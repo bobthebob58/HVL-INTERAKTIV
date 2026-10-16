@@ -1,0 +1,248 @@
+# Spec 02 — Identity: Feide OIDC Portal, Canvas LTI 1.3 Advantage and the Grade Bridge
+
+| | |
+|---|---|
+| **Status** | Approved for build (v1.0, 2026-10-16) |
+| **Load in sessions** | S3: §1–§4, §7 · S6: §5–§7 (NRPS, grade bridge, data) |
+| **Owns requirement IDs** | `AUTH-*`, `LTI-*` |
+| **Code location** | `apps/server/src/auth/`, `apps/server/src/lti/`, `apps/server/src/grades/`, `apps/web/src/lib/session/` |
+
+---
+
+## 1. Verified facts this spec relies on (checked 2026-10-16)
+
+| Fact | Value | Consequence |
+|---|---|---|
+| Latest `ltijs` | **7.0.7**, Apache-2.0. A full TypeScript rewrite with a `Provider` class (`onResourceLink`, `onDeepLinking`, `LaunchContext`). | The v5 API in the plan (`lti.setup(…, { ltiaas: true })`, `lti.redirect`, `lti.DeepLinking…`) is obsolete. Use v7. (D-005) |
+| ltijs 7 engine requirement | `node >= 24` | The runtime is **Node.js 24 LTS**, not 22. (D-001) |
+| ltijs 7 storage | Pluggable `DatabaseManager` interface with 14 methods. Ships only MongoDB implementations. Redis cache via `RedisCacheManager`. | We write `PrismaLtiDatabaseManager` for PostgreSQL rather than add MongoDB. `ltijs-postgresql` and `ltijs-sequelize` target v5 and have not been updated since 2022. (D-005) |
+| ltijs 7 launch tokens | Each launch yields a signed **ltik** (24 h lifetime). `LaunchContext.redirect()` appends it to the URL. `Provider.getLaunchContext(ltik)` resumes the launch. No session cookie is needed. | This solves the third-party-cookie problem in Canvas iframes by design. |
+| ltijs 7 services on `LaunchContext` | `deepLinking.createDeepLinkingForm(items, options)`, `grading.submitScore(lineItemId, score)`, Names & Roles, Dynamic Registration | These are the APIs used below. |
+| `openid-client` | **6.x** (ESM-only, functional API: `discovery()`, `buildAuthorizationUrl()`, `authorizationCodeGrant()`) | Older `Issuer`/`Client` class examples do not apply. |
+
+Values marked *(verify)* below must be confirmed from the reference attachments
+(`feide-oidc-config.example.json`, `canvas-lti13-developer-key.json`) or with TeCopp before
+Session 3 writes code that depends on them.
+
+---
+
+## 2. Two ways in, one identity model
+
+```
+                    ┌────────────────────── interaktiv.hvl.no (one public origin) ──────────────────────┐
+ Browser (top-level)│  /            → apps/web  (Next.js App Router)                                    │
+  Feide portal      │  /api, /h5p   → apps/server (Express)          principal = Feide session (cookie)  │
+                    │  /auth/feide/* → OIDC RP (openid-client)                                           │
+                    │                                                                                    │
+ Canvas iframe      │  /lti/login, /lti/launch, /lti/keys → ltijs Provider                               │
+  (3rd-party ctx)   │  → redirect to /app/…?ltik=…  → web stores ltik in memory → Authorization: Bearer   │
+                    └────────────────────────────────────────────────────────────────────────────────────┘
+ files.interaktiv.hvl.no  → user-uploaded H5P content files only (SEC-004), no cookies, no ltik
+```
+
+Both entry points resolve to a single server-side **`Principal`**:
+
+```ts
+/** What every API handler receives after authentication. Defined in apps/server/src/auth/Principal.ts */
+interface Principal {
+  userId: string;              // internal UUID (authors/admins) or null for learners
+  learnerKey: string;          // HMAC pseudonym (DATA-002), always present
+  roles: Array<'learner' | 'author' | 'admin'>;
+  mode: 'portal' | 'lti';
+  ltiContext?: { platformId: string; contextId: string; resourceLinkId: string; lineItemUrl?: string };
+  locale: 'nn' | 'nb' | 'en';
+}
+```
+
+Putting web and API on one origin behind a reverse proxy avoids CORS and keeps the portal session
+cookie first-party.
+
+---
+
+## 3. Requirements — Feide portal (standalone access)
+
+#### AUTH-001 · MUST · S3 · Feide OpenID Connect login (Authorization Code + PKCE)
+The server is a confidential OIDC relying party, registered in the Feide Customer Portal under
+HVL (`hvl.no`). It uses `openid-client` 6 with discovery from `https://auth.dataporten.no`
+*(verify)*, plus PKCE (S256), `state` and `nonce`. Scopes: `openid profile email userid-feide
+groups-org groups-edu` *(verify names in the Customer Portal)*.
+- **Acceptance:** The full flow works against a mock OIDC provider in tests. ID tokens with a wrong
+  `iss`, `aud`, `nonce` or an expired `exp` are rejected. The client secret is read from an
+  environment variable or secret store and is never logged.
+- **Verify:** Integration tests with `oauth2-mock-server` (or equivalent); test names `[AUTH-001] …`.
+
+#### AUTH-002 · MUST · S3 · Map Feide affiliation to roles
+After login, call the Feide Groups API (`/groups/me/groups`) *(verify base URL)*. Read the HVL
+organisation group's `membership.affiliation`.
+
+| Feide affiliation (any of) | Role in HVL Interaktiv |
+|---|---|
+| `employee`, `faculty`, `staff` | `author` |
+| `student` **and** member of an allow-listed course group (config `AUTHOR_COURSE_GROUPS`, e.g. PPU, *Brettspel som didaktisk ressurs*) | `author` (scoped: may author; content visibility limited to the course) |
+| `student`, `member`, `affiliate` | `learner` |
+| Feide ID in config `ADMIN_FEIDE_IDS` | adds `admin` |
+| Organisation not in `ALLOWED_FEIDE_ORGS` (default `hvl.no`) | `learner` on content shared with "anyone with Feide"; otherwise denied |
+
+- **Acceptance:** A table-driven test covers every row, including users with both `student` and `employee` (→ `author`).
+- **Verify:** Unit tests of `FeideRoleMapper`.
+
+#### AUTH-003 · MUST · S3 · Portal session
+The server keeps the session in Redis and gives the browser an opaque ID in a cookie
+(`__Host-hvli_sid`; `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`). The session expires after
+2 h idle or 12 h absolute. State-changing requests require a CSRF token (synchronizer pattern).
+Logout clears the session and calls Feide's `end_session_endpoint`.
+- **Verify:** Integration tests (expiry, CSRF rejection, logout).
+
+#### AUTH-004 · MUST · S3 · Data minimisation at login
+Request only the scopes listed in `AUTH-001`. **Never** request the national identity number
+(`norEduPersonNIN`) or other extended attributes. Store a display name and e-mail **only for
+authors and admins**, who need them for co-author search and attribution. Store neither for learners.
+- **Verify:** Unit test asserts the scope string. Integration test asserts that no learner row has a name or e-mail.
+
+#### AUTH-005 · SHOULD · S3 · Link an author's Canvas identity to their Feide identity
+The aim is one personal library whether a teacher arrives through Canvas or the portal. To link
+them, read a custom LTI claim (e.g. `feide_login = $Canvas.user.loginId`) *(verify with TeCopp)*, or
+offer a one-time "Link with Feide" pop-up. Learner identities are **never** linked across modes.
+- **Verify:** Integration test of the linking flow.
+
+---
+
+## 4. Requirements — Canvas LTI 1.3 core and Deep Linking
+
+#### LTI-001 · MUST · S3 · LTI 1.3 tool with ltijs 7
+`apps/server/src/lti/LtiProviderFactory.ts` builds the ltijs `Provider` with the routes
+`/lti/login`, `/lti/launch`, `/lti/keys`, our `PrismaLtiDatabaseManager` and `RedisCacheManager`.
+The Canvas platform registration values are:
+issuer `https://canvas.instructure.com`, auth `https://sso.canvaslms.com/api/lti/authorize_redirect`,
+token `https://sso.canvaslms.com/login/oauth2/token`, keyset `https://sso.canvaslms.com/api/lti/security/jwks`
+*(verify all four with TeCopp)*. The `clientId` and deployment ID come from the Canvas Developer Key.
+- **Acceptance:** A full launch against a mock platform (signed with a test key) succeeds. The
+  launch is rejected if the signature, `aud`, nonce or deployment ID is wrong, or if the nonce is
+  replayed.
+- **Verify:** Integration tests `[LTI-001] …`.
+
+#### LTI-002 · MUST · S3 · PostgreSQL storage for ltijs
+`PrismaLtiDatabaseManager` implements all 14 methods of ltijs's `DatabaseManager`.
+`consumeNonce` is atomic: a single `DELETE … RETURNING`, so a nonce can be used once even under
+concurrency. ID-token records expire after 24 h and nonces after 10 min, enforced by a cleanup job.
+Platform private keys are encrypted at rest with a key from the secret store.
+- **Verify:** Run ltijs's contract behaviour (save/get/consume) as a shared test suite. Concurrency test for `consumeNonce`.
+
+#### LTI-003 · MUST · S3 · Cookie-less ltik transport
+1. `onResourceLink` and `onDeepLinking` call `context.redirect(res, '/app/…')`, which appends `?ltik=…`.
+2. The Next.js page reads `ltik` once and keeps it **only in memory** (React context, never
+   `localStorage` or `sessionStorage`). It removes it from the address bar with `history.replaceState`.
+3. All API calls send `Authorization: Bearer <ltik>`. H5P iframe URLs carry it through `HvlUrlGenerator` (`H5P-007`).
+4. Server middleware resolves `provider.getLaunchContext(ltik)` into a `Principal`. Invalid or expired → 401 with a "please reopen from Canvas" page.
+5. Pages that receive an ltik send `Referrer-Policy: no-referrer`. The logger redacts `ltik` in query strings and headers.
+6. `Content-Security-Policy: frame-ancestors` lists only the configured Canvas origins (config
+   `CANVAS_ORIGINS`, e.g. `https://hvl.instructure.com`). `X-Frame-Options` is not sent.
+- **Acceptance:** A Playwright test with third-party cookies blocked completes launch → play → resume inside a cross-origin iframe.
+- **Verify:** Integration and e2e tests; header assertions.
+
+#### LTI-004 · MUST · S3 · Map LTI roles safely
+| LTI role claim contains | Role |
+|---|---|
+| `membership#Instructor`, `membership/Instructor#TeachingAssistant`, `membership#ContentDeveloper` | `author` (in this context) |
+| `membership#Learner` (only) | `learner` |
+| `institution/person#Administrator` or any other role | `author` at most |
+
+**An LTI launch never grants `admin`.** H5P library administration requires a Feide login and the admin allow-list (`AUTH-002`).
+- **Verify:** Table-driven unit test, including a forged `Administrator` claim.
+
+#### LTI-005 · MUST · S3 · Deep Linking 2.0 picker
+`onDeepLinking` redirects to `/app/deeplink`. There the author can (a) choose existing activities
+(own, co-authored or from the content bank), or (b) create a new one from a pattern (`PROD-001`) and
+return when it is published. The server builds content items of type `ltiResourceLink` with
+`custom: { contentId }`, `title`, an `iframe` size hint, and for graded placements a `lineItem` with
+`{ scoreMaximum: 100, label, resourceId: contentId, tag: 'hvl-interaktiv' }`. It returns them with
+`context.deepLinking.createDeepLinkingForm(items)`. Multiple selection is supported when the platform
+sends `accept_multiple`.
+- **Acceptance:** The auto-submitted form posts a signed JWT to `deep_link_return_url`. Draft activities cannot be returned.
+- **Verify:** Integration test decodes and validates the returned JWT. E2e in J1.
+
+#### LTI-006 · MUST · S3 · Resource-link launch
+`onResourceLink` reads `contentId` from the custom claim. It records or updates an `LtiPlacement`
+`(platformId, contextId, resourceLinkId, contentId, lineItemUrl)`. Learners get the player. Authors
+get the player plus **Rediger** (edit, if owner or co-author) and **Innsikt** (insight) tabs.
+- **Acceptance:** An unknown or draft `contentId` gives a friendly error page, not a stack trace or a redirect loop.
+- **Verify:** Integration tests.
+
+#### LTI-007 · SHOULD · S3 · Works after Canvas course copy
+When a Canvas course is copied, its resource links keep `custom.contentId`. Instructors of the new
+course can launch, play and view insight for their own context. They can **duplicate** the activity
+into their own library, but cannot edit the original unless they are co-authors.
+- **Verify:** Integration test with two contexts and a shared `contentId`.
+
+---
+
+## 5. Requirements — Names and Roles, Dynamic Registration
+
+#### LTI-008 · SHOULD · S6 · Participation denominators via NRPS
+If the launch includes the Names and Roles claim, fetch the number of active learners in the
+context. Cache it for 1 hour, and use it as the denominator in insight (`INS-001`). **Only counts are
+stored**, never member names or e-mail addresses.
+- **Verify:** Integration test with a mock NRPS endpoint.
+
+#### LTI-009 · COULD · S6 · LTI Dynamic Registration
+Support Canvas's LTI Dynamic Registration through ltijs 7, so TeCopp can install the tool from one
+URL. The JSON developer key in `docs/reference/canvas-lti13-developer-key.json` remains the fallback.
+
+---
+
+## 6. Requirements — xAPI-to-AGS grade bridge
+
+#### LTI-010 · MUST · S6 · Capture xAPI in the player
+The injected client script (`packages/hvl-h5p-theme/src/xapiBridge.ts`, `H5P-009`) subscribes with
+`H5P.externalDispatcher.on('xAPI', …)`. It POSTs each statement to `/api/h5p/xapi`, batched every
+2 s and flushed on `pagehide`, with the ltik or CSRF token. Failed posts are retried from an
+in-memory queue. They never block or slow down the activity.
+- **Verify:** Unit test of the batching queue; Playwright test that statements arrive.
+
+#### LTI-011 · MUST · S6 · Validate and store statements
+`/api/h5p/xapi` validates statements with a zod schema. It accepts only verbs it uses
+(`answered`, `completed`, `attempted`, `interacted`, `progressed`). It checks that the object belongs
+to content the principal may view, and that `0 ≤ score.raw ≤ score.max` and `0 ≤ scaled ≤ 1`. It
+rate-limits each learner and activity to 120 statements per minute. Then it stores the minimal
+fields defined in `DATA-012` and drops the rest of the statement (including `actor.name` and `actor.mbox`).
+- **Verify:** Unit tests for the schema; integration test for rate limiting.
+
+#### LTI-012 · MUST · S6 · Publish scores to the Canvas gradebook (AGS)
+When a statement concerns the **root** content (no `subContentId`), has the verb `completed` or
+`answered`, and carries `result.score`, the server applies the activity's attempt policy:
+
+| Policy (author setting) | Score sent to Canvas |
+|---|---|
+| `best` (default) | highest scaled score so far, ×100 |
+| `latest` | latest scaled score, ×100 |
+| `mastery` | 100 once the scaled score ≥ threshold (default 0.8), otherwise latest ×100 |
+
+The result goes to a durable `GradeSyncJob` queue. A worker calls
+`context.grading.submitScore(lineItemUrl, { userId: sub, scoreGiven, scoreMaximum: 100,
+activityProgress: 'Completed', gradingProgress: 'FullyGraded', timestamp })` with exponential
+backoff (up to 8 attempts in 24 h). Jobs are idempotent per `(placement, learnerKey, attemptId)`. If
+the line item no longer exists, the job is marked `orphaned` and is not retried.
+- **Acceptance:** Learning never waits for grade sync. Authors see a per-activity sync status
+  (counts of sent / pending / failed) and can retry failed jobs.
+- **Verify:** Integration tests with a mock AGS endpoint (success, 5xx retry, 404 orphaned, idempotency).
+
+#### LTI-013 · MUST · S6 · Score integrity is honest
+H5P computes scores in the browser, so a determined student can forge them. The system therefore
+(a) labels AGS scores as formative in the line-item `label` suffix "(formativ)", (b) shows the
+formative notice (`PROD-011`), and (c) never presents these scores as exam evidence. Server checks in
+`LTI-011` reduce accidental and casual manipulation. They are not claimed to prevent deliberate
+manipulation.
+- **Verify:** Review item in the evaluator guide; unit test for the label suffix.
+
+---
+
+## 7. Logical data owned by this module
+
+| Entity | Key fields | Personal data? |
+|---|---|---|
+| `User` | `id`, `kind (staff/learner)`, `displayName?`, `email?` (staff only), `createdAt` | Staff only |
+| `Identity` | `userId`, `provider (feide/lti)`, `subjectHash` (HMAC of Feide ID or `iss|sub`), `platformId?` | Pseudonymous |
+| `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken` | as required by ltijs `DatabaseManager` | ID tokens contain LTI claims. Kept for 24 h only. |
+| `LtiPlacement` | `platformId`, `contextId`, `resourceLinkId`, `contentId`, `lineItemUrl?`, `attemptPolicy`, `masteryThreshold?` | No |
+| `GradeSyncJob` | `placementId`, `learnerKey`, `ltiSub (encrypted)`, `scoreGiven`, `status`, `attempts`, `lastError`, `idempotencyKey` | `ltiSub` is needed for AGS; encrypted, deleted 30 days after success |
+| `AuthAuditEvent` | `at`, `actorUserId?`, `event`, `ipHash` | Minimal |

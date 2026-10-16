@@ -1,0 +1,79 @@
+# HVL Interaktiv
+
+**Short, accessible, interactive learning activities for asynchronous study at Høgskulen på
+Vestlandet (HVL), with feedback to teachers before the next class.**
+
+HVL Interaktiv is a planned open-source service built on H5P. A teacher takes one learning outcome,
+picks a research-based *pattern* (for example "an 8-minute video with three retrieval checks" or "a
+clinical dilemma with three decisions"), and builds it in under 30 minutes. The teacher then places
+it in Canvas and, before the next seminar, sees which misconceptions to address. Students get short
+activities that explain *why* an answer is wrong, work with screen readers and on phones, and can
+be resumed where they left off.
+
+> **Status (2026-10-16): specification complete; implementation not started.**
+> This repository currently holds the full specification, the documentation standard the code must
+> follow, and a traceability tool. Build progress is in [PROGRESS.md](PROGRESS.md).
+
+---
+
+## What it does for teachers and students
+
+| For teachers | For students |
+|---|---|
+| Start from **nine learning-design patterns** for *forarbeid*, *underveis* and *etterarbeid*, not a blank editor | Short, focused activities with **explanatory feedback** |
+| Use **ten curated H5P content types**, chosen for pedagogical value and accessibility | **Resume** on any device; unlimited retries in practice activities |
+| A **pre-publish check** catches missing alt text and captions, and nudges towards good design | Works with **keyboard, screen readers and 320 px phones** (WCAG 2.2 AA) |
+| **Before-the-seminar insight**: hardest questions, most common wrong answers, anonymised | **Nynorsk** by default, plus Bokmål and English |
+| Place activities in **Canvas** with one click (LTI 1.3 Deep Linking); optional formative grades | **Privacy**: pseudonymous; teachers never see individual answers |
+| **Pedagogisk mappe export** documents designs and their reasoning for merit and promotion applications | |
+
+## Documentation map
+
+| If you want to… | Read |
+|---|---|
+| Understand the product, users and pedagogy | [docs/specs/00-product-and-pedagogy.md](docs/specs/00-product-and-pedagogy.md) |
+| Review the H5P engine and upload security | [docs/specs/01-h5p-core128.md](docs/specs/01-h5p-core128.md) |
+| Review Feide login, Canvas LTI 1.3 and grade sync | [docs/specs/02-auth-feide-lti13.md](docs/specs/02-auth-feide-lti13.md) |
+| Review accessibility, theme and the validator | [docs/specs/03-hvl-wcag-theme.md](docs/specs/03-hvl-wcag-theme.md) |
+| Review the learning-design studio and portfolio export | [docs/specs/04-laeringsdesign-page.md](docs/specs/04-laeringsdesign-page.md) |
+| Review teacher insight and data protection | [docs/specs/05-analytics-privacy.md](docs/specs/05-analytics-privacy.md) |
+| **Evaluate the code** against the specs | [docs/EVALUATOR-GUIDE.md](docs/EVALUATOR-GUIDE.md) |
+| Know how code must be documented | [docs/DOCUMENTATION-STANDARD.md](docs/DOCUMENTATION-STANDARD.md) |
+| See which requirements are planned, in code or tested | [docs/TRACEABILITY.md](docs/TRACEABILITY.md) |
+| See why things were decided, including corrections to the original plan | [docs/DECISIONS.md](docs/DECISIONS.md) |
+| Look up a Norwegian term | [docs/GLOSSARY.md](docs/GLOSSARY.md) |
+| Supply HVL reference material | [docs/reference/README.md](docs/reference/README.md) |
+| Build it with Claude Code | [CLAUDE.md](CLAUDE.md) and [PROGRESS.md](PROGRESS.md) |
+
+## How the specification is organised
+
+The specification has **126 numbered requirements** (e.g. `SEC-001`), each with a priority
+(MUST / SHOULD / COULD), the build session that delivers it, testable acceptance criteria, and a
+verification method. The code must quote these IDs in file headers and test titles. That lets
+anyone trace a requirement to its implementation and its tests:
+
+```bash
+node tools/spec-trace/specTrace.mjs --check   # needs only Node; fails on unknown IDs or a stale matrix
+node tools/spec-trace/specTrace.mjs           # regenerates docs/TRACEABILITY.md
+```
+
+## Architecture at a glance
+
+```
+ Teacher / student browser ──► interaktiv.hvl.no (reverse proxy, one origin)
+                                 ├─ apps/web     Next.js: studio, insight, portfolio, LTI views
+                                 └─ apps/server  Express: H5P engine (Lumi h5p-server, Core 1.28),
+                                                 Feide OIDC, LTI 1.3 (ltijs 7), validator, xAPI → AGS
+ Canvas (iframe) ── LTI 1.3 launch / Deep Linking / AGS ──►  apps/server
+ files.interaktiv.hvl.no  ── user-uploaded H5P files (sandboxed, cookie-less)
+ PostgreSQL · Redis · S3-compatible storage (EEA)
+```
+
+Planned stack: Node.js 24 LTS, TypeScript, Express 5, Next.js, Prisma/PostgreSQL, Redis, Vitest,
+Playwright and axe-core. See [DECISIONS.md](docs/DECISIONS.md) for why it differs from the original
+plan in places (Node 24, ltijs 7, the CVE-2025-7062 mitigation, the focus-ring colour).
+
+## Licence
+
+Proposed: **GPL-3.0-or-later**, because the H5P server library it builds on uses that licence.
+The repository owner must confirm this before code is added (decision D-015).
