@@ -14,6 +14,9 @@ each session lands.
 
 ## 1. Orientation in 20 minutes
 
+Prefer a browser? `docs/site/index.html` holds the same documents as one searchable page, with a
+requirement explorer. Regenerate it with `node tools/spec-site/buildSpecSite.mjs`.
+
 | Minutes | Read | You will know |
 |---|---|---|
 | 3 | [README](../README.md) | What the service is and how the repository is organised |
@@ -54,6 +57,7 @@ asserts? Does the module header's *Invariants* section match the code? Is every 
 | Command | What it proves |
 |---|---|
 | `node tools/spec-trace/specTrace.mjs --check` *(available now)* | Specs are internally consistent; traceability is current |
+| `node tools/spec-site/buildSpecSite.mjs --check` *(available now)* | The spec website matches the Markdown |
 | `docker compose up -d` | PostgreSQL, Redis, MinIO and a mock OIDC/LTI platform start locally |
 | `npm ci && npm run build` | The monorepo builds from a clean checkout |
 | `npm run typecheck && npm run lint` | Types, lint, documentation lint (`DOC-001`, `DOC-002`) |

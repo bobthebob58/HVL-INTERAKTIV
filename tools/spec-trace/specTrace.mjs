@@ -30,7 +30,7 @@ const OUTPUT = 'docs/TRACEABILITY.md';
 const REQUIREMENT_SOURCES = ['docs/specs', 'docs/DOCUMENTATION-STANDARD.md'];
 const CODE_DIRS = ['apps', 'packages', 'tools', 'content'];
 const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs', '.css', '.yaml', '.yml']);
-const SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', 'coverage']);
+const SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', 'coverage', 'vendor']);
 
 // A requirement heading looks like: "#### SEC-001 · MUST · S2 · Sanitise SVG files"
 const HEADING = /^#### ([A-Z][A-Z0-9]*-\d{3}) · (MUST|SHOULD|COULD) · (S\d) · (.+)$/;
@@ -94,7 +94,7 @@ function scanSources(pattern) {
 /** Finds references (in Markdown and code) to IDs that no spec defines. */
 function findDanglingReferences(requirements, pattern) {
   const known = new Set(requirements.map((r) => r.id));
-  const files = [...listFiles('docs'), ...readdirSync(ROOT).filter((f) => f.endsWith('.md')),
+  const files = [...listFiles('docs').filter((f) => f.endsWith('.md')), ...readdirSync(ROOT).filter((f) => f.endsWith('.md')),
     ...CODE_DIRS.flatMap(listFiles).filter((f) => CODE_EXTENSIONS.has(extname(f)))];
   const problems = [];
   for (const file of [...new Set(files)].filter((f) => f !== OUTPUT)) {

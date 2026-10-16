@@ -161,7 +161,7 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 | DOC-001 | MUST | S1 | Every source file starts with a module header | — | — | planned |
 | DOC-002 | MUST | S1 | Every exported symbol has TSDoc | — | — | planned |
 | DOC-003 | MUST | S1 | Explain non-obvious code with tagged rationale comments | — | — | planned |
-| DOC-004 | MUST | S1 | Requirement IDs connect spec, code and tests | `tools/spec-trace/specTrace.mjs` | — | in code |
+| DOC-004 | MUST | S1 | Requirement IDs connect spec, code and tests | `tools/spec-site/buildSpecSite.mjs`<br>`tools/spec-site/markdownRenderer.mjs`<br>`tools/spec-site/overviewView.mjs`<br>`tools/spec-site/pageTemplate.mjs`<br>`tools/spec-site/spec-site.base.css`<br>`tools/spec-site/spec-site.client.js`<br>`tools/spec-site/spec-site.components.css`<br>`tools/spec-site/specParser.mjs`<br>`tools/spec-trace/specTrace.mjs` | — | in code |
 | DOC-005 | MUST | S1 | Each app and package has a README | — | — | planned |
 | DOC-006 | MUST | S1 | Tests are written to be read | — | — | planned |
 | DOC-007 | MUST | S1 | Small, explicitly named files | — | — | planned |

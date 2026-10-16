@@ -25,7 +25,7 @@ with the commands given.
 | D-012 | One public origin, plus a separate origin for uploaded files | Accepted |
 | D-013 | Validator errors can be acknowledged rather than hard-blocking | Accepted |
 | D-014 | English in code, Norwegian domain terms preserved | Accepted |
-| D-015 | Licence GPL-3.0-or-later | **Proposed — owner to confirm** |
+| D-015 | Licence GPL-3.0-or-later | Accepted (2026-10-16) |
 | D-016 | Specs beyond the plan's four, plus requirement IDs and traceability | Accepted |
 
 ---
@@ -123,9 +123,19 @@ English makes the code reviewable by international evaluators and the open-sourc
 Domain terms such as `forarbeid` or `laeringsutbytte` keep their Norwegian form so teachers and ALU
 recognise them. They are explained in [GLOSSARY.md](GLOSSARY.md) (`DOC-009`).
 
-### D-015 · Licence GPL-3.0-or-later (proposed)
-`@lumieducation/h5p-server` is GPL-3.0-or-later, so a combined server must be GPL-compatible. **The
-repository owner must confirm** before Session 1 adds `LICENSE` (`NFR-005`).
+### D-015 · Licence GPL-3.0-or-later
+- **Context:** `@lumieducation/h5p-server` is GPL-3.0-or-later, so a server that combines with it must be
+  GPL-compatible. The other main dependencies are compatible: ltijs (Apache-2.0), marked (MIT), H5P
+  content types (MIT).
+- **Decision:** The whole repository is licensed **GPL-3.0-or-later**. The repository owner asked
+  Claude to confirm the choice on 2026-10-16. `LICENSE` holds the unmodified GPL v3 text. Its SHA-256,
+  `3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986`, is the hash of the FSF's
+  `gpl-3.0.txt`, and it was cross-checked against the copy shipped in `@lumieducation/h5p-server`.
+- **Consequences:** Anyone who distributes a modified version must release its source under the same
+  licence. Network use alone does not trigger that. The HVL name and logo are trademarks of Høgskulen på
+  Vestlandet and are **not** licensed by the GPL. Logo files must not be committed without HVL's permission.
+  Third-party files keep their own licences, for example `tools/spec-site/vendor/marked.LICENSE.md`.
+- **Re-check:** `sha256sum LICENSE`.
 
 ### D-016 · Specs beyond the plan's four, plus requirement IDs and traceability
 The plan defines four module specs. This repository adds spec 00 (product, users, pedagogy), spec 05

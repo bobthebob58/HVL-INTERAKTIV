@@ -1,0 +1,88 @@
+/*
+ * spec-site.base — tokens, typography and page layout for the generated spec site.
+ *
+ * Why: the site follows the same rules it specifies (spec 03): colours from HVL Interaktiv's
+ *      tokens with measured contrast, line-height ≥ 1.5, left-aligned text, no ALL CAPS,
+ *      underline only for links, and a two-tone focus ring.
+ * Spec: DOC-004 (applies the house rules of spec 03 to this reading aid; not the product UI)
+ * Invariants:
+ *   - Every colour is a token defined on bare :root first; dark mode only redefines tokens.
+ *   - Light text pairs ≥ 6.1 : 1 and dark pairs ≥ 6.0 : 1 (checked when the palette was chosen).
+ * Collaborators: inlined by buildSpecSite.mjs together with spec-site.components.css.
+ * Tests: axe run on the published page (Session 4 adds it to CI).
+ */
+
+/* Layout: masthead across the top, sticky contents rail on the left, one reading column. */
+:root {
+  --bg: #F4F6F7; --panel: #FFFFFF; --ink: #111111; --muted: #4A5560;
+  --accent: #005F6B; --strong: #003D4C; --on-strong: #FFFFFF;
+  --line: #C9D3D7; --chip: #E3ECEE; --code-bg: #EAF0F2; --control-border: #4A5560;
+  --focus-outer: #003D4C; --focus-inner: #FFFFFF;
+  --font-display: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --measure: 70ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1B20; --panel: #122830; --ink: #E6EEF0; --muted: #A7B8BE;
+    --accent: #6CCBD6; --strong: #A6E3EA; --on-strong: #0C1B20;
+    --line: #2B4A53; --chip: #1B3942; --code-bg: #10232A; --control-border: #A7B8BE;
+    --focus-outer: #A6E3EA; --focus-inner: #0C1B20; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1B20; --panel: #122830; --ink: #E6EEF0; --muted: #A7B8BE;
+  --accent: #6CCBD6; --strong: #A6E3EA; --on-strong: #0C1B20;
+  --line: #2B4A53; --chip: #1B3942; --code-bg: #10232A; --control-border: #A7B8BE;
+  --focus-outer: #A6E3EA; --focus-inner: #0C1B20; color-scheme: dark;
+}
+
+[hidden] { display: none !important; }
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 1rem); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.6;
+  text-align: left; overflow-wrap: break-word;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.shell {
+  max-width: 84rem; margin: 0 auto; display: grid; gap: 0 3rem;
+  grid-template-columns: 15.5rem minmax(0, 1fr);
+  grid-template-areas: "mast mast" "nav main" "nav foot";
+}
+.masthead { grid-area: mast; padding-block: 2.5rem 1.75rem; border-bottom: 1px solid var(--line); margin-bottom: 2rem; }
+.sidenav { grid-area: nav; }
+main { grid-area: main; min-width: 0; outline: none; padding-bottom: 3rem; }
+.foot { grid-area: foot; border-top: 1px solid var(--line); padding-block: 1.5rem 2.5rem; color: var(--muted); font-size: .9rem; }
+
+/* Type scale: 1.0625rem body; headings in the serif display face. */
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); font-weight: 600; color: var(--strong); line-height: 1.25; text-wrap: balance; }
+h1 { font-size: clamp(2.3rem, 5vw, 3.4rem); margin: .2rem 0 .6rem; letter-spacing: -.01em; }
+h2 { font-size: clamp(1.7rem, 3vw, 2.1rem); margin: 0 0 1rem; }
+h3 { font-size: 1.4rem; margin: 2.4rem 0 .8rem; }
+h4 { font-size: 1.18rem; margin: 2rem 0 .6rem; }
+h5, h6 { font-size: 1.05rem; margin: 1.6rem 0 .5rem; }
+p, li, dd { max-width: var(--measure); }
+p { margin: 0 0 1rem; }
+ul, ol { padding-left: 1.4rem; margin: 0 0 1rem; }
+li + li { margin-top: .3rem; }
+strong { font-weight: 700; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2.5rem 0; }
+
+/* Links: underlined in running text (WCAG 1.4.1); underline is never used for anything else. */
+a { color: var(--accent); text-decoration: underline; text-underline-offset: .18em; text-decoration-thickness: .08em; }
+a:hover { text-decoration-thickness: .16em; }
+:focus-visible { outline: 3px solid var(--focus-outer); outline-offset: 2px; box-shadow: 0 0 0 2px var(--focus-inner); border-radius: 2px; }
+[tabindex="-1"]:focus:not(:focus-visible) { outline: none; box-shadow: none; }
+
+.kicker { margin: 0; color: var(--muted); font-size: .95rem; }
+.tagline { font-size: 1.2rem; max-width: 58ch; margin: 0; }
+.lede { font-size: 1.1rem; color: var(--ink); }
+.more { font-size: .95rem; }
+.vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.skip { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); top: -10rem; z-index: 20; background: var(--strong); color: var(--on-strong); padding: .6rem 1rem; }
+.skip:focus { top: calc(env(safe-area-inset-top, 0px) + .5rem); }

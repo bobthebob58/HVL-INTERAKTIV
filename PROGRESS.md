@@ -27,6 +27,8 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pas
 - [x] `docs/DOCUMENTATION-STANDARD.md`, `docs/EVALUATOR-GUIDE.md`, `docs/GLOSSARY.md`, `docs/DECISIONS.md` (D-001…D-016)
 - [x] `tools/spec-trace/specTrace.mjs` and the generated `docs/TRACEABILITY.md`
 - [x] `CLAUDE.md` (thin root, < 120 lines) and this file
+- [x] Licence confirmed: GPL-3.0-or-later, `LICENSE` added (D-015)
+- [x] Spec website: `tools/spec-site/` generates `docs/site/index.html`
 
 Gate output:
 ```
@@ -105,7 +107,7 @@ Effort: high, because this is security-critical. **Needs reference items 4 and 5
 
 | # | Question | Owner | Blocks |
 |---|---|---|---|
-| Q1 | Confirm the licence GPL-3.0-or-later (D-015) | Repository owner | S1 (LICENSE file) |
+| Q1 | ~~Confirm the licence GPL-3.0-or-later (D-015)~~ Resolved 2026-10-16: `LICENSE` added | — | — |
 | Q2 | Provide reference items 1–6 (`docs/reference/README.md`) | HVL / ALU / TeCopp | S2–S5 as listed |
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
 | Q4 | Canvas Developer Key on HVL's test instance; confirm the four Canvas endpoint values | TeCopp | S3 |

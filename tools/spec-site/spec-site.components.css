@@ -1,0 +1,94 @@
+/*
+ * spec-site.components — tables, badges, the requirement explorer, navigation and small screens.
+ *
+ * Why: split from spec-site.base.css to keep each file under the 200-line limit (DOC-007).
+ * Spec: DOC-004
+ * Invariants:
+ *   - Wide tables and code scroll inside their own container; the page never scrolls sideways.
+ *   - Interactive targets are at least 44 × 44 CSS px on touch layouts (exceeds WCAG 2.5.8).
+ * Collaborators: inlined after spec-site.base.css by buildSpecSite.mjs.
+ * Tests: axe run on the published page (Session 4 adds it to CI).
+ */
+
+/* Navigation rail */
+.sidenav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 1rem); align-self: start; max-height: calc(100vh - 2rem); overflow-y: auto; padding-bottom: 1rem; }
+.nav-toggle > summary { display: none; }
+.nav-root, .nav-root ul { list-style: none; margin: 0; padding: 0; }
+.nav-group + .nav-group { margin-top: 1.25rem; }
+.nav-group-label { display: block; color: var(--muted); font-size: .85rem; margin-bottom: .35rem; }
+.nav-root a { display: block; padding: .35rem .6rem; border-left: 3px solid transparent; color: var(--ink); text-decoration: none; line-height: 1.35; }
+.nav-root a:hover { color: var(--accent); border-left-color: var(--line); }
+.nav-root a[aria-current="page"] { border-left-color: var(--strong); color: var(--strong); font-weight: 700; background: var(--chip); }
+
+/* Overview */
+.promise p:first-child { font-family: var(--font-display); font-size: clamp(1.3rem, 2.4vw, 1.6rem); line-height: 1.45; color: var(--strong); max-width: 44ch; }
+.promise p:first-child strong { font-weight: 600; }
+tbody th[scope="row"] { background: var(--chip); width: 1%; white-space: nowrap; }
+.glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem 2rem; margin: 2rem 0 0; }
+.glance > div { border-top: 3px solid var(--strong); padding-top: .6rem; min-width: 0; }
+.glance dt { color: var(--muted); font-size: .95rem; }
+.glance dd { margin: 0; font-family: var(--font-display); font-size: 2rem; color: var(--strong); font-variant-numeric: tabular-nums; }
+.glance dd a { color: inherit; }
+.glance .sub { display: block; font-family: var(--font-body); font-size: .9rem; color: var(--muted); }
+
+/* Tables and code */
+.table-wrap { overflow-x: auto; margin: 0 0 1.5rem; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; line-height: 1.5; }
+th, td { text-align: left; vertical-align: top; padding: .55rem .8rem; border-bottom: 1px solid var(--line); }
+th { background: var(--chip); color: var(--strong); font-weight: 700; }
+tr:last-child td { border-bottom: 0; }
+td p, th p { margin: 0; }
+code { font-family: var(--font-mono); font-size: .88em; background: var(--chip); padding: .08em .32em; border-radius: 3px; }
+pre.code { background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; padding: 1rem 1.1rem; overflow-x: auto; line-height: 1.45; margin: 0 0 1.5rem; }
+pre.code code { background: none; padding: 0; font-size: .86rem; }
+blockquote { margin: 0 0 1.5rem; padding: .8rem 1.1rem; border-left: 4px solid var(--strong); background: var(--panel); }
+blockquote p:last-child { margin-bottom: 0; }
+
+/* Requirement headings and badges (A11Y: badges spell out their meaning) */
+.req-heading { scroll-margin-top: 1rem; }
+.req-heading .req-title { color: var(--ink); }
+.req-id, .req-ref code { font-family: var(--font-mono); font-weight: 500; }
+a.req-id { color: var(--strong); }
+.badge { display: inline-block; font-family: var(--font-mono); font-size: .76rem; font-weight: 500; line-height: 1.3; padding: .12rem .45rem; border-radius: 3px; vertical-align: .12em; white-space: nowrap; }
+.pri-must { background: var(--strong); color: var(--on-strong); border: 1.5px solid var(--strong); }
+.pri-should { color: var(--strong); border: 1.5px solid var(--strong); }
+.pri-could { color: var(--muted); border: 1.5px dashed var(--muted); }
+.sess { background: var(--chip); color: var(--ink); border: 1.5px solid var(--chip); }
+
+/* Requirement explorer */
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: .9rem 1rem; padding: 1rem; margin: 0 0 1rem; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; }
+.field { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.field-search { grid-column: span 2; }
+.field-actions { flex-direction: row; flex-wrap: wrap; align-items: end; gap: .5rem; }
+.field label { font-weight: 700; font-size: .92rem; }
+input, select, button { font: inherit; font-size: 1rem; min-height: 2.75rem; border-radius: 4px; }
+input, select { padding: .45rem .6rem; border: 1px solid var(--control-border); background: var(--panel); color: var(--ink); min-width: 0; }
+button { padding: .45rem .95rem; border: 1.5px solid var(--strong); cursor: pointer; }
+#req-expand { background: var(--strong); color: var(--on-strong); }
+#req-reset { background: transparent; color: var(--strong); }
+.result-count { color: var(--muted); }
+.req-list { border-top: 1px solid var(--line); }
+details.req { border-bottom: 1px solid var(--line); background: var(--panel); }
+details.req > summary { cursor: pointer; padding: .75rem 1rem; line-height: 1.9; }
+details.req > summary .req-id { color: var(--strong); margin-right: .25rem; }
+details.req > summary .req-title { font-weight: 700; margin-left: .25rem; }
+details.req > summary .status { color: var(--muted); font-size: .88rem; margin-left: .5rem; white-space: nowrap; }
+details.req[open] > summary { border-bottom: 1px dashed var(--line); }
+.req-body { padding: .9rem 1rem .4rem 2rem; }
+.req-source { color: var(--muted); font-size: .9rem; }
+
+/* Stacked views when JavaScript is off */
+html:not(.js) .view + .view { margin-top: 4rem; padding-top: 2rem; border-top: 3px solid var(--line); }
+
+/* Small screens: contents become a collapsible block above the text */
+@media (max-width: 60rem) {
+  .shell { grid-template-columns: minmax(0, 1fr); grid-template-areas: "mast" "nav" "main" "foot"; }
+  .masthead { padding-block: 1.5rem 1.25rem; margin-bottom: 1rem; }
+  .sidenav { position: static; max-height: none; overflow: visible; margin-bottom: 1.5rem; }
+  .nav-toggle { border: 1px solid var(--line); border-radius: 4px; background: var(--panel); }
+  .nav-toggle > summary { display: list-item; cursor: pointer; padding: .7rem 1rem; font-weight: 700; color: var(--strong); min-height: 2.75rem; box-sizing: border-box; }
+  .nav-toggle[open] > .nav-root { padding: 0 .5rem 1rem; }
+  .nav-root a { padding-block: .6rem; }
+  .field-search { grid-column: 1 / -1; }
+  .req-body { padding-left: 1rem; }
+}

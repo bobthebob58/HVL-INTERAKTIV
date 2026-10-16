@@ -48,6 +48,7 @@
 - Test one file: `npx vitest run <path>` · Tests for one requirement: `npx vitest run -t "SEC-001"`
 - Accessibility: `npm run test:a11y` · E2E: `npm run test:e2e`
 - Traceability: `node tools/spec-trace/specTrace.mjs --check` (`npm run spec:trace` after S1)
+- Spec website: `node tools/spec-site/buildSpecSite.mjs` (regenerate after any doc change; `--check` in CI)
 - Local services: `docker compose up -d`
 
 ## 4. SESSION PROTOCOL
