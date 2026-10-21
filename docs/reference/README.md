@@ -42,7 +42,7 @@ exactly what HVL still has to supply or confirm.
 
 | File | Source | Retrieved | By |
 |---|---|---|---|
-| `hvl-visual-identity.md`, `tools/contrast.py`, `tools/contrast-output.md` | HVL design manual 2017 v2.0 (search extracts), public transcriptions and logo copies on GitHub (cited by commit), Brandfetch | 2026-10-16 | Claude research agent; independently verified 2026-10-21 |
-| `hvl-laeringsdesign-model.md`, `proposals/phases.yaml` | HVL Årsrapport 2024 (PDF via Sikt's Forvaltningsdatabasen mirror, SHA-256 recorded), Møgelvang & Isaksen 2025, hvl.no course pages (search extracts) | 2026-10-16 | Claude research agent; independently verified 2026-10-21 |
-| `hvl-pedagogisk-mappe-criteria.md`, `proposals/mappe-template.nn.md` | hvl.no merit pages and ALU pages (search extracts), published HVL portfolios, national regulations | 2026-10-16 | Claude research agent; independently verified 2026-10-21 |
-| `feide-oidc-config.example.json`, `feide-values.md` | docs.feide.no (search extracts), Feide's archived AuthEngine source, public integrations on GitHub and npm (cited by commit and version) | 2026-10-16 | Claude research agent; independently verified 2026-10-21 |
+| `hvl-visual-identity.md`, `tools/contrast.py`, `tools/contrast-output.md` | HVL design manual 2017 v2.0 (search extracts), public transcriptions and logo copies on GitHub (cited by commit), Brandfetch | 2026-10-16 | Claude research agent; independent verification in progress |
+| `hvl-laeringsdesign-model.md`, `proposals/phases.yaml` | HVL Årsrapport 2024 (PDF via Sikt's Forvaltningsdatabasen mirror, SHA-256 recorded), Møgelvang & Isaksen 2025, hvl.no course pages (search extracts) | 2026-10-16 | Claude research agent; independent verification in progress |
+| `hvl-pedagogisk-mappe-criteria.md`, `proposals/mappe-template.nn.md` | hvl.no merit pages and ALU pages (search extracts), published HVL portfolios, national regulations | 2026-10-16 | Claude research agent; independent verification in progress |
+| `feide-oidc-config.example.json`, `feide-values.md` | docs.feide.no (search extracts), Feide's archived AuthEngine source, public integrations on GitHub and npm (cited by commit and version) | 2026-10-16 | Claude research agent; independent verification in progress |
