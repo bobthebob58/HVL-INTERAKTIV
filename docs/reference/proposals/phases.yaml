@@ -1,0 +1,53 @@
+# content/laeringsdesign/phases.yaml
+# PROPOSAL 2026-10-16 — derived from PUBLIC HVL usage, NOT from the ALU model document.
+# Replace/confirm when docs/reference/hvl-modellen-for-laeringsdesign.pdf arrives (spec 04 §1).
+# Position: these phases sit at the model's mikronivå (læringsøkt) around a samling;
+# they are not "the phases of HVL læringsdesign" (Møgelvang & Isaksen 2025 describe levels
+# and the parts kontekst / kunnskap / samskaping, not phases).
+version: 1
+status: proposed            # proposed | confirmed-by-alu
+anchor:
+  key: samling              # synchronous session; shown on the studio page, never authored
+  authored: false
+  label:
+    nn: Samling             # medium — HVL: "samling", "samlingar", "nettsamling"
+    nb: Samling             # medium — HVL (nb pages): "samlingen"
+    en: Session             # medium — HVL en: "two sessions with associated pre- and post-work"
+  description:
+    nn: Den synkrone økta – seminar, førelesing, lab eller nettsamling.
+    nb: Den synkrone økten – seminar, forelesning, lab eller nettsamling.
+    en: The synchronous session – seminar, lecture, lab or online session.
+phases:
+  - key: forarbeid
+    order: 1
+    position: before-samling
+    label:
+      nn: Forarbeid         # medium — HVL nn: "før- og etterarbeid"; module page heading "Forarbeid:"
+      nb: Forarbeid         # medium — same word in nb
+      en: Pre-work          # medium — HVL en: "pre- and post-work"
+    description:
+      nn: Asynkront arbeid før samlinga. Aktiver forkunnskapar, møt nøkkelomgrep og avdekk misoppfatningar.
+      nb: Asynkront arbeid før samlingen. Aktiver forkunnskaper, møt nøkkelbegreper og avdekk misoppfatninger.
+      en: Asynchronous work before the session. Activate prior knowledge, meet key concepts and surface misconceptions.
+  - key: underveis          # key kept stable; label changed to HVL's public term
+    order: 2
+    position: between-samlingar
+    label:
+      nn: Mellomarbeid      # medium — HVL module pages (FD6, FD9, FD20): "mellomarbeid"
+      nb: Mellomarbeid      # medium — same word in nb
+      en: Intermediate work # medium — HVL en (FD6): "intermediate work"
+    description:
+      nn: Asynkront arbeid mellom samlingane og i praksis. Bearbeid, bruk og øv på profesjonell dømmekraft.
+      nb: Asynkront arbeid mellom samlingene og i praksis. Bearbeid, bruk og øv på profesjonell dømmekraft.
+      en: Asynchronous work between sessions and during placement. Process, apply and practise professional judgement.
+  - key: etterarbeid
+    order: 3
+    position: after-samling
+    label:
+      nn: Etterarbeid       # medium — HVL nn: "før- og etterarbeid"
+      nb: Etterarbeid       # medium — HVL nb: "Etter samlingen …"
+      en: Post-work         # medium — HVL en: "pre- and post-work"
+    description:
+      nn: Konsolidering etter samlinga – repetisjon, gjenhenting og eigenvurdering mot læringsutbytet.
+      nb: Konsolidering etter samlingen – repetisjon, gjenhenting og egenvurdering mot læringsutbyttet.
+      en: Consolidation after the session – spaced retrieval and self-assessment against the learning outcomes.

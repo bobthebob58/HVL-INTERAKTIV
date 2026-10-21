@@ -1,0 +1,127 @@
+{
+  "_status": "assembled from public documentation; replace with the Feide Customer Portal export",
+  "_readme": "Stand-in for docs/reference/feide-oidc-config.example.json (AUTH-001..AUTH-005). Public Feide/Dataporten endpoint values are evidenced in feide-values.md. HVL-specific values (clientId, granted attribute groups, registered redirect URIs, Feide realm) can only come from the Feide Customer Portal (kunde.feide.no) and are placeholders or proposals here. Never put a client secret in this file.",
+
+  "issuer": "https://auth.dataporten.no",
+  "discoveryUrl": "https://auth.dataporten.no/.well-known/openid-configuration",
+  "endpoints": {
+    "authorization": "https://auth.dataporten.no/oauth/authorization",
+    "token": "https://auth.dataporten.no/oauth/token",
+    "userinfo": "https://auth.dataporten.no/openid/userinfo",
+    "jwks": "https://auth.dataporten.no/openid/jwks",
+    "endSession": "https://auth.dataporten.no/openid/endsession"
+  },
+
+  "clientId": "<from Feide Customer Portal>",
+  "clientSecretEnv": "FEIDE_CLIENT_SECRET",
+  "clientType": "confidential",
+  "tokenEndpointAuthMethodsSupported": ["client_secret_basic", "client_secret_post"],
+  "idTokenSigningAlg": "RS256",
+  "responseType": "code",
+  "pkce": "S256",
+
+  "redirectUris": [
+    "https://interaktiv.hvl.no/auth/feide/callback",
+    "http://localhost:3000/auth/feide/callback"
+  ],
+  "postLogoutRedirectUris": [
+    "https://interaktiv.hvl.no/",
+    "http://localhost:3000/"
+  ],
+  "_redirectNotes": "redirectUris are registered in the Customer Portal field 'Redirect URI after login'; postLogoutRedirectUris in 'Redirect URI for logout' (several URIs may be registered). postLogoutRedirectUris values are a PROPOSAL of this assembly (site root), not taken from any source; change them to whatever HVL registers. Feide permits plain-HTTP redirect URIs only for development; production must use HTTPS.",
+
+  "scopes": ["openid", "profile", "email", "userid-feide", "groups-org", "groups-edu"],
+  "scopeDetails": {
+    "openid": "Required for OIDC (and for login_hint). With openid alone the token covers ALL attribute groups configured for the client; listing scopes explicitly narrows the token. 'openid' and 'userid' are authorised automatically when an OIDC configuration is added.",
+    "userid": "Auto-authorised; not requested explicitly here. The OIDC 'sub' claim is always present.",
+    "profile": "Standard scope. Releases 'name' only if attribute group userinfo-name is authorised, and 'picture' only if userinfo-photo is authorised. Recommendation: authorise userinfo-name only, never userinfo-photo.",
+    "email": "Releases 'email' (attribute group 'email'). 'email_verified' is always false because Feide does not verify addresses; never use e-mail as an identifier.",
+    "userid-feide": "Releases the Feide ID (eduPersonPrincipalName) as claim https://n.feide.no/claims/eduPersonPrincipalName and a 'feide:'-prefixed entry in https://n.feide.no/claims/userid_sec. Needed for ADMIN_FEIDE_IDS.",
+    "groups-org": "Groups API: organisation group (type fc:org, id fc:org:<realm>) with membership.affiliation and membership.primaryAffiliation; org units (fc:orgunit). Needed for AUTH-002.",
+    "groups-edu": "Groups API: FS groups in higher education (course fc:fs:emne, programme of study fc:fs:prg, etc.) when the institution has the FS integration. Needed for AUTHOR_COURSE_GROUPS.",
+    "userid-nin": "NEVER request or authorise (AUTH-004). Would release https://n.feide.no/claims/nin (national identity number)."
+  },
+
+  "claims": {
+    "subject": "sub",
+    "feideId": "https://n.feide.no/claims/eduPersonPrincipalName",
+    "namespacedUserIds": "https://n.feide.no/claims/userid_sec",
+    "namespacedUserIdsDeprecated": "dataporten-userid_sec",
+    "displayName": "name",
+    "email": "email",
+    "emailVerified": "email_verified",
+    "picture": "picture",
+    "nationalIdNeverUse": "https://n.feide.no/claims/nin"
+  },
+
+  "groupsApiBaseUrl": "https://groups-api.dataporten.no/groups",
+  "groupsApi": {
+    "myGroupsPath": "/me/groups",
+    "myGroupsUrl": "https://groups-api.dataporten.no/groups/me/groups",
+    "auth": "Authorization: Bearer <Feide access token>",
+    "orgGroupType": "fc:org",
+    "orgGroupIdPattern": "fc:org:<realm>",
+    "hvlOrgGroupId": "fc:org:hvl.no",
+    "_hvlRealmStatus": "realm 'hvl.no' is taken from spec 02 and HVL's e-mail domain; it was NOT confirmed in a public Feide source (verify in the Customer Portal or with HVL IT)",
+    "affiliationField": "membership.affiliation",
+    "primaryAffiliationField": "membership.primaryAffiliation",
+    "affiliationValues": ["employee", "faculty", "staff", "student", "member", "affiliate", "alum", "library-walk-in"],
+    "fsCourseGroupType": "fc:fs:emne",
+    "fsCourseGroupIdPattern": "fc:fs:fs:emne:<realm>:<course-code>:<course-version>",
+    "fsProgrammeGroupType": "fc:fs:prg",
+    "fsProgrammeGroupIdPattern": "fc:fs:fs:prg:<realm>:<programme-code>"
+  },
+
+  "loginHint": {
+    "_optional": "Skips the organisation picker. Requires scope openid and the Customer Portal option 'Always require user interaction' to be unchecked.",
+    "value": "feide|realm|hvl.no"
+  },
+
+  "customerPortalFieldsToExport": [
+    "Configuration name",
+    "Client ID (fixed, generated)",
+    "Client secret (changeable; store as FEIDE_CLIENT_SECRET in the secret store, never here)",
+    "Client type (confidential per AUTH-001; the portal also offers 'Public', which requires PKCE)",
+    "Redirect URI after login",
+    "Redirect URI for logout",
+    "Authorised attribute groups (userinfo-name, email, userid-feide, groups-org, groups-edu; NOT userinfo-photo, NOT userid-nin)",
+    "Login providers (Feide; disable Feide test users before production)",
+    "Restrict login to selected organizations (leave off if 'anyone with Feide' sharing is required by AUTH-002)",
+    "Always require user interaction (uncheck only if loginHint is used)"
+  ],
+
+  "_provenance": {
+    "retrieved": "2026-10-16",
+    "method": "docs.feide.no, auth.dataporten.no and kunde.feide.no are blocked from the build container (HTTP 403 / DNS). Values were read from web-search snippets of docs.feide.no pages and from public source code (GitHub clones and npm tarballs, read only, never executed). Full evidence table with file:line references and confidence: feide-values.md.",
+    "sources": [
+      "https://docs.feide.no/reference/oauth_oidc/openid_connect_details.html (search snippets: PKCE S256, login_hint)",
+      "https://docs.feide.no/service_providers/manage/openid_connect/redir_etter_logout.html (search snippets: end_session_endpoint, post_logout_redirect_uri, id_token_hint)",
+      "https://docs.feide.no/service_providers/openid_connect/feide_obtaining_tokens.html (search snippets: scope=openid behaviour, HTTP Basic client auth, HTTPS in production)",
+      "https://docs.feide.no/reference/schema/attributegroups/index.html (search snippets: attribute groups = scopes)",
+      "https://docs.feide.no/reference/apis/userinfo.html (search snippets: userinfo endpoint and claims)",
+      "https://docs.feide.no/reference/tokens.html (search snippets; ID token example reproduced in TIHLDE/Codex)",
+      "https://docs.feide.no/reference/apis/groups_api/groups_endpoints.html (search snippets: base URL, /me/groups)",
+      "https://docs.feide.no/reference/apis/groups_api/group_types/he_organization.html (search snippets: fc:org membership example)",
+      "https://docs.feide.no/reference/apis/groups_api/group_types/fs_course.html and fs_program_of_study.html (search snippets: groups-edu, id formats)",
+      "https://docs.feide.no/reference/schema/attributes/edupersonaffiliation.html (search snippets: permissible affiliation values)",
+      "https://docs.feide.no/service_providers/manage/openid_connect/managing_applications.html (search snippets: Customer Portal fields)",
+      "github.com/feideconnect/feideconnect-authengine@851518863f885eae9de6cab6a497ac1768fbf187 lib/OpenIDConnect/OpenIDConnect.php:43-58, etc/authengine/config.json:30 (operator's archived source, 2018)",
+      "github.com/rubberdok/indok-api@eaddedd7ce0f9905aab2f88bd80203ea8d2e3f80 src/services/auth/__tests__/integration/auth.test.ts:674-722 (copy of the live discovery document)",
+      "github.com/Uninett/nav@6b8111cfeb0738f1a8de80855d8896127ee14adf doc/howto/mod_auth_openidc_feide.rst:39-141",
+      "github.com/TIHLDE/Codex@b9007ec5b8ebb0738fc8f88cb34fc26a1f7f0313 src/app/docs/lepton/external_api/feide/page.md:24-30,166-185",
+      "github.com/JakobGM/django-dataporten@2d9888a8167a74781a78dfe21c0638cf44f980dc dataporten/tests/groups.json:443-480",
+      "github.com/NDLANO/backend@5b76a04f96bdf61c2753bf4279f3f65f6d4b701f network/src/main/scala/no/ndla/network/clients/FeideApiClient.scala:33,54-58,86-87",
+      "github.com/Oslo-kommune-Utdanningsetaten/ki@674f86654d9321e3a647f254f1ff10fef42fe28a backend/.env-example:7, backend/ki/views/auth.py:118-131,180-196, backend/ki/utils.py:30,84-91",
+      "github.com/dotkom/monoweb@de990601428f4f38e54fec6b766c354a874e2032 apps/rpc/src/modules/feide/feide-groups-repository.ts:4-6,28,74",
+      "npm nodebb-plugin-feide-oauth@0.0.16 library.js:100-110",
+      "npm feide-provider-next-auth@1.0.0 index.ts:50,69-77",
+      "npm @kjartanm/feide-authjs@0.0.4 dist/index.js:6-12, README.md:70"
+    ],
+    "notVerifiedPublicly": [
+      "clientId, client type and the attribute groups actually authorised for HVL's client",
+      "Feide realm / org id for HVL ('hvl.no' / 'fc:org:hvl.no')",
+      "registered redirect and post-logout URIs",
+      "the live discovery document as of 2026-10-16 (newest copy seen: indok-api fixture, commit dated 2025-01-23)"
+    ]
+  }
+}

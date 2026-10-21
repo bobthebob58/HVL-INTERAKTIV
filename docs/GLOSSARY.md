@@ -9,23 +9,25 @@ uses the key in `monospace` (`DOC-009`).
 |---|---|---|
 | **HVL**, *Høgskulen på Vestlandet* | — | Western Norway University of Applied Sciences. Campuses in Bergen, Førde, Haugesund, Sogndal and Stord. |
 | **ALU**, *Avdeling for utvikling av læring og undervisning* | — | HVL's unit for the development of learning and teaching. Owns learning-design guidance and universal design guidance for teaching. |
-| *Faggruppa digital læringsdesign* | — | The digital learning design group in ALU. |
+| *Faggruppa for digital læringsdesign* | — | The digital learning design group in ALU. |
 | **TeCopp** | — | HVL's cross-disciplinary team that manages Canvas, including LTI tool approval and testing. |
-| *Pedagogisk akademi* | — | HVL's academy of merited teachers. |
-| *Meritert undervisar* (nb: *underviser*) | — | Merited teacher, a formal recognition of excellent teaching. |
+| *Pedagogisk akademi* | — | HVL's pedagogical academy. Merited teachers become members. |
+| *Merittert undervisar* (nb: *merittert underviser*) | — | Merited teacher, a formal recognition of excellent teaching. HVL calls for applications every other year (next call 2027). |
 | *Opprykk* | — | Academic promotion. |
-| *Pedagogisk mappe* | `pedagogiskMappe` | Teaching portfolio that documents practice and the reasoning behind it. Required for merit and promotion applications. |
-| *Emnedesign* | — | Course design; also the name of HVL's course-design module for staff. |
-| *Modellen for læringsdesign ved HVL* | — | HVL's model for learning design. Organises a course into asynchronous and synchronous phases. |
-| *Samsvar i emnedesign* | — | Constructive alignment: outcomes, activities and assessment fit together (Biggs). |
+| *Pedagogisk mappe* | `pedagogiskMappe` | Teaching portfolio that documents practice and the reasoning behind it. Required for merit and promotion applications. For merit it has three parts: Del 1 *samanhengande framstilling* (nb: *sammenhengende fremstilling*), Del 2 *pedagogisk CV*, Del 3 attachments. |
+| *Emnedesign* | — | Course design; also the name of HVL's course-design module for staff (UPED854). |
+| *Modellen for læringsdesign ved HVL*, «HVL læringsdesign» | — | HVL's model for learning design. An alignment model built on three interdependent parts, *kontekst*, *kunnskap* and *samskaping*, applied across levels from the single *læringsøkt* (mikronivå) to the *emne*, *studieprogram* and institution, with *baklengs planlegging* (Møgelvang & Isaksen 2025). |
+| *Meningsskapande samsvar* (nb: *meningsskapende samsvar*); *samsvar i emnedesign* | — | Constructive alignment: outcomes, activities and assessment fit together (Biggs). HVL describes it as *samsvar mellom læringsutbyttebeskrivingar, vurdering, læringsaktivitetar …* (UPED854). |
+| *Baklengs planlegging* | — | Backward planning: start from the intended outcomes and design assessment and activities from them (Wiggins & McTighe). |
+| *Læringsøkt* | — | A single learning session; the model's mikronivå, where HVL Interaktiv's activities sit. |
 | *Læringsutbytte*, *læringsutbyttebeskriving* (nb: *-beskrivelse*) | `laeringsutbytte` | Learning outcome(s), as written in the course plan. |
 | *Kunnskap / ferdigheiter / generell kompetanse* (nb: *ferdigheter*) | `kunnskap`, `ferdigheiter`, `generellKompetanse` | The three outcome categories of the Norwegian Qualifications Framework (NKR). |
 | *Forarbeid* | `forarbeid` | Asynchronous pre-work before a session. |
-| *Samling* / *synkron økt* | — | The synchronous session: seminar, lecture, lab or online meeting. |
-| *Underveis* / *mellomarbeid* | `underveis` | Asynchronous work between sessions or during placement. |
+| *Samling* / *nettsamling* | — | The synchronous session: seminar, lecture, lab or online meeting (*nettsamling*). |
+| *Mellomarbeid* | `underveis` | Asynchronous work between sessions or during placement. The code key keeps its earlier name (D-019). |
 | *Etterarbeid* | `etterarbeid` | Asynchronous consolidation after a session. |
 | *Eigenvurdering* (nb: *egenvurdering*) | — | Self-assessment. |
-| *Undervegsvurdering* (nb: *underveisvurdering*) | — | Formative assessment. |
+| *Undervegsvurdering* (nb: *underveisvurdering*) | — | Formative assessment. Not a phase; do not confuse with *mellomarbeid*. |
 | *Sluttvurdering* | — | Summative assessment (exam). Out of scope. |
 | *Praksis* | — | Work placement (clinical, school, etc.). |
 | *Profesjonell dømmekraft* | — | Professional judgement. |

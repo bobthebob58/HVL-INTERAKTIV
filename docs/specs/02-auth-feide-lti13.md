@@ -19,10 +19,11 @@
 | ltijs 7 launch tokens | Each launch yields a signed **ltik** (24 h lifetime). `LaunchContext.redirect()` appends it to the URL. `Provider.getLaunchContext(ltik)` resumes the launch. No session cookie is needed. | This solves the third-party-cookie problem in Canvas iframes by design. |
 | ltijs 7 services on `LaunchContext` | `deepLinking.createDeepLinkingForm(items, options)`, `grading.submitScore(lineItemId, score)`, Names & Roles, Dynamic Registration | These are the APIs used below. |
 | `openid-client` | **6.x** (ESM-only, functional API: `discovery()`, `buildAuthorizationUrl()`, `authorizationCodeGrant()`) | Older `Issuer`/`Client` class examples do not apply. |
+| Feide OIDC provider (checked 2026-10-16) | Issuer `https://auth.dataporten.no`; endpoints `/oauth/authorization`, `/oauth/token`, `/openid/userinfo`, `/openid/jwks`, `/openid/endsession`; PKCE `S256`; ID tokens `RS256`; Groups API `https://groups-api.dataporten.no/groups` | Recorded with evidence in [`docs/reference/feide-oidc-config.example.json`](../reference/feide-oidc-config.example.json) and [`feide-values.md`](../reference/feide-values.md). Assembled from Feide's documentation and public code; HVL's own client values still come from the Customer Portal. |
 
-Values marked *(verify)* below must be confirmed from the reference attachments
-(`feide-oidc-config.example.json`, `canvas-lti13-developer-key.json`) or with TeCopp before
-Session 3 writes code that depends on them.
+Values still marked *(verify)* below must be confirmed from HVL's own exports (Feide Customer Portal,
+Canvas Developer Key) or with TeCopp before Session 3 writes code that depends on them. Public values are
+recorded with evidence in `docs/reference/` ([reference README](../reference/README.md)).
 
 ---
 
@@ -62,25 +63,33 @@ cookie first-party.
 ## 3. Requirements — Feide portal (standalone access)
 
 #### AUTH-001 · MUST · S3 · Feide OpenID Connect login (Authorization Code + PKCE)
-The server is a confidential OIDC relying party, registered in the Feide Customer Portal under
-HVL (`hvl.no`). It uses `openid-client` 6 with discovery from `https://auth.dataporten.no`
-*(verify)*, plus PKCE (S256), `state` and `nonce`. Scopes: `openid profile email userid-feide
-groups-org groups-edu` *(verify names in the Customer Portal)*.
+The server is a confidential OIDC relying party, registered in the Feide Customer Portal
+(kunde.feide.no) under HVL (realm `hvl.no` *(verify realm)*). It uses `openid-client` 6 with discovery
+from issuer `https://auth.dataporten.no` (document `/.well-known/openid-configuration`), plus PKCE
+(`S256`), `state` and `nonce`. ID tokens are `RS256`-signed. Scopes:
+`openid profile email userid-feide groups-org groups-edu`. All six are valid Feide scope (attribute-group)
+names. **Always send the scope list explicitly**: a request with `openid` alone releases every attribute
+group configured for the client. In the Customer Portal, authorise only the attribute groups
+`userinfo-name`, `email`, `userid-feide`, `groups-org` and `groups-edu`; never `userinfo-photo` or `userid-nin`.
 - **Acceptance:** The full flow works against a mock OIDC provider in tests. ID tokens with a wrong
   `iss`, `aud`, `nonce` or an expired `exp` are rejected. The client secret is read from an
   environment variable or secret store and is never logged.
 - **Verify:** Integration tests with `oauth2-mock-server` (or equivalent); test names `[AUTH-001] …`.
 
 #### AUTH-002 · MUST · S3 · Map Feide affiliation to roles
-After login, call the Feide Groups API (`/groups/me/groups`) *(verify base URL)*. Read the HVL
-organisation group's `membership.affiliation`.
+After login, call `GET https://groups-api.dataporten.no/groups/me/groups` with the user's Feide access
+token (`Authorization: Bearer`). Find the organisation group (`type: "fc:org"`, `id: "fc:org:<realm>"`,
+for HVL `fc:org:hvl.no` *(verify realm)*) and read its `membership.affiliation` array. Feide's values are
+`faculty`, `student`, `staff`, `alum`, `member`, `affiliate`, `employee` and `library-walk-in`. Course groups
+for `AUTHOR_COURSE_GROUPS` come from `groups-edu` as FS groups, e.g. `fc:fs:fs:emne:<realm>:<course-code>:<version>`;
+they require HVL's FS integration in Feide *(verify)*.
 
 | Feide affiliation (any of) | Role in HVL Interaktiv |
 |---|---|
 | `employee`, `faculty`, `staff` | `author` |
 | `student` **and** member of an allow-listed course group (config `AUTHOR_COURSE_GROUPS`, e.g. PPU, *Brettspel som didaktisk ressurs*) | `author` (scoped: may author; content visibility limited to the course) |
-| `student`, `member`, `affiliate` | `learner` |
-| Feide ID in config `ADMIN_FEIDE_IDS` | adds `admin` |
+| `student`, `member`, `affiliate`, `alum`, `library-walk-in` | `learner` |
+| Feide ID (claim `https://n.feide.no/claims/eduPersonPrincipalName`, e.g. `name@hvl.no`; needs `userid-feide`) in config `ADMIN_FEIDE_IDS` | adds `admin` |
 | Organisation not in `ALLOWED_FEIDE_ORGS` (default `hvl.no`) | `learner` on content shared with "anyone with Feide"; otherwise denied |
 
 - **Acceptance:** A table-driven test covers every row, including users with both `student` and `employee` (→ `author`).
@@ -90,13 +99,20 @@ organisation group's `membership.affiliation`.
 The server keeps the session in Redis and gives the browser an opaque ID in a cookie
 (`__Host-hvli_sid`; `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`). The session expires after
 2 h idle or 12 h absolute. State-changing requests require a CSRF token (synchronizer pattern).
-Logout clears the session and calls Feide's `end_session_endpoint`.
+Logout clears the session and redirects the browser to Feide's `end_session_endpoint`
+(`https://auth.dataporten.no/openid/endsession`) with `post_logout_redirect_uri` (registered in the
+Customer Portal) and `id_token_hint`. Feide requires both, so the raw ID token is kept in the
+server-side session only, encrypted at rest and deleted at logout or expiry (D-021).
 - **Verify:** Integration tests (expiry, CSRF rejection, logout).
 
 #### AUTH-004 · MUST · S3 · Data minimisation at login
-Request only the scopes listed in `AUTH-001`. **Never** request the national identity number
-(`norEduPersonNIN`) or other extended attributes. Store a display name and e-mail **only for
-authors and admins**, who need them for co-author search and attribution. Store neither for learners.
+Request only the scopes listed in `AUTH-001`. **Never** request `userid-nin` or read the claim
+`https://n.feide.no/claims/nin` (national identity number), or other extended attributes. Feide releases
+`name` and `email` for **every** user once those attribute groups are authorised, so the claims mapper
+drops them for learners before anything is stored. Store a display name and e-mail **only for authors
+and admins**, who need them for co-author search and attribution. Feide never verifies e-mail
+addresses (`email_verified` is always `false`), so e-mail is never used as an identifier; use `sub` or
+the Feide ID.
 - **Verify:** Unit test asserts the scope string. Integration test asserts that no learner row has a name or e-mail.
 
 #### AUTH-005 · SHOULD · S3 · Link an author's Canvas identity to their Feide identity

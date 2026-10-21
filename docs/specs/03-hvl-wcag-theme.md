@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Approved for build (v1.0, 2026-10-16) |
+| **Status** | Approved for build (v1.1, 2026-10-21: brand tokens and typefaces aligned with HVL's design manual) |
 | **Load in sessions** | S4 (all); S6 (§6 conformance report) |
 | **Owns requirement IDs** | `UD-*` |
 | **Code location** | `packages/design-tokens/`, `packages/hvl-h5p-theme/`, `apps/web/src/components/`, `apps/server/src/validation/` |
@@ -29,32 +29,45 @@ Tokens live in `packages/design-tokens/tokens.json`. A build step generates CSS 
 (used by the web app and by `hvl-h5p-theme.css`) and a Tailwind preset. **No colour value may appear
 anywhere else in the codebase.** A lint rule rejects hex literals outside the tokens package.
 
-Contrast ratios below were **computed** with the WCAG 2.x relative-luminance formula on
-2026-10-16. A unit test recomputes them on every build (`UD-001`). Brand hex values must still be
-checked against the HVL design manual (`docs/reference/hvl-designmanual-og-logo.zip`). If they
-change, the test decides whether the new values may be used.
+**Brand basis.** Brand colours come from HVL's design manual (*Visuell identitet / Profilmanual*,
+v2.0, February 2017, page 16), as documented in
+[`docs/reference/hvl-visual-identity.md`](../reference/hvl-visual-identity.md). HVL's own logo colours are
+**Mørk blå 2** (PMS 3035 U, `#004357`) and **Sjøgrønn** (PMS 7710 U, `#00AFBA`). The manual was read
+through search extracts and independent transcriptions, not opened directly, so HVL (profil@hvl.no)
+must still confirm the values *(verify)*. Neutral tokens that are not HVL colours are labelled
+*neutral* below. (D-017)
 
-| Token | Value | Used for | Measured contrast | Requirement met |
+Contrast ratios below were **computed** with the WCAG 2.x relative-luminance formula. A unit test
+recomputes them on every build (`UD-001`). If HVL confirms different values, the test decides
+whether they may be used.
+
+| Token | Value (HVL name) | Used for | Measured contrast | Requirement met |
 |---|---|---|---|---|
-| `--hvl-primary-dark` | `#003D4C` (deep fjord teal) | Headings, navigation, primary buttons (white text) | 11.85 : 1 on `#FFFFFF`; 10.93 : 1 on `#F4F6F7` | Text AA and AAA |
-| `--hvl-primary-accent` | `#005F6B` (coastal teal) | Links, secondary buttons, progress bars | 7.37 : 1 on `#FFFFFF`; 6.80 : 1 on `#F4F6F7` | Text AA (AAA on white) |
-| `--hvl-primary-accent-light` | `#007681` | Large text, non-text UI only | 5.37 : 1 on `#FFFFFF`; 4.96 : 1 on `#F4F6F7` | Text AA; non-text 3 : 1 |
-| `--hvl-ink` | `#111111` | Body text | 18.88 : 1 on `#FFFFFF`; 17.42 : 1 on `#F4F6F7` | AAA |
-| `--hvl-ink-muted` | `#4A5560` | Secondary text | 7.61 : 1 on `#FFFFFF` | AAA |
-| `--hvl-surface` / `--hvl-surface-warm` | `#FFFFFF` / `#F4F6F7` | Cards / page background | — | — |
-| `--hvl-feedback-correct-fg` on `-bg` | `#0F5132` on `#D1E7DD` | Correct-answer text | 7.21 : 1 | AAA |
-| `--hvl-feedback-correct-border` | `#198754` | 4 px left border (decorative; the text prefix carries the meaning) | 3.49 : 1 on its background | Non-text 3 : 1 |
-| `--hvl-feedback-incorrect-fg` on `-bg` | `#842029` on `#F8D7DA` | Incorrect-answer text | 7.08 : 1 | AAA |
-| `--hvl-feedback-incorrect-border` | `#DC3545` | 4 px left border (decorative) | 3.39 : 1 on its background | Non-text 3 : 1 |
-| `--hvl-feedback-info-fg` on `-bg` | `#055160` on `#CFF4FC` | Hints, notices | 7.65 : 1 | AAA |
-| `--hvl-focus-inner` / `--hvl-focus-outer` | `#FFFFFF` / `#003D4C` | Two-tone focus ring (see `UD-004`) | outer ring 11.85 : 1 on white; inner ring separates it from dark fills | 1.4.11 and 2.4.7 on every surface |
+| `--hvl-primary-dark` | `#004357` (Mørk blå 2) | Headings, navigation, primary buttons (white text), links | 10.82 : 1 on `#FFFFFF`; 9.98 : 1 on `#F4F6F7` | Text AAA |
+| `--hvl-accent` | `#008AAF` (Mørk blå 1) | Non-text UI only: progress bars, selected-tab underline, chart marks | 4.00 : 1 on `#FFFFFF`; 3.69 : 1 on `#F4F6F7` | Non-text 3 : 1. **Never body text** |
+| `--hvl-brand-sea-green` | `#00AFBA` (Sjøgrønn) | Decorative only on light surfaces; non-text accents on `#004357` | 2.68 : 1 on `#FFFFFF` (fails); 4.04 : 1 on `#004357` | Decorative; non-text 3 : 1 on dark only |
+| `--hvl-brand-orange` | `#EB6851` (Oransje) | Decorative fills and badges with `#111111` text | `#111111` on it 5.96 : 1; 3.17 : 1 on `#FFFFFF` | Never a state or focus indicator |
+| `--hvl-band` | `#C9D5DA` (Blågrå lys) | Section bands, table headers | `#111111` on it 12.60 : 1; `#004357` on it 7.22 : 1 | AAA |
+| `--hvl-ink` | `#111111` (neutral) | Body text (the HVL palette has no near-black) | 18.88 : 1 on `#FFFFFF`; 17.42 : 1 on `#F4F6F7` | AAA |
+| `--hvl-ink-muted` | `#4A5560` (neutral) | Secondary text. HVL's own greys fail for text (Blågrå mørk 4.37 : 1, Grå mørk 3.43 : 1) | 7.61 : 1 on `#FFFFFF` | AAA |
+| `--hvl-surface` / `--hvl-surface-alt` | `#FFFFFF` (Kvit) / `#F4F6F7` (neutral) | Cards / page background. The manual encourages active use of white | — | — |
+| `--hvl-feedback-correct-fg` on `-bg` | `#0F5132` on `#D1E7DD` (neutral) | Correct-answer text | 7.21 : 1 | AAA |
+| `--hvl-feedback-correct-border` | `#198754` (neutral) | 4 px left border (decorative; the text prefix carries the meaning) | 3.49 : 1 on its background | Non-text 3 : 1 |
+| `--hvl-feedback-incorrect-fg` on `-bg` | `#6D2439` (Mørk raud) on `#F8D7DA` | Incorrect-answer text | 8.02 : 1 | AAA |
+| `--hvl-feedback-incorrect-border` | `#DC3545` (neutral) | 4 px left border (decorative) | 3.39 : 1 on its background | Non-text 3 : 1 |
+| `--hvl-feedback-info-fg` on `-bg` | `#004357` (Mørk blå 2) on `#CFF4FC` | Hints, notices | 9.28 : 1 | AAA |
+| `--hvl-focus-outer` / `--hvl-focus-inner` | `#004357` / `#FFFFFF` | Two-tone focus ring (see `UD-004`) | outer ring 10.82 : 1 on white; inner ring 10.82 : 1 against dark fills | 1.4.11 and 2.4.7 on every surface |
 
-> **Corrections to the development plan.** The plan's figures for the feedback colours were
-> overstated (it gave 8.3 : 1 and 7.6 : 1; the measured values are 7.21 : 1 and 7.08 : 1, which
-> still pass AAA). More importantly, it proposed a **single orange focus outline `#FF9E1B`**. That
-> measures **2.07 : 1 on white** and fails WCAG 1.4.11 (non-text contrast ≥ 3 : 1). It is replaced by
-> the two-tone ring. Orange may still be used *inside* the ring as a brand accent, but never as the
-> only indicator. (D-007)
+> **Corrections to the development plan.** The plan's colours (`#003D4C` "deep fjord teal",
+> `#005F6B`/`#007681` "coastal teal", orange `#FF9E1B`) do not appear in any HVL source and were
+> replaced by the manual's palette (D-017). The plan's single orange focus outline measured
+> **2.07 : 1 on white**, failing WCAG 1.4.11; it is replaced by the two-tone ring (D-007). The plan
+> also overstated two feedback ratios (8.3 : 1 and 7.6 : 1; measured 7.21 : 1 and 7.08 : 1).
+
+**Logo.** The official logo files (Norwegian, English, negative, square) are configured assets, not
+token-derived. They are never recoloured, cropped, animated or rewritten by the SVG sanitiser, and the
+institution name and logo are configuration, because HVL has applied for university status under the
+proposed name *Universitetet på Vestlandet*. The Norwegian (Nynorsk-name) logo serves both `nn` and `nb`.
 
 ---
 
@@ -67,8 +80,11 @@ change, the test decides whether the new values may be used.
 - **Verify:** Unit test; lint in CI.
 
 #### UD-002 · MUST · S4 · Typography and reading comfort
-Body text uses `font-family: Inter, Arial, Calibri, sans-serif` (Inter self-hosted, `DATA-011`),
-`font-size` ≥ 1rem, `line-height: 1.5` (1.55 inside H5P), `text-align: left`, and `max-width: 70ch`
+Typefaces follow the HVL design manual's office fonts (D-018): headings, UI controls and captions
+use `Arial, "Helvetica Neue", Helvetica, sans-serif` (stand-in for NB Akademie Std); long-form body
+text uses `Georgia, "Times New Roman", serif` (stand-in for Lyon Text). If HVL confirms web-font
+licences for NB Akademie Std and Lyon Text, they may be self-hosted ahead of these stacks
+(`DATA-011`). Text uses `font-size` ≥ 1rem, `line-height: 1.5` (1.55 inside H5P), `text-align: left`, and `max-width: 70ch`
 for paragraphs. `text-transform: uppercase` and `text-align: justify` are forbidden by a Stylelint
 rule. Underline is used only for links. All sizes are in `rem` or `em`. Layout survives 200 % text
 resize (1.4.4) and the text-spacing overrides of 1.4.12.

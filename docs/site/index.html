@@ -217,13 +217,13 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <div><dt>Requirements</dt><dd><a href="#requirements">126</a> <span class="sub">106 must · 17 should · 3 could</span></dd></div>
 <div><dt>Build sessions</dt><dd>6 <span class="sub">0 of 6 done; specification complete</span></dd></div>
 <div><dt>H5P content types</dt><dd>10 <span class="sub">chosen for pedagogy and accessibility</span></dd></div>
-<div><dt>Learning-design patterns</dt><dd>9 <span class="sub">for forarbeid, underveis and etterarbeid</span></dd></div>
+<div><dt>Learning-design patterns</dt><dd>9 <span class="sub">for forarbeid, mellomarbeid and etterarbeid</span></dd></div>
 </dl>
 <h3 id="overview--offer" tabindex="-1">What it does for teachers and students</h3>
 <div class="table-wrap" role="region" aria-label="Table 1, What it does" tabindex="0"><table><thead><tr>
 <th scope="col">For teachers</th><th scope="col">For students</th></tr>
 </thead><tbody><tr>
-<td>Start from <strong>nine learning-design patterns</strong> for <em>forarbeid</em>, <em>underveis</em> and <em>etterarbeid</em>, not a blank editor</td><td>Short, focused activities with <strong>explanatory feedback</strong></td></tr>
+<td>Start from <strong>nine learning-design patterns</strong> for <em>forarbeid</em>, <em>mellomarbeid</em> and <em>etterarbeid</em>, not a blank editor</td><td>Short, focused activities with <strong>explanatory feedback</strong></td></tr>
 <tr>
 <td>Use <strong>ten curated H5P content types</strong>, chosen for pedagogical value and accessibility</td><td><strong>Resume</strong> on any device; unlimited retries in practice activities</td></tr>
 <tr>
@@ -243,7 +243,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 </thead><tbody><tr>
 <td><strong>Forarbeid</strong></td><td>Activate prior knowledge; meet threshold concepts; surface misconceptions <em>before</em> teaching</td><td><code>fa-video</code>, <code>fa-slides</code>, <code>fa-hotspots</code>, <code>ea-diagnose</code></td><td>In the module before the seminar. Unlimited retries; <em>Show solution</em> on. The teacher reviews <strong>Før samlinga</strong> insight the evening before.</td></tr>
 <tr>
-<td><strong>Underveis</strong></td><td>Deepen integration; practise professional judgement (<em>profesjonell dømmekraft</em>, <em>didaktisk skjønn</em>) on realistic cases</td><td><code>uv-case</code>, <code>uv-module</code>, <code>uv-column</code></td><td>One or two interactive items per Canvas page. Resume enabled.</td></tr>
+<td><strong>Mellomarbeid</strong> (<code>underveis</code>)</td><td>Deepen integration; practise professional judgement (<em>profesjonell dømmekraft</em>, <em>didaktisk skjønn</em>) on realistic cases</td><td><code>uv-case</code>, <code>uv-module</code>, <code>uv-column</code></td><td>One or two interactive items per Canvas page. Resume enabled.</td></tr>
 <tr>
 <td><strong>Etterarbeid</strong></td><td>Consolidate through spaced retrieval; check the learning outcomes (<em>læringsutbytte</em>)</td><td><code>ea-retrieval</code>, <code>ea-terms</code>, <code>ea-diagnose</code></td><td>Graded through AGS with the <code>mastery</code> or <code>best</code> policy (<a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a>), unlimited attempts. Suggested repetition dates (<a class="req-ref" href="#r-PROD-014"><code>PROD-014</code></a>).</td></tr>
 </tbody></table></div>
@@ -304,23 +304,33 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <td>D-015</td><td>Licence GPL-3.0-or-later</td><td>Accepted (2026-10-16)</td></tr>
 <tr>
 <td>D-016</td><td>Specs beyond the plan&#39;s four, plus requirement IDs and traceability</td><td>Accepted</td></tr>
+<tr>
+<td>D-017</td><td>Brand tokens follow HVL&#39;s design manual (Mørk blå 2, Sjøgrønn …)</td><td>Accepted (2026-10-21), HVL to confirm values</td></tr>
+<tr>
+<td>D-018</td><td>Typefaces: Arial and Georgia, as the manual&#39;s office fonts</td><td>Accepted (2026-10-21), ALU/HVL to confirm</td></tr>
+<tr>
+<td>D-019</td><td>Phases are course-organisation vocabulary at the model&#39;s <em>mikronivå</em>; <code>underveis</code> is labelled <em>Mellomarbeid</em></td><td>Accepted (2026-10-21), ALU to confirm</td></tr>
+<tr>
+<td>D-020</td><td>Portfolio export follows HVL&#39;s three-part merit portfolio and the 2025 criteria, as content</td><td>Accepted (2026-10-21), ALU to confirm</td></tr>
+<tr>
+<td>D-021</td><td>The Feide ID token is kept in the server-side session for logout only</td><td>Accepted (2026-10-21)</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--references" tabindex="-1">Reference inputs from HVL</h3>
 <div class="table-wrap" role="region" aria-label="Table 1, Reference inputs" tabindex="0"><table><thead><tr>
-<th scope="col">#</th><th scope="col">File to place here</th><th scope="col">Where HVL staff can get it</th><th scope="col">What it unblocks</th><th scope="col">Needed by</th></tr>
+<th scope="col">#</th><th scope="col">Original we still need from HVL</th><th scope="col">What is here now</th><th scope="col">Status</th><th scope="col">Needed by</th></tr>
 </thead><tbody><tr>
-<td>1</td><td><code>hvl-designmanual-og-logo.zip</code></td><td>HVL press room (<em>design og logo</em>) or the Vestibylen templates</td><td>Exact SVG logos and brand colour and font values for <code>packages/design-tokens</code> (spec 03 §2)</td><td>S4</td></tr>
+<td>1</td><td><code>hvl-designmanual-og-logo.zip</code>: design manual PDF and official logo files (HVL press room, <a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext">hvl-visual-identity.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the manual&#39;s palette (PMS/CMYK/RGB/HEX), typefaces, logo variants and rules, contrast for every colour, and proposed tokens. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/tools/contrast.py" rel="noopener" class="ext">tools/contrast.py<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> recomputes all ratios. <strong>No logo artwork.</strong></td><td>Derived; HVL to confirm values and supply logo files</td><td>S4</td></tr>
 <tr>
-<td>2</td><td><code>hvl-modellen-for-laeringsdesign.pdf</code></td><td>ALU / <em>Faggruppa digital læringsdesign</em> (Emnedesign module)</td><td>Exact phase names and wording for <code>content/laeringsdesign/phases.yaml</code> (spec 04 §1)</td><td>S5</td></tr>
+<td>2</td><td><code>hvl-modellen-for-laeringsdesign.pdf</code> (ALU, <em>Faggruppa for digital læringsdesign</em>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext">hvl-laeringsdesign-model.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: what HVL has published about «HVL læringsdesign» (annual report 2024 p. 23, read directly; Møgelvang &amp; Isaksen 2025) and the phase vocabulary HVL uses. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/phases.yaml" rel="noopener" class="ext">proposals/phases.yaml<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed <code>content/laeringsdesign/phases.yaml</code></td><td>Partly found; ALU to confirm labels</td><td>S5</td></tr>
 <tr>
-<td>3</td><td><code>hvl-pedagogisk-mappe-retningslinjer.pdf</code></td><td>ALU, <em>Utdanningsfagleg kompetanse og pedagogisk mappe</em></td><td>Portfolio headings and criteria for <code>content/mappe/template.*.md</code> (<a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a>)</td><td>S5</td></tr>
+<td>3</td><td><code>hvl-pedagogisk-mappe-retningslinjer.pdf</code> (ALU)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext">hvl-pedagogisk-mappe-criteria.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the 2025 merit criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), the three-part portfolio, limits, and the national basis. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext">proposals/mappe-template.nn.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed export template. No public PDF of this name was found; HVL publishes the guidance as web pages</td><td>Derived; ALU to confirm</td><td>S5</td></tr>
 <tr>
-<td>4</td><td><code>feide-oidc-config.example.json</code></td><td>Feide Customer Portal (HVL organisation)</td><td>Issuer, redirect URIs, client ID, granted scopes (<a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>). <strong>Never commit the client secret.</strong></td><td>S3</td></tr>
+<td>4</td><td><code>feide-oidc-config.example.json</code> from the Feide Customer Portal</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-oidc-config.example.json" rel="noopener" class="ext">feide-oidc-config.example.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with public endpoint values and placeholders for HVL&#39;s client, plus <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-values.md" rel="noopener" class="ext">feide-values.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> (evidence table)</td><td>Public values high confidence; HVL client values pending</td><td>S3</td></tr>
 <tr>
-<td>5</td><td><code>canvas-lti13-developer-key.json</code></td><td>TeCopp (HVL&#39;s Canvas test instance)</td><td>Canvas issuer, endpoints, placements, client and deployment IDs (<a class="req-ref" href="#r-LTI-001"><code>LTI-001</code></a>)</td><td>S3</td></tr>
+<td>5</td><td><code>canvas-lti13-developer-key.json</code> (TeCopp)</td><td>Pending: being assembled from Instructure&#39;s own documentation in the canvas-lms repository</td><td>In progress</td><td>S3</td></tr>
 <tr>
-<td>6</td><td><code>h5p-core-1.28-seed-packages/</code></td><td>One verified <code>.h5p</code> per content type, from hub-api.h5p.org or an H5P-hosted source</td><td>Offline, deterministic seeding (<a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>)</td><td>S2</td></tr>
+<td>6</td><td><code>h5p-core-1.28-seed-packages/</code> (one verified <code>.h5p</code> per content type)</td><td>Pending: hub-api.h5p.org is blocked here; a status note and a fetch script will be added</td><td>Blocked by network policy</td><td>S2</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--howto" tabindex="-1">How to read this site</h3>
@@ -343,7 +353,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <div class="field field-actions"><button type="button" id="req-expand">Expand all</button><button type="reset" id="req-reset">Clear filters</button></div>
 </form>
 <p class="result-count" id="req-count" aria-live="polite">Showing all 126 requirements.</p>
-<div class="req-list"><details class="req" id="x-PROD-001" data-area="PROD" data-priority="MUST" data-session="S5" data-status="planned" data-text="prod-001 create an activity from a learning-design pattern an author can create a new activity by choosing a phase (*forarbeid*, *underveis*, *etterarbeid*)
+<div class="req-list"><details class="req" id="x-PROD-001" data-area="PROD" data-priority="MUST" data-session="S5" data-status="planned" data-text="prod-001 create an activity from a learning-design pattern an author can create a new activity by choosing a phase (*forarbeid*, *mellomarbeid*, *etterarbeid*)
 and then a pattern. the h5p editor opens pre-filled with a pedagogically sound skeleton and guidance.
 - **acceptance:** every pattern in [04 §4](04-laeringsdesign-page.md#4-pattern-catalogue) can be
   instantiated. the created content passes `validatecontent` with zero *errors* before the author
@@ -351,7 +361,7 @@ and then a pattern. the h5p editor opens pre-filled with a pedagogically sound s
   activity* is still possible.
 - **verify:** integration test that creates each pattern; e2e for j1.">
 <summary><span class="req-id">PROD-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Create an activity from a learning-design pattern</span> <span class="status" data-status="planned">○ Planned</span></summary>
-<div class="req-body"><p>An author can create a new activity by choosing a phase (<em>Forarbeid</em>, <em>Underveis</em>, <em>Etterarbeid</em>)
+<div class="req-body"><p>An author can create a new activity by choosing a phase (<em>Forarbeid</em>, <em>Mellomarbeid</em>, <em>Etterarbeid</em>)
 and then a pattern. The H5P editor opens pre-filled with a pedagogically sound skeleton and guidance.</p>
 <ul>
 <li><strong>Acceptance:</strong> Every pattern in <a href="#spec-04--4-pattern-catalogue">04 §4</a> can be
@@ -931,18 +941,27 @@ stored and rendered value is escaped.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-008">01 H5P engine and security</a> · Upload security</p></div>
 </details>
-<details class="req" id="x-AUTH-001" data-area="AUTH" data-priority="MUST" data-session="S3" data-status="planned" data-text="auth-001 feide openid connect login (authorization code + pkce) the server is a confidential oidc relying party, registered in the feide customer portal under
-hvl (`hvl.no`). it uses `openid-client` 6 with discovery from `https://auth.dataporten.no`
-*(verify)*, plus pkce (s256), `state` and `nonce`. scopes: `openid profile email userid-feide
-groups-org groups-edu` *(verify names in the customer portal)*.
+<details class="req" id="x-AUTH-001" data-area="AUTH" data-priority="MUST" data-session="S3" data-status="planned" data-text="auth-001 feide openid connect login (authorization code + pkce) the server is a confidential oidc relying party, registered in the feide customer portal
+(kunde.feide.no) under hvl (realm `hvl.no` *(verify realm)*). it uses `openid-client` 6 with discovery
+from issuer `https://auth.dataporten.no` (document `/.well-known/openid-configuration`), plus pkce
+(`s256`), `state` and `nonce`. id tokens are `rs256`-signed. scopes:
+`openid profile email userid-feide groups-org groups-edu`. all six are valid feide scope (attribute-group)
+names. **always send the scope list explicitly**: a request with `openid` alone releases every attribute
+group configured for the client. in the customer portal, authorise only the attribute groups
+`userinfo-name`, `email`, `userid-feide`, `groups-org` and `groups-edu`; never `userinfo-photo` or `userid-nin`.
 - **acceptance:** the full flow works against a mock oidc provider in tests. id tokens with a wrong
   `iss`, `aud`, `nonce` or an expired `exp` are rejected. the client secret is read from an
   environment variable or secret store and is never logged.
 - **verify:** integration tests with `oauth2-mock-server` (or equivalent); test names `[auth-001] …`.">
 <summary><span class="req-id">AUTH-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Feide OpenID Connect login (Authorization Code + PKCE)</span> <span class="status" data-status="planned">○ Planned</span></summary>
-<div class="req-body"><p>The server is a confidential OIDC relying party, registered in the Feide Customer Portal under
-HVL (<code>hvl.no</code>). It uses <code>openid-client</code> 6 with discovery from <code>https://auth.dataporten.no</code>
-<em>(verify)</em>, plus PKCE (S256), <code>state</code> and <code>nonce</code>. Scopes: <code>openid profile email userid-feide groups-org groups-edu</code> <em>(verify names in the Customer Portal)</em>.</p>
+<div class="req-body"><p>The server is a confidential OIDC relying party, registered in the Feide Customer Portal
+(kunde.feide.no) under HVL (realm <code>hvl.no</code> <em>(verify realm)</em>). It uses <code>openid-client</code> 6 with discovery
+from issuer <code>https://auth.dataporten.no</code> (document <code>/.well-known/openid-configuration</code>), plus PKCE
+(<code>S256</code>), <code>state</code> and <code>nonce</code>. ID tokens are <code>RS256</code>-signed. Scopes:
+<code>openid profile email userid-feide groups-org groups-edu</code>. All six are valid Feide scope (attribute-group)
+names. <strong>Always send the scope list explicitly</strong>: a request with <code>openid</code> alone releases every attribute
+group configured for the client. In the Customer Portal, authorise only the attribute groups
+<code>userinfo-name</code>, <code>email</code>, <code>userid-feide</code>, <code>groups-org</code> and <code>groups-edu</code>; never <code>userinfo-photo</code> or <code>userid-nin</code>.</p>
 <ul>
 <li><strong>Acceptance:</strong> The full flow works against a mock OIDC provider in tests. ID tokens with a wrong
 <code>iss</code>, <code>aud</code>, <code>nonce</code> or an expired <code>exp</code> are rejected. The client secret is read from an
@@ -951,22 +970,30 @@ environment variable or secret store and is never logged.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-AUTH-001">02 Feide, LTI and grades</a> · Feide login</p></div>
 </details>
-<details class="req" id="x-AUTH-002" data-area="AUTH" data-priority="MUST" data-session="S3" data-status="planned" data-text="auth-002 map feide affiliation to roles after login, call the feide groups api (`/groups/me/groups`) *(verify base url)*. read the hvl
-organisation group's `membership.affiliation`.
+<details class="req" id="x-AUTH-002" data-area="AUTH" data-priority="MUST" data-session="S3" data-status="planned" data-text="auth-002 map feide affiliation to roles after login, call `get https://groups-api.dataporten.no/groups/me/groups` with the user's feide access
+token (`authorization: bearer`). find the organisation group (`type: &quot;fc:org&quot;`, `id: &quot;fc:org:&lt;realm&gt;&quot;`,
+for hvl `fc:org:hvl.no` *(verify realm)*) and read its `membership.affiliation` array. feide's values are
+`faculty`, `student`, `staff`, `alum`, `member`, `affiliate`, `employee` and `library-walk-in`. course groups
+for `author_course_groups` come from `groups-edu` as fs groups, e.g. `fc:fs:fs:emne:&lt;realm&gt;:&lt;course-code&gt;:&lt;version&gt;`;
+they require hvl's fs integration in feide *(verify)*.
 
 | feide affiliation (any of) | role in hvl interaktiv |
 |---|---|
 | `employee`, `faculty`, `staff` | `author` |
 | `student` **and** member of an allow-listed course group (config `author_course_groups`, e.g. ppu, *brettspel som didaktisk ressurs*) | `author` (scoped: may author; content visibility limited to the course) |
-| `student`, `member`, `affiliate` | `learner` |
-| feide id in config `admin_feide_ids` | adds `admin` |
+| `student`, `member`, `affiliate`, `alum`, `library-walk-in` | `learner` |
+| feide id (claim `https://n.feide.no/claims/edupersonprincipalname`, e.g. `name@hvl.no`; needs `userid-feide`) in config `admin_feide_ids` | adds `admin` |
 | organisation not in `allowed_feide_orgs` (default `hvl.no`) | `learner` on content shared with &quot;anyone with feide&quot;; otherwise denied |
 
 - **acceptance:** a table-driven test covers every row, including users with both `student` and `employee` (→ `author`).
 - **verify:** unit tests of `feiderolemapper`.">
 <summary><span class="req-id">AUTH-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Map Feide affiliation to roles</span> <span class="status" data-status="planned">○ Planned</span></summary>
-<div class="req-body"><p>After login, call the Feide Groups API (<code>/groups/me/groups</code>) <em>(verify base URL)</em>. Read the HVL
-organisation group&#39;s <code>membership.affiliation</code>.</p>
+<div class="req-body"><p>After login, call <code>GET https://groups-api.dataporten.no/groups/me/groups</code> with the user&#39;s Feide access
+token (<code>Authorization: Bearer</code>). Find the organisation group (<code>type: &quot;fc:org&quot;</code>, <code>id: &quot;fc:org:&lt;realm&gt;&quot;</code>,
+for HVL <code>fc:org:hvl.no</code> <em>(verify realm)</em>) and read its <code>membership.affiliation</code> array. Feide&#39;s values are
+<code>faculty</code>, <code>student</code>, <code>staff</code>, <code>alum</code>, <code>member</code>, <code>affiliate</code>, <code>employee</code> and <code>library-walk-in</code>. Course groups
+for <code>AUTHOR_COURSE_GROUPS</code> come from <code>groups-edu</code> as FS groups, e.g. <code>fc:fs:fs:emne:&lt;realm&gt;:&lt;course-code&gt;:&lt;version&gt;</code>;
+they require HVL&#39;s FS integration in Feide <em>(verify)</em>.</p>
 <div class="table-wrap" role="region" aria-label="Table 1, AUTH-002 Map Feide affiliation to roles" tabindex="0"><table><thead><tr>
 <th scope="col">Feide affiliation (any of)</th><th scope="col">Role in HVL Interaktiv</th></tr>
 </thead><tbody><tr>
@@ -974,9 +1001,9 @@ organisation group&#39;s <code>membership.affiliation</code>.</p>
 <tr>
 <td><code>student</code> <strong>and</strong> member of an allow-listed course group (config <code>AUTHOR_COURSE_GROUPS</code>, e.g. PPU, <em>Brettspel som didaktisk ressurs</em>)</td><td><code>author</code> (scoped: may author; content visibility limited to the course)</td></tr>
 <tr>
-<td><code>student</code>, <code>member</code>, <code>affiliate</code></td><td><code>learner</code></td></tr>
+<td><code>student</code>, <code>member</code>, <code>affiliate</code>, <code>alum</code>, <code>library-walk-in</code></td><td><code>learner</code></td></tr>
 <tr>
-<td>Feide ID in config <code>ADMIN_FEIDE_IDS</code></td><td>adds <code>admin</code></td></tr>
+<td>Feide ID (claim <code>https://n.feide.no/claims/eduPersonPrincipalName</code>, e.g. <code>name@hvl.no</code>; needs <code>userid-feide</code>) in config <code>ADMIN_FEIDE_IDS</code></td><td>adds <code>admin</code></td></tr>
 <tr>
 <td>Organisation not in <code>ALLOWED_FEIDE_ORGS</code> (default <code>hvl.no</code>)</td><td><code>learner</code> on content shared with &quot;anyone with Feide&quot;; otherwise denied</td></tr>
 </tbody></table></div>
@@ -989,26 +1016,40 @@ organisation group&#39;s <code>membership.affiliation</code>.</p>
 <details class="req" id="x-AUTH-003" data-area="AUTH" data-priority="MUST" data-session="S3" data-status="planned" data-text="auth-003 portal session the server keeps the session in redis and gives the browser an opaque id in a cookie
 (`__host-hvli_sid`; `httponly`, `secure`, `samesite=lax`, `path=/`). the session expires after
 2 h idle or 12 h absolute. state-changing requests require a csrf token (synchronizer pattern).
-logout clears the session and calls feide's `end_session_endpoint`.
+logout clears the session and redirects the browser to feide's `end_session_endpoint`
+(`https://auth.dataporten.no/openid/endsession`) with `post_logout_redirect_uri` (registered in the
+customer portal) and `id_token_hint`. feide requires both, so the raw id token is kept in the
+server-side session only, encrypted at rest and deleted at logout or expiry (d-021).
 - **verify:** integration tests (expiry, csrf rejection, logout).">
 <summary><span class="req-id">AUTH-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Portal session</span> <span class="status" data-status="planned">○ Planned</span></summary>
 <div class="req-body"><p>The server keeps the session in Redis and gives the browser an opaque ID in a cookie
 (<code>__Host-hvli_sid</code>; <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code>, <code>Path=/</code>). The session expires after
 2 h idle or 12 h absolute. State-changing requests require a CSRF token (synchronizer pattern).
-Logout clears the session and calls Feide&#39;s <code>end_session_endpoint</code>.</p>
+Logout clears the session and redirects the browser to Feide&#39;s <code>end_session_endpoint</code>
+(<code>https://auth.dataporten.no/openid/endsession</code>) with <code>post_logout_redirect_uri</code> (registered in the
+Customer Portal) and <code>id_token_hint</code>. Feide requires both, so the raw ID token is kept in the
+server-side session only, encrypted at rest and deleted at logout or expiry (D-021).</p>
 <ul>
 <li><strong>Verify:</strong> Integration tests (expiry, CSRF rejection, logout).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-AUTH-003">02 Feide, LTI and grades</a> · Feide login</p></div>
 </details>
-<details class="req" id="x-AUTH-004" data-area="AUTH" data-priority="MUST" data-session="S3" data-status="planned" data-text="auth-004 data minimisation at login request only the scopes listed in `auth-001`. **never** request the national identity number
-(`noredupersonnin`) or other extended attributes. store a display name and e-mail **only for
-authors and admins**, who need them for co-author search and attribution. store neither for learners.
+<details class="req" id="x-AUTH-004" data-area="AUTH" data-priority="MUST" data-session="S3" data-status="planned" data-text="auth-004 data minimisation at login request only the scopes listed in `auth-001`. **never** request `userid-nin` or read the claim
+`https://n.feide.no/claims/nin` (national identity number), or other extended attributes. feide releases
+`name` and `email` for **every** user once those attribute groups are authorised, so the claims mapper
+drops them for learners before anything is stored. store a display name and e-mail **only for authors
+and admins**, who need them for co-author search and attribution. feide never verifies e-mail
+addresses (`email_verified` is always `false`), so e-mail is never used as an identifier; use `sub` or
+the feide id.
 - **verify:** unit test asserts the scope string. integration test asserts that no learner row has a name or e-mail.">
 <summary><span class="req-id">AUTH-004</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Data minimisation at login</span> <span class="status" data-status="planned">○ Planned</span></summary>
-<div class="req-body"><p>Request only the scopes listed in <a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>. <strong>Never</strong> request the national identity number
-(<code>norEduPersonNIN</code>) or other extended attributes. Store a display name and e-mail <strong>only for
-authors and admins</strong>, who need them for co-author search and attribution. Store neither for learners.</p>
+<div class="req-body"><p>Request only the scopes listed in <a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>. <strong>Never</strong> request <code>userid-nin</code> or read the claim
+<code>https://n.feide.no/claims/nin</code> (national identity number), or other extended attributes. Feide releases
+<code>name</code> and <code>email</code> for <strong>every</strong> user once those attribute groups are authorised, so the claims mapper
+drops them for learners before anything is stored. Store a display name and e-mail <strong>only for authors
+and admins</strong>, who need them for co-author search and attribution. Feide never verifies e-mail
+addresses (<code>email_verified</code> is always <code>false</code>), so e-mail is never used as an identifier; use <code>sub</code> or
+the Feide ID.</p>
 <ul>
 <li><strong>Verify:</strong> Unit test asserts the scope string. Integration test asserts that no learner row has a name or e-mail.</li>
 </ul>
@@ -1291,15 +1332,21 @@ Stylelint rule fails on hex, <code>rgb()</code> or <code>hsl()</code> literals o
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-001">03 Universal design</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-002" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-002 typography and reading comfort body text uses `font-family: inter, arial, calibri, sans-serif` (inter self-hosted, `data-011`),
-`font-size` ≥ 1rem, `line-height: 1.5` (1.55 inside h5p), `text-align: left`, and `max-width: 70ch`
+<details class="req" id="x-UD-002" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-002 typography and reading comfort typefaces follow the hvl design manual's office fonts (d-018): headings, ui controls and captions
+use `arial, &quot;helvetica neue&quot;, helvetica, sans-serif` (stand-in for nb akademie std); long-form body
+text uses `georgia, &quot;times new roman&quot;, serif` (stand-in for lyon text). if hvl confirms web-font
+licences for nb akademie std and lyon text, they may be self-hosted ahead of these stacks
+(`data-011`). text uses `font-size` ≥ 1rem, `line-height: 1.5` (1.55 inside h5p), `text-align: left`, and `max-width: 70ch`
 for paragraphs. `text-transform: uppercase` and `text-align: justify` are forbidden by a stylelint
 rule. underline is used only for links. all sizes are in `rem` or `em`. layout survives 200 % text
 resize (1.4.4) and the text-spacing overrides of 1.4.12.
 - **verify:** stylelint rules; a playwright test applies the 1.4.12 bookmarklet styles and checks for clipped text.">
 <summary><span class="req-id">UD-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Typography and reading comfort</span> <span class="status" data-status="planned">○ Planned</span></summary>
-<div class="req-body"><p>Body text uses <code>font-family: Inter, Arial, Calibri, sans-serif</code> (Inter self-hosted, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>),
-<code>font-size</code> ≥ 1rem, <code>line-height: 1.5</code> (1.55 inside H5P), <code>text-align: left</code>, and <code>max-width: 70ch</code>
+<div class="req-body"><p>Typefaces follow the HVL design manual&#39;s office fonts (D-018): headings, UI controls and captions
+use <code>Arial, &quot;Helvetica Neue&quot;, Helvetica, sans-serif</code> (stand-in for NB Akademie Std); long-form body
+text uses <code>Georgia, &quot;Times New Roman&quot;, serif</code> (stand-in for Lyon Text). If HVL confirms web-font
+licences for NB Akademie Std and Lyon Text, they may be self-hosted ahead of these stacks
+(<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>). Text uses <code>font-size</code> ≥ 1rem, <code>line-height: 1.5</code> (1.55 inside H5P), <code>text-align: left</code>, and <code>max-width: 70ch</code>
 for paragraphs. <code>text-transform: uppercase</code> and <code>text-align: justify</code> are forbidden by a Stylelint
 rule. Underline is used only for links. All sizes are in <code>rem</code> or <code>em</code>. Layout survives 200 % text
 resize (1.4.4) and the text-spacing overrides of 1.4.12.</p>
@@ -1625,12 +1672,14 @@ build fails if a key is missing a locale.</li>
 </details>
 <details class="req" id="x-PED-002" data-area="PED" data-priority="MUST" data-session="S5" data-status="planned" data-text="ped-002 guide page content the guide page contains, in this order:
 1. a 3-sentence introduction to why asynchronous work often fails (passive material, high cognitive load) and what helps.
-2. **three mechanisms**, each with a plain-language explanation, a &quot;what this means for your
+2. a short introduction to «hvl læringsdesign» (kontekst, kunnskap, samskaping; backward planning from
+   the learning outcomes) and where the activities sit in it (mikronivå), citing møgelvang &amp; isaksen (2025).
+3. **three mechanisms**, each with a plain-language explanation, a &quot;what this means for your
    activity&quot; box and its references (§3): *segment and retrieve*; *explain, don't just mark*;
    *practise judgement safely*.
-3. **the phase matrix** (§3), with a filter by phase that also filters the pattern catalogue.
-4. **the pattern catalogue** (§4) as cards: name, phase, content type, one-line purpose, time to build.
-5. a link to alu support and the *emnedesign* module.
+4. **the phase matrix** (§3), with a filter by phase that also filters the pattern catalogue.
+5. **the pattern catalogue** (§4) as cards: name, phase, content type, one-line purpose, time to build.
+6. links to alu support (hvl.no/alu) and the *emnedesign* module (uped854).
 - **acceptance:** every factual claim has a reference. page text lives in
   `content/laeringsdesign/guide.{nn,nb,en}.mdx`, so alu can edit it without changing code.
 - **verify:** component test; alu content review is recorded in `progress.md`.">
@@ -1638,12 +1687,14 @@ build fails if a key is missing a locale.</li>
 <div class="req-body"><p>The guide page contains, in this order:</p>
 <ol>
 <li>A 3-sentence introduction to why asynchronous work often fails (passive material, high cognitive load) and what helps.</li>
+<li>A short introduction to «HVL læringsdesign» (kontekst, kunnskap, samskaping; backward planning from
+the learning outcomes) and where the activities sit in it (mikronivå), citing Møgelvang &amp; Isaksen (2025).</li>
 <li><strong>Three mechanisms</strong>, each with a plain-language explanation, a &quot;what this means for your
 activity&quot; box and its references (§3): <em>segment and retrieve</em>; <em>explain, don&#39;t just mark</em>;
 <em>practise judgement safely</em>.</li>
 <li><strong>The phase matrix</strong> (§3), with a filter by phase that also filters the pattern catalogue.</li>
 <li><strong>The pattern catalogue</strong> (§4) as cards: name, phase, content type, one-line purpose, time to build.</li>
-<li>A link to ALU support and the <em>Emnedesign</em> module.</li>
+<li>Links to ALU support (hvl.no/alu) and the <em>Emnedesign</em> module (UPED854).</li>
 </ol>
 <ul>
 <li><strong>Acceptance:</strong> Every factual claim has a reference. Page text lives in
@@ -1699,7 +1750,7 @@ prompted (but not required) on publish.
 
 | field | type | notes |
 |---|---|---|
-| `phase` | `forarbeid \| underveis \| etterarbeid` | from the pattern by default |
+| `phase` | `forarbeid \| underveis \| etterarbeid` (labels *forarbeid*, *mellomarbeid*, *etterarbeid*) | from the pattern by default |
 | `coursecode` | string, e.g. `syk110` | free text. prefilled from the lti context label when available |
 | `learningoutcomes` | list of `{ text, category }` | `category` follows the norwegian qualifications framework (nkr): `kunnskap`, `ferdigheiter`, `generell kompetanse` |
 | `rationale` | text ≤ 1 000 characters | &quot;why this design for this outcome?&quot; used in the portfolio |
@@ -1712,7 +1763,7 @@ prompted (but not required) on publish.</p>
 <div class="table-wrap" role="region" aria-label="Table 1, PED-030 Tag each activity" tabindex="0"><table><thead><tr>
 <th scope="col">Field</th><th scope="col">Type</th><th scope="col">Notes</th></tr>
 </thead><tbody><tr>
-<td><code>phase</code></td><td><code>forarbeid | underveis | etterarbeid</code></td><td>From the pattern by default</td></tr>
+<td><code>phase</code></td><td><code>forarbeid | underveis | etterarbeid</code> (labels <em>Forarbeid</em>, <em>Mellomarbeid</em>, <em>Etterarbeid</em>)</td><td>From the pattern by default</td></tr>
 <tr>
 <td><code>courseCode</code></td><td>string, e.g. <code>SYK110</code></td><td>Free text. Prefilled from the LTI context label when available</td></tr>
 <tr>
@@ -1764,29 +1815,66 @@ taken from the metadata. This helps them plan their study and self-regulate.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-001">04 Læringsdesign studio</a> · Pedagogisk mappe</p></div>
 </details>
-<details class="req" id="x-MAPPE-002" data-area="MAPPE" data-priority="SHOULD" data-session="S5" data-status="planned" data-text="mappe-002 dossier structure headings come from `content/mappe/template.{nn,nb,en}.md`, so they can be aligned with alu's
-*utdanningsfagleg kompetanse og pedagogisk mappe* criteria once that document arrives
-(`docs/reference/hvl-pedagogisk-mappe-retningslinjer.pdf`). the default structure is:
-1. summary of the teacher's learning-design approach (the author writes this; a prompt is pre-filled).
-2. for each activity: title, content type, phase, course, learning outcomes, didactic rationale,
-   universal design status (validator result plus any acknowledgements with reasons), a link to the
-   activity, and **anonymised aggregates** (participants, completion rate, median attempts, and how
-   results changed between first and last attempts).
-3. reflection prompts linked to the research in §3 (the author writes the answers).
-4. references.">
+<details class="req" id="x-MAPPE-002" data-area="MAPPE" data-priority="SHOULD" data-session="S5" data-status="planned" data-text="mappe-002 dossier structure headings come from `content/mappe/template.{nn,nb,en}.md` and criterion texts from
+`content/mappe/criteria.{nn,nb,en}.yaml`, keyed by criteria set (default `hvl-merittering-2025`).
+hvl revises the merit criteria for every call (next call 2027), so a new set is a content change only.
+the proposed nynorsk template is
+[`docs/reference/proposals/mappe-template.nn.md`](../reference/proposals/mappe-template.nn.md). the
+default structure follows hvl's three-part merit portfolio:
+1. **reader's guide:** a table mapping each 2025 criterion (1.1–1.4, 2.1–2.4, 3.1–3.3) to the chapter
+   and attachment that address it, as in published hvl portfolios.
+2. **del 1 – samanhengande framstilling:** chapters ordered by the criteria, each with a pre-filled
+   writing prompt. the teacher's learning-design approach opens the text. for each selected activity
+   (under 2.3, *varierte læremidler*): title, content type, phase, course, learning outcomes, didactic
+   rationale, universal design status (validator result plus any acknowledgements with reasons), a link,
+   and **anonymised aggregates** (participants, completion rate, median attempts, change between first
+   and last attempts). a live word count shows del 1 against the limit (default 7 500 words, references
+   excluded).
+3. **del 2 – pedagogisk cv:** entries hvl interaktiv can document (digital learning resources developed,
+   with dates), to paste into hvl's own cv template.
+4. **del 3 – suggested attachments** (default limit 11, including the manager's letter, which the tool
+   never produces): documentation of developed learning resources, and an anonymised summary of student
+   feedback.
+5. **references**, pre-filled from the patterns' research keys (§3).
+
+the word limit, attachment limit and criteria set are content values marked *(verify)* until alu
+confirms them. a promotion mode (*opprykk*, rules in force from 13 june 2025) uses the same three parts;
+its del 1 headings wait for alu.
+- **acceptance:** switching the criteria set changes every criterion text and the reader's guide with no
+  code change. the word count excludes the references and the reader's guide.
+- **verify:** integration test with two fixture criteria sets.">
 <summary><span class="req-id">MAPPE-002</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Dossier structure</span> <span class="status" data-status="planned">○ Planned</span></summary>
-<div class="req-body"><p>Headings come from <code>content/mappe/template.{nn,nb,en}.md</code>, so they can be aligned with ALU&#39;s
-<em>Utdanningsfagleg kompetanse og pedagogisk mappe</em> criteria once that document arrives
-(<code>docs/reference/hvl-pedagogisk-mappe-retningslinjer.pdf</code>). The default structure is:</p>
+<div class="req-body"><p>Headings come from <code>content/mappe/template.{nn,nb,en}.md</code> and criterion texts from
+<code>content/mappe/criteria.{nn,nb,en}.yaml</code>, keyed by criteria set (default <code>hvl-merittering-2025</code>).
+HVL revises the merit criteria for every call (next call 2027), so a new set is a content change only.
+The proposed Nynorsk template is
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext"><code>docs/reference/proposals/mappe-template.nn.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. The
+default structure follows HVL&#39;s three-part merit portfolio:</p>
 <ol>
-<li>Summary of the teacher&#39;s learning-design approach (the author writes this; a prompt is pre-filled).</li>
-<li>For each activity: title, content type, phase, course, learning outcomes, didactic rationale,
-universal design status (validator result plus any acknowledgements with reasons), a link to the
-activity, and <strong>anonymised aggregates</strong> (participants, completion rate, median attempts, and how
-results changed between first and last attempts).</li>
-<li>Reflection prompts linked to the research in §3 (the author writes the answers).</li>
-<li>References.</li>
+<li><strong>Reader&#39;s guide:</strong> a table mapping each 2025 criterion (1.1–1.4, 2.1–2.4, 3.1–3.3) to the chapter
+and attachment that address it, as in published HVL portfolios.</li>
+<li><strong>Del 1 – Samanhengande framstilling:</strong> chapters ordered by the criteria, each with a pre-filled
+writing prompt. The teacher&#39;s learning-design approach opens the text. For each selected activity
+(under 2.3, <em>varierte læremidler</em>): title, content type, phase, course, learning outcomes, didactic
+rationale, universal design status (validator result plus any acknowledgements with reasons), a link,
+and <strong>anonymised aggregates</strong> (participants, completion rate, median attempts, change between first
+and last attempts). A live word count shows Del 1 against the limit (default 7 500 words, references
+excluded).</li>
+<li><strong>Del 2 – Pedagogisk CV:</strong> entries HVL Interaktiv can document (digital learning resources developed,
+with dates), to paste into HVL&#39;s own CV template.</li>
+<li><strong>Del 3 – Suggested attachments</strong> (default limit 11, including the manager&#39;s letter, which the tool
+never produces): documentation of developed learning resources, and an anonymised summary of student
+feedback.</li>
+<li><strong>References</strong>, pre-filled from the patterns&#39; research keys (§3).</li>
 </ol>
+<p>The word limit, attachment limit and criteria set are content values marked <em>(verify)</em> until ALU
+confirms them. A promotion mode (<em>opprykk</em>, rules in force from 13 June 2025) uses the same three parts;
+its Del 1 headings wait for ALU.</p>
+<ul>
+<li><strong>Acceptance:</strong> Switching the criteria set changes every criterion text and the reader&#39;s guide with no
+code change. The word count excludes the references and the reader&#39;s guide.</li>
+<li><strong>Verify:</strong> Integration test with two fixture criteria sets.</li>
+</ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-002">04 Læringsdesign studio</a> · Pedagogisk mappe</p></div>
 </details>
 <details class="req" id="x-MAPPE-003" data-area="MAPPE" data-priority="MUST" data-session="S5" data-status="planned" data-text="mappe-003 privacy in the export aggregates apply the same minimum group size as insight (`ins-006`, default *k* = 5). no learner
@@ -2510,7 +2598,7 @@ install or update libraries, even through an uploaded <code>.h5p</code> file (<a
 <hr>
 <h3 id="spec-00--5-functional-requirements" tabindex="-1">5. Functional requirements</h3>
 <h4 id="r-PROD-001" class="req-heading" tabindex="-1"><a class="req-id" href="#r-PROD-001">PROD-001</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Create an activity from a learning-design pattern</span></h4>
-<p>An author can create a new activity by choosing a phase (<em>Forarbeid</em>, <em>Underveis</em>, <em>Etterarbeid</em>)
+<p>An author can create a new activity by choosing a phase (<em>Forarbeid</em>, <em>Mellomarbeid</em>, <em>Etterarbeid</em>)
 and then a pattern. The H5P editor opens pre-filled with a pedagogically sound skeleton and guidance.</p>
 <ul>
 <li><strong>Acceptance:</strong> Every pattern in <a href="#spec-04--4-pattern-catalogue">04 §4</a> can be
@@ -3027,10 +3115,12 @@ registration (<code>/v1/sites</code>) needs anything new. Moodle users reported 
 <td>ltijs 7 services on <code>LaunchContext</code></td><td><code>deepLinking.createDeepLinkingForm(items, options)</code>, <code>grading.submitScore(lineItemId, score)</code>, Names &amp; Roles, Dynamic Registration</td><td>These are the APIs used below.</td></tr>
 <tr>
 <td><code>openid-client</code></td><td><strong>6.x</strong> (ESM-only, functional API: <code>discovery()</code>, <code>buildAuthorizationUrl()</code>, <code>authorizationCodeGrant()</code>)</td><td>Older <code>Issuer</code>/<code>Client</code> class examples do not apply.</td></tr>
+<tr>
+<td>Feide OIDC provider (checked 2026-10-16)</td><td>Issuer <code>https://auth.dataporten.no</code>; endpoints <code>/oauth/authorization</code>, <code>/oauth/token</code>, <code>/openid/userinfo</code>, <code>/openid/jwks</code>, <code>/openid/endsession</code>; PKCE <code>S256</code>; ID tokens <code>RS256</code>; Groups API <code>https://groups-api.dataporten.no/groups</code></td><td>Recorded with evidence in <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-oidc-config.example.json" rel="noopener" class="ext"><code>docs/reference/feide-oidc-config.example.json</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> and <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-values.md" rel="noopener" class="ext"><code>feide-values.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. Assembled from Feide&#39;s documentation and public code; HVL&#39;s own client values still come from the Customer Portal.</td></tr>
 </tbody></table></div>
-<p>Values marked <em>(verify)</em> below must be confirmed from the reference attachments
-(<code>feide-oidc-config.example.json</code>, <code>canvas-lti13-developer-key.json</code>) or with TeCopp before
-Session 3 writes code that depends on them.</p>
+<p>Values still marked <em>(verify)</em> below must be confirmed from HVL&#39;s own exports (Feide Customer Portal,
+Canvas Developer Key) or with TeCopp before Session 3 writes code that depends on them. Public values are
+recorded with evidence in <code>docs/reference/</code> (<a href="#reference">reference README</a>).</p>
 <hr>
 <h3 id="spec-02--2-two-ways-in-one-identity-model" tabindex="-1">2. Two ways in, one identity model</h3>
 <pre class="code" tabindex="0"><code>                    ┌────────────────────── interaktiv.hvl.no (one public origin) ──────────────────────┐
@@ -3057,9 +3147,14 @@ cookie first-party.</p>
 <hr>
 <h3 id="spec-02--3-requirements--feide-portal-standalone-access" tabindex="-1">3. Requirements — Feide portal (standalone access)</h3>
 <h4 id="r-AUTH-001" class="req-heading" tabindex="-1"><a class="req-id" href="#r-AUTH-001">AUTH-001</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Feide OpenID Connect login (Authorization Code + PKCE)</span></h4>
-<p>The server is a confidential OIDC relying party, registered in the Feide Customer Portal under
-HVL (<code>hvl.no</code>). It uses <code>openid-client</code> 6 with discovery from <code>https://auth.dataporten.no</code>
-<em>(verify)</em>, plus PKCE (S256), <code>state</code> and <code>nonce</code>. Scopes: <code>openid profile email userid-feide groups-org groups-edu</code> <em>(verify names in the Customer Portal)</em>.</p>
+<p>The server is a confidential OIDC relying party, registered in the Feide Customer Portal
+(kunde.feide.no) under HVL (realm <code>hvl.no</code> <em>(verify realm)</em>). It uses <code>openid-client</code> 6 with discovery
+from issuer <code>https://auth.dataporten.no</code> (document <code>/.well-known/openid-configuration</code>), plus PKCE
+(<code>S256</code>), <code>state</code> and <code>nonce</code>. ID tokens are <code>RS256</code>-signed. Scopes:
+<code>openid profile email userid-feide groups-org groups-edu</code>. All six are valid Feide scope (attribute-group)
+names. <strong>Always send the scope list explicitly</strong>: a request with <code>openid</code> alone releases every attribute
+group configured for the client. In the Customer Portal, authorise only the attribute groups
+<code>userinfo-name</code>, <code>email</code>, <code>userid-feide</code>, <code>groups-org</code> and <code>groups-edu</code>; never <code>userinfo-photo</code> or <code>userid-nin</code>.</p>
 <ul>
 <li><strong>Acceptance:</strong> The full flow works against a mock OIDC provider in tests. ID tokens with a wrong
 <code>iss</code>, <code>aud</code>, <code>nonce</code> or an expired <code>exp</code> are rejected. The client secret is read from an
@@ -3067,8 +3162,12 @@ environment variable or secret store and is never logged.</li>
 <li><strong>Verify:</strong> Integration tests with <code>oauth2-mock-server</code> (or equivalent); test names <code>[AUTH-001] …</code>.</li>
 </ul>
 <h4 id="r-AUTH-002" class="req-heading" tabindex="-1"><a class="req-id" href="#r-AUTH-002">AUTH-002</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Map Feide affiliation to roles</span></h4>
-<p>After login, call the Feide Groups API (<code>/groups/me/groups</code>) <em>(verify base URL)</em>. Read the HVL
-organisation group&#39;s <code>membership.affiliation</code>.</p>
+<p>After login, call <code>GET https://groups-api.dataporten.no/groups/me/groups</code> with the user&#39;s Feide access
+token (<code>Authorization: Bearer</code>). Find the organisation group (<code>type: &quot;fc:org&quot;</code>, <code>id: &quot;fc:org:&lt;realm&gt;&quot;</code>,
+for HVL <code>fc:org:hvl.no</code> <em>(verify realm)</em>) and read its <code>membership.affiliation</code> array. Feide&#39;s values are
+<code>faculty</code>, <code>student</code>, <code>staff</code>, <code>alum</code>, <code>member</code>, <code>affiliate</code>, <code>employee</code> and <code>library-walk-in</code>. Course groups
+for <code>AUTHOR_COURSE_GROUPS</code> come from <code>groups-edu</code> as FS groups, e.g. <code>fc:fs:fs:emne:&lt;realm&gt;:&lt;course-code&gt;:&lt;version&gt;</code>;
+they require HVL&#39;s FS integration in Feide <em>(verify)</em>.</p>
 <div class="table-wrap" role="region" aria-label="Table 3, 3. Requirements — Feide portal (standalone access)" tabindex="0"><table><thead><tr>
 <th scope="col">Feide affiliation (any of)</th><th scope="col">Role in HVL Interaktiv</th></tr>
 </thead><tbody><tr>
@@ -3076,9 +3175,9 @@ organisation group&#39;s <code>membership.affiliation</code>.</p>
 <tr>
 <td><code>student</code> <strong>and</strong> member of an allow-listed course group (config <code>AUTHOR_COURSE_GROUPS</code>, e.g. PPU, <em>Brettspel som didaktisk ressurs</em>)</td><td><code>author</code> (scoped: may author; content visibility limited to the course)</td></tr>
 <tr>
-<td><code>student</code>, <code>member</code>, <code>affiliate</code></td><td><code>learner</code></td></tr>
+<td><code>student</code>, <code>member</code>, <code>affiliate</code>, <code>alum</code>, <code>library-walk-in</code></td><td><code>learner</code></td></tr>
 <tr>
-<td>Feide ID in config <code>ADMIN_FEIDE_IDS</code></td><td>adds <code>admin</code></td></tr>
+<td>Feide ID (claim <code>https://n.feide.no/claims/eduPersonPrincipalName</code>, e.g. <code>name@hvl.no</code>; needs <code>userid-feide</code>) in config <code>ADMIN_FEIDE_IDS</code></td><td>adds <code>admin</code></td></tr>
 <tr>
 <td>Organisation not in <code>ALLOWED_FEIDE_ORGS</code> (default <code>hvl.no</code>)</td><td><code>learner</code> on content shared with &quot;anyone with Feide&quot;; otherwise denied</td></tr>
 </tbody></table></div>
@@ -3090,14 +3189,21 @@ organisation group&#39;s <code>membership.affiliation</code>.</p>
 <p>The server keeps the session in Redis and gives the browser an opaque ID in a cookie
 (<code>__Host-hvli_sid</code>; <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code>, <code>Path=/</code>). The session expires after
 2 h idle or 12 h absolute. State-changing requests require a CSRF token (synchronizer pattern).
-Logout clears the session and calls Feide&#39;s <code>end_session_endpoint</code>.</p>
+Logout clears the session and redirects the browser to Feide&#39;s <code>end_session_endpoint</code>
+(<code>https://auth.dataporten.no/openid/endsession</code>) with <code>post_logout_redirect_uri</code> (registered in the
+Customer Portal) and <code>id_token_hint</code>. Feide requires both, so the raw ID token is kept in the
+server-side session only, encrypted at rest and deleted at logout or expiry (D-021).</p>
 <ul>
 <li><strong>Verify:</strong> Integration tests (expiry, CSRF rejection, logout).</li>
 </ul>
 <h4 id="r-AUTH-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-AUTH-004">AUTH-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Data minimisation at login</span></h4>
-<p>Request only the scopes listed in <a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>. <strong>Never</strong> request the national identity number
-(<code>norEduPersonNIN</code>) or other extended attributes. Store a display name and e-mail <strong>only for
-authors and admins</strong>, who need them for co-author search and attribution. Store neither for learners.</p>
+<p>Request only the scopes listed in <a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>. <strong>Never</strong> request <code>userid-nin</code> or read the claim
+<code>https://n.feide.no/claims/nin</code> (national identity number), or other extended attributes. Feide releases
+<code>name</code> and <code>email</code> for <strong>every</strong> user once those attribute groups are authorised, so the claims mapper
+drops them for learners before anything is stored. Store a display name and e-mail <strong>only for authors
+and admins</strong>, who need them for co-author search and attribution. Feide never verifies e-mail
+addresses (<code>email_verified</code> is always <code>false</code>), so e-mail is never used as an identifier; use <code>sub</code> or
+the Feide ID.</p>
 <ul>
 <li><strong>Verify:</strong> Unit test asserts the scope string. Integration test asserts that no learner row has a name or e-mail.</li>
 </ul>
@@ -3269,7 +3375,7 @@ manipulation.</p>
 </section>
 <section class="view doc" id="spec-03" aria-labelledby="spec-03-h">
 <h2 id="spec-03-h" tabindex="-1">Spec 03 — HVL Visual Identity, Universal Design (WCAG 2.2 AA) and the Pre-Publish Validator</h2>
-<div class="table-wrap" role="region" aria-label="Table 1, 03 Universal design details" tabindex="0"><table><tbody><tr><th scope="row"><strong>Status</strong></th><td>Approved for build (v1.0, 2026-10-16)</td></tr>
+<div class="table-wrap" role="region" aria-label="Table 1, 03 Universal design details" tabindex="0"><table><tbody><tr><th scope="row"><strong>Status</strong></th><td>Approved for build (v1.1, 2026-10-21: brand tokens and typefaces aligned with HVL&#39;s design manual)</td></tr>
 <tr><th scope="row"><strong>Load in sessions</strong></th><td>S4 (all); S6 (§6 conformance report)</td></tr>
 <tr><th scope="row"><strong>Owns requirement IDs</strong></th><td><code>UD-*</code></td></tr>
 <tr><th scope="row"><strong>Code location</strong></th><td><code>packages/design-tokens/</code>, <code>packages/hvl-h5p-theme/</code>, <code>apps/web/src/components/</code>, <code>apps/server/src/validation/</code></td></tr>
@@ -3292,45 +3398,58 @@ no ALL-CAPS styling; links say where they go (external site, file type).</li>
 <p>Tokens live in <code>packages/design-tokens/tokens.json</code>. A build step generates CSS custom properties
 (used by the web app and by <code>hvl-h5p-theme.css</code>) and a Tailwind preset. <strong>No colour value may appear
 anywhere else in the codebase.</strong> A lint rule rejects hex literals outside the tokens package.</p>
-<p>Contrast ratios below were <strong>computed</strong> with the WCAG 2.x relative-luminance formula on
-2026-10-16. A unit test recomputes them on every build (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>). Brand hex values must still be
-checked against the HVL design manual (<code>docs/reference/hvl-designmanual-og-logo.zip</code>). If they
-change, the test decides whether the new values may be used.</p>
+<p><strong>Brand basis.</strong> Brand colours come from HVL&#39;s design manual (<em>Visuell identitet / Profilmanual</em>,
+v2.0, February 2017, page 16), as documented in
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext"><code>docs/reference/hvl-visual-identity.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. HVL&#39;s own logo colours are
+<strong>Mørk blå 2</strong> (PMS 3035 U, <code>#004357</code>) and <strong>Sjøgrønn</strong> (PMS 7710 U, <code>#00AFBA</code>). The manual was read
+through search extracts and independent transcriptions, not opened directly, so HVL (<a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)
+must still confirm the values <em>(verify)</em>. Neutral tokens that are not HVL colours are labelled
+<em>neutral</em> below. (D-017)</p>
+<p>Contrast ratios below were <strong>computed</strong> with the WCAG 2.x relative-luminance formula. A unit test
+recomputes them on every build (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>). If HVL confirms different values, the test decides
+whether they may be used.</p>
 <div class="table-wrap" role="region" aria-label="Table 2, 2. Design tokens (single source of truth)" tabindex="0"><table><thead><tr>
-<th scope="col">Token</th><th scope="col">Value</th><th scope="col">Used for</th><th scope="col">Measured contrast</th><th scope="col">Requirement met</th></tr>
+<th scope="col">Token</th><th scope="col">Value (HVL name)</th><th scope="col">Used for</th><th scope="col">Measured contrast</th><th scope="col">Requirement met</th></tr>
 </thead><tbody><tr>
-<td><code>--hvl-primary-dark</code></td><td><code>#003D4C</code> (deep fjord teal)</td><td>Headings, navigation, primary buttons (white text)</td><td>11.85 : 1 on <code>#FFFFFF</code>; 10.93 : 1 on <code>#F4F6F7</code></td><td>Text AA and AAA</td></tr>
+<td><code>--hvl-primary-dark</code></td><td><code>#004357</code> (Mørk blå 2)</td><td>Headings, navigation, primary buttons (white text), links</td><td>10.82 : 1 on <code>#FFFFFF</code>; 9.98 : 1 on <code>#F4F6F7</code></td><td>Text AAA</td></tr>
 <tr>
-<td><code>--hvl-primary-accent</code></td><td><code>#005F6B</code> (coastal teal)</td><td>Links, secondary buttons, progress bars</td><td>7.37 : 1 on <code>#FFFFFF</code>; 6.80 : 1 on <code>#F4F6F7</code></td><td>Text AA (AAA on white)</td></tr>
+<td><code>--hvl-accent</code></td><td><code>#008AAF</code> (Mørk blå 1)</td><td>Non-text UI only: progress bars, selected-tab underline, chart marks</td><td>4.00 : 1 on <code>#FFFFFF</code>; 3.69 : 1 on <code>#F4F6F7</code></td><td>Non-text 3 : 1. <strong>Never body text</strong></td></tr>
 <tr>
-<td><code>--hvl-primary-accent-light</code></td><td><code>#007681</code></td><td>Large text, non-text UI only</td><td>5.37 : 1 on <code>#FFFFFF</code>; 4.96 : 1 on <code>#F4F6F7</code></td><td>Text AA; non-text 3 : 1</td></tr>
+<td><code>--hvl-brand-sea-green</code></td><td><code>#00AFBA</code> (Sjøgrønn)</td><td>Decorative only on light surfaces; non-text accents on <code>#004357</code></td><td>2.68 : 1 on <code>#FFFFFF</code> (fails); 4.04 : 1 on <code>#004357</code></td><td>Decorative; non-text 3 : 1 on dark only</td></tr>
 <tr>
-<td><code>--hvl-ink</code></td><td><code>#111111</code></td><td>Body text</td><td>18.88 : 1 on <code>#FFFFFF</code>; 17.42 : 1 on <code>#F4F6F7</code></td><td>AAA</td></tr>
+<td><code>--hvl-brand-orange</code></td><td><code>#EB6851</code> (Oransje)</td><td>Decorative fills and badges with <code>#111111</code> text</td><td><code>#111111</code> on it 5.96 : 1; 3.17 : 1 on <code>#FFFFFF</code></td><td>Never a state or focus indicator</td></tr>
 <tr>
-<td><code>--hvl-ink-muted</code></td><td><code>#4A5560</code></td><td>Secondary text</td><td>7.61 : 1 on <code>#FFFFFF</code></td><td>AAA</td></tr>
+<td><code>--hvl-band</code></td><td><code>#C9D5DA</code> (Blågrå lys)</td><td>Section bands, table headers</td><td><code>#111111</code> on it 12.60 : 1; <code>#004357</code> on it 7.22 : 1</td><td>AAA</td></tr>
 <tr>
-<td><code>--hvl-surface</code> / <code>--hvl-surface-warm</code></td><td><code>#FFFFFF</code> / <code>#F4F6F7</code></td><td>Cards / page background</td><td>—</td><td>—</td></tr>
+<td><code>--hvl-ink</code></td><td><code>#111111</code> (neutral)</td><td>Body text (the HVL palette has no near-black)</td><td>18.88 : 1 on <code>#FFFFFF</code>; 17.42 : 1 on <code>#F4F6F7</code></td><td>AAA</td></tr>
 <tr>
-<td><code>--hvl-feedback-correct-fg</code> on <code>-bg</code></td><td><code>#0F5132</code> on <code>#D1E7DD</code></td><td>Correct-answer text</td><td>7.21 : 1</td><td>AAA</td></tr>
+<td><code>--hvl-ink-muted</code></td><td><code>#4A5560</code> (neutral)</td><td>Secondary text. HVL&#39;s own greys fail for text (Blågrå mørk 4.37 : 1, Grå mørk 3.43 : 1)</td><td>7.61 : 1 on <code>#FFFFFF</code></td><td>AAA</td></tr>
 <tr>
-<td><code>--hvl-feedback-correct-border</code></td><td><code>#198754</code></td><td>4 px left border (decorative; the text prefix carries the meaning)</td><td>3.49 : 1 on its background</td><td>Non-text 3 : 1</td></tr>
+<td><code>--hvl-surface</code> / <code>--hvl-surface-alt</code></td><td><code>#FFFFFF</code> (Kvit) / <code>#F4F6F7</code> (neutral)</td><td>Cards / page background. The manual encourages active use of white</td><td>—</td><td>—</td></tr>
 <tr>
-<td><code>--hvl-feedback-incorrect-fg</code> on <code>-bg</code></td><td><code>#842029</code> on <code>#F8D7DA</code></td><td>Incorrect-answer text</td><td>7.08 : 1</td><td>AAA</td></tr>
+<td><code>--hvl-feedback-correct-fg</code> on <code>-bg</code></td><td><code>#0F5132</code> on <code>#D1E7DD</code> (neutral)</td><td>Correct-answer text</td><td>7.21 : 1</td><td>AAA</td></tr>
 <tr>
-<td><code>--hvl-feedback-incorrect-border</code></td><td><code>#DC3545</code></td><td>4 px left border (decorative)</td><td>3.39 : 1 on its background</td><td>Non-text 3 : 1</td></tr>
+<td><code>--hvl-feedback-correct-border</code></td><td><code>#198754</code> (neutral)</td><td>4 px left border (decorative; the text prefix carries the meaning)</td><td>3.49 : 1 on its background</td><td>Non-text 3 : 1</td></tr>
 <tr>
-<td><code>--hvl-feedback-info-fg</code> on <code>-bg</code></td><td><code>#055160</code> on <code>#CFF4FC</code></td><td>Hints, notices</td><td>7.65 : 1</td><td>AAA</td></tr>
+<td><code>--hvl-feedback-incorrect-fg</code> on <code>-bg</code></td><td><code>#6D2439</code> (Mørk raud) on <code>#F8D7DA</code></td><td>Incorrect-answer text</td><td>8.02 : 1</td><td>AAA</td></tr>
 <tr>
-<td><code>--hvl-focus-inner</code> / <code>--hvl-focus-outer</code></td><td><code>#FFFFFF</code> / <code>#003D4C</code></td><td>Two-tone focus ring (see <a class="req-ref" href="#r-UD-004"><code>UD-004</code></a>)</td><td>outer ring 11.85 : 1 on white; inner ring separates it from dark fills</td><td>1.4.11 and 2.4.7 on every surface</td></tr>
+<td><code>--hvl-feedback-incorrect-border</code></td><td><code>#DC3545</code> (neutral)</td><td>4 px left border (decorative)</td><td>3.39 : 1 on its background</td><td>Non-text 3 : 1</td></tr>
+<tr>
+<td><code>--hvl-feedback-info-fg</code> on <code>-bg</code></td><td><code>#004357</code> (Mørk blå 2) on <code>#CFF4FC</code></td><td>Hints, notices</td><td>9.28 : 1</td><td>AAA</td></tr>
+<tr>
+<td><code>--hvl-focus-outer</code> / <code>--hvl-focus-inner</code></td><td><code>#004357</code> / <code>#FFFFFF</code></td><td>Two-tone focus ring (see <a class="req-ref" href="#r-UD-004"><code>UD-004</code></a>)</td><td>outer ring 10.82 : 1 on white; inner ring 10.82 : 1 against dark fills</td><td>1.4.11 and 2.4.7 on every surface</td></tr>
 </tbody></table></div>
 <blockquote>
-<p><strong>Corrections to the development plan.</strong> The plan&#39;s figures for the feedback colours were
-overstated (it gave 8.3 : 1 and 7.6 : 1; the measured values are 7.21 : 1 and 7.08 : 1, which
-still pass AAA). More importantly, it proposed a <strong>single orange focus outline <code>#FF9E1B</code></strong>. That
-measures <strong>2.07 : 1 on white</strong> and fails WCAG 1.4.11 (non-text contrast ≥ 3 : 1). It is replaced by
-the two-tone ring. Orange may still be used <em>inside</em> the ring as a brand accent, but never as the
-only indicator. (D-007)</p>
+<p><strong>Corrections to the development plan.</strong> The plan&#39;s colours (<code>#003D4C</code> &quot;deep fjord teal&quot;,
+<code>#005F6B</code>/<code>#007681</code> &quot;coastal teal&quot;, orange <code>#FF9E1B</code>) do not appear in any HVL source and were
+replaced by the manual&#39;s palette (D-017). The plan&#39;s single orange focus outline measured
+<strong>2.07 : 1 on white</strong>, failing WCAG 1.4.11; it is replaced by the two-tone ring (D-007). The plan
+also overstated two feedback ratios (8.3 : 1 and 7.6 : 1; measured 7.21 : 1 and 7.08 : 1).</p>
 </blockquote>
+<p><strong>Logo.</strong> The official logo files (Norwegian, English, negative, square) are configured assets, not
+token-derived. They are never recoloured, cropped, animated or rewritten by the SVG sanitiser, and the
+institution name and logo are configuration, because HVL has applied for university status under the
+proposed name <em>Universitetet på Vestlandet</em>. The Norwegian (Nynorsk-name) logo serves both <code>nn</code> and <code>nb</code>.</p>
 <hr>
 <h3 id="spec-03--3-requirements--design-system-and-theme" tabindex="-1">3. Requirements — design system and theme</h3>
 <h4 id="r-UD-001" class="req-heading" tabindex="-1"><a class="req-id" href="#r-UD-001">UD-001</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Tokens are the only source of colour, and contrast is tested</span></h4>
@@ -3341,8 +3460,11 @@ Stylelint rule fails on hex, <code>rgb()</code> or <code>hsl()</code> literals o
 <li><strong>Verify:</strong> Unit test; lint in CI.</li>
 </ul>
 <h4 id="r-UD-002" class="req-heading" tabindex="-1"><a class="req-id" href="#r-UD-002">UD-002</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Typography and reading comfort</span></h4>
-<p>Body text uses <code>font-family: Inter, Arial, Calibri, sans-serif</code> (Inter self-hosted, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>),
-<code>font-size</code> ≥ 1rem, <code>line-height: 1.5</code> (1.55 inside H5P), <code>text-align: left</code>, and <code>max-width: 70ch</code>
+<p>Typefaces follow the HVL design manual&#39;s office fonts (D-018): headings, UI controls and captions
+use <code>Arial, &quot;Helvetica Neue&quot;, Helvetica, sans-serif</code> (stand-in for NB Akademie Std); long-form body
+text uses <code>Georgia, &quot;Times New Roman&quot;, serif</code> (stand-in for Lyon Text). If HVL confirms web-font
+licences for NB Akademie Std and Lyon Text, they may be self-hosted ahead of these stacks
+(<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>). Text uses <code>font-size</code> ≥ 1rem, <code>line-height: 1.5</code> (1.55 inside H5P), <code>text-align: left</code>, and <code>max-width: 70ch</code>
 for paragraphs. <code>text-transform: uppercase</code> and <code>text-align: justify</code> are forbidden by a Stylelint
 rule. Underline is used only for links. All sizes are in <code>rem</code> or <code>em</code>. Layout survives 200 % text
 resize (1.4.4) and the text-spacing overrides of 1.4.12.</p>
@@ -3532,21 +3654,32 @@ learning into concrete starting points. It nudges authors towards designs that w
 them something useful back for their own career (the <em>pedagogisk mappe</em>).</p>
 <hr>
 <h3 id="spec-04--1-terminology-is-configuration-not-code" tabindex="-1">1. Terminology is configuration, not code</h3>
-<p>The phases and labels must match ALU&#39;s <em>Modellen for læringsdesign ved HVL</em> exactly. That
-document (<code>docs/reference/hvl-modellen-for-laeringsdesign.pdf</code>) has <strong>not yet been provided</strong>. So
-every label lives in <code>content/laeringsdesign/phases.yaml</code>, with <code>nn</code>/<code>nb</code>/<code>en</code> strings, and code
-refers only to stable keys:</p>
+<p><strong>HVL&#39;s model.</strong> HVL has developed a model for learning design, <em>«HVL læringsdesign»</em>, and teaches it
+to course leaders in the <em>Emnedesign</em> module (UPED854). Its public description (Møgelvang &amp; Isaksen
+2025, MNT-konferansen; HVL Årsrapport 2024 p. 23) presents an alignment model built on three
+interdependent parts, <strong>kontekst</strong>, <strong>kunnskap</strong> and <strong>samskaping</strong>. It applies across levels, from the
+single <em>læringsøkt</em> (mikronivå) through the <em>emne</em> and <em>studieprogram</em> to the institution, and uses
+<em>baklengs planlegging</em> (backward planning) and <em>meningsskapande samsvar</em> (constructive alignment).
+See <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext"><code>docs/reference/hvl-laeringsdesign-model.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>.</p>
+<p><strong>Where HVL Interaktiv sits.</strong> The activities live at the model&#39;s <strong>mikronivå</strong>: the work students do
+before, between and after a <em>samling</em>. HVL&#39;s course pages call this work <em>forarbeid</em>, <em>mellomarbeid</em>
+and <em>etterarbeid</em> (<em>før- og etterarbeid</em>; English &quot;pre-, intermediate and post-work&quot;). These are
+course-organisation terms, not named phases of the model (D-019).</p>
+<p>Every label lives in <code>content/laeringsdesign/phases.yaml</code>, with <code>nn</code>/<code>nb</code>/<code>en</code> strings, and code
+refers only to stable keys. The proposed file is
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/phases.yaml" rel="noopener" class="ext"><code>docs/reference/proposals/phases.yaml</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>; ALU must confirm the
+labels against the model document (<code>hvl-modellen-for-laeringsdesign.pdf</code>, not yet provided).</p>
 <div class="table-wrap" role="region" aria-label="Table 2, 1. Terminology is configuration, not code" tabindex="0"><table><thead><tr>
-<th scope="col">Key</th><th scope="col">Working label (nn)</th><th scope="col">Meaning</th></tr>
+<th scope="col">Key</th><th scope="col">Label (nn / en)</th><th scope="col">Meaning</th></tr>
 </thead><tbody><tr>
-<td><code>forarbeid</code></td><td>Forarbeid</td><td>Asynchronous pre-work before a seminar, lab or lecture</td></tr>
+<td><code>forarbeid</code></td><td>Forarbeid / Pre-work</td><td>Asynchronous pre-work before a seminar, lab or lecture</td></tr>
 <tr>
-<td><code>underveis</code></td><td>Underveis / mellomarbeid</td><td>Asynchronous active processing between sessions and during <em>praksis</em></td></tr>
+<td><code>underveis</code></td><td>Mellomarbeid / Intermediate work</td><td>Asynchronous active processing between sessions and during <em>praksis</em>. The key keeps its old name; the label is HVL&#39;s term. Not to be confused with <em>undervegsvurdering</em> (formative assessment)</td></tr>
 <tr>
-<td><code>etterarbeid</code></td><td>Etterarbeid og eigenvurdering</td><td>Consolidation, retrieval practice, self-assessment</td></tr>
+<td><code>etterarbeid</code></td><td>Etterarbeid / Post-work</td><td>Consolidation, retrieval practice and self-assessment (<em>eigenvurdering</em>)</td></tr>
 </tbody></table></div>
-<p>The synchronous session in the middle (<em>samling / synkron økt</em>) is not authored in HVL Interaktiv.
-It appears on the studio page to show where the activities fit.</p>
+<p>The synchronous session in the middle (<em>samling</em>; online: <em>nettsamling</em>) is not authored in HVL
+Interaktiv. It appears on the studio page to show where the activities fit.</p>
 <h4 id="r-PED-001" class="req-heading" tabindex="-1"><a class="req-id" href="#r-PED-001">PED-001</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Phases and labels load from content files</span></h4>
 <ul>
 <li><strong>Acceptance:</strong> Renaming a label in <code>phases.yaml</code> changes it everywhere with no code change. The
@@ -3558,7 +3691,7 @@ build fails if a key is missing a locale.</li>
 <div class="table-wrap" role="region" aria-label="Table 3, 2. Studio routes" tabindex="0"><table><thead><tr>
 <th scope="col">Route</th><th scope="col">Purpose</th><th scope="col">Audience</th></tr>
 </thead><tbody><tr>
-<td><code>/laeringsdesign</code></td><td>Guide: <em>Støtte til studentaktiv læring og HVL Læringsdesign</em>. Research summary, the phase matrix, and the pattern catalogue with filters.</td><td>Everyone (public within HVL)</td></tr>
+<td><code>/laeringsdesign</code></td><td>Guide: <em>Studentaktiv læring med «HVL læringsdesign»</em> (working title; ALU to name it). The model in brief, the research summary, the phase matrix, and the pattern catalogue with filters.</td><td>Everyone (public within HVL)</td></tr>
 <tr>
 <td><code>/laeringsdesign/monster/[patternId]</code></td><td>Pattern detail: when to use it, why it works, an example, and <em>Create from this pattern</em></td><td>Everyone; create = author</td></tr>
 <tr>
@@ -3570,12 +3703,14 @@ build fails if a key is missing a locale.</li>
 <p>The guide page contains, in this order:</p>
 <ol>
 <li>A 3-sentence introduction to why asynchronous work often fails (passive material, high cognitive load) and what helps.</li>
+<li>A short introduction to «HVL læringsdesign» (kontekst, kunnskap, samskaping; backward planning from
+the learning outcomes) and where the activities sit in it (mikronivå), citing Møgelvang &amp; Isaksen (2025).</li>
 <li><strong>Three mechanisms</strong>, each with a plain-language explanation, a &quot;what this means for your
 activity&quot; box and its references (§3): <em>segment and retrieve</em>; <em>explain, don&#39;t just mark</em>;
 <em>practise judgement safely</em>.</li>
 <li><strong>The phase matrix</strong> (§3), with a filter by phase that also filters the pattern catalogue.</li>
 <li><strong>The pattern catalogue</strong> (§4) as cards: name, phase, content type, one-line purpose, time to build.</li>
-<li>A link to ALU support and the <em>Emnedesign</em> module.</li>
+<li>Links to ALU support (hvl.no/alu) and the <em>Emnedesign</em> module (UPED854).</li>
 </ol>
 <ul>
 <li><strong>Acceptance:</strong> Every factual claim has a reference. Page text lives in
@@ -3594,7 +3729,7 @@ activity&quot; box and its references (§3): <em>segment and retrieve</em>; <em>
 </thead><tbody><tr>
 <td><strong>Forarbeid</strong></td><td>Activate prior knowledge; meet threshold concepts; surface misconceptions <em>before</em> teaching</td><td><code>fa-video</code>, <code>fa-slides</code>, <code>fa-hotspots</code>, <code>ea-diagnose</code></td><td>In the module before the seminar. Unlimited retries; <em>Show solution</em> on. The teacher reviews <strong>Før samlinga</strong> insight the evening before.</td></tr>
 <tr>
-<td><strong>Underveis</strong></td><td>Deepen integration; practise professional judgement (<em>profesjonell dømmekraft</em>, <em>didaktisk skjønn</em>) on realistic cases</td><td><code>uv-case</code>, <code>uv-module</code>, <code>uv-column</code></td><td>One or two interactive items per Canvas page. Resume enabled.</td></tr>
+<td><strong>Mellomarbeid</strong> (<code>underveis</code>)</td><td>Deepen integration; practise professional judgement (<em>profesjonell dømmekraft</em>, <em>didaktisk skjønn</em>) on realistic cases</td><td><code>uv-case</code>, <code>uv-module</code>, <code>uv-column</code></td><td>One or two interactive items per Canvas page. Resume enabled.</td></tr>
 <tr>
 <td><strong>Etterarbeid</strong></td><td>Consolidate through spaced retrieval; check the learning outcomes (<em>læringsutbytte</em>)</td><td><code>ea-retrieval</code>, <code>ea-terms</code>, <code>ea-diagnose</code></td><td>Graded through AGS with the <code>mastery</code> or <code>best</code> policy (<a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a>), unlimited attempts. Suggested repetition dates (<a class="req-ref" href="#r-PROD-014"><code>PROD-014</code></a>).</td></tr>
 </tbody></table></div>
@@ -3610,7 +3745,7 @@ activity&quot; box and its references (§3): <em>segment and retrieve</em>; <em>
 <tr>
 <td>Practise judgement safely</td><td>Schön (1983) <em>The Reflective Practitioner</em>; van Manen (1991) <em>The Tact of Teaching</em></td></tr>
 <tr>
-<td>Aligning it all</td><td>Biggs (1996) <em>Higher Education</em> 32(3)</td></tr>
+<td>Aligning it all</td><td>Biggs (1996) <em>Higher Education</em> 32(3); Wiggins &amp; McTighe (2005) <em>Understanding by Design</em> (2nd ed.); Møgelvang &amp; Isaksen (2025) <em>Nordic Journal of STEM Education</em> 9(2) — HVL&#39;s own model</td></tr>
 <tr>
 <td>Using pre-work in class</td><td>Novak, Patterson, Gavrin &amp; Christian (1999) <em>Just-in-Time Teaching</em></td></tr>
 </tbody></table></div>
@@ -3696,7 +3831,7 @@ prompted (but not required) on publish.</p>
 <div class="table-wrap" role="region" aria-label="Table 8, 6. Learning-design metadata and the alignment planner" tabindex="0"><table><thead><tr>
 <th scope="col">Field</th><th scope="col">Type</th><th scope="col">Notes</th></tr>
 </thead><tbody><tr>
-<td><code>phase</code></td><td><code>forarbeid | underveis | etterarbeid</code></td><td>From the pattern by default</td></tr>
+<td><code>phase</code></td><td><code>forarbeid | underveis | etterarbeid</code> (labels <em>Forarbeid</em>, <em>Mellomarbeid</em>, <em>Etterarbeid</em>)</td><td>From the pattern by default</td></tr>
 <tr>
 <td><code>courseCode</code></td><td>string, e.g. <code>SYK110</code></td><td>Free text. Prefilled from the LTI context label when available</td></tr>
 <tr>
@@ -3725,9 +3860,12 @@ taken from the metadata. This helps them plan their study and self-regulate.</p>
 </ul>
 <hr>
 <h3 id="spec-04--7-pedagogisk-mappe-export" tabindex="-1">7. Pedagogisk mappe export</h3>
-<p>HVL asks staff who apply for promotion or <em>meritert undervisar</em> status to document their teaching
-practice and their reasoning, including their use of educational technology. This feature produces
-a ready-to-edit dossier from work the teacher has already done.</p>
+<p>HVL asks staff who apply for appointment, promotion (<em>opprykk</em>) or <em>merittert undervisar</em> status to
+document their teaching practice and their reasoning in a <em>pedagogisk mappe</em>. ALU states that the
+portfolio also covers work with educational technology, and the 2025 merit criteria name <em>varierte
+læremidler</em> (sub-criterion 2.3). This feature produces a ready-to-edit draft from work the teacher has
+already done. The evidence behind this section is in
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext"><code>docs/reference/hvl-pedagogisk-mappe-criteria.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> (D-020).</p>
 <h4 id="r-MAPPE-001" class="req-heading" tabindex="-1"><a class="req-id" href="#r-MAPPE-001">MAPPE-001</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Select and export</span></h4>
 <p>On <code>/mappe</code>, an author selects activities, filtered by course, phase or date. The author exports
 <strong>Markdown</strong> (for editing) and <strong>PDF</strong> (for submission).</p>
@@ -3735,18 +3873,37 @@ a ready-to-edit dossier from work the teacher has already done.</p>
 <li><strong>Verify:</strong> Integration test produces both files from fixtures.</li>
 </ul>
 <h4 id="r-MAPPE-002" class="req-heading" tabindex="-1"><a class="req-id" href="#r-MAPPE-002">MAPPE-002</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Dossier structure</span></h4>
-<p>Headings come from <code>content/mappe/template.{nn,nb,en}.md</code>, so they can be aligned with ALU&#39;s
-<em>Utdanningsfagleg kompetanse og pedagogisk mappe</em> criteria once that document arrives
-(<code>docs/reference/hvl-pedagogisk-mappe-retningslinjer.pdf</code>). The default structure is:</p>
+<p>Headings come from <code>content/mappe/template.{nn,nb,en}.md</code> and criterion texts from
+<code>content/mappe/criteria.{nn,nb,en}.yaml</code>, keyed by criteria set (default <code>hvl-merittering-2025</code>).
+HVL revises the merit criteria for every call (next call 2027), so a new set is a content change only.
+The proposed Nynorsk template is
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext"><code>docs/reference/proposals/mappe-template.nn.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. The
+default structure follows HVL&#39;s three-part merit portfolio:</p>
 <ol>
-<li>Summary of the teacher&#39;s learning-design approach (the author writes this; a prompt is pre-filled).</li>
-<li>For each activity: title, content type, phase, course, learning outcomes, didactic rationale,
-universal design status (validator result plus any acknowledgements with reasons), a link to the
-activity, and <strong>anonymised aggregates</strong> (participants, completion rate, median attempts, and how
-results changed between first and last attempts).</li>
-<li>Reflection prompts linked to the research in §3 (the author writes the answers).</li>
-<li>References.</li>
+<li><strong>Reader&#39;s guide:</strong> a table mapping each 2025 criterion (1.1–1.4, 2.1–2.4, 3.1–3.3) to the chapter
+and attachment that address it, as in published HVL portfolios.</li>
+<li><strong>Del 1 – Samanhengande framstilling:</strong> chapters ordered by the criteria, each with a pre-filled
+writing prompt. The teacher&#39;s learning-design approach opens the text. For each selected activity
+(under 2.3, <em>varierte læremidler</em>): title, content type, phase, course, learning outcomes, didactic
+rationale, universal design status (validator result plus any acknowledgements with reasons), a link,
+and <strong>anonymised aggregates</strong> (participants, completion rate, median attempts, change between first
+and last attempts). A live word count shows Del 1 against the limit (default 7 500 words, references
+excluded).</li>
+<li><strong>Del 2 – Pedagogisk CV:</strong> entries HVL Interaktiv can document (digital learning resources developed,
+with dates), to paste into HVL&#39;s own CV template.</li>
+<li><strong>Del 3 – Suggested attachments</strong> (default limit 11, including the manager&#39;s letter, which the tool
+never produces): documentation of developed learning resources, and an anonymised summary of student
+feedback.</li>
+<li><strong>References</strong>, pre-filled from the patterns&#39; research keys (§3).</li>
 </ol>
+<p>The word limit, attachment limit and criteria set are content values marked <em>(verify)</em> until ALU
+confirms them. A promotion mode (<em>opprykk</em>, rules in force from 13 June 2025) uses the same three parts;
+its Del 1 headings wait for ALU.</p>
+<ul>
+<li><strong>Acceptance:</strong> Switching the criteria set changes every criterion text and the reader&#39;s guide with no
+code change. The word count excludes the references and the reader&#39;s guide.</li>
+<li><strong>Verify:</strong> Integration test with two fixture criteria sets.</li>
+</ul>
 <h4 id="r-MAPPE-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-MAPPE-003">MAPPE-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Privacy in the export</span></h4>
 <p>Aggregates apply the same minimum group size as insight (<a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>, default <em>k</em> = 5). No learner
 identifiers, free-text answers or individual scores ever appear. The export is generated on demand
@@ -4382,6 +4539,16 @@ with the commands given.</p>
 <td>D-015</td><td>Licence GPL-3.0-or-later</td><td>Accepted (2026-10-16)</td></tr>
 <tr>
 <td>D-016</td><td>Specs beyond the plan&#39;s four, plus requirement IDs and traceability</td><td>Accepted</td></tr>
+<tr>
+<td>D-017</td><td>Brand tokens follow HVL&#39;s design manual (Mørk blå 2, Sjøgrønn …)</td><td>Accepted (2026-10-21), HVL to confirm values</td></tr>
+<tr>
+<td>D-018</td><td>Typefaces: Arial and Georgia, as the manual&#39;s office fonts</td><td>Accepted (2026-10-21), ALU/HVL to confirm</td></tr>
+<tr>
+<td>D-019</td><td>Phases are course-organisation vocabulary at the model&#39;s <em>mikronivå</em>; <code>underveis</code> is labelled <em>Mellomarbeid</em></td><td>Accepted (2026-10-21), ALU to confirm</td></tr>
+<tr>
+<td>D-020</td><td>Portfolio export follows HVL&#39;s three-part merit portfolio and the 2025 criteria, as content</td><td>Accepted (2026-10-21), ALU to confirm</td></tr>
+<tr>
+<td>D-021</td><td>The Feide ID token is kept in the server-side session for logout only</td><td>Accepted (2026-10-21)</td></tr>
 </tbody></table></div>
 <hr>
 <h4 id="decisions--d-001--nodejs-24-lts-instead-of-22" tabindex="-1">D-001 · Node.js 24 LTS instead of 22</h4>
@@ -4446,8 +4613,10 @@ HVL&#39;s professional programmes.</li>
 <li><strong>Context:</strong> The plan pairs coastal teal with a <code>#FF9E1B</code> focus outline. Measured contrast against
 white is 2.07 : 1, which fails WCAG 1.4.11 (needs 3 : 1). The plan also overstated two feedback
 contrast ratios (7.21 : 1 and 7.08 : 1 measured; both still pass).</li>
-<li><strong>Decision:</strong> <code>outline: 3px solid #003D4C</code> with a 2 px white inner ring, which works on light and
-dark surfaces (<a class="req-ref" href="#r-UD-004"><code>UD-004</code></a>). Contrast is tested in CI from the tokens (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>).</li>
+<li><strong>Decision:</strong> <code>outline: 3px solid</code> HVL Mørk blå 2 (<code>#004357</code>, 10.82 : 1 on white; originally <code>#003D4C</code>,
+changed by D-017) with a 2 px white inner ring, which works on light and dark surfaces (<a class="req-ref" href="#r-UD-004"><code>UD-004</code></a>).
+Contrast is tested in CI from the tokens (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>). <code>#FF9E1B</code> is not an HVL colour; HVL&#39;s orange is
+Oransje <code>#EB6851</code>. It clears 3 : 1 on white only narrowly (3.17 : 1), so it stays decorative.</li>
 </ul>
 <h4 id="decisions--d-008--formative-use-only" tabindex="-1">D-008 · Formative use only</h4>
 <p>H5P scores in the browser, so scores can be forged. AGS scores are labelled formative and the UI
@@ -4500,6 +4669,70 @@ Third-party files keep their own licences, for example <code>tools/spec-site/ven
 <a href="#evaluator-guide">Evaluator Guide</a>. Requirement IDs connect spec, code and tests, and
 <code>tools/spec-trace/specTrace.mjs</code> enforces them. The plan&#39;s session structure and its progressive
 loading of one spec per session are kept.</p>
+<h4 id="decisions--d-017--brand-tokens-follow-hvls-design-manual" tabindex="-1">D-017 · Brand tokens follow HVL&#39;s design manual</h4>
+<ul>
+<li><strong>Context:</strong> The plan&#39;s colours (<code>#003D4C</code>, <code>#005F6B</code>, <code>#007681</code>, <code>#FF9E1B</code>, &quot;deep fjord teal&quot;, &quot;coastal
+teal&quot;) appear in no HVL source. HVL&#39;s <em>Visuell identitet / Profilmanual</em> (v2.0, February 2017, p. 16)
+defines the logo colours Mørk blå 2 <code>#004357</code> (PMS 3035 U) and Sjøgrønn <code>#00AFBA</code> (PMS 7710 U), plus
+signal, support and additional colours. The values were read through search extracts of the manual and
+agree with independent transcriptions and with two public copies of the logo
+(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext">docs/reference/hvl-visual-identity.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>).</li>
+<li><strong>Decision:</strong> Spec 03 §2 uses Mørk blå 2 for headings, links, primary buttons and the focus ring
+(10.82 : 1 on white), Mørk blå 1 <code>#008AAF</code> for non-text UI only (4.00 : 1), Sjøgrønn and Oransje for
+decoration only, Blågrå lys <code>#C9D5DA</code> for bands, Mørk raud <code>#6D2439</code> for incorrect-answer text.
+Body text stays a neutral near-black <code>#111111</code>, because the HVL palette has no text black and its
+greys fail 4.5 : 1. Neutral tokens are labelled as such.</li>
+<li><strong>Consequences:</strong> CLAUDE.md, <a class="req-ref" href="#r-UD-004"><code>UD-004</code></a> and D-007 now name <code>#004357</code>. HVL (<a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>) must confirm the
+values, the four hex/RGB mismatches noted in the reference file, and whether derived shades are allowed.</li>
+<li><strong>Re-check:</strong> <code>python3 -I docs/reference/tools/contrast.py</code>.</li>
+</ul>
+<h4 id="decisions--d-018--typefaces-arial-and-georgia" tabindex="-1">D-018 · Typefaces: Arial and Georgia</h4>
+<ul>
+<li><strong>Context:</strong> The plan specified Inter, Arial and Calibri. HVL&#39;s manual names NB Akademie Std (titles,
+captions) and Lyon Text (body) as profile fonts, with <strong>Arial</strong> and <strong>Georgia</strong> as the office
+substitutes. Both profile fonts are commercial; no source shows that HVL holds web-font licences.</li>
+<li><strong>Decision:</strong> Headings, UI controls and captions use Arial; long-form body text uses Georgia (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>).
+The licensed profile fonts may be self-hosted in front of these stacks once HVL confirms web licences.
+Inter and Calibri are dropped.</li>
+<li><strong>Consequences:</strong> No third-party font requests are needed (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>).</li>
+</ul>
+<h4 id="decisions--d-019--phases-are-course-organisation-vocabulary-at-the-models-mikroniva" tabindex="-1">D-019 · Phases are course-organisation vocabulary at the model&#39;s <em>mikronivå</em></h4>
+<ul>
+<li><strong>Context:</strong> Spec 04 assumed that <em>Modellen for læringsdesign ved HVL</em> defines phases. HVL&#39;s annual
+report 2024 (p. 23) confirms the model exists. Its only public description (Møgelvang &amp; Isaksen 2025,
+MNT-konferansen) presents an alignment model built on <em>kontekst</em>, <em>kunnskap</em> and <em>samskaping</em>, applied
+across levels from the <em>læringsøkt</em> (mikronivå) to the institution, using <em>baklengs planlegging</em>. HVL&#39;s
+course pages use <em>forarbeid</em>, <em>mellomarbeid</em> and <em>etterarbeid</em> (and <em>før- og etterarbeid</em>) for work
+around a <em>samling</em>. No HVL page uses <em>underveis</em> as a phase name, and it is easily confused with
+<em>undervegsvurdering</em> (formative assessment).
+(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext">docs/reference/hvl-laeringsdesign-model.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</li>
+<li><strong>Decision:</strong> Keep the stable keys <code>forarbeid</code>, <code>underveis</code>, <code>etterarbeid</code>. Label them <em>Forarbeid</em>,
+<em>Mellomarbeid</em> and <em>Etterarbeid</em> (en: <em>Pre-work</em>, <em>Intermediate work</em>, <em>Post-work</em>). Present them as the
+structure of a <em>læringsøkt</em> around a <em>samling</em>, not as the phases of HVL&#39;s model. The studio introduces
+the model itself (kontekst, kunnskap, samskaping; backward planning) and links to its public description.</li>
+<li><strong>Consequences:</strong> Spec 04 §1, the glossary and the proposed <code>phases.yaml</code> change. ALU must confirm the
+labels against the model document.</li>
+</ul>
+<h4 id="decisions--d-020--portfolio-export-follows-hvls-merit-portfolio-as-content" tabindex="-1">D-020 · Portfolio export follows HVL&#39;s merit portfolio, as content</h4>
+<ul>
+<li><strong>Context:</strong> The plan cited criteria &quot;1.1–3.2&quot;. HVL&#39;s 2025 merit call has three main criteria and eleven
+sub-criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), revised for each call. The merit portfolio has three parts:
+Del 1 <em>samanhengande framstilling</em> (up to 7 500 words, references excluded), Del 2 <em>pedagogisk CV</em>, and
+Del 3 up to 11 attachments including the manager&#39;s letter.
+(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext">docs/reference/hvl-pedagogisk-mappe-criteria.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</li>
+<li><strong>Decision:</strong> <a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a> follows the three-part structure with a criterion table as a reader&#39;s guide.
+Criteria texts, the word limit and the attachment limit live in content files keyed by criteria set
+(<code>hvl-merittering-2025</code>), so the 2027 call needs only a content change. A promotion (<em>opprykk</em>) mode
+waits for ALU to confirm its headings.</li>
+</ul>
+<h4 id="decisions--d-021--the-feide-id-token-is-kept-in-the-server-side-session-for-logout-only" tabindex="-1">D-021 · The Feide ID token is kept in the server-side session for logout only</h4>
+<ul>
+<li><strong>Context:</strong> Feide&#39;s RP-initiated logout requires both <code>post_logout_redirect_uri</code> and <code>id_token_hint</code>.
+The ID token contains the user&#39;s name and e-mail when those attribute groups are released.</li>
+<li><strong>Decision:</strong> Keep the raw ID token only in the Redis session (encrypted at rest, deleted at logout or
+expiry). Never write it to PostgreSQL or logs. Learner name and e-mail are dropped before anything is
+persisted (<a class="req-ref" href="#r-AUTH-003"><code>AUTH-003</code></a>, <a class="req-ref" href="#r-AUTH-004"><code>AUTH-004</code></a>).</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -4647,35 +4880,59 @@ what is done, what is verified, and what is blocked.</p>
 </section>
 <section class="view doc" id="reference" aria-labelledby="reference-h">
 <h2 id="reference-h" tabindex="-1">Reference Material (institutional inputs)</h2>
-<p>These files are authoritative inputs from HVL. When they are in the repository, a build session can
-read real values from them instead of guessing. <strong>None has been provided yet (2026-10-16).</strong> Until
-they arrive, the affected values are kept in configuration and marked <em>(verify)</em> in the specs.</p>
-<div class="table-wrap" role="region" aria-label="Table 1, Reference inputs details" tabindex="0"><table><thead><tr>
-<th scope="col">#</th><th scope="col">File to place here</th><th scope="col">Where HVL staff can get it</th><th scope="col">What it unblocks</th><th scope="col">Needed by</th></tr>
+<p>These files are the inputs a build session reads instead of guessing. The originals come from HVL
+(design manual, ALU documents, Feide and Canvas exports). On 2026-10-16 and 2026-10-21 the build
+container could not reach hvl.no, feide.no, instructure.com or h5p.org (network policy). So each input
+below was <strong>assembled from public sources</strong> with every value cited and graded by confidence, and an
+independent agent then tried to refute it. <strong>None of these files is an HVL original.</strong> Each says
+exactly what HVL still has to supply or confirm.</p>
+<h3 id="reference--status" tabindex="-1">Status</h3>
+<div class="table-wrap" role="region" aria-label="Table 1, Status" tabindex="0"><table><thead><tr>
+<th scope="col">#</th><th scope="col">Original we still need from HVL</th><th scope="col">What is here now</th><th scope="col">Status</th><th scope="col">Needed by</th></tr>
 </thead><tbody><tr>
-<td>1</td><td><code>hvl-designmanual-og-logo.zip</code></td><td>HVL press room (<em>design og logo</em>) or the Vestibylen templates</td><td>Exact SVG logos and brand colour and font values for <code>packages/design-tokens</code> (spec 03 §2)</td><td>S4</td></tr>
+<td>1</td><td><code>hvl-designmanual-og-logo.zip</code>: design manual PDF and official logo files (HVL press room, <a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext">hvl-visual-identity.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the manual&#39;s palette (PMS/CMYK/RGB/HEX), typefaces, logo variants and rules, contrast for every colour, and proposed tokens. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/tools/contrast.py" rel="noopener" class="ext">tools/contrast.py<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> recomputes all ratios. <strong>No logo artwork.</strong></td><td>Derived; HVL to confirm values and supply logo files</td><td>S4</td></tr>
 <tr>
-<td>2</td><td><code>hvl-modellen-for-laeringsdesign.pdf</code></td><td>ALU / <em>Faggruppa digital læringsdesign</em> (Emnedesign module)</td><td>Exact phase names and wording for <code>content/laeringsdesign/phases.yaml</code> (spec 04 §1)</td><td>S5</td></tr>
+<td>2</td><td><code>hvl-modellen-for-laeringsdesign.pdf</code> (ALU, <em>Faggruppa for digital læringsdesign</em>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext">hvl-laeringsdesign-model.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: what HVL has published about «HVL læringsdesign» (annual report 2024 p. 23, read directly; Møgelvang &amp; Isaksen 2025) and the phase vocabulary HVL uses. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/phases.yaml" rel="noopener" class="ext">proposals/phases.yaml<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed <code>content/laeringsdesign/phases.yaml</code></td><td>Partly found; ALU to confirm labels</td><td>S5</td></tr>
 <tr>
-<td>3</td><td><code>hvl-pedagogisk-mappe-retningslinjer.pdf</code></td><td>ALU, <em>Utdanningsfagleg kompetanse og pedagogisk mappe</em></td><td>Portfolio headings and criteria for <code>content/mappe/template.*.md</code> (<a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a>)</td><td>S5</td></tr>
+<td>3</td><td><code>hvl-pedagogisk-mappe-retningslinjer.pdf</code> (ALU)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext">hvl-pedagogisk-mappe-criteria.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the 2025 merit criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), the three-part portfolio, limits, and the national basis. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext">proposals/mappe-template.nn.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed export template. No public PDF of this name was found; HVL publishes the guidance as web pages</td><td>Derived; ALU to confirm</td><td>S5</td></tr>
 <tr>
-<td>4</td><td><code>feide-oidc-config.example.json</code></td><td>Feide Customer Portal (HVL organisation)</td><td>Issuer, redirect URIs, client ID, granted scopes (<a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>). <strong>Never commit the client secret.</strong></td><td>S3</td></tr>
+<td>4</td><td><code>feide-oidc-config.example.json</code> from the Feide Customer Portal</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-oidc-config.example.json" rel="noopener" class="ext">feide-oidc-config.example.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with public endpoint values and placeholders for HVL&#39;s client, plus <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-values.md" rel="noopener" class="ext">feide-values.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> (evidence table)</td><td>Public values high confidence; HVL client values pending</td><td>S3</td></tr>
 <tr>
-<td>5</td><td><code>canvas-lti13-developer-key.json</code></td><td>TeCopp (HVL&#39;s Canvas test instance)</td><td>Canvas issuer, endpoints, placements, client and deployment IDs (<a class="req-ref" href="#r-LTI-001"><code>LTI-001</code></a>)</td><td>S3</td></tr>
+<td>5</td><td><code>canvas-lti13-developer-key.json</code> (TeCopp)</td><td>Pending: being assembled from Instructure&#39;s own documentation in the canvas-lms repository</td><td>In progress</td><td>S3</td></tr>
 <tr>
-<td>6</td><td><code>h5p-core-1.28-seed-packages/</code></td><td>One verified <code>.h5p</code> per content type, from hub-api.h5p.org or an H5P-hosted source</td><td>Offline, deterministic seeding (<a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>)</td><td>S2</td></tr>
+<td>6</td><td><code>h5p-core-1.28-seed-packages/</code> (one verified <code>.h5p</code> per content type)</td><td>Pending: hub-api.h5p.org is blocked here; a status note and a fetch script will be added</td><td>Blocked by network policy</td><td>S2</td></tr>
 </tbody></table></div>
+<h3 id="reference--how-to-read-the-derived-files" tabindex="-1">How to read the derived files</h3>
+<ul>
+<li><strong>Confidence:</strong> <em>high</em> means an official source seen directly, or two independent sources that
+agree. <em>medium</em> means one credible source, often an official page read through a search-engine
+extract. <em>low</em> means inferred. Values marked <em>(verify)</em> must not be built on until confirmed.</li>
+<li><strong>Proposals</strong> in <code>proposals/</code> are drafts for files that belong in <code>content/</code> in Session 5. They are
+not approved by ALU.</li>
+<li>Third-party material without a licence (for example a public transcription of HVL&#39;s palette) is
+cited by repository and commit, never copied in.</li>
+</ul>
 <h3 id="reference--rules-for-this-folder" tabindex="-1">Rules for this folder</h3>
 <ul>
 <li><strong>No secrets.</strong> Client secrets and private keys go in the environment or secret store, never here.</li>
-<li><code>h5p-core-1.28-seed-packages/</code> must contain a <code>SHA256SUMS</code> file
-(<code>sha256sum *.h5p &gt; SHA256SUMS</code>). The seed script refuses packages that do not match it.</li>
-<li>Record where each file came from, and when, in the table below, so its provenance can be audited.</li>
+<li><strong>No HVL logo files</strong> without HVL&#39;s permission. The logo is a trademark and is not covered by the
+repository&#39;s GPL licence (D-015).</li>
+<li><code>h5p-core-1.28-seed-packages/</code> must contain a <code>SHA256SUMS</code> file (<code>sha256sum *.h5p &gt; SHA256SUMS</code>).
+The seed script refuses packages that do not match it.</li>
+<li>When an original arrives, put it here, record it in the provenance table, and re-run the check
+named in the derived file (for colours: <code>python3 -I docs/reference/tools/contrast.py</code>).</li>
 </ul>
-<div class="table-wrap" role="region" aria-label="Table 2, Rules for this folder" tabindex="0"><table><thead><tr>
-<th scope="col">File</th><th scope="col">Source URL or contact</th><th scope="col">Retrieved</th><th scope="col">By</th></tr>
+<h3 id="reference--provenance" tabindex="-1">Provenance</h3>
+<div class="table-wrap" role="region" aria-label="Table 2, Provenance" tabindex="0"><table><thead><tr>
+<th scope="col">File</th><th scope="col">Source</th><th scope="col">Retrieved</th><th scope="col">By</th></tr>
 </thead><tbody><tr>
-<td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<td><code>hvl-visual-identity.md</code>, <code>tools/contrast.py</code>, <code>tools/contrast-output.md</code></td><td>HVL design manual 2017 v2.0 (search extracts), public transcriptions and logo copies on GitHub (cited by commit), Brandfetch</td><td>2026-10-16</td><td>Claude research agent; independently verified 2026-10-21</td></tr>
+<tr>
+<td><code>hvl-laeringsdesign-model.md</code>, <code>proposals/phases.yaml</code></td><td>HVL Årsrapport 2024 (PDF via Sikt&#39;s Forvaltningsdatabasen mirror, SHA-256 recorded), Møgelvang &amp; Isaksen 2025, hvl.no course pages (search extracts)</td><td>2026-10-16</td><td>Claude research agent; independently verified 2026-10-21</td></tr>
+<tr>
+<td><code>hvl-pedagogisk-mappe-criteria.md</code>, <code>proposals/mappe-template.nn.md</code></td><td>hvl.no merit pages and ALU pages (search extracts), published HVL portfolios, national regulations</td><td>2026-10-16</td><td>Claude research agent; independently verified 2026-10-21</td></tr>
+<tr>
+<td><code>feide-oidc-config.example.json</code>, <code>feide-values.md</code></td><td>docs.feide.no (search extracts), Feide&#39;s archived AuthEngine source, public integrations on GitHub and npm (cited by commit and version)</td><td>2026-10-16</td><td>Claude research agent; independently verified 2026-10-21</td></tr>
 </tbody></table></div>
 
 </section>
@@ -4691,23 +4948,27 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <tr>
 <td><strong>ALU</strong>, <em>Avdeling for utvikling av læring og undervisning</em></td><td>—</td><td>HVL&#39;s unit for the development of learning and teaching. Owns learning-design guidance and universal design guidance for teaching.</td></tr>
 <tr>
-<td><em>Faggruppa digital læringsdesign</em></td><td>—</td><td>The digital learning design group in ALU.</td></tr>
+<td><em>Faggruppa for digital læringsdesign</em></td><td>—</td><td>The digital learning design group in ALU.</td></tr>
 <tr>
 <td><strong>TeCopp</strong></td><td>—</td><td>HVL&#39;s cross-disciplinary team that manages Canvas, including LTI tool approval and testing.</td></tr>
 <tr>
-<td><em>Pedagogisk akademi</em></td><td>—</td><td>HVL&#39;s academy of merited teachers.</td></tr>
+<td><em>Pedagogisk akademi</em></td><td>—</td><td>HVL&#39;s pedagogical academy. Merited teachers become members.</td></tr>
 <tr>
-<td><em>Meritert undervisar</em> (nb: <em>underviser</em>)</td><td>—</td><td>Merited teacher, a formal recognition of excellent teaching.</td></tr>
+<td><em>Merittert undervisar</em> (nb: <em>merittert underviser</em>)</td><td>—</td><td>Merited teacher, a formal recognition of excellent teaching. HVL calls for applications every other year (next call 2027).</td></tr>
 <tr>
 <td><em>Opprykk</em></td><td>—</td><td>Academic promotion.</td></tr>
 <tr>
-<td><em>Pedagogisk mappe</em></td><td><code>pedagogiskMappe</code></td><td>Teaching portfolio that documents practice and the reasoning behind it. Required for merit and promotion applications.</td></tr>
+<td><em>Pedagogisk mappe</em></td><td><code>pedagogiskMappe</code></td><td>Teaching portfolio that documents practice and the reasoning behind it. Required for merit and promotion applications. For merit it has three parts: Del 1 <em>samanhengande framstilling</em> (nb: <em>sammenhengende fremstilling</em>), Del 2 <em>pedagogisk CV</em>, Del 3 attachments.</td></tr>
 <tr>
-<td><em>Emnedesign</em></td><td>—</td><td>Course design; also the name of HVL&#39;s course-design module for staff.</td></tr>
+<td><em>Emnedesign</em></td><td>—</td><td>Course design; also the name of HVL&#39;s course-design module for staff (UPED854).</td></tr>
 <tr>
-<td><em>Modellen for læringsdesign ved HVL</em></td><td>—</td><td>HVL&#39;s model for learning design. Organises a course into asynchronous and synchronous phases.</td></tr>
+<td><em>Modellen for læringsdesign ved HVL</em>, «HVL læringsdesign»</td><td>—</td><td>HVL&#39;s model for learning design. An alignment model built on three interdependent parts, <em>kontekst</em>, <em>kunnskap</em> and <em>samskaping</em>, applied across levels from the single <em>læringsøkt</em> (mikronivå) to the <em>emne</em>, <em>studieprogram</em> and institution, with <em>baklengs planlegging</em> (Møgelvang &amp; Isaksen 2025).</td></tr>
 <tr>
-<td><em>Samsvar i emnedesign</em></td><td>—</td><td>Constructive alignment: outcomes, activities and assessment fit together (Biggs).</td></tr>
+<td><em>Meningsskapande samsvar</em> (nb: <em>meningsskapende samsvar</em>); <em>samsvar i emnedesign</em></td><td>—</td><td>Constructive alignment: outcomes, activities and assessment fit together (Biggs). HVL describes it as <em>samsvar mellom læringsutbyttebeskrivingar, vurdering, læringsaktivitetar …</em> (UPED854).</td></tr>
+<tr>
+<td><em>Baklengs planlegging</em></td><td>—</td><td>Backward planning: start from the intended outcomes and design assessment and activities from them (Wiggins &amp; McTighe).</td></tr>
+<tr>
+<td><em>Læringsøkt</em></td><td>—</td><td>A single learning session; the model&#39;s mikronivå, where HVL Interaktiv&#39;s activities sit.</td></tr>
 <tr>
 <td><em>Læringsutbytte</em>, <em>læringsutbyttebeskriving</em> (nb: <em>-beskrivelse</em>)</td><td><code>laeringsutbytte</code></td><td>Learning outcome(s), as written in the course plan.</td></tr>
 <tr>
@@ -4715,15 +4976,15 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <tr>
 <td><em>Forarbeid</em></td><td><code>forarbeid</code></td><td>Asynchronous pre-work before a session.</td></tr>
 <tr>
-<td><em>Samling</em> / <em>synkron økt</em></td><td>—</td><td>The synchronous session: seminar, lecture, lab or online meeting.</td></tr>
+<td><em>Samling</em> / <em>nettsamling</em></td><td>—</td><td>The synchronous session: seminar, lecture, lab or online meeting (<em>nettsamling</em>).</td></tr>
 <tr>
-<td><em>Underveis</em> / <em>mellomarbeid</em></td><td><code>underveis</code></td><td>Asynchronous work between sessions or during placement.</td></tr>
+<td><em>Mellomarbeid</em></td><td><code>underveis</code></td><td>Asynchronous work between sessions or during placement. The code key keeps its earlier name (D-019).</td></tr>
 <tr>
 <td><em>Etterarbeid</em></td><td><code>etterarbeid</code></td><td>Asynchronous consolidation after a session.</td></tr>
 <tr>
 <td><em>Eigenvurdering</em> (nb: <em>egenvurdering</em>)</td><td>—</td><td>Self-assessment.</td></tr>
 <tr>
-<td><em>Undervegsvurdering</em> (nb: <em>underveisvurdering</em>)</td><td>—</td><td>Formative assessment.</td></tr>
+<td><em>Undervegsvurdering</em> (nb: <em>underveisvurdering</em>)</td><td>—</td><td>Formative assessment. Not a phase; do not confuse with <em>mellomarbeid</em>.</td></tr>
 <tr>
 <td><em>Sluttvurdering</em></td><td>—</td><td>Summative assessment (exam). Out of scope.</td></tr>
 <tr>

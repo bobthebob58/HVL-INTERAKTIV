@@ -15,19 +15,32 @@ them something useful back for their own career (the *pedagogisk mappe*).
 
 ## 1. Terminology is configuration, not code
 
-The phases and labels must match ALU's *Modellen for læringsdesign ved HVL* exactly. That
-document (`docs/reference/hvl-modellen-for-laeringsdesign.pdf`) has **not yet been provided**. So
-every label lives in `content/laeringsdesign/phases.yaml`, with `nn`/`nb`/`en` strings, and code
-refers only to stable keys:
+**HVL's model.** HVL has developed a model for learning design, *«HVL læringsdesign»*, and teaches it
+to course leaders in the *Emnedesign* module (UPED854). Its public description (Møgelvang & Isaksen
+2025, MNT-konferansen; HVL Årsrapport 2024 p. 23) presents an alignment model built on three
+interdependent parts, **kontekst**, **kunnskap** and **samskaping**. It applies across levels, from the
+single *læringsøkt* (mikronivå) through the *emne* and *studieprogram* to the institution, and uses
+*baklengs planlegging* (backward planning) and *meningsskapande samsvar* (constructive alignment).
+See [`docs/reference/hvl-laeringsdesign-model.md`](../reference/hvl-laeringsdesign-model.md).
 
-| Key | Working label (nn) | Meaning |
+**Where HVL Interaktiv sits.** The activities live at the model's **mikronivå**: the work students do
+before, between and after a *samling*. HVL's course pages call this work *forarbeid*, *mellomarbeid*
+and *etterarbeid* (*før- og etterarbeid*; English "pre-, intermediate and post-work"). These are
+course-organisation terms, not named phases of the model (D-019).
+
+Every label lives in `content/laeringsdesign/phases.yaml`, with `nn`/`nb`/`en` strings, and code
+refers only to stable keys. The proposed file is
+[`docs/reference/proposals/phases.yaml`](../reference/proposals/phases.yaml); ALU must confirm the
+labels against the model document (`hvl-modellen-for-laeringsdesign.pdf`, not yet provided).
+
+| Key | Label (nn / en) | Meaning |
 |---|---|---|
-| `forarbeid` | Forarbeid | Asynchronous pre-work before a seminar, lab or lecture |
-| `underveis` | Underveis / mellomarbeid | Asynchronous active processing between sessions and during *praksis* |
-| `etterarbeid` | Etterarbeid og eigenvurdering | Consolidation, retrieval practice, self-assessment |
+| `forarbeid` | Forarbeid / Pre-work | Asynchronous pre-work before a seminar, lab or lecture |
+| `underveis` | Mellomarbeid / Intermediate work | Asynchronous active processing between sessions and during *praksis*. The key keeps its old name; the label is HVL's term. Not to be confused with *undervegsvurdering* (formative assessment) |
+| `etterarbeid` | Etterarbeid / Post-work | Consolidation, retrieval practice and self-assessment (*eigenvurdering*) |
 
-The synchronous session in the middle (*samling / synkron økt*) is not authored in HVL Interaktiv.
-It appears on the studio page to show where the activities fit.
+The synchronous session in the middle (*samling*; online: *nettsamling*) is not authored in HVL
+Interaktiv. It appears on the studio page to show where the activities fit.
 
 #### PED-001 · MUST · S5 · Phases and labels load from content files
 - **Acceptance:** Renaming a label in `phases.yaml` changes it everywhere with no code change. The
@@ -40,7 +53,7 @@ It appears on the studio page to show where the activities fit.
 
 | Route | Purpose | Audience |
 |---|---|---|
-| `/laeringsdesign` | Guide: *Støtte til studentaktiv læring og HVL Læringsdesign*. Research summary, the phase matrix, and the pattern catalogue with filters. | Everyone (public within HVL) |
+| `/laeringsdesign` | Guide: *Studentaktiv læring med «HVL læringsdesign»* (working title; ALU to name it). The model in brief, the research summary, the phase matrix, and the pattern catalogue with filters. | Everyone (public within HVL) |
 | `/laeringsdesign/monster/[patternId]` | Pattern detail: when to use it, why it works, an example, and *Create from this pattern* | Everyone; create = author |
 | `/laeringsdesign/planlegg` | Alignment planner for one course (`PED-031`) | Authors |
 | `/mappe` | Portfolio export (`MAPPE-*`) | Authors |
@@ -48,12 +61,14 @@ It appears on the studio page to show where the activities fit.
 #### PED-002 · MUST · S5 · Guide page content
 The guide page contains, in this order:
 1. A 3-sentence introduction to why asynchronous work often fails (passive material, high cognitive load) and what helps.
-2. **Three mechanisms**, each with a plain-language explanation, a "what this means for your
+2. A short introduction to «HVL læringsdesign» (kontekst, kunnskap, samskaping; backward planning from
+   the learning outcomes) and where the activities sit in it (mikronivå), citing Møgelvang & Isaksen (2025).
+3. **Three mechanisms**, each with a plain-language explanation, a "what this means for your
    activity" box and its references (§3): *segment and retrieve*; *explain, don't just mark*;
    *practise judgement safely*.
-3. **The phase matrix** (§3), with a filter by phase that also filters the pattern catalogue.
-4. **The pattern catalogue** (§4) as cards: name, phase, content type, one-line purpose, time to build.
-5. A link to ALU support and the *Emnedesign* module.
+4. **The phase matrix** (§3), with a filter by phase that also filters the pattern catalogue.
+5. **The pattern catalogue** (§4) as cards: name, phase, content type, one-line purpose, time to build.
+6. Links to ALU support (hvl.no/alu) and the *Emnedesign* module (UPED854).
 - **Acceptance:** Every factual claim has a reference. Page text lives in
   `content/laeringsdesign/guide.{nn,nb,en}.mdx`, so ALU can edit it without changing code.
 - **Verify:** Component test; ALU content review is recorded in `PROGRESS.md`.
@@ -69,7 +84,7 @@ Authors filter patterns by phase, content type and estimated build time. The fil
 | Phase | Pedagogical purpose | Recommended patterns (§4) | Canvas placement and attempt policy |
 |---|---|---|---|
 | **Forarbeid** | Activate prior knowledge; meet threshold concepts; surface misconceptions *before* teaching | `fa-video`, `fa-slides`, `fa-hotspots`, `ea-diagnose` | In the module before the seminar. Unlimited retries; *Show solution* on. The teacher reviews **Før samlinga** insight the evening before. |
-| **Underveis** | Deepen integration; practise professional judgement (*profesjonell dømmekraft*, *didaktisk skjønn*) on realistic cases | `uv-case`, `uv-module`, `uv-column` | One or two interactive items per Canvas page. Resume enabled. |
+| **Mellomarbeid** (`underveis`) | Deepen integration; practise professional judgement (*profesjonell dømmekraft*, *didaktisk skjønn*) on realistic cases | `uv-case`, `uv-module`, `uv-column` | One or two interactive items per Canvas page. Resume enabled. |
 | **Etterarbeid** | Consolidate through spaced retrieval; check the learning outcomes (*læringsutbytte*) | `ea-retrieval`, `ea-terms`, `ea-diagnose` | Graded through AGS with the `mastery` or `best` policy (`LTI-012`), unlimited attempts. Suggested repetition dates (`PROD-014`). |
 
 Research basis for the guide page (titles and venues must be checked by ALU before publishing):
@@ -80,7 +95,7 @@ Research basis for the guide page (titles and venues must be checked by ALU befo
 | Explain, don't just mark | Shute (2008) *RER* 78(1); Hattie & Timperley (2007) *RER* 77(1); Nicol & Macfarlane-Dick (2006) *Studies in Higher Education* 31(2) |
 | Spacing and practice testing | Cepeda et al. (2006) *Psychological Bulletin* 132(3); Dunlosky et al. (2013) *PSPI* 14(1) |
 | Practise judgement safely | Schön (1983) *The Reflective Practitioner*; van Manen (1991) *The Tact of Teaching* |
-| Aligning it all | Biggs (1996) *Higher Education* 32(3) |
+| Aligning it all | Biggs (1996) *Higher Education* 32(3); Wiggins & McTighe (2005) *Understanding by Design* (2nd ed.); Møgelvang & Isaksen (2025) *Nordic Journal of STEM Education* 9(2) — HVL's own model |
 | Using pre-work in class | Novak, Patterson, Gavrin & Christian (1999) *Just-in-Time Teaching* |
 
 ---
@@ -150,7 +165,7 @@ prompted (but not required) on publish.
 
 | Field | Type | Notes |
 |---|---|---|
-| `phase` | `forarbeid \| underveis \| etterarbeid` | From the pattern by default |
+| `phase` | `forarbeid \| underveis \| etterarbeid` (labels *Forarbeid*, *Mellomarbeid*, *Etterarbeid*) | From the pattern by default |
 | `courseCode` | string, e.g. `SYK110` | Free text. Prefilled from the LTI context label when available |
 | `learningOutcomes` | list of `{ text, category }` | `category` follows the Norwegian qualifications framework (NKR): `kunnskap`, `ferdigheiter`, `generell kompetanse` |
 | `rationale` | text ≤ 1 000 characters | "Why this design for this outcome?" Used in the portfolio |
@@ -174,9 +189,12 @@ taken from the metadata. This helps them plan their study and self-regulate.
 
 ## 7. Pedagogisk mappe export
 
-HVL asks staff who apply for promotion or *meritert undervisar* status to document their teaching
-practice and their reasoning, including their use of educational technology. This feature produces
-a ready-to-edit dossier from work the teacher has already done.
+HVL asks staff who apply for appointment, promotion (*opprykk*) or *merittert undervisar* status to
+document their teaching practice and their reasoning in a *pedagogisk mappe*. ALU states that the
+portfolio also covers work with educational technology, and the 2025 merit criteria name *varierte
+læremidler* (sub-criterion 2.3). This feature produces a ready-to-edit draft from work the teacher has
+already done. The evidence behind this section is in
+[`docs/reference/hvl-pedagogisk-mappe-criteria.md`](../reference/hvl-pedagogisk-mappe-criteria.md) (D-020).
 
 #### MAPPE-001 · SHOULD · S5 · Select and export
 On `/mappe`, an author selects activities, filtered by course, phase or date. The author exports
@@ -184,16 +202,34 @@ On `/mappe`, an author selects activities, filtered by course, phase or date. Th
 - **Verify:** Integration test produces both files from fixtures.
 
 #### MAPPE-002 · SHOULD · S5 · Dossier structure
-Headings come from `content/mappe/template.{nn,nb,en}.md`, so they can be aligned with ALU's
-*Utdanningsfagleg kompetanse og pedagogisk mappe* criteria once that document arrives
-(`docs/reference/hvl-pedagogisk-mappe-retningslinjer.pdf`). The default structure is:
-1. Summary of the teacher's learning-design approach (the author writes this; a prompt is pre-filled).
-2. For each activity: title, content type, phase, course, learning outcomes, didactic rationale,
-   universal design status (validator result plus any acknowledgements with reasons), a link to the
-   activity, and **anonymised aggregates** (participants, completion rate, median attempts, and how
-   results changed between first and last attempts).
-3. Reflection prompts linked to the research in §3 (the author writes the answers).
-4. References.
+Headings come from `content/mappe/template.{nn,nb,en}.md` and criterion texts from
+`content/mappe/criteria.{nn,nb,en}.yaml`, keyed by criteria set (default `hvl-merittering-2025`).
+HVL revises the merit criteria for every call (next call 2027), so a new set is a content change only.
+The proposed Nynorsk template is
+[`docs/reference/proposals/mappe-template.nn.md`](../reference/proposals/mappe-template.nn.md). The
+default structure follows HVL's three-part merit portfolio:
+1. **Reader's guide:** a table mapping each 2025 criterion (1.1–1.4, 2.1–2.4, 3.1–3.3) to the chapter
+   and attachment that address it, as in published HVL portfolios.
+2. **Del 1 – Samanhengande framstilling:** chapters ordered by the criteria, each with a pre-filled
+   writing prompt. The teacher's learning-design approach opens the text. For each selected activity
+   (under 2.3, *varierte læremidler*): title, content type, phase, course, learning outcomes, didactic
+   rationale, universal design status (validator result plus any acknowledgements with reasons), a link,
+   and **anonymised aggregates** (participants, completion rate, median attempts, change between first
+   and last attempts). A live word count shows Del 1 against the limit (default 7 500 words, references
+   excluded).
+3. **Del 2 – Pedagogisk CV:** entries HVL Interaktiv can document (digital learning resources developed,
+   with dates), to paste into HVL's own CV template.
+4. **Del 3 – Suggested attachments** (default limit 11, including the manager's letter, which the tool
+   never produces): documentation of developed learning resources, and an anonymised summary of student
+   feedback.
+5. **References**, pre-filled from the patterns' research keys (§3).
+
+The word limit, attachment limit and criteria set are content values marked *(verify)* until ALU
+confirms them. A promotion mode (*opprykk*, rules in force from 13 June 2025) uses the same three parts;
+its Del 1 headings wait for ALU.
+- **Acceptance:** Switching the criteria set changes every criterion text and the reader's guide with no
+  code change. The word count excludes the references and the reader's guide.
+- **Verify:** Integration test with two fixture criteria sets.
 
 #### MAPPE-003 · MUST · S5 · Privacy in the export
 Aggregates apply the same minimum group size as insight (`INS-006`, default *k* = 5). No learner

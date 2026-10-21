@@ -17,8 +17,8 @@
 - **Privacy:** learners are HMAC pseudonyms (`learnerKey`). NEVER store learner names, e-mails, Feide IDs, NIN
   or raw LTI `sub` (except encrypted in `GradeSyncJob`). Teachers see aggregates only; suppress groups < k (5).
   Logs contain no personal data or tokens.
-- **WCAG 2.2 AA + HVL rules:** colours only from `packages/design-tokens` (contrast-tested). Feedback NEVER by
-  colour alone: icon + text prefix (✓ Riktig: / ✗ Feil:). Two-tone focus ring (#003D4C + white), never orange
+- **WCAG 2.2 AA + HVL rules:** colours only from `packages/design-tokens` (HVL palette, contrast-tested; D-017). Feedback NEVER by
+  colour alone: icon + text prefix (✓ Riktig: / ✗ Feil:). Two-tone focus ring (#004357 + white), never orange
   alone. Body text line-height ≥ 1.5, left-aligned, never justified, no ALL CAPS, underline only for links.
 - **Formative only:** H5P scores are client-side. Label AGS scores formative. Never present them as exam evidence.
 - **Language:** UI strings only via i18n in `nn` (default), `nb`, `en`. Code and comments in English;

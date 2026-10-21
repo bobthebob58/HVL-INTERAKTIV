@@ -46,7 +46,7 @@ export function overviewView(docs, requirements, render) {
 <div><dt>Requirements</dt><dd><a href="#requirements">${requirements.length}</a> <span class="sub">${byPriority('MUST')} must · ${byPriority('SHOULD')} should · ${byPriority('COULD')} could</span></dd></div>
 <div><dt>Build sessions</dt><dd>${sessionCount} <span class="sub">${Math.max(0, done)} of ${sessionCount} done; specification complete</span></dd></div>
 <div><dt>H5P content types</dt><dd>${contentTypes} <span class="sub">chosen for pedagogy and accessibility</span></dd></div>
-<div><dt>Learning-design patterns</dt><dd>${patterns} <span class="sub">for forarbeid, underveis and etterarbeid</span></dd></div>
+<div><dt>Learning-design patterns</dt><dd>${patterns} <span class="sub">for forarbeid, mellomarbeid and etterarbeid</span></dd></div>
 </dl>
 <h3 id="overview--offer" tabindex="-1">What it does for teachers and students</h3>
 ${block(offer, 'readme', 'What it does')}

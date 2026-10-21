@@ -131,7 +131,7 @@ Each step names the requirements it exercises.
 ## 5. Functional requirements
 
 #### PROD-001 · MUST · S5 · Create an activity from a learning-design pattern
-An author can create a new activity by choosing a phase (*Forarbeid*, *Underveis*, *Etterarbeid*)
+An author can create a new activity by choosing a phase (*Forarbeid*, *Mellomarbeid*, *Etterarbeid*)
 and then a pattern. The H5P editor opens pre-filled with a pedagogically sound skeleton and guidance.
 - **Acceptance:** Every pattern in [04 §4](04-laeringsdesign-page.md#4-pattern-catalogue) can be
   instantiated. The created content passes `validateContent` with zero *errors* before the author

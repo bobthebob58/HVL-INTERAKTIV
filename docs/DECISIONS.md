@@ -27,6 +27,11 @@ with the commands given.
 | D-014 | English in code, Norwegian domain terms preserved | Accepted |
 | D-015 | Licence GPL-3.0-or-later | Accepted (2026-10-16) |
 | D-016 | Specs beyond the plan's four, plus requirement IDs and traceability | Accepted |
+| D-017 | Brand tokens follow HVL's design manual (Mørk blå 2, Sjøgrønn …) | Accepted (2026-10-21), HVL to confirm values |
+| D-018 | Typefaces: Arial and Georgia, as the manual's office fonts | Accepted (2026-10-21), ALU/HVL to confirm |
+| D-019 | Phases are course-organisation vocabulary at the model's *mikronivå*; `underveis` is labelled *Mellomarbeid* | Accepted (2026-10-21), ALU to confirm |
+| D-020 | Portfolio export follows HVL's three-part merit portfolio and the 2025 criteria, as content | Accepted (2026-10-21), ALU to confirm |
+| D-021 | The Feide ID token is kept in the server-side session for logout only | Accepted (2026-10-21) |
 
 ---
 
@@ -85,8 +90,10 @@ with the commands given.
 - **Context:** The plan pairs coastal teal with a `#FF9E1B` focus outline. Measured contrast against
   white is 2.07 : 1, which fails WCAG 1.4.11 (needs 3 : 1). The plan also overstated two feedback
   contrast ratios (7.21 : 1 and 7.08 : 1 measured; both still pass).
-- **Decision:** `outline: 3px solid #003D4C` with a 2 px white inner ring, which works on light and
-  dark surfaces (`UD-004`). Contrast is tested in CI from the tokens (`UD-001`).
+- **Decision:** `outline: 3px solid` HVL Mørk blå 2 (`#004357`, 10.82 : 1 on white; originally `#003D4C`,
+  changed by D-017) with a 2 px white inner ring, which works on light and dark surfaces (`UD-004`).
+  Contrast is tested in CI from the tokens (`UD-001`). `#FF9E1B` is not an HVL colour; HVL's orange is
+  Oransje `#EB6851`. It clears 3 : 1 on white only narrowly (3.17 : 1), so it stays decorative.
 
 ### D-008 · Formative use only
 H5P scores in the browser, so scores can be forged. AGS scores are labelled formative and the UI
@@ -143,3 +150,63 @@ The plan defines four module specs. This repository adds spec 00 (product, users
 [Evaluator Guide](EVALUATOR-GUIDE.md). Requirement IDs connect spec, code and tests, and
 `tools/spec-trace/specTrace.mjs` enforces them. The plan's session structure and its progressive
 loading of one spec per session are kept.
+
+### D-017 · Brand tokens follow HVL's design manual
+- **Context:** The plan's colours (`#003D4C`, `#005F6B`, `#007681`, `#FF9E1B`, "deep fjord teal", "coastal
+  teal") appear in no HVL source. HVL's *Visuell identitet / Profilmanual* (v2.0, February 2017, p. 16)
+  defines the logo colours Mørk blå 2 `#004357` (PMS 3035 U) and Sjøgrønn `#00AFBA` (PMS 7710 U), plus
+  signal, support and additional colours. The values were read through search extracts of the manual and
+  agree with independent transcriptions and with two public copies of the logo
+  ([docs/reference/hvl-visual-identity.md](reference/hvl-visual-identity.md)).
+- **Decision:** Spec 03 §2 uses Mørk blå 2 for headings, links, primary buttons and the focus ring
+  (10.82 : 1 on white), Mørk blå 1 `#008AAF` for non-text UI only (4.00 : 1), Sjøgrønn and Oransje for
+  decoration only, Blågrå lys `#C9D5DA` for bands, Mørk raud `#6D2439` for incorrect-answer text.
+  Body text stays a neutral near-black `#111111`, because the HVL palette has no text black and its
+  greys fail 4.5 : 1. Neutral tokens are labelled as such.
+- **Consequences:** CLAUDE.md, `UD-004` and D-007 now name `#004357`. HVL (profil@hvl.no) must confirm the
+  values, the four hex/RGB mismatches noted in the reference file, and whether derived shades are allowed.
+- **Re-check:** `python3 -I docs/reference/tools/contrast.py`.
+
+### D-018 · Typefaces: Arial and Georgia
+- **Context:** The plan specified Inter, Arial and Calibri. HVL's manual names NB Akademie Std (titles,
+  captions) and Lyon Text (body) as profile fonts, with **Arial** and **Georgia** as the office
+  substitutes. Both profile fonts are commercial; no source shows that HVL holds web-font licences.
+- **Decision:** Headings, UI controls and captions use Arial; long-form body text uses Georgia (`UD-002`).
+  The licensed profile fonts may be self-hosted in front of these stacks once HVL confirms web licences.
+  Inter and Calibri are dropped.
+- **Consequences:** No third-party font requests are needed (`DATA-011`).
+
+### D-019 · Phases are course-organisation vocabulary at the model's *mikronivå*
+- **Context:** Spec 04 assumed that *Modellen for læringsdesign ved HVL* defines phases. HVL's annual
+  report 2024 (p. 23) confirms the model exists. Its only public description (Møgelvang & Isaksen 2025,
+  MNT-konferansen) presents an alignment model built on *kontekst*, *kunnskap* and *samskaping*, applied
+  across levels from the *læringsøkt* (mikronivå) to the institution, using *baklengs planlegging*. HVL's
+  course pages use *forarbeid*, *mellomarbeid* and *etterarbeid* (and *før- og etterarbeid*) for work
+  around a *samling*. No HVL page uses *underveis* as a phase name, and it is easily confused with
+  *undervegsvurdering* (formative assessment).
+  ([docs/reference/hvl-laeringsdesign-model.md](reference/hvl-laeringsdesign-model.md))
+- **Decision:** Keep the stable keys `forarbeid`, `underveis`, `etterarbeid`. Label them *Forarbeid*,
+  *Mellomarbeid* and *Etterarbeid* (en: *Pre-work*, *Intermediate work*, *Post-work*). Present them as the
+  structure of a *læringsøkt* around a *samling*, not as the phases of HVL's model. The studio introduces
+  the model itself (kontekst, kunnskap, samskaping; backward planning) and links to its public description.
+- **Consequences:** Spec 04 §1, the glossary and the proposed `phases.yaml` change. ALU must confirm the
+  labels against the model document.
+
+### D-020 · Portfolio export follows HVL's merit portfolio, as content
+- **Context:** The plan cited criteria "1.1–3.2". HVL's 2025 merit call has three main criteria and eleven
+  sub-criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), revised for each call. The merit portfolio has three parts:
+  Del 1 *samanhengande framstilling* (up to 7 500 words, references excluded), Del 2 *pedagogisk CV*, and
+  Del 3 up to 11 attachments including the manager's letter.
+  ([docs/reference/hvl-pedagogisk-mappe-criteria.md](reference/hvl-pedagogisk-mappe-criteria.md))
+- **Decision:** `MAPPE-002` follows the three-part structure with a criterion table as a reader's guide.
+  Criteria texts, the word limit and the attachment limit live in content files keyed by criteria set
+  (`hvl-merittering-2025`), so the 2027 call needs only a content change. A promotion (*opprykk*) mode
+  waits for ALU to confirm its headings.
+
+### D-021 · The Feide ID token is kept in the server-side session for logout only
+- **Context:** Feide's RP-initiated logout requires both `post_logout_redirect_uri` and `id_token_hint`.
+  The ID token contains the user's name and e-mail when those attribute groups are released.
+- **Decision:** Keep the raw ID token only in the Redis session (encrypted at rest, deleted at logout or
+  expiry). Never write it to PostgreSQL or logs. Learner name and e-mail are dropped before anything is
+  persisted (`AUTH-003`, `AUTH-004`).
+

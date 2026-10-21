@@ -20,7 +20,7 @@ be resumed where they left off.
 
 | For teachers | For students |
 |---|---|
-| Start from **nine learning-design patterns** for *forarbeid*, *underveis* and *etterarbeid*, not a blank editor | Short, focused activities with **explanatory feedback** |
+| Start from **nine learning-design patterns** for *forarbeid*, *mellomarbeid* and *etterarbeid*, not a blank editor | Short, focused activities with **explanatory feedback** |
 | Use **ten curated H5P content types**, chosen for pedagogical value and accessibility | **Resume** on any device; unlimited retries in practice activities |
 | A **pre-publish check** catches missing alt text and captions, and nudges towards good design | Works with **keyboard, screen readers and 320 px phones** (WCAG 2.2 AA) |
 | **Before-the-seminar insight**: hardest questions, most common wrong answers, anonymised | **Nynorsk** by default, plus Bokmål and English |
