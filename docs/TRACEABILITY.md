@@ -8,9 +8,9 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 
 | | MUST | SHOULD | COULD | Total |
 |---|---|---|---|---|
-| planned | 104 | 17 | 3 | 124 |
-| in code | 2 | 0 | 0 | 2 |
-| tested | 0 | 0 | 0 | 0 |
+| planned | 80 | 17 | 3 | 100 |
+| in code | 1 | 0 | 0 | 1 |
+| tested | 25 | 0 | 0 | 25 |
 
 ## [docs/specs/00-product-and-pedagogy.md](specs/00-product-and-pedagogy.md)
 
@@ -27,25 +27,25 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 | PROD-009 | MUST | S5 | Formative defaults | — | — | planned |
 | PROD-010 | MUST | S6 | Teacher insight before the seminar | — | — | planned |
 | PROD-011 | MUST | S4 | Formative-use notice | — | — | planned |
-| PROD-012 | MUST | S1 | Three languages, Nynorsk first | — | — | planned |
+| PROD-012 | MUST | S1 | Three languages, Nynorsk first | `apps/server/src/i18n/translate.ts` | `apps/server/test/i18n/translate.test.ts` | tested |
 | PROD-013 | SHOULD | S5 | Safe editing of a published activity | — | — | planned |
 | PROD-014 | COULD | S6 | Spaced-retrieval suggestion | — | — | planned |
 | NFR-001 | MUST | S6 | Performance | — | — | planned |
 | NFR-002 | MUST | S6 | Availability and recoverability | — | — | planned |
 | NFR-003 | MUST | S4 | Mobile and assistive technology | — | — | planned |
-| NFR-004 | MUST | S1 | Maintainability | — | — | planned |
-| NFR-005 | MUST | S1 | Open source licence | — | — | planned |
-| NFR-006 | MUST | S6 | Observability without personal data | — | — | planned |
+| NFR-004 | MUST | S1 | Maintainability | `apps/server/vitest.config.ts` | `tools/doc-lint/test/ciWorkflow.test.mjs` | tested |
+| NFR-005 | MUST | S1 | Open source licence | `tools/dependency-check/checkLicences.mjs` | `tools/dependency-check/test/checkLicences.test.mjs`<br>`tools/doc-lint/test/ciWorkflow.test.mjs` | tested |
+| NFR-006 | MUST | S6 | Observability without personal data | `apps/server/src/logging/logger.ts`<br>`apps/server/src/logging/redactPersonalData.ts` | `apps/server/test/logging/logger.test.ts` | tested |
 | NFR-007 | MUST | S6 | Deployable on HVL or Sikt infrastructure | — | — | planned |
 
 ## [docs/specs/01-h5p-core128.md](specs/01-h5p-core128.md)
 
 | ID | Priority | Session | Requirement | Code | Tests | Status |
 |---|---|---|---|---|---|---|
-| H5P-001 | MUST | S1 | Target Core API 1.28 and the new Hub | — | — | planned |
+| H5P-001 | MUST | S1 | Target Core API 1.28 and the new Hub | `apps/server/src/h5p/H5pConfigFactory.ts`<br>`apps/server/src/h5p/bootCheck.ts`<br>`apps/server/src/h5p/coreVersionCheck.ts`<br>`apps/server/src/h5p/h5pServerInit.ts`<br>`tools/h5p-core/fetchCoreClients.sh`<br>`tools/h5p-core/verifyClientFiles.mjs` | `apps/server/test/h5p/H5pConfigFactory.test.ts`<br>`apps/server/test/h5p/h5pServerInit.test.ts`<br>`tools/h5p-core/test/verifyClientFiles.test.mjs` | tested |
 | H5P-002 | MUST | S2 | Ten-type authoring whitelist | — | — | planned |
 | H5P-003 | MUST | S2 | Deterministic offline seeding | `tools/seed/fetch-seed-packages.sh` | — | in code |
-| H5P-004 | MUST | S1 | Production storage adapters | — | — | planned |
+| H5P-004 | MUST | S1 | Production storage adapters | `apps/server/src/h5p/h5pStorage.ts`<br>`apps/server/src/h5p/jobs/TemporaryFileCleanupJob.ts`<br>`apps/server/src/h5p/storage/PrismaContentStorage.ts`<br>`apps/server/src/h5p/storage/RedisKeyValueStorage.ts`<br>`apps/server/src/h5p/storage/S3ContentFileStore.ts`<br>`apps/server/src/h5p/storage/S3TemporaryFileStorage.ts`<br>`apps/server/src/h5p/storage/contentUsage.ts`<br>`apps/server/src/h5p/storage/libraryStorageFactory.ts`<br>`apps/server/src/h5p/storage/s3Objects.ts`<br>`apps/server/src/infra/prismaClient.ts`<br>`apps/server/src/infra/redisClient.ts`<br>`apps/server/src/infra/s3Client.ts`<br>`apps/server/test/support/services.ts`<br>`apps/server/test/support/storageFixtures.ts` | `apps/server/test/h5p/contentStorage.int.test.ts`<br>`apps/server/test/h5p/s3Objects.test.ts`<br>`apps/server/test/h5p/sharedState.int.test.ts` | tested |
 | H5P-005 | MUST | S2 | Learner state persistence (resume) | — | — | planned |
 | H5P-006 | MUST | S2 | Permission system | — | — | planned |
 | H5P-007 | MUST | S3 | Authenticated H5P AJAX in iframes | — | — | planned |
@@ -54,12 +54,12 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 | H5P-010 | SHOULD | S6 | Panopto-first video guidance | — | — | planned |
 | H5P-011 | MUST | S2 | Controlled library updates | — | — | planned |
 | SEC-001 | MUST | S2 | Sanitise SVG files (CVE-2025-7062 mitigation) | — | — | planned |
-| SEC-002 | MUST | S2 | Narrow allowlist and content sniffing | — | — | planned |
+| SEC-002 | MUST | S2 | Narrow allowlist and content sniffing | `apps/server/src/h5p/H5pConfigFactory.ts` | `apps/server/test/h5p/H5pConfigFactory.test.ts` | tested |
 | SEC-003 | MUST | S2 | Uploaded packages never install code for non-admins | — | — | planned |
 | SEC-004 | MUST | S2 | Serve user content defensively | — | — | planned |
-| SEC-005 | MUST | S1 | Size limits and archive safety | — | — | planned |
+| SEC-005 | MUST | S1 | Size limits and archive safety | `apps/server/src/h5p/H5pConfigFactory.ts`<br>`apps/server/src/h5p/storage/S3ContentFileStore.ts`<br>`apps/server/src/h5p/storage/S3TemporaryFileStorage.ts`<br>`apps/server/src/h5p/storage/s3Objects.ts`<br>`apps/server/src/security/zipEntryGuard.ts` | `apps/server/test/h5p/H5pConfigFactory.test.ts`<br>`apps/server/test/h5p/contentStorage.int.test.ts`<br>`apps/server/test/h5p/s3Objects.test.ts`<br>`apps/server/test/security/zipEntryGuard.test.ts` | tested |
 | SEC-006 | SHOULD | S6 | Malware scanning | — | — | planned |
-| SEC-007 | MUST | S1 | Dependency hygiene | — | — | planned |
+| SEC-007 | MUST | S1 | Dependency hygiene | `tools/dependency-check/checkAudit.mjs`<br>`tools/dependency-check/checkPins.mjs` | `tools/dependency-check/test/checkAudit.test.mjs`<br>`tools/dependency-check/test/checkPins.test.mjs`<br>`tools/doc-lint/test/ciWorkflow.test.mjs` | tested |
 | SEC-008 | MUST | S2 | Regression test for CVE-2025-47828 | — | — | planned |
 
 ## [docs/specs/02-auth-feide-lti13.md](specs/02-auth-feide-lti13.md)
@@ -141,15 +141,15 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 | INS-008 | MUST | S6 | Accessible charts | — | — | planned |
 | INS-009 | SHOULD | S6 | Export aggregated CSV | — | — | planned |
 | INS-010 | SHOULD | S6 | Validator status in insight | — | — | planned |
-| DATA-001 | MUST | S1 | Data inventory | — | — | planned |
-| DATA-002 | MUST | S1 | Pseudonymous learners | — | — | planned |
+| DATA-001 | MUST | S1 | Data inventory | `apps/server/prisma.config.ts`<br>`apps/server/src/infra/prismaClient.ts`<br>`tools/privacy/checkInventory.mjs`<br>`tools/privacy/prismaSchema.mjs` | `apps/server/test/db/schema.int.test.ts`<br>`tools/privacy/test/checkInventory.test.mjs` | tested |
+| DATA-002 | MUST | S1 | Pseudonymous learners | `apps/server/src/privacy/academicYear.ts`<br>`apps/server/src/privacy/deriveLearnerKey.ts`<br>`apps/server/src/privacy/pseudonymSecrets.ts`<br>`tools/privacy/checkInventory.mjs`<br>`tools/privacy/prismaSchema.mjs` | `apps/server/test/config/env.test.ts`<br>`apps/server/test/db/schema.int.test.ts`<br>`apps/server/test/privacy/deriveLearnerKey.test.ts`<br>`tools/privacy/test/checkInventory.test.mjs` | tested |
 | DATA-003 | MUST | S6 | Annual retention purge | — | — | planned |
 | DATA-004 | MUST | S6 | EEA residency and encryption | — | — | planned |
 | DATA-005 | MUST | S6 | DPIA input | — | — | planned |
 | DATA-006 | MUST | S4 | Transparency for students | — | — | planned |
 | DATA-007 | MUST | S6 | Audit log | — | — | planned |
 | DATA-008 | MUST | S6 | Data-subject requests | — | — | planned |
-| DATA-009 | MUST | S1 | Logs contain no personal data | — | — | planned |
+| DATA-009 | MUST | S1 | Logs contain no personal data | `apps/server/src/logging/logger.ts`<br>`apps/server/src/logging/redactPersonalData.ts` | `apps/server/test/logging/logger.test.ts` | tested |
 | DATA-010 | MUST | S6 | Least-privilege access to infrastructure | — | — | planned |
 | DATA-011 | MUST | S4 | No third-party tracking or CDNs | — | — | planned |
 | DATA-012 | MUST | S6 | Minimal xAPI storage | — | — | planned |
@@ -158,17 +158,17 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 
 | ID | Priority | Session | Requirement | Code | Tests | Status |
 |---|---|---|---|---|---|---|
-| DOC-001 | MUST | S1 | Every source file starts with a module header | — | — | planned |
-| DOC-002 | MUST | S1 | Every exported symbol has TSDoc | — | — | planned |
-| DOC-003 | MUST | S1 | Explain non-obvious code with tagged rationale comments | — | — | planned |
-| DOC-004 | MUST | S1 | Requirement IDs connect spec, code and tests | `tools/spec-site/buildSpecSite.mjs`<br>`tools/spec-site/markdownRenderer.mjs`<br>`tools/spec-site/overviewView.mjs`<br>`tools/spec-site/pageTemplate.mjs`<br>`tools/spec-site/spec-site.base.css`<br>`tools/spec-site/spec-site.client.js`<br>`tools/spec-site/spec-site.components.css`<br>`tools/spec-site/specParser.mjs`<br>`tools/spec-trace/specTrace.mjs` | — | in code |
-| DOC-005 | MUST | S1 | Each app and package has a README | — | — | planned |
-| DOC-006 | MUST | S1 | Tests are written to be read | — | — | planned |
-| DOC-007 | MUST | S1 | Small, explicitly named files | — | — | planned |
-| DOC-008 | MUST | S1 | Configuration is documented where it is defined | — | — | planned |
-| DOC-009 | MUST | S1 | Language conventions | — | — | planned |
-| DOC-010 | MUST | S1 | Decisions and deviations are logged | — | — | planned |
-| DOC-011 | MUST | S1 | Commit messages are traceable | — | — | planned |
+| DOC-001 | MUST | S1 | Every source file starts with a module header | `tools/doc-lint/checks/moduleHeader.mjs`<br>`tools/doc-lint/docLint.mjs`<br>`tools/doc-lint/lib/repo.mjs` | `tools/doc-lint/test/docLint.headers.test.mjs` | tested |
+| DOC-002 | MUST | S1 | Every exported symbol has TSDoc | `tools/doc-lint/checks/exportDocs.mjs` | `tools/doc-lint/test/docLint.headers.test.mjs` | tested |
+| DOC-003 | MUST | S1 | Explain non-obvious code with tagged rationale comments | `tools/doc-lint/checks/rationaleTags.mjs` | `tools/doc-lint/test/docLint.headers.test.mjs` | tested |
+| DOC-004 | MUST | S1 | Requirement IDs connect spec, code and tests | `tools/spec-site/buildSpecSite.mjs`<br>`tools/spec-site/markdownRenderer.mjs`<br>`tools/spec-site/overviewView.mjs`<br>`tools/spec-site/pageTemplate.mjs`<br>`tools/spec-site/spec-site.base.css`<br>`tools/spec-site/spec-site.client.js`<br>`tools/spec-site/spec-site.components.css`<br>`tools/spec-site/specParser.mjs`<br>`tools/spec-trace/specTrace.mjs` | `tools/spec-trace/test/specTrace.test.mjs` | tested |
+| DOC-005 | MUST | S1 | Each app and package has a README | `tools/doc-lint/checks/packageReadme.mjs` | `tools/doc-lint/test/docLint.repo.test.mjs` | tested |
+| DOC-006 | MUST | S1 | Tests are written to be read | `tools/doc-lint/checks/moduleHeader.mjs`<br>`tools/doc-lint/checks/testReadability.mjs`<br>`tools/doc-lint/test/tempRepo.mjs` | `tools/doc-lint/test/docLint.code.test.mjs` | tested |
+| DOC-007 | MUST | S1 | Small, explicitly named files | `tools/doc-lint/checks/fileSize.mjs` | `tools/doc-lint/test/docLint.code.test.mjs` | tested |
+| DOC-008 | MUST | S1 | Configuration is documented where it is defined | `apps/server/src/config/env.ts`<br>`tools/doc-lint/checks/envDocumented.mjs` | `apps/server/test/config/env.test.ts`<br>`tools/doc-lint/test/docLint.repo.test.mjs` | tested |
+| DOC-009 | MUST | S1 | Language conventions | `apps/server/src/i18n/translate.ts`<br>`tools/doc-lint/checks/localeParity.mjs` | `apps/server/test/i18n/translate.test.ts`<br>`tools/doc-lint/test/docLint.repo.test.mjs` | tested |
+| DOC-010 | MUST | S1 | Decisions and deviations are logged | `tools/doc-lint/checks/deviations.mjs` | `tools/doc-lint/test/docLint.repo.test.mjs` | tested |
+| DOC-011 | MUST | S1 | Commit messages are traceable | `tools/doc-lint/checkCommitMessage.mjs` | `tools/doc-lint/test/commitMessage.test.mjs` | tested |
 | DOC-012 | SHOULD | S3 | HTTP APIs are self-describing | — | — | planned |
-| DOC-013 | MUST | S1 | No silent leftovers | — | — | planned |
-| DOC-014 | MUST | S1 | Content that non-developers edit has its own guide | — | — | planned |
+| DOC-013 | MUST | S1 | No silent leftovers | `tools/doc-lint/checks/leftovers.mjs` | `tools/doc-lint/test/docLint.code.test.mjs` | tested |
+| DOC-014 | MUST | S1 | Content that non-developers edit has its own guide | `tools/doc-lint/checks/contentGuides.mjs` | `tools/doc-lint/test/docLint.repo.test.mjs` | tested |

@@ -1,0 +1,58 @@
+// Læringsdesign: optional pedagogical metadata on an activity (spec 04 §6) and validator
+// acknowledgements (spec 03, UD-022). No learner data.
+
+/// The part of a læringsøkt an activity belongs to; labels are Forarbeid, Mellomarbeid, Etterarbeid (D-019).
+enum Phase {
+  forarbeid
+  underveis
+  etterarbeid
+}
+
+/// Learning-outcome category of the Norwegian qualifications framework (NKR).
+enum OutcomeCategory {
+  kunnskap
+  ferdigheiter
+  generell_kompetanse
+}
+
+/// Pedagogical metadata for one activity (PED-030).
+model LearningDesignMetadata {
+  contentId               String   @id @db.Uuid
+  phase                   Phase?
+  courseCode              String?
+  rationale               String?  @db.VarChar(1000)
+  estimatedStudentMinutes Int?
+  updatedAt               DateTime @updatedAt
+
+  content  H5PContent        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  outcomes LearningOutcome[]
+}
+
+/// One læringsutbyte an activity serves, in the author's words.
+model LearningOutcome {
+  id                String          @id @default(uuid(7)) @db.Uuid
+  metadataContentId String          @db.Uuid
+  text              String
+  category          OutcomeCategory
+  position          Int
+
+  metadata LearningDesignMetadata @relation(fields: [metadataContentId], references: [contentId], onDelete: Cascade)
+
+  @@index([metadataContentId])
+}
+
+/// An author published despite a validator error and gave a reason (UD-022).
+model ValidationAcknowledgement {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  contentId String   @db.Uuid
+  ruleId    String
+  path      String
+  reason    String
+  userId    String   @db.Uuid
+  at        DateTime @default(now())
+
+  content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([contentId])
+}

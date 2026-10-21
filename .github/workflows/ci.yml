@@ -1,0 +1,87 @@
+# CI: the Session gate from docs/EVALUATOR-GUIDE.md §5, on every push to main and every pull request.
+# Requirements: NFR-004 (typecheck, lint, tests, traceability), SEC-007 (pins, audit), NFR-005 (licences),
+# DATA-001 (data inventory), H5P-001 (verified H5P client files and the boot check), D-023 (services).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Session gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: hvli
+          POSTGRES_PASSWORD: hvli-dev
+          POSTGRES_DB: hvli
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U hvli" --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 20
+      s3:
+        image: motoserver/moto:5.1.16
+        ports: ['5000:5000']
+    env:
+      CI: 'true'
+      DATABASE_URL: postgresql://hvli:hvli-dev@localhost:5432/hvli
+      REDIS_URL: redis://localhost:6379
+      S3_ENDPOINT: http://localhost:5000
+      S3_ACCESS_KEY_ID: test
+      S3_SECRET_ACCESS_KEY: test
+      # Test-only secrets (32 bytes each); production secrets live in the secret store (DATA-002).
+      PSEUDONYM_SECRETS: 2025=Y2ktb25seS1wc2V1ZG9ueW0tc2VjcmV0LTIwMjUtLS0tLQ==,2026=Y2ktb25seS1wc2V1ZG9ueW0tc2VjcmV0LTIwMjYtLS0tLQ==
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies (exact lockfile)
+        run: npm ci
+      - name: Fetch and verify H5P core 1.28.0 and the pinned editor (H5P-001, D-022, D-027)
+        run: npm run h5p:fetch-core
+      - name: Generate the Prisma client and apply migrations
+        run: npm run db:generate --workspace apps/server && npm run db:migrate
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Formatting
+        run: npm run format:check
+      - name: Documentation standard (DOC-001…014)
+        run: npm run doc:lint
+      - name: File size (DOC-007)
+        run: npm run check:filesize
+      - name: Exact pins (SEC-007)
+        run: npm run check:pins
+      - name: Licences (NFR-005)
+        run: npm run check:licences
+      - name: Audit with reviewed exceptions (SEC-007)
+        run: npm run check:audit
+      - name: Data inventory (DATA-001)
+        run: npm run privacy:inventory-check
+      - name: Tests (unit and integration)
+        run: npm test
+      - name: Traceability (every S1 MUST has a test)
+        run: npm run spec:trace -- --check --done-through=S1
+      - name: Spec website is up to date
+        run: npm run spec:site -- --check
+      - name: H5P boot check (H5P-001)
+        run: npm run boot-check --workspace apps/server

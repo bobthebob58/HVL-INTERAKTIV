@@ -1,0 +1,111 @@
+// Content: H5P activities, their files, co-authors, learner resume state and library changes (spec 01 §6).
+
+/// Draft activities are visible to their authors only.
+enum ContentStatus {
+  draft
+  published
+}
+
+/// Who may open an activity outside Canvas (PROD-006): owner and co-authors, the organisation, any Feide user.
+enum ContentVisibility {
+  private
+  organisation
+  feide
+}
+
+/// Role of a co-author on an activity.
+enum CollaboratorRole {
+  coauthor
+}
+
+/// One H5P activity. `params` and `metadata` are H5P's own JSON (content.json and h5p.json).
+model H5PContent {
+  id              String            @id @default(uuid(7)) @db.Uuid
+  mainLibrary     String
+  title           String
+  params          Json
+  metadata        Json
+  status          ContentStatus     @default(draft)
+  visibility      ContentVisibility @default(private)
+  ownerUserId     String            @db.Uuid
+  version         Int               @default(1)
+  sourceContentId String?           @db.Uuid
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  owner            User                        @relation("ContentOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  source           H5PContent?                 @relation("ContentCopies", fields: [sourceContentId], references: [id], onDelete: SetNull)
+  copies           H5PContent[]                @relation("ContentCopies")
+  files            H5PContentFile[]
+  collaborators    ContentCollaborator[]
+  userData         H5PUserData[]
+  placements       LtiPlacement[]
+  learningDesign   LearningDesignMetadata?
+  acknowledgements ValidationAcknowledgement[]
+  statements       XapiStatement[]
+  snapshots        InsightSnapshot[]
+
+  @@index([ownerUserId])
+  @@index([mainLibrary])
+}
+
+/// A file used by an activity (image, video, audio). The bytes live in S3 under `s3Key`.
+model H5PContentFile {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  contentId String   @db.Uuid
+  filename  String
+  s3Key     String   @unique
+  size      Int
+  sha256    String
+  createdAt DateTime @default(now())
+
+  content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([contentId, filename])
+}
+
+/// A staff user who may edit an activity they do not own.
+model ContentCollaborator {
+  contentId String           @db.Uuid
+  userId    String           @db.Uuid
+  role      CollaboratorRole @default(coauthor)
+  createdAt DateTime         @default(now())
+
+  content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([contentId, userId])
+}
+
+/// H5P resume state for one learner (pseudonym) in one activity and context (H5P-005).
+model H5PUserData {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  contentId    String   @db.Uuid
+  subContentId String   @default("0")
+  dataType     String
+  learnerKey   String
+  contextId    String   @default("")
+  data         Json
+  preload      Boolean  @default(false)
+  invalidate   Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+
+  content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([contentId, subContentId, dataType, learnerKey, contextId])
+  @@index([learnerKey])
+  @@index([updatedAt])
+}
+
+/// An admin installed, updated or removed an H5P library (H5P-002, DATA-007).
+model LibraryAuditEvent {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  actorUserId String   @db.Uuid
+  machineName String
+  fromVersion String?
+  toVersion   String?
+  sha256      String?
+  at          DateTime @default(now())
+
+  @@index([at])
+}

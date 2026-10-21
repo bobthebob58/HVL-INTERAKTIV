@@ -33,13 +33,14 @@
 ## 2. TECH STACK AND MONOREPO MAP
 
 - `apps/server`: Express 5 + TypeScript, `@lumieducation/h5p-server`/`h5p-express`, `ltijs` 7,
-  `openid-client` 6 (Feide), Prisma (PostgreSQL 16), Redis 7, S3-compatible storage (MinIO locally), pino.
+  `openid-client` 6 (Feide), Prisma (PostgreSQL 16), Redis 7, S3-compatible storage (moto emulator locally and in CI, D-023), pino.
 - `apps/web`: Next.js (App Router) + React + TypeScript + Tailwind (token preset), `/laeringsdesign`,
   `/innsikt`, `/mappe`, `/app/*` (LTI views).
 - `packages/design-tokens`: `tokens.json` → CSS variables + Tailwind preset, with a contrast test.
 - `packages/hvl-h5p-theme`: `hvl-h5p-theme.css` + `xapiBridge.ts`, injected into H5P player and editor iframes.
 - `content/`: ALU-editable YAML/MDX (phases, patterns, guide text, portfolio templates). No code.
-- `tools/`: `spec-trace`, `doc-lint`, `seed`, `mock-platform` (mock OIDC + LTI platform for tests).
+- `tools/`: `spec-trace`, `spec-site`, `doc-lint`, `dependency-check`, `privacy`, `h5p-core`, `seed`,
+  `mock-platform` (S3: mock OIDC + LTI platform for tests).
 - `docs/specs/`: 00 product/pedagogy · 01 H5P/security · 02 auth/LTI/AGS · 03 WCAG/validator ·
   04 læringsdesign/mappe · 05 insight/privacy. **Load ONLY the specs named for the active session in PROGRESS.md.**
 
@@ -48,7 +49,9 @@
 - Build: `npm run build` · Typecheck: `npm run typecheck` · Lint and format: `npm run lint && npm run format:check`
 - Test one file: `npx vitest run <path>` · Tests for one requirement: `npx vitest run -t "SEC-001"`
 - Accessibility: `npm run test:a11y` · E2E: `npm run test:e2e`
-- Traceability: `node tools/spec-trace/specTrace.mjs --check` (`npm run spec:trace` after S1)
+- Traceability: `npm run spec:trace -- --check --done-through=S1` · Docs: `npm run doc:lint`
+- Dependencies: `npm run check:pins && npm run check:licences && npm run check:audit` · Privacy: `npm run privacy:inventory-check`
+- H5P client files: `npm run h5p:fetch-core` · H5P boot check: `npm run boot-check --workspace apps/server`
 - Spec website: `node tools/spec-site/buildSpecSite.mjs` (regenerate after any doc change; `--check` in CI)
 - Local services: `docker compose up -d`
 

@@ -1,0 +1,15 @@
+// Audit log (DATA-007): who did what to which object. No free-text personal data; kept for 2 years.
+
+/// One audited action. `actorUserId` is null for scheduled jobs such as the yearly purge.
+model AuditEvent {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  at          DateTime @default(now())
+  actorUserId String?  @db.Uuid
+  action      String
+  targetType  String
+  targetId    String
+  details     Json     @default("{}")
+
+  @@index([at])
+  @@index([actorUserId])
+}

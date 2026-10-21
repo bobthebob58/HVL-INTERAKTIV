@@ -1,0 +1,114 @@
+// LTI 1.3: platforms and the short-lived records ltijs 7 needs (DatabaseManager), placements in Canvas,
+// and the grade passback queue (spec 02 §7). Secrets are stored encrypted by the application.
+
+/// How an activity's score is sent to the Canvas gradebook (LTI-012).
+enum AttemptPolicy {
+  best
+  latest
+  mastery
+}
+
+/// State of one grade passback.
+enum GradeSyncStatus {
+  pending
+  succeeded
+  failed
+}
+
+/// A registered LMS (e.g. HVL's Canvas). `url` is the issuer; the tool's private key is encrypted.
+model LtiPlatform {
+  id                      String   @id @default(uuid(7)) @db.Uuid
+  url                     String
+  clientId                String
+  name                    String
+  authenticationEndpoint  String
+  accessTokenEndpoint     String
+  authorizationServer     String?
+  idTokenValidationMethod String
+  idTokenValidationKey    String
+  active                  Boolean  @default(true)
+  publicKey               String
+  privateKeyEncrypted     Bytes
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  identities Identity[]
+  placements LtiPlacement[]
+
+  @@unique([url, clientId])
+}
+
+/// A cached OAuth2 access token from a platform (client-credentials grant), encrypted.
+model LtiAccessToken {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  platformUrl    String
+  clientId       String
+  scopes         String
+  tokenEncrypted Bytes
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+
+  @@unique([platformUrl, clientId, scopes])
+}
+
+/// A validated LTI launch id_token. PRIVACY: may contain LTI claims; deleted 24 h after `createdAt`.
+model LtiIdToken {
+  id        String   @id
+  claims    Json
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+/// A used OIDC nonce, kept briefly to reject replays.
+model LtiNonce {
+  nonce     String   @id
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// An activity placed in a Canvas course through Deep Linking.
+model LtiPlacement {
+  id               String        @id @default(uuid(7)) @db.Uuid
+  platformId       String        @db.Uuid
+  contextId        String
+  resourceLinkId   String
+  contentId        String        @db.Uuid
+  lineItemUrl      String?
+  attemptPolicy    AttemptPolicy @default(best)
+  masteryThreshold Float?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  platform      LtiPlatform    @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  content       H5PContent     @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  gradeSyncJobs GradeSyncJob[]
+
+  @@unique([platformId, contextId, resourceLinkId])
+  @@index([contentId])
+}
+
+/// One score waiting to be sent to Canvas (AGS). PRIVACY: `ltiSubEncrypted` is the only raw learner ID
+/// in the database; it is set to null 30 days after a successful sync (DATA-002).
+model GradeSyncJob {
+  id              String          @id @default(uuid(7)) @db.Uuid
+  placementId     String          @db.Uuid
+  learnerKey      String
+  ltiSubEncrypted Bytes?
+  scoreGiven      Float
+  status          GradeSyncStatus @default(pending)
+  attempts        Int             @default(0)
+  lastError       String?
+  idempotencyKey  String          @unique
+  succeededAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  placement LtiPlacement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([succeededAt])
+  @@index([learnerKey])
+}

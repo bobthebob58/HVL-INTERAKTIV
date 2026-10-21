@@ -36,9 +36,13 @@ const FALLBACK_REPO_URL = 'https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ma
 function repoBlobUrl() {
   try {
     const git = (...a) => execFileSync('git', ['-C', ROOT, ...a], { encoding: 'utf8' }).trim();
-    const remote = git('remote', 'get-url', 'origin').replace(/\.git$/, '').replace(/^git@github\.com:/, 'https://github.com/');
+    const remote = git('remote', 'get-url', 'origin')
+      .replace(/\.git$/, '')
+      .replace(/^git@github\.com:/, 'https://github.com/');
     // WHY: strip credentials a proxy may have injected into the remote URL.
-    const clean = remote.replace(/^https:\/\/[^@/]+@/, 'https://').replace(/^http:\/\/[^/]+\/git\//, 'https://github.com/');
+    const clean = remote
+      .replace(/^https:\/\/[^@/]+@/, 'https://')
+      .replace(/^http:\/\/[^/]+\/git\//, 'https://github.com/');
     return `${clean}/blob/${git('rev-parse', '--abbrev-ref', 'HEAD')}`;
   } catch {
     return FALLBACK_REPO_URL;
@@ -49,7 +53,13 @@ function repoBlobUrl() {
 function navigation() {
   const item = (d) => ({ key: d.key, text: d.nav });
   return [
-    { label: 'Start here', items: [{ key: 'overview', text: 'Overview' }, { key: 'requirements', text: 'Requirements' }] },
+    {
+      label: 'Start here',
+      items: [
+        { key: 'overview', text: 'Overview' },
+        { key: 'requirements', text: 'Requirements' },
+      ],
+    },
     { label: 'Specifications', items: DOCUMENTS.filter((d) => d.key.startsWith('spec-')).map(item) },
     { label: 'For reviewers', items: DOCUMENTS.filter((d) => !d.key.startsWith('spec-')).map(item) },
   ];
@@ -60,21 +70,29 @@ function main() {
   const fragmentPath = args.includes('--fragment') ? args[args.indexOf('--fragment') + 1] : null;
   const docs = new Map(readDocuments(ROOT).map((d) => [d.key, d]));
   const status = readTraceStatus(ROOT);
-  const requirements = DOCUMENTS.flatMap((d) => extractRequirements(docs.get(d.key)))
-    .map((r) => ({ ...r, status: status.get(r.id), docNav: docs.get(r.docKey).nav }));
+  const requirements = DOCUMENTS.flatMap((d) => extractRequirements(docs.get(d.key))).map((r) => ({
+    ...r,
+    status: status.get(r.id),
+    docNav: docs.get(r.docKey).nav,
+  }));
   const render = createRenderer({ knownIds: new Set(requirements.map((r) => r.id)), repoUrl: repoBlobUrl() });
 
-  for (const r of requirements) r.html = render(r.body, r.docKey, docs.get(r.docKey).path, 3, `${r.id} ${r.title}`);
+  for (const r of requirements)
+    r.html = render(r.body, r.docKey, docs.get(r.docKey).path, 3, `${r.id} ${r.title}`);
   const documents = DOCUMENTS.map((d) => {
     const doc = docs.get(d.key);
     const body = doc.markdown.replace(/^# .+\n/m, ''); // the view's own <h2> carries the title
     return documentView({ ...doc, html: render(body, d.key, d.path, 1, `${d.nav} details`) });
   });
 
-  const css = ['spec-site.base.css', 'spec-site.components.css'].map((f) => readFileSync(join(HERE, f), 'utf8')).join('\n');
+  const css = ['spec-site.base.css', 'spec-site.components.css']
+    .map((f) => readFileSync(join(HERE, f), 'utf8'))
+    .join('\n');
   const js = readFileSync(join(HERE, 'spec-site.client.js'), 'utf8');
   const fragment = page({
-    css, js, nav: navigation(),
+    css,
+    js,
+    nav: navigation(),
     overview: overviewView(docs, requirements, render),
     explorer: explorerView(requirements),
     documents,
@@ -92,7 +110,9 @@ function main() {
   }
   mkdirSync(join(ROOT, dirname(OUTPUT)), { recursive: true });
   writeFileSync(join(ROOT, OUTPUT), html);
-  console.log(`Wrote ${OUTPUT} (${(html.length / 1024).toFixed(0)} KB, ${requirements.length} requirements, ${DOCUMENTS.length} documents).`);
+  console.log(
+    `Wrote ${OUTPUT} (${(html.length / 1024).toFixed(0)} KB, ${requirements.length} requirements, ${DOCUMENTS.length} documents).`,
+  );
   if (fragmentPath) {
     writeFileSync(fragmentPath, fragment);
     console.log(`Wrote fragment ${fragmentPath}.`);

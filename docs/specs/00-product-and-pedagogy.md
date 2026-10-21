@@ -239,7 +239,7 @@ traceability check.
 #### NFR-005 · MUST · S1 · Open source licence
 The repository is licensed **GPL-3.0-or-later**. This is required because `@lumieducation/h5p-server`
 is GPL-3.0-or-later. Dependencies must be GPL-3.0-compatible (for example MIT, BSD, Apache-2.0, ISC).
-- **Verify:** A licence check in CI (`license-checker` allow-list).
+- **Verify:** A licence check in CI against a GPL-3.0-compatible allow-list (`npm run check:licences`, D-029).
 
 #### NFR-006 · MUST · S6 · Observability without personal data
 Logs are structured JSON with request ID, route, status and latency. They must never contain names,

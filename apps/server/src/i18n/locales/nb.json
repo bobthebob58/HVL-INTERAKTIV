@@ -1,0 +1,15 @@
+{
+  "error": {
+    "generic": "Noe gikk galt. Prøv igjen senere."
+  },
+  "upload": {
+    "archive": {
+      "unreadable": "Filen er ikke et gyldig H5P-arkiv.",
+      "unsafePath": "Arkivet inneholder en ugyldig filsti: «{{entry}}».",
+      "symlink": "Arkivet inneholder en symbolsk lenke, og det er ikke tillatt: «{{entry}}».",
+      "tooManyEntries": "Arkivet inneholder for mange filer (mer enn {{max}}).",
+      "fileTooLarge": "Filen «{{entry}}» i arkivet er større enn {{maxMb}} MB.",
+      "totalTooLarge": "Arkivet blir større enn {{maxMb}} MB når det pakkes ut."
+    }
+  }
+}

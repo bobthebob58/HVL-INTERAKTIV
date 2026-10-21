@@ -1,0 +1,10 @@
+# Markdown is hand-formatted (tables, line breaks); generated and vendored files are never reformatted.
+*.md
+docs/
+tools/spec-site/vendor/
+# The spec-site stylesheets keep one rule per line, so each stays within the 200-line limit (DOC-007).
+tools/spec-site/*.css
+apps/server/src/generated/
+apps/server/h5p/
+apps/server/prisma/migrations/
+package-lock.json

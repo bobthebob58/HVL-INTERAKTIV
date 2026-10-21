@@ -33,6 +33,14 @@ with the commands given.
 | D-020 | Portfolio export follows HVL's three-part merit portfolio and the 2025 criteria, as content | Accepted (2026-10-21), ALU to confirm |
 | D-021 | The Feide ID token is kept in the server-side session for logout only | Accepted (2026-10-21) |
 | D-022 | H5P editor 1.28 client files come from a pinned, reviewed commit | Accepted (2026-10-21) |
+| D-023 | Integration tests use docker compose or CI service containers, not Testcontainers | Accepted (2026-10-21) |
+| D-024 | TypeScript pinned to 6.0.3 | Accepted (2026-10-21) |
+| D-025 | Own S3 adapters on AWS SDK v3 instead of `h5p-mongos3` | Accepted (2026-10-21) |
+| D-026 | Library storage on a shared volume until deployment needs S3 | Accepted (2026-10-21) |
+| D-027 | H5P core and editor files are fetched and verified, not committed | Accepted (2026-10-21) |
+| D-028 | The H5P user-data adapter moves to S2 with `H5P-005` | Accepted (2026-10-21) |
+| D-029 | Own licence and audit checks instead of `license-checker` and plain `npm audit` | Accepted (2026-10-21) |
+| D-030 | Accepted advisory: `image-size` parser loops (until 2027-01-31) | Accepted (2026-10-21), expires 2027-01-31 |
 
 ---
 
@@ -224,3 +232,81 @@ loading of one spec per session are kept.
   "never a moving branch; a pinned commit only where no release exists, with this entry". Revisit when
   H5P tags an editor 1.28 release.
 
+### D-023 · Integration tests use docker compose or CI service containers, not Testcontainers
+- **Context:** `H5P-004` names Testcontainers for its integration tests. Testcontainers starts containers
+  from inside the test process and needs a Docker socket there. CI runners and many development containers
+  (including the one Session 1 was built in, where Docker Hub also rate-limited pulls) do not offer that
+  reliably, while GitHub Actions service containers and `docker compose` do.
+- **Decision:** Integration tests read `DATABASE_URL`, `REDIS_URL` and `S3_*` from the environment. Locally,
+  `docker compose up -d` provides PostgreSQL 16, Redis 7 and an S3-compatible store; CI uses service
+  containers with the same images. Tests that need a service are named `*.int.test.ts` and skip with a
+  clear message when the service is not configured, so `npm test` still runs the unit tests anywhere.
+- **S3 emulator:** the moto server (`motoserver/moto`, pinned tag) emulates the S3 API in one container
+  that needs no start command. GitHub Actions service containers cannot pass a command, which MinIO needs
+  (`server /data`), so moto is used both locally and in CI. Production uses any S3-compatible store in the EEA.
+- **Consequences:** `H5P-004` and the evaluator guide say "integration tests against PostgreSQL, Redis and
+  S3" instead of naming Testcontainers; CLAUDE.md names the emulator instead of MinIO. CI must never skip
+  them: `test/support/services.ts` throws when `CI=true` and a service variable is missing.
+
+### D-024 · TypeScript pinned to 6.0.3
+- **Context:** TypeScript 7.0 (the native compiler) is the newest release, but `typescript-eslint` 8.72,
+  the newest release of the linter we need for typed rules, supports TypeScript `<6.1` only.
+- **Decision:** Pin `typescript` 6.0.3. Revisit when `typescript-eslint` supports 7.x.
+- **Re-check:** `npm view typescript-eslint@latest peerDependencies`.
+
+### D-025 · Own S3 adapters on AWS SDK v3 instead of `h5p-mongos3`
+- **Context:** Lumi's `@lumieducation/h5p-mongos3` stores content metadata in MongoDB and uses AWS SDK v2,
+  which reached end of support in September 2025. Our metadata lives in PostgreSQL (`H5P-004`).
+- **Decision:** `PrismaContentStorage` keeps metadata and parameters in PostgreSQL and delegates file I/O
+  to `S3ContentFileStore`; `S3TemporaryFileStorage` handles temporary files. Both use
+  `@aws-sdk/client-s3` v3 and work with any S3-compatible store (MinIO, Ceph, Sikt's object storage).
+- **Consequences:** We own these adapters and their tests. Lumi's `h5p-mongos3` source is a reference for
+  edge cases (key sanitising, range reads), not a dependency.
+
+### D-026 · Library storage on a shared volume until deployment needs S3
+- **Context:** `H5P-004` allows S3- or file-system-backed library storage. Libraries change only when an
+  admin installs or updates a content type, are read on every page view, and are cached by Lumi's
+  `CachedLibraryStorage` (backed by the shared Redis key-value store).
+- **Decision:** S1 uses Lumi's `FileLibraryStorage` on a volume shared by all server instances, wrapped
+  in `CachedLibraryStorage`. An S3 `ILibraryStorage` is added in S6 only if the target platform has no
+  shared volume.
+- **Consequences:** Deployment (S6, `NFR-007`) must mount one volume for `H5P_LIBRARY_DIR` on every node.
+
+### D-027 · H5P core and editor files are fetched and verified, not committed
+- **Context:** The server needs H5P's client files (core tag `1.28.0`, editor commit per D-022). Committing
+  about 1 000 third-party files would bury our own code in reviews and diffs.
+- **Decision:** `tools/h5p-core/fetchCoreClients.sh` fetches them into `apps/server/h5p/` (git-ignored).
+  Core files are checked against the committed per-file SHA-256 list; the editor is pinned by commit hash
+  (git verifies it). CI runs the script before the tests. The server refuses to start when the core API
+  version in the fetched files is not 1.28 (`H5P-001`).
+- **Consequences:** A fresh clone needs one `npm run h5p:fetch-core`. doc-lint and spec-trace skip
+  `apps/server/h5p/`.
+
+### D-028 · The H5P user-data adapter moves to S2 with `H5P-005`
+- **Context:** `H5P-004` (S1) lists `IContentUserDataStorage`, but the adapter's key and behaviour are
+  defined by `H5P-005` (S2), which needs the LTI context and the learner pseudonym in a request.
+- **Decision:** Build and test `PrismaContentUserDataStorage` in S2 together with `H5P-005`. S1 creates its
+  database table, so the schema is complete.
+- **Consequences:** The S1 integration test of `H5P-004` covers the other five adapters.
+
+### D-029 · Own licence and audit checks instead of `license-checker` and plain `npm audit`
+- **Context:** `NFR-005` suggests `license-checker`; it is unmaintained and pulls in its own dependency
+  tree. `SEC-007` allows reviewed, expiring exceptions to `npm audit`, which plain `npm audit` cannot express.
+- **Decision:** `tools/dependency-check/checkLicences.mjs` reads production packages with
+  `npm query ':not(.dev)'` and checks their SPDX expressions against a GPL-3.0-compatible allow-list.
+  `checkAudit.mjs` runs `npm audit --omit=dev --json` and fails on any high or critical advisory that has
+  no unexpired entry in `audit-exceptions.json` pointing to a decision here.
+- **Consequences:** No extra dependencies. Packages with legacy licence metadata are listed by name and
+  version after a person has read their licence file.
+
+### D-030 · Accepted advisory: `image-size` parser loops (until 2027-01-31)
+- **Context:** `@lumieducation/h5p-server` 10.0.4 depends on `image-size@^1.0.2`. Advisories
+  GHSA-5p2g-fcmc-qvqq (JXL and HEIF) and GHSA-w3rx-r6r6-pgpr (ICNS) affect every version up to 2.0.2; no
+  1.x release is fixed. Version 2 changes the API that `H5PEditor.saveContentFile` calls (it passes a file
+  path), so an override would break image uploads. A third advisory (`underscore` ≤ 1.13.7, via `jsonpath`)
+  is fixed by an npm `overrides` entry pinning `underscore` 1.13.8, a patch release.
+- **Decision:** Accept both `image-size` advisories until **2027-01-31**. The loop is reachable only through
+  an authenticated author's file upload. In S2, `SEC-002` content sniffing rejects any file whose magic
+  bytes are not on the allowlist (JXL, HEIF and ICNS are not) before H5P calls `image-size`.
+- **Consequences:** `audit-exceptions.json` lists both advisories with this decision and the expiry date.
+  Review again at expiry, or earlier if h5p-server releases a version with `image-size` ≥ 2.0.3.

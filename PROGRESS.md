@@ -9,7 +9,7 @@ what is done, what is verified, and what is blocked.
 | Session | Milestone | Specs to load | Status |
 |---|---|---|---|
 | S0 | Specification, documentation standard, traceability tool | — | ✅ Done (2026-10-16) |
-| S1 | Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup | 00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD | ⬜ Not started |
+| S1 | Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup | 00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD | ✅ Done (2026-10-21) |
 | S2 | Ten-type whitelist, seeding, SVG sanitiser, permission system, resume | 01 (all) | ⬜ Not started |
 | S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | ⬜ Not started |
 | S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ⬜ Not started |
@@ -36,24 +36,45 @@ $ node tools/spec-trace/specTrace.mjs --check
 ✓ 126 requirements, traceability up to date.
 ```
 
-## S1 — Scaffold, schema, H5P core ⬜
+## S1 — Scaffold, schema, H5P core ✅
 
-Effort: start in Plan Mode. After planning, clear the context before executing.
-- [ ] Spike (90 min time-box): spec 01 §7. Record the result for risk R-01 below and add a decision if needed
-- [ ] npm workspaces: `apps/server`, `apps/web`, `packages/design-tokens`, `packages/hvl-h5p-theme`, `tools/*`
-- [ ] Node 24 (`.nvmrc`, `engines`), TypeScript strict, ESLint + `eslint-plugin-jsdoc` + `eslint-plugin-i18next`, Prettier, Stylelint
-- [ ] Husky or Claude Code hooks run lint and format on commit (no tokens spent on formatting)
-- [ ] `npm run spec:trace`, `check:filesize`, `tools/doc-lint` (`DOC-001`, `DOC-004`, `DOC-007`, `NFR-004`)
-- [ ] Prisma schema from spec 05 §4; `docs/privacy/DATA-INVENTORY.md` with its check (`DATA-001`)
-- [ ] `deriveLearnerKey` (`DATA-002`); pino logger with redaction (`DATA-009`)
-- [ ] `H5pConfigFactory` (`H5P-001`), storage adapters and cleanup job (`H5P-004`), size limits (`SEC-005`)
-- [ ] i18n skeleton `nn`/`nb`/`en` with a key-parity test (`PROD-012`)
-- [ ] `docker-compose.yml`: PostgreSQL 16, Redis 7, MinIO
-- [ ] CI: typecheck, lint, test, audit (`SEC-007`), licence check (`NFR-005`)
-- [ ] Gate: `npm run typecheck && npx vitest run && npm run spec:trace -- --check --done-through=S1`
+- [x] Spike (spec 01 §7): steps 1–2 done, 3–5 blocked by the network; results below. R-01 stays open
+- [x] npm workspaces (`apps/*`, `packages/*`) with `apps/server`. `apps/web` and `packages/*` are created
+      with their first features (S3/S4), not as empty scaffolds; the tools live in `tools/*` without a package
+- [x] Node 24 (`.nvmrc`, `engines`), TypeScript strict (6.0.3, D-024), ESLint 10 + `eslint-plugin-jsdoc` +
+      `eslint-plugin-i18next`, Prettier. Stylelint moves to S4 with the first theme CSS
+- [x] Husky: `pre-commit` runs lint-staged (Prettier, ESLint); `commit-msg` runs the DOC-011 checker
+- [x] `npm run spec:trace` (root override, tests), `check:filesize`, `tools/doc-lint` with 11 checks and tests
+      (`DOC-001`…`DOC-014`, `NFR-004`)
+- [x] Prisma schema, split by domain (20 models of spec 05 §4), first migration with a CHECK constraint that
+      keeps names and e-mail off learner rows; `docs/privacy/DATA-INVENTORY.md` and its check (`DATA-001`, `DATA-002`)
+- [x] `deriveLearnerKey` with per-academic-year secrets (`DATA-002`); pino logger with deep redaction (`DATA-009`)
+- [x] `H5pConfigFactory` (`H5P-001`), boot check, storage adapters and cleanup job (`H5P-004`, user data in S2
+      per D-028), size limits and the zip guard (`SEC-005`)
+- [x] i18n `nn`/`nb`/`en` with typed keys and a key-parity test (`PROD-012`)
+- [x] `docker-compose.yml`: PostgreSQL 16, Redis 7, S3 emulator (moto instead of MinIO, D-023)
+- [x] CI: typecheck, lint, format, doc-lint, file size, pins, licences, audit with reviewed exceptions,
+      inventory, tests with service containers, traceability, spec site, H5P boot check (`SEC-007`, `NFR-005`)
+- [x] Decisions D-023…D-030 recorded
+- [x] Gate (output below)
+
+Spike results (spec 01 §7, Risk R-01):
+
+| Step | Result |
+|---|---|
+| 1. h5p-server 10.0.4 on Node 24, `coreApiVersion` 1.28 | ✅ Installs and runs on Node 24.x. `H5pConfigFactory` sets 1.28 and re-applies it after loading stored settings |
+| 2. Core tag `1.28.0` and editor commit `ab2daa18` | ✅ `npm run h5p:fetch-core`: core commit `2aeb0b83` matches, all 67 files match the committed SHA-256 list; editor commit verified by git, its 214 file hashes recorded (`h5p-editor-php-library-ab2daa18.files.sha256`) |
+| 3. Seed packages and site registration | ⛔ Blocked: this environment cannot reach `hub-api.h5p.org` (Q7). F1 (`localIdFor`, 15 characters) and F2 (pre-set `H5P_SITE_UUID`) are implemented and unit-tested, not tried against the Hub |
+| 4. Render `H5P.MultiChoice` in the player | ⛔ Blocked by step 3 (no package); needs the S2 player routes too |
+| 5. Daylight theme with the F3 CSS | ⛔ Blocked by step 4. F3 injection moves to S2 with the player factory |
+| 6. Decide 1.28 or the 1.27 fallback | Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2 |
+
+Gate output: see the session log entry for 2026-10-21 · S1.
 
 ## S2 — Content types and security ⬜
 
+- [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable; inject the F3 theme CSS in
+      `H5pPlayerFactory`/`H5pEditorFactory`; decide R-01 (1.28 or the 1.27 fallback) and record it
 - [ ] `HvlTop10ContentTypeFilter` and the DragQuestion semantics filter (`H5P-002`, `PROD-002`)
 - [ ] Seed script with SHA-256 verification (`H5P-003`). **Needs the `.h5p` files**: run `tools/seed/fetch-seed-packages.sh` where hub-api.h5p.org is reachable
 - [ ] `PrismaContentUserDataStorage` (`H5P-005`, `PROD-008`); `HvlPermissionSystem` with a table test (`H5P-006`)
@@ -120,13 +141,14 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 
 | ID | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|---|
-| R-01 | Lumi h5p-server 10.0.4 does not work with Core 1.28 libraries. Three issues are known (spec 01 §1, F1–F3), with workarounds; Lumi's fixes are unreleased | High | High | S1 spike with the workarounds; fall back to 1.27 without Daylight; `patch-package` only with a decision |
+| R-01 | Lumi h5p-server 10.0.4 does not work with Core 1.28 libraries. Three issues are known (spec 01 §1, F1–F3), with workarounds; Lumi's fixes are unreleased. S1 spike steps 1–2 passed; 3–5 are blocked by the network | High | High | Finish the spike in S2 where the Hub is reachable; fall back to 1.27 without Daylight; `patch-package` only with a decision |
 | R-07 | No H5P editor 1.28 release tag exists | Certain | Medium | Pinned, reviewed commit (D-022); revisit when a tag appears |
 | R-02 | ltijs 7 is a recent rewrite with possible early bugs | Medium | Medium | Keep it behind `LtiProviderFactory`; contract tests; pin the exact version |
 | R-03 | Canvas or Feide endpoint values differ from the spec | Medium | Medium | *(verify)* markers; reference items 4 and 5; integration tests against mocks first |
 | R-04 | Hub registration at `hub-api.h5p.org/v1/sites` fails (HTTP 405 reports in 2026) | Medium | Low | Runtime does not depend on the Hub; offline seeding (`H5P-003`) |
 | R-05 | A session runs out of usage quota mid-milestone | Medium | Low | One milestone per session; commit early; update this file before stopping |
 | R-06 | Upstream H5P accessibility barriers | High | Medium | Theme fixes where possible; report upstream; document in `UD-040` |
+| R-08 | `image-size` (via h5p-server) has two unfixed DoS advisories; accepted until 2027-01-31 (D-030) | Low | Medium | Only reachable through authenticated uploads; `SEC-002` sniffing in S2; `check:audit` fails at expiry |
 
 ## Session log
 
@@ -134,3 +156,29 @@ Append one entry per session: date, session, what was done, gate output, and any
 
 - **2026-10-16 · S0** — Specification written. Plan corrections recorded as D-001…D-007. Gate output above.
 - **2026-10-21 · S0** — Licence confirmed (D-015). Reference inputs 1–6 assembled from public sources with citations and checked again (`docs/reference/`). Specs aligned: HVL brand palette and fonts (D-017, D-018), phase labels and model (D-019), merit portfolio (D-020), Feide logout (D-021), H5P editor pin (D-022), Canvas platform values. Spec website generator added (`tools/spec-site/`).
+- **2026-10-21 · S1** — Monorepo scaffold (npm workspaces, Node 24, TypeScript 6.0.3, ESLint, Prettier,
+  Husky, Vitest projects), documentation linter with 11 checks, traceability tests, dependency checks
+  (pins, licences, audit with reviewed exceptions), CI and docker compose. Server foundations: config schema,
+  log redaction, learner pseudonyms, `nn`/`nb`/`en` messages, the 20-model Prisma schema with its migration
+  and data inventory. H5P: verified core 1.28.0 and editor files, config factory, boot check, storage
+  adapters, cleanup job, zip guard. Spike steps 1–2 passed; 3–5 blocked by the network (R-01 open).
+  Decisions D-023…D-030. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint                                       exit 0
+  $ npm run format:check                               exit 0
+  $ npm run doc:lint                                   ✓ doc-lint: 11 checks passed.
+  $ npm run check:filesize                             ✓ doc-lint: file-size passed.
+  $ npm run check:pins                                 ✓ check:pins: 2 manifests, every version is pinned exactly.
+  $ npm run check:licences                             ✓ check:licences: 157 production packages, all GPL-3.0-compatible.
+  $ npm run check:audit                                ✓ check:audit: 2 high/critical advisories, all covered by reviewed exceptions.
+  $ npm run privacy:inventory-check                    ✓ privacy:inventory-check: 20 models, 154 fields, all in docs/privacy/DATA-INVENTORY.md.
+  $ npx vitest run                                     Test Files 22 passed (22) · Tests 147 passed (147)
+  $ npm run spec:trace -- --check --done-through=S1    ✓ 126 requirements, traceability up to date.
+  $ npm run spec:site -- --check                       ✓ docs/site/index.html is up to date.
+  $ npm run h5p:fetch-core                             ✓ core and editor files match their committed hash lists
+  $ npm run boot-check --workspace apps/server
+  {"level":"info","service":"hvl-interaktiv-server","h5pCoreApi":"1.28","hubHost":"hub-api.h5p.org","siteRegistered":false,"msg":"H5P engine configured"}
+  ```
+

@@ -1,0 +1,36 @@
+{
+  "name": "@hvl-interaktiv/server",
+  "version": "0.1.0",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "boot-check": "tsx --env-file-if-exists=.env src/h5p/bootCheck.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1155.0",
+    "@aws-sdk/lib-storage": "3.1155.0",
+    "@lumieducation/h5p-redis-lock": "10.0.4",
+    "@lumieducation/h5p-server": "10.0.4",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "cache-manager": "4.1.0",
+    "pino": "10.4.0",
+    "redis": "4.7.1",
+    "yauzl": "3.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/cache-manager": "4.0.6",
+    "@types/yauzl": "2.10.3",
+    "@types/yazl": "3.3.0",
+    "prisma": "7.10.1",
+    "yazl": "3.3.1"
+  }
+}

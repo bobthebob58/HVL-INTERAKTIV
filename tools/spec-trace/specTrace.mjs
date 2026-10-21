@@ -1,36 +1,40 @@
 /**
  * specTrace — builds the requirement → code → test traceability matrix.
  *
- * Why: evaluators must be able to pick any requirement in docs/specs and find
- *      the code that implements it and the tests that prove it, without
- *      reading the whole codebase. This script makes that mapping explicit and
- *      lets CI fail when the specs and the code drift apart.
+ * Why: evaluators must be able to pick any requirement in docs/specs and find the code that
+ *      implements it and the tests that prove it, and CI must fail when specs and code drift apart.
  * Spec: DOC-004
  * Invariants:
- *   - Output is deterministic (sorted, no timestamps), so regenerating an
- *     unchanged repository produces no diff.
+ *   - Output is deterministic (sorted, no timestamps): regenerating an unchanged tree gives no diff.
  *   - Uses only Node built-ins, so it runs before `npm install`.
- * Collaborators: reads docs/specs/*.md, docs/DOCUMENTATION-STANDARD.md, all
- *   other Markdown files, and source files under apps/, packages/, tools/,
- *   content/. Writes docs/TRACEABILITY.md.
- * Tests: Session 1 adds tools/spec-trace/specTrace.test.mjs.
- *
- * Usage:
- *   node tools/spec-trace/specTrace.mjs                  regenerate docs/TRACEABILITY.md
- *   node tools/spec-trace/specTrace.mjs --check          also fail on problems (for CI)
- *   node tools/spec-trace/specTrace.mjs --check --done-through=S2
- *        additionally fail if a MUST requirement from S1–S2 has no test
+ * Collaborators: reads docs/specs/*.md, docs/DOCUMENTATION-STANDARD.md, all other Markdown files and
+ *   source files under apps/, packages/, tools/, content/. Writes docs/TRACEABILITY.md.
+ * Tests: tools/spec-trace/test/specTrace.test.mjs
+ * Usage: see tools/spec-trace/README.md (`--check`, `--done-through=S1`, `SPEC_TRACE_ROOT=<dir>`).
  */
 import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'node:fs';
-import { join, relative, extname } from 'node:path';
+import { join, relative, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = fileURLToPath(new URL('../../', import.meta.url));
+const ROOT = process.env.SPEC_TRACE_ROOT
+  ? resolve(process.env.SPEC_TRACE_ROOT)
+  : fileURLToPath(new URL('../../', import.meta.url));
 const OUTPUT = 'docs/TRACEABILITY.md';
 const REQUIREMENT_SOURCES = ['docs/specs', 'docs/DOCUMENTATION-STANDARD.md'];
 const CODE_DIRS = ['apps', 'packages', 'tools', 'content'];
 const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs', '.css', '.yaml', '.yml', '.sh']);
-const SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', 'coverage', 'vendor']);
+const SKIP_DIRS = new Set([
+  'node_modules',
+  '.git',
+  '.next',
+  'dist',
+  'build',
+  'coverage',
+  'vendor',
+  'generated',
+]);
+// WHY: apps/server/h5p holds H5P's own fetched core and editor files (D-027); they are not ours to trace.
+const SKIP_PATHS = new Set([join('apps', 'server', 'h5p')]);
 
 // A requirement heading looks like: "#### SEC-001 · MUST · S2 · Sanitise SVG files"
 const HEADING = /^#### ([A-Z][A-Z0-9]*-\d{3}) · (MUST|SHOULD|COULD) · (S\d) · (.+)$/;
@@ -41,11 +45,13 @@ function listFiles(dir) {
   const abs = join(ROOT, dir);
   if (!existsSync(abs)) return [];
   if (statSync(abs).isFile()) return [dir];
-  return readdirSync(abs, { withFileTypes: true }).flatMap((entry) => {
-    if (SKIP_DIRS.has(entry.name)) return [];
-    const child = join(dir, entry.name);
-    return entry.isDirectory() ? listFiles(child) : [child];
-  }).sort();
+  return readdirSync(abs, { withFileTypes: true })
+    .flatMap((entry) => {
+      const child = join(dir, entry.name);
+      if (SKIP_DIRS.has(entry.name) || SKIP_PATHS.has(child)) return [];
+      return entry.isDirectory() ? listFiles(child) : [child];
+    })
+    .sort();
 }
 
 /** Parses every requirement heading into { id, priority, session, title, file }. */
@@ -94,8 +100,11 @@ function scanSources(pattern) {
 /** Finds references (in Markdown and code) to IDs that no spec defines. */
 function findDanglingReferences(requirements, pattern) {
   const known = new Set(requirements.map((r) => r.id));
-  const files = [...listFiles('docs').filter((f) => f.endsWith('.md')), ...readdirSync(ROOT).filter((f) => f.endsWith('.md')),
-    ...CODE_DIRS.flatMap(listFiles).filter((f) => CODE_EXTENSIONS.has(extname(f)))];
+  const files = [
+    ...listFiles('docs').filter((f) => f.endsWith('.md')),
+    ...readdirSync(ROOT).filter((f) => f.endsWith('.md')),
+    ...CODE_DIRS.flatMap(listFiles).filter((f) => CODE_EXTENSIONS.has(extname(f))),
+  ];
   const problems = [];
   for (const file of [...new Set(files)].filter((f) => f !== OUTPUT)) {
     const lines = readFileSync(join(ROOT, file), 'utf8').split('\n');
@@ -129,11 +138,18 @@ function render(requirements, { code, tests }) {
     out.push(`| ${s} | ${n('MUST')} | ${n('SHOULD')} | ${n('COULD')} | ${count((r) => status(r) === s)} |`);
   }
   for (const file of [...new Set(requirements.map((r) => r.file))]) {
-    out.push('', `## [${file}](${relative('docs', file)})`, '',
-      '| ID | Priority | Session | Requirement | Code | Tests | Status |', '|---|---|---|---|---|---|---|');
+    out.push(
+      '',
+      `## [${file}](${relative('docs', file)})`,
+      '',
+      '| ID | Priority | Session | Requirement | Code | Tests | Status |',
+      '|---|---|---|---|---|---|---|',
+    );
     for (const r of requirements.filter((x) => x.file === file)) {
       const list = (m) => (m.get(r.id) ?? []).map((f) => `\`${f}\``).join('<br>') || '—';
-      out.push(`| ${r.id} | ${r.priority} | ${r.session} | ${r.title.replace(/\|/g, '\\|')} | ${list(code)} | ${list(tests)} | ${status(r)} |`);
+      out.push(
+        `| ${r.id} | ${r.priority} | ${r.session} | ${r.title.replace(/\|/g, '\\|')} | ${list(code)} | ${list(tests)} | ${status(r)} |`,
+      );
     }
   }
   return `${out.join('\n')}\n`;
@@ -163,7 +179,8 @@ function main() {
 
   if (check) {
     const current = existsSync(join(ROOT, OUTPUT)) ? readFileSync(join(ROOT, OUTPUT), 'utf8') : '';
-    if (current !== markdown) problems.push(`${OUTPUT} is out of date; run node tools/spec-trace/specTrace.mjs`);
+    if (current !== markdown)
+      problems.push(`${OUTPUT} is out of date; run node tools/spec-trace/specTrace.mjs`);
   } else {
     writeFileSync(join(ROOT, OUTPUT), markdown);
     console.log(`Wrote ${OUTPUT} (${requirements.length} requirements).`);

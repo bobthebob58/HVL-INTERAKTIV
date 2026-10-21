@@ -32,9 +32,18 @@ export const DOCUMENTS = [
 
 /** Requirement areas by ID prefix, for the explorer's filter. */
 export const AREAS = {
-  PROD: 'Product', NFR: 'Non-functional', H5P: 'H5P engine', SEC: 'Upload security',
-  AUTH: 'Feide login', LTI: 'Canvas LTI and grades', UD: 'Universal design', PED: 'Læringsdesign',
-  MAPPE: 'Pedagogisk mappe', INS: 'Teacher insight', DATA: 'Data protection', DOC: 'Documentation',
+  PROD: 'Product',
+  NFR: 'Non-functional',
+  H5P: 'H5P engine',
+  SEC: 'Upload security',
+  AUTH: 'Feide login',
+  LTI: 'Canvas LTI and grades',
+  UD: 'Universal design',
+  PED: 'Læringsdesign',
+  MAPPE: 'Pedagogisk mappe',
+  INS: 'Teacher insight',
+  DATA: 'Data protection',
+  DOC: 'Documentation',
 };
 
 // Same pattern as tools/spec-trace/specTrace.mjs: "#### SEC-001 · MUST · S2 · Title".
@@ -46,10 +55,16 @@ export const REQUIREMENT_HEADING = /^#### ([A-Z][A-Z0-9]*-\d{3}) · (MUST|SHOULD
  * @returns e.g. "4-pattern-catalogue".
  */
 export function slugify(text) {
-  return text.toLowerCase()
-    .replace(/æ/g, 'ae').replace(/ø/g, 'o').replace(/å/g, 'a')
-    .normalize('NFKD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9 _-]/g, '').trim().replace(/ /g, '-');
+  return text
+    .toLowerCase()
+    .replace(/æ/g, 'ae')
+    .replace(/ø/g, 'o')
+    .replace(/å/g, 'a')
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9 _-]/g, '')
+    .trim()
+    .replace(/ /g, '-');
 }
 
 /**
@@ -61,7 +76,7 @@ export function readDocuments(root) {
   const all = [...DOCUMENTS, { key: 'readme', path: 'README.md', nav: null }];
   return all.map((doc) => {
     const markdown = readFileSync(join(root, doc.path), 'utf8');
-    const title = (markdown.match(/^# (.+)$/m) ?? [, doc.nav])[1];
+    const title = markdown.match(/^# (.+)$/m)?.[1] ?? doc.nav;
     return { ...doc, markdown, title };
   });
 }
@@ -80,8 +95,18 @@ export function extractRequirements(doc) {
     let end = i + 1;
     while (end < lines.length && !/^#{1,4} /.test(lines[end]) && lines[end].trim() !== '---') end++;
     const [, id, priority, session, title] = m;
-    found.push({ id, priority, session, title, area: id.split('-')[0], docKey: doc.key,
-      body: lines.slice(i + 1, end).join('\n').trim() });
+    found.push({
+      id,
+      priority,
+      session,
+      title,
+      area: id.split('-')[0],
+      docKey: doc.key,
+      body: lines
+        .slice(i + 1, end)
+        .join('\n')
+        .trim(),
+    });
   });
   return found;
 }
@@ -98,8 +123,11 @@ export function sectionUnder(markdown, pattern) {
   if (start < 0) return '';
   const level = lines[start].match(/^#+/)[0].length;
   let end = start + 1;
-  while (end < lines.length && !(new RegExp(`^#{1,${level}} `).test(lines[end]))) end++;
-  return lines.slice(start + 1, end).join('\n').trim();
+  while (end < lines.length && !new RegExp(`^#{1,${level}} `).test(lines[end])) end++;
+  return lines
+    .slice(start + 1, end)
+    .join('\n')
+    .trim();
 }
 
 /**

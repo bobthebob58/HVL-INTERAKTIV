@@ -1,0 +1,55 @@
+// Identity: who uses the service and how they log in (spec 02 §7).
+// PRIVACY: learner rows carry no name or e-mail; a CHECK constraint in the first migration enforces it (DATA-002).
+
+/// Staff (authors, admins) or learner.
+enum UserKind {
+  staff
+  learner
+}
+
+/// Where an identity comes from.
+enum IdentityProvider {
+  feide
+  lti
+}
+
+/// A person who uses the service. Only staff rows may hold a display name and e-mail.
+model User {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  kind        UserKind
+  displayName String?
+  email       String?
+  createdAt   DateTime @default(now())
+
+  identities       Identity[]
+  ownedContent     H5PContent[]                @relation("ContentOwner")
+  collaborations   ContentCollaborator[]
+  acknowledgements ValidationAcknowledgement[]
+}
+
+/// One way a user logs in. `subjectHash` is an HMAC of the Feide ID or of `iss|sub`, never the raw value.
+model Identity {
+  id          String           @id @default(uuid(7)) @db.Uuid
+  userId      String           @db.Uuid
+  provider    IdentityProvider
+  subjectHash String
+  platformId  String?          @db.Uuid
+  createdAt   DateTime         @default(now())
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform LtiPlatform? @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, subjectHash])
+  @@index([userId])
+}
+
+/// Login, logout and role events (spec 02). No foreign key, so the record outlives the user row.
+model AuthAuditEvent {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  at          DateTime @default(now())
+  actorUserId String?  @db.Uuid
+  event       String
+  ipHash      String?
+
+  @@index([at])
+}

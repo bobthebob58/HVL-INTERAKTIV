@@ -58,15 +58,19 @@ asserts? Does the module header's *Invariants* section match the code? Is every 
 |---|---|
 | `node tools/spec-trace/specTrace.mjs --check` *(available now)* | Specs are internally consistent; traceability is current |
 | `node tools/spec-site/buildSpecSite.mjs --check` *(available now)* | The spec website matches the Markdown |
-| `docker compose up -d` | PostgreSQL, Redis, MinIO and a mock OIDC/LTI platform start locally |
+| `docker compose up -d` | PostgreSQL, Redis and an S3 emulator start locally (D-023); the mock OIDC/LTI platform joins in S3 |
 | `npm ci && npm run build` | The monorepo builds from a clean checkout |
-| `npm run typecheck && npm run lint` | Types, lint, documentation lint (`DOC-001`, `DOC-002`) |
-| `npm test` | Unit and integration tests (Vitest + Testcontainers) |
+| `npm run typecheck && npm run lint` | Types and lint |
+| `npm run doc:lint` | The Documentation Standard, checked by machine (`DOC-001`…`DOC-014`) |
+| `npm run privacy:inventory-check` | The data inventory matches the database schema (`DATA-001`) |
+| `npm run h5p:fetch-core && npm run boot-check --workspace apps/server` | H5P client files are the verified 1.28 release; the engine would start (`H5P-001`) |
+| `npm test` | Unit and integration tests (Vitest; integration tests need `docker compose up -d`, D-023) |
 | `npm run test:e2e` | Playwright journeys J1–J5 against the mock Canvas platform |
 | `npm run test:a11y` | axe-core on every route and inside each content type's iframe (`UD-030`) |
 | `npm run spec:trace -- --check --done-through=S<n>` | Every MUST requirement up to session *n* has a test |
 | `npm run check:filesize` | No source file over 200 lines (`DOC-007`) |
-| `npm audit --omit=dev` | Dependency vulnerabilities (`SEC-007`) |
+| `npm run check:audit` | No unreviewed high or critical advisory in production dependencies (`SEC-007`, D-029) |
+| `npm run check:pins && npm run check:licences` | Exact pins; GPL-3.0-compatible licences (`SEC-007`, `NFR-005`) |
 
 ---
 
@@ -135,7 +139,7 @@ must be pasted into `PROGRESS.md`, before the next session starts.
 
 | Session | Gate |
 |---|---|
-| S1 | `npm run typecheck`, `npx vitest run`, `spec:trace --check --done-through=S1` pass; boot test logs Core 1.28 and hub-api.h5p.org (or a recorded R-01 fallback decision) |
+| S1 | `npm run typecheck`, `npm run lint`, `npm run doc:lint`, `npx vitest run` (services up), `spec:trace --check --done-through=S1`, the inventory, pin, licence and audit checks pass; the boot check logs Core 1.28 and hub-api.h5p.org (or a recorded R-01 fallback decision) |
 | S2 | Only the ten types are creatable; non-admins cannot install libraries; the SVG corpus is neutralised; `--done-through=S2` passes |
 | S3 | Mock-OIDC and mock-LTI integration tests pass, including the cookie-less iframe e2e; Deep Linking JWT is valid |
 | S4 | axe shows zero serious/critical violations on routes and all ten iframes; contrast and validator tests pass |

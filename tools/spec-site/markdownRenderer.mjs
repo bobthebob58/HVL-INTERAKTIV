@@ -18,7 +18,8 @@ import { Marked } from './vendor/marked.esm.js';
 import { DOCUMENTS, REQUIREMENT_HEADING, slugify } from './specParser.mjs';
 
 const ID_ONLY = /^[A-Z][A-Z0-9]*-\d{3}$/;
-const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const escapeHtml = (s) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** Renders a priority keyword as a badge. A11Y: the word is spelled out, never colour alone. */
 export function priorityBadge(priority) {
@@ -67,8 +68,10 @@ export function createRenderer({ knownIds, repoUrl }) {
           if (level === 4 && req) {
             const [, id, priority, session, title] = req;
             const h = Math.min(levels[levels.length - 1].out + 1, 6);
-            return `<h${h} id="r-${id}" class="req-heading" tabindex="-1"><a class="req-id" href="#r-${id}">${id}</a> `
-              + `${priorityBadge(priority)} ${sessionBadge(session)} <span class="req-title">${escapeHtml(title)}</span></h${h}>\n`;
+            return (
+              `<h${h} id="r-${id}" class="req-heading" tabindex="-1"><a class="req-id" href="#r-${id}">${id}</a> ` +
+              `${priorityBadge(priority)} ${sessionBadge(session)} <span class="req-title">${escapeHtml(title)}</span></h${h}>\n`
+            );
           }
           while (levels.length > 1 && levels[levels.length - 1].src >= level) levels.pop();
           const out = Math.min(levels[levels.length - 1].out + 1, 6);
@@ -80,13 +83,16 @@ export function createRenderer({ knownIds, repoUrl }) {
           const target = resolveHref(href, docKey, docPath);
           if (!target.external) return `<a href="${escapeHtml(target.href)}">${text}</a>`;
           // A11Y: external links say so in text, not only with an icon (spec UD-007).
-          return `<a href="${escapeHtml(target.href)}" rel="noopener" class="ext">${text}`
-            + `<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>`;
+          return (
+            `<a href="${escapeHtml(target.href)}" rel="noopener" class="ext">${text}` +
+            `<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>`
+          );
         },
         codespan(code) {
           // Requirement IDs written as `SEC-001` link to their definition.
           return ID_ONLY.test(code) && knownIds.has(code)
-            ? `<a class="req-ref" href="#r-${code}"><code>${code}</code></a>` : `<code>${code}</code>`;
+            ? `<a class="req-ref" href="#r-${code}"><code>${code}</code></a>`
+            : `<code>${code}</code>`;
         },
         table(header, body) {
           // A11Y: wide tables scroll inside their own focusable region, named after the section
@@ -108,7 +114,7 @@ export function createRenderer({ knownIds, repoUrl }) {
           // A11Y: task-list state as icon + word, not an unlabelled disabled <input> (WCAG 1.3.1, 4.1.2).
           return checked ? '<span class="task">✓ Done:</span>' : '<span class="task">○ To do:</span>';
         },
-        code(code, info) {
+        code(code) {
           codeCount += 1;
           const label = escapeHtml(`Code ${codeCount}${lastHeading ? `, ${lastHeading}` : ''}`);
           return `<pre class="code" tabindex="0" role="region" aria-label="${label}"><code>${escapeHtml(code.replace(/\n$/, ''))}</code></pre>\n`;

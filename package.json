@@ -1,0 +1,65 @@
+{
+  "name": "hvl-interaktiv",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Accessible, research-based H5P activities for asynchronous learning at Høgskulen på Vestlandet.",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "prepare": "husky",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "doc:lint": "node tools/doc-lint/docLint.mjs",
+    "check:filesize": "node tools/doc-lint/docLint.mjs --only=file-size",
+    "check:pins": "node tools/dependency-check/checkPins.mjs",
+    "check:licences": "node tools/dependency-check/checkLicences.mjs",
+    "check:audit": "node tools/dependency-check/checkAudit.mjs",
+    "privacy:inventory-check": "node tools/privacy/checkInventory.mjs",
+    "spec:trace": "node tools/spec-trace/specTrace.mjs",
+    "spec:site": "node tools/spec-site/buildSpecSite.mjs",
+    "h5p:fetch-core": "bash tools/h5p-core/fetchCoreClients.sh",
+    "db:migrate": "npm run db:migrate --workspace apps/server"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "eslint": "10.13.0",
+    "eslint-plugin-i18next": "6.1.5",
+    "eslint-plugin-jsdoc": "65.4.0",
+    "globals": "17.13.0",
+    "husky": "9.1.7",
+    "lint-staged": "17.6.0",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "5.0.5"
+  },
+  "lint-staged": {
+    "*.{ts,mts,js,mjs}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,yml,yaml,css}": [
+      "prettier --write"
+    ]
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true
+  },
+  "overrides": {
+    "underscore": "1.13.8"
+  }
+}

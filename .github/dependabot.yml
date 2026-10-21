@@ -1,0 +1,23 @@
+# Dependabot: weekly update pull requests for npm packages and GitHub Actions (SEC-007).
+# Every update still goes through review, the exact-pin check and the audit check in CI.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    versioning-strategy: increase
+    open-pull-requests-limit: 10
+    groups:
+      h5p:
+        patterns: ['@lumieducation/*']
+      prisma:
+        patterns: ['prisma', '@prisma/*']
+      aws-sdk:
+        patterns: ['@aws-sdk/*']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

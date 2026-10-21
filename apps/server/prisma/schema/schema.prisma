@@ -1,0 +1,14 @@
+// HVL Interaktiv database schema: generator and datasource (spec 05 §4).
+// Models are split by domain in this folder: identity, content, lti, learningDesign, analytics, audit.
+// Every model and field is described in docs/privacy/DATA-INVENTORY.md (DATA-001); CI checks that
+// the two match (`npm run privacy:inventory-check`). The connection URL lives in prisma.config.ts.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}

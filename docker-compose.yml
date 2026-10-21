@@ -1,0 +1,35 @@
+# Local services for development and integration tests (D-023). Start with `docker compose up -d`.
+# The values match apps/server/.env.example. These containers are for development only: no TLS, fixed passwords.
+#
+# S3: the moto server emulates the S3 API in one container without arguments, so the same image also works
+# as a GitHub Actions service container (D-023). Data is kept in memory and lost on restart.
+name: hvl-interaktiv
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: hvli
+      POSTGRES_PASSWORD: hvli-dev
+      POSTGRES_DB: hvli
+    ports: ['5432:5432']
+    volumes: ['postgres-data:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'hvli']
+      interval: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports: ['6379:6379']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      retries: 20
+
+  s3:
+    image: motoserver/moto:5.1.16
+    ports: ['5000:5000']
+
+volumes:
+  postgres-data:

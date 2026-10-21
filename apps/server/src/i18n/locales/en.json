@@ -1,0 +1,15 @@
+{
+  "error": {
+    "generic": "Something went wrong. Please try again later."
+  },
+  "upload": {
+    "archive": {
+      "unreadable": "The file is not a valid H5P archive.",
+      "unsafePath": "The archive contains an invalid file path: “{{entry}}”.",
+      "symlink": "The archive contains a symbolic link, which is not allowed: “{{entry}}”.",
+      "tooManyEntries": "The archive contains too many files (more than {{max}}).",
+      "fileTooLarge": "The file “{{entry}}” in the archive is larger than {{maxMb}} MB.",
+      "totalTooLarge": "The archive is larger than {{maxMb}} MB when unpacked."
+    }
+  }
+}

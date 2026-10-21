@@ -14,7 +14,8 @@
 import { AREAS } from './specParser.mjs';
 import { priorityBadge, sessionBadge } from './markdownRenderer.mjs';
 
-const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const esc = (s) =>
+  String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const STATUS_WORD = { planned: '○ Planned', 'in code': '◐ In code', tested: '● Tested' };
 
 /** Builds a <select> filter with an "All" option. */
@@ -36,16 +37,26 @@ function requirementCard(r) {
 /** The requirement explorer view: filters, live result count, and every requirement card. */
 export function explorerView(requirements) {
   const areas = Object.entries(AREAS).filter(([k]) => requirements.some((r) => r.area === k));
-  const sessions = [...new Set(requirements.map((r) => r.session))].sort().map((s) => [s, `Session ${s.slice(1)}`]);
+  const sessions = [...new Set(requirements.map((r) => r.session))]
+    .sort()
+    .map((s) => [s, `Session ${s.slice(1)}`]);
   return `<section class="view" id="requirements" aria-labelledby="requirements-h">
 <h2 id="requirements-h" tabindex="-1">Requirements</h2>
 <p class="lede">Every requirement in the specification, with its acceptance criteria and how it will be verified. Filter by area, priority, build session or status, or search the text. Click an ID anywhere on this site to jump to its definition.</p>
 <form class="filters" id="req-filters" role="search" aria-label="Filter requirements">
 <div class="field field-search"><label for="req-search">Search</label><input id="req-search" type="search" autocomplete="off" placeholder="e.g. ltik, SVG, k-suppression"></div>
 ${select('req-area', 'Area', areas)}
-${select('req-priority', 'Priority', [['MUST', 'Must'], ['SHOULD', 'Should'], ['COULD', 'Could']])}
+${select('req-priority', 'Priority', [
+  ['MUST', 'Must'],
+  ['SHOULD', 'Should'],
+  ['COULD', 'Could'],
+])}
 ${select('req-session', 'Session', sessions)}
-${select('req-status', 'Status', [['planned', 'Planned'], ['in code', 'In code'], ['tested', 'Tested']])}
+${select('req-status', 'Status', [
+  ['planned', 'Planned'],
+  ['in code', 'In code'],
+  ['tested', 'Tested'],
+])}
 <div class="field field-actions"><button type="button" id="req-expand">Expand all</button><button type="reset" id="req-reset">Clear filters</button></div>
 </form>
 <p class="result-count" id="req-count" aria-live="polite">Showing all ${requirements.length} requirements.</p>
@@ -63,8 +74,14 @@ ${doc.html}
 
 /** The whole page fragment (the publish skeleton or `wrapDocument` supplies <html>/<head>/<body>). */
 export function page({ css, js, nav, overview, explorer, documents }) {
-  const links = nav.map((group) => `<li class="nav-group"><span class="nav-group-label">${esc(group.label)}</span><ul>${
-    group.items.map((i) => `<li><a href="#${i.key}" data-view="${i.key}">${esc(i.text)}</a></li>`).join('')}</ul></li>`).join('');
+  const links = nav
+    .map(
+      (group) =>
+        `<li class="nav-group"><span class="nav-group-label">${esc(group.label)}</span><ul>${group.items
+          .map((i) => `<li><a href="#${i.key}" data-view="${i.key}">${esc(i.text)}</a></li>`)
+          .join('')}</ul></li>`,
+    )
+    .join('');
   return `<title>HVL Interaktiv Spec</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Specification for HVL Interaktiv: accessible, research-based H5P activities for asynchronous learning at Høgskulen på Vestlandet.">

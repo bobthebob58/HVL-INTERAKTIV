@@ -1,0 +1,43 @@
+// Analytics: the minimal xAPI record (DATA-012) and k-suppressed aggregates for teacher insight (spec 05).
+
+/// One learning event, reduced to the fields insight needs. Everything else in the xAPI statement is dropped.
+model XapiStatement {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  contentId      String   @db.Uuid
+  subContentId   String?
+  contentVersion Int
+  contextId      String?
+  learnerKey     String
+  verb           String
+  scoreRaw       Float?
+  scoreMax       Float?
+  scaled         Float?
+  success        Boolean?
+  completion     Boolean?
+  response       String?  @db.VarChar(1000)
+  durationMs     Int?
+  attemptId      String
+  timestamp      DateTime
+
+  content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@index([contentId, contextId, timestamp])
+  @@index([learnerKey])
+  @@index([timestamp])
+}
+
+/// Aggregates for one activity and period, stored only after k-suppression (INS-006). Kept after the purge.
+model InsightSnapshot {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  contentId   String   @db.Uuid
+  contextId   String?
+  periodStart DateTime
+  periodEnd   DateTime
+  k           Int
+  aggregates  Json
+  createdAt   DateTime @default(now())
+
+  content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@index([contentId, contextId])
+}

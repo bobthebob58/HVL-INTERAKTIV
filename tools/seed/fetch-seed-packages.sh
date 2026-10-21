@@ -67,7 +67,8 @@ if [[ -z "$DEST" ]]; then
 fi
 [[ "$HUB" == https://* ]] || die "Hub endpoint must be https: $HUB"
 [[ "$HUB" == */ ]] || die "Hub endpoint must end with '/': $HUB"
-[[ "$HUB" != *"//api.h5p.org"* ]] || die "api.h5p.org is the retired Hub (CLAUDE.md invariant)"
+hub_host="${HUB#https://}"; hub_host="${hub_host%%/*}"
+[[ "$hub_host" != "api.h5p.org" ]] || die "api.h5p.org is the retired Hub (CLAUDE.md invariant)"
 [[ "$METHOD" == GET || "$METHOD" == POST ]] || die "H5P_HUB_METHOD must be GET or POST"
 
 if [[ $DRY -eq 1 ]]; then

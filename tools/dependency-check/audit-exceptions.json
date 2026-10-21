@@ -1,0 +1,16 @@
+[
+  {
+    "advisory": "GHSA-5p2g-fcmc-qvqq",
+    "package": "image-size",
+    "decision": "D-030",
+    "expires": "2027-01-31",
+    "mitigation": "JXL/HEIF parser loop. Reached only via H5PEditor upload; SEC-002 content sniffing (S2) rejects non-allowlisted magic bytes before H5P calls image-size."
+  },
+  {
+    "advisory": "GHSA-w3rx-r6r6-pgpr",
+    "package": "image-size",
+    "decision": "D-030",
+    "expires": "2027-01-31",
+    "mitigation": "ICNS parser loop. Same path and same mitigation as GHSA-5p2g-fcmc-qvqq."
+  }
+]
