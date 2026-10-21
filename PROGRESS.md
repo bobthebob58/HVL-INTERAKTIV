@@ -55,7 +55,7 @@ Effort: start in Plan Mode. After planning, clear the context before executing.
 ## S2 — Content types and security ⬜
 
 - [ ] `HvlTop10ContentTypeFilter` and the DragQuestion semantics filter (`H5P-002`, `PROD-002`)
-- [ ] Seed script with SHA-256 verification (`H5P-003`) — **needs reference item 6**
+- [ ] Seed script with SHA-256 verification (`H5P-003`). **Needs the `.h5p` files**: run `tools/seed/fetch-seed-packages.sh` where hub-api.h5p.org is reachable
 - [ ] `PrismaContentUserDataStorage` (`H5P-005`, `PROD-008`); `HvlPermissionSystem` with a table test (`H5P-006`)
 - [ ] `HvlTranslationCallback` (`H5P-008`); library update audit (`H5P-011`)
 - [ ] `SvgSanitizer`, `FileTypeSniffer`, `ContentFileHeaders`, package import rules (`SEC-001`…`SEC-004`, `SEC-008`)
@@ -63,7 +63,7 @@ Effort: start in Plan Mode. After planning, clear the context before executing.
 
 ## S3 — Dual authentication ⬜
 
-Effort: high, because this is security-critical. **Needs reference items 4 and 5**, or TeCopp confirmation of the *(verify)* values.
+Effort: high, because this is security-critical. Public Feide and Canvas values are in `docs/reference/`; **HVL's own client IDs, realm, redirect URIs and TeCopp instance** are still needed (Q3, Q4).
 - [ ] Mock OIDC provider and mock LTI platform in `tools/mock-platform/` for tests
 - [ ] Feide RP, role mapping, sessions, data minimisation, author linking (`AUTH-001`…`AUTH-005`)
 - [ ] `LtiProviderFactory`, `PrismaLtiDatabaseManager`, ltik transport, role mapping (`LTI-001`…`LTI-004`)
@@ -73,7 +73,7 @@ Effort: high, because this is security-critical. **Needs reference items 4 and 5
 
 ## S4 — Universal design ⬜
 
-**Needs reference item 1** (brand values), or keep the current tokens and record a decision.
+Brand tokens follow HVL's manual (D-017); HVL (profil@hvl.no) must still confirm the values and supply logo files.
 - [ ] `packages/design-tokens` with the contrast test and lint rules (`UD-001`)
 - [ ] Web shell components and `hvl-h5p-theme.css` (`UD-002`…`UD-013`, `H5P-009`)
 - [ ] Validator engine, UD rules and pedagogical hint rules (`UD-020`…`UD-022`, `PED-020`)
@@ -84,7 +84,7 @@ Effort: high, because this is security-critical. **Needs reference items 4 and 5
 
 ## S5 — Læringsdesign studio ⬜
 
-**Needs reference items 2 and 3**, or keep working labels and headings in config.
+Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.nn.md`; ALU must confirm labels, criteria and limits.
 - [ ] Studio routes and guide content (`PED-001`…`PED-003`); patterns and skeletons (`PED-010`, `PED-011`, `PROD-001`, `PROD-009`)
 - [ ] Metadata, planner, learner time estimate (`PED-030`…`PED-032`); co-authoring and content bank (`PROD-007`); versioning (`PROD-013`)
 - [ ] Mappe export in Markdown and tagged PDF (`MAPPE-001`…`MAPPE-004`)
@@ -108,9 +108,11 @@ Effort: high, because this is security-critical. **Needs reference items 4 and 5
 | # | Question | Owner | Blocks |
 |---|---|---|---|
 | Q1 | ~~Confirm the licence GPL-3.0-or-later (D-015)~~ Resolved 2026-10-16: `LICENSE` added | — | — |
-| Q2 | Provide reference items 1–6 (`docs/reference/README.md`) | HVL / ALU / TeCopp | S2–S5 as listed |
+| Q2 | Confirm or replace the derived reference inputs 1–6, and supply the originals (logo files, ALU model document, mappe guidance) (`docs/reference/README.md`) | HVL / ALU / TeCopp | S2–S5 as listed |
+| Q7 | Allow `hub-api.h5p.org` (and ideally `www.hvl.no`, `auth.dataporten.no`, `docs.feide.no`, `*.instructure.com`) in the environment's network settings, or run `tools/seed/fetch-seed-packages.sh` elsewhere | Repository owner | S2 |
+| Q8 | Decide whether "(formativ)" may appear in Canvas assignment names (`LTI-013`) | HVL / ALU | S6 |
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
-| Q4 | Canvas Developer Key on HVL's test instance; confirm the four Canvas endpoint values | TeCopp | S3 |
+| Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous | TeCopp | S3 |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
 | Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`) | HVL DPO | S6, pilot |
 
@@ -118,7 +120,8 @@ Effort: high, because this is security-critical. **Needs reference items 4 and 5
 
 | ID | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|---|
-| R-01 | Lumi h5p-server 10.0.4 does not work with Core 1.28 libraries | Medium | High | S1 spike; fall back to 1.27 without Daylight; `patch-package` only with a decision |
+| R-01 | Lumi h5p-server 10.0.4 does not work with Core 1.28 libraries. Three issues are known (spec 01 §1, F1–F3), with workarounds; Lumi's fixes are unreleased | High | High | S1 spike with the workarounds; fall back to 1.27 without Daylight; `patch-package` only with a decision |
+| R-07 | No H5P editor 1.28 release tag exists | Certain | Medium | Pinned, reviewed commit (D-022); revisit when a tag appears |
 | R-02 | ltijs 7 is a recent rewrite with possible early bugs | Medium | Medium | Keep it behind `LtiProviderFactory`; contract tests; pin the exact version |
 | R-03 | Canvas or Feide endpoint values differ from the spec | Medium | Medium | *(verify)* markers; reference items 4 and 5; integration tests against mocks first |
 | R-04 | Hub registration at `hub-api.h5p.org/v1/sites` fails (HTTP 405 reports in 2026) | Medium | Low | Runtime does not depend on the Hub; offline seeding (`H5P-003`) |
@@ -130,3 +133,4 @@ Effort: high, because this is security-critical. **Needs reference items 4 and 5
 Append one entry per session: date, session, what was done, gate output, and any decisions added.
 
 - **2026-10-16 · S0** — Specification written. Plan corrections recorded as D-001…D-007. Gate output above.
+- **2026-10-21 · S0** — Licence confirmed (D-015). Reference inputs 1–6 assembled from public sources with citations and checked again (`docs/reference/`). Specs aligned: HVL brand palette and fonts (D-017, D-018), phase labels and model (D-019), merit portfolio (D-020), Feide logout (D-021), H5P editor pin (D-022), Canvas platform values. Spec website generator added (`tools/spec-site/`).

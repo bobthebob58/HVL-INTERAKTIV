@@ -7,17 +7,20 @@
  * Spec: DOC-004 (applies the house rules of spec 03 to this reading aid; not the product UI)
  * Invariants:
  *   - Every colour is a token defined on bare :root first; dark mode only redefines tokens.
- *   - Light text pairs ≥ 6.1 : 1 and dark pairs ≥ 6.0 : 1 (checked when the palette was chosen).
+ *   - Text pairs are ≥ 5 : 1 in both themes (checked when the palette was chosen; brand Sjøgrønn is
+ *     decoration only).
  * Collaborators: inlined by buildSpecSite.mjs together with spec-site.components.css.
  * Tests: axe run on the published page (Session 4 adds it to CI).
  */
 
 /* Layout: masthead across the top, sticky contents rail on the left, one reading column. */
+/* Colours: HVL's palette (D-017): Mørk blå 2 for headings and links, Sjøgrønn as decoration only,
+   Blågrå lys for table headers; neutrals for text. Dark mode uses Lys blå for links and headings. */
 :root {
   --bg: #F4F6F7; --panel: #FFFFFF; --ink: #111111; --muted: #4A5560;
-  --accent: #005F6B; --strong: #003D4C; --on-strong: #FFFFFF;
+  --accent: #004357; --strong: #004357; --on-strong: #FFFFFF; --brand: #00AFBA; --band: #C9D5DA;
   --line: #C9D3D7; --chip: #E3ECEE; --code-bg: #EAF0F2; --control-border: #4A5560;
-  --focus-outer: #003D4C; --focus-inner: #FFFFFF;
+  --focus-outer: #004357; --focus-inner: #FFFFFF;
   --font-display: "Source Serif 4", "Iowan Old Style", Georgia, serif;
   --font-body: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -25,17 +28,17 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0C1B20; --panel: #122830; --ink: #E6EEF0; --muted: #A7B8BE;
-    --accent: #6CCBD6; --strong: #A6E3EA; --on-strong: #0C1B20;
-    --line: #2B4A53; --chip: #1B3942; --code-bg: #10232A; --control-border: #A7B8BE;
-    --focus-outer: #A6E3EA; --focus-inner: #0C1B20; color-scheme: dark;
+    --bg: #0B1C22; --panel: #11272F; --ink: #E6EEF0; --muted: #A7B8BE;
+    --accent: #64D0DF; --strong: #64D0DF; --on-strong: #0B1C22; --brand: #00AFBA; --band: #22424D;
+    --line: #2B4A53; --chip: #1A3640; --code-bg: #0F242B; --control-border: #A7B8BE;
+    --focus-outer: #64D0DF; --focus-inner: #0B1C22; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0C1B20; --panel: #122830; --ink: #E6EEF0; --muted: #A7B8BE;
-  --accent: #6CCBD6; --strong: #A6E3EA; --on-strong: #0C1B20;
-  --line: #2B4A53; --chip: #1B3942; --code-bg: #10232A; --control-border: #A7B8BE;
-  --focus-outer: #A6E3EA; --focus-inner: #0C1B20; color-scheme: dark;
+  --bg: #0B1C22; --panel: #11272F; --ink: #E6EEF0; --muted: #A7B8BE;
+  --accent: #64D0DF; --strong: #64D0DF; --on-strong: #0B1C22; --brand: #00AFBA; --band: #22424D;
+  --line: #2B4A53; --chip: #1A3640; --code-bg: #0F242B; --control-border: #A7B8BE;
+  --focus-outer: #64D0DF; --focus-inner: #0B1C22; color-scheme: dark;
 }
 
 [hidden] { display: none !important; }
@@ -76,6 +79,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 2.5rem 0; }
 /* Links: underlined in running text (WCAG 1.4.1); underline is never used for anything else. */
 a { color: var(--accent); text-decoration: underline; text-underline-offset: .18em; text-decoration-thickness: .08em; }
 a:hover { text-decoration-thickness: .16em; }
+::placeholder { color: var(--muted); opacity: 1; } /* the UA grey is 3.3 : 1 on the dark panel */
 :focus-visible { outline: 3px solid var(--focus-outer); outline-offset: 2px; box-shadow: 0 0 0 2px var(--focus-inner); border-radius: 2px; }
 [tabindex="-1"]:focus:not(:focus-visible) { outline: none; box-shadow: none; }
 

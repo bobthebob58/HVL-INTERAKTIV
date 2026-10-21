@@ -19,6 +19,7 @@
 | ltijs 7 launch tokens | Each launch yields a signed **ltik** (24 h lifetime). `LaunchContext.redirect()` appends it to the URL. `Provider.getLaunchContext(ltik)` resumes the launch. No session cookie is needed. | This solves the third-party-cookie problem in Canvas iframes by design. |
 | ltijs 7 services on `LaunchContext` | `deepLinking.createDeepLinkingForm(items, options)`, `grading.submitScore(lineItemId, score)`, Names & Roles, Dynamic Registration | These are the APIs used below. |
 | `openid-client` | **6.x** (ESM-only, functional API: `discovery()`, `buildAuthorizationUrl()`, `authorizationCodeGrant()`) | Older `Issuer`/`Client` class examples do not apply. |
+| Canvas platform values (checked 2026-10-21) | `iss` `https://canvas.instructure.com`; OIDC auth `https://sso.canvaslms.com/api/lti/authorize_redirect`; JWKS `https://sso.canvaslms.com/api/lti/security/jwks`; token `https://sso.canvaslms.com/login/oauth2/token` (or `https://<institution-domain>/login/oauth2/token`); `privacy_level` values `anonymous`, `name_only`, `email_only`, `public` | Recorded with Canvas doc and source citations in [`docs/reference/canvas-platform-values.md`](../reference/canvas-platform-values.md); paste-ready key in [`canvas-lti13-developer-key.json`](../reference/canvas-lti13-developer-key.json). |
 | Feide OIDC provider (checked 2026-10-16) | Issuer `https://auth.dataporten.no`; endpoints `/oauth/authorization`, `/oauth/token`, `/openid/userinfo`, `/openid/jwks`, `/openid/endsession`; PKCE `S256`; ID tokens `RS256`; Groups API `https://groups-api.dataporten.no/groups` | Recorded with evidence in [`docs/reference/feide-oidc-config.example.json`](../reference/feide-oidc-config.example.json) and [`feide-values.md`](../reference/feide-values.md). Assembled from Feide's documentation and public code; HVL's own client values still come from the Customer Portal. |
 
 Values still marked *(verify)* below must be confirmed from HVL's own exports (Feide Customer Portal,
@@ -117,8 +118,12 @@ the Feide ID.
 
 #### AUTH-005 · SHOULD · S3 · Link an author's Canvas identity to their Feide identity
 The aim is one personal library whether a teacher arrives through Canvas or the portal. To link
-them, read a custom LTI claim (e.g. `feide_login = $Canvas.user.loginId`) *(verify with TeCopp)*, or
-offer a one-time "Link with Feide" pop-up. Learner identities are **never** linked across modes.
+them, read the custom claim `feide_login = $Canvas.user.loginId`, configured **only on the Deep Linking
+placements** (never tool-wide), so learners' resource-link launches never carry it. The server reads it
+only when `LTI-004` yields `author`, ignores unresolved values that start with `$`, and never stores it
+for learners. In LTI 1.3 Canvas releases custom-field substitutions whatever the `privacy_level`, so a
+test launch must confirm the value and that it equals the Feide ID *(verify with TeCopp)*. If it does not,
+use a one-time "Link with Feide" pop-up instead. Learner identities are **never** linked across modes.
 - **Verify:** Integration test of the linking flow.
 
 ---
@@ -128,10 +133,16 @@ offer a one-time "Link with Feide" pop-up. Learner identities are **never** link
 #### LTI-001 · MUST · S3 · LTI 1.3 tool with ltijs 7
 `apps/server/src/lti/LtiProviderFactory.ts` builds the ltijs `Provider` with the routes
 `/lti/login`, `/lti/launch`, `/lti/keys`, our `PrismaLtiDatabaseManager` and `RedisCacheManager`.
-The Canvas platform registration values are:
-issuer `https://canvas.instructure.com`, auth `https://sso.canvaslms.com/api/lti/authorize_redirect`,
-token `https://sso.canvaslms.com/login/oauth2/token`, keyset `https://sso.canvaslms.com/api/lti/security/jwks`
-*(verify all four with TeCopp)*. The `clientId` and deployment ID come from the Canvas Developer Key.
+The Canvas platform registration values for Instructure-hosted Canvas are: issuer
+`https://canvas.instructure.com`, auth `https://sso.canvaslms.com/api/lti/authorize_redirect`, token
+`https://sso.canvaslms.com/login/oauth2/token`, keyset `https://sso.canvaslms.com/api/lti/security/jwks`
+(Instructure's documentation and source; the documented token fallback is
+`https://<institution-domain>/login/oauth2/token`). Leave ltijs's `authorizationServer` unset, so the
+client-assertion `aud` equals the token URL. Beta and test instances use `canvas.{beta,test}.instructure.com`
+and `sso.{beta,test}.canvaslms.com`; which one TeCopp's test Canvas is *(verify with TeCopp)*. The
+`clientId` and deployment ID come from the Developer Key after the JSON in
+`docs/reference/canvas-lti13-developer-key.json` is pasted. The Developer Key's **Redirect URIs** field
+(set in the Canvas UI, not in the JSON) must contain exactly `https://interaktiv.hvl.no/lti/launch`.
 - **Acceptance:** A full launch against a mock platform (signed with a test key) succeeds. The
   launch is rejected if the signature, `aud`, nonce or deployment ID is wrong, or if the nonce is
   replayed.
@@ -152,7 +163,8 @@ Platform private keys are encrypted at rest with a key from the secret store.
 4. Server middleware resolves `provider.getLaunchContext(ltik)` into a `Principal`. Invalid or expired → 401 with a "please reopen from Canvas" page.
 5. Pages that receive an ltik send `Referrer-Policy: no-referrer`. The logger redacts `ltik` in query strings and headers.
 6. `Content-Security-Policy: frame-ancestors` lists only the configured Canvas origins (config
-   `CANVAS_ORIGINS`, e.g. `https://hvl.instructure.com`). `X-Frame-Options` is not sent.
+   `CANVAS_ORIGINS`, e.g. `https://hvl.instructure.com`, plus TeCopp's test instance and any vanity domain). `sso.canvaslms.com` is
+   not an ancestor and is not listed. `X-Frame-Options` is not sent.
 - **Acceptance:** A Playwright test with third-party cookies blocked completes launch → play → resume inside a cross-origin iframe.
 - **Verify:** Integration and e2e tests; header assertions.
 
@@ -170,10 +182,12 @@ Platform private keys are encrypted at rest with a key from the secret store.
 `onDeepLinking` redirects to `/app/deeplink`. There the author can (a) choose existing activities
 (own, co-authored or from the content bank), or (b) create a new one from a pattern (`PROD-001`) and
 return when it is published. The server builds content items of type `ltiResourceLink` with
-`custom: { contentId }`, `title`, an `iframe` size hint, and for graded placements a `lineItem` with
-`{ scoreMaximum: 100, label, resourceId: contentId, tag: 'hvl-interaktiv' }`. It returns them with
-`context.deepLinking.createDeepLinkingForm(items)`. Multiple selection is supported when the platform
-sends `accept_multiple`.
+`custom: { contentId }`, `title`, an `iframe` size hint, and, for the graded placement
+`assignment_selection` only, a `lineItem` with `{ scoreMaximum: 100, label, resourceId: contentId,
+tag: 'hvl-interaktiv' }`. Canvas ignores `lineItem` from `link_selection` and `editor_button`, so those
+links never sync grades. It returns the items with `context.deepLinking.createDeepLinkingForm(items)`.
+Multiple selection is offered only when the platform sends `accept_multiple: true` (Canvas sends `false`
+for `assignment_selection`). Returned resource links always point to `https://interaktiv.hvl.no`.
 - **Acceptance:** The auto-submitted form posts a signed JWT to `deep_link_return_url`. Draft activities cannot be returned.
 - **Verify:** Integration test decodes and validates the returned JWT. E2e in J1.
 
@@ -197,7 +211,9 @@ into their own library, but cannot edit the original unless they are co-authors.
 #### LTI-008 · SHOULD · S6 · Participation denominators via NRPS
 If the launch includes the Names and Roles claim, fetch the number of active learners in the
 context. Cache it for 1 hour, and use it as the denominator in insight (`INS-001`). **Only counts are
-stored**, never member names or e-mail addresses.
+stored**, never member names or e-mail addresses. This needs the developer-key scope
+`https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly`; with `privacy_level`
+`anonymous`, NRPS members carry no name, e-mail or picture in any case.
 - **Verify:** Integration test with a mock NRPS endpoint.
 
 #### LTI-009 · COULD · S6 · LTI Dynamic Registration
@@ -238,6 +254,10 @@ The result goes to a durable `GradeSyncJob` queue. A worker calls
 activityProgress: 'Completed', gradingProgress: 'FullyGraded', timestamp })` with exponential
 backoff (up to 8 attempts in 24 h). Jobs are idempotent per `(placement, learnerKey, attemptId)`. If
 the line item no longer exists, the job is marked `orphaned` and is not retried.
+The developer key needs the scopes `…/lti-ags/scope/score` and `…/lti-ags/scope/lineitem.readonly`
+(the latter detects orphaned line items). ltijs's grading service works from a `LaunchContext`, which
+lives as long as the ltik (24 h); a job still failing after that window stores what it needs to request
+a new client-credentials token itself, or is marked failed for the author to retry from a fresh launch.
 - **Acceptance:** Learning never waits for grade sync. Authors see a per-activity sync status
   (counts of sent / pending / failed) and can retry failed jobs.
 - **Verify:** Integration tests with a mock AGS endpoint (success, 5xx retry, 404 orphaned, idempotency).
@@ -247,7 +267,10 @@ H5P computes scores in the browser, so a determined student can forge them. The 
 (a) labels AGS scores as formative in the line-item `label` suffix "(formativ)", (b) shows the
 formative notice (`PROD-011`), and (c) never presents these scores as exam evidence. Server checks in
 `LTI-011` reduce accidental and casual manipulation. They are not claimed to prevent deliberate
-manipulation.
+manipulation. On `assignment_selection`, Canvas uses the line-item `label` as the assignment name and
+overwrites the teacher's own name. Whether "(formativ)" belongs in the assignment name, or in the
+content item's description instead (with Canvas's `preserveExistingAssignmentName` extension), is a
+decision for HVL and ALU *(verify)*.
 - **Verify:** Review item in the evaluator guide; unit test for the label suffix.
 
 ---

@@ -1,0 +1,58 @@
+{
+  "title": "HVL Interaktiv",
+  "description": "Interactive H5P learning activities from Høgskulen på Vestlandet (HVL). Scores sent to the Canvas gradebook are formative only.",
+  "oidc_initiation_url": "https://interaktiv.hvl.no/lti/login",
+  "target_link_uri": "https://interaktiv.hvl.no/lti/launch",
+  "public_jwk_url": "https://interaktiv.hvl.no/lti/keys",
+  "scopes": [
+    "https://purl.imsglobal.org/spec/lti-ags/scope/score",
+    "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly",
+    "https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly"
+  ],
+  "extensions": [
+    {
+      "platform": "canvas.instructure.com",
+      "domain": "interaktiv.hvl.no",
+      "tool_id": "hvl-interaktiv",
+      "privacy_level": "anonymous",
+      "settings": {
+        "text": "HVL Interaktiv",
+        "selection_width": 1024,
+        "selection_height": 768,
+        "placements": [
+          {
+            "placement": "link_selection",
+            "enabled": true,
+            "message_type": "LtiDeepLinkingRequest",
+            "target_link_uri": "https://interaktiv.hvl.no/lti/launch",
+            "text": "HVL Interaktiv",
+            "custom_fields": {
+              "feide_login": "$Canvas.user.loginId"
+            }
+          },
+          {
+            "placement": "assignment_selection",
+            "enabled": true,
+            "message_type": "LtiDeepLinkingRequest",
+            "target_link_uri": "https://interaktiv.hvl.no/lti/launch",
+            "text": "HVL Interaktiv",
+            "custom_fields": {
+              "feide_login": "$Canvas.user.loginId"
+            }
+          },
+          {
+            "placement": "editor_button",
+            "enabled": true,
+            "message_type": "LtiDeepLinkingRequest",
+            "target_link_uri": "https://interaktiv.hvl.no/lti/launch",
+            "text": "HVL Interaktiv",
+            "visibility": "admins",
+            "custom_fields": {
+              "feide_login": "$Canvas.user.loginId"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -8,8 +8,8 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 
 | | MUST | SHOULD | COULD | Total |
 |---|---|---|---|---|
-| planned | 105 | 17 | 3 | 125 |
-| in code | 1 | 0 | 0 | 1 |
+| planned | 104 | 17 | 3 | 124 |
+| in code | 2 | 0 | 0 | 2 |
 | tested | 0 | 0 | 0 | 0 |
 
 ## [docs/specs/00-product-and-pedagogy.md](specs/00-product-and-pedagogy.md)
@@ -44,7 +44,7 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 |---|---|---|---|---|---|---|
 | H5P-001 | MUST | S1 | Target Core API 1.28 and the new Hub | — | — | planned |
 | H5P-002 | MUST | S2 | Ten-type authoring whitelist | — | — | planned |
-| H5P-003 | MUST | S2 | Deterministic offline seeding | — | — | planned |
+| H5P-003 | MUST | S2 | Deterministic offline seeding | `tools/seed/fetch-seed-packages.sh` | — | in code |
 | H5P-004 | MUST | S1 | Production storage adapters | — | — | planned |
 | H5P-005 | MUST | S2 | Learner state persistence (resume) | — | — | planned |
 | H5P-006 | MUST | S2 | Permission system | — | — | planned |

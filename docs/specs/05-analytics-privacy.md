@@ -116,7 +116,9 @@ PostgreSQL, Redis and S3-compatible storage are hosted in Norway or the EEA. All
 #### DATA-005 · MUST · S6 · DPIA input
 `docs/privacy/DPIA-INPUT.md` describes processing operations, data flows (with a diagram), risks
 and mitigations. It cross-references this spec, so HVL's data protection officer can complete the
-formal DPIA.
+formal DPIA. It records the Canvas developer key's `privacy_level` (`anonymous`) **and** its custom
+fields: in LTI 1.3, custom-field substitutions such as `$Canvas.user.loginId` release data whatever the
+privacy level, so adding one requires a DPIA update.
 - **Verify:** Evaluator review.
 
 #### DATA-006 · MUST · S4 · Transparency for students

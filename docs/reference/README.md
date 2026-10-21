@@ -3,8 +3,8 @@
 These files are the inputs a build session reads instead of guessing. The originals come from HVL
 (design manual, ALU documents, Feide and Canvas exports). On 2026-10-16 and 2026-10-21 the build
 container could not reach hvl.no, feide.no, instructure.com or h5p.org (network policy). So each input
-below was **assembled from public sources** with every value cited and graded by confidence, and an
-independent agent then tried to refute it. **None of these files is an HVL original.** Each says
+below was **assembled from public sources**, with every value cited and graded by confidence. Each was then
+checked again from different sources (see *Verification* in the provenance table). **None of these files is an HVL original.** Each says
 exactly what HVL still has to supply or confirm.
 
 ## Status
@@ -15,8 +15,8 @@ exactly what HVL still has to supply or confirm.
 | 2 | `hvl-modellen-for-laeringsdesign.pdf` (ALU, *Faggruppa for digital læringsdesign*) | [hvl-laeringsdesign-model.md](hvl-laeringsdesign-model.md): what HVL has published about «HVL læringsdesign» (annual report 2024 p. 23, read directly; Møgelvang & Isaksen 2025) and the phase vocabulary HVL uses. [proposals/phases.yaml](proposals/phases.yaml) is the proposed `content/laeringsdesign/phases.yaml` | Partly found; ALU to confirm labels | S5 |
 | 3 | `hvl-pedagogisk-mappe-retningslinjer.pdf` (ALU) | [hvl-pedagogisk-mappe-criteria.md](hvl-pedagogisk-mappe-criteria.md): the 2025 merit criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), the three-part portfolio, limits, and the national basis. [proposals/mappe-template.nn.md](proposals/mappe-template.nn.md) is the proposed export template. No public PDF of this name was found; HVL publishes the guidance as web pages | Derived; ALU to confirm | S5 |
 | 4 | `feide-oidc-config.example.json` from the Feide Customer Portal | [feide-oidc-config.example.json](feide-oidc-config.example.json) with public endpoint values and placeholders for HVL's client, plus [feide-values.md](feide-values.md) (evidence table) | Public values high confidence; HVL client values pending | S3 |
-| 5 | `canvas-lti13-developer-key.json` (TeCopp) | Pending: being assembled from Instructure's own documentation in the canvas-lms repository | In progress | S3 |
-| 6 | `h5p-core-1.28-seed-packages/` (one verified `.h5p` per content type) | Pending: hub-api.h5p.org is blocked here; a status note and a fetch script will be added | Blocked by network policy | S2 |
+| 5 | `canvas-lti13-developer-key.json` exported by TeCopp, plus HVL's client and deployment IDs | [canvas-lti13-developer-key.json](canvas-lti13-developer-key.json), paste-ready (`privacy_level` `anonymous`; scopes AGS score, line-item read, NRPS read; Deep Linking placements), and [canvas-platform-values.md](canvas-platform-values.md) with every platform value cited to Instructure's docs and source at a fixed commit | Public values high confidence; HVL instance values pending | S3 |
+| 6 | `h5p-core-1.28-seed-packages/` (one verified `.h5p` per content type) | [h5p-core-1.28-seed-packages/README.md](h5p-core-1.28-seed-packages/README.md): latest versions, the exact Hub request, three known h5p-server 10.0.4 incompatibilities, per-file hashes of core `1.28.0`. **No `.h5p` files yet**: hub-api.h5p.org is blocked here. Run `tools/seed/fetch-seed-packages.sh` where it is reachable | Blocked by network policy; script ready | S2 |
 
 ## How to read the derived files
 
@@ -40,9 +40,11 @@ exactly what HVL still has to supply or confirm.
 
 ## Provenance
 
-| File | Source | Retrieved | By |
+| File | Source | Retrieved | Verification |
 |---|---|---|---|
-| `hvl-visual-identity.md`, `tools/contrast.py`, `tools/contrast-output.md` | HVL design manual 2017 v2.0 (search extracts), public transcriptions and logo copies on GitHub (cited by commit), Brandfetch | 2026-10-16 | Claude research agent; independent verification in progress |
-| `hvl-laeringsdesign-model.md`, `proposals/phases.yaml` | HVL Årsrapport 2024 (PDF via Sikt's Forvaltningsdatabasen mirror, SHA-256 recorded), Møgelvang & Isaksen 2025, hvl.no course pages (search extracts) | 2026-10-16 | Claude research agent; independent verification in progress |
-| `hvl-pedagogisk-mappe-criteria.md`, `proposals/mappe-template.nn.md` | hvl.no merit pages and ALU pages (search extracts), published HVL portfolios, national regulations | 2026-10-16 | Claude research agent; independent verification in progress |
-| `feide-oidc-config.example.json`, `feide-values.md` | docs.feide.no (search extracts), Feide's archived AuthEngine source, public integrations on GitHub and npm (cited by commit and version) | 2026-10-16 | Claude research agent; independent verification in progress |
+| `hvl-visual-identity.md`, `tools/contrast.py`, `tools/contrast-output.md` | HVL design manual 2017 v2.0 (search extracts), public transcriptions and logo copies on GitHub (cited by commit), Brandfetch | 2026-10-16 | Independent agent, 2026-10-21: 18 of 19 facts confirmed from new sources, all contrast ratios recomputed; its corrections applied |
+| `hvl-laeringsdesign-model.md`, `proposals/phases.yaml` | HVL Årsrapport 2024 (PDF via Sikt's Forvaltningsdatabasen mirror, SHA-256 recorded), Møgelvang & Isaksen 2025, hvl.no course pages (search extracts) | 2026-10-16 | Key facts re-checked 2026-10-21 with new searches (paper title, authors, venue, three parts, keywords confirmed via Cristin, NTNU and the MNT 2025 programme); full independent review pending |
+| `hvl-pedagogisk-mappe-criteria.md`, `proposals/mappe-template.nn.md` | hvl.no merit pages and ALU pages (search extracts), published HVL portfolios, national regulations | 2026-10-16 | Key facts re-checked 2026-10-21 with new searches (three parts, criteria 1.1–1.4 and 3.1–3.3, 11 attachments, about 7 500 words, reader's-guide tables in published 2025 portfolios); full independent review pending |
+| `feide-oidc-config.example.json`, `feide-values.md` | docs.feide.no (search extracts), Feide's archived AuthEngine source, public integrations on GitHub and npm (cited by commit and version) | 2026-10-16 | Each high-confidence value already rests on two or more independent sources; separate independent review pending |
+| `canvas-lti13-developer-key.json`, `canvas-platform-values.md` | Instructure's canvas-lms repository at commit `1c9f0bb` (docs and source), ltijs 7.0.7, vendor guides | 2026-10-21 | Key claims (privacy levels, token `aud` rule, endpoints) re-checked against the Canvas docs; separate independent review pending |
+| `h5p-core-1.28-seed-packages/README.md`, `h5p-php-library-1.28.0.files.sha256`, `tools/seed/fetch-seed-packages.sh` | H5P's git repositories (tags and commits), Lumi h5p-server 10.0.4 and `master`, the H5P WordPress plugin, h5p.org and Moodle forum posts | 2026-10-21 | Script checked with `bash -n` and `--dry-run`; not run against the Hub |

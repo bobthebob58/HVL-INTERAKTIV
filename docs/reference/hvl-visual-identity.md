@@ -6,6 +6,7 @@
 | **For** | `docs/reference/` item 1, spec 03 §2 (design tokens), `UD-001`, `UD-002`, `UD-004` |
 | **Status** | Derived from public sources. **Not** the official manual or logo files. HVL (profil@hvl.no) must still supply or confirm them. |
 | **Logo artwork** | Deliberately not included or embedded here. |
+| **Verified** | 2026-10-21 by an independent agent: 18 of 19 facts confirmed with new sources, every contrast ratio recomputed. Its corrections are applied below. |
 
 ## 0. Summary
 
@@ -14,8 +15,8 @@
    *Logo, design og grafiske element*. No newer manual was found.
 2. The two **logo colours** are **Sjøgrønn PMS 7710 U = `#00AFBA`** (the symbol) and **Mørk blå 2
    PMS 3035 U = `#004357`** (the name). These values appear in an extract of the manual, in a
-   third-party Quarto theme that transcribes the manual, in two unrelated public SVG copies of the
-   logo, and in Brandfetch's scrape of hvl.no.
+   third-party Quarto theme that transcribes the manual, in two public SVG copies of the logo from
+   UiB Library-maintained repositories (different SVG geometry), and in Brandfetch's scrape of hvl.no.
 3. **None of the spec 03 brand tokens (`#003D4C`, `#005F6B`, `#007681`, `#F4F6F7`, `#111111`) and
    none of the plan's orange (`#FF9E1B`) were found in any HVL source.** The names "deep fjord teal"
    and "coastal teal" were not found in any HVL source either. `#003D4C` is close to the official
@@ -73,19 +74,23 @@
 ## 3. Official colour palette (Fargepalett, manual p. 16)
 
 Manual extract (S1): "Logoens farger er sjøgrønn PMS 7710 på symbolet og mørkblå PMS 3035 på
-navnetrekket." The manual says the colour specifications are on page 16. It describes the
-signalfargar (signal colours) as profiling colours, used in smaller amounts together with the
-støttefargar (support colours) and tilleggsfargar (additional colours). It says the support colours
-"complement the signal colours" and encourages active use of white ("bruke kvitt aktivt").
+navnetrekket." The manual says the colour specifications are on page 16. The manual is in Bokmål;
+verbatim extracts: "Signalfargene er profilerende farger som brukes i mindre mengder sammen med
+støttefarger og tilleggsfarger eller i markedsmateriell der det er ønske om god synlighet."
+"Støttefargene skal komplementere signalfargene." "Hvitt skal brukes aktivt for å skape luft og gi et
+lett uttrykk." (S1 extracts, medium)
 
-Values are given as printed. The Norwegian names and grouping follow S6 (`HVLStyleGuideDictionary.R:69-213`).
+Values are given as printed. **Name source:** the colour names (e.g. *Mørk blå 2*) and the
+signal/støtte/tillegg grouping come from the S6 transcription (`HVLStyleGuideDictionary.R:69-213`) and
+are **medium** confidence. The manual's own wording for the logo colours is "sjøgrønn PMS 7710" and
+"mørkblå PMS 3035". The PMS, CMYK, RGB and HEX values themselves are high confidence.
 **Contrast** was computed by `tools/contrast.py` (WCAG 2.x relative luminance, run with `python3 -I`).
 
 | Name (nn/nb as in source) | Group | PMS | CMYK | RGB | HEX (printed) | vs `#FFFFFF` | vs `#111111` | Text on white? | Confidence |
 |---|---|---|---|---|---|---|---|---|---|
 | Sjøgrønn | Signalfarge (logo symbol) | PMS 7710 U | 81/0/23/0 | 0/175/186 | `#00AFBA` | 2.68 : 1 | 7.05 : 1 | No (decorative only) | high (S1, S6, S7, S8, S9) |
-| Grønn | Signalfarge | PMS 2267 U | 32/0/42/0 | 151/223/154 | `#96DE99` ¹ | 1.59 : 1 | 11.87 : 1 | No | medium (S6 only) |
-| Lys blå | Signalfarge | PMS 3105 U | 44/0/11/0 | 100/208/223 | `#64D0DF` | 1.81 : 1 | 10.46 : 1 | No | medium (S6 only) |
+| Grønn | Signalfarge | PMS 2267 U | 32/0/42/0 | 151/223/154 | `#96DE99` ¹ | 1.59 : 1 | 11.87 : 1 | No | high (S1, S6) |
+| Lys blå | Signalfarge | PMS 3105 U | 44/0/11/0 | 100/208/223 | `#64D0DF` | 1.81 : 1 | 10.46 : 1 | No | high (S1, S6) |
 | Gul | Signalfarge | PMS 114 U | 0/4/87/0 | 249/222/69 | `#F9DE45` | 1.35 : 1 | 13.99 : 1 | No | high (S1, S6) |
 | Oransje | Signalfarge | PMS 7416 U | 0/72/70/0 | 235/104/82 | `#EB6851` ¹ | 3.17 : 1 | 5.96 : 1 | Large text / non-text only | high (S1, S6, S9) |
 | Mørk blå 1 | Støttefarge | PMS 7704 U | 93/4/8/24 | 0/138/175 | `#008AAF` | 4.00 : 1 | 4.72 : 1 | Large text / non-text only | high (S1 gives CMYK and RGB, S6 adds the hex) |
@@ -111,9 +116,9 @@ tones under *støttefarger*, and another said the extract was "uklar på kva som
 som er signalfarger". Confirm the grouping on page 16 of the manual. It does not change any value.
 
 **Logo-file fills differ from the manual in some copies.** S7 and S8 (`hvl-en.svg`) fill the logo
-with `#00AFBA` and `#004357`, which match the manual. Other public copies use `#00B6C9` for the
-symbol (S8 `hvl-icon.svg:5-6`, and the Inkscape-made `HVL-nobackground.svg` in S6) and `#003146` for
-the name. We do not know where these copies came from. When HVL supplies the official SVGs, check
+with `#00AFBA` and `#004357`, which match the manual. Two other files use `#00B6C9` for the
+symbol (S8 `hvl-icon.svg:5-6`, and the Inkscape-made `HVL-nobackground.svg` in S6), and only
+`HVL-nobackground.svg` uses `#003146` for the name. We do not know where these copies came from. When HVL supplies the official SVGs, check
 their fills against the table above.
 
 **Colours on dark surfaces.** On `#004357`, these pass:
@@ -146,15 +151,19 @@ The search engine may ignore quoted hex strings, so this is evidence of absence 
 | Role | Profile font, for designers (S1, S6 `HVLStyleGuideDictionary.R:9-46`) | Office font, for general staff (S1, S6 `:48-67`) | Confidence |
 |---|---|---|---|
 | Titles, subtitles, ingresses | **NB Akademie Std** (Bold for titles and subheadings, Regular for ingresses; the wordmark is set in NB Akademie Std Medium) | **Arial** | high |
-| Body text | **Lyon Text**, "chosen for optimal legibility in body text" | **Georgia**, "chosen for optimal legibility where there are larger amounts of text" | high |
+| Body text | **Lyon Text**: "valgt for optimal lesbarhet der det er større mengder tekst, både på trykk og web" | **Georgia** | high |
 | Captions, graphs, footnotes, infographics, fact boxes | **NB Akademie Std Light** | **Arial** | high |
 
-- The manual explains that Arial and Georgia were chosen because they are on every machine and in
-  Microsoft Office, and because they match the profile fonts well (S1 extract, medium).
+- On the office fonts the manual says: "Arial og Georgia er valgt fordi de samsvarer godt med
+  profilfontene, er godt lesbare" and "Dette er fonter som er tilgjengelige på alle maskiner og i
+  Microsoft Office-pakken" (S1 extracts, medium). The *Light* weight for captions is from S6 only (medium).
 - **Licensing:** NB Akademie Std and Lyon Text are commercial typefaces. S6 `README.md:177` calls them
   "the licensed originals". Lyon is sold by Commercial Type (https://www.typewolf.com/lyon-text,
   https://type.today/en/journal/lyon; medium). We did not find whether HVL holds **web-font**
-  licences for either typeface. No source confirmed NB Akademie's foundry or its licence terms.
+  licences for either typeface. NB Akademie was designed by Stefan Gandl and is published by
+  Neubau/NeubauLaden, Berlin (2016; https://www.itsnicethat.com/articles/neubau-nb-akademie-080816,
+  https://neubauberlin.com/project/nb-akademie-otf-stdpro/). Lyon Text is by Kai Bernau, Commercial
+  Type (2009). Web-licence terms were not retrieved; ask HVL which licences it holds.
 - **Calibri** is not named in the manual. HVL's student assignment guidelines allow Times New Roman,
   Arial or Calibri, but that is a different context (S-A, medium). **Inter** is not mentioned in any
   HVL source.
@@ -168,7 +177,7 @@ The search engine may ignore quoted hex strings, so this is evidence of absence 
 | Variant | Facts | Source, confidence |
 |---|---|---|
 | Main logo, Norwegian | It carries the Nynorsk name "Høgskulen på Vestlandet". A symbol, built on a triangle and a V shape, sits next to the name (*navnetrekk*) | S1, S2, S7 `HVLLeftNorLogo.tsx:15`; medium |
-| Main logo, English | "Western Norway University of Applied Sciences". "I kommunikasjon med internasjonale målgrupper skal den engelske versjonen [benyttes]" | S1, S2, S3 (02627); medium |
+| Main logo, English | "Western Norway University of Applied Sciences". "Logoen er også tilgjengelig på engelsk." (A rule about when to use it could not be verified.) | S1, S2, S3 (02627); medium |
 | Negative (white) | "Negativ (hvit) logo brukes der bakgrunnen er mørk." Available in Norwegian and English | S1, S2, S3 (02629); medium |
 | Black | "Det er i tillegg laget en sort versjon som kan benyttes der fargeversjonen ikke er …" (extract truncated) | S1; medium |
 | Square | "Den kvadratiske versjonen av logo finnes i positiv og negativ versjon. I noen sammenhenger kan det av plassmessige årsaker være vanskelig å bruke original logo med navnetrekk. Dette er særlig på kvadratiske formater. Da kan den kvadratiske versjonen benyttes." | S1; medium |
@@ -188,8 +197,10 @@ from the logo text and the absence of any Bokmål variant on S2).
 - The logo may be placed on profile colours or on images, "men det er viktig å passe på at logoen
   står på en rolig flate uten støy."
 - The logo should be used consistently so that the visual profile works.
-- **Clear space (*frisone*) and minimum size: NOT FOUND.** The search extract lists millimetre
-  values under the logo heading, but their labels are garbled. Ask HVL.
+- **Print placement and minimum size: partly found.** "på andre formater skal logo plasseres minimum
+  12,5 mm fra venstre og fra toppen av formatet", and a heading "Minste tillatte størrelse på A4 og A5
+  brosjyrer og rapporter" with millimetre values whose labels are garbled in the extract (medium/low).
+  **Screen clear space and screen minimum size were not found.** Ask HVL.
 
 ### 6.3 Licence and trademark
 
@@ -207,9 +218,11 @@ from the logo text and the absence of any Bokmål variant on S2).
 ### 6.4 Pending name change (affects the logo)
 
 HVL has applied to NOKUT for university status. The proposed name is **"Universitetet på
-Vestlandet"**, short form *Univest*. The NOKUT board aimed to decide "i løpet av hausten 2026",
-followed by a decision of the King in Council. No decision had been published in the sources found
-up to 2026-10-16 (S10; medium). If university status is granted, the name and logo will change, so
+Vestlandet"** (board decision on the name, 27 April 2022); *Univest* is attested as a working or brand
+name, not confirmed as the official short form (medium). HVL writes "innan utgangen av 2026 vil det
+liggja føre vedtak i NOKUT-styret" (hvl.no/om/universitetsprosjektet); Khrono reported autumn 2026.
+A decision of the King in Council follows. No decision had been published in the sources found up to
+2026-10-21 (S10; medium). If university status is granted, the name and logo will change, so
 the logo, institution name and colours must be configuration, not code.
 
 ## 7. Proposed changes to spec 03 §2
@@ -268,6 +281,6 @@ from SVG rewriting, and treat them as unalterable.
 
 - `docs/reference/hvl-visual-identity.md`: this document.
 - `docs/reference/tools/contrast.py`: the WCAG 2.x contrast calculator. Run it with `python3 -I docs/reference/tools/contrast.py`.
-- `docs/reference/tools/contrast-output.md`: the output of that run on 2026-10-16.
+- `docs/reference/tools/contrast-output.md`: the output of that run (regenerated 2026-10-21).
 - The third-party transcription (S6) is **not** copied here, because that repository has no licence.
   Re-read it at the cited commit.

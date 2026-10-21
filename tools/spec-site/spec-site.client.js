@@ -23,6 +23,7 @@
   var navLinks = Array.prototype.slice.call(document.querySelectorAll('.sidenav a[data-view]'));
   var navToggle = document.querySelector('.nav-toggle');
   var narrow = window.matchMedia('(max-width: 60rem)');
+  var baseTitle = document.title;
   if (narrow.matches && navToggle) navToggle.open = false;
 
   /** Resolves a hash token to { view, target } elements. */
@@ -36,6 +37,15 @@
     return { view: view, target: target && target !== view ? target : null };
   }
 
+  /** A11Y: only tables and code blocks that really scroll sideways stay tab stops (WCAG 2.1.1). */
+  function markScrollers(scope) {
+    Array.prototype.forEach.call(scope.querySelectorAll('.table-wrap, pre.code'), function (el) {
+      if (!el.clientWidth) return; // hidden view or closed card: decided when it is shown
+      if (el.scrollWidth > el.clientWidth) el.setAttribute('tabindex', '0');
+      else el.removeAttribute('tabindex');
+    });
+  }
+
   /** Shows one view, marks the nav link, and moves focus for keyboard and screen-reader users. */
   function route(moveFocus) {
     var r = resolve(location.hash);
@@ -44,6 +54,8 @@
       if (a.getAttribute('data-view') === r.view.id) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     });
+    var current = navLinks.filter(function (a) { return a.getAttribute('data-view') === r.view.id; })[0];
+    document.title = current ? current.textContent + ' · ' + baseTitle : baseTitle; // A11Y: WCAG 2.4.2
     var focusEl = r.target || r.view.querySelector('h2');
     if (r.target && r.target.tagName === 'DETAILS') r.target.open = true;
     if (moveFocus && focusEl) {
@@ -52,9 +64,27 @@
       focusEl.scrollIntoView({ block: 'start' });
     }
     if (moveFocus && narrow.matches && navToggle) navToggle.open = false;
+    markScrollers(r.view);
+    // WHY: a vertical scrollbar may appear after the view is shown and narrow the tables by ~15 px.
+    window.requestAnimationFrame(function () { markScrollers(r.view); });
   }
 
   window.addEventListener('hashchange', function () { route(true); });
+  window.addEventListener('resize', function () { markScrollers(document); });
+  document.addEventListener('toggle', function (e) { if (e.target.open) markScrollers(e.target); }, true);
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (a.classList.contains('skip')) {
+      // A11Y: "Skip to content" stays in the current view (WCAG 2.4.1); "#main" is not a view.
+      e.preventDefault();
+      var h = views.filter(function (v) { return !v.hidden; })[0].querySelector('h2');
+      h.focus(); h.scrollIntoView({ block: 'start' });
+    } else if (a.hash === location.hash) {
+      // No hashchange fires for the current hash: route here, or focus falls to <body> (WCAG 2.4.3).
+      e.preventDefault(); route(true);
+    }
+  });
   route(Boolean(location.hash));
 
   // ---- Requirement explorer -------------------------------------------------------------
@@ -86,6 +116,7 @@
       card.hidden = !ok;
       if (ok) shown++;
     });
+    syncExpandLabel();
     count.textContent = shown === cards.length
       ? 'Showing all ' + cards.length + ' requirements.'
       : shown === 0 ? 'No requirements match these filters. Clear a filter or change the search words.'
@@ -99,11 +130,17 @@
   form.addEventListener('submit', function (e) { e.preventDefault(); applyFilters(); });
   form.addEventListener('reset', function () { setTimeout(applyFilters, 0); });
 
-  var expanded = false;
+  /** A11Y: the label states the action the button will take next, derived from the visible cards. */
+  function syncExpandLabel() {
+    var visible = cards.filter(function (c) { return !c.hidden; });
+    var allOpen = visible.length > 0 && visible.every(function (c) { return c.open; });
+    expand.textContent = allOpen ? 'Collapse all' : 'Expand all';
+  }
   expand.addEventListener('click', function () {
-    expanded = !expanded;
-    cards.forEach(function (c) { if (!c.hidden) c.open = expanded; });
-    // A11Y: the label states the action the button will take next (no aria-pressed as well).
-    expand.textContent = expanded ? 'Collapse all' : 'Expand all';
+    var visible = cards.filter(function (c) { return !c.hidden; });
+    var open = !visible.every(function (c) { return c.open; });
+    visible.forEach(function (c) { c.open = open; });
+    syncExpandLabel();
   });
+  document.querySelector('.req-list').addEventListener('toggle', syncExpandLabel, true);
 })();

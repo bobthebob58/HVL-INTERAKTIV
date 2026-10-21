@@ -29,7 +29,7 @@ function requirementCard(r) {
   const text = `${r.id} ${r.title} ${r.body}`.toLowerCase();
   return `<details class="req" id="x-${r.id}" data-area="${r.area}" data-priority="${r.priority}" data-session="${r.session}" data-status="${esc(status)}" data-text="${esc(text)}">
 <summary><span class="req-id">${r.id}</span> ${priorityBadge(r.priority)} ${sessionBadge(r.session)} <span class="req-title">${esc(r.title)}</span> <span class="status" data-status="${esc(status)}">${esc(STATUS_WORD[status] ?? status)}</span></summary>
-<div class="req-body">${r.html}<p class="req-source">Defined in <a href="#r-${r.id}">${esc(r.docNav)}</a> · ${esc(AREAS[r.area] ?? r.area)}</p></div>
+<div class="req-body">${r.html}<p class="req-source">Defined in <a href="#r-${r.id}">${esc(r.docNav)}, ${r.id}</a> · ${esc(AREAS[r.area] ?? r.area)}</p></div>
 </details>`;
 }
 

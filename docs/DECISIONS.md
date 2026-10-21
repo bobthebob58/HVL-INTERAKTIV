@@ -32,6 +32,7 @@ with the commands given.
 | D-019 | Phases are course-organisation vocabulary at the model's *mikronivå*; `underveis` is labelled *Mellomarbeid* | Accepted (2026-10-21), ALU to confirm |
 | D-020 | Portfolio export follows HVL's three-part merit portfolio and the 2025 criteria, as content | Accepted (2026-10-21), ALU to confirm |
 | D-021 | The Feide ID token is kept in the server-side session for logout only | Accepted (2026-10-21) |
+| D-022 | H5P editor 1.28 client files come from a pinned, reviewed commit | Accepted (2026-10-21) |
 
 ---
 
@@ -160,7 +161,7 @@ loading of one spec per session are kept.
   ([docs/reference/hvl-visual-identity.md](reference/hvl-visual-identity.md)).
 - **Decision:** Spec 03 §2 uses Mørk blå 2 for headings, links, primary buttons and the focus ring
   (10.82 : 1 on white), Mørk blå 1 `#008AAF` for non-text UI only (4.00 : 1), Sjøgrønn and Oransje for
-  decoration only, Blågrå lys `#C9D5DA` for bands, Mørk raud `#6D2439` for incorrect-answer text.
+  decoration only, Blågrå lys `#C9D5DA` for bands, Mørk rød `#6D2439` for incorrect-answer text.
   Body text stays a neutral near-black `#111111`, because the HVL palette has no text black and its
   greys fail 4.5 : 1. Neutral tokens are labelled as such.
 - **Consequences:** CLAUDE.md, `UD-004` and D-007 now name `#004357`. HVL (profil@hvl.no) must confirm the
@@ -209,4 +210,17 @@ loading of one spec per session are kept.
 - **Decision:** Keep the raw ID token only in the Redis session (encrypted at rest, deleted at logout or
   expiry). Never write it to PostgreSQL or logs. Learner name and e-mail are dropped before anything is
   persisted (`AUTH-003`, `AUTH-004`).
+
+### D-022 · H5P editor 1.28 client files come from a pinned, reviewed commit
+- **Context:** `H5P-001` asked for core and editor files from a released, versioned 1.28 package. Core has
+  the release tag `1.28.0`. The editor (`h5p-editor-php-library`) has **no** 1.28 release tag: its newest
+  semver tag is `1.25`, and 1.28-era code exists only on platform branches and untagged commits. Lumi's own
+  `master` pins editor commit `ab2daa18bd61b19e7f8729e22eec88f3b637a868`
+  ([seed-package status](reference/h5p-core-1.28-seed-packages/README.md) §5).
+- **Decision:** Pin core to tag `1.28.0`. Pin the editor to one reviewed commit (start from Lumi's pin),
+  record its per-file SHA-256 in `docs/reference/`, and review the diff before any change. Never track a
+  moving branch.
+- **Consequences:** `H5P-001` and the CLAUDE.md invariant ("never unreleased H5P git branches") now mean
+  "never a moving branch; a pinned commit only where no release exists, with this entry". Revisit when
+  H5P tags an editor 1.28 release.
 

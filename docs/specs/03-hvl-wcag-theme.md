@@ -34,8 +34,9 @@ v2.0, February 2017, page 16), as documented in
 [`docs/reference/hvl-visual-identity.md`](../reference/hvl-visual-identity.md). HVL's own logo colours are
 **Mørk blå 2** (PMS 3035 U, `#004357`) and **Sjøgrønn** (PMS 7710 U, `#00AFBA`). The manual was read
 through search extracts and independent transcriptions, not opened directly, so HVL (profil@hvl.no)
-must still confirm the values *(verify)*. Neutral tokens that are not HVL colours are labelled
-*neutral* below. (D-017)
+must still confirm the values *(verify)*. Colour names in brackets follow a transcription of the manual
+and are medium confidence; the manual itself calls the logo colours "sjøgrønn PMS 7710" and "mørkblå
+PMS 3035". Neutral tokens that are not HVL colours are labelled *neutral* below. (D-017)
 
 Contrast ratios below were **computed** with the WCAG 2.x relative-luminance formula. A unit test
 recomputes them on every build (`UD-001`). If HVL confirms different values, the test decides
@@ -50,10 +51,10 @@ whether they may be used.
 | `--hvl-band` | `#C9D5DA` (Blågrå lys) | Section bands, table headers | `#111111` on it 12.60 : 1; `#004357` on it 7.22 : 1 | AAA |
 | `--hvl-ink` | `#111111` (neutral) | Body text (the HVL palette has no near-black) | 18.88 : 1 on `#FFFFFF`; 17.42 : 1 on `#F4F6F7` | AAA |
 | `--hvl-ink-muted` | `#4A5560` (neutral) | Secondary text. HVL's own greys fail for text (Blågrå mørk 4.37 : 1, Grå mørk 3.43 : 1) | 7.61 : 1 on `#FFFFFF` | AAA |
-| `--hvl-surface` / `--hvl-surface-alt` | `#FFFFFF` (Kvit) / `#F4F6F7` (neutral) | Cards / page background. The manual encourages active use of white | — | — |
+| `--hvl-surface` / `--hvl-surface-alt` | `#FFFFFF` (Hvit) / `#F4F6F7` (neutral) | Cards / page background. The manual encourages active use of white | — | — |
 | `--hvl-feedback-correct-fg` on `-bg` | `#0F5132` on `#D1E7DD` (neutral) | Correct-answer text | 7.21 : 1 | AAA |
 | `--hvl-feedback-correct-border` | `#198754` (neutral) | 4 px left border (decorative; the text prefix carries the meaning) | 3.49 : 1 on its background | Non-text 3 : 1 |
-| `--hvl-feedback-incorrect-fg` on `-bg` | `#6D2439` (Mørk raud) on `#F8D7DA` | Incorrect-answer text | 8.02 : 1 | AAA |
+| `--hvl-feedback-incorrect-fg` on `-bg` | `#6D2439` (Mørk rød) on `#F8D7DA` | Incorrect-answer text | 8.02 : 1 | AAA |
 | `--hvl-feedback-incorrect-border` | `#DC3545` (neutral) | 4 px left border (decorative) | 3.39 : 1 on its background | Non-text 3 : 1 |
 | `--hvl-feedback-info-fg` on `-bg` | `#004357` (Mørk blå 2) on `#CFF4FC` | Hints, notices | 9.28 : 1 | AAA |
 | `--hvl-focus-outer` / `--hvl-focus-inner` | `#004357` / `#FFFFFF` | Two-tone focus ring (see `UD-004`) | outer ring 10.82 : 1 on white; inner ring 10.82 : 1 against dark fills | 1.4.11 and 2.4.7 on every surface |

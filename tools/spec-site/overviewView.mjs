@@ -46,12 +46,12 @@ export function overviewView(docs, requirements, render) {
 <div><dt>Requirements</dt><dd><a href="#requirements">${requirements.length}</a> <span class="sub">${byPriority('MUST')} must · ${byPriority('SHOULD')} should · ${byPriority('COULD')} could</span></dd></div>
 <div><dt>Build sessions</dt><dd>${sessionCount} <span class="sub">${Math.max(0, done)} of ${sessionCount} done; specification complete</span></dd></div>
 <div><dt>H5P content types</dt><dd>${contentTypes} <span class="sub">chosen for pedagogy and accessibility</span></dd></div>
-<div><dt>Learning-design patterns</dt><dd>${patterns} <span class="sub">for forarbeid, mellomarbeid and etterarbeid</span></dd></div>
+<div><dt>Learning-design patterns</dt><dd>${patterns} <span class="sub">for <span lang="nn">forarbeid</span>, <span lang="nn">mellomarbeid</span> and <span lang="nn">etterarbeid</span></span></dd></div>
 </dl>
 <h3 id="overview--offer" tabindex="-1">What it does for teachers and students</h3>
 ${block(offer, 'readme', 'What it does')}
 <h3 id="overview--phases" tabindex="-1">How asynchronous work fits around the seminar</h3>
-<p>HVL Interaktiv supports the asynchronous phases of a course. The synchronous session (<em>samling</em>) happens in the classroom or online; the activities prepare for it and consolidate after it.</p>
+<p>HVL Interaktiv supports the asynchronous phases of a course. The synchronous session (<em lang="nn">samling</em>) happens in the classroom or online; the activities prepare for it and consolidate after it.</p>
 ${block(phases, 'spec-04', 'Phase matrix')}
 <p class="more"><a href="#spec-04">Read the læringsdesign spec</a> · <a href="#spec-00--4-design-principles-and-the-pedagogy-behind-them">See the research behind each principle</a></p>
 <h3 id="overview--plan" tabindex="-1">Build plan</h3>

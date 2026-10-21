@@ -29,7 +29,7 @@ const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const OUTPUT = 'docs/TRACEABILITY.md';
 const REQUIREMENT_SOURCES = ['docs/specs', 'docs/DOCUMENTATION-STANDARD.md'];
 const CODE_DIRS = ['apps', 'packages', 'tools', 'content'];
-const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs', '.css', '.yaml', '.yml']);
+const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs', '.css', '.yaml', '.yml', '.sh']);
 const SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', 'coverage', 'vendor']);
 
 // A requirement heading looks like: "#### SEC-001 · MUST · S2 · Sanitise SVG files"

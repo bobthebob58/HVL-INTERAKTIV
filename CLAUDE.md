@@ -5,7 +5,8 @@
 - **Runtime:** Node.js 24 LTS (ltijs 7 needs ≥ 24). TypeScript strict. Pin runtime dependencies exactly (no `^`).
 - **H5P engine:** `@lumieducation/h5p-server@10.0.4` and `@lumieducation/h5p-express@10.0.5`. Set
   `coreApiVersion` to `{ major: 1, minor: 28 }`, Hub endpoints to `https://hub-api.h5p.org/v1/content-types/`
-  and `https://hub-api.h5p.org/v1/sites`. NEVER use `api.h5p.org` or unreleased H5P git branches.
+  and `https://hub-api.h5p.org/v1/sites`. Core from tag `1.28.0`; editor from the pinned commit in D-022.
+  NEVER use `api.h5p.org` or track a moving H5P git branch.
 - **Exactly ten authorable types:** CoursePresentation, InteractiveVideo, QuestionSet, InteractiveBook,
   Column, DragText, MultiChoice, Blanks, ImageHotspots, BranchingScenario. NEVER offer `H5P.DragQuestion`,
   not even as sub-content. Dependencies stay installable.
@@ -70,6 +71,8 @@ Operational rules:
 
 - Lumi h5p-server's DEFAULTS are Core 1.27 and `api.h5p.org`. Always build the config via `H5pConfigFactory`.
 - There is no h5p-server 10.1.0. Do not "upgrade" to it. Fixing CVE-2025-7062 is our job (D-003).
+- 10.0.4 vs the new Hub: `local_id` must be ≤ 15 chars (`getLocalIdOverride`), `/v1/sites` returns a non-200 2xx
+  (pre-set `uuid`), and Core 1.28 theme CSS is missing from the asset lists (inject it). See spec 01 §1.
 - Library installation is `GeneralPermission.*`, not `ContentPermission.*` (D-004).
 - Most ltijs examples online are v5 (`lti.setup`, `ltiaas`, `lti.redirect`). Use the v7 API:
   `new Provider(...)`, `onResourceLink`, `onDeepLinking`, `context.redirect`,

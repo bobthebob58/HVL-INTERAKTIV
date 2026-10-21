@@ -53,8 +53,11 @@ export function createRenderer({ knownIds, repoUrl }) {
   }
 
   return function render(markdown, docKey, docPath, demote = 1, context = '') {
-    let lastLevel = 1;
+    // A11Y: map Markdown levels through a stack so a source jump ("#" straight to "###", as in
+    // DECISIONS.md) never skips a level on the site (WCAG 1.3.1).
+    const levels = [{ src: 1, out: 1 + demote }];
     let lastHeading = context;
+    let codeCount = 0;
     let tableCount = 0;
     const marked = new Marked({ gfm: true });
     marked.use({
@@ -63,13 +66,15 @@ export function createRenderer({ knownIds, repoUrl }) {
           const req = REQUIREMENT_HEADING.exec(`#### ${raw}`.trim());
           if (level === 4 && req) {
             const [, id, priority, session, title] = req;
-            const h = Math.min(lastLevel + 1, 6);
+            const h = Math.min(levels[levels.length - 1].out + 1, 6);
             return `<h${h} id="r-${id}" class="req-heading" tabindex="-1"><a class="req-id" href="#r-${id}">${id}</a> `
               + `${priorityBadge(priority)} ${sessionBadge(session)} <span class="req-title">${escapeHtml(title)}</span></h${h}>\n`;
           }
-          lastLevel = Math.min(level + demote, 6);
+          while (levels.length > 1 && levels[levels.length - 1].src >= level) levels.pop();
+          const out = Math.min(levels[levels.length - 1].out + 1, 6);
+          levels.push({ src: level, out });
           lastHeading = raw;
-          return `<h${lastLevel} id="${docKey}--${slugify(raw)}" tabindex="-1">${text}</h${lastLevel}>\n`;
+          return `<h${out} id="${docKey}--${slugify(raw)}" tabindex="-1">${text}</h${out}>\n`;
         },
         link(href, title, text) {
           const target = resolveHref(href, docKey, docPath);
@@ -99,8 +104,14 @@ export function createRenderer({ knownIds, repoUrl }) {
         tablecell(content, flags) {
           return flags.header ? `<th scope="col">${content}</th>` : `<td>${content}</td>`;
         },
+        checkbox(checked) {
+          // A11Y: task-list state as icon + word, not an unlabelled disabled <input> (WCAG 1.3.1, 4.1.2).
+          return checked ? '<span class="task">✓ Done:</span>' : '<span class="task">○ To do:</span>';
+        },
         code(code, info) {
-          return `<pre class="code" tabindex="0"><code>${escapeHtml(code.replace(/\n$/, ''))}</code></pre>\n`;
+          codeCount += 1;
+          const label = escapeHtml(`Code ${codeCount}${lastHeading ? `, ${lastHeading}` : ''}`);
+          return `<pre class="code" tabindex="0" role="region" aria-label="${label}"><code>${escapeHtml(code.replace(/\n$/, ''))}</code></pre>\n`;
         },
       },
     });

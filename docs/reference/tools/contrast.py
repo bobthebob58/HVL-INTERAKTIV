@@ -53,7 +53,7 @@ for n, g, p, cmyk, rgb, hx in OFFICIAL:
     print(f"| {n} | {g} | {p} | {cmyk} | {rgb} | `{hx}` | {note} | {w:.2f} : 1 | {k:.2f} : 1 | {verdict(w)} | {verdict(k)} |")
 
 print("\n## RGB-vs-HEX discrepancy check (contrast vs white)\n")
-for a, b in [("#96DE99", "#97DF9A"), ("#009382", "#009482"), ("#707B7B", "#707C7C")]:
+for a, b in [("#96DE99", "#97DF9A"), ("#009382", "#009482"), ("#707B7B", "#707C7C"), ("#EB6851", "#EB6852")]:
     print(f"- {a}: {ratio(a,'#FFFFFF'):.3f} : 1 ; {b}: {ratio(b,'#FFFFFF'):.3f} : 1")
 
 print("\n## Spec 03 tokens and other values (for comparison)\n")
