@@ -5,7 +5,7 @@
  *      of semantics, language files, package import and seeding need only a few fields, so they build
  *      exactly the libraries they describe, on disk, in the layout Lumi's FileLibraryStorage reads.
  * Spec: H5P-002, H5P-003, H5P-008, SEC-003, SEC-008
- * Tests: shared by the S2 tests under test/h5p, test/http and test/security.
+ * Tests: shared by the S2 tests under test/h5p and test/security.
  */
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

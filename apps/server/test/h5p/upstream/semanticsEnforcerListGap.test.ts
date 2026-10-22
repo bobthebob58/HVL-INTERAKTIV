@@ -41,8 +41,8 @@ describe('[SEC-008] upstream: Lumi skips list items when enforcing semantics', (
   it('[SEC-008] sanitises a plain text field but leaves text that is a list item untouched', async () => {
     const params = await enforce({ title: XSS, questions: [XSS], items: [] });
     expect(params.title).not.toContain('onerror');
-    // UPSTREAM: ContentScanner passes the array as parentParams for list items (ContentScanner.js:119),
-    // so the sanitised text is written to a property of the array, not to the item. D-039 closes this.
+    // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/ContentScanner.ts passes the array as parentParams for list
+    // items, so the sanitised text is written to a property of the array, not to the item. D-039 closes this.
     const questions = params.questions as string[] & { question?: string };
     expect(questions[0]).toBe(XSS);
     expect(questions.question).not.toContain('onerror');

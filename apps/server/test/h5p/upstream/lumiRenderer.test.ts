@@ -20,8 +20,8 @@ describe('[SEC-008] upstream: Lumi player template', () => {
       scripts: [],
       integration: { contents: { 'cid-1': { metadata: { title } } } },
     } as unknown as IPlayerModel;
-    // UPSTREAM: renderers/player.js:16 embeds JSON.stringify(integration), which leaves "<" unescaped,
-    // so this markup would run in every learner's browser. Our own template (D-040) escapes it.
+    // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/renderers/player.ts embeds JSON.stringify(integration),
+    // which leaves "<" unescaped, so this markup would run for every learner. Our template (D-040) escapes it.
     expect(renderPlayer(model)).toContain(title);
   });
 });
