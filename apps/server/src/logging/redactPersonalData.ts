@@ -7,18 +7,17 @@
  * Spec: DATA-009, NFR-006
  * Invariants:
  *   - Keys are matched case-insensitively, ignoring `-` and `_` (so `ID_Token` = `idToken`).
- *   - Keys starting with `feide` are redacted whatever follows (`feideId`, `feide_affiliation`).
- *   - In every string value, `ltik=` parameters, `Bearer`/`Basic` credentials, JWTs, passwords in URLs and
- *     e-mail addresses are masked too (`redactText`).
+ *   - Keys that contain `feide`, keys ending in a sensitive word (`authToken`, `userEmail`, `ltiSubject`,
+ *     `S3_SECRET_ACCESS_KEY`) and Feide attribute names are redacted too.
+ *   - Every string value goes through `redactText` (credentials and e-mail addresses inside text).
  *   - Input objects are never mutated; cycles are replaced by "[Circular]" instead of recursing forever.
  *   - Prisma errors, wherever they appear, are reduced to their codes (./prismaErrorSummary.ts).
- * Collaborators: ./logger.ts (applies it to every log record and message), ./prismaErrorSummary.ts.
+ * Collaborators: ./logger.ts (applies it to every log record and argument), ./redactText.ts,
+ *   ./prismaErrorSummary.ts.
  * Tests: apps/server/test/logging/logger.test.ts
  */
 import { isPrismaError, summarisePrismaError } from './prismaErrorSummary.js';
-
-/** Replacement written in place of a redacted value. */
-export const REDACTED = '[Redacted]';
+import { REDACTED, redactText } from './redactText.js';
 
 /**
  * Key names whose values are always removed (normalised: lower case, no `-` or `_`).
@@ -54,42 +53,50 @@ export const SENSITIVE_KEYS: ReadonlySet<string> = new Set([
   'apikey',
   'xapikey',
   'clientassertion',
+  'idtokenhint',
+  'loginhint',
   'credentials',
   'nin',
   'personnummer',
   'fodselsnummer',
 ]);
 
-const normalise = (key: string): string => key.toLowerCase().replace(/[-_]/g, '');
+/** Endings that mark a key as sensitive whatever comes before them (`authToken`, `userEmail`, `ltiSubject`). */
+export const SENSITIVE_SUFFIXES: readonly string[] = [
+  'token',
+  'secret',
+  'password',
+  'passwd',
+  'email',
+  'emailaddress',
+  'apikey',
+  'subject',
+  'accesskey',
+  'privatekey',
+  'cookie',
+  'authorization',
+  'nin',
+];
+
+// PRIVACY: Feide attribute names for the Feide ID, legal name and national ID number (DATA-002).
+const FEIDE_ATTRIBUTES = new Set(['edupersonprincipalname', 'noredupersonlegalname', 'noredupersonnin']);
+
+const normalise = (key: string): string => key.toLowerCase().replace(/[-_\s]/g, '');
 
 /**
  * Tells whether a key's value must be redacted.
  * @param key - Object key as written by the caller.
- * @returns True for DATA-009 keys, their aliases and any `feide*` key.
+ * @returns True for DATA-009 keys and their aliases, keys ending in a sensitive word, and any key that
+ *   names Feide (including claim URIs such as `https://n.feide.no/claims/nin`).
  */
 export function isSensitiveKey(key: string): boolean {
   const k = normalise(key);
-  return SENSITIVE_KEYS.has(k) || k.startsWith('feide');
-}
-
-/** Patterns masked in free text, in order: URL passwords before e-mail addresses (both contain `@`). */
-const TEXT_PATTERNS: [RegExp, string][] = [
-  [/\b(ltik=)[^&#\s"']+/gi, `$1${REDACTED}`],
-  // WHY: HTTP authentication schemes are case-insensitive (RFC 9110 §11.1).
-  [/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+/gi, `$1 ${REDACTED}`],
-  [/\beyJ[\w-]+\.[\w-]+\.[\w-]*/g, REDACTED],
-  [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/:@]*:[^\s/@]*@/gi, `$1${REDACTED}@`],
-  [/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, REDACTED],
-];
-
-/**
- * Masks credentials and identifiers embedded in free text, such as a URL with `?ltik=`, a copied
- * header, a JWT, `redis://user:password@host` or an e-mail address in an error message.
- * @param text - Any string that may be logged.
- * @returns The text with those values replaced.
- */
-export function redactText(text: string): string {
-  return TEXT_PATTERNS.reduce((out, [pattern, replacement]) => out.replace(pattern, replacement), text);
+  return (
+    SENSITIVE_KEYS.has(k) ||
+    FEIDE_ATTRIBUTES.has(k) ||
+    k.includes('feide') ||
+    SENSITIVE_SUFFIXES.some((suffix) => k.endsWith(suffix))
+  );
 }
 
 /**

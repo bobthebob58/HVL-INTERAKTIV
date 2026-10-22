@@ -6,13 +6,9 @@
 import { describe, it, expect } from 'vitest';
 import { Writable } from 'node:stream';
 import { createLogger } from '../../src/logging/logger.js';
-import {
-  REDACTED,
-  isSensitiveKey,
-  redactPersonalData,
-  redactText,
-} from '../../src/logging/redactPersonalData.js';
-import { Prisma } from '../../src/generated/prisma/client.js';
+import { isSensitiveKey, redactPersonalData } from '../../src/logging/redactPersonalData.js';
+import { REDACTED, redactText } from '../../src/logging/redactText.js';
+import { PrismaClientValidationError } from '@prisma/client/runtime/client';
 
 /** A fixture with every kind of sensitive field DATA-009 names, nested as libraries really log them. */
 const SENSITIVE = {
@@ -154,7 +150,7 @@ describe('[DATA-009] redaction of messages, format arguments and error text', ()
   it('[DATA-009] logs Prisma errors by code only, without the query values they render', () => {
     const message =
       'Invalid `prisma.user.create()` invocation:\n  data: { email: "kari@hvl.no", displayName: "Kari Nordmann" }';
-    const error = new Prisma.PrismaClientValidationError(message, { clientVersion: '7.10.1' });
+    const error = new PrismaClientValidationError(message, { clientVersion: '7.10.1' });
     expect(redactPersonalData({ cause: error })).toEqual({
       cause: {
         type: 'PrismaClientValidationError',

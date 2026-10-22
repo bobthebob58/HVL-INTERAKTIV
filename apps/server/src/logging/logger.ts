@@ -5,17 +5,21 @@
  *      redaction (DATA-009) and has the same shape for the log pipeline (NFR-006).
  * Spec: DATA-009, NFR-006
  * Invariants:
- *   - Every record, every base and child-logger binding, every message string and every printf-style
- *     argument goes through `redactPersonalData` / `redactText` before it is serialised.
- *   - An error logged without a message gets a redacted copy of its message as `msg`.
- *   - Error objects are logged under `err` with type, message and stack, all redacted; Prisma errors keep
- *     their codes only (./prismaErrorSummary.ts).
- *   - As a last line of defence, every finished line passes `redactText` once more.
- * Collaborators: ./redactPersonalData.ts, ../config/env.ts (LOG_LEVEL).
+ *   - Every record, every base and child-logger binding and every argument after the record (message
+ *     strings, printf-style arguments, object messages) goes through `redactPersonalData` / `redactText`.
+ *   - An Error used as a printf argument becomes redacted text (`Error: …`); a Prisma error becomes its
+ *     code line only (./prismaErrorSummary.ts).
+ *   - An error logged without a message gets a redacted `msg` (Prisma errors: code only), unless the
+ *     record already has its own `msg`, mirroring pino's own rule.
+ *   - What redaction can and cannot do: keys and credential/e-mail shapes are removed; names typed into
+ *     free text cannot be recognised, so messages must never contain them (DATA-009).
+ * Collaborators: ./redactPersonalData.ts, ./redactText.ts, ./prismaErrorSummary.ts, ../config/env.ts (LOG_LEVEL).
  * Tests: apps/server/test/logging/logger.test.ts
  */
 import { pino, type DestinationStream, type Logger, type LevelWithSilent } from 'pino';
-import { redactPersonalData, redactText } from './redactPersonalData.js';
+import { isPrismaError, prismaErrorLine } from './prismaErrorSummary.js';
+import { redactPersonalData } from './redactPersonalData.js';
+import { redactText } from './redactText.js';
 
 /** Options for `createLogger`. */
 export interface LoggerOptions {
@@ -32,6 +36,19 @@ const errorOf = (value: unknown): Error | undefined => {
   if (value instanceof Error) return value;
   const err = value !== null && typeof value === 'object' ? asRecord(value).err : undefined;
   return err instanceof Error ? err : undefined;
+};
+
+/** A log-safe one-line message for an error, or undefined when it has no usable message. */
+const messageOf = (error: Error): string | undefined => {
+  if (isPrismaError(error)) return prismaErrorLine(error);
+  return typeof error.message === 'string' ? redactText(error.message) : undefined;
+};
+
+/** Redacts one argument that pino will place inside `msg`. */
+const maskArgument = (arg: unknown): unknown => {
+  if (typeof arg === 'string') return redactText(arg);
+  if (arg instanceof Error) return isPrismaError(arg) ? prismaErrorLine(arg) : redactText(String(arg));
+  return arg !== null && typeof arg === 'object' ? redactPersonalData(arg) : arg;
 };
 
 /**
@@ -53,17 +70,19 @@ export function createLogger(options: LoggerOptions): Logger {
       serializers: { err: (error: unknown) => redactPersonalData(error) },
       hooks: {
         logMethod(args, method) {
-          // PRIVACY: strings are free text; objects after the format string end up inside `msg`.
-          const formatAt = typeof args[0] === 'string' ? 0 : 1;
-          const masked: unknown[] = args.map((arg, i) =>
-            typeof arg === 'string' ? redactText(arg) : i > formatAt ? redactPersonalData(arg) : arg,
-          );
-          // PRIVACY: with no message string, pino copies err.message into `msg` after this hook runs.
-          const error = masked.length === 1 ? errorOf(masked[0]) : undefined;
-          if (error) masked.push(redactText(error.message));
+          const all = args as unknown[];
+          // PRIVACY: a leading record object is redacted by formatters.log; everything after it ends up in `msg`.
+          const recordFirst = all.length > 0 && typeof all[0] !== 'string';
+          const masked = all.map((arg, i) => (i === 0 && recordFirst ? arg : maskArgument(arg)));
+          // PRIVACY: with no message, pino copies err.message into `msg` after this hook runs.
+          if (recordFirst && masked.slice(1).every((arg) => arg === undefined)) {
+            const error = errorOf(all[0]);
+            const ownMsg = all[0] !== null && typeof all[0] === 'object' && Object.hasOwn(all[0], 'msg');
+            const message = error && !ownMsg ? messageOf(error) : undefined;
+            if (message !== undefined) masked.splice(1, masked.length - 1, message);
+          }
           method.apply(this, masked as Parameters<typeof method>);
         },
-        streamWrite: (line) => redactText(line),
       },
     },
     options.destination,
