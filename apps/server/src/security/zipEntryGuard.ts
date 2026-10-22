@@ -11,7 +11,7 @@
  *     `maxEntries` entries, any entry above `maxFileSize`, a declared total above `maxTotalSize`.
  *   - Declared sizes are trustworthy for extraction because yauzl verifies them while unpacking.
  * Collaborators: yauzl, ../i18n/translate.ts (message keys), ../h5p/H5pConfigFactory.ts (limits); the
- *   package import route (S2) calls it first.
+ *   package import (../h5p/HvlH5PEditor.ts) calls it first; ../h5p/libraries/packageManifest.ts reuses the reader.
  * Tests: apps/server/test/security/zipEntryGuard.test.ts
  */
 import yauzl from 'yauzl';
@@ -98,7 +98,13 @@ export async function inspectZip(
   return { entries, totalSize };
 }
 
-function openZip(path: string): Promise<yauzl.ZipFile> {
+/**
+ * Opens a zip file for reading its central directory and entries (no data is read yet).
+ * @param path - Path of the zip file.
+ * @returns The open file; call `close()` when done.
+ * @throws ZipRejectedError `upload.archive.unreadable` when it is not a readable zip.
+ */
+export function openZip(path: string): Promise<yauzl.ZipFile> {
   return new Promise((resolve, reject) => {
     // WHY: strictFileNames false lets us see backslash names and reject them with our own message.
     yauzl.open(
@@ -112,7 +118,13 @@ function openZip(path: string): Promise<yauzl.ZipFile> {
   });
 }
 
-async function* readEntries(zip: yauzl.ZipFile): AsyncGenerator<yauzl.Entry> {
+/**
+ * Lists the entries of an open zip file one by one.
+ * @param zip - From `openZip`.
+ * @yields Each central-directory entry.
+ * @throws ZipRejectedError for unsafe names yauzl itself refuses, or an unreadable directory.
+ */
+export async function* readEntries(zip: yauzl.ZipFile): AsyncGenerator<yauzl.Entry> {
   while (true) {
     const next = await new Promise<yauzl.Entry | null>((resolve, reject) => {
       const onEntry = (entry: yauzl.Entry) => (cleanup(), resolve(entry));
