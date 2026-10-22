@@ -1,6 +1,11 @@
 {
   "error": {
-    "generic": "Noko gjekk gale. Prøv igjen seinare."
+    "generic": "Noko gjekk gale. Prøv igjen seinare.",
+    "unauthenticated": "Du må logge inn for å gjere dette.",
+    "forbidden": "Du har ikkje tilgang til dette.",
+    "notFound": "Fann ikkje det du leita etter.",
+    "badRequest": "Førespurnaden kunne ikkje handsamast.",
+    "tooLarge": "Fila er større enn {{maxMb}} MB."
   },
   "upload": {
     "archive": {
@@ -10,6 +15,27 @@
       "tooManyEntries": "Arkivet inneheld for mange filer (meir enn {{max}}).",
       "fileTooLarge": "Fila «{{entry}}» i arkivet er større enn {{maxMb}} MB.",
       "totalTooLarge": "Arkivet blir større enn {{maxMb}} MB når det blir pakka ut."
+    },
+    "package": {
+      "notH5p": "Fila er ikkje ei H5P-pakke (.h5p).",
+      "librariesNotInstalled": "Pakka treng innhaldstypar som ikkje er installerte: {{libraries}}. Be ein administrator om å installere dei.",
+      "libraryVersionMismatch": "Pakka inneheld ein annan versjon av {{libraries}} enn den som er installert. Be ein administrator om å sjå på pakka."
+    },
+    "file": {
+      "notAllowed": "Filtypen «.{{extension}}» er ikkje tillaten.",
+      "typeMismatch": "Innhaldet i fila passar ikkje til filtypen «.{{extension}}».",
+      "svgRejected": "SVG-fila kan ikkje brukast fordi ho inneheld definisjonar som kan vere skadelege.",
+      "tooLarge": "Fila er større enn {{maxMb}} MB."
+    }
+  },
+  "h5p": {
+    "contentTypeNotAllowed": "Innhaldstypen «{{library}}» kan ikkje brukast i HVL Interaktiv.",
+    "subContentNotAllowed": "«{{library}}» kan ikkje brukast inne i denne aktiviteten.",
+    "libraryNotInstalled": "Innhaldstypen «{{library}}» er ikkje installert.",
+    "hubInstallDisabled": "Innhaldstypar blir installerte av ein administrator, ikkje frå H5P-huben.",
+    "librariesChanged": "Installert: {{installed}}. Oppdatert: {{updated}}.",
+    "userData": {
+      "asUserNotSupported": "Du kan berre lagre og hente dine eigne svar."
     }
   }
 }

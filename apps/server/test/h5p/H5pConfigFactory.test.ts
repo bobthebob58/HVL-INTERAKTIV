@@ -38,6 +38,7 @@ const staleStorage = (): IKeyValueStorage => {
     sendUsageStatistics: true,
     uuid: 'stored-uuid',
     contentUserStateSaveInterval: 15_000,
+    setFinishedEnabled: true,
   };
   return { load: async (key) => values[key], save: async (key, value) => (values[key] = value) };
 };
@@ -59,7 +60,15 @@ describe('[H5P-001] Core API 1.28 and the new Hub', () => {
     expect(config.proxy).toBeUndefined();
     expect(JSON.stringify(config.customization)).not.toContain('evil.js');
     expect(config.uuid).toBe('stored-uuid');
-    expect(config.contentUserStateSaveInterval).toBe(15_000);
+  });
+
+  it('[H5P-005] saves learner state every 5 s, whatever the stored settings say', async () => {
+    expect((await createH5pConfig(undefined, OPTIONS)).contentUserStateSaveInterval).toBe(5000);
+    expect((await createH5pConfig(staleStorage(), OPTIONS)).contentUserStateSaveInterval).toBe(5000);
+  });
+
+  it('[H5P-005] keeps finished data off, whatever the stored settings say (D-037)', async () => {
+    expect((await createH5pConfig(staleStorage(), OPTIONS)).setFinishedEnabled).toBe(false);
   });
 
   it('[H5P-001] stored settings cannot change which scripts or file URLs a page loads', async () => {

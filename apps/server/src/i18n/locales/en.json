@@ -1,6 +1,11 @@
 {
   "error": {
-    "generic": "Something went wrong. Please try again later."
+    "generic": "Something went wrong. Please try again later.",
+    "unauthenticated": "You need to sign in to do this.",
+    "forbidden": "You do not have access to this.",
+    "notFound": "We could not find what you were looking for.",
+    "badRequest": "The request could not be processed.",
+    "tooLarge": "The file is larger than {{maxMb}} MB."
   },
   "upload": {
     "archive": {
@@ -10,6 +15,27 @@
       "tooManyEntries": "The archive contains too many files (more than {{max}}).",
       "fileTooLarge": "The file “{{entry}}” in the archive is larger than {{maxMb}} MB.",
       "totalTooLarge": "The archive is larger than {{maxMb}} MB when unpacked."
+    },
+    "package": {
+      "notH5p": "The file is not an H5P package (.h5p).",
+      "librariesNotInstalled": "The package needs content types that are not installed: {{libraries}}. Ask an administrator to install them.",
+      "libraryVersionMismatch": "The package contains a different version of {{libraries}} than the one installed. Ask an administrator to review the package."
+    },
+    "file": {
+      "notAllowed": "The file type “.{{extension}}” is not allowed.",
+      "typeMismatch": "The content of the file does not match its type “.{{extension}}”.",
+      "svgRejected": "The SVG file cannot be used because it contains definitions that could be harmful.",
+      "tooLarge": "The file is larger than {{maxMb}} MB."
+    }
+  },
+  "h5p": {
+    "contentTypeNotAllowed": "The content type “{{library}}” cannot be used in HVL Interaktiv.",
+    "subContentNotAllowed": "“{{library}}” cannot be used inside this activity.",
+    "libraryNotInstalled": "The content type “{{library}}” is not installed.",
+    "hubInstallDisabled": "Content types are installed by an administrator, not from the H5P Hub.",
+    "librariesChanged": "Installed: {{installed}}. Updated: {{updated}}.",
+    "userData": {
+      "asUserNotSupported": "You can only save and load your own answers."
     }
   }
 }

@@ -93,19 +93,30 @@ model H5PUserData {
   content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
   @@unique([contentId, subContentId, dataType, learnerKey, contextId])
+  // WHY: the player preloads all of one learner's state for an activity on every page load (H5P-005).
+  @@index([contentId, learnerKey, contextId])
   @@index([learnerKey])
   @@index([updatedAt])
 }
 
-/// An admin installed, updated or removed an H5P library (H5P-011, DATA-007).
+/// How a library change arrived (D-041): the seed command or an admin's package import.
+enum LibraryChangeSource {
+  seed
+  upload
+}
+
+/// An H5P library was installed or updated (H5P-011, DATA-007).
 model LibraryAuditEvent {
-  id          String   @id @default(uuid(7)) @db.Uuid
-  actorUserId String   @db.Uuid
+  id          String              @id @default(uuid(7)) @db.Uuid
+  /// The admin who imported the package; empty when the seed command installed it (D-041).
+  actorUserId String?             @db.Uuid
+  source      LibraryChangeSource
   machineName String
   fromVersion String?
   toVersion   String?
   sha256      String?
-  at          DateTime @default(now())
+  at          DateTime            @default(now())
 
   @@index([at])
+  @@index([machineName])
 }

@@ -111,22 +111,23 @@ Resume state of one learner in one activity (H5P-005).
 | `dataType` | H5P state type, e.g. `state` | None | n/a | Yearly purge | PG |
 | `learnerKey` | The learner's yearly pseudonym (DATA-002) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `contextId` | Canvas course, so state is separate per course; empty outside Canvas | None | n/a | Yearly purge | PG |
-| `data` | The learner's answers so far, so they can resume | Pseudonymous | 6(1)(e) | Yearly purge | PG |
+| `data` | The learner's answers so far, so they can resume (H5P's state as a JSON string, D-038) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `preload` | H5P: send with the player | None | n/a | Yearly purge | PG |
 | `invalidate` | H5P: drop when the activity changes | None | n/a | Yearly purge | PG |
 | `updatedAt` | Purge boundary | None | n/a | Yearly purge | PG |
 
 ## LibraryAuditEvent
 
-An admin changed the installed H5P libraries.
+An H5P library was installed or updated, by the seed command or an admin's package import (D-041).
 
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
 | `id` | Internal key | None | n/a | 2 years | PG |
-| `actorUserId` | The admin | Staff PII (by reference) | 6(1)(e) | 2 years | PG |
+| `actorUserId` | The admin; empty when the seed command installed it | Staff PII (by reference) | 6(1)(e) | 2 years | PG |
+| `source` | How the library arrived: `seed` or `upload` | None | n/a | 2 years | PG |
 | `machineName` | Library, e.g. `H5P.Blanks` | None | n/a | 2 years | PG |
 | `fromVersion` | Version before | None | n/a | 2 years | PG |
-| `toVersion` | Version after (empty on removal) | None | n/a | 2 years | PG |
+| `toVersion` | Version after | None | n/a | 2 years | PG |
 | `sha256` | Hash of the installed package | None | n/a | 2 years | PG |
 | `at` | When | None | n/a | 2 years | PG |
 

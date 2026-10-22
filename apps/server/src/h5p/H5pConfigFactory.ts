@@ -10,7 +10,7 @@
  *   - `coreApiVersion` is 1.28; both Hub endpoints are on hub-api.h5p.org (F1/F2 workarounds below).
  *   - `maxFileSize` 50 MB, `maxTotalSize` 200 MB, narrowed `contentWhitelist` (SEC-002 list).
  *   - Usage statistics and the H5P Content Hub (sharing to h5p.com) are off: no learner or author data
- *     leaves HVL without a decision.
+ *     leaves HVL without a decision. Finished data is off and state is saved every 5 s (D-037).
  *   - Only the settings in `STORAGE_LOADABLE_SETTINGS` keep a stored value; URLs, library config,
  *     customisation, add-ons, proxy and allowlists always come from Lumi's defaults or from this file.
  * Collaborators: ./h5pServerInit.ts, ./storage/RedisKeyValueStorage.ts, ../config/env.ts.
@@ -34,6 +34,8 @@ export const MAX_TOTAL_SIZE = 200 * 1024 * 1024;
 /** File extensions allowed in content, narrowed to what the ten types need (SEC-002). */
 export const CONTENT_WHITELIST =
   'json png jpg jpeg gif webp svg webm mp4 mp3 m4a ogg wav vtt webvtt pdf txt csv docx xlsx pptx odt ods odp';
+/** How often the player saves learner state, in milliseconds (`H5P-005`: the H5P default of 5 s). */
+export const CONTENT_USER_STATE_SAVE_INTERVAL_MS = 5000;
 /** The new Hub rejects a `local_id` longer than this (finding F1). */
 export const LOCAL_ID_MAX_LENGTH = 15;
 
@@ -65,11 +67,9 @@ export const STORAGE_LOADABLE_SETTINGS: ReadonlySet<string> = new Set([
   'uuid',
   'contentHubMetadataRefreshInterval',
   'contentTypeCacheRefreshInterval',
-  'contentUserStateSaveInterval',
   'disableFullscreen',
   'exportMaxContentPathLength',
   'fetchingDisabled',
-  'setFinishedEnabled',
   'siteType',
 ]);
 
@@ -100,6 +100,9 @@ export function applyEnforcedSettings(config: H5PConfig, options: H5pConfigOptio
   // PRIVACY: no usage statistics to H5P Group, and no publishing to the public Content Hub.
   config.sendUsageStatistics = false;
   config.contentHubEnabled = false;
+  // PRIVACY: no separate "finished" record per learner; scores reach the LMS through xAPI in S6 (D-037).
+  config.setFinishedEnabled = false;
+  config.contentUserStateSaveInterval = CONTENT_USER_STATE_SAVE_INTERVAL_MS;
   // UPSTREAM: finding F2, https://github.com/h5p/h5p-wordpress-plugin/commit/79235d0 — a known UUID skips registration.
   if (options.siteUuid) config.uuid = options.siteUuid;
 }
