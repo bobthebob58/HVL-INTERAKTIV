@@ -6,7 +6,7 @@
  * Spec: H5P-004
  * Invariants: credentials come only from config (S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY), never from files.
  * Collaborators: ../config/env.ts, ../h5p/storage/S3ContentFileStore.ts, ../h5p/storage/S3TemporaryFileStorage.ts.
- * Tests: apps/server/test/h5p/storage.int.test.ts
+ * Tests: apps/server/test/h5p/contentStorage.int.test.ts, apps/server/test/h5p/sharedState.int.test.ts
  */
 import { S3Client } from '@aws-sdk/client-s3';
 import type { Env } from '../config/env.js';

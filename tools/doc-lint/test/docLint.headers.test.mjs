@@ -24,6 +24,17 @@ describe('[DOC-001] module headers', () => {
     ]);
   });
 
+  it('[DOC-001] rejects a Tests: line that points to a file that does not exist', () => {
+    const header = GOOD_HEADER.replace(
+      'Tests: written with the widget (no path, so no file has to exist)',
+      'Tests: docs/specs/00-test.md and\n *   tools/widget/test/gone.int.test.mjs (integration)',
+    );
+    const root = makeRepo({ 'tools/widget/widget.mjs': header });
+    expect(problems(root, 'module-header')).toEqual([
+      'tools/widget/widget.mjs:1 "Tests:" names a file that does not exist: tools/widget/test/gone.int.test.mjs',
+    ]);
+  });
+
   it('[DOC-001] names each missing label', () => {
     const header = '/**\n * widget — renders one widget.\n * Spec: TST-001\n */\n';
     const root = makeRepo({ 'tools/widget/widget.mjs': header });

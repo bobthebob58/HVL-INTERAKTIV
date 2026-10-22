@@ -27,7 +27,7 @@ export const GOOD_HEADER = [
   ' *',
   ' * Why: widgets need a single place that decides how they look.',
   ' * Spec: TST-001',
-  ' * Tests: tools/widget/test/widget.test.mjs',
+  ' * Tests: written with the widget (no path, so no file has to exist)',
   ' */',
   '',
 ].join('\n');

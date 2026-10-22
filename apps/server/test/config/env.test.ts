@@ -4,9 +4,14 @@
  * Spec: DOC-008, DATA-002
  */
 import { describe, it, expect } from 'vitest';
-import { InvalidEnvironmentError, loadEnv } from '../../src/config/env.js';
+import { InvalidEnvironmentError, loadEnv, loadEnvPart } from '../../src/config/env.js';
 
 const SECRET = Buffer.alloc(32, 7).toString('base64');
+const OTHER = Buffer.alloc(32, 8).toString('base64');
+/** 32 bytes that are not printable text, as `openssl rand` produces. */
+const random = (seed: number) =>
+  Buffer.from(Array.from({ length: 32 }, (_, i) => ((seed * 31 + i * 7) % 256) | 0x80)).toString('base64');
+const AUTUMN_2026 = new Date('2026-10-22T12:00:00Z');
 const VALID = {
   DATABASE_URL: 'postgresql://u:p@localhost:5432/db',
   REDIS_URL: 'redis://localhost:6379',
@@ -69,7 +74,7 @@ describe('[DOC-008] configuration validation', () => {
 
 describe('[DATA-002] pseudonym secret configuration', () => {
   it('[DATA-002] parses one secret per academic year', () => {
-    const env = loadEnv({ ...VALID, PSEUDONYM_SECRETS: `2025=${SECRET}, 2026=${SECRET}` });
+    const env = loadEnv({ ...VALID, PSEUDONYM_SECRETS: `2025=${SECRET}, 2026=${OTHER}` });
     expect([...env.PSEUDONYM_SECRETS.keys()]).toEqual([2025, 2026]);
   });
 
@@ -80,5 +85,51 @@ describe('[DATA-002] pseudonym secret configuration', () => {
     expect(problemsOf({ ...VALID, PSEUDONYM_SECRETS: 'current-secret' })).toEqual([
       'PSEUDONYM_SECRETS: entry 1 is not "YYYY=<base64>"',
     ]);
+  });
+
+  it('[DATA-002] rejects the same secret for two years, so destroying one year unlinks it', () => {
+    expect(problemsOf({ ...VALID, PSEUDONYM_SECRETS: `2025=${SECRET},2026=${SECRET}` })).toEqual([
+      'PSEUDONYM_SECRETS: the secrets for 2025 and 2026 are the same; each year needs its own',
+    ]);
+  });
+});
+
+describe('[DATA-002] production-only configuration checks', () => {
+  const production = (secrets: string) => ({ ...VALID, NODE_ENV: 'production', PSEUDONYM_SECRETS: secrets });
+  const problemsAt = (env: Record<string, string>, now: Date) => {
+    try {
+      loadEnv(env, now);
+      return [];
+    } catch (error) {
+      return (error as InvalidEnvironmentError).problems;
+    }
+  };
+
+  it('[DATA-002] accepts random secrets that cover the current academic year', () => {
+    expect(problemsAt(production(`2026=${random(1)}`), AUTUMN_2026)).toEqual([]);
+  });
+
+  it('[DATA-002] refuses to start without a secret for the current academic year', () => {
+    expect(problemsAt(production(`2025=${random(1)}`), AUTUMN_2026)).toEqual([
+      'PSEUDONYM_SECRETS: no secret for the current academic year 2026/2027',
+    ]);
+  });
+
+  it('[DATA-002] refuses secrets that are readable text, such as the published examples', () => {
+    const example = Buffer.from('dev-only-pseudonym-secret-2026-do-not-use').toString('base64');
+    expect(problemsAt(production(`2026=${example}`), AUTUMN_2026)).toEqual([
+      'PSEUDONYM_SECRETS: the 2026 secret is readable text; use `openssl rand -base64 32`',
+    ]);
+    expect(problemsAt({ ...VALID, PSEUDONYM_SECRETS: `2026=${example}` }, AUTUMN_2026)).toEqual([]);
+  });
+});
+
+describe('[DOC-008] partial configuration for tools', () => {
+  it('[DOC-008] validates only the requested variables', () => {
+    expect(loadEnvPart(['LOG_LEVEL', 'H5P_CORE_DIR'], {})).toEqual({
+      LOG_LEVEL: 'info',
+      H5P_CORE_DIR: 'h5p/core',
+    });
+    expect(() => loadEnvPart(['LOG_LEVEL'], { LOG_LEVEL: 'loud' })).toThrow('LOG_LEVEL:');
   });
 });

@@ -6,10 +6,11 @@
  * Spec: H5P-004, SEC-005
  * Invariants:
  *   - Key: `<prefix><encoded user id>/<file name>`, so one author can never read another author's upload.
- *   - Expiry time and owner are stored as object metadata; `listFiles` reads them for the cleanup job.
+ *   - The expiry time is stored as object metadata; `listFiles` reads it (and the owner from the key) for the
+ *     cleanup job, and skips files deleted while it lists.
  *   - Uploads stop at `maxFileSize` bytes.
  * Collaborators: ./s3Objects.ts, ../../infra/s3Client.ts, ../jobs/TemporaryFileCleanupJob.ts (via H5PEditor).
- * Tests: apps/server/test/h5p/storage.int.test.ts
+ * Tests: apps/server/test/h5p/contentStorage.int.test.ts
  */
 import type { Readable } from 'node:stream';
 import {
@@ -128,18 +129,30 @@ export class S3TemporaryFileStorage implements ITemporaryFileStorage {
         }),
       );
       for (const object of page.Contents ?? []) {
-        const head = await this.s3.send(new HeadObjectCommand({ Bucket: this.bucket, Key: object.Key }));
-        // WHY: the key is `<prefix><user>/<file name>`; the file name itself may contain "/".
+        const head = await this.headIfPresent(object.Key ?? '');
+        // WHY: an author's save (H5P's ContentStorer) can delete the file between LIST and HEAD.
+        if (!head) continue;
+        // WHY: the key is `<prefix><encoded user id>/<file name>`; the file name itself may contain "/".
         const rest = (object.Key ?? '').slice(this.prefix.length);
+        const slash = rest.indexOf('/');
         files.push({
-          filename: rest.slice(rest.indexOf('/') + 1),
-          ownedByUserId: head.Metadata?.owner ?? '',
+          filename: rest.slice(slash + 1),
+          ownedByUserId: decodeURIComponent(rest.slice(0, slash)),
           expiresAt: new Date(head.Metadata?.expiresat ?? 0),
         });
       }
       ContinuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
     } while (ContinuationToken);
     return files;
+  }
+
+  private async headIfPresent(Key: string) {
+    try {
+      return await this.s3.send(new HeadObjectCommand({ Bucket: this.bucket, Key }));
+    } catch (error) {
+      if (isNotFound(error)) return undefined;
+      throw error;
+    }
   }
 }
 

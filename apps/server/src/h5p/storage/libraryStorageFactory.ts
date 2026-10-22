@@ -8,7 +8,7 @@
  *   - The cache lives at most `LIBRARY_CACHE_TTL_SECONDS`, so a library update on one node reaches the others
  *     within that time (Lumi's own default is 24 hours, too long for several nodes).
  * Collaborators: @lumieducation/h5p-server (FileLibraryStorage, CachedLibraryStorage), ../h5pServerInit.ts.
- * Tests: apps/server/test/h5p/storage.int.test.ts
+ * Tests: apps/server/test/h5p/sharedState.int.test.ts, apps/server/test/h5p/libraryStorageFactory.test.ts
  */
 import { mkdirSync } from 'node:fs';
 import { cacheImplementations, fsImplementations, type ILibraryStorage } from '@lumieducation/h5p-server';

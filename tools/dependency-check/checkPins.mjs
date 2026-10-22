@@ -5,7 +5,8 @@
  *      engine with a known unpatched CVE (D-003) every version change must be a deliberate commit.
  * Spec: SEC-007
  * Invariants:
- *   - Checks dependencies, devDependencies, optionalDependencies, peerDependencies and overrides.
+ *   - Checks dependencies, devDependencies, optionalDependencies, peerDependencies and overrides,
+ *     including overrides scoped to a parent package (every nested leaf must be exact).
  *   - Accepts only exact semver (`1.2.3`, `1.2.3-rc.1`); `^`, `~`, `*`, `x`, `>=`, tags and URLs fail.
  * Collaborators: root package.json, apps/* and packages/* package.json files; CI (`npm run check:pins`).
  * Tests: tools/dependency-check/test/checkPins.test.mjs
@@ -38,10 +39,16 @@ export function manifestPaths(root) {
  * @returns {string[]} One message per loose specifier.
  */
 export function loosePins(file, manifest) {
+  // WHY: npm overrides may be scoped to one parent, e.g. {"h5p-express": {"express": "4.22.3"}}; every leaf counts.
+  const leaves = (path, spec) =>
+    spec !== null && typeof spec === 'object' && path.startsWith('overrides.')
+      ? Object.entries(spec).flatMap(([name, inner]) => leaves(`${path}.${name}`, inner))
+      : [[path, spec]];
   return FIELDS.flatMap((field) =>
     Object.entries(manifest[field] ?? {})
+      .flatMap(([name, spec]) => leaves(`${field}.${name}`, spec))
       .filter(([, spec]) => typeof spec !== 'string' || !EXACT.test(spec))
-      .map(([name, spec]) => `${file}: ${field}.${name} is "${JSON.stringify(spec)}"; pin an exact version`),
+      .map(([path, spec]) => `${file}: ${path} is "${JSON.stringify(spec)}"; pin an exact version`),
   );
 }
 

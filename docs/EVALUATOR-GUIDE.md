@@ -5,10 +5,11 @@ designers, TeCopp administrators, security and privacy reviewers, examiners and 
 reviewers. It explains how to check, efficiently and independently, that the code does what the
 specifications promise.
 
-**Current state (2026-10-16):** the specification is complete and **no application code exists
-yet**. The only code is the traceability tool `tools/spec-trace/specTrace.mjs`. Build progress is
-tracked in [PROGRESS.md](../PROGRESS.md). The commands marked *(from S1)* below become available as
-each session lands.
+**Current state (2026-10-22):** Session 1 is done. The monorepo, `apps/server` (configuration, log
+redaction, learner pseudonyms, the database schema, the H5P configuration and boot check, the storage
+adapters and the archive guard) and the tools `spec-trace`, `spec-site`, `doc-lint`, `dependency-check`,
+`privacy` and `h5p-core` exist. There is no web app or HTTP server yet (Sessions 2–4). Build progress is
+tracked in [PROGRESS.md](../PROGRESS.md). Commands marked *(from S<n>)* below arrive with that session.
 
 ---
 
@@ -52,21 +53,21 @@ asserts? Does the module header's *Invariants* section match the code? Is every 
 
 ---
 
-## 3. Commands *(from S1 unless noted)*
+## 3. Commands *(available now unless a later session is noted)*
 
 | Command | What it proves |
 |---|---|
-| `node tools/spec-trace/specTrace.mjs --check` *(available now)* | Specs are internally consistent; traceability is current |
-| `node tools/spec-site/buildSpecSite.mjs --check` *(available now)* | The spec website matches the Markdown |
+| `node tools/spec-trace/specTrace.mjs --check` | Specs are internally consistent; traceability is current |
+| `node tools/spec-site/buildSpecSite.mjs --check` | The spec website matches the Markdown |
 | `docker compose up -d` | PostgreSQL, Redis and an S3 emulator start locally (D-023); the mock OIDC/LTI platform joins in S3 |
-| `npm ci && npm run build` | The monorepo builds from a clean checkout |
+| `npm ci && npm run typecheck` | The monorepo installs and compiles from a clean checkout (`npm run build` arrives with `apps/web` in S4) |
 | `npm run typecheck && npm run lint` | Types and lint |
-| `npm run doc:lint` | The Documentation Standard, checked by machine (`DOC-001`…`DOC-014`) |
+| `npm run doc:lint` | The Documentation Standard, checked by machine (`DOC-001`–`003`, `005`–`010`, `013`, `014`; `DOC-004` is `spec:trace`, `DOC-011` the commit-msg hook) |
 | `npm run privacy:inventory-check` | The data inventory matches the database schema (`DATA-001`) |
-| `npm run h5p:fetch-core && npm run boot-check --workspace apps/server` | H5P client files are the verified 1.28 release; the engine would start (`H5P-001`) |
+| `npm run h5p:fetch-core && npm run boot-check --workspace apps/server` | H5P client files are the verified 1.28 release; the engine would start (`H5P-001`); needs no services or `.env` |
 | `npm test` | Unit and integration tests (Vitest; integration tests need `docker compose up -d`, D-023) |
-| `npm run test:e2e` | Playwright journeys J1–J5 against the mock Canvas platform |
-| `npm run test:a11y` | axe-core on every route and inside each content type's iframe (`UD-030`) |
+| `npm run test:e2e` *(from S3)* | Playwright journeys J1–J5 against the mock Canvas platform |
+| `npm run test:a11y` *(from S4)* | axe-core on every route and inside each content type's iframe (`UD-030`) |
 | `npm run spec:trace -- --check --done-through=S<n>` | Every MUST requirement up to session *n* has a test |
 | `npm run check:filesize` | No source file over 200 lines (`DOC-007`) |
 | `npm run check:audit` | No unreviewed high or critical advisory in production dependencies (`SEC-007`, D-029) |
@@ -154,8 +155,10 @@ must be pasted into `PROGRESS.md`, before the next session starts.
    is for formative use only (`LTI-013`, `PROD-011`).
 2. **Upstream accessibility.** Some barriers are inside H5P content types and can only be fixed
    upstream. The conformance report (`UD-040`) lists them with issue links.
-3. **H5P Core 1.28 with Lumi 10.0.4 is unverified** (risk R-01). Session 1 starts with a spike and
-   has a documented fallback.
+3. **H5P Core 1.28 with Lumi 10.0.4 is only partly verified** (risk R-01). The S1 spike passed steps 1–2
+   (Node 24 with core API 1.28; core and editor files verified file by file). Steps 3–5 (Hub registration,
+   rendering a content type, the Daylight theme) were blocked by the network and move to S2, where the
+   choice between 1.28 and the 1.27 fallback is made (D-031).
 4. **Institutional reference material is not yet in the repository** (see
    [reference/README.md](reference/README.md)). Labels, brand colours and portfolio headings are
    therefore kept in configuration, so they can be corrected without code changes.

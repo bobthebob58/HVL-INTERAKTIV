@@ -9,11 +9,25 @@
 import { describe } from 'vitest';
 import { loadEnv, type Env } from '../../src/config/env.js';
 
-const configured = Boolean(process.env.DATABASE_URL && process.env.REDIS_URL && process.env.S3_ACCESS_KEY_ID);
+const REQUIRED = [
+  'DATABASE_URL',
+  'REDIS_URL',
+  'S3_ACCESS_KEY_ID',
+  'S3_SECRET_ACCESS_KEY',
+  'PSEUDONYM_SECRETS',
+];
+const missing = REQUIRED.filter((name) => !process.env[name]);
+const configured = missing.length === 0;
 
 if (!configured && process.env.CI === 'true') {
   throw new Error(
-    'CI must run integration tests: set DATABASE_URL, REDIS_URL and S3_* (see apps/server/.env.example).',
+    `CI must run integration tests; missing ${missing.join(', ')} (see apps/server/.env.example).`,
+  );
+}
+if (!configured) {
+  console.warn(
+    `Integration tests skipped: ${missing.join(', ')} not set. Run \`docker compose up -d\` and copy ` +
+      'apps/server/.env.example to apps/server/.env (D-023).',
   );
 }
 

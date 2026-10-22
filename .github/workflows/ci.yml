@@ -65,7 +65,7 @@ jobs:
         run: npm run lint
       - name: Formatting
         run: npm run format:check
-      - name: Documentation standard (DOC-001…014)
+      - name: Documentation standard (doc-lint rules, see tools/doc-lint/README.md)
         run: npm run doc:lint
       - name: File size (DOC-007)
         run: npm run check:filesize

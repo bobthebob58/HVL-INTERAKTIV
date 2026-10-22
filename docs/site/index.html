@@ -344,23 +344,27 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <td>D-029</td><td>Own licence and audit checks instead of <code>license-checker</code> and plain <code>npm audit</code></td><td>Accepted (2026-10-21)</td></tr>
 <tr>
 <td>D-030</td><td>Accepted advisory: <code>image-size</code> parser loops (until 2027-01-31)</td><td>Accepted (2026-10-21), expires 2027-01-31</td></tr>
+<tr>
+<td>D-031</td><td>Session 1 items that finish in Session 2 (spike steps 3–6, F1/F3 wiring, import directory, TypeDoc)</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-032</td><td><code>h5p-express</code> installed in S1; its Express 4 is overridden to 4.22.3</td><td>Accepted (2026-10-22)</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--references" tabindex="-1">Reference inputs from HVL</h3>
 <div class="table-wrap" role="region" aria-label="Table 1, Reference inputs" tabindex="0"><table><thead><tr>
 <th scope="col">#</th><th scope="col">Original we still need from HVL</th><th scope="col">What is here now</th><th scope="col">Status</th><th scope="col">Needed by</th></tr>
 </thead><tbody><tr>
-<td>1</td><td><code>hvl-designmanual-og-logo.zip</code>: design manual PDF and official logo files (HVL press room, <a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext">hvl-visual-identity.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the manual&#39;s palette (PMS/CMYK/RGB/HEX), typefaces, logo variants and rules, contrast for every colour, and proposed tokens. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/tools/contrast.py" rel="noopener" class="ext">tools/contrast.py<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> recomputes all ratios. <strong>No logo artwork.</strong></td><td>Derived; HVL to confirm values and supply logo files</td><td>S4</td></tr>
+<td>1</td><td><code>hvl-designmanual-og-logo.zip</code>: design manual PDF and official logo files (HVL press room, <a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext">hvl-visual-identity.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the manual&#39;s palette (PMS/CMYK/RGB/HEX), typefaces, logo variants and rules, contrast for every colour, and proposed tokens. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/tools/contrast.py" rel="noopener" class="ext">tools/contrast.py<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> recomputes all ratios. <strong>No logo artwork.</strong></td><td>Derived; HVL to confirm values and supply logo files</td><td>S4</td></tr>
 <tr>
-<td>2</td><td><code>hvl-modellen-for-laeringsdesign.pdf</code> (ALU, <em>Faggruppa for digital læringsdesign</em>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext">hvl-laeringsdesign-model.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: what HVL has published about «HVL læringsdesign» (annual report 2024 p. 23, read directly; Møgelvang &amp; Isaksen 2025) and the phase vocabulary HVL uses. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/phases.yaml" rel="noopener" class="ext">proposals/phases.yaml<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed <code>content/laeringsdesign/phases.yaml</code></td><td>Partly found; ALU to confirm labels</td><td>S5</td></tr>
+<td>2</td><td><code>hvl-modellen-for-laeringsdesign.pdf</code> (ALU, <em>Faggruppa for digital læringsdesign</em>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext">hvl-laeringsdesign-model.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: what HVL has published about «HVL læringsdesign» (annual report 2024 p. 23, read directly; Møgelvang &amp; Isaksen 2025) and the phase vocabulary HVL uses. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/proposals/phases.yaml" rel="noopener" class="ext">proposals/phases.yaml<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed <code>content/laeringsdesign/phases.yaml</code></td><td>Partly found; ALU to confirm labels</td><td>S5</td></tr>
 <tr>
-<td>3</td><td><code>hvl-pedagogisk-mappe-retningslinjer.pdf</code> (ALU)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext">hvl-pedagogisk-mappe-criteria.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the 2025 merit criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), the three-part portfolio, limits, and the national basis. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext">proposals/mappe-template.nn.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed export template. No public PDF of this name was found; HVL publishes the guidance as web pages</td><td>Derived; ALU to confirm</td><td>S5</td></tr>
+<td>3</td><td><code>hvl-pedagogisk-mappe-retningslinjer.pdf</code> (ALU)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext">hvl-pedagogisk-mappe-criteria.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the 2025 merit criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), the three-part portfolio, limits, and the national basis. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext">proposals/mappe-template.nn.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed export template. No public PDF of this name was found; HVL publishes the guidance as web pages</td><td>Derived; ALU to confirm</td><td>S5</td></tr>
 <tr>
-<td>4</td><td><code>feide-oidc-config.example.json</code> from the Feide Customer Portal</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-oidc-config.example.json" rel="noopener" class="ext">feide-oidc-config.example.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with public endpoint values and placeholders for HVL&#39;s client, plus <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-values.md" rel="noopener" class="ext">feide-values.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> (evidence table)</td><td>Public values high confidence; HVL client values pending</td><td>S3</td></tr>
+<td>4</td><td><code>feide-oidc-config.example.json</code> from the Feide Customer Portal</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/feide-oidc-config.example.json" rel="noopener" class="ext">feide-oidc-config.example.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with public endpoint values and placeholders for HVL&#39;s client, plus <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/feide-values.md" rel="noopener" class="ext">feide-values.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> (evidence table)</td><td>Public values high confidence; HVL client values pending</td><td>S3</td></tr>
 <tr>
-<td>5</td><td><code>canvas-lti13-developer-key.json</code> exported by TeCopp, plus HVL&#39;s client and deployment IDs</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/canvas-lti13-developer-key.json" rel="noopener" class="ext">canvas-lti13-developer-key.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>, paste-ready (<code>privacy_level</code> <code>anonymous</code>; scopes AGS score, line-item read, NRPS read; Deep Linking placements), and <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/canvas-platform-values.md" rel="noopener" class="ext">canvas-platform-values.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with every platform value cited to Instructure&#39;s docs and source at a fixed commit</td><td>Public values high confidence; HVL instance values pending</td><td>S3</td></tr>
+<td>5</td><td><code>canvas-lti13-developer-key.json</code> exported by TeCopp, plus HVL&#39;s client and deployment IDs</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/canvas-lti13-developer-key.json" rel="noopener" class="ext">canvas-lti13-developer-key.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>, paste-ready (<code>privacy_level</code> <code>anonymous</code>; scopes AGS score, line-item read, NRPS read; Deep Linking placements), and <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/canvas-platform-values.md" rel="noopener" class="ext">canvas-platform-values.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with every platform value cited to Instructure&#39;s docs and source at a fixed commit</td><td>Public values high confidence; HVL instance values pending</td><td>S3</td></tr>
 <tr>
-<td>6</td><td><code>h5p-core-1.28-seed-packages/</code> (one verified <code>.h5p</code> per content type)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/h5p-core-1.28-seed-packages/README.md" rel="noopener" class="ext">h5p-core-1.28-seed-packages/README.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: latest versions, the exact Hub request, three known h5p-server 10.0.4 incompatibilities, per-file hashes of core <code>1.28.0</code>. <strong>No <code>.h5p</code> files yet</strong>: hub-api.h5p.org is blocked here. Run <code>tools/seed/fetch-seed-packages.sh</code> where it is reachable</td><td>Blocked by network policy; script ready</td><td>S2</td></tr>
+<td>6</td><td><code>h5p-core-1.28-seed-packages/</code> (one verified <code>.h5p</code> per content type)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/h5p-core-1.28-seed-packages/README.md" rel="noopener" class="ext">h5p-core-1.28-seed-packages/README.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: latest versions, the exact Hub request, three known h5p-server 10.0.4 incompatibilities, per-file hashes of core <code>1.28.0</code>. <strong>No <code>.h5p</code> files yet</strong>: hub-api.h5p.org is blocked here. Run <code>tools/seed/fetch-seed-packages.sh</code> where it is reachable</td><td>Blocked by network policy; script ready</td><td>S2</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--howto" tabindex="-1">How to read this site</h3>
@@ -1927,7 +1931,7 @@ its del 1 headings wait for alu.
 <code>content/mappe/criteria.{nn,nb,en}.yaml</code>, keyed by criteria set (default <code>hvl-merittering-2025</code>).
 HVL revises the merit criteria for every call (next call 2027), so a new set is a content change only.
 The proposed Nynorsk template is
-<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext"><code>docs/reference/proposals/mappe-template.nn.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. The
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext"><code>docs/reference/proposals/mappe-template.nn.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. The
 default structure follows HVL&#39;s three-part merit portfolio:</p>
 <ol>
 <li><strong>Reader&#39;s guide:</strong> a table mapping each 2025 criterion (1.1–1.4, 2.1–2.4, 3.1–3.3) to the chapter
@@ -2316,42 +2320,43 @@ call order. add `@spec &lt;id&gt;` when the symbol directly implements a require
 
 ```ts
 /**
- * derives the pseudonymous key under which a learner's data is stored.
- *
- * the same person gets different keys in different academic years, and
- * different keys in feide and canvas modes, by design (data-002).
- *
- * @param source - `feide|&lt;feide-id&gt;` or `lti|&lt;iss&gt;|&lt;sub&gt;`; never persisted.
- * @param academicyear - e.g. `2026` for the year starting 1 august 2026.
- * @returns 64-character lowercase hex hmac-sha256.
- * @throws {missingpseudonymsecreterror} if the year's secret has been destroyed by the purge.
- * @spec data-002
+ * derives the learner pseudonym for the academic year that contains `at`.
+ * @param source - feide or lti identity of the learner.
+ * @param secrets - per-year secrets from pseudonym_secrets.
+ * @param at - the moment of the event; defaults to now.
+ * @returns the 43-character base64url `learnerkey`.
+ * @throws missingpseudonymsecreterror when the year has no secret.
  */
-export function derivelearnerkey(source: string, academicyear: number): string { … }
+export function derivelearnerkey(source: learnersource, secrets: pseudonymsecrets, at: date = new date()): string { … }
 ```
 
-*checked by:* `eslint-plugin-jsdoc` (`require-jsdoc` for exports, `require-param`,
-`check-tag-names` with `spec` registered in `tsdoc.json`). typedoc builds browsable api docs in ci.">
+(from `apps/server/src/privacy/derivelearnerkey.ts`.)
+
+*checked by:* `eslint-plugin-jsdoc` (`require-jsdoc` for exported functions, classes, interfaces, types
+and enums; `require-param` for exported functions; `check-tag-names` with `spec` as a defined tag) and
+doc-lint's `export-docs` check (tsdoc on every exported declaration, known `@spec` ids). class methods
+that implement a documented interface, such as lumi's storage interfaces, may rely on that interface's
+documentation. browsable api docs (typedoc) are added with the http api in s2 (d-031).">
 <summary><span class="req-id">DOC-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Every exported symbol has TSDoc</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Each exported function, class, method, type and constant has a one-sentence summary. Add
 <code>@param</code> and <code>@returns</code> where they add meaning beyond the type. Use <code>@throws</code> for every error a
 caller must handle. Add an <code>@example</code> for anything with more than two parameters or a non-obvious
 call order. Add <code>@spec &lt;ID&gt;</code> when the symbol directly implements a requirement.</p>
 <pre class="code" tabindex="0" role="region" aria-label="Code 1, DOC-002 Every exported symbol has TSDoc"><code>/**
- * Derives the pseudonymous key under which a learner's data is stored.
- *
- * The same person gets different keys in different academic years, and
- * different keys in Feide and Canvas modes, by design (DATA-002).
- *
- * @param source - `feide|&lt;feide-id&gt;` or `lti|&lt;iss&gt;|&lt;sub&gt;`; never persisted.
- * @param academicYear - e.g. `2026` for the year starting 1 August 2026.
- * @returns 64-character lowercase hex HMAC-SHA256.
- * @throws {MissingPseudonymSecretError} if the year's secret has been destroyed by the purge.
- * @spec DATA-002
+ * Derives the learner pseudonym for the academic year that contains `at`.
+ * @param source - Feide or LTI identity of the learner.
+ * @param secrets - Per-year secrets from PSEUDONYM_SECRETS.
+ * @param at - The moment of the event; defaults to now.
+ * @returns The 43-character base64url `learnerKey`.
+ * @throws MissingPseudonymSecretError when the year has no secret.
  */
-export function deriveLearnerKey(source: string, academicYear: number): string { … }</code></pre>
-<p><em>Checked by:</em> <code>eslint-plugin-jsdoc</code> (<code>require-jsdoc</code> for exports, <code>require-param</code>,
-<code>check-tag-names</code> with <code>spec</code> registered in <code>tsdoc.json</code>). TypeDoc builds browsable API docs in CI.</p>
+export function deriveLearnerKey(source: LearnerSource, secrets: PseudonymSecrets, at: Date = new Date()): string { … }</code></pre>
+<p>(From <code>apps/server/src/privacy/deriveLearnerKey.ts</code>.)</p>
+<p><em>Checked by:</em> <code>eslint-plugin-jsdoc</code> (<code>require-jsdoc</code> for exported functions, classes, interfaces, types
+and enums; <code>require-param</code> for exported functions; <code>check-tag-names</code> with <code>spec</code> as a defined tag) and
+doc-lint&#39;s <code>export-docs</code> check (TSDoc on every exported declaration, known <code>@spec</code> IDs). Class methods
+that implement a documented interface, such as Lumi&#39;s storage interfaces, may rely on that interface&#39;s
+documentation. Browsable API docs (TypeDoc) are added with the HTTP API in S2 (D-031).</p>
 <p class="req-source">Defined in <a href="#r-DOC-002">Documentation standard, DOC-002</a> · Documentation</p></div>
 </details>
 <details class="req" id="x-DOC-003" data-area="DOC" data-priority="MUST" data-session="S1" data-status="tested" data-text="doc-003 explain non-obvious code with tagged rationale comments comments explain **why**, never restate **what**. use one of these tags so reviewers can grep for them:
@@ -2879,7 +2884,7 @@ points. Where it does, this spec wins and the reason is recorded in <a href="#de
 <tr>
 <td>H5P editor 1.28 client</td><td><strong>No 1.28 release tag exists</strong> (newest semver tag <code>1.25</code>; platform tags such as <code>moodle-1.28.2</code>). Lumi&#39;s own <code>master</code> pins editor commit <code>ab2daa18</code>.</td><td>Pin a reviewed commit with recorded file hashes (D-022).</td></tr>
 <tr>
-<td>h5p-server 10.0.4 vs the new Hub</td><td>(F1) the Hub limits <code>local_id</code> to 15 characters, but 10.0.4 sends 64; (F2) <code>/v1/sites</code> answers with a 2xx other than 200, which 10.0.4 treats as an error; (F3) 10.0.4&#39;s player and editor asset lists lack Core 1.28&#39;s theme CSS (<code>h5p-theme.css</code>, <code>h5p-theme-variables.css</code>, <code>h5p-fonts.css</code>). Lumi <code>master</code> fixes all three, <strong>unreleased</strong>.</td><td>Workarounds without patching: <code>getLocalIdOverride</code>, a pre-set <code>config.uuid</code>, and injecting the three CSS files through the customisation hooks. Details in <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/h5p-core-1.28-seed-packages/README.md" rel="noopener" class="ext"><code>docs/reference/h5p-core-1.28-seed-packages/README.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §4.</td></tr>
+<td>h5p-server 10.0.4 vs the new Hub</td><td>(F1) the Hub limits <code>local_id</code> to 15 characters, but 10.0.4 sends 64; (F2) <code>/v1/sites</code> answers with a 2xx other than 200, which 10.0.4 treats as an error; (F3) 10.0.4&#39;s player and editor asset lists lack Core 1.28&#39;s theme CSS (<code>h5p-theme.css</code>, <code>h5p-theme-variables.css</code>, <code>h5p-fonts.css</code>). Lumi <code>master</code> fixes all three, <strong>unreleased</strong>.</td><td>Workarounds without patching: <code>getLocalIdOverride</code>, a pre-set <code>config.uuid</code>, and injecting the three CSS files through the customisation hooks. Details in <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/h5p-core-1.28-seed-packages/README.md" rel="noopener" class="ext"><code>docs/reference/h5p-core-1.28-seed-packages/README.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §4.</td></tr>
 <tr>
 <td>Hub download request</td><td><code>GET https://hub-api.h5p.org/v1/content-types/&lt;machineName&gt;</code>, no body, no site UUID (Lumi 10.0.4, the PHP editor, and the WordPress plugin agree)</td><td><code>tools/seed/fetch-seed-packages.sh</code> downloads and hashes the ten packages once the host is reachable.</td></tr>
 <tr>
@@ -3216,9 +3221,9 @@ stored and rendered value is escaped.</p>
 <tr>
 <td><code>openid-client</code></td><td><strong>6.x</strong> (ESM-only, functional API: <code>discovery()</code>, <code>buildAuthorizationUrl()</code>, <code>authorizationCodeGrant()</code>)</td><td>Older <code>Issuer</code>/<code>Client</code> class examples do not apply.</td></tr>
 <tr>
-<td>Canvas platform values (checked 2026-10-21)</td><td><code>iss</code> <code>https://canvas.instructure.com</code>; OIDC auth <code>https://sso.canvaslms.com/api/lti/authorize_redirect</code>; JWKS <code>https://sso.canvaslms.com/api/lti/security/jwks</code>; token <code>https://sso.canvaslms.com/login/oauth2/token</code> (or <code>https://&lt;institution-domain&gt;/login/oauth2/token</code>); <code>privacy_level</code> values <code>anonymous</code>, <code>name_only</code>, <code>email_only</code>, <code>public</code></td><td>Recorded with Canvas doc and source citations in <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/canvas-platform-values.md" rel="noopener" class="ext"><code>docs/reference/canvas-platform-values.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>; paste-ready key in <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/canvas-lti13-developer-key.json" rel="noopener" class="ext"><code>canvas-lti13-developer-key.json</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>.</td></tr>
+<td>Canvas platform values (checked 2026-10-21)</td><td><code>iss</code> <code>https://canvas.instructure.com</code>; OIDC auth <code>https://sso.canvaslms.com/api/lti/authorize_redirect</code>; JWKS <code>https://sso.canvaslms.com/api/lti/security/jwks</code>; token <code>https://sso.canvaslms.com/login/oauth2/token</code> (or <code>https://&lt;institution-domain&gt;/login/oauth2/token</code>); <code>privacy_level</code> values <code>anonymous</code>, <code>name_only</code>, <code>email_only</code>, <code>public</code></td><td>Recorded with Canvas doc and source citations in <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/canvas-platform-values.md" rel="noopener" class="ext"><code>docs/reference/canvas-platform-values.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>; paste-ready key in <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/canvas-lti13-developer-key.json" rel="noopener" class="ext"><code>canvas-lti13-developer-key.json</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>.</td></tr>
 <tr>
-<td>Feide OIDC provider (checked 2026-10-16)</td><td>Issuer <code>https://auth.dataporten.no</code>; endpoints <code>/oauth/authorization</code>, <code>/oauth/token</code>, <code>/openid/userinfo</code>, <code>/openid/jwks</code>, <code>/openid/endsession</code>; PKCE <code>S256</code>; ID tokens <code>RS256</code>; Groups API <code>https://groups-api.dataporten.no/groups</code></td><td>Recorded with evidence in <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-oidc-config.example.json" rel="noopener" class="ext"><code>docs/reference/feide-oidc-config.example.json</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> and <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-values.md" rel="noopener" class="ext"><code>feide-values.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. Assembled from Feide&#39;s documentation and public code; HVL&#39;s own client values still come from the Customer Portal.</td></tr>
+<td>Feide OIDC provider (checked 2026-10-16)</td><td>Issuer <code>https://auth.dataporten.no</code>; endpoints <code>/oauth/authorization</code>, <code>/oauth/token</code>, <code>/openid/userinfo</code>, <code>/openid/jwks</code>, <code>/openid/endsession</code>; PKCE <code>S256</code>; ID tokens <code>RS256</code>; Groups API <code>https://groups-api.dataporten.no/groups</code></td><td>Recorded with evidence in <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/feide-oidc-config.example.json" rel="noopener" class="ext"><code>docs/reference/feide-oidc-config.example.json</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> and <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/feide-values.md" rel="noopener" class="ext"><code>feide-values.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. Assembled from Feide&#39;s documentation and public code; HVL&#39;s own client values still come from the Customer Portal.</td></tr>
 </tbody></table></div>
 <p>Values still marked <em>(verify)</em> below must be confirmed from HVL&#39;s own exports (Feide Customer Portal,
 Canvas Developer Key) or with TeCopp before Session 3 writes code that depends on them. Public values are
@@ -3523,7 +3528,7 @@ no ALL-CAPS styling; links say where they go (external site, file type).</li>
 anywhere else in the codebase.</strong> A lint rule rejects hex literals outside the tokens package.</p>
 <p><strong>Brand basis.</strong> Brand colours come from HVL&#39;s design manual (<em>Visuell identitet / Profilmanual</em>,
 v2.0, February 2017, page 16), as documented in
-<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext"><code>docs/reference/hvl-visual-identity.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. HVL&#39;s own logo colours are
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext"><code>docs/reference/hvl-visual-identity.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. HVL&#39;s own logo colours are
 <strong>Mørk blå 2</strong> (PMS 3035 U, <code>#004357</code>) and <strong>Sjøgrønn</strong> (PMS 7710 U, <code>#00AFBA</code>). The manual was read
 through search extracts and independent transcriptions, not opened directly, so HVL (<a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)
 must still confirm the values <em>(verify)</em>. Colour names in brackets follow a transcription of the manual
@@ -3784,14 +3789,14 @@ to course leaders in the <em>Emnedesign</em> module (UPED854). Its public descri
 interdependent parts, <strong>kontekst</strong>, <strong>kunnskap</strong> and <strong>samskaping</strong>. It applies across levels, from the
 single <em>læringsøkt</em> (mikronivå) through the <em>emne</em> and <em>studieprogram</em> to the institution, and uses
 <em>baklengs planlegging</em> (backward planning) and <em>meningsskapande samsvar</em> (constructive alignment).
-See <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext"><code>docs/reference/hvl-laeringsdesign-model.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>.</p>
+See <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext"><code>docs/reference/hvl-laeringsdesign-model.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>.</p>
 <p><strong>Where HVL Interaktiv sits.</strong> The activities live at the model&#39;s <strong>mikronivå</strong>: the work students do
 before, between and after a <em>samling</em>. HVL&#39;s course pages call this work <em>forarbeid</em>, <em>mellomarbeid</em>
 and <em>etterarbeid</em> (<em>før- og etterarbeid</em>; English &quot;pre-, intermediate and post-work&quot;). These are
 course-organisation terms, not named phases of the model (D-019).</p>
 <p>Every label lives in <code>content/laeringsdesign/phases.yaml</code>, with <code>nn</code>/<code>nb</code>/<code>en</code> strings, and code
 refers only to stable keys. The proposed file is
-<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/phases.yaml" rel="noopener" class="ext"><code>docs/reference/proposals/phases.yaml</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>; ALU must confirm the
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/proposals/phases.yaml" rel="noopener" class="ext"><code>docs/reference/proposals/phases.yaml</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>; ALU must confirm the
 labels against the model document (<code>hvl-modellen-for-laeringsdesign.pdf</code>, not yet provided).</p>
 <div class="table-wrap" role="region" aria-label="Table 2, 1. Terminology is configuration, not code" tabindex="0"><table><thead><tr>
 <th scope="col">Key</th><th scope="col">Label (nn / en)</th><th scope="col">Meaning</th></tr>
@@ -3989,7 +3994,7 @@ document their teaching practice and their reasoning in a <em>pedagogisk mappe</
 portfolio also covers work with educational technology, and the 2025 merit criteria name <em>varierte
 læremidler</em> (sub-criterion 2.3). This feature produces a ready-to-edit draft from work the teacher has
 already done. The evidence behind this section is in
-<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext"><code>docs/reference/hvl-pedagogisk-mappe-criteria.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> (D-020).</p>
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext"><code>docs/reference/hvl-pedagogisk-mappe-criteria.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> (D-020).</p>
 <h4 id="r-MAPPE-001" class="req-heading" tabindex="-1"><a class="req-id" href="#r-MAPPE-001">MAPPE-001</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Select and export</span></h4>
 <p>On <code>/mappe</code>, an author selects activities, filtered by course, phase or date. The author exports
 <strong>Markdown</strong> (for editing) and <strong>PDF</strong> (for submission).</p>
@@ -4001,7 +4006,7 @@ already done. The evidence behind this section is in
 <code>content/mappe/criteria.{nn,nb,en}.yaml</code>, keyed by criteria set (default <code>hvl-merittering-2025</code>).
 HVL revises the merit criteria for every call (next call 2027), so a new set is a content change only.
 The proposed Nynorsk template is
-<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext"><code>docs/reference/proposals/mappe-template.nn.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. The
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext"><code>docs/reference/proposals/mappe-template.nn.md</code><span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>. The
 default structure follows HVL&#39;s three-part merit portfolio:</p>
 <ol>
 <li><strong>Reader&#39;s guide:</strong> a table mapping each 2025 criterion (1.1–1.4, 2.1–2.4, 3.1–3.3) to the chapter
@@ -4334,20 +4339,20 @@ and CSS files use the same header in their language&#39;s comment syntax.</p>
 caller must handle. Add an <code>@example</code> for anything with more than two parameters or a non-obvious
 call order. Add <code>@spec &lt;ID&gt;</code> when the symbol directly implements a requirement.</p>
 <pre class="code" tabindex="0" role="region" aria-label="Code 2, Rules"><code>/**
- * Derives the pseudonymous key under which a learner's data is stored.
- *
- * The same person gets different keys in different academic years, and
- * different keys in Feide and Canvas modes, by design (DATA-002).
- *
- * @param source - `feide|&lt;feide-id&gt;` or `lti|&lt;iss&gt;|&lt;sub&gt;`; never persisted.
- * @param academicYear - e.g. `2026` for the year starting 1 August 2026.
- * @returns 64-character lowercase hex HMAC-SHA256.
- * @throws {MissingPseudonymSecretError} if the year's secret has been destroyed by the purge.
- * @spec DATA-002
+ * Derives the learner pseudonym for the academic year that contains `at`.
+ * @param source - Feide or LTI identity of the learner.
+ * @param secrets - Per-year secrets from PSEUDONYM_SECRETS.
+ * @param at - The moment of the event; defaults to now.
+ * @returns The 43-character base64url `learnerKey`.
+ * @throws MissingPseudonymSecretError when the year has no secret.
  */
-export function deriveLearnerKey(source: string, academicYear: number): string { … }</code></pre>
-<p><em>Checked by:</em> <code>eslint-plugin-jsdoc</code> (<code>require-jsdoc</code> for exports, <code>require-param</code>,
-<code>check-tag-names</code> with <code>spec</code> registered in <code>tsdoc.json</code>). TypeDoc builds browsable API docs in CI.</p>
+export function deriveLearnerKey(source: LearnerSource, secrets: PseudonymSecrets, at: Date = new Date()): string { … }</code></pre>
+<p>(From <code>apps/server/src/privacy/deriveLearnerKey.ts</code>.)</p>
+<p><em>Checked by:</em> <code>eslint-plugin-jsdoc</code> (<code>require-jsdoc</code> for exported functions, classes, interfaces, types
+and enums; <code>require-param</code> for exported functions; <code>check-tag-names</code> with <code>spec</code> as a defined tag) and
+doc-lint&#39;s <code>export-docs</code> check (TSDoc on every exported declaration, known <code>@spec</code> IDs). Class methods
+that implement a documented interface, such as Lumi&#39;s storage interfaces, may rely on that interface&#39;s
+documentation. Browsable API docs (TypeDoc) are added with the HTTP API in S2 (D-031).</p>
 <h4 id="r-DOC-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DOC-003">DOC-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Explain non-obvious code with tagged rationale comments</span></h4>
 <p>Comments explain <strong>why</strong>, never restate <strong>what</strong>. Use one of these tags so reviewers can grep for them:</p>
 <div class="table-wrap" role="region" aria-label="Table 3, Rules" tabindex="0"><table><thead><tr>
@@ -4461,10 +4466,11 @@ portfolio templates. It includes an example and states which tests will catch mi
 designers, TeCopp administrators, security and privacy reviewers, examiners and external code
 reviewers. It explains how to check, efficiently and independently, that the code does what the
 specifications promise.</p>
-<p><strong>Current state (2026-10-16):</strong> the specification is complete and <strong>no application code exists
-yet</strong>. The only code is the traceability tool <code>tools/spec-trace/specTrace.mjs</code>. Build progress is
-tracked in <a href="#progress">PROGRESS.md</a>. The commands marked <em>(from S1)</em> below become available as
-each session lands.</p>
+<p><strong>Current state (2026-10-22):</strong> Session 1 is done. The monorepo, <code>apps/server</code> (configuration, log
+redaction, learner pseudonyms, the database schema, the H5P configuration and boot check, the storage
+adapters and the archive guard) and the tools <code>spec-trace</code>, <code>spec-site</code>, <code>doc-lint</code>, <code>dependency-check</code>,
+<code>privacy</code> and <code>h5p-core</code> exist. There is no web app or HTTP server yet (Sessions 2–4). Build progress is
+tracked in <a href="#progress">PROGRESS.md</a>. Commands marked <em>(from S<n>)</em> below arrive with that session.</p>
 <hr>
 <h3 id="evaluator-guide--1-orientation-in-20-minutes" tabindex="-1">1. Orientation in 20 minutes</h3>
 <p>Prefer a browser? <code>docs/site/index.html</code> holds the same documents as one searchable page, with a
@@ -4472,7 +4478,7 @@ requirement explorer. Regenerate it with <code>node tools/spec-site/buildSpecSit
 <div class="table-wrap" role="region" aria-label="Table 1, 1. Orientation in 20 minutes" tabindex="0"><table><thead><tr>
 <th scope="col">Minutes</th><th scope="col">Read</th><th scope="col">You will know</th></tr>
 </thead><tbody><tr>
-<td>3</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/README.md" rel="noopener" class="ext">README<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a></td><td>What the service is and how the repository is organised</td></tr>
+<td>3</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/README.md" rel="noopener" class="ext">README<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a></td><td>What the service is and how the repository is organised</td></tr>
 <tr>
 <td>7</td><td><a href="#spec-00">Spec 00 §1–§4</a></td><td>Who it is for, the five user journeys, and the pedagogical principles</td></tr>
 <tr>
@@ -4480,7 +4486,7 @@ requirement explorer. Regenerate it with <code>node tools/spec-site/buildSpecSit
 <tr>
 <td>4</td><td><a href="#decisions">DECISIONS</a></td><td>What was decided, including where the build deliberately departs from the original plan, and why</td></tr>
 <tr>
-<td>3</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/TRACEABILITY.md" rel="noopener" class="ext">TRACEABILITY<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a></td><td>Which requirements are planned, in code or tested</td></tr>
+<td>3</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/TRACEABILITY.md" rel="noopener" class="ext">TRACEABILITY<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a></td><td>Which requirements are planned, in code or tested</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="evaluator-guide--2-checking-one-requirement-end-to-end" tabindex="-1">2. Checking one requirement end-to-end</h3>
@@ -4501,31 +4507,31 @@ node tools/spec-trace/specTrace.mjs --check</code></pre>
 asserts? Does the module header&#39;s <em>Invariants</em> section match the code? Is every <code>SECURITY:</code>,
 <code>PRIVACY:</code>, <code>A11Y:</code> and <code>PEDAGOGY:</code> comment justified?</p>
 <hr>
-<h3 id="evaluator-guide--3-commands-from-s1-unless-noted" tabindex="-1">3. Commands <em>(from S1 unless noted)</em></h3>
-<div class="table-wrap" role="region" aria-label="Table 2, 3. Commands (from S1 unless noted)" tabindex="0"><table><thead><tr>
+<h3 id="evaluator-guide--3-commands-available-now-unless-a-later-session-is-noted" tabindex="-1">3. Commands <em>(available now unless a later session is noted)</em></h3>
+<div class="table-wrap" role="region" aria-label="Table 2, 3. Commands (available now unless a later session is noted)" tabindex="0"><table><thead><tr>
 <th scope="col">Command</th><th scope="col">What it proves</th></tr>
 </thead><tbody><tr>
-<td><code>node tools/spec-trace/specTrace.mjs --check</code> <em>(available now)</em></td><td>Specs are internally consistent; traceability is current</td></tr>
+<td><code>node tools/spec-trace/specTrace.mjs --check</code></td><td>Specs are internally consistent; traceability is current</td></tr>
 <tr>
-<td><code>node tools/spec-site/buildSpecSite.mjs --check</code> <em>(available now)</em></td><td>The spec website matches the Markdown</td></tr>
+<td><code>node tools/spec-site/buildSpecSite.mjs --check</code></td><td>The spec website matches the Markdown</td></tr>
 <tr>
 <td><code>docker compose up -d</code></td><td>PostgreSQL, Redis and an S3 emulator start locally (D-023); the mock OIDC/LTI platform joins in S3</td></tr>
 <tr>
-<td><code>npm ci &amp;&amp; npm run build</code></td><td>The monorepo builds from a clean checkout</td></tr>
+<td><code>npm ci &amp;&amp; npm run typecheck</code></td><td>The monorepo installs and compiles from a clean checkout (<code>npm run build</code> arrives with <code>apps/web</code> in S4)</td></tr>
 <tr>
 <td><code>npm run typecheck &amp;&amp; npm run lint</code></td><td>Types and lint</td></tr>
 <tr>
-<td><code>npm run doc:lint</code></td><td>The Documentation Standard, checked by machine (<a class="req-ref" href="#r-DOC-001"><code>DOC-001</code></a>…<a class="req-ref" href="#r-DOC-014"><code>DOC-014</code></a>)</td></tr>
+<td><code>npm run doc:lint</code></td><td>The Documentation Standard, checked by machine (<a class="req-ref" href="#r-DOC-001"><code>DOC-001</code></a>–<code>003</code>, <code>005</code>–<code>010</code>, <code>013</code>, <code>014</code>; <a class="req-ref" href="#r-DOC-004"><code>DOC-004</code></a> is <code>spec:trace</code>, <a class="req-ref" href="#r-DOC-011"><code>DOC-011</code></a> the commit-msg hook)</td></tr>
 <tr>
 <td><code>npm run privacy:inventory-check</code></td><td>The data inventory matches the database schema (<a class="req-ref" href="#r-DATA-001"><code>DATA-001</code></a>)</td></tr>
 <tr>
-<td><code>npm run h5p:fetch-core &amp;&amp; npm run boot-check --workspace apps/server</code></td><td>H5P client files are the verified 1.28 release; the engine would start (<a class="req-ref" href="#r-H5P-001"><code>H5P-001</code></a>)</td></tr>
+<td><code>npm run h5p:fetch-core &amp;&amp; npm run boot-check --workspace apps/server</code></td><td>H5P client files are the verified 1.28 release; the engine would start (<a class="req-ref" href="#r-H5P-001"><code>H5P-001</code></a>); needs no services or <code>.env</code></td></tr>
 <tr>
 <td><code>npm test</code></td><td>Unit and integration tests (Vitest; integration tests need <code>docker compose up -d</code>, D-023)</td></tr>
 <tr>
-<td><code>npm run test:e2e</code></td><td>Playwright journeys J1–J5 against the mock Canvas platform</td></tr>
+<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Playwright journeys J1–J5 against the mock Canvas platform</td></tr>
 <tr>
-<td><code>npm run test:a11y</code></td><td>axe-core on every route and inside each content type&#39;s iframe (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>)</td></tr>
+<td><code>npm run test:a11y</code> <em>(from S4)</em></td><td>axe-core on every route and inside each content type&#39;s iframe (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>)</td></tr>
 <tr>
 <td><code>npm run spec:trace -- --check --done-through=S&lt;n&gt;</code></td><td>Every MUST requirement up to session <em>n</em> has a test</td></tr>
 <tr>
@@ -4622,8 +4628,10 @@ must be pasted into <code>PROGRESS.md</code>, before the next session starts.</p
 is for formative use only (<a class="req-ref" href="#r-LTI-013"><code>LTI-013</code></a>, <a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>).</li>
 <li><strong>Upstream accessibility.</strong> Some barriers are inside H5P content types and can only be fixed
 upstream. The conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>) lists them with issue links.</li>
-<li><strong>H5P Core 1.28 with Lumi 10.0.4 is unverified</strong> (risk R-01). Session 1 starts with a spike and
-has a documented fallback.</li>
+<li><strong>H5P Core 1.28 with Lumi 10.0.4 is only partly verified</strong> (risk R-01). The S1 spike passed steps 1–2
+(Node 24 with core API 1.28; core and editor files verified file by file). Steps 3–5 (Hub registration,
+rendering a content type, the Daylight theme) were blocked by the network and move to S2, where the
+choice between 1.28 and the 1.27 fallback is made (D-031).</li>
 <li><strong>Institutional reference material is not yet in the repository</strong> (see
 <a href="#reference">reference/README.md</a>). Labels, brand colours and portfolio headings are
 therefore kept in configuration, so they can be corrected without code changes.</li>
@@ -4701,6 +4709,10 @@ with the commands given.</p>
 <td>D-029</td><td>Own licence and audit checks instead of <code>license-checker</code> and plain <code>npm audit</code></td><td>Accepted (2026-10-21)</td></tr>
 <tr>
 <td>D-030</td><td>Accepted advisory: <code>image-size</code> parser loops (until 2027-01-31)</td><td>Accepted (2026-10-21), expires 2027-01-31</td></tr>
+<tr>
+<td>D-031</td><td>Session 1 items that finish in Session 2 (spike steps 3–6, F1/F3 wiring, import directory, TypeDoc)</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-032</td><td><code>h5p-express</code> installed in S1; its Express 4 is overridden to 4.22.3</td><td>Accepted (2026-10-22)</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="decisions--d-001--nodejs-24-lts-instead-of-22" tabindex="-1">D-001 · Node.js 24 LTS instead of 22</h3>
@@ -4828,7 +4840,7 @@ teal&quot;) appear in no HVL source. HVL&#39;s <em>Visuell identitet / Profilman
 defines the logo colours Mørk blå 2 <code>#004357</code> (PMS 3035 U) and Sjøgrønn <code>#00AFBA</code> (PMS 7710 U), plus
 signal, support and additional colours. The values were read through search extracts of the manual and
 agree with independent transcriptions and with two public copies of the logo
-(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext">docs/reference/hvl-visual-identity.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>).</li>
+(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext">docs/reference/hvl-visual-identity.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>).</li>
 <li><strong>Decision:</strong> Spec 03 §2 uses Mørk blå 2 for headings, links, primary buttons and the focus ring
 (10.82 : 1 on white), Mørk blå 1 <code>#008AAF</code> for non-text UI only (4.00 : 1), Sjøgrønn and Oransje for
 decoration only, Blågrå lys <code>#C9D5DA</code> for bands, Mørk rød <code>#6D2439</code> for incorrect-answer text.
@@ -4857,7 +4869,7 @@ across levels from the <em>læringsøkt</em> (mikronivå) to the institution, us
 course pages use <em>forarbeid</em>, <em>mellomarbeid</em> and <em>etterarbeid</em> (and <em>før- og etterarbeid</em>) for work
 around a <em>samling</em>. No HVL page uses <em>underveis</em> as a phase name, and it is easily confused with
 <em>undervegsvurdering</em> (formative assessment).
-(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext">docs/reference/hvl-laeringsdesign-model.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</li>
+(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext">docs/reference/hvl-laeringsdesign-model.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</li>
 <li><strong>Decision:</strong> Keep the stable keys <code>forarbeid</code>, <code>underveis</code>, <code>etterarbeid</code>. Label them <em>Forarbeid</em>,
 <em>Mellomarbeid</em> and <em>Etterarbeid</em> (en: <em>Pre-work</em>, <em>Intermediate work</em>, <em>Post-work</em>). Present them as the
 structure of a <em>læringsøkt</em> around a <em>samling</em>, not as the phases of HVL&#39;s model. The studio introduces
@@ -4871,7 +4883,7 @@ labels against the model document.</li>
 sub-criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), revised for each call. The merit portfolio has three parts:
 Del 1 <em>samanhengande framstilling</em> (up to 7 500 words, references excluded), Del 2 <em>pedagogisk CV</em>, and
 Del 3 up to 11 attachments including the manager&#39;s letter.
-(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext">docs/reference/hvl-pedagogisk-mappe-criteria.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</li>
+(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext">docs/reference/hvl-pedagogisk-mappe-criteria.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</li>
 <li><strong>Decision:</strong> <a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a> follows the three-part structure with a criterion table as a reader&#39;s guide.
 Criteria texts, the word limit and the attachment limit live in content files keyed by criteria set
 (<code>hvl-merittering-2025</code>), so the 2027 call needs only a content change. A promotion (<em>opprykk</em>) mode
@@ -4891,7 +4903,7 @@ persisted (<a class="req-ref" href="#r-AUTH-003"><code>AUTH-003</code></a>, <a c
 the release tag <code>1.28.0</code>. The editor (<code>h5p-editor-php-library</code>) has <strong>no</strong> 1.28 release tag: its newest
 semver tag is <code>1.25</code>, and 1.28-era code exists only on platform branches and untagged commits. Lumi&#39;s own
 <code>master</code> pins editor commit <code>ab2daa18bd61b19e7f8729e22eec88f3b637a868</code>
-(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/h5p-core-1.28-seed-packages/README.md" rel="noopener" class="ext">seed-package status<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §5).</li>
+(<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/h5p-core-1.28-seed-packages/README.md" rel="noopener" class="ext">seed-package status<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §5).</li>
 <li><strong>Decision:</strong> Pin core to tag <code>1.28.0</code>. Pin the editor to one reviewed commit (start from Lumi&#39;s pin),
 record its per-file SHA-256 in <code>docs/reference/</code>, and review the diff before any change. Never track a
 moving branch.</li>
@@ -4936,20 +4948,25 @@ edge cases (key sanitising, range reads), not a dependency.</li>
 <h3 id="decisions--d-026--library-storage-on-a-shared-volume-until-deployment-needs-s3" tabindex="-1">D-026 · Library storage on a shared volume until deployment needs S3</h3>
 <ul>
 <li><strong>Context:</strong> <a class="req-ref" href="#r-H5P-004"><code>H5P-004</code></a> allows S3- or file-system-backed library storage. Libraries change only when an
-admin installs or updates a content type, are read on every page view, and are cached by Lumi&#39;s
-<code>CachedLibraryStorage</code> (backed by the shared Redis key-value store).</li>
+admin installs or updates a content type and are read on every page view. Lumi&#39;s <code>CachedLibraryStorage</code>
+caches their metadata in each node&#39;s memory; its own default lifetime is 24 hours.</li>
 <li><strong>Decision:</strong> S1 uses Lumi&#39;s <code>FileLibraryStorage</code> on a volume shared by all server instances, wrapped
-in <code>CachedLibraryStorage</code>. An S3 <code>ILibraryStorage</code> is added in S6 only if the target platform has no
-shared volume.</li>
-<li><strong>Consequences:</strong> Deployment (S6, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>) must mount one volume for <code>H5P_LIBRARY_DIR</code> on every node.</li>
+in <code>CachedLibraryStorage</code> with a per-node in-memory cache of 300 s (<code>LIBRARY_CACHE_TTL_SECONDS</code>). An S3
+<code>ILibraryStorage</code> is added in S6 only if the target platform has no shared volume.</li>
+<li><strong>Consequences:</strong> Deployment (S6, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>) must mount one volume for <code>H5P_LIBRARY_DIR</code> on every node.
+After a library install or update (including a security update, <a class="req-ref" href="#r-H5P-011"><code>H5P-011</code></a>), other nodes can serve the
+old library metadata for up to 5 minutes. If S6 needs instant propagation, use a Redis-backed cache store
+or a cross-node invalidation message.</li>
 </ul>
 <h3 id="decisions--d-027--h5p-core-and-editor-files-are-fetched-and-verified-not-committed" tabindex="-1">D-027 · H5P core and editor files are fetched and verified, not committed</h3>
 <ul>
 <li><strong>Context:</strong> The server needs H5P&#39;s client files (core tag <code>1.28.0</code>, editor commit per D-022). Committing
-about 1 000 third-party files would bury our own code in reviews and diffs.</li>
+these 281 third-party files (67 core, 214 editor) would bury our own code in reviews and diffs.</li>
 <li><strong>Decision:</strong> <code>tools/h5p-core/fetchCoreClients.sh</code> fetches them into <code>apps/server/h5p/</code> (git-ignored).
-Core files are checked against the committed per-file SHA-256 list; the editor is pinned by commit hash
-(git verifies it). CI runs the script before the tests. The server refuses to start when the core API
+The script checks that each tag or commit resolves to the expected commit hash, then checks every file
+against a committed per-file SHA-256 list (<code>h5p-php-library-1.28.0.files.sha256</code>,
+<code>h5p-editor-php-library-ab2daa18.files.sha256</code>); a changed, missing or extra file stops it. CI runs the
+script before the tests. The server refuses to start when the core API
 version in the fetched files is not 1.28 (<a class="req-ref" href="#r-H5P-001"><code>H5P-001</code></a>).</li>
 <li><strong>Consequences:</strong> A fresh clone needs one <code>npm run h5p:fetch-core</code>. doc-lint and spec-trace skip
 <code>apps/server/h5p/</code>.</li>
@@ -4985,6 +5002,38 @@ an authenticated author&#39;s file upload. In S2, <a class="req-ref" href="#r-SE
 bytes are not on the allowlist (JXL, HEIF and ICNS are not) before H5P calls <code>image-size</code>.</li>
 <li><strong>Consequences:</strong> <code>audit-exceptions.json</code> lists both advisories with this decision and the expiry date.
 Review again at expiry, or earlier if h5p-server releases a version with <code>image-size</code> ≥ 2.0.3.</li>
+</ul>
+<h3 id="decisions--d-031--session-1-items-that-finish-in-session-2" tabindex="-1">D-031 · Session 1 items that finish in Session 2</h3>
+<ul>
+<li><strong>Context:</strong> Some Session 1 work depends on things that only exist in Session 2, or on a network this
+build environment does not have. The Session 1 review (2026-10-22) found these were not recorded as a decision.</li>
+<li><strong>Decision:</strong> These move to S2 and are listed in its <code>PROGRESS.md</code> checklist:<ol>
+<li>Spike steps 3–6 (spec 01 §7): site registration and seeding against hub-api.h5p.org, rendering
+<code>H5P.MultiChoice</code>, the Daylight theme with the F3 CSS, and the R-01 choice between 1.28 and the 1.27
+fallback. This environment&#39;s proxy blocks hub-api.h5p.org (Q7).</li>
+<li>Wiring workaround F1: <code>getLocalIdOverride: () =&gt; localIdFor(&lt;site UUID&gt;)</code> is an <code>H5PEditor</code> option, so
+it is set in <code>H5pEditorFactory</code>. S1 provides and tests <code>localIdFor</code>.</li>
+<li>Injecting the F3 theme CSS through the player and editor customisation hooks (needs the S2 routes).</li>
+<li><a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>&#39;s &quot;temporary directory with a quota&quot;: the S2 package import route runs <code>inspectZip</code> before
+Lumi&#39;s <code>PackageImporter</code>. The quota is <code>maxTotalSize</code>, checked from the central directory; yauzl checks
+the real sizes while extracting into a fresh <code>os.tmpdir()</code> folder that is removed afterwards. S1 provides
+the guard, the limits and the size-limited S3 uploads.</li>
+<li>TypeDoc API pages for <a class="req-ref" href="#r-DOC-002"><code>DOC-002</code></a>, added with the HTTP API.</li>
+</ol>
+</li>
+<li><strong>Consequences:</strong> <a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a> and <a class="req-ref" href="#r-H5P-001"><code>H5P-001</code></a> have tests in S1 for what exists; their S2 parts get their own
+<code>[ID]</code> tests in S2.</li>
+</ul>
+<h3 id="decisions--d-032--h5p-express-installed-in-s1-its-express-4-is-overridden-to-4223" tabindex="-1">D-032 · <code>h5p-express</code> installed in S1; its Express 4 is overridden to 4.22.3</h3>
+<ul>
+<li><strong>Context:</strong> Spike step 1 installs <code>@lumieducation/h5p-express@10.0.5</code>. It depends on <code>express</code> 4.21.2
+exactly, whose dependencies have advisories: <code>path-to-regexp</code> &lt; 0.1.13 (GHSA-37ch-88jc-xwx2, high), plus
+moderate ones in <code>qs</code> and <code>body-parser</code>. Express 4.22.3 (2026-09-14) uses the fixed versions.</li>
+<li><strong>Decision:</strong> A scoped npm override (<code>&quot;@lumieducation/h5p-express&quot;: { &quot;express&quot;: &quot;4.22.3&quot; }</code> in the root
+<code>package.json</code>) replaces Express only inside h5p-express. Our own server (S2) uses Express 5 as its own
+dependency, which the override does not touch. <code>check:pins</code> checks nested override values too.</li>
+<li><strong>Consequences:</strong> S2 must test the h5p-express routers on Express 4.22.3. Remove the override when Lumi
+releases an h5p-express with a fixed Express.</li>
 </ul>
 
 </section>
@@ -5036,7 +5085,7 @@ with their first features (S3/S4), not as empty scaffolds; the tools live in <co
 <li><span class="task">✓ Done:</span> Husky: <code>pre-commit</code> runs lint-staged (Prettier, ESLint); <code>commit-msg</code> runs the DOC-011 checker</li>
 <li><span class="task">✓ Done:</span> <code>npm run spec:trace</code> (root override, tests), <code>check:filesize</code>, <code>tools/doc-lint</code> with 11 checks and tests
 (<a class="req-ref" href="#r-DOC-001"><code>DOC-001</code></a>…<a class="req-ref" href="#r-DOC-014"><code>DOC-014</code></a>, <a class="req-ref" href="#r-NFR-004"><code>NFR-004</code></a>)</li>
-<li><span class="task">✓ Done:</span> Prisma schema, split by domain (20 models of spec 05 §4), first migration with a CHECK constraint that
+<li><span class="task">✓ Done:</span> Prisma schema, split by domain (20 models: spec 05 §4 plus <code>AuthAuditEvent</code> from spec 02 §7), first migration with a CHECK constraint that
 keeps names and e-mail off learner rows; <code>docs/privacy/DATA-INVENTORY.md</code> and its check (<a class="req-ref" href="#r-DATA-001"><code>DATA-001</code></a>, <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>)</li>
 <li><span class="task">✓ Done:</span> <code>deriveLearnerKey</code> with per-academic-year secrets (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>); pino logger with deep redaction (<a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>)</li>
 <li><span class="task">✓ Done:</span> <code>H5pConfigFactory</code> (<a class="req-ref" href="#r-H5P-001"><code>H5P-001</code></a>), boot check, storage adapters and cleanup job (<a class="req-ref" href="#r-H5P-004"><code>H5P-004</code></a>, user data in S2
@@ -5045,18 +5094,21 @@ per D-028), size limits and the zip guard (<a class="req-ref" href="#r-SEC-005">
 <li><span class="task">✓ Done:</span> <code>docker-compose.yml</code>: PostgreSQL 16, Redis 7, S3 emulator (moto instead of MinIO, D-023)</li>
 <li><span class="task">✓ Done:</span> CI: typecheck, lint, format, doc-lint, file size, pins, licences, audit with reviewed exceptions,
 inventory, tests with service containers, traceability, spec site, H5P boot check (<a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>, <a class="req-ref" href="#r-NFR-005"><code>NFR-005</code></a>)</li>
-<li><span class="task">✓ Done:</span> Decisions D-023…D-030 recorded</li>
+<li><span class="task">✓ Done:</span> Decisions D-023…D-032 recorded</li>
+<li><span class="task">✓ Done:</span> Independent review (2026-10-22): three reviewers (correctness and security, privacy and spec
+compliance, documentation) with a skeptic per finding; 16 confirmed findings and the valid
+low-severity ones fixed with regression tests (see the session log)</li>
 <li><span class="task">✓ Done:</span> Gate (output below)</li>
 </ul>
 <p>Spike results (spec 01 §7, Risk R-01):</p>
 <div class="table-wrap" role="region" aria-label="Table 2, S1 — Scaffold, schema, H5P core ✅" tabindex="0"><table><thead><tr>
 <th scope="col">Step</th><th scope="col">Result</th></tr>
 </thead><tbody><tr>
-<td>1. h5p-server 10.0.4 on Node 24, <code>coreApiVersion</code> 1.28</td><td>✅ Installs and runs on Node 24.x. <code>H5pConfigFactory</code> sets 1.28 and re-applies it after loading stored settings</td></tr>
+<td>1. h5p-server 10.0.4 and h5p-express 10.0.5 on Node 24, <code>coreApiVersion</code> 1.28</td><td>✅ Both install on Node 24.x (h5p-express with its Express 4 overridden to 4.22.3 for advisories, D-032). <code>H5pConfigFactory</code> sets 1.28 and re-applies it after loading stored settings</td></tr>
 <tr>
 <td>2. Core tag <code>1.28.0</code> and editor commit <code>ab2daa18</code></td><td>✅ <code>npm run h5p:fetch-core</code>: core commit <code>2aeb0b83</code> matches, all 67 files match the committed SHA-256 list; editor commit verified by git, its 214 file hashes recorded (<code>h5p-editor-php-library-ab2daa18.files.sha256</code>)</td></tr>
 <tr>
-<td>3. Seed packages and site registration</td><td>⛔ Blocked: this environment cannot reach <code>hub-api.h5p.org</code> (Q7). F1 (<code>localIdFor</code>, 15 characters) and F2 (pre-set <code>H5P_SITE_UUID</code>) are implemented and unit-tested, not tried against the Hub</td></tr>
+<td>3. Seed packages and site registration</td><td>⛔ Blocked: this environment cannot reach <code>hub-api.h5p.org</code> (Q7). F2 (pre-set <code>H5P_SITE_UUID</code>) is applied by <code>H5pConfigFactory</code>; for F1, the <code>localIdFor</code> helper (15 characters) exists and is tested, and is wired into <code>H5pEditorFactory</code> in S2 (D-031). Neither was tried against the Hub</td></tr>
 <tr>
 <td>4. Render <code>H5P.MultiChoice</code> in the player</td><td>⛔ Blocked by step 3 (no package); needs the S2 player routes too</td></tr>
 <tr>
@@ -5068,7 +5120,11 @@ inventory, tests with service containers, traceability, spec site, H5P boot chec
 <h3 id="progress--s2--content-types-and-security" tabindex="-1">S2 — Content types and security ⬜</h3>
 <ul>
 <li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable; inject the F3 theme CSS in
-<code>H5pPlayerFactory</code>/<code>H5pEditorFactory</code>; decide R-01 (1.28 or the 1.27 fallback) and record it</li>
+<code>H5pPlayerFactory</code>/<code>H5pEditorFactory</code>; decide R-01 (1.28 or the 1.27 fallback) and record it (D-031)</li>
+<li><span class="task">○ To do:</span> Wire F1: <code>getLocalIdOverride: () =&gt; localIdFor(&lt;site UUID&gt;)</code> in <code>H5pEditorFactory</code>, with a test (D-031)</li>
+<li><span class="task">○ To do:</span> Package import route: <code>inspectZip</code> before Lumi&#39;s <code>PackageImporter</code>, extraction in a fresh temporary
+folder that is removed afterwards (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>, D-031); test the h5p-express routers on Express 4.22.3 (D-032)</li>
+<li><span class="task">○ To do:</span> TypeDoc API pages in CI (<a class="req-ref" href="#r-DOC-002"><code>DOC-002</code></a>, D-031)</li>
 <li><span class="task">○ To do:</span> <code>HvlTop10ContentTypeFilter</code> and the DragQuestion semantics filter (<a class="req-ref" href="#r-H5P-002"><code>H5P-002</code></a>, <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>)</li>
 <li><span class="task">○ To do:</span> Seed script with SHA-256 verification (<a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>). <strong>Needs the <code>.h5p</code> files</strong>: run <code>tools/seed/fetch-seed-packages.sh</code> where hub-api.h5p.org is reachable</li>
 <li><span class="task">○ To do:</span> <code>PrismaContentUserDataStorage</code> (<a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a>); <code>HvlPermissionSystem</code> with a table test (<a class="req-ref" href="#r-H5P-006"><code>H5P-006</code></a>)</li>
@@ -5080,6 +5136,8 @@ inventory, tests with service containers, traceability, spec site, H5P boot chec
 <p>Effort: high, because this is security-critical. Public Feide and Canvas values are in <code>docs/reference/</code>; <strong>HVL&#39;s own client IDs, realm, redirect URIs and TeCopp instance</strong> are still needed (Q3, Q4).</p>
 <ul>
 <li><span class="task">○ To do:</span> Mock OIDC provider and mock LTI platform in <code>tools/mock-platform/</code> for tests</li>
+<li><span class="task">○ To do:</span> Define the stable HMAC key for <code>Identity.subjectHash</code> and <code>AuthAuditEvent.ipHash</code> (env.ts,
+<code>.env.example</code>, DATA-INVENTORY &quot;Pseudonymous (stable key)&quot;), including its rotation</li>
 <li><span class="task">○ To do:</span> Feide RP, role mapping, sessions, data minimisation, author linking (<a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>…<a class="req-ref" href="#r-AUTH-005"><code>AUTH-005</code></a>)</li>
 <li><span class="task">○ To do:</span> <code>LtiProviderFactory</code>, <code>PrismaLtiDatabaseManager</code>, ltik transport, role mapping (<a class="req-ref" href="#r-LTI-001"><code>LTI-001</code></a>…<a class="req-ref" href="#r-LTI-004"><code>LTI-004</code></a>)</li>
 <li><span class="task">○ To do:</span> Deep Linking picker, resource-link launch, course copy (<a class="req-ref" href="#r-LTI-005"><code>LTI-005</code></a>…<a class="req-ref" href="#r-LTI-007"><code>LTI-007</code></a>, <a class="req-ref" href="#r-PROD-005"><code>PROD-005</code></a>); <code>HvlUrlGenerator</code> (<a class="req-ref" href="#r-H5P-007"><code>H5P-007</code></a>)</li>
@@ -5202,17 +5260,17 @@ exactly what HVL still has to supply or confirm.</p>
 <div class="table-wrap" role="region" aria-label="Table 1, Status" tabindex="0"><table><thead><tr>
 <th scope="col">#</th><th scope="col">Original we still need from HVL</th><th scope="col">What is here now</th><th scope="col">Status</th><th scope="col">Needed by</th></tr>
 </thead><tbody><tr>
-<td>1</td><td><code>hvl-designmanual-og-logo.zip</code>: design manual PDF and official logo files (HVL press room, <a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext">hvl-visual-identity.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the manual&#39;s palette (PMS/CMYK/RGB/HEX), typefaces, logo variants and rules, contrast for every colour, and proposed tokens. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/tools/contrast.py" rel="noopener" class="ext">tools/contrast.py<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> recomputes all ratios. <strong>No logo artwork.</strong></td><td>Derived; HVL to confirm values and supply logo files</td><td>S4</td></tr>
+<td>1</td><td><code>hvl-designmanual-og-logo.zip</code>: design manual PDF and official logo files (HVL press room, <a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-visual-identity.md" rel="noopener" class="ext">hvl-visual-identity.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the manual&#39;s palette (PMS/CMYK/RGB/HEX), typefaces, logo variants and rules, contrast for every colour, and proposed tokens. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/tools/contrast.py" rel="noopener" class="ext">tools/contrast.py<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> recomputes all ratios. <strong>No logo artwork.</strong></td><td>Derived; HVL to confirm values and supply logo files</td><td>S4</td></tr>
 <tr>
-<td>2</td><td><code>hvl-modellen-for-laeringsdesign.pdf</code> (ALU, <em>Faggruppa for digital læringsdesign</em>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext">hvl-laeringsdesign-model.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: what HVL has published about «HVL læringsdesign» (annual report 2024 p. 23, read directly; Møgelvang &amp; Isaksen 2025) and the phase vocabulary HVL uses. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/phases.yaml" rel="noopener" class="ext">proposals/phases.yaml<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed <code>content/laeringsdesign/phases.yaml</code></td><td>Partly found; ALU to confirm labels</td><td>S5</td></tr>
+<td>2</td><td><code>hvl-modellen-for-laeringsdesign.pdf</code> (ALU, <em>Faggruppa for digital læringsdesign</em>)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-laeringsdesign-model.md" rel="noopener" class="ext">hvl-laeringsdesign-model.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: what HVL has published about «HVL læringsdesign» (annual report 2024 p. 23, read directly; Møgelvang &amp; Isaksen 2025) and the phase vocabulary HVL uses. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/proposals/phases.yaml" rel="noopener" class="ext">proposals/phases.yaml<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed <code>content/laeringsdesign/phases.yaml</code></td><td>Partly found; ALU to confirm labels</td><td>S5</td></tr>
 <tr>
-<td>3</td><td><code>hvl-pedagogisk-mappe-retningslinjer.pdf</code> (ALU)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext">hvl-pedagogisk-mappe-criteria.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the 2025 merit criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), the three-part portfolio, limits, and the national basis. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext">proposals/mappe-template.nn.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed export template. No public PDF of this name was found; HVL publishes the guidance as web pages</td><td>Derived; ALU to confirm</td><td>S5</td></tr>
+<td>3</td><td><code>hvl-pedagogisk-mappe-retningslinjer.pdf</code> (ALU)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/hvl-pedagogisk-mappe-criteria.md" rel="noopener" class="ext">hvl-pedagogisk-mappe-criteria.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: the 2025 merit criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), the three-part portfolio, limits, and the national basis. <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/proposals/mappe-template.nn.md" rel="noopener" class="ext">proposals/mappe-template.nn.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is the proposed export template. No public PDF of this name was found; HVL publishes the guidance as web pages</td><td>Derived; ALU to confirm</td><td>S5</td></tr>
 <tr>
-<td>4</td><td><code>feide-oidc-config.example.json</code> from the Feide Customer Portal</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-oidc-config.example.json" rel="noopener" class="ext">feide-oidc-config.example.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with public endpoint values and placeholders for HVL&#39;s client, plus <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/feide-values.md" rel="noopener" class="ext">feide-values.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> (evidence table)</td><td>Public values high confidence; HVL client values pending</td><td>S3</td></tr>
+<td>4</td><td><code>feide-oidc-config.example.json</code> from the Feide Customer Portal</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/feide-oidc-config.example.json" rel="noopener" class="ext">feide-oidc-config.example.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with public endpoint values and placeholders for HVL&#39;s client, plus <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/feide-values.md" rel="noopener" class="ext">feide-values.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> (evidence table)</td><td>Public values high confidence; HVL client values pending</td><td>S3</td></tr>
 <tr>
-<td>5</td><td><code>canvas-lti13-developer-key.json</code> exported by TeCopp, plus HVL&#39;s client and deployment IDs</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/canvas-lti13-developer-key.json" rel="noopener" class="ext">canvas-lti13-developer-key.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>, paste-ready (<code>privacy_level</code> <code>anonymous</code>; scopes AGS score, line-item read, NRPS read; Deep Linking placements), and <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/canvas-platform-values.md" rel="noopener" class="ext">canvas-platform-values.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with every platform value cited to Instructure&#39;s docs and source at a fixed commit</td><td>Public values high confidence; HVL instance values pending</td><td>S3</td></tr>
+<td>5</td><td><code>canvas-lti13-developer-key.json</code> exported by TeCopp, plus HVL&#39;s client and deployment IDs</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/canvas-lti13-developer-key.json" rel="noopener" class="ext">canvas-lti13-developer-key.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>, paste-ready (<code>privacy_level</code> <code>anonymous</code>; scopes AGS score, line-item read, NRPS read; Deep Linking placements), and <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/canvas-platform-values.md" rel="noopener" class="ext">canvas-platform-values.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with every platform value cited to Instructure&#39;s docs and source at a fixed commit</td><td>Public values high confidence; HVL instance values pending</td><td>S3</td></tr>
 <tr>
-<td>6</td><td><code>h5p-core-1.28-seed-packages/</code> (one verified <code>.h5p</code> per content type)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/ccr-07f63266-6cere5/docs/reference/h5p-core-1.28-seed-packages/README.md" rel="noopener" class="ext">h5p-core-1.28-seed-packages/README.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: latest versions, the exact Hub request, three known h5p-server 10.0.4 incompatibilities, per-file hashes of core <code>1.28.0</code>. <strong>No <code>.h5p</code> files yet</strong>: hub-api.h5p.org is blocked here. Run <code>tools/seed/fetch-seed-packages.sh</code> where it is reachable</td><td>Blocked by network policy; script ready</td><td>S2</td></tr>
+<td>6</td><td><code>h5p-core-1.28-seed-packages/</code> (one verified <code>.h5p</code> per content type)</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/h5p-core-1.28-seed-packages/README.md" rel="noopener" class="ext">h5p-core-1.28-seed-packages/README.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>: latest versions, the exact Hub request, three known h5p-server 10.0.4 incompatibilities, per-file hashes of core <code>1.28.0</code>. <strong>No <code>.h5p</code> files yet</strong>: hub-api.h5p.org is blocked here. Run <code>tools/seed/fetch-seed-packages.sh</code> where it is reachable</td><td>Blocked by network policy; script ready</td><td>S2</td></tr>
 </tbody></table></div>
 <h3 id="reference--how-to-read-the-derived-files" tabindex="-1">How to read the derived files</h3>
 <ul>
@@ -5402,7 +5460,8 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
  *   - A11Y: focus moves to the heading of the view or target the reader navigated to (WCAG 2.4.3),
  *     and filter results are announced through a polite live region (WCAG 4.1.3).
  * Collaborators: inlined by buildSpecSite.mjs into the page produced by pageTemplate.mjs.
- * Tests: Session 1 adds a Playwright smoke test of routing and filtering.
+ * Tests: none automated yet; routing, focus and filtering were checked with Playwright and axe in S0.
+ *        An automated browser test arrives with the S4 accessibility suite (UD-030).
  */
 (function () {
   'use strict';

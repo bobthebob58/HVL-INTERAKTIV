@@ -10,7 +10,7 @@
  *   - Deterministic: the same repository content produces byte-identical output.
  * Collaborators: specParser.mjs, markdownRenderer.mjs, overviewView.mjs, pageTemplate.mjs,
  *   spec-site.base.css, spec-site.components.css, spec-site.client.js.
- * Tests: Session 1 adds tools/spec-site/buildSpecSite.test.mjs (runs a build and checks landmarks).
+ * Tests: tools/spec-site/test/specSite.test.mjs (deterministic output and landmarks).
  *
  * Usage:
  *   node tools/spec-site/buildSpecSite.mjs                      write docs/site/index.html
@@ -21,7 +21,6 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execFileSync } from 'node:child_process';
 import { DOCUMENTS, readDocuments, extractRequirements, readTraceStatus } from './specParser.mjs';
 import { createRenderer } from './markdownRenderer.mjs';
 import { overviewView } from './overviewView.mjs';
@@ -30,24 +29,9 @@ import { explorerView, documentView, page, wrapDocument } from './pageTemplate.m
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '../..');
 const OUTPUT = 'docs/site/index.html';
-const FALLBACK_REPO_URL = 'https://github.com/bobthebob58/HVL-INTERAKTIV/blob/main';
-
-/** Builds the GitHub "blob" base URL for files the site links to but does not display. */
-function repoBlobUrl() {
-  try {
-    const git = (...a) => execFileSync('git', ['-C', ROOT, ...a], { encoding: 'utf8' }).trim();
-    const remote = git('remote', 'get-url', 'origin')
-      .replace(/\.git$/, '')
-      .replace(/^git@github\.com:/, 'https://github.com/');
-    // WHY: strip credentials a proxy may have injected into the remote URL.
-    const clean = remote
-      .replace(/^https:\/\/[^@/]+@/, 'https://')
-      .replace(/^http:\/\/[^/]+\/git\//, 'https://github.com/');
-    return `${clean}/blob/${git('rev-parse', '--abbrev-ref', 'HEAD')}`;
-  } catch {
-    return FALLBACK_REPO_URL;
-  }
-}
+// WHY: a fixed URL keeps the output identical on every checkout (CI runs on a detached HEAD or another
+// branch). GitHub resolves `blob/HEAD/<path>` to the repository's default branch.
+const REPO_BLOB_URL = 'https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD';
 
 /** Groups navigation links: getting started, the six specs, and reviewer material. */
 function navigation() {
@@ -75,7 +59,7 @@ function main() {
     status: status.get(r.id),
     docNav: docs.get(r.docKey).nav,
   }));
-  const render = createRenderer({ knownIds: new Set(requirements.map((r) => r.id)), repoUrl: repoBlobUrl() });
+  const render = createRenderer({ knownIds: new Set(requirements.map((r) => r.id)), repoUrl: REPO_BLOB_URL });
 
   for (const r of requirements)
     r.html = render(r.body, r.docKey, docs.get(r.docKey).path, 3, `${r.id} ${r.title}`);

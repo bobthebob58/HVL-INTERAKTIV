@@ -82,6 +82,16 @@ describe('[DATA-002] learner tables hold pseudonyms only', () => {
     ]);
   });
 
+  it('[DATA-002] does not mistake ordinary words that contain "nin" for a national ID number', () => {
+    const schema = parseModels(
+      'model XapiStatement {\n  learningPhase String\n  runningScore Int\n  ninHash String\n  learnerNin String\n}',
+    );
+    expect(learnerTablePii(schema).map((p) => p.split(' ')[0])).toEqual([
+      'XapiStatement.ninHash',
+      'XapiStatement.learnerNin',
+    ]);
+  });
+
   it('[DATA-002] the real schema has no such column except the encrypted AGS subject', () => {
     const schema = readSchemaModels(ROOT);
     expect(learnerTablePii(schema)).toEqual([]);

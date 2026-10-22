@@ -6,7 +6,8 @@
  * Spec: NFR-005
  * Invariants:
  *   - Only production dependencies count (`npm query ':not(.dev)'`); our own workspaces are skipped.
- *   - SPDX `OR` passes if any branch is allowed; `AND` passes only if every part is allowed.
+ *   - SPDX `OR` passes if any branch is allowed; `AND` passes only if every part is allowed; AND binds
+ *     tighter than OR and parentheses group, as in the SPDX specification. Malformed expressions fail.
  *   - A package without usable metadata fails unless REVIEWED lists it with the licence a person read.
  * Collaborators: npm (query), CI (`npm run check:licences`).
  * Tests: tools/dependency-check/test/checkLicences.test.mjs
@@ -45,15 +46,56 @@ export const REVIEWED = {
 };
 
 /**
- * Decides whether an SPDX expression is allowed.
- * @param {string} expression - e.g. "MIT", "(MIT OR Apache-2.0)", "MIT AND BSD-3-Clause".
- * @returns {boolean} True when the expression can be used under GPL-3.0-or-later.
+ * Decides whether an SPDX expression is allowed, honouring precedence: AND binds tighter than OR,
+ * parentheses group, and `X WITH exception` is as allowed as `X` (exceptions only add permissions).
+ * @param {string} expression - e.g. "MIT", "(MIT OR Apache-2.0)", "(MIT OR GPL-2.0-only) AND BSD-3-Clause".
+ * @returns {boolean} True when the expression can be used under GPL-3.0-or-later; false when it is malformed.
  */
 export function isAllowed(expression) {
-  const clean = expression.replace(/[()]/g, ' ').trim();
-  return clean
-    .split(/\s+OR\s+/)
-    .some((branch) => branch.split(/\s+AND\s+/).every((id) => ALLOWED.has(id.trim())));
+  const tokens = expression.match(/\(|\)|[^\s()]+/g) ?? [];
+  let at = 0;
+  const peek = () => tokens[at];
+  const next = () => tokens[at++];
+  const atom = () => {
+    if (peek() === '(') {
+      next();
+      const value = orExpr();
+      if (next() !== ')') throw new Error('unbalanced parentheses');
+      return value;
+    }
+    const id = next();
+    if (!id || ['AND', 'OR', 'WITH', ')'].includes(id)) throw new Error('licence identifier expected');
+    if (peek() === 'WITH') {
+      next();
+      if (!next()) throw new Error('exception identifier expected');
+    }
+    return ALLOWED.has(id);
+  };
+  // WHY: the right-hand side is always parsed (not short-circuited), so every token is consumed and checked.
+  const andExpr = () => {
+    let value = atom();
+    while (peek() === 'AND') {
+      next();
+      const right = atom();
+      value = value && right;
+    }
+    return value;
+  };
+  const orExpr = () => {
+    let value = andExpr();
+    while (peek() === 'OR') {
+      next();
+      const right = andExpr();
+      value = value || right;
+    }
+    return value;
+  };
+  try {
+    const value = orExpr();
+    return at === tokens.length && value;
+  } catch {
+    return false;
+  }
 }
 
 /**

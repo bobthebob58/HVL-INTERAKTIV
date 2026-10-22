@@ -9,7 +9,7 @@
  *     and saving `undefined` deletes the key.
  *   - No personal data is stored here (H5P keeps only settings and the public content-type list).
  * Collaborators: `redis` client (shared with RedisLockProvider), ../H5pConfigFactory.ts, H5PEditor (S2).
- * Tests: apps/server/test/h5p/storage.int.test.ts
+ * Tests: apps/server/test/h5p/sharedState.int.test.ts
  */
 import type { IKeyValueStorage } from '@lumieducation/h5p-server';
 import type { RedisClientType } from 'redis';

@@ -9,7 +9,7 @@
  *     site and the traceability matrix always agree on what a requirement is.
  *   - Pure functions except readDocuments/readTraceStatus, which only read files.
  * Collaborators: buildSpecSite.mjs (caller), markdownRenderer.mjs (consumes slugs and docs).
- * Tests: Session 1 adds tools/spec-site/specParser.test.mjs.
+ * Tests: tools/spec-site/test/specSite.test.mjs (requirement extraction, anchors).
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';

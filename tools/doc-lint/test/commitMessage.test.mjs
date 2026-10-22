@@ -34,7 +34,16 @@ describe('[DOC-011] commit messages', () => {
   it('[DOC-011] rejects a header that is not a Conventional Commit', () => {
     expect(checkCommitMessage('Added stuff', IDS)).toHaveLength(1);
     expect(checkCommitMessage('feature: add stuff', IDS)).toHaveLength(1);
-    expect(checkCommitMessage(`chore: ${'x'.repeat(100)}`, IDS)).toHaveLength(1);
+    expect(checkCommitMessage(`chore: ${'x'.repeat(100)}`, IDS)).toContain(
+      'header is 107 characters; the limit is 100',
+    );
+  });
+
+  it('[DOC-011] limits the whole header, type and scope included, to 100 characters', () => {
+    expect(checkCommitMessage(`chore(server): ${'x'.repeat(85)}`, IDS)).toEqual([]);
+    expect(checkCommitMessage(`chore(server): ${'x'.repeat(86)}`, IDS)).toContain(
+      'header is 101 characters; the limit is 100',
+    );
   });
 
   it('[DOC-011] requires a Refs footer on feat and fix', () => {

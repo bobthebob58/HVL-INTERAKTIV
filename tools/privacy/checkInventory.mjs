@@ -22,8 +22,14 @@ import { readSchemaModels } from './prismaSchema.mjs';
 export const INVENTORY = 'docs/privacy/DATA-INVENTORY.md';
 /** Tables that hold learner data and therefore must stay free of direct identifiers (DATA-002). */
 export const LEARNER_TABLES = ['H5PUserData', 'XapiStatement', 'GradeSyncJob', 'Identity'];
-/** Column names that would store a direct identifier. */
-export const PII_COLUMN = /(name|e-?mail|feide|nin|personnummer|fodselsnummer|^sub$|ltisub)/i;
+/** Words that mark a column storing a direct identifier, matched anywhere in the name, in any case. */
+export const PII_WORDS = /(name|e-?mail|feide|personnummer|fodselsnummer|ltisub)/i;
+/**
+ * Short identifiers that must be a whole camelCase word: `sub`, and `nin` (national ID number) as in
+ * `nin`, `ninHash` or `learnerNin`.
+ */
+// WHY: case-sensitive on purpose, so `learningPhase` or `runningScore` are not read as containing `nin`.
+export const PII_TOKENS = /^sub$|^nin$|^nin[A-Z_]|[a-z]Nin$/;
 const ALLOWED_PII = new Set(['GradeSyncJob.ltiSubEncrypted']);
 
 /**
@@ -87,7 +93,9 @@ export function compareInventory(schema, inventory) {
 export function learnerTablePii(schema) {
   return LEARNER_TABLES.flatMap((model) =>
     (schema.get(model) ?? [])
-      .filter((f) => PII_COLUMN.test(f.name) && !ALLOWED_PII.has(`${model}.${f.name}`))
+      .filter(
+        (f) => (PII_WORDS.test(f.name) || PII_TOKENS.test(f.name)) && !ALLOWED_PII.has(`${model}.${f.name}`),
+      )
       .map(
         (f) => `${model}.${f.name} looks like personal data; learner tables store pseudonyms only (DATA-002)`,
       ),

@@ -11,7 +11,8 @@
  *   - A11Y: focus moves to the heading of the view or target the reader navigated to (WCAG 2.4.3),
  *     and filter results are announced through a polite live region (WCAG 4.1.3).
  * Collaborators: inlined by buildSpecSite.mjs into the page produced by pageTemplate.mjs.
- * Tests: Session 1 adds a Playwright smoke test of routing and filtering.
+ * Tests: none automated yet; routing, focus and filtering were checked with Playwright and axe in S0.
+ *        An automated browser test arrives with the S4 accessibility suite (UD-030).
  */
 (function () {
   'use strict';

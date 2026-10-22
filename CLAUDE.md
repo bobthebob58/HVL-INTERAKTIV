@@ -46,9 +46,9 @@
 
 ## 3. COMMANDS
 
-- Build: `npm run build` · Typecheck: `npm run typecheck` · Lint and format: `npm run lint && npm run format:check`
+- Typecheck: `npm run typecheck` · Lint and format: `npm run lint && npm run format:check` · Build: `npm run build` (from S4, with `apps/web`)
 - Test one file: `npx vitest run <path>` · Tests for one requirement: `npx vitest run -t "SEC-001"`
-- Accessibility: `npm run test:a11y` · E2E: `npm run test:e2e`
+- Accessibility: `npm run test:a11y` (from S4) · E2E: `npm run test:e2e` (from S3)
 - Traceability: `npm run spec:trace -- --check --done-through=S1` · Docs: `npm run doc:lint`
 - Dependencies: `npm run check:pins && npm run check:licences && npm run check:audit` · Privacy: `npm run privacy:inventory-check`
 - H5P client files: `npm run h5p:fetch-core` · H5P boot check: `npm run boot-check --workspace apps/server`

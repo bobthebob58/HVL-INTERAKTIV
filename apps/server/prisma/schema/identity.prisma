@@ -27,7 +27,8 @@ model User {
   acknowledgements ValidationAcknowledgement[]
 }
 
-/// One way a user logs in. `subjectHash` is an HMAC of the Feide ID or of `iss|sub`, never the raw value.
+/// One way a user logs in. `subjectHash` is an HMAC of the Feide ID or of `iss|sub`, never the raw value;
+/// its key is a stable secret defined with the S3 authentication code (see DATA-INVENTORY.md).
 model Identity {
   id          String           @id @default(uuid(7)) @db.Uuid
   userId      String           @db.Uuid

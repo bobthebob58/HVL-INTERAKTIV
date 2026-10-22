@@ -8,18 +8,22 @@
  * Invariants:
  *   - Keys are matched case-insensitively, ignoring `-` and `_` (so `ID_Token` = `idToken`).
  *   - Keys starting with `feide` are redacted whatever follows (`feideId`, `feide_affiliation`).
- *   - In every string value, `ltik=` query parameters and `Bearer` credentials are masked too.
+ *   - In every string value, `ltik=` parameters, `Bearer`/`Basic` credentials, JWTs, passwords in URLs and
+ *     e-mail addresses are masked too (`redactText`).
  *   - Input objects are never mutated; cycles are replaced by "[Circular]" instead of recursing forever.
- * Collaborators: ./logger.ts (applies it to every log record and message).
+ *   - Prisma errors, wherever they appear, are reduced to their codes (./prismaErrorSummary.ts).
+ * Collaborators: ./logger.ts (applies it to every log record and message), ./prismaErrorSummary.ts.
  * Tests: apps/server/test/logging/logger.test.ts
  */
+import { isPrismaError, summarisePrismaError } from './prismaErrorSummary.js';
 
 /** Replacement written in place of a redacted value. */
 export const REDACTED = '[Redacted]';
 
 /**
  * Key names whose values are always removed (normalised: lower case, no `-` or `_`).
- * The first nine come from DATA-009; the rest are the same data under other common names.
+ * The first eight come from DATA-009 (its `feide*` entry is matched by prefix in `isSensitiveKey`);
+ * the rest are the same data under other common names.
  */
 export const SENSITIVE_KEYS: ReadonlySet<string> = new Set([
   'authorization',
@@ -44,6 +48,13 @@ export const SENSITIVE_KEYS: ReadonlySet<string> = new Set([
   'displayname',
   'mail',
   'ltisub',
+  'subject',
+  'token',
+  'jwt',
+  'apikey',
+  'xapikey',
+  'clientassertion',
+  'credentials',
   'nin',
   'personnummer',
   'fodselsnummer',
@@ -61,15 +72,24 @@ export function isSensitiveKey(key: string): boolean {
   return SENSITIVE_KEYS.has(k) || k.startsWith('feide');
 }
 
+/** Patterns masked in free text, in order: URL passwords before e-mail addresses (both contain `@`). */
+const TEXT_PATTERNS: [RegExp, string][] = [
+  [/\b(ltik=)[^&#\s"']+/gi, `$1${REDACTED}`],
+  // WHY: HTTP authentication schemes are case-insensitive (RFC 9110 §11.1).
+  [/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+/gi, `$1 ${REDACTED}`],
+  [/\beyJ[\w-]+\.[\w-]+\.[\w-]*/g, REDACTED],
+  [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/:@]*:[^\s/@]*@/gi, `$1${REDACTED}@`],
+  [/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, REDACTED],
+];
+
 /**
- * Masks credentials embedded in free text, such as a URL with `?ltik=` or a copied header.
+ * Masks credentials and identifiers embedded in free text, such as a URL with `?ltik=`, a copied
+ * header, a JWT, `redis://user:password@host` or an e-mail address in an error message.
  * @param text - Any string that may be logged.
- * @returns The text with token values replaced.
+ * @returns The text with those values replaced.
  */
 export function redactText(text: string): string {
-  return text
-    .replace(/([?&;]ltik=)[^&#\s"']+/gi, `$1${REDACTED}`)
-    .replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+/g, `$1 ${REDACTED}`);
+  return TEXT_PATTERNS.reduce((out, [pattern, replacement]) => out.replace(pattern, replacement), text);
 }
 
 /**
@@ -83,13 +103,17 @@ export function redactPersonalData(value: unknown, seen: WeakSet<object> = new W
   if (value === null || typeof value !== 'object') return value;
   if (seen.has(value)) return '[Circular]';
   if (Buffer.isBuffer(value) || value instanceof Date) return value;
+  // PRIVACY: Prisma renders query values into message and stack; keep only its codes.
+  if (isPrismaError(value)) return summarisePrismaError(value);
   // WHY: only objects on the current path count as visited, so a shared (non-cyclic) object is kept.
   seen.add(value);
   try {
     if (Array.isArray(value)) return value.map((item) => redactPersonalData(item, seen));
+    // WHY: an Error's own `name` would be blanked as a sensitive key; its class name goes to `type` instead.
+    const { name: _name, ...own } = value as Error & Record<string, unknown>;
     const source =
       value instanceof Error
-        ? { ...value, type: value.name, message: value.message, stack: value.stack }
+        ? { ...own, type: value.name, message: value.message, stack: value.stack }
         : (value as Record<string, unknown>);
     return Object.fromEntries(
       Object.entries(source).map(([key, v]) => [

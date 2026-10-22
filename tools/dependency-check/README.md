@@ -29,7 +29,9 @@ risk is acceptable, mitigation, expiry), then add one entry per advisory to `aud
   "expires": "2027-01-31", "mitigation": "Why the vulnerable path is not reachable, or what blocks it." }
 ```
 
-The check fails again on the expiry date, and also when an exception is no longer needed.
+An exception is valid up to and including its `expires` date; the check fails from the next day, and also
+when an exception is no longer needed. If `npm audit` cannot run (for example, the registry is unreachable),
+the check fails with exit code 2 instead of reporting zero advisories.
 A transitive advisory with a compatible fixed release is fixed with an exact `overrides` entry in the
 root `package.json` instead (for example `underscore` 1.13.8, see D-030).
 

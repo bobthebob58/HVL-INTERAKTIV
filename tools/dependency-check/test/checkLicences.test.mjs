@@ -33,6 +33,18 @@ describe('[NFR-005] licence allow-list', () => {
     expect(isAllowed('(BUSL-1.1 OR SSPL-1.0)')).toBe(false);
   });
 
+  it('[NFR-005] lets AND bind tighter than OR and honours parentheses', () => {
+    expect(isAllowed('(MIT OR GPL-2.0-only) AND BSD-4-Clause')).toBe(false);
+    expect(isAllowed('MIT OR GPL-2.0-only AND BSD-4-Clause')).toBe(true);
+    expect(isAllowed('BSD-4-Clause AND (MIT OR Apache-2.0)')).toBe(false);
+    expect(isAllowed('GPL-3.0-or-later WITH Classpath-exception-2.0')).toBe(true);
+  });
+
+  it('[NFR-005] rejects malformed expressions', () => {
+    for (const bad of ['', '(MIT', 'MIT AND', 'OR MIT', 'MIT WITH', 'MIT Apache-2.0'])
+      expect(isAllowed(bad), bad).toBe(false);
+  });
+
   it('[NFR-005] reads legacy licence objects and reviewed overrides', () => {
     expect(licenceOf({ name: 'a', version: '1.0.0', license: { type: 'MIT' } })).toBe('MIT');
     expect(licenceOf({ name: 'esprima', version: '1.2.5', licenses: [{ type: 'BSD' }] })).toBe(

@@ -43,6 +43,8 @@ export function checkCommitMessage(message, ids) {
   if (/^(Merge|Revert) /.test(header)) return [];
   const problems = [];
   const match = HEADER.exec(header);
+  // WHY: the regex caps only the summary; the whole header (type and scope included) has the 100-character limit.
+  if (header.length > 100) problems.push(`header is ${header.length} characters; the limit is 100`);
   if (!match)
     problems.push(`header must look like "type(scope): summary" (types: ${TYPES.join(', ')}), max 100 chars`);
   const refsLine = lines.find((l) => /^Refs:/.test(l));

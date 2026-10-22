@@ -9,7 +9,7 @@
  *   - The database row is the source of truth for which files exist; S3 holds only their bytes.
  *   - IDs that are not UUIDs are treated as "not found" instead of reaching the database.
  * Collaborators: ./S3ContentFileStore.ts, ./contentUsage.ts, ../../infra/prismaClient.ts, H5PEditor (S2).
- * Tests: apps/server/test/h5p/storage.int.test.ts
+ * Tests: apps/server/test/h5p/contentStorage.int.test.ts
  */
 import type { Readable } from 'node:stream';
 import {

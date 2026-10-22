@@ -90,8 +90,9 @@ model LtiPlacement {
   @@index([contentId])
 }
 
-/// One score waiting to be sent to Canvas (AGS). PRIVACY: `ltiSubEncrypted` is the only raw learner ID
-/// in the database; it is set to null 30 days after a successful sync (DATA-002).
+/// One score waiting to be sent to Canvas (AGS). PRIVACY: `ltiSubEncrypted` is the only raw learner ID kept
+/// longer than 24 hours (LtiIdToken.claims holds `sub` for 24 h); it is set to null 30 days after a successful
+/// sync (DATA-002).
 model GradeSyncJob {
   id              String          @id @default(uuid(7)) @db.Uuid
   placementId     String          @db.Uuid

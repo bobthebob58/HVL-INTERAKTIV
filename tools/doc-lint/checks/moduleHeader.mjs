@@ -8,9 +8,12 @@
  *   - Source files need a summary line plus `Why:`, `Spec:` and `Tests:` labels.
  *   - Test files need a summary line plus `Spec:`; their test titles carry the rest (DOC-006).
  *   - Every requirement ID named on a `Spec:` line must exist in the specs.
+ *   - Every repository path named on the `Tests:` line must exist, so the pointer can be followed.
  * Collaborators: ../lib/repo.mjs, ../docLint.mjs.
  * Tests: tools/doc-lint/test/docLint.headers.test.mjs
  */
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { isTestFile, read, ID_PATTERN } from '../lib/repo.mjs';
 
 export const id = 'DOC-001';
@@ -67,6 +70,22 @@ export function run({ root, files, ids }) {
     const named = specLine.match(ID_PATTERN) ?? [];
     if (specLine && named.length === 0) say('"Spec:" line names no requirement ID');
     for (const ref of named.filter((r) => !ids.has(r))) say(`"Spec:" names unknown requirement ${ref}`);
+    for (const path of testPaths(lines).filter((p) => !existsSync(join(root, p)))) {
+      say(`"Tests:" names a file that does not exist: ${path}`);
+    }
   }
   return problems;
+}
+
+/**
+ * Repository paths named on the `Tests:` line and its indented continuation lines.
+ * @param {string[]} lines - Header lines from `headerLines`.
+ * @returns {string[]} Paths such as `apps/server/test/x.test.ts`.
+ */
+export function testPaths(lines) {
+  const start = lines.findIndex((l) => /^\s*Tests:/.test(l));
+  if (start < 0) return [];
+  const end = lines.findIndex((l, i) => i > start && (l.trim() === '' || /^\s*[A-Z][\w-]*:/.test(l)));
+  const text = lines.slice(start, end < 0 ? undefined : end).join(' ');
+  return text.match(/\b(?:apps|packages|tools|content|docs)\/[\w./-]*\w\.[a-z]+\b/g) ?? [];
 }

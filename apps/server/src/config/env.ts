@@ -8,11 +8,14 @@
  *   - Every variable read anywhere in the server is declared here, one per line as `NAME: z…`
  *     (doc-lint compares this list with .env.example).
  *   - Error messages name variables, never their values (values can be secrets).
- * Collaborators: apps/server/.env.example, ../privacy/pseudonymSecrets.ts, ../h5p/H5pConfigFactory.ts.
+ *   - With NODE_ENV=production, the checks in ./productionChecks.ts also apply.
+ * Collaborators: apps/server/.env.example, ./productionChecks.ts, ../privacy/pseudonymSecrets.ts,
+ *   ../h5p/H5pConfigFactory.ts.
  * Tests: apps/server/test/config/env.test.ts
  */
 import { z } from 'zod';
 import { parsePseudonymSecrets } from '../privacy/pseudonymSecrets.js';
+import { productionProblems } from './productionChecks.js';
 
 /** The schema of every environment variable the server reads. */
 export const envSchema = z.object({
@@ -61,17 +64,41 @@ export class InvalidEnvironmentError extends Error {
   }
 }
 
+const problemsOf = (error: z.ZodError): string[] =>
+  error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`);
+
+// WHY: an empty string (e.g. `S3_ENDPOINT=` in .env) means "not set", so defaults and optionals apply.
+const withoutEmpty = (source: NodeJS.ProcessEnv) =>
+  Object.fromEntries(Object.entries(source).filter(([, v]) => v !== ''));
+
 /**
  * Validates and parses the environment.
  * @param source - Variables to read; defaults to `process.env`.
+ * @param now - The current time, for the production check of this year's pseudonym secret.
  * @returns The typed configuration.
  * @throws InvalidEnvironmentError listing every invalid or missing variable.
  */
-export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  // WHY: an empty string (e.g. `S3_ENDPOINT=` in .env) means "not set", so defaults and optionals apply.
-  const cleaned = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== ''));
-  const result = envSchema.safeParse(cleaned);
-  if (result.success) return result.data;
-  const problems = result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`);
-  throw new InvalidEnvironmentError(problems);
+export function loadEnv(source: NodeJS.ProcessEnv = process.env, now: Date = new Date()): Env {
+  const result = envSchema.safeParse(withoutEmpty(source));
+  if (!result.success) throw new InvalidEnvironmentError(problemsOf(result.error));
+  const problems = result.data.NODE_ENV === 'production' ? productionProblems(result.data, now) : [];
+  if (problems.length > 0) throw new InvalidEnvironmentError(problems);
+  return result.data;
+}
+
+/**
+ * Validates only some variables, for tools that need no services (e.g. the H5P boot check).
+ * @param keys - Variables to read; all others are ignored, even when missing.
+ * @param source - Variables to read from; defaults to `process.env`.
+ * @returns The typed subset of the configuration.
+ * @throws InvalidEnvironmentError listing every invalid variable among `keys`.
+ */
+export function loadEnvPart<K extends keyof Env>(
+  keys: readonly K[],
+  source: NodeJS.ProcessEnv = process.env,
+): Pick<Env, K> {
+  const shape = Object.fromEntries(keys.map((key) => [key, envSchema.shape[key]]));
+  const result = z.object(shape).safeParse(withoutEmpty(source));
+  if (!result.success) throw new InvalidEnvironmentError(problemsOf(result.error));
+  return result.data as unknown as Pick<Env, K>;
 }

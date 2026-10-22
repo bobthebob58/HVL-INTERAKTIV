@@ -91,6 +91,21 @@ describe('[DOC-004] traceability matrix', () => {
     expect(trace(tested, '--check', '--done-through=S1').code).toBe(0);
   });
 
+  it('[DOC-004] counts an ID only when it opens an it() or test() title', () => {
+    const notReally =
+      TEST_HEADER +
+      '// covers [TST-002] one day\n' +
+      testCall('describe', '[TST-002] group only') +
+      testCall('it.skip', '[TST-002] skipped') +
+      testCall('it', '[TST-001] real');
+    const root = makeRepo({ 'tools/w/test/w.test.mjs': notReally });
+    trace(root);
+    const r = trace(root, '--check', '--done-through=S1');
+    expect(r.code).toBe(1);
+    expect(r.out).toContain('TST-002 (MUST, S1) has no test whose title contains [TST-002]');
+    expect(r.out).not.toContain('TST-001 (MUST, S1)');
+  });
+
   it('[DOC-004] ignores the fetched H5P core files', () => {
     const root = makeRepo({
       'apps/server/h5p/core/js/h5p.js': '// TST-404\n',

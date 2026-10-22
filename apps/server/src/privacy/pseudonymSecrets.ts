@@ -6,7 +6,8 @@
  * Spec: DATA-002
  * Invariants:
  *   - Format: `2025=<base64>,2026=<base64>`; the year is the calendar year in which the academic year starts.
- *   - Each secret decodes to at least 32 bytes (the HMAC-SHA256 block-size guidance for keys).
+ *   - Each secret decodes to at least 32 bytes (RFC 2104: at least the 32-byte SHA-256 output length).
+ *   - No two years share a secret: destroying one year's secret must leave no other year linkable.
  *   - Errors never echo the secret value.
  * Collaborators: ../config/env.ts (validates PSEUDONYM_SECRETS), ./deriveLearnerKey.ts.
  * Tests: apps/server/test/privacy/deriveLearnerKey.test.ts
@@ -40,6 +41,9 @@ export function parsePseudonymSecrets(raw: string): PseudonymSecrets {
         throw new Error(`secret for ${year} is shorter than ${MIN_SECRET_BYTES} bytes`);
       }
       if (secrets.has(year)) throw new Error(`year ${year} is listed twice`);
+      const reused = [...secrets].find(([, other]) => other.equals(secret));
+      if (reused)
+        throw new Error(`the secrets for ${reused[0]} and ${year} are the same; each year needs its own`);
       secrets.set(year, secret);
     });
   if (secrets.size === 0) throw new Error('no secrets given');

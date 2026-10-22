@@ -4,7 +4,8 @@
  * Why: lint enforces part of the Documentation Standard automatically (TSDoc on exports, known
  *      TSDoc tags) and keeps style questions out of code review.
  * Spec: NFR-004
- * Collaborators: tsdoc.json (registers the @spec tag), tools/doc-lint (checks ESLint cannot do).
+ * Collaborators: tsdoc.json (declares @spec for TSDoc-aware tools such as editors; ESLint gets the same
+ *   tag through `definedTags` below), tools/doc-lint (checks ESLint cannot do).
  * Tests: run by `npm run lint` in CI.
  */
 import js from '@eslint/js';
@@ -49,13 +50,25 @@ export default tseslint.config(
           contexts: ['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSEnumDeclaration'],
         },
       ],
+      // DOC-002: exported functions name every parameter. Class methods that implement a documented
+      // interface (e.g. Lumi's IContentStorage) rely on that interface's documentation.
+      'jsdoc/require-param': [
+        'error',
+        {
+          checkDestructured: false,
+          contexts: [
+            'ExportNamedDeclaration > FunctionDeclaration',
+            'ExportDefaultDeclaration > FunctionDeclaration',
+          ],
+        },
+      ],
       'jsdoc/check-tag-names': ['error', { definedTags: ['spec'] }],
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', ignoreRestSiblings: true }],
     },
   },
   {
-    files: ['**/test/**/*.ts', '**/*.test.ts'],
-    rules: { 'jsdoc/require-jsdoc': 'off' },
+    files: ['**/test/**/*.{ts,mjs}', '**/*.test.{ts,mjs}'],
+    rules: { 'jsdoc/require-jsdoc': 'off', 'jsdoc/require-param': 'off' },
   },
   {
     // DOC-009: user-facing text in the web app comes from locale files, never literals.

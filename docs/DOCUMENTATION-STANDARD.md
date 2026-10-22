@@ -73,22 +73,23 @@ call order. Add `@spec <ID>` when the symbol directly implements a requirement.
 
 ```ts
 /**
- * Derives the pseudonymous key under which a learner's data is stored.
- *
- * The same person gets different keys in different academic years, and
- * different keys in Feide and Canvas modes, by design (DATA-002).
- *
- * @param source - `feide|<feide-id>` or `lti|<iss>|<sub>`; never persisted.
- * @param academicYear - e.g. `2026` for the year starting 1 August 2026.
- * @returns 64-character lowercase hex HMAC-SHA256.
- * @throws {MissingPseudonymSecretError} if the year's secret has been destroyed by the purge.
- * @spec DATA-002
+ * Derives the learner pseudonym for the academic year that contains `at`.
+ * @param source - Feide or LTI identity of the learner.
+ * @param secrets - Per-year secrets from PSEUDONYM_SECRETS.
+ * @param at - The moment of the event; defaults to now.
+ * @returns The 43-character base64url `learnerKey`.
+ * @throws MissingPseudonymSecretError when the year has no secret.
  */
-export function deriveLearnerKey(source: string, academicYear: number): string { … }
+export function deriveLearnerKey(source: LearnerSource, secrets: PseudonymSecrets, at: Date = new Date()): string { … }
 ```
 
-*Checked by:* `eslint-plugin-jsdoc` (`require-jsdoc` for exports, `require-param`,
-`check-tag-names` with `spec` registered in `tsdoc.json`). TypeDoc builds browsable API docs in CI.
+(From `apps/server/src/privacy/deriveLearnerKey.ts`.)
+
+*Checked by:* `eslint-plugin-jsdoc` (`require-jsdoc` for exported functions, classes, interfaces, types
+and enums; `require-param` for exported functions; `check-tag-names` with `spec` as a defined tag) and
+doc-lint's `export-docs` check (TSDoc on every exported declaration, known `@spec` IDs). Class methods
+that implement a documented interface, such as Lumi's storage interfaces, may rely on that interface's
+documentation. Browsable API docs (TypeDoc) are added with the HTTP API in S2 (D-031).
 
 #### DOC-003 · MUST · S1 · Explain non-obvious code with tagged rationale comments
 Comments explain **why**, never restate **what**. Use one of these tags so reviewers can grep for them:

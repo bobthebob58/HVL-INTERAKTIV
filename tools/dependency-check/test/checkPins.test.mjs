@@ -33,8 +33,12 @@ describe('[SEC-007] exact dependency pins', () => {
     ]);
   });
 
-  it('[SEC-007] rejects nested override objects, which hide ranges', () => {
-    expect(loosePins('package.json', { overrides: { a: { b: '^1.0.0' } } })).toHaveLength(1);
+  it('[SEC-007] checks every leaf of overrides scoped to a parent package', () => {
+    expect(loosePins('package.json', { overrides: { parent: { express: '4.22.3' } } })).toEqual([]);
+    expect(loosePins('package.json', { overrides: { a: { b: '^1.0.0', c: { d: '~2.0.0' } } } })).toEqual([
+      'package.json: overrides.a.b is ""^1.0.0""; pin an exact version',
+      'package.json: overrides.a.c.d is ""~2.0.0""; pin an exact version',
+    ]);
   });
 
   it('[SEC-007] passes on this repository', () => {

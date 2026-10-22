@@ -6,12 +6,14 @@
  * Spec: H5P-004, SEC-005
  * Invariants:
  *   - A file name is relative, uses `/` only, and has no empty, `.` or `..` segment and no control characters.
- *   - `limitedUpload` aborts the upload as soon as more than `maxBytes` have streamed through.
+ *   - `limitedUpload` aborts the upload as soon as more than `maxBytes` have streamed through, and destroys
+ *     the source stream on any failure.
  * Collaborators: ./S3ContentFileStore.ts, ./S3TemporaryFileStorage.ts.
- * Tests: apps/server/test/h5p/storage.int.test.ts, apps/server/test/h5p/s3Objects.test.ts
+ * Tests: apps/server/test/h5p/contentStorage.int.test.ts, apps/server/test/h5p/s3Objects.test.ts
  */
 import { createHash } from 'node:crypto';
 import { PassThrough, Readable, Transform } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import { type S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 
@@ -91,10 +93,14 @@ export async function limitedUpload(
     },
   });
   const sink = new PassThrough();
-  body.on('error', (error) => sink.destroy(error));
-  meter.on('error', (error) => sink.destroy(error));
-  body.pipe(meter).pipe(sink);
+  // WHY: pipeline destroys every stream on error, so a rejected upload releases the file or socket it read from.
+  const piping = pipeline(body, meter, sink);
   // WHY: lib-storage Upload streams in parts, so a 50 MB video never sits in memory as a whole.
-  await new Upload({ client: s3, params: { ...params, Body: sink } }).done();
+  const upload = new Upload({ client: s3, params: { ...params, Body: sink } }).done();
+  // WHY: if S3 fails first, nobody reads the sink any more; destroying it ends the pipeline instead of stalling.
+  upload.catch((error: unknown) => sink.destroy(error as Error));
+  const [piped, uploaded] = await Promise.allSettled([piping, upload]);
+  if (piped.status === 'rejected') throw piped.reason;
+  if (uploaded.status === 'rejected') throw uploaded.reason;
   return { size, sha256: hash.digest('hex') };
 }

@@ -8,6 +8,9 @@
  *   - Every high or critical advisory must match an entry in audit-exceptions.json by its GHSA ID.
  *   - An entry must name an existing decision (`### D-xxx` in docs/DECISIONS.md) and must not be expired.
  *   - An entry that no longer matches any advisory fails too, so the list never goes stale.
+ *   - Output that is not a real report (registry unreachable, npm error) fails with exit code 2; it never
+ *     counts as "no advisories".
+ *   - An exception is valid up to and including its `expires` date.
  * Collaborators: npm (audit), ./audit-exceptions.json, docs/DECISIONS.md, CI (`npm run check:audit`).
  * Tests: tools/dependency-check/test/checkAudit.test.mjs
  */
@@ -32,6 +35,28 @@ export function blockingAdvisories(report) {
     }
   }
   return [...found.values()].sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/**
+ * Rejects output that is not a real audit report, e.g. when the registry could not be reached.
+ * @param {unknown} report - Parsed `npm audit --json` output.
+ * @returns {object} The same report, when it has `vulnerabilities` and `metadata` and no `error`.
+ * @throws Error describing why the audit did not run.
+ */
+export function assertAuditReport(report) {
+  // WHY: npm exits 1 both for findings and for failures; only the report's shape tells them apart.
+  if (
+    !report ||
+    typeof report !== 'object' ||
+    report.error ||
+    typeof report.vulnerabilities !== 'object' ||
+    typeof report.metadata !== 'object'
+  ) {
+    throw new Error(
+      `npm audit did not produce a report: ${report?.message ?? report?.error?.summary ?? 'unexpected output'}`,
+    );
+  }
+  return report;
 }
 
 /**
@@ -60,13 +85,19 @@ export function evaluateAudit(advisories, exceptions, decisions, today) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = fileURLToPath(new URL('../../', import.meta.url));
-  // WHY: npm audit exits 1 whenever it finds anything, so the exit code is ignored and the JSON decides.
   const run = spawnSync('npm', ['audit', '--omit=dev', '--json'], {
     cwd: root,
     encoding: 'utf8',
     maxBuffer: 1 << 26,
   });
-  const advisories = blockingAdvisories(JSON.parse(run.stdout));
+  let advisories;
+  try {
+    if (run.error) throw run.error;
+    advisories = blockingAdvisories(assertAuditReport(JSON.parse(run.stdout)));
+  } catch (error) {
+    console.error(`✗ check:audit: ${error.message}`);
+    process.exit(2);
+  }
   const exceptions = JSON.parse(readFileSync(new URL('./audit-exceptions.json', import.meta.url), 'utf8'));
   const decisionText = readFileSync(join(root, 'docs/DECISIONS.md'), 'utf8');
   const decisions = new Set([...decisionText.matchAll(/^### (D-\d{3})\b/gm)].map((m) => m[1]));

@@ -11,7 +11,7 @@ describeWithServices('[DATA-002] database enforces pseudonymous learners', () =>
   const db = createPrismaClient(serviceEnv().DATABASE_URL);
   afterAll(() => db.$disconnect());
 
-  it('[DATA-001] has every table of the consolidated data model (spec 05 §4)', async () => {
+  it('[DATA-001] has every table of the data model (spec 05 §4 plus AuthAuditEvent from spec 02 §7)', async () => {
     const rows = await db.$queryRaw<{ table_name: string }[]>`
       SELECT table_name FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name <> '_prisma_migrations'`;

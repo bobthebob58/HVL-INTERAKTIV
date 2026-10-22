@@ -9,7 +9,7 @@
  *   - One <h1> for the page; each view starts with an <h2> (A11Y: WCAG 1.3.1, 2.4.6).
  *   - No colour-only meaning: badges and statuses carry words (A11Y: WCAG 1.4.1).
  * Collaborators: buildSpecSite.mjs (caller), markdownRenderer.mjs (badges).
- * Tests: Session 1 adds a snapshot test of the rendered landmarks.
+ * Tests: tools/spec-site/test/specSite.test.mjs (landmarks of the committed page).
  */
 import { AREAS } from './specParser.mjs';
 import { priorityBadge, sessionBadge } from './markdownRenderer.mjs';

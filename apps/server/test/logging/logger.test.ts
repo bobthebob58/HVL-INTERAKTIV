@@ -6,7 +6,13 @@
 import { describe, it, expect } from 'vitest';
 import { Writable } from 'node:stream';
 import { createLogger } from '../../src/logging/logger.js';
-import { REDACTED, isSensitiveKey, redactPersonalData } from '../../src/logging/redactPersonalData.js';
+import {
+  REDACTED,
+  isSensitiveKey,
+  redactPersonalData,
+  redactText,
+} from '../../src/logging/redactPersonalData.js';
+import { Prisma } from '../../src/generated/prisma/client.js';
 
 /** A fixture with every kind of sensitive field DATA-009 names, nested as libraries really log them. */
 const SENSITIVE = {
@@ -96,5 +102,67 @@ describe('[NFR-006] structured logger output', () => {
     const first = JSON.parse(lines[0] ?? '{}');
     expect(first).toMatchObject({ level: 'info', service: 'hvl-interaktiv-server', route: '/play' });
     expect(JSON.parse(lines[1] ?? '{}').err).toMatchObject({ type: 'Error', email: REDACTED });
+  });
+});
+
+describe('[DATA-009] redaction of messages, format arguments and error text', () => {
+  const run = (write: (log: ReturnType<typeof createLogger>) => void): string => {
+    const { lines, stream } = capture();
+    write(createLogger({ level: 'info', destination: stream }));
+    return lines.join('');
+  };
+
+  it('[DATA-009] redacts msg when an Error is logged without a message', () => {
+    const out = run((log) => {
+      log.error(new Error('GET /lti?ltik=abc.def failed'));
+      log.warn({ err: new Error('rejected Bearer xyz.123') });
+      log.child({ a: 1 }).child({ b: 2 }).error(new Error('child bearer qqq.www'));
+    });
+    for (const leaked of ['abc.def', 'xyz.123', 'qqq.www']) expect(out, leaked).not.toContain(leaked);
+    expect(JSON.parse(out.split('\n')[0] ?? '{}').msg).toBe('GET /lti?ltik=[Redacted] failed');
+  });
+
+  it('[DATA-009] redacts objects passed as printf-style format arguments', () => {
+    const out = run((log) => {
+      log.info('user %j', { email: 'kari@hvl.no', name: 'Kari' });
+      log.info({ route: '/x' }, 'token %o', { idToken: 'tok-123' });
+    });
+    for (const leaked of ['kari@hvl.no', 'Kari', 'tok-123']) expect(out, leaked).not.toContain(leaked);
+  });
+
+  it('[DATA-009] masks identifiers and credentials inside free text', () => {
+    const text = redactText(
+      'authorization: bearer abc.def; jwt eyJhbGciOi.eyJzdWIiOi.c2ln; redis://default:hunter2@cache:6379; mail kari@hvl.no; ltik=zzz',
+    );
+    for (const leaked of ['abc.def', 'eyJhbGciOi', 'hunter2', 'kari@hvl.no', 'zzz'])
+      expect(text, leaked).not.toContain(leaked);
+    expect(text).toContain('redis://[Redacted]@cache:6379');
+  });
+
+  it('[DATA-009] redacts the raw LTI subject under the project field name', () => {
+    const out = JSON.stringify(
+      redactPersonalData({
+        source: { kind: 'lti', issuer: 'https://canvas.example', subject: 'lti-sub-456' },
+      }),
+    );
+    expect(out).not.toContain('lti-sub-456');
+    expect(isSensitiveKey('subjectHash')).toBe(false);
+    for (const key of ['subject', 'token', 'x-api-key', 'client_assertion', 'credentials'])
+      expect(isSensitiveKey(key), key).toBe(true);
+  });
+
+  it('[DATA-009] logs Prisma errors by code only, without the query values they render', () => {
+    const message =
+      'Invalid `prisma.user.create()` invocation:\n  data: { email: "kari@hvl.no", displayName: "Kari Nordmann" }';
+    const error = new Prisma.PrismaClientValidationError(message, { clientVersion: '7.10.1' });
+    expect(redactPersonalData({ cause: error })).toEqual({
+      cause: {
+        type: 'PrismaClientValidationError',
+        code: undefined,
+        meta: { modelName: undefined, target: undefined },
+      },
+    });
+    const out = run((log) => log.error({ err: error }, 'insert failed'));
+    for (const leaked of ['kari@hvl.no', 'Kari Nordmann']) expect(out, leaked).not.toContain(leaked);
   });
 });

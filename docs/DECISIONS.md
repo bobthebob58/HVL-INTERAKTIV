@@ -41,6 +41,8 @@ with the commands given.
 | D-028 | The H5P user-data adapter moves to S2 with `H5P-005` | Accepted (2026-10-21) |
 | D-029 | Own licence and audit checks instead of `license-checker` and plain `npm audit` | Accepted (2026-10-21) |
 | D-030 | Accepted advisory: `image-size` parser loops (until 2027-01-31) | Accepted (2026-10-21), expires 2027-01-31 |
+| D-031 | Session 1 items that finish in Session 2 (spike steps 3–6, F1/F3 wiring, import directory, TypeDoc) | Accepted (2026-10-22) |
+| D-032 | `h5p-express` installed in S1; its Express 4 is overridden to 4.22.3 | Accepted (2026-10-22) |
 
 ---
 
@@ -265,19 +267,24 @@ loading of one spec per session are kept.
 
 ### D-026 · Library storage on a shared volume until deployment needs S3
 - **Context:** `H5P-004` allows S3- or file-system-backed library storage. Libraries change only when an
-  admin installs or updates a content type, are read on every page view, and are cached by Lumi's
-  `CachedLibraryStorage` (backed by the shared Redis key-value store).
+  admin installs or updates a content type and are read on every page view. Lumi's `CachedLibraryStorage`
+  caches their metadata in each node's memory; its own default lifetime is 24 hours.
 - **Decision:** S1 uses Lumi's `FileLibraryStorage` on a volume shared by all server instances, wrapped
-  in `CachedLibraryStorage`. An S3 `ILibraryStorage` is added in S6 only if the target platform has no
-  shared volume.
+  in `CachedLibraryStorage` with a per-node in-memory cache of 300 s (`LIBRARY_CACHE_TTL_SECONDS`). An S3
+  `ILibraryStorage` is added in S6 only if the target platform has no shared volume.
 - **Consequences:** Deployment (S6, `NFR-007`) must mount one volume for `H5P_LIBRARY_DIR` on every node.
+  After a library install or update (including a security update, `H5P-011`), other nodes can serve the
+  old library metadata for up to 5 minutes. If S6 needs instant propagation, use a Redis-backed cache store
+  or a cross-node invalidation message.
 
 ### D-027 · H5P core and editor files are fetched and verified, not committed
 - **Context:** The server needs H5P's client files (core tag `1.28.0`, editor commit per D-022). Committing
-  about 1 000 third-party files would bury our own code in reviews and diffs.
+  these 281 third-party files (67 core, 214 editor) would bury our own code in reviews and diffs.
 - **Decision:** `tools/h5p-core/fetchCoreClients.sh` fetches them into `apps/server/h5p/` (git-ignored).
-  Core files are checked against the committed per-file SHA-256 list; the editor is pinned by commit hash
-  (git verifies it). CI runs the script before the tests. The server refuses to start when the core API
+  The script checks that each tag or commit resolves to the expected commit hash, then checks every file
+  against a committed per-file SHA-256 list (`h5p-php-library-1.28.0.files.sha256`,
+  `h5p-editor-php-library-ab2daa18.files.sha256`); a changed, missing or extra file stops it. CI runs the
+  script before the tests. The server refuses to start when the core API
   version in the fetched files is not 1.28 (`H5P-001`).
 - **Consequences:** A fresh clone needs one `npm run h5p:fetch-core`. doc-lint and spec-trace skip
   `apps/server/h5p/`.
@@ -310,3 +317,32 @@ loading of one spec per session are kept.
   bytes are not on the allowlist (JXL, HEIF and ICNS are not) before H5P calls `image-size`.
 - **Consequences:** `audit-exceptions.json` lists both advisories with this decision and the expiry date.
   Review again at expiry, or earlier if h5p-server releases a version with `image-size` ≥ 2.0.3.
+
+### D-031 · Session 1 items that finish in Session 2
+- **Context:** Some Session 1 work depends on things that only exist in Session 2, or on a network this
+  build environment does not have. The Session 1 review (2026-10-22) found these were not recorded as a decision.
+- **Decision:** These move to S2 and are listed in its `PROGRESS.md` checklist:
+  1. Spike steps 3–6 (spec 01 §7): site registration and seeding against hub-api.h5p.org, rendering
+     `H5P.MultiChoice`, the Daylight theme with the F3 CSS, and the R-01 choice between 1.28 and the 1.27
+     fallback. This environment's proxy blocks hub-api.h5p.org (Q7).
+  2. Wiring workaround F1: `getLocalIdOverride: () => localIdFor(<site UUID>)` is an `H5PEditor` option, so
+     it is set in `H5pEditorFactory`. S1 provides and tests `localIdFor`.
+  3. Injecting the F3 theme CSS through the player and editor customisation hooks (needs the S2 routes).
+  4. `SEC-005`'s "temporary directory with a quota": the S2 package import route runs `inspectZip` before
+     Lumi's `PackageImporter`. The quota is `maxTotalSize`, checked from the central directory; yauzl checks
+     the real sizes while extracting into a fresh `os.tmpdir()` folder that is removed afterwards. S1 provides
+     the guard, the limits and the size-limited S3 uploads.
+  5. TypeDoc API pages for `DOC-002`, added with the HTTP API.
+- **Consequences:** `SEC-005` and `H5P-001` have tests in S1 for what exists; their S2 parts get their own
+  `[ID]` tests in S2.
+
+### D-032 · `h5p-express` installed in S1; its Express 4 is overridden to 4.22.3
+- **Context:** Spike step 1 installs `@lumieducation/h5p-express@10.0.5`. It depends on `express` 4.21.2
+  exactly, whose dependencies have advisories: `path-to-regexp` < 0.1.13 (GHSA-37ch-88jc-xwx2, high), plus
+  moderate ones in `qs` and `body-parser`. Express 4.22.3 (2026-09-14) uses the fixed versions.
+- **Decision:** A scoped npm override (`"@lumieducation/h5p-express": { "express": "4.22.3" }` in the root
+  `package.json`) replaces Express only inside h5p-express. Our own server (S2) uses Express 5 as its own
+  dependency, which the override does not touch. `check:pins` checks nested override values too.
+- **Consequences:** S2 must test the h5p-express routers on Express 4.22.3. Remove the override when Lumi
+  releases an h5p-express with a fixed Express.
+

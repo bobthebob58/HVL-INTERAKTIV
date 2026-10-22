@@ -15,6 +15,7 @@ import { isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { H5PConfig, IKeyValueStorage } from '@lumieducation/h5p-server';
 import type { Logger } from 'pino';
+import serverPackage from '../../package.json' with { type: 'json' };
 import type { Env } from '../config/env.js';
 import { assertClientFiles, type CoreApiVersion } from './coreVersionCheck.js';
 import { createH5pConfig } from './H5pConfigFactory.js';
@@ -30,7 +31,7 @@ export interface H5pServerInitOptions {
   keyValueStorage?: IKeyValueStorage;
   /** Base folder for relative paths; defaults to `SERVER_ROOT`. */
   root?: string;
-  /** Reported to the Hub; defaults to the server package version. */
+  /** Reported to the Hub; defaults to the version in apps/server/package.json. */
   platformVersion?: string;
 }
 
@@ -57,7 +58,7 @@ export async function h5pServerInit(options: H5pServerInitOptions): Promise<H5pS
   };
   const config = await createH5pConfig(options.keyValueStorage, {
     siteUuid: options.env.H5P_SITE_UUID,
-    platformVersion: options.platformVersion ?? '0.1.0',
+    platformVersion: options.platformVersion ?? serverPackage.version,
   });
   const coreVersion = assertClientFiles(paths.coreDir, paths.editorDir, config.coreApiVersion);
   options.logger.info(

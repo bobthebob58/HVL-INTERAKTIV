@@ -30,9 +30,8 @@ import { RedisKeyValueStorage } from './storage/RedisKeyValueStorage.js';
 import { S3ContentFileStore } from './storage/S3ContentFileStore.js';
 import { S3TemporaryFileStorage } from './storage/S3TemporaryFileStorage.js';
 
-// UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/tree/master/packages/h5p-redis-lock is CommonJS
-// with `exports.default`. Node and Vitest unwrap such a default differently on `import`; `require` returns the
-// same object in both.
+// WHY: h5p-redis-lock is CommonJS with `exports.default`. Node and Vitest unwrap such a default differently
+// on `import`; `require` returns the same object in both.
 const { default: RedisLockProvider } = createRequire(import.meta.url)(
   '@lumieducation/h5p-redis-lock',
 ) as typeof import('@lumieducation/h5p-redis-lock');

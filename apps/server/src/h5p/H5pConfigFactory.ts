@@ -11,6 +11,7 @@
  *   - `maxFileSize` 50 MB, `maxTotalSize` 200 MB, narrowed `contentWhitelist` (SEC-002 list).
  *   - Usage statistics and the H5P Content Hub (sharing to h5p.com) are off: no learner or author data
  *     leaves HVL without a decision.
+ *   - Stored values for the library allowlist, proxy, customisation and add-ons are discarded.
  * Collaborators: ./h5pServerInit.ts, ./storage/RedisKeyValueStorage.ts, ../config/env.ts.
  * Tests: apps/server/test/h5p/H5pConfigFactory.test.ts
  */
@@ -59,6 +60,15 @@ export function localIdFor(seed: string): string {
  * @param options - Installation options.
  */
 export function applyEnforcedSettings(config: H5PConfig, options: H5pConfigOptions): void {
+  // SECURITY: settings that change which files are accepted, where Hub traffic goes or which scripts run
+  // are reset to Lumi's defaults; later sessions set them in code (e.g. the S4 theme), never from storage.
+  const defaults = new H5PConfig();
+  config.libraryWhitelist = defaults.libraryWhitelist;
+  config.proxy = undefined;
+  config.customization = structuredClone(defaults.customization);
+  config.playerAddons = structuredClone(defaults.playerAddons);
+  config.editorAddons = structuredClone(defaults.editorAddons);
+  config.enableLrsContentTypes = defaults.enableLrsContentTypes;
   config.coreApiVersion = { ...CORE_API_VERSION };
   config.hubContentTypesEndpoint = HUB_CONTENT_TYPES_ENDPOINT;
   config.hubRegistrationEndpoint = HUB_REGISTRATION_ENDPOINT;

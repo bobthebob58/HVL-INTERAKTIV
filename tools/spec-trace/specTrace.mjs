@@ -39,6 +39,7 @@ const SKIP_PATHS = new Set([join('apps', 'server', 'h5p')]);
 // A requirement heading looks like: "#### SEC-001 · MUST · S2 · Sanitise SVG files"
 const HEADING = /^#### ([A-Z][A-Z0-9]*-\d{3}) · (MUST|SHOULD|COULD) · (S\d) · (.+)$/;
 const TEST_FILE = /(\.(test|spec)\.[cm]?[jt]sx?$)|([\\/]e2e[\\/])/;
+const TEST_TITLE = /\b(?:it|test)(?:\.(?!skip\b|todo\b)\w+)*\(\s*(['"`])((?:\[[A-Z][A-Z0-9-]*\])+)/g;
 
 /** Recursively lists files under `dir` (relative to ROOT), skipping build output. */
 function listFiles(dir) {
@@ -85,8 +86,11 @@ function scanSources(pattern) {
     if (!CODE_EXTENSIONS.has(extname(file))) continue;
     const text = readFileSync(join(ROOT, file), 'utf8');
     if (TEST_FILE.test(file)) {
-      // Tests count only when the ID is written in brackets in a test title: "[SEC-001] …".
-      for (const m of text.matchAll(/\[([A-Z][A-Z0-9]*-\d{3})\]/g)) add(tests, m[1], file);
+      // Tests count only when the ID opens the title of an it()/test() call: it('[SEC-001] …').
+      // WHY: an ID in a comment, a fixture string or a describe() title alone proves nothing; skipped tests neither.
+      for (const m of text.matchAll(TEST_TITLE)) {
+        for (const id of m[2].matchAll(/\[([A-Z][A-Z0-9]*-\d{3})\]/g)) add(tests, id[1], file);
+      }
     } else {
       // Code counts only through "Spec:" header lines or "@spec" TSDoc tags.
       for (const line of text.split('\n').filter((l) => /Spec:|@spec\b/.test(l))) {

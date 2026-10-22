@@ -11,7 +11,7 @@
  *   - Heading levels never skip (A11Y: WCAG 1.3.1); requirement headings sit one level below
  *     the nearest preceding ordinary heading.
  * Collaborators: specParser.mjs (slugify, REQUIREMENT_HEADING), vendor/marked.esm.js (marked 12.0.2, MIT).
- * Tests: Session 1 adds tools/spec-site/markdownRenderer.test.mjs.
+ * Tests: tools/spec-site/test/specSite.test.mjs (requirement and repository links).
  */
 import { posix } from 'node:path';
 import { Marked } from './vendor/marked.esm.js';

@@ -8,7 +8,7 @@
  *   - Key: `content/<contentId>/<file name>`; names are checked by `assertSafeObjectName`.
  *   - Writes stop at `maxFileSize` bytes and report size and SHA-256 of what was stored.
  * Collaborators: ./s3Objects.ts, ./PrismaContentStorage.ts.
- * Tests: apps/server/test/h5p/storage.int.test.ts
+ * Tests: apps/server/test/h5p/contentStorage.int.test.ts, apps/server/test/h5p/S3ContentFileStore.test.ts
  */
 import type { Readable } from 'node:stream';
 import {
@@ -91,6 +91,7 @@ export class S3ContentFileStore {
   /**
    * Deletes every file of an activity, including any the database does not know about.
    * @param contentId - Activity ID.
+   * @throws Error when S3 reports that any file could not be deleted.
    */
   async deleteAll(contentId: string): Promise<void> {
     const Prefix = `content/${assertSafeObjectName(contentId)}/`;
@@ -104,8 +105,17 @@ export class S3ContentFileStore {
         }),
       );
       const Objects = (page.Contents ?? []).map((o) => ({ Key: o.Key }));
-      if (Objects.length > 0)
-        await this.s3.send(new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects } }));
+      if (Objects.length > 0) {
+        const result = await this.s3.send(
+          new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects } }),
+        );
+        // WHY: S3 answers 200 with a per-key Errors list; ignoring it would leave orphaned media after a purge.
+        if (result.Errors?.length) {
+          throw new Error(
+            `could not delete ${result.Errors.length} file(s) of content ${contentId}: ${result.Errors[0]?.Code}`,
+          );
+        }
+      }
       ContinuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
     } while (ContinuationToken);
   }

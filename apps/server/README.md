@@ -24,20 +24,23 @@ npm run db:generate --workspace apps/server  # Prisma client into src/generated/
 npm run db:migrate                           # apply prisma/migrations
 
 # every day
-npm run boot-check --workspace apps/server   # proves the H5P engine would start (logs core 1.28 + Hub host)
+npm run boot-check --workspace apps/server   # proves the H5P engine would start (logs core 1.28 + Hub host);
+                                             # needs only the fetched H5P files, no services or .env
 npx vitest run --project server              # unit + integration tests (integration tests need the services)
 npm run typecheck
 ```
 
-Integration tests (`*.int.test.ts`) are skipped with a notice when `DATABASE_URL`, `REDIS_URL` or the S3
-settings are missing; in CI (`CI=true`) a missing service fails the run instead (D-023).
+Integration tests (`*.int.test.ts`) are skipped with a warning that names the missing variables when
+`DATABASE_URL`, `REDIS_URL`, the S3 credentials or `PSEUDONYM_SECRETS` are not set; in CI (`CI=true`) a
+missing variable fails the run instead (D-023).
 
 ## Folder structure
 
 | Path | Responsibility |
 |---|---|
 | `src/config/env.ts` | The zod schema of every environment variable; startup fails with the variable's name |
-| `src/logging/` | pino logger and the redaction that removes personal data and tokens from every log line |
+| `src/config/productionChecks.ts` | Extra startup rules for `NODE_ENV=production` (current-year secret present, no example secrets) |
+| `src/logging/` | pino logger and the redaction that removes personal data and tokens from every log line (Prisma errors are reduced to their codes) |
 | `src/privacy/` | Academic-year boundary, pseudonym secrets, `deriveLearnerKey` (HMAC-SHA256) |
 | `src/i18n/` | Server messages in `nn` (default), `nb`, `en`, and the typed `t()` lookup |
 | `src/infra/` | Clients: Prisma (PostgreSQL), Redis, S3 |
@@ -91,10 +94,30 @@ flowchart LR
     Job -->|delete expired| TS
 ```
 
-**Learner pseudonym (`DATA-002`).** The raw Feide ID or LTI `iss`/`sub` exists only during the request:
-`deriveLearnerKey({kind: 'lti', issuer, subject}, secrets)` returns
-`HMAC-SHA256(secret[academic year], "lti|iss|sub")` as base64url. The academic year starts on 1 August,
-Oslo time. When a year's secret is destroyed at the yearly purge, its keys can no longer be linked to anyone.
+**Learner pseudonym (`DATA-002`).** The raw Feide ID or LTI `iss`/`sub` exists only during the request
+(the callers arrive with Feide login and LTI launch in S3):
+
+```mermaid
+sequenceDiagram
+    participant Launch as LTI launch / Feide login (S3)
+    participant Derive as deriveLearnerKey
+    participant Year as academicYearOf
+    participant Secrets as PSEUDONYM_SECRETS
+    participant DB as PostgreSQL
+    Launch->>Derive: {kind: 'lti', issuer, subject}, secrets, now
+    Derive->>Year: now
+    Year-->>Derive: 2026 (from 1 August, Oslo time)
+    Derive->>Secrets: get(2026)
+    alt no secret for 2026
+        Secrets-->>Derive: undefined → MissingPseudonymSecretError
+    else
+        Secrets-->>Derive: 32+ random bytes
+        Derive->>Derive: HMAC-SHA256(secret, "lti|iss|sub") → base64url
+        Derive-->>Launch: learnerKey (43 characters)
+        Launch->>DB: H5PUserData / XapiStatement keyed by learnerKey only
+    end
+    Note over Secrets,DB: Yearly purge (S6): rows deleted, the year's secret destroyed — leftovers cannot be linked to anyone.
+```
 
 ## Configuration
 
@@ -121,15 +144,15 @@ fails if the two disagree. Summary:
 | Requirement | Where | Tests |
 |---|---|---|
 | `H5P-001` Core 1.28 and the new Hub | `src/h5p/H5pConfigFactory.ts`, `coreVersionCheck.ts`, `h5pServerInit.ts`, `bootCheck.ts` | `test/h5p/H5pConfigFactory.test.ts`, `test/h5p/h5pServerInit.test.ts` |
-| `H5P-004` Production storage adapters | `src/h5p/h5pStorage.ts`, `src/h5p/storage/*`, `src/h5p/jobs/*` | `test/h5p/contentStorage.int.test.ts`, `test/h5p/sharedState.int.test.ts` |
+| `H5P-004` Production storage adapters | `src/h5p/h5pStorage.ts`, `src/h5p/storage/*`, `src/h5p/jobs/*` | `test/h5p/contentStorage.int.test.ts`, `test/h5p/sharedState.int.test.ts`, `test/h5p/S3TemporaryFileStorage.test.ts`, `test/h5p/cleanupJob.test.ts`, `test/h5p/libraryStorageFactory.test.ts` |
 | `SEC-002` Narrowed allowlist (value only; sniffing in S2) | `src/h5p/H5pConfigFactory.ts` | `test/h5p/H5pConfigFactory.test.ts` |
 | `SEC-005` Size limits and archive safety | `src/security/zipEntryGuard.ts`, `src/h5p/storage/s3Objects.ts` | `test/security/zipEntryGuard.test.ts`, `test/h5p/s3Objects.test.ts` |
 | `DATA-001` Data inventory | `prisma/schema/*.prisma`, `prisma.config.ts` | `tools/privacy/test/checkInventory.test.mjs`, `test/db/schema.int.test.ts` |
-| `DATA-002` Pseudonymous learners | `src/privacy/*`, CHECK constraint in the first migration | `test/privacy/deriveLearnerKey.test.ts`, `test/db/schema.int.test.ts` |
+| `DATA-002` Pseudonymous learners | `src/privacy/*`, `src/config/productionChecks.ts`, CHECK constraint in the first migration | `test/privacy/deriveLearnerKey.test.ts`, `test/config/env.test.ts`, `test/db/schema.int.test.ts` |
 | `DATA-009`, `NFR-006` No personal data in logs | `src/logging/*` | `test/logging/logger.test.ts` |
 | `PROD-012`, `DOC-009` Three languages, Nynorsk first | `src/i18n/*` | `test/i18n/translate.test.ts` |
 | `DOC-008` Configuration documented | `src/config/env.ts`, `.env.example` | `test/config/env.test.ts` |
 
 Decisions that shape this package: D-023 (test services), D-024 (TypeScript 6.0), D-025 (own S3 adapters),
 D-026 (library storage), D-027 (fetched H5P files), D-028 (user-data adapter in S2), D-030 (accepted
-`image-size` advisory).
+`image-size` advisory), D-031 (S1 items finished in S2), D-032 (`h5p-express` and its Express override).

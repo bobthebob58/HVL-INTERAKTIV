@@ -7,7 +7,7 @@
  * Invariants: same rule as Lumi's `hasDependencyOn`: a match in preloaded, editor or dynamic dependencies
  *   (machine name, major and minor version); `asMainLibrary` when the activity's main library has that name.
  * Collaborators: ./PrismaContentStorage.ts, ../../infra/prismaClient.ts.
- * Tests: apps/server/test/h5p/storage.int.test.ts
+ * Tests: apps/server/test/h5p/contentStorage.int.test.ts
  */
 import type { ILibraryName } from '@lumieducation/h5p-server';
 import type { Database } from '../../infra/prismaClient.js';

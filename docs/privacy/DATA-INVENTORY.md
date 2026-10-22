@@ -11,9 +11,9 @@
 | Column | Meaning |
 |---|---|
 | Purpose | Why the field is stored. A field with no purpose is not stored. |
-| Category | **None**: not personal data. **Staff PII**: personal data about staff (authors, admins). **Learner PII**: a direct identifier of a learner. **Pseudonymous**: learner data that can be linked to a person only with that academic year's secret (`DATA-002`). **Secret**: a credential, not personal data. |
+| Category | **None**: not personal data. **Staff PII**: personal data about staff (authors, admins). **Learner PII**: a direct identifier of a learner. **Pseudonymous**: learner data that can be linked to a person only with that academic year's secret (`DATA-002`); it becomes unlinkable when the yearly purge destroys the secret. **Pseudonymous (stable key)**: a keyed HMAC whose key does not rotate yearly, so the value stays linkable as long as that key exists; the key and its rotation are defined with the authentication code in Session 3 (spec 02). **Secret**: a credential, not personal data. |
 | Legal basis | **6(1)(e)**: GDPR Art. 6(1)(e), a task in the public interest (higher education). **n/a**: not personal data. |
-| Retention | **Yearly purge**: deleted 30 days after the academic year ends, and that year's pseudonym secret is destroyed (`DATA-003`). **Account**: until the staff account is deleted (`DATA-008`). **2 years**: audit records (`DATA-007`). Other periods are stated in the row. |
+| Retention | **Yearly purge**: deleted 30 days after the academic year ends, and that year's pseudonym secret is destroyed (`DATA-003`). **Account**: until the staff account is deleted. **2 years**: audit records (`DATA-007`). Other periods are stated in the row. |
 | Location | **PG**: PostgreSQL hosted in Norway or the EEA, encrypted at rest (`DATA-004`). Media bytes are in S3-compatible storage in the same region. |
 
 Logs are not stored in the database. They contain no personal data (`DATA-009`) and are kept for 30 days.
@@ -24,11 +24,11 @@ A person who uses the service. Learner rows have no name or e-mail (database CHE
 
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
-| `id` | Internal key | None | n/a | Account | PG |
-| `kind` | Staff or learner; decides which fields may be filled | None | n/a | Account | PG |
+| `id` | Internal key | None | n/a | Account; learner rows: yearly purge | PG |
+| `kind` | Staff or learner; decides which fields may be filled | None | n/a | Account; learner rows: yearly purge | PG |
 | `displayName` | Name shown to co-authors and in the portfolio export (staff only) | Staff PII | 6(1)(e) | Account | PG |
 | `email` | Contact for co-author invitations (staff only) | Staff PII | 6(1)(e) | Account | PG |
-| `createdAt` | Account age, for purge and audit | None | n/a | Account | PG |
+| `createdAt` | Account age, for purge and audit | None | n/a | Account; learner rows: yearly purge | PG |
 
 ## Identity
 
@@ -37,9 +37,9 @@ One login method of a user. The subject is stored only as an HMAC.
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
 | `id` | Internal key | None | n/a | Account; learner rows: yearly purge | PG |
-| `userId` | Links the login to the user | Pseudonymous | 6(1)(e) | Account; learner rows: yearly purge | PG |
+| `userId` | Links the login to the user | Staff PII (by reference); learner rows: Pseudonymous | 6(1)(e) | Account; learner rows: yearly purge | PG |
 | `provider` | Feide or LTI | None | n/a | Account; learner rows: yearly purge | PG |
-| `subjectHash` | Recognises the same person at the next login without storing the Feide ID or LTI `sub` | Pseudonymous | 6(1)(e) | Account; learner rows: yearly purge | PG |
+| `subjectHash` | Recognises the same person at the next login without storing the Feide ID or LTI `sub` | Pseudonymous (stable key) | 6(1)(e) | Account; learner rows: yearly purge | PG |
 | `platformId` | Which LMS an LTI identity comes from | None | n/a | Account; learner rows: yearly purge | PG |
 | `createdAt` | Purge boundary | None | n/a | Account; learner rows: yearly purge | PG |
 
@@ -51,9 +51,9 @@ Login, logout and role events (spec 02).
 |---|---|---|---|---|---|
 | `id` | Internal key | None | n/a | 2 years | PG |
 | `at` | When it happened | None | n/a | 2 years | PG |
-| `actorUserId` | Who logged in (internal ID; empty for failed logins) | Pseudonymous | 6(1)(e) | 2 years | PG |
+| `actorUserId` | Who logged in (internal ID; empty for failed logins) | Staff PII (by reference); learner rows: Pseudonymous | 6(1)(e) | 2 years | PG |
 | `event` | Event code, e.g. `login.feide` | None | n/a | 2 years | PG |
-| `ipHash` | Keyed hash of the IP address, for abuse detection only | Pseudonymous | 6(1)(e) | 2 years | PG |
+| `ipHash` | Keyed hash of the IP address, for abuse detection only | Pseudonymous (stable key) | 6(1)(e) | 2 years | PG |
 
 ## H5PContent
 
@@ -211,7 +211,7 @@ One score waiting to be sent to the Canvas gradebook.
 | `id` | Internal key | None | n/a | Yearly purge | PG |
 | `placementId` | Which placement | None | n/a | Yearly purge | PG |
 | `learnerKey` | The learner's pseudonym | Pseudonymous | 6(1)(e) | Yearly purge | PG |
-| `ltiSubEncrypted` | Canvas user ID, which AGS requires; the only raw learner ID stored (DATA-002) | Learner PII (encrypted) | 6(1)(e) | Set to null 30 days after success | PG |
+| `ltiSubEncrypted` | Canvas user ID, which AGS requires; the only raw learner ID kept longer than 24 hours (`LtiIdToken.claims` holds `sub` for 24 h) (DATA-002) | Learner PII (encrypted) | 6(1)(e) | Set to null 30 days after success | PG |
 | `scoreGiven` | Formative score to send | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `status` | Pending, succeeded or failed | None | n/a | Yearly purge | PG |
 | `attempts` | Retry count | None | n/a | Yearly purge | PG |
@@ -230,7 +230,7 @@ Pedagogical metadata on an activity (PED-030).
 | `contentId` | The activity | None | n/a | With the activity | PG |
 | `phase` | Forarbeid, Mellomarbeid or Etterarbeid | None | n/a | With the activity | PG |
 | `courseCode` | Course, e.g. `SYK110` | None | n/a | With the activity | PG |
-| `rationale` | The author's reasoning, used in the portfolio | None | n/a | With the activity | PG |
+| `rationale` | The author's reasoning, used in the portfolio | Staff PII (authored text) | 6(1)(e) | With the activity | PG |
 | `estimatedStudentMinutes` | Shown to students before they start | None | n/a | With the activity | PG |
 | `updatedAt` | Audit | None | n/a | With the activity | PG |
 
@@ -252,13 +252,13 @@ An author published despite a validator error (UD-022).
 
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
-| `id` | Internal key | None | n/a | With the activity | PG |
-| `contentId` | The activity | None | n/a | With the activity | PG |
-| `ruleId` | Which rule, e.g. `V-IMG-ALT` | None | n/a | With the activity | PG |
-| `path` | Where in the activity | None | n/a | With the activity | PG |
-| `reason` | The author's reason, shown in insight and the portfolio | Staff PII (authored text) | 6(1)(e) | With the activity | PG |
-| `userId` | The author | Staff PII (by reference) | 6(1)(e) | With the activity | PG |
-| `at` | When | None | n/a | With the activity | PG |
+| `id` | Internal key | None | n/a | With the activity or the author's account | PG |
+| `contentId` | The activity | None | n/a | With the activity or the author's account | PG |
+| `ruleId` | Which rule, e.g. `V-IMG-ALT` | None | n/a | With the activity or the author's account | PG |
+| `path` | Where in the activity | None | n/a | With the activity or the author's account | PG |
+| `reason` | The author's reason, shown in insight and the portfolio | Staff PII (authored text) | 6(1)(e) | With the activity or the author's account | PG |
+| `userId` | The author | Staff PII (by reference) | 6(1)(e) | With the activity or the author's account | PG |
+| `at` | When | None | n/a | With the activity or the author's account | PG |
 
 ## XapiStatement
 
@@ -309,5 +309,5 @@ Who did what to which object (DATA-007).
 | `actorUserId` | Who (empty for scheduled jobs) | Staff PII (by reference) | 6(1)(e) | 2 years | PG |
 | `action` | Action code, e.g. `insight.view` | None | n/a | 2 years | PG |
 | `targetType` | Kind of object | None | n/a | 2 years | PG |
-| `targetId` | Which object | None | n/a | 2 years | PG |
+| `targetId` | Which object | None; Pseudonymous when the target is a learner (data-subject actions, `DATA-008`) | 6(1)(e) | 2 years | PG |
 | `details` | Structured details, never free text with personal data | None | n/a | 2 years | PG |

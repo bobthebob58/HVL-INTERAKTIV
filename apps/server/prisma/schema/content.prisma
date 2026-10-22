@@ -97,7 +97,7 @@ model H5PUserData {
   @@index([updatedAt])
 }
 
-/// An admin installed, updated or removed an H5P library (H5P-002, DATA-007).
+/// An admin installed, updated or removed an H5P library (H5P-011, DATA-007).
 model LibraryAuditEvent {
   id          String   @id @default(uuid(7)) @db.Uuid
   actorUserId String   @db.Uuid

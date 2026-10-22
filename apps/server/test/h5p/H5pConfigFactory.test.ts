@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { IKeyValueStorage } from '@lumieducation/h5p-server';
+import { H5PConfig, type IKeyValueStorage } from '@lumieducation/h5p-server';
 import {
   CONTENT_WHITELIST,
   LOCAL_ID_MAX_LENGTH,
@@ -25,6 +25,9 @@ const staleStorage = (): IKeyValueStorage => {
     hubContentTypesEndpoint: 'https://api.h5p.org/v1/content-types/',
     maxFileSize: 1024 * 1024 * 1024,
     contentWhitelist: 'json png xml swf',
+    libraryWhitelist: 'js css html php',
+    proxy: { host: 'attacker.example', port: 8080 },
+    customization: { global: { player: { scripts: ['https://cdn.example/evil.js'] } } },
     uuid: 'stored-uuid',
   };
   return { load: async (key) => values[key], save: async (key, value) => (values[key] = value) };
@@ -43,6 +46,9 @@ describe('[H5P-001] Core API 1.28 and the new Hub', () => {
     expect(config.hubContentTypesEndpoint).toBe('https://hub-api.h5p.org/v1/content-types/');
     expect(config.maxFileSize).toBe(50 * 1024 * 1024);
     expect(config.contentWhitelist).toBe(CONTENT_WHITELIST);
+    expect(config.libraryWhitelist).toBe(new H5PConfig().libraryWhitelist);
+    expect(config.proxy).toBeUndefined();
+    expect(JSON.stringify(config.customization)).not.toContain('evil.js');
     expect(config.uuid).toBe('stored-uuid');
   });
 

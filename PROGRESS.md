@@ -46,7 +46,7 @@ $ node tools/spec-trace/specTrace.mjs --check
 - [x] Husky: `pre-commit` runs lint-staged (Prettier, ESLint); `commit-msg` runs the DOC-011 checker
 - [x] `npm run spec:trace` (root override, tests), `check:filesize`, `tools/doc-lint` with 11 checks and tests
       (`DOC-001`…`DOC-014`, `NFR-004`)
-- [x] Prisma schema, split by domain (20 models of spec 05 §4), first migration with a CHECK constraint that
+- [x] Prisma schema, split by domain (20 models: spec 05 §4 plus `AuthAuditEvent` from spec 02 §7), first migration with a CHECK constraint that
       keeps names and e-mail off learner rows; `docs/privacy/DATA-INVENTORY.md` and its check (`DATA-001`, `DATA-002`)
 - [x] `deriveLearnerKey` with per-academic-year secrets (`DATA-002`); pino logger with deep redaction (`DATA-009`)
 - [x] `H5pConfigFactory` (`H5P-001`), boot check, storage adapters and cleanup job (`H5P-004`, user data in S2
@@ -55,16 +55,19 @@ $ node tools/spec-trace/specTrace.mjs --check
 - [x] `docker-compose.yml`: PostgreSQL 16, Redis 7, S3 emulator (moto instead of MinIO, D-023)
 - [x] CI: typecheck, lint, format, doc-lint, file size, pins, licences, audit with reviewed exceptions,
       inventory, tests with service containers, traceability, spec site, H5P boot check (`SEC-007`, `NFR-005`)
-- [x] Decisions D-023…D-030 recorded
+- [x] Decisions D-023…D-032 recorded
+- [x] Independent review (2026-10-22): three reviewers (correctness and security, privacy and spec
+      compliance, documentation) with a skeptic per finding; 16 confirmed findings and the valid
+      low-severity ones fixed with regression tests (see the session log)
 - [x] Gate (output below)
 
 Spike results (spec 01 §7, Risk R-01):
 
 | Step | Result |
 |---|---|
-| 1. h5p-server 10.0.4 on Node 24, `coreApiVersion` 1.28 | ✅ Installs and runs on Node 24.x. `H5pConfigFactory` sets 1.28 and re-applies it after loading stored settings |
+| 1. h5p-server 10.0.4 and h5p-express 10.0.5 on Node 24, `coreApiVersion` 1.28 | ✅ Both install on Node 24.x (h5p-express with its Express 4 overridden to 4.22.3 for advisories, D-032). `H5pConfigFactory` sets 1.28 and re-applies it after loading stored settings |
 | 2. Core tag `1.28.0` and editor commit `ab2daa18` | ✅ `npm run h5p:fetch-core`: core commit `2aeb0b83` matches, all 67 files match the committed SHA-256 list; editor commit verified by git, its 214 file hashes recorded (`h5p-editor-php-library-ab2daa18.files.sha256`) |
-| 3. Seed packages and site registration | ⛔ Blocked: this environment cannot reach `hub-api.h5p.org` (Q7). F1 (`localIdFor`, 15 characters) and F2 (pre-set `H5P_SITE_UUID`) are implemented and unit-tested, not tried against the Hub |
+| 3. Seed packages and site registration | ⛔ Blocked: this environment cannot reach `hub-api.h5p.org` (Q7). F2 (pre-set `H5P_SITE_UUID`) is applied by `H5pConfigFactory`; for F1, the `localIdFor` helper (15 characters) exists and is tested, and is wired into `H5pEditorFactory` in S2 (D-031). Neither was tried against the Hub |
 | 4. Render `H5P.MultiChoice` in the player | ⛔ Blocked by step 3 (no package); needs the S2 player routes too |
 | 5. Daylight theme with the F3 CSS | ⛔ Blocked by step 4. F3 injection moves to S2 with the player factory |
 | 6. Decide 1.28 or the 1.27 fallback | Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2 |
@@ -74,7 +77,11 @@ Gate output: see the session log entry for 2026-10-21 · S1.
 ## S2 — Content types and security ⬜
 
 - [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable; inject the F3 theme CSS in
-      `H5pPlayerFactory`/`H5pEditorFactory`; decide R-01 (1.28 or the 1.27 fallback) and record it
+      `H5pPlayerFactory`/`H5pEditorFactory`; decide R-01 (1.28 or the 1.27 fallback) and record it (D-031)
+- [ ] Wire F1: `getLocalIdOverride: () => localIdFor(<site UUID>)` in `H5pEditorFactory`, with a test (D-031)
+- [ ] Package import route: `inspectZip` before Lumi's `PackageImporter`, extraction in a fresh temporary
+      folder that is removed afterwards (`SEC-005`, D-031); test the h5p-express routers on Express 4.22.3 (D-032)
+- [ ] TypeDoc API pages in CI (`DOC-002`, D-031)
 - [ ] `HvlTop10ContentTypeFilter` and the DragQuestion semantics filter (`H5P-002`, `PROD-002`)
 - [ ] Seed script with SHA-256 verification (`H5P-003`). **Needs the `.h5p` files**: run `tools/seed/fetch-seed-packages.sh` where hub-api.h5p.org is reachable
 - [ ] `PrismaContentUserDataStorage` (`H5P-005`, `PROD-008`); `HvlPermissionSystem` with a table test (`H5P-006`)
@@ -86,6 +93,8 @@ Gate output: see the session log entry for 2026-10-21 · S1.
 
 Effort: high, because this is security-critical. Public Feide and Canvas values are in `docs/reference/`; **HVL's own client IDs, realm, redirect URIs and TeCopp instance** are still needed (Q3, Q4).
 - [ ] Mock OIDC provider and mock LTI platform in `tools/mock-platform/` for tests
+- [ ] Define the stable HMAC key for `Identity.subjectHash` and `AuthAuditEvent.ipHash` (env.ts,
+      `.env.example`, DATA-INVENTORY "Pseudonymous (stable key)"), including its rotation
 - [ ] Feide RP, role mapping, sessions, data minimisation, author linking (`AUTH-001`…`AUTH-005`)
 - [ ] `LtiProviderFactory`, `PrismaLtiDatabaseManager`, ltik transport, role mapping (`LTI-001`…`LTI-004`)
 - [ ] Deep Linking picker, resource-link launch, course copy (`LTI-005`…`LTI-007`, `PROD-005`); `HvlUrlGenerator` (`H5P-007`)

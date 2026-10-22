@@ -9,7 +9,7 @@
  *   - No figure is typed by hand: counts come from parsed requirements and tables.
  *   - Each block links to the document it was taken from.
  * Collaborators: buildSpecSite.mjs (caller), specParser.mjs (sectionUnder, firstTable).
- * Tests: Session 1 adds a test that every extracted block is non-empty.
+ * Tests: tools/spec-site/test/specSite.test.mjs (the built page, including this view).
  */
 import { sectionUnder, firstTable } from './specParser.mjs';
 

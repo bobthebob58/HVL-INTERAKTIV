@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { blockingAdvisories, evaluateAudit } from '../checkAudit.mjs';
+import { assertAuditReport, blockingAdvisories, evaluateAudit } from '../checkAudit.mjs';
 
 const advisory = (name, severity, ghsa) => ({
   source: 1,
@@ -65,5 +65,23 @@ describe('[SEC-007] npm audit with reviewed exceptions', () => {
       expect(e.expires).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(e.mitigation.length).toBeGreaterThan(20);
     }
+  });
+
+  it('[SEC-007] treats a failed audit as an error, never as "no advisories"', () => {
+    const offline = {
+      message: 'request to https://registry.npmjs.org failed, reason: ECONNREFUSED',
+      error: { summary: '' },
+    };
+    expect(() => assertAuditReport(offline)).toThrow('npm audit did not produce a report: request to');
+    expect(() => assertAuditReport({})).toThrow('unexpected output');
+    expect(assertAuditReport({ vulnerabilities: {}, metadata: {} })).toEqual({
+      vulnerabilities: {},
+      metadata: {},
+    });
+  });
+
+  it('[SEC-007] an exception is valid up to and including its expiry date', () => {
+    const [a] = blockingAdvisories(REPORT);
+    expect(evaluateAudit([a], [EXCEPTION], new Set(['D-001']), '2027-01-31')).toEqual([]);
   });
 });

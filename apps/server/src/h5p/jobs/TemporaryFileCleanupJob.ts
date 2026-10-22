@@ -6,9 +6,10 @@
  * Spec: H5P-004
  * Invariants:
  *   - At most one run per interval cluster-wide: the lease lives slightly less than one interval.
- *   - A failed run is logged and does not stop the timer; the S3 lifecycle rule is the backstop.
+ *   - `runOnce` never rejects: a failed lease or run is logged and the timer continues. A bucket lifecycle
+ *     rule on S3_TEMPORARY_BUCKET (an operations task, see .env.example) is the backstop.
  * Collaborators: H5PEditor.temporaryFileManager.cleanUp (S2 wiring), ../storage/S3TemporaryFileStorage.ts.
- * Tests: apps/server/test/h5p/storage.int.test.ts
+ * Tests: apps/server/test/h5p/sharedState.int.test.ts, apps/server/test/h5p/cleanupJob.test.ts
  */
 import { randomUUID } from 'node:crypto';
 import type { Logger } from 'pino';
@@ -43,15 +44,22 @@ export class TemporaryFileCleanupJob {
 
   /**
    * Runs the cleanup if no other node has run it in this interval.
-   * @returns `ran` when this node did the work, `skipped` when another node holds the lease.
+   * @returns `ran` when this node did the work, `skipped` when another node holds the lease or Redis
+   *   could not be reached. It never rejects.
    */
   async runOnce(): Promise<'ran' | 'skipped'> {
-    // WHY: the lease expires 1 % before the next tick, so clock drift cannot skip a whole interval.
-    const lease = await this.options.redis.set(CLEANUP_LEASE_KEY, this.nodeId, {
-      NX: true,
-      PX: Math.max(1, Math.floor(this.intervalMs * 0.99)),
-    });
-    if (lease !== 'OK') return 'skipped';
+    try {
+      // WHY: the lease expires 1 % before the next tick, so clock drift cannot skip a whole interval.
+      const lease = await this.options.redis.set(CLEANUP_LEASE_KEY, this.nodeId, {
+        NX: true,
+        PX: Math.max(1, Math.floor(this.intervalMs * 0.99)),
+      });
+      if (lease !== 'OK') return 'skipped';
+    } catch (error) {
+      // WHY: a Redis outage must not crash the server; the next tick tries again.
+      this.options.logger.error({ job: 'temporary-file-cleanup', err: error }, 'cleanup lease failed');
+      return 'skipped';
+    }
     try {
       await this.options.cleanUp();
       this.options.logger.info({ job: 'temporary-file-cleanup' }, 'temporary files cleaned up');
