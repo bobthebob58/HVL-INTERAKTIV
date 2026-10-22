@@ -41,6 +41,7 @@
     "lint-staged": "17.6.0",
     "prettier": "3.9.10",
     "tsx": "4.23.15",
+    "typedoc": "0.28.20",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.0",
     "vitest": "5.0.5"
@@ -60,9 +61,6 @@
     "@prisma/engines@7.10.1": true
   },
   "overrides": {
-    "underscore": "1.13.8",
-    "@lumieducation/h5p-express": {
-      "express": "4.22.3"
-    }
+    "underscore": "1.13.8"
   }
 }

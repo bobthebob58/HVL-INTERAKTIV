@@ -155,4 +155,4 @@ fails if the two disagree. Summary:
 
 Decisions that shape this package: D-023 (test services), D-024 (TypeScript 6.0), D-025 (own S3 adapters),
 D-026 (library storage), D-027 (fetched H5P files), D-028 (user-data adapter in S2), D-030 (accepted
-`image-size` advisory), D-031 (S1 items finished in S2), D-032 (`h5p-express` and its Express override).
+`image-size` advisory), D-031 (S1 items finished in S2), D-032 (superseded) and D-035 (own Express 5 routes instead of `h5p-express`).

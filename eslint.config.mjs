@@ -71,6 +71,38 @@ export default tseslint.config(
     rules: { 'jsdoc/require-jsdoc': 'off', 'jsdoc/require-param': 'off' },
   },
   {
+    // H5P-006, D-035, D-036: Lumi's allow-everything permission system and the Express 4 routers of
+    // h5p-express never enter the server; the factories also refuse any other permission system at runtime.
+    files: ['apps/server/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@lumieducation/h5p-server',
+              importNames: ['LaissezFairePermissionSystem'],
+              message: 'Use HvlPermissionSystem (H5P-006).',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@lumieducation/h5p-express', '@lumieducation/h5p-express/*'],
+              message: 'Removed by D-035; the routes live in apps/server/src/http.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "Identifier[name='LaissezFairePermissionSystem']",
+          message: 'Use HvlPermissionSystem (H5P-006).',
+        },
+      ],
+    },
+  },
+  {
     // DOC-009: user-facing text in the web app comes from locale files, never literals.
     files: ['apps/web/**/*.{ts,tsx}'],
     plugins: { i18next },
