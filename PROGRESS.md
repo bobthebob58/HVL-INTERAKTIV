@@ -10,7 +10,7 @@ what is done, what is verified, and what is blocked.
 |---|---|---|---|
 | S0 | Specification, documentation standard, traceability tool | — | ✅ Done (2026-10-16) |
 | S1 | Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup | 00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD | ✅ Done (2026-10-21) |
-| S2 | Ten-type whitelist, seeding, SVG sanitiser, permission system, resume | 01 (all) | ⬜ Not started |
+| S2 | Ten-type whitelist, seeding, SVG sanitiser, permission system, resume | 01 (all); 00 `PROD-002`, `PROD-008` | 🟨 In progress (2026-10-22) |
 | S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | ⬜ Not started |
 | S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ⬜ Not started |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04 | ⬜ Not started |
@@ -76,17 +76,20 @@ Spike results (spec 01 §7, Risk R-01):
 
 Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-21 entry is the first run).
 
-## S2 — Content types and security ⬜
+## S2 — Content types and security 🟨
 
 - [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable; inject the F3 theme CSS in
       `H5pPlayerFactory`/`H5pEditorFactory`; decide R-01 (1.28 or the 1.27 fallback) and record it (D-031)
 - [ ] Wire F1: `getLocalIdOverride: () => localIdFor(<site UUID>)` in `H5pEditorFactory`, with a test (D-031)
 - [ ] Package import route: `inspectZip` before Lumi's `PackageImporter`, extraction in a fresh temporary
-      folder that is removed afterwards (`SEC-005`, D-031); test the h5p-express routers on Express 4.22.3 (D-032)
+      folder that is removed afterwards (`SEC-005`, D-031). The h5p-express item of D-032 is replaced by our
+      own Express 5 routes (D-035)
+- [ ] Decisions D-035…D-046 recorded (plan approved 2026-10-22)
 - [ ] TypeDoc API pages in CI (`DOC-002`, D-031)
 - [ ] `HvlTop10ContentTypeFilter` and the DragQuestion semantics filter (`H5P-002`, `PROD-002`)
 - [ ] Seed script with SHA-256 verification (`H5P-003`). **Needs the `.h5p` files**: run `tools/seed/fetch-seed-packages.sh` where hub-api.h5p.org is reachable
 - [ ] `PrismaContentUserDataStorage` (`H5P-005`, `PROD-008`); `HvlPermissionSystem` with a table test (`H5P-006`)
+- [ ] Own Express 5 routes, player page and sub-content policy (D-035, D-039, D-040; `SEC-008`)
 - [ ] `HvlTranslationCallback` (`H5P-008`); library update audit (`H5P-011`)
 - [ ] `SvgSanitizer`, `FileTypeSniffer`, `ContentFileHeaders`, package import rules (`SEC-001`…`SEC-004`, `SEC-008`)
 - [ ] Gate: as in the Evaluator Guide §5, S2
@@ -143,6 +146,8 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 | Q2 | Confirm or replace the derived reference inputs 1–6, and supply the originals (logo files, ALU model document, mappe guidance) (`docs/reference/README.md`) | HVL / ALU / TeCopp | S2–S5 as listed |
 | Q7 | Allow `hub-api.h5p.org` (and ideally `www.hvl.no`, `auth.dataporten.no`, `docs.feide.no`, `*.instructure.com`) in the environment's network settings, or run `tools/seed/fetch-seed-packages.sh` elsewhere | Repository owner | S2 |
 | Q8 | Decide whether "(formativ)" may appear in Canvas assignment names (`LTI-013`) | HVL / ALU | S6 |
+| Q9 | `SEC-003` refuses a package whose library has a different patch version. Most `.h5p` files exported elsewhere differ in patch version. May an *older* patch be accepted for a content-only import? S2 follows the spec strictly | HVL / ALU | Pilot |
+| Q10 | Confirm that the ten seed packages may be committed to the repository (D-042 size rule; H5P libraries are mostly MIT) | Repository owner | S2 |
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous | TeCopp | S3 |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |

@@ -3,7 +3,7 @@
 ## 1. CRITICAL INVARIANTS (NEVER VIOLATE)
 
 - **Runtime:** Node.js 24 LTS (ltijs 7 needs ≥ 24). TypeScript strict. Pin runtime dependencies exactly (no `^`).
-- **H5P engine:** `@lumieducation/h5p-server@10.0.4` and `@lumieducation/h5p-express@10.0.5`. Set
+- **H5P engine:** `@lumieducation/h5p-server@10.0.4` behind our own Express 5 routes (no `h5p-express`, D-035). Set
   `coreApiVersion` to `{ major: 1, minor: 28 }`, Hub endpoints to `https://hub-api.h5p.org/v1/content-types/`
   and `https://hub-api.h5p.org/v1/sites`. Core from tag `1.28.0`; editor from the pinned commit in D-022.
   NEVER use `api.h5p.org` or track a moving H5P git branch.
@@ -32,7 +32,7 @@
 
 ## 2. TECH STACK AND MONOREPO MAP
 
-- `apps/server`: Express 5 + TypeScript, `@lumieducation/h5p-server`/`h5p-express`, `ltijs` 7,
+- `apps/server`: Express 5 + TypeScript, `@lumieducation/h5p-server` (own routes in `src/http`), `ltijs` 7,
   `openid-client` 6 (Feide), Prisma (PostgreSQL 16), Redis 7, S3-compatible storage (moto emulator locally and in CI, D-023), pino.
 - `apps/web`: Next.js (App Router) + React + TypeScript + Tailwind (token preset), `/laeringsdesign`,
   `/innsikt`, `/mappe`, `/app/*` (LTI views).

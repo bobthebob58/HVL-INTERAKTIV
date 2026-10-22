@@ -42,7 +42,21 @@ with the commands given.
 | D-029 | Own licence and audit checks instead of `license-checker` and plain `npm audit` | Accepted (2026-10-21) |
 | D-030 | Accepted advisory: `image-size` parser loops (until 2027-01-31) | Accepted (2026-10-21), expires 2027-01-31 |
 | D-031 | Session 1 items that finish in Session 2 (spike steps 3–6, F1/F3 wiring, import directory, TypeDoc) | Accepted (2026-10-22) |
-| D-032 | `h5p-express` installed in S1; its Express 4 is overridden to 4.22.3 | Accepted (2026-10-22) |
+| D-032 | `h5p-express` installed in S1; its Express 4 is overridden to 4.22.3 | Superseded by D-035 (2026-10-22) |
+| D-033 | Only running it()/test() titles prove a requirement | Accepted (2026-10-22) |
+| D-034 | The yearly purge also deletes learner `User` rows | Accepted (2026-10-22) |
+| D-035 | Own Express 5 routes over `H5PAjaxEndpoint`; `h5p-express` removed | Accepted (2026-10-22) |
+| D-036 | The H5P actor has an account view and a state view | Accepted (2026-10-22) |
+| D-037 | H5P "finished" data is off; the state save interval is fixed at 5 s | Accepted (2026-10-22) |
+| D-038 | How learner state is stored, deleted and invalidated | Accepted (2026-10-22) |
+| D-039 | Our own sub-content policy on save (list items, DragQuestion, titles) | Accepted (2026-10-22) |
+| D-040 | Our own player and editor page templates with script-safe JSON | Accepted (2026-10-22) |
+| D-041 | Library change control: one audited install path, no Hub installs | Accepted (2026-10-22) |
+| D-042 | The seeder lives in `apps/server`; where the seed packages are kept | Accepted (2026-10-22) |
+| D-043 | Multipart uploads keep their extension and are limited while streaming | Accepted (2026-10-22) |
+| D-044 | SVG sanitising rules and order | Accepted (2026-10-22) |
+| D-045 | Headers for user files; the separate files origin moves to S3/S6 | Accepted (2026-10-22) |
+| D-046 | Library language files fall back nn → nb → en | Accepted (2026-10-22) |
 
 ---
 
@@ -345,6 +359,7 @@ loading of one spec per session are kept.
   dependency, which the override does not touch. `check:pins` checks nested override values too.
 - **Consequences:** S2 must test the h5p-express routers on Express 4.22.3. Remove the override when Lumi
   releases an h5p-express with a fixed Express.
+- **Superseded by D-035 (2026-10-22):** S2 does not use h5p-express, so the override and Express 4 are removed.
 
 ### D-033 · Only running it()/test() titles prove a requirement
 - **Context:** `DOC-004` said "the `describe` or `it` title starts with the ID". The Session 1 review found
@@ -369,3 +384,125 @@ loading of one spec per session are kept.
 - **Consequences:** The S6 purge test checks that no learner `User` row without an `Identity` survives.
   Staff `User` rows are unaffected.
 
+### D-035 · Own Express 5 routes over `H5PAjaxEndpoint`; `h5p-express` removed
+- **Context:** S2 needs the H5P HTTP endpoints. `@lumieducation/h5p-express` 10.0.5 builds Express 4 routers.
+  Mounted in our Express 5 app they route correctly, but: the Express 4 layer ignores returned promises, so an
+  error after a stream has started is an unhandled rejection that ends a Node 24 process; its error handler
+  returns internal error messages; 206 responses get the file name as `Content-Type`; content files get no
+  `nosniff`, CSP or `Content-Disposition`; the library-administration and content-type-cache routers have no
+  authorisation; `?asUserId=` and `contextId` come straight from the query string; and the download route
+  never reaches our permission system (Lumi builds its `PackageExporter` without one).
+- **Decision:** `apps/server/src/http/` implements the routes in Express 5 on top of h5p-server's exported
+  `H5PAjaxEndpoint` and `H5PEditor`/`H5PPlayer`. `@lumieducation/h5p-express` and the root override for its
+  Express 4 are removed (D-032 superseded). ESLint forbids importing it. D-002's pin of h5p-express no longer
+  applies; the h5p-server pin stays.
+- **Consequences:** We own about ten small route handlers and their tests. The `D-032` checklist item "test
+  the h5p-express routers on Express 4.22.3" is closed by removal. CLAUDE.md §1/§2 say so.
+
+### D-036 · The H5P actor has an account view and a state view
+- **Context:** Lumi passes one `IUser` everywhere and uses `user.id` both as the content owner and as the key
+  of learner state. `DATA-002` requires learner state to be keyed by the pseudonym (`learnerKey`), never by an
+  internal or raw ID, while ownership needs the account ID.
+- **Decision:** `HvlH5pActor` (`src/h5p/HvlH5pUser.ts`) carries the account ID, role, learnerKey, context and
+  visibility facts. Two `IUser` views wrap it: the **account** view (`id` = `User.id`) for content and
+  temporary files, and the **state** view (`id` = learnerKey) for user data and the player. The permission
+  system reads the actor's explicit fields, never `user.id`, so the wrong view fails closed. `contextId` comes
+  from the authenticated request; `?asUserId` is refused with 400. An undefined or unknown user is always
+  denied; files an author removes are deleted by our code as that author. The H5P-006 boot check is a guard in
+  the editor and player factories (every Lumi component must hold `HvlPermissionSystem`) plus an ESLint ban on
+  `LaissezFairePermissionSystem`.
+- **Consequences:** S3 maps its `Principal` to `HvlH5pActor`. Own state also requires View on the content.
+
+### D-037 · H5P "finished" data is off; the state save interval is fixed at 5 s
+- **Context:** Lumi stores a separate "finished" record (score, times) per learner. Spec 05 has no such entity;
+  scores reach the LMS through xAPI → AGS in S6. `H5P-005` asks for the default 5 s save interval, and S1
+  allowed both settings to be loaded from storage.
+- **Decision:** `setFinishedEnabled` is `false` and `contentUserStateSaveInterval` is `5000`, set in code after
+  loading. There is no `/finishedData` route; the storage's finished-data methods store nothing.
+- **Consequences:** Less learner data (data minimisation). S6 reads scores from xAPI statements.
+
+### D-038 · How learner state is stored, deleted and invalidated
+- **Context:** H5P sends state as a JSON string and deletes it by posting `data=0`. Lumi deletes invalidated
+  state *before* checking the Edit permission on save (`H5PEditor.js:527-528`), so any signed-in user could
+  wipe learners' state, and Lumi sorts state by `Number(subContentId)`, which is `NaN` for UUIDs.
+- **Decision:** The state string is stored as a JSON string value in `H5PUserData.data` (no migration);
+  `data=0` deletes the row; invalidated rows are deleted only after a save that passed the permission check;
+  the storage returns the main state (`subContentId` `'0'`) first.
+- **Consequences:** `PROD-013` (S5) adds the author's confirmation before invalidating.
+
+### D-039 · Our own sub-content policy on save (list items, DragQuestion, titles)
+- **Context:** Lumi's `ContentScanner` passes a list's array, not its parent object, to the
+  `SemanticsEnforcer` for list items (`ContentScanner.js:119`). Text fields that are list items (for example
+  H5P.Blanks `questions`) are therefore never sanitised (a CVE-2025-47828 regression), and a disallowed library
+  that is a list item (for example a DragQuestion in a QuestionSet) is neither removed nor checked. Metadata
+  titles are not sanitised either.
+- **Decision:** On save, our `SubContentPolicy` walks the params with the (altered) semantics, refuses with 403
+  any sub-library that the field does not offer and `H5P.DragQuestion` anywhere, sanitises list-item text with
+  Lumi's own text rules, and sanitises the titles in main and sub-content metadata. A test pins the upstream
+  behaviour so we notice when Lumi fixes it.
+- **Consequences:** The walker (`semantics/paramsWalker.ts`) is reused by the S4 validator.
+
+### D-040 · Our own player and editor page templates with script-safe JSON
+- **Context:** Lumi's default templates write `JSON.stringify(integration)` into a `<script>` element
+  (`renderers/player.js:16`). `JSON.stringify` does not escape `</script>`, so a title or an unknown parameter
+  key containing it would run script for every learner. `H5PIntegration.user` also carries the user's ID.
+- **Decision:** We render the pages ourselves and escape `<`, `>`, `&`, U+2028 and U+2029 in the embedded JSON.
+  `H5PIntegration.user` is blank (no pseudonym or account ID in the page).
+- **Consequences:** S4 extends the same templates with the theme and the xAPI bridge.
+
+### D-041 · Library change control: one audited install path, no Hub installs
+- **Context:** `H5P-011` requires an audit event for every library change and no Hub installs on demand in
+  production. Lumi has no install hook, and an empty content-type cache makes it call the Hub on every request.
+- **Decision:** Libraries change only through (a) the seed command and (b) an admin's package import; both
+  write a `LibraryAuditEvent` per new or patched library. Installing from the Hub is refused for everyone, in
+  every environment. `LibraryAuditEvent.actorUserId` becomes nullable (the seed command has no user) and gains
+  `source` (`seed` or `upload`). An empty content-type cache is stored as `[]`, so the server never calls the
+  Hub while serving requests; `npm run hub:check` contacts it explicitly (spike step 3).
+- **Consequences:** New content types arrive through new seed packages, reviewed like code.
+
+### D-042 · The seeder lives in `apps/server`; where the seed packages are kept
+- **Context:** Spec 01 §2 places `seedLibraries.ts` in `tools/seed/`, but seeding needs the server's H5P
+  configuration, library storage and Prisma (for the audit).
+- **Decision:** `SPEC-DEVIATION`: the seeder is `apps/server/src/h5p/libraries/` (`npm run seed:libraries`);
+  `tools/seed/` keeps the fetch script. The ten packages are committed under
+  `docs/reference/h5p-core-1.28-seed-packages/` when every file is under 50 MB and all together under 150 MB;
+  otherwise they are published as a GitHub Release asset and only `SHA256SUMS` is committed (as D-027).
+- **Consequences:** CI seeds from committed (or release) packages and never fetches from the Hub.
+
+### D-043 · Multipart uploads keep their extension and are limited while streaming
+- **Context:** Lumi requires a temporary file path when file sanitisers are registered, and its SVG sanitiser
+  ignores any path that does not end in `.svg`; common upload middlewares write temporary files without an
+  extension. Lumi also has no size limit on direct editor uploads, and it trusts the client's MIME type.
+- **Decision:** `@fastify/busboy` parses uploads into a fresh `mkdtemp` folder; each file keeps its lower-cased
+  extension, its MIME type comes from the extension, and the 50 MB limit is enforced while streaming (413).
+- **Consequences:** The folder is removed after every request, successful or not.
+
+### D-044 · SVG sanitising rules and order
+- **Context:** `SEC-001` asks to reject or strip DOCTYPE/ENTITY, scripts, event handlers, `foreignObject`,
+  `javascript:`/`data:text/html` URLs and external references. Inkscape and Illustrator exports carry a public
+  DOCTYPE, which is harmless without an internal subset.
+- **Decision:** An internal DTD subset or any `<!ENTITY` is rejected. A plain DOCTYPE and `xml-stylesheet`
+  instructions are stripped. `href`/`xlink:href` may only point to a `#fragment` or a raster
+  `data:image/(png|jpeg|gif|webp)`. `script`, `foreignObject`, `set`, `on*` attributes and animations of `href`
+  are removed; `@import` and external `url()` are removed from styles. Order: our pre-check, Lumi's sanitiser,
+  our stricter DOMPurify pass, and a final check that nothing forbidden is left. Benign SVGs must render
+  identically in Chromium before and after (screenshot comparison).
+- **Consequences:** SVG files larger than 5 MB are refused.
+
+### D-045 · Headers for user files; the separate files origin moves to S3/S6
+- **Context:** `SEC-004` asks for `nosniff`, a sandbox CSP for SVG and documents, and `attachment` for
+  non-media types, and for a separate files origin in production. Files on another origin need their own
+  authorisation (signed URLs, part of S3's `HvlUrlGenerator`) and deployment (S6).
+- **Decision:** Every content and temporary file is served with `X-Content-Type-Options: nosniff` and
+  `Content-Security-Policy: sandbox; default-src 'none'; style-src 'unsafe-inline'`; everything except raster
+  images, audio, video and VTT captions is served as `attachment`. The separate origin is an S6 checklist item.
+- **Consequences:** A stricter superset of `SEC-004` in S2; the origin isolation follows in S3/S6.
+
+### D-046 · Library language files fall back nn → nb → en
+- **Context:** `H5P-008` asks that a content type without `language/nn.json` uses its `nb` strings, then `en`.
+  Lumi falls back from `nn` straight to `en` (`LibraryManager.js:109-168`), and its `alterLibraryLanguageFile`
+  hook cannot supply a missing file.
+- **Decision:** A library-storage wrapper serves `language/nb.json` when `language/nn.json` is missing. The
+  translation callback for Lumi's own strings uses i18next (`lng: 'nn'`, `fallbackLng: ['nb', 'en']`); our own
+  server messages stay in `src/i18n/translate.ts`.
+- **Consequences:** Lumi's own `nn` client strings are partly Bokmål; HVL's language advisers review them (Q2).

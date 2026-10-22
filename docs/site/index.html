@@ -269,7 +269,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S1</td><td>Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup</td><td>00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD</td><td>✅ Done (2026-10-21)</td></tr>
 <tr>
-<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all)</td><td>⬜ Not started</td></tr>
+<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>🟨 In progress (2026-10-22)</td></tr>
 <tr>
 <td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>⬜ Not started</td></tr>
 <tr>
@@ -347,7 +347,35 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>D-031</td><td>Session 1 items that finish in Session 2 (spike steps 3–6, F1/F3 wiring, import directory, TypeDoc)</td><td>Accepted (2026-10-22)</td></tr>
 <tr>
-<td>D-032</td><td><code>h5p-express</code> installed in S1; its Express 4 is overridden to 4.22.3</td><td>Accepted (2026-10-22)</td></tr>
+<td>D-032</td><td><code>h5p-express</code> installed in S1; its Express 4 is overridden to 4.22.3</td><td>Superseded by D-035 (2026-10-22)</td></tr>
+<tr>
+<td>D-033</td><td>Only running it()/test() titles prove a requirement</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-034</td><td>The yearly purge also deletes learner <code>User</code> rows</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-035</td><td>Own Express 5 routes over <code>H5PAjaxEndpoint</code>; <code>h5p-express</code> removed</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-036</td><td>The H5P actor has an account view and a state view</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-037</td><td>H5P &quot;finished&quot; data is off; the state save interval is fixed at 5 s</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-038</td><td>How learner state is stored, deleted and invalidated</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-039</td><td>Our own sub-content policy on save (list items, DragQuestion, titles)</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-040</td><td>Our own player and editor page templates with script-safe JSON</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-041</td><td>Library change control: one audited install path, no Hub installs</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-042</td><td>The seeder lives in <code>apps/server</code>; where the seed packages are kept</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-043</td><td>Multipart uploads keep their extension and are limited while streaming</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-044</td><td>SVG sanitising rules and order</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-045</td><td>Headers for user files; the separate files origin moves to S3/S6</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-046</td><td>Library language files fall back nn → nb → en</td><td>Accepted (2026-10-22)</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--references" tabindex="-1">Reference inputs from HVL</h3>
@@ -2880,7 +2908,7 @@ points. Where it does, this spec wins and the reason is recorded in <a href="#de
 </thead><tbody><tr>
 <td>Latest <code>@lumieducation/h5p-server</code></td><td><strong>10.0.4</strong> (published 2025-03-08). There is no 10.1.0.</td><td>Pin <code>10.0.4</code> exactly. The plan&#39;s &quot;≥ 10.1.0&quot; cannot be installed. (D-002)</td></tr>
 <tr>
-<td>Latest <code>@lumieducation/h5p-express</code></td><td><strong>10.0.5</strong></td><td>Pin exactly.</td></tr>
+<td>Latest <code>@lumieducation/h5p-express</code></td><td><strong>10.0.5</strong></td><td>Not used: its Express 4 routers are unsafe inside our Express 5 app, so <code>apps/server/src/http/</code> implements the routes on h5p-server&#39;s <code>H5PAjaxEndpoint</code> (D-035).</td></tr>
 <tr>
 <td>h5p-server default <code>coreApiVersion</code></td><td><code>{ major: 1, minor: 27 }</code></td><td>We must override it to 1.28 (<a class="req-ref" href="#r-H5P-001"><code>H5P-001</code></a>).</td></tr>
 <tr>
@@ -2925,6 +2953,11 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
   HvlPermissionSystem.ts       IPermissionSystem implementation (role matrix §5)     H5P-006
   HvlUrlGenerator.ts           UrlGenerator that appends ltik / CSRF parameters      H5P-007
   HvlTranslationCallback.ts    i18next nn → nb → en                                  H5P-008
+  HvlH5PEditor.ts              editor subclass: ten-type filter, save order, package rules  H5P-002, SEC-003 (S2)
+  semantics/                   DragQuestion removal, params walker, sub-content policy H5P-002, SEC-008 (S2, D-039)
+  permissions/                 content facts and the rule tables for HvlPermissionSystem  H5P-006 (S2)
+  libraries/                   seeder, audited library installer, package manifest checks  H5P-003, H5P-011, SEC-003 (S2, D-042)
+  render/                      our player/editor pages with script-safe JSON          SEC-008 (S2, D-040)
   storage/
     PrismaContentStorage.ts        IContentStorage (metadata in PostgreSQL, files in S3)
     S3ContentFileStore.ts          S3 file I/O for PrismaContentStorage (D-025)
@@ -2940,8 +2973,11 @@ apps/server/src/security/
   SvgSanitizer.ts              IFileSanitizer (wraps @lumieducation/h5p-svg-sanitizer + extra rules) SEC-001
   FileTypeSniffer.ts           compares magic bytes with the extension               SEC-002
   ContentFileHeaders.ts        CSP sandbox, nosniff, Content-Disposition             SEC-004
+apps/server/src/http/
+  createH5pRouter.ts + routes/ Express 5 routes on H5PAjaxEndpoint (D-035): AJAX, files, user data, content  H5P-005, SEC-004 (S2)
 tools/seed/
-  seedLibraries.ts             installs the ten types offline from verified .h5p packages  H5P-003</code></pre>
+  fetch-seed-packages.sh       downloads and checks the ten .h5p packages (the seeder itself is in
+                               apps/server/src/h5p/libraries/, D-042)                  H5P-003</code></pre>
 <p>The server never interprets pedagogical parameters except in the validator (spec 03), which only reads them.</p>
 <hr>
 <h3 id="spec-01--3-the-ten-content-types" tabindex="-1">3. The ten content types</h3>
@@ -4721,7 +4757,35 @@ with the commands given.</p>
 <tr>
 <td>D-031</td><td>Session 1 items that finish in Session 2 (spike steps 3–6, F1/F3 wiring, import directory, TypeDoc)</td><td>Accepted (2026-10-22)</td></tr>
 <tr>
-<td>D-032</td><td><code>h5p-express</code> installed in S1; its Express 4 is overridden to 4.22.3</td><td>Accepted (2026-10-22)</td></tr>
+<td>D-032</td><td><code>h5p-express</code> installed in S1; its Express 4 is overridden to 4.22.3</td><td>Superseded by D-035 (2026-10-22)</td></tr>
+<tr>
+<td>D-033</td><td>Only running it()/test() titles prove a requirement</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-034</td><td>The yearly purge also deletes learner <code>User</code> rows</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-035</td><td>Own Express 5 routes over <code>H5PAjaxEndpoint</code>; <code>h5p-express</code> removed</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-036</td><td>The H5P actor has an account view and a state view</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-037</td><td>H5P &quot;finished&quot; data is off; the state save interval is fixed at 5 s</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-038</td><td>How learner state is stored, deleted and invalidated</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-039</td><td>Our own sub-content policy on save (list items, DragQuestion, titles)</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-040</td><td>Our own player and editor page templates with script-safe JSON</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-041</td><td>Library change control: one audited install path, no Hub installs</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-042</td><td>The seeder lives in <code>apps/server</code>; where the seed packages are kept</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-043</td><td>Multipart uploads keep their extension and are limited while streaming</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-044</td><td>SVG sanitising rules and order</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-045</td><td>Headers for user files; the separate files origin moves to S3/S6</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-046</td><td>Library language files fall back nn → nb → en</td><td>Accepted (2026-10-22)</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="decisions--d-001--nodejs-24-lts-instead-of-22" tabindex="-1">D-001 · Node.js 24 LTS instead of 22</h3>
@@ -5043,6 +5107,7 @@ moderate ones in <code>qs</code> and <code>body-parser</code>. Express 4.22.3 (2
 dependency, which the override does not touch. <code>check:pins</code> checks nested override values too.</li>
 <li><strong>Consequences:</strong> S2 must test the h5p-express routers on Express 4.22.3. Remove the override when Lumi
 releases an h5p-express with a fixed Express.</li>
+<li><strong>Superseded by D-035 (2026-10-22):</strong> S2 does not use h5p-express, so the override and Express 4 are removed.</li>
 </ul>
 <h3 id="decisions--d-033--only-running-ittest-titles-prove-a-requirement" tabindex="-1">D-033 · Only running it()/test() titles prove a requirement</h3>
 <ul>
@@ -5069,6 +5134,141 @@ The inventory labels a learner&#39;s <code>userId</code> references (<code>Ident
 <li><strong>Consequences:</strong> The S6 purge test checks that no learner <code>User</code> row without an <code>Identity</code> survives.
 Staff <code>User</code> rows are unaffected.</li>
 </ul>
+<h3 id="decisions--d-035--own-express-5-routes-over-h5pajaxendpoint-h5p-express-removed" tabindex="-1">D-035 · Own Express 5 routes over <code>H5PAjaxEndpoint</code>; <code>h5p-express</code> removed</h3>
+<ul>
+<li><strong>Context:</strong> S2 needs the H5P HTTP endpoints. <code>@lumieducation/h5p-express</code> 10.0.5 builds Express 4 routers.
+Mounted in our Express 5 app they route correctly, but: the Express 4 layer ignores returned promises, so an
+error after a stream has started is an unhandled rejection that ends a Node 24 process; its error handler
+returns internal error messages; 206 responses get the file name as <code>Content-Type</code>; content files get no
+<code>nosniff</code>, CSP or <code>Content-Disposition</code>; the library-administration and content-type-cache routers have no
+authorisation; <code>?asUserId=</code> and <code>contextId</code> come straight from the query string; and the download route
+never reaches our permission system (Lumi builds its <code>PackageExporter</code> without one).</li>
+<li><strong>Decision:</strong> <code>apps/server/src/http/</code> implements the routes in Express 5 on top of h5p-server&#39;s exported
+<code>H5PAjaxEndpoint</code> and <code>H5PEditor</code>/<code>H5PPlayer</code>. <code>@lumieducation/h5p-express</code> and the root override for its
+Express 4 are removed (D-032 superseded). ESLint forbids importing it. D-002&#39;s pin of h5p-express no longer
+applies; the h5p-server pin stays.</li>
+<li><strong>Consequences:</strong> We own about ten small route handlers and their tests. The <code>D-032</code> checklist item &quot;test
+the h5p-express routers on Express 4.22.3&quot; is closed by removal. CLAUDE.md §1/§2 say so.</li>
+</ul>
+<h3 id="decisions--d-036--the-h5p-actor-has-an-account-view-and-a-state-view" tabindex="-1">D-036 · The H5P actor has an account view and a state view</h3>
+<ul>
+<li><strong>Context:</strong> Lumi passes one <code>IUser</code> everywhere and uses <code>user.id</code> both as the content owner and as the key
+of learner state. <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a> requires learner state to be keyed by the pseudonym (<code>learnerKey</code>), never by an
+internal or raw ID, while ownership needs the account ID.</li>
+<li><strong>Decision:</strong> <code>HvlH5pActor</code> (<code>src/h5p/HvlH5pUser.ts</code>) carries the account ID, role, learnerKey, context and
+visibility facts. Two <code>IUser</code> views wrap it: the <strong>account</strong> view (<code>id</code> = <code>User.id</code>) for content and
+temporary files, and the <strong>state</strong> view (<code>id</code> = learnerKey) for user data and the player. The permission
+system reads the actor&#39;s explicit fields, never <code>user.id</code>, so the wrong view fails closed. <code>contextId</code> comes
+from the authenticated request; <code>?asUserId</code> is refused with 400. An undefined or unknown user is always
+denied; files an author removes are deleted by our code as that author. The H5P-006 boot check is a guard in
+the editor and player factories (every Lumi component must hold <code>HvlPermissionSystem</code>) plus an ESLint ban on
+<code>LaissezFairePermissionSystem</code>.</li>
+<li><strong>Consequences:</strong> S3 maps its <code>Principal</code> to <code>HvlH5pActor</code>. Own state also requires View on the content.</li>
+</ul>
+<h3 id="decisions--d-037--h5p-finished-data-is-off-the-state-save-interval-is-fixed-at-5-s" tabindex="-1">D-037 · H5P &quot;finished&quot; data is off; the state save interval is fixed at 5 s</h3>
+<ul>
+<li><strong>Context:</strong> Lumi stores a separate &quot;finished&quot; record (score, times) per learner. Spec 05 has no such entity;
+scores reach the LMS through xAPI → AGS in S6. <a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a> asks for the default 5 s save interval, and S1
+allowed both settings to be loaded from storage.</li>
+<li><strong>Decision:</strong> <code>setFinishedEnabled</code> is <code>false</code> and <code>contentUserStateSaveInterval</code> is <code>5000</code>, set in code after
+loading. There is no <code>/finishedData</code> route; the storage&#39;s finished-data methods store nothing.</li>
+<li><strong>Consequences:</strong> Less learner data (data minimisation). S6 reads scores from xAPI statements.</li>
+</ul>
+<h3 id="decisions--d-038--how-learner-state-is-stored-deleted-and-invalidated" tabindex="-1">D-038 · How learner state is stored, deleted and invalidated</h3>
+<ul>
+<li><strong>Context:</strong> H5P sends state as a JSON string and deletes it by posting <code>data=0</code>. Lumi deletes invalidated
+state <em>before</em> checking the Edit permission on save (<code>H5PEditor.js:527-528</code>), so any signed-in user could
+wipe learners&#39; state, and Lumi sorts state by <code>Number(subContentId)</code>, which is <code>NaN</code> for UUIDs.</li>
+<li><strong>Decision:</strong> The state string is stored as a JSON string value in <code>H5PUserData.data</code> (no migration);
+<code>data=0</code> deletes the row; invalidated rows are deleted only after a save that passed the permission check;
+the storage returns the main state (<code>subContentId</code> <code>&#39;0&#39;</code>) first.</li>
+<li><strong>Consequences:</strong> <a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a> (S5) adds the author&#39;s confirmation before invalidating.</li>
+</ul>
+<h3 id="decisions--d-039--our-own-sub-content-policy-on-save-list-items-dragquestion-titles" tabindex="-1">D-039 · Our own sub-content policy on save (list items, DragQuestion, titles)</h3>
+<ul>
+<li><strong>Context:</strong> Lumi&#39;s <code>ContentScanner</code> passes a list&#39;s array, not its parent object, to the
+<code>SemanticsEnforcer</code> for list items (<code>ContentScanner.js:119</code>). Text fields that are list items (for example
+H5P.Blanks <code>questions</code>) are therefore never sanitised (a CVE-2025-47828 regression), and a disallowed library
+that is a list item (for example a DragQuestion in a QuestionSet) is neither removed nor checked. Metadata
+titles are not sanitised either.</li>
+<li><strong>Decision:</strong> On save, our <code>SubContentPolicy</code> walks the params with the (altered) semantics, refuses with 403
+any sub-library that the field does not offer and <code>H5P.DragQuestion</code> anywhere, sanitises list-item text with
+Lumi&#39;s own text rules, and sanitises the titles in main and sub-content metadata. A test pins the upstream
+behaviour so we notice when Lumi fixes it.</li>
+<li><strong>Consequences:</strong> The walker (<code>semantics/paramsWalker.ts</code>) is reused by the S4 validator.</li>
+</ul>
+<h3 id="decisions--d-040--our-own-player-and-editor-page-templates-with-script-safe-json" tabindex="-1">D-040 · Our own player and editor page templates with script-safe JSON</h3>
+<ul>
+<li><strong>Context:</strong> Lumi&#39;s default templates write <code>JSON.stringify(integration)</code> into a <code>&lt;script&gt;</code> element
+(<code>renderers/player.js:16</code>). <code>JSON.stringify</code> does not escape <code>&lt;/script&gt;</code>, so a title or an unknown parameter
+key containing it would run script for every learner. <code>H5PIntegration.user</code> also carries the user&#39;s ID.</li>
+<li><strong>Decision:</strong> We render the pages ourselves and escape <code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, U+2028 and U+2029 in the embedded JSON.
+<code>H5PIntegration.user</code> is blank (no pseudonym or account ID in the page).</li>
+<li><strong>Consequences:</strong> S4 extends the same templates with the theme and the xAPI bridge.</li>
+</ul>
+<h3 id="decisions--d-041--library-change-control-one-audited-install-path-no-hub-installs" tabindex="-1">D-041 · Library change control: one audited install path, no Hub installs</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-H5P-011"><code>H5P-011</code></a> requires an audit event for every library change and no Hub installs on demand in
+production. Lumi has no install hook, and an empty content-type cache makes it call the Hub on every request.</li>
+<li><strong>Decision:</strong> Libraries change only through (a) the seed command and (b) an admin&#39;s package import; both
+write a <code>LibraryAuditEvent</code> per new or patched library. Installing from the Hub is refused for everyone, in
+every environment. <code>LibraryAuditEvent.actorUserId</code> becomes nullable (the seed command has no user) and gains
+<code>source</code> (<code>seed</code> or <code>upload</code>). An empty content-type cache is stored as <code>[]</code>, so the server never calls the
+Hub while serving requests; <code>npm run hub:check</code> contacts it explicitly (spike step 3).</li>
+<li><strong>Consequences:</strong> New content types arrive through new seed packages, reviewed like code.</li>
+</ul>
+<h3 id="decisions--d-042--the-seeder-lives-in-appsserver-where-the-seed-packages-are-kept" tabindex="-1">D-042 · The seeder lives in <code>apps/server</code>; where the seed packages are kept</h3>
+<ul>
+<li><strong>Context:</strong> Spec 01 §2 places <code>seedLibraries.ts</code> in <code>tools/seed/</code>, but seeding needs the server&#39;s H5P
+configuration, library storage and Prisma (for the audit).</li>
+<li><strong>Decision:</strong> <code>SPEC-DEVIATION</code>: the seeder is <code>apps/server/src/h5p/libraries/</code> (<code>npm run seed:libraries</code>);
+<code>tools/seed/</code> keeps the fetch script. The ten packages are committed under
+<code>docs/reference/h5p-core-1.28-seed-packages/</code> when every file is under 50 MB and all together under 150 MB;
+otherwise they are published as a GitHub Release asset and only <code>SHA256SUMS</code> is committed (as D-027).</li>
+<li><strong>Consequences:</strong> CI seeds from committed (or release) packages and never fetches from the Hub.</li>
+</ul>
+<h3 id="decisions--d-043--multipart-uploads-keep-their-extension-and-are-limited-while-streaming" tabindex="-1">D-043 · Multipart uploads keep their extension and are limited while streaming</h3>
+<ul>
+<li><strong>Context:</strong> Lumi requires a temporary file path when file sanitisers are registered, and its SVG sanitiser
+ignores any path that does not end in <code>.svg</code>; common upload middlewares write temporary files without an
+extension. Lumi also has no size limit on direct editor uploads, and it trusts the client&#39;s MIME type.</li>
+<li><strong>Decision:</strong> <code>@fastify/busboy</code> parses uploads into a fresh <code>mkdtemp</code> folder; each file keeps its lower-cased
+extension, its MIME type comes from the extension, and the 50 MB limit is enforced while streaming (413).</li>
+<li><strong>Consequences:</strong> The folder is removed after every request, successful or not.</li>
+</ul>
+<h3 id="decisions--d-044--svg-sanitising-rules-and-order" tabindex="-1">D-044 · SVG sanitising rules and order</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a> asks to reject or strip DOCTYPE/ENTITY, scripts, event handlers, <code>foreignObject</code>,
+<code>javascript:</code>/<code>data:text/html</code> URLs and external references. Inkscape and Illustrator exports carry a public
+DOCTYPE, which is harmless without an internal subset.</li>
+<li><strong>Decision:</strong> An internal DTD subset or any <code>&lt;!ENTITY</code> is rejected. A plain DOCTYPE and <code>xml-stylesheet</code>
+instructions are stripped. <code>href</code>/<code>xlink:href</code> may only point to a <code>#fragment</code> or a raster
+<code>data:image/(png|jpeg|gif|webp)</code>. <code>script</code>, <code>foreignObject</code>, <code>set</code>, <code>on*</code> attributes and animations of <code>href</code>
+are removed; <code>@import</code> and external <code>url()</code> are removed from styles. Order: our pre-check, Lumi&#39;s sanitiser,
+our stricter DOMPurify pass, and a final check that nothing forbidden is left. Benign SVGs must render
+identically in Chromium before and after (screenshot comparison).</li>
+<li><strong>Consequences:</strong> SVG files larger than 5 MB are refused.</li>
+</ul>
+<h3 id="decisions--d-045--headers-for-user-files-the-separate-files-origin-moves-to-s3s6" tabindex="-1">D-045 · Headers for user files; the separate files origin moves to S3/S6</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a> asks for <code>nosniff</code>, a sandbox CSP for SVG and documents, and <code>attachment</code> for
+non-media types, and for a separate files origin in production. Files on another origin need their own
+authorisation (signed URLs, part of S3&#39;s <code>HvlUrlGenerator</code>) and deployment (S6).</li>
+<li><strong>Decision:</strong> Every content and temporary file is served with <code>X-Content-Type-Options: nosniff</code> and
+<code>Content-Security-Policy: sandbox; default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;</code>; everything except raster
+images, audio, video and VTT captions is served as <code>attachment</code>. The separate origin is an S6 checklist item.</li>
+<li><strong>Consequences:</strong> A stricter superset of <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a> in S2; the origin isolation follows in S3/S6.</li>
+</ul>
+<h3 id="decisions--d-046--library-language-files-fall-back-nn--nb--en" tabindex="-1">D-046 · Library language files fall back nn → nb → en</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-H5P-008"><code>H5P-008</code></a> asks that a content type without <code>language/nn.json</code> uses its <code>nb</code> strings, then <code>en</code>.
+Lumi falls back from <code>nn</code> straight to <code>en</code> (<code>LibraryManager.js:109-168</code>), and its <code>alterLibraryLanguageFile</code>
+hook cannot supply a missing file.</li>
+<li><strong>Decision:</strong> A library-storage wrapper serves <code>language/nb.json</code> when <code>language/nn.json</code> is missing. The
+translation callback for Lumi&#39;s own strings uses i18next (<code>lng: &#39;nn&#39;</code>, <code>fallbackLng: [&#39;nb&#39;, &#39;en&#39;]</code>); our own
+server messages stay in <code>src/i18n/translate.ts</code>.</li>
+<li><strong>Consequences:</strong> Lumi&#39;s own <code>nn</code> client strings are partly Bokmål; HVL&#39;s language advisers review them (Q2).</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -5084,7 +5284,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S1</td><td>Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup</td><td>00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD</td><td>✅ Done (2026-10-21)</td></tr>
 <tr>
-<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all)</td><td>⬜ Not started</td></tr>
+<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>🟨 In progress (2026-10-22)</td></tr>
 <tr>
 <td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>⬜ Not started</td></tr>
 <tr>
@@ -5153,17 +5353,20 @@ every residual and new problem it found is fixed, with regression tests (see the
 <td>6. Decide 1.28 or the 1.27 fallback</td><td>Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2</td></tr>
 </tbody></table></div>
 <p>Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-21 entry is the first run).</p>
-<h3 id="progress--s2--content-types-and-security" tabindex="-1">S2 — Content types and security ⬜</h3>
+<h3 id="progress--s2--content-types-and-security" tabindex="-1">S2 — Content types and security 🟨</h3>
 <ul>
 <li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable; inject the F3 theme CSS in
 <code>H5pPlayerFactory</code>/<code>H5pEditorFactory</code>; decide R-01 (1.28 or the 1.27 fallback) and record it (D-031)</li>
 <li><span class="task">○ To do:</span> Wire F1: <code>getLocalIdOverride: () =&gt; localIdFor(&lt;site UUID&gt;)</code> in <code>H5pEditorFactory</code>, with a test (D-031)</li>
 <li><span class="task">○ To do:</span> Package import route: <code>inspectZip</code> before Lumi&#39;s <code>PackageImporter</code>, extraction in a fresh temporary
-folder that is removed afterwards (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>, D-031); test the h5p-express routers on Express 4.22.3 (D-032)</li>
+folder that is removed afterwards (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>, D-031). The h5p-express item of D-032 is replaced by our
+own Express 5 routes (D-035)</li>
+<li><span class="task">○ To do:</span> Decisions D-035…D-046 recorded (plan approved 2026-10-22)</li>
 <li><span class="task">○ To do:</span> TypeDoc API pages in CI (<a class="req-ref" href="#r-DOC-002"><code>DOC-002</code></a>, D-031)</li>
 <li><span class="task">○ To do:</span> <code>HvlTop10ContentTypeFilter</code> and the DragQuestion semantics filter (<a class="req-ref" href="#r-H5P-002"><code>H5P-002</code></a>, <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>)</li>
 <li><span class="task">○ To do:</span> Seed script with SHA-256 verification (<a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>). <strong>Needs the <code>.h5p</code> files</strong>: run <code>tools/seed/fetch-seed-packages.sh</code> where hub-api.h5p.org is reachable</li>
 <li><span class="task">○ To do:</span> <code>PrismaContentUserDataStorage</code> (<a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a>); <code>HvlPermissionSystem</code> with a table test (<a class="req-ref" href="#r-H5P-006"><code>H5P-006</code></a>)</li>
+<li><span class="task">○ To do:</span> Own Express 5 routes, player page and sub-content policy (D-035, D-039, D-040; <a class="req-ref" href="#r-SEC-008"><code>SEC-008</code></a>)</li>
 <li><span class="task">○ To do:</span> <code>HvlTranslationCallback</code> (<a class="req-ref" href="#r-H5P-008"><code>H5P-008</code></a>); library update audit (<a class="req-ref" href="#r-H5P-011"><code>H5P-011</code></a>)</li>
 <li><span class="task">○ To do:</span> <code>SvgSanitizer</code>, <code>FileTypeSniffer</code>, <code>ContentFileHeaders</code>, package import rules (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>…<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-008"><code>SEC-008</code></a>)</li>
 <li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S2</li>
@@ -5222,6 +5425,10 @@ folder that is removed afterwards (<a class="req-ref" href="#r-SEC-005"><code>SE
 <td>Q7</td><td>Allow <code>hub-api.h5p.org</code> (and ideally <code>www.hvl.no</code>, <code>auth.dataporten.no</code>, <code>docs.feide.no</code>, <code>*.instructure.com</code>) in the environment&#39;s network settings, or run <code>tools/seed/fetch-seed-packages.sh</code> elsewhere</td><td>Repository owner</td><td>S2</td></tr>
 <tr>
 <td>Q8</td><td>Decide whether &quot;(formativ)&quot; may appear in Canvas assignment names (<a class="req-ref" href="#r-LTI-013"><code>LTI-013</code></a>)</td><td>HVL / ALU</td><td>S6</td></tr>
+<tr>
+<td>Q9</td><td><a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a> refuses a package whose library has a different patch version. Most <code>.h5p</code> files exported elsewhere differ in patch version. May an <em>older</em> patch be accepted for a content-only import? S2 follows the spec strictly</td><td>HVL / ALU</td><td>Pilot</td></tr>
+<tr>
+<td>Q10</td><td>Confirm that the ten seed packages may be committed to the repository (D-042 size rule; H5P libraries are mostly MIT)</td><td>Repository owner</td><td>S2</td></tr>
 <tr>
 <td>Q3</td><td>Feide Customer Portal registration and redirect URIs</td><td>HVL IT</td><td>S3</td></tr>
 <tr>
