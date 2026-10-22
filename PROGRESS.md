@@ -45,7 +45,7 @@ $ node tools/spec-trace/specTrace.mjs --check
       `eslint-plugin-i18next`, Prettier. Stylelint moves to S4 with the first theme CSS
 - [x] Husky: `pre-commit` runs lint-staged (Prettier, ESLint); `commit-msg` runs the DOC-011 checker
 - [x] `npm run spec:trace` (root override, tests), `check:filesize`, `tools/doc-lint` with 11 checks and tests
-      (`DOC-001`…`DOC-014`, `NFR-004`)
+      (`DOC-001`–`003`, `005`–`010`, `013`, `014`, see `tools/doc-lint/README.md`; `NFR-004`)
 - [x] Prisma schema, split by domain (20 models: spec 05 §4 plus `AuthAuditEvent` from spec 02 §7), first migration with a CHECK constraint that
       keeps names and e-mail off learner rows; `docs/privacy/DATA-INVENTORY.md` and its check (`DATA-001`, `DATA-002`)
 - [x] `deriveLearnerKey` with per-academic-year secrets (`DATA-002`); pino logger with deep redaction (`DATA-009`)
@@ -55,11 +55,13 @@ $ node tools/spec-trace/specTrace.mjs --check
 - [x] `docker-compose.yml`: PostgreSQL 16, Redis 7, S3 emulator (moto instead of MinIO, D-023)
 - [x] CI: typecheck, lint, format, doc-lint, file size, pins, licences, audit with reviewed exceptions,
       inventory, tests with service containers, traceability, spec site, H5P boot check (`SEC-007`, `NFR-005`)
-- [x] Decisions D-023…D-032 recorded
+- [x] Decisions D-023…D-034 recorded
 - [x] Independent review (2026-10-22): three reviewers (correctness and security, privacy and spec
       compliance, documentation) with a skeptic per finding; 16 confirmed findings and the valid
       low-severity ones fixed with regression tests (see the session log)
-- [x] Gate (output below)
+- [x] Verification of those fixes (2026-10-22): an independent pass re-ran each finding and probed the fixes;
+      every residual and new problem it found is fixed, with regression tests (see the session log)
+- [x] Gate (output in the session log, 2026-10-22 · S1 review)
 
 Spike results (spec 01 §7, Risk R-01):
 
@@ -72,7 +74,7 @@ Spike results (spec 01 §7, Risk R-01):
 | 5. Daylight theme with the F3 CSS | ⛔ Blocked by step 4. F3 injection moves to S2 with the player factory |
 | 6. Decide 1.28 or the 1.27 fallback | Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2 |
 
-Gate output: see the session log entry for 2026-10-21 · S1.
+Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-21 entry is the first run).
 
 ## S2 — Content types and security ⬜
 
@@ -188,6 +190,34 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npm run spec:site -- --check                       ✓ docs/site/index.html is up to date.
   $ npm run h5p:fetch-core                             ✓ core and editor files match their committed hash lists
   $ npm run boot-check --workspace apps/server
+  {"level":"info","service":"hvl-interaktiv-server","h5pCoreApi":"1.28","hubHost":"hub-api.h5p.org","siteRegistered":false,"msg":"H5P engine configured"}
+  ```
+- **2026-10-22 · S1 review** — Independent review of Session 1 (three reviewers, a skeptic per finding),
+  then a verification pass that re-ran every finding against the fixes. Fixed: log redaction (message
+  strings, printf arguments, Prisma and driver-adapter errors by code only, sensitive key endings and Feide
+  attributes, credentials and e-mails in free text in linear time, valid JSON lines); production secret
+  checks (text with newlines, too few distinct bytes, secrets that give the same HMAC key); H5P settings
+  from storage (only an allowlist survives, so no stored URL or script setting); S3 uploads report the S3
+  error; temporary-file listing skips foreign keys; doc-lint follows every `Tests:` path form; spec-trace
+  and doc-lint share one rule for test titles (D-033); `nin` matched as a word in the learner-table guard;
+  SPDX `WITH` validation; data inventory and `DATA-003` purge of learner `User` rows (D-034); h5p-express
+  Express override (D-032) and S1 items finished in S2 (D-031). Decisions D-031…D-034. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint                                       exit 0
+  $ npm run format:check                               All matched files use Prettier code style!
+  $ npm run doc:lint                                   ✓ doc-lint: 11 checks passed.
+  $ npm run check:filesize                             ✓ doc-lint: file-size passed.
+  $ npm run check:pins                                 ✓ check:pins: 2 manifests, every version is pinned exactly.
+  $ npm run check:licences                             ✓ check:licences: 214 production packages, all GPL-3.0-compatible.
+  $ npm run check:audit                                ✓ check:audit: 2 high/critical advisories, all covered by reviewed exceptions.
+  $ npm run privacy:inventory-check                    ✓ privacy:inventory-check: 20 models, 154 fields, all in docs/privacy/DATA-INVENTORY.md.
+  $ npx vitest run                                     Test Files 31 passed (31) · Tests 203 passed (203)
+  $ npm run spec:trace -- --check --done-through=S1    ✓ 126 requirements, traceability up to date.
+  $ npm run spec:site -- --check                       ✓ docs/site/index.html is up to date.
+  $ npm run h5p:fetch-core                             ✓ H5P core 1.28.0 and editor ab2daa18 are in apps/server/h5p
+  $ npm run boot-check --workspace apps/server         (no .env, no DATABASE_URL/REDIS_URL/S3_*/PSEUDONYM_SECRETS)
   {"level":"info","service":"hvl-interaktiv-server","h5pCoreApi":"1.28","hubHost":"hub-api.h5p.org","siteRegistered":false,"msg":"H5P engine configured"}
   ```
 

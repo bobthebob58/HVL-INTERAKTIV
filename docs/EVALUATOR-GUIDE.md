@@ -60,12 +60,12 @@ asserts? Does the module header's *Invariants* section match the code? Is every 
 | `node tools/spec-trace/specTrace.mjs --check` | Specs are internally consistent; traceability is current |
 | `node tools/spec-site/buildSpecSite.mjs --check` | The spec website matches the Markdown |
 | `docker compose up -d` | PostgreSQL, Redis and an S3 emulator start locally (D-023); the mock OIDC/LTI platform joins in S3 |
-| `npm ci && npm run typecheck` | The monorepo installs and compiles from a clean checkout (`npm run build` arrives with `apps/web` in S4) |
+| `npm ci && npm run db:generate --workspace apps/server && npm run typecheck` | The monorepo installs and compiles from a clean checkout; the Prisma client is generated, not committed (`npm run build` arrives with `apps/web` in S4) |
 | `npm run typecheck && npm run lint` | Types and lint |
 | `npm run doc:lint` | The Documentation Standard, checked by machine (`DOC-001`–`003`, `005`–`010`, `013`, `014`; `DOC-004` is `spec:trace`, `DOC-011` the commit-msg hook) |
 | `npm run privacy:inventory-check` | The data inventory matches the database schema (`DATA-001`) |
 | `npm run h5p:fetch-core && npm run boot-check --workspace apps/server` | H5P client files are the verified 1.28 release; the engine would start (`H5P-001`); needs no services or `.env` |
-| `npm test` | Unit and integration tests (Vitest; integration tests need `docker compose up -d`, D-023) |
+| `npm test` | Unit and integration tests (Vitest). Generate the Prisma client first (row above). Integration tests also need `docker compose up -d`, `npm run db:migrate` and `apps/server/.env` copied from `.env.example` (D-023) |
 | `npm run test:e2e` *(from S3)* | Playwright journeys J1–J5 against the mock Canvas platform |
 | `npm run test:a11y` *(from S4)* | axe-core on every route and inside each content type's iframe (`UD-030`) |
 | `npm run spec:trace -- --check --done-through=S<n>` | Every MUST requirement up to session *n* has a test |

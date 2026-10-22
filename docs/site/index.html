@@ -2142,14 +2142,16 @@ addresses, Feide IDs, national ID numbers or raw LTI <code>sub</code> values. Th
 </details>
 <details class="req" id="x-DATA-003" data-area="DATA" data-priority="MUST" data-session="S6" data-status="planned" data-text="data-003 annual retention purge a scheduled job runs on a configured date (default 15 august), for the academic year that has
 ended. it deletes `xapistatement`, `h5puserdata`, `gradesyncjob` and learner `identity` rows older
-than the academic-year boundary plus 30 days, and destroys that year's pseudonym secret. only
+than the academic-year boundary plus 30 days, then learner `user` rows that have no `identity` left
+(d-034), and destroys that year's pseudonym secret. only
 aggregate snapshots that already satisfy *k*-suppression are kept, for the *pedagogisk mappe*.
 - **acceptance:** a dry-run mode reports counts without deleting. each run writes an audit event with the counts.
 - **verify:** integration test with time travel.">
 <summary><span class="req-id">DATA-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span> <span class="status" data-status="planned">○ Planned</span></summary>
 <div class="req-body"><p>A scheduled job runs on a configured date (default 15 August), for the academic year that has
 ended. It deletes <code>XapiStatement</code>, <code>H5PUserData</code>, <code>GradeSyncJob</code> and learner <code>Identity</code> rows older
-than the academic-year boundary plus 30 days, and destroys that year&#39;s pseudonym secret. Only
+than the academic-year boundary plus 30 days, then learner <code>User</code> rows that have no <code>Identity</code> left
+(D-034), and destroys that year&#39;s pseudonym secret. Only
 aggregate snapshots that already satisfy <em>k</em>-suppression are kept, for the <em>pedagogisk mappe</em>.</p>
 <ul>
 <li><strong>Acceptance:</strong> A dry-run mode reports counts without deleting. Each run writes an audit event with the counts.</li>
@@ -2406,14 +2408,18 @@ complete tour of the security-relevant lines.</p>
 <p class="req-source">Defined in <a href="#r-DOC-003">Documentation standard, DOC-003</a> · Documentation</p></div>
 </details>
 <details class="req" id="x-DOC-004" data-area="DOC" data-priority="MUST" data-session="S1" data-status="tested" data-text="doc-004 requirement ids connect spec, code and tests - code: `spec:` in the module header and/or `@spec` in tsdoc.
-- tests: the `describe` or `it` title starts with the id in brackets: `it('[sec-001] strips inline &lt;script&gt; elements', …)`.
+- tests: the title of an `it()` or `test()` call that runs starts with the id in brackets:
+  `it('[sec-001] strips inline &lt;script&gt; elements', …)`. mentions in comments, strings, `describe` titles
+  and skipped tests do not count (d-033).
 - `node tools/spec-trace/spectrace.mjs` (wired as `npm run spec:trace` in session 1) regenerates
   `docs/traceability.md`. with `--check` it fails ci on: duplicate ids, references to unknown ids,
   and **must** requirements of completed sessions that have no test reference.">
 <summary><span class="req-id">DOC-004</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Requirement IDs connect spec, code and tests</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><ul>
 <li>Code: <code>Spec:</code> in the module header and/or <code>@spec</code> in TSDoc.</li>
-<li>Tests: the <code>describe</code> or <code>it</code> title starts with the ID in brackets: <code>it(&#39;[SEC-001] strips inline &lt;script&gt; elements&#39;, …)</code>.</li>
+<li>Tests: the title of an <code>it()</code> or <code>test()</code> call that runs starts with the ID in brackets:
+<code>it(&#39;[SEC-001] strips inline &lt;script&gt; elements&#39;, …)</code>. Mentions in comments, strings, <code>describe</code> titles
+and skipped tests do not count (D-033).</li>
 <li><code>node tools/spec-trace/specTrace.mjs</code> (wired as <code>npm run spec:trace</code> in Session 1) regenerates
 <code>docs/TRACEABILITY.md</code>. With <code>--check</code> it fails CI on: duplicate IDs, references to unknown IDs,
 and <strong>MUST</strong> requirements of completed sessions that have no test reference.</li>
@@ -4152,7 +4158,8 @@ addresses, Feide IDs, national ID numbers or raw LTI <code>sub</code> values. Th
 <h4 id="r-DATA-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DATA-003">DATA-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span></h4>
 <p>A scheduled job runs on a configured date (default 15 August), for the academic year that has
 ended. It deletes <code>XapiStatement</code>, <code>H5PUserData</code>, <code>GradeSyncJob</code> and learner <code>Identity</code> rows older
-than the academic-year boundary plus 30 days, and destroys that year&#39;s pseudonym secret. Only
+than the academic-year boundary plus 30 days, then learner <code>User</code> rows that have no <code>Identity</code> left
+(D-034), and destroys that year&#39;s pseudonym secret. Only
 aggregate snapshots that already satisfy <em>k</em>-suppression are kept, for the <em>pedagogisk mappe</em>.</p>
 <ul>
 <li><strong>Acceptance:</strong> A dry-run mode reports counts without deleting. Each run writes an audit event with the counts.</li>
@@ -4380,7 +4387,9 @@ complete tour of the security-relevant lines.</p>
 <h4 id="r-DOC-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DOC-004">DOC-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Requirement IDs connect spec, code and tests</span></h4>
 <ul>
 <li>Code: <code>Spec:</code> in the module header and/or <code>@spec</code> in TSDoc.</li>
-<li>Tests: the <code>describe</code> or <code>it</code> title starts with the ID in brackets: <code>it(&#39;[SEC-001] strips inline &lt;script&gt; elements&#39;, …)</code>.</li>
+<li>Tests: the title of an <code>it()</code> or <code>test()</code> call that runs starts with the ID in brackets:
+<code>it(&#39;[SEC-001] strips inline &lt;script&gt; elements&#39;, …)</code>. Mentions in comments, strings, <code>describe</code> titles
+and skipped tests do not count (D-033).</li>
 <li><code>node tools/spec-trace/specTrace.mjs</code> (wired as <code>npm run spec:trace</code> in Session 1) regenerates
 <code>docs/TRACEABILITY.md</code>. With <code>--check</code> it fails CI on: duplicate IDs, references to unknown IDs,
 and <strong>MUST</strong> requirements of completed sessions that have no test reference.</li>
@@ -4517,7 +4526,7 @@ asserts? Does the module header&#39;s <em>Invariants</em> section match the code
 <tr>
 <td><code>docker compose up -d</code></td><td>PostgreSQL, Redis and an S3 emulator start locally (D-023); the mock OIDC/LTI platform joins in S3</td></tr>
 <tr>
-<td><code>npm ci &amp;&amp; npm run typecheck</code></td><td>The monorepo installs and compiles from a clean checkout (<code>npm run build</code> arrives with <code>apps/web</code> in S4)</td></tr>
+<td><code>npm ci &amp;&amp; npm run db:generate --workspace apps/server &amp;&amp; npm run typecheck</code></td><td>The monorepo installs and compiles from a clean checkout; the Prisma client is generated, not committed (<code>npm run build</code> arrives with <code>apps/web</code> in S4)</td></tr>
 <tr>
 <td><code>npm run typecheck &amp;&amp; npm run lint</code></td><td>Types and lint</td></tr>
 <tr>
@@ -4527,7 +4536,7 @@ asserts? Does the module header&#39;s <em>Invariants</em> section match the code
 <tr>
 <td><code>npm run h5p:fetch-core &amp;&amp; npm run boot-check --workspace apps/server</code></td><td>H5P client files are the verified 1.28 release; the engine would start (<a class="req-ref" href="#r-H5P-001"><code>H5P-001</code></a>); needs no services or <code>.env</code></td></tr>
 <tr>
-<td><code>npm test</code></td><td>Unit and integration tests (Vitest; integration tests need <code>docker compose up -d</code>, D-023)</td></tr>
+<td><code>npm test</code></td><td>Unit and integration tests (Vitest). Generate the Prisma client first (row above). Integration tests also need <code>docker compose up -d</code>, <code>npm run db:migrate</code> and <code>apps/server/.env</code> copied from <code>.env.example</code> (D-023)</td></tr>
 <tr>
 <td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Playwright journeys J1–J5 against the mock Canvas platform</td></tr>
 <tr>
@@ -5035,6 +5044,31 @@ dependency, which the override does not touch. <code>check:pins</code> checks ne
 <li><strong>Consequences:</strong> S2 must test the h5p-express routers on Express 4.22.3. Remove the override when Lumi
 releases an h5p-express with a fixed Express.</li>
 </ul>
+<h3 id="decisions--d-033--only-running-ittest-titles-prove-a-requirement" tabindex="-1">D-033 · Only running it()/test() titles prove a requirement</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-DOC-004"><code>DOC-004</code></a> said &quot;the <code>describe</code> or <code>it</code> title starts with the ID&quot;. The Session 1 review found
+that spec-trace counted an <code>[ID]</code> anywhere in a test file, including comments, strings, <code>describe</code> titles
+of groups whose tests name other IDs, and skipped tests. Such a mention proves nothing.</li>
+<li><strong>Decision:</strong> A requirement counts as tested only when its ID opens the title of an <code>it()</code> or <code>test()</code>
+call that runs. Calls in comments, strings and regex literals are ignored; <code>skip</code>, <code>todo</code>, <code>skipIf</code>,
+<code>fails</code> and the <code>x</code> prefix, on the test or on an enclosing <code>describe</code>, mean it does not run.
+<code>describe</code> titles may still carry IDs for readers. <code>tools/spec-trace/testTitles.mjs</code> holds the rule;
+spec-trace and doc-lint&#39;s <a class="req-ref" href="#r-DOC-006"><code>DOC-006</code></a> check both use it. <a class="req-ref" href="#r-DOC-004"><code>DOC-004</code></a> in the Documentation Standard says so.</li>
+<li><strong>Consequences:</strong> Conditional groups such as <code>describeWithServices</code> count, because CI always runs them
+(it fails when services are missing). A title built at run time (not a string literal) is not counted.</li>
+</ul>
+<h3 id="decisions--d-034--the-yearly-purge-also-deletes-learner-user-rows" tabindex="-1">D-034 · The yearly purge also deletes learner <code>User</code> rows</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> lists <code>XapiStatement</code>, <code>H5PUserData</code>, <code>GradeSyncJob</code> and learner <code>Identity</code>
+rows. In the schema the cascade runs from <code>User</code> to <code>Identity</code>, not back, so a purge that follows the
+list leaves each learner&#39;s <code>User</code> row (<code>id</code>, <code>kind</code>, <code>createdAt</code>) behind. The data inventory already
+gave those rows the yearly purge as retention.</li>
+<li><strong>Decision:</strong> <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> also deletes learner <code>User</code> rows that have no <code>Identity</code> left after the purge.
+The inventory labels a learner&#39;s <code>userId</code> references (<code>Identity.userId</code>, <code>AuthAuditEvent.actorUserId</code>)
+&quot;Pseudonymous (stable key)&quot;, because <code>Identity.subjectHash</code> links that ID to the person until the purge.</li>
+<li><strong>Consequences:</strong> The S6 purge test checks that no learner <code>User</code> row without an <code>Identity</code> survives.
+Staff <code>User</code> rows are unaffected.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -5084,7 +5118,7 @@ with their first features (S3/S4), not as empty scaffolds; the tools live in <co
 <code>eslint-plugin-i18next</code>, Prettier. Stylelint moves to S4 with the first theme CSS</li>
 <li><span class="task">✓ Done:</span> Husky: <code>pre-commit</code> runs lint-staged (Prettier, ESLint); <code>commit-msg</code> runs the DOC-011 checker</li>
 <li><span class="task">✓ Done:</span> <code>npm run spec:trace</code> (root override, tests), <code>check:filesize</code>, <code>tools/doc-lint</code> with 11 checks and tests
-(<a class="req-ref" href="#r-DOC-001"><code>DOC-001</code></a>…<a class="req-ref" href="#r-DOC-014"><code>DOC-014</code></a>, <a class="req-ref" href="#r-NFR-004"><code>NFR-004</code></a>)</li>
+(<a class="req-ref" href="#r-DOC-001"><code>DOC-001</code></a>–<code>003</code>, <code>005</code>–<code>010</code>, <code>013</code>, <code>014</code>, see <code>tools/doc-lint/README.md</code>; <a class="req-ref" href="#r-NFR-004"><code>NFR-004</code></a>)</li>
 <li><span class="task">✓ Done:</span> Prisma schema, split by domain (20 models: spec 05 §4 plus <code>AuthAuditEvent</code> from spec 02 §7), first migration with a CHECK constraint that
 keeps names and e-mail off learner rows; <code>docs/privacy/DATA-INVENTORY.md</code> and its check (<a class="req-ref" href="#r-DATA-001"><code>DATA-001</code></a>, <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>)</li>
 <li><span class="task">✓ Done:</span> <code>deriveLearnerKey</code> with per-academic-year secrets (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>); pino logger with deep redaction (<a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>)</li>
@@ -5094,11 +5128,13 @@ per D-028), size limits and the zip guard (<a class="req-ref" href="#r-SEC-005">
 <li><span class="task">✓ Done:</span> <code>docker-compose.yml</code>: PostgreSQL 16, Redis 7, S3 emulator (moto instead of MinIO, D-023)</li>
 <li><span class="task">✓ Done:</span> CI: typecheck, lint, format, doc-lint, file size, pins, licences, audit with reviewed exceptions,
 inventory, tests with service containers, traceability, spec site, H5P boot check (<a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>, <a class="req-ref" href="#r-NFR-005"><code>NFR-005</code></a>)</li>
-<li><span class="task">✓ Done:</span> Decisions D-023…D-032 recorded</li>
+<li><span class="task">✓ Done:</span> Decisions D-023…D-034 recorded</li>
 <li><span class="task">✓ Done:</span> Independent review (2026-10-22): three reviewers (correctness and security, privacy and spec
 compliance, documentation) with a skeptic per finding; 16 confirmed findings and the valid
 low-severity ones fixed with regression tests (see the session log)</li>
-<li><span class="task">✓ Done:</span> Gate (output below)</li>
+<li><span class="task">✓ Done:</span> Verification of those fixes (2026-10-22): an independent pass re-ran each finding and probed the fixes;
+every residual and new problem it found is fixed, with regression tests (see the session log)</li>
+<li><span class="task">✓ Done:</span> Gate (output in the session log, 2026-10-22 · S1 review)</li>
 </ul>
 <p>Spike results (spec 01 §7, Risk R-01):</p>
 <div class="table-wrap" role="region" aria-label="Table 2, S1 — Scaffold, schema, H5P core ✅" tabindex="0"><table><thead><tr>
@@ -5116,7 +5152,7 @@ low-severity ones fixed with regression tests (see the session log)</li>
 <tr>
 <td>6. Decide 1.28 or the 1.27 fallback</td><td>Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2</td></tr>
 </tbody></table></div>
-<p>Gate output: see the session log entry for 2026-10-21 · S1.</p>
+<p>Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-21 entry is the first run).</p>
 <h3 id="progress--s2--content-types-and-security" tabindex="-1">S2 — Content types and security ⬜</h3>
 <ul>
 <li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable; inject the F3 theme CSS in
@@ -5243,6 +5279,32 @@ $ npm run spec:trace -- --check --done-through=S1    ✓ 126 requirements, trace
 $ npm run spec:site -- --check                       ✓ docs/site/index.html is up to date.
 $ npm run h5p:fetch-core                             ✓ core and editor files match their committed hash lists
 $ npm run boot-check --workspace apps/server
+{&quot;level&quot;:&quot;info&quot;,&quot;service&quot;:&quot;hvl-interaktiv-server&quot;,&quot;h5pCoreApi&quot;:&quot;1.28&quot;,&quot;hubHost&quot;:&quot;hub-api.h5p.org&quot;,&quot;siteRegistered&quot;:false,&quot;msg&quot;:&quot;H5P engine configured&quot;}</code></pre>
+</li>
+<li><p><strong>2026-10-22 · S1 review</strong> — Independent review of Session 1 (three reviewers, a skeptic per finding),
+then a verification pass that re-ran every finding against the fixes. Fixed: log redaction (message
+strings, printf arguments, Prisma and driver-adapter errors by code only, sensitive key endings and Feide
+attributes, credentials and e-mails in free text in linear time, valid JSON lines); production secret
+checks (text with newlines, too few distinct bytes, secrets that give the same HMAC key); H5P settings
+from storage (only an allowlist survives, so no stored URL or script setting); S3 uploads report the S3
+error; temporary-file listing skips foreign keys; doc-lint follows every <code>Tests:</code> path form; spec-trace
+and doc-lint share one rule for test titles (D-033); <code>nin</code> matched as a word in the learner-table guard;
+SPDX <code>WITH</code> validation; data inventory and <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> purge of learner <code>User</code> rows (D-034); h5p-express
+Express override (D-032) and S1 items finished in S2 (D-031). Decisions D-031…D-034. Gate output:</p>
+<pre class="code" tabindex="0" role="region" aria-label="Code 3, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint                                       exit 0
+$ npm run format:check                               All matched files use Prettier code style!
+$ npm run doc:lint                                   ✓ doc-lint: 11 checks passed.
+$ npm run check:filesize                             ✓ doc-lint: file-size passed.
+$ npm run check:pins                                 ✓ check:pins: 2 manifests, every version is pinned exactly.
+$ npm run check:licences                             ✓ check:licences: 214 production packages, all GPL-3.0-compatible.
+$ npm run check:audit                                ✓ check:audit: 2 high/critical advisories, all covered by reviewed exceptions.
+$ npm run privacy:inventory-check                    ✓ privacy:inventory-check: 20 models, 154 fields, all in docs/privacy/DATA-INVENTORY.md.
+$ npx vitest run                                     Test Files 31 passed (31) · Tests 203 passed (203)
+$ npm run spec:trace -- --check --done-through=S1    ✓ 126 requirements, traceability up to date.
+$ npm run spec:site -- --check                       ✓ docs/site/index.html is up to date.
+$ npm run h5p:fetch-core                             ✓ H5P core 1.28.0 and editor ab2daa18 are in apps/server/h5p
+$ npm run boot-check --workspace apps/server         (no .env, no DATABASE_URL/REDIS_URL/S3_*/PSEUDONYM_SECRETS)
 {&quot;level&quot;:&quot;info&quot;,&quot;service&quot;:&quot;hvl-interaktiv-server&quot;,&quot;h5pCoreApi&quot;:&quot;1.28&quot;,&quot;hubHost&quot;:&quot;hub-api.h5p.org&quot;,&quot;siteRegistered&quot;:false,&quot;msg&quot;:&quot;H5P engine configured&quot;}</code></pre>
 </li>
 </ul>

@@ -23,11 +23,14 @@ describe('[H5P-004] library storage', () => {
       await import('../../src/h5p/storage/libraryStorageFactory.js');
     const dir = mkdtempSync(join(tmpdir(), 'h5p-libs-'));
     try {
-      createLibraryStorage(join(dir, 'libraries'));
+      const storage = createLibraryStorage(join(dir, 'libraries'));
       expect(LIBRARY_CACHE_TTL_SECONDS).toBe(300);
+      expect(caching).toHaveBeenCalledTimes(1);
       expect(caching).toHaveBeenCalledWith(
         expect.objectContaining({ store: 'memory', ttl: LIBRARY_CACHE_TTL_SECONDS }),
       );
+      // WHY: without our cache, CachedLibraryStorage silently builds its own with a 24-hour lifetime (D-026).
+      expect((storage as unknown as { cache: unknown }).cache).toBe(caching.mock.results[0]?.value);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

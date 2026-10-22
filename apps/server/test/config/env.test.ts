@@ -4,6 +4,7 @@
  * Spec: DOC-008, DATA-002
  */
 import { describe, it, expect } from 'vitest';
+import { createHash } from 'node:crypto';
 import { InvalidEnvironmentError, loadEnv, loadEnvPart } from '../../src/config/env.js';
 
 const SECRET = Buffer.alloc(32, 7).toString('base64');
@@ -92,6 +93,21 @@ describe('[DATA-002] pseudonym secret configuration', () => {
       'PSEUDONYM_SECRETS: the secrets for 2025 and 2026 are the same; each year needs its own',
     ]);
   });
+
+  it('[DATA-002] treats secrets that give the same HMAC key as the same secret', () => {
+    const key = Buffer.from(random(3), 'base64');
+    const padded = Buffer.concat([key, Buffer.alloc(1)]).toString('base64');
+    const long = Buffer.alloc(100, 9);
+    const hashed = createHash('sha256').update(long).digest().toString('base64');
+    for (const pair of [
+      `2025=${random(3)},2026=${padded}`,
+      `2025=${long.toString('base64')},2026=${hashed}`,
+    ]) {
+      expect(problemsOf({ ...VALID, PSEUDONYM_SECRETS: pair }), pair).toEqual([
+        'PSEUDONYM_SECRETS: the secrets for 2025 and 2026 are the same; each year needs its own',
+      ]);
+    }
+  });
 });
 
 describe('[DATA-002] production-only configuration checks', () => {
@@ -121,6 +137,21 @@ describe('[DATA-002] production-only configuration checks', () => {
       'PSEUDONYM_SECRETS: the 2026 secret is readable text; use `openssl rand -base64 32`',
     ]);
     expect(problemsAt({ ...VALID, PSEUDONYM_SECRETS: `2026=${example}` }, AUTUMN_2026)).toEqual([]);
+    // WHY: `echo … | base64` adds a newline; tabs and CR are text too.
+    for (const tail of ['\n', '\r\n', '\t']) {
+      const encoded = Buffer.from(`dev-only-pseudonym-secret-2026-do-not-use${tail}`).toString('base64');
+      expect(problemsAt(production(`2026=${encoded}`), AUTUMN_2026), JSON.stringify(tail)).toEqual([
+        'PSEUDONYM_SECRETS: the 2026 secret is readable text; use `openssl rand -base64 32`',
+      ]);
+    }
+  });
+
+  it('[DATA-002] refuses secrets with too few distinct bytes, such as zeros or the test fixtures', () => {
+    for (const secret of [Buffer.alloc(32).toString('base64'), SECRET]) {
+      expect(problemsAt(production(`2026=${secret}`), AUTUMN_2026)).toEqual([
+        'PSEUDONYM_SECRETS: the 2026 secret is not random enough; use `openssl rand -base64 32`',
+      ]);
+    }
   });
 });
 

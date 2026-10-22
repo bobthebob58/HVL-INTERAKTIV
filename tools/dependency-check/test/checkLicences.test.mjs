@@ -41,7 +41,19 @@ describe('[NFR-005] licence allow-list', () => {
   });
 
   it('[NFR-005] rejects malformed expressions', () => {
-    for (const bad of ['', '(MIT', 'MIT AND', 'OR MIT', 'MIT WITH', 'MIT Apache-2.0'])
+    for (const bad of [
+      '',
+      '(MIT',
+      'MIT AND',
+      'OR MIT',
+      'MIT WITH',
+      'MIT Apache-2.0',
+      'MIT WITH OR',
+      'MIT WITH AND',
+      'MIT WITH (',
+      'MIT WITH )',
+      '(MIT WITH OR)',
+    ])
       expect(isAllowed(bad), bad).toBe(false);
   });
 

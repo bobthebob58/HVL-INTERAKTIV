@@ -10,7 +10,7 @@ Refs: <!-- requirement IDs, e.g. SEC-001, H5P-006 -->
 
 - [ ] `npm run typecheck && npm run lint && npm test`
 - [ ] `npm run spec:trace -- --check` (TRACEABILITY.md regenerated)
-- [ ] `npm run test:a11y` (UI changes)
+- [ ] `npm run test:a11y` (UI changes; available from S4)
 
 ## Documentation checklist (docs/DOCUMENTATION-STANDARD.md)
 

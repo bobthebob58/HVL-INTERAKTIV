@@ -7,7 +7,7 @@
  * Invariants:
  *   - A file name is relative, uses `/` only, and has no empty, `.` or `..` segment and no control characters.
  *   - `limitedUpload` aborts the upload as soon as more than `maxBytes` have streamed through, and destroys
- *     the source stream on any failure.
+ *     the source stream on any failure. It reports the S3 error, not the stream abort it causes.
  * Collaborators: ./S3ContentFileStore.ts, ./S3TemporaryFileStorage.ts.
  * Tests: apps/server/test/h5p/contentStorage.int.test.ts, apps/server/test/h5p/s3Objects.test.ts
  */
@@ -74,7 +74,7 @@ export class FileTooLargeError extends Error {
  * @param body - Data to upload.
  * @param maxBytes - Hard upper limit for this object.
  * @returns Size in bytes and SHA-256 (hex) of what was stored.
- * @throws FileTooLargeError when the limit is exceeded (nothing is left in the bucket).
+ * @throws FileTooLargeError when the limit is exceeded (nothing is left in the bucket), otherwise the S3 error.
  */
 export async function limitedUpload(
   s3: S3Client,
@@ -100,7 +100,10 @@ export async function limitedUpload(
   // WHY: if S3 fails first, nobody reads the sink any more; destroying it ends the pipeline instead of stalling.
   upload.catch((error: unknown) => sink.destroy(error as Error));
   const [piped, uploaded] = await Promise.allSettled([piping, upload]);
-  if (piped.status === 'rejected') throw piped.reason;
+  // WHY: when S3 fails mid-stream the pipeline only sees a generic AbortError, so the S3 error is the real
+  // cause and wins, unless the pipeline stopped on the size limit.
+  if (piped.status === 'rejected' && piped.reason instanceof FileTooLargeError) throw piped.reason;
   if (uploaded.status === 'rejected') throw uploaded.reason;
+  if (piped.status === 'rejected') throw piped.reason;
   return { size, sha256: hash.digest('hex') };
 }

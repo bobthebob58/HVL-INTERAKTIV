@@ -31,7 +31,7 @@ describe('[DOC-001] module headers', () => {
     );
     const root = makeRepo({ 'tools/widget/widget.mjs': header });
     expect(problems(root, 'module-header')).toEqual([
-      'tools/widget/widget.mjs:1 "Tests:" names a file that does not exist: tools/widget/test/gone.int.test.mjs',
+      'tools/widget/widget.mjs:1 "Tests:" names a path that does not exist: tools/widget/test/gone.int.test.mjs',
     ]);
   });
 

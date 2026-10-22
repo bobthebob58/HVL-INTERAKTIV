@@ -56,6 +56,11 @@ export function isAllowed(expression) {
   let at = 0;
   const peek = () => tokens[at];
   const next = () => tokens[at++];
+  const identifier = (kind) => {
+    const id = next();
+    if (!id || ['AND', 'OR', 'WITH', '(', ')'].includes(id)) throw new Error(`${kind} identifier expected`);
+    return id;
+  };
   const atom = () => {
     if (peek() === '(') {
       next();
@@ -63,11 +68,10 @@ export function isAllowed(expression) {
       if (next() !== ')') throw new Error('unbalanced parentheses');
       return value;
     }
-    const id = next();
-    if (!id || ['AND', 'OR', 'WITH', ')'].includes(id)) throw new Error('licence identifier expected');
+    const id = identifier('licence');
     if (peek() === 'WITH') {
       next();
-      if (!next()) throw new Error('exception identifier expected');
+      identifier('exception');
     }
     return ALLOWED.has(id);
   };

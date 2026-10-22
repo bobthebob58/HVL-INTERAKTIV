@@ -21,7 +21,7 @@ describe('[DOC-006] test titles and fixtures', () => {
   it('[DOC-006] rejects a test file without any [ID] title', () => {
     const root = makeRepo({ 'apps/server/test/widget.test.ts': TEST_HEADER + testCall('it', 'works') });
     expect(problems(root, 'test-readability')).toEqual([
-      'apps/server/test/widget.test.ts:1 no test title starts with "[<requirement ID>] "',
+      'apps/server/test/widget.test.ts:1 no running it()/test() title starts with "[<requirement ID>] "',
     ]);
   });
 

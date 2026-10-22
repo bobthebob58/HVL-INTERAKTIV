@@ -9,7 +9,7 @@
  *   property) keeps only type, code, model name and constraint target, in the record and in `msg`; no
  *   message, stack, cause or other free text.
  * Collaborators: ./redactPersonalData.ts (calls it for every Error it meets), ./logger.ts (message lines).
- * Tests: apps/server/test/logging/logger.test.ts
+ * Tests: apps/server/test/logging/logger.test.ts, apps/server/test/logging/loggerMessages.test.ts
  */
 
 /** Fields of a Prisma error that never contain query values. */

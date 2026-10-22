@@ -39,12 +39,12 @@ missing variable fails the run instead (D-023).
 | Path | Responsibility |
 |---|---|
 | `src/config/env.ts` | The zod schema of every environment variable; startup fails with the variable's name |
-| `src/config/productionChecks.ts` | Extra startup rules for `NODE_ENV=production` (current-year secret present, no example secrets) |
-| `src/logging/` | pino logger and the redaction that removes personal data and tokens from every log line (Prisma errors are reduced to their codes) |
+| `src/config/productionChecks.ts` | Extra startup rules for `NODE_ENV=production` (a current-year pseudonym secret exists; no pseudonym secret is readable text or low in distinct bytes) |
+| `src/logging/` | pino logger with key-based redaction (sensitive keys, endings and Feide attributes) and pattern-based redaction of credentials and e-mail addresses in free text; Prisma errors are logged by name and code only, in `err` and in `msg`. Names in free text cannot be detected, so callers never put them in messages |
 | `src/privacy/` | Academic-year boundary, pseudonym secrets, `deriveLearnerKey` (HMAC-SHA256) |
 | `src/i18n/` | Server messages in `nn` (default), `nb`, `en`, and the typed `t()` lookup |
 | `src/infra/` | Clients: Prisma (PostgreSQL), Redis, S3 |
-| `src/h5p/H5pConfigFactory.ts` | H5P config: Core 1.28, hub-api.h5p.org, 50 MB / 200 MB limits, allowlist |
+| `src/h5p/H5pConfigFactory.ts` | H5P config: Core 1.28, hub-api.h5p.org, 50 MB / 200 MB limits, allowlist; only harmless stored settings survive loading |
 | `src/h5p/coreVersionCheck.ts`, `h5pServerInit.ts`, `bootCheck.ts` | Refuse to start when the fetched core files are not API 1.28 |
 | `src/h5p/h5pStorage.ts` | Builds every storage adapter from the clients (the `H5P-004` table) |
 | `src/h5p/storage/` | The adapters: content (PostgreSQL + S3), temporary files (S3), settings (Redis), libraries |
@@ -67,11 +67,11 @@ sequenceDiagram
     participant Init as h5pServerInit
     participant Files as h5p/core, h5p/editor
     participant Log as logger
-    Boot->>Env: loadEnv(process.env)
+    Boot->>Env: loadEnvPart(LOG_LEVEL and H5P keys), from S2 the server calls loadEnv
     Env-->>Boot: typed config, or InvalidEnvironmentError naming each variable
     Boot->>Init: h5pServerInit(env, logger)
-    Init->>Init: createH5pConfig: load stored settings, then re-apply 1.28, hub-api, limits
-    Init->>Files: read $coreApi from h5p.classes.php; check editor entry script
+    Init->>Init: createH5pConfig: load stored settings, then reset all but the allowlist and apply 1.28, hub-api, limits
+    Init->>Files: read $coreApi from h5p.classes.php, check editor entry script
     alt core API is not 1.28 or files missing
         Init-->>Boot: CoreVersionMismatchError → exit 1
     else
@@ -144,12 +144,12 @@ fails if the two disagree. Summary:
 | Requirement | Where | Tests |
 |---|---|---|
 | `H5P-001` Core 1.28 and the new Hub | `src/h5p/H5pConfigFactory.ts`, `coreVersionCheck.ts`, `h5pServerInit.ts`, `bootCheck.ts` | `test/h5p/H5pConfigFactory.test.ts`, `test/h5p/h5pServerInit.test.ts` |
-| `H5P-004` Production storage adapters | `src/h5p/h5pStorage.ts`, `src/h5p/storage/*`, `src/h5p/jobs/*` | `test/h5p/contentStorage.int.test.ts`, `test/h5p/sharedState.int.test.ts`, `test/h5p/S3TemporaryFileStorage.test.ts`, `test/h5p/cleanupJob.test.ts`, `test/h5p/libraryStorageFactory.test.ts` |
+| `H5P-004` Production storage adapters | `src/h5p/h5pStorage.ts`, `src/h5p/storage/*`, `src/h5p/jobs/*` | `test/h5p/contentStorage.int.test.ts`, `test/h5p/sharedState.int.test.ts`, `test/h5p/S3TemporaryFileStorage.test.ts`, `test/h5p/s3Objects.test.ts`, `test/h5p/cleanupJob.test.ts`, `test/h5p/libraryStorageFactory.test.ts` |
 | `SEC-002` Narrowed allowlist (value only; sniffing in S2) | `src/h5p/H5pConfigFactory.ts` | `test/h5p/H5pConfigFactory.test.ts` |
 | `SEC-005` Size limits and archive safety | `src/security/zipEntryGuard.ts`, `src/h5p/storage/s3Objects.ts` | `test/security/zipEntryGuard.test.ts`, `test/h5p/s3Objects.test.ts` |
 | `DATA-001` Data inventory | `prisma/schema/*.prisma`, `prisma.config.ts` | `tools/privacy/test/checkInventory.test.mjs`, `test/db/schema.int.test.ts` |
 | `DATA-002` Pseudonymous learners | `src/privacy/*`, `src/config/productionChecks.ts`, CHECK constraint in the first migration | `test/privacy/deriveLearnerKey.test.ts`, `test/config/env.test.ts`, `test/db/schema.int.test.ts` |
-| `DATA-009`, `NFR-006` No personal data in logs | `src/logging/*` | `test/logging/logger.test.ts` |
+| `DATA-009`, `NFR-006` No personal data in logs | `src/logging/*` | `test/logging/logger.test.ts`, `test/logging/loggerMessages.test.ts`, `test/logging/redactText.test.ts` |
 | `PROD-012`, `DOC-009` Three languages, Nynorsk first | `src/i18n/*` | `test/i18n/translate.test.ts` |
 | `DOC-008` Configuration documented | `src/config/env.ts`, `.env.example` | `test/config/env.test.ts` |
 

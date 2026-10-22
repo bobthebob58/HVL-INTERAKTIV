@@ -103,7 +103,8 @@ addresses, Feide IDs, national ID numbers or raw LTI `sub` values. The one excep
 #### DATA-003 · MUST · S6 · Annual retention purge
 A scheduled job runs on a configured date (default 15 August), for the academic year that has
 ended. It deletes `XapiStatement`, `H5PUserData`, `GradeSyncJob` and learner `Identity` rows older
-than the academic-year boundary plus 30 days, and destroys that year's pseudonym secret. Only
+than the academic-year boundary plus 30 days, then learner `User` rows that have no `Identity` left
+(D-034), and destroys that year's pseudonym secret. Only
 aggregate snapshots that already satisfy *k*-suppression are kept, for the *pedagogisk mappe*.
 - **Acceptance:** A dry-run mode reports counts without deleting. Each run writes an audit event with the counts.
 - **Verify:** Integration test with time travel.

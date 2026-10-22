@@ -115,7 +115,9 @@ complete tour of the security-relevant lines.
 
 #### DOC-004 · MUST · S1 · Requirement IDs connect spec, code and tests
 - Code: `Spec:` in the module header and/or `@spec` in TSDoc.
-- Tests: the `describe` or `it` title starts with the ID in brackets: `it('[SEC-001] strips inline <script> elements', …)`.
+- Tests: the title of an `it()` or `test()` call that runs starts with the ID in brackets:
+  `it('[SEC-001] strips inline <script> elements', …)`. Mentions in comments, strings, `describe` titles
+  and skipped tests do not count (D-033).
 - `node tools/spec-trace/specTrace.mjs` (wired as `npm run spec:trace` in Session 1) regenerates
   `docs/TRACEABILITY.md`. With `--check` it fails CI on: duplicate IDs, references to unknown IDs,
   and **MUST** requirements of completed sessions that have no test reference.

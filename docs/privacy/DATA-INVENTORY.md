@@ -37,7 +37,7 @@ One login method of a user. The subject is stored only as an HMAC.
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
 | `id` | Internal key | None | n/a | Account; learner rows: yearly purge | PG |
-| `userId` | Links the login to the user | Staff PII (by reference); learner rows: Pseudonymous | 6(1)(e) | Account; learner rows: yearly purge | PG |
+| `userId` | Links the login to the user | Staff PII (by reference); learner rows: Pseudonymous (stable key, by reference; D-034) | 6(1)(e) | Account; learner rows: yearly purge | PG |
 | `provider` | Feide or LTI | None | n/a | Account; learner rows: yearly purge | PG |
 | `subjectHash` | Recognises the same person at the next login without storing the Feide ID or LTI `sub` | Pseudonymous (stable key) | 6(1)(e) | Account; learner rows: yearly purge | PG |
 | `platformId` | Which LMS an LTI identity comes from | None | n/a | Account; learner rows: yearly purge | PG |
@@ -51,7 +51,7 @@ Login, logout and role events (spec 02).
 |---|---|---|---|---|---|
 | `id` | Internal key | None | n/a | 2 years | PG |
 | `at` | When it happened | None | n/a | 2 years | PG |
-| `actorUserId` | Who logged in (internal ID; empty for failed logins) | Staff PII (by reference); learner rows: Pseudonymous | 6(1)(e) | 2 years | PG |
+| `actorUserId` | Who logged in (internal ID; empty for failed logins) | Staff PII (by reference); learner rows: Pseudonymous (stable key, by reference; D-034) | 6(1)(e) | 2 years | PG |
 | `event` | Event code, e.g. `login.feide` | None | n/a | 2 years | PG |
 | `ipHash` | Keyed hash of the IP address, for abuse detection only | Pseudonymous (stable key) | 6(1)(e) | 2 years | PG |
 

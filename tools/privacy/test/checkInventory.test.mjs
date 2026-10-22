@@ -7,7 +7,14 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { compareInventory, learnerTablePii, parseInventory, INVENTORY } from '../checkInventory.mjs';
+import {
+  compareInventory,
+  hasPiiToken,
+  learnerTablePii,
+  parseInventory,
+  wordsOf,
+  INVENTORY,
+} from '../checkInventory.mjs';
 import { parseModels, readSchemaModels } from '../prismaSchema.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -90,6 +97,23 @@ describe('[DATA-002] learner tables hold pseudonyms only', () => {
       'XapiStatement.ninHash',
       'XapiStatement.learnerNin',
     ]);
+  });
+
+  it('[DATA-002] finds "nin" as a word anywhere in the name, in any case', () => {
+    const names = [
+      'NIN',
+      'Nin',
+      'learnerNinHash',
+      'encryptedNinValue',
+      'studentNIN',
+      'learner_nin',
+      'NIN_hash',
+    ];
+    const schema = parseModels(`model Identity {\n${names.map((n) => `  ${n} String`).join('\n')}\n}`);
+    expect(learnerTablePii(schema).map((p) => p.split(' ')[0])).toEqual(names.map((n) => `Identity.${n}`));
+    expect(wordsOf('learnerNinHash')).toEqual(['learner', 'Nin', 'Hash']);
+    expect(wordsOf('studentNIN')).toEqual(['student', 'NIN']);
+    expect(hasPiiToken('subContentId')).toBe(false);
   });
 
   it('[DATA-002] the real schema has no such column except the encrypted AGS subject', () => {

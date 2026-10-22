@@ -11,7 +11,8 @@
  *   - `maxFileSize` 50 MB, `maxTotalSize` 200 MB, narrowed `contentWhitelist` (SEC-002 list).
  *   - Usage statistics and the H5P Content Hub (sharing to h5p.com) are off: no learner or author data
  *     leaves HVL without a decision.
- *   - Stored values for the library allowlist, proxy, customisation and add-ons are discarded.
+ *   - Only the settings in `STORAGE_LOADABLE_SETTINGS` keep a stored value; URLs, library config,
+ *     customisation, add-ons, proxy and allowlists always come from Lumi's defaults or from this file.
  * Collaborators: ./h5pServerInit.ts, ./storage/RedisKeyValueStorage.ts, ../config/env.ts.
  * Tests: apps/server/test/h5p/H5pConfigFactory.test.ts
  */
@@ -20,6 +21,8 @@ import { H5PConfig, type IKeyValueStorage } from '@lumieducation/h5p-server';
 
 /** The H5P core API version this service is built for (H5P-001). */
 export const CORE_API_VERSION = { major: 1, minor: 28 } as const;
+/** Core release served to browsers and reported to the Hub; matches CORE_TAG in tools/h5p-core. */
+export const H5P_CORE_VERSION = '1.28.0';
 /** Content-type list endpoint of the new Hub. */
 export const HUB_CONTENT_TYPES_ENDPOINT = 'https://hub-api.h5p.org/v1/content-types/';
 /** Site registration endpoint of the new Hub. */
@@ -55,21 +58,38 @@ export function localIdFor(seed: string): string {
 }
 
 /**
+ * Settings that may keep a value loaded from storage: the Hub registration result and harmless timings
+ * or toggles. Every other setting comes from Lumi's defaults or from this file.
+ */
+export const STORAGE_LOADABLE_SETTINGS: ReadonlySet<string> = new Set([
+  'uuid',
+  'contentHubMetadataRefreshInterval',
+  'contentTypeCacheRefreshInterval',
+  'contentUserStateSaveInterval',
+  'disableFullscreen',
+  'exportMaxContentPathLength',
+  'fetchingDisabled',
+  'setFinishedEnabled',
+  'siteType',
+]);
+
+/**
  * Sets every value we enforce. Called after `load()`, so stored settings cannot override them.
  * @param config - A loaded config.
  * @param options - Installation options.
  */
 export function applyEnforcedSettings(config: H5PConfig, options: H5pConfigOptions): void {
-  // SECURITY: settings that change which files are accepted, where Hub traffic goes or which scripts run
-  // are reset to Lumi's defaults; later sessions set them in code (e.g. the S4 theme), never from storage.
-  const defaults = new H5PConfig();
-  config.libraryWhitelist = defaults.libraryWhitelist;
-  config.proxy = undefined;
-  config.customization = structuredClone(defaults.customization);
-  config.playerAddons = structuredClone(defaults.playerAddons);
-  config.editorAddons = structuredClone(defaults.editorAddons);
-  config.enableLrsContentTypes = defaults.enableLrsContentTypes;
+  // SECURITY: a stored baseUrl, file-URL override, libraryConfig, customisation or allowlist would decide
+  // which scripts every player and editor page loads, so everything outside the allowlist is reset to
+  // Lumi's defaults. Later sessions set such values in code (e.g. the S2 files origin), never from storage.
+  const defaults = new H5PConfig() as unknown as Record<string, unknown>;
+  const target = config as unknown as Record<string, unknown>;
+  for (const key of Object.keys(defaults)) {
+    if (key !== 'storage' && !STORAGE_LOADABLE_SETTINGS.has(key))
+      target[key] = structuredClone(defaults[key]);
+  }
   config.coreApiVersion = { ...CORE_API_VERSION };
+  config.h5pVersion = H5P_CORE_VERSION;
   config.hubContentTypesEndpoint = HUB_CONTENT_TYPES_ENDPOINT;
   config.hubRegistrationEndpoint = HUB_REGISTRATION_ENDPOINT;
   config.maxFileSize = MAX_FILE_SIZE;

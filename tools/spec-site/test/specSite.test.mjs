@@ -26,9 +26,10 @@ describe('[DOC-004] spec website', () => {
 
   it('[DOC-004] makes stable anchors from headings', () => {
     expect(slugify('H5P-001 · MUST · S1 · Target Core API 1.28')).toBe(
-      slugify('H5P-001 · MUST · S1 · Target Core API 1.28'),
+      'h5p-001--must--s1--target-core-api-128',
     );
-    expect(slugify('Læringsdesign & mappe')).toMatch(/^[a-z0-9-]+$/);
+    expect(slugify('Læringsdesign & mappe')).toBe('laeringsdesign--mappe');
+    expect(slugify('Øving på åtferd')).toBe('oving-pa-atferd');
   });
 
   it('[DOC-004] links known requirement IDs in-page and other repository files to GitHub', () => {

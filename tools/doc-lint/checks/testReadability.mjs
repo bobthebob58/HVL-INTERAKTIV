@@ -5,14 +5,16 @@
  *      tests that prove it, and must be able to tell why each fixture exists.
  * Spec: DOC-006
  * Invariants:
- *   - Every test file has at least one test title containing a known requirement ID in brackets.
+ *   - Every test file has at least one running it()/test() title that opens with a requirement ID in
+ *     brackets, and every bracketed ID opening any describe/it/test title exists.
  *   - Every directory named `fixtures` contains a README.md.
- * Collaborators: ../lib/repo.mjs; tools/spec-trace reads the same bracketed IDs.
+ * Collaborators: ../lib/repo.mjs, ../../spec-trace/testTitles.mjs (the title rule shared with spec-trace).
  * Tests: tools/doc-lint/test/docLint.repo.test.mjs
  */
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { isTestFile, listFiles, read, SOURCE_ROOTS } from '../lib/repo.mjs';
+import { leadingIds, testTitles } from '../../spec-trace/testTitles.mjs';
 
 export const id = 'DOC-006';
 export const name = 'test-readability';
@@ -25,14 +27,17 @@ export const name = 'test-readability';
 export function run({ root, files, ids }) {
   const problems = [];
   for (const file of files.filter(isTestFile)) {
-    const titled = [
-      ...read(root, file).matchAll(/\b(?:describe|it|test)(?:\.\w+)*\(\s*['"`]\[([A-Z][A-Z0-9]*-\d{3})\]/g),
-    ];
-    if (titled.length === 0) {
-      problems.push({ file, line: 1, message: 'no test title starts with "[<requirement ID>] "' });
+    const titles = testTitles(read(root, file));
+    // WHY: the same rule as tools/spec-trace (D-033): only a running it()/test() title proves a requirement.
+    if (!titles.some((t) => t.active && t.fn !== 'describe' && leadingIds(t.title).length > 0)) {
+      problems.push({
+        file,
+        line: 1,
+        message: 'no running it()/test() title starts with "[<requirement ID>] "',
+      });
     }
-    for (const m of titled.filter((t) => !ids.has(t[1]))) {
-      problems.push({ file, line: 1, message: `test title names unknown requirement ${m[1]}` });
+    for (const ref of titles.flatMap((t) => leadingIds(t.title)).filter((r) => !ids.has(r))) {
+      problems.push({ file, line: 1, message: `test title names unknown requirement ${ref}` });
     }
   }
   const all = SOURCE_ROOTS.flatMap((d) => listFiles(root, d));

@@ -346,3 +346,26 @@ loading of one spec per session are kept.
 - **Consequences:** S2 must test the h5p-express routers on Express 4.22.3. Remove the override when Lumi
   releases an h5p-express with a fixed Express.
 
+### D-033 · Only running it()/test() titles prove a requirement
+- **Context:** `DOC-004` said "the `describe` or `it` title starts with the ID". The Session 1 review found
+  that spec-trace counted an `[ID]` anywhere in a test file, including comments, strings, `describe` titles
+  of groups whose tests name other IDs, and skipped tests. Such a mention proves nothing.
+- **Decision:** A requirement counts as tested only when its ID opens the title of an `it()` or `test()`
+  call that runs. Calls in comments, strings and regex literals are ignored; `skip`, `todo`, `skipIf`,
+  `fails` and the `x` prefix, on the test or on an enclosing `describe`, mean it does not run.
+  `describe` titles may still carry IDs for readers. `tools/spec-trace/testTitles.mjs` holds the rule;
+  spec-trace and doc-lint's `DOC-006` check both use it. `DOC-004` in the Documentation Standard says so.
+- **Consequences:** Conditional groups such as `describeWithServices` count, because CI always runs them
+  (it fails when services are missing). A title built at run time (not a string literal) is not counted.
+
+### D-034 · The yearly purge also deletes learner `User` rows
+- **Context:** `DATA-003` lists `XapiStatement`, `H5PUserData`, `GradeSyncJob` and learner `Identity`
+  rows. In the schema the cascade runs from `User` to `Identity`, not back, so a purge that follows the
+  list leaves each learner's `User` row (`id`, `kind`, `createdAt`) behind. The data inventory already
+  gave those rows the yearly purge as retention.
+- **Decision:** `DATA-003` also deletes learner `User` rows that have no `Identity` left after the purge.
+  The inventory labels a learner's `userId` references (`Identity.userId`, `AuthAuditEvent.actorUserId`)
+  "Pseudonymous (stable key)", because `Identity.subjectHash` links that ID to the person until the purge.
+- **Consequences:** The S6 purge test checks that no learner `User` row without an `Identity` survives.
+  Staff `User` rows are unaffected.
+

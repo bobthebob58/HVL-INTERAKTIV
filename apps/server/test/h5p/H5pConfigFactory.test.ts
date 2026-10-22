@@ -11,6 +11,7 @@ import { H5PConfig, type IKeyValueStorage } from '@lumieducation/h5p-server';
 import {
   CONTENT_WHITELIST,
   LOCAL_ID_MAX_LENGTH,
+  STORAGE_LOADABLE_SETTINGS,
   createH5pConfig,
   localIdFor,
 } from '../../src/h5p/H5pConfigFactory.js';
@@ -28,7 +29,15 @@ const staleStorage = (): IKeyValueStorage => {
     libraryWhitelist: 'js css html php',
     proxy: { host: 'attacker.example', port: 8080 },
     customization: { global: { player: { scripts: ['https://cdn.example/evil.js'] } } },
+    baseUrl: 'https://attacker.example/h5p',
+    contentFilesUrlPlayerOverride: 'https://attacker.example/files/{{contentId}}',
+    libraryConfig: {
+      'H5P.MathDisplay': { renderer: { mathjax: { src: 'https://attacker.example/mj.js' } } },
+    },
+    playerAddons: { 'H5P.InteractiveVideo': ['H5P.Evil'] },
+    sendUsageStatistics: true,
     uuid: 'stored-uuid',
+    contentUserStateSaveInterval: 15_000,
   };
   return { load: async (key) => values[key], save: async (key, value) => (values[key] = value) };
 };
@@ -50,6 +59,19 @@ describe('[H5P-001] Core API 1.28 and the new Hub', () => {
     expect(config.proxy).toBeUndefined();
     expect(JSON.stringify(config.customization)).not.toContain('evil.js');
     expect(config.uuid).toBe('stored-uuid');
+    expect(config.contentUserStateSaveInterval).toBe(15_000);
+  });
+
+  it('[H5P-001] stored settings cannot change which scripts or file URLs a page loads', async () => {
+    const config = await createH5pConfig(staleStorage(), OPTIONS);
+    const defaults = new H5PConfig();
+    expect(config.baseUrl).toBe(defaults.baseUrl);
+    expect(config.contentFilesUrlPlayerOverride).toBeUndefined();
+    expect(config.libraryConfig).toBeUndefined();
+    expect(config.playerAddons).toBeUndefined();
+    expect(config.sendUsageStatistics).toBe(false);
+    expect(config.h5pVersion).toBe('1.28.0');
+    for (const key of STORAGE_LOADABLE_SETTINGS) expect(Object.keys(defaults), key).toContain(key);
   });
 
   it('[H5P-001] uses a pre-registered site UUID (F2) and a local_id of at most 15 characters (F1)', async () => {

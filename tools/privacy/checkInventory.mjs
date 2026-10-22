@@ -25,11 +25,21 @@ export const LEARNER_TABLES = ['H5PUserData', 'XapiStatement', 'GradeSyncJob', '
 /** Words that mark a column storing a direct identifier, matched anywhere in the name, in any case. */
 export const PII_WORDS = /(name|e-?mail|feide|personnummer|fodselsnummer|ltisub)/i;
 /**
- * Short identifiers that must be a whole camelCase word: `sub`, and `nin` (national ID number) as in
- * `nin`, `ninHash` or `learnerNin`.
+ * Splits a camelCase or snake_case field name into words, keeping all-caps runs together.
+ * @param {string} name - e.g. `learnerNinHash`, `studentNIN`, `learner_nin`.
+ * @returns {string[]} e.g. `['learner', 'Nin', 'Hash']`.
  */
-// WHY: case-sensitive on purpose, so `learningPhase` or `runningScore` are not read as containing `nin`.
-export const PII_TOKENS = /^sub$|^nin$|^nin[A-Z_]|[a-z]Nin$/;
+export const wordsOf = (name) =>
+  name.split(/_|(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])/).filter((word) => word !== '');
+
+/**
+ * Short identifiers: a column named `sub` (raw LTI subject), or `nin` (national ID number) as a whole
+ * word anywhere in the name, in any case.
+ * @param {string} name - Field name.
+ * @returns {boolean} True when the name holds one of them.
+ */
+// WHY: matched by word, so `learningPhase` or `runningScore` are not read as containing `nin`.
+export const hasPiiToken = (name) => /^sub$/i.test(name) || wordsOf(name).some((word) => /^nin$/i.test(word));
 const ALLOWED_PII = new Set(['GradeSyncJob.ltiSubEncrypted']);
 
 /**
@@ -94,7 +104,7 @@ export function learnerTablePii(schema) {
   return LEARNER_TABLES.flatMap((model) =>
     (schema.get(model) ?? [])
       .filter(
-        (f) => (PII_WORDS.test(f.name) || PII_TOKENS.test(f.name)) && !ALLOWED_PII.has(`${model}.${f.name}`),
+        (f) => (PII_WORDS.test(f.name) || hasPiiToken(f.name)) && !ALLOWED_PII.has(`${model}.${f.name}`),
       )
       .map(
         (f) => `${model}.${f.name} looks like personal data; learner tables store pseudonyms only (DATA-002)`,

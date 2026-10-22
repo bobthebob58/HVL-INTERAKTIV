@@ -91,12 +91,14 @@ describe('[DOC-004] traceability matrix', () => {
     expect(trace(tested, '--check', '--done-through=S1').code).toBe(0);
   });
 
-  it('[DOC-004] counts an ID only when it opens an it() or test() title', () => {
+  it('[DOC-004] counts an ID only when it opens the title of a running it() or test() call', () => {
     const notReally =
       TEST_HEADER +
       '// covers [TST-002] one day\n' +
       testCall('describe', '[TST-002] group only') +
       testCall('it.skip', '[TST-002] skipped') +
+      `// ${testCall('it', '[TST-002] commented out')}` +
+      `describe.skip('later', () => { ${testCall('it', '[TST-002] in a skipped group')} });\n` +
       testCall('it', '[TST-001] real');
     const root = makeRepo({ 'tools/w/test/w.test.mjs': notReally });
     trace(root);

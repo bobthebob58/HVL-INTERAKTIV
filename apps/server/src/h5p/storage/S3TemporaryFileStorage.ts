@@ -7,10 +7,11 @@
  * Invariants:
  *   - Key: `<prefix><encoded user id>/<file name>`, so one author can never read another author's upload.
  *   - The expiry time is stored as object metadata; `listFiles` reads it (and the owner from the key) for the
- *     cleanup job, and skips files deleted while it lists.
+ *     cleanup job. It skips files deleted while it lists and keys it did not write (no owner segment or a
+ *     malformed escape); the bucket lifecycle rule removes those.
  *   - Uploads stop at `maxFileSize` bytes.
  * Collaborators: ./s3Objects.ts, ../../infra/s3Client.ts, ../jobs/TemporaryFileCleanupJob.ts (via H5PEditor).
- * Tests: apps/server/test/h5p/contentStorage.int.test.ts
+ * Tests: apps/server/test/h5p/contentStorage.int.test.ts, apps/server/test/h5p/S3TemporaryFileStorage.test.ts
  */
 import type { Readable } from 'node:stream';
 import {
@@ -129,21 +130,29 @@ export class S3TemporaryFileStorage implements ITemporaryFileStorage {
         }),
       );
       for (const object of page.Contents ?? []) {
+        const parsed = this.parseKey(object.Key ?? '');
+        // WHY: one object this adapter did not write must not make every cleanup tick fail.
+        if (!parsed) continue;
         const head = await this.headIfPresent(object.Key ?? '');
         // WHY: an author's save (H5P's ContentStorer) can delete the file between LIST and HEAD.
         if (!head) continue;
-        // WHY: the key is `<prefix><encoded user id>/<file name>`; the file name itself may contain "/".
-        const rest = (object.Key ?? '').slice(this.prefix.length);
-        const slash = rest.indexOf('/');
-        files.push({
-          filename: rest.slice(slash + 1),
-          ownedByUserId: decodeURIComponent(rest.slice(0, slash)),
-          expiresAt: new Date(head.Metadata?.expiresat ?? 0),
-        });
+        files.push({ ...parsed, expiresAt: new Date(head.Metadata?.expiresat ?? 0) });
       }
       ContinuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
     } while (ContinuationToken);
     return files;
+  }
+
+  /** Splits `<prefix><encoded user id>/<file name>`; the file name itself may contain "/". */
+  private parseKey(key: string): { filename: string; ownedByUserId: string } | undefined {
+    const rest = key.slice(this.prefix.length);
+    const slash = rest.indexOf('/');
+    if (slash < 1 || slash === rest.length - 1) return undefined;
+    try {
+      return { filename: rest.slice(slash + 1), ownedByUserId: decodeURIComponent(rest.slice(0, slash)) };
+    } catch {
+      return undefined; // URIError: a malformed escape in a key written by something else
+    }
   }
 
   private async headIfPresent(Key: string) {

@@ -14,7 +14,7 @@
  *   - What redaction can and cannot do: keys and credential/e-mail shapes are removed; names typed into
  *     free text cannot be recognised, so messages must never contain them (DATA-009).
  * Collaborators: ./redactPersonalData.ts, ./redactText.ts, ./prismaErrorSummary.ts, ../config/env.ts (LOG_LEVEL).
- * Tests: apps/server/test/logging/logger.test.ts
+ * Tests: apps/server/test/logging/logger.test.ts, apps/server/test/logging/loggerMessages.test.ts
  */
 import { pino, type DestinationStream, type Logger, type LevelWithSilent } from 'pino';
 import { isPrismaError, prismaErrorLine } from './prismaErrorSummary.js';

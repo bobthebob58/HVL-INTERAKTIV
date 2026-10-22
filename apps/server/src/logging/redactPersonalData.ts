@@ -14,7 +14,7 @@
  *   - Prisma errors, wherever they appear, are reduced to their codes (./prismaErrorSummary.ts).
  * Collaborators: ./logger.ts (applies it to every log record and argument), ./redactText.ts,
  *   ./prismaErrorSummary.ts.
- * Tests: apps/server/test/logging/logger.test.ts
+ * Tests: apps/server/test/logging/logger.test.ts, apps/server/test/logging/loggerMessages.test.ts
  */
 import { isPrismaError, summarisePrismaError } from './prismaErrorSummary.js';
 import { REDACTED, redactText } from './redactText.js';

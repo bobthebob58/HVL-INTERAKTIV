@@ -35,7 +35,7 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 | NFR-003 | MUST | S4 | Mobile and assistive technology | — | — | planned |
 | NFR-004 | MUST | S1 | Maintainability | `apps/server/vitest.config.ts` | `tools/doc-lint/test/ciWorkflow.test.mjs` | tested |
 | NFR-005 | MUST | S1 | Open source licence | `tools/dependency-check/checkLicences.mjs` | `tools/dependency-check/test/checkLicences.test.mjs`<br>`tools/doc-lint/test/ciWorkflow.test.mjs` | tested |
-| NFR-006 | MUST | S6 | Observability without personal data | `apps/server/src/logging/logger.ts`<br>`apps/server/src/logging/redactPersonalData.ts` | `apps/server/test/logging/logger.test.ts` | tested |
+| NFR-006 | MUST | S6 | Observability without personal data | `apps/server/src/logging/logger.ts`<br>`apps/server/src/logging/redactPersonalData.ts`<br>`apps/server/src/logging/redactText.ts` | `apps/server/test/logging/logger.test.ts`<br>`apps/server/test/logging/loggerMessages.test.ts`<br>`apps/server/test/logging/redactText.test.ts` | tested |
 | NFR-007 | MUST | S6 | Deployable on HVL or Sikt infrastructure | — | — | planned |
 
 ## [docs/specs/01-h5p-core128.md](specs/01-h5p-core128.md)
@@ -57,7 +57,7 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 | SEC-002 | MUST | S2 | Narrow allowlist and content sniffing | `apps/server/src/h5p/H5pConfigFactory.ts` | `apps/server/test/h5p/H5pConfigFactory.test.ts` | tested |
 | SEC-003 | MUST | S2 | Uploaded packages never install code for non-admins | — | — | planned |
 | SEC-004 | MUST | S2 | Serve user content defensively | — | — | planned |
-| SEC-005 | MUST | S1 | Size limits and archive safety | `apps/server/src/h5p/H5pConfigFactory.ts`<br>`apps/server/src/h5p/storage/S3ContentFileStore.ts`<br>`apps/server/src/h5p/storage/S3TemporaryFileStorage.ts`<br>`apps/server/src/h5p/storage/s3Objects.ts`<br>`apps/server/src/security/zipEntryGuard.ts` | `apps/server/test/h5p/H5pConfigFactory.test.ts`<br>`apps/server/test/h5p/S3TemporaryFileStorage.test.ts`<br>`apps/server/test/h5p/contentStorage.int.test.ts`<br>`apps/server/test/h5p/s3Objects.test.ts`<br>`apps/server/test/security/zipEntryGuard.test.ts` | tested |
+| SEC-005 | MUST | S1 | Size limits and archive safety | `apps/server/src/h5p/H5pConfigFactory.ts`<br>`apps/server/src/h5p/storage/S3ContentFileStore.ts`<br>`apps/server/src/h5p/storage/S3TemporaryFileStorage.ts`<br>`apps/server/src/h5p/storage/s3Objects.ts`<br>`apps/server/src/security/zipEntryGuard.ts` | `apps/server/test/h5p/H5pConfigFactory.test.ts`<br>`apps/server/test/h5p/contentStorage.int.test.ts`<br>`apps/server/test/h5p/s3Objects.test.ts`<br>`apps/server/test/security/zipEntryGuard.test.ts` | tested |
 | SEC-006 | SHOULD | S6 | Malware scanning | — | — | planned |
 | SEC-007 | MUST | S1 | Dependency hygiene | `tools/dependency-check/checkAudit.mjs`<br>`tools/dependency-check/checkPins.mjs` | `tools/dependency-check/test/checkAudit.test.mjs`<br>`tools/dependency-check/test/checkPins.test.mjs`<br>`tools/doc-lint/test/ciWorkflow.test.mjs` | tested |
 | SEC-008 | MUST | S2 | Regression test for CVE-2025-47828 | — | — | planned |
@@ -149,7 +149,7 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 | DATA-006 | MUST | S4 | Transparency for students | — | — | planned |
 | DATA-007 | MUST | S6 | Audit log | — | — | planned |
 | DATA-008 | MUST | S6 | Data-subject requests | — | — | planned |
-| DATA-009 | MUST | S1 | Logs contain no personal data | `apps/server/src/logging/logger.ts`<br>`apps/server/src/logging/prismaErrorSummary.ts`<br>`apps/server/src/logging/redactPersonalData.ts` | `apps/server/test/logging/logger.test.ts` | tested |
+| DATA-009 | MUST | S1 | Logs contain no personal data | `apps/server/src/logging/logger.ts`<br>`apps/server/src/logging/prismaErrorSummary.ts`<br>`apps/server/src/logging/redactPersonalData.ts`<br>`apps/server/src/logging/redactText.ts` | `apps/server/test/logging/logger.test.ts`<br>`apps/server/test/logging/loggerMessages.test.ts`<br>`apps/server/test/logging/redactText.test.ts` | tested |
 | DATA-010 | MUST | S6 | Least-privilege access to infrastructure | — | — | planned |
 | DATA-011 | MUST | S4 | No third-party tracking or CDNs | — | — | planned |
 | DATA-012 | MUST | S6 | Minimal xAPI storage | — | — | planned |
@@ -158,12 +158,12 @@ header or `@spec` tag; **tested**, at least one test title carries the ID in bra
 
 | ID | Priority | Session | Requirement | Code | Tests | Status |
 |---|---|---|---|---|---|---|
-| DOC-001 | MUST | S1 | Every source file starts with a module header | `tools/doc-lint/checks/moduleHeader.mjs`<br>`tools/doc-lint/docLint.mjs`<br>`tools/doc-lint/lib/repo.mjs` | `tools/doc-lint/test/docLint.headers.test.mjs` | tested |
+| DOC-001 | MUST | S1 | Every source file starts with a module header | `tools/doc-lint/checks/moduleHeader.mjs`<br>`tools/doc-lint/docLint.mjs`<br>`tools/doc-lint/lib/repo.mjs` | `tools/doc-lint/test/docLint.headers.test.mjs`<br>`tools/doc-lint/test/docLint.testPaths.test.mjs` | tested |
 | DOC-002 | MUST | S1 | Every exported symbol has TSDoc | `tools/doc-lint/checks/exportDocs.mjs` | `tools/doc-lint/test/docLint.headers.test.mjs` | tested |
 | DOC-003 | MUST | S1 | Explain non-obvious code with tagged rationale comments | `tools/doc-lint/checks/rationaleTags.mjs` | `tools/doc-lint/test/docLint.headers.test.mjs` | tested |
-| DOC-004 | MUST | S1 | Requirement IDs connect spec, code and tests | `tools/spec-site/buildSpecSite.mjs`<br>`tools/spec-site/markdownRenderer.mjs`<br>`tools/spec-site/overviewView.mjs`<br>`tools/spec-site/pageTemplate.mjs`<br>`tools/spec-site/spec-site.base.css`<br>`tools/spec-site/spec-site.client.js`<br>`tools/spec-site/spec-site.components.css`<br>`tools/spec-site/specParser.mjs`<br>`tools/spec-trace/specTrace.mjs` | `tools/spec-site/test/specSite.test.mjs`<br>`tools/spec-trace/test/specTrace.test.mjs` | tested |
+| DOC-004 | MUST | S1 | Requirement IDs connect spec, code and tests | `tools/spec-site/buildSpecSite.mjs`<br>`tools/spec-site/markdownRenderer.mjs`<br>`tools/spec-site/overviewView.mjs`<br>`tools/spec-site/pageTemplate.mjs`<br>`tools/spec-site/spec-site.base.css`<br>`tools/spec-site/spec-site.client.js`<br>`tools/spec-site/spec-site.components.css`<br>`tools/spec-site/specParser.mjs`<br>`tools/spec-trace/specTrace.mjs`<br>`tools/spec-trace/testTitles.mjs` | `tools/spec-site/test/specSite.test.mjs`<br>`tools/spec-trace/test/specTrace.test.mjs`<br>`tools/spec-trace/test/testTitles.test.mjs` | tested |
 | DOC-005 | MUST | S1 | Each app and package has a README | `tools/doc-lint/checks/packageReadme.mjs` | `tools/doc-lint/test/docLint.repo.test.mjs` | tested |
-| DOC-006 | MUST | S1 | Tests are written to be read | `tools/doc-lint/checks/moduleHeader.mjs`<br>`tools/doc-lint/checks/testReadability.mjs`<br>`tools/doc-lint/test/tempRepo.mjs` | `tools/doc-lint/test/docLint.code.test.mjs` | tested |
+| DOC-006 | MUST | S1 | Tests are written to be read | `tools/doc-lint/checks/moduleHeader.mjs`<br>`tools/doc-lint/checks/testReadability.mjs`<br>`tools/doc-lint/test/tempRepo.mjs`<br>`tools/spec-trace/testTitles.mjs` | `tools/doc-lint/test/docLint.code.test.mjs` | tested |
 | DOC-007 | MUST | S1 | Small, explicitly named files | `tools/doc-lint/checks/fileSize.mjs` | `tools/doc-lint/test/docLint.code.test.mjs` | tested |
 | DOC-008 | MUST | S1 | Configuration is documented where it is defined | `apps/server/src/config/env.ts`<br>`apps/server/src/config/productionChecks.ts`<br>`tools/doc-lint/checks/envDocumented.mjs` | `apps/server/test/config/env.test.ts`<br>`tools/doc-lint/test/docLint.repo.test.mjs` | tested |
 | DOC-009 | MUST | S1 | Language conventions | `apps/server/src/i18n/translate.ts`<br>`tools/doc-lint/checks/localeParity.mjs` | `apps/server/test/i18n/translate.test.ts`<br>`tools/doc-lint/test/docLint.repo.test.mjs` | tested |
