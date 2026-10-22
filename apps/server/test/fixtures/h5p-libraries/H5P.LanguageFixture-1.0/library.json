@@ -1,0 +1,13 @@
+{
+  "title": "H5P.LanguageFixture",
+  "machineName": "H5P.LanguageFixture",
+  "majorVersion": 1,
+  "minorVersion": 0,
+  "patchVersion": 0,
+  "runnable": 1,
+  "coreApi": {
+    "majorVersion": 1,
+    "minorVersion": 28
+  },
+  "embedTypes": ["iframe"]
+}

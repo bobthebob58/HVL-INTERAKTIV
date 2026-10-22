@@ -1,0 +1,21 @@
+[
+  {
+    "name": "greeting",
+    "type": "text",
+    "label": "Greeting",
+    "default": "Hello"
+  },
+  {
+    "name": "behaviour",
+    "type": "group",
+    "label": "Behaviour settings",
+    "fields": [
+      {
+        "name": "showSolution",
+        "type": "text",
+        "label": "Show solution button",
+        "default": "Show solution"
+      }
+    ]
+  }
+]

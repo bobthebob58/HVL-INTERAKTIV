@@ -1,0 +1,17 @@
+{
+  "semantics": [
+    {
+      "label": "Hilsen",
+      "default": "Hei"
+    },
+    {
+      "label": "Innstillinger for oppførsel",
+      "fields": [
+        {
+          "label": "Knapp for å vise løsning",
+          "default": "Vis løsning"
+        }
+      ]
+    }
+  ]
+}

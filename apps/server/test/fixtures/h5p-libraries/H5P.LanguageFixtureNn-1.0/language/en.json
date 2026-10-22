@@ -1,0 +1,17 @@
+{
+  "semantics": [
+    {
+      "label": "Greeting",
+      "default": "Hello"
+    },
+    {
+      "label": "Behaviour settings",
+      "fields": [
+        {
+          "label": "Show solution button",
+          "default": "Show solution"
+        }
+      ]
+    }
+  ]
+}
