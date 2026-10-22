@@ -95,7 +95,7 @@ export class HvlH5PEditor extends H5PEditor {
 
   /** Saves with HVL's checks in the order described in the module header; learner state is not touched. */
   override async saveOrUpdateContentReturnMetaData(
-    contentId: ContentId,
+    contentId: ContentId | undefined,
     parameters: ContentParameters,
     metadata: IContentMetadata,
     mainLibraryUbername: string,
@@ -113,7 +113,8 @@ export class HvlH5PEditor extends H5PEditor {
     const before = contentId === undefined ? [] : await this.files.storedFiles(contentId, main, user);
     await this.subContent.enforce(parameters as Record<string, unknown>, metadata, main);
     const result = await super.saveOrUpdateContentReturnMetaData(
-      contentId,
+      // WHY: Lumi types the ID as a string but treats undefined as "new content".
+      contentId as ContentId,
       parameters,
       metadata,
       mainLibraryUbername,
@@ -132,7 +133,7 @@ export class HvlH5PEditor extends H5PEditor {
 
   /** Saves, then drops invalidated learner state, only after the save passed every check (D-038). */
   override async saveOrUpdateContent(
-    contentId: ContentId,
+    contentId: ContentId | undefined,
     parameters: ContentParameters,
     metadata: IContentMetadata,
     mainLibraryUbername: string,
@@ -182,12 +183,12 @@ export class HvlH5PEditor extends H5PEditor {
   }
 
   /** Refused for everyone: libraries arrive only through reviewed seed packages or audited imports (D-041). */
-  override async installLibraryFromHub(): Promise<never> {
+  override async installLibraryFromHub(_machineName: string, _user: IUser): Promise<never> {
     throw hubDisabled();
   }
 
   /** Refused for everyone: the public Content Hub is off (`H5P-001` privacy rule). */
-  override async getContentHubContent(): Promise<never> {
+  override async getContentHubContent(_contentHubId: string, _user: IUser): Promise<never> {
     throw hubDisabled();
   }
 }

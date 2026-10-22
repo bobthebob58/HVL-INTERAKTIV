@@ -3,18 +3,20 @@
  *
  * Why: one place shows which interface is backed by which store, so evaluators can compare it with the
  *      spec table, and the editor factory (S2) receives everything ready-made.
- * Spec: H5P-004
+ * Spec: H5P-004, H5P-005
  * Invariants:
  *   - Content: PostgreSQL + S3 · Libraries: shared folder + cache (D-026) · Temporary files: S3 ·
- *     Key-value: Redis · Locks: Redis. The user-data store arrives with H5P-005 in S2 (D-028).
+ *     Key-value: Redis · Locks: Redis · Learner state: PostgreSQL, keyed by the pseudonym (H5P-005, D-028).
  *   - Upload limits come from the H5P config (SEC-005), so storage and engine agree.
  * Collaborators: ./storage/*, ../infra/prismaClient.ts, ../infra/redisClient.ts, ../infra/s3Client.ts.
- * Tests: apps/server/test/h5p/sharedState.int.test.ts
+ * Tests: apps/server/test/h5p/sharedState.int.test.ts,
+ *   apps/server/test/h5p/PrismaContentUserDataStorage.int.test.ts
  */
 import { createRequire } from 'node:module';
 import type { S3Client } from '@aws-sdk/client-s3';
 import type {
   IContentStorage,
+  IContentUserDataStorage,
   IKeyValueStorage,
   ILibraryStorage,
   ILockProvider,
@@ -26,6 +28,7 @@ import type { Redis } from '../infra/redisClient.js';
 import { MAX_FILE_SIZE } from './H5pConfigFactory.js';
 import { createLibraryStorage } from './storage/libraryStorageFactory.js';
 import { PrismaContentStorage } from './storage/PrismaContentStorage.js';
+import { PrismaContentUserDataStorage } from './storage/PrismaContentUserDataStorage.js';
 import { RedisKeyValueStorage } from './storage/RedisKeyValueStorage.js';
 import { S3ContentFileStore } from './storage/S3ContentFileStore.js';
 import { S3TemporaryFileStorage } from './storage/S3TemporaryFileStorage.js';
@@ -43,6 +46,8 @@ export interface H5pStorage {
   contentStorage: IContentStorage;
   temporaryStorage: ITemporaryFileStorage;
   lockProvider: ILockProvider;
+  /** Learner resume state; Lumi must be given the state view of the actor (D-036). */
+  contentUserDataStorage: IContentUserDataStorage;
 }
 
 /** Clients and settings the adapters are built from. */
@@ -73,5 +78,6 @@ export function createH5pStorage(deps: H5pStorageDeps): H5pStorage {
     lockProvider: new RedisLockProvider(
       deps.redis as unknown as ConstructorParameters<typeof RedisLockProvider>[0],
     ),
+    contentUserDataStorage: new PrismaContentUserDataStorage(deps.db),
   };
 }
