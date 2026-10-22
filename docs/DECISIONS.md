@@ -487,7 +487,9 @@ loading of one spec per session are kept.
   are removed; `@import` and external `url()` are removed from styles. Order: our pre-check, Lumi's sanitiser,
   our stricter DOMPurify pass, and a final check that nothing forbidden is left. Benign SVGs must render
   identically in Chromium before and after (screenshot comparison).
-- **Consequences:** SVG files larger than 5 MB are refused.
+- **Consequences:** SVG files larger than 5 MB are refused. DOMPurify parses with the HTML parser (its XML mode
+  returns nothing for a file with an `<?xml?>` prolog); that parser keeps `xmlns` but its SVG profile removes
+  `<use>`, so a drawing that relies on `<use>` loses those parts. The S2 probes recorded this behaviour.
 
 ### D-045 · Headers for user files; the separate files origin moves to S3/S6
 - **Context:** `SEC-004` asks for `nosniff`, a sandbox CSP for SVG and documents, and `attachment` for
