@@ -120,6 +120,9 @@ describe('[AUTH-002] Feide role lists', () => {
     expect(problemsOf({ ...VALID_ENV, AUTHOR_COURSE_GROUPS: 'emne:ppu' })[0]).toMatch(
       /^AUTHOR_COURSE_GROUPS:/,
     );
+    expect(problemsOf({ ...VALID_ENV, AUTHOR_COURSE_GROUPS: 'fc:fs:fs:emne:hvl.no:' })[0]).toMatch(
+      /^AUTHOR_COURSE_GROUPS: entry 1/,
+    );
   });
 });
 

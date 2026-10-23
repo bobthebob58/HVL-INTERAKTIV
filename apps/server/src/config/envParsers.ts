@@ -102,8 +102,8 @@ export const toMatchingList =
 export const FEIDE_ID_PATTERN = /^[^@\s,]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 /** A Feide realm, e.g. `hvl.no`. */
 export const FEIDE_REALM_PATTERN = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/;
-/** A Feide group ID or prefix, e.g. `fc:fs:fs:emne:hvl.no:ppu` (D-059). */
-export const FEIDE_GROUP_PATTERN = /^fc:[a-z0-9:._-]+$/;
+/** A Feide group ID or prefix, e.g. `fc:fs:fs:emne:hvl.no:ppu` (D-059); a trailing `:` could never match. */
+export const FEIDE_GROUP_PATTERN = /^fc:[a-z0-9:._-]*[a-z0-9._-]$/;
 
 /** One LTI platform (a Canvas developer key) as configured in `LTI_PLATFORMS`. */
 export const ltiPlatformSchema = z.strictObject({
