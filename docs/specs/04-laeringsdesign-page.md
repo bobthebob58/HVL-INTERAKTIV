@@ -5,7 +5,7 @@
 | **Status** | Approved for build (v1.0, 2026-10-16) |
 | **Load in sessions** | S5 (all). S4 loads §5 only, because the hint rules plug into the validator engine. |
 | **Owns requirement IDs** | `PED-*`, `MAPPE-*` |
-| **Code location** | `apps/web/src/app/laeringsdesign/`, `apps/web/src/app/mappe/`, `apps/server/src/patterns/`, `apps/server/src/validation/rules/pedagogy/`, `content/laeringsdesign/` |
+| **Code location** | `apps/web/src/app/laeringsdesign/`, `apps/web/src/app/mappe/`, `apps/server/src/patterns/`, `apps/server/src/validation/rules/*Hint.ts`, `content/laeringsdesign/` |
 
 This is the part of HVL Interaktiv that teachers will judge it by. It turns research on asynchronous
 learning into concrete starting points. It nudges authors towards designs that work, and it gives

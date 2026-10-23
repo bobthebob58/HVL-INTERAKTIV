@@ -113,7 +113,7 @@ For each area: what *good* looks like, where to look, and the red flags that sho
   retries on, no timers (`PROD-009`). Hints nudge towards short segments and explanatory feedback
   (`PED-020`). Insight answers "what should I address in the next session?" (`INS-002`, `INS-003`).
 - **Look at:** `content/laeringsdesign/`, `apps/server/src/patterns/`,
-  `apps/server/src/validation/rules/pedagogy/`, the `/laeringsdesign` and `/innsikt` pages.
+  `apps/server/src/validation/rules/*Hint.ts`, the `/laeringsdesign` and `/innsikt` pages.
 - **Red flags:** Thresholds without a `PEDAGOGY:` reference. Hints that *block* publishing. Insight
   that ranks individual students. Pattern text that is not editable without code (`PED-011`).
 - **Best evidence:** Pilot results against the success measures in spec 00 §8.

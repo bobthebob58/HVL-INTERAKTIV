@@ -2978,7 +2978,7 @@ export; teacher insight; GDPR controls; Docker deployment.</p>
 <div class="table-wrap" role="region" aria-label="Table 1, 01 H5P engine and security details" tabindex="0"><table><tbody><tr><th scope="row"><strong>Status</strong></th><td>Approved for build (v1.0, 2026-10-16)</td></tr>
 <tr><th scope="row"><strong>Load in sessions</strong></th><td>S1: §1, §2, §4 (<a class="req-ref" href="#r-H5P-001"><code>H5P-001</code></a>, <a class="req-ref" href="#r-H5P-004"><code>H5P-004</code></a>), §5 (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>, <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>), §6, §7 · S2: all · S3: <a class="req-ref" href="#r-H5P-007"><code>H5P-007</code></a> · S4: <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a> · S6: <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a></td></tr>
 <tr><th scope="row"><strong>Owns requirement IDs</strong></th><td><code>H5P-*</code>, <code>SEC-*</code></td></tr>
-<tr><th scope="row"><strong>Code location</strong></th><td><code>apps/server/src/h5p/</code>, <code>apps/server/src/security/</code>, <code>tools/seed/</code></td></tr>
+<tr><th scope="row"><strong>Code location</strong></th><td><code>apps/server/src/h5p/</code>, <code>apps/server/src/http/</code>, <code>apps/server/src/security/</code>, <code>tools/seed/</code>, <code>tools/h5p-libraries/</code></td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="spec-01--1-verified-facts-this-spec-relies-on" tabindex="-1">1. Verified facts this spec relies on</h3>
@@ -4004,7 +4004,7 @@ its uustatus.no statement.</p>
 <div class="table-wrap" role="region" aria-label="Table 1, 04 Læringsdesign studio details" tabindex="0"><table><tbody><tr><th scope="row"><strong>Status</strong></th><td>Approved for build (v1.0, 2026-10-16)</td></tr>
 <tr><th scope="row"><strong>Load in sessions</strong></th><td>S5 (all). S4 loads §5 only, because the hint rules plug into the validator engine.</td></tr>
 <tr><th scope="row"><strong>Owns requirement IDs</strong></th><td><code>PED-*</code>, <code>MAPPE-*</code></td></tr>
-<tr><th scope="row"><strong>Code location</strong></th><td><code>apps/web/src/app/laeringsdesign/</code>, <code>apps/web/src/app/mappe/</code>, <code>apps/server/src/patterns/</code>, <code>apps/server/src/validation/rules/pedagogy/</code>, <code>content/laeringsdesign/</code></td></tr>
+<tr><th scope="row"><strong>Code location</strong></th><td><code>apps/web/src/app/laeringsdesign/</code>, <code>apps/web/src/app/mappe/</code>, <code>apps/server/src/patterns/</code>, <code>apps/server/src/validation/rules/*Hint.ts</code>, <code>content/laeringsdesign/</code></td></tr>
 </tbody></table></div>
 <p>This is the part of HVL Interaktiv that teachers will judge it by. It turns research on asynchronous
 learning into concrete starting points. It nudges authors towards designs that work, and it gives
@@ -4825,7 +4825,7 @@ asserts? Does the module header&#39;s <em>Invariants</em> section match the code
 retries on, no timers (<a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>). Hints nudge towards short segments and explanatory feedback
 (<a class="req-ref" href="#r-PED-020"><code>PED-020</code></a>). Insight answers &quot;what should I address in the next session?&quot; (<a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>, <a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>).</li>
 <li><strong>Look at:</strong> <code>content/laeringsdesign/</code>, <code>apps/server/src/patterns/</code>,
-<code>apps/server/src/validation/rules/pedagogy/</code>, the <code>/laeringsdesign</code> and <code>/innsikt</code> pages.</li>
+<code>apps/server/src/validation/rules/*Hint.ts</code>, the <code>/laeringsdesign</code> and <code>/innsikt</code> pages.</li>
 <li><strong>Red flags:</strong> Thresholds without a <code>PEDAGOGY:</code> reference. Hints that <em>block</em> publishing. Insight
 that ranks individual students. Pattern text that is not editable without code (<a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>).</li>
 <li><strong>Best evidence:</strong> Pilot results against the success measures in spec 00 §8.</li>
@@ -6371,13 +6371,18 @@ package a dev tool also uses (now 470 packages checked instead of 240; D-071)</l
 all ten real types open and save under the strict policy; in Canvas with frame storage partitioned or blocked.
 Found and fixed: no Edit check in Lumi&#39;s editor render, H5P editor scripts failing under a cross-origin
 parent, Content Hub metadata refused with 403 (page errors), and <code>base-uri &#39;none&#39;</code> refusing jQuery&#39;s parser</li>
-<li><span class="task">○ To do:</span> <code>packages/design-tokens</code> with the contrast test and lint rules (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>)</li>
+<li><span class="task">✓ Done:</span> <code>packages/design-tokens</code> with the contrast test and lint rules (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>): <code>tokens.json</code> → <code>tokens.css</code>,
+the Tailwind <code>@theme</code> file and the Daylight mapping, checked with <code>npm run tokens:check</code>; Stylelint and ESLint
+refuse colour literals, upper case and justified text (D-072)</li>
 <li><span class="task">○ To do:</span> Carried in by earlier decisions: the LTI views <code>/lti/play</code>, <code>/lti/deeplink</code> and the friendly pages move to
 <code>apps/web</code> <code>/app/*</code> on the same server APIs (D-048); the H5P editor page with the player&#39;s script-safe JSON
 (D-040) and the LTI-006 <strong>Rediger</strong> tab on it (D-062); an editor in a cookie-less Canvas iframe needs
 grant-bearing file URLs issued after an Edit check (D-058); <a class="req-ref" href="#r-DOC-012"><code>DOC-012</code></a> from S3</li>
 <li><span class="task">○ To do:</span> Web shell components and <code>hvl-h5p-theme.css</code> (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>…<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>, <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>)</li>
-<li><span class="task">○ To do:</span> Validator engine, UD rules and pedagogical hint rules (<a class="req-ref" href="#r-UD-020"><code>UD-020</code></a>…<a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>, <a class="req-ref" href="#r-PED-020"><code>PED-020</code></a>)</li>
+<li><span class="task">✓ Done:</span> Validator engine, UD rules and pedagogical hint rules (<a class="req-ref" href="#r-UD-020"><code>UD-020</code></a>…<a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>, <a class="req-ref" href="#r-PED-020"><code>PED-020</code></a>): pure
+<code>validateContent</code> with 11 <code>V-*</code> and 11 <code>PED-H*</code> rules, fixtures per rule, messages in three languages,
+thresholds from <code>content/laeringsdesign/hint-thresholds.yaml</code> (D-073). Found and fixed: imported activities
+state <code>language</code>, the editor saves <code>defaultLanguage</code>; V-LANG and the player&#39;s <code>lang</code> read both (UD-010)</li>
 <li><span class="task">○ To do:</span> Publish flow with acknowledgements (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>), which also ends S3&#39;s visibility-only sharing (D-066, Q14);
 formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>); privacy notice (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>)</li>
 <li><span class="task">○ To do:</span> CSP that blocks third-party requests; self-hosted fonts (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>); browser and assistive-technology matrix (<a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>).
@@ -6804,6 +6809,20 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <td><em>Riktig / Feil</em></td><td>Correct / Incorrect (feedback prefixes)</td></tr>
 <tr>
 <td><em>Hjelp</em></td><td>Help</td></tr>
+<tr>
+<td><em>Personvern</em></td><td>Privacy (the footer link to the privacy page, <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>)</td></tr>
+<tr>
+<td><em>Utkast</em> / <em>Publisert</em></td><td>Draft / Published: an activity&#39;s two states. Learners and Deep Linking see published activities only (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>, <a class="req-ref" href="#r-PROD-004"><code>PROD-004</code></a>)</td></tr>
+<tr>
+<td><em>Publiser</em> / <em>Gjer om til utkast</em> (nb: <em>Gjør om til utkast</em>)</td><td>Publish / Turn back into a draft (unpublish)</td></tr>
+<tr>
+<td><em>Sjekk</em></td><td>The pre-publish check: the validator&#39;s findings for one activity (<a class="req-ref" href="#r-UD-020"><code>UD-020</code></a>)</td></tr>
+<tr>
+<td><em>Grunngjeving</em> (nb: <em>begrunnelse</em>)</td><td>The author&#39;s reason for publishing despite an error; stored as a <code>ValidationAcknowledgement</code> and valid for 14 days (<a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>, D-074)</td></tr>
+<tr>
+<td><em>Gå til feltet</em></td><td>&quot;Go to the field&quot;: the link from a finding to the field in the editor (<a class="req-ref" href="#r-UD-021"><code>UD-021</code></a>)</td></tr>
+<tr>
+<td><em>Eigar</em> / <em>Medforfattar</em> (nb: <em>Eier</em> / <em>Medforfatter</em>)</td><td>Owner / Co-author of an activity</td></tr>
 </tbody></table></div>
 <h3 id="glossary--technical-terms" tabindex="-1">Technical terms</h3>
 <div class="table-wrap" role="region" aria-label="Table 3, Technical terms" tabindex="0"><table><thead><tr>
@@ -6829,13 +6848,13 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <tr>
 <td><strong>Placement (Canvas)</strong></td><td>Where Canvas offers a tool, set per developer key. Ours: <code>assignment_selection</code> (an assignment&#39;s external tool; the only one that creates a gradebook column), <code>link_selection</code> (a module item) and <code>editor_button</code> (the rich content editor). The custom field <code>hvl_placement</code> repeats the placement&#39;s name, for launches where Canvas&#39;s own placement claim is missing (D-061). Not the same as an <code>LtiPlacement</code> row, which records one activity placed in one course through one resource link (<a class="req-ref" href="#r-LTI-006"><code>LTI-006</code></a>).</td></tr>
 <tr>
-<td><strong>Deep Linking 2.0</strong></td><td>LTI flow where a teacher picks content in the tool, which is then placed in Canvas. Canvas opens the tool from a placement with an <code>LtiDeepLinkingRequest</code> launch; the tool shows its picker (<code>/lti/deeplink</code> in S3) and returns the chosen activities as a signed <code>LtiDeepLinkingResponse</code> JWT to the platform&#39;s <code>deep_link_return_url</code> (<a class="req-ref" href="#r-LTI-005"><code>LTI-005</code></a>, D-061).</td></tr>
+<td><strong>Deep Linking 2.0</strong></td><td>LTI flow where a teacher picks content in the tool, which is then placed in Canvas. Canvas opens the tool from a placement with an <code>LtiDeepLinkingRequest</code> launch; the tool shows its picker (<code>/lti/deeplink</code>, server-rendered, D-067) and returns the chosen activities as a signed <code>LtiDeepLinkingResponse</code> JWT to the platform&#39;s <code>deep_link_return_url</code> (<a class="req-ref" href="#r-LTI-005"><code>LTI-005</code></a>, D-061).</td></tr>
 <tr>
 <td><strong>AGS</strong></td><td>Assignment and Grade Services: the tool sends scores to the Canvas gradebook.</td></tr>
 <tr>
 <td><strong>NRPS</strong></td><td>Names and Role Provisioning Services: the tool can read course membership. We read counts only.</td></tr>
 <tr>
-<td><strong>ltik</strong></td><td>ltijs launch token: an RS256-signed JWT that holds only the ID of the stored launch record (<code>tid</code>) and is valid for 24 hours. It replaces cookies inside the Canvas iframe. It travels as <code>Authorization: Bearer</code>; only <code>/lti/play</code>, <code>/lti/deeplink</code>, <code>/h5p/ajax</code> and <code>/h5p/contentUserData/…</code> accept it in the query (D-058). It lives in page memory only, never in browser storage or logs, and the landing script removes it from the address bar (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</td></tr>
+<td><strong>ltik</strong></td><td>ltijs launch token: an RS256-signed JWT that holds only the ID of the stored launch record (<code>tid</code>) and is valid for 24 hours. It replaces cookies inside the Canvas iframe. It travels as <code>Authorization: Bearer</code>; only <code>/app/play</code>, <code>/lti/play</code>, <code>/lti/edit</code>, <code>/lti/deeplink</code>, <code>/h5p/ajax</code> and <code>/h5p/contentUserData/…</code> accept it in the query (D-058, D-069). It lives in page memory only, never in browser storage or logs, and the landing script removes it from the address bar (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</td></tr>
 <tr>
 <td><strong>Recovery token (ltijs)</strong></td><td>A value ltijs 7 makes at the OIDC login step: an HMAC-signed state ID that expires after 10 minutes. The browser keeps it in the tool frame&#39;s <code>localStorage</code> or, where that storage is blocked, in LTI Platform Storage, and posts it back with the launch, so ltijs can match the launch to its login without a cookie. It grants nothing on its own; the ltik is never stored this way (D-050).</td></tr>
 <tr>
@@ -6862,6 +6881,16 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <td><strong>Signed file grant</strong></td><td>The part of a content-file URL <code>/h5p/files/&lt;grant&gt;/&lt;contentId&gt;/&lt;file&gt;</code> that authorises it: a key ID, an expiry and an HMAC over <code>contentId|expiry</code> made with <code>URL_SIGNING_KEYS</code>. A player render issues it after the View check. It lasts 12 to 13 hours and names no person, so <code>&lt;img&gt;</code> and <code>&lt;video&gt;</code> tags work in a cookie-less iframe (D-058).</td></tr>
 <tr>
 <td><strong>Key ring</strong></td><td>An environment value <code>id=base64,id=base64,…</code> whose first key is current; older keys still verify or decrypt, so keys rotate without downtime when the new key is first added in second place and moved first only once every server holds it (the three steps are in D-056; D-055 and D-058 apply them to the other two rings). HKDF derives one key per purpose from each key. <code>IDENTITY_HASH_KEYS</code>: identity and audit-IP hashes (D-055). <code>DATA_ENCRYPTION_KEYS</code>: AES-256-GCM for LTI private keys, LTI access tokens and the session&#39;s Feide ID token (D-056). <code>URL_SIGNING_KEYS</code>: signed file grants (D-058). <code>PSEUDONYM_SECRETS</code> is keyed by academic year instead (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>).</td></tr>
+<tr>
+<td><strong>Design token</strong></td><td>A named brand value (colour, spacing, type) in <code>packages/design-tokens/tokens.json</code>. Code uses only the generated CSS variables (<code>--hvl-…</code>) and Tailwind classes; colour literals elsewhere fail Stylelint and ESLint (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>, D-072).</td></tr>
+<tr>
+<td><strong>Daylight theme</strong></td><td>H5P Core 1.28&#39;s theme, configured through <code>--h5p-theme-*</code> CSS variables. <code>packages/design-tokens</code> maps HVL tokens onto them (<code>h5p-daylight.css</code>), and <code>hvl-h5p-theme.css</code> adds typography, focus, targets and feedback prefixes on top (<a class="req-ref" href="#r-UD-011"><code>UD-011</code></a>).</td></tr>
+<tr>
+<td><strong>Finding</strong></td><td>One result of the pre-publish check: rule ID, severity (<code>error</code>, <code>warning</code>, <code>hint</code>), the path of the field in <code>content.json</code> and a message in the author&#39;s language. Only errors block publishing (<a class="req-ref" href="#r-UD-020"><code>UD-020</code></a>, <a class="req-ref" href="#r-UD-021"><code>UD-021</code></a>, <a class="req-ref" href="#r-PED-020"><code>PED-020</code></a>).</td></tr>
+<tr>
+<td><strong>Chrome page</strong></td><td>A Next.js page of <code>apps/web</code> (header, tabs, notices, footer) that frames an H5P player or editor page served by Express on the same origin (D-067).</td></tr>
+<tr>
+<td><strong>Nonce (CSP)</strong></td><td>A random value made for each response and named in its <code>script-src</code>; only scripts carrying it run. Next.js pages use one; H5P pages use <code>&#39;self&#39;</code> and a hash instead, because H5P writes <code>&lt;script&gt;</code> tags a nonce cannot reach (D-070).</td></tr>
 <tr>
 <td><strong>WCAG 2.2 AA</strong></td><td>Web Content Accessibility Guidelines, version 2.2, conformance level AA.</td></tr>
 <tr>
