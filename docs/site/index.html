@@ -5590,7 +5590,8 @@ what &quot;visibility limited to the course&quot; means for student authors when
 <li><strong>Decision:</strong> LTI <code>institution/person#Administrator</code> gives <code>author</code>, never <code>admin</code>; unknown roles and <code>TestUser</code>
 give <code>learner</code>. An <code>AUTHOR_COURSE_GROUPS</code> entry matches a group ID exactly or as a prefix followed by <code>:</code>. Student
 authors may share only <code>private</code> until a course visibility exists. Users from other organisations are <code>learner</code>
-and see only <code>feide</code>-visible activities.</li>
+and see only <code>feide</code>-visible activities. <code>ADMIN_FEIDE_IDS</code> grants <code>admin</code> only to an HVL member (a realm in
+<code>ALLOWED_FEIDE_ORGS</code>); a listed Feide ID from another organisation gets no admin role.</li>
 <li><strong>Consequences:</strong> The owner confirms the student-author rule (Q12).</li>
 </ul>
 <h3 id="decisions--d-060--authors-may-view-a-published-activity-they-launched-from-canvas-course-copy" tabindex="-1">D-060 · Authors may view a published activity they launched from Canvas (course copy)</h3>

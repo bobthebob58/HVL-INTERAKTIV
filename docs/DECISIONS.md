@@ -696,7 +696,8 @@ loading of one spec per session are kept.
 - **Decision:** LTI `institution/person#Administrator` gives `author`, never `admin`; unknown roles and `TestUser`
   give `learner`. An `AUTHOR_COURSE_GROUPS` entry matches a group ID exactly or as a prefix followed by `:`. Student
   authors may share only `private` until a course visibility exists. Users from other organisations are `learner`
-  and see only `feide`-visible activities.
+  and see only `feide`-visible activities. `ADMIN_FEIDE_IDS` grants `admin` only to an HVL member (a realm in
+  `ALLOWED_FEIDE_ORGS`); a listed Feide ID from another organisation gets no admin role.
 - **Consequences:** The owner confirms the student-author rule (Q12).
 
 ### D-060 · Authors may view a published activity they launched from Canvas (course copy)
