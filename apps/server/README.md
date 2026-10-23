@@ -84,7 +84,7 @@ sequenceDiagram
     participant Init as h5pServerInit
     participant Files as h5p/core, h5p/editor
     participant Log as logger
-    Boot->>Env: loadEnvPart(LOG_LEVEL and H5P keys), from S2 the server calls loadEnv
+    Boot->>Env: loadEnvPart(LOG_LEVEL and H5P keys); the seeder (and from S3 the server) calls loadEnv
     Env-->>Boot: typed config, or InvalidEnvironmentError naming each variable
     Boot->>Init: h5pServerInit(env, logger)
     Init->>Init: createH5pConfig: load stored settings, then reset all but the allowlist and apply 1.28, hub-api, limits

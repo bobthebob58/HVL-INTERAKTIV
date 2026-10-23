@@ -2139,12 +2139,12 @@ accessibility debt stays visible.</p>
 <p class="req-source">Defined in <a href="#r-INS-010">05 Insight and privacy, INS-010</a> · Teacher insight</p></div>
 </details>
 <details class="req" id="x-DATA-001" data-area="DATA" data-priority="MUST" data-session="S1" data-status="tested" data-text="data-001 data inventory `docs/privacy/data-inventory.md` lists every stored field: purpose, category, legal basis,
-retention period and location. it must match `schema.prisma`. a ci script fails if a prisma model
+retention period and location. it must match the prisma schema (`apps/server/prisma/schema/`). a ci script fails if a prisma model
 or field is missing from the inventory.
 - **verify:** `npm run privacy:inventory-check`.">
 <summary><span class="req-id">DATA-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Data inventory</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>docs/privacy/DATA-INVENTORY.md</code> lists every stored field: purpose, category, legal basis,
-retention period and location. It must match <code>schema.prisma</code>. A CI script fails if a Prisma model
+retention period and location. It must match the Prisma schema (<code>apps/server/prisma/schema/</code>). A CI script fails if a Prisma model
 or field is missing from the inventory.</p>
 <ul>
 <li><strong>Verify:</strong> <code>npm run privacy:inventory-check</code>.</li>
@@ -3246,7 +3246,7 @@ stored and rendered value is escaped.</p>
 <tr>
 <td><code>LibraryAuditEvent</code></td><td><code>actorUserId?</code> (empty for the seed command), <code>source (seed/upload)</code>, <code>machineName</code>, <code>fromVersion?</code>, <code>toVersion?</code>, <code>sha256?</code>, <code>at</code></td><td>Admin ID (D-041)</td></tr>
 </tbody></table></div>
-<p>Session 1 turns this into <code>apps/server/prisma/schema.prisma</code>, together with the entities from specs 02, 04 and 05.</p>
+<p>Session 1 turns this into the Prisma schema in <code>apps/server/prisma/schema/</code> (<code>content.prisma</code>), together with the entities from specs 02, 04 and 05.</p>
 <hr>
 <h3 id="spec-01--7-session-1-spike-checklist-time-box-90-minutes" tabindex="-1">7. Session 1 spike checklist (time-box: 90 minutes)</h3>
 <p>Record each result in <code>PROGRESS.md</code>, and record a decision in <code>DECISIONS.md</code> whenever a result changes this spec.</p>
@@ -4200,7 +4200,7 @@ accessibility debt stays visible.</p>
 during the DPIA (<a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>).</p>
 <h4 id="r-DATA-001" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DATA-001">DATA-001</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Data inventory</span></h4>
 <p><code>docs/privacy/DATA-INVENTORY.md</code> lists every stored field: purpose, category, legal basis,
-retention period and location. It must match <code>schema.prisma</code>. A CI script fails if a Prisma model
+retention period and location. It must match the Prisma schema (<code>apps/server/prisma/schema/</code>). A CI script fails if a Prisma model
 or field is missing from the inventory.</p>
 <ul>
 <li><strong>Verify:</strong> <code>npm run privacy:inventory-check</code>.</li>
@@ -4300,7 +4300,7 @@ else is dropped, including actor names, mailboxes and extensions.</p>
 </tbody></table></div>
 <hr>
 <h3 id="spec-05--4-consolidated-logical-data-model" tabindex="-1">4. Consolidated logical data model</h3>
-<p>Session 1 turns this into <code>apps/server/prisma/schema.prisma</code>. <strong>PII</strong> marks fields that are
+<p>Session 1 turns this into the Prisma schema in <code>apps/server/prisma/schema/*.prisma</code>. <strong>PII</strong> marks fields that are
 personal data; <strong>P</strong> marks pseudonymous fields.</p>
 <div class="table-wrap" role="region" aria-label="Table 3, 4. Consolidated logical data model" tabindex="0"><table><thead><tr>
 <th scope="col">Entity</th><th scope="col">Owner spec</th><th scope="col">Notable fields</th></tr>
@@ -4667,7 +4667,7 @@ URLs and logs (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>). N
 <li><strong>Good:</strong> Learners exist only as HMAC pseudonyms (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>). No insight cell under <em>k</em> = 5 (<a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>,
 backed by a property test). Yearly purge with secret destruction (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>). The data inventory
 matches the schema (<a class="req-ref" href="#r-DATA-001"><code>DATA-001</code></a>). Logs are redacted (<a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>). No third-party requests (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>).</li>
-<li><strong>Look at:</strong> <code>docs/privacy/</code>, <code>apps/server/src/privacy/</code>, <code>apps/server/src/insight/</code>, <code>schema.prisma</code>.</li>
+<li><strong>Look at:</strong> <code>docs/privacy/</code>, <code>apps/server/src/privacy/</code>, <code>apps/server/src/insight/</code>, <code>apps/server/prisma/schema/</code>.</li>
 <li><strong>Red flags:</strong> Learner names or e-mails in any table. An endpoint returning per-learner rows to
 teachers. <code>actor.name</code> or <code>mbox</code> persisted from xAPI.</li>
 </ul>
@@ -5311,8 +5311,8 @@ returns nothing for a file with an <code>&lt;?xml?&gt;</code> prolog); that pars
 Lumi&#39;s profile is SVG only (no filter elements), so filter primitives such as <code>feGaussianBlur</code> are lost too,
 and DOMPurify removes ids that name document properties (<code>title</code>, <code>blur</code>, …), which breaks <code>url(#…)</code>
 references to them; a test pins all three losses. Our pass writes its result with XMLSerializer, and the final
-check parses it again as XML, as a browser does, and fails closed. Lumi alone let 13 of the 41 attack payloads
-in <code>SvgSanitizer.bypass.test.ts</code> through; the added layers stop all of them.</li>
+check parses it again as XML, as a browser does, and fails closed. Lumi alone let 15 of the 41 attack payloads
+in <code>SvgSanitizer.bypass.test.ts</code> through (13 once our pre-check had run); the added layers stop all of them.</li>
 </ul>
 <h3 id="decisions--d-045--headers-for-user-files-the-separate-files-origin-moves-to-s3s6" tabindex="-1">D-045 · Headers for user files; the separate files origin moves to S3/S6</h3>
 <ul>

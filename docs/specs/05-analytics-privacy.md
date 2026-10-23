@@ -88,7 +88,7 @@ during the DPIA (`DATA-005`).
 
 #### DATA-001 · MUST · S1 · Data inventory
 `docs/privacy/DATA-INVENTORY.md` lists every stored field: purpose, category, legal basis,
-retention period and location. It must match `schema.prisma`. A CI script fails if a Prisma model
+retention period and location. It must match the Prisma schema (`apps/server/prisma/schema/`). A CI script fails if a Prisma model
 or field is missing from the inventory.
 - **Verify:** `npm run privacy:inventory-check`.
 
@@ -176,7 +176,7 @@ else is dropped, including actor names, mailboxes and extensions.
 
 ## 4. Consolidated logical data model
 
-Session 1 turns this into `apps/server/prisma/schema.prisma`. **PII** marks fields that are
+Session 1 turns this into the Prisma schema in `apps/server/prisma/schema/*.prisma`. **PII** marks fields that are
 personal data; **P** marks pseudonymous fields.
 
 | Entity | Owner spec | Notable fields |

@@ -122,7 +122,7 @@ For each area: what *good* looks like, where to look, and the red flags that sho
 - **Good:** Learners exist only as HMAC pseudonyms (`DATA-002`). No insight cell under *k* = 5 (`INS-006`,
   backed by a property test). Yearly purge with secret destruction (`DATA-003`). The data inventory
   matches the schema (`DATA-001`). Logs are redacted (`DATA-009`). No third-party requests (`DATA-011`).
-- **Look at:** `docs/privacy/`, `apps/server/src/privacy/`, `apps/server/src/insight/`, `schema.prisma`.
+- **Look at:** `docs/privacy/`, `apps/server/src/privacy/`, `apps/server/src/insight/`, `apps/server/prisma/schema/`.
 - **Red flags:** Learner names or e-mails in any table. An endpoint returning per-learner rows to
   teachers. `actor.name` or `mbox` persisted from xAPI.
 

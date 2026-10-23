@@ -503,8 +503,8 @@ loading of one spec per session are kept.
   Lumi's profile is SVG only (no filter elements), so filter primitives such as `feGaussianBlur` are lost too,
   and DOMPurify removes ids that name document properties (`title`, `blur`, …), which breaks `url(#…)`
   references to them; a test pins all three losses. Our pass writes its result with XMLSerializer, and the final
-  check parses it again as XML, as a browser does, and fails closed. Lumi alone let 13 of the 41 attack payloads
-  in `SvgSanitizer.bypass.test.ts` through; the added layers stop all of them.
+  check parses it again as XML, as a browser does, and fails closed. Lumi alone let 15 of the 41 attack payloads
+  in `SvgSanitizer.bypass.test.ts` through (13 once our pre-check had run); the added layers stop all of them.
 
 ### D-045 · Headers for user files; the separate files origin moves to S3/S6
 - **Context:** `SEC-004` asks for `nosniff`, a sandbox CSP for SVG and documents, and `attachment` for
