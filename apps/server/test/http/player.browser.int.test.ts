@@ -18,30 +18,9 @@ import {
   RIGHTS_FLAGS,
   RIGHTS_PAYLOAD,
 } from '../support/rightsOfUsePayloads.js';
-import { HTTP_TEST_LIBRARIES, MULTI_CHOICE } from '../support/tenTypeLibraries.js';
+import { PROBE_LIBRARIES } from '../support/probeContentType.js';
 
-/** A minimal content type: one button that counts clicks and reports the count as its state. */
-const PROBE_JS = `H5P.MultiChoice = (function ($) {
-  function Probe(params, contentId, extras) {
-    H5P.EventDispatcher.call(this);
-    var state = (extras && extras.previousState) || { clicks: 0 };
-    this.getCurrentState = function () { return state; };
-    this.attach = function ($container) {
-      var $button = $('<button type="button" class="hvl-probe"></button>').text(String(state.clicks));
-      $button.on('click', function () { state.clicks += 1; $button.text(String(state.clicks)); });
-      $container.addClass('hvl-probe-attached').append($button);
-    };
-  }
-  Probe.prototype = Object.create(H5P.EventDispatcher.prototype);
-  Probe.prototype.constructor = Probe;
-  return Probe;
-})(H5P.jQuery);`;
-
-const LIBRARIES = HTTP_TEST_LIBRARIES.map((lib) =>
-  lib.machineName === MULTI_CHOICE.machineName
-    ? { ...lib, files: { ...lib.files, 'js/main.js': PROBE_JS } }
-    : lib,
-);
+const LIBRARIES = PROBE_LIBRARIES;
 
 describeWithServices('H5P player in a browser', () => {
   let tb: HttpTestbed;

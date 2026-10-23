@@ -5502,7 +5502,13 @@ lower-case <code>req.headers</code> through, or ltijs skips its <code>Sec-Fetch-
 launch page calls <code>localStorage.removeItem</code> outside its <code>try</code>, so where frame storage is blocked (the getter
 throws) the launch form is never submitted. A static guard script (<code>src/lti/pages/client/ltijsStorageGuard.js</code>)
 runs before ltijs&#39;s scripts and, only when the getter throws, puts a stand-in in its place that stores nothing
-and whose <code>setItem</code> still fails, so ltijs falls back to Platform Storage as designed.</li>
+and whose <code>setItem</code> still fails, so ltijs falls back to Platform Storage as designed. The cookie-less e2e launch
+(<code>apps/server/e2e/ltiIframe.e2e.test.ts</code>) found the same problem in H5P Core 1.28: it reads <code>localStorage</code> without
+a <code>try</code> (xAPI actor UUID, clipboard, xAPI queue), so <code>H5P.init</code> stopped and learner state was never saved. The LTI
+player therefore loads <code>src/lti/pages/client/h5pStorageGuard.js</code> before H5P Core: only when the getter throws, it
+puts a page-memory stand-in in its place (nothing reaches disk; the ltik is never written to it). With storage
+blocked <em>and</em> no <code>lti_storage_target</code>, ltijs cannot recover its state and the launch ends on our &quot;launch failed&quot;
+page; Canvas sends <code>lti_storage_target</code>, so this affects only other platforms.</li>
 </ul>
 <h3 id="decisions--d-051--lti-platforms-and-deployments-from-lti_platforms-deployment-ids-checked-by-us" tabindex="-1">D-051 · LTI platforms and deployments from <code>LTI_PLATFORMS</code>; deployment IDs checked by us</h3>
 <ul>

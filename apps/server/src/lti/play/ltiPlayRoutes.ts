@@ -10,8 +10,9 @@
  *   - Unknown, draft or invisible activities give the one 404 page; an invalid ltik the "reopen from Canvas" page.
  *   - The page is `no-store`, `no-referrer`, framed only by `CANVAS_ORIGINS`, and never sends `X-Frame-Options`.
  *   - Lumi's render runs with the View check (the player factory refuses the options that skip it).
+ *   - Before H5P Core loads, the storage guard makes blocked frame storage safe for H5P (D-050).
  * Collaborators: ../ltikPrincipal.ts, ../../auth/principalToH5pActor.ts, ../../h5p/render/playerPage.ts,
- *   ../http/ltiPageHeaders.ts, ../pages/client/ltikLanding.js, ../ltiRoutes.ts.
+ *   ../http/ltiPageHeaders.ts, ../pages/client/ltikLanding.js, ../pages/client/h5pStorageGuard.js, ../ltiRoutes.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/ltiPlay.int.test.ts
  */
 import { fileURLToPath } from 'node:url';
@@ -30,6 +31,8 @@ import type { ResolvedLtik } from '../ltikPrincipal.js';
 export const LTI_STATIC_PATH = '/static/lti';
 /** The player page's first script. */
 export const LTIK_LANDING_SCRIPT = `${LTI_STATIC_PATH}/ltikLanding.js`;
+/** Runs before H5P Core so it survives blocked frame storage (./../pages/client/h5pStorageGuard.js). */
+export const H5P_STORAGE_GUARD_SCRIPT = `${LTI_STATIC_PATH}/h5pStorageGuard.js`;
 
 const CLIENT_DIR = fileURLToPath(new URL('../pages/client/', import.meta.url));
 
@@ -72,7 +75,11 @@ export function ltiPlayRoutes(deps: LtiPlayDeps): Router {
       throw error;
     }
     setLtiPageHeaders(res, ltiPlayerCsp(deps.canvasOrigins));
-    res.type('html').send(renderPlayerPage(model, actor.locale, { firstScripts: [LTIK_LANDING_SCRIPT] }));
+    res.type('html').send(
+      renderPlayerPage(model, actor.locale, {
+        firstScripts: [LTIK_LANDING_SCRIPT, H5P_STORAGE_GUARD_SCRIPT],
+      }),
+    );
   });
   return router;
 }

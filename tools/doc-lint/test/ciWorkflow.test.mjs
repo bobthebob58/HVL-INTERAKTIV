@@ -32,6 +32,11 @@ describe('[NFR-004] CI runs the maintainability gates', () => {
     expect(typedoc.treatWarningsAsErrors).toBe(true);
   });
 
+  it('[LTI-003] runs the end-to-end flows in full Chromium (the headless shell ignores cookie blocking, D-065)', () => {
+    expect(runs('npm run test:e2e')).toBe(true);
+    expect(runs('--only-shell')).toBe(false);
+  });
+
   it('[H5P-003] never contacts the H5P Hub and installs the browser for the SVG rendering test', () => {
     expect(ci).not.toMatch(/hub:check|fetch-seed-packages|hub-api\.h5p\.org/);
     expect(runs('playwright-core install --with-deps chromium')).toBe(true);

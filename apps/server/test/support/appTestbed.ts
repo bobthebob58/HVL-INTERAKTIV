@@ -32,7 +32,7 @@ import { createLogger } from '../../src/logging/logger.js';
 import { createApp, type App } from '../../src/server/createApp.js';
 import { uniqueName } from './services.js';
 import { removeTestBucket } from './storageFixtures.js';
-import { syntheticLibraryDir } from './syntheticLibraries.js';
+import { syntheticLibraryDir, type SyntheticLibrary } from './syntheticLibraries.js';
 import { HTTP_TEST_LIBRARIES } from './tenTypeLibraries.js';
 import { testActor } from './testActors.js';
 
@@ -72,9 +72,12 @@ const scopedTo = (manager: PlatformManager, issuer: string): PlatformManager =>
 
 /**
  * Starts the app, the mock Canvas and the mock Feide.
+ * @param libraries - The installed H5P libraries (default: the HTTP test set).
  * @returns The testbed.
  */
-export async function openAppTestbed(): Promise<AppTestbed> {
+export async function openAppTestbed(
+  libraries: SyntheticLibrary[] = HTTP_TEST_LIBRARIES,
+): Promise<AppTestbed> {
   const startedAt = new Date();
   let handler = (_req: IncomingMessage, res: ServerResponse): void => void res.writeHead(503).end();
   const server: Server = createServer((req, res) => handler(req, res));
@@ -86,7 +89,7 @@ export async function openAppTestbed(): Promise<AppTestbed> {
     ...process.env,
     ...mock.env,
     PUBLIC_BASE_URL: toolUrl,
-    H5P_LIBRARY_DIR: syntheticLibraryDir(HTTP_TEST_LIBRARIES),
+    H5P_LIBRARY_DIR: syntheticLibraryDir(libraries),
     S3_CONTENT_BUCKET: buckets.content,
     S3_TEMPORARY_BUCKET: buckets.temporary,
   });

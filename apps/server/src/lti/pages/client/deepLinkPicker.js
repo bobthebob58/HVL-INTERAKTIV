@@ -12,7 +12,7 @@
  *   - Status and errors are written as text into live regions (`role="status"`, `role="alert"`); texts come from
  *     the page's `data-msg-*` attributes, which the server filled from the locale files.
  * Collaborators: ../deepLinkPickerPage.ts (markup and data attributes), ../../deepLinking/deepLinkRoutes.ts.
- * Tests: apps/server/test/lti/deepLinking/deepLinking.int.test.ts
+ * Tests: apps/server/test/lti/deepLinking/deepLinking.int.test.ts, apps/server/e2e/deepLinking.e2e.test.ts
  */
 (function deepLinkPicker() {
   'use strict';

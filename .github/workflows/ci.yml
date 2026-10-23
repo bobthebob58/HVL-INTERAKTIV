@@ -67,7 +67,7 @@ jobs:
         run: npm run h5p:fetch-core
       - name: Generate the Prisma client and apply migrations
         run: npm run db:generate --workspace apps/server && npm run db:migrate
-      - name: Install Chromium for the browser tests (SEC-001 SVG rendering)
+      - name: Install full Chromium for the browser and end-to-end tests (SEC-001, D-065; never --only-shell)
         run: npx playwright-core install --with-deps chromium
       - name: Typecheck
         run: npm run typecheck
@@ -89,6 +89,8 @@ jobs:
         run: npm run privacy:inventory-check
       - name: Tests (unit and integration)
         run: npm test
+      - name: End-to-end flows in Chromium with third-party cookies blocked (LTI-003, LTI-005, PROD-006, D-065)
+        run: npm run test:e2e
       - name: API documentation builds without warnings (TypeDoc, DOC-002)
         run: npm run docs:api
       - name: Traceability (every MUST of a finished session has a running test)

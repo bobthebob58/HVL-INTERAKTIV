@@ -19,6 +19,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:e2e": "vitest run --root apps/server --config vitest.e2e.config.ts",
     "doc:lint": "node tools/doc-lint/docLint.mjs",
     "check:filesize": "node tools/doc-lint/docLint.mjs --only=file-size",
     "check:pins": "node tools/dependency-check/checkPins.mjs",
