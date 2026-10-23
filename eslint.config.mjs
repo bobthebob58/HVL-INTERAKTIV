@@ -12,6 +12,8 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import jsdoc from 'eslint-plugin-jsdoc';
 import i18next from 'eslint-plugin-i18next';
+import reactHooks from 'eslint-plugin-react-hooks';
+import nextPlugin from '@next/eslint-plugin-next';
 import globals from 'globals';
 
 export default tseslint.config(
@@ -26,6 +28,8 @@ export default tseslint.config(
       'apps/server/src/generated/**',
       'apps/server/h5p/**',
       'apps/server/var/**',
+      'apps/web/.next/**',
+      'apps/web/next-env.d.ts',
     ],
   },
   js.configs.recommended,
@@ -37,9 +41,9 @@ export default tseslint.config(
     files: ['tools/spec-site/spec-site.client.js'],
     languageOptions: { sourceType: 'script', globals: { ...globals.browser } },
   },
-  ...tseslint.configs.recommended.map((config) => ({ ...config, files: ['**/*.ts'] })),
+  ...tseslint.configs.recommended.map((config) => ({ ...config, files: ['**/*.{ts,tsx}'] })),
   {
-    files: ['**/*.ts'],
+    files: ['**/*.{ts,tsx}'],
     plugins: { jsdoc },
     rules: {
       // DOC-002: every exported function, class, interface and type alias carries TSDoc.
@@ -68,7 +72,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/test/**/*.{ts,mjs}', '**/*.test.{ts,mjs}'],
+    files: ['**/test/**/*.{ts,tsx,mjs}', '**/*.test.{ts,tsx,mjs}'],
     rules: { 'jsdoc/require-jsdoc': 'off', 'jsdoc/require-param': 'off' },
   },
   {
@@ -124,6 +128,17 @@ export default tseslint.config(
         { object: 'window', property: 'sessionStorage', message: 'LTI-003: keep the ltik in memory only.' },
         { object: 'document', property: 'cookie', message: 'LTI-003: keep the ltik in memory only.' },
       ],
+    },
+  },
+  {
+    // D-068: the web app's React and Next.js rules; Next.js finds the app through `rootDir`.
+    files: ['apps/web/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooks, '@next/next': nextPlugin },
+    settings: { next: { rootDir: 'apps/web/' } },
+    languageOptions: { globals: { ...globals.browser } },
+    rules: {
+      ...reactHooks.configs.flat['recommended-latest'].rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
     },
   },
   {

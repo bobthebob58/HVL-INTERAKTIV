@@ -10,9 +10,11 @@
  *   - The server listens only after the platform sync and the platform-key re-encryption (D-056) have finished.
  *   - A port that cannot be opened stops the start with exit code 1 instead of a process that serves nothing.
  *   - SIGTERM and SIGINT stop the jobs, stop accepting connections, then close the clients; exit code 0.
+ *   - The web app is loaded only when `WEB_APP` is not `off`; only its development server takes WebSocket upgrades,
+ *     and only under `/_next/`.
  * Collaborators: ./createApp.ts, ../h5p/createH5pRuntime.ts, ../lti/platforms/syncLtiPlatforms.ts,
  *   ../lti/platforms/reencryptPlatformKeys.ts,
- *   ../lti/storage/LtiRecordCleanupJob.ts, ../config/env.ts.
+ *   ../lti/storage/LtiRecordCleanupJob.ts, ../config/env.ts, ../web/nextWebApp.ts.
  * Tests: apps/server/test/server/main.smoke.test.ts
  */
 import type { Server } from 'node:http';
@@ -27,6 +29,7 @@ import { syncLtiPlatforms } from '../lti/platforms/syncLtiPlatforms.js';
 import { LtiRecordCleanupJob } from '../lti/storage/LtiRecordCleanupJob.js';
 import { createLogger } from '../logging/logger.js';
 import { DataEncryption } from '../security/keys/DataEncryption.js';
+import { loadWebApp } from '../web/nextWebApp.js';
 import { createApp } from './createApp.js';
 
 /** A started server and how to stop it. */
@@ -46,7 +49,8 @@ export async function startServer(env: Env): Promise<RunningServer> {
   const db = createPrismaClient(env.DATABASE_URL);
   const redis = await connectRedis(env.REDIS_URL, logger);
   const h5p = await createH5pRuntime({ env, logger, db, redis, s3: createS3Client(env) });
-  const { app, lti } = createApp({ env, logger, db, redis, h5p });
+  const web = env.WEB_APP === 'off' ? undefined : await loadWebApp(env.WEB_APP);
+  const { app, lti } = createApp({ env, logger, db, redis, h5p, ...(web ? { web } : {}) });
   const synced = await syncLtiPlatforms(env.LTI_PLATFORMS, { platforms: lti.provider.platformManager, db });
   logger.info(synced, 'LTI platforms synchronised');
   const rewritten = await reencryptPlatformKeys(db, new DataEncryption(env.DATA_ENCRYPTION_KEYS));
@@ -58,13 +62,19 @@ export async function startServer(env: Env): Promise<RunningServer> {
   const server = await new Promise<Server>((resolve, reject) => {
     const listening = app.listen(env.PORT, (error?: Error) => (error ? reject(error) : resolve(listening)));
   });
-  logger.info({ port: env.PORT }, 'HVL Interaktiv server listening');
+  if (web?.dev) {
+    server.on('upgrade', (req, socket, head) => {
+      if (req.url?.startsWith('/_next/')) void web.upgrade(req, socket, head);
+      else socket.destroy();
+    });
+  }
+  logger.info({ port: env.PORT, webApp: env.WEB_APP }, 'HVL Interaktiv server listening');
   return {
     server,
     stop: async () => {
       for (const job of jobs) job.stop();
       await new Promise<void>((resolve) => server.close(() => resolve()));
-      await Promise.all([redis.quit(), db.$disconnect()]);
+      await Promise.all([redis.quit(), db.$disconnect(), web?.close()]);
       logger.info('HVL Interaktiv server stopped');
     },
   };

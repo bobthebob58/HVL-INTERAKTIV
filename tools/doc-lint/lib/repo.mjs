@@ -30,8 +30,9 @@ const SKIP_DIRS = new Set([
   'migrations',
   'var',
 ]);
-// WHY: apps/server/h5p holds H5P's own core and editor files, fetched and hash-verified (D-027).
-const SKIP_PATHS = ['apps/server/h5p/'];
+// WHY: apps/server/h5p holds H5P's own core and editor files, fetched and hash-verified (D-027). Next.js writes
+// apps/web/next-env.d.ts itself whenever it builds, runs or generates types, and it is not committed (D-068).
+const SKIP_PATHS = ['apps/server/h5p/', 'apps/web/next-env.d.ts'];
 
 /**
  * Lists every file under `dir` (repository-relative), skipping build output and third-party code.

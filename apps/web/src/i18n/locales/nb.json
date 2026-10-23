@@ -1,0 +1,13 @@
+{
+  "site": {
+    "name": "HVL Interaktiv"
+  },
+  "help": {
+    "title": "Hjelp",
+    "intro": "Her finner du hjelp til å lage og bruke aktiviteter i HVL Interaktiv."
+  },
+  "notFound": {
+    "title": "Fant ikke siden",
+    "body": "Siden finnes ikke. Sjekk adressen."
+  }
+}

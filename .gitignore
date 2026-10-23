@@ -21,3 +21,7 @@ apps/server/var/
 .env
 .env.*
 !.env.example
+
+# Next.js build output and its generated type references (rewritten by `next build`, `next dev` and `next typegen`)
+apps/web/.next/
+apps/web/next-env.d.ts

@@ -347,7 +347,7 @@ loading of one spec per session are kept.
 - **Context:** `NFR-005` suggests `license-checker`; it is unmaintained and pulls in its own dependency
   tree. `SEC-007` allows reviewed, expiring exceptions to `npm audit`, which plain `npm audit` cannot express.
 - **Decision:** `tools/dependency-check/checkLicences.mjs` reads production packages with
-  `npm query ':not(.dev)'` and checks their SPDX expressions against a GPL-3.0-compatible allow-list.
+  `npm query ':not(.dev)'` (since S4 `npm query '*'` filtered on the `dev` flag, D-071) and checks their SPDX expressions against a GPL-3.0-compatible allow-list.
   `checkAudit.mjs` runs `npm audit --omit=dev --json` and fails on any high or critical advisory that has
   no unexpired entry in `audit-exceptions.json` pointing to a decision here.
 - **Consequences:** No extra dependencies. Packages with legacy licence metadata are listed by name and
@@ -884,6 +884,15 @@ loading of one spec per session are kept.
   the same header code.
 - **Consequences:** Amends D-012 for development and tests; production may still put a proxy in front (S6).
   `npm run build` builds `apps/web` before `npm start` in production mode and before the e2e and a11y suites.
+- **Probe result (2026-10-23):** the in-process mount works in both modes (Turbopack for `dev` and `build`); Next.js
+  reads the nonce from the request's `content-security-policy` header and puts it on every script and the
+  stylesheet preload; pages are dynamic because the layout reads `x-hvli-locale`. Findings: `next` 16.0.0–16.4.0
+  carry GHSA-2464-fhr4-w9xw, GHSA-p3m5-59mp-jv5r and GHSA-673q-mjm6-r5xr, so the pin is 16.4.2 (with React 19.3.1,
+  one copy shared by server and app), and the image optimiser stays off (`images.unoptimized`); Next.js reports
+  telemetry unless `NEXT_TELEMETRY_DISABLED` is set, which the build script and the server set; the server imports
+  Next.js through a computed specifier with its own type for the factory, because Next.js's global types make
+  `process.env.NODE_ENV` read-only and would break the server's compilation; `next-env.d.ts` differs between
+  `dev` and `build` in Next.js 16, so it is generated (`next typegen` in `typecheck`) and ignored, not committed.
 
 ### D-069 · Query-ltik paths and file grants for the S4 views and the editor
 - **Context:** D-058 accepts an ltik in a query string on four paths. S4 adds the LTI chrome pages and the editor in
@@ -914,10 +923,18 @@ loading of one spec per session are kept.
 
 ### D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)
 - **Context:** `next` depends on `caniuse-lite`, a browser-support data set under CC-BY-4.0, which the licence check
-  (`tools/dependency-check/checkLicences.mjs`) does not list.
+  (`tools/dependency-check/checkLicences.mjs`) does not list. Adding it showed that the check never saw it: D-029's
+  `npm query ':not(.dev)'` drops every package that any dev tool also reaches, which left about 230 of 470
+  production packages unchecked since S1.
 - **Decision:** CC-BY-4.0 joins the allowlist. The FSF lists it as compatible with GPLv3, and the package is data,
-  not code. A per-version exception was rejected because caniuse-lite releases weekly.
-- **Consequences:** Attribution is kept by shipping the package's licence file.
+  not code. A per-version exception was rejected because caniuse-lite releases weekly. Amends D-029: the check now
+  reads `npm query '*'` and counts every package whose npm `dev` flag is false, i.e. what a production install
+  contains. The packages that surfaced: MIT-0 (`@csstools/color-helpers` via jsdom) joins the allowlist;
+  `@visx/vendor` (declared "MIT and ISC") is listed as reviewed; `elkjs` (EPL-2.0, not GPL-compatible) ships only in
+  Prisma Studio, the GUI of the `prisma` CLI that production runs as its own process for migrations, and is listed
+  by name and version as a separate program (aggregation, not a combined work).
+- **Consequences:** Attribution is kept by shipping the package's licence file. A new version of a listed separate
+  program fails the check until a person reviews it again.
 
 ### D-072 · Design tokens: generated CSS, a Tailwind v4 theme file and colour lint
 - **Context:** `UD-001` makes `packages/design-tokens/tokens.json` the only source of colour and asks for "a Tailwind

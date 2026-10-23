@@ -5,7 +5,9 @@
  *      incompatible or unknown licence would make the whole service undistributable.
  * Spec: NFR-005
  * Invariants:
- *   - Only production dependencies count (`npm query ':not(.dev)'`); our own workspaces are skipped.
+ *   - Every package a production install contains counts: npm's `dev` flag is false (`npm query '*'`), even when a
+ *     dev tool uses it too (D-071). Our own workspaces are skipped.
+ *   - A separate program's own dependencies are skipped only when SEPARATE_PROGRAMS names them with a reason.
  *   - SPDX `OR` passes if any branch is allowed; `AND` passes only if every part is allowed; AND binds
  *     tighter than OR and parentheses group, as in the SPDX specification. Malformed expressions fail.
  *   - A package without usable metadata fails unless REVIEWED lists it with the licence a person read.
@@ -22,6 +24,8 @@ export const ALLOWED = new Set([
   'BlueOak-1.0.0',
   'BSD-2-Clause',
   'BSD-3-Clause',
+  // WHY: caniuse-lite (via next) is a data set; the FSF lists CC-BY-4.0 as GPLv3-compatible (D-071).
+  'CC-BY-4.0',
   'CC0-1.0',
   'GPL-3.0-only',
   'GPL-3.0-or-later',
@@ -30,6 +34,8 @@ export const ALLOWED = new Set([
   'LGPL-3.0-only',
   'LGPL-3.0-or-later',
   'MIT',
+  // WHY: MIT without the attribution condition (@csstools/color-helpers via jsdom); it adds no restriction.
+  'MIT-0',
   'MPL-2.0',
   'Python-2.0',
   'Unlicense',
@@ -43,7 +49,26 @@ export const ALLOWED = new Set([
 export const REVIEWED = {
   // WHY: esprima 1.2.5 (via jsonpath) declares `licenses: [{type: "BSD"}]`; LICENSE.BSD has two clauses.
   'esprima@1.2.5': 'BSD-2-Clause',
+  // WHY: declares "MIT and ISC" (lower case, not SPDX); LICENSE is MIT and the bundled d3 modules are ISC.
+  '@visx/vendor@4.0.0-alpha.0': 'MIT AND ISC',
 };
+
+/**
+ * Packages that ship only inside a separate program we run but never combine with our code (aggregation, not a
+ * combined work). Key: `name@version`; value: the reason a person checked. Re-review when the version changes.
+ */
+export const SEPARATE_PROGRAMS = {
+  // WHY: EPL-2.0 graph layout inside Prisma Studio (@prisma/studio-core), the GUI of the `prisma` CLI. Production
+  // runs only `prisma migrate deploy`, as its own process; nothing of it is loaded into the server (D-071).
+  'elkjs@0.11.1': 'EPL-2.0, Prisma Studio only',
+};
+
+/**
+ * The packages a production install contains: npm sets `dev` only on packages that dev dependencies alone need.
+ * @param {{dev?: boolean}[]} entries - Every entry from `npm query '*'`.
+ * @returns {object[]} The entries without the dev flag.
+ */
+export const productionPackages = (entries) => entries.filter((entry) => entry.dev !== true);
 
 /**
  * Decides whether an SPDX expression is allowed, honouring precedence: AND binds tighter than OR,
@@ -118,12 +143,13 @@ export function licenceOf(pkg) {
 
 /**
  * Checks a list of production packages.
- * @param {object[]} packages - Entries from `npm query ':not(.dev)'`.
+ * @param {object[]} packages - Production entries (productionPackages).
  * @returns {string[]} One message per package that fails.
  */
 export function checkLicences(packages) {
   return packages
     .filter((p) => p.name !== 'hvl-interaktiv' && !p.name.startsWith('@hvl-interaktiv/'))
+    .filter((p) => !(`${p.name}@${p.version}` in SEPARATE_PROGRAMS))
     .flatMap((p) => {
       const licence = licenceOf(p);
       if (!licence)
@@ -136,12 +162,12 @@ export function checkLicences(packages) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const cwd = fileURLToPath(new URL('../../', import.meta.url));
-  const out = execFileSync('npm', ['query', ':not(.dev)'], {
+  const out = execFileSync('npm', ['query', '*'], {
     cwd,
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
   });
-  const packages = JSON.parse(out);
+  const packages = productionPackages(JSON.parse(out));
   const problems = checkLicences(packages);
   for (const p of problems) console.error(`✗ ${p}`);
   if (problems.length > 0) process.exit(1);

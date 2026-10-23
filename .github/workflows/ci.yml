@@ -69,6 +69,8 @@ jobs:
         run: npm run db:generate --workspace apps/server && npm run db:migrate
       - name: Install full Chromium for the browser and end-to-end tests (SEC-001, D-065; never --only-shell)
         run: npx playwright-core install --with-deps chromium
+      - name: Build the web app (apps/web, Next.js in the server process; D-068)
+        run: npm run build
       - name: Typecheck
         run: npm run typecheck
       - name: Lint

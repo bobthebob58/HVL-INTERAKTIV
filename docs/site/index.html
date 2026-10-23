@@ -1517,7 +1517,7 @@ Stylelint rule fails on hex, <code>rgb()</code> or <code>hsl()</code> literals o
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-001">03 Universal design, UD-001</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-002" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-002 typography and reading comfort typefaces follow the hvl design manual's office fonts (d-018): headings, ui controls and captions
+<details class="req" id="x-UD-002" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-002 typography and reading comfort typefaces follow the hvl design manual's office fonts (d-018): headings, ui controls and captions
 use `arial, &quot;helvetica neue&quot;, helvetica, sans-serif` (stand-in for nb akademie std); long-form body
 text uses `georgia, &quot;times new roman&quot;, serif` (stand-in for lyon text). if hvl confirms web-font
 licences for nb akademie std and lyon text, they may be self-hosted ahead of these stacks
@@ -1526,7 +1526,7 @@ for paragraphs. `text-transform: uppercase` and `text-align: justify` are forbid
 rule. underline is used only for links. all sizes are in `rem` or `em`. layout survives 200 % text
 resize (1.4.4) and the text-spacing overrides of 1.4.12.
 - **verify:** stylelint rules; a playwright test applies the 1.4.12 bookmarklet styles and checks for clipped text.">
-<summary><span class="req-id">UD-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Typography and reading comfort</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Typography and reading comfort</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>Typefaces follow the HVL design manual&#39;s office fonts (D-018): headings, UI controls and captions
 use <code>Arial, &quot;Helvetica Neue&quot;, Helvetica, sans-serif</code> (stand-in for NB Akademie Std); long-form body
 text uses <code>Georgia, &quot;Times New Roman&quot;, serif</code> (stand-in for Lyon Text). If HVL confirms web-font
@@ -1635,10 +1635,10 @@ such as images with hotspots, which may pan. Works in both orientations.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-009">03 Universal design, UD-009</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-010" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-010 language of page and parts `&lt;html lang&gt;` follows the ui locale (`nn`, `nb`, `en`). each h5p content item carries its own
+<details class="req" id="x-UD-010" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-010 language of page and parts `&lt;html lang&gt;` follows the ui locale (`nn`, `nb`, `en`). each h5p content item carries its own
 `metadata.defaultlanguage`, and the player sets `lang` on the content container.
 - **verify:** playwright assertions.">
-<summary><span class="req-id">UD-010</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Language of page and parts</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-010</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Language of page and parts</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>&lt;html lang&gt;</code> follows the UI locale (<code>nn</code>, <code>nb</code>, <code>en</code>). Each H5P content item carries its own
 <code>metadata.defaultLanguage</code>, and the player sets <code>lang</code> on the content container.</p>
 <ul>
@@ -1672,11 +1672,11 @@ tokens, typography (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>)
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-012">03 Universal design, UD-012</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-013" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-013 consistent help and accessible errors (3.2.6, 3.3.1, 3.3.3, 3.3.7) a **hjelp** link appears in the same place on every page. form errors are listed in a summary at
+<details class="req" id="x-UD-013" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-013 consistent help and accessible errors (3.2.6, 3.3.1, 3.3.3, 3.3.7) a **hjelp** link appears in the same place on every page. form errors are listed in a summary at
 the top and linked to their fields with `aria-describedby`. data the user has already entered is not
 asked for again (3.3.7). login uses feide or canvas only, with no cognitive tests (3.3.8).
 - **verify:** component tests; axe.">
-<summary><span class="req-id">UD-013</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Consistent help and accessible errors (3.2.6, 3.3.1, 3.3.3, 3.3.7)</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-013</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Consistent help and accessible errors (3.2.6, 3.3.1, 3.3.3, 3.3.7)</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>A <strong>Hjelp</strong> link appears in the same place on every page. Form errors are listed in a summary at
 the top and linked to their fields with <code>aria-describedby</code>. Data the user has already entered is not
 asked for again (3.3.7). Login uses Feide or Canvas only, with no cognitive tests (3.3.8).</p>
@@ -1799,12 +1799,12 @@ in the portfolio export.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-022">03 Universal design, UD-022</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-030" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-030 automated accessibility tests `@axe-core/playwright` runs with the tags `wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa` on every
+<details class="req" id="x-UD-030" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-030 automated accessibility tests `@axe-core/playwright` runs with the tags `wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa` on every
 web route and inside the iframe of one seed activity per content type, in both light theme and
 forced-colours mode. ci fails on any violation with impact `serious` or `critical`. lower-impact
 findings are listed in the report.
 - **verify:** `npm run test:a11y`.">
-<summary><span class="req-id">UD-030</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Automated accessibility tests</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-030</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Automated accessibility tests</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p><code>@axe-core/playwright</code> runs with the tags <code>wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa</code> on every
 web route and inside the iframe of one seed activity per content type, in both light theme and
 forced-colours mode. CI fails on any violation with impact <code>serious</code> or <code>critical</code>. Lower-impact
@@ -5413,7 +5413,7 @@ database table, so the schema is complete.</li>
 <li><strong>Context:</strong> <a class="req-ref" href="#r-NFR-005"><code>NFR-005</code></a> suggests <code>license-checker</code>; it is unmaintained and pulls in its own dependency
 tree. <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a> allows reviewed, expiring exceptions to <code>npm audit</code>, which plain <code>npm audit</code> cannot express.</li>
 <li><strong>Decision:</strong> <code>tools/dependency-check/checkLicences.mjs</code> reads production packages with
-<code>npm query &#39;:not(.dev)&#39;</code> and checks their SPDX expressions against a GPL-3.0-compatible allow-list.
+<code>npm query &#39;:not(.dev)&#39;</code> (since S4 <code>npm query &#39;*&#39;</code> filtered on the <code>dev</code> flag, D-071) and checks their SPDX expressions against a GPL-3.0-compatible allow-list.
 <code>checkAudit.mjs</code> runs <code>npm audit --omit=dev --json</code> and fails on any high or critical advisory that has
 no unexpired entry in <code>audit-exceptions.json</code> pointing to a decision here.</li>
 <li><strong>Consequences:</strong> No extra dependencies. Packages with legacy licence metadata are listed by name and
@@ -5990,6 +5990,15 @@ tests run with <code>off</code>. If the in-process mount fails, the fallback is 
 the same header code.</li>
 <li><strong>Consequences:</strong> Amends D-012 for development and tests; production may still put a proxy in front (S6).
 <code>npm run build</code> builds <code>apps/web</code> before <code>npm start</code> in production mode and before the e2e and a11y suites.</li>
+<li><strong>Probe result (2026-10-23):</strong> the in-process mount works in both modes (Turbopack for <code>dev</code> and <code>build</code>); Next.js
+reads the nonce from the request&#39;s <code>content-security-policy</code> header and puts it on every script and the
+stylesheet preload; pages are dynamic because the layout reads <code>x-hvli-locale</code>. Findings: <code>next</code> 16.0.0–16.4.0
+carry GHSA-2464-fhr4-w9xw, GHSA-p3m5-59mp-jv5r and GHSA-673q-mjm6-r5xr, so the pin is 16.4.2 (with React 19.3.1,
+one copy shared by server and app), and the image optimiser stays off (<code>images.unoptimized</code>); Next.js reports
+telemetry unless <code>NEXT_TELEMETRY_DISABLED</code> is set, which the build script and the server set; the server imports
+Next.js through a computed specifier with its own type for the factory, because Next.js&#39;s global types make
+<code>process.env.NODE_ENV</code> read-only and would break the server&#39;s compilation; <code>next-env.d.ts</code> differs between
+<code>dev</code> and <code>build</code> in Next.js 16, so it is generated (<code>next typegen</code> in <code>typecheck</code>) and ignored, not committed.</li>
 </ul>
 <h3 id="decisions--d-069--query-ltik-paths-and-file-grants-for-the-s4-views-and-the-editor" tabindex="-1">D-069 · Query-ltik paths and file grants for the S4 views and the editor</h3>
 <ul>
@@ -6020,10 +6029,18 @@ script; tags that H5P writes into its iframes cannot carry either, so they are c
 <h3 id="decisions--d-071--cc-by-40-is-an-allowed-licence-caniuse-lite" tabindex="-1">D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)</h3>
 <ul>
 <li><strong>Context:</strong> <code>next</code> depends on <code>caniuse-lite</code>, a browser-support data set under CC-BY-4.0, which the licence check
-(<code>tools/dependency-check/checkLicences.mjs</code>) does not list.</li>
+(<code>tools/dependency-check/checkLicences.mjs</code>) does not list. Adding it showed that the check never saw it: D-029&#39;s
+<code>npm query &#39;:not(.dev)&#39;</code> drops every package that any dev tool also reaches, which left about 230 of 470
+production packages unchecked since S1.</li>
 <li><strong>Decision:</strong> CC-BY-4.0 joins the allowlist. The FSF lists it as compatible with GPLv3, and the package is data,
-not code. A per-version exception was rejected because caniuse-lite releases weekly.</li>
-<li><strong>Consequences:</strong> Attribution is kept by shipping the package&#39;s licence file.</li>
+not code. A per-version exception was rejected because caniuse-lite releases weekly. Amends D-029: the check now
+reads <code>npm query &#39;*&#39;</code> and counts every package whose npm <code>dev</code> flag is false, i.e. what a production install
+contains. The packages that surfaced: MIT-0 (<code>@csstools/color-helpers</code> via jsdom) joins the allowlist;
+<code>@visx/vendor</code> (declared &quot;MIT and ISC&quot;) is listed as reviewed; <code>elkjs</code> (EPL-2.0, not GPL-compatible) ships only in
+Prisma Studio, the GUI of the <code>prisma</code> CLI that production runs as its own process for migrations, and is listed
+by name and version as a separate program (aggregation, not a combined work).</li>
+<li><strong>Consequences:</strong> Attribution is kept by shipping the package&#39;s licence file. A new version of a listed separate
+program fails the check until a person reviews it again.</li>
 </ul>
 <h3 id="decisions--d-072--design-tokens-generated-css-a-tailwind-v4-theme-file-and-colour-lint" tabindex="-1">D-072 · Design tokens: generated CSS, a Tailwind v4 theme file and colour lint</h3>
 <ul>
@@ -6289,8 +6306,13 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
 <li><span class="task">✓ Done:</span> Real H5P content types from GitHub at pinned commits (<code>npm run h5p:fetch-libraries</code>, D-078): 120 libraries,
 ten Nynorsk example activities; all ten install through the seed path, import, save and play in Chromium;
 R-01 settled (D-047). Found and fixed: library folders refused icon fonts (SEC-002 list applied to them)</li>
-<li><span class="task">○ To do:</span> H5P pages under a strict script policy (D-070); Next.js inside Express (D-067, D-068); the editor page and the
-LTI editor in a cookie-less iframe (D-069)</li>
+<li><span class="task">✓ Done:</span> H5P player pages under a strict script policy (D-070): JSON data block, <code>script-src &#39;self&#39;</code> plus the hash of
+Core&#39;s one iframe script; an injected inline script never runs in the ten real types</li>
+<li><span class="task">✓ Done:</span> Next.js inside Express (D-067, D-068): built and dev modes, nonce on every script, credentials and the ltik
+removed before Next.js, locale header, no server endpoints in <code>apps/web</code>. Found and fixed: <code>next</code> ≤ 16.4.0 has
+critical advisories (pinned 16.4.2), telemetry is now off, and the S1 licence check skipped every production
+package a dev tool also uses (now 470 packages checked instead of 240; D-071)</li>
+<li><span class="task">○ To do:</span> The editor page and the LTI editor in a cookie-less iframe (D-069)</li>
 <li><span class="task">○ To do:</span> <code>packages/design-tokens</code> with the contrast test and lint rules (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>)</li>
 <li><span class="task">○ To do:</span> Carried in by earlier decisions: the LTI views <code>/lti/play</code>, <code>/lti/deeplink</code> and the friendly pages move to
 <code>apps/web</code> <code>/app/*</code> on the same server APIs (D-048); the H5P editor page with the player&#39;s script-safe JSON

@@ -8,13 +8,13 @@
  * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, NFR-002
  * Invariants:
  *   - Order: trust proxy → base headers → `/healthz` → portal session → LTI (ltijs first) → Feide routes → start
- *     page → `/api` → `/h5p` → HTML 404 → last-resort error page.
+ *     page → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page.
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
  *     session with CSRF); signed file URLs are checked before it, inside the H5P router (D-058).
  *   - `X-Powered-By` is off; every response gets `nosniff` and `no-referrer`, and HSTS when the base URL is https.
  * Collaborators: ../lti/ltiRoutes.ts, ../auth/feide/feideLoginRoutes.ts, ../auth/requestPrincipal.ts,
  *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/contentSharingRoutes.ts,
- *   ./healthRoutes.ts, ./main.ts.
+ *   ../web/webRoutes.ts, ./healthRoutes.ts, ./main.ts.
  * Tests: apps/server/test/server/createApp.int.test.ts
  */
 import express, { type ErrorRequestHandler, type Express } from 'express';
@@ -43,6 +43,8 @@ import type { Redis } from '../infra/redisClient.js';
 import { createLtiRoutes, type LtiRoutes } from '../lti/ltiRoutes.js';
 import { DataEncryption } from '../security/keys/DataEncryption.js';
 import { IdentityHasher } from '../security/keys/IdentityHasher.js';
+import type { WebApp } from '../web/nextWebApp.js';
+import { webRoutes } from '../web/webRoutes.js';
 import { healthRoutes } from './healthRoutes.js';
 
 /** What the app is built from. */
@@ -53,6 +55,8 @@ export interface AppInputs {
   readonly redis: Redis;
   /** The H5P engine (../h5p/createH5pRuntime.ts). */
   readonly h5p: H5pRouteDeps;
+  /** The web app, unless `WEB_APP` is `off` (../web/nextWebApp.ts). */
+  readonly web?: Pick<WebApp, 'dev' | 'handle'>;
 }
 
 /** The app and the parts `main.ts` needs at start-up. */
@@ -136,6 +140,7 @@ export function createApp(inputs: AppInputs): App {
   app.use('/api', h5pErrorHandler(logger));
   app.use('/h5p', authenticate, createH5pRouter(inputs.h5p, h5pAuthenticate()));
   app.use('/h5p', h5pErrorHandler(logger));
+  if (inputs.web) app.use(webRoutes(inputs.web));
   app.use(portalNotFound());
   app.use(((error, _req, res, next) => {
     if (res.headersSent) return next(error);

@@ -1,0 +1,14 @@
+/*
+ * globals — base typography of the web app until the design tokens arrive (packages/design-tokens, D-072).
+ *
+ * Why: HVL's rules ask for left-aligned body text with a line height of at least 1.5 (UD-002); colours come only
+ *      from the tokens, so this file names none.
+ * Spec: UD-002
+ * Tests: apps/server/test/web/webApp.browser.int.test.ts
+ */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  text-align: left;
+}

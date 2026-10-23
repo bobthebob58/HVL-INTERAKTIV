@@ -158,8 +158,13 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
 - [x] Real H5P content types from GitHub at pinned commits (`npm run h5p:fetch-libraries`, D-078): 120 libraries,
       ten Nynorsk example activities; all ten install through the seed path, import, save and play in Chromium;
       R-01 settled (D-047). Found and fixed: library folders refused icon fonts (SEC-002 list applied to them)
-- [ ] H5P pages under a strict script policy (D-070); Next.js inside Express (D-067, D-068); the editor page and the
-      LTI editor in a cookie-less iframe (D-069)
+- [x] H5P player pages under a strict script policy (D-070): JSON data block, `script-src 'self'` plus the hash of
+      Core's one iframe script; an injected inline script never runs in the ten real types
+- [x] Next.js inside Express (D-067, D-068): built and dev modes, nonce on every script, credentials and the ltik
+      removed before Next.js, locale header, no server endpoints in `apps/web`. Found and fixed: `next` ≤ 16.4.0 has
+      critical advisories (pinned 16.4.2), telemetry is now off, and the S1 licence check skipped every production
+      package a dev tool also uses (now 470 packages checked instead of 240; D-071)
+- [ ] The editor page and the LTI editor in a cookie-less iframe (D-069)
 - [ ] `packages/design-tokens` with the contrast test and lint rules (`UD-001`)
 - [ ] Carried in by earlier decisions: the LTI views `/lti/play`, `/lti/deeplink` and the friendly pages move to
       `apps/web` `/app/*` on the same server APIs (D-048); the H5P editor page with the player's script-safe JSON

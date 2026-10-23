@@ -1,0 +1,13 @@
+{
+  "site": {
+    "name": "HVL Interaktiv"
+  },
+  "help": {
+    "title": "Help",
+    "intro": "Here you find help with creating and using activities in HVL Interaktiv."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "This page does not exist. Check the address."
+  }
+}

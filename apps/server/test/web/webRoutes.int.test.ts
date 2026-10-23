@@ -1,0 +1,77 @@
+/**
+ * Tests for the hand-over to the web app: only GET and HEAD reach it, with the session's locale, the same nonce in
+ * the request and the response, and no credentials. The web app is a stub that records what it received.
+ *
+ * Spec: DATA-011, LTI-003, PROD-012
+ */
+import type { IncomingMessage } from 'node:http';
+import express from 'express';
+import request from 'supertest';
+import { describe, expect, it } from 'vitest';
+import { webRoutes } from '../../src/web/webRoutes.js';
+
+/** An app with a fake portal session (or none) and a recording web app. */
+function appWith(locale?: 'nn' | 'nb' | 'en') {
+  const seen: IncomingMessage[] = [];
+  const app = express();
+  app.use((_req, res, next) => {
+    if (locale) res.locals.hvliPortalSession = { sid: 'sid', session: { locale } };
+    next();
+  });
+  app.use(
+    webRoutes({
+      dev: false,
+      handle: async (req, res) => {
+        seen.push(req);
+        res.end('web');
+      },
+    }),
+  );
+  app.use((_req, res) => void res.status(404).send('express 404'));
+  return { app, seen };
+}
+
+describe('[DATA-011] hand-over to the web app', () => {
+  it('[DATA-011] a GET page gets one nonce in both policies, and the session locale', async () => {
+    // Arrange
+    const { app, seen } = appWith('en');
+    // Act
+    const res = await request(app)
+      .get('/hjelp?ltik=abc')
+      .set('Cookie', 'a=b')
+      .set('Authorization', 'Bearer x');
+    // Assert
+    expect(res.text).toBe('web');
+    const sent = /'nonce-([^']+)'/.exec(res.headers['content-security-policy'] ?? '')?.[1];
+    expect(sent).toBeDefined();
+    expect(seen[0]?.headers['content-security-policy']).toBe(res.headers['content-security-policy']);
+    expect(seen[0]?.headers['x-hvli-locale']).toBe('en');
+    expect(seen[0]?.headers.cookie).toBeUndefined();
+    expect(seen[0]?.headers.authorization).toBeUndefined();
+    expect(seen[0]?.url).toBe('/hjelp');
+    expect(res.headers['x-frame-options']).toBe('SAMEORIGIN');
+  });
+
+  it('[PROD-012] without a session the locale is Nynorsk, whatever the client sends', async () => {
+    const { app, seen } = appWith();
+    await request(app).get('/hjelp').set('x-hvli-locale', 'en');
+    expect(seen[0]?.headers['x-hvli-locale']).toBe('nn');
+  });
+
+  it('[LTI-003] other methods never reach the web app', async () => {
+    const { app, seen } = appWith('nn');
+    for (const method of ['post', 'put', 'delete', 'patch'] as const) {
+      expect((await request(app)[method]('/hjelp')).text).toBe('express 404');
+    }
+    expect((await request(app).head('/hjelp')).status).toBe(200);
+    expect(seen).toHaveLength(1);
+  });
+
+  it('[DATA-011] each response gets its own nonce', async () => {
+    const { app } = appWith();
+    const nonces = await Promise.all(
+      [1, 2, 3].map(async () => (await request(app).get('/')).headers['content-security-policy']),
+    );
+    expect(new Set(nonces).size).toBe(3);
+  });
+});

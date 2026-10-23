@@ -4,11 +4,21 @@
  * Spec: NFR-005
  */
 import { describe, it, expect } from 'vitest';
-import { checkLicences, isAllowed, licenceOf } from '../checkLicences.mjs';
+import { checkLicences, isAllowed, licenceOf, productionPackages } from '../checkLicences.mjs';
 
 describe('[NFR-005] licence allow-list', () => {
   it('[NFR-005] allows permissive and GPL-3.0 licences', () => {
-    for (const id of ['MIT', 'ISC', 'Apache-2.0', 'BSD-3-Clause', 'GPL-3.0-or-later', 'MPL-2.0']) {
+    // Act and assert: each licence on its own.
+    for (const id of [
+      'MIT',
+      'MIT-0',
+      'ISC',
+      'Apache-2.0',
+      'BSD-3-Clause',
+      'GPL-3.0-or-later',
+      'MPL-2.0',
+      'CC-BY-4.0',
+    ]) {
       expect(isAllowed(id), id).toBe(true);
     }
   });
@@ -79,6 +89,25 @@ describe('[NFR-005] licence allow-list', () => {
     expect(checkLicences(packages)).toEqual([
       'mystery@2.0.0: no SPDX licence; read its licence file and add it to REVIEWED',
       'closed@3.0.0: licence "BUSL-1.1" is not GPL-3.0-compatible',
+    ]);
+  });
+
+  it('[NFR-005] counts a production package that a dev tool also uses; skips only dev-only packages', () => {
+    // Arrange: npm's dev flag is true only for packages that dev dependencies alone need.
+    const entries = [
+      { name: 'shared', version: '1.0.0', license: 'CC-BY-NC-4.0', dev: false },
+      { name: 'linter', version: '1.0.0', license: 'BUSL-1.1', dev: true },
+    ];
+    // Act and assert
+    expect(checkLicences(productionPackages(entries))).toEqual([
+      'shared@1.0.0: licence "CC-BY-NC-4.0" is not GPL-3.0-compatible',
+    ]);
+  });
+
+  it('[NFR-005] skips a separate program only at the reviewed name and version', () => {
+    expect(checkLicences([{ name: 'elkjs', version: '0.11.1', license: 'EPL-2.0' }])).toEqual([]);
+    expect(checkLicences([{ name: 'elkjs', version: '0.12.0', license: 'EPL-2.0' }])).toEqual([
+      'elkjs@0.12.0: licence "EPL-2.0" is not GPL-3.0-compatible',
     ]);
   });
 });

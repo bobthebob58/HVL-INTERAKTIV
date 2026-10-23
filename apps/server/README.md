@@ -108,6 +108,7 @@ test database one file at a time.
 | `src/lti/placements/` | `LtiPlacementRecorder`: one `LtiPlacement` per platform, course and resource link |
 | `src/lti/deepLinking/` | The picker and response routes, the activities an author may place, and the content items (D-061) |
 | `src/lti/play/` | `/lti/play` (the H5P player inside Canvas) and the static page scripts under `/static/lti` |
+| `src/web/` | The web app (`apps/web`, Next.js) in the server's process: loader, nonce policy, and the request contract that removes cookies, tokens and the `ltik` query before Next.js sees a request (D-068, D-070) |
 | `src/lti/pages/` | The picker HTML. `client/`: the static page scripts `ltikLanding.js` (removes the ltik from the address bar), `deepLinkPicker.js`, `ltijsStorageGuard.js` and `h5pStorageGuard.js` (D-050); ESLint forbids storage APIs and cookies there |
 | `src/lti/ltikPrincipal.ts` | ltik → `Principal`, with the platform-active, deployment and account checks ltijs does not make (D-050, D-051) |
 | `src/lti/LtiRoleMapper.ts`, `launchFacts.ts`, `ltiLocale.ts`, `ltijsLogger.ts` | LTI roles → `learner` or `author`, never `admin` (D-059); the launch facts (course = `launch.context.id`); UI language; ltijs's log calls through pino |
@@ -444,6 +445,8 @@ fails if the two disagree. Summary:
 | `PORT` | no | The port the server listens on (default 3000) |
 | `TRUST_PROXY` | no | How many reverse proxies' `X-Forwarded-*` headers are trusted (0–5, default 0); never more than really run |
 | `CANVAS_ORIGINS` | no | Origins that may frame the LTI pages (`frame-ancestors`, comma-separated); empty: no framing |
+| `EXTERNAL_MEDIA_ORIGINS` | no | Origins H5P content may load outside media from (e.g. Panopto); never YouTube (D-070) |
+| `WEB_APP` | no | `off` (default), `dev` or `prod`: whether the server also serves `apps/web` in its own process (D-068) |
 | `LTI_PLATFORMS` | no | The Canvas platforms and their deployment IDs as JSON, synced at start-up (D-051); a launch from an unlisted deployment gets no ltik. `"feideLinking": true` on a platform turns on Canvas–Feide account linking for it (default off, D-063) |
 | `LTI_TOKEN_MAX_AGE_SECONDS` | no | Oldest accepted LTI ID token by its `iat` (1–60 s, default 10) |
 | `FEIDE_ISSUER`, `FEIDE_CLIENT_ID` | no | Feide OpenID Connect issuer (discovery) and this server's client ID |
