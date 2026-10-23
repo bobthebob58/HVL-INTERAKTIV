@@ -113,17 +113,26 @@ Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-
 Effort: high, because this is security-critical. Public Feide and Canvas values are in `docs/reference/`; **HVL's own client IDs, realm, redirect URIs and TeCopp instance** are still needed (Q3, Q4).
 - [x] Decisions D-048…D-066 recorded (plan approved 2026-10-23): server-rendered LTI views until S4 (D-048),
       mock platform (D-049), ltijs on our router with our deployment and ltik checks (D-050, D-051)
-- [ ] Mock OIDC provider and mock LTI platform in `tools/mock-platform/` for tests
-- [x] Define the stable HMAC key for `Identity.subjectHash` and `AuthAuditEvent.ipHash` (env.ts,
-      `.env.example`, DATA-INVENTORY "Pseudonymous (stable key)"), including its rotation: `IDENTITY_HASH_KEYS`
-      key ring with HKDF purposes and `subjectKeyId`/`ipKeyId` columns (D-055); also `DATA_ENCRYPTION_KEYS` (D-056)
-      and `URL_SIGNING_KEYS` (D-058), production checks for weak, shared and http values
-- [x] Risk probes kept as tests: ltijs 7.0.7 Provider pins, openid-client vs mock OIDC, Chromium cookie blocking
-      (findings in D-050, D-065; ltijs's launch page needs our storage guard)
-- [ ] Feide RP, role mapping, sessions, data minimisation, author linking (`AUTH-001`…`AUTH-005`)
-- [ ] `LtiProviderFactory`, `PrismaLtiDatabaseManager`, ltik transport, role mapping (`LTI-001`…`LTI-004`)
-- [ ] Deep Linking picker, resource-link launch, course copy (`LTI-005`…`LTI-007`, `PROD-005`); `HvlUrlGenerator` (`H5P-007`)
-- [ ] Draft/published visibility, Feide sharing (`PROD-004`, `PROD-006`)
+- [x] Mock OIDC provider and mock LTI platform in `tools/mock-platform/` for tests (mock Feide on oauth2-mock-server
+      with a Groups API; mock Canvas with `form_post`, JWKS, a cross-site course page, LTI Platform Storage and Deep
+      Linking verification; `npm run mock:platform`, D-049)
+- [x] Feide RP, role mapping, sessions, data minimisation, author linking (`AUTH-001`…`AUTH-005`): PKCE + state +
+      nonce bound to a single-use login transaction, signature checks on, Groups API fail-closed, Redis sessions
+      (`__Host-hvli_sid`, idle 2 h, absolute 12 h) with a synchronizer CSRF token, logout via Feide end-session;
+      AUTH-005 linking at Deep Linking launches (D-063), content never changes owner
+- [x] `LtiProviderFactory`, `PrismaLtiDatabaseManager`, ltik transport, role mapping (`LTI-001`…`LTI-004`): ltijs on
+      our router, claim allowlist, deployment and active-platform checks on every ltik, ltik in the query only on
+      four paths, LTI never grants admin; platform keys re-encrypted at start-up after a key rotation (D-056)
+- [x] Deep Linking picker, resource-link launch, course copy (`LTI-005`…`LTI-007`, `PROD-005`); `HvlUrlGenerator` and
+      signed content-file grants (`H5P-007`, D-058)
+- [x] Draft/published visibility, Feide sharing (`PROD-004`, `PROD-006`): one 404 page for unknown, draft and
+      invisible activities; `PATCH /api/content/:id/sharing` changes visibility only (D-066)
+- [x] Entry point: `createApp` + `main.ts` (`npm start`), `/healthz` (`NFR-002`), graceful shutdown, cleanup jobs
+- [x] `npm run test:e2e`: cookie-less iframe launch → play → resume (stock Chrome and blocked frame storage with LTI
+      Platform Storage), Deep Linking round trip, portal sharing with logout (D-065); in CI. Found and fixed: H5P
+      Core reads `localStorage` without a `try`, so the LTI player loads a storage guard first (D-050)
+- [ ] Independent review (Feide, LTI, privacy, app wiring, spec conformance; a skeptic per finding) and at least two
+      adversarial verification passes over the fixes
 - [ ] Gate: as in the Evaluator Guide §5, S3
 
 ## S4 — Universal design ⬜
