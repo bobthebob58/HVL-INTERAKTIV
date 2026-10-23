@@ -674,7 +674,10 @@ loading of one spec per session are kept.
   Format `0x01 | keyIdLength | keyId | iv(12) | tag(16) | ciphertext`. Used for `LtiPlatform.privateKeyEncrypted`,
   `LtiAccessToken.tokenEncrypted`, the session's Feide ID token, and in S6 for `ltiSubEncrypted`. Values are
   re-encrypted with the current key when they are next written.
-- **Consequences:** A database dump alone reveals no private key or token.
+- **Consequences:** A database dump alone reveals no private key or token. A platform's key pair is written only
+  at registration, so the server re-encrypts stale platform private keys at every start-up
+  (`src/lti/platforms/reencryptPlatformKeys.ts`); access tokens and session ID tokens expire within 12 hours. An old
+  key can therefore leave the ring 12 hours after all servers restarted with the new key first.
 
 ### D-057 · Own Redis portal sessions, login transactions and a synchronizer CSRF token
 - **Context:** `AUTH-003` asks for a Redis session behind an opaque `__Host-hvli_sid` cookie (idle 2 h, absolute

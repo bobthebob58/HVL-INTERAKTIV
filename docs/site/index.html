@@ -5570,7 +5570,10 @@ session encrypted; S6 stores <code>GradeSyncJob.ltiSubEncrypted</code>.</li>
 Format <code>0x01 | keyIdLength | keyId | iv(12) | tag(16) | ciphertext</code>. Used for <code>LtiPlatform.privateKeyEncrypted</code>,
 <code>LtiAccessToken.tokenEncrypted</code>, the session&#39;s Feide ID token, and in S6 for <code>ltiSubEncrypted</code>. Values are
 re-encrypted with the current key when they are next written.</li>
-<li><strong>Consequences:</strong> A database dump alone reveals no private key or token.</li>
+<li><strong>Consequences:</strong> A database dump alone reveals no private key or token. A platform&#39;s key pair is written only
+at registration, so the server re-encrypts stale platform private keys at every start-up
+(<code>src/lti/platforms/reencryptPlatformKeys.ts</code>); access tokens and session ID tokens expire within 12 hours. An old
+key can therefore leave the ring 12 hours after all servers restarted with the new key first.</li>
 </ul>
 <h3 id="decisions--d-057--own-redis-portal-sessions-login-transactions-and-a-synchronizer-csrf-token" tabindex="-1">D-057 · Own Redis portal sessions, login transactions and a synchronizer CSRF token</h3>
 <ul>

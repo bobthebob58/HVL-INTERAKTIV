@@ -7,9 +7,10 @@
  * Spec: NFR-002, LTI-001, LTI-002, H5P-001
  * Invariants:
  *   - Invalid configuration stops the start with the list of problems and exit code 1; secrets are never printed.
- *   - The server listens only after the platform sync has finished.
+ *   - The server listens only after the platform sync and the platform-key re-encryption (D-056) have finished.
  *   - SIGTERM and SIGINT stop the jobs, stop accepting connections, then close the clients; exit code 0.
  * Collaborators: ./createApp.ts, ../h5p/createH5pRuntime.ts, ../lti/platforms/syncLtiPlatforms.ts,
+ *   ../lti/platforms/reencryptPlatformKeys.ts,
  *   ../lti/storage/LtiRecordCleanupJob.ts, ../config/env.ts.
  * Tests: apps/server/test/server/main.smoke.test.ts
  */
@@ -20,9 +21,11 @@ import { createH5pRuntime } from '../h5p/createH5pRuntime.js';
 import { createPrismaClient } from '../infra/prismaClient.js';
 import { connectRedis } from '../infra/redisClient.js';
 import { createS3Client } from '../infra/s3Client.js';
+import { reencryptPlatformKeys } from '../lti/platforms/reencryptPlatformKeys.js';
 import { syncLtiPlatforms } from '../lti/platforms/syncLtiPlatforms.js';
 import { LtiRecordCleanupJob } from '../lti/storage/LtiRecordCleanupJob.js';
 import { createLogger } from '../logging/logger.js';
+import { DataEncryption } from '../security/keys/DataEncryption.js';
 import { createApp } from './createApp.js';
 
 /** A started server and how to stop it. */
@@ -45,6 +48,8 @@ export async function startServer(env: Env): Promise<RunningServer> {
   const { app, lti } = createApp({ env, logger, db, redis, h5p });
   const synced = await syncLtiPlatforms(env.LTI_PLATFORMS, { platforms: lti.provider.platformManager, db });
   logger.info(synced, 'LTI platforms synchronised');
+  const reencrypted = await reencryptPlatformKeys(db, new DataEncryption(env.DATA_ENCRYPTION_KEYS));
+  logger.info({ reencrypted }, 'LTI platform keys on the current encryption key');
   const jobs = [h5p.cleanupJob, new LtiRecordCleanupJob({ db, redis, logger })];
   for (const job of jobs) job.start();
   const server = await new Promise<Server>((resolve) => {
