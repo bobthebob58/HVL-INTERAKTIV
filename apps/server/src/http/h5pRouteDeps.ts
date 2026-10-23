@@ -37,6 +37,8 @@ export interface H5pRouteDeps {
   readonly fileSanitizers: readonly IFileSanitizer[];
   /** Verifies the grants in content-file URLs (`/h5p/files/<grant>/…`). */
   readonly fileGrants: ContentFileGrants;
+  /** Issues and verifies the grants in editor upload URLs (`/h5p/uploads/<grant>/<owner>/…`, D-069). */
+  readonly uploadGrants: ContentFileGrants;
   /** Absolute folder of the H5P core client files. */
   readonly corePath: string;
   /** Absolute folder of the H5P editor client files. */

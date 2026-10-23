@@ -43,7 +43,8 @@ export type KeyPurpose =
   | 'lti-access-token'
   | 'session-id-token'
   | 'grade-lti-sub'
-  | 'content-file-url';
+  | 'content-file-url'
+  | 'temporary-file-url';
 
 /**
  * Parses a key ring.

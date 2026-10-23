@@ -10,13 +10,22 @@
  * Spec: H5P-011, H5P-002
  * Invariants:
  *   - After `disconnectFromHub`, the editor's content-type cache and Content Hub never make a network request:
- *     a missing list is rebuilt as `[]`, and Content Hub metadata is refused with 403.
+ *     a missing list is rebuilt as `[]`, and Content Hub metadata is empty lists (H5P's hub client always asks for
+ *     them and fails with page errors on a refusal; found with the S4 editor page).
  *   - An existing cache is never replaced; nothing in the server writes one (`hub:check` only reports).
  * Collaborators: ./HvlH5PEditor.ts (calls `disconnectFromHub`), ./createH5pRuntime.ts, Lumi's ContentTypeCache
  *   and ContentHub (key `contentTypeCache`).
  * Tests: apps/server/test/h5p/offlineContentTypeCache.test.ts, apps/server/test/http/ajax.int.test.ts
  */
-import { H5pError, type H5PEditor, type IKeyValueStorage } from '@lumieducation/h5p-server';
+import type { H5PEditor, IKeyValueStorage } from '@lumieducation/h5p-server';
+
+/** The Content Hub's filter lists, empty: HVL does not use the Content Hub. */
+export const EMPTY_CONTENT_HUB_METADATA = Object.freeze({
+  disciplines: [],
+  languages: [],
+  levels: [],
+  licenses: [],
+});
 
 /** The key under which Lumi's ContentTypeCache keeps the Hub list. */
 export const CONTENT_TYPE_CACHE_KEY = 'contentTypeCache';
@@ -31,13 +40,12 @@ export async function keepContentTypeCacheOffline(storage: IKeyValueStorage): Pr
 
 /**
  * Replaces the editor's two Hub calls: the content-type list download returns an empty list (so Lumi stores
- * `[]` instead of asking the Hub), and Content Hub metadata is refused.
+ * `[]` instead of asking the Hub), and Content Hub metadata is empty.
  * @param editor - The editor, right after construction.
  */
 export function disconnectFromHub(editor: Pick<H5PEditor, 'contentTypeCache' | 'contentHub'>): void {
   // SECURITY: Lumi calls the Hub here even with fetching disabled in the config (D-041); no request may leave.
   editor.contentTypeCache.downloadContentTypesFromHub = async () => [];
-  editor.contentHub.getMetadata = async () => {
-    throw new H5pError('hvl:hub-install-disabled', {}, 403);
-  };
+  // WHY: a fresh copy each time, so no caller can change the shared empty lists.
+  editor.contentHub.getMetadata = async () => structuredClone(EMPTY_CONTENT_HUB_METADATA);
 }

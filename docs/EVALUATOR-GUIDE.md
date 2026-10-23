@@ -207,16 +207,15 @@ must be pasted into `PROGRESS.md`, before the next session starts.
    installed one in its patch version (`SEC-003`, Q9), which will refuse many packages exported elsewhere.
 7. **Plain server-rendered pages until S4** (D-048). The Canvas player (`/lti/play`), the Deep Linking
    picker (`/lti/deeplink`), the friendly error pages and the portal start page (`/`) are unstyled pages
-   rendered by the server; `apps/web` replaces them in S4. There is no editor page yet, the **Rediger** and
-   **Innsikt** tabs come with the editor (S4) and insight (S6) (D-062), and no page offers sharing: it is an
-   API call.
-8. **The player pages allow inline styles, and the editor page has no script policy yet** (D-070). Since S4 the
-   portal player (`/h5p/play/:contentId`) and the Canvas player (`/lti/play`) send `script-src 'self'` plus the
-   hash of H5P Core's one constant inline script, so a script inside an activity cannot run and read the page's
-   URL token (the ltik or the CSRF token). `style-src` still allows `'unsafe-inline'`, because H5P sets style
-   attributes throughout; injected CSS can change how an activity looks but not run code. The H5P editor page
-   comes later in S4 under the same policy. The S2 upload checks (`SEC-001`, `SEC-002`) and admin-only library
-   installation (`SEC-003`) limit what an activity can carry.
+   rendered by the server; `apps/web` replaces them in S4. The H5P editor page exists since S4 (`/h5p/edit/:id`,
+   `/h5p/new`, and `/lti/edit` inside Canvas), but the **Rediger** and **Innsikt** tabs come with the web app's
+   chrome (S4) and insight (S6) (D-062), and no page offers sharing yet: it is an API call.
+8. **The H5P pages allow inline styles** (D-070). Since S4 the player (`/h5p/play/:contentId`, `/lti/play`) and
+   editor pages (`/h5p/edit/:id`, `/h5p/new`, `/lti/edit`) send `script-src 'self'` plus the hash of H5P Core's
+   one constant inline script, so a script inside an activity cannot run and read the page's URL token (the ltik
+   or the CSRF token). `style-src` still allows `'unsafe-inline'`, because H5P sets style attributes throughout;
+   injected CSS can change how an activity looks but not run code. The S2 upload checks (`SEC-001`, `SEC-002`)
+   and admin-only library installation (`SEC-003`) limit what an activity can carry.
 9. **Tokens travel in some URLs, so proxies must not log query strings** (D-057, D-058). A launch reaches
    `/lti/play` and `/lti/deeplink` with the ltik in the query (a first-party script then removes it from the
    address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF token as a query value,

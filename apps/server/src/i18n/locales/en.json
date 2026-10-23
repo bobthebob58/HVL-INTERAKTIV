@@ -84,6 +84,13 @@
     "home": {
       "signedIn": "You are signed in to HVL Interaktiv.",
       "signedOut": "Sign in with Feide to create and share activities."
+    },
+    "editor": {
+      "title": "Edit activity",
+      "save": "Save",
+      "saving": "Saving …",
+      "saved": "Saved.",
+      "saveFailed": "Could not save. Try again."
     }
   },
   "deepLink": {

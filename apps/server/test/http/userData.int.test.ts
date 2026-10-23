@@ -100,4 +100,16 @@ describeWithServices('H5P learner state over HTTP', () => {
       .send({ preload: '1' });
     expect(res.status).toBe(400);
   });
+
+  it('[DATA-002] the editor’s UI state (activity 0) is answered as empty and never stored', async () => {
+    // Arrange
+    const before = await tb.db.h5PUserData.count();
+    // Act
+    const saved = await save(author, '0', '{"open":true}');
+    const loaded = await load(author, '0');
+    // Assert
+    expect(saved.status).toBe(200);
+    expect(loaded.body).toEqual({ success: true, data: false });
+    expect(await tb.db.h5PUserData.count()).toBe(before);
+  });
 });

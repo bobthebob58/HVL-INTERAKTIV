@@ -172,4 +172,15 @@ describe('[H5P-007] content-file grants', () => {
     const theirs = new ContentFileGrants(ring(`k1=${randomKey(3)}`)).issueGrant(CONTENT, ISSUED);
     expect(ours.verifyGrant(theirs, CONTENT, ISSUED)).toEqual({ valid: false, reason: 'wrong-signature' });
   });
+
+  it('[H5P-007] an upload grant and a content-file grant never verify as each other (separate purpose keys)', () => {
+    // Arrange
+    const keys = ring();
+    const content = new ContentFileGrants(keys);
+    const uploads = new ContentFileGrants(keys, 'temporary-file-url');
+    // Act and assert
+    expect(uploads.verifyGrant(uploads.issueGrant(CONTENT, ISSUED), CONTENT, ISSUED).valid).toBe(true);
+    expect(content.verifyGrant(uploads.issueGrant(CONTENT, ISSUED), CONTENT, ISSUED).valid).toBe(false);
+    expect(uploads.verifyGrant(content.issueGrant(CONTENT, ISSUED), CONTENT, ISSUED).valid).toBe(false);
+  });
 });

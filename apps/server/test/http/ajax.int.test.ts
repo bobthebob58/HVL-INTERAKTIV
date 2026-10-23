@@ -114,12 +114,15 @@ describeWithServices('H5P editor AJAX endpoint', () => {
     expect(bogus).not.toContain('Question (en)');
   });
 
-  it('[H5P-011] Content Hub metadata is refused instead of being fetched from the Hub', async () => {
+  it('[H5P-011] Content Hub metadata is answered empty instead of being fetched from the Hub', async () => {
     const res = await request(tb.app)
       .get('/h5p/ajax?action=content-hub-metadata-cache&language=nn')
       .set(...author.header);
-    expect(res.status).toBe(403);
-    expect(res.body).toMatchObject({ errorCode: 'hvl:hub-install-disabled' });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      data: { disciplines: [], languages: [], levels: [], licenses: [] },
+    });
   });
 
   it('[SEC-003][H5P-011] installing from the H5P Hub is refused for everyone, also admins', async () => {

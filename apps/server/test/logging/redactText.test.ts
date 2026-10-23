@@ -17,6 +17,14 @@ describe('[DATA-009] credentials and e-mail addresses in free text', () => {
     expect(text).toContain('state=[Redacted]&iss=I1');
   });
 
+  it('[DATA-009] masks content-file and upload grants in paths', () => {
+    const text = redactText(
+      'GET /h5p/files/k1.1.SIGA/c1/images/a.png and GET /h5p/uploads/k1.2.SIGB/u1/images/b.png',
+    );
+    expect(text).not.toMatch(/SIGA|SIGB/);
+    expect(text).toContain('/h5p/uploads/[Redacted]/u1/images/b.png');
+  });
+
   it('[DATA-009] masks authorization credentials in any case, with or without a colon', () => {
     for (const header of [
       'Bearer abc.def',

@@ -904,6 +904,18 @@ loading of one spec per session are kept.
   check (D-058's grant, bound to the content), and uploaded temporary files get a grant over
   `temp|userId|expiry` from the same key ring.
 - **Consequences:** Amends D-058. The redaction and query-ltik tests cover the new paths.
+- **Probe result (2026-10-23):** the editor page (`/h5p/edit/:id`, `/h5p/new`, `/lti/edit`) opens all ten real types
+  and saves through the content API, also in the cookie-less Canvas iframe with frame storage partitioned or
+  blocked. Upload grants use their own HKDF purpose (`temporary-file-url`) over the uploading account, served at
+  `/h5p/uploads/<grant>/<account>/<file>`; content grants go into `H5PIntegration.contents`, which H5P's editor
+  reads for saved files. Findings fixed on the way: Lumi's editor render checks no permission, so the route checks
+  Edit before rendering or issuing a grant; Lumi lists every editor script for the outer page too, where H5P's
+  `h5peditor.js` reads `window.parent` and fails when Canvas is that parent, so the outer page loads only H5P Core,
+  the iframe creator and its language file, as H5P's own integrations do; H5P's `getAjaxUrl` lives in
+  `h5peditor-init.js`, which Lumi does not load, so our boot script defines it; the editor iframe needs the page's
+  storage stand-in where frame storage is blocked (`hvliGuardFrameStorage`); the editor keeps its UI state as user
+  data of activity `0`, which is now answered empty and never stored; and H5P's hub client always asks for Content
+  Hub metadata, which D-041 refused with 403 and now answers with empty lists (still without a network request).
 
 ### D-070 · Content Security Policy for H5P pages and Next.js pages; no YouTube
 - **Context:** D-039 and `DATA-011` require a script policy without `'unsafe-inline'` on the player page and no
@@ -920,6 +932,12 @@ loading of one spec per session are kept.
   script; tags that H5P writes into its iframes cannot carry either, so they are covered by `'self'` instead.
 - **Consequences:** A content type that needs inline handlers or `eval` gets a scoped, recorded exception, never
   `'unsafe-inline'` for scripts. Inline styles stay allowed on H5P pages only.
+- **Probe result (2026-10-23):** all ten real types play and open in the editor under this policy with no script
+  exception. Two changes: `base-uri` is `'self'` instead of `'none'` on H5P pages, because jQuery's HTML parser
+  gives its scratch document a `<base>` with the page's own URL on every editor field (another origin stays
+  refused); and BranchingScenario's editor embeds H5P's online tutorial (`documentation.h5p.com`), which the policy
+  keeps out as intended (`DATA-011`); the editor works without it, and the browser test lists it so a new outside
+  frame is noticed.
 
 ### D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)
 - **Context:** `next` depends on `caniuse-lite`, a browser-support data set under CC-BY-4.0, which the licence check

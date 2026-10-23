@@ -11,6 +11,8 @@
  *   - `asUserId` in the query is refused with 400 (reading another learner's state is not a player feature).
  *   - Answers have H5P's shape: `{ success: true, data }`, with `data: false` when nothing is stored.
  *   - `data=0` deletes the state (H5P's reset), handled by the storage (D-038).
+ *   - Activity `0` is the editor's own UI state (e.g. whether a field's description is open): it is answered
+ *     as "nothing stored" and never written, so no table holds author UI preferences (D-069).
  * Collaborators: ../../h5p/storage/PrismaContentUserDataStorage.ts, Lumi's ContentUserDataManager,
  *   ../requestBodies.ts.
  * Tests: apps/server/test/http/userData.int.test.ts
@@ -41,6 +43,13 @@ export function userDataRoutes(deps: H5pRouteDeps): Router {
   const router = Router();
   const path = '/contentUserData/:contentId/:dataType/:subContentId';
   const manager = deps.editor.contentUserDataManager;
+
+  // WHY: H5P's editor remembers UI choices as user data of activity 0; it works without them, so they are not kept.
+  router.get(
+    '/contentUserData/0/:dataType/:subContentId',
+    (_req, res) => void res.json({ success: true, data: false }),
+  );
+  router.post('/contentUserData/0/:dataType/:subContentId', (_req, res) => void res.json({ success: true }));
 
   router.get(path, async (req, res) => {
     refuseOtherLearner(req);

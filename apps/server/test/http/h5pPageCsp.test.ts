@@ -24,7 +24,7 @@ describe('[DATA-011] H5P page policy', () => {
     expect(csp.get('connect-src')).toEqual(["'self'"]);
     expect(csp.get('frame-src')).toEqual(["'self'"]);
     expect(csp.get('object-src')).toEqual(["'none'"]);
-    expect(csp.get('base-uri')).toEqual(["'none'"]);
+    expect(csp.get('base-uri')).toEqual(["'self'"]);
     expect([...csp.values()].flat()).not.toContain("'unsafe-eval'");
     expect(csp.get('script-src')).not.toContain("'unsafe-inline'");
   });

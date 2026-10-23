@@ -11,6 +11,8 @@
  *   - `script-src` never contains `'unsafe-inline'` or `'unsafe-eval'`.
  *   - `style-src` allows inline styles: H5P sets style attributes throughout (D-070).
  *   - `frame-ancestors` is given by the caller: `'self'` for the portal, plus `CANVAS_ORIGINS` for LTI pages.
+ *   - `base-uri 'self'`: jQuery's HTML parser adds a `<base>` with the page's own URL to its scratch document,
+ *     which `'none'` refuses on every editor field; another origin's base stays refused.
  * Collaborators: ../h5p/render/coreInlineScripts.ts, ./routes/playerRoutes.ts, ../lti/play/ltiPlayRoutes.ts.
  * Tests: apps/server/test/http/h5pPageCsp.test.ts, apps/server/test/h5p/realTypes.browser.int.test.ts
  */
@@ -41,7 +43,7 @@ export function h5pPageCsp(settings: H5pPageCspSettings, frameAncestors: readonl
     "font-src 'self' data:",
     "connect-src 'self'",
     withMedia("frame-src 'self'"),
-    "base-uri 'none'",
+    "base-uri 'self'",
     "object-src 'none'",
     "form-action 'self'",
     `frame-ancestors ${frameAncestors.length > 0 ? frameAncestors.join(' ') : "'none'"}`,

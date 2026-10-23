@@ -13,7 +13,7 @@
  *   - Identities are linked only for platforms with `feideLinking: true` and Feide IDs of `ALLOWED_FEIDE_ORGS`.
  *   - A launch handler's refusal is shown in the launch's language (`inLaunchLocale`, PROD-012).
  * Collaborators: ./LtiProviderFactory.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts,
- *   ./play/ltiPlayRoutes.ts, ./deepLinking/deepLinkRoutes.ts, ./http/ltiErrorPages.ts, ./ltikPrincipal.ts,
+ *   ./play/ltiPlayRoutes.ts, ./play/ltiEditRoutes.ts, ./deepLinking/deepLinkRoutes.ts, ./http/ltiErrorPages.ts, ./ltikPrincipal.ts,
  *   ../server/createApp.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/deepLinking/deepLinking.int.test.ts,
  *   apps/server/test/lti/ltiPageLocale.int.test.ts
@@ -26,6 +26,7 @@ import type { LtiPlatformConfig } from '../config/envParsers.js';
 import { AccountResolver } from '../auth/identity/AccountResolver.js';
 import { accountLinker } from '../auth/identity/accountLinking.js';
 import type { ContentAccessRepository } from '../h5p/permissions/ContentAccessRepository.js';
+import type { EditorViewDeps } from '../http/editorView.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import type { Database } from '../infra/prismaClient.js';
 import type { Redis } from '../infra/redisClient.js';
@@ -43,6 +44,7 @@ import { resolveLtik, type ResolvedLtik } from './ltikPrincipal.js';
 import { createLtiProvider } from './LtiProviderFactory.js';
 import { LtiPlacementRecorder } from './placements/LtiPlacementRecorder.js';
 import type { LtiDeploymentGuard } from './platforms/LtiDeploymentGuard.js';
+import { ltiEditRoutes } from './play/ltiEditRoutes.js';
 import { ltiPlayRoutes } from './play/ltiPlayRoutes.js';
 
 /** What the LTI routes need. */
@@ -61,6 +63,8 @@ export interface LtiRouteDeps {
   readonly player: H5pRouteDeps['player'];
   /** The H5P page policy settings (D-070). */
   readonly pageCsp: H5pRouteDeps['pageCsp'];
+  /** Editor, permission system and upload grants, for `/lti/edit`. */
+  readonly editorView: EditorViewDeps;
   /** `CANVAS_ORIGINS`. */
   readonly canvasOrigins: readonly string[];
   /** `LTI_TOKEN_MAX_AGE_SECONDS`. */
@@ -153,6 +157,9 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
   router.use(ltijsRouter);
   router.use(
     ltiPlayRoutes({ player: deps.player, pageCsp: deps.pageCsp, resolveLtik: resolve, canvasOrigins }),
+  );
+  router.use(
+    ltiEditRoutes({ editor: deps.editorView, pageCsp: deps.pageCsp, resolveLtik: resolve, canvasOrigins }),
   );
   router.use(deepLinkRoutes({ db, resolveLtik: resolve, canvasOrigins, publicBaseUrl: deps.publicBaseUrl }));
   router.use(ltiErrorPages({ canvasOrigins, logger: deps.logger, audit: deps.audit }));

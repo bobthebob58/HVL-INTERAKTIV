@@ -55,9 +55,11 @@ export class ContentFileGrants {
 
   /**
    * @param ring - `URL_SIGNING_KEYS`; the first key signs, every key verifies.
+   * @param purpose - `content-file-url` (subject: an activity ID) or `temporary-file-url` (subject: the account ID
+   *   that owns an editor upload, D-069); separate keys, so a grant for one never verifies as the other.
    */
-  constructor(ring: Keyring) {
-    this.keys = new Map(ring.keys.map((key) => [key.id, purposeKey(key, 'content-file-url')]));
+  constructor(ring: Keyring, purpose: 'content-file-url' | 'temporary-file-url' = 'content-file-url') {
+    this.keys = new Map(ring.keys.map((key) => [key.id, purposeKey(key, purpose)]));
     this.currentKeyId = ring.current.id;
   }
 

@@ -39,8 +39,10 @@ export const STATIC_ASSET_EXTENSIONS: ReadonlySet<string> = new Set([
 ]);
 
 const SANDBOX_CSP = "sandbox; default-src 'none'; style-src 'unsafe-inline'";
-const INTEGRATION_SCRIPT = fileURLToPath(
-  new URL('../../h5p/render/client/h5pIntegration.js', import.meta.url),
+const CLIENT_DIR = new URL('../../h5p/render/client/', import.meta.url);
+/** The page boot files under `/boot/` (../../h5p/render/client), by name; nothing else is served there. */
+const BOOT_SCRIPTS: ReadonlyMap<string, string> = new Map(
+  ['h5pIntegration.js', 'editorPage.js'].map((name) => [name, fileURLToPath(new URL(name, CLIENT_DIR))]),
 );
 const YEAR_SECONDS = 365 * 24 * 60 * 60;
 
@@ -70,10 +72,12 @@ const staticFolder = (root: string) =>
  */
 export function staticRoutes(deps: H5pRouteDeps): Router {
   const router = Router();
-  router.get('/boot/h5pIntegration.js', (_req, res) => {
-    // WHY: the page's only boot code, served as a file so the page needs no inline script (D-070).
+  router.get('/boot/:file', (req, res) => {
+    const file = BOOT_SCRIPTS.get(pathParam(req, 'file'));
+    if (!file) throw new HttpError(404, 'error.notFound');
+    // WHY: the pages' boot code, served as files so the pages need no inline script (D-070).
     res.set({ 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
-    res.type('text/javascript').sendFile(INTEGRATION_SCRIPT);
+    res.type('text/javascript').sendFile(file);
   });
   router.use('/core', assetsOnly, staticFolder(deps.corePath));
   router.use('/editor', assetsOnly, staticFolder(deps.editorPath));

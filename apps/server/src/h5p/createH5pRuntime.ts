@@ -120,6 +120,7 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     permissions,
     fileSanitizers,
     fileGrants,
+    uploadGrants: new ContentFileGrants(env.URL_SIGNING_KEYS, 'temporary-file-url'),
     corePath: paths.coreDir,
     editorPath: paths.editorDir,
     pageCsp: {

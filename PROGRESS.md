@@ -164,7 +164,10 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
       removed before Next.js, locale header, no server endpoints in `apps/web`. Found and fixed: `next` ≤ 16.4.0 has
       critical advisories (pinned 16.4.2), telemetry is now off, and the S1 licence check skipped every production
       package a dev tool also uses (now 470 packages checked instead of 240; D-071)
-- [ ] The editor page and the LTI editor in a cookie-less iframe (D-069)
+- [x] The editor page and the LTI editor in a cookie-less iframe (D-069): `/h5p/edit/:id`, `/h5p/new`, `/lti/edit`;
+      all ten real types open and save under the strict policy; in Canvas with frame storage partitioned or blocked.
+      Found and fixed: no Edit check in Lumi's editor render, H5P editor scripts failing under a cross-origin
+      parent, Content Hub metadata refused with 403 (page errors), and `base-uri 'none'` refusing jQuery's parser
 - [ ] `packages/design-tokens` with the contrast test and lint rules (`UD-001`)
 - [ ] Carried in by earlier decisions: the LTI views `/lti/play`, `/lti/deeplink` and the friendly pages move to
       `apps/web` `/app/*` on the same server APIs (D-048); the H5P editor page with the player's script-safe JSON

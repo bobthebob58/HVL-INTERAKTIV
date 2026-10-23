@@ -30,6 +30,7 @@ export const LTIK_QUERY_PATHS: readonly RegExp[] = Object.freeze([
   /^\/h5p\/ajax\/?$/,
   /^\/h5p\/contentUserData\/[^/]+\/[^/]+\/[^/]+\/?$/,
   /^\/lti\/play\/?$/,
+  /^\/lti\/edit\/?$/,
   /^\/lti\/deeplink\/?$/,
 ]);
 

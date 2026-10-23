@@ -11,7 +11,10 @@
  *   - When storage works, it changes nothing.
  *   - The stand-in lives in this page's memory and is gone when the page unloads; nothing reaches disk or cookies.
  *   - It is never handed the ltik: nothing on the player page writes the ltik to storage.
- * Collaborators: ../../play/ltiPlayRoutes.ts (loads it before H5P Core), ./ltijsStorageGuard.js (the launch pages'
+ *   - `window.hvliGuardFrameStorage(frameWindow)` gives a same-origin child frame (the H5P editor's iframe) the
+ *     same stand-in; it exists only when storage is blocked.
+ * Collaborators: ../../play/ltiPlayRoutes.ts and ../../play/ltiEditRoutes.ts (load it before H5P Core),
+ *   ../../../h5p/render/client/editorPage.js (guards the editor iframe), ./ltijsStorageGuard.js (the launch pages'
  *   guard, which must keep `setItem` failing for ltijs; this one must not).
  * Tests: apps/server/e2e/ltiIframe.e2e.test.ts
  */
@@ -44,9 +47,13 @@
       values.clear();
     },
   };
-  try {
-    Object.defineProperty(window, 'localStorage', { value: standIn, configurable: true });
-  } catch {
-    // WHY: if the browser forbids redefining it, H5P behaves exactly as it would without this guard.
-  }
+  var guard = function guard(target) {
+    try {
+      Object.defineProperty(target, 'localStorage', { value: standIn, configurable: true });
+    } catch {
+      // WHY: if the browser forbids redefining it, H5P behaves exactly as it would without this guard.
+    }
+  };
+  guard(window);
+  window.hvliGuardFrameStorage = guard;
 })();

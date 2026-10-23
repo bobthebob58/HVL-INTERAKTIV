@@ -8,8 +8,8 @@
  *      failure and never leaks a message.
  * Spec: H5P-004, H5P-006, H5P-007, SEC-004
  * Invariants:
- *   - Only `/core`, `/editor`, `/libraries` and the grant-checked `/files` answer without an actor; everything
- *     else needs `authenticate`.
+ *   - Only `/core`, `/editor`, `/libraries`, `/boot` and the grant-checked `/files` and `/uploads` answer without
+ *     an actor; everything else needs `authenticate`.
  *   - The error handler is the last middleware; no route sends its own error body.
  *   - A path under the router that matches no route gets the translated 404 answer, never Express's page.
  * Collaborators: ./routes/*, ./h5pErrorHandler.ts, ./h5pLocals.ts (Authenticate), ../h5p/createH5pRuntime.ts.
@@ -25,6 +25,8 @@ import { contentRoutes } from './routes/contentRoutes.js';
 import { fileRoutes } from './routes/fileRoutes.js';
 import { playerRoutes } from './routes/playerRoutes.js';
 import { signedFileRoutes } from './routes/signedFileRoutes.js';
+import { signedUploadRoutes } from './routes/signedUploadRoutes.js';
+import { editorRoutes } from './routes/editorRoutes.js';
 import { staticRoutes } from './routes/staticRoutes.js';
 import { userDataRoutes } from './routes/userDataRoutes.js';
 
@@ -40,12 +42,14 @@ export function createH5pRouter(deps: H5pRouteDeps, authenticate: Authenticate):
   // SECURITY: before `authenticate`, because `<img>` and `<video>` in a cookie-less iframe send no credential.
   // The grant in the path is the authorisation (D-058).
   router.use(signedFileRoutes(deps));
+  router.use(signedUploadRoutes(deps));
   router.use(authenticate);
   router.use(ajaxRoutes(deps));
   router.use(fileRoutes(deps));
   router.use(userDataRoutes(deps));
   router.use(contentRoutes(deps));
   router.use(playerRoutes(deps));
+  router.use(editorRoutes(deps));
   router.use(() => {
     throw new HttpError(404, 'error.notFound');
   });

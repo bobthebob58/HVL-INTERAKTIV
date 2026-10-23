@@ -53,13 +53,15 @@ describe('keepContentTypeCacheOffline', () => {
     expect(await storages.keyValueStorage.load(CONTENT_TYPE_CACHE_KEY)).toEqual([]);
   });
 
-  it('[H5P-011] Content Hub metadata is refused without a network request', async () => {
+  it('[H5P-011] Content Hub metadata is empty lists, without a network request', async () => {
     const { editor } = await engineTestbed();
     const hub = recorder();
     (editor.contentHub as unknown as { httpClient: unknown }).httpClient = hub.client;
-    await expect(editor.contentHub.getMetadata('nn')).rejects.toMatchObject({
-      errorId: 'hvl:hub-install-disabled',
-      httpStatusCode: 403,
+    expect(await editor.contentHub.getMetadata('nn')).toEqual({
+      disciplines: [],
+      languages: [],
+      levels: [],
+      licenses: [],
     });
     expect(hub.calls).toEqual([]);
   });

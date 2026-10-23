@@ -39,8 +39,8 @@ const TEXT_PATTERNS: [RegExp, string][] = [
   ],
   // SECURITY: our cookies (`__Host-hvli_sid`, the login transaction) in Cookie and Set-Cookie text (D-057).
   [/(?<![\w-])((?:__Host-)?hvli_[A-Za-z0-9_]{1,32}=)[^;&\s"'\\,]{1,4096}/g, `$1${REDACTED}`],
-  // SECURITY: a signed content-file grant is a bearer credential for 12 hours (D-058).
-  [/(\/h5p\/files\/)[^/\s"'\\?#]{1,512}/g, `$1${REDACTED}`],
+  // SECURITY: a signed content-file or upload grant is a bearer credential for 12 hours (D-058, D-069).
+  [/(\/h5p\/(?:files|uploads)\/)[^/\s"'\\?#]{1,512}/g, `$1${REDACTED}`],
   // WHY: schemes are case-insensitive (RFC 9110 §11.1), so case variants are spelled out rather than using
   // the `i` flag, which would make the mixed-case test below meaningless. The token must look like a
   // credential (a digit or symbol, or mixed case and at least 8 characters), so "basic validation" is kept.

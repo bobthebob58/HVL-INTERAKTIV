@@ -1589,11 +1589,11 @@ excluded for this reason (<a class="req-ref" href="#r-H5P-002"><code>H5P-002</co
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-005">03 Universal design, UD-005</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-006" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-006 fully keyboard operable there is a skip link to `&lt;main&gt;`. focus order is logical. there are no keyboard traps, including
+<details class="req" id="x-UD-006" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-006 fully keyboard operable there is a skip link to `&lt;main&gt;`. focus order is logical. there are no keyboard traps, including
 modal dialogs, which return focus on close. all custom widgets follow the wai-aria authoring
 practices patterns.
 - **verify:** keyboard-only playwright scripts for j1–j4; manual check (`ud-031`).">
-<summary><span class="req-id">UD-006</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Fully keyboard operable</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-006</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Fully keyboard operable</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>There is a skip link to <code>&lt;main&gt;</code>. Focus order is logical. There are no keyboard traps, including
 modal dialogs, which return focus on close. All custom widgets follow the WAI-ARIA Authoring
 Practices patterns.</p>
@@ -4926,16 +4926,15 @@ code, unless they behave differently from the documented values the mocks follow
 installed one in its patch version (<a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>, Q9), which will refuse many packages exported elsewhere.</li>
 <li><strong>Plain server-rendered pages until S4</strong> (D-048). The Canvas player (<code>/lti/play</code>), the Deep Linking
 picker (<code>/lti/deeplink</code>), the friendly error pages and the portal start page (<code>/</code>) are unstyled pages
-rendered by the server; <code>apps/web</code> replaces them in S4. There is no editor page yet, the <strong>Rediger</strong> and
-<strong>Innsikt</strong> tabs come with the editor (S4) and insight (S6) (D-062), and no page offers sharing: it is an
-API call.</li>
-<li><strong>The player pages allow inline styles, and the editor page has no script policy yet</strong> (D-070). Since S4 the
-portal player (<code>/h5p/play/:contentId</code>) and the Canvas player (<code>/lti/play</code>) send <code>script-src &#39;self&#39;</code> plus the
-hash of H5P Core&#39;s one constant inline script, so a script inside an activity cannot run and read the page&#39;s
-URL token (the ltik or the CSRF token). <code>style-src</code> still allows <code>&#39;unsafe-inline&#39;</code>, because H5P sets style
-attributes throughout; injected CSS can change how an activity looks but not run code. The H5P editor page
-comes later in S4 under the same policy. The S2 upload checks (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>, <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a>) and admin-only library
-installation (<a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>) limit what an activity can carry.</li>
+rendered by the server; <code>apps/web</code> replaces them in S4. The H5P editor page exists since S4 (<code>/h5p/edit/:id</code>,
+<code>/h5p/new</code>, and <code>/lti/edit</code> inside Canvas), but the <strong>Rediger</strong> and <strong>Innsikt</strong> tabs come with the web app&#39;s
+chrome (S4) and insight (S6) (D-062), and no page offers sharing yet: it is an API call.</li>
+<li><strong>The H5P pages allow inline styles</strong> (D-070). Since S4 the player (<code>/h5p/play/:contentId</code>, <code>/lti/play</code>) and
+editor pages (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>) send <code>script-src &#39;self&#39;</code> plus the hash of H5P Core&#39;s
+one constant inline script, so a script inside an activity cannot run and read the page&#39;s URL token (the ltik
+or the CSRF token). <code>style-src</code> still allows <code>&#39;unsafe-inline&#39;</code>, because H5P sets style attributes throughout;
+injected CSS can change how an activity looks but not run code. The S2 upload checks (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>, <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a>)
+and admin-only library installation (<a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>) limit what an activity can carry.</li>
 <li><strong>Tokens travel in some URLs, so proxies must not log query strings</strong> (D-057, D-058). A launch reaches
 <code>/lti/play</code> and <code>/lti/deeplink</code> with the ltik in the query (a first-party script then removes it from the
 address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF token as a query value,
@@ -6011,6 +6010,18 @@ memory and removes it from the address bar. The editor&#39;s content files get s
 check (D-058&#39;s grant, bound to the content), and uploaded temporary files get a grant over
 <code>temp|userId|expiry</code> from the same key ring.</li>
 <li><strong>Consequences:</strong> Amends D-058. The redaction and query-ltik tests cover the new paths.</li>
+<li><strong>Probe result (2026-10-23):</strong> the editor page (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>) opens all ten real types
+and saves through the content API, also in the cookie-less Canvas iframe with frame storage partitioned or
+blocked. Upload grants use their own HKDF purpose (<code>temporary-file-url</code>) over the uploading account, served at
+<code>/h5p/uploads/&lt;grant&gt;/&lt;account&gt;/&lt;file&gt;</code>; content grants go into <code>H5PIntegration.contents</code>, which H5P&#39;s editor
+reads for saved files. Findings fixed on the way: Lumi&#39;s editor render checks no permission, so the route checks
+Edit before rendering or issuing a grant; Lumi lists every editor script for the outer page too, where H5P&#39;s
+<code>h5peditor.js</code> reads <code>window.parent</code> and fails when Canvas is that parent, so the outer page loads only H5P Core,
+the iframe creator and its language file, as H5P&#39;s own integrations do; H5P&#39;s <code>getAjaxUrl</code> lives in
+<code>h5peditor-init.js</code>, which Lumi does not load, so our boot script defines it; the editor iframe needs the page&#39;s
+storage stand-in where frame storage is blocked (<code>hvliGuardFrameStorage</code>); the editor keeps its UI state as user
+data of activity <code>0</code>, which is now answered empty and never stored; and H5P&#39;s hub client always asks for Content
+Hub metadata, which D-041 refused with 403 and now answers with empty lists (still without a network request).</li>
 </ul>
 <h3 id="decisions--d-070--content-security-policy-for-h5p-pages-and-nextjs-pages-no-youtube" tabindex="-1">D-070 · Content Security Policy for H5P pages and Next.js pages; no YouTube</h3>
 <ul>
@@ -6025,6 +6036,12 @@ way to allow outside media; YouTube is never listed. <code>SPEC-DEVIATION</code>
 script; tags that H5P writes into its iframes cannot carry either, so they are covered by <code>&#39;self&#39;</code> instead.</li>
 <li><strong>Consequences:</strong> A content type that needs inline handlers or <code>eval</code> gets a scoped, recorded exception, never
 <code>&#39;unsafe-inline&#39;</code> for scripts. Inline styles stay allowed on H5P pages only.</li>
+<li><strong>Probe result (2026-10-23):</strong> all ten real types play and open in the editor under this policy with no script
+exception. Two changes: <code>base-uri</code> is <code>&#39;self&#39;</code> instead of <code>&#39;none&#39;</code> on H5P pages, because jQuery&#39;s HTML parser
+gives its scratch document a <code>&lt;base&gt;</code> with the page&#39;s own URL on every editor field (another origin stays
+refused); and BranchingScenario&#39;s editor embeds H5P&#39;s online tutorial (<code>documentation.h5p.com</code>), which the policy
+keeps out as intended (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>); the editor works without it, and the browser test lists it so a new outside
+frame is noticed.</li>
 </ul>
 <h3 id="decisions--d-071--cc-by-40-is-an-allowed-licence-caniuse-lite" tabindex="-1">D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)</h3>
 <ul>
@@ -6312,7 +6329,10 @@ Core&#39;s one iframe script; an injected inline script never runs in the ten re
 removed before Next.js, locale header, no server endpoints in <code>apps/web</code>. Found and fixed: <code>next</code> ≤ 16.4.0 has
 critical advisories (pinned 16.4.2), telemetry is now off, and the S1 licence check skipped every production
 package a dev tool also uses (now 470 packages checked instead of 240; D-071)</li>
-<li><span class="task">○ To do:</span> The editor page and the LTI editor in a cookie-less iframe (D-069)</li>
+<li><span class="task">✓ Done:</span> The editor page and the LTI editor in a cookie-less iframe (D-069): <code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>;
+all ten real types open and save under the strict policy; in Canvas with frame storage partitioned or blocked.
+Found and fixed: no Edit check in Lumi&#39;s editor render, H5P editor scripts failing under a cross-origin
+parent, Content Hub metadata refused with 403 (page errors), and <code>base-uri &#39;none&#39;</code> refusing jQuery&#39;s parser</li>
 <li><span class="task">○ To do:</span> <code>packages/design-tokens</code> with the contrast test and lint rules (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>)</li>
 <li><span class="task">○ To do:</span> Carried in by earlier decisions: the LTI views <code>/lti/play</code>, <code>/lti/deeplink</code> and the friendly pages move to
 <code>apps/web</code> <code>/app/*</code> on the same server APIs (D-048); the H5P editor page with the player&#39;s script-safe JSON

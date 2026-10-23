@@ -84,6 +84,13 @@
     "home": {
       "signedIn": "Du er logga inn i HVL Interaktiv.",
       "signedOut": "Logg inn med Feide for å lage og dele aktivitetar."
+    },
+    "editor": {
+      "title": "Rediger aktivitet",
+      "save": "Lagre",
+      "saving": "Lagrar …",
+      "saved": "Lagra.",
+      "saveFailed": "Klarte ikkje å lagre. Prøv igjen."
     }
   },
   "deepLink": {
