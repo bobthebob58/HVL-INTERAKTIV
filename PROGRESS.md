@@ -137,13 +137,29 @@ Effort: high, because this is security-critical. Public Feide and Canvas values 
       (`-t`); `npm start` against `npm run mock:platform` answers `/healthz` and `/lti/keys`; output in the session
       log (2026-10-23)
 
+Not done in S3 (recorded 2026-10-23):
+- `DOC-012` (SHOULD): the OpenAPI document generated from the zod schemas at `/api/docs` was not built; it moves to
+  S4, where the web app becomes the first API client. (Route headers already state their authentication mode.)
+- `AUTH-005`'s "Link with Feide" fallback that proves both identities is not built (D-063); a teacher whose Canvas
+  account owns content before the first link keeps two libraries (`link.conflict`).
+- Known limitation: if a teacher's very first resource-link launch commits while their first Deep Linking launch
+  is linking, that Deep Linking launch opens on the new, empty Canvas account; the next one moves the identity
+  (`src/auth/identity/accountLinking.ts`).
+- Everything HVL must supply: Feide registration and redirect URIs (Q3), the TeCopp test launch and `feideLinking`
+  (Q4), owner answers Q12–Q15. GitHub has never run CI on this work (Q16).
+
 ## S4 — Universal design ⬜
 
 Brand tokens follow HVL's manual (D-017); HVL (profil@hvl.no) must still confirm the values and supply logo files.
 - [ ] `packages/design-tokens` with the contrast test and lint rules (`UD-001`)
+- [ ] Carried in by earlier decisions: the LTI views `/lti/play`, `/lti/deeplink` and the friendly pages move to
+      `apps/web` `/app/*` on the same server APIs (D-048); the H5P editor page with the player's script-safe JSON
+      (D-040) and the LTI-006 **Rediger** tab on it (D-062); an editor in a cookie-less Canvas iframe needs
+      grant-bearing file URLs issued after an Edit check (D-058); `DOC-012` from S3
 - [ ] Web shell components and `hvl-h5p-theme.css` (`UD-002`…`UD-013`, `H5P-009`)
 - [ ] Validator engine, UD rules and pedagogical hint rules (`UD-020`…`UD-022`, `PED-020`)
-- [ ] Publish flow with acknowledgements (`PROD-003`); formative notice (`PROD-011`); privacy notice (`DATA-006`)
+- [ ] Publish flow with acknowledgements (`PROD-003`), which also ends S3's visibility-only sharing (D-066, Q14);
+      formative notice (`PROD-011`); privacy notice (`DATA-006`)
 - [ ] CSP that blocks third-party requests; self-hosted fonts (`DATA-011`); browser and assistive-technology matrix (`NFR-003`).
       The player page's `script-src` must not allow `'unsafe-inline'`: it is the structural defence against
       markup H5P Core writes without escaping (D-039)
@@ -192,6 +208,7 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 | Q15 | Learner LTI launches are not written to the authentication audit (D-064) | HVL DPO | S6 |
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous and equals the Feide ID; only then set `"feideLinking": true` for that platform in `LTI_PLATFORMS` (AUTH-005, D-063) | TeCopp | S3 |
+| Q16 | The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact) | Repository owner | Confidence in every gate |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
 | Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`) | HVL DPO | S6, pilot |
 

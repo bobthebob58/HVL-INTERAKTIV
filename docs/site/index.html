@@ -6019,13 +6019,30 @@ then three adversarial verification passes over the fixes; every fix has a test 
 (<code>-t</code>); <code>npm start</code> against <code>npm run mock:platform</code> answers <code>/healthz</code> and <code>/lti/keys</code>; output in the session
 log (2026-10-23)</li>
 </ul>
+<p>Not done in S3 (recorded 2026-10-23):</p>
+<ul>
+<li><a class="req-ref" href="#r-DOC-012"><code>DOC-012</code></a> (SHOULD): the OpenAPI document generated from the zod schemas at <code>/api/docs</code> was not built; it moves to
+S4, where the web app becomes the first API client. (Route headers already state their authentication mode.)</li>
+<li><a class="req-ref" href="#r-AUTH-005"><code>AUTH-005</code></a>&#39;s &quot;Link with Feide&quot; fallback that proves both identities is not built (D-063); a teacher whose Canvas
+account owns content before the first link keeps two libraries (<code>link.conflict</code>).</li>
+<li>Known limitation: if a teacher&#39;s very first resource-link launch commits while their first Deep Linking launch
+is linking, that Deep Linking launch opens on the new, empty Canvas account; the next one moves the identity
+(<code>src/auth/identity/accountLinking.ts</code>).</li>
+<li>Everything HVL must supply: Feide registration and redirect URIs (Q3), the TeCopp test launch and <code>feideLinking</code>
+(Q4), owner answers Q12–Q15. GitHub has never run CI on this work (Q16).</li>
+</ul>
 <h3 id="progress--s4--universal-design" tabindex="-1">S4 — Universal design ⬜</h3>
 <p>Brand tokens follow HVL&#39;s manual (D-017); HVL (<a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>) must still confirm the values and supply logo files.</p>
 <ul>
 <li><span class="task">○ To do:</span> <code>packages/design-tokens</code> with the contrast test and lint rules (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>)</li>
+<li><span class="task">○ To do:</span> Carried in by earlier decisions: the LTI views <code>/lti/play</code>, <code>/lti/deeplink</code> and the friendly pages move to
+<code>apps/web</code> <code>/app/*</code> on the same server APIs (D-048); the H5P editor page with the player&#39;s script-safe JSON
+(D-040) and the LTI-006 <strong>Rediger</strong> tab on it (D-062); an editor in a cookie-less Canvas iframe needs
+grant-bearing file URLs issued after an Edit check (D-058); <a class="req-ref" href="#r-DOC-012"><code>DOC-012</code></a> from S3</li>
 <li><span class="task">○ To do:</span> Web shell components and <code>hvl-h5p-theme.css</code> (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>…<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>, <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>)</li>
 <li><span class="task">○ To do:</span> Validator engine, UD rules and pedagogical hint rules (<a class="req-ref" href="#r-UD-020"><code>UD-020</code></a>…<a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>, <a class="req-ref" href="#r-PED-020"><code>PED-020</code></a>)</li>
-<li><span class="task">○ To do:</span> Publish flow with acknowledgements (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>); formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>); privacy notice (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>)</li>
+<li><span class="task">○ To do:</span> Publish flow with acknowledgements (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>), which also ends S3&#39;s visibility-only sharing (D-066, Q14);
+formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>); privacy notice (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>)</li>
 <li><span class="task">○ To do:</span> CSP that blocks third-party requests; self-hosted fonts (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>); browser and assistive-technology matrix (<a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>).
 The player page&#39;s <code>script-src</code> must not allow <code>&#39;unsafe-inline&#39;</code>: it is the structural defence against
 markup H5P Core writes without escaping (D-039)</li>
@@ -6084,6 +6101,8 @@ The data-subject tool must delete learner state through the storage directly: Lu
 <td>Q3</td><td>Feide Customer Portal registration and redirect URIs</td><td>HVL IT</td><td>S3</td></tr>
 <tr>
 <td>Q4</td><td>Paste <code>docs/reference/canvas-lti13-developer-key.json</code> into HVL&#39;s test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether <code>feide_login</code> arrives under <code>privacy_level</code> anonymous and equals the Feide ID; only then set <code>&quot;feideLinking&quot;: true</code> for that platform in <code>LTI_PLATFORMS</code> (AUTH-005, D-063)</td><td>TeCopp</td><td>S3</td></tr>
+<tr>
+<td>Q16</td><td>The repository has no <code>main</code> branch, and CI (<code>.github/workflows/ci.yml</code>) runs only on pushes to <code>main</code> and on pull requests, so GitHub has never run the gate: every session&#39;s gate ran locally only. Create <code>main</code> from <code>ccr-07f63266-6cere5</code> or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact)</td><td>Repository owner</td><td>Confidence in every gate</td></tr>
 <tr>
 <td>Q5</td><td>Hosting: HVL on-premises or Sikt, both in the EEA (<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>)</td><td>HVL IT</td><td>S6</td></tr>
 <tr>
