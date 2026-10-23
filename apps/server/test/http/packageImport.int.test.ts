@@ -5,7 +5,7 @@
  *
  * Spec: SEC-003, SEC-005, H5P-002, H5P-011, H5P-006
  */
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import request from 'supertest';
@@ -108,11 +108,27 @@ describeWithServices('H5P package import over HTTP', () => {
     expect(res.body).toMatchObject({ errorCode: 'upload.archive.unsafePath' });
   });
 
-  it('[SEC-005] a content file reference that leaves the package is refused before Lumi copies anything', async () => {
-    const params = { ...PARAMS, media: { path: '../../../../victim.svg', mime: 'image/svg+xml' } };
-    const res = await importAs(author, await buildH5pPackage({ main: MULTI_CHOICE, params }));
-    expect(res.status).toBe(400);
-    expect(res.body).toMatchObject({ errorCode: 'upload.archive.unsafePath' });
+  it('[SEC-005] a content file reference that leaves the package is refused before Lumi touches the target', async () => {
+    // Arrange: an SVG outside the package that the sanitiser would rewrite if Lumi reached it.
+    const outside = mkdtempSync(join(tmpdir(), 'hvli-victim-'));
+    const victim = join(outside, 'victim.svg');
+    const original =
+      '<svg xmlns="http://www.w3.org/2000/svg"><script>x()</script><rect width="1" height="1"/></svg>';
+    writeFileSync(victim, original);
+    try {
+      for (const scheme of ['', 'HTTPS://', 'Http://']) {
+        const path = `${scheme}${'../'.repeat(20)}${victim.slice(1)}`;
+        const params = { ...PARAMS, media: { path, mime: 'image/svg+xml' } };
+        // Act
+        const res = await importAs(author, await buildH5pPackage({ main: MULTI_CHOICE, params }));
+        // Assert
+        expect(res.status, scheme).toBe(400);
+        expect(res.body).toMatchObject({ errorCode: 'upload.archive.unsafePath' });
+        expect(readFileSync(victim, 'utf8'), scheme).toBe(original);
+      }
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
   });
 
   it('[H5P-011] an admin import that installs a newer patch is recorded in the library audit', async () => {

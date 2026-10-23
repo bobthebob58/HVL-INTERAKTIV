@@ -8,8 +8,8 @@
  *      sanitiser rewrite a file outside the package. Every reference is checked before Lumi sees the package.
  * Spec: SEC-005, SEC-001
  * Invariants:
- *   - Every string under a `path` key counts as a reference (Lumi's file objects are `{ path, mime, … }`); web
- *     URLs are skipped, as Lumi does not copy them.
+ *   - Every string under a `path` key counts as a reference (Lumi's file objects are `{ path, mime, … }`). Only
+ *     what Lumi itself skips as a web URL is skipped: a lower-case `http://` or `https://` prefix, nothing else.
  *   - A reference with a backslash, a leading `/`, a drive letter or a `..` segment is refused.
  *   - Iterative, so deeply nested parameters cannot overflow the stack.
  * Collaborators: ./packageManifest.ts (reads content.json and calls the check), ../../security/zipEntryGuard.ts.
@@ -17,7 +17,11 @@
  */
 import { ZipRejectedError } from '../../security/zipEntryGuard.js';
 
-const WEB_URL = /^https?:\/\//i;
+// SECURITY: exactly Lumi's test (case-sensitive). `HTTPS://../x` is no URL to Lumi: it joins it to the package
+// folder like any file name, so it must go through the checks below.
+// UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/ContentFileScanner.ts
+// (urlRegExp). Keep the two in step on every Lumi upgrade.
+const WEB_URL = /^https?:\/\//;
 
 /**
  * Collects every `path` string in content parameters.

@@ -4,8 +4,9 @@
  *
  * Spec: SEC-005, SEC-001, SEC-002
  */
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
@@ -21,6 +22,24 @@ interface Seen {
 }
 
 /** An app that reads one upload, records what it saw, and cleans up. */
+/**
+ * Runs `act` with `os.tmpdir()` pointing at a fresh folder (Vitest runs each file in its own process).
+ * @returns The names left in that folder afterwards.
+ */
+async function leftovers(act: () => Promise<unknown>): Promise<string[]> {
+  const previous = process.env.TMPDIR;
+  const dir = mkdtempSync(join(tmpdir(), 'multipart-probe-'));
+  process.env.TMPDIR = dir;
+  try {
+    await act();
+    return readdirSync(dir);
+  } finally {
+    if (previous === undefined) delete process.env.TMPDIR;
+    else process.env.TMPDIR = previous;
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 function probeApp(maxFileSize = 1024): { app: express.Express; seen: Seen } {
   const seen: Seen = {};
   const app = express();
@@ -88,21 +107,30 @@ describe('readMultipart', () => {
 
   it('[SEC-005] an oversize file is refused with 413 while it streams, and its folder is removed', async () => {
     const { app, seen } = probeApp(16);
-    const res = await request(app).post('/u').attach('file', Buffer.alloc(64, 'x'), 'big.png');
-    expect(res.status).toBe(413);
+    let status = 0;
+    const left = await leftovers(async () => {
+      status = (await request(app).post('/u').attach('file', Buffer.alloc(64, 'x'), 'big.png')).status;
+    });
+    expect(status).toBe(413);
     expect(seen.error).toEqual({ status: 413, key: 'error.tooLarge' });
+    expect(left).toEqual([]);
   });
 
-  it('[SEC-005] a request that is not multipart, or is malformed, is refused with 400', async () => {
+  it('[SEC-005] a request that is not multipart, or is malformed, is refused with 400 and leaves no folder', async () => {
     const json = probeApp();
     expect((await request(json.app).post('/u').send({ a: 1 })).status).toBe(400);
     const broken = probeApp();
-    const res = await request(broken.app)
-      .post('/u')
-      .set('Content-Type', 'multipart/form-data; boundary=xyz')
-      .send('--xyz\r\nContent-Disposition: form-data; name="file"; filename="a.png"\r\n\r\nunterminated');
-    expect(res.status).toBe(400);
+    let status = 0;
+    const left = await leftovers(async () => {
+      const res = await request(broken.app)
+        .post('/u')
+        .set('Content-Type', 'multipart/form-data; boundary=xyz')
+        .send('--xyz\r\nContent-Disposition: form-data; name="file"; filename="a.png"\r\n\r\nunterminated');
+      status = res.status;
+    });
+    expect(status).toBe(400);
     expect(broken.seen.error).toEqual({ status: 400, key: 'error.badRequest' });
+    expect(left).toEqual([]);
   });
 
   it('[SEC-005] a request with only fields has no file', async () => {

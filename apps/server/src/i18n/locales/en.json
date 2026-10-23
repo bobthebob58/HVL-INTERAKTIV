@@ -32,6 +32,7 @@
     "contentTypeNotAllowed": "The content type “{{library}}” cannot be used in HVL Interaktiv.",
     "subContentNotAllowed": "“{{library}}” cannot be used inside this activity.",
     "libraryNotInstalled": "The content type “{{library}}” is not installed.",
+    "unsafeFilePath": "A file path in the activity contains characters that are not allowed (quotes, < or >).",
     "hubInstallDisabled": "Content types are installed by an administrator, not from the H5P Hub.",
     "librariesInstalled": "Content types installed: {{count}}.",
     "librariesUpdated": "Content types updated: {{count}}.",

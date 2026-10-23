@@ -4,13 +4,14 @@
  * Why: CVE-2025-47828 was fixed in Lumi by sanitising text fields on save, but its scanner never reaches text
  *      that is a list item (D-039), and content metadata is not sanitised at all. H5P Core's "Rights of use"
  *      dialog builds HTML from metadata without escaping (h5p.js `buildMetadataCopyrights`, `MediaCopyright`),
- *      with `source` inside `<a href="…">`. Reusing Lumi's rules keeps one definition of "safe text" (allowed
- *      tags from the semantics, sanitize-html defaults for plain text).
+ *      with `source` inside `<a href="…">`. List items reuse Lumi's rules, so a text field has one definition
+ *      of "safe text" (the tags its semantics allow). Metadata has no semantics: Lumi's default for a field
+ *      without tags still allows links, tables and more, so metadata gets sanitize-html with no tags at all.
  * Spec: SEC-008
  * Invariants:
- *   - Values are sanitised exactly as Lumi sanitises a text field with the same semantics.
+ *   - A list item is sanitised exactly as Lumi sanitises a text field with the same semantics.
  *   - Every string in a metadata object (main or sub-content, also inside `authors` and `changes`) is plain
- *     text: tags are removed, `<`, `>` and `&` escaped.
+ *     text: every tag is removed (script and style with their content), `<`, `>` and `&` escaped.
  *   - A top-level field that was only markup is removed (Lumi's schema refuses empty strings).
  *   - `source` is kept only as an http(s) URL in its normalised form (quotes and angle brackets
  *     percent-encoded, so it cannot leave the `href` attribute); anything else is removed.
@@ -19,6 +20,7 @@
  */
 import type { LibraryManager } from '@lumieducation/h5p-server';
 import type { ISemanticsEntry } from '@lumieducation/h5p-server/build/src/types.js';
+import sanitizeHtml from 'sanitize-html';
 import { SemanticsEnforcer } from '../lumiInternals.js';
 
 /** The private Lumi method we call (SemanticsEnforcer.enforceTextSemantics). */
@@ -33,6 +35,17 @@ interface TextEnforcer {
 
 /** Nesting limit for metadata (h5p.json is flat apart from `authors` and `changes`). */
 const MAX_METADATA_DEPTH = 8;
+
+const NO_MARKUP: sanitizeHtml.IOptions = { allowedTags: [], allowedAttributes: {} };
+
+/**
+ * Text with every tag removed and `<`, `>` and `&` escaped, for places H5P writes into HTML as it is.
+ * @param text - The author's text.
+ * @returns The plain text; entities such as `&quot;` come back decoded, except `&lt;`, `&gt;` and `&amp;`.
+ */
+export function plainText(text: string): string {
+  return sanitizeHtml(text, NO_MARKUP);
+}
 
 /**
  * The `source` URL in a form that cannot leave a double-quoted attribute, or undefined.
@@ -87,7 +100,7 @@ export class LumiTextSanitizer {
     const record = metadata as Record<string, unknown>;
     for (const [key, value] of Object.entries(record)) {
       if (key !== 'source') {
-        record[key] = this.plainText(value, key, 1);
+        record[key] = this.plainTextDeep(value, 1);
         // WHY: Lumi's schema wants 1+ characters; a field that was only markup is left out instead.
         if (record[key] === '' && value !== '') delete record[key];
         continue;
@@ -98,12 +111,12 @@ export class LumiTextSanitizer {
     }
   }
 
-  private plainText(value: unknown, name: string, depth: number): unknown {
-    if (typeof value === 'string') return this.sanitizeText({ name, type: 'text' }, value);
+  private plainTextDeep(value: unknown, depth: number): unknown {
+    if (typeof value === 'string') return plainText(value);
     if (typeof value !== 'object' || value === null || depth >= MAX_METADATA_DEPTH) return value;
-    if (Array.isArray(value)) return value.map((item) => this.plainText(item, name, depth + 1));
+    if (Array.isArray(value)) return value.map((item) => this.plainTextDeep(item, depth + 1));
     const record = value as Record<string, unknown>;
-    for (const [key, item] of Object.entries(record)) record[key] = this.plainText(item, key, depth + 1);
+    for (const [key, item] of Object.entries(record)) record[key] = this.plainTextDeep(item, depth + 1);
     return record;
   }
 }

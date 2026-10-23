@@ -32,6 +32,7 @@
     "contentTypeNotAllowed": "Innholdstypen «{{library}}» kan ikke brukes i HVL Interaktiv.",
     "subContentNotAllowed": "«{{library}}» kan ikke brukes inne i denne aktiviteten.",
     "libraryNotInstalled": "Innholdstypen «{{library}}» er ikke installert.",
+    "unsafeFilePath": "En filsti i aktiviteten inneholder tegn som ikke er tillatt (anførselstegn, < eller >).",
     "hubInstallDisabled": "Innholdstyper installeres av en administrator, ikke fra H5P-huben.",
     "librariesInstalled": "Installerte innholdstyper: {{count}}.",
     "librariesUpdated": "Oppdaterte innholdstyper: {{count}}.",

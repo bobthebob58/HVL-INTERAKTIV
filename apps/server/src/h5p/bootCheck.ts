@@ -1,7 +1,7 @@
 /**
  * bootCheck — command-line check that the H5P engine would start: valid config, matching client files.
  *
- * Why: until the HTTP server exists (S2), CI and developers need a way to prove H5P-001 on a real checkout:
+ * Why: until the HTTP server exists (S3), CI and developers need a way to prove H5P-001 on a real checkout:
  *      the fetched core files are API 1.28 and the config points at hub-api.h5p.org.
  * Spec: H5P-001
  * Invariants: exits 1 with a readable message on any failure; prints one JSON log line on success;

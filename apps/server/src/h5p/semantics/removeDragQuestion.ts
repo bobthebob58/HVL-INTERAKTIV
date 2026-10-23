@@ -8,7 +8,7 @@
  * Invariants:
  *   - The input semantics are never changed; a filtered copy is returned (Lumi may cache the original).
  *   - Every `library` field at any depth (groups, lists, nested lists) loses the DragQuestion options.
- * Collaborators: ./H5pEditorFactory.ts via `customization.alterLibrarySemantics`; ./SubContentPolicy.ts
+ * Collaborators: ../H5pEditorFactory.ts via `customization.alterLibrarySemantics`; ./SubContentPolicy.ts
  *   enforces the same rule on save, where list items need our own walk (D-039).
  * Tests: apps/server/test/h5p/semantics/removeDragQuestion.test.ts
  */

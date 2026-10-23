@@ -134,4 +134,16 @@ describe('[H5P-011] admins install library updates through an audited import', (
     const installed = await editor.libraryManager.listInstalledLibraries('H5P.MultiChoice');
     expect(installed['H5P.MultiChoice']?.map((lib) => lib.patchVersion)).toEqual([MC.patchVersion ?? 0]);
   });
+
+  it('[H5P-011] when the audit cannot be written, a library that is new is not installed either', async () => {
+    const { editor, user, control } = await editorTestbed([MC]);
+    control.auditFails = true;
+    const path = await buildH5pPackage({
+      main: MC,
+      libraries: [{ machineName: 'H5P.NewProbe' }],
+      params: PARAMS,
+    });
+    await expect(editor.uploadPackage(path, user('admin'))).rejects.toThrow('audit store unavailable');
+    expect(await editor.libraryManager.listInstalledLibraries('H5P.NewProbe')).toEqual({});
+  });
 });

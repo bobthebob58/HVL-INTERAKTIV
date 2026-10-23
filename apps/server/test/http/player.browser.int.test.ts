@@ -42,6 +42,39 @@ const RIGHTS_PAYLOAD = {
   authors: [{ name: 'Ola<img src=x onerror="window.__hvlAuthor=1">', role: 'Author' }],
 };
 
+/** Copyright data under keys no semantics field defines; h5p.js `findCopyrights` still renders all of it. */
+const COPYRIGHT_PARAMS = {
+  question: 'Kva?',
+  media: {
+    path: 'images/a.png',
+    mime: 'image/png',
+    copyright: {
+      license: 'CC BY',
+      title: '<img src=x onerror="window.__hvlMedia=1">',
+      source: 'javascript:1',
+    },
+  },
+  hidden: {
+    file: {
+      path: 'images/b.png',
+      mime: 'image/png',
+      copyright: { license: 'CC BY', author: '<img src=x onerror="window.__hvlHidden=1">' },
+    },
+  },
+  picture: {
+    params: {
+      contentName: 'Image',
+      file: { path: 'images/c.png', width: 4, height: 4 },
+      alt: 'x" onerror="window.__hvlAlt=1',
+    },
+    metadata: {
+      license: 'CC BY',
+      title: 'Bilete',
+      licenseExtras: '<img src=x onerror="window.__hvlSubMeta=1">',
+    },
+  },
+};
+
 const LIBRARIES = HTTP_TEST_LIBRARIES.map((lib) =>
   lib.machineName === MULTI_CHOICE.machineName
     ? { ...lib, files: { ...lib.files, 'js/main.js': PROBE_JS } }
@@ -55,12 +88,14 @@ describeWithServices('H5P player in a browser', () => {
   let learner: TestActor;
   let contentId: string;
   let rightsId: string;
+  let copyrightId: string;
   beforeAll(async () => {
     tb = await openHttpTestbed(LIBRARIES);
     const author = await tb.actor('author');
     learner = await tb.actor('learner');
     contentId = await tb.activity(author, { published: true, metadata: { title: 'Probe', license: 'U' } });
     rightsId = await tb.activity(author, { published: true, metadata: RIGHTS_PAYLOAD });
+    copyrightId = await tb.activity(author, { published: true, params: COPYRIGHT_PARAMS });
     server = tb.app.listen(0, '127.0.0.1');
     await new Promise((resolve) => server.once('listening', resolve));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -115,6 +150,21 @@ describeWithServices('H5P player in a browser', () => {
         ),
       );
       expect(fired).toEqual([]);
+      await page.close();
+    }, 30_000);
+
+    it('[SEC-008] copyright data, image paths and alt texts under any key never run as script in that dialog', async () => {
+      const { page } = await openPlayer(copyrightId);
+      await page.click('.h5p-copyrights button');
+      await page.waitForSelector('.h5p-popup-dialog', { state: 'visible' });
+      await page.waitForTimeout(300);
+      const result = await page.evaluate(() => ({
+        fired: ['__hvlMedia', '__hvlHidden', '__hvlAlt', '__hvlSubMeta'].filter((flag) => flag in window),
+        handlers: document.querySelectorAll('.h5p-popup-dialog [onerror]').length,
+        scriptLinks: document.querySelectorAll('.h5p-popup-dialog a[href^="javascript"]').length,
+        thumbnails: document.querySelectorAll('.h5p-popup-dialog img.h5p-thumbnail').length,
+      }));
+      expect(result).toEqual({ fired: [], handlers: 0, scriptLinks: 0, thumbnails: 1 });
       await page.close();
     }, 30_000);
 

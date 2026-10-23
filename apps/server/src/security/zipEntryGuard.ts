@@ -7,8 +7,11 @@
  * Spec: SEC-005
  * Invariants:
  *   - Only the central directory is read; no entry is extracted or decompressed here.
- *   - Rejected: absolute paths, `..` segments, backslash paths that become either, symbolic links, more than
+ *   - Rejected: absolute paths, `..`, `.` and empty segments (only a directory's trailing `/` is allowed),
+ *     backslash paths that become any of these, a name that occurs twice, symbolic links, more than
  *     `maxEntries` entries, any entry above `maxFileSize`, a declared total above `maxTotalSize`.
+ *   - So every name is in the one form Lumi writes it to disk (`path.join`), and later checks that match a
+ *     name exactly (h5p.json, content/content.json, library.json) see the file Lumi will read.
  *   - Declared sizes are trustworthy for extraction because yauzl verifies them while unpacking.
  * Collaborators: yauzl, ../i18n/translate.ts (message keys), ../h5p/H5pConfigFactory.ts (limits); the
  *   package import (../h5p/HvlH5PEditor.ts) calls it first; ../h5p/libraries/packageManifest.ts reuses the reader.
@@ -55,7 +58,10 @@ const MB = 1024 * 1024;
 const isSafeName = (name: string): boolean => {
   const normalised = name.replace(/\\/g, '/');
   if (normalised.startsWith('/') || /^[A-Za-z]:/.test(normalised)) return false;
-  return !normalised.split('/').some((segment) => segment === '..');
+  // SECURITY: `content/./content.json` or `content//content.json` would be written over `content/content.json`
+  // when Lumi extracts the package, after our checks had read the harmless entry with the exact name.
+  const segments = normalised.replace(/\/$/, '').split('/');
+  return !segments.some((segment) => segment === '..' || segment === '.' || segment === '');
 };
 
 /**
@@ -72,6 +78,7 @@ export async function inspectZip(
   const zip = await openZip(path);
   let entries = 0;
   let totalSize = 0;
+  const seen = new Set<string>();
   try {
     for await (const entry of readEntries(zip)) {
       entries += 1;
@@ -79,6 +86,10 @@ export async function inspectZip(
         throw new ZipRejectedError('upload.archive.tooManyEntries', { max: limits.maxEntries });
       if (!isSafeName(entry.fileName))
         throw new ZipRejectedError('upload.archive.unsafePath', { entry: entry.fileName });
+      // SECURITY: a second entry with the same name replaces the first one on extraction.
+      const key = entry.fileName.replace(/\\/g, '/');
+      if (seen.has(key)) throw new ZipRejectedError('upload.archive.unsafePath', { entry: entry.fileName });
+      seen.add(key);
       if (((entry.externalFileAttributes >>> 16) & S_IFMT) === S_IFLNK) {
         throw new ZipRejectedError('upload.archive.symlink', { entry: entry.fileName });
       }

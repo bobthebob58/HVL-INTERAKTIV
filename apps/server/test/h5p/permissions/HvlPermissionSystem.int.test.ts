@@ -175,7 +175,7 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
       targetType: 'learner',
       targetId: learnerKey,
     };
-    // PRIVACY: exactly these fields and detail keys; no name, e-mail or free text reaches the audit log.
+    // PRIVACY: exactly these fields and detail keys; no name, e-mail or free text reaches the audit (DATA-007).
     expect(events).toHaveLength(2);
     expect(events).toEqual(
       expect.arrayContaining([

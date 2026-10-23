@@ -80,6 +80,18 @@ describe('[SEC-005] package archive safety', () => {
     );
   });
 
+  it('[SEC-005] rejects dot and empty segments and repeated names, which extract over another entry', async () => {
+    // WHY: Lumi writes each entry to path.join(folder, name), so all of these land on an existing entry's file.
+    for (const name of ['content/./content.json', 'content//content.json', './h5p.json']) {
+      const path = await writeZip([{ name: 'content/content.json' }, { name }]);
+      expect((await rejection(path)).messageKey, name).toBe('upload.archive.unsafePath');
+    }
+    const twice = await rejection(await writeZip([{ name: 'h5p.json' }, { name: 'h5p.json' }]));
+    expect(twice.params).toEqual({ entry: 'h5p.json' });
+    const folders = await writeZip([{ name: 'content/' }, { name: 'content/a.json' }]);
+    expect(await inspectZip(folders)).toEqual({ entries: 2, totalSize: 2 });
+  });
+
   it('[SEC-005] rejects symbolic links', async () => {
     const error = await rejection(
       await writeZip([{ name: 'content/link', data: Buffer.from('/etc/passwd'), mode: 0o120777 }]),

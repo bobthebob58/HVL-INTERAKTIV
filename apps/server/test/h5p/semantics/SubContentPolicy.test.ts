@@ -144,6 +144,17 @@ describe('[SEC-008] text that Lumi does not sanitise', () => {
     expect(metadata).not.toHaveProperty('licenseExtras');
   });
 
+  it('[SEC-008] on save, rights-of-use values under unknown keys are cleaned and an unsafe file path is refused', async () => {
+    const params = { introduction: 'ok', extra: { metadata: { license: 'CC BY', title: `T${XSS}` } } };
+    await new SubContentPolicy(manager()).enforce(params, {}, MAIN);
+    expect(params.extra.metadata.title).toBe('TSvar');
+    const unsafe = { introduction: 'ok', extra: { path: 'a.png" onerror="x' } };
+    await expect(new SubContentPolicy(manager()).enforce(unsafe, {}, MAIN)).rejects.toMatchObject({
+      errorId: 'hvl:unsafe-file-path',
+      httpStatusCode: 400,
+    });
+  });
+
   it('[SEC-008] together with Lumi enforcer, no text in the content can carry script', async () => {
     const lumi = manager();
     const params = {

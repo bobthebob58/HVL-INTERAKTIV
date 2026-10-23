@@ -40,7 +40,10 @@ export interface HttpTestbed {
   /** Creates a `User` row and an actor with that account; overrides change any other field. */
   actor(role: H5pRole, overrides?: Partial<HvlH5pActor>): Promise<TestActor>;
   /** Saves an H5P.MultiChoice activity as `author` over HTTP; `published` also shares it with all of HVL. */
-  activity(author: TestActor, options?: { published?: boolean; metadata?: object }): Promise<string>;
+  activity(
+    author: TestActor,
+    options?: { published?: boolean; metadata?: object; params?: object },
+  ): Promise<string>;
   /** Deletes everything the testbed created and disconnects. */
   close(): Promise<void>;
 }
@@ -91,8 +94,9 @@ export async function openHttpTestbed(
       actors.set(name, actor);
       return { actor, header: [ACTOR_HEADER, name] as const };
     },
-    activity: async (author, { published = false, metadata = { title: 'Q', license: 'U' } } = {}) => {
-      const params = { params: { question: 'Kva?', answers: ['Ja'] }, metadata };
+    activity: async (author, options = {}) => {
+      const { published = false, metadata = { title: 'Q', license: 'U' } } = options;
+      const params = { params: options.params ?? { question: 'Kva?', answers: ['Ja'] }, metadata };
       const res = await request(app)
         .post('/h5p/content')
         .set(...author.header)

@@ -5,6 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import type { IPlayerModel } from '@lumieducation/h5p-server';
+import type { Locale } from '../../../src/i18n/translate.js';
 import { ANONYMOUS_H5P_USER, renderPlayerPage } from '../../../src/h5p/render/playerPage.js';
 import { escapeHtml, scriptJson } from '../../../src/h5p/render/scriptJson.js';
 
@@ -55,6 +56,12 @@ describe('[SEC-008] player page', () => {
     expect(html.match(/<script/g)).toHaveLength(2);
     expect(html).toContain('<html lang="nn" class="h5p-iframe">');
     expect(html).not.toContain('onload="x()"');
+    // WHY: the type allows only nn, nb and en; the escaping must hold even if a caller passes something else.
+    const hostile = renderPlayerPage(model(), '"><script>x()</script>' as unknown as Locale);
+    expect(hostile).toContain(
+      '<html lang="&#34;&#62;&#60;script&#62;x()&#60;/script&#62;" class="h5p-iframe">',
+    );
+    expect(hostile.match(/<script/g)).toHaveLength(2);
   });
 
   it('[SEC-008] scriptJson round-trips every value and never emits markup characters', () => {

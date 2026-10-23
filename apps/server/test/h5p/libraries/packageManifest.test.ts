@@ -58,6 +58,9 @@ describe('[SEC-003] package manifest', () => {
       '/etc/passwd',
       'C:/x.svg',
       'images\\..\\x.svg',
+      // WHY: Lumi skips only a lower-case http(s):// prefix; any other case is joined like a file name.
+      'HTTPS://../../x.svg',
+      'Http://../../x.svg',
     ]) {
       const pkg = await buildH5pPackage({ main: MC, params: { media: { path, mime: 'image/svg+xml' } } });
       await expect(readPackageManifest(pkg), path).rejects.toMatchObject({

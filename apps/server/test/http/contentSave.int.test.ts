@@ -1,6 +1,6 @@
 /**
  * Integration tests for saving, loading, deleting and exporting an activity over HTTP: stored markup is inert,
- * only owners change their activities, and refusals never look like downloads.
+ * a colleague cannot change someone else's activity, and refusals never look like downloads.
  *
  * Spec: H5P-002, H5P-006, SEC-008
  */
@@ -110,7 +110,7 @@ describeWithServices('H5P content over HTTP', () => {
     for (const res of await Promise.all(calls)) expect(res.status).toBe(403);
   });
 
-  it('[H5P-006] only the owner deletes; the activity is gone afterwards', async () => {
+  it('[H5P-006] an unrelated colleague cannot delete; the owner can, and the activity is gone afterwards', async () => {
     const id = await create();
     expect(
       (

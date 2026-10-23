@@ -81,7 +81,7 @@ export const STORAGE_LOADABLE_SETTINGS: ReadonlySet<string> = new Set([
 export function applyEnforcedSettings(config: H5PConfig, options: H5pConfigOptions): void {
   // SECURITY: a stored baseUrl, file-URL override, libraryConfig, customisation or allowlist would decide
   // which scripts every player and editor page loads, so everything outside the allowlist is reset to
-  // Lumi's defaults. Later sessions set such values in code (e.g. the S2 files origin), never from storage.
+  // Lumi's defaults. Later sessions set such values in code (e.g. the files origin in S3/S6, D-045), never from storage.
   const defaults = new H5PConfig() as unknown as Record<string, unknown>;
   const target = config as unknown as Record<string, unknown>;
   for (const key of Object.keys(defaults)) {

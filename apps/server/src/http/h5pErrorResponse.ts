@@ -36,6 +36,7 @@ const BY_ERROR_ID: Record<string, MessageKey> = {
   'hvl:content-type-not-allowed': 'h5p.contentTypeNotAllowed',
   'hvl:sub-content-not-allowed': 'h5p.subContentNotAllowed',
   'hvl:library-not-installed': 'h5p.libraryNotInstalled',
+  'hvl:unsafe-file-path': 'h5p.unsafeFilePath',
   'hvl:hub-install-disabled': 'h5p.hubInstallDisabled',
   'hvl:package-libraries-not-installed': 'upload.package.librariesNotInstalled',
   'hvl:package-library-version-mismatch': 'upload.package.libraryVersionMismatch',

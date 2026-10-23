@@ -1,7 +1,7 @@
 /**
  * Integration tests for offline seeding: an empty library storage is seeded from a verified folder, a second
- * run changes nothing, any folder or hash problem stops the run before the first install, and every new or
- * patched library is audited.
+ * run changes nothing, any folder or hash problem stops the run before the first install, every new or
+ * patched library is audited, and a failed audit write installs nothing.
  *
  * Spec: H5P-003, H5P-011, SEC-005
  */
@@ -93,28 +93,54 @@ describeWithServices('seedLibraries', () => {
   });
 
   it('[H5P-011] each new or patched library gets one seed audit row with the package hash and no actor', async () => {
-    // WHY: arranged here, not taken from the test above, so the test also runs on its own (`-t "H5P-011"`).
+    // Arrange: here, not taken from the test above, so the test also runs on its own (`-t "H5P-011"`).
     await seedLibraries(await seedFolder([mc]), installer);
     const patched = await buildH5pPackage(
-      { main: { ...MULTI_CHOICE, patchVersion: 2 } },
+      { main: { ...MULTI_CHOICE, patchVersion: 2 }, libraries: [{ machineName: 'H5P.AuditProbe' }] },
       'H5P.MultiChoice-patch.h5p',
     );
     const hash = await sha256File(patched);
-    expect(await seedLibraries(await seedFolder([patched]), installer)).toEqual({
-      packages: 1,
-      installed: 0,
-      updated: 1,
-    });
-    expect(await audits([hash])).toEqual([
+    // Act
+    const summary = await seedLibraries(await seedFolder([patched]), installer);
+    // Assert
+    expect(summary).toEqual({ packages: 1, installed: 1, updated: 1 });
+    const rows = (await audits([hash])).sort((a, b) => a.machineName.localeCompare(b.machineName));
+    const row = { source: 'seed', actorUserId: null, sha256: hash };
+    expect(rows).toEqual([
       expect.objectContaining({
-        source: 'seed',
-        actorUserId: null,
+        ...row,
+        machineName: 'H5P.AuditProbe',
+        fromVersion: null,
+        toVersion: '1.0.0',
+      }),
+      expect.objectContaining({
+        ...row,
         machineName: 'H5P.MultiChoice',
         fromVersion: '1.16.0',
         toVersion: '1.16.2',
       }),
     ]);
     await tb.db.libraryAuditEvent.deleteMany({ where: { sha256: hash } });
+  });
+
+  it('[H5P-011] when the seed audit cannot be written, nothing is installed', async () => {
+    // Arrange
+    await seedLibraries(await seedFolder([mc]), installer);
+    const failing = new LibraryInstaller(
+      tb.runtime.editor.packageImporter,
+      { record: () => Promise.reject(new Error('audit store unavailable')) },
+      tb.runtime.editor.libraryManager,
+    );
+    const pkg = await buildH5pPackage(
+      { main: { ...MULTI_CHOICE, patchVersion: 9 }, libraries: [{ machineName: 'H5P.UnauditedProbe' }] },
+      'H5P.MultiChoice-unaudited.h5p',
+    );
+    // Act
+    await expect(seedLibraries(await seedFolder([pkg]), failing)).rejects.toThrow('audit store unavailable');
+    // Assert
+    const all = await tb.runtime.editor.libraryManager.listInstalledLibraries();
+    expect(all['H5P.UnauditedProbe']).toBeUndefined();
+    expect((all['H5P.MultiChoice'] ?? []).map((lib) => lib.patchVersion)).not.toContain(9);
   });
 
   it('[SEC-005] a pinned package with an unsafe archive entry is still refused', async () => {

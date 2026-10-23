@@ -4,6 +4,8 @@
  * Why: tests of package import and seeding need packages with exactly the libraries, versions and files a
  *      case describes, including broken and malicious ones, without depending on the H5P Hub.
  * Spec: SEC-003, SEC-005, H5P-003
+ * Invariants: every entry name occurs once; a file given for a name replaces the default one (the zip guard
+ *   refuses a name that occurs twice).
  * Tests: shared by the package import, manifest and seeding tests.
  */
 import { createWriteStream, mkdtempSync, rmSync } from 'node:fs';
@@ -31,13 +33,15 @@ export interface PackageSpec {
 
 const created: string[] = [];
 
-function addLibrary(zip: yazl.ZipFile, lib: SyntheticLibrary): void {
+type Entries = Map<string, Buffer>;
+
+function addLibrary(entries: Entries, lib: SyntheticLibrary): void {
   const folder = libraryFolder(lib);
-  zip.addBuffer(Buffer.from(JSON.stringify(libraryJson(lib))), `${folder}/library.json`);
-  zip.addBuffer(Buffer.from(JSON.stringify(lib.semantics ?? [])), `${folder}/semantics.json`);
-  zip.addBuffer(Buffer.from(`/* ${lib.machineName} */`), `${folder}/js/main.js`);
+  entries.set(`${folder}/library.json`, Buffer.from(JSON.stringify(libraryJson(lib))));
+  entries.set(`${folder}/semantics.json`, Buffer.from(JSON.stringify(lib.semantics ?? [])));
+  entries.set(`${folder}/js/main.js`, Buffer.from(`/* ${lib.machineName} */`));
   for (const [path, content] of Object.entries(lib.files ?? {}))
-    zip.addBuffer(Buffer.from(content), `${folder}/${path}`);
+    entries.set(`${folder}/${path}`, Buffer.from(content));
 }
 
 /**
@@ -49,7 +53,7 @@ function addLibrary(zip: yazl.ZipFile, lib: SyntheticLibrary): void {
 export async function buildH5pPackage(spec: PackageSpec, fileName = 'content.h5p'): Promise<string> {
   const dir = mkdtempSync(join(tmpdir(), 'h5p-pkg-'));
   created.push(dir);
-  const zip = new yazl.ZipFile();
+  const entries: Entries = new Map();
   const main = spec.main;
   if (!spec.omitH5pJson) {
     const deps = [main, ...(spec.libraries ?? [])].map((lib) => ({
@@ -65,14 +69,16 @@ export async function buildH5pPackage(spec: PackageSpec, fileName = 'content.h5p
       license: 'U',
       preloadedDependencies: deps,
     };
-    zip.addBuffer(Buffer.from(JSON.stringify(h5pJson)), 'h5p.json');
+    entries.set('h5p.json', Buffer.from(JSON.stringify(h5pJson)));
   }
-  zip.addBuffer(Buffer.from(JSON.stringify(spec.params ?? {})), 'content/content.json');
-  if (!spec.omitMainFolder) addLibrary(zip, main);
-  for (const lib of spec.libraries ?? []) addLibrary(zip, lib);
+  entries.set('content/content.json', Buffer.from(JSON.stringify(spec.params ?? {})));
+  if (!spec.omitMainFolder) addLibrary(entries, main);
+  for (const lib of spec.libraries ?? []) addLibrary(entries, lib);
   for (const [path, content] of Object.entries(spec.files ?? {})) {
-    zip.addBuffer(Buffer.isBuffer(content) ? content : Buffer.from(content), path);
+    entries.set(path, Buffer.isBuffer(content) ? content : Buffer.from(content));
   }
+  const zip = new yazl.ZipFile();
+  for (const [name, data] of entries) zip.addBuffer(data, name);
   zip.end();
   const path = join(dir, fileName);
   await pipeline(zip.outputStream, createWriteStream(path));
