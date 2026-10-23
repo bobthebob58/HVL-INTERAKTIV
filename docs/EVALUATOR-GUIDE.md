@@ -8,7 +8,8 @@ specifications promise.
 **Current state (2026-10-23):** Session 1 is done; Session 2 (the H5P engine with the ten types, the
 permission system, learner state, upload security, seeding and our own routes) passed its gate on
 2026-10-23, with spike steps 3–5 still open because the Hub is unreachable (limitation 3). Session 3 (dual
-authentication) is built; its independent review and gate are still open. Session 1 built the monorepo,
+authentication) passed its gate on 2026-10-23 after an independent review and three verification passes; HVL's own
+Feide and Canvas values are still open (Q3, Q4), so it runs against the mock platform. Session 1 built the monorepo,
 `apps/server` (configuration, log redaction, learner pseudonyms, the database schema, the H5P configuration
 and boot check, the storage adapters and the archive guard) and the tools `spec-trace`, `spec-site`,
 `doc-lint`, `dependency-check`, `privacy` and `h5p-core`. Session 2 added the H5P routes. Session 3 made the

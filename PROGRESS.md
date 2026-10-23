@@ -11,7 +11,7 @@ what is done, what is verified, and what is blocked.
 | S0 | Specification, documentation standard, traceability tool | — | ✅ Done (2026-10-16) |
 | S1 | Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup | 00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD | ✅ Done (2026-10-21) |
 | S2 | Ten-type whitelist, seeding, SVG sanitiser, permission system, resume | 01 (all); 00 `PROD-002`, `PROD-008` | ✅ Gate passed (2026-10-23); spike steps 3–5 open (Q7) |
-| S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | 🟨 In progress (2026-10-23) |
+| S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | ✅ Gate passed (2026-10-23); HVL's Feide and Canvas values open (Q3, Q4) |
 | S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ⬜ Not started |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04 | ⬜ Not started |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §5–7; 05; 00 §6 | ⬜ Not started |
@@ -108,7 +108,7 @@ Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-
 - [x] Gate: as in the Evaluator Guide §5, S2, plus each S2 requirement's tests run on their own (`-t`);
       output in the session log (2026-10-23)
 
-## S3 — Dual authentication 🟨
+## S3 — Dual authentication ✅ (gate passed 2026-10-23; HVL's own Feide and Canvas values open, Q3 and Q4)
 
 Effort: high, because this is security-critical. Public Feide and Canvas values are in `docs/reference/`; **HVL's own client IDs, realm, redirect URIs and TeCopp instance** are still needed (Q3, Q4).
 - [x] Decisions D-048…D-066 recorded (plan approved 2026-10-23): server-rendered LTI views until S4 (D-048),
@@ -131,9 +131,11 @@ Effort: high, because this is security-critical. Public Feide and Canvas values 
 - [x] `npm run test:e2e`: cookie-less iframe launch → play → resume (stock Chrome and blocked frame storage with LTI
       Platform Storage), Deep Linking round trip, portal sharing with logout (D-065); in CI. Found and fixed: H5P
       Core reads `localStorage` without a `try`, so the LTI player loads a storage guard first (D-050)
-- [ ] Independent review (Feide, LTI, privacy, app wiring, spec conformance; a skeptic per finding) and at least two
-      adversarial verification passes over the fixes
-- [ ] Gate: as in the Evaluator Guide §5, S3
+- [x] Independent review (Feide, LTI, privacy, app wiring, spec conformance; a skeptic per finding) in two rounds,
+      then three adversarial verification passes over the fixes; every fix has a test that fails on the old code
+- [x] Gate: as in the Evaluator Guide §5, S3, plus the S1/S2 commands and each S3 requirement's tests on their own
+      (`-t`); `npm start` against `npm run mock:platform` answers `/healthz` and `/lti/keys`; output in the session
+      log (2026-10-23)
 
 ## S4 — Universal design ⬜
 
@@ -318,4 +320,66 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npm run boot-check --workspace apps/server
   {"level":"info","service":"hvl-interaktiv-server","h5pCoreApi":"1.28","hubHost":"hub-api.h5p.org","siteRegistered":false,"msg":"H5P engine configured"}
   $ NODE_USE_ENV_PROXY=1 npm run hub:check             "ok": false, "error": "fetch failed: Request was cancelled." (proxy 403, Q7)
+  ```
+
+- **2026-10-23 · S3** — Session 3 delivered dual authentication on our own Express router (D-048…D-066). Feide
+  login (openid-client 6) with PKCE, state and nonce in a single-use login transaction, ID-token signature checks,
+  roles from the Groups API failing closed, Redis portal sessions (`__Host-hvli_sid`, idle 2 h, absolute 12 h), a
+  synchronizer CSRF token and logout through Feide (`AUTH-001`…`AUTH-004`). ltijs 7 on our router with PostgreSQL
+  storage, a claim allowlist, our deployment and active-platform checks, the ltik as a Bearer header or on four
+  paths only, and no admin from LTI (`LTI-001`…`LTI-004`). The Deep Linking picker with a JWT the mock Canvas
+  verifies, resource-link launches and course copy (`LTI-005`…`LTI-007`, `PROD-005`); H5P URLs with the request's
+  token and signed content-file grants (`H5P-007`, D-058); one 404 page and visibility-only sharing (`PROD-004`,
+  `PROD-006`); Canvas–Feide linking for platforms with `feideLinking` (`AUTH-005`, D-063); `npm start` with
+  `/healthz`, start-up re-encryption of platform keys and graceful shutdown; a mock Feide and a mock Canvas
+  (D-049); three Chromium e2e flows, among them the Canvas iframe with third-party cookies blocked (D-065).
+  An independent review in two rounds (Feide, LTI, privacy, app wiring, spec conformance; a skeptic per finding)
+  and three adversarial verification passes followed; each fix has a test that fails on the code before it. The
+  review found that AUTH-005 trusted any `feide_login` from any platform (now only platforms with `feideLinking`,
+  Feide IDs of `ALLOWED_FEIDE_ORGS` and existing non-learner Feide accounts, so nobody can pre-claim a Feide ID),
+  course-group authorship that ignored membership dates, a failed listen that still logged "listening", portal
+  4xx pages that became 500, and a sharing race. Pass 1 found that a one-step `DATA_ENCRYPTION_KEYS` rotation
+  would break LTI on servers not yet restarted (now three steps, D-056) and that login and linking could choose
+  different identity rows while key rings are mixed. Pass 2 found a double-clicked first Deep Linking launch
+  refused as its own rival, the same rotation problem for `IDENTITY_HASH_KEYS` and `URL_SIGNING_KEYS` (D-055,
+  D-058), and launch refusals shown in Nynorsk to an English launch. Pass 3 found a test that failed about 1 run
+  in 128 and an understated leaked-key risk (D-055: it lasts while rows hashed with the key exist). The gate then
+  found 33 TypeDoc warnings in S3 code (`docs:api` failed) and two tests that relied on the test before them under
+  `-t`; both fixed. Open: HVL's Feide registration and redirect URIs (Q3) and the TeCopp test launch that confirms
+  client and deployment IDs and `feide_login` before `feideLinking` is set (Q4); owner questions Q12–Q15; the
+  LTI pages stay unstyled until S4 (D-048). Decisions D-048…D-066, with D-050, D-055, D-056, D-058 and D-063
+  amended. Gate output (after the last fix, commit e31237e):
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint                                       exit 0
+  $ npm run format:check                               All matched files use Prettier code style!
+  $ npm run doc:lint                                   ✓ doc-lint: 11 checks passed.
+  $ npm run check:filesize                             ✓ doc-lint: file-size passed.
+  $ npm run check:pins                                 ✓ check:pins: 2 manifests, every version is pinned exactly.
+  $ npm run check:licences                             ✓ check:licences: 229 production packages, all GPL-3.0-compatible.
+  $ npm run check:audit                                ✓ check:audit: 2 high/critical advisories, all covered by reviewed exceptions.
+  $ npm run privacy:inventory-check                    ✓ privacy:inventory-check: 21 models, 162 fields, all in docs/privacy/DATA-INVENTORY.md.
+  $ npx vitest run                                     Test Files 174 passed (174) · Tests 20126 passed (20126) · no Errors or Unhandled
+  $ npm run test:e2e                                   Test Files 3 passed (3) · Tests 6 passed (6)   (iframe, Deep Linking, portal)
+  $ npx vitest run -t "AUTH-00"                        Test Files 38 passed | 136 skipped · Tests 351 passed
+  $ npx vitest run -t "LTI-00"                         Test Files 58 passed | 116 skipped · Tests 348 passed
+  $ npx vitest run -t "LTI-005"                        Test Files 10 passed | 164 skipped · Tests 85 passed
+  $ npx vitest run -t "H5P-002|PROD-002"               Test Files 11 passed | 163 skipped · Tests 24 passed      (S2)
+  $ npx vitest run -t "SEC-003|H5P-011|H5P-006"        Test Files 25 passed | 149 skipped · Tests 18707 passed   (S2)
+  $ npx vitest run -t "SEC-001"                        Test Files 8 passed | 166 skipped · Tests 111 passed      (S2)
+  $ npx vitest run -t "\[<ID>\]", one run per ID       all 16 S3 IDs pass on their own:
+      AUTH-001 63 · AUTH-002 81 · AUTH-003 152 · AUTH-004 21 · AUTH-005 48
+      LTI-001 96 · LTI-002 61 · LTI-003 64 · LTI-004 40 · LTI-005 85 · LTI-006 13 · LTI-007 6
+      PROD-004 13 · PROD-005 8 · PROD-006 19 · H5P-007 57
+  $ npm run spec:trace -- --check --done-through=S3    ✓ 126 requirements, traceability up to date.
+  $ npm run spec:site -- --check                       ✓ docs/site/index.html is up to date.
+  $ npm run h5p:fetch-core                             ✓ H5P core 1.28.0 and editor ab2daa18 are in apps/server/h5p
+  $ npm run docs:api                                   html generated at docs/api (warnings as errors; none)
+  $ npm run boot-check --workspace apps/server
+  {"level":"info","service":"hvl-interaktiv-server","h5pCoreApi":"1.28","hubHost":"hub-api.h5p.org","siteRegistered":false,"msg":"H5P engine configured"}
+  $ npm run mock:platform & npm start                  "LTI platforms synchronised" → "LTI platform keys on the current encryption key" → "HVL Interaktiv server listening"
+  $ curl http://localhost:3000/healthz                 {"status":"ok"} (200)
+  $ curl http://localhost:3000/lti/keys                {"keys":[{"kty":"RSA",…}]} (200)
+  $ kill -TERM <server>                                "HVL Interaktiv server stopped"
   ```
