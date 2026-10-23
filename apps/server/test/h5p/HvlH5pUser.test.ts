@@ -1,7 +1,7 @@
 /**
  * Tests for the H5P actor and its account and state views.
  *
- * Spec: H5P-006, H5P-005, DATA-002
+ * Spec: H5P-006, H5P-005, H5P-007, DATA-002
  */
 import { describe, it, expect } from 'vitest';
 import { asAccountUser, asStateUser, isHvlH5pUser, type HvlH5pActor } from '../../src/h5p/HvlH5pUser.js';
@@ -49,5 +49,17 @@ describe('[H5P-006] H5P users', () => {
     expect(() => {
       (user.actor as { role: string }).role = 'admin';
     }).toThrow(TypeError);
+  });
+
+  it('[H5P-007] the URL token is copied and frozen with the actor, and absent when the request has none', () => {
+    // Arrange
+    const token = { name: 'ltik' as const, value: 'eyJ.a.b' };
+    // Act
+    const user = asStateUser({ ...ACTOR, urlToken: token });
+    token.value = 'changed';
+    // Assert
+    expect(user.actor.urlToken).toEqual({ name: 'ltik', value: 'eyJ.a.b' });
+    expect(Object.isFrozen(user.actor.urlToken)).toBe(true);
+    expect(asAccountUser(ACTOR).actor.urlToken).toBeUndefined();
   });
 });

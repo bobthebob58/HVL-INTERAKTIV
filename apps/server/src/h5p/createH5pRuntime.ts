@@ -6,15 +6,17 @@
  *      built one way. Building it here keeps every safety option in one reviewed place, runs the H5P-001 start
  *      check and the permission guard before anything is served, and never lets the server call the Hub on its
  *      own (empty content-type cache stored as `[]`, D-041).
- * Spec: H5P-001, H5P-004, H5P-006, SEC-001, SEC-002
+ * Spec: H5P-001, H5P-004, H5P-006, H5P-007, SEC-001, SEC-002
  * Invariants:
  *   - The same HvlPermissionSystem instance is used by editor, player and routes; the guard checks it.
+ *   - Editor and player share one HvlUrlGenerator; its content-file grants are signed with `URL_SIGNING_KEYS`,
+ *     and the routes verify them with the same ContentFileGrants (D-058).
  *   - File sanitisers run in this order: file-type sniffer, then the SVG sanitiser.
  *   - The cleanup job is created but not started; the server starts and stops it (S3 entry point).
  * Collaborators: ./h5pServerInit.ts, ./h5pStorage.ts, ./H5pEditorFactory.ts, ./H5pPlayerFactory.ts,
- *   ./permissionSystemGuard.ts, ./HvlPermissionSystem.ts, ../security/FileTypeSniffer.ts,
- *   ../security/SvgSanitizer.ts, ../http/createH5pRouter.ts.
- * Tests: apps/server/test/http/router.int.test.ts
+ *   ./HvlUrlGenerator.ts, ./contentFileGrants.ts, ./permissionSystemGuard.ts, ./HvlPermissionSystem.ts,
+ *   ../security/FileTypeSniffer.ts, ../security/SvgSanitizer.ts, ../http/createH5pRouter.ts.
+ * Tests: apps/server/test/http/router.int.test.ts, apps/server/test/http/signedFiles.int.test.ts
  */
 import type { S3Client } from '@aws-sdk/client-s3';
 import { H5PAjaxEndpoint, type IH5PConfig } from '@lumieducation/h5p-server';
@@ -25,11 +27,13 @@ import type { Database } from '../infra/prismaClient.js';
 import type { Redis } from '../infra/redisClient.js';
 import { FileTypeSniffer } from '../security/FileTypeSniffer.js';
 import { SvgSanitizer } from '../security/SvgSanitizer.js';
+import { ContentFileGrants } from './contentFileGrants.js';
 import { createHvlEditor } from './H5pEditorFactory.js';
 import { createHvlPlayer } from './H5pPlayerFactory.js';
 import { h5pServerInit } from './h5pServerInit.js';
 import { createH5pStorage } from './h5pStorage.js';
 import { HvlPermissionSystem } from './HvlPermissionSystem.js';
+import { HvlUrlGenerator } from './HvlUrlGenerator.js';
 import { createHvlTranslationCallback } from './HvlTranslationCallback.js';
 import { TemporaryFileCleanupJob } from './jobs/TemporaryFileCleanupJob.js';
 import { PrismaLibraryAuditSink } from './libraries/LibraryAuditSink.js';
@@ -83,6 +87,8 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
   });
   const translate = createHvlTranslationCallback();
   const fileSanitizers = [new FileTypeSniffer(), new SvgSanitizer()];
+  const fileGrants = new ContentFileGrants(env.URL_SIGNING_KEYS);
+  const urlGenerator = new HvlUrlGenerator(config, fileGrants);
   const editor = createHvlEditor({
     config,
     storages,
@@ -90,8 +96,15 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     audit: new PrismaLibraryAuditSink(db),
     translate,
     fileSanitizers,
+    urlGenerator,
   });
-  const player = createHvlPlayer({ ...storages, config, permissionSystem: permissions, translate });
+  const player = createHvlPlayer({
+    ...storages,
+    config,
+    permissionSystem: permissions,
+    translate,
+    urlGenerator,
+  });
   assertPermissionSystem({ editor, player }, permissions);
   const cleanupJob = new TemporaryFileCleanupJob({
     redis,
@@ -105,6 +118,7 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     ajax: new H5PAjaxEndpoint(editor),
     permissions,
     fileSanitizers,
+    fileGrants,
     corePath: paths.coreDir,
     editorPath: paths.editorDir,
     logger,

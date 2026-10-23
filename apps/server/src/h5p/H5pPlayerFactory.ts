@@ -5,18 +5,22 @@
  *      integration object into a `<script>` unescaped (D-040). The factory sets HVL's permission system, the
  *      learner-state storage, Nynorsk-first strings and the Core 1.28 styles (F3), and makes `render` return
  *      the model so ../http/routes/playerRoutes.ts renders it with our template.
- * Spec: H5P-004, H5P-005, H5P-006, H5P-008, SEC-008
+ * Spec: H5P-004, H5P-005, H5P-006, H5P-007, H5P-008, SEC-008
  * Invariants:
  *   - The renderer returns the model unchanged; HTML is produced only by ./render/playerPage.ts.
+ *   - Every URL comes from the HvlUrlGenerator passed in: tokens on H5P's AJAX URLs and a signed `contentUrl`
+ *     for the activity's files (H5P-007, D-058).
+ *   - `render` always loads the activity as the acting user, so Lumi's View check runs before the grant is
+ *     signed: `ignoreUserPermissions`, `parametersOverride` and `metadataOverride` are refused (D-058).
  *   - Built by createH5pRuntime with the editor's inputs: one permission system, one state storage, and the
  *     same library storage, each engine behind its own language-fallback wrapper.
- * Collaborators: ./h5pAssets.ts, ./render/playerPage.ts, ./storage/LanguageFallbackLibraryStorage.ts,
- *   ./createH5pRuntime.ts.
- * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts
+ * Collaborators: ./h5pAssets.ts, ./HvlUrlGenerator.ts, ./render/playerPage.ts,
+ *   ./storage/LanguageFallbackLibraryStorage.ts, ./createH5pRuntime.ts.
+ * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts,
+ *   apps/server/test/h5p/HvlUrlGenerator.test.ts
  */
 import {
   H5PPlayer,
-  UrlGenerator,
   type IContentStorage,
   type IContentUserDataStorage,
   type IH5PConfig,
@@ -28,6 +32,7 @@ import {
 } from '@lumieducation/h5p-server';
 import { playerGlobalAssets } from './h5pAssets.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
+import type { HvlUrlGenerator } from './HvlUrlGenerator.js';
 import { withLanguageFallback } from './storage/LanguageFallbackLibraryStorage.js';
 
 /** Everything the player is built from. */
@@ -40,18 +45,39 @@ export interface PlayerFactoryInputs {
   readonly lockProvider: ILockProvider;
   readonly permissionSystem: IPermissionSystem<HvlH5pUser>;
   readonly translate: ITranslationFunction;
+  /** Builds every URL of the player page; shared with the editor (H5P-007). */
+  readonly urlGenerator: HvlUrlGenerator;
 }
 
 /** The renderer that hands Lumi's model to our template instead of Lumi's HTML. */
 export const modelRenderer = (model: IPlayerModel): IPlayerModel => model;
 
+/** `render` options that make Lumi skip loading the activity as the acting user, and so its View check. */
+export const UNCHECKED_RENDER_OPTIONS = [
+  'ignoreUserPermissions',
+  'parametersOverride',
+  'metadataOverride',
+] as const;
+
+// SECURITY: Lumi checks View only while it loads parameters and metadata as the acting user, and signs the
+// content-file grant afterwards (./HvlUrlGenerator.ts). With these options it would sign one unchecked (D-058).
+function refuseUncheckedRenders(player: H5PPlayer): void {
+  const render = player.render.bind(player);
+  player.render = (contentId, actingUser, language, options) => {
+    const unchecked = UNCHECKED_RENDER_OPTIONS.filter((name) => Boolean(options?.[name]));
+    if (unchecked.length > 0)
+      return Promise.reject(new Error(`H5PPlayer.render refuses ${unchecked.join(', ')}`));
+    return render(contentId, actingUser, language, options);
+  };
+}
+
 /**
  * Builds the player.
- * @param inputs - Config, storages, permission system and translation.
- * @returns The player; `render` resolves to an `IPlayerModel`.
+ * @param inputs - Config, storages, permission system, translation and URL generator.
+ * @returns The player; `render` resolves to an `IPlayerModel` and refuses `UNCHECKED_RENDER_OPTIONS`.
  */
 export function createHvlPlayer(inputs: PlayerFactoryInputs): H5PPlayer {
-  const urls = new UrlGenerator(inputs.config);
+  const urls = inputs.urlGenerator;
   const player = new H5PPlayer(
     withLanguageFallback(inputs.libraryStorage),
     inputs.contentStorage,
@@ -68,5 +94,6 @@ export function createHvlPlayer(inputs: PlayerFactoryInputs): H5PPlayer {
     inputs.contentUserDataStorage,
   );
   player.setRenderer(modelRenderer);
+  refuseUncheckedRenders(player);
   return player;
 }

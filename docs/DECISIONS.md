@@ -680,7 +680,12 @@ loading of one spec per session are kept.
   `X-CSRF-Token` header, a `csrf` query value (H5P URLs) or a `csrf` form field; it is required on every unsafe
   method and on `/h5p/ajax` and `/h5p/contentUserData` for any method. A missing or wrong token is 401
   `hvl:csrf-invalid`. Roles are computed at login only.
-- **Consequences:** A role change in Feide takes effect at the next login.
+- **Consequences:** A role change in Feide takes effect at the next login. Details settled in the implementation:
+  the session cookie has no `Max-Age` (a browser-session cookie; the server enforces both limits); a cookie name
+  sent twice is ignored entirely (defence against cookie tossing); logout is a POST, so the CSRF token protects it;
+  the session's ID-token blob is sealed once at login, so a retired `DATA_ENCRYPTION_KEYS` key is kept at least
+  12 hours. Reverse proxies must not cache responses that carry `Set-Cookie` and must not log query strings
+  (`csrf`, `ltik`).
 
 ### D-058 · H5P URL tokens and signed content-file URLs
 - **Context:** `H5P-007` asks that H5P's AJAX and user-data URLs carry the ltik (Canvas) or a CSRF token (portal).
@@ -692,7 +697,16 @@ loading of one spec per session are kept.
   check. An ltik in a query string is accepted only on `/h5p/ajax`, `/h5p/contentUserData/*`, `/lti/play` and
   `/lti/deeplink`; everywhere else it must be a Bearer header.
 - **Consequences:** Script inside content could read the token from its page; the S2 sanitising and the S4 CSP
-  limit that. The separate files origin stays in S6 (D-045).
+  limit that. The separate files origin stays in S6 (D-045). Details settled in the implementation: Lumi's
+  `csrfProtection.queryParamGenerator` is not used, because it does not encode the token the same way on the three
+  URLs (SPEC-DEVIATION from `H5P-007`'s wording); a grant's expiry is rounded up to the hour, so it lives 12 to 13
+  hours and a file URL stays the same (cacheable) for an hour, verification allows 5 minutes of clock skew, and an
+  old `URL_SIGNING_KEYS` key is removed at least 13 h 5 min after rotation; responses are `Cache-Control: private,
+  max-age=<seconds left>`; the signed route reads only an activity's registered files (no temporary-file
+  fallback); the player factory refuses Lumi's render options that skip the View check (`ignoreUserPermissions`,
+  parameter overrides), so no grant is ever signed without it. The authenticated `/h5p/content/:id/*file` route
+  stays for the H5P editor, whose integration has no `contentUrl`; an editor in a cookie-less Canvas iframe (S4)
+  needs grant-bearing URLs issued after an Edit check.
 
 ### D-059 · How the Feide and LTI role tables are read
 - **Context:** `AUTH-002` and `LTI-004` leave some cases open: unknown LTI roles, how a course group matches, and

@@ -868,15 +868,17 @@ leaving `permissionsystem` undefined (lumi's `laissezfairepermissionsystem`) is 
 </ul>
 <p class="req-source">Defined in <a href="#r-H5P-006">01 H5P engine and security, H5P-006</a> · H5P engine</p></div>
 </details>
-<details class="req" id="x-H5P-007" data-area="H5P" data-priority="MUST" data-session="S3" data-status="planned" data-text="h5p-007 authenticated h5p ajax in iframes `hvlurlgenerator` extends lumi's `urlgenerator` and uses `queryparamgenerator`. every ajax, user-data
-and set-finished url then carries the ltik (canvas mode) or a csrf token (portal mode), as
-specified in `lti-003`.
+<details class="req" id="x-H5P-007" data-area="H5P" data-priority="MUST" data-session="S3" data-status="planned" data-text="h5p-007 authenticated h5p ajax in iframes `hvlurlgenerator` extends lumi's `urlgenerator`. every ajax, user-data and set-finished url carries the
+ltik (canvas mode) or a csrf token (portal mode), url-encoded, as specified in `lti-003`. *amended in s3
+(d-058):* the token is added by our class rather than lumi's `queryparamgenerator`, which does not encode it
+consistently; content files use signed urls (`/h5p/files/&lt;grant&gt;/…`) instead of a token.
 - **acceptance:** a request to an h5p ajax endpoint without a valid token returns 401.
 - **verify:** integration test for each mode.">
 <summary><span class="req-id">H5P-007</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Authenticated H5P AJAX in iframes</span> <span class="status" data-status="planned">○ Planned</span></summary>
-<div class="req-body"><p><code>HvlUrlGenerator</code> extends Lumi&#39;s <code>UrlGenerator</code> and uses <code>queryParamGenerator</code>. Every AJAX, user-data
-and set-finished URL then carries the ltik (Canvas mode) or a CSRF token (portal mode), as
-specified in <a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>.</p>
+<div class="req-body"><p><code>HvlUrlGenerator</code> extends Lumi&#39;s <code>UrlGenerator</code>. Every AJAX, user-data and set-finished URL carries the
+ltik (Canvas mode) or a CSRF token (portal mode), URL-encoded, as specified in <a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>. <em>Amended in S3
+(D-058):</em> the token is added by our class rather than Lumi&#39;s <code>queryParamGenerator</code>, which does not encode it
+consistently; content files use signed URLs (<code>/h5p/files/&lt;grant&gt;/…</code>) instead of a token.</p>
 <ul>
 <li><strong>Acceptance:</strong> A request to an H5P AJAX endpoint without a valid token returns 401.</li>
 <li><strong>Verify:</strong> Integration test for each mode.</li>
@@ -3006,7 +3008,8 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
   lumiInternals.ts             the Lumi classes its package does not export          SEC-001, SEC-008 (S2)
   HvlTop10ContentTypeFilter.ts restricts the authoring list to the ten types         H5P-002
   HvlPermissionSystem.ts       IPermissionSystem implementation (role matrix §4)     H5P-006
-  HvlUrlGenerator.ts           UrlGenerator that appends ltik / CSRF parameters (S3) H5P-007
+  HvlUrlGenerator.ts           UrlGenerator that appends ltik / CSRF parameters (S3) H5P-007 (D-058)
+  contentFileGrants.ts         signed, expiring grants for content-file URLs         H5P-007, SEC-004 (S3, D-058)
   HvlTranslationCallback.ts    i18next nn → nb → en (resources: h5pTranslationResources.ts)  H5P-008
   HvlH5PEditor.ts              editor subclass: ten-type filter, save order, package rules  H5P-002, SEC-003 (S2)
   semantics/                   DragQuestion removal, params walker, sub-content policy H5P-002, SEC-008 (S2, D-039)
@@ -3042,6 +3045,7 @@ apps/server/src/security/
 apps/server/src/http/
   createH5pRouter.ts + routes/ Express 5 routes on H5PAjaxEndpoint (D-035): static files, AJAX, uploads,
                                content and temporary files, user data, content, player  H5P-005, SEC-004 (S2)
+  routes/signedFileRoutes.ts   public content files behind a signed grant (D-058)   H5P-007, SEC-004 (S3)
   h5pErrorResponse.ts …        translated errors, multipart uploads (D-043), byte ranges, body parsers
 tools/seed/
   fetch-seed-packages.sh       downloads and checks the ten .h5p packages (the seeder itself is in
@@ -3179,9 +3183,10 @@ different Canvas course (context) gets separate state.</li>
 <li><strong>Verify:</strong> A table-driven unit test covers every cell above.</li>
 </ul>
 <h4 id="r-H5P-007" class="req-heading" tabindex="-1"><a class="req-id" href="#r-H5P-007">H5P-007</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Authenticated H5P AJAX in iframes</span></h4>
-<p><code>HvlUrlGenerator</code> extends Lumi&#39;s <code>UrlGenerator</code> and uses <code>queryParamGenerator</code>. Every AJAX, user-data
-and set-finished URL then carries the ltik (Canvas mode) or a CSRF token (portal mode), as
-specified in <a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>.</p>
+<p><code>HvlUrlGenerator</code> extends Lumi&#39;s <code>UrlGenerator</code>. Every AJAX, user-data and set-finished URL carries the
+ltik (Canvas mode) or a CSRF token (portal mode), URL-encoded, as specified in <a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>. <em>Amended in S3
+(D-058):</em> the token is added by our class rather than Lumi&#39;s <code>queryParamGenerator</code>, which does not encode it
+consistently; content files use signed URLs (<code>/h5p/files/&lt;grant&gt;/…</code>) instead of a token.</p>
 <ul>
 <li><strong>Acceptance:</strong> A request to an H5P AJAX endpoint without a valid token returns 401.</li>
 <li><strong>Verify:</strong> Integration test for each mode.</li>
@@ -5572,7 +5577,12 @@ PKCE verifier to the browser, which prevents login CSRF. One synchronizer token 
 <code>X-CSRF-Token</code> header, a <code>csrf</code> query value (H5P URLs) or a <code>csrf</code> form field; it is required on every unsafe
 method and on <code>/h5p/ajax</code> and <code>/h5p/contentUserData</code> for any method. A missing or wrong token is 401
 <code>hvl:csrf-invalid</code>. Roles are computed at login only.</li>
-<li><strong>Consequences:</strong> A role change in Feide takes effect at the next login.</li>
+<li><strong>Consequences:</strong> A role change in Feide takes effect at the next login. Details settled in the implementation:
+the session cookie has no <code>Max-Age</code> (a browser-session cookie; the server enforces both limits); a cookie name
+sent twice is ignored entirely (defence against cookie tossing); logout is a POST, so the CSRF token protects it;
+the session&#39;s ID-token blob is sealed once at login, so a retired <code>DATA_ENCRYPTION_KEYS</code> key is kept at least
+12 hours. Reverse proxies must not cache responses that carry <code>Set-Cookie</code> and must not log query strings
+(<code>csrf</code>, <code>ltik</code>).</li>
 </ul>
 <h3 id="decisions--d-058--h5p-url-tokens-and-signed-content-file-urls" tabindex="-1">D-058 · H5P URL tokens and signed content-file URLs</h3>
 <ul>
@@ -5585,7 +5595,15 @@ Content files are served from a public route <code>/h5p/files/:grant/:contentId/
 check. An ltik in a query string is accepted only on <code>/h5p/ajax</code>, <code>/h5p/contentUserData/*</code>, <code>/lti/play</code> and
 <code>/lti/deeplink</code>; everywhere else it must be a Bearer header.</li>
 <li><strong>Consequences:</strong> Script inside content could read the token from its page; the S2 sanitising and the S4 CSP
-limit that. The separate files origin stays in S6 (D-045).</li>
+limit that. The separate files origin stays in S6 (D-045). Details settled in the implementation: Lumi&#39;s
+<code>csrfProtection.queryParamGenerator</code> is not used, because it does not encode the token the same way on the three
+URLs (SPEC-DEVIATION from <a class="req-ref" href="#r-H5P-007"><code>H5P-007</code></a>&#39;s wording); a grant&#39;s expiry is rounded up to the hour, so it lives 12 to 13
+hours and a file URL stays the same (cacheable) for an hour, verification allows 5 minutes of clock skew, and an
+old <code>URL_SIGNING_KEYS</code> key is removed at least 13 h 5 min after rotation; responses are <code>Cache-Control: private, max-age=&lt;seconds left&gt;</code>; the signed route reads only an activity&#39;s registered files (no temporary-file
+fallback); the player factory refuses Lumi&#39;s render options that skip the View check (<code>ignoreUserPermissions</code>,
+parameter overrides), so no grant is ever signed without it. The authenticated <code>/h5p/content/:id/*file</code> route
+stays for the H5P editor, whose integration has no <code>contentUrl</code>; an editor in a cookie-less Canvas iframe (S4)
+needs grant-bearing URLs issued after an Edit check.</li>
 </ul>
 <h3 id="decisions--d-059--how-the-feide-and-lti-role-tables-are-read" tabindex="-1">D-059 · How the Feide and LTI role tables are read</h3>
 <ul>

@@ -3,10 +3,11 @@
  *
  * Why: the routes are thin; all rules live in the editor, the player and the permission system. Passing them in
  *      as one typed object keeps the routes testable and makes it visible that no route builds its own engine.
- * Spec: H5P-004, H5P-006
+ * Spec: H5P-004, H5P-006, H5P-007
  * Invariants:
  *   - `permissions` is the same HvlPermissionSystem instance the editor and player use.
  *   - `fileSanitizers` are the same sanitisers the editor runs; routes run them first only to give a specific reason.
+ *   - `fileGrants` is the instance whose grants the player's HvlUrlGenerator puts into file URLs (D-058).
  * Collaborators: ./createH5pRouter.ts, ./routes/*, ../h5p/createH5pRuntime.ts.
  * Tests: apps/server/test/http/router.int.test.ts
  */
@@ -17,6 +18,7 @@ import type {
   IPermissionSystem,
 } from '@lumieducation/h5p-server';
 import type { Logger } from 'pino';
+import type { ContentFileGrants } from '../h5p/contentFileGrants.js';
 import type { HvlH5PEditor } from '../h5p/HvlH5PEditor.js';
 import type { HvlH5pUser } from '../h5p/HvlH5pUser.js';
 
@@ -32,6 +34,8 @@ export interface H5pRouteDeps {
   readonly permissions: IPermissionSystem<HvlH5pUser>;
   /** Sanitisers for uploaded files (file-type sniffer, SVG sanitiser). */
   readonly fileSanitizers: readonly IFileSanitizer[];
+  /** Verifies the grants in content-file URLs (`/h5p/files/<grant>/…`). */
+  readonly fileGrants: ContentFileGrants;
   /** Absolute folder of the H5P core client files. */
   readonly corePath: string;
   /** Absolute folder of the H5P editor client files. */

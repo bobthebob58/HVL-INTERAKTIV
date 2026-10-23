@@ -3,15 +3,17 @@
  * else behind authentication.
  *
  * Why: one function shows the whole H5P surface (D-035): public client and library files first, then the
- *      `authenticate` middleware S3 provides, then the editor, file, learner-state, content and player routes,
- *      and last the error handler that translates every failure and never leaks a message.
- * Spec: H5P-004, H5P-006, SEC-004
+ *      content files behind a signed grant (D-058), then the `authenticate` middleware S3 provides, then the
+ *      editor, file, learner-state, content and player routes, and last the error handler that translates every
+ *      failure and never leaks a message.
+ * Spec: H5P-004, H5P-006, H5P-007, SEC-004
  * Invariants:
- *   - Only `/core`, `/editor` and `/libraries` answer without an actor; everything else needs `authenticate`.
+ *   - Only `/core`, `/editor`, `/libraries` and the grant-checked `/files` answer without an actor; everything
+ *     else needs `authenticate`.
  *   - The error handler is the last middleware; no route sends its own error body.
  *   - A path under the router that matches no route gets the translated 404 answer, never Express's page.
  * Collaborators: ./routes/*, ./h5pErrorHandler.ts, ./h5pLocals.ts (Authenticate), ../h5p/createH5pRuntime.ts.
- * Tests: apps/server/test/http/router.int.test.ts
+ * Tests: apps/server/test/http/router.int.test.ts, apps/server/test/http/signedFiles.int.test.ts
  */
 import { Router } from 'express';
 import { h5pErrorHandler } from './h5pErrorHandler.js';
@@ -22,6 +24,7 @@ import { ajaxRoutes } from './routes/ajaxRoutes.js';
 import { contentRoutes } from './routes/contentRoutes.js';
 import { fileRoutes } from './routes/fileRoutes.js';
 import { playerRoutes } from './routes/playerRoutes.js';
+import { signedFileRoutes } from './routes/signedFileRoutes.js';
 import { staticRoutes } from './routes/staticRoutes.js';
 import { userDataRoutes } from './routes/userDataRoutes.js';
 
@@ -34,6 +37,9 @@ import { userDataRoutes } from './routes/userDataRoutes.js';
 export function createH5pRouter(deps: H5pRouteDeps, authenticate: Authenticate): Router {
   const router = Router();
   router.use(staticRoutes(deps));
+  // SECURITY: before `authenticate`, because `<img>` and `<video>` in a cookie-less iframe send no credential.
+  // The grant in the path is the authorisation (D-058).
+  router.use(signedFileRoutes(deps));
   router.use(authenticate);
   router.use(ajaxRoutes(deps));
   router.use(fileRoutes(deps));

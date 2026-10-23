@@ -16,12 +16,16 @@ import {
   type IFileSanitizer,
   type IH5PConfig,
 } from '@lumieducation/h5p-server';
+import { ContentFileGrants } from '../../src/h5p/contentFileGrants.js';
 import { createH5pConfig } from '../../src/h5p/H5pConfigFactory.js';
 import { createHvlEditor, type EditorStorages } from '../../src/h5p/H5pEditorFactory.js';
 import { createHvlPlayer } from '../../src/h5p/H5pPlayerFactory.js';
 import type { HvlH5PEditor } from '../../src/h5p/HvlH5PEditor.js';
 import { createHvlTranslationCallback } from '../../src/h5p/HvlTranslationCallback.js';
+import { HvlUrlGenerator } from '../../src/h5p/HvlUrlGenerator.js';
 import { keepContentTypeCacheOffline } from '../../src/h5p/offlineContentTypeCache.js';
+import { parseKeyring } from '../../src/security/keys/keyring.js';
+import { randomKey } from './authEnv.js';
 import { RulePermissions } from './rulePermissions.js';
 import { syntheticLibraryDir, type SyntheticLibrary } from './syntheticLibraries.js';
 
@@ -62,6 +66,7 @@ export async function engineTestbed(
   const permissions = new RulePermissions();
   const translate = createHvlTranslationCallback();
   const audit = { record: async () => undefined };
+  const urlGenerator = new HvlUrlGenerator(config, new ContentFileGrants(parseKeyring(`t1=${randomKey(9)}`)));
   const editor = createHvlEditor({
     config,
     storages,
@@ -69,8 +74,15 @@ export async function engineTestbed(
     audit,
     translate,
     fileSanitizers,
+    urlGenerator,
   });
-  const player = createHvlPlayer({ ...storages, config, permissionSystem: permissions, translate });
+  const player = createHvlPlayer({
+    ...storages,
+    config,
+    permissionSystem: permissions,
+    translate,
+    urlGenerator,
+  });
   return { editor, player, config, permissions, storages };
 }
 

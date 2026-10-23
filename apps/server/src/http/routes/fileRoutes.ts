@@ -1,8 +1,9 @@
 /**
- * fileRoutes — streams the files of an activity and the editor's temporary uploads.
+ * fileRoutes — streams the files of an activity and the editor's temporary uploads, for a signed-in person.
  *
  * Why: images, audio and video of an activity, and files an author just uploaded in the editor, are fetched by
- *      the player and the editor. Lumi checks the permission (View for content files, the uploader for
+ *      the editor (whose integration has no `contentUrl`, so H5P asks for `<url>/content/<id>/…`). Since S3 the
+ *      player uses signed URLs instead (./signedFileRoutes.ts, D-058). Lumi checks the permission (View for content files, the uploader for
  *      temporary files) with the account view of the actor, because both are tied to the person's account,
  *      not to a learner pseudonym. Every answer carries the D-045 headers and correct byte ranges.
  * Spec: H5P-004, SEC-004, H5P-006

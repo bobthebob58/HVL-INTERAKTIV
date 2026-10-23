@@ -17,13 +17,17 @@ import {
   type IContentUserDataStorage,
   type ILibraryInstallResult,
 } from '@lumieducation/h5p-server';
+import { ContentFileGrants } from '../../src/h5p/contentFileGrants.js';
 import { createH5pConfig } from '../../src/h5p/H5pConfigFactory.js';
 import { createHvlEditor } from '../../src/h5p/H5pEditorFactory.js';
 import type { HvlH5PEditor } from '../../src/h5p/HvlH5PEditor.js';
 import { asAccountUser, type H5pRole, type HvlH5pUser } from '../../src/h5p/HvlH5pUser.js';
+import { HvlUrlGenerator } from '../../src/h5p/HvlUrlGenerator.js';
 import type { LibraryChange } from '../../src/h5p/libraries/LibraryAuditSink.js';
 import { keepContentTypeCacheOffline } from '../../src/h5p/offlineContentTypeCache.js';
 import { createHvlTranslationCallback } from '../../src/h5p/HvlTranslationCallback.js';
+import { parseKeyring } from '../../src/security/keys/keyring.js';
+import { randomKey } from './authEnv.js';
 import { RulePermissions } from './rulePermissions.js';
 import { syntheticLibraryDir, type SyntheticLibrary } from './syntheticLibraries.js';
 import { testActor } from './testActors.js';
@@ -80,6 +84,7 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
     },
     translate: createHvlTranslationCallback(),
     fileSanitizers: [],
+    urlGenerator: new HvlUrlGenerator(config, new ContentFileGrants(parseKeyring(`t1=${randomKey(9)}`))),
   });
   const user = (role: H5pRole): HvlH5pUser => asAccountUser(testActor(role));
   return { editor, permissions, audited, control, invalidated, libraryDir, user };
