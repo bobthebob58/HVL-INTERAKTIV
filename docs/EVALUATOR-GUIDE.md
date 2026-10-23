@@ -6,11 +6,13 @@ reviewers. It explains how to check, efficiently and independently, that the cod
 specifications promise.
 
 **Current state (2026-10-23):** Session 1 is done; Session 2 (the H5P engine with the ten types, the
-permission system, learner state, upload security, seeding and our own routes) is in review. Below is what
+permission system, learner state, upload security, seeding and our own routes) passed its gate on
+2026-10-23, with spike steps 3–5 still open because the Hub is unreachable (limitation 3). Below is what
 Session 1 built. The monorepo, `apps/server` (configuration, log
 redaction, learner pseudonyms, the database schema, the H5P configuration and boot check, the storage
 adapters and the archive guard) and the tools `spec-trace`, `spec-site`, `doc-lint`, `dependency-check`,
-`privacy` and `h5p-core` exist. There is no web app or HTTP server yet (Sessions 2–4). Build progress is
+`privacy` and `h5p-core` exist. Session 2 added the H5P routes, which get a production entry point with
+login in Session 3; there is no web app yet (Session 4). Build progress is
 tracked in [PROGRESS.md](../PROGRESS.md). Commands marked *(from S<n>)* below arrive with that session.
 
 ---

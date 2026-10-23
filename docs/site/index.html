@@ -227,7 +227,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 </div>
 <dl class="glance">
 <div><dt>Requirements</dt><dd><a href="#requirements">126</a> <span class="sub">106 must · 17 should · 3 could</span></dd></div>
-<div><dt>Build sessions</dt><dd>6 <span class="sub">1 of 6 done; specification complete</span></dd></div>
+<div><dt>Build sessions</dt><dd>6 <span class="sub">2 of 6 done; specification complete</span></dd></div>
 <div><dt>H5P content types</dt><dd>10 <span class="sub">chosen for pedagogy and accessibility</span></dd></div>
 <div><dt>Learning-design patterns</dt><dd>9 <span class="sub">for <span lang="nn">forarbeid</span>, <span lang="nn">mellomarbeid</span> and <span lang="nn">etterarbeid</span></span></dd></div>
 </dl>
@@ -269,7 +269,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S1</td><td>Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup</td><td>00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD</td><td>✅ Done (2026-10-21)</td></tr>
 <tr>
-<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>🟨 In progress (2026-10-22)</td></tr>
+<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>✅ Gate passed (2026-10-23); spike steps 3–5 open (Q7)</td></tr>
 <tr>
 <td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>⬜ Not started</td></tr>
 <tr>
@@ -4537,11 +4537,13 @@ designers, TeCopp administrators, security and privacy reviewers, examiners and 
 reviewers. It explains how to check, efficiently and independently, that the code does what the
 specifications promise.</p>
 <p><strong>Current state (2026-10-23):</strong> Session 1 is done; Session 2 (the H5P engine with the ten types, the
-permission system, learner state, upload security, seeding and our own routes) is in review. Below is what
+permission system, learner state, upload security, seeding and our own routes) passed its gate on
+2026-10-23, with spike steps 3–5 still open because the Hub is unreachable (limitation 3). Below is what
 Session 1 built. The monorepo, <code>apps/server</code> (configuration, log
 redaction, learner pseudonyms, the database schema, the H5P configuration and boot check, the storage
 adapters and the archive guard) and the tools <code>spec-trace</code>, <code>spec-site</code>, <code>doc-lint</code>, <code>dependency-check</code>,
-<code>privacy</code> and <code>h5p-core</code> exist. There is no web app or HTTP server yet (Sessions 2–4). Build progress is
+<code>privacy</code> and <code>h5p-core</code> exist. Session 2 added the H5P routes, which get a production entry point with
+login in Session 3; there is no web app yet (Session 4). Build progress is
 tracked in <a href="#progress">PROGRESS.md</a>. Commands marked <em>(from S<n>)</em> below arrive with that session.</p>
 <hr>
 <h3 id="evaluator-guide--1-orientation-in-20-minutes" tabindex="-1">1. Orientation in 20 minutes</h3>
@@ -5349,7 +5351,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S1</td><td>Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup</td><td>00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD</td><td>✅ Done (2026-10-21)</td></tr>
 <tr>
-<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>🟨 In progress (2026-10-22)</td></tr>
+<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>✅ Gate passed (2026-10-23); spike steps 3–5 open (Q7)</td></tr>
 <tr>
 <td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>⬜ Not started</td></tr>
 <tr>
@@ -5418,10 +5420,12 @@ every residual and new problem it found is fixed, with regression tests (see the
 <td>6. Decide 1.28 or the 1.27 fallback</td><td>Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2</td></tr>
 </tbody></table></div>
 <p>Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-21 entry is the first run).</p>
-<h3 id="progress--s2--content-types-and-security" tabindex="-1">S2 — Content types and security 🟨</h3>
+<h3 id="progress--s2--content-types-and-security--gate-passed-2026-10-23-spike-steps-35-open-q7" tabindex="-1">S2 — Content types and security ✅ (gate passed 2026-10-23; spike steps 3–5 open, Q7)</h3>
 <ul>
 <li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (to be recorded as D-047).
-<strong>Still blocked (Q7):</strong> on 2026-10-23 the egress proxy refused hub-api.h5p.org (<code>CONNECT tunnel failed, response 403</code>; <code>npm run hub:check</code> reports <code>fetch failed: Request was cancelled.</code>). Done without the
+<strong>Still blocked (Q7):</strong> on 2026-10-23 (last checked 04:18 UTC) the egress proxy refused hub-api.h5p.org
+(<code>CONNECT tunnel failed, response 403</code>; <code>npm run hub:check</code> reports <code>fetch failed: Request was cancelled.</code>).
+S2 closed on the plan&#39;s fallback: the gate passes on synthetic packages; this item carries forward. Done without the
 Hub: F3 injected and tested; a Chromium test runs Core 1.28 on our player page with no console errors,
 the Daylight tokens active and overridable, and state resumed after a reload (synthetic content type)</li>
 <li><span class="task">✓ Done:</span> F1 wired: <code>getLocalIdOverride: () =&gt; localIdFor(config.uuid)</code> in <code>H5pEditorFactory</code>; the Hub
@@ -5441,8 +5445,10 @@ matrix cell (<a class="req-ref" href="#r-H5P-006"><code>H5P-006</code></a>); per
 <li><span class="task">✓ Done:</span> <code>HvlTranslationCallback</code> and the nn → nb → en library fallback (<a class="req-ref" href="#r-H5P-008"><code>H5P-008</code></a>); library audit (<a class="req-ref" href="#r-H5P-011"><code>H5P-011</code></a>)</li>
 <li><span class="task">✓ Done:</span> <code>SvgSanitizer</code>, <code>FileTypeSniffer</code>, <code>ContentFileHeaders</code>, package import rules (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>…<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-008"><code>SEC-008</code></a>)</li>
 <li><span class="task">✓ Done:</span> <code>npm run hub:check</code> for spike step 3 (registration status, F1, versions of the ten types)</li>
-<li><span class="task">○ To do:</span> Independent review and its fixes</li>
-<li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S2</li>
+<li><span class="task">✓ Done:</span> Independent review and its fixes: three reviewers (correctness and security, privacy and spec,
+documentation), each finding checked by a skeptic; every fix has a test that fails on the old code</li>
+<li><span class="task">✓ Done:</span> Gate: as in the Evaluator Guide §5, S2, plus each S2 requirement&#39;s tests run on their own (<code>-t</code>);
+output in the session log (2026-10-23)</li>
 </ul>
 <h3 id="progress--s3--dual-authentication" tabindex="-1">S3 — Dual authentication ⬜</h3>
 <p>Effort: high, because this is security-critical. Public Feide and Canvas values are in <code>docs/reference/</code>; <strong>HVL&#39;s own client IDs, realm, redirect URIs and TeCopp instance</strong> are still needed (Q3, Q4).</p>
@@ -5520,7 +5526,7 @@ The data-subject tool must delete learner state through the storage directly: Lu
 <div class="table-wrap" role="region" aria-label="Table 4, Risk register" tabindex="0"><table><thead><tr>
 <th scope="col">ID</th><th scope="col">Risk</th><th scope="col">Likelihood</th><th scope="col">Impact</th><th scope="col">Mitigation</th></tr>
 </thead><tbody><tr>
-<td>R-01</td><td>Lumi h5p-server 10.0.4 does not work with Core 1.28 libraries. Three issues are known (spec 01 §1, F1–F3), with workarounds; Lumi&#39;s fixes are unreleased. S1 spike steps 1–2 passed; 3–5 are blocked by the network</td><td>High</td><td>High</td><td>Finish the spike in S2 where the Hub is reachable; fall back to 1.27 without Daylight; <code>patch-package</code> only with a decision</td></tr>
+<td>R-01</td><td>Lumi h5p-server 10.0.4 does not work with Core 1.28 libraries. Three issues are known (spec 01 §1, F1–F3), with workarounds; Lumi&#39;s fixes are unreleased. S1 spike steps 1–2 passed; 3–5 are blocked by the network</td><td>High</td><td>High</td><td>Finish the spike as soon as the Hub is reachable (Q7; S2 closed with steps 3–5 open, Core 1.28 runs on synthetic content); fall back to 1.27 without Daylight; <code>patch-package</code> only with a decision</td></tr>
 <tr>
 <td>R-07</td><td>No H5P editor 1.28 release tag exists</td><td>Certain</td><td>Medium</td><td>Pinned, reviewed commit (D-022); revisit when a tag appears</td></tr>
 <tr>
@@ -5591,6 +5597,43 @@ $ npm run spec:site -- --check                       ✓ docs/site/index.html is
 $ npm run h5p:fetch-core                             ✓ H5P core 1.28.0 and editor ab2daa18 are in apps/server/h5p
 $ npm run boot-check --workspace apps/server         (no .env, no DATABASE_URL/REDIS_URL/S3_*/PSEUDONYM_SECRETS)
 {&quot;level&quot;:&quot;info&quot;,&quot;service&quot;:&quot;hvl-interaktiv-server&quot;,&quot;h5pCoreApi&quot;:&quot;1.28&quot;,&quot;hubHost&quot;:&quot;hub-api.h5p.org&quot;,&quot;siteRegistered&quot;:false,&quot;msg&quot;:&quot;H5P engine configured&quot;}</code></pre>
+</li>
+<li><p><strong>2026-10-23 · S2</strong> — Session 2 delivered on our own Express 5 routes over Lumi&#39;s <code>H5PAjaxEndpoint</code>
+(D-035): the actor&#39;s account and state views (D-036), <code>HvlPermissionSystem</code> with a test per matrix cell and
+a start-up guard (<a class="req-ref" href="#r-H5P-006"><code>H5P-006</code></a>), learner state under the pseudonym (<a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a>), the ten-type
+filter, DragQuestion removal and the sub-content policy (<a class="req-ref" href="#r-H5P-002"><code>H5P-002</code></a>, <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-SEC-008"><code>SEC-008</code></a>, D-039), our own
+player page with script-safe JSON (D-040), Nynorsk-first translation (<a class="req-ref" href="#r-H5P-008"><code>H5P-008</code></a>, D-046), upload security
+(<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>…<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>, D-043…D-045), offline audited seeding and package import rules (<a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>,
+<a class="req-ref" href="#r-H5P-011"><code>H5P-011</code></a>, <a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>, D-041, D-042), <code>hub:check</code>, TypeDoc and a Chromium test of Core 1.28 on our player
+page. Independent review, then fixes, each with a test that fails on the old code: author metadata ran as
+script in H5P&#39;s &quot;Rights of use&quot; dialog; a truncated multipart upload could end the process; <code>.h5p</code>
+downloads were cut short; content.json paths could leave the package; the editor still called the Hub;
+a library hidden under an unknown key was loaded; audit rows are written before an install; client errors
+keep their 4xx and request bodies are never logged; documentation (removal conditions on <code>UPSTREAM</code>,
+<code>DATA-*</code> IDs on <code>PRIVACY</code>, upstream pins no longer count as proof, the D-045 deviation tagged).
+hub-api.h5p.org is still refused by the egress proxy (403, Q7), so spike steps 3–5, the real seed packages,
+the CI seed step and R-01 (D-047) stay open. Decisions D-035…D-046. Gate output:</p>
+<pre class="code" tabindex="0" role="region" aria-label="Code 4, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint                                       exit 0
+$ npm run format:check                               All matched files use Prettier code style!
+$ npm run doc:lint                                   ✓ doc-lint: 11 checks passed.
+$ npm run check:filesize                             ✓ doc-lint: file-size passed.
+$ npm run check:pins                                 ✓ check:pins: 2 manifests, every version is pinned exactly.
+$ npm run check:licences                             ✓ check:licences: 188 production packages, all GPL-3.0-compatible.
+$ npm run check:audit                                ✓ check:audit: 2 high/critical advisories, all covered by reviewed exceptions.
+$ npm run privacy:inventory-check                    ✓ privacy:inventory-check: 20 models, 155 fields, all in docs/privacy/DATA-INVENTORY.md.
+$ npx vitest run                                     Test Files 80 passed (80) · Tests 19264 passed (19264)
+$ npx vitest run -t &quot;H5P-002|PROD-002&quot;               Test Files 11 passed | 69 skipped · Tests 24 passed      (ten types only)
+$ npx vitest run -t &quot;SEC-003|H5P-011|H5P-006&quot;        Test Files 24 passed | 56 skipped · Tests 18700 passed   (no installs by non-admins)
+$ npx vitest run -t &quot;SEC-001&quot;                        Test Files 8 passed | 72 skipped · Tests 111 passed      (SVG corpus)
+$ npx vitest run -t &quot;\[&lt;ID&gt;\]&quot;, one run per S2 ID     all 17 pass on their own (H5P-001…011, SEC-001…008, PROD-002/008/012)
+$ npm run spec:trace -- --check --done-through=S2    ✓ 126 requirements, traceability up to date.
+$ npm run spec:site -- --check                       ✓ docs/site/index.html is up to date.
+$ npm run h5p:fetch-core                             ✓ H5P core 1.28.0 and editor ab2daa18 are in apps/server/h5p
+$ npm run docs:api                                   html generated at docs/api (warnings as errors; none)
+$ npm run boot-check --workspace apps/server
+{&quot;level&quot;:&quot;info&quot;,&quot;service&quot;:&quot;hvl-interaktiv-server&quot;,&quot;h5pCoreApi&quot;:&quot;1.28&quot;,&quot;hubHost&quot;:&quot;hub-api.h5p.org&quot;,&quot;siteRegistered&quot;:false,&quot;msg&quot;:&quot;H5P engine configured&quot;}
+$ NODE_USE_ENV_PROXY=1 npm run hub:check             &quot;ok&quot;: false, &quot;error&quot;: &quot;fetch failed: Request was cancelled.&quot; (proxy 403, Q7)</code></pre>
 </li>
 </ul>
 
