@@ -11,8 +11,13 @@
  * Tests: apps/server/test/h5p/sharedState.int.test.ts, apps/server/test/h5p/libraryStorageFactory.test.ts
  */
 import { mkdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { cacheImplementations, fsImplementations, type ILibraryStorage } from '@lumieducation/h5p-server';
-import { caching } from 'cache-manager';
+import type { caching as Caching } from 'cache-manager';
+
+// WHY: cache-manager 4 is CommonJS whose exports Node's ESM loader cannot detect, so `import { caching }`
+// works under Vitest but fails when the server or a CLI runs under Node.
+const { caching } = createRequire(import.meta.url)('cache-manager') as { caching: typeof Caching };
 
 /** How long library metadata stays in a node's memory, in seconds. */
 export const LIBRARY_CACHE_TTL_SECONDS = 300;

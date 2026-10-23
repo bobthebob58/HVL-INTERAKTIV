@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
-    "boot-check": "tsx --env-file-if-exists=.env src/h5p/bootCheck.ts"
+    "boot-check": "tsx --env-file-if-exists=.env src/h5p/bootCheck.ts",
+    "seed:libraries": "tsx --env-file-if-exists=.env src/h5p/libraries/seedCli.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1155.0",
