@@ -2974,6 +2974,7 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
   semantics/                   DragQuestion removal, params walker, sub-content policy H5P-002, SEC-008 (S2, D-039)
     libraryReferences.ts           every `library` value Lumi would load            H5P-002, SEC-008 (S2)
     rightsOfUse.ts                 what the &quot;Rights of use&quot; dialog renders, anywhere SEC-008 (S2, D-039)
+    nestingDepth.ts                refuses nesting Lumi's recursive walks cannot follow  PROD-012 (S2, D-039)
   permissions/                 content facts and the rule tables for HvlPermissionSystem  H5P-006 (S2)
   libraries/                   seeder, audited library installer, package manifest checks  H5P-003, H5P-011, SEC-003 (S2, D-042)
     auditBeforeInstall.ts          records planned library changes before Lumi installs  H5P-011 (S2)
@@ -2987,6 +2988,7 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
     LanguageFallbackLibraryStorage.ts  serves nb.json for a missing nn.json         H5P-008 (S2, D-046)
     S3TemporaryFileStorage.ts      ITemporaryFileStorage
     s3Objects.ts                   safe object names, ranges, size-limited uploads   SEC-005
+    storableText.ts                refuses text PostgreSQL cannot store (U+0000, lone surrogates)  PROD-012 (S2)
     PrismaContentUserDataStorage.ts IContentUserDataStorage                          H5P-005 (S2, D-028)
     learnerStateRows.ts            row ⇄ IContentUserData mapping, learnerKey shape  H5P-005, DATA-002 (S2)
     FinishedDataSwitchedOff.ts     the finished-data methods, which store nothing    H5P-005 (S2, D-037)
@@ -5265,7 +5267,13 @@ and turns <code>&amp;quot;</code> back into <code>&quot;</code>. A second verifi
 keeps a quote in a URL&#39;s host raw, so a <code>source</code> whose serialised form still holds <code>&quot;</code>, <code>&#39;</code>, <code>&lt;</code>, <code>&gt;</code> or a
 backtick is removed; the walk now continues inside metadata and copyright objects, as h5p.js does; and h5p.js
 joins arrays into the HTML, so an array <code>path</code> is refused, an array <code>alt</code> is emptied, and metadata nested
-deeper than the limit is dropped instead of kept as it was.</li>
+deeper than the limit is dropped instead of kept as it was. A third, focused check (a sink audit of h5p.js and
+Chromium fuzzing with more than 60 variants) found no further way to run script, but five inputs that Lumi or
+PostgreSQL turned into a 500. They are now refused as the request&#39;s fault (400): text with U+0000 or a lone
+surrogate (<code>storage/storableText.ts</code>, also for learner state), nesting deeper than 256 levels before Lumi&#39;s
+recursive walks see it (<code>semantics/nestingDepth.ts</code>, also for an imported content.json), and values whose
+JSON type Lumi&#39;s scanners cannot read (<code>paramsWalker.ts</code>: text, list, group, library, file, image, video and
+audio fields); a sub-content <code>library</code> object without a usable <code>toString</code> is refused with 403 like any other.</li>
 <li><strong>Consequences:</strong> The walker (<code>semantics/paramsWalker.ts</code>) is reused by the S4 validator. Cleaning data for a
 renderer that does not escape is a list of known sinks, not a guarantee: the real ten types render their own
 copyright data (<code>getCopyrights</code>), so their sinks must be reviewed when the Hub packages arrive (Q7), and the

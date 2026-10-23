@@ -455,7 +455,13 @@ loading of one spec per session are kept.
   keeps a quote in a URL's host raw, so a `source` whose serialised form still holds `"`, `'`, `<`, `>` or a
   backtick is removed; the walk now continues inside metadata and copyright objects, as h5p.js does; and h5p.js
   joins arrays into the HTML, so an array `path` is refused, an array `alt` is emptied, and metadata nested
-  deeper than the limit is dropped instead of kept as it was.
+  deeper than the limit is dropped instead of kept as it was. A third, focused check (a sink audit of h5p.js and
+  Chromium fuzzing with more than 60 variants) found no further way to run script, but five inputs that Lumi or
+  PostgreSQL turned into a 500. They are now refused as the request's fault (400): text with U+0000 or a lone
+  surrogate (`storage/storableText.ts`, also for learner state), nesting deeper than 256 levels before Lumi's
+  recursive walks see it (`semantics/nestingDepth.ts`, also for an imported content.json), and values whose
+  JSON type Lumi's scanners cannot read (`paramsWalker.ts`: text, list, group, library, file, image, video and
+  audio fields); a sub-content `library` object without a usable `toString` is refused with 403 like any other.
 - **Consequences:** The walker (`semantics/paramsWalker.ts`) is reused by the S4 validator. Cleaning data for a
   renderer that does not escape is a list of known sinks, not a guarantee: the real ten types render their own
   copyright data (`getCopyrights`), so their sinks must be reviewed when the Hub packages arrive (Q7), and the
