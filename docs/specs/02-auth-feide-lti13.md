@@ -48,6 +48,11 @@ instead of `/app/…`. `apps/web` takes over `/` and `/app/*` in S4. Until the f
 the player loads content files from `/h5p/files/<grant>/…` on the main origin, authorised by a signed grant
 rather than a cookie or an ltik.
 
+*From S4 (D-067, D-068, D-069):* ltijs redirects to `/app/play` and `/app/deeplink`, which Next.js renders after
+Express has resolved the ltik and removed it from what Next.js sees. The page keeps the ltik in memory and frames the
+H5P pages `/lti/play?ltik=…` (player) and `/lti/edit?ltik=…` (the **Rediger** tab), which stay server-rendered. The
+server-rendered picker `/lti/deeplink` is removed; its JSON endpoint `/lti/deeplink/response` stays.
+
 Both entry points resolve to a single server-side **`Principal`**:
 
 ```ts

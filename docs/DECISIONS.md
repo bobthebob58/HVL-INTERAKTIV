@@ -76,6 +76,19 @@ with the commands given.
 | D-064 | What the authentication audit records | Accepted (2026-10-23), owner to confirm (Q15) |
 | D-065 | End-to-end tests in Session 3 | Accepted (2026-10-23) |
 | D-066 | Friendly "not available" pages and visibility-only sharing until S4 | Accepted (2026-10-23), owner to confirm (Q14) |
+| D-067 | H5P runtime pages stay in Express; the Next.js app frames them | Accepted (2026-10-23) |
+| D-068 | Express is the front door and runs Next.js in the same process | Accepted (2026-10-23) |
+| D-069 | Query-ltik paths and file grants for the S4 views and the editor | Accepted (2026-10-23) |
+| D-070 | Content Security Policy for H5P pages and Next.js pages; no YouTube | Accepted (2026-10-23) |
+| D-071 | CC-BY-4.0 is an allowed licence (caniuse-lite) | Accepted (2026-10-23) |
+| D-072 | Design tokens: generated CSS, a Tailwind v4 theme file and colour lint | Accepted (2026-10-23) |
+| D-073 | The validator is pure: shape-based walk, configuration passed in | Accepted (2026-10-23) |
+| D-074 | Publishing: server re-validation, acknowledgements and concurrency | Accepted (2026-10-23) |
+| D-075 | Notice dismissals are stored per user | Accepted (2026-10-23) |
+| D-076 | The web app's own typed translations | Accepted (2026-10-23) |
+| D-077 | API schemas in `packages/api-contract` and an OpenAPI document | Accepted (2026-10-23) |
+| D-078 | Real H5P libraries from GitHub at pinned commits | Accepted (2026-10-23) |
+| D-079 | What S4 verifies automatically and what HVL records by hand | Accepted (2026-10-23) |
 
 ---
 
@@ -826,3 +839,143 @@ loading of one spec per session are kept.
   existence is not revealed. A portal page without a session sends the browser to Feide login with a checked
   `returnTo`. The S3 sharing API changes **visibility only**; every change writes an audit event.
 - **Consequences:** Activities are published through S4's flow (owner to confirm, Q14).
+
+### D-067 · H5P runtime pages stay in Express; the Next.js app frames them
+- **Context:** S4 brings `apps/web` (Next.js), the H5P editor page (D-040) and the move of the S3 LTI views (D-048).
+  H5P needs its own global jQuery, CSS and iframes, and `UD-011`/`DATA-011` need a strict script policy. Next.js App
+  Router pages always contain inline scripts, and H5P Core writes `<script src>` tags into its iframes, which a
+  nonce policy with `'strict-dynamic'` would block.
+- **Decision:** The H5P player (`/h5p/play/:id`, `/lti/play`) and editor (`/h5p/edit/:id`, `/h5p/new`, `/lti/edit`)
+  stay server-rendered by Express with a hash-based policy (D-070). Next.js pages are the application chrome and
+  frame them on the same origin: `/`, `/aktivitet/[id]`, `/aktivitet/ny`, `/app/play`, `/app/deeplink`,
+  `/personvern`, `/hjelp`. Amends D-048: the picker and the LTI chrome move to `/app/*`; the friendly error pages stay
+  server-rendered (they need Express's 401/403/404/503 statuses) but use the token CSS. Amends D-062: the
+  **Rediger** tab arrives on `/app/play` for authors. H5P pages refuse a top-level navigation and send the browser
+  to their chrome page, so the privacy link (`DATA-006`) is always on screen.
+- **Consequences:** The S2/S3 player tests keep their page; e2e tests reach H5P one frame deeper. Same-origin
+  framing does not isolate the ltik from H5P content; the script policy is the defence (D-058).
+
+### D-068 · Express is the front door and runs Next.js in the same process
+- **Context:** D-012 puts a reverse proxy in front of Express and Next.js in production. Development and tests need
+  one origin too, and the session cookie (`__Host-`, D-057), ltijs's same-origin checks and `PUBLIC_BASE_URL` must not
+  change.
+- **Decision:** Express mounts Next.js's request handler (`next({ dev, dir })`) after all its own routes, for GET and
+  HEAD only. Before handing over, Express removes `cookie`, `authorization` and the `ltik` query from the request,
+  overwrites any client-sent `content-security-policy` and `x-hvli-*` request headers, and sets the per-request nonce
+  policy and `x-hvli-locale`. `apps/web` has no route handlers, server actions or middleware (a test enforces it):
+  every data request goes from the browser to the Express API. `WEB_APP=off|dev|prod` selects the mode; integration
+  tests run with `off`. If the in-process mount fails, the fallback is `next start` behind a small Express proxy with
+  the same header code.
+- **Consequences:** Amends D-012 for development and tests; production may still put a proxy in front (S6).
+  `npm run build` builds `apps/web` before `npm start` in production mode and before the e2e and a11y suites.
+
+### D-069 · Query-ltik paths and file grants for the S4 views and the editor
+- **Context:** D-058 accepts an ltik in a query string on four paths. S4 adds the LTI chrome pages and the editor in
+  a cookie-less Canvas iframe, whose file URLs cannot carry a cookie.
+- **Decision:** The query ltik is accepted on `/app/play`, `/app/deeplink`, `/lti/play`, `/lti/edit`,
+  `/h5p/ajax` and `/h5p/contentUserData/*`; `/lti/deeplink` goes away with the server-rendered picker. Express
+  resolves the ltik on `/app/*` before Next.js runs and passes only the page; the page script keeps the ltik in
+  memory and removes it from the address bar. The editor's content files get signed grants issued after an Edit
+  check (D-058's grant, bound to the content), and uploaded temporary files get a grant over
+  `temp|userId|expiry` from the same key ring.
+- **Consequences:** Amends D-058. The redaction and query-ltik tests cover the new paths.
+
+### D-070 · Content Security Policy for H5P pages and Next.js pages; no YouTube
+- **Context:** D-039 and `DATA-011` require a script policy without `'unsafe-inline'` on the player page and no
+  third-party requests. H5P Core writes one constant inline script into its iframes (`h5p.js` `getHeadTags`) and sets
+  inline styles. The owner decided on 2026-10-23 that YouTube is not offered (it loads scripts and tracks viewers).
+- **Decision:** H5P pages move `H5PIntegration` from an inline script into a `<script type="application/json">` block
+  read by a static boot file, and send `default-src 'none'; script-src 'self' 'sha256-<getHeadTags>'; style-src
+  'self' 'unsafe-inline'; img-src 'self' data: blob: <EXTERNAL_MEDIA_ORIGINS>; media-src 'self' blob:
+  <EXTERNAL_MEDIA_ORIGINS>; connect-src 'self'; frame-src 'self' <EXTERNAL_MEDIA_ORIGINS>; font-src 'self';
+  base-uri 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'self' <CANVAS_ORIGINS>`. A test computes
+  the hash from the installed `h5p.js`, so a core update cannot drift silently. Next.js pages get a per-request
+  nonce policy with the same first-party sources. `EXTERNAL_MEDIA_ORIGINS` (for example HVL's Panopto) is the only
+  way to allow outside media; YouTube is never listed. `SPEC-DEVIATION`: `H5P-009` asks for nonces or SRI on every
+  script; tags that H5P writes into its iframes cannot carry either, so they are covered by `'self'` instead.
+- **Consequences:** A content type that needs inline handlers or `eval` gets a scoped, recorded exception, never
+  `'unsafe-inline'` for scripts. Inline styles stay allowed on H5P pages only.
+
+### D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)
+- **Context:** `next` depends on `caniuse-lite`, a browser-support data set under CC-BY-4.0, which the licence check
+  (`tools/dependency-check/checkLicences.mjs`) does not list.
+- **Decision:** CC-BY-4.0 joins the allowlist. The FSF lists it as compatible with GPLv3, and the package is data,
+  not code. A per-version exception was rejected because caniuse-lite releases weekly.
+- **Consequences:** Attribution is kept by shipping the package's licence file.
+
+### D-072 · Design tokens: generated CSS, a Tailwind v4 theme file and colour lint
+- **Context:** `UD-001` makes `packages/design-tokens/tokens.json` the only source of colour and asks for "a Tailwind
+  preset". Tailwind v4 configures themes in CSS (`@theme`); a JS preset loads only through the legacy `@config`.
+- **Decision:** A generator writes `dist/tokens.css` (custom properties, forced-colours overrides) and
+  `dist/tailwind-theme.css` (`@theme` aliases to `var(--hvl-*)`, with Tailwind's own palette removed). Both are
+  committed and checked by `npm run tokens:check`, so the server needs no build step. `SPEC-DEVIATION`: the Tailwind
+  "preset" is this theme file. Stylelint (`color-no-hex`, no colour functions or names, no `uppercase` or `justify`)
+  and an ESLint rule against colour literals in `apps/*/src` and `packages/*/src` apply everywhere except
+  `packages/design-tokens`; vendored H5P files, the mock platform and test fixtures are exempt, each with a `WHY`.
+- **Consequences:** HVL's confirmed values (Q2) change one file; the contrast test decides whether they may be used.
+
+### D-073 · The validator is pure: shape-based walk, configuration passed in
+- **Context:** `UD-020` asks for a pure, deterministic `validateContent`. The S2 parameter walker needs an
+  asynchronous semantics lookup, and spec 04 §5 keeps hint thresholds in `content/laeringsdesign/hint-thresholds.yaml`.
+- **Decision:** `validateContent(input, context)`: `context` carries the thresholds and the captioned media origins,
+  loaded and checked with zod once at start-up (a bad file stops the server). Sub-content is found by shape (an object
+  with `library: "H5P.Name x.y"` and `params`), recursively. Rich text is parsed with `htmlparser2` (synchronous, the
+  parser sanitize-html already uses); `htmlparser2` and `yaml` become direct, pinned dependencies. Lint forbids I/O
+  modules under `src/validation/`. Rule messages live in `src/validation/locales/`.
+- **Consequences:** The second parameter is an addition to the spec's signature, not a change to its behaviour.
+
+### D-074 · Publishing: server re-validation, acknowledgements and concurrency
+- **Context:** `PROD-003` and `UD-022` let an author publish despite an error with a recorded reason, raised again
+  after 14 days. D-066 waited for this flow.
+- **Decision:** `GET /api/content/:id/findings` returns the findings and which errors are acknowledged.
+  `POST /api/content/:id/publish` takes the `updatedAt` it checked and acknowledgements `{ruleId, path, reason}`;
+  the server validates the stored content again and never trusts the client's findings. An error is covered by an
+  acknowledgement for the same rule and path younger than 14 days, or by one in the request; acknowledging something
+  that is not a current error is a 400; remaining errors are 409 `hvl:publish-blocked`. The status change, the new
+  acknowledgements and an audit event (rule IDs only, no reason text, `DATA-007`) are one transaction conditional on
+  `updatedAt` (409 `hvl:content-changed`). `POST …/unpublish` returns an activity to draft. Saving an activity that is
+  already published runs the same gate. Only those who may edit (H5P-006) may publish.
+- **Consequences:** Acknowledgements keyed on a path ask again when list items move; that fails safe.
+
+### D-075 · Notice dismissals are stored per user
+- **Context:** `PROD-011` remembers the formative-use notice's dismissal per user; `User` has no preference fields and
+  the Redis session ends at logout.
+- **Decision:** A table `NoticeDismissal(userId, noticeId, noticeVersion, at)`; a new notice version is shown again.
+  `GET /api/me` and `PUT /api/me/notices/:noticeId`. Learners never see these notices, so no learner data is added.
+- **Consequences:** New rows in `docs/privacy/DATA-INVENTORY.md`; deleted with the account.
+
+### D-076 · The web app's own typed translations
+- **Context:** UI strings exist in `nn`, `nb` and `en` only (CLAUDE.md). The server's messages are typed from
+  `nn.json` (D-046). next-intl adds routing and middleware that D-068 does not use.
+- **Decision:** `apps/web/src/i18n/` has the same typed `t()` and `locales/{nn,nb,en}.json` (locale-parity checked);
+  the locale comes from Express's `x-hvli-locale` header (session or launch locale, else `nn`).
+- **Consequences:** No next-intl dependency; one key style across server and web.
+
+### D-077 · API schemas in `packages/api-contract` and an OpenAPI document
+- **Context:** `DOC-012` (moved from S3) asks for zod request and response schemas and an OpenAPI document at
+  `/api/docs` in development. The web app becomes the first client of the API.
+- **Decision:** `packages/api-contract` holds the zod schemas the server validates with and the web app types against.
+  The OpenAPI 3.1 document is built from them with zod 4's own `z.toJSONSchema`, served at `/api/docs` when
+  `NODE_ENV` is not `production`, and a test checks that every `/api` route is listed.
+- **Consequences:** No OpenAPI library is added.
+
+### D-078 · Real H5P libraries from GitHub at pinned commits
+- **Context:** hub-api.h5p.org and github.com's web pages are unreachable from the build environment (Q7), but `git`
+  reaches public GitHub repositories. Without real content types, `UD-003`, `UD-011` and `UD-030` would be tested
+  on stand-ins only, and R-01 (D-047) stays open.
+- **Decision:** `tools/h5p-libraries` (`npm run h5p:fetch-libraries`) clones each library's repository at a commit
+  pinned in a committed manifest (repository, tag, commit SHA), resolves `library.json` dependencies recursively,
+  builds libraries whose built files are not committed (`npm ci --ignore-scripts` and their build script), and packs
+  one `.h5p` per content type with our own example content into the gitignored `apps/server/var/h5p-real/`. The
+  packages are installed through the admin package import, so the S2 package checks run on them. Library files are
+  not committed (Q10 stays open); synthetic libraries remain for unit tests.
+- **Consequences:** Versions can differ from what the Hub serves; the Hub packages (D-042) replace them when Q7 is
+  resolved. A type that cannot be assembled stays synthetic and is listed in PROGRESS.
+
+### D-079 · What S4 verifies automatically and what HVL records by hand
+- **Context:** `NFR-003` names the last two versions of four browsers and three screen readers; `UD-031` asks for
+  dated manual results. The build environment has Chromium only and no assistive technology.
+- **Decision:** CI runs the axe suite and the browser checks in Chromium. `docs/accessibility/manual-test-protocol.md`
+  scripts the manual tasks and the browser/assistive-technology matrix; HVL/ALU record dated results in
+  `docs/accessibility/results/`. The S4 gate lists what remains manual.
+- **Consequences:** Firefox, Safari, Edge and the screen-reader results stay open until HVL runs the protocol.

@@ -273,7 +273,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>✅ Gate passed (2026-10-23); HVL&#39;s Feide and Canvas values open (Q3, Q4)</td></tr>
 <tr>
-<td>S4</td><td>Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator</td><td>03; 04 §5; 05 <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a></td><td>⬜ Not started</td></tr>
+<td>S4</td><td>Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator</td><td>03; 04 §5; 05 <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a></td><td>🟨 In progress (2026-10-23)</td></tr>
 <tr>
 <td>S5</td><td>Læringsdesign studio, patterns, planner, pedagogisk mappe export</td><td>04</td><td>⬜ Not started</td></tr>
 <tr>
@@ -414,6 +414,32 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <td>D-065</td><td>End-to-end tests in Session 3</td><td>Accepted (2026-10-23)</td></tr>
 <tr>
 <td>D-066</td><td>Friendly &quot;not available&quot; pages and visibility-only sharing until S4</td><td>Accepted (2026-10-23), owner to confirm (Q14)</td></tr>
+<tr>
+<td>D-067</td><td>H5P runtime pages stay in Express; the Next.js app frames them</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-068</td><td>Express is the front door and runs Next.js in the same process</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-069</td><td>Query-ltik paths and file grants for the S4 views and the editor</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-070</td><td>Content Security Policy for H5P pages and Next.js pages; no YouTube</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-071</td><td>CC-BY-4.0 is an allowed licence (caniuse-lite)</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-072</td><td>Design tokens: generated CSS, a Tailwind v4 theme file and colour lint</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-073</td><td>The validator is pure: shape-based walk, configuration passed in</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-074</td><td>Publishing: server re-validation, acknowledgements and concurrency</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-075</td><td>Notice dismissals are stored per user</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-076</td><td>The web app&#39;s own typed translations</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-077</td><td>API schemas in <code>packages/api-contract</code> and an OpenAPI document</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-078</td><td>Real H5P libraries from GitHub at pinned commits</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-079</td><td>What S4 verifies automatically and what HVL records by hand</td><td>Accepted (2026-10-23)</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--references" tabindex="-1">Reference inputs from HVL</h3>
@@ -902,7 +928,10 @@ content-type library has no <code>language/nn.json</code>, the library&#39;s <co
 `packages/hvl-h5p-theme/dist/hvl-h5p-theme.css` (`ud-011`) and the xapi bridge script (`lti-010`)
 inside the h5p iframe.
 - **acceptance:** the iframe document contains both assets with integrity hashes and `nonce`s that match the csp.
-- **verify:** playwright test inspects the iframe dom.">
+- **verify:** playwright test inspects the iframe dom.
+- **amended (d-070, 2026-10-23):** tags that h5p core writes into its own iframes cannot carry a nonce or an
+  integrity hash; they are allowed by the page's `script-src 'self'` and the hash of core's one constant inline
+  script instead. our own page tags keep integrity hashes.">
 <summary><span class="req-id">H5P-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Inject theme and client scripts into player and editor</span> <span class="status" data-status="planned">○ Planned</span></summary>
 <div class="req-body"><p>Use <code>customization.global.styles</code> and <code>customization.global.scripts</code>, or <code>alterLibraryFiles</code>, to add
 <code>packages/hvl-h5p-theme/dist/hvl-h5p-theme.css</code> (<a class="req-ref" href="#r-UD-011"><code>UD-011</code></a>) and the xAPI bridge script (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>)
@@ -910,6 +939,9 @@ inside the H5P iframe.</p>
 <ul>
 <li><strong>Acceptance:</strong> The iframe document contains both assets with integrity hashes and <code>nonce</code>s that match the CSP.</li>
 <li><strong>Verify:</strong> Playwright test inspects the iframe DOM.</li>
+<li><strong>Amended (D-070, 2026-10-23):</strong> tags that H5P Core writes into its own iframes cannot carry a nonce or an
+integrity hash; they are allowed by the page&#39;s <code>script-src &#39;self&#39;</code> and the hash of Core&#39;s one constant inline
+script instead. Our own page tags keep integrity hashes.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-H5P-009">01 H5P engine and security, H5P-009</a> · H5P engine</p></div>
 </details>
@@ -3208,6 +3240,9 @@ inside the H5P iframe.</p>
 <ul>
 <li><strong>Acceptance:</strong> The iframe document contains both assets with integrity hashes and <code>nonce</code>s that match the CSP.</li>
 <li><strong>Verify:</strong> Playwright test inspects the iframe DOM.</li>
+<li><strong>Amended (D-070, 2026-10-23):</strong> tags that H5P Core writes into its own iframes cannot carry a nonce or an
+integrity hash; they are allowed by the page&#39;s <code>script-src &#39;self&#39;</code> and the hash of Core&#39;s one constant inline
+script instead. Our own page tags keep integrity hashes.</li>
 </ul>
 <h4 id="r-H5P-010" class="req-heading" tabindex="-1"><a class="req-id" href="#r-H5P-010">H5P-010</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Panopto-first video guidance</span></h4>
 <p>Use <code>alterLibrarySemantics</code> on <code>H5P.InteractiveVideo</code> and <code>H5P.Video</code> to replace the upload field&#39;s
@@ -3362,6 +3397,10 @@ player <code>/lti/play</code> and the Deep Linking picker <code>/lti/deeplink</c
 instead of <code>/app/…</code>. <code>apps/web</code> takes over <code>/</code> and <code>/app/*</code> in S4. Until the files origin arrives in S6 (D-045),
 the player loads content files from <code>/h5p/files/&lt;grant&gt;/…</code> on the main origin, authorised by a signed grant
 rather than a cookie or an ltik.</p>
+<p><em>From S4 (D-067, D-068, D-069):</em> ltijs redirects to <code>/app/play</code> and <code>/app/deeplink</code>, which Next.js renders after
+Express has resolved the ltik and removed it from what Next.js sees. The page keeps the ltik in memory and frames the
+H5P pages <code>/lti/play?ltik=…</code> (player) and <code>/lti/edit?ltik=…</code> (the <strong>Rediger</strong> tab), which stay server-rendered. The
+server-rendered picker <code>/lti/deeplink</code> is removed; its JSON endpoint <code>/lti/deeplink/response</code> stays.</p>
 <p>Both entry points resolve to a single server-side <strong><code>Principal</code></strong>:</p>
 <pre class="code" tabindex="0" role="region" aria-label="Code 2, 2. Two ways in, one identity model"><code>/** What every API handler receives after authentication. Defined in apps/server/src/auth/Principal.ts */
 interface Principal {
@@ -5072,6 +5111,32 @@ with the commands given.</p>
 <td>D-065</td><td>End-to-end tests in Session 3</td><td>Accepted (2026-10-23)</td></tr>
 <tr>
 <td>D-066</td><td>Friendly &quot;not available&quot; pages and visibility-only sharing until S4</td><td>Accepted (2026-10-23), owner to confirm (Q14)</td></tr>
+<tr>
+<td>D-067</td><td>H5P runtime pages stay in Express; the Next.js app frames them</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-068</td><td>Express is the front door and runs Next.js in the same process</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-069</td><td>Query-ltik paths and file grants for the S4 views and the editor</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-070</td><td>Content Security Policy for H5P pages and Next.js pages; no YouTube</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-071</td><td>CC-BY-4.0 is an allowed licence (caniuse-lite)</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-072</td><td>Design tokens: generated CSS, a Tailwind v4 theme file and colour lint</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-073</td><td>The validator is pure: shape-based walk, configuration passed in</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-074</td><td>Publishing: server re-validation, acknowledgements and concurrency</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-075</td><td>Notice dismissals are stored per user</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-076</td><td>The web app&#39;s own typed translations</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-077</td><td>API schemas in <code>packages/api-contract</code> and an OpenAPI document</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-078</td><td>Real H5P libraries from GitHub at pinned commits</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-079</td><td>What S4 verifies automatically and what HVL records by hand</td><td>Accepted (2026-10-23)</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="decisions--d-001--nodejs-24-lts-instead-of-22" tabindex="-1">D-001 · Node.js 24 LTS instead of 22</h3>
@@ -5874,6 +5939,156 @@ existence is not revealed. A portal page without a session sends the browser to 
 <code>returnTo</code>. The S3 sharing API changes <strong>visibility only</strong>; every change writes an audit event.</li>
 <li><strong>Consequences:</strong> Activities are published through S4&#39;s flow (owner to confirm, Q14).</li>
 </ul>
+<h3 id="decisions--d-067--h5p-runtime-pages-stay-in-express-the-nextjs-app-frames-them" tabindex="-1">D-067 · H5P runtime pages stay in Express; the Next.js app frames them</h3>
+<ul>
+<li><strong>Context:</strong> S4 brings <code>apps/web</code> (Next.js), the H5P editor page (D-040) and the move of the S3 LTI views (D-048).
+H5P needs its own global jQuery, CSS and iframes, and <a class="req-ref" href="#r-UD-011"><code>UD-011</code></a>/<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a> need a strict script policy. Next.js App
+Router pages always contain inline scripts, and H5P Core writes <code>&lt;script src&gt;</code> tags into its iframes, which a
+nonce policy with <code>&#39;strict-dynamic&#39;</code> would block.</li>
+<li><strong>Decision:</strong> The H5P player (<code>/h5p/play/:id</code>, <code>/lti/play</code>) and editor (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>)
+stay server-rendered by Express with a hash-based policy (D-070). Next.js pages are the application chrome and
+frame them on the same origin: <code>/</code>, <code>/aktivitet/[id]</code>, <code>/aktivitet/ny</code>, <code>/app/play</code>, <code>/app/deeplink</code>,
+<code>/personvern</code>, <code>/hjelp</code>. Amends D-048: the picker and the LTI chrome move to <code>/app/*</code>; the friendly error pages stay
+server-rendered (they need Express&#39;s 401/403/404/503 statuses) but use the token CSS. Amends D-062: the
+<strong>Rediger</strong> tab arrives on <code>/app/play</code> for authors. H5P pages refuse a top-level navigation and send the browser
+to their chrome page, so the privacy link (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>) is always on screen.</li>
+<li><strong>Consequences:</strong> The S2/S3 player tests keep their page; e2e tests reach H5P one frame deeper. Same-origin
+framing does not isolate the ltik from H5P content; the script policy is the defence (D-058).</li>
+</ul>
+<h3 id="decisions--d-068--express-is-the-front-door-and-runs-nextjs-in-the-same-process" tabindex="-1">D-068 · Express is the front door and runs Next.js in the same process</h3>
+<ul>
+<li><strong>Context:</strong> D-012 puts a reverse proxy in front of Express and Next.js in production. Development and tests need
+one origin too, and the session cookie (<code>__Host-</code>, D-057), ltijs&#39;s same-origin checks and <code>PUBLIC_BASE_URL</code> must not
+change.</li>
+<li><strong>Decision:</strong> Express mounts Next.js&#39;s request handler (<code>next({ dev, dir })</code>) after all its own routes, for GET and
+HEAD only. Before handing over, Express removes <code>cookie</code>, <code>authorization</code> and the <code>ltik</code> query from the request,
+overwrites any client-sent <code>content-security-policy</code> and <code>x-hvli-*</code> request headers, and sets the per-request nonce
+policy and <code>x-hvli-locale</code>. <code>apps/web</code> has no route handlers, server actions or middleware (a test enforces it):
+every data request goes from the browser to the Express API. <code>WEB_APP=off|dev|prod</code> selects the mode; integration
+tests run with <code>off</code>. If the in-process mount fails, the fallback is <code>next start</code> behind a small Express proxy with
+the same header code.</li>
+<li><strong>Consequences:</strong> Amends D-012 for development and tests; production may still put a proxy in front (S6).
+<code>npm run build</code> builds <code>apps/web</code> before <code>npm start</code> in production mode and before the e2e and a11y suites.</li>
+</ul>
+<h3 id="decisions--d-069--query-ltik-paths-and-file-grants-for-the-s4-views-and-the-editor" tabindex="-1">D-069 · Query-ltik paths and file grants for the S4 views and the editor</h3>
+<ul>
+<li><strong>Context:</strong> D-058 accepts an ltik in a query string on four paths. S4 adds the LTI chrome pages and the editor in
+a cookie-less Canvas iframe, whose file URLs cannot carry a cookie.</li>
+<li><strong>Decision:</strong> The query ltik is accepted on <code>/app/play</code>, <code>/app/deeplink</code>, <code>/lti/play</code>, <code>/lti/edit</code>,
+<code>/h5p/ajax</code> and <code>/h5p/contentUserData/*</code>; <code>/lti/deeplink</code> goes away with the server-rendered picker. Express
+resolves the ltik on <code>/app/*</code> before Next.js runs and passes only the page; the page script keeps the ltik in
+memory and removes it from the address bar. The editor&#39;s content files get signed grants issued after an Edit
+check (D-058&#39;s grant, bound to the content), and uploaded temporary files get a grant over
+<code>temp|userId|expiry</code> from the same key ring.</li>
+<li><strong>Consequences:</strong> Amends D-058. The redaction and query-ltik tests cover the new paths.</li>
+</ul>
+<h3 id="decisions--d-070--content-security-policy-for-h5p-pages-and-nextjs-pages-no-youtube" tabindex="-1">D-070 · Content Security Policy for H5P pages and Next.js pages; no YouTube</h3>
+<ul>
+<li><strong>Context:</strong> D-039 and <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a> require a script policy without <code>&#39;unsafe-inline&#39;</code> on the player page and no
+third-party requests. H5P Core writes one constant inline script into its iframes (<code>h5p.js</code> <code>getHeadTags</code>) and sets
+inline styles. The owner decided on 2026-10-23 that YouTube is not offered (it loads scripts and tracks viewers).</li>
+<li><strong>Decision:</strong> H5P pages move <code>H5PIntegration</code> from an inline script into a <code>&lt;script type=&quot;application/json&quot;&gt;</code> block
+read by a static boot file, and send <code>default-src &#39;none&#39;; script-src &#39;self&#39; &#39;sha256-&lt;getHeadTags&gt;&#39;; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data: blob: &lt;EXTERNAL_MEDIA_ORIGINS&gt;; media-src &#39;self&#39; blob: &lt;EXTERNAL_MEDIA_ORIGINS&gt;; connect-src &#39;self&#39;; frame-src &#39;self&#39; &lt;EXTERNAL_MEDIA_ORIGINS&gt;; font-src &#39;self&#39;; base-uri &#39;none&#39;; object-src &#39;none&#39;; form-action &#39;self&#39;; frame-ancestors &#39;self&#39; &lt;CANVAS_ORIGINS&gt;</code>. A test computes
+the hash from the installed <code>h5p.js</code>, so a core update cannot drift silently. Next.js pages get a per-request
+nonce policy with the same first-party sources. <code>EXTERNAL_MEDIA_ORIGINS</code> (for example HVL&#39;s Panopto) is the only
+way to allow outside media; YouTube is never listed. <code>SPEC-DEVIATION</code>: <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a> asks for nonces or SRI on every
+script; tags that H5P writes into its iframes cannot carry either, so they are covered by <code>&#39;self&#39;</code> instead.</li>
+<li><strong>Consequences:</strong> A content type that needs inline handlers or <code>eval</code> gets a scoped, recorded exception, never
+<code>&#39;unsafe-inline&#39;</code> for scripts. Inline styles stay allowed on H5P pages only.</li>
+</ul>
+<h3 id="decisions--d-071--cc-by-40-is-an-allowed-licence-caniuse-lite" tabindex="-1">D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)</h3>
+<ul>
+<li><strong>Context:</strong> <code>next</code> depends on <code>caniuse-lite</code>, a browser-support data set under CC-BY-4.0, which the licence check
+(<code>tools/dependency-check/checkLicences.mjs</code>) does not list.</li>
+<li><strong>Decision:</strong> CC-BY-4.0 joins the allowlist. The FSF lists it as compatible with GPLv3, and the package is data,
+not code. A per-version exception was rejected because caniuse-lite releases weekly.</li>
+<li><strong>Consequences:</strong> Attribution is kept by shipping the package&#39;s licence file.</li>
+</ul>
+<h3 id="decisions--d-072--design-tokens-generated-css-a-tailwind-v4-theme-file-and-colour-lint" tabindex="-1">D-072 · Design tokens: generated CSS, a Tailwind v4 theme file and colour lint</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-UD-001"><code>UD-001</code></a> makes <code>packages/design-tokens/tokens.json</code> the only source of colour and asks for &quot;a Tailwind
+preset&quot;. Tailwind v4 configures themes in CSS (<code>@theme</code>); a JS preset loads only through the legacy <code>@config</code>.</li>
+<li><strong>Decision:</strong> A generator writes <code>dist/tokens.css</code> (custom properties, forced-colours overrides) and
+<code>dist/tailwind-theme.css</code> (<code>@theme</code> aliases to <code>var(--hvl-*)</code>, with Tailwind&#39;s own palette removed). Both are
+committed and checked by <code>npm run tokens:check</code>, so the server needs no build step. <code>SPEC-DEVIATION</code>: the Tailwind
+&quot;preset&quot; is this theme file. Stylelint (<code>color-no-hex</code>, no colour functions or names, no <code>uppercase</code> or <code>justify</code>)
+and an ESLint rule against colour literals in <code>apps/*/src</code> and <code>packages/*/src</code> apply everywhere except
+<code>packages/design-tokens</code>; vendored H5P files, the mock platform and test fixtures are exempt, each with a <code>WHY</code>.</li>
+<li><strong>Consequences:</strong> HVL&#39;s confirmed values (Q2) change one file; the contrast test decides whether they may be used.</li>
+</ul>
+<h3 id="decisions--d-073--the-validator-is-pure-shape-based-walk-configuration-passed-in" tabindex="-1">D-073 · The validator is pure: shape-based walk, configuration passed in</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-UD-020"><code>UD-020</code></a> asks for a pure, deterministic <code>validateContent</code>. The S2 parameter walker needs an
+asynchronous semantics lookup, and spec 04 §5 keeps hint thresholds in <code>content/laeringsdesign/hint-thresholds.yaml</code>.</li>
+<li><strong>Decision:</strong> <code>validateContent(input, context)</code>: <code>context</code> carries the thresholds and the captioned media origins,
+loaded and checked with zod once at start-up (a bad file stops the server). Sub-content is found by shape (an object
+with <code>library: &quot;H5P.Name x.y&quot;</code> and <code>params</code>), recursively. Rich text is parsed with <code>htmlparser2</code> (synchronous, the
+parser sanitize-html already uses); <code>htmlparser2</code> and <code>yaml</code> become direct, pinned dependencies. Lint forbids I/O
+modules under <code>src/validation/</code>. Rule messages live in <code>src/validation/locales/</code>.</li>
+<li><strong>Consequences:</strong> The second parameter is an addition to the spec&#39;s signature, not a change to its behaviour.</li>
+</ul>
+<h3 id="decisions--d-074--publishing-server-re-validation-acknowledgements-and-concurrency" tabindex="-1">D-074 · Publishing: server re-validation, acknowledgements and concurrency</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a> and <a class="req-ref" href="#r-UD-022"><code>UD-022</code></a> let an author publish despite an error with a recorded reason, raised again
+after 14 days. D-066 waited for this flow.</li>
+<li><strong>Decision:</strong> <code>GET /api/content/:id/findings</code> returns the findings and which errors are acknowledged.
+<code>POST /api/content/:id/publish</code> takes the <code>updatedAt</code> it checked and acknowledgements <code>{ruleId, path, reason}</code>;
+the server validates the stored content again and never trusts the client&#39;s findings. An error is covered by an
+acknowledgement for the same rule and path younger than 14 days, or by one in the request; acknowledging something
+that is not a current error is a 400; remaining errors are 409 <code>hvl:publish-blocked</code>. The status change, the new
+acknowledgements and an audit event (rule IDs only, no reason text, <a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>) are one transaction conditional on
+<code>updatedAt</code> (409 <code>hvl:content-changed</code>). <code>POST …/unpublish</code> returns an activity to draft. Saving an activity that is
+already published runs the same gate. Only those who may edit (H5P-006) may publish.</li>
+<li><strong>Consequences:</strong> Acknowledgements keyed on a path ask again when list items move; that fails safe.</li>
+</ul>
+<h3 id="decisions--d-075--notice-dismissals-are-stored-per-user" tabindex="-1">D-075 · Notice dismissals are stored per user</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a> remembers the formative-use notice&#39;s dismissal per user; <code>User</code> has no preference fields and
+the Redis session ends at logout.</li>
+<li><strong>Decision:</strong> A table <code>NoticeDismissal(userId, noticeId, noticeVersion, at)</code>; a new notice version is shown again.
+<code>GET /api/me</code> and <code>PUT /api/me/notices/:noticeId</code>. Learners never see these notices, so no learner data is added.</li>
+<li><strong>Consequences:</strong> New rows in <code>docs/privacy/DATA-INVENTORY.md</code>; deleted with the account.</li>
+</ul>
+<h3 id="decisions--d-076--the-web-apps-own-typed-translations" tabindex="-1">D-076 · The web app&#39;s own typed translations</h3>
+<ul>
+<li><strong>Context:</strong> UI strings exist in <code>nn</code>, <code>nb</code> and <code>en</code> only (CLAUDE.md). The server&#39;s messages are typed from
+<code>nn.json</code> (D-046). next-intl adds routing and middleware that D-068 does not use.</li>
+<li><strong>Decision:</strong> <code>apps/web/src/i18n/</code> has the same typed <code>t()</code> and <code>locales/{nn,nb,en}.json</code> (locale-parity checked);
+the locale comes from Express&#39;s <code>x-hvli-locale</code> header (session or launch locale, else <code>nn</code>).</li>
+<li><strong>Consequences:</strong> No next-intl dependency; one key style across server and web.</li>
+</ul>
+<h3 id="decisions--d-077--api-schemas-in-packagesapi-contract-and-an-openapi-document" tabindex="-1">D-077 · API schemas in <code>packages/api-contract</code> and an OpenAPI document</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-DOC-012"><code>DOC-012</code></a> (moved from S3) asks for zod request and response schemas and an OpenAPI document at
+<code>/api/docs</code> in development. The web app becomes the first client of the API.</li>
+<li><strong>Decision:</strong> <code>packages/api-contract</code> holds the zod schemas the server validates with and the web app types against.
+The OpenAPI 3.1 document is built from them with zod 4&#39;s own <code>z.toJSONSchema</code>, served at <code>/api/docs</code> when
+<code>NODE_ENV</code> is not <code>production</code>, and a test checks that every <code>/api</code> route is listed.</li>
+<li><strong>Consequences:</strong> No OpenAPI library is added.</li>
+</ul>
+<h3 id="decisions--d-078--real-h5p-libraries-from-github-at-pinned-commits" tabindex="-1">D-078 · Real H5P libraries from GitHub at pinned commits</h3>
+<ul>
+<li><strong>Context:</strong> hub-api.h5p.org and github.com&#39;s web pages are unreachable from the build environment (Q7), but <code>git</code>
+reaches public GitHub repositories. Without real content types, <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, <a class="req-ref" href="#r-UD-011"><code>UD-011</code></a> and <a class="req-ref" href="#r-UD-030"><code>UD-030</code></a> would be tested
+on stand-ins only, and R-01 (D-047) stays open.</li>
+<li><strong>Decision:</strong> <code>tools/h5p-libraries</code> (<code>npm run h5p:fetch-libraries</code>) clones each library&#39;s repository at a commit
+pinned in a committed manifest (repository, tag, commit SHA), resolves <code>library.json</code> dependencies recursively,
+builds libraries whose built files are not committed (<code>npm ci --ignore-scripts</code> and their build script), and packs
+one <code>.h5p</code> per content type with our own example content into the gitignored <code>apps/server/var/h5p-real/</code>. The
+packages are installed through the admin package import, so the S2 package checks run on them. Library files are
+not committed (Q10 stays open); synthetic libraries remain for unit tests.</li>
+<li><strong>Consequences:</strong> Versions can differ from what the Hub serves; the Hub packages (D-042) replace them when Q7 is
+resolved. A type that cannot be assembled stays synthetic and is listed in PROGRESS.</li>
+</ul>
+<h3 id="decisions--d-079--what-s4-verifies-automatically-and-what-hvl-records-by-hand" tabindex="-1">D-079 · What S4 verifies automatically and what HVL records by hand</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a> names the last two versions of four browsers and three screen readers; <a class="req-ref" href="#r-UD-031"><code>UD-031</code></a> asks for
+dated manual results. The build environment has Chromium only and no assistive technology.</li>
+<li><strong>Decision:</strong> CI runs the axe suite and the browser checks in Chromium. <code>docs/accessibility/manual-test-protocol.md</code>
+scripts the manual tasks and the browser/assistive-technology matrix; HVL/ALU record dated results in
+<code>docs/accessibility/results/</code>. The S4 gate lists what remains manual.</li>
+<li><strong>Consequences:</strong> Firefox, Safari, Edge and the screen-reader results stay open until HVL runs the protocol.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -5893,7 +6108,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>✅ Gate passed (2026-10-23); HVL&#39;s Feide and Canvas values open (Q3, Q4)</td></tr>
 <tr>
-<td>S4</td><td>Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator</td><td>03; 04 §5; 05 <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a></td><td>⬜ Not started</td></tr>
+<td>S4</td><td>Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator</td><td>03; 04 §5; 05 <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a></td><td>🟨 In progress (2026-10-23)</td></tr>
 <tr>
 <td>S5</td><td>Læringsdesign studio, patterns, planner, pedagogisk mappe export</td><td>04</td><td>⬜ Not started</td></tr>
 <tr>
@@ -6031,9 +6246,14 @@ is linking, that Deep Linking launch opens on the new, empty Canvas account; the
 <li>Everything HVL must supply: Feide registration and redirect URIs (Q3), the TeCopp test launch and <code>feideLinking</code>
 (Q4), owner answers Q12–Q15. GitHub has never run CI on this work (Q16).</li>
 </ul>
-<h3 id="progress--s4--universal-design" tabindex="-1">S4 — Universal design ⬜</h3>
-<p>Brand tokens follow HVL&#39;s manual (D-017); HVL (<a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>) must still confirm the values and supply logo files.</p>
+<h3 id="progress--s4--universal-design" tabindex="-1">S4 — Universal design 🟨</h3>
+<p>Brand tokens follow HVL&#39;s manual (D-017); HVL (<a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>) must still confirm the values and supply logo files.
+Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one go); decisions D-067…D-079.</p>
 <ul>
+<li><span class="task">✓ Done:</span> Decisions D-067…D-079 recorded; D-047 (R-01) follows the real-library probe</li>
+<li><span class="task">○ To do:</span> Real H5P content types from GitHub at pinned commits (D-078), which also settles the S2 carry-over R-01 (D-047)</li>
+<li><span class="task">○ To do:</span> H5P pages under a strict script policy (D-070); Next.js inside Express (D-067, D-068); the editor page and the
+LTI editor in a cookie-less iframe (D-069)</li>
 <li><span class="task">○ To do:</span> <code>packages/design-tokens</code> with the contrast test and lint rules (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>)</li>
 <li><span class="task">○ To do:</span> Carried in by earlier decisions: the LTI views <code>/lti/play</code>, <code>/lti/deeplink</code> and the friendly pages move to
 <code>apps/web</code> <code>/app/*</code> on the same server APIs (D-048); the H5P editor page with the player&#39;s script-safe JSON

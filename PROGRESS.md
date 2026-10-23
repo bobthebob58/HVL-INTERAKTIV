@@ -12,7 +12,7 @@ what is done, what is verified, and what is blocked.
 | S1 | Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup | 00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD | ✅ Done (2026-10-21) |
 | S2 | Ten-type whitelist, seeding, SVG sanitiser, permission system, resume | 01 (all); 00 `PROD-002`, `PROD-008` | ✅ Gate passed (2026-10-23); spike steps 3–5 open (Q7) |
 | S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | ✅ Gate passed (2026-10-23); HVL's Feide and Canvas values open (Q3, Q4) |
-| S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ⬜ Not started |
+| S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | 🟨 In progress (2026-10-23) |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04 | ⬜ Not started |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §5–7; 05; 00 §6 | ⬜ Not started |
 
@@ -148,9 +148,14 @@ Not done in S3 (recorded 2026-10-23):
 - Everything HVL must supply: Feide registration and redirect URIs (Q3), the TeCopp test launch and `feideLinking`
   (Q4), owner answers Q12–Q15. GitHub has never run CI on this work (Q16).
 
-## S4 — Universal design ⬜
+## S4 — Universal design 🟨
 
 Brand tokens follow HVL's manual (D-017); HVL (profil@hvl.no) must still confirm the values and supply logo files.
+Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one go); decisions D-067…D-079.
+- [x] Decisions D-067…D-079 recorded; D-047 (R-01) follows the real-library probe
+- [ ] Real H5P content types from GitHub at pinned commits (D-078), which also settles the S2 carry-over R-01 (D-047)
+- [ ] H5P pages under a strict script policy (D-070); Next.js inside Express (D-067, D-068); the editor page and the
+      LTI editor in a cookie-less iframe (D-069)
 - [ ] `packages/design-tokens` with the contrast test and lint rules (`UD-001`)
 - [ ] Carried in by earlier decisions: the LTI views `/lti/play`, `/lti/deeplink` and the friendly pages move to
       `apps/web` `/app/*` on the same server APIs (D-048); the H5P editor page with the player's script-safe JSON
