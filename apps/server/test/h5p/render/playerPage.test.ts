@@ -122,4 +122,12 @@ describe('[DATA-002] no identity in the page', () => {
       );
     }
   });
+
+  it('[UD-010] the content container carries the activity’s own language, escaped, and none when it states none', () => {
+    expect(renderPlayerPage(model(), 'nn', { contentLanguage: 'en' })).toMatch(
+      /<div class="h5p-content"[^>]* lang="en">/,
+    );
+    expect(renderPlayerPage(model(), 'nn', { contentLanguage: '"><x' })).toContain('lang="&#34;&#62;&#60;x"');
+    expect(renderPlayerPage(model(), 'nn')).not.toMatch(/<div class="h5p-content"[^>]* lang=/);
+  });
 });

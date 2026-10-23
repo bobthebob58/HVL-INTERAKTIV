@@ -21,6 +21,7 @@ import express, { Router } from 'express';
 import { principalToH5pActor } from '../../auth/principalToH5pActor.js';
 import { asStateUser } from '../../h5p/HvlH5pUser.js';
 import { renderPlayerPage } from '../../h5p/render/playerPage.js';
+import { activityLanguage } from '../../validation/activityLanguage.js';
 import { authError } from '../../http/authErrors.js';
 import type { H5pRouteDeps } from '../../http/h5pRouteDeps.js';
 import { PLAYER_DISPLAY_OPTIONS } from '../../http/routes/playerRoutes.js';
@@ -51,6 +52,8 @@ export interface LtiPlayDeps {
   readonly canvasOrigins: readonly string[];
   /** The H5P page policy settings (D-070). */
   readonly pageCsp: H5pRouteDeps['pageCsp'];
+  /** The stored metadata of an activity, for its language (UD-010); called only after the View check. */
+  readonly metadataOf?: (contentId: string) => Promise<unknown>;
 }
 
 /**
@@ -82,9 +85,11 @@ export function ltiPlayRoutes(deps: LtiPlayDeps): Router {
     }
     // SECURITY: the strict H5P page policy (D-070); framed by our LTI chrome page and by Canvas (D-067).
     setLtiPageHeaders(res, h5pPageCsp(deps.pageCsp, ["'self'", ...deps.canvasOrigins]));
+    const contentLanguage = deps.metadataOf ? activityLanguage(await deps.metadataOf(contentId)) : undefined;
     res.type('html').send(
       renderPlayerPage(model, actor.locale, {
         firstScripts: [LTIK_LANDING_SCRIPT, H5P_STORAGE_GUARD_SCRIPT],
+        ...(contentLanguage ? { contentLanguage } : {}),
       }),
     );
   });

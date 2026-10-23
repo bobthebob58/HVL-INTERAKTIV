@@ -9,7 +9,8 @@
  * Invariants:
  *   - The account is created or found here (the only LTI path that may write it); the `sub` is never stored.
  *   - Nothing is recorded for an activity the launch may not view; the answer is the one 404 page.
- *   - The player is opened with `context.redirect`, which appends the ltik (LTI-003 step 1).
+ *   - The player (or, when the web app runs, its chrome page `/app/play`) is opened with `context.redirect`, which
+ *     appends the ltik (LTI-003 step 1).
  *   - Author launches are audited; learner launches are not (D-064).
  * Collaborators: ../launchFacts.ts, ../ltikPrincipal.ts, ./ltiAccount.ts, ../placements/LtiPlacementRecorder.ts,
  *   ../../auth/principalToH5pActor.ts, ../../h5p/permissions/contentRules.ts, ../ltiRoutes.ts.
@@ -39,6 +40,8 @@ export interface ResourceLinkDeps {
   readonly access: ContentAccessRepository;
   readonly placements: Pick<LtiPlacementRecorder, 'record'>;
   readonly audit: Pick<AuthAuditRecorder, 'record'>;
+  /** Where the launch lands: the web app's chrome page `/app/play` when it runs (D-067), else `/lti/play`. */
+  readonly landingPath?: string;
 }
 
 /**
@@ -74,6 +77,6 @@ export function onResourceLink(deps: ResourceLinkDeps): OnLaunchHandler {
         ...(facts.lineItemUrl ? { lineItemUrl: facts.lineItemUrl } : {}),
       });
     }
-    context.redirect(response, LTI_PLAY_PATH);
+    context.redirect(response, deps.landingPath ?? LTI_PLAY_PATH);
   };
 }

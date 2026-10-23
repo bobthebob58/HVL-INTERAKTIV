@@ -1,0 +1,12 @@
+{
+  "description": "A package's h5p.json states the language in `language` (no defaultLanguage).",
+  "mainLibrary": "H5P.AdvancedText 1.1",
+  "metadata": {
+    "title": "Frå ein pakke",
+    "language": "nn"
+  },
+  "params": {
+    "text": "<p>Tekst.</p>"
+  },
+  "expected": []
+}

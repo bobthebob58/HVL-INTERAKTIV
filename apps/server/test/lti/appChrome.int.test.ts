@@ -1,0 +1,67 @@
+/**
+ * Integration tests for launches when the web app runs: ltijs lands on the chrome page `/app/play`, which reaches the
+ * web app with the launch facts and without the ltik or any credential; an invalid ltik never reaches it; and `/` is
+ * the web app's start page. The web app is a stub that records what it received.
+ *
+ * Spec: LTI-006, LTI-003, D-067
+ */
+import type { IncomingMessage } from 'node:http';
+import request from 'supertest';
+import { afterAll, beforeAll, expect, it } from 'vitest';
+import { CANVAS_USERS } from '../../../../tools/mock-platform/mockPlatform.mjs';
+import { LAUNCH_HEADER } from '../../src/web/appLaunch.js';
+import { openAppTestbed, type AppTestbed } from '../support/appTestbed.js';
+import { launchFromCanvas } from '../support/ltiLaunchDriver.js';
+import { describeWithServices } from '../support/services.js';
+
+describeWithServices('[LTI-006] launches into the web app’s chrome page', () => {
+  let tb: AppTestbed;
+  let published: string;
+  const seen: IncomingMessage[] = [];
+  beforeAll(async () => {
+    tb = await openAppTestbed(undefined, {
+      web: { dev: false, handle: async (req, res) => void (seen.push(req), res.end('web')) },
+    });
+    published = await tb.activity(await tb.staffAccount(), { published: true, title: 'Brøkar' });
+  }, 60_000);
+  afterAll(() => tb?.close());
+
+  it('[LTI-006] a launch lands on /app/play, which hands the web app the facts but no ltik or credential', async () => {
+    // Arrange
+    const run = await launchFromCanvas(tb.app, tb.mock.canvas, {
+      user: CANVAS_USERS.student,
+      custom: { contentId: published },
+      resourceLinkId: 'chrome-link',
+    });
+    seen.length = 0;
+    // Act
+    const res = await request(tb.app)
+      .get(`/app/play?ltik=${encodeURIComponent(run.ltik ?? '')}`)
+      .set('Authorization', `Bearer ${run.ltik ?? ''}`);
+    // Assert
+    expect(run.path).toBe('/app/play');
+    expect(res.text).toBe('web');
+    expect(res.headers['content-security-policy']).toContain(
+      `frame-ancestors 'self' ${tb.env.CANVAS_ORIGINS.join(' ')}`,
+    );
+    const launch = JSON.parse(decodeURIComponent(String(seen[0]?.headers[LAUNCH_HEADER])));
+    expect(launch).toEqual({ contentId: published, title: 'Brøkar', mayEdit: false, locale: 'nn' });
+    expect(seen[0]?.url).toBe('/app/play');
+    expect(seen[0]?.headers.authorization).toBeUndefined();
+    expect(JSON.stringify(seen[0]?.rawHeaders)).not.toContain(run.ltik ?? 'no-ltik');
+  });
+
+  it('[LTI-003] an invalid ltik gets the LTI reopen page (401) and never reaches the web app', async () => {
+    seen.length = 0;
+    const res = await request(tb.app).get('/app/play?ltik=not-a-token');
+    expect(res.status).toBe(401);
+    expect(seen).toEqual([]);
+  });
+
+  it('[LTI-006] the start page / is the web app’s, not the server-rendered one', async () => {
+    seen.length = 0;
+    const res = await request(tb.app).get('/');
+    expect(res.text).toBe('web');
+    expect(seen).toHaveLength(1);
+  });
+});

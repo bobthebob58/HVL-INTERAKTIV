@@ -11,6 +11,8 @@
  *   - No download link: downloads are a separate, permission-checked route.
  *   - Extra scripts run first and are only same-origin static files (`/static/…js`), e.g. the LTI landing script
  *     that removes the ltik from the address bar (LTI-003).
+ *   - The content container carries the activity's own language as `lang` when it states one (UD-010); the page's
+ *     `lang` is the UI locale.
  *   - No inline script: the integration object is an inert JSON block that ./client/h5pIntegration.js reads, so the
  *     page works under a `script-src` without `'unsafe-inline'` (D-070, DATA-011).
  * Collaborators: ./scriptJson.ts; ../../http/routes/playerRoutes.ts (the only caller), which gets the model from
@@ -31,6 +33,8 @@ export const ANONYMOUS_H5P_USER = Object.freeze({ name: '', mail: '', id: '' });
 export interface PlayerPageOptions {
   /** Same-origin static scripts that run before H5P's, e.g. `/static/lti/ltikLanding.js`. */
   readonly firstScripts?: readonly string[];
+  /** The activity's own language tag (../../validation/activityLanguage.ts), for the content container. */
+  readonly contentLanguage?: string;
 }
 
 /**
@@ -67,7 +71,9 @@ export function renderPlayerPage(
     ...scripts,
     '</head>',
     '<body>',
-    `<div class="h5p-content" data-content-id="${escapeHtml(String(model.contentId))}"></div>`,
+    `<div class="h5p-content" data-content-id="${escapeHtml(String(model.contentId))}"${
+      options.contentLanguage ? ` lang="${escapeHtml(options.contentLanguage)}"` : ''
+    }></div>`,
     '</body>',
     '</html>',
   ].join('\n');

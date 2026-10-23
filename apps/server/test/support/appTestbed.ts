@@ -32,6 +32,7 @@ import { syncLtiPlatforms } from '../../src/lti/platforms/syncLtiPlatforms.js';
 import { createLogger } from '../../src/logging/logger.js';
 import { createApp, type App } from '../../src/server/createApp.js';
 import { createContentValidator } from '../../src/validation/validateContent.js';
+import type { WebApp } from '../../src/web/nextWebApp.js';
 import { uniqueName } from './services.js';
 import { removeTestBucket } from './storageFixtures.js';
 import { syntheticLibraryDir, type SyntheticLibrary } from './syntheticLibraries.js';
@@ -75,10 +76,12 @@ const scopedTo = (manager: PlatformManager, issuer: string): PlatformManager =>
 /**
  * Starts the app, the mock Canvas and the mock Feide.
  * @param libraries - The installed H5P libraries (default: the HTTP test set).
+ * @param options - `web`: a web app (a stub, or the built one from `loadWebApp`) mounted as main.ts mounts it.
  * @returns The testbed.
  */
 export async function openAppTestbed(
   libraries: SyntheticLibrary[] = HTTP_TEST_LIBRARIES,
+  options: { web?: Pick<WebApp, 'dev' | 'handle'> } = {},
 ): Promise<AppTestbed> {
   const startedAt = new Date();
   let handler = (_req: IncomingMessage, res: ServerResponse): void => void res.writeHead(503).end();
@@ -107,7 +110,15 @@ export async function openAppTestbed(
   const runtime = await createH5pRuntime({ env, logger, db, redis, s3 });
   // WHY: the whole app as main.ts builds it, including the real pre-publish validator (D-073).
   const validator = createContentValidator(loadValidationContext(env));
-  const built = createApp({ env, logger, db, redis, h5p: runtime, validator });
+  const built = createApp({
+    env,
+    logger,
+    db,
+    redis,
+    h5p: runtime,
+    validator,
+    ...(options.web ? { web: options.web } : {}),
+  });
   const platforms = scopedTo(built.lti.provider.platformManager, mock.canvas.issuer);
   await syncLtiPlatforms(env.LTI_PLATFORMS, { platforms, db });
   const platform = await platforms.getPlatformByUrlAndClientId(mock.canvas.issuer, mock.canvas.clientId);

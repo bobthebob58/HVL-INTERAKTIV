@@ -8,7 +8,8 @@
  * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, PROD-003, DOC-012, NFR-002
  * Invariants:
  *   - Order: trust proxy → base headers → `/healthz` → portal session → LTI (ltijs first) → Feide routes → start
- *     page → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page.
+ *     page (only without the web app) → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 →
+ *     last-resort error page. With the web app, launches land on `/app/play` (D-067).
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
  *     session with CSRF); signed file URLs are checked before it, inside the H5P router (D-058).
  *   - `X-Powered-By` is off; every response gets `nosniff` and `no-referrer`, and HSTS when the base URL is https.
@@ -98,6 +99,7 @@ export function createApp(inputs: AppInputs): App {
     player: inputs.h5p.player,
     pageCsp: inputs.h5p.pageCsp,
     editorView: inputs.h5p,
+    chromePages: Boolean(inputs.web),
     canvasOrigins: env.CANVAS_ORIGINS,
     tokenMaxAgeSeconds: env.LTI_TOKEN_MAX_AGE_SECONDS,
     publicBaseUrl: base,
@@ -151,7 +153,8 @@ export function createApp(inputs: AppInputs): App {
       },
     }),
   );
-  app.use(portalHomeRoutes());
+  // WHY: with the web app, `/` is its start page (D-067); the server-rendered one serves WEB_APP=off.
+  if (!inputs.web) app.use(portalHomeRoutes());
   app.use(
     '/api',
     authenticate,
@@ -161,7 +164,7 @@ export function createApp(inputs: AppInputs): App {
   app.use('/api', h5pErrorHandler(logger));
   app.use('/h5p', authenticate, createH5pRouter(h5pRoutes, h5pAuthenticate()));
   app.use('/h5p', h5pErrorHandler(logger));
-  if (inputs.web) app.use(webRoutes(inputs.web));
+  if (inputs.web) app.use(webRoutes(inputs.web, { canvasOrigins: env.CANVAS_ORIGINS }));
   app.use(portalNotFound());
   app.use(((error, _req, res, next) => {
     if (res.headersSent) return next(error);

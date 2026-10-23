@@ -11,7 +11,8 @@
  *   - The page is never cached (it contains the learner's preloaded state).
  *   - Without a session the browser goes to Feide login and back (S3); an unknown, draft or invisible activity is
  *     the one friendly 404 page (PROD-004). Portal pages are framed only by our own origin.
- * Collaborators: ../../h5p/render/playerPage.ts, ../../h5p/H5pPlayerFactory.ts (identity renderer).
+ * Collaborators: ../../h5p/render/playerPage.ts, ../../h5p/H5pPlayerFactory.ts (identity renderer),
+ *   ../../validation/activityLanguage.ts (the content container's `lang`, UD-010).
  * Tests: apps/server/test/http/player.int.test.ts
  */
 import type { IPlayerModel } from '@lumieducation/h5p-server';
@@ -19,6 +20,7 @@ import { Router } from 'express';
 import { safeReturnTo } from '../../auth/returnTo.js';
 import { asStateUser, type HvlH5pActor } from '../../h5p/HvlH5pUser.js';
 import { renderPlayerPage } from '../../h5p/render/playerPage.js';
+import { activityLanguage } from '../../validation/activityLanguage.js';
 import { sendPortalPage } from '../pages/portalPages.js';
 import { setPortalFrameHeaders } from '../securityHeaders.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
@@ -50,9 +52,10 @@ export function playerRoutes(deps: H5pRouteDeps): Router {
       res.redirect(302, `/auth/feide/login?returnTo=${encodeURIComponent(safeReturnTo(req.originalUrl))}`);
       return;
     }
+    const id = pathParam(req, 'contentId');
     let model: IPlayerModel;
     try {
-      model = (await deps.player.render(pathParam(req, 'contentId'), asStateUser(actor), actor.locale, {
+      model = (await deps.player.render(id, asStateUser(actor), actor.locale, {
         ...PLAYER_DISPLAY_OPTIONS,
         contextId: actor.contextId,
       })) as IPlayerModel;
@@ -71,7 +74,8 @@ export function playerRoutes(deps: H5pRouteDeps): Router {
     setPortalFrameHeaders(res);
     // SECURITY: no inline script, first-party sources only (D-070, DATA-011); framed by our own pages only.
     res.set('Content-Security-Policy', h5pPageCsp(deps.pageCsp, ["'self'"]));
-    res.type('html').send(renderPlayerPage(model, actor.locale));
+    const contentLanguage = activityLanguage(await deps.editor.contentManager.contentStorage.getMetadata(id));
+    res.type('html').send(renderPlayerPage(model, actor.locale, contentLanguage ? { contentLanguage } : {}));
   });
   return router;
 }

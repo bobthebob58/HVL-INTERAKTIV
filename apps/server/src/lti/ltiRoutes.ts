@@ -13,7 +13,7 @@
  *   - Identities are linked only for platforms with `feideLinking: true` and Feide IDs of `ALLOWED_FEIDE_ORGS`.
  *   - A launch handler's refusal is shown in the launch's language (`inLaunchLocale`, PROD-012).
  * Collaborators: ./LtiProviderFactory.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts,
- *   ./play/ltiPlayRoutes.ts, ./play/ltiEditRoutes.ts, ./deepLinking/deepLinkRoutes.ts, ./http/ltiErrorPages.ts, ./ltikPrincipal.ts,
+ *   ./play/ltiPlayRoutes.ts, ./play/ltiEditRoutes.ts, ./play/appLaunchRoutes.ts, ./deepLinking/deepLinkRoutes.ts, ./http/ltiErrorPages.ts, ./ltikPrincipal.ts,
  *   ../server/createApp.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/deepLinking/deepLinking.int.test.ts,
  *   apps/server/test/lti/ltiPageLocale.int.test.ts
@@ -44,6 +44,7 @@ import { resolveLtik, type ResolvedLtik } from './ltikPrincipal.js';
 import { createLtiProvider } from './LtiProviderFactory.js';
 import { LtiPlacementRecorder } from './placements/LtiPlacementRecorder.js';
 import type { LtiDeploymentGuard } from './platforms/LtiDeploymentGuard.js';
+import { APP_PLAY_PATH, appLaunchRoutes } from './play/appLaunchRoutes.js';
 import { ltiEditRoutes } from './play/ltiEditRoutes.js';
 import { ltiPlayRoutes } from './play/ltiPlayRoutes.js';
 
@@ -65,6 +66,8 @@ export interface LtiRouteDeps {
   readonly pageCsp: H5pRouteDeps['pageCsp'];
   /** Editor, permission system and upload grants, for `/lti/edit`. */
   readonly editorView: EditorViewDeps;
+  /** The web app runs, so launches land on its chrome page `/app/play` (D-067); else on `/lti/play` as in S3. */
+  readonly chromePages?: boolean;
   /** `CANVAS_ORIGINS`. */
   readonly canvasOrigins: readonly string[];
   /** `LTI_TOKEN_MAX_AGE_SECONDS`. */
@@ -134,6 +137,7 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
         access: deps.access,
         placements: new LtiPlacementRecorder(db),
         audit: deps.audit,
+        ...(deps.chromePages ? { landingPath: APP_PLAY_PATH } : {}),
       }),
     ),
   );
@@ -155,9 +159,21 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
     resolveLtik({ provider, deployments, accounts }, ltik);
   const router = Router();
   router.use(ltijsRouter);
+  const { contentStorage } = deps.editorView.editor.contentManager;
   router.use(
-    ltiPlayRoutes({ player: deps.player, pageCsp: deps.pageCsp, resolveLtik: resolve, canvasOrigins }),
+    ltiPlayRoutes({
+      player: deps.player,
+      pageCsp: deps.pageCsp,
+      resolveLtik: resolve,
+      canvasOrigins,
+      metadataOf: (id) => contentStorage.getMetadata(id),
+    }),
   );
+  if (deps.chromePages) {
+    const titleOf = async (id: string) =>
+      (await db.h5PContent.findUnique({ where: { id }, select: { title: true } }))?.title ?? '';
+    router.use(appLaunchRoutes({ resolveLtik: resolve, access: deps.access, titleOf }));
+  }
   router.use(
     ltiEditRoutes({ editor: deps.editorView, pageCsp: deps.pageCsp, resolveLtik: resolve, canvasOrigins }),
   );

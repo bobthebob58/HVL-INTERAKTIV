@@ -85,6 +85,7 @@ missing from this README.
 | Fixture | What it represents |
 |---|---|
 | `V-LANG/negative-language-set.json` | Metadata with defaultLanguage nn. |
+| `V-LANG/negative-package-language.json` | A package's h5p.json states the language in `language` (no defaultLanguage). |
 | `V-LANG/positive-missing-language.json` | Metadata without defaultLanguage. |
 | `V-LANG/positive-undetermined-language.json` | Metadata with H5P's «und» (undetermined). |
 

@@ -35,7 +35,8 @@ const examples = readdirSync(EXAMPLES_DIR)
         // WHY: the examples name their library as h5p.json does (`H5P.Blanks-1.14`); content.json uses a space.
         mainLibrary: example.mainLibrary.replace('-', ' '),
         params: example.params,
-        metadata: { title: example.title, defaultLanguage: example.language },
+        // WHY: as Lumi stores a package's h5p.json: the language is in `language`, not the editor's field.
+        metadata: { title: example.title, language: example.language },
         locale: 'nn',
       },
     ];

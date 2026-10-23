@@ -95,4 +95,24 @@ describeWithServices('H5P player page', () => {
       `/auth/feide/login?returnTo=${encodeURIComponent(`/h5p/play/${published}?lang=nb`)}`,
     );
   });
+
+  it('[UD-010] the content container carries the activity’s language from either metadata field', async () => {
+    // Arrange: one activity from the editor (defaultLanguage), one as a package stores it (language only)
+    const author = await tb.actor('author');
+    const learner = await tb.actor('learner');
+    const fromEditor = await tb.activity(author, {
+      published: true,
+      metadata: { title: 'Engelsk', license: 'U', defaultLanguage: 'en' },
+    });
+    const fromPackage = await tb.activity(author, {
+      published: true,
+      metadata: { title: 'Bokmål', license: 'U', language: 'nb' },
+    });
+    // Act
+    const pages = await Promise.all([fromEditor, fromPackage].map((id) => play(learner, id)));
+    // Assert
+    const langs = pages.map((r) => /<div class="h5p-content"[^>]*?(?: lang="([^"]+)")?>/.exec(r.text)?.[1]);
+    expect(langs).toEqual(['en', 'nb']);
+    expect(pages.every((r) => r.text.includes('<html lang="nn"'))).toBe(true);
+  });
 });
