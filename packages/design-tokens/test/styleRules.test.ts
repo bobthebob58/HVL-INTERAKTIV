@@ -106,6 +106,30 @@ describe('the ESLint colour rules', () => {
       /UD-001/,
     ],
     [
+      'a hex colour in an SVG attribute of a markup template',
+      'export const icon = `<svg><path fill="#004357" d="M0 0"/></svg>`;\n',
+      'apps/server/src/http/pages/fixture.ts',
+      /UD-001/,
+    ],
+    [
+      'a hex colour in a single-quoted attribute string',
+      "var html = \"<span style='color:x' data-c='#C9D5DA'>\";\n",
+      'apps/server/src/lti/pages/client/fixture.js',
+      /UD-001/,
+    ],
+    [
+      'a color-mix() value',
+      "export const c = 'color-mix(in srgb, var(--hvl-ink) 80%, transparent)';\n",
+      'apps/web/src/components/fixture.ts',
+      /UD-001/,
+    ],
+    [
+      'a color() value',
+      "var c = 'color(display-p3 0 0.3 0.4)';\n",
+      'packages/hvl-h5p-theme/src/fixture.js',
+      /UD-001/,
+    ],
+    [
       'a JSX style attribute',
       'export function Box() {\n  return <div style={{ color: "var(--hvl-ink)" }} />;\n}\n',
       'apps/web/src/components/Fixture.tsx',

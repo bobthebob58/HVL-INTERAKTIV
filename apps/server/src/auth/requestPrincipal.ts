@@ -3,7 +3,8 @@
  * the portal session (Feide), and puts the `Principal` on the response.
  *
  * Why: both entry points end in one principal (spec 02 §2). LTI requests carry the ltik as `Authorization: Bearer`;
- *      only four URLs may carry it in the query (D-058), because H5P and the first page load cannot set headers.
+ *      only the paths in `LTIK_QUERY_PATHS` may carry it in the query (D-058, D-069), because H5P and the first page
+ *      load cannot set headers.
  *      Portal requests carry the session cookie, so every state-changing request needs the CSRF token (D-057).
  * Spec: LTI-003, AUTH-003, H5P-007
  * Invariants:

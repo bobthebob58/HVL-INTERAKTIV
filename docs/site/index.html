@@ -3357,7 +3357,7 @@ stored and rendered value is escaped.</p>
 <div class="table-wrap" role="region" aria-label="Table 1, 02 Feide, LTI and grades details" tabindex="0"><table><tbody><tr><th scope="row"><strong>Status</strong></th><td>Approved for build (v1.0, 2026-10-16)</td></tr>
 <tr><th scope="row"><strong>Load in sessions</strong></th><td>S3: §1–§4, §7, §8 · S6: §5–§8 (NRPS, grade bridge, data, S3 code map)</td></tr>
 <tr><th scope="row"><strong>Owns requirement IDs</strong></th><td><code>AUTH-*</code>, <code>LTI-*</code></td></tr>
-<tr><th scope="row"><strong>Code location</strong></th><td><code>apps/server/src/auth/</code>, <code>apps/server/src/lti/</code>, <code>apps/server/src/grades/</code>, <code>apps/web/src/lib/session/</code></td></tr>
+<tr><th scope="row"><strong>Code location</strong></th><td><code>apps/server/src/auth/</code>, <code>apps/server/src/lti/</code>, <code>apps/server/src/web/</code>, <code>apps/server/src/grades/</code>, <code>apps/web/src/api/</code>, <code>apps/web/src/features/lti/</code></td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="spec-02--1-verified-facts-this-spec-relies-on-checked-2026-10-16" tabindex="-1">1. Verified facts this spec relies on (checked 2026-10-16)</h3>
@@ -3399,10 +3399,12 @@ player <code>/lti/play</code> and the Deep Linking picker <code>/lti/deeplink</c
 instead of <code>/app/…</code>. <code>apps/web</code> takes over <code>/</code> and <code>/app/*</code> in S4. Until the files origin arrives in S6 (D-045),
 the player loads content files from <code>/h5p/files/&lt;grant&gt;/…</code> on the main origin, authorised by a signed grant
 rather than a cookie or an ltik.</p>
-<p><em>From S4 (D-067, D-068, D-069):</em> ltijs redirects to <code>/app/play</code> and <code>/app/deeplink</code>, which Next.js renders after
-Express has resolved the ltik and removed it from what Next.js sees. The page keeps the ltik in memory and frames the
-H5P pages <code>/lti/play?ltik=…</code> (player) and <code>/lti/edit?ltik=…</code> (the <strong>Rediger</strong> tab), which stay server-rendered. The
-server-rendered picker <code>/lti/deeplink</code> is removed; its JSON endpoint <code>/lti/deeplink/response</code> stays.</p>
+<p><em>From S4 (D-067, D-068, D-069):</em> when the web app runs (<code>WEB_APP</code> is not <code>off</code>), ltijs sends resource-link launches
+to <code>/app/play</code>, which Next.js renders after Express has resolved the ltik and removed it from what Next.js sees. The
+page keeps the ltik in memory and frames the H5P pages <code>/lti/play?ltik=…</code> (player) and <code>/lti/edit?ltik=…</code> (the
+<strong>Rediger</strong> tab), which stay server-rendered. The Deep Linking picker stays the server-rendered page <code>/lti/deeplink</code>,
+restyled with the token CSS and given the formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>); there is no <code>/app/deeplink</code> (D-067
+amendment). Without the web app, launches land on <code>/lti/play</code> as in S3.</p>
 <p>Both entry points resolve to a single server-side <strong><code>Principal</code></strong>:</p>
 <pre class="code" tabindex="0" role="region" aria-label="Code 2, 2. Two ways in, one identity model"><code>/** What every API handler receives after authentication. Defined in apps/server/src/auth/Principal.ts */
 interface Principal {
@@ -4281,7 +4283,7 @@ output enabled. It has document language, a title, a heading outline and real te
 <div class="table-wrap" role="region" aria-label="Table 1, 05 Insight and privacy details" tabindex="0"><table><tbody><tr><th scope="row"><strong>Status</strong></th><td>Approved for build (v1.0, 2026-10-16)</td></tr>
 <tr><th scope="row"><strong>Load in sessions</strong></th><td>S1: §2 (<a class="req-ref" href="#r-DATA-001"><code>DATA-001</code></a>, <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>, <a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>), §4, §5 · S4: <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a> · S6: all</td></tr>
 <tr><th scope="row"><strong>Owns requirement IDs</strong></th><td><code>INS-*</code>, <code>DATA-*</code></td></tr>
-<tr><th scope="row"><strong>Code location</strong></th><td><code>apps/server/src/insight/</code>, <code>apps/server/src/privacy/</code>, <code>apps/web/src/app/innsikt/</code></td></tr>
+<tr><th scope="row"><strong>Code location</strong></th><td><code>apps/server/src/insight/</code>, <code>apps/server/src/privacy/</code>, <code>apps/server/src/web/</code>, <code>apps/server/src/http/h5pPageCsp.ts</code>, <code>apps/web/src/app/innsikt/</code></td></tr>
 </tbody></table></div>
 <p>Insight exists for one purpose: to help a teacher decide what to do in the next synchronous
 session (Just-in-Time Teaching). It is <strong>not</strong> for surveilling or ranking individual students.
@@ -4936,7 +4938,7 @@ or the CSRF token). <code>style-src</code> still allows <code>&#39;unsafe-inline
 injected CSS can change how an activity looks but not run code. The S2 upload checks (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>, <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a>)
 and admin-only library installation (<a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>) limit what an activity can carry.</li>
 <li><strong>Tokens travel in some URLs, so proxies must not log query strings</strong> (D-057, D-058). A launch reaches
-<code>/lti/play</code> and <code>/lti/deeplink</code> with the ltik in the query (a first-party script then removes it from the
+<code>/app/play</code>, <code>/lti/play</code>, <code>/lti/edit</code> and <code>/lti/deeplink</code> with the ltik in the query (a first-party script then removes it from the
 address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF token as a query value,
 because H5P builds those URLs itself. Our logs redact these values (<a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>), but a reverse proxy, load
 balancer or CDN in front of the server must not log query strings and must not cache responses that set
@@ -5980,6 +5982,11 @@ framing does not isolate the ltik from H5P content; the script policy is the def
 Deep Linking answer without adding anything for the teacher. ltijs sends resource-link launches to <code>/app/play</code>
 only when the web app runs (<code>WEB_APP</code> is not <code>off</code>); otherwise to <code>/lti/play</code> as in S3, so the integration tests
 without the web app keep their flow.</li>
+<li><strong>Amendment (2026-10-23, integration):</strong> the refusal of top-level navigations is <code>src/web/chromeRedirect.ts</code>,
+mounted only when the web app runs. A browser&#39;s own navigation (<code>Sec-Fetch-Dest: document</code>, <code>Sec-Fetch-Mode: navigate</code>) to <code>/h5p/play/:id</code> or <code>/h5p/edit/:id</code> gets 303 to <code>/aktivitet/:id</code>, <code>/h5p/new</code> to <code>/aktivitet/ny</code>, and
+<code>/lti/play</code> or <code>/lti/edit</code> to <code>/app/play</code> with only the ltik carried over (<code>no-store</code>, <code>no-referrer</code>). Frames,
+fetches and clients without fetch metadata get the page as before, so the integration tests and older browsers
+are unaffected.</li>
 </ul>
 <h3 id="decisions--d-068--express-is-the-front-door-and-runs-nextjs-in-the-same-process" tabindex="-1">D-068 · Express is the front door and runs Next.js in the same process</h3>
 <ul>
@@ -6053,6 +6060,10 @@ gives its scratch document a <code>&lt;base&gt;</code> with the page&#39;s own U
 refused); and BranchingScenario&#39;s editor embeds H5P&#39;s online tutorial (<code>documentation.h5p.com</code>), which the policy
 keeps out as intended (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>); the editor works without it, and the browser test lists it so a new outside
 frame is noticed.</li>
+<li><strong>Amendment (2026-10-23, integration of the web shell):</strong> the web pages&#39; <code>form-action</code> is <code>&#39;self&#39;</code> plus the origin
+of <code>FEIDE_ISSUER</code>. The start page&#39;s logout form posts to <code>/auth/logout</code>, which answers 303 to Feide&#39;s end-session
+endpoint, and Chromium applies <code>form-action</code> to that redirect as well (the web workstream&#39;s probe); with <code>&#39;self&#39;</code>
+alone, logout from the web app was refused. No other directive names an outside origin.</li>
 </ul>
 <h3 id="decisions--d-071--cc-by-40-is-an-allowed-licence-caniuse-lite" tabindex="-1">D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)</h3>
 <ul>
@@ -6362,7 +6373,8 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
 ten Nynorsk example activities; all ten install through the seed path, import, save and play in Chromium;
 R-01 settled (D-047). Found and fixed: library folders refused icon fonts (SEC-002 list applied to them)</li>
 <li><span class="task">✓ Done:</span> H5P player pages under a strict script policy (D-070): JSON data block, <code>script-src &#39;self&#39;</code> plus the hash of
-Core&#39;s one iframe script; an injected inline script never runs in the ten real types</li>
+Core&#39;s one iframe script; all ten real types play under it, and an injected inline script never runs
+(tested on the CoursePresentation page and its frames)</li>
 <li><span class="task">✓ Done:</span> Next.js inside Express (D-067, D-068): built and dev modes, nonce on every script, credentials and the ltik
 removed before Next.js, locale header, no server endpoints in <code>apps/web</code>. Found and fixed: <code>next</code> ≤ 16.4.0 has
 critical advisories (pinned 16.4.2), telemetry is now off, and the S1 licence check skipped every production

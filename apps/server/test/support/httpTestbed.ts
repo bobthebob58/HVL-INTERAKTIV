@@ -7,6 +7,10 @@
  *      With `seedFrom`, real packages are installed through the seed path first (D-078), so real content types
  *      run behind the same router.
  * Spec: H5P-004, H5P-006
+ * Invariants: every testbed has its own library folder and buckets, which `close()` removes, and its rows use fresh
+ *   IDs, so test files can run in parallel.
+ * Collaborators: ../../src/h5p/createH5pRuntime.ts, ../../src/http/createH5pRouter.ts, ./syntheticLibraries.ts,
+ *   ./realPackages.ts, ./testActors.ts.
  * Tests: shared by apps/server/test/http/*.int.test.ts.
  */
 import { randomUUID } from 'node:crypto';

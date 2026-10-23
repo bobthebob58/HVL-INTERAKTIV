@@ -1,8 +1,8 @@
 # CI: the Session gate from docs/EVALUATOR-GUIDE.md §5, on every push to main and every pull request.
 # Requirements: NFR-004 (typecheck, lint, tests, traceability), SEC-007 (pins, audit), NFR-005 (licences),
 # DATA-001 (data inventory), H5P-001 (verified H5P client files and the boot check), D-023 (services).
-# CI never contacts the H5P Hub (D-041). It does not seed real packages yet: they are fetched once the Hub is
-# reachable (Q7, H5P-003); until then the integration tests seed synthetic packages.
+# CI never contacts the H5P Hub (D-041). The ten real content types are fetched from GitHub at pinned commits and
+# verified (D-078); unit tests use synthetic packages, the real-type browser tests the fetched ones.
 name: CI
 
 on:
@@ -71,16 +71,19 @@ jobs:
         run: npm run db:generate --workspace apps/server && npm run db:migrate
       - name: Install full Chromium for the browser and end-to-end tests (SEC-001, D-065; never --only-shell)
         run: npx playwright-core install --with-deps chromium
+      # WHY: the workspace build regenerates the committed token and theme files, so they are checked before it.
+      - name: Design tokens and theme prefixes are up to date (UD-001, UD-003, D-072)
+        run: npm run tokens:check && npm run check --workspace packages/hvl-h5p-theme
       - name: Build the web app (apps/web, Next.js in the server process; D-068)
         run: npm run build
+      - name: The build left the committed token and theme files unchanged (D-072)
+        run: git diff --exit-code -- packages/design-tokens/dist packages/hvl-h5p-theme/dist
       - name: Typecheck
         run: npm run typecheck
       - name: Lint
         run: npm run lint
       - name: CSS lint (colours only from tokens, no uppercase or justified text; UD-001, UD-002)
         run: npm run lint:css
-      - name: Design tokens are up to date (UD-001, D-072)
-        run: npm run tokens:check
       - name: Formatting
         run: npm run format:check
       - name: Documentation standard (doc-lint rules, see tools/doc-lint/README.md)

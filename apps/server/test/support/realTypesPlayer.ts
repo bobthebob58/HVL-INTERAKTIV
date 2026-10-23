@@ -5,6 +5,8 @@
  * Why: the theme tests (UD-003, UD-011) need the real H5P markup of all ten types (D-078) behind the production
  *      router, in more than one test file; one setup keeps them consistent.
  * Spec: UD-003, UD-011
+ * Invariants: every example is imported through the seed path and published, so players show what learners see.
+ * Collaborators: ./httpTestbed.ts, ./realPackages.ts, ./browser.ts.
  * Tests: apps/server/test/h5p/hvlTheme.browser.int.test.ts, apps/server/test/h5p/hvlFeedback.browser.int.test.ts
  */
 import type { Server } from 'node:http';

@@ -217,7 +217,7 @@ must be pasted into `PROGRESS.md`, before the next session starts.
    injected CSS can change how an activity looks but not run code. The S2 upload checks (`SEC-001`, `SEC-002`)
    and admin-only library installation (`SEC-003`) limit what an activity can carry.
 9. **Tokens travel in some URLs, so proxies must not log query strings** (D-057, D-058). A launch reaches
-   `/lti/play` and `/lti/deeplink` with the ltik in the query (a first-party script then removes it from the
+   `/app/play`, `/lti/play`, `/lti/edit` and `/lti/deeplink` with the ltik in the query (a first-party script then removes it from the
    address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF token as a query value,
    because H5P builds those URLs itself. Our logs redact these values (`DATA-009`), but a reverse proxy, load
    balancer or CDN in front of the server must not log query strings and must not cache responses that set

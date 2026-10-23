@@ -5,7 +5,7 @@
 | **Status** | Approved for build (v1.0, 2026-10-16) |
 | **Load in sessions** | S1: §2 (`DATA-001`, `DATA-002`, `DATA-009`), §4, §5 · S4: `DATA-006`, `DATA-011` · S6: all |
 | **Owns requirement IDs** | `INS-*`, `DATA-*` |
-| **Code location** | `apps/server/src/insight/`, `apps/server/src/privacy/`, `apps/web/src/app/innsikt/` |
+| **Code location** | `apps/server/src/insight/`, `apps/server/src/privacy/`, `apps/server/src/web/`, `apps/server/src/http/h5pPageCsp.ts`, `apps/web/src/app/innsikt/` |
 
 Insight exists for one purpose: to help a teacher decide what to do in the next synchronous
 session (Just-in-Time Teaching). It is **not** for surveilling or ranking individual students.

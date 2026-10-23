@@ -6,6 +6,8 @@
  *      `<script type="application/json" id="h5p-integration">` block instead of an inline script. Tests read it in one
  *      way, so a change to the page format changes one helper.
  * Spec: DATA-011, H5P-009
+ * Invariants: reads only; a page without the data block yields null, never a guess.
+ * Collaborators: ../../src/h5p/render/playerPage.ts, ../../src/h5p/render/editorPage.ts.
  * Tests: shared by apps/server/test/http/*.int.test.ts and apps/server/test/lti/*.int.test.ts.
  */
 

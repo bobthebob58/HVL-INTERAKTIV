@@ -5,7 +5,7 @@
 | **Status** | Approved for build (v1.0, 2026-10-16) |
 | **Load in sessions** | S3: §1–§4, §7, §8 · S6: §5–§8 (NRPS, grade bridge, data, S3 code map) |
 | **Owns requirement IDs** | `AUTH-*`, `LTI-*` |
-| **Code location** | `apps/server/src/auth/`, `apps/server/src/lti/`, `apps/server/src/grades/`, `apps/web/src/lib/session/` |
+| **Code location** | `apps/server/src/auth/`, `apps/server/src/lti/`, `apps/server/src/web/`, `apps/server/src/grades/`, `apps/web/src/api/`, `apps/web/src/features/lti/` |
 
 ---
 
@@ -48,10 +48,12 @@ instead of `/app/…`. `apps/web` takes over `/` and `/app/*` in S4. Until the f
 the player loads content files from `/h5p/files/<grant>/…` on the main origin, authorised by a signed grant
 rather than a cookie or an ltik.
 
-*From S4 (D-067, D-068, D-069):* ltijs redirects to `/app/play` and `/app/deeplink`, which Next.js renders after
-Express has resolved the ltik and removed it from what Next.js sees. The page keeps the ltik in memory and frames the
-H5P pages `/lti/play?ltik=…` (player) and `/lti/edit?ltik=…` (the **Rediger** tab), which stay server-rendered. The
-server-rendered picker `/lti/deeplink` is removed; its JSON endpoint `/lti/deeplink/response` stays.
+*From S4 (D-067, D-068, D-069):* when the web app runs (`WEB_APP` is not `off`), ltijs sends resource-link launches
+to `/app/play`, which Next.js renders after Express has resolved the ltik and removed it from what Next.js sees. The
+page keeps the ltik in memory and frames the H5P pages `/lti/play?ltik=…` (player) and `/lti/edit?ltik=…` (the
+**Rediger** tab), which stay server-rendered. The Deep Linking picker stays the server-rendered page `/lti/deeplink`,
+restyled with the token CSS and given the formative notice (`PROD-011`); there is no `/app/deeplink` (D-067
+amendment). Without the web app, launches land on `/lti/play` as in S3.
 
 Both entry points resolve to a single server-side **`Principal`**:
 
