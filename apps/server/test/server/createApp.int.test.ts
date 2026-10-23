@@ -66,6 +66,7 @@ describeWithServices('The assembled app', () => {
     });
 
     it('[AUTH-003] a logout form that is too large or in another charset gets a 4xx page, not a server error', async () => {
+      // Act
       const large = await request(tb.app)
         .post('/auth/logout')
         .type('form')
@@ -74,6 +75,7 @@ describeWithServices('The assembled app', () => {
         .post('/auth/logout')
         .set('Content-Type', 'application/x-www-form-urlencoded; charset=koi8-r')
         .send('csrf=x');
+      // Assert
       expect(large.status).toBe(413);
       expect(charset.status).toBe(415);
       expect(large.type).toBe('text/html');
