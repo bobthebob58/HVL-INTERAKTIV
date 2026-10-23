@@ -27,15 +27,16 @@ model User {
   acknowledgements ValidationAcknowledgement[]
 }
 
-/// One way a user logs in. `subjectHash` is an HMAC of the Feide ID or of `iss|sub`, never the raw value;
-/// its key is a stable secret defined with the S3 authentication code (see DATA-INVENTORY.md).
+/// One way a user logs in. `subjectHash` is an HMAC of the Feide ID or of `iss|sub`, never the raw value, made
+/// with the `IDENTITY_HASH_KEYS` key named in `subjectKeyId` (D-055: re-hashed with the current key at login).
 model Identity {
-  id          String           @id @default(uuid(7)) @db.Uuid
-  userId      String           @db.Uuid
-  provider    IdentityProvider
-  subjectHash String
-  platformId  String?          @db.Uuid
-  createdAt   DateTime         @default(now())
+  id           String           @id @default(uuid(7)) @db.Uuid
+  userId       String           @db.Uuid
+  provider     IdentityProvider
+  subjectHash  String
+  subjectKeyId String
+  platformId   String?          @db.Uuid
+  createdAt    DateTime         @default(now())
 
   user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   platform LtiPlatform? @relation(fields: [platformId], references: [id], onDelete: Cascade)
@@ -44,13 +45,17 @@ model Identity {
   @@index([userId])
 }
 
-/// Login, logout and role events (spec 02). No foreign key, so the record outlives the user row.
+/// Login, logout, launch and account-linking events (D-064). No foreign key, so the record outlives the user
+/// row. `ipHash` is made with the `IDENTITY_HASH_KEYS` key named in `ipKeyId`; `reason` is a fixed code.
 model AuthAuditEvent {
   id          String   @id @default(uuid(7)) @db.Uuid
   at          DateTime @default(now())
   actorUserId String?  @db.Uuid
   event       String
+  reason      String?
   ipHash      String?
+  ipKeyId     String?
 
   @@index([at])
+  @@index([actorUserId])
 }

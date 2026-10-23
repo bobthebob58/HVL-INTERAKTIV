@@ -11,7 +11,7 @@
 | Column | Meaning |
 |---|---|
 | Purpose | Why the field is stored. A field with no purpose is not stored. |
-| Category | **None**: not personal data. **Staff PII**: personal data about staff (authors, admins). **Learner PII**: a direct identifier of a learner. **Pseudonymous**: learner data that can be linked to a person only with that academic year's secret (`DATA-002`); it becomes unlinkable when the yearly purge destroys the secret. **Pseudonymous (stable key)**: a keyed HMAC whose key does not rotate yearly, so the value stays linkable as long as that key exists; the key and its rotation are defined with the authentication code in Session 3 (spec 02). **Secret**: a credential, not personal data. |
+| Category | **None**: not personal data. **Staff PII**: personal data about staff (authors, admins). **Learner PII**: a direct identifier of a learner. **Pseudonymous**: learner data that can be linked to a person only with that academic year's secret (`DATA-002`); it becomes unlinkable when the yearly purge destroys the secret. **Pseudonymous (stable key)**: a keyed HMAC whose key does not rotate yearly, so the value stays linkable as long as that key exists. The key is `IDENTITY_HASH_KEYS` (D-055): a new key is put first, matching rows are re-hashed at the next login, and an old key is removed after at least 13 months (at once if it leaked). **Secret**: a credential, not personal data. |
 | Legal basis | **6(1)(e)**: GDPR Art. 6(1)(e), a task in the public interest (higher education). **n/a**: not personal data. |
 | Retention | **Yearly purge**: deleted 30 days after the academic year ends, and that year's pseudonym secret is destroyed (`DATA-003`). **Account**: until the staff account is deleted. **2 years**: audit records (`DATA-007`). Other periods are stated in the row. |
 | Location | **PG**: PostgreSQL hosted in Norway or the EEA, encrypted at rest (`DATA-004`). Media bytes are in S3-compatible storage in the same region. |
@@ -40,12 +40,14 @@ One login method of a user. The subject is stored only as an HMAC.
 | `userId` | Links the login to the user | Staff PII (by reference); learner rows: Pseudonymous (stable key, by reference; D-034) | 6(1)(e) | Account; learner rows: yearly purge | PG |
 | `provider` | Feide or LTI | None | n/a | Account; learner rows: yearly purge | PG |
 | `subjectHash` | Recognises the same person at the next login without storing the Feide ID or LTI `sub` | Pseudonymous (stable key) | 6(1)(e) | Account; learner rows: yearly purge | PG |
+| `subjectKeyId` | Which identity key made `subjectHash`, so a rotated key can be found and the row re-hashed (D-055) | None | n/a | Account; learner rows: yearly purge | PG |
 | `platformId` | Which LMS an LTI identity comes from | None | n/a | Account; learner rows: yearly purge | PG |
 | `createdAt` | Purge boundary | None | n/a | Account; learner rows: yearly purge | PG |
 
 ## AuthAuditEvent
 
-Login, logout and role events (spec 02).
+Login, logout, author launch and account-linking events (D-064). Learner LTI launches are not recorded
+(minimisation).
 
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
@@ -53,7 +55,9 @@ Login, logout and role events (spec 02).
 | `at` | When it happened | None | n/a | 2 years | PG |
 | `actorUserId` | Who logged in (internal ID; empty for failed logins) | Staff PII (by reference); learner rows: Pseudonymous (stable key, by reference; D-034) | 6(1)(e) | 2 years | PG |
 | `event` | Event code, e.g. `login.feide` | None | n/a | 2 years | PG |
+| `reason` | Fixed failure code, e.g. `deployment-not-allowed`; never free text | None | n/a | 2 years | PG |
 | `ipHash` | Keyed hash of the IP address, for abuse detection only | Pseudonymous (stable key) | 6(1)(e) | 2 years | PG |
+| `ipKeyId` | Which identity key made `ipHash` (D-055) | None | n/a | 2 years | PG |
 
 ## H5PContent
 
@@ -152,6 +156,17 @@ A registered LMS such as HVL's Canvas.
 | `createdAt` | Audit | None | n/a | While registered | PG |
 | `updatedAt` | Audit | None | n/a | While registered | PG |
 
+## LtiDeployment
+
+A deployment of the tool that may launch it, from `LTI_PLATFORMS` (D-051).
+
+| Field | Purpose | Category | Legal basis | Retention | Location |
+|---|---|---|---|---|---|
+| `id` | Internal key | None | n/a | While configured | PG |
+| `platformId` | Which LMS | None | n/a | While configured | PG |
+| `deploymentId` | Canvas deployment ID; launches from other deployments are refused | None | n/a | While configured | PG |
+| `createdAt` | Audit | None | n/a | While configured | PG |
+
 ## LtiAccessToken
 
 Cached OAuth2 token for AGS and NRPS calls.
@@ -173,7 +188,7 @@ A validated launch token, needed by ltijs during the launch.
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
 | `id` | ltijs record key | None | n/a | 24 h | PG |
-| `claims` | LTI claims of the launch. With Canvas `privacy_level` anonymous it holds no name or e-mail, but it holds `sub` | Learner PII | 6(1)(e) | 24 h | PG |
+| `claims` | The allowlisted LTI claims of the launch (D-052): never names, e-mail, `lis` or unknown custom fields, but it holds `sub` | Learner PII | 6(1)(e) | 24 h | PG |
 | `createdAt` | Expiry calculation | None | n/a | 24 h | PG |
 | `expiresAt` | When it is deleted | None | n/a | 24 h | PG |
 
@@ -183,8 +198,8 @@ Used OIDC nonces, to reject replayed launches.
 
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
-| `nonce` | Random value from the launch | None | n/a | 1 h | PG |
-| `createdAt` | Expiry calculation | None | n/a | 1 h | PG |
+| `nonce` | Random value from the launch | None | n/a | 10 minutes (D-052) | PG |
+| `createdAt` | Expiry calculation | None | n/a | 10 minutes (D-052) | PG |
 
 ## LtiPlacement
 
@@ -312,3 +327,20 @@ Who did what to which object (DATA-007).
 | `targetType` | Kind of object | None | n/a | 2 years | PG |
 | `targetId` | Which object | None; Pseudonymous when the target is a learner (data-subject actions, `DATA-008`) | 6(1)(e) | 2 years | PG |
 | `details` | Structured details, never free text with personal data | None | n/a | 2 years | PG |
+
+## Redis: portal sessions and login transactions
+
+Not database models, so the inventory check does not read this section. Redis is hosted with PostgreSQL
+(`DATA-004`); keys are a SHA-256 of the cookie value, so a Redis dump does not reveal a usable cookie (D-057).
+
+| Field | Purpose | Category | Legal basis | Retention | Location |
+|---|---|---|---|---|---|
+| session `userId` | Who is logged in | Staff PII (by reference); learner: Pseudonymous (stable key, by reference) | 6(1)(e) | Logout, 2 h idle or 12 h absolute | Redis |
+| session `roles`, `hvlMember`, `studentAuthor`, `locale` | Permissions computed at login (D-057) | None | n/a | Logout, 2 h idle or 12 h absolute | Redis |
+| session `learnerKey` | The learner pseudonym for H5P state, computed at login | Pseudonymous | 6(1)(e) | Logout, 2 h idle or 12 h absolute | Redis |
+| session `csrfToken` | Synchronizer token for state-changing requests (AUTH-003) | Secret | n/a | Logout, 2 h idle or 12 h absolute | Redis |
+| session `idTokenEncrypted` | Feide ID token for `id_token_hint` at logout (D-021), encrypted (D-056) | Staff or learner PII (encrypted) | 6(1)(e) | Logout, 2 h idle or 12 h absolute | Redis |
+| session `createdAt`, `lastSeenAt` | Idle and absolute expiry | None | n/a | Logout, 2 h idle or 12 h absolute | Redis |
+| login `state`, `nonce`, `codeVerifier` | Bind the Feide callback to this browser (login CSRF, PKCE) | Secret | n/a | Single use, at most 10 minutes | Redis |
+| login `returnTo` | A checked local path to open after login | None | n/a | Single use, at most 10 minutes | Redis |
+| LTI cache | Platforms' public JWKS and keysets (D-050) | None | n/a | Cache lifetime | Redis |

@@ -32,10 +32,24 @@ model LtiPlatform {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
-  identities Identity[]
-  placements LtiPlacement[]
+  identities  Identity[]
+  placements  LtiPlacement[]
+  deployments LtiDeployment[]
 
   @@unique([url, clientId])
+}
+
+/// A deployment of the tool on a platform that may launch it (D-051). Replaced from `LTI_PLATFORMS` at start-up;
+/// a launch whose `deployment_id` is not listed gets no ltik.
+model LtiDeployment {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  platformId   String   @db.Uuid
+  deploymentId String
+  createdAt    DateTime @default(now())
+
+  platform LtiPlatform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@unique([platformId, deploymentId])
 }
 
 /// A cached OAuth2 access token from a platform (client-credentials grant), encrypted.
@@ -51,7 +65,8 @@ model LtiAccessToken {
   @@unique([platformUrl, clientId, scopes])
 }
 
-/// A validated LTI launch id_token. PRIVACY: may contain LTI claims; deleted 24 h after `createdAt`.
+/// A validated LTI launch id_token. PRIVACY: only allowlisted claims are stored (D-052), never names, e-mail,
+/// `lis` or unknown custom fields; deleted 24 h after `createdAt`.
 model LtiIdToken {
   id        String   @id
   claims    Json
@@ -61,7 +76,7 @@ model LtiIdToken {
   @@index([expiresAt])
 }
 
-/// A used OIDC nonce, kept briefly to reject replays.
+/// A used OIDC nonce, kept 10 minutes to reject replays (D-052).
 model LtiNonce {
   nonce     String   @id
   createdAt DateTime @default(now())

@@ -75,6 +75,7 @@ model ContentCollaborator {
   user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([contentId, userId])
+  @@index([userId])
 }
 
 /// H5P resume state for one learner (pseudonym) in one activity and context (H5P-005).

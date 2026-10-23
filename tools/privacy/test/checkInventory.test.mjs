@@ -73,6 +73,25 @@ describe('[DATA-001] data inventory matches the schema', () => {
     ]);
   });
 
+  it('[DATA-001] ignores tables under a heading that is not a model name', () => {
+    // Arrange: a section about data outside PostgreSQL after the last model.
+    const md = [
+      `## Note`,
+      HEADER,
+      row('id'),
+      row('text'),
+      row('ownerId'),
+      '## Redis: sessions',
+      HEADER,
+      row('csrf'),
+    ];
+    // Act
+    const inventory = parseInventory(md.join('\n'));
+    // Assert
+    expect([...(inventory.get('Note')?.keys() ?? [])]).toEqual(['id', 'text', 'ownerId']);
+    expect(inventory.has('Redis')).toBe(false);
+  });
+
   it('[DATA-001] passes on this repository', () => {
     const inventory = parseInventory(readFileSync(join(ROOT, INVENTORY), 'utf8'));
     expect(compareInventory(readSchemaModels(ROOT), inventory)).toEqual([]);

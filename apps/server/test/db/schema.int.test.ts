@@ -32,6 +32,7 @@ describeWithServices('[DATA-002] database enforces pseudonymous learners', () =>
         'LearningOutcome',
         'LibraryAuditEvent',
         'LtiAccessToken',
+        'LtiDeployment',
         'LtiIdToken',
         'LtiNonce',
         'LtiPlacement',

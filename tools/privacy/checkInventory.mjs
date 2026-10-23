@@ -51,6 +51,8 @@ export function parseInventory(markdown) {
   const models = new Map();
   let current;
   for (const line of markdown.split('\n')) {
+    // WHY: any other level-2 heading (e.g. the Redis section) ends the model section above it.
+    if (line.startsWith('## ')) current = undefined;
     const heading = /^## `?(\w+)`?\s*$/.exec(line);
     if (heading) models.set(heading[1], (current = new Map()));
     const row = /^\|\s*`(\w+)`\s*\|(.*)\|\s*$/.exec(line);
