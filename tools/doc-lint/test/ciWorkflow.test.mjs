@@ -22,7 +22,7 @@ describe('[NFR-004] CI runs the maintainability gates', () => {
   });
 
   it('[NFR-004] runs the traceability check for every finished session', () => {
-    expect(runs('npm run spec:trace -- --check --done-through=S2')).toBe(true);
+    expect(runs('npm run spec:trace -- --check --done-through=S3')).toBe(true);
     expect(runs('npm run spec:site -- --check')).toBe(true);
   });
 
