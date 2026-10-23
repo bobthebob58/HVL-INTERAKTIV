@@ -10,8 +10,8 @@
  *     created.
  *   - The picker is opened with `context.redirect`, which appends the ltik.
  *   - Every Deep Linking launch is an author launch and is audited (D-064), and so is the linking outcome: a
- *     refusal on the claimant's own account, a link on the account the launch ends in (D-063); a link is audited
- *     without an actor when the launch fails after it.
+ *     refusal on the claimant's own account, a link on the account the launch ends in (D-063); either is audited
+ *     without an actor when the launch fails after linking.
  *   - Linking runs before the account is resolved and only reads the in-memory claims (`context.rawIdToken`).
  * Collaborators: ../launchFacts.ts, ./ltiAccount.ts, ../../auth/identity/accountLinking.ts, ../ltiRoutes.ts.
  * Tests: apps/server/test/lti/launch/onDeepLinking.test.ts, apps/server/test/lti/deepLinking/deepLinking.int.test.ts,
@@ -60,7 +60,7 @@ export function onDeepLinking(deps: DeepLinkingDeps): OnLaunchHandler {
     try {
       account = await deps.accounts.atLaunch({ ...identity, roles });
     } catch (error) {
-      // WHY: a link already written stays in the audit even when the launch then fails (D-064).
+      // WHY: what linking did or refused stays in the audit even when the launch then fails (D-064).
       if (linked) await deps.audit.record(linked);
       throw error;
     }

@@ -117,7 +117,9 @@ export function accountLinker(
         });
         if (rival > 0) return outcome('link.conflict', 'platform-identity-exists');
         if (decision.kind === 'link-new') {
-          // WHY: a second launch at the same moment (a double click) already made the identity; its result stands.
+          // WHY: another launch of this person made the identity a moment ago, here (a double click) or on a new
+          //      account (a first resource-link launch); its result stands, and the next Deep Linking launch moves
+          //      an identity whose account owns nothing (D-063).
           const made = await tx.identity.count({ where: { provider: 'lti', subjectHash: { in: own } } });
           if (made > 0) return undefined;
           const { hash, keyId } = hasher.hash('identity-subject', ltiSource);

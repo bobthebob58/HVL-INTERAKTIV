@@ -672,9 +672,11 @@ loading of one spec per session are kept.
   months after the last step-2 restart. Putting the new key first in one step lets a server still on the old ring
   miss a row hashed with the new key and give that person a second account, and the lookup cannot repair that later
   (`src/auth/identity/identityLookup.ts` prefers the current-key row, else the oldest). A leaked key is rotated with
-  the same steps, started at once, and stays in the ring while rows re-hash. Residual risk, accepted: until it is
-  removed, whoever holds the leaked key and a copy of the database can test guessed Feide IDs and IP addresses
-  against the hashes; without a guess the hashes reveal nothing.
+  the same steps, started at once, and stays in the ring while rows re-hash. Residual risk, accepted: whoever
+  holds the leaked key and a copy of the database can test guessed Feide IDs and IP addresses against every hash
+  made with that key for as long as such rows exist: `AuthAuditEvent.ipHash` rows with that `ipKeyId` (up to 2
+  years) and `Identity` rows of people who never log in or launch again (retention: account). Removing the key
+  from the ring does not end this; without a guess the hashes reveal nothing.
 
 ### D-056 · Secrets at rest are encrypted with AES-256-GCM from a key ring
 - **Context:** `LTI-002` requires platform private keys encrypted at rest; D-021 requires the Feide ID token in the
@@ -786,8 +788,8 @@ loading of one spec per session are kept.
   `platform-identity-exists`); that check and the write run in one transaction with the Feide account's row
   locked; the same person's launch arriving twice at once (a double click) is no rival and no conflict. A refusal
   is audited on the claimant's own account (the one the launch uses), never on the Feide account it named; a link
-  is audited on the account the launch then uses, which is the Feide account, and without an actor if the launch
-  fails after the link was written.
+  is audited on the account the launch then uses, which is the Feide account. If the launch fails after linking,
+  the outcome (link or refusal) is audited without an actor.
 - **Consequences:** No content ever changes owner through linking. A teacher who starts in Canvas is linked at the
   first Deep Linking launch after their first Feide login; if their Canvas account owns content by then, the two
   libraries stay apart (`link.conflict`) until a "Link with Feide" step that proves both identities exists (the
@@ -799,7 +801,8 @@ loading of one spec per session are kept.
 - **Decision:** Recorded events: `login.feide`, `login.feide.failed`, `logout`, `launch.lti.author`,
   `launch.lti.failed`, `link.feide-lti`, `link.conflict`; `ipHash` uses the D-055 key. Learner LTI launches are not
   recorded (volume and data minimisation). `ipHash` is recorded for logins, failed logins, logouts and failed
-  launches; author launches and link outcomes carry the actor instead.
+  launches; author launches and link outcomes carry the actor instead (a link outcome has none when its launch
+  then fails, D-063).
 - **Consequences:** The owner confirms the learner rule (Q15).
 
 ### D-065 · End-to-end tests in Session 3

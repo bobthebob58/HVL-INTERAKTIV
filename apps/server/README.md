@@ -336,7 +336,7 @@ sequenceDiagram
     DL->>LK: custom.feide_login from the in-memory claims (authors only, "$…" ignored, never stored)
     LK->>LK: D-063, only for a platform with feideLinking true and a Feide ID in ALLOWED_FEIDE_ORGS. The LTI identity joins the existing Feide account of a non-learner (audit link.feide-lti), or moves there only when its account owns and co-authors nothing. A learner's Feide account, a Feide account that already holds another person's identity from this platform, or a Canvas account that owns content is refused (link.conflict) and nothing changes. No Feide account, no link
     LK-->>DL: the outcome (linking records nothing itself)
-    DL->>DL: account for iss + sub, audit launch.lti.author, then the outcome: a refusal on the claimant's own account, a link on the account the launch now uses (the Feide account)
+    DL->>DL: account for iss + sub, audit launch.lti.author, then the outcome: a refusal on the claimant's own account, a link on the account the launch now uses (the Feide account), and without an actor if the launch fails after linking
     DL-->>B: 302 /lti/deeplink?ltik=…
     B->>PK: GET /lti/deeplink?ltik=…
     PK->>PK: resolveLtik, then: a Deep Linking ltik of an author, deep_link_return_url absolute http(s) (else 403)

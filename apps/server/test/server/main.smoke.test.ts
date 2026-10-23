@@ -61,12 +61,19 @@ describeWithServices('[NFR-002] the server entry point', () => {
   afterAll(async () => {
     await mock.close();
     const db = createPrismaClient(serviceEnv().DATABASE_URL);
-    await db.ltiPlatform.deleteMany({ where: { url: mock.canvas.issuer } });
-    // WHY: a start with the older key first re-encrypts every platform row; if the test stopped half-way, rows of
-    //      other tests would stay on a key their rings lack, so they go back to the usual key whatever happened.
-    await reencryptPlatformKeys(db, new DataEncryption(parseKeyring(`${RING},${OLDER}`)));
-    await db.$disconnect();
-    for (const bucket of Object.values(buckets)) await removeTestBucket(s3, bucket);
+    try {
+      await db.ltiPlatform.deleteMany({ where: { url: mock.canvas.issuer } });
+      // WHY: a start with the older key first re-encrypts every platform row; if the test stopped half-way, rows of
+      //      other tests would stay on a key their rings lack, so they go back to the usual key whatever happened.
+      //      Row by row: a row this ring cannot read (another test's own key or placeholder) is not ours to fix.
+      const ring = new DataEncryption(parseKeyring(`${RING},${OLDER}`));
+      for (const { id } of await db.ltiPlatform.findMany({ select: { id: true } })) {
+        await reencryptPlatformKeys(db, ring, { id }).catch(() => 0);
+      }
+    } finally {
+      await db.$disconnect();
+      for (const bucket of Object.values(buckets)) await removeTestBucket(s3, bucket);
+    }
   });
 
   const serverEnv = (): NodeJS.ProcessEnv => ({

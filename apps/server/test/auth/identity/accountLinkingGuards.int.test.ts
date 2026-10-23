@@ -105,14 +105,13 @@ describeWithServices('[AUTH-005] linking guards', () => {
     // older one and also comes first in the hash index, so a lookup that ignored the key ID would pick it.
     const feideId = `${uniqueName('g')}@hvl.no`;
     const source = identitySource({ kind: 'feide', feideId });
-    const oldKey = randomKey(31);
+    // WHY: a hash depends on the key, not on its ID, so the key whose hash sorts first becomes the old one.
+    const [k1, k2] = [randomKey(31), randomKey(32)];
+    const hashWith = (key: string) =>
+      new IdentityHasher(parseKeyring(`k=${key}`)).hash('identity-subject', source).hash;
+    const [oldKey, newKey] = (await sortsFirst(hashWith(k1), hashWith(k2))) ? [k1, k2] : [k2, k1];
     const OLD = new IdentityHasher(parseKeyring(`old=${oldKey}`));
-    const hashOf = (ring: IdentityHasher) => ring.hash('identity-subject', source).hash;
-    const rotatedWith = (seed: number) =>
-      new IdentityHasher(parseKeyring(`new=${randomKey(seed)},old=${oldKey}`));
-    let seed = 32;
-    while (!(await sortsFirst(hashOf(OLD), hashOf(rotatedWith(seed))))) seed += 1;
-    const rotated = rotatedWith(seed);
+    const rotated = new IdentityHasher(parseKeyring(`new=${newKey},old=${oldKey}`));
     await fx.feideAccount(feideId, 'staff', OLD);
     const loginAccount = await fx.feideAccount(feideId, 'staff', rotated);
     const launch = request(feideId);
