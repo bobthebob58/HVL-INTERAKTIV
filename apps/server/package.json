@@ -9,6 +9,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "start": "tsx --env-file-if-exists=.env src/server/main.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "boot-check": "tsx --env-file-if-exists=.env src/h5p/bootCheck.ts",

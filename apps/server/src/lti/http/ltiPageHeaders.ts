@@ -75,6 +75,16 @@ export function ltiPageCsp(canvasOrigins: readonly string[], extra: readonly str
 }
 
 /**
+ * The CSP for the H5P player inside Canvas. H5P renders with inline scripts and some content types write their own
+ * frames, so the script policy waits for S4's CSP work (D-058); here only framing, `<base>`, plugins and form
+ * targets are restricted.
+ * @param canvasOrigins - `CANVAS_ORIGINS`.
+ * @returns The header value.
+ */
+export const ltiPlayerCsp = (canvasOrigins: readonly string[]): string =>
+  ["base-uri 'none'", "object-src 'none'", "form-action 'self'", frameAncestors(canvasOrigins)].join('; ');
+
+/**
  * Sets the LTI-003 headers on a response.
  * @param res - The Express response.
  * @param csp - The Content-Security-Policy value.

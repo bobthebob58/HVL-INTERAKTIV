@@ -7,7 +7,8 @@
  *      language, while the log keeps only a fixed code (D-050, D-066). Failed launches are audited (D-064).
  * Spec: LTI-001, LTI-003, LTI-006, PROD-004
  * Invariants:
- *   - Each failure class maps to one status and one message; unknown errors are 500 "something went wrong".
+ *   - Each failure class maps to one status and one message; our other 4xx errors keep their status and message;
+ *     unknown errors are 500 "something went wrong".
  *   - Nothing from the error (message, claims, token) reaches the page; the log gets the code and redacted error.
  *   - Pages carry the LTI headers (no-store, no-referrer, frame-ancestors = Canvas origins).
  * Collaborators: ./ltiPageHeaders.ts, ../../http/authErrors.ts, ../../http/pages/messagePage.ts,
@@ -76,6 +77,14 @@ const BY_AUTH_CODE: Record<string, LtiFailure> = {
   'hvl:activity-unavailable': failure(404, 'page.notAvailable.title', 'page.notAvailable.body'),
   'hvl:deep-link-not-allowed': failure(403, 'page.error.title', 'error.deepLinkNotAllowed'),
   'hvl:deep-link-draft': failure(409, 'page.error.title', 'error.deepLinkDraft'),
+  'hvl:deep-link-choice-invalid': failure(400, 'page.error.title', 'error.deepLinkChoiceInvalid'),
+};
+
+/** The 4xx status a body parser or another middleware set on its error, if any. */
+const clientStatusOf = (error: unknown): number | undefined => {
+  const status =
+    typeof error === 'object' && error !== null ? (error as { status?: unknown }).status : undefined;
+  return typeof status === 'number' && status >= 400 && status < 500 ? status : undefined;
 };
 
 /** jsonwebtoken's error names (signature, audience, expiry), which ltijs lets through. */
@@ -87,8 +96,17 @@ const JWT_ERRORS = new Set(['JsonWebTokenError', 'TokenExpiredError', 'NotBefore
  * @returns How to answer it, or undefined for an unexpected error.
  */
 export function classifyLtiError(error: unknown): LtiFailure | undefined {
-  if (error instanceof HttpError) return BY_AUTH_CODE[error.errorCode];
+  if (error instanceof HttpError) {
+    const own = BY_AUTH_CODE[error.errorCode];
+    if (own || error.status >= 500) return own;
+    return failure(error.status, 'page.error.title', error.messageKey);
+  }
   if (!(error instanceof Error)) return undefined;
+  const clientStatus = clientStatusOf(error);
+  // WHY: a malformed JSON body on an LTI API call is the request's fault, like in the H5P routes.
+  if (clientStatus !== undefined && !(error.message in BY_LTIJS_CODE)) {
+    return failure(clientStatus, 'page.error.title', 'error.badRequest');
+  }
   return (
     BY_LTIJS_CODE[error.message] ?? (JWT_ERRORS.has(error.name) ? LAUNCH_FAILED('token-invalid') : undefined)
   );
@@ -117,7 +135,8 @@ export function ltiErrorPages(deps: {
     }
     setLtiPageHeaders(res, ltiPageCsp(deps.canvasOrigins));
     if (req.accepts(['html', 'json']) === 'json') {
-      const body = error instanceof HttpError ? toErrorResponse(error, 'nn').body : undefined;
+      const ours = error instanceof HttpError || clientStatusOf(error) !== undefined;
+      const body = known && ours ? toErrorResponse(error, 'nn').body : undefined;
       res.status(answer.status).json(body ?? { success: false, httpStatusCode: answer.status });
       return;
     }

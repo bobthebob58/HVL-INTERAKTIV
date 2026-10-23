@@ -17,7 +17,11 @@ describeWithServices('[LTI-001] LTI accounts', () => {
   const accounts = new AccountResolver({ db, hasher: new IdentityHasher(env.IDENTITY_HASH_KEYS) });
   const autumn = () => new Date('2026-10-23T10:00:00Z');
   const lti = new LtiAccounts({ accounts, secrets: env.PSEUDONYM_SECRETS, now: autumn });
-  afterAll(() => db.$disconnect());
+  afterAll(async () => {
+    // WHY: fixture platforms have no decryptable key; left behind, they would break `getPlatforms()` elsewhere.
+    await db.ltiPlatform.deleteMany({ where: { url: { startsWith: 'https://test-c-' } } });
+    await db.$disconnect();
+  });
 
   it('[LTI-001] creates the account at the launch and finds the same one for a resumed request', async () => {
     // Arrange

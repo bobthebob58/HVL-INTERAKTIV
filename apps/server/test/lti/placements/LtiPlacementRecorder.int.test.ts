@@ -44,7 +44,11 @@ describeWithServices('[LTI-006] Canvas placements', () => {
       })
     ).id;
   });
-  afterAll(() => db.$disconnect());
+  afterAll(async () => {
+    // WHY: fixture platforms have no decryptable key; left behind, they would break `getPlatforms()` elsewhere.
+    await db.ltiPlatform.deleteMany({ where: { url: { startsWith: 'https://test-canvas-' } } });
+    await db.$disconnect();
+  });
 
   it('[LTI-006] records a placement and updates it at the next launch of the same link', async () => {
     // Arrange

@@ -80,10 +80,18 @@ describeWithServices('H5P player page', () => {
     const learner = await tb.actor('learner');
     const refused = await play(learner, draft);
     expect(refused.status).toBe(404);
-    expect(refused.body).toMatchObject({
-      errorCode: 'h5p-player:content-missing',
-      message: t('error.notFound', {}, 'nn'),
-    });
+    expect(refused.text).toContain(`<h1>${t('page.notAvailable.title', {}, 'nn')}</h1>`);
+    expect(refused.text).not.toContain('content-missing');
+    const unknown = await play(learner, crypto.randomUUID());
+    expect(unknown.text).toBe(refused.text);
     expect((await play(author, draft)).status).toBe(200);
+  });
+
+  it('[PROD-004] without a session the player page sends the browser to Feide login and back', async () => {
+    const res = await request(tb.app).get(`/h5p/play/${published}?lang=nb`);
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe(
+      `/auth/feide/login?returnTo=${encodeURIComponent(`/h5p/play/${published}?lang=nb`)}`,
+    );
   });
 });

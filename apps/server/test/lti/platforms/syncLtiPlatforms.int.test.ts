@@ -15,7 +15,11 @@ type PlatformManager = Provider['platformManager'];
 
 describeWithServices('[LTI-001] LTI platform sync', () => {
   const db = createPrismaClient(serviceEnv().DATABASE_URL);
-  afterAll(() => db.$disconnect());
+  afterAll(async () => {
+    // WHY: fixture platforms have no decryptable key; left behind, they would break `getPlatforms()` elsewhere.
+    await db.ltiPlatform.deleteMany({ where: { url: { startsWith: 'https://test-sync-' } } });
+    await db.$disconnect();
+  });
 
   /** A platform manager on real LtiPlatform rows (keys are placeholders; ltijs generates real ones). */
   const manager = (scope: string, onRegister?: () => Promise<void>) => {

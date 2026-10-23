@@ -10,7 +10,11 @@ import { describeWithServices, serviceEnv, uniqueName } from '../support/service
 
 describeWithServices('[LTI-001] LTI deployments and identity key IDs in the database', () => {
   const db = createPrismaClient(serviceEnv().DATABASE_URL);
-  afterAll(() => db.$disconnect());
+  afterAll(async () => {
+    // WHY: fixture platforms have no decryptable key; left behind, they would break `getPlatforms()` elsewhere.
+    await db.ltiPlatform.deleteMany({ where: { url: { startsWith: 'https://test-canvas-' } } });
+    await db.$disconnect();
+  });
 
   const platform = () =>
     db.ltiPlatform.create({

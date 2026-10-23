@@ -19,7 +19,8 @@
     "noFeideId": "Your Feide account has no Feide ID, so you cannot log in here.",
     "feideGroupsUnavailable": "We cannot reach Feide right now. Please try again shortly.",
     "fileGrantInvalid": "The link to this file has expired. Reload the page.",
-    "sharingNotAllowed": "As a student you can only keep your activities private for now."
+    "sharingNotAllowed": "As a student you can only keep your activities private for now.",
+    "deepLinkChoiceInvalid": "Canvas does not accept this choice here."
   },
   "upload": {
     "archive": {
@@ -74,6 +75,27 @@
     "login": "Log in with Feide",
     "logout": "Log out",
     "loading": "Opening the activity …",
-    "noscript": "This page needs JavaScript."
+    "noscript": "This page needs JavaScript.",
+    "notFound": {
+      "title": "Page not found",
+      "body": "This page does not exist. Check the address."
+    },
+    "home": {
+      "signedIn": "You are signed in to HVL Interaktiv.",
+      "signedOut": "Sign in with Feide to create and share activities."
+    }
+  },
+  "deepLink": {
+    "title": "Choose an activity",
+    "intro": "Choose the activity to add to Canvas.",
+    "introMultiple": "Choose one or more activities to add to Canvas.",
+    "legend": "Your activities",
+    "draft": "draft – cannot be added until it is published",
+    "empty": "You have no activities yet. Create one in HVL Interaktiv first.",
+    "graded": "Canvas creates an assignment with points for this activity. The points are formative and not exam evidence.",
+    "submit": "Add to Canvas",
+    "sending": "Sending your choice to Canvas …",
+    "noneChosen": "Choose at least one activity.",
+    "failed": "Your choice could not be sent to Canvas. Try again."
   }
 }

@@ -87,4 +87,18 @@ describe('[DATA-002] no identity in the page', () => {
     expect(integration.user).toEqual(ANONYMOUS_H5P_USER);
     expect(JSON.stringify(integration)).toContain('answers');
   });
+
+  it('[LTI-003] runs a same-origin first script before H5P and refuses any other script URL', () => {
+    // Act
+    const html = renderPlayerPage(model(), 'nn', { firstScripts: ['/static/lti/ltikLanding.js'] });
+    // Assert
+    const landing = html.indexOf('<script src="/static/lti/ltikLanding.js"></script>');
+    expect(landing).toBeGreaterThan(0);
+    expect(landing).toBeLessThan(html.indexOf('<script src=', landing + 1));
+    for (const src of ['https://evil.example/x.js', '//evil.example/x.js', '/static/../x.js', '/h5p/x.js']) {
+      expect(() => renderPlayerPage(model(), 'nn', { firstScripts: [src] }), src).toThrow(
+        'invalid script path',
+      );
+    }
+  });
 });

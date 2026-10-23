@@ -128,13 +128,13 @@ export interface DrivenLogin {
 
 /**
  * Logs a mock Feide user in, following the redirects like a browser.
- * @param tb - The test bed.
+ * @param tb - The test bed (or any app with a mock Feide).
  * @param userKey - The mock Feide user, e.g. `author`, `student`.
  * @param returnTo - Where the portal should go after login.
  * @returns The callback response and cookies.
  */
 export async function loginWithFeide(
-  tb: FeideTestbed,
+  tb: Pick<FeideTestbed, 'app' | 'feide'>,
   userKey: string,
   returnTo?: string,
 ): Promise<DrivenLogin> {

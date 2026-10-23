@@ -31,8 +31,8 @@ describeWithServices('H5P router', () => {
     ['put', `/h5p/content/${id}`],
     ['delete', `/h5p/content/${id}`],
     ['get', `/h5p/download/${id}`],
-    ['get', `/h5p/play/${id}`],
   ];
+  // WHY: since S3 the player page sends a browser without a session to Feide login (player.int.test.ts, PROD-004).
 
   it.each(ACTOR_ROUTES)('[H5P-006] %s %s answers 401 without a signed-in person', async (method, path) => {
     const res = await (request(tb.app) as unknown as Record<string, (p: string) => request.Test>)[method]!(

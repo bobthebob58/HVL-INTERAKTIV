@@ -46,6 +46,7 @@ export const AUTH_AUDIT_REASONS = [
   'link-moved',
   'lti-account-owns-content',
   'learner-account',
+  'feide-identity-exists',
 ] as const;
 /** One reason code. */
 export type AuthAuditReason = (typeof AUTH_AUDIT_REASONS)[number];

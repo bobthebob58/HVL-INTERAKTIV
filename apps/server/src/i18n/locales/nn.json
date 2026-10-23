@@ -19,7 +19,8 @@
     "noFeideId": "Feide-kontoen din har ingen Feide-ID, så du kan ikkje logge inn her.",
     "feideGroupsUnavailable": "Vi får ikkje kontakt med Feide akkurat no. Prøv igjen om litt.",
     "fileGrantInvalid": "Lenkja til fila har gått ut. Last sida på nytt.",
-    "sharingNotAllowed": "Som student kan du førebels berre ha aktivitetane dine private."
+    "sharingNotAllowed": "Som student kan du førebels berre ha aktivitetane dine private.",
+    "deepLinkChoiceInvalid": "Canvas tek ikkje imot dette valet her."
   },
   "upload": {
     "archive": {
@@ -74,6 +75,27 @@
     "login": "Logg inn med Feide",
     "logout": "Logg ut",
     "loading": "Opnar aktiviteten …",
-    "noscript": "Denne sida treng JavaScript."
+    "noscript": "Denne sida treng JavaScript.",
+    "notFound": {
+      "title": "Fann ikkje sida",
+      "body": "Sida finst ikkje. Sjekk adressa."
+    },
+    "home": {
+      "signedIn": "Du er logga inn i HVL Interaktiv.",
+      "signedOut": "Logg inn med Feide for å lage og dele aktivitetar."
+    }
+  },
+  "deepLink": {
+    "title": "Vel aktivitet",
+    "intro": "Vel aktiviteten du vil leggje inn i Canvas.",
+    "introMultiple": "Vel ein eller fleire aktivitetar å leggje inn i Canvas.",
+    "legend": "Aktivitetane dine",
+    "draft": "utkast – kan ikkje leggjast inn før han er publisert",
+    "empty": "Du har ingen aktivitetar enno. Lag ein aktivitet i HVL Interaktiv først.",
+    "graded": "Canvas lagar ei oppgåve med poeng for aktiviteten. Poenga er formative og ikkje eksamensgrunnlag.",
+    "submit": "Legg inn i Canvas",
+    "sending": "Sender valet til Canvas …",
+    "noneChosen": "Vel minst éin aktivitet.",
+    "failed": "Valet kunne ikkje sendast til Canvas. Prøv igjen."
   }
 }
