@@ -168,13 +168,18 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
       all ten real types open and save under the strict policy; in Canvas with frame storage partitioned or blocked.
       Found and fixed: no Edit check in Lumi's editor render, H5P editor scripts failing under a cross-origin
       parent, Content Hub metadata refused with 403 (page errors), and `base-uri 'none'` refusing jQuery's parser
-- [ ] `packages/design-tokens` with the contrast test and lint rules (`UD-001`)
+- [x] `packages/design-tokens` with the contrast test and lint rules (`UD-001`): `tokens.json` → `tokens.css`,
+      the Tailwind `@theme` file and the Daylight mapping, checked with `npm run tokens:check`; Stylelint and ESLint
+      refuse colour literals, upper case and justified text (D-072)
 - [ ] Carried in by earlier decisions: the LTI views `/lti/play`, `/lti/deeplink` and the friendly pages move to
       `apps/web` `/app/*` on the same server APIs (D-048); the H5P editor page with the player's script-safe JSON
       (D-040) and the LTI-006 **Rediger** tab on it (D-062); an editor in a cookie-less Canvas iframe needs
       grant-bearing file URLs issued after an Edit check (D-058); `DOC-012` from S3
 - [ ] Web shell components and `hvl-h5p-theme.css` (`UD-002`…`UD-013`, `H5P-009`)
-- [ ] Validator engine, UD rules and pedagogical hint rules (`UD-020`…`UD-022`, `PED-020`)
+- [x] Validator engine, UD rules and pedagogical hint rules (`UD-020`…`UD-022`, `PED-020`): pure
+      `validateContent` with 11 `V-*` and 11 `PED-H*` rules, fixtures per rule, messages in three languages,
+      thresholds from `content/laeringsdesign/hint-thresholds.yaml` (D-073). Found and fixed: imported activities
+      state `language`, the editor saves `defaultLanguage`; V-LANG and the player's `lang` read both (UD-010)
 - [ ] Publish flow with acknowledgements (`PROD-003`), which also ends S3's visibility-only sharing (D-066, Q14);
       formative notice (`PROD-011`); privacy notice (`DATA-006`)
 - [ ] CSP that blocks third-party requests; self-hosted fonts (`DATA-011`); browser and assistive-technology matrix (`NFR-003`).

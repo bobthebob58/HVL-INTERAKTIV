@@ -75,6 +75,10 @@ jobs:
         run: npm run typecheck
       - name: Lint
         run: npm run lint
+      - name: CSS lint (colours only from tokens, no uppercase or justified text; UD-001, UD-002)
+        run: npm run lint:css
+      - name: Design tokens are up to date (UD-001, D-072)
+        run: npm run tokens:check
       - name: Formatting
         run: npm run format:check
       - name: Documentation standard (doc-lint rules, see tools/doc-lint/README.md)
