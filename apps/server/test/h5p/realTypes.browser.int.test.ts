@@ -6,6 +6,7 @@
  * Spec: H5P-001, H5P-002, H5P-003
  */
 import type { Server } from 'node:http';
+import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
@@ -31,7 +32,9 @@ describeWithServices('real H5P content types', () => {
       learner = await tb.actor('learner');
       examples = [];
       for (const example of await packageExamples()) {
-        const contentId = await tb.activity(author, { published: true, ...example });
+        const contentId = await tb.importPackage(author, join(REAL_PACKAGES_DIR, example.file), {
+          published: true,
+        });
         examples.push({ ...example, contentId });
       }
       server = tb.app.listen(0, '127.0.0.1');
@@ -43,7 +46,7 @@ describeWithServices('real H5P content types', () => {
       await tb?.close();
     });
 
-    it('[H5P-003] every package installs through the seed path and its example activity saves', () => {
+    it('[H5P-003] every package installs through the seed path and its example activity imports with its files', () => {
       expect(examples.length).toBeGreaterThan(0);
       expect(examples.every((e) => e.contentId)).toBe(true);
     });

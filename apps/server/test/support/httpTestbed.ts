@@ -15,7 +15,7 @@ import { CreateBucketCommand, type S3Client } from '@aws-sdk/client-s3';
 import express, { type Express, type RequestHandler } from 'express';
 import request from 'supertest';
 import { createH5pRuntime, type H5pRuntime } from '../../src/h5p/createH5pRuntime.js';
-import type { H5pRole, HvlH5pActor } from '../../src/h5p/HvlH5pUser.js';
+import { asAccountUser, type H5pRole, type HvlH5pActor } from '../../src/h5p/HvlH5pUser.js';
 import { createH5pRouter } from '../../src/http/createH5pRouter.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
 import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
@@ -50,6 +50,8 @@ export interface HttpTestbed {
     author: TestActor,
     options?: { published?: boolean; metadata?: object; params?: object; library?: string },
   ): Promise<string>;
+  /** Imports a whole `.h5p` (content and its files) as `author`, as an admin's package import does. */
+  importPackage(author: TestActor, packagePath: string, options?: { published?: boolean }): Promise<string>;
   /** Deletes everything the testbed created and disconnects. */
   close(): Promise<void>;
 }
@@ -119,6 +121,20 @@ export async function openHttpTestbed(
       const id = (res.body as { contentId?: string }).contentId;
       if (res.status !== 201 || !id) throw new Error(`saving the test activity failed: ${res.status}`);
       if (published) {
+        await db.h5PContent.update({
+          where: { id },
+          data: { status: 'published', visibility: 'organisation' },
+        });
+      }
+      return id;
+    },
+    importPackage: async (author, packagePath, options = {}) => {
+      const imported = await runtime.editor.packageImporter.addPackageLibrariesAndContent(
+        packagePath,
+        asAccountUser(author.actor),
+      );
+      const id = String(imported.id);
+      if (options.published) {
         await db.h5PContent.update({
           where: { id },
           data: { status: 'published', visibility: 'organisation' },
