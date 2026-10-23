@@ -5,14 +5,14 @@
  * Why: LTI-001 rejects launches with a wrong signature, audience, nonce or deployment and LTI-003 answers an
  *      invalid ltik with "please reopen from Canvas"; the person in the Canvas iframe must read a sentence in their
  *      language, while the log keeps only a fixed code (D-050, D-066). Failed launches are audited (D-064).
- * Spec: LTI-001, LTI-003, LTI-006, PROD-004
+ * Spec: LTI-001, LTI-003, LTI-006, PROD-004, PROD-012
  * Invariants:
  *   - Each failure class maps to one status and one message; our other 4xx errors keep their status and message;
  *     unknown errors are 500 "something went wrong".
  *   - Nothing from the error (message, claims, token) reaches the page; the log gets the code and redacted error.
  *   - Pages carry the LTI headers (no-store, no-referrer, frame-ancestors = Canvas origins).
- *   - Pages and JSON are in the launch's language once a route has resolved the ltik (`setLtiPageLocale`), else in
- *     Nynorsk.
+ *   - Pages and JSON are in the launch's language once a route has resolved the ltik (`setLtiPageLocale`) or a
+ *     launch handler has tagged its error (`withLaunchLocale`), else in Nynorsk (PROD-012).
  * Collaborators: ./ltiPageHeaders.ts, ../../http/authErrors.ts, ../../http/pages/messagePage.ts,
  *   ../../auth/audit/AuthAuditRecorder.ts.
  * Tests: apps/server/test/lti/http/ltiErrorPages.test.ts
@@ -27,6 +27,8 @@ import { DEFAULT_LOCALE, type Locale, type MessageKey } from '../../i18n/transla
 import { ltiPageCsp, setLtiPageHeaders } from './ltiPageHeaders.js';
 
 const LTI_LOCALE = 'hvliLtiLocale';
+/** Errors thrown by a launch handler, with the language of their launch (no ltik exists yet at that point). */
+const LAUNCH_LOCALE = new WeakMap<object, Locale>();
 
 /**
  * Records the language of the launch an LTI route has resolved, so its error pages use it.
@@ -36,6 +38,20 @@ const LTI_LOCALE = 'hvliLtiLocale';
 export function setLtiPageLocale(res: Response, locale: Locale): void {
   res.locals[LTI_LOCALE] = locale;
 }
+
+/**
+ * Tags an error thrown by a launch handler with the launch's language, so its page uses it.
+ * @param error - What the handler threw (a non-object cannot be tagged and is returned as it is).
+ * @param locale - The launch's locale (../ltiLocale.ts `localeFromLaunch`).
+ * @returns The same error, for `throw withLaunchLocale(error, locale)`.
+ */
+export function withLaunchLocale(error: unknown, locale: Locale): unknown {
+  if (typeof error === 'object' && error !== null) LAUNCH_LOCALE.set(error, locale);
+  return error;
+}
+
+const launchLocaleOf = (error: unknown): Locale | undefined =>
+  typeof error === 'object' && error !== null ? LAUNCH_LOCALE.get(error) : undefined;
 
 /** How one class of failure is answered. */
 interface LtiFailure {
@@ -137,7 +153,7 @@ export function ltiErrorPages(deps: {
 }) {
   return async (error: unknown, req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (res.headersSent) return next(error);
-    const locale = (res.locals[LTI_LOCALE] as Locale | undefined) ?? DEFAULT_LOCALE;
+    const locale = (res.locals[LTI_LOCALE] as Locale | undefined) ?? launchLocaleOf(error) ?? DEFAULT_LOCALE;
     const known = classifyLtiError(error);
     const answer = known ?? failure(500, 'page.error.title', 'error.generic');
     deps.logger[known ? 'warn' : 'error'](
@@ -154,7 +170,7 @@ export function ltiErrorPages(deps: {
       res.status(answer.status).json(body ?? { success: false, httpStatusCode: answer.status });
       return;
     }
-    // WHY: before the ltik is resolved the person's language is unknown; Nynorsk is the default (PROD-012).
+    // WHY: before the launch is verified the person's language is unknown; Nynorsk is the default (PROD-012).
     res
       .status(answer.status)
       .type('html')

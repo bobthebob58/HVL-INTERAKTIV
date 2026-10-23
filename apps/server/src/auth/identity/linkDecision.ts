@@ -13,7 +13,8 @@
  *   - Learner identities are never linked: a learner launch yields no Feide ID, so no decision is made.
  *   - Only an existing Feide account is ever joined; without one the decision is `no-feide-account` (D-063).
  *   - `conflict` changes nothing; `move-lti-to-feide` happens only when the LTI account owns nothing.
- * Collaborators: ./accountLinking.ts (applies the decision and audits it), ./AccountResolver.ts,
+ * Collaborators: ./accountLinking.ts (applies the decision), ../../lti/launch/onDeepLinking.ts (audits it),
+ *   ./AccountResolver.ts,
  *   ../../lti/LtiRoleMapper.ts, ../audit/AuthAuditRecorder.ts (`link.*` events), ../Principal.ts.
  * Tests: apps/server/test/auth/identity/linkDecision.test.ts
  */

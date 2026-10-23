@@ -99,7 +99,7 @@ test database one file at a time.
 | `src/auth/feide/` | The Feide relying party (openid-client 6, PKCE S256, `client_secret_post`), login transactions, Groups API call, role mapping, Feide ID and author profile from the claims, login completion, and the `/auth/*` routes |
 | `src/auth/session/` | Portal sessions in Redis behind `__Host-hvli_sid` (idle 2 h, absolute 12 h), the two cookies, opaque IDs, the synchronizer CSRF token (D-057) |
 | `src/auth/identity/` | Accounts found by keyed identity hash with key rotation (D-055), the one subject text for hashes and learnerKey, Canvas–Feide account linking for platforms with `feideLinking` (AUTH-005, D-063) |
-| `src/auth/audit/` | `AuthAuditRecorder`: login, logout, author-launch and link events from fixed lists, with a keyed IP hash (D-064) |
+| `src/auth/audit/` | `AuthAuditRecorder`: login, logout, author-launch and link events from fixed lists; logins, logouts and failed launches carry a keyed IP hash (D-064) |
 | `src/lti/LtiProviderFactory.ts`, `ltiRoutes.ts` | The ltijs 7 `Provider` on our router, storage, cache and logger (D-050), and the `/lti` router: ltijs routes, launch handlers, player, picker, LTI error pages |
 | `src/lti/http/` | `ExpressRouterHttpHandler` (ltijs's routes on an Express router, `listen` never called), the LTI page headers (no-store, no-referrer, `frame-ancestors` from `CANVAS_ORIGINS`), the friendly LTI error pages |
 | `src/lti/storage/` | ltijs's `DatabaseManager` on PostgreSQL (deployment check and claim allowlist in `saveIdToken`, encrypted private keys and access tokens), the node-redis `LtiCacheManager`, record lifetimes, `LtiRecordCleanupJob` (D-052) |
@@ -334,8 +334,9 @@ sequenceDiagram
     LJ->>DL: launch context + ltik
     DL->>DL: LTI roles give author? Otherwise 403 page, and no account is created
     DL->>LK: custom.feide_login from the in-memory claims (authors only, "$…" ignored, never stored)
-    LK->>LK: D-063, only for a platform with feideLinking true and a Feide ID in ALLOWED_FEIDE_ORGS. The LTI identity joins the existing Feide account of a non-learner (audit link.feide-lti), or moves there only when its account owns and co-authors nothing. A learner's Feide account, a Feide account that already holds another identity from this platform, or a Canvas account that owns content is refused (audit link.conflict, as the launching account's action) and nothing changes. No Feide account, no link
-    DL->>DL: account for iss + sub, audit launch.lti.author
+    LK->>LK: D-063, only for a platform with feideLinking true and a Feide ID in ALLOWED_FEIDE_ORGS. The LTI identity joins the existing Feide account of a non-learner (audit link.feide-lti), or moves there only when its account owns and co-authors nothing. A learner's Feide account, a Feide account that already holds another person's identity from this platform, or a Canvas account that owns content is refused (link.conflict) and nothing changes. No Feide account, no link
+    LK-->>DL: the outcome (linking records nothing itself)
+    DL->>DL: account for iss + sub, audit launch.lti.author, then the outcome: a refusal on the claimant's own account, a link on the account the launch now uses (the Feide account)
     DL-->>B: 302 /lti/deeplink?ltik=…
     B->>PK: GET /lti/deeplink?ltik=…
     PK->>PK: resolveLtik, then: a Deep Linking ltik of an author, deep_link_return_url absolute http(s) (else 403)

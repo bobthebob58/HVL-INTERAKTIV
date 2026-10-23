@@ -5,19 +5,21 @@
  * Why: the app mounts one router for Canvas (spec 02 LTI-001…007). The ltik resolver built here is also what the
  *      H5P and API routes use to authenticate LTI requests (../auth/requestPrincipal.ts), so the same platform,
  *      deployment and account checks run everywhere (D-050, D-051).
- * Spec: LTI-001, LTI-003, LTI-005, LTI-006, AUTH-005
+ * Spec: LTI-001, LTI-003, LTI-005, LTI-006, AUTH-005, PROD-012
  * Invariants:
  *   - ltijs's routes come first, so its login and launch see the request before anything else of ours.
  *   - Errors from any of these routes end in `ltiErrorPages` (a page, or JSON for API calls), never in ltijs's JSON.
  *   - Only the launch handlers may create LTI accounts; the resolver never writes.
  *   - Identities are linked only for platforms with `feideLinking: true` and Feide IDs of `ALLOWED_FEIDE_ORGS`.
+ *   - A launch handler's refusal is shown in the launch's language (`inLaunchLocale`, PROD-012).
  * Collaborators: ./LtiProviderFactory.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts,
  *   ./play/ltiPlayRoutes.ts, ./deepLinking/deepLinkRoutes.ts, ./http/ltiErrorPages.ts, ./ltikPrincipal.ts,
  *   ../server/createApp.ts.
- * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/deepLinking/deepLinking.int.test.ts
+ * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/deepLinking/deepLinking.int.test.ts,
+ *   apps/server/test/lti/ltiPageLocale.int.test.ts
  */
 import { Router } from 'express';
-import type { Provider } from 'ltijs';
+import type { OnLaunchHandler, Provider } from 'ltijs';
 import type { Logger } from 'pino';
 import type { AuthAuditRecorder } from '../auth/audit/AuthAuditRecorder.js';
 import type { LtiPlatformConfig } from '../config/envParsers.js';
@@ -31,11 +33,12 @@ import type { PseudonymSecrets } from '../privacy/pseudonymSecrets.js';
 import type { DataEncryption } from '../security/keys/DataEncryption.js';
 import type { IdentityHasher } from '../security/keys/IdentityHasher.js';
 import { deepLinkRoutes } from './deepLinking/deepLinkRoutes.js';
-import { ltiErrorPages } from './http/ltiErrorPages.js';
+import { ltiErrorPages, withLaunchLocale } from './http/ltiErrorPages.js';
 import { LtiAccounts } from './launch/ltiAccount.js';
 import { platformLinksFeide } from './linkingPlatforms.js';
 import { onDeepLinking } from './launch/onDeepLinking.js';
 import { onResourceLink } from './launch/onResourceLink.js';
+import { localeFromLaunch } from './ltiLocale.js';
 import { resolveLtik, type ResolvedLtik } from './ltikPrincipal.js';
 import { createLtiProvider } from './LtiProviderFactory.js';
 import { LtiPlacementRecorder } from './placements/LtiPlacementRecorder.js';
@@ -81,6 +84,21 @@ export interface LtiRoutes {
 }
 
 /**
+ * Wraps a launch handler so that what it throws carries the launch's language to the error page (PROD-012).
+ * @param handler - `onResourceLink` or `onDeepLinking`.
+ * @returns The same handler, tagging its errors with `withLaunchLocale`.
+ */
+const inLaunchLocale =
+  (handler: OnLaunchHandler): OnLaunchHandler =>
+  async (context, request, response) => {
+    try {
+      await handler(context, request, response);
+    } catch (error) {
+      throw withLaunchLocale(error, localeFromLaunch(context.rawIdToken));
+    }
+  };
+
+/**
  * Builds the LTI routes.
  * @param deps - Clients, keys, audit, the H5P player and the LTI settings.
  * @returns The router, the ltik resolver, the provider and the deployment guard.
@@ -104,24 +122,28 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
     secrets: deps.secrets,
   });
   provider.onResourceLink(
-    onResourceLink({
-      accounts,
-      access: deps.access,
-      placements: new LtiPlacementRecorder(db),
-      audit: deps.audit,
-    }),
+    inLaunchLocale(
+      onResourceLink({
+        accounts,
+        access: deps.access,
+        placements: new LtiPlacementRecorder(db),
+        audit: deps.audit,
+      }),
+    ),
   );
   provider.onDeepLinking(
-    onDeepLinking({
-      accounts,
-      audit: deps.audit,
-      link: accountLinker({
-        db,
-        hasher: deps.hasher,
-        linksFeide: platformLinksFeide(deps.platforms),
-        allowedOrgs: deps.allowedFeideOrgs,
+    inLaunchLocale(
+      onDeepLinking({
+        accounts,
+        audit: deps.audit,
+        link: accountLinker({
+          db,
+          hasher: deps.hasher,
+          linksFeide: platformLinksFeide(deps.platforms),
+          allowedOrgs: deps.allowedFeideOrgs,
+        }),
       }),
-    }),
+    ),
   );
   const resolve = (ltik: string): Promise<ResolvedLtik> =>
     resolveLtik({ provider, deployments, accounts }, ltik);

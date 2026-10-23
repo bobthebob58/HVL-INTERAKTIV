@@ -45,9 +45,15 @@ describe('[DATA-002] account resolver with rows under several keys', () => {
   });
 
   it('[DATA-002] the row under the current key wins, even when an older row comes first, and nothing is re-hashed', async () => {
+    // Arrange: rows come oldest first, as the lookup asks the database for them
     const { db, resolver } = fakeDb([row('r1', 'u-old', 'old'), row('r2', 'u-new', 'new')], async () => ({}));
+    // Act
     const account = await resolver.resolve(request);
+    // Assert
     expect(account.userId).toBe('u-new');
+    expect(db.identity.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { createdAt: 'asc' } }),
+    );
     expect(db.identity.update).not.toHaveBeenCalled();
     expect(await resolver.lookup('feide', request.source)).toBe('u-new');
   });

@@ -13,12 +13,18 @@ import { afterAll, beforeAll, expect, it } from 'vitest';
 import { startMockPlatform, type MockPlatform } from '../../../../tools/mock-platform/mockPlatform.mjs';
 import { createPrismaClient } from '../../src/infra/prismaClient.js';
 import { createS3Client } from '../../src/infra/s3Client.js';
+import { reencryptPlatformKeys } from '../../src/lti/platforms/reencryptPlatformKeys.js';
+import { DataEncryption } from '../../src/security/keys/DataEncryption.js';
+import { parseKeyring } from '../../src/security/keys/keyring.js';
 import { describeWithServices, serviceEnv, uniqueName } from '../support/services.js';
 import { removeTestBucket } from '../support/storageFixtures.js';
 import { syntheticLibraryDir } from '../support/syntheticLibraries.js';
 import { HTTP_TEST_LIBRARIES } from '../support/tenTypeLibraries.js';
 
 const SERVER_DIR = fileURLToPath(new URL('../../', import.meta.url));
+/** The test ring, and an older key the first start makes current (step 1 of a rotation the other way round). */
+const RING = String(process.env.DATA_ENCRYPTION_KEYS);
+const OLDER = `smokeold=${Buffer.alloc(32, 7).toString('base64')}`;
 const PORT = 3900 + Math.floor(Math.random() * 90);
 const TOOL_URL = `http://localhost:${PORT}`;
 
@@ -56,6 +62,9 @@ describeWithServices('[NFR-002] the server entry point', () => {
     await mock.close();
     const db = createPrismaClient(serviceEnv().DATABASE_URL);
     await db.ltiPlatform.deleteMany({ where: { url: mock.canvas.issuer } });
+    // WHY: a start with the older key first re-encrypts every platform row; if the test stopped half-way, rows of
+    //      other tests would stay on a key their rings lack, so they go back to the usual key whatever happened.
+    await reencryptPlatformKeys(db, new DataEncryption(parseKeyring(`${RING},${OLDER}`)));
     await db.$disconnect();
     for (const bucket of Object.values(buckets)) await removeTestBucket(s3, bucket);
   });
@@ -87,14 +96,12 @@ describeWithServices('[NFR-002] the server entry point', () => {
 
   it('[NFR-002] starts, re-encrypts stale platform keys before listening, answers /healthz and /lti/keys, and stops with exit code 0', async () => {
     // Arrange: a first start registers the mock Canvas while an older key is the current one
-    const ring = String(process.env.DATA_ENCRYPTION_KEYS);
-    const older = `smokeold=${Buffer.alloc(32, 7).toString('base64')}`;
-    await runUntilListening({ ...serverEnv(), DATA_ENCRYPTION_KEYS: `${older},${ring}` });
+    await runUntilListening({ ...serverEnv(), DATA_ENCRYPTION_KEYS: `${OLDER},${RING}` });
     // Act: start again with the usual key first and the older one second, as in step 2 of a rotation (D-056)
     let health = 0;
     let keys: unknown[] = [];
     const run = await runUntilListening(
-      { ...serverEnv(), DATA_ENCRYPTION_KEYS: `${ring},${older}` },
+      { ...serverEnv(), DATA_ENCRYPTION_KEYS: `${RING},${OLDER}` },
       async () => {
         health = (await fetch(`${TOOL_URL}/healthz`)).status;
         keys = ((await (await fetch(`${TOOL_URL}/lti/keys`)).json()) as { keys: unknown[] }).keys;
@@ -108,7 +115,8 @@ describeWithServices('[NFR-002] the server entry point', () => {
     expect(stored.subarray(2, 2 + (stored[1] ?? 0)).toString('ascii')).toBe(
       serviceEnv().DATA_ENCRYPTION_KEYS.current.id,
     );
-    expect(run.output).toMatch(/"platformKeysRewritten":1\b/);
+    // WHY: at least the mock Canvas's row; rows another test left in the shared database may be rewritten too.
+    expect(Number(/"platformKeysRewritten":(\d+)/.exec(run.output)?.[1])).toBeGreaterThanOrEqual(1);
     expect(run.output.indexOf('LTI platform keys on the current encryption key')).toBeLessThan(
       run.output.indexOf('HVL Interaktiv server listening'),
     );

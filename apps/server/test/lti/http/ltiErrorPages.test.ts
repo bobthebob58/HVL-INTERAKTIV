@@ -1,8 +1,8 @@
 /**
  * Tests that every failure on an LTI route becomes a friendly page (or JSON for API calls) with the LTI headers,
- * and that failed launches are audited with a fixed reason.
+ * in the launch's language once it is known, and that failed launches are audited with a fixed reason.
  *
- * Spec: LTI-001, LTI-003, PROD-004
+ * Spec: LTI-001, LTI-003, PROD-004, PROD-012
  */
 import { Writable } from 'node:stream';
 import express from 'express';
@@ -12,7 +12,12 @@ import { describe, expect, it } from 'vitest';
 import type { AuthAuditInput } from '../../../src/auth/audit/AuthAuditRecorder.js';
 import { authError } from '../../../src/http/authErrors.js';
 import { t } from '../../../src/i18n/translate.js';
-import { classifyLtiError, ltiErrorPages, setLtiPageLocale } from '../../../src/lti/http/ltiErrorPages.js';
+import {
+  classifyLtiError,
+  ltiErrorPages,
+  setLtiPageLocale,
+  withLaunchLocale,
+} from '../../../src/lti/http/ltiErrorPages.js';
 import { createLogger } from '../../../src/logging/logger.js';
 
 const ltijs = (code: string) => new LtijsError(code);
@@ -98,13 +103,24 @@ describe('[LTI-001] LTI error pages', () => {
     expect(res.text).toContain('<h1>Ikkje tilgjengeleg</h1>');
   });
 
-  it('[PROD-012] after the ltik is resolved, the page and the JSON are in the launch’s language', async () => {
+  it('[PROD-012] once a route has resolved the ltik (setLtiPageLocale), the page and the JSON are in the launch’s language', async () => {
     const { app } = appThrowing(authError('hvl:activity-unavailable'));
     const page = await request(app).get('/lti/deeplink');
     const json = await request(app).get('/lti/deeplink').set('Accept', 'application/json');
     expect(page.text).toContain(`<h1>${t('page.notAvailable.title', {}, 'en')}</h1>`);
     expect(page.text).toContain('<html lang="en">');
     expect(json.body.message).toBe(t('error.activityUnavailable', {}, 'en'));
+  });
+
+  it('[PROD-012] a launch handler’s refusal tagged with withLaunchLocale is shown in the launch’s language', async () => {
+    const tagged = withLaunchLocale(authError('hvl:activity-unavailable'), 'nb');
+    const page = await request(appThrowing(tagged).app).post('/lti/launch');
+    const untagged = await request(appThrowing(authError('hvl:activity-unavailable')).app).post(
+      '/lti/launch',
+    );
+    expect(page.text).toContain('<html lang="nb">');
+    expect(page.text).toContain(`<h1>${t('page.notAvailable.title', {}, 'nb')}</h1>`);
+    expect(untagged.text).toContain('<html lang="nn">');
   });
 
   it('[LTI-001] an unexpected error is a 500 page that reveals nothing, and API calls get JSON', async () => {

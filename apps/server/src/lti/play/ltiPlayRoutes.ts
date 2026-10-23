@@ -4,7 +4,7 @@
  * Why: after a launch ltijs redirects to `/lti/play?ltik=…` (LTI-003 step 1). The page plays the activity the
  *      launch opened, for the launch's person and course; its first script removes the ltik from the address bar
  *      (step 2), and H5P's own AJAX and user-data URLs carry the ltik (D-058).
- * Spec: LTI-003, LTI-006, LTI-007, H5P-007, PROD-004
+ * Spec: LTI-003, LTI-006, LTI-007, H5P-007, PROD-004, PROD-012
  * Invariants:
  *   - The ltik in the query is accepted here (D-058); the activity comes from the stored launch, never the request.
  *   - Unknown, draft or invisible activities give the one 404 page; an invalid ltik the "reopen from Canvas" page.

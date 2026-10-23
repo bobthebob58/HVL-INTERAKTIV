@@ -9,11 +9,12 @@
  *   - A launch whose roles are not author is refused with 403 `hvl:deep-link-not-allowed`, before any account is
  *     created.
  *   - The picker is opened with `context.redirect`, which appends the ltik.
- *   - Every Deep Linking launch is an author launch and is audited (D-064), and so is the linking outcome, as an
- *     action of the launching account.
+ *   - Every Deep Linking launch is an author launch and is audited (D-064), and so is the linking outcome: a
+ *     refusal on the claimant's own account, a link on the account the launch ends in (D-063); a link is audited
+ *     without an actor when the launch fails after it.
  *   - Linking runs before the account is resolved and only reads the in-memory claims (`context.rawIdToken`).
  * Collaborators: ../launchFacts.ts, ./ltiAccount.ts, ../../auth/identity/accountLinking.ts, ../ltiRoutes.ts.
- * Tests: apps/server/test/lti/deepLinking/deepLinking.int.test.ts,
+ * Tests: apps/server/test/lti/launch/onDeepLinking.test.ts, apps/server/test/lti/deepLinking/deepLinking.int.test.ts,
  *   apps/server/test/auth/identity/accountLinking.int.test.ts
  */
 import type { OnLaunchHandler } from 'ltijs';
@@ -55,9 +56,17 @@ export function onDeepLinking(deps: DeepLinkingDeps): OnLaunchHandler {
       claims: context.rawIdToken,
       roles,
     });
-    const account = await deps.accounts.atLaunch({ ...identity, roles });
+    let account;
+    try {
+      account = await deps.accounts.atLaunch({ ...identity, roles });
+    } catch (error) {
+      // WHY: a link already written stays in the audit even when the launch then fails (D-064).
+      if (linked) await deps.audit.record(linked);
+      throw error;
+    }
     await deps.audit.record({ event: 'launch.lti.author', actorUserId: account.userId });
-    // WHY: a link or a refused claim is the action of the person launching, whoever's account it named (D-064).
+    // WHY: a refused claim is recorded on the claimant's own account, never on the Feide account it named; a link on
+    //      the account the launch now uses, which is the Feide account (D-063, D-064).
     if (linked) await deps.audit.record({ ...linked, actorUserId: account.userId });
     context.redirect(response, LTI_DEEP_LINK_PATH);
   };

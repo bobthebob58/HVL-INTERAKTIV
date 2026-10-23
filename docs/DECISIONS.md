@@ -666,6 +666,15 @@ loading of one spec per session are kept.
   re-hash a match in place at that login. Remove an old key after at least 13 months (learner rows are purged by
   then; a dormant staff member gets a new account). On compromise, rotate the same way at once.
 - **Consequences:** Rotation needs no downtime and no bulk re-hash.
+- **Amendment (2026-10-23, S3 verification):** rotation has three steps, as in D-056: (1) add the new key second and
+  restart every server, so every server finds rows under either key; (2) when every server runs that ring, move it
+  first and restart every server (logins re-hash to it, new audit rows use it); (3) remove the old key at least 13
+  months after the last step-2 restart. Putting the new key first in one step lets a server still on the old ring
+  miss a row hashed with the new key and give that person a second account, and the lookup cannot repair that later
+  (`src/auth/identity/identityLookup.ts` prefers the current-key row, else the oldest). A leaked key is rotated with
+  the same steps, started at once, and stays in the ring while rows re-hash. Residual risk, accepted: until it is
+  removed, whoever holds the leaked key and a copy of the database can test guessed Feide IDs and IP addresses
+  against the hashes; without a guess the hashes reveal nothing.
 
 ### D-056 · Secrets at rest are encrypted with AES-256-GCM from a key ring
 - **Context:** `LTI-002` requires platform private keys encrypted at rest; D-021 requires the Feide ID token in the
@@ -720,6 +729,10 @@ loading of one spec per session are kept.
   parameter overrides), so no grant is ever signed without it. The authenticated `/h5p/content/:id/*file` route
   stays for the H5P editor, whose integration has no `contentUrl`; an editor in a cookie-less Canvas iframe (S4)
   needs grant-bearing URLs issued after an Edit check.
+- **Amendment (2026-10-23, S3 verification):** `URL_SIGNING_KEYS` rotates in the three steps of D-056: (1) add the
+  new key second and restart every server; (2) move it first and restart every server; (3) remove the old key at
+  least 13 h 5 min after the last step-2 restart. Putting it first in one step would make servers not yet
+  restarted refuse the file URLs that restarted servers sign.
 
 ### D-059 · How the Feide and LTI role tables are read
 - **Context:** `AUTH-002` and `LTI-004` leave some cases open: unknown LTI roles, how a course group matches, and
@@ -771,7 +784,10 @@ loading of one spec per session are kept.
   Canvas user pre-claim someone else's Feide ID and linked student TAs whose Feide role was unknown. A Feide account
   that already holds another identity from the same platform is refused (`link.conflict`,
   `platform-identity-exists`); that check and the write run in one transaction with the Feide account's row
-  locked. Every outcome is audited as an action of the launching (claiming) account, never of the account it named.
+  locked; the same person's launch arriving twice at once (a double click) is no rival and no conflict. A refusal
+  is audited on the claimant's own account (the one the launch uses), never on the Feide account it named; a link
+  is audited on the account the launch then uses, which is the Feide account, and without an actor if the launch
+  fails after the link was written.
 - **Consequences:** No content ever changes owner through linking. A teacher who starts in Canvas is linked at the
   first Deep Linking launch after their first Feide login; if their Canvas account owns content by then, the two
   libraries stay apart (`link.conflict`) until a "Link with Feide" step that proves both identities exists (the
@@ -782,7 +798,8 @@ loading of one spec per session are kept.
 - **Context:** spec 02 §7 defines `AuthAuditEvent(at, actorUserId?, event, ipHash)`.
 - **Decision:** Recorded events: `login.feide`, `login.feide.failed`, `logout`, `launch.lti.author`,
   `launch.lti.failed`, `link.feide-lti`, `link.conflict`; `ipHash` uses the D-055 key. Learner LTI launches are not
-  recorded (volume and data minimisation).
+  recorded (volume and data minimisation). `ipHash` is recorded for logins, failed logins, logouts and failed
+  launches; author launches and link outcomes carry the actor instead.
 - **Consequences:** The owner confirms the learner rule (Q15).
 
 ### D-065 · End-to-end tests in Session 3

@@ -108,6 +108,24 @@ describeWithServices('[AUTH-005] Canvas and Feide account linking', () => {
     expect(await audited('link.conflict', 'lti-account-owns-content', canvasAccount)).toBe(1);
   });
 
+  it('[AUTH-005] a second Canvas user naming a linked teacher’s Feide ID is refused, audited on their own account', async () => {
+    // Arrange: teacher A is linked; Canvas user B of the same platform claims A's Feide ID
+    const a = person();
+    await loginWithFeide({ app: tb.app, feide: tb.mock.feide }, a.key);
+    const linked = await deepLinkAccount(a.canvas);
+    const b: CanvasUser = {
+      sub: `canvas-${randomUUID()}`,
+      roles: CANVAS_USERS.teacher.roles,
+      loginId: a.feideId,
+    };
+    // Act
+    const claimant = await deepLinkAccount(b);
+    // Assert
+    expect(claimant).not.toBe(linked);
+    expect(await audited('link.conflict', 'platform-identity-exists', claimant)).toBe(1);
+    expect(await audited('link.conflict', 'platform-identity-exists', linked)).toBe(0);
+  });
+
   it('[AUTH-005] a login ID Canvas could not expand (`$Canvas.user.loginId`) links nothing', async () => {
     // Arrange: a Canvas user without a login ID, so the variable reaches the tool unexpanded
     const p = person();

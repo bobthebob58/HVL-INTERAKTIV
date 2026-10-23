@@ -5,7 +5,7 @@
  * Why: LTI-005 and PROD-005: after a Deep Linking launch the teacher picks own or co-authored activities, and the
  *      tool returns a signed `LtiDeepLinkingResponse` to `deep_link_return_url`. ltijs signs it with the platform's
  *      key (`createDeepLinkingMessage`); this module decides what may be signed (D-061).
- * Spec: LTI-005, PROD-005, LTI-003, LTI-004
+ * Spec: LTI-005, PROD-005, LTI-003, LTI-004, PROD-012
  * Invariants:
  *   - Both routes need the ltik of a Deep Linking launch by an author; any other ltik is 403
  *     `hvl:deep-link-not-allowed`. The page takes it from the query (D-058), the API only as a Bearer token.

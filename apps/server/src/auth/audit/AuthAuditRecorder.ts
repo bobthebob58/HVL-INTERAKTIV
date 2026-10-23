@@ -8,7 +8,7 @@
  * Invariants:
  *   - Event names and reasons come from fixed lists; no free text, name, Feide ID, LTI sub or token is stored.
  *   - The IP address is stored only as HMAC-SHA256 under the identity key ring's `auth-audit-ip` purpose, with the
- *     key's ID (D-055).
+ *     key's ID (D-055), and only for logins, failed logins, logouts and failed launches (callers pass `ip` there).
  *   - A failure to record never fails the login or launch it describes; it is logged without personal data.
  * Collaborators: ../../security/keys/IdentityHasher.ts, ../feide/completeFeideLogin.ts, ../../lti/launch/.
  * Tests: apps/server/test/auth/audit/AuthAuditRecorder.int.test.ts

@@ -15,14 +15,17 @@
  *     learner's) is joined, so nobody can pre-claim someone else's Feide ID and learner identities are never linked.
  *   - No content ever changes owner: an LTI identity moves only when its account owns and co-authors nothing.
  *   - Refusals (`link.conflict`): an account that owns content, a learner's Feide account, and a Feide account that
- *     already holds another identity from the same platform. The rival check and the write run in one transaction
- *     with the Feide account's row locked, so two simultaneous claims cannot both succeed.
- *   - The outcome is returned, not recorded: the caller audits it as an action of the claimant's account.
+ *     already holds another person's identity from the same platform. The rival check and the write run in one
+ *     transaction with the Feide account's row locked, so two simultaneous claims cannot both succeed, while the
+ *     same person launching twice at once (a double click) is neither a rival nor a conflict.
+ *   - The outcome is returned, not recorded: the caller audits a refusal as an action of the launching account
+ *     (the claimant's) and a link as an action of the account the launch ends in.
  *   - Runs before the launch resolves its account, so a new LTI identity joins the Feide account directly.
  * Collaborators: ./linkDecision.ts, ./identityLookup.ts, ./subjectSources.ts, ../../security/keys/IdentityHasher.ts,
  *   ../../lti/launch/onDeepLinking.ts (audits the outcome), ../../lti/linkingPlatforms.ts, ../../lti/ltiRoutes.ts.
  * Tests: apps/server/test/auth/identity/accountLinking.int.test.ts,
- *   apps/server/test/auth/identity/accountLinkingGuards.int.test.ts
+ *   apps/server/test/auth/identity/accountLinkingGuards.int.test.ts,
+ *   apps/server/test/auth/identity/accountLinkingRaces.int.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
 import type { IdentityHasher } from '../../security/keys/IdentityHasher.js';
@@ -97,6 +100,8 @@ export function accountLinker(
     });
     if (decision.kind === 'already-linked' || decision.kind === 'no-feide-account') return undefined;
     if (decision.kind === 'conflict') return outcome('link.conflict', 'lti-account-owns-content');
+    // WHY: every hash of this subject under the ring; rows with one of them are this person, never a rival.
+    const own = hasher.candidates('identity-subject', ltiSource).map((c) => c.hash);
     try {
       return await db.$transaction(async (tx) => {
         // WHY: two Canvas users claiming this account at the same moment must not both pass the rival check.
@@ -107,11 +112,14 @@ export function accountLinker(
             userId: feide.userId,
             provider: 'lti',
             platformId: request.platformId,
-            ...(lti ? { NOT: { id: lti.id } } : {}),
+            NOT: { subjectHash: { in: own } },
           },
         });
         if (rival > 0) return outcome('link.conflict', 'platform-identity-exists');
         if (decision.kind === 'link-new') {
+          // WHY: a second launch at the same moment (a double click) already made the identity; its result stands.
+          const made = await tx.identity.count({ where: { provider: 'lti', subjectHash: { in: own } } });
+          if (made > 0) return undefined;
           const { hash, keyId } = hasher.hash('identity-subject', ltiSource);
           await tx.identity.create({
             data: {
