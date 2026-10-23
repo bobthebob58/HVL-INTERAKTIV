@@ -103,13 +103,14 @@ describeWithServices('H5P learner state over HTTP', () => {
 
   it('[DATA-002] the editor’s UI state (activity 0) is answered as empty and never stored', async () => {
     // Arrange
-    const before = await tb.db.h5PUserData.count();
+    const mine = { where: { learnerKey: author.actor.learnerKey } };
+    const before = await tb.db.h5PUserData.count(mine);
     // Act
     const saved = await save(author, '0', '{"open":true}');
     const loaded = await load(author, '0');
     // Assert
     expect(saved.status).toBe(200);
     expect(loaded.body).toEqual({ success: true, data: false });
-    expect(await tb.db.h5PUserData.count()).toBe(before);
+    expect(await tb.db.h5PUserData.count(mine)).toBe(before);
   });
 });
