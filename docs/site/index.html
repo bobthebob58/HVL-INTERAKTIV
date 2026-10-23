@@ -1685,7 +1685,7 @@ asked for again (3.3.7). Login uses Feide or Canvas only, with no cognitive test
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-013">03 Universal design, UD-013</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-020" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-020 validator engine `apps/server/src/validation/validatecontent.ts` exports a **pure function**:
+<details class="req" id="x-UD-020" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-020 validator engine `apps/server/src/validation/validatecontent.ts` exports a **pure function**:
 
 ```ts
 /**
@@ -1712,7 +1712,7 @@ the walker visits nested sub-content recursively (any object with `library: &quo
 `params`). each rule is a separate file under `validation/rules/`, ≤ 100 lines, with its own test.
 pedagogical hint rules (`ped-h*`) are specified in [04 §5](04-laeringsdesign-page.md#5-pedagogical-hint-rules)
 and plug into the same engine.">
-<summary><span class="req-id">UD-020</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Validator engine</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-020</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Validator engine</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p><code>apps/server/src/validation/validateContent.ts</code> exports a <strong>pure function</strong>:</p>
 <pre class="code" tabindex="0" role="region" aria-label="Code 1, UD-020 Validator engine"><code>/**
  * Inspects authored H5P parameters for universal design and pedagogical problems.
@@ -1738,7 +1738,7 @@ Pedagogical hint rules (<code>PED-H*</code>) are specified in <a href="#spec-04-
 and plug into the same engine.</p>
 <p class="req-source">Defined in <a href="#r-UD-020">03 Universal design, UD-020</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-021" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-021 rule set (universal design) | rule id | checks | severity |
+<details class="req" id="x-UD-021" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-021 rule set (universal design) | rule id | checks | severity |
 |---|---|---|
 | `v-img-alt` | `h5p.image` (and images inside `imagehotspots`, `coursepresentation`, `interactivebook`) have non-empty `alt`. the alt text must not look like a filename (`/\.(jpe?g\|png\|gif\|webp\|svg)$/i`, `image1`, `bilde`, `img_1234`), unless the image is marked decorative. | error |
 | `v-img-alt-length` | alt text is longer than 250 characters. suggest a long description in the text instead. | warning |
@@ -1754,7 +1754,7 @@ and plug into the same engine.</p>
 
 - **acceptance:** each rule has positive and negative fixtures under `apps/server/test/fixtures/content/`.
 - **verify:** unit tests `[ud-021][v-img-alt] …` etc.">
-<summary><span class="req-id">UD-021</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Rule set (universal design)</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-021</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Rule set (universal design)</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><div class="table-wrap" role="region" aria-label="Table 1, UD-021 Rule set (universal design)" tabindex="0"><table><thead><tr>
 <th scope="col">Rule ID</th><th scope="col">Checks</th><th scope="col">Severity</th></tr>
 </thead><tbody><tr>
@@ -1921,9 +1921,9 @@ activity&quot; box and its references (§3): <em>segment and retrieve</em>; <em>
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-011">04 Læringsdesign studio, PED-011</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-PED-020" data-area="PED" data-priority="MUST" data-session="S4" data-status="planned" data-text="ped-020 implement the hint rules - **acceptance:** each rule is one file with positive and negative fixtures. messages exist in `nn`, `nb` and `en`, and each names its reference.
+<details class="req" id="x-PED-020" data-area="PED" data-priority="MUST" data-session="S4" data-status="in code" data-text="ped-020 implement the hint rules - **acceptance:** each rule is one file with positive and negative fixtures. messages exist in `nn`, `nb` and `en`, and each names its reference.
 - **verify:** unit tests `[ped-020][ped-h05] …`.">
-<summary><span class="req-id">PED-020</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Implement the hint rules</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PED-020</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Implement the hint rules</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><ul>
 <li><strong>Acceptance:</strong> Each rule is one file with positive and negative fixtures. Messages exist in <code>nn</code>, <code>nb</code> and <code>en</code>, and each names its reference.</li>
 <li><strong>Verify:</strong> Unit tests <code>[PED-020][PED-H05] …</code>.</li>
@@ -2633,10 +2633,10 @@ listing requirement ids, for example `refs: sec-001, h5p-006`.">
 listing requirement IDs, for example <code>Refs: SEC-001, H5P-006</code>.</p>
 <p class="req-source">Defined in <a href="#r-DOC-011">Documentation standard, DOC-011</a> · Documentation</p></div>
 </details>
-<details class="req" id="x-DOC-012" data-area="DOC" data-priority="SHOULD" data-session="S3" data-status="planned" data-text="doc-012 http apis are self-describing request and response bodies are zod schemas. an openapi document is generated from them and served
+<details class="req" id="x-DOC-012" data-area="DOC" data-priority="SHOULD" data-session="S3" data-status="in code" data-text="doc-012 http apis are self-describing request and response bodies are zod schemas. an openapi document is generated from them and served
 at `/api/docs` in development. every route file states its authentication mode (portal, lti,
 either, or admin) and its error responses in the module header.">
-<summary><span class="req-id">DOC-012</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">HTTP APIs are self-describing</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">DOC-012</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">HTTP APIs are self-describing</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>Request and response bodies are zod schemas. An OpenAPI document is generated from them and served
 at <code>/api/docs</code> in development. Every route file states its authentication mode (portal, LTI,
 either, or admin) and its error responses in the module header.</p>
@@ -5974,6 +5974,12 @@ server-rendered (they need Express&#39;s 401/403/404/503 statuses) but use the t
 to their chrome page, so the privacy link (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>) is always on screen.</li>
 <li><strong>Consequences:</strong> The S2/S3 player tests keep their page; e2e tests reach H5P one frame deeper. Same-origin
 framing does not isolate the ltik from H5P content; the script policy is the defence (D-058).</li>
+<li><strong>Amendment (2026-10-23, workstream planning):</strong> the Deep Linking picker stays the server-rendered page at
+<code>/lti/deeplink</code> from S3, restyled with the token CSS and given the formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>); there is no
+<code>/app/deeplink</code>. Its form post to Canvas works today, and a Next.js picker would need a new API for the signed
+Deep Linking answer without adding anything for the teacher. ltijs sends resource-link launches to <code>/app/play</code>
+only when the web app runs (<code>WEB_APP</code> is not <code>off</code>); otherwise to <code>/lti/play</code> as in S3, so the integration tests
+without the web app keep their flow.</li>
 </ul>
 <h3 id="decisions--d-068--express-is-the-front-door-and-runs-nextjs-in-the-same-process" tabindex="-1">D-068 · Express is the front door and runs Next.js in the same process</h3>
 <ul>
@@ -6010,6 +6016,11 @@ memory and removes it from the address bar. The editor&#39;s content files get s
 check (D-058&#39;s grant, bound to the content), and uploaded temporary files get a grant over
 <code>temp|userId|expiry</code> from the same key ring.</li>
 <li><strong>Consequences:</strong> Amends D-058. The redaction and query-ltik tests cover the new paths.</li>
+<li><strong>Amendment (2026-10-23):</strong> Express resolves the ltik of <code>/app/play</code> inside the LTI router (an invalid one gets the
+friendly 401 page there), checks View, and hands the web app the request header <code>x-hvli-launch</code> =
+<code>encodeURIComponent(JSON.stringify({ contentId, title, mayEdit, locale }))</code> (header values must be Latin-1; titles
+are not). The header is removed from client requests like every <code>x-hvli-*</code> header, and carries no token or user
+ID. <code>/app/deeplink</code> is not built (D-067 amendment).</li>
 <li><strong>Probe result (2026-10-23):</strong> the editor page (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>) opens all ten real types
 and saves through the content API, also in the cookie-less Canvas iframe with frame storage partitioned or
 blocked. Upload grants use their own HKDF purpose (<code>temporary-file-url</code>) over the uploading account, served at

@@ -870,6 +870,12 @@ loading of one spec per session are kept.
   to their chrome page, so the privacy link (`DATA-006`) is always on screen.
 - **Consequences:** The S2/S3 player tests keep their page; e2e tests reach H5P one frame deeper. Same-origin
   framing does not isolate the ltik from H5P content; the script policy is the defence (D-058).
+- **Amendment (2026-10-23, workstream planning):** the Deep Linking picker stays the server-rendered page at
+  `/lti/deeplink` from S3, restyled with the token CSS and given the formative notice (`PROD-011`); there is no
+  `/app/deeplink`. Its form post to Canvas works today, and a Next.js picker would need a new API for the signed
+  Deep Linking answer without adding anything for the teacher. ltijs sends resource-link launches to `/app/play`
+  only when the web app runs (`WEB_APP` is not `off`); otherwise to `/lti/play` as in S3, so the integration tests
+  without the web app keep their flow.
 
 ### D-068 · Express is the front door and runs Next.js in the same process
 - **Context:** D-012 puts a reverse proxy in front of Express and Next.js in production. Development and tests need
@@ -904,6 +910,11 @@ loading of one spec per session are kept.
   check (D-058's grant, bound to the content), and uploaded temporary files get a grant over
   `temp|userId|expiry` from the same key ring.
 - **Consequences:** Amends D-058. The redaction and query-ltik tests cover the new paths.
+- **Amendment (2026-10-23):** Express resolves the ltik of `/app/play` inside the LTI router (an invalid one gets the
+  friendly 401 page there), checks View, and hands the web app the request header `x-hvli-launch` =
+  `encodeURIComponent(JSON.stringify({ contentId, title, mayEdit, locale }))` (header values must be Latin-1; titles
+  are not). The header is removed from client requests like every `x-hvli-*` header, and carries no token or user
+  ID. `/app/deeplink` is not built (D-067 amendment).
 - **Probe result (2026-10-23):** the editor page (`/h5p/edit/:id`, `/h5p/new`, `/lti/edit`) opens all ten real types
   and saves through the content API, also in the cookie-less Canvas iframe with frame storage partitioned or
   blocked. Upload grants use their own HKDF purpose (`temporary-file-url`) over the uploading account, served at

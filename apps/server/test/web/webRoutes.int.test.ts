@@ -8,6 +8,7 @@ import type { IncomingMessage } from 'node:http';
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
+import { LAUNCH_HEADER, setAppLaunch } from '../../src/web/appLaunch.js';
 import { webRoutes } from '../../src/web/webRoutes.js';
 
 /** An app with a fake portal session (or none) and a recording web app. */
@@ -73,5 +74,43 @@ describe('[DATA-011] hand-over to the web app', () => {
       [1, 2, 3].map(async () => (await request(app).get('/')).headers['content-security-policy']),
     );
     expect(new Set(nonces).size).toBe(3);
+  });
+
+  it('[LTI-006] a launch page gets the launch facts, its locale and Canvas framing; no client can forge them', async () => {
+    // Arrange
+    const seen: IncomingMessage[] = [];
+    const app = express();
+    app.use((_req, res, next) => {
+      setAppLaunch(res, { contentId: 'c1', title: 'Brøkar ✓', mayEdit: true, locale: 'en' });
+      next();
+    });
+    app.use(
+      webRoutes(
+        { dev: false, handle: async (req, res) => void (seen.push(req), res.end('web')) },
+        { canvasOrigins: ['https://hvl.instructure.com'] },
+      ),
+    );
+    // Act
+    const res = await request(app).get('/app/play').set('x-hvli-launch', 'forged');
+    // Assert
+    const header = String(seen[0]?.headers[LAUNCH_HEADER]);
+    expect(JSON.parse(decodeURIComponent(header))).toEqual({
+      contentId: 'c1',
+      title: 'Brøkar ✓',
+      mayEdit: true,
+      locale: 'en',
+    });
+    expect(seen[0]?.headers['x-hvli-locale']).toBe('en');
+    expect(res.headers['content-security-policy']).toMatch(
+      /frame-ancestors 'self' https:\/\/hvl\.instructure\.com$/,
+    );
+    expect(res.headers['x-frame-options']).toBeUndefined();
+    expect(res.headers['cache-control']).toBe('no-store');
+  });
+
+  it('[LTI-003] a page without a launch never carries a launch header, even a forged one', async () => {
+    const { app, seen } = appWith();
+    await request(app).get('/app/play').set('x-hvli-launch', encodeURIComponent('{"mayEdit":true}'));
+    expect(seen[0]?.headers[LAUNCH_HEADER]).toBeUndefined();
   });
 });
