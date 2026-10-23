@@ -271,7 +271,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>✅ Gate passed (2026-10-23); spike steps 3–5 open (Q7)</td></tr>
 <tr>
-<td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>⬜ Not started</td></tr>
+<td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>🟨 In progress (2026-10-23)</td></tr>
 <tr>
 <td>S4</td><td>Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator</td><td>03; 04 §5; 05 <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a></td><td>⬜ Not started</td></tr>
 <tr>
@@ -376,6 +376,44 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <td>D-045</td><td>Headers for user files; the separate files origin moves to S3/S6</td><td>Accepted (2026-10-22)</td></tr>
 <tr>
 <td>D-046</td><td>Library language files fall back nn → nb → en</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-048</td><td>The Session 3 LTI views are server-rendered pages until <code>apps/web</code> (S4)</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-049</td><td>A mock Feide and a mock Canvas in <code>tools/mock-platform</code>; HVL values from env</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-050</td><td>How we use ltijs 7: our router, our cache, our pages, our ltik checks</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-051</td><td>LTI platforms and deployments from <code>LTI_PLATFORMS</code>; deployment IDs checked by us</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-052</td><td>ltijs records: 10-minute nonces, 24-hour ID tokens with a claim allowlist</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-053</td><td>The <code>Principal</code>: always a user ID, roles as a list, one mapping to the H5P actor</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-054</td><td>The Feide subject is the Feide ID; Groups API failures fail closed</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-055</td><td>A stable identity key ring with HKDF purposes and a rotation rule</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-056</td><td>Secrets at rest are encrypted with AES-256-GCM from a key ring</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-057</td><td>Own Redis portal sessions, login transactions and a synchronizer CSRF token</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-058</td><td>H5P URL tokens and signed content-file URLs</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-059</td><td>How the Feide and LTI role tables are read</td><td>Accepted (2026-10-23), owner to confirm (Q12)</td></tr>
+<tr>
+<td>D-060</td><td>Authors may view a published activity they launched from Canvas (course copy)</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-061</td><td>Deep Linking in Session 3</td><td>Accepted (2026-10-23), TeCopp to confirm (Q13)</td></tr>
+<tr>
+<td>D-062</td><td>The LTI-006 tabs and the LTI-007 duplicate come with their pages</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-063</td><td>Linking an author&#39;s Canvas and Feide identities</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-064</td><td>What the authentication audit records</td><td>Accepted (2026-10-23), owner to confirm (Q15)</td></tr>
+<tr>
+<td>D-065</td><td>End-to-end tests in Session 3</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-066</td><td>Friendly &quot;not available&quot; pages and visibility-only sharing until S4</td><td>Accepted (2026-10-23), owner to confirm (Q14)</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--references" tabindex="-1">Reference inputs from HVL</h3>
@@ -793,7 +831,7 @@ different Canvas course (context) gets separate state.</li>
 | `generalpermission.updateandinstalllibraries` | ✗ | ✗ | ✓ |
 | `generalpermission.createrestricted` | ✗ | ✗ | ✓ |
 | `contentpermission.create` / `list` | ✗ | ✓ | ✓ |
-| `contentpermission.view` | if published **and** visible to them (`prod-006`) or launched via lti | owner, co-author, or visible | ✓ |
+| `contentpermission.view` | if published **and** visible to them (`prod-006`) or launched via lti | owner, co-author, visible, or published and launched by them via lti (course copy, d-060) | ✓ |
 | `contentpermission.edit` / `delete` / `download` | ✗ | owner or co-author | ✓ |
 | `userdatapermission.*` on **own** data | ✓ | ✓ | ✓ |
 | `userdatapermission.*` on **someone else's** data | ✗ | ✗ (aggregates only via insight) | for data-subject requests only, audit-logged |
@@ -814,7 +852,7 @@ leaving `permissionsystem` undefined (lumi's `laissezfairepermissionsystem`) is 
 <tr>
 <td><code>ContentPermission.Create</code> / <code>List</code></td><td>✗</td><td>✓</td><td>✓</td></tr>
 <tr>
-<td><code>ContentPermission.View</code></td><td>if published <strong>and</strong> visible to them (<a class="req-ref" href="#r-PROD-006"><code>PROD-006</code></a>) or launched via LTI</td><td>owner, co-author, or visible</td><td>✓</td></tr>
+<td><code>ContentPermission.View</code></td><td>if published <strong>and</strong> visible to them (<a class="req-ref" href="#r-PROD-006"><code>PROD-006</code></a>) or launched via LTI</td><td>owner, co-author, visible, or published and launched by them via LTI (course copy, D-060)</td><td>✓</td></tr>
 <tr>
 <td><code>ContentPermission.Edit</code> / <code>Delete</code> / <code>Download</code></td><td>✗</td><td>owner or co-author</td><td>✓</td></tr>
 <tr>
@@ -3126,7 +3164,7 @@ different Canvas course (context) gets separate state.</li>
 <tr>
 <td><code>ContentPermission.Create</code> / <code>List</code></td><td>✗</td><td>✓</td><td>✓</td></tr>
 <tr>
-<td><code>ContentPermission.View</code></td><td>if published <strong>and</strong> visible to them (<a class="req-ref" href="#r-PROD-006"><code>PROD-006</code></a>) or launched via LTI</td><td>owner, co-author, or visible</td><td>✓</td></tr>
+<td><code>ContentPermission.View</code></td><td>if published <strong>and</strong> visible to them (<a class="req-ref" href="#r-PROD-006"><code>PROD-006</code></a>) or launched via LTI</td><td>owner, co-author, visible, or published and launched by them via LTI (course copy, D-060)</td><td>✓</td></tr>
 <tr>
 <td><code>ContentPermission.Edit</code> / <code>Delete</code> / <code>Download</code></td><td>✗</td><td>owner or co-author</td><td>✓</td></tr>
 <tr>
@@ -3314,13 +3352,19 @@ recorded with evidence in <code>docs/reference/</code> (<a href="#reference">ref
 <p>Both entry points resolve to a single server-side <strong><code>Principal</code></strong>:</p>
 <pre class="code" tabindex="0" role="region" aria-label="Code 2, 2. Two ways in, one identity model"><code>/** What every API handler receives after authentication. Defined in apps/server/src/auth/Principal.ts */
 interface Principal {
-  userId: string;              // internal UUID (authors/admins) or null for learners
+  userId: string;              // internal UUID; learners have pseudonymous User rows too (D-034, D-053)
   learnerKey: string;          // HMAC pseudonym (DATA-002), always present
-  roles: Array&lt;'learner' | 'author' | 'admin'&gt;;
+  roles: Array&lt;'learner' | 'author' | 'admin'&gt;;   // the H5P role is the highest of them
   mode: 'portal' | 'lti';
-  ltiContext?: { platformId: string; contextId: string; resourceLinkId: string; lineItemUrl?: string };
   locale: 'nn' | 'nb' | 'en';
+  hvlMember: boolean;          // portal: Feide organisation in ALLOWED_FEIDE_ORGS; LTI: false
+  feideAuthenticated: boolean; // portal only
+  studentAuthor: boolean;      // a student allowed to author through AUTHOR_COURSE_GROUPS (D-059)
+  lti?: { platformId: string; deploymentId: string; contextId: string; resourceLinkId?: string;
+          contentId?: string; lineItemUrl?: string; messageType: string };
 }</code></pre>
+<p><em>Amended in S3 (D-053):</em> <code>userId</code> is always set, and the principal carries the facts the permission system
+reads (D-036). <code>auth/principalToH5pActor.ts</code> maps it to the H5P actor.</p>
 <p>Putting web and API on one origin behind a reverse proxy avoids CORS and keeps the portal session
 cookie first-party.</p>
 <hr>
@@ -4843,6 +4887,44 @@ with the commands given.</p>
 <td>D-045</td><td>Headers for user files; the separate files origin moves to S3/S6</td><td>Accepted (2026-10-22)</td></tr>
 <tr>
 <td>D-046</td><td>Library language files fall back nn → nb → en</td><td>Accepted (2026-10-22)</td></tr>
+<tr>
+<td>D-048</td><td>The Session 3 LTI views are server-rendered pages until <code>apps/web</code> (S4)</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-049</td><td>A mock Feide and a mock Canvas in <code>tools/mock-platform</code>; HVL values from env</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-050</td><td>How we use ltijs 7: our router, our cache, our pages, our ltik checks</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-051</td><td>LTI platforms and deployments from <code>LTI_PLATFORMS</code>; deployment IDs checked by us</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-052</td><td>ltijs records: 10-minute nonces, 24-hour ID tokens with a claim allowlist</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-053</td><td>The <code>Principal</code>: always a user ID, roles as a list, one mapping to the H5P actor</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-054</td><td>The Feide subject is the Feide ID; Groups API failures fail closed</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-055</td><td>A stable identity key ring with HKDF purposes and a rotation rule</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-056</td><td>Secrets at rest are encrypted with AES-256-GCM from a key ring</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-057</td><td>Own Redis portal sessions, login transactions and a synchronizer CSRF token</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-058</td><td>H5P URL tokens and signed content-file URLs</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-059</td><td>How the Feide and LTI role tables are read</td><td>Accepted (2026-10-23), owner to confirm (Q12)</td></tr>
+<tr>
+<td>D-060</td><td>Authors may view a published activity they launched from Canvas (course copy)</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-061</td><td>Deep Linking in Session 3</td><td>Accepted (2026-10-23), TeCopp to confirm (Q13)</td></tr>
+<tr>
+<td>D-062</td><td>The LTI-006 tabs and the LTI-007 duplicate come with their pages</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-063</td><td>Linking an author&#39;s Canvas and Feide identities</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-064</td><td>What the authentication audit records</td><td>Accepted (2026-10-23), owner to confirm (Q15)</td></tr>
+<tr>
+<td>D-065</td><td>End-to-end tests in Session 3</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-066</td><td>Friendly &quot;not available&quot; pages and visibility-only sharing until S4</td><td>Accepted (2026-10-23), owner to confirm (Q14)</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="decisions--d-001--nodejs-24-lts-instead-of-22" tabindex="-1">D-001 · Node.js 24 LTS instead of 22</h3>
@@ -5367,6 +5449,209 @@ translation callback for Lumi&#39;s own strings uses i18next (<code>lng: &#39;nn
 server messages stay in <code>src/i18n/translate.ts</code>.</li>
 <li><strong>Consequences:</strong> Lumi&#39;s own <code>nn</code> client strings are partly Bokmål; HVL&#39;s language advisers review them (Q2).</li>
 </ul>
+<h3 id="decisions--d-048--the-session-3-lti-views-are-server-rendered-pages-until-appsweb-s4" tabindex="-1">D-048 · The Session 3 LTI views are server-rendered pages until <code>apps/web</code> (S4)</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a> and <a class="req-ref" href="#r-LTI-005"><code>LTI-005</code></a> describe the Canvas views as Next.js pages, but <code>apps/web</code> and its design
+tokens arrive in S4. Building the views in Next.js now would add React and Next.js to S3 and style the pages
+twice. The owner chose server-rendered pages for S3 (2026-10-23).</li>
+<li><strong>Decision:</strong> <code>SPEC-DEVIATION</code>: in S3 the server renders <code>/lti/play</code> (the player Canvas embeds), <code>/lti/deeplink</code>
+(the picker) and the friendly error pages. <a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a> still holds in full: the ltik lives only in page memory (a
+script closure or the <code>H5PIntegration</code> URLs), never in localStorage, sessionStorage or cookies; a first-party
+script removes it from the address bar with <code>history.replaceState</code>; our APIs take <code>Authorization: Bearer</code>; every
+page that receives an ltik sends <code>Referrer-Policy: no-referrer</code>, <code>Cache-Control: no-store</code> and CSP
+<code>frame-ancestors</code> from <code>CANVAS_ORIGINS</code>, and never <code>X-Frame-Options</code>. Page scripts are static files
+(<code>script-src &#39;self&#39;</code>). The pages are unstyled until S4.</li>
+<li><strong>Consequences:</strong> S4 moves the views to <code>apps/web</code> <code>/app/*</code> and keeps the same server APIs.</li>
+</ul>
+<h3 id="decisions--d-049--a-mock-feide-and-a-mock-canvas-in-toolsmock-platform-hvl-values-from-env" tabindex="-1">D-049 · A mock Feide and a mock Canvas in <code>tools/mock-platform</code>; HVL values from env</h3>
+<ul>
+<li><strong>Context:</strong> HVL&#39;s Feide client values and the TeCopp Canvas instance are not available yet (Q3, Q4), and
+<code>auth.dataporten.no</code> and <code>*.instructure.com</code> are not reachable from the build environment (Q7).</li>
+<li><strong>Decision:</strong> <code>tools/mock-platform</code> holds a mock Feide (<code>oauth2-mock-server</code> plus a Groups API route) and a mock
+Canvas (our own <code>node:http</code> + <code>jose</code> server: an OIDC auth endpoint with <code>form_post</code>, JWKS, the LTI Platform
+Storage frame, a course page that embeds the tool cross-site, and deep-link return verification). Tests start it
+in-process; <code>npm run mock:platform</code> runs it by hand. It is not a docker compose service: the server on the host
+and the browser must reach the mock Feide at the same URL. Every HVL value is an environment variable.</li>
+<li><strong>Consequences:</strong> The <em>(verify)</em> items in spec 02 stay open until HVL IT and TeCopp deliver (Q3, Q4).</li>
+</ul>
+<h3 id="decisions--d-050--how-we-use-ltijs-7-our-router-our-cache-our-pages-our-ltik-checks" tabindex="-1">D-050 · How we use ltijs 7: our router, our cache, our pages, our ltik checks</h3>
+<ul>
+<li><strong>Context:</strong> ltijs 7.0.7 registers its routes through a pluggable <code>HttpHandler</code>; its own <code>ExpressHttpHandler</code>
+creates an Express app with <code>cors({ origin: true, credentials: true })</code> and helmet, and <code>Provider.listen()</code>
+installs a <code>SIGINT</code> handler that calls <code>process.exit()</code>. Its <code>RedisCacheManager</code> uses ioredis. mongoose and
+ioredis load at import. <code>getLaunchContext(ltik)</code> does not check whether the platform is still active.</li>
+<li><strong>Decision:</strong> ltijs runs on our <code>ExpressRouterHttpHandler</code> (an Express <code>Router</code>); we never call
+<code>Provider.listen()</code>. <code>SPEC-DEVIATION</code>: our node-redis <code>LtiCacheManager</code> replaces ltijs&#39;s <code>RedisCacheManager</code>
+(<a class="req-ref" href="#r-LTI-001"><code>LTI-001</code></a> wording); it caches only public JWKS and keysets. ltijs&#39;s own HTML gets a CSP with hashes of its
+inline scripts. Its default handlers are replaced by friendly pages. Our ltik resolver also checks
+<code>platform.active</code>. ltijs&#39;s OIDC <em>recovery token</em> (at most 10 minutes, grants nothing on its own) may sit in the
+frame&#39;s partitioned localStorage or in LTI Platform Storage; the ltik never does.</li>
+<li><strong>Consequences:</strong> mongoose, mongodb and ioredis are installed and loaded but never connected; an upstream issue
+asks ltijs to load them lazily. ESLint forbids importing <code>RedisCacheManager</code>, <code>ExpressHttpHandler</code> and
+<code>MongoLegacyDatabaseManager</code>.</li>
+</ul>
+<h3 id="decisions--d-051--lti-platforms-and-deployments-from-lti_platforms-deployment-ids-checked-by-us" tabindex="-1">D-051 · LTI platforms and deployments from <code>LTI_PLATFORMS</code>; deployment IDs checked by us</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-LTI-001"><code>LTI-001</code></a> requires rejecting a launch with a wrong deployment ID. ltijs 7 checks only that the claim
+is a string, and its platform model has no deployment field.</li>
+<li><strong>Decision:</strong> A new table <code>LtiDeployment(platformId, deploymentId)</code>. <code>LTI_PLATFORMS</code> (JSON in env) is synced at
+start-up: new platforms are registered (ltijs generates the tool key pair), endpoints updated, removed platforms
+deactivated, and each platform&#39;s deployments replaced. The deployment ID is checked in <code>saveIdToken</code>, so no ltik
+is ever minted for a foreign deployment, and again on every use of an ltik.</li>
+<li><strong>Consequences:</strong> Adding a Canvas deployment is a configuration change and a restart. Dynamic Registration
+(<a class="req-ref" href="#r-LTI-009"><code>LTI-009</code></a>) stays in S6.</li>
+</ul>
+<h3 id="decisions--d-052--ltijs-records-10-minute-nonces-24-hour-id-tokens-with-a-claim-allowlist" tabindex="-1">D-052 · ltijs records: 10-minute nonces, 24-hour ID tokens with a claim allowlist</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-LTI-002"><code>LTI-002</code></a> says nonces expire after 10 minutes; the data inventory said 1 hour. ltijs stores the whole
+ID token, which can carry names, e-mail, <code>lis</code> identifiers and custom fields.</li>
+<li><strong>Decision:</strong> Nonces live 10 minutes (the inventory is corrected), matching ltijs&#39;s 600-second state.
+<code>consumeNonce</code> is one conditional <code>DELETE</code>, which is atomic. ID tokens live 24 hours and expired rows are never
+returned. The stored claims are an allowlist of what the launch needs; names, e-mail, <code>lis</code>, <code>feide_login</code> and
+unknown custom fields are dropped before storage. A cleanup job runs every 10 minutes under a Redis lease.</li>
+<li><strong>Consequences:</strong> The launch handler still sees the full claims in memory; only storage is minimised.</li>
+</ul>
+<h3 id="decisions--d-053--the-principal-always-a-user-id-roles-as-a-list-one-mapping-to-the-h5p-actor" tabindex="-1">D-053 · The <code>Principal</code>: always a user ID, roles as a list, one mapping to the H5P actor</h3>
+<ul>
+<li><strong>Context:</strong> Spec 02 §2 types <code>Principal.userId</code> as a string but comments &quot;null for learners&quot;, while D-034 gives
+learners pseudonymous <code>User</code> rows and <code>HvlH5pActor.accountId</code> is required (D-036).</li>
+<li><strong>Decision:</strong> <code>userId</code> is always set. <code>roles</code> is a list; the H5P role is the highest of them. LTI principals have
+<code>hvlMember = false</code> and <code>feideAuthenticated = false</code>, so in Canvas they see the launched activity and their own
+content. <code>auth/principalToH5pActor.ts</code> is the one mapping to <code>HvlH5pActor</code> (D-036). Spec 02 §2 is amended.</li>
+<li><strong>Consequences:</strong> No code path has to handle a missing user ID.</li>
+</ul>
+<h3 id="decisions--d-054--the-feide-subject-is-the-feide-id-groups-api-failures-fail-closed" tabindex="-1">D-054 · The Feide subject is the Feide ID; Groups API failures fail closed</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a> derives the learnerKey from <code>feide|&lt;feide-id&gt;</code>, <a class="req-ref" href="#r-AUTH-005"><code>AUTH-005</code></a> compares Canvas&#39;s login ID with
+the Feide ID, and <code>ADMIN_FEIDE_IDS</code> lists Feide IDs. <a class="req-ref" href="#r-AUTH-004"><code>AUTH-004</code></a> allows <code>sub</code> or the Feide ID.</li>
+<li><strong>Decision:</strong> The Feide subject is the Feide ID (<code>eduPersonPrincipalName</code>, trimmed and lower-cased). It feeds
+<code>Identity.subjectHash</code>, the learnerKey, <code>ADMIN_FEIDE_IDS</code> and account linking; <code>sub</code> is never stored. A login
+without a Feide ID is refused with a friendly page. The organisation comes from the Groups API (<code>fc:org:&lt;realm&gt;</code>);
+if that call fails, the login fails closed (503 page). <code>enableNonRepudiationChecks</code> adds an ID-token signature
+check against Feide&#39;s JWKS on top of openid-client&#39;s claim checks.</li>
+<li><strong>Consequences:</strong> Feide users without a Feide ID (guests, eduGAIN) cannot log in (owner to confirm, Q12).</li>
+</ul>
+<h3 id="decisions--d-055--a-stable-identity-key-ring-with-hkdf-purposes-and-a-rotation-rule" tabindex="-1">D-055 · A stable identity key ring with HKDF purposes and a rotation rule</h3>
+<ul>
+<li><strong>Context:</strong> <code>Identity.subjectHash</code> and <code>AuthAuditEvent.ipHash</code> need a keyed hash whose key does not rotate every
+year (the learnerKey&#39;s key does, D-011), and the rotation must be defined (PROGRESS S3).</li>
+<li><strong>Decision:</strong> <code>IDENTITY_HASH_KEYS</code> is a key ring <code>id=base64,…</code> whose first entry is current; HKDF derives the
+purpose keys <code>identity-subject</code> and <code>auth-audit-ip</code>. New columns <code>Identity.subjectKeyId</code> and
+<code>AuthAuditEvent.ipKeyId</code> record which key made a hash. Rotation: put the new key first; lookups try every key and
+re-hash a match in place at that login. Remove an old key after at least 13 months (learner rows are purged by
+then; a dormant staff member gets a new account). On compromise, rotate the same way at once.</li>
+<li><strong>Consequences:</strong> Rotation needs no downtime and no bulk re-hash.</li>
+</ul>
+<h3 id="decisions--d-056--secrets-at-rest-are-encrypted-with-aes-256-gcm-from-a-key-ring" tabindex="-1">D-056 · Secrets at rest are encrypted with AES-256-GCM from a key ring</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-LTI-002"><code>LTI-002</code></a> requires platform private keys encrypted at rest; D-021 requires the Feide ID token in the
+session encrypted; S6 stores <code>GradeSyncJob.ltiSubEncrypted</code>.</li>
+<li><strong>Decision:</strong> <code>DATA_ENCRYPTION_KEYS</code> key ring; AES-256-GCM with a per-purpose HKDF key and the purpose as AAD.
+Format <code>0x01 | keyIdLength | keyId | iv(12) | tag(16) | ciphertext</code>. Used for <code>LtiPlatform.privateKeyEncrypted</code>,
+<code>LtiAccessToken.tokenEncrypted</code>, the session&#39;s Feide ID token, and in S6 for <code>ltiSubEncrypted</code>. Values are
+re-encrypted with the current key when they are next written.</li>
+<li><strong>Consequences:</strong> A database dump alone reveals no private key or token.</li>
+</ul>
+<h3 id="decisions--d-057--own-redis-portal-sessions-login-transactions-and-a-synchronizer-csrf-token" tabindex="-1">D-057 · Own Redis portal sessions, login transactions and a synchronizer CSRF token</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-AUTH-003"><code>AUTH-003</code></a> asks for a Redis session behind an opaque <code>__Host-hvli_sid</code> cookie (idle 2 h, absolute
+12 h) and CSRF protection; <a class="req-ref" href="#r-H5P-007"><code>H5P-007</code></a> requires 401 for an H5P request without a valid token. Generic middleware
+(express-session, csurf) does not give these exact semantics, and csurf is deprecated.</li>
+<li><strong>Decision:</strong> Small own modules. Sessions in Redis under a hash of the session ID; the cookie is <code>HttpOnly</code>,
+<code>Secure</code>, <code>SameSite=Lax</code>, <code>Path=/</code>. A single-use login-transaction cookie (10 minutes) binds state, nonce and
+PKCE verifier to the browser, which prevents login CSRF. One synchronizer token per session, read from the
+<code>X-CSRF-Token</code> header, a <code>csrf</code> query value (H5P URLs) or a <code>csrf</code> form field; it is required on every unsafe
+method and on <code>/h5p/ajax</code> and <code>/h5p/contentUserData</code> for any method. A missing or wrong token is 401
+<code>hvl:csrf-invalid</code>. Roles are computed at login only.</li>
+<li><strong>Consequences:</strong> A role change in Feide takes effect at the next login.</li>
+</ul>
+<h3 id="decisions--d-058--h5p-url-tokens-and-signed-content-file-urls" tabindex="-1">D-058 · H5P URL tokens and signed content-file URLs</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-H5P-007"><code>H5P-007</code></a> asks that H5P&#39;s AJAX and user-data URLs carry the ltik (Canvas) or a CSRF token (portal).
+Lumi&#39;s <code>UrlGenerator</code> puts the token unencoded, and <code>contentFilesUrl</code> receives no user, while H5P builds file
+URLs as <code>contentUrl + &quot;/&quot; + path</code>, so a query token cannot work there. D-045 puts signed file URLs in S3.</li>
+<li><strong>Decision:</strong> <code>HvlUrlGenerator</code> appends <code>ltik</code> or <code>csrf</code>, URL-encoded, from a new actor field <code>urlToken</code>.
+Content files are served from a public route <code>/h5p/files/:grant/:contentId/*file</code>, where the grant is an HMAC over
+<code>contentId|expiry</code> with <code>URL_SIGNING_KEYS</code>, valid for 12 hours and issued only by a render that passed the View
+check. An ltik in a query string is accepted only on <code>/h5p/ajax</code>, <code>/h5p/contentUserData/*</code>, <code>/lti/play</code> and
+<code>/lti/deeplink</code>; everywhere else it must be a Bearer header.</li>
+<li><strong>Consequences:</strong> Script inside content could read the token from its page; the S2 sanitising and the S4 CSP
+limit that. The separate files origin stays in S6 (D-045).</li>
+</ul>
+<h3 id="decisions--d-059--how-the-feide-and-lti-role-tables-are-read" tabindex="-1">D-059 · How the Feide and LTI role tables are read</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a> and <a class="req-ref" href="#r-LTI-004"><code>LTI-004</code></a> leave some cases open: unknown LTI roles, how a course group matches, and
+what &quot;visibility limited to the course&quot; means for student authors when no course visibility exists yet.</li>
+<li><strong>Decision:</strong> LTI <code>institution/person#Administrator</code> gives <code>author</code>, never <code>admin</code>; unknown roles and <code>TestUser</code>
+give <code>learner</code>. An <code>AUTHOR_COURSE_GROUPS</code> entry matches a group ID exactly or as a prefix followed by <code>:</code>. Student
+authors may share only <code>private</code> until a course visibility exists. Users from other organisations are <code>learner</code>
+and see only <code>feide</code>-visible activities.</li>
+<li><strong>Consequences:</strong> The owner confirms the student-author rule (Q12).</li>
+</ul>
+<h3 id="decisions--d-060--authors-may-view-a-published-activity-they-launched-from-canvas-course-copy" tabindex="-1">D-060 · Authors may view a published activity they launched from Canvas (course copy)</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-LTI-007"><code>LTI-007</code></a> lets instructors of a copied course launch and play an activity they do not own. The S2
+rules granted launched activities to learners only.</li>
+<li><strong>Decision:</strong> Amendment to <a class="req-ref" href="#r-H5P-006"><code>H5P-006</code></a>: an author may View a <strong>published</strong> activity opened by their own LTI launch.
+Edit stays with the owner and co-authors. The spec 01 matrix and its test are updated.</li>
+<li><strong>Consequences:</strong> Copying a course never gives edit rights.</li>
+</ul>
+<h3 id="decisions--d-061--deep-linking-in-session-3" tabindex="-1">D-061 · Deep Linking in Session 3</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-LTI-005"><code>LTI-005</code></a> names a picker with the author&#39;s activities, the content bank and &quot;new from a pattern&quot;;
+the last two arrive in S5. Canvas sends <code>lineItem</code> only for <code>assignment_selection</code>.</li>
+<li><strong>Decision:</strong> The picker lists the author&#39;s own and co-authored activities; drafts are shown but cannot be
+selected. The graded placement is recognised from Canvas&#39;s placement claim or, failing that, from our custom
+field <code>hvl_placement</code> set per placement in the developer key. A <code>lineItem</code> is sent only for
+<code>assignment_selection</code>. We use <code>createDeepLinkingMessage</code> with our own form (no inline script); the return URL
+must be http(s); several items only when <code>accept_multiple</code> is <code>true</code>.</li>
+<li><strong>Consequences:</strong> TeCopp adds <code>hvl_placement</code> to the developer key (Q13).</li>
+</ul>
+<h3 id="decisions--d-062--the-lti-006-tabs-and-the-lti-007-duplicate-come-with-their-pages" tabindex="-1">D-062 · The LTI-006 tabs and the LTI-007 duplicate come with their pages</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-LTI-006"><code>LTI-006</code></a> gives authors <strong>Rediger</strong> and <strong>Innsikt</strong> tabs; the editor page is S4 (D-040) and insight
+is S6. <a class="req-ref" href="#r-LTI-007"><code>LTI-007</code></a>&#39;s &quot;duplicate&quot; belongs to the content bank (<a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a>, S5).</li>
+<li><strong>Decision:</strong> <code>SPEC-DEVIATION</code>: in S3 both roles get the player; the tabs arrive with the editor page (S4) and
+insight (S6), and duplicating with <a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a> (S5).</li>
+<li><strong>Consequences:</strong> <a class="req-ref" href="#r-LTI-006"><code>LTI-006</code></a> and <a class="req-ref" href="#r-LTI-007"><code>LTI-007</code></a> are tested for what S3 delivers.</li>
+</ul>
+<h3 id="decisions--d-063--linking-an-authors-canvas-and-feide-identities" tabindex="-1">D-063 · Linking an author&#39;s Canvas and Feide identities</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-AUTH-005"><code>AUTH-005</code></a> links an author&#39;s Canvas identity to their Feide identity through the custom claim
+<code>feide_login</code>.</li>
+<li><strong>Decision:</strong> <code>feide_login</code> is read only when <a class="req-ref" href="#r-LTI-004"><code>LTI-004</code></a> gives <code>author</code>; values starting with <code>$</code> are ignored; it is
+never stored. If only the Feide account exists, the LTI identity joins it; if neither exists, one account gets
+both; if only the LTI account exists, the Feide identity joins it; if both exist and differ, the LTI identity
+moves only when its account owns no content and no co-authorship, otherwise <code>link.conflict</code> is audited and
+nothing changes. Learner identities are never linked.</li>
+<li><strong>Consequences:</strong> No content ever changes owner through linking.</li>
+</ul>
+<h3 id="decisions--d-064--what-the-authentication-audit-records" tabindex="-1">D-064 · What the authentication audit records</h3>
+<ul>
+<li><strong>Context:</strong> spec 02 §7 defines <code>AuthAuditEvent(at, actorUserId?, event, ipHash)</code>.</li>
+<li><strong>Decision:</strong> Recorded events: <code>login.feide</code>, <code>login.feide.failed</code>, <code>logout</code>, <code>launch.lti.author</code>,
+<code>launch.lti.failed</code>, <code>link.feide-lti</code>, <code>link.conflict</code>; <code>ipHash</code> uses the D-055 key. Learner LTI launches are not
+recorded (volume and data minimisation).</li>
+<li><strong>Consequences:</strong> The owner confirms the learner rule (Q15).</li>
+</ul>
+<h3 id="decisions--d-065--end-to-end-tests-in-session-3" tabindex="-1">D-065 · End-to-end tests in Session 3</h3>
+<ul>
+<li><strong>Context:</strong> The EVALUATOR-GUIDE says <code>npm run test:e2e</code> runs journeys J1–J5 from S3, but spec 00 places J1–J5 in
+S6 (they need S4–S6 features). The S3 gate needs the cookie-less iframe e2e (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
+<li><strong>Decision:</strong> In S3 <code>npm run test:e2e</code> runs three Chromium flows: launch → play → resume in a cross-site iframe
+with third-party cookies blocked, the Deep Linking round trip, and portal sharing with logout. J1–J5 stay in S6;
+the EVALUATOR-GUIDE is corrected.</li>
+<li><strong>Consequences:</strong> The e2e tests use the mock platform and run in CI.</li>
+</ul>
+<h3 id="decisions--d-066--friendly-not-available-pages-and-visibility-only-sharing-until-s4" tabindex="-1">D-066 · Friendly &quot;not available&quot; pages and visibility-only sharing until S4</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-PROD-004"><code>PROD-004</code></a> asks for a friendly page with 404 for drafts; <a class="req-ref" href="#r-PROD-006"><code>PROD-006</code></a> asks that visibility changes take
+effect immediately. Publishing (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>) belongs to S4&#39;s validator flow.</li>
+<li><strong>Decision:</strong> An unknown, draft or invisible activity always gets the same &quot;not available&quot; page with 404, so its
+existence is not revealed. A portal page without a session sends the browser to Feide login with a checked
+<code>returnTo</code>. The S3 sharing API changes <strong>visibility only</strong>; every change writes an audit event.</li>
+<li><strong>Consequences:</strong> Activities are published through S4&#39;s flow (owner to confirm, Q14).</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -5384,7 +5669,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>✅ Gate passed (2026-10-23); spike steps 3–5 open (Q7)</td></tr>
 <tr>
-<td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>⬜ Not started</td></tr>
+<td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>🟨 In progress (2026-10-23)</td></tr>
 <tr>
 <td>S4</td><td>Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator</td><td>03; 04 §5; 05 <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a></td><td>⬜ Not started</td></tr>
 <tr>
@@ -5483,9 +5768,11 @@ every fix has a test that fails on the old code</li>
 <li><span class="task">✓ Done:</span> Gate: as in the Evaluator Guide §5, S2, plus each S2 requirement&#39;s tests run on their own (<code>-t</code>);
 output in the session log (2026-10-23)</li>
 </ul>
-<h3 id="progress--s3--dual-authentication" tabindex="-1">S3 — Dual authentication ⬜</h3>
+<h3 id="progress--s3--dual-authentication" tabindex="-1">S3 — Dual authentication 🟨</h3>
 <p>Effort: high, because this is security-critical. Public Feide and Canvas values are in <code>docs/reference/</code>; <strong>HVL&#39;s own client IDs, realm, redirect URIs and TeCopp instance</strong> are still needed (Q3, Q4).</p>
 <ul>
+<li><span class="task">✓ Done:</span> Decisions D-048…D-066 recorded (plan approved 2026-10-23): server-rendered LTI views until S4 (D-048),
+mock platform (D-049), ltijs on our router with our deployment and ltik checks (D-050, D-051)</li>
 <li><span class="task">○ To do:</span> Mock OIDC provider and mock LTI platform in <code>tools/mock-platform/</code> for tests</li>
 <li><span class="task">○ To do:</span> Define the stable HMAC key for <code>Identity.subjectHash</code> and <code>AuthAuditEvent.ipHash</code> (env.ts,
 <code>.env.example</code>, DATA-INVENTORY &quot;Pseudonymous (stable key)&quot;), including its rotation</li>
@@ -5548,6 +5835,14 @@ The data-subject tool must delete learner state through the storage directly: Lu
 <td>Q9</td><td><a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a> refuses a package whose library has a different patch version. Most <code>.h5p</code> files exported elsewhere differ in patch version. May an <em>older</em> patch be accepted for a content-only import? S2 follows the spec strictly</td><td>HVL / ALU</td><td>Pilot</td></tr>
 <tr>
 <td>Q10</td><td>Confirm that the ten seed packages may be committed to the repository (D-042 size rule; H5P libraries are mostly MIT)</td><td>Repository owner</td><td>S2</td></tr>
+<tr>
+<td>Q12</td><td>Student authors (<code>AUTHOR_COURSE_GROUPS</code>) may share only <code>private</code> until a course visibility exists, and Feide users without a Feide ID cannot log in (D-059, D-054)</td><td>HVL / ALU</td><td>Pilot</td></tr>
+<tr>
+<td>Q13</td><td>Add <code>&quot;hvl_placement&quot;: &quot;&lt;placement&gt;&quot;</code> to each placement&#39;s <code>custom_fields</code> in the Canvas developer key, so the graded placement is recognised (D-061)</td><td>TeCopp</td><td>S3 pilot</td></tr>
+<tr>
+<td>Q14</td><td>No publishing before S4&#39;s publish flow; the S3 sharing API changes visibility only (D-066)</td><td>HVL / ALU</td><td>S4</td></tr>
+<tr>
+<td>Q15</td><td>Learner LTI launches are not written to the authentication audit (D-064)</td><td>HVL DPO</td><td>S6</td></tr>
 <tr>
 <td>Q3</td><td>Feide Customer Portal registration and redirect URIs</td><td>HVL IT</td><td>S3</td></tr>
 <tr>

@@ -57,6 +57,25 @@ with the commands given.
 | D-044 | SVG sanitising rules and order | Accepted (2026-10-22) |
 | D-045 | Headers for user files; the separate files origin moves to S3/S6 | Accepted (2026-10-22) |
 | D-046 | Library language files fall back nn → nb → en | Accepted (2026-10-22) |
+| D-048 | The Session 3 LTI views are server-rendered pages until `apps/web` (S4) | Accepted (2026-10-23) |
+| D-049 | A mock Feide and a mock Canvas in `tools/mock-platform`; HVL values from env | Accepted (2026-10-23) |
+| D-050 | How we use ltijs 7: our router, our cache, our pages, our ltik checks | Accepted (2026-10-23) |
+| D-051 | LTI platforms and deployments from `LTI_PLATFORMS`; deployment IDs checked by us | Accepted (2026-10-23) |
+| D-052 | ltijs records: 10-minute nonces, 24-hour ID tokens with a claim allowlist | Accepted (2026-10-23) |
+| D-053 | The `Principal`: always a user ID, roles as a list, one mapping to the H5P actor | Accepted (2026-10-23) |
+| D-054 | The Feide subject is the Feide ID; Groups API failures fail closed | Accepted (2026-10-23) |
+| D-055 | A stable identity key ring with HKDF purposes and a rotation rule | Accepted (2026-10-23) |
+| D-056 | Secrets at rest are encrypted with AES-256-GCM from a key ring | Accepted (2026-10-23) |
+| D-057 | Own Redis portal sessions, login transactions and a synchronizer CSRF token | Accepted (2026-10-23) |
+| D-058 | H5P URL tokens and signed content-file URLs | Accepted (2026-10-23) |
+| D-059 | How the Feide and LTI role tables are read | Accepted (2026-10-23), owner to confirm (Q12) |
+| D-060 | Authors may view a published activity they launched from Canvas (course copy) | Accepted (2026-10-23) |
+| D-061 | Deep Linking in Session 3 | Accepted (2026-10-23), TeCopp to confirm (Q13) |
+| D-062 | The LTI-006 tabs and the LTI-007 duplicate come with their pages | Accepted (2026-10-23) |
+| D-063 | Linking an author's Canvas and Feide identities | Accepted (2026-10-23) |
+| D-064 | What the authentication audit records | Accepted (2026-10-23), owner to confirm (Q15) |
+| D-065 | End-to-end tests in Session 3 | Accepted (2026-10-23) |
+| D-066 | Friendly "not available" pages and visibility-only sharing until S4 | Accepted (2026-10-23), owner to confirm (Q14) |
 
 ---
 
@@ -547,3 +566,187 @@ loading of one spec per session are kept.
   translation callback for Lumi's own strings uses i18next (`lng: 'nn'`, `fallbackLng: ['nb', 'en']`); our own
   server messages stay in `src/i18n/translate.ts`.
 - **Consequences:** Lumi's own `nn` client strings are partly Bokmål; HVL's language advisers review them (Q2).
+
+### D-048 · The Session 3 LTI views are server-rendered pages until `apps/web` (S4)
+- **Context:** `LTI-003` and `LTI-005` describe the Canvas views as Next.js pages, but `apps/web` and its design
+  tokens arrive in S4. Building the views in Next.js now would add React and Next.js to S3 and style the pages
+  twice. The owner chose server-rendered pages for S3 (2026-10-23).
+- **Decision:** `SPEC-DEVIATION`: in S3 the server renders `/lti/play` (the player Canvas embeds), `/lti/deeplink`
+  (the picker) and the friendly error pages. `LTI-003` still holds in full: the ltik lives only in page memory (a
+  script closure or the `H5PIntegration` URLs), never in localStorage, sessionStorage or cookies; a first-party
+  script removes it from the address bar with `history.replaceState`; our APIs take `Authorization: Bearer`; every
+  page that receives an ltik sends `Referrer-Policy: no-referrer`, `Cache-Control: no-store` and CSP
+  `frame-ancestors` from `CANVAS_ORIGINS`, and never `X-Frame-Options`. Page scripts are static files
+  (`script-src 'self'`). The pages are unstyled until S4.
+- **Consequences:** S4 moves the views to `apps/web` `/app/*` and keeps the same server APIs.
+
+### D-049 · A mock Feide and a mock Canvas in `tools/mock-platform`; HVL values from env
+- **Context:** HVL's Feide client values and the TeCopp Canvas instance are not available yet (Q3, Q4), and
+  `auth.dataporten.no` and `*.instructure.com` are not reachable from the build environment (Q7).
+- **Decision:** `tools/mock-platform` holds a mock Feide (`oauth2-mock-server` plus a Groups API route) and a mock
+  Canvas (our own `node:http` + `jose` server: an OIDC auth endpoint with `form_post`, JWKS, the LTI Platform
+  Storage frame, a course page that embeds the tool cross-site, and deep-link return verification). Tests start it
+  in-process; `npm run mock:platform` runs it by hand. It is not a docker compose service: the server on the host
+  and the browser must reach the mock Feide at the same URL. Every HVL value is an environment variable.
+- **Consequences:** The *(verify)* items in spec 02 stay open until HVL IT and TeCopp deliver (Q3, Q4).
+
+### D-050 · How we use ltijs 7: our router, our cache, our pages, our ltik checks
+- **Context:** ltijs 7.0.7 registers its routes through a pluggable `HttpHandler`; its own `ExpressHttpHandler`
+  creates an Express app with `cors({ origin: true, credentials: true })` and helmet, and `Provider.listen()`
+  installs a `SIGINT` handler that calls `process.exit()`. Its `RedisCacheManager` uses ioredis. mongoose and
+  ioredis load at import. `getLaunchContext(ltik)` does not check whether the platform is still active.
+- **Decision:** ltijs runs on our `ExpressRouterHttpHandler` (an Express `Router`); we never call
+  `Provider.listen()`. `SPEC-DEVIATION`: our node-redis `LtiCacheManager` replaces ltijs's `RedisCacheManager`
+  (`LTI-001` wording); it caches only public JWKS and keysets. ltijs's own HTML gets a CSP with hashes of its
+  inline scripts. Its default handlers are replaced by friendly pages. Our ltik resolver also checks
+  `platform.active`. ltijs's OIDC *recovery token* (at most 10 minutes, grants nothing on its own) may sit in the
+  frame's partitioned localStorage or in LTI Platform Storage; the ltik never does.
+- **Consequences:** mongoose, mongodb and ioredis are installed and loaded but never connected; an upstream issue
+  asks ltijs to load them lazily. ESLint forbids importing `RedisCacheManager`, `ExpressHttpHandler` and
+  `MongoLegacyDatabaseManager`.
+
+### D-051 · LTI platforms and deployments from `LTI_PLATFORMS`; deployment IDs checked by us
+- **Context:** `LTI-001` requires rejecting a launch with a wrong deployment ID. ltijs 7 checks only that the claim
+  is a string, and its platform model has no deployment field.
+- **Decision:** A new table `LtiDeployment(platformId, deploymentId)`. `LTI_PLATFORMS` (JSON in env) is synced at
+  start-up: new platforms are registered (ltijs generates the tool key pair), endpoints updated, removed platforms
+  deactivated, and each platform's deployments replaced. The deployment ID is checked in `saveIdToken`, so no ltik
+  is ever minted for a foreign deployment, and again on every use of an ltik.
+- **Consequences:** Adding a Canvas deployment is a configuration change and a restart. Dynamic Registration
+  (`LTI-009`) stays in S6.
+
+### D-052 · ltijs records: 10-minute nonces, 24-hour ID tokens with a claim allowlist
+- **Context:** `LTI-002` says nonces expire after 10 minutes; the data inventory said 1 hour. ltijs stores the whole
+  ID token, which can carry names, e-mail, `lis` identifiers and custom fields.
+- **Decision:** Nonces live 10 minutes (the inventory is corrected), matching ltijs's 600-second state.
+  `consumeNonce` is one conditional `DELETE`, which is atomic. ID tokens live 24 hours and expired rows are never
+  returned. The stored claims are an allowlist of what the launch needs; names, e-mail, `lis`, `feide_login` and
+  unknown custom fields are dropped before storage. A cleanup job runs every 10 minutes under a Redis lease.
+- **Consequences:** The launch handler still sees the full claims in memory; only storage is minimised.
+
+### D-053 · The `Principal`: always a user ID, roles as a list, one mapping to the H5P actor
+- **Context:** Spec 02 §2 types `Principal.userId` as a string but comments "null for learners", while D-034 gives
+  learners pseudonymous `User` rows and `HvlH5pActor.accountId` is required (D-036).
+- **Decision:** `userId` is always set. `roles` is a list; the H5P role is the highest of them. LTI principals have
+  `hvlMember = false` and `feideAuthenticated = false`, so in Canvas they see the launched activity and their own
+  content. `auth/principalToH5pActor.ts` is the one mapping to `HvlH5pActor` (D-036). Spec 02 §2 is amended.
+- **Consequences:** No code path has to handle a missing user ID.
+
+### D-054 · The Feide subject is the Feide ID; Groups API failures fail closed
+- **Context:** `DATA-002` derives the learnerKey from `feide|<feide-id>`, `AUTH-005` compares Canvas's login ID with
+  the Feide ID, and `ADMIN_FEIDE_IDS` lists Feide IDs. `AUTH-004` allows `sub` or the Feide ID.
+- **Decision:** The Feide subject is the Feide ID (`eduPersonPrincipalName`, trimmed and lower-cased). It feeds
+  `Identity.subjectHash`, the learnerKey, `ADMIN_FEIDE_IDS` and account linking; `sub` is never stored. A login
+  without a Feide ID is refused with a friendly page. The organisation comes from the Groups API (`fc:org:<realm>`);
+  if that call fails, the login fails closed (503 page). `enableNonRepudiationChecks` adds an ID-token signature
+  check against Feide's JWKS on top of openid-client's claim checks.
+- **Consequences:** Feide users without a Feide ID (guests, eduGAIN) cannot log in (owner to confirm, Q12).
+
+### D-055 · A stable identity key ring with HKDF purposes and a rotation rule
+- **Context:** `Identity.subjectHash` and `AuthAuditEvent.ipHash` need a keyed hash whose key does not rotate every
+  year (the learnerKey's key does, D-011), and the rotation must be defined (PROGRESS S3).
+- **Decision:** `IDENTITY_HASH_KEYS` is a key ring `id=base64,…` whose first entry is current; HKDF derives the
+  purpose keys `identity-subject` and `auth-audit-ip`. New columns `Identity.subjectKeyId` and
+  `AuthAuditEvent.ipKeyId` record which key made a hash. Rotation: put the new key first; lookups try every key and
+  re-hash a match in place at that login. Remove an old key after at least 13 months (learner rows are purged by
+  then; a dormant staff member gets a new account). On compromise, rotate the same way at once.
+- **Consequences:** Rotation needs no downtime and no bulk re-hash.
+
+### D-056 · Secrets at rest are encrypted with AES-256-GCM from a key ring
+- **Context:** `LTI-002` requires platform private keys encrypted at rest; D-021 requires the Feide ID token in the
+  session encrypted; S6 stores `GradeSyncJob.ltiSubEncrypted`.
+- **Decision:** `DATA_ENCRYPTION_KEYS` key ring; AES-256-GCM with a per-purpose HKDF key and the purpose as AAD.
+  Format `0x01 | keyIdLength | keyId | iv(12) | tag(16) | ciphertext`. Used for `LtiPlatform.privateKeyEncrypted`,
+  `LtiAccessToken.tokenEncrypted`, the session's Feide ID token, and in S6 for `ltiSubEncrypted`. Values are
+  re-encrypted with the current key when they are next written.
+- **Consequences:** A database dump alone reveals no private key or token.
+
+### D-057 · Own Redis portal sessions, login transactions and a synchronizer CSRF token
+- **Context:** `AUTH-003` asks for a Redis session behind an opaque `__Host-hvli_sid` cookie (idle 2 h, absolute
+  12 h) and CSRF protection; `H5P-007` requires 401 for an H5P request without a valid token. Generic middleware
+  (express-session, csurf) does not give these exact semantics, and csurf is deprecated.
+- **Decision:** Small own modules. Sessions in Redis under a hash of the session ID; the cookie is `HttpOnly`,
+  `Secure`, `SameSite=Lax`, `Path=/`. A single-use login-transaction cookie (10 minutes) binds state, nonce and
+  PKCE verifier to the browser, which prevents login CSRF. One synchronizer token per session, read from the
+  `X-CSRF-Token` header, a `csrf` query value (H5P URLs) or a `csrf` form field; it is required on every unsafe
+  method and on `/h5p/ajax` and `/h5p/contentUserData` for any method. A missing or wrong token is 401
+  `hvl:csrf-invalid`. Roles are computed at login only.
+- **Consequences:** A role change in Feide takes effect at the next login.
+
+### D-058 · H5P URL tokens and signed content-file URLs
+- **Context:** `H5P-007` asks that H5P's AJAX and user-data URLs carry the ltik (Canvas) or a CSRF token (portal).
+  Lumi's `UrlGenerator` puts the token unencoded, and `contentFilesUrl` receives no user, while H5P builds file
+  URLs as `contentUrl + "/" + path`, so a query token cannot work there. D-045 puts signed file URLs in S3.
+- **Decision:** `HvlUrlGenerator` appends `ltik` or `csrf`, URL-encoded, from a new actor field `urlToken`.
+  Content files are served from a public route `/h5p/files/:grant/:contentId/*file`, where the grant is an HMAC over
+  `contentId|expiry` with `URL_SIGNING_KEYS`, valid for 12 hours and issued only by a render that passed the View
+  check. An ltik in a query string is accepted only on `/h5p/ajax`, `/h5p/contentUserData/*`, `/lti/play` and
+  `/lti/deeplink`; everywhere else it must be a Bearer header.
+- **Consequences:** Script inside content could read the token from its page; the S2 sanitising and the S4 CSP
+  limit that. The separate files origin stays in S6 (D-045).
+
+### D-059 · How the Feide and LTI role tables are read
+- **Context:** `AUTH-002` and `LTI-004` leave some cases open: unknown LTI roles, how a course group matches, and
+  what "visibility limited to the course" means for student authors when no course visibility exists yet.
+- **Decision:** LTI `institution/person#Administrator` gives `author`, never `admin`; unknown roles and `TestUser`
+  give `learner`. An `AUTHOR_COURSE_GROUPS` entry matches a group ID exactly or as a prefix followed by `:`. Student
+  authors may share only `private` until a course visibility exists. Users from other organisations are `learner`
+  and see only `feide`-visible activities.
+- **Consequences:** The owner confirms the student-author rule (Q12).
+
+### D-060 · Authors may view a published activity they launched from Canvas (course copy)
+- **Context:** `LTI-007` lets instructors of a copied course launch and play an activity they do not own. The S2
+  rules granted launched activities to learners only.
+- **Decision:** Amendment to `H5P-006`: an author may View a **published** activity opened by their own LTI launch.
+  Edit stays with the owner and co-authors. The spec 01 matrix and its test are updated.
+- **Consequences:** Copying a course never gives edit rights.
+
+### D-061 · Deep Linking in Session 3
+- **Context:** `LTI-005` names a picker with the author's activities, the content bank and "new from a pattern";
+  the last two arrive in S5. Canvas sends `lineItem` only for `assignment_selection`.
+- **Decision:** The picker lists the author's own and co-authored activities; drafts are shown but cannot be
+  selected. The graded placement is recognised from Canvas's placement claim or, failing that, from our custom
+  field `hvl_placement` set per placement in the developer key. A `lineItem` is sent only for
+  `assignment_selection`. We use `createDeepLinkingMessage` with our own form (no inline script); the return URL
+  must be http(s); several items only when `accept_multiple` is `true`.
+- **Consequences:** TeCopp adds `hvl_placement` to the developer key (Q13).
+
+### D-062 · The LTI-006 tabs and the LTI-007 duplicate come with their pages
+- **Context:** `LTI-006` gives authors **Rediger** and **Innsikt** tabs; the editor page is S4 (D-040) and insight
+  is S6. `LTI-007`'s "duplicate" belongs to the content bank (`PROD-007`, S5).
+- **Decision:** `SPEC-DEVIATION`: in S3 both roles get the player; the tabs arrive with the editor page (S4) and
+  insight (S6), and duplicating with `PROD-007` (S5).
+- **Consequences:** `LTI-006` and `LTI-007` are tested for what S3 delivers.
+
+### D-063 · Linking an author's Canvas and Feide identities
+- **Context:** `AUTH-005` links an author's Canvas identity to their Feide identity through the custom claim
+  `feide_login`.
+- **Decision:** `feide_login` is read only when `LTI-004` gives `author`; values starting with `$` are ignored; it is
+  never stored. If only the Feide account exists, the LTI identity joins it; if neither exists, one account gets
+  both; if only the LTI account exists, the Feide identity joins it; if both exist and differ, the LTI identity
+  moves only when its account owns no content and no co-authorship, otherwise `link.conflict` is audited and
+  nothing changes. Learner identities are never linked.
+- **Consequences:** No content ever changes owner through linking.
+
+### D-064 · What the authentication audit records
+- **Context:** spec 02 §7 defines `AuthAuditEvent(at, actorUserId?, event, ipHash)`.
+- **Decision:** Recorded events: `login.feide`, `login.feide.failed`, `logout`, `launch.lti.author`,
+  `launch.lti.failed`, `link.feide-lti`, `link.conflict`; `ipHash` uses the D-055 key. Learner LTI launches are not
+  recorded (volume and data minimisation).
+- **Consequences:** The owner confirms the learner rule (Q15).
+
+### D-065 · End-to-end tests in Session 3
+- **Context:** The EVALUATOR-GUIDE says `npm run test:e2e` runs journeys J1–J5 from S3, but spec 00 places J1–J5 in
+  S6 (they need S4–S6 features). The S3 gate needs the cookie-less iframe e2e (`LTI-003`).
+- **Decision:** In S3 `npm run test:e2e` runs three Chromium flows: launch → play → resume in a cross-site iframe
+  with third-party cookies blocked, the Deep Linking round trip, and portal sharing with logout. J1–J5 stay in S6;
+  the EVALUATOR-GUIDE is corrected.
+- **Consequences:** The e2e tests use the mock platform and run in CI.
+
+### D-066 · Friendly "not available" pages and visibility-only sharing until S4
+- **Context:** `PROD-004` asks for a friendly page with 404 for drafts; `PROD-006` asks that visibility changes take
+  effect immediately. Publishing (`PROD-003`) belongs to S4's validator flow.
+- **Decision:** An unknown, draft or invisible activity always gets the same "not available" page with 404, so its
+  existence is not revealed. A portal page without a session sends the browser to Feide login with a checked
+  `returnTo`. The S3 sharing API changes **visibility only**; every change writes an audit event.
+- **Consequences:** Activities are published through S4's flow (owner to confirm, Q14).

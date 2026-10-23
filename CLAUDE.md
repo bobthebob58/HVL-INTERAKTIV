@@ -86,6 +86,11 @@ Operational rules:
   `new Provider(...)`, `onResourceLink`, `onDeepLinking`, `context.redirect`,
   `context.deepLinking.createDeepLinkingForm`, `context.grading.submitScore` (D-005).
 - `openid-client` 6 is ESM-only and functional (`discovery`, `authorizationCodeGrant`); v5 `Issuer`/`Client` examples do not apply.
+- ltijs 7 does NOT validate the deployment ID, and `getLaunchContext(ltik)` ignores `platform.active`: both are our
+  checks (D-050, D-051). `LaunchContext.contextId` is the ID-token record, not the course (`idToken.launch.context.id`).
+  Never call `Provider.listen()` (it installs a SIGINT `process.exit`); ltijs runs on our router.
+- Playwright 1.56.1 turns off Chromium's third-party storage partitioning; third-party-cookie tests must assert a
+  canary that blocking is really on (D-065).
 - H5P sub-content is nested in `params` as `{ library: "H5P.Name 1.2", params, subContentId }`. Validator rules must walk it recursively.
 - `#FF9E1B` (orange) is 2.07 : 1 on white. Never use it alone as a focus or state indicator (D-007).
 

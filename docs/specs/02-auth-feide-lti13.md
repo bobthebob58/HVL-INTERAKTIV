@@ -47,14 +47,21 @@ Both entry points resolve to a single server-side **`Principal`**:
 ```ts
 /** What every API handler receives after authentication. Defined in apps/server/src/auth/Principal.ts */
 interface Principal {
-  userId: string;              // internal UUID (authors/admins) or null for learners
+  userId: string;              // internal UUID; learners have pseudonymous User rows too (D-034, D-053)
   learnerKey: string;          // HMAC pseudonym (DATA-002), always present
-  roles: Array<'learner' | 'author' | 'admin'>;
+  roles: Array<'learner' | 'author' | 'admin'>;   // the H5P role is the highest of them
   mode: 'portal' | 'lti';
-  ltiContext?: { platformId: string; contextId: string; resourceLinkId: string; lineItemUrl?: string };
   locale: 'nn' | 'nb' | 'en';
+  hvlMember: boolean;          // portal: Feide organisation in ALLOWED_FEIDE_ORGS; LTI: false
+  feideAuthenticated: boolean; // portal only
+  studentAuthor: boolean;      // a student allowed to author through AUTHOR_COURSE_GROUPS (D-059)
+  lti?: { platformId: string; deploymentId: string; contextId: string; resourceLinkId?: string;
+          contentId?: string; lineItemUrl?: string; messageType: string };
 }
 ```
+
+*Amended in S3 (D-053):* `userId` is always set, and the principal carries the facts the permission system
+reads (D-036). `auth/principalToH5pActor.ts` maps it to the H5P actor.
 
 Putting web and API on one origin behind a reverse proxy avoids CORS and keeps the portal session
 cookie first-party.

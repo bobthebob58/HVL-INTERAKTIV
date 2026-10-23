@@ -11,7 +11,7 @@ what is done, what is verified, and what is blocked.
 | S0 | Specification, documentation standard, traceability tool | — | ✅ Done (2026-10-16) |
 | S1 | Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup | 00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD | ✅ Done (2026-10-21) |
 | S2 | Ten-type whitelist, seeding, SVG sanitiser, permission system, resume | 01 (all); 00 `PROD-002`, `PROD-008` | ✅ Gate passed (2026-10-23); spike steps 3–5 open (Q7) |
-| S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | ⬜ Not started |
+| S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | 🟨 In progress (2026-10-23) |
 | S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ⬜ Not started |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04 | ⬜ Not started |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §5–7; 05; 00 §6 | ⬜ Not started |
@@ -108,9 +108,11 @@ Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-
 - [x] Gate: as in the Evaluator Guide §5, S2, plus each S2 requirement's tests run on their own (`-t`);
       output in the session log (2026-10-23)
 
-## S3 — Dual authentication ⬜
+## S3 — Dual authentication 🟨
 
 Effort: high, because this is security-critical. Public Feide and Canvas values are in `docs/reference/`; **HVL's own client IDs, realm, redirect URIs and TeCopp instance** are still needed (Q3, Q4).
+- [x] Decisions D-048…D-066 recorded (plan approved 2026-10-23): server-rendered LTI views until S4 (D-048),
+      mock platform (D-049), ltijs on our router with our deployment and ltik checks (D-050, D-051)
 - [ ] Mock OIDC provider and mock LTI platform in `tools/mock-platform/` for tests
 - [ ] Define the stable HMAC key for `Identity.subjectHash` and `AuthAuditEvent.ipHash` (env.ts,
       `.env.example`, DATA-INVENTORY "Pseudonymous (stable key)"), including its rotation
@@ -169,6 +171,10 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 | Q8 | Decide whether "(formativ)" may appear in Canvas assignment names (`LTI-013`) | HVL / ALU | S6 |
 | Q9 | `SEC-003` refuses a package whose library has a different patch version. Most `.h5p` files exported elsewhere differ in patch version. May an *older* patch be accepted for a content-only import? S2 follows the spec strictly | HVL / ALU | Pilot |
 | Q10 | Confirm that the ten seed packages may be committed to the repository (D-042 size rule; H5P libraries are mostly MIT) | Repository owner | S2 |
+| Q12 | Student authors (`AUTHOR_COURSE_GROUPS`) may share only `private` until a course visibility exists, and Feide users without a Feide ID cannot log in (D-059, D-054) | HVL / ALU | Pilot |
+| Q13 | Add `"hvl_placement": "<placement>"` to each placement's `custom_fields` in the Canvas developer key, so the graded placement is recognised (D-061) | TeCopp | S3 pilot |
+| Q14 | No publishing before S4's publish flow; the S3 sharing API changes visibility only (D-066) | HVL / ALU | S4 |
+| Q15 | Learner LTI launches are not written to the authentication audit (D-064) | HVL DPO | S6 |
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous | TeCopp | S3 |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
