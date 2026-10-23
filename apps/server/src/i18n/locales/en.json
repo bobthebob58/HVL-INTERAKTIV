@@ -33,7 +33,8 @@
     "subContentNotAllowed": "“{{library}}” cannot be used inside this activity.",
     "libraryNotInstalled": "The content type “{{library}}” is not installed.",
     "hubInstallDisabled": "Content types are installed by an administrator, not from the H5P Hub.",
-    "librariesChanged": "Installed: {{installed}}. Updated: {{updated}}.",
+    "librariesInstalled": "Content types installed: {{count}}.",
+    "librariesUpdated": "Content types updated: {{count}}.",
     "userData": {
       "asUserNotSupported": "You can only save and load your own answers."
     }

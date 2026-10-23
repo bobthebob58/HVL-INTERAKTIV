@@ -33,7 +33,8 @@
     "subContentNotAllowed": "«{{library}}» kan ikke brukes inne i denne aktiviteten.",
     "libraryNotInstalled": "Innholdstypen «{{library}}» er ikke installert.",
     "hubInstallDisabled": "Innholdstyper installeres av en administrator, ikke fra H5P-huben.",
-    "librariesChanged": "Installert: {{installed}}. Oppdatert: {{updated}}.",
+    "librariesInstalled": "Installerte innholdstyper: {{count}}.",
+    "librariesUpdated": "Oppdaterte innholdstyper: {{count}}.",
     "userData": {
       "asUserNotSupported": "Du kan bare lagre og hente dine egne svar."
     }
