@@ -111,6 +111,24 @@ describeWithServices('LTI resource-link launch', () => {
       expect(run.path).toBe('/lti/play');
     });
 
+    it.each([
+      ['another audience', { aud: 'another-tool-client' }],
+      ['an expired token', { exp: Math.floor(Date.now() / 1000) - 600 }],
+      ['another nonce', { nonce: 'not-the-nonce-of-this-login' }],
+    ])(
+      '[LTI-001] an ID token with %s, correctly signed, is refused without an ltik',
+      async (_case, change) => {
+        const run = await launchFromCanvas(
+          tb.app,
+          tb.mock.canvas,
+          { custom: { contentId: published } },
+          (token, canvas) => canvas.signIdToken({ ...claimsOf(token), ...change }),
+        );
+        expect(run.ltik).toBeUndefined();
+        expect(run.res.status).toBe(400);
+      },
+    );
+
     it('[PROD-004] a draft, an unknown activity and a launch without an activity get the same 404 page', async () => {
       // Act
       const answers = await Promise.all([
