@@ -1,0 +1,618 @@
+{
+  "registry": {
+    "repository": "https://github.com/h5p/h5p-registry",
+    "commit": "5ce6205a9a90753e405c43c82b4543a5918e2b78"
+  },
+  "libraries": [
+    {
+      "machineName": "FontAwesome",
+      "version": "4.5.6",
+      "repository": "https://github.com/h5p/font-awesome",
+      "ref": "refs/tags/4.5.6",
+      "commit": "49f57629864f80d0bc339ccf3b99f172106d20b4",
+      "build": false
+    },
+    {
+      "machineName": "H5P.AdvancedText",
+      "version": "1.1.16",
+      "repository": "https://github.com/h5p/h5p-advanced-text",
+      "ref": "refs/tags/1.1.16",
+      "commit": "ca7451c56145facde0d33b8b63f4ae3770368dfa",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Audio",
+      "version": "1.5.29",
+      "repository": "https://github.com/h5p/h5p-audio",
+      "ref": "refs/tags/1.5.29",
+      "commit": "4f79c2158b3dbd34a5ee8f33ebc2134624cce8b4",
+      "build": false
+    },
+    {
+      "machineName": "H5P.AudioRecorder",
+      "version": "1.0.33",
+      "repository": "https://github.com/h5p/h5p-audio-recorder",
+      "ref": "refs/tags/1.0.33",
+      "commit": "283329030a18f79a446afda0c7779d7e56e13f31",
+      "build": true
+    },
+    {
+      "machineName": "H5P.Blanks",
+      "version": "1.14.13",
+      "repository": "https://github.com/h5p/h5p-blanks",
+      "ref": "refs/tags/1.14.13",
+      "commit": "5fc308e6ea96331aee6412366c6477498c21c341",
+      "build": false
+    },
+    {
+      "machineName": "H5P.BranchingQuestion",
+      "version": "1.0.20",
+      "repository": "https://github.com/h5p/h5p-branching-question",
+      "ref": "refs/tags/1.0.20",
+      "commit": "daad55fcd40e07010f77604e6fd7c3c0879cf6f0",
+      "build": false
+    },
+    {
+      "machineName": "H5P.BranchingScenario",
+      "version": "1.10.1",
+      "repository": "https://github.com/h5p/h5p-branching-scenario",
+      "ref": "refs/tags/1.10.1",
+      "commit": "6860e97e916054c09e9f2c4bb824ca958521213a",
+      "build": true
+    },
+    {
+      "machineName": "H5P.CKEditor",
+      "version": "1.0.23",
+      "repository": "https://github.com/h5p/h5p-ckeditor",
+      "ref": "refs/tags/1.0.23",
+      "commit": "7101d4b9e3d9fbe619360b92d026b95a2ac4cfd3",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Column",
+      "version": "1.18.8",
+      "repository": "https://github.com/h5p/h5p-column",
+      "ref": "refs/tags/1.18.8",
+      "commit": "c8586b59bbc41c50bd46ddbf538bde4aafab700b",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Components",
+      "version": "1.0.99",
+      "repository": "https://github.com/h5p/h5p-components",
+      "ref": "refs/tags/1.0.99",
+      "commit": "223a9164259db6f9c1132791671beb1ce4d2c9c2",
+      "build": true
+    },
+    {
+      "machineName": "H5P.ContinuousText",
+      "version": "1.2.16",
+      "repository": "https://github.com/h5p/h5p-continuous-text",
+      "ref": "refs/tags/1.2.16",
+      "commit": "73dfc334c9482eaeb1ae7a40be6756ee6dcc9166",
+      "build": false
+    },
+    {
+      "machineName": "H5P.CoursePresentation",
+      "version": "1.27.27",
+      "repository": "https://github.com/h5p/h5p-course-presentation",
+      "ref": "refs/tags/1.27.27",
+      "commit": "64640e64fa1cfe87fa295345d13d7123abc6a5c8",
+      "build": true
+    },
+    {
+      "machineName": "H5P.CoursePresentation",
+      "version": "1.28.25",
+      "repository": "https://github.com/h5p/h5p-course-presentation",
+      "ref": "refs/tags/1.28.25",
+      "commit": "369d140c741fab528604237380c34ec1fe8f121a",
+      "build": true
+    },
+    {
+      "machineName": "H5P.Dialogcards",
+      "version": "1.9.40",
+      "repository": "https://github.com/h5p/h5p-dialogcards",
+      "ref": "refs/tags/1.9.40",
+      "commit": "5d48d1c599f5a2de1b5e3ce6dd954fb1371c219f",
+      "build": true
+    },
+    {
+      "machineName": "H5P.DragNBar",
+      "version": "1.5.23",
+      "repository": "https://github.com/h5p/h5p-drag-n-bar",
+      "ref": "refs/tags/1.5.23",
+      "commit": "b475daaf1d5de8d967145072388fb4727a7d8e6a",
+      "build": false
+    },
+    {
+      "machineName": "H5P.DragNDrop",
+      "version": "1.1.5",
+      "repository": "https://github.com/h5p/h5p-drag-n-drop",
+      "ref": "refs/tags/1.1.5",
+      "commit": "a739a3dba26412f184a337642f5c82cdf179f54c",
+      "build": false
+    },
+    {
+      "machineName": "H5P.DragNResize",
+      "version": "1.2.5",
+      "repository": "https://github.com/h5p/h5p-drag-n-resize",
+      "ref": "refs/tags/1.2.5",
+      "commit": "c00d12cf65905e7fe2ece5cc8aaa145bebb2168a",
+      "build": false
+    },
+    {
+      "machineName": "H5P.DragQuestion",
+      "version": "1.15.16",
+      "repository": "https://github.com/h5p/h5p-drag-question",
+      "ref": "refs/tags/1.15.16",
+      "commit": "383aaeb169827e921c43eb7ecdcf72f667b95514",
+      "build": true
+    },
+    {
+      "machineName": "H5P.DragText",
+      "version": "1.10.52",
+      "repository": "https://github.com/h5p/h5p-drag-text",
+      "ref": "refs/tags/1.10.52",
+      "commit": "3d3eb6d759b3ed65862c3048fbe02b989cbb7110",
+      "build": true
+    },
+    {
+      "machineName": "H5P.ExportableTextArea",
+      "version": "1.3.19",
+      "repository": "https://github.com/h5p/h5p-exportable-text-area",
+      "ref": "refs/tags/1.3.19",
+      "commit": "67bfe51706807a2cbb052167f2ccee9f359ed51e",
+      "build": true
+    },
+    {
+      "machineName": "H5P.FontIcons",
+      "version": "1.0.6",
+      "repository": "https://github.com/h5p/h5p-font-icons",
+      "ref": "refs/tags/1.0.6",
+      "commit": "8328f1554e7ba531eb34424ceca08034bda9c639",
+      "build": false
+    },
+    {
+      "machineName": "H5P.FreeTextQuestion",
+      "version": "1.0.16",
+      "repository": "https://github.com/h5p/h5p-free-text-question",
+      "ref": "refs/tags/1.0.16",
+      "commit": "5ea90c9c76353d87356e74012ccdb1e71b9228fb",
+      "build": false
+    },
+    {
+      "machineName": "H5P.GoToQuestion",
+      "version": "1.3.23",
+      "repository": "https://github.com/h5p/h5p-go-to-question",
+      "ref": "refs/tags/1.3.23",
+      "commit": "3f4694c9af7c1e1fbcd22d3bb6d159b17b902a03",
+      "build": false
+    },
+    {
+      "machineName": "H5P.GuidedTour",
+      "version": "1.0.6",
+      "repository": "https://github.com/h5p/h5p-guided-tour",
+      "ref": "refs/tags/1.0.6",
+      "commit": "060794f89056da5417c98f291d75af1c3a647087",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Image",
+      "version": "1.1.23",
+      "repository": "https://github.com/h5p/h5p-image",
+      "ref": "refs/tags/1.1.23",
+      "commit": "310f8572e60987ad7305425e0ea1b1e786aa0f60",
+      "build": false
+    },
+    {
+      "machineName": "H5P.ImageHotspots",
+      "version": "1.10.31",
+      "repository": "https://github.com/h5p/h5p-image-hotspots",
+      "ref": "refs/tags/1.10.31",
+      "commit": "c72b91308e2fdb1eb319c9dfd11c5c7d50c80d12",
+      "build": false
+    },
+    {
+      "machineName": "H5P.ImageHotspots",
+      "version": "1.11.6",
+      "repository": "https://github.com/h5p/h5p-image-hotspots",
+      "ref": "refs/tags/1.11.6",
+      "commit": "adc855f17f2c86e8741c9299f6d834f8fabc7417",
+      "build": false
+    },
+    {
+      "machineName": "H5P.InteractiveBook",
+      "version": "1.15.1",
+      "repository": "https://github.com/h5p/h5p-interactive-book",
+      "ref": "refs/tags/1.15.1",
+      "commit": "90efced9d1fab953e289ac4bc6f751cdd93e0e9c",
+      "build": true
+    },
+    {
+      "machineName": "H5P.InteractiveVideo",
+      "version": "1.28.37",
+      "repository": "https://github.com/h5p/h5p-interactive-video",
+      "ref": "refs/tags/1.28.37",
+      "commit": "bcfa06d2b057cddc583fb922a75038981084be62",
+      "build": true
+    },
+    {
+      "machineName": "H5P.IVHotspot",
+      "version": "1.2.18",
+      "repository": "https://github.com/h5p/h5p-iv-hotspot",
+      "ref": "refs/tags/1.2.18",
+      "commit": "1c5fdb23fe0939d78c96a73429babc8c6af28e4b",
+      "build": false
+    },
+    {
+      "machineName": "H5P.JoubelUI",
+      "version": "1.3.32",
+      "repository": "https://github.com/h5p/h5p-joubel-ui",
+      "ref": "refs/tags/1.3.32",
+      "commit": "5d1890570f2c8eb48d229c47928fb79bdc03bdaf",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Link",
+      "version": "1.3.19",
+      "repository": "https://github.com/h5p/h5p-link",
+      "ref": "refs/tags/1.3.19",
+      "commit": "ea354cebd2b592ae56a911ac32eff4f2fba858c4",
+      "build": false
+    },
+    {
+      "machineName": "H5P.MarkTheWords",
+      "version": "1.11.18",
+      "repository": "https://github.com/h5p/h5p-mark-the-words",
+      "ref": "refs/tags/1.11.18",
+      "commit": "c35980a08ab11c8f68edd3b66c576f413cd038f2",
+      "build": false
+    },
+    {
+      "machineName": "H5P.MaterialDesignIcons",
+      "version": "1.0.0",
+      "repository": "https://github.com/h5p/h5p-material-design-icons",
+      "ref": "refs/tags/1.0.0",
+      "commit": "4d1cde70c9a12a4f4874b6721c25eb5a4f7abd80",
+      "build": false
+    },
+    {
+      "machineName": "H5P.MultiChoice",
+      "version": "1.16.14",
+      "repository": "https://github.com/h5p/h5p-multi-choice",
+      "ref": "refs/tags/1.16.14",
+      "commit": "571f5e002fba50046b24809994f7161f4f7d2c31",
+      "build": false
+    },
+    {
+      "machineName": "H5P.MultiMediaChoice",
+      "version": "0.3.56",
+      "repository": "https://github.com/h5p/h5p-multi-media-choice",
+      "ref": "refs/tags/0.3.56",
+      "commit": "894394bfef9f09f86805d75bb23af53a360f2ca8",
+      "build": true
+    },
+    {
+      "machineName": "H5P.Nil",
+      "version": "1.0.14",
+      "repository": "https://github.com/h5p/h5p-nil",
+      "ref": "refs/tags/1.0.14",
+      "commit": "d09dd4a820fd57496913db0dbefbd5daef82f4cd",
+      "build": false
+    },
+    {
+      "machineName": "H5P.OpenEndedQuestion",
+      "version": "1.0.28",
+      "repository": "https://github.com/h5p/h5p-open-ended-question",
+      "ref": "refs/tags/1.0.28",
+      "commit": "93d3b3e5e939453afd88913026c0daceeb0711d1",
+      "build": true
+    },
+    {
+      "machineName": "H5P.Question",
+      "version": "1.5.47",
+      "repository": "https://github.com/h5p/h5p-question",
+      "ref": "refs/tags/1.5.47",
+      "commit": "fffb3c86f5289b1d24adfd7343559a4f03ba81d5",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Questionnaire",
+      "version": "1.3.11",
+      "repository": "https://github.com/h5p/h5p-questionnaire",
+      "ref": "refs/tags/1.3.11",
+      "commit": "feeff48ad3f709e1c452e28d851235e126c6c1f8",
+      "build": true
+    },
+    {
+      "machineName": "H5P.QuestionSet",
+      "version": "1.21.13",
+      "repository": "https://github.com/h5p/h5p-question-set",
+      "ref": "refs/tags/1.21.13",
+      "commit": "4598d1d60ea8730e62c66a4ac6ad5ef653f0c5f6",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Shape",
+      "version": "1.0.5",
+      "repository": "https://github.com/h5p/h5p-shape",
+      "ref": "refs/tags/1.0.5",
+      "commit": "66b614b87af7b8722edce5692a0c5825f37c2ba7",
+      "build": false
+    },
+    {
+      "machineName": "H5P.SimpleMultiChoice",
+      "version": "1.1.22",
+      "repository": "https://github.com/h5p/h5p-simple-multiple-choice",
+      "ref": "refs/tags/1.1.22",
+      "commit": "67440d9b7472cebf3e787fa2cae97c844a70d0f3",
+      "build": true
+    },
+    {
+      "machineName": "H5P.SingleChoiceSet",
+      "version": "1.11.89",
+      "repository": "https://github.com/h5p/h5p-single-choice-set",
+      "ref": "refs/tags/1.11.89",
+      "commit": "d570a968fa9e3d944262f9bf5eed42ce2718f2bc",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Summary",
+      "version": "1.10.22",
+      "repository": "https://github.com/h5p/h5p-summary",
+      "ref": "refs/tags/1.10.22",
+      "commit": "1f2d338f4570156dffa5b48bfdb923034d69dcb9",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Table",
+      "version": "1.2.2",
+      "repository": "https://github.com/h5p/h5p-table",
+      "ref": "refs/tags/1.2.2",
+      "commit": "a729f98aad466f7aedbe368e6a33d7141d21e518",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Text",
+      "version": "1.1.17",
+      "repository": "https://github.com/h5p/h5p-text",
+      "ref": "refs/tags/1.1.17",
+      "commit": "85ab86ebd42f3262bb2bb3c40cf07321851f8a77",
+      "build": false
+    },
+    {
+      "machineName": "H5P.TextUtilities",
+      "version": "1.3.0",
+      "repository": "https://github.com/otacke/h5p-text-utilities",
+      "ref": "refs/tags/1.3.0",
+      "commit": "e5bffbe458dd2626aae7650c32fde236bd2f0e54",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Transition",
+      "version": "1.0.4",
+      "repository": "https://github.com/h5p/h5p-transition",
+      "ref": "refs/tags/1.0.4",
+      "commit": "5b5d056baeafd277412f8960814b077e3b6f9bd2",
+      "build": false
+    },
+    {
+      "machineName": "H5P.TrueFalse",
+      "version": "1.8.11",
+      "repository": "https://github.com/h5p/h5p-true-false",
+      "ref": "refs/tags/1.8.11",
+      "commit": "20a11571c3b3ebf21efbe1127ebf140924cdaf76",
+      "build": false
+    },
+    {
+      "machineName": "H5P.TwitterUserFeed",
+      "version": "1.0.21",
+      "repository": "https://github.com/h5p/h5p-twitter-user-feed",
+      "ref": "refs/tags/1.0.21",
+      "commit": "9794120dbc272c692415fac25a886e381dc42699",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Video",
+      "version": "1.6.80",
+      "repository": "https://github.com/h5p/h5p-video",
+      "ref": "refs/tags/1.6.80",
+      "commit": "af25aef6e9eb8f84db037d564d82494c7d44e267",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.BranchingQuestion",
+      "version": "1.0.5",
+      "repository": "https://github.com/h5p/h5p-editor-branching-question",
+      "ref": "refs/tags/1.0.5",
+      "commit": "dfcc6a55ecb389d9ffff2a16d1af7ec2f18014ad",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.BranchingScenario",
+      "version": "1.5.13",
+      "repository": "https://github.com/h5p/h5p-editor-branching-scenario",
+      "ref": "refs/tags/1.5.13",
+      "commit": "8fcd92d0a5a5f6b855d9d03ce4d19ab31baa4b99",
+      "build": true
+    },
+    {
+      "machineName": "H5PEditor.ColorSelector",
+      "version": "1.3.1",
+      "repository": "https://github.com/h5p/h5p-editor-color-selector",
+      "ref": "refs/tags/1.3.1",
+      "commit": "00cc797b9031c1372a8b6dd4d4e1541ebd1f538c",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.CoursePresentation",
+      "version": "1.26.7",
+      "repository": "https://github.com/h5p/h5p-editor-course-presentation",
+      "ref": "refs/tags/1.26.7",
+      "commit": "e0afa95e10181d9f127b3e0455a6e1e92952814d",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.DragQuestion",
+      "version": "1.10.21",
+      "repository": "https://github.com/h5p/h5p-editor-drag-question",
+      "ref": "refs/tags/1.10.21",
+      "commit": "82dca6641ca1c1ae3cd05b1399b1da9b5dbf5115",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.Duration",
+      "version": "1.1.14",
+      "repository": "https://github.com/h5p/h5p-editor-duration",
+      "ref": "refs/tags/1.1.14",
+      "commit": "3661c92e072c85648100cd1187419be0c9667075",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.ImageCoordinateSelector",
+      "version": "1.2.7",
+      "repository": "https://github.com/h5p/h5p-editor-image-coordinate-selector",
+      "ref": "refs/tags/1.2.7",
+      "commit": "53bd59035df3193d60de571b18be16827ca94c41",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.InteractiveVideo",
+      "version": "1.26.3",
+      "repository": "https://github.com/h5p/h5p-editor-interactive-video",
+      "ref": "HEAD",
+      "commit": "205abc173eece12046c4dedbe883ea5835e49151",
+      "untagged": true,
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.QuestionSetTextualEditor",
+      "version": "1.3.18",
+      "repository": "https://github.com/h5p/h5p-editor-question-set-textual-editor",
+      "ref": "refs/tags/1.3.18",
+      "commit": "fad138d32eebd7d0a90848448fae9650797a1fde",
+      "build": true
+    },
+    {
+      "machineName": "H5PEditor.RadioGroup",
+      "version": "1.1.3",
+      "repository": "https://github.com/h5p/h5p-editor-radio-group",
+      "ref": "refs/tags/1.1.3",
+      "commit": "7b2cba7c6fdc4c5b994a9098fd04b3120ab961f3",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.RadioSelector",
+      "version": "1.2.2",
+      "repository": "https://github.com/h5p/h5p-editor-radio-selector",
+      "ref": "refs/tags/1.2.2",
+      "commit": "c91ff35898ccc14702c668d47491eae920f14a34",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.RangeList",
+      "version": "1.0.13",
+      "repository": "https://github.com/h5p/h5p-editor-range-list",
+      "ref": "refs/tags/1.0.13",
+      "commit": "d1e1118999cedb86bd4f746f8db9dbde8ccbf05c",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.SelectToggleFields",
+      "version": "1.1.1",
+      "repository": "https://github.com/h5p/h5p-editor-select-toggle-fields",
+      "ref": "refs/tags/1.1.1",
+      "commit": "c8aa5aab1548e7b936c1f7f532a7aebde59a3f22",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.Shape",
+      "version": "1.0.0",
+      "repository": "https://github.com/h5p/h5p-editor-shape",
+      "ref": "HEAD",
+      "commit": "2acebc340e66cb5c93558e4bfeee7d1d9a72cf58",
+      "untagged": true,
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.ShowWhen",
+      "version": "1.0.9",
+      "repository": "https://github.com/h5p/h5p-editor-show-when",
+      "ref": "refs/tags/1.0.9",
+      "commit": "93678737300e084cb9390a691d3e1ad4e793fbaa",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.SingleChoiceSetTextualEditor",
+      "version": "1.0.10",
+      "repository": "https://github.com/h5p/h5p-editor-single-choice-set-textual-editor",
+      "ref": "refs/tags/1.0.10",
+      "commit": "c32ebb9790616142fb7d28bdd8c8082342e2ba11",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.SummaryTextualEditor",
+      "version": "1.1.12",
+      "repository": "https://github.com/h5p/h5p-editor-summary-textual-editor",
+      "ref": "refs/tags/1.1.12",
+      "commit": "18f50660c6b682374b91a0e53d93b8edc6a72b0f",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.TableList",
+      "version": "1.0.4",
+      "repository": "https://github.com/h5p/h5p-editor-table-list",
+      "ref": "refs/tags/1.0.4",
+      "commit": "6c92ab93ad33ee3dd63554ae444972a8cff5596a",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.Timecode",
+      "version": "1.2.14",
+      "repository": "https://github.com/h5p/h5p-editor-timecode",
+      "ref": "refs/tags/1.2.14",
+      "commit": "0b32f41f9900daff4cf05b1345db390d0ebb4965",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.UrlField",
+      "version": "1.2.2",
+      "repository": "https://github.com/h5p/h5p-editor-url-field",
+      "ref": "refs/tags/1.2.2",
+      "commit": "00274822eb1827cb5f4aca2564b42a420f25bb3a",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.VerticalTabs",
+      "version": "1.3.16",
+      "repository": "https://github.com/h5p/h5p-editor-vertical-tabs",
+      "ref": "refs/tags/1.3.16",
+      "commit": "20df230e6b2f052b61a8dfd9b195c6d12a8a9c86",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.Wizard",
+      "version": "1.2.17",
+      "repository": "https://github.com/h5p/h5p-editor-wizard",
+      "ref": "refs/tags/1.2.17",
+      "commit": "4cdf5d26d998daf10191fa4dcc1fb9b2192f3dd6",
+      "build": false
+    },
+    {
+      "machineName": "jQuery.ui",
+      "version": "1.10.22",
+      "repository": "https://github.com/h5p/jquery-ui",
+      "ref": "refs/tags/1.10.22",
+      "commit": "3c4d7f373e6a18ca71fdc4be48fa6b062ff2134d",
+      "build": false
+    },
+    {
+      "machineName": "Shepherd",
+      "version": "1.0.8",
+      "repository": "https://github.com/h5p/shepherd",
+      "ref": "refs/tags/1.0.8",
+      "commit": "cf9eb9b5fd30ace7c75dad5e31b617f826bc96b5",
+      "build": false
+    }
+  ]
+}

@@ -970,7 +970,16 @@ loading of one spec per session are kept.
   packages are installed through the admin package import, so the S2 package checks run on them. Library files are
   not committed (Q10 stays open); synthetic libraries remain for unit tests.
 - **Consequences:** Versions can differ from what the Hub serves; the Hub packages (D-042) replace them when Q7 is
-  resolved. A type that cannot be assembled stays synthetic and is listed in PROGRESS.
+  resolved. A type that cannot be assembled stays synthetic and is listed in PROGRESS. `SPEC-DEVIATION`: `H5P-003`
+  seeds from packages downloaded from the Hub; these are built from H5P's own repositories at pinned commits and
+  serve development, tests and CI until the Hub is reachable.
+- **Amendment (2026-10-23, probe 1):** the H5P registry (`github.com/h5p/h5p-registry`, pinned) maps machine names to
+  repositories; the ten types need 76 libraries, 17 of them built with webpack; two editor libraries have no matching
+  tag and are pinned to a reviewed commit (D-022 rule). Builds run outside the repository, because a library's
+  build otherwise picks up this repository's TypeScript configuration. Installing the first real package showed
+  that S2's narrowed `contentWhitelist` (SEC-002) also applied to library folders through Lumi's
+  `libraryWhitelist`, so every real package, from GitHub or the Hub, was refused for its icon fonts:
+  `libraryWhitelist` now adds `eot ttf woff woff2 otf` (library folders only; content files keep the SEC-002 list).
 
 ### D-079 · What S4 verifies automatically and what HVL records by hand
 - **Context:** `NFR-003` names the last two versions of four browsers and three screen readers; `UD-031` asks for

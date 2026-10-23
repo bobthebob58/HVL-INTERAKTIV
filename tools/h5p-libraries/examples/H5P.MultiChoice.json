@@ -1,0 +1,48 @@
+{
+  "mainLibrary": "H5P.MultiChoice-1.16",
+  "title": "Kva er undervegsvurdering?",
+  "language": "nn",
+  "license": "U",
+  "params": {
+    "question": "<p>Kva kjenneteiknar undervegsvurdering (formativ vurdering)?</p>",
+    "answers": [
+      {
+        "text": "<div>Ho gir studenten tilbakemelding medan læringa framleis held på.</div>",
+        "correct": true,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det framleis er tid til å justere.</div>",
+          "notChosenFeedback": ""
+        }
+      },
+      {
+        "text": "<div>Ho tel med i den endelege karakteren i emnet.</div>",
+        "correct": false,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Nei. Det er summativ vurdering. Undervegsvurdering skal hjelpe læringa, ikkje måle henne til slutt.</div>",
+          "notChosenFeedback": ""
+        }
+      },
+      {
+        "text": "<div>Ho skjer berre på eksamensdagen.</div>",
+        "correct": false,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Nei. Eksamen er ein sluttvurdering; undervegsvurdering skjer gjennom heile emnet.</div>",
+          "notChosenFeedback": ""
+        }
+      }
+    ],
+    "overallFeedback": [
+      { "from": 0, "to": 50, "feedback": "Les om undervegsvurdering i emneplanen, og prøv igjen." },
+      { "from": 51, "to": 100, "feedback": "Bra! Du kjenner skilnaden mellom undervegs- og sluttvurdering." }
+    ],
+    "behaviour": {
+      "enableRetry": true,
+      "enableSolutionsButton": true,
+      "singlePoint": false,
+      "randomAnswers": false
+    }
+  }
+}

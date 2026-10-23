@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { H5PConfig, type IKeyValueStorage } from '@lumieducation/h5p-server';
 import {
   CONTENT_WHITELIST,
+  LIBRARY_WHITELIST,
   LOCAL_ID_MAX_LENGTH,
   STORAGE_LOADABLE_SETTINGS,
   createH5pConfig,
@@ -56,7 +57,7 @@ describe('[H5P-001] Core API 1.28 and the new Hub', () => {
     expect(config.hubContentTypesEndpoint).toBe('https://hub-api.h5p.org/v1/content-types/');
     expect(config.maxFileSize).toBe(50 * 1024 * 1024);
     expect(config.contentWhitelist).toBe(CONTENT_WHITELIST);
-    expect(config.libraryWhitelist).toBe(new H5PConfig().libraryWhitelist);
+    expect(config.libraryWhitelist).toBe(LIBRARY_WHITELIST);
     expect(config.proxy).toBeUndefined();
     expect(JSON.stringify(config.customization)).not.toContain('evil.js');
     expect(config.uuid).toBe('stored-uuid');
@@ -137,6 +138,15 @@ describe('[SEC-002] narrowed content allowlist', () => {
     expect(allowed).toEqual(CONTENT_WHITELIST.split(' '));
     for (const removed of ['xml', 'swf', 'md', 'textile', 'diff', 'patch', 'html', 'js']) {
       expect(allowed, removed).not.toContain(removed);
+    }
+  });
+
+  it('[SEC-002] library folders may also hold scripts, styles and web fonts, content files never', async () => {
+    const config = await createH5pConfig(undefined, OPTIONS);
+    expect(config.libraryWhitelist).toBe(LIBRARY_WHITELIST);
+    for (const font of ['eot', 'ttf', 'woff', 'woff2', 'otf']) {
+      expect(config.libraryWhitelist.split(' '), font).toContain(font);
+      expect(config.contentWhitelist.split(' '), font).not.toContain(font);
     }
   });
 });

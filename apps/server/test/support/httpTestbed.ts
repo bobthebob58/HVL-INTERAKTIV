@@ -4,6 +4,8 @@
  * Why: the HTTP tests must exercise what the server will run: createH5pRuntime (factories, permission system,
  *      sanitisers, guard) and createH5pRouter. Only authentication is replaced (S3 brings the real one): a
  *      request names its actor in the `x-test-actor` header, and requests without it have no actor at all.
+ *      With `seedFrom`, real packages are installed through the seed path first (D-078), so real content types
+ *      run behind the same router.
  * Spec: H5P-004, H5P-006
  * Tests: shared by apps/server/test/http/*.int.test.ts.
  */
@@ -18,6 +20,9 @@ import { createH5pRouter } from '../../src/http/createH5pRouter.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
 import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
 import { createS3Client } from '../../src/infra/s3Client.js';
+import { PrismaLibraryAuditSink } from '../../src/h5p/libraries/LibraryAuditSink.js';
+import { LibraryInstaller } from '../../src/h5p/libraries/LibraryInstaller.js';
+import { seedLibraries } from '../../src/h5p/libraries/seedLibraries.js';
 import { createLogger } from '../../src/logging/logger.js';
 import { newLearner } from './learnerStateFixtures.js';
 import { testActor } from './testActors.js';
@@ -39,10 +44,11 @@ export interface HttpTestbed {
   readonly db: Database;
   /** Creates a `User` row and an actor with that account; overrides change any other field. */
   actor(role: H5pRole, overrides?: Partial<HvlH5pActor>): Promise<TestActor>;
-  /** Saves an H5P.MultiChoice activity as `author` over HTTP; `published` also shares it with all of HVL. */
+  /** Saves an activity (H5P.MultiChoice 1.16 unless `library` says otherwise) as `author` over HTTP; `published`
+   *  also shares it with all of HVL. */
   activity(
     author: TestActor,
-    options?: { published?: boolean; metadata?: object; params?: object },
+    options?: { published?: boolean; metadata?: object; params?: object; library?: string },
   ): Promise<string>;
   /** Deletes everything the testbed created and disconnects. */
   close(): Promise<void>;
@@ -53,10 +59,12 @@ const ACTOR_HEADER = 'x-test-actor';
 /**
  * Builds the testbed.
  * @param libraries - Libraries to install (the ten stand-ins, TrueFalse and DragQuestion by default).
+ * @param options - `seedFrom`: a folder of `.h5p` packages with `SHA256SUMS` to install through the seed path.
  * @returns The testbed; call `close()` in `afterAll`.
  */
 export async function openHttpTestbed(
   libraries: SyntheticLibrary[] = HTTP_TEST_LIBRARIES,
+  options: { seedFrom?: string } = {},
 ): Promise<HttpTestbed> {
   const libraryDir = syntheticLibraryDir(libraries);
   const buckets = { content: uniqueName('content'), temporary: uniqueName('temporary') };
@@ -72,6 +80,12 @@ export async function openHttpTestbed(
   const redis: Redis = await connectRedis(env.REDIS_URL);
   const logger = createLogger({ level: 'silent' });
   const runtime = await createH5pRuntime({ env, logger, db, redis, s3 });
+  const openedAt = new Date();
+  if (options.seedFrom) {
+    const { packageImporter, libraryManager } = runtime.editor;
+    const sink = new PrismaLibraryAuditSink(db);
+    await seedLibraries(options.seedFrom, new LibraryInstaller(packageImporter, sink, libraryManager));
+  }
   const actors = new Map<string, HvlH5pActor>();
   const authenticate: RequestHandler = (req, res, next) => {
     const actor = actors.get(String(req.headers[ACTOR_HEADER] ?? ''));
@@ -97,10 +111,11 @@ export async function openHttpTestbed(
     activity: async (author, options = {}) => {
       const { published = false, metadata = { title: 'Q', license: 'U' } } = options;
       const params = { params: options.params ?? { question: 'Kva?', answers: ['Ja'] }, metadata };
+      const library = options.library ?? 'H5P.MultiChoice 1.16';
       const res = await request(app)
         .post('/h5p/content')
         .set(...author.header)
-        .send({ library: 'H5P.MultiChoice 1.16', params });
+        .send({ library, params });
       const id = (res.body as { contentId?: string }).contentId;
       if (res.status !== 201 || !id) throw new Error(`saving the test activity failed: ${res.status}`);
       if (published) {
@@ -115,6 +130,12 @@ export async function openHttpTestbed(
       await db.h5PContent.deleteMany({ where: { ownerUserId: { in: userIds } } });
       await db.auditEvent.deleteMany({ where: { actorUserId: { in: userIds } } });
       await db.libraryAuditEvent.deleteMany({ where: { actorUserId: { in: userIds } } });
+      // WHY: seeding records its installs without an actor (D-041); only this testbed's own rows go.
+      if (options.seedFrom) {
+        await db.libraryAuditEvent.deleteMany({
+          where: { actorUserId: null, source: 'seed', at: { gte: openedAt } },
+        });
+      }
       await db.user.deleteMany({ where: { id: { in: userIds } } });
       for (const bucket of Object.values(buckets)) await removeTestBucket(s3, bucket);
       await Promise.all([redis.quit(), db.$disconnect()]);

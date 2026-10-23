@@ -9,6 +9,7 @@
  * Invariants:
  *   - `coreApiVersion` is 1.28; both Hub endpoints are on hub-api.h5p.org (F1/F2 workarounds below).
  *   - `maxFileSize` 50 MB, `maxTotalSize` 200 MB, narrowed `contentWhitelist` (SEC-002 list).
+ *   - `libraryWhitelist` adds web fonts for library folders only; content files never accept fonts or scripts.
  *   - Usage statistics and the H5P Content Hub (sharing to h5p.com) are off: no learner or author data
  *     leaves HVL without a decision. Finished data is off and state is saved every 5 s (D-037).
  *   - Only the settings in `STORAGE_LOADABLE_SETTINGS` keep a stored value; URLs, library config,
@@ -34,6 +35,11 @@ export const MAX_TOTAL_SIZE = 200 * 1024 * 1024;
 /** File extensions allowed in content, narrowed to what the ten types need (SEC-002). */
 export const CONTENT_WHITELIST =
   'json png jpg jpeg gif webp svg webm mp4 mp3 m4a ogg wav vtt webvtt pdf txt csv docx xlsx pptx odt ods odp';
+/**
+ * Extra extensions allowed in library folders (Lumi adds the content list to these). Real libraries ship icon fonts
+ * (FontAwesome, JoubelUI, FontIcons), so packages from the Hub or GitHub need them (D-047, D-078).
+ */
+export const LIBRARY_WHITELIST = 'js css svg eot ttf woff woff2 otf';
 /** How often the player saves learner state, in milliseconds (`H5P-005`: the H5P default of 5 s). */
 export const CONTENT_USER_STATE_SAVE_INTERVAL_MS = 5000;
 /** The new Hub rejects a `local_id` longer than this (finding F1). */
@@ -95,6 +101,9 @@ export function applyEnforcedSettings(config: H5PConfig, options: H5pConfigOptio
   config.maxFileSize = MAX_FILE_SIZE;
   config.maxTotalSize = MAX_TOTAL_SIZE;
   config.contentWhitelist = CONTENT_WHITELIST;
+  // SECURITY: fonts and scripts are accepted only inside library folders, which only admins install (D-004).
+  //           Content files keep the narrowed SEC-002 list, because Lumi checks `content/` against it alone.
+  config.libraryWhitelist = LIBRARY_WHITELIST;
   config.platformName = 'HVL Interaktiv';
   config.platformVersion = options.platformVersion;
   // PRIVACY: no usage statistics to H5P Group, and no publishing to the public Content Hub (DATA-011).

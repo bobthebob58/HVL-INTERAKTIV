@@ -29,6 +29,7 @@
     "spec:trace": "node tools/spec-trace/specTrace.mjs",
     "spec:site": "node tools/spec-site/buildSpecSite.mjs",
     "h5p:fetch-core": "bash tools/h5p-core/fetchCoreClients.sh",
+    "h5p:fetch-libraries": "node tools/h5p-libraries/fetchLibraries.mjs",
     "db:migrate": "npm run db:migrate --workspace apps/server",
     "seed:libraries": "npm run seed:libraries --workspace apps/server --",
     "hub:check": "npm run hub:check --workspace apps/server",
@@ -52,7 +53,8 @@
     "typedoc": "0.28.20",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.0",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "yazl": "3.3.1"
   },
   "lint-staged": {
     "*.{ts,mts,js,mjs}": [
