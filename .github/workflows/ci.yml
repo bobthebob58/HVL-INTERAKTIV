@@ -65,6 +65,8 @@ jobs:
         run: npm ci
       - name: Fetch and verify H5P core 1.28.0 and the pinned editor (H5P-001, D-022, D-027)
         run: npm run h5p:fetch-core
+      - name: Fetch, build and verify the ten real content types at pinned commits (D-078, D-047)
+        run: npm run h5p:fetch-libraries
       - name: Generate the Prisma client and apply migrations
         run: npm run db:generate --workspace apps/server && npm run db:migrate
       - name: Install full Chromium for the browser and end-to-end tests (SEC-001, D-065; never --only-shell)
