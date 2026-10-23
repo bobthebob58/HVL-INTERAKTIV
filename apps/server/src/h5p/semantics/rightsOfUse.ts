@@ -11,10 +11,12 @@
  * Spec: SEC-008
  * Invariants:
  *   - Every `metadata` and `copyright` object anywhere is plain text, with `source` only as an http(s) URL
- *     (LumiTextSanitizer.sanitizeMetadata).
+ *     (LumiTextSanitizer.sanitizeMetadata); the walk continues inside them, as h5p.js does.
  *   - Every `path` string is free of `"`, `<`, `>`, backticks and control characters, and has no scheme other
- *     than http(s); otherwise the content is refused with 400 `hvl:unsafe-file-path`.
- *   - Every `alt` string is plain text without a straight double quote: `"` (also as an entity) becomes `”`.
+ *     than http(s); a path that is an array (h5p.js would join it into the attribute) is refused as well. Both
+ *     are refused with 400 `hvl:unsafe-file-path`.
+ *   - Every `alt` string is plain text without a straight double quote: `"` (also as an entity) becomes `”`;
+ *     an `alt` that is an array becomes an empty string. Other non-strings only ever print as "[object …]".
  *   - Iterative, so deeply nested parameters cannot overflow the stack; values are changed in place.
  * Collaborators: ./lumiTextSanitizer.ts, ./SubContentPolicy.ts (calls it on every save).
  * Tests: apps/server/test/h5p/semantics/rightsOfUse.test.ts, apps/server/test/http/player.browser.int.test.ts
@@ -62,15 +64,17 @@ export function sanitizeRightsOfUse(params: unknown, text: LumiTextSanitizer): v
     const node = pending.pop();
     if (typeof node !== 'object' || node === null) continue;
     if (Array.isArray(node)) {
-      pending.push(...(node as unknown[]));
+      for (const item of node as unknown[]) pending.push(item);
       continue;
     }
     const record = node as Record<string, unknown>;
     for (const [key, value] of Object.entries(record)) {
       if ((key === 'metadata' || key === 'copyright') && isObject(value)) text.sanitizeMetadata(value);
-      else if (key === 'path' && typeof value === 'string' && !isSafeFilePath(value))
+      // SECURITY: `'<img src="' + path` and `alt="' + alt` in h5p.js also join arrays into the attribute.
+      if (key === 'path' && (Array.isArray(value) || (typeof value === 'string' && !isSafeFilePath(value))))
         throw new H5pError('hvl:unsafe-file-path', {}, 400);
-      else if (key === 'alt' && typeof value === 'string') record[key] = attributeSafeAlt(value);
+      if (key === 'alt' && typeof value === 'string') record[key] = attributeSafeAlt(value);
+      else if (key === 'alt' && Array.isArray(value)) record[key] = '';
       else pending.push(value);
     }
   }

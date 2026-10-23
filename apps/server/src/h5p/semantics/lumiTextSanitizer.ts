@@ -11,10 +11,11 @@
  * Invariants:
  *   - A list item is sanitised exactly as Lumi sanitises a text field with the same semantics.
  *   - Every string in a metadata object (main or sub-content, also inside `authors` and `changes`) is plain
- *     text: every tag is removed (script and style with their content), `<`, `>` and `&` escaped.
+ *     text: every tag is removed (script and style with their content), `<`, `>` and `&` escaped. Anything
+ *     nested deeper than the depth limit is dropped, never kept as it was.
  *   - A top-level field that was only markup is removed (Lumi's schema refuses empty strings).
- *   - `source` is kept only as an http(s) URL in its normalised form (quotes and angle brackets
- *     percent-encoded, so it cannot leave the `href` attribute); anything else is removed.
+ *   - `source` is kept only as an http(s) URL in its normalised form that contains no `"`, `'`, `<`, `>` or
+ *     backtick, so it cannot leave the `href` attribute; anything else is removed.
  * Collaborators: ./SubContentPolicy.ts, ../lumiInternals.ts (Lumi's SemanticsEnforcer).
  * Tests: apps/server/test/h5p/semantics/SubContentPolicy.test.ts
  */
@@ -56,8 +57,10 @@ export function safeSourceUrl(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined;
   try {
     const url = new URL(value.trim());
-    // SECURITY: WHATWG serialisation percent-encodes `"`, `<`, `>` and spaces; only web links are kept.
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : undefined;
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return undefined;
+    // SECURITY: WHATWG percent-encodes quotes in the path, query and fragment, but leaves them raw in the host
+    // (`https://x.example"onmouseover=…`), so a serialised URL that still holds one is refused.
+    return /["'<>`]/.test(url.href) ? undefined : url.href;
   } catch {
     return undefined;
   }
@@ -113,7 +116,10 @@ export class LumiTextSanitizer {
 
   private plainTextDeep(value: unknown, depth: number): unknown {
     if (typeof value === 'string') return plainText(value);
-    if (typeof value !== 'object' || value === null || depth >= MAX_METADATA_DEPTH) return value;
+    if (typeof value !== 'object' || value === null) return value;
+    // SECURITY: h5p.js joins nested arrays into the dialog's HTML, so nothing past the limit may stay raw.
+    // WHY: null, not undefined: the parameters are stored as JSON, which has no undefined inside an array.
+    if (depth >= MAX_METADATA_DEPTH) return null;
     if (Array.isArray(value)) return value.map((item) => this.plainTextDeep(item, depth + 1));
     const record = value as Record<string, unknown>;
     for (const [key, item] of Object.entries(record)) record[key] = this.plainTextDeep(item, depth + 1);

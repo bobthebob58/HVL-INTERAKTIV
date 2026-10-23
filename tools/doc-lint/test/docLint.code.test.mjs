@@ -51,6 +51,9 @@ describe('[DOC-006] test titles and fixtures', () => {
     expect(check(body('  // Arrange\n  // Act\n  /* Assert */\n'))).toEqual([]);
     const short = `${TEST_HEADER}it('[TST-001] short', () => {\n${'  expect(1).toBe(1);\n'.repeat(10)}});\n`;
     expect(check(short)).toEqual([]);
+    // WHY: an it.each table and the title are not the test's steps; only the function body counts.
+    const table = `${TEST_HEADER}it.each([\n${'  [1],\n'.repeat(12)}])('[TST-001] row %i', (n) => {\n  expect(n).toBe(n);\n});\n`;
+    expect(check(table)).toEqual([]);
   });
 
   it('[DOC-006] rejects titles that name unknown requirements', () => {

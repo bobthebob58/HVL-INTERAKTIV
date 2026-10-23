@@ -21,7 +21,6 @@ interface Seen {
   error?: { status: number; key: string };
 }
 
-/** An app that reads one upload, records what it saw, and cleans up. */
 /**
  * Runs `act` with `os.tmpdir()` pointing at a fresh folder (Vitest runs each file in its own process).
  * @returns The names left in that folder afterwards.
@@ -40,6 +39,7 @@ async function leftovers(act: () => Promise<unknown>): Promise<string[]> {
   }
 }
 
+/** An app that reads one upload, records what it saw, and cleans up. */
 function probeApp(maxFileSize = 1024): { app: express.Express; seen: Seen } {
   const seen: Seen = {};
   const app = express();
@@ -119,7 +119,12 @@ describe('readMultipart', () => {
   it('[SEC-005] a request that is not multipart, or is malformed, is refused with 400 and leaves no folder', async () => {
     const json = probeApp(); // Arrange
     // Act and assert: a body that is not multipart
-    expect((await request(json.app).post('/u').send({ a: 1 })).status).toBe(400);
+    let jsonStatus = 0;
+    const jsonLeft = await leftovers(async () => {
+      jsonStatus = (await request(json.app).post('/u').send({ a: 1 })).status;
+    });
+    expect(jsonStatus).toBe(400);
+    expect(jsonLeft).toEqual([]);
     const broken = probeApp(); // Arrange
     let status = 0;
     // Act: a multipart body whose part never ends

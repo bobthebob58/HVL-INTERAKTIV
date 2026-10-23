@@ -7,7 +7,7 @@
 import { describe, it, expect, afterAll } from 'vitest';
 import sanitizeHtml from 'sanitize-html';
 import { LibraryManager, fsImplementations } from '@lumieducation/h5p-server';
-import { LumiTextSanitizer, plainText } from '../../../src/h5p/semantics/lumiTextSanitizer.js';
+import { LumiTextSanitizer, plainText, safeSourceUrl } from '../../../src/h5p/semantics/lumiTextSanitizer.js';
 import { isSafeFilePath, sanitizeRightsOfUse } from '../../../src/h5p/semantics/rightsOfUse.js';
 import { removeSyntheticLibraryDirs, syntheticLibraryDir } from '../../support/syntheticLibraries.js';
 
@@ -52,6 +52,37 @@ describe('[SEC-008] values the "Rights of use" dialog renders', () => {
     expect(params.hidden[0]?.file.copyright.author).toBe('x');
   });
 
+  it('[SEC-008] the walk goes on inside metadata and copyright objects, and nothing past the depth limit stays', () => {
+    // Arrange: h5p.js findCopyrights also walks into these objects, and joins nested arrays into HTML.
+    const nestedImage = {
+      params: { contentName: 'Image', alt: 'x" onerror="alert(1)' },
+      metadata: { license: 'U' },
+    };
+    const deep = [[[[[[[[`D${XSS}`]]]]]]]];
+    const params = {
+      media: { copyright: { license: 'CC BY', nested: nestedImage } },
+      sub: { metadata: { license: 'CC BY', licenseExtras: deep } },
+    };
+    // Act
+    sanitizeRightsOfUse(params, text);
+    // Assert
+    expect(nestedImage.params.alt).toBe('x” onerror=”alert(1)');
+    expect(JSON.stringify(params)).not.toMatch(/<img|"x"/);
+    const pathInMetadata = { sub: { metadata: { license: 'U', image: { path: 'a.png" onerror="x' } } } };
+    expect(refusal(pathInMetadata)).toMatchObject({ errorId: 'hvl:unsafe-file-path' });
+  });
+
+  it('[SEC-008] a source link with a quote in its host is removed; quotes elsewhere are percent-encoded', () => {
+    expect(safeSourceUrl('https://evil.example"onmouseover=alert(1)//x/')).toBeUndefined();
+    expect(safeSourceUrl("https://evil.example'x/")).toBeUndefined();
+    expect(safeSourceUrl('https://x.example/a"b?c="d')).toBe('https://x.example/a%22b?c=%22d');
+    const params = {
+      media: { copyright: { license: 'CC BY', source: 'https://evil.example"onmouseover=alert(1)//' } },
+    };
+    sanitizeRightsOfUse(params, text);
+    expect(params.media.copyright).not.toHaveProperty('source');
+  });
+
   it('[SEC-008] metadata keeps no markup at all: links, emphasis, tables and script content are removed', () => {
     expect(
       plainText('<a href="https://e.example">lenke</a> <b>feit</b> <table><tr><td>t</td></tr></table>'),
@@ -71,6 +102,9 @@ describe('[SEC-008] values the "Rights of use" dialog renders', () => {
     const alts = [params.picture.params.alt, params.nested[0]?.alt ?? ''];
     for (const alt of [...alts, ...alts.map((a) => sanitizeHtml(a))]) expect(alt).not.toContain('"');
     expect(params.picture.params.alt).toBe('Ein ”fin” dag” onerror=”alert(1)');
+    const listed = { picture: { params: { alt: ['x" onerror="alert(1)'] } } };
+    sanitizeRightsOfUse(listed, text);
+    expect(listed.picture.params.alt).toBe('');
   });
 
   it('[SEC-008] a file path that could leave an attribute or run as a link is refused with 400', () => {
@@ -92,6 +126,8 @@ describe('[SEC-008] values the "Rights of use" dialog renders', () => {
         httpStatusCode: 400,
       });
     }
+    // Act and assert: an array, which h5p.js would join into `src="…"`, is refused too.
+    expect(refusal({ media: { path: ['https://x.example/a.png'] } })).toMatchObject({ httpStatusCode: 400 });
     // Act and assert: file names Lumi creates and web links pass.
     const safe = ['images/photo-1a2b.png#tmp', 'videos/v.mp4', 'https://www.youtube.com/watch?v=x&t=1'];
     for (const path of safe) expect(refusal({ media: { path } }), path).toBeUndefined();

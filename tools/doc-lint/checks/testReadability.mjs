@@ -8,8 +8,9 @@
  *   - Every test file has at least one running it()/test() title that opens with a requirement ID in
  *     brackets, unless all its running titles open with `upstream pin: ` (DOC-004); every bracketed ID
  *     opening any describe/it/test title exists.
- *   - An it()/test() whose body is longer than 10 lines has comments that name its Act and Assert steps
- *     (`// Act`, `// Assert`, or `// Act and assert`), as DOC-006 asks.
+ *   - An it()/test() whose function body is longer than 10 lines has comments inside that body that name its
+ *     Act and Assert steps (`// Act`, `// Assert`, or `// Act and assert`), as DOC-006 asks. Tables of
+ *     `it.each` and the title do not count as body lines.
  *   - Every directory named `fixtures` contains a README.md.
  * Collaborators: ../lib/repo.mjs, ../../spec-trace/testTitles.mjs (the title rule shared with spec-trace).
  * Tests: tools/doc-lint/test/docLint.code.test.mjs
@@ -25,20 +26,39 @@ const MAX_UNMARKED_BODY_LINES = 10;
 const lineOf = (text, offset) => text.slice(0, offset).split('\n').length;
 
 /**
+ * The `{` and `}` of the test function's body: the last block before the call's closing parenthesis.
+ * @param {string} code - The file with comments and literals blanked.
+ * @param {{start: number, end: number}} call - Offsets of the it()/test() call.
+ * @returns {[number, number] | undefined} Offsets of the braces, or undefined for a call without a body.
+ */
+function bodyOf(code, call) {
+  const close = code.lastIndexOf('}', call.end);
+  if (close <= call.start) return undefined;
+  let depth = 0;
+  for (let i = close; i > call.start; i -= 1) {
+    if (code[i] === '}') depth += 1;
+    else if (code[i] === '{' && --depth === 0) return [i, close];
+  }
+  return undefined;
+}
+
+/**
  * The tests in a file whose body is longer than 10 lines but whose comments do not name Act and Assert.
  * @param {string} text - Contents of a test file.
  * @returns {{line: number, lines: number}[]} The first line and the body length of each such test.
  */
 function unmarkedLongTests(text) {
-  const { comments } = blankLiterals(text);
+  const { code, comments } = blankLiterals(text);
   const found = [];
   for (const t of testTitles(text).filter((c) => c.fn !== 'describe')) {
-    const [first, last] = [lineOf(text, t.start), lineOf(text, t.end)];
-    const lines = last - first - 1;
+    // WHY: only the function body counts; an it.each table or a long title is not the test's steps.
+    const body = bodyOf(code, t);
+    if (!body) continue;
+    const lines = lineOf(text, body[1]) - lineOf(text, body[0]) - 1;
     if (lines <= MAX_UNMARKED_BODY_LINES) continue;
-    const inside = comments.filter((c) => c.start > t.start && c.start < t.end).map((c) => c.text);
+    const inside = comments.filter((c) => c.start > body[0] && c.start < body[1]).map((c) => c.text);
     const names = (word) => inside.some((c) => new RegExp(`\\b${word}\\b`, 'i').test(c));
-    if (!names('act') || !names('assert')) found.push({ line: first, lines });
+    if (!names('act') || !names('assert')) found.push({ line: lineOf(text, t.start), lines });
   }
   return found;
 }

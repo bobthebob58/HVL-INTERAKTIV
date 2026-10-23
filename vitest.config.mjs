@@ -12,7 +12,16 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     projects: [
-      { test: { name: 'tools', include: ['tools/**/*.test.mjs'], environment: 'node' } },
+      {
+        test: {
+          name: 'tools',
+          include: ['tools/**/*.test.mjs'],
+          environment: 'node',
+          // WHY: the vendored marked build names a source map that is not vendored; Node loads it as it is,
+          // so Vite never tries to read the map and prints no error stack on a fresh checkout.
+          server: { deps: { external: [/tools\/spec-site\/vendor\//] } },
+        },
+      },
       'apps/*/vitest.config.ts',
     ],
   },

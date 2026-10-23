@@ -11,6 +11,13 @@ import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
+import {
+  COPYRIGHT_FLAGS,
+  COPYRIGHT_PARAMS,
+  COPYRIGHT_THUMBNAILS,
+  RIGHTS_FLAGS,
+  RIGHTS_PAYLOAD,
+} from '../support/rightsOfUsePayloads.js';
 import { HTTP_TEST_LIBRARIES, MULTI_CHOICE } from '../support/tenTypeLibraries.js';
 
 /** A minimal content type: one button that counts clicks and reports the count as its state. */
@@ -29,51 +36,6 @@ const PROBE_JS = `H5P.MultiChoice = (function ($) {
   Probe.prototype.constructor = Probe;
   return Probe;
 })(H5P.jQuery);`;
-
-/** Metadata an author could send, each field trying to run script in H5P's "Rights of use" dialog. */
-const RIGHTS_PAYLOAD = {
-  title: 'Rettar',
-  license: 'CC BY',
-  licenseVersion: '4.0',
-  source: 'https://x.example/"><img src=x onerror="window.__hvlSource=1">',
-  licenseExtras: '<img src=x onerror="window.__hvlExtras=1">',
-  yearFrom: '<img src=x onerror="window.__hvlYear=1">',
-  contentType: 'Quiz<img src=x onerror="window.__hvlType=1">',
-  authors: [{ name: 'Ola<img src=x onerror="window.__hvlAuthor=1">', role: 'Author' }],
-};
-
-/** Copyright data under keys no semantics field defines; h5p.js `findCopyrights` still renders all of it. */
-const COPYRIGHT_PARAMS = {
-  question: 'Kva?',
-  media: {
-    path: 'images/a.png',
-    mime: 'image/png',
-    copyright: {
-      license: 'CC BY',
-      title: '<img src=x onerror="window.__hvlMedia=1">',
-      source: 'javascript:1',
-    },
-  },
-  hidden: {
-    file: {
-      path: 'images/b.png',
-      mime: 'image/png',
-      copyright: { license: 'CC BY', author: '<img src=x onerror="window.__hvlHidden=1">' },
-    },
-  },
-  picture: {
-    params: {
-      contentName: 'Image',
-      file: { path: 'images/c.png', width: 4, height: 4 },
-      alt: 'x" onerror="window.__hvlAlt=1',
-    },
-    metadata: {
-      license: 'CC BY',
-      title: 'Bilete',
-      licenseExtras: '<img src=x onerror="window.__hvlSubMeta=1">',
-    },
-  },
-};
 
 const LIBRARIES = HTTP_TEST_LIBRARIES.map((lib) =>
   lib.machineName === MULTI_CHOICE.machineName
@@ -146,29 +108,31 @@ describeWithServices('H5P player in a browser', () => {
       await page.waitForSelector('.h5p-popup-dialog', { state: 'visible' });
       await page.waitForTimeout(300);
       // Assert: no payload set its flag
-      const fired = await page.evaluate(() =>
-        ['__hvlSource', '__hvlExtras', '__hvlYear', '__hvlType', '__hvlAuthor'].filter(
-          (flag) => flag in window,
-        ),
-      );
+      const fired = await page.evaluate((flags) => flags.filter((flag) => flag in window), RIGHTS_FLAGS);
       expect(fired).toEqual([]);
       await page.close();
     }, 30_000);
 
-    it('[SEC-008] copyright data, image paths and alt texts under any key never run as script in that dialog', async () => {
+    it('[SEC-008] copyright data, source links and alt texts under any key never run as script in that dialog', async () => {
       const { page } = await openPlayer(copyrightId); // Arrange
-      // Act: open the "Rights of use" dialog and give any injected handler time to fire
+      // Act: open the "Rights of use" dialog, hover every link, and give any injected handler time to fire
       await page.click('.h5p-copyrights button');
       await page.waitForSelector('.h5p-popup-dialog', { state: 'visible' });
+      await page.$$eval('.h5p-popup-dialog a', (links) =>
+        links.forEach((a) => a.dispatchEvent(new MouseEvent('mouseover'))),
+      );
       await page.waitForTimeout(300);
-      // Assert: no flag, handler or script link in the dialog, and the one safe image still shows
-      const result = await page.evaluate(() => ({
-        fired: ['__hvlMedia', '__hvlHidden', '__hvlAlt', '__hvlSubMeta'].filter((flag) => flag in window),
-        handlers: document.querySelectorAll('.h5p-popup-dialog [onerror]').length,
-        scriptLinks: document.querySelectorAll('.h5p-popup-dialog a[href^="javascript"]').length,
-        thumbnails: document.querySelectorAll('.h5p-popup-dialog img.h5p-thumbnail').length,
-      }));
-      expect(result).toEqual({ fired: [], handlers: 0, scriptLinks: 0, thumbnails: 1 });
+      // Assert: no flag, event-handler attribute or script link in the dialog; the safe images still show
+      const result = await page.evaluate((flags) => {
+        const inDialog = [...document.querySelectorAll('.h5p-popup-dialog *')];
+        return {
+          fired: flags.filter((flag) => flag in window),
+          handlers: inDialog.filter((el) => [...el.attributes].some((a) => a.name.startsWith('on'))).length,
+          scriptLinks: document.querySelectorAll('.h5p-popup-dialog a[href^="javascript"]').length,
+          thumbnails: document.querySelectorAll('.h5p-popup-dialog img.h5p-thumbnail').length,
+        };
+      }, COPYRIGHT_FLAGS);
+      expect(result).toEqual({ fired: [], handlers: 0, scriptLinks: 0, thumbnails: COPYRIGHT_THUMBNAILS });
       await page.close();
     }, 30_000);
 
