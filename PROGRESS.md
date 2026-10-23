@@ -79,7 +79,7 @@ Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-
 ## S2 — Content types and security ✅ (gate passed 2026-10-23; spike steps 3–5 open, Q7)
 
 - [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (to be recorded as D-047).
-      **Still blocked (Q7):** on 2026-10-23 (last checked 04:18 UTC) the egress proxy refused hub-api.h5p.org
+      **Still blocked (Q7):** on 2026-10-23 (last checked 07:32 UTC) the egress proxy refused hub-api.h5p.org
       (`CONNECT tunnel failed, response 403`; `npm run hub:check` reports `fetch failed: Request was cancelled.`).
       S2 closed on the plan's fallback: the gate passes on synthetic packages; this item carries forward.
       When the packages arrive, also review each type's `getCopyrights` for values it writes into HTML (D-039).
@@ -103,7 +103,8 @@ Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-
 - [x] `SvgSanitizer`, `FileTypeSniffer`, `ContentFileHeaders`, package import rules (`SEC-001`…`SEC-004`, `SEC-008`)
 - [x] `npm run hub:check` for spike step 3 (registration status, F1, versions of the ten types)
 - [x] Independent review and its fixes: three reviewers (correctness and security, privacy and spec,
-      documentation), each finding checked by a skeptic; every fix has a test that fails on the old code
+      documentation), each finding checked by a skeptic, then three verification passes over the fixes;
+      every fix has a test that fails on the old code
 - [x] Gate: as in the Evaluator Guide §5, S2, plus each S2 requirement's tests run on their own (`-t`);
       output in the session log (2026-10-23)
 
@@ -259,8 +260,19 @@ Append one entry per session: date, session, what was done, gate output, and any
   a library hidden under an unknown key was loaded; audit rows are written before an install; client errors
   keep their 4xx and request bodies are never logged; documentation (removal conditions on `UPSTREAM`,
   `DATA-*` IDs on `PRIVACY`, upstream pins no longer count as proof, the D-045 deviation tagged).
-  hub-api.h5p.org is still refused by the egress proxy (403, Q7), so spike steps 3–5, the real seed packages,
-  the CI seed step and R-01 (D-047) stay open. Decisions D-035…D-046. Gate output:
+  Three verification passes followed, each finding challenged by a skeptic before it was fixed. The first
+  found a content.json path that `HTTPS://` (upper case) let out of the package, a `content/./content.json`
+  entry that replaced the checked one on extraction, and metadata, copyright, image paths and alt texts that
+  H5P Core's "Rights of use" dialog renders from anywhere in the parameters (fixed in
+  `semantics/rightsOfUse.ts`, metadata as true plain text). The second found a quote in a source link's host,
+  values inside metadata objects and arrays joined into the dialog's HTML. The third (an h5p.js sink audit and
+  Chromium fuzzing with more than 60 variants) found no further script, but five inputs that ended a save with
+  500; they are now 4xx. Each fix has a test that fails on the code before it. Arrange/Act/Assert comments were
+  added to 113 long tests of S1 and S2 and doc-lint now checks them (`DOC-006`). Follow-ups: the real types'
+  `getCopyrights` when the Hub packages arrive, and a player-page script CSP without `'unsafe-inline'` in S4
+  (D-039). hub-api.h5p.org is still refused by the egress proxy (403 at 07:32 UTC, Q7), so spike steps 3–5,
+  the real seed packages, the CI seed step and R-01 (D-047) stay open. Decisions D-035…D-046. Gate output
+  (after the last fix, commit b06511e):
 
   ```
   $ npm run typecheck                                  exit 0
@@ -269,14 +281,17 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npm run doc:lint                                   ✓ doc-lint: 11 checks passed.
   $ npm run check:filesize                             ✓ doc-lint: file-size passed.
   $ npm run check:pins                                 ✓ check:pins: 2 manifests, every version is pinned exactly.
-  $ npm run check:licences                             ✓ check:licences: 188 production packages, all GPL-3.0-compatible.
+  $ npm run check:licences                             ✓ check:licences: 182 production packages, all GPL-3.0-compatible.
   $ npm run check:audit                                ✓ check:audit: 2 high/critical advisories, all covered by reviewed exceptions.
   $ npm run privacy:inventory-check                    ✓ privacy:inventory-check: 20 models, 155 fields, all in docs/privacy/DATA-INVENTORY.md.
-  $ npx vitest run                                     Test Files 80 passed (80) · Tests 19264 passed (19264)
-  $ npx vitest run -t "H5P-002|PROD-002"               Test Files 11 passed | 69 skipped · Tests 24 passed      (ten types only)
-  $ npx vitest run -t "SEC-003|H5P-011|H5P-006"        Test Files 24 passed | 56 skipped · Tests 18700 passed   (no installs by non-admins)
-  $ npx vitest run -t "SEC-001"                        Test Files 8 passed | 72 skipped · Tests 111 passed      (SVG corpus)
-  $ npx vitest run -t "\[<ID>\]", one run per S2 ID     all 17 pass on their own (H5P-001…011, SEC-001…008, PROD-002/008/012)
+  $ npx vitest run                                     Test Files 82 passed (82) · Tests 19290 passed (19290) · no Errors or Unhandled
+  $ npx vitest run -t "H5P-002|PROD-002"               Test Files 11 passed | 71 skipped · Tests 24 passed      (ten types only)
+  $ npx vitest run -t "SEC-003|H5P-011|H5P-006"        Test Files 24 passed | 58 skipped · Tests 18702 passed   (no installs by non-admins)
+  $ npx vitest run -t "SEC-001"                        Test Files 8 passed | 74 skipped · Tests 111 passed      (SVG corpus)
+  $ npx vitest run -t "\[<ID>\]", one run per ID       all 17 pass on their own:
+      H5P-001 26 · H5P-002 24 · H5P-003 8 · H5P-004 32 · H5P-005 27 · H5P-006 18669 · H5P-008 58 · H5P-011 17
+      SEC-001 111 · SEC-002 70 · SEC-003 19 · SEC-004 10 · SEC-005 31 · SEC-008 37
+      PROD-002 3 · PROD-008 4 · PROD-012 24
   $ npm run spec:trace -- --check --done-through=S2    ✓ 126 requirements, traceability up to date.
   $ npm run spec:site -- --check                       ✓ docs/site/index.html is up to date.
   $ npm run h5p:fetch-core                             ✓ H5P core 1.28.0 and editor ab2daa18 are in apps/server/h5p
