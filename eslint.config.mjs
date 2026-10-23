@@ -85,6 +85,11 @@ export default tseslint.config(
               importNames: ['LaissezFairePermissionSystem'],
               message: 'Use HvlPermissionSystem (H5P-006).',
             },
+            {
+              name: 'ltijs',
+              importNames: ['RedisCacheManager', 'ExpressHttpHandler', 'MongoLegacyDatabaseManager'],
+              message: 'D-050: ltijs runs on our router, our node-redis cache and PrismaLtiDatabaseManager.',
+            },
           ],
           patterns: [
             {
@@ -100,6 +105,24 @@ export default tseslint.config(
           selector: "Identifier[name='LaissezFairePermissionSystem']",
           message: 'Use HvlPermissionSystem (H5P-006).',
         },
+      ],
+    },
+  },
+  {
+    // SECURITY: LTI-003 / D-048: the ltik lives only in page memory, never in browser storage or cookies.
+    files: ['apps/server/src/lti/pages/client/*.js'],
+    languageOptions: { sourceType: 'script', globals: { ...globals.browser } },
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        { name: 'localStorage', message: 'LTI-003: keep the ltik in memory only.' },
+        { name: 'sessionStorage', message: 'LTI-003: keep the ltik in memory only.' },
+      ],
+      'no-restricted-properties': [
+        'error',
+        { object: 'window', property: 'localStorage', message: 'LTI-003: keep the ltik in memory only.' },
+        { object: 'window', property: 'sessionStorage', message: 'LTI-003: keep the ltik in memory only.' },
+        { object: 'document', property: 'cookie', message: 'LTI-003: keep the ltik in memory only.' },
       ],
     },
   },
