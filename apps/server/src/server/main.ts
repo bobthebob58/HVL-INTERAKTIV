@@ -8,6 +8,7 @@
  * Invariants:
  *   - Invalid configuration stops the start with the list of problems and exit code 1; secrets are never printed.
  *   - The server listens only after the platform sync and the platform-key re-encryption (D-056) have finished.
+ *   - A port that cannot be opened stops the start with exit code 1 instead of a process that serves nothing.
  *   - SIGTERM and SIGINT stop the jobs, stop accepting connections, then close the clients; exit code 0.
  * Collaborators: ./createApp.ts, ../h5p/createH5pRuntime.ts, ../lti/platforms/syncLtiPlatforms.ts,
  *   ../lti/platforms/reencryptPlatformKeys.ts,
@@ -52,8 +53,9 @@ export async function startServer(env: Env): Promise<RunningServer> {
   logger.info({ reencrypted }, 'LTI platform keys on the current encryption key');
   const jobs = [h5p.cleanupJob, new LtiRecordCleanupJob({ db, redis, logger })];
   for (const job of jobs) job.start();
-  const server = await new Promise<Server>((resolve) => {
-    const listening = app.listen(env.PORT, () => resolve(listening));
+  // WHY: Express 5 passes a listen failure (port taken, no permission) to this callback; it must fail the start.
+  const server = await new Promise<Server>((resolve, reject) => {
+    const listening = app.listen(env.PORT, (error?: Error) => (error ? reject(error) : resolve(listening)));
   });
   logger.info({ port: env.PORT }, 'HVL Interaktiv server listening');
   return {

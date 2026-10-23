@@ -8,8 +8,9 @@
  * Spec: AUTH-001, AUTH-002, AUTH-003, AUTH-004, DATA-002
  * Invariants:
  *   - A login without a Feide ID is refused (403 page, D-054); a Groups API failure fails closed (503).
- *   - Neither the Feide ID, the `sub`, the access token nor any national ID number is stored; the ID token is
- *     handed to the session store, which keeps it encrypted (D-021).
+ *   - Neither the Feide ID, the `sub`, the access token nor any national ID number is stored in plaintext; the ID
+ *     token (which may hold them) is handed to the session store, which keeps it only encrypted until logout or
+ *     expiry (D-021, D-056).
  *   - Every outcome is audited with a fixed code (D-064).
  * Collaborators: ./FeideClient.ts, ./feideGroups.ts, ./FeideRoleMapper.ts, ./feideClaims.ts,
  *   ../identity/AccountResolver.ts, ../identity/subjectSources.ts, ../audit/AuthAuditRecorder.ts,

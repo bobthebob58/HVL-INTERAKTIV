@@ -1,11 +1,12 @@
 /**
  * Smoke tests for the entry point: `src/server/main.ts` started as its own process against the mock platform
- * answers `/healthz` and `/lti/keys` and stops cleanly on SIGTERM; a broken configuration stops it with exit code 1
+ * answers `/healthz` and `/lti/keys` and stops cleanly on SIGTERM; a broken configuration or a taken port stops it with exit code 1
  * and names the variable without printing any secret.
  *
  * Spec: NFR-002, LTI-001
  */
 import { spawn, type ChildProcess } from 'node:child_process';
+import { createServer } from 'node:http';
 import { CreateBucketCommand } from '@aws-sdk/client-s3';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -86,6 +87,19 @@ describeWithServices('[NFR-002] the server entry point', () => {
     expect(main.output()).toContain('LTI platforms synchronised');
     expect(main.output()).toContain('HVL Interaktiv server stopped');
     expect(code).toBe(0);
+  }, 60_000);
+
+  it('[NFR-002] a port that is already taken stops the start with exit code 1', async () => {
+    // Arrange: something else listens on PORT
+    const taken = createServer().listen(PORT);
+    await new Promise((resolve) => taken.once('listening', resolve));
+    // Act
+    const main = startMain(serverEnv());
+    const code = await main.exit;
+    taken.close();
+    // Assert
+    expect(code).toBe(1);
+    expect(main.output()).not.toContain('HVL Interaktiv server listening');
   }, 60_000);
 
   it('[NFR-002] a broken configuration stops the start with exit code 1 and prints no secret', async () => {

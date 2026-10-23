@@ -11,7 +11,11 @@ import type { Principal } from '../../../src/auth/Principal.js';
 import { setPrincipal } from '../../../src/auth/principalLocals.js';
 import { contentSharingRoutes } from '../../../src/http/api/contentSharingRoutes.js';
 import { h5pErrorHandler } from '../../../src/http/h5pErrorHandler.js';
-import { PrismaContentAccessRepository } from '../../../src/h5p/permissions/ContentAccessRepository.js';
+import {
+  PrismaContentAccessRepository,
+  type ContentAccessRepository,
+} from '../../../src/h5p/permissions/ContentAccessRepository.js';
+import { t } from '../../../src/i18n/translate.js';
 import { createPrismaClient } from '../../../src/infra/prismaClient.js';
 import { createLogger } from '../../../src/logging/logger.js';
 import { describeWithServices, serviceEnv } from '../../support/services.js';
@@ -25,7 +29,10 @@ describeWithServices('[PROD-006] sharing API', () => {
   let owner: string;
   let contentId: string;
 
-  const appAs = (principal?: Partial<Principal>) =>
+  const appAs = (
+    principal?: Partial<Principal>,
+    access: ContentAccessRepository = new PrismaContentAccessRepository(db),
+  ) =>
     express()
       .use((_req, res, next) => {
         if (principal)
@@ -42,7 +49,7 @@ describeWithServices('[PROD-006] sharing API', () => {
           });
         next();
       })
-      .use('/api', contentSharingRoutes({ db, access: new PrismaContentAccessRepository(db) }))
+      .use('/api', contentSharingRoutes({ db, access }))
       .use(h5pErrorHandler(logger));
 
   beforeAll(async () => {
@@ -121,5 +128,46 @@ describeWithServices('[PROD-006] sharing API', () => {
         JSON.stringify(body),
       ).toBe(400);
     }
+  });
+
+  it('[PROD-006] the canonical activity ID is changed, audited and returned, whatever case the path uses', async () => {
+    // Act
+    const res = await request(appAs({}))
+      .patch(`/api/content/${contentId.toUpperCase()}/sharing`)
+      .send({ visibility: 'private' });
+    // Assert
+    expect(res.body).toMatchObject({ contentId });
+    const last = await db.auditEvent.findFirst({ where: { actorUserId: owner }, orderBy: { at: 'desc' } });
+    expect(last?.targetId).toBe(contentId);
+  });
+
+  it('[PROD-006] a change that lost a race to another one is refused with 409, and the audit trail stays true', async () => {
+    // Arrange: someone else changes the visibility between our check and our update
+    const real = new PrismaContentAccessRepository(db);
+    const racing: ContentAccessRepository = {
+      ...real,
+      factsFor: async (id) => {
+        const facts = await real.factsFor(id);
+        await db.h5PContent.update({ where: { id: contentId }, data: { visibility: 'feide' } });
+        return facts;
+      },
+    };
+    await db.h5PContent.update({ where: { id: contentId }, data: { visibility: 'private' } });
+    const audits = await db.auditEvent.count({ where: { targetId: contentId } });
+    // Act
+    const res = await request(appAs({}, racing))
+      .patch(`/api/content/${contentId}/sharing`)
+      .send({ visibility: 'organisation' });
+    // Assert
+    expect(res.status).toBe(409);
+    expect((await db.h5PContent.findUniqueOrThrow({ where: { id: contentId } })).visibility).toBe('feide');
+    expect(await db.auditEvent.count({ where: { targetId: contentId } })).toBe(audits);
+  });
+
+  it('[PROD-012] refusals are in the signed-in person’s language', async () => {
+    const res = await request(appAs({ locale: 'en', userId: crypto.randomUUID() }))
+      .patch(`/api/content/${contentId}/sharing`)
+      .send({ visibility: 'feide' });
+    expect(res.body.message).toBe(t('error.activityUnavailable', {}, 'en'));
   });
 });

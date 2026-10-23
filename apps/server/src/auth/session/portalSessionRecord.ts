@@ -9,7 +9,8 @@
  * Invariants:
  *   - The stored record has exactly: userId, roles, hvlMember, studentAuthor, locale, learnerKey, csrfToken,
  *     idTokenEncrypted (base64 of the D-056 format), createdAt and lastSeenAt (epoch milliseconds).
- *   - No name, e-mail, Feide ID, Feide `sub` or session ID is ever part of it.
+ *   - No name, e-mail, Feide ID, Feide `sub` or session ID is ever part of it in plaintext; Feide's ID token (which
+ *     holds such claims) is kept only inside `idTokenEncrypted` (D-021, D-056).
  *   - `toPortalSession` drops the encrypted ID token; only `SessionStore.destroy` reads it.
  * Collaborators: ./SessionStore.ts, ./portalSessionMiddleware.ts.
  * Tests: apps/server/test/auth/session/SessionStore.int.test.ts,

@@ -129,7 +129,7 @@ describeWithServices('LTI resource-link launch', () => {
       },
     );
 
-    it('[PROD-004] a draft, an unknown activity and a launch without an activity get the same 404 page', async () => {
+    it('[LTI-006][PROD-004] a draft, an unknown activity and a launch without an activity get the same 404 page', async () => {
       // Act
       const answers = await Promise.all([
         launch(draft),

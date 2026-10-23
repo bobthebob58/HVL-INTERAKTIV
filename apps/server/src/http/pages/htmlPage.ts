@@ -1,8 +1,8 @@
 /**
  * htmlPage — builds the small server-rendered pages of Session 3 with an escaping `markup` template.
  *
- * Why: the LTI play and Deep Linking pages and the friendly error pages are server-rendered until Next.js
- *      replaces them in S4 (D-048). Building them with an auto-escaping template means a title or message that
+ * Why: the Deep Linking picker, the portal start page and the friendly message pages are server-rendered until
+ *      Next.js replaces them in S4 (D-048); the H5P player has its own template (../../h5p/render/playerPage.ts). Building them with an auto-escaping template means a title or message that
  *      contains `<`, quotes or `&` can never inject markup (XSS), whatever its source.
  * Spec: LTI-003, PROD-004
  * Invariants:
@@ -12,7 +12,7 @@
  *     inline script or style: scripts are static files from our own origin (`script-src 'self'`, D-048).
  *   - The `ltik` and the CSRF token are never put in the page by this module; callers pass them as data
  *     attributes only where D-058 allows.
- * Collaborators: ./messagePage.ts, ../../lti/play/ltiPlayRoutes.ts, ../../lti/deepLinking/deepLinkRoutes.ts.
+ * Collaborators: ./messagePage.ts, ./portalHomeRoutes.ts, ../../lti/pages/deepLinkPickerPage.ts.
  * Tests: apps/server/test/http/pages/htmlPage.test.ts
  */
 import type { Locale } from '../../i18n/translate.js';

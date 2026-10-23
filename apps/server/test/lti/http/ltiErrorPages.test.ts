@@ -86,7 +86,7 @@ describe('[LTI-001] LTI error pages', () => {
     expect(audited).toEqual([]);
   });
 
-  it('[PROD-004] an unavailable activity is the one 404 page', async () => {
+  it('[LTI-006][PROD-004] an unavailable activity is the one 404 page', async () => {
     const res = await request(appThrowing(authError('hvl:activity-unavailable')).app).get('/lti/play');
     expect(res.status).toBe(404);
     expect(res.text).toContain('<h1>Ikkje tilgjengeleg</h1>');

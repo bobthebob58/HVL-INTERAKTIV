@@ -132,7 +132,7 @@ describeWithServices('[AUTH-001] Feide login', () => {
     expect(await sessionOf(sessionCookie)).toMatchObject(expected);
   });
 
-  it("[AUTH-004] a learner's account has no name or e-mail, and no national ID number is kept or logged", async () => {
+  it("[AUTH-004] a learner's account has no name or e-mail, and no national ID number is kept in plaintext or logged", async () => {
     // Arrange: Feide releases name, e-mail and (wrongly) a national ID number.
     tb.feide.tamperNextIdToken((payload) => void (payload['https://n.feide.no/claims/nin'] = '01017012345'));
     // Act
@@ -142,7 +142,10 @@ describeWithServices('[AUTH-001] Feide login', () => {
       where: { id: (await sessionOf(sessionCookie))?.userId ?? '' },
     });
     expect(user).toMatchObject({ kind: 'learner', displayName: null, email: null });
-    const everything = JSON.stringify([user, await tb.redis.keys('hvli:*'), tb.logs]);
+    // WHY: values, not only key names: the session holds the ID token, and only encrypted (D-021, D-056).
+    const keys = await tb.redis.keys('hvli:*');
+    const values = keys.length > 0 ? await tb.redis.mGet(keys) : [];
+    const everything = JSON.stringify([user, keys, values, tb.logs]);
     for (const secret of ['01017012345', 'Siri Student', 'student@hvl.no', 'test-only-feide-secret']) {
       expect(everything, secret).not.toContain(secret);
     }

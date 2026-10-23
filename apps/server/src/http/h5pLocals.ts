@@ -12,6 +12,7 @@
  * Tests: apps/server/test/http/router.int.test.ts
  */
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import { principalOf } from '../auth/principalLocals.js';
 import type { H5pRole, HvlH5pActor } from '../h5p/HvlH5pUser.js';
 import { DEFAULT_LOCALE, type Locale } from '../i18n/translate.js';
 import { HttpError } from './HttpError.js';
@@ -32,12 +33,13 @@ export function requireActor(res: Response): HvlH5pActor {
 }
 
 /**
- * The language for messages: the actor's, or Nynorsk when nobody is signed in.
+ * The language for messages: the H5P actor's, else the principal's (routes outside `/h5p`, such as `/api`), or
+ * Nynorsk when nobody is signed in.
  * @param res - The response.
  * @returns A supported locale.
  */
 export const localeOf = (res: Response): Locale =>
-  (res.locals.h5pActor as HvlH5pActor | undefined)?.locale ?? DEFAULT_LOCALE;
+  (res.locals.h5pActor as HvlH5pActor | undefined)?.locale ?? principalOf(res)?.locale ?? DEFAULT_LOCALE;
 
 /**
  * Middleware that lets only signed-in people with one of the roles through.

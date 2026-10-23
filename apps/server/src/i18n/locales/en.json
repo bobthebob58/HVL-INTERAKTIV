@@ -20,7 +20,8 @@
     "feideGroupsUnavailable": "We cannot reach Feide right now. Please try again shortly.",
     "fileGrantInvalid": "The link to this file has expired. Reload the page.",
     "sharingNotAllowed": "As a student you can only keep your activities private for now.",
-    "deepLinkChoiceInvalid": "Canvas does not accept this choice here."
+    "deepLinkChoiceInvalid": "Canvas does not accept this choice here.",
+    "sharingChanged": "Someone else changed the sharing in the meantime. Reload the page and try again."
   },
   "upload": {
     "archive": {

@@ -20,7 +20,8 @@
     "feideGroupsUnavailable": "Vi får ikkje kontakt med Feide akkurat no. Prøv igjen om litt.",
     "fileGrantInvalid": "Lenkja til fila har gått ut. Last sida på nytt.",
     "sharingNotAllowed": "Som student kan du førebels berre ha aktivitetane dine private.",
-    "deepLinkChoiceInvalid": "Canvas tek ikkje imot dette valet her."
+    "deepLinkChoiceInvalid": "Canvas tek ikkje imot dette valet her.",
+    "sharingChanged": "Delinga vart endra av nokon andre i mellomtida. Last sida på nytt og prøv igjen."
   },
   "upload": {
     "archive": {
