@@ -30,7 +30,8 @@ export const splitList = (raw: string): string[] =>
     .filter((entry) => entry !== '');
 
 /** The context zod passes to a transform, used to report a problem. */
-type Ctx = z.core.$RefinementCtx;
+/** Zod's refinement context, where a parser reports a problem with the variable it reads. */
+export type Ctx = z.core.$RefinementCtx;
 
 const fail = (ctx: Ctx, message: string): typeof z.NEVER => {
   ctx.addIssue({ code: 'custom', message });

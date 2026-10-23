@@ -21,7 +21,8 @@ import type { Role } from '../Principal.js';
 import { LOCALES, type Locale } from '../../i18n/translate.js';
 
 // PRIVACY: exactly the fields DATA-INVENTORY lists for Redis sessions (DATA-001); no name, e-mail or Feide ID.
-const PortalSessionRecordSchema = z.object({
+/** The shape a session record must have when it is written and when it is read back from Redis. */
+export const PortalSessionRecordSchema = z.object({
   userId: z.string().min(1),
   roles: z.array(z.enum(['learner', 'author', 'admin'] as const satisfies readonly Role[])),
   hvlMember: z.boolean(),

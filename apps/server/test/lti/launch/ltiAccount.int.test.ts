@@ -22,16 +22,9 @@ describeWithServices('[LTI-001] LTI accounts', () => {
     await db.ltiPlatform.deleteMany({ where: { url: { startsWith: 'https://test-c-' } } });
     await db.$disconnect();
   });
-
-  it('[LTI-001] creates the account at the launch and finds the same one for a resumed request', async () => {
-    // Arrange
-    const identity = {
-      issuer: 'https://canvas.example',
-      subject: uniqueName('sub'),
-      platformId: crypto.randomUUID(),
-      roles: ['learner'] as const,
-    };
-    const platform = await db.ltiPlatform.create({
+  /** A platform row of this file's own, so every test also runs on its own (`-t`). */
+  const fixturePlatform = () =>
+    db.ltiPlatform.create({
       data: {
         url: `https://${uniqueName('c')}.example`,
         clientId: '1',
@@ -44,6 +37,16 @@ describeWithServices('[LTI-001] LTI accounts', () => {
         privateKeyEncrypted: Buffer.from([1]),
       },
     });
+
+  it('[LTI-001] creates the account at the launch and finds the same one for a resumed request', async () => {
+    // Arrange
+    const identity = {
+      issuer: 'https://canvas.example',
+      subject: uniqueName('sub'),
+      platformId: crypto.randomUUID(),
+      roles: ['learner'] as const,
+    };
+    const platform = await fixturePlatform();
     const launch = { ...identity, platformId: platform.id };
     // Act
     const atLaunch = await lti.atLaunch(launch);
@@ -85,7 +88,7 @@ describeWithServices('[LTI-001] LTI accounts', () => {
       platformId: crypto.randomUUID(),
       roles: ['author'] as const,
     };
-    const platform = await db.ltiPlatform.findFirstOrThrow();
+    const platform = await fixturePlatform();
     // Act
     const { userId } = await lti.atLaunch({ ...identity, platformId: platform.id });
     // Assert

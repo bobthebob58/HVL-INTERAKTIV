@@ -42,6 +42,7 @@ const DEEP_LINKING_REQUEST = 'LtiDeepLinkingRequest';
 /** What the Deep Linking routes need. */
 export interface DeepLinkRouteDeps {
   readonly db: Database;
+  /** Resolves the request's ltik into its launch (../ltikPrincipal.ts). */
   readonly resolveLtik: (ltik: string) => Promise<ResolvedLtik>;
   readonly canvasOrigins: readonly string[];
   /** `PUBLIC_BASE_URL`, for the launch URL of each item. */

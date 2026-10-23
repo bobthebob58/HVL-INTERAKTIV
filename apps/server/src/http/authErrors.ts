@@ -17,7 +17,8 @@
 import type { MessageKey } from '../i18n/translate.js';
 import { HttpError } from './HttpError.js';
 
-const AUTH_ERRORS = {
+/** Every authentication and authorisation refusal: its stable code, HTTP status and message key. */
+export const AUTH_ERRORS = {
   'hvl:unauthenticated': [401, 'error.unauthenticated'],
   'hvl:csrf-invalid': [401, 'error.csrfInvalid'],
   'hvl:session-expired': [401, 'error.sessionExpired'],

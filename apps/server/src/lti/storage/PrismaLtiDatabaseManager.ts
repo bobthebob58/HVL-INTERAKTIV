@@ -65,11 +65,13 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
     this.now = deps.now ?? (() => new Date());
   }
 
-  // WHY: ltijs would connect and disconnect its store here; Prisma's connection belongs to the server.
+  /** Nothing to open: ltijs would connect its own store here, but Prisma's connection belongs to the server. */
   async listen(): Promise<void> {}
 
+  /** Nothing to close: Prisma's connection belongs to the server. */
   async close(): Promise<void> {}
 
+  /** The registered platforms matching `filter`, oldest first, with decrypted private keys. */
   async getPlatforms(filter?: PlatformFilter): Promise<PlatformRecord[]> {
     const rows = await this.db.ltiPlatform.findMany({
       where: platformWhere(filter),
@@ -78,23 +80,27 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
     return rows.map((row) => platformFromRow(row, this.encryption));
   }
 
+  /** One platform by its ID, or undefined (also for an ID that is not a UUID). */
   async getPlatformById(id: string): Promise<PlatformRecord | undefined> {
     if (!isPlatformId(id)) return undefined;
     const row = await this.db.ltiPlatform.findUnique({ where: { id } });
     return row === null ? undefined : platformFromRow(row, this.encryption);
   }
 
+  /** One platform by issuer and client ID, or undefined. */
   async getPlatformByUrlAndClientId(url: string, clientId: string): Promise<PlatformRecord | undefined> {
     if (!isNonEmptyString(url) || !isNonEmptyString(clientId)) return undefined;
     const row = await this.db.ltiPlatform.findUnique({ where: { url_clientId: { url, clientId } } });
     return row === null ? undefined : platformFromRow(row, this.encryption);
   }
 
+  /** Registers a platform, its private key encrypted (LTI-002); returns its ID. */
   async savePlatform(platform: PlatformAttributes): Promise<string> {
     const data = platformCreateData(platform, this.encryption);
     return (await this.db.ltiPlatform.create({ data, select: { id: true } })).id;
   }
 
+  /** Changes a platform's fields; an unknown ID changes nothing. */
   async updatePlatformById(id: string, fields: Partial<PlatformAttributes>): Promise<void> {
     if (!isPlatformId(id)) return;
     await this.db.ltiPlatform.updateMany({
@@ -103,11 +109,13 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
     });
   }
 
+  /** Removes a platform; its deployments, identities, tokens and placements cascade. */
   async deletePlatformById(id: string): Promise<void> {
     if (!isPlatformId(id)) return;
     await this.db.ltiPlatform.deleteMany({ where: { id } });
   }
 
+  /** The unexpired access token for a platform, client and scopes, decrypted, or undefined. */
   async getAccessToken(
     platformUrl: string,
     clientId: string,
@@ -120,6 +128,7 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
     return accessTokenFromRow(row, this.encryption);
   }
 
+  /** Stores an access token encrypted, replacing the one for the same platform, client and scopes. */
   async saveAccessToken(
     platformUrl: string,
     clientId: string,
@@ -136,6 +145,7 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
     return row.id;
   }
 
+  /** The unexpired stored launch claims of an ltik's record, or undefined. */
   async getIdToken(id: string): Promise<IdTokenRecord | undefined> {
     if (!isNonEmptyString(id)) return undefined;
     const row = await this.db.ltiIdToken.findUnique({ where: { id } });
@@ -143,6 +153,7 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
     return { ...(row.claims as unknown as IdTokenClaims), id: row.id };
   }
 
+  /** Stores a launch's allowlisted claims for 24 hours after the deployment check; returns the record ID. */
   async saveIdToken(token: IdTokenClaims): Promise<string> {
     // SECURITY: no record, and so no ltik, for a deployment that LTI_PLATFORMS does not list (LTI-001, D-051).
     await this.deps.deployments.assertAllowed(token.platform_id, token[DEPLOYMENT_ID_CLAIM] as string);
@@ -161,11 +172,13 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
     return id;
   }
 
+  /** Records a nonce sent to the platform at login. */
   async saveNonce(nonce: string): Promise<string> {
     await this.db.ltiNonce.create({ data: { nonce, createdAt: this.now() } });
     return nonce;
   }
 
+  /** Uses up a fresh nonce; true exactly once per nonce (LTI-002). */
   async consumeNonce(nonce: string): Promise<boolean> {
     // SECURITY: without this guard an undefined nonce would drop the filter and match every recent nonce.
     if (!isNonEmptyString(nonce)) return false;

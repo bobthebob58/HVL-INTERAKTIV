@@ -54,10 +54,14 @@ const launchLocaleOf = (error: unknown): Locale | undefined =>
   typeof error === 'object' && error !== null ? LAUNCH_LOCALE.get(error) : undefined;
 
 /** How one class of failure is answered. */
-interface LtiFailure {
+export interface LtiFailure {
+  /** The HTTP status. */
   readonly status: number;
+  /** The page title. */
   readonly titleKey: MessageKey;
+  /** The page text. */
   readonly bodyKey: MessageKey;
+  /** The reason a failed launch is audited with, if it is audited. */
   readonly reason: AuthAuditReason | undefined;
 }
 

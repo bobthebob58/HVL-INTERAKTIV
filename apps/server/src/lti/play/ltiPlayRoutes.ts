@@ -45,6 +45,7 @@ const statusOf = (error: unknown): unknown =>
 /** What the player route needs. */
 export interface LtiPlayDeps {
   readonly player: H5pRouteDeps['player'];
+  /** Resolves the request's ltik into its launch (../ltikPrincipal.ts). */
   readonly resolveLtik: (ltik: string) => Promise<ResolvedLtik>;
   readonly canvasOrigins: readonly string[];
 }

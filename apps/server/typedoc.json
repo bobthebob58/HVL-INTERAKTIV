@@ -16,5 +16,14 @@
     "notDocumented": true
   },
   "requiredToBeDocumented": ["Class", "Function", "Interface", "TypeAlias", "Enum", "Variable", "Method"],
-  "intentionallyNotExported": ["nn", "PrismaClient", "H5PUserData"]
+  "intentionallyNotExported": [
+    "nn",
+    "PrismaClient",
+    "H5PUserData",
+    "LtiAccessToken",
+    "LtiPlatformCreateInput",
+    "LtiPlatformUpdateManyMutationInput",
+    "LtiPlatformWhereInput",
+    "UserKind"
+  ]
 }

@@ -28,7 +28,8 @@ export const LTI_CLEANUP_INTERVAL_MS = 10 * 60 * 1000;
 export const LTI_CLEANUP_LEASE_KEY = 'hvli:lti:record-cleanup';
 
 /** The tables the job deletes from. */
-type LtiRecordTables = Pick<Database, 'ltiIdToken' | 'ltiNonce' | 'ltiAccessToken'>;
+/** The ltijs record tables the cleanup deletes from. */
+export type LtiRecordTables = Pick<Database, 'ltiIdToken' | 'ltiNonce' | 'ltiAccessToken'>;
 
 /** How many rows of each kind one run deleted. */
 export interface LtiCleanupCounts {

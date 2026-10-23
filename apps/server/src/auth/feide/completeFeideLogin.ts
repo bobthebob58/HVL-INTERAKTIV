@@ -38,7 +38,9 @@ export interface FeideLoginDeps {
   readonly accounts: AccountResolver;
   readonly secrets: PseudonymSecrets;
   readonly audit: Pick<AuthAuditRecorder, 'record'>;
+  /** The clock for course-group validity; tests pass a fixed one. Defaults to the system clock. */
   readonly now?: () => Date;
+  /** The fetch used for the Groups API; tests pass a fake. Defaults to the global fetch. */
   readonly fetchImpl?: typeof fetch;
 }
 

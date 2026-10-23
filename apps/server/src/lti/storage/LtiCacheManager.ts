@@ -35,11 +35,13 @@ export class LtiCacheManager implements CacheManager {
    */
   constructor(private readonly redis: Pick<Redis, 'get' | 'set' | 'del'>) {}
 
-  // WHY: ltijs would connect and disconnect its own Redis here; the server's client is shared and owned by main.
+  /** Nothing to open: ltijs would connect its own Redis here, but the shared client is connected by main. */
   async listen(): Promise<void> {}
 
+  /** Nothing to close: the shared Redis client is closed by main. */
   async close(): Promise<void> {}
 
+  /** The cached value of `key`, or undefined for a miss or an unreadable value. */
   async get<T = unknown>(key: string): Promise<T | undefined> {
     const raw = await this.redis.get(LTI_CACHE_PREFIX + key);
     if (typeof raw !== 'string') return undefined;
@@ -51,6 +53,7 @@ export class LtiCacheManager implements CacheManager {
     }
   }
 
+  /** Caches `value` under `key` for `ttlMs` milliseconds; a non-positive lifetime caches nothing. */
   async set<T = unknown>(key: string, value: T, ttlMs: number): Promise<void> {
     if (!Number.isFinite(ttlMs) || ttlMs < 1) return;
     const text = JSON.stringify(value);
@@ -58,6 +61,7 @@ export class LtiCacheManager implements CacheManager {
     await this.redis.set(LTI_CACHE_PREFIX + key, text, { PX: Math.ceil(ttlMs) });
   }
 
+  /** Removes `key` from the cache. */
   async delete(key: string): Promise<void> {
     await this.redis.del(LTI_CACHE_PREFIX + key);
   }

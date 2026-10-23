@@ -94,6 +94,9 @@ describeWithServices('[PROD-006] sharing API', () => {
   it('[PROD-004] someone who may not edit, or an unknown ID, gets the same 404 and nothing changes', async () => {
     // Arrange
     const colleague = (await db.user.create({ data: { kind: 'staff' } })).id;
+    const visibilityOf = async () =>
+      (await db.h5PContent.findUniqueOrThrow({ where: { id: contentId } })).visibility;
+    const before = await visibilityOf();
     // Act
     const foreign = await request(appAs({ userId: colleague }))
       .patch(`/api/content/${contentId}/sharing`)
@@ -106,9 +109,7 @@ describeWithServices('[PROD-006] sharing API', () => {
       expect(res.status).toBe(404);
       expect(res.body).toMatchObject({ errorCode: 'hvl:activity-unavailable' });
     }
-    expect((await db.h5PContent.findUniqueOrThrow({ where: { id: contentId } })).visibility).toBe(
-      'organisation',
-    );
+    expect(await visibilityOf()).toBe(before);
   });
 
   it('[PROD-006] a student author may not share beyond private; nobody signed in is 401; bad bodies are 400', async () => {
