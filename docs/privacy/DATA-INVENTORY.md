@@ -188,7 +188,7 @@ A validated launch token, needed by ltijs during the launch.
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
 | `id` | ltijs record key | None | n/a | 24 h | PG |
-| `claims` | The allowlisted LTI claims of the launch (D-052): never names, e-mail, `lis` or unknown custom fields, but it holds `sub` | Learner PII | 6(1)(e) | 24 h | PG |
+| `claims` | The allowlisted LTI claims of the launch (D-052): never names, e-mail, `lis` or unknown custom fields, but it holds `sub` | Learner PII | 6(1)(e) | 24 h (never read after; deleted at most 10 minutes later) | PG |
 | `createdAt` | Expiry calculation | None | n/a | 24 h | PG |
 | `expiresAt` | When it is deleted | None | n/a | 24 h | PG |
 
@@ -344,4 +344,6 @@ Not database models, so the inventory check does not read this section. Redis is
 | login `state`, `nonce`, `codeVerifier` | Bind the Feide callback to this browser (login CSRF, PKCE) | Secret | n/a | Single use, at most 10 minutes | Redis |
 | login `returnTo` | A checked local path to open after login | None | n/a | Single use, at most 10 minutes | Redis |
 | login `createdAt` | Enforces the 10-minute limit alongside the Redis expiry | None | n/a | Single use, at most 10 minutes | Redis |
-| LTI cache | Platforms' public JWKS and keysets (D-050) | None | n/a | Cache lifetime | Redis |
+| LTI cache `hvli:lti:cache:keyset:default` | The tool's own public keyset, served at `/lti/keys` (D-050) | None | n/a | 60 seconds | Redis |
+| LTI cache `hvli:lti:cache:oidc:jwks:<url>` | A platform's public JWKS, for launch-token signatures (D-050) | None | n/a | 5 minutes | Redis |
+| lease `hvli:lti:record-cleanup` | A random node ID: one server runs the LTI record cleanup per interval | None | n/a | About 10 minutes | Redis |

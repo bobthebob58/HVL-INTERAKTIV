@@ -2,18 +2,21 @@
  * TemporaryFileCleanupJob — deletes expired editor uploads every 5 minutes, on exactly one node per interval.
  *
  * Why: H5P leaves an author's unsaved uploads in temporary storage until they expire. Every node runs this
- *      timer, but a Redis lease (`SET NX PX`) lets only the first node in each interval do the work (H5P-004).
+ *      timer, but a Redis lease (`SET NX PX`, ../../jobs/LeasedIntervalJob.ts) lets only the first node in each
+ *      interval do the work (H5P-004).
  * Spec: H5P-004
  * Invariants:
  *   - At most one run per interval cluster-wide: the lease lives slightly less than one interval.
  *   - `runOnce` never rejects: a failed lease or run is logged and the timer continues. A bucket lifecycle
  *     rule on S3_TEMPORARY_BUCKET (an operations task, see .env.example) is the backstop.
- * Collaborators: H5PEditor.temporaryFileManager.cleanUp (S2 wiring), ../storage/S3TemporaryFileStorage.ts.
- * Tests: apps/server/test/h5p/sharedState.int.test.ts, apps/server/test/h5p/cleanupJob.test.ts
+ * Collaborators: ../../jobs/LeasedIntervalJob.ts, H5PEditor.temporaryFileManager.cleanUp (S2 wiring),
+ *   ../storage/S3TemporaryFileStorage.ts.
+ * Tests: apps/server/test/h5p/sharedState.int.test.ts, apps/server/test/h5p/cleanupJob.test.ts,
+ *   apps/server/test/jobs/LeasedIntervalJob.test.ts
  */
-import { randomUUID } from 'node:crypto';
 import type { Logger } from 'pino';
 import type { RedisClientType } from 'redis';
+import { LeasedIntervalJob } from '../../jobs/LeasedIntervalJob.js';
 
 /** Default interval: 5 minutes (H5P-004). */
 export const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
@@ -30,56 +33,19 @@ export interface TemporaryFileCleanupOptions {
 }
 
 /** Periodic, cluster-wide single-run cleanup of temporary files. */
-export class TemporaryFileCleanupJob {
-  private timer: NodeJS.Timeout | undefined;
-  private readonly nodeId = randomUUID();
-  private readonly intervalMs: number;
-
+export class TemporaryFileCleanupJob extends LeasedIntervalJob {
   /**
    * @param options - Redis client, cleanup function, logger and interval.
    */
-  constructor(private readonly options: TemporaryFileCleanupOptions) {
-    this.intervalMs = options.intervalMs ?? CLEANUP_INTERVAL_MS;
-  }
-
-  /**
-   * Runs the cleanup if no other node has run it in this interval.
-   * @returns `ran` when this node did the work, `skipped` when another node holds the lease or Redis
-   *   could not be reached. It never rejects.
-   */
-  async runOnce(): Promise<'ran' | 'skipped'> {
-    try {
-      // WHY: the lease expires 1 % before the next tick, so clock drift cannot skip a whole interval.
-      const lease = await this.options.redis.set(CLEANUP_LEASE_KEY, this.nodeId, {
-        NX: true,
-        PX: Math.max(1, Math.floor(this.intervalMs * 0.99)),
-      });
-      if (lease !== 'OK') return 'skipped';
-    } catch (error) {
-      // WHY: a Redis outage must not crash the server; the next tick tries again.
-      this.options.logger.error({ job: 'temporary-file-cleanup', err: error }, 'cleanup lease failed');
-      return 'skipped';
-    }
-    try {
-      await this.options.cleanUp();
-      this.options.logger.info({ job: 'temporary-file-cleanup' }, 'temporary files cleaned up');
-    } catch (error) {
-      this.options.logger.error(
-        { job: 'temporary-file-cleanup', err: error },
-        'temporary file cleanup failed',
-      );
-    }
-    return 'ran';
-  }
-
-  /** Starts the timer; it does not keep the process alive on its own. */
-  start(): void {
-    this.timer ??= setInterval(() => void this.runOnce(), this.intervalMs).unref();
-  }
-
-  /** Stops the timer. */
-  stop(): void {
-    clearInterval(this.timer);
-    this.timer = undefined;
+  constructor(options: TemporaryFileCleanupOptions) {
+    super({
+      name: 'temporary-file-cleanup',
+      label: 'temporary file cleanup',
+      leaseKey: CLEANUP_LEASE_KEY,
+      intervalMs: options.intervalMs ?? CLEANUP_INTERVAL_MS,
+      redis: options.redis,
+      run: options.cleanUp,
+      logger: options.logger,
+    });
   }
 }
