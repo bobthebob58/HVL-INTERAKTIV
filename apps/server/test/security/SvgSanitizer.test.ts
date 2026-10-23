@@ -54,7 +54,9 @@ describe('[SEC-001] SvgSanitizer', () => {
   });
 
   it.each(malicious.filter((name) => !REFUSED.includes(name)))('[SEC-001] neutralises %s', async (name) => {
+    // Arrange
     const path = place('upload.svg', fixture('malicious', name));
+    // Act and assert
     expect(await sanitizer.sanitize(path)).toBe(FileSanitizerResult.Sanitized);
     const output = readFileSync(path, 'utf8');
     expect(svgProblems(output)).toEqual([]);
@@ -79,8 +81,10 @@ describe('[SEC-001] SvgSanitizer', () => {
   });
 
   it('[SEC-001] removes a plain public DOCTYPE and xml-stylesheet instructions', async () => {
+    // Arrange
     const text = fixture('benign', 'inkscape-export.svg');
     const path = place('figur.svg', text);
+    // Act and assert: a public DOCTYPE, then xml-stylesheet instructions
     expect(await sanitizer.sanitize(path)).toBe(FileSanitizerResult.Sanitized);
     expect(readFileSync(path, 'utf8')).not.toMatch(/<!DOCTYPE|<\?/);
     const styled = place(
@@ -138,7 +142,9 @@ describe('[SEC-001] SvgSanitizer', () => {
   });
 
   it('[SEC-001] keeps the embedded PNG and the internal references', async () => {
+    // Arrange
     const png = place('png.svg', fixture('benign', 'embedded-png.svg'));
+    // Act and assert: the embedded PNG, then the internal references
     await sanitizer.sanitize(png);
     expect(readFileSync(png, 'utf8')).toMatch(/xlink:href="data:image\/png;base64,iVBORw0KGgo[^"]+"/);
     const refs = place('refs.svg', fixture('benign', 'internal-references.svg'));
@@ -179,11 +185,13 @@ describe('[SEC-001] SvgSanitizer', () => {
     // WHY: Lumi's DOMPurify profile is "svg" without "svgFilters", DOMPurify drops <use>, and its DOM-clobbering
     // guard drops ids such as "title" that name document properties. This pins those documented losses; it is
     // why the corpus has no filter or <use> drawing (D-044).
+    // Arrange
     const path = place(
       'loss.svg',
       '<svg xmlns="http://www.w3.org/2000/svg"><defs><filter id="f"><feGaussianBlur stdDeviation="2"/></filter><rect id="r" width="1" height="1"/><linearGradient id="title"/></defs><use href="#r"/></svg>',
     );
-    await sanitizer.sanitize(path);
+    await sanitizer.sanitize(path); // Act
+    // Assert
     expect(readFileSync(path, 'utf8')).toBe(
       '<svg xmlns="http://www.w3.org/2000/svg"><defs><filter id="f"/><rect id="r" width="1" height="1"/><linearGradient/></defs></svg>',
     );

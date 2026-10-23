@@ -159,14 +159,15 @@ describe('[H5P-008] HvlTranslationCallback', () => {
     ['', 'nn'],
     [undefined, 'nn'],
   ])('[H5P-008] reads language code %s as %s', (code, expected) => {
-    expect(normaliseH5pLanguage(code)).toBe(expected);
+    expect(normaliseH5pLanguage(code)).toBe(expected); // Act and assert
   });
 });
 
 describe('[H5P-008] h5pTranslationResources', () => {
   it("[H5P-008] loads Lumi's namespaces for nn, nb and en from the installed package", () => {
-    const resources = loadH5pTranslationResources();
+    const resources = loadH5pTranslationResources(); // Act
 
+    // Assert
     expect(h5pTranslationsDirectory()).toMatch(
       /@lumieducation[/\\]h5p-server[/\\]build[/\\]assets[/\\]translations$/,
     );
@@ -181,13 +182,15 @@ describe('[H5P-008] h5pTranslationResources', () => {
   });
 
   it('[H5P-008] skips missing files and fails loudly on a broken one', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'h5p-translations-'));
+    const dir = mkdtempSync(join(tmpdir(), 'h5p-translations-')); // Arrange: a folder with only client/nb.json
     try {
       mkdirSync(join(dir, 'client'));
       writeFileSync(join(dir, 'client', 'nb.json'), JSON.stringify({ close: 'Lukk' }));
 
+      // Act and assert: the missing nn and en files are skipped.
       expect(loadH5pTranslationResources(dir)).toEqual({ nn: {}, nb: { client: { close: 'Lukk' } }, en: {} });
 
+      // Act and assert: a broken file fails loudly.
       writeFileSync(join(dir, 'client', 'en.json'), '{ not json');
       expect(() => loadH5pTranslationResources(dir)).toThrow(SyntaxError);
     } finally {

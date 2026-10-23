@@ -29,7 +29,9 @@ describeWithServices('H5P editor uploads', () => {
   afterAll(() => tb.close());
 
   it('[SEC-001] an uploaded SVG is stored without script, event handlers or javascript: links', async () => {
+    // Act
     const res = await uploadEditorFile(tb.app, author, 'Logo.SVG', Buffer.from(EVIL_SVG));
+    // Assert: accepted, and served back sandboxed and without active content
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     const { path } = res.body as { path: string };
     const file = await request(tb.app)
@@ -45,12 +47,14 @@ describeWithServices('H5P editor uploads', () => {
   });
 
   it('[SEC-002] HTML saved as .png is refused with the reason, in the author’s language', async () => {
+    // Act
     const res = await uploadEditorFile(
       tb.app,
       author,
       'bilde.png',
       Buffer.from('<html><script>alert(1)</script>'),
     );
+    // Assert
     expect(res.status).toBe(400);
     expect(res.body).toMatchObject({
       errorCode: 'upload.file.typeMismatch',

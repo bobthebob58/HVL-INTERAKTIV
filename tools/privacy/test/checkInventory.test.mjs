@@ -53,6 +53,7 @@ describe('[DATA-001] data inventory matches the schema', () => {
   });
 
   it('[DATA-001] reports missing sections, missing fields, empty cells and stale entries', () => {
+    // Arrange: an inventory with one problem of each kind
     const md = [
       `## Note`,
       HEADER,
@@ -62,6 +63,7 @@ describe('[DATA-001] data inventory matches the schema', () => {
       '## Ghost',
       HEADER,
     ].join('\n');
+    // Act and assert
     expect(compareInventory(parseModels(SCHEMA), parseInventory(md))).toEqual([
       'Note.text needs purpose, category, legal basis, retention and location',
       'Note.ownerId is not in the inventory',
@@ -100,6 +102,7 @@ describe('[DATA-002] learner tables hold pseudonyms only', () => {
   });
 
   it('[DATA-002] finds "nin" as a word anywhere in the name, in any case', () => {
+    // Arrange: column names with "nin" as a word, in different positions and cases
     const names = [
       'NIN',
       'Nin',
@@ -110,6 +113,7 @@ describe('[DATA-002] learner tables hold pseudonyms only', () => {
       'NIN_hash',
     ];
     const schema = parseModels(`model Identity {\n${names.map((n) => `  ${n} String`).join('\n')}\n}`);
+    // Act and assert
     expect(learnerTablePii(schema).map((p) => p.split(' ')[0])).toEqual(names.map((n) => `Identity.${n}`));
     expect(wordsOf('learnerNinHash')).toEqual(['learner', 'Nin', 'Hash']);
     expect(wordsOf('studentNIN')).toEqual(['student', 'NIN']);
@@ -117,8 +121,11 @@ describe('[DATA-002] learner tables hold pseudonyms only', () => {
   });
 
   it('[DATA-002] the real schema has no such column except the encrypted AGS subject', () => {
+    // Arrange: the real Prisma schema
     const schema = readSchemaModels(ROOT);
+    // Act and assert: no learner-table column is flagged
     expect(learnerTablePii(schema)).toEqual([]);
+    // Assert: the AGS subject is stored encrypted, and a User's display name and e-mail are optional
     expect(schema.get('GradeSyncJob')?.find((f) => f.name === 'ltiSubEncrypted')).toMatchObject({
       type: 'Bytes',
       optional: true,

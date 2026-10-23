@@ -97,6 +97,7 @@ describe('[H5P-001] Core API 1.28 and the new Hub', () => {
   });
 
   it('[H5P-001] no source file refers to the retired api.h5p.org Hub', () => {
+    // Arrange: the old host, and every source file outside vendored and generated code
     // WHY: built from parts so this test file does not contain the string it searches for.
     const oldHost = ['//api', 'h5p', 'org'].join('.');
     const sources = ['apps', 'packages', 'tools']
@@ -112,9 +113,11 @@ describe('[H5P-001] Core API 1.28 and the new Hub', () => {
       .filter(
         (f) => !/node_modules|[\\/]h5p[\\/](core|editor)[\\/]|[\\/]generated[\\/]/.test(f) && f !== THIS_FILE,
       );
+    // Act
     const offenders = sources
       .filter((f) => readFileSync(f, 'utf8').includes(oldHost))
       .map((f) => relative(REPO, f));
+    // Assert: the search saw real files, and none of them names the old host
     expect(sources.length).toBeGreaterThan(20);
     expect(offenders).toEqual([]);
   });

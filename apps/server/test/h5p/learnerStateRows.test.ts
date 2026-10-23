@@ -46,6 +46,7 @@ const row = (overrides: Partial<H5PUserData>): H5PUserData => ({
 
 describe('[H5P-005] learner state rows', () => {
   it('[H5P-005] keys a state by content, sub-content, data type, learnerKey and context', () => {
+    // Act and assert: from an H5P state, and from separate parts with the defaults filled in.
     expect(stateKeyOf(state({ contextId: 'course-1' }), CONTENT)).toEqual({
       contentId: CONTENT,
       subContentId: '0',
@@ -90,7 +91,9 @@ describe('[H5P-005] learner state rows', () => {
   });
 
   it('[H5P-005][PROD-008] maps an empty context back to "no context" and keeps other contexts', () => {
+    // Act
     const withoutContext = toUserData(row({}));
+    // Assert
     expect(withoutContext).toEqual({
       contentId: CONTENT,
       subContentId: '0',
@@ -101,11 +104,13 @@ describe('[H5P-005] learner state rows', () => {
       invalidate: false,
     });
     expect('contextId' in withoutContext).toBe(false);
+    // Act and assert: another context is kept, and object data comes back as a JSON string.
     expect(toUserData(row({ contextId: 'course-2' })).contextId).toBe('course-2');
     expect(toUserData(row({ data: { page: 4 } })).userState).toBe('{"page":4}');
   });
 
   it('[H5P-005] puts the main state first, then sub-content and data types in a stable order', () => {
+    // Arrange: rows in no particular order.
     const rows = [
       { subContentId: 'f3b1c2d4-0000-4000-8000-000000000000', dataType: 'state' },
       { subContentId: '0', dataType: 'state' },
@@ -113,6 +118,7 @@ describe('[H5P-005] learner state rows', () => {
       { subContentId: '0', dataType: 'answers' },
       { subContentId: '0a1b2c3d-0000-4000-8000-000000000000', dataType: 'extra' },
     ];
+    // Act and assert
     expect([...rows].sort(mainStateFirst)).toEqual([
       { subContentId: '0', dataType: 'answers' },
       { subContentId: '0', dataType: 'state' },

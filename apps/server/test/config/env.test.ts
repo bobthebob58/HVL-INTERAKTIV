@@ -33,7 +33,9 @@ const problemsOf = (env: Record<string, string>): string[] => {
 
 describe('[DOC-008] configuration validation', () => {
   it('[DOC-008] applies documented defaults to a minimal valid environment', () => {
+    // Act
     const env = loadEnv(VALID);
+    // Assert
     expect(env).toMatchObject({
       NODE_ENV: 'development',
       LOG_LEVEL: 'info',
@@ -95,10 +97,12 @@ describe('[DATA-002] pseudonym secret configuration', () => {
   });
 
   it('[DATA-002] treats secrets that give the same HMAC key as the same secret', () => {
+    // Arrange: a key with a zero byte appended, and a long secret beside its SHA-256 digest.
     const key = Buffer.from(random(3), 'base64');
     const padded = Buffer.concat([key, Buffer.alloc(1)]).toString('base64');
     const long = Buffer.alloc(100, 9);
     const hashed = createHash('sha256').update(long).digest().toString('base64');
+    // Act and assert: each pair counts as one secret used for two years.
     for (const pair of [
       `2025=${random(3)},2026=${padded}`,
       `2025=${long.toString('base64')},2026=${hashed}`,
@@ -132,11 +136,14 @@ describe('[DATA-002] production-only configuration checks', () => {
   });
 
   it('[DATA-002] refuses secrets that are readable text, such as the published examples', () => {
+    // Arrange
     const example = Buffer.from('dev-only-pseudonym-secret-2026-do-not-use').toString('base64');
+    // Act and assert: production refuses the example, development accepts it.
     expect(problemsAt(production(`2026=${example}`), AUTUMN_2026)).toEqual([
       'PSEUDONYM_SECRETS: the 2026 secret is readable text; use `openssl rand -base64 32`',
     ]);
     expect(problemsAt({ ...VALID, PSEUDONYM_SECRETS: `2026=${example}` }, AUTUMN_2026)).toEqual([]);
+    // Act and assert: with trailing whitespace, production still refuses the example.
     // WHY: `echo … | base64` adds a newline; tabs and CR are text too.
     for (const tail of ['\n', '\r\n', '\t']) {
       const encoded = Buffer.from(`dev-only-pseudonym-secret-2026-do-not-use${tail}`).toString('base64');

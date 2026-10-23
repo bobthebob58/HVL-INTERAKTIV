@@ -45,7 +45,9 @@ describe('[DOC-004] spec website', () => {
   });
 
   it('[DOC-004] the committed page is up to date, does not depend on the checkout and has its landmarks', () => {
+    // Act
     const check = spawnSync(process.execPath, [BUILD, '--check'], { encoding: 'utf8' });
+    // Assert: the committed page matches a fresh build, has its landmarks and links only to HEAD.
     expect(check.status, check.stderr).toBe(0);
     const html = readFileSync(`${ROOT}docs/site/index.html`, 'utf8');
     for (const landmark of [

@@ -84,8 +84,8 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
   });
 
   it('[H5P-006] reads owner, co-authors, status and visibility with one findUnique', async () => {
-    const calls: string[] = [];
-    const facts = await new PrismaContentAccessRepository(recording(db, calls)).factsFor(contentId);
+    const calls: string[] = []; // Arrange
+    const facts = await new PrismaContentAccessRepository(recording(db, calls)).factsFor(contentId); // Act and assert
     expect(facts).toEqual({
       contentId,
       ownerUserId: ids.owner,
@@ -116,12 +116,12 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
     const malformed = ['', 'not-a-uuid', `${contentId}\n`, ` ${contentId}`, `${contentId}' OR '1'='1`];
     malformed.push('a'.repeat(100_000), contentId.replaceAll('-', ''), `{${contentId}}`);
     for (const id of [...malformed, 42, null, undefined] as string[]) {
-      expect(await guarded.factsFor(id)).toBeUndefined();
+      expect(await guarded.factsFor(id)).toBeUndefined(); // Act and assert
     }
   });
 
   it('[PROD-006] each visibility level is enforced from the database, and a change applies at once', async () => {
-    const hvlOnly = actor(randomUUID(), { hvlMember: true });
+    const hvlOnly = actor(randomUUID(), { hvlMember: true }); // Arrange
     const feideOnly = actor(randomUUID(), { feideAuthenticated: true });
     const colleague = actor(ids.colleague, { role: 'author', hvlMember: true, feideAuthenticated: true });
     const coAuthor = actor(ids.coAuthor, { role: 'author' });
@@ -135,8 +135,8 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
         where: { id: contentId },
         data: { visibility: visibility as ContentVisibility },
       });
-      const seen = await Promise.all([hvlOnly, feideOnly, colleague, coAuthor].map((a) => mayView(a)));
-      expect({ visibility, seen }).toEqual({ visibility, seen: allowed });
+      const seen = await Promise.all([hvlOnly, feideOnly, colleague, coAuthor].map((a) => mayView(a))); // Act
+      expect({ visibility, seen }).toEqual({ visibility, seen: allowed }); // Assert
     }
     await db.h5PContent.update({ where: { id: contentId }, data: { visibility: 'organisation' } });
   });
@@ -154,13 +154,13 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
   });
 
   it('[DATA-007] writes one AuditEvent per granted data-subject access and none for a denial', async () => {
-    const learnerKey = uniqueName('learner');
+    const learnerKey = uniqueName('learner'); // Arrange
     const requestId = uniqueName('dsr');
     const admin = asAccountUser(
       actor(ids.admin, { role: 'admin', dataSubjectRequest: { requestId, learnerKey } }),
     );
     const { ViewState, DeleteState, ViewFinished } = UserDataPermission;
-    expect(await system.checkForUserData(admin, ViewState, contentId, learnerKey)).toBe(true);
+    expect(await system.checkForUserData(admin, ViewState, contentId, learnerKey)).toBe(true); // Act and assert
     expect(await system.checkForUserData(admin, DeleteState, undefined, learnerKey)).toBe(true);
     expect(await system.checkForUserData(admin, ViewFinished, contentId, learnerKey)).toBe(false);
     expect(await system.checkForUserData(admin, ViewState, contentId, uniqueName('other'))).toBe(false);

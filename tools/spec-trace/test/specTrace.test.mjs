@@ -92,6 +92,7 @@ describe('[DOC-004] traceability matrix', () => {
   });
 
   it('[DOC-004] counts an ID only when it opens the title of a running it() or test() call', () => {
+    // Arrange: TST-002 appears only in places that do not count as a running test
     const notReally =
       TEST_HEADER +
       '// covers [TST-002] one day\n' +
@@ -101,8 +102,10 @@ describe('[DOC-004] traceability matrix', () => {
       `describe.skip('later', () => { ${testCall('it', '[TST-002] in a skipped group')} });\n` +
       testCall('it', '[TST-001] real');
     const root = makeRepo({ 'tools/w/test/w.test.mjs': notReally });
+    // Act: regenerate the matrix, then check it
     trace(root);
     const r = trace(root, '--check', '--done-through=S1');
+    // Assert
     expect(r.code).toBe(1);
     expect(r.out).toContain('TST-002 (MUST, S1) has no test whose title contains [TST-002]');
     expect(r.out).not.toContain('TST-001 (MUST, S1)');

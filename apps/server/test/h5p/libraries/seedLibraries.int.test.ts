@@ -64,6 +64,7 @@ describeWithServices('seedLibraries', () => {
 
   it('[H5P-003] a wrong hash, an unlisted or a missing package stops the run before anything is installed', async () => {
     // WHY: the first package (by name) is fine; only the second is wrong, so an early install would show.
+    // Act and assert: each broken folder stops the run
     const flipped = (await sha256File(qs)).replace(/^./, (c) => (c === '0' ? '1' : '0'));
     const wrongHash = await seedFolder(
       [mc, qs],
@@ -77,6 +78,7 @@ describeWithServices('seedLibraries', () => {
       `${await sha256File(mc)}  ${basename(mc)}\n${'0'.repeat(64)}  Gone.h5p\n`,
     );
     await expect(seedLibraries(missing, installer)).rejects.toThrow(/missing/);
+    // Assert: nothing was installed
     expect(await installed()).toBe(0);
   });
 

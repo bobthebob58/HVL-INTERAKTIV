@@ -25,13 +25,16 @@ describeWithServices('[H5P-011] library audit events', () => {
   });
 
   it('[H5P-011] records new and patched libraries with versions, actor, source and package hash', async () => {
+    // Arrange: one new, one patched and one unchanged library, installed by an admin
     const admin = await db.user.create({ data: { kind: 'staff' } });
     const results: ILibraryInstallResult[] = [
       { type: 'new', newVersion: lib(`${sha256}.New`, 0) },
       { type: 'patch', oldVersion: lib(`${sha256}.Patched`, 3), newVersion: lib(`${sha256}.Patched`, 4) },
       { type: 'none' },
     ];
+    // Act
     await new PrismaLibraryAuditSink(db).record(results, { source: 'upload', actorUserId: admin.id, sha256 });
+    // Assert
     const rows = await db.libraryAuditEvent.findMany({ where: { sha256 }, orderBy: { machineName: 'asc' } });
     expect(
       rows.map(({ machineName, fromVersion, toVersion, source, actorUserId }) => ({
@@ -57,17 +60,20 @@ describeWithServices('[H5P-011] library audit events', () => {
         actorUserId: admin.id,
       },
     ]);
+    // Clean up
     await db.libraryAuditEvent.deleteMany({ where: { sha256 } });
     await db.user.delete({ where: { id: admin.id } });
   });
 
   it('[H5P-011] records the seed command without an actor and writes nothing for unchanged libraries', async () => {
+    // Act and assert: an unchanged library writes no row
     await new PrismaLibraryAuditSink(db).record([{ type: 'none' }], {
       source: 'seed',
       actorUserId: null,
       sha256,
     });
     expect(await db.libraryAuditEvent.count({ where: { sha256 } })).toBe(0);
+    // Act and assert: a seeded library is recorded without an actor
     await new PrismaLibraryAuditSink(db).record([{ type: 'new', newVersion: lib(`${sha256}.Seeded`, 1) }], {
       source: 'seed',
       actorUserId: null,

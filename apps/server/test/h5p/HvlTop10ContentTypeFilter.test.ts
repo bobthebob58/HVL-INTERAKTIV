@@ -49,6 +49,7 @@ describe('[H5P-002] the ten authorable content types', () => {
   });
 
   it('[H5P-002][PROD-002] keeps only installed members of the ten, none installable or updatable', () => {
+    // Arrange: the ten, three types outside them, and one of the ten not installed.
     const info = hubInfo([
       ...HVL_TOP10_CONTENT_TYPES.map((name) => entry(name)),
       entry('H5P.DragQuestion'),
@@ -56,7 +57,9 @@ describe('[H5P-002] the ten authorable content types', () => {
       entry('H5P.Accordion'),
       entry('H5P.Blanks', false),
     ]);
+    // Act
     const filtered = filterContentTypeCache(info);
+    // Assert
     expect(filtered.libraries.map((l) => l.machineName)).toEqual([...HVL_TOP10_CONTENT_TYPES]);
     for (const type of filtered.libraries) {
       expect(type).toMatchObject({ installed: true, canInstall: false, isUpToDate: true, restricted: false });

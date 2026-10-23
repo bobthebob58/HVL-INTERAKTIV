@@ -33,15 +33,18 @@ const installedScript = (libraryDir: string): string =>
 
 describe('[SEC-003] authors import content, never code', () => {
   it('[SEC-003] refuses a package whose H5P.MultiChoice has another patch version; nothing is installed', async () => {
+    // Arrange
     const { editor, user, libraryDir } = await editorTestbed([MC]);
     const path = await buildH5pPackage({
       main: { ...MC, patchVersion: 4, files: MODIFIED_JS },
       params: PARAMS,
     });
+    // Act and assert: the author's upload is refused
     await expect(editor.uploadPackage(path, user('author'))).rejects.toMatchObject({
       errorId: 'hvl:package-library-version-mismatch',
       httpStatusCode: 403,
     });
+    // Assert: the installed library is unchanged
     expect(installedScript(libraryDir)).toBe('/* H5P.MultiChoice */');
     expect(
       (await editor.libraryManager.getLibrary({ ...MC, majorVersion: 1, minorVersion: 16 })).patchVersion,
@@ -81,6 +84,7 @@ describe('[SEC-003] authors import content, never code', () => {
   });
 
   it('[SEC-005] runs the archive checks before Lumi sees the package', async () => {
+    // Arrange: a small package and a zip bomb
     const { editor, user } = await editorTestbed([MC]);
     const path = await buildH5pPackage({
       main: MC,
@@ -92,6 +96,7 @@ describe('[SEC-003] authors import content, never code', () => {
       omitMainFolder: true,
       files: { 'content/big.txt': Buffer.alloc(51 * 1024 * 1024) },
     });
+    // Act and assert: the small package imports, the bomb is refused
     await expect(editor.uploadPackage(path, user('author'))).resolves.toBeDefined();
     await expect(editor.uploadPackage(bomb, user('author'))).rejects.toMatchObject({
       messageKey: 'upload.archive.fileTooLarge',
@@ -113,10 +118,13 @@ describe('[SEC-003] authors import content, never code', () => {
 
 describe('[H5P-011] admins install library updates through an audited import', () => {
   it('[H5P-011][SEC-003] an admin import installs the newer patch and records actor, source and package hash', async () => {
+    // Arrange
     const { editor, user, audited } = await editorTestbed([MC]);
     const admin = user('admin');
     const path = await buildH5pPackage({ main: { ...MC, patchVersion: 4 }, params: PARAMS });
+    // Act
     const result = await editor.uploadPackage(path, admin);
+    // Assert
     expect(result.installedLibraries).toMatchObject([{ type: 'patch' }]);
     expect(audited).toEqual([
       {

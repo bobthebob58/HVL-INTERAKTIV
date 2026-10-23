@@ -76,6 +76,7 @@ describe('H5P engine factories', () => {
   });
 
   it('[H5P-002] the editor built by the factory never offers H5P.DragQuestion', async () => {
+    // Arrange: a Column whose semantics offer DragQuestion beside MultiChoice
     const { editor } = await engineTestbed([
       {
         machineName: 'H5P.Column',
@@ -86,7 +87,9 @@ describe('H5P engine factories', () => {
         ],
       },
     ]);
+    // Act
     const data = await editor.getLibraryData('H5P.Column', '1', '34', 'nn');
+    // Assert: MultiChoice is still offered, DragQuestion is gone
     expect(JSON.stringify(data.semantics)).toContain('H5P.MultiChoice 1.16');
     expect(JSON.stringify(data.semantics)).not.toContain('H5P.DragQuestion');
   });

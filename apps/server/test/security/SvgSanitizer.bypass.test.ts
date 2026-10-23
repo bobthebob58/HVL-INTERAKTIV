@@ -116,11 +116,14 @@ const PAYLOADS: [string, string][] = [
 
 describe('[SEC-001] SvgSanitizer bypass attempts', () => {
   it.each(PAYLOADS)('[SEC-001] neutralises or refuses: %s', async (_what, payload) => {
+    // Act
     const result = await sanitizeSvgText(payload).catch((error: unknown) => error);
+    // Assert: a refusal is the SVG rejection
     if (result instanceof RejectedUploadError) {
       expect(result.messageKey).toBe('upload.file.svgRejected');
       return;
     }
+    // Assert: otherwise the output is inert SVG with no trace of the attack in its markup
     expect(typeof result).toBe('string');
     const output = result as string;
     expect(svgProblems(output)).toEqual([]);

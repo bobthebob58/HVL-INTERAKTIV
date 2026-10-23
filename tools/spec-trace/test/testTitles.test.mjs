@@ -15,12 +15,14 @@ const running = (source) =>
 
 describe('[DOC-004] which test titles count', () => {
   it('[DOC-004] reads it, test, modifiers, two-call forms and template titles', () => {
+    // Arrange: one call of each form.
     const source =
       testCall('it', '[TST-001] plain') +
       testCall('test.concurrent', '[TST-001] concurrent') +
       testCall('it.each([1, 2])', '[TST-001] each %i') +
       testCall('test.runIf(true)', '[TST-001] runIf') +
       'it(`[TST-001] template ${name}`, () => {});\n';
+    // Act and assert
     expect(running(source)).toEqual([
       '[TST-001] plain',
       '[TST-001] concurrent',

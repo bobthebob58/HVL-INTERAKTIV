@@ -48,6 +48,7 @@ describeWithServices('H5P package import over HTTP', () => {
   });
 
   it('[SEC-001] an SVG inside an imported package is sanitised like an editor upload', async () => {
+    // Arrange: a package whose SVG carries a script and an event handler.
     const svg =
       '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4" onload="alert(1)"><script>alert(2)</script><rect width="4" height="4"/></svg>';
     const params = { ...PARAMS, media: { path: 'images/logo.svg', mime: 'image/svg+xml' } };
@@ -56,15 +57,19 @@ describeWithServices('H5P package import over HTTP', () => {
       params,
       files: { 'content/images/logo.svg': svg },
     });
+    // Act: import the package.
     const res = await importAs(author, path);
+    // Assert: the import succeeds and names the stored SVG.
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     const imported = JSON.stringify(res.body).match(/images\/[^"#]*\.svg/)?.[0];
     expect(imported).toBeDefined();
+    // Act: read the stored SVG back.
     const file = await request(tb.app)
       .get(`/h5p/temp-files/${imported}`)
       .set(...author.header)
       .buffer(true)
       .parse(rawBody);
+    // Assert: the drawing stays; the script and the event handler are gone.
     expect(file.status).toBe(200);
     const stored = (file.body as Buffer).toString('utf8');
     expect(stored).toContain('<rect');

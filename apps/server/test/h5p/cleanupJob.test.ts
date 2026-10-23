@@ -38,6 +38,7 @@ describe('[H5P-004] temporary file cleanup job', () => {
   });
 
   it('[H5P-004] the timer keeps running after a failed tick and can be stopped', async () => {
+    // Arrange: fake timers and a job whose Redis lease always fails
     vi.useFakeTimers();
     try {
       const { logger } = capture();
@@ -48,9 +49,11 @@ describe('[H5P-004] temporary file cleanup job', () => {
         logger,
         intervalMs: 1000,
       });
+      // Act and assert: every tick runs, although each one fails
       job.start();
       await vi.advanceTimersByTimeAsync(3000);
       expect(set).toHaveBeenCalledTimes(3);
+      // Act and assert: no tick runs after stop()
       job.stop();
       await vi.advanceTimersByTimeAsync(3000);
       expect(set).toHaveBeenCalledTimes(3);

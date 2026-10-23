@@ -82,8 +82,10 @@ describe('[H5P-002] creatable content types', () => {
 
 describe('[H5P-006] saving', () => {
   it('[SEC-008] stores list-item text and the title without markup that could run', async () => {
+    // Arrange
     const { editor, user } = await editorTestbed(LIBS);
     const author = user('author');
+    // Act: save markup in the question, a list item and the title
     const id = await editor.saveOrUpdateContent(
       undefined,
       { question: XSS, answers: [XSS] },
@@ -91,12 +93,14 @@ describe('[H5P-006] saving', () => {
       'H5P.MultiChoice 1.16',
       author,
     );
+    // Assert
     const stored = await editor.contentManager.getContentParameters(id, author);
     const metadata = await editor.contentManager.getContentMetadata(id, author);
     expect(JSON.stringify([stored, metadata.title])).not.toMatch(/onerror|<img/);
   });
 
   it('[H5P-005] a refused save leaves learner state alone; an allowed save drops invalidated state', async () => {
+    // Arrange: an existing activity
     const testbed = await editorTestbed(LIBS);
     const author = testbed.user('author');
     const id = await testbed.editor.saveOrUpdateContent(
@@ -106,6 +110,7 @@ describe('[H5P-006] saving', () => {
       'H5P.MultiChoice 1.16',
       author,
     );
+    // Act and assert: a refused save
     testbed.permissions.overrides.Edit = false;
     await expect(
       testbed.editor.saveOrUpdateContent(
@@ -117,6 +122,7 @@ describe('[H5P-006] saving', () => {
       ),
     ).rejects.toMatchObject({ httpStatusCode: 403 });
     expect(testbed.invalidated).toEqual([id]);
+    // Act and assert: an allowed save
     delete testbed.permissions.overrides.Edit;
     await testbed.editor.saveOrUpdateContent(
       id,
@@ -129,6 +135,7 @@ describe('[H5P-006] saving', () => {
   });
 
   it('[H5P-006] deletes the files an author removed from the activity', async () => {
+    // Arrange: an activity with a stored image
     const { editor, user } = await editorTestbed(LIBS);
     const author = user('author');
     const media = { path: 'images/a.png', mime: 'image/png' };
@@ -146,6 +153,7 @@ describe('[H5P-006] saving', () => {
       author,
     );
     expect(await editor.contentStorage.fileExists(id, 'images/a.png')).toBe(true);
+    // Act: save the activity without the image
     await editor.saveOrUpdateContent(
       id,
       { question: 'Q', answers: [] },
@@ -153,6 +161,7 @@ describe('[H5P-006] saving', () => {
       'H5P.MultiChoice 1.16',
       author,
     );
+    // Assert
     expect(await editor.contentStorage.fileExists(id, 'images/a.png')).toBe(false);
   });
 

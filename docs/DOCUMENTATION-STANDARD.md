@@ -137,7 +137,9 @@ Sections, in order:
 #### DOC-006 · MUST · S1 · Tests are written to be read
 - Name tests as behaviour, not implementation: `[H5P-006] denies library installation to authors`,
   not `test checkForGeneralAction 2`.
-- Use *Arrange / Act / Assert* comments in tests longer than 10 lines.
+- Use *Arrange / Act / Assert* comments in tests longer than 10 lines (`// Arrange`, `// Act`, `// Assert`,
+  or `// Act and assert` where the steps interleave). `npm run doc:lint` fails on an `it()`/`test()` body of
+  more than 10 lines whose comments do not name its Act and Assert steps.
 - Every fixture directory has a `README.md` that says what each fixture represents and why it exists
   (e.g. `svg/xxe-external-entity.svg — standalone="no" with an external entity; must be neutralised`).
 - Table-driven tests (`it.each`) are preferred for permission and role matrices, so the table in the

@@ -53,6 +53,7 @@ describe('[SEC-002] FileTypeSniffer', () => {
   );
 
   it('[SEC-002] accepts the other detections an extension allows, and upper-case extensions', async () => {
+    // Arrange: legitimate variants of allowlisted formats
     const variants: [string, Buffer | string][] = [
       ['anim.png', bytes.apng()],
       ['clip.mp4', bytes.ftyp('M4V ')],
@@ -70,12 +71,14 @@ describe('[SEC-002] FileTypeSniffer', () => {
         '<?xml version="1.0"?>\n<!-- x -->\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "x">\n<svg/>',
       ],
     ];
+    // Act and assert: each variant passes unchanged
     for (const [name, data] of variants) {
       expect(await sniffer.sanitize(place(name, data)), name).toBe(FileSanitizerResult.NotSanitized);
     }
   });
 
   it('[SEC-002] refuses HTML in a .png and other polyglots', async () => {
+    // Arrange: bytes that do not match the extension they arrive under
     const cases: [string, Buffer | string][] = [
       ['image.png', html],
       ['image.png', bytes.gif()],
@@ -99,10 +102,12 @@ describe('[SEC-002] FileTypeSniffer', () => {
       ['drawing.svg', bytes.png()],
       ['data.json', bytes.pdf()],
     ];
+    // Act and assert: each is refused as a type mismatch
     for (const [name, data] of cases) await expectMismatch(name, data);
   });
 
   it('[SEC-002] refuses text files a browser would sniff as HTML', async () => {
+    // Arrange: text-format files that hold markup or are not valid text of their kind
     const cases: [string, Buffer | string][] = [
       ['notes.txt', html],
       ['notes.txt', '  \n\t<html><script>alert(1)</script>'],
@@ -125,10 +130,12 @@ describe('[SEC-002] FileTypeSniffer', () => {
       ['drawing.svg', html],
       ['drawing.svg', '<?xml version="1.0"?><html xmlns="http://www.w3.org/1999/xhtml"><svg/></html>'],
     ];
+    // Act and assert: each is refused as a type mismatch
     for (const [name, data] of cases) await expectMismatch(name, data);
   });
 
   it('[SEC-002] refuses extensions outside the allowlist', async () => {
+    // Act and assert: each name outside the allowlist is refused as not allowed
     for (const name of [
       'page.html',
       'page.htm',
@@ -144,7 +151,9 @@ describe('[SEC-002] FileTypeSniffer', () => {
       const error = await rejection(name, 'harmless text');
       expect(error.messageKey, name).toBe('upload.file.notAllowed');
     }
+    // Act: an upper-case extension
     const error = await rejection('Page.HTML', html);
+    // Assert: the message names the extension in lower case
     expect(error.params).toEqual({ extension: 'html' });
     expect(t(error.messageKey, error.params, 'en')).toContain('.html');
   });

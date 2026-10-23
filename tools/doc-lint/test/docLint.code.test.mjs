@@ -36,6 +36,23 @@ describe('[DOC-006] test titles and fixtures', () => {
     ]);
   });
 
+  it('[DOC-006] a test body over 10 lines must name its Act and Assert steps in comments', () => {
+    const body = (comments) =>
+      `${TEST_HEADER}it('[TST-001] long', () => {\n${comments}${'  expect(1).toBe(1);\n'.repeat(11)}});\n`;
+    const check = (text) => problems(makeRepo({ 'apps/server/test/long.test.ts': text }), 'test-readability');
+    expect(check(body(''))).toEqual([
+      'apps/server/test/long.test.ts:6 test body of 11 lines needs "// Act" and "// Assert" comments',
+    ]);
+    // WHY: words inside strings are not comments; "Act" alone or "assert" alone is not enough either.
+    expect(check(body("  const url = 'https://x.example/act/assert';\n  // Arrange and act\n"))).toHaveLength(
+      1,
+    );
+    expect(check(body('  // Act and assert\n'))).toEqual([]);
+    expect(check(body('  // Arrange\n  // Act\n  /* Assert */\n'))).toEqual([]);
+    const short = `${TEST_HEADER}it('[TST-001] short', () => {\n${'  expect(1).toBe(1);\n'.repeat(10)}});\n`;
+    expect(check(short)).toEqual([]);
+  });
+
   it('[DOC-006] rejects titles that name unknown requirements', () => {
     const root = makeRepo({ 'tools/w/test/w.test.mjs': TEST_HEADER + testCall('test', '[TST-777] ghost') });
     expect(problems(root, 'test-readability')).toEqual([

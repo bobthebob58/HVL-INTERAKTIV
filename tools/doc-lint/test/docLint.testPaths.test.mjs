@@ -34,6 +34,7 @@ describe('[DOC-001] paths on the Tests: line', () => {
   });
 
   it('[DOC-001] rejects each form when it points to nothing', () => {
+    // Arrange: one path of each form, none of which exists
     const missing = [
       'test/gone.test.ts',
       './test/gone.test.ts',
@@ -42,6 +43,7 @@ describe('[DOC-001] paths on the Tests: line', () => {
       'apps/server/test/nothere/*.test.ts',
       'gone.test.ts',
     ];
+    // Act and assert: one problem per missing path, in order
     expect(lintTestsLine(missing.join(', '))).toEqual(
       missing.map((path) => `apps/server/src/widget.ts:1 "Tests:" names a path that does not exist: ${path}`),
     );

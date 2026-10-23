@@ -16,6 +16,7 @@ describe('[SEC-007] exact dependency pins', () => {
   });
 
   it('[SEC-007] rejects ranges, tags, wildcards and URLs in every dependency field', () => {
+    // Arrange
     const manifest = {
       dependencies: { caret: '^1.2.3' },
       devDependencies: { tilde: '~1.2.3', tag: 'latest' },
@@ -23,6 +24,7 @@ describe('[SEC-007] exact dependency pins', () => {
       peerDependencies: { range: '>=1.0.0' },
       overrides: { git: 'github:x/y' },
     };
+    // Act and assert
     expect(loosePins('apps/server/package.json', manifest)).toEqual([
       'apps/server/package.json: dependencies.caret is ""^1.2.3""; pin an exact version',
       'apps/server/package.json: devDependencies.tilde is ""~1.2.3""; pin an exact version',

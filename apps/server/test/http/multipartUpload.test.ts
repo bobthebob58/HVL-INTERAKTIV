@@ -117,10 +117,12 @@ describe('readMultipart', () => {
   });
 
   it('[SEC-005] a request that is not multipart, or is malformed, is refused with 400 and leaves no folder', async () => {
-    const json = probeApp();
+    const json = probeApp(); // Arrange
+    // Act and assert: a body that is not multipart
     expect((await request(json.app).post('/u').send({ a: 1 })).status).toBe(400);
-    const broken = probeApp();
+    const broken = probeApp(); // Arrange
     let status = 0;
+    // Act: a multipart body whose part never ends
     const left = await leftovers(async () => {
       const res = await request(broken.app)
         .post('/u')
@@ -128,6 +130,7 @@ describe('readMultipart', () => {
         .send('--xyz\r\nContent-Disposition: form-data; name="file"; filename="a.png"\r\n\r\nunterminated');
       status = res.status;
     });
+    // Assert: refused, and no folder left behind
     expect(status).toBe(400);
     expect(broken.seen.error).toEqual({ status: 400, key: 'error.badRequest' });
     expect(left).toEqual([]);

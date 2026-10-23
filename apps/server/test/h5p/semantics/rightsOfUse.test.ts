@@ -74,6 +74,7 @@ describe('[SEC-008] values the "Rights of use" dialog renders', () => {
   });
 
   it('[SEC-008] a file path that could leave an attribute or run as a link is refused with 400', () => {
+    // Arrange
     const unsafe = [
       'images/a.png" onerror="alert(1)',
       'images/<x>.png',
@@ -83,6 +84,7 @@ describe('[SEC-008] values the "Rights of use" dialog renders', () => {
       'JavaScript:alert(1)',
       'data:text/html,x',
     ];
+    // Act and assert: every unsafe path is refused, and a save with it fails with 400.
     for (const path of unsafe) {
       expect(isSafeFilePath(path), path).toBe(false);
       expect(refusal({ media: { path } }), path).toMatchObject({
@@ -90,6 +92,7 @@ describe('[SEC-008] values the "Rights of use" dialog renders', () => {
         httpStatusCode: 400,
       });
     }
+    // Act and assert: file names Lumi creates and web links pass.
     const safe = ['images/photo-1a2b.png#tmp', 'videos/v.mp4', 'https://www.youtube.com/watch?v=x&t=1'];
     for (const path of safe) expect(refusal({ media: { path } }), path).toBeUndefined();
   });

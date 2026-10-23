@@ -61,6 +61,7 @@ describe('[SEC-005] size-limited uploads', () => {
   });
 
   it('[H5P-004] reports the S3 error of a failed multipart upload, not the stream abort', async () => {
+    // Arrange: an S3 client whose every request fails with NoSuchBucket, and a lazy 40 MB body.
     const noSuchBucket = Object.assign(new Error('The specified bucket does not exist'), {
       name: 'NoSuchBucket',
       $metadata: { httpStatusCode: 404 },
@@ -72,6 +73,7 @@ describe('[SEC-005] size-limited uploads', () => {
       },
     } as unknown as S3Client;
     const body = lazyBody(40);
+    // Act and assert
     await expect(
       limitedUpload(s3, { Bucket: 'missing', Key: 'k' }, body, 50 * 1024 * 1024),
     ).rejects.toMatchObject({ name: 'NoSuchBucket' });

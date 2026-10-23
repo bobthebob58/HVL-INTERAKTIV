@@ -35,6 +35,7 @@ const scriptedS3 = (objects: Record<string, Record<string, string>>): S3Client =
 
 describe('[H5P-004] temporary file listing', () => {
   it('[H5P-004] skips deleted files and foreign keys, and reads the owner from the key', async () => {
+    // Arrange
     const storage = new S3TemporaryFileStorage(
       scriptedS3({
         'tmp/u%401/a.png': { expiresat: '2026-10-22T10:00:00.000Z' },
@@ -46,6 +47,7 @@ describe('[H5P-004] temporary file listing', () => {
       'bucket',
       1024,
     );
+    // Act and assert
     expect(await storage.listFiles()).toEqual([
       { filename: 'a.png', ownedByUserId: 'u@1', expiresAt: new Date('2026-10-22T10:00:00.000Z') },
       { filename: 'img/b.png', ownedByUserId: 'u2', expiresAt: new Date('2026-10-22T11:00:00.000Z') },

@@ -37,12 +37,14 @@ describeWithServices('H5P editor AJAX endpoint', () => {
   });
 
   it('[H5P-006] a learner gets 403 on the editor endpoint, GET and POST', async () => {
+    // Act
     const get = await request(tb.app)
       .get('/h5p/ajax?action=content-type-cache')
       .set(...learner.header);
     const post = await request(tb.app)
       .post('/h5p/ajax?action=libraries')
       .set(...learner.header);
+    // Assert: both are refused with the translated message.
     for (const res of [get, post]) {
       expect(res.status).toBe(403);
       expect(res.body).toMatchObject({
@@ -53,8 +55,10 @@ describeWithServices('H5P editor AJAX endpoint', () => {
   });
 
   it('[H5P-002] saving H5P.TrueFalse as main library is refused with 403, in nn and in en', async () => {
+    // Arrange
     const english = await tb.actor('author', { locale: 'en' });
     const body = { library: 'H5P.TrueFalse 1.8', params: { params: {}, metadata: { title: 'Sant' } } };
+    // Act and assert: a save by an nn author and by an en author.
     for (const [who, locale] of [
       [author, 'nn'],
       [english, 'en'],
@@ -92,6 +96,7 @@ describeWithServices('H5P editor AJAX endpoint', () => {
   });
 
   it('[H5P-008] library strings come in the requested language, nn falls back to nb, and an unknown code to the actor’s', async () => {
+    // Arrange: fetch one library's strings in a given language.
     const strings = async (language: string) => {
       const res = await request(tb.app)
         .post(`/h5p/ajax?action=translations&language=${encodeURIComponent(language)}`)
@@ -101,6 +106,7 @@ describeWithServices('H5P editor AJAX endpoint', () => {
       expect(res.status).toBe(200);
       return JSON.stringify(res.body);
     };
+    // Act and assert: en as asked, nn through nb, and a bogus code through the actor's language.
     expect(await strings('en')).toContain('Question (en)');
     expect(await strings('nn')).toContain('Spørsmål (nb)');
     const bogus = await strings('../../etc');

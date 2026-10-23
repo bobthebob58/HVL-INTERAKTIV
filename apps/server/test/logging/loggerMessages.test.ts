@@ -44,6 +44,7 @@ describe('[DATA-009] message building', () => {
   });
 
   it('[DATA-009] logs Prisma errors without a message by code only, in msg as well as err', () => {
+    // Act: a Prisma error in every logging position, and a driver-adapter error in `meta`.
     const out = run((log) => {
       log.error(prismaError());
       log.error({ err: prismaError() });
@@ -51,6 +52,7 @@ describe('[DATA-009] message building', () => {
       log.child({ c: 1 }).error(prismaError());
       log.error({ meta: { driverAdapterError: driverError() } }, 'insert failed');
     });
+    // Assert
     for (const line of out) {
       for (const leaked of ['Kari', 'Bergen', 'Failing row']) expect(line, leaked).not.toContain(leaked);
     }
@@ -78,6 +80,7 @@ describe('[DATA-009] message building', () => {
   });
 
   it('[DATA-009] redacts keys by sensitive ending and Feide attribute names', () => {
+    // Act and assert: sensitive keys, harmless keys, then a secret nested in an object.
     for (const key of [
       'ltiSubject',
       'userEmail',
@@ -104,12 +107,14 @@ describe('[DATA-009] message building', () => {
 
 describe('[NFR-006] one JSON object per line', () => {
   it('[NFR-006] every line parses, whatever URLs, ltiks and @-signs it carries', () => {
+    // Act
     const lines = run((log) => {
       log.warn('redirect to "/app?ltik=abc"');
       log.info({ referer: '<a href="/app/launch?ltik=abc">' });
       log.info({ hub: 'https://hub-api.h5p.org', dependency: { pkg: '@lumieducation/h5p-server' } });
       log.info({ s3: 'http://localhost:5000', owner: { team: 'ops@x' }, library: 'H5P.Blanks' });
     });
+    // Assert
     for (const line of lines) expect(() => JSON.parse(line), line).not.toThrow();
     expect(JSON.parse(lines[3] ?? '{}')).toMatchObject({
       s3: 'http://localhost:5000',

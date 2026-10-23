@@ -37,6 +37,7 @@ describe('[SEC-003] package manifest', () => {
   });
 
   it('[SEC-003] ignores library.json files that are not at the top of a folder', async () => {
+    // Arrange: a library.json nested below content/.
     const path = await buildH5pPackage({
       main: MC,
       omitMainFolder: true,
@@ -48,10 +49,12 @@ describe('[SEC-003] package manifest', () => {
         }),
       },
     });
+    // Act and assert
     expect((await readPackageManifest(path)).libraries).toEqual([]);
   });
 
   it('[SEC-005] refuses content.json file references that leave the content folder', async () => {
+    // Act and assert: every reference that can leave the content folder is refused and named.
     for (const path of [
       '../../victim.svg',
       'images/../../x.svg',
@@ -68,6 +71,7 @@ describe('[SEC-003] package manifest', () => {
         params: { entry: path },
       });
     }
+    // Act and assert: a relative path with a fragment and an https URL are accepted.
     const fine = { media: { path: 'images/a.svg#tmp' }, video: { path: 'https://example.org/v.mp4' } };
     await expect(
       readPackageManifest(await buildH5pPackage({ main: MC, params: fine })),

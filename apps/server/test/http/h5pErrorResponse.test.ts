@@ -14,6 +14,7 @@ import { ZipRejectedError } from '../../src/security/zipEntryGuard.js';
 
 describe('toErrorResponse', () => {
   it('[PROD-012] an HttpError keeps its status and message key, in the requested language', () => {
+    // Act and assert: the same error in each of the three languages.
     for (const locale of ['nn', 'nb', 'en'] as const) {
       expect(toErrorResponse(new HttpError(401, 'error.unauthenticated'), locale)).toEqual({
         status: 401,
@@ -44,6 +45,7 @@ describe('toErrorResponse', () => {
   });
 
   it('[SEC-005] upload and archive refusals are 400, size limits 413, with their parameters', () => {
+    // Act and assert: a file type mismatch, a zip-slip entry and an oversized entry.
     const type = toErrorResponse(
       new RejectedUploadError('upload.file.typeMismatch', { extension: 'png' }),
       'nn',
@@ -71,6 +73,7 @@ describe('toErrorResponse', () => {
   });
 
   it('[PROD-012] client errors from body parsers, static files and storage guards keep their 4xx status', () => {
+    // Act and assert: a body-parser parse error, a missing static file and an unsafe storage name.
     const parse = Object.assign(new SyntaxError('Unexpected token'), {
       status: 400,
       type: 'entity.parse.failed',
@@ -94,6 +97,7 @@ describe('toErrorResponse', () => {
   });
 
   it('[PROD-012] unknown errors and server faults never show their own text', () => {
+    // Arrange: errors whose own text would leak hosts, paths or internals.
     const leaks = [
       new Error('ECONNREFUSED 10.0.0.5:5432 /home/app/secret'),
       new H5pError('storage-error', { path: '/var/lib/x' }, 500),
@@ -102,7 +106,9 @@ describe('toErrorResponse', () => {
       undefined,
     ];
     for (const error of leaks) {
+      // Act
       const { status, body } = toErrorResponse(error, 'nn');
+      // Assert
       expect(status).toBe(500);
       expect(body).toEqual({
         success: false,

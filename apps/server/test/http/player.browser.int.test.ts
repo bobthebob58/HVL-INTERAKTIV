@@ -140,10 +140,12 @@ describeWithServices('H5P player in a browser', () => {
     }, 30_000);
 
     it('[SEC-008] author metadata shown in the "Rights of use" dialog never runs as script', async () => {
-      const { page } = await openPlayer(rightsId);
+      const { page } = await openPlayer(rightsId); // Arrange
+      // Act: open the "Rights of use" dialog and give any injected handler time to fire
       await page.click('.h5p-copyrights button');
       await page.waitForSelector('.h5p-popup-dialog', { state: 'visible' });
       await page.waitForTimeout(300);
+      // Assert: no payload set its flag
       const fired = await page.evaluate(() =>
         ['__hvlSource', '__hvlExtras', '__hvlYear', '__hvlType', '__hvlAuthor'].filter(
           (flag) => flag in window,
@@ -154,10 +156,12 @@ describeWithServices('H5P player in a browser', () => {
     }, 30_000);
 
     it('[SEC-008] copyright data, image paths and alt texts under any key never run as script in that dialog', async () => {
-      const { page } = await openPlayer(copyrightId);
+      const { page } = await openPlayer(copyrightId); // Arrange
+      // Act: open the "Rights of use" dialog and give any injected handler time to fire
       await page.click('.h5p-copyrights button');
       await page.waitForSelector('.h5p-popup-dialog', { state: 'visible' });
       await page.waitForTimeout(300);
+      // Assert: no flag, handler or script link in the dialog, and the one safe image still shows
       const result = await page.evaluate(() => ({
         fired: ['__hvlMedia', '__hvlHidden', '__hvlAlt', '__hvlSubMeta'].filter((flag) => flag in window),
         handlers: document.querySelectorAll('.h5p-popup-dialog [onerror]').length,
@@ -169,7 +173,8 @@ describeWithServices('H5P player in a browser', () => {
     }, 30_000);
 
     it('[H5P-005] the learner’s answers are saved and resumed after a reload', async () => {
-      const { page } = await openPlayer();
+      const { page } = await openPlayer(); // Arrange
+      // Act and assert: two answers are saved
       await page.click('.hvl-probe');
       await page.click('.hvl-probe');
       // WHY: H5P saves state every 5 s (D-037); wait for that save instead of relying on unload handlers.
@@ -179,6 +184,7 @@ describeWithServices('H5P player in a browser', () => {
         { timeout: 15_000 },
       );
       expect(saved.status()).toBe(200);
+      // Act and assert: a reload resumes them
       await page.reload();
       await page.waitForSelector('.hvl-probe-attached .hvl-probe');
       expect(await page.textContent('.hvl-probe')).toBe('2');

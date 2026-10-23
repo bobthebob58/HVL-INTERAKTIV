@@ -23,10 +23,12 @@ describe('[DOC-005] READMEs', () => {
   });
 
   it('[DOC-005] names the missing README and each missing section', () => {
+    // Arrange: a package without a README and an app README with two of its six sections
     const root = makeRepo({
       'packages/design-tokens/tokens.json': '{}',
       'apps/server/README.md': '# Server\n\n## Purpose\n\n## How to run (locally)\n',
     });
+    // Act and assert
     expect(problems(root, 'package-readme')).toEqual([
       'apps/server/README.md:1 README lacks a "## Folder structure" section',
       'apps/server/README.md:1 README lacks a "## Key flows" section',

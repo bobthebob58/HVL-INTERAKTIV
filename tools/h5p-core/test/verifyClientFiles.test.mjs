@@ -51,9 +51,11 @@ describe('[H5P-001] pinned H5P client files', () => {
   });
 
   it('[H5P-001] the committed lists cover core 1.28.0 (67 files) and the pinned editor commit', () => {
+    // Arrange
     const ref = fileURLToPath(
       new URL('../../../docs/reference/h5p-core-1.28-seed-packages/', import.meta.url),
     );
+    // Act: parse both committed lists
     const core = readHashList(
       readFileSync(join(ref, 'h5p-php-library-1.28.0.files.sha256'), 'utf8'),
       'h5p-php-library-1.28.0/',
@@ -62,6 +64,7 @@ describe('[H5P-001] pinned H5P client files', () => {
       readFileSync(join(ref, 'h5p-editor-php-library-ab2daa18.files.sha256'), 'utf8'),
       'h5p-editor-php-library-ab2daa18/',
     );
+    // Assert
     expect(core.size).toBe(67);
     expect(core.has('h5p.classes.php')).toBe(true);
     expect(editor.has('scripts/h5peditor.js')).toBe(true);

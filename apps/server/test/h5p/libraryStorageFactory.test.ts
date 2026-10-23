@@ -23,9 +23,12 @@ const caching = vi.fn((options: unknown) => ({
 
 describe('[H5P-004] library storage', () => {
   it('[H5P-004] caches library metadata per node for at most LIBRARY_CACHE_TTL_SECONDS', async () => {
+    // Arrange
     const dir = mkdtempSync(join(tmpdir(), 'h5p-libs-'));
     try {
+      // Act
       const storage = createLibraryStorage(join(dir, 'libraries'), caching as unknown as typeof Caching);
+      // Assert
       expect(LIBRARY_CACHE_TTL_SECONDS).toBe(300);
       expect(caching).toHaveBeenCalledTimes(1);
       expect(caching).toHaveBeenCalledWith(

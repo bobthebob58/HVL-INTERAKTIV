@@ -47,7 +47,9 @@ describe('[SEC-008] walking parameters', () => {
   });
 
   it('[SEC-008] reports paths and treats a group with one field like H5P does', async () => {
+    // Act
     const paths = (await visits(params())).map((v) => `${v.path}:${v.semantics.type}`);
+    // Assert: the one-field group "wrapped" is visited as its field, at the group's own path.
     expect(paths).toEqual([
       '$.title:text',
       '$.questions:list',

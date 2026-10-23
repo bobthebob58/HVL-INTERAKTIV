@@ -25,6 +25,7 @@ describe('permissionSystemGuard', () => {
   });
 
   it('[H5P-006] refuses an editor or player built without HVL’s permission system (Lumi’s allow-all default)', async () => {
+    // Arrange: an editor and a player built with Lumi's defaults
     const { config, storages, permissions } = await engineTestbed();
     const s = storages;
     const plainEditor = new H5PEditor(
@@ -35,6 +36,7 @@ describe('permissionSystemGuard', () => {
       s.temporaryStorage,
     );
     const plainPlayer = new H5PPlayer(s.libraryStorage, s.contentStorage, config);
+    // Act and assert
     expect(() => assertPermissionSystem({ editor: plainEditor }, permissions)).toThrow(
       PermissionSystemMismatchError,
     );

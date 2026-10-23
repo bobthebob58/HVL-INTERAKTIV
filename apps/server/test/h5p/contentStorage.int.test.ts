@@ -53,14 +53,17 @@ describeWithServices('[H5P-004] content storage on PostgreSQL and S3', () => {
   });
 
   it('[H5P-004] stores, reads, updates and lists an activity', async () => {
+    // Act: store an activity
     const id = await content.addContent(
       metadata('H5P.MultiChoice', [['H5P.MultiChoice', 1, 16]]),
       { question: 'Kva?' },
       author,
     );
+    // Assert: it exists and reads back
     expect(await content.contentExists(id)).toBe(true);
     expect(await content.getParameters(id)).toEqual({ question: 'Kva?' });
     expect((await content.getMetadata(id)).mainLibrary).toBe('H5P.MultiChoice');
+    // Act and assert: an update keeps the ID, the list holds it, an unknown ID does not exist
     expect(
       await content.addContent(metadata('H5P.MultiChoice', []), { question: 'Kvifor?' }, author, id),
     ).toBe(id);

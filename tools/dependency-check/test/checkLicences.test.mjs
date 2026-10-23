@@ -41,6 +41,7 @@ describe('[NFR-005] licence allow-list', () => {
   });
 
   it('[NFR-005] rejects malformed expressions', () => {
+    // Act and assert: each malformed expression is rejected.
     for (const bad of [
       '',
       '(MIT',
@@ -66,6 +67,7 @@ describe('[NFR-005] licence allow-list', () => {
   });
 
   it('[NFR-005] reports unknown and incompatible packages and skips our own workspaces', () => {
+    // Arrange: our own workspaces, a compatible, an unknown and an incompatible package.
     const packages = [
       { name: 'hvl-interaktiv', version: '0.1.0', license: 'GPL-3.0-or-later' },
       { name: '@hvl-interaktiv/server', version: '0.1.0' },
@@ -73,6 +75,7 @@ describe('[NFR-005] licence allow-list', () => {
       { name: 'mystery', version: '2.0.0' },
       { name: 'closed', version: '3.0.0', license: 'BUSL-1.1' },
     ];
+    // Act and assert
     expect(checkLicences(packages)).toEqual([
       'mystery@2.0.0: no SPDX licence; read its licence file and add it to REVIEWED',
       'closed@3.0.0: licence "BUSL-1.1" is not GPL-3.0-compatible',

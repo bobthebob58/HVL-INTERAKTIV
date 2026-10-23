@@ -75,6 +75,7 @@ describe('[H5P-002] sub-content rules on save', () => {
   });
 
   it('[H5P-002] refuses a library hidden under a key no field defines, which Lumi would still load', async () => {
+    // Arrange: a library under an undefined key, and one deep inside a sub-content's params.
     const hidden = [
       { questions: [question('H5P.MultiChoice 1.16')], extra: question('H5P.DragQuestion 1.14') },
       {
@@ -83,12 +84,14 @@ describe('[H5P-002] sub-content rules on save', () => {
         ],
       },
     ];
+    // Act and assert: each hidden library is refused.
     for (const params of hidden) {
       await expect(new SubContentPolicy(manager()).enforce(params, {}, MAIN)).rejects.toMatchObject({
         errorId: 'hvl:sub-content-not-allowed',
         httpStatusCode: 403,
       });
     }
+    // Act and assert: a plain value under a "library" key is accepted.
     // WHY: Lumi only collects "Name x.y" values, so a plain text field called "library" is not a dependency.
     const label = { questions: [question('H5P.MultiChoice 1.16')], note: { library: 'school library' } };
     await expect(new SubContentPolicy(manager()).enforce(label, {}, MAIN)).resolves.toBeUndefined();
@@ -119,6 +122,7 @@ describe('[SEC-008] text that Lumi does not sanitise', () => {
   });
 
   it('[SEC-008] every metadata string the "Rights of use" dialog shows is plain text; source stays a web link', async () => {
+    // Arrange: the payload in every metadata string, and a script link as a sub-content's source.
     const payload = '<img src=x onerror=alert(1)>';
     const metadata = {
       title: 'T',
@@ -136,7 +140,9 @@ describe('[SEC-008] text that Lumi does not sanitise', () => {
       ...question('H5P.MultiChoice 1.16'),
       metadata: { licenseExtras: payload, source: 'javascript:alert(1)//' },
     };
+    // Act
     await new SubContentPolicy(manager()).enforce({ questions: [sub] }, metadata, MAIN);
+    // Assert: markup is gone, the source is an escaped web link, and empty or unsafe values are dropped.
     expect(JSON.stringify(metadata)).not.toMatch(/<img|onerror=alert\(1\)>|">/);
     expect(metadata.source).toBe('https://x.example/%22%3E%3Cimg%20src=x%20onerror=alert(1)%3E');
     expect(metadata.yearFrom).toBe('2020');

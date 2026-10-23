@@ -85,10 +85,13 @@ describeWithServices('H5P router', () => {
   });
 
   it('[H5P-006] a refused request gets a translated message and no internal detail', async () => {
+    // Arrange
     const author = await tb.actor('author', { locale: 'en' });
+    // Act: ask for the parameters of content the author has no access to
     const res = await request(tb.app)
       .get(`/h5p/params/${randomUUID()}`)
       .set(...author.header);
+    // Assert
     expect(res.status).toBe(403);
     expect((res.body as { message: string }).message).toBe(t('error.forbidden', {}, 'en'));
     expect(Object.keys(res.body as object).sort()).toEqual([
@@ -101,14 +104,18 @@ describeWithServices('H5P router', () => {
   });
 
   it('[PROD-012] malformed JSON, a missing client file and an unsafe file name are 4xx, not server faults', async () => {
+    // Arrange
     const author = await tb.actor('author');
+    // Act and assert: malformed JSON
     const json = await request(tb.app)
       .post('/h5p/content')
       .set(...author.header)
       .set('Content-Type', 'application/json')
       .send('{"library": ');
     expect(json.status).toBe(400);
+    // Act and assert: a missing client file
     expect((await request(tb.app).get('/h5p/core/js/no-such-file.js')).status).toBe(404);
+    // Act and assert: an unsafe file name
     const unsafe = await request(tb.app)
       .get('/h5p/temp-files/..%2F..%2Fsecret.png')
       .set(...author.header);

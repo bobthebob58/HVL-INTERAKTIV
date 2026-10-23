@@ -13,6 +13,7 @@ const { default: renderPlayer } = createRequire(import.meta.url)(
 
 describe('[SEC-008] upstream: Lumi player template', () => {
   it('upstream pin: lets "</script>" in a title end the integration script early', () => {
+    // Arrange: a player model whose content title closes the script element
     const title = '</script><script>alert(1)</script>';
     const model = {
       contentId: '1',
@@ -20,6 +21,7 @@ describe('[SEC-008] upstream: Lumi player template', () => {
       scripts: [],
       integration: { contents: { 'cid-1': { metadata: { title } } } },
     } as unknown as IPlayerModel;
+    // Act and assert: the title reaches the page unescaped
     // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/renderers/player.ts embeds JSON.stringify(integration),
     // which leaves "<" unescaped, so this markup would run for every learner. Our template (D-040) escapes it.
     // When this fails after a Lumi upgrade, Lumi escapes the JSON; our template stays (it also blanks the user).

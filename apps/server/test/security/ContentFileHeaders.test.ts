@@ -32,6 +32,7 @@ const INLINE = [
 
 describe('[SEC-004] ContentFileHeaders', () => {
   it('[SEC-004] every user file gets nosniff and the sandbox CSP', () => {
+    // Act and assert: allowlisted, unknown and extension-less names all get both headers.
     for (const name of [
       ...allowlisted.map((ext) => `images/file.${ext}`),
       'unknown.bin',
@@ -43,6 +44,7 @@ describe('[SEC-004] ContentFileHeaders', () => {
       expect(headers['Content-Security-Policy'], name).toBe(USER_FILE_CSP);
       expect(headers['Content-Type'], name).toBe(contentTypeFor(name));
     }
+    // Assert: the policy text itself.
     expect(USER_FILE_CSP).toBe("sandbox; default-src 'none'; style-src 'unsafe-inline'");
   });
 
@@ -83,6 +85,7 @@ describe('[SEC-004] ContentFileHeaders', () => {
   });
 
   it('[SEC-004] the type comes from an explicit map; anything else is a download of octet-stream', () => {
+    // Arrange
     const expected: Record<string, string> = {
       png: 'image/png',
       jpg: 'image/jpeg',
@@ -103,14 +106,17 @@ describe('[SEC-004] ContentFileHeaders', () => {
       ods: 'application/vnd.oasis.opendocument.spreadsheet',
       odp: 'application/vnd.oasis.opendocument.presentation',
     };
+    // Act and assert: no allowlisted extension falls back to octet-stream, and the listed ones match.
     for (const ext of allowlisted) {
       expect(contentTypeFor(`x.${ext}`), ext).not.toBe('application/octet-stream');
       if (expected[ext]) expect(contentTypeFor(`x.${ext}`), ext).toBe(expected[ext]);
     }
+    // Act and assert: anything else is an octet-stream attachment.
     for (const name of ['x.html', 'x.htm', 'x.xml', 'x.js', 'x.svgz', 'noext', '.svg.html']) {
       expect(contentTypeFor(name), name).toBe('application/octet-stream');
       expect(contentDispositionFor(name), name).toMatch(/^attachment;/);
     }
+    // Act and assert: the case of the extension does not matter.
     expect(contentTypeFor('IMAGE.PNG')).toBe('image/png');
   });
 });

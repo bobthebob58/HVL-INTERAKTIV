@@ -10,6 +10,7 @@
  *     prefix (`xit`, `xdescribe`); `it.fails` is inactive too, since it passes only when the test fails.
  *   - `.each(table)(title)`, `.for(table)(title)`, `.skipIf(c)(title)` and `.runIf(c)(title)` read the
  *     title from the second call.
+ *   - Each call reports the offsets of its name and of its closing parenthesis, so a caller can measure it.
  * Collaborators: ./specTrace.mjs, ../doc-lint/checks/testReadability.mjs.
  * Tests: tools/spec-trace/test/testTitles.test.mjs
  */
@@ -67,12 +68,13 @@ function before(code) {
 /**
  * Blanks comments, string contents and regex literals, keeping every offset.
  * @param {string} text - Source code.
- * @returns {{code: string, strings: Map<number, string>}} The blanked code, and the content of each
- *   string literal by the offset of its opening quote.
+ * @returns {{code: string, strings: Map<number, string>, comments: {start: number, text: string}[]}} The
+ *   blanked code, the content of each string literal by the offset of its opening quote, and every comment.
  */
 export function blankLiterals(text) {
   let code = '';
   const strings = new Map();
+  const comments = [];
   let i = 0;
   const push = (part, to) => {
     code += part;
@@ -82,6 +84,7 @@ export function blankLiterals(text) {
     const [c, next] = [text[i], text[i + 1]];
     if (c === '/' && (next === '/' || next === '*')) {
       const stop = commentEnd(text, i);
+      comments.push({ start: i, text: text.slice(i, stop) });
       push(blank(text.slice(i, stop)), stop);
     } else if (c === "'" || c === '"' || c === '`') {
       const stop = literalEnd(text, i);
@@ -92,7 +95,7 @@ export function blankLiterals(text) {
       push(`/${blank(text.slice(i + 1, stop - 1))}${stop - 1 > i ? '/' : ''}`, stop);
     } else push(c, i + 1);
   }
-  return { code, strings };
+  return { code, strings, comments };
 }
 
 /** Offset of the `)` matching the `(` at `open`, or the end of the code. */
@@ -110,7 +113,8 @@ const nextNonSpace = (code, from) => from + (/^\s*/.exec(code.slice(from))?.[0].
 /**
  * Lists the describe/it/test calls whose title is a string literal.
  * @param {string} text - Contents of a test file.
- * @returns {{fn: string, title: string, active: boolean}[]} One entry per call, in source order.
+ * @returns {{fn: string, title: string, active: boolean, start: number, end: number}[]} One entry per call,
+ *   in source order; `start` is the offset of the call's name, `end` that of its closing parenthesis.
  */
 export function testTitles(text) {
   const { code, strings } = blankLiterals(text);
@@ -128,10 +132,12 @@ export function testTitles(text) {
     calls.push({ fn: m[2], title, start: m.index, end: closeOf(code, open), skipped });
   }
   const skippedGroups = calls.filter((c) => c.fn === 'describe' && c.skipped);
-  return calls.map(({ fn, title, start, skipped }) => ({
+  return calls.map(({ fn, title, start, end, skipped }) => ({
     fn,
     title,
     active: !skipped && !skippedGroups.some((g) => g.start < start && start < g.end),
+    start,
+    end,
   }));
 }
 

@@ -69,13 +69,15 @@ describeWithServices('H5P content over HTTP', () => {
   });
 
   it('[H5P-006] the owner updates the activity; a colleague can neither read nor change it', async () => {
-    const id = await create();
+    const id = await create(); // Arrange
+    // Act and assert: the owner's update is saved
     const own = await request(tb.app)
       .put(`/h5p/content/${id}`)
       .set(...owner.header)
       .send(mcBody('Ny tekst'));
     expect(own.status).toBe(200);
     expect(own.body).toEqual({ contentId: id });
+    // Act and assert: the colleague's read and write are refused, and the owner's text stays
     const read = await request(tb.app)
       .get(`/h5p/params/${id}`)
       .set(...colleague.header);
@@ -90,7 +92,8 @@ describeWithServices('H5P content over HTTP', () => {
   });
 
   it('[H5P-006] learners never reach saving, loading parameters or deleting', async () => {
-    const id = await create();
+    const id = await create(); // Arrange
+    // Act: every write, read and delete a learner could try
     const calls = [
       request(tb.app)
         .post('/h5p/content')
@@ -107,11 +110,12 @@ describeWithServices('H5P content over HTTP', () => {
         .delete(`/h5p/content/${id}`)
         .set(...learner.header),
     ];
-    for (const res of await Promise.all(calls)) expect(res.status).toBe(403);
+    for (const res of await Promise.all(calls)) expect(res.status).toBe(403); // Assert
   });
 
   it('[H5P-006] an unrelated colleague cannot delete; the owner can, and the activity is gone afterwards', async () => {
-    const id = await create();
+    const id = await create(); // Arrange
+    // Act and assert: the colleague's delete is refused; the owner's succeeds and leaves nothing behind
     expect(
       (
         await request(tb.app)
@@ -137,14 +141,17 @@ describeWithServices('H5P content over HTTP', () => {
   });
 
   it('[H5P-006] the owner downloads a complete .h5p package; a refusal is JSON, never an attachment', async () => {
+    // Arrange
     // WHY: a long text makes the zip span many chunks, so a response cut short cannot pass as complete.
     const long = 'Lang tekst. '.repeat(5000);
     const id = await create(mcBody(long));
+    // Act: the owner downloads
     const ok = await request(tb.app)
       .get(`/h5p/download/${id}`)
       .set(...owner.header)
       .buffer(true)
       .parse(rawBody);
+    // Assert: an attachment that unpacks to a complete package
     expect(ok.status).toBe(200);
     expect(ok.headers['content-disposition']).toBe(`attachment; filename="${id}.h5p"`);
     expect(ok.headers['x-content-type-options']).toBe('nosniff');
@@ -158,26 +165,32 @@ describeWithServices('H5P content over HTTP', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+    // Act: a learner tries the same download
     const refused = await request(tb.app)
       .get(`/h5p/download/${id}`)
       .set(...learner.header);
+    // Assert: a JSON refusal, not an attachment
     expect(refused.status).toBe(403);
     expect(refused.headers['content-disposition']).toBeUndefined();
     expect(refused.headers['content-type']).toMatch(/^application\/json/);
   });
 
   it('[H5P-006] a malformed save or an unknown activity is refused without saving anything', async () => {
+    // Arrange
     const before = await tb.db.h5PContent.count({ where: { ownerUserId: owner.actor.accountId } });
+    // Act and assert: a malformed save is refused
     const malformed = await request(tb.app)
       .post('/h5p/content')
       .set(...owner.header)
       .send({ library: 'H5P.MultiChoice 1.16', params: { params: [] } });
     expect(malformed.status).toBe(400);
+    // Act and assert: a save to an unknown activity is refused
     const unknown = await request(tb.app)
       .put(`/h5p/content/${randomUUID()}`)
       .set(...owner.header)
       .send(mcBody('x'));
     expect(unknown.status).toBe(403);
+    // Assert: nothing was saved
     expect(await tb.db.h5PContent.count({ where: { ownerUserId: owner.actor.accountId } })).toBe(before);
   });
 });

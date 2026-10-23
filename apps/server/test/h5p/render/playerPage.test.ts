@@ -45,6 +45,7 @@ describe('[SEC-008] player page', () => {
   });
 
   it('[SEC-008] escapes URLs, the content ID and the language', () => {
+    // Act: hostile URLs and content ID
     const html = renderPlayerPage(
       model({
         contentId: '"><script>x()</script>',
@@ -53,11 +54,14 @@ describe('[SEC-008] player page', () => {
       }),
       'nn',
     );
+    // Assert
     expect(html.match(/<script/g)).toHaveLength(2);
     expect(html).toContain('<html lang="nn" class="h5p-iframe">');
     expect(html).not.toContain('onload="x()"');
+    // Act: a hostile language
     // WHY: the type allows only nn, nb and en; the escaping must hold even if a caller passes something else.
     const hostile = renderPlayerPage(model(), '"><script>x()</script>' as unknown as Locale);
+    // Assert
     expect(hostile).toContain(
       '<html lang="&#34;&#62;&#60;script&#62;x()&#60;/script&#62;" class="h5p-iframe">',
     );

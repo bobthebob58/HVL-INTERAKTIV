@@ -61,22 +61,27 @@ describeWithServices('[H5P-004] state shared by several server nodes', () => {
   });
 
   it('[H5P-004] a config saved on one node is loaded by the other', async () => {
+    // Arrange
     // WHY: a private prefix keeps this test's settings out of the development installation's settings.
     const prefix = `${uniqueName('kv')}:`;
     const configA = await createH5pConfig(new RedisKeyValueStorage(redisA, prefix), {
       platformVersion: 'test',
     });
     configA.contentTypeCacheRefreshInterval = 123_456;
+    // Act: node A saves, node B loads
     await configA.save();
     const configB = await createH5pConfig(new RedisKeyValueStorage(redisB, prefix), {
       platformVersion: 'test',
     });
+    // Assert
     expect(configB.contentTypeCacheRefreshInterval).toBe(123_456);
+    // Clean up: remove this test's keys
     const keys = await redisA.keys(`${prefix}*`);
     if (keys.length > 0) await redisA.del(keys);
   });
 
   it('[H5P-004] locks are exclusive across nodes', async () => {
+    // Arrange: work that records when it starts and ends
     const key = uniqueName('lock');
     const order: string[] = [];
     const work = (name: string) => async () => {
@@ -85,10 +90,12 @@ describeWithServices('[H5P-004] state shared by several server nodes', () => {
       order.push(`${name}:end`);
     };
     const options = { timeout: 5_000, maxOccupationTime: 5_000 };
+    // Act: both nodes take the same lock at once
     await Promise.all([
       nodeA.lockProvider.acquire(key, work('a'), options),
       nodeB.lockProvider.acquire(key, work('b'), options),
     ]);
+    // Assert: whoever started first also ended before the other started
     expect(order[1]).toBe(`${order[0]?.split(':')[0]}:end`);
   });
 

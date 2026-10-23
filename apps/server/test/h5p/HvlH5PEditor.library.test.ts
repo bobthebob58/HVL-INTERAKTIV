@@ -39,6 +39,7 @@ describe('[H5P-011] library changes and downloads', () => {
   });
 
   it('[H5P-006] a download asks our permission system for Download', async () => {
+    // Arrange
     const testbed = await editorTestbed(LIBS);
     const author = testbed.user('author');
     const id = await testbed.editor.saveOrUpdateContent(
@@ -50,7 +51,9 @@ describe('[H5P-011] library changes and downloads', () => {
     );
     testbed.permissions.overrides.Download = false;
     const sink = new Writable({ write: (_chunk, _encoding, done) => done() });
+    // Act: a download the permission system refuses
     await expect(testbed.editor.exportContent(id, sink, author)).rejects.toBeDefined();
+    // Assert
     expect(testbed.permissions.calls).toContainEqual({
       kind: 'content',
       permission: 'Download',

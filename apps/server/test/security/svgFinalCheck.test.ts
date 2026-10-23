@@ -70,10 +70,12 @@ describe('[SEC-001] SVG final check and rules', () => {
   });
 
   it('[SEC-001] links may only point inside the drawing or to a matching raster data URL', () => {
+    // Act and assert: local references, and raster data URLs only where they match
     expect(isAllowedHref('#linearGradient123', 'lineargradient')).toBe(true);
     expect(isAllowedHref(`data:image/png;base64,${PNG}`, 'image')).toBe(true);
     expect(isAllowedHref(`data:image/jpeg;base64,${PNG}`, 'image')).toBe(false);
     expect(isAllowedHref(`data:image/png;base64,${PNG}`, 'a')).toBe(false);
+    // Act and assert: everything else is refused
     for (const bad of [
       '',
       '#',
@@ -89,12 +91,14 @@ describe('[SEC-001] SVG final check and rules', () => {
   });
 
   it('[SEC-001] CSS keeps local references and loses imports and external loads', () => {
+    // Act and assert: neutraliseCss rewrites what it can and gives up on the rest
     expect(neutraliseCss('.a{fill:url(#g)}')).toBe('.a{fill:url(#g)}');
     expect(neutraliseCss('@import url(x.css); .a{fill:red}')).toBe('  .a{fill:red}');
     expect(neutraliseCss('.a{background:url("https://x/y.png")} /* c */')).toBe('.a{background:none}  ');
     expect(neutraliseCss('.a{fill:u\\72l(x)}')).toBeUndefined();
     expect(neutraliseCss('.a{fill:image-set("x.png" 1x)}')).toBeUndefined();
     expect(neutraliseCss('.a{fill:url(x.png}')).toBeUndefined();
+    // Act and assert: findCssViolation names each kind of violation
     expect(findCssViolation('a{behavior:url(#x)}')).toBe('fetching function');
     expect(findCssViolation('@IMPORT "x.css";')).toBe('import');
     expect(findCssViolation('a{fill:\\75 rl(x)}')).toBe('escape');
@@ -103,10 +107,13 @@ describe('[SEC-001] SVG final check and rules', () => {
   });
 
   it('[SEC-001] the pre-check strips plain DOCTYPEs and xml-stylesheet instructions', () => {
+    // Arrange
     const svg = `<svg ${NS}/>`;
+    // Act and assert: plain DOCTYPEs and xml-stylesheet instructions are stripped
     expect(precheckSvg(`<?xml-stylesheet type="text/xsl" href="x.xsl"?>${svg}`)).toBe(svg);
     expect(precheckSvg(`<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "svg11.dtd">${svg}`)).toBe(svg);
     expect(precheckSvg(`<!doctype svg SYSTEM 'a>b.dtd'>${svg}`)).toBe(svg);
+    // Act and assert: internal subsets and entity declarations are refused
     for (const bad of [
       `<!DOCTYPE svg [ ]>${svg}`,
       `${svg}<!ENTITY x "y">`,

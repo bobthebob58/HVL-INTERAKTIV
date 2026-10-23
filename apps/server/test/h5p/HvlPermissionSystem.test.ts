@@ -72,7 +72,7 @@ function setup(auditor?: (access: DataSubjectAccess) => Promise<void>) {
 
 describe('[H5P-006] HvlPermissionSystem', () => {
   it('[H5P-006] denies an undefined, forged or copied user on all four methods without any I/O', async () => {
-    const real = account('admin');
+    const real = account('admin'); // Arrange
     const forged = [
       undefined,
       null,
@@ -83,6 +83,7 @@ describe('[H5P-006] HvlPermissionSystem', () => {
       Object.create(real),
     ] as unknown as (HvlH5pUser | undefined)[];
     const { system, lookups, audited } = setup();
+    // Act and assert: every method refuses every such user, and nothing is looked up or audited.
     for (const user of forged) {
       expect(await system.checkForContent(user, View, CONTENT_ID)).toBe(false);
       expect(await system.checkForContent(user, Create, undefined)).toBe(false);
@@ -98,7 +99,7 @@ describe('[H5P-006] HvlPermissionSystem', () => {
   });
 
   it('[H5P-006] anything not in the matrix is denied', async () => {
-    const { system: s, audited } = setup();
+    const { system: s, audited } = setup(); // Arrange
     const unknown = 99 as never;
     const blank = asStateUser(
       actor('admin', { learnerKey: '', dataSubjectRequest: { ...REQUEST, learnerKey: '' } }),
@@ -131,17 +132,18 @@ describe('[H5P-006] HvlPermissionSystem', () => {
       ['an empty learner key', data(blank, DeleteState, '')],
       ['every learner, with a request', data(state('admin'), DeleteState)],
     ];
-    for (const [label, run] of denied) expect(await run(), label).toBe(false);
+    for (const [label, run] of denied) expect(await run(), label).toBe(false); // Act and assert
     expect(audited).toEqual([]);
   });
 
   it('[DATA-007] records a granted data-subject access before it allows it', async () => {
-    let release = (): void => undefined;
+    let release = (): void => undefined; // Arrange: an auditor that holds its record until released
     const recorded: DataSubjectAccess[] = [];
     const { system } = setup(
       (access) => new Promise<void>((resolve) => (release = () => (recorded.push(access), resolve()))),
     );
     let settled = false;
+    // Act and assert: the check stays pending until the record is written, then grants.
     const check = system
       .checkForUserData(account('admin'), DeleteState, CONTENT_ID, NAMED_KEY)
       .finally(() => (settled = true));
@@ -164,7 +166,8 @@ describe('[H5P-006] HvlPermissionSystem', () => {
   });
 
   it('[H5P-006] Create and List need no lookup; a missing or non-string content ID is unknown', async () => {
-    const { system, lookups, audited } = setup();
+    const { system, lookups, audited } = setup(); // Arrange
+    // Act and assert
     expect(await system.checkForContent(account('author'), Create, undefined)).toBe(true);
     expect(await system.checkForContent(account('author'), List, undefined)).toBe(true);
     for (const id of [undefined, 42, null, { id: CONTENT_ID }, [CONTENT_ID]] as unknown as string[]) {
@@ -178,7 +181,7 @@ describe('[H5P-006] HvlPermissionSystem', () => {
   });
 
   it("[H5P-006] through Lumi's ContentUserDataManager only the state view resumes own state", async () => {
-    const { system, audited } = setup();
+    const { system, audited } = setup(); // Arrange
     const stored = { dataType: 'state', subContentId: '0', userState: '{"page":2}', contentId: CONTENT_ID };
     const storage = { getContentUserData: async () => stored } as unknown as IContentUserDataStorage;
     // WHY: Lumi's constructors take IPermissionSystem<IUser>; the factories pass ours typed like this.
@@ -186,6 +189,7 @@ describe('[H5P-006] HvlPermissionSystem', () => {
     const manager = new ContentUserDataManager(storage, permissions);
     const read = (user: HvlH5pUser, asUserId?: string) =>
       manager.getContentUserData(CONTENT_ID, 'state', '0', user, 'course-1', asUserId);
+    // Act and assert: own state through the state view, another learner's only by an audited request.
     expect(await read(state('learner'))).toEqual(stored);
     await expect(read(account('learner'))).rejects.toMatchObject({ httpStatusCode: 403 });
     await expect(read(state('author'), NAMED_KEY)).rejects.toMatchObject({ httpStatusCode: 403 });

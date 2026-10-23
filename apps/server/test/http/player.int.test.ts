@@ -31,13 +31,16 @@ describeWithServices('H5P player page', () => {
       .set(...who.header);
 
   it('[H5P-005] the page preloads the learner’s saved state and is never cached', async () => {
+    // Arrange: the learner has saved state that is to be preloaded
     const learner = await tb.actor('learner', { contextId: 'course-1' });
     await request(tb.app)
       .post(`/h5p/contentUserData/${published}/state/0`)
       .set(...learner.header)
       .type('form')
       .send({ data: '{"answers":[2]}', preload: '1', invalidate: '1' });
+    // Act
     const res = await play(learner, published);
+    // Assert
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/^text\/html/);
     expect(res.headers['cache-control']).toBe('no-store');
