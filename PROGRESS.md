@@ -114,8 +114,12 @@ Effort: high, because this is security-critical. Public Feide and Canvas values 
 - [x] Decisions D-048…D-066 recorded (plan approved 2026-10-23): server-rendered LTI views until S4 (D-048),
       mock platform (D-049), ltijs on our router with our deployment and ltik checks (D-050, D-051)
 - [ ] Mock OIDC provider and mock LTI platform in `tools/mock-platform/` for tests
-- [ ] Define the stable HMAC key for `Identity.subjectHash` and `AuthAuditEvent.ipHash` (env.ts,
-      `.env.example`, DATA-INVENTORY "Pseudonymous (stable key)"), including its rotation
+- [x] Define the stable HMAC key for `Identity.subjectHash` and `AuthAuditEvent.ipHash` (env.ts,
+      `.env.example`, DATA-INVENTORY "Pseudonymous (stable key)"), including its rotation: `IDENTITY_HASH_KEYS`
+      key ring with HKDF purposes and `subjectKeyId`/`ipKeyId` columns (D-055); also `DATA_ENCRYPTION_KEYS` (D-056)
+      and `URL_SIGNING_KEYS` (D-058), production checks for weak, shared and http values
+- [x] Risk probes kept as tests: ltijs 7.0.7 Provider pins, openid-client vs mock OIDC, Chromium cookie blocking
+      (findings in D-050, D-065; ltijs's launch page needs our storage guard)
 - [ ] Feide RP, role mapping, sessions, data minimisation, author linking (`AUTH-001`…`AUTH-005`)
 - [ ] `LtiProviderFactory`, `PrismaLtiDatabaseManager`, ltik transport, role mapping (`LTI-001`…`LTI-004`)
 - [ ] Deep Linking picker, resource-link launch, course copy (`LTI-005`…`LTI-007`, `PROD-005`); `HvlUrlGenerator` (`H5P-007`)
