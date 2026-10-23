@@ -4,13 +4,15 @@
  * Why: the page embeds the H5P integration object, which holds author-controlled titles and parameters. It must
  *      be script-safe, must not carry who is viewing (the pseudonym or account ID would be readable by any
  *      script in the activity), and must name the page language for screen readers (WCAG 3.1.1).
- * Spec: SEC-008, DATA-002, H5P-005
+ * Spec: SEC-008, DATA-002, H5P-005, H5P-009, DATA-011
  * Invariants:
  *   - Every URL, ID and the language are escaped; the integration object goes through `scriptJson`.
  *   - `H5PIntegration.user` is always `{ name: '', mail: '', id: '' }`; the preloaded learner state stays.
  *   - No download link: downloads are a separate, permission-checked route.
  *   - Extra scripts run first and are only same-origin static files (`/static/…js`), e.g. the LTI landing script
  *     that removes the ltik from the address bar (LTI-003).
+ *   - No inline script: the integration object is an inert JSON block that ./client/h5pIntegration.js reads, so the
+ *     page works under a `script-src` without `'unsafe-inline'` (D-070, DATA-011).
  * Collaborators: ./scriptJson.ts; ../../http/routes/playerRoutes.ts (the only caller), which gets the model from
  *   the identity renderer that ../H5pPlayerFactory.ts installs.
  * Tests: apps/server/test/h5p/render/playerPage.test.ts
@@ -18,6 +20,9 @@
 import type { IPlayerModel } from '@lumieducation/h5p-server';
 import type { Locale } from '../../i18n/translate.js';
 import { escapeHtml, scriptJson } from './scriptJson.js';
+
+/** Where the H5P router serves ./client/h5pIntegration.js. */
+export const H5P_INTEGRATION_SCRIPT = '/h5p/boot/h5pIntegration.js';
 
 /** The user object H5P sees: nobody in particular. */
 export const ANONYMOUS_H5P_USER = Object.freeze({ name: '', mail: '', id: '' });
@@ -56,9 +61,10 @@ export function renderPlayerPage(
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
     ...first,
+    `<script type="application/json" id="h5p-integration">${scriptJson(integration)}</script>`,
+    `<script src="${H5P_INTEGRATION_SCRIPT}"></script>`,
     ...styles,
     ...scripts,
-    `<script>window.H5PIntegration = ${scriptJson(integration)};</script>`,
     '</head>',
     '<body>',
     `<div class="h5p-content" data-content-id="${escapeHtml(String(model.contentId))}"></div>`,

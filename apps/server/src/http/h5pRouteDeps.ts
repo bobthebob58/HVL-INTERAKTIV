@@ -21,6 +21,7 @@ import type { Logger } from 'pino';
 import type { ContentFileGrants } from '../h5p/contentFileGrants.js';
 import type { HvlH5PEditor } from '../h5p/HvlH5PEditor.js';
 import type { HvlH5pUser } from '../h5p/HvlH5pUser.js';
+import type { H5pPageCspSettings } from './h5pPageCsp.js';
 
 /** Everything the H5P routes use. */
 export interface H5pRouteDeps {
@@ -40,6 +41,8 @@ export interface H5pRouteDeps {
   readonly corePath: string;
   /** Absolute folder of the H5P editor client files. */
   readonly editorPath: string;
+  /** H5P Core's inline-script hashes and the allowed outside media origins, for the page policy (D-070). */
+  readonly pageCsp: H5pPageCspSettings;
   /** Server logger. */
   readonly logger: Logger;
 }

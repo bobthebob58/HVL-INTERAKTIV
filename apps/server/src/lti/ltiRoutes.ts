@@ -59,6 +59,8 @@ export interface LtiRouteDeps {
   readonly access: ContentAccessRepository;
   /** The H5P player. */
   readonly player: H5pRouteDeps['player'];
+  /** The H5P page policy settings (D-070). */
+  readonly pageCsp: H5pRouteDeps['pageCsp'];
   /** `CANVAS_ORIGINS`. */
   readonly canvasOrigins: readonly string[];
   /** `LTI_TOKEN_MAX_AGE_SECONDS`. */
@@ -149,7 +151,9 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
     resolveLtik({ provider, deployments, accounts }, ltik);
   const router = Router();
   router.use(ltijsRouter);
-  router.use(ltiPlayRoutes({ player: deps.player, resolveLtik: resolve, canvasOrigins }));
+  router.use(
+    ltiPlayRoutes({ player: deps.player, pageCsp: deps.pageCsp, resolveLtik: resolve, canvasOrigins }),
+  );
   router.use(deepLinkRoutes({ db, resolveLtik: resolve, canvasOrigins, publicBaseUrl: deps.publicBaseUrl }));
   router.use(ltiErrorPages({ canvasOrigins, logger: deps.logger, audit: deps.audit }));
   return { router, resolveLtik: resolve, provider, deployments };

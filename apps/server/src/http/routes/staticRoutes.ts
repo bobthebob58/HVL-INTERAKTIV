@@ -13,6 +13,7 @@
  * Tests: apps/server/test/http/router.int.test.ts
  */
 import { extname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { pipeline } from 'node:stream/promises';
 import express, { Router, type NextFunction, type Request, type Response } from 'express';
 import { HttpError } from '../HttpError.js';
@@ -38,6 +39,9 @@ export const STATIC_ASSET_EXTENSIONS: ReadonlySet<string> = new Set([
 ]);
 
 const SANDBOX_CSP = "sandbox; default-src 'none'; style-src 'unsafe-inline'";
+const INTEGRATION_SCRIPT = fileURLToPath(
+  new URL('../../h5p/render/client/h5pIntegration.js', import.meta.url),
+);
 const YEAR_SECONDS = 365 * 24 * 60 * 60;
 
 const assetsOnly = (req: Request, _res: Response, next: NextFunction): void => {
@@ -66,6 +70,11 @@ const staticFolder = (root: string) =>
  */
 export function staticRoutes(deps: H5pRouteDeps): Router {
   const router = Router();
+  router.get('/boot/h5pIntegration.js', (_req, res) => {
+    // WHY: the page's only boot code, served as a file so the page needs no inline script (D-070).
+    res.set({ 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
+    res.type('text/javascript').sendFile(INTEGRATION_SCRIPT);
+  });
   router.use('/core', assetsOnly, staticFolder(deps.corePath));
   router.use('/editor', assetsOnly, staticFolder(deps.editorPath));
   router.get('/libraries/:uberName/*file', assetsOnly, async (req, res) => {

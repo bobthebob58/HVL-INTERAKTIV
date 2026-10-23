@@ -95,6 +95,37 @@ describeWithServices('real H5P content types', () => {
         // Assert
         expect(report).toEqual(Object.fromEntries(examples.map((e) => [e.library, []])));
       }, 300_000);
+
+      it('[DATA-011] the strict page policy holds: an injected inline script never runs, in the page or its frames', async () => {
+        // Arrange: a container type, whose sub-content may sit in frames of the same document
+        const example = examples.find((e) => e.library.startsWith('H5P.CoursePresentation')) ?? examples[0];
+        const page = await browser().newPage();
+        await page.setExtraHTTPHeaders({ [learner.header[0]]: learner.header[1] });
+        const response = await page.goto(`${base}/h5p/play/${example?.contentId}`);
+        await page.waitForFunction(() => {
+          const h5p = (window as unknown as { H5P?: { instances?: unknown[] } }).H5P;
+          return (h5p?.instances?.length ?? 0) > 0;
+        });
+        // Act: what an XSS payload would do, in the page and in H5P's own iframe
+        const ran = await page.evaluate(async () => {
+          const inject = (doc: Document) => {
+            const script = doc.createElement('script');
+            script.textContent = 'window.top.__pwned = (window.top.__pwned || 0) + 1;';
+            doc.head.appendChild(script);
+          };
+          inject(document);
+          for (const frame of document.querySelectorAll('iframe')) {
+            if (frame.contentDocument?.head) inject(frame.contentDocument);
+          }
+          await new Promise((r) => setTimeout(r, 200));
+          return (window as unknown as { __pwned?: number }).__pwned ?? 0;
+        });
+        // Assert
+        const csp = response?.headers()['content-security-policy'] ?? '';
+        expect(csp).toMatch(/script-src 'self' 'sha256-[^']+'(;|$)/);
+        expect(ran).toBe(0);
+        await page.close();
+      }, 60_000);
     });
   });
 });

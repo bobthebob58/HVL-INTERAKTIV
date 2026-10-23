@@ -1,12 +1,17 @@
 /**
- * Tests for our player page: script-safe integration JSON, escaped attributes and no user identifier.
+ * Tests for our player page: script-safe integration JSON in an inert data block (no inline script), escaped
+ * attributes and no user identifier.
  *
- * Spec: SEC-008, DATA-002
+ * Spec: SEC-008, DATA-002, DATA-011
  */
 import { describe, it, expect } from 'vitest';
 import type { IPlayerModel } from '@lumieducation/h5p-server';
 import type { Locale } from '../../../src/i18n/translate.js';
-import { ANONYMOUS_H5P_USER, renderPlayerPage } from '../../../src/h5p/render/playerPage.js';
+import {
+  ANONYMOUS_H5P_USER,
+  H5P_INTEGRATION_SCRIPT,
+  renderPlayerPage,
+} from '../../../src/h5p/render/playerPage.js';
 import { escapeHtml, scriptJson } from '../../../src/h5p/render/scriptJson.js';
 
 const BREAKOUT = '</script><script>alert(1)</script>';
@@ -30,14 +35,20 @@ const model = (overrides: Partial<IPlayerModel> = {}): IPlayerModel =>
     ...overrides,
   }) as unknown as IPlayerModel;
 
-/** The object assigned to window.H5PIntegration in a rendered page. */
+/** The object the page's JSON data block holds for window.H5PIntegration. */
 const integrationOf = (html: string): Record<string, unknown> =>
-  JSON.parse(/window\.H5PIntegration = (.*);<\/script>/.exec(html)?.[1] ?? 'null') as Record<string, unknown>;
+  JSON.parse(
+    /<script type="application\/json" id="h5p-integration">(.*?)<\/script>/.exec(html)?.[1] ?? 'null',
+  ) as Record<string, unknown>;
+/** Script elements that would run inline: neither a `src` nor an inert JSON block. */
+const inlineScripts = (html: string): string[] =>
+  html.match(/<script(?![^>]*\bsrc=)(?![^>]*type="application\/json")[^>]*>/g) ?? [];
 
 describe('[SEC-008] player page', () => {
-  it('[SEC-008] keeps markup in titles and parameters inert: exactly one inline script, data unchanged', () => {
+  it('[SEC-008] keeps markup in titles and parameters inert: no inline script, data unchanged', () => {
     const html = renderPlayerPage(model(), 'nn');
-    expect(html.match(/<script/g)).toHaveLength(2);
+    expect(html.match(/<script/g)).toHaveLength(3);
+    expect(inlineScripts(html)).toEqual([]);
     expect(html).not.toContain(BREAKOUT);
     const integration = integrationOf(html);
     const contents = integration.contents as Record<string, { metadata: { title: string } }>;
@@ -55,7 +66,8 @@ describe('[SEC-008] player page', () => {
       'nn',
     );
     // Assert
-    expect(html.match(/<script/g)).toHaveLength(2);
+    expect(html.match(/<script/g)).toHaveLength(3);
+    expect(inlineScripts(html)).toEqual([]);
     expect(html).toContain('<html lang="nn" class="h5p-iframe">');
     expect(html).not.toContain('onload="x()"');
     // Act: a hostile language
@@ -65,7 +77,16 @@ describe('[SEC-008] player page', () => {
     expect(hostile).toContain(
       '<html lang="&#34;&#62;&#60;script&#62;x()&#60;/script&#62;" class="h5p-iframe">',
     );
-    expect(hostile.match(/<script/g)).toHaveLength(2);
+    expect(hostile.match(/<script/g)).toHaveLength(3);
+  });
+
+  it('[DATA-011] the integration data comes before the boot script, which comes before every H5P script', () => {
+    const html = renderPlayerPage(model(), 'nn');
+    const data = html.indexOf('id="h5p-integration"');
+    const boot = html.indexOf(`<script src="${H5P_INTEGRATION_SCRIPT}"></script>`);
+    expect(data).toBeGreaterThan(-1);
+    expect(boot).toBeGreaterThan(data);
+    expect(html.indexOf('<script src="/h5p/core/js/h5p.js">')).toBeGreaterThan(boot);
   });
 
   it('[SEC-008] scriptJson round-trips every value and never emits markup characters', () => {

@@ -63,6 +63,7 @@ export const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
   CANVAS_ORIGINS: z.string().transform(toOriginList).default([]),
+  EXTERNAL_MEDIA_ORIGINS: z.string().transform(toOriginList).default([]),
   LTI_PLATFORMS: z.string().transform(toJson).pipe(ltiPlatformList).default([]),
   LTI_TOKEN_MAX_AGE_SECONDS: z.coerce.number().int().min(1).max(60).default(10),
   FEIDE_ISSUER: z.url({ protocol: /^https?$/ }).default('https://auth.dataporten.no'),

@@ -42,14 +42,16 @@ describeWithServices('LTI resource-link launch', () => {
       expect(run.ltik).toBeTruthy();
     });
 
-    it('[LTI-003] the player page is framed only by Canvas, never cached and never sends a Referer', async () => {
+    it('[LTI-003] the player page is framed only by our chrome page and Canvas, never cached, never sends a Referer', async () => {
       // Arrange
       const { ltik } = await launch(published);
       // Act
       const res = await request(tb.app).get(`/lti/play?ltik=${encodeURIComponent(ltik ?? '')}`);
       // Assert
       expect(res.status).toBe(200);
-      expect(res.headers['content-security-policy']).toContain(`frame-ancestors ${tb.mock.canvas.origin}`);
+      expect(res.headers['content-security-policy']).toContain(
+        `frame-ancestors 'self' ${tb.mock.canvas.origin}`,
+      );
       expect(res.headers['x-frame-options']).toBeUndefined();
       expect(res.headers['cache-control']).toBe('no-store');
       expect(res.headers['referrer-policy']).toBe('no-referrer');

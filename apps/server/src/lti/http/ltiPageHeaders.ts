@@ -4,10 +4,11 @@
  * Why: LTI-003 requires `Referrer-Policy: no-referrer`, `Content-Security-Policy: frame-ancestors` with only the
  *      configured Canvas origins and no `X-Frame-Options`. ltijs's own login and launch pages contain inline
  *      scripts, so their CSP allows exactly those scripts by hash (D-050); our own pages allow only same-origin
- *      static scripts (D-048).
+ *      static scripts (D-048). The H5P player's policy is ../../http/h5pPageCsp.ts (D-070).
  * Spec: LTI-003, LTI-001
  * Invariants:
- *   - `frame-ancestors` lists only `CANVAS_ORIGINS`, or `'none'` when none are configured.
+ *   - `frame-ancestors` lists only `CANVAS_ORIGINS`, or `'none'` when none are configured (the H5P player adds
+ *     `'self'` for our own chrome page, D-070).
  *   - Every response is `no-store` and `no-referrer`; `X-Frame-Options` is removed if anything set it.
  *   - Inline scripts are allowed only by the SHA-256 of their exact text; JSON data blocks are not scripts.
  * Collaborators: ./ExpressRouterHttpHandler.ts, ../play/ltiPlayRoutes.ts, ../deepLinking/deepLinkRoutes.ts.
@@ -73,16 +74,6 @@ export function ltiPageCsp(canvasOrigins: readonly string[], extra: readonly str
     frameAncestors(canvasOrigins),
   ].join('; ');
 }
-
-/**
- * The CSP for the H5P player inside Canvas. H5P renders with inline scripts and some content types write their own
- * frames, so the script policy waits for S4's CSP work (D-058); here only framing, `<base>`, plugins and form
- * targets are restricted.
- * @param canvasOrigins - `CANVAS_ORIGINS`.
- * @returns The header value.
- */
-export const ltiPlayerCsp = (canvasOrigins: readonly string[]): string =>
-  ["base-uri 'none'", "object-src 'none'", "form-action 'self'", frameAncestors(canvasOrigins)].join('; ');
 
 /**
  * Sets the LTI-003 headers on a response.

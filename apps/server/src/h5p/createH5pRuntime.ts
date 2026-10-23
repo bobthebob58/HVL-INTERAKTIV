@@ -42,6 +42,7 @@ import { assertPermissionSystem } from './permissionSystemGuard.js';
 import { PrismaContentAccessRepository } from './permissions/ContentAccessRepository.js';
 import { PrismaUserDataAccessAuditor } from './permissions/UserDataAccessAuditor.js';
 import { RedisKeyValueStorage } from './storage/RedisKeyValueStorage.js';
+import { coreInlineScriptHashes } from './render/coreInlineScripts.js';
 
 /** Connected clients and settings the engine is built from. */
 export interface H5pRuntimeInputs {
@@ -121,6 +122,10 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     fileGrants,
     corePath: paths.coreDir,
     editorPath: paths.editorDir,
+    pageCsp: {
+      scriptHashes: coreInlineScriptHashes(paths.coreDir),
+      externalMediaOrigins: env.EXTERNAL_MEDIA_ORIGINS,
+    },
     logger,
     cleanupJob,
   };

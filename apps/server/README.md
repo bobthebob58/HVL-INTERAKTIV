@@ -124,9 +124,9 @@ test database one file at a time.
 | `src/h5p/HvlPermissionSystem.ts`, `permissions/`, `permissionSystemGuard.ts`, `HvlH5pUser.ts` | Who may do what (`H5P-006`, with D-060 for launched activities), the actor's account and state views (D-036), and the start-up check that every Lumi component uses it |
 | `src/h5p/HvlTranslationCallback.ts`, `h5pTranslationResources.ts` | Lumi's strings in nn → nb → en (`H5P-008`) |
 | `src/h5p/libraries/` | Package manifest and version checks, library audit, the offline seeder (`seed:libraries`) |
-| `src/h5p/render/` | Our player page with script-safe JSON (D-040); the LTI player puts its two page scripts first |
+| `src/h5p/render/` | Our player page with script-safe JSON in an inert data block read by `client/h5pIntegration.js` (D-040, D-070); the LTI player puts its two page scripts first; `coreInlineScripts.ts` hashes H5P Core's one inline script for the page CSP |
 | `src/h5p/hubCheck.ts` | `hub:check`: registration and Hub versions, on demand only (D-041) |
-| `src/http/` | `createH5pRouter`: public client files, then the grant-checked content files, then `h5pAuthenticate`, the editor, file, state, content and player routes, and the translated error handler; `securityHeaders.ts` (headers of every response), `authErrors.ts` (one status and message per refusal code) |
+| `src/http/` | `createH5pRouter`: public client files, then the grant-checked content files, then `h5pAuthenticate`, the editor, file, state, content and player routes, and the translated error handler; `securityHeaders.ts` (headers of every response), `h5pPageCsp.ts` (the strict policy of the pages that run H5P, D-070), `authErrors.ts` (one status and message per refusal code) |
 | `src/http/pages/` | Server-rendered pages with an escaping `markup` template, the friendly message page, the S3 start page `/` and the HTML 404 page (D-048, D-066) |
 | `src/http/api/` | `PATCH /api/content/:contentId/sharing`: changes visibility only, for the owner, co-authors and admins only, audited in the same transaction (PROD-006, D-066) |
 | `src/h5p/coreVersionCheck.ts`, `h5pServerInit.ts`, `bootCheck.ts` | Refuse to start when the fetched core files are not API 1.28 |
@@ -312,7 +312,7 @@ sequenceDiagram
     RL-->>B: 302 /lti/play?ltik=… (context.redirect)
     B->>P: GET /lti/play?ltik=…
     P->>P: resolveLtik, then render the player as the launch's actor (View check, signed contentUrl)
-    P-->>B: player page: ltikLanding.js, h5pStorageGuard.js, then H5P Core (no-store, no-referrer, frame-ancestors CANVAS_ORIGINS)
+    P-->>B: player page: ltikLanding.js, h5pStorageGuard.js, then H5P Core (no-store, no-referrer, strict script CSP, frame-ancestors self + CANVAS_ORIGINS)
     B->>B: ltikLanding.js removes the ltik from the address bar (history.replaceState)
     B->>H: GET and POST /h5p/contentUserData/…?ltik=… and /h5p/ajax?ltik=… (H5P cannot send a header)
     B->>H: GET /h5p/files/:grant/:contentId/*file (the grant authorises, no token)

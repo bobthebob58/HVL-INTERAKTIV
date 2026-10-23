@@ -11,6 +11,7 @@ import { openAppTestbed, type AppTestbed } from '../support/appTestbed.js';
 import { loginWithFeide } from '../support/feideTestbed.js';
 import { launchFromCanvas } from '../support/ltiLaunchDriver.js';
 import { describeWithServices } from '../support/services.js';
+import { integrationText } from '../support/playerIntegration.js';
 
 describeWithServices('Authentication on the H5P routes', () => {
   let tb: AppTestbed;
@@ -42,7 +43,7 @@ describeWithServices('Authentication on the H5P routes', () => {
       // Act
       const page = await request(tb.app).get(`/lti/play?ltik=${encodeURIComponent(ltik)}`);
       // Assert
-      const integration = /H5PIntegration\s*=\s*(\{.*?\});/s.exec(page.text)?.[1] ?? '';
+      const integration = integrationText(page.text);
       expect(integration).toContain(`ltik=${encodeURIComponent(ltik)}`);
       expect(integration).toMatch(/\/h5p\/files\/[^/"]+\//);
       expect(integration).not.toContain('csrf=');

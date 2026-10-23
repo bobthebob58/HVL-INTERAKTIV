@@ -9,6 +9,7 @@ import { afterAll, beforeAll, expect, it } from 'vitest';
 import { t } from '../../src/i18n/translate.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
+import { inlineScriptTags, integrationFromPage } from '../support/playerIntegration.js';
 
 const BREAKOUT = '</script><script>alert(1)</script>';
 
@@ -44,7 +45,7 @@ describeWithServices('H5P player page', () => {
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/^text\/html/);
     expect(res.headers['cache-control']).toBe('no-store');
-    expect(res.text).toContain('window.H5PIntegration');
+    expect(integrationFromPage(res.text)).not.toBeNull();
     expect(res.text).toMatch(/answers.{0,6}\[2\]/);
   });
 
@@ -64,8 +65,8 @@ describeWithServices('H5P player page', () => {
     const res = await play(learner, published);
     expect(res.status).toBe(200);
     expect(res.text).not.toContain(BREAKOUT);
-    const inline = res.text.match(/<script>/g) ?? [];
-    expect(inline).toHaveLength(1);
+    expect(inlineScriptTags(res.text)).toEqual([]);
+    expect(integrationFromPage(res.text)).not.toBeNull();
   });
 
   it('[DATA-002] the page carries no pseudonym and no account ID', async () => {

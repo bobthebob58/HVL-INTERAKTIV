@@ -16,6 +16,7 @@ import { randomKey } from '../support/authEnv.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
 import { FILE_FIELD, MINIMAL_PDF, PNG_1X1, rawBody, uploadEditorFile } from '../support/uploadFixtures.js';
+import { integrationFromPage } from '../support/playerIntegration.js';
 
 interface PlayerIntegration {
   ajaxPath: string;
@@ -23,8 +24,7 @@ interface PlayerIntegration {
   contents: Record<string, { contentUrl: string }>;
 }
 
-const integrationOf = (html: string) =>
-  JSON.parse(/window\.H5PIntegration = (.*);<\/script>/.exec(html)?.[1] ?? 'null') as PlayerIntegration;
+const integrationOf = (html: string) => integrationFromPage<PlayerIntegration>(html) as PlayerIntegration;
 
 describeWithServices('signed content-file URLs', () => {
   let tb: HttpTestbed;

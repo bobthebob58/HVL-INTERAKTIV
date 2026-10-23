@@ -210,12 +210,13 @@ must be pasted into `PROGRESS.md`, before the next session starts.
    rendered by the server; `apps/web` replaces them in S4. There is no editor page yet, the **Rediger** and
    **Innsikt** tabs come with the editor (S4) and insight (S6) (D-062), and no page offers sharing: it is an
    API call.
-8. **The player pages have no script policy yet** (D-058 residual risk). H5P Core renders with inline
-   scripts, so the CSP of the Canvas player (`/lti/play`) restricts only framing, `<base>`, plugins and form
-   targets, and the portal player (`/h5p/play/:contentId`) restricts only framing; the script policy is S4's
-   CSP work. Until then a script inside an activity could read the page's URL token (the ltik or the CSRF
-   token in the H5P URLs) and send requests as that user. The S2 upload checks (`SEC-001`, `SEC-002`) and
-   admin-only library installation (`SEC-003`) limit what an activity can carry.
+8. **The player pages allow inline styles, and the editor page has no script policy yet** (D-070). Since S4 the
+   portal player (`/h5p/play/:contentId`) and the Canvas player (`/lti/play`) send `script-src 'self'` plus the
+   hash of H5P Core's one constant inline script, so a script inside an activity cannot run and read the page's
+   URL token (the ltik or the CSRF token). `style-src` still allows `'unsafe-inline'`, because H5P sets style
+   attributes throughout; injected CSS can change how an activity looks but not run code. The H5P editor page
+   comes later in S4 under the same policy. The S2 upload checks (`SEC-001`, `SEC-002`) and admin-only library
+   installation (`SEC-003`) limit what an activity can carry.
 9. **Tokens travel in some URLs, so proxies must not log query strings** (D-057, D-058). A launch reaches
    `/lti/play` and `/lti/deeplink` with the ltik in the query (a first-party script then removes it from the
    address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF token as a query value,

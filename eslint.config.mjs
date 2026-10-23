@@ -110,7 +110,7 @@ export default tseslint.config(
   },
   {
     // SECURITY: LTI-003 / D-048: the ltik lives only in page memory, never in browser storage or cookies.
-    files: ['apps/server/src/lti/pages/client/*.js'],
+    files: ['apps/server/src/lti/pages/client/*.js', 'apps/server/src/h5p/render/client/*.js'],
     languageOptions: { sourceType: 'script', globals: { ...globals.browser } },
     rules: {
       'no-restricted-globals': [

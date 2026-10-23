@@ -84,6 +84,7 @@ export function createApp(inputs: AppInputs): App {
     audit,
     access,
     player: inputs.h5p.player,
+    pageCsp: inputs.h5p.pageCsp,
     canvasOrigins: env.CANVAS_ORIGINS,
     tokenMaxAgeSeconds: env.LTI_TOKEN_MAX_AGE_SECONDS,
     publicBaseUrl: base,

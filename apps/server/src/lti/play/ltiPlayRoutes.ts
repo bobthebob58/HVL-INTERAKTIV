@@ -25,7 +25,8 @@ import { authError } from '../../http/authErrors.js';
 import type { H5pRouteDeps } from '../../http/h5pRouteDeps.js';
 import { PLAYER_DISPLAY_OPTIONS } from '../../http/routes/playerRoutes.js';
 import { setLtiPageLocale } from '../http/ltiErrorPages.js';
-import { ltiPlayerCsp, setLtiPageHeaders } from '../http/ltiPageHeaders.js';
+import { h5pPageCsp } from '../../http/h5pPageCsp.js';
+import { setLtiPageHeaders } from '../http/ltiPageHeaders.js';
 import type { ResolvedLtik } from '../ltikPrincipal.js';
 
 /** Where the LTI page scripts are served. */
@@ -48,6 +49,8 @@ export interface LtiPlayDeps {
   /** Resolves the request's ltik into its launch (../ltikPrincipal.ts). */
   readonly resolveLtik: (ltik: string) => Promise<ResolvedLtik>;
   readonly canvasOrigins: readonly string[];
+  /** The H5P page policy settings (D-070). */
+  readonly pageCsp: H5pRouteDeps['pageCsp'];
 }
 
 /**
@@ -77,7 +80,8 @@ export function ltiPlayRoutes(deps: LtiPlayDeps): Router {
       if (statusOf(error) === 403 || statusOf(error) === 404) throw authError('hvl:activity-unavailable');
       throw error;
     }
-    setLtiPageHeaders(res, ltiPlayerCsp(deps.canvasOrigins));
+    // SECURITY: the strict H5P page policy (D-070); framed by our LTI chrome page and by Canvas (D-067).
+    setLtiPageHeaders(res, h5pPageCsp(deps.pageCsp, ["'self'", ...deps.canvasOrigins]));
     res.type('html').send(
       renderPlayerPage(model, actor.locale, {
         firstScripts: [LTIK_LANDING_SCRIPT, H5P_STORAGE_GUARD_SCRIPT],

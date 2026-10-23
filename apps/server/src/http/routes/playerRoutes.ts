@@ -23,6 +23,7 @@ import { sendPortalPage } from '../pages/portalPages.js';
 import { setPortalFrameHeaders } from '../securityHeaders.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
 import { pathParam } from '../routeParams.js';
+import { h5pPageCsp } from '../h5pPageCsp.js';
 
 /** Buttons and frame of the player (H5P "display options"). */
 export const PLAYER_DISPLAY_OPTIONS = Object.freeze({
@@ -68,6 +69,8 @@ export function playerRoutes(deps: H5pRouteDeps): Router {
     }
     res.set('Cache-Control', 'no-store');
     setPortalFrameHeaders(res);
+    // SECURITY: no inline script, first-party sources only (D-070, DATA-011); framed by our own pages only.
+    res.set('Content-Security-Policy', h5pPageCsp(deps.pageCsp, ["'self'"]));
     res.type('html').send(renderPlayerPage(model, actor.locale));
   });
   return router;

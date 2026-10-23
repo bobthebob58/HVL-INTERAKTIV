@@ -926,7 +926,7 @@ content-type library has no <code>language/nn.json</code>, the library&#39;s <co
 </ul>
 <p class="req-source">Defined in <a href="#r-H5P-008">01 H5P engine and security, H5P-008</a> · H5P engine</p></div>
 </details>
-<details class="req" id="x-H5P-009" data-area="H5P" data-priority="MUST" data-session="S4" data-status="planned" data-text="h5p-009 inject theme and client scripts into player and editor use `customization.global.styles` and `customization.global.scripts`, or `alterlibraryfiles`, to add
+<details class="req" id="x-H5P-009" data-area="H5P" data-priority="MUST" data-session="S4" data-status="tested" data-text="h5p-009 inject theme and client scripts into player and editor use `customization.global.styles` and `customization.global.scripts`, or `alterlibraryfiles`, to add
 `packages/hvl-h5p-theme/dist/hvl-h5p-theme.css` (`ud-011`) and the xapi bridge script (`lti-010`)
 inside the h5p iframe.
 - **acceptance:** the iframe document contains both assets with integrity hashes and `nonce`s that match the csp.
@@ -934,7 +934,7 @@ inside the h5p iframe.
 - **amended (d-070, 2026-10-23):** tags that h5p core writes into its own iframes cannot carry a nonce or an
   integrity hash; they are allowed by the page's `script-src 'self'` and the hash of core's one constant inline
   script instead. our own page tags keep integrity hashes.">
-<summary><span class="req-id">H5P-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Inject theme and client scripts into player and editor</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">H5P-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Inject theme and client scripts into player and editor</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Use <code>customization.global.styles</code> and <code>customization.global.scripts</code>, or <code>alterLibraryFiles</code>, to add
 <code>packages/hvl-h5p-theme/dist/hvl-h5p-theme.css</code> (<a class="req-ref" href="#r-UD-011"><code>UD-011</code></a>) and the xAPI bridge script (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>)
 inside the H5P iframe.</p>
@@ -2346,11 +2346,11 @@ data is never copied to development; test data is synthetic.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-010">05 Insight and privacy, DATA-010</a> · Data protection</p></div>
 </details>
-<details class="req" id="x-DATA-011" data-area="DATA" data-priority="MUST" data-session="S4" data-status="planned" data-text="data-011 no third-party tracking or cdns student-facing pages load no third-party scripts, fonts, analytics or embeds other than ones the
+<details class="req" id="x-DATA-011" data-area="DATA" data-priority="MUST" data-session="S4" data-status="tested" data-text="data-011 no third-party tracking or cdns student-facing pages load no third-party scripts, fonts, analytics or embeds other than ones the
 author has explicitly added (e.g. a panopto video). fonts are self-hosted. a
 `content-security-policy` enforces this.
 - **verify:** playwright test records all network requests on a seed activity and asserts first-party only.">
-<summary><span class="req-id">DATA-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">No third-party tracking or CDNs</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">DATA-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">No third-party tracking or CDNs</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Student-facing pages load no third-party scripts, fonts, analytics or embeds other than ones the
 author has explicitly added (e.g. a Panopto video). Fonts are self-hosted. A
 <code>Content-Security-Policy</code> enforces this.</p>
@@ -4929,12 +4929,13 @@ picker (<code>/lti/deeplink</code>), the friendly error pages and the portal sta
 rendered by the server; <code>apps/web</code> replaces them in S4. There is no editor page yet, the <strong>Rediger</strong> and
 <strong>Innsikt</strong> tabs come with the editor (S4) and insight (S6) (D-062), and no page offers sharing: it is an
 API call.</li>
-<li><strong>The player pages have no script policy yet</strong> (D-058 residual risk). H5P Core renders with inline
-scripts, so the CSP of the Canvas player (<code>/lti/play</code>) restricts only framing, <code>&lt;base&gt;</code>, plugins and form
-targets, and the portal player (<code>/h5p/play/:contentId</code>) restricts only framing; the script policy is S4&#39;s
-CSP work. Until then a script inside an activity could read the page&#39;s URL token (the ltik or the CSRF
-token in the H5P URLs) and send requests as that user. The S2 upload checks (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>, <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a>) and
-admin-only library installation (<a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>) limit what an activity can carry.</li>
+<li><strong>The player pages allow inline styles, and the editor page has no script policy yet</strong> (D-070). Since S4 the
+portal player (<code>/h5p/play/:contentId</code>) and the Canvas player (<code>/lti/play</code>) send <code>script-src &#39;self&#39;</code> plus the
+hash of H5P Core&#39;s one constant inline script, so a script inside an activity cannot run and read the page&#39;s
+URL token (the ltik or the CSRF token). <code>style-src</code> still allows <code>&#39;unsafe-inline&#39;</code>, because H5P sets style
+attributes throughout; injected CSS can change how an activity looks but not run code. The H5P editor page
+comes later in S4 under the same policy. The S2 upload checks (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>, <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a>) and admin-only library
+installation (<a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>) limit what an activity can carry.</li>
 <li><strong>Tokens travel in some URLs, so proxies must not log query strings</strong> (D-057, D-058). A launch reaches
 <code>/lti/play</code> and <code>/lti/deeplink</code> with the ltik in the query (a first-party script then removes it from the
 address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF token as a query value,
