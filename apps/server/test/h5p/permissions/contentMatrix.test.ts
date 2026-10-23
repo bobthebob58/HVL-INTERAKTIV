@@ -68,7 +68,8 @@ function expected(c: Cell): boolean {
       return account && c.role !== 'learner';
     case View:
       if (c.role === 'admin') return true;
-      if (c.role === 'author') return ownerOrCoAuthor || (published && visible);
+      // D-060: an author's own launch (e.g. after a course copy) reveals a published activity, as for learners.
+      if (c.role === 'author') return ownerOrCoAuthor || (published && (visible || c.launched));
       return published && (visible || c.launched);
     case Edit:
     case Delete:
@@ -158,7 +159,9 @@ describe('[H5P-006] content permissions: anchor cells written out by hand', () =
     ['HVL without Feide does not reach a Feide activity', { visibility: 'feide', reach: 'hvl' }, false],
     ['an author previews a co-authored draft', { ...author, status: 'draft', relation: 'co-author' }, true],
     ["authors do not see a colleague's draft", { ...author, status: 'draft', visibility: 'feide' }, false],
-    ["an author's launch does not reveal a private activity", author, false],
+    ['[LTI-007] an author views a published activity their own launch opened (D-060)', author, true],
+    ["an author's launch does not reveal a colleague's draft", { ...author, status: 'draft' }, false],
+    ["an author's launch never lets them edit it", { ...author, permission: Edit }, false],
     ["no edits to a colleague's activity", { ...author, permission: Edit, visibility: 'feide' }, false],
     [
       'a co-author may download a draft',

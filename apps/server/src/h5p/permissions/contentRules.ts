@@ -3,12 +3,14 @@
  *
  * Why: the permission matrix must be provable cell by cell (H5P-006 "Verify"). Keeping the decisions free of
  *      I/O lets a table-driven test cover every combination of role, view, relation, status and visibility.
- * Spec: H5P-006, PROD-004, PROD-006
+ * Spec: H5P-006, PROD-004, PROD-006, LTI-007
  * Invariants:
  *   - Anything not listed in the matrix is denied, including unknown enum values and `ContentPermission.Embed`.
  *   - Decisions read the actor's explicit fields and the view, never `user.id` (D-036), so a wrong view fails
  *     closed.
  *   - A draft is never visible to a learner, not even through an LTI launch (PROD-004).
+ *   - An LTI launch reveals a published activity to the learner or author it was launched for (D-060); it never
+ *     grants Edit, Delete or Download.
  *   - Unknown content (no facts) is denied for every per-activity permission.
  * Collaborators: ../HvlPermissionSystem.ts (the caller), ./ContentAccessRepository.ts (facts),
  *   ../HvlH5pUser.ts (actor and views), ./userDataRules.ts (uses `View` for own state).
@@ -84,8 +86,12 @@ function mayView(actor: HvlH5pActor, facts: ContentFacts): boolean {
     case 'admin':
       return true;
     case 'author':
-      // WHY: authors preview their own drafts (PROD-004); others' activities only once published and visible.
-      return isOwnerOrCoAuthor(actor, facts) || (published && isVisibleTo(actor, facts));
+      // WHY: authors preview their own drafts (PROD-004); others' activities only once published and visible, or
+      // when their own launch opened it, e.g. after a Canvas course copy (D-060, LTI-007).
+      return (
+        isOwnerOrCoAuthor(actor, facts) ||
+        (published && (isVisibleTo(actor, facts) || actor.ltiLaunchContentIds.includes(facts.contentId)))
+      );
     case 'learner':
       // WHY: a draft stays hidden from learners even when its ID arrives in an LTI launch (PROD-004).
       return published && (isVisibleTo(actor, facts) || actor.ltiLaunchContentIds.includes(facts.contentId));

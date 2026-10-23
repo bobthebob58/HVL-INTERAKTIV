@@ -67,7 +67,8 @@ function canView(c: Cell): boolean {
   const published = c.status === 'published';
   const visible = ownerOrCoAuthor || c.visibility === 'organisation';
   if (c.role === 'admin') return true;
-  if (c.role === 'author') return ownerOrCoAuthor || (published && visible);
+  // D-060: an author's own launch (e.g. after a course copy) reveals a published activity, as for learners.
+  if (c.role === 'author') return ownerOrCoAuthor || (published && (visible || c.launched));
   return published && (visible || c.launched);
 }
 
