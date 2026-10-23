@@ -415,6 +415,8 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>D-066</td><td>Friendly &quot;not available&quot; pages and visibility-only sharing until S4</td><td>Accepted (2026-10-23), owner to confirm (Q14)</td></tr>
 <tr>
+<td>D-047</td><td>R-01 settled: Core 1.28 and Lumi 10.0.4 run the ten real content types</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
 <td>D-067</td><td>H5P runtime pages stay in Express; the Next.js app frames them</td><td>Accepted (2026-10-23)</td></tr>
 <tr>
 <td>D-068</td><td>Express is the front door and runs Next.js in the same process</td><td>Accepted (2026-10-23)</td></tr>
@@ -1644,12 +1646,12 @@ such as images with hotspots, which may pan. Works in both orientations.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-010">03 Universal design, UD-010</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-011" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-011 hvl theme inside h5p iframes `packages/hvl-h5p-theme/src/hvl-h5p-theme.css` is layered **on top of** h5p core 1.28's daylight
+<details class="req" id="x-UD-011" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-011 hvl theme inside h5p iframes `packages/hvl-h5p-theme/src/hvl-h5p-theme.css` is layered **on top of** h5p core 1.28's daylight
 theme. it overrides daylight's custom properties where possible and selectors only where necessary.
 every `!important` has a `/* why: … */` comment naming the h5p selector it beats. the theme covers:
 tokens, typography (`ud-002`), feedback states (`ud-003`), focus (`ud-004`) and target size (`ud-005`).
 - **verify:** playwright and axe inside the iframe for one seed activity of each of the ten types (`ud-030`).">
-<summary><span class="req-id">UD-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">HVL theme inside H5P iframes</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">HVL theme inside H5P iframes</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p><code>packages/hvl-h5p-theme/src/hvl-h5p-theme.css</code> is layered <strong>on top of</strong> H5P Core 1.28&#39;s Daylight
 theme. It overrides Daylight&#39;s custom properties where possible and selectors only where necessary.
 Every <code>!important</code> has a <code>/* WHY: … */</code> comment naming the H5P selector it beats. The theme covers:
@@ -5112,6 +5114,8 @@ with the commands given.</p>
 <tr>
 <td>D-066</td><td>Friendly &quot;not available&quot; pages and visibility-only sharing until S4</td><td>Accepted (2026-10-23), owner to confirm (Q14)</td></tr>
 <tr>
+<td>D-047</td><td>R-01 settled: Core 1.28 and Lumi 10.0.4 run the ten real content types</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
 <td>D-067</td><td>H5P runtime pages stay in Express; the Next.js app frames them</td><td>Accepted (2026-10-23)</td></tr>
 <tr>
 <td>D-068</td><td>Express is the front door and runs Next.js in the same process</td><td>Accepted (2026-10-23)</td></tr>
@@ -5939,6 +5943,22 @@ existence is not revealed. A portal page without a session sends the browser to 
 <code>returnTo</code>. The S3 sharing API changes <strong>visibility only</strong>; every change writes an audit event.</li>
 <li><strong>Consequences:</strong> Activities are published through S4&#39;s flow (owner to confirm, Q14).</li>
 </ul>
+<h3 id="decisions--d-047--r-01-settled-core-128-and-lumi-1004-run-the-ten-real-content-types" tabindex="-1">D-047 · R-01 settled: Core 1.28 and Lumi 10.0.4 run the ten real content types</h3>
+<ul>
+<li><strong>Context:</strong> R-01 asked whether Lumi h5p-server 10.0.4 works with Core 1.28 libraries (spike steps 3–5, S2); the
+fallback was Core 1.27 without the Daylight theme. The Hub stayed unreachable (Q7), so the spike was carried into S4.</li>
+<li><strong>Decision:</strong> Keep Core 1.28 with Lumi 10.0.4 and the F1–F3 workarounds. Evidence (2026-10-23): the ten types at
+their newest Core-1.28-era releases (MultiChoice 1.16.14, Blanks 1.14.13, DragText 1.10.52, QuestionSet 1.21.13,
+Column 1.18.8, CoursePresentation 1.28.25, InteractiveVideo 1.28.37, InteractiveBook 1.15.1 with Column 1.22.0,
+ImageHotspots 1.11.6, BranchingScenario 1.10.1; 120 libraries in all, built from GitHub, D-078) install through
+the seed path with the S2 package checks, import with their files, save through the editor with the sub-content
+policy, and play on our player page in Chromium without console errors, page errors or failed requests
+(<code>apps/server/test/h5p/realTypes.browser.int.test.ts</code>). Spike step 3 (Hub registration) still waits for Q7.</li>
+<li><strong>Consequences:</strong> No downgrade to 1.27. Findings for later work: QuestionSet 1.21 announces its end feedback to
+screen readers but no longer shows it (relevant to <code>PED-H11</code> and <a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>); several libraries&#39; Nynorsk files leave
+UI strings in English or are out of step with their semantics (BranchingScenario <code>l10n</code>), so authors may need to
+correct labels; InteractiveBook 1.15 offers only Column 1.22, which has no release tag (pinned commit, D-022 rule).</li>
+</ul>
 <h3 id="decisions--d-067--h5p-runtime-pages-stay-in-express-the-nextjs-app-frames-them" tabindex="-1">D-067 · H5P runtime pages stay in Express; the Next.js app frames them</h3>
 <ul>
 <li><strong>Context:</strong> S4 brings <code>apps/web</code> (Next.js), the H5P editor page (D-040) and the move of the S3 LTI views (D-048).
@@ -6078,7 +6098,19 @@ one <code>.h5p</code> per content type with our own example content into the git
 packages are installed through the admin package import, so the S2 package checks run on them. Library files are
 not committed (Q10 stays open); synthetic libraries remain for unit tests.</li>
 <li><strong>Consequences:</strong> Versions can differ from what the Hub serves; the Hub packages (D-042) replace them when Q7 is
-resolved. A type that cannot be assembled stays synthetic and is listed in PROGRESS.</li>
+resolved. A type that cannot be assembled stays synthetic and is listed in PROGRESS. <code>SPEC-DEVIATION</code>: <a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>
+seeds from packages downloaded from the Hub; these are built from H5P&#39;s own repositories at pinned commits and
+serve development, tests and CI until the Hub is reachable.</li>
+<li><strong>Amendment (2026-10-23, probe 1):</strong> the H5P registry (<code>github.com/h5p/h5p-registry</code>, pinned) maps machine names to
+repositories. The resolver follows required dependencies and, as optional, the sub-content types each library&#39;s
+semantics offers (without them InteractiveBook could not save its own pages): 120 libraries, 23 of them built
+with webpack; 39 offered old versions are skipped and listed in the manifest (their dependencies are not in the
+registry, or they need a build without a lockfile). Three libraries have no matching release tag and are pinned to
+a reviewed commit (D-022 rule). Network errors are retried and never cause a skip. Builds run outside the repository, because a library&#39;s
+build otherwise picks up this repository&#39;s TypeScript configuration. Installing the first real package showed
+that S2&#39;s narrowed <code>contentWhitelist</code> (SEC-002) also applied to library folders through Lumi&#39;s
+<code>libraryWhitelist</code>, so every real package, from GitHub or the Hub, was refused for its icon fonts:
+<code>libraryWhitelist</code> now adds <code>eot ttf woff woff2 otf</code> (library folders only; content files keep the SEC-002 list).</li>
 </ul>
 <h3 id="decisions--d-079--what-s4-verifies-automatically-and-what-hvl-records-by-hand" tabindex="-1">D-079 · What S4 verifies automatically and what HVL records by hand</h3>
 <ul>
@@ -6176,6 +6208,8 @@ every residual and new problem it found is fixed, with regression tests (see the
 <h3 id="progress--s2--content-types-and-security--gate-passed-2026-10-23-spike-steps-35-open-q7" tabindex="-1">S2 — Content types and security ✅ (gate passed 2026-10-23; spike steps 3–5 open, Q7)</h3>
 <ul>
 <li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (to be recorded as D-047).
+<strong>2026-10-23 (S4):</strong> steps 4–5 and R-01 are done with real content types built from GitHub at pinned commits
+(D-078): Core 1.28 stays (D-047). Only step 3, the Hub registration, still waits for Q7.
 <strong>Still blocked (Q7):</strong> on 2026-10-23 (last checked 07:32 UTC) the egress proxy refused hub-api.h5p.org
 (<code>CONNECT tunnel failed, response 403</code>; <code>npm run hub:check</code> reports <code>fetch failed: Request was cancelled.</code>).
 S2 closed on the plan&#39;s fallback: the gate passes on synthetic packages; this item carries forward.
@@ -6251,7 +6285,9 @@ is linking, that Deep Linking launch opens on the new, empty Canvas account; the
 Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one go); decisions D-067…D-079.</p>
 <ul>
 <li><span class="task">✓ Done:</span> Decisions D-067…D-079 recorded; D-047 (R-01) follows the real-library probe</li>
-<li><span class="task">○ To do:</span> Real H5P content types from GitHub at pinned commits (D-078), which also settles the S2 carry-over R-01 (D-047)</li>
+<li><span class="task">✓ Done:</span> Real H5P content types from GitHub at pinned commits (<code>npm run h5p:fetch-libraries</code>, D-078): 120 libraries,
+ten Nynorsk example activities; all ten install through the seed path, import, save and play in Chromium;
+R-01 settled (D-047). Found and fixed: library folders refused icon fonts (SEC-002 list applied to them)</li>
 <li><span class="task">○ To do:</span> H5P pages under a strict script policy (D-070); Next.js inside Express (D-067, D-068); the editor page and the
 LTI editor in a cookie-less iframe (D-069)</li>
 <li><span class="task">○ To do:</span> <code>packages/design-tokens</code> with the contrast test and lint rules (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>)</li>

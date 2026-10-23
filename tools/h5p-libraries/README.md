@@ -20,8 +20,8 @@ node tools/h5p-libraries/fetchLibraries.mjs --only H5P.Blanks --dest /tmp/x   # 
 node tools/h5p-libraries/fetchLibraries.mjs --resolve   # re-pin the manifest (review the diff, then commit)
 ```
 
-The first run clones 76 repositories and builds 17 of them with webpack (about three minutes); later runs reuse
-the cache and take seconds. Tests that need the packages (`describeWithRealPackages`) skip locally without them and
+The first run clones 120 repositories and builds 23 of them with webpack (a few minutes); later runs reuse the
+cache and take seconds. Tests that need the packages (`describeWithRealPackages`) skip locally without them and
 fail in CI. `REAL_H5P_PACKAGES_DIR` points tests at another package folder.
 
 ## Key flows
@@ -39,8 +39,13 @@ flowchart LR
 ```
 
 - **Pins:** every library is fetched at the commit in `libraries.manifest.json`; a moved tag or another commit
-  aborts the run. Two editor libraries have no matching release tag and are pinned to a reviewed commit
+  aborts the run. A few libraries have no matching release tag and are pinned to a reviewed commit
   (`"untagged": true`), as D-022 allows for the editor.
+- **What is resolved:** required dependencies (`preloadedDependencies`, `editorDependencies`) and, as optional, the
+  sub-content types each library's semantics offers, so containers can save and edit their own children. An
+  optional library that cannot be resolved (not in the registry, no matching version, a build without a
+  lockfile, or a skipped dependency) is listed under `skipped` with the reason; network errors are retried and
+  never cause a skip.
 - **Builds:** `npm ci --ignore-scripts` (no third-party install scripts) and the library's own `build` script. The
   checkouts live outside the repository (`H5P_LIBRARIES_CACHE`, default `~/.cache/hvl-interaktiv/h5p-libraries`)
   so a library build never picks up this repository's TypeScript or PostCSS configuration.

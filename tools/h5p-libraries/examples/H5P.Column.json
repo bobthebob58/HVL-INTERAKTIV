@@ -1,0 +1,119 @@
+{
+  "mainLibrary": "H5P.Column-1.18",
+  "title": "Samlingsbasert undervisning: før, under og etter",
+  "language": "nn",
+  "license": "U",
+  "assets": {
+    "images/diagram.png": "assets/diagram.png"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<h2>Tre fasar i samlingsbasert undervisning</h2><p>Når studentane berre møtest nokre få gonger i semesteret, må kvar samling brukast godt. Eit læringsdesign deler difor arbeidet inn i tre fasar:</p><ul><li><strong>Før samlinga</strong> førebur studentane seg med ein kort video og ein quiz.</li><li><strong>Under samlinga</strong> bruker studentar og lærarar tida saman på samtale og problemløysing.</li><li><strong>Etter samlinga</strong> skriv studentane ein kort refleksjon og får tilbakemelding.</li></ul><p>Undervegsvurdering gir studentane tilbakemelding i alle tre fasane, medan det framleis er tid til å justere. Gi videoen teksting og bileta alternativ tekst, slik at alle studentane kan bruke materialet (universell utforming).</p>"
+          },
+          "subContentId": "3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b01",
+          "metadata": {
+            "contentType": "Text",
+            "license": "U",
+            "title": "Tre fasar i samlingsbasert undervisning"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Image 1.1",
+          "params": {
+            "file": {
+              "path": "images/diagram.png",
+              "mime": "image/png",
+              "copyright": { "license": "U" },
+              "width": 960,
+              "height": 540
+            },
+            "decorative": false,
+            "alt": "Læringsdesign i tre fasar. Fase 1, før samlinga: førebuing med video og quiz. Fase 2, under samlinga: samtale og problemløysing. Fase 3, etter samlinga: refleksjon og oppsummering."
+          },
+          "subContentId": "3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b02",
+          "metadata": {
+            "contentType": "Image",
+            "license": "U",
+            "title": "Diagram over dei tre fasane"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.MultiChoice 1.16",
+          "params": {
+            "question": "<p>Kvifor er det lurt å leggje førebuinga med video og quiz til fasen <em>før</em> samlinga?</p>",
+            "answers": [
+              {
+                "text": "<div>Då kan tida på samlinga brukast til samtale og problemløysing, fordi alle kjem med eit felles grunnlag.</div>",
+                "correct": true,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Ja. Når studentane har arbeidd med fagstoffet på førehand, kan den felles tida brukast på det dei har mest nytte av å gjere saman.</div>",
+                  "notChosenFeedback": ""
+                }
+              },
+              {
+                "text": "<div>Då slepp læraren å gi tilbakemelding undervegs i emnet.</div>",
+                "correct": false,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Nei. Førebuinga erstattar ikkje tilbakemelding. Quizen gir tvert imot rask tilbakemelding, og undervegsvurderinga held fram i alle tre fasane.</div>",
+                  "notChosenFeedback": ""
+                }
+              },
+              {
+                "text": "<div>Då kan quizen telje med i sluttkarakteren i emnet.</div>",
+                "correct": false,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Nei. Quizen er undervegsvurdering: han skal vise studenten kva som må øvast meir, ikkje måle læringa til slutt.</div>",
+                  "notChosenFeedback": ""
+                }
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 50,
+                "feedback": "Sjå på diagrammet igjen: førebuinga før samlinga gir alle eit felles grunnlag, slik at samlinga kan brukast til samtale og problemløysing. Prøv igjen."
+              },
+              {
+                "from": 51,
+                "to": 100,
+                "feedback": "Bra! Du ser samanhengen mellom førebuinga før samlinga og den felles tida under samlinga."
+              }
+            ],
+            "UI": {
+              "submitAnswerButton": "Send inn",
+              "a11yCheck": "Sjekk svara. Svara blir merkte som rette, feil eller utan svar.",
+              "a11yShowSolution": "Vis svar. Oppgåva blir merkt med rette svar.",
+              "a11yRetry": "Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt."
+            },
+            "behaviour": {
+              "enableRetry": true,
+              "enableSolutionsButton": true,
+              "singlePoint": false,
+              "randomAnswers": false
+            }
+          },
+          "subContentId": "3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b03",
+          "metadata": {
+            "contentType": "Multiple Choice",
+            "license": "U",
+            "title": "Kvifor førebuing før samlinga?"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  }
+}

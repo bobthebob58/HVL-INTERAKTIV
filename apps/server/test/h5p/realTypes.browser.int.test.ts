@@ -42,13 +42,33 @@ describeWithServices('real H5P content types', () => {
       base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
     }, 180_000);
     afterAll(async () => {
-      await new Promise((resolve) => server?.close(resolve));
+      if (server) await new Promise((resolve) => server.close(resolve));
       await tb?.close();
     });
 
     it('[H5P-003] every package installs through the seed path and its example activity imports with its files', () => {
       expect(examples.length).toBeGreaterThan(0);
       expect(examples.every((e) => e.contentId)).toBe(true);
+    });
+
+    it('[H5P-002] every example also saves through the editor path, whose sub-content policy accepts it', async () => {
+      // Arrange
+      const author = await tb.actor('author');
+      // Act
+      const saved = await Promise.all(
+        examples.map(async (e) => {
+          try {
+            await tb.activity(author, { library: e.library, params: e.params, metadata: e.metadata });
+            return [e.library, 'saved'];
+          } catch (error) {
+            return [e.library, (error as Error).message];
+          }
+        }),
+      );
+      // Assert
+      expect(Object.fromEntries(saved)).toEqual(
+        Object.fromEntries(examples.map((e) => [e.library, 'saved'])),
+      );
     });
 
     describeWithBrowser('[H5P-001] each type plays with H5P Core 1.28', (browser) => {

@@ -1,0 +1,227 @@
+{
+  "mainLibrary": "H5P.CoursePresentation-1.28",
+  "title": "Læringsdesign for samlingsbasert undervisning",
+  "language": "nn",
+  "license": "U",
+  "assets": {
+    "images/diagram.png": "assets/diagram.png"
+  },
+  "params": {
+    "presentation": {
+      "slides": [
+        {
+          "elements": [
+            {
+              "x": 3,
+              "y": 6,
+              "width": 44,
+              "height": 86,
+              "action": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<h2>Tre fasar rundt ei samling</h2><p>Eit læringsdesign planlegg arbeidet før, under og etter samlinga.</p><p>Studentane førebur seg heime, bruker samlinga til samtale og problemløysing, og reflekterer etterpå.</p>"
+                },
+                "subContentId": "8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d11",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Tre fasar rundt ei samling"
+                }
+              },
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false,
+              "solution": ""
+            },
+            {
+              "x": 50,
+              "y": 22,
+              "width": 47,
+              "height": 47,
+              "action": {
+                "library": "H5P.Image 1.1",
+                "params": {
+                  "file": {
+                    "path": "images/diagram.png",
+                    "mime": "image/png",
+                    "copyright": { "license": "U" },
+                    "width": 960,
+                    "height": 540
+                  },
+                  "decorative": false,
+                  "alt": "Læringsdesign i tre fasar. Fase 1, før samlinga: førebuing med video og quiz. Fase 2, under samlinga: samtale og problemløysing. Fase 3, etter samlinga: refleksjon og oppsummering."
+                },
+                "subContentId": "8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d12",
+                "metadata": {
+                  "contentType": "Image",
+                  "license": "U",
+                  "title": "Diagram over dei tre fasane"
+                }
+              },
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false,
+              "solution": ""
+            }
+          ],
+          "keywords": [{ "main": "Tre fasar" }],
+          "slideBackgroundSelector": {}
+        },
+        {
+          "elements": [
+            {
+              "x": 3,
+              "y": 2,
+              "width": 94,
+              "height": 10,
+              "action": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<h2>Undervegsvurdering</h2>"
+                },
+                "subContentId": "8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d21",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Undervegsvurdering"
+                }
+              },
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false,
+              "solution": ""
+            },
+            {
+              "x": 3,
+              "y": 12,
+              "width": 94,
+              "height": 87,
+              "action": {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Studentane tek ein kort quiz før samlinga. Kva bør læraren gjere med resultata?</p>",
+                  "answers": [
+                    {
+                      "text": "<div>Bruke dei til å planleggje kva samlinga skal leggje vekt på.</div>",
+                      "correct": true,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Ja. Resultata viser kva studentane treng mest hjelp med, og samlinga kan byggje vidare på det.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    },
+                    {
+                      "text": "<div>Rekne dei med i sluttkarakteren i emnet.</div>",
+                      "correct": false,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Nei. Då blir quizen ei sluttvurdering. Undervegsvurdering skal hjelpe læringa medan ho held på, ikkje måle henne til slutt.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    },
+                    {
+                      "text": "<div>Vente med å sjå på dei til eksamen nærmar seg.</div>",
+                      "correct": false,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Nei. Då kjem informasjonen for seint. Poenget er å justere undervisninga medan det framleis er tid.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    }
+                  ],
+                  "overallFeedback": [
+                    {
+                      "from": 0,
+                      "to": 99,
+                      "feedback": "Quizresultata er mest nyttige når læraren bruker dei til å planleggje samlinga."
+                    },
+                    {
+                      "from": 100,
+                      "to": 100,
+                      "feedback": "Rett. Då blir quizen undervegsvurdering som hjelper både studentane og læraren."
+                    }
+                  ],
+                  "UI": {
+                    "submitAnswerButton": "Send inn",
+                    "a11yCheck": "Sjekk svara. Svara blir merkte som rette, feil eller utan svar.",
+                    "a11yShowSolution": "Vis svar. Oppgåva blir merkt med rette svar.",
+                    "a11yRetry": "Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt."
+                  },
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "singlePoint": false,
+                    "randomAnswers": false
+                  }
+                },
+                "subContentId": "8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d22",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Kva gjer læraren med quizresultata?"
+                }
+              },
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false,
+              "solution": ""
+            }
+          ],
+          "keywords": [{ "main": "Undervegsvurdering" }],
+          "slideBackgroundSelector": {}
+        },
+        {
+          "elements": [
+            {
+              "x": 3,
+              "y": 6,
+              "width": 94,
+              "height": 86,
+              "action": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<h2>Universell utforming</h2><p>Lag materialet slik at alle studentane kan bruke det, før, under og etter samlinga:</p><ul><li>Gi kvart bilete ein alternativ tekst som seier kva det viser.</li><li>Gi videoar teksting.</li><li>Skriv tilbakemeldingar som forklarar kvifor eit svar er rett eller feil.</li></ul>"
+                },
+                "subContentId": "8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d31",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Universell utforming"
+                }
+              },
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false,
+              "solution": ""
+            }
+          ],
+          "keywords": [{ "main": "Universell utforming" }],
+          "slideBackgroundSelector": {}
+        }
+      ]
+    },
+    "l10n": {
+      "slides": "Sider",
+      "resultHeader": "Resultat",
+      "amountCorrect": "@value / @max rette",
+      "amountCorrectAria": "@value av @max rette",
+      "confirmDialogConfirmLabel": "Stadfest",
+      "confirmDialogCancelLabel": "Avbryt"
+    }
+  }
+}

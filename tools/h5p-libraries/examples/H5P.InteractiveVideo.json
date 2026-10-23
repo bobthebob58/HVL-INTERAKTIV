@@ -1,0 +1,196 @@
+{
+  "mainLibrary": "H5P.InteractiveVideo-1.28",
+  "title": "Undervegsvurdering på seks sekund",
+  "language": "nn",
+  "license": "U",
+  "assets": {
+    "videos/clip.webm": "assets/clip.webm",
+    "videos/clip.nn.vtt": "assets/clip.nn.vtt"
+  },
+  "params": {
+    "interactiveVideo": {
+      "video": {
+        "files": [{ "path": "videos/clip.webm", "mime": "video/webm" }],
+        "startScreenOptions": {
+          "title": "Undervegsvurdering på seks sekund",
+          "hideStartTitle": false,
+          "shortStartDescription": "Ein kort video med teksting, eitt spørsmål og ei oppsummering til slutt."
+        },
+        "textTracks": {
+          "videoTrack": [
+            {
+              "label": "Nynorsk",
+              "kind": "subtitles",
+              "srcLang": "nn",
+              "track": { "path": "videos/clip.nn.vtt", "mime": "text/vtt" }
+            }
+          ],
+          "defaultTrackLabel": "Nynorsk"
+        }
+      },
+      "assets": {
+        "interactions": [
+          {
+            "x": 4,
+            "y": 6,
+            "width": 10,
+            "height": 10,
+            "duration": { "from": 3, "to": 5 },
+            "pause": true,
+            "displayType": "button",
+            "buttonOnMobile": false,
+            "label": "<p>Spørsmål om undervegsvurdering</p>",
+            "libraryTitle": "Multiple Choice",
+            "visuals": { "backgroundColor": "rgb(255, 255, 255)", "boxShadow": true },
+            "adaptivity": {
+              "correct": { "allowOptOut": false, "message": "" },
+              "wrong": { "allowOptOut": false, "message": "" },
+              "requireCompletion": false
+            },
+            "action": {
+              "library": "H5P.MultiChoice 1.16",
+              "subContentId": "3b9e6f12-7c4a-4d81-a2e5-0f6d8c1b9a51",
+              "metadata": {
+                "contentType": "Multiple Choice",
+                "license": "U",
+                "title": "Spørsmål om undervegsvurdering"
+              },
+              "params": {
+                "question": "<p>Videoen seier at undervegsvurdering er tilbakemelding medan læringa held på. Kvifor er det nyttig at tilbakemeldinga kjem undervegs?</p>",
+                "answers": [
+                  {
+                    "text": "<div>Studenten har framleis tid til å bruke tilbakemeldinga og justere arbeidet sitt før eksamen.</div>",
+                    "correct": true,
+                    "tipsAndFeedback": {
+                      "tip": "",
+                      "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det framleis er tid til å endre noko, både for studenten og for læraren som planlegg neste samling.</div>",
+                      "notChosenFeedback": ""
+                    }
+                  },
+                  {
+                    "text": "<div>Tilbakemeldinga avgjer kva karakter studenten får i emnet.</div>",
+                    "correct": false,
+                    "tipsAndFeedback": {
+                      "tip": "",
+                      "chosenFeedback": "<div>Nei. Ei vurdering som avgjer karakteren, er sluttvurdering. Undervegsvurdering tel ikkje med i karakteren; ho skal hjelpe læringa medan ho held på.</div>",
+                      "notChosenFeedback": ""
+                    }
+                  },
+                  {
+                    "text": "<div>Læraren får dokumentert at studenten var til stades på samlinga.</div>",
+                    "correct": false,
+                    "tipsAndFeedback": {
+                      "tip": "",
+                      "chosenFeedback": "<div>Nei. Oppmøte seier ikkje noko om kva studenten har lært. Undervegsvurdering handlar om kva studenten kan no, og kva neste steg bør vere.</div>",
+                      "notChosenFeedback": ""
+                    }
+                  }
+                ],
+                "overallFeedback": [
+                  {
+                    "from": 0,
+                    "to": 99,
+                    "feedback": "Les tilbakemeldinga på svaret ditt. Undervegsvurdering er nyttig fordi ho kjem medan studenten framleis kan bruke henne, og ho tel ikkje med i karakteren."
+                  },
+                  {
+                    "from": 100,
+                    "to": 100,
+                    "feedback": "Rett. Tilbakemelding undervegs er verdifull fordi studenten framleis har tid til å justere arbeidet før eksamen."
+                  }
+                ],
+                "UI": {
+                  "submitAnswerButton": "Send inn",
+                  "a11yCheck": "Sjekk svara. Svara blir merkte som rette, feil eller utan svar.",
+                  "a11yShowSolution": "Vis svar. Oppgåva blir merkt med rette svar.",
+                  "a11yRetry": "Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt."
+                },
+                "behaviour": {
+                  "enableRetry": true,
+                  "enableSolutionsButton": true,
+                  "singlePoint": false,
+                  "randomAnswers": false
+                }
+              }
+            }
+          }
+        ],
+        "bookmarks": [
+          { "time": 0, "label": "Kva er undervegsvurdering?" },
+          { "time": 2, "label": "Tilbakemelding medan læringa held på" },
+          { "time": 4, "label": "Studenten justerer før eksamen" }
+        ],
+        "endscreens": []
+      },
+      "summary": {
+        "task": {
+          "library": "H5P.Summary 1.10",
+          "subContentId": "8d2f4a63-1e7b-4c95-b0a8-6e3c9f2d7b14",
+          "metadata": {
+            "contentType": "Summary",
+            "license": "U",
+            "title": "Oppsummering: undervegsvurdering i læringsdesign"
+          },
+          "params": {
+            "intro": "<p>Vel den påstanden som stemmer, i kvar av dei tre gruppene. Står du fast, kan du opne tipset.</p>",
+            "summaries": [
+              {
+                "subContentId": "c41a7e95-2b6d-4f08-9e3a-5d7b1c8f6a27",
+                "summary": [
+                  "<p>Undervegsvurdering skal hjelpe studenten å lære medan emnet held på.</p>",
+                  "<p>Undervegsvurdering er eit anna ord for eksamen.</p>",
+                  "<p>Undervegsvurdering tel alltid med i sluttkarakteren.</p>"
+                ],
+                "tip": "<p>Tenk på når tilbakemeldinga kjem, og kva studenten kan gjere med henne etterpå.</p>"
+              },
+              {
+                "subContentId": "5e8b2d14-9a3f-4c67-b1e0-7f4a6d2c9e38",
+                "summary": [
+                  "<p>Ein kort quiz før samlinga viser kva studentane treng å arbeide meir med når dei møtest.</p>",
+                  "<p>Ein quiz før samlinga gjer det unødvendig å ha aktivitetar på samlinga.</p>",
+                  "<p>Ein quiz før samlinga er berre meint for studentane som slit med faget.</p>"
+                ],
+                "tip": "<p>Tenk på korleis arbeidet før, under og etter samlinga heng saman i læringsdesignet.</p>"
+              },
+              {
+                "subContentId": "a7c3f1b8-4d2e-4a59-8c06-2b9e5f7d1a43",
+                "summary": [
+                  "<p>Teksting gjer at videoen kan følgjast òg utan lyd, og det hjelper mange studentar.</p>",
+                  "<p>Teksting trengst berre når ein student har meldt frå om nedsett høyrsel.</p>",
+                  "<p>Teksting gjer videoen vanskelegare å følgje for dei fleste studentane.</p>"
+                ],
+                "tip": "<p>Universell utforming vil seie at same løysing fungerer for flest mogleg utan særskild tilrettelegging.</p>"
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 49,
+                "feedback": "Fleire val var feil. Opne tipsa og tenk på at undervegsvurdering skal hjelpe læringa medan ho held på, og at universell utforming skal fungere for alle. Sjå videoen ein gong til og prøv igjen."
+              },
+              {
+                "from": 50,
+                "to": 99,
+                "feedback": "Godt på veg. Sjå på gruppene der du valde feil først: kva for ein påstand handla om å hjelpe læringa undervegs eller om å gjere materialet tilgjengeleg for alle?"
+              },
+              {
+                "from": 100,
+                "to": 100,
+                "feedback": "Alt er rett. Du kan forklare kvifor undervegsvurdering, ein quiz før samlinga og teksting høyrer heime i eit godt læringsdesign."
+              }
+            ]
+          }
+        },
+        "displayAt": 1
+      }
+    },
+    "override": {
+      "showSolutionButton": "on",
+      "retryButton": "on"
+    },
+    "l10n": {
+      "endcardQuestion": "Spørsmål",
+      "endCardTableRowSummaryWithScore": "Du fekk @score av @total poeng for @question, som kom etter @minutes minutt og @seconds sekund.",
+      "endCardTableRowSummaryWithoutScore": "Du har svart på @question, som kom etter @minutes minutt og @seconds sekund."
+    }
+  }
+}

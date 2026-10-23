@@ -1,0 +1,33 @@
+{
+  "mainLibrary": "H5P.DragText-1.10",
+  "title": "Omgrep i læringsdesign",
+  "language": "nn",
+  "license": "U",
+  "params": {
+    "taskDescription": "<p>Dra orda inn i dei rette lukene i teksten om samlingsbasert undervisning. Bruk tipsa dersom du står fast.</p>",
+    "textField": "Læringsdesign handlar om å planleggje *læringsaktivitetar:Kva studentane gjer for å lære\\+Ja. Læringsdesign tek utgangspunkt i kva studentane gjer, ikkje berre i kva læraren presenterer.\\-Nei. Ordet her skal beskrive det studentane gjer for å lære, og det kallar vi læringsaktivitetar.* som hjelper studentane mot læringsutbyttet i emnet.\nI samlingsbasert undervisning deler vi arbeidet i tre fasar: før, under og etter *samlinga:Dei dagane studentane er saman på campus\\+Ja. Samlinga er dei dagane studentane og lærarane er saman på campus.\\-Nei. Dei tre fasane er bygde rundt dagane studentane er saman på campus, altså samlinga.*.\nEin quiz før samlinga er eit døme på *undervegsvurdering:Vurdering medan læringa held på\\+Ja. Quizen gir både studentane og læraren informasjon medan det framleis er tid til å justere.\\-Nei. Quizen tel ikkje med i karakteren. Han gir tilbakemelding medan læringa held på, og det er undervegsvurdering.*, fordi studentane får vite kva dei må arbeide meir med.\nNår opptak er teksta og dokument kan lesast med skjermlesar, følgjer undervisninga prinsippa for *universell utforming:Utforming som gjer at flest mogleg kan delta\\+Ja. Universell utforming vil seie at flest mogleg kan bruke tilbodet utan særskild tilrettelegging.\\-Nei. Teksting og dokument som fungerer med skjermlesar gjer at flest mogleg kan delta utan særskild tilrettelegging. Det er universell utforming.*.",
+    "distractors": "*sluttvurdering*",
+    "overallFeedback": [
+      {
+        "from": 0,
+        "to": 49,
+        "feedback": "Fleire ord står på feil stad. Les tilbakemeldinga til kvar luke, sjå på tipsa og prøv igjen. Sluttvurdering høyrer ikkje heime i teksten, sidan quizen ikkje tel med i karakteren."
+      },
+      {
+        "from": 50,
+        "to": 99,
+        "feedback": "Godt på veg. Tilbakemeldinga til lukene som er feil, forklarer kva omgrep som høyrer heime der. Prøv igjen med dei lukene."
+      },
+      {
+        "from": 100,
+        "to": 100,
+        "feedback": "Alt er rett. Du kan forklare korleis læringsaktivitetar, undervegsvurdering og universell utforming heng saman i samlingsbasert undervisning."
+      }
+    ],
+    "behaviour": {
+      "enableRetry": true,
+      "enableSolutionsButton": true,
+      "instantFeedback": false
+    }
+  }
+}

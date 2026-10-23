@@ -45,16 +45,22 @@ function resolveAndWrite() {
   const work = join(CACHE, 'resolve');
   const registryCommit = checkout(REGISTRY_REPOSITORY, 'HEAD', join(work, 'registry'));
   const registry = JSON.parse(readFileSync(join(work, 'registry', 'libraries.json'), 'utf8'));
-  const { libraries } = resolveManifest({
+  const { libraries, skipped } = resolveManifest({
     roots: CONTENT_TYPE_ROOTS,
     registry,
     source: { listVersionTags, checkout },
     workDir: join(work, 'checkouts'),
   });
-  const manifest = { registry: { repository: REGISTRY_REPOSITORY, commit: registryCommit }, libraries };
+  const manifest = {
+    registry: { repository: REGISTRY_REPOSITORY, commit: registryCommit },
+    libraries,
+    skipped,
+  };
   writeFileSync(MANIFEST_FILE, `${JSON.stringify(manifest, null, 2)}\n`);
   rmSync(work, { recursive: true, force: true });
-  console.log(`✓ ${libraries.length} libraries pinned in ${MANIFEST_FILE}; review the diff, then commit it`);
+  console.log(
+    `✓ ${libraries.length} libraries pinned (${skipped.length} offered ones skipped) in ${MANIFEST_FILE}`,
+  );
 }
 
 function fetchOne(entry, dest) {

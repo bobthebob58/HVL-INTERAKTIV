@@ -10,6 +10,9 @@
  *   - A checkout is accepted only if `HEAD` is exactly the pinned commit; otherwise it throws and leaves nothing.
  *   - Tags are read with `ls-remote --refs`, so annotated tags show their own object, never a peeled commit; the
  *     commit is always taken from the checkout itself.
+ *   - Network calls are retried four times with growing pauses; an error that outlasts them is marked
+ *     `transient`, so the resolver fails instead of quietly skipping a library (a manifest must not depend on a
+ *     flaky connection).
  * Collaborators: ./resolveManifest.mjs, ./fetchLibraries.mjs.
  * Tests: tools/h5p-libraries/test/resolveManifest.test.mjs (with a fake source); CI runs `npm run h5p:fetch-libraries`.
  */
@@ -20,12 +23,31 @@ const run = (args, cwd) =>
   execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
 /**
+ * Runs a git network command, retrying a failure four times (after 2, 4, 8 and 16 seconds).
+ * @param {string[]} args - Git arguments.
+ * @param {string} [cwd] - Working directory.
+ * @returns {string} The command's output.
+ * @throws {Error} With `transient: true` when every attempt failed.
+ */
+function runNetwork(args, cwd) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return run(args, cwd);
+    } catch (error) {
+      if (attempt === 4)
+        throw Object.assign(new Error(`git ${args[0]} failed: ${error.message}`), { transient: true });
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000 * 2 ** attempt);
+    }
+  }
+}
+
+/**
  * Lists a repository's semantic-version tags.
  * @param {string} repository - The repository URL.
  * @returns {{ tag: string, version: number[] }[]} Tags that read `x.y.z` or `vx.y.z`.
  */
 export function listVersionTags(repository) {
-  const out = run(['ls-remote', '--tags', '--refs', repository]);
+  const out = runNetwork(['ls-remote', '--tags', '--refs', repository]);
   return out
     .split('\n')
     .filter(Boolean)
@@ -49,7 +71,7 @@ export function checkout(repository, ref, dir, expectedCommit) {
   mkdirSync(dir, { recursive: true });
   try {
     run(['init', '--quiet'], dir);
-    run(['fetch', '--quiet', '--depth', '1', repository, ref], dir);
+    runNetwork(['fetch', '--quiet', '--depth', '1', repository, ref], dir);
     run(['-c', 'advice.detachedHead=false', 'checkout', '--quiet', 'FETCH_HEAD'], dir);
     const commit = run(['rev-parse', 'HEAD'], dir);
     // SECURITY: a moved tag or a substituted repository must never reach the build (D-078, CLAUDE.md §1).

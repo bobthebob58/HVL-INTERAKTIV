@@ -1,0 +1,45 @@
+{
+  "mainLibrary": "H5P.Blanks-1.14",
+  "title": "Læringsdesign i samlingsbasert undervisning",
+  "language": "nn",
+  "license": "U",
+  "params": {
+    "text": "<p>Eit læringsdesign for samlingsbasert undervisning har tre fasar: før, under og etter samlinga. Fyll inn orda som manglar i setningane under. Står du fast, kan du opne tipset ved feltet.</p>",
+    "questions": [
+      "<p>Før samlinga førebur studentane seg med ein kort video og ein *quiz/test:Ei kort oppgåve med spørsmål som gir rask tilbakemelding.*, slik at alle kjem til samlinga med eit felles grunnlag.</p>",
+      "<p>Under samlinga bruker vi tida på *samtale/samtalar/diskusjon/drøfting:Studentane snakkar saman om fagstoffet.* og problemløysing, for det er då studentane har mest nytte av å vere saman.</p>",
+      "<p>Etter samlinga skriv studentane ein kort *refleksjon/refleksjonstekst/refleksjonsnotat:Studenten tenkjer over si eiga læring.* over kva dei har lært, og kva dei vil arbeide vidare med.</p>",
+      "<p>Undervegsvurdering blir òg kalla *formativ:Det motsette er summativ vurdering, som måler læringa til slutt.* vurdering, fordi ho skal hjelpe studenten medan læringa framleis held på.</p>",
+      "<p>Ei god tilbakemelding svarer på tre spørsmål: Kvar skal eg? Kvar står eg no? Korleis kjem eg *vidare:Den siste delen av tilbakemeldinga peikar framover mot neste steg.*?</p>",
+      "<p>Når ein video har *teksting/undertekstar/undertekst:Skriven tekst i videoen som viser det som blir sagt.*, kan òg studentar som ikkje høyrer lyden, følgje med på innhaldet.</p>",
+      "<p>Eit bilete som formidlar innhald, treng ein *alternativ tekst/alternativtekst/alt-tekst:Ein kort tekst som skjermlesaren les opp i staden for biletet.*, slik at alle får den same informasjonen.</p>"
+    ],
+    "overallFeedback": [
+      {
+        "from": 0,
+        "to": 40,
+        "feedback": "Fleire av felta er ikkje rette enno. Bruk tipsa: kvar fase har sitt eige føremål, frå førebuing før samlinga til refleksjon etterpå. Prøv igjen."
+      },
+      {
+        "from": 41,
+        "to": 80,
+        "feedback": "Bra, du har mykje rett. Bruk «Vis svar» og samanlikn med svaret ditt. Legg merke til korleis undervegsvurdering og universell utforming hjelper alle studentane vidare."
+      },
+      {
+        "from": 81,
+        "to": 100,
+        "feedback": "Svært bra! Du kjenner dei tre fasane i samlingsbasert undervisning og veit korleis tilbakemelding, teksting og alternativ tekst støttar læringa."
+      }
+    ],
+    "behaviour": {
+      "enableRetry": true,
+      "enableSolutionsButton": true,
+      "enableCheckButton": true,
+      "autoCheck": false,
+      "caseSensitive": false,
+      "showSolutionsRequiresInput": true,
+      "separateLines": false,
+      "acceptSpellingErrors": true
+    }
+  }
+}

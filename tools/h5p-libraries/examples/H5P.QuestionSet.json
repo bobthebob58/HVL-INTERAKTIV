@@ -1,0 +1,267 @@
+{
+  "mainLibrary": "H5P.QuestionSet-1.21",
+  "title": "Læringsdesign for ei samling",
+  "language": "nn",
+  "license": "U",
+  "params": {
+    "introPage": {
+      "showIntroPage": true,
+      "title": "Læringsdesign for ei samling",
+      "introduction": "<p>Desse fire oppgåvene handlar om korleis du planlegg arbeidet før, under og etter ei samling, med undervegsvurdering og universell utforming. Du får tilbakemelding på svara dine og kan prøve igjen så mange gonger du vil. Resultatet er berre til di eiga læring og tel ikkje med i nokon karakter.</p>",
+      "startButtonText": "Start"
+    },
+    "texts": {
+      "previous": "Førre",
+      "next": "Neste",
+      "questionSetInstruction": "Vel kva oppgåve du vil sjå",
+      "noQuestionAdded": "Inga oppgåve er lagd til"
+    },
+    "questions": [
+      {
+        "library": "H5P.MultiChoice 1.16",
+        "subContentId": "6c1f0a52-3d8e-4b7a-9f21-5e4c8b0d7a11",
+        "metadata": { "contentType": "Multiple Choice", "license": "U", "title": "Quiz før samlinga" },
+        "params": {
+          "question": "<p>Studentane tek ein kort quiz før samlinga. Kva er det viktigaste føremålet med quizen?</p>",
+          "answers": [
+            {
+              "text": "<div>Å vise studentane og læraren kva studentane alt kan, slik at samlinga kan byggje vidare på det.</div>",
+              "correct": true,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Ja. Quizen er undervegsvurdering: han gir informasjon medan det framleis er tid til å justere både førebuinga og opplegget på samlinga.</div>",
+                "notChosenFeedback": ""
+              }
+            },
+            {
+              "text": "<div>Å gi studentane ein del av sluttkarakteren i emnet.</div>",
+              "correct": false,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Nei. Ein quiz før samlinga tel ikkje med i karakteren. Han er undervegsvurdering, som skal hjelpe læringa, ikkje måle henne til slutt.</div>",
+                "notChosenFeedback": ""
+              }
+            },
+            {
+              "text": "<div>Å erstatte undervisninga på samlinga, slik at samlinga kan bli kortare.</div>",
+              "correct": false,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Nei. Quizen førebur samlinga, men erstattar henne ikkje. Tida saman blir best brukt til samtale og problemløysing, som er vanskeleg å gjere åleine.</div>",
+                "notChosenFeedback": ""
+              }
+            }
+          ],
+          "overallFeedback": [
+            {
+              "from": 0,
+              "to": 99,
+              "feedback": "Les tilbakemeldinga på svaret ditt. Ein quiz før samlinga er undervegsvurdering: han viser kva studentane treng å arbeide meir med, og tel ikkje med i karakteren."
+            },
+            {
+              "from": 100,
+              "to": 100,
+              "feedback": "Rett. Quizen gir studentane og læraren eit felles bilete av kva som må arbeidast meir med på samlinga."
+            }
+          ],
+          "UI": {
+            "submitAnswerButton": "Send inn",
+            "a11yCheck": "Sjekk svara. Svara blir merkte som rette, feil eller utan svar.",
+            "a11yShowSolution": "Vis svar. Oppgåva blir merkt med rette svar.",
+            "a11yRetry": "Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt."
+          },
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "singlePoint": false,
+            "randomAnswers": false
+          }
+        }
+      },
+      {
+        "library": "H5P.Blanks 1.14",
+        "subContentId": "a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22",
+        "metadata": {
+          "contentType": "Fill in the Blanks",
+          "license": "U",
+          "title": "Undervegsvurdering og tilbakemelding"
+        },
+        "params": {
+          "text": "<p>Fyll inn orda som manglar i setningane om undervegsvurdering. Står du fast, kan du opne tipset ved feltet.</p>",
+          "questions": [
+            "<p>Vurdering som skal hjelpe studenten medan læringa framleis held på, kallar vi *undervegsvurdering/formativ vurdering:Ho skjer undervegs i emnet, ikkje berre til slutt.*.</p>",
+            "<p>Ei god tilbakemelding seier ikkje berre kva som er feil, men peikar òg *framover/vidare:Tilbakemeldinga skal hjelpe studenten med det som kjem etterpå.* mot neste steg.</p>",
+            "<p>Når studentane gir kvarandre tilbakemelding på arbeidet, kallar vi det *medstudentvurdering/fagfellevurdering:Studentane vurderer arbeidet til kvarandre.*.</p>"
+          ],
+          "overallFeedback": [
+            {
+              "from": 0,
+              "to": 49,
+              "feedback": "Fleire felt er ikkje rette enno. Opne tipsa og tenk på kva vurderinga skal brukast til: undervegsvurdering hjelper læringa medan ho held på. Prøv igjen."
+            },
+            {
+              "from": 50,
+              "to": 99,
+              "feedback": "Godt på veg. Bruk «Vis svar» og samanlikn med svara dine. Legg merke til at ei god tilbakemelding alltid peikar framover."
+            },
+            {
+              "from": 100,
+              "to": 100,
+              "feedback": "Alt er rett. Du kjenner omgrepa for vurdering som hjelper læringa medan ho held på, og veit at god tilbakemelding peikar framover."
+            }
+          ],
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "enableCheckButton": true,
+            "autoCheck": false,
+            "caseSensitive": false,
+            "showSolutionsRequiresInput": true,
+            "separateLines": false,
+            "acceptSpellingErrors": true
+          }
+        }
+      },
+      {
+        "library": "H5P.DragText 1.10",
+        "subContentId": "2f7b9c41-6e0a-4d58-b3c7-9a1e5d8f0b33",
+        "metadata": {
+          "contentType": "Drag the Words",
+          "license": "U",
+          "title": "Universell utforming av læringsressursar"
+        },
+        "params": {
+          "taskDescription": "<p>Dra orda inn i dei rette lukene, slik at kvar setning beskriv eit tiltak for universell utforming. Eitt av orda passar ikkje nokon stad.</p>",
+          "textField": "Ein video med *teksting:Skriven tekst som viser det som blir sagt\\+Ja. Med teksting kan alle følgje med på det som blir sagt, òg utan lyd.\\-Nei. Det som gjer at ein video kan følgjast utan lyd, er teksting.* kan følgjast utan lyd.\nEit bilete med *alternativ tekst:Ein kort tekst som skjermlesaren les opp\\+Ja. Skjermlesaren les opp den alternative teksten, slik at alle får den same informasjonen.\\-Nei. Ein skjermlesar kan ikkje sjå biletet. Han les opp den alternative teksten i staden.* kan òg forståast av studentar som bruker skjermlesar.\nEit dokument med tydelege *overskrifter:Titlar som deler teksten i bolkar\\+Ja. Overskrifter gir dokumentet ein struktur som skjermlesaren kan hoppe mellom.\\-Nei. Det som gjer eit langt dokument lett å finne fram i, er overskrifter som deler teksten i bolkar.* er lettare å finne fram i med skjermlesar.",
+          "distractors": "*lydspor*",
+          "overallFeedback": [
+            {
+              "from": 0,
+              "to": 49,
+              "feedback": "Fleire ord står på feil stad. Les tilbakemeldinga til kvar luke og tenk på kven tiltaket hjelper. Lydspor høyrer ikkje heime i teksten, sidan det ikkje hjelper den som ikkje høyrer lyden."
+            },
+            {
+              "from": 50,
+              "to": 99,
+              "feedback": "Godt på veg. Tilbakemeldinga til lukene som er feil, forklarer kva tiltak som høyrer heime der. Prøv igjen med dei lukene."
+            },
+            {
+              "from": 100,
+              "to": 100,
+              "feedback": "Alt er rett. Teksting, alternativ tekst og tydelege overskrifter gjer at fleire studentar kan bruke same ressurs utan særskild tilrettelegging."
+            }
+          ],
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "instantFeedback": false
+          }
+        }
+      },
+      {
+        "library": "H5P.MultiChoice 1.16",
+        "subContentId": "d4e8a1f6-0b3c-4e9d-a5f2-8c7b6e1d2a44",
+        "metadata": {
+          "contentType": "Multiple Choice",
+          "license": "U",
+          "title": "Ei universelt utforma samling"
+        },
+        "params": {
+          "question": "<p>Kva for tiltak gjer ei samling meir universelt utforma? Vel alle som passar.</p>",
+          "answers": [
+            {
+              "text": "<div>Lysbileta blir delte digitalt før samlinga.</div>",
+              "correct": true,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Ja. Då kan studentane førebu seg, forstørre teksten eller lese med skjermlesar i sitt eige tempo.</div>",
+                "notChosenFeedback": "<div>Dette tiltaket er òg rett: når lysbileta blir delte før samlinga, kan alle førebu seg i sitt eige tempo.</div>"
+              }
+            },
+            {
+              "text": "<div>Opptak og videoar frå samlinga får teksting.</div>",
+              "correct": true,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Ja. Teksting hjelper studentar som ikkje høyrer lyden, og alle som ser opptaket der det er mykje støy.</div>",
+                "notChosenFeedback": "<div>Dette tiltaket er òg rett: teksting gjer at alle kan følgje med på opptaket, òg utan lyd.</div>"
+              }
+            },
+            {
+              "text": "<div>Viktige beskjedar blir gitt berre munnleg på samlinga.</div>",
+              "correct": false,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Nei. Ein beskjed som berre blir gitt munnleg, når ikkje dei som høyrer dårleg eller ikkje var til stades. Gi beskjeden skriftleg òg.</div>",
+                "notChosenFeedback": ""
+              }
+            },
+            {
+              "text": "<div>Arbeidsoppgåvene blir delte ut berre på papir under samlinga.</div>",
+              "correct": false,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Nei. Papir kan ikkje lesast med skjermlesar eller forstørrast på skjerm. Del oppgåvene digitalt òg.</div>",
+                "notChosenFeedback": ""
+              }
+            }
+          ],
+          "overallFeedback": [
+            {
+              "from": 0,
+              "to": 49,
+              "feedback": "Les tilbakemeldinga på kvart alternativ. Universell utforming vil seie at same opplegg fungerer for flest mogleg, til dømes ved at innhaldet finst digitalt og som tekst, ikkje berre munnleg eller på papir."
+            },
+            {
+              "from": 50,
+              "to": 99,
+              "feedback": "Godt på veg. Les tilbakemeldinga på alternativa du ikkje fekk rett, og sjå kva tiltak som gjer at fleire kan delta utan særskild tilrettelegging."
+            },
+            {
+              "from": 100,
+              "to": 100,
+              "feedback": "Alt er rett. Du valde tiltaka som gjer at fleire studentar kan bruke materialet frå samlinga utan særskild tilrettelegging."
+            }
+          ],
+          "UI": {
+            "submitAnswerButton": "Send inn",
+            "a11yCheck": "Sjekk svara. Svara blir merkte som rette, feil eller utan svar.",
+            "a11yShowSolution": "Vis svar. Oppgåva blir merkt med rette svar.",
+            "a11yRetry": "Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt."
+          },
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "singlePoint": false,
+            "randomAnswers": false
+          }
+        }
+      }
+    ],
+    "endGame": {
+      "showResultPage": true,
+      "showSolutionButton": true,
+      "showRetryButton": true,
+      "message": "Resultat",
+      "amountCorrect": "@finals av @totals poeng",
+      "scoreHeader": "Poeng",
+      "overallFeedback": [
+        {
+          "from": 0,
+          "to": 49,
+          "feedback": "Du har fleire svar å arbeide vidare med. Gå gjennom oppgåvene med «Vis svar», les tilbakemeldingane og prøv igjen. Resultatet er berre til di eiga læring."
+        },
+        {
+          "from": 50,
+          "to": 89,
+          "feedback": "Godt arbeid. Du kjenner hovudtrekka i læringsdesign for ei samling. Sjå på oppgåvene der du mista poeng, og les tilbakemeldinga om undervegsvurdering og universell utforming der."
+        },
+        {
+          "from": 90,
+          "to": 100,
+          "feedback": "Svært bra. Du kan forklare korleis ein quiz før samlinga, god tilbakemelding og universell utforming heng saman i eit læringsdesign."
+        }
+      ]
+    }
+  }
+}

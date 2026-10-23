@@ -1,0 +1,211 @@
+{
+  "mainLibrary": "H5P.InteractiveBook-1.15",
+  "title": "Planlegg ei god samling",
+  "language": "nn",
+  "license": "U",
+  "assets": {
+    "images/diagram.png": "assets/diagram.png"
+  },
+  "params": {
+    "showCoverPage": true,
+    "bookCover": {
+      "coverDescription": "<p>Denne boka er for deg som planlegg undervisning på samlingar i lærarutdanninga. Den første sida handlar om undervegsvurdering, den andre om universell utforming. Kvar side har ei oppgåve med tilbakemelding, og du kan prøve igjen så mange gonger du vil. Resultatet er berre til di eiga læring og tel ikkje med i nokon karakter.</p>",
+      "coverMedium": {
+        "library": "H5P.Image 1.1",
+        "params": {
+          "file": {
+            "path": "images/diagram.png",
+            "mime": "image/png",
+            "copyright": { "license": "U" },
+            "width": 960,
+            "height": 540
+          },
+          "decorative": false,
+          "alt": "Læringsdesign i tre fasar. Fase 1, før samlinga: førebuing med video og quiz. Fase 2, under samlinga: samtale og problemløysing. Fase 3, etter samlinga: refleksjon og oppsummering."
+        },
+        "subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e601",
+        "metadata": {
+          "contentType": "Image",
+          "license": "U",
+          "title": "Diagram over dei tre fasane i ei samling"
+        }
+      }
+    },
+    "chapters": [
+      {
+        "library": "H5P.Column 1.22",
+        "params": {
+          "content": [
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<h2>Undervegsvurdering gjennom heile samlinga</h2><p>Undervegsvurdering (formativ vurdering) gir studentane informasjon om kvar dei står, medan det framleis er tid til å justere. I samlingsbasert undervisning kan du leggje inn slik vurdering i alle tre fasane:</p><ul><li><strong>Før samlinga</strong> viser ein kort quiz kva studentane alt kan, og kva dei treng å arbeide meir med på samlinga.</li><li><strong>Under samlinga</strong> arbeider studentane med fagstoffet i grupper og får tilbakemelding frå medstudentar og lærar.</li><li><strong>Etter samlinga</strong> skriv studentane ein kort refleksjon og får ei tilbakemelding som peikar framover.</li></ul><h3>Tre spørsmål i ei god tilbakemelding</h3><p>Ei tilbakemelding som fremjar læring, gir svar på tre spørsmål: Kvar skal eg? Kvar står eg no? Korleis kjem eg vidare?</p>"
+                },
+                "subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e611",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Undervegsvurdering gjennom heile samlinga"
+                }
+              },
+              "useSeparator": "auto"
+            },
+            {
+              "content": {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Ein student har skrive ein refleksjon etter samlinga. Kva for ei tilbakemelding hjelper studenten best vidare?</p>",
+                  "answers": [
+                    {
+                      "text": "<div>«Du forklarer omgrepa godt. Neste steg er å knyte dei til eit døme frå praksis.»</div>",
+                      "correct": true,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Ja. Tilbakemeldinga viser kvar studenten står no, og peikar framover mot neste steg. Slik kan studenten bruke henne i arbeidet vidare.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    },
+                    {
+                      "text": "<div>«4 av 6 poeng.»</div>",
+                      "correct": false,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Nei. Ein poengsum åleine fortel ikkje kva studenten gjer godt, eller kva som skal til for å kome vidare. Ei tilbakemelding som fremjar læring, peikar framover.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    },
+                    {
+                      "text": "<div>«Godt arbeid!»</div>",
+                      "correct": false,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Nei. Ros kan motivere, men seier ikkje kva som var godt, eller kva studenten bør arbeide vidare med.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    }
+                  ],
+                  "overallFeedback": [
+                    {
+                      "from": 0,
+                      "to": 99,
+                      "feedback": "Les tilbakemeldinga på svaret ditt. Ei tilbakemelding fremjar læring når ho viser kvar studenten står no, og kva studenten kan gjere for å kome vidare. Prøv igjen."
+                    },
+                    {
+                      "from": 100,
+                      "to": 100,
+                      "feedback": "Rett. Du ser at ei god tilbakemelding både viser kvar studenten står no, og peikar framover mot neste steg."
+                    }
+                  ],
+                  "UI": {
+                    "submitAnswerButton": "Send inn",
+                    "a11yCheck": "Sjekk svara. Svara blir merkte som rette, feil eller utan svar.",
+                    "a11yShowSolution": "Vis svar. Oppgåva blir merkt med rette svar.",
+                    "a11yRetry": "Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt."
+                  },
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "singlePoint": false,
+                    "randomAnswers": false
+                  }
+                },
+                "subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e612",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Tilbakemelding som hjelper studenten vidare"
+                }
+              },
+              "useSeparator": "auto"
+            }
+          ]
+        },
+        "subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e610",
+        "metadata": {
+          "contentType": "Page",
+          "license": "U",
+          "title": "Undervegsvurdering"
+        }
+      },
+      {
+        "library": "H5P.Column 1.22",
+        "params": {
+          "content": [
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<h2>Universell utforming av læringsressursar</h2><p>Universell utforming betyr at alle studentane kan bruke læringsressursane, utan at nokon treng ei særskild løysing. Det gjeld òg materialet studentane bruker før og etter samlinga.</p><h3>Tre gode vanar</h3><ul><li>Gi kvar video <strong>teksting</strong>, slik at studentar som ikkje høyrer lyden, kan følgje med.</li><li>Gi kvart bilete som formidlar innhald, ein <strong>alternativ tekst</strong> som skjermlesaren kan lese opp.</li><li>Bruk <strong>overskrifter</strong> i rett rekkjefølgje, slik at det er lett å finne fram med tastatur og skjermlesar.</li></ul>"
+                },
+                "subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e621",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Universell utforming av læringsressursar"
+                }
+              },
+              "useSeparator": "auto"
+            },
+            {
+              "content": {
+                "library": "H5P.Blanks 1.14",
+                "params": {
+                  "text": "<p>Fyll inn orda som manglar. Står du fast, kan du opne tipset ved feltet.</p>",
+                  "questions": [
+                    "<p>Ein video med *teksting/undertekstar/undertekst:Skriven tekst i biletet som viser det som blir sagt.* kan òg brukast av studentar som ikkje høyrer lyden.</p>",
+                    "<p>Eit bilete som formidlar innhald, treng ein *alternativ tekst/alternativtekst/alt-tekst:Ein kort tekst som skjermlesaren les opp i staden for biletet.*, slik at alle får den same informasjonen.</p>",
+                    "<p>Når teksten har *overskrifter/overskrift:Dei deler teksten inn i bolkar med eigne titlar.* i rett rekkjefølgje, kan studentar som bruker skjermlesar, hoppe mellom delane av teksten.</p>"
+                  ],
+                  "overallFeedback": [
+                    {
+                      "from": 0,
+                      "to": 50,
+                      "feedback": "Fleire av felta er ikkje rette enno. Bruk tipsa og les lista over dei tre gode vanane ein gong til. Prøv igjen."
+                    },
+                    {
+                      "from": 51,
+                      "to": 99,
+                      "feedback": "Bra, du har mykje rett. Bruk «Vis svar» og samanlikn med svaret ditt. Teksting, alternativ tekst og overskrifter hjelper ulike studentar på kvar sin måte."
+                    },
+                    {
+                      "from": 100,
+                      "to": 100,
+                      "feedback": "Svært bra! Du veit korleis teksting, alternativ tekst og overskrifter gjer læringsressursane tilgjengelege for alle studentane."
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "enableCheckButton": true,
+                    "autoCheck": false,
+                    "caseSensitive": false,
+                    "showSolutionsRequiresInput": true,
+                    "separateLines": false,
+                    "acceptSpellingErrors": true
+                  }
+                },
+                "subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e622",
+                "metadata": {
+                  "contentType": "Fill in the Blanks",
+                  "license": "U",
+                  "title": "Tre gode vanar i universell utforming"
+                }
+              },
+              "useSeparator": "auto"
+            }
+          ]
+        },
+        "subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e620",
+        "metadata": {
+          "contentType": "Page",
+          "license": "U",
+          "title": "Universell utforming"
+        }
+      }
+    ],
+    "page": "Side",
+    "next": "Neste",
+    "previous": "Førre"
+  }
+}

@@ -98,7 +98,8 @@ export async function packContentType({ librariesDir, exampleFile, outFile }) {
     title: example.title,
     language: example.language,
     mainLibrary: main.machineName,
-    embedTypes: main.embedTypes,
+    // WHY: h5p.json must name an embed type; QuestionSet 1.21's library.json lists none (upstream omission).
+    embedTypes: main.embedTypes?.length ? main.embedTypes : ['iframe'],
     license: example.license,
     defaultLanguage: example.language,
     preloadedDependencies: [mainDep, ...subContent],

@@ -76,6 +76,7 @@ with the commands given.
 | D-064 | What the authentication audit records | Accepted (2026-10-23), owner to confirm (Q15) |
 | D-065 | End-to-end tests in Session 3 | Accepted (2026-10-23) |
 | D-066 | Friendly "not available" pages and visibility-only sharing until S4 | Accepted (2026-10-23), owner to confirm (Q14) |
+| D-047 | R-01 settled: Core 1.28 and Lumi 10.0.4 run the ten real content types | Accepted (2026-10-23) |
 | D-067 | H5P runtime pages stay in Express; the Next.js app frames them | Accepted (2026-10-23) |
 | D-068 | Express is the front door and runs Next.js in the same process | Accepted (2026-10-23) |
 | D-069 | Query-ltik paths and file grants for the S4 views and the editor | Accepted (2026-10-23) |
@@ -840,6 +841,21 @@ loading of one spec per session are kept.
   `returnTo`. The S3 sharing API changes **visibility only**; every change writes an audit event.
 - **Consequences:** Activities are published through S4's flow (owner to confirm, Q14).
 
+### D-047 · R-01 settled: Core 1.28 and Lumi 10.0.4 run the ten real content types
+- **Context:** R-01 asked whether Lumi h5p-server 10.0.4 works with Core 1.28 libraries (spike steps 3–5, S2); the
+  fallback was Core 1.27 without the Daylight theme. The Hub stayed unreachable (Q7), so the spike was carried into S4.
+- **Decision:** Keep Core 1.28 with Lumi 10.0.4 and the F1–F3 workarounds. Evidence (2026-10-23): the ten types at
+  their newest Core-1.28-era releases (MultiChoice 1.16.14, Blanks 1.14.13, DragText 1.10.52, QuestionSet 1.21.13,
+  Column 1.18.8, CoursePresentation 1.28.25, InteractiveVideo 1.28.37, InteractiveBook 1.15.1 with Column 1.22.0,
+  ImageHotspots 1.11.6, BranchingScenario 1.10.1; 120 libraries in all, built from GitHub, D-078) install through
+  the seed path with the S2 package checks, import with their files, save through the editor with the sub-content
+  policy, and play on our player page in Chromium without console errors, page errors or failed requests
+  (`apps/server/test/h5p/realTypes.browser.int.test.ts`). Spike step 3 (Hub registration) still waits for Q7.
+- **Consequences:** No downgrade to 1.27. Findings for later work: QuestionSet 1.21 announces its end feedback to
+  screen readers but no longer shows it (relevant to `PED-H11` and `UD-030`); several libraries' Nynorsk files leave
+  UI strings in English or are out of step with their semantics (BranchingScenario `l10n`), so authors may need to
+  correct labels; InteractiveBook 1.15 offers only Column 1.22, which has no release tag (pinned commit, D-022 rule).
+
 ### D-067 · H5P runtime pages stay in Express; the Next.js app frames them
 - **Context:** S4 brings `apps/web` (Next.js), the H5P editor page (D-040) and the move of the S3 LTI views (D-048).
   H5P needs its own global jQuery, CSS and iframes, and `UD-011`/`DATA-011` need a strict script policy. Next.js App
@@ -974,8 +990,11 @@ loading of one spec per session are kept.
   seeds from packages downloaded from the Hub; these are built from H5P's own repositories at pinned commits and
   serve development, tests and CI until the Hub is reachable.
 - **Amendment (2026-10-23, probe 1):** the H5P registry (`github.com/h5p/h5p-registry`, pinned) maps machine names to
-  repositories; the ten types need 76 libraries, 17 of them built with webpack; two editor libraries have no matching
-  tag and are pinned to a reviewed commit (D-022 rule). Builds run outside the repository, because a library's
+  repositories. The resolver follows required dependencies and, as optional, the sub-content types each library's
+  semantics offers (without them InteractiveBook could not save its own pages): 120 libraries, 23 of them built
+  with webpack; 39 offered old versions are skipped and listed in the manifest (their dependencies are not in the
+  registry, or they need a build without a lockfile). Three libraries have no matching release tag and are pinned to
+  a reviewed commit (D-022 rule). Network errors are retried and never cause a skip. Builds run outside the repository, because a library's
   build otherwise picks up this repository's TypeScript configuration. Installing the first real package showed
   that S2's narrowed `contentWhitelist` (SEC-002) also applied to library folders through Lumi's
   `libraryWhitelist`, so every real package, from GitHub or the Hub, was refused for its icon fonts:

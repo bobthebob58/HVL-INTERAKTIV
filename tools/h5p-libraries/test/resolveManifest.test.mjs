@@ -3,7 +3,7 @@
  *
  * Spec: H5P-003, H5P-002
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -69,7 +69,12 @@ describe('[H5P-003] resolving the pinned library set', () => {
         '1.3.0': lib('H5P.A', '1.3.0'),
       },
       b: { '1.0.4': lib('H5P.B', '1.0.4', ['H5P.C 2.1']) },
-      c: { '2.1.9': lib('H5P.C', '2.1.9', [], { preloadedJs: [{ path: 'dist/c.js' }] }) },
+      c: {
+        '2.1.9': lib('H5P.C', '2.1.9', [], {
+          preloadedJs: [{ path: 'dist/c.js' }],
+          files: ['package-lock.json'],
+        }),
+      },
     });
     // Act
     const { libraries } = resolveManifest({
@@ -96,6 +101,49 @@ describe('[H5P-003] resolving the pinned library set', () => {
       workDir: workDir(),
     });
     expect(libraries[0]).toMatchObject({ ref: 'HEAD', untagged: true, version: '1.2.3' });
+  });
+
+  it('[H5P-003] follows sub-content types the semantics offer, and skips one that cannot be resolved', () => {
+    // Arrange: A offers C 2.1 (resolvable) and B 9.9 (no such version) as sub-content
+    const offers = [
+      {
+        name: 'pages',
+        type: 'list',
+        field: { name: 'page', type: 'library', options: ['H5P.C 2.1', 'H5P.B 9.9'] },
+      },
+    ];
+    const source = fakeSource({
+      a: { '1.2.0': lib('H5P.A', '1.2.0', [], { semantics: offers }) },
+      b: { HEAD: lib('H5P.B', '1.0.0') },
+      c: { '2.1.0': lib('H5P.C', '2.1.0') },
+    });
+    const checkout = source.checkout;
+    source.checkout = (repo, ref, dir) => {
+      const commit = checkout(repo, ref, dir);
+      const library = JSON.parse(readFileSync(join(dir, 'library.json'), 'utf8'));
+      if (library.semantics) writeFileSync(join(dir, 'semantics.json'), JSON.stringify(library.semantics));
+      return commit;
+    };
+    // Act
+    const { libraries, skipped } = resolveManifest({
+      roots: [{ machineName: 'H5P.A', majorVersion: 1, minorVersion: 2 }],
+      registry,
+      source,
+      workDir: workDir(),
+    });
+    // Assert
+    expect(libraries.map((l) => l.machineName)).toEqual(['H5P.A', 'H5P.C']);
+    expect(skipped).toEqual([
+      { library: 'H5P.B 9.9', offeredBy: 'H5P.A 1.2', reason: expect.stringMatching(/holds 1.0/) },
+    ]);
+  });
+
+  it('[H5P-003] refuses a library that must be built but has no package-lock.json', () => {
+    const source = fakeSource({
+      a: { '1.2.0': lib('H5P.A', '1.2.0', [], { preloadedJs: [{ path: 'dist/a.js' }] }) },
+    });
+    const roots = [{ machineName: 'H5P.A', majorVersion: 1, minorVersion: 2 }];
+    expect(() => resolveManifest({ roots, registry, source, workDir: workDir() })).toThrow(/no package-lock/);
   });
 
   it('[H5P-003] refuses a checkout that holds another version, and a library missing from the registry', () => {

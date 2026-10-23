@@ -1,0 +1,88 @@
+{
+  "mainLibrary": "H5P.ImageHotspots-1.11",
+  "title": "Læringsdesign: før, under og etter samlinga",
+  "language": "nn",
+  "license": "U",
+  "assets": {
+    "images/diagram.png": "assets/diagram.png"
+  },
+  "params": {
+    "image": {
+      "path": "images/diagram.png",
+      "mime": "image/png",
+      "copyright": { "license": "U" },
+      "width": 960,
+      "height": 540
+    },
+    "backgroundImageAltText": "Læringsdesign i tre fasar. Fase 1, før samlinga: førebuing med video og quiz. Fase 2, under samlinga: samtale og problemløysing. Fase 3, etter samlinga: refleksjon og oppsummering.",
+    "globalIconType": "numbers",
+    "globalColor": "#004357",
+    "hotspots": [
+      {
+        "position": { "x": 20, "y": 32, "legacyPositioning": false },
+        "hotspotIconType": "default",
+        "hotspotIcon": "plus",
+        "alwaysFullscreen": false,
+        "header": "Før samlinga: førebuing",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>Studentane ser ein kort video og svarar på ein quiz før dei møtest. Quizen er undervegsvurdering: han viser kva kvar student treng å øve meir på, og tel ikkje med i karakteren.</p><p>Læraren ser kva som var vanskeleg, og kan planleggje samlinga ut frå det. Gi videoen teksting, slik at alle studentane kan bruke han (universell utforming).</p>"
+            },
+            "subContentId": "5c1e9a72-4b3d-4f8e-a6c2-7d9b1e3f5a01",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Før samlinga: førebuing"
+            }
+          }
+        ]
+      },
+      {
+        "position": { "x": 52, "y": 32, "legacyPositioning": false },
+        "hotspotIconType": "default",
+        "hotspotIcon": "plus",
+        "alwaysFullscreen": false,
+        "header": "Under samlinga: samtale og problemløysing",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>Når alle har førebudd seg, kan den felles tida brukast til det studentane har mest nytte av å gjere saman: samtale og problemløysing i grupper.</p><p>Læraren tek utgangspunkt i det som var vanskeleg i quizen, og gir munnleg tilbakemelding undervegs.</p>"
+            },
+            "subContentId": "5c1e9a72-4b3d-4f8e-a6c2-7d9b1e3f5a02",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Under samlinga: samtale og problemløysing"
+            }
+          }
+        ]
+      },
+      {
+        "position": { "x": 84, "y": 32, "legacyPositioning": false },
+        "hotspotIconType": "default",
+        "hotspotIcon": "plus",
+        "alwaysFullscreen": false,
+        "header": "Etter samlinga: refleksjon og oppsummering",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>Studentane skriv ein kort refleksjon om kva dei har lært, og kva dei framleis er usikre på. Medstudentar eller lærar gir tilbakemelding før neste samling.</p><p>Studentane kan velje om dei vil skrive refleksjonen eller spele han inn (universell utforming). Refleksjonane kan samlast i ei mappe, slik at studenten ser si eiga utvikling gjennom emnet.</p>"
+            },
+            "subContentId": "5c1e9a72-4b3d-4f8e-a6c2-7d9b1e3f5a03",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Etter samlinga: refleksjon og oppsummering"
+            }
+          }
+        ]
+      }
+    ],
+    "untitledHotspotLabel": "Markør utan tittel",
+    "containsAudioVideoLabel": "Inneheld lyd eller video"
+  }
+}

@@ -79,6 +79,8 @@ Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-
 ## S2 — Content types and security ✅ (gate passed 2026-10-23; spike steps 3–5 open, Q7)
 
 - [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (to be recorded as D-047).
+      **2026-10-23 (S4):** steps 4–5 and R-01 are done with real content types built from GitHub at pinned commits
+      (D-078): Core 1.28 stays (D-047). Only step 3, the Hub registration, still waits for Q7.
       **Still blocked (Q7):** on 2026-10-23 (last checked 07:32 UTC) the egress proxy refused hub-api.h5p.org
       (`CONNECT tunnel failed, response 403`; `npm run hub:check` reports `fetch failed: Request was cancelled.`).
       S2 closed on the plan's fallback: the gate passes on synthetic packages; this item carries forward.
@@ -153,7 +155,9 @@ Not done in S3 (recorded 2026-10-23):
 Brand tokens follow HVL's manual (D-017); HVL (profil@hvl.no) must still confirm the values and supply logo files.
 Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one go); decisions D-067…D-079.
 - [x] Decisions D-067…D-079 recorded; D-047 (R-01) follows the real-library probe
-- [ ] Real H5P content types from GitHub at pinned commits (D-078), which also settles the S2 carry-over R-01 (D-047)
+- [x] Real H5P content types from GitHub at pinned commits (`npm run h5p:fetch-libraries`, D-078): 120 libraries,
+      ten Nynorsk example activities; all ten install through the seed path, import, save and play in Chromium;
+      R-01 settled (D-047). Found and fixed: library folders refused icon fonts (SEC-002 list applied to them)
 - [ ] H5P pages under a strict script policy (D-070); Next.js inside Express (D-067, D-068); the editor page and the
       LTI editor in a cookie-less iframe (D-069)
 - [ ] `packages/design-tokens` with the contrast test and lint rules (`UD-001`)

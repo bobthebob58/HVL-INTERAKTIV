@@ -13,12 +13,28 @@
       "build": false
     },
     {
+      "machineName": "H5P.Accordion",
+      "version": "1.0.33",
+      "repository": "https://github.com/h5p/h5p-accordion",
+      "ref": "refs/tags/1.0.33",
+      "commit": "9db09da2e16983e70904db864f78edbaa4c9c797",
+      "build": false
+    },
+    {
       "machineName": "H5P.AdvancedText",
       "version": "1.1.16",
       "repository": "https://github.com/h5p/h5p-advanced-text",
       "ref": "refs/tags/1.1.16",
       "commit": "ca7451c56145facde0d33b8b63f4ae3770368dfa",
       "build": false
+    },
+    {
+      "machineName": "H5P.Agamotto",
+      "version": "1.6.13",
+      "repository": "https://github.com/otacke/h5p-agamotto",
+      "ref": "refs/tags/1.6.13",
+      "commit": "1cf03e114915664568e218ca586e0b3b7bdf6ae6",
+      "build": true
     },
     {
       "machineName": "H5P.Audio",
@@ -61,6 +77,14 @@
       "build": true
     },
     {
+      "machineName": "H5P.Chart",
+      "version": "1.2.24",
+      "repository": "https://github.com/h5p/h5p-chart",
+      "ref": "refs/tags/1.2.24",
+      "commit": "0c2dd287f71956ecf5a67caac4fb0f1839efc437",
+      "build": false
+    },
+    {
       "machineName": "H5P.CKEditor",
       "version": "1.0.23",
       "repository": "https://github.com/h5p/h5p-ckeditor",
@@ -69,11 +93,28 @@
       "build": false
     },
     {
+      "machineName": "H5P.Collage",
+      "version": "0.3.25",
+      "repository": "https://github.com/h5p/h5p-collage",
+      "ref": "refs/tags/0.3.25",
+      "commit": "4c7362fed56b63dfeb75472bd4c31cfa9094defa",
+      "build": false
+    },
+    {
       "machineName": "H5P.Column",
       "version": "1.18.8",
       "repository": "https://github.com/h5p/h5p-column",
       "ref": "refs/tags/1.18.8",
       "commit": "c8586b59bbc41c50bd46ddbf538bde4aafab700b",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Column",
+      "version": "1.22.0",
+      "repository": "https://github.com/h5p/h5p-column",
+      "ref": "HEAD",
+      "commit": "86703853e2781fc871ce2565cfd1fef014b466e2",
+      "untagged": true,
       "build": false
     },
     {
@@ -117,6 +158,30 @@
       "build": true
     },
     {
+      "machineName": "H5P.DocumentationTool",
+      "version": "1.8.35",
+      "repository": "https://github.com/h5p/h5p-documentation-tool",
+      "ref": "refs/tags/1.8.35",
+      "commit": "877d8ee21e20f626936eefd0f4af96ff506982b7",
+      "build": false
+    },
+    {
+      "machineName": "H5P.DocumentExportPage",
+      "version": "1.5.18",
+      "repository": "https://github.com/h5p/h5p-document-export-page",
+      "ref": "refs/tags/1.5.18",
+      "commit": "268f72090a3cc620cea86d80f7dc7f56f6d0f00b",
+      "build": true
+    },
+    {
+      "machineName": "H5P.DragNBar",
+      "version": "1.3.2",
+      "repository": "https://github.com/h5p/h5p-drag-n-bar",
+      "ref": "refs/tags/1.3.2",
+      "commit": "a12e87ece1dde357bc34b49107f5c15fd4b0ca58",
+      "build": false
+    },
+    {
       "machineName": "H5P.DragNBar",
       "version": "1.5.23",
       "repository": "https://github.com/h5p/h5p-drag-n-bar",
@@ -142,6 +207,14 @@
     },
     {
       "machineName": "H5P.DragQuestion",
+      "version": "1.14.23",
+      "repository": "https://github.com/h5p/h5p-drag-question",
+      "ref": "refs/tags/1.14.23",
+      "commit": "27b23dd2b11188f6f83f4e1cc06604b5239870fa",
+      "build": true
+    },
+    {
+      "machineName": "H5P.DragQuestion",
       "version": "1.15.16",
       "repository": "https://github.com/h5p/h5p-drag-question",
       "ref": "refs/tags/1.15.16",
@@ -155,6 +228,14 @@
       "ref": "refs/tags/1.10.52",
       "commit": "3d3eb6d759b3ed65862c3048fbe02b989cbb7110",
       "build": true
+    },
+    {
+      "machineName": "H5P.Essay",
+      "version": "1.5.20",
+      "repository": "https://github.com/otacke/h5p-essay",
+      "ref": "refs/tags/1.5.20",
+      "commit": "5a7e2b33a1f06a5d7ab5fb992308fc8ded1bbdb4",
+      "build": false
     },
     {
       "machineName": "H5P.ExportableTextArea",
@@ -181,11 +262,35 @@
       "build": false
     },
     {
+      "machineName": "H5P.GoalsAssessmentPage",
+      "version": "1.4.17",
+      "repository": "https://github.com/h5p/h5p-goals-assessment-page",
+      "ref": "refs/tags/1.4.17",
+      "commit": "6f9e2020915770041287d856e89fb1620eb39517",
+      "build": false
+    },
+    {
+      "machineName": "H5P.GoalsPage",
+      "version": "1.5.32",
+      "repository": "https://github.com/h5p/h5p-goals-page",
+      "ref": "refs/tags/1.5.32",
+      "commit": "d76a28b8d22b69f2f2504780fcd490950b4c2a59",
+      "build": false
+    },
+    {
       "machineName": "H5P.GoToQuestion",
       "version": "1.3.23",
       "repository": "https://github.com/h5p/h5p-go-to-question",
       "ref": "refs/tags/1.3.23",
       "commit": "3f4694c9af7c1e1fbcd22d3bb6d159b17b902a03",
+      "build": false
+    },
+    {
+      "machineName": "H5P.GuessTheAnswer",
+      "version": "1.5.3",
+      "repository": "https://github.com/h5p/h5p-guess-the-answer",
+      "ref": "refs/tags/1.5.3",
+      "commit": "94ce0e99bb6060a3e4d7b3e3881b533fb87b6142",
       "build": false
     },
     {
@@ -197,11 +302,43 @@
       "build": false
     },
     {
+      "machineName": "H5P.IFrameEmbed",
+      "version": "1.0.28",
+      "repository": "https://github.com/h5p/h5p-iframe-embed",
+      "ref": "refs/tags/1.0.28",
+      "commit": "3ec88beab0e4a2f2a3d01dd0eab65a04a59a31af",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Image",
+      "version": "1.0.32",
+      "repository": "https://github.com/h5p/h5p-image",
+      "ref": "refs/tags/1.0.32",
+      "commit": "9188e4941d9d6ab52c87ed88cf8d8382a181a545",
+      "build": false
+    },
+    {
       "machineName": "H5P.Image",
       "version": "1.1.23",
       "repository": "https://github.com/h5p/h5p-image",
       "ref": "refs/tags/1.1.23",
       "commit": "310f8572e60987ad7305425e0ea1b1e786aa0f60",
+      "build": false
+    },
+    {
+      "machineName": "H5P.ImageHotspotQuestion",
+      "version": "1.8.22",
+      "repository": "https://github.com/h5p/h5p-image-hotspot-question",
+      "ref": "refs/tags/1.8.22",
+      "commit": "41aea7cf02f5873b1773d863f49460c4e827213d",
+      "build": false
+    },
+    {
+      "machineName": "H5P.ImageHotspots",
+      "version": "1.5.5",
+      "repository": "https://github.com/h5p/h5p-image-hotspots",
+      "ref": "refs/tags/1.5.5",
+      "commit": "796ccd98a680a53b6ec2b8024a644aa951cfa10f",
       "build": false
     },
     {
@@ -221,6 +358,22 @@
       "build": false
     },
     {
+      "machineName": "H5P.ImageSlide",
+      "version": "1.1.4",
+      "repository": "https://github.com/falcon-git/h5p-image-slide",
+      "ref": "refs/tags/1.1.4",
+      "commit": "97984f727d2410db0a0ad8298d30fd57ca8814bc",
+      "build": false
+    },
+    {
+      "machineName": "H5P.ImageSlider",
+      "version": "1.1.9",
+      "repository": "https://github.com/falcon-git/h5p-image-slider",
+      "ref": "refs/tags/1.1.9",
+      "commit": "6ae7b52d1589ebb7974e1d471b538ead8f824eb7",
+      "build": false
+    },
+    {
       "machineName": "H5P.InteractiveBook",
       "version": "1.15.1",
       "repository": "https://github.com/h5p/h5p-interactive-book",
@@ -230,11 +383,27 @@
     },
     {
       "machineName": "H5P.InteractiveVideo",
+      "version": "1.27.9",
+      "repository": "https://github.com/h5p/h5p-interactive-video",
+      "ref": "refs/tags/1.27.9",
+      "commit": "6ed13f4a19e43ac32c4b1690e83f7b0bf8d26978",
+      "build": true
+    },
+    {
+      "machineName": "H5P.InteractiveVideo",
       "version": "1.28.37",
       "repository": "https://github.com/h5p/h5p-interactive-video",
       "ref": "refs/tags/1.28.37",
       "commit": "bcfa06d2b057cddc583fb922a75038981084be62",
       "build": true
+    },
+    {
+      "machineName": "H5P.IVHotspot",
+      "version": "1.1.0",
+      "repository": "https://github.com/h5p/h5p-iv-hotspot",
+      "ref": "refs/tags/1.1.0",
+      "commit": "5722cf652facdf8a98fe9508ae7b22ed1e6f8534",
+      "build": false
     },
     {
       "machineName": "H5P.IVHotspot",
@@ -274,6 +443,22 @@
       "repository": "https://github.com/h5p/h5p-material-design-icons",
       "ref": "refs/tags/1.0.0",
       "commit": "4d1cde70c9a12a4f4874b6721c25eb5a4f7abd80",
+      "build": false
+    },
+    {
+      "machineName": "H5P.MemoryGame",
+      "version": "1.1.11",
+      "repository": "https://github.com/h5p/h5p-memory-game",
+      "ref": "refs/tags/1.1.11",
+      "commit": "9b6b2ba0e36eac7d0e6ff0826ee441dada53c994",
+      "build": false
+    },
+    {
+      "machineName": "H5P.MemoryGame",
+      "version": "1.3.51",
+      "repository": "https://github.com/h5p/h5p-memory-game",
+      "ref": "refs/tags/1.3.51",
+      "commit": "8f3591a2df181d71e4b6c5ca1a606134204e489f",
       "build": false
     },
     {
@@ -326,10 +511,50 @@
     },
     {
       "machineName": "H5P.QuestionSet",
+      "version": "1.20.31",
+      "repository": "https://github.com/h5p/h5p-question-set",
+      "ref": "refs/tags/1.20.31",
+      "commit": "bbfba40797b8fc972f68555164d211be4645a79e",
+      "build": false
+    },
+    {
+      "machineName": "H5P.QuestionSet",
       "version": "1.21.13",
       "repository": "https://github.com/h5p/h5p-question-set",
       "ref": "refs/tags/1.21.13",
       "commit": "4598d1d60ea8730e62c66a4ac6ad5ef653f0c5f6",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Row",
+      "version": "1.0.12",
+      "repository": "https://github.com/h5p/h5p-row",
+      "ref": "refs/tags/1.0.12",
+      "commit": "a2f86dce33490c597e682ae06a2fb7d5571fb15a",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Row",
+      "version": "1.3.0",
+      "repository": "https://github.com/h5p/h5p-row",
+      "ref": "refs/tags/1.3.0",
+      "commit": "33b907a0e234ae10da7ae28b8eab9662b1baa393",
+      "build": false
+    },
+    {
+      "machineName": "H5P.RowColumn",
+      "version": "1.0.4",
+      "repository": "https://github.com/h5p/h5p-row-column",
+      "ref": "refs/tags/1.0.4",
+      "commit": "794a90dc038f1a8a4b9c8809ad835c0e59581335",
+      "build": false
+    },
+    {
+      "machineName": "H5P.RowColumn",
+      "version": "1.3.1",
+      "repository": "https://github.com/h5p/h5p-row-column",
+      "ref": "refs/tags/1.3.1",
+      "commit": "cbcbf9d640789c46de491d90e55f3aa8b4270e4c",
       "build": false
     },
     {
@@ -357,11 +582,35 @@
       "build": false
     },
     {
+      "machineName": "H5P.SoundJS",
+      "version": "1.0.2",
+      "repository": "https://github.com/h5p/h5p-soundjs",
+      "ref": "refs/tags/1.0.2",
+      "commit": "c4313c98d2f2687c8f88f42ab3c2e79f29a611fd",
+      "build": false
+    },
+    {
+      "machineName": "H5P.StandardPage",
+      "version": "1.5.21",
+      "repository": "https://github.com/h5p/h5p-standard-page",
+      "ref": "refs/tags/1.5.21",
+      "commit": "1b449888643fb8fae61b518254639e13f15fc230",
+      "build": false
+    },
+    {
       "machineName": "H5P.Summary",
       "version": "1.10.22",
       "repository": "https://github.com/h5p/h5p-summary",
       "ref": "refs/tags/1.10.22",
       "commit": "1f2d338f4570156dffa5b48bfdb923034d69dcb9",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Table",
+      "version": "1.1.19",
+      "repository": "https://github.com/h5p/h5p-table",
+      "ref": "refs/tags/1.1.19",
+      "commit": "3ba8d0d73572abdc809ef85d161557022d751491",
       "build": false
     },
     {
@@ -381,11 +630,43 @@
       "build": false
     },
     {
+      "machineName": "H5P.TextInputField",
+      "version": "1.0.9",
+      "repository": "https://github.com/h5p/h5p-text-input-field",
+      "ref": "refs/tags/1.0.9",
+      "commit": "9e781272cf3d90dbd53ee03890df957f591e3dac",
+      "build": false
+    },
+    {
+      "machineName": "H5P.TextInputField",
+      "version": "1.2.17",
+      "repository": "https://github.com/h5p/h5p-text-input-field",
+      "ref": "refs/tags/1.2.17",
+      "commit": "f4546a122febbad3296feb35cc4147e9012bff28",
+      "build": false
+    },
+    {
       "machineName": "H5P.TextUtilities",
       "version": "1.3.0",
       "repository": "https://github.com/otacke/h5p-text-utilities",
       "ref": "refs/tags/1.3.0",
       "commit": "e5bffbe458dd2626aae7650c32fde236bd2f0e54",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Timeline",
+      "version": "1.1.25",
+      "repository": "https://github.com/h5p/h5p-timeline",
+      "ref": "refs/tags/1.1.25",
+      "commit": "080719644530d4cc3426fc68fe92d73ce2389bbc",
+      "build": false
+    },
+    {
+      "machineName": "H5P.Timer",
+      "version": "0.4.2",
+      "repository": "https://github.com/otacke/h5p-timer",
+      "ref": "refs/tags/0.4.2",
+      "commit": "c3645cee23aa80ecef493cfc80f22ad5da485ad0",
       "build": false
     },
     {
@@ -421,6 +702,14 @@
       "build": false
     },
     {
+      "machineName": "H5PEditor.AudioRecorder",
+      "version": "1.0.12",
+      "repository": "https://github.com/h5p/h5p-editor-audio-recorder",
+      "ref": "refs/tags/1.0.12",
+      "commit": "d66676273300711d7201356fb036e75c29b76e43",
+      "build": true
+    },
+    {
       "machineName": "H5PEditor.BranchingQuestion",
       "version": "1.0.5",
       "repository": "https://github.com/h5p/h5p-editor-branching-question",
@@ -435,6 +724,22 @@
       "ref": "refs/tags/1.5.13",
       "commit": "8fcd92d0a5a5f6b855d9d03ce4d19ab31baa4b99",
       "build": true
+    },
+    {
+      "machineName": "H5PEditor.Collage",
+      "version": "0.3.22",
+      "repository": "https://github.com/h5p/h5p-editor-collage",
+      "ref": "refs/tags/0.3.22",
+      "commit": "47ab17367fddbc541cec58df7044402e7e1ada5f",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.ColorSelector",
+      "version": "1.2.6",
+      "repository": "https://github.com/h5p/h5p-editor-color-selector",
+      "ref": "refs/tags/1.2.6",
+      "commit": "5c4e6d486be19c57db80a9e8e4286bf55b8fd6a2",
+      "build": false
     },
     {
       "machineName": "H5PEditor.ColorSelector",
@@ -470,10 +775,34 @@
     },
     {
       "machineName": "H5PEditor.ImageCoordinateSelector",
+      "version": "1.1.2",
+      "repository": "https://github.com/h5p/h5p-editor-image-coordinate-selector",
+      "ref": "refs/tags/1.1.2",
+      "commit": "e279067a3d3b92cb166338e4f962dfafac8d34f3",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.ImageCoordinateSelector",
       "version": "1.2.7",
       "repository": "https://github.com/h5p/h5p-editor-image-coordinate-selector",
       "ref": "refs/tags/1.2.7",
       "commit": "53bd59035df3193d60de571b18be16827ca94c41",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.ImageHotspotQuestion",
+      "version": "1.8.12",
+      "repository": "https://github.com/h5p/h5p-editor-image-hotspot-question",
+      "ref": "refs/tags/1.8.12",
+      "commit": "a8a959bbd942c2a2232e165e2ec9abbb94c71fd1",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.InteractiveVideo",
+      "version": "1.25.11",
+      "repository": "https://github.com/h5p/h5p-editor-interactive-video",
+      "ref": "refs/tags/1.25.11",
+      "commit": "0a9fbd07d9f0ab2cefb9cb32a0b46bb05d342f88",
       "build": false
     },
     {
@@ -484,6 +813,14 @@
       "commit": "205abc173eece12046c4dedbe883ea5835e49151",
       "untagged": true,
       "build": false
+    },
+    {
+      "machineName": "H5PEditor.QuestionSetTextualEditor",
+      "version": "1.2.4",
+      "repository": "https://github.com/h5p/h5p-editor-question-set-textual-editor",
+      "ref": "refs/tags/1.2.4",
+      "commit": "99d3b8c5bb3cf7a8e1bc09875f6cab19b73a65a7",
+      "build": true
     },
     {
       "machineName": "H5PEditor.QuestionSetTextualEditor",
@@ -592,6 +929,14 @@
     },
     {
       "machineName": "H5PEditor.Wizard",
+      "version": "1.1.1",
+      "repository": "https://github.com/h5p/h5p-editor-wizard",
+      "ref": "refs/tags/1.1.1",
+      "commit": "6f4fadf80d5b750ad60b859284894200e5d6ce8f",
+      "build": false
+    },
+    {
+      "machineName": "H5PEditor.Wizard",
       "version": "1.2.17",
       "repository": "https://github.com/h5p/h5p-editor-wizard",
       "ref": "refs/tags/1.2.17",
@@ -613,6 +958,211 @@
       "ref": "refs/tags/1.0.8",
       "commit": "cf9eb9b5fd30ace7c75dad5e31b617f826bc96b5",
       "build": false
+    },
+    {
+      "machineName": "TimelineJS",
+      "version": "1.1.1",
+      "repository": "https://github.com/h5p/timelinejs",
+      "ref": "refs/tags/1.1.1",
+      "commit": "f5729241acb91633ddeb9cf5087a864499169c59",
+      "build": false
+    }
+  ],
+  "skipped": [
+    {
+      "library": "downloadify 1.0",
+      "offeredBy": "H5P.ExportableTextArea 1.2",
+      "reason": "downloadify 1.0 (required by H5P.ExportableTextArea 1.2) is not in the H5P registry"
+    },
+    {
+      "library": "Drop 1.0",
+      "offeredBy": "H5P.JoubelUI 1.2",
+      "reason": "Drop 1.0 (required by H5P.JoubelUI 1.2) is not in the H5P registry"
+    },
+    {
+      "library": "EmbeddedJS 1.0",
+      "offeredBy": "H5P.MultiChoice 1.9",
+      "reason": "EmbeddedJS 1.0 (required by H5P.MultiChoice 1.9) is not in the H5P registry"
+    },
+    {
+      "library": "filesaver 1.0",
+      "offeredBy": "H5P.ExportableTextArea 1.2",
+      "reason": "filesaver 1.0 (required by H5P.ExportableTextArea 1.2) is not in the H5P registry"
+    },
+    {
+      "library": "flowplayer 1.0",
+      "offeredBy": "H5P.Audio 1.2",
+      "reason": "flowplayer 1.0 (required by H5P.Audio 1.2) is not in the H5P registry"
+    },
+    {
+      "library": "H5P.AppearIn 1.0",
+      "offeredBy": "H5P.RowColumn 1.3",
+      "reason": "H5P.AppearIn 1.0 (required by H5P.RowColumn 1.3) is not in the H5P registry"
+    },
+    {
+      "library": "H5P.Audio 1.2",
+      "offeredBy": "dependency",
+      "reason": "needs flowplayer 1.0, which was skipped"
+    },
+    {
+      "library": "H5P.Blanks 1.7",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.CoursePresentation 1.15",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.CoursePresentation 1.26",
+      "offeredBy": "H5P.Column 1.18",
+      "reason": "H5P.CoursePresentation 1.26: https://github.com/h5p/h5p-course-presentation refs/tags/1.26.24 holds 1.28"
+    },
+    {
+      "library": "H5P.Dialogcards 1.5",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.DocumentationTool 1.4",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.StandardPage 1.1, which was skipped"
+    },
+    {
+      "library": "H5P.DocumentExportPage 1.1",
+      "offeredBy": "dependency",
+      "reason": "needs MustacheJS 1.0, which was skipped"
+    },
+    {
+      "library": "H5P.DragNSort 1.1",
+      "offeredBy": "H5PEditor.CoursePresentation 1.15",
+      "reason": "H5P.DragNSort 1.1 (required by H5PEditor.CoursePresentation 1.15) is not in the H5P registry"
+    },
+    {
+      "library": "H5P.DragQuestion 1.8",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.DragText 1.5",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.ExportableTextArea 1.2",
+      "offeredBy": "dependency",
+      "reason": "needs filesaver 1.0, which was skipped"
+    },
+    {
+      "library": "H5P.ExportPage 1.0",
+      "offeredBy": "H5P.DocumentExportPage 1.1",
+      "reason": "H5P.ExportPage 1.0 (required by H5P.DocumentExportPage 1.1) is not in the H5P registry"
+    },
+    {
+      "library": "H5P.GoalsAssessmentPage 1.1",
+      "offeredBy": "dependency",
+      "reason": "needs MustacheJS 1.0, which was skipped"
+    },
+    {
+      "library": "H5P.GoalsPage 1.2",
+      "offeredBy": "dependency",
+      "reason": "needs MustacheJS 1.0, which was skipped"
+    },
+    {
+      "library": "H5P.GoToQuestion 1.2",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.ImageHotspotQuestion 1.4",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.Question 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.InteractiveVideo 1.14",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.Video 1.3, which was skipped"
+    },
+    {
+      "library": "H5P.JoubelUI 1.2",
+      "offeredBy": "dependency",
+      "reason": "needs Drop 1.0, which was skipped"
+    },
+    {
+      "library": "H5P.MarkTheWords 1.6",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.MultiChoice 1.9",
+      "offeredBy": "dependency",
+      "reason": "needs EmbeddedJS 1.0, which was skipped"
+    },
+    {
+      "library": "H5P.Question 1.2",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.Questionnaire 1.1",
+      "offeredBy": "H5P.InteractiveVideo 1.14",
+      "reason": "H5P.Questionnaire 1.1 must be built but has no package-lock.json, so its build is not reproducible"
+    },
+    {
+      "library": "H5P.QuestionSet 1.11",
+      "offeredBy": "dependency",
+      "reason": "needs EmbeddedJS 1.0, which was skipped"
+    },
+    {
+      "library": "H5P.SingleChoiceSet 1.8",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.StandardPage 1.1",
+      "offeredBy": "dependency",
+      "reason": "needs MustacheJS 1.0, which was skipped"
+    },
+    {
+      "library": "H5P.Summary 1.7",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.TrueFalse 1.1",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5P.Video 1.3",
+      "offeredBy": "dependency",
+      "reason": "needs flowplayer 1.0, which was skipped"
+    },
+    {
+      "library": "H5PEditor.CoursePresentation 1.15",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.DragNSort 1.1, which was skipped"
+    },
+    {
+      "library": "H5PEditor.DragQuestion 1.6",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.JoubelUI 1.2, which was skipped"
+    },
+    {
+      "library": "H5PEditor.ImageHotspotQuestion 1.4",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.ImageHotspotQuestion 1.4, which was skipped"
+    },
+    {
+      "library": "H5PEditor.InteractiveVideo 1.14",
+      "offeredBy": "dependency",
+      "reason": "needs H5P.MultiChoice 1.9, which was skipped"
+    },
+    {
+      "library": "MustacheJS 1.0",
+      "offeredBy": "H5P.StandardPage 1.1",
+      "reason": "MustacheJS 1.0 (required by H5P.StandardPage 1.1) is not in the H5P registry"
     }
   ]
 }

@@ -1,0 +1,193 @@
+{
+  "mainLibrary": "H5P.BranchingScenario-1.10",
+  "title": "Planlegg ei samling",
+  "language": "nn",
+  "license": "U",
+  "assets": {
+    "images/diagram.png": "assets/diagram.png"
+  },
+  "params": {
+    "branchingScenario": {
+      "title": "Planlegg ei samling",
+      "startScreen": {
+        "startScreenTitle": "<p>Planlegg ei samling</p>",
+        "startScreenSubtitle": "<p>Du underviser i eit samlingsbasert emne i lærarutdanninga og skal planleggje neste samling. Vel kva du vil gjere, og sjå kva vala fører til. Du kan gå eit steg tilbake og starte på nytt når du vil. Poenga på slutten er berre til di eiga læring og tel ikkje med i nokon karakter.</p>",
+        "startScreenImage": {
+          "path": "images/diagram.png",
+          "mime": "image/png",
+          "copyright": { "license": "U" },
+          "width": 960,
+          "height": 540
+        },
+        "startScreenAltText": "Læringsdesign i tre fasar. Fase 1, før samlinga: førebuing med video og quiz. Fase 2, under samlinga: samtale og problemløysing. Fase 3, etter samlinga: refleksjon og oppsummering."
+      },
+      "endScreens": [
+        {
+          "endScreenTitle": "<p>Scenarioet er slutt</p>",
+          "endScreenSubtitle": "<p>Sjå tilbake på vala du gjorde, og start på nytt om du vil prøve ein annan veg.</p>",
+          "endScreenScore": 0,
+          "contentId": -1
+        }
+      ],
+      "content": [
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>Om tre veker har kullet ditt samling på campus i to dagar. Studentane bur spreidd og arbeider ved sida av studiet, så tida dei har saman, er verdfull.</p><p>Emnet handlar om undervegsvurdering. Ein av studentane bruker skjermlesar, og ein annan har sagt frå at han treng teksting på video.</p><p>No skal du bestemme korleis du vil bruke tida før samlinga, og korleis du gjer materiellet tilgjengeleg for alle.</p>"
+            },
+            "subContentId": "b3a7c1d2-4e5f-4a6b-8c7d-9e0f1a2b3c01",
+            "metadata": { "contentType": "Text", "license": "U", "title": "Situasjonen" }
+          },
+          "contentId": 0,
+          "nextContentId": 1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Korleis vil du bruke tida før samlinga?</p>",
+                "alternatives": [
+                  {
+                    "text": "Eg lagar ein kort video om undervegsvurdering og ein quiz som studentane tek før samlinga.",
+                    "nextContentId": 2,
+                    "feedback": {
+                      "title": "<p>Studentane kjem førebudde</p>",
+                      "subtitle": "<p>Videoen gir alle det same utgangspunktet, og quizen er undervegsvurdering: svara viser deg kva studentane strevar med, medan det framleis er tid til å justere planen for samlinga.</p>"
+                    }
+                  },
+                  {
+                    "text": "Eg sender ut ei lang pensumliste og går gjennom stoffet i ei førelesing på samlinga.",
+                    "nextContentId": 3,
+                    "feedback": {
+                      "title": "<p>Studentane får lite hjelp til å førebu seg</p>",
+                      "subtitle": "<p>Ei lang liste utan oppgåver gjer det vanskeleg å vite kva som er viktigast. Du får heller ikkje vite kva studentane har forstått før dei kjem, og mykje av den felles tida går med til å gjenta pensum.</p>"
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "b3a7c1d2-4e5f-4a6b-8c7d-9e0f1a2b3c02",
+            "metadata": { "contentType": "Branching Question", "license": "U", "title": "Før samlinga" }
+          },
+          "contentId": 1,
+          "nextContentId": -1,
+          "showContentTitle": false,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>Resultata frå quizen viser at mange studentar blandar saman undervegsvurdering og sluttvurdering. Du bestemmer deg for å bruke den første økta på samlinga til samtale i grupper om nettopp denne skilnaden.</p><p>No står berre materiellet att. Hugs at ein av studentane bruker skjermlesar, og at ein annan treng teksting på video.</p>"
+            },
+            "subContentId": "b3a7c1d2-4e5f-4a6b-8c7d-9e0f1a2b3c03",
+            "metadata": { "contentType": "Text", "license": "U", "title": "Kva quizen viste" }
+          },
+          "contentId": 2,
+          "nextContentId": 4,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>Du bruker mesteparten av den første dagen på å gå gjennom pensum. Studentane lyttar, men få stiller spørsmål, og du veit framleis ikkje kva dei har forstått.</p><p>På slutten av dagen seier fleire at dei kunne ha lese det same heime, og at dei ønskte meir tid til å diskutere med kvarandre.</p><p>Gå tilbake og planlegg tida før samlinga på nytt, slik at studentane kan arbeide med stoffet før dei kjem.</p>"
+            },
+            "subContentId": "b3a7c1d2-4e5f-4a6b-8c7d-9e0f1a2b3c04",
+            "metadata": { "contentType": "Text", "license": "U", "title": "Samlinga blir ei førelesing" }
+          },
+          "contentId": 3,
+          "nextContentId": 1,
+          "showContentTitle": true,
+          "proceedButtonText": "Planlegg på nytt",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Korleis gjer du materiellet til samlinga tilgjengeleg for alle studentane?</p>",
+                "alternatives": [
+                  {
+                    "text": "Eg tekstar videoen, bruker ekte overskrifter i dokumenta og legg ut alt i emnerommet før samlinga.",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Ei godt planlagd samling</p>",
+                      "subtitle": "<p>Du brukte tida før samlinga til førebuing og undervegsvurdering, og materiellet er universelt utforma frå starten. Ekte overskrifter hjelper studenten som bruker skjermlesar, og teksting hjelper den som treng tekst på video. Begge delar hjelper også alle som ser videoen på bussen eller vil finne fram i eit langt dokument. Poenga er berre til di eiga læring.</p>",
+                      "endScreenScore": 10
+                    }
+                  },
+                  {
+                    "text": "Eg lagar eigne versjonar til dei to studentane når dei ber om det.",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Ei god samling med ein svakheit</p>",
+                      "subtitle": "<p>Førebuinga fungerte, men materiellet er ikkje universelt utforma. Når tilrettelegginga kjem i etterkant, må studentane be om hjelp og vente, og andre som òg kunne hatt nytte av teksting og overskrifter, får inga hjelp. Start på nytt og vel ei løysing som fungerer for flest mogleg frå starten. Poenga er berre til di eiga læring.</p>",
+                      "endScreenScore": 5
+                    }
+                  },
+                  {
+                    "text": "Eg deler ut lysbileta på papir når studentane kjem til samlinga.",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Materiellet når ikkje alle</p>",
+                      "subtitle": "<p>Papir kan ikkje lesast med skjermlesar, og studentar som ikkje kjem på samlinga, får ingenting. Videoen er framleis utan teksting. Start på nytt og vel ei løysing der materiellet ligg digitalt og tilgjengeleg før samlinga. Poenga er berre til di eiga læring.</p>",
+                      "endScreenScore": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "b3a7c1d2-4e5f-4a6b-8c7d-9e0f1a2b3c05",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Materiellet til samlinga"
+            }
+          },
+          "contentId": 4,
+          "nextContentId": -1,
+          "showContentTitle": false,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        }
+      ],
+      "scoringOptionGroup": {
+        "scoringOption": "static-end-score"
+      },
+      "behaviour": {
+        "enableBackwardsNavigation": true,
+        "forceContentFinished": false,
+        "randomizeBranchingQuestions": false
+      },
+      "l10n": {
+        "startScreenButtonText": "Start scenarioet",
+        "endScreenButtonText": "Start på nytt",
+        "backButtonText": "Tilbake",
+        "disableProceedButtonText": "Du må fullføre denne delen før du kan gå vidare",
+        "replayButtonText": "Spel av videoen på nytt",
+        "scoreText": "Resultatet ditt:",
+        "fullscreenAria": "Fullskjerm"
+      }
+    }
+  }
+}
