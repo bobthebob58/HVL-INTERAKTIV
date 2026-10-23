@@ -13,7 +13,7 @@
  *   - `requirement` is `UD-021` for `V-*` rules and `PED-020` for `PED-H*` rules.
  *   - `message` is plain language in the requested locale and says what to do.
  * Collaborators: ./validateContent.ts, ../http/api (findings and publish), ../config/validationContext.ts.
- * Tests: apps/server/test/validation/validateContent.test.ts
+ * Tests: types only, checked by the compiler wherever they are used.
  */
 
 /** How much a finding matters: only `error` can block publishing (PROD-003). */

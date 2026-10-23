@@ -5,7 +5,7 @@
  * Why: DOC-012 asks for zod request and response schemas and an OpenAPI document built from them (D-077). One
  *      package keeps the server and the web app on the same shapes.
  * Spec: DOC-012
- * Tests: packages/api-contract/test/
+ * Tests: a constant only; the schemas arrive with their tests.
  */
 
 /** The version of this contract; it changes when a shape changes incompatibly. */
