@@ -998,6 +998,13 @@ loading of one spec per session are kept.
   `updatedAt` (409 `hvl:content-changed`). `POST …/unpublish` returns an activity to draft. Saving an activity that is
   already published runs the same gate. Only those who may edit (H5P-006) may publish.
 - **Consequences:** Acknowledgements keyed on a path ask again when list items move; that fails safe.
+- **Amendment (2026-10-23, W3):** every save of an existing activity increases `H5PContent.version` (the inventory
+  used to say "on structural change"); a refused save of a published activity is 409 `hvl:published-save-blocked`
+  with the findings, and nothing is saved; findings, publish and unpublish answer 404 when the person may not view
+  the activity and 403 `hvl:edit-not-allowed` when they may view but not edit; unpublish clears `publishedAt`, and
+  publishing an activity that is already published validates again and moves `publishedAt` to now. Known gap: a
+  publish that commits between the save gate's check and Lumi's save is not re-checked (the publish validated what it
+  saw); recorded in `PublishedSaveGate.ts`.
 
 ### D-075 · Notice dismissals are stored per user
 - **Context:** `PROD-011` remembers the formative-use notice's dismissal per user; `User` has no preference fields and

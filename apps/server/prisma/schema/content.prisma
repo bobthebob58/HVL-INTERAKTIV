@@ -32,6 +32,8 @@ model H5PContent {
   sourceContentId String?           @db.Uuid
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+  /// When the activity was last published through the publish flow (PROD-003); null while it is a draft.
+  publishedAt     DateTime?
 
   owner            User                        @relation("ContentOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
   source           H5PContent?                 @relation("ContentCopies", fields: [sourceContentId], references: [id], onDelete: SetNull)

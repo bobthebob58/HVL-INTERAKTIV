@@ -37,6 +37,7 @@ describeWithServices('[DATA-002] database enforces pseudonymous learners', () =>
         'LtiNonce',
         'LtiPlacement',
         'LtiPlatform',
+        'NoticeDismissal',
         'User',
         'ValidationAcknowledgement',
         'XapiStatement',

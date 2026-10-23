@@ -21,7 +21,12 @@
     "fileGrantInvalid": "Lenkja til fila har gått ut. Last sida på nytt.",
     "sharingNotAllowed": "Som student kan du førebels berre ha aktivitetane dine private.",
     "deepLinkChoiceInvalid": "Canvas tek ikkje imot dette valet her.",
-    "sharingChanged": "Delinga vart endra av nokon andre i mellomtida. Last sida på nytt og prøv igjen."
+    "sharingChanged": "Delinga vart endra av nokon andre i mellomtida. Last sida på nytt og prøv igjen.",
+    "acknowledgementInvalid": "Ei grunngjeving gjeld ein feil som ikkje finst lenger. Last sida på nytt og prøv igjen.",
+    "editNotAllowed": "Du har ikkje løyve til å endre denne aktiviteten.",
+    "contentChanged": "Aktiviteten vart endra i mellomtida. Last sida på nytt og sjekk han igjen.",
+    "publishBlocked": "Aktiviteten har feil som må rettast eller grunngjevast før han kan publiserast.",
+    "publishedSaveBlocked": "Aktiviteten er publisert, og endringa di gir feil som ingen har grunngjeve. Rett feila, eller gjer aktiviteten om til utkast før du lagrar."
   },
   "upload": {
     "archive": {

@@ -1,0 +1,33 @@
+# hint-thresholds — the limits of the pedagogical hints that the pre-publish validator gives authors.
+#
+# Why: the hints (spec 04 §5, PED-H01 to PED-H11) nudge authors towards short videos with frequent checks, short
+#      question sets and focused pages. ALU can tune these numbers here without changing code.
+# Spec: PED-020
+# Rules for editing:
+#   - Keep every key; the server refuses to start when a key is missing, unknown, repeated or out of range, and the
+#     message names the key. See content/laeringsdesign/README.md.
+#   - Hints are warnings or hints only; they never block publishing.
+# Tests: apps/server/test/config/validationContext.test.ts
+
+# PED-H01: warn when an Interactive Video is longer than this many minutes (Guo, Kim & Rubin 2014). 1 to 180.
+maxVideoMinutes: 15
+
+# PED-H02: hint when a video runs longer than this many minutes without a task (Szpunar, Khan & Schacter 2013). 1 to 60.
+maxMinutesWithoutInteraction: 4
+
+# PED-H04: warn when a Question Set shows more questions than this (Mayer 2009). 1 to 100.
+maxQuestionsPerSet: 15
+
+# PED-H06: warn when a Branching Scenario has fewer or more decision points on its main path (Schön 1983). 1 to 20.
+minDecisionPoints: 2
+maxDecisionPoints: 4
+
+# PED-H08: warn when a Column holds more tasks than this (Mayer 2009). 1 to 50.
+maxColumnActivities: 3
+
+# PED-H09: hint when a Course Presentation slide has more words than this (Mayer 2009). 10 to 2000.
+maxSlideWords: 150
+
+# PED-H10: hint when an Interactive Book chapter without a task has more words than this
+# (Roediger & Karpicke 2006). 100 to 50000.
+maxChapterWordsWithoutInteraction: 1500

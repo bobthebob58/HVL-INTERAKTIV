@@ -59,6 +59,18 @@ Login, logout, author launch and account-linking events (D-064). Learner LTI lau
 | `ipHash` | Keyed hash of the IP address, for abuse detection only | Pseudonymous (stable key) | 6(1)(e) | 2 years | PG |
 | `ipKeyId` | Which identity key made `ipHash` (D-055) | None | n/a | 2 years | PG |
 
+## NoticeDismissal
+
+A notice a staff user dismissed, such as the formative-use notice (PROD-011, D-075). Learners never see these
+notices, so no learner row is ever written. Deleted with the account (foreign key with cascade).
+
+| Field | Purpose | Category | Legal basis | Retention | Location |
+|---|---|---|---|---|---|
+| `userId` | Whose dismissal it is | Staff PII (by reference) | 6(1)(e) | Account | PG |
+| `noticeId` | Which notice, from a fixed allowlist (e.g. `formative-use`) | None | n/a | Account | PG |
+| `noticeVersion` | The version dismissed; a newer version is shown again | None | n/a | Account | PG |
+| `at` | When it was dismissed | None | n/a | Account | PG |
+
 ## H5PContent
 
 One H5P activity.
@@ -73,10 +85,11 @@ One H5P activity.
 | `status` | Draft or published | None | n/a | Until deleted by the author | PG |
 | `visibility` | Who may open it outside Canvas (PROD-006) | None | n/a | Until deleted by the author | PG |
 | `ownerUserId` | The author who owns it | Staff PII (by reference) | 6(1)(e) | Until deleted by the author | PG |
-| `version` | Increments on structural change; insight compares like with like | None | n/a | Until deleted by the author | PG |
+| `version` | Increments on every save of the activity (D-074); xAPI statements record it, so insight compares like with like | None | n/a | Until deleted by the author | PG |
 | `sourceContentId` | The activity this one was copied from | None | n/a | Until deleted by the author | PG |
 | `createdAt` | Sorting and audit | None | n/a | Until deleted by the author | PG |
-| `updatedAt` | Sorting and audit | None | n/a | Until deleted by the author | PG |
+| `updatedAt` | Sorting and audit; the publish flow checks it so a changed activity is never published unseen (D-074) | None | n/a | Until deleted by the author | PG |
+| `publishedAt` | When the activity was last published through the publish flow (PROD-003); empty while it is a draft | None | n/a | Until deleted by the author | PG |
 
 ## H5PContentFile
 
@@ -272,7 +285,7 @@ An author published despite a validator error (UD-022).
 | `contentId` | The activity | None | n/a | With the activity or the author's account | PG |
 | `ruleId` | Which rule, e.g. `V-IMG-ALT` | None | n/a | With the activity or the author's account | PG |
 | `path` | Where in the activity | None | n/a | With the activity or the author's account | PG |
-| `reason` | The author's reason, shown in insight and the portfolio | Staff PII (authored text) | 6(1)(e) | With the activity or the author's account | PG |
+| `reason` | The author's reason, shown to the activity's editors in the publish flow, in insight and the portfolio; never copied into the audit log (DATA-007) | Staff PII (authored text) | 6(1)(e) | With the activity or the author's account | PG |
 | `userId` | The author | Staff PII (by reference) | 6(1)(e) | With the activity or the author's account | PG |
 | `at` | When | None | n/a | With the activity or the author's account | PG |
 

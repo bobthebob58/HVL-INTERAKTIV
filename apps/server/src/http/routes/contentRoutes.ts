@@ -5,18 +5,23 @@
  *      export gives the author a `.h5p` package. All rules (the ten types, the sub-content policy, sanitising,
  *      the permission matrix, learner-state invalidation) live in HvlH5PEditor and the permission system; the
  *      routes only check the shape of the request and use the actor's account view.
- * Spec: H5P-002, H5P-006, SEC-003, SEC-008, PROD-002
+ * Spec: H5P-002, H5P-006, SEC-003, SEC-008, PROD-002, PROD-003
  * Invariants:
  *   - Only `author` and `admin` reach save, delete and parameters; export is decided by the permission system.
  *   - A save body is `{ library: string, params: { params: object, metadata: object } }`, else 400.
+ *   - With a save gate (createApp always passes one), saving a published activity runs the publish gate first: an
+ *     error without an acknowledgement younger than 14 days is 409 `hvl:published-save-blocked` with the findings,
+ *     and nothing is saved (D-074); every save of an existing activity then increases `H5PContent.version`.
  *   - The export is always a download (`attachment`, `nosniff`) named after the content ID, never a title, and
  *     the response ends only when Lumi's zip stream has been written completely.
- * Collaborators: ../../h5p/HvlH5PEditor.ts, ../requestBodies.ts, Lumi's H5PAjaxEndpoint.
- * Tests: apps/server/test/http/contentSave.int.test.ts
+ * Collaborators: ../../h5p/HvlH5PEditor.ts, ../requestBodies.ts, Lumi's H5PAjaxEndpoint,
+ *   ../../content/PublishedSaveGate.ts.
+ * Tests: apps/server/test/http/contentSave.int.test.ts, apps/server/test/content/publishedSave.int.test.ts
  */
-import type { ContentParameters, IContentMetadata } from '@lumieducation/h5p-server';
+import { ContentPermission, type ContentParameters, type IContentMetadata } from '@lumieducation/h5p-server';
 import { finished } from 'node:stream/promises';
 import { Router } from 'express';
+import type { ContentSaveGate } from '../../content/PublishedSaveGate.js';
 import { asAccountUser } from '../../h5p/HvlH5pUser.js';
 import { HttpError } from '../HttpError.js';
 import { requireActor, requireRole } from '../h5pLocals.js';
@@ -42,12 +47,18 @@ const saveRequest = (body: unknown): SaveRequest => {
   return { library: body.library, params, metadata: metadata as unknown as IContentMetadata };
 };
 
+/** The H5P routes' dependencies, with the publish gate for saves (D-074). */
+export interface ContentRouteDeps extends H5pRouteDeps {
+  /** Runs the publish gate on saves of published activities and counts versions; absent in H5P-only tests. */
+  readonly saveGate?: ContentSaveGate;
+}
+
 /**
  * Builds the content routes.
- * @param deps - Editor and AJAX endpoint.
+ * @param deps - Editor, AJAX endpoint, permission system and, from createApp, the save gate.
  * @returns A router for `/params/:contentId`, `/content`, `/content/:contentId` and `/download/:contentId`.
  */
-export function contentRoutes(deps: H5pRouteDeps): Router {
+export function contentRoutes(deps: ContentRouteDeps): Router {
   const router = Router();
   const authorsOnly = requireRole('author', 'admin');
 
@@ -64,15 +75,16 @@ export function contentRoutes(deps: H5pRouteDeps): Router {
   });
 
   router.put('/content/:contentId', authorsOnly, ...jsonBody, async (req, res) => {
-    const user = asAccountUser(requireActor(res));
+    const actor = requireActor(res);
+    const user = asAccountUser(actor);
     const { library, params, metadata } = saveRequest(req.body);
-    const contentId = await deps.editor.saveOrUpdateContent(
-      pathParam(req, 'contentId'),
-      params,
-      metadata,
-      library,
-      user,
-    );
+    const id = pathParam(req, 'contentId');
+    // WHY: only someone who may edit learns the gate's findings; anyone else meets the editor's own 403.
+    if (deps.saveGate && (await deps.permissions.checkForContent(user, ContentPermission.Edit, id))) {
+      await deps.saveGate.beforeSave(id, { mainLibrary: library, params, metadata }, actor.locale);
+    }
+    const contentId = await deps.editor.saveOrUpdateContent(id, params, metadata, library, user);
+    await deps.saveGate?.afterSave(contentId);
     res.json({ contentId });
   });
 

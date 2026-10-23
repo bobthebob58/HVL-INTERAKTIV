@@ -7,7 +7,7 @@
  *      as a table.
  * Spec: PROD-006, PROD-004, AUTH-002
  * Invariants:
- *   - Only visibility changes here; publishing waits for S4's publish flow (D-066, Q14).
+ *   - Only visibility changes here; publishing is the publish flow's (./publishRoutes.ts, D-074).
  *   - Someone who may not edit gets the same 404 as for an activity that does not exist.
  * Collaborators: ./contentSharingRoutes.ts, ../../h5p/permissions/ContentAccessRepository.ts.
  * Tests: apps/server/test/http/api/contentSharing.test.ts

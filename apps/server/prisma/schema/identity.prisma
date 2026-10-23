@@ -25,6 +25,7 @@ model User {
   ownedContent     H5PContent[]                @relation("ContentOwner")
   collaborations   ContentCollaborator[]
   acknowledgements ValidationAcknowledgement[]
+  noticeDismissals NoticeDismissal[]
 }
 
 /// One way a user logs in. `subjectHash` is an HMAC of the Feide ID or of `iss|sub`, never the raw value, made
@@ -58,4 +59,17 @@ model AuthAuditEvent {
 
   @@index([at])
   @@index([actorUserId])
+}
+
+/// A notice a staff user dismissed, e.g. the formative-use notice (PROD-011, D-075). One row per user and notice;
+/// a newer `noticeVersion` replaces it, and a notice whose current version is higher is shown again.
+model NoticeDismissal {
+  userId        String   @db.Uuid
+  noticeId      String
+  noticeVersion Int
+  at            DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, noticeId])
 }

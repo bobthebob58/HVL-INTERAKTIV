@@ -21,7 +21,12 @@
     "fileGrantInvalid": "The link to this file has expired. Reload the page.",
     "sharingNotAllowed": "As a student you can only keep your activities private for now.",
     "deepLinkChoiceInvalid": "Canvas does not accept this choice here.",
-    "sharingChanged": "Someone else changed the sharing in the meantime. Reload the page and try again."
+    "sharingChanged": "Someone else changed the sharing in the meantime. Reload the page and try again.",
+    "acknowledgementInvalid": "A reason refers to an error that no longer exists. Reload the page and try again.",
+    "editNotAllowed": "You are not allowed to change this activity.",
+    "contentChanged": "The activity was changed in the meantime. Reload the page and check it again.",
+    "publishBlocked": "The activity has errors that must be fixed or explained before it can be published.",
+    "publishedSaveBlocked": "The activity is published, and your change adds errors that nobody has explained. Fix the errors, or turn the activity back into a draft before you save."
   },
   "upload": {
     "archive": {

@@ -1,21 +1,23 @@
 /**
- * createApp — builds the Express app: health check, portal session, LTI, Feide login, the sharing API, the H5P
- * routes and the fallback pages, in the order the security rules need.
+ * createApp — builds the Express app: health check, portal session, LTI, Feide login, the `/api` routes (me,
+ * content, publishing, sharing, docs), the H5P routes and the fallback pages, in the order the security rules need.
  *
  * Why: spec 02 joins two entry points (Canvas via LTI, the portal via Feide) into one principal; the mount order
  *      decides which checks a request meets. The app is built from connected clients so tests and `main.ts` run the
  *      same code.
- * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, NFR-002
+ * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, PROD-003, DOC-012, NFR-002
  * Invariants:
  *   - Order: trust proxy → base headers → `/healthz` → portal session → LTI (ltijs first) → Feide routes → start
  *     page → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page.
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
  *     session with CSRF); signed file URLs are checked before it, inside the H5P router (D-058).
  *   - `X-Powered-By` is off; every response gets `nosniff` and `no-referrer`, and HSTS when the base URL is https.
+ *   - The findings API, the publish API and the save gate of `/h5p` share one validator; `/api/docs` is mounted
+ *     only when NODE_ENV is not production (D-077).
  * Collaborators: ../lti/ltiRoutes.ts, ../auth/feide/feideLoginRoutes.ts, ../auth/requestPrincipal.ts,
- *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/contentSharingRoutes.ts,
- *   ../web/webRoutes.ts, ./healthRoutes.ts, ./main.ts.
- * Tests: apps/server/test/server/createApp.int.test.ts
+ *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/apiRouter.ts,
+ *   ../content/PublishedSaveGate.ts, ../web/webRoutes.ts, ./healthRoutes.ts, ./main.ts.
+ * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
 import express, { type ErrorRequestHandler, type Express } from 'express';
 import type { Logger } from 'pino';
@@ -28,21 +30,25 @@ import { requestPrincipal } from '../auth/requestPrincipal.js';
 import { portalSessionMiddleware } from '../auth/session/portalSessionMiddleware.js';
 import { SessionStore } from '../auth/session/SessionStore.js';
 import type { Env } from '../config/env.js';
+import { PublishedSaveGate } from '../content/PublishedSaveGate.js';
+import type { PublishingDeps } from '../content/publishingDeps.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import { PrismaContentAccessRepository } from '../h5p/permissions/ContentAccessRepository.js';
-import { contentSharingRoutes } from '../http/api/contentSharingRoutes.js';
+import { apiRouter } from '../http/api/apiRouter.js';
 import { createH5pRouter } from '../http/createH5pRouter.js';
 import { h5pAuthenticate } from '../http/h5pAuthenticate.js';
 import { h5pErrorHandler } from '../http/h5pErrorHandler.js';
 import { HttpError } from '../http/HttpError.js';
 import { portalHomeRoutes, portalNotFound } from '../http/pages/portalHomeRoutes.js';
 import { sendPortalError } from '../http/pages/portalPages.js';
+import type { ContentRouteDeps } from '../http/routes/contentRoutes.js';
 import { baseSecurityHeaders } from '../http/securityHeaders.js';
 import type { Database } from '../infra/prismaClient.js';
 import type { Redis } from '../infra/redisClient.js';
 import { createLtiRoutes, type LtiRoutes } from '../lti/ltiRoutes.js';
 import { DataEncryption } from '../security/keys/DataEncryption.js';
 import { IdentityHasher } from '../security/keys/IdentityHasher.js';
+import type { ContentValidator } from '../validation/types.js';
 import type { WebApp } from '../web/nextWebApp.js';
 import { webRoutes } from '../web/webRoutes.js';
 import { healthRoutes } from './healthRoutes.js';
@@ -57,6 +63,8 @@ export interface AppInputs {
   readonly h5p: H5pRouteDeps;
   /** The web app, unless `WEB_APP` is `off` (../web/nextWebApp.ts). */
   readonly web?: Pick<WebApp, 'dev' | 'handle'>;
+  /** The pre-publish validator (UD-020) with its configuration bound; see `createApp` for the default. */
+  readonly validator?: ContentValidator;
 }
 
 /** The app and the parts `main.ts` needs at start-up. */
@@ -104,6 +112,15 @@ export function createApp(inputs: AppInputs): App {
     postLogoutRedirectUri: `${base}/auth/logged-out`,
   });
   const authenticate = requestPrincipal(lti.resolveLtik);
+  // WHY: the validator is built from configuration loaded at start-up (D-073) and passed in by main.ts; without one,
+  // the publish flow runs with a validator that finds nothing, so publishing works and never blocks.
+  const publishing: PublishingDeps = {
+    db,
+    validator: inputs.validator ?? (() => []),
+    clock: () => new Date(),
+  };
+  // WHY: the content routes inside the H5P router run the same publish gate on saves of published activities.
+  const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, saveGate: new PublishedSaveGate(publishing) };
 
   const app = express();
   app.disable('x-powered-by');
@@ -135,11 +152,14 @@ export function createApp(inputs: AppInputs): App {
     }),
   );
   app.use(portalHomeRoutes());
-  app.use('/api', authenticate, contentSharingRoutes({ db, access }), (_req, _res, next) =>
-    next(new HttpError(404, 'error.notFound')),
+  app.use(
+    '/api',
+    authenticate,
+    apiRouter({ publishing, access, serveDocs: env.NODE_ENV !== 'production' }),
+    (_req, _res, next) => next(new HttpError(404, 'error.notFound')),
   );
   app.use('/api', h5pErrorHandler(logger));
-  app.use('/h5p', authenticate, createH5pRouter(inputs.h5p, h5pAuthenticate()));
+  app.use('/h5p', authenticate, createH5pRouter(h5pRoutes, h5pAuthenticate()));
   app.use('/h5p', h5pErrorHandler(logger));
   if (inputs.web) app.use(webRoutes(inputs.web));
   app.use(portalNotFound());

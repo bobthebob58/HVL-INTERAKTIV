@@ -5,16 +5,20 @@
  *      never reveal internal messages, stack traces or file paths. Lumi's own Express error handler returned
  *      raw error messages (D-035); here every known error maps to a locale key and everything else becomes
  *      "something went wrong" with status 500.
- * Spec: PROD-012, H5P-002, SEC-003, H5P-006
+ * Spec: PROD-012, H5P-002, SEC-003, H5P-006, PROD-003
  * Invariants:
- *   - The body is H5P's AJAX error shape `{ success: false, errorCode, httpStatusCode, message }`.
+ *   - The body is H5P's AJAX error shape `{ success: false, errorCode, httpStatusCode, message }`; a blocked publish
+ *     or save (PublishBlockedError, 409) adds the server's own `findings` (PROD-003).
  *   - `message` always comes from the locale files; `errorCode` is a stable machine code, never free text.
  *   - Errors with a numeric 4xx `status`/`statusCode` (body parsers, express.static, storage guards) keep it.
  *   - Unknown errors and server faults (5xx) are reported as `error.generic`, except the deliberate 503s in
  *     ./authErrors.ts (a dependency is down), which keep their status and message.
- * Collaborators: ./h5pErrorHandler.ts, ./HttpError.ts, ./authErrors.ts, ../i18n/translate.ts.
- * Tests: apps/server/test/http/h5pErrorResponse.test.ts
+ * Collaborators: ./h5pErrorHandler.ts, ./HttpError.ts, ./authErrors.ts, ../i18n/translate.ts,
+ *   ../content/PublishBlockedError.ts.
+ * Tests: apps/server/test/http/h5pErrorResponse.test.ts, apps/server/test/http/api/publishRoutes.int.test.ts
  */
+import type { CoveredFinding } from '../content/acknowledgementCoverage.js';
+import { PublishBlockedError } from '../content/PublishBlockedError.js';
 import { MAX_FILE_SIZE } from '../h5p/H5pConfigFactory.js';
 import { t, type Locale, type MessageKey } from '../i18n/translate.js';
 import { SERVICE_UNAVAILABLE_CODES } from './authErrors.js';
@@ -29,6 +33,8 @@ export interface ErrorBody {
   errorCode: string;
   httpStatusCode: number;
   message: string;
+  /** Only on a blocked publish or save: every current finding with its acknowledgement (PROD-003). */
+  findings?: readonly CoveredFinding[];
 }
 
 type Params = Record<string, string | number>;
@@ -125,8 +131,15 @@ export function toErrorResponse(error: unknown, locale: Locale): { status: numbe
   const { status, code, key, params } = serverFault
     ? { status: 500, code: 'internal', key: 'error.generic' as MessageKey, params: {} }
     : described;
+  const findings = !serverFault && error instanceof PublishBlockedError ? { findings: error.findings } : {};
   return {
     status,
-    body: { success: false, errorCode: code, httpStatusCode: status, message: t(key, params, locale) },
+    body: {
+      success: false,
+      errorCode: code,
+      httpStatusCode: status,
+      message: t(key, params, locale),
+      ...findings,
+    },
   };
 }

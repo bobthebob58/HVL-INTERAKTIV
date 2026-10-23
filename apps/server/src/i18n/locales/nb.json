@@ -21,7 +21,12 @@
     "fileGrantInvalid": "Lenken til filen har utløpt. Last inn siden på nytt.",
     "sharingNotAllowed": "Som student kan du foreløpig bare ha aktivitetene dine private.",
     "deepLinkChoiceInvalid": "Canvas tar ikke imot dette valget her.",
-    "sharingChanged": "Delingen ble endret av noen andre i mellomtiden. Last siden på nytt og prøv igjen."
+    "sharingChanged": "Delingen ble endret av noen andre i mellomtiden. Last siden på nytt og prøv igjen.",
+    "acknowledgementInvalid": "En begrunnelse gjelder en feil som ikke finnes lenger. Last inn siden på nytt og prøv igjen.",
+    "editNotAllowed": "Du har ikke tillatelse til å endre denne aktiviteten.",
+    "contentChanged": "Aktiviteten ble endret i mellomtiden. Last inn siden på nytt og sjekk den igjen.",
+    "publishBlocked": "Aktiviteten har feil som må rettes eller begrunnes før den kan publiseres.",
+    "publishedSaveBlocked": "Aktiviteten er publisert, og endringen din gir feil som ingen har begrunnet. Rett feilene, eller gjør aktiviteten om til utkast før du lagrer."
   },
   "upload": {
     "archive": {
