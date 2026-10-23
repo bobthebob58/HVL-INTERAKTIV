@@ -32,7 +32,7 @@ import { createH5pStorage } from './h5pStorage.js';
 import { HvlPermissionSystem } from './HvlPermissionSystem.js';
 import { createHvlTranslationCallback } from './HvlTranslationCallback.js';
 import { TemporaryFileCleanupJob } from './jobs/TemporaryFileCleanupJob.js';
-import { PrismaLibraryAuditSink } from './libraries/LibraryAuditRecorder.js';
+import { PrismaLibraryAuditSink } from './libraries/LibraryAuditSink.js';
 import { keepContentTypeCacheOffline } from './offlineContentTypeCache.js';
 import { assertPermissionSystem } from './permissionSystemGuard.js';
 import { PrismaContentAccessRepository } from './permissions/ContentAccessRepository.js';

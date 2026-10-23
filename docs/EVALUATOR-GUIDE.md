@@ -5,7 +5,9 @@ designers, TeCopp administrators, security and privacy reviewers, examiners and 
 reviewers. It explains how to check, efficiently and independently, that the code does what the
 specifications promise.
 
-**Current state (2026-10-22):** Session 1 is done. The monorepo, `apps/server` (configuration, log
+**Current state (2026-10-23):** Session 1 is done; Session 2 (the H5P engine with the ten types, the
+permission system, learner state, upload security, seeding and our own routes) is in review. Below is what
+Session 1 built. The monorepo, `apps/server` (configuration, log
 redaction, learner pseudonyms, the database schema, the H5P configuration and boot check, the storage
 adapters and the archive guard) and the tools `spec-trace`, `spec-site`, `doc-lint`, `dependency-check`,
 `privacy` and `h5p-core` exist. There is no web app or HTTP server yet (Sessions 2–4). Build progress is
@@ -166,7 +168,7 @@ must be pasted into `PROGRESS.md`, before the next session starts.
    player page in Chromium with the F3 styles, the Daylight tokens are active and overridable, and state
    resumes after a reload, but only with a synthetic content type: hub-api.h5p.org is still unreachable
    from the build environment (Q7), so Hub registration, the real seed packages and rendering the real
-   content types remain open, and so does the 1.28-or-1.27 decision (D-047).
+   content types remain open, and so does the 1.28-or-1.27 decision (R-01, to be recorded as D-047).
 4. **Institutional reference material is not yet in the repository** (see
    [reference/README.md](reference/README.md)). Labels, brand colours and portfolio headings are
    therefore kept in configuration, so they can be corrected without code changes.

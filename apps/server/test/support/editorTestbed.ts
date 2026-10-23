@@ -2,7 +2,9 @@
  * editorTestbed — builds an HvlH5PEditor on temporary folders for unit tests (no database, no S3).
  *
  * Why: the editor's rules (content types, save order, package import) are tested in isolation on Lumi's own
- *      file-based storages, with synthetic libraries and a rule-based permission system.
+ *      file-based storages, with synthetic libraries and a rule-based permission system. The editor is built by
+ *      the production factory, so the tests see the same options (language fallback, assets, DragQuestion
+ *      removal, Hub disconnection) as the server.
  * Spec: H5P-002, SEC-003
  * Tests: shared by apps/server/test/h5p/HvlH5PEditor*.test.ts.
  */
@@ -11,18 +13,20 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   fsImplementations,
+  SimpleLockProvider,
   type IContentUserDataStorage,
   type ILibraryInstallResult,
-  type IPermissionSystem,
 } from '@lumieducation/h5p-server';
 import { createH5pConfig } from '../../src/h5p/H5pConfigFactory.js';
-import { HvlH5PEditor } from '../../src/h5p/HvlH5PEditor.js';
+import { createHvlEditor } from '../../src/h5p/H5pEditorFactory.js';
+import type { HvlH5PEditor } from '../../src/h5p/HvlH5PEditor.js';
 import { asAccountUser, type H5pRole, type HvlH5pUser } from '../../src/h5p/HvlH5pUser.js';
-import type { LibraryChange } from '../../src/h5p/libraries/LibraryAuditRecorder.js';
+import type { LibraryChange } from '../../src/h5p/libraries/LibraryAuditSink.js';
 import { keepContentTypeCacheOffline } from '../../src/h5p/offlineContentTypeCache.js';
-import { removeDragQuestion } from '../../src/h5p/semantics/removeDragQuestion.js';
+import { createHvlTranslationCallback } from '../../src/h5p/HvlTranslationCallback.js';
 import { RulePermissions } from './rulePermissions.js';
 import { syntheticLibraryDir, type SyntheticLibrary } from './syntheticLibraries.js';
+import { testActor } from './testActors.js';
 
 /** An editor with its folders, permission rules and recorded audit entries. */
 export interface EditorTestbed {
@@ -57,44 +61,27 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
   const userData = {
     deleteInvalidatedContentUserData: async (contentId: string) => void invalidated.push(contentId),
   } as unknown as IContentUserDataStorage;
-  const editor = new HvlH5PEditor(
-    [
-      cache,
-      config,
-      new fsImplementations.FileLibraryStorage(libraryDir),
-      new fsImplementations.FileContentStorage(join(root, 'content')),
-      new fsImplementations.DirectoryTemporaryFileStorage(join(root, 'tmp')),
-      undefined,
-      undefined,
-      {
-        // WHY: Lumi types the option as IPermissionSystem<IUser>; ours denies any user it did not issue.
-        permissionSystem: permissions as unknown as IPermissionSystem,
-        customization: { alterLibrarySemantics: removeDragQuestion },
-      },
-      userData,
-    ],
-    {
-      permissionSystem: permissions,
-      audit: {
-        record: async (results, change) => {
-          if (control.auditFails) throw new Error('audit store unavailable');
-          audited.push({ results, change });
-        },
+  const editor = createHvlEditor({
+    config,
+    storages: {
+      keyValueStorage: cache,
+      libraryStorage: new fsImplementations.FileLibraryStorage(libraryDir),
+      contentStorage: new fsImplementations.FileContentStorage(join(root, 'content')),
+      temporaryStorage: new fsImplementations.DirectoryTemporaryFileStorage(join(root, 'tmp')),
+      lockProvider: new SimpleLockProvider(),
+      contentUserDataStorage: userData,
+    },
+    permissionSystem: permissions,
+    audit: {
+      record: async (results, change) => {
+        if (control.auditFails) throw new Error('audit store unavailable');
+        audited.push({ results, change });
       },
     },
-  );
-  let n = 0;
-  const user = (role: H5pRole): HvlH5pUser =>
-    asAccountUser({
-      accountId: `0192f0c4-0000-7000-8000-${String((n += 1)).padStart(12, '0')}`,
-      role,
-      learnerKey: `learner-key-${n}`,
-      contextId: '',
-      locale: 'nn',
-      hvlMember: true,
-      feideAuthenticated: true,
-      ltiLaunchContentIds: [],
-    });
+    translate: createHvlTranslationCallback(),
+    fileSanitizers: [],
+  });
+  const user = (role: H5pRole): HvlH5pUser => asAccountUser(testActor(role));
   return { editor, permissions, audited, control, invalidated, libraryDir, user };
 }
 

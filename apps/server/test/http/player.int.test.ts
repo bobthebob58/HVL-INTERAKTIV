@@ -20,25 +20,8 @@ describeWithServices('H5P player page', () => {
   beforeAll(async () => {
     tb = await openHttpTestbed();
     author = await tb.actor('author');
-    const body = {
-      library: 'H5P.MultiChoice 1.16',
-      params: { params: { question: 'Kva?', answers: ['Ja'] }, metadata: { title: 'Q', license: 'U' } },
-    };
-    const save = async () =>
-      (
-        (
-          await request(tb.app)
-            .post('/h5p/content')
-            .set(...author.header)
-            .send(body)
-        ).body as { contentId: string }
-      ).contentId;
-    published = await save();
-    draft = await save();
-    await tb.db.h5PContent.update({
-      where: { id: published },
-      data: { status: 'published', visibility: 'organisation' },
-    });
+    published = await tb.activity(author, { published: true });
+    draft = await tb.activity(author);
   }, 60_000);
   afterAll(() => tb.close());
 

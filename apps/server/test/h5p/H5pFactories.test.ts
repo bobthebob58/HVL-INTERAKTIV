@@ -15,6 +15,7 @@ import { asAccountUser } from '../../src/h5p/HvlH5pUser.js';
 import { SERVER_ROOT } from '../../src/h5p/h5pServerInit.js';
 import { LanguageFallbackLibraryStorage } from '../../src/h5p/storage/LanguageFallbackLibraryStorage.js';
 import { engineTestbed, removeEngineTestbeds } from '../support/engineTestbed.js';
+import { testActor } from '../support/testActors.js';
 
 afterAll(removeEngineTestbeds);
 
@@ -25,16 +26,7 @@ function coreList(name: 'styles' | 'scripts'): string[] {
   return [...block.matchAll(/'([^']+)'/g)].map((m) => m[1] ?? '');
 }
 
-const author = asAccountUser({
-  accountId: '0192f0c4-0000-7000-8000-000000000001',
-  role: 'author',
-  learnerKey: 'k',
-  contextId: '',
-  locale: 'nn',
-  hvlMember: true,
-  feideAuthenticated: true,
-  ltiLaunchContentIds: [],
-});
+const author = asAccountUser(testActor('author'));
 
 describe('H5P engine factories', () => {
   it('[H5P-001] Core 1.28 lists the theme styles that Lumi 10.0.4 leaves out (F3 still applies)', () => {

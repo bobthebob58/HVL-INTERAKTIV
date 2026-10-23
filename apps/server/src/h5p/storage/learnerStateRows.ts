@@ -30,8 +30,6 @@ const DELETE_SIGNAL = '0';
 /** HMAC-SHA256 in base64url without padding, as `deriveLearnerKey` produces it (DATA-002). */
 const LEARNER_KEY = /^[A-Za-z0-9_-]{43}$/;
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 /** The unique key of one stored state (the `@@unique` of `H5PUserData`). */
 export interface StateKey {
   contentId: string;
@@ -50,13 +48,8 @@ export const isLearnerKey = (value: unknown): value is string =>
   // PRIVACY: an account UUID, e-mail, Feide ID, national ID number or LTI `sub` never has this shape (D-036).
   typeof value === 'string' && LEARNER_KEY.test(value);
 
-/**
- * Tells whether an ID can name a stored activity.
- * @param value - A content ID from Lumi or a request; may be anything.
- * @returns True only for a canonical UUID (the `H5PContent.id` column type).
- */
-export const isContentUuid = (value: unknown): value is string =>
-  typeof value === 'string' && UUID.test(value);
+/** Tells whether an ID can name a stored activity (re-exported from ../contentIds.ts for the storage). */
+export { isContentUuid } from '../contentIds.js';
 
 /**
  * Builds the unique key of a state, in the argument order of Lumi's `getContentUserData`.

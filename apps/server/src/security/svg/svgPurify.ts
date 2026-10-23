@@ -32,7 +32,7 @@ const purifier = createDOMPurify(window as unknown as WindowLike);
 
 const CONFIG: Config & { RETURN_DOM_FRAGMENT: true } = {
   USE_PROFILES: { svg: true },
-  FORBID_TAGS: [...FORBIDDEN_ELEMENTS, 'use'],
+  FORBID_TAGS: [...FORBIDDEN_ELEMENTS],
   ALLOW_DATA_ATTR: false,
   RETURN_DOM_FRAGMENT: true,
 };

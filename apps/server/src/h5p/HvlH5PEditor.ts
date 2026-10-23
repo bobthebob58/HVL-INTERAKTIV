@@ -43,7 +43,7 @@ import {
 } from './HvlTop10ContentTypeFilter.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import { auditBeforeInstall } from './libraries/auditBeforeInstall.js';
-import type { LibraryAuditSink } from './libraries/LibraryAuditRecorder.js';
+import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
 import { disconnectFromHub } from './offlineContentTypeCache.js';
 import { assertPackageLibrariesInstalled } from './libraries/packageLibraryCheck.js';
 import { readPackageManifest } from './libraries/packageManifest.js';
@@ -124,12 +124,8 @@ export class HvlH5PEditor extends H5PEditor {
       user,
     );
     if (contentId !== undefined) {
-      await this.files.deleteDropped(
-        result.id,
-        before,
-        await this.files.referencedFiles(parameters, main),
-        user,
-      );
+      const after = await this.files.referencedFiles(parameters, main);
+      await this.files.deleteDropped(result.id, before, after, user);
     }
     return result;
   }

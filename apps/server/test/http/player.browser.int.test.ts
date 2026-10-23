@@ -7,7 +7,6 @@
  */
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
-import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
@@ -60,21 +59,8 @@ describeWithServices('H5P player in a browser', () => {
     tb = await openHttpTestbed(LIBRARIES);
     const author = await tb.actor('author');
     learner = await tb.actor('learner');
-    const publish = async (metadata: object) => {
-      const params = { params: { question: 'Kva?', answers: ['Ja'] }, metadata };
-      const res = await request(tb.app)
-        .post('/h5p/content')
-        .set(...author.header)
-        .send({ library: 'H5P.MultiChoice 1.16', params });
-      const id = (res.body as { contentId: string }).contentId;
-      await tb.db.h5PContent.update({
-        where: { id },
-        data: { status: 'published', visibility: 'organisation' },
-      });
-      return id;
-    };
-    contentId = await publish({ title: 'Probe', license: 'U' });
-    rightsId = await publish(RIGHTS_PAYLOAD);
+    contentId = await tb.activity(author, { published: true, metadata: { title: 'Probe', license: 'U' } });
+    rightsId = await tb.activity(author, { published: true, metadata: RIGHTS_PAYLOAD });
     server = tb.app.listen(0, '127.0.0.1');
     await new Promise((resolve) => server.once('listening', resolve));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;

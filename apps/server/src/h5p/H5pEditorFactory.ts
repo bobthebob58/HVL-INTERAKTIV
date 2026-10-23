@@ -32,7 +32,7 @@ import { editorGlobalAssets } from './h5pAssets.js';
 import { localIdFor } from './H5pConfigFactory.js';
 import { HvlH5PEditor } from './HvlH5PEditor.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
-import type { LibraryAuditSink } from './libraries/LibraryAuditRecorder.js';
+import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
 import { removeDragQuestion } from './semantics/removeDragQuestion.js';
 import { withLanguageFallback } from './storage/LanguageFallbackLibraryStorage.js';
 

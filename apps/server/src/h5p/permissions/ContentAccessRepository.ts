@@ -11,9 +11,10 @@
  *   - Facts carry account IDs and flags only, never names or e-mail addresses.
  * Collaborators: ../HvlPermissionSystem.ts (the caller), ./contentRules.ts (reads the facts),
  *   ../../infra/prismaClient.ts.
- * Tests: apps/server/test/h5p/permissions/ContentAccessRepository.int.test.ts
+ * Tests: apps/server/test/h5p/permissions/HvlPermissionSystem.int.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
+import { isContentUuid } from '../contentIds.js';
 
 /** Whether learners may see an activity at all (`PROD-004`). */
 export type ContentStatus = 'draft' | 'published';
@@ -45,8 +46,6 @@ export interface ContentAccessRepository {
   factsFor(contentId: string): Promise<ContentFacts | undefined>;
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 /** `ContentAccessRepository` on PostgreSQL (`H5PContent` and `ContentCollaborator`). */
 export class PrismaContentAccessRepository implements ContentAccessRepository {
   /**
@@ -61,7 +60,7 @@ export class PrismaContentAccessRepository implements ContentAccessRepository {
    */
   async factsFor(contentId: string): Promise<ContentFacts | undefined> {
     // SECURITY: a malformed ID would make PostgreSQL raise an error; unknown is the fail-closed answer.
-    if (typeof contentId !== 'string' || !UUID.test(contentId)) return undefined;
+    if (!isContentUuid(contentId)) return undefined;
     const row = await this.db.h5PContent.findUnique({
       where: { id: contentId },
       select: {

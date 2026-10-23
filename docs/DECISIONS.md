@@ -408,9 +408,9 @@ loading of one spec per session are kept.
   temporary files, and the **state** view (`id` = learnerKey) for user data and the player. The permission
   system reads the actor's explicit fields, never `user.id`, so the wrong view fails closed. `contextId` comes
   from the authenticated request; `?asUserId` is refused with 400. An undefined or unknown user is always
-  denied; files an author removes are deleted by our code as that author. The H5P-006 boot check is a guard in
-  the editor and player factories (every Lumi component must hold `HvlPermissionSystem`) plus an ESLint ban on
-  `LaissezFairePermissionSystem`.
+  denied; files an author removes are deleted by our code as that author. The H5P-006 boot check:
+  `createH5pRuntime` runs `assertPermissionSystem` on the editor and player the factories build (every Lumi
+  component must hold `HvlPermissionSystem`), plus an ESLint ban on `LaissezFairePermissionSystem`.
 - **Consequences:** S3 maps its `Principal` to `HvlH5pActor`. Own state also requires View on the content.
 
 ### D-037 · H5P "finished" data is off; the state save interval is fixed at 5 s
@@ -442,13 +442,14 @@ loading of one spec per session are kept.
   behaviour so we notice when Lumi fixes it.
 - **Consequences:** The walker (`semantics/paramsWalker.ts`) is reused by the S4 validator.
 
-### D-040 · Our own player and editor page templates with script-safe JSON
+### D-040 · Our own page templates with script-safe JSON
 - **Context:** Lumi's default templates write `JSON.stringify(integration)` into a `<script>` element
   (`renderers/player.js:16`). `JSON.stringify` does not escape `</script>`, so a title or an unknown parameter
   key containing it would run script for every learner. `H5PIntegration.user` also carries the user's ID.
-- **Decision:** We render the pages ourselves and escape `<`, `>`, `&`, U+2028 and U+2029 in the embedded JSON.
-  `H5PIntegration.user` is blank (no pseudonym or account ID in the page).
-- **Consequences:** S4 extends the same templates with the theme and the xAPI bridge.
+- **Decision:** We render the player page ourselves and escape `<`, `>`, `&`, U+2028 and U+2029 in the embedded
+  JSON. `H5PIntegration.user` is blank (no pseudonym or account ID in the page). The editor returns only its
+  model until S4 adds its page with the same escaping; Lumi's templates are never used.
+- **Consequences:** S4 adds the editor page and extends both with the theme; S6 adds the xAPI bridge.
 
 ### D-041 · Library change control: one audited install path, no Hub installs
 - **Context:** `H5P-011` requires an audit event for every library change and no Hub installs on demand in
@@ -489,7 +490,8 @@ loading of one spec per session are kept.
   identically in Chromium before and after (screenshot comparison).
 - **Consequences:** SVG files larger than 5 MB are refused. DOMPurify parses with the HTML parser (its XML mode
   returns nothing for a file with an `<?xml?>` prolog); that parser keeps `xmlns` but its SVG profile removes
-  `<use>`, so a drawing that relies on `<use>` loses those parts. The S2 probes recorded this behaviour.
+  `<use>`, so a drawing that relies on `<use>` loses those parts (pinned in `test/security/upstream/lumiSvgSanitizer.test.ts`
+  and `SvgSanitizer.test.ts`).
   Lumi's profile is SVG only (no filter elements), so filter primitives such as `feGaussianBlur` are lost too,
   and DOMPurify removes ids that name document properties (`title`, `blur`, …), which breaks `url(#…)`
   references to them; a test pins all three losses. Our pass writes its result with XMLSerializer, and the final

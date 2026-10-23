@@ -78,7 +78,7 @@ Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-
 
 ## S2 — Content types and security 🟨
 
-- [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (D-047).
+- [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (to be recorded as D-047).
       **Still blocked (Q7):** on 2026-10-23 the egress proxy refused hub-api.h5p.org (`CONNECT tunnel failed,
       response 403`; `npm run hub:check` reports `fetch failed: Request was cancelled.`). Done without the
       Hub: F3 injected and tested; a Chromium test runs Core 1.28 on our player page with no console errors,
@@ -88,7 +88,7 @@ Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-
 - [x] Package import over `ajax?action=library-upload`: `inspectZip` before Lumi, the upload in a fresh
       `mkdtemp` folder that is always removed (`SEC-005`, D-031, D-043). Own Express 5 routes replace
       h5p-express (D-035)
-- [x] Decisions D-035…D-046 recorded (plan approved 2026-10-22); D-047 waits for the spike
+- [x] Decisions D-035…D-046 recorded (plan approved 2026-10-22); D-047 (R-01) will be written after the spike
 - [x] TypeDoc API pages (`npm run docs:api`, warnings as errors) in CI (`DOC-002`, D-031)
 - [x] `HvlTop10ContentTypeFilter` and the DragQuestion semantics filter (`H5P-002`, `PROD-002`)
 - [x] Seed command with SHA-256 verification and audit (`npm run seed:libraries`, `H5P-003`, `H5P-011`),

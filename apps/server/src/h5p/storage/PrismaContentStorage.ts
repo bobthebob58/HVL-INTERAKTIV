@@ -25,8 +25,8 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import type { Database } from '../../infra/prismaClient.js';
 import { countLibraryUsage } from './contentUsage.js';
 import type { S3ContentFileStore } from './S3ContentFileStore.js';
+import { isContentUuid } from '../contentIds.js';
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const json = (value: unknown) => value as Prisma.InputJsonValue;
 
 /** `IContentStorage` on PostgreSQL (Prisma) and S3. */
@@ -60,7 +60,7 @@ export class PrismaContentStorage implements IContentStorage {
       });
       return created.id;
     }
-    if (!UUID.test(contentId))
+    if (!isContentUuid(contentId))
       throw new H5pError('storage-file-implementations:content-not-found', { contentId }, 404);
     await this.db.h5PContent.upsert({
       where: { id: contentId },
@@ -83,7 +83,7 @@ export class PrismaContentStorage implements IContentStorage {
 
   /** True when the activity exists. */
   async contentExists(contentId: ContentId): Promise<boolean> {
-    return UUID.test(contentId) && (await this.db.h5PContent.count({ where: { id: contentId } })) > 0;
+    return isContentUuid(contentId) && (await this.db.h5PContent.count({ where: { id: contentId } })) > 0;
   }
 
   /** Deletes an activity, its files and (by cascade) its learner state and statements. */
@@ -102,7 +102,7 @@ export class PrismaContentStorage implements IContentStorage {
 
   /** True when the activity has a file with this name. */
   async fileExists(contentId: ContentId, filename: string): Promise<boolean> {
-    if (!UUID.test(contentId)) return false;
+    if (!isContentUuid(contentId)) return false;
     return (await this.db.h5PContentFile.count({ where: { contentId, filename } })) > 0;
   }
 
@@ -151,7 +151,7 @@ export class PrismaContentStorage implements IContentStorage {
 
   /** Names of an activity's files. */
   async listFiles(contentId: ContentId, _user?: IUser): Promise<string[]> {
-    if (!UUID.test(contentId)) return [];
+    if (!isContentUuid(contentId)) return [];
     const rows = await this.db.h5PContentFile.findMany({
       where: { contentId },
       select: { filename: true },
@@ -161,7 +161,7 @@ export class PrismaContentStorage implements IContentStorage {
   }
 
   private async requireContent(contentId: ContentId) {
-    const row = UUID.test(contentId)
+    const row = isContentUuid(contentId)
       ? await this.db.h5PContent.findUnique({ where: { id: contentId } })
       : null;
     if (!row) throw new H5pError('storage-file-implementations:content-not-found', { contentId }, 404);
@@ -169,7 +169,7 @@ export class PrismaContentStorage implements IContentStorage {
   }
 
   private async requireFile(contentId: ContentId, filename: string) {
-    const row = UUID.test(contentId)
+    const row = isContentUuid(contentId)
       ? await this.db.h5PContentFile.findUnique({ where: { contentId_filename: { contentId, filename } } })
       : null;
     if (!row) throw new H5pError('content-file-missing', { file: filename, contentId }, 404);

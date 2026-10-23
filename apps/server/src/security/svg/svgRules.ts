@@ -28,6 +28,8 @@ export const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 
 /** Elements that run script, embed other documents or rewrite attributes; lower-case local names. */
 export const FORBIDDEN_ELEMENTS: ReadonlySet<string> = new Set([
+  // SECURITY: <use> can pull in external or data: documents (external-use.svg); DOMPurify drops it too.
+  'use',
   'script',
   'foreignobject',
   'set',

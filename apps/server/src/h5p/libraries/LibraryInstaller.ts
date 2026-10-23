@@ -10,14 +10,14 @@
  *   - Only libraries are installed; content in a seed package is never stored.
  *   - Audit rows have `source: 'seed'`, no actor, and the package hash; they are written before the install
  *     (./auditBeforeInstall.ts); an unchanged library writes none.
- * Collaborators: ./seedLibraries.ts, ./LibraryAuditRecorder.ts, ./sha256Sums.ts, ../../security/zipEntryGuard.ts,
+ * Collaborators: ./seedLibraries.ts, ./LibraryAuditSink.ts, ./sha256Sums.ts, ../../security/zipEntryGuard.ts,
  *   Lumi's PackageImporter (installLibrariesFromPackage).
  * Tests: apps/server/test/h5p/libraries/seedLibraries.int.test.ts
  */
 import type { ILibraryInstallResult } from '@lumieducation/h5p-server';
 import { inspectZip } from '../../security/zipEntryGuard.js';
 import { auditBeforeInstall, type InstalledLibraries } from './auditBeforeInstall.js';
-import type { LibraryAuditSink } from './LibraryAuditRecorder.js';
+import type { LibraryAuditSink } from './LibraryAuditSink.js';
 import { readPackageManifest } from './packageManifest.js';
 import { sha256File } from './sha256Sums.js';
 

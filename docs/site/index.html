@@ -2962,7 +2962,7 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
   semantics/                   DragQuestion removal, params walker, sub-content policy H5P-002, SEC-008 (S2, D-039)
   permissions/                 content facts and the rule tables for HvlPermissionSystem  H5P-006 (S2)
   libraries/                   seeder, audited library installer, package manifest checks  H5P-003, H5P-011, SEC-003 (S2, D-042)
-  render/                      our player/editor pages with script-safe JSON          SEC-008 (S2, D-040)
+  render/                      our player page with script-safe JSON (editor page in S4)  SEC-008 (S2, D-040)
   storage/
     PrismaContentStorage.ts        IContentStorage (metadata in PostgreSQL, files in S3)
     S3ContentFileStore.ts          S3 file I/O for PrismaContentStorage (D-025)
@@ -4519,7 +4519,9 @@ portfolio templates. It includes an example and states which tests will catch mi
 designers, TeCopp administrators, security and privacy reviewers, examiners and external code
 reviewers. It explains how to check, efficiently and independently, that the code does what the
 specifications promise.</p>
-<p><strong>Current state (2026-10-22):</strong> Session 1 is done. The monorepo, <code>apps/server</code> (configuration, log
+<p><strong>Current state (2026-10-23):</strong> Session 1 is done; Session 2 (the H5P engine with the ten types, the
+permission system, learner state, upload security, seeding and our own routes) is in review. Below is what
+Session 1 built. The monorepo, <code>apps/server</code> (configuration, log
 redaction, learner pseudonyms, the database schema, the H5P configuration and boot check, the storage
 adapters and the archive guard) and the tools <code>spec-trace</code>, <code>spec-site</code>, <code>doc-lint</code>, <code>dependency-check</code>,
 <code>privacy</code> and <code>h5p-core</code> exist. There is no web app or HTTP server yet (Sessions 2–4). Build progress is
@@ -4698,7 +4700,7 @@ upstream. The conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-0
 player page in Chromium with the F3 styles, the Daylight tokens are active and overridable, and state
 resumes after a reload, but only with a synthetic content type: hub-api.h5p.org is still unreachable
 from the build environment (Q7), so Hub registration, the real seed packages and rendering the real
-content types remain open, and so does the 1.28-or-1.27 decision (D-047).</li>
+content types remain open, and so does the 1.28-or-1.27 decision (R-01, to be recorded as D-047).</li>
 <li><strong>Institutional reference material is not yet in the repository</strong> (see
 <a href="#reference">reference/README.md</a>). Labels, brand colours and portfolio headings are
 therefore kept in configuration, so they can be corrected without code changes.</li>
@@ -5187,9 +5189,9 @@ visibility facts. Two <code>IUser</code> views wrap it: the <strong>account</str
 temporary files, and the <strong>state</strong> view (<code>id</code> = learnerKey) for user data and the player. The permission
 system reads the actor&#39;s explicit fields, never <code>user.id</code>, so the wrong view fails closed. <code>contextId</code> comes
 from the authenticated request; <code>?asUserId</code> is refused with 400. An undefined or unknown user is always
-denied; files an author removes are deleted by our code as that author. The H5P-006 boot check is a guard in
-the editor and player factories (every Lumi component must hold <code>HvlPermissionSystem</code>) plus an ESLint ban on
-<code>LaissezFairePermissionSystem</code>.</li>
+denied; files an author removes are deleted by our code as that author. The H5P-006 boot check:
+<code>createH5pRuntime</code> runs <code>assertPermissionSystem</code> on the editor and player the factories build (every Lumi
+component must hold <code>HvlPermissionSystem</code>), plus an ESLint ban on <code>LaissezFairePermissionSystem</code>.</li>
 <li><strong>Consequences:</strong> S3 maps its <code>Principal</code> to <code>HvlH5pActor</code>. Own state also requires View on the content.</li>
 </ul>
 <h3 id="decisions--d-037--h5p-finished-data-is-off-the-state-save-interval-is-fixed-at-5-s" tabindex="-1">D-037 · H5P &quot;finished&quot; data is off; the state save interval is fixed at 5 s</h3>
@@ -5224,14 +5226,15 @@ Lumi&#39;s own text rules, and sanitises the titles in main and sub-content meta
 behaviour so we notice when Lumi fixes it.</li>
 <li><strong>Consequences:</strong> The walker (<code>semantics/paramsWalker.ts</code>) is reused by the S4 validator.</li>
 </ul>
-<h3 id="decisions--d-040--our-own-player-and-editor-page-templates-with-script-safe-json" tabindex="-1">D-040 · Our own player and editor page templates with script-safe JSON</h3>
+<h3 id="decisions--d-040--our-own-page-templates-with-script-safe-json" tabindex="-1">D-040 · Our own page templates with script-safe JSON</h3>
 <ul>
 <li><strong>Context:</strong> Lumi&#39;s default templates write <code>JSON.stringify(integration)</code> into a <code>&lt;script&gt;</code> element
 (<code>renderers/player.js:16</code>). <code>JSON.stringify</code> does not escape <code>&lt;/script&gt;</code>, so a title or an unknown parameter
 key containing it would run script for every learner. <code>H5PIntegration.user</code> also carries the user&#39;s ID.</li>
-<li><strong>Decision:</strong> We render the pages ourselves and escape <code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, U+2028 and U+2029 in the embedded JSON.
-<code>H5PIntegration.user</code> is blank (no pseudonym or account ID in the page).</li>
-<li><strong>Consequences:</strong> S4 extends the same templates with the theme and the xAPI bridge.</li>
+<li><strong>Decision:</strong> We render the player page ourselves and escape <code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, U+2028 and U+2029 in the embedded
+JSON. <code>H5PIntegration.user</code> is blank (no pseudonym or account ID in the page). The editor returns only its
+model until S4 adds its page with the same escaping; Lumi&#39;s templates are never used.</li>
+<li><strong>Consequences:</strong> S4 adds the editor page and extends both with the theme; S6 adds the xAPI bridge.</li>
 </ul>
 <h3 id="decisions--d-041--library-change-control-one-audited-install-path-no-hub-installs" tabindex="-1">D-041 · Library change control: one audited install path, no Hub installs</h3>
 <ul>
@@ -5276,7 +5279,8 @@ our stricter DOMPurify pass, and a final check that nothing forbidden is left. B
 identically in Chromium before and after (screenshot comparison).</li>
 <li><strong>Consequences:</strong> SVG files larger than 5 MB are refused. DOMPurify parses with the HTML parser (its XML mode
 returns nothing for a file with an <code>&lt;?xml?&gt;</code> prolog); that parser keeps <code>xmlns</code> but its SVG profile removes
-<code>&lt;use&gt;</code>, so a drawing that relies on <code>&lt;use&gt;</code> loses those parts. The S2 probes recorded this behaviour.
+<code>&lt;use&gt;</code>, so a drawing that relies on <code>&lt;use&gt;</code> loses those parts (pinned in <code>test/security/upstream/lumiSvgSanitizer.test.ts</code>
+and <code>SvgSanitizer.test.ts</code>).
 Lumi&#39;s profile is SVG only (no filter elements), so filter primitives such as <code>feGaussianBlur</code> are lost too,
 and DOMPurify removes ids that name document properties (<code>title</code>, <code>blur</code>, …), which breaks <code>url(#…)</code>
 references to them; a test pins all three losses. Our pass writes its result with XMLSerializer, and the final
@@ -5391,7 +5395,7 @@ every residual and new problem it found is fixed, with regression tests (see the
 <p>Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-21 entry is the first run).</p>
 <h3 id="progress--s2--content-types-and-security" tabindex="-1">S2 — Content types and security 🟨</h3>
 <ul>
-<li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (D-047).
+<li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (to be recorded as D-047).
 <strong>Still blocked (Q7):</strong> on 2026-10-23 the egress proxy refused hub-api.h5p.org (<code>CONNECT tunnel failed, response 403</code>; <code>npm run hub:check</code> reports <code>fetch failed: Request was cancelled.</code>). Done without the
 Hub: F3 injected and tested; a Chromium test runs Core 1.28 on our player page with no console errors,
 the Daylight tokens active and overridable, and state resumed after a reload (synthetic content type)</li>
@@ -5400,7 +5404,7 @@ registration payload is tested to carry 15 characters (D-031)</li>
 <li><span class="task">✓ Done:</span> Package import over <code>ajax?action=library-upload</code>: <code>inspectZip</code> before Lumi, the upload in a fresh
 <code>mkdtemp</code> folder that is always removed (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>, D-031, D-043). Own Express 5 routes replace
 h5p-express (D-035)</li>
-<li><span class="task">✓ Done:</span> Decisions D-035…D-046 recorded (plan approved 2026-10-22); D-047 waits for the spike</li>
+<li><span class="task">✓ Done:</span> Decisions D-035…D-046 recorded (plan approved 2026-10-22); D-047 (R-01) will be written after the spike</li>
 <li><span class="task">✓ Done:</span> TypeDoc API pages (<code>npm run docs:api</code>, warnings as errors) in CI (<a class="req-ref" href="#r-DOC-002"><code>DOC-002</code></a>, D-031)</li>
 <li><span class="task">✓ Done:</span> <code>HvlTop10ContentTypeFilter</code> and the DragQuestion semantics filter (<a class="req-ref" href="#r-H5P-002"><code>H5P-002</code></a>, <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>)</li>
 <li><span class="task">✓ Done:</span> Seed command with SHA-256 verification and audit (<code>npm run seed:libraries</code>, <a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>, <a class="req-ref" href="#r-H5P-011"><code>H5P-011</code></a>),
@@ -5436,6 +5440,7 @@ matrix cell (<a class="req-ref" href="#r-H5P-006"><code>H5P-006</code></a>); per
 <li><span class="task">○ To do:</span> Publish flow with acknowledgements (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>); formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>); privacy notice (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>)</li>
 <li><span class="task">○ To do:</span> CSP that blocks third-party requests; self-hosted fonts (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>); browser and assistive-technology matrix (<a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>)</li>
 <li><span class="task">○ To do:</span> axe suite (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>); manual protocol document (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>)</li>
+<li><span class="task">○ To do:</span> Progress screenshots (desktop and mobile, <code>nn</code>) sent to the owner as each view is built (CLAUDE.md §4)</li>
 <li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S4</li>
 </ul>
 <h3 id="progress--s5--laeringsdesign-studio" tabindex="-1">S5 — Læringsdesign studio ⬜</h3>

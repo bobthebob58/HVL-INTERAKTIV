@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { asAccountUser } from '../../../src/h5p/HvlH5pUser.js';
-import { PrismaLibraryAuditSink } from '../../../src/h5p/libraries/LibraryAuditRecorder.js';
+import { PrismaLibraryAuditSink } from '../../../src/h5p/libraries/LibraryAuditSink.js';
 import { LibraryInstaller } from '../../../src/h5p/libraries/LibraryInstaller.js';
 import { seedLibraries, SHA256SUMS_FILE } from '../../../src/h5p/libraries/seedLibraries.js';
 import { sha256File } from '../../../src/h5p/libraries/sha256Sums.js';

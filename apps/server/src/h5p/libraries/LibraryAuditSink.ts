@@ -1,5 +1,5 @@
 /**
- * LibraryAuditRecorder — writes one audit event per installed or updated H5P library.
+ * LibraryAuditSink — writes one audit event per installed or updated H5P library.
  *
  * Why: libraries are code that runs for every learner, so every change must be traceable to a person (or to
  *      the seed command), a version change and the hash of the package it came from (`H5P-011`, D-041).
@@ -8,7 +8,7 @@
  *   - One row per library that was newly installed (`new`) or patched (`patch`); `none` results write nothing.
  *   - Versions are written as `major.minor.patch`.
  * Collaborators: ./LibraryInstaller.ts (seed), ../HvlH5PEditor.ts (admin package import), prisma LibraryAuditEvent.
- * Tests: apps/server/test/h5p/libraries/LibraryAuditRecorder.int.test.ts
+ * Tests: apps/server/test/h5p/libraries/LibraryAuditSink.int.test.ts
  */
 import type { ILibraryInstallResult } from '@lumieducation/h5p-server';
 import type { IFullLibraryName } from '@lumieducation/h5p-server/build/src/types.js';

@@ -20,7 +20,7 @@ import { createS3Client } from '../../infra/s3Client.js';
 import { createLogger } from '../../logging/logger.js';
 import { createH5pRuntime } from '../createH5pRuntime.js';
 import { SERVER_ROOT } from '../h5pServerInit.js';
-import { PrismaLibraryAuditSink } from './LibraryAuditRecorder.js';
+import { PrismaLibraryAuditSink } from './LibraryAuditSink.js';
 import { LibraryInstaller } from './LibraryInstaller.js';
 import { seedLibraries } from './seedLibraries.js';
 

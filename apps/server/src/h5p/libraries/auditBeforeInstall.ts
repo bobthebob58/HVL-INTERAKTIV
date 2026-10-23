@@ -12,11 +12,11 @@
  *   - Changes Lumi makes beyond the plan (none are expected) are recorded right after the install.
  *   - A failed install leaves the planned rows: the log may then show an attempted change, never miss a real one.
  * Collaborators: ./LibraryInstaller.ts (seed), ../HvlH5PEditor.ts (admin package import),
- *   ./LibraryAuditRecorder.ts, ./packageManifest.ts.
+ *   ./LibraryAuditSink.ts, ./packageManifest.ts.
  * Tests: apps/server/test/h5p/HvlH5PEditor.upload.test.ts, apps/server/test/h5p/libraries/seedLibraries.int.test.ts
  */
 import type { ILibraryInstallResult, LibraryManager } from '@lumieducation/h5p-server';
-import type { LibraryAuditSink, LibraryChange } from './LibraryAuditRecorder.js';
+import type { LibraryAuditSink, LibraryChange } from './LibraryAuditSink.js';
 import type { PackageLibrary } from './packageManifest.js';
 
 /** What Lumi's library manager is asked to predict an install. */

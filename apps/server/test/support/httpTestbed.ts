@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { CreateBucketCommand, type S3Client } from '@aws-sdk/client-s3';
 import express, { type Express, type RequestHandler } from 'express';
+import request from 'supertest';
 import { createH5pRuntime, type H5pRuntime } from '../../src/h5p/createH5pRuntime.js';
 import type { H5pRole, HvlH5pActor } from '../../src/h5p/HvlH5pUser.js';
 import { createH5pRouter } from '../../src/http/createH5pRouter.js';
@@ -19,6 +20,7 @@ import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
 import { createS3Client } from '../../src/infra/s3Client.js';
 import { createLogger } from '../../src/logging/logger.js';
 import { newLearner } from './learnerStateFixtures.js';
+import { testActor } from './testActors.js';
 import { serviceEnv, uniqueName } from './services.js';
 import { removeTestBucket } from './storageFixtures.js';
 import { syntheticLibraryDir, type SyntheticLibrary } from './syntheticLibraries.js';
@@ -37,6 +39,8 @@ export interface HttpTestbed {
   readonly db: Database;
   /** Creates a `User` row and an actor with that account; overrides change any other field. */
   actor(role: H5pRole, overrides?: Partial<HvlH5pActor>): Promise<TestActor>;
+  /** Saves an H5P.MultiChoice activity as `author` over HTTP; `published` also shares it with all of HVL. */
+  activity(author: TestActor, options?: { published?: boolean; metadata?: object }): Promise<string>;
   /** Deletes everything the testbed created and disconnects. */
   close(): Promise<void>;
 }
@@ -82,14 +86,26 @@ export async function openHttpTestbed(
       const kind = role === 'learner' ? 'learner' : 'staff';
       const { id } = await db.user.create({ data: { kind }, select: { id: true } });
       userIds.push(id);
-      const actor: HvlH5pActor = {
-        ...{ accountId: id, role, learnerKey: newLearner(), contextId: '', locale: 'nn' as const },
-        ...{ hvlMember: true, feideAuthenticated: true, ltiLaunchContentIds: [] },
-        ...overrides,
-      };
+      const actor = testActor(role, { accountId: id, learnerKey: newLearner(), ...overrides });
       const name = randomUUID();
       actors.set(name, actor);
       return { actor, header: [ACTOR_HEADER, name] as const };
+    },
+    activity: async (author, { published = false, metadata = { title: 'Q', license: 'U' } } = {}) => {
+      const params = { params: { question: 'Kva?', answers: ['Ja'] }, metadata };
+      const res = await request(app)
+        .post('/h5p/content')
+        .set(...author.header)
+        .send({ library: 'H5P.MultiChoice 1.16', params });
+      const id = (res.body as { contentId?: string }).contentId;
+      if (res.status !== 201 || !id) throw new Error(`saving the test activity failed: ${res.status}`);
+      if (published) {
+        await db.h5PContent.update({
+          where: { id },
+          data: { status: 'published', visibility: 'organisation' },
+        });
+      }
+      return id;
     },
     close: async () => {
       await db.h5PContent.deleteMany({ where: { ownerUserId: { in: userIds } } });

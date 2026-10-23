@@ -19,7 +19,7 @@
  *   apps/server/test/h5p/permissions/contentMatrix.test.ts,
  *   apps/server/test/h5p/permissions/userDataMatrix.test.ts,
  *   apps/server/test/h5p/permissions/generalAndTemporary.test.ts,
- *   apps/server/test/h5p/permissions/ContentAccessRepository.int.test.ts
+ *   apps/server/test/h5p/permissions/HvlPermissionSystem.int.test.ts
  */
 import {
   ContentPermission,

@@ -10,7 +10,7 @@
  *     no free-text personal data (DATA-007).
  *   - A failed write rejects, so the permission check rejects too and no state is released unaudited.
  * Collaborators: ../HvlPermissionSystem.ts (the caller), ../../infra/prismaClient.ts, ../HvlH5pUser.ts.
- * Tests: apps/server/test/h5p/permissions/ContentAccessRepository.int.test.ts,
+ * Tests: apps/server/test/h5p/permissions/HvlPermissionSystem.int.test.ts,
  *   apps/server/test/h5p/permissions/userDataMatrix.test.ts, apps/server/test/h5p/HvlPermissionSystem.test.ts
  */
 import { UserDataPermission } from '@lumieducation/h5p-server';

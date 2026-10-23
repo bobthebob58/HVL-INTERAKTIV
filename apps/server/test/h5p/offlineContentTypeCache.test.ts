@@ -12,6 +12,7 @@ import {
   keepContentTypeCacheOffline,
 } from '../../src/h5p/offlineContentTypeCache.js';
 import { engineTestbed, removeEngineTestbeds } from '../support/engineTestbed.js';
+import { testActor } from '../support/testActors.js';
 
 afterAll(removeEngineTestbeds);
 
@@ -25,16 +26,7 @@ const recorder = () => {
   return { calls, client: { get: record, post: record } };
 };
 
-const author = asAccountUser({
-  accountId: '0192f0c4-0000-7000-8000-000000000002',
-  role: 'author',
-  learnerKey: 'k',
-  contextId: '',
-  locale: 'nn',
-  hvlMember: true,
-  feideAuthenticated: true,
-  ltiLaunchContentIds: [],
-});
+const author = asAccountUser(testActor('author'));
 
 describe('keepContentTypeCacheOffline', () => {
   it('[H5P-011] stores an empty Hub list when none is cached, so Lumi never asks the Hub', async () => {

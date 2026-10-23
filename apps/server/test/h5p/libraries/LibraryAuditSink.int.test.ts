@@ -6,7 +6,7 @@
 import { afterAll, expect, it } from 'vitest';
 import type { ILibraryInstallResult } from '@lumieducation/h5p-server';
 import { createPrismaClient } from '../../../src/infra/prismaClient.js';
-import { PrismaLibraryAuditSink } from '../../../src/h5p/libraries/LibraryAuditRecorder.js';
+import { PrismaLibraryAuditSink } from '../../../src/h5p/libraries/LibraryAuditSink.js';
 import { describeWithServices, serviceEnv, uniqueName } from '../../support/services.js';
 
 const lib = (machineName: string, patchVersion: number) => ({
