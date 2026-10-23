@@ -16,7 +16,7 @@ import { join, extname } from 'node:path';
 /** Directories that hold our own code and therefore must follow the Documentation Standard. */
 export const SOURCE_ROOTS = ['apps', 'packages', 'tools'];
 /** File extensions treated as source code. */
-export const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs', '.css', '.sh']);
+export const SOURCE_EXTENSIONS = new Set(['.ts', '.mts', '.tsx', '.js', '.mjs', '.cjs', '.css', '.sh']);
 
 const SKIP_DIRS = new Set([
   'node_modules',

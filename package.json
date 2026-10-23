@@ -31,7 +31,8 @@
     "db:migrate": "npm run db:migrate --workspace apps/server",
     "seed:libraries": "npm run seed:libraries --workspace apps/server --",
     "hub:check": "npm run hub:check --workspace apps/server",
-    "docs:api": "npm run docs:api --workspace apps/server"
+    "docs:api": "npm run docs:api --workspace apps/server",
+    "mock:platform": "node tools/mock-platform/cli.mjs --tool-url http://localhost:3000 --canvas-port 4100 --feide-port 4200"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
