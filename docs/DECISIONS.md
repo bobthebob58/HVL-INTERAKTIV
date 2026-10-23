@@ -451,8 +451,16 @@ loading of one spec per session are kept.
   direct dependency at the version Lumi uses; Lumi's own default for a field without tags still allows links
   and tables); a `path` with quotes, angle brackets, control characters or a scheme other than http(s) is
   refused with 400; and a straight double quote in `alt` becomes `”`, because Lumi's sanitiser runs after ours
-  and turns `&quot;` back into `"`.
-- **Consequences:** The walker (`semantics/paramsWalker.ts`) is reused by the S4 validator.
+  and turns `&quot;` back into `"`. A second verification pass found three more ways out, now closed: WHATWG
+  keeps a quote in a URL's host raw, so a `source` whose serialised form still holds `"`, `'`, `<`, `>` or a
+  backtick is removed; the walk now continues inside metadata and copyright objects, as h5p.js does; and h5p.js
+  joins arrays into the HTML, so an array `path` is refused, an array `alt` is emptied, and metadata nested
+  deeper than the limit is dropped instead of kept as it was.
+- **Consequences:** The walker (`semantics/paramsWalker.ts`) is reused by the S4 validator. Cleaning data for a
+  renderer that does not escape is a list of known sinks, not a guarantee: the real ten types render their own
+  copyright data (`getCopyrights`), so their sinks must be reviewed when the Hub packages arrive (Q7), and the
+  player page gets a script CSP without `'unsafe-inline'` in S4 (`DATA-011`), which stops injected handlers
+  whatever their source.
 
 ### D-040 · Our own page templates with script-safe JSON
 - **Context:** Lumi's default templates write `JSON.stringify(integration)` into a `<script>` element

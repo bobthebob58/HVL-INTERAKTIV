@@ -5261,8 +5261,16 @@ the parameters: metadata and copyright objects become plain text (sanitize-html 
 direct dependency at the version Lumi uses; Lumi&#39;s own default for a field without tags still allows links
 and tables); a <code>path</code> with quotes, angle brackets, control characters or a scheme other than http(s) is
 refused with 400; and a straight double quote in <code>alt</code> becomes <code>”</code>, because Lumi&#39;s sanitiser runs after ours
-and turns <code>&amp;quot;</code> back into <code>&quot;</code>.</li>
-<li><strong>Consequences:</strong> The walker (<code>semantics/paramsWalker.ts</code>) is reused by the S4 validator.</li>
+and turns <code>&amp;quot;</code> back into <code>&quot;</code>. A second verification pass found three more ways out, now closed: WHATWG
+keeps a quote in a URL&#39;s host raw, so a <code>source</code> whose serialised form still holds <code>&quot;</code>, <code>&#39;</code>, <code>&lt;</code>, <code>&gt;</code> or a
+backtick is removed; the walk now continues inside metadata and copyright objects, as h5p.js does; and h5p.js
+joins arrays into the HTML, so an array <code>path</code> is refused, an array <code>alt</code> is emptied, and metadata nested
+deeper than the limit is dropped instead of kept as it was.</li>
+<li><strong>Consequences:</strong> The walker (<code>semantics/paramsWalker.ts</code>) is reused by the S4 validator. Cleaning data for a
+renderer that does not escape is a list of known sinks, not a guarantee: the real ten types render their own
+copyright data (<code>getCopyrights</code>), so their sinks must be reviewed when the Hub packages arrive (Q7), and the
+player page gets a script CSP without <code>&#39;unsafe-inline&#39;</code> in S4 (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>), which stops injected handlers
+whatever their source.</li>
 </ul>
 <h3 id="decisions--d-040--our-own-page-templates-with-script-safe-json" tabindex="-1">D-040 · Our own page templates with script-safe JSON</h3>
 <ul>
@@ -5440,8 +5448,9 @@ every residual and new problem it found is fixed, with regression tests (see the
 <li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (to be recorded as D-047).
 <strong>Still blocked (Q7):</strong> on 2026-10-23 (last checked 04:18 UTC) the egress proxy refused hub-api.h5p.org
 (<code>CONNECT tunnel failed, response 403</code>; <code>npm run hub:check</code> reports <code>fetch failed: Request was cancelled.</code>).
-S2 closed on the plan&#39;s fallback: the gate passes on synthetic packages; this item carries forward. Done without the
-Hub: F3 injected and tested; a Chromium test runs Core 1.28 on our player page with no console errors,
+S2 closed on the plan&#39;s fallback: the gate passes on synthetic packages; this item carries forward.
+When the packages arrive, also review each type&#39;s <code>getCopyrights</code> for values it writes into HTML (D-039).
+Done without the Hub: F3 injected and tested; a Chromium test runs Core 1.28 on our player page with no console errors,
 the Daylight tokens active and overridable, and state resumed after a reload (synthetic content type)</li>
 <li><span class="task">✓ Done:</span> F1 wired: <code>getLocalIdOverride: () =&gt; localIdFor(config.uuid)</code> in <code>H5pEditorFactory</code>; the Hub
 registration payload is tested to carry 15 characters (D-031)</li>
@@ -5484,7 +5493,9 @@ output in the session log (2026-10-23)</li>
 <li><span class="task">○ To do:</span> Web shell components and <code>hvl-h5p-theme.css</code> (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>…<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>, <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>)</li>
 <li><span class="task">○ To do:</span> Validator engine, UD rules and pedagogical hint rules (<a class="req-ref" href="#r-UD-020"><code>UD-020</code></a>…<a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>, <a class="req-ref" href="#r-PED-020"><code>PED-020</code></a>)</li>
 <li><span class="task">○ To do:</span> Publish flow with acknowledgements (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>); formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>); privacy notice (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>)</li>
-<li><span class="task">○ To do:</span> CSP that blocks third-party requests; self-hosted fonts (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>); browser and assistive-technology matrix (<a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>)</li>
+<li><span class="task">○ To do:</span> CSP that blocks third-party requests; self-hosted fonts (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>); browser and assistive-technology matrix (<a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>).
+The player page&#39;s <code>script-src</code> must not allow <code>&#39;unsafe-inline&#39;</code>: it is the structural defence against
+markup H5P Core writes without escaping (D-039)</li>
 <li><span class="task">○ To do:</span> axe suite (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>); manual protocol document (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>)</li>
 <li><span class="task">○ To do:</span> Progress screenshots (desktop and mobile, <code>nn</code>) sent to the owner as each view is built (CLAUDE.md §4)</li>
 <li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S4</li>

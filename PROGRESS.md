@@ -81,8 +81,9 @@ Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-
 - [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (to be recorded as D-047).
       **Still blocked (Q7):** on 2026-10-23 (last checked 04:18 UTC) the egress proxy refused hub-api.h5p.org
       (`CONNECT tunnel failed, response 403`; `npm run hub:check` reports `fetch failed: Request was cancelled.`).
-      S2 closed on the plan's fallback: the gate passes on synthetic packages; this item carries forward. Done without the
-      Hub: F3 injected and tested; a Chromium test runs Core 1.28 on our player page with no console errors,
+      S2 closed on the plan's fallback: the gate passes on synthetic packages; this item carries forward.
+      When the packages arrive, also review each type's `getCopyrights` for values it writes into HTML (D-039).
+      Done without the Hub: F3 injected and tested; a Chromium test runs Core 1.28 on our player page with no console errors,
       the Daylight tokens active and overridable, and state resumed after a reload (synthetic content type)
 - [x] F1 wired: `getLocalIdOverride: () => localIdFor(config.uuid)` in `H5pEditorFactory`; the Hub
       registration payload is tested to carry 15 characters (D-031)
@@ -125,7 +126,9 @@ Brand tokens follow HVL's manual (D-017); HVL (profil@hvl.no) must still confirm
 - [ ] Web shell components and `hvl-h5p-theme.css` (`UD-002`…`UD-013`, `H5P-009`)
 - [ ] Validator engine, UD rules and pedagogical hint rules (`UD-020`…`UD-022`, `PED-020`)
 - [ ] Publish flow with acknowledgements (`PROD-003`); formative notice (`PROD-011`); privacy notice (`DATA-006`)
-- [ ] CSP that blocks third-party requests; self-hosted fonts (`DATA-011`); browser and assistive-technology matrix (`NFR-003`)
+- [ ] CSP that blocks third-party requests; self-hosted fonts (`DATA-011`); browser and assistive-technology matrix (`NFR-003`).
+      The player page's `script-src` must not allow `'unsafe-inline'`: it is the structural defence against
+      markup H5P Core writes without escaping (D-039)
 - [ ] axe suite (`UD-030`); manual protocol document (`UD-031`)
 - [ ] Progress screenshots (desktop and mobile, `nn`) sent to the owner as each view is built (CLAUDE.md §4)
 - [ ] Gate: as in the Evaluator Guide §5, S4
