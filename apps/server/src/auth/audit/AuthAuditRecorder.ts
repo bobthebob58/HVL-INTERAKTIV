@@ -14,7 +14,7 @@
  * Tests: apps/server/test/auth/audit/AuthAuditRecorder.int.test.ts
  */
 import type { Logger } from 'pino';
-import type { PrismaClient } from '../../generated/prisma/client.js';
+import type { Database } from '../../infra/prismaClient.js';
 import type { IdentityHasher } from '../../security/keys/IdentityHasher.js';
 
 /** Audited authentication events (D-064). */
@@ -64,7 +64,7 @@ export class AuthAuditRecorder {
   /**
    * @param deps - The database, the identity hasher and the logger.
    */
-  constructor(private readonly deps: { db: PrismaClient; hasher: IdentityHasher; logger: Logger }) {}
+  constructor(private readonly deps: { db: Database; hasher: IdentityHasher; logger: Logger }) {}
 
   /**
    * Records one event; never throws.
