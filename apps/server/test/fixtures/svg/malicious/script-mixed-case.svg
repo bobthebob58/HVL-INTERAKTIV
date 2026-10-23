@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <!-- Attack: a mixed-case <ScRiPt> tag, aimed at filters that compare tag names case-sensitively. -->
+  <rect id="keep" width="10" height="10" fill="#004357"/>
+  <ScRiPt>alert(document.domain)</ScRiPt>
+</svg>

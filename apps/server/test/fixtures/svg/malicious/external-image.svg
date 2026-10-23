@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <!-- Attack: an external <image href="https://..."> tracks every viewer and can change after review. -->
+  <rect id="keep" width="10" height="10" fill="#004357"/>
+  <image href="https://attacker.example/track.png" width="10" height="10"/>
+</svg>

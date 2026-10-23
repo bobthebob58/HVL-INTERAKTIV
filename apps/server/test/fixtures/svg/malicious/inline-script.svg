@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <!-- Attack: an inline <script> runs when the SVG is opened as a document. -->
+  <rect id="keep" width="10" height="10" fill="#004357"/>
+  <script type="text/javascript">alert(document.domain)</script>
+</svg>

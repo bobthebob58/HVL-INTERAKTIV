@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- Benign: a clipPath and a mask applied to shapes. -->
+  <defs>
+    <clipPath id="round"><circle cx="30" cy="30" r="25"/></clipPath>
+    <mask id="fade"><rect width="120" height="120" fill="#ffffff"/><rect x="60" y="60" width="60" height="60" fill="#000000"/></mask>
+  </defs>
+  <rect width="60" height="60" fill="#004357" clip-path="url(#round)"/>
+  <rect x="40" y="40" width="80" height="80" fill="#004357" mask="url(#fade)"/>
+</svg>

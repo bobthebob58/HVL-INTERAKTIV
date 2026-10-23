@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80" viewBox="0 0 200 80">
+  <!-- Benign: text and tspan with Norwegian letters and a non-breaking space. -->
+  <rect width="200" height="80" fill="#ffffff"/>
+  <text x="10" y="30" font-family="sans-serif" font-size="18" fill="#004357">Blåbær&#160;og æøå</text>
+  <text x="10" y="60" font-family="sans-serif" font-size="14"><tspan font-weight="bold">Riktig:</tspan> svaret</text>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <!-- Attack: a data:text/html link and image source carry a whole HTML page with a script. -->
+  <a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="><rect id="keep" width="10" height="10" fill="#004357"/></a>
+  <image href="data:text/html,%3Cscript%3Ealert(1)%3C/script%3E" width="10" height="10"/>
+</svg>

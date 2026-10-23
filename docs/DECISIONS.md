@@ -490,6 +490,11 @@ loading of one spec per session are kept.
 - **Consequences:** SVG files larger than 5 MB are refused. DOMPurify parses with the HTML parser (its XML mode
   returns nothing for a file with an `<?xml?>` prolog); that parser keeps `xmlns` but its SVG profile removes
   `<use>`, so a drawing that relies on `<use>` loses those parts. The S2 probes recorded this behaviour.
+  Lumi's profile is SVG only (no filter elements), so filter primitives such as `feGaussianBlur` are lost too,
+  and DOMPurify removes ids that name document properties (`title`, `blur`, …), which breaks `url(#…)`
+  references to them; a test pins all three losses. Our pass writes its result with XMLSerializer, and the final
+  check parses it again as XML, as a browser does, and fails closed. Lumi alone let 13 of the 41 attack payloads
+  in `SvgSanitizer.bypass.test.ts` through; the added layers stop all of them.
 
 ### D-045 · Headers for user files; the separate files origin moves to S3/S6
 - **Context:** `SEC-004` asks for `nosniff`, a sandbox CSP for SVG and documents, and `attachment` for
@@ -498,7 +503,9 @@ loading of one spec per session are kept.
 - **Decision:** Every content and temporary file is served with `X-Content-Type-Options: nosniff` and
   `Content-Security-Policy: sandbox; default-src 'none'; style-src 'unsafe-inline'`; everything except raster
   images, audio, video and VTT captions is served as `attachment`. The separate origin is an S6 checklist item.
-- **Consequences:** A stricter superset of `SEC-004` in S2; the origin isolation follows in S3/S6.
+- **Consequences:** A stricter superset of `SEC-004` in S2; the origin isolation follows in S3/S6. Text types,
+  SVG included, carry `charset=utf-8`. An SVG is an `attachment` too: a browser still draws it in `<img>`, but
+  opening it directly downloads it instead of showing it as a page.
 
 ### D-046 · Library language files fall back nn → nb → en
 - **Context:** `H5P-008` asks that a content type without `language/nn.json` uses its `nb` strings, then `en`.

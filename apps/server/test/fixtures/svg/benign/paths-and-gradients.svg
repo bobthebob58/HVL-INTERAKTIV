@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- Benign: paths filled with a linear and a radial gradient. -->
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#004357"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#004357"/>
+    </radialGradient>
+  </defs>
+  <path d="M10 10 H110 V60 H10 Z" fill="url(#sea)"/>
+  <path d="M60 70 a25 25 0 1 0 0.1 0 Z" fill="url(#sun)" stroke="#000000" stroke-width="2"/>
+</svg>

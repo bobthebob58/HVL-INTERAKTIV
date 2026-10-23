@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="120" height="120" viewBox="0 0 120 120">
+  <!-- Benign: internal url(#...) references, gradient inheritance through xlink:href, a pattern and a marker. -->
+  <defs>
+    <linearGradient id="base"><stop offset="0" stop-color="#004357"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+    <linearGradient id="tilted" xlink:href="#base" gradientTransform="rotate(45)"/>
+    <pattern id="dots" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="2" fill="#004357"/></pattern>
+    <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#000000"/></marker>
+  </defs>
+  <rect x="5" y="5" width="50" height="50" style="fill:url(#tilted);stroke:#000000"/>
+  <rect x="65" y="5" width="50" height="50" fill="url('#dots')"/>
+  <line x1="10" y1="90" x2="100" y2="90" stroke="#000000" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>

