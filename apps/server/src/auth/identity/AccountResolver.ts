@@ -14,12 +14,13 @@
  *   - Two first logins at the same moment create one account: the loser of the unique-key race re-reads it.
  *   - When one person has rows under several keys (mixed key rings during a rotation), the row under the current
  *     key wins, else the oldest; a re-hash that collides keeps the login working instead of failing it.
- * Collaborators: ./subjectSources.ts, ../../security/keys/IdentityHasher.ts, ../feide/completeFeideLogin.ts,
+ * Collaborators: ./subjectSources.ts, ./identityLookup.ts (which row wins), ../../security/keys/IdentityHasher.ts, ../feide/completeFeideLogin.ts,
  *   ../../lti/launch/ltiAccount.ts.
- * Tests: apps/server/test/auth/identity/AccountResolver.int.test.ts
+ * Tests: apps/server/test/auth/identity/AccountResolver.int.test.ts, apps/server/test/auth/identity/AccountResolver.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
 import type { IdentityHasher } from '../../security/keys/IdentityHasher.js';
+import { findIdentity } from './identityLookup.js';
 
 /** Who is logging in, as the resolver needs it. */
 export interface AccountRequest {
@@ -47,17 +48,6 @@ export interface ResolvedAccount {
 
 const isUniqueViolation = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && (error as { code?: unknown }).code === 'P2002';
-
-/**
- * The row a lookup uses when the same person has rows under several keys (possible while servers with different key
- * rings run side by side): the one under the current key, else the oldest, so the answer never changes at random.
- */
-function preferred<T extends { subjectKeyId: string }>(
-  rows: readonly T[],
-  currentKeyId: string | undefined,
-): T | undefined {
-  return rows.find((row) => row.subjectKeyId === currentKeyId) ?? rows[0];
-}
 
 /** Finds or creates accounts by identity hash. */
 export class AccountResolver {
@@ -92,25 +82,12 @@ export class AccountResolver {
    * @returns The `User.id`, or undefined when no account has this identity.
    */
   async lookup(provider: AccountRequest['provider'], source: string): Promise<string | undefined> {
-    const candidates = this.deps.hasher.candidates('identity-subject', source);
-    const rows = await this.deps.db.identity.findMany({
-      where: { provider, subjectHash: { in: candidates.map((c) => c.hash) } },
-      select: { userId: true, subjectKeyId: true },
-      orderBy: { createdAt: 'asc' },
-    });
-    return preferred(rows, candidates[0]?.keyId)?.userId;
+    return (await findIdentity(this.deps.db, this.deps.hasher, provider, source)).identity?.userId;
   }
 
   private async find(request: AccountRequest): Promise<ResolvedAccount | undefined> {
     const { db, hasher } = this.deps;
-    const candidates = hasher.candidates('identity-subject', request.source);
-    const rows = await db.identity.findMany({
-      where: { provider: request.provider, subjectHash: { in: candidates.map((c) => c.hash) } },
-      include: { user: true },
-      orderBy: { createdAt: 'asc' },
-    });
-    const [current] = candidates;
-    const identity = preferred(rows, current?.keyId);
+    const { identity, current } = await findIdentity(db, hasher, request.provider, request.source);
     if (!identity) return undefined;
     if (current && identity.subjectKeyId !== current.keyId) {
       try {

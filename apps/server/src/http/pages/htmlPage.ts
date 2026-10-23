@@ -2,8 +2,9 @@
  * htmlPage — builds the small server-rendered pages of Session 3 with an escaping `markup` template.
  *
  * Why: the Deep Linking picker, the portal start page and the friendly message pages are server-rendered until
- *      Next.js replaces them in S4 (D-048); the H5P player has its own template (../../h5p/render/playerPage.ts). Building them with an auto-escaping template means a title or message that
- *      contains `<`, quotes or `&` can never inject markup (XSS), whatever its source.
+ *      Next.js replaces them in S4 (D-048); the H5P player has its own template (../../h5p/render/playerPage.ts).
+ *      Building them with an auto-escaping template means a title or message that contains `<`, quotes or `&` can
+ *      never inject markup (XSS), whatever its source.
  * Spec: LTI-003, PROD-004
  * Invariants:
  *   - Every interpolated value is escaped unless it is a `SafeHtml` built by `markup` itself; arrays are joined,

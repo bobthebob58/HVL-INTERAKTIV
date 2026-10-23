@@ -9,14 +9,16 @@
  *   - A launch whose roles are not author is refused with 403 `hvl:deep-link-not-allowed`, before any account is
  *     created.
  *   - The picker is opened with `context.redirect`, which appends the ltik.
- *   - Every Deep Linking launch is an author launch and is audited (D-064).
+ *   - Every Deep Linking launch is an author launch and is audited (D-064), and so is the linking outcome, as an
+ *     action of the launching account.
  *   - Linking runs before the account is resolved and only reads the in-memory claims (`context.rawIdToken`).
  * Collaborators: ../launchFacts.ts, ./ltiAccount.ts, ../../auth/identity/accountLinking.ts, ../ltiRoutes.ts.
- * Tests: apps/server/test/lti/deepLinking/deepLinking.int.test.ts
+ * Tests: apps/server/test/lti/deepLinking/deepLinking.int.test.ts,
+ *   apps/server/test/auth/identity/accountLinking.int.test.ts
  */
 import type { OnLaunchHandler } from 'ltijs';
 import type { AuthAuditRecorder } from '../../auth/audit/AuthAuditRecorder.js';
-import type { LinkRequest } from '../../auth/identity/accountLinking.js';
+import type { LinkOutcome, LinkRequest } from '../../auth/identity/accountLinking.js';
 import { canAuthor } from '../../auth/Principal.js';
 import { authError } from '../../http/authErrors.js';
 import { launchFactsOf } from '../launchFacts.js';
@@ -31,7 +33,7 @@ export interface DeepLinkingDeps {
   readonly accounts: Pick<LtiAccounts, 'atLaunch'>;
   readonly audit: Pick<AuthAuditRecorder, 'record'>;
   /** Links the teacher's identities (AUTH-005), given the launch's in-memory claims. */
-  readonly link?: (request: LinkRequest) => Promise<void>;
+  readonly link?: (request: LinkRequest) => Promise<LinkOutcome | undefined>;
 }
 
 /**
@@ -47,7 +49,7 @@ export function onDeepLinking(deps: DeepLinkingDeps): OnLaunchHandler {
     if (!canAuthor({ roles })) throw authError('hvl:deep-link-not-allowed');
     const identity = { issuer: facts.issuer, subject: facts.subject, platformId: facts.platformId };
     // WHY: linking first lets a first launch put its LTI identity straight on the teacher's Feide account (D-063).
-    await deps.link?.({
+    const linked = await deps.link?.({
       ...identity,
       clientId: context.platform.clientId,
       claims: context.rawIdToken,
@@ -55,6 +57,8 @@ export function onDeepLinking(deps: DeepLinkingDeps): OnLaunchHandler {
     });
     const account = await deps.accounts.atLaunch({ ...identity, roles });
     await deps.audit.record({ event: 'launch.lti.author', actorUserId: account.userId });
+    // WHY: a link or a refused claim is the action of the person launching, whoever's account it named (D-064).
+    if (linked) await deps.audit.record({ ...linked, actorUserId: account.userId });
     context.redirect(response, LTI_DEEP_LINK_PATH);
   };
 }

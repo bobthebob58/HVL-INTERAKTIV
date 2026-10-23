@@ -49,8 +49,9 @@ export async function startServer(env: Env): Promise<RunningServer> {
   const { app, lti } = createApp({ env, logger, db, redis, h5p });
   const synced = await syncLtiPlatforms(env.LTI_PLATFORMS, { platforms: lti.provider.platformManager, db });
   logger.info(synced, 'LTI platforms synchronised');
-  const reencrypted = await reencryptPlatformKeys(db, new DataEncryption(env.DATA_ENCRYPTION_KEYS));
-  logger.info({ reencrypted }, 'LTI platform keys on the current encryption key');
+  const rewritten = await reencryptPlatformKeys(db, new DataEncryption(env.DATA_ENCRYPTION_KEYS));
+  // WHY: not `reencrypted`: keys ending in "encrypted" are redacted, which would hide the count (DATA-009).
+  logger.info({ platformKeysRewritten: rewritten }, 'LTI platform keys on the current encryption key');
   const jobs = [h5p.cleanupJob, new LtiRecordCleanupJob({ db, redis, logger })];
   for (const job of jobs) job.start();
   // WHY: Express 5 passes a listen failure (port taken, no permission) to this callback; it must fail the start.

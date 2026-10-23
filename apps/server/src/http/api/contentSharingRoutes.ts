@@ -50,7 +50,7 @@ export function contentSharingRoutes(deps: { db: Database; access: ContentAccess
         where: { id, visibility: facts.visibility },
         data: { visibility: to },
       });
-      if (count === 0) throw new HttpError(409, 'error.sharingChanged', {}, 'hvl:sharing-changed');
+      if (count === 0) throw authError('hvl:sharing-changed');
       await tx.auditEvent.create({
         data: {
           actorUserId: principal.userId,

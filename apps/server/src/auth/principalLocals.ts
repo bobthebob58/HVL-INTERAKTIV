@@ -8,7 +8,7 @@
  * Invariants:
  *   - `setPrincipal` is called only by the authentication middleware (./requestPrincipal.ts).
  *   - `requirePrincipal` answers 401 `hvl:unauthenticated` when nobody is signed in.
- * Collaborators: ./requestPrincipal.ts, ../http/api/contentSharingRoutes.ts.
+ * Collaborators: ./requestPrincipal.ts, ../http/api/contentSharingRoutes.ts, ../http/h5pLocals.ts.
  * Tests: apps/server/test/http/api/contentSharingRoutes.int.test.ts
  */
 import type { Response } from 'express';

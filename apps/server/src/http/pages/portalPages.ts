@@ -10,7 +10,7 @@
  *     page, and only the redacted error reaches the log.
  *   - Pages are `no-store` and carry the portal framing headers.
  * Collaborators: ./messagePage.ts, ../securityHeaders.ts, ../../auth/feide/feideLoginRoutes.ts.
- * Tests: apps/server/test/auth/feide/feideLogin.int.test.ts
+ * Tests: apps/server/test/auth/feide/feideLogin.int.test.ts, apps/server/test/server/createApp.int.test.ts
  */
 import type { Response } from 'express';
 import type { Logger } from 'pino';

@@ -160,6 +160,7 @@ describeWithServices('[PROD-006] sharing API', () => {
       .send({ visibility: 'organisation' });
     // Assert
     expect(res.status).toBe(409);
+    expect(res.body.errorCode).toBe('hvl:sharing-changed');
     expect((await db.h5PContent.findUniqueOrThrow({ where: { id: contentId } })).visibility).toBe('feide');
     expect(await db.auditEvent.count({ where: { targetId: contentId } })).toBe(audits);
   });

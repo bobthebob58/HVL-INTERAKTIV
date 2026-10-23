@@ -24,6 +24,7 @@ import { renderPlayerPage } from '../../h5p/render/playerPage.js';
 import { authError } from '../../http/authErrors.js';
 import type { H5pRouteDeps } from '../../http/h5pRouteDeps.js';
 import { PLAYER_DISPLAY_OPTIONS } from '../../http/routes/playerRoutes.js';
+import { setLtiPageLocale } from '../http/ltiErrorPages.js';
 import { ltiPlayerCsp, setLtiPageHeaders } from '../http/ltiPageHeaders.js';
 import type { ResolvedLtik } from '../ltikPrincipal.js';
 
@@ -60,6 +61,7 @@ export function ltiPlayRoutes(deps: LtiPlayDeps): Router {
     const ltik = typeof req.query.ltik === 'string' ? req.query.ltik : '';
     if (ltik === '') throw authError('hvl:ltik-invalid');
     const { principal } = await deps.resolveLtik(ltik);
+    setLtiPageLocale(res, principal.locale);
     const contentId = principal.lti?.contentId;
     if (!contentId) throw authError('hvl:activity-unavailable');
     const actor = principalToH5pActor(principal, { name: 'ltik', value: ltik });

@@ -676,8 +676,12 @@ loading of one spec per session are kept.
   re-encrypted with the current key when they are next written.
 - **Consequences:** A database dump alone reveals no private key or token. A platform's key pair is written only
   at registration, so the server re-encrypts stale platform private keys at every start-up
-  (`src/lti/platforms/reencryptPlatformKeys.ts`); access tokens and session ID tokens expire within 12 hours. An old
-  key can therefore leave the ring 12 hours after all servers restarted with the new key first.
+  (`src/lti/platforms/reencryptPlatformKeys.ts`); access tokens and session ID tokens expire within 12 hours.
+  Because the first restarted server rewrites the platform keys for everyone, a rotation has three steps (S3
+  verification): (1) add the new key second and restart every server, so every server can read both; (2) move it
+  first and restart every server; (3) remove the old key 12 hours after the last step-2 restart. Putting the new key
+  first in one step would break LTI on servers not yet restarted, and a key that has been first must stay in every
+  ring until nothing uses it.
 
 ### D-057 · Own Redis portal sessions, login transactions and a synchronizer CSRF token
 - **Context:** `AUTH-003` asks for a Redis session behind an opaque `__Host-hvli_sid` cookie (idle 2 h, absolute
@@ -766,7 +770,8 @@ loading of one spec per session are kept.
   gets both" and "only the LTI account exists → the Feide identity joins it" are dropped, because they let a
   Canvas user pre-claim someone else's Feide ID and linked student TAs whose Feide role was unknown. A Feide account
   that already holds another identity from the same platform is refused (`link.conflict`,
-  `platform-identity-exists`).
+  `platform-identity-exists`); that check and the write run in one transaction with the Feide account's row
+  locked. Every outcome is audited as an action of the launching (claiming) account, never of the account it named.
 - **Consequences:** No content ever changes owner through linking. A teacher who starts in Canvas is linked at the
   first Deep Linking launch after their first Feide login; if their Canvas account owns content by then, the two
   libraries stay apart (`link.conflict`) until a "Link with Feide" step that proves both identities exists (the

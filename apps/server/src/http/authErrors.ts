@@ -31,6 +31,7 @@ const AUTH_ERRORS = {
   'hvl:sharing-not-allowed': [403, 'error.sharingNotAllowed'],
   'hvl:activity-unavailable': [404, 'error.activityUnavailable'],
   'hvl:deep-link-draft': [409, 'error.deepLinkDraft'],
+  'hvl:sharing-changed': [409, 'error.sharingChanged'],
   'hvl:feide-groups-unavailable': [503, 'error.feideGroupsUnavailable'],
 } as const satisfies Record<string, readonly [number, MessageKey]>;
 

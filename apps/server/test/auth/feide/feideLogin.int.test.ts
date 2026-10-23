@@ -146,6 +146,8 @@ describeWithServices('[AUTH-001] Feide login', () => {
     const keys = await tb.redis.keys('hvli:*');
     const values = keys.length > 0 ? await tb.redis.mGet(keys) : [];
     const everything = JSON.stringify([user, keys, values, tb.logs]);
+    // WHY: a compact JWT hides its claims in base64url, so a plaintext ID token is looked for by its shape.
+    expect(JSON.stringify([values, tb.logs])).not.toMatch(/eyJ[\w-]+\.eyJ[\w-]+\./);
     for (const secret of ['01017012345', 'Siri Student', 'student@hvl.no', 'test-only-feide-secret']) {
       expect(everything, secret).not.toContain(secret);
     }

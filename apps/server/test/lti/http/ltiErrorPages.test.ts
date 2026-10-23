@@ -11,7 +11,8 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import type { AuthAuditInput } from '../../../src/auth/audit/AuthAuditRecorder.js';
 import { authError } from '../../../src/http/authErrors.js';
-import { classifyLtiError, ltiErrorPages } from '../../../src/lti/http/ltiErrorPages.js';
+import { t } from '../../../src/i18n/translate.js';
+import { classifyLtiError, ltiErrorPages, setLtiPageLocale } from '../../../src/lti/http/ltiErrorPages.js';
 import { createLogger } from '../../../src/logging/logger.js';
 
 const ltijs = (code: string) => new LtijsError(code);
@@ -28,6 +29,11 @@ const appThrowing = (error: unknown) => {
     throw error;
   });
   app.get('/lti/play', () => {
+    throw error;
+  });
+  app.get('/lti/deeplink', (_req, res) => {
+    // Like the route: the ltik resolved, so the launch's language is known before the refusal.
+    setLtiPageLocale(res, 'en');
     throw error;
   });
   app.use(
@@ -90,6 +96,15 @@ describe('[LTI-001] LTI error pages', () => {
     const res = await request(appThrowing(authError('hvl:activity-unavailable')).app).get('/lti/play');
     expect(res.status).toBe(404);
     expect(res.text).toContain('<h1>Ikkje tilgjengeleg</h1>');
+  });
+
+  it('[PROD-012] after the ltik is resolved, the page and the JSON are in the launch’s language', async () => {
+    const { app } = appThrowing(authError('hvl:activity-unavailable'));
+    const page = await request(app).get('/lti/deeplink');
+    const json = await request(app).get('/lti/deeplink').set('Accept', 'application/json');
+    expect(page.text).toContain(`<h1>${t('page.notAvailable.title', {}, 'en')}</h1>`);
+    expect(page.text).toContain('<html lang="en">');
+    expect(json.body.message).toBe(t('error.activityUnavailable', {}, 'en'));
   });
 
   it('[LTI-001] an unexpected error is a 500 page that reveals nothing, and API calls get JSON', async () => {

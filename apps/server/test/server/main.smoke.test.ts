@@ -72,34 +72,72 @@ describeWithServices('[NFR-002] the server entry point', () => {
     S3_TEMPORARY_BUCKET: buckets.temporary,
   });
 
-  it('[NFR-002] starts, answers /healthz and /lti/keys, and stops with exit code 0 on SIGTERM', async () => {
-    // Arrange
-    const main = startMain(serverEnv());
-    await until(() => main.output().includes('HVL Interaktiv server listening'), 30_000);
-    // Act
-    const health = await fetch(`${TOOL_URL}/healthz`);
-    const keys = (await (await fetch(`${TOOL_URL}/lti/keys`)).json()) as { keys: unknown[] };
-    main.child.kill('SIGTERM');
+  /** Runs main.ts until it listens, checks it, then stops it with SIGTERM and returns its output and exit code. */
+  const runUntilListening = async (env: NodeJS.ProcessEnv, check: () => Promise<void> = async () => {}) => {
+    const main = startMain(env);
+    try {
+      await until(() => main.output().includes('HVL Interaktiv server listening'), 30_000);
+      await check();
+    } finally {
+      main.child.kill('SIGTERM');
+    }
     const code = await main.exit;
-    // Assert
-    expect(health.status).toBe(200);
-    expect(keys.keys.length).toBeGreaterThan(0);
-    expect(main.output()).toContain('LTI platforms synchronised');
-    expect(main.output()).toContain('HVL Interaktiv server stopped');
-    expect(code).toBe(0);
-  }, 60_000);
+    return { output: main.output(), code };
+  };
 
-  it('[NFR-002] a port that is already taken stops the start with exit code 1', async () => {
+  it('[NFR-002] starts, re-encrypts stale platform keys before listening, answers /healthz and /lti/keys, and stops with exit code 0', async () => {
+    // Arrange: a first start registers the mock Canvas while an older key is the current one
+    const ring = String(process.env.DATA_ENCRYPTION_KEYS);
+    const older = `smokeold=${Buffer.alloc(32, 7).toString('base64')}`;
+    await runUntilListening({ ...serverEnv(), DATA_ENCRYPTION_KEYS: `${older},${ring}` });
+    // Act: start again with the usual key first and the older one second, as in step 2 of a rotation (D-056)
+    let health = 0;
+    let keys: unknown[] = [];
+    const run = await runUntilListening(
+      { ...serverEnv(), DATA_ENCRYPTION_KEYS: `${ring},${older}` },
+      async () => {
+        health = (await fetch(`${TOOL_URL}/healthz`)).status;
+        keys = ((await (await fetch(`${TOOL_URL}/lti/keys`)).json()) as { keys: unknown[] }).keys;
+      },
+    );
+    // Assert
+    const db = createPrismaClient(serviceEnv().DATABASE_URL);
+    const row = await db.ltiPlatform.findFirstOrThrow({ where: { url: mock.canvas.issuer } });
+    await db.$disconnect();
+    const stored = Buffer.from(row.privateKeyEncrypted);
+    expect(stored.subarray(2, 2 + (stored[1] ?? 0)).toString('ascii')).toBe(
+      serviceEnv().DATA_ENCRYPTION_KEYS.current.id,
+    );
+    expect(run.output).toMatch(/"platformKeysRewritten":1\b/);
+    expect(run.output.indexOf('LTI platform keys on the current encryption key')).toBeLessThan(
+      run.output.indexOf('HVL Interaktiv server listening'),
+    );
+    expect(health).toBe(200);
+    expect(keys.length).toBeGreaterThan(0);
+    expect(run.output).toContain('HVL Interaktiv server stopped');
+    expect(run.code).toBe(0);
+  }, 90_000);
+
+  it('[NFR-002] a port that is already taken stops the start at listening with exit code 1', async () => {
     // Arrange: something else listens on PORT
     const taken = createServer().listen(PORT);
     await new Promise((resolve) => taken.once('listening', resolve));
-    // Act
     const main = startMain(serverEnv());
-    const code = await main.exit;
-    taken.close();
-    // Assert
-    expect(code).toBe(1);
-    expect(main.output()).not.toContain('HVL Interaktiv server listening');
+    try {
+      // Act
+      const code = await Promise.race([
+        main.exit,
+        new Promise((resolve) => setTimeout(() => resolve('hung'), 30_000)),
+      ]);
+      // Assert: it got as far as listening, failed there, and never claimed to listen
+      expect(code).toBe(1);
+      expect(main.output()).toContain('LTI platform keys on the current encryption key');
+      expect(main.output()).toContain('EADDRINUSE');
+      expect(main.output()).not.toContain('HVL Interaktiv server listening');
+    } finally {
+      main.child.kill('SIGKILL');
+      taken.close();
+    }
   }, 60_000);
 
   it('[NFR-002] a broken configuration stops the start with exit code 1 and prints no secret', async () => {

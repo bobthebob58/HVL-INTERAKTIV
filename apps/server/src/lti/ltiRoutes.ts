@@ -33,6 +33,7 @@ import type { IdentityHasher } from '../security/keys/IdentityHasher.js';
 import { deepLinkRoutes } from './deepLinking/deepLinkRoutes.js';
 import { ltiErrorPages } from './http/ltiErrorPages.js';
 import { LtiAccounts } from './launch/ltiAccount.js';
+import { platformLinksFeide } from './linkingPlatforms.js';
 import { onDeepLinking } from './launch/onDeepLinking.js';
 import { onResourceLink } from './launch/onResourceLink.js';
 import { resolveLtik, type ResolvedLtik } from './ltikPrincipal.js';
@@ -117,9 +118,7 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
       link: accountLinker({
         db,
         hasher: deps.hasher,
-        audit: deps.audit,
-        linksFeide: (issuer, clientId) =>
-          deps.platforms.some((p) => p.issuer === issuer && p.clientId === clientId && p.feideLinking),
+        linksFeide: platformLinksFeide(deps.platforms),
         allowedOrgs: deps.allowedFeideOrgs,
       }),
     }),

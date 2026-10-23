@@ -21,6 +21,7 @@ import { canAuthor } from '../../auth/Principal.js';
 import { authError } from '../../http/authErrors.js';
 import { HttpError } from '../../http/HttpError.js';
 import type { Database } from '../../infra/prismaClient.js';
+import { setLtiPageLocale } from '../http/ltiErrorPages.js';
 import { ltiPageCsp, setLtiPageHeaders } from '../http/ltiPageHeaders.js';
 import { LTI_DEEP_LINK_PATH } from '../launch/onDeepLinking.js';
 import type { ResolvedLtik } from '../ltikPrincipal.js';
@@ -96,6 +97,7 @@ export function deepLinkRoutes(deps: DeepLinkRouteDeps): Router {
     const ltik = typeof req.query.ltik === 'string' ? req.query.ltik : '';
     if (ltik === '') throw authError('hvl:ltik-invalid');
     const resolved = await deps.resolveLtik(ltik);
+    setLtiPageLocale(res, resolved.principal.locale);
     const request = deepLinkRequestOf(resolved);
     const activities = await listPickerActivities(deps.db, resolved.principal.userId);
     // SECURITY: the page's forms may go only to us and to the platform's return URL (D-061).
@@ -116,6 +118,7 @@ export function deepLinkRoutes(deps: DeepLinkRouteDeps): Router {
     const ltik = bearerOf(req);
     if (ltik === undefined) throw authError('hvl:ltik-invalid');
     const resolved = await deps.resolveLtik(ltik);
+    setLtiPageLocale(res, resolved.principal.locale);
     const request = deepLinkRequestOf(resolved);
     const activities = await chosenActivities(deps.db, resolved.principal.userId, contentIdsOf(req.body));
     let items;

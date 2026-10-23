@@ -350,5 +350,6 @@ cookie (D-057). Learner state is never in Redis: it lives in PostgreSQL (`H5PUse
 | LTI cache `hvli:lti:cache:oidc:jwks:<url>` | A platform's public JWKS, for launch-token signatures (D-050) | None | n/a | 5 minutes | Redis |
 | lease `hvli:lti:record-cleanup` | A random node ID: one server runs the LTI record cleanup per interval | None | n/a | About 10 minutes | Redis |
 | H5P key-value store `hvli:h5p:kv:*` | Lumi's settings and the Hub content-type cache (`RedisKeyValueStorage`) | None | n/a | Until replaced | Redis |
-| H5P locks (Lumi's `RedisLockProvider`) | Serialise library installs and content saves across servers | None | n/a | Seconds (the lock's timeout) | Redis |
+| H5P locks `@simple-redis-mutex:lock-install-library:<library>` and `…:lock-install-from-directory:<library>` (Lumi's `RedisLockProvider`; no `hvli:` prefix) | Serialise library installs across servers | None | n/a | Seconds (while the install runs) | Redis |
+| `@simple-redis-mutex:fencing-tokens` | The lock library's fencing counter (an integer) | None | n/a | Never expires | Redis |
 | lease `hvli:h5p:temporary-file-cleanup` | A random node ID: one server cleans temporary editor files per interval | None | n/a | About 5 minutes | Redis |

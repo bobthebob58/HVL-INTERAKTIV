@@ -11,6 +11,8 @@
  *     unknown errors are 500 "something went wrong".
  *   - Nothing from the error (message, claims, token) reaches the page; the log gets the code and redacted error.
  *   - Pages carry the LTI headers (no-store, no-referrer, frame-ancestors = Canvas origins).
+ *   - Pages and JSON are in the launch's language once a route has resolved the ltik (`setLtiPageLocale`), else in
+ *     Nynorsk.
  * Collaborators: ./ltiPageHeaders.ts, ../../http/authErrors.ts, ../../http/pages/messagePage.ts,
  *   ../../auth/audit/AuthAuditRecorder.ts.
  * Tests: apps/server/test/lti/http/ltiErrorPages.test.ts
@@ -21,8 +23,19 @@ import type { AuthAuditReason, AuthAuditRecorder } from '../../auth/audit/AuthAu
 import { toErrorResponse } from '../../http/h5pErrorResponse.js';
 import { HttpError } from '../../http/HttpError.js';
 import { messagePage } from '../../http/pages/messagePage.js';
-import type { MessageKey } from '../../i18n/translate.js';
+import { DEFAULT_LOCALE, type Locale, type MessageKey } from '../../i18n/translate.js';
 import { ltiPageCsp, setLtiPageHeaders } from './ltiPageHeaders.js';
+
+const LTI_LOCALE = 'hvliLtiLocale';
+
+/**
+ * Records the language of the launch an LTI route has resolved, so its error pages use it.
+ * @param res - The response.
+ * @param locale - The principal's locale (from the launch, ../ltiLocale.ts).
+ */
+export function setLtiPageLocale(res: Response, locale: Locale): void {
+  res.locals[LTI_LOCALE] = locale;
+}
 
 /** How one class of failure is answered. */
 interface LtiFailure {
@@ -124,6 +137,7 @@ export function ltiErrorPages(deps: {
 }) {
   return async (error: unknown, req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (res.headersSent) return next(error);
+    const locale = (res.locals[LTI_LOCALE] as Locale | undefined) ?? DEFAULT_LOCALE;
     const known = classifyLtiError(error);
     const answer = known ?? failure(500, 'page.error.title', 'error.generic');
     deps.logger[known ? 'warn' : 'error'](
@@ -136,14 +150,14 @@ export function ltiErrorPages(deps: {
     setLtiPageHeaders(res, ltiPageCsp(deps.canvasOrigins));
     if (req.accepts(['html', 'json']) === 'json') {
       const ours = error instanceof HttpError || clientStatusOf(error) !== undefined;
-      const body = known && ours ? toErrorResponse(error, 'nn').body : undefined;
+      const body = known && ours ? toErrorResponse(error, locale).body : undefined;
       res.status(answer.status).json(body ?? { success: false, httpStatusCode: answer.status });
       return;
     }
-    // WHY: the person's language is unknown when a launch fails; Nynorsk is the service default (PROD-012).
+    // WHY: before the ltik is resolved the person's language is unknown; Nynorsk is the default (PROD-012).
     res
       .status(answer.status)
       .type('html')
-      .send(messagePage({ locale: 'nn', titleKey: answer.titleKey, bodyKey: answer.bodyKey }));
+      .send(messagePage({ locale, titleKey: answer.titleKey, bodyKey: answer.bodyKey }));
   };
 }

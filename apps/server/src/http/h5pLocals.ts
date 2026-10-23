@@ -1,15 +1,17 @@
 /**
  * h5pLocals — where the authenticated actor lives on a request, and how routes require it.
  *
- * Why: S2 ships no authentication of its own (Feide and LTI arrive in S3). The router therefore takes an
- *      `authenticate` middleware that puts the actor on `res.locals`, and every route that needs a person
- *      reads it through `requireActor`, which answers 401 when nobody is signed in.
- * Spec: H5P-006
+ * Why: the H5P router takes an `authenticate` middleware that puts the actor on `res.locals` (in the app,
+ *      ./h5pAuthenticate.ts maps the principal that ../auth/requestPrincipal.ts found), and every route that needs a
+ *      person reads it through `requireActor`, which answers 401 when nobody is signed in. Error messages use the
+ *      actor's language, else the principal's (routes outside `/h5p`, PROD-012).
+ * Spec: H5P-006, PROD-012
  * Invariants:
  *   - Routes never trust request data for identity; only `authenticate` sets `res.locals.h5pActor`.
  *   - `requireRole` answers 403 for a signed-in person without one of the roles.
- * Collaborators: ./createH5pRouter.ts, ../h5p/HvlH5pUser.ts; S3 provides the real `authenticate`.
- * Tests: apps/server/test/http/router.int.test.ts
+ * Collaborators: ./createH5pRouter.ts, ./h5pAuthenticate.ts, ./h5pErrorHandler.ts, ../h5p/HvlH5pUser.ts,
+ *   ../auth/principalLocals.ts.
+ * Tests: apps/server/test/http/router.int.test.ts, apps/server/test/http/api/contentSharingRoutes.int.test.ts
  */
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { principalOf } from '../auth/principalLocals.js';
