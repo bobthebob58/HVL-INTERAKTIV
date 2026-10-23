@@ -2,10 +2,11 @@
  * h5pAssets — the H5P Core 1.28 files that h5p-server 10.0.4 leaves out of its player and editor pages.
  *
  * Why: Lumi 10.0.4's asset lists were written for Core 1.27. Core 1.28 adds the theme ("Daylight") styles and
- *      fonts, and the editor list also lacks the tooltip and table styles and two core scripts that the player
- *      list has (F3 in spec 01 §1). Without them content types render unstyled or call a missing H5P.Tooltip.
+ *      fonts (F3 in spec 01 §1). The editor list also lacks the tooltip and table styles and two core scripts
+ *      that the player list has (found in S2). Without them content types render unstyled or call a missing
+ *      H5P.Tooltip.
  *      The files are added through Lumi's `customization.global` options instead of patching Lumi.
- * Spec: H5P-001, H5P-004
+ * Spec: H5P-001
  * Invariants:
  *   - With these additions, the player and the editor load every style and script that Core 1.28's own
  *     H5PCore lists (`h5p.classes.php`), checked by a test against the fetched core.

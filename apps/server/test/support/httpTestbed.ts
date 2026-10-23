@@ -8,9 +8,7 @@
  * Tests: shared by apps/server/test/http/*.int.test.ts.
  */
 import { randomUUID } from 'node:crypto';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { rmSync } from 'node:fs';
 import { CreateBucketCommand, type S3Client } from '@aws-sdk/client-s3';
 import express, { type Express, type RequestHandler } from 'express';
 import { createH5pRuntime, type H5pRuntime } from '../../src/h5p/createH5pRuntime.js';
@@ -105,6 +103,3 @@ export async function openHttpTestbed(
     },
   };
 }
-
-/** A fresh temporary folder for files a test uploads. */
-export const uploadDir = (): string => mkdtempSync(join(tmpdir(), 'h5p-upload-src-'));

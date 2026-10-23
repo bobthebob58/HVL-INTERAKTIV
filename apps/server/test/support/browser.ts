@@ -4,8 +4,9 @@
  * Why: SEC-001 and D-044 require benign SVGs to look identical before and after sanitising, which only a real
  *      renderer can show. Locally the tests are skipped when no browser can start; in CI (`CI=true`) a missing
  *      browser is an error, never a skip. The browser build is found through PLAYWRIGHT_BROWSERS_PATH.
- * Spec: SEC-001
- * Tests: used by apps/server/test/security/SvgSanitizer.render.test.ts.
+ * Spec: SEC-001, H5P-001, H5P-005
+ * Tests: used by apps/server/test/security/SvgSanitizer.render.test.ts and
+ *   apps/server/test/http/player.browser.int.test.ts.
  */
 import { afterAll, beforeAll, describe } from 'vitest';
 import { chromium, type Browser } from 'playwright-core';

@@ -9,6 +9,7 @@
  * Invariants:
  *   - The body is H5P's AJAX error shape `{ success: false, errorCode, httpStatusCode, message }`.
  *   - `message` always comes from the locale files; `errorCode` is a stable machine code, never free text.
+ *   - Errors with a numeric 4xx `status`/`statusCode` (body parsers, express.static, storage guards) keep it.
  *   - Unknown errors and server faults (5xx) are reported as `error.generic`.
  * Collaborators: ./h5pErrorHandler.ts, ./HttpError.ts, ../i18n/translate.ts.
  * Tests: apps/server/test/http/h5pErrorResponse.test.ts
@@ -17,6 +18,8 @@ import { MAX_FILE_SIZE } from '../h5p/H5pConfigFactory.js';
 import { t, type Locale, type MessageKey } from '../i18n/translate.js';
 
 const MB = 1024 * 1024;
+/** Lumi's message for metadata that its save schema refuses (an author error, not a server fault). */
+const LUMI_INVALID_METADATA = 'Metadata does not conform to schema.';
 
 /** The JSON body of an error response (H5P's AjaxErrorResponse shape). */
 export interface ErrorBody {
@@ -78,8 +81,14 @@ function describe(error: unknown): Described {
     const key = BY_ERROR_ID[e.errorId] ?? BY_STATUS[status];
     if (key) return { status, code: e.errorId, key, params: stringParams(e.replacements) };
   }
+  // UPSTREAM: Lumi throws a plain Error when its schema refuses the metadata; see https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/H5PEditor.ts (saveOrUpdateContentReturnMetaData).
+  if (error instanceof Error && error.message === LUMI_INVALID_METADATA) {
+    return { status: 400, code: 'invalid-metadata', key: 'error.badRequest', params: {} };
+  }
+  const status =
+    typeof e.status === 'number' ? e.status : typeof e.statusCode === 'number' ? e.statusCode : 0;
   // Body parsers and busboy report size limits with status 413.
-  if (e.status === 413 || e.statusCode === 413) {
+  if (status === 413) {
     const limit = typeof e.limit === 'number' ? e.limit : MAX_FILE_SIZE;
     return {
       status: 413,
@@ -87,6 +96,12 @@ function describe(error: unknown): Described {
       key: 'error.tooLarge',
       params: { maxMb: Math.ceil(limit / MB) },
     };
+  }
+  // WHY: body parsers (malformed JSON, wrong charset), express.static and storage guards report client errors
+  // with a 4xx status; they are the request's fault, not the server's.
+  if (status >= 400 && status < 500) {
+    const code = typeof e.type === 'string' ? e.type : `http-${status}`;
+    return { status, code, key: BY_STATUS[status] ?? 'error.badRequest', params: {} };
   }
   return { status: 500, code: 'internal', key: 'error.generic', params: {} };
 }

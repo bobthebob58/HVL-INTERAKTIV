@@ -2,7 +2,7 @@
  * Integration tests for the editor's AJAX endpoint: exactly ten creatable types, learners refused, no Hub
  * install, no DragQuestion in library data, and translated refusals.
  *
- * Spec: H5P-002, PROD-002, H5P-006, H5P-008, SEC-003, SEC-008
+ * Spec: H5P-002, PROD-002, H5P-004, H5P-006, H5P-008, H5P-011, SEC-003
  */
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -71,7 +71,7 @@ describeWithServices('H5P editor AJAX endpoint', () => {
     }
   });
 
-  it('[SEC-008] library data for a container never offers H5P.DragQuestion', async () => {
+  it('[H5P-002] library data for a container never offers H5P.DragQuestion', async () => {
     const res = await request(tb.app)
       .get('/h5p/ajax?action=libraries&machineName=H5P.QuestionSet&majorVersion=1&minorVersion=21')
       .set(...author.header);
@@ -80,7 +80,7 @@ describeWithServices('H5P editor AJAX endpoint', () => {
     expect(JSON.stringify(res.body)).not.toContain('H5P.DragQuestion');
   });
 
-  it('[H5P-002] the library overview reads jQuery-style form arrays (libraries[]=…)', async () => {
+  it('[H5P-004] the library overview reads jQuery-style form arrays (libraries[]=…)', async () => {
     const res = await request(tb.app)
       .post('/h5p/ajax?action=libraries')
       .set(...author.header)
@@ -91,19 +91,29 @@ describeWithServices('H5P editor AJAX endpoint', () => {
     expect(names).toEqual(['H5P.MultiChoice 1.16', 'H5P.QuestionSet 1.21']);
   });
 
-  it('[H5P-008] the editor asks for library strings in the actor’s language or a supported one only', async () => {
+  it('[H5P-008] library strings come in the requested language, nn falls back to nb, and an unknown code to the actor’s', async () => {
+    const strings = async (language: string) => {
+      const res = await request(tb.app)
+        .post(`/h5p/ajax?action=translations&language=${encodeURIComponent(language)}`)
+        .set(...author.header)
+        .type('form')
+        .send('libraries[]=H5P.MultiChoice 1.16');
+      expect(res.status).toBe(200);
+      return JSON.stringify(res.body);
+    };
+    expect(await strings('en')).toContain('Question (en)');
+    expect(await strings('nn')).toContain('Spørsmål (nb)');
+    const bogus = await strings('../../etc');
+    expect(bogus).toContain('Spørsmål (nb)');
+    expect(bogus).not.toContain('Question (en)');
+  });
+
+  it('[H5P-011] Content Hub metadata is refused instead of being fetched from the Hub', async () => {
     const res = await request(tb.app)
-      .post('/h5p/ajax?action=translations&language=en')
-      .set(...author.header)
-      .type('form')
-      .send('libraries[]=H5P.MultiChoice 1.16');
-    expect(res.status).toBe(200);
-    const bogus = await request(tb.app)
-      .post('/h5p/ajax?action=translations&language=../../etc')
-      .set(...author.header)
-      .type('form')
-      .send('libraries[]=H5P.MultiChoice 1.16');
-    expect(bogus.status).toBe(200);
+      .get('/h5p/ajax?action=content-hub-metadata-cache&language=nn')
+      .set(...author.header);
+    expect(res.status).toBe(403);
+    expect(res.body).toMatchObject({ errorCode: 'hvl:hub-install-disabled' });
   });
 
   it('[SEC-003][H5P-011] installing from the H5P Hub is refused for everyone, also admins', async () => {

@@ -125,4 +125,13 @@ describe('[H5P-011] admins install library updates through an audited import', (
       },
     ]);
   });
+
+  it('[H5P-011] when the audit cannot be written, nothing is installed', async () => {
+    const { editor, user, control } = await editorTestbed([MC]);
+    control.auditFails = true;
+    const path = await buildH5pPackage({ main: { ...MC, patchVersion: 6 }, params: PARAMS });
+    await expect(editor.uploadPackage(path, user('admin'))).rejects.toThrow('audit store unavailable');
+    const installed = await editor.libraryManager.listInstalledLibraries('H5P.MultiChoice');
+    expect(installed['H5P.MultiChoice']?.map((lib) => lib.patchVersion)).toEqual([MC.patchVersion ?? 0]);
+  });
 });

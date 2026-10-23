@@ -29,6 +29,8 @@ export interface EditorTestbed {
   editor: HvlH5PEditor;
   permissions: RulePermissions;
   audited: { results: readonly ILibraryInstallResult[]; change: LibraryChange }[];
+  /** Set `auditFails` to make every audit write throw (the audit store is down). */
+  control: { auditFails: boolean };
   invalidated: string[];
   libraryDir: string;
   user(role: H5pRole): HvlH5pUser;
@@ -50,6 +52,7 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
   const config = await createH5pConfig(undefined, { platformVersion: 'test' });
   const permissions = new RulePermissions();
   const audited: EditorTestbed['audited'] = [];
+  const control = { auditFails: false };
   const invalidated: string[] = [];
   const userData = {
     deleteInvalidatedContentUserData: async (contentId: string) => void invalidated.push(contentId),
@@ -72,7 +75,12 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
     ],
     {
       permissionSystem: permissions,
-      audit: { record: async (results, change) => void audited.push({ results, change }) },
+      audit: {
+        record: async (results, change) => {
+          if (control.auditFails) throw new Error('audit store unavailable');
+          audited.push({ results, change });
+        },
+      },
     },
   );
   let n = 0;
@@ -87,7 +95,7 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
       feideAuthenticated: true,
       ltiLaunchContentIds: [],
     });
-  return { editor, permissions, audited, invalidated, libraryDir, user };
+  return { editor, permissions, audited, control, invalidated, libraryDir, user };
 }
 
 /** Removes every folder made by `editorTestbed` (call in `afterAll`). */

@@ -1,8 +1,8 @@
 /**
  * Tests for the editor and player factories: Core 1.28 assets (F3), the Hub local ID (F1), and the wiring of
- * permission system, language fallback, DragQuestion removal and renderers.
+ * language fallback, DragQuestion removal and renderers (the permission wiring: permissionSystemGuard.test.ts).
  *
- * Spec: H5P-001, H5P-002, H5P-006, H5P-008, SEC-008
+ * Spec: H5P-001, H5P-002, H5P-008, SEC-008
  */
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';

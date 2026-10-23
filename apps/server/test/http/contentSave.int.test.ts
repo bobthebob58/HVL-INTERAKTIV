@@ -2,12 +2,16 @@
  * Integration tests for saving, loading, deleting and exporting an activity over HTTP: stored markup is inert,
  * only owners change their activities, and refusals never look like downloads.
  *
- * Spec: H5P-002, H5P-006, SEC-003, SEC-008
+ * Spec: H5P-002, H5P-006, SEC-008
  */
 import { randomUUID } from 'node:crypto';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
+import { openZip, readEntries } from '../../src/security/zipEntryGuard.js';
 import { describeWithServices } from '../support/services.js';
 import { rawBody } from '../support/uploadFixtures.js';
 
@@ -51,6 +55,17 @@ describeWithServices('H5P content over HTTP', () => {
     expect(stored).not.toMatch(/<[^>]*onerror/i);
     const row = await tb.db.h5PContent.findUniqueOrThrow({ where: { id } });
     expect(JSON.stringify([row.params, row.metadata, row.title])).not.toContain('<img');
+  });
+
+  it('[H5P-002] a DragQuestion hidden under an unknown key is refused, so the player never loads it', async () => {
+    const body = mcBody('Kva?');
+    (body.params.params as Record<string, unknown>).extra = { library: 'H5P.DragQuestion 1.14', params: {} };
+    const res = await request(tb.app)
+      .post('/h5p/content')
+      .set(...owner.header)
+      .send(body);
+    expect(res.status).toBe(403);
+    expect(res.body).toMatchObject({ errorCode: 'hvl:sub-content-not-allowed' });
   });
 
   it('[H5P-006] the owner updates the activity; a colleague can neither read nor change it', async () => {
@@ -121,8 +136,10 @@ describeWithServices('H5P content over HTTP', () => {
     ).toBe(403);
   });
 
-  it('[H5P-006] the owner downloads a .h5p package; a refusal is JSON, never an attachment', async () => {
-    const id = await create();
+  it('[H5P-006] the owner downloads a complete .h5p package; a refusal is JSON, never an attachment', async () => {
+    // WHY: a long text makes the zip span many chunks, so a response cut short cannot pass as complete.
+    const long = 'Lang tekst. '.repeat(5000);
+    const id = await create(mcBody(long));
     const ok = await request(tb.app)
       .get(`/h5p/download/${id}`)
       .set(...owner.header)
@@ -131,7 +148,16 @@ describeWithServices('H5P content over HTTP', () => {
     expect(ok.status).toBe(200);
     expect(ok.headers['content-disposition']).toBe(`attachment; filename="${id}.h5p"`);
     expect(ok.headers['x-content-type-options']).toBe('nosniff');
-    expect((ok.body as Buffer).subarray(0, 2).toString()).toBe('PK');
+    const dir = mkdtempSync(join(tmpdir(), 'h5p-download-'));
+    try {
+      const file = join(dir, 'export.h5p');
+      writeFileSync(file, ok.body as Buffer);
+      const names: string[] = [];
+      for await (const entry of readEntries(await openZip(file))) names.push(entry.fileName);
+      expect(names).toEqual(expect.arrayContaining(['h5p.json', 'content/content.json']));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
     const refused = await request(tb.app)
       .get(`/h5p/download/${id}`)
       .set(...learner.header);
@@ -140,7 +166,7 @@ describeWithServices('H5P content over HTTP', () => {
     expect(refused.headers['content-type']).toMatch(/^application\/json/);
   });
 
-  it('[H5P-002] a malformed save or an unknown activity is refused without saving anything', async () => {
+  it('[H5P-006] a malformed save or an unknown activity is refused without saving anything', async () => {
     const before = await tb.db.h5PContent.count({ where: { ownerUserId: owner.actor.accountId } });
     const malformed = await request(tb.app)
       .post('/h5p/content')

@@ -1,6 +1,6 @@
 /**
- * Tests for the last two layers of SVG sanitising on their own: the shared rules (links, CSS, animations) and
- * the final check, which must refuse anything forbidden even if every earlier layer had missed it.
+ * Tests for the SVG layers on their own: the pre-check, the shared rules (links, CSS, animations) and the final
+ * check, which must refuse anything forbidden even if every earlier layer had missed it.
  *
  * Spec: SEC-001
  */

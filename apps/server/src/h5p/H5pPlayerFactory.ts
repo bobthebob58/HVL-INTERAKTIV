@@ -2,13 +2,14 @@
  * H5pPlayerFactory — builds the one H5PPlayer the server uses, with HVL's permission system and assets.
  *
  * Why: Lumi's player defaults to allow-everything permissions and to its own HTML template, which puts the
- *      integration object into a `<script>` unescaped (A1, D-040). The factory sets HVL's permission system, the
+ *      integration object into a `<script>` unescaped (D-040). The factory sets HVL's permission system, the
  *      learner-state storage, Nynorsk-first strings and the Core 1.28 styles (F3), and makes `render` return
  *      the model so ../http/routes/playerRoutes.ts renders it with our template.
  * Spec: H5P-004, H5P-005, H5P-006, H5P-008, SEC-008
  * Invariants:
  *   - The renderer returns the model unchanged; HTML is produced only by ./render/playerPage.ts.
- *   - The player and the editor share the same permission system, library storage wrapper and state storage.
+ *   - Built by createH5pRuntime with the editor's inputs: one permission system, one state storage, and the
+ *     same library storage, each engine behind its own language-fallback wrapper.
  * Collaborators: ./h5pAssets.ts, ./render/playerPage.ts, ./storage/LanguageFallbackLibraryStorage.ts,
  *   ./createH5pRuntime.ts.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts

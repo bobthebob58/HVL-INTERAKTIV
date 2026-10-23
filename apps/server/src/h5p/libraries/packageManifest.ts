@@ -7,15 +7,20 @@
  * Spec: SEC-003, H5P-002, SEC-005
  * Invariants:
  *   - Run after `inspectZip`, so names, sizes and entry counts are already checked.
- *   - Only `h5p.json` and `<folder>/library.json` are read, each at most `MAX_MANIFEST_BYTES`.
+ *   - Only `h5p.json` and `<folder>/library.json` (each at most `MAX_MANIFEST_BYTES`) and `content/content.json`
+ *     (at most the upload limit) are read.
  *   - A package without a readable `h5p.json` naming a main library is refused as "not an H5P package".
- * Collaborators: ../../security/zipEntryGuard.ts (zip reader), ./packageLibraryCheck.ts, ../HvlH5PEditor.ts.
+ *   - A file reference in content.json that leaves `content/` is refused (./contentFileReferences.ts).
+ * Collaborators: ../../security/zipEntryGuard.ts (zip reader), ./contentFileReferences.ts,
+ *   ./packageLibraryCheck.ts, ../HvlH5PEditor.ts, ./LibraryInstaller.ts.
  * Tests: apps/server/test/h5p/libraries/packageManifest.test.ts
  */
 import type { Readable } from 'node:stream';
 import type yauzl from 'yauzl';
 import type { ILibraryName } from '@lumieducation/h5p-server';
 import { openZip, readEntries, ZipRejectedError } from '../../security/zipEntryGuard.js';
+import { MAX_FILE_SIZE } from '../H5pConfigFactory.js';
+import { assertContentFilesInside, contentFilePaths } from './contentFileReferences.js';
 
 /** Largest manifest file read (library.json and h5p.json are a few kilobytes). */
 export const MAX_MANIFEST_BYTES = 1024 * 1024;
@@ -38,8 +43,8 @@ export interface PackageManifest {
 
 const notH5p = (): ZipRejectedError => new ZipRejectedError('upload.package.notH5p');
 
-function readText(zip: yauzl.ZipFile, entry: yauzl.Entry): Promise<string> {
-  if (entry.uncompressedSize > MAX_MANIFEST_BYTES) return Promise.reject(notH5p());
+function readText(zip: yauzl.ZipFile, entry: yauzl.Entry, maxBytes = MAX_MANIFEST_BYTES): Promise<string> {
+  if (entry.uncompressedSize > maxBytes) return Promise.reject(notH5p());
   return new Promise((resolve, reject) => {
     zip.openReadStream(entry, (error, stream?: Readable) => {
       if (error || !stream) return reject(notH5p());
@@ -72,7 +77,8 @@ function toLibrary(json: Record<string, unknown>): PackageLibrary | undefined {
  * Reads h5p.json and the top-level library.json files of a package.
  * @param path - Path of the .h5p file.
  * @returns The main library and the libraries the package carries.
- * @throws ZipRejectedError `upload.package.notH5p` when h5p.json is missing or unreadable.
+ * @throws ZipRejectedError `upload.package.notH5p` when h5p.json is missing or unreadable;
+ *   `upload.archive.unsafePath` when content.json points at a file outside `content/`.
  */
 export async function readPackageManifest(path: string): Promise<PackageManifest> {
   const zip = await openZip(path);
@@ -82,6 +88,8 @@ export async function readPackageManifest(path: string): Promise<PackageManifest
     for await (const entry of readEntries(zip)) {
       const name = entry.fileName.replace(/\\/g, '/');
       if (name === 'h5p.json') h5pJson = parse(await readText(zip, entry));
+      else if (name === 'content/content.json')
+        assertContentFilesInside(contentFilePaths(parse(await readText(zip, entry, MAX_FILE_SIZE))));
       else if (/^[^/]+\/library\.json$/.test(name)) {
         const library = toLibrary(parse(await readText(zip, entry)));
         if (library) libraries.push(library);

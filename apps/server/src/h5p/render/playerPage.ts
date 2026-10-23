@@ -9,7 +9,8 @@
  *   - Every URL, ID and the language are escaped; the integration object goes through `scriptJson`.
  *   - `H5PIntegration.user` is always `{ name: '', mail: '', id: '' }`; the preloaded learner state stays.
  *   - No download link: downloads are a separate, permission-checked route.
- * Collaborators: ./scriptJson.ts, ../H5pPlayerFactory.ts (`player.setRenderer`).
+ * Collaborators: ./scriptJson.ts; ../../http/routes/playerRoutes.ts (the only caller), which gets the model from
+ *   the identity renderer that ../H5pPlayerFactory.ts installs.
  * Tests: apps/server/test/h5p/render/playerPage.test.ts
  */
 import type { IPlayerModel } from '@lumieducation/h5p-server';

@@ -2,7 +2,7 @@
  * svgPurify — step 3 of SVG sanitising: our own DOMPurify pass, stricter than Lumi's, written out as XML.
  *
  * Why: Lumi's sanitiser keeps external `href`s, `data:text/html` links on `<image>`, `@import` and external
- *      `url()` in CSS (checked by the S2 probes). D-044 needs those gone too. DOMPurify's HTML parser is used
+ *      `url()` in CSS (pinned in test/security/upstream/lumiSvgSanitizer.test.ts). D-044 needs those gone too. DOMPurify's HTML parser is used
  *      because its XML mode returns nothing for a file with an `<?xml?>` prolog; the result is then written
  *      with XMLSerializer, because browsers read a served SVG with an XML parser (HTML serialisation would
  *      write `&nbsp;`, which XML does not know, and would not fix namespace declarations).

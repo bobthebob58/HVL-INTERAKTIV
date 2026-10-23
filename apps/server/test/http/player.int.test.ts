@@ -2,7 +2,7 @@
  * Integration tests for the player page: preloaded learner state, Core 1.28 styles, inert stored markup, no
  * user identifier in the page, and no player for drafts.
  *
- * Spec: H5P-004, H5P-005, H5P-006, SEC-008, DATA-002
+ * Spec: H5P-001, H5P-005, H5P-006, SEC-008, DATA-002
  */
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -62,7 +62,7 @@ describeWithServices('H5P player page', () => {
     expect(res.text).toMatch(/answers.{0,6}\[2\]/);
   });
 
-  it('[H5P-004] the page loads the Core 1.28 theme styles (F3)', async () => {
+  it('[H5P-001] the page loads the Core 1.28 theme styles (F3)', async () => {
     const learner = await tb.actor('learner');
     const res = await play(learner, published);
     expect(res.text).toMatch(/href="[^"]*\/h5p\/core\/styles\/h5p-theme\.css\?version=/);

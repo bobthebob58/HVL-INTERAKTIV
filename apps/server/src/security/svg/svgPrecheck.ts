@@ -12,7 +12,8 @@
  *   - Every `<?xml-stylesheet ...?>` instruction is removed, also an unterminated one.
  *   - Works on text only; never parses XML, so nothing is expanded or fetched.
  * Collaborators: ../SvgSanitizer.ts (first step), ../RejectedUploadError.ts.
- * Tests: apps/server/test/security/SvgSanitizer.test.ts, apps/server/test/security/SvgSanitizer.bypass.test.ts
+ * Tests: apps/server/test/security/svgFinalCheck.test.ts, apps/server/test/security/SvgSanitizer.test.ts,
+ *   apps/server/test/security/SvgSanitizer.bypass.test.ts
  */
 import { RejectedUploadError } from '../RejectedUploadError.js';
 

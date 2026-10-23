@@ -73,6 +73,26 @@ describe('[H5P-002] sub-content rules on save', () => {
       new SubContentPolicy(manager()).enforce({ questions: [question('H5P.MultiChoice 1.16')] }, {}, MAIN),
     ).resolves.toBeUndefined();
   });
+
+  it('[H5P-002] refuses a library hidden under a key no field defines, which Lumi would still load', async () => {
+    const hidden = [
+      { questions: [question('H5P.MultiChoice 1.16')], extra: question('H5P.DragQuestion 1.14') },
+      {
+        questions: [
+          { ...question('H5P.MultiChoice 1.16'), params: { deep: [{ library: 'H5P.TrueFalse 1.8' }] } },
+        ],
+      },
+    ];
+    for (const params of hidden) {
+      await expect(new SubContentPolicy(manager()).enforce(params, {}, MAIN)).rejects.toMatchObject({
+        errorId: 'hvl:sub-content-not-allowed',
+        httpStatusCode: 403,
+      });
+    }
+    // WHY: Lumi only collects "Name x.y" values, so a plain text field called "library" is not a dependency.
+    const label = { questions: [question('H5P.MultiChoice 1.16')], note: { library: 'school library' } };
+    await expect(new SubContentPolicy(manager()).enforce(label, {}, MAIN)).resolves.toBeUndefined();
+  });
 });
 
 describe('[SEC-008] text that Lumi does not sanitise', () => {
@@ -96,6 +116,32 @@ describe('[SEC-008] text that Lumi does not sanitise', () => {
     expect(metadata.title).not.toMatch(/onerror|<img|<\/script/);
     expect(metadata.source).toBe('https://example.org/?a=1&b=2');
     expect(params.questions[0]?.metadata.title).not.toMatch(/onerror|<img/);
+  });
+
+  it('[SEC-008] every metadata string the "Rights of use" dialog shows is plain text; source stays a web link', async () => {
+    const payload = '<img src=x onerror=alert(1)>';
+    const metadata = {
+      title: 'T',
+      license: 'CC BY',
+      licenseVersion: `4.0${payload}`,
+      licenseExtras: payload,
+      contentType: payload,
+      yearFrom: `2020${payload}`,
+      yearTo: payload,
+      authors: [{ name: payload, role: payload }],
+      changes: [{ author: 'A', log: payload, date: payload }],
+      source: `https://x.example/"><img src=x onerror=alert(1)>`,
+    };
+    const sub = {
+      ...question('H5P.MultiChoice 1.16'),
+      metadata: { licenseExtras: payload, source: 'javascript:alert(1)//' },
+    };
+    await new SubContentPolicy(manager()).enforce({ questions: [sub] }, metadata, MAIN);
+    expect(JSON.stringify(metadata)).not.toMatch(/<img|onerror=alert\(1\)>|">/);
+    expect(metadata.source).toBe('https://x.example/%22%3E%3Cimg%20src=x%20onerror=alert(1)%3E');
+    expect(metadata.yearFrom).toBe('2020');
+    expect(sub.metadata).toEqual({});
+    expect(metadata).not.toHaveProperty('licenseExtras');
   });
 
   it('[SEC-008] together with Lumi enforcer, no text in the content can carry script', async () => {

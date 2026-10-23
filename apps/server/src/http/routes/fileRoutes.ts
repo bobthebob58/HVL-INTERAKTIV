@@ -9,7 +9,7 @@
  * Invariants:
  *   - The actor's account view is the user; nothing in the request names another person.
  *   - Headers come from ../sendUserFile.ts (nosniff, sandbox CSP, attachment for non-media files).
- *   - A storage error before streaming becomes 404 through the error handler; after streaming it ends the socket.
+ *   - A missing file is 404; any other failure before streaming is 500; after streaming starts, the socket ends.
  * Collaborators: ../sendUserFile.ts, ../h5pLocals.ts, ../routeParams.ts, Lumi's H5PAjaxEndpoint
  *   (getContentFile, getTemporaryFile).
  * Tests: apps/server/test/http/contentFiles.int.test.ts

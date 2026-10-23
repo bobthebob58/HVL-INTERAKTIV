@@ -59,6 +59,9 @@ export const SENSITIVE_KEYS: ReadonlySet<string> = new Set([
   'nin',
   'personnummer',
   'fodselsnummer',
+  // PRIVACY: body parsers attach the raw request text to their errors (`err.body`); answers and names can be in it.
+  'body',
+  'rawbody',
 ]);
 
 /** Endings that mark a key as sensitive whatever comes before them (`authToken`, `userEmail`, `ltiSubject`). */

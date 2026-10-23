@@ -8,15 +8,18 @@
  * Spec: H5P-002, SEC-008
  * Invariants:
  *   - Every `library` value anywhere names a library its field offers (exact "H5P.Name x.y", as Lumi checks),
- *     and never an excluded type; otherwise 403 `hvl:sub-content-not-allowed` names the library.
+ *     and never an excluded type; a `library` value outside any library field (under a key the semantics do not
+ *     define) is refused too. Otherwise 403 `hvl:sub-content-not-allowed` names the library.
  *   - Text that is a list item is sanitised with Lumi's rules; metadata titles of the content and of every
  *     sub-content are sanitised as plain text.
  *   - The parameters and metadata are changed in place; nothing else is.
- * Collaborators: ./paramsWalker.ts, ./lumiTextSanitizer.ts, ./removeDragQuestion.ts, ../HvlH5PEditor.ts.
+ * Collaborators: ./paramsWalker.ts, ./libraryReferences.ts, ./lumiTextSanitizer.ts, ./removeDragQuestion.ts,
+ *   ../HvlH5PEditor.ts.
  * Tests: apps/server/test/h5p/semantics/SubContentPolicy.test.ts
  */
 import { H5pError, type ILibraryName, type LibraryManager } from '@lumieducation/h5p-server';
 import { LumiTextSanitizer } from './lumiTextSanitizer.js';
+import { findLibraryReferences } from './libraryReferences.js';
 import { walkParams, type ParamsVisit } from './paramsWalker.js';
 import { EXCLUDED_SUB_CONTENT, optionMachineName } from './removeDragQuestion.js';
 
@@ -47,15 +50,20 @@ export class SubContentPolicy {
     mainLibrary: ILibraryName,
   ): Promise<void> {
     this.text.sanitizeMetadata(metadata);
+    const reached = new WeakSet<object>();
     await walkParams(
       params,
       mainLibrary,
       (lib) => this.libraryManager.getSemantics(lib),
-      (visit) => this.visit(visit),
+      (visit) => this.visit(visit, reached),
     );
+    // SECURITY: Lumi loads every `library` value it finds, also under keys no field defines (D-039).
+    for (const { owner, library } of findLibraryReferences(params)) {
+      if (!reached.has(owner)) throw notAllowed(optionMachineName(library) ?? library);
+    }
   }
 
-  private visit({ semantics, value, container, key }: ParamsVisit): void {
+  private visit({ semantics, value, container, key }: ParamsVisit, reached: WeakSet<object>): void {
     if (semantics.type === 'library') {
       if (typeof value !== 'object' || value === null) return;
       const entry = value as Record<string, unknown>;
@@ -67,6 +75,7 @@ export class SubContentPolicy {
       const machineName = optionMachineName(entry.library) ?? entry.library;
       if (EXCLUDED_SUB_CONTENT.has(machineName) || !offered.includes(entry.library))
         throw notAllowed(machineName);
+      reached.add(entry);
       this.text.sanitizeMetadata(entry.metadata);
     } else if (semantics.type === 'text' && Array.isArray(container)) {
       // SECURITY: Lumi's enforcer never reaches list items (D-039), so they are sanitised here.

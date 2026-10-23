@@ -1,18 +1,19 @@
 /**
  * Tests for turning route errors into translated H5P error answers without leaking internal messages.
  *
- * Spec: PROD-012, H5P-002, H5P-006, SEC-003
+ * Spec: PROD-012, H5P-002, H5P-006, SEC-005
  */
 import { H5pError } from '@lumieducation/h5p-server';
 import { describe, expect, it } from 'vitest';
 import { t } from '../../src/i18n/translate.js';
 import { HttpError } from '../../src/http/HttpError.js';
 import { toErrorResponse } from '../../src/http/h5pErrorResponse.js';
+import { UnsafeObjectNameError } from '../../src/h5p/storage/s3Objects.js';
 import { RejectedUploadError } from '../../src/security/RejectedUploadError.js';
 import { ZipRejectedError } from '../../src/security/zipEntryGuard.js';
 
 describe('toErrorResponse', () => {
-  it('[H5P-006] an HttpError keeps its status and message key, in the requested language', () => {
+  it('[PROD-012] an HttpError keeps its status and message key, in the requested language', () => {
     for (const locale of ['nn', 'nb', 'en'] as const) {
       expect(toErrorResponse(new HttpError(401, 'error.unauthenticated'), locale)).toEqual({
         status: 401,
@@ -42,7 +43,7 @@ describe('toErrorResponse', () => {
     });
   });
 
-  it('[SEC-003] upload and archive refusals are 400, size limits 413, with their parameters', () => {
+  it('[SEC-005] upload and archive refusals are 400, size limits 413, with their parameters', () => {
     const type = toErrorResponse(
       new RejectedUploadError('upload.file.typeMismatch', { extension: 'png' }),
       'nn',
@@ -58,7 +59,7 @@ describe('toErrorResponse', () => {
     expect(big.status).toBe(413);
   });
 
-  it('[SEC-003] a body-parser size error says how large a request may be', () => {
+  it('[SEC-005] a body-parser size error says how large a request may be', () => {
     const error = Object.assign(new Error('request entity too large'), {
       status: 413,
       limit: 2 * 1024 * 1024,
@@ -67,6 +68,29 @@ describe('toErrorResponse', () => {
       status: 413,
       body: { message: t('error.tooLarge', { maxMb: 2 }, 'en') },
     });
+  });
+
+  it('[PROD-012] client errors from body parsers, static files and storage guards keep their 4xx status', () => {
+    const parse = Object.assign(new SyntaxError('Unexpected token'), {
+      status: 400,
+      type: 'entity.parse.failed',
+    });
+    expect(toErrorResponse(parse, 'nn')).toMatchObject({
+      status: 400,
+      body: { errorCode: 'entity.parse.failed', message: t('error.badRequest', {}, 'nn') },
+    });
+    const missing = Object.assign(new Error('Not Found'), { statusCode: 404 });
+    expect(toErrorResponse(missing, 'en')).toMatchObject({
+      status: 404,
+      body: { message: t('error.notFound', {}, 'en') },
+    });
+    expect(toErrorResponse(new UnsafeObjectNameError('../x'), 'nn').status).toBe(400);
+  });
+
+  it('[PROD-012] metadata that Lumi’s schema refuses is the author’s error (400), not a server fault', () => {
+    const { status, body } = toErrorResponse(new Error('Metadata does not conform to schema.'), 'nn');
+    expect(status).toBe(400);
+    expect(body).toMatchObject({ errorCode: 'invalid-metadata', message: t('error.badRequest', {}, 'nn') });
   });
 
   it('[PROD-012] unknown errors and server faults never show their own text', () => {

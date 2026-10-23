@@ -128,7 +128,7 @@ describe('[H5P-006] saving', () => {
     expect(testbed.invalidated).toEqual([id, id]);
   });
 
-  it('[H5P-006] deletes the files an author removed, with the author as acting user', async () => {
+  it('[H5P-006] deletes the files an author removed from the activity', async () => {
     const { editor, user } = await editorTestbed(LIBS);
     const author = user('author');
     const media = { path: 'images/a.png', mime: 'image/png' };

@@ -100,6 +100,22 @@ describeWithServices('H5P router', () => {
     expect(res.text).not.toMatch(/Error:|\bat \w|node_modules|\/home\//);
   });
 
+  it('[PROD-012] malformed JSON, a missing client file and an unsafe file name are 4xx, not server faults', async () => {
+    const author = await tb.actor('author');
+    const json = await request(tb.app)
+      .post('/h5p/content')
+      .set(...author.header)
+      .set('Content-Type', 'application/json')
+      .send('{"library": ');
+    expect(json.status).toBe(400);
+    expect((await request(tb.app).get('/h5p/core/js/no-such-file.js')).status).toBe(404);
+    const unsafe = await request(tb.app)
+      .get('/h5p/temp-files/..%2F..%2Fsecret.png')
+      .set(...author.header);
+    expect(unsafe.status).toBeGreaterThanOrEqual(400);
+    expect(unsafe.status).toBeLessThan(500);
+  });
+
   it('[H5P-006] a path that is not a route answers 404 in the actor’s language, also to learners', async () => {
     const learner = await tb.actor('learner', { locale: 'nb' });
     const res = await request(tb.app)

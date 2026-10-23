@@ -3,7 +3,7 @@
  *
  * Why: learners (and authors previewing) open an activity here; S3 embeds this page in Canvas. Lumi builds the
  *      player model with the actor's state view, so the learner's saved state is preloaded for their course,
- *      and our template (D-040) turns it into HTML without Lumi's unescaped JSON (A1).
+ *      and our template (D-040) turns it into HTML without Lumi's unescaped JSON.
  * Spec: H5P-004, H5P-005, H5P-006, SEC-008
  * Invariants:
  *   - The user is `asStateUser(actor)` and the context is the actor's; the page never carries a user identifier.

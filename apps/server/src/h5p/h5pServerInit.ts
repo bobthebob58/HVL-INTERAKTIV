@@ -2,8 +2,8 @@
  * h5pServerInit — the H5P part of server startup: check the client files, build the config, log what runs.
  *
  * Why: H5P-001 requires the server to refuse to start when the fetched core files and the config disagree,
- *      and to log the core version and Hub host it starts with. One function does this for the server
- *      (S2) and for the boot check that CI runs now.
+ *      and to log the core version and Hub host it starts with. One function does this for the boot check,
+ *      createH5pRuntime (seed:libraries, and the server from S3) and hub:check.
  * Spec: H5P-001
  * Invariants:
  *   - Relative H5P folders in the config are resolved against the server package root (apps/server).

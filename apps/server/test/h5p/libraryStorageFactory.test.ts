@@ -38,7 +38,7 @@ describe('[H5P-004] library storage', () => {
     }
   });
 
-  it('[H5P-004] by default the cache is cache-manager’s in-memory store, loaded the way Node can load it', () => {
+  it('[H5P-004] by default the cache is cache-manager’s in-memory store', () => {
     const dir = mkdtempSync(join(tmpdir(), 'h5p-libs-'));
     try {
       const storage = createLibraryStorage(join(dir, 'libraries'));

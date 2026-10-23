@@ -10,7 +10,8 @@
  *   - A key ending in `[]` becomes the key without it, always holding an array.
  *   - `req.body` is always an object after these parsers (Express 5 leaves it undefined otherwise).
  * Collaborators: ./routes/ajaxRoutes.ts, ./routes/userDataRoutes.ts, ./routes/contentRoutes.ts.
- * Tests: apps/server/test/http/router.int.test.ts
+ * Tests: apps/server/test/http/ajax.int.test.ts, apps/server/test/http/userData.int.test.ts,
+ *   apps/server/test/http/contentSave.int.test.ts
  */
 import express, { type NextFunction, type Request, type RequestHandler, type Response } from 'express';
 

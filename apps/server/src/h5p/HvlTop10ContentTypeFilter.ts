@@ -55,7 +55,7 @@ export function filterContentTypeCache(info: IHubInfo): IHubInfo {
 }
 
 /**
- * Refuses a main library outside the ten, as content saves and package imports require.
+ * Refuses a main library outside the ten when content is saved.
  * @param ubername - Main library as the editor sends it, e.g. `H5P.MultiChoice 1.16`.
  * @throws H5pError `hvl:content-type-not-allowed` (HTTP 403) for any other type, or
  *   `invalid-main-library-name` (HTTP 400) when the name cannot be parsed.

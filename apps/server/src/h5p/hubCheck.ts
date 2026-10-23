@@ -4,7 +4,7 @@
  *
  * Why: the server never calls the Hub while serving requests (D-041), so the F1/F2 findings and the Hub's
  *      versions are checked by an operator command instead. The report records the exact status codes, which
- *      is the evidence the spike and R-01 need (D-047).
+ *      is the evidence the spike and R-01 need (to be recorded as D-047).
  * Spec: H5P-001, H5P-003
  * Invariants:
  *   - Contacts only the config's Hub endpoints (hub-api.h5p.org); never api.h5p.org.

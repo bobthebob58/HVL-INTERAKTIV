@@ -13,7 +13,8 @@
  *     legacy binding or script URL; `neutraliseCss` either returns CSS that passes `findCssViolation` or undefined.
  *   - Every rule is a pure function of names and values; no I/O and no DOM access.
  * Collaborators: ./svgPurify.ts, ./svgFinalCheck.ts.
- * Tests: apps/server/test/security/SvgSanitizer.test.ts, apps/server/test/security/SvgSanitizer.bypass.test.ts
+ * Tests: apps/server/test/security/svgFinalCheck.test.ts, apps/server/test/security/SvgSanitizer.test.ts,
+ *   apps/server/test/security/SvgSanitizer.bypass.test.ts
  */
 
 /** The SVG namespace; every element of a stored SVG is in it. */

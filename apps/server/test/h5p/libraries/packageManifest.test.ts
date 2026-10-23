@@ -1,7 +1,7 @@
 /**
  * Tests for reading a package's main library and library versions without extracting it.
  *
- * Spec: SEC-003, H5P-002
+ * Spec: SEC-003
  */
 import { describe, it, expect, afterAll } from 'vitest';
 import { LibraryManager, fsImplementations } from '@lumieducation/h5p-server';
@@ -51,7 +51,27 @@ describe('[SEC-003] package manifest', () => {
     expect((await readPackageManifest(path)).libraries).toEqual([]);
   });
 
-  it('[H5P-002] refuses a zip without h5p.json as not an H5P package', async () => {
+  it('[SEC-005] refuses content.json file references that leave the content folder', async () => {
+    for (const path of [
+      '../../victim.svg',
+      'images/../../x.svg',
+      '/etc/passwd',
+      'C:/x.svg',
+      'images\\..\\x.svg',
+    ]) {
+      const pkg = await buildH5pPackage({ main: MC, params: { media: { path, mime: 'image/svg+xml' } } });
+      await expect(readPackageManifest(pkg), path).rejects.toMatchObject({
+        messageKey: 'upload.archive.unsafePath',
+        params: { entry: path },
+      });
+    }
+    const fine = { media: { path: 'images/a.svg#tmp' }, video: { path: 'https://example.org/v.mp4' } };
+    await expect(
+      readPackageManifest(await buildH5pPackage({ main: MC, params: fine })),
+    ).resolves.toBeDefined();
+  });
+
+  it('[SEC-003] refuses a zip without h5p.json as not an H5P package', async () => {
     await expect(
       readPackageManifest(await buildH5pPackage({ main: MC, omitH5pJson: true })),
     ).rejects.toMatchObject({

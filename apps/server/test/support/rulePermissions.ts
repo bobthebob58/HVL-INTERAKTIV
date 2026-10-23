@@ -5,7 +5,8 @@
  *      download") without a database. The production rules live in src/h5p/HvlPermissionSystem.ts and have
  *      their own table-driven tests; Lumi's allow-everything system is never used, not even in tests.
  * Spec: H5P-006
- * Tests: shared by apps/server/test/h5p/HvlH5PEditor*.test.ts.
+ * Tests: shared by apps/server/test/h5p/HvlH5PEditor*.test.ts, apps/server/test/support/engineTestbed.ts and
+ *   apps/server/test/h5p/permissionSystemGuard.test.ts.
  */
 import {
   ContentPermission,

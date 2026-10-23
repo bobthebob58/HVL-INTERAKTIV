@@ -9,11 +9,13 @@
  * Invariants:
  *   - Only `author` and `admin` reach save, delete and parameters; export is decided by the permission system.
  *   - A save body is `{ library: string, params: { params: object, metadata: object } }`, else 400.
- *   - The export is always a download (`attachment`, `nosniff`) named after the content ID, never a title.
+ *   - The export is always a download (`attachment`, `nosniff`) named after the content ID, never a title, and
+ *     the response ends only when Lumi's zip stream has been written completely.
  * Collaborators: ../../h5p/HvlH5PEditor.ts, ../requestBodies.ts, Lumi's H5PAjaxEndpoint.
  * Tests: apps/server/test/http/contentSave.int.test.ts
  */
 import type { ContentParameters, IContentMetadata } from '@lumieducation/h5p-server';
+import { finished } from 'node:stream/promises';
 import { Router } from 'express';
 import { asAccountUser } from '../../h5p/HvlH5pUser.js';
 import { HttpError } from '../HttpError.js';
@@ -89,7 +91,9 @@ export function contentRoutes(deps: H5pRouteDeps): Router {
       'X-Content-Type-Options': 'nosniff',
     });
     await deps.ajax.getDownload(contentId, user, res);
-    res.end();
+    // WHY: Lumi starts piping the zip into `res` and returns before it is written; the pipe ends the response,
+    // so ending it here would cut the package. A client that disconnects early is not a server fault.
+    await finished(res).catch(() => undefined);
   });
   return router;
 }

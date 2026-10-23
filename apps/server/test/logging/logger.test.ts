@@ -161,4 +161,14 @@ describe('[DATA-009] redaction of messages, format arguments and error text', ()
     const out = run((log) => log.error({ err: error }, 'insert failed'));
     for (const leaked of ['kari@hvl.no', 'Kari Nordmann']) expect(out, leaked).not.toContain(leaked);
   });
+
+  it('[DATA-009] never logs the raw request text a body parser attaches to its error', () => {
+    const error = Object.assign(new SyntaxError('Unexpected token'), {
+      status: 400,
+      type: 'entity.parse.failed',
+      body: 'data={"svar":"Byen er Oslo","fornavn":"Kari Nordmann"}',
+    });
+    const out = run((log) => log.error({ err: error }, 'request failed'));
+    for (const leaked of ['Kari Nordmann', 'Byen er Oslo']) expect(out, leaked).not.toContain(leaked);
+  });
 });

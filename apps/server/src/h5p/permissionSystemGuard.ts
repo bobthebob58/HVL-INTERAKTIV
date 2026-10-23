@@ -12,7 +12,8 @@
  *   - Every object reachable from the editor or player (three levels deep) that has a `permissionSystem`
  *     property holds exactly the expected instance; otherwise startup throws.
  *   - At least one such component must be found in each engine, so a renamed Lumi field cannot hide the check.
- * Collaborators: ./H5pEditorFactory.ts, ./H5pPlayerFactory.ts, ./HvlPermissionSystem.ts.
+ * Collaborators: ./createH5pRuntime.ts (the only caller), ./H5pEditorFactory.ts and ./H5pPlayerFactory.ts (build
+ *   what it checks), ./HvlPermissionSystem.ts.
  * Tests: apps/server/test/h5p/permissionSystemGuard.test.ts
  */
 

@@ -46,7 +46,11 @@ describeWithServices('seedLibraries', () => {
 
   beforeAll(async () => {
     tb = await openHttpTestbed([]);
-    installer = new LibraryInstaller(tb.runtime.editor.packageImporter, new PrismaLibraryAuditSink(tb.db));
+    installer = new LibraryInstaller(
+      tb.runtime.editor.packageImporter,
+      new PrismaLibraryAuditSink(tb.db),
+      tb.runtime.editor.libraryManager,
+    );
     mc = await buildH5pPackage({ main: MULTI_CHOICE }, 'H5P.MultiChoice.h5p');
     qs = await buildH5pPackage({ main: QUESTION_SET, libraries: [MULTI_CHOICE] }, 'H5P.QuestionSet.h5p');
   }, 60_000);

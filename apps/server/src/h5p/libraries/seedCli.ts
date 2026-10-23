@@ -34,7 +34,11 @@ try {
   const s3 = createS3Client(env);
   try {
     const runtime = await createH5pRuntime({ env, logger, db, redis, s3 });
-    const installer = new LibraryInstaller(runtime.editor.packageImporter, new PrismaLibraryAuditSink(db));
+    const installer = new LibraryInstaller(
+      runtime.editor.packageImporter,
+      new PrismaLibraryAuditSink(db),
+      runtime.editor.libraryManager,
+    );
     const started = Date.now();
     const summary = await seedLibraries(resolve(process.argv[2] ?? DEFAULT_FOLDER), installer);
     logger.info({ ...summary, durationMs: Date.now() - started }, 'seed libraries finished');

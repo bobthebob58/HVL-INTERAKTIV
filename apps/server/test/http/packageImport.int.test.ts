@@ -15,6 +15,7 @@ import { buildH5pPackage, removeBuiltPackages } from '../support/h5pPackageBuild
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
 import { MULTI_CHOICE, NOT_AUTHORABLE } from '../support/tenTypeLibraries.js';
+import { rawBody } from '../support/uploadFixtures.js';
 
 const PARAMS = { question: 'Importert?', answers: ['Ja'] };
 const uploadFolders = () => readdirSync(tmpdir()).filter((name) => name.startsWith('hvli-upload-')).length;
@@ -44,6 +45,30 @@ describeWithServices('H5P package import over HTTP', () => {
     const res = await importAs(author, path);
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(JSON.stringify(res.body)).toContain('Importert?');
+  });
+
+  it('[SEC-001] an SVG inside an imported package is sanitised like an editor upload', async () => {
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4" onload="alert(1)"><script>alert(2)</script><rect width="4" height="4"/></svg>';
+    const params = { ...PARAMS, media: { path: 'images/logo.svg', mime: 'image/svg+xml' } };
+    const path = await buildH5pPackage({
+      main: MULTI_CHOICE,
+      params,
+      files: { 'content/images/logo.svg': svg },
+    });
+    const res = await importAs(author, path);
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    const imported = JSON.stringify(res.body).match(/images\/[^"#]*\.svg/)?.[0];
+    expect(imported).toBeDefined();
+    const file = await request(tb.app)
+      .get(`/h5p/temp-files/${imported}`)
+      .set(...author.header)
+      .buffer(true)
+      .parse(rawBody);
+    expect(file.status).toBe(200);
+    const stored = (file.body as Buffer).toString('utf8');
+    expect(stored).toContain('<rect');
+    expect(stored).not.toMatch(/<script|onload/i);
   });
 
   it('[SEC-003] modified library code under the same version is ignored; the installed files stay', async () => {
@@ -79,6 +104,13 @@ describeWithServices('H5P package import over HTTP', () => {
     const bytes = readFileSync(path).toString('latin1').split('xx/evil.js').join('../evil.js');
     writeFileSync(path, Buffer.from(bytes, 'latin1'));
     const res = await importAs(author, path);
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ errorCode: 'upload.archive.unsafePath' });
+  });
+
+  it('[SEC-005] a content file reference that leaves the package is refused before Lumi copies anything', async () => {
+    const params = { ...PARAMS, media: { path: '../../../../victim.svg', mime: 'image/svg+xml' } };
+    const res = await importAs(author, await buildH5pPackage({ main: MULTI_CHOICE, params }));
     expect(res.status).toBe(400);
     expect(res.body).toMatchObject({ errorCode: 'upload.archive.unsafePath' });
   });

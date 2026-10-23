@@ -10,7 +10,7 @@
  *   - The library storage is the language-fallback wrapper; DragQuestion is removed from every semantics.
  *   - F1: `local_id` is at most 15 characters; F3: Core 1.28 styles and scripts are added (./h5pAssets.ts).
  *   - The file sanitisers run on every uploaded file (editor uploads and package import).
- *   - `render` returns Lumi's model, never Lumi's HTML (its template is unsafe, A1).
+ *   - `render` returns Lumi's model, never Lumi's HTML (its template is unsafe, D-040).
  * Collaborators: ./HvlH5PEditor.ts, ./h5pAssets.ts, ./H5pConfigFactory.ts, ./semantics/removeDragQuestion.ts,
  *   ./storage/LanguageFallbackLibraryStorage.ts, ./createH5pRuntime.ts.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts
@@ -89,7 +89,7 @@ export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
     ],
     { permissionSystem, audit: inputs.audit },
   );
-  // SECURITY: Lumi's editor template puts the integration JSON in a <script> unescaped (A1); S4 brings our own.
+  // SECURITY: Lumi's editor template puts the integration JSON in a <script> unescaped (D-040); S4 brings ours.
   editor.setRenderer((model) => model);
   return editor;
 }

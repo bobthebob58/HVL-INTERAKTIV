@@ -17,20 +17,34 @@ import { pipeline } from 'node:stream/promises';
 import { type S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 
+/** A file name that is not safe as an S3 key: the request's fault (HTTP 400). */
+export class UnsafeObjectNameError extends Error {
+  /** HTTP status for the error handler. */
+  readonly status = 400;
+
+  /**
+   * @param name - The refused name.
+   */
+  constructor(name: string) {
+    super(`unsafe file name: ${JSON.stringify(name)}`);
+    this.name = 'UnsafeObjectNameError';
+  }
+}
+
 /**
  * Rejects file names that could escape their key prefix or confuse tools that later mirror the bucket.
  * @param name - File name as given by H5P, e.g. `images/photo-1a2b.png`.
  * @returns The same name, when it is safe.
- * @throws Error naming the problem.
+ * @throws UnsafeObjectNameError (HTTP 400) naming the problem.
  */
 export function assertSafeObjectName(name: string): string {
   // SECURITY: S3 itself has no directories, but backups and sync tools that write keys to disk do.
   const hasControlCharacter = [...name].some((c) => c.charCodeAt(0) < 0x20 || c.charCodeAt(0) === 0x7f);
   if (name === '' || name.startsWith('/') || name.includes('\\') || hasControlCharacter) {
-    throw new Error(`unsafe file name: ${JSON.stringify(name)}`);
+    throw new UnsafeObjectNameError(name);
   }
   if (name.split('/').some((segment) => segment === '' || segment === '.' || segment === '..')) {
-    throw new Error(`unsafe file name: ${JSON.stringify(name)}`);
+    throw new UnsafeObjectNameError(name);
   }
   return name;
 }

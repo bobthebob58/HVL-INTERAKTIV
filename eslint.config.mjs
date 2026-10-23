@@ -73,7 +73,7 @@ export default tseslint.config(
   },
   {
     // H5P-006, D-035, D-036: Lumi's allow-everything permission system and the Express 4 routers of
-    // h5p-express never enter the server; the factories also refuse any other permission system at runtime.
+    // h5p-express never enter the server; createH5pRuntime also refuses any other permission system at runtime.
     files: ['apps/server/**/*.ts'],
     rules: {
       'no-restricted-imports': [

@@ -2,7 +2,7 @@
  * tenTypeLibraries — synthetic stand-ins for the ten content types plus two that must stay unauthorable.
  *
  * Why: the HTTP tests need installed libraries with realistic semantics (text, lists, images, sub-content)
- *      without the real Hub packages (blocked until Step 14). H5P.TrueFalse and H5P.DragQuestion are installed
+ *      without the real Hub packages (blocked, Q7). H5P.TrueFalse and H5P.DragQuestion are installed
  *      too, so the tests can show they are never offered or accepted.
  * Spec: H5P-002, PROD-002, SEC-008
  * Tests: shared by apps/server/test/http/*.int.test.ts.
@@ -10,7 +10,7 @@
 import { HVL_TOP10_CONTENT_TYPES } from '../../src/h5p/HvlTop10ContentTypeFilter.js';
 import type { SyntheticLibrary } from './syntheticLibraries.js';
 
-/** H5P.MultiChoice with text, list, image and file fields, and an SVG among its library files. */
+/** H5P.MultiChoice with text, list, image and file fields, an SVG library file, and nb and en strings. */
 export const MULTI_CHOICE: SyntheticLibrary = {
   machineName: 'H5P.MultiChoice',
   minorVersion: 16,
@@ -22,6 +22,11 @@ export const MULTI_CHOICE: SyntheticLibrary = {
     { name: 'attachment', type: 'file', optional: true },
   ],
   files: { 'images/icon.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"/>' },
+  // WHY: no nn.json, so the nn → nb fallback (D-046) shows; the labels name their language.
+  languages: {
+    nb: { semantics: [{ label: 'Spørsmål (nb)' }, { label: 'Svar (nb)' }, {}, {}] },
+    en: { semantics: [{ label: 'Question (en)' }, { label: 'Answers (en)' }, {}, {}] },
+  },
 };
 
 /** H5P.QuestionSet with a list of sub-content (MultiChoice offered; DragQuestion removed by our hook). */

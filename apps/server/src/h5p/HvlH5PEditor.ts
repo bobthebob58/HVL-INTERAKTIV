@@ -42,7 +42,9 @@ import {
   isAuthorableType,
 } from './HvlTop10ContentTypeFilter.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
+import { auditBeforeInstall } from './libraries/auditBeforeInstall.js';
 import type { LibraryAuditSink } from './libraries/LibraryAuditRecorder.js';
+import { disconnectFromHub } from './offlineContentTypeCache.js';
 import { assertPackageLibrariesInstalled } from './libraries/packageLibraryCheck.js';
 import { readPackageManifest } from './libraries/packageManifest.js';
 import { sha256File } from './libraries/sha256Sums.js';
@@ -74,6 +76,7 @@ export class HvlH5PEditor extends H5PEditor {
   constructor(args: ConstructorParameters<typeof H5PEditor>, policy: HvlEditorPolicy) {
     super(...args);
     this.policy = policy;
+    disconnectFromHub(this);
     this.subContent = new SubContentPolicy(this.libraryManager);
     this.files = new ContentFileCleanup(this.libraryManager, this.contentManager);
     // SECURITY: Lumi builds its PackageExporter from the config, which has no permission system, so downloads
@@ -170,16 +173,22 @@ export class HvlH5PEditor extends H5PEditor {
       actor,
       GeneralPermission.UpdateAndInstallLibraries,
     );
-    if (!mayInstall) await assertPackageLibrariesInstalled(manifest.libraries, this.libraryManager);
-    const result = await super.uploadPackage(dataOrPath, user);
-    if (mayInstall && result.installedLibraries.length > 0) {
-      await this.policy.audit.record(result.installedLibraries, {
-        source: 'upload',
-        actorUserId: actor.actor.accountId,
-        sha256: await sha256File(dataOrPath),
-      });
+    if (!mayInstall) {
+      await assertPackageLibrariesInstalled(manifest.libraries, this.libraryManager);
+      return super.uploadPackage(dataOrPath, user);
     }
-    return result;
+    const change = {
+      source: 'upload',
+      actorUserId: actor.actor.accountId,
+      sha256: await sha256File(dataOrPath),
+    } as const;
+    let result: UploadResult | undefined;
+    await auditBeforeInstall(
+      { libraries: manifest.libraries, installed: this.libraryManager },
+      { sink: this.policy.audit, change },
+      async () => (result = await super.uploadPackage(dataOrPath, user)).installedLibraries,
+    );
+    return result as UploadResult;
   }
 
   /** Refused for everyone: libraries arrive only through reviewed seed packages or audited imports (D-041). */
@@ -187,7 +196,7 @@ export class HvlH5PEditor extends H5PEditor {
     throw hubDisabled();
   }
 
-  /** Refused for everyone: the public Content Hub is off (`H5P-001` privacy rule). */
+  /** Refused for everyone: the public Content Hub is off (H5pConfigFactory; D-041). */
   override async getContentHubContent(_contentHubId: string, _user: IUser): Promise<never> {
     throw hubDisabled();
   }

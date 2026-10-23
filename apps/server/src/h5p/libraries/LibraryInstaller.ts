@@ -8,14 +8,17 @@
  * Invariants:
  *   - The archive is checked (`inspectZip`) and its hash compared before Lumi opens it.
  *   - Only libraries are installed; content in a seed package is never stored.
- *   - Audit rows have `source: 'seed'`, no actor, and the package hash; an unchanged library writes none.
+ *   - Audit rows have `source: 'seed'`, no actor, and the package hash; they are written before the install
+ *     (./auditBeforeInstall.ts); an unchanged library writes none.
  * Collaborators: ./seedLibraries.ts, ./LibraryAuditRecorder.ts, ./sha256Sums.ts, ../../security/zipEntryGuard.ts,
  *   Lumi's PackageImporter (installLibrariesFromPackage).
  * Tests: apps/server/test/h5p/libraries/seedLibraries.int.test.ts
  */
 import type { ILibraryInstallResult } from '@lumieducation/h5p-server';
 import { inspectZip } from '../../security/zipEntryGuard.js';
+import { auditBeforeInstall, type InstalledLibraries } from './auditBeforeInstall.js';
 import type { LibraryAuditSink } from './LibraryAuditRecorder.js';
+import { readPackageManifest } from './packageManifest.js';
 import { sha256File } from './sha256Sums.js';
 
 /** The part of Lumi's PackageImporter the installer uses. */
@@ -44,10 +47,12 @@ export class LibraryInstaller {
   /**
    * @param importer - Lumi's package importer of the server's editor.
    * @param audit - Where changes are recorded.
+   * @param installed - Lumi's library manager, to predict the changes before they happen.
    */
   constructor(
     private readonly importer: LibraryPackageImporter,
     private readonly audit: LibraryAuditSink,
+    private readonly installed: InstalledLibraries,
   ) {}
 
   /**
@@ -66,8 +71,13 @@ export class LibraryInstaller {
     await inspectZip(packagePath);
     const sha256 = await sha256File(packagePath);
     if (sha256 !== expectedSha256) throw new PackageHashMismatchError(fileName);
-    const results = await this.importer.installLibrariesFromPackage(packagePath);
-    await this.audit.record(results, { source: 'seed', actorUserId: null, sha256 });
-    return results;
+    const { libraries } = await readPackageManifest(packagePath);
+    return [
+      ...(await auditBeforeInstall(
+        { libraries, installed: this.installed },
+        { sink: this.audit, change: { source: 'seed', actorUserId: null, sha256 } },
+        () => this.importer.installLibrariesFromPackage(packagePath),
+      )),
+    ];
   }
 }

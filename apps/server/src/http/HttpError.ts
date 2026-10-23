@@ -5,7 +5,8 @@
  *      error handler turns into a translated JSON answer, without ever showing an internal message.
  * Spec: H5P-006, PROD-012
  * Invariants:
- *   - The message is a locale key; the HTTP status is between 400 and 599.
+ *   - The message is a locale key. Callers pass a 4xx status (5xx for faults); toErrorResponse turns anything
+ *     outside 400–499 into 500.
  * Collaborators: ./h5pErrorResponse.ts, ./h5pLocals.ts.
  * Tests: apps/server/test/http/h5pErrorResponse.test.ts
  */

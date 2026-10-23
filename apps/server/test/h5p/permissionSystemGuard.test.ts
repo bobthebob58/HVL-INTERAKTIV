@@ -1,7 +1,7 @@
 /**
  * Tests for the startup guard that every H5P component uses HVL's permission system.
  *
- * Spec: H5P-006, SEC-003
+ * Spec: H5P-006
  */
 import { H5PEditor, H5PPlayer } from '@lumieducation/h5p-server';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -43,7 +43,7 @@ describe('permissionSystemGuard', () => {
     );
   });
 
-  it('[SEC-003] names the one component that uses another permission system', async () => {
+  it('[H5P-006] names the one component that uses another permission system', async () => {
     const { editor, player, permissions } = await engineTestbed();
     (editor.packageImporter as unknown as { permissionSystem: unknown }).permissionSystem =
       new RulePermissions();

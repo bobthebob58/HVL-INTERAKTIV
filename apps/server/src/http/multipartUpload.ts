@@ -12,6 +12,7 @@
  *   - The file is written as `upload.<ext>` in a new `mkdtemp` folder; `cleanup()` removes the folder and must be
  *     called in a `finally` block by the route.
  *   - Over `maxFileSize` bytes: 413 `error.tooLarge`; malformed or non-multipart requests: 400.
+ *   - No failure leaves a rejected promise unhandled (a truncated body would otherwise end the process).
  * Collaborators: ./routes/ajaxRoutes.ts, ../security/ContentFileHeaders.ts (MIME type by extension).
  * Tests: apps/server/test/http/multipartUpload.test.ts
  */
@@ -93,22 +94,25 @@ export async function readMultipart(req: Request, options: MultipartOptions): Pr
       stream.on('limit', () => {
         tooLarge = true;
       });
-      writes.push(
-        pipeline(stream, createWriteStream(path)).then(() => {
-          if (tooLarge)
-            throw new HttpError(413, 'error.tooLarge', { maxMb: Math.ceil(options.maxFileSize / MB) });
-          file = {
-            name: filename,
-            mimetype: contentTypeFor(`x${ext}`).split(';')[0] ?? '',
-            size: stream.bytesRead,
-            tempFilePath: path,
-          };
-        }),
-      );
+      const write = pipeline(stream, createWriteStream(path)).then(() => {
+        if (tooLarge)
+          throw new HttpError(413, 'error.tooLarge', { maxMb: Math.ceil(options.maxFileSize / MB) });
+        file = {
+          name: filename,
+          mimetype: contentTypeFor(`x${ext}`).split(';')[0] ?? '',
+          size: stream.bytesRead,
+          tempFilePath: path,
+        };
+      });
+      // SECURITY: when the request fails first (a truncated body), nobody awaits this write; without a handler
+      // its rejection is unhandled and ends the Node process. The error is read through `writes` below.
+      write.catch(() => undefined);
+      writes.push(write);
     });
     await pipeline(req, busboy);
     await Promise.all(writes);
   } catch (error) {
+    await Promise.allSettled(writes);
     await cleanup();
     if (error instanceof HttpError) throw error;
     throw new HttpError(400, 'error.badRequest');

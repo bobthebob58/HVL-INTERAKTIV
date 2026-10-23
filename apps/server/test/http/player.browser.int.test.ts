@@ -3,7 +3,7 @@
  * Daylight theme tokens are active and can be overridden (spike step 5), and a content type's state survives a
  * reload (H5P-005). The content type is a synthetic stand-in until the Hub packages arrive (spike step 4, Q7).
  *
- * Spec: H5P-004, H5P-005, H5P-001
+ * Spec: H5P-001, H5P-005, SEC-008
  */
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
@@ -31,6 +31,18 @@ const PROBE_JS = `H5P.MultiChoice = (function ($) {
   return Probe;
 })(H5P.jQuery);`;
 
+/** Metadata an author could send, each field trying to run script in H5P's "Rights of use" dialog. */
+const RIGHTS_PAYLOAD = {
+  title: 'Rettar',
+  license: 'CC BY',
+  licenseVersion: '4.0',
+  source: 'https://x.example/"><img src=x onerror="window.__hvlSource=1">',
+  licenseExtras: '<img src=x onerror="window.__hvlExtras=1">',
+  yearFrom: '<img src=x onerror="window.__hvlYear=1">',
+  contentType: 'Quiz<img src=x onerror="window.__hvlType=1">',
+  authors: [{ name: 'Ola<img src=x onerror="window.__hvlAuthor=1">', role: 'Author' }],
+};
+
 const LIBRARIES = HTTP_TEST_LIBRARIES.map((lib) =>
   lib.machineName === MULTI_CHOICE.machineName
     ? { ...lib, files: { ...lib.files, 'js/main.js': PROBE_JS } }
@@ -43,23 +55,26 @@ describeWithServices('H5P player in a browser', () => {
   let base: string;
   let learner: TestActor;
   let contentId: string;
+  let rightsId: string;
   beforeAll(async () => {
     tb = await openHttpTestbed(LIBRARIES);
     const author = await tb.actor('author');
     learner = await tb.actor('learner');
-    const body = {
-      library: 'H5P.MultiChoice 1.16',
-      params: { params: { question: 'Kva?', answers: ['Ja'] }, metadata: { title: 'Probe', license: 'U' } },
+    const publish = async (metadata: object) => {
+      const params = { params: { question: 'Kva?', answers: ['Ja'] }, metadata };
+      const res = await request(tb.app)
+        .post('/h5p/content')
+        .set(...author.header)
+        .send({ library: 'H5P.MultiChoice 1.16', params });
+      const id = (res.body as { contentId: string }).contentId;
+      await tb.db.h5PContent.update({
+        where: { id },
+        data: { status: 'published', visibility: 'organisation' },
+      });
+      return id;
     };
-    const res = await request(tb.app)
-      .post('/h5p/content')
-      .set(...author.header)
-      .send(body);
-    contentId = (res.body as { contentId: string }).contentId;
-    await tb.db.h5PContent.update({
-      where: { id: contentId },
-      data: { status: 'published', visibility: 'organisation' },
-    });
+    contentId = await publish({ title: 'Probe', license: 'U' });
+    rightsId = await publish(RIGHTS_PAYLOAD);
     server = tb.app.listen(0, '127.0.0.1');
     await new Promise((resolve) => server.once('listening', resolve));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -70,19 +85,19 @@ describeWithServices('H5P player in a browser', () => {
   });
 
   describeWithBrowser('[H5P-004] player page in Chromium', (browser) => {
-    const openPlayer = async () => {
+    const openPlayer = async (id = contentId) => {
       const page = await browser().newPage();
       await page.setExtraHTTPHeaders({ [learner.header[0]]: learner.header[1] });
       const problems: string[] = [];
       page.on('console', (m) => void (m.type() === 'error' && problems.push(`console: ${m.text()}`)));
       page.on('pageerror', (e) => problems.push(`page: ${e.message}`));
       page.on('response', (r) => void (r.status() >= 400 && problems.push(`${r.status()} ${r.url()}`)));
-      await page.goto(`${base}/h5p/play/${contentId}`);
+      await page.goto(`${base}/h5p/play/${id}`);
       await page.waitForSelector('.hvl-probe-attached .hvl-probe');
       return { page, problems };
     };
 
-    it('[H5P-004] runs H5P Core 1.28 and attaches the content type without errors or failed requests', async () => {
+    it('[H5P-001] runs H5P Core 1.28 and attaches the content type without errors or failed requests', async () => {
       const { page, problems } = await openPlayer();
       expect(problems).toEqual([]);
       expect(
@@ -100,6 +115,20 @@ describeWithServices('H5P player in a browser', () => {
       expect((await token()).toUpperCase()).toBe('#006FBF');
       await page.addStyleTag({ content: ':root { --h5p-theme-main-cta-base: #004357; }' });
       expect(await token()).toBe('#004357');
+      await page.close();
+    }, 30_000);
+
+    it('[SEC-008] author metadata shown in the "Rights of use" dialog never runs as script', async () => {
+      const { page } = await openPlayer(rightsId);
+      await page.click('.h5p-copyrights button');
+      await page.waitForSelector('.h5p-popup-dialog', { state: 'visible' });
+      await page.waitForTimeout(300);
+      const fired = await page.evaluate(() =>
+        ['__hvlSource', '__hvlExtras', '__hvlYear', '__hvlType', '__hvlAuthor'].filter(
+          (flag) => flag in window,
+        ),
+      );
+      expect(fired).toEqual([]);
       await page.close();
     }, 30_000);
 

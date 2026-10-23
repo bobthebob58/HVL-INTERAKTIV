@@ -42,7 +42,12 @@ const expectRefused = async (text: string, name = 'drawing.svg') => {
 };
 
 describe('[SEC-001] SvgSanitizer', () => {
-  it('[SEC-001] the corpus has one fixture per attack named in the brief', () => {
+  it('[SEC-001] the corpus has an annotated fixture for each attack class SEC-001 names', () => {
+    // WHY: one fixture per class spec 01 SEC-001 names: entities, scripts, handlers, foreignObject, script and
+    // data:text/html URLs, external references.
+    const named = 'billion-laughs xxe-external-entity inline-script event-handlers foreignobject-html ';
+    for (const name of `${named}javascript-href data-html-href external-image external-use`.split(' '))
+      expect(malicious, name).toContain(`${name}.svg`);
     expect(malicious.length).toBeGreaterThanOrEqual(17);
     for (const name of malicious) expect(fixture('malicious', name), name).toMatch(/<!-- Attack: .{20,}-->/);
     expect(benign.length).toBeGreaterThanOrEqual(6);
