@@ -9,12 +9,23 @@
  *     (doc-lint compares this list with .env.example).
  *   - Error messages name variables, never their values (values can be secrets).
  *   - With NODE_ENV=production, the checks in ./productionChecks.ts also apply.
- * Collaborators: apps/server/.env.example, ./productionChecks.ts, ../privacy/pseudonymSecrets.ts,
- *   ../h5p/H5pConfigFactory.ts.
+ * Collaborators: apps/server/.env.example, ./envParsers.ts, ./productionChecks.ts,
+ *   ../privacy/pseudonymSecrets.ts, ../h5p/H5pConfigFactory.ts.
  * Tests: apps/server/test/config/env.test.ts
  */
 import { z } from 'zod';
 import { parsePseudonymSecrets } from '../privacy/pseudonymSecrets.js';
+import {
+  FEIDE_GROUP_PATTERN,
+  FEIDE_ID_PATTERN,
+  FEIDE_REALM_PATTERN,
+  ltiPlatformList,
+  toJson,
+  toKeyring,
+  toMatchingList,
+  toOrigin,
+  toOriginList,
+} from './envParsers.js';
 import { productionProblems } from './productionChecks.js';
 
 /** The schema of every environment variable the server reads. */
@@ -45,6 +56,34 @@ export const envSchema = z.object({
       return z.NEVER;
     }
   }),
+  PUBLIC_BASE_URL: z
+    .url({ protocol: /^https?$/ })
+    .transform(toOrigin)
+    .default('http://localhost:3000'),
+  PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
+  CANVAS_ORIGINS: z.string().transform(toOriginList).default([]),
+  LTI_PLATFORMS: z.string().transform(toJson).pipe(ltiPlatformList).default([]),
+  LTI_TOKEN_MAX_AGE_SECONDS: z.coerce.number().int().min(1).max(60).default(10),
+  FEIDE_ISSUER: z.url({ protocol: /^https?$/ }).default('https://auth.dataporten.no'),
+  FEIDE_CLIENT_ID: z.string().min(1),
+  FEIDE_CLIENT_SECRET: z.string().min(1),
+  FEIDE_GROUPS_API_URL: z.url({ protocol: /^https?$/ }).default('https://groups-api.dataporten.no'),
+  ALLOWED_FEIDE_ORGS: z
+    .string()
+    .transform(toMatchingList(FEIDE_REALM_PATTERN, 'a Feide realm like hvl.no'))
+    .default(['hvl.no']),
+  ADMIN_FEIDE_IDS: z
+    .string()
+    .transform(toMatchingList(FEIDE_ID_PATTERN, 'a Feide ID like name@hvl.no'))
+    .default([]),
+  AUTHOR_COURSE_GROUPS: z
+    .string()
+    .transform(toMatchingList(FEIDE_GROUP_PATTERN, 'a Feide group ID like fc:…'))
+    .default([]),
+  IDENTITY_HASH_KEYS: z.string().transform(toKeyring),
+  DATA_ENCRYPTION_KEYS: z.string().transform(toKeyring),
+  URL_SIGNING_KEYS: z.string().transform(toKeyring),
 });
 
 /** The parsed configuration. */

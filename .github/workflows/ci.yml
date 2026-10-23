@@ -49,6 +49,12 @@ jobs:
       S3_SECRET_ACCESS_KEY: test
       # Test-only secrets (32 bytes each); production secrets live in the secret store (DATA-002).
       PSEUDONYM_SECRETS: 2025=Y2ktb25seS1wc2V1ZG9ueW0tc2VjcmV0LTIwMjUtLS0tLQ==,2026=Y2ktb25seS1wc2V1ZG9ueW0tc2VjcmV0LTIwMjYtLS0tLQ==
+      IDENTITY_HASH_KEYS: ci1=Y2ktb25seS1pZGVudGl0eS1oYXNoLWtleS0xLWRvLW5vdC11c2UtLQ==
+      DATA_ENCRYPTION_KEYS: ci1=Y2ktb25seS1kYXRhLWVuY3J5cHRpb24ta2V5LTEtZG8tbm90LXVzZS0=
+      URL_SIGNING_KEYS: ci1=Y2ktb25seS11cmwtc2lnbmluZy1rZXktMS1kby1ub3QtdXNlLS0tLS0=
+      # Mock Feide and mock Canvas from tools/mock-platform; tests start them in-process (D-049).
+      FEIDE_CLIENT_ID: hvli-ci-client
+      FEIDE_CLIENT_SECRET: ci-only-feide-client-secret
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

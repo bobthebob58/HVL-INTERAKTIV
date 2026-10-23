@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { createHash } from 'node:crypto';
 import { InvalidEnvironmentError, loadEnv, loadEnvPart } from '../../src/config/env.js';
+import { productionEnv, VALID_ENV } from '../support/authEnv.js';
 
 const SECRET = Buffer.alloc(32, 7).toString('base64');
 const OTHER = Buffer.alloc(32, 8).toString('base64');
@@ -13,13 +14,7 @@ const OTHER = Buffer.alloc(32, 8).toString('base64');
 const random = (seed: number) =>
   Buffer.from(Array.from({ length: 32 }, (_, i) => ((seed * 31 + i * 7) % 256) | 0x80)).toString('base64');
 const AUTUMN_2026 = new Date('2026-10-22T12:00:00Z');
-const VALID = {
-  DATABASE_URL: 'postgresql://u:p@localhost:5432/db',
-  REDIS_URL: 'redis://localhost:6379',
-  S3_ACCESS_KEY_ID: 'key',
-  S3_SECRET_ACCESS_KEY: 'very-secret-value',
-  PSEUDONYM_SECRETS: `2026=${SECRET}`,
-};
+const VALID = { ...VALID_ENV, PSEUDONYM_SECRETS: `2026=${SECRET}` };
 
 const problemsOf = (env: Record<string, string>): string[] => {
   try {
@@ -115,7 +110,7 @@ describe('[DATA-002] pseudonym secret configuration', () => {
 });
 
 describe('[DATA-002] production-only configuration checks', () => {
-  const production = (secrets: string) => ({ ...VALID, NODE_ENV: 'production', PSEUDONYM_SECRETS: secrets });
+  const production = (secrets: string) => productionEnv({ PSEUDONYM_SECRETS: secrets });
   const problemsAt = (env: Record<string, string>, now: Date) => {
     try {
       loadEnv(env, now);

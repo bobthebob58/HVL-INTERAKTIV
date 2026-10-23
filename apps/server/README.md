@@ -43,8 +43,9 @@ missing variable fails the run instead (D-023).
 
 | Path | Responsibility |
 |---|---|
-| `src/config/env.ts` | The zod schema of every environment variable; startup fails with the variable's name |
-| `src/config/productionChecks.ts` | Extra startup rules for `NODE_ENV=production` (a current-year pseudonym secret exists; no pseudonym secret is readable text or low in distinct bytes) |
+| `src/config/env.ts`, `envParsers.ts` | The zod schema of every environment variable (lists, origins, key rings, `LTI_PLATFORMS` JSON); startup fails with the variable's name |
+| `src/config/productionChecks.ts` | Extra startup rules for `NODE_ENV=production`: a current-year pseudonym secret exists; no pseudonym secret or ring key is readable text, low in distinct bytes or used twice; every public, Feide, Canvas and LTI platform URL is https |
+| `src/security/keys/` | Key rings with HKDF purpose keys (D-055, D-056, D-058): stable identity hashes with rotation, AES-256-GCM encryption of secrets at rest |
 | `src/logging/` | pino logger with key-based redaction (sensitive keys, endings and Feide attributes) and pattern-based redaction of credentials and e-mail addresses in free text; Prisma errors are logged by name and code only, in `err` and in `msg`. Names in free text cannot be detected, so callers never put them in messages |
 | `src/privacy/` | Academic-year boundary, pseudonym secrets, `deriveLearnerKey` (HMAC-SHA256) |
 | `src/i18n/` | Server messages in `nn` (default), `nb`, `en`, and the typed `t()` lookup |
@@ -199,7 +200,7 @@ fails if the two disagree. Summary:
 | `DATA-002` Pseudonymous learners | `src/privacy/*`, `src/config/productionChecks.ts`, CHECK constraint in the first migration | `test/privacy/deriveLearnerKey.test.ts`, `test/config/env.test.ts`, `test/db/schema.int.test.ts` |
 | `DATA-009`, `NFR-006` No personal data in logs | `src/logging/*` | `test/logging/logger.test.ts`, `test/logging/loggerMessages.test.ts`, `test/logging/redactText.test.ts` |
 | `PROD-012`, `DOC-009` Three languages, Nynorsk first | `src/i18n/*` | `test/i18n/translate.test.ts` |
-| `DOC-008` Configuration documented | `src/config/env.ts`, `.env.example` | `test/config/env.test.ts` |
+| `DOC-008` Configuration documented | `src/config/env.ts`, `envParsers.ts`, `.env.example` | `test/config/env.test.ts`, `test/config/envParsers.test.ts` |
 
 Decisions that shape this package: D-023 (test services), D-024 (TypeScript 6.0), D-025 (own S3 adapters),
 D-026 (library storage), D-027 (fetched H5P files), D-028 (user-data adapter), D-030 (accepted

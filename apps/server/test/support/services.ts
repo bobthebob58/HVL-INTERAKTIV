@@ -15,6 +15,11 @@ const REQUIRED = [
   'S3_ACCESS_KEY_ID',
   'S3_SECRET_ACCESS_KEY',
   'PSEUDONYM_SECRETS',
+  'FEIDE_CLIENT_ID',
+  'FEIDE_CLIENT_SECRET',
+  'IDENTITY_HASH_KEYS',
+  'DATA_ENCRYPTION_KEYS',
+  'URL_SIGNING_KEYS',
 ];
 const missing = REQUIRED.filter((name) => !process.env[name]);
 const configured = missing.length === 0;
