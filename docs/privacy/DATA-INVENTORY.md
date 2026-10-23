@@ -343,4 +343,5 @@ Not database models, so the inventory check does not read this section. Redis is
 | session `createdAt`, `lastSeenAt` | Idle and absolute expiry | None | n/a | Logout, 2 h idle or 12 h absolute | Redis |
 | login `state`, `nonce`, `codeVerifier` | Bind the Feide callback to this browser (login CSRF, PKCE) | Secret | n/a | Single use, at most 10 minutes | Redis |
 | login `returnTo` | A checked local path to open after login | None | n/a | Single use, at most 10 minutes | Redis |
+| login `createdAt` | Enforces the 10-minute limit alongside the Redis expiry | None | n/a | Single use, at most 10 minutes | Redis |
 | LTI cache | Platforms' public JWKS and keysets (D-050) | None | n/a | Cache lifetime | Redis |

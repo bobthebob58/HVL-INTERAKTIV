@@ -18,6 +18,7 @@ describe('[DATA-009] Session 3 redaction by key', () => {
       'code_verifier',
       'sid',
       'sessionId',
+      'txId',
       'csrf',
       'csrfToken',
       'grant',

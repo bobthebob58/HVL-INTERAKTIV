@@ -70,6 +70,7 @@ export const SENSITIVE_KEYS: ReadonlySet<string> = new Set([
   'codeverifier',
   'sid',
   'sessionid',
+  'txid',
   'csrf',
   'grant',
   'ltimessagehint',
