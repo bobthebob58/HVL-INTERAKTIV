@@ -5493,7 +5493,11 @@ asks ltijs to load them lazily. ESLint forbids importing <code>RedisCacheManager
 copies the claims for the handler only after <code>saveIdToken</code> returns, so our storage filters a copy, never its
 argument; a resumed context (<code>getLaunchContext</code>) has only the stored claims, so the claim allowlist (D-052)
 must keep everything a later request reads (e.g. Deep Linking settings); and our handler must pass Express&#39;s
-lower-case <code>req.headers</code> through, or ltijs skips its <code>Sec-Fetch-Site</code> check without an error.</li>
+lower-case <code>req.headers</code> through, or ltijs skips its <code>Sec-Fetch-Site</code> check without an error. ltijs 7.0.7&#39;s
+launch page calls <code>localStorage.removeItem</code> outside its <code>try</code>, so where frame storage is blocked (the getter
+throws) the launch form is never submitted. A static guard script (<code>src/lti/pages/client/ltijsStorageGuard.js</code>)
+runs before ltijs&#39;s scripts and, only when the getter throws, puts a stand-in in its place that stores nothing
+and whose <code>setItem</code> still fails, so ltijs falls back to Platform Storage as designed.</li>
 </ul>
 <h3 id="decisions--d-051--lti-platforms-and-deployments-from-lti_platforms-deployment-ids-checked-by-us" tabindex="-1">D-051 · LTI platforms and deployments from <code>LTI_PLATFORMS</code>; deployment IDs checked by us</h3>
 <ul>

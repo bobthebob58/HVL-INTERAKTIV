@@ -608,7 +608,11 @@ loading of one spec per session are kept.
   copies the claims for the handler only after `saveIdToken` returns, so our storage filters a copy, never its
   argument; a resumed context (`getLaunchContext`) has only the stored claims, so the claim allowlist (D-052)
   must keep everything a later request reads (e.g. Deep Linking settings); and our handler must pass Express's
-  lower-case `req.headers` through, or ltijs skips its `Sec-Fetch-Site` check without an error.
+  lower-case `req.headers` through, or ltijs skips its `Sec-Fetch-Site` check without an error. ltijs 7.0.7's
+  launch page calls `localStorage.removeItem` outside its `try`, so where frame storage is blocked (the getter
+  throws) the launch form is never submitted. A static guard script (`src/lti/pages/client/ltijsStorageGuard.js`)
+  runs before ltijs's scripts and, only when the getter throws, puts a stand-in in its place that stores nothing
+  and whose `setItem` still fails, so ltijs falls back to Platform Storage as designed.
 
 ### D-051 · LTI platforms and deployments from `LTI_PLATFORMS`; deployment IDs checked by us
 - **Context:** `LTI-001` requires rejecting a launch with a wrong deployment ID. ltijs 7 checks only that the claim
