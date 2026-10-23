@@ -1,0 +1,45 @@
+{
+  "description": "A question about colour with colour names as answers, which is not colour coding.",
+  "mainLibrary": "H5P.MultiChoice 1.16",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "question": "<p>Kva farge har HVL-logoen?</p>",
+    "answers": [
+      {
+        "text": "<div>Blå</div>",
+        "correct": true,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Ja. Logoen er mørk blå.</div>",
+          "notChosenFeedback": ""
+        }
+      },
+      {
+        "text": "<div>Gul</div>",
+        "correct": false,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Nei. Gul er ein kontrastfarge.</div>",
+          "notChosenFeedback": ""
+        }
+      }
+    ],
+    "overallFeedback": [
+      {
+        "from": 0,
+        "to": 100,
+        "feedback": ""
+      }
+    ],
+    "behaviour": {
+      "enableRetry": true,
+      "enableSolutionsButton": true,
+      "singlePoint": false,
+      "randomAnswers": false
+    }
+  },
+  "expected": []
+}

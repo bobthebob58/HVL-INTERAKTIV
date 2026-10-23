@@ -1,0 +1,225 @@
+{
+  "description": "A Column with four tasks and a text.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<p>Innleiing.</p>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000102",
+          "metadata": {
+            "contentType": "Text",
+            "license": "U",
+            "title": "Tekst"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.MultiChoice 1.16",
+          "params": {
+            "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+            "answers": [
+              {
+                "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                "correct": true,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                  "notChosenFeedback": ""
+                }
+              },
+              {
+                "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                "correct": false,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                  "notChosenFeedback": ""
+                }
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 100,
+                "feedback": ""
+              }
+            ],
+            "behaviour": {
+              "enableRetry": true,
+              "enableSolutionsButton": true,
+              "singlePoint": false,
+              "randomAnswers": false
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000103",
+          "metadata": {
+            "contentType": "Multiple Choice",
+            "license": "U",
+            "title": "Spørsmål"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.MultiChoice 1.16",
+          "params": {
+            "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+            "answers": [
+              {
+                "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                "correct": true,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                  "notChosenFeedback": ""
+                }
+              },
+              {
+                "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                "correct": false,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                  "notChosenFeedback": ""
+                }
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 100,
+                "feedback": ""
+              }
+            ],
+            "behaviour": {
+              "enableRetry": true,
+              "enableSolutionsButton": true,
+              "singlePoint": false,
+              "randomAnswers": false
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000104",
+          "metadata": {
+            "contentType": "Multiple Choice",
+            "license": "U",
+            "title": "Spørsmål"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.MultiChoice 1.16",
+          "params": {
+            "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+            "answers": [
+              {
+                "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                "correct": true,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                  "notChosenFeedback": ""
+                }
+              },
+              {
+                "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                "correct": false,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                  "notChosenFeedback": ""
+                }
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 100,
+                "feedback": ""
+              }
+            ],
+            "behaviour": {
+              "enableRetry": true,
+              "enableSolutionsButton": true,
+              "singlePoint": false,
+              "randomAnswers": false
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000105",
+          "metadata": {
+            "contentType": "Multiple Choice",
+            "license": "U",
+            "title": "Spørsmål"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.MultiChoice 1.16",
+          "params": {
+            "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+            "answers": [
+              {
+                "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                "correct": true,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                  "notChosenFeedback": ""
+                }
+              },
+              {
+                "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                "correct": false,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                  "notChosenFeedback": ""
+                }
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 100,
+                "feedback": ""
+              }
+            ],
+            "behaviour": {
+              "enableRetry": true,
+              "enableSolutionsButton": true,
+              "singlePoint": false,
+              "randomAnswers": false
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000106",
+          "metadata": {
+            "contentType": "Multiple Choice",
+            "license": "U",
+            "title": "Spørsmål"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": [
+    {
+      "path": "content",
+      "message": "PED-H08.tooMany"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "description": "Choices with real text, one of which mentions a colour in passing.",
+  "mainLibrary": "H5P.BranchingScenario 1.10",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "branchingScenario": {
+      "title": "Planlegg ei samling",
+      "startScreen": {
+        "startScreenTitle": "<p>Planlegg ei samling</p>",
+        "startScreenSubtitle": "<p>Vel og sjå kva som skjer.</p>"
+      },
+      "endScreens": [
+        {
+          "endScreenTitle": "<p>Slutt</p>",
+          "endScreenSubtitle": "<p>Start på nytt om du vil.</p>",
+          "endScreenScore": 0,
+          "contentId": -1
+        }
+      ],
+      "content": [
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Korleis førebur du studentane?</p>",
+                "alternatives": [
+                  {
+                    "text": "Eg lagar ein kort video og ein quiz.",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Godt val.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Eg legg ut den raude boka som pensum.",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Svakare val.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000052",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Val"
+            }
+          },
+          "contentId": 0,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        }
+      ],
+      "scoringOptionGroup": {
+        "scoringOption": "no-score"
+      },
+      "behaviour": {
+        "enableBackwardsNavigation": false,
+        "forceContentFinished": false,
+        "randomizeBranchingQuestions": false
+      }
+    }
+  },
+  "expected": []
+}

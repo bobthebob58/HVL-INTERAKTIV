@@ -1,0 +1,73 @@
+{
+  "description": "An H5P.Video next to a text that links to its transcript.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.Video 1.6",
+          "params": {
+            "sources": [
+              {
+                "path": "videos/clip.webm",
+                "mime": "video/webm",
+                "copyright": {
+                  "license": "U"
+                }
+              }
+            ],
+            "visuals": {
+              "fit": true,
+              "controls": true
+            },
+            "playback": {
+              "autoplay": false,
+              "loop": false
+            },
+            "a11y": [
+              {
+                "label": "Nynorsk",
+                "kind": "subtitles",
+                "srcLang": "nn",
+                "track": {
+                  "path": "videos/clip.nn.vtt",
+                  "mime": "text/vtt",
+                  "copyright": {
+                    "license": "U"
+                  }
+                }
+              }
+            ]
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000028",
+          "metadata": {
+            "contentType": "Video",
+            "license": "U",
+            "title": "Video"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<p>Les <a href=\"https://www.hvl.no/video/transkripsjon.pdf\">transkripsjonen av videoen</a>.</p>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000029",
+          "metadata": {
+            "contentType": "Text",
+            "license": "U",
+            "title": "Tekst"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": []
+}

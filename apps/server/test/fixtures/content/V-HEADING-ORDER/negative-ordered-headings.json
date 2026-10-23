@@ -1,0 +1,43 @@
+{
+  "description": "h2 → h3 → h3 → h2 in one text, and a text that starts at h3.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<h2>Tre fasar</h2><h3>Før</h3><h3>Under</h3><h2>Etter</h2>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000045",
+          "metadata": {
+            "contentType": "Text",
+            "license": "U",
+            "title": "Tekst"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<h3>Oppsummering</h3><p>Kort.</p>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000046",
+          "metadata": {
+            "contentType": "Text",
+            "license": "U",
+            "title": "Tekst"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": []
+}

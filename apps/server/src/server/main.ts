@@ -7,6 +7,8 @@
  * Spec: NFR-002, LTI-001, LTI-002, H5P-001
  * Invariants:
  *   - Invalid configuration stops the start with the list of problems and exit code 1; secrets are never printed.
+ *     That includes the validator's hint thresholds (content/laeringsdesign/hint-thresholds.yaml), read before any
+ *     connection is made (D-073).
  *   - The server listens only after the platform sync and the platform-key re-encryption (D-056) have finished.
  *   - A port that cannot be opened stops the start with exit code 1 instead of a process that serves nothing.
  *   - SIGTERM and SIGINT stop the jobs, stop accepting connections, then close the clients; exit code 0.
@@ -14,12 +16,14 @@
  *     and only under `/_next/`.
  * Collaborators: ./createApp.ts, ../h5p/createH5pRuntime.ts, ../lti/platforms/syncLtiPlatforms.ts,
  *   ../lti/platforms/reencryptPlatformKeys.ts,
- *   ../lti/storage/LtiRecordCleanupJob.ts, ../config/env.ts, ../web/nextWebApp.ts.
+ *   ../lti/storage/LtiRecordCleanupJob.ts, ../config/env.ts, ../config/validationContext.ts,
+ *   ../validation/validateContent.ts, ../web/nextWebApp.ts.
  * Tests: apps/server/test/server/main.smoke.test.ts
  */
 import type { Server } from 'node:http';
 import { pathToFileURL } from 'node:url';
 import { InvalidEnvironmentError, loadEnv, type Env } from '../config/env.js';
+import { InvalidValidationContextError, loadValidationContext } from '../config/validationContext.js';
 import { createH5pRuntime } from '../h5p/createH5pRuntime.js';
 import { createPrismaClient } from '../infra/prismaClient.js';
 import { connectRedis } from '../infra/redisClient.js';
@@ -29,6 +33,7 @@ import { syncLtiPlatforms } from '../lti/platforms/syncLtiPlatforms.js';
 import { LtiRecordCleanupJob } from '../lti/storage/LtiRecordCleanupJob.js';
 import { createLogger } from '../logging/logger.js';
 import { DataEncryption } from '../security/keys/DataEncryption.js';
+import { createContentValidator } from '../validation/validateContent.js';
 import { loadWebApp } from '../web/nextWebApp.js';
 import { createApp } from './createApp.js';
 
@@ -45,12 +50,13 @@ export interface RunningServer {
  * @returns The listening server and its stop function.
  */
 export async function startServer(env: Env): Promise<RunningServer> {
+  const validator = createContentValidator(loadValidationContext(env));
   const logger = createLogger({ level: env.LOG_LEVEL });
   const db = createPrismaClient(env.DATABASE_URL);
   const redis = await connectRedis(env.REDIS_URL, logger);
   const h5p = await createH5pRuntime({ env, logger, db, redis, s3: createS3Client(env) });
   const web = env.WEB_APP === 'off' ? undefined : await loadWebApp(env.WEB_APP);
-  const { app, lti } = createApp({ env, logger, db, redis, h5p, ...(web ? { web } : {}) });
+  const { app, lti } = createApp({ env, logger, db, redis, h5p, validator, ...(web ? { web } : {}) });
   const synced = await syncLtiPlatforms(env.LTI_PLATFORMS, { platforms: lti.provider.platformManager, db });
   logger.info(synced, 'LTI platforms synchronised');
   const rewritten = await reencryptPlatformKeys(db, new DataEncryption(env.DATA_ENCRYPTION_KEYS));
@@ -93,7 +99,18 @@ async function main(): Promise<void> {
     }
     throw error;
   }
-  const running = await startServer(env);
+  let running: RunningServer;
+  try {
+    running = await startServer(env);
+  } catch (error) {
+    // WHY: a bad thresholds file is configuration, reported like the environment: the problems, no stack trace.
+    if (error instanceof InvalidValidationContextError) {
+      process.stderr.write(`${error.message}\n`);
+      process.exitCode = 1;
+      return;
+    }
+    throw error;
+  }
   let stopping = false;
   const shutdown = (): void => {
     if (stopping) return;

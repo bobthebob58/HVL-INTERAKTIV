@@ -1,0 +1,72 @@
+{
+  "description": "A BranchingScenario start image whose alt text is blank.",
+  "mainLibrary": "H5P.BranchingScenario 1.10",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "branchingScenario": {
+      "title": "Planlegg ei samling",
+      "startScreen": {
+        "startScreenTitle": "<p>Planlegg ei samling</p>",
+        "startScreenSubtitle": "<p>Vel og sjå kva som skjer.</p>",
+        "startScreenImage": {
+          "path": "images/diagram.png",
+          "mime": "image/png",
+          "copyright": {
+            "license": "U"
+          },
+          "width": 960,
+          "height": 540
+        },
+        "startScreenAltText": "  "
+      },
+      "endScreens": [
+        {
+          "endScreenTitle": "<p>Slutt</p>",
+          "endScreenSubtitle": "<p>Start på nytt om du vil.</p>",
+          "endScreenScore": 0,
+          "contentId": -1
+        }
+      ],
+      "content": [
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>Situasjonen.</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000009",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Situasjonen"
+            }
+          },
+          "contentId": 0,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        }
+      ],
+      "scoringOptionGroup": {
+        "scoringOption": "no-score"
+      },
+      "behaviour": {
+        "enableBackwardsNavigation": false,
+        "forceContentFinished": false,
+        "randomizeBranchingQuestions": false
+      }
+    }
+  },
+  "expected": [
+    {
+      "path": "branchingScenario.startScreen.startScreenAltText",
+      "message": "V-IMG-ALT.missing"
+    }
+  ]
+}

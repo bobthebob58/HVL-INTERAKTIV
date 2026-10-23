@@ -1,0 +1,156 @@
+{
+  "description": "An InteractiveVideo with a bookmark at 20 minutes, so it is at least 20 minutes long.",
+  "mainLibrary": "H5P.InteractiveVideo 1.28",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "interactiveVideo": {
+      "video": {
+        "files": [
+          {
+            "path": "videos/clip.webm",
+            "mime": "video/webm",
+            "copyright": {
+              "license": "U"
+            }
+          }
+        ],
+        "startScreenOptions": {
+          "title": "Video",
+          "hideStartTitle": false
+        },
+        "textTracks": {
+          "videoTrack": [
+            {
+              "label": "Nynorsk",
+              "kind": "subtitles",
+              "srcLang": "nn",
+              "track": {
+                "path": "videos/clip.nn.vtt",
+                "mime": "text/vtt",
+                "copyright": {
+                  "license": "U"
+                }
+              }
+            }
+          ],
+          "defaultTrackLabel": "Nynorsk"
+        }
+      },
+      "assets": {
+        "interactions": [
+          {
+            "x": 4,
+            "y": 6,
+            "width": 10,
+            "height": 10,
+            "duration": {
+              "from": 120,
+              "to": 130
+            },
+            "pause": true,
+            "displayType": "button",
+            "buttonOnMobile": false,
+            "label": "",
+            "action": {
+              "library": "H5P.MultiChoice 1.16",
+              "params": {
+                "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+                "answers": [
+                  {
+                    "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                    "correct": true,
+                    "tipsAndFeedback": {
+                      "tip": "",
+                      "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                      "notChosenFeedback": ""
+                    }
+                  },
+                  {
+                    "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                    "correct": false,
+                    "tipsAndFeedback": {
+                      "tip": "",
+                      "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                      "notChosenFeedback": ""
+                    }
+                  }
+                ],
+                "overallFeedback": [
+                  {
+                    "from": 0,
+                    "to": 100,
+                    "feedback": ""
+                  }
+                ],
+                "behaviour": {
+                  "enableRetry": true,
+                  "enableSolutionsButton": true,
+                  "singlePoint": false,
+                  "randomAnswers": false
+                }
+              },
+              "subContentId": "00000000-0000-4000-8000-000000000001",
+              "metadata": {
+                "contentType": "Multiple Choice",
+                "license": "U",
+                "title": "Spørsmål"
+              }
+            }
+          }
+        ],
+        "bookmarks": [
+          {
+            "time": 0,
+            "label": "Start"
+          },
+          {
+            "time": 1200,
+            "label": "Slutt"
+          }
+        ],
+        "endscreens": []
+      },
+      "summary": {
+        "task": {
+          "library": "H5P.Summary 1.10",
+          "params": {
+            "intro": "<p>Vel den påstanden som stemmer.</p>",
+            "summaries": [
+              {
+                "subContentId": "00000000-0000-4000-8000-000000000002",
+                "summary": ["<p>Teksting hjelper alle.</p>", "<p>Teksting trengst aldri.</p>"],
+                "tip": ""
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 100
+              }
+            ]
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000003",
+          "metadata": {
+            "contentType": "Summary",
+            "license": "U",
+            "title": "Oppsummering"
+          }
+        },
+        "displayAt": 3
+      }
+    },
+    "override": {
+      "showSolutionButton": "on",
+      "retryButton": "on"
+    }
+  },
+  "expected": [
+    {
+      "path": "interactiveVideo.video.files",
+      "message": "PED-H01.tooLong"
+    }
+  ]
+}

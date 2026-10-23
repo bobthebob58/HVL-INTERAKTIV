@@ -1,0 +1,56 @@
+{
+  "description": "A link whose text is its address, and an H5P.Link with no title (shown as its URL).",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<p>Sjå <a href=\"https://www.hvl.no/\">https://www.hvl.no/</a></p>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000047",
+          "metadata": {
+            "contentType": "Text",
+            "license": "U",
+            "title": "Tekst"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Link 1.3",
+          "params": {
+            "title": "",
+            "linkWidget": {
+              "protocol": "https://",
+              "url": "www.hvl.no"
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000048",
+          "metadata": {
+            "contentType": "Link",
+            "license": "U",
+            "title": "Lenkje"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": [
+    {
+      "path": "content[0].content.params.text",
+      "message": "V-LINK-TEXT.bareUrl"
+    },
+    {
+      "path": "content[1].content.params.title",
+      "message": "V-LINK-TEXT.bareUrl"
+    }
+  ]
+}

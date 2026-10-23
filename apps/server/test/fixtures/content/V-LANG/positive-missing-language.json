@@ -1,0 +1,16 @@
+{
+  "description": "Metadata without defaultLanguage.",
+  "mainLibrary": "H5P.AdvancedText 1.1",
+  "metadata": {
+    "title": "Utan språk"
+  },
+  "params": {
+    "text": "<p>Tekst.</p>"
+  },
+  "expected": [
+    {
+      "path": "metadata.defaultLanguage",
+      "message": "V-LANG.missing"
+    }
+  ]
+}

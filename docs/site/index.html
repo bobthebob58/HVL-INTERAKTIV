@@ -511,7 +511,7 @@ activity</em> is still possible.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PROD-002">00 Product and pedagogy, PROD-002</a> · Product</p></div>
 </details>
-<details class="req" id="x-PROD-003" data-area="PROD" data-priority="MUST" data-session="S4" data-status="planned" data-text="prod-003 check-and-publish quality gate activities have the states `draft` and `published`. *publish* runs the universal design validator
+<details class="req" id="x-PROD-003" data-area="PROD" data-priority="MUST" data-session="S4" data-status="tested" data-text="prod-003 check-and-publish quality gate activities have the states `draft` and `published`. *publish* runs the universal design validator
 (`ud-020`) and the pedagogical hints (`ped-020`). findings are listed in plain language with a
 *go to field* link.
 - **acceptance:** an *error* blocks publishing unless the author records an acknowledgement with a
@@ -519,7 +519,7 @@ activity</em> is still possible.</li>
   insight and in the portfolio export, and are raised again on the next publish after 14 days.
   *warnings* and *hints* never block.
 - **verify:** unit tests for state transitions; e2e for j1 step 5.">
-<summary><span class="req-id">PROD-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Check-and-publish quality gate</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PROD-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Check-and-publish quality gate</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Activities have the states <code>draft</code> and <code>published</code>. <em>Publish</em> runs the universal design validator
 (<a class="req-ref" href="#r-UD-020"><code>UD-020</code></a>) and the pedagogical hints (<a class="req-ref" href="#r-PED-020"><code>PED-020</code></a>). Findings are listed in plain language with a
 <em>Go to field</em> link.</p>
@@ -603,11 +603,11 @@ flags activities where an author has turned these off.</li>
 <div class="req-body"><p>Authors see aggregated, anonymised results per activity, designed to prepare the next synchronous session. See <code>INS-*</code> in <a href="#spec-05">05</a>.</p>
 <p class="req-source">Defined in <a href="#r-PROD-010">00 Product and pedagogy, PROD-010</a> · Product</p></div>
 </details>
-<details class="req" id="x-PROD-011" data-area="PROD" data-priority="MUST" data-session="S4" data-status="planned" data-text="prod-011 formative-use notice the editor and the deep linking picker show a short, dismissible notice. it says h5p activities are
+<details class="req" id="x-PROD-011" data-area="PROD" data-priority="MUST" data-session="S4" data-status="tested" data-text="prod-011 formative-use notice the editor and the deep linking picker show a short, dismissible notice. it says h5p activities are
 scored in the browser and are meant for formative work (*undervegsvurdering*), not exams.
 - **acceptance:** notice text exists in `nn`, `nb` and `en`. dismissal is remembered per user.
 - **verify:** component test.">
-<summary><span class="req-id">PROD-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Formative-use notice</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PROD-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Formative-use notice</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The editor and the Deep Linking picker show a short, dismissible notice. It says H5P activities are
 scored in the browser and are meant for formative work (<em>undervegsvurdering</em>), not exams.</p>
 <ul>
@@ -1504,11 +1504,11 @@ decision for HVL and ALU <em>(verify)</em>.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-013">02 Feide, LTI and grades, LTI-013</a> · Canvas LTI and grades</p></div>
 </details>
-<details class="req" id="x-UD-001" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-001 tokens are the only source of colour, and contrast is tested - **acceptance:** `packages/design-tokens/test/contrast.test.ts` declares every foreground and background
+<details class="req" id="x-UD-001" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-001 tokens are the only source of colour, and contrast is tested - **acceptance:** `packages/design-tokens/test/contrast.test.ts` declares every foreground and background
   pairing actually used and asserts ≥ 4.5 : 1 for text, ≥ 3 : 1 for large text and non-text ui. a
   stylelint rule fails on hex, `rgb()` or `hsl()` literals outside `packages/design-tokens/`.
 - **verify:** unit test; lint in ci.">
-<summary><span class="req-id">UD-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Tokens are the only source of colour, and contrast is tested</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Tokens are the only source of colour, and contrast is tested</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><ul>
 <li><strong>Acceptance:</strong> <code>packages/design-tokens/test/contrast.test.ts</code> declares every foreground and background
 pairing actually used and asserts ≥ 4.5 : 1 for text, ≥ 3 : 1 for large text and non-text UI. A
@@ -1517,7 +1517,7 @@ Stylelint rule fails on hex, <code>rgb()</code> or <code>hsl()</code> literals o
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-001">03 Universal design, UD-001</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-002" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-002 typography and reading comfort typefaces follow the hvl design manual's office fonts (d-018): headings, ui controls and captions
+<details class="req" id="x-UD-002" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-002 typography and reading comfort typefaces follow the hvl design manual's office fonts (d-018): headings, ui controls and captions
 use `arial, &quot;helvetica neue&quot;, helvetica, sans-serif` (stand-in for nb akademie std); long-form body
 text uses `georgia, &quot;times new roman&quot;, serif` (stand-in for lyon text). if hvl confirms web-font
 licences for nb akademie std and lyon text, they may be self-hosted ahead of these stacks
@@ -1526,7 +1526,7 @@ for paragraphs. `text-transform: uppercase` and `text-align: justify` are forbid
 rule. underline is used only for links. all sizes are in `rem` or `em`. layout survives 200 % text
 resize (1.4.4) and the text-spacing overrides of 1.4.12.
 - **verify:** stylelint rules; a playwright test applies the 1.4.12 bookmarklet styles and checks for clipped text.">
-<summary><span class="req-id">UD-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Typography and reading comfort</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">UD-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Typography and reading comfort</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Typefaces follow the HVL design manual&#39;s office fonts (D-018): headings, UI controls and captions
 use <code>Arial, &quot;Helvetica Neue&quot;, Helvetica, sans-serif</code> (stand-in for NB Akademie Std); long-form body
 text uses <code>Georgia, &quot;Times New Roman&quot;, serif</code> (stand-in for Lyon Text). If HVL confirms web-font
@@ -1540,7 +1540,7 @@ resize (1.4.4) and the text-spacing overrides of 1.4.12.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-002">03 Universal design, UD-002</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-003" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-003 feedback never relies on colour alone (wcag 1.4.1) every correct or incorrect state shows an icon **and** a text prefix as well as colour:
+<details class="req" id="x-UD-003" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-003 feedback never relies on colour alone (wcag 1.4.1) every correct or incorrect state shows an icon **and** a text prefix as well as colour:
 **✓ riktig:** / **✗ feil:** (`nn`, `nb`), **✓ correct:** / **✗ incorrect:** (`en`). prefixes are i18n
 keys (`feedback.correctprefix`, `feedback.incorrectprefix`). in h5p iframes, the theme adds them with
 css `::before` content **and** the xapi bridge script adds a visually hidden text node, so screen
@@ -1548,7 +1548,7 @@ readers announce them consistently. icons are `aria-hidden=&quot;true&quot;`.
 - **acceptance:** shown for multichoice, questionset, blanks, dragtext and the answer states inside
   containers. checked in greyscale screenshots.
 - **verify:** playwright tests per content type, asserting the text prefix in the accessibility tree.">
-<summary><span class="req-id">UD-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Feedback never relies on colour alone (WCAG 1.4.1)</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Feedback never relies on colour alone (WCAG 1.4.1)</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Every correct or incorrect state shows an icon <strong>and</strong> a text prefix as well as colour:
 <strong>✓ Riktig:</strong> / <strong>✗ Feil:</strong> (<code>nn</code>, <code>nb</code>), <strong>✓ Correct:</strong> / <strong>✗ Incorrect:</strong> (<code>en</code>). Prefixes are i18n
 keys (<code>feedback.correctPrefix</code>, <code>feedback.incorrectPrefix</code>). In H5P iframes, the theme adds them with
@@ -1561,12 +1561,12 @@ containers. Checked in greyscale screenshots.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-003">03 Universal design, UD-003</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-004" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-004 visible, unobscured focus (2.4.7, 2.4.11, 1.4.11) `:focus-visible { outline: 3px solid var(--hvl-focus-outer); outline-offset: 2px; box-shadow: 0 0 0 2px var(--hvl-focus-inner); }`.
+<details class="req" id="x-UD-004" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-004 visible, unobscured focus (2.4.7, 2.4.11, 1.4.11) `:focus-visible { outline: 3px solid var(--hvl-focus-outer); outline-offset: 2px; box-shadow: 0 0 0 2px var(--hvl-focus-inner); }`.
 this is applied in the web app and inside h5p iframes. sticky headers set `scroll-padding-top` so a
 focused element is never hidden behind them.
 - **verify:** playwright test tabs through each route and asserts that the focused element is in
   the viewport and not covered (by `elementfrompoint`).">
-<summary><span class="req-id">UD-004</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Visible, unobscured focus (2.4.7, 2.4.11, 1.4.11)</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-004</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Visible, unobscured focus (2.4.7, 2.4.11, 1.4.11)</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>:focus-visible { outline: 3px solid var(--hvl-focus-outer); outline-offset: 2px; box-shadow: 0 0 0 2px var(--hvl-focus-inner); }</code>.
 This is applied in the web app and inside H5P iframes. Sticky headers set <code>scroll-padding-top</code> so a
 focused element is never hidden behind them.</p>
@@ -1576,11 +1576,11 @@ the viewport and not covered (by <code>elementFromPoint</code>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-004">03 Universal design, UD-004</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-005" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-005 target size ≥ 24 × 24 css px (2.5.8) and no drag-only actions (2.5.7) every pointer target in the web app meets 2.5.8. every drag interaction has a single-pointer
+<details class="req" id="x-UD-005" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-005 target size ≥ 24 × 24 css px (2.5.8) and no drag-only actions (2.5.7) every pointer target in the web app meets 2.5.8. every drag interaction has a single-pointer
 alternative. in h5p, dragtext's keyboard and click mode counts as that alternative. dragquestion is
 excluded for this reason (`h5p-002`).
 - **verify:** playwright measurement script over interactive elements.">
-<summary><span class="req-id">UD-005</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Target size ≥ 24 × 24 CSS px (2.5.8) and no drag-only actions (2.5.7)</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-005</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Target size ≥ 24 × 24 CSS px (2.5.8) and no drag-only actions (2.5.7)</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Every pointer target in the web app meets 2.5.8. Every drag interaction has a single-pointer
 alternative. In H5P, DragText&#39;s keyboard and click mode counts as that alternative. DragQuestion is
 excluded for this reason (<a class="req-ref" href="#r-H5P-002"><code>H5P-002</code></a>).</p>
@@ -1626,9 +1626,9 @@ such as images with hotspots, which may pan. Works in both orientations.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-008">03 Universal design, UD-008</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-009" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-009 motion and media respect `prefers-reduced-motion`. no autoplay with sound. nothing flashes more than 3 times per second.
+<details class="req" id="x-UD-009" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-009 motion and media respect `prefers-reduced-motion`. no autoplay with sound. nothing flashes more than 3 times per second.
 - **verify:** css review; playwright with reduced motion emulated.">
-<summary><span class="req-id">UD-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Motion and media</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Motion and media</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Respect <code>prefers-reduced-motion</code>. No autoplay with sound. Nothing flashes more than 3 times per second.</p>
 <ul>
 <li><strong>Verify:</strong> CSS review; Playwright with reduced motion emulated.</li>
@@ -1646,12 +1646,12 @@ such as images with hotspots, which may pan. Works in both orientations.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-010">03 Universal design, UD-010</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-011" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-011 hvl theme inside h5p iframes `packages/hvl-h5p-theme/src/hvl-h5p-theme.css` is layered **on top of** h5p core 1.28's daylight
+<details class="req" id="x-UD-011" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-011 hvl theme inside h5p iframes `packages/hvl-h5p-theme/src/hvl-h5p-theme.css` is layered **on top of** h5p core 1.28's daylight
 theme. it overrides daylight's custom properties where possible and selectors only where necessary.
 every `!important` has a `/* why: … */` comment naming the h5p selector it beats. the theme covers:
 tokens, typography (`ud-002`), feedback states (`ud-003`), focus (`ud-004`) and target size (`ud-005`).
 - **verify:** playwright and axe inside the iframe for one seed activity of each of the ten types (`ud-030`).">
-<summary><span class="req-id">UD-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">HVL theme inside H5P iframes</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">UD-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">HVL theme inside H5P iframes</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>packages/hvl-h5p-theme/src/hvl-h5p-theme.css</code> is layered <strong>on top of</strong> H5P Core 1.28&#39;s Daylight
 theme. It overrides Daylight&#39;s custom properties where possible and selectors only where necessary.
 Every <code>!important</code> has a <code>/* WHY: … */</code> comment naming the H5P selector it beats. The theme covers:
@@ -1661,10 +1661,10 @@ tokens, typography (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>)
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-011">03 Universal design, UD-011</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-012" data-area="UD" data-priority="SHOULD" data-session="S4" data-status="planned" data-text="ud-012 windows high-contrast and forced colours under `@media (forced-colors: active)`, focus rings and feedback borders use system colours
+<details class="req" id="x-UD-012" data-area="UD" data-priority="SHOULD" data-session="S4" data-status="tested" data-text="ud-012 windows high-contrast and forced colours under `@media (forced-colors: active)`, focus rings and feedback borders use system colours
 (`highlight`, `canvastext`), and no information is lost.
 - **verify:** playwright with forced colours emulated.">
-<summary><span class="req-id">UD-012</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Windows high-contrast and forced colours</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-012</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Windows high-contrast and forced colours</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Under <code>@media (forced-colors: active)</code>, focus rings and feedback borders use system colours
 (<code>Highlight</code>, <code>CanvasText</code>), and no information is lost.</p>
 <ul>
@@ -1685,7 +1685,7 @@ asked for again (3.3.7). Login uses Feide or Canvas only, with no cognitive test
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-013">03 Universal design, UD-013</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-020" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-020 validator engine `apps/server/src/validation/validatecontent.ts` exports a **pure function**:
+<details class="req" id="x-UD-020" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-020 validator engine `apps/server/src/validation/validatecontent.ts` exports a **pure function**:
 
 ```ts
 /**
@@ -1712,7 +1712,7 @@ the walker visits nested sub-content recursively (any object with `library: &quo
 `params`). each rule is a separate file under `validation/rules/`, ≤ 100 lines, with its own test.
 pedagogical hint rules (`ped-h*`) are specified in [04 §5](04-laeringsdesign-page.md#5-pedagogical-hint-rules)
 and plug into the same engine.">
-<summary><span class="req-id">UD-020</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Validator engine</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">UD-020</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Validator engine</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>apps/server/src/validation/validateContent.ts</code> exports a <strong>pure function</strong>:</p>
 <pre class="code" tabindex="0" role="region" aria-label="Code 1, UD-020 Validator engine"><code>/**
  * Inspects authored H5P parameters for universal design and pedagogical problems.
@@ -1738,7 +1738,7 @@ Pedagogical hint rules (<code>PED-H*</code>) are specified in <a href="#spec-04-
 and plug into the same engine.</p>
 <p class="req-source">Defined in <a href="#r-UD-020">03 Universal design, UD-020</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-021" data-area="UD" data-priority="MUST" data-session="S4" data-status="in code" data-text="ud-021 rule set (universal design) | rule id | checks | severity |
+<details class="req" id="x-UD-021" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-021 rule set (universal design) | rule id | checks | severity |
 |---|---|---|
 | `v-img-alt` | `h5p.image` (and images inside `imagehotspots`, `coursepresentation`, `interactivebook`) have non-empty `alt`. the alt text must not look like a filename (`/\.(jpe?g\|png\|gif\|webp\|svg)$/i`, `image1`, `bilde`, `img_1234`), unless the image is marked decorative. | error |
 | `v-img-alt-length` | alt text is longer than 250 characters. suggest a long description in the text instead. | warning |
@@ -1754,7 +1754,7 @@ and plug into the same engine.</p>
 
 - **acceptance:** each rule has positive and negative fixtures under `apps/server/test/fixtures/content/`.
 - **verify:** unit tests `[ud-021][v-img-alt] …` etc.">
-<summary><span class="req-id">UD-021</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Rule set (universal design)</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">UD-021</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Rule set (universal design)</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><div class="table-wrap" role="region" aria-label="Table 1, UD-021 Rule set (universal design)" tabindex="0"><table><thead><tr>
 <th scope="col">Rule ID</th><th scope="col">Checks</th><th scope="col">Severity</th></tr>
 </thead><tbody><tr>
@@ -1786,11 +1786,11 @@ and plug into the same engine.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-021">03 Universal design, UD-021</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-022" data-area="UD" data-priority="MUST" data-session="S4" data-status="planned" data-text="ud-022 acknowledgements are recorded when an author publishes despite an *error* (`prod-003`), a `validationacknowledgement`
+<details class="req" id="x-UD-022" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-022 acknowledgements are recorded when an author publishes despite an *error* (`prod-003`), a `validationacknowledgement`
 `(contentid, ruleid, path, reason, userid, at)` is stored. acknowledgements are listed in insight and
 in the portfolio export.
 - **verify:** integration test.">
-<summary><span class="req-id">UD-022</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Acknowledgements are recorded</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-022</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Acknowledgements are recorded</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>When an author publishes despite an <em>error</em> (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>), a <code>ValidationAcknowledgement</code>
 <code>(contentId, ruleId, path, reason, userId, at)</code> is stored. Acknowledgements are listed in insight and
 in the portfolio export.</p>
@@ -1921,9 +1921,9 @@ activity&quot; box and its references (§3): <em>segment and retrieve</em>; <em>
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-011">04 Læringsdesign studio, PED-011</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-PED-020" data-area="PED" data-priority="MUST" data-session="S4" data-status="in code" data-text="ped-020 implement the hint rules - **acceptance:** each rule is one file with positive and negative fixtures. messages exist in `nn`, `nb` and `en`, and each names its reference.
+<details class="req" id="x-PED-020" data-area="PED" data-priority="MUST" data-session="S4" data-status="tested" data-text="ped-020 implement the hint rules - **acceptance:** each rule is one file with positive and negative fixtures. messages exist in `nn`, `nb` and `en`, and each names its reference.
 - **verify:** unit tests `[ped-020][ped-h05] …`.">
-<summary><span class="req-id">PED-020</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Implement the hint rules</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">PED-020</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Implement the hint rules</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><ul>
 <li><strong>Acceptance:</strong> Each rule is one file with positive and negative fixtures. Messages exist in <code>nn</code>, <code>nb</code> and <code>en</code>, and each names its reference.</li>
 <li><strong>Verify:</strong> Unit tests <code>[PED-020][PED-H05] …</code>.</li>
@@ -2633,10 +2633,10 @@ listing requirement ids, for example `refs: sec-001, h5p-006`.">
 listing requirement IDs, for example <code>Refs: SEC-001, H5P-006</code>.</p>
 <p class="req-source">Defined in <a href="#r-DOC-011">Documentation standard, DOC-011</a> · Documentation</p></div>
 </details>
-<details class="req" id="x-DOC-012" data-area="DOC" data-priority="SHOULD" data-session="S3" data-status="in code" data-text="doc-012 http apis are self-describing request and response bodies are zod schemas. an openapi document is generated from them and served
+<details class="req" id="x-DOC-012" data-area="DOC" data-priority="SHOULD" data-session="S3" data-status="tested" data-text="doc-012 http apis are self-describing request and response bodies are zod schemas. an openapi document is generated from them and served
 at `/api/docs` in development. every route file states its authentication mode (portal, lti,
 either, or admin) and its error responses in the module header.">
-<summary><span class="req-id">DOC-012</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">HTTP APIs are self-describing</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">DOC-012</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">HTTP APIs are self-describing</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Request and response bodies are zod schemas. An OpenAPI document is generated from them and served
 at <code>/api/docs</code> in development. Every route file states its authentication mode (portal, LTI,
 either, or admin) and its error responses in the module header.</p>
@@ -6092,6 +6092,17 @@ with <code>library: &quot;H5P.Name x.y&quot;</code> and <code>params</code>), re
 parser sanitize-html already uses); <code>htmlparser2</code> and <code>yaml</code> become direct, pinned dependencies. Lint forbids I/O
 modules under <code>src/validation/</code>. Rule messages live in <code>src/validation/locales/</code>.</li>
 <li><strong>Consequences:</strong> The second parameter is an addition to the spec&#39;s signature, not a change to its behaviour.</li>
+<li><strong>Amendment (2026-10-23, W2):</strong> interpretations the rules make where spec 04 §5 and UD-021 leave room, each also in
+its rule&#39;s module header, for ALU to confirm: PED-H06&#39;s main path is the path from the first node that meets the
+most decision points without repeating a node (the search stops after 20 000 steps), and &quot;a way back&quot; is backwards
+navigation or a loop to an earlier node; PED-H08 counts learner tasks only, also in InteractiveBook chapters (which
+are Columns); PED-H05 also flags verdict-only wrong-answer feedback («Feil.») and reads TrueFalse&#39;s
+<code>behaviour.feedbackOnWrong</code>; SingleChoiceSet has no per-answer feedback to check; V-VID-CAPTIONS counts a track
+only when its kind is subtitles, captions or unset (stricter than &quot;any text track&quot;); PED-H01 uses a lower bound of
+the video length from the latest interaction time, because content.json has no duration; V-VID-TRANSCRIPT accepts
+any authored text or link that mentions a transcript, since H5P has no transcript field; V-HOTSPOT-ORDER accepts
+numbered icons or a list order that follows reading order. Findings are unique per <code>(ruleId, path)</code>, as the
+acknowledgements of D-074 need.</li>
 </ul>
 <h3 id="decisions--d-074--publishing-server-re-validation-acknowledgements-and-concurrency" tabindex="-1">D-074 · Publishing: server re-validation, acknowledgements and concurrency</h3>
 <ul>
@@ -6106,6 +6117,13 @@ acknowledgements and an audit event (rule IDs only, no reason text, <a class="re
 <code>updatedAt</code> (409 <code>hvl:content-changed</code>). <code>POST …/unpublish</code> returns an activity to draft. Saving an activity that is
 already published runs the same gate. Only those who may edit (H5P-006) may publish.</li>
 <li><strong>Consequences:</strong> Acknowledgements keyed on a path ask again when list items move; that fails safe.</li>
+<li><strong>Amendment (2026-10-23, W3):</strong> every save of an existing activity increases <code>H5PContent.version</code> (the inventory
+used to say &quot;on structural change&quot;); a refused save of a published activity is 409 <code>hvl:published-save-blocked</code>
+with the findings, and nothing is saved; findings, publish and unpublish answer 404 when the person may not view
+the activity and 403 <code>hvl:edit-not-allowed</code> when they may view but not edit; unpublish clears <code>publishedAt</code>, and
+publishing an activity that is already published validates again and moves <code>publishedAt</code> to now. Known gap: a
+publish that commits between the save gate&#39;s check and Lumi&#39;s save is not re-checked (the publish validated what it
+saw); recorded in <code>PublishedSaveGate.ts</code>.</li>
 </ul>
 <h3 id="decisions--d-075--notice-dismissals-are-stored-per-user" tabindex="-1">D-075 · Notice dismissals are stored per user</h3>
 <ul>

@@ -1,0 +1,108 @@
+{
+  "description": "One decision, one choice without feedback, no backwards navigation and no loop.",
+  "mainLibrary": "H5P.BranchingScenario 1.10",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "branchingScenario": {
+      "title": "Planlegg ei samling",
+      "startScreen": {
+        "startScreenTitle": "<p>Planlegg ei samling</p>",
+        "startScreenSubtitle": "<p>Vel og sjå kva som skjer.</p>"
+      },
+      "endScreens": [
+        {
+          "endScreenTitle": "<p>Slutt</p>",
+          "endScreenSubtitle": "<p>Start på nytt om du vil.</p>",
+          "endScreenScore": 0,
+          "contentId": -1
+        }
+      ],
+      "content": [
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>Steg 0.</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000083",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Steg 0"
+            }
+          },
+          "contentId": 0,
+          "nextContentId": 1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Val 1?</p>",
+                "alternatives": [
+                  {
+                    "text": "Lag ein quiz.",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Godt val</p>",
+                      "subtitle": "<p>Studentane kjem førebudde.</p>"
+                    }
+                  },
+                  {
+                    "text": "Hald ei førelesing.",
+                    "nextContentId": -1,
+                    "feedback": {}
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000084",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Val 1"
+            }
+          },
+          "contentId": 1,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        }
+      ],
+      "scoringOptionGroup": {
+        "scoringOption": "no-score"
+      },
+      "behaviour": {
+        "enableBackwardsNavigation": false,
+        "forceContentFinished": false,
+        "randomizeBranchingQuestions": false
+      }
+    }
+  },
+  "expected": [
+    {
+      "path": "branchingScenario.content",
+      "message": "PED-H06.decisionPoints"
+    },
+    {
+      "path": "branchingScenario.content[1].type.params.branchingQuestion.alternatives[1].feedback",
+      "message": "PED-H06.choiceFeedback"
+    },
+    {
+      "path": "branchingScenario.behaviour.enableBackwardsNavigation",
+      "message": "PED-H06.noWayBack"
+    }
+  ]
+}

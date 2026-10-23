@@ -1,0 +1,71 @@
+{
+  "description": "An image on a slide whose alt text is a camera file name.",
+  "mainLibrary": "H5P.CoursePresentation 1.28",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "presentation": {
+      "slides": [
+        {
+          "elements": [
+            {
+              "x": 3,
+              "y": 6,
+              "width": 90,
+              "height": 25,
+              "action": {
+                "library": "H5P.Image 1.1",
+                "params": {
+                  "file": {
+                    "path": "images/diagram.png",
+                    "mime": "image/png",
+                    "copyright": {
+                      "license": "U"
+                    },
+                    "width": 960,
+                    "height": 540
+                  },
+                  "decorative": false,
+                  "alt": "IMG_1234.jpg"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000003",
+                "metadata": {
+                  "contentType": "Image",
+                  "license": "U",
+                  "title": "Bilete"
+                }
+              },
+              "solution": "",
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false
+            }
+          ],
+          "keywords": [
+            {
+              "main": "Side 1"
+            }
+          ],
+          "slideBackgroundSelector": {}
+        }
+      ],
+      "keywordListEnabled": true,
+      "globalBackgroundSelector": {}
+    },
+    "override": {
+      "activeSurface": false,
+      "hideSummarySlide": false
+    }
+  },
+  "expected": [
+    {
+      "path": "presentation.slides[0].elements[0].action.params.alt",
+      "message": "V-IMG-ALT.fileName"
+    }
+  ]
+}

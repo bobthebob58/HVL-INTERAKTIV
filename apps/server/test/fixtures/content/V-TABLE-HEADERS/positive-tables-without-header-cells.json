@@ -1,0 +1,52 @@
+{
+  "description": "An H5P.Table and an AdvancedText, each with a table of <td> cells only.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.Table 1.2",
+          "params": {
+            "text": "<figure class=\"table\"><table><tbody><tr><td>Fase</td><td>Aktivitet</td></tr><tr><td>Før</td><td>Quiz</td></tr></tbody></table></figure>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000041",
+          "metadata": {
+            "contentType": "Table",
+            "license": "U",
+            "title": "Tabell"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<p>Oversikt:</p><table><tbody><tr><td>Fase</td><td>Aktivitet</td></tr><tr><td>Før</td><td>Quiz</td></tr></tbody></table>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000042",
+          "metadata": {
+            "contentType": "Text",
+            "license": "U",
+            "title": "Tekst"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": [
+    {
+      "path": "content[0].content.params.text",
+      "message": "V-TABLE-HEADERS.missing"
+    },
+    {
+      "path": "content[1].content.params.text",
+      "message": "V-TABLE-HEADERS.missing"
+    }
+  ]
+}

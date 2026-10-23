@@ -1,0 +1,71 @@
+{
+  "description": "Three wrong options: blank feedback, no feedback group, and «Feil.» only. The right option has none, which is fine.",
+  "mainLibrary": "H5P.MultiChoice 1.16",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "question": "<p>Kva er undervegsvurdering?</p>",
+    "answers": [
+      {
+        "text": "<div>Vurdering medan læringa held på.</div>",
+        "correct": true,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "",
+          "notChosenFeedback": ""
+        }
+      },
+      {
+        "text": "<div>Eksamen.</div>",
+        "correct": false,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div> </div>",
+          "notChosenFeedback": ""
+        }
+      },
+      {
+        "text": "<div>Karakteren.</div>",
+        "correct": false
+      },
+      {
+        "text": "<div>Oppmøte.</div>",
+        "correct": false,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Feil.</div>",
+          "notChosenFeedback": ""
+        }
+      }
+    ],
+    "overallFeedback": [
+      {
+        "from": 0,
+        "to": 100,
+        "feedback": ""
+      }
+    ],
+    "behaviour": {
+      "enableRetry": true,
+      "enableSolutionsButton": true,
+      "singlePoint": false,
+      "randomAnswers": false
+    }
+  },
+  "expected": [
+    {
+      "path": "answers[1].tipsAndFeedback.chosenFeedback",
+      "message": "PED-H05.noExplanation"
+    },
+    {
+      "path": "answers[2].tipsAndFeedback.chosenFeedback",
+      "message": "PED-H05.noExplanation"
+    },
+    {
+      "path": "answers[3].tipsAndFeedback.chosenFeedback",
+      "message": "PED-H05.noExplanation"
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "description": "The second slide has 160 words of text in two text boxes.",
+  "mainLibrary": "H5P.CoursePresentation 1.28",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "presentation": {
+      "slides": [
+        {
+          "elements": [
+            {
+              "x": 3,
+              "y": 6,
+              "width": 90,
+              "height": 25,
+              "action": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<h2>Kort</h2><p>Ein kort tekst.</p>"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000117",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Tekst"
+                }
+              },
+              "solution": "",
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false
+            }
+          ],
+          "keywords": [
+            {
+              "main": "Side 1"
+            }
+          ],
+          "slideBackgroundSelector": {}
+        },
+        {
+          "elements": [
+            {
+              "x": 3,
+              "y": 6,
+              "width": 90,
+              "height": 25,
+              "action": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<p>Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort</p>"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000118",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Tekst"
+                }
+              },
+              "solution": "",
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false
+            },
+            {
+              "x": 3,
+              "y": 36,
+              "width": 90,
+              "height": 25,
+              "action": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<ul><li>Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i</li></ul>"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000119",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Tekst"
+                }
+              },
+              "solution": "",
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false
+            }
+          ],
+          "keywords": [
+            {
+              "main": "Side 2"
+            }
+          ],
+          "slideBackgroundSelector": {}
+        }
+      ],
+      "keywordListEnabled": true,
+      "globalBackgroundSelector": {}
+    },
+    "override": {
+      "activeSurface": false,
+      "hideSummarySlide": false
+    }
+  },
+  "expected": [
+    {
+      "path": "presentation.slides[1]",
+      "message": "PED-H09.tooManyWords"
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+{
+  "description": "An InteractiveBook chapter (a Column) with four tasks.",
+  "mainLibrary": "H5P.InteractiveBook 1.15",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "showCoverPage": false,
+    "bookCover": {},
+    "chapters": [
+      {
+        "library": "H5P.Column 1.22",
+        "params": {
+          "content": [
+            {
+              "content": {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+                  "answers": [
+                    {
+                      "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                      "correct": true,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    },
+                    {
+                      "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                      "correct": false,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    }
+                  ],
+                  "overallFeedback": [
+                    {
+                      "from": 0,
+                      "to": 100,
+                      "feedback": ""
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "singlePoint": false,
+                    "randomAnswers": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000107",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              },
+              "useSeparator": "auto"
+            },
+            {
+              "content": {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+                  "answers": [
+                    {
+                      "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                      "correct": true,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    },
+                    {
+                      "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                      "correct": false,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    }
+                  ],
+                  "overallFeedback": [
+                    {
+                      "from": 0,
+                      "to": 100,
+                      "feedback": ""
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "singlePoint": false,
+                    "randomAnswers": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000108",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              },
+              "useSeparator": "auto"
+            },
+            {
+              "content": {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+                  "answers": [
+                    {
+                      "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                      "correct": true,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    },
+                    {
+                      "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                      "correct": false,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    }
+                  ],
+                  "overallFeedback": [
+                    {
+                      "from": 0,
+                      "to": 100,
+                      "feedback": ""
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "singlePoint": false,
+                    "randomAnswers": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000109",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              },
+              "useSeparator": "auto"
+            },
+            {
+              "content": {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+                  "answers": [
+                    {
+                      "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                      "correct": true,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    },
+                    {
+                      "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                      "correct": false,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    }
+                  ],
+                  "overallFeedback": [
+                    {
+                      "from": 0,
+                      "to": 100,
+                      "feedback": ""
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "singlePoint": false,
+                    "randomAnswers": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000110",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              },
+              "useSeparator": "auto"
+            }
+          ]
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000111",
+        "metadata": {
+          "contentType": "Column",
+          "license": "U",
+          "title": "Kapittel 1"
+        }
+      }
+    ],
+    "behaviour": {
+      "defaultTableOfContents": true,
+      "progressIndicators": true,
+      "displaySummary": true,
+      "enableRetry": true
+    }
+  },
+  "expected": [
+    {
+      "path": "chapters[0].params.content",
+      "message": "PED-H08.tooMany"
+    }
+  ]
+}

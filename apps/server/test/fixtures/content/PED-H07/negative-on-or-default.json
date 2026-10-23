@@ -1,0 +1,162 @@
+{
+  "description": "Retry and solutions on, set explicitly or left to the defaults.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.MultiChoice 1.16",
+          "params": {
+            "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+            "answers": [
+              {
+                "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                "correct": true,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                  "notChosenFeedback": ""
+                }
+              },
+              {
+                "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                "correct": false,
+                "tipsAndFeedback": {
+                  "tip": "",
+                  "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                  "notChosenFeedback": ""
+                }
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 100,
+                "feedback": ""
+              }
+            ],
+            "behaviour": {
+              "enableRetry": true,
+              "enableSolutionsButton": true,
+              "singlePoint": false,
+              "randomAnswers": false
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000097",
+          "metadata": {
+            "contentType": "Multiple Choice",
+            "license": "U",
+            "title": "Spørsmål"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Blanks 1.14",
+          "params": {
+            "text": "<p>Fyll inn.</p>",
+            "questions": ["<p>Eit *ord*.</p>"]
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000098",
+          "metadata": {
+            "contentType": "Fill in the Blanks",
+            "license": "U",
+            "title": "Fyll inn"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.InteractiveVideo 1.28",
+          "params": {
+            "interactiveVideo": {
+              "video": {
+                "files": [
+                  {
+                    "path": "videos/clip.webm",
+                    "mime": "video/webm",
+                    "copyright": {
+                      "license": "U"
+                    }
+                  }
+                ],
+                "startScreenOptions": {
+                  "title": "Video",
+                  "hideStartTitle": false
+                },
+                "textTracks": {
+                  "videoTrack": [
+                    {
+                      "label": "Nynorsk",
+                      "kind": "subtitles",
+                      "srcLang": "nn",
+                      "track": {
+                        "path": "videos/clip.nn.vtt",
+                        "mime": "text/vtt",
+                        "copyright": {
+                          "license": "U"
+                        }
+                      }
+                    }
+                  ],
+                  "defaultTrackLabel": "Nynorsk"
+                }
+              },
+              "assets": {
+                "interactions": [],
+                "bookmarks": [],
+                "endscreens": []
+              },
+              "summary": {
+                "task": {
+                  "library": "H5P.Summary 1.10",
+                  "params": {
+                    "intro": "<p>Vel den påstanden som stemmer.</p>",
+                    "summaries": [
+                      {
+                        "subContentId": "00000000-0000-4000-8000-000000000099",
+                        "summary": ["<p>Teksting hjelper alle.</p>", "<p>Teksting trengst aldri.</p>"],
+                        "tip": ""
+                      }
+                    ],
+                    "overallFeedback": [
+                      {
+                        "from": 0,
+                        "to": 100
+                      }
+                    ]
+                  },
+                  "subContentId": "00000000-0000-4000-8000-000000000100",
+                  "metadata": {
+                    "contentType": "Summary",
+                    "license": "U",
+                    "title": "Oppsummering"
+                  }
+                },
+                "displayAt": 3
+              }
+            },
+            "override": {
+              "showSolutionButton": "on",
+              "retryButton": "on"
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000101",
+          "metadata": {
+            "contentType": "Interactive Video",
+            "license": "U",
+            "title": "Video"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": []
+}

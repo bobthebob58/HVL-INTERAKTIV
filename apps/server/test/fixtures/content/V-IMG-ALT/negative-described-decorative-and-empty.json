@@ -1,0 +1,79 @@
+{
+  "description": "A described image, a decorative image without alt text, and an image element with no file yet.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.Image 1.1",
+          "params": {
+            "file": {
+              "path": "images/diagram.png",
+              "mime": "image/png",
+              "copyright": {
+                "license": "U"
+              },
+              "width": 960,
+              "height": 540
+            },
+            "decorative": false,
+            "alt": "Læringsdesign i tre fasar: førebuing før samlinga, samtale under samlinga og refleksjon etterpå."
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000010",
+          "metadata": {
+            "contentType": "Image",
+            "license": "U",
+            "title": "Diagram"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Image 1.1",
+          "params": {
+            "file": {
+              "path": "images/diagram.png",
+              "mime": "image/png",
+              "copyright": {
+                "license": "U"
+              },
+              "width": 960,
+              "height": 540
+            },
+            "decorative": true,
+            "alt": ""
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000011",
+          "metadata": {
+            "contentType": "Image",
+            "license": "U",
+            "title": "Pynt"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Image 1.1",
+          "params": {
+            "decorative": false,
+            "alt": ""
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000012",
+          "metadata": {
+            "contentType": "Image",
+            "license": "U",
+            "title": "Tomt"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": []
+}

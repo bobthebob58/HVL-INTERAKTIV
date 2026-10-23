@@ -1,0 +1,69 @@
+{
+  "description": "The same Panopto video with its origin listed in CAPTIONED_MEDIA_ORIGINS.",
+  "mainLibrary": "H5P.InteractiveVideo 1.28",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "context": {
+    "captionedMediaOrigins": ["https://hvl.cloud.panopto.eu"]
+  },
+  "params": {
+    "interactiveVideo": {
+      "video": {
+        "files": [
+          {
+            "path": "https://hvl.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=8f0c2b1e-0000-4000-8000-000000000000",
+            "mime": "video/Panopto"
+          }
+        ],
+        "startScreenOptions": {
+          "title": "Video",
+          "hideStartTitle": false
+        },
+        "textTracks": {
+          "videoTrack": [],
+          "defaultTrackLabel": "Nynorsk"
+        }
+      },
+      "assets": {
+        "interactions": [],
+        "bookmarks": [],
+        "endscreens": []
+      },
+      "summary": {
+        "task": {
+          "library": "H5P.Summary 1.10",
+          "params": {
+            "intro": "<p>Vel den påstanden som stemmer.</p>",
+            "summaries": [
+              {
+                "subContentId": "00000000-0000-4000-8000-000000000020",
+                "summary": ["<p>Teksting hjelper alle.</p>", "<p>Teksting trengst aldri.</p>"],
+                "tip": ""
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 100
+              }
+            ]
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000021",
+          "metadata": {
+            "contentType": "Summary",
+            "license": "U",
+            "title": "Oppsummering"
+          }
+        },
+        "displayAt": 3
+      }
+    },
+    "override": {
+      "showSolutionButton": "on",
+      "retryButton": "on"
+    }
+  },
+  "expected": []
+}

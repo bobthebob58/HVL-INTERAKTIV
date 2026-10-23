@@ -1,0 +1,99 @@
+{
+  "description": "Icon hotspots listed in reading order: a row (y 20 and 24), then a lower one.",
+  "mainLibrary": "H5P.ImageHotspots 1.11",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "image": {
+      "path": "images/diagram.png",
+      "mime": "image/png",
+      "copyright": {
+        "license": "U"
+      },
+      "width": 960,
+      "height": 540
+    },
+    "backgroundImageAltText": "Diagram over tre fasar.",
+    "globalIconType": "icon",
+    "globalIcon": "plus",
+    "hotspots": [
+      {
+        "position": {
+          "x": 10,
+          "y": 20,
+          "legacyPositioning": false
+        },
+        "hotspotIconType": "default",
+        "alwaysFullscreen": false,
+        "header": "Før",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>Før.</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000038",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Før"
+            }
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 60,
+          "y": 24,
+          "legacyPositioning": false
+        },
+        "hotspotIconType": "default",
+        "alwaysFullscreen": false,
+        "header": "Under",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>Under.</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000039",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Under"
+            }
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 30,
+          "y": 70,
+          "legacyPositioning": false
+        },
+        "hotspotIconType": "default",
+        "alwaysFullscreen": false,
+        "header": "Etter",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>Etter.</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000040",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Etter"
+            }
+          }
+        ]
+      }
+    ],
+    "untitledHotspotLabel": "Markør utan tittel",
+    "closeButtonLabel": "Lukk"
+  },
+  "expected": []
+}

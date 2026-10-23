@@ -1,0 +1,17 @@
+{
+  "description": "A text with an h2 followed directly by an h4.",
+  "mainLibrary": "H5P.AdvancedText 1.1",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "text": "<h2>Tre fasar</h2><p>Innleiing.</p><h4>Før samlinga</h4><p>Førebuing.</p>"
+  },
+  "expected": [
+    {
+      "path": "text",
+      "message": "V-HEADING-ORDER.skipped"
+    }
+  ]
+}

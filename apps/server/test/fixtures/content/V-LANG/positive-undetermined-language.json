@@ -1,0 +1,17 @@
+{
+  "description": "Metadata with H5P's «und» (undetermined).",
+  "mainLibrary": "H5P.AdvancedText 1.1",
+  "metadata": {
+    "title": "Ubestemt",
+    "defaultLanguage": "und"
+  },
+  "params": {
+    "text": "<p>Tekst.</p>"
+  },
+  "expected": [
+    {
+      "path": "metadata.defaultLanguage",
+      "message": "V-LANG.missing"
+    }
+  ]
+}

@@ -985,6 +985,17 @@ loading of one spec per session are kept.
   parser sanitize-html already uses); `htmlparser2` and `yaml` become direct, pinned dependencies. Lint forbids I/O
   modules under `src/validation/`. Rule messages live in `src/validation/locales/`.
 - **Consequences:** The second parameter is an addition to the spec's signature, not a change to its behaviour.
+- **Amendment (2026-10-23, W2):** interpretations the rules make where spec 04 §5 and UD-021 leave room, each also in
+  its rule's module header, for ALU to confirm: PED-H06's main path is the path from the first node that meets the
+  most decision points without repeating a node (the search stops after 20 000 steps), and "a way back" is backwards
+  navigation or a loop to an earlier node; PED-H08 counts learner tasks only, also in InteractiveBook chapters (which
+  are Columns); PED-H05 also flags verdict-only wrong-answer feedback («Feil.») and reads TrueFalse's
+  `behaviour.feedbackOnWrong`; SingleChoiceSet has no per-answer feedback to check; V-VID-CAPTIONS counts a track
+  only when its kind is subtitles, captions or unset (stricter than "any text track"); PED-H01 uses a lower bound of
+  the video length from the latest interaction time, because content.json has no duration; V-VID-TRANSCRIPT accepts
+  any authored text or link that mentions a transcript, since H5P has no transcript field; V-HOTSPOT-ORDER accepts
+  numbered icons or a list order that follows reading order. Findings are unique per `(ruleId, path)`, as the
+  acknowledgements of D-074 need.
 
 ### D-074 · Publishing: server re-validation, acknowledgements and concurrency
 - **Context:** `PROD-003` and `UD-022` let an author publish despite an error with a recorded reason, raised again

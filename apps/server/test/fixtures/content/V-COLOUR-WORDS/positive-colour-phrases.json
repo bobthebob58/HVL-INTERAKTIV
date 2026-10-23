@@ -1,0 +1,54 @@
+{
+  "description": "A question that points to «det raude feltet» and an answer that says «the green option».",
+  "mainLibrary": "H5P.MultiChoice 1.16",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "question": "<p>Kva står i det raude feltet på biletet?</p>",
+    "answers": [
+      {
+        "text": "<div>Choose the green option.</div>",
+        "correct": false,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Nei. Feltet viser fasen før samlinga.</div>",
+          "notChosenFeedback": ""
+        }
+      },
+      {
+        "text": "<div>Fasen før samlinga.</div>",
+        "correct": true,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Ja. Feltet viser førebuinga.</div>",
+          "notChosenFeedback": ""
+        }
+      }
+    ],
+    "overallFeedback": [
+      {
+        "from": 0,
+        "to": 100,
+        "feedback": ""
+      }
+    ],
+    "behaviour": {
+      "enableRetry": true,
+      "enableSolutionsButton": true,
+      "singlePoint": false,
+      "randomAnswers": false
+    }
+  },
+  "expected": [
+    {
+      "path": "answers[0].text",
+      "message": "V-COLOUR-WORDS.colourOnly"
+    },
+    {
+      "path": "question",
+      "message": "V-COLOUR-WORDS.colourOnly"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "V-IMG-ALT": {
+    "missing": "The image has no alternative text. Write briefly what the image shows and why it is there. If the image is only decoration, mark it as decorative.",
+    "fileName": "The alternative text “{{alt}}” looks like a file name. Write briefly what the image shows and why it is there instead."
+  },
+  "V-IMG-ALT-LENGTH": {
+    "tooLong": "The alternative text is {{length}} characters long (more than {{max}}). Screen readers read it in one go. Write a short description here and put the long explanation in the text next to the image."
+  },
+  "V-VID-CAPTIONS": {
+    "missing": "The video has no captions. Upload a captions file (WebVTT, .vtt), or use a video from a video service set up with captions, such as Panopto.",
+    "wrongKind": "The video's text track is marked as “Descriptions” or “Chapters” and is not shown as captions. Set its kind to “Subtitles” or “Captions”."
+  },
+  "V-VID-TRANSCRIPT": {
+    "missing": "There is no transcript or text version of the video. Add a link to a transcript, or write the content as text next to the video."
+  },
+  "V-HOTSPOT-ORDER": {
+    "unordered": "The hotspots are not numbered, and their order in the list does not follow the image. Choose numbers as icons, or sort the hotspots from top to bottom and left to right.",
+    "noHeader": "The hotspot has no header. Write a short header that says what the hotspot is about. Screen readers read it aloud."
+  },
+  "V-TABLE-HEADERS": {
+    "missing": "The table has no header cells. Make the first row or column a header, so screen readers can say what each value belongs to."
+  },
+  "V-HEADING-ORDER": {
+    "skipped": "The headings skip a level ({{from}} → {{to}}). Use {{next}} here, or change the levels so the structure holds together."
+  },
+  "V-LINK-TEXT": {
+    "vague": "The link text “{{text}}” does not say where the link goes. Write what the link opens, for example “The course description”.",
+    "bareUrl": "The link shows only its address. Write a link text that says what the link opens."
+  },
+  "V-LANG": {
+    "missing": "The activity has no language. Choose its language in the metadata, so screen readers pronounce the text correctly."
+  },
+  "V-COLOUR-WORDS": {
+    "colourOnly": "The text refers to something by colour alone (“{{phrase}}”). Not everyone sees colours. Also give its position, shape, number or name."
+  },
+  "V-BRANCH-COLOUR": {
+    "colourOnly": "The choice is only a colour. Not everyone sees colours, and screen readers read only the text. Write what the choice is about."
+  },
+  "PED-H01": {
+    "tooLong": "The video is at least {{minutes}} minutes long (recommended at most {{max}}). Split it into segments of 6–9 minutes so students stay engaged (Guo, Kim & Rubin 2014)."
+  },
+  "PED-H02": {
+    "gap": "The video runs {{minutes}} minutes without a task (recommended at most {{max}}). Add a short question every two to three minutes (Szpunar, Khan & Schacter 2013)."
+  },
+  "PED-H03": {
+    "noSummary": "The video ends without a summary. Add a summary or a reflection task at the end, so students consolidate what they have learned (Brame 2016)."
+  },
+  "PED-H04": {
+    "tooMany": "The question set has {{count}} questions (recommended at most {{max}}). Split it into several short sets of about 10 questions each (Mayer 2009)."
+  },
+  "PED-H05": {
+    "noExplanation": "This wrong option has no explanation. Write why the answer is wrong, so the student can correct the misunderstanding (Shute 2008)."
+  },
+  "PED-H06": {
+    "decisionPoints": "The scenario has {{count}} decision points on its main path (recommended {{min}}–{{max}}). Keep the case to 3–4 decisions with explanations (Schön 1983).",
+    "choiceFeedback": "The choice has no feedback. Explain what the choice leads to, and why (Schön 1983).",
+    "noWayBack": "The scenario has no way back. Turn on backwards navigation, or add a path to an earlier step, so students can try another choice (Schön 1983)."
+  },
+  "PED-H07": {
+    "retryOff": "“Retry” is turned off. Formative tasks work best when students can practise several times, so turn it on (Dunlosky et al. 2013).",
+    "solutionsOff": "“Show solution” is turned off. Students learn by comparing with the solution, so turn it on (Dunlosky et al. 2013)."
+  },
+  "PED-H08": {
+    "tooMany": "The column has {{count}} tasks (recommended at most {{max}}). Spread them over several pages, so it is easier to keep track (Mayer 2009)."
+  },
+  "PED-H09": {
+    "tooManyWords": "The slide has {{count}} words (recommended at most {{max}}). Keep to one point per slide and move the rest to more slides (Mayer 2009)."
+  },
+  "PED-H10": {
+    "tooManyWords": "The chapter has {{count}} words and no task (recommended at most {{max}} words without a task). Add a short task, so students retrieve what they have read (Roediger & Karpicke 2006)."
+  },
+  "PED-H11": {
+    "verdictOnly": "The feedback only says whether the answer was right or wrong. Explain why, and what the student can do next (Hattie & Timperley 2007)."
+  }
+}

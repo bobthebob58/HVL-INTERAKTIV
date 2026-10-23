@@ -1,0 +1,63 @@
+{
+  "description": "An H5P.Video in a Column whose only track is marked «descriptions», so it is not shown as captions.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.Video 1.6",
+          "params": {
+            "sources": [
+              {
+                "path": "videos/clip.webm",
+                "mime": "video/webm",
+                "copyright": {
+                  "license": "U"
+                }
+              }
+            ],
+            "visuals": {
+              "fit": true,
+              "controls": true
+            },
+            "playback": {
+              "autoplay": false,
+              "loop": false
+            },
+            "a11y": [
+              {
+                "label": "Nynorsk",
+                "kind": "descriptions",
+                "srcLang": "nn",
+                "track": {
+                  "path": "videos/clip.nn.vtt",
+                  "mime": "text/vtt",
+                  "copyright": {
+                    "license": "U"
+                  }
+                }
+              }
+            ]
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000017",
+          "metadata": {
+            "contentType": "Video",
+            "license": "U",
+            "title": "Video"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": [
+    {
+      "path": "content[0].content.params.a11y",
+      "message": "V-VID-CAPTIONS.wrongKind"
+    }
+  ]
+}

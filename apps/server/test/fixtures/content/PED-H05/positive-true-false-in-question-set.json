@@ -1,0 +1,105 @@
+{
+  "description": "A TrueFalse in a QuestionSet with no feedback for a wrong answer.",
+  "mainLibrary": "H5P.QuestionSet 1.21",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "introPage": {
+      "showIntroPage": false,
+      "title": "Quiz"
+    },
+    "progressType": "dots",
+    "passPercentage": 50,
+    "questions": [
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Undervegsvurdering tel med i karakteren.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": ""
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000081",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand"
+        }
+      },
+      {
+        "library": "H5P.MultiChoice 1.16",
+        "params": {
+          "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+          "answers": [
+            {
+              "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+              "correct": true,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                "notChosenFeedback": ""
+              }
+            },
+            {
+              "text": "<div>Ho tel med i sluttkarakteren.</div>",
+              "correct": false,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                "notChosenFeedback": ""
+              }
+            }
+          ],
+          "overallFeedback": [
+            {
+              "from": 0,
+              "to": 100,
+              "feedback": ""
+            }
+          ],
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "singlePoint": false,
+            "randomAnswers": false
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000082",
+        "metadata": {
+          "contentType": "Multiple Choice",
+          "license": "U",
+          "title": "Spørsmål"
+        }
+      }
+    ],
+    "disableBackwardsNavigation": false,
+    "randomQuestions": false,
+    "endGame": {
+      "showResultPage": true,
+      "showSolutionButton": true,
+      "showRetryButton": true,
+      "overallFeedback": [
+        {
+          "from": 0,
+          "to": 100,
+          "feedback": "Gå gjennom svara med «Vis svar» og sjå kva du kan øve meir på."
+        }
+      ]
+    },
+    "override": {
+      "checkButton": true
+    }
+  },
+  "expected": [
+    {
+      "path": "questions[0].params.behaviour.feedbackOnWrong",
+      "message": "PED-H05.noExplanation"
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+{
+  "description": "Two decisions with feedback; a weak choice loops back to the first decision (as in the realistic example).",
+  "mainLibrary": "H5P.BranchingScenario 1.10",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "branchingScenario": {
+      "title": "Planlegg ei samling",
+      "startScreen": {
+        "startScreenTitle": "<p>Planlegg ei samling</p>",
+        "startScreenSubtitle": "<p>Vel og sjå kva som skjer.</p>"
+      },
+      "endScreens": [
+        {
+          "endScreenTitle": "<p>Slutt</p>",
+          "endScreenSubtitle": "<p>Start på nytt om du vil.</p>",
+          "endScreenScore": 0,
+          "contentId": -1
+        }
+      ],
+      "content": [
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>Steg 0.</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000090",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Steg 0"
+            }
+          },
+          "contentId": 0,
+          "nextContentId": 1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Val 1?</p>",
+                "alternatives": [
+                  {
+                    "text": "Video og quiz.",
+                    "nextContentId": 2,
+                    "feedback": {
+                      "title": "<p>Studentane kjem førebudde.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Lang pensumliste.",
+                    "nextContentId": 3,
+                    "feedback": {
+                      "title": "<p>Studentane får lite hjelp.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000091",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Val 1"
+            }
+          },
+          "contentId": 1,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>Steg 2.</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000092",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Steg 2"
+            }
+          },
+          "contentId": 2,
+          "nextContentId": 4,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>Steg 3.</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000093",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Steg 3"
+            }
+          },
+          "contentId": 3,
+          "nextContentId": 1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Val 4?</p>",
+                "alternatives": [
+                  {
+                    "text": "Teksta video.",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Godt planlagt.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Papir.",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Når ikkje alle.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000094",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Val 4"
+            }
+          },
+          "contentId": 4,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        }
+      ],
+      "scoringOptionGroup": {
+        "scoringOption": "no-score"
+      },
+      "behaviour": {
+        "enableBackwardsNavigation": false,
+        "forceContentFinished": false,
+        "randomizeBranchingQuestions": false
+      }
+    }
+  },
+  "expected": []
+}

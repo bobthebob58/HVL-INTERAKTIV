@@ -1,0 +1,87 @@
+{
+  "description": "A captioned InteractiveVideo with no transcript mentioned anywhere.",
+  "mainLibrary": "H5P.InteractiveVideo 1.28",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "interactiveVideo": {
+      "video": {
+        "files": [
+          {
+            "path": "videos/clip.webm",
+            "mime": "video/webm",
+            "copyright": {
+              "license": "U"
+            }
+          }
+        ],
+        "startScreenOptions": {
+          "title": "Video",
+          "hideStartTitle": false
+        },
+        "textTracks": {
+          "videoTrack": [
+            {
+              "label": "Nynorsk",
+              "kind": "subtitles",
+              "srcLang": "nn",
+              "track": {
+                "path": "videos/clip.nn.vtt",
+                "mime": "text/vtt",
+                "copyright": {
+                  "license": "U"
+                }
+              }
+            }
+          ],
+          "defaultTrackLabel": "Nynorsk"
+        }
+      },
+      "assets": {
+        "interactions": [],
+        "bookmarks": [],
+        "endscreens": []
+      },
+      "summary": {
+        "task": {
+          "library": "H5P.Summary 1.10",
+          "params": {
+            "intro": "<p>Vel den påstanden som stemmer.</p>",
+            "summaries": [
+              {
+                "subContentId": "00000000-0000-4000-8000-000000000026",
+                "summary": ["<p>Teksting hjelper alle.</p>", "<p>Teksting trengst aldri.</p>"],
+                "tip": ""
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 100
+              }
+            ]
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000027",
+          "metadata": {
+            "contentType": "Summary",
+            "license": "U",
+            "title": "Oppsummering"
+          }
+        },
+        "displayAt": 3
+      }
+    },
+    "override": {
+      "showSolutionButton": "on",
+      "retryButton": "on"
+    }
+  },
+  "expected": [
+    {
+      "path": "interactiveVideo.video.files",
+      "message": "V-VID-TRANSCRIPT.missing"
+    }
+  ]
+}

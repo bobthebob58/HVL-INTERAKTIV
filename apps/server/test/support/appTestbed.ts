@@ -22,6 +22,7 @@ import type { IContentMetadata } from '@lumieducation/h5p-server';
 import type { Provider } from 'ltijs';
 import { startMockPlatform, type MockPlatform } from '../../../../tools/mock-platform/mockPlatform.mjs';
 import { loadEnv, type Env } from '../../src/config/env.js';
+import { loadValidationContext } from '../../src/config/validationContext.js';
 import { createH5pRuntime, type H5pRuntime } from '../../src/h5p/createH5pRuntime.js';
 import { asAccountUser } from '../../src/h5p/HvlH5pUser.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
@@ -30,6 +31,7 @@ import { createS3Client } from '../../src/infra/s3Client.js';
 import { syncLtiPlatforms } from '../../src/lti/platforms/syncLtiPlatforms.js';
 import { createLogger } from '../../src/logging/logger.js';
 import { createApp, type App } from '../../src/server/createApp.js';
+import { createContentValidator } from '../../src/validation/validateContent.js';
 import { uniqueName } from './services.js';
 import { removeTestBucket } from './storageFixtures.js';
 import { syntheticLibraryDir, type SyntheticLibrary } from './syntheticLibraries.js';
@@ -103,7 +105,9 @@ export async function openAppTestbed(
     destination: new Writable({ write: (chunk, _e, done) => (logs.push(String(chunk)), done()) }),
   });
   const runtime = await createH5pRuntime({ env, logger, db, redis, s3 });
-  const built = createApp({ env, logger, db, redis, h5p: runtime });
+  // WHY: the whole app as main.ts builds it, including the real pre-publish validator (D-073).
+  const validator = createContentValidator(loadValidationContext(env));
+  const built = createApp({ env, logger, db, redis, h5p: runtime, validator });
   const platforms = scopedTo(built.lti.provider.platformManager, mock.canvas.issuer);
   await syncLtiPlatforms(env.LTI_PLATFORMS, { platforms, db });
   const platform = await platforms.getPlatformByUrlAndClientId(mock.canvas.issuer, mock.canvas.clientId);

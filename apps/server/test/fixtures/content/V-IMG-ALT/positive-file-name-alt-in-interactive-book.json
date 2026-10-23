@@ -1,0 +1,64 @@
+{
+  "description": "An image two levels down (book → chapter → image) with the alt text «bilde».",
+  "mainLibrary": "H5P.InteractiveBook 1.15",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "showCoverPage": false,
+    "bookCover": {},
+    "chapters": [
+      {
+        "library": "H5P.Column 1.22",
+        "params": {
+          "content": [
+            {
+              "content": {
+                "library": "H5P.Image 1.1",
+                "params": {
+                  "file": {
+                    "path": "images/diagram.png",
+                    "mime": "image/png",
+                    "copyright": {
+                      "license": "U"
+                    },
+                    "width": 960,
+                    "height": 540
+                  },
+                  "decorative": false,
+                  "alt": "bilde"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000004",
+                "metadata": {
+                  "contentType": "Image",
+                  "license": "U",
+                  "title": "Bilete"
+                }
+              },
+              "useSeparator": "auto"
+            }
+          ]
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000005",
+        "metadata": {
+          "contentType": "Column",
+          "license": "U",
+          "title": "Kapittel 1"
+        }
+      }
+    ],
+    "behaviour": {
+      "defaultTableOfContents": true,
+      "progressIndicators": true,
+      "displaySummary": true,
+      "enableRetry": true
+    }
+  },
+  "expected": [
+    {
+      "path": "chapters[0].params.content[0].content.params.alt",
+      "message": "V-IMG-ALT.fileName"
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "description": "A chapter with 1 600 words and a task, and a short chapter without one.",
+  "mainLibrary": "H5P.InteractiveBook 1.15",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "showCoverPage": false,
+    "bookCover": {},
+    "chapters": [
+      {
+        "library": "H5P.Column 1.22",
+        "params": {
+          "content": [
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<p>Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på.</p>"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000128",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Tekst"
+                }
+              },
+              "useSeparator": "auto"
+            },
+            {
+              "content": {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+                  "answers": [
+                    {
+                      "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                      "correct": true,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    },
+                    {
+                      "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                      "correct": false,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    }
+                  ],
+                  "overallFeedback": [
+                    {
+                      "from": 0,
+                      "to": 100,
+                      "feedback": ""
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "singlePoint": false,
+                    "randomAnswers": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000129",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              },
+              "useSeparator": "auto"
+            }
+          ]
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000131",
+        "metadata": {
+          "contentType": "Column",
+          "license": "U",
+          "title": "Kapittel 1"
+        }
+      },
+      {
+        "library": "H5P.Column 1.22",
+        "params": {
+          "content": [
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<p>Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding medan læringa framleis held på. Når studentane får vite kva dei må arbeide meir med, kan dei justere i tide. Ein kort quiz før samlinga viser læraren kva gruppa treng mest hjelp med. Undervegsvurdering gir studentane tilbakemelding</p>"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000130",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Tekst"
+                }
+              },
+              "useSeparator": "auto"
+            }
+          ]
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000132",
+        "metadata": {
+          "contentType": "Column",
+          "license": "U",
+          "title": "Kapittel 2"
+        }
+      }
+    ],
+    "behaviour": {
+      "defaultTableOfContents": true,
+      "progressIndicators": true,
+      "displaySummary": true,
+      "enableRetry": true
+    }
+  },
+  "expected": []
+}

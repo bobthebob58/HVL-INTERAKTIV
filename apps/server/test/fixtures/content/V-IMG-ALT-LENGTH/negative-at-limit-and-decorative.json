@@ -1,0 +1,63 @@
+{
+  "description": "An alt text of exactly 250 characters, and a long alt text on a decorative image.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.Image 1.1",
+          "params": {
+            "file": {
+              "path": "images/diagram.png",
+              "mime": "image/png",
+              "copyright": {
+                "license": "U"
+              },
+              "width": 960,
+              "height": 540
+            },
+            "decorative": false,
+            "alt": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx end"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000013",
+          "metadata": {
+            "contentType": "Image",
+            "license": "U",
+            "title": "Diagram"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Image 1.1",
+          "params": {
+            "file": {
+              "path": "images/diagram.png",
+              "mime": "image/png",
+              "copyright": {
+                "license": "U"
+              },
+              "width": 960,
+              "height": 540
+            },
+            "decorative": true,
+            "alt": "Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar."
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000014",
+          "metadata": {
+            "contentType": "Image",
+            "license": "U",
+            "title": "Pynt"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": []
+}

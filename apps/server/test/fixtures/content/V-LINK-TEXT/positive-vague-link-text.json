@@ -1,0 +1,17 @@
+{
+  "description": "A link whose text is «klikk her».",
+  "mainLibrary": "H5P.AdvancedText 1.1",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "text": "<p>Emneplanen finn du <a href=\"https://www.hvl.no/studier/\">klikk her</a>.</p>"
+  },
+  "expected": [
+    {
+      "path": "text",
+      "message": "V-LINK-TEXT.vague"
+    }
+  ]
+}

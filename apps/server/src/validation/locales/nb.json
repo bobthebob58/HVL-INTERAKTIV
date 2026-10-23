@@ -1,0 +1,75 @@
+{
+  "V-IMG-ALT": {
+    "missing": "Bildet mangler alternativ tekst. Skriv kort hva bildet viser og hvorfor det er med. Er bildet bare pynt, kan du merke det som dekorativt.",
+    "fileName": "Den alternative teksten «{{alt}}» ser ut som et filnavn. Skriv i stedet kort hva bildet viser og hvorfor det er med."
+  },
+  "V-IMG-ALT-LENGTH": {
+    "tooLong": "Den alternative teksten er {{length}} tegn lang (mer enn {{max}}). Skjermlesere leser den i ett. Skriv en kort beskrivelse her, og legg den lange forklaringen i teksten ved bildet."
+  },
+  "V-VID-CAPTIONS": {
+    "missing": "Videoen har ikke teksting. Last opp en tekstingsfil (WebVTT, .vtt), eller bruk en video fra en videotjeneste som er satt opp med teksting, for eksempel Panopto.",
+    "wrongKind": "Tekstsporet til videoen er merket som «Beskrivelser» eller «Kapitler» og vises ikke som teksting. Sett typen til «Undertekster» eller «Teksting»."
+  },
+  "V-VID-TRANSCRIPT": {
+    "missing": "Det finnes ingen transkripsjon eller tekstversjon av videoen. Legg ved en lenke til en transkripsjon, eller skriv innholdet som tekst ved videoen."
+  },
+  "V-HOTSPOT-ORDER": {
+    "unordered": "Markørene er ikke nummererte, og rekkefølgen i listen følger ikke bildet. Velg nummer som ikon, eller sorter markørene ovenfra og ned og fra venstre mot høyre.",
+    "noHeader": "Markøren har ingen overskrift. Skriv en kort overskrift som sier hva markøren handler om. Skjermlesere leser den opp."
+  },
+  "V-TABLE-HEADERS": {
+    "missing": "Tabellen har ingen overskriftsceller. Gjør den første raden eller kolonnen til overskrift, slik at skjermlesere kan si hva hver verdi hører til."
+  },
+  "V-HEADING-ORDER": {
+    "skipped": "Overskriftene hopper over et nivå ({{from}} → {{to}}). Bruk {{next}} her, eller endre nivåene slik at strukturen henger sammen."
+  },
+  "V-LINK-TEXT": {
+    "vague": "Lenketeksten «{{text}}» sier ikke hvor lenken går. Skriv hva lenken åpner, for eksempel «Emneplanen for emnet».",
+    "bareUrl": "Lenken viser bare adressen. Skriv en lenketekst som sier hva lenken åpner."
+  },
+  "V-LANG": {
+    "missing": "Aktiviteten har ikke noe språk. Velg språket i metadata, slik at skjermlesere uttaler teksten riktig."
+  },
+  "V-COLOUR-WORDS": {
+    "colourOnly": "Teksten viser til noe bare med farge («{{phrase}}»). Ikke alle ser farger. Nevn også plassering, form, nummer eller navn."
+  },
+  "V-BRANCH-COLOUR": {
+    "colourOnly": "Valget er bare en farge. Ikke alle ser farger, og skjermlesere leser bare teksten. Skriv hva valget går ut på."
+  },
+  "PED-H01": {
+    "tooLong": "Videoen er minst {{minutes}} minutter lang (anbefalt høyst {{max}}). Del den i bolker på 6–9 minutter, slik at studentene holder på oppmerksomheten (Guo, Kim & Rubin 2014)."
+  },
+  "PED-H02": {
+    "gap": "Videoen går {{minutes}} minutter uten oppgave (anbefalt høyst {{max}}). Legg inn et lite spørsmål hvert andre eller tredje minutt (Szpunar, Khan & Schacter 2013)."
+  },
+  "PED-H03": {
+    "noSummary": "Videoen slutter uten oppsummering. Legg til en oppsummering eller en refleksjonsoppgave til slutt, slik at studentene samler det de har lært (Brame 2016)."
+  },
+  "PED-H04": {
+    "tooMany": "Oppgavesettet har {{count}} spørsmål (anbefalt høyst {{max}}). Del det i flere korte sett med omtrent 10 spørsmål hvert (Mayer 2009)."
+  },
+  "PED-H05": {
+    "noExplanation": "Dette feilalternativet har ingen forklaring. Skriv hvorfor svaret er feil, slik at studenten kan rette opp misforståelsen (Shute 2008)."
+  },
+  "PED-H06": {
+    "decisionPoints": "Scenarioet har {{count}} beslutningspunkter på hovedveien (anbefalt {{min}}–{{max}}). Hold caset til 3–4 beslutninger med forklaringer (Schön 1983).",
+    "choiceFeedback": "Valget har ingen tilbakemelding. Forklar hva valget fører til, og hvorfor (Schön 1983).",
+    "noWayBack": "Scenarioet har ingen vei tilbake. Slå på navigering bakover, eller lag en vei til et tidligere steg, slik at studentene kan prøve et annet valg (Schön 1983)."
+  },
+  "PED-H07": {
+    "retryOff": "«Prøv igjen» er slått av. Underveisoppgaver virker best når studentene kan øve flere ganger, så slå det på (Dunlosky et al. 2013).",
+    "solutionsOff": "«Vis svar» er slått av. Studentene lærer av å sammenligne med fasiten, så slå det på (Dunlosky et al. 2013)."
+  },
+  "PED-H08": {
+    "tooMany": "Kolonnen har {{count}} oppgaver (anbefalt høyst {{max}}). Fordel dem på flere sider, så blir det lettere å holde oversikten (Mayer 2009)."
+  },
+  "PED-H09": {
+    "tooManyWords": "Lysbildet har {{count}} ord (anbefalt høyst {{max}}). Hold deg til ett poeng per lysbilde, og flytt resten til flere lysbilder (Mayer 2009)."
+  },
+  "PED-H10": {
+    "tooManyWords": "Kapittelet har {{count}} ord og ingen oppgave (anbefalt høyst {{max}} ord uten oppgave). Legg til en liten oppgave, slik at studentene henter fram det de har lest (Roediger & Karpicke 2006)."
+  },
+  "PED-H11": {
+    "verdictOnly": "Tilbakemeldingen sier bare om svaret var riktig eller feil. Forklar hvorfor, og hva studenten kan gjøre videre (Hattie & Timperley 2007)."
+  }
+}

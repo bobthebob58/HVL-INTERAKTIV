@@ -1,0 +1,94 @@
+{
+  "description": "A CoursePresentation whose summary slide hides «Vis svar».",
+  "mainLibrary": "H5P.CoursePresentation 1.28",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "presentation": {
+      "slides": [
+        {
+          "elements": [
+            {
+              "x": 3,
+              "y": 6,
+              "width": 90,
+              "height": 25,
+              "action": {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+                  "answers": [
+                    {
+                      "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                      "correct": true,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    },
+                    {
+                      "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                      "correct": false,
+                      "tipsAndFeedback": {
+                        "tip": "",
+                        "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                        "notChosenFeedback": ""
+                      }
+                    }
+                  ],
+                  "overallFeedback": [
+                    {
+                      "from": 0,
+                      "to": 100,
+                      "feedback": ""
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "singlePoint": false,
+                    "randomAnswers": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000096",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              },
+              "solution": "",
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false
+            }
+          ],
+          "keywords": [
+            {
+              "main": "Side 1"
+            }
+          ],
+          "slideBackgroundSelector": {}
+        }
+      ],
+      "keywordListEnabled": true,
+      "globalBackgroundSelector": {}
+    },
+    "override": {
+      "summarySlideSolutionButton": false,
+      "summarySlideRetryButton": true
+    }
+  },
+  "expected": [
+    {
+      "path": "override.summarySlideSolutionButton",
+      "message": "PED-H07.solutionsOff"
+    }
+  ]
+}

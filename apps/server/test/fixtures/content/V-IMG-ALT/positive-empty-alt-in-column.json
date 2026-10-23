@@ -1,0 +1,58 @@
+{
+  "description": "An H5P.Image inside a Column with an empty alt text.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<p>Sjå på diagrammet.</p>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000001",
+          "metadata": {
+            "contentType": "Text",
+            "license": "U",
+            "title": "Tekst"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Image 1.1",
+          "params": {
+            "file": {
+              "path": "images/diagram.png",
+              "mime": "image/png",
+              "copyright": {
+                "license": "U"
+              },
+              "width": 960,
+              "height": 540
+            },
+            "decorative": false,
+            "alt": ""
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000002",
+          "metadata": {
+            "contentType": "Image",
+            "license": "U",
+            "title": "Diagram"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": [
+    {
+      "path": "content[1].content.params.alt",
+      "message": "V-IMG-ALT.missing"
+    }
+  ]
+}

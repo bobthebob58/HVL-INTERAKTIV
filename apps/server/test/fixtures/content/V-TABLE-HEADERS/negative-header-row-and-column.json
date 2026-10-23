@@ -1,0 +1,43 @@
+{
+  "description": "H5P.Table's default table (header row) and a table with a header column.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.Table 1.2",
+          "params": {
+            "text": "<figure class=\"table\"><table class=\"h5p-table\"><thead><tr><th>Fase</th><th>Aktivitet</th></tr></thead><tbody><tr><td>Før</td><td>Quiz</td></tr></tbody></table></figure>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000043",
+          "metadata": {
+            "contentType": "Table",
+            "license": "U",
+            "title": "Tabell"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<table><tbody><tr><th scope=\"row\">Før</th><td>Quiz</td></tr></tbody></table>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000044",
+          "metadata": {
+            "contentType": "Text",
+            "license": "U",
+            "title": "Tekst"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": []
+}

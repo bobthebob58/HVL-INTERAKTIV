@@ -1,0 +1,27 @@
+{
+  "description": "An image whose alt text is 307 characters long.",
+  "mainLibrary": "H5P.Image 1.1",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "file": {
+      "path": "images/diagram.png",
+      "mime": "image/png",
+      "copyright": {
+        "license": "U"
+      },
+      "width": 960,
+      "height": 540
+    },
+    "decorative": false,
+    "alt": "Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar. Diagrammet viser læringsdesign i tre fasar."
+  },
+  "expected": [
+    {
+      "path": "alt",
+      "message": "V-IMG-ALT-LENGTH.tooLong"
+    }
+  ]
+}

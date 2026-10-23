@@ -1,0 +1,122 @@
+{
+  "description": "An InteractiveVideo with a subtitles track, and an H5P.Video with no source yet.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.InteractiveVideo 1.28",
+          "params": {
+            "interactiveVideo": {
+              "video": {
+                "files": [
+                  {
+                    "path": "videos/clip.webm",
+                    "mime": "video/webm",
+                    "copyright": {
+                      "license": "U"
+                    }
+                  }
+                ],
+                "startScreenOptions": {
+                  "title": "Video",
+                  "hideStartTitle": false
+                },
+                "textTracks": {
+                  "videoTrack": [
+                    {
+                      "label": "Nynorsk",
+                      "kind": "subtitles",
+                      "srcLang": "nn",
+                      "track": {
+                        "path": "videos/clip.nn.vtt",
+                        "mime": "text/vtt",
+                        "copyright": {
+                          "license": "U"
+                        }
+                      }
+                    }
+                  ],
+                  "defaultTrackLabel": "Nynorsk"
+                }
+              },
+              "assets": {
+                "interactions": [],
+                "bookmarks": [],
+                "endscreens": []
+              },
+              "summary": {
+                "task": {
+                  "library": "H5P.Summary 1.10",
+                  "params": {
+                    "intro": "<p>Vel den påstanden som stemmer.</p>",
+                    "summaries": [
+                      {
+                        "subContentId": "00000000-0000-4000-8000-000000000022",
+                        "summary": ["<p>Teksting hjelper alle.</p>", "<p>Teksting trengst aldri.</p>"],
+                        "tip": ""
+                      }
+                    ],
+                    "overallFeedback": [
+                      {
+                        "from": 0,
+                        "to": 100
+                      }
+                    ]
+                  },
+                  "subContentId": "00000000-0000-4000-8000-000000000023",
+                  "metadata": {
+                    "contentType": "Summary",
+                    "license": "U",
+                    "title": "Oppsummering"
+                  }
+                },
+                "displayAt": 3
+              }
+            },
+            "override": {
+              "showSolutionButton": "on",
+              "retryButton": "on"
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000024",
+          "metadata": {
+            "contentType": "Interactive Video",
+            "license": "U",
+            "title": "Video"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Video 1.6",
+          "params": {
+            "sources": [],
+            "visuals": {
+              "fit": true,
+              "controls": true
+            },
+            "playback": {
+              "autoplay": false,
+              "loop": false
+            },
+            "a11y": []
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000025",
+          "metadata": {
+            "contentType": "Video",
+            "license": "U",
+            "title": "Tom video"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": []
+}

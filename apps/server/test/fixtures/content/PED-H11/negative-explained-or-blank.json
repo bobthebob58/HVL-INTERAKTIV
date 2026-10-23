@@ -1,0 +1,50 @@
+{
+  "description": "Overall feedback that starts with a verdict and explains, and a blank range (H5P shows the score instead).",
+  "mainLibrary": "H5P.MultiChoice 1.16",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "question": "<p>Spørsmål?</p>",
+    "answers": [
+      {
+        "text": "<div>A</div>",
+        "correct": true,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Ja, fordi A.</div>",
+          "notChosenFeedback": ""
+        }
+      },
+      {
+        "text": "<div>B</div>",
+        "correct": false,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Nei, fordi B.</div>",
+          "notChosenFeedback": ""
+        }
+      }
+    ],
+    "overallFeedback": [
+      {
+        "from": 0,
+        "to": 50,
+        "feedback": ""
+      },
+      {
+        "from": 51,
+        "to": 100,
+        "feedback": "Rett. Du ser at tilbakemelding undervegs hjelper studentane vidare."
+      }
+    ],
+    "behaviour": {
+      "enableRetry": true,
+      "enableSolutionsButton": true,
+      "singlePoint": false,
+      "randomAnswers": false
+    }
+  },
+  "expected": []
+}

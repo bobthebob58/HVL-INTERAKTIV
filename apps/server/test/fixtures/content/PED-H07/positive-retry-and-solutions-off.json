@@ -1,0 +1,86 @@
+{
+  "description": "A QuestionSet that turns retry off for all questions and hides the solution at the end, with a MultiChoice that turns retry off itself.",
+  "mainLibrary": "H5P.QuestionSet 1.21",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "introPage": {
+      "showIntroPage": false,
+      "title": "Quiz"
+    },
+    "progressType": "dots",
+    "passPercentage": 50,
+    "questions": [
+      {
+        "library": "H5P.MultiChoice 1.16",
+        "params": {
+          "question": "<p>Spørsmål?</p>",
+          "answers": [
+            {
+              "text": "<div>A</div>",
+              "correct": true,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Ja, fordi A.</div>",
+                "notChosenFeedback": ""
+              }
+            },
+            {
+              "text": "<div>B</div>",
+              "correct": false,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Nei, fordi B.</div>",
+                "notChosenFeedback": ""
+              }
+            }
+          ],
+          "overallFeedback": [
+            {
+              "from": 0,
+              "to": 100,
+              "feedback": ""
+            }
+          ],
+          "behaviour": {
+            "enableRetry": false,
+            "enableSolutionsButton": true
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000095",
+        "metadata": {
+          "contentType": "Multiple Choice",
+          "license": "U",
+          "title": "Spørsmål"
+        }
+      }
+    ],
+    "disableBackwardsNavigation": false,
+    "randomQuestions": false,
+    "endGame": {
+      "showResultPage": true,
+      "showSolutionButton": false,
+      "showRetryButton": true
+    },
+    "override": {
+      "checkButton": true,
+      "retryButton": "off"
+    }
+  },
+  "expected": [
+    {
+      "path": "endGame.showSolutionButton",
+      "message": "PED-H07.solutionsOff"
+    },
+    {
+      "path": "override.retryButton",
+      "message": "PED-H07.retryOff"
+    },
+    {
+      "path": "questions[0].params.behaviour.enableRetry",
+      "message": "PED-H07.retryOff"
+    }
+  ]
+}

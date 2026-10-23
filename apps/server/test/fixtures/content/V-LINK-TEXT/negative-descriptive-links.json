@@ -1,0 +1,47 @@
+{
+  "description": "Links whose texts say where they lead.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<p>Les <a href=\"https://www.hvl.no/studier/\">emneplanen for MGL5</a>.</p>"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000049",
+          "metadata": {
+            "contentType": "Text",
+            "license": "U",
+            "title": "Tekst"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Link 1.3",
+          "params": {
+            "title": "Universell utforming ved HVL",
+            "linkWidget": {
+              "protocol": "https://",
+              "url": "www.hvl.no/uu"
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000050",
+          "metadata": {
+            "contentType": "Link",
+            "license": "U",
+            "title": "Lenkje"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": []
+}

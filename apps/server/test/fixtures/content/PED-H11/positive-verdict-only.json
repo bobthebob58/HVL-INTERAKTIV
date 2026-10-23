@@ -1,0 +1,122 @@
+{
+  "description": "Overall feedback that is only «Feil!» / «Riktig!» in a MultiChoice, «Correct, well done!» at the end of a QuestionSet, and a TrueFalse that says only «Rett».",
+  "mainLibrary": "H5P.QuestionSet 1.21",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "introPage": {
+      "showIntroPage": false,
+      "title": "Quiz"
+    },
+    "progressType": "dots",
+    "passPercentage": 50,
+    "questions": [
+      {
+        "library": "H5P.MultiChoice 1.16",
+        "params": {
+          "question": "<p>Spørsmål?</p>",
+          "answers": [
+            {
+              "text": "<div>A</div>",
+              "correct": true,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Ja, fordi A.</div>",
+                "notChosenFeedback": ""
+              }
+            },
+            {
+              "text": "<div>B</div>",
+              "correct": false,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Nei, fordi B.</div>",
+                "notChosenFeedback": ""
+              }
+            }
+          ],
+          "overallFeedback": [
+            {
+              "from": 0,
+              "to": 50,
+              "feedback": "Feil!"
+            },
+            {
+              "from": 51,
+              "to": 100,
+              "feedback": "<p>Riktig!</p>"
+            }
+          ],
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "singlePoint": false,
+            "randomAnswers": false
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000133",
+        "metadata": {
+          "contentType": "Multiple Choice",
+          "license": "U",
+          "title": "Spørsmål"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "Rett",
+            "feedbackOnWrong": "Nei. Påstanden blandar saman to omgrep."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000134",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand"
+        }
+      }
+    ],
+    "disableBackwardsNavigation": false,
+    "randomQuestions": false,
+    "endGame": {
+      "showResultPage": true,
+      "showSolutionButton": true,
+      "showRetryButton": true,
+      "overallFeedback": [
+        {
+          "from": 0,
+          "to": 100,
+          "feedback": "Correct, well done!"
+        }
+      ]
+    },
+    "override": {
+      "checkButton": true
+    }
+  },
+  "expected": [
+    {
+      "path": "endGame.overallFeedback[0].feedback",
+      "message": "PED-H11.verdictOnly"
+    },
+    {
+      "path": "questions[0].params.overallFeedback[0].feedback",
+      "message": "PED-H11.verdictOnly"
+    },
+    {
+      "path": "questions[0].params.overallFeedback[1].feedback",
+      "message": "PED-H11.verdictOnly"
+    },
+    {
+      "path": "questions[1].params.behaviour.feedbackOnCorrect",
+      "message": "PED-H11.verdictOnly"
+    }
+  ]
+}

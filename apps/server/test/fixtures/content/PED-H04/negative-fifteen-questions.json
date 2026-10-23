@@ -1,0 +1,321 @@
+{
+  "description": "Exactly 15 questions (the limit).",
+  "mainLibrary": "H5P.QuestionSet 1.21",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "introPage": {
+      "showIntroPage": false,
+      "title": "Quiz"
+    },
+    "progressType": "dots",
+    "passPercentage": 50,
+    "questions": [
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 1.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000066",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 1"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 2.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000067",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 2"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 3.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000068",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 3"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 4.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000069",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 4"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 5.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000070",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 5"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 6.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000071",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 6"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 7.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000072",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 7"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 8.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000073",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 8"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 9.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000074",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 9"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 10.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000075",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 10"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 11.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000076",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 11"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 12.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000077",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 12"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 13.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000078",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 13"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 14.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000079",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 14"
+        }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>Påstand 15.</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "",
+            "feedbackOnWrong": "Nei. Sjå igjen på definisjonen."
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000080",
+        "metadata": {
+          "contentType": "True/False",
+          "license": "U",
+          "title": "Påstand 15"
+        }
+      }
+    ],
+    "disableBackwardsNavigation": false,
+    "randomQuestions": false,
+    "endGame": {
+      "showResultPage": true,
+      "showSolutionButton": true,
+      "showRetryButton": true,
+      "overallFeedback": [
+        {
+          "from": 0,
+          "to": 100,
+          "feedback": "Gå gjennom svara med «Vis svar» og sjå kva du kan øve meir på."
+        }
+      ]
+    },
+    "override": {
+      "checkButton": true
+    }
+  },
+  "expected": []
+}

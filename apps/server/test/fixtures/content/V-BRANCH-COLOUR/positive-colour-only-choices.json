@@ -1,0 +1,98 @@
+{
+  "description": "Three choices that are only a colour: «Raud», a green circle and «The green one».",
+  "mainLibrary": "H5P.BranchingScenario 1.10",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "branchingScenario": {
+      "title": "Planlegg ei samling",
+      "startScreen": {
+        "startScreenTitle": "<p>Planlegg ei samling</p>",
+        "startScreenSubtitle": "<p>Vel og sjå kva som skjer.</p>"
+      },
+      "endScreens": [
+        {
+          "endScreenTitle": "<p>Slutt</p>",
+          "endScreenSubtitle": "<p>Start på nytt om du vil.</p>",
+          "endScreenScore": 0,
+          "contentId": -1
+        }
+      ],
+      "content": [
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Kva dør vel du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Raud",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Du gjekk inn.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "🟢",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Du gjekk inn.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "The green one",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Du gjekk inn.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000051",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Val"
+            }
+          },
+          "contentId": 0,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        }
+      ],
+      "scoringOptionGroup": {
+        "scoringOption": "no-score"
+      },
+      "behaviour": {
+        "enableBackwardsNavigation": false,
+        "forceContentFinished": false,
+        "randomizeBranchingQuestions": false
+      }
+    }
+  },
+  "expected": [
+    {
+      "path": "branchingScenario.content[0].type.params.branchingQuestion.alternatives[0].text",
+      "message": "V-BRANCH-COLOUR.colourOnly"
+    },
+    {
+      "path": "branchingScenario.content[0].type.params.branchingQuestion.alternatives[1].text",
+      "message": "V-BRANCH-COLOUR.colourOnly"
+    },
+    {
+      "path": "branchingScenario.content[0].type.params.branchingQuestion.alternatives[2].text",
+      "message": "V-BRANCH-COLOUR.colourOnly"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "description": "Every wrong option explains why.",
+  "mainLibrary": "H5P.MultiChoice 1.16",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+    "answers": [
+      {
+        "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+        "correct": true,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+          "notChosenFeedback": ""
+        }
+      },
+      {
+        "text": "<div>Ho tel med i sluttkarakteren.</div>",
+        "correct": false,
+        "tipsAndFeedback": {
+          "tip": "",
+          "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+          "notChosenFeedback": ""
+        }
+      }
+    ],
+    "overallFeedback": [
+      {
+        "from": 0,
+        "to": 100,
+        "feedback": ""
+      }
+    ],
+    "behaviour": {
+      "enableRetry": true,
+      "enableSolutionsButton": true,
+      "singlePoint": false,
+      "randomAnswers": false
+    }
+  },
+  "expected": []
+}

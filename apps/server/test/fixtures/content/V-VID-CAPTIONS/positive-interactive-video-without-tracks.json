@@ -1,0 +1,74 @@
+{
+  "description": "An InteractiveVideo with an uploaded file and no text track.",
+  "mainLibrary": "H5P.InteractiveVideo 1.28",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "interactiveVideo": {
+      "video": {
+        "files": [
+          {
+            "path": "videos/clip.webm",
+            "mime": "video/webm",
+            "copyright": {
+              "license": "U"
+            }
+          }
+        ],
+        "startScreenOptions": {
+          "title": "Video",
+          "hideStartTitle": false
+        },
+        "textTracks": {
+          "videoTrack": [],
+          "defaultTrackLabel": "Nynorsk"
+        }
+      },
+      "assets": {
+        "interactions": [],
+        "bookmarks": [],
+        "endscreens": []
+      },
+      "summary": {
+        "task": {
+          "library": "H5P.Summary 1.10",
+          "params": {
+            "intro": "<p>Vel den påstanden som stemmer.</p>",
+            "summaries": [
+              {
+                "subContentId": "00000000-0000-4000-8000-000000000015",
+                "summary": ["<p>Teksting hjelper alle.</p>", "<p>Teksting trengst aldri.</p>"],
+                "tip": ""
+              }
+            ],
+            "overallFeedback": [
+              {
+                "from": 0,
+                "to": 100
+              }
+            ]
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000016",
+          "metadata": {
+            "contentType": "Summary",
+            "license": "U",
+            "title": "Oppsummering"
+          }
+        },
+        "displayAt": 3
+      }
+    },
+    "override": {
+      "showSolutionButton": "on",
+      "retryButton": "on"
+    }
+  },
+  "expected": [
+    {
+      "path": "interactiveVideo.video.textTracks",
+      "message": "V-VID-CAPTIONS.missing"
+    }
+  ]
+}

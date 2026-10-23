@@ -1,0 +1,156 @@
+{
+  "description": "No summary statements, but the last interaction is a free-text reflection.",
+  "mainLibrary": "H5P.InteractiveVideo 1.28",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "interactiveVideo": {
+      "video": {
+        "files": [
+          {
+            "path": "videos/clip.webm",
+            "mime": "video/webm",
+            "copyright": {
+              "license": "U"
+            }
+          }
+        ],
+        "startScreenOptions": {
+          "title": "Video",
+          "hideStartTitle": false
+        },
+        "textTracks": {
+          "videoTrack": [
+            {
+              "label": "Nynorsk",
+              "kind": "subtitles",
+              "srcLang": "nn",
+              "track": {
+                "path": "videos/clip.nn.vtt",
+                "mime": "text/vtt",
+                "copyright": {
+                  "license": "U"
+                }
+              }
+            }
+          ],
+          "defaultTrackLabel": "Nynorsk"
+        }
+      },
+      "assets": {
+        "interactions": [
+          {
+            "x": 4,
+            "y": 6,
+            "width": 10,
+            "height": 10,
+            "duration": {
+              "from": 60,
+              "to": 70
+            },
+            "pause": true,
+            "displayType": "button",
+            "buttonOnMobile": false,
+            "label": "",
+            "action": {
+              "library": "H5P.MultiChoice 1.16",
+              "params": {
+                "question": "<p>Kva kjenneteiknar undervegsvurdering?</p>",
+                "answers": [
+                  {
+                    "text": "<div>Ho gir tilbakemelding medan læringa held på.</div>",
+                    "correct": true,
+                    "tipsAndFeedback": {
+                      "tip": "",
+                      "chosenFeedback": "<div>Ja. Tilbakemeldinga kjem medan det er tid til å justere.</div>",
+                      "notChosenFeedback": ""
+                    }
+                  },
+                  {
+                    "text": "<div>Ho tel med i sluttkarakteren.</div>",
+                    "correct": false,
+                    "tipsAndFeedback": {
+                      "tip": "",
+                      "chosenFeedback": "<div>Nei. Det er sluttvurdering; undervegsvurdering skal hjelpe læringa.</div>",
+                      "notChosenFeedback": ""
+                    }
+                  }
+                ],
+                "overallFeedback": [
+                  {
+                    "from": 0,
+                    "to": 100,
+                    "feedback": ""
+                  }
+                ],
+                "behaviour": {
+                  "enableRetry": true,
+                  "enableSolutionsButton": true,
+                  "singlePoint": false,
+                  "randomAnswers": false
+                }
+              },
+              "subContentId": "00000000-0000-4000-8000-000000000027",
+              "metadata": {
+                "contentType": "Multiple Choice",
+                "license": "U",
+                "title": "Spørsmål"
+              }
+            }
+          },
+          {
+            "x": 4,
+            "y": 6,
+            "width": 10,
+            "height": 10,
+            "duration": {
+              "from": 300,
+              "to": 310
+            },
+            "pause": true,
+            "displayType": "button",
+            "buttonOnMobile": false,
+            "label": "",
+            "action": {
+              "library": "H5P.FreeTextQuestion 1.0",
+              "params": {
+                "question": "<p>Kva tek du med deg?</p>"
+              },
+              "subContentId": "00000000-0000-4000-8000-000000000028",
+              "metadata": {
+                "contentType": "Free Text Question",
+                "license": "U",
+                "title": "Refleksjon"
+              }
+            }
+          }
+        ],
+        "bookmarks": [],
+        "endscreens": []
+      },
+      "summary": {
+        "task": {
+          "library": "H5P.Summary 1.10",
+          "params": {
+            "intro": "",
+            "summaries": []
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000029",
+          "metadata": {
+            "contentType": "Summary",
+            "license": "U",
+            "title": "Oppsummering"
+          }
+        },
+        "displayAt": 3
+      }
+    },
+    "override": {
+      "showSolutionButton": "on",
+      "retryButton": "on"
+    }
+  },
+  "expected": []
+}
