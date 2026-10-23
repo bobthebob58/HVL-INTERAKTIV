@@ -36,7 +36,7 @@
     "userid": "Auto-authorised; not requested explicitly here. The OIDC 'sub' claim is always present.",
     "profile": "Standard scope. Releases 'name' only if attribute group userinfo-name is authorised, and 'picture' only if userinfo-photo is authorised. Recommendation: authorise userinfo-name only, never userinfo-photo.",
     "email": "Releases 'email' (attribute group 'email'). 'email_verified' is always false because Feide does not verify addresses; never use e-mail as an identifier.",
-    "userid-feide": "Releases the Feide ID (eduPersonPrincipalName) as claim https://n.feide.no/claims/eduPersonPrincipalName and a 'feide:'-prefixed entry in https://n.feide.no/claims/userid_sec. Needed for ADMIN_FEIDE_IDS.",
+    "userid-feide": "Releases the Feide ID (eduPersonPrincipalName) as claim https://n.feide.no/claims/eduPersonPrincipalName and a 'feide:'-prefixed entry in https://n.feide.no/claims/userid_sec. Needed for every login: the Feide ID is the server's Feide subject, and a login without one is refused (D-054); also used for ADMIN_FEIDE_IDS.",
     "groups-org": "Groups API: organisation group (type fc:org, id fc:org:<realm>) with membership.affiliation and membership.primaryAffiliation; org units (fc:orgunit). Needed for AUTH-002.",
     "groups-edu": "Groups API: FS groups in higher education (course fc:fs:emne, programme of study fc:fs:prg, etc.) when the institution has the FS integration. Needed for AUTHOR_COURSE_GROUPS.",
     "userid-nin": "NEVER request or authorise (AUTH-004). Would release https://n.feide.no/claims/nin (national identity number)."
@@ -73,7 +73,7 @@
   },
 
   "loginHint": {
-    "_optional": "Skips the organisation picker. Requires scope openid and the Customer Portal option 'Always require user interaction' to be unchecked.",
+    "_optional": "Skips the organisation picker. Requires scope openid and the Customer Portal option 'Always require user interaction' to be unchecked. The S3 server sends no login_hint.",
     "value": "feide|realm|hvl.no"
   },
 

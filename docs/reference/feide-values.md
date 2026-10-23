@@ -1,7 +1,7 @@
 # Feide OpenID Connect: evidence for `feide-oidc-config.example.json`
 
 - **Item:** 4, a stand-in for `docs/reference/feide-oidc-config.example.json` (spec 02, `AUTH-001`…`AUTH-005`).
-- **Retrieved:** 2026-10-16.
+- **Retrieved:** 2026-10-16. *What HVL IT registers* added on 2026-10-23 to match the Session 3 code.
 - **Status:** assembled from public documentation. Replace it with the Feide Customer Portal export.
 
 ## How this was gathered (and its limits)
@@ -124,13 +124,13 @@ Other scopes and attribute groups that appeared in the evidence:
 
 | Value | Result | Evidence | Confidence |
 |---|---|---|---|
-| `login_hint` | `feide|realm|<realm>` preselects the organisation, and `feide|all` shows the picker. It needs scope `openid`, and the portal option "Always require user interaction" must be unchecked. | F-OIDC (snippet). G-OSLO `views/auth.py:129` `login_hint=f"feide|realm|{feide_realm}"`. N-NODEBB `library.js:110` `loginHint: "feide|all"`. | high |
+| `login_hint` | `feide\|realm\|<realm>` preselects the organisation, and `feide\|all` shows the picker. It needs scope `openid`, and the portal option "Always require user interaction" must be unchecked. | F-OIDC (snippet). G-OSLO `views/auth.py:129` `login_hint=f"feide\|realm\|{feide_realm}"`. N-NODEBB `library.js:110` `loginHint: "feide\|all"`. | high |
 
 ### HVL-specific values
 
 | Value | Result | Evidence | Confidence |
 |---|---|---|---|
-| HVL Feide realm / org group | `hvl.no` / `fc:org:hvl.no` (assumed) | Spec 02 assumes `hvl.no`, and HVL's e-mail domains are `hvl.no` and `stud.hvl.no` (search result covering HVL's Covidence licence). GitHub code search for `"fc:org:hvl.no"` and `"realm|hvl.no"` returned 0 hits. **No public source confirms it.** | low |
+| HVL Feide realm / org group | `hvl.no` / `fc:org:hvl.no` (assumed) | Spec 02 assumes `hvl.no`, and HVL's e-mail domains are `hvl.no` and `stud.hvl.no` (search result covering HVL's Covidence licence). GitHub code search for `"fc:org:hvl.no"` and `"realm\|hvl.no"` returned 0 hits. **No public source confirms it.** | low |
 
 ### Customer Portal registration fields
 
@@ -148,6 +148,31 @@ Other scopes and attribute groups that appeared in the evidence:
 | "Always require user interaction" | F-OIDC (snippet), in the context of `login_hint` | high |
 | Several redirect URIs on file at once | G-NAV `allauth-and-oidc.rst:249`: "Dataporten supports having multiple redirect urls on file simultaneously." | medium |
 | Plain-HTTP redirect URIs are allowed only in development | F-TOKENS-HOWTO (snippet): "For an application in production you are required to only use HTTPS secured endpoints." | high |
+
+## What HVL IT registers in the Customer Portal (matches the S3 code)
+
+The server builds its Feide URLs on `PUBLIC_BASE_URL` (`apps/server/src/server/createApp.ts`), so the portal must
+hold them exactly, for every origin the server runs on: production `https://interaktiv.hvl.no`, plus any test
+server. Feide accepts plain-HTTP URIs such as `http://localhost:3000/…` for development only.
+
+| Customer Portal field | Value | Where the server uses it |
+|---|---|---|
+| Redirect URI after login | `<PUBLIC_BASE_URL>/auth/feide/callback`, e.g. `https://interaktiv.hvl.no/auth/feide/callback` | `redirect_uri` of the authorisation request and the code exchange (`apps/server/src/auth/feide/FeideClient.ts`); the route is `GET /auth/feide/callback` |
+| Redirect URI for logout | `<PUBLIC_BASE_URL>/auth/logged-out`, e.g. `https://interaktiv.hvl.no/auth/logged-out` | `post_logout_redirect_uri` with `id_token_hint` at logout (`AUTH-003`); `GET /auth/logged-out` says goodbye and offers a new login |
+| Client type | Confidential (client ID and client secret) | The server authenticates at the token endpoint with `client_secret_post`, which Feide supports alongside `client_secret_basic` |
+| Attribute groups | `userinfo-name`, `email`, `userid-feide`, `groups-org`, `groups-edu`; **never** `userinfo-photo` or `userid-nin` | The server sends the scope `openid profile email userid-feide groups-org groups-edu` (`FEIDE_SCOPE`). Without `userid-feide` there is no Feide ID and every login is refused (D-054); without `groups-org` no one counts as an HVL member, so everyone is a learner (`AUTH-002`) |
+| Restrict login to selected organizations | Off, if activities may be shared with "anyone with Feide" (`AUTH-002`) | Users from other organisations log in as learners and see only activities shared with Feide (D-059) |
+| Always require user interaction | Either | The server sends no `login_hint` |
+| Login providers | Feide; disable Feide test users before production | — |
+
+What comes back goes into the server's environment (`apps/server/.env.example` documents each variable):
+
+- `FEIDE_CLIENT_ID`: the generated client ID. `FEIDE_CLIENT_SECRET`: the client secret, in the secret store only.
+- `FEIDE_ISSUER` (default `https://auth.dataporten.no`) and `FEIDE_GROUPS_API_URL` (default
+  `https://groups-api.dataporten.no`) need no change for production.
+- `ALLOWED_FEIDE_ORGS` (default `hvl.no`, realm still *(verify)*), `ADMIN_FEIDE_IDS` (Feide IDs of HVL members)
+  and `AUTHOR_COURSE_GROUPS` (FS group IDs or prefixes, e.g. `fc:fs:fs:emne:hvl.no:<course code>`, which need
+  HVL's FS integration in Feide *(verify)*).
 
 ## Conflicts and caveats
 

@@ -185,11 +185,11 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 | Q9 | `SEC-003` refuses a package whose library has a different patch version. Most `.h5p` files exported elsewhere differ in patch version. May an *older* patch be accepted for a content-only import? S2 follows the spec strictly | HVL / ALU | Pilot |
 | Q10 | Confirm that the ten seed packages may be committed to the repository (D-042 size rule; H5P libraries are mostly MIT) | Repository owner | S2 |
 | Q12 | Student authors (`AUTHOR_COURSE_GROUPS`) may share only `private` until a course visibility exists, and Feide users without a Feide ID cannot log in (D-059, D-054) | HVL / ALU | Pilot |
-| Q13 | Add `"hvl_placement": "<placement>"` to each placement's `custom_fields` in the Canvas developer key, so the graded placement is recognised (D-061) | TeCopp | S3 pilot |
+| Q13 | Confirm `"hvl_placement": "<placement>"` in each placement's `custom_fields` (now in `docs/reference/canvas-lti13-developer-key.json`), so the graded placement is recognised (D-061) | TeCopp | S3 pilot |
 | Q14 | No publishing before S4's publish flow; the S3 sharing API changes visibility only (D-066) | HVL / ALU | S4 |
 | Q15 | Learner LTI launches are not written to the authentication audit (D-064) | HVL DPO | S6 |
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
-| Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous | TeCopp | S3 |
+| Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous and equals the Feide ID; only then set `"feideLinking": true` for that platform in `LTI_PLATFORMS` (AUTH-005, D-063) | TeCopp | S3 |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
 | Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`) | HVL DPO | S6, pilot |
 

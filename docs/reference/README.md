@@ -14,9 +14,29 @@ exactly what HVL still has to supply or confirm.
 | 1 | `hvl-designmanual-og-logo.zip`: design manual PDF and official logo files (HVL press room, profil@hvl.no) | [hvl-visual-identity.md](hvl-visual-identity.md): the manual's palette (PMS/CMYK/RGB/HEX), typefaces, logo variants and rules, contrast for every colour, and proposed tokens. [tools/contrast.py](tools/contrast.py) recomputes all ratios. **No logo artwork.** | Derived; HVL to confirm values and supply logo files | S4 |
 | 2 | `hvl-modellen-for-laeringsdesign.pdf` (ALU, *Faggruppa for digital læringsdesign*) | [hvl-laeringsdesign-model.md](hvl-laeringsdesign-model.md): what HVL has published about «HVL læringsdesign» (annual report 2024 p. 23, read directly; Møgelvang & Isaksen 2025) and the phase vocabulary HVL uses. [proposals/phases.yaml](proposals/phases.yaml) is the proposed `content/laeringsdesign/phases.yaml` | Partly found; ALU to confirm labels | S5 |
 | 3 | `hvl-pedagogisk-mappe-retningslinjer.pdf` (ALU) | [hvl-pedagogisk-mappe-criteria.md](hvl-pedagogisk-mappe-criteria.md): the 2025 merit criteria (1.1–1.4, 2.1–2.4, 3.1–3.3), the three-part portfolio, limits, and the national basis. [proposals/mappe-template.nn.md](proposals/mappe-template.nn.md) is the proposed export template. No public PDF of this name was found; HVL publishes the guidance as web pages | Derived; ALU to confirm | S5 |
-| 4 | `feide-oidc-config.example.json` from the Feide Customer Portal | [feide-oidc-config.example.json](feide-oidc-config.example.json) with public endpoint values and placeholders for HVL's client, plus [feide-values.md](feide-values.md) (evidence table) | Public values high confidence; HVL client values pending | S3 |
-| 5 | `canvas-lti13-developer-key.json` exported by TeCopp, plus HVL's client and deployment IDs | [canvas-lti13-developer-key.json](canvas-lti13-developer-key.json), paste-ready (`privacy_level` `anonymous`; scopes AGS score, line-item read, NRPS read; Deep Linking placements), and [canvas-platform-values.md](canvas-platform-values.md) with every platform value cited to Instructure's docs and source at a fixed commit | Public values high confidence; HVL instance values pending | S3 |
+| 4 | `feide-oidc-config.example.json` from the Feide Customer Portal | [feide-oidc-config.example.json](feide-oidc-config.example.json) with public endpoint values and placeholders for HVL's client, plus [feide-values.md](feide-values.md) (evidence table, and what HVL IT registers for the S3 server) | Public values high confidence; HVL client values pending (Q3) | S3 |
+| 5 | `canvas-lti13-developer-key.json` exported by TeCopp, plus HVL's client and deployment IDs | [canvas-lti13-developer-key.json](canvas-lti13-developer-key.json), paste-ready (`privacy_level` `anonymous`; scopes AGS score, line-item read, NRPS read; Deep Linking placements with the custom fields `feide_login` and `hvl_placement`), and [canvas-platform-values.md](canvas-platform-values.md) with every platform value cited to Instructure's docs and source at a fixed commit, and what TeCopp registers (§1.1, §1.2) | Public values high confidence; HVL instance values pending (Q4, Q13) | S3 |
 | 6 | `h5p-core-1.28-seed-packages/` (one verified `.h5p` per content type) | [h5p-core-1.28-seed-packages/README.md](h5p-core-1.28-seed-packages/README.md): latest versions, the exact Hub request, three known h5p-server 10.0.4 incompatibilities, per-file hashes of core `1.28.0`. **No `.h5p` files yet**: hub-api.h5p.org is blocked here. Run `tools/seed/fetch-seed-packages.sh` where it is reachable | Blocked by network policy; script ready | S2 |
+
+## What HVL IT and TeCopp register (Session 3)
+
+The S3 server runs and is tested against a mock Feide and a mock Canvas (D-049). These registrations connect it
+to HVL's real services. `<PUBLIC_BASE_URL>` is the server's public origin, `https://interaktiv.hvl.no` in
+production; register the same paths for any test server.
+
+- **Feide Customer Portal (HVL IT, Q3).** Redirect URI after login `<PUBLIC_BASE_URL>/auth/feide/callback`;
+  redirect URI for logout `<PUBLIC_BASE_URL>/auth/logged-out`; a confidential client; the attribute groups
+  `userinfo-name`, `email`, `userid-feide`, `groups-org` and `groups-edu` (never `userinfo-photo` or
+  `userid-nin`). Send back the client ID and secret (`FEIDE_CLIENT_ID`, `FEIDE_CLIENT_SECRET`). Details:
+  [feide-values.md](feide-values.md), section *What HVL IT registers in the Customer Portal*.
+- **Canvas developer key (TeCopp, Q4, Q13).** Paste [canvas-lti13-developer-key.json](canvas-lti13-developer-key.json):
+  OIDC login `<PUBLIC_BASE_URL>/lti/login`, launch `<PUBLIC_BASE_URL>/lti/launch`, keyset
+  `<PUBLIC_BASE_URL>/lti/keys`, and on each of the three Deep Linking placements the custom fields
+  `feide_login` = `$Canvas.user.loginId` and `hvl_placement` = the placement's name. Enter
+  `<PUBLIC_BASE_URL>/lti/launch` in the key's Redirect URIs field, deploy the key, and send back the client ID,
+  each deployment ID (for `LTI_PLATFORMS`) and the Canvas origins that frame the tool (for `CANVAS_ORIGINS`).
+  Account linking (`"feideLinking": true` in `LTI_PLATFORMS`) is switched on only after a test launch shows
+  that `feide_login` is the Feide ID (D-063). Details: [canvas-platform-values.md](canvas-platform-values.md) §1.1 and §1.2.
 
 ## How to read the derived files
 

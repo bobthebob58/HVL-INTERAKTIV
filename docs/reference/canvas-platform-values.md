@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Status** | Assembled from Instructure's public docs and source. Replace or confirm with the TeCopp export. |
-| **Assembled** | 2026-10-21 |
+| **Assembled** | 2026-10-21; §1.1, §1.2 and §10 updated on 2026-10-23 to match the Session 3 code |
 | **Supports** | `AUTH-005`, `LTI-001`, `LTI-003`, `LTI-005`, `LTI-008`, `LTI-009`, `LTI-012`, `LTI-013` (spec 02); `DATA-002`, `DATA-005` (spec 05) |
 | **Companion file** | `canvas-lti13-developer-key.json`, ready to paste into Canvas (*Developer Keys → + LTI Key → Paste JSON*) |
 
@@ -36,18 +36,49 @@ Confidence: **high** means the official doc and the source code agree, or two in
 
 Self-hosted Canvas would differ: the `iss` "must be updated to your Canvas instance's hostname" (C:`doc/api/lti_launch_overview.md:16`). HVL's Canvas is Instructure-hosted (W: <https://www.hvl.no/en/hvl-students/learning-management-system/>; medium). **TeCopp is unknown.** A web search for "TeCopp" found nothing public. If TeCopp is an Instructure *test* environment (`*.test.instructure.com`), use the **Test** column. If it is a separate production instance, use **Production**. *(verify with TeCopp)*
 
-### 1.1 What the tool registers in Canvas (Developer Key UI, outside the JSON)
+### 1.1 What TeCopp registers in Canvas (the developer key)
+
+The tool's three LTI routes are fixed in `apps/server/src/lti/LtiProviderFactory.ts` (`LTI_ROUTES`: `/lti/login`,
+`/lti/launch`, `/lti/keys`) and served on the server's public origin, `PUBLIC_BASE_URL` (production
+`https://interaktiv.hvl.no`). The JSON and the redirect URI below use that production origin. For a server on
+another origin (a test server, say), replace `https://interaktiv.hvl.no` everywhere, and set `extensions[].domain`
+to that host.
 
 | Field | Value | Why |
 |---|---|---|
-| Redirect URIs | `https://interaktiv.hvl.no/lti/launch` | Canvas requires an *exact* match with the `redirect_uri` sent in step 2 (C:`doc/api/lti_launch_overview.md:94,101`). ltijs 7 sends `redirect_uri` = the `target_link_uri` with query and fragment removed (L:`services/launch/launch.service.js:245,255,308-318`). Every `target_link_uri` in the JSON is therefore `…/lti/launch`. |
-| JSON | `canvas-lti13-developer-key.json` | The pasted JSON does not carry redirect URIs: `LtiConfiguration.from_internal_lti_configuration` deletes `redirect_uris`, C:`lib/schemas/lti_configuration.rb:76`. |
+| JSON | `canvas-lti13-developer-key.json`, pasted in *Developer Keys → + LTI Key → Paste JSON* | The pasted JSON does not carry redirect URIs: `LtiConfiguration.from_internal_lti_configuration` deletes `redirect_uris`, C:`lib/schemas/lti_configuration.rb:76`. |
+| `oidc_initiation_url` (in the JSON) | `https://interaktiv.hvl.no/lti/login` | ltijs's login route: Canvas starts every launch here. |
+| `target_link_uri` (in the JSON, tool-wide and on each placement) | `https://interaktiv.hvl.no/lti/launch` | ltijs's launch route. |
+| `public_jwk_url` (in the JSON) | `https://interaktiv.hvl.no/lti/keys` | ltijs's keyset route: the tool's public key for each registered platform, which Canvas uses to verify Deep Linking responses and AGS token requests. |
+| `custom_fields` of each placement (in the JSON) | `"feide_login": "$Canvas.user.loginId"` and `"hvl_placement": "<the placement's own name>"` (`link_selection`, `assignment_selection` or `editor_button`) | `feide_login` links a teacher's Canvas and Feide accounts (`AUTH-005`, §7, §8); it sits on the Deep Linking placements only, never tool-wide, so learners' launches never carry it. `hvl_placement` tells the server which placement opened the picker when Canvas's own placement claim is missing, so `assignment_selection` still gets its `lineItem` (D-061, Q13). |
+| Redirect URIs (Canvas UI field, outside the JSON) | `https://interaktiv.hvl.no/lti/launch` | Canvas requires an *exact* match with the `redirect_uri` sent in step 2 (C:`doc/api/lti_launch_overview.md:94,101`). ltijs 7 sends `redirect_uri` = the `target_link_uri` with query and fragment removed (L:`services/launch/launch.service.js:245,255,308-318`). Every `target_link_uri` in the JSON is therefore `…/lti/launch`. |
+
+### 1.2 What goes back into the server configuration
+
+After pasting the key, TeCopp deploys it and reports the client ID and each deployment ID (§10). They go into the
+server's environment; `apps/server/.env.example` documents every variable.
+
+- `LTI_PLATFORMS`: a JSON array with one object per developer key, using the §1 column of the instance TeCopp
+  uses. A launch from a deployment that is not listed gets no ltik (D-051), and a change takes effect at the next
+  restart. For Instructure-hosted production Canvas (shown on several lines here; in `.env` it is one line):
+  ```json
+  [{"name":"HVL Canvas","issuer":"https://canvas.instructure.com","clientId":"<client ID>",
+    "authEndpoint":"https://sso.canvaslms.com/api/lti/authorize_redirect",
+    "tokenEndpoint":"https://sso.canvaslms.com/login/oauth2/token",
+    "jwksUrl":"https://sso.canvaslms.com/api/lti/security/jwks","deployments":["<deployment ID>"]}]
+  ```
+  Add `"feideLinking": true` to the platform only after the test launch in §10 item 4 has shown that
+  `custom.feide_login` is the teacher's Feide ID; until then the server links no Canvas and Feide accounts
+  (`AUTH-005`, D-063).
+- `CANVAS_ORIGINS`: the Canvas origins that may frame the tool, comma-separated: HVL's Canvas
+  (`https://hvl.instructure.com` *(verify domain)*), TeCopp's instance and any vanity domain. Never
+  `sso.canvaslms.com`, whose storage frame is a sibling, not an ancestor (`LTI-003`).
 
 ---
 
 ## 2. Token endpoint: checking spec `LTI-001`
 
-Spec 02 `LTI-001` (now at `docs/specs/02-auth-feide-lti13.md:128-138`) says: token `https://sso.canvaslms.com/login/oauth2/token`.
+Spec 02 `LTI-001` says: token `https://sso.canvaslms.com/login/oauth2/token`.
 
 **Verdict:** the value is **valid**, but the spec should say why, list the alternative, and record the `aud` rule. (High confidence: Canvas source and an independent vendor guide agree.)
 
@@ -165,11 +196,15 @@ Spec 05 says learners are pseudonyms; no names, e-mails or Feide IDs are stored 
 | **B:** `anonymous`, no custom field; one-time "Link with Feide" pop-up | Nothing | No Canvas PII at all | One extra Feide login per author. Needs a top-level pop-up from the iframe. |
 | **C:** `name_only` / `public` | Names (and e-mail) of all users | — | Rejected: breaks spec 05 data minimisation. |
 
-To switch from A to B, delete the three `custom_fields` objects from the JSON. Option A is safe only with the server rules proposed in §9 (`AUTH-005`).
+To switch from A to B, delete the three `feide_login` entries from the JSON and keep `hvl_placement` (D-061). Option A is safe only with the server rules proposed in §9 (`AUTH-005`), which the server follows (D-063).
 
 ---
 
 ## 9. Proposed corrections to spec 02 (and one to spec 05)
+
+These were applied to spec 02 and spec 05 on 2026-10-21; the line numbers are those of spec 02 before that
+change. Two parts of the `LTI-001` row are not in the spec text: (d) is a fact about Canvas only, and (e) is how
+`LTI_PLATFORMS` identifies a platform (`apps/server/src/config/envParsers.ts`, D-051).
 
 | Location (current line) | Proposal | Evidence |
 |---|---|---|
@@ -193,6 +228,10 @@ To switch from A to B, delete the three `custom_fields` objects from the JSON. O
 3. After pasting the JSON: the **client ID** (developer key global ID) and the **deployment ID** for each deployment.
 4. One test launch from `link_selection` by a teacher, to confirm `custom.feide_login` and its format. If it does not equal the Feide `eduPersonPrincipalName`, use Option B.
 5. Confirmation that the institution allows the `score`, `lineitem.readonly` and `contextmembership.readonly` scopes, and has not restricted them in the key UI.
+6. One test launch from `assignment_selection`, to confirm whether Canvas sends the placement claim
+   `https://www.instructure.com/placement`, which the server reads before `hvl_placement` *(verify)*. That claim
+   is not cited from the Canvas source in this file; until it is confirmed, `hvl_placement` in the pasted key is
+   what makes `assignment_selection` create a gradebook column (D-061, Q13).
 
 ## 11. Doc/code discrepancies noticed (for the record)
 

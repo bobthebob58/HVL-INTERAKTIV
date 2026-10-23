@@ -27,7 +27,8 @@
             "target_link_uri": "https://interaktiv.hvl.no/lti/launch",
             "text": "HVL Interaktiv",
             "custom_fields": {
-              "feide_login": "$Canvas.user.loginId"
+              "feide_login": "$Canvas.user.loginId",
+              "hvl_placement": "link_selection"
             }
           },
           {
@@ -37,7 +38,8 @@
             "target_link_uri": "https://interaktiv.hvl.no/lti/launch",
             "text": "HVL Interaktiv",
             "custom_fields": {
-              "feide_login": "$Canvas.user.loginId"
+              "feide_login": "$Canvas.user.loginId",
+              "hvl_placement": "assignment_selection"
             }
           },
           {
@@ -48,7 +50,8 @@
             "text": "HVL Interaktiv",
             "visibility": "admins",
             "custom_fields": {
-              "feide_login": "$Canvas.user.loginId"
+              "feide_login": "$Canvas.user.loginId",
+              "hvl_placement": "editor_button"
             }
           }
         ]
