@@ -68,6 +68,10 @@ Operational rules:
   in `PROGRESS.md`, and continue in a fresh context from a different angle.
 - Compact the context at about 50 % use. Clear it when switching to an unrelated task.
 - Let hooks or Husky run Prettier and ESLint. Do not spend output on manual formatting.
+- **Progress screenshots (owner's request, 2026-10-23):** whenever frontend work (`apps/web`, S4 onwards)
+  makes a page or view look different, take Playwright screenshots in `nn` at desktop (1280 px) and mobile
+  (390 px) width and send them to the owner as images during the session (not only at the end). Keep them in
+  the scratchpad; commit none unless the owner asks.
 - Values marked *(verify)* in specs must be confirmed from `docs/reference/` or by the owner before you depend on them.
 
 ## 5. KNOWN TRAPS (verified 2026-10-16; details in docs/DECISIONS.md)

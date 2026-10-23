@@ -124,6 +124,7 @@ Brand tokens follow HVL's manual (D-017); HVL (profil@hvl.no) must still confirm
 - [ ] Publish flow with acknowledgements (`PROD-003`); formative notice (`PROD-011`); privacy notice (`DATA-006`)
 - [ ] CSP that blocks third-party requests; self-hosted fonts (`DATA-011`); browser and assistive-technology matrix (`NFR-003`)
 - [ ] axe suite (`UD-030`); manual protocol document (`UD-031`)
+- [ ] Progress screenshots (desktop and mobile, `nn`) sent to the owner as each view is built (CLAUDE.md §4)
 - [ ] Gate: as in the Evaluator Guide §5, S4
 
 ## S5 — Læringsdesign studio ⬜
