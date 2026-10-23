@@ -2,7 +2,7 @@
  * Unit tests for the Deep Linking picker's HTML: radio buttons or checkboxes, disabled drafts with their reason in
  * text, the formative note for graded placements, escaping and the locale.
  *
- * Spec: LTI-005, PROD-005
+ * Spec: LTI-005, PROD-005, PROD-011
  */
 import { describe, expect, it } from 'vitest';
 import { t } from '../../../src/i18n/translate.js';
@@ -55,5 +55,13 @@ describe('deepLinkPickerPage', () => {
     expect(html).toContain('<html lang="en">');
     expect(html).toContain(`data-msg-failed="${t('deepLink.failed', {}, 'en')}"`);
     expect(html).toContain('<script src="/static/lti/deepLinkPicker.js" defer></script>');
+  });
+
+  it('[PROD-011] shows the formative-use notice with its version, and none once it is dismissed', () => {
+    const shown = page({ noticeVersion: 1 });
+    expect(shown).toContain(t('notice.formativeUse.body', {}, 'nn'));
+    expect(shown).toContain('<button type="button" data-notice-version="1">');
+    expect(shown).toContain('aria-labelledby="formative-notice-title"');
+    expect(page()).not.toContain('formative-notice');
   });
 });

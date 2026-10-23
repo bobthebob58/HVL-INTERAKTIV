@@ -9,6 +9,8 @@
  *   - Checkboxes only when the platform accepts several items (`accept_multiple === true`), else radio buttons.
  *   - Drafts are listed but disabled, with the reason in text tied to the input (D-061; not by colour alone).
  *   - The graded placement says the points are formative, never exam evidence.
+ *   - The formative-use notice (PROD-011) is shown unless the teacher dismissed its current version; its button
+ *     carries that version for ./client/deepLinkPicker.js.
  *   - Every text comes from the locale files; every value is escaped (`markup`).
  * Collaborators: ../deepLinking/deepLinkRoutes.ts, ./client/deepLinkPicker.js, ../../http/pages/htmlPage.ts.
  * Tests: apps/server/test/lti/pages/deepLinkPickerPage.test.ts
@@ -32,6 +34,22 @@ export interface DeepLinkPickerInput {
   readonly multiple: boolean;
   /** The placement creates a gradebook column (`assignment_selection`). */
   readonly graded: boolean;
+  /** The current version of the formative-use notice, or undefined when the teacher dismissed it. */
+  readonly noticeVersion?: number;
+}
+
+/**
+ * The formative-use notice (PROD-011), dismissible.
+ * @param locale - The page language.
+ * @param version - The notice version the dismiss button records.
+ * @returns The notice markup.
+ */
+function formativeNotice(locale: Locale, version: number): SafeHtml {
+  return markup`<section class="hvl-notice" id="formative-notice" aria-labelledby="formative-notice-title">
+<h2 id="formative-notice-title">${t('notice.formativeUse.title', {}, locale)}</h2>
+<p>${t('notice.formativeUse.body', {}, locale)}</p>
+<button type="button" data-notice-version="${version}">${t('notice.formativeUse.dismiss', {}, locale)}</button>
+</section>`;
 }
 
 function choice(
@@ -75,7 +93,9 @@ ${activities.map((activity, index) => choice(activity, index, type, locale))}
 </form>
 <p id="deep-link-status" role="status"></p>
 <p id="deep-link-error" role="alert"></p>`;
-  const main = markup`<h1>${title}</h1>
+  const notice = input.noticeVersion === undefined ? undefined : formativeNotice(locale, input.noticeVersion);
+  const main = markup`<h1 tabindex="-1">${title}</h1>
+${notice}
 <p>${t(multiple ? 'deepLink.introMultiple' : 'deepLink.intro', {}, locale)}</p>
 ${gradedNote}
 <noscript><p>${t('page.noscript', {}, locale)}</p></noscript>

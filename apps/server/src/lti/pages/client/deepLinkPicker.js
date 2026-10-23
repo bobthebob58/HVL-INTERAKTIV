@@ -5,8 +5,10 @@
  * Why: LTI-005 ends with a form post of the signed JWT to `deep_link_return_url`. The ltik arrives in the address
  *      bar (LTI-003 step 1); this script takes it into a variable and removes it from the URL at once (step 2), then
  *      uses it only as `Authorization: Bearer` (step 3), so it never travels in a cookie, a URL or storage.
- * Spec: LTI-005, LTI-003, PROD-005
+ * Spec: LTI-005, LTI-003, PROD-005, PROD-011
  * Invariants:
+ *   - Dismissing the formative-use notice (PROD-011) hides it, moves focus to the heading and records the dismissal
+ *     with the Bearer ltik (`PUT /api/me/notices/formative-use`).
  *   - The ltik lives in this function's closure only (ESLint forbids storage APIs and cookies in this folder).
  *   - The answer is posted only to an http(s) URL; the server already checked it (D-061), this is a second check.
  *   - Status and errors are written as text into live regions (`role="status"`, `role="alert"`); texts come from
@@ -21,6 +23,23 @@
   if (url.searchParams.has('ltik')) {
     url.searchParams.delete('ltik');
     window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+  }
+  var notice = document.getElementById('formative-notice');
+  var dismiss = notice && notice.querySelector('button[data-notice-version]');
+  if (dismiss && ltik) {
+    dismiss.addEventListener('click', function () {
+      notice.hidden = true;
+      // A11Y: the button disappears with the notice, so focus goes to the page heading, not to the document start.
+      document.querySelector('h1').focus();
+      fetch('/api/me/notices/formative-use', {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + ltik, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ version: Number(dismiss.dataset.noticeVersion) }),
+        credentials: 'omit',
+      }).catch(function () {
+        // WHY: the notice is gone for this page either way; it shows again next time, which is harmless.
+      });
+    });
   }
   var form = document.getElementById('deep-link-form');
   if (!form || !ltik) return;

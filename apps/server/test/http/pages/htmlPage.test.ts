@@ -34,6 +34,9 @@ describe('[LTI-003] page template', () => {
     // Assert
     expect(page.startsWith('<!doctype html>\n<html lang="nb">')).toBe(true);
     expect(page).toContain('<meta name="referrer" content="no-referrer">');
+    // UD-001: the design tokens and the server pages' stylesheet, both same-origin files (D-067).
+    expect(page).toContain('<link rel="stylesheet" href="/h5p/theme/tokens.css">');
+    expect(page).toContain('<link rel="stylesheet" href="/static/pages/serverPages.css">');
     expect(page).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
     expect(page.match(/<main/g)).toHaveLength(1);
     expect(page).toContain('<script src="/static/lti/ltikLanding.js" defer></script>');

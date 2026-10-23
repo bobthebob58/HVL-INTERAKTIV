@@ -110,5 +110,12 @@
     "sending": "Sending your choice to Canvas …",
     "noneChosen": "Choose at least one activity.",
     "failed": "Your choice could not be sent to Canvas. Try again."
+  },
+  "notice": {
+    "formativeUse": {
+      "title": "For formative use",
+      "body": "H5P activities are scored in the browser. The points are meant for learning along the way (formative assessment), not for exams or grades.",
+      "dismiss": "Close the notice"
+    }
   }
 }

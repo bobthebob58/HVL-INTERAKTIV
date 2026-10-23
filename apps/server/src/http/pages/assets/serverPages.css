@@ -1,0 +1,115 @@
+/*
+ * serverPages — the look of the pages the server renders itself: the friendly message and error pages, the
+ * server-rendered start page (WEB_APP=off) and the Deep Linking picker (D-067).
+ *
+ * Why: D-067 keeps these pages in Express but asks for the token CSS, so they match the web app. Every value is a
+ *      design token (packages/design-tokens/dist/tokens.css, loaded first); the page's own rules stay small.
+ * Spec: UD-001, UD-002, UD-004, UD-005, UD-012
+ * Tests: apps/server/test/http/pages/pageAssets.int.test.ts
+ */
+html {
+  background: var(--hvl-surface-alt);
+  color: var(--hvl-ink);
+}
+
+body {
+  margin: 0;
+  font-family: var(--hvl-font-ui);
+  font-size: var(--hvl-font-size-min);
+  line-height: var(--hvl-line-height-body);
+  text-align: left;
+}
+
+main {
+  box-sizing: border-box;
+  max-width: calc(var(--hvl-measure) + 2 * var(--hvl-space-l));
+  margin: 0 auto;
+  padding: var(--hvl-space-l);
+  background: var(--hvl-surface);
+}
+
+h1,
+h2 {
+  color: var(--hvl-primary-dark);
+  line-height: 1.25;
+}
+
+p,
+li {
+  max-width: var(--hvl-measure);
+}
+
+a {
+  color: var(--hvl-primary-dark);
+  text-decoration: underline;
+}
+
+button {
+  min-width: var(--hvl-target-min);
+  min-height: var(--hvl-target-min);
+  padding: var(--hvl-space-xs) var(--hvl-space-m);
+  border: 2px solid var(--hvl-primary-dark);
+  border-radius: 4px;
+  background: var(--hvl-primary-dark);
+  color: var(--hvl-surface);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  border-color: var(--hvl-ink-muted);
+  background: var(--hvl-surface);
+  color: var(--hvl-ink-muted);
+  cursor: not-allowed;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: var(--hvl-target-min);
+  height: var(--hvl-target-min);
+  margin: 0 var(--hvl-space-xs) 0 0;
+  vertical-align: middle;
+}
+
+fieldset {
+  border: 1px solid var(--hvl-band);
+  padding: var(--hvl-space-m);
+}
+
+fieldset ul {
+  list-style: none;
+  padding: 0;
+}
+
+fieldset li {
+  margin: var(--hvl-space-s) 0;
+}
+
+:focus-visible {
+  outline: var(--hvl-focus-outline);
+  outline-offset: var(--hvl-focus-offset);
+  box-shadow: var(--hvl-focus-shadow);
+}
+
+.hvl-notice {
+  margin: var(--hvl-space-m) 0;
+  padding: var(--hvl-space-m);
+  border-left: var(--hvl-feedback-border-width) solid var(--hvl-feedback-info-fg);
+  background: var(--hvl-feedback-info-bg);
+  color: var(--hvl-feedback-info-fg);
+}
+
+.hvl-notice h2 {
+  margin-top: 0;
+  font-size: 1.125rem;
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-width: calc(var(--hvl-focus-outline-width) + var(--hvl-focus-inner-width));
+  }
+
+  .hvl-notice {
+    border-left-color: CanvasText;
+  }
+}

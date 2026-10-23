@@ -16,6 +16,7 @@
  *   ../ltikPrincipal.ts, ../http/ltiPageHeaders.ts, ../ltiRoutes.ts.
  * Tests: apps/server/test/lti/deepLinking/deepLinking.int.test.ts
  */
+import { NOTICE_VERSIONS } from '@hvl-interaktiv/api-contract';
 import express, { Router, type Request } from 'express';
 import { canAuthor } from '../../auth/Principal.js';
 import { authError } from '../../http/authErrors.js';
@@ -76,6 +77,16 @@ function deepLinkRequestOf(resolved: ResolvedLtik): DeepLinkRequest {
   };
 }
 
+/** The formative-use notice's current version, unless this teacher dismissed it (PROD-011, D-075). */
+async function formativeNoticeVersion(db: Database, userId: string): Promise<number | undefined> {
+  const current = NOTICE_VERSIONS['formative-use'];
+  const dismissal = await db.noticeDismissal.findUnique({
+    where: { userId_noticeId: { userId, noticeId: 'formative-use' } },
+    select: { noticeVersion: true },
+  });
+  return dismissal && dismissal.noticeVersion >= current ? undefined : current;
+}
+
 const bearerOf = (req: Request): string | undefined =>
   /^Bearer ([\w.~+/=-]+)$/i.exec(req.headers.authorization ?? '')?.[1];
 
@@ -101,6 +112,7 @@ export function deepLinkRoutes(deps: DeepLinkRouteDeps): Router {
     setLtiPageLocale(res, resolved.principal.locale);
     const request = deepLinkRequestOf(resolved);
     const activities = await listPickerActivities(deps.db, resolved.principal.userId);
+    const noticeVersion = await formativeNoticeVersion(deps.db, resolved.principal.userId);
     // SECURITY: the page's forms may go only to us and to the platform's return URL (D-061).
     const formAction = `form-action 'self' ${new URL(request.returnUrl).origin}`;
     setLtiPageHeaders(res, ltiPageCsp(deps.canvasOrigins, [formAction]));
@@ -110,6 +122,7 @@ export function deepLinkRoutes(deps: DeepLinkRouteDeps): Router {
         activities,
         multiple: request.settings.accept_multiple === true,
         graded: request.placement === 'assignment_selection',
+        ...(noticeVersion === undefined ? {} : { noticeVersion }),
       }),
     );
   });

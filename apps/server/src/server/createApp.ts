@@ -40,6 +40,7 @@ import { createH5pRouter } from '../http/createH5pRouter.js';
 import { h5pAuthenticate } from '../http/h5pAuthenticate.js';
 import { h5pErrorHandler } from '../http/h5pErrorHandler.js';
 import { HttpError } from '../http/HttpError.js';
+import { pageAssetRoutes } from '../http/pages/pageAssetRoutes.js';
 import { portalHomeRoutes, portalNotFound } from '../http/pages/portalHomeRoutes.js';
 import { sendPortalError } from '../http/pages/portalPages.js';
 import type { ContentRouteDeps } from '../http/routes/contentRoutes.js';
@@ -130,6 +131,7 @@ export function createApp(inputs: AppInputs): App {
   app.set('trust proxy', env.TRUST_PROXY);
   app.use(baseSecurityHeaders({ https: base.startsWith('https:') }));
   app.use(healthRoutes({ database: () => db.$queryRaw`SELECT 1`, redis: () => redis.ping() }));
+  app.use(pageAssetRoutes());
   app.use(portalSessionMiddleware(sessions));
   app.use(lti.router);
   app.use(

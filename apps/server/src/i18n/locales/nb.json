@@ -110,5 +110,12 @@
     "sending": "Sender valget til Canvas …",
     "noneChosen": "Velg minst én aktivitet.",
     "failed": "Valget kunne ikke sendes til Canvas. Prøv igjen."
+  },
+  "notice": {
+    "formativeUse": {
+      "title": "Til underveisvurdering",
+      "body": "H5P-aktiviteter blir rettet i nettleseren. Poengene er ment for læring underveis (underveisvurdering), ikke for eksamen eller karakterer.",
+      "dismiss": "Lukk meldingen"
+    }
   }
 }

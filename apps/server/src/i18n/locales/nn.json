@@ -110,5 +110,12 @@
     "sending": "Sender valet til Canvas …",
     "noneChosen": "Vel minst éin aktivitet.",
     "failed": "Valet kunne ikkje sendast til Canvas. Prøv igjen."
+  },
+  "notice": {
+    "formativeUse": {
+      "title": "Til undervegsvurdering",
+      "body": "H5P-aktivitetar blir retta i nettlesaren. Poenga er meinte for læring undervegs (undervegsvurdering), ikkje for eksamen eller karakterar.",
+      "dismiss": "Lukk meldinga"
+    }
   }
 }

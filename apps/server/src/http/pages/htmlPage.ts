@@ -11,12 +11,18 @@
  *     and `undefined`, `null` and `false` render as nothing.
  *   - The page declares its language and a viewport, has one `<main>` and one `<h1>` (A11Y), and loads no
  *     inline script or style: scripts are static files from our own origin (`script-src 'self'`, D-048).
+ *   - Styles are the design tokens and the server pages' stylesheet, both same-origin files (D-067).
  *   - The `ltik` and the CSRF token are never put in the page by this module; callers pass them as data
  *     attributes only where D-058 allows.
- * Collaborators: ./messagePage.ts, ./portalHomeRoutes.ts, ../../lti/pages/deepLinkPickerPage.ts.
+ * Collaborators: ./messagePage.ts, ./portalHomeRoutes.ts, ../../lti/pages/deepLinkPickerPage.ts,
+ *   ./pageAssetRoutes.ts (the stylesheet), ../routes/staticRoutes.ts (`/h5p/theme/tokens.css`).
  * Tests: apps/server/test/http/pages/htmlPage.test.ts
  */
 import type { Locale } from '../../i18n/translate.js';
+import { SERVER_PAGES_STYLESHEET } from './pageAssetRoutes.js';
+
+/** The design tokens, served by the H5P router's theme route without a session. */
+const TOKENS_STYLESHEET = '/h5p/theme/tokens.css';
 
 /** Markup that is already safe: built by `markup`, so its parts were escaped. */
 export class SafeHtml {
@@ -106,6 +112,8 @@ export function htmlPage(input: PageInput, siteName: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <title>${input.title} – ${siteName}</title>
+<link rel="stylesheet" href="${TOKENS_STYLESHEET}">
+<link rel="stylesheet" href="${SERVER_PAGES_STYLESHEET}">
 </head>
 <body${data}>
 <main id="main">

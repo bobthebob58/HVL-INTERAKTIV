@@ -14,8 +14,16 @@
  */
 import { z } from 'zod';
 
-/** Notices a person can dismiss (D-075); the web app owns their text and current version. */
+/** Notices a person can dismiss (D-075); their texts live with the pages that show them. */
 export const NOTICE_IDS = ['formative-use'] as const;
+
+/**
+ * The current version of each notice. A dismissal of an older version does not hide a newer one (D-075); the web app
+ * and the server-rendered Deep Linking picker show the same version.
+ */
+export const NOTICE_VERSIONS: Readonly<Record<(typeof NOTICE_IDS)[number], number>> = Object.freeze({
+  'formative-use': 1,
+});
 
 /** A notice ID from the allowlist. */
 export const noticeIdSchema = z.enum(NOTICE_IDS);

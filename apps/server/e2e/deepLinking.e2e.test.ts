@@ -6,6 +6,7 @@
  */
 import { randomUUID } from 'node:crypto';
 import type { Browser } from 'playwright-core';
+import { t } from '../src/i18n/translate.js';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { CANVAS_USERS, type CanvasUser } from '../../../tools/mock-platform/mockPlatform.mjs';
 import { openAppTestbed, type AppTestbed } from '../test/support/appTestbed.js';
@@ -35,6 +36,25 @@ describeWithServices('[LTI-005] Deep Linking round trip in a browser', () => {
     await tb?.close();
   });
 
+  it('[PROD-011] the formative notice closes, gives focus to the heading and stays closed for this teacher', async () => {
+    // Arrange
+    const startedAt = new Date();
+    const page = await browser.newPage();
+    await page.goto(tb.mock.canvas.coursePageUrl({ messageType: 'LtiDeepLinkingRequest', user: teacher }));
+    const picker = page.frameLocator('#tool_content');
+    const notice = picker.locator('#formative-notice');
+    await notice.waitFor({ timeout: 30_000 });
+    // Act
+    await picker.getByRole('button', { name: t('notice.formativeUse.dismiss', {}, 'nn') }).click();
+    // Assert
+    await expect.poll(() => notice.isHidden()).toBe(true);
+    expect(await picker.locator('h1').evaluate((h1) => h1 === document.activeElement)).toBe(true);
+    const fromThisTest = { noticeId: 'formative-use', noticeVersion: 1, at: { gte: startedAt } };
+    await expect.poll(() => tb.db.noticeDismissal.count({ where: fromThisTest })).toBe(1);
+    await tb.db.noticeDismissal.deleteMany({ where: fromThisTest });
+    await page.close();
+  });
+
   it('[LTI-005] the teacher picks an activity and Canvas accepts the signed answer with a line item', async () => {
     // Arrange
     const page = await browser.newPage();
@@ -51,7 +71,7 @@ describeWithServices('[LTI-005] Deep Linking round trip in a browser', () => {
     const draftDisabled = await picker.getByLabel('Utkast').isDisabled();
     // Act
     await picker.getByLabel('Brøkar').check();
-    await picker.getByRole('button').click();
+    await picker.getByRole('button', { name: t('deepLink.submit', {}, 'nn') }).click();
     await expect.poll(() => tb.mock.canvas.deepLinkResponses.length, { timeout: 15_000 }).toBe(1);
     // Assert
     const [record] = tb.mock.canvas.deepLinkResponses;
