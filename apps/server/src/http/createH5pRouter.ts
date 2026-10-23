@@ -8,7 +8,7 @@
  *      failure and never leaks a message.
  * Spec: H5P-004, H5P-006, H5P-007, SEC-004
  * Invariants:
- *   - Only `/core`, `/editor`, `/libraries`, `/boot` and the grant-checked `/files` and `/uploads` answer without
+ *   - Only `/core`, `/editor`, `/libraries`, `/boot`, `/theme` and the grant-checked `/files` and `/uploads` answer without
  *     an actor; everything else needs `authenticate`.
  *   - The error handler is the last middleware; no route sends its own error body.
  *   - A path under the router that matches no route gets the translated 404 answer, never Express's page.

@@ -22,6 +22,8 @@
     "@aws-sdk/lib-storage": "3.1155.0",
     "@fastify/busboy": "3.2.4",
     "@hvl-interaktiv/api-contract": "0.1.0",
+    "@hvl-interaktiv/design-tokens": "0.1.0",
+    "@hvl-interaktiv/hvl-h5p-theme": "0.1.0",
     "@lumieducation/h5p-redis-lock": "10.0.4",
     "@lumieducation/h5p-server": "10.0.4",
     "@lumieducation/h5p-svg-sanitizer": "10.0.4",

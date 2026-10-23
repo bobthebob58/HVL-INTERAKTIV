@@ -6,5 +6,20 @@
   "type": "module",
   "engines": {
     "node": ">=24.0.0 <25"
+  },
+  "exports": {
+    "./tokens.css": "./dist/tokens.css",
+    "./tailwind-theme.css": "./dist/tailwind-theme.css",
+    "./h5p-daylight.css": "./dist/h5p-daylight.css",
+    "./tokens.json": "./tokens.json"
+  },
+  "files": [
+    "dist",
+    "tokens.json"
+  ],
+  "scripts": {
+    "build": "node scripts/buildTokens.mjs",
+    "check": "node scripts/buildTokens.mjs --check",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   }
 }

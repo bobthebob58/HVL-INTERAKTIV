@@ -6081,6 +6081,15 @@ committed and checked by <code>npm run tokens:check</code>, so the server needs 
 and an ESLint rule against colour literals in <code>apps/*/src</code> and <code>packages/*/src</code> apply everywhere except
 <code>packages/design-tokens</code>; vendored H5P files, the mock platform and test fixtures are exempt, each with a <code>WHY</code>.</li>
 <li><strong>Consequences:</strong> HVL&#39;s confirmed values (Q2) change one file; the contrast test decides whether they may be used.</li>
+<li><strong>Amendment (2026-10-23, W1):</strong> (a) the visually hidden feedback prefix comes from the theme&#39;s static
+<code>feedbackPrefixes.js</code> in S4, not from the xAPI bridge that <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a> names (S6); (b) where a library already draws
+its own ✓/✗ for a state (MultiChoice, Blanks, DragText), that icon is the <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a> icon and the visible prefix is
+the label only, so no icon is doubled; (c) the prefix language follows <code>:lang()</code> of the element: the UI locale on
+our player page, <code>metadata.defaultLanguage</code> in iframes Core writes, and a container <code>lang</code> wins; (d) Stylelint also
+bans <code>color-mix()</code> (derived shades need HVL&#39;s approval, D-017) and ignores all of <code>tools/spec-site</code> (the generated
+spec website, not product UI); (e) the generated <code>dist/</code> folders are committed through package-level <code>.gitignore</code>
+files that re-include <code>dist/</code>; (f) H5P&#39;s own hard-coded colours remain where a library ignores Daylight
+(BranchingScenario 1.10 start screen); the accessibility suite decides whether they need overrides.</li>
 </ul>
 <h3 id="decisions--d-073--the-validator-is-pure-shape-based-walk-configuration-passed-in" tabindex="-1">D-073 · The validator is pure: shape-based walk, configuration passed in</h3>
 <ul>

@@ -1,0 +1,3 @@
+# WHY: the root .gitignore ignores every dist/; the generated prefix stylesheet is committed so the server needs
+# no build step, and a test fails when it is out of step with src/locales and src/feedbackTargets.json (D-072).
+!dist/

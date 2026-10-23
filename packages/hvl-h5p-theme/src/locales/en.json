@@ -1,0 +1,6 @@
+{
+  "feedback": {
+    "correctPrefix": "✓ Correct:",
+    "incorrectPrefix": "✗ Incorrect:"
+  }
+}

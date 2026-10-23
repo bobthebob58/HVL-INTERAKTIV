@@ -1,0 +1,70 @@
+/*
+ * hvl-feedback-prefixes — GENERATED from src/locales/*.json and src/feedbackTargets.json by
+ * scripts/buildFeedbackPrefixes.mjs. Do not edit; run `npm run build --workspace packages/hvl-h5p-theme`.
+ * Visible prefixes for correct and incorrect answers (UD-003), in the language of the element (UD-010).
+ * Where the library draws its own ✓/✗ icon, the prefix is the label alone, so no icon appears twice.
+ */
+
+:root {
+  --hvl-feedback-correct-targets: '.h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner, .h5p-blanks .h5p-input-wrapper.h5p-correct, .h5p-drag-text .h5p-draggable.h5p-draggable-correct > span:first-child, .h5p-question-explanation-correct';
+  --hvl-feedback-incorrect-targets: '.h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner, .h5p-blanks .h5p-input-wrapper.h5p-wrong, .h5p-drag-text .h5p-draggable.h5p-draggable-wrong > span:first-child, .h5p-question-explanation-wrong';
+}
+
+:root,
+:lang(nn) {
+  --hvl-feedback-correct-prefix: '✓ Riktig:';
+  --hvl-feedback-correct-label: 'Riktig:';
+  --hvl-feedback-incorrect-prefix: '✗ Feil:';
+  --hvl-feedback-incorrect-label: 'Feil:';
+}
+
+:lang(nb),
+:lang(no) {
+  --hvl-feedback-correct-prefix: '✓ Riktig:';
+  --hvl-feedback-correct-label: 'Riktig:';
+  --hvl-feedback-incorrect-prefix: '✗ Feil:';
+  --hvl-feedback-incorrect-label: 'Feil:';
+}
+
+:lang(en) {
+  --hvl-feedback-correct-prefix: '✓ Correct:';
+  --hvl-feedback-correct-label: 'Correct:';
+  --hvl-feedback-incorrect-prefix: '✗ Incorrect:';
+  --hvl-feedback-incorrect-label: 'Incorrect:';
+}
+
+.h5p-question-explanation-correct::before {
+  content: var(--hvl-feedback-correct-prefix) / '';
+}
+
+.h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner::before,
+.h5p-blanks .h5p-input-wrapper.h5p-correct::before,
+.h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-correct)::before {
+  content: var(--hvl-feedback-correct-label) / '';
+}
+
+.h5p-question-explanation-wrong::before {
+  content: var(--hvl-feedback-incorrect-prefix) / '';
+}
+
+.h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner::before,
+.h5p-blanks .h5p-input-wrapper.h5p-wrong::before,
+.h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-wrong)::before {
+  content: var(--hvl-feedback-incorrect-label) / '';
+}
+
+.h5p-question-explanation-correct::before,
+.h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner::before,
+.h5p-blanks .h5p-input-wrapper.h5p-correct::before,
+.h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-correct)::before,
+.h5p-question-explanation-wrong::before,
+.h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner::before,
+.h5p-blanks .h5p-input-wrapper.h5p-wrong::before,
+.h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-wrong)::before {
+  display: inline-block;
+  margin-inline-end: 0.25em;
+  font-weight: bold;
+  text-indent: 0;
+  white-space: nowrap;
+  word-break: normal;
+}

@@ -975,6 +975,15 @@ loading of one spec per session are kept.
   and an ESLint rule against colour literals in `apps/*/src` and `packages/*/src` apply everywhere except
   `packages/design-tokens`; vendored H5P files, the mock platform and test fixtures are exempt, each with a `WHY`.
 - **Consequences:** HVL's confirmed values (Q2) change one file; the contrast test decides whether they may be used.
+- **Amendment (2026-10-23, W1):** (a) the visually hidden feedback prefix comes from the theme's static
+  `feedbackPrefixes.js` in S4, not from the xAPI bridge that `UD-003` names (S6); (b) where a library already draws
+  its own ✓/✗ for a state (MultiChoice, Blanks, DragText), that icon is the `UD-003` icon and the visible prefix is
+  the label only, so no icon is doubled; (c) the prefix language follows `:lang()` of the element: the UI locale on
+  our player page, `metadata.defaultLanguage` in iframes Core writes, and a container `lang` wins; (d) Stylelint also
+  bans `color-mix()` (derived shades need HVL's approval, D-017) and ignores all of `tools/spec-site` (the generated
+  spec website, not product UI); (e) the generated `dist/` folders are committed through package-level `.gitignore`
+  files that re-include `dist/`; (f) H5P's own hard-coded colours remain where a library ignores Daylight
+  (BranchingScenario 1.10 start screen); the accessibility suite decides whether they need overrides.
 
 ### D-073 · The validator is pure: shape-based walk, configuration passed in
 - **Context:** `UD-020` asks for a pure, deterministic `validateContent`. The S2 parameter walker needs an

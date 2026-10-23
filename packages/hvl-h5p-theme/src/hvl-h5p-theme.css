@@ -1,0 +1,133 @@
+/*
+ * hvl-h5p-theme — HVL's typography, focus ring, target sizes and motion rules inside every H5P document.
+ *
+ * Why: H5P content runs in documents the web app's CSS never reaches: our player page, the iframes H5P Core
+ *      writes for iframe content, and the editor's iframe (UD-011). This file is layered on Core 1.28's Daylight
+ *      theme: @hvl-interaktiv/design-tokens/h5p-daylight.css points Daylight's custom properties at the HVL
+ *      tokens, and this file overrides selectors only where a property is not themeable. It brings HVL's
+ *      typefaces and line height (UD-002, D-018), the two-tone focus ring (UD-004, D-007), 24 px targets (UD-005)
+ *      and reduced motion (UD-009). Forced colours (UD-012) switch the tokens to system colours (tokens.css).
+ * Spec: UD-002, UD-004, UD-005, UD-009, UD-011, UD-012
+ * Invariants:
+ *   - Loaded after H5P Core's styles and before the libraries' styles (apps/server/src/h5p/h5pAssets.ts): it beats
+ *     Core by order and libraries by a `:root` prefix (one more class of specificity) or a commented !important.
+ *   - No colour literal (Stylelint, UD-001); every !important names the H5P selector it beats in a WHY comment.
+ *   - Font families are set on text elements only, never on pseudo-elements, so H5P's icon fonts keep working.
+ * Collaborators: @hvl-interaktiv/design-tokens (tokens.css, h5p-daylight.css), ./hvl-h5p-feedback.css,
+ *   ../dist/hvl-feedback-prefixes.css, ./feedbackPrefixes.js, apps/server/src/h5p/h5pAssets.ts.
+ * Tests: packages/hvl-h5p-theme/test/themeStructure.test.ts, apps/server/test/h5p/hvlTheme.browser.int.test.ts
+ */
+
+/* Typography (UD-002, D-018): Arial for H5P's UI and texts, line height 1.55, left-aligned, never capitals. */
+html.h5p-iframe,
+:root .h5p-content,
+:root.h5p-iframe .h5p-content,
+:root .h5peditor {
+  font-family: var(--hvl-font-ui);
+  line-height: var(--hvl-line-height-h5p);
+}
+
+:root .h5p-blanks .h5p-text-input,
+:root button.h5p-core-button,
+:root .h5p-interactive-video .h5p-splash-wrapper .h5p-splash .h5p-splash-title,
+:root .h5p-interactive-video .h5p-splash-wrapper .h5p-splash .h5p-splash-description,
+:root .h5p-interactive-video .h5p-control .h5p-interactive-video-tooltip {
+  font-family: inherit;
+}
+
+/* WHY: !important beats BranchingScenario's H5PRoboto faces on `.h5p-branching-scenario .h5p-screen-header
+   .h5p-title-wrapper h1`, `.h5p-branching-scenario .h5p-branching-question button:not(…)`,
+   `.h5p-branching-scenario .h5p-start-button` and `.h5p-branching-scenario .h5p-result-container` (D-018). */
+:root .h5p-branching-scenario :is(h1, h2, h3, button, .h5p-start-button, .h5p-result-container),
+:root .h5p-branching-scenario :is(.h5p-branching-scenario-title-text, .h5p-branching-scenario-subtitle-text) {
+  font-family: var(--hvl-font-ui) !important;
+}
+
+:root :is(.h5p-content, .h5peditor) :is(p, li, dd, dt, blockquote, figcaption),
+:root .h5p-question-introduction,
+:root .h5p-course-presentation .h5p-question-introduction > p,
+:root .h5p-question-explanation-item,
+:root .h5p-text.h5p-image-hotspot-popup-body {
+  line-height: var(--hvl-line-height-h5p);
+}
+
+/* WHY: !important beats the inline `style="text-align: justify"` that CKEditor's alignment button writes into
+   author text in `.h5p-advanced-text` and `.h5p-question-introduction`; HVL asks for ragged-right text (UD-002). */
+:root [style*='text-align: justify'],
+:root [style*='text-align:justify'] {
+  text-align: left !important;
+}
+
+/* WHY: !important beats H5P's ALL-CAPS labels: `.h5p-course-presentation .h5p-theme-navigation-header`,
+   `.h5p-interactive-video .h5p-interaction-continue-button`, the editor's `.h5peditor-button-textual.importance-high`
+   and VerticalTabs' `.add-entity`; HVL's rules forbid capitals as styling (UD-002). */
+:root :is(.h5p-content, .h5peditor, .h5p-editor) *,
+:root :is(.h5p-content, .h5peditor, .h5p-editor) ::before,
+:root :is(.h5p-content, .h5peditor, .h5p-editor) ::after {
+  text-transform: none !important;
+}
+
+/* Colours of libraries that predate Daylight (JoubelUI 1.3 buttons, Question 1.5 feedback in MultiChoice and
+   Blanks): the same roles as Daylight's main call-to-action and text, from the tokens (UD-001, UD-011). */
+:root .h5p-joubelui-button {
+  background: var(--hvl-primary-dark);
+  color: var(--hvl-surface);
+}
+
+:root .h5p-joubelui-button:hover,
+:root .h5p-joubelui-button:focus,
+:root .h5p-joubelui-button:active {
+  background: var(--hvl-ink);
+}
+
+:root .h5p-question-feedback {
+  color: var(--hvl-primary-dark);
+}
+
+/* Focus (UD-004, D-007): a 3 px dark outer ring with a 2 px white inner ring, visible on light and dark fills. */
+/* WHY: !important beats H5P's own focus styles, which hide or replace the outline: `button.h5p-core-button`
+   (outline: none), `.h5p-multichoice .h5p-feedback-button:focus` (outline: none), `.h5p-blanks .h5p-text-input:focus`
+   (a box-shadow glow) and Daylight's `.h5p-theme-button:focus-visible` (a 2 px ridge outline). */
+:focus-visible {
+  outline: var(--hvl-focus-outline) !important;
+  outline-offset: var(--hvl-focus-offset) !important;
+  box-shadow: var(--hvl-focus-shadow) !important;
+}
+
+/* Pointer targets (UD-005, WCAG 2.5.8): every control is at least 24 × 24 CSS px. */
+:root :is(.h5p-content, .h5peditor) :is(button, select, input[type='checkbox'], input[type='radio']),
+:root :is(.h5p-content, .h5peditor) :is([role='button'], [role='radio'], [role='checkbox'], [role='switch']),
+:root :is(.h5p-content, .h5peditor) :is([role='tab'], [role='menuitem'], [role='option']) {
+  min-width: var(--hvl-target-min);
+  min-height: var(--hvl-target-min);
+}
+
+/* A11Y: QuestionSet's progress dots (Components 1.0 `.h5p-progress-dot`) are 9 px links about 22 px apart; spacing
+   their centres 24 px apart meets WCAG 2.5.8's spacing exception without changing how they look. */
+:root .h5p-progress-dot {
+  margin: 0 calc((var(--hvl-target-min) - 0.5625em) / 2);
+}
+
+/* Motion (UD-009): no animation or transition for readers who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  /* WHY: !important beats the libraries' transitions and animations (`.h5p-joubelui-button`,
+     `.h5p-course-presentation .h5p-slide`, `.h5p-joubelui-score-bar-star`) and jQuery's inline animation styles.
+     Durations become 0.01ms rather than none, so H5P code that waits for `transitionend` still continues. */
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Forced colours (UD-012): tokens.css turns the focus ring into Highlight; the inner ring is a box-shadow, which
+   forced colours drop, so the outer ring grows by its width and stays as visible as the two rings together. */
+@media (forced-colors: active) {
+  /* WHY: !important beats the `:focus-visible` rule above, the only rule that sets the ring's width. */
+  :focus-visible {
+    outline-width: calc(var(--hvl-focus-outline-width) + var(--hvl-focus-inner-width)) !important;
+  }
+}

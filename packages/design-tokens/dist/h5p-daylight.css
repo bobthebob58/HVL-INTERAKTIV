@@ -1,0 +1,43 @@
+/*
+ * h5p-daylight — GENERATED from packages/design-tokens/tokens.json by scripts/buildTokens.mjs. Do not edit.
+ * H5P Core 1.28's Daylight theme variables mapped onto the HVL tokens (UD-011).
+ * Rebuild with `npm run tokens:build`; `npm run tokens:check` fails when this file is out of date (D-072).
+ */
+
+:root {
+  --h5p-theme-main-cta-base: var(--hvl-primary-dark);
+  --h5p-theme-main-cta-light: var(--hvl-ink);
+  --h5p-theme-main-cta-dark: var(--hvl-ink);
+  --h5p-theme-main-contrast-cta: var(--hvl-accent);
+  --h5p-theme-contrast-cta: var(--hvl-surface);
+  --h5p-theme-contrast-cta-white: var(--hvl-primary-dark);
+  --h5p-theme-contrast-cta-light: var(--hvl-surface-alt);
+  --h5p-theme-secondary-cta-base: var(--hvl-band);
+  --h5p-theme-secondary-cta-light: var(--hvl-surface-alt);
+  --h5p-theme-secondary-cta-dark: var(--hvl-band);
+  --h5p-theme-secondary-contrast-cta: var(--hvl-ink);
+  --h5p-theme-secondary-contrast-cta-hover: var(--hvl-surface-alt);
+  --h5p-theme-alternative-base: var(--hvl-surface-alt);
+  --h5p-theme-alternative-light: var(--hvl-surface-alt);
+  --h5p-theme-alternative-dark: var(--hvl-band);
+  --h5p-theme-alternative-darker: var(--hvl-band);
+  --h5p-theme-background: var(--hvl-surface-alt);
+  --h5p-theme-focus: var(--hvl-focus-outer);
+  --h5p-theme-text-primary: var(--hvl-ink);
+  --h5p-theme-text-secondary: var(--hvl-ink-muted);
+  --h5p-theme-text-third: var(--hvl-ink-muted);
+  --h5p-theme-ui-base: var(--hvl-surface);
+  --h5p-theme-stroke-1: var(--hvl-band);
+  --h5p-theme-stroke-2: var(--hvl-band);
+  --h5p-theme-stroke-3: var(--hvl-band);
+  --h5p-theme-feedback-correct-main: var(--hvl-feedback-correct-fg);
+  --h5p-theme-feedback-correct-secondary: var(--hvl-feedback-correct-bg);
+  --h5p-theme-feedback-correct-third: var(--hvl-feedback-correct-border);
+  --h5p-theme-feedback-incorrect-main: var(--hvl-feedback-incorrect-fg);
+  --h5p-theme-feedback-incorrect-secondary: var(--hvl-feedback-incorrect-bg);
+  --h5p-theme-feedback-incorrect-third: var(--hvl-feedback-incorrect-border);
+  --h5p-theme-feedback-neutral-main: var(--hvl-feedback-info-fg);
+  --h5p-theme-feedback-neutral-secondary: var(--hvl-feedback-info-fg);
+  --h5p-theme-feedback-neutral-third: var(--hvl-feedback-info-bg);
+  --h5p-theme-font-name: var(--hvl-font-ui);
+}

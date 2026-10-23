@@ -1,0 +1,33 @@
+{
+  "description": "Where each H5P library shows a correct or incorrect answer (UD-003). `correct`/`incorrect`: the element that gets the visually hidden label (src/feedbackPrefixes.js); pick one whose children the library does not count. `prefixOn`: the element whose ::before shows the visible prefix, when it differs (dist/hvl-feedback-prefixes.css); pick one whose ::before the library does not use and whose size it does not fix. `ownIcon`: the library already draws a ✓/✗ icon for the state, so the visible prefix is the label only.",
+  "targets": [
+    {
+      "library": "H5P.MultiChoice 1.16",
+      "correct": ".h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner",
+      "incorrect": ".h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner",
+      "ownIcon": true
+    },
+    {
+      "library": "H5P.Blanks 1.14",
+      "correct": ".h5p-blanks .h5p-input-wrapper.h5p-correct",
+      "incorrect": ".h5p-blanks .h5p-input-wrapper.h5p-wrong",
+      "ownIcon": true
+    },
+    {
+      "library": "H5P.DragText 1.10",
+      "correct": ".h5p-drag-text .h5p-draggable.h5p-draggable-correct > span:first-child",
+      "incorrect": ".h5p-drag-text .h5p-draggable.h5p-draggable-wrong > span:first-child",
+      "prefixOn": {
+        "correct": ".h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-correct)",
+        "incorrect": ".h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-wrong)"
+      },
+      "ownIcon": true
+    },
+    {
+      "library": "H5P.Question 1.5 explanations (DragText, QuestionSet)",
+      "correct": ".h5p-question-explanation-correct",
+      "incorrect": ".h5p-question-explanation-wrong",
+      "ownIcon": false
+    }
+  ]
+}

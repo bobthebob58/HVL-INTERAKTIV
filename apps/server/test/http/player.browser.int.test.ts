@@ -74,9 +74,10 @@ describeWithServices('H5P player in a browser', () => {
         page.evaluate(() =>
           getComputedStyle(document.documentElement).getPropertyValue('--h5p-theme-main-cta-base').trim(),
         );
-      expect((await token()).toUpperCase()).toBe('#006FBF');
-      await page.addStyleTag({ content: ':root { --h5p-theme-main-cta-base: #004357; }' });
+      // UD-011: HVL's theme (h5p-daylight.css, loaded after Core's variables) already points Daylight at the tokens.
       expect(await token()).toBe('#004357');
+      await page.addStyleTag({ content: ':root { --h5p-theme-main-cta-base: var(--hvl-ink); }' });
+      expect(await token()).toBe('#111111');
       await page.close();
     }, 30_000);
 

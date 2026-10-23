@@ -1,0 +1,6 @@
+{
+  "feedback": {
+    "correctPrefix": "✓ Riktig:",
+    "incorrectPrefix": "✗ Feil:"
+  }
+}

@@ -1,0 +1,3 @@
+# WHY: the root .gitignore ignores every dist/; these generated files are committed so the server and the web app
+# need no build step, and `npm run tokens:check` keeps them in step with tokens.json (D-072).
+!dist/

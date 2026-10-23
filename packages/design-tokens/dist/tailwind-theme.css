@@ -1,0 +1,41 @@
+/*
+ * tailwind-theme — GENERATED from packages/design-tokens/tokens.json by scripts/buildTokens.mjs. Do not edit.
+ * Tailwind v4 theme: `@import '@hvl-interaktiv/design-tokens/tailwind-theme.css';` after `@import 'tailwindcss';`.
+ * Rebuild with `npm run tokens:build`; `npm run tokens:check` fails when this file is out of date (D-072).
+ */
+@import './tokens.css';
+
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+}
+
+@theme inline {
+  --color-hvl-primary-dark: var(--hvl-primary-dark);
+  --color-hvl-accent: var(--hvl-accent);
+  --color-hvl-brand-sea-green: var(--hvl-brand-sea-green);
+  --color-hvl-brand-orange: var(--hvl-brand-orange);
+  --color-hvl-band: var(--hvl-band);
+  --color-hvl-ink: var(--hvl-ink);
+  --color-hvl-ink-muted: var(--hvl-ink-muted);
+  --color-hvl-surface: var(--hvl-surface);
+  --color-hvl-surface-alt: var(--hvl-surface-alt);
+  --color-hvl-feedback-correct-fg: var(--hvl-feedback-correct-fg);
+  --color-hvl-feedback-correct-bg: var(--hvl-feedback-correct-bg);
+  --color-hvl-feedback-correct-border: var(--hvl-feedback-correct-border);
+  --color-hvl-feedback-incorrect-fg: var(--hvl-feedback-incorrect-fg);
+  --color-hvl-feedback-incorrect-bg: var(--hvl-feedback-incorrect-bg);
+  --color-hvl-feedback-incorrect-border: var(--hvl-feedback-incorrect-border);
+  --color-hvl-feedback-info-fg: var(--hvl-feedback-info-fg);
+  --color-hvl-feedback-info-bg: var(--hvl-feedback-info-bg);
+  --color-hvl-focus-outer: var(--hvl-focus-outer);
+  --color-hvl-focus-inner: var(--hvl-focus-inner);
+  --font-ui: var(--hvl-font-ui);
+  --font-body: var(--hvl-font-body);
+  --font-mono: var(--hvl-font-mono);
+  --font-sans: var(--hvl-font-ui);
+  --font-serif: var(--hvl-font-body);
+  --leading-body: var(--hvl-line-height-body);
+  --spacing-target: var(--hvl-target-min);
+  --container-measure: var(--hvl-measure);
+}

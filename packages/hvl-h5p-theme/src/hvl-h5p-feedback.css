@@ -1,0 +1,118 @@
+/*
+ * hvl-h5p-feedback — HVL's colours and borders for correct and incorrect answers in H5P libraries that do not use
+ * Daylight's variables, and the visually hidden prefix text.
+ *
+ * Why: UD-003 asks that an answer's state is shown by an icon and a text prefix as well as by colour. Libraries on
+ *      Daylight (DragText 1.10, Question's explanations, Components) take the feedback tokens through
+ *      @hvl-interaktiv/design-tokens/h5p-daylight.css; MultiChoice 1.16 and Blanks 1.14 hard-code their colours,
+ *      so their states are restyled here with the tokens and a 4 px left border. The prefixes themselves come
+ *      from ../dist/hvl-feedback-prefixes.css (visible) and ./feedbackPrefixes.js (announced).
+ * Spec: UD-003, UD-011, UD-012
+ * Invariants:
+ *   - Every library rule carries a `:root` prefix, so it beats the library rule of the same shape loaded after it.
+ *   - No colour literal. !important only keeps the hidden label hidden, whatever a library sets on its spans.
+ *   - In forced colours the border tokens become CanvasText (tokens.css), and the prefix text carries the meaning
+ *     when backgrounds are dropped (UD-012).
+ * Collaborators: ./hvl-h5p-theme.css, ../dist/hvl-feedback-prefixes.css, ./feedbackPrefixes.js.
+ * Tests: packages/hvl-h5p-theme/test/themeStructure.test.ts, apps/server/test/h5p/hvlTheme.browser.int.test.ts
+ */
+
+/* MultiChoice 1.16 (`.h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-container` and its :hover). */
+:root .h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-container,
+:root .h5p-multichoice .h5p-answer.h5p-correct:hover .h5p-alternative-container {
+  border-color: var(--hvl-feedback-correct-bg);
+  border-left: var(--hvl-feedback-border-width) solid var(--hvl-feedback-correct-border);
+  background: var(--hvl-feedback-correct-bg);
+  box-shadow: none;
+  color: var(--hvl-feedback-correct-fg);
+}
+
+:root .h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-container,
+:root .h5p-multichoice .h5p-answer.h5p-wrong:hover .h5p-alternative-container {
+  border-color: var(--hvl-feedback-incorrect-bg);
+  border-left: var(--hvl-feedback-border-width) solid var(--hvl-feedback-incorrect-border);
+  background: var(--hvl-feedback-incorrect-bg);
+  box-shadow: none;
+  color: var(--hvl-feedback-incorrect-fg);
+}
+
+:root .h5p-multichoice .h5p-correct .h5p-answer-icon::before {
+  color: var(--hvl-feedback-correct-fg);
+}
+
+:root .h5p-multichoice .h5p-wrong .h5p-answer-icon::before {
+  color: var(--hvl-feedback-incorrect-fg);
+}
+
+/* Blanks 1.14: the input carries the state (`.h5p-blanks .h5p-correct .h5p-text-input`). */
+:root .h5p-blanks .h5p-text-input {
+  /* A11Y: the field's boundary must reach 3 : 1 (WCAG 1.4.11); Blanks' own grey border does not. */
+  border-color: var(--hvl-ink-muted);
+}
+
+:root .h5p-blanks .h5p-correct .h5p-text-input {
+  border: 1px solid var(--hvl-feedback-correct-border);
+  border-left-width: var(--hvl-feedback-border-width);
+  background: var(--hvl-feedback-correct-bg);
+  color: var(--hvl-feedback-correct-fg);
+}
+
+:root .h5p-blanks .h5p-wrong .h5p-text-input {
+  border: 1px solid var(--hvl-feedback-incorrect-border);
+  border-left-width: var(--hvl-feedback-border-width);
+  background: var(--hvl-feedback-incorrect-bg);
+  color: var(--hvl-feedback-incorrect-fg);
+}
+
+:root .h5p-blanks .h5p-correct::after {
+  color: var(--hvl-feedback-correct-fg);
+}
+
+:root .h5p-blanks .h5p-wrong::after {
+  color: var(--hvl-feedback-incorrect-fg);
+}
+
+:root .h5p-blanks .h5p-correct-answer {
+  border-color: var(--hvl-feedback-correct-border);
+  background-color: var(--hvl-feedback-correct-bg);
+  color: var(--hvl-feedback-correct-fg);
+}
+
+:root .h5p-blanks .h5p-text-input.h5p-not-filled-out {
+  background: var(--hvl-feedback-incorrect-bg);
+}
+
+/* The visible prefixes take the state's text colour where the library does not set one on that element. */
+:root .h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner::before,
+:root .h5p-blanks .h5p-input-wrapper.h5p-correct::before,
+:root .h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-correct)::before {
+  color: var(--hvl-feedback-correct-fg);
+}
+
+:root .h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner::before,
+:root .h5p-blanks .h5p-input-wrapper.h5p-wrong::before,
+:root .h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-wrong)::before {
+  color: var(--hvl-feedback-incorrect-fg);
+}
+
+/* Question 1.5's explanation list lays each answer out as a flex row; text flow keeps the prefix with its word. */
+:root .h5p-question-explanation-correct,
+:root .h5p-question-explanation-wrong {
+  display: block;
+}
+
+/* The label that ./feedbackPrefixes.js adds for screen readers: in the accessibility tree, not on screen. */
+/* WHY: !important beats Components 1.0's `.h5p-theme .h5p-draggable span:not(.h5p-hidden-read)` (display: block,
+   width: fit-content, padding) and its nested `span` rule (display: contents), which show the label in DragText. */
+.hvl-feedback-sr {
+  display: block !important;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+  clip-path: inset(50%) !important;
+}

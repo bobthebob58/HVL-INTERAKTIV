@@ -1,0 +1,56 @@
+/*
+ * tokens — GENERATED from packages/design-tokens/tokens.json by scripts/buildTokens.mjs. Do not edit.
+ * Every HVL token as a custom property on :root (UD-001), with system colours in forced colours (UD-012).
+ * Rebuild with `npm run tokens:build`; `npm run tokens:check` fails when this file is out of date (D-072).
+ */
+
+:root {
+  --hvl-primary-dark: #004357;
+  --hvl-accent: #008aaf;
+  --hvl-brand-sea-green: #00afba;
+  --hvl-brand-orange: #eb6851;
+  --hvl-band: #c9d5da;
+  --hvl-ink: #111111;
+  --hvl-ink-muted: #4a5560;
+  --hvl-surface: #ffffff;
+  --hvl-surface-alt: #f4f6f7;
+  --hvl-feedback-correct-fg: #0f5132;
+  --hvl-feedback-correct-bg: #d1e7dd;
+  --hvl-feedback-correct-border: #198754;
+  --hvl-feedback-incorrect-fg: #6d2439;
+  --hvl-feedback-incorrect-bg: #f8d7da;
+  --hvl-feedback-incorrect-border: #dc3545;
+  --hvl-feedback-info-fg: var(--hvl-primary-dark);
+  --hvl-feedback-info-bg: #cff4fc;
+  --hvl-focus-outer: var(--hvl-primary-dark);
+  --hvl-focus-inner: var(--hvl-surface);
+  --hvl-font-ui: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  --hvl-font-body: Georgia, 'Times New Roman', serif;
+  --hvl-font-mono: ui-monospace, Menlo, Consolas, monospace;
+  --hvl-line-height-body: 1.5;
+  --hvl-line-height-h5p: 1.55;
+  --hvl-font-size-min: 1rem;
+  --hvl-measure: 70ch;
+  --hvl-target-min: 24px;
+  --hvl-feedback-border-width: 4px;
+  --hvl-focus-outline-width: 3px;
+  --hvl-focus-offset: 2px;
+  --hvl-focus-inner-width: 2px;
+  --hvl-focus-outline: var(--hvl-focus-outline-width) solid var(--hvl-focus-outer);
+  --hvl-focus-shadow: 0 0 0 var(--hvl-focus-inner-width) var(--hvl-focus-inner);
+  --hvl-space-xs: 0.25rem;
+  --hvl-space-s: 0.5rem;
+  --hvl-space-m: 1rem;
+  --hvl-space-l: 1.5rem;
+  --hvl-space-xl: 2rem;
+  --hvl-space-xxl: 3rem;
+}
+
+@media (forced-colors: active) {
+  :root {
+    --hvl-focus-outer: Highlight;
+    --hvl-focus-inner: Canvas;
+    --hvl-feedback-correct-border: CanvasText;
+    --hvl-feedback-incorrect-border: CanvasText;
+  }
+}

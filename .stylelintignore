@@ -1,0 +1,15 @@
+# Stylelint ignore list (stylelint.config.mjs). Each entry is CSS we do not write, or not product UI.
+# WHY: dependencies and build output are not our source.
+**/node_modules/**
+**/.next/**
+**/coverage/**
+# WHY: H5P Core, the H5P editor and the H5P libraries are vendored or fetched third-party CSS (D-027, D-078);
+# the HVL theme overrides them from packages/hvl-h5p-theme instead of editing them.
+apps/server/h5p/**
+apps/server/var/**
+# WHY: generated documentation sites (TypeDoc output and the published spec site) are reading aids, not product UI.
+docs/api/**
+docs/site/**
+# WHY: the spec website's stylesheets (tools/spec-site) define their own palette and fluid heading sizes for the
+# generated reading aid; it is not product UI and the application never serves it, so the product rules do not apply.
+tools/spec-site/**

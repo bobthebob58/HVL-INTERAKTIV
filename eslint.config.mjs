@@ -183,6 +183,11 @@ export default tseslint.config(
     rules: { 'no-restricted-syntax': ['error', LAISSEZ_FAIRE, ...COLOUR_BANS] },
   },
   {
+    // UD-003: the H5P theme's static script runs as a classic script inside H5P documents (no modules there).
+    files: ['packages/hvl-h5p-theme/src/*.js'],
+    languageOptions: { sourceType: 'script', globals: { ...globals.browser } },
+  },
+  {
     // SECURITY: LTI-003 / D-048: the ltik lives only in page memory, never in browser storage or cookies.
     files: ['apps/server/src/lti/pages/client/*.js', 'apps/server/src/h5p/render/client/*.js'],
     languageOptions: { sourceType: 'script', globals: { ...globals.browser } },
