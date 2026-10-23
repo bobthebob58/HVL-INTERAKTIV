@@ -30,6 +30,7 @@ const token = (launch: Partial<IdToken['launch']> = {}, lineItemId?: string): Id
 
 describe('[LTI-006] launch facts', () => {
   it('[LTI-006] reads platform, deployment, course, link, activity and line item', () => {
+    // Act and assert
     expect(launchFactsOf(token({}, 'https://canvas.example/li/1'))).toEqual({
       issuer: 'https://canvas.example',
       subject: 'sub-1',

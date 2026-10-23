@@ -63,7 +63,9 @@ describeWithServices('[LTI-006] Canvas placements', () => {
   });
 
   it('[LTI-007] keeps a separate placement per course for the same activity (course copy)', async () => {
+    // Arrange
     const resourceLinkId = uniqueName('link');
+    // Act
     const a = await recorder.record({
       platformId,
       contextId: 'course-a',
@@ -76,6 +78,7 @@ describeWithServices('[LTI-006] Canvas placements', () => {
       resourceLinkId,
       contentId: contentIds[0] ?? '',
     });
+    // Assert
     expect(a).not.toBe(b);
   });
 

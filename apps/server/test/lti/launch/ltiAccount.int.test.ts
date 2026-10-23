@@ -74,6 +74,7 @@ describeWithServices('[LTI-001] LTI accounts', () => {
   });
 
   it('[LTI-004] an author launch makes a staff account, never with a profile', async () => {
+    // Arrange
     const identity = {
       issuer: 'https://canvas.example',
       subject: uniqueName('sub'),
@@ -81,7 +82,9 @@ describeWithServices('[LTI-001] LTI accounts', () => {
       roles: ['author'] as const,
     };
     const platform = await db.ltiPlatform.findFirstOrThrow();
+    // Act
     const { userId } = await lti.atLaunch({ ...identity, platformId: platform.id });
+    // Assert
     expect(await db.user.findUniqueOrThrow({ where: { id: userId } })).toMatchObject({
       kind: 'staff',
       displayName: null,

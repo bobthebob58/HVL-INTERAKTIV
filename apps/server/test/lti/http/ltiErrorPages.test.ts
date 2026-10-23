@@ -42,6 +42,7 @@ const appThrowing = (error: unknown) => {
 
 describe('[LTI-001] LTI error pages', () => {
   it('[LTI-001] classifies ltijs codes, jsonwebtoken errors and our refusals', () => {
+    // Act and assert
     expect(classifyLtiError(ltijs('INVALID_NONCE_RECEIVED'))).toMatchObject({
       status: 400,
       reason: 'nonce-invalid',

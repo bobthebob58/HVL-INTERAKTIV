@@ -24,8 +24,7 @@ export const AUTH_AUDIT_EVENTS = [
   'logout',
   'launch.lti.author',
   'launch.lti.failed',
-  'link.attached',
-  'link.moved',
+  'link.feide-lti',
   'link.conflict',
 ] as const;
 /** One audited event name. */
@@ -42,7 +41,11 @@ export const AUTH_AUDIT_REASONS = [
   'deployment-not-allowed',
   'nonce-invalid',
   'launch-invalid',
+  'link-created',
+  'link-joined',
+  'link-moved',
   'lti-account-owns-content',
+  'learner-account',
 ] as const;
 /** One reason code. */
 export type AuthAuditReason = (typeof AUTH_AUDIT_REASONS)[number];
