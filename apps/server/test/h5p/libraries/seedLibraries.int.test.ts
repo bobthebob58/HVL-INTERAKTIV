@@ -93,6 +93,8 @@ describeWithServices('seedLibraries', () => {
   });
 
   it('[H5P-011] each new or patched library gets one seed audit row with the package hash and no actor', async () => {
+    // WHY: arranged here, not taken from the test above, so the test also runs on its own (`-t "H5P-011"`).
+    await seedLibraries(await seedFolder([mc]), installer);
     const patched = await buildH5pPackage(
       { main: { ...MULTI_CHOICE, patchVersion: 2 } },
       'H5P.MultiChoice-patch.h5p',
