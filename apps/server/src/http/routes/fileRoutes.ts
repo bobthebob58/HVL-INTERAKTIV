@@ -45,6 +45,7 @@ export function fileRoutes(deps: H5pRouteDeps): Router {
     const user = asAccountUser(requireActor(res));
     const filename = wildcardParam(req, 'file');
     // UPSTREAM: the d.ts omits `undefined` (whole file), which the code handles; see https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/H5PAjaxEndpoint.ts
+    // Remove the cast when the d.ts accepts `undefined`.
     const range = requestedRange(req) as (size: number) => { start: number; end: number };
     const file = await deps.ajax.getTemporaryFile(filename, user, range);
     await sendUserFile(res, file, filename);

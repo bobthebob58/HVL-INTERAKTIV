@@ -1,7 +1,8 @@
 # CI: the Session gate from docs/EVALUATOR-GUIDE.md §5, on every push to main and every pull request.
 # Requirements: NFR-004 (typecheck, lint, tests, traceability), SEC-007 (pins, audit), NFR-005 (licences),
 # DATA-001 (data inventory), H5P-001 (verified H5P client files and the boot check), D-023 (services).
-# CI never contacts the H5P Hub: content types come from the pinned seed packages (H5P-003, D-041).
+# CI never contacts the H5P Hub (D-041). It does not seed real packages yet: they are fetched once the Hub is
+# reachable (Q7, H5P-003); until then the integration tests seed synthetic packages.
 name: CI
 
 on:

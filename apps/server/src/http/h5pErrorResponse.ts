@@ -82,6 +82,7 @@ function describe(error: unknown): Described {
     if (key) return { status, code: e.errorId, key, params: stringParams(e.replacements) };
   }
   // UPSTREAM: Lumi throws a plain Error when its schema refuses the metadata; see https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/H5PEditor.ts (saveOrUpdateContentReturnMetaData).
+  // Remove when a Lumi release throws an H5pError with a 4xx status for it.
   if (error instanceof Error && error.message === LUMI_INVALID_METADATA) {
     return { status: 400, code: 'invalid-metadata', key: 'error.badRequest', params: {} };
   }

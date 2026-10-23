@@ -25,6 +25,17 @@ describe('[DOC-006] test titles and fixtures', () => {
     ]);
   });
 
+  it('[DOC-006] accepts a file of upstream pins without IDs, but not pins mixed with untagged tests', () => {
+    const pins = TEST_HEADER + testCall('it', 'upstream pin: Lumi skips list items');
+    expect(problems(makeRepo({ 'apps/server/test/upstream/a.test.ts': pins }), 'test-readability')).toEqual(
+      [],
+    );
+    const mixed = pins + testCall('it', 'works');
+    expect(problems(makeRepo({ 'apps/server/test/upstream/b.test.ts': mixed }), 'test-readability')).toEqual([
+      'apps/server/test/upstream/b.test.ts:1 no running it()/test() title starts with "[<requirement ID>] "',
+    ]);
+  });
+
   it('[DOC-006] rejects titles that name unknown requirements', () => {
     const root = makeRepo({ 'tools/w/test/w.test.mjs': TEST_HEADER + testCall('test', '[TST-777] ghost') });
     expect(problems(root, 'test-readability')).toEqual([

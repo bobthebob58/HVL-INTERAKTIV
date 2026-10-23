@@ -89,8 +89,8 @@ describeWithServices('H5P router', () => {
     const res = await request(tb.app)
       .get(`/h5p/params/${randomUUID()}`)
       .set(...author.header);
-    expect(res.status).toBeGreaterThanOrEqual(400);
-    expect(res.status).toBeLessThan(500);
+    expect(res.status).toBe(403);
+    expect((res.body as { message: string }).message).toBe(t('error.forbidden', {}, 'en'));
     expect(Object.keys(res.body as object).sort()).toEqual([
       'errorCode',
       'httpStatusCode',

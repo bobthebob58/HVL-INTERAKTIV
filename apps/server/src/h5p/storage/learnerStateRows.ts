@@ -45,7 +45,7 @@ export interface StateKey {
  * @returns True only for a 43-character base64url string.
  */
 export const isLearnerKey = (value: unknown): value is string =>
-  // PRIVACY: an account UUID, e-mail, Feide ID, national ID number or LTI `sub` never has this shape (D-036).
+  // PRIVACY: an account UUID, e-mail, Feide ID, national ID number or LTI `sub` never has this shape (D-036, DATA-002).
   typeof value === 'string' && LEARNER_KEY.test(value);
 
 /** Tells whether an ID can name a stored activity (re-exported from ../contentIds.ts for the storage). */
@@ -80,7 +80,7 @@ export function stateKey(
  *   `dataType` is missing (a delete without it would match every data type).
  */
 export function stateKeyOf(userData: IContentUserData, contentId: string): StateKey {
-  // PRIVACY: the state view's ID is the pseudonym (D-036); it is stored as given and nothing else is.
+  // PRIVACY: the state view's ID is the pseudonym (D-036, DATA-002); it is stored as given and nothing else is.
   if (!isLearnerKey(userData.userId)) throw new TypeError('content user data needs a learnerKey');
   if (!userData.dataType) throw new TypeError('content user data needs a dataType');
   return stateKey(contentId, userData.dataType, userData.subContentId, userData.userId, userData.contextId);

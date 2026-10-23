@@ -117,7 +117,9 @@ complete tour of the security-relevant lines.
 - Code: `Spec:` in the module header and/or `@spec` in TSDoc.
 - Tests: the title of an `it()` or `test()` call that runs starts with the ID in brackets:
   `it('[SEC-001] strips inline <script> elements', …)`. Mentions in comments, strings, `describe` titles
-  and skipped tests do not count (D-033).
+  and skipped tests do not count (D-033). A test that pins a bug in an upstream library passes while the
+  upstream code is unsafe, so it proves nothing: its title starts with `upstream pin: ` instead, and its
+  `describe` title and module header name the requirement the workaround protects.
 - `node tools/spec-trace/specTrace.mjs` (wired as `npm run spec:trace` in Session 1) regenerates
   `docs/TRACEABILITY.md`. With `--check` it fails CI on: duplicate IDs, references to unknown IDs,
   and **MUST** requirements of completed sessions that have no test reference.

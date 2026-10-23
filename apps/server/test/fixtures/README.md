@@ -9,5 +9,11 @@ never serve them outside a test. doc-lint skips this folder in its source checks
 | `svg/benign/` | Ordinary drawings that must survive sanitising and look identical afterwards. Examples: paths and gradients, text, internal `#` references, clip paths and masks, an embedded PNG, and an Inkscape export with a public DOCTYPE. Filters are not in the set: Lumi's SVG-only profile removes them (D-044). | `test/security/SvgSanitizer.test.ts`, `test/security/SvgSanitizer.render.test.ts` |
 | `h5p-libraries/` | Tiny H5P libraries with and without `language/nn.json`, used to test the nn → nb → en fallback (`H5P-008`, D-046). | `test/h5p/LanguageFallbackLibraryStorage.test.ts` |
 
+The three libraries in `h5p-libraries/` differ only in their language files:
+
+- `H5P.LanguageFixtureNn-1.0` — `nn`, `nb` and `en`: `nn` is served as it is.
+- `H5P.LanguageFixture-1.0` — `nb` and `en`, no `nn`: a request for `nn` gets the `nb` file.
+- `H5P.LanguageFixtureEn-1.0` — `en` only: a request for `nn` or `nb` gets the `en` file.
+
 Most other S2 tests build their libraries and packages at run time instead: see
 `test/support/syntheticLibraries.ts` and the zip builders in `test/support/`.

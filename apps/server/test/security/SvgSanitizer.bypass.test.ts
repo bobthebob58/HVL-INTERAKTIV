@@ -130,7 +130,7 @@ describe('[SEC-001] SvgSanitizer bypass attempts', () => {
     );
   });
 
-  it('[SEC-001] the harmless part of each payload survives', async () => {
+  it('[SEC-001] most payloads are cleaned rather than refused: the harmless part survives (at most 8 refusals)', async () => {
     let kept = 0;
     for (const [, payload] of PAYLOADS) {
       const output = await sanitizeSvgText(payload).catch(() => '');

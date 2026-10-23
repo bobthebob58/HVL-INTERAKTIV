@@ -17,6 +17,7 @@
 import type { IUrlGenerator } from '@lumieducation/h5p-server';
 
 // UPSTREAM: Lumi master adds these, unreleased; see https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/playerAssetList.json
+// Remove when a pinned h5p-server release lists these files; the first test in H5pFactories.test.ts then fails.
 /** Core 1.28 styles missing from Lumi 10.0.4's player list. */
 export const PLAYER_MISSING_CORE_STYLES: readonly string[] = [
   'styles/h5p-fonts.css',

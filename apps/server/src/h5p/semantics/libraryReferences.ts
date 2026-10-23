@@ -22,6 +22,7 @@ export interface LibraryReference {
 }
 
 // UPSTREAM: the same pattern as https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/H5PEditor.ts (findLibrariesInParameters).
+// Keep it in step with Lumi; remove the check (D-039) when Lumi collects only libraries the semantics reach.
 const LUMI_LIBRARY_VALUE = /.+ \d+\.\d+/;
 
 /**

@@ -44,7 +44,7 @@ export function decideUserData(
   affectedUserId: string | undefined,
   canViewContent: boolean,
 ): UserDataDecision {
-  // PRIVACY: finished data is not stored (D-037), so no one may write, read or delete it.
+  // PRIVACY: finished data (scores) is not stored (D-037, DATA-012), so no one may write, read or delete it.
   if (!STATE.has(permission)) return 'deny';
   // SECURITY: "every learner" and malformed IDs never match a pseudonym, even an empty one by mistake.
   if (typeof affectedUserId !== 'string' || affectedUserId === '') return 'deny';
@@ -53,7 +53,7 @@ export function decideUserData(
     // WHY: only the state view keys state by the learnerKey; the account view here is a wiring error (D-036).
     return user.view === 'state' && canViewContent ? 'allow' : 'deny';
   }
-  // PRIVACY: teachers see aggregates only (spec 05); a single learner's state is for data-subject requests.
+  // PRIVACY: teachers see aggregates only (spec 05); a single learner's state is for data-subject requests (DATA-008).
   return actor.role === 'admin' && actor.dataSubjectRequest?.learnerKey === affectedUserId
     ? 'dataSubjectRequest'
     : 'deny';

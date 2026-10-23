@@ -23,7 +23,7 @@ const TOKEN = '[A-Za-z0-9._~+/=-]';
 
 /** Patterns in order: URL passwords run before e-mail addresses, since both contain `@`. */
 const TEXT_PATTERNS: [RegExp, string][] = [
-  // PRIVACY: the ltik may appear anywhere (query string, form body, start of a string).
+  // PRIVACY: the ltik may appear anywhere (query string, form body, start of a string) (DATA-009).
   [/(?<![\w-])(ltik=)[^&#\s"'\\]{1,4096}/gi, `$1${REDACTED}`],
   // SECURITY: OAuth/OIDC credentials and passwords in query strings and form bodies.
   [

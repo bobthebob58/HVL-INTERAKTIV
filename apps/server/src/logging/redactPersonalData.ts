@@ -59,7 +59,8 @@ export const SENSITIVE_KEYS: ReadonlySet<string> = new Set([
   'nin',
   'personnummer',
   'fodselsnummer',
-  // PRIVACY: body parsers attach the raw request text to their errors (`err.body`); answers and names can be in it.
+  // PRIVACY: body parsers attach the raw request text to their errors (`err.body`); answers and names can be in
+  // it (DATA-009).
   'body',
   'rawbody',
 ]);
@@ -113,7 +114,7 @@ export function redactPersonalData(value: unknown, seen: WeakSet<object> = new W
   if (value === null || typeof value !== 'object') return value;
   if (seen.has(value)) return '[Circular]';
   if (Buffer.isBuffer(value) || value instanceof Date) return value;
-  // PRIVACY: Prisma renders query values into message and stack; keep only its codes.
+  // PRIVACY: Prisma renders query values into message and stack; keep only its codes (DATA-009).
   if (isPrismaError(value)) return summarisePrismaError(value);
   // WHY: only objects on the current path count as visited, so a shared (non-cyclic) object is kept.
   seen.add(value);

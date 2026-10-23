@@ -32,7 +32,7 @@ export class FinishedDataSwitchedOff implements FinishedDataMethods {
    * @returns A resolved promise.
    */
   createOrUpdateFinishedData(_finishedData: IFinishedUserData): Promise<void> {
-    // PRIVACY: data minimisation (D-037); the score reaches the LMS through xAPI, never through this record.
+    // PRIVACY: data minimisation (D-037, DATA-012); the score reaches the LMS through xAPI, never through this record.
     return Promise.resolve();
   }
 

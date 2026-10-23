@@ -68,7 +68,7 @@ function issue(actor: HvlH5pActor, view: H5pUserView): HvlH5pUser {
     ltiLaunchContentIds: Object.freeze([...actor.ltiLaunchContentIds]),
   });
   const id = view === 'account' ? frozen.accountId : frozen.learnerKey;
-  // PRIVACY: Lumi copies name and e-mail into pages and the Hub request; they stay empty.
+  // PRIVACY: Lumi copies name and e-mail into pages and the Hub request; they stay empty (DATA-002).
   const user: HvlH5pUser = Object.freeze({ id, name: '', email: '', type: 'local', actor: frozen, view });
   ISSUED.add(user);
   return user;

@@ -87,7 +87,7 @@ function mayView(actor: HvlH5pActor, facts: ContentFacts): boolean {
       // WHY: authors preview their own drafts (PROD-004); others' activities only once published and visible.
       return isOwnerOrCoAuthor(actor, facts) || (published && isVisibleTo(actor, facts));
     case 'learner':
-      // PRIVACY: a draft stays hidden from learners even when its ID arrives in an LTI launch (PROD-004).
+      // WHY: a draft stays hidden from learners even when its ID arrives in an LTI launch (PROD-004).
       return published && (isVisibleTo(actor, facts) || actor.ltiLaunchContentIds.includes(facts.contentId));
     default:
       return false;

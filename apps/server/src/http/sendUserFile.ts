@@ -10,6 +10,7 @@
  *   - Headers come from ../security/ContentFileHeaders.ts, never from the stored object or the browser.
  *   - A single satisfiable range gives 206 with Content-Range; anything else sends the whole file with 200.
  *   - A stream error after the headers ends the connection (./h5pErrorHandler.ts); the source is always closed.
+ * SPEC-DEVIATION: D-045 — files are served from the app's own origin until S3/S6 add the separate files origin.
  * Collaborators: ./routes/fileRoutes.ts, Lumi's H5PAjaxEndpoint (getContentFile, getTemporaryFile).
  * Tests: apps/server/test/http/contentFiles.int.test.ts
  */

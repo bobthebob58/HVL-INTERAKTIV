@@ -53,7 +53,7 @@ export interface H5pConfigOptions {
  * @returns 15 lowercase hex characters.
  *
  * UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/commit/fcc7063 fixes this, unreleased
- *   (docs/reference/h5p-core-1.28-seed-packages/README.md §4).
+ *   (docs/reference/h5p-core-1.28-seed-packages/README.md §4). Remove the override when a pinned release has it.
  */
 export function localIdFor(seed: string): string {
   return createHash('sha256').update(seed).digest('hex').slice(0, LOCAL_ID_MAX_LENGTH);
@@ -97,13 +97,14 @@ export function applyEnforcedSettings(config: H5PConfig, options: H5pConfigOptio
   config.contentWhitelist = CONTENT_WHITELIST;
   config.platformName = 'HVL Interaktiv';
   config.platformVersion = options.platformVersion;
-  // PRIVACY: no usage statistics to H5P Group, and no publishing to the public Content Hub.
+  // PRIVACY: no usage statistics to H5P Group, and no publishing to the public Content Hub (DATA-011).
   config.sendUsageStatistics = false;
   config.contentHubEnabled = false;
-  // PRIVACY: no separate "finished" record per learner; scores reach the LMS through xAPI in S6 (D-037).
+  // PRIVACY: no separate "finished" record per learner; scores reach the LMS through xAPI in S6 (D-037, DATA-012).
   config.setFinishedEnabled = false;
   config.contentUserStateSaveInterval = CONTENT_USER_STATE_SAVE_INTERVAL_MS;
   // UPSTREAM: finding F2, https://github.com/h5p/h5p-wordpress-plugin/commit/79235d0 — a known UUID skips registration.
+  // Keep until a pinned h5p-server release accepts the Hub's non-200 2xx registration answer (spec 01 §1).
   if (options.siteUuid) config.uuid = options.siteUuid;
 }
 

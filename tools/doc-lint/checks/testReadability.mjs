@@ -6,7 +6,8 @@
  * Spec: DOC-006
  * Invariants:
  *   - Every test file has at least one running it()/test() title that opens with a requirement ID in
- *     brackets, and every bracketed ID opening any describe/it/test title exists.
+ *     brackets, unless all its running titles open with `upstream pin: ` (DOC-004); every bracketed ID
+ *     opening any describe/it/test title exists.
  *   - Every directory named `fixtures` contains a README.md.
  * Collaborators: ../lib/repo.mjs, ../../spec-trace/testTitles.mjs (the title rule shared with spec-trace).
  * Tests: tools/doc-lint/test/docLint.repo.test.mjs
@@ -15,6 +16,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { isTestFile, listFiles, read, SOURCE_ROOTS } from '../lib/repo.mjs';
 import { leadingIds, testTitles } from '../../spec-trace/testTitles.mjs';
+
+const UPSTREAM_PIN = /^upstream pin: /;
 
 export const id = 'DOC-006';
 export const name = 'test-readability';
@@ -28,8 +31,11 @@ export function run({ root, files, ids }) {
   const problems = [];
   for (const file of files.filter(isTestFile)) {
     const titles = testTitles(read(root, file));
+    const running = titles.filter((t) => t.active && t.fn !== 'describe');
+    // WHY: a pin of an upstream bug passes while the upstream code is unsafe, so it proves no requirement.
+    const pinsOnly = running.length > 0 && running.every((t) => UPSTREAM_PIN.test(t.title));
     // WHY: the same rule as tools/spec-trace (D-033): only a running it()/test() title proves a requirement.
-    if (!titles.some((t) => t.active && t.fn !== 'describe' && leadingIds(t.title).length > 0)) {
+    if (!pinsOnly && !running.some((t) => leadingIds(t.title).length > 0)) {
       problems.push({
         file,
         line: 1,

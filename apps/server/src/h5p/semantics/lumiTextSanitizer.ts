@@ -59,7 +59,8 @@ export class LumiTextSanitizer {
    */
   constructor(libraryManager: LibraryManager) {
     // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/SemanticsEnforcer.ts
-    // keeps enforceTextSemantics private in the typings, but it is the CVE-2025-47828 fix we reuse.
+    // keeps enforceTextSemantics private in the typings, but it is the CVE-2025-47828 fix we reuse. Remove the
+    // cast when Lumi exports it; if a Lumi upgrade drops the method, SubContentPolicy.test.ts fails.
     this.enforcer = new SemanticsEnforcer(libraryManager) as unknown as TextEnforcer;
   }
 

@@ -71,10 +71,11 @@ export function createLogger(options: LoggerOptions): Logger {
       hooks: {
         logMethod(args, method) {
           const all = args as unknown[];
-          // PRIVACY: a leading record object is redacted by formatters.log; everything after it ends up in `msg`.
+          // PRIVACY: a leading record object is redacted by formatters.log; everything after it ends up in `msg`
+          // (DATA-009).
           const recordFirst = all.length > 0 && typeof all[0] !== 'string';
           const masked = all.map((arg, i) => (i === 0 && recordFirst ? arg : maskArgument(arg)));
-          // PRIVACY: with no message, pino copies err.message into `msg` after this hook runs.
+          // PRIVACY: with no message, pino copies err.message into `msg` after this hook runs (DATA-009).
           if (recordFirst && masked.slice(1).every((arg) => arg === undefined)) {
             const error = errorOf(all[0]);
             const ownMsg = all[0] !== null && typeof all[0] === 'object' && Object.hasOwn(all[0], 'msg');

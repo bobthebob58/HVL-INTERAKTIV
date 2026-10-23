@@ -439,7 +439,11 @@ loading of one spec per session are kept.
 - **Decision:** On save, our `SubContentPolicy` walks the params with the (altered) semantics, refuses with 403
   any sub-library that the field does not offer and `H5P.DragQuestion` anywhere, sanitises list-item text with
   Lumi's own text rules, and sanitises the titles in main and sub-content metadata. A test pins the upstream
-  behaviour so we notice when Lumi fixes it.
+  behaviour so we notice when Lumi fixes it. Two gaps found in the S2 review are closed the same way: Lumi
+  adds every `library: "H5P.Name 1.2"` value it finds, under any key, to the content's dependencies, so the
+  policy refuses any such value the semantics walk did not reach (`semantics/libraryReferences.ts`); and H5P's
+  "Rights of use" dialog shows metadata without escaping, so every metadata string is reduced to plain text,
+  `source` is kept only as an http(s) URL, and a field that becomes empty is dropped.
 - **Consequences:** The walker (`semantics/paramsWalker.ts`) is reused by the S4 validator.
 
 ### D-040 · Our own page templates with script-safe JSON
@@ -458,17 +462,22 @@ loading of one spec per session are kept.
   write a `LibraryAuditEvent` per new or patched library. Installing from the Hub is refused for everyone, in
   every environment. `LibraryAuditEvent.actorUserId` becomes nullable (the seed command has no user) and gains
   `source` (`seed` or `upload`). An empty content-type cache is stored as `[]`, so the server never calls the
-  Hub while serving requests; `npm run hub:check` contacts it explicitly (spike step 3).
+  Hub while serving requests; `npm run hub:check` contacts it explicitly (spike step 3). The audit rows are
+  written before Lumi installs anything (`libraries/auditBeforeInstall.ts`, which predicts Lumi's `new`/`patch`
+  decision from the package), so a failed audit write installs nothing; changes beyond the prediction are
+  recorded right after. The editor's Hub download and Content Hub calls are replaced at construction
+  (`disconnectFromHub`).
 - **Consequences:** New content types arrive through new seed packages, reviewed like code.
 
 ### D-042 · The seeder lives in `apps/server`; where the seed packages are kept
 - **Context:** Spec 01 §2 places `seedLibraries.ts` in `tools/seed/`, but seeding needs the server's H5P
   configuration, library storage and Prisma (for the audit).
-- **Decision:** `SPEC-DEVIATION`: the seeder is `apps/server/src/h5p/libraries/` (`npm run seed:libraries`);
-  `tools/seed/` keeps the fetch script. The ten packages are committed under
+- **Decision:** The seeder is in `apps/server/src/h5p/libraries/` (`npm run seed:libraries`), and
+  `tools/seed/` keeps the fetch script. Spec 01 §2 was amended to match, so no code carries a deviation tag. The ten packages are committed under
   `docs/reference/h5p-core-1.28-seed-packages/` when every file is under 50 MB and all together under 150 MB;
   otherwise they are published as a GitHub Release asset and only `SHA256SUMS` is committed (as D-027).
-- **Consequences:** CI seeds from committed (or release) packages and never fetches from the Hub.
+- **Consequences:** CI will seed from the committed (or release) packages and never fetches from the Hub. Until
+  the packages can be fetched (Q7), CI has no seed step; the integration tests seed synthetic packages.
 
 ### D-043 · Multipart uploads keep their extension and are limited while streaming
 - **Context:** Lumi requires a temporary file path when file sanitisers are registered, and its SVG sanitiser
@@ -484,14 +493,13 @@ loading of one spec per session are kept.
   DOCTYPE, which is harmless without an internal subset.
 - **Decision:** An internal DTD subset or any `<!ENTITY` is rejected. A plain DOCTYPE and `xml-stylesheet`
   instructions are stripped. `href`/`xlink:href` may only point to a `#fragment` or a raster
-  `data:image/(png|jpeg|gif|webp)`. `script`, `foreignObject`, `set`, `on*` attributes and animations of `href`
-  are removed; `@import` and external `url()` are removed from styles. Order: our pre-check, Lumi's sanitiser,
+  `data:image/(png|jpeg|gif|webp)`. `script`, `foreignObject`, `use`, `set`, `on*` attributes and animations of
+  `href` are removed (`<use>` can load an external document); `@import` and external `url()` are removed from styles. Order: our pre-check, Lumi's sanitiser,
   our stricter DOMPurify pass, and a final check that nothing forbidden is left. Benign SVGs must render
   identically in Chromium before and after (screenshot comparison).
 - **Consequences:** SVG files larger than 5 MB are refused. DOMPurify parses with the HTML parser (its XML mode
   returns nothing for a file with an `<?xml?>` prolog); that parser keeps `xmlns` but its SVG profile removes
-  `<use>`, so a drawing that relies on `<use>` loses those parts (pinned in `test/security/upstream/lumiSvgSanitizer.test.ts`
-  and `SvgSanitizer.test.ts`).
+  `<use>`, so a drawing that relies on `<use>` loses those parts (pinned in `SvgSanitizer.test.ts`).
   Lumi's profile is SVG only (no filter elements), so filter primitives such as `feGaussianBlur` are lost too,
   and DOMPurify removes ids that name document properties (`title`, `blur`, …), which breaks `url(#…)`
   references to them; a test pins all three losses. Our pass writes its result with XMLSerializer, and the final

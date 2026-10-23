@@ -38,17 +38,18 @@ async function enforce(params: Record<string, unknown>): Promise<Record<string, 
 }
 
 describe('[SEC-008] upstream: Lumi skips list items when enforcing semantics', () => {
-  it('[SEC-008] sanitises a plain text field but leaves text that is a list item untouched', async () => {
+  it('upstream pin: sanitises a plain text field but leaves text that is a list item untouched', async () => {
     const params = await enforce({ title: XSS, questions: [XSS], items: [] });
     expect(params.title).not.toContain('onerror');
     // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/ContentScanner.ts passes the array as parentParams for list
     // items, so the sanitised text is written to a property of the array, not to the item. D-039 closes this.
+    // When this fails after a Lumi upgrade, the gap is fixed upstream; SubContentPolicy keeps its own walk.
     const questions = params.questions as string[] & { question?: string };
     expect(questions[0]).toBe(XSS);
     expect(questions.question).not.toContain('onerror');
   });
 
-  it('[H5P-002] keeps a library that is a list item even when the field does not offer it', async () => {
+  it('upstream pin: keeps a library that is a list item even when the field does not offer it', async () => {
     const drag = { library: 'H5P.DragQuestion 1.0', params: {}, subContentId: 'a' };
     const params = await enforce({ title: 'ok', questions: [], items: [drag] });
     expect(params.items).toEqual([drag]);

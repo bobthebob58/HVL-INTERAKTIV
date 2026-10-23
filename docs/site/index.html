@@ -2438,7 +2438,9 @@ complete tour of the security-relevant lines.</p>
 <details class="req" id="x-DOC-004" data-area="DOC" data-priority="MUST" data-session="S1" data-status="tested" data-text="doc-004 requirement ids connect spec, code and tests - code: `spec:` in the module header and/or `@spec` in tsdoc.
 - tests: the title of an `it()` or `test()` call that runs starts with the id in brackets:
   `it('[sec-001] strips inline &lt;script&gt; elements', …)`. mentions in comments, strings, `describe` titles
-  and skipped tests do not count (d-033).
+  and skipped tests do not count (d-033). a test that pins a bug in an upstream library passes while the
+  upstream code is unsafe, so it proves nothing: its title starts with `upstream pin: ` instead, and its
+  `describe` title and module header name the requirement the workaround protects.
 - `node tools/spec-trace/spectrace.mjs` (wired as `npm run spec:trace` in session 1) regenerates
   `docs/traceability.md`. with `--check` it fails ci on: duplicate ids, references to unknown ids,
   and **must** requirements of completed sessions that have no test reference.">
@@ -2447,7 +2449,9 @@ complete tour of the security-relevant lines.</p>
 <li>Code: <code>Spec:</code> in the module header and/or <code>@spec</code> in TSDoc.</li>
 <li>Tests: the title of an <code>it()</code> or <code>test()</code> call that runs starts with the ID in brackets:
 <code>it(&#39;[SEC-001] strips inline &lt;script&gt; elements&#39;, …)</code>. Mentions in comments, strings, <code>describe</code> titles
-and skipped tests do not count (D-033).</li>
+and skipped tests do not count (D-033). A test that pins a bug in an upstream library passes while the
+upstream code is unsafe, so it proves nothing: its title starts with <code>upstream pin: </code> instead, and its
+<code>describe</code> title and module header name the requirement the workaround protects.</li>
 <li><code>node tools/spec-trace/specTrace.mjs</code> (wired as <code>npm run spec:trace</code> in Session 1) regenerates
 <code>docs/TRACEABILITY.md</code>. With <code>--check</code> it fails CI on: duplicate IDs, references to unknown IDs,
 and <strong>MUST</strong> requirements of completed sessions that have no test reference.</li>
@@ -2953,15 +2957,22 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
   h5pAssets.ts                 Core 1.28 styles and scripts Lumi 10.0.4 leaves out (F3)  H5P-001 (S2)
   permissionSystemGuard.ts     start-up check: every Lumi component uses ours         H5P-006 (S2)
   HvlH5pUser.ts                the actor with its account and state views (D-036)     H5P-006 (S2)
-  hubCheck.ts                  `npm run hub:check`: registration and Hub versions     H5P-001 (S2, D-041)
+  hubCheck.ts / hubCheckCli.ts `npm run hub:check`: registration and Hub versions     H5P-001 (S2, D-041)
+  offlineContentTypeCache.ts   keeps the content-type cache offline; no Hub calls    H5P-011 (S2, D-041)
+  contentFileCleanup.ts        deletes files an author removed, as that author       H5P-006 (S2, D-036)
+  contentIds.ts                the content-ID (UUID) check shared by storage and permissions  H5P-006 (S2)
+  lumiInternals.ts             the Lumi classes its package does not export          SEC-001, SEC-008 (S2)
   HvlTop10ContentTypeFilter.ts restricts the authoring list to the ten types         H5P-002
-  HvlPermissionSystem.ts       IPermissionSystem implementation (role matrix §5)     H5P-006
-  HvlUrlGenerator.ts           UrlGenerator that appends ltik / CSRF parameters      H5P-007
+  HvlPermissionSystem.ts       IPermissionSystem implementation (role matrix §4)     H5P-006
+  HvlUrlGenerator.ts           UrlGenerator that appends ltik / CSRF parameters (S3) H5P-007
   HvlTranslationCallback.ts    i18next nn → nb → en (resources: h5pTranslationResources.ts)  H5P-008
   HvlH5PEditor.ts              editor subclass: ten-type filter, save order, package rules  H5P-002, SEC-003 (S2)
   semantics/                   DragQuestion removal, params walker, sub-content policy H5P-002, SEC-008 (S2, D-039)
+    libraryReferences.ts           every `library` value Lumi would load            H5P-002, SEC-008 (S2)
   permissions/                 content facts and the rule tables for HvlPermissionSystem  H5P-006 (S2)
   libraries/                   seeder, audited library installer, package manifest checks  H5P-003, H5P-011, SEC-003 (S2, D-042)
+    auditBeforeInstall.ts          records planned library changes before Lumi installs  H5P-011 (S2)
+    contentFileReferences.ts       content.json file paths stay inside content/     SEC-005 (S2)
   render/                      our player page with script-safe JSON (editor page in S4)  SEC-008 (S2, D-040)
   storage/
     PrismaContentStorage.ts        IContentStorage (metadata in PostgreSQL, files in S3)
@@ -2972,6 +2983,8 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
     S3TemporaryFileStorage.ts      ITemporaryFileStorage
     s3Objects.ts                   safe object names, ranges, size-limited uploads   SEC-005
     PrismaContentUserDataStorage.ts IContentUserDataStorage                          H5P-005 (S2, D-028)
+    learnerStateRows.ts            row ⇄ IContentUserData mapping, learnerKey shape  H5P-005, DATA-002 (S2)
+    FinishedDataSwitchedOff.ts     the finished-data methods, which store nothing    H5P-005 (S2, D-037)
     RedisKeyValueStorage.ts        IKeyValueStorage for ContentTypeCache &amp; settings
   jobs/TemporaryFileCleanupJob.ts  runs every 5 min, once per interval cluster-wide  H5P-004
 apps/server/src/security/
@@ -2979,6 +2992,8 @@ apps/server/src/security/
   SvgSanitizer.ts + svg/       IFileSanitizer (wraps @lumieducation/h5p-svg-sanitizer + extra rules) SEC-001
   FileTypeSniffer.ts + sniff/  compares magic bytes with the extension               SEC-002
   ContentFileHeaders.ts        CSP sandbox, nosniff, Content-Disposition             SEC-004
+  RejectedUploadError.ts       a refused upload with its translated message key      SEC-001, SEC-002 (S2)
+  fileExtension.ts             the lower-cased extension of a file name              SEC-002 (S2)
 apps/server/src/http/
   createH5pRouter.ts + routes/ Express 5 routes on H5PAjaxEndpoint (D-035): static files, AJAX, uploads,
                                content and temporary files, user data, content, player  H5P-005, SEC-004 (S2)
@@ -3229,7 +3244,7 @@ stored and rendered value is escaped.</p>
 <tr>
 <td><code>H5PUserData</code></td><td><code>contentId</code>, <code>subContentId</code>, <code>dataType</code>, <code>learnerKey</code>, <code>contextId</code>, <code>data (jsonb)</code>, <code>preload</code>, <code>invalidate</code>, <code>updatedAt</code></td><td>Pseudonymous learner data</td></tr>
 <tr>
-<td><code>LibraryAuditEvent</code></td><td><code>actorUserId</code>, <code>machineName</code>, <code>fromVersion</code>, <code>toVersion</code>, <code>sha256</code>, <code>at</code></td><td>Admin ID</td></tr>
+<td><code>LibraryAuditEvent</code></td><td><code>actorUserId?</code> (empty for the seed command), <code>source (seed/upload)</code>, <code>machineName</code>, <code>fromVersion?</code>, <code>toVersion?</code>, <code>sha256?</code>, <code>at</code></td><td>Admin ID (D-041)</td></tr>
 </tbody></table></div>
 <p>Session 1 turns this into <code>apps/server/prisma/schema.prisma</code>, together with the entities from specs 02, 04 and 05.</p>
 <hr>
@@ -4433,7 +4448,9 @@ complete tour of the security-relevant lines.</p>
 <li>Code: <code>Spec:</code> in the module header and/or <code>@spec</code> in TSDoc.</li>
 <li>Tests: the title of an <code>it()</code> or <code>test()</code> call that runs starts with the ID in brackets:
 <code>it(&#39;[SEC-001] strips inline &lt;script&gt; elements&#39;, …)</code>. Mentions in comments, strings, <code>describe</code> titles
-and skipped tests do not count (D-033).</li>
+and skipped tests do not count (D-033). A test that pins a bug in an upstream library passes while the
+upstream code is unsafe, so it proves nothing: its title starts with <code>upstream pin: </code> instead, and its
+<code>describe</code> title and module header name the requirement the workaround protects.</li>
 <li><code>node tools/spec-trace/specTrace.mjs</code> (wired as <code>npm run spec:trace</code> in Session 1) regenerates
 <code>docs/TRACEABILITY.md</code>. With <code>--check</code> it fails CI on: duplicate IDs, references to unknown IDs,
 and <strong>MUST</strong> requirements of completed sessions that have no test reference.</li>
@@ -5223,7 +5240,11 @@ titles are not sanitised either.</li>
 <li><strong>Decision:</strong> On save, our <code>SubContentPolicy</code> walks the params with the (altered) semantics, refuses with 403
 any sub-library that the field does not offer and <code>H5P.DragQuestion</code> anywhere, sanitises list-item text with
 Lumi&#39;s own text rules, and sanitises the titles in main and sub-content metadata. A test pins the upstream
-behaviour so we notice when Lumi fixes it.</li>
+behaviour so we notice when Lumi fixes it. Two gaps found in the S2 review are closed the same way: Lumi
+adds every <code>library: &quot;H5P.Name 1.2&quot;</code> value it finds, under any key, to the content&#39;s dependencies, so the
+policy refuses any such value the semantics walk did not reach (<code>semantics/libraryReferences.ts</code>); and H5P&#39;s
+&quot;Rights of use&quot; dialog shows metadata without escaping, so every metadata string is reduced to plain text,
+<code>source</code> is kept only as an http(s) URL, and a field that becomes empty is dropped.</li>
 <li><strong>Consequences:</strong> The walker (<code>semantics/paramsWalker.ts</code>) is reused by the S4 validator.</li>
 </ul>
 <h3 id="decisions--d-040--our-own-page-templates-with-script-safe-json" tabindex="-1">D-040 · Our own page templates with script-safe JSON</h3>
@@ -5244,18 +5265,23 @@ production. Lumi has no install hook, and an empty content-type cache makes it c
 write a <code>LibraryAuditEvent</code> per new or patched library. Installing from the Hub is refused for everyone, in
 every environment. <code>LibraryAuditEvent.actorUserId</code> becomes nullable (the seed command has no user) and gains
 <code>source</code> (<code>seed</code> or <code>upload</code>). An empty content-type cache is stored as <code>[]</code>, so the server never calls the
-Hub while serving requests; <code>npm run hub:check</code> contacts it explicitly (spike step 3).</li>
+Hub while serving requests; <code>npm run hub:check</code> contacts it explicitly (spike step 3). The audit rows are
+written before Lumi installs anything (<code>libraries/auditBeforeInstall.ts</code>, which predicts Lumi&#39;s <code>new</code>/<code>patch</code>
+decision from the package), so a failed audit write installs nothing; changes beyond the prediction are
+recorded right after. The editor&#39;s Hub download and Content Hub calls are replaced at construction
+(<code>disconnectFromHub</code>).</li>
 <li><strong>Consequences:</strong> New content types arrive through new seed packages, reviewed like code.</li>
 </ul>
 <h3 id="decisions--d-042--the-seeder-lives-in-appsserver-where-the-seed-packages-are-kept" tabindex="-1">D-042 · The seeder lives in <code>apps/server</code>; where the seed packages are kept</h3>
 <ul>
 <li><strong>Context:</strong> Spec 01 §2 places <code>seedLibraries.ts</code> in <code>tools/seed/</code>, but seeding needs the server&#39;s H5P
 configuration, library storage and Prisma (for the audit).</li>
-<li><strong>Decision:</strong> <code>SPEC-DEVIATION</code>: the seeder is <code>apps/server/src/h5p/libraries/</code> (<code>npm run seed:libraries</code>);
-<code>tools/seed/</code> keeps the fetch script. The ten packages are committed under
+<li><strong>Decision:</strong> The seeder is in <code>apps/server/src/h5p/libraries/</code> (<code>npm run seed:libraries</code>), and
+<code>tools/seed/</code> keeps the fetch script. Spec 01 §2 was amended to match, so no code carries a deviation tag. The ten packages are committed under
 <code>docs/reference/h5p-core-1.28-seed-packages/</code> when every file is under 50 MB and all together under 150 MB;
 otherwise they are published as a GitHub Release asset and only <code>SHA256SUMS</code> is committed (as D-027).</li>
-<li><strong>Consequences:</strong> CI seeds from committed (or release) packages and never fetches from the Hub.</li>
+<li><strong>Consequences:</strong> CI will seed from the committed (or release) packages and never fetches from the Hub. Until
+the packages can be fetched (Q7), CI has no seed step; the integration tests seed synthetic packages.</li>
 </ul>
 <h3 id="decisions--d-043--multipart-uploads-keep-their-extension-and-are-limited-while-streaming" tabindex="-1">D-043 · Multipart uploads keep their extension and are limited while streaming</h3>
 <ul>
@@ -5273,14 +5299,13 @@ extension, its MIME type comes from the extension, and the 50 MB limit is enforc
 DOCTYPE, which is harmless without an internal subset.</li>
 <li><strong>Decision:</strong> An internal DTD subset or any <code>&lt;!ENTITY</code> is rejected. A plain DOCTYPE and <code>xml-stylesheet</code>
 instructions are stripped. <code>href</code>/<code>xlink:href</code> may only point to a <code>#fragment</code> or a raster
-<code>data:image/(png|jpeg|gif|webp)</code>. <code>script</code>, <code>foreignObject</code>, <code>set</code>, <code>on*</code> attributes and animations of <code>href</code>
-are removed; <code>@import</code> and external <code>url()</code> are removed from styles. Order: our pre-check, Lumi&#39;s sanitiser,
+<code>data:image/(png|jpeg|gif|webp)</code>. <code>script</code>, <code>foreignObject</code>, <code>use</code>, <code>set</code>, <code>on*</code> attributes and animations of
+<code>href</code> are removed (<code>&lt;use&gt;</code> can load an external document); <code>@import</code> and external <code>url()</code> are removed from styles. Order: our pre-check, Lumi&#39;s sanitiser,
 our stricter DOMPurify pass, and a final check that nothing forbidden is left. Benign SVGs must render
 identically in Chromium before and after (screenshot comparison).</li>
 <li><strong>Consequences:</strong> SVG files larger than 5 MB are refused. DOMPurify parses with the HTML parser (its XML mode
 returns nothing for a file with an <code>&lt;?xml?&gt;</code> prolog); that parser keeps <code>xmlns</code> but its SVG profile removes
-<code>&lt;use&gt;</code>, so a drawing that relies on <code>&lt;use&gt;</code> loses those parts (pinned in <code>test/security/upstream/lumiSvgSanitizer.test.ts</code>
-and <code>SvgSanitizer.test.ts</code>).
+<code>&lt;use&gt;</code>, so a drawing that relies on <code>&lt;use&gt;</code> loses those parts (pinned in <code>SvgSanitizer.test.ts</code>).
 Lumi&#39;s profile is SVG only (no filter elements), so filter primitives such as <code>feGaussianBlur</code> are lost too,
 and DOMPurify removes ids that name document properties (<code>title</code>, <code>blur</code>, …), which breaks <code>url(#…)</code>
 references to them; a test pins all three losses. Our pass writes its result with XMLSerializer, and the final

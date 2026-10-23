@@ -35,6 +35,7 @@ import {
 
 // UPSTREAM: a miss is null, as in https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/implementation/fs/FileContentUserDataStorage.ts
 // The interface types a value, but Lumi's ContentUserDataManager passes null on to its caller unchanged.
+// Remove the cast when Lumi's interface types the miss as null.
 const NOT_FOUND = null as unknown as IContentUserData;
 
 /** `IContentUserDataStorage` on PostgreSQL (Prisma); finished data is switched off (D-037). */

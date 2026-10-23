@@ -41,6 +41,7 @@ const SVG_MAX_BYTES = SVG_MAX_MB * 1024 * 1024;
  */
 async function lumiSanitize(text: string): Promise<string> {
   // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-svg-sanitizer/src/SvgSanitizer.ts skips paths not ending in ".svg".
+  // Remove the copy when Lumi sanitises by content; test/security/upstream/lumiSvgSanitizer.test.ts then fails.
   const dir = await mkdtemp(join(tmpdir(), 'hvl-svg-'));
   try {
     const copy = join(dir, 'upload.svg');

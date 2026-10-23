@@ -17,10 +17,10 @@ const SCRIPTED =
   '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><rect width="1" height="1"/></svg>';
 
 describe('[SEC-001] upstream: Lumi SVG sanitiser', () => {
-  it('[SEC-001] ignores a file whose path does not end in a lower-case .svg', async () => {
+  it('upstream pin: ignores a file whose path does not end in a lower-case .svg', async () => {
     // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-svg-sanitizer/src/SvgSanitizer.ts checks file.endsWith('.svg'), so
     // temp files without an extension and "IMAGE.SVG" are skipped silently. Uploads keep a lower-cased
-    // extension (D-043).
+    // extension (D-043). When this fails after a Lumi upgrade, SvgSanitizer's `upload.svg` copy can go.
     for (const name of ['upload-tmp-1234', 'IMAGE.SVG']) {
       const file = join(dir, name);
       writeFileSync(file, SCRIPTED);
