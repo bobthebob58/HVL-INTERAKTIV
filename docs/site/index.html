@@ -4642,7 +4642,7 @@ asserts? Does the module header&#39;s <em>Invariants</em> section match the code
 <tr>
 <td><code>node tools/spec-site/buildSpecSite.mjs --check</code></td><td>The spec website matches the Markdown</td></tr>
 <tr>
-<td><code>docker compose up -d</code></td><td>PostgreSQL, Redis and an S3 emulator start locally (D-023); the mock OIDC/LTI platform joins in S3</td></tr>
+<td><code>docker compose up -d</code></td><td>PostgreSQL, Redis and an S3 emulator start locally (D-023). The mock Feide and mock Canvas (<code>tools/mock-platform</code>) are not compose services: tests start them in-process, and <code>npm run mock:platform</code> runs them for manual use (D-049)</td></tr>
 <tr>
 <td><code>npm ci &amp;&amp; npm run db:generate --workspace apps/server &amp;&amp; npm run typecheck</code></td><td>The monorepo installs and compiles from a clean checkout; the Prisma client is generated, not committed (<code>npm run build</code> arrives with <code>apps/web</code> in S4)</td></tr>
 <tr>
@@ -4656,7 +4656,7 @@ asserts? Does the module header&#39;s <em>Invariants</em> section match the code
 <tr>
 <td><code>npm test</code></td><td>Unit and integration tests (Vitest). Generate the Prisma client first (row above). Integration tests also need <code>docker compose up -d</code>, <code>npm run db:migrate</code> and <code>apps/server/.env</code> copied from <code>.env.example</code> (D-023)</td></tr>
 <tr>
-<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Playwright journeys J1–J5 against the mock Canvas platform</td></tr>
+<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Chromium flows against the mock platform: the cookie-less Canvas iframe launch (third-party cookies blocked, checked by a canary), the Deep Linking round trip, and portal sharing with logout (D-065). Journeys J1–J5 join in S6</td></tr>
 <tr>
 <td><code>npm run test:a11y</code> <em>(from S4)</em></td><td>axe-core on every route and inside each content type&#39;s iframe (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>)</td></tr>
 <tr>
@@ -5790,8 +5790,12 @@ output in the session log (2026-10-23)</li>
 <li><span class="task">✓ Done:</span> Decisions D-048…D-066 recorded (plan approved 2026-10-23): server-rendered LTI views until S4 (D-048),
 mock platform (D-049), ltijs on our router with our deployment and ltik checks (D-050, D-051)</li>
 <li><span class="task">○ To do:</span> Mock OIDC provider and mock LTI platform in <code>tools/mock-platform/</code> for tests</li>
-<li><span class="task">○ To do:</span> Define the stable HMAC key for <code>Identity.subjectHash</code> and <code>AuthAuditEvent.ipHash</code> (env.ts,
-<code>.env.example</code>, DATA-INVENTORY &quot;Pseudonymous (stable key)&quot;), including its rotation</li>
+<li><span class="task">✓ Done:</span> Define the stable HMAC key for <code>Identity.subjectHash</code> and <code>AuthAuditEvent.ipHash</code> (env.ts,
+<code>.env.example</code>, DATA-INVENTORY &quot;Pseudonymous (stable key)&quot;), including its rotation: <code>IDENTITY_HASH_KEYS</code>
+key ring with HKDF purposes and <code>subjectKeyId</code>/<code>ipKeyId</code> columns (D-055); also <code>DATA_ENCRYPTION_KEYS</code> (D-056)
+and <code>URL_SIGNING_KEYS</code> (D-058), production checks for weak, shared and http values</li>
+<li><span class="task">✓ Done:</span> Risk probes kept as tests: ltijs 7.0.7 Provider pins, openid-client vs mock OIDC, Chromium cookie blocking
+(findings in D-050, D-065; ltijs&#39;s launch page needs our storage guard)</li>
 <li><span class="task">○ To do:</span> Feide RP, role mapping, sessions, data minimisation, author linking (<a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>…<a class="req-ref" href="#r-AUTH-005"><code>AUTH-005</code></a>)</li>
 <li><span class="task">○ To do:</span> <code>LtiProviderFactory</code>, <code>PrismaLtiDatabaseManager</code>, ltik transport, role mapping (<a class="req-ref" href="#r-LTI-001"><code>LTI-001</code></a>…<a class="req-ref" href="#r-LTI-004"><code>LTI-004</code></a>)</li>
 <li><span class="task">○ To do:</span> Deep Linking picker, resource-link launch, course copy (<a class="req-ref" href="#r-LTI-005"><code>LTI-005</code></a>…<a class="req-ref" href="#r-LTI-007"><code>LTI-007</code></a>, <a class="req-ref" href="#r-PROD-005"><code>PROD-005</code></a>); <code>HvlUrlGenerator</code> (<a class="req-ref" href="#r-H5P-007"><code>H5P-007</code></a>)</li>

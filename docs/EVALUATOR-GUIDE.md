@@ -63,14 +63,14 @@ asserts? Does the module header's *Invariants* section match the code? Is every 
 |---|---|
 | `node tools/spec-trace/specTrace.mjs --check` | Specs are internally consistent; traceability is current |
 | `node tools/spec-site/buildSpecSite.mjs --check` | The spec website matches the Markdown |
-| `docker compose up -d` | PostgreSQL, Redis and an S3 emulator start locally (D-023); the mock OIDC/LTI platform joins in S3 |
+| `docker compose up -d` | PostgreSQL, Redis and an S3 emulator start locally (D-023). The mock Feide and mock Canvas (`tools/mock-platform`) are not compose services: tests start them in-process, and `npm run mock:platform` runs them for manual use (D-049) |
 | `npm ci && npm run db:generate --workspace apps/server && npm run typecheck` | The monorepo installs and compiles from a clean checkout; the Prisma client is generated, not committed (`npm run build` arrives with `apps/web` in S4) |
 | `npm run typecheck && npm run lint` | Types and lint |
 | `npm run doc:lint` | The Documentation Standard, checked by machine (`DOC-001`–`003`, `005`–`010`, `013`, `014`; `DOC-004` is `spec:trace`, `DOC-011` the commit-msg hook) |
 | `npm run privacy:inventory-check` | The data inventory matches the database schema (`DATA-001`) |
 | `npm run h5p:fetch-core && npm run boot-check --workspace apps/server` | H5P client files are the verified 1.28 release; the engine would start (`H5P-001`); needs no services or `.env` |
 | `npm test` | Unit and integration tests (Vitest). Generate the Prisma client first (row above). Integration tests also need `docker compose up -d`, `npm run db:migrate` and `apps/server/.env` copied from `.env.example` (D-023) |
-| `npm run test:e2e` *(from S3)* | Playwright journeys J1–J5 against the mock Canvas platform |
+| `npm run test:e2e` *(from S3)* | Chromium flows against the mock platform: the cookie-less Canvas iframe launch (third-party cookies blocked, checked by a canary), the Deep Linking round trip, and portal sharing with logout (D-065). Journeys J1–J5 join in S6 |
 | `npm run test:a11y` *(from S4)* | axe-core on every route and inside each content type's iframe (`UD-030`) |
 | `npm run spec:trace -- --check --done-through=S<n>` | Every MUST requirement up to session *n* has a test |
 | `npm run check:filesize` | No source file over 200 lines (`DOC-007`) |
