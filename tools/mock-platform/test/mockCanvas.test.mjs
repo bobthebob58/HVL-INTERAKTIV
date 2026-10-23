@@ -57,6 +57,7 @@ describe('[LTI-001] mock Canvas keys and platform configuration', () => {
       tokenEndpoint: `${canvas.origin}/login/oauth2/token`,
       jwksUrl: `${canvas.origin}/api/lti/security/jwks`,
       deployments: [canvas.deploymentId],
+      feideLinking: true,
     });
   });
 

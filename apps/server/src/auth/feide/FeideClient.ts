@@ -32,7 +32,7 @@ export interface FeideSettings {
   readonly clientSecret: string;
   /** `<PUBLIC_BASE_URL>/auth/feide/callback`, registered in the Feide Customer Portal. */
   readonly redirectUri: string;
-  /** `<PUBLIC_BASE_URL>/`, registered as the logout redirect. */
+  /** `<PUBLIC_BASE_URL>/auth/logged-out`, registered as the logout redirect. */
   readonly postLogoutRedirectUri: string;
 }
 

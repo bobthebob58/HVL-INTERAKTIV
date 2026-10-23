@@ -3,14 +3,15 @@
  * the `feide_login` value that names the Feide ID.
  *
  * Why: AUTH-005 wants one personal library whether a teacher arrives through Canvas or the portal. D-063 fixes the
- *      cases: the identities join an existing account when that loses nothing, and when both identities already
- *      have different accounts the LTI identity moves only if its account owns nothing, so content never changes
- *      owner through linking. Keeping the decision pure makes every case testable without a database.
+ *      cases: the LTI identity joins the teacher's existing Feide account when that loses nothing, and when both
+ *      identities already have different accounts it moves only if its account owns nothing, so content never
+ *      changes owner through linking. Keeping the decision pure makes every case testable without a database.
  * Spec: AUTH-005
  * Invariants:
  *   - `feide_login` is read only when the LTI roles give `author`; a value starting with `$` (an unexpanded Canvas
  *     variable) or not a valid Feide ID is ignored; the value is normalised and never stored (D-063).
  *   - Learner identities are never linked: a learner launch yields no Feide ID, so no decision is made.
+ *   - Only an existing Feide account is ever joined; without one the decision is `no-feide-account` (D-063).
  *   - `conflict` changes nothing; `move-lti-to-feide` happens only when the LTI account owns nothing.
  * Collaborators: ./accountLinking.ts (applies the decision and audits it), ./AccountResolver.ts,
  *   ../../lti/LtiRoleMapper.ts, ../audit/AuthAuditRecorder.ts (`link.*` events), ../Principal.ts.
@@ -47,11 +48,11 @@ export interface LinkSituation {
 
 /** What to do (D-063). */
 export type LinkDecision =
-  /** No LTI identity yet: create it on `feideAccountId`, or, with no Feide identity either, create one account
-   *  that holds both identities. */
-  | { readonly kind: 'link-new'; readonly feideAccountId: string | undefined }
-  /** Only the LTI identity exists: add the Feide identity to its account. */
-  | { readonly kind: 'attach-lti-to-feide'; readonly accountId: string }
+  /** No Feide account for this Feide ID: nothing is linked. A Feide identity is never created or claimed from the
+   *  Canvas side, so nobody can pre-claim someone else's Feide ID and no learner's Feide ID is linked. */
+  | { readonly kind: 'no-feide-account' }
+  /** No LTI identity yet: create it on the Feide account. */
+  | { readonly kind: 'link-new'; readonly feideAccountId: string }
   /** Both identities are already in the same account: nothing to do. */
   | { readonly kind: 'already-linked'; readonly accountId: string }
   /** Different accounts and the LTI account owns nothing: move the LTI identity to the Feide account. */
@@ -62,13 +63,14 @@ export type LinkDecision =
 /**
  * Decides how to link an author's LTI and Feide identities (D-063).
  * @param situation - Which of the two identities exist, in which accounts, and whether the LTI account owns anything.
- * @returns The decision; the caller applies it in one transaction and audits it.
+ * @returns The decision; the caller applies it and audits it.
  * @spec AUTH-005
  */
 export function decideLink(situation: LinkSituation): LinkDecision {
   const { lti, feide } = situation;
-  if (lti === undefined) return { kind: 'link-new', feideAccountId: feide?.accountId };
-  if (feide === undefined) return { kind: 'attach-lti-to-feide', accountId: lti.accountId };
+  // SECURITY: only a Feide login creates a Feide identity; a Canvas claim alone never does (D-063).
+  if (feide === undefined) return { kind: 'no-feide-account' };
+  if (lti === undefined) return { kind: 'link-new', feideAccountId: feide.accountId };
   if (lti.accountId === feide.accountId) return { kind: 'already-linked', accountId: lti.accountId };
   // WHY: moving an identity whose account owns content would split that content from its owner (D-063).
   if (lti.ownsAnything) {

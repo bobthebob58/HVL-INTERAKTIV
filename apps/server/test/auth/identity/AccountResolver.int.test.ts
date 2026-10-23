@@ -38,6 +38,24 @@ describeWithServices('[DATA-002] accounts by identity hash', () => {
     expect(JSON.stringify(user)).not.toContain(source.slice(6));
   });
 
+  it('[DATA-002] during a mixed-ring rotation the same person always reaches the current-key account, never a 500', async () => {
+    // Arrange: a node with the old ring made the account; a node with only the new ring could not see it and made
+    // a second one under the new key
+    const source = feide();
+    const NEW_ONLY = parseKeyring(`new=${randomKey(12)}`);
+    const duplicate = await resolver(OLD).resolve({ provider: 'feide', source, kind: 'learner' });
+    const original = await resolver(NEW_ONLY).resolve({ provider: 'feide', source, kind: 'learner' });
+    // Act: every node now runs the rotated ring (new first, old second)
+    const answers = [
+      await resolver(ROTATED).resolve({ provider: 'feide', source, kind: 'learner' }),
+      await resolver(ROTATED).resolve({ provider: 'feide', source, kind: 'learner' }),
+    ];
+    // Assert
+    expect(duplicate.userId).not.toBe(original.userId);
+    expect(answers.map((a) => a.userId)).toEqual([original.userId, original.userId]);
+    expect(await resolver(ROTATED).lookup('feide', source)).toBe(original.userId);
+  });
+
   it('[DATA-002] after a key rotation finds the old row and re-hashes it with the current key', async () => {
     // Arrange
     const source = feide();

@@ -23,11 +23,18 @@ const TOKEN = '[A-Za-z0-9._~+/=-]';
 
 /** Patterns in order: URL passwords run before e-mail addresses, since both contain `@`. */
 const TEXT_PATTERNS: [RegExp, string][] = [
-  // PRIVACY: the ltik may appear anywhere (query string, form body, start of a string) (DATA-009).
-  [/(?<![\w-])(ltik=)[^&#\s"'\\]{1,4096}/gi, `$1${REDACTED}`],
-  // SECURITY: OAuth/OIDC credentials and passwords in query strings and form bodies.
+  // PRIVACY: the ltik may appear anywhere (query string, form body, start of a string, or URL-encoded inside
+  // another URL as `ltik%3D…`) (DATA-009).
+  [/(?<=^|[^\w-]|%26|%3F)(ltik(?:=|%3D))[^&#\s"'\\]{1,4096}/gi, `$1${REDACTED}`],
+  // SECURITY: OAuth/OIDC credentials and passwords in query strings and form bodies, also as a body's first field
+  // and URL-encoded inside another URL.
   [
-    /([?&;](?:access_token|id_token|id_token_hint|refresh_token|token|api_?key|password|secret|client_secret|code|login_hint|lti_message_hint|state|nonce|code_verifier|csrf)=)[^&#\s"'\\]{1,4096}/gi,
+    /(?<=^|[?&;]|%26|%3F)((?:access_token|id_token|id_token_hint|refresh_token|token|api_?key|password|secret|client_secret|code|login_hint|lti_message_hint|state|nonce|code_verifier|csrf)(?:=|%3D))[^&#\s"'\\]{1,4096}/gi,
+    `$1${REDACTED}`,
+  ],
+  // WHY: after a blank only names that are never ordinary words count, so "exit code=1" is kept.
+  [
+    /(?<=\s)((?:access_token|id_token|id_token_hint|refresh_token|api_?key|password|client_secret|login_hint|lti_message_hint|nonce|code_verifier|csrf)=)[^&#\s"'\\]{1,4096}/gi,
     `$1${REDACTED}`,
   ],
   // SECURITY: our cookies (`__Host-hvli_sid`, the login transaction) in Cookie and Set-Cookie text (D-057).
@@ -44,7 +51,8 @@ const TEXT_PATTERNS: [RegExp, string][] = [
     ),
     `$1 ${REDACTED}`,
   ],
-  [/(?<![\w-])eyJ[\w-]{1,4096}\.[\w-]{1,8192}\.[\w-]{0,4096}/g, REDACTED],
+  // WHY: a JWT may also follow `%3D` when a URL that carries it is URL-encoded inside another one.
+  [/(?<=^|[^\w-]|%3[Dd])eyJ[\w-]{1,4096}\.[\w-]{1,8192}\.[\w-]{0,4096}/g, REDACTED],
   // WHY: the password part is greedy up to the last `@` before the host, so `u:p@ss@host` loses all of `p@ss`.
   [
     /(?<![a-z0-9+.-])([a-z][a-z0-9+.-]{0,30}:\/\/)[^\s/:@"',{}\\]{0,256}:[^\s/"',{}\\]{0,256}@/gi,

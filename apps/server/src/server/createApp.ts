@@ -87,6 +87,8 @@ export function createApp(inputs: AppInputs): App {
     canvasOrigins: env.CANVAS_ORIGINS,
     tokenMaxAgeSeconds: env.LTI_TOKEN_MAX_AGE_SECONDS,
     publicBaseUrl: base,
+    platforms: env.LTI_PLATFORMS,
+    allowedFeideOrgs: env.ALLOWED_FEIDE_ORGS,
   });
   const feide = new FeideClient({
     issuer: env.FEIDE_ISSUER,

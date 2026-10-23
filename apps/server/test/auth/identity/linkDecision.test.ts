@@ -19,20 +19,16 @@ const F = 'acc-feide';
 
 describe('[AUTH-005] link decision (D-063)', () => {
   it.each<[string, LinkSituation, LinkDecision]>([
-    [
-      'neither identity exists',
-      { lti: undefined, feide: undefined },
-      { kind: 'link-new', feideAccountId: undefined },
-    ],
+    ['neither identity exists', { lti: undefined, feide: undefined }, { kind: 'no-feide-account' }],
     [
       'only the Feide identity exists',
       { lti: undefined, feide: { accountId: F } },
       { kind: 'link-new', feideAccountId: F },
     ],
     [
-      'only the LTI identity exists',
-      { lti: { accountId: L, ownsAnything: true }, feide: undefined },
-      { kind: 'attach-lti-to-feide', accountId: L },
+      'only the LTI identity exists (no Feide ID is ever claimed from Canvas)',
+      { lti: { accountId: L, ownsAnything: false }, feide: undefined },
+      { kind: 'no-feide-account' },
     ],
     [
       'both are in one account',
@@ -63,7 +59,7 @@ describe('[AUTH-005] link decision (D-063)', () => {
     const kinds = owning.map((situation) => decideLink(situation).kind);
     // Assert
     expect(kinds).not.toContain('move-lti-to-feide');
-    expect(kinds).toEqual(['attach-lti-to-feide', 'conflict', 'already-linked']);
+    expect(kinds).toEqual(['no-feide-account', 'conflict', 'already-linked']);
   });
 });
 

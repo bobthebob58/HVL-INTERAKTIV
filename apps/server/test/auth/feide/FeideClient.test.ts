@@ -30,7 +30,7 @@ beforeAll(async () => {
     clientId: 'hvli-test',
     clientSecret: 'test-only-secret',
     redirectUri: 'http://localhost:3000/auth/feide/callback',
-    postLogoutRedirectUri: 'http://localhost:3000/',
+    postLogoutRedirectUri: 'http://localhost:3000/auth/logged-out',
   };
 });
 afterAll(() => server.stop());
@@ -97,7 +97,7 @@ describe('[AUTH-001] Feide relying party', () => {
   it('[AUTH-003] builds the end-session URL with id_token_hint and the registered logout redirect', async () => {
     const url = await new FeideClient(settings).endSessionUrl('id.token.value');
     expect(url.searchParams.get('id_token_hint')).toBe('id.token.value');
-    expect(url.searchParams.get('post_logout_redirect_uri')).toBe('http://localhost:3000/');
+    expect(url.searchParams.get('post_logout_redirect_uri')).toBe('http://localhost:3000/auth/logged-out');
   });
 
   it('[AUTH-001] retries discovery after Feide was unreachable', async () => {

@@ -118,6 +118,8 @@ export interface MockCanvasPlatformConfig {
   tokenEndpoint: string;
   jwksUrl: string;
   deployments: string[];
+  /** Always true: the mock sends the demo user's Feide ID as `feide_login` (AUTH-005, D-063). */
+  feideLinking: boolean;
 }
 
 /** A running mock Canvas. */

@@ -47,7 +47,12 @@ export function onDeepLinking(deps: DeepLinkingDeps): OnLaunchHandler {
     if (!canAuthor({ roles })) throw authError('hvl:deep-link-not-allowed');
     const identity = { issuer: facts.issuer, subject: facts.subject, platformId: facts.platformId };
     // WHY: linking first lets a first launch put its LTI identity straight on the teacher's Feide account (D-063).
-    await deps.link?.({ ...identity, claims: context.rawIdToken, roles });
+    await deps.link?.({
+      ...identity,
+      clientId: context.platform.clientId,
+      claims: context.rawIdToken,
+      roles,
+    });
     const account = await deps.accounts.atLaunch({ ...identity, roles });
     await deps.audit.record({ event: 'launch.lti.author', actorUserId: account.userId });
     context.redirect(response, LTI_DEEP_LINK_PATH);

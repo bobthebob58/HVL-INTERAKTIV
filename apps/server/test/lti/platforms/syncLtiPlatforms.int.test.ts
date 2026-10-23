@@ -74,6 +74,7 @@ describeWithServices('[LTI-001] LTI platform sync', () => {
     tokenEndpoint: `https://${scope}.example/token`,
     jwksUrl: `https://${scope}.example/jwks`,
     deployments,
+    feideLinking: false,
   });
   const deploymentsOf = async (url: string, clientId: string) => {
     const platform = await db.ltiPlatform.findUniqueOrThrow({

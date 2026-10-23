@@ -2,7 +2,7 @@
  * portalSessionRecord — what a portal session holds in Redis, how that value is checked when read back, and the
  * shape routes see.
  *
- * Why: DATA-INVENTORY ("Redis: portal sessions and login transactions") lists exactly which fields a session may
+ * Why: DATA-INVENTORY ("Redis keys") lists exactly which fields a session may
  *      hold. One schema keeps the store from writing anything else and turns a malformed or foreign value into
  *      "no session" instead of a half-trusted object (D-057).
  * Spec: AUTH-003, DATA-001

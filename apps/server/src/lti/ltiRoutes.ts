@@ -10,6 +10,7 @@
  *   - ltijs's routes come first, so its login and launch see the request before anything else of ours.
  *   - Errors from any of these routes end in `ltiErrorPages` (a page, or JSON for API calls), never in ltijs's JSON.
  *   - Only the launch handlers may create LTI accounts; the resolver never writes.
+ *   - Identities are linked only for platforms with `feideLinking: true` and Feide IDs of `ALLOWED_FEIDE_ORGS`.
  * Collaborators: ./LtiProviderFactory.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts,
  *   ./play/ltiPlayRoutes.ts, ./deepLinking/deepLinkRoutes.ts, ./http/ltiErrorPages.ts, ./ltikPrincipal.ts,
  *   ../server/createApp.ts.
@@ -19,6 +20,7 @@ import { Router } from 'express';
 import type { Provider } from 'ltijs';
 import type { Logger } from 'pino';
 import type { AuthAuditRecorder } from '../auth/audit/AuthAuditRecorder.js';
+import type { LtiPlatformConfig } from '../config/envParsers.js';
 import { AccountResolver } from '../auth/identity/AccountResolver.js';
 import { accountLinker } from '../auth/identity/accountLinking.js';
 import type { ContentAccessRepository } from '../h5p/permissions/ContentAccessRepository.js';
@@ -59,6 +61,10 @@ export interface LtiRouteDeps {
   readonly tokenMaxAgeSeconds: number;
   /** `PUBLIC_BASE_URL`. */
   readonly publicBaseUrl: string;
+  /** `LTI_PLATFORMS`, for which platforms may link Canvas and Feide identities (`feideLinking`, D-063). */
+  readonly platforms: readonly LtiPlatformConfig[];
+  /** `ALLOWED_FEIDE_ORGS`, the realms a linked Feide ID may have. */
+  readonly allowedFeideOrgs: readonly string[];
 }
 
 /** The LTI router and what the rest of the app shares with it. */
@@ -108,7 +114,14 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
     onDeepLinking({
       accounts,
       audit: deps.audit,
-      link: accountLinker({ db, hasher: deps.hasher, audit: deps.audit }),
+      link: accountLinker({
+        db,
+        hasher: deps.hasher,
+        audit: deps.audit,
+        linksFeide: (issuer, clientId) =>
+          deps.platforms.some((p) => p.issuer === issuer && p.clientId === clientId && p.feideLinking),
+        allowedOrgs: deps.allowedFeideOrgs,
+      }),
     }),
   );
   const resolve = (ltik: string): Promise<ResolvedLtik> =>

@@ -93,6 +93,8 @@ export async function startMockCanvas(options) {
       tokenEndpoint,
       jwksUrl,
       deployments: [deploymentId],
+      // WHY: the mock substitutes `$Canvas.user.loginId` with the demo user's Feide ID, so linking is confirmed.
+      feideLinking: true,
     },
     deepLinkResponses: verifier.responses,
     loginInitiation(spec) {

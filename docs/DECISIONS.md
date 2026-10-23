@@ -755,11 +755,23 @@ loading of one spec per session are kept.
 - **Context:** `AUTH-005` links an author's Canvas identity to their Feide identity through the custom claim
   `feide_login`.
 - **Decision:** `feide_login` is read only when `LTI-004` gives `author`; values starting with `$` are ignored; it is
-  never stored. If only the Feide account exists, the LTI identity joins it; if neither exists, one account gets
-  both; if only the LTI account exists, the Feide identity joins it; if both exist and differ, the LTI identity
-  moves only when its account owns no content and no co-authorship, otherwise `link.conflict` is audited and
-  nothing changes. Learner identities are never linked.
-- **Consequences:** No content ever changes owner through linking.
+  never stored. If only the Feide account exists, the LTI identity joins it; if both exist and differ, the LTI
+  identity moves only when its account owns no content and no co-authorship, otherwise `link.conflict` is audited
+  and nothing changes. Learner identities are never linked.
+- **Amendment (2026-10-23, S3 review):** the value is whatever the platform says, and AUTH-005 itself asks for it
+  to be confirmed first *(verify with TeCopp)*. So linking runs only for a platform with `"feideLinking": true` in
+  `LTI_PLATFORMS` (default false; set after the Q4 test launch), only for a Feide ID whose realm is in
+  `ALLOWED_FEIDE_ORGS`, and only onto a Feide account that a Feide login created and that is not a learner's. A
+  Feide identity is never created or attached from the Canvas side: the earlier cases "neither exists → one account
+  gets both" and "only the LTI account exists → the Feide identity joins it" are dropped, because they let a
+  Canvas user pre-claim someone else's Feide ID and linked student TAs whose Feide role was unknown. A Feide account
+  that already holds another identity from the same platform is refused (`link.conflict`,
+  `platform-identity-exists`).
+- **Consequences:** No content ever changes owner through linking. A teacher who starts in Canvas is linked at the
+  first Deep Linking launch after their first Feide login; if their Canvas account owns content by then, the two
+  libraries stay apart (`link.conflict`) until a "Link with Feide" step that proves both identities exists (the
+  AUTH-005 fallback, not built in S3). A Canvas administrator who can set login IDs on a linked platform can still
+  join a Canvas account to an existing HVL staff account; that trust in the platform is why the flag exists.
 
 ### D-064 · What the authentication audit records
 - **Context:** spec 02 §7 defines `AuthAuditEvent(at, actorUserId?, event, ipHash)`.

@@ -74,6 +74,18 @@ describe('[LTI-003] Session 3 redaction in free text', () => {
     );
   });
 
+  it('[LTI-003] masks a credential that is a body’s first field, and an ltik URL-encoded inside another URL', () => {
+    const jwt = 'eyJhbGciOiJSUzI1NiJ9.eyJ0aWQiOiJ4In0.c2ln';
+    expect(redactText('csrf=AbCdEf123')).toBe('csrf=[Redacted]');
+    expect(redactText('login_hint=abc123&iss=x')).toBe('login_hint=[Redacted]&iss=x');
+    expect(redactText(`returnTo=%2Flti%2Fplay%3Fltik%3D${jwt}`)).toBe(
+      'returnTo=%2Flti%2Fplay%3Fltik%3D[Redacted]',
+    );
+    expect(redactText('next=%2Fcb%3Fcode%3Dabc%26state%3Ds1')).not.toMatch(/abc|s1/);
+    expect(redactText(`token%3D${jwt}`)).not.toContain(jwt);
+    expect(redactText('errorcode=5 and statecode=7')).toBe('errorcode=5 and statecode=7');
+  });
+
   it('[AUTH-003] masks our cookies in Cookie and Set-Cookie text', () => {
     expect(redactText('cookie: a=1; __Host-hvli_sid=Zm9vYmFy; hvli_login=tx1')).toBe(
       'cookie: a=1; __Host-hvli_sid=[Redacted]; hvli_login=[Redacted]',

@@ -14,8 +14,9 @@
  *     `studentAuthor`; everything else (`member`, `affiliate`, `alum`, `library-walk-in`, unknown) → `learner`.
  *   - `admin` is added for a Feide ID in `ADMIN_FEIDE_IDS` of an HVL member, and never otherwise (D-059).
  *   - A course-group entry matches a group ID exactly or as a prefix followed by `:`, ignoring case (D-059), and
- *     counts only while its membership is valid: within `notBefore`/`notAfter` when Feide sends them (an unreadable
- *     date counts as not valid), so a former student of an author course does not stay an author.
+ *     counts only while its membership is valid: a membership is listed and not `active: false`, and now lies within
+ *     the membership's and the group's `notBefore`/`notAfter` when Feide sends them (an unreadable date counts as
+ *     not valid), so a former student of an author course does not stay an author.
  *   - The Groups API answer is read defensively: a value of an unexpected shape grants nothing.
  * Collaborators: ./feideClaims.ts (the Feide ID), ./feideGroups.ts (the Groups API call), ./completeFeideLogin.ts,
  *   ../Principal.ts, ../../config/env.ts (ALLOWED_FEIDE_ORGS, ADMIN_FEIDE_IDS, AUTHOR_COURSE_GROUPS).
@@ -89,23 +90,28 @@ export function matchesCourseGroup(groupId: string, entry: string): boolean {
 }
 
 /**
- * Tells whether a group membership is valid now (Feide's G-DOTKOM `membership.notBefore`/`notAfter`).
+ * Tells whether a course-group membership is valid now: Feide must list a membership that is not marked
+ * `active: false`, within the membership's and the group's own `notBefore`/`notAfter`.
  * @param group - A group object from the Groups API.
  * @param now - The current time.
- * @returns False outside the window, and for a date that cannot be read.
+ * @returns False without a membership, for an inactive one, outside either window, and for an unreadable date.
  */
 function membershipValidAt(group: unknown, now: Date): boolean {
-  const membership = isObject(group) && isObject(group.membership) ? group.membership : {};
+  // SECURITY: a course group without a membership, or with `active: false`, is a past course (former students).
+  if (!isObject(group) || !isObject(group.membership) || group.membership.active === false) return false;
   const bound = (value: unknown): number | undefined | false => {
     if (value === undefined || value === null) return undefined;
     const time = typeof value === 'string' ? Date.parse(value) : Number.NaN;
     return Number.isNaN(time) ? false : time;
   };
-  const from = bound(membership.notBefore);
-  const until = bound(membership.notAfter);
-  // SECURITY: an unreadable date cannot prove the membership is current, so it grants nothing.
-  if (from === false || until === false) return false;
-  return (from === undefined || now.getTime() >= from) && (until === undefined || now.getTime() < until);
+  const within = (holder: JsonObject): boolean => {
+    const from = bound(holder.notBefore);
+    const until = bound(holder.notAfter);
+    // SECURITY: an unreadable date cannot prove the membership is current, so it grants nothing.
+    if (from === false || until === false) return false;
+    return (from === undefined || now.getTime() >= from) && (until === undefined || now.getTime() < until);
+  };
+  return within(group.membership) && within(group);
 }
 
 /** Freezes the result and its role list, so no caller can add a role afterwards. */

@@ -328,10 +328,12 @@ Who did what to which object (DATA-007).
 | `targetId` | Which object | None; Pseudonymous when the target is a learner (data-subject actions, `DATA-008`) | 6(1)(e) | 2 years | PG |
 | `details` | Structured details, never free text with personal data | None | n/a | 2 years | PG |
 
-## Redis: portal sessions and login transactions
+## Redis keys
 
-Not database models, so the inventory check does not read this section. Redis is hosted with PostgreSQL
-(`DATA-004`); keys are a SHA-256 of the cookie value, so a Redis dump does not reveal a usable cookie (D-057).
+Everything the server writes to Redis: portal sessions, login transactions, caches, locks and job leases. Not
+database models, so the inventory check does not read this section. Redis is hosted with PostgreSQL
+(`DATA-004`); session and login keys are a SHA-256 of the cookie value, so a Redis dump does not reveal a usable
+cookie (D-057). Learner state is never in Redis: it lives in PostgreSQL (`H5PUserData`).
 
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
@@ -347,3 +349,6 @@ Not database models, so the inventory check does not read this section. Redis is
 | LTI cache `hvli:lti:cache:keyset:default` | The tool's own public keyset, served at `/lti/keys` (D-050) | None | n/a | 60 seconds | Redis |
 | LTI cache `hvli:lti:cache:oidc:jwks:<url>` | A platform's public JWKS, for launch-token signatures (D-050) | None | n/a | 5 minutes | Redis |
 | lease `hvli:lti:record-cleanup` | A random node ID: one server runs the LTI record cleanup per interval | None | n/a | About 10 minutes | Redis |
+| H5P key-value store `hvli:h5p:kv:*` | Lumi's settings and the Hub content-type cache (`RedisKeyValueStorage`) | None | n/a | Until replaced | Redis |
+| H5P locks (Lumi's `RedisLockProvider`) | Serialise library installs and content saves across servers | None | n/a | Seconds (the lock's timeout) | Redis |
+| lease `hvli:h5p:temporary-file-cleanup` | A random node ID: one server cleans temporary editor files per interval | None | n/a | About 5 minutes | Redis |

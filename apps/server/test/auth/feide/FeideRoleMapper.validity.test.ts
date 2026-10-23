@@ -38,8 +38,19 @@ describe('[AUTH-002] course membership validity', () => {
     ['not started yet', { notBefore: '2027-01-01T00:00:00Z' }, false],
     ['an unreadable date', { notAfter: 'next summer' }, false],
     ['a date that is not text', { notAfter: 1767225600 }, false],
+    ['an active membership', { active: true }, true],
+    ['a membership Feide marks inactive (a past course)', { active: false }, false],
   ])('[AUTH-002] %s → student author: %s', (_name, membership, expected) => {
     expect(studentAuthor(membership)).toBe(expected);
+  });
+
+  it('[AUTH-002] the course group’s own notAfter ends the membership, and a course group without one grants nothing', () => {
+    const roles = (group: Record<string, unknown>) =>
+      mapFeideRoles({ feideId: 'kari@hvl.no', groups: [ORG, group] }, POLICY, NOW).studentAuthor;
+    const { membership: _membership, ...withoutMembership } = course({});
+    expect(roles({ ...course({}), notAfter: '2025-06-30T22:00:00Z' })).toBe(false);
+    expect(roles({ ...course({}), notBefore: '2026-08-01T00:00:00Z' })).toBe(true);
+    expect(roles(withoutMembership)).toBe(false);
   });
 
   it('[AUTH-002] an expired course leaves an employee an author (validity matters only for course groups)', () => {

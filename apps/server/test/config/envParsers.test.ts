@@ -127,9 +127,20 @@ describe('[AUTH-002] Feide role lists', () => {
 });
 
 describe('[LTI-001] LTI_PLATFORMS', () => {
-  it('[LTI-001] parses a JSON array of platforms with their deployments', () => {
+  it('[LTI-001] parses a JSON array of platforms with their deployments; Feide linking is off unless set', () => {
     const env = loadEnv({ ...VALID_ENV, LTI_PLATFORMS: JSON.stringify([PLATFORM]) });
-    expect(env.LTI_PLATFORMS).toEqual([PLATFORM]);
+    expect(env.LTI_PLATFORMS).toEqual([{ ...PLATFORM, feideLinking: false }]);
+  });
+
+  it('[AUTH-005] reads `feideLinking` as a boolean only', () => {
+    const linked = loadEnv({
+      ...VALID_ENV,
+      LTI_PLATFORMS: JSON.stringify([{ ...PLATFORM, feideLinking: true }]),
+    });
+    expect(linked.LTI_PLATFORMS[0]?.feideLinking).toBe(true);
+    expect(
+      problemsOf({ ...VALID_ENV, LTI_PLATFORMS: JSON.stringify([{ ...PLATFORM, feideLinking: 'yes' }]) })[0],
+    ).toMatch(/^LTI_PLATFORMS\.0\.feideLinking:/);
   });
 
   it('[LTI-001] refuses bad JSON, missing deployments, unknown fields, non-http URLs and duplicates', () => {

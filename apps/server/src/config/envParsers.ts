@@ -121,6 +121,9 @@ export const ltiPlatformSchema = z.strictObject({
   jwksUrl: httpUrl(),
   /** The deployment IDs launches may carry (D-051). */
   deployments: z.array(z.string().min(1).max(255)).min(1),
+  /** Link Canvas and Feide identities through `custom.feide_login` (AUTH-005, D-063); set only after a test launch
+   *  confirmed that this platform sends the user's Feide ID there (Q4). */
+  feideLinking: z.boolean().default(false),
 });
 
 /** One configured LTI platform. */

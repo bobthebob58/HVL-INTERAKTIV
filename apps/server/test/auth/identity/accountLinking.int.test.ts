@@ -67,14 +67,18 @@ describeWithServices('[AUTH-005] Canvas and Feide account linking', () => {
     expect(await audited('link.feide-lti', 'link-joined', ltiAccount)).toBe(1);
   });
 
-  it('[AUTH-005] a teacher who starts in Canvas finds the same account at the first Feide login', async () => {
-    // Arrange
+  it('[AUTH-005] a teacher who starts in Canvas is linked at the first Deep Linking launch after a Feide login', async () => {
+    // Arrange: Canvas first; the launch claims no Feide identity, so nothing exists for the Feide ID yet
     const p = person();
-    const ltiAccount = await deepLinkAccount(p.canvas);
-    // Act
+    const canvasFirst = await deepLinkAccount(p.canvas);
+    const before = await feideAccount(p.feideId);
+    // Act: the first portal login, then the next Deep Linking launch
     await loginWithFeide({ app: tb.app, feide: tb.mock.feide }, p.key);
-    // Assert
-    expect(await feideAccount(p.feideId)).toBe(ltiAccount);
+    const after = await deepLinkAccount(p.canvas);
+    // Assert: the empty Canvas account's identity moved to the account the Feide login made
+    expect(before).toBeUndefined();
+    expect(after).toBe(await feideAccount(p.feideId));
+    expect(after).not.toBe(canvasFirst);
   });
 
   it('[AUTH-005] an existing Canvas account that owns nothing moves to the Feide account', async () => {
@@ -108,10 +112,12 @@ describeWithServices('[AUTH-005] Canvas and Feide account linking', () => {
     // Arrange: a Canvas user without a login ID, so the variable reaches the tool unexpanded
     const p = person();
     const canvas: CanvasUser = { sub: p.canvas.sub, roles: p.canvas.roles };
+    await loginWithFeide({ app: tb.app, feide: tb.mock.feide }, p.key);
+    const portalAccount = await feideAccount(p.feideId);
     // Act
-    await deepLinkAccount(canvas);
+    const ltiAccount = await deepLinkAccount(canvas);
     // Assert
-    expect(await feideAccount(p.feideId)).toBeUndefined();
+    expect(ltiAccount).not.toBe(portalAccount);
   });
 
   it('[AUTH-005] `feide_login` is never stored with the launch', async () => {

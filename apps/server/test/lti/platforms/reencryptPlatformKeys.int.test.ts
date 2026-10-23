@@ -41,12 +41,12 @@ describeWithServices('[LTI-002] platform private keys after a key rotation', () 
       },
     });
     // Act
-    const first = await reencryptPlatformKeys(db, during);
-    const second = await reencryptPlatformKeys(db, during);
+    const first = await reencryptPlatformKeys(db, during, { url });
+    const second = await reencryptPlatformKeys(db, during, { url });
     // Assert
     const row = await db.ltiPlatform.findUniqueOrThrow({ where: { id } });
     const stored = Buffer.from(row.privateKeyEncrypted);
-    expect(first).toBeGreaterThanOrEqual(1);
+    expect(first).toBe(1);
     expect(second).toBe(0);
     expect(after.decrypt('lti-private-key', stored).toString('utf8')).toBe(PRIVATE_KEY);
     expect(stored.toString('latin1')).not.toContain('MIIfake');

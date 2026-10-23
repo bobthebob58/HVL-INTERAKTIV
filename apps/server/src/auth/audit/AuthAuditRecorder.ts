@@ -41,12 +41,11 @@ export const AUTH_AUDIT_REASONS = [
   'deployment-not-allowed',
   'nonce-invalid',
   'launch-invalid',
-  'link-created',
   'link-joined',
   'link-moved',
   'lti-account-owns-content',
   'learner-account',
-  'feide-identity-exists',
+  'platform-identity-exists',
 ] as const;
 /** One reason code. */
 export type AuthAuditReason = (typeof AUTH_AUDIT_REASONS)[number];
