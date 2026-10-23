@@ -69,29 +69,38 @@ Spike results (spec 01 §7, Risk R-01):
 |---|---|
 | 1. h5p-server 10.0.4 and h5p-express 10.0.5 on Node 24, `coreApiVersion` 1.28 | ✅ Both install on Node 24.x (h5p-express with its Express 4 overridden to 4.22.3 for advisories, D-032). `H5pConfigFactory` sets 1.28 and re-applies it after loading stored settings |
 | 2. Core tag `1.28.0` and editor commit `ab2daa18` | ✅ `npm run h5p:fetch-core`: core commit `2aeb0b83` matches, all 67 files match the committed SHA-256 list; editor commit verified by git, its 214 file hashes recorded (`h5p-editor-php-library-ab2daa18.files.sha256`) |
-| 3. Seed packages and site registration | ⛔ Blocked: this environment cannot reach `hub-api.h5p.org` (Q7). F2 (pre-set `H5P_SITE_UUID`) is applied by `H5pConfigFactory`; for F1, the `localIdFor` helper (15 characters) exists and is tested, and is wired into `H5pEditorFactory` in S2 (D-031). Neither was tried against the Hub |
-| 4. Render `H5P.MultiChoice` in the player | ⛔ Blocked by step 3 (no package); needs the S2 player routes too |
-| 5. Daylight theme with the F3 CSS | ⛔ Blocked by step 4. F3 injection moves to S2 with the player factory |
+| 3. Seed packages and site registration | ⛔ Blocked: this environment cannot reach `hub-api.h5p.org` (Q7; re-checked 2026-10-23, proxy 403). F2 (pre-set `H5P_SITE_UUID`) is applied by `H5pConfigFactory`; F1 is wired in `H5pEditorFactory` (S2). `npm run hub:check` runs the step where the Hub is reachable |
+| 4. Render `H5P.MultiChoice` in the player | ⛔ Real package blocked by step 3. S2: a synthetic content type runs on our player page in Chromium with Core 1.28, no console errors, and resumes after a reload (`player.browser.int.test.ts`) |
+| 5. Daylight theme with the F3 CSS | ✅ with the synthetic type (S2): the F3 styles load, `--h5p-theme-*` tokens are active, and a later stylesheet overrides them. To repeat with real content types |
 | 6. Decide 1.28 or the 1.27 fallback | Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2 |
 
 Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-21 entry is the first run).
 
 ## S2 — Content types and security 🟨
 
-- [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable; inject the F3 theme CSS in
-      `H5pPlayerFactory`/`H5pEditorFactory`; decide R-01 (1.28 or the 1.27 fallback) and record it (D-031)
-- [ ] Wire F1: `getLocalIdOverride: () => localIdFor(<site UUID>)` in `H5pEditorFactory`, with a test (D-031)
-- [ ] Package import route: `inspectZip` before Lumi's `PackageImporter`, extraction in a fresh temporary
-      folder that is removed afterwards (`SEC-005`, D-031). The h5p-express item of D-032 is replaced by our
-      own Express 5 routes (D-035)
-- [ ] Decisions D-035…D-046 recorded (plan approved 2026-10-22)
-- [ ] TypeDoc API pages in CI (`DOC-002`, D-031)
-- [ ] `HvlTop10ContentTypeFilter` and the DragQuestion semantics filter (`H5P-002`, `PROD-002`)
-- [ ] Seed script with SHA-256 verification (`H5P-003`). **Needs the `.h5p` files**: run `tools/seed/fetch-seed-packages.sh` where hub-api.h5p.org is reachable
-- [ ] `PrismaContentUserDataStorage` (`H5P-005`, `PROD-008`); `HvlPermissionSystem` with a table test (`H5P-006`)
-- [ ] Own Express 5 routes, player page and sub-content policy (D-035, D-039, D-040; `SEC-008`)
-- [ ] `HvlTranslationCallback` (`H5P-008`); library update audit (`H5P-011`)
-- [ ] `SvgSanitizer`, `FileTypeSniffer`, `ContentFileHeaders`, package import rules (`SEC-001`…`SEC-004`, `SEC-008`)
+- [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (D-047).
+      **Still blocked (Q7):** on 2026-10-23 the egress proxy refused hub-api.h5p.org (`CONNECT tunnel failed,
+      response 403`; `npm run hub:check` reports `fetch failed: Request was cancelled.`). Done without the
+      Hub: F3 injected and tested; a Chromium test runs Core 1.28 on our player page with no console errors,
+      the Daylight tokens active and overridable, and state resumed after a reload (synthetic content type)
+- [x] F1 wired: `getLocalIdOverride: () => localIdFor(config.uuid)` in `H5pEditorFactory`; the Hub
+      registration payload is tested to carry 15 characters (D-031)
+- [x] Package import over `ajax?action=library-upload`: `inspectZip` before Lumi, the upload in a fresh
+      `mkdtemp` folder that is always removed (`SEC-005`, D-031, D-043). Own Express 5 routes replace
+      h5p-express (D-035)
+- [x] Decisions D-035…D-046 recorded (plan approved 2026-10-22); D-047 waits for the spike
+- [x] TypeDoc API pages (`npm run docs:api`, warnings as errors) in CI (`DOC-002`, D-031)
+- [x] `HvlTop10ContentTypeFilter` and the DragQuestion semantics filter (`H5P-002`, `PROD-002`)
+- [x] Seed command with SHA-256 verification and audit (`npm run seed:libraries`, `H5P-003`, `H5P-011`),
+      tested on synthetic packages. **Open:** the real `.h5p` files (run `tools/seed/fetch-seed-packages.sh`
+      where the Hub is reachable), the CI seed step and the "< 2 min in CI" measurement (Q7, Q10)
+- [x] `PrismaContentUserDataStorage` (`H5P-005`, `PROD-008`); `HvlPermissionSystem` with a test of every
+      matrix cell (`H5P-006`); permission guard at start-up
+- [x] Own Express 5 routes, player page and sub-content policy (D-035, D-039, D-040; `SEC-008`)
+- [x] `HvlTranslationCallback` and the nn → nb → en library fallback (`H5P-008`); library audit (`H5P-011`)
+- [x] `SvgSanitizer`, `FileTypeSniffer`, `ContentFileHeaders`, package import rules (`SEC-001`…`SEC-004`, `SEC-008`)
+- [x] `npm run hub:check` for spike step 3 (registration status, F1, versions of the ten types)
+- [ ] Independent review and its fixes
 - [ ] Gate: as in the Evaluator Guide §5, S2
 
 ## S3 — Dual authentication ⬜
@@ -131,7 +140,11 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 - [ ] xAPI bridge, ingestion, minimal storage (`LTI-010`, `LTI-011`, `DATA-012`)
 - [ ] AGS queue and worker, sync status, honest labelling (`LTI-012`, `LTI-013`); NRPS counts (`LTI-008`)
 - [ ] Insight views with *k*-suppression (`INS-001`…`INS-010`, `PROD-010`); spaced-retrieval suggestion (`PROD-014`, COULD)
-- [ ] Purge, audit, data-subject requests, DPIA input (`DATA-003`…`DATA-008`, `DATA-010`); log redaction review (`NFR-006`)
+- [ ] Purge, audit, data-subject requests, DPIA input (`DATA-003`…`DATA-008`, `DATA-010`); log redaction review (`NFR-006`).
+      The data-subject tool must delete learner state through the storage directly: Lumi 10.0.4's
+      `deleteAllContentUserDataByUser` checks permission for one user and deletes the acting user's data
+      (`ContentUserDataManager.js:39-43`)
+- [ ] Separate files origin for user files with signed URLs (`SEC-004`, D-045; URLs from S3's `HvlUrlGenerator`)
 - [ ] Panopto guidance (`H5P-010`); ClamAV scanning (`SEC-006`); LTI Dynamic Registration (`LTI-009`, COULD)
 - [ ] Docker images, load test, runbook (`NFR-001`, `NFR-002`, `NFR-007`); conformance report (`UD-040`)
 - [ ] Gate: as in the Evaluator Guide §5, S6

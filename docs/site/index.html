@@ -2947,12 +2947,17 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
   coreVersionCheck.ts          reads $coreApi from the fetched core files           H5P-001
   h5pServerInit.ts / bootCheck.ts  refuse to start on a core mismatch; log core + Hub host  H5P-001
   h5pStorage.ts                assembles the storage adapters below                  H5P-004
-  H5pEditorFactory.ts          wires H5PEditor with all adapters below               H5P-004 (S2)
-  H5pPlayerFactory.ts          wires H5PPlayer + theme/xAPI injection                H5P-009
+  createH5pRuntime.ts          builds the whole engine once; runs the permission guard  H5P-004, H5P-006 (S2)
+  H5pEditorFactory.ts          wires H5PEditor: adapters, F1 local ID, F3 styles, sanitisers  H5P-004 (S2)
+  H5pPlayerFactory.ts          wires H5PPlayer: F3 styles, model renderer (xAPI in S6)  H5P-004 (S2), H5P-009
+  h5pAssets.ts                 Core 1.28 styles and scripts Lumi 10.0.4 leaves out (F3)  H5P-001 (S2)
+  permissionSystemGuard.ts     start-up check: every Lumi component uses ours         H5P-006 (S2)
+  HvlH5pUser.ts                the actor with its account and state views (D-036)     H5P-006 (S2)
+  hubCheck.ts                  `npm run hub:check`: registration and Hub versions     H5P-001 (S2, D-041)
   HvlTop10ContentTypeFilter.ts restricts the authoring list to the ten types         H5P-002
   HvlPermissionSystem.ts       IPermissionSystem implementation (role matrix §5)     H5P-006
   HvlUrlGenerator.ts           UrlGenerator that appends ltik / CSRF parameters      H5P-007
-  HvlTranslationCallback.ts    i18next nn → nb → en                                  H5P-008
+  HvlTranslationCallback.ts    i18next nn → nb → en (resources: h5pTranslationResources.ts)  H5P-008
   HvlH5PEditor.ts              editor subclass: ten-type filter, save order, package rules  H5P-002, SEC-003 (S2)
   semantics/                   DragQuestion removal, params walker, sub-content policy H5P-002, SEC-008 (S2, D-039)
   permissions/                 content facts and the rule tables for HvlPermissionSystem  H5P-006 (S2)
@@ -2963,6 +2968,7 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
     S3ContentFileStore.ts          S3 file I/O for PrismaContentStorage (D-025)
     contentUsage.ts                library usage count in SQL (IContentStorage.getUsage)
     libraryStorageFactory.ts       ILibraryStorage: shared folder + CachedLibraryStorage (D-026)
+    LanguageFallbackLibraryStorage.ts  serves nb.json for a missing nn.json         H5P-008 (S2, D-046)
     S3TemporaryFileStorage.ts      ITemporaryFileStorage
     s3Objects.ts                   safe object names, ranges, size-limited uploads   SEC-005
     PrismaContentUserDataStorage.ts IContentUserDataStorage                          H5P-005 (S2, D-028)
@@ -2970,11 +2976,13 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
   jobs/TemporaryFileCleanupJob.ts  runs every 5 min, once per interval cluster-wide  H5P-004
 apps/server/src/security/
   zipEntryGuard.ts             rejects unsafe or oversize package archives before extraction  SEC-005
-  SvgSanitizer.ts              IFileSanitizer (wraps @lumieducation/h5p-svg-sanitizer + extra rules) SEC-001
-  FileTypeSniffer.ts           compares magic bytes with the extension               SEC-002
+  SvgSanitizer.ts + svg/       IFileSanitizer (wraps @lumieducation/h5p-svg-sanitizer + extra rules) SEC-001
+  FileTypeSniffer.ts + sniff/  compares magic bytes with the extension               SEC-002
   ContentFileHeaders.ts        CSP sandbox, nosniff, Content-Disposition             SEC-004
 apps/server/src/http/
-  createH5pRouter.ts + routes/ Express 5 routes on H5PAjaxEndpoint (D-035): AJAX, files, user data, content  H5P-005, SEC-004 (S2)
+  createH5pRouter.ts + routes/ Express 5 routes on H5PAjaxEndpoint (D-035): static files, AJAX, uploads,
+                               content and temporary files, user data, content, player  H5P-005, SEC-004 (S2)
+  h5pErrorResponse.ts …        translated errors, multipart uploads (D-043), byte ranges, body parsers
 tools/seed/
   fetch-seed-packages.sh       downloads and checks the ten .h5p packages (the seeder itself is in
                                apps/server/src/h5p/libraries/, D-042)                  H5P-003</code></pre>
@@ -4585,6 +4593,18 @@ asserts? Does the module header&#39;s <em>Invariants</em> section match the code
 <td><code>npm run check:audit</code></td><td>No unreviewed high or critical advisory in production dependencies (<a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>, D-029)</td></tr>
 <tr>
 <td><code>npm run check:pins &amp;&amp; npm run check:licences</code></td><td>Exact pins; GPL-3.0-compatible licences (<a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>, <a class="req-ref" href="#r-NFR-005"><code>NFR-005</code></a>)</td></tr>
+<tr>
+<td><code>npm run docs:api</code> <em>(from S2)</em></td><td>Browsable API documentation builds with no warnings (TypeDoc; <a class="req-ref" href="#r-DOC-002"><code>DOC-002</code></a>)</td></tr>
+<tr>
+<td><code>npx vitest run -t &quot;H5P-002|PROD-002&quot;</code> <em>(from S2)</em></td><td>Only the ten types are creatable; DragQuestion is never offered</td></tr>
+<tr>
+<td><code>npx vitest run -t &quot;SEC-003|H5P-011|H5P-006&quot;</code> <em>(from S2)</em></td><td>Non-admins cannot install libraries; every library change is audited; the permission matrix</td></tr>
+<tr>
+<td><code>npx vitest run -t &quot;SEC-001&quot;</code> <em>(from S2)</em></td><td>The SVG corpus is neutralised and benign drawings render identically (needs Chromium)</td></tr>
+<tr>
+<td><code>npm run seed:libraries</code> <em>(from S2)</em></td><td>Installs the content types offline from the verified seed packages (<a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>); needs the packages (Q7)</td></tr>
+<tr>
+<td><code>NODE_USE_ENV_PROXY=1 npm run hub:check</code> <em>(from S2)</em></td><td>Spike step 3: Hub registration status, the 15-character <code>local_id</code>, versions of the ten types</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="evaluator-guide--4-evaluation-rubric" tabindex="-1">4. Evaluation rubric</h3>
@@ -4674,12 +4694,19 @@ is for formative use only (<a class="req-ref" href="#r-LTI-013"><code>LTI-013</c
 <li><strong>Upstream accessibility.</strong> Some barriers are inside H5P content types and can only be fixed
 upstream. The conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>) lists them with issue links.</li>
 <li><strong>H5P Core 1.28 with Lumi 10.0.4 is only partly verified</strong> (risk R-01). The S1 spike passed steps 1–2
-(Node 24 with core API 1.28; core and editor files verified file by file). Steps 3–5 (Hub registration,
-rendering a content type, the Daylight theme) were blocked by the network and move to S2, where the
-choice between 1.28 and the 1.27 fallback is made (D-031).</li>
+(Node 24 with core API 1.28; core and editor files verified file by file). In S2, Core 1.28 runs on our
+player page in Chromium with the F3 styles, the Daylight tokens are active and overridable, and state
+resumes after a reload, but only with a synthetic content type: hub-api.h5p.org is still unreachable
+from the build environment (Q7), so Hub registration, the real seed packages and rendering the real
+content types remain open, and so does the 1.28-or-1.27 decision (D-047).</li>
 <li><strong>Institutional reference material is not yet in the repository</strong> (see
 <a href="#reference">reference/README.md</a>). Labels, brand colours and portfolio headings are
 therefore kept in configuration, so they can be corrected without code changes.</li>
+<li><strong>No listening server yet.</strong> Session 2 builds the H5P routes (<code>createH5pRouter</code>) and tests them through
+Express with a test-only authenticator. The HTTP entry point, Feide and LTI authentication arrive in S3;
+the separate origin for user files, with signed URLs, in S3/S6 (D-045).</li>
+<li><strong>Strict package versions.</strong> An author&#39;s <code>.h5p</code> import is refused when any library differs from the
+installed one in its patch version (<a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>, Q9), which will refuse many packages exported elsewhere.</li>
 </ol>
 
 </section>
@@ -5353,31 +5380,39 @@ every residual and new problem it found is fixed, with regression tests (see the
 <tr>
 <td>2. Core tag <code>1.28.0</code> and editor commit <code>ab2daa18</code></td><td>✅ <code>npm run h5p:fetch-core</code>: core commit <code>2aeb0b83</code> matches, all 67 files match the committed SHA-256 list; editor commit verified by git, its 214 file hashes recorded (<code>h5p-editor-php-library-ab2daa18.files.sha256</code>)</td></tr>
 <tr>
-<td>3. Seed packages and site registration</td><td>⛔ Blocked: this environment cannot reach <code>hub-api.h5p.org</code> (Q7). F2 (pre-set <code>H5P_SITE_UUID</code>) is applied by <code>H5pConfigFactory</code>; for F1, the <code>localIdFor</code> helper (15 characters) exists and is tested, and is wired into <code>H5pEditorFactory</code> in S2 (D-031). Neither was tried against the Hub</td></tr>
+<td>3. Seed packages and site registration</td><td>⛔ Blocked: this environment cannot reach <code>hub-api.h5p.org</code> (Q7; re-checked 2026-10-23, proxy 403). F2 (pre-set <code>H5P_SITE_UUID</code>) is applied by <code>H5pConfigFactory</code>; F1 is wired in <code>H5pEditorFactory</code> (S2). <code>npm run hub:check</code> runs the step where the Hub is reachable</td></tr>
 <tr>
-<td>4. Render <code>H5P.MultiChoice</code> in the player</td><td>⛔ Blocked by step 3 (no package); needs the S2 player routes too</td></tr>
+<td>4. Render <code>H5P.MultiChoice</code> in the player</td><td>⛔ Real package blocked by step 3. S2: a synthetic content type runs on our player page in Chromium with Core 1.28, no console errors, and resumes after a reload (<code>player.browser.int.test.ts</code>)</td></tr>
 <tr>
-<td>5. Daylight theme with the F3 CSS</td><td>⛔ Blocked by step 4. F3 injection moves to S2 with the player factory</td></tr>
+<td>5. Daylight theme with the F3 CSS</td><td>✅ with the synthetic type (S2): the F3 styles load, <code>--h5p-theme-*</code> tokens are active, and a later stylesheet overrides them. To repeat with real content types</td></tr>
 <tr>
 <td>6. Decide 1.28 or the 1.27 fallback</td><td>Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2</td></tr>
 </tbody></table></div>
 <p>Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-21 entry is the first run).</p>
 <h3 id="progress--s2--content-types-and-security" tabindex="-1">S2 — Content types and security 🟨</h3>
 <ul>
-<li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable; inject the F3 theme CSS in
-<code>H5pPlayerFactory</code>/<code>H5pEditorFactory</code>; decide R-01 (1.28 or the 1.27 fallback) and record it (D-031)</li>
-<li><span class="task">○ To do:</span> Wire F1: <code>getLocalIdOverride: () =&gt; localIdFor(&lt;site UUID&gt;)</code> in <code>H5pEditorFactory</code>, with a test (D-031)</li>
-<li><span class="task">○ To do:</span> Package import route: <code>inspectZip</code> before Lumi&#39;s <code>PackageImporter</code>, extraction in a fresh temporary
-folder that is removed afterwards (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>, D-031). The h5p-express item of D-032 is replaced by our
-own Express 5 routes (D-035)</li>
-<li><span class="task">○ To do:</span> Decisions D-035…D-046 recorded (plan approved 2026-10-22)</li>
-<li><span class="task">○ To do:</span> TypeDoc API pages in CI (<a class="req-ref" href="#r-DOC-002"><code>DOC-002</code></a>, D-031)</li>
-<li><span class="task">○ To do:</span> <code>HvlTop10ContentTypeFilter</code> and the DragQuestion semantics filter (<a class="req-ref" href="#r-H5P-002"><code>H5P-002</code></a>, <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>)</li>
-<li><span class="task">○ To do:</span> Seed script with SHA-256 verification (<a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>). <strong>Needs the <code>.h5p</code> files</strong>: run <code>tools/seed/fetch-seed-packages.sh</code> where hub-api.h5p.org is reachable</li>
-<li><span class="task">○ To do:</span> <code>PrismaContentUserDataStorage</code> (<a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a>); <code>HvlPermissionSystem</code> with a table test (<a class="req-ref" href="#r-H5P-006"><code>H5P-006</code></a>)</li>
-<li><span class="task">○ To do:</span> Own Express 5 routes, player page and sub-content policy (D-035, D-039, D-040; <a class="req-ref" href="#r-SEC-008"><code>SEC-008</code></a>)</li>
-<li><span class="task">○ To do:</span> <code>HvlTranslationCallback</code> (<a class="req-ref" href="#r-H5P-008"><code>H5P-008</code></a>); library update audit (<a class="req-ref" href="#r-H5P-011"><code>H5P-011</code></a>)</li>
-<li><span class="task">○ To do:</span> <code>SvgSanitizer</code>, <code>FileTypeSniffer</code>, <code>ContentFileHeaders</code>, package import rules (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>…<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-008"><code>SEC-008</code></a>)</li>
+<li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (D-047).
+<strong>Still blocked (Q7):</strong> on 2026-10-23 the egress proxy refused hub-api.h5p.org (<code>CONNECT tunnel failed, response 403</code>; <code>npm run hub:check</code> reports <code>fetch failed: Request was cancelled.</code>). Done without the
+Hub: F3 injected and tested; a Chromium test runs Core 1.28 on our player page with no console errors,
+the Daylight tokens active and overridable, and state resumed after a reload (synthetic content type)</li>
+<li><span class="task">✓ Done:</span> F1 wired: <code>getLocalIdOverride: () =&gt; localIdFor(config.uuid)</code> in <code>H5pEditorFactory</code>; the Hub
+registration payload is tested to carry 15 characters (D-031)</li>
+<li><span class="task">✓ Done:</span> Package import over <code>ajax?action=library-upload</code>: <code>inspectZip</code> before Lumi, the upload in a fresh
+<code>mkdtemp</code> folder that is always removed (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>, D-031, D-043). Own Express 5 routes replace
+h5p-express (D-035)</li>
+<li><span class="task">✓ Done:</span> Decisions D-035…D-046 recorded (plan approved 2026-10-22); D-047 waits for the spike</li>
+<li><span class="task">✓ Done:</span> TypeDoc API pages (<code>npm run docs:api</code>, warnings as errors) in CI (<a class="req-ref" href="#r-DOC-002"><code>DOC-002</code></a>, D-031)</li>
+<li><span class="task">✓ Done:</span> <code>HvlTop10ContentTypeFilter</code> and the DragQuestion semantics filter (<a class="req-ref" href="#r-H5P-002"><code>H5P-002</code></a>, <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>)</li>
+<li><span class="task">✓ Done:</span> Seed command with SHA-256 verification and audit (<code>npm run seed:libraries</code>, <a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>, <a class="req-ref" href="#r-H5P-011"><code>H5P-011</code></a>),
+tested on synthetic packages. <strong>Open:</strong> the real <code>.h5p</code> files (run <code>tools/seed/fetch-seed-packages.sh</code>
+where the Hub is reachable), the CI seed step and the &quot;&lt; 2 min in CI&quot; measurement (Q7, Q10)</li>
+<li><span class="task">✓ Done:</span> <code>PrismaContentUserDataStorage</code> (<a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a>); <code>HvlPermissionSystem</code> with a test of every
+matrix cell (<a class="req-ref" href="#r-H5P-006"><code>H5P-006</code></a>); permission guard at start-up</li>
+<li><span class="task">✓ Done:</span> Own Express 5 routes, player page and sub-content policy (D-035, D-039, D-040; <a class="req-ref" href="#r-SEC-008"><code>SEC-008</code></a>)</li>
+<li><span class="task">✓ Done:</span> <code>HvlTranslationCallback</code> and the nn → nb → en library fallback (<a class="req-ref" href="#r-H5P-008"><code>H5P-008</code></a>); library audit (<a class="req-ref" href="#r-H5P-011"><code>H5P-011</code></a>)</li>
+<li><span class="task">✓ Done:</span> <code>SvgSanitizer</code>, <code>FileTypeSniffer</code>, <code>ContentFileHeaders</code>, package import rules (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>…<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-008"><code>SEC-008</code></a>)</li>
+<li><span class="task">✓ Done:</span> <code>npm run hub:check</code> for spike step 3 (registration status, F1, versions of the ten types)</li>
+<li><span class="task">○ To do:</span> Independent review and its fixes</li>
 <li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S2</li>
 </ul>
 <h3 id="progress--s3--dual-authentication" tabindex="-1">S3 — Dual authentication ⬜</h3>
@@ -5417,7 +5452,11 @@ own Express 5 routes (D-035)</li>
 <li><span class="task">○ To do:</span> xAPI bridge, ingestion, minimal storage (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>, <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>, <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>)</li>
 <li><span class="task">○ To do:</span> AGS queue and worker, sync status, honest labelling (<a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a>, <a class="req-ref" href="#r-LTI-013"><code>LTI-013</code></a>); NRPS counts (<a class="req-ref" href="#r-LTI-008"><code>LTI-008</code></a>)</li>
 <li><span class="task">○ To do:</span> Insight views with <em>k</em>-suppression (<a class="req-ref" href="#r-INS-001"><code>INS-001</code></a>…<a class="req-ref" href="#r-INS-010"><code>INS-010</code></a>, <a class="req-ref" href="#r-PROD-010"><code>PROD-010</code></a>); spaced-retrieval suggestion (<a class="req-ref" href="#r-PROD-014"><code>PROD-014</code></a>, COULD)</li>
-<li><span class="task">○ To do:</span> Purge, audit, data-subject requests, DPIA input (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>…<a class="req-ref" href="#r-DATA-008"><code>DATA-008</code></a>, <a class="req-ref" href="#r-DATA-010"><code>DATA-010</code></a>); log redaction review (<a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a>)</li>
+<li><span class="task">○ To do:</span> Purge, audit, data-subject requests, DPIA input (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>…<a class="req-ref" href="#r-DATA-008"><code>DATA-008</code></a>, <a class="req-ref" href="#r-DATA-010"><code>DATA-010</code></a>); log redaction review (<a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a>).
+The data-subject tool must delete learner state through the storage directly: Lumi 10.0.4&#39;s
+<code>deleteAllContentUserDataByUser</code> checks permission for one user and deletes the acting user&#39;s data
+(<code>ContentUserDataManager.js:39-43</code>)</li>
+<li><span class="task">○ To do:</span> Separate files origin for user files with signed URLs (<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, D-045; URLs from S3&#39;s <code>HvlUrlGenerator</code>)</li>
 <li><span class="task">○ To do:</span> Panopto guidance (<a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>); ClamAV scanning (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>); LTI Dynamic Registration (<a class="req-ref" href="#r-LTI-009"><code>LTI-009</code></a>, COULD)</li>
 <li><span class="task">○ To do:</span> Docker images, load test, runbook (<a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>, <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>); conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>)</li>
 <li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S6</li>

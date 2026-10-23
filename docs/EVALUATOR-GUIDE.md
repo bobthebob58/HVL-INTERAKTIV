@@ -72,6 +72,12 @@ asserts? Does the module header's *Invariants* section match the code? Is every 
 | `npm run check:filesize` | No source file over 200 lines (`DOC-007`) |
 | `npm run check:audit` | No unreviewed high or critical advisory in production dependencies (`SEC-007`, D-029) |
 | `npm run check:pins && npm run check:licences` | Exact pins; GPL-3.0-compatible licences (`SEC-007`, `NFR-005`) |
+| `npm run docs:api` *(from S2)* | Browsable API documentation builds with no warnings (TypeDoc; `DOC-002`) |
+| `npx vitest run -t "H5P-002\|PROD-002"` *(from S2)* | Only the ten types are creatable; DragQuestion is never offered |
+| `npx vitest run -t "SEC-003\|H5P-011\|H5P-006"` *(from S2)* | Non-admins cannot install libraries; every library change is audited; the permission matrix |
+| `npx vitest run -t "SEC-001"` *(from S2)* | The SVG corpus is neutralised and benign drawings render identically (needs Chromium) |
+| `npm run seed:libraries` *(from S2)* | Installs the content types offline from the verified seed packages (`H5P-003`); needs the packages (Q7) |
+| `NODE_USE_ENV_PROXY=1 npm run hub:check` *(from S2)* | Spike step 3: Hub registration status, the 15-character `local_id`, versions of the ten types |
 
 ---
 
@@ -156,9 +162,16 @@ must be pasted into `PROGRESS.md`, before the next session starts.
 2. **Upstream accessibility.** Some barriers are inside H5P content types and can only be fixed
    upstream. The conformance report (`UD-040`) lists them with issue links.
 3. **H5P Core 1.28 with Lumi 10.0.4 is only partly verified** (risk R-01). The S1 spike passed steps 1–2
-   (Node 24 with core API 1.28; core and editor files verified file by file). Steps 3–5 (Hub registration,
-   rendering a content type, the Daylight theme) were blocked by the network and move to S2, where the
-   choice between 1.28 and the 1.27 fallback is made (D-031).
+   (Node 24 with core API 1.28; core and editor files verified file by file). In S2, Core 1.28 runs on our
+   player page in Chromium with the F3 styles, the Daylight tokens are active and overridable, and state
+   resumes after a reload, but only with a synthetic content type: hub-api.h5p.org is still unreachable
+   from the build environment (Q7), so Hub registration, the real seed packages and rendering the real
+   content types remain open, and so does the 1.28-or-1.27 decision (D-047).
 4. **Institutional reference material is not yet in the repository** (see
    [reference/README.md](reference/README.md)). Labels, brand colours and portfolio headings are
    therefore kept in configuration, so they can be corrected without code changes.
+5. **No listening server yet.** Session 2 builds the H5P routes (`createH5pRouter`) and tests them through
+   Express with a test-only authenticator. The HTTP entry point, Feide and LTI authentication arrive in S3;
+   the separate origin for user files, with signed URLs, in S3/S6 (D-045).
+6. **Strict package versions.** An author's `.h5p` import is refused when any library differs from the
+   installed one in its patch version (`SEC-003`, Q9), which will refuse many packages exported elsewhere.

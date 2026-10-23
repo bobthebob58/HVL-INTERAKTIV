@@ -1,7 +1,10 @@
 # Item 6: H5P Core 1.28 seed packages (status)
 
 Provenance date: 2026-10-21. Prepared for `docs/reference/h5p-core-1.28-seed-packages/` (spec 01, `H5P-003`).
-**No `.h5p` package is in this folder yet**: the H5P Hub is blocked by the build container's network policy.
+**No `.h5p` package is in this folder yet**: the H5P Hub is blocked by the build container's network policy
+(re-checked 2026-10-23: the egress proxy refuses hub-api.h5p.org with 403). When the packages and their
+`SHA256SUMS` are here, `npm run seed:libraries` installs them offline, and `npm run hub:check` records the
+registration status for F2 (Session 2).
 
 ## 1. Summary
 
