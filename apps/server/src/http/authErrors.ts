@@ -22,6 +22,8 @@ const AUTH_ERRORS = {
   'hvl:csrf-invalid': [401, 'error.csrfInvalid'],
   'hvl:session-expired': [401, 'error.sessionExpired'],
   'hvl:ltik-invalid': [401, 'error.ltikInvalid'],
+  'hvl:login-failed': [400, 'error.loginFailed'],
+  'hvl:no-feide-id': [403, 'error.noFeideId'],
   'hvl:deployment-not-allowed': [403, 'error.deploymentNotAllowed'],
   'hvl:deep-link-not-allowed': [403, 'error.deepLinkNotAllowed'],
   'hvl:file-grant-invalid': [403, 'error.fileGrantInvalid'],

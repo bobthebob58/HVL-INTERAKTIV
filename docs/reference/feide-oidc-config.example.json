@@ -25,10 +25,10 @@
     "http://localhost:3000/auth/feide/callback"
   ],
   "postLogoutRedirectUris": [
-    "https://interaktiv.hvl.no/",
-    "http://localhost:3000/"
+    "https://interaktiv.hvl.no/auth/logged-out",
+    "http://localhost:3000/auth/logged-out"
   ],
-  "_redirectNotes": "redirectUris are registered in the Customer Portal field 'Redirect URI after login'; postLogoutRedirectUris in 'Redirect URI for logout' (several URIs may be registered). postLogoutRedirectUris values are a PROPOSAL of this assembly (site root), not taken from any source; change them to whatever HVL registers. Feide permits plain-HTTP redirect URIs only for development; production must use HTTPS.",
+  "_redirectNotes": "redirectUris are registered in the Customer Portal field 'Redirect URI after login'; postLogoutRedirectUris in 'Redirect URI for logout' (several URIs may be registered). postLogoutRedirectUris values are a PROPOSAL of this assembly (the server's logged-out page, /auth/logged-out), not taken from any source; the server sends <PUBLIC_BASE_URL>/auth/logged-out, so register exactly that. Feide permits plain-HTTP redirect URIs only for development; production must use HTTPS.",
 
   "scopes": ["openid", "profile", "email", "userid-feide", "groups-org", "groups-edu"],
   "scopeDetails": {
