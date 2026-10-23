@@ -25,11 +25,15 @@ export const LIBRARY_CACHE_TTL_SECONDS = 300;
 /**
  * Creates the library storage.
  * @param libraryDir - Absolute folder on the shared volume (H5P_LIBRARY_DIR); created if missing.
+ * @param createCache - cache-manager's `caching`; tests pass a spy to see the options.
  * @returns A cached library storage.
  */
-export function createLibraryStorage(libraryDir: string): ILibraryStorage {
+export function createLibraryStorage(
+  libraryDir: string,
+  createCache: typeof Caching = caching,
+): ILibraryStorage {
   mkdirSync(libraryDir, { recursive: true });
-  const cache = caching({ store: 'memory', ttl: LIBRARY_CACHE_TTL_SECONDS, max: 10_000 });
+  const cache = createCache({ store: 'memory', ttl: LIBRARY_CACHE_TTL_SECONDS, max: 10_000 });
   return new cacheImplementations.CachedLibraryStorage(
     new fsImplementations.FileLibraryStorage(libraryDir),
     cache,
