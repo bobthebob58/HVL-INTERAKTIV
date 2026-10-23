@@ -85,6 +85,10 @@ fieldset li {
   margin: var(--hvl-space-s) 0;
 }
 
+form > button {
+  margin-top: var(--hvl-space-m);
+}
+
 :focus-visible {
   outline: var(--hvl-focus-outline);
   outline-offset: var(--hvl-focus-offset);
