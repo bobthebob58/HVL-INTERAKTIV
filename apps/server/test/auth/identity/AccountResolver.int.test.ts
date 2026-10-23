@@ -91,6 +91,19 @@ describeWithServices('[DATA-002] accounts by identity hash', () => {
     expect(results.filter((r) => r.created)).toHaveLength(1);
   });
 
+  it('[DATA-002] looks an account up without creating or re-hashing anything', async () => {
+    // Arrange
+    const source = feide();
+    const { userId } = await resolver(OLD).resolve({ provider: 'feide', source, kind: 'learner' });
+    // Act
+    const found = await resolver(ROTATED).lookup('feide', source);
+    const missing = await resolver().lookup('feide', feide());
+    // Assert
+    expect(found).toBe(userId);
+    expect(missing).toBeUndefined();
+    expect((await db.identity.findFirstOrThrow({ where: { userId } })).subjectKeyId).toBe('old');
+  });
+
   it('[DATA-002] keeps Feide and LTI identities with the same source text apart', async () => {
     const source = feide();
     const a = await resolver().resolve({ provider: 'feide', source, kind: 'learner' });

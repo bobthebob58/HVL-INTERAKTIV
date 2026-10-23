@@ -72,6 +72,21 @@ export class AccountResolver {
     }
   }
 
+  /**
+   * Finds an existing account without changing anything (for requests that resume a launch or a session).
+   * @param provider - Feide or LTI.
+   * @param source - The identity source text.
+   * @returns The `User.id`, or undefined when no account has this identity.
+   */
+  async lookup(provider: AccountRequest['provider'], source: string): Promise<string | undefined> {
+    const candidates = this.deps.hasher.candidates('identity-subject', source);
+    const identity = await this.deps.db.identity.findFirst({
+      where: { provider, subjectHash: { in: candidates.map((c) => c.hash) } },
+      select: { userId: true },
+    });
+    return identity?.userId;
+  }
+
   private async find(request: AccountRequest): Promise<ResolvedAccount | undefined> {
     const { db, hasher } = this.deps;
     const candidates = hasher.candidates('identity-subject', request.source);
