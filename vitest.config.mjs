@@ -4,7 +4,8 @@
  * Why: the session gate needs one test run that covers tools and apps. Test titles carry
  *      requirement IDs in brackets, which tools/spec-trace reads (DOC-004, DOC-006).
  * Spec: NFR-004
- * Collaborators: apps/server/vitest.config.ts (server unit and integration tests).
+ * Collaborators: apps/server/vitest.config.ts (server unit and integration tests), apps/web/vitest.config.ts,
+ *   packages/<name>/vitest.config.ts (one project per package).
  * Tests: this file is the test runner configuration itself.
  */
 import { defineConfig } from 'vitest/config';
@@ -23,6 +24,7 @@ export default defineConfig({
         },
       },
       'apps/*/vitest.config.ts',
+      'packages/*/vitest.config.ts',
     ],
   },
 });

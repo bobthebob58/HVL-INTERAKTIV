@@ -64,6 +64,7 @@ export const envSchema = z.object({
   TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
   CANVAS_ORIGINS: z.string().transform(toOriginList).default([]),
   EXTERNAL_MEDIA_ORIGINS: z.string().transform(toOriginList).default([]),
+  CAPTIONED_MEDIA_ORIGINS: z.string().transform(toOriginList).default([]),
   WEB_APP: z.enum(['off', 'dev', 'prod']).default('off'),
   LTI_PLATFORMS: z.string().transform(toJson).pipe(ltiPlatformList).default([]),
   LTI_TOKEN_MAX_AGE_SECONDS: z.coerce.number().int().min(1).max(60).default(10),
