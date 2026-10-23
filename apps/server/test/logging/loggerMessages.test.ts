@@ -93,10 +93,11 @@ describe('[DATA-009] message building', () => {
       'https://n.feide.no/claims/nin',
       'norEduPersonNIN',
       'eduPersonPrincipalName',
+      'tokenEncrypted',
     ]) {
       expect(isSensitiveKey(key), key).toBe(true);
     }
-    for (const key of ['subjectHash', 'learnerKey', 'machineName', 'tokenEncrypted', 'admin', 'running']) {
+    for (const key of ['subjectHash', 'learnerKey', 'machineName', 'admin', 'running']) {
       expect(isSensitiveKey(key), key).toBe(false);
     }
     expect(redactPersonalData({ env: { S3_SECRET_ACCESS_KEY: 'test-secret' } })).toEqual({

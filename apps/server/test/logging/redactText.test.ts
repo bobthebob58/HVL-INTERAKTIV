@@ -9,11 +9,12 @@ import { redactText } from '../../src/logging/redactText.js';
 describe('[DATA-009] credentials and e-mail addresses in free text', () => {
   it('[DATA-009] masks tokens in query strings and form bodies', () => {
     const text = redactText(
-      'GET /cb?code=abc123&state=s1&access_token=AT9&api_key=K1 body ltik=L1&id_token_hint=eyJx&password=hunter2',
+      'GET /cb?code=abc123&state=s1&iss=I1&access_token=AT9&api_key=K1 body ltik=L1&id_token_hint=eyJx&password=hunter2',
     );
-    for (const leaked of ['abc123', 'AT9', 'K1', 'L1', 'eyJx', 'hunter2'])
+    for (const leaked of ['abc123', 's1', 'AT9', 'K1', 'L1', 'eyJx', 'hunter2'])
       expect(text, leaked).not.toContain(leaked);
-    expect(text).toContain('state=s1');
+    // WHY: since S3 the OIDC `state` binds a login to its browser (D-057), so it is masked; `iss` is public.
+    expect(text).toContain('state=[Redacted]&iss=I1');
   });
 
   it('[DATA-009] masks authorization credentials in any case, with or without a colon', () => {

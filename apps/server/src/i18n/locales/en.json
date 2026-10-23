@@ -5,7 +5,21 @@
     "forbidden": "You do not have access to this.",
     "notFound": "We could not find what you were looking for.",
     "badRequest": "The request could not be processed.",
-    "tooLarge": "The file is larger than {{maxMb}} MB."
+    "tooLarge": "The file is larger than {{maxMb}} MB.",
+    "csrfInvalid": "Your session could not be verified. Reload the page and try again.",
+    "sessionExpired": "Your session has expired. Please log in again.",
+    "ltikInvalid": "Your access has expired. Open the activity again from Canvas.",
+    "launchFailed": "The activity could not be opened from Canvas. Try opening it again.",
+    "platformNotRegistered": "This learning platform is not registered with HVL Interaktiv.",
+    "deploymentNotAllowed": "This Canvas installation is not allowed to use HVL Interaktiv.",
+    "activityUnavailable": "The activity is not available.",
+    "deepLinkDraft": "Drafts cannot be added to Canvas until they are published.",
+    "deepLinkNotAllowed": "Only teachers can add activities to Canvas.",
+    "loginFailed": "Login failed. Please try again.",
+    "noFeideId": "Your Feide account has no Feide ID, so you cannot log in here.",
+    "feideGroupsUnavailable": "We cannot reach Feide right now. Please try again shortly.",
+    "fileGrantInvalid": "The link to this file has expired. Reload the page.",
+    "sharingNotAllowed": "As a student you can only keep your activities private for now."
   },
   "upload": {
     "archive": {
@@ -39,5 +53,27 @@
     "userData": {
       "asUserNotSupported": "You can only save and load your own answers."
     }
+  },
+  "page": {
+    "siteName": "HVL Interaktiv",
+    "notAvailable": {
+      "title": "Not available",
+      "body": "The activity does not exist, is not published, or you do not have access to it."
+    },
+    "reopen": {
+      "title": "Open the activity again",
+      "body": "Your access has expired. Go back to Canvas and open the activity again."
+    },
+    "error": {
+      "title": "Something went wrong"
+    },
+    "loggedOut": {
+      "title": "You are logged out",
+      "body": "You are now logged out of HVL Interaktiv."
+    },
+    "login": "Log in with Feide",
+    "logout": "Log out",
+    "loading": "Opening the activity …",
+    "noscript": "This page needs JavaScript."
   }
 }

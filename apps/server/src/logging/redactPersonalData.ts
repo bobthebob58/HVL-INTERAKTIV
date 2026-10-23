@@ -8,7 +8,8 @@
  * Invariants:
  *   - Keys are matched case-insensitively, ignoring `-` and `_` (so `ID_Token` = `idToken`).
  *   - Keys that contain `feide`, keys ending in a sensitive word (`authToken`, `userEmail`, `ltiSubject`,
- *     `S3_SECRET_ACCESS_KEY`) and Feide attribute names are redacted too.
+ *     `S3_SECRET_ACCESS_KEY`, `privateKeyEncrypted`, `codeVerifier`) and Feide attribute names are redacted too.
+ *   - OIDC `state`/`nonce`, session IDs, CSRF tokens, file grants and client IP addresses are redacted (S3).
  *   - Every string value goes through `redactText` (credentials and e-mail addresses inside text).
  *   - Input objects are never mutated; cycles are replaced by "[Circular]" instead of recursing forever.
  *   - Prisma errors, wherever they appear, are reduced to their codes (./prismaErrorSummary.ts).
@@ -63,6 +64,23 @@ export const SENSITIVE_KEYS: ReadonlySet<string> = new Set([
   // it (DATA-009).
   'body',
   'rawbody',
+  // SECURITY: OIDC login values, the portal session and CSRF token, and signed file grants (D-057, D-058).
+  'state',
+  'nonce',
+  'codeverifier',
+  'sid',
+  'sessionid',
+  'csrf',
+  'grant',
+  'ltimessagehint',
+  // PRIVACY: client addresses (DATA-009); the audit log keeps only a keyed hash (D-064).
+  'ip',
+  'ips',
+  'remoteaddress',
+  'xforwardedfor',
+  'xrealip',
+  'forwarded',
+  'useridsec',
 ]);
 
 /** Endings that mark a key as sensitive whatever comes before them (`authToken`, `userEmail`, `ltiSubject`). */
@@ -80,6 +98,11 @@ export const SENSITIVE_SUFFIXES: readonly string[] = [
   'cookie',
   'authorization',
   'nin',
+  // SECURITY: `privateKeyEncrypted`, `idTokenEncrypted`: ciphertext is useless alone but never belongs in logs.
+  'encrypted',
+  'verifier',
+  'nonce',
+  'csrf',
 ];
 
 // PRIVACY: Feide attribute names for the Feide ID, legal name and national ID number (DATA-002).

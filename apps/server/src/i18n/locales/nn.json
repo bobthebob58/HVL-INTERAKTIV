@@ -5,7 +5,21 @@
     "forbidden": "Du har ikkje tilgang til dette.",
     "notFound": "Fann ikkje det du leita etter.",
     "badRequest": "Førespurnaden kunne ikkje handsamast.",
-    "tooLarge": "Fila er større enn {{maxMb}} MB."
+    "tooLarge": "Fila er større enn {{maxMb}} MB.",
+    "csrfInvalid": "Økta di kunne ikkje stadfestast. Last sida på nytt og prøv igjen.",
+    "sessionExpired": "Økta di har gått ut. Logg inn på nytt.",
+    "ltikInvalid": "Tilgangen din har gått ut. Opne aktiviteten på nytt frå Canvas.",
+    "launchFailed": "Aktiviteten kunne ikkje opnast frå Canvas. Prøv å opne han på nytt.",
+    "platformNotRegistered": "Denne læringsplattforma er ikkje registrert i HVL Interaktiv.",
+    "deploymentNotAllowed": "Denne Canvas-installasjonen har ikkje tilgang til HVL Interaktiv.",
+    "activityUnavailable": "Aktiviteten er ikkje tilgjengeleg.",
+    "deepLinkDraft": "Utkast kan ikkje leggjast inn i Canvas før dei er publiserte.",
+    "deepLinkNotAllowed": "Berre lærarar kan leggje aktivitetar inn i Canvas.",
+    "loginFailed": "Innlogginga mislukkast. Prøv igjen.",
+    "noFeideId": "Feide-kontoen din har ingen Feide-ID, så du kan ikkje logge inn her.",
+    "feideGroupsUnavailable": "Vi får ikkje kontakt med Feide akkurat no. Prøv igjen om litt.",
+    "fileGrantInvalid": "Lenkja til fila har gått ut. Last sida på nytt.",
+    "sharingNotAllowed": "Som student kan du førebels berre ha aktivitetane dine private."
   },
   "upload": {
     "archive": {
@@ -39,5 +53,27 @@
     "userData": {
       "asUserNotSupported": "Du kan berre lagre og hente dine eigne svar."
     }
+  },
+  "page": {
+    "siteName": "HVL Interaktiv",
+    "notAvailable": {
+      "title": "Ikkje tilgjengeleg",
+      "body": "Aktiviteten finst ikkje, er ikkje publisert, eller du har ikkje tilgang til han."
+    },
+    "reopen": {
+      "title": "Opne aktiviteten på nytt",
+      "body": "Tilgangen din har gått ut. Gå tilbake til Canvas og opne aktiviteten på nytt."
+    },
+    "error": {
+      "title": "Noko gjekk gale"
+    },
+    "loggedOut": {
+      "title": "Du er logga ut",
+      "body": "Du er no logga ut av HVL Interaktiv."
+    },
+    "login": "Logg inn med Feide",
+    "logout": "Logg ut",
+    "loading": "Opnar aktiviteten …",
+    "noscript": "Denne sida treng JavaScript."
   }
 }

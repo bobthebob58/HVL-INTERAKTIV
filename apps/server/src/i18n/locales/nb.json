@@ -5,7 +5,21 @@
     "forbidden": "Du har ikke tilgang til dette.",
     "notFound": "Fant ikke det du lette etter.",
     "badRequest": "Forespørselen kunne ikke behandles.",
-    "tooLarge": "Filen er større enn {{maxMb}} MB."
+    "tooLarge": "Filen er større enn {{maxMb}} MB.",
+    "csrfInvalid": "Økten din kunne ikke bekreftes. Last inn siden på nytt og prøv igjen.",
+    "sessionExpired": "Økten din har utløpt. Logg inn på nytt.",
+    "ltikInvalid": "Tilgangen din har utløpt. Åpne aktiviteten på nytt fra Canvas.",
+    "launchFailed": "Aktiviteten kunne ikke åpnes fra Canvas. Prøv å åpne den på nytt.",
+    "platformNotRegistered": "Denne læringsplattformen er ikke registrert i HVL Interaktiv.",
+    "deploymentNotAllowed": "Denne Canvas-installasjonen har ikke tilgang til HVL Interaktiv.",
+    "activityUnavailable": "Aktiviteten er ikke tilgjengelig.",
+    "deepLinkDraft": "Utkast kan ikke legges inn i Canvas før de er publisert.",
+    "deepLinkNotAllowed": "Bare lærere kan legge aktiviteter inn i Canvas.",
+    "loginFailed": "Innloggingen mislyktes. Prøv igjen.",
+    "noFeideId": "Feide-kontoen din har ingen Feide-ID, så du kan ikke logge inn her.",
+    "feideGroupsUnavailable": "Vi får ikke kontakt med Feide akkurat nå. Prøv igjen om litt.",
+    "fileGrantInvalid": "Lenken til filen har utløpt. Last inn siden på nytt.",
+    "sharingNotAllowed": "Som student kan du foreløpig bare ha aktivitetene dine private."
   },
   "upload": {
     "archive": {
@@ -39,5 +53,27 @@
     "userData": {
       "asUserNotSupported": "Du kan bare lagre og hente dine egne svar."
     }
+  },
+  "page": {
+    "siteName": "HVL Interaktiv",
+    "notAvailable": {
+      "title": "Ikke tilgjengelig",
+      "body": "Aktiviteten finnes ikke, er ikke publisert, eller du har ikke tilgang til den."
+    },
+    "reopen": {
+      "title": "Åpne aktiviteten på nytt",
+      "body": "Tilgangen din har utløpt. Gå tilbake til Canvas og åpne aktiviteten på nytt."
+    },
+    "error": {
+      "title": "Noe gikk galt"
+    },
+    "loggedOut": {
+      "title": "Du er logget ut",
+      "body": "Du er nå logget ut av HVL Interaktiv."
+    },
+    "login": "Logg inn med Feide",
+    "logout": "Logg ut",
+    "loading": "Åpner aktiviteten …",
+    "noscript": "Denne siden trenger JavaScript."
   }
 }

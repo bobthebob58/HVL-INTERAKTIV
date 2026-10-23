@@ -27,9 +27,13 @@ const TEXT_PATTERNS: [RegExp, string][] = [
   [/(?<![\w-])(ltik=)[^&#\s"'\\]{1,4096}/gi, `$1${REDACTED}`],
   // SECURITY: OAuth/OIDC credentials and passwords in query strings and form bodies.
   [
-    /([?&;](?:access_token|id_token|id_token_hint|refresh_token|token|api_?key|password|secret|client_secret|code|login_hint)=)[^&#\s"'\\]{1,4096}/gi,
+    /([?&;](?:access_token|id_token|id_token_hint|refresh_token|token|api_?key|password|secret|client_secret|code|login_hint|lti_message_hint|state|nonce|code_verifier|csrf)=)[^&#\s"'\\]{1,4096}/gi,
     `$1${REDACTED}`,
   ],
+  // SECURITY: our cookies (`__Host-hvli_sid`, the login transaction) in Cookie and Set-Cookie text (D-057).
+  [/(?<![\w-])((?:__Host-)?hvli_[A-Za-z0-9_]{1,32}=)[^;&\s"'\\,]{1,4096}/g, `$1${REDACTED}`],
+  // SECURITY: a signed content-file grant is a bearer credential for 12 hours (D-058).
+  [/(\/h5p\/files\/)[^/\s"'\\?#]{1,512}/g, `$1${REDACTED}`],
   // WHY: schemes are case-insensitive (RFC 9110 §11.1), so case variants are spelled out rather than using
   // the `i` flag, which would make the mixed-case test below meaningless. The token must look like a
   // credential (a digit or symbol, or mixed case and at least 8 characters), so "basic validation" is kept.

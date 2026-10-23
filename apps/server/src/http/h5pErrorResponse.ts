@@ -10,12 +10,14 @@
  *   - The body is H5P's AJAX error shape `{ success: false, errorCode, httpStatusCode, message }`.
  *   - `message` always comes from the locale files; `errorCode` is a stable machine code, never free text.
  *   - Errors with a numeric 4xx `status`/`statusCode` (body parsers, express.static, storage guards) keep it.
- *   - Unknown errors and server faults (5xx) are reported as `error.generic`.
- * Collaborators: ./h5pErrorHandler.ts, ./HttpError.ts, ../i18n/translate.ts.
+ *   - Unknown errors and server faults (5xx) are reported as `error.generic`, except the deliberate 503s in
+ *     ./authErrors.ts (a dependency is down), which keep their status and message.
+ * Collaborators: ./h5pErrorHandler.ts, ./HttpError.ts, ./authErrors.ts, ../i18n/translate.ts.
  * Tests: apps/server/test/http/h5pErrorResponse.test.ts
  */
 import { MAX_FILE_SIZE } from '../h5p/H5pConfigFactory.js';
 import { t, type Locale, type MessageKey } from '../i18n/translate.js';
+import { SERVICE_UNAVAILABLE_CODES } from './authErrors.js';
 
 const MB = 1024 * 1024;
 /** Lumi's message for metadata that its save schema refuses (an author error, not a server fault). */
@@ -74,7 +76,8 @@ function describe(error: unknown): Described {
   if (typeof e.messageKey === 'string') {
     // WHY: size limits (`upload.file.tooLarge`, `upload.archive.fileTooLarge`, …) are 413; other refusals 400.
     const status = typeof e.status === 'number' ? e.status : /toolarge$/i.test(e.messageKey) ? 413 : 400;
-    return { status, code: e.messageKey, key: e.messageKey as MessageKey, params: stringParams(e.params) };
+    const code = typeof e.errorCode === 'string' ? e.errorCode : e.messageKey;
+    return { status, code, key: e.messageKey as MessageKey, params: stringParams(e.params) };
   }
   // Lumi's H5pError: errorId, replacements, httpStatusCode.
   if (typeof e.errorId === 'string' && typeof e.httpStatusCode === 'number') {
@@ -116,7 +119,9 @@ function describe(error: unknown): Described {
  */
 export function toErrorResponse(error: unknown, locale: Locale): { status: number; body: ErrorBody } {
   const described = describe(error);
-  const serverFault = described.status < 400 || described.status >= 500;
+  // WHY: a 503 the auth layer raised on purpose (Feide's Groups API is down) is shown as such, not as a fault.
+  const unavailable = described.status === 503 && SERVICE_UNAVAILABLE_CODES.has(described.code);
+  const serverFault = !unavailable && (described.status < 400 || described.status >= 500);
   const { status, code, key, params } = serverFault
     ? { status: 500, code: 'internal', key: 'error.generic' as MessageKey, params: {} }
     : described;
