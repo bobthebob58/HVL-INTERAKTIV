@@ -8,7 +8,9 @@
  * Invariants:
  *   - `script-src` never contains `'unsafe-inline'`; `'unsafe-eval'` only in development (React's dev tools need it).
  *   - Inline styles only in development (the dev server injects them); production styles are files or nonced.
- *   - No outside origin: the web pages frame only our own H5P pages.
+ *   - No outside origin: the web pages frame only our own H5P pages. The one exception is `form-action`, which also
+ *     allows Feide's origin: the logout form posts to `/auth/logout`, whose 303 goes on to Feide's end-session
+ *     endpoint, and browsers apply `form-action` to that redirect too.
  * Collaborators: ./webRoutes.ts, ../http/h5pPageCsp.ts (the H5P pages' own policy).
  * Tests: apps/server/test/web/webPageCsp.test.ts
  */
@@ -22,6 +24,8 @@ export interface WebPageCspOptions {
   readonly dev: boolean;
   /** Who may frame the page: `'self'` for portal pages, plus `CANVAS_ORIGINS` for `/app/*`. */
   readonly frameAncestors: readonly string[];
+  /** Outside origins a form's redirect may reach (Feide's, for logout); none by default. */
+  readonly formActionOrigins?: readonly string[];
 }
 
 /**
@@ -48,7 +52,7 @@ export function webPageCsp(options: WebPageCspOptions): string {
     "manifest-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    "form-action 'self'",
+    ["form-action 'self'", ...(options.formActionOrigins ?? [])].join(' '),
     `frame-ancestors ${options.frameAncestors.length > 0 ? options.frameAncestors.join(' ') : "'none'"}`,
   ].join('; ');
 }

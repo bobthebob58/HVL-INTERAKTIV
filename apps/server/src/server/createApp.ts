@@ -7,9 +7,10 @@
  *      same code.
  * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, PROD-003, DOC-012, NFR-002
  * Invariants:
- *   - Order: trust proxy → base headers → `/healthz` → portal session → LTI (ltijs first) → Feide routes → start
- *     page (only without the web app) → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 →
- *     last-resort error page. With the web app, launches land on `/app/play` (D-067).
+ *   - Order: trust proxy → base headers → `/healthz` → page assets → the chrome redirect (with the web app) →
+ *     portal session → LTI (ltijs first) → Feide routes → start page (only without the web app) → `/api` → `/h5p` →
+ *     the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page. With the web app, launches land
+ *     on `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
  *     session with CSRF); signed file URLs are checked before it, inside the H5P router (D-058).
  *   - `X-Powered-By` is off; every response gets `nosniff` and `no-referrer`, and HSTS when the base URL is https.
@@ -17,7 +18,7 @@
  *     only when NODE_ENV is not production (D-077).
  * Collaborators: ../lti/ltiRoutes.ts, ../auth/feide/feideLoginRoutes.ts, ../auth/requestPrincipal.ts,
  *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/apiRouter.ts,
- *   ../content/PublishedSaveGate.ts, ../web/webRoutes.ts, ./healthRoutes.ts, ./main.ts.
+ *   ../content/PublishedSaveGate.ts, ../web/webRoutes.ts, ../web/chromeRedirect.ts, ./healthRoutes.ts, ./main.ts.
  * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
 import express, { type ErrorRequestHandler, type Express } from 'express';
@@ -52,6 +53,7 @@ import { DataEncryption } from '../security/keys/DataEncryption.js';
 import { IdentityHasher } from '../security/keys/IdentityHasher.js';
 import type { ContentValidator } from '../validation/types.js';
 import type { WebApp } from '../web/nextWebApp.js';
+import { chromeRedirect } from '../web/chromeRedirect.js';
 import { webRoutes } from '../web/webRoutes.js';
 import { healthRoutes } from './healthRoutes.js';
 
@@ -132,6 +134,8 @@ export function createApp(inputs: AppInputs): App {
   app.use(baseSecurityHeaders({ https: base.startsWith('https:') }));
   app.use(healthRoutes({ database: () => db.$queryRaw`SELECT 1`, redis: () => redis.ping() }));
   app.use(pageAssetRoutes());
+  // WHY: with the web app, an H5P page opened on its own goes to the chrome page that frames it (D-067).
+  if (inputs.web) app.use(chromeRedirect());
   app.use(portalSessionMiddleware(sessions));
   app.use(lti.router);
   app.use(
@@ -166,7 +170,10 @@ export function createApp(inputs: AppInputs): App {
   app.use('/api', h5pErrorHandler(logger));
   app.use('/h5p', authenticate, createH5pRouter(h5pRoutes, h5pAuthenticate()));
   app.use('/h5p', h5pErrorHandler(logger));
-  if (inputs.web) app.use(webRoutes(inputs.web, { canvasOrigins: env.CANVAS_ORIGINS }));
+  if (inputs.web) {
+    const formActionOrigins = [new URL(env.FEIDE_ISSUER).origin];
+    app.use(webRoutes(inputs.web, { canvasOrigins: env.CANVAS_ORIGINS, formActionOrigins }));
+  }
   app.use(portalNotFound());
   app.use(((error, _req, res, next) => {
     if (res.headersSent) return next(error);

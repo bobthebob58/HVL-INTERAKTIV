@@ -21,6 +21,7 @@ describe('[DATA-011] web page policy', () => {
     for (const name of ['img-src', 'connect-src', 'frame-src', 'font-src'])
       expect(csp.get(name)?.[0]).toBe("'self'");
     expect([...csp.values()].flat().filter((source) => /^https?:/.test(source))).toEqual([]);
+    expect(csp.get('form-action')).toEqual(["'self'"]);
     expect([...csp.values()].flat()).not.toContain("'unsafe-inline'");
     expect([...csp.values()].flat()).not.toContain("'unsafe-eval'");
     expect(csp.get('frame-ancestors')).toEqual(["'self'"]);
@@ -31,6 +32,22 @@ describe('[DATA-011] web page policy', () => {
     expect(csp.get('script-src')).toEqual(["'self'", "'nonce-abc'", "'unsafe-eval'"]);
     expect(csp.get('style-src')).toEqual(["'self'", "'unsafe-inline'"]);
     expect(csp.get('frame-ancestors')).toEqual(["'none'"]);
+  });
+
+  it('[DATA-011] forms may only reach our own origin, plus the Feide origin given for the logout redirect', () => {
+    // Act
+    const plain = directives(webPageCsp({ nonce: 'abc', dev: false, frameAncestors: ["'self'"] }));
+    const withFeide = directives(
+      webPageCsp({
+        nonce: 'abc',
+        dev: false,
+        frameAncestors: ["'self'"],
+        formActionOrigins: ['https://auth.dataporten.no'],
+      }),
+    );
+    // Assert
+    expect(plain.get('form-action')).toEqual(["'self'"]);
+    expect(withFeide.get('form-action')).toEqual(["'self'", 'https://auth.dataporten.no']);
   });
 
   it('[DATA-011] every nonce is fresh, 128 bits in base64', () => {

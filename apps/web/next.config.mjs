@@ -3,12 +3,14 @@
  *
  * Why: the app is the chrome around the H5P pages (D-067). It has no image optimiser, no telemetry and no
  *      `X-Powered-By`; the monorepo root is named so builds trace files from the workspace, not a parent folder.
+ *      `@hvl-interaktiv/api-contract` ships TypeScript source (D-077), so Next.js compiles it like the app's own code.
  * Spec: UD-030, DATA-011
  * Invariants:
  *   - `images.unoptimized`: the image optimisation endpoint stays off (it had remote-code advisories, D-068).
  *   - Security headers and the nonce policy come from Express (apps/server/src/web), not from this file.
- * Collaborators: apps/server/src/web/nextWebApp.ts, package.json (`build`).
- * Tests: apps/server/test/web/webApp.browser.int.test.ts
+ *   - The web app imports only types from api-contract, so zod never reaches the browser bundle.
+ * Collaborators: apps/server/src/web/nextWebApp.ts, package.json (`build`), postcss.config.mjs.
+ * Tests: apps/server/test/web/webApp.browser.int.test.ts, apps/server/test/web/webPages.browser.int.test.ts
  */
 import { fileURLToPath } from 'node:url';
 
@@ -24,6 +26,8 @@ const config = {
   devIndicators: false,
   outputFileTracingRoot: root,
   turbopack: { root },
+  // WHY: the contract package exports `src/index.ts` with `.js`-suffixed imports (D-077); Next.js must compile it.
+  transpilePackages: ['@hvl-interaktiv/api-contract'],
 };
 
 export default config;

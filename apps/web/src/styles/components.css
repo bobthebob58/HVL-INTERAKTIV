@@ -1,0 +1,103 @@
+/*
+ * components — the shared classes of the web app's chrome: the skip link, the site header and the two button styles.
+ *
+ * Why: these few patterns repeat on every page and need rules Tailwind classes cannot say well (focus-revealed skip
+ *      link, a header that is sticky only where there is room, forced-colours borders). Colours come only from the
+ *      design tokens (UD-001); targets are at least 24 px (UD-005).
+ * Spec: UD-006, UD-004, UD-005, UD-008, UD-012
+ * Invariants:
+ *   - No colour literal; system colours only under `forced-colors: active`.
+ *   - `--site-header-height` is the header's minimum height and the scroll padding below it (UD-004).
+ * Collaborators: ../app/globals.css (imports it), ../components/SiteHeader.tsx, ../app/layout.tsx (skip link).
+ * Tests: apps/server/test/web/webPages.browser.int.test.ts
+ */
+@layer components {
+  /* A11Y: WCAG 2.4.1 (UD-006): the first element on every page; visible as soon as it has focus. */
+  .skip-link {
+    position: absolute;
+    left: var(--hvl-space-s);
+    top: calc(-1 * var(--hvl-space-xxl));
+    z-index: 50;
+    padding: var(--hvl-space-s) var(--hvl-space-m);
+    background-color: var(--hvl-surface);
+    color: var(--hvl-primary-dark);
+    font-weight: 700;
+  }
+
+  .skip-link:focus {
+    top: var(--hvl-space-s);
+  }
+
+  .site-header {
+    background-color: var(--hvl-primary-dark);
+    color: var(--hvl-surface);
+  }
+
+  .site-header a {
+    color: var(--hvl-surface);
+  }
+
+  /* A11Y: WCAG 1.4.10: sticky only where there is room, so a narrow or zoomed screen keeps its height for content. */
+  @media (min-width: 48em) and (min-height: 32em) {
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    html:has(.site-header) {
+      scroll-padding-top: calc(var(--site-header-height) + var(--hvl-space-m));
+    }
+  }
+
+  .site-header-bar {
+    min-height: var(--site-header-height);
+  }
+
+  .button-primary {
+    background-color: var(--hvl-primary-dark);
+    color: var(--hvl-surface);
+  }
+
+  .button-primary:hover,
+  .button-primary:active {
+    background-color: var(--hvl-ink);
+  }
+
+  .button-secondary {
+    background-color: var(--hvl-band);
+    color: var(--hvl-ink);
+  }
+
+  .button-primary,
+  .button-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--hvl-space-xs);
+    min-height: var(--hvl-target-min);
+    min-width: var(--hvl-target-min);
+    padding: var(--hvl-space-xs) var(--hvl-space-m);
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .button-primary:disabled,
+  .button-secondary:disabled {
+    cursor: not-allowed;
+  }
+
+  /* A11Y: under forced colours the fill disappears, so the transparent border becomes the button's outline. */
+  @media (forced-colors: active) {
+    .button-primary,
+    .button-secondary {
+      border-color: ButtonText;
+    }
+  }
+}
+
+:root {
+  --site-header-height: 4rem;
+}

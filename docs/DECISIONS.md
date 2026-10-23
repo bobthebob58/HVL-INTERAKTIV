@@ -876,6 +876,12 @@ loading of one spec per session are kept.
   Deep Linking answer without adding anything for the teacher. ltijs sends resource-link launches to `/app/play`
   only when the web app runs (`WEB_APP` is not `off`); otherwise to `/lti/play` as in S3, so the integration tests
   without the web app keep their flow.
+- **Amendment (2026-10-23, integration):** the refusal of top-level navigations is `src/web/chromeRedirect.ts`,
+  mounted only when the web app runs. A browser's own navigation (`Sec-Fetch-Dest: document`, `Sec-Fetch-Mode:
+  navigate`) to `/h5p/play/:id` or `/h5p/edit/:id` gets 303 to `/aktivitet/:id`, `/h5p/new` to `/aktivitet/ny`, and
+  `/lti/play` or `/lti/edit` to `/app/play` with only the ltik carried over (`no-store`, `no-referrer`). Frames,
+  fetches and clients without fetch metadata get the page as before, so the integration tests and older browsers
+  are unaffected.
 
 ### D-068 · Express is the front door and runs Next.js in the same process
 - **Context:** D-012 puts a reverse proxy in front of Express and Next.js in production. Development and tests need
@@ -949,6 +955,10 @@ loading of one spec per session are kept.
   refused); and BranchingScenario's editor embeds H5P's online tutorial (`documentation.h5p.com`), which the policy
   keeps out as intended (`DATA-011`); the editor works without it, and the browser test lists it so a new outside
   frame is noticed.
+- **Amendment (2026-10-23, integration of the web shell):** the web pages' `form-action` is `'self'` plus the origin
+  of `FEIDE_ISSUER`. The start page's logout form posts to `/auth/logout`, which answers 303 to Feide's end-session
+  endpoint, and Chromium applies `form-action` to that redirect as well (the web workstream's probe); with `'self'`
+  alone, logout from the web app was refused. No other directive names an outside origin.
 
 ### D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)
 - **Context:** `next` depends on `caniuse-lite`, a browser-support data set under CC-BY-4.0, which the licence check

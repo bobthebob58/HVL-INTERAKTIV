@@ -217,8 +217,9 @@ export default tseslint.config(
     },
   },
   {
-    // DOC-009: user-facing text in the web app comes from locale files, never literals.
+    // DOC-009: user-facing text in the web app comes from locale files, never literals. Test data is not UI text.
     files: ['apps/web/**/*.{ts,tsx}'],
+    ignores: ['apps/web/test/**'],
     plugins: { i18next },
     rules: { 'i18next/no-literal-string': ['error', { mode: 'jsx-only' }] },
   },

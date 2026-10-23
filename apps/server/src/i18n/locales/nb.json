@@ -95,7 +95,8 @@
       "save": "Lagre",
       "saving": "Lagrer …",
       "saved": "Lagret.",
-      "saveFailed": "Kunne ikke lagre. Prøv igjen."
+      "saveFailed": "Kunne ikke lagre. Prøv igjen.",
+      "blockedErrors": "Feil som må rettes eller begrunnes: {{count}}."
     }
   },
   "deepLink": {

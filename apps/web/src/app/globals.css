@@ -1,14 +1,119 @@
 /*
- * globals — base typography of the web app until the design tokens arrive (packages/design-tokens, D-072).
+ * globals — the web app's stylesheet: Tailwind v4 with HVL's token theme, and the base rules every page shares.
  *
- * Why: HVL's rules ask for left-aligned body text with a line height of at least 1.5 (UD-002); colours come only
- *      from the tokens, so this file names none.
- * Spec: UD-002
- * Tests: apps/server/test/web/webApp.browser.int.test.ts
+ * Why: colours, fonts and sizes come only from packages/design-tokens (UD-001, D-072). HVL's reading rules
+ *      (left-aligned text, line height 1.5, no capitals, underline only for links; UD-002), the two-tone focus ring
+ *      (UD-004), forced colours (UD-012) and reduced motion (UD-009) apply to every page, so they live here once.
+ * Spec: UD-001, UD-002, UD-004, UD-006, UD-008, UD-009, UD-012
+ * Invariants:
+ *   - No colour literal: only `var(--hvl-*)` and the `hvl-*` Tailwind classes (Stylelint enforces it).
+ *   - Font sizes in rem; body text never below 1rem.
+ *   - Tailwind scans only this app's sources (`source('..')`), so classes cannot come from elsewhere.
+ * Collaborators: ./layout.tsx, ../styles/components.css (skip link, header, buttons), ../components/*,
+ *   packages/design-tokens/dist/tailwind-theme.css.
+ * Tests: apps/server/test/web/webPages.browser.int.test.ts
  */
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
-  text-align: left;
+@import 'tailwindcss' source('..');
+@import '@hvl-interaktiv/design-tokens/tailwind-theme.css';
+@import '../styles/components.css';
+
+@layer base {
+  html {
+    /* A11Y: WCAG 2.4.11: the sticky header never covers the element that receives focus (UD-004). */
+    scroll-padding-top: var(--hvl-space-m);
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--hvl-surface-alt);
+    color: var(--hvl-ink);
+    font-family: var(--hvl-font-ui);
+    font-size: 1rem;
+    line-height: var(--hvl-line-height-body);
+    text-align: left;
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: var(--hvl-primary-dark);
+    font-family: var(--hvl-font-ui);
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0 0 var(--hvl-space-s);
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.375rem;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+  }
+
+  p,
+  li,
+  dd {
+    max-width: var(--hvl-measure);
+  }
+
+  p {
+    margin: 0 0 var(--hvl-space-s);
+  }
+
+  /* A11Y: HVL rule: underline is reserved for links, so every link has one and nothing else does. */
+  a {
+    color: var(--hvl-primary-dark);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  a:hover {
+    text-decoration-thickness: 0.15em;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* A11Y: WCAG 2.4.7 and 1.4.11: the two-tone ring is visible on light and dark surfaces alike (D-007). */
+  :focus-visible {
+    outline: var(--hvl-focus-outline);
+    outline-offset: var(--hvl-focus-offset);
+    box-shadow: var(--hvl-focus-shadow);
+  }
+
+  /* A11Y: the skip link's target is a landmark, not a control; it takes focus so screen readers start there. */
+  #main:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  @media (forced-colors: active) {
+    /* A11Y: WCAG 1.4.11 under forced colours: the box-shadow ring is dropped, so the outline takes its width. */
+    :focus-visible {
+      outline-width: calc(var(--hvl-focus-outline-width) + var(--hvl-focus-inner-width));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* A11Y: WCAG 2.3.3 (UD-009): no animation or smooth scrolling; durations are tiny, not none, so end events fire. */
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important; /* WHY: beats any component's own duration. */
+      animation-iteration-count: 1 !important; /* WHY: beats any component's own iteration count. */
+      transition-duration: 0.01ms !important; /* WHY: beats any component's own transition. */
+      scroll-behavior: auto !important; /* WHY: beats a smooth scroll set by any component. */
+    }
+  }
 }

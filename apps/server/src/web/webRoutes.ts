@@ -25,12 +25,14 @@ import { prepareWebRequest } from './webRequestContract.js';
 export interface WebRouteOptions {
   /** `CANVAS_ORIGINS`, which may frame pages that serve a launch. */
   readonly canvasOrigins?: readonly string[];
+  /** Origins the logout form's redirect may reach (Feide's issuer origin). */
+  readonly formActionOrigins?: readonly string[];
 }
 
 /**
  * Builds the handler.
  * @param web - The loaded web app.
- * @param options - The Canvas origins for launch pages.
+ * @param options - The Canvas origins for launch pages and the Feide origin for the logout form.
  * @returns Express middleware for the end of the chain.
  */
 export function webRoutes(
@@ -41,7 +43,12 @@ export function webRoutes(
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
     const launch = appLaunchOf(res);
     const frameAncestors = launch ? ["'self'", ...(options.canvasOrigins ?? [])] : ["'self'"];
-    const csp = webPageCsp({ nonce: createNonce(), dev: web.dev, frameAncestors });
+    const csp = webPageCsp({
+      nonce: createNonce(),
+      dev: web.dev,
+      frameAncestors,
+      formActionOrigins: options.formActionOrigins ?? [],
+    });
     const locale = launch?.locale ?? portalSessionOf(res)?.session.locale ?? 'nn';
     res.setHeader('Content-Security-Policy', csp);
     if (launch) {

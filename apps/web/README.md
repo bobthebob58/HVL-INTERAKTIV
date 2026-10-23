@@ -2,18 +2,21 @@
 
 ## Purpose
 
-The web pages of HVL Interaktiv, built with Next.js (App Router) and React. They are the application around the
-H5P pages: header, help, privacy, tabs, notices, the findings list and the publish dialog. The H5P player and
-editor themselves stay server-rendered by Express under their own strict policy (D-067); these pages frame them on
-the same origin.
+The web pages of HVL Interaktiv, built with Next.js (App Router), React and Tailwind CSS v4 on HVL's design tokens.
+They are the application around the H5P pages: the start page with the person's activities, the activity page with
+the tabs **Spel**, **Rediger** and **Sjekk og publiser**, the new-activity page, the Canvas page `/app/play`, help and
+the privacy notice. The H5P player and editor themselves stay server-rendered by Express under their own strict
+policy (D-067); these pages frame them on the same origin.
 
 The app has **no server endpoints of its own**: no route handlers, server actions, middleware or API routes
 (`test/appStructure.test.ts` enforces it). Every data request goes from the browser to the Express API, which checks
 the session cookie and CSRF token or the Bearer ltik. Express runs this app inside its own process and removes
-cookies, tokens and the `ltik` query before a request reaches Next.js (D-068).
+cookies, tokens and the `ltik` query before a request reaches Next.js (D-068), so server components render only the
+shell and the locale; client components fetch the data.
 
-**Status (Session 4, in progress).** The in-process mount, the nonce policy, the locale header, the translations
-and `/hjelp` exist; the page shell, components and the other pages arrive later in Session 4.
+**Status (Session 4).** Shell, components and pages are in place. HVL's logo files are not yet supplied (Q2): the
+header shows the site name as text until `src/config/branding.ts` names them. HVL's data protection officer must
+review the privacy notice (Q6).
 
 ## How to run
 
@@ -24,55 +27,96 @@ npm run build                         # builds apps/web (NEXT_TELEMETRY_DISABLED
 WEB_APP=prod npm start                # the server, with the built app
 WEB_APP=dev npm start                 # the server, with Next.js's development server (hot reload)
 npm run typecheck --workspace apps/web   # next typegen, then tsc
-npx vitest run --project web          # translations and the structure test
-npx vitest run apps/server/test/web   # the mount: header contract, nonce policy, the built app in Chromium
+npx vitest run --project web          # components (jsdom), API calls, translations, structure
+npx vitest run apps/server/test/web   # the mount and every page of the built app in Chromium
+npm run lint:css                      # Stylelint: no colour literals, rem font sizes, no capitals or justify
 ```
 
-The browser test of the built app is skipped locally when `apps/web/.next` is missing and fails in CI, which builds
+The browser tests of the built app are skipped locally when `apps/web/.next` is missing and fail in CI, which builds
 first.
 
 ## Folder structure
 
 | Path | What it holds |
 |---|---|
-| `src/app/layout.tsx` | The document: `<html lang>` from the request's locale, the site title |
-| `src/app/hjelp/page.tsx` | `/hjelp` |
-| `src/app/not-found.tsx` | The translated 404 page for paths nothing else answers |
-| `src/app/globals.css` | Base typography until the design tokens arrive (no colours) |
-| `src/i18n/translate.ts`, `locales/{nn,nb,en}.json` | Typed `t()`; Nynorsk is the reference and the default (D-076) |
-| `src/i18n/requestLocale.ts` | Reads Express's `x-hvli-locale` header |
-| `next.config.mjs` | No image optimiser, no `X-Powered-By`, the monorepo root for tracing |
-| `test/` | Unit tests of the app's own logic and the structure test |
+| `src/app/layout.tsx` | The document: `<html lang>` from the request's locale, the skip link, the locale for client components |
+| `src/app/(portal)/` | The portal pages in the portal chrome: `/`, `/aktivitet/[id]`, `/aktivitet/ny`, `/hjelp`, `/personvern` |
+| `src/app/app/play/page.tsx` | `/app/play`, the Canvas page: reads Express's `x-hvli-launch` header |
+| `src/app/not-found.tsx` | The translated 404 page in the portal chrome |
+| `src/app/globals.css`, `src/styles/components.css` | Tailwind v4 with the token theme; base rules, focus ring, reduced motion; skip link, header, buttons |
+| `src/components/` | One component per file: ExternalLink, FileLink, ErrorSummary, Tabs, Dialog, Notice, FindingsList, PublishDialog, AcknowledgementField, H5pFrame, StatusBadge, LoginPrompt, TextSections, SiteHeader, SiteFooter, PortalChrome |
+| `src/features/` | The pages' client views: `portal/` (start page), `activity/` (activity and new-activity pages), `lti/` (Canvas page), `info/` (help and privacy sections) |
+| `src/api/` | Browser calls of the Express API with the right credential (`apiRequest.ts`), the portal session, typed by `@hvl-interaktiv/api-contract` |
+| `src/messaging/` | Messages with the framed H5P pages: `hvli:content-saved`, `hvli:go-to-field`, H5P's resize protocol |
+| `src/config/` | Every address the app links to or frames (`paths.ts`); the logo slot (`branding.ts`) |
+| `src/i18n/` | Typed `t()`, `locales/{nn,nb,en}.json` (Nynorsk is the reference, D-076), the request locale, dates, type names |
+| `src/lti/launchHeader.ts` | Parses the launch Express resolved for `/app/play` |
+| `next.config.mjs`, `postcss.config.mjs` | No image optimiser, no `X-Powered-By`, the contract package compiled; Tailwind through PostCSS |
+| `test/` | Component tests (jsdom), unit tests, the structure test; `test/support/` has the fake `fetch` and cleanup |
 
 `next-env.d.ts` and `.next/` are generated (`next build`, `next dev`, `next typegen`) and not committed.
 
 ## Key flows
+
+A portal page: Express hands over the request without credentials; the browser then asks the API itself.
 
 ```mermaid
 sequenceDiagram
     participant B as Browser
     participant E as Express (apps/server)
     participant N as Next.js (this app, same process)
-    B->>E: GET /hjelp (session cookie)
-    E->>E: no Express route matched; GET or HEAD only
-    E->>E: nonce policy; locale from the portal session (else nn)
-    E->>N: request without cookie, authorization, ltik, x-hvli-* from the client; with CSP and x-hvli-locale
-    N-->>B: HTML: every script carries the nonce; response CSP from Express
-    B->>E: GET /_next/static/... (scripts, styles)
-    E->>N: same hand-over
+    B->>E: GET /aktivitet/<id> (session cookie)
+    E->>N: request without cookie, authorization, ltik; with nonce CSP and x-hvli-locale
+    N-->>B: the shell: header with Hjelp, main#main, footer with Personvern; scripts with the nonce
+    B->>E: GET /auth/session (cookie)
+    E-->>B: { roles, locale, csrfToken } or 401 (then the Feide login link)
+    B->>E: GET /api/content/<id> (cookie)
+    E-->>B: { title, status, mayEdit, mayPublish }
+    B->>E: GET /h5p/play/<id> in a titled iframe; /h5p/edit/<id> on the Rediger tab
+    Note over B: the editor posts hvli:content-saved; the page fetches the findings again
+    B->>E: POST /api/content/<id>/publish (cookie, X-CSRF-Token, { updatedAt, acknowledgements })
+    E-->>B: published, or 409 publish-blocked / content-changed, shown in plain language
+```
+
+The Canvas page: Express resolves the ltik before Next.js runs; the page keeps the ltik in memory only.
+
+```mermaid
+sequenceDiagram
+    participant C as Canvas iframe
+    participant E as Express
+    participant N as Next.js
+    C->>E: GET /app/play?ltik=… (after the LTI launch)
+    E->>E: resolve the ltik, check View, decide mayEdit
+    E->>N: request without the ltik; x-hvli-launch = encoded { contentId, title, mayEdit, locale }
+    N-->>C: the Canvas chrome; Hjelp and Personvern open in a new tab
+    C->>C: read the ltik from the address bar once, history.replaceState without it
+    C->>E: GET /lti/play?ltik=… (Spel) and, for authors, /lti/edit?ltik=… (Rediger)
+    C->>E: GET /api/me, PUT /api/me/notices/formative-use (Authorization: Bearer <ltik>, no cookie)
 ```
 
 ## Configuration
 
 The app reads no environment variables. The server's `WEB_APP` (`off`, `dev`, `prod`) decides whether it runs;
 see `apps/server/.env.example`. Next.js telemetry is always off (`NEXT_TELEMETRY_DISABLED`, set by the build script
-and by the server before Next.js loads).
+and by the server before Next.js loads). The logo files are configured in `src/config/branding.ts`.
 
 ## Implements
 
 | Requirement | Where | Tests |
 |---|---|---|
-| `DATA-011` First-party pages under a strict policy | `apps/server/src/web/webPageCsp.ts`, `webRoutes.ts`, `next.config.mjs` | `apps/server/test/web/webPageCsp.test.ts`, `webRoutes.int.test.ts`, `webApp.browser.int.test.ts` |
-| `UD-010` Page language | `src/app/layout.tsx`, `src/i18n/requestLocale.ts` | `test/i18n/translate.test.ts`, `apps/server/test/web/webApp.browser.int.test.ts` |
+| `UD-001`, `UD-002` Token colours and typography | `src/app/globals.css`, `src/styles/components.css`, `postcss.config.mjs` | `npm run lint:css`, `apps/server/test/web/webPages.browser.int.test.ts` |
+| `UD-003` Status and severity not by colour alone | `src/components/StatusBadge.tsx`, `FindingsList.tsx` | `test/components/StatusBadge.test.tsx`, `FindingsList.test.tsx` |
+| `UD-004` Two-tone focus, sticky header with scroll padding | `src/app/globals.css`, `src/styles/components.css` | `apps/server/test/web/webPages.browser.int.test.ts` |
+| `UD-006` Skip link, tabs, modal dialog | `src/app/layout.tsx`, `src/components/Tabs.tsx`, `Dialog.tsx` | `test/components/Tabs.test.tsx`, `Dialog.test.tsx`, `SiteHeader.test.tsx` |
+| `UD-007` Honest links | `src/components/ExternalLink.tsx`, `FileLink.tsx` | `test/components/ExternalLink.test.tsx`, `FileLink.test.tsx` |
+| `UD-008` Reflow at 320 px | every page; `src/messaging/useH5pResizer.ts` | `apps/server/test/web/webPages.browser.int.test.ts`, `test/messaging/useH5pResizer.test.tsx` |
+| `UD-009`, `UD-012` Reduced motion, forced colours | `src/app/globals.css`, `src/styles/components.css` | CSS review; the accessibility suite (`npm run test:a11y`) |
+| `UD-010` Page language | `src/app/layout.tsx`, `src/i18n/` | `test/i18n/translate.test.ts`, `apps/server/test/web/webApp.browser.int.test.ts` |
+| `UD-013` Consistent help, accessible errors | `src/components/SiteHeader.tsx`, `ErrorSummary.tsx`, `/hjelp` | `test/components/SiteHeader.test.tsx`, `ErrorSummary.test.tsx`, `TextSections.test.tsx` |
+| `PROD-003`, `UD-022` Check and publish | `src/features/activity/CheckPanel.tsx`, `src/components/PublishDialog.tsx`, `FindingsList.tsx` | `test/components/PublishDialog.test.tsx`, `test/features/CheckPanel.test.tsx` |
+| `PROD-011` Formative-use notice | `src/components/Notice.tsx` | `test/components/Notice.test.tsx` |
+| `DATA-006` Privacy notice | `/personvern`, `src/components/SiteFooter.tsx` | `test/components/TextSections.test.tsx`, `SiteFooter.test.tsx` |
+| `LTI-006`, `LTI-003` Canvas tabs, ltik in memory only | `src/app/app/play/page.tsx`, `src/features/lti/` | `test/features/LtiPlayView.test.tsx`, `test/lti/launchHeader.test.ts` |
+| `DATA-011` First-party pages under a strict policy | `next.config.mjs`, `apps/server/src/web/` | `test/appStructure.test.ts`, `apps/server/test/web/webPages.browser.int.test.ts` |
 | `PROD-012` Nynorsk first, nb and en | `src/i18n/` | `test/i18n/translate.test.ts` |
-| `AUTH-003`, `LTI-003` No credentials or endpoints in the web app | `apps/server/src/web/webRequestContract.ts` | `apps/server/test/web/webRequestContract.test.ts`, `test/appStructure.test.ts` |
+| `AUTH-003` No credentials or endpoints in the web app | `src/api/`, `apps/server/src/web/webRequestContract.ts` | `test/appStructure.test.ts`, `test/api/apiRequest.test.ts` |

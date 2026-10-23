@@ -1,10 +1,197 @@
 {
   "site": {
-    "name": "HVL Interaktiv"
+    "name": "HVL Interaktiv",
+    "skipToMain": "Skip to main content",
+    "home": "HVL Interaktiv, home page",
+    "headerNav": "Help and information",
+    "footerNav": "About the service"
+  },
+  "nav": {
+    "help": "Help",
+    "privacy": "Privacy"
+  },
+  "link": {
+    "external": "(opens an external website)",
+    "newTab": "(opens in a new tab)",
+    "fileDetails": "{{type}}, {{size}}"
+  },
+  "fileSize": {
+    "bytes": "{{value}} B",
+    "kilobytes": "{{value}} kB",
+    "megabytes": "{{value}} MB",
+    "gigabytes": "{{value}} GB"
+  },
+  "common": {
+    "loading": "Loading …",
+    "close": "Close",
+    "cancel": "Cancel",
+    "loadFailed": "The content could not be loaded. Reload the page.",
+    "requiredMark": "(required)"
+  },
+  "errorSummary": {
+    "titleOne": "There is 1 problem to fix",
+    "titleOther": "There are {{count}} problems to fix"
+  },
+  "notice": {
+    "formativeUse": {
+      "title": "For formative use",
+      "body": "H5P activities are scored in the browser. The points are meant for learning along the way (formative assessment), not for exams or grades.",
+      "dismiss": "Do not show this notice again",
+      "dismissFailed": "Your choice could not be saved. Try again."
+    }
+  },
+  "severity": {
+    "error": "Error",
+    "warning": "Warning",
+    "hint": "Hint"
+  },
+  "findings": {
+    "heading": "Check results",
+    "groupError": "Errors ({{count}})",
+    "groupWarning": "Warnings ({{count}})",
+    "groupHint": "Hints ({{count}})",
+    "groupErrorIntro": "Errors block publishing until they are fixed or explained.",
+    "groupOtherIntro": "Warnings and hints do not block publishing.",
+    "none": "The check found nothing to fix. The activity can be published.",
+    "goToField": "Go to the field",
+    "acknowledged": "Explained: “{{reason}}”. The explanation holds until {{date}}.",
+    "rule": "Rule {{ruleId}}"
+  },
+  "publish": {
+    "open": "Publish",
+    "title": "Publish the activity",
+    "intro": "Students see the activity once it is published.",
+    "errorsHeading": "Errors that need an explanation",
+    "errorsIntro": "Fix the errors in the editor, or write why you publish anyway. The explanation is stored and holds for 14 days.",
+    "reasonLabel": "Explanation for “{{message}}”",
+    "reasonHint": "For example: “Captions are being produced in Panopto.” Between 1 and {{max}} characters.",
+    "reasonMissing": "Write an explanation for the error “{{message}}”.",
+    "reasonTooLong": "The explanation for “{{message}}” is too long: {{count}} of {{max}} characters.",
+    "noErrors": "No errors need an explanation.",
+    "nonBlocking": "Warnings and hints do not block publishing ({{count}}).",
+    "submit": "Publish now",
+    "publishing": "Publishing …",
+    "published": "The activity is published.",
+    "blocked": "Some errors still have no explanation. Write an explanation for each error below, or fix the errors in the editor.",
+    "changed": "The activity changed while you were checking it. We have fetched the check results again. Look them over and try again.",
+    "invalid": "One of the errors you explained no longer exists. We have fetched the check results again. Look them over and try again.",
+    "failed": "The activity could not be published. Try again."
+  },
+  "status": {
+    "draft": "Draft",
+    "published": "Published"
+  },
+  "role": {
+    "owner": "Owner",
+    "coAuthor": "Co-author"
+  },
+  "contentType": {
+    "CoursePresentation": "Course Presentation",
+    "InteractiveVideo": "Interactive Video",
+    "QuestionSet": "Question Set",
+    "InteractiveBook": "Interactive Book",
+    "Column": "Column",
+    "DragText": "Drag the Words",
+    "MultiChoice": "Multiple Choice",
+    "Blanks": "Fill in the Blanks",
+    "ImageHotspots": "Image Hotspots",
+    "BranchingScenario": "Branching Scenario"
+  },
+  "login": {
+    "required": "You must log in to see this page.",
+    "action": "Log in with Feide",
+    "logout": "Log out"
+  },
+  "home": {
+    "intro": "Create interactive learning activities with H5P, check them for universal design and use them in Canvas.",
+    "signedOut": "Log in with Feide to create and share activities.",
+    "activities": "Your activities",
+    "empty": "You have no activities yet.",
+    "new": "New activity",
+    "type": "Type: {{type}}",
+    "role": "Role: {{role}}",
+    "updated": "Last changed {{date}}",
+    "learner": "You are logged in as a student. Your activities are in Canvas."
+  },
+  "activity": {
+    "tabsLabel": "The activity",
+    "tabPlay": "Play",
+    "tabEdit": "Edit",
+    "tabCheck": "Check and publish",
+    "playFrame": "Play: {{title}}",
+    "editFrame": "Edit: {{title}}",
+    "unavailable": "The activity is not available. It does not exist, or you do not have access to it.",
+    "statusLabel": "Status:",
+    "saved": "Your changes are saved. Check and publish is up to date.",
+    "checking": "Checking the activity …",
+    "checkFailed": "The activity could not be checked. Try again.",
+    "checkAgain": "Check again",
+    "unpublish": "Return to draft",
+    "unpublished": "The activity is a draft again. Students no longer see it.",
+    "unpublishFailed": "The activity could not be returned to draft. Try again.",
+    "publishedNote": "The activity is published. Changes you save are checked again before they are saved."
+  },
+  "newActivity": {
+    "title": "New activity",
+    "intro": "Choose a content type, fill in the form and choose “Save”. After the first save you go to the activity’s page.",
+    "frame": "Create a new activity",
+    "notAllowed": "Only staff and students with an author role can create activities.",
+    "opening": "Opening the activity …"
+  },
+  "lti": {
+    "noLaunchTitle": "Open the activity from Canvas",
+    "noLaunchBody": "This page works only when you open an activity from Canvas. Go back to the course in Canvas and open the activity again."
+  },
+  "privacy": {
+    "title": "Privacy in HVL Interaktiv",
+    "intro": "HVL Interaktiv is a service of Western Norway University of Applied Sciences (HVL) for interactive learning activities. HVL is responsible for the data. Here you can read what we store, why, for how long and who sees what.",
+    "learnersHeading": "What we store about you as a student",
+    "learners1": "We do not store your name, your e-mail address, your Feide ID or your national identity number.",
+    "learners2": "You get a code instead of a name. The code is computed from your login with a secret key for each academic year, and on its own it does not say who you are.",
+    "learners3": "We store the answers you have given so far in an activity, so you can continue where you left off.",
+    "learners4": "We store short events from the activities, for example that you answered a question, how many points you got and how long you took.",
+    "whyHeading": "Why we store it",
+    "why1": "So you can continue where you left off, and so teachers can see what the student group finds hard and plan their teaching around it.",
+    "why2": "When an activity is a graded assignment in Canvas, we send the points to Canvas. The points are formative and not exam evidence.",
+    "why3": "HVL processes the data because teaching is a task carried out in the public interest (GDPR Article 6(1)(e)).",
+    "howLongHeading": "How long we store it",
+    "howLong1": "Answers, events and your code are deleted 30 days after the academic year ends. The key for that academic year is destroyed too, so what remains cannot be linked to you.",
+    "howLong2": "After that we keep only combined numbers for groups of at least 5 students.",
+    "howLong3": "The service’s logs contain no personal data and are deleted after 30 days.",
+    "whoHeading": "Who sees what",
+    "who1": "Teachers see only combined results for groups of at least 5 students. A group of fewer than 5 is shown as “< 5”. No teacher can see the answers of an individual student.",
+    "who2": "Your teachers see points from a graded assignment in the Canvas gradebook, as they see other assignments.",
+    "who3": "Administrators at HVL see data only through a support action that is logged.",
+    "staffHeading": "For you who create activities",
+    "staff1": "We store your name and e-mail address, so co-authors can find you, and which activities you own or co-author.",
+    "staff2": "We remember which notices you have closed. Logins are logged without your IP address in plain text, and the log is deleted after 2 years.",
+    "safetyHeading": "Storage and security",
+    "safety1": "The data is stored encrypted in Norway or the EEA.",
+    "safety2": "The pages load no scripts, fonts or tracking from other websites. The exception is video from a video service HVL has approved, such as Panopto, when a teacher has added such a video.",
+    "rightsHeading": "Your rights",
+    "rights1": "You can ask for access to, correction of and deletion of data about you. Contact HVL’s data protection officer."
   },
   "help": {
     "title": "Help",
-    "intro": "Here you find help with creating and using activities in HVL Interaktiv."
+    "intro": "Here you find help with creating and using activities in HVL Interaktiv.",
+    "createHeading": "Create an activity",
+    "create1": "Log in with Feide on the home page.",
+    "create2": "Choose “New activity”.",
+    "create3": "Choose a content type, for example Multiple Choice or Interactive Video, and fill in the form.",
+    "create4": "Choose “Save”. After the first save you go to the activity’s page, where you can play it and keep editing.",
+    "checkHeading": "Check and publish",
+    "check1": "Open the activity and choose the tab “Check and publish”.",
+    "check2": "The check shows errors, warnings and hints about universal design and learning design. Choose “Go to the field” to fix something in the editor.",
+    "check3": "Errors block publishing. Fix the error, or write why you publish anyway, for example that captions are being produced. The explanation holds for 14 days.",
+    "check4": "Warnings and hints do not block publishing. Students see only published activities.",
+    "canvasHeading": "Use the activity in Canvas",
+    "canvas1": "Add the activity to your course in Canvas with the HVL Interaktiv tool. When you open it from Canvas, you see the tabs “Play” and, if you may edit it, “Edit”.",
+    "canvas2": "Points in H5P are computed in the browser. Use them for formative assessment, not for exams or grades.",
+    "accessHeading": "Universal design",
+    "access1": "The activities must work with a keyboard and a screen reader. Correct answers are marked “✓ Correct:” and incorrect answers “✗ Incorrect:”, not by colour alone.",
+    "moreHeading": "More help",
+    "more1": "Ask HVL’s department for the development of learning and teaching (ALU) about learning design and universal design.",
+    "more2": "Ask TeCopp about Canvas, and HVL’s IT service desk about logging in and technical problems."
   },
   "notFound": {
     "title": "Page not found",

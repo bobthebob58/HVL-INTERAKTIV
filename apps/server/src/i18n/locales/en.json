@@ -95,7 +95,8 @@
       "save": "Save",
       "saving": "Saving …",
       "saved": "Saved.",
-      "saveFailed": "Could not save. Try again."
+      "saveFailed": "Could not save. Try again.",
+      "blockedErrors": "Errors that must be fixed or explained: {{count}}."
     }
   },
   "deepLink": {

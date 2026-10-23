@@ -1,10 +1,197 @@
 {
   "site": {
-    "name": "HVL Interaktiv"
+    "name": "HVL Interaktiv",
+    "skipToMain": "Gå til hovudinnhaldet",
+    "home": "HVL Interaktiv, startside",
+    "headerNav": "Hjelp og informasjon",
+    "footerNav": "Om tenesta"
+  },
+  "nav": {
+    "help": "Hjelp",
+    "privacy": "Personvern"
+  },
+  "link": {
+    "external": "(opnar ekstern nettstad)",
+    "newTab": "(opnar i ny fane)",
+    "fileDetails": "{{type}}, {{size}}"
+  },
+  "fileSize": {
+    "bytes": "{{value}} B",
+    "kilobytes": "{{value}} kB",
+    "megabytes": "{{value}} MB",
+    "gigabytes": "{{value}} GB"
+  },
+  "common": {
+    "loading": "Hentar …",
+    "close": "Lukk",
+    "cancel": "Avbryt",
+    "loadFailed": "Klarte ikkje å hente innhaldet. Last sida på nytt.",
+    "requiredMark": "(må fyllast ut)"
+  },
+  "errorSummary": {
+    "titleOne": "Det er 1 problem du må rette",
+    "titleOther": "Det er {{count}} problem du må rette"
+  },
+  "notice": {
+    "formativeUse": {
+      "title": "Til undervegsvurdering",
+      "body": "H5P-aktivitetar blir retta i nettlesaren. Poenga er meinte for læring undervegs (undervegsvurdering), ikkje for eksamen eller karakterar.",
+      "dismiss": "Ikkje vis meldinga igjen",
+      "dismissFailed": "Klarte ikkje å hugse valet ditt. Prøv igjen."
+    }
+  },
+  "severity": {
+    "error": "Feil",
+    "warning": "Åtvaring",
+    "hint": "Tips"
+  },
+  "findings": {
+    "heading": "Resultat av sjekken",
+    "groupError": "Feil ({{count}})",
+    "groupWarning": "Åtvaringar ({{count}})",
+    "groupHint": "Tips ({{count}})",
+    "groupErrorIntro": "Feil hindrar publisering til dei er retta eller grunngjevne.",
+    "groupOtherIntro": "Åtvaringar og tips hindrar ikkje publisering.",
+    "none": "Sjekken fann ingenting å rette. Aktiviteten kan publiserast.",
+    "goToField": "Gå til feltet",
+    "acknowledged": "Grunngjeve: «{{reason}}». Grunngjevinga gjeld til {{date}}.",
+    "rule": "Regel {{ruleId}}"
+  },
+  "publish": {
+    "open": "Publiser",
+    "title": "Publiser aktiviteten",
+    "intro": "Studentar ser aktiviteten når han er publisert.",
+    "errorsHeading": "Feil som treng grunngjeving",
+    "errorsIntro": "Rett feila i redigeringa, eller skriv kvifor du publiserer likevel. Grunngjevinga blir lagra og gjeld i 14 dagar.",
+    "reasonLabel": "Grunngjeving for «{{message}}»",
+    "reasonHint": "Til dømes: «Tekstinga blir laga i Panopto.» Mellom 1 og {{max}} teikn.",
+    "reasonMissing": "Skriv ei grunngjeving for feilen «{{message}}».",
+    "reasonTooLong": "Grunngjevinga for «{{message}}» er for lang: {{count}} av {{max}} teikn.",
+    "noErrors": "Ingen feil treng grunngjeving.",
+    "nonBlocking": "Åtvaringar og tips hindrar ikkje publisering ({{count}}).",
+    "submit": "Publiser no",
+    "publishing": "Publiserer …",
+    "published": "Aktiviteten er publisert.",
+    "blocked": "Nokre feil manglar framleis grunngjeving. Skriv ei grunngjeving for kvar feil under, eller rett feila i redigeringa.",
+    "changed": "Aktiviteten vart endra medan du sjekka han. Vi har henta resultatet av sjekken på nytt. Sjå over det og prøv igjen.",
+    "invalid": "Ein av feila du grunngav finst ikkje lenger. Vi har henta resultatet av sjekken på nytt. Sjå over det og prøv igjen.",
+    "failed": "Klarte ikkje å publisere. Prøv igjen."
+  },
+  "status": {
+    "draft": "Utkast",
+    "published": "Publisert"
+  },
+  "role": {
+    "owner": "Eigar",
+    "coAuthor": "Medforfattar"
+  },
+  "contentType": {
+    "CoursePresentation": "Kurspresentasjon",
+    "InteractiveVideo": "Interaktiv video",
+    "QuestionSet": "Spørsmålssett",
+    "InteractiveBook": "Interaktiv bok",
+    "Column": "Kolonne",
+    "DragText": "Dra orda",
+    "MultiChoice": "Fleirval",
+    "Blanks": "Fyll inn orda",
+    "ImageHotspots": "Bilete med klikkpunkt",
+    "BranchingScenario": "Forgreina scenario"
+  },
+  "login": {
+    "required": "Du må logge inn for å sjå denne sida.",
+    "action": "Logg inn med Feide",
+    "logout": "Logg ut"
+  },
+  "home": {
+    "intro": "Lag interaktive læringsaktivitetar med H5P, sjekk dei for universell utforming og bruk dei i Canvas.",
+    "signedOut": "Logg inn med Feide for å lage og dele aktivitetar.",
+    "activities": "Aktivitetane dine",
+    "empty": "Du har ingen aktivitetar enno.",
+    "new": "Ny aktivitet",
+    "type": "Type: {{type}}",
+    "role": "Rolle: {{role}}",
+    "updated": "Sist endra {{date}}",
+    "learner": "Du er logga inn som student. Aktivitetane dine finn du i Canvas."
+  },
+  "activity": {
+    "tabsLabel": "Aktiviteten",
+    "tabPlay": "Spel",
+    "tabEdit": "Rediger",
+    "tabCheck": "Sjekk og publiser",
+    "playFrame": "Spel: {{title}}",
+    "editFrame": "Rediger: {{title}}",
+    "unavailable": "Aktiviteten er ikkje tilgjengeleg. Han finst ikkje, eller du har ikkje tilgang til han.",
+    "statusLabel": "Status:",
+    "saved": "Endringane er lagra. Sjekk og publiser er oppdatert.",
+    "checking": "Sjekkar aktiviteten …",
+    "checkFailed": "Klarte ikkje å sjekke aktiviteten. Prøv igjen.",
+    "checkAgain": "Sjekk på nytt",
+    "unpublish": "Gjer om til utkast",
+    "unpublished": "Aktiviteten er eit utkast igjen. Studentar ser han ikkje lenger.",
+    "unpublishFailed": "Klarte ikkje å gjere aktiviteten om til utkast. Prøv igjen.",
+    "publishedNote": "Aktiviteten er publisert. Endringar du lagrar, blir sjekka på nytt før dei blir lagra."
+  },
+  "newActivity": {
+    "title": "Ny aktivitet",
+    "intro": "Vel innhaldstype, fyll ut skjemaet og vel «Lagre». Etter første lagring kjem du til sida for aktiviteten.",
+    "frame": "Lag ny aktivitet",
+    "notAllowed": "Berre tilsette og studentar med forfattarrolle kan lage aktivitetar.",
+    "opening": "Opnar aktiviteten …"
+  },
+  "lti": {
+    "noLaunchTitle": "Opne aktiviteten frå Canvas",
+    "noLaunchBody": "Denne sida verkar berre når du opnar ein aktivitet frå Canvas. Gå tilbake til emnet i Canvas og opne aktiviteten på nytt."
+  },
+  "privacy": {
+    "title": "Personvern i HVL Interaktiv",
+    "intro": "HVL Interaktiv er ei teneste frå Høgskulen på Vestlandet (HVL) for interaktive læringsaktivitetar. HVL har ansvaret for opplysningane. Her kan du lese kva vi lagrar, kvifor, kor lenge og kven som ser kva.",
+    "learnersHeading": "Kva vi lagrar om deg som student",
+    "learners1": "Vi lagrar ikkje namnet ditt, e-postadressa di, Feide-ID-en din eller fødselsnummeret ditt.",
+    "learners2": "Du får ein kode i staden for namn. Koden blir rekna ut frå innlogginga di med ein hemmeleg nøkkel for kvart studieår, og han seier ikkje åleine kven du er.",
+    "learners3": "Vi lagrar svara du har gitt så langt i ein aktivitet, slik at du kan halde fram der du slapp.",
+    "learners4": "Vi lagrar korte hendingar frå aktivitetane, til dømes at du svarte på eit spørsmål, kor mange poeng du fekk og kor lang tid du brukte.",
+    "whyHeading": "Kvifor vi lagrar det",
+    "why1": "Slik at du kan halde fram der du slapp, og slik at lærarane kan sjå kva studentgruppa strevar med og planleggje undervisninga etter det.",
+    "why2": "Når ein aktivitet er ei oppgåve med poeng i Canvas, sender vi poenga til Canvas. Poenga er formative og ikkje eksamensgrunnlag.",
+    "why3": "HVL behandlar opplysningane fordi undervisning er ei oppgåve i allmenta si interesse (personvernforordninga artikkel 6 nr. 1 bokstav e).",
+    "howLongHeading": "Kor lenge vi lagrar det",
+    "howLong1": "Svar, hendingar og koden din blir sletta 30 dagar etter at studieåret er slutt. Då blir òg nøkkelen for det studieåret øydelagd, så det som er igjen, kan ikkje koplast til deg.",
+    "howLong2": "Etter det tek vi berre vare på samla tal for grupper på minst 5 studentar.",
+    "howLong3": "Loggane til tenesta inneheld ingen personopplysningar og blir sletta etter 30 dagar.",
+    "whoHeading": "Kven ser kva",
+    "who1": "Lærarar ser berre samla resultat for grupper på minst 5 studentar. Ei gruppe med færre enn 5 blir vist som «< 5». Ingen lærar kan sjå svara til ein einskild student.",
+    "who2": "Poeng frå ei oppgåve med poeng ser lærarane dine i karakterboka i Canvas, slik dei ser andre oppgåver.",
+    "who3": "Administratorar ved HVL ser berre data gjennom ei støttehandling som blir logga.",
+    "staffHeading": "For deg som lagar aktivitetar",
+    "staff1": "Vi lagrar namnet og e-postadressa di, slik at medforfattarar kan finne deg, og kva aktivitetar du eig eller er medforfattar av.",
+    "staff2": "Vi hugsar kva meldingar du har lukka. Innloggingar blir logga utan IP-adressa i klartekst, og loggen blir sletta etter 2 år.",
+    "safetyHeading": "Lagring og tryggleik",
+    "safety1": "Opplysningane er lagra kryptert i Noreg eller EØS.",
+    "safety2": "Sidene hentar ikkje skript, skrifter eller sporing frå andre nettstader. Unntaket er video frå ei videoteneste HVL har godkjent, til dømes Panopto, når ein lærar har lagt inn ein slik video.",
+    "rightsHeading": "Rettane dine",
+    "rights1": "Du kan be om innsyn i, retting av og sletting av opplysningar om deg. Ta kontakt med personvernombodet ved HVL."
   },
   "help": {
     "title": "Hjelp",
-    "intro": "Her finn du hjelp til å lage og bruke aktivitetar i HVL Interaktiv."
+    "intro": "Her finn du hjelp til å lage og bruke aktivitetar i HVL Interaktiv.",
+    "createHeading": "Lage ein aktivitet",
+    "create1": "Logg inn med Feide på startsida.",
+    "create2": "Vel «Ny aktivitet».",
+    "create3": "Vel ein innhaldstype, til dømes Fleirval eller Interaktiv video, og fyll ut skjemaet.",
+    "create4": "Vel «Lagre». Etter første lagring kjem du til sida for aktiviteten, der du kan spele han av og redigere vidare.",
+    "checkHeading": "Sjekke og publisere",
+    "check1": "Opne aktiviteten og vel fana «Sjekk og publiser».",
+    "check2": "Sjekken viser feil, åtvaringar og tips om universell utforming og læringsdesign. Vel «Gå til feltet» for å rette noko i redigeringa.",
+    "check3": "Feil hindrar publisering. Rett feilen, eller skriv kvifor du publiserer likevel, til dømes at tekstinga blir laga. Grunngjevinga gjeld i 14 dagar.",
+    "check4": "Åtvaringar og tips hindrar ikkje publisering. Studentar ser berre publiserte aktivitetar.",
+    "canvasHeading": "Bruke aktiviteten i Canvas",
+    "canvas1": "Legg aktiviteten til i emnet ditt i Canvas med verktøyet HVL Interaktiv. Når du opnar han frå Canvas, ser du fanene «Spel» og, om du kan redigere han, «Rediger».",
+    "canvas2": "Poeng i H5P blir rekna ut i nettlesaren. Bruk dei til undervegsvurdering, ikkje til eksamen eller karakterar.",
+    "accessHeading": "Universell utforming",
+    "access1": "Aktivitetane skal kunne brukast med tastatur og skjermlesar. Rette svar blir merkte med «✓ Riktig:» og feil svar med «✗ Feil:», ikkje berre med farge.",
+    "moreHeading": "Meir hjelp",
+    "more1": "Spør Avdeling for utvikling av læring og undervisning (ALU) ved HVL om læringsdesign og universell utforming.",
+    "more2": "Spør TeCopp om Canvas, og IT-brukarstøtta ved HVL om innlogging og tekniske problem."
   },
   "notFound": {
     "title": "Fann ikkje sida",

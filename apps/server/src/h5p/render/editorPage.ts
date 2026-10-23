@@ -22,6 +22,8 @@ import { escapeHtml, scriptJson } from './scriptJson.js';
 
 /** Where the H5P router serves ./client/editorPage.js. */
 export const EDITOR_BOOT_SCRIPT = '/h5p/boot/editorPage.js';
+/** Where the H5P router serves ./client/editorFields.js, which the boot script needs ("Gå til feltet"). */
+export const EDITOR_FIELDS_SCRIPT = '/h5p/boot/editorFields.js';
 
 /** What the editor page is built from. */
 export interface EditorPageInput {
@@ -57,6 +59,8 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
       saving: t('page.editor.saving', {}, language),
       saved: t('page.editor.saved', {}, language),
       failed: t('page.editor.saveFailed', {}, language),
+      // WHY: `{{count}}` stays literal (no param given); editorPage.js fills in the number of open errors.
+      blockedErrors: t('page.editor.blockedErrors', {}, language),
     },
   };
   return [
@@ -79,6 +83,7 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
     `<p><button type="button" id="hvl-editor-save" disabled>${escapeHtml(t('page.editor.save', {}, language))}</button></p>`,
     '<p id="hvl-editor-status" role="status" aria-live="polite"></p>',
     '</main>',
+    `<script src="${EDITOR_FIELDS_SCRIPT}"></script>`,
     `<script src="${EDITOR_BOOT_SCRIPT}"></script>`,
     '</body>',
     '</html>',
