@@ -21,6 +21,7 @@ export default tseslint.config(
       '**/dist/**',
       '**/coverage/**',
       'docs/site/**',
+      'docs/api/**',
       'tools/spec-site/vendor/**',
       'apps/server/src/generated/**',
       'apps/server/h5p/**',

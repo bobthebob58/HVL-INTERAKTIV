@@ -22,8 +22,19 @@ describe('[NFR-004] CI runs the maintainability gates', () => {
   });
 
   it('[NFR-004] runs the traceability check for every finished session', () => {
-    expect(runs('npm run spec:trace -- --check --done-through=S1')).toBe(true);
+    expect(runs('npm run spec:trace -- --check --done-through=S2')).toBe(true);
     expect(runs('npm run spec:site -- --check')).toBe(true);
+  });
+
+  it('[NFR-004] builds the API documentation with warnings as errors', () => {
+    expect(runs('npm run docs:api')).toBe(true);
+    const typedoc = JSON.parse(readFileSync(`${root}apps/server/typedoc.json`, 'utf8'));
+    expect(typedoc.treatWarningsAsErrors).toBe(true);
+  });
+
+  it('[H5P-003] never contacts the H5P Hub and installs the browser for the SVG rendering test', () => {
+    expect(ci).not.toMatch(/hub:check|fetch-seed-packages|hub-api\.h5p\.org/);
+    expect(runs('playwright-core install --with-deps chromium')).toBe(true);
   });
 
   it('[NFR-004] every npm script CI calls exists', () => {

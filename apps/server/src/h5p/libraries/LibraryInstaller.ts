@@ -20,6 +20,11 @@ import { sha256File } from './sha256Sums.js';
 
 /** The part of Lumi's PackageImporter the installer uses. */
 export interface LibraryPackageImporter {
+  /**
+   * Installs or updates the libraries in a package; content in it is ignored.
+   * @param packagePath - Absolute path of the `.h5p` file.
+   * @returns One result per new or patched library (unchanged ones are left out).
+   */
   installLibrariesFromPackage(packagePath: string): Promise<ILibraryInstallResult[]>;
 }
 
@@ -50,7 +55,7 @@ export class LibraryInstaller {
    * @param packagePath - Absolute path of the `.h5p` file.
    * @param fileName - Its name in SHA256SUMS (for messages).
    * @param expectedSha256 - The pinned hash.
-   * @returns What Lumi installed, updated or left unchanged.
+   * @returns One result per new or patched library.
    * @throws ZipRejectedError for an unsafe archive; PackageHashMismatchError when the hash differs.
    */
   async install(

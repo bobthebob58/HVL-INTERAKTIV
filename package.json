@@ -30,7 +30,8 @@
     "h5p:fetch-core": "bash tools/h5p-core/fetchCoreClients.sh",
     "db:migrate": "npm run db:migrate --workspace apps/server",
     "seed:libraries": "npm run seed:libraries --workspace apps/server --",
-    "hub:check": "npm run hub:check --workspace apps/server"
+    "hub:check": "npm run hub:check --workspace apps/server",
+    "docs:api": "npm run docs:api --workspace apps/server"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

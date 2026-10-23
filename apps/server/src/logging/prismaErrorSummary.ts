@@ -13,7 +13,7 @@
  */
 
 /** Fields of a Prisma error that never contain query values. */
-interface PrismaErrorShape {
+export interface PrismaErrorShape {
   name: string;
   code?: unknown;
   clientVersion?: unknown;

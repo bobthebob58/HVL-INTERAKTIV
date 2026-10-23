@@ -23,7 +23,8 @@ export type Locale = (typeof LOCALES)[number];
 /** The default locale (Nynorsk). */
 export const DEFAULT_LOCALE: Locale = 'nn';
 
-type Leaves<T, P extends string = ''> = {
+/** The dotted paths to every string in a nested object type, e.g. `error.generic`. */
+export type Leaves<T, P extends string = ''> = {
   [K in keyof T & string]: T[K] extends string ? `${P}${K}` : Leaves<T[K], `${P}${K}.`>;
 }[keyof T & string];
 

@@ -51,10 +51,22 @@ export class LanguageFallbackLibraryStorage implements ILibraryStorage {
     if (listAddons) this.listAddons = listAddons;
   }
 
+  /**
+   * Reads a library file as text; `language/nn.json` falls back to nb, then to the original request.
+   * @param library - The library.
+   * @param file - Path inside the library.
+   * @returns The file's text.
+   */
   async getFileAsString(library: ILibraryName, file: string): Promise<string> {
     return this.inner.getFileAsString(library, await this.fileToRead(library, file));
   }
 
+  /**
+   * Reads a library file as JSON, with the same language fallback as `getFileAsString`.
+   * @param library - The library.
+   * @param file - Path inside the library.
+   * @returns The parsed file.
+   */
   // WHY: Lumi reads language files as strings, but a JSON read of nn.json must give the same answer.
   async getFileAsJson(library: ILibraryName, file: string): Promise<unknown> {
     return this.inner.getFileAsJson(library, await this.fileToRead(library, file));

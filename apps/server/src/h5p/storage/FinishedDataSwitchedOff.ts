@@ -14,7 +14,8 @@
  */
 import type { ContentId, IContentUserDataStorage, IFinishedUserData, IUser } from '@lumieducation/h5p-server';
 
-type FinishedDataMethods = Pick<
+/** The finished-data part of Lumi's `IContentUserDataStorage`. */
+export type FinishedDataMethods = Pick<
   IContentUserDataStorage,
   | 'createOrUpdateFinishedData'
   | 'getFinishedDataByContentId'

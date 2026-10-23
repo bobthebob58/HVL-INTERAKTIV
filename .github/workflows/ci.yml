@@ -1,6 +1,7 @@
 # CI: the Session gate from docs/EVALUATOR-GUIDE.md §5, on every push to main and every pull request.
 # Requirements: NFR-004 (typecheck, lint, tests, traceability), SEC-007 (pins, audit), NFR-005 (licences),
 # DATA-001 (data inventory), H5P-001 (verified H5P client files and the boot check), D-023 (services).
+# CI never contacts the H5P Hub: content types come from the pinned seed packages (H5P-003, D-041).
 name: CI
 
 on:
@@ -59,6 +60,8 @@ jobs:
         run: npm run h5p:fetch-core
       - name: Generate the Prisma client and apply migrations
         run: npm run db:generate --workspace apps/server && npm run db:migrate
+      - name: Install Chromium for the browser tests (SEC-001 SVG rendering)
+        run: npx playwright-core install --with-deps chromium
       - name: Typecheck
         run: npm run typecheck
       - name: Lint
@@ -79,8 +82,10 @@ jobs:
         run: npm run privacy:inventory-check
       - name: Tests (unit and integration)
         run: npm test
-      - name: Traceability (every S1 MUST has a test)
-        run: npm run spec:trace -- --check --done-through=S1
+      - name: API documentation builds without warnings (TypeDoc, DOC-002)
+        run: npm run docs:api
+      - name: Traceability (every MUST of a finished session has a running test)
+        run: npm run spec:trace -- --check --done-through=S2
       - name: Spec website is up to date
         run: npm run spec:site -- --check
       - name: H5P boot check (H5P-001)

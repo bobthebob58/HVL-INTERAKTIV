@@ -1,0 +1,20 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src"],
+  "entryPointStrategy": "expand",
+  "exclude": ["src/generated/**", "src/**/*Cli.ts", "src/h5p/bootCheck.ts"],
+  "tsconfig": "tsconfig.json",
+  "out": "../../docs/api",
+  "name": "HVL Interaktiv server",
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "treatWarningsAsErrors": true,
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": true
+  },
+  "requiredToBeDocumented": ["Class", "Function", "Interface", "TypeAlias", "Enum", "Variable", "Method"],
+  "intentionallyNotExported": ["nn", "PrismaClient", "H5PUserData"]
+}
