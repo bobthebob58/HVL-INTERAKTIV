@@ -89,8 +89,9 @@ Operational rules:
 - ltijs 7 does NOT validate the deployment ID, and `getLaunchContext(ltik)` ignores `platform.active`: both are our
   checks (D-050, D-051). `LaunchContext.contextId` is the ID-token record, not the course (`idToken.launch.context.id`).
   Never call `Provider.listen()` (it installs a SIGINT `process.exit`); ltijs runs on our router.
-- Playwright 1.56.1 turns off Chromium's third-party storage partitioning; third-party-cookie tests must assert a
-  canary that blocking is really on (D-065).
+- Playwright 1.56.1 turns off Chromium's third-party storage partitioning, and its default headless shell ignores
+  cookie blocking: use full Chromium (`channel: 'chromium'`) with `--test-third-party-cookie-phaseout` and assert a
+  canary (D-065, `test/support/thirdPartyCookies.ts`). A blocked frame's `localStorage` getter throws.
 - H5P sub-content is nested in `params` as `{ library: "H5P.Name 1.2", params, subContentId }`. Validator rules must walk it recursively.
 - `#FF9E1B` (orange) is 2.07 : 1 on white. Never use it alone as a focus or state indicator (D-007).
 

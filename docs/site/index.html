@@ -5485,10 +5485,15 @@ ioredis load at import. <code>getLaunchContext(ltik)</code> does not check wheth
 (<a class="req-ref" href="#r-LTI-001"><code>LTI-001</code></a> wording); it caches only public JWKS and keysets. ltijs&#39;s own HTML gets a CSP with hashes of its
 inline scripts. Its default handlers are replaced by friendly pages. Our ltik resolver also checks
 <code>platform.active</code>. ltijs&#39;s OIDC <em>recovery token</em> (at most 10 minutes, grants nothing on its own) may sit in the
-frame&#39;s partitioned localStorage or in LTI Platform Storage; the ltik never does.</li>
+frame&#39;s partitioned localStorage (stock Chrome) or, where storage is blocked and <code>localStorage</code> throws, in LTI
+Platform Storage; the ltik never does.</li>
 <li><strong>Consequences:</strong> mongoose, mongodb and ioredis are installed and loaded but never connected; an upstream issue
 asks ltijs to load them lazily. ESLint forbids importing <code>RedisCacheManager</code>, <code>ExpressHttpHandler</code> and
-<code>MongoLegacyDatabaseManager</code>.</li>
+<code>MongoLegacyDatabaseManager</code>. The S3 probes (<code>test/lti/upstream/ltijsProvider.test.ts</code>) also showed: ltijs
+copies the claims for the handler only after <code>saveIdToken</code> returns, so our storage filters a copy, never its
+argument; a resumed context (<code>getLaunchContext</code>) has only the stored claims, so the claim allowlist (D-052)
+must keep everything a later request reads (e.g. Deep Linking settings); and our handler must pass Express&#39;s
+lower-case <code>req.headers</code> through, or ltijs skips its <code>Sec-Fetch-Site</code> check without an error.</li>
 </ul>
 <h3 id="decisions--d-051--lti-platforms-and-deployments-from-lti_platforms-deployment-ids-checked-by-us" tabindex="-1">D-051 · LTI platforms and deployments from <code>LTI_PLATFORMS</code>; deployment IDs checked by us</h3>
 <ul>
@@ -5641,7 +5646,13 @@ S6 (they need S4–S6 features). The S3 gate needs the cookie-less iframe e2e (<
 <li><strong>Decision:</strong> In S3 <code>npm run test:e2e</code> runs three Chromium flows: launch → play → resume in a cross-site iframe
 with third-party cookies blocked, the Deep Linking round trip, and portal sharing with logout. J1–J5 stay in S6;
 the EVALUATOR-GUIDE is corrected.</li>
-<li><strong>Consequences:</strong> The e2e tests use the mock platform and run in CI.</li>
+<li><strong>Consequences:</strong> The e2e tests use the mock platform and run in CI. The S3 probe
+(<code>test/browser/thirdPartyCookies.browser.test.ts</code>) fixed the mechanism: full Chromium (<code>channel: &#39;chromium&#39;</code>,
+not the headless shell, which ignores it) with <code>--test-third-party-cookie-phaseout</code>, checked by a canary. CDP
+<code>Network.setCookieControls</code> is not used: in full Chromium it misses a site-isolated frame after its first load.
+With Playwright&#39;s defaults the blocked frame&#39;s <code>localStorage</code> throws, which exercises ltijs&#39;s Platform Storage
+fallback; <code>partitionedStorage: true</code> restores stock Chrome&#39;s partitioned storage. CI must keep installing full
+Chromium (never <code>--only-shell</code>).</li>
 </ul>
 <h3 id="decisions--d-066--friendly-not-available-pages-and-visibility-only-sharing-until-s4" tabindex="-1">D-066 · Friendly &quot;not available&quot; pages and visibility-only sharing until S4</h3>
 <ul>
