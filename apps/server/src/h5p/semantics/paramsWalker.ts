@@ -12,6 +12,12 @@
  *     `{ library: "H5P.Name 1.2", params, metadata, subContentId }` whose params use that library's semantics.
  *   - `container[key]` is the visited value at the moment of the visit.
  *   - Nesting deeper than `MAX_LIBRARY_DEPTH` libraries is refused instead of walked (no stack exhaustion).
+ *   - A value whose JSON type Lumi's ContentScanner and SemanticsEnforcer cannot read is refused with 400
+ *     `hvl:invalid-params` (they would throw a TypeError, a 500): text must be a string, number or null; a list
+ *     an array; a group an object (not null when it has one field); a library entry an object whose `params` is
+ *     an object once `library` is set; a file or image an object whose `path` (and `originalImage.path`) is a
+ *     string or null; video and audio sources objects with such a path. Select, number and boolean values are
+ *     never refused for their type: Lumi neither walks nor changes them.
  * Collaborators: ./SubContentPolicy.ts, Lumi's LibraryManager.getSemantics (the semantics lookup).
  * Tests: apps/server/test/h5p/semantics/paramsWalker.test.ts
  */
@@ -46,6 +52,34 @@ type Container = Record<string, unknown> | unknown[];
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+const pathFits = (file: Record<string, unknown>): boolean =>
+  file.path === undefined || file.path === null || typeof file.path === 'string';
+
+const fileFits = (file: unknown): boolean =>
+  isObject(file) && pathFits(file) && (!isObject(file.originalImage) || pathFits(file.originalImage));
+
+/** Whether a value has the JSON type Lumi's ContentScanner and SemanticsEnforcer assume for its field. */
+function fitsField(semantics: ISemanticsEntry, value: unknown): boolean {
+  switch (semantics.type) {
+    case 'text':
+      return typeof value === 'string' || typeof value === 'number' || value === null;
+    case 'list':
+      return Array.isArray(value);
+    case 'group':
+      return (semantics.fields ?? []).length === 1 ? value !== null : isObject(value);
+    case 'library':
+      return isObject(value) && (value.library === undefined || isObject(value.params));
+    case 'image':
+    case 'file':
+      return fileFits(value);
+    case 'video':
+    case 'audio':
+      return !Array.isArray(value) || value.every(fileFits);
+    default:
+      return true;
+  }
+}
+
 class Walk {
   constructor(
     private readonly getSemantics: SemanticsLookup,
@@ -68,6 +102,8 @@ class Walk {
   ) {
     const value = (container as Record<string | number, unknown>)[key];
     if (value === undefined) return;
+    // WHY: Lumi's scanners assume these types and throw a TypeError (a 500) on anything else.
+    if (!fitsField(semantics, value)) throw new H5pError('hvl:invalid-params', { path }, 400);
     const fields = semantics.fields ?? [];
     // WHY: H5P stores a group with one field as that field's value, not as an object (see Lumi's ContentScanner).
     const single = fields.length === 1 ? fields[0] : undefined;

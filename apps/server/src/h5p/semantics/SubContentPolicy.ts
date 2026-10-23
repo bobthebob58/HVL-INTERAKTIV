@@ -13,14 +13,16 @@
  *   - Text that is a list item is sanitised with Lumi's rules. The content's metadata, and everything the
  *     "Rights of use" dialog renders anywhere in the parameters (metadata, copyright, file paths, alt texts),
  *     are cleaned by ./rightsOfUse.ts; an unsafe file path is refused with 400 `hvl:unsafe-file-path`.
+ *   - Content nested deeper than ./nestingDepth.ts allows is refused (400) before anything else runs.
  *   - The parameters and metadata are changed in place; nothing else is.
- * Collaborators: ./paramsWalker.ts, ./libraryReferences.ts, ./lumiTextSanitizer.ts, ./rightsOfUse.ts,
+ * Collaborators: ./paramsWalker.ts, ./nestingDepth.ts, ./libraryReferences.ts, ./lumiTextSanitizer.ts, ./rightsOfUse.ts,
  *   ./removeDragQuestion.ts, ../HvlH5PEditor.ts.
  * Tests: apps/server/test/h5p/semantics/SubContentPolicy.test.ts, apps/server/test/h5p/semantics/rightsOfUse.test.ts
  */
 import { H5pError, type ILibraryName, type LibraryManager } from '@lumieducation/h5p-server';
 import { LumiTextSanitizer } from './lumiTextSanitizer.js';
 import { findLibraryReferences } from './libraryReferences.js';
+import { assertNestingDepth } from './nestingDepth.js';
 import { walkParams, type ParamsVisit } from './paramsWalker.js';
 import { sanitizeRightsOfUse } from './rightsOfUse.js';
 import { EXCLUDED_SUB_CONTENT, optionMachineName } from './removeDragQuestion.js';
@@ -52,6 +54,9 @@ export class SubContentPolicy {
     metadata: unknown,
     mainLibrary: ILibraryName,
   ): Promise<void> {
+    // WHY: Lumi's own walks after ours are recursive; refusing deep content first avoids a stack overflow (500).
+    assertNestingDepth(params);
+    assertNestingDepth(metadata);
     this.text.sanitizeMetadata(metadata);
     const reached = new WeakSet<object>();
     await walkParams(
@@ -73,7 +78,9 @@ export class SubContentPolicy {
       if (typeof value !== 'object' || value === null) return;
       const entry = value as Record<string, unknown>;
       if (entry.library === undefined) return; // WHY: the editor leaves empty entries; Lumi removes them.
-      if (typeof entry.library !== 'string') throw notAllowed(String(entry.library));
+      // WHY: String() throws on an object from JSON whose `toString` is not a function (500 instead of 403).
+      if (typeof entry.library !== 'string')
+        throw notAllowed(typeof entry.library === 'object' ? '[object]' : String(entry.library));
       const offered = (semantics.options ?? []).map((o) =>
         typeof o === 'string' ? o : (o as { name?: string })?.name,
       );

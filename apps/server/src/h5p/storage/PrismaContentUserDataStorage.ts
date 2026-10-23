@@ -22,6 +22,7 @@
 import type { ContentId, IContentUserData, IContentUserDataStorage, IUser } from '@lumieducation/h5p-server';
 import type { Database } from '../../infra/prismaClient.js';
 import { FinishedDataSwitchedOff } from './FinishedDataSwitchedOff.js';
+import { assertStorableText } from './storableText.js';
 import {
   NO_CONTEXT,
   isContentUuid,
@@ -63,6 +64,7 @@ export class PrismaContentUserDataStorage extends FinishedDataSwitchedOff implem
     }
     // WHY: h5p.js always posts a JSON string; storing it as one JSON string value needs no migration (D-038).
     if (typeof userData.userState !== 'string') throw new TypeError('content user state must be a string');
+    assertStorableText(userData.userState);
     const values = { data: userData.userState, preload: userData.preload, invalidate: userData.invalidate };
     await this.db.h5PUserData.upsert({
       where: { contentId_subContentId_dataType_learnerKey_contextId: key },

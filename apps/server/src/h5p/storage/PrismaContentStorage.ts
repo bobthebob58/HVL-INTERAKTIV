@@ -25,6 +25,7 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import type { Database } from '../../infra/prismaClient.js';
 import { countLibraryUsage } from './contentUsage.js';
 import type { S3ContentFileStore } from './S3ContentFileStore.js';
+import { assertStorableText } from './storableText.js';
 import { isContentUuid } from '../contentIds.js';
 
 const json = (value: unknown) => value as Prisma.InputJsonValue;
@@ -47,6 +48,7 @@ export class PrismaContentStorage implements IContentStorage {
     user: IUser,
     contentId?: ContentId,
   ): Promise<ContentId> {
+    assertStorableText(content, metadata);
     const data = {
       mainLibrary: metadata.mainLibrary,
       title: metadata.title,

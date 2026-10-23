@@ -10,7 +10,8 @@
  *   - Only `h5p.json` and `<folder>/library.json` (each at most `MAX_MANIFEST_BYTES`) and `content/content.json`
  *     (at most the upload limit) are read.
  *   - A package without a readable `h5p.json` naming a main library is refused as "not an H5P package".
- *   - A file reference in content.json that leaves `content/` is refused (./contentFileReferences.ts).
+ *   - A file reference in content.json that leaves `content/` is refused (./contentFileReferences.ts), and so is
+ *     content.json nested deeper than Lumi's recursive scanners can walk (../semantics/nestingDepth.ts).
  * Collaborators: ../../security/zipEntryGuard.ts (zip reader), ./contentFileReferences.ts,
  *   ./packageLibraryCheck.ts, ../HvlH5PEditor.ts, ./LibraryInstaller.ts.
  * Tests: apps/server/test/h5p/libraries/packageManifest.test.ts
@@ -20,6 +21,7 @@ import type yauzl from 'yauzl';
 import type { ILibraryName } from '@lumieducation/h5p-server';
 import { openZip, readEntries, ZipRejectedError } from '../../security/zipEntryGuard.js';
 import { MAX_FILE_SIZE } from '../H5pConfigFactory.js';
+import { assertNestingDepth } from '../semantics/nestingDepth.js';
 import { assertContentFilesInside, contentFilePaths } from './contentFileReferences.js';
 
 /** Largest manifest file read (library.json and h5p.json are a few kilobytes). */
@@ -88,9 +90,11 @@ export async function readPackageManifest(path: string): Promise<PackageManifest
     for await (const entry of readEntries(zip)) {
       const name = entry.fileName.replace(/\\/g, '/');
       if (name === 'h5p.json') h5pJson = parse(await readText(zip, entry));
-      else if (name === 'content/content.json')
-        assertContentFilesInside(contentFilePaths(parse(await readText(zip, entry, MAX_FILE_SIZE))));
-      else if (/^[^/]+\/library\.json$/.test(name)) {
+      else if (name === 'content/content.json') {
+        const content = parse(await readText(zip, entry, MAX_FILE_SIZE));
+        assertNestingDepth(content);
+        assertContentFilesInside(contentFilePaths(content));
+      } else if (/^[^/]+\/library\.json$/.test(name)) {
         const library = toLibrary(parse(await readText(zip, entry)));
         if (library) libraries.push(library);
       }

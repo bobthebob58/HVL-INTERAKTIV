@@ -14,6 +14,7 @@ const SEMANTICS: Record<string, ISemanticsEntry[]> = {
     { name: 'questions', type: 'list', field: { name: 'question', type: 'text' } },
     { name: 'wrapped', type: 'group', fields: [{ name: 'only', type: 'text' }] },
     { name: 'items', type: 'list', field: { name: 'item', type: 'library', options: ['H5P.Leaf 1.0'] } },
+    { name: 'media', type: 'image' },
   ],
   'H5P.Leaf': [{ name: 'text', type: 'text' }],
   'H5P.Loop': [{ name: 'next', type: 'library', options: ['H5P.Loop 1.0'] }],
@@ -82,13 +83,22 @@ describe('[SEC-008] walking parameters', () => {
     });
   });
 
-  it('[SEC-008] ignores values whose shape does not match the semantics', async () => {
-    const odd = {
-      title: 5,
-      questions: 'not a list',
-      wrapped: { wrapped: 'x' },
-      items: [{ library: 7 }, null],
-    };
-    await expect(visits(odd)).resolves.toBeInstanceOf(Array);
+  it.each([
+    ['a list that is a string', { questions: 'not a list' }],
+    ['a list that is an object', { questions: { a: 'x' } }],
+    ['text that is an array', { title: ['x'] }],
+    ['text that is a boolean', { title: true }],
+    ['a single-field group that is null', { wrapped: null }],
+    ['a library item that is null', { items: [null] }],
+    ['a library item whose params are null', { items: [{ library: 'H5P.Leaf 1.0', params: null }] }],
+    ['an image whose path is a number', { media: { path: 5 } }],
+  ])('[PROD-012] refuses %s with 400 instead of letting Lumi crash with 500', async (_what, odd) => {
+    await expect(visits(odd)).rejects.toMatchObject({ errorId: 'hvl:invalid-params', httpStatusCode: 400 });
+  });
+
+  it('[PROD-012] still accepts numbers and null as text, an empty library entry and an image with paths', async () => {
+    const media = { path: 'images/a.png#tmp', originalImage: { path: 'images/b.png' } };
+    const fine = { title: 5, questions: [null, 3], items: [{ subContentId: 's2' }], media };
+    await expect(visits(fine)).resolves.toBeInstanceOf(Array);
   });
 });
