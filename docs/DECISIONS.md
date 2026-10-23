@@ -443,7 +443,15 @@ loading of one spec per session are kept.
   adds every `library: "H5P.Name 1.2"` value it finds, under any key, to the content's dependencies, so the
   policy refuses any such value the semantics walk did not reach (`semantics/libraryReferences.ts`); and H5P's
   "Rights of use" dialog shows metadata without escaping, so every metadata string is reduced to plain text,
-  `source` is kept only as an http(s) URL, and a field that becomes empty is dropped.
+  `source` is kept only as an http(s) URL, and a field that becomes empty is dropped. The verification pass
+  after that review showed the dialog reads more than the semantics reach: h5p.js `findCopyrights` walks the
+  whole tree, renders every `metadata` and file `copyright` object, and writes an image's `path` and the
+  sub-content's `alt` into `<img src="…" alt="…">`. So `semantics/rightsOfUse.ts` cleans these anywhere in
+  the parameters: metadata and copyright objects become plain text (sanitize-html with no tags, pinned as a
+  direct dependency at the version Lumi uses; Lumi's own default for a field without tags still allows links
+  and tables); a `path` with quotes, angle brackets, control characters or a scheme other than http(s) is
+  refused with 400; and a straight double quote in `alt` becomes `”`, because Lumi's sanitiser runs after ours
+  and turns `&quot;` back into `"`.
 - **Consequences:** The walker (`semantics/paramsWalker.ts`) is reused by the S4 validator.
 
 ### D-040 · Our own page templates with script-safe JSON

@@ -2481,7 +2481,9 @@ xAPI → AGS, pseudonymisation, library install.</li>
 </details>
 <details class="req" id="x-DOC-006" data-area="DOC" data-priority="MUST" data-session="S1" data-status="tested" data-text="doc-006 tests are written to be read - name tests as behaviour, not implementation: `[h5p-006] denies library installation to authors`,
   not `test checkforgeneralaction 2`.
-- use *arrange / act / assert* comments in tests longer than 10 lines.
+- use *arrange / act / assert* comments in tests longer than 10 lines (`// arrange`, `// act`, `// assert`,
+  or `// act and assert` where the steps interleave). `npm run doc:lint` fails on an `it()`/`test()` body of
+  more than 10 lines whose comments do not name its act and assert steps.
 - every fixture directory has a `readme.md` that says what each fixture represents and why it exists
   (e.g. `svg/xxe-external-entity.svg — standalone=&quot;no&quot; with an external entity; must be neutralised`).
 - table-driven tests (`it.each`) are preferred for permission and role matrices, so the table in the
@@ -2490,7 +2492,9 @@ xAPI → AGS, pseudonymisation, library install.</li>
 <div class="req-body"><ul>
 <li>Name tests as behaviour, not implementation: <code>[H5P-006] denies library installation to authors</code>,
 not <code>test checkForGeneralAction 2</code>.</li>
-<li>Use <em>Arrange / Act / Assert</em> comments in tests longer than 10 lines.</li>
+<li>Use <em>Arrange / Act / Assert</em> comments in tests longer than 10 lines (<code>// Arrange</code>, <code>// Act</code>, <code>// Assert</code>,
+or <code>// Act and assert</code> where the steps interleave). <code>npm run doc:lint</code> fails on an <code>it()</code>/<code>test()</code> body of
+more than 10 lines whose comments do not name its Act and Assert steps.</li>
 <li>Every fixture directory has a <code>README.md</code> that says what each fixture represents and why it exists
 (e.g. <code>svg/xxe-external-entity.svg — standalone=&quot;no&quot; with an external entity; must be neutralised</code>).</li>
 <li>Table-driven tests (<code>it.each</code>) are preferred for permission and role matrices, so the table in the
@@ -2969,6 +2973,7 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
   HvlH5PEditor.ts              editor subclass: ten-type filter, save order, package rules  H5P-002, SEC-003 (S2)
   semantics/                   DragQuestion removal, params walker, sub-content policy H5P-002, SEC-008 (S2, D-039)
     libraryReferences.ts           every `library` value Lumi would load            H5P-002, SEC-008 (S2)
+    rightsOfUse.ts                 what the &quot;Rights of use&quot; dialog renders, anywhere SEC-008 (S2, D-039)
   permissions/                 content facts and the rule tables for HvlPermissionSystem  H5P-006 (S2)
   libraries/                   seeder, audited library installer, package manifest checks  H5P-003, H5P-011, SEC-003 (S2, D-042)
     auditBeforeInstall.ts          records planned library changes before Lumi installs  H5P-011 (S2)
@@ -4470,7 +4475,9 @@ xAPI → AGS, pseudonymisation, library install.</li>
 <ul>
 <li>Name tests as behaviour, not implementation: <code>[H5P-006] denies library installation to authors</code>,
 not <code>test checkForGeneralAction 2</code>.</li>
-<li>Use <em>Arrange / Act / Assert</em> comments in tests longer than 10 lines.</li>
+<li>Use <em>Arrange / Act / Assert</em> comments in tests longer than 10 lines (<code>// Arrange</code>, <code>// Act</code>, <code>// Assert</code>,
+or <code>// Act and assert</code> where the steps interleave). <code>npm run doc:lint</code> fails on an <code>it()</code>/<code>test()</code> body of
+more than 10 lines whose comments do not name its Act and Assert steps.</li>
 <li>Every fixture directory has a <code>README.md</code> that says what each fixture represents and why it exists
 (e.g. <code>svg/xxe-external-entity.svg — standalone=&quot;no&quot; with an external entity; must be neutralised</code>).</li>
 <li>Table-driven tests (<code>it.each</code>) are preferred for permission and role matrices, so the table in the
@@ -5246,7 +5253,15 @@ behaviour so we notice when Lumi fixes it. Two gaps found in the S2 review are c
 adds every <code>library: &quot;H5P.Name 1.2&quot;</code> value it finds, under any key, to the content&#39;s dependencies, so the
 policy refuses any such value the semantics walk did not reach (<code>semantics/libraryReferences.ts</code>); and H5P&#39;s
 &quot;Rights of use&quot; dialog shows metadata without escaping, so every metadata string is reduced to plain text,
-<code>source</code> is kept only as an http(s) URL, and a field that becomes empty is dropped.</li>
+<code>source</code> is kept only as an http(s) URL, and a field that becomes empty is dropped. The verification pass
+after that review showed the dialog reads more than the semantics reach: h5p.js <code>findCopyrights</code> walks the
+whole tree, renders every <code>metadata</code> and file <code>copyright</code> object, and writes an image&#39;s <code>path</code> and the
+sub-content&#39;s <code>alt</code> into <code>&lt;img src=&quot;…&quot; alt=&quot;…&quot;&gt;</code>. So <code>semantics/rightsOfUse.ts</code> cleans these anywhere in
+the parameters: metadata and copyright objects become plain text (sanitize-html with no tags, pinned as a
+direct dependency at the version Lumi uses; Lumi&#39;s own default for a field without tags still allows links
+and tables); a <code>path</code> with quotes, angle brackets, control characters or a scheme other than http(s) is
+refused with 400; and a straight double quote in <code>alt</code> becomes <code>”</code>, because Lumi&#39;s sanitiser runs after ours
+and turns <code>&amp;quot;</code> back into <code>&quot;</code>.</li>
 <li><strong>Consequences:</strong> The walker (<code>semantics/paramsWalker.ts</code>) is reused by the S4 validator.</li>
 </ul>
 <h3 id="decisions--d-040--our-own-page-templates-with-script-safe-json" tabindex="-1">D-040 · Our own page templates with script-safe JSON</h3>
