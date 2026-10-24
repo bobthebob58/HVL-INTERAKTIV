@@ -6288,6 +6288,25 @@ scripts the manual tasks and the browser/assistive-technology matrix; HVL/ALU re
 <code>docs/accessibility/results/</code>. The S4 gate lists what remains manual.</li>
 <li><strong>Consequences:</strong> Firefox, Safari, Edge and the screen-reader results stay open until HVL runs the protocol.</li>
 </ul>
+<h3 id="decisions--d-080--h5p-markup-barriers-repaired-in-the-page-where-we-can-registered-where-we-cannot" tabindex="-1">D-080 · H5P markup barriers: repaired in the page where we can, registered where we cannot</h3>
+<ul>
+<li><strong>Context:</strong> <a class="req-ref" href="#r-UD-030"><code>UD-030</code></a> lets CI fail on any serious or critical axe violation on every route and inside each type&#39;s
+iframe. The suite found such violations in H5P&#39;s own markup (player, editor and the content-type list): empty
+links, <code>role=&quot;tab&quot;</code> items inside <code>&lt;li&gt;</code>, inputs without labels, drop zones with <code>aria-label</code> but no role. They come
+from the pinned upstream libraries (D-078), which we do not fork; <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a> already expects known upstream
+limitations to be listed with links.</li>
+<li><strong>Decision:</strong> Barriers that a local, attribute-only change can remove without changing behaviour are repaired at
+run time inside H5P documents by <code>packages/hvl-h5p-theme/src/a11yRepairs.js</code>, loaded like <code>feedbackPrefixes.js</code>
+into player and editor iframes: it adds names, roles and labels, and re-applies them when H5P rebuilds the markup
+(MutationObserver). It never removes H5P&#39;s own handlers, focus order or content. Every barrier the suite still
+finds is an entry in <code>apps/server/a11y/support/upstreamRegister.ts</code>, matched by rule and markup, with the reason and
+a link to the upstream source at the pinned commit; an entry that stops occurring fails the suite, so the register
+cannot hide a fixed problem or a new one. <code>SPEC-DEVIATION</code>: <a class="req-ref" href="#r-UD-030"><code>UD-030</code></a> says CI fails on any serious or critical
+violation; registered upstream violations are reported in every run but do not fail CI. Our own pages (the web app
+and the server-rendered pages) have no registered entries.</li>
+<li><strong>Consequences:</strong> The register is the list for the <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a> conformance report (S6) and for issues to file
+upstream. A library update (D-078) re-runs the suite: a repair that no longer matches shows up as a new failure.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">

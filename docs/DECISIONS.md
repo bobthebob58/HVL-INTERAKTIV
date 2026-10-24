@@ -1175,3 +1175,21 @@ loading of one spec per session are kept.
   scripts the manual tasks and the browser/assistive-technology matrix; HVL/ALU record dated results in
   `docs/accessibility/results/`. The S4 gate lists what remains manual.
 - **Consequences:** Firefox, Safari, Edge and the screen-reader results stay open until HVL runs the protocol.
+
+### D-080 · H5P markup barriers: repaired in the page where we can, registered where we cannot
+- **Context:** `UD-030` lets CI fail on any serious or critical axe violation on every route and inside each type's
+  iframe. The suite found such violations in H5P's own markup (player, editor and the content-type list): empty
+  links, `role="tab"` items inside `<li>`, inputs without labels, drop zones with `aria-label` but no role. They come
+  from the pinned upstream libraries (D-078), which we do not fork; `UD-040` already expects known upstream
+  limitations to be listed with links.
+- **Decision:** Barriers that a local, attribute-only change can remove without changing behaviour are repaired at
+  run time inside H5P documents by `packages/hvl-h5p-theme/src/a11yRepairs.js`, loaded like `feedbackPrefixes.js`
+  into player and editor iframes: it adds names, roles and labels, and re-applies them when H5P rebuilds the markup
+  (MutationObserver). It never removes H5P's own handlers, focus order or content. Every barrier the suite still
+  finds is an entry in `apps/server/a11y/support/upstreamRegister.ts`, matched by rule and markup, with the reason and
+  a link to the upstream source at the pinned commit; an entry that stops occurring fails the suite, so the register
+  cannot hide a fixed problem or a new one. `SPEC-DEVIATION`: `UD-030` says CI fails on any serious or critical
+  violation; registered upstream violations are reported in every run but do not fail CI. Our own pages (the web app
+  and the server-rendered pages) have no registered entries.
+- **Consequences:** The register is the list for the `UD-040` conformance report (S6) and for issues to file
+  upstream. A library update (D-078) re-runs the suite: a repair that no longer matches shows up as a new failure.

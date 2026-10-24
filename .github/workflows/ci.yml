@@ -102,6 +102,17 @@ jobs:
         run: npm test
       - name: End-to-end flows in Chromium with third-party cookies blocked (LTI-003, LTI-005, PROD-006, D-065)
         run: npm run test:e2e
+      - name: Accessibility suite in Chromium (axe WCAG 2.2 AA, keyboard, reflow, motion, target size, lang, first-party; UD-030, D-079)
+        run: npm run test:a11y
+        env:
+          A11Y_REPORT_DIR: a11y-report
+      - name: Keep the accessibility report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report
+          path: a11y-report
+          if-no-files-found: ignore
       - name: API documentation builds without warnings (TypeDoc, DOC-002)
         run: npm run docs:api
       - name: Traceability (every MUST of a finished session has a running test)

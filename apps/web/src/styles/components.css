@@ -1,5 +1,6 @@
 /*
- * components — the shared classes of the web app's chrome: the skip link, the site header and the two button styles.
+ * components — the shared classes of the web app's chrome: the skip link, the site header, stand-alone links and
+ * the two button styles.
  *
  * Why: these few patterns repeat on every page and need rules Tailwind classes cannot say well (focus-revealed skip
  *      link, a header that is sticky only where there is room, forced-colours borders). Colours come only from the
@@ -82,6 +83,14 @@
     font-weight: 700;
     text-decoration: none;
     cursor: pointer;
+  }
+
+  /* A11Y: WCAG 2.5.8 (UD-005): a link that stands on its own (navigation, a list of activities) is a 24 px tall
+     target, not only the height of its text; links inside a sentence keep the criterion's inline exception. */
+  .link-target {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--hvl-target-min);
   }
 
   .button-primary:disabled,

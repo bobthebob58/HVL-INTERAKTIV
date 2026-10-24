@@ -46,6 +46,9 @@ npm run boot-check --workspace apps/server   # proves the H5P engine would start
 npx vitest run --project server              # unit + integration + browser tests (need the services, Chromium)
 npm run test:e2e                             # three Chromium flows (D-065): cookie-less Canvas iframe launch →
                                              # play → resume, the Deep Linking round trip, portal sharing + logout
+npm run build && npm run test:a11y           # accessibility suite (UD-030, D-079): axe WCAG 2.2 AA, keyboard, reflow, motion,
+                                             # target size, lang, first-party requests; needs the built web app, the real H5P
+                                             # packages and Chromium; run it on its own (about 12 min)
 npm run typecheck
 npm run seed:libraries                       # install the content types from the verified seed packages (offline)
 npm run docs:api                             # browsable API docs into docs/api/ (TypeDoc)
@@ -149,6 +152,8 @@ test database one file at a time.
 | `test/` | Vitest tests; titles start with the requirement ID, e.g. `[DATA-002] …` |
 | `test/support/appTestbed.ts`, `ltiLaunchDriver.ts` | The whole app on a real port with the mock platform pointed at it, and an LTI launch through the real ltijs routes without a browser |
 | `vitest.e2e.config.ts`, `e2e/` | The three Chromium flows of `npm run test:e2e` (D-065); the two Canvas flows run in full Chromium with third-party cookies blocked |
+| `vitest.a11y.config.ts`, `a11y/` | The accessibility suite of `npm run test:a11y` (UD-030); `a11y/support/upstreamRegister.ts` lists the H5P upstream violations it reports but cannot repair |
+| `test/support/realWebApp.ts` | The whole server with the built web app, the ten real H5P types, a signed-in Feide author and LTI launches, for the browser suites |
 | [`../../tools/mock-platform/`](../../tools/mock-platform/README.md) | The mock Feide and mock Canvas that the tests and `npm run mock:platform` use (D-049) |
 
 ## Key flows

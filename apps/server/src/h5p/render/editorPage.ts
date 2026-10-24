@@ -66,6 +66,7 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
       failed: t('page.editor.saveFailed', {}, language),
       // WHY: `{{count}}` stays literal (no param given); editorPage.js fills in the number of open errors.
       blockedErrors: t('page.editor.blockedErrors', {}, language),
+      editorFrameTitle: t('page.editor.frameTitle', {}, language),
     },
   };
   return [

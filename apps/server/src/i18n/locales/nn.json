@@ -102,7 +102,8 @@
       "saving": "Lagrar …",
       "saved": "Lagra.",
       "saveFailed": "Klarte ikkje å lagre. Prøv igjen.",
-      "blockedErrors": "Feil som må rettast eller grunngjevast: {{count}}."
+      "blockedErrors": "Feil som må rettast eller grunngjevast: {{count}}.",
+      "frameTitle": "H5P-redigering: ny aktivitet"
     }
   },
   "deepLink": {

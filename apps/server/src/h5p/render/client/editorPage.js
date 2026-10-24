@@ -74,6 +74,8 @@ function hvliSaveFailureText(status, body, messages) {
     // WHY: where frame storage is blocked, the iframe's H5P scripts need the page's stand-in (h5pStorageGuard.js).
     // They are fetched, so they run after this line.
     var frame = document.querySelector('iframe.h5p-editor-iframe');
+    // A11Y: WCAG 4.1.2: H5P names its iframe after the activity's title, which a new activity does not have yet.
+    if (frame && !frame.getAttribute('title')) frame.setAttribute('title', config.messages.editorFrameTitle);
     if (typeof window.hvliGuardFrameStorage === 'function' && frame)
       window.hvliGuardFrameStorage(frame.contentWindow);
     saveButton.disabled = false;

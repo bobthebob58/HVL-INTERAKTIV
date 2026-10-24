@@ -35,7 +35,9 @@ export function ActivityList({ items }: { readonly items: readonly ContentSummar
       {items.map((item) => (
         <li key={item.id} className="rounded bg-hvl-surface p-4">
           <h3 className="mb-1">
-            <a href={activityPath(item.id)}>{item.title}</a>
+            <a href={activityPath(item.id)} className="link-target">
+              {item.title}
+            </a>
           </h3>
           <p className="m-0 flex flex-wrap items-center gap-x-4 gap-y-1">
             <StatusBadge status={item.status} locale={locale} />

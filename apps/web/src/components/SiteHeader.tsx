@@ -54,11 +54,19 @@ export function SiteHeader({ locale, inCanvas = false }: SiteHeaderProps) {
           <ul className="m-0 flex list-none gap-4 p-0">
             <li>
               {inCanvas ? (
-                <ExternalLink href={HELP_PATH} locale={locale} newTab external={false}>
+                <ExternalLink
+                  href={HELP_PATH}
+                  locale={locale}
+                  newTab
+                  external={false}
+                  className="link-target"
+                >
                   {t('nav.help', locale)}
                 </ExternalLink>
               ) : (
-                <a href={HELP_PATH}>{t('nav.help', locale)}</a>
+                <a href={HELP_PATH} className="link-target">
+                  {t('nav.help', locale)}
+                </a>
               )}
             </li>
           </ul>

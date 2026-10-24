@@ -33,11 +33,19 @@ export function SiteFooter({
         <ul className="m-0 flex list-none flex-wrap gap-4 p-0">
           <li>
             {inCanvas ? (
-              <ExternalLink href={PRIVACY_PATH} locale={locale} newTab external={false}>
+              <ExternalLink
+                href={PRIVACY_PATH}
+                locale={locale}
+                newTab
+                external={false}
+                className="link-target"
+              >
                 {t('nav.privacy', locale)}
               </ExternalLink>
             ) : (
-              <a href={PRIVACY_PATH}>{t('nav.privacy', locale)}</a>
+              <a href={PRIVACY_PATH} className="link-target">
+                {t('nav.privacy', locale)}
+              </a>
             )}
           </li>
         </ul>

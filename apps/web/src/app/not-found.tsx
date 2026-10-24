@@ -24,7 +24,9 @@ export default async function NotFound() {
       <h1>{t('notFound.title', locale)}</h1>
       <p>{t('notFound.body', locale)}</p>
       <p>
-        <Link href={HOME_PATH}>{t('site.home', locale)}</Link>
+        <Link href={HOME_PATH} className="link-target">
+          {t('site.home', locale)}
+        </Link>
       </p>
     </PortalChrome>
   );
