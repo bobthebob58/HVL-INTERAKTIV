@@ -20,7 +20,7 @@ describeWithServices('H5P router', () => {
   afterAll(() => tb.close());
 
   const id = randomUUID();
-  const ACTOR_ROUTES: [string, string][] = [
+  const ACTOR_ROUTES: ['get' | 'post' | 'put' | 'delete', string][] = [
     ['get', '/h5p/ajax?action=content-type-cache'],
     ['post', '/h5p/ajax?action=libraries'],
     ['get', `/h5p/content/${id}/images/a.png`],
@@ -36,9 +36,7 @@ describeWithServices('H5P router', () => {
   // WHY: since S3 the player page sends a browser without a session to Feide login (player.int.test.ts, PROD-004).
 
   it.each(ACTOR_ROUTES)('[H5P-006] %s %s answers 401 without a signed-in person', async (method, path) => {
-    const res = await (request(tb.app) as unknown as Record<string, (p: string) => request.Test>)[method]!(
-      path,
-    );
+    const res = await request(tb.app)[method](path);
     expect(res.status).toBe(401);
     expect(res.body).toEqual({
       success: false,

@@ -51,8 +51,7 @@ export async function launchFromCanvas(
   tamper?: IdTokenTamper,
 ): Promise<DrivenLaunch> {
   const login = await request(app).post('/lti/login').type('form').send(canvas.loginInitiation(spec));
-  const { targetUrl } = embedded(login.text, 'ltijs-login-data');
-  const recoveryToken = embedded(login.text, 'ltijs-login-data').recoveryToken;
+  const { targetUrl, recoveryToken } = embedded(login.text, 'ltijs-login-data');
   if (!targetUrl) throw new Error(`no login data in the ltijs login page (status ${login.status})`);
   const answer = await canvas.authorize(targetUrl);
   if (!('idToken' in answer)) throw new Error(`the mock Canvas refused the login: ${answer.error}`);

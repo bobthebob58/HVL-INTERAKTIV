@@ -42,7 +42,6 @@ export interface TestContentOptions {
   readonly title?: string;
   readonly status?: 'draft' | 'published';
   readonly visibility?: 'private' | 'organisation' | 'feide';
-  readonly params?: object;
   readonly coAuthors?: readonly string[];
 }
 
@@ -95,12 +94,8 @@ export function openApiTestbed(): ApiTestbed {
       return { principal, header: [PRINCIPAL_HEADER, name] as const };
     },
     content: async (ownerUserId, options = {}) => {
-      const {
-        title = 'Quiz',
-        status = 'draft',
-        visibility = 'private',
-        params = { question: 'Kva?' },
-      } = options;
+      const { title = 'Quiz', status = 'draft', visibility = 'private' } = options;
+      const params = { question: 'Kva?' };
       const metadata = {
         title,
         mainLibrary: 'H5P.MultiChoice',
