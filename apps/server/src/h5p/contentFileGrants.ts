@@ -6,6 +6,7 @@
  *      Canvas iframe) nor a query token can authorise them (D-058). The player render, which has passed the
  *      View check, puts a grant into `contentUrl` instead: an HMAC over the activity ID and an expiry, valid for
  *      about 12 hours, which the public file route checks before it reads storage (D-045 moved signed URLs here).
+ *      The editor render, after the Edit check, does the same for the signed-in owner's uploads (D-069).
  * Spec: H5P-007, SEC-004
  * Invariants:
  *   - Format `<keyId>.<expirySeconds>.<base64url HMAC-SHA256(purpose key, "<contentId>|<expirySeconds>")>`, where
@@ -17,7 +18,7 @@
  *     hour and browsers can cache the files.
  *   - Verification accepts only the canonical form, compares signatures in constant time, and refuses a removed
  *     key, an expired grant (expiry ≤ now), an expiry further ahead than any grant this code issues, and a grant
- *     for another activity.
+ *     for another activity (or another owner).
  *   - A grant names no person and carries no token; logs redact it (../logging/redactText.ts).
  * Collaborators: ../security/keys/keyring.ts, ./HvlUrlGenerator.ts, ../http/routes/signedFileRoutes.ts,
  *   ../http/routes/signedUploadRoutes.ts, ./render/editorIntegration.ts, ./createH5pRuntime.ts.
@@ -52,7 +53,7 @@ export type GrantCheck =
 
 const toSeconds = (at: Date): number => Math.floor(at.getTime() / 1000);
 
-/** Issues and verifies content-file grants with the `URL_SIGNING_KEYS` ring. */
+/** Issues and verifies content-file or editor-upload grants with the `URL_SIGNING_KEYS` ring, one purpose per instance. */
 export class ContentFileGrants {
   private readonly keys: ReadonlyMap<string, Buffer>;
   private readonly currentKeyId: string;
@@ -68,24 +69,27 @@ export class ContentFileGrants {
   }
 
   /**
-   * Issues a grant for the files of one activity. Call only after the View check for that activity.
-   * @param contentId - The activity ID, exactly as it appears in the file URL.
+   * Issues a grant for the files of one subject. Call only after the View check on that activity (content files),
+   * or for the signed-in owner after the Edit check (uploads, ./render/editorIntegration.ts).
+   * @param subject - The activity ID for `content-file-url`, or the account ID that owns the uploads for
+   *   `temporary-file-url`, exactly as it appears in the file URL.
    * @param now - The issue time.
    * @returns The grant, safe to put into a URL path segment as it is.
    */
-  issueGrant(contentId: string, now: Date): string {
+  issueGrant(subject: string, now: Date): string {
     const expiry = Math.ceil(toSeconds(now) / HOUR_SECONDS) * HOUR_SECONDS + GRANT_LIFETIME_SECONDS;
-    return `${this.currentKeyId}.${expiry}.${this.sign(this.currentKeyId, contentId, expiry)}`;
+    return `${this.currentKeyId}.${expiry}.${this.sign(this.currentKeyId, subject, expiry)}`;
   }
 
   /**
-   * Checks a grant from a file URL.
+   * Checks a grant from a file or upload URL.
    * @param grant - The grant path segment.
-   * @param contentId - The activity ID from the same URL.
+   * @param subject - The subject from the same URL: the activity ID (`content-file-url`) or the owning account's ID
+   *   (`temporary-file-url`).
    * @param now - The time of the request.
    * @returns `valid` with the expiry (Unix seconds), or the reason for the refusal.
    */
-  verifyGrant(grant: string, contentId: string, now: Date): GrantCheck {
+  verifyGrant(grant: string, subject: string, now: Date): GrantCheck {
     const match = GRANT_PATTERN.exec(grant);
     if (!match) return { valid: false, reason: 'malformed' };
     const [, keyId = '', expiryText = '', signature = ''] = match;
@@ -94,7 +98,7 @@ export class ContentFileGrants {
     const nowSeconds = toSeconds(now);
     if (expiry <= nowSeconds) return { valid: false, reason: 'expired' };
     if (expiry > nowSeconds + MAX_AHEAD_SECONDS) return { valid: false, reason: 'too-far-ahead' };
-    const expected = Buffer.from(this.sign(keyId, contentId, expiry), 'ascii');
+    const expected = Buffer.from(this.sign(keyId, subject, expiry), 'ascii');
     // SECURITY: both sides are 43 ASCII characters here, so the comparison takes the same time for any input.
     if (!timingSafeEqual(Buffer.from(signature, 'ascii'), expected)) {
       return { valid: false, reason: 'wrong-signature' };
@@ -102,9 +106,9 @@ export class ContentFileGrants {
     return { valid: true, expiresAt: expiry };
   }
 
-  private sign(keyId: string, contentId: string, expiry: number): string {
+  private sign(keyId: string, subject: string, expiry: number): string {
     const key = this.keys.get(keyId);
     if (!key) throw new Error(`URL signing key ${keyId} is not in the ring`);
-    return createHmac('sha256', key).update(`${contentId}|${expiry}`, 'utf8').digest('base64url');
+    return createHmac('sha256', key).update(`${subject}|${expiry}`, 'utf8').digest('base64url');
   }
 }

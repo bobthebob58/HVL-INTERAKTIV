@@ -151,8 +151,10 @@ for the set-up, because the impact on a screen-reader user is what the conforman
   confirm that every slide link can be reached and activated both in browse mode and with Tab plus the arrow keys.
 - CoursePresentation in full screen («Fullskjerm»), on the phone (AT-3): the progress bar is H5P's own there, and
   its parts are smaller than 24 px (WCAG 2.5.8). Confirm that every slide can be reached with the side menu («Vis
-  sidemeny») and the previous and next buttons, the equivalent controls D-080 relies on, and that the bar covers no
-  footer control. No automated test opens full screen.
+  sidemeny») and the previous and next buttons, the equivalent controls D-080 relies on, and that the footer's
+  controls lie above the bar, whole, so a tap near their top edge still presses them. The accessibility suite checks
+  this in Chromium at 320, 390 and 640 CSS px (`apps/server/a11y/reflowAndMotion.a11y.test.ts`); this step covers a
+  real phone and its own full screen.
 - Editor, keyboard (WCAG 2.1.1, `UD-006`; axe cannot see these): QuestionSet's editor-mode switch cannot be used by
   keyboard (Enter and Space do nothing; its items have `tabindex="1"`); the vertical-tab buttons open with Space
   only, not Enter; the hotspot position picker works with a pointer only, and its image is decorative. All three are

@@ -987,6 +987,26 @@ loading of one spec per session are kept.
   `replaceState` once more, after Next.js's history hooks are installed, with Next.js's `__NA` marker left out of
   the state, so the router adopts the clean address (`UPSTREAM`, `apps/web/src/features/lti/ltikFromAddress.ts`). A
   browser test refreshes the router and checks the address (`apps/server/test/web/webChrome.browser.int.test.ts`).
+- **Amendment (2026-10-24, second verification V2-ED-1, V2-ED-2, V2-ED-3: «Gå til feltet»):** three corrections.
+  (1) The WEBA11Y-5 amendment's sentence that «Gå til feltet» presses the tour's "I got it" did not hold when the
+  web app posts the path on the editor frame's load event (the first opening of Rediger,
+  `apps/web/src/features/activity/ActivityView.tsx`) in a browser that never closed the tour: BranchingScenario asks
+  for its tour flag with `H5P.getUserData` (a jQuery request) and shows the tour only once answered, which was often
+  after the field had been opened, so the tour made it inert and focus fell to the frame's body. The path is now
+  followed only once no request of BranchingScenario's editor is open (`H5P.jQuery.active`, within the same 20 s),
+  and a tour that still shows after the field was opened is pressed and the path followed again
+  (`apps/server/src/h5p/render/client/editorFields.js`). (2) A path that ends at a list (QuestionSet's `questions`,
+  ImageHotspots' `hotspots`, Column's `content`) has no `field-name-` wrapper; the whole form stood in for it, focus
+  went to the form's first control and nothing was said. The list's own wrapper is now found by the ID of its list
+  element (H5P's ListEditor and VerticalTabs give it `getId()`), and the whole form is never counted as a field's
+  own, so a path that ends there is announced as not reached. The code that opens what hides a field moved to its own
+  file, `apps/server/src/h5p/render/client/editorFieldReveal.js`, served as a boot script before `editorFields.js`
+  (`apps/server/src/http/routes/staticRoutes.ts`, `apps/server/src/h5p/render/editorPage.ts`). (3) A "not reached"
+  status stayed on screen after a later «Gå til feltet» that reached its field (WCAG 4.1.3); each attempt now empties
+  that text first, so a new one is announced again, while a refused save's reason stays
+  (`apps/server/src/h5p/render/client/editorPage.js`). Tests: `apps/server/test/h5p/editorGoToFieldEarly.browser.int.test.ts`
+  (posted on the load event in a fresh browser, four runs; the three list paths; not reached, then reached),
+  `apps/server/test/h5p/render/editorFieldChain.test.ts`.
 
 ### D-070 · Content Security Policy for H5P pages and Next.js pages; no YouTube
 - **Context:** D-039 and `DATA-011` require a script policy without `'unsafe-inline'` on the player page and no
@@ -1229,6 +1249,19 @@ loading of one spec per session are kept.
   (`apps/server/test/h5p/editorBlockedSave.browser.int.test.ts`). The Canvas page has no **Sjekk og publiser** tab
   (`LTI-006`), so in Canvas the editor says `page.editor.blockedSaveCanvas`: fix the errors and save again, or
   explain them on the activity's page in HVL Interaktiv, which needs a Feide login.
+- **Amendment (2026-10-24, second verification V2-ED-4, SEC2-1, V2W-1, V2W-2):** the F3 amendment's refusal texts
+  offered «Grunngje på nytt» for every refused save. Sjekk og publiser checks the stored version, and a refused save
+  stores nothing, so an error that the change itself adds is never listed there and «Grunngje på nytt» cannot explain
+  it; the publish request would refuse a reason for it too. `error.publishedSaveBlocked`, `page.editor.blockedSave`
+  and `page.editor.blockedSaveCanvas` (nn, nb, en) now say so by case: fix the errors and save again; an error that is
+  also in the published version can be explained with «Grunngje på nytt» (a reason holds for 14 days); an error new
+  in the change can be explained only by publishing: in the portal, «Gjer om til utkast», save, and publish with a
+  reason; in Canvas, it must be fixed while the activity is published
+  (`apps/server/test/h5p/render/blockedSaveTexts.test.ts`). On the tab itself, a `hvl:content-changed` answer to the
+  dialog now reloads the activity as well as the findings, so `renew` compares the two of one moment again; and when
+  the control that had focus goes away (**Grunngje på nytt** behind its dialog, **Sjekk på nytt** after a retry that
+  worked), focus moves to the main action instead of `body` (`apps/web/src/features/activity/CheckPanel.tsx`,
+  `apps/web/test/features/CheckPanelFocus.test.tsx`).
 
 ### D-075 · Notice dismissals are stored per user
 - **Context:** `PROD-011` remembers the formative-use notice's dismissal per user; `User` has no preference fields and
@@ -1434,3 +1467,41 @@ loading of one spec per session are kept.
   through 2.5.8's equivalent-control exception, because the side menu and the previous and next buttons, which the
   theme's 24 px rule for buttons covers, reach every slide. No automated test opens full screen; the manual protocol
   (§8) checks it.
+- **Amendment (2026-10-24, second verification V2T-1, V2T-2, V2T-3: CoursePresentation's footer):** the NEW-4
+  amendment above is corrected. Its fix gave the bar room, but the footer stayed 7 % of the player's height (11 to
+  15 px on a phone) with 24 to 29 px controls, so their top lay under the bar's links and the player's
+  `overflow: hidden` cut off their bottom: a pointer reached «Neste side» in 15 × 11 px at 320 CSS px (WCAG 2.5.8,
+  `UD-005`). The footer's middle column (20 %) was also narrower than the slide buttons, and the navigation around
+  them (H5P.Components 1.0, a size container with `overflow: hidden`) cut 7 to 9 px off each. The sentence "checks
+  with a pointer that nothing covers a footer control" was true of one point per control only, and "its parts then
+  cover nothing" in full screen was false: there the bar's 5 to 7 px links lay over the top of the footer's controls,
+  so no control met 2.5.8 itself and the equivalent-control exception did not apply. Now, in a file of its own,
+  `packages/hvl-h5p-theme/src/hvl-h5p-targets.css` (loaded after `hvl-h5p-theme.css`, which keeps the general 24 px
+  rule): outside full screen the footer is at least 24 px too and the player grows by both shortfalls
+  (`padding-bottom: calc(max(0px, 24px - 1.6875%) + max(0px, 24px - 3.9375%))`, 7 % of a 9/16 height being 3.9375 %
+  of the width); the middle column keeps its 20 % but is at least as wide as two buttons, their margins and the slide
+  count; in full screen the footer lies above the bar, so each footer control meets 24 × 24 px itself and they are
+  2.5.8's equivalent controls for the bar's smaller parts. QuestionSet's dot spacing moved to the same file.
+  `apps/server/a11y/support/pointerReach.ts` now tries every pixel of a control and requires the points that reach it
+  to span 24 rows and 24 columns; `apps/server/a11y/reflowAndMotion.a11y.test.ts` runs it at 320 × 640, 640 × 320
+  and 390 × 844, in the page and in full screen, on the slide where both slide buttons work, and
+  `apps/server/a11y/targetSize.a11y.test.ts` measures CoursePresentation's targets at 320 × 640 and 390 × 844. The
+  accessibility suite now moves to CoursePresentation's question slide with a real pointer click on «Neste side»
+  (`apps/server/a11y/support/views.ts`). The manual protocol (§8) still confirms the slides can be reached in full
+  screen on a phone. Remove the rules when a pinned CoursePresentation gives its bar and footer 24 px.
+- **Amendment (2026-10-24, second verification V2T-4):** the register guard (`matchesAnyElement`) accepted an entry
+  that names only the start of a class or id (`class="h5p-`), which also matches a class H5P never writes. It now
+  extends each class or id the pattern starts with an unknown name and treats a match as a catch-all; register
+  entries name their classes whole (the hub entry's `class="h5p-hub-media` is now followed by `[ "]`, the space or quote
+  that ends the name). Tests:
+  `apps/server/a11y/upstreamRegister.a11y.test.ts`.
+- **Amendment (2026-10-24, second verification V2D-5):** `DOC-003` asks an `UPSTREAM` tag for an issue link and
+  when it can go. Two kinds of tag added in S4 had neither. `SPEC-DEVIATION`: as for the repairs (DOC-13 amendment),
+  no issue is filed for them, and the pinned source stands in for the issue link. (a) Workarounds name their removal
+  condition in the tag: the second `replaceState` for Next.js's router (`apps/web/src/features/lti/ltikFromAddress.ts`,
+  until a pinned Next.js no longer writes its start-up `canonicalUrl` back) and the error answer to
+  BranchingScenario's tour flags (`apps/server/src/http/routes/userDataRoutes.ts`, until HVL keeps author UI flags or
+  H5P's editors stop letting the server's answer override localStorage). (b) Tags that record how pinned upstream
+  code works, not a bug (where an editor keeps its widgets, how a tour is shown,
+  `apps/server/src/h5p/render/client/editorFields.js` and `editorFieldReveal.js`), go when a pinned version changes
+  that behaviour; each file's header says so once, and the browser tests in its `Tests:` line then fail.

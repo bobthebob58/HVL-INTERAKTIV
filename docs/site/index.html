@@ -2262,14 +2262,14 @@ addresses, Feide IDs, national ID numbers or raw LTI <code>sub</code> values. Th
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-002">05 Insight and privacy, DATA-002</a> · Data protection</p></div>
 </details>
-<details class="req" id="x-DATA-003" data-area="DATA" data-priority="MUST" data-session="S6" data-status="tested" data-text="data-003 annual retention purge a scheduled job runs on a configured date (default 15 august), for the academic year that has
+<details class="req" id="x-DATA-003" data-area="DATA" data-priority="MUST" data-session="S6" data-status="in code" data-text="data-003 annual retention purge a scheduled job runs on a configured date (default 15 august), for the academic year that has
 ended. it deletes `xapistatement`, `h5puserdata`, `gradesyncjob` and learner `identity` rows older
 than the academic-year boundary plus 30 days, then learner `user` rows that have no `identity` left
 (d-034), and destroys that year's pseudonym secret. only
 aggregate snapshots that already satisfy *k*-suppression are kept, for the *pedagogisk mappe*.
 - **acceptance:** a dry-run mode reports counts without deleting. each run writes an audit event with the counts.
 - **verify:** integration test with time travel.">
-<summary><span class="req-id">DATA-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span> <span class="status" data-status="tested">● Tested</span></summary>
+<summary><span class="req-id">DATA-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>A scheduled job runs on a configured date (default 15 August), for the academic year that has
 ended. It deletes <code>XapiStatement</code>, <code>H5PUserData</code>, <code>GradeSyncJob</code> and learner <code>Identity</code> rows older
 than the academic-year boundary plus 30 days, then learner <code>User</code> rows that have no <code>Identity</code> left
@@ -6150,6 +6150,26 @@ the ltik, and writes it back on every router update (refresh, hot reload); after
 <code>replaceState</code> once more, after Next.js&#39;s history hooks are installed, with Next.js&#39;s <code>__NA</code> marker left out of
 the state, so the router adopts the clean address (<code>UPSTREAM</code>, <code>apps/web/src/features/lti/ltikFromAddress.ts</code>). A
 browser test refreshes the router and checks the address (<code>apps/server/test/web/webChrome.browser.int.test.ts</code>).</li>
+<li><strong>Amendment (2026-10-24, second verification V2-ED-1, V2-ED-2, V2-ED-3: «Gå til feltet»):</strong> three corrections.
+(1) The WEBA11Y-5 amendment&#39;s sentence that «Gå til feltet» presses the tour&#39;s &quot;I got it&quot; did not hold when the
+web app posts the path on the editor frame&#39;s load event (the first opening of Rediger,
+<code>apps/web/src/features/activity/ActivityView.tsx</code>) in a browser that never closed the tour: BranchingScenario asks
+for its tour flag with <code>H5P.getUserData</code> (a jQuery request) and shows the tour only once answered, which was often
+after the field had been opened, so the tour made it inert and focus fell to the frame&#39;s body. The path is now
+followed only once no request of BranchingScenario&#39;s editor is open (<code>H5P.jQuery.active</code>, within the same 20 s),
+and a tour that still shows after the field was opened is pressed and the path followed again
+(<code>apps/server/src/h5p/render/client/editorFields.js</code>). (2) A path that ends at a list (QuestionSet&#39;s <code>questions</code>,
+ImageHotspots&#39; <code>hotspots</code>, Column&#39;s <code>content</code>) has no <code>field-name-</code> wrapper; the whole form stood in for it, focus
+went to the form&#39;s first control and nothing was said. The list&#39;s own wrapper is now found by the ID of its list
+element (H5P&#39;s ListEditor and VerticalTabs give it <code>getId()</code>), and the whole form is never counted as a field&#39;s
+own, so a path that ends there is announced as not reached. The code that opens what hides a field moved to its own
+file, <code>apps/server/src/h5p/render/client/editorFieldReveal.js</code>, served as a boot script before <code>editorFields.js</code>
+(<code>apps/server/src/http/routes/staticRoutes.ts</code>, <code>apps/server/src/h5p/render/editorPage.ts</code>). (3) A &quot;not reached&quot;
+status stayed on screen after a later «Gå til feltet» that reached its field (WCAG 4.1.3); each attempt now empties
+that text first, so a new one is announced again, while a refused save&#39;s reason stays
+(<code>apps/server/src/h5p/render/client/editorPage.js</code>). Tests: <code>apps/server/test/h5p/editorGoToFieldEarly.browser.int.test.ts</code>
+(posted on the load event in a fresh browser, four runs; the three list paths; not reached, then reached),
+<code>apps/server/test/h5p/render/editorFieldChain.test.ts</code>.</li>
 </ul>
 <h3 id="decisions--d-070--content-security-policy-for-h5p-pages-and-nextjs-pages-no-youtube" tabindex="-1">D-070 · Content Security Policy for H5P pages and Next.js pages; no YouTube</h3>
 <ul>
@@ -6390,6 +6410,19 @@ errors in its error summary, each with «Gå til feltet»
 (<code>apps/server/test/h5p/editorBlockedSave.browser.int.test.ts</code>). The Canvas page has no <strong>Sjekk og publiser</strong> tab
 (<a class="req-ref" href="#r-LTI-006"><code>LTI-006</code></a>), so in Canvas the editor says <code>page.editor.blockedSaveCanvas</code>: fix the errors and save again, or
 explain them on the activity&#39;s page in HVL Interaktiv, which needs a Feide login.</li>
+<li><strong>Amendment (2026-10-24, second verification V2-ED-4, SEC2-1, V2W-1, V2W-2):</strong> the F3 amendment&#39;s refusal texts
+offered «Grunngje på nytt» for every refused save. Sjekk og publiser checks the stored version, and a refused save
+stores nothing, so an error that the change itself adds is never listed there and «Grunngje på nytt» cannot explain
+it; the publish request would refuse a reason for it too. <code>error.publishedSaveBlocked</code>, <code>page.editor.blockedSave</code>
+and <code>page.editor.blockedSaveCanvas</code> (nn, nb, en) now say so by case: fix the errors and save again; an error that is
+also in the published version can be explained with «Grunngje på nytt» (a reason holds for 14 days); an error new
+in the change can be explained only by publishing: in the portal, «Gjer om til utkast», save, and publish with a
+reason; in Canvas, it must be fixed while the activity is published
+(<code>apps/server/test/h5p/render/blockedSaveTexts.test.ts</code>). On the tab itself, a <code>hvl:content-changed</code> answer to the
+dialog now reloads the activity as well as the findings, so <code>renew</code> compares the two of one moment again; and when
+the control that had focus goes away (<strong>Grunngje på nytt</strong> behind its dialog, <strong>Sjekk på nytt</strong> after a retry that
+worked), focus moves to the main action instead of <code>body</code> (<code>apps/web/src/features/activity/CheckPanel.tsx</code>,
+<code>apps/web/test/features/CheckPanelFocus.test.tsx</code>).</li>
 </ul>
 <h3 id="decisions--d-075--notice-dismissals-are-stored-per-user" tabindex="-1">D-075 · Notice dismissals are stored per user</h3>
 <ul>
@@ -6601,6 +6634,44 @@ cover nothing, but on a phone they are 5 to 10 px high, below 2.5.8&#39;s size a
 through 2.5.8&#39;s equivalent-control exception, because the side menu and the previous and next buttons, which the
 theme&#39;s 24 px rule for buttons covers, reach every slide. No automated test opens full screen; the manual protocol
 (§8) checks it.</li>
+<li><strong>Amendment (2026-10-24, second verification V2T-1, V2T-2, V2T-3: CoursePresentation&#39;s footer):</strong> the NEW-4
+amendment above is corrected. Its fix gave the bar room, but the footer stayed 7 % of the player&#39;s height (11 to
+15 px on a phone) with 24 to 29 px controls, so their top lay under the bar&#39;s links and the player&#39;s
+<code>overflow: hidden</code> cut off their bottom: a pointer reached «Neste side» in 15 × 11 px at 320 CSS px (WCAG 2.5.8,
+<a class="req-ref" href="#r-UD-005"><code>UD-005</code></a>). The footer&#39;s middle column (20 %) was also narrower than the slide buttons, and the navigation around
+them (H5P.Components 1.0, a size container with <code>overflow: hidden</code>) cut 7 to 9 px off each. The sentence &quot;checks
+with a pointer that nothing covers a footer control&quot; was true of one point per control only, and &quot;its parts then
+cover nothing&quot; in full screen was false: there the bar&#39;s 5 to 7 px links lay over the top of the footer&#39;s controls,
+so no control met 2.5.8 itself and the equivalent-control exception did not apply. Now, in a file of its own,
+<code>packages/hvl-h5p-theme/src/hvl-h5p-targets.css</code> (loaded after <code>hvl-h5p-theme.css</code>, which keeps the general 24 px
+rule): outside full screen the footer is at least 24 px too and the player grows by both shortfalls
+(<code>padding-bottom: calc(max(0px, 24px - 1.6875%) + max(0px, 24px - 3.9375%))</code>, 7 % of a 9/16 height being 3.9375 %
+of the width); the middle column keeps its 20 % but is at least as wide as two buttons, their margins and the slide
+count; in full screen the footer lies above the bar, so each footer control meets 24 × 24 px itself and they are
+2.5.8&#39;s equivalent controls for the bar&#39;s smaller parts. QuestionSet&#39;s dot spacing moved to the same file.
+<code>apps/server/a11y/support/pointerReach.ts</code> now tries every pixel of a control and requires the points that reach it
+to span 24 rows and 24 columns; <code>apps/server/a11y/reflowAndMotion.a11y.test.ts</code> runs it at 320 × 640, 640 × 320
+and 390 × 844, in the page and in full screen, on the slide where both slide buttons work, and
+<code>apps/server/a11y/targetSize.a11y.test.ts</code> measures CoursePresentation&#39;s targets at 320 × 640 and 390 × 844. The
+accessibility suite now moves to CoursePresentation&#39;s question slide with a real pointer click on «Neste side»
+(<code>apps/server/a11y/support/views.ts</code>). The manual protocol (§8) still confirms the slides can be reached in full
+screen on a phone. Remove the rules when a pinned CoursePresentation gives its bar and footer 24 px.</li>
+<li><strong>Amendment (2026-10-24, second verification V2T-4):</strong> the register guard (<code>matchesAnyElement</code>) accepted an entry
+that names only the start of a class or id (<code>class=&quot;h5p-</code>), which also matches a class H5P never writes. It now
+extends each class or id the pattern starts with an unknown name and treats a match as a catch-all; register
+entries name their classes whole (the hub entry&#39;s <code>class=&quot;h5p-hub-media</code> is now followed by <code>[ &quot;]</code>, the space or quote
+that ends the name). Tests:
+<code>apps/server/a11y/upstreamRegister.a11y.test.ts</code>.</li>
+<li><strong>Amendment (2026-10-24, second verification V2D-5):</strong> <a class="req-ref" href="#r-DOC-003"><code>DOC-003</code></a> asks an <code>UPSTREAM</code> tag for an issue link and
+when it can go. Two kinds of tag added in S4 had neither. <code>SPEC-DEVIATION</code>: as for the repairs (DOC-13 amendment),
+no issue is filed for them, and the pinned source stands in for the issue link. (a) Workarounds name their removal
+condition in the tag: the second <code>replaceState</code> for Next.js&#39;s router (<code>apps/web/src/features/lti/ltikFromAddress.ts</code>,
+until a pinned Next.js no longer writes its start-up <code>canonicalUrl</code> back) and the error answer to
+BranchingScenario&#39;s tour flags (<code>apps/server/src/http/routes/userDataRoutes.ts</code>, until HVL keeps author UI flags or
+H5P&#39;s editors stop letting the server&#39;s answer override localStorage). (b) Tags that record how pinned upstream
+code works, not a bug (where an editor keeps its widgets, how a tour is shown,
+<code>apps/server/src/h5p/render/client/editorFields.js</code> and <code>editorFieldReveal.js</code>), go when a pinned version changes
+that behaviour; each file&#39;s header says so once, and the browser tests in its <code>Tests:</code> line then fail.</li>
 </ul>
 
 </section>
@@ -6679,14 +6750,14 @@ every residual and new problem it found is fixed, with regression tests (see the
 <tr>
 <td>3. Seed packages and site registration</td><td>⛔ Blocked: this environment cannot reach <code>hub-api.h5p.org</code> (Q7; re-checked 2026-10-23, proxy 403). F2 (pre-set <code>H5P_SITE_UUID</code>) is applied by <code>H5pConfigFactory</code>; F1 is wired in <code>H5pEditorFactory</code> (S2). <code>npm run hub:check</code> runs the step where the Hub is reachable</td></tr>
 <tr>
-<td>4. Render <code>H5P.MultiChoice</code> in the player</td><td>⛔ Real package blocked by step 3. S2: a synthetic content type runs on our player page in Chromium with Core 1.28, no console errors, and resumes after a reload (<code>player.browser.int.test.ts</code>)</td></tr>
+<td>4. Render <code>H5P.MultiChoice</code> in the player</td><td>✅ with the ten real types (D-078, S4), built from GitHub at pinned commits instead of the Hub. S2: a synthetic content type runs on our player page in Chromium with Core 1.28, no console errors, and resumes after a reload (<code>player.browser.int.test.ts</code>)</td></tr>
 <tr>
-<td>5. Daylight theme with the F3 CSS</td><td>✅ with the synthetic type (S2): the F3 styles load, <code>--h5p-theme-*</code> tokens are active, and a later stylesheet overrides them. To repeat with real content types</td></tr>
+<td>5. Daylight theme with the F3 CSS</td><td>✅ with the synthetic type (S2): the F3 styles load, <code>--h5p-theme-*</code> tokens are active, and a later stylesheet overrides them. Repeated with the real content types in S4 (<code>hvlTheme.browser.int.test.ts</code>, D-078)</td></tr>
 <tr>
-<td>6. Decide 1.28 or the 1.27 fallback</td><td>Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2</td></tr>
+<td>6. Decide 1.28 or the 1.27 fallback</td><td>Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2 (decided 2026-10-23: Core 1.28, D-047)</td></tr>
 </tbody></table></div>
 <p>Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-21 entry is the first run).</p>
-<h3 id="progress--s2--content-types-and-security--gate-passed-2026-10-23-spike-steps-35-open-q7" tabindex="-1">S2 — Content types and security ✅ (gate passed 2026-10-23; spike steps 3–5 open, Q7)</h3>
+<h3 id="progress--s2--content-types-and-security--gate-passed-2026-10-23-spike-step-3-open-q7" tabindex="-1">S2 — Content types and security ✅ (gate passed 2026-10-23; spike step 3 open, Q7)</h3>
 <ul>
 <li><span class="task">○ To do:</span> Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (to be recorded as D-047).
 <strong>2026-10-23 (S4):</strong> steps 4–5 and R-01 are done with real content types built from GitHub at pinned commits
@@ -6823,8 +6894,9 @@ the content-type list), which also makes the parts BranchingScenario&#39;s tour 
 prefixes now cover the question types the containers offer (TrueFalse, MarkTheWords, SingleChoiceSet, Summary,
 MultiMediaChoice, ImageHotspotQuestion), drawn colour pairs are tested, jQuery motion stops with reduced motion.
 Found and fixed: CoursePresentation&#39;s 24 px progress-bar parts covered the footer&#39;s buttons at 320 and 640 px
-wide; the bar now has room of its own outside full screen (in full screen H5P&#39;s smaller bar stays, D-080
-amendment NEW-4)</li>
+wide, and its 7 % footer cut them off; bar and footer now have room of their own outside full screen, the
+slide buttons&#39; column fits them, and in full screen the footer lies above H5P&#39;s smaller bar
+(<code>hvl-h5p-targets.css</code>; D-080 amendments NEW-4 and V2T-1, checked pixel by pixel at 320, 390 and 640 px)</li>
 <li><span class="task">✓ Done:</span> New end-to-end flows: publishing despite an error with a reason (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>, <a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>) and the teacher&#39;s
 <strong>Rediger</strong> inside <code>/app/play</code> with frame storage blocked (<a class="req-ref" href="#r-LTI-006"><code>LTI-006</code></a>); <code>npm run test:e2e</code> runs 8 files.
 Found and fixed: a closing test bed deleted every user created since it opened, also other processes&#39; users;

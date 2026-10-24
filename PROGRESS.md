@@ -70,13 +70,13 @@ Spike results (spec 01 §7, Risk R-01):
 | 1. h5p-server 10.0.4 and h5p-express 10.0.5 on Node 24, `coreApiVersion` 1.28 | ✅ Both install on Node 24.x (h5p-express with its Express 4 overridden to 4.22.3 for advisories, D-032). `H5pConfigFactory` sets 1.28 and re-applies it after loading stored settings |
 | 2. Core tag `1.28.0` and editor commit `ab2daa18` | ✅ `npm run h5p:fetch-core`: core commit `2aeb0b83` matches, all 67 files match the committed SHA-256 list; editor commit verified by git, its 214 file hashes recorded (`h5p-editor-php-library-ab2daa18.files.sha256`) |
 | 3. Seed packages and site registration | ⛔ Blocked: this environment cannot reach `hub-api.h5p.org` (Q7; re-checked 2026-10-23, proxy 403). F2 (pre-set `H5P_SITE_UUID`) is applied by `H5pConfigFactory`; F1 is wired in `H5pEditorFactory` (S2). `npm run hub:check` runs the step where the Hub is reachable |
-| 4. Render `H5P.MultiChoice` in the player | ⛔ Real package blocked by step 3. S2: a synthetic content type runs on our player page in Chromium with Core 1.28, no console errors, and resumes after a reload (`player.browser.int.test.ts`) |
-| 5. Daylight theme with the F3 CSS | ✅ with the synthetic type (S2): the F3 styles load, `--h5p-theme-*` tokens are active, and a later stylesheet overrides them. To repeat with real content types |
-| 6. Decide 1.28 or the 1.27 fallback | Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2 |
+| 4. Render `H5P.MultiChoice` in the player | ✅ with the ten real types (D-078, S4), built from GitHub at pinned commits instead of the Hub. S2: a synthetic content type runs on our player page in Chromium with Core 1.28, no console errors, and resumes after a reload (`player.browser.int.test.ts`) |
+| 5. Daylight theme with the F3 CSS | ✅ with the synthetic type (S2): the F3 styles load, `--h5p-theme-*` tokens are active, and a later stylesheet overrides them. Repeated with the real content types in S4 (`hvlTheme.browser.int.test.ts`, D-078) |
+| 6. Decide 1.28 or the 1.27 fallback | Stay on 1.28 for now: nothing found so far contradicts it. Decide after steps 3–5 in S2 (decided 2026-10-23: Core 1.28, D-047) |
 
 Gate output: see the session log entry for 2026-10-22 · S1 review (the 2026-10-21 entry is the first run).
 
-## S2 — Content types and security ✅ (gate passed 2026-10-23; spike steps 3–5 open, Q7)
+## S2 — Content types and security ✅ (gate passed 2026-10-23; spike step 3 open, Q7)
 
 - [ ] Finish the spike (spec 01 §7 steps 3–5) where hub-api.h5p.org is reachable, and decide R-01 (to be recorded as D-047).
       **2026-10-23 (S4):** steps 4–5 and R-01 are done with real content types built from GitHub at pinned commits
@@ -212,8 +212,9 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
       prefixes now cover the question types the containers offer (TrueFalse, MarkTheWords, SingleChoiceSet, Summary,
       MultiMediaChoice, ImageHotspotQuestion), drawn colour pairs are tested, jQuery motion stops with reduced motion.
       Found and fixed: CoursePresentation's 24 px progress-bar parts covered the footer's buttons at 320 and 640 px
-      wide; the bar now has room of its own outside full screen (in full screen H5P's smaller bar stays, D-080
-      amendment NEW-4)
+      wide, and its 7 % footer cut them off; bar and footer now have room of their own outside full screen, the
+      slide buttons' column fits them, and in full screen the footer lies above H5P's smaller bar
+      (`hvl-h5p-targets.css`; D-080 amendments NEW-4 and V2T-1, checked pixel by pixel at 320, 390 and 640 px)
 - [x] New end-to-end flows: publishing despite an error with a reason (`PROD-003`, `UD-022`) and the teacher's
       **Rediger** inside `/app/play` with frame storage blocked (`LTI-006`); `npm run test:e2e` runs 8 files.
       Found and fixed: a closing test bed deleted every user created since it opened, also other processes' users;
