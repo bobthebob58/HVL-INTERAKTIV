@@ -1992,7 +1992,58 @@
           "useH5pResizer's two 'pixels → style.height' branches. A setHeight helper nets 0 lines. LtiPlayView's `|| !auth` looks redundant but is needed for type narrowing (the memo must stay above the early returns so Notice's [auth] effect does not re-run).",
           "apps/server/test/web duplicates. webChrome vs webPages have an identical 16-line beforeAll/afterAll. webApp.browser.int.test.ts has its own BUILT check, Express setup and open() next to webTestServer.ts's WEB_APP_BUILT/webTestServer/openWebPage. The shared file is under apps/server/test, so these go to the server-test area. Note for that finder: webApp's BUILT expression is identical to WEB_APP_BUILT. Its open() must stay: it has a stricter console filter (no 401 exemption), sends extraHTTPHeaders and returns the Response for nonce and CSP header checks, so openWebPage would weaken it."
         ]
-      }
+      },
+      "skeptic_worth-rules": [
+        {
+          "id": "web-1",
+          "verdict": "survives",
+          "reason": "This removes real duplication. Each file wrote the href, the text and the className twice, once in each branch of the ternary, and both files did it the same way. `newTab={inCanvas}` says exactly what both module headers state: in Canvas the link opens in a new tab and says so (UD-007). It is a plain boolean prop in place of a branch, so nothing clever is introduced. ExternalLink was already used in Canvas for our own non-external link, so the component is not stretched further. The `external` TSDoc is updated to cover the plain-link case, and only SiteHeader and SiteFooter pass `external={false}`. Module headers, the SECURITY rel comment in ExternalLink and the [REQ-ID] tests are untouched. The files shrink: SiteHeader goes from 79 to 73 lines. History (7fddcbd, 82ddca8) gives no stated reason for the separate plain <a>.",
+          "conditions": "Apply exactly as specified. Keep the site-name ternary (mark versus Link) unchanged. Change only the TSDoc of the `external` prop in ExternalLink.tsx, using the given wording, and leave its module header and SECURITY comment alone. Do not edit any test."
+        },
+        {
+          "id": "web-2",
+          "verdict": "survives",
+          "reason": "The loose jscpd report flags this exact 6-line clone (formatDate.ts lines 35 and 51). The helper keeps the module's 'never throws: an unreadable value comes back as it was' invariant in one place, together with the locale list and time-zone choice, so a future fix cannot drift between the two functions. Both exports stay function declarations with their TSDoc. The module header and the INTL_LOCALE WHY comment stay. The helper is private, and the codebase's style for private helpers is an undocumented arrow const (translate.ts `lookup`, useH5pResizer.ts `pixels`). DOC-002 requires TSDoc only on exports. The gain is small (4 lines), but it is a genuine de-duplication in a single file at almost no cost.",
+          "conditions": "Keep `format` private (not exported). Keep formatDate and formatDateTime as exported function declarations with their existing TSDoc, examples and order. Leave the module header, INTL_LOCALE and its WHY comment, and HVL_TIME_ZONE unchanged."
+        },
+        {
+          "id": "web-3",
+          "verdict": "refuted",
+          "reason": "The gain is too small for the churn and coupling. It adds a new 23-line support module and touches 5 files for a net saving of about 4 lines. It also ties four independent test files in three folders (features, components, messaging) to one shared helper. The removed inline blocks spelled out `origin: window.location.origin` and `source: frame.contentWindow`, which is the exact precondition the code under test checks (frameMessages.ts invariant: 'accepted only from our own origin and from the frame the page expects'). The helper hides the origin behind a default in another file, so the Act step of the ActivityView and NewActivityView tests becomes less explicit about a security-relevant fact. The proposal itself shows the abstraction does not fit well: useH5pResizer.test.tsx has to import it as `postFromFrame as send` to keep its lines under 110 characters. Its local `send` was already a 2-line helper scoped to that file. Test code should keep its Arrange/Act steps explicit, and given doubtful worth, the default is refuted."
+        },
+        {
+          "id": "web-4",
+          "verdict": "survives",
+          "reason": "Both changes remove real redundancy in one file. First, `cursor: not-allowed` was declared twice for the same buttons: the aria-disabled copy was appended later (82ddca8) with no rationale of its own. Its new position is computed-style identical: the only rules between the old and new spots are `.tab` rules, which set no cursor, both selector groups have specificity (0,2,0), and the layer is unchanged. Second, the two adjacent `@media (forced-colors: active)` blocks share the same condition, so merging them keeps the rule order. Each A11Y comment (UD-012, button outline) moves unchanged in wording and still sits directly above the rules it explains. No test reads components.css as text. Stylelint and Prettier pass on the proposed file, and it goes from 141 to 136 lines with its header intact.",
+          "conditions": "Move the A11Y comments verbatim, each directly above its own rules inside the merged block. Do not change any declaration, selector or the `:root { --site-header-height }` rule. Run `npm run lint:css` and the forced-colours browser check named in the proposal before committing."
+        }
+      ],
+      "skeptic_equivalence": [
+        {
+          "id": "web-1",
+          "verdict": "survives",
+          "reason": "I could not find any input where the change behaves differently. ExternalLink with newTab=false and external=false gives notes='' (no sr-only span), target and rel undefined (left out of the DOM) and no icon, so it renders `<a href class>text</a>`, the same as the removed portal branch. With newTab=true it is the removed Canvas branch prop for prop. I checked this myself: I bundled the repo and scratch versions with esbuild and rendered them with renderToStaticMarkup. Header and footer markup was byte-identical in 9 cases: nn/nb/en with inCanvas false, true and undefined. inCanvas is a literal at its only two call sites (PortalChrome: absent, LtiChrome: `inCanvas`) and always a boolean because of its default. So it never toggles at runtime, and the different React tree (component vs host element) cannot change remount or focus behaviour. No test mocks ExternalLink, and no server or browser test depends on more than the DOM. In the scratch copy the SiteHeader, SiteFooter and ExternalLink tests pass with the same counts, and tsc, ESLint, Prettier and doc-lint (--root on the scratch copy) are clean.",
+          "conditions": "Apply exactly the scratch versions. Do not change ExternalLink's logic, its defaults or its SECURITY comment; the only change in ExternalLink.tsx is the `external` TSDoc line."
+        },
+        {
+          "id": "web-2",
+          "verdict": "survives",
+          "reason": "Both functions do the same parse and the same NaN fallback. The Intl.DateTimeFormat locale list is the same, and the option set is the same ({dateStyle, timeStyle?} spread, then timeZone; Intl reads options by name, so key order does not matter either way). I ran the old and new modules side by side with Node type-stripping: 18 values (valid, empty, garbage, Feb 30, both DST edges, epoch, year 9999, +275760, negative year, date-only, no-Z, RFC 1123, padded, '0', '1e3') x nn/nb/en x both functions. All 108 results were identical, and so were the error paths for an unknown or undefined locale (both throw TypeError). The exports are unchanged (HVL_TIME_ZONE, INTL_LOCALE, formatDate, formatDateTime). The helper is a private const defined before any call, so there is no TDZ problem. formatDate.test.ts passes in the scratch copy; tsc, doc-lint and Prettier are clean.",
+          "conditions": "Keep the helper non-exported. Keep both exported function declarations with their TSDoc as they are."
+        },
+        {
+          "id": "web-3",
+          "verdict": "survives",
+          "reason": "Every replaced block built `new MessageEvent('message', {data, origin: window.location.origin, source})` and dispatched it on window. postFromFrame builds the same event (MessageEventInit key order does not matter) at the same moment. frame.contentWindow and the default origin are still evaluated inside the act callback on each call, as before. The act callbacks returned undefined before and still do, so act takes the same synchronous path and TypeScript picks the same overload. useH5pResizer's local `send` returned the dispatchEvent boolean, but no caller uses that value, and no call is wrapped in act. In H5pFrame the dispatch was not in act and still is not. The vitest include is `test/**/*.test.{ts,tsx}`, so the new support file does not count as a test. In both repo and scratch the 8 affected files run 32 tests, all passing, and the it/expect counts per file match (ActivityView 8/19, NewActivityView 3/7, H5pFrame 2/5, useH5pResizer 2/5). Titles and [REQ-ID]s are untouched. The header follows the existing support-file convention (Spec: NFR-004, like cleanup.ts and fakeFetch.ts). tsc (which includes test/**), ESLint, Prettier and doc-lint are clean.",
+          "conditions": "spec-trace lists every file that has a `Spec:` header, including apps/web/test/support/*.ts under NFR-004. Regenerate docs/TRACEABILITY.md with npm run spec:trace after applying, or the --check gate will flag a stale file."
+        },
+        {
+          "id": "web-4",
+          "verdict": "survives",
+          "reason": "I compiled the repo and scratch globals.css with @tailwindcss/postcss, with and without optimize. The only output difference is that the two aria-disabled selectors join the `:disabled` cursor:not-allowed rule. Even unoptimised, Tailwind already printed the two adjacent forced-colors blocks as one block with the same rule order, so that half of the change does not alter the output at all. The aria-disabled selectors move earlier past only `.tab` and `.tab[aria-selected]`, which set no cursor. They keep specificity (0,2,0) against the earlier `.button-*{cursor:pointer}` (0,1,0), and the utilities layer (`.cursor-pointer`) still wins by layer order, so computed cursor is identical for every element. All the selectors are valid, so the merged list cannot drop the rule. No test or tool reads components.css source. Stylelint and Prettier pass on the scratch file, and doc-lint (rationale tags) passes; the A11Y comments keep their wording and stay next to the rules they explain.",
+          "conditions": "Apply the scratch file exactly. Keep `:root { --site-header-height }` and the wording of every A11Y comment."
+        }
+      ]
     },
     "packages": {
       "finder": {
