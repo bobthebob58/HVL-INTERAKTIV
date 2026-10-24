@@ -8,8 +8,11 @@
  * Spec: LTI-001, LTI-005, AUTH-001, NFR-004
  * Invariants:
  *   - The platform sync sees only this testbed's mock Canvas, so it never deactivates another test's platform.
- *   - `close` removes the platform (its deployments, identities, tokens and placements cascade), every user created
- *     since the testbed opened, their content and audit rows, and the S3 buckets.
+ *   - `close` removes the platform (its deployments, identities, tokens and placements cascade), the users of its
+ *     mock Canvas and of `staffAccount`, the Feide users that first signed in during its run, their content and audit
+ *     rows, and the S3 buckets. It never touches LTI or staff users of another testbed running at the same time;
+ *     the mock Feide's subjects are the same in every process, so suites that sign in with it run one at a time
+ *     (the e2e and a11y configs run their files sequentially).
  *   - Every log line is kept in `logs` so tests can prove that no token or personal value was logged.
  * Collaborators: ../../src/server/createApp.ts, ../../../../tools/mock-platform/mockPlatform.mjs, ./services.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts and the other users of `openAppTestbed`.
@@ -125,10 +128,15 @@ export async function openAppTestbed(
   if (!platform) throw new Error('the mock Canvas was not registered');
   handler = built.app;
 
-  const createdUsers = async () =>
-    (await db.user.findMany({ where: { createdAt: { gte: startedAt } }, select: { id: true } })).map(
-      (u) => u.id,
-    );
+  const madeHere = new Set<string>();
+  /** The users this testbed made: its staff accounts, its mock Canvas's users and Feide users new in this run. */
+  const ownUsers = async (): Promise<string[]> => {
+    const identities = await db.identity.findMany({
+      where: { OR: [{ platformId: platform.id }, { provider: 'feide', createdAt: { gte: startedAt } }] },
+      select: { userId: true },
+    });
+    return [...new Set([...madeHere, ...identities.map((identity) => identity.userId)])];
+  };
   return {
     ...built,
     toolUrl,
@@ -139,7 +147,11 @@ export async function openAppTestbed(
     runtime,
     logs,
     platformId: platform.id,
-    staffAccount: async () => (await db.user.create({ data: { kind: 'staff' } })).id,
+    staffAccount: async () => {
+      const { id } = await db.user.create({ data: { kind: 'staff' } });
+      madeHere.add(id);
+      return id;
+    },
     activity: async (ownerUserId, options = {}) => {
       const actor = testActor('author', { accountId: ownerUserId });
       const id = await runtime.editor.saveOrUpdateContent(
@@ -161,11 +173,12 @@ export async function openAppTestbed(
       await mock.close();
       server.closeAllConnections();
       await new Promise<void>((resolve) => server.close(() => resolve()));
+      // WHY: before the platform goes, because its identities (which name its users) cascade with it.
+      const users = await ownUsers();
       await db.ltiPlatform.deleteMany({ where: { url: mock.canvas.issuer } });
-      const users = await createdUsers();
       await db.h5PContent.deleteMany({ where: { ownerUserId: { in: users } } });
       await db.auditEvent.deleteMany({ where: { actorUserId: { in: users } } });
-      await db.authAuditEvent.deleteMany({ where: { at: { gte: startedAt } } });
+      await db.authAuditEvent.deleteMany({ where: { actorUserId: { in: users } } });
       await db.user.deleteMany({ where: { id: { in: users } } });
       for (const bucket of Object.values(buckets)) await removeTestBucket(s3, bucket);
       await Promise.all([redis.quit(), db.$disconnect()]);

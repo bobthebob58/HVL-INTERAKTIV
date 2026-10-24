@@ -100,7 +100,7 @@ jobs:
         run: npm run privacy:inventory-check
       - name: Tests (unit and integration)
         run: npm test
-      - name: End-to-end flows in Chromium with third-party cookies blocked (LTI-003, LTI-005, PROD-006, D-065)
+      - name: End-to-end flows in Chromium with third-party cookies blocked (LTI-003, LTI-005, LTI-006, PROD-003, PROD-006, UD-022, D-065)
         run: npm run test:e2e
       - name: Accessibility suite in Chromium (axe WCAG 2.2 AA, keyboard, reflow, motion, target size, lang, first-party; UD-030, D-079)
         run: npm run test:a11y

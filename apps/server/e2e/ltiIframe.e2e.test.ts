@@ -12,6 +12,7 @@ import { t } from '../src/i18n/translate.js';
 import { openAppTestbed, type AppTestbed } from '../test/support/appTestbed.js';
 import { PROBE_LIBRARIES } from '../test/support/probeContentType.js';
 import { describeWithServices } from '../test/support/services.js';
+import { recordFlow } from '../test/support/flowRecorder.js';
 import { launchCookieTestChromium, startCookieCanary } from '../test/support/thirdPartyCookies.js';
 
 describeWithServices('[LTI-003] Canvas iframe with third-party cookies blocked', () => {
@@ -70,6 +71,8 @@ describeWithServices('[LTI-003] Canvas iframe with third-party cookies blocked',
       const context = await variant.newContext();
       const page = await context.newPage();
       const failed = failures(page);
+      // WHY: the record sees the Set-Cookie headers the blocked browser drops; the jar alone cannot show them.
+      const flow = await recordFlow(page, tb.toolUrl);
       const spec: LaunchSpec = {
         user: { sub: `student-${randomUUID()}`, roles: CANVAS_USERS.student.roles },
         course: { id: `course-${randomUUID().slice(0, 8)}` },
@@ -95,6 +98,8 @@ describeWithServices('[LTI-003] Canvas iframe with third-party cookies blocked',
       expect(saved.status()).toBe(200);
       expect(await resumed.textContent()).toBe('2');
       expect(await context.cookies(tb.toolUrl)).toEqual([]);
+      await flow.settled();
+      expect(flow.setCookies).toEqual([]);
       expect(failed).toEqual([]);
       await context.close();
     });

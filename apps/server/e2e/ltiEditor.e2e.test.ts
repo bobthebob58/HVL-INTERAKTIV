@@ -12,6 +12,7 @@ import { CANVAS_USERS, type LaunchSpec } from '../../../tools/mock-platform/mock
 import { openAppTestbed, type AppTestbed } from '../test/support/appTestbed.js';
 import { launchFromCanvas } from '../test/support/ltiLaunchDriver.js';
 import { describeWithServices } from '../test/support/services.js';
+import { recordFlow, redactTokens } from '../test/support/flowRecorder.js';
 import { launchCookieTestChromium } from '../test/support/thirdPartyCookies.js';
 
 /** The ltik H5P's AJAX URL carries on the tool's player page (the address bar no longer has it). */
@@ -51,11 +52,8 @@ describeWithServices('[LTI-006] the H5P editor in the Canvas iframe with third-p
       // Arrange: launch into the player, as Canvas does
       const context = await browser.newContext();
       const page = await context.newPage();
-      const failed: string[] = [];
-      page.on('response', (r) => {
-        if (r.url().startsWith(tb.toolUrl) && r.status() >= 400)
-          failed.push(`${r.status()} ${r.url().split('?')[0]}`);
-      });
+      // WHY: the record sees the Set-Cookie headers the blocked browser drops; the jar alone cannot show them.
+      const flow = await recordFlow(page, tb.toolUrl);
       const problems: string[] = [];
       const spec: LaunchSpec = {
         user: CANVAS_USERS.teacher,
@@ -76,7 +74,8 @@ describeWithServices('[LTI-006] the H5P editor in the Canvas iframe with third-p
       // Act: open the editor in the same frame and save
       page.on('console', (m) => {
         // WHY: the mock Canvas frame does not delegate fullscreen, as Canvas's own `allow` list does.
-        if (m.type() === 'error' && !m.text().includes('fullscreen is not allowed')) problems.push(m.text());
+        if (m.type() === 'error' && !m.text().includes('fullscreen is not allowed'))
+          problems.push(redactTokens(m.text()));
       });
       page.on('pageerror', (e) => problems.push(e.message));
       await frame.goto(`${tb.toolUrl}/lti/edit?ltik=${encodeURIComponent(ltik)}`);
@@ -98,7 +97,9 @@ describeWithServices('[LTI-006] the H5P editor in the Canvas iframe with third-p
       expect(frame.url()).not.toContain('ltik=');
       await expect.poll(() => frame.textContent('#hvl-editor-status')).toBe('Lagra.');
       expect(await context.cookies(tb.toolUrl)).toEqual([]);
-      expect(failed).toEqual([]);
+      await flow.settled();
+      expect(flow.setCookies).toEqual([]);
+      expect(flow.failed).toEqual([]);
       expect(problems).toEqual([]);
       await context.close();
     }, 90_000);

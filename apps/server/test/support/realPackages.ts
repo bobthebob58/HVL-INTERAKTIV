@@ -33,7 +33,7 @@ export const hasRealPackages = (): boolean => existsSync(join(REAL_PACKAGES_DIR,
  */
 export function describeWithRealPackages(name: string, body: () => void): void {
   if (hasRealPackages()) describe(name, body);
-  else if (process.env.CI) {
+  else if (process.env.CI === 'true') {
     throw new Error(`${REAL_PACKAGES_DIR} is missing; run npm run h5p:fetch-libraries before the tests`);
   } else describe.skip(`${name} (no real H5P packages; run npm run h5p:fetch-libraries)`, body);
 }

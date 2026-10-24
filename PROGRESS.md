@@ -204,6 +204,16 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
       time or registered (D-080). `docs/accessibility/` holds the protocol and the matrix; results are HVL's.
       Found and fixed: the H5P editor scrolled sideways at 320 px, CoursePresentation's focus ring was cut off,
       the new-activity editor frame had no title
+- [x] H5P's own markup barriers (D-080): `a11yRepairs.js` repairs eight at run time (CoursePresentation's progress
+      bar, DragText's drop zones, the editor's score ranges, vertical tabs, mode switch, hotspot picker and paste
+      button, the content-type list) and makes the parts BranchingScenario's tour fades inert; 13 of the register's
+      15 entries are gone, 2 remain (the hub's nested buttons, BranchingScenario's disabled «Paste»). The answer
+      prefixes now cover the question types the containers offer (TrueFalse, MarkTheWords, SingleChoiceSet, Summary,
+      MultiMediaChoice, ImageHotspotQuestion), drawn colour pairs are tested, jQuery motion stops with reduced motion
+- [x] New end-to-end flows: publishing despite an error with a reason (`PROD-003`, `UD-022`) and the teacher's
+      **Rediger** inside `/app/play` with frame storage blocked (`LTI-006`); `npm run test:e2e` runs 7 files.
+      Found and fixed: a closing test bed deleted every user created since it opened, also other processes' users;
+      it now removes only its own (`test/support/appTestbed.ts`)
 - [x] Progress screenshots (desktop and mobile, `nn`) sent to the owner as each view is built (CLAUDE.md §4):
       eleven views at 1280 and 390 px on 2026-10-24
 - [x] Early independent review of the server work (security, publishing, validator, accessibility, privacy and
