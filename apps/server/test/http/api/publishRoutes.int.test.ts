@@ -30,6 +30,8 @@ describeWithServices('[PROD-003] publish flow', () => {
   const api = (method: 'get' | 'post', path: string, who: TestPrincipal = author) =>
     contentApi(tb, method, path, who);
   const checked = (id: string) => checkedUpdatedAt(tb, id, author);
+  const publish = async (id: string, acknowledgements: readonly object[] = []) =>
+    api('post', `${id}/publish`).send({ updatedAt: await checked(id), acknowledgements });
 
   beforeAll(async () => {
     author = await tb.principal('author');
@@ -66,10 +68,7 @@ describeWithServices('[PROD-003] publish flow', () => {
     const id = await tb.content(author.principal.userId);
     tb.validator = findingsOnly(altError);
     // Act
-    const res = await api('post', `${id}/publish`).send({
-      updatedAt: await checked(id),
-      acknowledgements: [],
-    });
+    const res = await publish(id);
     // Assert
     expect(res.status).toBe(409);
     // PRIVACY: the findings quote the author's texts; the error answer must not be cached either.
@@ -86,10 +85,7 @@ describeWithServices('[PROD-003] publish flow', () => {
     const id = await tb.content(author.principal.userId);
     tb.validator = findingsOnly(altError);
     // Act
-    const res = await api('post', `${id}/publish`).send({
-      updatedAt: await checked(id),
-      acknowledgements: [altReason],
-    });
+    const res = await publish(id, [altReason]);
     const after = await api('get', `${id}/findings`);
     // Assert
     expect(res.status).toBe(200);
@@ -117,19 +113,13 @@ describeWithServices('[PROD-003] publish flow', () => {
     // Arrange
     const id = await tb.content(author.principal.userId);
     tb.validator = findingsOnly(altError);
-    await api('post', `${id}/publish`).send({ updatedAt: await checked(id), acknowledgements: [altReason] });
+    await publish(id, [altReason]);
     // Act
     tb.clockOffsetMs = 13 * DAY;
-    const within = await api('post', `${id}/publish`).send({
-      updatedAt: await checked(id),
-      acknowledgements: [],
-    });
+    const within = await publish(id);
     tb.clockOffsetMs = 15 * DAY;
     const findings = await api('get', `${id}/findings`);
-    const expired = await api('post', `${id}/publish`).send({
-      updatedAt: await checked(id),
-      acknowledgements: [],
-    });
+    const expired = await publish(id);
     tb.clockOffsetMs = 0;
     // Assert
     expect(within.status).toBe(200);
@@ -143,10 +133,7 @@ describeWithServices('[PROD-003] publish flow', () => {
     const id = await tb.content(author.principal.userId);
     tb.validator = findingsOnly(langWarning, colourHint);
     // Act
-    const res = await api('post', `${id}/publish`).send({
-      updatedAt: await checked(id),
-      acknowledgements: [],
-    });
+    const res = await publish(id);
     // Assert
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('published');

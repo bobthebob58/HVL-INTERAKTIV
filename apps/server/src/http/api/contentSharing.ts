@@ -16,9 +16,6 @@ import type { Principal } from '../../auth/Principal.js';
 import type { ContentFacts, ContentVisibility } from '../../h5p/permissions/ContentAccessRepository.js';
 import type { AuthErrorCode } from '../authErrors.js';
 
-/** Visibility levels a sharing request may ask for. */
-export const VISIBILITIES: readonly ContentVisibility[] = ['private', 'organisation', 'feide'];
-
 /**
  * Why a sharing change is refused, if it is.
  * @param principal - Who asks.

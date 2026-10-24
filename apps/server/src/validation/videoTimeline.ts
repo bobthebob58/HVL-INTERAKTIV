@@ -42,21 +42,16 @@ export interface VideoTimeline {
  */
 export function timelineOf(params: unknown): VideoTimeline {
   const assets = fieldAt(params, 'interactiveVideo', 'assets');
+  // WHY: Array.prototype.sort is stable, so interactions with the same start time keep their list order.
   const interactions = asArray(fieldAt(assets, 'interactions'))
-    .map((item, index) => {
+    .map((item) => {
       const from = asNumber(fieldAt(item, 'duration', 'from'));
       const to = asNumber(fieldAt(item, 'duration', 'to'));
       const library = asString(fieldAt(item, 'action', 'library'));
-      return {
-        index,
-        from,
-        to: Math.max(to ?? 0, from ?? 0),
-        machineName: library && machineNameOf(library),
-      };
+      return { from, to: Math.max(to ?? 0, from ?? 0), machineName: library && machineNameOf(library) };
     })
-    .filter((item): item is typeof item & { from: number } => item.from !== undefined && item.from >= 0)
-    .sort((a, b) => a.from - b.from || a.index - b.index)
-    .map(({ from, to, machineName }) => ({ from, to, machineName }));
+    .filter((item): item is TimedInteraction => item.from !== undefined && item.from >= 0)
+    .sort((a, b) => a.from - b.from);
   const marks = [
     ...asArray(fieldAt(assets, 'bookmarks')).map((b) => asNumber(fieldAt(b, 'time'))),
     ...asArray(fieldAt(assets, 'endscreens')).map((e) => asNumber(fieldAt(e, 'time'))),
