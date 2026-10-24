@@ -70,20 +70,16 @@ const LAISSEZ_FAIRE = {
   message: 'Use HvlPermissionSystem (H5P-006).',
 };
 
-/** UD-001, D-072: colours come only from packages/design-tokens; no colour literal and no style attribute. */
 // UD-001: a hex value after a quote or `=` (HTML and SVG attributes in markup strings) counts too, and so do the
 // CSS colour functions Stylelint bans; named colours are left to Stylelint (too many words collide with them).
+const COLOUR_LITERAL =
+  '/(?:^|[\\s:,(="\\x27])#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})\\b|\\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix)\\(/';
+const COLOUR_LITERAL_MESSAGE = 'UD-001: use a design token, not a colour literal.';
+
+/** UD-001, D-072: colours come only from packages/design-tokens; no colour literal and no style attribute. */
 const COLOUR_BANS = [
-  {
-    selector:
-      'Literal[value=/(?:^|[\\s:,(="\\x27])#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})\\b|\\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix)\\(/]',
-    message: 'UD-001: use a design token, not a colour literal.',
-  },
-  {
-    selector:
-      'TemplateElement[value.raw=/(?:^|[\\s:,(="\\x27])#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})\\b|\\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix)\\(/]',
-    message: 'UD-001: use a design token, not a colour literal.',
-  },
+  { selector: `Literal[value=${COLOUR_LITERAL}]`, message: COLOUR_LITERAL_MESSAGE },
+  { selector: `TemplateElement[value.raw=${COLOUR_LITERAL}]`, message: COLOUR_LITERAL_MESSAGE },
   {
     selector: "JSXAttribute[name.name='style']",
     message: 'D-072: style with token classes, never the style attribute (it also breaks the nonce policy).',
