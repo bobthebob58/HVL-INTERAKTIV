@@ -63,6 +63,12 @@
   },
   "page": {
     "siteName": "HVL Interaktiv",
+    "skipToMain": "Gå til hovedinnholdet",
+    "help": {
+      "link": "Hjelp",
+      "nav": "Hjelp og informasjon",
+      "newTab": "(åpner i ny fane)"
+    },
     "notAvailable": {
       "title": "Ikke tilgjengelig",
       "body": "Aktiviteten finnes ikke, er ikke publisert, eller du har ikke tilgang til den."
@@ -110,6 +116,7 @@
     "submit": "Legg inn i Canvas",
     "sending": "Sender valget til Canvas …",
     "noneChosen": "Velg minst én aktivitet.",
+    "errorSummaryTitle": "Det er 1 problem du må rette",
     "failed": "Valget kunne ikke sendes til Canvas. Prøv igjen."
   },
   "notice": {

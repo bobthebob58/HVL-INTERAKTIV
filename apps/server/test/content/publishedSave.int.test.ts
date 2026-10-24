@@ -1,6 +1,6 @@
 /**
  * Integration tests for the publish gate on saves (D-074): saving a published activity through the H5P content
- * route, with injected validators, and the version count of every save.
+ * route, with injected validators, judged as the editor stores it, and the version count of every save.
  *
  * Spec: PROD-003, UD-022, H5P-006
  */
@@ -8,6 +8,7 @@ import express, { type Express, type RequestHandler } from 'express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
 import { PublishedSaveGate } from '../../src/content/PublishedSaveGate.js';
+import { editorSavedForm } from '../../src/content/savedForm.js';
 import { createH5pRouter } from '../../src/http/createH5pRouter.js';
 import type { ContentRouteDeps } from '../../src/http/routes/contentRoutes.js';
 import { t } from '../../src/i18n/translate.js';
@@ -18,11 +19,19 @@ import { describeWithServices } from '../support/services.js';
 
 const linkWarning: Finding = { ...altError, ruleId: 'V-LINK-TEXT', severity: 'warning', path: 'question' };
 
-/** Finds an alt-text error when the question says so, and a warning and a hint when it mentions a link. */
+const questionText = (params: unknown): string =>
+  String((params as { question?: unknown }).question ?? '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+
+/**
+ * Finds an alt-text error when the question says so or reads as empty once tags are removed (as the validator's
+ * text reading does), and a warning and a hint when it mentions a link.
+ */
 const byQuestion = (input: ValidationInput): Finding[] => {
   const text = JSON.stringify(input.params);
   return [
-    ...(text.includes('utan alt') ? [altError] : []),
+    ...(text.includes('utan alt') || questionText(input.params) === '' ? [altError] : []),
     ...(text.includes('lenkje') ? [linkWarning, colourHint] : []),
   ];
 };
@@ -53,11 +62,14 @@ describeWithServices('[PROD-003] saving a published activity', () => {
       if (match) res.locals.h5pActor = match.actor;
       next();
     };
-    const gate = new PublishedSaveGate({
-      db: tb.db,
-      validator: (input) => (validated.push(input), byQuestion(input)),
-      clock: () => new Date(),
-    });
+    const gate = new PublishedSaveGate(
+      {
+        db: tb.db,
+        validator: (input) => (validated.push(input), byQuestion(input)),
+        clock: () => new Date(),
+      },
+      editorSavedForm(tb.runtime.editor.libraryManager),
+    );
     const deps: ContentRouteDeps = { ...tb.runtime, saveGate: gate };
     app = express().use('/h5p', createH5pRouter(deps, authenticate));
   }, 60_000);
@@ -79,6 +91,18 @@ describeWithServices('[PROD-003] saving a published activity', () => {
     });
     expect(validated[0]).toMatchObject({ mainLibrary: 'H5P.MultiChoice 1.16', locale: 'nn' });
     expect(await stored(id)).toMatchObject({ params: { question: 'Kva?' }, version: 1 });
+  });
+
+  it('[PROD-003] the gate judges what the editor stores: text that sanitising empties counts as empty', async () => {
+    // Arrange
+    const id = await tb.activity(author, { published: true });
+    // Act
+    const res = await save(id, '<style>Kva er rett?</style>');
+    // Assert
+    expect(res.status).toBe(409);
+    expect(res.body.errorCode).toBe('hvl:published-save-blocked');
+    expect(validated[0]?.params).toMatchObject({ question: '' });
+    expect(await stored(id)).toMatchObject({ params: { question: 'Kva?' }, status: 'published', version: 1 });
   });
 
   it('[PROD-003] a save with only warnings and hints goes through, and the version goes up by one', async () => {

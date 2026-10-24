@@ -6,7 +6,10 @@
  *      test compares it with the routes Express really mounts, so a route cannot be added without being described.
  * Spec: DOC-012, PROD-003, PROD-011, PROD-006
  * Invariants:
- *   - `path` is below `/api`, in Express form (`/content/:contentId`); every `:name` has a schema in `params`.
+ *   - `path` is below `/api`, in Express form (`/content/:contentId`); every `:name` has a schema in `params`. The
+ *     server does not answer a path that misses it with 400: a malformed `contentId` is 404 like an unknown one
+ *     (D-066), and a notice ID outside the allowlist is 404 as well.
+ *   - Every 400 answer describes the body only, because no path parameter leads to one.
  *   - Every schema a route names is listed in ./openApi.ts (`REQUEST_SCHEMAS` or `RESPONSE_SCHEMAS`).
  *   - Error answers use `errorBodySchema`; only publish's 409 can carry findings.
  * Collaborators: ./apiRouteTypes.ts, ./openApi.ts, ./me.ts, ./content.ts, ./findings.ts, ./publishing.ts,
@@ -31,10 +34,18 @@ const failure = (description: string): ApiResponse => ({ description, schema: er
 const unauthenticated = failure(
   '`hvl:unauthenticated`, `hvl:session-expired` or `hvl:ltik-invalid`; on unsafe methods also `hvl:csrf-invalid`.',
 );
-const badRequest = failure('`error.badRequest`: the body or a path parameter does not match the schema.');
-const unavailable = failure('`hvl:activity-unavailable`: unknown, or the person may not view it (D-066).');
+const badRequest = failure('`error.badRequest`: the body does not match the schema.');
+const unavailable = failure(
+  '`hvl:activity-unavailable`: unknown (also a malformed ID), or the person may not view it (D-066).',
+);
 const editNotAllowed = failure('`hvl:edit-not-allowed`: the person may view the activity but not edit it.');
-const contentParams = z.strictObject({ contentId: z.uuid() });
+// WHY: the server never checks the path against this schema: an ID that is not a UUID is answered like an unknown
+// activity (404), so a malformed ID reveals nothing more than an unknown one (D-066).
+const contentParams = z.strictObject({
+  contentId: z
+    .uuid()
+    .describe('The activity ID. One that is not a UUID is answered like an unknown one: 404.'),
+});
 
 /** Every route under `/api`, in the order of the OpenAPI document. */
 export const API_ROUTES = [
@@ -56,7 +67,9 @@ export const API_ROUTES = [
     body: noticeDismissalRequestSchema,
     responses: {
       204: { description: 'Stored; replaces an earlier dismissal of the same notice.' },
-      400: badRequest,
+      400: failure(
+        '`error.badRequest`: the body does not match the schema, or `version` is newer than the current version.',
+      ),
       401: unauthenticated,
       403: failure('`error.forbidden`: learners never see these notices.'),
       404: failure('`error.notFound`: the notice ID is not in the allowlist.'),
@@ -113,7 +126,8 @@ export const API_ROUTES = [
       404: unavailable,
       409: {
         description:
-          '`hvl:publish-blocked` with findings, or `hvl:content-changed` (changed since `updatedAt`).',
+          '`hvl:publish-blocked` with findings, or `hvl:content-changed` (changed since `updatedAt`, or a save of the ' +
+          'activity is still running after 30 s).',
         schema: publishConflictBodySchema,
       },
     },
@@ -148,7 +162,9 @@ export const API_ROUTES = [
       400: badRequest,
       401: unauthenticated,
       403: failure('`hvl:sharing-not-allowed`: a student author may keep activities private only (D-059).'),
-      404: failure('`hvl:activity-unavailable`: unknown, or the person may not edit it (D-066).'),
+      404: failure(
+        '`hvl:activity-unavailable`: unknown (also a malformed ID), or the person may not edit it (D-066).',
+      ),
       409: failure('`hvl:sharing-changed`: someone else changed the visibility in the meantime.'),
     },
   },

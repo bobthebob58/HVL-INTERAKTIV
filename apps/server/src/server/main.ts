@@ -13,11 +13,11 @@
  *   - A port that cannot be opened stops the start with exit code 1 instead of a process that serves nothing.
  *   - SIGTERM and SIGINT stop the jobs, stop accepting connections, then close the clients; exit code 0.
  *   - The web app is loaded only when `WEB_APP` is not `off`; only its development server takes WebSocket upgrades,
- *     and only under `/_next/`.
+ *     only under `/_next/`, and without cookies, tokens or the ltik, like every request it gets (D-068).
  * Collaborators: ./createApp.ts, ../h5p/createH5pRuntime.ts, ../lti/platforms/syncLtiPlatforms.ts,
  *   ../lti/platforms/reencryptPlatformKeys.ts,
  *   ../lti/storage/LtiRecordCleanupJob.ts, ../config/env.ts, ../config/validationContext.ts,
- *   ../validation/validateContent.ts, ../web/nextWebApp.ts.
+ *   ../validation/validateContent.ts, ../web/nextWebApp.ts, ../web/webRoutes.ts (`webUpgrades`).
  * Tests: apps/server/test/server/main.smoke.test.ts
  */
 import type { Server } from 'node:http';
@@ -35,6 +35,7 @@ import { createLogger } from '../logging/logger.js';
 import { DataEncryption } from '../security/keys/DataEncryption.js';
 import { createContentValidator } from '../validation/validateContent.js';
 import { loadWebApp } from '../web/nextWebApp.js';
+import { webUpgrades } from '../web/webRoutes.js';
 import { createApp } from './createApp.js';
 
 /** A started server and how to stop it. */
@@ -68,12 +69,7 @@ export async function startServer(env: Env): Promise<RunningServer> {
   const server = await new Promise<Server>((resolve, reject) => {
     const listening = app.listen(env.PORT, (error?: Error) => (error ? reject(error) : resolve(listening)));
   });
-  if (web?.dev) {
-    server.on('upgrade', (req, socket, head) => {
-      if (req.url?.startsWith('/_next/')) void web.upgrade(req, socket, head);
-      else socket.destroy();
-    });
-  }
+  if (web?.dev) server.on('upgrade', webUpgrades(web));
   logger.info({ port: env.PORT, webApp: env.WEB_APP }, 'HVL Interaktiv server listening');
   return {
     server,

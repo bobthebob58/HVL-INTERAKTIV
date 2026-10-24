@@ -5,16 +5,21 @@
  *      must work under the strict H5P policy (D-070). The integration object travels as an inert JSON block, a
  *      second block carries what our boot script needs (activity ID, token, messages), and the boot script
  *      (./client/editorPage.js) starts H5P's editor, loads the parameters and saves through the content API.
- * Spec: H5P-002, H5P-007, SEC-008, UD-010, DATA-011
+ * Spec: H5P-002, H5P-007, SEC-008, UD-010, DATA-011, UD-002
  * Invariants:
  *   - Every value is escaped; both JSON blocks go through `scriptJson`.
  *   - The page has a `lang`, a title, one save button and a polite status region for save results (UD-006).
  *   - First scripts are only same-origin static files (`/static/…js`), e.g. the LTI landing script.
+ *   - The server pages' stylesheet comes after H5P's styles, so the save button and the status use the token
+ *     typography, colours and target size like every server page (UD-002, UD-005, D-067); the editor keeps its
+ *     full width.
  * Collaborators: ./editorIntegration.ts, ./playerPage.ts (shared boot script), ./scriptJson.ts,
- *   ../../http/routes/editorRoutes.ts, ../../lti/play/ltiEditRoutes.ts.
- * Tests: apps/server/test/h5p/render/editorPage.test.ts
+ *   ../../http/routes/editorRoutes.ts, ../../lti/play/ltiEditRoutes.ts, ../../http/pages/pageAssetRoutes.ts
+ *   (the stylesheet).
+ * Tests: apps/server/test/h5p/render/editorPage.test.ts, apps/server/test/http/pages/serverPages.browser.test.ts
  */
 import type { IIntegration } from '@lumieducation/h5p-server';
+import { SERVER_PAGES_STYLESHEET } from '../../http/pages/pageAssetRoutes.js';
 import { t, type Locale } from '../../i18n/translate.js';
 import type { UrlToken } from '../HvlH5pUser.js';
 import { H5P_INTEGRATION_SCRIPT } from './playerPage.js';
@@ -75,6 +80,7 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
     `<script type="application/json" id="hvl-editor-config">${scriptJson(config)}</script>`,
     `<script src="${H5P_INTEGRATION_SCRIPT}"></script>`,
     ...input.styles.map((href) => `<link rel="stylesheet" href="${escapeHtml(href)}">`),
+    `<link rel="stylesheet" href="${SERVER_PAGES_STYLESHEET}">`,
     ...input.scripts.map((src) => `<script src="${escapeHtml(src)}"></script>`),
     '</head>',
     '<body>',

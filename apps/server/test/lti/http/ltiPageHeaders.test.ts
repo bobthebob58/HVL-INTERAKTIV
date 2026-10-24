@@ -5,7 +5,12 @@
  */
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { frameAncestors, ltiPageCsp, ltijsPageCsp } from '../../../src/lti/http/ltiPageHeaders.js';
+import {
+  frameAncestors,
+  ltiPageAncestors,
+  ltiPageCsp,
+  ltijsPageCsp,
+} from '../../../src/lti/http/ltiPageHeaders.js';
 
 const hash = (text: string) => `'sha256-${createHash('sha256').update(text).digest('base64')}'`;
 const CANVAS = ['https://hvl.instructure.com', 'https://hvl.test.instructure.com'];
@@ -16,6 +21,24 @@ describe('[LTI-003] LTI page headers', () => {
       'frame-ancestors https://hvl.instructure.com https://hvl.test.instructure.com',
     );
     expect(frameAncestors([])).toBe("frame-ancestors 'none'");
+  });
+
+  it('[LTI-003] only the pages our /app/play chrome frames add our own origin to the Canvas origins', () => {
+    // Arrange: Express routes the trailing-slash and other-case spellings to the same pages (D-070 amendment)
+    const framed = ['/lti/play', '/lti/edit', '/lti/play/', '/LTI/Edit', '/lti/EDIT/'];
+    const canvasOnly = [
+      '/lti/launch',
+      '/lti/login',
+      '/lti/deeplink',
+      '/app/play',
+      '/lti/play/x',
+      '/lti/play//',
+    ];
+    // Act
+    const ancestorsOf = (paths: string[]) => paths.map((path) => ltiPageAncestors(path, CANVAS));
+    // Assert
+    expect(ancestorsOf(framed)).toEqual(framed.map(() => ["'self'", ...CANVAS]));
+    expect(ancestorsOf(canvasOnly)).toEqual(canvasOnly.map(() => CANVAS));
   });
 
   it('[LTI-003] allows ltijs inline scripts and style attributes by hash, not its JSON data blocks', () => {

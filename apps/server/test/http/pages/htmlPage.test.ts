@@ -1,9 +1,10 @@
 /**
- * Tests for the escaping page template of the server-rendered Session 3 pages.
+ * Tests for the escaping page template of the server-rendered pages, and their header with Hjelp.
  *
- * Spec: LTI-003, PROD-004
+ * Spec: LTI-003, PROD-004, UD-013, UD-006, UD-007
  */
 import { describe, expect, it } from 'vitest';
+import { t } from '../../../src/i18n/translate.js';
 import { escapeHtml, htmlPage, markup, SafeHtml } from '../../../src/http/pages/htmlPage.js';
 
 const ATTACK = `"><script>alert('x')</script><img src=x onerror=alert(1)>&`;
@@ -61,5 +62,36 @@ describe('[LTI-003] page template', () => {
       expect(page({ scripts: [src] }), src).toThrow('invalid script path');
     }
     expect(page({ bodyData: { 'x" onload="alert(1)': 'v' } })).toThrow('invalid data attribute name');
+  });
+});
+
+describe('[UD-013] the Hjelp header', () => {
+  const pageWith = (help?: { newTab: boolean }) =>
+    htmlPage({ locale: 'nn', title: 'T', main: markup`<h1>T</h1>`, help }, 'HVL Interaktiv');
+
+  it('[UD-013] with a help link the page starts with a skip link and the banner with Hjelp, like the web app', () => {
+    // Act
+    const page = pageWith({ newTab: false });
+    // Assert
+    const body = page.slice(page.indexOf('<body>'));
+    expect(body.indexOf('class="hvl-skip-link" href="#main"')).toBeLessThan(body.indexOf('<header'));
+    expect(body.indexOf('</header>')).toBeLessThan(body.indexOf('<main id="main">'));
+    expect(page).toContain(`<nav aria-label="${t('page.help.nav', {}, 'nn')}">`);
+    expect(page).toContain(`<a href="/hjelp" target="_top">${t('page.help.link', {}, 'nn')}</a>`);
+    expect(page).toContain('<link rel="stylesheet" href="/static/pages/serverChrome.css">');
+    expect(page).not.toMatch(/style=/);
+  });
+
+  it('[UD-007] inside Canvas the link opens a new tab, says so, and gives the new tab no opener', () => {
+    const page = pageWith({ newTab: true });
+    expect(page).toContain('<a href="/hjelp" target="_blank" rel="noopener noreferrer">');
+    expect(page).toContain(`<span class="hvl-visually-hidden"> ${t('page.help.newTab', {}, 'nn')}</span>`);
+  });
+
+  it('[UD-013] without a help link (the web app does not run) there is no header and no link to /hjelp', () => {
+    const page = pageWith();
+    expect(page).not.toContain('<header');
+    expect(page).not.toContain('/hjelp');
+    expect(page).not.toContain('serverChrome.css');
   });
 });

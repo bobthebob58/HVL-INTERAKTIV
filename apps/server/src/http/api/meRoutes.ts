@@ -8,16 +8,19 @@
  * Auth: either — a portal session (the CSRF token on PUT) or an ltik as `Authorization: Bearer`.
  * Errors: 401 `hvl:unauthenticated`, `hvl:session-expired`, `hvl:ltik-invalid`, `hvl:csrf-invalid`;
  *   PUT also 403 `error.forbidden` (learners), 404 `error.notFound` (a notice ID outside the allowlist) and
- *   400 `error.badRequest` (body).
+ *   400 `error.badRequest` (a body that does not match the schema, or a version newer than the notice's current one).
  * Invariants:
  *   - `/me` never contains a name, e-mail address, Feide ID, LTI subject or user ID (DATA-002).
  *   - Learners never see these notices: they get no dismissals and may not store one, so no learner data is added.
  *   - One row per (user, notice); a PUT replaces the version and the time.
+ *   - A stored version is never above `NOTICE_VERSIONS[noticeId]`, so it fits the INTEGER column and cannot hide a
+ *     later version of the notice in advance (D-075). An older version is stored as sent (a page left open).
  * Collaborators: ./apiRouter.ts, ./apiBodies.ts, ../../auth/principalLocals.ts, @hvl-interaktiv/api-contract.
  * Tests: apps/server/test/http/api/meRoutes.int.test.ts
  */
 import {
   NOTICE_IDS,
+  NOTICE_VERSIONS,
   noticeDismissalRequestSchema,
   noticeIdSchema,
   type DismissedNotice,
@@ -71,6 +74,8 @@ export function meRoutes(deps: { db: Database; clock: Clock }): Router {
     const notice = noticeIdSchema.safeParse(pathParam(req, 'noticeId'));
     if (!notice.success) throw new HttpError(404, 'error.notFound');
     const { version } = parseBody(noticeDismissalRequestSchema, req.body);
+    // WHY: a version the server has not shown yet would hide that version once it comes (D-075).
+    if (version > NOTICE_VERSIONS[notice.data]) throw new HttpError(400, 'error.badRequest');
     const at = deps.clock();
     await deps.db.noticeDismissal.upsert({
       where: { userId_noticeId: { userId: principal.userId, noticeId: notice.data } },

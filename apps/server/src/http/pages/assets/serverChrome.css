@@ -1,0 +1,87 @@
+/*
+ * serverChrome — the skip link and the header with **Hjelp** of the pages the server renders itself, when the web
+ * app runs (../helpLink.ts).
+ *
+ * Why: UD-013 wants Hjelp in the same place on every page; the server's own pages repeat the web app's header
+ *      (apps/web/src/components/SiteHeader.tsx, apps/web/src/styles/components.css) so it looks and sits the same.
+ * Spec: UD-013, UD-006, UD-005, UD-001, UD-012
+ * Invariants:
+ *   - Values are design tokens only; no colour literal, system colours only under `forced-colors: active`.
+ *   - Loaded after /h5p/theme/tokens.css and ./serverPages.css, only on pages that have the header.
+ *   - Header links are at least `--hvl-target-min` tall (UD-005); the skip link is visible when focused (UD-006).
+ * Collaborators: ../htmlPage.ts, ../pageAssetRoutes.ts, ./serverPages.css, packages/design-tokens/dist/tokens.css.
+ * Tests: apps/server/test/http/pages/pageAssets.int.test.ts, apps/server/test/http/pages/serverPages.browser.test.ts
+ */
+
+/* A11Y: WCAG 2.4.1 (UD-006): the first element of a page with a header; visible as soon as it has focus. */
+.hvl-skip-link {
+  position: absolute;
+  left: var(--hvl-space-s);
+  top: calc(-1 * var(--hvl-space-xxl));
+  padding: var(--hvl-space-s) var(--hvl-space-m);
+  background: var(--hvl-surface);
+  color: var(--hvl-primary-dark);
+  font-weight: 700;
+}
+
+.hvl-skip-link:focus {
+  top: var(--hvl-space-s);
+}
+
+.hvl-site-header {
+  background: var(--hvl-primary-dark);
+  color: var(--hvl-surface);
+}
+
+.hvl-site-header-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hvl-space-s) var(--hvl-space-l);
+  box-sizing: border-box;
+  max-width: calc(var(--hvl-measure) + 2 * var(--hvl-space-l));
+  /* As tall as the web app's header (`--site-header-height`, 4rem). */
+  min-height: calc(var(--hvl-space-xxl) + var(--hvl-space-m));
+  margin: 0 auto;
+  padding: var(--hvl-space-s) var(--hvl-space-l);
+}
+
+.hvl-site-name {
+  font-weight: 700;
+}
+
+.hvl-site-header ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hvl-site-header a {
+  display: inline-block;
+  min-height: var(--hvl-target-min);
+  line-height: var(--hvl-target-min);
+  color: var(--hvl-surface);
+}
+
+/* The new-tab arrow, as in the web app: apart from the text and not underlined (an inline block stops the line). */
+.hvl-site-header a [aria-hidden='true'] {
+  display: inline-block;
+  margin-left: var(--hvl-space-xs);
+  text-decoration: none;
+}
+
+.hvl-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (forced-colors: active) {
+  .hvl-site-header {
+    border-bottom: 1px solid CanvasText;
+  }
+}

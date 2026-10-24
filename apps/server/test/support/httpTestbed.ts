@@ -21,6 +21,7 @@ import request from 'supertest';
 import { createH5pRuntime, type H5pRuntime } from '../../src/h5p/createH5pRuntime.js';
 import { asAccountUser, type H5pRole, type HvlH5pActor } from '../../src/h5p/HvlH5pUser.js';
 import { createH5pRouter } from '../../src/http/createH5pRouter.js';
+import { pageAssetRoutes } from '../../src/http/pages/pageAssetRoutes.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
 import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
 import { createS3Client } from '../../src/infra/s3Client.js';
@@ -99,6 +100,8 @@ export async function openHttpTestbed(
     next();
   };
   const app = express();
+  // WHY: as createApp does: the editor's outer page links /static/pages/serverPages.css (A11Y-4).
+  app.use(pageAssetRoutes());
   app.use('/h5p', createH5pRouter(runtime, authenticate));
   const userIds: string[] = [];
   return {

@@ -362,6 +362,7 @@ cookie (D-057). Learner state is never in Redis: it lives in PostgreSQL (`H5PUse
 | LTI cache `hvli:lti:cache:keyset:default` | The tool's own public keyset, served at `/lti/keys` (D-050) | None | n/a | 60 seconds | Redis |
 | LTI cache `hvli:lti:cache:oidc:jwks:<url>` | A platform's public JWKS, for launch-token signatures (D-050) | None | n/a | 5 minutes | Redis |
 | lease `hvli:lti:record-cleanup` | A random node ID: one server runs the LTI record cleanup per interval | None | n/a | About 10 minutes | Redis |
+| lock `hvli:content:write-lock:<contentId>` (ID in lower case) | A random token: one save or publish of an activity at a time across servers (D-074) | None | n/a | Until the save or publish ends, at most 60 seconds | Redis |
 | H5P key-value store `hvli:h5p:kv:*` | Lumi's settings and the Hub content-type cache (`RedisKeyValueStorage`) | None | n/a | Until replaced | Redis |
 | H5P locks `@simple-redis-mutex:lock-install-library:<library>` and `…:lock-install-from-directory:<library>` (Lumi's `RedisLockProvider`; no `hvli:` prefix) | Serialise library installs across servers | None | n/a | Seconds (while the install runs) | Redis |
 | `@simple-redis-mutex:fencing-tokens` | The lock library's fencing counter (an integer) | None | n/a | Never expires | Redis |

@@ -4,14 +4,16 @@
  * Why: a learner who opens an unavailable activity, a teacher whose Canvas access expired, or a user who just
  *      logged out should read a clear sentence in their own language, never a stack trace or a JSON body
  *      (PROD-004, LTI-001 friendly error pages, D-066).
- * Spec: PROD-004, LTI-001, LTI-003, PROD-012
+ * Spec: PROD-004, LTI-001, LTI-003, PROD-012, UD-013
  * Invariants:
  *   - Every string comes from the locale files; nothing from the request is shown.
  *   - The link, if any, is a same-origin path (`/…`, never `//…`), so a page can never send the user elsewhere.
+ *   - With `help`, the page has the header with **Hjelp** like every web-app page (UD-013).
  * Collaborators: ./htmlPage.ts, ../../i18n/translate.ts, ../routes/playerRoutes.ts, ../../lti/http/ltiErrorPages.ts.
- * Tests: apps/server/test/http/pages/messagePage.test.ts
+ * Tests: apps/server/test/http/pages/messagePage.test.ts, apps/server/test/http/pages/portalPages.test.ts
  */
 import { t, type Locale, type MessageKey } from '../../i18n/translate.js';
+import type { HelpLink } from './helpLink.js';
 import { htmlPage, markup } from './htmlPage.js';
 
 /** A link the page offers, e.g. "Log in with Feide". */
@@ -32,6 +34,8 @@ export interface MessagePageInput {
   readonly bodyKey: MessageKey;
   /** The page's one link, if any. */
   readonly action?: PageAction;
+  /** The header's Hjelp link, when the web app runs (./helpLink.ts). */
+  readonly help?: HelpLink | undefined;
 }
 
 /**
@@ -51,5 +55,5 @@ export function messagePage(input: MessagePageInput): string {
   const main = markup`<h1>${title}</h1>
 <p>${t(bodyKey, {}, locale)}</p>
 ${link}`;
-  return htmlPage({ locale, title, main }, t('page.siteName', {}, locale));
+  return htmlPage({ locale, title, main, help: input.help }, t('page.siteName', {}, locale));
 }

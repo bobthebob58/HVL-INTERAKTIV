@@ -5987,6 +5987,17 @@ mounted only when the web app runs. A browser&#39;s own navigation (<code>Sec-Fe
 <code>/lti/play</code> or <code>/lti/edit</code> to <code>/app/play</code> with only the ltik carried over (<code>no-store</code>, <code>no-referrer</code>). Frames,
 fetches and clients without fetch metadata get the page as before, so the integration tests and older browsers
 are unaffected.</li>
+<li><strong>Amendment (2026-10-24, review):</strong> the pages Express still renders (the friendly error pages and the Deep Linking
+picker) show the web app&#39;s header themselves when the web app runs and they are opened on their own, in the
+browser or as the page of Canvas&#39;s iframe (<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>): a skip link, the site name and <strong>Hjelp</strong> to <code>/hjelp</code>, which
+opens a new tab inside Canvas (<a class="req-ref" href="#r-UD-007"><code>UD-007</code></a>). Inside our own chrome (the error pages of <code>/lti/play</code> and <code>/lti/edit</code> in
+<code>/app/play</code>, the not-available pages of <code>/h5p/play</code> and <code>/h5p/edit</code> in <code>/aktivitet</code>) the chrome&#39;s header already
+shows Hjelp, so a frame our own origin asked for (<code>Sec-Fetch-Dest: iframe</code> with <code>Sec-Fetch-Site: same-origin</code>)
+gets no second header; Canvas&#39;s iframe is cross-site, also after the launch&#39;s redirects. A browser without fetch
+metadata shows both headers, which repeats Hjelp but hides nothing. With <code>WEB_APP=off</code> there is no <code>/hjelp</code>, so
+there is no header. The picker lists its problems in an error summary below the heading that takes focus and
+links to the choices (<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>). The editor&#39;s outer page uses the server pages&#39; stylesheet for its save button and
+status (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>).</li>
 </ul>
 <h3 id="decisions--d-068--express-is-the-front-door-and-runs-nextjs-in-the-same-process" tabindex="-1">D-068 · Express is the front door and runs Next.js in the same process</h3>
 <ul>
@@ -6011,6 +6022,10 @@ telemetry unless <code>NEXT_TELEMETRY_DISABLED</code> is set, which the build sc
 Next.js through a computed specifier with its own type for the factory, because Next.js&#39;s global types make
 <code>process.env.NODE_ENV</code> read-only and would break the server&#39;s compilation; <code>next-env.d.ts</code> differs between
 <code>dev</code> and <code>build</code> in Next.js 16, so it is generated (<code>next typegen</code> in <code>typecheck</code>) and ignored, not committed.</li>
+<li><strong>Amendment (2026-10-24, review):</strong> the development server&#39;s WebSocket upgrades (<code>/_next/</code>, hot reload) get the same
+removal of <code>cookie</code>, <code>authorization</code>, <code>x-hvli-*</code> and the <code>ltik</code> query before Next.js sees them; any other upgrade
+is closed. Production refuses <code>WEB_APP=dev</code>, so the development server and its relaxed policy (D-070) never run
+there.</li>
 </ul>
 <h3 id="decisions--d-069--query-ltik-paths-and-file-grants-for-the-s4-views-and-the-editor" tabindex="-1">D-069 · Query-ltik paths and file grants for the S4 views and the editor</h3>
 <ul>
@@ -6064,6 +6079,31 @@ frame is noticed.</li>
 of <code>FEIDE_ISSUER</code>. The start page&#39;s logout form posts to <code>/auth/logout</code>, which answers 303 to Feide&#39;s end-session
 endpoint, and Chromium applies <code>form-action</code> to that redirect as well (the web workstream&#39;s probe); with <code>&#39;self&#39;</code>
 alone, logout from the web app was refused. No other directive names an outside origin.</li>
+<li><strong>Amendment (2026-10-24, Panopto):</strong> the owner decided on 2026-10-23 that videos come from sources HVL allows in
+configuration, for example Panopto, and never YouTube. H5P.Video 1.6 plays a Panopto viewer link only through
+Panopto&#39;s embed API, which <code>scripts/panopto.js</code> inserts as a script tag for
+<code>https://developers.panopto.com/scripts/v1.2.0/embedapi.min.js</code>; under <code>script-src &#39;self&#39;</code> such a video stayed on
+&quot;loading&quot;. <code>script-src</code> on H5P pages therefore also lists that file as a path source (the file, not the whole
+<code>developers.panopto.com</code> origin), but only when an <code>EXTERNAL_MEDIA_ORIGINS</code> entry is a Panopto site (a subdomain
+of <code>panopto.com</code> or <code>panopto.eu</code>); a configured media origin itself never gets script rights. <code>SECURITY</code>: this is
+a third-party script on pages that hold the ltik in memory (D-058), so it is opt-in by configuration and limited
+to that one file; the player&#39;s iframe comes from the configured site, which <code>frame-src</code> already lists. Whether
+<code>embedapi.min.js</code> loads further scripts could not be checked (the file was not reachable from the build
+machine); if it does, Chromium reports the refusal and the video stays on &quot;loading&quot;, and the source is widened to
+exactly the further file after checking it on HVL&#39;s network. <code>SPEC-DEVIATION</code>: <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a> asks for SRI on every
+script and <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a> for no third-party scripts beyond the media the author added; H5P.Video writes the tag
+without <code>integrity</code>, so SRI is impossible. A Chromium test plays a Panopto-shaped source with the request
+intercepted: the script loads when a Panopto site is configured and is refused when none is, and another script
+on <code>developers.panopto.com</code> stays refused.</li>
+<li><strong>Amendment (2026-10-24, review):</strong> <code>font-src</code> on H5P pages is <code>&#39;self&#39; data:</code>: H5P.DragNBar 1.3 and 1.5
+(CoursePresentation, InteractiveVideo) inline their icon font as a data: WOFF in <code>styles/context-menu.css</code>; a data:
+font reaches no other origin. The friendly portal pages (not available, error, 404, logged out) send <code>default-src &#39;none&#39;; script-src &#39;self&#39;; style-src &#39;self&#39;; img-src &#39;self&#39; data:; connect-src &#39;self&#39;; base-uri &#39;none&#39;; object-src &#39;none&#39;; form-action &#39;self&#39;; frame-ancestors &#39;self&#39;</code> instead of <code>frame-ancestors &#39;self&#39;</code> alone, so
+<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a> is enforced on them too; <code>connect-src &#39;self&#39;</code> keeps a page script&#39;s request to <code>/auth/session</code> working
+(the <a class="req-ref" href="#r-PROD-006"><code>PROD-006</code></a> e2e flow). The <code>WEB_APP=off</code> start page sends the same without <code>form-action</code>, because its logout
+redirect goes on to Feide (see above). The error pages of <code>/lti/play</code> and <code>/lti/edit</code> (matched as Express routes
+them: with a trailing slash and in any case) may be framed by <code>&#39;self&#39;</code> and <code>CANVAS_ORIGINS</code> like those pages,
+because <code>/app/play</code> frames them on our origin; launch, login and Deep Linking pages stay framed by Canvas only
+(<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
 </ul>
 <h3 id="decisions--d-071--cc-by-40-is-an-allowed-licence-caniuse-lite" tabindex="-1">D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)</h3>
 <ul>
@@ -6123,6 +6163,32 @@ the video length from the latest interaction time, because content.json has no d
 any authored text or link that mentions a transcript, since H5P has no transcript field; V-HOTSPOT-ORDER accepts
 numbered icons or a list order that follows reading order. Findings are unique per <code>(ruleId, path)</code>, as the
 acknowledgements of D-074 need.</li>
+<li><strong>Amendment (2026-10-24, review fixes, validator):</strong> corrections after checking the rules against the code of the
+installed libraries (D-078); each one is also in its rule&#39;s module header. V-HOTSPOT-ORDER checks the order in which
+learners meet the hotspots, and only the hotspots the player shows: from 1.10, ImageHotspots drops a hotspot whose
+content has no item with a library, and 1.5 drops one without content. Unless the icons are numbers, ImageHotspots
+(1.5, 1.10, 1.11) sorts the hotspots strictly by y, then x, before it builds the DOM (a hotspot whose x or y is 0
+goes last), so the list order never reaches the learner. The rule warns when hotspots on one visual row (within 10
+percentage points of height) are read right to left, or when a hotspot moved last breaks the reading order. Its
+remedy is to place each hotspot of a row a little lower than the one to its left, because hand-placed hotspots
+rarely get exactly the same height. Numbers as icons are offered only from ImageHotspots 1.11
+(<code>V-HOTSPOT-ORDER.unorderedWithoutNumbers</code> for older versions). With numbers (1.11) the list order is kept and only
+hotspots with the default icon get a number, so a list with unnumbered hotspots must follow the image
+(<code>V-HOTSPOT-ORDER.partlyNumbered</code>). V-VID-CAPTIONS counts a track only when its kind is subtitles or captions:
+H5P.Video 1.6 does not add a track without a kind, and InteractiveVideo hands its tracks to it
+(<code>V-VID-CAPTIONS.kindNotSet</code>). V-IMG-ALT and V-IMG-ALT-LENGTH also check Dialogcards (<code>dialogs[n].imageAltText</code>),
+MemoryGame from 1.2 (<code>cards[n].imageAlt</code>, <code>cards[n].matchAlt</code>; 1.1 has no alt-text fields, and 1.2 gained them in
+patch 1.2.6), Collage (<code>collage.clips[n].alt</code>) and a shown QuestionSet cover from 1.21
+(<code>introPage.backgroundImageAltText</code>). These have no decorative flag, so an empty alt text is an error to fix or
+acknowledge. V-HEADING-ORDER reads the reading texts of an H5P.Column (every InteractiveBook chapter) as one
+outline. V-COLOUR-WORDS leaves only a BranchingQuestion&#39;s choice texts to V-BRANCH-COLOUR. PED-H07 does not report a
+task&#39;s switch that its QuestionSet, CoursePresentation or InteractiveVideo forces on with <code>override.* = &quot;on&quot;</code>.
+PED-H06 merges alternatives that lead to the same node and computes the best path on from each node on no cycle only
+once. A case without loops is therefore counted exactly as long as it is at most 500 nodes deep and fits the 20
+000-expansion budget, which in practice limits only the search inside loops; past either bound PED-H06 reports no
+count rather than a guess. Message numbers are written per locale (<code>11,5</code> and <code>1 500</code> in nn and nb), and
+PED-H01/PED-H02 round minutes up to a tenth, so a message never contradicts its threshold. Findings stay keyed on
+the same (ruleId, path) for unchanged content.</li>
 </ul>
 <h3 id="decisions--d-074--publishing-server-re-validation-acknowledgements-and-concurrency" tabindex="-1">D-074 · Publishing: server re-validation, acknowledgements and concurrency</h3>
 <ul>
@@ -6141,9 +6207,23 @@ already published runs the same gate. Only those who may edit (H5P-006) may publ
 used to say &quot;on structural change&quot;); a refused save of a published activity is 409 <code>hvl:published-save-blocked</code>
 with the findings, and nothing is saved; findings, publish and unpublish answer 404 when the person may not view
 the activity and 403 <code>hvl:edit-not-allowed</code> when they may view but not edit; unpublish clears <code>publishedAt</code>, and
-publishing an activity that is already published validates again and moves <code>publishedAt</code> to now. Known gap: a
-publish that commits between the save gate&#39;s check and Lumi&#39;s save is not re-checked (the publish validated what it
-saw); recorded in <code>PublishedSaveGate.ts</code>.</li>
+publishing an activity that is already published validates again and moves <code>publishedAt</code> to now.</li>
+<li><strong>Amendment (2026-10-24, review fixes F-01, F-02):</strong> the save gate validates what the editor will store, not the
+request: HVL&#39;s sub-content policy and Lumi&#39;s semantics enforcer run on copies of the request first
+(<code>apps/server/src/content/savedForm.ts</code>), so markup the sanitiser removes (e.g. an alt text that is only
+<code>&lt;style&gt;…&lt;/style&gt;</code>) is judged as removed. A save of an existing activity (gate, Lumi&#39;s write, version count) and a
+publish (from its read to its commit) each hold the activity&#39;s Redis lock <code>hvli:content:write-lock:&lt;contentId&gt;</code> with
+the ID in lower case (<code>apps/server/src/content/ContentWriteLock.ts</code>, <code>writeLockKey</code>; lease 60 s, wait 30 s, then
+409 <code>hvl:content-changed</code>), because the save passes the ID as its URL spells it and the publish passes the stored
+ID; so a publish can no longer commit between the gate&#39;s status read and Lumi&#39;s write. A PostgreSQL lock was
+rejected because it would hold a pooled connection through the whole Lumi save, which needs connections from the
+same pool. Residual risk: if the gate&#39;s read and Lumi&#39;s write of the parameters were more than the 60-second lease
+apart, a publish could commit in between; only database reads and semantics walks lie between them, no file
+transfer. While Redis is unreachable, the client&#39;s offline queue holds the lock command, so a save or publish waits
+for Redis, as the Redis-backed session on the same request already does; it is refused only on an error answer
+from Redis. The saved form repeats the editor&#39;s cleaning steps;
+<code>apps/server/test/content/publishedSaveRealTypes.int.test.ts</code> compares it with what the editor stores, so a new
+step in <code>HvlH5PEditor</code>&#39;s save must be added to <code>savedForm.ts</code> as well.</li>
 </ul>
 <h3 id="decisions--d-075--notice-dismissals-are-stored-per-user" tabindex="-1">D-075 · Notice dismissals are stored per user</h3>
 <ul>
@@ -6152,6 +6232,9 @@ the Redis session ends at logout.</li>
 <li><strong>Decision:</strong> A table <code>NoticeDismissal(userId, noticeId, noticeVersion, at)</code>; a new notice version is shown again.
 <code>GET /api/me</code> and <code>PUT /api/me/notices/:noticeId</code>. Learners never see these notices, so no learner data is added.</li>
 <li><strong>Consequences:</strong> New rows in <code>docs/privacy/DATA-INVENTORY.md</code>; deleted with the account.</li>
+<li><strong>Amendment (2026-10-24, review fix F-03):</strong> <code>PUT /api/me/notices/:noticeId</code> refuses a <code>version</code> above
+<code>NOTICE_VERSIONS[noticeId]</code> with 400 <code>error.badRequest</code>, so a stored version always fits the INTEGER column and can
+never hide a later version of the notice in advance; an older version is stored as sent (a page left open).</li>
 </ul>
 <h3 id="decisions--d-076--the-web-apps-own-typed-translations" tabindex="-1">D-076 · The web app&#39;s own typed translations</h3>
 <ul>

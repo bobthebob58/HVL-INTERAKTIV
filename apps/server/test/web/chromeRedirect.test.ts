@@ -25,6 +25,11 @@ describe('[DATA-006] H5P pages opened on their own go to their chrome page', () 
     ['/lti/play?ltik=a.b.c&other=x', '/app/play?ltik=a.b.c'],
     ['/lti/edit?ltik=a.b.c', '/app/play?ltik=a.b.c'],
     ['/lti/play', '/app/play'],
+    // Express routes these spellings to the same pages (no strict routing, no case sensitivity).
+    [`/H5P/Play/${ID}/`, `/aktivitet/${ID}`],
+    ['/h5p/NEW/', '/aktivitet/ny'],
+    ['/lti/play/?ltik=a.b.c', '/app/play?ltik=a.b.c'],
+    ['/LTI/Edit', '/app/play'],
   ])('[DATA-006][UD-013] a top-level navigation to %s goes to %s, never cached', async (path, target) => {
     const res = await request(app).get(path).set(NAVIGATION);
     expect(res.status).toBe(303);

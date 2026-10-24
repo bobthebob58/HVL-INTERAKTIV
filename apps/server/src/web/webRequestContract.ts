@@ -10,7 +10,10 @@
  *     `x-middleware-*` header, `next-action`, and the `ltik` query parameter (all spellings of the names).
  *   - `rawHeaders` is filtered the same way, so no code path sees a removed header.
  *   - Set afterwards: `content-security-policy` (Next.js takes the nonce from it) and `x-hvli-locale`.
- * Collaborators: ./webRoutes.ts, apps/web/src/i18n/requestLocale.ts (reads `x-hvli-locale`).
+ *   - The development server's WebSocket upgrades get the same removal (`stripForWebApp`), without a policy or a
+ *     locale: an upgrade answers no page.
+ * Collaborators: ./webRoutes.ts, ../server/main.ts (upgrades), apps/web/src/i18n/requestLocale.ts (reads
+ *   `x-hvli-locale`).
  * Tests: apps/server/test/web/webRequestContract.test.ts
  */
 import type { IncomingMessage } from 'node:http';
@@ -49,11 +52,10 @@ export function withoutLtik(url: string): string {
 }
 
 /**
- * Rewrites a request for the web app, in place.
- * @param req - The incoming request, after every Express route has passed it on.
- * @param decisions - The response's policy and the locale Express chose.
+ * Removes credentials, forged decisions, Next.js internals and the `ltik` query from a request, in place.
+ * @param req - A request (or WebSocket upgrade) on its way to the web app.
  */
-export function prepareWebRequest(req: IncomingMessage, decisions: { csp: string; locale: Locale }): void {
+export function stripForWebApp(req: IncomingMessage): void {
   for (const name of Object.keys(req.headers)) if (isRemoved(name)) delete req.headers[name];
   const raw: string[] = [];
   for (let i = 0; i + 1 < req.rawHeaders.length; i += 2) {
@@ -62,6 +64,15 @@ export function prepareWebRequest(req: IncomingMessage, decisions: { csp: string
   }
   req.rawHeaders = raw;
   req.url = withoutLtik(req.url ?? '/');
+}
+
+/**
+ * Rewrites a request for the web app, in place: `stripForWebApp`, then Express's decisions.
+ * @param req - The incoming request, after every Express route has passed it on.
+ * @param decisions - The response's policy and the locale Express chose.
+ */
+export function prepareWebRequest(req: IncomingMessage, decisions: { csp: string; locale: Locale }): void {
+  stripForWebApp(req);
   req.headers['content-security-policy'] = decisions.csp;
   req.headers[LOCALE_HEADER] = decisions.locale;
   req.rawHeaders.push('content-security-policy', decisions.csp, LOCALE_HEADER, decisions.locale);

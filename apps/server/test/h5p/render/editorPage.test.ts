@@ -1,8 +1,8 @@
 /**
  * Tests for our editor page template: no inline script, inert and escaped JSON blocks, the page language and title,
- * a save button with a polite status region, and only same-origin first scripts.
+ * a save button with a polite status region, the server pages' stylesheet, and only same-origin first scripts.
  *
- * Spec: SEC-008, H5P-007, UD-010, DATA-011, PROD-003
+ * Spec: SEC-008, H5P-007, UD-010, DATA-011, PROD-003, UD-002
  */
 import type { IIntegration } from '@lumieducation/h5p-server';
 import { describe, expect, it } from 'vitest';
@@ -43,6 +43,13 @@ describe('[SEC-008] editor page template', () => {
     expect(html).toContain('<title>Edit activity</title>');
     expect(html).toContain('<button type="button" id="hvl-editor-save" disabled>Save</button>');
     expect(html).toContain('<p id="hvl-editor-status" role="status" aria-live="polite"></p>');
+  });
+
+  it('[UD-002] links the server pages’ stylesheet after H5P’s styles, so its own controls use the tokens', () => {
+    const html = renderEditorPage(input(), 'nn');
+    const own = html.indexOf('<link rel="stylesheet" href="/static/pages/serverPages.css">');
+    expect(own).toBeGreaterThan(html.indexOf('href="/h5p/core/styles/h5p.css?version=1.28.0"'));
+    expect(html).toContain('<main class="hvl-editor">');
   });
 
   it('[PROD-003] hands the script the blocked-save count message in the page language, with the count left open', () => {

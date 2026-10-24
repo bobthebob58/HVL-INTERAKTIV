@@ -2,7 +2,7 @@
  * Tests that every failure on an LTI route becomes a friendly page (or JSON for API calls) with the LTI headers,
  * in the launch's language once it is known, and that failed launches are audited with a fixed reason.
  *
- * Spec: LTI-001, LTI-003, PROD-004, PROD-012
+ * Spec: LTI-001, LTI-003, PROD-004, PROD-012, UD-013
  */
 import { Writable } from 'node:stream';
 import express from 'express';
@@ -11,6 +11,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import type { AuthAuditInput } from '../../../src/auth/audit/AuthAuditRecorder.js';
 import { authError } from '../../../src/http/authErrors.js';
+import { offerHelpLink } from '../../../src/http/pages/helpLink.js';
 import { t } from '../../../src/i18n/translate.js';
 import {
   classifyLtiError,
@@ -23,17 +24,18 @@ import { createLogger } from '../../../src/logging/logger.js';
 const ltijs = (code: string) => new LtijsError(code);
 const jwt = (name: string) => Object.assign(new Error('invalid signature'), { name });
 
-const appThrowing = (error: unknown) => {
+const appThrowing = (error: unknown, options: { webApp?: boolean } = {}) => {
   const audited: AuthAuditInput[] = [];
   const logger = createLogger({
     level: 'silent',
     destination: new Writable({ write: (_c, _e, done) => done() }),
   });
   const app = express();
+  if (options.webApp) app.use(offerHelpLink());
   app.post('/lti/launch', () => {
     throw error;
   });
-  app.get('/lti/play', () => {
+  app.get(['/lti/play', '/lti/edit'], () => {
     throw error;
   });
   app.get('/lti/deeplink', (_req, res) => {
@@ -101,6 +103,59 @@ describe('[LTI-001] LTI error pages', () => {
     const res = await request(appThrowing(authError('hvl:activity-unavailable')).app).get('/lti/play');
     expect(res.status).toBe(404);
     expect(res.text).toContain('<h1>Ikkje tilgjengeleg</h1>');
+  });
+
+  it('[LTI-003] the 401 and 404 pages of /lti/play and /lti/edit may be framed by our /app/play chrome and Canvas', async () => {
+    // Arrange
+    const reopen = appThrowing(ltijs('INVALID_LTIK')).app;
+    const unavailable = appThrowing(authError('hvl:activity-unavailable')).app;
+    // Act
+    const pages = await Promise.all(
+      [reopen, unavailable].flatMap((app) =>
+        ['/lti/play', '/lti/edit'].map((path) => request(app).get(path)),
+      ),
+    );
+    // Assert
+    expect(pages.map((res) => res.status)).toEqual([401, 401, 404, 404]);
+    for (const res of pages) {
+      expect(res.headers['content-security-policy']).toMatch(
+        /; frame-ancestors 'self' https:\/\/hvl\.instructure\.com$/,
+      );
+      expect(res.headers['x-frame-options']).toBeUndefined();
+    }
+  });
+
+  it('[LTI-003] launch and Deep Linking error pages stay framed by Canvas only', async () => {
+    const { app } = appThrowing(ltijs('INVALID_LTIK'));
+    for (const res of [await request(app).post('/lti/launch'), await request(app).get('/lti/deeplink')]) {
+      expect(res.headers['content-security-policy']).toMatch(
+        /; frame-ancestors https:\/\/hvl\.instructure\.com$/,
+      );
+    }
+  });
+
+  it('[UD-013] with the web app, the page has the Hjelp header, opening a new tab so the launch is kept', async () => {
+    const withWeb = await request(appThrowing(ltijs('INVALID_LTIK'), { webApp: true }).app).get('/lti/play');
+    const without = await request(appThrowing(ltijs('INVALID_LTIK')).app).get('/lti/play');
+    expect(withWeb.text).toContain('<a href="/hjelp" target="_blank" rel="noopener noreferrer">Hjelp');
+    expect(without.text).not.toContain('/hjelp');
+  });
+
+  it('[UD-013] inside our /app/play chrome (a same-origin frame) the page has no second header; in Canvas it has', async () => {
+    // Arrange: /app/play frames /lti/play under the header that already shows Hjelp
+    const { app } = appThrowing(ltijs('INVALID_LTIK'), { webApp: true });
+    const asFrame = (path: string, site: string) =>
+      request(app).get(path).set('Sec-Fetch-Dest', 'iframe').set('Sec-Fetch-Site', site);
+    // Act
+    const inOurChrome = await Promise.all(['/lti/play', '/lti/edit'].map((p) => asFrame(p, 'same-origin')));
+    const inCanvas = await asFrame('/lti/play', 'cross-site');
+    // Assert
+    for (const res of inOurChrome) {
+      expect(res.status).toBe(401);
+      expect(res.text).not.toContain('/hjelp');
+      expect(res.text).not.toContain('hvl-site-header');
+    }
+    expect(inCanvas.text).toContain('<a href="/hjelp" target="_blank" rel="noopener noreferrer">Hjelp');
   });
 
   it('[PROD-012] once a route has resolved the ltik (setLtiPageLocale), the page and the JSON are in the launch’s language', async () => {

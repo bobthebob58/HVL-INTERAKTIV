@@ -1,11 +1,20 @@
 /*
  * serverPages — the look of the pages the server renders itself: the friendly message and error pages, the
- * server-rendered start page (WEB_APP=off) and the Deep Linking picker (D-067).
+ * server-rendered start page (WEB_APP=off), the Deep Linking picker and the outer page of the H5P editor (D-067).
  *
  * Why: D-067 keeps these pages in Express but asks for the token CSS, so they match the web app. Every value is a
  *      design token (packages/design-tokens/dist/tokens.css, loaded first); the page's own rules stay small.
- * Spec: UD-001, UD-002, UD-004, UD-005, UD-012
- * Tests: apps/server/test/http/pages/pageAssets.int.test.ts
+ * Spec: UD-001, UD-002, UD-004, UD-005, UD-012, UD-013
+ * Invariants:
+ *   - Values are design tokens only; no colour literal, system colours only under `forced-colors: active`.
+ *   - Loaded after /h5p/theme/tokens.css; the pages need no inline style (`style-src 'self'`, D-048).
+ *   - The error summary looks like the web app's (apps/web/src/components/ErrorSummary.tsx): problems with an icon
+ *     and text, not by colour alone (UD-003); the header with Hjelp is in ./serverChrome.css.
+ *   - The editor's `main` keeps the full width: H5P's editors need it; only its own save button and status use these
+ *     rules.
+ * Collaborators: ../htmlPage.ts, ../pageAssetRoutes.ts, ./serverChrome.css, ../../../h5p/render/editorPage.ts,
+ *   packages/design-tokens/dist/tokens.css.
+ * Tests: apps/server/test/http/pages/pageAssets.int.test.ts, apps/server/test/http/pages/serverPages.browser.test.ts
  */
 html {
   background: var(--hvl-surface-alt);
@@ -26,6 +35,34 @@ main {
   margin: 0 auto;
   padding: var(--hvl-space-l);
   background: var(--hvl-surface);
+}
+
+main.hvl-editor {
+  max-width: none;
+}
+
+.hvl-error-summary {
+  margin: var(--hvl-space-m) 0;
+  padding: var(--hvl-space-m);
+  border-left: var(--hvl-feedback-border-width) solid var(--hvl-feedback-incorrect-border);
+  background: var(--hvl-feedback-incorrect-bg);
+  color: var(--hvl-feedback-incorrect-fg);
+}
+
+.hvl-error-summary h2 {
+  margin-top: 0;
+  color: var(--hvl-feedback-incorrect-fg);
+  font-size: 1.125rem;
+}
+
+.hvl-error-summary ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hvl-error-summary a {
+  color: var(--hvl-feedback-incorrect-fg);
 }
 
 h1,

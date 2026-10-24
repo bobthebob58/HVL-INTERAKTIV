@@ -1,11 +1,12 @@
 /**
  * productionChecks — extra configuration rules that apply only when NODE_ENV is `production`.
  *
- * Why: development and CI use published example secrets, plain-http mock services and may lack next year's
- *      secret. In production each of these breaks a guarantee: a published secret lets anyone recompute a
- *      learnerKey or forge a signed URL (DATA-002, D-058), a missing current-year secret fails every learner
- *      request, and an http issuer or platform lets a network attacker forge logins (AUTH-001, LTI-001).
- * Spec: DATA-002, DOC-008, AUTH-001, LTI-001, LTI-002
+ * Why: development and CI use published example secrets, plain-http mock services, may lack next year's
+ *      secret and run the web app's development server. In production each of these breaks a guarantee: a
+ *      published secret lets anyone recompute a learnerKey or forge a signed URL (DATA-002, D-058), a missing
+ *      current-year secret fails every learner request, an http issuer or platform lets a network attacker forge
+ *      logins (AUTH-001, LTI-001), and the development server relaxes the web pages' policy (D-070).
+ * Spec: DATA-002, DOC-008, AUTH-001, LTI-001, LTI-002, DATA-011
  * Invariants:
  *   - Production needs a pseudonym secret for the current academic year (1 August boundary, Oslo time).
  *   - Production rejects secrets and ring keys that decode to text (printable ASCII plus tab, CR and LF), as
@@ -16,6 +17,8 @@
  *     leaked purpose never exposes another (D-055, D-056, D-058).
  *   - Production requires https for the public base URL, Feide, the Groups API, Canvas origins and every
  *     configured LTI platform URL.
+ *   - Production refuses `WEB_APP=dev`: Next.js's development server compiles on demand, shows stack traces and
+ *     gets `'unsafe-eval'` and inline styles in its policy (../web/webPageCsp.ts). `prod` and `off` pass.
  *   - Messages name the variable, the year or the key ID, never a secret.
  * Collaborators: ./env.ts (calls it after parsing), ../privacy/academicYear.ts, ../security/keys/keyring.ts.
  * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/productionChecks.test.ts
@@ -45,6 +48,7 @@ export type ProductionCheckedEnv = Pick<
   | 'FEIDE_GROUPS_API_URL'
   | 'CANVAS_ORIGINS'
   | 'LTI_PLATFORMS'
+  | 'WEB_APP'
 >;
 
 const RINGS = ['IDENTITY_HASH_KEYS', 'DATA_ENCRYPTION_KEYS', 'URL_SIGNING_KEYS'] as const;
@@ -110,6 +114,14 @@ const httpsProblems = (env: ProductionCheckedEnv): string[] => {
   return urls.filter(([, url]) => !isHttps(url)).map(([name]) => `${name}: must use https in production`);
 };
 
+// SECURITY: `.env.example` ships `WEB_APP=dev`; a production .env copied from it must not start the dev server.
+const webAppProblems = (env: ProductionCheckedEnv): string[] =>
+  env.WEB_APP === 'dev'
+    ? [
+        'WEB_APP: dev runs the Next.js development server; use prod (after npm run build) or off in production',
+      ]
+    : [];
+
 /**
  * Lists production-only configuration problems.
  * @param env - Parsed configuration.
@@ -117,5 +129,10 @@ const httpsProblems = (env: ProductionCheckedEnv): string[] => {
  * @returns One message per problem, in the `VARIABLE: reason` form of InvalidEnvironmentError.
  */
 export function productionProblems(env: ProductionCheckedEnv, now: Date): string[] {
-  return [...pseudonymProblems(env, now), ...ringProblems(env), ...httpsProblems(env)];
+  return [
+    ...pseudonymProblems(env, now),
+    ...ringProblems(env),
+    ...httpsProblems(env),
+    ...webAppProblems(env),
+  ];
 }

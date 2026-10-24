@@ -1,7 +1,8 @@
 /**
- * Tests for the Session 3 production rules: https everywhere, strong ring keys, and no key used twice.
+ * Tests for the production rules: https everywhere, strong ring keys, no key used twice, and no web-app
+ * development server.
  *
- * Spec: AUTH-001, LTI-001, LTI-002, DATA-002
+ * Spec: AUTH-001, LTI-001, LTI-002, DATA-002, DATA-011
  */
 import { describe, expect, it } from 'vitest';
 import { InvalidEnvironmentError, loadEnv } from '../../src/config/env.js';
@@ -99,5 +100,16 @@ describe('[LTI-002] production ring keys', () => {
       'IDENTITY_HASH_KEYS: key a is also used in PSEUDONYM_SECRETS 2026; every place needs its own key',
       'URL_SIGNING_KEYS: key c is also used in DATA_ENCRYPTION_KEYS b; every place needs its own key',
     ]);
+  });
+});
+
+describe('[DATA-011] production web app mode', () => {
+  it('[DATA-011] refuses the Next.js development server in production, and accepts prod, off and dev elsewhere', () => {
+    expect(problemsAt(productionEnv({ WEB_APP: 'dev' }))).toEqual([
+      'WEB_APP: dev runs the Next.js development server; use prod (after npm run build) or off in production',
+    ]);
+    expect(problemsAt(productionEnv({ WEB_APP: 'prod' }))).toEqual([]);
+    expect(problemsAt(productionEnv({ WEB_APP: 'off' }))).toEqual([]);
+    expect(problemsAt({ ...VALID_ENV, WEB_APP: 'dev' })).toEqual([]);
   });
 });

@@ -1,11 +1,12 @@
 /**
  * Tests for the Content Security Policy of the H5P pages: no inline or eval scripts, first-party sources, outside
- * media only from configured origins, and the framing the caller asks for.
+ * media only from configured origins, Panopto's embed API only with a configured Panopto site, and the framing the
+ * caller asks for.
  *
  * Spec: DATA-011, H5P-009, LTI-003
  */
 import { describe, expect, it } from 'vitest';
-import { h5pPageCsp } from '../../src/http/h5pPageCsp.js';
+import { h5pPageCsp, isPanoptoOrigin, PANOPTO_EMBED_API_URL } from '../../src/http/h5pPageCsp.js';
 
 const directives = (csp: string) =>
   new Map(csp.split('; ').map((d) => [d.split(' ')[0] ?? '', d.split(' ').slice(1)] as const));
@@ -23,6 +24,7 @@ describe('[DATA-011] H5P page policy', () => {
     expect(csp.get('media-src')).toEqual(["'self'", 'blob:']);
     expect(csp.get('connect-src')).toEqual(["'self'"]);
     expect(csp.get('frame-src')).toEqual(["'self'"]);
+    expect(csp.get('font-src')).toEqual(["'self'", 'data:']);
     expect(csp.get('object-src')).toEqual(["'none'"]);
     expect(csp.get('base-uri')).toEqual(["'self'"]);
     expect([...csp.values()].flat()).not.toContain("'unsafe-eval'");
@@ -37,6 +39,39 @@ describe('[DATA-011] H5P page policy', () => {
       expect(csp.get(name)).toContain('https://hvl.cloud.panopto.eu');
     for (const name of ['script-src', 'connect-src', 'style-src']) {
       expect(csp.get(name)).not.toContain('https://hvl.cloud.panopto.eu');
+    }
+  });
+
+  it('[DATA-011] a configured Panopto site adds Panopto’s embed API to script-src, and nothing else does', () => {
+    // Arrange
+    const scriptsWith = (origins: string[]) =>
+      directives(
+        h5pPageCsp({ scriptHashes: ["'sha256-abc'"], externalMediaOrigins: origins }, ["'self'"]),
+      ).get('script-src');
+    // Act and assert
+    expect(scriptsWith(['https://media.hvl.no', 'https://hvl.cloud.panopto.eu'])).toEqual([
+      "'self'",
+      "'sha256-abc'",
+      PANOPTO_EMBED_API_URL,
+    ]);
+    expect(scriptsWith(['https://hvl.hosted.panopto.com'])).toContain(PANOPTO_EMBED_API_URL);
+    // SECURITY: the file H5P.Video 1.6 inserts, as a path source; never the whole developers.panopto.com origin.
+    expect(PANOPTO_EMBED_API_URL).toBe('https://developers.panopto.com/scripts/v1.2.0/embedapi.min.js');
+    expect(scriptsWith(['https://hvl.cloud.panopto.eu'])).not.toContain('https://developers.panopto.com');
+    expect(scriptsWith(['https://media.hvl.no'])).toEqual(["'self'", "'sha256-abc'"]);
+    expect(scriptsWith([])).toEqual(["'self'", "'sha256-abc'"]);
+  });
+
+  it('[DATA-011] only subdomains of panopto.com and panopto.eu count as Panopto sites', () => {
+    expect(isPanoptoOrigin('https://hvl.cloud.panopto.eu')).toBe(true);
+    expect(isPanoptoOrigin('https://HVL.Hosted.Panopto.COM')).toBe(true);
+    for (const origin of [
+      'https://panopto.eu.evil.example',
+      'https://evilpanopto.com',
+      'https://panopto.com',
+      'https://hvl.panopto.eu.example',
+    ]) {
+      expect(isPanoptoOrigin(origin)).toBe(false);
     }
   });
 

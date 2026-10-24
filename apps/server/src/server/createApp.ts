@@ -7,18 +7,20 @@
  *      same code.
  * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, PROD-003, DOC-012, NFR-002
  * Invariants:
- *   - Order: trust proxy → base headers → `/healthz` → page assets → the chrome redirect (with the web app) →
- *     portal session → LTI (ltijs first) → Feide routes → start page (only without the web app) → `/api` → `/h5p` →
- *     the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page. With the web app, launches land
- *     on `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
+ *   - Order: trust proxy → base headers → `/healthz` → page assets → the Hjelp marker and the chrome redirect (with
+ *     the web app) → portal session → LTI (ltijs first) → Feide routes → start page (only without the web app) →
+ *     `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page. With the web app,
+ *     launches land on `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
  *     session with CSRF); signed file URLs are checked before it, inside the H5P router (D-058).
  *   - `X-Powered-By` is off; every response gets `nosniff` and `no-referrer`, and HSTS when the base URL is https.
- *   - The findings API, the publish API and the save gate of `/h5p` share one validator; `/api/docs` is mounted
- *     only when NODE_ENV is not production (D-077).
+ *   - The findings API, the publish API and the save gate of `/h5p` share one validator and one Redis write lock
+ *     (D-074); the gate reads what the editor will store; `/api/docs` is mounted only when NODE_ENV is not
+ *     production (D-077).
  * Collaborators: ../lti/ltiRoutes.ts, ../auth/feide/feideLoginRoutes.ts, ../auth/requestPrincipal.ts,
  *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/apiRouter.ts,
- *   ../content/PublishedSaveGate.ts, ../web/webRoutes.ts, ../web/chromeRedirect.ts, ./healthRoutes.ts, ./main.ts.
+ *   ../content/PublishedSaveGate.ts, ../content/ContentWriteLock.ts, ../content/savedForm.ts, ../web/webRoutes.ts,
+ *   ../web/chromeRedirect.ts, ../http/pages/helpLink.ts, ./healthRoutes.ts, ./main.ts.
  * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
 import express, { type ErrorRequestHandler, type Express } from 'express';
@@ -32,8 +34,10 @@ import { requestPrincipal } from '../auth/requestPrincipal.js';
 import { portalSessionMiddleware } from '../auth/session/portalSessionMiddleware.js';
 import { SessionStore } from '../auth/session/SessionStore.js';
 import type { Env } from '../config/env.js';
+import { RedisContentWriteLock } from '../content/ContentWriteLock.js';
 import { PublishedSaveGate } from '../content/PublishedSaveGate.js';
 import type { PublishingDeps } from '../content/publishingDeps.js';
+import { editorSavedForm } from '../content/savedForm.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import { PrismaContentAccessRepository } from '../h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../http/api/apiRouter.js';
@@ -54,6 +58,7 @@ import { IdentityHasher } from '../security/keys/IdentityHasher.js';
 import type { ContentValidator } from '../validation/types.js';
 import type { WebApp } from '../web/nextWebApp.js';
 import { chromeRedirect } from '../web/chromeRedirect.js';
+import { offerHelpLink } from '../http/pages/helpLink.js';
 import { webRoutes } from '../web/webRoutes.js';
 import { healthRoutes } from './healthRoutes.js';
 
@@ -123,9 +128,11 @@ export function createApp(inputs: AppInputs): App {
     db,
     validator: inputs.validator ?? (() => []),
     clock: () => new Date(),
+    writeLock: new RedisContentWriteLock(redis),
   };
   // WHY: the content routes inside the H5P router run the same publish gate on saves of published activities.
-  const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, saveGate: new PublishedSaveGate(publishing) };
+  const saveGate = new PublishedSaveGate(publishing, editorSavedForm(inputs.h5p.editor.libraryManager));
+  const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, saveGate };
 
   const app = express();
   app.disable('x-powered-by');
@@ -134,8 +141,9 @@ export function createApp(inputs: AppInputs): App {
   app.use(baseSecurityHeaders({ https: base.startsWith('https:') }));
   app.use(healthRoutes({ database: () => db.$queryRaw`SELECT 1`, redis: () => redis.ping() }));
   app.use(pageAssetRoutes());
-  // WHY: with the web app, an H5P page opened on its own goes to the chrome page that frames it (D-067).
-  if (inputs.web) app.use(chromeRedirect());
+  // WHY: with the web app, an H5P page opened on its own goes to the chrome page that frames it (D-067), and /hjelp
+  // exists, so the server's own pages show the Hjelp header unless our chrome frames them (UD-013, D-067).
+  if (inputs.web) app.use(offerHelpLink(), chromeRedirect());
   app.use(portalSessionMiddleware(sessions));
   app.use(lti.router);
   app.use(

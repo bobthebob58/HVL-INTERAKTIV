@@ -5,16 +5,19 @@
  * Why: LTI-005 ends with a form post of the signed JWT to `deep_link_return_url`. The ltik arrives in the address
  *      bar (LTI-003 step 1); this script takes it into a variable and removes it from the URL at once (step 2), then
  *      uses it only as `Authorization: Bearer` (step 3), so it never travels in a cookie, a URL or storage.
- * Spec: LTI-005, LTI-003, PROD-005, PROD-011
+ * Spec: LTI-005, LTI-003, PROD-005, PROD-011, UD-013
  * Invariants:
  *   - Dismissing the formative-use notice (PROD-011) hides it, moves focus to the heading and records the dismissal
  *     with the Bearer ltik (`PUT /api/me/notices/formative-use`).
  *   - The ltik lives in this function's closure only (ESLint forbids storage APIs and cookies in this folder).
  *   - The answer is posted only to an http(s) URL; the server already checked it (D-061), this is a second check.
- *   - Status and errors are written as text into live regions (`role="status"`, `role="alert"`); texts come from
- *     the page's `data-msg-*` attributes, which the server filled from the locale files.
+ *   - Progress is written as text into the `role="status"` region. A problem goes into the error summary below the
+ *     heading, which is shown and takes focus (UD-013): "nothing chosen" links to the first choice, and the
+ *     choices' fieldset gets `aria-invalid` and `aria-describedby` until the next submit. Texts come from the
+ *     page's `data-msg-*` attributes, which the server filled from the locale files.
  * Collaborators: ../deepLinkPickerPage.ts (markup and data attributes), ../../deepLinking/deepLinkRoutes.ts.
- * Tests: apps/server/test/lti/deepLinking/deepLinking.int.test.ts, apps/server/e2e/deepLinking.e2e.test.ts
+ * Tests: apps/server/test/lti/pages/deepLinkPicker.browser.test.ts,
+ *   apps/server/test/lti/deepLinking/deepLinking.int.test.ts, apps/server/e2e/deepLinking.e2e.test.ts
  */
 (function deepLinkPicker() {
   'use strict';
@@ -45,12 +48,44 @@
   if (!form || !ltik) return;
   var data = document.body.dataset;
   var status = document.getElementById('deep-link-status');
+  var summary = document.getElementById('deep-link-errors');
   var problem = document.getElementById('deep-link-error');
+  var choices = form.querySelector('fieldset');
   var button = form.querySelector('button[type="submit"]');
 
-  function say(statusText, problemText) {
-    status.textContent = statusText;
-    problem.textContent = problemText;
+  /** Clears the summary and the fieldset's error state. */
+  function clearProblem() {
+    summary.hidden = true;
+    problem.textContent = '';
+    choices.removeAttribute('aria-invalid');
+    choices.removeAttribute('aria-describedby');
+  }
+
+  /**
+   * Shows one problem in the summary and moves focus there.
+   * @param {string} text - What is wrong and what to do.
+   * @param {HTMLInputElement | null} field - The field it is about; the summary links to it.
+   */
+  function report(text, field) {
+    status.textContent = '';
+    problem.textContent = '';
+    if (field) {
+      var link = document.createElement('a');
+      link.href = '#' + field.id;
+      link.textContent = text;
+      link.addEventListener('click', function (event) {
+        // A11Y: move focus to the field itself; a fragment link alone would only scroll to it.
+        event.preventDefault();
+        field.focus();
+      });
+      problem.appendChild(link);
+      choices.setAttribute('aria-invalid', 'true');
+      choices.setAttribute('aria-describedby', problem.id);
+    } else {
+      problem.textContent = text;
+    }
+    summary.hidden = false;
+    summary.focus();
   }
 
   function postToPlatform(returnUrl, jwt) {
@@ -68,7 +103,7 @@
 
   function failed() {
     button.disabled = false;
-    say('', data.msgFailed);
+    report(data.msgFailed, null);
   }
 
   form.addEventListener('submit', function (event) {
@@ -78,11 +113,12 @@
       return input.value;
     });
     if (chosen.length === 0) {
-      say('', data.msgNone);
+      report(data.msgNone, form.querySelector('input[name="contentId"]:not(:disabled)'));
       return;
     }
+    clearProblem();
     button.disabled = true;
-    say(data.msgSending, '');
+    status.textContent = data.msgSending;
     fetch(data.responseUrl, {
       method: 'POST',
       headers: {

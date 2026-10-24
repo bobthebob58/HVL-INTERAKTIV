@@ -1,8 +1,9 @@
 /**
  * Unit tests for the Deep Linking picker's HTML: radio buttons or checkboxes, disabled drafts with their reason in
- * text, the formative note for graded placements, escaping and the locale.
+ * text, the formative note for graded placements, escaping, the locale, the error summary at the top and the Hjelp
+ * header.
  *
- * Spec: LTI-005, PROD-005, PROD-011
+ * Spec: LTI-005, PROD-005, PROD-011, UD-013
  */
 import { describe, expect, it } from 'vitest';
 import { t } from '../../../src/i18n/translate.js';
@@ -63,5 +64,36 @@ describe('deepLinkPickerPage', () => {
     expect(shown).toContain('<button type="button" data-notice-version="1">');
     expect(shown).toContain('aria-labelledby="formative-notice-title"');
     expect(page()).not.toContain('formative-notice');
+  });
+});
+
+describe('[UD-013] picker errors and help', () => {
+  it('[UD-013] has an empty, hidden error summary right below the heading, before the form', () => {
+    // Act
+    const html = page();
+    // Assert
+    const summary = html.indexOf(
+      '<div id="deep-link-errors" class="hvl-error-summary" role="alert" tabindex="-1"',
+    );
+    expect(summary).toBeGreaterThan(html.indexOf('</h1>'));
+    expect(summary).toBeLessThan(html.indexOf('<form'));
+    expect(html).toContain('aria-labelledby="deep-link-errors-title" hidden>');
+    expect(html).toContain(
+      `<h2 id="deep-link-errors-title">${t('deepLink.errorSummaryTitle', {}, 'nn')}</h2>`,
+    );
+    expect(html).toContain('<span aria-hidden="true">✗ </span><span id="deep-link-error"></span>');
+    expect(html.indexOf('id="deep-link-error"')).toBeLessThan(html.indexOf('<form'));
+    expect(html).toContain('<p id="deep-link-status" role="status"></p>');
+  });
+
+  it('[UD-013] has no error summary when there is no form', () => {
+    expect(page({ activities: [] })).not.toContain('deep-link-errors');
+  });
+
+  it('[UD-013] shows the Hjelp header, opening a new tab, only when the route passes it', () => {
+    expect(page({ help: { newTab: true } })).toContain(
+      '<a href="/hjelp" target="_blank" rel="noopener noreferrer">',
+    );
+    expect(page()).not.toContain('/hjelp');
   });
 });

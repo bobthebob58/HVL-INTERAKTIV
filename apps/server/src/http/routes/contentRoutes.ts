@@ -9,14 +9,18 @@
  * Invariants:
  *   - Only `author` and `admin` reach save, delete and parameters; export is decided by the permission system.
  *   - A save body is `{ library: string, params: { params: object, metadata: object } }`, else 400.
- *   - With a save gate (createApp always passes one), saving a published activity runs the publish gate first: an
- *     error without an acknowledgement younger than 14 days is 409 `hvl:published-save-blocked` with the findings,
- *     and nothing is saved (D-074); every save of an existing activity then increases `H5PContent.version`.
+ *   - With a save gate (createApp always passes one), a save of an existing activity by someone who may edit runs
+ *     through it: under the activity's write lock, a published activity meets the publish gate on what the editor
+ *     will store; an error without an acknowledgement younger than 14 days is 409 `hvl:published-save-blocked` with
+ *     the findings, and nothing is saved (D-074); every save then increases `H5PContent.version`. When another save
+ *     or a publish holds the lock for longer than its 30-second wait, the answer is 409 `hvl:content-changed` and
+ *     nothing is saved; the editor then shows its "try again" text, which keeps the author's unsaved work.
  *   - The export is always a download (`attachment`, `nosniff`) named after the content ID, never a title, and
  *     the response ends only when Lumi's zip stream has been written completely.
  * Collaborators: ../../h5p/HvlH5PEditor.ts, ../requestBodies.ts, Lumi's H5PAjaxEndpoint,
  *   ../../content/PublishedSaveGate.ts.
- * Tests: apps/server/test/http/contentSave.int.test.ts, apps/server/test/content/publishedSave.int.test.ts
+ * Tests: apps/server/test/http/contentSave.int.test.ts, apps/server/test/content/publishedSave.int.test.ts,
+ *   apps/server/test/content/saveRace.int.test.ts
  */
 import { ContentPermission, type ContentParameters, type IContentMetadata } from '@lumieducation/h5p-server';
 import { finished } from 'node:stream/promises';
@@ -79,12 +83,13 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
     const user = asAccountUser(actor);
     const { library, params, metadata } = saveRequest(req.body);
     const id = pathParam(req, 'contentId');
-    // WHY: only someone who may edit learns the gate's findings; anyone else meets the editor's own 403.
-    if (deps.saveGate && (await deps.permissions.checkForContent(user, ContentPermission.Edit, id))) {
-      await deps.saveGate.beforeSave(id, { mainLibrary: library, params, metadata }, actor.locale);
-    }
-    const contentId = await deps.editor.saveOrUpdateContent(id, params, metadata, library, user);
-    await deps.saveGate?.afterSave(contentId);
+    const write = () => deps.editor.saveOrUpdateContent(id, params, metadata, library, user);
+    const gate = deps.saveGate;
+    // WHY: only someone who may edit learns the gate's findings or holds the lock; anyone else meets the editor's 403.
+    const mayEdit =
+      gate !== undefined && (await deps.permissions.checkForContent(user, ContentPermission.Edit, id));
+    const submitted = { mainLibrary: library, params, metadata, locale: actor.locale };
+    const contentId = gate && mayEdit ? await gate.save(id, submitted, write) : await write();
     res.json({ contentId });
   });
 

@@ -1,15 +1,17 @@
 /**
  * Tests for the hand-over to the web app: only GET and HEAD reach it, with the session's locale, the same nonce in
- * the request and the response, and no credentials. The web app is a stub that records what it received.
+ * the request and the response, and no credentials; the development server's WebSocket upgrades get no credentials
+ * either. The web app is a stub that records what it received.
  *
  * Spec: DATA-011, LTI-003, PROD-012
  */
-import type { IncomingMessage } from 'node:http';
+import { IncomingMessage } from 'node:http';
+import { Socket } from 'node:net';
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { LAUNCH_HEADER, setAppLaunch } from '../../src/web/appLaunch.js';
-import { webRoutes } from '../../src/web/webRoutes.js';
+import { webRoutes, webUpgrades } from '../../src/web/webRoutes.js';
 
 /** An app with a fake portal session (or none) and a recording web app. */
 function appWith(locale?: 'nn' | 'nb' | 'en') {
@@ -112,5 +114,33 @@ describe('[DATA-011] hand-over to the web app', () => {
     const { app, seen } = appWith();
     await request(app).get('/app/play').set('x-hvli-launch', encodeURIComponent('{"mayEdit":true}'));
     expect(seen[0]?.headers[LAUNCH_HEADER]).toBeUndefined();
+  });
+});
+
+describe('[LTI-003] WebSocket upgrades of the development server', () => {
+  /** An upgrade request as Node parses it, with the session cookie the browser sends along. */
+  const upgradeRequest = (url: string): IncomingMessage => {
+    const req = new IncomingMessage(new Socket());
+    req.url = url;
+    req.rawHeaders = ['Cookie', '__Host-hvli_sid=secret', 'Upgrade', 'websocket'];
+    req.headers = { cookie: '__Host-hvli_sid=secret', upgrade: 'websocket' };
+    return req;
+  };
+
+  it('[LTI-003] a /_next/ upgrade reaches Next.js without the cookie; any other upgrade is closed', async () => {
+    // Arrange
+    const seen: IncomingMessage[] = [];
+    const listener = webUpgrades({ upgrade: async (req) => void seen.push(req) });
+    const other = new Socket();
+    // Act
+    listener(upgradeRequest('/_next/webpack-hmr?ltik=abc'), new Socket(), Buffer.alloc(0));
+    listener(upgradeRequest('/lti/play'), other, Buffer.alloc(0));
+    await Promise.resolve();
+    // Assert
+    expect(seen).toHaveLength(1);
+    expect(seen[0]?.headers).toEqual({ upgrade: 'websocket' });
+    expect(seen[0]?.rawHeaders.join(' ')).not.toContain('secret');
+    expect(seen[0]?.url).toBe('/_next/webpack-hmr');
+    expect(other.destroyed).toBe(true);
   });
 });

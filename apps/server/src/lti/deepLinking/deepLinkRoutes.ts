@@ -27,6 +27,7 @@ import { ltiPageCsp, setLtiPageHeaders } from '../http/ltiPageHeaders.js';
 import { LTI_DEEP_LINK_PATH } from '../launch/onDeepLinking.js';
 import type { ResolvedLtik } from '../ltikPrincipal.js';
 import { DEEP_LINK_RESPONSE_PATH, deepLinkPickerPage } from '../pages/deepLinkPickerPage.js';
+import { helpLinkFor } from '../../http/pages/helpLink.js';
 import { chosenActivities, listPickerActivities, PICKER_LIMIT } from './deepLinkActivities.js';
 import {
   buildDeepLinkItems,
@@ -122,6 +123,7 @@ export function deepLinkRoutes(deps: DeepLinkRouteDeps): Router {
         activities,
         multiple: request.settings.accept_multiple === true,
         graded: request.placement === 'assignment_selection',
+        help: helpLinkFor(res, 'canvas'),
         ...(noticeVersion === undefined ? {} : { noticeVersion }),
       }),
     );

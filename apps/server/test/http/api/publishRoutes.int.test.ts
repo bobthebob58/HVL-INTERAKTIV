@@ -55,6 +55,10 @@ describeWithServices('[PROD-003] publish flow', () => {
     expect(locales).toEqual(['en']);
     expect(stranger.status).toBe(404);
     expect(stranger.body.errorCode).toBe('hvl:activity-unavailable');
+    expect([res.headers['cache-control'], stranger.headers['cache-control']]).toEqual([
+      'no-store',
+      'no-store',
+    ]);
   });
 
   it('[PROD-003] publishing is blocked without an acknowledgement, with the findings, and nothing changes', async () => {
@@ -68,6 +72,8 @@ describeWithServices('[PROD-003] publish flow', () => {
     });
     // Assert
     expect(res.status).toBe(409);
+    // PRIVACY: the findings quote the author's texts; the error answer must not be cached either.
+    expect(res.headers['cache-control']).toBe('no-store');
     const body = publishBlockedBodySchema.parse(res.body);
     expect(body).toMatchObject({ errorCode: 'hvl:publish-blocked', message: t('error.publishBlocked') });
     expect(body.findings).toEqual([{ ...altError, acknowledgement: null }]);

@@ -11,15 +11,20 @@
  *   - Portal pages are framed only by our own origin (with `X-Frame-Options: SAMEORIGIN`). A page with a launch is
  *     framed by our origin and `CANVAS_ORIGINS`, never sends `X-Frame-Options`, and is `no-store` (LTI-003).
  *   - The locale is the launch's, else the portal session's, else Nynorsk.
- * Collaborators: ./nextWebApp.ts, ./webPageCsp.ts, ./webRequestContract.ts, ./appLaunch.ts, ../server/createApp.ts.
+ *   - WebSocket upgrades (the development server's hot reload) reach Next.js only under `/_next/`, stripped of
+ *     credentials and the ltik like every request (D-068); any other upgrade is closed.
+ * Collaborators: ./nextWebApp.ts, ./webPageCsp.ts, ./webRequestContract.ts, ./appLaunch.ts, ../server/createApp.ts,
+ *   ../server/main.ts (mounts `webUpgrades`).
  * Tests: apps/server/test/web/webRoutes.int.test.ts, apps/server/test/web/webApp.browser.int.test.ts
  */
+import type { IncomingMessage } from 'node:http';
+import type { Duplex } from 'node:stream';
 import type { RequestHandler } from 'express';
 import { portalSessionOf } from '../auth/session/portalSessionMiddleware.js';
 import { appLaunchOf, LAUNCH_HEADER, launchHeaderValue } from './appLaunch.js';
 import type { WebApp } from './nextWebApp.js';
 import { createNonce, webPageCsp } from './webPageCsp.js';
-import { prepareWebRequest } from './webRequestContract.js';
+import { prepareWebRequest, stripForWebApp } from './webRequestContract.js';
 
 /** Options of the hand-over. */
 export interface WebRouteOptions {
@@ -61,5 +66,27 @@ export function webRoutes(
     prepareWebRequest(req, { csp, locale });
     if (launch) req.headers[LAUNCH_HEADER] = launchHeaderValue(launch);
     web.handle(req, res).catch(next);
+  };
+}
+
+/** Where the development server's hot-reload socket lives. */
+const NEXT_INTERNAL_PATH = '/_next/';
+
+/**
+ * Builds the HTTP server's `upgrade` listener for the development server's hot reload.
+ * @param web - The loaded web app.
+ * @returns A listener that hands `/_next/` upgrades to Next.js without credentials and closes any other.
+ */
+export function webUpgrades(
+  web: Pick<WebApp, 'upgrade'>,
+): (req: IncomingMessage, socket: Duplex, head: Buffer) => void {
+  return (req, socket, head) => {
+    if (!req.url?.startsWith(NEXT_INTERNAL_PATH)) {
+      socket.destroy();
+      return;
+    }
+    // SECURITY: the browser sends the session cookie with the hot-reload socket too; Next.js never sees it (D-068).
+    stripForWebApp(req);
+    web.upgrade(req, socket, head).catch(() => socket.destroy());
   };
 }

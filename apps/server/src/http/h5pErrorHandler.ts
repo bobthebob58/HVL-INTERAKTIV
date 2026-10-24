@@ -8,9 +8,11 @@
  * Invariants:
  *   - Server faults are logged at error level with the error object (the logger redacts personal data).
  *   - Expected 4xx answers are logged at debug level with their code only.
- *   - A JSON error never carries a file's length, range or download headers.
- * Collaborators: ./h5pErrorResponse.ts, ./h5pLocals.ts, ../logging/logger.ts.
- * Tests: apps/server/test/http/router.int.test.ts
+ *   - A JSON error never carries a file's length, range or download headers, and is always
+ *     `Cache-Control: no-store`: it is about one request, and a 409 can list the author's texts and reasons.
+ * Collaborators: ./h5pErrorResponse.ts, ./h5pLocals.ts, ../logging/logger.ts, ../server/createApp.ts (mounts it on
+ *   `/api` and `/h5p`).
+ * Tests: apps/server/test/http/router.int.test.ts, apps/server/test/http/api/publishRoutes.int.test.ts
  */
 import type { ErrorRequestHandler } from 'express';
 import type { Logger } from 'pino';
@@ -44,6 +46,8 @@ export function h5pErrorHandler(logger: Logger): ErrorRequestHandler {
     }
     // WHY: a file route may have set the file's type, length, range and download name before it failed.
     for (const header of FILE_HEADERS) res.removeHeader(header);
+    // PRIVACY: removing the file's caching header must not leave the error cacheable; `/api` promises no-store.
+    res.set('Cache-Control', 'no-store');
     res.status(status).json(body);
   };
 }

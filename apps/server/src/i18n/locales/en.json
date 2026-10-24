@@ -63,6 +63,12 @@
   },
   "page": {
     "siteName": "HVL Interaktiv",
+    "skipToMain": "Skip to main content",
+    "help": {
+      "link": "Help",
+      "nav": "Help and information",
+      "newTab": "(opens in a new tab)"
+    },
     "notAvailable": {
       "title": "Not available",
       "body": "The activity does not exist, is not published, or you do not have access to it."
@@ -110,6 +116,7 @@
     "submit": "Add to Canvas",
     "sending": "Sending your choice to Canvas …",
     "noneChosen": "Choose at least one activity.",
+    "errorSummaryTitle": "There is 1 problem to fix",
     "failed": "Your choice could not be sent to Canvas. Try again."
   },
   "notice": {

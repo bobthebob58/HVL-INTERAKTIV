@@ -1,9 +1,10 @@
 /**
  * Integration tests for the guards of the publish flow: an activity changed or saved in the meantime, the audit
- * record, unpublishing, and who may publish at all.
+ * record, unpublishing, who may publish at all, and how a malformed activity ID is answered.
  *
- * Spec: PROD-003, DATA-007, H5P-006
+ * Spec: PROD-003, DATA-007, H5P-006, DOC-012
  */
+import { API_ROUTES, buildOpenApiDocument } from '@hvl-interaktiv/api-contract';
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { ContentPublisher } from '../../../src/content/ContentPublisher.js';
@@ -149,5 +150,36 @@ describeWithServices('[PROD-003] publish flow guards', () => {
       message: t('error.editNotAllowed'),
     });
     expect([outsider.status, pupil.status, anonymous.status]).toEqual([404, 403, 401]);
+  });
+
+  it('[DOC-012] a malformed activity ID is 404 like an unknown one on every activity route, as the document says', async () => {
+    // Arrange
+    const bodies: Record<string, object> = {
+      publishContent: { updatedAt: new Date().toISOString(), acknowledgements: [] },
+      unpublishContent: { updatedAt: new Date().toISOString() },
+      changeSharing: { visibility: 'private' },
+    };
+    const routes = API_ROUTES.filter((route) => route.path.includes(':contentId'));
+    const paths = buildOpenApiDocument().paths as Record<string, Record<string, { responses: object }>>;
+    // Act
+    const answers = await Promise.all(
+      routes.map((route) => {
+        const call = request(tb.app)[route.method](`/api${route.path.replace(':contentId', 'not-a-uuid')}`);
+        return call.set(...author.header).send(bodies[route.operationId]);
+      }),
+    );
+    // Assert
+    expect(routes.length).toBeGreaterThanOrEqual(5);
+    routes.forEach((route, index) => {
+      const answer = answers[index];
+      expect([answer?.status, answer?.body.errorCode], route.operationId).toEqual([
+        404,
+        'hvl:activity-unavailable',
+      ]);
+      expect(answer?.headers['cache-control'], route.operationId).toBe('no-store');
+      const responses =
+        paths[`/api${route.path.replace(':contentId', '{contentId}')}`]?.[route.method]?.responses;
+      expect(JSON.stringify(responses), route.operationId).toMatch(/malformed ID/);
+    });
   });
 });

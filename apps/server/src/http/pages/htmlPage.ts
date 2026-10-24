@@ -1,25 +1,28 @@
 /**
  * htmlPage — builds the small server-rendered pages of Session 3 with an escaping `markup` template.
  *
- * Why: the Deep Linking picker, the portal start page and the friendly message pages are server-rendered until
- *      Next.js replaces them in S4 (D-048); the H5P player has its own template (../../h5p/render/playerPage.ts).
- *      Building them with an auto-escaping template means a title or message that contains `<`, quotes or `&` can
- *      never inject markup (XSS), whatever its source.
- * Spec: LTI-003, PROD-004
+ * Why: the Deep Linking picker, the portal start page and the friendly message pages stay server-rendered (D-067);
+ *      the H5P player has its own template (../../h5p/render/playerPage.ts). Building them with an auto-escaping
+ *      template means a title or message that contains `<`, quotes or `&` can never inject markup (XSS), whatever
+ *      its source.
+ * Spec: LTI-003, PROD-004, UD-013, UD-006
  * Invariants:
  *   - Every interpolated value is escaped unless it is a `SafeHtml` built by `markup` itself; arrays are joined,
  *     and `undefined`, `null` and `false` render as nothing.
  *   - The page declares its language and a viewport, has one `<main>` and one `<h1>` (A11Y), and loads no
  *     inline script or style: scripts are static files from our own origin (`script-src 'self'`, D-048).
- *   - Styles are the design tokens and the server pages' stylesheet, both same-origin files (D-067).
+ *   - Styles are the design tokens and the server pages' stylesheets, all same-origin files (D-067).
+ *   - With a `help` link the page starts like the web app's: a skip link to `<main>`, then the `banner` header with
+ *     the site name and **Hjelp** in a labelled `nav` (UD-013, UD-006); texts come from the locale files.
  *   - The `ltik` and the CSRF token are never put in the page by this module; callers pass them as data
  *     attributes only where D-058 allows.
- * Collaborators: ./messagePage.ts, ./portalHomeRoutes.ts, ../../lti/pages/deepLinkPickerPage.ts,
+ * Collaborators: ./messagePage.ts, ./portalHomeRoutes.ts, ../../lti/pages/deepLinkPickerPage.ts, ./helpLink.ts,
  *   ./pageAssetRoutes.ts (the stylesheet), ../routes/staticRoutes.ts (`/h5p/theme/tokens.css`).
- * Tests: apps/server/test/http/pages/htmlPage.test.ts
+ * Tests: apps/server/test/http/pages/htmlPage.test.ts, apps/server/test/http/pages/serverPages.browser.test.ts
  */
-import type { Locale } from '../../i18n/translate.js';
-import { SERVER_PAGES_STYLESHEET } from './pageAssetRoutes.js';
+import { t, type Locale } from '../../i18n/translate.js';
+import { HELP_PATH, type HelpLink } from './helpLink.js';
+import { SERVER_CHROME_STYLESHEET, SERVER_PAGES_STYLESHEET } from './pageAssetRoutes.js';
 
 /** The design tokens, served by the H5P router's theme route without a session. */
 const TOKENS_STYLESHEET = '/h5p/theme/tokens.css';
@@ -86,6 +89,30 @@ export interface PageInput {
   readonly scripts?: readonly string[];
   /** Attributes for `<body>` (data attributes for page scripts), as name → value. */
   readonly bodyData?: Readonly<Record<string, string>>;
+  /** The Hjelp link of the header (./helpLink.ts); without it the page has no header. */
+  readonly help?: HelpLink | undefined;
+}
+
+/**
+ * The skip link and the header with the site name and Hjelp, like the web app's SiteHeader.
+ * @param locale - The page language.
+ * @param siteName - The site name.
+ * @param help - How the link opens.
+ * @returns The markup before `<main>`.
+ */
+function siteHeader(locale: Locale, siteName: string, help: HelpLink): SafeHtml {
+  // SECURITY: a new tab cannot reach this window, and gets no Referer (UD-007, as apps/web's ExternalLink).
+  const link = help.newTab
+    ? markup`<a href="${HELP_PATH}" target="_blank" rel="noopener noreferrer">${t('page.help.link', {}, locale)}<span aria-hidden="true"> ↗</span><span class="hvl-visually-hidden"> ${t('page.help.newTab', {}, locale)}</span></a>`
+    : markup`<a href="${HELP_PATH}" target="_top">${t('page.help.link', {}, locale)}</a>`;
+  return markup`<a class="hvl-skip-link" href="#main">${t('page.skipToMain', {}, locale)}</a>
+<header class="hvl-site-header">
+<div class="hvl-site-header-bar">
+<span class="hvl-site-name">${siteName}</span>
+<nav aria-label="${t('page.help.nav', {}, locale)}"><ul><li>${link}</li></ul></nav>
+</div>
+</header>
+`;
 }
 
 /**
@@ -105,6 +132,10 @@ export function htmlPage(input: PageInput, siteName: string): string {
       throw new Error(`invalid script path: ${src}`);
     return markup`<script src="${src}" defer></script>`;
   });
+  const chrome = input.help && {
+    style: markup`<link rel="stylesheet" href="${SERVER_CHROME_STYLESHEET}">\n`,
+    header: siteHeader(input.locale, siteName, input.help),
+  };
   return markup`<!doctype html>
 <html lang="${input.locale}">
 <head>
@@ -114,9 +145,9 @@ export function htmlPage(input: PageInput, siteName: string): string {
 <title>${input.title} – ${siteName}</title>
 <link rel="stylesheet" href="${TOKENS_STYLESHEET}">
 <link rel="stylesheet" href="${SERVER_PAGES_STYLESHEET}">
-</head>
+${chrome?.style}</head>
 <body${data}>
-<main id="main">
+${chrome?.header}<main id="main">
 ${input.main}
 </main>
 ${scripts}

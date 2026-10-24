@@ -64,7 +64,8 @@ export const meSchema = z.strictObject({
 export type Me = z.infer<typeof meSchema>;
 
 /**
- * `PUT /api/me/notices/:noticeId` body: the version of the notice the person dismissed.
+ * `PUT /api/me/notices/:noticeId` body: the version of the notice the person dismissed. The server also refuses a
+ * version above `NOTICE_VERSIONS[noticeId]` (400), which it has not shown yet (D-075).
  * @spec PROD-011
  */
 export const noticeDismissalRequestSchema = z.strictObject({ version: z.int().min(1) });

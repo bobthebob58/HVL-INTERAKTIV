@@ -5,16 +5,20 @@
  * Why: LTI-001 rejects launches with a wrong signature, audience, nonce or deployment and LTI-003 answers an
  *      invalid ltik with "please reopen from Canvas"; the person in the Canvas iframe must read a sentence in their
  *      language, while the log keeps only a fixed code (D-050, D-066). Failed launches are audited (D-064).
- * Spec: LTI-001, LTI-003, LTI-006, PROD-004, PROD-012
+ * Spec: LTI-001, LTI-003, LTI-006, PROD-004, PROD-012, UD-013
  * Invariants:
  *   - Each failure class maps to one status and one message; our other 4xx errors keep their status and message;
  *     unknown errors are 500 "something went wrong".
  *   - Nothing from the error (message, claims, token) reaches the page; the log gets the code and redacted error.
- *   - Pages carry the LTI headers (no-store, no-referrer, frame-ancestors = Canvas origins).
+ *   - Pages carry the LTI headers (no-store, no-referrer, frame-ancestors = Canvas origins). The error pages of
+ *     `/lti/play` and `/lti/edit`, which our own `/app/play` chrome frames, also allow `'self'`, like their pages;
+ *     launch, login and Deep Linking errors stay Canvas-only (LTI-003, D-067).
+ *   - Pages have the Hjelp header, opening a new tab, whenever the web app runs, except inside `/app/play`'s frame,
+ *     whose header already has it (../../http/pages/helpLink.ts, UD-013, UD-007).
  *   - Pages and JSON are in the launch's language once a route has resolved the ltik (`setLtiPageLocale`) or a
  *     launch handler has tagged its error (`withLaunchLocale`), else in Nynorsk (PROD-012).
  * Collaborators: ./ltiPageHeaders.ts, ../../http/authErrors.ts, ../../http/pages/messagePage.ts,
- *   ../../auth/audit/AuthAuditRecorder.ts.
+ *   ../../http/pages/helpLink.ts, ../../auth/audit/AuthAuditRecorder.ts.
  * Tests: apps/server/test/lti/http/ltiErrorPages.test.ts
  */
 import type { NextFunction, Request, Response } from 'express';
@@ -22,9 +26,10 @@ import type { Logger } from 'pino';
 import type { AuthAuditReason, AuthAuditRecorder } from '../../auth/audit/AuthAuditRecorder.js';
 import { toErrorResponse } from '../../http/h5pErrorResponse.js';
 import { HttpError } from '../../http/HttpError.js';
+import { helpLinkFor } from '../../http/pages/helpLink.js';
 import { messagePage } from '../../http/pages/messagePage.js';
 import { DEFAULT_LOCALE, type Locale, type MessageKey } from '../../i18n/translate.js';
-import { ltiPageCsp, setLtiPageHeaders } from './ltiPageHeaders.js';
+import { ltiPageAncestors, ltiPageCsp, setLtiPageHeaders } from './ltiPageHeaders.js';
 
 const LTI_LOCALE = 'hvliLtiLocale';
 /** Errors thrown by a launch handler, with the language of their launch (no ltik exists yet at that point). */
@@ -167,7 +172,8 @@ export function ltiErrorPages(deps: {
     if (req.path === '/lti/launch' && answer.reason) {
       await deps.audit.record({ event: 'launch.lti.failed', reason: answer.reason, ip: req.ip });
     }
-    setLtiPageHeaders(res, ltiPageCsp(deps.canvasOrigins));
+    // WHY: browsers check frame-ancestors against every ancestor; without 'self' the /app/play frame shows nothing.
+    setLtiPageHeaders(res, ltiPageCsp(ltiPageAncestors(req.path, deps.canvasOrigins)));
     if (req.accepts(['html', 'json']) === 'json') {
       const ours = error instanceof HttpError || clientStatusOf(error) !== undefined;
       const body = known && ours ? toErrorResponse(error, locale).body : undefined;
@@ -178,6 +184,13 @@ export function ltiErrorPages(deps: {
     res
       .status(answer.status)
       .type('html')
-      .send(messagePage({ locale, titleKey: answer.titleKey, bodyKey: answer.bodyKey }));
+      .send(
+        messagePage({
+          locale,
+          titleKey: answer.titleKey,
+          bodyKey: answer.bodyKey,
+          help: helpLinkFor(res, 'canvas'),
+        }),
+      );
   };
 }

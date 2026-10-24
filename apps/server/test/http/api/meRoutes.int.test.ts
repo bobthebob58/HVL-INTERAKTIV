@@ -4,7 +4,7 @@
  *
  * Spec: DATA-002, PROD-011
  */
-import { meSchema } from '@hvl-interaktiv/api-contract';
+import { meSchema, NOTICE_VERSIONS } from '@hvl-interaktiv/api-contract';
 import request from 'supertest';
 import { afterAll, expect, it } from 'vitest';
 import { openApiTestbed } from '../../support/apiTestbed.js';
@@ -39,19 +39,25 @@ describeWithServices('[PROD-011] me and notices', () => {
     expect(res.text).not.toMatch(new RegExp(`Aud|aud@hvl.no|${author.principal.userId}|learner-`));
   });
 
-  it('[PROD-011] a dismissal is stored per user, shown in me, and replaced by a newer version', async () => {
+  it('[PROD-011] a dismissal is stored per user, shown in me, and replaces the earlier one', async () => {
     // Arrange
     const author = await tb.principal('author');
     const other = await tb.principal('author');
+    const version = NOTICE_VERSIONS['formative-use'];
+    const earlier = new Date(Date.now() - 60_000);
+    await tb.db.noticeDismissal.create({
+      data: {
+        userId: author.principal.userId,
+        noticeId: 'formative-use',
+        noticeVersion: version,
+        at: earlier,
+      },
+    });
     // Act
-    const first = await request(tb.app)
+    const res = await request(tb.app)
       .put(notice('formative-use'))
       .set(...author.header)
-      .send({ version: 1 });
-    const second = await request(tb.app)
-      .put(notice('formative-use'))
-      .set(...author.header)
-      .send({ version: 2 });
+      .send({ version });
     const me = await request(tb.app)
       .get('/api/me')
       .set(...author.header);
@@ -59,11 +65,34 @@ describeWithServices('[PROD-011] me and notices', () => {
       .get('/api/me')
       .set(...other.header);
     // Assert
-    expect([first.status, second.status]).toEqual([204, 204]);
-    expect(me.body.dismissedNotices).toEqual([{ noticeId: 'formative-use', version: 2 }]);
+    expect(res.status).toBe(204);
+    expect(me.body.dismissedNotices).toEqual([{ noticeId: 'formative-use', version }]);
     expect(otherMe.body.dismissedNotices).toEqual([]);
     const rows = await tb.db.noticeDismissal.findMany({ where: { userId: author.principal.userId } });
-    expect(rows).toEqual([expect.objectContaining({ noticeId: 'formative-use', noticeVersion: 2 })]);
+    expect(rows).toEqual([expect.objectContaining({ noticeId: 'formative-use', noticeVersion: version })]);
+    expect(rows[0]?.at.getTime()).toBeGreaterThan(earlier.getTime());
+  });
+
+  it('[PROD-011] a version newer than the current notice is 400 and stored nowhere, also beyond the INTEGER range', async () => {
+    // Arrange
+    const author = await tb.principal('author');
+    const current = NOTICE_VERSIONS['formative-use'];
+    const put = (version: number) =>
+      request(tb.app)
+        .put(notice('formative-use'))
+        .set(...author.header)
+        .send({ version });
+    // Act
+    const future = await put(current + 1);
+    const outOfRange = await put(2_147_483_648);
+    const me = await request(tb.app)
+      .get('/api/me')
+      .set(...author.header);
+    // Assert
+    expect([future.status, outOfRange.status]).toEqual([400, 400]);
+    expect(outOfRange.body.errorCode).toBe('error.badRequest');
+    expect(me.body.dismissedNotices).toEqual([]);
+    expect(await tb.db.noticeDismissal.count({ where: { userId: author.principal.userId } })).toBe(0);
   });
 
   it('[PROD-011] learners never see the notices: 403, nothing stored, no dismissals in me', async () => {
@@ -107,7 +136,7 @@ describeWithServices('[PROD-011] me and notices', () => {
     await request(tb.app)
       .put(notice('formative-use'))
       .set(...author.header)
-      .send({ version: 3 });
+      .send({ version: NOTICE_VERSIONS['formative-use'] });
     // Act
     await tb.db.user.delete({ where: { id: author.principal.userId } });
     // Assert

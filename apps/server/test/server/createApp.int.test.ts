@@ -13,6 +13,7 @@ import { openAppTestbed, type AppTestbed } from '../support/appTestbed.js';
 import { loginWithFeide } from '../support/feideTestbed.js';
 import { launchFromCanvas } from '../support/ltiLaunchDriver.js';
 import { describeWithServices } from '../support/services.js';
+import { portalPageCsp } from '../../src/http/pages/portalPages.js';
 
 describeWithServices('The assembled app', () => {
   let tb: AppTestbed;
@@ -58,11 +59,11 @@ describeWithServices('The assembled app', () => {
   });
 
   describe('pages', () => {
-    it('[PROD-004] an unknown path gets the HTML 404 page, framed only by our own origin', async () => {
+    it('[PROD-004] an unknown path gets the HTML 404 page, framed only by our own origin and loading only our own files (DATA-011)', async () => {
       const res = await request(tb.app).get('/no-such-page');
       expect(res.status).toBe(404);
       expect(res.type).toBe('text/html');
-      expect(res.headers['content-security-policy']).toBe("frame-ancestors 'self'");
+      expect(res.headers['content-security-policy']).toBe(portalPageCsp());
     });
 
     it('[AUTH-003] a logout form that is too large or in another charset gets a 4xx page, not a server error', async () => {

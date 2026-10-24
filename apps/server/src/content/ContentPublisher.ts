@@ -10,10 +10,14 @@
  *   - The findings always come from the validator on the stored activity, never from the request.
  *   - Publish and unpublish apply only while `updatedAt` equals the request's; otherwise 409 `hvl:content-changed`
  *     and nothing is written.
+ *   - A publish holds the activity's ContentWriteLock from its read to its commit, as a save does from the gate to
+ *     Lumi's write (./PublishedSaveGate.ts), so a save never lands unvalidated on an activity the publish just made
+ *     visible (D-074). Unpublishing needs no lock: hiding an activity never shows unvalidated content.
  *   - Audit details hold rule IDs, the previous status and the mode only, never a reason (DATA-007).
- * Collaborators: ./storedContent.ts, ./acknowledgementCoverage.ts, ./PublishBlockedError.ts,
+ * Collaborators: ./storedContent.ts, ./acknowledgementCoverage.ts, ./PublishBlockedError.ts, ./ContentWriteLock.ts,
  *   ../http/api/publishRoutes.ts.
- * Tests: apps/server/test/http/api/publishRoutes.int.test.ts, apps/server/test/http/api/publishGuards.int.test.ts
+ * Tests: apps/server/test/http/api/publishRoutes.int.test.ts, apps/server/test/http/api/publishGuards.int.test.ts,
+ *   apps/server/test/content/saveRace.int.test.ts
  */
 import type {
   FindingsResponse,
@@ -26,6 +30,7 @@ import type { AuthMode } from '../auth/Principal.js';
 import { authError } from '../http/authErrors.js';
 import type { Locale } from '../i18n/translate.js';
 import { decidePublish, withAcknowledgements } from './acknowledgementCoverage.js';
+import { IN_PROCESS_WRITE_LOCK } from './ContentWriteLock.js';
 import type { PublishingDeps } from './publishingDeps.js';
 import { PublishBlockedError } from './PublishBlockedError.js';
 import { recentAcknowledgements, validateStoredContent } from './storedContent.js';
@@ -66,10 +71,20 @@ export class ContentPublisher {
    * @param by - Who publishes.
    * @param request - The checked `updatedAt` and the new acknowledgements.
    * @returns The new status, `updatedAt` and `publishedAt`.
-   * @throws HttpError 409 `hvl:content-changed`, 400 `hvl:acknowledgement-invalid`; PublishBlockedError (409).
+   * @throws HttpError 409 `hvl:content-changed` (also when a save holds the activity for longer than the lock's
+   *   wait), 400 `hvl:acknowledgement-invalid`; PublishBlockedError (409).
    * @spec PROD-003
    */
   async publish(contentId: string, by: Publisher, request: PublishRequest): Promise<PublishResponse> {
+    const lock = this.deps.writeLock ?? IN_PROCESS_WRITE_LOCK;
+    return lock.hold(contentId, () => this.publishLocked(contentId, by, request));
+  }
+
+  private async publishLocked(
+    contentId: string,
+    by: Publisher,
+    request: PublishRequest,
+  ): Promise<PublishResponse> {
     const { db } = this.deps;
     const now = this.deps.clock();
     const { row, findings } = await validateStoredContent(this.deps, contentId, by.locale);

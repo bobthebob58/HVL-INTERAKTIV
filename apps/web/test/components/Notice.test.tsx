@@ -5,6 +5,7 @@
  * Spec: PROD-011, UD-006
  */
 // @vitest-environment jsdom
+import { NOTICE_VERSIONS as CONTRACT_NOTICE_VERSIONS } from '@hvl-interaktiv/api-contract';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ApiAuthProvider } from '../../src/api/ApiAuthContext';
@@ -104,6 +105,11 @@ describe('[PROD-011] the formative-use notice', () => {
       'Klarte ikkje å hugse valet ditt. Prøv igjen.',
     );
     expect(screen.getByRole('region')).toBeTruthy();
+  });
+
+  it('[PROD-011] dismisses the version the server knows: the copy agrees with the API contract', () => {
+    // WHY: the server refuses a dismissal of a version above its own NOTICE_VERSIONS (D-075).
+    expect(NOTICE_VERSIONS).toEqual(CONTRACT_NOTICE_VERSIONS);
   });
 
   it('[PROD-011] is shown when the dismissals cannot be read', async () => {

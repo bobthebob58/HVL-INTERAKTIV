@@ -1,15 +1,16 @@
 /**
  * Integration tests for launches when the web app runs: ltijs lands on the chrome page `/app/play`, which reaches the
  * web app with the launch facts and without the ltik or any credential; an invalid ltik never reaches it; and `/` is
- * the web app's start page; an H5P page opened on its own goes to its chrome page. The web app is a stub that
- * records what it received.
+ * the web app's start page; an H5P page opened on its own goes to its chrome page; and the server's own pages show
+ * Hjelp, except inside our own chrome. The web app is a stub that records what it received.
  *
- * Spec: LTI-006, LTI-003, DATA-006, D-067
+ * Spec: LTI-006, LTI-003, DATA-006, UD-013, D-067
  */
 import type { IncomingMessage } from 'node:http';
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { CANVAS_USERS } from '../../../../tools/mock-platform/mockPlatform.mjs';
+import { t } from '../../src/i18n/translate.js';
 import { LAUNCH_HEADER } from '../../src/web/appLaunch.js';
 import { openAppTestbed, type AppTestbed } from '../support/appTestbed.js';
 import { launchFromCanvas } from '../support/ltiLaunchDriver.js';
@@ -84,5 +85,29 @@ describeWithServices('[LTI-006] launches into the web app’s chrome page', () =
     expect(res.headers['content-security-policy']).toContain(
       `form-action 'self' ${new URL(tb.env.FEIDE_ISSUER).origin}`,
     );
+  });
+
+  it('[UD-013] the server pages show Hjelp when the web app runs, in Canvas in a new tab, but not inside our chrome', async () => {
+    // Arrange: a teacher's Deep Linking launch, and an ltik that resolves to nothing
+    const picker = await launchFromCanvas(tb.app, tb.mock.canvas, {
+      messageType: 'LtiDeepLinkingRequest',
+      user: CANVAS_USERS.teacher,
+    });
+    const inCanvas = { 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Site': 'cross-site' };
+    const inOurChrome = { 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Site': 'same-origin' };
+    const newTab = `<a href="/hjelp" target="_blank" rel="noopener noreferrer">${t('page.help.link', {}, 'nn')}`;
+    // Act
+    const pickerPage = await request(tb.app)
+      .get(`/lti/deeplink?ltik=${encodeURIComponent(picker.ltik ?? '')}`)
+      .set(inCanvas);
+    const reopenInCanvas = await request(tb.app).get('/app/play?ltik=not-a-token').set(inCanvas);
+    const reopenInChrome = await request(tb.app).get('/lti/play?ltik=not-a-token').set(inOurChrome);
+    // Assert
+    expect(pickerPage.status).toBe(200);
+    expect(pickerPage.text).toContain(newTab);
+    expect(reopenInCanvas.status).toBe(401);
+    expect(reopenInCanvas.text).toContain(newTab);
+    expect(reopenInChrome.status).toBe(401);
+    expect(reopenInChrome.text).not.toContain('/hjelp');
   });
 });
