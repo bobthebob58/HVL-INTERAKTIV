@@ -13,6 +13,7 @@ import {
   renderPlayerPage,
 } from '../../../src/h5p/render/playerPage.js';
 import { escapeHtml, scriptJson } from '../../../src/h5p/render/scriptJson.js';
+import { inlineScriptTags, integrationFromPage } from '../../support/playerIntegration.js';
 
 const BREAKOUT = '</script><script>alert(1)</script>';
 const STATE = '{"answers":[1]}';
@@ -35,23 +36,14 @@ const model = (overrides: Partial<IPlayerModel> = {}): IPlayerModel =>
     ...overrides,
   }) as unknown as IPlayerModel;
 
-/** The object the page's JSON data block holds for window.H5PIntegration. */
-const integrationOf = (html: string): Record<string, unknown> =>
-  JSON.parse(
-    /<script type="application\/json" id="h5p-integration">(.*?)<\/script>/.exec(html)?.[1] ?? 'null',
-  ) as Record<string, unknown>;
-/** Script elements that would run inline: neither a `src` nor an inert JSON block. */
-const inlineScripts = (html: string): string[] =>
-  html.match(/<script(?![^>]*\bsrc=)(?![^>]*type="application\/json")[^>]*>/g) ?? [];
-
 describe('[SEC-008] player page', () => {
   it('[SEC-008] keeps markup in titles and parameters inert: no inline script, data unchanged', () => {
     const html = renderPlayerPage(model(), 'nn');
     expect(html.match(/<script/g)).toHaveLength(3);
-    expect(inlineScripts(html)).toEqual([]);
+    expect(inlineScriptTags(html)).toEqual([]);
     expect(html).not.toContain(BREAKOUT);
-    const integration = integrationOf(html);
-    const contents = integration.contents as Record<string, { metadata: { title: string } }>;
+    const integration = integrationFromPage(html);
+    const contents = integration?.contents as Record<string, { metadata: { title: string } }>;
     expect(Object.values(contents)[0]?.metadata.title).toBe(BREAKOUT);
   });
 
@@ -67,7 +59,7 @@ describe('[SEC-008] player page', () => {
     );
     // Assert
     expect(html.match(/<script/g)).toHaveLength(3);
-    expect(inlineScripts(html)).toEqual([]);
+    expect(inlineScriptTags(html)).toEqual([]);
     expect(html).toContain('<html lang="nn" class="h5p-iframe">');
     expect(html).not.toContain('onload="x()"');
     // Act: a hostile language
@@ -104,8 +96,8 @@ describe('[DATA-002] no identity in the page', () => {
     for (const secret of ['Kari Nordmann', 'kari@hvl.no', 'fVM1n87kyTwxPqqVDl8B3LabYsblWepkkhGCUE-d9Mo']) {
       expect(html).not.toContain(secret);
     }
-    const integration = integrationOf(html);
-    expect(integration.user).toEqual(ANONYMOUS_H5P_USER);
+    const integration = integrationFromPage(html);
+    expect(integration?.user).toEqual(ANONYMOUS_H5P_USER);
     expect(JSON.stringify(integration)).toContain('answers');
   });
 
