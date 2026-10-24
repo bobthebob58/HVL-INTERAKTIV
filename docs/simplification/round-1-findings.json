@@ -2511,6 +2511,370 @@
           "reason": "It saves 1 line and drops an explicit local shape check. ID_ONLY is what visibly guarantees, inside markdownRenderer, that only ID-shaped code spans are linked, and so that the unescaped interpolation into `href=\"#r-${code}\"` is safe. Without it, that guarantee depends on how buildSpecSite.mjs builds knownIds from REQUIREMENT_HEADING captures, a cross-file invariant. createRenderer is an exported function whose documented contract is only 'Requirement IDs that exist'. The output is byte-identical today, but the code becomes less explicit for a negligible gain, and the rules say not to trade an explicit check for a reliance on an invariant elsewhere."
         }
       ]
-    }
+    },
+    "undefined": {}
+  },
+  "plan": {
+    "order": [
+      {
+        "area": "srv-h5p",
+        "proposalIds": [
+          "srv-h5p-1"
+        ],
+        "instructions": "S3TemporaryFileStorage.ts: rewrite fileExists and getFileStats on top of the existing private headIfPresent, exactly as proposed. Keep the TSDoc lines on both methods and keep the HeadObjectCommand import. Leave headIfPresent and notFound unchanged. Run the proposal's testsToRun."
+      },
+      {
+        "area": "srv-h5p",
+        "proposalIds": [
+          "srv-h5p-2"
+        ],
+        "instructions": "main.ts: one try/catch around `startServer(loadEnv())` that handles InvalidEnvironmentError and InvalidValidationContextError, as proposed. Keep the SECURITY: and WHY: comments word for word, directly above the combined instanceof check inside the catch. Keep `type Env` in the import, because startServer's signature uses it. Leave the shutdown handlers unchanged. Run main.smoke.test.ts and typecheck."
+      },
+      {
+        "area": "srv-h5p",
+        "proposalIds": [
+          "srv-h5p-3"
+        ],
+        "instructions": "envParsers.ts: delete the stray first TSDoc line stacked on `Ctx`. Add the generic `parsedWith` and make `toKeyring = parsedWith(parseKeyring)`, then narrow the keyring import. In env.ts, PSEUDONYM_SECRETS becomes the one line `z.string().transform(parsedWith(parsePseudonymSecrets)),`, and the import from './envParsers.js' gains parsedWith. parsedWith's TSDoc must say, tagged `SECURITY:`, that the parser's error messages never contain the value. Do NOT route toJson through parsedWith: it keeps its fixed message on purpose. Keep toKeyring's TSDoc. Run apps/server/test/config, typecheck and doc:lint (the env-documented regex must still match the one-line entry)."
+      },
+      {
+        "area": "srv-h5p",
+        "proposalIds": [
+          "srv-h5p-4"
+        ],
+        "instructions": "H5pEditorFactory.ts: replace the EditorStorages interface with `export type EditorStorages = Readonly<H5pStorage>;`, imported with `import type` from './h5pStorage.js'. Move the 'plain library storage; the factory adds the language fallback' note into the alias TSDoc. Narrow the Lumi type import to the names still used, add ./h5pStorage.ts to the header's Collaborators, and keep the name EditorStorages, which engineTestbed.ts imports. Run typecheck, doc:lint, H5pFactories.test and permissionSystemGuard.test."
+      },
+      {
+        "area": "srv-h5p",
+        "proposalIds": [
+          "srv-h5p-5"
+        ],
+        "instructions": "Export `firstScriptTags(srcs = [])` from playerPage.ts. Use the same regex, the same `invalid script path: ${src}` error and the same tag string, with the `// SECURITY: only our own static files, never a URL from a request.` comment inside it, next to the regex. Required deviation from the proposal text, to keep evaluation order: make the call the FIRST statement of each renderer (`const first = firstScriptTags(options.firstScripts);` in renderPlayerPage, `const first = firstScriptTags(input.firstScripts);` in renderEditorPage) and keep spreading `...first` exactly where it is now. Do NOT inline the call into the array literal. Keep @throws on both renderers and the first-script invariants in both headers. Update Collaborators: editorPage gets './playerPage.ts (shared boot script and first-script check)', and playerPage adds './editorPage.ts (firstScriptTags)'. Run the playerPage/editorPage render tests, editorRoutes.int, player.int, typecheck and doc:lint."
+      },
+      {
+        "area": "srv-h5p",
+        "proposalIds": [
+          "srv-h5p-7"
+        ],
+        "instructions": "editorFrameHost.ts: merge openFramedEditor, openFramedEditorAndGoTo and the private openFramed into one exported `openFramedEditor(page, base, author, contentId, path: string | null = null)` that has openFramed's body unchanged. Its TSDoc must keep both details: with a path, it posts on the editor page's load event, and the page should then be a fresh browser context (no tour closed). Reword the header invariant as proposed. In editorGoToFieldEarly.browser.int.test.ts, change only the import and the openFramedEditorAndGoTo call at line 71, to `openFramedEditor(page, base, author, ids.BranchingScenario ?? '', path)`, and keep that file's local four-argument `openFramed` helper as it is. editorGoToField.browser.int.test.ts is unchanged. Run both editorGoToField browser tests, typecheck and doc:lint."
+      },
+      {
+        "area": "srv-h5p",
+        "proposalIds": [
+          "srv-h5p-12"
+        ],
+        "instructions": "This replaces tests-other-3, which is dropped. In httpTestbed.ts, add `appWith(overrides: Partial<ContentRouteDeps>): Express` to HttpTestbed, with TSDoc. Implement it with the routerApp builder: `express().use(pageAssetRoutes()).use('/h5p', createH5pRouter(deps, authenticate))`, with `app = routerApp(runtime)` and `appWith = (overrides) => routerApp({ ...runtime, ...overrides })`. tb.app must keep pageAssetRoutes before '/h5p' and the WHY comment about serverPages.css. Add no other middleware. Extend the header's Tests line to name the content save tests and editorBlockedSave. Then switch publishedSave.int, publishedSaveRealTypes.int, saveRace.int (its local appWith returns `tb.appWith({ editor: editor as HvlH5PEditor, saveGate })`) and editorBlockedSave.browser.int (`const app = tb.appWith({ saveGate });`, keeping its listen lines for now) as proposed, and remove the imports that become unused. Do not apply find-tests-other/authenticate.diff. Run apps/server/test/content, editorBlockedSave.browser.int, editorRoutes.int, typecheck and doc:lint."
+      },
+      {
+        "area": "srv-h5p",
+        "proposalIds": [
+          "srv-h5p-13"
+        ],
+        "instructions": "NARROWED: this item covers only loggers whose lines are captured. The five silent loggers go to the plain `createLogger({ level: 'silent' })` form in srv-lti-auth item 1. Do not touch sharedState.int, csrfToken.test, ltiErrorPages.test, LtiRecordCleanupJob.int or contentSharingRoutes.int. Create apps/server/test/support/capturedLogger.ts as proposed: a full module header (What/Why/Spec: DATA-009, NFR-006/Invariants/Collaborators: ../../src/logging/logger.ts/Tests naming its users), with TSDoc on `CapturedLogger` and `capturedLogger(level: LevelWithSilent = 'info')`. Its destination pushes String(chunk) and calls done synchronously. Adopt it in exactly these files, keeping each one's level: h5p/cleanupJob.test.ts and h5p/h5pServerInit.test.ts (delete capture(), call capturedLogger()), logging/loggerMessages.test.ts (the 5-line run; type the parameter as pino's `Logger` via `import type`, or as `CapturedLogger['logger']`), auth/audit/AuthAuditRecorder.int.test.ts ('error'), lti/ltijsLogger.test.ts ('debug'), support/feideTestbed.ts and support/appTestbed.ts ('debug', keeping the exposed name: `const { logger, lines: logs } = capturedLogger('debug')`). Remove the Writable/createLogger imports that become unused. Do NOT convert LeasedIntervalJob.test.ts or LtiRecordCleanupJob.test.ts (they push JSON.parse objects), logger.test.ts (it needs the raw stream) or the `sink` in HvlH5PEditor.library.test.ts (not a logger). With every capturing copy adopting the helper and the silent copies getting the simpler form, the skeptic's 'replace most copies' condition is met, and the net saving is about 12 lines plus the removal of the jscpd clone. The new file has a Spec header, so regenerate docs/TRACEABILITY.md with `npm run spec:trace` (never by hand). Run cleanupJob, h5pServerInit, test/logging, AuthAuditRecorder.int, ltijsLogger.test, a Feide test and an appTestbed user (e.g. test/lti/ltiLaunch.int.test.ts), then typecheck, lint and doc:lint."
+      },
+      {
+        "area": "srv-lti-auth",
+        "proposalIds": [
+          "srv-lti-auth-3",
+          "tests-lti-auth-web-3",
+          "tests-h5p-4",
+          "tests-support-http-7"
+        ],
+        "instructions": "One change for every silent test logger. Replace `createLogger({ level: 'silent', destination: new Writable({ write: (_c, _e, done) => done() }) })` with `createLogger({ level: 'silent' })`, and delete the now unused `import { Writable } from 'node:stream';`, in exactly these five files: apps/server/test/auth/session/csrfToken.test.ts, apps/server/test/lti/http/ltiErrorPages.test.ts (inside appThrowing), apps/server/test/lti/storage/LtiRecordCleanupJob.int.test.ts, apps/server/test/h5p/sharedState.int.test.ts (patch: /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tests-h5p/patches/tests-h5p-4.patch) and apps/server/test/http/api/contentSharingRoutes.int.test.ts. Leave logger usage and test bodies unchanged. Leave every capturing Writable that a test reads alone (srv-h5p-13 handles those that are shared). Run the five files (the int ones need services), then lint and typecheck."
+      },
+      {
+        "area": "srv-lti-auth",
+        "proposalIds": [
+          "srv-lti-auth-4"
+        ],
+        "instructions": "ltiAccount.int.test.ts: add the describe-local `newIdentity(role)` builder, with its doc comment, next to fixturePlatform. Call it INSIDE each of the three tests (`const identity = newIdentity('learner'|'author');`), never once at describe level. Keep the `// Arrange` comments, fixturePlatform and its doc. Run the file."
+      },
+      {
+        "area": "srv-lti-auth",
+        "proposalIds": [
+          "srv-lti-auth-5"
+        ],
+        "instructions": "launchFacts.ts and deepLinkActivities.ts: import isContentUuid from h5p/contentIds.ts and use it, as proposed (`every(isContentUuid)`, which relies on isContentUuid keeping its one-parameter signature). Keep the SECURITY: comment in chosenActivities exactly where it is. Leave ltiPlatformRows' own UUID/isPlatformId alone. Add ../h5p/contentIds.ts or ../../h5p/contentIds.ts to Collaborators in both lti files, and add both lti files to contentIds.ts's Collaborators. Do NOT write a count into contentIds.ts's Why sentence: leave it, or rephrase it without a number, since 'five' would be false. Run launchFacts.test, deepLinkActivities.int, deepLinking.int, ltiLaunch.int, typecheck, lint and doc:lint."
+      },
+      {
+        "area": "srv-lti-auth",
+        "proposalIds": [
+          "srv-lti-auth-6"
+        ],
+        "instructions": "LtiRoleMapper.ts: delete the unused `LtiRole` alias with its doc line and blank line, and the `Role` import that only it used. Leave the header unchanged (including Collaborators ../auth/Principal.ts), both SECURITY: comments, LtiRoles, LTI_TEST_USER_ROLE and LTI_AUTHOR_ROLES. Run LtiRoleMapper.test, typecheck, lint and doc:lint."
+      },
+      {
+        "area": "srv-lti-auth",
+        "proposalIds": [
+          "srv-lti-auth-9"
+        ],
+        "instructions": "LtiRecordCleanupJob.ts: delete only line 30 `/** The tables the job deletes from. */`. Keep `/** The ltijs record tables the cleanup deletes from. */` directly above `export type LtiRecordTables`. Run doc:lint and lint."
+      },
+      {
+        "area": "srv-lti-auth",
+        "proposalIds": [
+          "srv-lti-auth-1"
+        ],
+        "instructions": "This replaces tests-lti-auth-web-1, which is dropped. In webTestServer.ts, move the CI guard there with its message byte-identical, right after WEB_APP_BUILT. Add `serveBuiltWebApp(build = webTestServer): () => string`, with full TSDoc, holding the verbatim beforeAll/afterAll bodies (60_000 timeout; close the server if started, then web?.close()). Update the header's What, Why, Invariants and Tests: name ./webApp.browser.int.test.ts, and say it shares only the lifecycle and keeps its own bare Express app without the signed-out API or stand-in frames. The file must stay at 200 lines or fewer. In webPages and webChrome, call `const base = serveBuiltWebApp();` synchronously in the describe body, before describeWithBrowser, where the inline hooks were (lines 20-32). In webApp, call `serveBuiltWebApp((web) => express().use(baseSecurityHeaders({ https: false })).use(webRoutes(web)).use(portalNotFound()))` (lines 26-42), switch to WEB_APP_BUILT, and keep its console.warn line and its own `open` helper (with its WHY). Replace every `${base}` with `${base()}`. Keep each file's describe title literal and the `(WEB_APP_BUILT ? describe : describe.skip)` wrapper, and keep the import of '../support/browser.js' ahead of './webTestServer.js' in all three files. Later, tests-support-http item 1 will replace the listen/close lines inside serveBuiltWebApp with listenOnLoopback/closeLoopbackServers. Write it here with its own listen code, as proposed. Run the three web browser files one at a time (they need apps/web/.next and Chromium), `npx vitest list apps/server/test/web` (same names as baseline/default.json), then typecheck, lint and doc:lint."
+      },
+      {
+        "area": "srv-http-sec-val",
+        "proposalIds": [
+          "srv-http-sec-val-1"
+        ],
+        "instructions": "Apply /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-srv-http-sec-val/patches/1-requestAs.patch with `git apply`. Earlier areas do not touch these 13 files, so it should apply cleanly. Then fix the DOC-006 failure in ajax.int.test.ts in '[H5P-011] Content Hub metadata is answered empty…'. Preferred: put the long path in a local const so requestAs fits on one line. Otherwise add `// Act` and `// Assert`. Change nothing else in it, especially not its title or assertions. Do the same at the other sites where prettier wraps requestAs over 6 lines (ajax.int.test.ts:70 and :93, userData.int.test.ts:118), or leave those chains in their old form. If a file then still calls `request(` itself, it keeps its supertest import. Do NOT apply the optional extras (test/support/uploadFixtures.ts, test/support/httpTestbed.ts, content/*.int.test.ts, which srv-h5p-12 has already changed). requestAs.ts carries `Spec: H5P-006`, so regenerate docs/TRACEABILITY.md with `npm run spec:trace`. Require: the 13 files give 105 tests, all passing; `npm run doc:lint` reports all 11 checks passed; typecheck, lint and prettier --check are clean."
+      },
+      {
+        "area": "srv-http-sec-val",
+        "proposalIds": [
+          "srv-http-sec-val-3",
+          "tests-support-http-2"
+        ],
+        "instructions": "These two are duplicates; apply them once. Apply /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-srv-http-sec-val/patches/3-publishRoutesTest.patch, which adds the local `publish(id, acknowledgements: readonly object[] = [])` and uses it at the six call sites. Leave the 'a reason that names no current error…' test and publishGuards.int.test.ts unchanged. Run publishRoutes.int (6 tests) and typecheck. tests-support-http must NOT apply the publishRoutes hunk of its proposals.diff later."
+      },
+      {
+        "area": "srv-http-sec-val",
+        "proposalIds": [
+          "srv-http-sec-val-5"
+        ],
+        "instructions": "Apply /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-srv-http-sec-val/patches/5-videoTimeline.patch. Keep the added `// WHY: Array.prototype.sort is stable…` comment and leave the header invariant ('sorted by time, then by list position') unchanged. Run apps/server/test/validation and typecheck."
+      },
+      {
+        "area": "srv-http-sec-val",
+        "proposalIds": [
+          "srv-http-sec-val-6"
+        ],
+        "instructions": "Apply /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-srv-http-sec-val/patches/6-visibilities.patch, which deletes the dead VISIBILITIES export. Keep the ContentVisibility import (sharingRefusal uses it). Run contentSharing.test, contentSharingRoutes.int and typecheck. Do NOT apply patches 2, 4, 7 or 8 from that folder: they were not approved."
+      },
+      {
+        "area": "tests-h5p",
+        "proposalIds": [
+          "tests-h5p-1",
+          "srv-h5p-8"
+        ],
+        "instructions": "These two are duplicates; apply them once. Apply /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tests-h5p/patches/tests-h5p-1.patch: playerPage.test.ts uses inlineScriptTags and integrationFromPage from ../../support/playerIntegration.js. Use `integration?.contents` and `integration?.user` exactly. Add no non-null assertion and no `?? {}` fallback. Titles and assertions stay unchanged. Run playerPage.test (7 tests)."
+      },
+      {
+        "area": "tests-h5p",
+        "proposalIds": [
+          "tests-h5p-2",
+          "srv-h5p-9"
+        ],
+        "instructions": "These two are duplicates; apply them once. Apply /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tests-h5p/patches/tests-h5p-2.patch: a file-local `configOf<T>` with a one-line doc, the same regex with the `s` flag and the same `?? '{}'` fallback, used at the three sites. Titles, Arrange/Act/Assert comments and expected values stay unchanged. Run editorPage.test (7 tests)."
+      },
+      {
+        "area": "tests-h5p",
+        "proposalIds": [
+          "tests-h5p-6"
+        ],
+        "instructions": "Apply /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tests-h5p/patches/tests-h5p-6.patch: a new permissions/matrixDimensions.ts with product, numeric, ROLES and VIEWS. Every export gets TSDoc, and the module header has Spec: H5P-006. generalAndTemporary.test.ts must keep its H5pRole/H5pUserView type import (actorFor/userFor). Regenerate docs/TRACEABILITY.md with `npm run spec:trace`. Run the three matrix files: the per-file test counts must be the same as before (6070, 12444 and 104). Then run doc:lint and typecheck."
+      },
+      {
+        "area": "tests-h5p",
+        "proposalIds": [
+          "tests-h5p-7"
+        ],
+        "instructions": "Apply /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tests-h5p/patches/tests-h5p-7.patch, which adds render/clientScripts.ts with runClientScripts. One fix-up is needed in editorFieldChain.test.ts: put the `// WHY:` load-order line ABOVE `/** Runs the script, which only defines its functions. */`, so the doc comment sits directly on `const script`, as in the other two files. Keep the existing doc comments of script() in all three files. Regenerate docs/TRACEABILITY.md with `npm run spec:trace`. Run the three script tests (6, 8 and 15 tests), then doc:lint and typecheck. Do not apply tests-h5p-3 or tests-h5p-5 patches if present."
+      },
+      {
+        "area": "tests-lti-auth-web",
+        "proposalIds": [
+          "tests-lti-auth-web-2"
+        ],
+        "instructions": "webRoutes.int.test.ts: give appWith the optional `launch?: AppLaunch` and `options?: WebRouteOptions` parameters, as proposed, with updated TSDoc. Use it in '[DATA-006] a repeated lang is ignored…' and '[LTI-006] a launch page gets the launch facts…'. Keep both titles, every assertion (including the written-out launch-header `toEqual({...})`) and the launch facts at the call sites exactly as they are now. Run webRoutes.int.test.ts (12 tests). This is the only item in this area: tests-lti-auth-web-1 is dropped in favour of srv-lti-auth-1, and tests-lti-auth-web-3 was applied in srv-lti-auth item 1."
+      },
+      {
+        "area": "tests-support-http",
+        "proposalIds": [
+          "tests-support-http-1",
+          "tests-support-http-9"
+        ],
+        "instructions": "Take ONLY these paths from /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tests-support-http/proposals.diff, via `git apply --3way` with one `--include=` per path: apps/server/test/support/loopbackServers.ts, apps/server/test/http/player.browser.int.test.ts (also carries tests-support-http-9, the LIBRARIES alias), apps/server/test/http/pages/serverPages.browser.test.ts, apps/server/test/http/h5pPageCsp.browser.int.test.ts, apps/server/test/lti/pages/deepLinkPicker.browser.test.ts, and apps/server/test/h5p/{editorPage,editorGoToField,editorGoToFieldEarly,branchingTour,editorBlockedSave,realTypes}.browser.int.test.ts. srv-h5p-7 and srv-h5p-12 have already changed editorGoToFieldEarly and editorBlockedSave. If a hunk fails there, make the edit by hand: drop the Server/AddressInfo type imports and `let server`, use `base = await listenOnLoopback(<app>)` and `await closeLoopbackServers()`, and add the loopbackServers import after the describeWithBrowser import. Do NOT take the web/*.browser.int hunks: srv-lti-auth-1 has moved that code into apps/server/test/web/webTestServer.ts. There, change serveBuiltWebApp so that beforeAll does `web = await loadWebApp('prod'); base = await listenOnLoopback(build(web));` and afterAll does `await closeLoopbackServers(); await web?.close();`. Drop its `server` variable and the Server/AddressInfo imports, and add ../support/loopbackServers.ts to its Collaborators. That way all 13 files adopt the helper in this one change. In loopbackServers.ts, fix the header. Collaborators must be accurate: the helper does not use ./browser.ts, so write something like 'Express app.listen; used beside describeWithBrowser from ./browser.ts'. The Tests line must also name ../web/webTestServer.ts. Leave realTypesPlayer.ts, thirdPartyCookies.ts and appTestbed.ts alone. Regenerate docs/TRACEABILITY.md (Spec: NFR-004) with `npm run spec:trace`. Run every affected browser file one at a time, including the three web files: 26 tests in player/serverPages/deepLinkPicker/web*, 38 in h5pPageCsp/editor*/branchingTour/realTypes. Then compare `npx vitest list` for these files with the baseline, and run typecheck, lint and doc:lint."
+      },
+      {
+        "area": "tests-support-http",
+        "proposalIds": [
+          "tests-support-http-6"
+        ],
+        "instructions": "apiTestbed.ts: drop the `params` option no caller passes; inside `content` it becomes `const params = { question: 'Kva?' };`. You may take the apiTestbed.ts hunk from proposals.diff (`--include=apps/server/test/support/apiTestbed.ts`). Run apps/server/test/http/api (23 tests) and typecheck."
+      },
+      {
+        "area": "tests-support-http",
+        "proposalIds": [
+          "tests-support-http-8"
+        ],
+        "instructions": "router.int.test.ts: type ACTOR_ROUTES as `['get' | 'post' | 'put' | 'delete', string][]` and replace the double-cast call with `await request(tb.app)[method](path)`. srv-http-sec-val-1 has already changed this file (requestAs and its import). Take the router.int hunk from proposals.diff with `git apply --3way --include=apps/server/test/http/router.int.test.ts`, or make the edit by hand. Keep the supertest import, which this test still uses. Run router.int.test.ts (17 tests: the 11 it.each titles stay unchanged) and typecheck."
+      },
+      {
+        "area": "tests-support-http",
+        "proposalIds": [
+          "tests-support-http-10"
+        ],
+        "instructions": "ltiLaunchDriver.ts: replace the two embedded(login.text, 'ltijs-login-data') reads with one destructuring, `const { targetUrl, recoveryToken } = embedded(...)` (the ltiLaunchDriver hunk of proposals.diff). Run ltiLaunch.int, deepLinking.int, h5pAuthenticate.int and apiDocs.int. Apply NOTHING else from proposals.diff: the hunks for HvlH5PEditor.test.ts, rulePermissions.ts, contentFiles.int, signedFiles.int, uploadFixtures.ts, httpTestbed.ts, appTestbed.ts, realWebApp.ts and tenTypeLibraries.ts belong to proposals that were not approved; publishRoutes.int and contentSharingRoutes.int are already done; and the web/* hunks are covered by item 1."
+      },
+      {
+        "area": "tests-other",
+        "proposalIds": [
+          "tests-other-1",
+          "srv-h5p-11",
+          "tests-other-2"
+        ],
+        "instructions": "tests-other-1 and srv-h5p-11 are duplicates, applied once. tests-other-1's form is chosen because its envProblems keeps the original `expect(error).toBeInstanceOf(InvalidEnvironmentError)` assertion verbatim, where srv-h5p-11 would rethrow; its diff is also verified together with tests-other-2. Apply with `cd /home/user/HVL-INTERAKTIV/apps/server/test && patch -p0 < /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tests-other/config.diff`; its paths are relative to apps/server/test. It covers authEnv.ts plus env.test.ts, envParsers.test.ts and productionChecks.test.ts, including tests-other-2's swap of random() for randomKey(). Then add a header line to authEnv.ts: `Collaborators: ../../src/config/env.ts (loadEnv, InvalidEnvironmentError).` Keep the updated summary and the envProblems TSDoc, including @param now. Give it no default `now` other than leaving it undefined, which means new Date(). Keep productionChecks' local one-line `problemsAt` wrapper. authEnv.ts must stay imported only by vitest-run files. srv-h5p-3 changed src/config/env.ts earlier, but not these test files and not the messages they assert. Run test/config (43 tests), AccountResolver.test, HvlUrlGenerator.test, contentFileGrants.test, editorIntegration.test, typecheck and doc:lint."
+      },
+      {
+        "area": "tests-other",
+        "proposalIds": [
+          "tests-other-4"
+        ],
+        "instructions": "createApp.int.test.ts: use `portalUser = await tb.feideAccount('author');` after loginWithFeide in the same beforeAll, and drop the IdentityHasher and identitySource imports. Apply with `cd /home/user/HVL-INTERAKTIV/apps/server/test && patch -p0 < /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tests-other/createApp.diff`. Run createApp.int.test.ts (9 tests, services up)."
+      },
+      {
+        "area": "tests-other",
+        "proposalIds": [
+          "tests-other-5"
+        ],
+        "instructions": "purity.test.ts: replace the body of sourceFiles with `readdirSync(dir, { recursive: true, withFileTypes: true }).filter((entry) => !entry.isDirectory() && entry.name.endsWith('.ts')).map((entry) => join(entry.parentPath, entry.name))`, formatted by prettier. purity.diff uses absolute paths, so make this edit by hand. Imports stay unchanged. Add no assertion that depends on file order. Run purity.test.ts (46 tests, the same titles)."
+      },
+      {
+        "area": "tests-other",
+        "proposalIds": [
+          "tests-other-6"
+        ],
+        "instructions": "zipEntryGuard.test.ts: loop over '/etc/cron', '..\\\\evil.js' and 'C:/evil.js' (the TS source keeps the `'..\\\\evil.js'` literal) with the `name` label, as proposed. Apply with `cd /home/user/HVL-INTERAKTIV/apps/server/test && patch -p0 < /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tests-other/zipEntryGuard.diff`. Run zipEntryGuard.test.ts (9 tests). Do NOT apply authenticate.diff: tests-other-3 is dropped, and srv-h5p-12 already covers it."
+      },
+      {
+        "area": "a11y-e2e",
+        "proposalIds": [
+          "a11y-e2e-1"
+        ],
+        "instructions": "Add `COLOUR_MODES`, with its TSDoc, to apps/server/a11y/support/catalogue.ts, after the header. Update header lines 2-3 to name the colour modes, WITHOUT the '(a frame's too)' wording, which belongs to the refuted a11y-e2e-3. Delete the four local MODES copies, use describe.each(COLOUR_MODES) and update the imports as proposed. Leave no local alias, and leave the suites' module headers unchanged. Run the four axe suites (a11y config), typecheck for apps/server and doc:lint. The vitest list must show the same titles."
+      },
+      {
+        "area": "a11y-e2e",
+        "proposalIds": [
+          "a11y-e2e-2"
+        ],
+        "instructions": "layoutChecks.ts: delete only the dead `clippedText` function and its TSDoc, plus the blank line after it. Keep findClippedText, markClippedText, clippedTextEverywhere and the local frameName. KEEP `import type { Frame, Page } from 'playwright-core';`, because a11y-e2e-3 is not applied and frameName still uses Frame. Run typecheck, lint and the textSpacingZoom control tests."
+      },
+      {
+        "area": "a11y-e2e",
+        "proposalIds": [
+          "a11y-e2e-4"
+        ],
+        "instructions": "pages.ts: in openServed, keep the `context.route(...)` call and replace the four open-and-wait lines with `return openWebPage(context, base, path, false);`. Updating openWebPage's `@param nextPage` TSDoc is REQUIRED, using the proposed wording or something equivalent, at 120 characters per line at most. Leave the header's openFramed/openServerAnswer invariant unchanged. Run axeServerPages.a11y.test.ts (16 tests) and typecheck."
+      },
+      {
+        "area": "a11y-e2e",
+        "proposalIds": [
+          "a11y-e2e-5"
+        ],
+        "instructions": "upstreamFindings.ts: delete the `export type { H5pSurface, UpstreamFinding }` re-export line and the blank line after it. Keep its own import of UPSTREAM_FINDINGS and the two types. In upstreamRegister.a11y.test.ts, change only the two import lines, as proposed. Run upstreamRegister.a11y.test.ts (2 tests) and typecheck."
+      },
+      {
+        "area": "web",
+        "proposalIds": [
+          "web-1"
+        ],
+        "instructions": "SiteHeader.tsx and SiteFooter.tsx: one `<ExternalLink … newTab={inCanvas} external={false} className=\"link-target\">` in place of the ExternalLink/<a> ternary, and change only the TSDoc of the `external` prop in ExternalLink.tsx. Leave the site-name ternary in SiteHeader alone. Do not change ExternalLink's logic, its defaults or its SECURITY comment. Do not edit any test. The applied versions are in /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-web/repo/apps/web/src/components/. Diff each one against the repo file first, and take only the proposal's hunks. Run the SiteHeader, SiteFooter and ExternalLink tests, then `npx vitest run apps/web`."
+      },
+      {
+        "area": "web",
+        "proposalIds": [
+          "web-2"
+        ],
+        "instructions": "formatDate.ts: add the private `format(iso, locale, style)` helper (not exported) and make formatDateTime and formatDate call it. Keep both as exported function declarations with their TSDoc and examples, in the same order. Leave the module header, INTL_LOCALE with its WHY comment, and HVL_TIME_ZONE unchanged. Scratch version: /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-web/repo/apps/web/src/i18n/formatDate.ts. Diff it first. Run formatDate.test, FindingsList.test and PortalHome.test."
+      },
+      {
+        "area": "web",
+        "proposalIds": [
+          "web-4"
+        ],
+        "instructions": "components.css: add the aria-disabled selectors to the earlier `cursor: not-allowed` rule and delete the later duplicate. Merge the two adjacent `@media (forced-colors: active)` blocks into one, with each A11Y comment moved word for word, directly above its own rules. Change no declaration or selector, and keep `:root { --site-header-height }`. Scratch version: /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-web/repo/apps/web/src/styles/components.css. Diff it first. After all three web items: run `npm run lint:css`, then `npm run build --workspace apps/web`, because the server's web browser tests and the a11y suite use apps/web/.next. Then run the three apps/server/test/web/*.browser.int tests one at a time, then `npm run test:a11y` (332 tests). No page should look different, so CLAUDE.md §4 needs no screenshots. If anything renders differently, stop and revert that item."
+      },
+      {
+        "area": "packages",
+        "proposalIds": [
+          "packages-1"
+        ],
+        "instructions": "a11yRepairsTour.test.ts: use openRepairDocument and repairScript from ./support/repairDocument.js, as proposed. Keep the EDITOR constant, the module header and every describe/it title and body byte-identical, and openDocument still returns { document, settle, inert }. In repairDocument.ts, the Tests: addition must be an indented continuation line (` *   packages/hvl-h5p-theme/test/a11yRepairsTour.test.ts`, with a comma ending the line before it). Run the three repair tests, typecheck for the package and doc:lint."
+      },
+      {
+        "area": "packages",
+        "proposalIds": [
+          "packages-2"
+        ],
+        "instructions": "buildTokens.test.ts: add the local `type Tokens = Record<string, Record<string, unknown>>` with its one-line doc, and use it in tokensWith and in the six it.each callbacks. Keep every label, `!` and assigned value character for character. Leave the circular-ref test's own cast alone. Run prettier. The file must still have 15 tests with the same titles. Run typecheck for design-tokens and tokens:check."
+      },
+      {
+        "area": "packages",
+        "proposalIds": [
+          "packages-3"
+        ],
+        "instructions": "buildFeedbackPrefixes.mjs: give `content` a block body that computes `drawn(state, ownIcon)` once, as proposed. Keep the `// A11Y:` comment directly above it, and leave drawn, block and list unchanged. `npm run check --workspace packages/hvl-h5p-theme` must report dist/hvl-feedback-prefixes.css as up to date, byte-identical. Run feedbackPrefixesCss, feedbackPrefixes, feedbackNames and themeStructure tests."
+      },
+      {
+        "area": "tools-mock-site",
+        "proposalIds": [
+          "tools-mock-site-1",
+          "tools-mock-site-2",
+          "tools-mock-site-3"
+        ],
+        "instructions": "These three edit the same mockPlatform.mjs/d.mts lines, so apply them together from /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tools-mock-site/all-proposals.patch: `git apply --include=tools/mock-platform/ltiVocabulary.mjs --include=tools/mock-platform/mockPlatform.d.mts --include=tools/mock-platform/mockPlatform.mjs --include=tools/mock-platform/deepLinkReturn.mjs <patch>`. Never take the feideUsers.mjs hunk: it belongs to a proposal that was not approved. Keep the exports in the defining modules (mockFeide.mjs, feideDiscovery.mjs, feideUsers.mjs, mockCanvas.mjs), the TSDoc of mockPlatformEnv (now module-private), the MockPlatformEnv interface, and the DeepLinkProblem union with its doc in canvasTypes.d.mts. Narrow the d.mts LTI_ROLE key union with the comma moved to `| 'systemUser',`. Run tools/mock-platform, typecheck for apps/server, lint, doc:lint and `npm run test:e2e`."
+      },
+      {
+        "area": "tools-mock-site",
+        "proposalIds": [
+          "tools-mock-site-4"
+        ],
+        "instructions": "mockCanvas.mjs: replace the withoutUndefined helper and the spread merge with destructuring defaults that reference MOCK_CANVAS_DEFAULTS.<key> (not inlined literals). Keep MOCK_CANVAS_DEFAULTS exported with its TSDoc. Use `git apply --include=tools/mock-platform/mockCanvas.mjs` with all-proposals.patch. Run tools/mock-platform and the deepLinking e2e."
+      },
+      {
+        "area": "tools-mock-site",
+        "proposalIds": [
+          "tools-mock-site-6"
+        ],
+        "instructions": "mockFeide.test.mjs: give redeemRaw an optional codeVerifier (TSDoc updated) and make the PKCE test's `exchange` a named local that calls redeemRaw. Leave the title, the Act lines and the assertions unchanged. Use `--include=tools/mock-platform/test/mockFeide.test.mjs` with all-proposals.patch. The file must still have 11 tests, all passing."
+      },
+      {
+        "area": "tools-mock-site",
+        "proposalIds": [
+          "tools-mock-site-7"
+        ],
+        "instructions": "mockPlatform.test.mjs: put the six names once, in a hand-written literal `six` inside the test (not derived from code under test). Keep the Arrange/Act/Assert comments and the three expectations that follow. Use `--include=tools/mock-platform/test/mockPlatform.test.mjs` with all-proposals.patch. The file must still have 5 tests."
+      },
+      {
+        "area": "tools-mock-site",
+        "proposalIds": [
+          "tools-mock-site-8"
+        ],
+        "instructions": "spec-site: export the escapeHtml from markdownRenderer.mjs, with its TSDoc and with `String(s)` kept. pageTemplate imports it as `esc` and drops its own copy, so the call sites stay unchanged. Update pageTemplate's Collaborators line. Use `--include=tools/spec-site/markdownRenderer.mjs --include=tools/spec-site/pageTemplate.mjs` with all-proposals.patch. Run tools/spec-site and `node tools/spec-site/buildSpecSite.mjs --check`, which must report the site up to date."
+      },
+      {
+        "area": "tools-other",
+        "proposalIds": [
+          "tools-other-1"
+        ],
+        "instructions": "eslint.config.mjs: replace the COLOUR_BANS block with the version in /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tools-other/eslint.new-block.txt. The full file is after.eslint.config.mjs; diff it against the repo first, and only this block may differ. Copy the regex escapes character for character. Keep the two-line `// UD-001: a hex value after a quote…` comment directly above COLOUR_LITERAL and the `/** UD-001, D-072: … */` doc directly above COLOUR_BANS. Leave the JSX style entry and both spread sites unchanged. Run styleRules.test.ts, `npm run lint` and `npm run format:check`."
+      },
+      {
+        "area": "tools-other",
+        "proposalIds": [
+          "tools-other-2"
+        ],
+        "instructions": "resolveManifest.test.mjs: add ROOTS and the documented `resolveA(source)` after the registry block, and use it at the five sites, as proposed. You may copy the body of /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tools-other/rm-test/resolveManifest.test.mjs, but keep the repo's `../resolveManifest.mjs` import, not the scratch path. Keep the `roots: missing` call as a direct resolveManifest call, and keep the Arrange/Act/Assert comments. Run the file (5 tests), the tools project, doc:lint and `npm run spec:trace -- --check --done-through=S4`."
+      },
+      {
+        "area": "tools-other",
+        "proposalIds": [
+          "tools-other-3"
+        ],
+        "instructions": "fetchCoreClients.sh: `editor_mode=verify` as an unconditional default, then `[[ \"${1:-}\" == \"--record-editor-hashes\" ]] && editor_mode=record`, and the single line `$VERIFY \"$editor_mode\" \"$work/editor\" \"$EDITOR_HASHES\" --prefix=h5p-editor-php-library-ab2daa18/`. The reference is /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/find-tools-other/fetchCoreClients.after.sh; `diff` must show only those two hunks. Keep the core verify line literal, and leave the header, the SECURITY: line and the copy steps unchanged. Test with `bash -n`, and run verify mode only (H5P_DEST=$(mktemp -d)) if github is reachable. NEVER run --record-editor-hashes: it rewrites the committed hash list. Then run tools/h5p-core tests and doc:lint."
+      }
+    ],
+    "dropped": [
+      "tests-lti-auth-web-1: conflicts with srv-lti-auth-1. Both rewrite the same lines of webTestServer.ts and the three web browser tests and each creates a competing lifecycle helper. srv-lti-auth-1 is kept because it saves more (25 lines against 14), leaves each file's explicit `(WEB_APP_BUILT ? describe : describe.skip)(title)` and inline title in place, follows browser.ts's getter pattern, and needs no body-callback wrapper or extra plainServer builder.",
+      "tests-other-3: replaced by srv-h5p-12. Both edit the same lines of publishedSave.int, publishedSaveRealTypes.int, saveRace.int, editorBlockedSave.browser.int and the HttpTestbed interface. srv-h5p-12 also reuses the testbed's own authenticator, and it also removes the hand-built routers (29 lines against 14). Its authenticate.diff must not be applied."
+    ],
+    "notes": "I read the repository only and changed nothing; I did not apply any patch or run any test. I dry-ran each patch against HEAD 94d9715: the srv-http-sec-val, tests-h5p, tools-mock-site and tests-support-http patches pass `git apply --check`. The tests-other diffs only apply with `patch -p0` from apps/server/test. purity.diff has absolute paths, so that edit is made by hand.\n\nMERGED DUPLICATES (each applied once, under the first id listed in its order entry):\n- srv-h5p-8 into tests-h5p-1 (playerPage.test shared readers).\n- srv-h5p-9 into tests-h5p-2 (editorPage.test configOf).\n- tests-support-http-2 into srv-http-sec-val-3 (publishRoutes publish helper; patch 3 with `readonly object[]`).\n- srv-h5p-11 into tests-other-1 (envProblems in authEnv.ts). tests-other-1's form is chosen because it keeps the original `expect(error).toBeInstanceOf(InvalidEnvironmentError)` and its verified config.diff already includes tests-other-2.\n- tests-lti-auth-web-3, tests-h5p-4 and tests-support-http-7 into srv-lti-auth-3: one silent-logger change across five files, done in srv-lti-auth.\n\nNARROWED, to resolve overlaps:\n- srv-h5p-13 (capturedLogger) now covers only the seven capturing loggers. Its 'silent' conversions (sharedState, csrfToken, ltiErrorPages, LtiRecordCleanupJob.int, contentSharingRoutes) conflicted with the simpler `createLogger({ level: 'silent' })` form from four other proposals. That form wins, because it needs no helper.\n- tests-support-http-1 (loopbackServers) no longer edits the three web test files, since srv-lti-auth-1 has moved their listen code into webTestServer.ts's serveBuiltWebApp. Instead it converts that one function, so all 13 users still adopt the helper in one change.\n\nORDER DEPENDENCIES AND SHARED FILES:\n- srv-h5p-12 (httpTestbed.appWith) and srv-h5p-7 (editorFrameHost) edit editorBlockedSave and editorGoToFieldEarly before tests-support-http-1 edits their listen blocks. Use `git apply --3way` or hand edits there.\n- srv-http-sec-val-1 (requestAs) edits router.int before tests-support-http-8.\n- srv-lti-auth-1 must exist before tests-support-http-1 rewrites serveBuiltWebApp.\n- The silent-logger item in srv-lti-auth and srv-h5p-13 touch disjoint files.\n- tests-other-1 touches only test files; srv-h5p-3 touches only src/config.\n\nSCRATCH DIFFS ARE NOT WHOLESALE PATCHES:\n- find-tests-support-http/proposals.diff and find-tools-mock-site/all-proposals.patch contain hunks of proposals that were not approved: publishToHvl in httpTestbed/appTestbed, HvlH5PEditor.test, rulePermissions, contentFiles/signedFiles, uploadFixtures, realWebApp, tenTypeLibraries, and the feideUsers.mjs hunk.\n- find-srv-http-sec-val patches 2, 4, 7 and 8 were not approved either.\n- Use `git apply --include=` exactly as each item says.\n- Whole-file scratch copies (find-web/repo, find-tools-other) must be diffed against the repo file before copying, and only the proposal's hunks taken.\n\nFOR EVERY APPLIER:\n1. Follow CLAUDE.md: module headers, TSDoc, tags kept beside their code, at most 200 lines per file, no test removed or weakened.\n2. After each item, run its tests plus `npm run typecheck`, `npm run lint`, prettier --check on the changed files and `npm run doc:lint`.\n3. When an item adds a file with a `Spec:` header (requestAs.ts, capturedLogger.ts, loopbackServers.ts, matrixDimensions.ts, clientScripts.ts), regenerate docs/TRACEABILITY.md with `npm run spec:trace`, never by hand. Then run `npm run spec:trace -- --check --done-through=S4` and `node tools/spec-site/buildSpecSite.mjs --check`, and regenerate the site only if that check fails.\n4. Compare `npx vitest list` for touched files with the baseline in /tmp/claude-0/-home-user-HVL-INTERAKTIV/37720df0-f9da-5b31-b812-6844bcca1b8f/scratchpad/simplify/baseline.\n5. Run browser and int tests one file at a time with services up (start-services.sh if needed).\n6. The web applier rebuilds apps/web (`npm run build --workspace apps/web`) before rerunning the server's web browser tests and `npm run test:a11y`.\n7. Make one conventional commit per item with a `Refs:` footer.\n8. Use two strikes: if an item fails twice, revert it and record the exact error rather than forcing it.\n\nThe final gate (last applier or orchestrator) must still show 21423 tests in 315 files (npx vitest run), 332 a11y tests in 13 files and 16 e2e tests in 8 files."
   }
 }
