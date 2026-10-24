@@ -28,11 +28,13 @@ const DETAIL: ContentDetail = {
 };
 const FINDINGS = { updatedAt: UPDATED, findings: [] };
 
-const show = (onStatusChange = vi.fn()) =>
+const DRAFT: ContentDetail = { ...DETAIL, status: 'draft', publishedAt: null };
+
+const show = (onStatusChange = vi.fn(), detail = DETAIL) =>
   render(
     <ApiAuthProvider auth={{ kind: 'portal', csrfToken: 'csrf-1' }}>
       <CheckPanel
-        detail={DETAIL}
+        detail={detail}
         revision={0}
         onGoToField={() => undefined}
         onStatusChange={onStatusChange}
@@ -51,7 +53,7 @@ describe('[PROD-003] the check-and-publish tab', () => {
         body: { status: 'published', updatedAt: UPDATED, publishedAt: UPDATED },
       },
     });
-    show(onStatusChange);
+    show(onStatusChange, DRAFT);
     fireEvent.click(await screen.findByRole('button', { name: 'Publiser' }));
     // Act
     fireEvent.click(screen.getByRole('button', { name: 'Publiser no' }));
@@ -64,6 +66,13 @@ describe('[PROD-003] the check-and-publish tab', () => {
       updatedAt: UPDATED,
       acknowledgements: [],
     });
+  });
+
+  it('[PROD-003] a published activity offers only the way back to draft, not a second publish', async () => {
+    fakeFetch({ [`GET /api/content/${ID}/findings`]: { status: 200, body: FINDINGS } });
+    show();
+    expect(await screen.findByRole('button', { name: 'Gjer om til utkast' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Publiser' })).toBeNull();
   });
 
   it('[PROD-003] returns a published activity to draft with the updatedAt it shows', async () => {

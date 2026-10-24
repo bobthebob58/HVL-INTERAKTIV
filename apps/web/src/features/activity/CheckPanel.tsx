@@ -101,7 +101,7 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
             canGoToField={detail.mayEdit}
           />
           <div className="flex flex-wrap gap-2">
-            {detail.mayPublish ? (
+            {detail.mayPublish && detail.status !== 'published' ? (
               <button type="button" className="button-primary" onClick={() => setDialogOpen(true)}>
                 {t('publish.open', locale)}
               </button>
