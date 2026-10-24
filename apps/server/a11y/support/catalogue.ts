@@ -1,6 +1,6 @@
 /**
- * catalogue — what the accessibility suites walk through: the ten content types, the web app's routes and the
- * server's own pages, by the names the suites print.
+ * catalogue — what the accessibility suites walk through: the colour modes of the axe scans, the ten content
+ * types, the web app's routes and the server's own pages, by the names the suites print.
  *
  * Why: UD-030, UD-008 and DATA-011 say "every route" and "every type". One list keeps the suites from drifting
  *      apart: a route added to the web app is added here once and every check covers it.
@@ -12,6 +12,12 @@
  * Collaborators: ./pages.ts, the suites in ../.
  * Tests: apps/server/a11y/axeWebRoutes.a11y.test.ts and the other suites in apps/server/a11y/.
  */
+
+/** The colour modes every axe suite scans in: the light theme, and forced colours emulated (`forcedColors`). */
+export const COLOUR_MODES = [
+  ['light', 'none'],
+  ['forced colours', 'active'],
+] as const;
 
 /** The ten authorable content types by main library (PROD-002). */
 export const CONTENT_TYPES = [

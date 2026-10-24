@@ -9,19 +9,15 @@
 import { describe, expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
 import { scanPage } from './support/axeScan.js';
+import { COLOUR_MODES } from './support/catalogue.js';
 import { openFramed, openServerAnswer, openWebPage } from './support/pages.js';
 import { expectOnlyRecorded } from './support/upstreamFindings.js';
-
-const MODES = [
-  ['light', 'none'],
-  ['forced colours', 'active'],
-] as const;
 
 /** An activity ID no activity has. */
 const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
 
 describeA11y('[UD-030] axe on the server-rendered pages', (env) => {
-  describe.each(MODES)('%s', (mode, forcedColors) => {
+  describe.each(COLOUR_MODES)('%s', (mode, forcedColors) => {
     it.each([
       ['the signed-out page', '/auth/logged-out', 200],
       ['the Canvas page without an ltik', '/app/play', 401],

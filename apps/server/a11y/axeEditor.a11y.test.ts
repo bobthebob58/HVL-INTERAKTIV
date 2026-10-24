@@ -9,18 +9,13 @@
 import { describe, expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
 import { scanPage } from './support/axeScan.js';
-import { CONTENT_TYPES } from './support/catalogue.js';
+import { COLOUR_MODES, CONTENT_TYPES } from './support/catalogue.js';
 import { editorFrame } from './support/pages.js';
 import { expectOnlyRecorded, recordedFor } from './support/upstreamFindings.js';
 import { closeBranchingTour, openView } from './support/views.js';
 
-const MODES = [
-  ['light', 'none'],
-  ['forced colours', 'active'],
-] as const;
-
 describeA11y('[UD-030] axe on the H5P editor of each content type', (env) => {
-  describe.each(MODES)('%s', (mode, forcedColors) => {
+  describe.each(COLOUR_MODES)('%s', (mode, forcedColors) => {
     const forced = forcedColors === 'active';
 
     it.each(CONTENT_TYPES)('[UD-030] the editor of %s has only recorded upstream problems', async (type) => {

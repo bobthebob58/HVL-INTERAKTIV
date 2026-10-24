@@ -11,19 +11,14 @@
 import { describe, expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
 import { mergeReports, scanPage } from './support/axeScan.js';
-import { PLAIN_ROUTES } from './support/catalogue.js';
+import { COLOUR_MODES, PLAIN_ROUTES } from './support/catalogue.js';
 import { noticeRegion } from './support/formativeNotice.js';
 import { editorFrame, openLaunch, openWebPage } from './support/pages.js';
 import { expectOnlyRecorded, recordedFor } from './support/upstreamFindings.js';
 import { openView } from './support/views.js';
 
-const MODES = [
-  ['light', 'none'],
-  ['forced colours', 'active'],
-] as const;
-
 describeA11y('[UD-030] axe on the web routes', (env) => {
-  describe.each(MODES)('%s', (mode, forcedColors) => {
+  describe.each(COLOUR_MODES)('%s', (mode, forcedColors) => {
     const forced = forcedColors === 'active';
 
     it.each([...PLAIN_ROUTES, '/aktivitet/<id>'])(

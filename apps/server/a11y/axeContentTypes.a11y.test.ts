@@ -15,7 +15,7 @@ import { AxeBuilder } from '@axe-core/playwright';
 import { describe, expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
 import { mergeReports, scanPage, WCAG_TAGS, type AxeReport } from './support/axeScan.js';
-import { CONTENT_TYPES } from './support/catalogue.js';
+import { COLOUR_MODES, CONTENT_TYPES } from './support/catalogue.js';
 import { playerFrame } from './support/pages.js';
 import { expectOnlyRecorded, recordedFor } from './support/upstreamFindings.js';
 import { openView, startAndAnswer, waitForStillness } from './support/views.js';
@@ -29,13 +29,8 @@ const FRAMELESS_AXE = `${readFileSync(
   'utf8',
 )}\nif (window !== window.top) throw new Error('Script Timeout');`;
 
-const MODES = [
-  ['light', 'none'],
-  ['forced colours', 'active'],
-] as const;
-
 describeA11y('[UD-030] axe inside the H5P player of each content type', (env) => {
-  describe.each(MODES)('%s', (mode, forcedColors) => {
+  describe.each(COLOUR_MODES)('%s', (mode, forcedColors) => {
     it.each(CONTENT_TYPES)(
       '[UD-030] %s has only recorded upstream problems, fresh and started or answered',
       async (type) => {
