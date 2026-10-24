@@ -10,8 +10,8 @@
  * Collaborators: ./mockPlatform.mjs, ./feideTypes.d.mts, ./canvasTypes.d.mts.
  * Tests: tools/mock-platform/test/ (behaviour); `npx tsc -p apps/server --noEmit` checks callers against these types.
  */
-import type { CanvasUser, DeepLinkProblem, MockCanvas } from './canvasTypes.mjs';
-import type { FeideAffiliation, FeideUserSpec, MockFeide } from './feideTypes.mjs';
+import type { CanvasUser, MockCanvas } from './canvasTypes.mjs';
+import type { FeideUserSpec, MockFeide } from './feideTypes.mjs';
 
 export type * from './canvasTypes.mjs';
 export type * from './feideTypes.mjs';
@@ -61,33 +61,13 @@ export function startMockCanvas(options: {
   deploymentId?: string;
   launchTtlSeconds?: number;
 }): Promise<MockCanvas>;
-/** The tool environment variables for running mocks. */
-export function mockPlatformEnv(feide: MockFeide, canvas: MockCanvas): MockPlatformEnv;
 
-/** The user who logs in when none was chosen (`author`). */
-export const DEFAULT_FEIDE_LOGIN: string;
-/** Feide's endpoint paths under the mock issuer. */
-export const FEIDE_ENDPOINTS: Readonly<{
-  authorize: '/oauth/authorization';
-  token: '/oauth/token';
-  userinfo: '/openid/userinfo';
-  jwks: '/openid/jwks';
-  endSession: '/openid/endsession';
-}>;
-/** The affiliation values Feide permits. */
-export const FEIDE_AFFILIATIONS: readonly FeideAffiliation[];
 /** The preloaded demo users. */
 export const FEIDE_DEMO_USERS: readonly FeideUserSpec[];
 /** `https://n.feide.no/claims/eduPersonPrincipalName`. */
 export const FEIDE_ID_CLAIM: 'https://n.feide.no/claims/eduPersonPrincipalName';
 /** `https://n.feide.no/claims/userid_sec`. */
 export const USERID_SEC_CLAIM: 'https://n.feide.no/claims/userid_sec';
-/** Canvas-like defaults of the mock Canvas. */
-export const MOCK_CANVAS_DEFAULTS: Readonly<{
-  clientId: string;
-  deploymentId: string;
-  launchTtlSeconds: number;
-}>;
 /** LTI 1.3 / Deep Linking claim names, plus Canvas's placement claim. */
 export const LTI_CLAIM: Readonly<
   Record<
@@ -115,13 +95,10 @@ export const LTI_ROLE: Readonly<
   Record<
     | 'learner'
     | 'instructor'
-    | 'teachingAssistant'
-    | 'contentDeveloper'
     | 'administrator'
     | 'institutionStudent'
     | 'institutionInstructor'
-    | 'systemUser'
-    | 'testUser',
+    | 'systemUser',
     string
   >
 >;
@@ -134,7 +111,5 @@ export const MESSAGE_TYPE: Readonly<{
 }>;
 /** Canvas's description of an expired or used login. */
 export const LAUNCH_GONE: string;
-/** Every problem code a Deep Linking response record can list. */
-export const DEEP_LINK_PROBLEMS: readonly DeepLinkProblem[];
 /** The frame name sent as `lti_storage_target` (`post_message_forwarding`). */
 export const STORAGE_TARGET: 'post_message_forwarding';

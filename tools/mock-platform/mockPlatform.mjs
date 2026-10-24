@@ -16,13 +16,11 @@
 import { startMockCanvas, toolBaseUrl } from './mockCanvas.mjs';
 import { startMockFeide } from './mockFeide.mjs';
 
-export { DEFAULT_FEIDE_LOGIN, startMockFeide } from './mockFeide.mjs';
-export { FEIDE_ENDPOINTS } from './feideDiscovery.mjs';
-export { FEIDE_AFFILIATIONS, FEIDE_DEMO_USERS, FEIDE_ID_CLAIM, USERID_SEC_CLAIM } from './feideUsers.mjs';
-export { MOCK_CANVAS_DEFAULTS, startMockCanvas } from './mockCanvas.mjs';
+export { startMockFeide } from './mockFeide.mjs';
+export { FEIDE_DEMO_USERS, FEIDE_ID_CLAIM, USERID_SEC_CLAIM } from './feideUsers.mjs';
+export { startMockCanvas } from './mockCanvas.mjs';
 export { CANVAS_USERS, LTI_CLAIM, LTI_ROLE, MESSAGE_TYPE } from './ltiVocabulary.mjs';
 export { LAUNCH_GONE } from './canvasAuthorize.mjs';
-export { DEEP_LINK_PROBLEMS } from './deepLinkReturn.mjs';
 export { STORAGE_TARGET } from './platformStorageFrame.mjs';
 
 /**
@@ -31,7 +29,7 @@ export { STORAGE_TARGET } from './platformStorageFrame.mjs';
  * @param {{origin: string, platformConfig: object}} canvas - A mock Canvas.
  * @returns {Record<string, string>} The six variables (see the header).
  */
-export const mockPlatformEnv = (feide, canvas) => ({
+const mockPlatformEnv = (feide, canvas) => ({
   FEIDE_ISSUER: feide.issuer,
   FEIDE_GROUPS_API_URL: feide.groupsApiUrl,
   FEIDE_CLIENT_ID: feide.clientId,

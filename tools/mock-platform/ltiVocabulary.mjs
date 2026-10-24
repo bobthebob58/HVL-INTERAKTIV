@@ -38,13 +38,10 @@ const LIS = 'http://purl.imsglobal.org/vocab/lis/v2/';
 export const LTI_ROLE = Object.freeze({
   learner: `${LIS}membership#Learner`,
   instructor: `${LIS}membership#Instructor`,
-  teachingAssistant: `${LIS}membership/Instructor#TeachingAssistant`,
-  contentDeveloper: `${LIS}membership#ContentDeveloper`,
   administrator: `${LIS}institution/person#Administrator`,
   institutionStudent: `${LIS}institution/person#Student`,
   institutionInstructor: `${LIS}institution/person#Instructor`,
   systemUser: `${LIS}system/person#User`,
-  testUser: 'http://purl.imsglobal.org/vocab/lti/system/person#TestUser',
 });
 
 /** Canvas users with the role sets Canvas sends; the teacher's login ID equals the Feide demo author's Feide ID. */

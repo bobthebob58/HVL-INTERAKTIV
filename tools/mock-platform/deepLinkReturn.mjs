@@ -22,28 +22,6 @@ import { compactVerify, createRemoteJWKSet, decodeJwt, decodeProtectedHeader } f
 import { LTI_CLAIM, acceptedItemTypes } from './ltiVocabulary.mjs';
 import { escapeHtml, htmlDocument, readForm, sendHtml } from './httpRouter.mjs';
 
-/** Problem codes a recorded response may list, in the order they are checked. */
-export const DEEP_LINK_PROBLEMS = Object.freeze([
-  'invalid-jwt',
-  'wrong-alg',
-  'unknown-kid',
-  'bad-signature',
-  'jwks-unavailable',
-  'wrong-iss',
-  'wrong-aud',
-  'wrong-deployment',
-  'missing-nonce',
-  'reused-nonce',
-  'wrong-message-type',
-  'wrong-version',
-  'data-mismatch',
-  'bad-iat',
-  'expired',
-  'bad-content-items',
-  'too-many-items',
-  'unaccepted-type',
-  'foreign-url',
-]);
 const SIGNATURE_PROBLEM = {
   ERR_JWKS_NO_MATCHING_KEY: 'unknown-kid',
   ERR_JWS_SIGNATURE_VERIFICATION_FAILED: 'bad-signature',
