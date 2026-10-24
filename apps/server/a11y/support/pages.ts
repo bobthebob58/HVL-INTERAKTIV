@@ -31,7 +31,8 @@ const EDITOR_FRAME = 'iframe[src*="/h5p/edit/"], iframe[src*="/h5p/new"], iframe
  * @param context - The browser context (signed in or not).
  * @param base - The server's origin.
  * @param path - The path, e.g. `/hjelp`.
- * @param nextPage - False for a page Express renders itself (the Deep Linking picker), which has no Next.js.
+ * @param nextPage - False for a page without Next.js: one Express renders itself (the Deep Linking picker), or one
+ *   the helpers below serve.
  * @returns The page.
  */
 export async function openWebPage(
@@ -145,10 +146,7 @@ async function openServed(context: BrowserContext, base: string, path: string, h
   await context.route(`${base}${path}`, (route) =>
     route.fulfill({ contentType: 'text/html; charset=utf-8', body: html }),
   );
-  const page = await context.newPage();
-  await page.goto(`${base}${path}`);
-  await page.waitForLoadState('networkidle');
-  return page;
+  return openWebPage(context, base, path, false);
 }
 
 /**

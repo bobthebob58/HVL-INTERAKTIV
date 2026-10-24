@@ -26,8 +26,6 @@ import { expect } from 'vitest';
 import { printReport, type AxeFinding, type AxeReport } from './axeScan.js';
 import { UPSTREAM_FINDINGS, type H5pSurface, type UpstreamFinding } from './upstreamRegister.js';
 
-export type { H5pSurface, UpstreamFinding } from './upstreamRegister.js';
-
 /** The state of the scanned page that decides which entries apply. */
 export interface ScanState {
   /** Forced colours emulated. */

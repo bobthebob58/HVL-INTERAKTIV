@@ -8,8 +8,8 @@
  * Spec: UD-030
  */
 import { describe, expect, it } from 'vitest';
-import { matchesAnyElement, type UpstreamFinding } from './support/upstreamFindings.js';
-import { UPSTREAM_FINDINGS } from './support/upstreamRegister.js';
+import { matchesAnyElement } from './support/upstreamFindings.js';
+import { UPSTREAM_FINDINGS, type UpstreamFinding } from './support/upstreamRegister.js';
 
 const ENTRY: Omit<UpstreamFinding, 'html'> = {
   ruleId: 'color-contrast',

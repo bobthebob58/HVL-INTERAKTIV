@@ -114,15 +114,6 @@ const frameName = (page: Page, frame: Frame): string =>
       : new URL(frame.url()).pathname;
 
 /**
- * Elements whose text is cut off in one document.
- * @param frame - The page's main frame or one of its frames.
- * @returns A description of each clipping element.
- */
-export function clippedText(frame: Frame): Promise<string[]> {
-  return frame.evaluate(findClippedText, { mark: false, skipMarked: false });
-}
-
-/**
  * Records, in every frame of a page (not the top document), the elements whose text is clipped now and by how
  * much they overflow, before a change such as zoom or text spacing.
  * @param page - A loaded page.
