@@ -5,10 +5,9 @@
  *
  * Spec: H5P-001, H5P-005, SEC-008
  */
-import type { AddressInfo } from 'node:net';
-import type { Server } from 'node:http';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
+import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
 import {
@@ -20,29 +19,24 @@ import {
 } from '../support/rightsOfUsePayloads.js';
 import { PROBE_LIBRARIES } from '../support/probeContentType.js';
 
-const LIBRARIES = PROBE_LIBRARIES;
-
 describeWithServices('H5P player in a browser', () => {
   let tb: HttpTestbed;
-  let server: Server;
   let base: string;
   let learner: TestActor;
   let contentId: string;
   let rightsId: string;
   let copyrightId: string;
   beforeAll(async () => {
-    tb = await openHttpTestbed(LIBRARIES);
+    tb = await openHttpTestbed(PROBE_LIBRARIES);
     const author = await tb.actor('author');
     learner = await tb.actor('learner');
     contentId = await tb.activity(author, { published: true, metadata: { title: 'Probe', license: 'U' } });
     rightsId = await tb.activity(author, { published: true, metadata: RIGHTS_PAYLOAD });
     copyrightId = await tb.activity(author, { published: true, params: COPYRIGHT_PARAMS });
-    server = tb.app.listen(0, '127.0.0.1');
-    await new Promise((resolve) => server.once('listening', resolve));
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = await listenOnLoopback(tb.app);
   }, 60_000);
   afterAll(async () => {
-    await new Promise((resolve) => server.close(resolve));
+    await closeLoopbackServers();
     await tb.close();
   });
 

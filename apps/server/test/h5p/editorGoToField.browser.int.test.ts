@@ -8,13 +8,12 @@
  *
  * Spec: PROD-003, UD-006
  */
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
 import type { Frame, Page } from 'playwright-core';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { t } from '../../src/i18n/translate.js';
 import { describeWithBrowser } from '../support/browser.js';
+import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithRealPackages, REAL_PACKAGES_DIR } from '../support/realPackages.js';
 import { describeWithServices } from '../support/services.js';
@@ -40,7 +39,6 @@ const IV_QUESTION = (n: number) => `interactiveVideo.assets.interactions[${n}].a
 describeWithServices('the editor page and "Gå til feltet"', () => {
   describeWithRealPackages('[PROD-003] go to a finding’s field in the real editor', () => {
     let tb: HttpTestbed;
-    let server: Server;
     let base: string;
     let author: TestActor;
     const ids: Record<string, string> = {};
@@ -53,13 +51,11 @@ describeWithServices('the editor page and "Gå til feltet"', () => {
       }
       // WHY: the web app frames the editor on the same origin; this empty page stands in for it.
       serveFrameHost(tb.app);
-      server = tb.app.listen(0, '127.0.0.1');
-      await new Promise((resolve) => server.once('listening', resolve));
-      base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+      base = await listenOnLoopback(tb.app);
       await addSecondInteraction(base, author, ids.InteractiveVideo ?? '');
     }, 180_000);
     afterAll(async () => {
-      if (server) await new Promise((resolve) => server.close(resolve));
+      await closeLoopbackServers();
       await tb?.close();
     });
     const openFramed = (page: Page, contentId: string) => openFramedEditor(page, base, author, contentId);

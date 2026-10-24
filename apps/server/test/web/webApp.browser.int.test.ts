@@ -6,8 +6,6 @@
  * Spec: DATA-011, H5P-009, UD-010, PROD-012
  */
 import { existsSync } from 'node:fs';
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
 import express from 'express';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -16,6 +14,7 @@ import { baseSecurityHeaders } from '../../src/http/securityHeaders.js';
 import { loadWebApp, WEB_APP_DIR, type WebApp } from '../../src/web/nextWebApp.js';
 import { webRoutes } from '../../src/web/webRoutes.js';
 import { describeWithBrowser } from '../support/browser.js';
+import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 
 const BUILT = existsSync(join(WEB_APP_DIR, '.next', 'BUILD_ID'));
 if (!BUILT && process.env.CI === 'true')
@@ -24,7 +23,6 @@ if (!BUILT) console.warn('Web app tests skipped: apps/web is not built (npm run 
 
 (BUILT ? describe : describe.skip)('[DATA-011] the built web app inside Express', () => {
   let web: WebApp;
-  let server: Server;
   let base = '';
   beforeAll(async () => {
     web = await loadWebApp('prod');
@@ -32,12 +30,10 @@ if (!BUILT) console.warn('Web app tests skipped: apps/web is not built (npm run 
     app.use(baseSecurityHeaders({ https: false }));
     app.use(webRoutes(web));
     app.use(portalNotFound());
-    server = app.listen(0, '127.0.0.1');
-    await new Promise((resolve) => server.once('listening', resolve));
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = await listenOnLoopback(app);
   }, 60_000);
   afterAll(async () => {
-    if (server) await new Promise((resolve) => server.close(resolve));
+    await closeLoopbackServers();
     await web?.close();
   });
 

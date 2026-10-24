@@ -7,8 +7,6 @@
  * Spec: DATA-011, H5P-009
  */
 import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import express from 'express';
@@ -17,6 +15,7 @@ import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import { createH5pRouter } from '../../src/http/createH5pRouter.js';
 import { PANOPTO_EMBED_API_URL } from '../../src/http/h5pPageCsp.js';
 import { describeWithBrowser } from '../support/browser.js';
+import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithRealPackages, packageExamples, REAL_PACKAGES_DIR } from '../support/realPackages.js';
 import { describeWithServices } from '../support/services.js';
@@ -56,7 +55,6 @@ describeWithServices('H5P page policy with a Panopto video', () => {
     let tb: HttpTestbed;
     let learner: TestActor;
     let contentId: string;
-    const servers: Server[] = [];
     const bases = { configured: '', unconfigured: '' };
 
     /** The H5P router of the testbed, with the given `EXTERNAL_MEDIA_ORIGINS`, signed in as the learner. */
@@ -70,10 +68,7 @@ describeWithServices('H5P page policy with a Panopto video', () => {
           next();
         }),
       );
-      const server = app.listen(0, '127.0.0.1');
-      await new Promise((resolve) => server.once('listening', resolve));
-      servers.push(server);
-      return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+      return listenOnLoopback(app);
     };
 
     beforeAll(async () => {
@@ -93,7 +88,7 @@ describeWithServices('H5P page policy with a Panopto video', () => {
       bases.unconfigured = await listenWith([]);
     }, 240_000);
     afterAll(async () => {
-      await Promise.all(servers.map((s) => new Promise((resolve) => s.close(resolve))));
+      await closeLoopbackServers();
       await tb?.close();
       if (seedDir) rmSync(seedDir, { recursive: true, force: true });
     });

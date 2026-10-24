@@ -4,8 +4,6 @@
  *
  * Spec: UD-013, LTI-005
  */
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
@@ -20,6 +18,7 @@ import {
   deepLinkPickerPage,
 } from '../../../src/lti/pages/deepLinkPickerPage.js';
 import { describeWithBrowser } from '../../support/browser.js';
+import { closeLoopbackServers, listenOnLoopback } from '../../support/loopbackServers.js';
 
 const TOKENS = createRequire(import.meta.url).resolve('@hvl-interaktiv/design-tokens/tokens.css');
 const SCRIPT = fileURLToPath(new URL('../../../src/lti/pages/client/deepLinkPicker.js', import.meta.url));
@@ -29,7 +28,6 @@ const ACTIVITIES = [
 ];
 
 describeWithBrowser('[UD-013] Deep Linking picker errors in Chromium', (browser) => {
-  let server: Server;
   let base: string;
   const pages: Page[] = [];
   beforeAll(async () => {
@@ -44,15 +42,13 @@ describeWithBrowser('[UD-013] Deep Linking picker errors in Chromium', (browser)
         .send(deepLinkPickerPage({ locale: 'nn', activities: ACTIVITIES, multiple: false, graded: false }));
     });
     app.post(DEEP_LINK_RESPONSE_PATH, (_req, res) => void res.status(500).json({ success: false }));
-    server = app.listen(0, '127.0.0.1');
-    await new Promise((resolve) => server.once('listening', resolve));
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = await listenOnLoopback(app);
   });
   afterEach(async () => {
     await Promise.all(pages.splice(0).map((page) => page.close()));
   });
   afterAll(async () => {
-    await new Promise((resolve) => server.close(resolve));
+    await closeLoopbackServers();
   });
 
   const openPicker = async (): Promise<Page> => {

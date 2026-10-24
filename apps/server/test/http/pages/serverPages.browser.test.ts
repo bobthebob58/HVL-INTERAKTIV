@@ -5,8 +5,6 @@
  *
  * Spec: UD-002, UD-005, UD-006, UD-013
  */
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import type { IIntegration } from '@lumieducation/h5p-server';
 import express from 'express';
 import type { Page } from 'playwright-core';
@@ -16,11 +14,11 @@ import { renderEditorPage } from '../../../src/h5p/render/editorPage.js';
 import { messagePage } from '../../../src/http/pages/messagePage.js';
 import { pageAssetRoutes } from '../../../src/http/pages/pageAssetRoutes.js';
 import { describeWithBrowser } from '../../support/browser.js';
+import { closeLoopbackServers, listenOnLoopback } from '../../support/loopbackServers.js';
 
 const THEME_STYLES = HVL_THEME_FILES.filter((file) => file.name.endsWith('.css'));
 
 describeWithBrowser('[UD-002] server pages in Chromium', (browser) => {
-  let server: Server;
   let base: string;
   const pages: Page[] = [];
   beforeAll(async () => {
@@ -41,15 +39,13 @@ describeWithBrowser('[UD-002] server pages in Chromium', (browser) => {
       const input = { locale: 'nn', titleKey: 'page.notFound.title', bodyKey: 'page.notFound.body' } as const;
       res.type('html').send(messagePage({ ...input, help: { newTab: false } }));
     });
-    server = app.listen(0, '127.0.0.1');
-    await new Promise((resolve) => server.once('listening', resolve));
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = await listenOnLoopback(app);
   });
   afterEach(async () => {
     await Promise.all(pages.splice(0).map((page) => page.close()));
   });
   afterAll(async () => {
-    await new Promise((resolve) => server.close(resolve));
+    await closeLoopbackServers();
   });
 
   const open = async (path: string): Promise<Page> => {

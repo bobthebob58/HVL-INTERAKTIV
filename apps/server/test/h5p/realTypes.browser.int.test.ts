@@ -5,11 +5,10 @@
  *
  * Spec: H5P-001, H5P-002, H5P-003
  */
-import type { Server } from 'node:http';
 import { join } from 'node:path';
-import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
+import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import {
   describeWithRealPackages,
@@ -22,7 +21,6 @@ import { describeWithServices } from '../support/services.js';
 describeWithServices('real H5P content types', () => {
   describeWithRealPackages('[H5P-002] the real content types', () => {
     let tb: HttpTestbed;
-    let server: Server;
     let base: string;
     let learner: TestActor;
     let examples: (PackageExample & { contentId: string })[];
@@ -37,12 +35,10 @@ describeWithServices('real H5P content types', () => {
         });
         examples.push({ ...example, contentId });
       }
-      server = tb.app.listen(0, '127.0.0.1');
-      await new Promise((resolve) => server.once('listening', resolve));
-      base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+      base = await listenOnLoopback(tb.app);
     }, 180_000);
     afterAll(async () => {
-      if (server) await new Promise((resolve) => server.close(resolve));
+      await closeLoopbackServers();
       await tb?.close();
     });
 

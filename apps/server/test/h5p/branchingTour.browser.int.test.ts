@@ -7,12 +7,11 @@
  *
  * Spec: UD-006, UD-030, DATA-002
  */
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
 import type { Browser } from 'playwright-core';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
+import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithRealPackages, REAL_PACKAGES_DIR } from '../support/realPackages.js';
 import { describeWithServices } from '../support/services.js';
@@ -20,7 +19,6 @@ import { describeWithServices } from '../support/services.js';
 describeWithServices('the editor’s own UI state in the browser', () => {
   describeWithRealPackages('[UD-006] the editor’s tour and flags in the real editor', () => {
     let tb: HttpTestbed;
-    let server: Server;
     let base: string;
     let author: TestActor;
     const ids: Record<string, string> = {};
@@ -30,12 +28,10 @@ describeWithServices('the editor’s own UI state in the browser', () => {
       for (const type of ['BranchingScenario', 'Blanks', 'DragText']) {
         ids[type] = await tb.importPackage(author, join(REAL_PACKAGES_DIR, `H5P.${type}.h5p`));
       }
-      server = tb.app.listen(0, '127.0.0.1');
-      await new Promise((resolve) => server.once('listening', resolve));
-      base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+      base = await listenOnLoopback(tb.app);
     }, 180_000);
     afterAll(async () => {
-      if (server) await new Promise((resolve) => server.close(resolve));
+      await closeLoopbackServers();
       await tb?.close();
     });
 

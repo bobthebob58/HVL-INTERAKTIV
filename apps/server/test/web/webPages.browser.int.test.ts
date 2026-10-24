@@ -5,12 +5,11 @@
  *
  * Spec: DATA-011, UD-006, UD-008, UD-013, DATA-006, LTI-003, LTI-006
  */
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import type { Page } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { loadWebApp, type WebApp } from '../../src/web/nextWebApp.js';
 import { describeWithBrowser } from '../support/browser.js';
+import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { ACTIVITY, LTIK, openWebPage, WEB_APP_BUILT, webTestServer } from './webTestServer.js';
 
 if (!WEB_APP_BUILT && process.env.CI === 'true')
@@ -18,16 +17,13 @@ if (!WEB_APP_BUILT && process.env.CI === 'true')
 
 (WEB_APP_BUILT ? describe : describe.skip)('[DATA-011] every page of the built web app', () => {
   let web: WebApp;
-  let server: Server;
   let base = '';
   beforeAll(async () => {
     web = await loadWebApp('prod');
-    server = webTestServer(web).listen(0, '127.0.0.1');
-    await new Promise((resolve) => server.once('listening', resolve));
-    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    base = await listenOnLoopback(webTestServer(web));
   }, 60_000);
   afterAll(async () => {
-    if (server) await new Promise((resolve) => server.close(resolve));
+    await closeLoopbackServers();
     await web?.close();
   });
 

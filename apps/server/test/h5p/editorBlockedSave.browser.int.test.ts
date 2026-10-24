@@ -6,8 +6,6 @@
  *
  * Spec: PROD-003, UD-013, UD-006
  */
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
 import express, { type RequestHandler } from 'express';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -20,6 +18,7 @@ import type { ContentRouteDeps } from '../../src/http/routes/contentRoutes.js';
 import { t } from '../../src/i18n/translate.js';
 import { createContentValidator } from '../../src/validation/validateContent.js';
 import { describeWithBrowser } from '../support/browser.js';
+import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithRealPackages, REAL_PACKAGES_DIR } from '../support/realPackages.js';
 import { describeWithServices } from '../support/services.js';
@@ -27,7 +26,6 @@ import { describeWithServices } from '../support/services.js';
 describeWithServices('the editor page and a refused save', () => {
   describeWithRealPackages('[PROD-003] a refused save of a published activity in the real editor', () => {
     let tb: HttpTestbed;
-    let server: Server;
     let base: string;
     let author: TestActor;
     let contentId: string;
@@ -49,12 +47,10 @@ describeWithServices('the editor page and a refused save', () => {
       };
       const routes: ContentRouteDeps = { ...tb.runtime, saveGate };
       const app = express().use(pageAssetRoutes()).use('/h5p', createH5pRouter(routes, authenticate));
-      server = app.listen(0, '127.0.0.1');
-      await new Promise((resolve) => server.once('listening', resolve));
-      base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+      base = await listenOnLoopback(app);
     }, 180_000);
     afterAll(async () => {
-      if (server) await new Promise((resolve) => server.close(resolve));
+      await closeLoopbackServers();
       await tb?.close();
     });
 
