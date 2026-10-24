@@ -6,26 +6,12 @@
  *
  * Spec: DATA-006, PROD-012, UD-010, UD-012, UD-013, LTI-003
  */
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { loadWebApp, type WebApp } from '../../src/web/nextWebApp.js';
+import { describe, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
-import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
-import { ACTIVITY, LTIK, LTIK_EN, openWebPage, WEB_APP_BUILT, webTestServer } from './webTestServer.js';
-
-if (!WEB_APP_BUILT && process.env.CI === 'true')
-  throw new Error('CI must run `npm run build` before the web app tests');
+import { ACTIVITY, LTIK, LTIK_EN, openWebPage, serveBuiltWebApp, WEB_APP_BUILT } from './webTestServer.js';
 
 (WEB_APP_BUILT ? describe : describe.skip)('[UD-013] the chrome of the built web app', () => {
-  let web: WebApp;
-  let base = '';
-  beforeAll(async () => {
-    web = await loadWebApp('prod');
-    base = await listenOnLoopback(webTestServer(web));
-  }, 60_000);
-  afterAll(async () => {
-    await closeLoopbackServers();
-    await web?.close();
-  });
+  const base = serveBuiltWebApp();
 
   describeWithBrowser('[UD-013] chrome in Chromium', (browser) => {
     it('[UD-013] every route has its own title, its name first and the site name last (WCAG 2.4.2)', async () => {
@@ -43,7 +29,9 @@ if (!WEB_APP_BUILT && process.env.CI === 'true')
       const titles: string[] = [];
       // Act
       for (const [path, , status] of routes) {
-        const { page, problems } = await openWebPage(browser(), `${base}${path}`, { documentStatus: status });
+        const { page, problems } = await openWebPage(browser(), `${base()}${path}`, {
+          documentStatus: status,
+        });
         titles.push(await page.title());
         expect(problems).toEqual([]);
         await page.close();
@@ -65,7 +53,7 @@ if (!WEB_APP_BUILT && process.env.CI === 'true')
       '[DATA-006] the %s link of an English launch opens its page in English, in a new tab',
       async (_case, landmark, name, href, heading) => {
         // Arrange
-        const { page, problems } = await openWebPage(browser(), `${base}/app/play?ltik=${LTIK_EN}`);
+        const { page, problems } = await openWebPage(browser(), `${base()}/app/play?ltik=${LTIK_EN}`);
         const link = page.getByRole(landmark).getByRole('link', { name });
         // Act
         const [tab] = await Promise.all([page.context().waitForEvent('page'), link.click()]);
@@ -83,7 +71,7 @@ if (!WEB_APP_BUILT && process.env.CI === 'true')
 
     it('[LTI-003] a router refresh after the launch never writes the ltik back into the address', async () => {
       // Arrange
-      const { page, requests } = await openWebPage(browser(), `${base}/app/play?ltik=${LTIK}`);
+      const { page, requests } = await openWebPage(browser(), `${base()}/app/play?ltik=${LTIK}`);
       await page.getByRole('heading', { level: 1, name: 'Celler og vev' }).waitFor();
       const before = requests.length;
       // Act
@@ -104,7 +92,7 @@ if (!WEB_APP_BUILT && process.env.CI === 'true')
 
     it('[UD-012] under forced colours only the selected tab keeps a visible underline', async () => {
       // Arrange
-      const { page, problems } = await openWebPage(browser(), `${base}/app/play?ltik=${LTIK}`, {
+      const { page, problems } = await openWebPage(browser(), `${base()}/app/play?ltik=${LTIK}`, {
         context: { forcedColors: 'active' },
       });
       const tabs = page.getByRole('tab');

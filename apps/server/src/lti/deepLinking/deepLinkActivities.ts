@@ -10,9 +10,10 @@
  *     whether it exists or not.
  *   - A chosen draft is refused with 409 `hvl:deep-link-draft`, before any JWT is signed.
  *   - The list is bounded and ordered by last change, newest first.
- * Collaborators: ./deepLinkRoutes.ts, ./deepLinkItems.ts, ../../http/authErrors.ts.
+ * Collaborators: ./deepLinkRoutes.ts, ./deepLinkItems.ts, ../../http/authErrors.ts, ../../h5p/contentIds.ts.
  * Tests: apps/server/test/lti/deepLinking/deepLinkActivities.int.test.ts
  */
+import { isContentUuid } from '../../h5p/contentIds.js';
 import { authError } from '../../http/authErrors.js';
 import type { Database } from '../../infra/prismaClient.js';
 
@@ -71,9 +72,7 @@ export async function chosenActivities(
   contentIds: readonly string[],
 ): Promise<{ id: string; title: string }[]> {
   const unique = [...new Set(contentIds)];
-  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (unique.length === 0 || !unique.every((id) => UUID.test(id)))
-    throw authError('hvl:activity-unavailable');
+  if (unique.length === 0 || !unique.every(isContentUuid)) throw authError('hvl:activity-unavailable');
   const rows = await db.h5PContent.findMany({
     where: { id: { in: unique }, ...ownOrCoAuthored(userId) },
     select: { id: true, title: true, status: true },

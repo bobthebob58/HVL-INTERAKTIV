@@ -27,7 +27,6 @@ export const LTI_CLEANUP_INTERVAL_MS = 10 * 60 * 1000;
 /** Redis key of the lease. */
 export const LTI_CLEANUP_LEASE_KEY = 'hvli:lti:record-cleanup';
 
-/** The tables the job deletes from. */
 /** The ltijs record tables the cleanup deletes from. */
 export type LtiRecordTables = Pick<Database, 'ltiIdToken' | 'ltiNonce' | 'ltiAccessToken'>;
 

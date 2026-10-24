@@ -37,15 +37,17 @@ describeWithServices('[LTI-001] LTI accounts', () => {
         privateKeyEncrypted: Buffer.from([1]),
       },
     });
+  /** A Canvas identity of this test only, with one role. */
+  const newIdentity = (role: 'learner' | 'author') => ({
+    issuer: 'https://canvas.example',
+    subject: uniqueName('sub'),
+    platformId: crypto.randomUUID(),
+    roles: [role] as const,
+  });
 
   it('[LTI-001] creates the account at the launch and finds the same one for a resumed request', async () => {
     // Arrange
-    const identity = {
-      issuer: 'https://canvas.example',
-      subject: uniqueName('sub'),
-      platformId: crypto.randomUUID(),
-      roles: ['learner'] as const,
-    };
+    const identity = newIdentity('learner');
     const platform = await fixturePlatform();
     const launch = { ...identity, platformId: platform.id };
     // Act
@@ -69,12 +71,7 @@ describeWithServices('[LTI-001] LTI accounts', () => {
   });
 
   it('[DATA-002] a resumed request for an unknown person finds nothing and creates nothing', async () => {
-    const identity = {
-      issuer: 'https://canvas.example',
-      subject: uniqueName('sub'),
-      platformId: crypto.randomUUID(),
-      roles: ['learner'] as const,
-    };
+    const identity = newIdentity('learner');
     const before = await db.identity.count();
     expect(await lti.forRequest(identity)).toBeUndefined();
     expect(await db.identity.count()).toBe(before);
@@ -82,12 +79,7 @@ describeWithServices('[LTI-001] LTI accounts', () => {
 
   it('[LTI-004] an author launch makes a staff account, never with a profile', async () => {
     // Arrange
-    const identity = {
-      issuer: 'https://canvas.example',
-      subject: uniqueName('sub'),
-      platformId: crypto.randomUUID(),
-      roles: ['author'] as const,
-    };
+    const identity = newIdentity('author');
     const platform = await fixturePlatform();
     // Act
     const { userId } = await lti.atLaunch({ ...identity, platformId: platform.id });

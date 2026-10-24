@@ -9,12 +9,11 @@
  *   - `contextId` is the Canvas course (`launch.context.id`), never ltijs's `LaunchContext.contextId`.
  *   - `contentId` is set only when `custom.contentId` is a UUID; anything else counts as missing.
  *   - The `sub` is returned for hashing in memory only; callers never store or log it.
- * Collaborators: ./ltikPrincipal.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts.
+ * Collaborators: ./ltikPrincipal.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts, ../h5p/contentIds.ts.
  * Tests: apps/server/test/lti/launchFacts.test.ts
  */
 import type { IdToken } from 'ltijs';
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { isContentUuid } from '../h5p/contentIds.js';
 
 /** The launch facts our code uses. */
 export interface LaunchFacts {
@@ -62,7 +61,7 @@ export function launchFactsOf(idToken: IdToken): LaunchFacts {
     contextId: text(idToken.launch.context?.id) ?? '',
     roles: [...idToken.user.roles],
     ...(resourceLinkId ? { resourceLinkId } : {}),
-    ...(contentId && UUID.test(contentId) ? { contentId: contentId.toLowerCase() } : {}),
+    ...(isContentUuid(contentId) ? { contentId: contentId.toLowerCase() } : {}),
     ...(lineItemUrl ? { lineItemUrl } : {}),
   };
 }

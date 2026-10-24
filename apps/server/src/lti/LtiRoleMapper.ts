@@ -15,12 +15,7 @@
  * Collaborators: ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts, ./ltikPrincipal.ts, ../auth/Principal.ts.
  * Tests: apps/server/test/lti/LtiRoleMapper.test.ts
  */
-import type { Role } from '../auth/Principal.js';
-
 const LIS = 'http://purl.imsglobal.org/vocab/lis/v2/';
-
-/** The roles an LTI launch can give: never `admin`. */
-export type LtiRole = Exclude<Role, 'admin'>;
 
 /** The result of mapping: one role, as a frozen list (the shape `Principal.roles` takes). */
 export type LtiRoles = readonly ['learner'] | readonly ['author'];

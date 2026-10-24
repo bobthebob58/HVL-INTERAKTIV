@@ -3,12 +3,12 @@
  *
  * Why: activity IDs come from URLs and from Lumi, so every lookup checks the shape before it reaches PostgreSQL
  *      (`H5PContent.id` is a UUID column; a malformed value would make the query fail instead of answering
- *      "not found"). Three modules needed the same check; one definition keeps them in step.
+ *      "not found"). Several modules need the same check; one definition keeps them in step.
  * Spec: H5P-004, H5P-006
  * Invariants:
  *   - Accepts a canonical UUID in any letter case, nothing else.
  * Collaborators: ./permissions/ContentAccessRepository.ts, ./storage/PrismaContentStorage.ts,
- *   ./storage/learnerStateRows.ts.
+ *   ./storage/learnerStateRows.ts, ../lti/launchFacts.ts, ../lti/deepLinking/deepLinkActivities.ts.
  * Tests: apps/server/test/h5p/permissions/HvlPermissionSystem.int.test.ts,
  *   apps/server/test/h5p/contentStorage.int.test.ts
  */

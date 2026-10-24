@@ -6,31 +6,17 @@
  * Spec: DATA-011, UD-006, UD-008, UD-013, DATA-006, LTI-003, LTI-006
  */
 import type { Page } from 'playwright-core';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { loadWebApp, type WebApp } from '../../src/web/nextWebApp.js';
+import { describe, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
-import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
-import { ACTIVITY, LTIK, openWebPage, WEB_APP_BUILT, webTestServer } from './webTestServer.js';
-
-if (!WEB_APP_BUILT && process.env.CI === 'true')
-  throw new Error('CI must run `npm run build` before the web app tests');
+import { ACTIVITY, LTIK, openWebPage, serveBuiltWebApp, WEB_APP_BUILT } from './webTestServer.js';
 
 (WEB_APP_BUILT ? describe : describe.skip)('[DATA-011] every page of the built web app', () => {
-  let web: WebApp;
-  let base = '';
-  beforeAll(async () => {
-    web = await loadWebApp('prod');
-    base = await listenOnLoopback(webTestServer(web));
-  }, 60_000);
-  afterAll(async () => {
-    await closeLoopbackServers();
-    await web?.close();
-  });
+  const base = serveBuiltWebApp();
 
   describeWithBrowser('[DATA-011] pages in Chromium', (browser) => {
     /** Opens a page at 320 px and records every problem a strict policy or React could report. */
     const open = (path: string, documentStatus = 200) =>
-      openWebPage(browser(), `${base}${path}`, {
+      openWebPage(browser(), `${base()}${path}`, {
         context: { viewport: { width: 320, height: 640 } },
         documentStatus,
       });
@@ -54,7 +40,7 @@ if (!WEB_APP_BUILT && process.env.CI === 'true')
       expect(await page.evaluate(() => document.activeElement?.textContent)).toBe('Gå til hovudinnhaldet');
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow).toBeLessThanOrEqual(0);
-      expect(requests.filter((url) => !url.startsWith(`${base}/`))).toEqual([]);
+      expect(requests.filter((url) => !url.startsWith(`${base()}/`))).toEqual([]);
       expect(await page.$$eval('iframe', (frames) => frames.filter((frame) => !frame.title).length)).toBe(0);
     };
 

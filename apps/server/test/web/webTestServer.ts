@@ -1,30 +1,39 @@
 /**
  * webTestServer — Express in front of the built web app for the browser tests of its pages: a signed-out API, stand-in
- * H5P frames, resolved Canvas launches for fixed test ltiks, and a page opener that records every problem.
+ * H5P frames, resolved Canvas launches for fixed test ltiks, a page opener that records every problem, and the
+ * lifecycle that serves the built web app for a test block.
  *
  * Why: the page tests (./webPages.browser.int.test.ts) and the chrome tests (./webChrome.browser.int.test.ts) need the
  *      same server and the same strict checks (no console error, page error or CSP violation); one helper keeps them
- *      the same. The launches stand in for apps/server/src/lti/play/appLaunchRoutes.ts, which resolves a real ltik.
+ *      the same. ./webApp.browser.int.test.ts shares only the lifecycle (`serveBuiltWebApp`) and keeps its own bare
+ *      Express app, without the signed-out API or the stand-in frames. The launches stand in for
+ *      apps/server/src/lti/play/appLaunchRoutes.ts, which resolves a real ltik.
  * Spec: DATA-011, LTI-003, LTI-006, DATA-006
  * Invariants:
  *   - Only `LAUNCHES`' ltiks get a launch; any other `/app/play` request reaches the web app without one.
  *   - Expected 401 answers of the signed-out API and a page's own expected status are not reported as problems.
+ *   - `serveBuiltWebApp` starts and stops the server in the caller's describe block; an unbuilt web app skips the
+ *     tests locally and is an error in CI.
  * Collaborators: ../../src/web/webRoutes.ts, ../../src/web/appLaunch.ts, ../../src/web/nextWebApp.ts,
- *   ../support/browser.ts.
- * Tests: used by ./webPages.browser.int.test.ts and ./webChrome.browser.int.test.ts.
+ *   ../support/browser.ts, ../support/loopbackServers.ts.
+ * Tests: used by ./webPages.browser.int.test.ts, ./webChrome.browser.int.test.ts and ./webApp.browser.int.test.ts.
  */
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import express, { type Express } from 'express';
 import type { Browser, BrowserContextOptions } from 'playwright-core';
+import { afterAll, beforeAll } from 'vitest';
 import { portalNotFound } from '../../src/http/pages/portalHomeRoutes.js';
 import { baseSecurityHeaders } from '../../src/http/securityHeaders.js';
 import { setAppLaunch, type AppLaunch } from '../../src/web/appLaunch.js';
-import { WEB_APP_DIR, type WebApp } from '../../src/web/nextWebApp.js';
+import { loadWebApp, WEB_APP_DIR, type WebApp } from '../../src/web/nextWebApp.js';
 import { webRoutes } from '../../src/web/webRoutes.js';
+import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 
 /** Whether `npm run build` has built apps/web; the tests skip otherwise (and CI fails). */
 export const WEB_APP_BUILT = existsSync(join(WEB_APP_DIR, '.next', 'BUILD_ID'));
+if (!WEB_APP_BUILT && process.env.CI === 'true')
+  throw new Error('CI must run `npm run build` before the web app tests');
 
 /** The activity every test launch opens. */
 export const ACTIVITY = '7d3c1a8e-5b2f-4c1d-9e8f-0a1b2c3d4e5f';
@@ -69,6 +78,25 @@ export function webTestServer(web: WebApp): Express {
   app.use(webRoutes(web));
   app.use(portalNotFound());
   return app;
+}
+
+/**
+ * Loads the built web app and serves it on a free loopback port for the enclosing `describe` block.
+ * @param build - The Express app around the web app; `webTestServer` by default.
+ * @returns The server's address (`http://127.0.0.1:<port>`), set once `beforeAll` has run.
+ */
+export function serveBuiltWebApp(build: (web: WebApp) => Express = webTestServer): () => string {
+  let web: WebApp | undefined;
+  let base = '';
+  beforeAll(async () => {
+    web = await loadWebApp('prod');
+    base = await listenOnLoopback(build(web));
+  }, 60_000);
+  afterAll(async () => {
+    await closeLoopbackServers();
+    await web?.close();
+  });
+  return () => base;
 }
 
 /**

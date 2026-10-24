@@ -5,37 +5,23 @@
  *
  * Spec: DATA-011, H5P-009, UD-010, PROD-012
  */
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import express from 'express';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { portalNotFound } from '../../src/http/pages/portalHomeRoutes.js';
 import { baseSecurityHeaders } from '../../src/http/securityHeaders.js';
-import { loadWebApp, WEB_APP_DIR, type WebApp } from '../../src/web/nextWebApp.js';
 import { webRoutes } from '../../src/web/webRoutes.js';
 import { describeWithBrowser } from '../support/browser.js';
-import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
+import { serveBuiltWebApp, WEB_APP_BUILT } from './webTestServer.js';
 
-const BUILT = existsSync(join(WEB_APP_DIR, '.next', 'BUILD_ID'));
-if (!BUILT && process.env.CI === 'true')
-  throw new Error('CI must run `npm run build` before the web app tests');
-if (!BUILT) console.warn('Web app tests skipped: apps/web is not built (npm run build).');
+if (!WEB_APP_BUILT) console.warn('Web app tests skipped: apps/web is not built (npm run build).');
 
-(BUILT ? describe : describe.skip)('[DATA-011] the built web app inside Express', () => {
-  let web: WebApp;
-  let base = '';
-  beforeAll(async () => {
-    web = await loadWebApp('prod');
-    const app = express();
-    app.use(baseSecurityHeaders({ https: false }));
-    app.use(webRoutes(web));
-    app.use(portalNotFound());
-    base = await listenOnLoopback(app);
-  }, 60_000);
-  afterAll(async () => {
-    await closeLoopbackServers();
-    await web?.close();
-  });
+(WEB_APP_BUILT ? describe : describe.skip)('[DATA-011] the built web app inside Express', () => {
+  const base = serveBuiltWebApp((web) =>
+    express()
+      .use(baseSecurityHeaders({ https: false }))
+      .use(webRoutes(web))
+      .use(portalNotFound()),
+  );
 
   describeWithBrowser('[DATA-011] web pages in Chromium', (browser) => {
     /** Opens a page and records every problem a strict policy or React could report. */
@@ -51,7 +37,7 @@ if (!BUILT) console.warn('Web app tests skipped: apps/web is not built (npm run 
           console.error(`csp: ${e.violatedDirective} ${e.blockedURI}`);
         });
       });
-      const response = await page.goto(`${base}${path}`);
+      const response = await page.goto(`${base()}${path}`);
       // WHY: `window.next` is set by Next.js's client bootstrap, so it proves the nonced scripts ran and hydrated.
       await page.waitForFunction(() => 'next' in window, undefined, { timeout: 10_000 });
       await page.waitForLoadState('networkidle');
@@ -84,14 +70,14 @@ if (!BUILT) console.warn('Web app tests skipped: apps/web is not built (npm run 
     it('[DATA-011] every request the page makes is first-party', async () => {
       const { page, requests } = await open('/hjelp');
       expect(requests.length).toBeGreaterThan(1);
-      expect(requests.filter((url) => !url.startsWith(`${base}/`))).toEqual([]);
+      expect(requests.filter((url) => !url.startsWith(`${base()}/`))).toEqual([]);
       await page.close();
     });
 
     it('[PROD-012] an unknown path gets the web app’s translated 404 page', async () => {
       // Act
       const page = await browser().newPage();
-      const response = await page.goto(`${base}/finst-ikkje`);
+      const response = await page.goto(`${base()}/finst-ikkje`);
       // Assert
       expect(response?.status()).toBe(404);
       expect(await page.textContent('h1')).toBe('Fann ikkje sida');
