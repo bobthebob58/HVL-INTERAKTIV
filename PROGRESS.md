@@ -12,7 +12,8 @@ what is done, what is verified, and what is blocked.
 | S1 | Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup | 00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD | ✅ Done (2026-10-21) |
 | S2 | Ten-type whitelist, seeding, SVG sanitiser, permission system, resume | 01 (all); 00 `PROD-002`, `PROD-008` | ✅ Gate passed (2026-10-23); spike step 3 open (Q7), steps 4–5 done in S4 (D-047) |
 | S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | ✅ Gate passed (2026-10-23); HVL's Feide and Canvas values open (Q3, Q4) |
-| S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | 🟨 In progress (2026-10-23) |
+| S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ✅ Gate passed (2026-10-24); HVL's token and logo confirmation (Q2), the DPO's review of the privacy text (Q6) and the first manual AT run open |
+| S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ⬜ Not started |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04 | ⬜ Not started |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §5–7; 05; 00 §6 | ⬜ Not started |
 
@@ -150,7 +151,7 @@ Not done in S3 (recorded 2026-10-23):
 - Everything HVL must supply: Feide registration and redirect URIs (Q3), the TeCopp test launch and `feideLinking`
   (Q4), owner answers Q12–Q15. GitHub has never run CI on this work (Q16).
 
-## S4 — Universal design 🟨
+## S4 — Universal design ✅ (gate passed 2026-10-24; Q2, Q6 and the first manual AT run open)
 
 Brand tokens follow HVL's manual (D-017); HVL (profil@hvl.no) must still confirm the values and supply logo files.
 Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one go); decisions D-067…D-079.
@@ -230,12 +231,31 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
       eleven views at 1280 and 390 px on 2026-10-24
 - [x] Early independent review of the server work (security, publishing, validator, accessibility, privacy and
       documentation; a skeptic per dimension): 36 confirmed findings, fixed in three groups and verified again
+- [x] Final independent review of all of S4 (web security and privacy, web accessibility and language, the author's
+      publish flow, test validity, documentation; a skeptic per dimension): 48 confirmed findings, fixed in four
+      groups; the groups' 28 requests to each other applied, then checked by a verifier (6 more, fixed). A second
+      independent verification (four group verifiers and one security and privacy verifier, a skeptic each) found
+      19 more, all confirmed and fixed; the code fixes have tests that fail on the code before them
+- [x] Owner decisions recorded (2026-10-24): one Node.js system with Lumi's server half, a PHP server half considered
+      and not chosen (D-081); a whole-code-base simplification pass before S5 (section S4+ below); problem reporting
+      for the pilot and Q16 required before it (S6 below)
 - [ ] First manual run of the protocol and the matrix (`UD-031`, `NFR-003`; D-079), by HVL/ALU before the first
       pilot release: the set-ups AT-1, AT-2, AT-3, KB and Z400 of `docs/accessibility/manual-test-protocol.md`, each
       saved as a dated file in `docs/accessibility/results/`, which holds none yet. `docs/TRACEABILITY.md` lists both
       requirements as "tested" only because `apps/server/a11y/accessibilityDocs.a11y.test.ts`, a check that the
       documents agree, carries their IDs; it passes without any result (Evaluator Guide §2)
-- [ ] Gate: as in the Evaluator Guide §5, S4
+- [x] Gate: as in the Evaluator Guide §5, S4 (2026-10-24; output in the session log)
+
+## S4+ — Whole-code-base simplification ⬜ (owner decision 2026-10-24)
+
+Before S5 builds on the code, the owner asked for one pass over the whole code base (server, web app, packages,
+tools, tests) that makes it shorter where meaning and behaviour stay the same. The pass changes no behaviour, page,
+text or API, removes or weakens no test (the test count does not drop) and keeps every CLAUDE.md rule.
+- [ ] Measure duplication with a duplicate-code detector run outside the repository (no new dependency); before counts
+- [ ] Finders per area propose changes; two independent skeptics per proposal, and a proposal is applied only when
+      neither refutes it; refuted or behaviour-changing ideas are listed, not applied
+- [ ] Apply area by area with that area's tests; one commit per area
+- [ ] The full S4 gate again; before/after report here (lines, duplicates, test count)
 
 ## S5 — Læringsdesign studio ⬜
 
@@ -258,6 +278,21 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 - [ ] Separate files origin for user files with signed URLs (`SEC-004`, D-045; URLs from S3's `HvlUrlGenerator`)
 - [ ] Panopto guidance (`H5P-010`); ClamAV scanning (`SEC-006`); LTI Dynamic Registration (`LTI-009`, COULD)
 - [ ] Docker images, load test, runbook (`NFR-001`, `NFR-002`, `NFR-007`); conformance report (`UD-040`)
+- [ ] Lumi's server half (D-081): ask Lumi's maintainers for a release with their unreleased file-security work, or
+      review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
+      10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
+      upstream to Lumi and H5P
+- [ ] Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in `docs/` and
+      GitHub issue templates in `.github/ISSUE_TEMPLATE/` (a fault; an accessibility barrier) asking for the steps,
+      what was expected and what happened, device, browser, assistive technology and zoom, the activity type or
+      page, a screenshot, and the severity (cannot use, or privacy or security; accessibility barrier; cosmetic),
+      with matching labels. Rule: no personal data in an issue (no student names, e-mails or Feide IDs; log lines are
+      safe by design, `DATA-009`). The guide describes how a problem is fixed: reproduced in the test set-up, a test
+      that fails first, the cause fixed, the area's tests and the gate, a branch and pull request that HVL reviews
+      and merges. A problem seen only in HVL's Canvas or Feide needs the error and the server's log lines; one seen
+      only on a device or with a screen reader needs a precise description and an HVL re-test; H5P's own barriers
+      are repaired at run time or registered and reported (D-080). Manual results stay dated in
+      `docs/accessibility/results/`
 - [ ] Gate: as in the Evaluator Guide §5, S6
 
 ---
@@ -278,7 +313,7 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 | Q15 | Learner LTI launches are not written to the authentication audit (D-064) | HVL DPO | S6 |
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous and equals the Feide ID; only then set `"feideLinking": true` for that platform in `LTI_PLATFORMS` (AUTH-005, D-063) | TeCopp | S3 |
-| Q16 | The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact) | Repository owner | Confidence in every gate |
+| Q16 | The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).** | Repository owner | Confidence in every gate; the pilot |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
 | Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`) | HVL DPO | S6, pilot |
 
@@ -294,6 +329,7 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 | R-05 | A session runs out of usage quota mid-milestone | Medium | Low | One milestone per session; commit early; update this file before stopping |
 | R-06 | Upstream H5P accessibility barriers | High | Medium | Theme fixes where possible; report upstream; document in `UD-040` |
 | R-08 | `image-size` (via h5p-server) has two unfixed DoS advisories; accepted until 2027-01-31 (D-030) | Low | Medium | Only reachable through authenticated uploads; `SEC-002` sniffing in S2; `check:audit` fails at expiry |
+| R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081 |
 
 ## Session log
 
@@ -468,5 +504,77 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npm run mock:platform & npm start                  "LTI platforms synchronised" → "LTI platform keys on the current encryption key" → "HVL Interaktiv server listening"
   $ curl http://localhost:3000/healthz                 {"status":"ok"} (200)
   $ curl http://localhost:3000/lti/keys                {"keys":[{"kty":"RSA",…}]} (200)
+  $ kill -TERM <server>                                "HVL Interaktiv server stopped"
+  ```
+
+- **2026-10-24 · S4** — Session 4 delivered universal design over 47 commits (D-047, D-067…D-081). Real H5P content
+  types built from GitHub at pinned commits: 120 libraries, the ten types, ten Nynorsk examples (D-078), which settled
+  R-01 (D-047). A strict script policy on every page type: H5P pages read their data from a JSON block and allow only
+  `'self'` and Core's one hashed script; Next.js pages use a nonce; no third-party request (D-070, `DATA-011`). The web
+  app (`apps/web`, Next.js inside Express, D-067, D-068) with the portal, the activity page (Spel, Rediger, Sjekk og
+  publiser), `/app/play` for Canvas, `/hjelp`, `/personvern` in three languages, the formative notice and the publish
+  flow with reasons that hold 14 days (`PROD-003`, `PROD-011`, `UD-020`…`UD-022`, D-073…D-075). Design tokens with
+  contrast tests and lint rules, the HVL theme inside every H5P document, answer prefixes, run-time repairs of H5P's
+  own markup (`UD-001`…`UD-013`, D-072, D-080). An accessibility suite of 13 files and 332 tests over every route and
+  the player and editor of all ten types (`UD-030`); the manual protocol and the browser matrix for HVL (`UD-031`,
+  `NFR-003`, D-079). Reviews: an early review of the server work (36 findings), a theme round (11), the final review
+  of all of S4 (48), a verifier of the groups' requests (6) and a second independent verification (19), each finding
+  checked by a skeptic and fixed. The gate then found two undocumented names in the API documentation (`docs:api`
+  failed); fixed in 510cef7. Owner decisions: D-081 (one system; PHP server half not chosen; Lumi checked); a
+  simplification pass before S5 (S4+); problem reporting for the pilot and Q16 before it (S6). Open: HVL's token
+  confirmation and logo files (Q2), the DPO's review of `/personvern` (Q6), the first manual run of the protocol and
+  matrix (`UD-031`, `NFR-003`), Hub registration (Q7), CI on GitHub (Q16). Residuals: «Gå til feltet» waits at most 20 s for
+  BranchingScenario's tour request (D-069); CoursePresentation's footer column is sized for slide counts up to about
+  «10 / 12» at 320 px, and at phone width the bottom 2–3 px of a footer button's focus ring are clipped by the
+  player while the ring stays visible (D-080, gate amendment). Gate output (commit ed21808; `docs:api` after
+  510cef7):
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint                                       exit 0
+  $ npm run format:check                               exit 0 (All matched files use Prettier code style!)
+  $ npm run doc:lint                                   ✓ doc-lint: 11 checks passed.
+  $ npm run check:filesize                             ✓ doc-lint: file-size passed.
+  $ npm run check:pins                                 ✓ check:pins: 6 manifests, every version is pinned exactly.
+  $ npm run check:licences                             ✓ check:licences: 473 production packages, all GPL-3.0-compatible.
+  $ npm run check:audit                                ✓ check:audit: 2 high/critical advisories, all covered by reviewed exceptions.
+  $ npm run privacy:inventory-check                    ✓ privacy:inventory-check: 22 models, 167 fields, all in docs/privacy/DATA-INVENTORY.md.
+  $ npm run h5p:fetch-core                             ✓ core and editor: every file matches the committed SHA-256 lists
+  $ npm run h5p:fetch-libraries                        ✓ 120 libraries and 10 packages in apps/server/var/h5p-real
+  $ npm run build                                      exit 0: 7 web routes; design tokens and feedback prefixes rewritten, no file changed
+  $ npm run tokens:check                               ✓ design tokens: 3 files up to date. ✓ feedback prefixes: up to date.
+  $ npm run lint:css                                   exit 0
+  $ npm run spec:trace -- --check --done-through=S4    ✓ 126 requirements, traceability up to date.
+  $ npm run spec:site -- --check                       ✓ docs/site/index.html is up to date.
+  $ npm run docs:api                                   exit 4 on ed21808 (2 warnings); after 510cef7: html generated at docs/api (none)
+  $ npm run boot-check --workspace apps/server
+  {"level":"info","service":"hvl-interaktiv-server","h5pCoreApi":"1.28","hubHost":"hub-api.h5p.org","siteRegistered":false,"msg":"H5P engine configured"}
+  $ npx vitest run                                     Test Files 315 passed (315) · Tests 21423 passed (21423) · 633 s
+  $ npm run test:e2e                                   Test Files 8 passed (8) · Tests 16 passed (16)
+  $ npm run test:a11y                                  Test Files 13 passed (13) · Tests 332 passed (332) · 950 s
+  $ npx vitest run -t "AUTH-00"                        Test Files 44 passed | 271 skipped · Tests 378 passed           (S3)
+  $ npx vitest run -t "LTI-00"                         Test Files 75 passed | 240 skipped · Tests 416 passed           (S3)
+  $ npx vitest run -t "H5P-002|PROD-002"               Test Files 17 passed | 298 skipped · Tests 42 passed            (S2)
+  $ npx vitest run -t "SEC-003|H5P-011|H5P-006"        Test Files 30 passed | 285 skipped · Tests 18717 passed         (S2)
+  $ npx vitest run -t "SEC-001"                        Test Files 8 passed | 307 skipped · Tests 111 passed            (S2)
+  $ npx vitest run -t "PROD-004|PROD-005|PROD-006|H5P-007"  Test Files 33 passed | 282 skipped · Tests 117 passed     (S3)
+  $ npx vitest run -t "UD-0"                           Test Files 96 passed | 219 skipped · Tests 900 passed
+  $ npx vitest run -t "PED-020"                        Test Files 16 passed | 299 skipped · Tests 129 passed
+  $ npx vitest run -t "PROD-003|UD-022"                Test Files 26 passed | 289 skipped · Tests 141 passed
+  $ npx vitest run -t "PROD-011|DATA-006|DATA-011"     Test Files 31 passed | 284 skipped · Tests 134 passed
+  $ npx vitest run -t "\[<ID>\]", one run per ID       every S4 ID (and DOC-012) passes on its own; tests per ID:
+      PROD-003 138 · PROD-011 27 · H5P-009 6 · UD-001 126 · UD-002 6 · UD-003 65 · UD-004 5 · UD-005 3
+      UD-006 73 · UD-007 13 · UD-008 9 · UD-009 8 · UD-010 25 · UD-011 62 · UD-012 7 · UD-013 83 · UD-020 261
+      UD-021 211 · UD-022 20 · UD-030 19 · PED-020 118 · DATA-006 60 · DATA-011 51 · DOC-012 14
+      NFR-003 and UD-031 have no test in the default projects; in the accessibility suite
+      (npx vitest run --root apps/server --config vitest.a11y.config.ts -t "\[<ID>\]"): NFR-003 1 · UD-031 3, both
+      the document-consistency check, which passes without a manual result (see the open item above)
+  $ npm run mock:platform & WEB_APP=dev npm start      "H5P engine configured" → "LTI platforms synchronised" → "LTI platform keys on the current encryption key" → "HVL Interaktiv server listening"
+  $ curl http://localhost:3000/healthz                 {"status":"ok"} (200)
+  $ curl http://localhost:3000/lti/keys                {"keys":[{"kty":"RSA",…}]} (200)
+  $ curl http://localhost:3000/                        200 · <title>HVL Interaktiv</title>
+  $ curl http://localhost:3000/hjelp                   200 · <title>Hjelp – HVL Interaktiv</title>
+  $ curl http://localhost:3000/personvern              200 · <title>Personvern – HVL Interaktiv</title>
+  $ curl http://localhost:3000/api/docs                200 · {"openapi":"3.1.0",…}
   $ kill -TERM <server>                                "HVL Interaktiv server stopped"
   ```

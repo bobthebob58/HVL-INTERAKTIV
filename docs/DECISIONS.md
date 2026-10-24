@@ -91,6 +91,7 @@ with the commands given.
 | D-078 | Real H5P libraries from GitHub at pinned commits | Accepted (2026-10-23) |
 | D-079 | What S4 verifies automatically and what HVL records by hand | Accepted (2026-10-23) |
 | D-080 | H5P markup barriers: repaired in the page where we can, registered where we cannot | Accepted (2026-10-24) |
+| D-081 | One Node.js system with Lumi's H5P server half; a PHP server half considered and not chosen | Accepted (2026-10-24) |
 
 ---
 
@@ -1505,3 +1506,54 @@ loading of one spec per session are kept.
   code works, not a bug (where an editor keeps its widgets, how a tour is shown,
   `apps/server/src/h5p/render/client/editorFields.js` and `editorFieldReveal.js`), go when a pinned version changes
   that behaviour; each file's header says so once, and the browser tests in its `Tests:` line then fail.
+- **Amendment (2026-10-24, S4 gate: what the CoursePresentation footer fix leaves):** two residuals of the V2T-1 fix,
+  found by its fixer and not covered by a test. (1) The footer's middle column is at least as wide as two slide
+  buttons, their margins and a slide count of about «10 / 12» in the default font; a presentation with 100 slides or
+  more on a 320 px phone can again lose a few pixels of the slide buttons to H5P.Components' `overflow: hidden`
+  (`UD-005`). The pointer test uses the four-slide example. (2) At phone width the bottom 2 to 3 px of a footer
+  button's focus ring are clipped by the player's `overflow: hidden`; the ring stays visible on the other sides and
+  the control is not hidden, so WCAG 2.4.7 and 2.4.11 hold (`keyboardFocus.a11y.test.ts` passes). Both are items for
+  the manual protocol's next run and for the S6 conformance report (`UD-040`).
+
+### D-081 · One Node.js system with Lumi's H5P server half; an official PHP server half was considered and not chosen
+- **Context:** H5P has a browser half (Core and the editor client) and a server half (storing content, installing
+  libraries, the editor's AJAX, the Hub). We run H5P's official browser half unchanged (Core `1.28.0`, editor commit
+  `ab2daa18`, D-022) and Lumi's Node.js server half, `@lumieducation/h5p-server@10.0.4` (D-002), which was built for
+  Core 1.27. That costs us adapters: the config factory's Core 1.28 and `hub-api.h5p.org` settings, the 15-character
+  `local_id` and the non-200 `/v1/sites` answer (spec 01 §1), Daylight's CSS that Lumi leaves out of the asset lists, our
+  own Edit check before Lumi renders the editor (D-069), our own file security for CVE-2025-7062, which is Lumi's, not
+  H5P's (D-003), and S6's data-subject tool deleting learner state through the storage (Lumi's
+  `deleteAllContentUserDataByUser` deletes the acting user's data). The owner asked (2026-10-24) whether the H5P part could run on H5P's official server half in
+  PHP instead, beside our Node.js system. That half is `h5p-php-library` with `h5p-editor-php-library`: a library, not
+  a server; a host implements dozens of framework functions (about 60 in `H5PFrameworkInterface`, plus the editor's
+  storage and AJAX interfaces) for its database, files, users and permissions, as the Moodle, WordPress and Drupal plugins do.
+- **Decision:** Keep one Node.js/TypeScript system with Lumi's server half. Reasons:
+  (1) Sign-in and permissions stay in one process. The ltik travels as a Bearer header in a cookie-less Canvas frame
+  and lives in memory only (LTI-003, D-069); Feide sessions, CSRF and the View/Edit decisions (D-066) are made in one
+  place. A PHP half would need every H5P request's identity and rights handed across a second service, a new
+  security seam inside exactly the frames S3 and S4 hardened.
+  (2) Privacy is enforced in one place: learners as HMAC pseudonyms (DATA-002), the yearly purge (DATA-003), the data
+  inventory checked against one schema (DATA-001), *k*-suppression (INS-006). A PHP half would store learner state
+  in its own tables and on local disk by default (`H5PDefaultStorage`), so each rule would be built and checked twice.
+  (3) One language, runtime, deployment and set of checks for HVL IT to run, and one test suite.
+  (4) The validator (D-073), the publish flow (D-074), the læringsdesign studio (S5) and the grade bridge (S6) read and
+  write H5P content directly, inside the same transactions and locks (D-074's write lock).
+  (5) The browser half, where H5P's behaviour and markup live, is already H5P's own. The accessibility barriers are in
+  the content types and Core (D-080) and stay with either server half, and so does Core writing unescaped markup
+  (D-039, D-070).
+  (6) Lumi's server half works with Core 1.28 and the ten real types under these adapters (D-047), and a browser test
+  replays them after every library change (D-078). A PHP half would mean redoing most of S2–S4's H5P work
+  (D-035…D-080: permissions, upload security, the ten types, the editor in Canvas, the strict page policy, file grants).
+- **Lumi's state (checked 2026-10-24):** npm's latest is still 10.0.4 (2025-03-08), but the repository's `master` is
+  active: about 620 commits since that release, the newest on 2026-10-13. Unreleased changes that concern us:
+  "buffer sanitizer and malware scanners and many other improvements in file security checks" (#4600, 2026-09-06),
+  "accept SVG uploads with an XML prolog" (2026-10-04) and "reject packages with unsatisfied library dependencies"
+  (#4625, 2026-10-06). Recheck: `npm view @lumieducation/h5p-server time` and the repository's commit log.
+- **Consequences:** We keep carrying the adapters and the security work above, each marked `UPSTREAM:` or
+  `SPEC-DEVIATION:` in code. S6 adds a checklist item: ask Lumi's maintainers for a release, or review and pin a Lumi
+  commit built from source as D-022 pins the editor (a change to the CLAUDE.md invariant "h5p-server@10.0.4", so it
+  needs its own decision and the full gate), then remove the adapters it makes unnecessary; report our fixes and the
+  D-080 barriers upstream to Lumi and H5P.
+- **Revisit when:** Lumi's repository has no commit for 12 months; a serious security flaw in Lumi can be neither
+  fixed nor contained in our code; a Core version Lumi cannot support becomes necessary; or HVL decides to run regular
+  H5P (h5p.com or a Moodle or WordPress installation) and give up the HVL-specific parts.

@@ -227,7 +227,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 </div>
 <dl class="glance">
 <div><dt>Requirements</dt><dd><a href="#requirements">126</a> <span class="sub">106 must · 17 should · 3 could</span></dd></div>
-<div><dt>Build sessions</dt><dd>6 <span class="sub">3 of 6 done; specification complete</span></dd></div>
+<div><dt>Build sessions</dt><dd>7 <span class="sub">4 of 7 done; specification complete</span></dd></div>
 <div><dt>H5P content types</dt><dd>10 <span class="sub">chosen for pedagogy and accessibility</span></dd></div>
 <div><dt>Learning-design patterns</dt><dd>9 <span class="sub">for <span lang="nn">forarbeid</span>, <span lang="nn">mellomarbeid</span> and <span lang="nn">etterarbeid</span></span></dd></div>
 </dl>
@@ -273,7 +273,9 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>✅ Gate passed (2026-10-23); HVL&#39;s Feide and Canvas values open (Q3, Q4)</td></tr>
 <tr>
-<td>S4</td><td>Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator</td><td>03; 04 §5; 05 <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a></td><td>🟨 In progress (2026-10-23)</td></tr>
+<td>S4</td><td>Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator</td><td>03; 04 §5; 05 <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a></td><td>✅ Gate passed (2026-10-24); HVL&#39;s token and logo confirmation (Q2), the DPO&#39;s review of the privacy text (Q6) and the first manual AT run open</td></tr>
+<tr>
+<td>S4+</td><td>Whole-code-base simplification pass (owner decision, 2026-10-24)</td><td>—</td><td>⬜ Not started</td></tr>
 <tr>
 <td>S5</td><td>Læringsdesign studio, patterns, planner, pedagogisk mappe export</td><td>04</td><td>⬜ Not started</td></tr>
 <tr>
@@ -444,6 +446,8 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <td>D-079</td><td>What S4 verifies automatically and what HVL records by hand</td><td>Accepted (2026-10-23)</td></tr>
 <tr>
 <td>D-080</td><td>H5P markup barriers: repaired in the page where we can, registered where we cannot</td><td>Accepted (2026-10-24)</td></tr>
+<tr>
+<td>D-081</td><td>One Node.js system with Lumi&#39;s H5P server half; a PHP server half considered and not chosen</td><td>Accepted (2026-10-24)</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--references" tabindex="-1">Reference inputs from HVL</h3>
@@ -5200,6 +5204,8 @@ with the commands given.</p>
 <td>D-079</td><td>What S4 verifies automatically and what HVL records by hand</td><td>Accepted (2026-10-23)</td></tr>
 <tr>
 <td>D-080</td><td>H5P markup barriers: repaired in the page where we can, registered where we cannot</td><td>Accepted (2026-10-24)</td></tr>
+<tr>
+<td>D-081</td><td>One Node.js system with Lumi&#39;s H5P server half; a PHP server half considered and not chosen</td><td>Accepted (2026-10-24)</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="decisions--d-001--nodejs-24-lts-instead-of-22" tabindex="-1">D-001 · Node.js 24 LTS instead of 22</h3>
@@ -6672,6 +6678,58 @@ H5P&#39;s editors stop letting the server&#39;s answer override localStorage). (
 code works, not a bug (where an editor keeps its widgets, how a tour is shown,
 <code>apps/server/src/h5p/render/client/editorFields.js</code> and <code>editorFieldReveal.js</code>), go when a pinned version changes
 that behaviour; each file&#39;s header says so once, and the browser tests in its <code>Tests:</code> line then fail.</li>
+<li><strong>Amendment (2026-10-24, S4 gate: what the CoursePresentation footer fix leaves):</strong> two residuals of the V2T-1 fix,
+found by its fixer and not covered by a test. (1) The footer&#39;s middle column is at least as wide as two slide
+buttons, their margins and a slide count of about «10 / 12» in the default font; a presentation with 100 slides or
+more on a 320 px phone can again lose a few pixels of the slide buttons to H5P.Components&#39; <code>overflow: hidden</code>
+(<a class="req-ref" href="#r-UD-005"><code>UD-005</code></a>). The pointer test uses the four-slide example. (2) At phone width the bottom 2 to 3 px of a footer
+button&#39;s focus ring are clipped by the player&#39;s <code>overflow: hidden</code>; the ring stays visible on the other sides and
+the control is not hidden, so WCAG 2.4.7 and 2.4.11 hold (<code>keyboardFocus.a11y.test.ts</code> passes). Both are items for
+the manual protocol&#39;s next run and for the S6 conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>).</li>
+</ul>
+<h3 id="decisions--d-081--one-nodejs-system-with-lumis-h5p-server-half-an-official-php-server-half-was-considered-and-not-chosen" tabindex="-1">D-081 · One Node.js system with Lumi&#39;s H5P server half; an official PHP server half was considered and not chosen</h3>
+<ul>
+<li><strong>Context:</strong> H5P has a browser half (Core and the editor client) and a server half (storing content, installing
+libraries, the editor&#39;s AJAX, the Hub). We run H5P&#39;s official browser half unchanged (Core <code>1.28.0</code>, editor commit
+<code>ab2daa18</code>, D-022) and Lumi&#39;s Node.js server half, <code>@lumieducation/h5p-server@10.0.4</code> (D-002), which was built for
+Core 1.27. That costs us adapters: the config factory&#39;s Core 1.28 and <code>hub-api.h5p.org</code> settings, the 15-character
+<code>local_id</code> and the non-200 <code>/v1/sites</code> answer (spec 01 §1), Daylight&#39;s CSS that Lumi leaves out of the asset lists, our
+own Edit check before Lumi renders the editor (D-069), our own file security for CVE-2025-7062, which is Lumi&#39;s, not
+H5P&#39;s (D-003), and S6&#39;s data-subject tool deleting learner state through the storage (Lumi&#39;s
+<code>deleteAllContentUserDataByUser</code> deletes the acting user&#39;s data). The owner asked (2026-10-24) whether the H5P part could run on H5P&#39;s official server half in
+PHP instead, beside our Node.js system. That half is <code>h5p-php-library</code> with <code>h5p-editor-php-library</code>: a library, not
+a server; a host implements dozens of framework functions (about 60 in <code>H5PFrameworkInterface</code>, plus the editor&#39;s
+storage and AJAX interfaces) for its database, files, users and permissions, as the Moodle, WordPress and Drupal plugins do.</li>
+<li><strong>Decision:</strong> Keep one Node.js/TypeScript system with Lumi&#39;s server half. Reasons:
+(1) Sign-in and permissions stay in one process. The ltik travels as a Bearer header in a cookie-less Canvas frame
+and lives in memory only (LTI-003, D-069); Feide sessions, CSRF and the View/Edit decisions (D-066) are made in one
+place. A PHP half would need every H5P request&#39;s identity and rights handed across a second service, a new
+security seam inside exactly the frames S3 and S4 hardened.
+(2) Privacy is enforced in one place: learners as HMAC pseudonyms (DATA-002), the yearly purge (DATA-003), the data
+inventory checked against one schema (DATA-001), <em>k</em>-suppression (INS-006). A PHP half would store learner state
+in its own tables and on local disk by default (<code>H5PDefaultStorage</code>), so each rule would be built and checked twice.
+(3) One language, runtime, deployment and set of checks for HVL IT to run, and one test suite.
+(4) The validator (D-073), the publish flow (D-074), the læringsdesign studio (S5) and the grade bridge (S6) read and
+write H5P content directly, inside the same transactions and locks (D-074&#39;s write lock).
+(5) The browser half, where H5P&#39;s behaviour and markup live, is already H5P&#39;s own. The accessibility barriers are in
+the content types and Core (D-080) and stay with either server half, and so does Core writing unescaped markup
+(D-039, D-070).
+(6) Lumi&#39;s server half works with Core 1.28 and the ten real types under these adapters (D-047), and a browser test
+replays them after every library change (D-078). A PHP half would mean redoing most of S2–S4&#39;s H5P work
+(D-035…D-080: permissions, upload security, the ten types, the editor in Canvas, the strict page policy, file grants).</li>
+<li><strong>Lumi&#39;s state (checked 2026-10-24):</strong> npm&#39;s latest is still 10.0.4 (2025-03-08), but the repository&#39;s <code>master</code> is
+active: about 620 commits since that release, the newest on 2026-10-13. Unreleased changes that concern us:
+&quot;buffer sanitizer and malware scanners and many other improvements in file security checks&quot; (#4600, 2026-09-06),
+&quot;accept SVG uploads with an XML prolog&quot; (2026-10-04) and &quot;reject packages with unsatisfied library dependencies&quot;
+(#4625, 2026-10-06). Recheck: <code>npm view @lumieducation/h5p-server time</code> and the repository&#39;s commit log.</li>
+<li><strong>Consequences:</strong> We keep carrying the adapters and the security work above, each marked <code>UPSTREAM:</code> or
+<code>SPEC-DEVIATION:</code> in code. S6 adds a checklist item: ask Lumi&#39;s maintainers for a release, or review and pin a Lumi
+commit built from source as D-022 pins the editor (a change to the CLAUDE.md invariant &quot;<a href="mailto:h5p-server@10.0.4" rel="noopener" class="ext">h5p-server@10.0.4<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>&quot;, so it
+needs its own decision and the full gate), then remove the adapters it makes unnecessary; report our fixes and the
+D-080 barriers upstream to Lumi and H5P.</li>
+<li><strong>Revisit when:</strong> Lumi&#39;s repository has no commit for 12 months; a serious security flaw in Lumi can be neither
+fixed nor contained in our code; a Core version Lumi cannot support becomes necessary; or HVL decides to run regular
+H5P (h5p.com or a Moodle or WordPress installation) and give up the HVL-specific parts.</li>
 </ul>
 
 </section>
@@ -6692,7 +6750,9 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>✅ Gate passed (2026-10-23); HVL&#39;s Feide and Canvas values open (Q3, Q4)</td></tr>
 <tr>
-<td>S4</td><td>Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator</td><td>03; 04 §5; 05 <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a></td><td>🟨 In progress (2026-10-23)</td></tr>
+<td>S4</td><td>Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator</td><td>03; 04 §5; 05 <a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a></td><td>✅ Gate passed (2026-10-24); HVL&#39;s token and logo confirmation (Q2), the DPO&#39;s review of the privacy text (Q6) and the first manual AT run open</td></tr>
+<tr>
+<td>S4+</td><td>Whole-code-base simplification pass (owner decision, 2026-10-24)</td><td>—</td><td>⬜ Not started</td></tr>
 <tr>
 <td>S5</td><td>Læringsdesign studio, patterns, planner, pedagogisk mappe export</td><td>04</td><td>⬜ Not started</td></tr>
 <tr>
@@ -6832,7 +6892,7 @@ is linking, that Deep Linking launch opens on the new, empty Canvas account; the
 <li>Everything HVL must supply: Feide registration and redirect URIs (Q3), the TeCopp test launch and <code>feideLinking</code>
 (Q4), owner answers Q12–Q15. GitHub has never run CI on this work (Q16).</li>
 </ul>
-<h3 id="progress--s4--universal-design" tabindex="-1">S4 — Universal design 🟨</h3>
+<h3 id="progress--s4--universal-design--gate-passed-2026-10-24-q2-q6-and-the-first-manual-at-run-open" tabindex="-1">S4 — Universal design ✅ (gate passed 2026-10-24; Q2, Q6 and the first manual AT run open)</h3>
 <p>Brand tokens follow HVL&#39;s manual (D-017); HVL (<a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>) must still confirm the values and supply logo files.
 Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one go); decisions D-067…D-079.</p>
 <ul>
@@ -6912,12 +6972,31 @@ or the fetch fails; its untracked build output is reused without a rebuild and r
 eleven views at 1280 and 390 px on 2026-10-24</li>
 <li><span class="task">✓ Done:</span> Early independent review of the server work (security, publishing, validator, accessibility, privacy and
 documentation; a skeptic per dimension): 36 confirmed findings, fixed in three groups and verified again</li>
+<li><span class="task">✓ Done:</span> Final independent review of all of S4 (web security and privacy, web accessibility and language, the author&#39;s
+publish flow, test validity, documentation; a skeptic per dimension): 48 confirmed findings, fixed in four
+groups; the groups&#39; 28 requests to each other applied, then checked by a verifier (6 more, fixed). A second
+independent verification (four group verifiers and one security and privacy verifier, a skeptic each) found
+19 more, all confirmed and fixed; the code fixes have tests that fail on the code before them</li>
+<li><span class="task">✓ Done:</span> Owner decisions recorded (2026-10-24): one Node.js system with Lumi&#39;s server half, a PHP server half considered
+and not chosen (D-081); a whole-code-base simplification pass before S5 (section S4+ below); problem reporting
+for the pilot and Q16 required before it (S6 below)</li>
 <li><span class="task">○ To do:</span> First manual run of the protocol and the matrix (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>, <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>; D-079), by HVL/ALU before the first
 pilot release: the set-ups AT-1, AT-2, AT-3, KB and Z400 of <code>docs/accessibility/manual-test-protocol.md</code>, each
 saved as a dated file in <code>docs/accessibility/results/</code>, which holds none yet. <code>docs/TRACEABILITY.md</code> lists both
 requirements as &quot;tested&quot; only because <code>apps/server/a11y/accessibilityDocs.a11y.test.ts</code>, a check that the
 documents agree, carries their IDs; it passes without any result (Evaluator Guide §2)</li>
-<li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S4</li>
+<li><span class="task">✓ Done:</span> Gate: as in the Evaluator Guide §5, S4 (2026-10-24; output in the session log)</li>
+</ul>
+<h3 id="progress--s4--whole-code-base-simplification--owner-decision-2026-10-24" tabindex="-1">S4+ — Whole-code-base simplification ⬜ (owner decision 2026-10-24)</h3>
+<p>Before S5 builds on the code, the owner asked for one pass over the whole code base (server, web app, packages,
+tools, tests) that makes it shorter where meaning and behaviour stay the same. The pass changes no behaviour, page,
+text or API, removes or weakens no test (the test count does not drop) and keeps every CLAUDE.md rule.</p>
+<ul>
+<li><span class="task">○ To do:</span> Measure duplication with a duplicate-code detector run outside the repository (no new dependency); before counts</li>
+<li><span class="task">○ To do:</span> Finders per area propose changes; two independent skeptics per proposal, and a proposal is applied only when
+neither refutes it; refuted or behaviour-changing ideas are listed, not applied</li>
+<li><span class="task">○ To do:</span> Apply area by area with that area&#39;s tests; one commit per area</li>
+<li><span class="task">○ To do:</span> The full S4 gate again; before/after report here (lines, duplicates, test count)</li>
 </ul>
 <h3 id="progress--s5--laeringsdesign-studio" tabindex="-1">S5 — Læringsdesign studio ⬜</h3>
 <p>Start from <code>docs/reference/proposals/phases.yaml</code> and <code>proposals/mappe-template.nn.md</code>; ALU must confirm labels, criteria and limits.</p>
@@ -6940,6 +7019,21 @@ The data-subject tool must delete learner state through the storage directly: Lu
 <li><span class="task">○ To do:</span> Separate files origin for user files with signed URLs (<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, D-045; URLs from S3&#39;s <code>HvlUrlGenerator</code>)</li>
 <li><span class="task">○ To do:</span> Panopto guidance (<a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>); ClamAV scanning (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>); LTI Dynamic Registration (<a class="req-ref" href="#r-LTI-009"><code>LTI-009</code></a>, COULD)</li>
 <li><span class="task">○ To do:</span> Docker images, load test, runbook (<a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>, <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>); conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>)</li>
+<li><span class="task">○ To do:</span> Lumi&#39;s server half (D-081): ask Lumi&#39;s maintainers for a release with their unreleased file-security work, or
+review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
+10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
+upstream to Lumi and H5P</li>
+<li><span class="task">○ To do:</span> Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in <code>docs/</code> and
+GitHub issue templates in <code>.github/ISSUE_TEMPLATE/</code> (a fault; an accessibility barrier) asking for the steps,
+what was expected and what happened, device, browser, assistive technology and zoom, the activity type or
+page, a screenshot, and the severity (cannot use, or privacy or security; accessibility barrier; cosmetic),
+with matching labels. Rule: no personal data in an issue (no student names, e-mails or Feide IDs; log lines are
+safe by design, <a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>). The guide describes how a problem is fixed: reproduced in the test set-up, a test
+that fails first, the cause fixed, the area&#39;s tests and the gate, a branch and pull request that HVL reviews
+and merges. A problem seen only in HVL&#39;s Canvas or Feide needs the error and the server&#39;s log lines; one seen
+only on a device or with a screen reader needs a precise description and an HVL re-test; H5P&#39;s own barriers
+are repaired at run time or registered and reported (D-080). Manual results stay dated in
+<code>docs/accessibility/results/</code></li>
 <li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S6</li>
 </ul>
 <hr>
@@ -6971,7 +7065,7 @@ The data-subject tool must delete learner state through the storage directly: Lu
 <tr>
 <td>Q4</td><td>Paste <code>docs/reference/canvas-lti13-developer-key.json</code> into HVL&#39;s test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether <code>feide_login</code> arrives under <code>privacy_level</code> anonymous and equals the Feide ID; only then set <code>&quot;feideLinking&quot;: true</code> for that platform in <code>LTI_PLATFORMS</code> (AUTH-005, D-063)</td><td>TeCopp</td><td>S3</td></tr>
 <tr>
-<td>Q16</td><td>The repository has no <code>main</code> branch, and CI (<code>.github/workflows/ci.yml</code>) runs only on pushes to <code>main</code> and on pull requests, so GitHub has never run the gate: every session&#39;s gate ran locally only. Create <code>main</code> from <code>ccr-07f63266-6cere5</code> or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact)</td><td>Repository owner</td><td>Confidence in every gate</td></tr>
+<td>Q16</td><td>The repository has no <code>main</code> branch, and CI (<code>.github/workflows/ci.yml</code>) runs only on pushes to <code>main</code> and on pull requests, so GitHub has never run the gate: every session&#39;s gate ran locally only. Create <code>main</code> from <code>ccr-07f63266-6cere5</code> or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). <strong>Required before the pilot (owner, 2026-10-24).</strong></td><td>Repository owner</td><td>Confidence in every gate; the pilot</td></tr>
 <tr>
 <td>Q5</td><td>Hosting: HVL on-premises or Sikt, both in the EEA (<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>)</td><td>HVL IT</td><td>S6</td></tr>
 <tr>
@@ -6996,6 +7090,8 @@ The data-subject tool must delete learner state through the storage directly: Lu
 <td>R-06</td><td>Upstream H5P accessibility barriers</td><td>High</td><td>Medium</td><td>Theme fixes where possible; report upstream; document in <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a></td></tr>
 <tr>
 <td>R-08</td><td><code>image-size</code> (via h5p-server) has two unfixed DoS advisories; accepted until 2027-01-31 (D-030)</td><td>Low</td><td>Medium</td><td>Only reachable through authenticated uploads; <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a> sniffing in S2; <code>check:audit</code> fails at expiry</td></tr>
+<tr>
+<td>R-09</td><td>Lumi&#39;s npm releases lag its repository: none since 10.0.4 (2025-03-08), while <code>master</code> carries file-security work we would want (D-081)</td><td>High</td><td>Medium</td><td>Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081</td></tr>
 </tbody></table></div>
 <h3 id="progress--session-log" tabindex="-1">Session log</h3>
 <p>Append one entry per session: date, session, what was done, gate output, and any decisions added.</p>
@@ -7161,6 +7257,75 @@ $ npm run boot-check --workspace apps/server
 $ npm run mock:platform &amp; npm start                  &quot;LTI platforms synchronised&quot; → &quot;LTI platform keys on the current encryption key&quot; → &quot;HVL Interaktiv server listening&quot;
 $ curl http://localhost:3000/healthz                 {&quot;status&quot;:&quot;ok&quot;} (200)
 $ curl http://localhost:3000/lti/keys                {&quot;keys&quot;:[{&quot;kty&quot;:&quot;RSA&quot;,…}]} (200)
+$ kill -TERM &lt;server&gt;                                &quot;HVL Interaktiv server stopped&quot;</code></pre>
+</li>
+<li><p><strong>2026-10-24 · S4</strong> — Session 4 delivered universal design over 47 commits (D-047, D-067…D-081). Real H5P content
+types built from GitHub at pinned commits: 120 libraries, the ten types, ten Nynorsk examples (D-078), which settled
+R-01 (D-047). A strict script policy on every page type: H5P pages read their data from a JSON block and allow only
+<code>&#39;self&#39;</code> and Core&#39;s one hashed script; Next.js pages use a nonce; no third-party request (D-070, <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>). The web
+app (<code>apps/web</code>, Next.js inside Express, D-067, D-068) with the portal, the activity page (Spel, Rediger, Sjekk og
+publiser), <code>/app/play</code> for Canvas, <code>/hjelp</code>, <code>/personvern</code> in three languages, the formative notice and the publish
+flow with reasons that hold 14 days (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>, <a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>, <a class="req-ref" href="#r-UD-020"><code>UD-020</code></a>…<a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>, D-073…D-075). Design tokens with
+contrast tests and lint rules, the HVL theme inside every H5P document, answer prefixes, run-time repairs of H5P&#39;s
+own markup (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>…<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>, D-072, D-080). An accessibility suite of 13 files and 332 tests over every route and
+the player and editor of all ten types (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>); the manual protocol and the browser matrix for HVL (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>,
+<a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>, D-079). Reviews: an early review of the server work (36 findings), a theme round (11), the final review
+of all of S4 (48), a verifier of the groups&#39; requests (6) and a second independent verification (19), each finding
+checked by a skeptic and fixed. The gate then found two undocumented names in the API documentation (<code>docs:api</code>
+failed); fixed in 510cef7. Owner decisions: D-081 (one system; PHP server half not chosen; Lumi checked); a
+simplification pass before S5 (S4+); problem reporting for the pilot and Q16 before it (S6). Open: HVL&#39;s token
+confirmation and logo files (Q2), the DPO&#39;s review of <code>/personvern</code> (Q6), the first manual run of the protocol and
+matrix (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>, <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>), Hub registration (Q7), CI on GitHub (Q16). Residuals: «Gå til feltet» waits at most 20 s for
+BranchingScenario&#39;s tour request (D-069); CoursePresentation&#39;s footer column is sized for slide counts up to about
+«10 / 12» at 320 px, and at phone width the bottom 2–3 px of a footer button&#39;s focus ring are clipped by the
+player while the ring stays visible (D-080, gate amendment). Gate output (commit ed21808; <code>docs:api</code> after
+510cef7):</p>
+<pre class="code" tabindex="0" role="region" aria-label="Code 6, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint                                       exit 0
+$ npm run format:check                               exit 0 (All matched files use Prettier code style!)
+$ npm run doc:lint                                   ✓ doc-lint: 11 checks passed.
+$ npm run check:filesize                             ✓ doc-lint: file-size passed.
+$ npm run check:pins                                 ✓ check:pins: 6 manifests, every version is pinned exactly.
+$ npm run check:licences                             ✓ check:licences: 473 production packages, all GPL-3.0-compatible.
+$ npm run check:audit                                ✓ check:audit: 2 high/critical advisories, all covered by reviewed exceptions.
+$ npm run privacy:inventory-check                    ✓ privacy:inventory-check: 22 models, 167 fields, all in docs/privacy/DATA-INVENTORY.md.
+$ npm run h5p:fetch-core                             ✓ core and editor: every file matches the committed SHA-256 lists
+$ npm run h5p:fetch-libraries                        ✓ 120 libraries and 10 packages in apps/server/var/h5p-real
+$ npm run build                                      exit 0: 7 web routes; design tokens and feedback prefixes rewritten, no file changed
+$ npm run tokens:check                               ✓ design tokens: 3 files up to date. ✓ feedback prefixes: up to date.
+$ npm run lint:css                                   exit 0
+$ npm run spec:trace -- --check --done-through=S4    ✓ 126 requirements, traceability up to date.
+$ npm run spec:site -- --check                       ✓ docs/site/index.html is up to date.
+$ npm run docs:api                                   exit 4 on ed21808 (2 warnings); after 510cef7: html generated at docs/api (none)
+$ npm run boot-check --workspace apps/server
+{&quot;level&quot;:&quot;info&quot;,&quot;service&quot;:&quot;hvl-interaktiv-server&quot;,&quot;h5pCoreApi&quot;:&quot;1.28&quot;,&quot;hubHost&quot;:&quot;hub-api.h5p.org&quot;,&quot;siteRegistered&quot;:false,&quot;msg&quot;:&quot;H5P engine configured&quot;}
+$ npx vitest run                                     Test Files 315 passed (315) · Tests 21423 passed (21423) · 633 s
+$ npm run test:e2e                                   Test Files 8 passed (8) · Tests 16 passed (16)
+$ npm run test:a11y                                  Test Files 13 passed (13) · Tests 332 passed (332) · 950 s
+$ npx vitest run -t &quot;AUTH-00&quot;                        Test Files 44 passed | 271 skipped · Tests 378 passed           (S3)
+$ npx vitest run -t &quot;LTI-00&quot;                         Test Files 75 passed | 240 skipped · Tests 416 passed           (S3)
+$ npx vitest run -t &quot;H5P-002|PROD-002&quot;               Test Files 17 passed | 298 skipped · Tests 42 passed            (S2)
+$ npx vitest run -t &quot;SEC-003|H5P-011|H5P-006&quot;        Test Files 30 passed | 285 skipped · Tests 18717 passed         (S2)
+$ npx vitest run -t &quot;SEC-001&quot;                        Test Files 8 passed | 307 skipped · Tests 111 passed            (S2)
+$ npx vitest run -t &quot;PROD-004|PROD-005|PROD-006|H5P-007&quot;  Test Files 33 passed | 282 skipped · Tests 117 passed     (S3)
+$ npx vitest run -t &quot;UD-0&quot;                           Test Files 96 passed | 219 skipped · Tests 900 passed
+$ npx vitest run -t &quot;PED-020&quot;                        Test Files 16 passed | 299 skipped · Tests 129 passed
+$ npx vitest run -t &quot;PROD-003|UD-022&quot;                Test Files 26 passed | 289 skipped · Tests 141 passed
+$ npx vitest run -t &quot;PROD-011|DATA-006|DATA-011&quot;     Test Files 31 passed | 284 skipped · Tests 134 passed
+$ npx vitest run -t &quot;\[&lt;ID&gt;\]&quot;, one run per ID       every S4 ID (and DOC-012) passes on its own; tests per ID:
+    PROD-003 138 · PROD-011 27 · H5P-009 6 · UD-001 126 · UD-002 6 · UD-003 65 · UD-004 5 · UD-005 3
+    UD-006 73 · UD-007 13 · UD-008 9 · UD-009 8 · UD-010 25 · UD-011 62 · UD-012 7 · UD-013 83 · UD-020 261
+    UD-021 211 · UD-022 20 · UD-030 19 · PED-020 118 · DATA-006 60 · DATA-011 51 · DOC-012 14
+    NFR-003 and UD-031 have no test in the default projects; in the accessibility suite
+    (npx vitest run --root apps/server --config vitest.a11y.config.ts -t &quot;\[&lt;ID&gt;\]&quot;): NFR-003 1 · UD-031 3, both
+    the document-consistency check, which passes without a manual result (see the open item above)
+$ npm run mock:platform &amp; WEB_APP=dev npm start      &quot;H5P engine configured&quot; → &quot;LTI platforms synchronised&quot; → &quot;LTI platform keys on the current encryption key&quot; → &quot;HVL Interaktiv server listening&quot;
+$ curl http://localhost:3000/healthz                 {&quot;status&quot;:&quot;ok&quot;} (200)
+$ curl http://localhost:3000/lti/keys                {&quot;keys&quot;:[{&quot;kty&quot;:&quot;RSA&quot;,…}]} (200)
+$ curl http://localhost:3000/                        200 · &lt;title&gt;HVL Interaktiv&lt;/title&gt;
+$ curl http://localhost:3000/hjelp                   200 · &lt;title&gt;Hjelp – HVL Interaktiv&lt;/title&gt;
+$ curl http://localhost:3000/personvern              200 · &lt;title&gt;Personvern – HVL Interaktiv&lt;/title&gt;
+$ curl http://localhost:3000/api/docs                200 · {&quot;openapi&quot;:&quot;3.1.0&quot;,…}
 $ kill -TERM &lt;server&gt;                                &quot;HVL Interaktiv server stopped&quot;</code></pre>
 </li>
 </ul>
