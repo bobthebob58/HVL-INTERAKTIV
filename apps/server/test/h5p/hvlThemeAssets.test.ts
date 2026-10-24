@@ -27,6 +27,7 @@ const STYLE_ORDER = [
   'tokens.css',
   'h5p-daylight.css',
   'hvl-h5p-theme.css',
+  'hvl-h5p-targets.css',
   'hvl-h5p-feedback.css',
   'hvl-h5p-indicators.css',
   'hvl-feedback-prefixes.css',

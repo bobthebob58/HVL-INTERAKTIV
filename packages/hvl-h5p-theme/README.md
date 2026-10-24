@@ -23,7 +23,7 @@ cd apps/server && npx vitest run test/h5p/a11yRepairs.browser.int.test.ts   # th
 The server serves the files under `/h5p/theme/<name>?version=<content hash>` and lists them in Lumi's
 `customization.global` (`apps/server/src/h5p/h5pAssets.ts`), in this order, after Core's own styles:
 `tokens.css`, `h5p-daylight.css` (both from `@hvl-interaktiv/design-tokens`), `hvl-h5p-theme.css`,
-`hvl-h5p-feedback.css`, `hvl-h5p-indicators.css`, `hvl-feedback-prefixes.css`, and the scripts
+`hvl-h5p-targets.css`, `hvl-h5p-feedback.css`, `hvl-h5p-indicators.css`, `hvl-feedback-prefixes.css`, and the scripts
 `feedbackPrefixes.js`, `a11yRepairs.js`, `a11yEditorRepairs.js` and `reducedMotion.js`.
 
 ## Folder structure
@@ -31,6 +31,7 @@ The server serves the files under `/h5p/theme/<name>?version=<content hash>` and
 | Path | What it holds |
 |---|---|
 | `src/hvl-h5p-theme.css` | Typography, colours of pre-Daylight libraries, focus ring, target sizes, reduced motion, forced colours |
+| `src/hvl-h5p-targets.css` | Room for 24 px targets where a library's layout leaves none: CoursePresentation's progress bar and footer (outside full screen; the footer above the bar in full screen), QuestionSet's progress-dot spacing |
 | `src/hvl-h5p-feedback.css` | Correct/incorrect colours for MultiChoice, Blanks and ImageHotspotQuestion, the hidden and the shown label, and where labels outside the text flow sit |
 | `src/hvl-h5p-indicators.css` | DragText's empty drop-zone border and CoursePresentation's answered-task dots at 3 : 1, the dots also in forced colours |
 | `src/feedbackPrefixes.js` | Browser script: adds the prefix label to each answer state (hidden, or shown where the library uses the pseudo-elements) and puts it in front of an `aria-label` name |

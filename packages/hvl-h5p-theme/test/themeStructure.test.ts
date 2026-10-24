@@ -1,6 +1,7 @@
 /**
  * Structural tests of the HVL H5P theme: every !important is explained, no colour literal appears, every token it
- * uses exists, and the rules for typography, focus, targets, motion and forced colours are present.
+ * uses exists, and the rules for typography, focus, targets (with CoursePresentation's bar and footer), motion and
+ * forced colours are present.
  *
  * Spec: UD-001, UD-002, UD-004, UD-005, UD-009, UD-011, UD-012
  */
@@ -12,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const SOURCES = {
   'src/hvl-h5p-theme.css': read('../src/hvl-h5p-theme.css'),
+  'src/hvl-h5p-targets.css': read('../src/hvl-h5p-targets.css'),
   'src/hvl-h5p-feedback.css': read('../src/hvl-h5p-feedback.css'),
   'src/hvl-h5p-indicators.css': read('../src/hvl-h5p-indicators.css'),
   'dist/hvl-feedback-prefixes.css': read('../dist/hvl-feedback-prefixes.css'),
@@ -77,6 +79,17 @@ describe('the theme stylesheets', () => {
     expect(THEME).toMatch(
       /\[role='button'\][\s\S]*?min-width: var\(--hvl-target-min\);\s*min-height: var\(--hvl-target-min\);/,
     );
+  });
+
+  it('[UD-005] gives CoursePresentation’s bar and footer 24 px outside full screen, and the player room for both', () => {
+    const targets = rules(SOURCES['src/hvl-h5p-targets.css']);
+    const body = (selector: string) =>
+      targets.find(([prelude]) => prelude.trim().endsWith(selector))?.[1] ?? '';
+    expect(body(".h5p-course-presentation:not([class*='fullscreen']) .h5p-footer")).toContain(
+      'min-height: var(--hvl-target-min);',
+    );
+    expect(body(".h5p-wrapper:not([class*='active-surface'])")).toMatch(/1\.6875%\)[\s\S]*3\.9375%\)/);
+    expect(body(".h5p-course-presentation[class*='fullscreen'] .h5p-footer")).toContain('z-index: 2;');
   });
 
   it('[UD-009] stops animations and transitions under prefers-reduced-motion', () => {

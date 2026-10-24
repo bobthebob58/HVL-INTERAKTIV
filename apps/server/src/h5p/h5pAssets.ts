@@ -71,6 +71,7 @@ const THEME_SOURCES: readonly (readonly [string, string])[] = [
   ['tokens.css', '@hvl-interaktiv/design-tokens/tokens.css'],
   ['h5p-daylight.css', '@hvl-interaktiv/design-tokens/h5p-daylight.css'],
   ['hvl-h5p-theme.css', '@hvl-interaktiv/hvl-h5p-theme/hvl-h5p-theme.css'],
+  ['hvl-h5p-targets.css', '@hvl-interaktiv/hvl-h5p-theme/hvl-h5p-targets.css'],
   ['hvl-h5p-feedback.css', '@hvl-interaktiv/hvl-h5p-theme/hvl-h5p-feedback.css'],
   ['hvl-h5p-indicators.css', '@hvl-interaktiv/hvl-h5p-theme/hvl-h5p-indicators.css'],
   ['hvl-feedback-prefixes.css', '@hvl-interaktiv/hvl-h5p-theme/hvl-feedback-prefixes.css'],

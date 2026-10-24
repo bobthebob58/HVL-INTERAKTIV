@@ -1,0 +1,71 @@
+/*
+ * hvl-h5p-targets — room for 24 px pointer targets where a library's own layout leaves none: CoursePresentation's
+ * progress bar and footer, and the spacing of QuestionSet's progress dots (UD-005, WCAG 2.5.8; UD-008, 1.4.10).
+ *
+ * Why: ./hvl-h5p-theme.css gives every control at least 24 × 24 CSS px, but a library that sizes the strip around
+ *      its controls as a share of the player (CoursePresentation: its bar 3 %, its footer 7 % of the player's
+ *      height) then lets the controls overlap or clips them at phone widths, and a pointer misses them. D-080's
+ *      NEW-4 amendment and its correction record the measurements.
+ * Spec: UD-005, UD-008, UD-011
+ * Invariants:
+ *   - Every rule carries a `:root` prefix, so it beats the library rule of the same shape loaded after it.
+ *   - No colour literal and no !important; each CoursePresentation rule says when it can be removed (UPSTREAM).
+ *   - Full screen, which H5P fits to the screen, keeps H5P's own bar and footer sizes.
+ * Collaborators: ./hvl-h5p-theme.css (the 24 px rule; loaded before this file), ./a11yRepairs.js (the bar as a list),
+ *   apps/server/src/h5p/h5pAssets.ts.
+ * Tests: packages/hvl-h5p-theme/test/themeStructure.test.ts, apps/server/a11y/reflowAndMotion.a11y.test.ts,
+ *   apps/server/a11y/targetSize.a11y.test.ts
+ */
+
+/* A11Y: WCAG 2.5.8, 1.4.10: D-080's repair (a11yRepairs.js) makes CoursePresentation's progress bar a list, so its
+   parts no longer match the theme's [role='tab'] rule. CP 1.28 makes its bar 3 % and its footer 7 % of the player's
+   height (5 px and 11 px at 320 px), while their controls are 24 px: the bar's parts lay over the footer's controls,
+   and the player's `overflow: hidden` cut the footer's controls off. So, outside full screen, bar and footer get
+   24 px of their own and the player grows by what that adds (CP 1.28 is 16:9 to its width: 3 % of its height is
+   1.6875 % of its width, 7 % is 3.9375 %). The summary slide's part keeps its 2.2em, but at least 24 px. Remove
+   when a pinned CP gives its bar and its footer 24 px.
+   UPSTREAM: https://github.com/h5p/h5p-course-presentation/blob/369d140c741fab528604237380c34ec1fe8f121a/src/scripts/cp.js */
+:root .h5p-course-presentation:not([class*='fullscreen']) .h5p-wrapper:not([class*='active-surface']) {
+  box-sizing: content-box;
+  padding-bottom: calc(max(0px, var(--hvl-target-min) - 1.6875%) + max(0px, var(--hvl-target-min) - 3.9375%));
+}
+
+:root .h5p-course-presentation:not([class*='fullscreen']) :is(.h5p-cp-navigation, .h5p-progressbar-part) {
+  min-width: var(--hvl-target-min);
+  min-height: var(--hvl-target-min);
+}
+
+:root .h5p-course-presentation:not([class*='fullscreen']) .h5p-footer {
+  min-height: var(--hvl-target-min);
+}
+
+:root .h5p-course-presentation .h5p-cp-navigation .h5p-progressbar-part.progressbar-part-summary-slide {
+  min-width: max(2.2em, var(--hvl-target-min));
+}
+
+/* A11Y: WCAG 2.5.8: the footer's middle column is 20 % of its width, and the slide buttons' navigation (Components
+   1.0 `.h5p-navigation`) clips what does not fit (`overflow: hidden`); on a phone it cut 7 to 9 px off each slide
+   button. The column keeps its 20 % but is at least as wide as two buttons with their margins and the slide count
+   ("10 / 12") with the navigation's padding; the side columns share the rest (40 % each when 20 % is enough). The
+   width cannot come from the content: the navigation is a size container (`container-type: inline-size`). In full
+   screen the bar stays H5P's own (5 to 10 px high on a phone) and the footer's controls reach up over it, so the
+   footer is put above the bar: each control then meets 24 px itself, and the side menu and the slide buttons are
+   2.5.8's equivalent controls for the bar's smaller parts. Remove with the rules above.
+   UPSTREAM: https://github.com/h5p/h5p-components/blob/223a9164259db6f9c1132791671beb1ce4d2c9c2/src/styles/h5p-navigation.css */
+:root .h5p-course-presentation .h5p-footer {
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(calc(2 * max(var(--hvl-target-min), 1.5em) + 20px + 6.5em), 20%)
+    minmax(0, 1fr);
+}
+
+:root .h5p-course-presentation[class*='fullscreen'] .h5p-footer {
+  position: relative;
+  z-index: 2;
+}
+
+/* A11Y: QuestionSet's progress dots (Components 1.0 `.h5p-progress-dot`) are 9 px links about 22 px apart; spacing
+   their centres 24 px apart meets WCAG 2.5.8's spacing exception without changing how they look. */
+:root .h5p-progress-dot {
+  margin: 0 calc((var(--hvl-target-min) - 0.5625em) / 2);
+}

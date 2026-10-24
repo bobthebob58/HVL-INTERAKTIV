@@ -9,6 +9,7 @@
   },
   "exports": {
     "./hvl-h5p-theme.css": "./src/hvl-h5p-theme.css",
+    "./hvl-h5p-targets.css": "./src/hvl-h5p-targets.css",
     "./hvl-h5p-feedback.css": "./src/hvl-h5p-feedback.css",
     "./hvl-h5p-indicators.css": "./src/hvl-h5p-indicators.css",
     "./hvl-feedback-prefixes.css": "./dist/hvl-feedback-prefixes.css",

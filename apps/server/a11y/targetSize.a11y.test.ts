@@ -2,7 +2,8 @@
  * Pointer targets of at least 24 × 24 CSS px (WCAG 2.5.8) on every web view, in the page and in every frame it holds
  * (the H5P player, and on the Rediger tab and /aktivitet/ny H5P's editor and content-type list, which must be
  * measured), and in the player of each content type, fresh and once its first task is answered
- * (./support/views.ts `startAndAnswer`). A smaller target passes only through
+ * (./support/views.ts `startAndAnswer`), and CoursePresentation's also at phone sizes (320 × 640, 390 × 844), where
+ * it sizes its bar and footer as a share of the player. A smaller target passes only through
  * one of 2.5.8's exceptions (spacing, a link inside a sentence) or as a slider, and every such target is printed,
  * so the H5P exceptions are on record.
  *
@@ -68,6 +69,27 @@ describeA11y('[UD-005] target size', (env) => {
       // Assert
       expect(failing(`${type} fresh`, fresh)).toEqual([]);
       expect(failing(`${type} started or answered`, answered)).toEqual([]);
+      await context.close();
+    },
+  );
+
+  it.each([
+    [320, 640],
+    [390, 844],
+  ])(
+    '[UD-005] H5P.CoursePresentation at %i × %i: every target of the player is 24 × 24 px or excepted',
+    async (width, height) => {
+      // Arrange
+      const { app, browser } = env();
+      const context = await browser.newContext({ viewport: { width, height } });
+      const contentId = app.ids.get('H5P.CoursePresentation') ?? '';
+      const player = await playerFrame(await openView(app, context, { kind: 'canvas' }, { contentId }));
+      // Act
+      await waitForStillness(player);
+      const targets = await measureTargets(player);
+      // Assert
+      expect(targets.length).toBeGreaterThanOrEqual(4);
+      expect(failing(`H5P.CoursePresentation ${width} × ${height}`, targets)).toEqual([]);
       await context.close();
     },
   );

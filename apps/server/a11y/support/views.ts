@@ -14,8 +14,8 @@
  *   - An activity view opens the author's MultiChoice draft unless a content ID is given; the Canvas view is a
  *     student's launch of the published MultiChoice unless a content ID is given.
  *   - `startAndAnswer` brings each type to the state `ANSWERED_STATE` names: it leaves an intro screen, moves to the
- *     slide (CoursePresentation's next button by keyboard; its pointer barrier at 320 and 640 CSS px is checked in
- *     reflowAndMotion.a11y.test.ts) or video moment with a question, drops a DragText word by keyboard (UD-005's
+ *     slide (CoursePresentation's next button with a real pointer click; reflowAndMotion.a11y.test.ts checks every
+ *     pixel of its footer) or video moment with a question, drops a DragText word by keyboard (UD-005's
  *     alternative) or opens a hotspot, answers (the first option, or text in the first fields), presses the check
  *     button with a real pointer click (Playwright refuses a control something lies over); it fails when
  *     that state does not appear, so a suite never checks a fresh activity twice and calls it answered. It does not
@@ -100,11 +100,10 @@ async function reachTask(frame: Frame, type: ContentType): Promise<void> {
     const checkShown = () => frame.locator(CHECK_BUTTON).filter({ visible: true }).count();
     const next = frame.locator('.h5p-theme-next').first();
     for (let i = 0; i < 3 && (await checkShown()) === 0; i += 1) {
-      // WHY: at 320 and 640 CSS px the progress bar's links (24 px tall by the HVL theme's target-size rule) lie over
-      // this button, so a pointer cannot press it; that barrier is reported by "a pointer can press every footer
-      // control" in reflowAndMotion.a11y.test.ts. Here, where only the question slide is needed, it is pressed as a
-      // keyboard user presses it (focus, then Enter).
-      await next.press('Enter');
+      // WHY: a real pointer click, which Playwright refuses while something lies over the button's centre; the HVL
+      // theme gives the footer room of its own (hvl-h5p-targets.css), and reflowAndMotion.a11y.test.ts checks that a
+      // pointer reaches all of every footer control at phone sizes.
+      await next.click();
       await frame.waitForTimeout(500);
     }
   }

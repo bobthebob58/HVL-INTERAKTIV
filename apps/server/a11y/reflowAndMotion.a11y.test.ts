@@ -1,13 +1,15 @@
 /**
  * Reflow and motion in the browser. At 320 × 640 CSS px (and turned to 640 × 320) no web view and no content type's
  * player scrolls sideways, in the page or in any frame; H5P.ImageHotspots may pan its image (UD-008's own
- * exception) but nothing else of it may. At both sizes nothing lies over CoursePresentation's footer controls, so a
- * pointer can still press them (the other players' controls are pressed with real pointer clicks by
- * ./support/views.ts `startAndAnswer`, which Playwright refuses on a covered control). With reduced motion emulated, no CSS animation, transition or script
+ * exception) but nothing else of it may. At both sizes and at 390 × 844, in the page and in full screen, a pointer
+ * can press every footer control of CoursePresentation over 24 × 24 px: nothing lies over it and nothing clips it
+ * (./support/pointerReach.ts tries every pixel; the other players' controls, and CoursePresentation's next button,
+ * are pressed with real pointer clicks by ./support/views.ts `startAndAnswer`, which Playwright refuses on a
+ * control covered at its centre). With reduced motion emulated, no CSS animation, transition or script
  * animation moves in any view or player at any moment from loading to answering its first task (recorded in every
  * frame as it starts); a control run without the preference records H5P's feedback motion, so the check can fail.
  *
- * Spec: UD-008, UD-009
+ * Spec: UD-008, UD-009, UD-005
  */
 import { describe, expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
@@ -32,8 +34,15 @@ const ORIENTATIONS = [
  */
 const PANNING_ALLOWED = /image-hotspots|h5p-image-hotspot/;
 
-/** CoursePresentation's footer controls (slide navigation, side menu, full screen), which views.ts presses by key. */
+/** CoursePresentation's footer controls (slide navigation, side menu, full screen), in a strip it sizes as 7 %. */
 const CP_FOOTER_CONTROLS = '.h5p-course-presentation .h5p-footer :is(button, [role=button])';
+/** The reflow sizes and a common phone (390 × 844), each in the page and in full screen. */
+const CP_FOOTER_CASES = [...ORIENTATIONS.map(([, size]) => size), { width: 390, height: 844 }].flatMap(
+  (viewport) =>
+    (['in the page', 'in full screen'] as const).map(
+      (where) => [`${viewport.width} × ${viewport.height}`, where, viewport] as const,
+    ),
+);
 
 /** Overflow that UD-008 does not excuse. */
 const unexcused = (type: string, found: readonly Overflow[]): Overflow[] =>
@@ -89,22 +98,31 @@ describeA11y('[UD-008] reflow and [UD-009] reduced motion', (env) => {
         await context.close();
       },
     );
+  });
 
-    it('[UD-008][UD-005] a pointer can press every footer control of H5P.CoursePresentation', async () => {
+  it.each(CP_FOOTER_CASES)(
+    '[UD-008][UD-005] at %s %s, a pointer can press all of every footer control of H5P.CoursePresentation',
+    async (_size, where, viewport) => {
       // Arrange
       const { app, browser } = env();
       const context = await browser.newContext({ viewport });
       const contentId = app.ids.get('H5P.CoursePresentation') ?? '';
       const player = await playerFrame(await openView(app, context, { kind: 'canvas' }, { contentId }));
       await waitForStillness(player);
-      // Act
+      if (where === 'in full screen') {
+        await player.locator('.h5p-footer-toggle-full-screen').first().press('Enter');
+        await expect.poll(() => player.locator('.h5p-course-presentation.h5p-fullscreen').count()).toBe(1);
+      }
+      // Act: on the second slide, where both slide buttons are enabled
+      await player.locator('.h5p-theme-next').first().press('Enter');
+      await waitForStillness(player);
       const { controls, covered } = await pointerReach(player, CP_FOOTER_CONTROLS);
       // Assert
-      expect(controls.length).toBeGreaterThanOrEqual(2);
+      expect(controls.length).toBeGreaterThanOrEqual(4);
       expect(covered).toEqual([]);
       await context.close();
-    });
-  });
+    },
+  );
 
   it.each(WEB_VIEWS.map((view) => [viewName(view), view] as const))(
     '[UD-009] with reduced motion, nothing moves on %s',
