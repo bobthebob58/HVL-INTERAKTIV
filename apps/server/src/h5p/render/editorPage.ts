@@ -19,9 +19,9 @@
  *     full width.
  * SPEC-DEVIATION: D-070 — the page's own <script>/<link> tags carry no integrity or nonce (H5P-009):
  *   same-origin files allowed by 'self' (amendment of 2026-10-24).
- * Collaborators: ./editorIntegration.ts, ./playerPage.ts (shared boot script), ./scriptJson.ts,
- *   ../../http/routes/editorRoutes.ts, ../../lti/play/ltiEditRoutes.ts, ../../http/pages/pageAssetRoutes.ts
- *   (the stylesheet).
+ * Collaborators: ./editorIntegration.ts, ./playerPage.ts (shared boot script and first-script check),
+ *   ./scriptJson.ts, ../../http/routes/editorRoutes.ts, ../../lti/play/ltiEditRoutes.ts,
+ *   ../../http/pages/pageAssetRoutes.ts (the stylesheet).
  * Tests: apps/server/test/h5p/render/editorPage.test.ts, apps/server/test/http/pages/serverPages.browser.test.ts,
  *   apps/server/test/h5p/editorBlockedSave.browser.int.test.ts
  */
@@ -29,7 +29,7 @@ import type { IIntegration } from '@lumieducation/h5p-server';
 import { SERVER_PAGES_STYLESHEET } from '../../http/pages/pageAssetRoutes.js';
 import { t, type Locale } from '../../i18n/translate.js';
 import type { UrlToken } from '../HvlH5pUser.js';
-import { H5P_INTEGRATION_SCRIPT } from './playerPage.js';
+import { firstScriptTags, H5P_INTEGRATION_SCRIPT } from './playerPage.js';
 import { escapeHtml, scriptJson } from './scriptJson.js';
 
 /** Where the H5P router serves ./client/editorPage.js. */
@@ -61,11 +61,7 @@ export interface EditorPageInput {
  * @throws Error when a first script is not a same-origin static file (a programming error).
  */
 export function renderEditorPage(input: EditorPageInput, language: Locale): string {
-  const first = (input.firstScripts ?? []).map((src) => {
-    // SECURITY: only our own static files, never a URL from a request.
-    if (!/^\/static\/(?!.*\.\.)[\w/.-]+\.js$/.test(src)) throw new Error(`invalid script path: ${src}`);
-    return `<script src="${escapeHtml(src)}"></script>`;
-  });
+  const first = firstScriptTags(input.firstScripts);
   const inCanvas = input.token?.name === 'ltik';
   const config = {
     contentId: input.contentId ?? null,

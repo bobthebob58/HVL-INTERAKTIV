@@ -7,14 +7,10 @@
  * Spec: PROD-003, UD-013, UD-006
  */
 import { join } from 'node:path';
-import express, { type RequestHandler } from 'express';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { loadValidationContext } from '../../src/config/validationContext.js';
 import { editorSavedForm } from '../../src/content/savedForm.js';
 import { PublishedSaveGate } from '../../src/content/PublishedSaveGate.js';
-import { createH5pRouter } from '../../src/http/createH5pRouter.js';
-import { pageAssetRoutes } from '../../src/http/pages/pageAssetRoutes.js';
-import type { ContentRouteDeps } from '../../src/http/routes/contentRoutes.js';
 import { t } from '../../src/i18n/translate.js';
 import { createContentValidator } from '../../src/validation/validateContent.js';
 import { describeWithBrowser } from '../support/browser.js';
@@ -41,12 +37,7 @@ describeWithServices('the editor page and a refused save', () => {
         { db: tb.db, validator, clock: () => new Date() },
         editorSavedForm(tb.runtime.editor.libraryManager),
       );
-      const authenticate: RequestHandler = (req, res, next) => {
-        if (author.header[1] === req.headers[author.header[0]]) res.locals.h5pActor = author.actor;
-        next();
-      };
-      const routes: ContentRouteDeps = { ...tb.runtime, saveGate };
-      const app = express().use(pageAssetRoutes()).use('/h5p', createH5pRouter(routes, authenticate));
+      const app = tb.appWith({ saveGate });
       base = await listenOnLoopback(app);
     }, 180_000);
     afterAll(async () => {

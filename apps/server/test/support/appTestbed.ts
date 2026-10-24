@@ -21,7 +21,6 @@
  */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { Writable } from 'node:stream';
 import { CreateBucketCommand } from '@aws-sdk/client-s3';
 import type { IContentMetadata } from '@lumieducation/h5p-server';
 import type { Provider } from 'ltijs';
@@ -34,10 +33,10 @@ import { createPrismaClient, type Database } from '../../src/infra/prismaClient.
 import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
 import { createS3Client } from '../../src/infra/s3Client.js';
 import { syncLtiPlatforms } from '../../src/lti/platforms/syncLtiPlatforms.js';
-import { createLogger } from '../../src/logging/logger.js';
 import { createApp, type App } from '../../src/server/createApp.js';
 import { createContentValidator } from '../../src/validation/validateContent.js';
 import type { WebApp } from '../../src/web/nextWebApp.js';
+import { capturedLogger } from './capturedLogger.js';
 import { uniqueName } from './services.js';
 import { accountOfFeideUser, feideSubjectHashes, giveRunAuthor } from './runFeideAuthor.js';
 import { removeTestBucket } from './storageFixtures.js';
@@ -110,11 +109,7 @@ export async function openAppTestbed(
   for (const Bucket of Object.values(buckets)) await s3.send(new CreateBucketCommand({ Bucket }));
   const db = createPrismaClient(env.DATABASE_URL);
   const redis = await connectRedis(env.REDIS_URL);
-  const logs: string[] = [];
-  const logger = createLogger({
-    level: 'debug',
-    destination: new Writable({ write: (chunk, _e, done) => (logs.push(String(chunk)), done()) }),
-  });
+  const { logger, lines: logs } = capturedLogger('debug');
   const runtime = await createH5pRuntime({ env, logger, db, redis, s3 });
   // WHY: the whole app as main.ts builds it, including the real pre-publish validator (D-073).
   const validator = createContentValidator(loadValidationContext(env));

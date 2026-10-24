@@ -4,22 +4,12 @@
  * Spec: H5P-004
  */
 import { describe, it, expect, vi } from 'vitest';
-import { Writable } from 'node:stream';
 import { TemporaryFileCleanupJob } from '../../src/h5p/jobs/TemporaryFileCleanupJob.js';
-import { createLogger } from '../../src/logging/logger.js';
-
-const capture = () => {
-  const lines: string[] = [];
-  const logger = createLogger({
-    level: 'info',
-    destination: new Writable({ write: (c, _e, done) => (lines.push(String(c)), done()) }),
-  });
-  return { lines, logger };
-};
+import { capturedLogger } from '../support/capturedLogger.js';
 
 describe('[H5P-004] temporary file cleanup job', () => {
   it('[H5P-004] skips and logs when the Redis lease cannot be taken, instead of rejecting', async () => {
-    const { lines, logger } = capture();
+    const { lines, logger } = capturedLogger();
     const cleanUp = vi.fn(async () => {});
     const redis = { set: vi.fn(async () => Promise.reject(new Error('socket closed'))) };
     const job = new TemporaryFileCleanupJob({ redis: redis as never, cleanUp, logger });
@@ -29,7 +19,7 @@ describe('[H5P-004] temporary file cleanup job', () => {
   });
 
   it('[H5P-004] logs a failing cleanup and still reports that this node ran it', async () => {
-    const { lines, logger } = capture();
+    const { lines, logger } = capturedLogger();
     const redis = { set: vi.fn(async () => 'OK') };
     const cleanUp = async () => Promise.reject(new Error('S3 unavailable'));
     const job = new TemporaryFileCleanupJob({ redis: redis as never, cleanUp, logger });
@@ -41,7 +31,7 @@ describe('[H5P-004] temporary file cleanup job', () => {
     // Arrange: fake timers and a job whose Redis lease always fails
     vi.useFakeTimers();
     try {
-      const { logger } = capture();
+      const { logger } = capturedLogger();
       const set = vi.fn(async () => Promise.reject(new Error('down')));
       const job = new TemporaryFileCleanupJob({
         redis: { set } as never,

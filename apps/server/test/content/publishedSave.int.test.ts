@@ -4,13 +4,11 @@
  *
  * Spec: PROD-003, UD-022, H5P-006
  */
-import express, { type Express, type RequestHandler } from 'express';
+import type { Express } from 'express';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
 import { PublishedSaveGate } from '../../src/content/PublishedSaveGate.js';
 import { editorSavedForm } from '../../src/content/savedForm.js';
-import { createH5pRouter } from '../../src/http/createH5pRouter.js';
-import type { ContentRouteDeps } from '../../src/http/routes/contentRoutes.js';
 import { t } from '../../src/i18n/translate.js';
 import type { Finding, ValidationInput } from '../../src/validation/types.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
@@ -57,11 +55,6 @@ describeWithServices('[PROD-003] saving a published activity', () => {
     tb = await openHttpTestbed();
     author = await tb.actor('author');
     colleague = await tb.actor('author');
-    const authenticate: RequestHandler = (req, res, next) => {
-      const match = [author, colleague].find((a) => a.header[1] === req.headers[a.header[0]]);
-      if (match) res.locals.h5pActor = match.actor;
-      next();
-    };
     const gate = new PublishedSaveGate(
       {
         db: tb.db,
@@ -70,8 +63,7 @@ describeWithServices('[PROD-003] saving a published activity', () => {
       },
       editorSavedForm(tb.runtime.editor.libraryManager),
     );
-    const deps: ContentRouteDeps = { ...tb.runtime, saveGate: gate };
-    app = express().use('/h5p', createH5pRouter(deps, authenticate));
+    app = tb.appWith({ saveGate: gate });
   }, 60_000);
   beforeEach(() => void validated.splice(0));
   afterAll(() => tb.close());

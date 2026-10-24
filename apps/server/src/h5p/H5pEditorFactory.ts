@@ -13,23 +13,19 @@
  *   - The file sanitisers run on every uploaded file (editor uploads and package import).
  *   - `render` returns Lumi's model, never Lumi's HTML (its template is unsafe, D-040).
  * Collaborators: ./HvlH5PEditor.ts, ./HvlUrlGenerator.ts, ./h5pAssets.ts, ./H5pConfigFactory.ts,
- *   ./semantics/removeDragQuestion.ts, ./storage/LanguageFallbackLibraryStorage.ts, ./createH5pRuntime.ts.
+ *   ./h5pStorage.ts, ./semantics/removeDragQuestion.ts, ./storage/LanguageFallbackLibraryStorage.ts,
+ *   ./createH5pRuntime.ts.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts
  */
 import type {
-  IContentStorage,
-  IContentUserDataStorage,
   IFileSanitizer,
   IH5PConfig,
-  IKeyValueStorage,
-  ILibraryStorage,
-  ILockProvider,
   IPermissionSystem,
-  ITemporaryFileStorage,
   ITranslationFunction,
 } from '@lumieducation/h5p-server';
 import { editorGlobalAssets } from './h5pAssets.js';
 import { localIdFor } from './H5pConfigFactory.js';
+import type { H5pStorage } from './h5pStorage.js';
 import { HvlH5PEditor } from './HvlH5PEditor.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import type { HvlUrlGenerator } from './HvlUrlGenerator.js';
@@ -37,16 +33,9 @@ import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
 import { removeDragQuestion } from './semantics/removeDragQuestion.js';
 import { withLanguageFallback } from './storage/LanguageFallbackLibraryStorage.js';
 
-/** The storages the editor works on. */
-export interface EditorStorages {
-  readonly keyValueStorage: IKeyValueStorage;
-  /** The plain library storage; the factory adds the language fallback. */
-  readonly libraryStorage: ILibraryStorage;
-  readonly contentStorage: IContentStorage;
-  readonly temporaryStorage: ITemporaryFileStorage;
-  readonly lockProvider: ILockProvider;
-  readonly contentUserDataStorage: IContentUserDataStorage;
-}
+/** The storages the editor works on (./h5pStorage.ts); the library storage is the plain one, the factory adds the
+ *  language fallback. */
+export type EditorStorages = Readonly<H5pStorage>;
 
 /** Everything the editor is built from. */
 export interface EditorFactoryInputs {

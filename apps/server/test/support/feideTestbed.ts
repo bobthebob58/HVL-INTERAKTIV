@@ -7,7 +7,6 @@
  * Spec: AUTH-001, AUTH-003
  * Tests: shared by apps/server/test/auth/feide/*.int.test.ts
  */
-import { Writable } from 'node:stream';
 import express, { type Express } from 'express';
 import request, { type Response } from 'supertest';
 import { startMockFeide, type MockFeide } from '../../../../tools/mock-platform/mockPlatform.mjs';
@@ -22,9 +21,9 @@ import { LOGIN_COOKIE, SESSION_COOKIE } from '../../src/auth/session/sessionCook
 import { SessionStore } from '../../src/auth/session/SessionStore.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
 import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
-import { createLogger } from '../../src/logging/logger.js';
 import { DataEncryption } from '../../src/security/keys/DataEncryption.js';
 import { IdentityHasher } from '../../src/security/keys/IdentityHasher.js';
+import { capturedLogger } from './capturedLogger.js';
 import { serviceEnv } from './services.js';
 
 /** The public base URL the test app pretends to have. */
@@ -52,11 +51,7 @@ export async function openFeideTestbed(policy: Partial<FeideRolePolicy> = {}): P
   const feide = await startMockFeide({ host: '127.0.0.1' });
   const db = createPrismaClient(env.DATABASE_URL);
   const redis = await connectRedis(env.REDIS_URL);
-  const logs: string[] = [];
-  const logger = createLogger({
-    level: 'debug',
-    destination: new Writable({ write: (chunk, _e, done) => (logs.push(String(chunk)), done()) }),
-  });
+  const { logger, lines: logs } = capturedLogger('debug');
   const sessions = new SessionStore({ redis, encryption: new DataEncryption(env.DATA_ENCRYPTION_KEYS) });
   const hasher = new IdentityHasher(env.IDENTITY_HASH_KEYS);
   const audit = new AuthAuditRecorder({ db, hasher, logger });

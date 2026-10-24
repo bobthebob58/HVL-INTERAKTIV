@@ -16,7 +16,7 @@
  * Tests: apps/server/test/config/envParsers.test.ts
  */
 import { z } from 'zod';
-import { parseKeyring, type Keyring } from '../security/keys/keyring.js';
+import { parseKeyring } from '../security/keys/keyring.js';
 
 /**
  * Splits a comma-separated list.
@@ -29,7 +29,6 @@ export const splitList = (raw: string): string[] =>
     .map((entry) => entry.trim())
     .filter((entry) => entry !== '');
 
-/** The context zod passes to a transform, used to report a problem. */
 /** Zod's refinement context, where a parser reports a problem with the variable it reads. */
 export type Ctx = z.core.$RefinementCtx;
 
@@ -42,18 +41,24 @@ const fail = (ctx: Ctx, message: string): typeof z.NEVER => {
 export const httpUrl = () => z.url({ protocol: /^https?$/, error: 'must be an http:// or https:// URL' });
 
 /**
- * Transform for a key ring variable (D-055, D-056, D-058).
- * @param raw - `id=base64,…`.
- * @param ctx - zod's transform context.
- * @returns The ring.
+ * Builds a transform from a parser that throws on bad input (`parseKeyring`, `parsePseudonymSecrets`): a thrown
+ * error becomes a zod issue with its message.
+ * SECURITY: the parser's error messages never contain the value (they name entries by position, ID or year).
+ * @param parse - The parser.
+ * @returns The transform.
  */
-export const toKeyring = (raw: string, ctx: Ctx): Keyring => {
-  try {
-    return parseKeyring(raw);
-  } catch (error) {
-    return fail(ctx, (error as Error).message);
-  }
-};
+export const parsedWith =
+  <T>(parse: (raw: string) => T) =>
+  (raw: string, ctx: Ctx): T => {
+    try {
+      return parse(raw);
+    } catch (error) {
+      return fail(ctx, (error as Error).message);
+    }
+  };
+
+/** Transform for a key ring variable (D-055, D-056, D-058): `id=base64,…` to the ring. */
+export const toKeyring = parsedWith(parseKeyring);
 
 /**
  * Transform for a list of web origins, e.g. `CANVAS_ORIGINS`.

@@ -10,8 +10,8 @@
  *   - The parent page (`/frame-host`) is empty and on the testbed's own origin; the editor is framed at a fixed size.
  *   - `focusedField` names only H5P's `field-name-` class of the focused control's field, the list whose wrapper
  *     holds it, and whether the control is CKEditor's editable; it reads no content.
- *   - `openFramedEditorAndGoTo` posts on the editor page's load event, before H5P has built its form, as the web
- *     app does when the Rediger tab first mounts (apps/web/src/features/activity/ActivityView.tsx).
+ *   - `openFramedEditor` with a `path` posts on the editor page's load event, before H5P has built its form, as
+ *     the web app does when the Rediger tab first mounts (apps/web/src/features/activity/ActivityView.tsx).
  * Collaborators: ../../support/httpTestbed.ts, ../../../src/h5p/render/client/editorPage.js.
  * Tests: used by ../editorGoToField.browser.int.test.ts and ../editorGoToFieldEarly.browser.int.test.ts.
  */
@@ -60,12 +60,15 @@ export function focusedField(editor: Frame): Promise<FocusedField> {
 }
 
 /**
- * Opens the editor for an activity inside the parent page.
- * @param page - A new page whose requests carry the author's test header.
+ * Opens the editor for an activity inside the parent page; with a `path`, posts `hvli:go-to-field` on the editor
+ * page's load event, while H5P still builds its form.
+ * @param page - A new page whose requests carry the author's test header (for a `path`, a fresh browser context,
+ *   so no guided tour has been closed in it).
  * @param base - The testbed server's origin.
  * @param author - The author whose test header authenticates the requests.
  * @param contentId - The activity to edit.
- * @returns The editor page's frame and H5P's editor frame inside it.
+ * @param path - The finding's path to post on load; none by default.
+ * @returns The editor page's frame and H5P's editor frame inside it, once the form exists.
  * @throws Error when the frames do not appear.
  */
 export async function openFramedEditor(
@@ -73,38 +76,7 @@ export async function openFramedEditor(
   base: string,
   author: TestActor,
   contentId: string,
-): Promise<{ editorPage: Frame; editor: Frame }> {
-  return openFramed(page, base, author, contentId, null);
-}
-
-/**
- * Opens the editor inside the parent page and posts `hvli:go-to-field` on the editor page's load event, while H5P
- * still builds its form.
- * @param page - A new page; a fresh browser context, so no guided tour has been closed in it.
- * @param base - The testbed server's origin.
- * @param author - The author whose test header authenticates the requests.
- * @param contentId - The activity to edit.
- * @param path - The finding's path.
- * @returns The editor page's frame and H5P's editor frame inside it, once the form exists.
- * @throws Error when the frames do not appear.
- */
-export function openFramedEditorAndGoTo(
-  page: Page,
-  base: string,
-  author: TestActor,
-  contentId: string,
-  path: string,
-): Promise<{ editorPage: Frame; editor: Frame }> {
-  return openFramed(page, base, author, contentId, path);
-}
-
-/** Frames the editor page; posts `path` on its load event unless it is `null`; waits for H5P's form. */
-async function openFramed(
-  page: Page,
-  base: string,
-  author: TestActor,
-  contentId: string,
-  path: string | null,
+  path: string | null = null,
 ): Promise<{ editorPage: Frame; editor: Frame }> {
   await page.setExtraHTTPHeaders({ [author.header[0]]: author.header[1] });
   await page.goto(`${base}${FRAME_HOST_PATH}`);

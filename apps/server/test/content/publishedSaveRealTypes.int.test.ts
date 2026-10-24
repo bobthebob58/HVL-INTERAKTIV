@@ -5,14 +5,12 @@
  * Spec: PROD-003, UD-021
  */
 import { join } from 'node:path';
-import express, { type Express, type RequestHandler } from 'express';
+import type { Express } from 'express';
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { loadValidationContext } from '../../src/config/validationContext.js';
 import { PublishedSaveGate } from '../../src/content/PublishedSaveGate.js';
 import { editorSavedForm, type SavedForm } from '../../src/content/savedForm.js';
-import { createH5pRouter } from '../../src/http/createH5pRouter.js';
-import type { ContentRouteDeps } from '../../src/http/routes/contentRoutes.js';
 import { createContentValidator } from '../../src/validation/validateContent.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithRealPackages, REAL_PACKAGES_DIR } from '../support/realPackages.js';
@@ -48,12 +46,7 @@ describeWithServices('[PROD-003] the save gate on a real ImageHotspots activity'
       const validator = createContentValidator(loadValidationContext({ CAPTIONED_MEDIA_ORIGINS: [] }));
       savedForm = editorSavedForm(tb.runtime.editor.libraryManager);
       const gate = new PublishedSaveGate({ db: tb.db, validator, clock: () => new Date() }, savedForm);
-      const authenticate: RequestHandler = (req, res, next) => {
-        if (author.header[1] === req.headers[author.header[0]]) res.locals.h5pActor = author.actor;
-        next();
-      };
-      const routes: ContentRouteDeps = { ...tb.runtime, saveGate: gate };
-      app = express().use('/h5p', createH5pRouter(routes, authenticate));
+      app = tb.appWith({ saveGate: gate });
       const { majorVersion, minorVersion } = (
         await tb.runtime.editor.libraryManager.listInstalledLibraries('H5P.ImageHotspots')
       )['H5P.ImageHotspots']?.[0] ?? { majorVersion: 0, minorVersion: 0 };

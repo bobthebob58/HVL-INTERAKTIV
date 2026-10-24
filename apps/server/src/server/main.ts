@@ -83,24 +83,13 @@ export async function startServer(env: Env): Promise<RunningServer> {
 }
 
 async function main(): Promise<void> {
-  let env: Env;
-  try {
-    env = loadEnv();
-  } catch (error) {
-    // SECURITY: the problem list names variables and rules only, never their values.
-    if (error instanceof InvalidEnvironmentError) {
-      process.stderr.write(`${error.message}\n`);
-      process.exitCode = 1;
-      return;
-    }
-    throw error;
-  }
   let running: RunningServer;
   try {
-    running = await startServer(env);
+    running = await startServer(loadEnv());
   } catch (error) {
+    // SECURITY: the problem list names variables and rules only, never their values.
     // WHY: a bad thresholds file is configuration, reported like the environment: the problems, no stack trace.
-    if (error instanceof InvalidValidationContextError) {
+    if (error instanceof InvalidEnvironmentError || error instanceof InvalidValidationContextError) {
       process.stderr.write(`${error.message}\n`);
       process.exitCode = 1;
       return;

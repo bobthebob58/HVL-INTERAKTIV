@@ -20,6 +20,7 @@ import {
   FEIDE_ID_PATTERN,
   FEIDE_REALM_PATTERN,
   ltiPlatformList,
+  parsedWith,
   toJson,
   toKeyring,
   toMatchingList,
@@ -48,14 +49,7 @@ export const envSchema = z.object({
   H5P_EDITOR_DIR: z.string().min(1).default('h5p/editor'),
   H5P_LIBRARY_DIR: z.string().min(1).default('var/h5p/libraries'),
   H5P_SITE_UUID: z.uuid().optional(),
-  PSEUDONYM_SECRETS: z.string().transform((raw, ctx) => {
-    try {
-      return parsePseudonymSecrets(raw);
-    } catch (error) {
-      ctx.addIssue({ code: 'custom', message: (error as Error).message });
-      return z.NEVER;
-    }
-  }),
+  PSEUDONYM_SECRETS: z.string().transform(parsedWith(parsePseudonymSecrets)),
   PUBLIC_BASE_URL: z
     .url({ protocol: /^https?$/ })
     .transform(toOrigin)

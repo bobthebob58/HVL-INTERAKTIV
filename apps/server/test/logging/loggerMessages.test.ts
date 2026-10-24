@@ -4,19 +4,13 @@
  * Spec: DATA-009, NFR-006
  */
 import { describe, it, expect } from 'vitest';
-import { Writable } from 'node:stream';
 import { PrismaClientValidationError } from '@prisma/client/runtime/client';
-import { createLogger } from '../../src/logging/logger.js';
 import { isSensitiveKey, redactPersonalData } from '../../src/logging/redactPersonalData.js';
+import { capturedLogger, type CapturedLogger } from '../support/capturedLogger.js';
 
-const run = (write: (log: ReturnType<typeof createLogger>) => void): string[] => {
-  const lines: string[] = [];
-  write(
-    createLogger({
-      level: 'info',
-      destination: new Writable({ write: (c, _e, done) => (lines.push(String(c)), done()) }),
-    }),
-  );
+const run = (write: (log: CapturedLogger['logger']) => void): string[] => {
+  const { logger, lines } = capturedLogger();
+  write(logger);
   return lines;
 };
 const prismaError = () =>

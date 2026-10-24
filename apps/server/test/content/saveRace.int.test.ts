@@ -6,7 +6,7 @@
  * Spec: PROD-003
  */
 import { setTimeout as delay } from 'node:timers/promises';
-import express, { type Express, type RequestHandler } from 'express';
+import type { Express } from 'express';
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { ContentPublisher, type Publisher } from '../../src/content/ContentPublisher.js';
@@ -14,8 +14,6 @@ import { RedisContentWriteLock, writeLockKey } from '../../src/content/ContentWr
 import { PublishedSaveGate } from '../../src/content/PublishedSaveGate.js';
 import type { PublishingDeps } from '../../src/content/publishingDeps.js';
 import { editorSavedForm } from '../../src/content/savedForm.js';
-import { createH5pRouter } from '../../src/http/createH5pRouter.js';
-import type { ContentRouteDeps } from '../../src/http/routes/contentRoutes.js';
 import { isAuthError } from '../../src/http/authErrors.js';
 import type { HvlH5PEditor } from '../../src/h5p/HvlH5PEditor.js';
 import type { Database } from '../../src/infra/prismaClient.js';
@@ -60,10 +58,6 @@ describeWithServices('[PROD-003] a save and a publish at the same time', () => {
   const editorPause = { current: undefined as ReturnType<typeof pausePoint> | undefined };
 
   const appWith = (gateDeps: PublishingDeps = deps): Express => {
-    const authenticate: RequestHandler = (req, res, next) => {
-      if (author.header[1] === req.headers[author.header[0]]) res.locals.h5pActor = author.actor;
-      next();
-    };
     // WHY: Lumi's save waits here while the test lets a publish try to get in between.
     const editor = pausing(
       tb.runtime.editor,
@@ -71,8 +65,7 @@ describeWithServices('[PROD-003] a save and a publish at the same time', () => {
       () => editorPause.current?.wait() ?? Promise.resolve(),
     );
     const saveGate = new PublishedSaveGate(gateDeps, editorSavedForm(tb.runtime.editor.libraryManager));
-    const routes: ContentRouteDeps = { ...tb.runtime, editor: editor as HvlH5PEditor, saveGate };
-    return express().use('/h5p', createH5pRouter(routes, authenticate));
+    return tb.appWith({ editor: editor as HvlH5PEditor, saveGate });
   };
   const save = (app: Express, id: string, question: string) =>
     request(app)

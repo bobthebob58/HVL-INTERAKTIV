@@ -10,8 +10,9 @@
  * Invariants: every testbed has its own library folder and buckets, which `close()` removes, and its rows use fresh
  *   IDs, so test files can run in parallel; `close()` removes only the seed audit rows its own seeding wrote, by ID.
  * Collaborators: ../../src/h5p/createH5pRuntime.ts, ../../src/http/createH5pRouter.ts, ./syntheticLibraries.ts,
- *   ./realPackages.ts, ./testActors.ts, ./testLibraryAuditSink.ts.
- * Tests: shared by apps/server/test/http/*.int.test.ts.
+ *   ./realPackages.ts, ./testActors.ts, ./testLibraryAuditSink.ts, ../../src/http/routes/contentRoutes.ts.
+ * Tests: shared by apps/server/test/http/*.int.test.ts; `appWith` by the save-gate tests in
+ *   apps/server/test/content/*.int.test.ts and apps/server/test/h5p/editorBlockedSave.browser.int.test.ts.
  */
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
@@ -22,6 +23,7 @@ import { createH5pRuntime, type H5pRuntime } from '../../src/h5p/createH5pRuntim
 import { asAccountUser, type H5pRole, type HvlH5pActor } from '../../src/h5p/HvlH5pUser.js';
 import { createH5pRouter } from '../../src/http/createH5pRouter.js';
 import { pageAssetRoutes } from '../../src/http/pages/pageAssetRoutes.js';
+import type { ContentRouteDeps } from '../../src/http/routes/contentRoutes.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
 import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
 import { createS3Client } from '../../src/infra/s3Client.js';
@@ -45,6 +47,9 @@ export interface TestActor {
 /** The app, the runtime and helpers. */
 export interface HttpTestbed {
   readonly app: Express;
+  /** An app like `app` whose H5P router gets `overrides` on top of the runtime, e.g. a save gate or a wrapped
+   *  editor. */
+  appWith(overrides: Partial<ContentRouteDeps>): Express;
   readonly runtime: H5pRuntime;
   readonly db: Database;
   /** Creates a `User` row and an actor with that account; overrides change any other field. */
@@ -98,13 +103,14 @@ export async function openHttpTestbed(
     if (actor) res.locals.h5pActor = actor;
     next();
   };
-  const app = express();
   // WHY: as createApp does: the editor's outer page links /static/pages/serverPages.css (A11Y-4).
-  app.use(pageAssetRoutes());
-  app.use('/h5p', createH5pRouter(runtime, authenticate));
+  const routerApp = (deps: ContentRouteDeps): Express =>
+    express().use(pageAssetRoutes()).use('/h5p', createH5pRouter(deps, authenticate));
+  const app = routerApp(runtime);
   const userIds: string[] = [];
   return {
     app,
+    appWith: (overrides) => routerApp({ ...runtime, ...overrides }),
     runtime,
     db,
     actor: async (role, overrides = {}) => {

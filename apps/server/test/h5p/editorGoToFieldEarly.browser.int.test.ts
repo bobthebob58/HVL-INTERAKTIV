@@ -16,13 +16,7 @@ import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServe
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithRealPackages, REAL_PACKAGES_DIR } from '../support/realPackages.js';
 import { describeWithServices } from '../support/services.js';
-import {
-  focusedField,
-  openFramedEditor,
-  openFramedEditorAndGoTo,
-  postGoToField,
-  serveFrameHost,
-} from './support/editorFrameHost.js';
+import { focusedField, openFramedEditor, postGoToField, serveFrameHost } from './support/editorFrameHost.js';
 
 const status = (editorPage: Frame) => editorPage.textContent('#hvl-editor-status');
 /** BranchingScenario's guided tours still up, and the parts of its editor they keep inert. */
@@ -64,7 +58,7 @@ describeWithServices('the editor page and "Gå til feltet", early and at a list'
           // Arrange
           const page = await browser().newPage();
           // Act
-          const { editorPage, editor } = await openFramedEditorAndGoTo(
+          const { editorPage, editor } = await openFramedEditor(
             page,
             base,
             author,

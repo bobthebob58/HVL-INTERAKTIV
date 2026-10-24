@@ -7,10 +7,9 @@ import { describe, it, expect, afterAll } from 'vitest';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Writable } from 'node:stream';
 import { CoreVersionMismatchError, readCoreApiVersion } from '../../src/h5p/coreVersionCheck.js';
 import { h5pServerInit } from '../../src/h5p/h5pServerInit.js';
-import { createLogger } from '../../src/logging/logger.js';
+import { capturedLogger } from '../support/capturedLogger.js';
 
 const roots: string[] = [];
 afterAll(() => roots.forEach((r) => rmSync(r, { recursive: true, force: true })));
@@ -38,22 +37,13 @@ const ENV = {
   H5P_SITE_UUID: undefined,
 };
 
-const capture = () => {
-  const lines: string[] = [];
-  const logger = createLogger({
-    level: 'info',
-    destination: new Writable({ write: (c, _e, done) => (lines.push(String(c)), done()) }),
-  });
-  return { lines, logger };
-};
-
 describe('[H5P-001] startup check of the H5P client files', () => {
   it('[H5P-001] reads the core API version the way H5P declares it', () => {
     expect(readCoreApiVersion(join(fakeClientFiles(28), 'h5p/core'))).toEqual({ major: 1, minor: 28 });
   });
 
   it('[H5P-001] starts with matching files and logs the core version and Hub host', async () => {
-    const { lines, logger } = capture();
+    const { lines, logger } = capturedLogger();
     const root = fakeClientFiles(28);
     const result = await h5pServerInit({ env: ENV, logger, root });
     expect(result.coreVersion).toEqual({ major: 1, minor: 28 });
@@ -62,14 +52,14 @@ describe('[H5P-001] startup check of the H5P client files', () => {
   });
 
   it('[H5P-001] refuses to start when the core files report another version', async () => {
-    const { logger } = capture();
+    const { logger } = capturedLogger();
     await expect(h5pServerInit({ env: ENV, logger, root: fakeClientFiles(27) })).rejects.toThrow(
       'are API 1.27, but the config expects 1.28',
     );
   });
 
   it('[H5P-001] refuses to start when the core or editor files are missing', async () => {
-    const { logger } = capture();
+    const { logger } = capturedLogger();
     await expect(h5pServerInit({ env: ENV, logger, root: fakeClientFiles(null) })).rejects.toThrow(
       CoreVersionMismatchError,
     );

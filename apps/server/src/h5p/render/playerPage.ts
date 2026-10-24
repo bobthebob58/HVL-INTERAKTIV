@@ -18,7 +18,7 @@
  * SPEC-DEVIATION: D-070 — the page's own <script>/<link> tags carry no integrity or nonce (H5P-009):
  *   same-origin files allowed by 'self' (amendment of 2026-10-24).
  * Collaborators: ./scriptJson.ts; ../../http/routes/playerRoutes.ts (the only caller), which gets the model from
- *   the identity renderer that ../H5pPlayerFactory.ts installs.
+ *   the identity renderer that ../H5pPlayerFactory.ts installs; ./editorPage.ts (firstScriptTags).
  * Tests: apps/server/test/h5p/render/playerPage.test.ts
  */
 import type { IPlayerModel } from '@lumieducation/h5p-server';
@@ -30,6 +30,19 @@ export const H5P_INTEGRATION_SCRIPT = '/h5p/boot/h5pIntegration.js';
 
 /** The user object H5P sees: nobody in particular. */
 export const ANONYMOUS_H5P_USER = Object.freeze({ name: '', mail: '', id: '' });
+
+/**
+ * Script tags for same-origin static scripts that run before H5P's, e.g. the LTI landing script.
+ * @param srcs - Paths under `/static/`; none by default.
+ * @returns One `<script src>` tag per path, in order.
+ * @throws Error when a path is not a same-origin static script (a programming error).
+ */
+export const firstScriptTags = (srcs: readonly string[] = []): string[] =>
+  srcs.map((src) => {
+    // SECURITY: only our own static files, never a URL from a request.
+    if (!/^\/static\/(?!.*\.\.)[\w/.-]+\.js$/.test(src)) throw new Error(`invalid script path: ${src}`);
+    return `<script src="${escapeHtml(src)}"></script>`;
+  });
 
 /** Options of `renderPlayerPage`. */
 export interface PlayerPageOptions {
@@ -52,11 +65,7 @@ export function renderPlayerPage(
   language: Locale,
   options: PlayerPageOptions = {},
 ): string {
-  const first = (options.firstScripts ?? []).map((src) => {
-    // SECURITY: only our own static files, never a URL from a request.
-    if (!/^\/static\/(?!.*\.\.)[\w/.-]+\.js$/.test(src)) throw new Error(`invalid script path: ${src}`);
-    return `<script src="${escapeHtml(src)}"></script>`;
-  });
+  const first = firstScriptTags(options.firstScripts);
   const integration = { ...(model.integration as object), user: ANONYMOUS_H5P_USER };
   const styles = model.styles.map((href) => `<link rel="stylesheet" href="${escapeHtml(href)}">`);
   const scripts = model.scripts.map((src) => `<script src="${escapeHtml(src)}"></script>`);

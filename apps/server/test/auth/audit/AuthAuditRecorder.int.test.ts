@@ -3,23 +3,18 @@
  *
  * Spec: DATA-007, AUTH-001
  */
-import { Writable } from 'node:stream';
 import { afterAll, expect, it } from 'vitest';
 import { AuthAuditRecorder } from '../../../src/auth/audit/AuthAuditRecorder.js';
 import { createPrismaClient } from '../../../src/infra/prismaClient.js';
-import { createLogger } from '../../../src/logging/logger.js';
 import { IdentityHasher } from '../../../src/security/keys/IdentityHasher.js';
+import { capturedLogger } from '../../support/capturedLogger.js';
 import { describeWithServices, serviceEnv } from '../../support/services.js';
 
 describeWithServices('[DATA-007] authentication audit trail', () => {
   const env = serviceEnv();
   const db = createPrismaClient(env.DATABASE_URL);
   const hasher = new IdentityHasher(env.IDENTITY_HASH_KEYS);
-  const lines: string[] = [];
-  const logger = createLogger({
-    level: 'error',
-    destination: new Writable({ write: (chunk, _e, done) => (lines.push(String(chunk)), done()) }),
-  });
+  const { logger, lines } = capturedLogger('error');
   afterAll(() => db.$disconnect());
 
   it('[DATA-007] stores the event, reason and a keyed hash of the address, never the address', async () => {
