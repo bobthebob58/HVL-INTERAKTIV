@@ -7,8 +7,6 @@
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CANVAS_USERS } from '../../../../tools/mock-platform/mockPlatform.mjs';
-import { identitySource } from '../../src/auth/identity/subjectSources.js';
-import { IdentityHasher } from '../../src/security/keys/IdentityHasher.js';
 import { openAppTestbed, type AppTestbed } from '../support/appTestbed.js';
 import { loginWithFeide } from '../support/feideTestbed.js';
 import { launchFromCanvas } from '../support/ltiLaunchDriver.js';
@@ -24,14 +22,7 @@ describeWithServices('The assembled app', () => {
     tb = await openAppTestbed();
     cookie = (await loginWithFeide({ app: tb.app, feide: tb.mock.feide }, 'author')).sessionCookie ?? '';
     csrf = (await request(tb.app).get('/auth/session').set('Cookie', cookie)).body.csrfToken as string;
-    const hashes = new IdentityHasher(tb.env.IDENTITY_HASH_KEYS).candidates(
-      'identity-subject',
-      identitySource({ kind: 'feide', feideId: 'author@hvl.no' }),
-    );
-    const identity = await tb.db.identity.findFirst({
-      where: { subjectHash: { in: hashes.map((c) => c.hash) } },
-    });
-    portalUser = identity?.userId ?? '';
+    portalUser = await tb.feideAccount('author');
   }, 60_000);
   afterAll(() => tb.close());
 

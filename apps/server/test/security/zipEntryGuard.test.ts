@@ -69,15 +69,11 @@ describe('[SEC-005] package archive safety', () => {
   });
 
   it('[SEC-005] rejects absolute and backslash paths', async () => {
-    expect((await rejection(await writeZip([{ name: '/etc/cron' }]))).messageKey).toBe(
-      'upload.archive.unsafePath',
-    );
-    expect((await rejection(await writeZip([{ name: '..\\evil.js' }]))).messageKey).toBe(
-      'upload.archive.unsafePath',
-    );
-    expect((await rejection(await writeZip([{ name: 'C:/evil.js' }]))).messageKey).toBe(
-      'upload.archive.unsafePath',
-    );
+    for (const name of ['/etc/cron', '..\\evil.js', 'C:/evil.js']) {
+      expect((await rejection(await writeZip([{ name }]))).messageKey, name).toBe(
+        'upload.archive.unsafePath',
+      );
+    }
   });
 
   it('[SEC-005] rejects dot and empty segments and repeated names, which extract over another entry', async () => {

@@ -12,13 +12,9 @@ import { describe, expect, it } from 'vitest';
 const VALIDATION_DIR = fileURLToPath(new URL('../../src/validation', import.meta.url));
 
 const sourceFiles = (dir: string): string[] =>
-  readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
-    entry.isDirectory()
-      ? sourceFiles(join(dir, entry.name))
-      : entry.name.endsWith('.ts')
-        ? [join(dir, entry.name)]
-        : [],
-  );
+  readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((entry) => !entry.isDirectory() && entry.name.endsWith('.ts'))
+    .map((entry) => join(entry.parentPath, entry.name));
 
 /** Module specifiers a value import may use: the folder itself, its locale files and htmlparser2 (D-073). */
 const allowed = (file: string, specifier: string): boolean => {
