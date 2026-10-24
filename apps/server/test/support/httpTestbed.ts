@@ -8,9 +8,9 @@
  *      run behind the same router.
  * Spec: H5P-004, H5P-006
  * Invariants: every testbed has its own library folder and buckets, which `close()` removes, and its rows use fresh
- *   IDs, so test files can run in parallel.
+ *   IDs, so test files can run in parallel; `close()` removes only the seed audit rows its own seeding wrote, by ID.
  * Collaborators: ../../src/h5p/createH5pRuntime.ts, ../../src/http/createH5pRouter.ts, ./syntheticLibraries.ts,
- *   ./realPackages.ts, ./testActors.ts.
+ *   ./realPackages.ts, ./testActors.ts, ./testLibraryAuditSink.ts.
  * Tests: shared by apps/server/test/http/*.int.test.ts.
  */
 import { randomUUID } from 'node:crypto';
@@ -25,7 +25,7 @@ import { pageAssetRoutes } from '../../src/http/pages/pageAssetRoutes.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
 import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
 import { createS3Client } from '../../src/infra/s3Client.js';
-import { PrismaLibraryAuditSink } from '../../src/h5p/libraries/LibraryAuditSink.js';
+import { TestLibraryAuditSink } from './testLibraryAuditSink.js';
 import { LibraryInstaller } from '../../src/h5p/libraries/LibraryInstaller.js';
 import { seedLibraries } from '../../src/h5p/libraries/seedLibraries.js';
 import { createLogger } from '../../src/logging/logger.js';
@@ -87,11 +87,10 @@ export async function openHttpTestbed(
   const redis: Redis = await connectRedis(env.REDIS_URL);
   const logger = createLogger({ level: 'silent' });
   const runtime = await createH5pRuntime({ env, logger, db, redis, s3 });
-  const openedAt = new Date();
+  const seedAudit = new TestLibraryAuditSink(db);
   if (options.seedFrom) {
     const { packageImporter, libraryManager } = runtime.editor;
-    const sink = new PrismaLibraryAuditSink(db);
-    await seedLibraries(options.seedFrom, new LibraryInstaller(packageImporter, sink, libraryManager));
+    await seedLibraries(options.seedFrom, new LibraryInstaller(packageImporter, seedAudit, libraryManager));
   }
   const actors = new Map<string, HvlH5pActor>();
   const authenticate: RequestHandler = (req, res, next) => {
@@ -153,12 +152,9 @@ export async function openHttpTestbed(
       await db.h5PContent.deleteMany({ where: { ownerUserId: { in: userIds } } });
       await db.auditEvent.deleteMany({ where: { actorUserId: { in: userIds } } });
       await db.libraryAuditEvent.deleteMany({ where: { actorUserId: { in: userIds } } });
-      // WHY: seeding records its installs without an actor (D-041); only this testbed's own rows go.
-      if (options.seedFrom) {
-        await db.libraryAuditEvent.deleteMany({
-          where: { actorUserId: null, source: 'seed', at: { gte: openedAt } },
-        });
-      }
+      // WHY: seeding records its installs without an actor (D-041); the rows this test bed's seeding wrote go, by ID,
+      // and no other process's (./testLibraryAuditSink.ts).
+      await seedAudit.remove();
       await db.user.deleteMany({ where: { id: { in: userIds } } });
       for (const bucket of Object.values(buckets)) await removeTestBucket(s3, bucket);
       await Promise.all([redis.quit(), db.$disconnect()]);

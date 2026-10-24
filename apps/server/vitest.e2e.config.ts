@@ -10,10 +10,10 @@
  *      run separately from `npx vitest run`; the web app flows also need `npm run build` and
  *      `npm run h5p:fetch-libraries` (skipped without them locally, failing in CI). A failed step names itself, what
  *      failed before it (with every ltik redacted) and whether the flow's rows are still in the database
- *      (test/support/flowRecorder.ts, test/support/lostTestRows.ts): a testbed that closes in another test process
- *      on the same database removes its own mock Canvas and staff users and the mock Feide users that first signed
- *      in during its run, with their content; the demo Feide subjects are the same in every process, so run the
- *      suite without other test runs.
+ *      (test/support/flowRecorder.ts, test/support/lostTestRows.ts). A test bed that closes in another process on
+ *      the same database removes only its own mock Canvas's users and its own mock Feide's accounts, with their
+ *      content; the flows on the built web app have a run author of their own, while the other flows' demo Feide
+ *      users are the same in every process, so run the suite without other test runs or servers on that database.
  * Spec: NFR-004, LTI-003, LTI-005, LTI-006, PROD-003, PROD-006, UD-022, DATA-009
  * Tests: this file configures them; see apps/server/e2e/.
  */

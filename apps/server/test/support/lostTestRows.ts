@@ -2,13 +2,15 @@
  * lostTestRows — tells a failed end-to-end flow whether the rows it set up are still in the shared database, and a
  * closed test bed that it left none of its own.
  *
- * Why: every test process uses the one development database. `openAppTestbed`'s `close` removes its own mock
- *      Canvas and staff users and the mock Feide users that first signed in during its run, with their content
- *      (./appTestbed.ts). The demo Feide subjects are the same in every process, so a testbed closing in another
- *      process while a flow runs can still delete the flow's rows; the flow then sees 401s and 404s and times out.
- *      A failure should say so, not look like a bug in the code under test. The reverse also happened: a test bed
- *      whose author's account had outlived an earlier run left every activity it imported (3 000+ on the start
- *      page), so `assertRowsRemoved` checks after `close`.
+ * Why: every test process uses the one development database. A test bed with a run author (`runAuthor`, as
+ *      ./realWebApp.ts opens it for the flows that use this) owns an author whose Feide ID and subject exist only in
+ *      this run and a mock Canvas on its own port, and another process's test bed removes only the accounts of its
+ *      own mock Feide and Canvas (./appTestbed.ts, ./runFeideAuthor.ts), so it cannot take this flow's rows. Rows
+ *      that are gone, or a platform that is inactive, therefore mean that something else changed the shared
+ *      database: another server's start-up platform sync, a reset or a manual cleanup. The flow then sees 401s and
+ *      404s and times out, and the failure should say so, not look like a bug in the code under test. The reverse
+ *      also happened: a test bed whose author's account had outlived an earlier run left every activity it imported
+ *      (3 000+ on the start page), so `assertRowsRemoved` checks after `close`.
  * Spec: NFR-004
  * Invariants:
  *   - It only reads; it never repairs, recreates or deletes a row.
@@ -31,9 +33,9 @@ export interface FlowRows {
 
 /** How a failure explains lost rows: the cause and what to do about it. */
 export const LOST_ROWS_HINT =
-  "another process's testbed removed them on the shared database (appTestbed.close deletes the mock Feide users " +
-  'that first signed in during its run, and the demo Feide subjects are the same in every process); run this flow ' +
-  'without other test processes';
+  'something else changed the shared database: a test bed with a run author owns accounts and a mock Canvas that ' +
+  "no other process's test bed removes, so look for another server's start-up platform sync, a database reset or " +
+  'a manual cleanup; run this flow without other test processes or servers on the same database';
 
 /**
  * Lists the rows of `rows` that are gone (or, for the platform, inactive).

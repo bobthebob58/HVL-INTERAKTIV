@@ -1,9 +1,9 @@
 /**
  * The register of recorded H5P upstream problems (support/upstreamRegister.ts) names the element of every entry: an
- * entry whose markup pattern also matches a bare element, or one with a class or id H5P never writes, and whose
- * selector (if any) does not rule that element out, would cover any new violation of its rule on the pages it
- * applies to, so the register could hide a new problem (D-080). These are checks of data, so they run without a
- * browser or services.
+ * entry whose markup pattern also matches a bare element, or one with a class or id H5P never writes (also one that
+ * only shares the prefix the pattern names), and whose selector (if any) does not rule that element out, would cover
+ * any new violation of its rule on the pages it applies to, so the register could hide a new problem (D-080). These
+ * are checks of data, so they run without a browser or services.
  *
  * Spec: UD-030
  */
@@ -34,10 +34,18 @@ describe('[UD-030] the register of recorded H5P upstream problems', () => {
       { html: /^</, target: /./ },
       { html: /^<li/, target: /iframe > li$/ },
       { html: /^<div id="/, target: /^#/ },
+      { html: /^<div class="h5p-/ },
+      { html: /^<span class="h5p/ },
+      { html: /^<[a-z]+ class="h5p-/ },
+      { html: /^<li id="h5p-/ },
+      { html: /^<li class="reuse-question/ },
+      { html: /^<div/, target: /\.h5p-/ },
     ];
     const named: Omit<UpstreamFinding, 'ruleId' | 'surfaces' | 'types' | 'why'>[] = [
       { html: /^<li class="reuse-question disabled"/ },
-      { html: /^<li (class="h5p-hub-tab-button"|id="h5p-[a-z]+" class="h5p-hub-media)/ },
+      { html: /^<li (class="h5p-hub-tab-button"|id="h5p-[a-z]+" class="h5p-hub-media[ "])/ },
+      { html: /^<span class="h5p-joubelui-score-bar-star"/ },
+      { html: /^<div class="h5p-/, target: /\.h5p-dragnbar > div$/ },
       { html: /^<ol>$/, target: /\.h5p-hub-content-type-list > ol$/ },
     ];
     // Act

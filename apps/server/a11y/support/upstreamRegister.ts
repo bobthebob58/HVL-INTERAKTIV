@@ -5,7 +5,8 @@
  *
  * Why: UD-030 fails on serious and critical violations and forbids disabling an axe rule. The suite therefore needs
  *      an explicit, reviewable list of what remains and why (./upstreamFindings.ts matches it, prints every match and
- *      fails on anything new and on any entry that no longer occurs). This list is reported to H5P and in PROGRESS.
+ *      fails on anything new and on any entry that no longer occurs). This list is the source for the UD-040
+ *      conformance report and for the upstream issues still to be filed (S6, D-080); PROGRESS summarises it.
  *      D-080: what a local, attribute-only change removes without changing H5P's behaviour is repaired at run time
  *      by packages/hvl-h5p-theme/src/a11yRepairs.js (CoursePresentation's progress bar, DragText's drop zones,
  *      H5P.Question's explanation title) and src/a11yEditorRepairs.js (the paste button, the score-range "to" field,
@@ -20,9 +21,10 @@
  *   - Every entry has an `UPSTREAM:` comment with the repository at the commit we run (D-022, D-078 manifest).
  *   - `html` matches the start of the element's markup as axe reports it; `target` narrows by axe's selector.
  *     No entry matches an element it knows nothing about (a bare tag, or one with a class, id or role H5P never
- *     writes) unless its `target` rules out such an element's selector chain: it would cover a new violation of
- *     the same rule (./upstreamFindings.ts `matchesAnyElement`; apps/server/a11y/upstreamRegister.a11y.test.ts
- *     fails on such an entry).
+ *     writes, also one that only starts with the prefix the pattern names) unless its `target` rules out such an
+ *     element's selector chain: it would cover a new violation of the same rule (./upstreamFindings.ts
+ *     `matchesAnyElement`; apps/server/a11y/upstreamRegister.a11y.test.ts fails on such an entry). So a class or
+ *     id is named whole, up to its closing quote or the space before the next name.
  *   - `forced` limits an entry to forced colours (`true`) or the light theme (`false`); `tour` limits it to the
  *     BranchingScenario editor while H5P's guided tour is open (`true`) or after it was closed (`false`). Only the
  *     Paste entry needs one (`tour: false`); the editor is still scanned in both states (axeEditor.a11y.test.ts).
@@ -71,7 +73,7 @@ export const UPSTREAM_FINDINGS: readonly UpstreamFinding[] = [
   // UPSTREAM: https://github.com/h5p/h5p-editor-php-library/blob/ab2daa18bd61b19e7f8729e22eec88f3b637a868/scripts/h5p-hub-client.js (built from h5p/h5p-hub-client). No issue filed yet (SPEC-DEVIATION: D-080 amendment DOC-13); the entry goes when it stops occurring, which fails the suite.
   {
     ruleId: 'nested-interactive',
-    html: /^<li (class="h5p-hub-tab-button"|id="h5p-[a-z]+" class="h5p-hub-media)/,
+    html: /^<li (class="h5p-hub-tab-button"|id="h5p-[a-z]+" class="h5p-hub-media[ "])/,
     surfaces: ['hub'],
     types: ['*'],
     why:

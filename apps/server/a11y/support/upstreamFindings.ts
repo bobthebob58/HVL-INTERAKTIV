@@ -14,9 +14,10 @@
  *   - The entries that apply to a scan are chosen by surface, content type, colour mode and tour state; each of them
  *     must match at least one finding of that scan.
  *   - No entry may match an element it knows nothing about: a bare tag (`<div>`, `<li>` …), or a tag with a class,
- *     id or role that no H5P markup has, unless its `target` names something such an element's selector chain
- *     (`div`, `iframe > li`, `.unknown span` …) does not have. Such an entry would cover every new violation of its
- *     rule on the pages it applies to (`matchesAnyElement`, checked by ../upstreamRegister.a11y.test.ts).
+ *     id or role that no H5P markup has, also one that only shares the prefix the entry names (`class="h5p-` matches
+ *     `class="h5p-anything"`), unless its `target` names something such an element's selector chain (`div`,
+ *     `iframe > li`, `.unknown span` …) does not have. Such an entry would cover every new violation of its rule on
+ *     the pages it applies to (`matchesAnyElement`, checked by ../upstreamRegister.a11y.test.ts).
  * Collaborators: ./upstreamRegister.ts, ./axeScan.ts, the axe suites in ../.
  * Tests: apps/server/a11y/upstreamRegister.a11y.test.ts, apps/server/a11y/axeContentTypes.a11y.test.ts,
  *   apps/server/a11y/axeEditor.a11y.test.ts, apps/server/a11y/axeWebRoutes.a11y.test.ts
@@ -73,47 +74,63 @@ const TAGS = [
   'table',
 ];
 
-/** Markup of elements with nothing to identify them (D-080); an entry must name more than any of these. */
-const GENERIC_HTML = [
+/**
+ * The names an entry's markup pattern starts a class or id with (`h5p-` in `class="h5p-`), each followed by
+ * `UNKNOWN`: a pattern that only starts a name (a prefix) then matches a name H5P never writes, while one that
+ * ends it (a quote or space after the name, `class="h5p-hub-media[ "]`) does not.
+ */
+const unknownNames = (pattern: RegExp, start: RegExp): string[] => [
+  UNKNOWN,
+  ...[...pattern.source.matchAll(start)].map((m) => `${m[1] ?? ''}${UNKNOWN}`),
+];
+
+/** Markup of elements with nothing to identify them (D-080), with the given unknown names; an entry must name more. */
+const genericHtml = (names: readonly string[]): string[] => [
   ...TAGS.flatMap((tag) => [
     `<${tag}>`,
-    `<${tag} class="${UNKNOWN}">`,
-    `<${tag} id="${UNKNOWN}">`,
-    `<${tag} id="${UNKNOWN}" class="${UNKNOWN}">`,
-    `<${tag} class="${UNKNOWN}" role="button" tabindex="0">`,
-    `<${tag} aria-hidden="true" class="${UNKNOWN}">`,
+    ...names.flatMap((name) => [
+      `<${tag} class="${name}">`,
+      `<${tag} id="${name}">`,
+      ...names.map((other) => `<${tag} id="${name}" class="${other}">`),
+      `<${tag} class="${name}" role="button" tabindex="0">`,
+      `<${tag} aria-hidden="true" class="${name}">`,
+    ]),
   ]),
   '<a href="#">',
-  `<a href="#" class="${UNKNOWN}">`,
-  `<input type="text" class="${UNKNOWN}">`,
   '<img src="image.png" alt="">',
+  ...names.flatMap((name) => [`<a href="#" class="${name}">`, `<input type="text" class="${name}">`]),
 ];
 
 /** Selector chains of such elements, as axe writes them; a `target` that matches one narrows nothing. */
-const GENERIC_TARGETS = [
-  ...TAGS.flatMap((tag) => [
-    tag,
-    `${tag}:nth-child(2)`,
-    `iframe > ${tag}`,
-    `iframe > iframe > ${tag}`,
-    `#${UNKNOWN} > ${tag}`,
-    `.${UNKNOWN} ${tag}`,
-    `iframe > .${UNKNOWN} > ${tag}:nth-child(3)`,
+const genericTargets = (names: readonly string[]): string[] => [
+  ...TAGS.flatMap((tag) => [tag, `${tag}:nth-child(2)`, `iframe > ${tag}`, `iframe > iframe > ${tag}`]),
+  ...names.flatMap((name) => [
+    ...TAGS.flatMap((tag) => [
+      `#${name} > ${tag}`,
+      `.${name} ${tag}`,
+      `iframe > .${name} > ${tag}:nth-child(3)`,
+    ]),
+    `.${name}`,
+    `#${name}`,
+    `iframe > .${name}`,
   ]),
-  `.${UNKNOWN}`,
-  `#${UNKNOWN}`,
-  `iframe > .${UNKNOWN}`,
 ];
 
 /**
- * Whether an entry would cover any element of its rule: its `html` matches an element it knows nothing about, and
- * its `target`, if it has one, also matches such an element's selector chain.
+ * Whether an entry would cover any element of its rule: its `html` matches an element it knows nothing about (no
+ * class or id, or one H5P never writes, also one that only shares the prefix the pattern names), and its `target`,
+ * if it has one, also matches such an element's selector chain.
  * @param entry - A register entry.
  * @returns True for a catch-all entry, which would hide a new violation of the same rule.
  */
-export const matchesAnyElement = (entry: UpstreamFinding): boolean =>
-  GENERIC_HTML.some((html) => entry.html.test(html)) &&
-  (entry.target === undefined || GENERIC_TARGETS.some((target) => entry.target?.test(target)));
+export const matchesAnyElement = (entry: UpstreamFinding): boolean => {
+  const html = genericHtml(unknownNames(entry.html, /(?:class|id)="([^\\^$.|?*+()[\]{}"\s]*)/g));
+  const target = entry.target;
+  const chains = target ? genericTargets(unknownNames(target, /(?:\\\.|#)([\w-]*)/g)) : [];
+  return (
+    html.some((markup) => entry.html.test(markup)) && (!target || chains.some((chain) => target.test(chain)))
+  );
+};
 
 const matches = (entry: UpstreamFinding, finding: AxeFinding): boolean =>
   entry.ruleId === finding.ruleId &&

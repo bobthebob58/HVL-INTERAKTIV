@@ -8,7 +8,8 @@
  *   - One row per library that was newly installed (`new`) or patched (`patch`); `none` results write nothing.
  *   - Versions are written as `major.minor.patch`.
  * Collaborators: ./LibraryInstaller.ts (seed), ../HvlH5PEditor.ts (admin package import), prisma LibraryAuditEvent.
- * Tests: apps/server/test/h5p/libraries/LibraryAuditSink.int.test.ts
+ * Tests: apps/server/test/h5p/libraries/LibraryAuditSink.int.test.ts,
+ *   apps/server/test/h5p/libraries/testLibraryAuditSink.int.test.ts
  */
 import type { ILibraryInstallResult } from '@lumieducation/h5p-server';
 import type { IFullLibraryName } from '@lumieducation/h5p-server/build/src/types.js';
@@ -37,6 +38,25 @@ export interface LibraryAuditSink {
 const version = (lib: IFullLibraryName | undefined): string | null =>
   lib ? `${lib.majorVersion}.${lib.minorVersion}.${lib.patchVersion}` : null;
 
+/**
+ * The LibraryAuditEvent rows for the results of one install: one per new or patched library.
+ * @param results - What Lumi installed or updated.
+ * @param change - Who and from which package.
+ * @returns The rows to write; empty when nothing changed.
+ */
+export function libraryAuditRows(results: readonly ILibraryInstallResult[], change: LibraryChange) {
+  return results
+    .filter((result) => (result.type === 'new' || result.type === 'patch') && result.newVersion)
+    .map((result) => ({
+      actorUserId: change.actorUserId,
+      source: change.source,
+      sha256: change.sha256,
+      machineName: result.newVersion?.machineName ?? '',
+      fromVersion: version(result.oldVersion),
+      toVersion: version(result.newVersion),
+    }));
+}
+
 /** Writes library changes to the LibraryAuditEvent table. */
 export class PrismaLibraryAuditSink implements LibraryAuditSink {
   /**
@@ -45,16 +65,7 @@ export class PrismaLibraryAuditSink implements LibraryAuditSink {
   constructor(private readonly db: Database) {}
 
   async record(results: readonly ILibraryInstallResult[], change: LibraryChange): Promise<void> {
-    const rows = results
-      .filter((result) => (result.type === 'new' || result.type === 'patch') && result.newVersion)
-      .map((result) => ({
-        actorUserId: change.actorUserId,
-        source: change.source,
-        sha256: change.sha256,
-        machineName: result.newVersion?.machineName ?? '',
-        fromVersion: version(result.oldVersion),
-        toVersion: version(result.newVersion),
-      }));
+    const rows = libraryAuditRows(results, change);
     if (rows.length > 0) await this.db.libraryAuditEvent.createMany({ data: rows });
   }
 }

@@ -14,9 +14,9 @@
  *   - The author is the mock Feide's `author` with a Feide ID of this run (./runFeideAuthor.ts): a new account with
  *     no notice dismissals and no activities but this run's, whatever earlier runs left in the database.
  *   - `ids` hold published activities; `draftId` is a draft MultiChoice for flows that change state.
- *   - `close` removes the seed audit rows of this run and the library folder, on top of ./appTestbed.ts's cleanup
- *     (which removes the author and the LTI users with all their content), and then fails if any of the author's or
- *     the teacher's accounts or activities is still in the database.
+ *   - `close` removes the seed audit rows this run wrote (by ID, ./testLibraryAuditSink.ts) and the library folder,
+ *     on top of ./appTestbed.ts's cleanup (which removes the author and the LTI users with all their content), and
+ *     then fails if any of the author's or the teacher's accounts or activities is still in the database.
  *   - Every launch first checks that the mock Canvas is still active, so a platform another process deactivated on
  *     the shared database is reported as such, not as ltijs's bare 403.
  * Collaborators: ./appTestbed.ts, ./runFeideAuthor.ts, ./realPackages.ts, ./ltiLaunchDriver.ts,
@@ -28,7 +28,7 @@ import { join } from 'node:path';
 import type { Browser } from 'playwright-core';
 import { CANVAS_USERS } from '../../../../tools/mock-platform/mockPlatform.mjs';
 import { asAccountUser } from '../../src/h5p/HvlH5pUser.js';
-import { PrismaLibraryAuditSink } from '../../src/h5p/libraries/LibraryAuditSink.js';
+import { TestLibraryAuditSink } from './testLibraryAuditSink.js';
 import { LibraryInstaller } from '../../src/h5p/libraries/LibraryInstaller.js';
 import { seedLibraries } from '../../src/h5p/libraries/seedLibraries.js';
 import { loadWebApp, type WebApp } from '../../src/web/nextWebApp.js';
@@ -91,13 +91,10 @@ export interface RealWebApp {
  */
 export async function openRealWebApp(browser: Browser): Promise<RealWebApp> {
   const web: WebApp = await loadWebApp('prod');
-  const startedAt = new Date();
   const tb = await openAppTestbed([], { web, runAuthor: true });
   const { packageImporter, libraryManager } = tb.runtime.editor;
-  await seedLibraries(
-    REAL_PACKAGES_DIR,
-    new LibraryInstaller(packageImporter, new PrismaLibraryAuditSink(tb.db), libraryManager),
-  );
+  const seedAudit = new TestLibraryAuditSink(tb.db);
+  await seedLibraries(REAL_PACKAGES_DIR, new LibraryInstaller(packageImporter, seedAudit, libraryManager));
   const authorStorage = await signInRunAuthor(browser, tb);
   const authorId = await tb.feideAccount(AUTHOR_KEY);
   const author = asAccountUser(testActor('author', { accountId: authorId }));
@@ -181,10 +178,9 @@ export async function openRealWebApp(browser: Browser): Promise<RealWebApp> {
       return teacherActivity ?? '';
     },
     close: async () => {
-      // WHY: seeding records its installs without an actor (D-041); only this run's rows go.
-      await tb.db.libraryAuditEvent.deleteMany({
-        where: { actorUserId: null, source: 'seed', at: { gte: startedAt } },
-      });
+      // WHY: seeding records its installs without an actor (D-041); the rows this run's seeding wrote go, by ID, and
+      // no other process's (./testLibraryAuditSink.ts).
+      await seedAudit.remove();
       await tb.close();
       await web.close();
       rmSync(tb.env.H5P_LIBRARY_DIR, { recursive: true, force: true });
