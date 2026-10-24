@@ -154,7 +154,7 @@ Not done in S3 (recorded 2026-10-23):
 
 Brand tokens follow HVL's manual (D-017); HVL (profil@hvl.no) must still confirm the values and supply logo files.
 Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one go); decisions D-067…D-079.
-- [x] Decisions D-067…D-079 recorded; D-047 (R-01) follows the real-library probe
+- [x] Decisions D-067…D-080 recorded; D-047 (R-01) follows the real-library probe
 - [x] Real H5P content types from GitHub at pinned commits (`npm run h5p:fetch-libraries`, D-078): 120 libraries,
       ten Nynorsk example activities; all ten install through the seed path, import, save and play in Chromium;
       R-01 settled (D-047). Found and fixed: library folders refused icon fonts (SEC-002 list applied to them)
@@ -172,22 +172,42 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
 - [x] `packages/design-tokens` with the contrast test and lint rules (`UD-001`): `tokens.json` → `tokens.css`,
       the Tailwind `@theme` file and the Daylight mapping, checked with `npm run tokens:check`; Stylelint and ESLint
       refuse colour literals, upper case and justified text (D-072)
-- [ ] Carried in by earlier decisions: the LTI views `/lti/play`, `/lti/deeplink` and the friendly pages move to
-      `apps/web` `/app/*` on the same server APIs (D-048); the H5P editor page with the player's script-safe JSON
-      (D-040) and the LTI-006 **Rediger** tab on it (D-062); an editor in a cookie-less Canvas iframe needs
-      grant-bearing file URLs issued after an Edit check (D-058); `DOC-012` from S3
-- [ ] Web shell components and `hvl-h5p-theme.css` (`UD-002`…`UD-013`, `H5P-009`)
+- [x] Carried in by earlier decisions: launches land on the web app's Canvas chrome `/app/play` (D-048 as amended
+      by D-067: the Deep Linking picker and the friendly pages stay server-rendered, token-styled, with the formative
+      notice and **Hjelp**); the H5P editor page with the player's script-safe JSON (D-040) and the LTI-006
+      **Rediger** tab on `/app/play` (D-062); editor file and upload grants after an Edit check (D-058, D-069);
+      `DOC-012` (`/api/docs` from the zod schemas in `packages/api-contract`, D-077). H5P pages opened on their own
+      go to their chrome page (D-067)
+- [x] Web shell components and `hvl-h5p-theme.css` (`UD-002`…`UD-013`, `H5P-009`): layout with skip link,
+      **Hjelp** and **Personvern**, tabs, dialog, error summary, findings with **Gå til feltet**, publish dialog,
+      notice, `ExternalLink`/`FileLink`; pages `/`, `/aktivitet/[id]`, `/aktivitet/ny`, `/app/play`, `/hjelp`,
+      `/personvern`, 404; the H5P theme with feedback prefixes, two-tone focus, 24 px targets, reduced motion and
+      forced colours. Found and fixed: logout refused by `form-action` (D-070 amendment), the editor's go-to-field
+      giving up while H5P still loads, a second **Publiser** on published activities
 - [x] Validator engine, UD rules and pedagogical hint rules (`UD-020`…`UD-022`, `PED-020`): pure
       `validateContent` with 11 `V-*` and 11 `PED-H*` rules, fixtures per rule, messages in three languages,
       thresholds from `content/laeringsdesign/hint-thresholds.yaml` (D-073). Found and fixed: imported activities
       state `language`, the editor saves `defaultLanguage`; V-LANG and the player's `lang` read both (UD-010)
-- [ ] Publish flow with acknowledgements (`PROD-003`), which also ends S3's visibility-only sharing (D-066, Q14);
-      formative notice (`PROD-011`); privacy notice (`DATA-006`)
-- [ ] CSP that blocks third-party requests; self-hosted fonts (`DATA-011`); browser and assistive-technology matrix (`NFR-003`).
+- [x] Publish flow with acknowledgements (`PROD-003`), which also ends S3's visibility-only sharing (D-066, Q14);
+      formative notice (`PROD-011`); privacy notice (`DATA-006`): server re-validation, reasons valid 14 days, a
+      Redis write lock so a publish cannot slip between the save gate and the write (D-074 amendment), unpublish,
+      notice dismissal per user with bounded versions (D-075), `/personvern` in nn/nb/en (DPO review open, Q6)
+- [x] CSP that blocks third-party requests; self-hosted fonts (`DATA-011`); browser and assistive-technology matrix (`NFR-003`).
       The player page's `script-src` must not allow `'unsafe-inline'`: it is the structural defence against
-      markup H5P Core writes without escaping (D-039)
-- [ ] axe suite (`UD-030`); manual protocol document (`UD-031`)
-- [ ] Progress screenshots (desktop and mobile, `nn`) sent to the owner as each view is built (CLAUDE.md §4)
+      markup H5P Core writes without escaping (D-039). Done: first-party policies on every page type (portal pages
+      too), system font stacks (D-018), a request recorder over every view and type; the one outside script is
+      Panopto's embed API file, only when a Panopto site is configured (D-070 amendment). NFR-003 is a documented
+      matrix; manual results open (D-079)
+- [x] axe suite (`UD-030`); manual protocol document (`UD-031`): `npm run test:a11y` (12 files, 296 tests) on every
+      route and in the player and editor of all ten types, light and forced colours, plus reflow, motion, text
+      spacing, zoom, keyboard, target size, `lang` and first-party checks; H5P's own findings are repaired at run
+      time or registered (D-080). `docs/accessibility/` holds the protocol and the matrix; results are HVL's.
+      Found and fixed: the H5P editor scrolled sideways at 320 px, CoursePresentation's focus ring was cut off,
+      the new-activity editor frame had no title
+- [x] Progress screenshots (desktop and mobile, `nn`) sent to the owner as each view is built (CLAUDE.md §4):
+      eleven views at 1280 and 390 px on 2026-10-24
+- [x] Early independent review of the server work (security, publishing, validator, accessibility, privacy and
+      documentation; a skeptic per dimension): 36 confirmed findings, fixed in three groups and verified again
 - [ ] Gate: as in the Evaluator Guide §5, S4
 
 ## S5 — Læringsdesign studio ⬜
