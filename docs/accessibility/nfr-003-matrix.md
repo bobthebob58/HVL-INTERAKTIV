@@ -31,7 +31,10 @@ H5P content types (D-078) and the server's own pages, all behind the production 
 a player then run on the first question or screen as well, not only on the start button.
 
 `accessibilityDocs.a11y.test.ts` keeps the manual side consistent: the protocol's set-ups and journeys, this
-matrix's browsers, screen readers and suite names, and the names of the dated result files.
+matrix's browsers, screen readers and suite names, and the names of the dated result files. It checks documents
+only: it passes with no result file at all, so it proves that the protocol and this matrix exist and agree, not
+that anything was tested by hand. Its `[UD-031]` and `[NFR-003]` titles are why `docs/TRACEABILITY.md` lists both
+requirements as "tested".
 
 Answer prefixes in the accessibility tree (`UD-003`) and the theme inside H5P (`UD-011`) are covered by the
 browser tests in `apps/server/test/h5p/` (`hvlFeedback.browser.int.test.ts`, `hvlTheme.browser.int.test.ts`).
@@ -63,5 +66,6 @@ Edge in a Windows contrast theme checks `UD-012` for real; it is recorded as an 
 - A release may ship when CI is green and the latest manual runs of AT-1, AT-2, AT-3, KB and Z400 (at most one
   semester old, or newer than any change named in protocol §2) have no **Fail** that is not recorded as a known
   problem with an issue.
-- Until HVL has run the protocol for the first time, `NFR-003` and `UD-031` are open in `PROGRESS.md` (D-079):
-  Firefox, Safari, Edge, the mobile browsers and the three screen readers are untested.
+- `UD-031` and `NFR-003` are documented protocols whose results HVL records (D-079). Until HVL has run the
+  protocol for the first time, that first run is an open item of S4 in `PROGRESS.md`: Firefox, Safari, Edge, the
+  mobile browsers and the three screen readers are untested, and `docs/accessibility/results/` holds no result.

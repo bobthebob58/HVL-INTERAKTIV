@@ -39,7 +39,7 @@ first.
 
 | Path | What it holds |
 |---|---|
-| `src/app/layout.tsx` | The document: `<html lang>` from the request's locale, the skip link, the locale for client components |
+| `src/app/layout.tsx` | The document: `<html lang>` from the request's locale, the title template ("<page> – HVL Interaktiv"), the skip link, the locale for client components |
 | `src/app/(portal)/` | The portal pages in the portal chrome: `/`, `/aktivitet/[id]`, `/aktivitet/ny`, `/hjelp`, `/personvern` |
 | `src/app/app/play/page.tsx` | `/app/play`, the Canvas page: reads Express's `x-hvli-launch` header |
 | `src/app/not-found.tsx` | The translated 404 page in the portal chrome |
@@ -49,7 +49,7 @@ first.
 | `src/api/` | Browser calls of the Express API with the right credential (`apiRequest.ts`), the portal session, typed by `@hvl-interaktiv/api-contract` |
 | `src/messaging/` | Messages with the framed H5P pages: `hvli:content-saved`, `hvli:go-to-field`, H5P's resize protocol |
 | `src/config/` | Every address the app links to or frames (`paths.ts`); the logo slot (`branding.ts`) |
-| `src/i18n/` | Typed `t()`, `locales/{nn,nb,en}.json` (Nynorsk is the reference, D-076), the request locale, dates, type names |
+| `src/i18n/` | Typed `t()`, `locales/{nn,nb,en}.json` (Nynorsk is the reference, D-076), the request locale, page titles, the `lang` of an activity's title, dates, type names |
 | `src/lti/launchHeader.ts` | Parses the launch Express resolved for `/app/play` |
 | `next.config.mjs`, `postcss.config.mjs` | No image optimiser, no `X-Powered-By`, the contract package compiled; Tailwind through PostCSS |
 | `test/` | Component tests (jsdom), unit tests, the structure test; `test/support/` has the fake `fetch` and cleanup |
@@ -87,12 +87,16 @@ sequenceDiagram
     participant N as Next.js
     C->>E: GET /app/play?ltik=… (after the LTI launch)
     E->>E: resolve the ltik, check View, decide mayEdit
-    E->>N: request without the ltik; x-hvli-launch = encoded { contentId, title, mayEdit, locale }
+    E->>N: request without the ltik; x-hvli-launch = encoded { contentId, title, mayEdit, locale, language? }
     N-->>C: the Canvas chrome; Hjelp and Personvern open in a new tab
-    C->>C: read the ltik from the address bar once, history.replaceState without it
+    C->>C: read the ltik from the address bar once, history.replaceState without it (and once more for Next.js's router)
     C->>E: GET /lti/play?ltik=… (Spel) and, for authors, /lti/edit?ltik=… (Rediger)
     C->>E: GET /api/me, PUT /api/me/notices/formative-use (Authorization: Bearer <ltik>, no cookie)
 ```
+
+The page language (`x-hvli-locale`) is the launch's, else the `?lang=` of a help or privacy link (`nn`, `nb`, `en`),
+else the portal session's, else Nynorsk. The header's **Hjelp** and the footer's **Personvern** carry the page's
+locale, because inside Canvas they open in a new tab that has no launch (DATA-006).
 
 ## Configuration
 
@@ -110,12 +114,12 @@ and by the server before Next.js loads). The logo files are configured in `src/c
 | `UD-006` Skip link, tabs, modal dialog | `src/app/layout.tsx`, `src/components/Tabs.tsx`, `Dialog.tsx` | `test/components/Tabs.test.tsx`, `Dialog.test.tsx`, `SiteHeader.test.tsx` |
 | `UD-007` Honest links | `src/components/ExternalLink.tsx`, `FileLink.tsx` | `test/components/ExternalLink.test.tsx`, `FileLink.test.tsx` |
 | `UD-008` Reflow at 320 px | every page; `src/messaging/useH5pResizer.ts` | `apps/server/test/web/webPages.browser.int.test.ts`, `test/messaging/useH5pResizer.test.tsx` |
-| `UD-009`, `UD-012` Reduced motion, forced colours | `src/app/globals.css`, `src/styles/components.css` | CSS review; the accessibility suite (`npm run test:a11y`) |
-| `UD-010` Page language | `src/app/layout.tsx`, `src/i18n/` | `test/i18n/translate.test.ts`, `apps/server/test/web/webApp.browser.int.test.ts` |
-| `UD-013` Consistent help, accessible errors | `src/components/SiteHeader.tsx`, `ErrorSummary.tsx`, `/hjelp` | `test/components/SiteHeader.test.tsx`, `ErrorSummary.test.tsx`, `TextSections.test.tsx` |
-| `PROD-003`, `UD-022` Check and publish | `src/features/activity/CheckPanel.tsx`, `src/components/PublishDialog.tsx`, `FindingsList.tsx` | `test/components/PublishDialog.test.tsx`, `test/features/CheckPanel.test.tsx` |
+| `UD-009`, `UD-012` Reduced motion, forced colours (the selected tab alone underlined) | `src/app/globals.css`, `src/styles/components.css` | `apps/server/test/web/webChrome.browser.int.test.ts`; the accessibility suite (`npm run test:a11y`) |
+| `UD-010` Page language; an activity title's own `lang` | `src/app/layout.tsx`, `src/i18n/`, `src/i18n/partLanguage.ts` | `test/i18n/translate.test.ts`, `test/i18n/partLanguage.test.ts`, `apps/server/test/web/webApp.browser.int.test.ts`, `webChrome.browser.int.test.ts` |
+| `UD-013` Consistent help, accessible errors, a title per page (WCAG 2.4.2) | `src/components/SiteHeader.tsx`, `ErrorSummary.tsx`, `/hjelp`, `src/i18n/pageTitle.ts` | `test/components/SiteHeader.test.tsx`, `ErrorSummary.test.tsx`, `TextSections.test.tsx`, `test/i18n/pageTitle.test.ts`, `apps/server/test/web/webChrome.browser.int.test.ts` |
+| `PROD-003`, `UD-022` Check and publish; a new reason for a published activity with an error that has no reason that holds | `src/features/activity/CheckPanel.tsx`, `src/components/PublishDialog.tsx`, `FindingsList.tsx` | `test/components/PublishDialog.test.tsx`, `test/features/CheckPanel.test.tsx`, `CheckPanelTransitions.test.tsx` |
 | `PROD-011` Formative-use notice | `src/components/Notice.tsx` | `test/components/Notice.test.tsx` |
-| `DATA-006` Privacy notice | `/personvern`, `src/components/SiteFooter.tsx` | `test/components/TextSections.test.tsx`, `SiteFooter.test.tsx` |
+| `DATA-006` Privacy notice in the language of the linking page (`?lang=`), pinned to the data inventory | `/personvern`, `src/components/SiteFooter.tsx`, `src/features/info/privacySections.ts` | `test/components/TextSections.test.tsx`, `SiteFooter.test.tsx`, `test/features/privacyNotice.test.ts`, `privacyNoticeScope.test.ts`, `apps/server/test/web/webChrome.browser.int.test.ts` |
 | `LTI-006`, `LTI-003` Canvas tabs, ltik in memory only | `src/app/app/play/page.tsx`, `src/features/lti/` | `test/features/LtiPlayView.test.tsx`, `test/lti/launchHeader.test.ts` |
 | `DATA-011` First-party pages under a strict policy | `next.config.mjs`, `apps/server/src/web/` | `test/appStructure.test.ts`, `apps/server/test/web/webPages.browser.int.test.ts` |
 | `PROD-012` Nynorsk first, nb and en | `src/i18n/` | `test/i18n/translate.test.ts` |

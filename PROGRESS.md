@@ -10,7 +10,7 @@ what is done, what is verified, and what is blocked.
 |---|---|---|---|
 | S0 | Specification, documentation standard, traceability tool | — | ✅ Done (2026-10-16) |
 | S1 | Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup | 00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD | ✅ Done (2026-10-21) |
-| S2 | Ten-type whitelist, seeding, SVG sanitiser, permission system, resume | 01 (all); 00 `PROD-002`, `PROD-008` | ✅ Gate passed (2026-10-23); spike steps 3–5 open (Q7) |
+| S2 | Ten-type whitelist, seeding, SVG sanitiser, permission system, resume | 01 (all); 00 `PROD-002`, `PROD-008` | ✅ Gate passed (2026-10-23); spike step 3 open (Q7), steps 4–5 done in S4 (D-047) |
 | S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | ✅ Gate passed (2026-10-23); HVL's Feide and Canvas values open (Q3, Q4) |
 | S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | 🟨 In progress (2026-10-23) |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04 | ⬜ Not started |
@@ -197,27 +197,43 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
       markup H5P Core writes without escaping (D-039). Done: first-party policies on every page type (portal pages
       too), system font stacks (D-018), a request recorder over every view and type; the one outside script is
       Panopto's embed API file, only when a Panopto site is configured (D-070 amendment). NFR-003 is a documented
-      matrix; manual results open (D-079)
-- [x] axe suite (`UD-030`); manual protocol document (`UD-031`): `npm run test:a11y` (12 files, 296 tests) on every
-      route and in the player and editor of all ten types, light and forced colours, plus reflow, motion, text
-      spacing, zoom, keyboard, target size, `lang` and first-party checks; H5P's own findings are repaired at run
-      time or registered (D-080). `docs/accessibility/` holds the protocol and the matrix; results are HVL's.
-      Found and fixed: the H5P editor scrolled sideways at 320 px, CoursePresentation's focus ring was cut off,
-      the new-activity editor frame had no title
-- [x] H5P's own markup barriers (D-080): `a11yRepairs.js` repairs eight at run time (CoursePresentation's progress
-      bar, DragText's drop zones, the editor's score ranges, vertical tabs, mode switch, hotspot picker and paste
-      button, the content-type list) and makes the parts BranchingScenario's tour fades inert; 13 of the register's
+      matrix whose results HVL records (D-079); the first manual run is the open item below
+- [x] axe suite (`UD-030`); manual protocol document (`UD-031`): `npm run test:a11y` (13 files; the test count is in
+      the gate output) on every route and in the player and editor of all ten types, light and forced colours, plus
+      reflow, motion, text spacing, zoom, keyboard, target size, `lang` and first-party checks; H5P's own findings are
+      repaired at run time or registered (D-080). `docs/accessibility/` holds the protocol and the matrix; results
+      are HVL's (the first manual run is the open item below). Found and fixed: the H5P editor scrolled sideways at
+      320 px, CoursePresentation's focus ring was cut off, the new-activity editor frame had no title
+- [x] H5P's own markup barriers (D-080): two scripts repair nine at run time, `a11yRepairs.js` in the content
+      types (CoursePresentation's progress bar, DragText's drop zones, H5P.Question's explanation title) and
+      `a11yEditorRepairs.js` in the editor (score ranges, vertical tabs, mode switch, hotspot picker, paste button,
+      the content-type list), which also makes the parts BranchingScenario's tour fades inert; 13 of the register's
       15 entries are gone, 2 remain (the hub's nested buttons, BranchingScenario's disabled «Paste»). The answer
       prefixes now cover the question types the containers offer (TrueFalse, MarkTheWords, SingleChoiceSet, Summary,
-      MultiMediaChoice, ImageHotspotQuestion), drawn colour pairs are tested, jQuery motion stops with reduced motion
+      MultiMediaChoice, ImageHotspotQuestion), drawn colour pairs are tested, jQuery motion stops with reduced motion.
+      Found and fixed: CoursePresentation's 24 px progress-bar parts covered the footer's buttons at 320 and 640 px
+      wide; the bar now has room of its own outside full screen (in full screen H5P's smaller bar stays, D-080
+      amendment NEW-4)
 - [x] New end-to-end flows: publishing despite an error with a reason (`PROD-003`, `UD-022`) and the teacher's
-      **Rediger** inside `/app/play` with frame storage blocked (`LTI-006`); `npm run test:e2e` runs 7 files.
+      **Rediger** inside `/app/play` with frame storage blocked (`LTI-006`); `npm run test:e2e` runs 8 files.
       Found and fixed: a closing test bed deleted every user created since it opened, also other processes' users;
-      it now removes only its own (`test/support/appTestbed.ts`)
+      it now removes only its own (`test/support/appTestbed.ts`), which `e2e/testbedCleanup.e2e.test.ts` checks
+- [x] CI (`.github/workflows/ci.yml`) runs the S4 steps (GitHub has not run it yet, Q16): the web app build,
+      `h5p:fetch-libraries`, the browser tests, `test:e2e`, `test:a11y` and `--done-through=S4`. Found and fixed:
+      the job's 30-minute timeout was shorter than these steps. It is now 75 minutes, sized from the steps' measured
+      durations (about 35 minutes in all, so a 2x margin). The H5P library checkouts and builds are cached
+      (`actions/cache`, keyed on the manifest and the tool's scripts), and a reused checkout must still have its
+      pinned commit as `HEAD` with no tracked file edited (`verifiedHead` in `tools/h5p-libraries/gitSource.mjs`),
+      or the fetch fails; its untracked build output is reused without a rebuild and relies on the cache's scope
 - [x] Progress screenshots (desktop and mobile, `nn`) sent to the owner as each view is built (CLAUDE.md §4):
       eleven views at 1280 and 390 px on 2026-10-24
 - [x] Early independent review of the server work (security, publishing, validator, accessibility, privacy and
       documentation; a skeptic per dimension): 36 confirmed findings, fixed in three groups and verified again
+- [ ] First manual run of the protocol and the matrix (`UD-031`, `NFR-003`; D-079), by HVL/ALU before the first
+      pilot release: the set-ups AT-1, AT-2, AT-3, KB and Z400 of `docs/accessibility/manual-test-protocol.md`, each
+      saved as a dated file in `docs/accessibility/results/`, which holds none yet. `docs/TRACEABILITY.md` lists both
+      requirements as "tested" only because `apps/server/a11y/accessibilityDocs.a11y.test.ts`, a check that the
+      documents agree, carries their IDs; it passes without any result (Evaluator Guide §2)
 - [ ] Gate: as in the Evaluator Guide §5, S4
 
 ## S5 — Læringsdesign studio ⬜
@@ -257,7 +273,7 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 | Q10 | Confirm that the ten seed packages may be committed to the repository (D-042 size rule; H5P libraries are mostly MIT) | Repository owner | S2 |
 | Q12 | Student authors (`AUTHOR_COURSE_GROUPS`) may share only `private` until a course visibility exists, and Feide users without a Feide ID cannot log in (D-059, D-054) | HVL / ALU | Pilot |
 | Q13 | Confirm `"hvl_placement": "<placement>"` in each placement's `custom_fields` (now in `docs/reference/canvas-lti13-developer-key.json`), so the graded placement is recognised (D-061) | TeCopp | S3 pilot |
-| Q14 | No publishing before S4's publish flow; the S3 sharing API changes visibility only (D-066) | HVL / ALU | S4 |
+| Q14 | Confirm S4's publish flow (D-074), which replaced "no publishing before S4": an author publishes from **Sjekk og publiser**, an error needs a reason, which is asked for again after 14 days; the status changes only through publish and unpublish, and the sharing API changes only who can find an activity (D-066) | HVL / ALU | Pilot |
 | Q15 | Learner LTI launches are not written to the authentication audit (D-064) | HVL DPO | S6 |
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous and equals the Feide ID; only then set `"feideLinking": true` for that platform in `LTI_PLATFORMS` (AUTH-005, D-063) | TeCopp | S3 |
@@ -269,7 +285,7 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 
 | ID | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|---|
-| R-01 | Lumi h5p-server 10.0.4 does not work with Core 1.28 libraries. Three issues are known (spec 01 §1, F1–F3), with workarounds; Lumi's fixes are unreleased. S1 spike steps 1–2 passed; 3–5 are blocked by the network | High | High | Finish the spike as soon as the Hub is reachable (Q7; S2 closed with steps 3–5 open, Core 1.28 runs on synthetic content); fall back to 1.27 without Daylight; `patch-package` only with a decision |
+| R-01 | Lumi h5p-server 10.0.4 does not work with Core 1.28 libraries. **Settled 2026-10-23 (D-047):** with the F1–F3 workarounds (spec 01 §1) the ten real content types install, save and play under Core 1.28; only spike step 3, the Hub registration, waits for Q7 (see R-04) | Low | Medium | No fallback to 1.27; `realTypes.browser.int.test.ts` runs the ten types again after every library update (D-078); `npm run hub:check` once the Hub is reachable; `patch-package` only with a decision |
 | R-07 | No H5P editor 1.28 release tag exists | Certain | Medium | Pinned, reviewed commit (D-022); revisit when a tag appears |
 | R-02 | ltijs 7 is a recent rewrite with possible early bugs | Medium | Medium | Keep it behind `LtiProviderFactory`; contract tests; pin the exact version |
 | R-03 | Canvas or Feide endpoint values differ from the spec | Medium | Medium | *(verify)* markers; reference items 4 and 5; integration tests against mocks first |

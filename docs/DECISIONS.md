@@ -90,6 +90,7 @@ with the commands given.
 | D-077 | API schemas in `packages/api-contract` and an OpenAPI document | Accepted (2026-10-23) |
 | D-078 | Real H5P libraries from GitHub at pinned commits | Accepted (2026-10-23) |
 | D-079 | What S4 verifies automatically and what HVL records by hand | Accepted (2026-10-23) |
+| D-080 | H5P markup barriers: repaired in the page where we can, registered where we cannot | Accepted (2026-10-24) |
 
 ---
 
@@ -948,6 +949,44 @@ loading of one spec per session are kept.
   storage stand-in where frame storage is blocked (`hvliGuardFrameStorage`); the editor keeps its UI state as user
   data of activity `0`, which is now answered empty and never stored; and H5P's hub client always asks for Content
   Hub metadata, which D-041 refused with 403 and now answers with empty lists (still without a network request).
+- **Amendment (2026-10-24, final review DOC-4):** two parts of the Decision above did not happen as written.
+  `/lti/deeplink` did not go away: the picker stayed server-rendered there (D-067 amendment), so its first page load
+  still takes the query ltik as in S3, and `/app/deeplink` does not exist. The query ltik is therefore accepted on
+  the pages `/app/play`, `/lti/play`, `/lti/edit` and `/lti/deeplink`, whose routes in the LTI router resolve it
+  themselves, and on `/h5p/ajax` and `/h5p/contentUserData/*` (`LTIK_QUERY_PATHS` in
+  `apps/server/src/auth/requestPrincipal.ts`, which also lists the three `/lti` pages). Upload grants are
+  `HMAC-SHA256` with the HKDF purpose key `temporary-file-url` over `<accountId>|<expiry>`, as the probe result
+  above says, not over `temp|userId|expiry` (`apps/server/src/h5p/contentFileGrants.ts`).
+- **Amendment (2026-10-24, final review WEBA11Y-5):** activity `0` (the editor's own UI state) is still never
+  written, but its GET answer now depends on the flag. H5P's editors read such a flag from the browser's
+  localStorage and then let the server's answer override it (`ns.storage` in `h5peditor.js`; BranchingScenario's
+  `UserStorage`). `{ success: true, data: false }` arrives as "not set". That is right for an "important
+  description" (Blanks, DragText), which stays open until the author closes it. It is wrong for BranchingScenario's
+  three guided tours (`h5p-editor-branching-scenario-*tour-v1-seen`), which then started on every open and faded the
+  editor (inert, D-080 amendment of review THEME-V3). Those three flags are now answered
+  `{ success: false, message: 'hvl:editor-ui-state-not-kept' }`, and H5P then keeps the browser's own flag. Every
+  other flag keeps the empty answer, because an error answer for all of them would hide the important descriptions
+  on a first open (`apps/server/src/http/routes/userDataRoutes.ts`). No table holds author UI preferences.
+  Residual: in a browser that never closed the tour, or whose storage is cleared or blocked, the tour shows again.
+  After its "I got it", focus falls to the frame's body because the tour removes its button (upstream), and the
+  tour's repair in `packages/hvl-h5p-theme/src/a11yEditorRepairs.js` stays attribute-only. «Gå til feltet» presses
+  the tour's "I got it" itself when a tour shows in the BranchingScenario editor
+  (`apps/server/src/h5p/render/client/editorFields.js`). Tests: `apps/server/test/http/userData.int.test.ts`,
+  `apps/server/test/h5p/branchingTour.browser.int.test.ts` (which reopens the editor after "I got it").
+- **Amendment (2026-10-24, final review WEBA11Y-4, WEBSEC-3):** `x-hvli-launch` may also carry `language`, the
+  activity's own language tag (`activityLanguage`, `UD-010`), read after the View check
+  (`apps/server/src/lti/play/appLaunchRoutes.ts`), so the Canvas page marks the title with `lang` when it differs
+  from the page (WCAG 3.1.2, `apps/web/src/i18n/partLanguage.ts`); present but malformed means no launch
+  (`apps/web/src/lti/launchHeader.ts`). The portal's content summaries and details carry the same optional
+  `language` (`packages/api-contract/src/content.ts`), for the activity page's `h1` and the links of the activity
+  list; of the stored metadata only this tag leaves the server (`apps/server/src/content/contentSummaries.ts`). An
+  activity saved without `defaultLanguage` reads as `en`, the `language` Lumi writes as a default on every editor
+  save, as on the player's content container; activities from our editor and the real packages state
+  `defaultLanguage`. Next.js 16 reads `location` into its router's `canonicalUrl` before the page script removes
+  the ltik, and writes it back on every router update (refresh, hot reload); after removing the ltik the page calls
+  `replaceState` once more, after Next.js's history hooks are installed, with Next.js's `__NA` marker left out of
+  the state, so the router adopts the clean address (`UPSTREAM`, `apps/web/src/features/lti/ltikFromAddress.ts`). A
+  browser test refreshes the router and checks the address (`apps/server/test/web/webChrome.browser.int.test.ts`).
 
 ### D-070 · Content Security Policy for H5P pages and Next.js pages; no YouTube
 - **Context:** D-039 and `DATA-011` require a script policy without `'unsafe-inline'` on the player page and no
@@ -1001,6 +1040,26 @@ loading of one spec per session are kept.
   them: with a trailing slash and in any case) may be framed by `'self'` and `CANVAS_ORIGINS` like those pages,
   because `/app/play` frames them on our origin; launch, login and Deep Linking pages stay framed by Canvas only
   (`LTI-003`).
+- **Amendment (2026-10-24, final review DOC-1):** the `SPEC-DEVIATION` from `H5P-009` also covers our own tags on the
+  H5P pages. The player and editor pages (`apps/server/src/h5p/render/playerPage.ts`, `editorPage.ts`) write plain
+  `<script src>` and `<link rel="stylesheet">` tags, with neither `integrity` nor a nonce, for the first scripts
+  (`/static/lti/…`), the boot scripts (`/h5p/boot/…`), the server pages' stylesheet and Lumi's core and library lists,
+  which on the player page include HVL's theme files (`/h5p/theme/…`). Like the tags H5P writes, they are allowed by
+  `'self'` (in `script-src`, next to Core's hash, and in `style-src`). Spec 01's note of 2026-10-23 that our own page
+  tags keep integrity hashes was wrong: no code wrote one. SRI was not added, for three reasons. Every one of these
+  files is same-origin, served by the server that sends the page and its policy, so whoever can change a file can
+  change the hash in the page as well; SRI guards against content changing on another origin, and the only other
+  origin is Panopto's file (amendment above). The same theme files reach the iframes H5P Core writes (for content
+  types it embeds in an iframe, and the editor's) only through `H5PIntegration.core` and `editor.assets`, as tags
+  without `integrity`, so SRI on our tags would cover some documents with H5P content and not others. A nonce would
+  add nothing while `'self'` must stay for H5P's own tags, because a script runs when any source of `script-src`
+  allows it. The Next.js pages are not affected: Next.js puts the nonce on each of its scripts (D-068).
+- **Amendment (2026-10-24, final review DOC-15):** with `WEB_APP=dev` only, the Next.js pages' policy adds
+  `'unsafe-eval'` to `script-src`, which React's development tools need, and allows inline styles (`style-src 'self'
+  'unsafe-inline'` instead of the nonce), because the development server injects style elements without one
+  (`apps/server/src/web/webPageCsp.ts`). This is the "relaxed policy" of D-068's 2026-10-24 amendment. Production
+  refuses `WEB_APP=dev` (`apps/server/src/config/productionChecks.ts`), `WEB_APP=prod` sends the nonce policy above
+  unchanged, and the H5P pages' policy has no development variant.
 
 ### D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)
 - **Context:** `next` depends on `caniuse-lite`, a browser-support data set under CC-BY-4.0, which the licence check
@@ -1054,6 +1113,26 @@ loading of one spec per session are kept.
   library draws one (CoursePresentation's progress bar), and the contrast test fails when a pair drawn over Daylight
   is not declared there. The cues for where an answer goes and which tasks are answered (DragText's empty drop zone,
   CoursePresentation's answered-task dot, the dot also under forced colours) are in `hvl-h5p-indicators.css`.
+- **Amendment (2026-10-24, final review F11):** `SPEC-DEVIATION`: `UD-003`'s acceptance "Checked in greyscale
+  screenshots" is not an automated check; no test renders or stores a greyscale screenshot. A grey screenshot proves
+  nothing until a person judges it, and a stored reference image would need that judgement again after every
+  library update (D-078). The browser tests check instead what lets a state be told apart without colour: the text
+  prefix drawn as `::before` content or as `.hvl-feedback-text` (with its own ✓ or ✗ where the library draws none,
+  W1 (b) above) and announced in the accessibility tree, for the ten types and the question types they offer
+  (`apps/server/test/h5p/hvlFeedback.browser.int.test.ts`, `hvlFeedbackContainers.browser.int.test.ts`,
+  `hvlFeedbackHotspot.browser.int.test.ts`); `packages/design-tokens/test/contrast.test.ts` checks the colour pairs
+  they are drawn in. The look in greyscale is a step of the manual protocol
+  (`docs/accessibility/manual-test-protocol.md` §7, "Greyscale"), which HVL runs with the operating system's
+  greyscale filter and records with the other manual results (D-079).
+- **Amendment (2026-10-24, final review NEW-1):** a correction of the F11 amendment above, which says more than the
+  tests prove. The browser tests answer in MultiChoice, Blanks and DragText, and in the question types inside
+  QuestionSet (TrueFalse, MarkTheWords, MultiMediaChoice), Column (SingleChoiceSet, ImageHotspotQuestion) and
+  InteractiveVideo (Summary). No browser test answers a question inside CoursePresentation, InteractiveBook or
+  BranchingScenario; the questions there are the same libraries, and
+  `packages/hvl-h5p-theme/test/feedbackPrefixesCss.test.ts` checks that the target list covers each of these question
+  types in both states. The prefix is drawn as `::before` content, as the image's `::after`
+  (ImageHotspotQuestion, `prefixPseudo: "after"`, amendment of review A11Y-1 above) or as `.hvl-feedback-text`. So
+  "for the ten types and the question types they offer" should read "for the question types the ten types offer".
 
 ### D-073 · The validator is pure: shape-based walk, configuration passed in
 - **Context:** `UD-020` asks for a pure, deterministic `validateContent`. The S2 parameter walker needs an
@@ -1135,6 +1214,21 @@ loading of one spec per session are kept.
   from Redis. The saved form repeats the editor's cleaning steps;
   `apps/server/test/content/publishedSaveRealTypes.int.test.ts` compares it with what the editor stores, so a new
   step in `HvlH5PEditor`'s save must be added to `savedForm.ts` as well.
+- **Amendment (2026-10-24, final review F1, F3, F4, F5, NEW-6):** a published activity with an error that has no
+  acknowledgement that holds (it ran out, or the error is new to a later rule; the findings show both as
+  `acknowledgement: null`, so the note names neither) offers **Grunngje på nytt** on **Sjekk og publiser**, next to
+  **Gjer om til utkast**: the publish dialog, labelled for new reasons, which sends the same `POST …/publish` (W3:
+  it validates again and moves `publishedAt`). With nothing to explain it offers only **Gjer om til utkast**.
+  Publish and unpublish share one button element, so keyboard focus stays on it when the status changes, and after
+  a publish or new reasons focus is put on it again, since **Grunngje på nytt** goes away once every error has a
+  reason; unpublishing runs one request at a time (`aria-disabled` while it runs;
+  `apps/web/src/features/activity/CheckPanel.tsx`). The refusal of such a save no longer blames the change:
+  `error.publishedSaveBlocked` and the editor page's `page.editor.blockedSave` say that some errors have no reason
+  that holds, that a reason holds for 14 days, and how to fix, explain or unpublish; the editor page lists the
+  errors in its error summary, each with «Gå til feltet»
+  (`apps/server/test/h5p/editorBlockedSave.browser.int.test.ts`). The Canvas page has no **Sjekk og publiser** tab
+  (`LTI-006`), so in Canvas the editor says `page.editor.blockedSaveCanvas`: fix the errors and save again, or
+  explain them on the activity's page in HVL Interaktiv, which needs a Feide login.
 
 ### D-075 · Notice dismissals are stored per user
 - **Context:** `PROD-011` remembers the formative-use notice's dismissal per user; `User` has no preference fields and
@@ -1152,6 +1246,17 @@ loading of one spec per session are kept.
 - **Decision:** `apps/web/src/i18n/` has the same typed `t()` and `locales/{nn,nb,en}.json` (locale-parity checked);
   the locale comes from Express's `x-hvli-locale` header (session or launch locale, else `nn`).
 - **Consequences:** No next-intl dependency; one key style across server and web.
+- **Amendment (2026-10-24, final review WEBSEC-2/F2, NEW-3, WEBA11Y-1/DOC-2):** the locale is the launch's, else an
+  allowlisted `?lang=` (`nn`, `nb`, `en`; any other value or a repeated parameter is ignored), else the portal
+  session's, else `nn` (`apps/server/src/web/webRoutes.ts`). The web app's **Hjelp** and **Personvern** links carry
+  the page's locale (`apps/web/src/config/paths.ts` `infoHref`), and so does **Hjelp** on the server-rendered pages
+  (`apps/server/src/http/pages/htmlPage.ts`), because inside Canvas they open a new tab without the launch, and
+  portal sessions are always Nynorsk; without it the nb and en privacy notices (`DATA-006`) were unreachable. Every
+  page but the start page now has its own title, "<page> – HVL Interaktiv" (WCAG 2.4.2,
+  `apps/web/src/i18n/pageTitle.ts`); the start page is titled "HVL Interaktiv", and the activity page is titled
+  "Aktivitet – HVL Interaktiv" until the activity has loaded, then "<activity's title> – HVL Interaktiv". Tests:
+  `apps/server/test/web/webChrome.browser.int.test.ts` (an English launch's links open English pages; each route's
+  title), `apps/web/test/features/ActivityView.test.tsx`.
 
 ### D-077 · API schemas in `packages/api-contract` and an OpenAPI document
 - **Context:** `DOC-012` (moved from S3) asks for zod request and response schemas and an OpenAPI document at
@@ -1193,6 +1298,16 @@ loading of one spec per session are kept.
   scripts the manual tasks and the browser/assistive-technology matrix; HVL/ALU record dated results in
   `docs/accessibility/results/`. The S4 gate lists what remains manual.
 - **Consequences:** Firefox, Safari, Edge and the screen-reader results stay open until HVL runs the protocol.
+- **Amendment (2026-10-24, final review DOC-7):** `docs/TRACEABILITY.md` lists `UD-031` and `NFR-003` as "tested"
+  because `apps/server/a11y/accessibilityDocs.a11y.test.ts` carries their IDs. That test checks that the protocol,
+  the matrix and the results README agree with each other, and it passes while no result is recorded. We accept
+  this mechanical status and do not give spec-trace a special case for the two. The traceability legend defines
+  "tested" as "at least one test title carries the ID". `spec:trace --check --done-through=S4` must still count
+  both as covered, because this decision leaves their manual results to HVL and outside the S4 gate. A status kept by
+  hand inside the generator would be a second record of what PROGRESS already tracks, and nothing would clear it once
+  HVL records results. The open work is the unchecked S4 item "First manual run of the protocol and the matrix" in
+  PROGRESS.md. The matrix (§1, §3), the Evaluator Guide (§2, limitation 15) and `tools/spec-trace/README.md` say
+  what "tested" means for these two.
 
 ### D-080 · H5P markup barriers: repaired in the page where we can, registered where we cannot
 - **Context:** `UD-030` lets CI fail on any serious or critical axe violation on every route and inside each type's
@@ -1252,3 +1367,70 @@ loading of one spec per session are kept.
   no longer keeps the faded parts at full opacity: that hid the spotlight while clicks there still did nothing. axe
   skips inert content, so the tour adds no register entry; the reuse panel with the Paste item is faded too, so the
   Paste entry applies after the tour only (`tour: false`).
+- **Amendment (2026-10-24, final review DOC-9):** a third keyboard barrier that axe cannot see (WCAG 2.1.1,
+  `UD-006`): ImageHotspots' hotspot position picker (H5PEditor.ImageCoordinateSelector 1.2.7,
+  `scripts/image-coordinate-selector.js`) is a `<div>` with a click handler only, with no `tabindex`, no key handler
+  and no x or y field, and a new hotspot starts at 50 % / 50 %. A keyboard-only author can add a hotspot but cannot
+  move it. Attributes cannot add the missing input, so the barrier stays as H5P wrote it (repair 6 only gives the
+  picker's copy of the image `alt=""`); the manual protocol (§8) names it, and it belongs on the `UD-040` upstream
+  list with the other two. It has no `upstream pin:` test of its own yet: the repairs' browser test file has 199 of its
+  200 lines (`DOC-007`), so the pin needs a file of its own; until it has one, the manual protocol is where the
+  barrier is checked.
+- **Amendment (2026-10-24, final review DOC-13):** no upstream issue has been filed for any repair or register
+  entry. Filing them belongs to the `UD-040` work (S6), from this record and the register. `SPEC-DEVIATION`:
+  `DOC-003` asks an `UPSTREAM` tag for a link to the upstream issue; until an issue exists, each tag links the
+  library source at the pinned commit (D-078 manifest), and the issue link replaces it once the issue is filed. A
+  repair can be removed once a pinned version of its library (version pinned now in brackets) writes itself what the
+  repair adds: (a) CoursePresentation (1.28.25) a progress bar that is a list of named links,
+  not a tab list of `<div>`s, and (b) slides that are no `role="tabpanel"`; (c) H5P.Components (1.0.99, DragText's
+  drop zones) a role on the drop zone; (d) H5PEditor.RangeList (1.0.13) a label on the "to" field; (e)
+  H5PEditor.VerticalTabs (1.3.16) no `role="tablist"` around items that hold other buttons and no `role="tabpanel"`
+  on their forms; (f) the H5P editor (D-022 commit) a mode switch that is a named group whose active mode is
+  pressed; (g) H5PEditor.ImageCoordinateSelector (1.2.7) an `alt` on its copy of the image; (h) H5P.DragNBar
+  (1.5.23) a name on the paste button; (i) the hub client (in the H5P editor) a content-type list that is a list of
+  items or a named group; (j) H5PEditor.BranchingScenario (1.5.13) a tour that makes the parts it fades inert. A
+  repair is removed together with its expectations in `packages/hvl-h5p-theme/test/a11yRepairs.test.ts` and
+  `apps/server/test/h5p/a11yRepairs.browser.int.test.ts`, and `npm run test:a11y` must then still pass. A register
+  entry needs no such condition: an entry that stops occurring fails the suite (Decision above).
+- **Amendment (2026-10-24, final review DOC-13, tests of (j)):** repair (j), the tour, is not tested in the two
+  files the amendment above names. Its expectations are in `packages/hvl-h5p-theme/test/a11yRepairsTour.test.ts` and
+  `apps/server/test/h5p/branchingTour.browser.int.test.ts`, and the axe scan of the BranchingScenario editor with the
+  tour open is in `apps/server/a11y/axeEditor.a11y.test.ts`. Removing (j) removes or adjusts those.
+- **Amendment (2026-10-24, pin):** the position picker now has its `upstream pin:` test,
+  `apps/server/test/h5p/upstreamPins.browser.int.test.ts`, so the DOC-9 amendment's "no `upstream pin:` test of its
+  own yet" no longer holds. The pin presses arrow keys, Enter and Space on the picker in the real editor and expects
+  the hotspot not to move, then clicks as a positive control; a library update that gives the picker keyboard input
+  fails it.
+- **Amendment (2026-10-24, final review DOC-13 and NEW-1: repair (k) and the editor's own file):** the repairs are
+  now two files, one per surface, loaded in this order into every H5P document after `feedbackPrefixes.js`
+  (`apps/server/src/h5p/h5pAssets.ts`). `packages/hvl-h5p-theme/src/a11yRepairs.js` repairs the content types'
+  markup: (a) to (c) of the DOC-13 amendment and (k) below. `packages/hvl-h5p-theme/src/a11yEditorRepairs.js`
+  repairs H5P's editor, its widgets, DragNBar, the hub's list and BranchingScenario's tour: (d) to (j), so it is
+  also the file that makes the tour's faded parts inert (amendment of review THEME-V3), which the Decision and the
+  earlier amendments credit to `a11yRepairs.js`. The jsdom tests follow the split: (a) to (c) and (k) are in
+  `packages/hvl-h5p-theme/test/a11yRepairs.test.ts`, (d) to (i) in
+  `packages/hvl-h5p-theme/test/a11yEditorRepairs.test.ts` (not in `a11yRepairs.test.ts`, as the DOC-13 amendment
+  says), and `a11yRepairsTour.test.ts` loads `a11yEditorRepairs.js`. A ninth barrier is repaired, (k):
+  H5P.Question (1.5.47, `scripts/explainer.js`) writes the title of the explanation shown after a check (DragText's
+  "Forklaring") as `role="heading"` without the `aria-level` that ARIA 1.2 requires (axe `aria-required-attr`,
+  critical). `a11yRepairs.js` gives it level 2, because the player document has no heading of its own and the page
+  around it gives the activity's title as its `h1`. It can be removed once a pinned H5P.Question writes a heading
+  level itself; it is removed together with its case in `a11yRepairs.test.ts`, and the axe scan of DragText
+  answered (`apps/server/a11y/axeContentTypes.a11y.test.ts`) must still pass. No upstream issue is filed for (k)
+  either.
+- **Amendment (2026-10-24, final review NEW-4: CoursePresentation's bar):** the 24 px progress-bar parts of the
+  repairs amendment above lay over CoursePresentation's footer. The bar (`.h5p-cp-navigation`) is 3 % of the
+  player's height, 5 px at 320 CSS px wide, and the parts' links (`z-index: 3`) covered «Vis sidemeny», «Neste side»
+  and «Fullskjerm» at 320 and 640 px wide, so a pointer could not press them (WCAG 1.4.10, 2.5.8). A taller bar
+  alone was clipped by the player's `overflow: hidden`. Outside full screen the theme now gives the bar room and the
+  player grows by what that adds: `.h5p-wrapper` is `content-box` with `padding-bottom: max(0px, 24px - 1.6875%)`
+  (CoursePresentation 1.28 keeps its height at 9/16 of its width, so 3 % of the height is 1.6875 % of the width), the
+  bar and its parts are at least 24 × 24 px, and the summary slide's part keeps its 2.2em but at least 24 px
+  (`packages/hvl-h5p-theme/src/hvl-h5p-theme.css`, with a removal condition).
+  `apps/server/a11y/reflowAndMotion.a11y.test.ts` checks with a pointer that nothing covers a footer control at
+  320 × 640 and 640 × 320, and `apps/server/a11y/targetSize.a11y.test.ts` measures the parts with every other target
+  of the player. Residual: in full screen, which H5P fits to the screen, the bar stays H5P's own. Its parts then
+  cover nothing, but on a phone they are 5 to 10 px high, below 2.5.8's size and spacing; `UD-005` is met there only
+  through 2.5.8's equivalent-control exception, because the side menu and the previous and next buttons, which the
+  theme's 24 px rule for buttons covers, reach every slide. No automated test opens full screen; the manual protocol
+  (§8) checks it.

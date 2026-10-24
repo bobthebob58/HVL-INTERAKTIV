@@ -269,7 +269,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S1</td><td>Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup</td><td>00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD</td><td>✅ Done (2026-10-21)</td></tr>
 <tr>
-<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>✅ Gate passed (2026-10-23); spike steps 3–5 open (Q7)</td></tr>
+<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>✅ Gate passed (2026-10-23); spike step 3 open (Q7), steps 4–5 done in S4 (D-047)</td></tr>
 <tr>
 <td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>✅ Gate passed (2026-10-23); HVL&#39;s Feide and Canvas values open (Q3, Q4)</td></tr>
 <tr>
@@ -442,6 +442,8 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <td>D-078</td><td>Real H5P libraries from GitHub at pinned commits</td><td>Accepted (2026-10-23)</td></tr>
 <tr>
 <td>D-079</td><td>What S4 verifies automatically and what HVL records by hand</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-080</td><td>H5P markup barriers: repaired in the page where we can, registered where we cannot</td><td>Accepted (2026-10-24)</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--references" tabindex="-1">Reference inputs from HVL</h3>
@@ -933,7 +935,14 @@ inside the h5p iframe.
 - **verify:** playwright test inspects the iframe dom.
 - **amended (d-070, 2026-10-23):** tags that h5p core writes into its own iframes cannot carry a nonce or an
   integrity hash; they are allowed by the page's `script-src 'self'` and the hash of core's one constant inline
-  script instead. our own page tags keep integrity hashes.">
+  script instead. our own page tags keep integrity hashes. *(this sentence was withdrawn on 2026-10-24: no code
+  did this. see the next note.)*
+- **amended (d-070, 2026-10-24):** our own tags on the h5p player and editor pages (first scripts, boot scripts,
+  stylesheets, lumi's core and library lists with the theme files) carry no integrity hash or nonce either; they are
+  same-origin files allowed by `'self'`, like h5p's own tags. this replaces the withdrawn last sentence of the
+  2026-10-23 note; d-070's amendment gives the reasons. the next.js pages carry a nonce on every script.
+  what remains of the acceptance in s4 is the theme in each document that holds h5p content, under that policy
+  (`apps/server/test/h5p/hvltheme.browser.int.test.ts`); the xapi bridge arrives with `lti-010` (s6).">
 <summary><span class="req-id">H5P-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Inject theme and client scripts into player and editor</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Use <code>customization.global.styles</code> and <code>customization.global.scripts</code>, or <code>alterLibraryFiles</code>, to add
 <code>packages/hvl-h5p-theme/dist/hvl-h5p-theme.css</code> (<a class="req-ref" href="#r-UD-011"><code>UD-011</code></a>) and the xAPI bridge script (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>)
@@ -943,7 +952,14 @@ inside the H5P iframe.</p>
 <li><strong>Verify:</strong> Playwright test inspects the iframe DOM.</li>
 <li><strong>Amended (D-070, 2026-10-23):</strong> tags that H5P Core writes into its own iframes cannot carry a nonce or an
 integrity hash; they are allowed by the page&#39;s <code>script-src &#39;self&#39;</code> and the hash of Core&#39;s one constant inline
-script instead. Our own page tags keep integrity hashes.</li>
+script instead. Our own page tags keep integrity hashes. <em>(This sentence was withdrawn on 2026-10-24: no code
+did this. See the next note.)</em></li>
+<li><strong>Amended (D-070, 2026-10-24):</strong> our own tags on the H5P player and editor pages (first scripts, boot scripts,
+stylesheets, Lumi&#39;s core and library lists with the theme files) carry no integrity hash or nonce either; they are
+same-origin files allowed by <code>&#39;self&#39;</code>, like H5P&#39;s own tags. This replaces the withdrawn last sentence of the
+2026-10-23 note; D-070&#39;s amendment gives the reasons. The Next.js pages carry a nonce on every script.
+What remains of the acceptance in S4 is the theme in each document that holds H5P content, under that policy
+(<code>apps/server/test/h5p/hvlTheme.browser.int.test.ts</code>); the xAPI bridge arrives with <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> (S6).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-H5P-009">01 H5P engine and security, H5P-009</a> · H5P engine</p></div>
 </details>
@@ -1547,7 +1563,9 @@ css `::before` content **and** the xapi bridge script adds a visually hidden tex
 readers announce them consistently. icons are `aria-hidden=&quot;true&quot;`.
 - **acceptance:** shown for multichoice, questionset, blanks, dragtext and the answer states inside
   containers. checked in greyscale screenshots.
-- **verify:** playwright tests per content type, asserting the text prefix in the accessibility tree.">
+- **verify:** playwright tests per content type, asserting the text prefix in the accessibility tree.
+- **amended (d-072, 2026-10-24):** the greyscale check is a manual step (`docs/accessibility/manual-test-protocol.md`
+  §7); no automated test renders greyscale screenshots. the browser tests assert the drawn and the announced prefix.">
 <summary><span class="req-id">UD-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Feedback never relies on colour alone (WCAG 1.4.1)</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Every correct or incorrect state shows an icon <strong>and</strong> a text prefix as well as colour:
 <strong>✓ Riktig:</strong> / <strong>✗ Feil:</strong> (<code>nn</code>, <code>nb</code>), <strong>✓ Correct:</strong> / <strong>✗ Incorrect:</strong> (<code>en</code>). Prefixes are i18n
@@ -1558,6 +1576,8 @@ readers announce them consistently. Icons are <code>aria-hidden=&quot;true&quot;
 <li><strong>Acceptance:</strong> Shown for MultiChoice, QuestionSet, Blanks, DragText and the answer states inside
 containers. Checked in greyscale screenshots.</li>
 <li><strong>Verify:</strong> Playwright tests per content type, asserting the text prefix in the accessibility tree.</li>
+<li><strong>Amended (D-072, 2026-10-24):</strong> the greyscale check is a manual step (<code>docs/accessibility/manual-test-protocol.md</code>
+§7); no automated test renders greyscale screenshots. The browser tests assert the drawn and the announced prefix.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-003">03 Universal design, UD-003</a> · Universal design</p></div>
 </details>
@@ -2242,14 +2262,14 @@ addresses, Feide IDs, national ID numbers or raw LTI <code>sub</code> values. Th
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-002">05 Insight and privacy, DATA-002</a> · Data protection</p></div>
 </details>
-<details class="req" id="x-DATA-003" data-area="DATA" data-priority="MUST" data-session="S6" data-status="in code" data-text="data-003 annual retention purge a scheduled job runs on a configured date (default 15 august), for the academic year that has
+<details class="req" id="x-DATA-003" data-area="DATA" data-priority="MUST" data-session="S6" data-status="tested" data-text="data-003 annual retention purge a scheduled job runs on a configured date (default 15 august), for the academic year that has
 ended. it deletes `xapistatement`, `h5puserdata`, `gradesyncjob` and learner `identity` rows older
 than the academic-year boundary plus 30 days, then learner `user` rows that have no `identity` left
 (d-034), and destroys that year's pseudonym secret. only
 aggregate snapshots that already satisfy *k*-suppression are kept, for the *pedagogisk mappe*.
 - **acceptance:** a dry-run mode reports counts without deleting. each run writes an audit event with the counts.
 - **verify:** integration test with time travel.">
-<summary><span class="req-id">DATA-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">DATA-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>A scheduled job runs on a configured date (default 15 August), for the academic year that has
 ended. It deletes <code>XapiStatement</code>, <code>H5PUserData</code>, <code>GradeSyncJob</code> and learner <code>Identity</code> rows older
 than the academic-year boundary plus 30 days, then learner <code>User</code> rows that have no <code>Identity</code> left
@@ -3244,7 +3264,14 @@ inside the H5P iframe.</p>
 <li><strong>Verify:</strong> Playwright test inspects the iframe DOM.</li>
 <li><strong>Amended (D-070, 2026-10-23):</strong> tags that H5P Core writes into its own iframes cannot carry a nonce or an
 integrity hash; they are allowed by the page&#39;s <code>script-src &#39;self&#39;</code> and the hash of Core&#39;s one constant inline
-script instead. Our own page tags keep integrity hashes.</li>
+script instead. Our own page tags keep integrity hashes. <em>(This sentence was withdrawn on 2026-10-24: no code
+did this. See the next note.)</em></li>
+<li><strong>Amended (D-070, 2026-10-24):</strong> our own tags on the H5P player and editor pages (first scripts, boot scripts,
+stylesheets, Lumi&#39;s core and library lists with the theme files) carry no integrity hash or nonce either; they are
+same-origin files allowed by <code>&#39;self&#39;</code>, like H5P&#39;s own tags. This replaces the withdrawn last sentence of the
+2026-10-23 note; D-070&#39;s amendment gives the reasons. The Next.js pages carry a nonce on every script.
+What remains of the acceptance in S4 is the theme in each document that holds H5P content, under that policy
+(<code>apps/server/test/h5p/hvlTheme.browser.int.test.ts</code>); the xAPI bridge arrives with <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> (S6).</li>
 </ul>
 <h4 id="r-H5P-010" class="req-heading" tabindex="-1"><a class="req-id" href="#r-H5P-010">H5P-010</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Panopto-first video guidance</span></h4>
 <p>Use <code>alterLibrarySemantics</code> on <code>H5P.InteractiveVideo</code> and <code>H5P.Video</code> to replace the upload field&#39;s
@@ -3736,7 +3763,7 @@ in <code>tools/mock-platform/test/</code>. To try the flows by hand, run <code>n
 <div class="table-wrap" role="region" aria-label="Table 1, 03 Universal design details" tabindex="0"><table><tbody><tr><th scope="row"><strong>Status</strong></th><td>Approved for build (v1.1, 2026-10-21: brand tokens and typefaces aligned with HVL&#39;s design manual)</td></tr>
 <tr><th scope="row"><strong>Load in sessions</strong></th><td>S4 (all); S6 (§6 conformance report)</td></tr>
 <tr><th scope="row"><strong>Owns requirement IDs</strong></th><td><code>UD-*</code></td></tr>
-<tr><th scope="row"><strong>Code location</strong></th><td><code>packages/design-tokens/</code>, <code>packages/hvl-h5p-theme/</code>, <code>apps/web/src/components/</code>, <code>apps/server/src/validation/</code></td></tr>
+<tr><th scope="row"><strong>Code location</strong></th><td><code>packages/design-tokens/</code>, <code>packages/hvl-h5p-theme/</code>, <code>apps/web/src/app/</code>, <code>apps/web/src/components/</code>, <code>apps/web/src/features/</code>, <code>apps/web/src/styles/</code>, <code>apps/server/src/http/pages/</code> (server-rendered pages), <code>apps/server/src/validation/</code>, <code>apps/server/a11y/</code> (the axe suite, <a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>), <code>docs/accessibility/</code> (manual protocol and results, <a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>)</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="spec-03--1-legal-and-institutional-baseline" tabindex="-1">1. Legal and institutional baseline</h3>
@@ -3840,6 +3867,8 @@ readers announce them consistently. Icons are <code>aria-hidden=&quot;true&quot;
 <li><strong>Acceptance:</strong> Shown for MultiChoice, QuestionSet, Blanks, DragText and the answer states inside
 containers. Checked in greyscale screenshots.</li>
 <li><strong>Verify:</strong> Playwright tests per content type, asserting the text prefix in the accessibility tree.</li>
+<li><strong>Amended (D-072, 2026-10-24):</strong> the greyscale check is a manual step (<code>docs/accessibility/manual-test-protocol.md</code>
+§7); no automated test renders greyscale screenshots. The browser tests assert the drawn and the announced prefix.</li>
 </ul>
 <h4 id="r-UD-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-UD-004">UD-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Visible, unobscured focus (2.4.7, 2.4.11, 1.4.11)</span></h4>
 <p><code>:focus-visible { outline: 3px solid var(--hvl-focus-outer); outline-offset: 2px; box-shadow: 0 0 0 2px var(--hvl-focus-inner); }</code>.
@@ -4734,13 +4763,17 @@ requirement explorer. Regenerate it with <code>node tools/spec-site/buildSpecSit
 <tr>
 <td>2</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/TRACEABILITY.md" rel="noopener" class="ext">TRACEABILITY<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a></td><td>Which requirements are planned, in code or tested</td></tr>
 </tbody></table></div>
-<p><strong>To see it run</strong> <em>(from S3)</em>: set up the services, the H5P files and <code>apps/server/.env</code> as for <code>npm start</code>
-(§3; <code>.env.example</code> already holds the mock&#39;s values), start <code>npm run mock:platform</code> in one terminal and run
-<code>npm start</code> in another. The mock Canvas home page (<code>http://127.0.0.1:4100/</code>) offers demo launches into
-the tool, and the start page (<code>http://localhost:3000/</code>) offers Feide login against the mock Feide. There is no
-editor before S4 and the seed packages are not in the repository yet (Q7, Q10), so a launch can only open an
-activity that already exists in the database; the e2e tests (<code>npm run test:e2e</code>) create their own and show
-the whole flows in a browser. Details: <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/tools/mock-platform/README.md" rel="noopener" class="ext">tools/mock-platform/README.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>.</p>
+<p><strong>To see it run</strong> <em>(from S3; the web app and the real content types from S4)</em>: set up the services, the H5P files
+and <code>apps/server/.env</code> as for <code>npm start</code> (§3; <code>.env.example</code> already holds the mock&#39;s values and <code>WEB_APP=dev</code>),
+start <code>npm run mock:platform</code> in one terminal and run <code>npm start</code> in another. The mock Canvas home page
+(<code>http://127.0.0.1:4100/</code>) offers demo launches into the tool, and the start page (<code>http://localhost:3000/</code>)
+offers Feide login against the mock Feide. The Hub&#39;s seed packages are not in the repository (Q7, Q10), so install
+the real content types first: <code>npm run h5p:fetch-libraries</code>, then <code>npm run seed:libraries -- var/h5p-real/packages</code>
+(D-078). Then sign in (the mock Feide signs in its <code>author</code>), create an activity at <code>/aktivitet/ny</code>, save it and
+publish it from <strong>Sjekk og publiser</strong>; the mock Canvas can then launch it by the ID in its address
+(<code>/aktivitet/&lt;id&gt;</code>) or place it through Deep Linking. With <code>WEB_APP=prod</code>, run <code>npm run build</code> first. The e2e tests
+(<code>npm run test:e2e</code>) create their own activities and show the whole flows in a browser. Details:
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/tools/mock-platform/README.md" rel="noopener" class="ext">tools/mock-platform/README.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>.</p>
 <hr>
 <h3 id="evaluator-guide--2-checking-one-requirement-end-to-end" tabindex="-1">2. Checking one requirement end-to-end</h3>
 <p>Every requirement has an ID such as <a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>. The same ID appears in the spec heading, in the
@@ -4759,6 +4792,15 @@ node tools/spec-trace/specTrace.mjs --check</code></pre>
 <p>Things to judge as you go: Do the acceptance criteria in the spec match what the test actually
 asserts? Does the module header&#39;s <em>Invariants</em> section match the code? Is every <code>SECURITY:</code>,
 <code>PRIVACY:</code>, <code>A11Y:</code> and <code>PEDAGOGY:</code> comment justified?</p>
+<p><strong>&quot;Tested&quot; is not &quot;verified&quot; for the two manual requirements.</strong> <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/TRACEABILITY.md" rel="noopener" class="ext">TRACEABILITY<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> calls a requirement
+<em>tested</em> as soon as one test title carries its ID. For <a class="req-ref" href="#r-UD-031"><code>UD-031</code></a> and <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a> that test is
+<code>apps/server/a11y/accessibilityDocs.a11y.test.ts</code>, a check of documents. It proves that the manual protocol scripts
+J1–J4 for the five set-ups <a class="req-ref" href="#r-UD-031"><code>UD-031</code></a> names, that the <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a> matrix names every browser and screen reader of the
+requirement and only suites that exist, and that every file in <code>docs/accessibility/results/</code> has a dated name. It
+does not prove that anyone has run the protocol, that a browser other than Chromium works, or that a screen reader
+announces anything: it passes while the results folder holds no result. Both requirements are documented protocols
+whose results HVL records (D-079); <a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>&#39;s own check, a dated result file for the release, stays an open item in
+<a href="#progress">PROGRESS.md</a> until HVL&#39;s first run.</p>
 <hr>
 <h3 id="evaluator-guide--3-commands-available-now-unless-a-later-session-is-noted" tabindex="-1">3. Commands <em>(available now unless a later session is noted)</em></h3>
 <div class="table-wrap" role="region" aria-label="Table 2, 3. Commands (available now unless a later session is noted)" tabindex="0"><table><thead><tr>
@@ -4788,11 +4830,11 @@ asserts? Does the module header&#39;s <em>Invariants</em> section match the code
 <tr>
 <td><code>npm start</code> <em>(from S3)</em></td><td>The server starts: tsx runs <code>apps/server/src/server/main.ts</code> (no build step), which syncs <code>LTI_PLATFORMS</code>, re-encrypts platform keys, starts the cleanup jobs and listens on <code>PORT</code>. With <code>npm run mock:platform</code> running, <code>curl http://localhost:3000/healthz</code> answers <code>{&quot;status&quot;:&quot;ok&quot;}</code> and <code>/lti/keys</code> the tool&#39;s public keys. Needs the setup of <code>npm test</code> plus <code>npm run h5p:fetch-core</code>; a bad configuration exits with code 1 and names the variables, never their values (<a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>)</td></tr>
 <tr>
-<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Chromium flows against the whole server and the mock platform (D-065), in CI too: from S3, launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome&#39;s partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available; the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item; portal Feide login, sharing with the CSRF token, and logout through Feide. These play a synthetic content type (limitation 3). From S4: the owner edits and saves in the H5P editor inside the cookie-less Canvas iframe with the Bearer ltik (<code>ltiEditor.e2e.test.ts</code>); on the built web app with the real content types, a Feide author is refused without a reason and then publishes despite a validator error with one, which stores one ValidationAcknowledgement and leaves no reason in the audit or the log (<code>publishWithReason.e2e.test.ts</code>, PROD-003, UD-022); and the teacher&#39;s Canvas page <code>/app/play</code> with Spel and Rediger, where frame storage is blocked (LTI Platform Storage), saves from the editor inside its chrome with the teacher&#39;s ltik as Bearer, with no Set-Cookie from the tool and no ltik in any frame address (<code>appPlayEditor.e2e.test.ts</code>, LTI-006, LTI-003). A failed step names itself, what failed before it (ltik redacted) and whether another process removed its rows (<code>flowRecord.e2e.test.ts</code> tests this). Needs the setup of <code>npm test</code>; the web app flows also need <code>npm run build</code> and <code>npm run h5p:fetch-libraries</code> (skipped without them locally, failing in CI). Run it without other test processes on the same database. Journeys J1–J5 join in S6</td></tr>
+<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Chromium flows against the whole server and the mock platform (D-065), in CI too: from S3, launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome&#39;s partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available; the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item; portal Feide login, sharing with the CSRF token, and logout through Feide. These play a synthetic content type (limitation 3). From S4: the owner edits and saves in the H5P editor inside the cookie-less Canvas iframe with the Bearer ltik (<code>ltiEditor.e2e.test.ts</code>); on the built web app with the real content types, a Feide author is refused without a reason and then publishes despite a validator error with one, which stores one ValidationAcknowledgement and leaves no reason in the audit or the log (<code>publishWithReason.e2e.test.ts</code>, PROD-003, UD-022); and the teacher&#39;s Canvas page <code>/app/play</code> with Spel and Rediger, where frame storage is blocked (LTI Platform Storage), saves from the editor inside its chrome with the teacher&#39;s ltik as Bearer, with no Set-Cookie from the tool and no ltik in any frame address (<code>appPlayEditor.e2e.test.ts</code>, LTI-006, LTI-003). A failed step names itself, what failed before it (ltik redacted) and whether another process removed its rows (<code>flowRecord.e2e.test.ts</code> tests this); a closed test bed removes what it created and keeps an account an earlier run left (<code>testbedCleanup.e2e.test.ts</code>). Needs the setup of <code>npm test</code>; the web app flows also need <code>npm run build</code> and <code>npm run h5p:fetch-libraries</code> (skipped without them locally, failing in CI). Run it without other test processes on the same database. Journeys J1–J5 join in S6</td></tr>
 <tr>
-<td><code>npm run test:a11y</code> <em>(from S4)</em></td><td>axe-core (WCAG 2.2 AA tags) on every web route, the server pages and the player and editor of all ten real types, in the light theme and with forced colours, plus reflow at 320 px, reduced motion, text spacing and 200 % zoom, keyboard walks (focus visible and not covered), target size, <code>lang</code> and first-party requests (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>, D-079). H5P&#39;s own findings are repaired at run time or listed in <code>apps/server/a11y/support/upstreamRegister.ts</code> (D-080). Needs <code>npm run build</code>, the real packages and Chromium; about 12 minutes; run it on its own</td></tr>
+<td><code>npm run test:a11y</code> <em>(from S4)</em></td><td>axe-core (WCAG 2.2 AA tags) on every web route, the server pages and the player and editor of all ten real types, in the light theme and with forced colours, plus reflow at 320 px, reduced motion, text spacing and 200 % zoom, keyboard walks (focus visible and not covered), target size, <code>lang</code> and first-party requests (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>, D-079). H5P&#39;s own findings are repaired at run time or listed in <code>apps/server/a11y/support/upstreamRegister.ts</code> (D-080). Needs <code>npm run build</code>, the real packages and Chromium; about 15 minutes; run it on its own</td></tr>
 <tr>
-<td><code>npm run h5p:fetch-libraries</code> <em>(from S4)</em></td><td>Clones the ten content types and their dependencies at pinned commits, builds those without committed files and verifies every tree against <code>tools/h5p-libraries/libraries.manifest.json</code> (D-078)</td></tr>
+<td><code>npm run h5p:fetch-libraries</code> <em>(from S4)</em></td><td>Clones the ten content types and their dependencies at pinned commits, builds those without committed files and verifies every tree against <code>tools/h5p-libraries/libraries.manifest.json</code> (D-078); a cached checkout is reused only while its <code>HEAD</code> is still the pinned commit, which CI&#39;s cache of the checkouts relies on</td></tr>
 <tr>
 <td><code>npm run tokens:check &amp;&amp; npm run lint:css</code> <em>(from S4)</em></td><td>The committed token CSS matches <code>tokens.json</code>; no colour literal, upper case or justified text in any stylesheet (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>, <a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>, D-072)</td></tr>
 <tr>
@@ -4822,7 +4864,7 @@ asserts? Does the module header&#39;s <em>Invariants</em> section match the code
 <tr>
 <td><code>npx vitest run -t &quot;PROD-004|PROD-005|PROD-006|H5P-007&quot;</code> <em>(from S3)</em></td><td>One 404 page for unknown, draft and invisible activities; placing activities in Canvas; sharing that applies at once, only for those who may edit; H5P AJAX and learner-state calls refused without an ltik or CSRF token, and signed content-file URLs. Needs the services</td></tr>
 <tr>
-<td><code>npm run seed:libraries</code> <em>(from S2)</em></td><td>Installs the content types offline from the verified seed packages (<a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>); needs the packages (Q7)</td></tr>
+<td><code>npm run seed:libraries</code> <em>(from S2)</em></td><td>Installs the content types offline from the verified seed packages (<a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>); needs the packages (Q7). From S4, <code>npm run seed:libraries -- var/h5p-real/packages</code> installs the real types that <code>npm run h5p:fetch-libraries</code> built (D-078)</td></tr>
 <tr>
 <td><code>NODE_USE_ENV_PROXY=1 npm run hub:check</code> <em>(from S2)</em></td><td>Spike step 3: Hub registration status, the 15-character <code>local_id</code>, versions of the ten types</td></tr>
 </tbody></table></div>
@@ -4937,12 +4979,17 @@ installed one in its patch version (<a class="req-ref" href="#r-SEC-003"><code>S
 friendly error pages stay server-rendered by Express (they need its 401/403/404/503 statuses) but use the token
 CSS, the formative notice and the <strong>Hjelp</strong> link. The <strong>Innsikt</strong> tab comes with insight (S6), and no page offers
 sharing yet: it is an API call (<code>PATCH /api/content/:contentId/sharing</code>).</li>
-<li><strong>The H5P pages allow inline styles</strong> (D-070). Since S4 the player (<code>/h5p/play/:contentId</code>, <code>/lti/play</code>) and
-editor pages (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>) send <code>script-src &#39;self&#39;</code> plus the hash of H5P Core&#39;s
-one constant inline script, so a script inside an activity cannot run and read the page&#39;s URL token (the ltik
-or the CSRF token). <code>style-src</code> still allows <code>&#39;unsafe-inline&#39;</code>, because H5P sets style attributes throughout;
-injected CSS can change how an activity looks but not run code. The S2 upload checks (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>, <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a>)
-and admin-only library installation (<a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>) limit what an activity can carry.</li>
+<li><strong>The H5P pages allow inline styles, and Panopto&#39;s script once a Panopto site is configured</strong> (D-070). Since S4
+the player (<code>/h5p/play/:contentId</code>, <code>/lti/play</code>) and editor pages (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>)
+send <code>script-src &#39;self&#39;</code> plus the hash of H5P Core&#39;s one constant inline script, so a script inside an activity
+cannot run and read the page&#39;s URL token (the ltik or the CSRF token). When <code>EXTERNAL_MEDIA_ORIGINS</code> lists a
+Panopto site, <code>script-src</code> also allows one third-party file,
+<code>https://developers.panopto.com/scripts/v1.2.0/embedapi.min.js</code>, which H5P.Video needs to play Panopto videos and
+loads without SRI, on pages that hold the ltik in memory (<code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a> and <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>); with
+no Panopto site configured, no outside script can run. Our own tags on these pages carry no SRI or nonce either:
+they are same-origin files allowed by <code>&#39;self&#39;</code> (D-070). <code>style-src</code> still allows <code>&#39;unsafe-inline&#39;</code>, because H5P
+sets style attributes throughout; injected CSS can change how an activity looks but not run code. The S2 upload
+checks (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>, <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a>) and admin-only library installation (<a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>) limit what an activity can carry.</li>
 <li><strong>Tokens travel in some URLs, so proxies must not log query strings</strong> (D-057, D-058). A launch reaches
 <code>/app/play</code>, <code>/lti/play</code>, <code>/lti/edit</code> and <code>/lti/deeplink</code> with the ltik in the query (a first-party script then removes it from the
 address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF token as a query value,
@@ -4975,7 +5022,8 @@ an activity only as <code>private</code> until a course visibility exists (D-059
 ID, such as guests, cannot log in (D-054).</li>
 <li><strong>Accessibility is verified automatically in Chromium only; H5P&#39;s own barriers are listed, not hidden</strong> (D-079,
 D-080). Firefox, Safari, Edge, mobile browsers and the three screen readers are covered by the manual protocol
-in <code>docs/accessibility/</code>, which HVL runs and records (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>, <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>). Barriers in H5P&#39;s own markup that
+in <code>docs/accessibility/</code>, which HVL runs and records (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>, <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>); no run is recorded yet, and the
+&quot;tested&quot; status of both in <code>docs/TRACEABILITY.md</code> comes from a check of the documents (§2). Barriers in H5P&#39;s own markup that
 a run-time repair cannot remove safely are listed in <code>apps/server/a11y/support/upstreamRegister.ts</code> with links
 to the upstream code; they are reported in every run but do not fail CI (<code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>).</li>
 </ol>
@@ -5150,6 +5198,8 @@ with the commands given.</p>
 <td>D-078</td><td>Real H5P libraries from GitHub at pinned commits</td><td>Accepted (2026-10-23)</td></tr>
 <tr>
 <td>D-079</td><td>What S4 verifies automatically and what HVL records by hand</td><td>Accepted (2026-10-23)</td></tr>
+<tr>
+<td>D-080</td><td>H5P markup barriers: repaired in the page where we can, registered where we cannot</td><td>Accepted (2026-10-24)</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="decisions--d-001--nodejs-24-lts-instead-of-22" tabindex="-1">D-001 · Node.js 24 LTS instead of 22</h3>
@@ -6062,6 +6112,44 @@ the iframe creator and its language file, as H5P&#39;s own integrations do; H5P&
 storage stand-in where frame storage is blocked (<code>hvliGuardFrameStorage</code>); the editor keeps its UI state as user
 data of activity <code>0</code>, which is now answered empty and never stored; and H5P&#39;s hub client always asks for Content
 Hub metadata, which D-041 refused with 403 and now answers with empty lists (still without a network request).</li>
+<li><strong>Amendment (2026-10-24, final review DOC-4):</strong> two parts of the Decision above did not happen as written.
+<code>/lti/deeplink</code> did not go away: the picker stayed server-rendered there (D-067 amendment), so its first page load
+still takes the query ltik as in S3, and <code>/app/deeplink</code> does not exist. The query ltik is therefore accepted on
+the pages <code>/app/play</code>, <code>/lti/play</code>, <code>/lti/edit</code> and <code>/lti/deeplink</code>, whose routes in the LTI router resolve it
+themselves, and on <code>/h5p/ajax</code> and <code>/h5p/contentUserData/*</code> (<code>LTIK_QUERY_PATHS</code> in
+<code>apps/server/src/auth/requestPrincipal.ts</code>, which also lists the three <code>/lti</code> pages). Upload grants are
+<code>HMAC-SHA256</code> with the HKDF purpose key <code>temporary-file-url</code> over <code>&lt;accountId&gt;|&lt;expiry&gt;</code>, as the probe result
+above says, not over <code>temp|userId|expiry</code> (<code>apps/server/src/h5p/contentFileGrants.ts</code>).</li>
+<li><strong>Amendment (2026-10-24, final review WEBA11Y-5):</strong> activity <code>0</code> (the editor&#39;s own UI state) is still never
+written, but its GET answer now depends on the flag. H5P&#39;s editors read such a flag from the browser&#39;s
+localStorage and then let the server&#39;s answer override it (<code>ns.storage</code> in <code>h5peditor.js</code>; BranchingScenario&#39;s
+<code>UserStorage</code>). <code>{ success: true, data: false }</code> arrives as &quot;not set&quot;. That is right for an &quot;important
+description&quot; (Blanks, DragText), which stays open until the author closes it. It is wrong for BranchingScenario&#39;s
+three guided tours (<code>h5p-editor-branching-scenario-*tour-v1-seen</code>), which then started on every open and faded the
+editor (inert, D-080 amendment of review THEME-V3). Those three flags are now answered
+<code>{ success: false, message: &#39;hvl:editor-ui-state-not-kept&#39; }</code>, and H5P then keeps the browser&#39;s own flag. Every
+other flag keeps the empty answer, because an error answer for all of them would hide the important descriptions
+on a first open (<code>apps/server/src/http/routes/userDataRoutes.ts</code>). No table holds author UI preferences.
+Residual: in a browser that never closed the tour, or whose storage is cleared or blocked, the tour shows again.
+After its &quot;I got it&quot;, focus falls to the frame&#39;s body because the tour removes its button (upstream), and the
+tour&#39;s repair in <code>packages/hvl-h5p-theme/src/a11yEditorRepairs.js</code> stays attribute-only. «Gå til feltet» presses
+the tour&#39;s &quot;I got it&quot; itself when a tour shows in the BranchingScenario editor
+(<code>apps/server/src/h5p/render/client/editorFields.js</code>). Tests: <code>apps/server/test/http/userData.int.test.ts</code>,
+<code>apps/server/test/h5p/branchingTour.browser.int.test.ts</code> (which reopens the editor after &quot;I got it&quot;).</li>
+<li><strong>Amendment (2026-10-24, final review WEBA11Y-4, WEBSEC-3):</strong> <code>x-hvli-launch</code> may also carry <code>language</code>, the
+activity&#39;s own language tag (<code>activityLanguage</code>, <a class="req-ref" href="#r-UD-010"><code>UD-010</code></a>), read after the View check
+(<code>apps/server/src/lti/play/appLaunchRoutes.ts</code>), so the Canvas page marks the title with <code>lang</code> when it differs
+from the page (WCAG 3.1.2, <code>apps/web/src/i18n/partLanguage.ts</code>); present but malformed means no launch
+(<code>apps/web/src/lti/launchHeader.ts</code>). The portal&#39;s content summaries and details carry the same optional
+<code>language</code> (<code>packages/api-contract/src/content.ts</code>), for the activity page&#39;s <code>h1</code> and the links of the activity
+list; of the stored metadata only this tag leaves the server (<code>apps/server/src/content/contentSummaries.ts</code>). An
+activity saved without <code>defaultLanguage</code> reads as <code>en</code>, the <code>language</code> Lumi writes as a default on every editor
+save, as on the player&#39;s content container; activities from our editor and the real packages state
+<code>defaultLanguage</code>. Next.js 16 reads <code>location</code> into its router&#39;s <code>canonicalUrl</code> before the page script removes
+the ltik, and writes it back on every router update (refresh, hot reload); after removing the ltik the page calls
+<code>replaceState</code> once more, after Next.js&#39;s history hooks are installed, with Next.js&#39;s <code>__NA</code> marker left out of
+the state, so the router adopts the clean address (<code>UPSTREAM</code>, <code>apps/web/src/features/lti/ltikFromAddress.ts</code>). A
+browser test refreshes the router and checks the address (<code>apps/server/test/web/webChrome.browser.int.test.ts</code>).</li>
 </ul>
 <h3 id="decisions--d-070--content-security-policy-for-h5p-pages-and-nextjs-pages-no-youtube" tabindex="-1">D-070 · Content Security Policy for H5P pages and Next.js pages; no YouTube</h3>
 <ul>
@@ -6111,6 +6199,25 @@ redirect goes on to Feide (see above). The error pages of <code>/lti/play</code>
 them: with a trailing slash and in any case) may be framed by <code>&#39;self&#39;</code> and <code>CANVAS_ORIGINS</code> like those pages,
 because <code>/app/play</code> frames them on our origin; launch, login and Deep Linking pages stay framed by Canvas only
 (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
+<li><strong>Amendment (2026-10-24, final review DOC-1):</strong> the <code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a> also covers our own tags on the
+H5P pages. The player and editor pages (<code>apps/server/src/h5p/render/playerPage.ts</code>, <code>editorPage.ts</code>) write plain
+<code>&lt;script src&gt;</code> and <code>&lt;link rel=&quot;stylesheet&quot;&gt;</code> tags, with neither <code>integrity</code> nor a nonce, for the first scripts
+(<code>/static/lti/…</code>), the boot scripts (<code>/h5p/boot/…</code>), the server pages&#39; stylesheet and Lumi&#39;s core and library lists,
+which on the player page include HVL&#39;s theme files (<code>/h5p/theme/…</code>). Like the tags H5P writes, they are allowed by
+<code>&#39;self&#39;</code> (in <code>script-src</code>, next to Core&#39;s hash, and in <code>style-src</code>). Spec 01&#39;s note of 2026-10-23 that our own page
+tags keep integrity hashes was wrong: no code wrote one. SRI was not added, for three reasons. Every one of these
+files is same-origin, served by the server that sends the page and its policy, so whoever can change a file can
+change the hash in the page as well; SRI guards against content changing on another origin, and the only other
+origin is Panopto&#39;s file (amendment above). The same theme files reach the iframes H5P Core writes (for content
+types it embeds in an iframe, and the editor&#39;s) only through <code>H5PIntegration.core</code> and <code>editor.assets</code>, as tags
+without <code>integrity</code>, so SRI on our tags would cover some documents with H5P content and not others. A nonce would
+add nothing while <code>&#39;self&#39;</code> must stay for H5P&#39;s own tags, because a script runs when any source of <code>script-src</code>
+allows it. The Next.js pages are not affected: Next.js puts the nonce on each of its scripts (D-068).</li>
+<li><strong>Amendment (2026-10-24, final review DOC-15):</strong> with <code>WEB_APP=dev</code> only, the Next.js pages&#39; policy adds
+<code>&#39;unsafe-eval&#39;</code> to <code>script-src</code>, which React&#39;s development tools need, and allows inline styles (<code>style-src &#39;self&#39; &#39;unsafe-inline&#39;</code> instead of the nonce), because the development server injects style elements without one
+(<code>apps/server/src/web/webPageCsp.ts</code>). This is the &quot;relaxed policy&quot; of D-068&#39;s 2026-10-24 amendment. Production
+refuses <code>WEB_APP=dev</code> (<code>apps/server/src/config/productionChecks.ts</code>), <code>WEB_APP=prod</code> sends the nonce policy above
+unchanged, and the H5P pages&#39; policy has no development variant.</li>
 </ul>
 <h3 id="decisions--d-071--cc-by-40-is-an-allowed-licence-caniuse-lite" tabindex="-1">D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)</h3>
 <ul>
@@ -6165,6 +6272,26 @@ the name when the state ends. <code>tokens.json</code> pairings may name a <code
 library draws one (CoursePresentation&#39;s progress bar), and the contrast test fails when a pair drawn over Daylight
 is not declared there. The cues for where an answer goes and which tasks are answered (DragText&#39;s empty drop zone,
 CoursePresentation&#39;s answered-task dot, the dot also under forced colours) are in <code>hvl-h5p-indicators.css</code>.</li>
+<li><strong>Amendment (2026-10-24, final review F11):</strong> <code>SPEC-DEVIATION</code>: <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>&#39;s acceptance &quot;Checked in greyscale
+screenshots&quot; is not an automated check; no test renders or stores a greyscale screenshot. A grey screenshot proves
+nothing until a person judges it, and a stored reference image would need that judgement again after every
+library update (D-078). The browser tests check instead what lets a state be told apart without colour: the text
+prefix drawn as <code>::before</code> content or as <code>.hvl-feedback-text</code> (with its own ✓ or ✗ where the library draws none,
+W1 (b) above) and announced in the accessibility tree, for the ten types and the question types they offer
+(<code>apps/server/test/h5p/hvlFeedback.browser.int.test.ts</code>, <code>hvlFeedbackContainers.browser.int.test.ts</code>,
+<code>hvlFeedbackHotspot.browser.int.test.ts</code>); <code>packages/design-tokens/test/contrast.test.ts</code> checks the colour pairs
+they are drawn in. The look in greyscale is a step of the manual protocol
+(<code>docs/accessibility/manual-test-protocol.md</code> §7, &quot;Greyscale&quot;), which HVL runs with the operating system&#39;s
+greyscale filter and records with the other manual results (D-079).</li>
+<li><strong>Amendment (2026-10-24, final review NEW-1):</strong> a correction of the F11 amendment above, which says more than the
+tests prove. The browser tests answer in MultiChoice, Blanks and DragText, and in the question types inside
+QuestionSet (TrueFalse, MarkTheWords, MultiMediaChoice), Column (SingleChoiceSet, ImageHotspotQuestion) and
+InteractiveVideo (Summary). No browser test answers a question inside CoursePresentation, InteractiveBook or
+BranchingScenario; the questions there are the same libraries, and
+<code>packages/hvl-h5p-theme/test/feedbackPrefixesCss.test.ts</code> checks that the target list covers each of these question
+types in both states. The prefix is drawn as <code>::before</code> content, as the image&#39;s <code>::after</code>
+(ImageHotspotQuestion, <code>prefixPseudo: &quot;after&quot;</code>, amendment of review A11Y-1 above) or as <code>.hvl-feedback-text</code>. So
+&quot;for the ten types and the question types they offer&quot; should read &quot;for the question types the ten types offer&quot;.</li>
 </ul>
 <h3 id="decisions--d-073--the-validator-is-pure-shape-based-walk-configuration-passed-in" tabindex="-1">D-073 · The validator is pure: shape-based walk, configuration passed in</h3>
 <ul>
@@ -6248,6 +6375,21 @@ for Redis, as the Redis-backed session on the same request already does; it is r
 from Redis. The saved form repeats the editor&#39;s cleaning steps;
 <code>apps/server/test/content/publishedSaveRealTypes.int.test.ts</code> compares it with what the editor stores, so a new
 step in <code>HvlH5PEditor</code>&#39;s save must be added to <code>savedForm.ts</code> as well.</li>
+<li><strong>Amendment (2026-10-24, final review F1, F3, F4, F5, NEW-6):</strong> a published activity with an error that has no
+acknowledgement that holds (it ran out, or the error is new to a later rule; the findings show both as
+<code>acknowledgement: null</code>, so the note names neither) offers <strong>Grunngje på nytt</strong> on <strong>Sjekk og publiser</strong>, next to
+<strong>Gjer om til utkast</strong>: the publish dialog, labelled for new reasons, which sends the same <code>POST …/publish</code> (W3:
+it validates again and moves <code>publishedAt</code>). With nothing to explain it offers only <strong>Gjer om til utkast</strong>.
+Publish and unpublish share one button element, so keyboard focus stays on it when the status changes, and after
+a publish or new reasons focus is put on it again, since <strong>Grunngje på nytt</strong> goes away once every error has a
+reason; unpublishing runs one request at a time (<code>aria-disabled</code> while it runs;
+<code>apps/web/src/features/activity/CheckPanel.tsx</code>). The refusal of such a save no longer blames the change:
+<code>error.publishedSaveBlocked</code> and the editor page&#39;s <code>page.editor.blockedSave</code> say that some errors have no reason
+that holds, that a reason holds for 14 days, and how to fix, explain or unpublish; the editor page lists the
+errors in its error summary, each with «Gå til feltet»
+(<code>apps/server/test/h5p/editorBlockedSave.browser.int.test.ts</code>). The Canvas page has no <strong>Sjekk og publiser</strong> tab
+(<a class="req-ref" href="#r-LTI-006"><code>LTI-006</code></a>), so in Canvas the editor says <code>page.editor.blockedSaveCanvas</code>: fix the errors and save again, or
+explain them on the activity&#39;s page in HVL Interaktiv, which needs a Feide login.</li>
 </ul>
 <h3 id="decisions--d-075--notice-dismissals-are-stored-per-user" tabindex="-1">D-075 · Notice dismissals are stored per user</h3>
 <ul>
@@ -6267,6 +6409,17 @@ never hide a later version of the notice in advance; an older version is stored 
 <li><strong>Decision:</strong> <code>apps/web/src/i18n/</code> has the same typed <code>t()</code> and <code>locales/{nn,nb,en}.json</code> (locale-parity checked);
 the locale comes from Express&#39;s <code>x-hvli-locale</code> header (session or launch locale, else <code>nn</code>).</li>
 <li><strong>Consequences:</strong> No next-intl dependency; one key style across server and web.</li>
+<li><strong>Amendment (2026-10-24, final review WEBSEC-2/F2, NEW-3, WEBA11Y-1/DOC-2):</strong> the locale is the launch&#39;s, else an
+allowlisted <code>?lang=</code> (<code>nn</code>, <code>nb</code>, <code>en</code>; any other value or a repeated parameter is ignored), else the portal
+session&#39;s, else <code>nn</code> (<code>apps/server/src/web/webRoutes.ts</code>). The web app&#39;s <strong>Hjelp</strong> and <strong>Personvern</strong> links carry
+the page&#39;s locale (<code>apps/web/src/config/paths.ts</code> <code>infoHref</code>), and so does <strong>Hjelp</strong> on the server-rendered pages
+(<code>apps/server/src/http/pages/htmlPage.ts</code>), because inside Canvas they open a new tab without the launch, and
+portal sessions are always Nynorsk; without it the nb and en privacy notices (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>) were unreachable. Every
+page but the start page now has its own title, &quot;<page> – HVL Interaktiv&quot; (WCAG 2.4.2,
+<code>apps/web/src/i18n/pageTitle.ts</code>); the start page is titled &quot;HVL Interaktiv&quot;, and the activity page is titled
+&quot;Aktivitet – HVL Interaktiv&quot; until the activity has loaded, then &quot;&lt;activity&#39;s title&gt; – HVL Interaktiv&quot;. Tests:
+<code>apps/server/test/web/webChrome.browser.int.test.ts</code> (an English launch&#39;s links open English pages; each route&#39;s
+title), <code>apps/web/test/features/ActivityView.test.tsx</code>.</li>
 </ul>
 <h3 id="decisions--d-077--api-schemas-in-packagesapi-contract-and-an-openapi-document" tabindex="-1">D-077 · API schemas in <code>packages/api-contract</code> and an OpenAPI document</h3>
 <ul>
@@ -6311,6 +6464,16 @@ dated manual results. The build environment has Chromium only and no assistive t
 scripts the manual tasks and the browser/assistive-technology matrix; HVL/ALU record dated results in
 <code>docs/accessibility/results/</code>. The S4 gate lists what remains manual.</li>
 <li><strong>Consequences:</strong> Firefox, Safari, Edge and the screen-reader results stay open until HVL runs the protocol.</li>
+<li><strong>Amendment (2026-10-24, final review DOC-7):</strong> <code>docs/TRACEABILITY.md</code> lists <a class="req-ref" href="#r-UD-031"><code>UD-031</code></a> and <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a> as &quot;tested&quot;
+because <code>apps/server/a11y/accessibilityDocs.a11y.test.ts</code> carries their IDs. That test checks that the protocol,
+the matrix and the results README agree with each other, and it passes while no result is recorded. We accept
+this mechanical status and do not give spec-trace a special case for the two. The traceability legend defines
+&quot;tested&quot; as &quot;at least one test title carries the ID&quot;. <code>spec:trace --check --done-through=S4</code> must still count
+both as covered, because this decision leaves their manual results to HVL and outside the S4 gate. A status kept by
+hand inside the generator would be a second record of what PROGRESS already tracks, and nothing would clear it once
+HVL records results. The open work is the unchecked S4 item &quot;First manual run of the protocol and the matrix&quot; in
+PROGRESS.md. The matrix (§1, §3), the Evaluator Guide (§2, limitation 15) and <code>tools/spec-trace/README.md</code> say
+what &quot;tested&quot; means for these two.</li>
 </ul>
 <h3 id="decisions--d-080--h5p-markup-barriers-repaired-in-the-page-where-we-can-registered-where-we-cannot" tabindex="-1">D-080 · H5P markup barriers: repaired in the page where we can, registered where we cannot</h3>
 <ul>
@@ -6371,6 +6534,73 @@ given back), as H5P&#39;s own <code>pointer-events: none</code> intends; the tou
 no longer keeps the faded parts at full opacity: that hid the spotlight while clicks there still did nothing. axe
 skips inert content, so the tour adds no register entry; the reuse panel with the Paste item is faded too, so the
 Paste entry applies after the tour only (<code>tour: false</code>).</li>
+<li><strong>Amendment (2026-10-24, final review DOC-9):</strong> a third keyboard barrier that axe cannot see (WCAG 2.1.1,
+<a class="req-ref" href="#r-UD-006"><code>UD-006</code></a>): ImageHotspots&#39; hotspot position picker (H5PEditor.ImageCoordinateSelector 1.2.7,
+<code>scripts/image-coordinate-selector.js</code>) is a <code>&lt;div&gt;</code> with a click handler only, with no <code>tabindex</code>, no key handler
+and no x or y field, and a new hotspot starts at 50 % / 50 %. A keyboard-only author can add a hotspot but cannot
+move it. Attributes cannot add the missing input, so the barrier stays as H5P wrote it (repair 6 only gives the
+picker&#39;s copy of the image <code>alt=&quot;&quot;</code>); the manual protocol (§8) names it, and it belongs on the <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a> upstream
+list with the other two. It has no <code>upstream pin:</code> test of its own yet: the repairs&#39; browser test file has 199 of its
+200 lines (<a class="req-ref" href="#r-DOC-007"><code>DOC-007</code></a>), so the pin needs a file of its own; until it has one, the manual protocol is where the
+barrier is checked.</li>
+<li><strong>Amendment (2026-10-24, final review DOC-13):</strong> no upstream issue has been filed for any repair or register
+entry. Filing them belongs to the <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a> work (S6), from this record and the register. <code>SPEC-DEVIATION</code>:
+<a class="req-ref" href="#r-DOC-003"><code>DOC-003</code></a> asks an <code>UPSTREAM</code> tag for a link to the upstream issue; until an issue exists, each tag links the
+library source at the pinned commit (D-078 manifest), and the issue link replaces it once the issue is filed. A
+repair can be removed once a pinned version of its library (version pinned now in brackets) writes itself what the
+repair adds: (a) CoursePresentation (1.28.25) a progress bar that is a list of named links,
+not a tab list of <code>&lt;div&gt;</code>s, and (b) slides that are no <code>role=&quot;tabpanel&quot;</code>; (c) H5P.Components (1.0.99, DragText&#39;s
+drop zones) a role on the drop zone; (d) H5PEditor.RangeList (1.0.13) a label on the &quot;to&quot; field; (e)
+H5PEditor.VerticalTabs (1.3.16) no <code>role=&quot;tablist&quot;</code> around items that hold other buttons and no <code>role=&quot;tabpanel&quot;</code>
+on their forms; (f) the H5P editor (D-022 commit) a mode switch that is a named group whose active mode is
+pressed; (g) H5PEditor.ImageCoordinateSelector (1.2.7) an <code>alt</code> on its copy of the image; (h) H5P.DragNBar
+(1.5.23) a name on the paste button; (i) the hub client (in the H5P editor) a content-type list that is a list of
+items or a named group; (j) H5PEditor.BranchingScenario (1.5.13) a tour that makes the parts it fades inert. A
+repair is removed together with its expectations in <code>packages/hvl-h5p-theme/test/a11yRepairs.test.ts</code> and
+<code>apps/server/test/h5p/a11yRepairs.browser.int.test.ts</code>, and <code>npm run test:a11y</code> must then still pass. A register
+entry needs no such condition: an entry that stops occurring fails the suite (Decision above).</li>
+<li><strong>Amendment (2026-10-24, final review DOC-13, tests of (j)):</strong> repair (j), the tour, is not tested in the two
+files the amendment above names. Its expectations are in <code>packages/hvl-h5p-theme/test/a11yRepairsTour.test.ts</code> and
+<code>apps/server/test/h5p/branchingTour.browser.int.test.ts</code>, and the axe scan of the BranchingScenario editor with the
+tour open is in <code>apps/server/a11y/axeEditor.a11y.test.ts</code>. Removing (j) removes or adjusts those.</li>
+<li><strong>Amendment (2026-10-24, pin):</strong> the position picker now has its <code>upstream pin:</code> test,
+<code>apps/server/test/h5p/upstreamPins.browser.int.test.ts</code>, so the DOC-9 amendment&#39;s &quot;no <code>upstream pin:</code> test of its
+own yet&quot; no longer holds. The pin presses arrow keys, Enter and Space on the picker in the real editor and expects
+the hotspot not to move, then clicks as a positive control; a library update that gives the picker keyboard input
+fails it.</li>
+<li><strong>Amendment (2026-10-24, final review DOC-13 and NEW-1: repair (k) and the editor&#39;s own file):</strong> the repairs are
+now two files, one per surface, loaded in this order into every H5P document after <code>feedbackPrefixes.js</code>
+(<code>apps/server/src/h5p/h5pAssets.ts</code>). <code>packages/hvl-h5p-theme/src/a11yRepairs.js</code> repairs the content types&#39;
+markup: (a) to (c) of the DOC-13 amendment and (k) below. <code>packages/hvl-h5p-theme/src/a11yEditorRepairs.js</code>
+repairs H5P&#39;s editor, its widgets, DragNBar, the hub&#39;s list and BranchingScenario&#39;s tour: (d) to (j), so it is
+also the file that makes the tour&#39;s faded parts inert (amendment of review THEME-V3), which the Decision and the
+earlier amendments credit to <code>a11yRepairs.js</code>. The jsdom tests follow the split: (a) to (c) and (k) are in
+<code>packages/hvl-h5p-theme/test/a11yRepairs.test.ts</code>, (d) to (i) in
+<code>packages/hvl-h5p-theme/test/a11yEditorRepairs.test.ts</code> (not in <code>a11yRepairs.test.ts</code>, as the DOC-13 amendment
+says), and <code>a11yRepairsTour.test.ts</code> loads <code>a11yEditorRepairs.js</code>. A ninth barrier is repaired, (k):
+H5P.Question (1.5.47, <code>scripts/explainer.js</code>) writes the title of the explanation shown after a check (DragText&#39;s
+&quot;Forklaring&quot;) as <code>role=&quot;heading&quot;</code> without the <code>aria-level</code> that ARIA 1.2 requires (axe <code>aria-required-attr</code>,
+critical). <code>a11yRepairs.js</code> gives it level 2, because the player document has no heading of its own and the page
+around it gives the activity&#39;s title as its <code>h1</code>. It can be removed once a pinned H5P.Question writes a heading
+level itself; it is removed together with its case in <code>a11yRepairs.test.ts</code>, and the axe scan of DragText
+answered (<code>apps/server/a11y/axeContentTypes.a11y.test.ts</code>) must still pass. No upstream issue is filed for (k)
+either.</li>
+<li><strong>Amendment (2026-10-24, final review NEW-4: CoursePresentation&#39;s bar):</strong> the 24 px progress-bar parts of the
+repairs amendment above lay over CoursePresentation&#39;s footer. The bar (<code>.h5p-cp-navigation</code>) is 3 % of the
+player&#39;s height, 5 px at 320 CSS px wide, and the parts&#39; links (<code>z-index: 3</code>) covered «Vis sidemeny», «Neste side»
+and «Fullskjerm» at 320 and 640 px wide, so a pointer could not press them (WCAG 1.4.10, 2.5.8). A taller bar
+alone was clipped by the player&#39;s <code>overflow: hidden</code>. Outside full screen the theme now gives the bar room and the
+player grows by what that adds: <code>.h5p-wrapper</code> is <code>content-box</code> with <code>padding-bottom: max(0px, 24px - 1.6875%)</code>
+(CoursePresentation 1.28 keeps its height at 9/16 of its width, so 3 % of the height is 1.6875 % of the width), the
+bar and its parts are at least 24 × 24 px, and the summary slide&#39;s part keeps its 2.2em but at least 24 px
+(<code>packages/hvl-h5p-theme/src/hvl-h5p-theme.css</code>, with a removal condition).
+<code>apps/server/a11y/reflowAndMotion.a11y.test.ts</code> checks with a pointer that nothing covers a footer control at
+320 × 640 and 640 × 320, and <code>apps/server/a11y/targetSize.a11y.test.ts</code> measures the parts with every other target
+of the player. Residual: in full screen, which H5P fits to the screen, the bar stays H5P&#39;s own. Its parts then
+cover nothing, but on a phone they are 5 to 10 px high, below 2.5.8&#39;s size and spacing; <a class="req-ref" href="#r-UD-005"><code>UD-005</code></a> is met there only
+through 2.5.8&#39;s equivalent-control exception, because the side menu and the previous and next buttons, which the
+theme&#39;s 24 px rule for buttons covers, reach every slide. No automated test opens full screen; the manual protocol
+(§8) checks it.</li>
 </ul>
 
 </section>
@@ -6387,7 +6617,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S1</td><td>Monorepo scaffold, DB schema, H5P Core 1.28 spike and setup</td><td>00 §6; 01 §1–2, §4–7; 05 §2, §4–5; DOCUMENTATION-STANDARD</td><td>✅ Done (2026-10-21)</td></tr>
 <tr>
-<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>✅ Gate passed (2026-10-23); spike steps 3–5 open (Q7)</td></tr>
+<td>S2</td><td>Ten-type whitelist, seeding, SVG sanitiser, permission system, resume</td><td>01 (all); 00 <a class="req-ref" href="#r-PROD-002"><code>PROD-002</code></a>, <a class="req-ref" href="#r-PROD-008"><code>PROD-008</code></a></td><td>✅ Gate passed (2026-10-23); spike step 3 open (Q7), steps 4–5 done in S4 (D-047)</td></tr>
 <tr>
 <td>S3</td><td>Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking</td><td>02 §1–4, §7</td><td>✅ Gate passed (2026-10-23); HVL&#39;s Feide and Canvas values open (Q3, Q4)</td></tr>
 <tr>
@@ -6578,27 +6808,43 @@ The player page&#39;s <code>script-src</code> must not allow <code>&#39;unsafe-i
 markup H5P Core writes without escaping (D-039). Done: first-party policies on every page type (portal pages
 too), system font stacks (D-018), a request recorder over every view and type; the one outside script is
 Panopto&#39;s embed API file, only when a Panopto site is configured (D-070 amendment). NFR-003 is a documented
-matrix; manual results open (D-079)</li>
-<li><span class="task">✓ Done:</span> axe suite (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>); manual protocol document (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>): <code>npm run test:a11y</code> (12 files, 296 tests) on every
-route and in the player and editor of all ten types, light and forced colours, plus reflow, motion, text
-spacing, zoom, keyboard, target size, <code>lang</code> and first-party checks; H5P&#39;s own findings are repaired at run
-time or registered (D-080). <code>docs/accessibility/</code> holds the protocol and the matrix; results are HVL&#39;s.
-Found and fixed: the H5P editor scrolled sideways at 320 px, CoursePresentation&#39;s focus ring was cut off,
-the new-activity editor frame had no title</li>
-<li><span class="task">✓ Done:</span> H5P&#39;s own markup barriers (D-080): <code>a11yRepairs.js</code> repairs eight at run time (CoursePresentation&#39;s progress
-bar, DragText&#39;s drop zones, the editor&#39;s score ranges, vertical tabs, mode switch, hotspot picker and paste
-button, the content-type list) and makes the parts BranchingScenario&#39;s tour fades inert; 13 of the register&#39;s
+matrix whose results HVL records (D-079); the first manual run is the open item below</li>
+<li><span class="task">✓ Done:</span> axe suite (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>); manual protocol document (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>): <code>npm run test:a11y</code> (13 files; the test count is in
+the gate output) on every route and in the player and editor of all ten types, light and forced colours, plus
+reflow, motion, text spacing, zoom, keyboard, target size, <code>lang</code> and first-party checks; H5P&#39;s own findings are
+repaired at run time or registered (D-080). <code>docs/accessibility/</code> holds the protocol and the matrix; results
+are HVL&#39;s (the first manual run is the open item below). Found and fixed: the H5P editor scrolled sideways at
+320 px, CoursePresentation&#39;s focus ring was cut off, the new-activity editor frame had no title</li>
+<li><span class="task">✓ Done:</span> H5P&#39;s own markup barriers (D-080): two scripts repair nine at run time, <code>a11yRepairs.js</code> in the content
+types (CoursePresentation&#39;s progress bar, DragText&#39;s drop zones, H5P.Question&#39;s explanation title) and
+<code>a11yEditorRepairs.js</code> in the editor (score ranges, vertical tabs, mode switch, hotspot picker, paste button,
+the content-type list), which also makes the parts BranchingScenario&#39;s tour fades inert; 13 of the register&#39;s
 15 entries are gone, 2 remain (the hub&#39;s nested buttons, BranchingScenario&#39;s disabled «Paste»). The answer
 prefixes now cover the question types the containers offer (TrueFalse, MarkTheWords, SingleChoiceSet, Summary,
-MultiMediaChoice, ImageHotspotQuestion), drawn colour pairs are tested, jQuery motion stops with reduced motion</li>
+MultiMediaChoice, ImageHotspotQuestion), drawn colour pairs are tested, jQuery motion stops with reduced motion.
+Found and fixed: CoursePresentation&#39;s 24 px progress-bar parts covered the footer&#39;s buttons at 320 and 640 px
+wide; the bar now has room of its own outside full screen (in full screen H5P&#39;s smaller bar stays, D-080
+amendment NEW-4)</li>
 <li><span class="task">✓ Done:</span> New end-to-end flows: publishing despite an error with a reason (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>, <a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>) and the teacher&#39;s
-<strong>Rediger</strong> inside <code>/app/play</code> with frame storage blocked (<a class="req-ref" href="#r-LTI-006"><code>LTI-006</code></a>); <code>npm run test:e2e</code> runs 7 files.
+<strong>Rediger</strong> inside <code>/app/play</code> with frame storage blocked (<a class="req-ref" href="#r-LTI-006"><code>LTI-006</code></a>); <code>npm run test:e2e</code> runs 8 files.
 Found and fixed: a closing test bed deleted every user created since it opened, also other processes&#39; users;
-it now removes only its own (<code>test/support/appTestbed.ts</code>)</li>
+it now removes only its own (<code>test/support/appTestbed.ts</code>), which <code>e2e/testbedCleanup.e2e.test.ts</code> checks</li>
+<li><span class="task">✓ Done:</span> CI (<code>.github/workflows/ci.yml</code>) runs the S4 steps (GitHub has not run it yet, Q16): the web app build,
+<code>h5p:fetch-libraries</code>, the browser tests, <code>test:e2e</code>, <code>test:a11y</code> and <code>--done-through=S4</code>. Found and fixed:
+the job&#39;s 30-minute timeout was shorter than these steps. It is now 75 minutes, sized from the steps&#39; measured
+durations (about 35 minutes in all, so a 2x margin). The H5P library checkouts and builds are cached
+(<code>actions/cache</code>, keyed on the manifest and the tool&#39;s scripts), and a reused checkout must still have its
+pinned commit as <code>HEAD</code> with no tracked file edited (<code>verifiedHead</code> in <code>tools/h5p-libraries/gitSource.mjs</code>),
+or the fetch fails; its untracked build output is reused without a rebuild and relies on the cache&#39;s scope</li>
 <li><span class="task">✓ Done:</span> Progress screenshots (desktop and mobile, <code>nn</code>) sent to the owner as each view is built (CLAUDE.md §4):
 eleven views at 1280 and 390 px on 2026-10-24</li>
 <li><span class="task">✓ Done:</span> Early independent review of the server work (security, publishing, validator, accessibility, privacy and
 documentation; a skeptic per dimension): 36 confirmed findings, fixed in three groups and verified again</li>
+<li><span class="task">○ To do:</span> First manual run of the protocol and the matrix (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>, <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>; D-079), by HVL/ALU before the first
+pilot release: the set-ups AT-1, AT-2, AT-3, KB and Z400 of <code>docs/accessibility/manual-test-protocol.md</code>, each
+saved as a dated file in <code>docs/accessibility/results/</code>, which holds none yet. <code>docs/TRACEABILITY.md</code> lists both
+requirements as &quot;tested&quot; only because <code>apps/server/a11y/accessibilityDocs.a11y.test.ts</code>, a check that the
+documents agree, carries their IDs; it passes without any result (Evaluator Guide §2)</li>
 <li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S4</li>
 </ul>
 <h3 id="progress--s5--laeringsdesign-studio" tabindex="-1">S5 — Læringsdesign studio ⬜</h3>
@@ -6645,7 +6891,7 @@ The data-subject tool must delete learner state through the storage directly: Lu
 <tr>
 <td>Q13</td><td>Confirm <code>&quot;hvl_placement&quot;: &quot;&lt;placement&gt;&quot;</code> in each placement&#39;s <code>custom_fields</code> (now in <code>docs/reference/canvas-lti13-developer-key.json</code>), so the graded placement is recognised (D-061)</td><td>TeCopp</td><td>S3 pilot</td></tr>
 <tr>
-<td>Q14</td><td>No publishing before S4&#39;s publish flow; the S3 sharing API changes visibility only (D-066)</td><td>HVL / ALU</td><td>S4</td></tr>
+<td>Q14</td><td>Confirm S4&#39;s publish flow (D-074), which replaced &quot;no publishing before S4&quot;: an author publishes from <strong>Sjekk og publiser</strong>, an error needs a reason, which is asked for again after 14 days; the status changes only through publish and unpublish, and the sharing API changes only who can find an activity (D-066)</td><td>HVL / ALU</td><td>Pilot</td></tr>
 <tr>
 <td>Q15</td><td>Learner LTI launches are not written to the authentication audit (D-064)</td><td>HVL DPO</td><td>S6</td></tr>
 <tr>
@@ -6663,7 +6909,7 @@ The data-subject tool must delete learner state through the storage directly: Lu
 <div class="table-wrap" role="region" aria-label="Table 4, Risk register" tabindex="0"><table><thead><tr>
 <th scope="col">ID</th><th scope="col">Risk</th><th scope="col">Likelihood</th><th scope="col">Impact</th><th scope="col">Mitigation</th></tr>
 </thead><tbody><tr>
-<td>R-01</td><td>Lumi h5p-server 10.0.4 does not work with Core 1.28 libraries. Three issues are known (spec 01 §1, F1–F3), with workarounds; Lumi&#39;s fixes are unreleased. S1 spike steps 1–2 passed; 3–5 are blocked by the network</td><td>High</td><td>High</td><td>Finish the spike as soon as the Hub is reachable (Q7; S2 closed with steps 3–5 open, Core 1.28 runs on synthetic content); fall back to 1.27 without Daylight; <code>patch-package</code> only with a decision</td></tr>
+<td>R-01</td><td>Lumi h5p-server 10.0.4 does not work with Core 1.28 libraries. <strong>Settled 2026-10-23 (D-047):</strong> with the F1–F3 workarounds (spec 01 §1) the ten real content types install, save and play under Core 1.28; only spike step 3, the Hub registration, waits for Q7 (see R-04)</td><td>Low</td><td>Medium</td><td>No fallback to 1.27; <code>realTypes.browser.int.test.ts</code> runs the ten types again after every library update (D-078); <code>npm run hub:check</code> once the Hub is reachable; <code>patch-package</code> only with a decision</td></tr>
 <tr>
 <td>R-07</td><td>No H5P editor 1.28 release tag exists</td><td>Certain</td><td>Medium</td><td>Pinned, reviewed commit (D-022); revisit when a tag appears</td></tr>
 <tr>
@@ -7029,6 +7275,8 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <tr>
 <td><em>Grunngjeving</em> (nb: <em>begrunnelse</em>)</td><td>The author&#39;s reason for publishing despite an error; stored as a <code>ValidationAcknowledgement</code> and valid for 14 days (<a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>, D-074)</td></tr>
 <tr>
+<td><em>Grunngje på nytt</em> (nb: <em>Begrunn på nytt</em>)</td><td>&quot;Explain again&quot;: new reasons for a published activity with an error that has no reason that holds; the same publish request, and the activity stays published (D-074 amendment)</td></tr>
+<tr>
 <td><em>Gå til feltet</em></td><td>&quot;Go to the field&quot;: the link from a finding to the field in the editor (<a class="req-ref" href="#r-UD-021"><code>UD-021</code></a>)</td></tr>
 <tr>
 <td><em>Eigar</em> / <em>Medforfattar</em> (nb: <em>Eier</em> / <em>Medforfatter</em>)</td><td>Owner / Co-author of an activity</td></tr>
@@ -7087,9 +7335,9 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <tr>
 <td><strong>Principal</strong></td><td>Who a request acts for, in the same shape for both entry points: user ID, learnerKey, roles, mode (<code>portal</code> or <code>lti</code>), locale and, for LTI, the launch facts (<code>apps/server/src/auth/Principal.ts</code>). Built from the portal session or the ltik; it never holds a name, e-mail, Feide ID, LTI <code>sub</code> or token (spec 02 §2, D-053).</td></tr>
 <tr>
-<td><strong>Signed file grant</strong></td><td>The part of a content-file URL <code>/h5p/files/&lt;grant&gt;/&lt;contentId&gt;/&lt;file&gt;</code> that authorises it: a key ID, an expiry and an HMAC over <code>contentId|expiry</code> made with <code>URL_SIGNING_KEYS</code>. A player render issues it after the View check. It lasts 12 to 13 hours and names no person, so <code>&lt;img&gt;</code> and <code>&lt;video&gt;</code> tags work in a cookie-less iframe (D-058).</td></tr>
+<td><strong>Signed file grant</strong></td><td>The part of a content-file URL <code>/h5p/files/&lt;grant&gt;/&lt;contentId&gt;/&lt;file&gt;</code> that authorises it: a key ID, an expiry and an HMAC over <code>contentId|expiry</code> made with <code>URL_SIGNING_KEYS</code>. A player render issues it after the View check, and the editor page after the Edit check (D-069). It lasts 12 to 13 hours and names no person, so <code>&lt;img&gt;</code> and <code>&lt;video&gt;</code> tags work in a cookie-less iframe (D-058). An editor&#39;s fresh uploads load through an upload grant of the same form, <code>/h5p/uploads/&lt;grant&gt;/&lt;accountId&gt;/&lt;file&gt;</code>, an HMAC over <code>accountId|expiry</code> under its own HKDF purpose (<code>temporary-file-url</code>), so neither kind of grant opens the other (D-069).</td></tr>
 <tr>
-<td><strong>Key ring</strong></td><td>An environment value <code>id=base64,id=base64,…</code> whose first key is current; older keys still verify or decrypt, so keys rotate without downtime when the new key is first added in second place and moved first only once every server holds it (the three steps are in D-056; D-055 and D-058 apply them to the other two rings). HKDF derives one key per purpose from each key. <code>IDENTITY_HASH_KEYS</code>: identity and audit-IP hashes (D-055). <code>DATA_ENCRYPTION_KEYS</code>: AES-256-GCM for LTI private keys, LTI access tokens and the session&#39;s Feide ID token (D-056). <code>URL_SIGNING_KEYS</code>: signed file grants (D-058). <code>PSEUDONYM_SECRETS</code> is keyed by academic year instead (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>).</td></tr>
+<td><strong>Key ring</strong></td><td>An environment value <code>id=base64,id=base64,…</code> whose first key is current; older keys still verify or decrypt, so keys rotate without downtime when the new key is first added in second place and moved first only once every server holds it (the three steps are in D-056; D-055 and D-058 apply them to the other two rings). HKDF derives one key per purpose from each key. <code>IDENTITY_HASH_KEYS</code>: identity and audit-IP hashes (D-055). <code>DATA_ENCRYPTION_KEYS</code>: AES-256-GCM for LTI private keys, LTI access tokens and the session&#39;s Feide ID token (D-056). <code>URL_SIGNING_KEYS</code>: signed file grants (D-058) and editor upload grants, each under its own HKDF purpose (D-069). <code>PSEUDONYM_SECRETS</code> is keyed by academic year instead (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>).</td></tr>
 <tr>
 <td><strong>Design token</strong></td><td>A named brand value (colour, spacing, type) in <code>packages/design-tokens/tokens.json</code>. Code uses only the generated CSS variables (<code>--hvl-…</code>) and Tailwind classes; colour literals elsewhere fail Stylelint and ESLint (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>, D-072).</td></tr>
 <tr>

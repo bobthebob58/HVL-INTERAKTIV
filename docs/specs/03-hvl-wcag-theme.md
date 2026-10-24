@@ -5,7 +5,7 @@
 | **Status** | Approved for build (v1.1, 2026-10-21: brand tokens and typefaces aligned with HVL's design manual) |
 | **Load in sessions** | S4 (all); S6 (§6 conformance report) |
 | **Owns requirement IDs** | `UD-*` |
-| **Code location** | `packages/design-tokens/`, `packages/hvl-h5p-theme/`, `apps/web/src/components/`, `apps/server/src/validation/` |
+| **Code location** | `packages/design-tokens/`, `packages/hvl-h5p-theme/`, `apps/web/src/app/`, `apps/web/src/components/`, `apps/web/src/features/`, `apps/web/src/styles/`, `apps/server/src/http/pages/` (server-rendered pages), `apps/server/src/validation/`, `apps/server/a11y/` (the axe suite, `UD-030`), `docs/accessibility/` (manual protocol and results, `UD-031`) |
 
 ---
 
@@ -100,6 +100,8 @@ readers announce them consistently. Icons are `aria-hidden="true"`.
 - **Acceptance:** Shown for MultiChoice, QuestionSet, Blanks, DragText and the answer states inside
   containers. Checked in greyscale screenshots.
 - **Verify:** Playwright tests per content type, asserting the text prefix in the accessibility tree.
+- **Amended (D-072, 2026-10-24):** the greyscale check is a manual step (`docs/accessibility/manual-test-protocol.md`
+  §7); no automated test renders greyscale screenshots. The browser tests assert the drawn and the announced prefix.
 
 #### UD-004 · MUST · S4 · Visible, unobscured focus (2.4.7, 2.4.11, 1.4.11)
 `:focus-visible { outline: 3px solid var(--hvl-focus-outer); outline-offset: 2px; box-shadow: 0 0 0 2px var(--hvl-focus-inner); }`.

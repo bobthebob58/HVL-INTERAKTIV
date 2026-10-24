@@ -34,13 +34,17 @@ requirement explorer. Regenerate it with `node tools/spec-site/buildSpecSite.mjs
 | 3 | [apps/server README](../apps/server/README.md) | How to run the server against the mock platform, what each folder does, and the start-up, Feide login, LTI launch and Deep Linking flows |
 | 2 | [TRACEABILITY](TRACEABILITY.md) | Which requirements are planned, in code or tested |
 
-**To see it run** *(from S3)*: set up the services, the H5P files and `apps/server/.env` as for `npm start`
-(§3; `.env.example` already holds the mock's values), start `npm run mock:platform` in one terminal and run
-`npm start` in another. The mock Canvas home page (`http://127.0.0.1:4100/`) offers demo launches into
-the tool, and the start page (`http://localhost:3000/`) offers Feide login against the mock Feide. There is no
-editor before S4 and the seed packages are not in the repository yet (Q7, Q10), so a launch can only open an
-activity that already exists in the database; the e2e tests (`npm run test:e2e`) create their own and show
-the whole flows in a browser. Details: [tools/mock-platform/README.md](../tools/mock-platform/README.md).
+**To see it run** *(from S3; the web app and the real content types from S4)*: set up the services, the H5P files
+and `apps/server/.env` as for `npm start` (§3; `.env.example` already holds the mock's values and `WEB_APP=dev`),
+start `npm run mock:platform` in one terminal and run `npm start` in another. The mock Canvas home page
+(`http://127.0.0.1:4100/`) offers demo launches into the tool, and the start page (`http://localhost:3000/`)
+offers Feide login against the mock Feide. The Hub's seed packages are not in the repository (Q7, Q10), so install
+the real content types first: `npm run h5p:fetch-libraries`, then `npm run seed:libraries -- var/h5p-real/packages`
+(D-078). Then sign in (the mock Feide signs in its `author`), create an activity at `/aktivitet/ny`, save it and
+publish it from **Sjekk og publiser**; the mock Canvas can then launch it by the ID in its address
+(`/aktivitet/<id>`) or place it through Deep Linking. With `WEB_APP=prod`, run `npm run build` first. The e2e tests
+(`npm run test:e2e`) create their own activities and show the whole flows in a browser. Details:
+[tools/mock-platform/README.md](../tools/mock-platform/README.md).
 
 ---
 
@@ -67,6 +71,16 @@ Things to judge as you go: Do the acceptance criteria in the spec match what the
 asserts? Does the module header's *Invariants* section match the code? Is every `SECURITY:`,
 `PRIVACY:`, `A11Y:` and `PEDAGOGY:` comment justified?
 
+**"Tested" is not "verified" for the two manual requirements.** [TRACEABILITY](TRACEABILITY.md) calls a requirement
+*tested* as soon as one test title carries its ID. For `UD-031` and `NFR-003` that test is
+`apps/server/a11y/accessibilityDocs.a11y.test.ts`, a check of documents. It proves that the manual protocol scripts
+J1–J4 for the five set-ups `UD-031` names, that the `NFR-003` matrix names every browser and screen reader of the
+requirement and only suites that exist, and that every file in `docs/accessibility/results/` has a dated name. It
+does not prove that anyone has run the protocol, that a browser other than Chromium works, or that a screen reader
+announces anything: it passes while the results folder holds no result. Both requirements are documented protocols
+whose results HVL records (D-079); `UD-031`'s own check, a dated result file for the release, stays an open item in
+[PROGRESS.md](../PROGRESS.md) until HVL's first run.
+
 ---
 
 ## 3. Commands *(available now unless a later session is noted)*
@@ -85,9 +99,9 @@ asserts? Does the module header's *Invariants* section match the code? Is every 
 | `npm test` | Unit and integration tests (Vitest). Generate the Prisma client first (row above). Integration tests also need `docker compose up -d`, `npm run db:migrate` and `apps/server/.env` copied from `.env.example` (D-023); they start the mock Feide and mock Canvas themselves. Browser tests need full Chromium (`npx playwright-core install chromium`, never `--only-shell`, D-065) |
 | `npm run mock:platform` *(from S3)* | A mock Canvas on `http://127.0.0.1:4100` and a mock Feide on `http://localhost:4200` start for a tool on `http://localhost:3000`, and the six `.env` lines that point the server at them are printed (D-049); Ctrl+C stops both. `.env.example` already holds these values for the fixed ports; paste the printed lines into `apps/server/.env` only after changing ports or IDs (the mock Feide refuses another client ID with `unauthorized_client`; [tools/mock-platform/README.md](../tools/mock-platform/README.md)) |
 | `npm start` *(from S3)* | The server starts: tsx runs `apps/server/src/server/main.ts` (no build step), which syncs `LTI_PLATFORMS`, re-encrypts platform keys, starts the cleanup jobs and listens on `PORT`. With `npm run mock:platform` running, `curl http://localhost:3000/healthz` answers `{"status":"ok"}` and `/lti/keys` the tool's public keys. Needs the setup of `npm test` plus `npm run h5p:fetch-core`; a bad configuration exits with code 1 and names the variables, never their values (`NFR-002`) |
-| `npm run test:e2e` *(from S3)* | Chromium flows against the whole server and the mock platform (D-065), in CI too: from S3, launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome's partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available; the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item; portal Feide login, sharing with the CSRF token, and logout through Feide. These play a synthetic content type (limitation 3). From S4: the owner edits and saves in the H5P editor inside the cookie-less Canvas iframe with the Bearer ltik (`ltiEditor.e2e.test.ts`); on the built web app with the real content types, a Feide author is refused without a reason and then publishes despite a validator error with one, which stores one ValidationAcknowledgement and leaves no reason in the audit or the log (`publishWithReason.e2e.test.ts`, PROD-003, UD-022); and the teacher's Canvas page `/app/play` with Spel and Rediger, where frame storage is blocked (LTI Platform Storage), saves from the editor inside its chrome with the teacher's ltik as Bearer, with no Set-Cookie from the tool and no ltik in any frame address (`appPlayEditor.e2e.test.ts`, LTI-006, LTI-003). A failed step names itself, what failed before it (ltik redacted) and whether another process removed its rows (`flowRecord.e2e.test.ts` tests this). Needs the setup of `npm test`; the web app flows also need `npm run build` and `npm run h5p:fetch-libraries` (skipped without them locally, failing in CI). Run it without other test processes on the same database. Journeys J1–J5 join in S6 |
-| `npm run test:a11y` *(from S4)* | axe-core (WCAG 2.2 AA tags) on every web route, the server pages and the player and editor of all ten real types, in the light theme and with forced colours, plus reflow at 320 px, reduced motion, text spacing and 200 % zoom, keyboard walks (focus visible and not covered), target size, `lang` and first-party requests (`UD-030`, D-079). H5P's own findings are repaired at run time or listed in `apps/server/a11y/support/upstreamRegister.ts` (D-080). Needs `npm run build`, the real packages and Chromium; about 12 minutes; run it on its own |
-| `npm run h5p:fetch-libraries` *(from S4)* | Clones the ten content types and their dependencies at pinned commits, builds those without committed files and verifies every tree against `tools/h5p-libraries/libraries.manifest.json` (D-078) |
+| `npm run test:e2e` *(from S3)* | Chromium flows against the whole server and the mock platform (D-065), in CI too: from S3, launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome's partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available; the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item; portal Feide login, sharing with the CSRF token, and logout through Feide. These play a synthetic content type (limitation 3). From S4: the owner edits and saves in the H5P editor inside the cookie-less Canvas iframe with the Bearer ltik (`ltiEditor.e2e.test.ts`); on the built web app with the real content types, a Feide author is refused without a reason and then publishes despite a validator error with one, which stores one ValidationAcknowledgement and leaves no reason in the audit or the log (`publishWithReason.e2e.test.ts`, PROD-003, UD-022); and the teacher's Canvas page `/app/play` with Spel and Rediger, where frame storage is blocked (LTI Platform Storage), saves from the editor inside its chrome with the teacher's ltik as Bearer, with no Set-Cookie from the tool and no ltik in any frame address (`appPlayEditor.e2e.test.ts`, LTI-006, LTI-003). A failed step names itself, what failed before it (ltik redacted) and whether another process removed its rows (`flowRecord.e2e.test.ts` tests this); a closed test bed removes what it created and keeps an account an earlier run left (`testbedCleanup.e2e.test.ts`). Needs the setup of `npm test`; the web app flows also need `npm run build` and `npm run h5p:fetch-libraries` (skipped without them locally, failing in CI). Run it without other test processes on the same database. Journeys J1–J5 join in S6 |
+| `npm run test:a11y` *(from S4)* | axe-core (WCAG 2.2 AA tags) on every web route, the server pages and the player and editor of all ten real types, in the light theme and with forced colours, plus reflow at 320 px, reduced motion, text spacing and 200 % zoom, keyboard walks (focus visible and not covered), target size, `lang` and first-party requests (`UD-030`, D-079). H5P's own findings are repaired at run time or listed in `apps/server/a11y/support/upstreamRegister.ts` (D-080). Needs `npm run build`, the real packages and Chromium; about 15 minutes; run it on its own |
+| `npm run h5p:fetch-libraries` *(from S4)* | Clones the ten content types and their dependencies at pinned commits, builds those without committed files and verifies every tree against `tools/h5p-libraries/libraries.manifest.json` (D-078); a cached checkout is reused only while its `HEAD` is still the pinned commit, which CI's cache of the checkouts relies on |
 | `npm run tokens:check && npm run lint:css` *(from S4)* | The committed token CSS matches `tokens.json`; no colour literal, upper case or justified text in any stylesheet (`UD-001`, `UD-002`, D-072) |
 | `npx vitest run -t "UD-0"` *(from S4)* | The tokens' contrast pairs, the theme inside H5P, the validator rules with their fixtures, the publish flow (`-t "PROD-003\|UD-022"`), the notices (`-t "PROD-011\|DATA-006\|DATA-011"`) and the pedagogical hints (`-t "PED-020"`) |
 | `WEB_APP=dev npm start` *(from S4)* | With `npm run mock:platform`: `/`, `/hjelp`, `/personvern` and, outside production, `/api/docs` (the OpenAPI document, `DOC-012`) |
@@ -102,7 +116,7 @@ asserts? Does the module header's *Invariants* section match the code? Is every 
 | `npx vitest run -t "AUTH-00"` *(from S3)* | Feide login against the mock Feide: PKCE, state and nonce in a single-use login transaction, the ID-token checks, roles from the Groups API (failing closed), portal sessions and CSRF, data minimisation, and Canvas–Feide account linking (`AUTH-001`…`AUTH-005`). Needs the services |
 | `npx vitest run -t "LTI-00"` *(from S3)* | LTI 1.3 against the mock Canvas: launches and their refusals (foreign signature, replay, unknown deployment), ltijs storage on PostgreSQL, the cookie-less ltik transport, role mapping that never grants `admin`, Deep Linking with a JWT the mock verifies, resource links and course copy (`LTI-001`…`LTI-007`). Needs the services |
 | `npx vitest run -t "PROD-004\|PROD-005\|PROD-006\|H5P-007"` *(from S3)* | One 404 page for unknown, draft and invisible activities; placing activities in Canvas; sharing that applies at once, only for those who may edit; H5P AJAX and learner-state calls refused without an ltik or CSRF token, and signed content-file URLs. Needs the services |
-| `npm run seed:libraries` *(from S2)* | Installs the content types offline from the verified seed packages (`H5P-003`); needs the packages (Q7) |
+| `npm run seed:libraries` *(from S2)* | Installs the content types offline from the verified seed packages (`H5P-003`); needs the packages (Q7). From S4, `npm run seed:libraries -- var/h5p-real/packages` installs the real types that `npm run h5p:fetch-libraries` built (D-078) |
 | `NODE_USE_ENV_PROXY=1 npm run hub:check` *(from S2)* | Spike step 3: Hub registration status, the 15-character `local_id`, versions of the ten types |
 
 ---
@@ -211,12 +225,17 @@ must be pasted into `PROGRESS.md`, before the next session starts.
    friendly error pages stay server-rendered by Express (they need its 401/403/404/503 statuses) but use the token
    CSS, the formative notice and the **Hjelp** link. The **Innsikt** tab comes with insight (S6), and no page offers
    sharing yet: it is an API call (`PATCH /api/content/:contentId/sharing`).
-8. **The H5P pages allow inline styles** (D-070). Since S4 the player (`/h5p/play/:contentId`, `/lti/play`) and
-   editor pages (`/h5p/edit/:id`, `/h5p/new`, `/lti/edit`) send `script-src 'self'` plus the hash of H5P Core's
-   one constant inline script, so a script inside an activity cannot run and read the page's URL token (the ltik
-   or the CSRF token). `style-src` still allows `'unsafe-inline'`, because H5P sets style attributes throughout;
-   injected CSS can change how an activity looks but not run code. The S2 upload checks (`SEC-001`, `SEC-002`)
-   and admin-only library installation (`SEC-003`) limit what an activity can carry.
+8. **The H5P pages allow inline styles, and Panopto's script once a Panopto site is configured** (D-070). Since S4
+   the player (`/h5p/play/:contentId`, `/lti/play`) and editor pages (`/h5p/edit/:id`, `/h5p/new`, `/lti/edit`)
+   send `script-src 'self'` plus the hash of H5P Core's one constant inline script, so a script inside an activity
+   cannot run and read the page's URL token (the ltik or the CSRF token). When `EXTERNAL_MEDIA_ORIGINS` lists a
+   Panopto site, `script-src` also allows one third-party file,
+   `https://developers.panopto.com/scripts/v1.2.0/embedapi.min.js`, which H5P.Video needs to play Panopto videos and
+   loads without SRI, on pages that hold the ltik in memory (`SPEC-DEVIATION` from `H5P-009` and `DATA-011`); with
+   no Panopto site configured, no outside script can run. Our own tags on these pages carry no SRI or nonce either:
+   they are same-origin files allowed by `'self'` (D-070). `style-src` still allows `'unsafe-inline'`, because H5P
+   sets style attributes throughout; injected CSS can change how an activity looks but not run code. The S2 upload
+   checks (`SEC-001`, `SEC-002`) and admin-only library installation (`SEC-003`) limit what an activity can carry.
 9. **Tokens travel in some URLs, so proxies must not log query strings** (D-057, D-058). A launch reaches
    `/app/play`, `/lti/play`, `/lti/edit` and `/lti/deeplink` with the ltik in the query (a first-party script then removes it from the
    address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF token as a query value,
@@ -249,6 +268,7 @@ must be pasted into `PROGRESS.md`, before the next session starts.
     ID, such as guests, cannot log in (D-054).
 15. **Accessibility is verified automatically in Chromium only; H5P's own barriers are listed, not hidden** (D-079,
     D-080). Firefox, Safari, Edge, mobile browsers and the three screen readers are covered by the manual protocol
-    in `docs/accessibility/`, which HVL runs and records (`UD-031`, `NFR-003`). Barriers in H5P's own markup that
+    in `docs/accessibility/`, which HVL runs and records (`UD-031`, `NFR-003`); no run is recorded yet, and the
+    "tested" status of both in `docs/TRACEABILITY.md` comes from a check of the documents (§2). Barriers in H5P's own markup that
     a run-time repair cannot remove safely are listed in `apps/server/a11y/support/upstreamRegister.ts` with links
     to the upstream code; they are reported in every run but do not fail CI (`SPEC-DEVIATION` from `UD-030`).

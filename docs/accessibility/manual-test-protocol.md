@@ -68,7 +68,7 @@ and the pattern steps are added here when the studio exists.
 
 | Step | Action | Expected result |
 |---|---|---|
-| J1.1 | In a Canvas module choose *Add item → External tool → HVL Interaktiv*. | The picker opens with the heading «Vel aktivitet» and the group «Aktivitetane dine». The formative notice is announced as a region and can be closed with «Lukk meldinga». |
+| J1.1 | In a Canvas module choose *Add item → External tool → HVL Interaktiv*. | The picker opens with the heading «Vel aktivitet» and the group «Aktivitetane dine». The formative notice is announced as a region and can be dismissed for good with «Ikkje vis meldinga igjen» (the same per-user dismissal as the web app's notice). |
 | J1.2 | Move through the list of activities. | Each activity is a radio button or checkbox with its title; the draft is announced as unavailable with its reason, not by colour or dimming alone. |
 | J1.3 | Choose a published activity and activate «Legg inn i Canvas». | Canvas shows the new item. Focus is not lost on the way. |
 | J1.4 | Sign in to HVL Interaktiv with Feide and open the draft activity from «Aktivitetane dine». | The page starts with the skip link «Gå til hovudinnhaldet»; it moves to the main content. The page title and the `h1` name the activity. |
@@ -76,7 +76,7 @@ and the pattern steps are added here when the studio exists.
 | J1.6 | In «Rediger», change the question text and save («Lagre»). | The H5P editor frame is announced with its title «Rediger: …». Every field has a label. The save result is announced. Known H5P problems: §8. |
 | J1.7 | In «Sjekk og publiser», read the findings and use «Gå til feltet» on one. | Each finding states severity in text. «Gå til feltet» moves focus to the field in the editor. |
 | J1.8 | Activate «Publiser». | A dialog «Publiser aktiviteten» opens and takes focus; Tab stays inside it; Escape closes it and focus returns to «Publiser». |
-| J1.9 | Open it again; give a reason for each error if asked; activate «Publiser no». | Errors in the form are listed at the top and linked to their fields (`UD-013`). After publishing, the status «Publisert» is announced. |
+| J1.9 | Open it again; give a reason for each error if asked; activate «Publiser no». | Errors in the form are listed at the top and linked to their fields (`UD-013`). After publishing, the status «Publisert» is announced, and focus stays on the same button, now «Gjer om til utkast». |
 
 ### J2 — Study on a phone and resume (student; `UD-003`, `UD-006`, `UD-008`, `PROD-008`)
 
@@ -128,6 +128,7 @@ The portfolio export does not exist yet. When it arrives, run:
 | 400 % zoom (Z400) | All text readable without sideways scrolling; nothing overlaps or is cut off; the header is not sticky. | 1.4.4, 1.4.10 |
 | Text spacing | With a text-spacing bookmarklet, no text is cut off. | 1.4.12 |
 | Forced colours | In a Windows contrast theme, focus rings and the feedback borders are visible; no information is lost. | 1.4.11, `UD-012` |
+| Greyscale (KB, Z400) | With the operating system's colour filter set to greyscale (Windows 11: Accessibility → Colour filters), a right and a wrong answer (J2.3, J2.4), the severity of each finding (J1.7) and the activity's status are told apart by icon and text alone. This is the greyscale check of `UD-003` (D-072). | 1.4.1, `UD-003` |
 | Reduced motion | With "show animations" off, nothing slides or flashes. | 2.3.3, `UD-009` |
 
 ## 8. Known H5P problems to expect
@@ -138,21 +139,28 @@ for the set-up, because the impact on a screen-reader user is what the conforman
 
 - Repaired at run time (D-080), to confirm with each screen reader: CoursePresentation's progress bar is a list of
   links named by slide, the current slide announced as the current step, and each slide is a group named by its
-  title; DragText's drop zones are groups announced with their label when a word is dropped by keyboard; in the
-  editor, the score-range "to" field is announced by the column heading, H5P's required marker, the row's "from"
-  value and the dash (for example "Poengområde* 51 % –"; a screen reader may read the "*" as "star", as in every
-  required field of H5P's editor), the vertical tabs of QuestionSet, InteractiveBook and ImageHotspots are buttons
+  title; DragText's drop zones are groups announced with their label when a word is dropped by keyboard, and the
+  title of the explanation shown after «Sjekk» ("Forklaring") is a heading of level 2; in the editor, the
+  score-range "to" field is announced by the column heading, H5P's required marker, the row's "from" value and the
+  dash (for example "Poengområde* 51 % –"; a screen reader may read the "*" as "star", as in every required field
+  of H5P's editor), the vertical tabs of QuestionSet, InteractiveBook and ImageHotspots are buttons
   (the open item current) and their forms plain groups, CoursePresentation's paste button is named "Paste" (H5P has
   no nn or nb text for it), and QuestionSet's editor-mode switch is a group whose active mode is pressed.
 - CoursePresentation's progress bar keeps H5P's keyboard model: only one slide link is in the Tab order, and the
   arrow, Home and End keys move between the links, which the list does not announce. With each screen reader,
   confirm that every slide link can be reached and activated both in browse mode and with Tab plus the arrow keys.
+- CoursePresentation in full screen («Fullskjerm»), on the phone (AT-3): the progress bar is H5P's own there, and
+  its parts are smaller than 24 px (WCAG 2.5.8). Confirm that every slide can be reached with the side menu («Vis
+  sidemeny») and the previous and next buttons, the equivalent controls D-080 relies on, and that the bar covers no
+  footer control. No automated test opens full screen.
 - Editor, keyboard (WCAG 2.1.1, `UD-006`; axe cannot see these): QuestionSet's editor-mode switch cannot be used by
   keyboard (Enter and Space do nothing; its items have `tabindex="1"`); the vertical-tab buttons open with Space
-  only, not Enter; the hotspot position picker works with a pointer only, and its image is decorative.
+  only, not Enter; the hotspot position picker works with a pointer only, and its image is decorative. All three are
+  recorded in D-080 for the upstream list of `UD-040`.
 - BranchingScenario editor: the disabled «Paste» item is not announced as disabled, and it stays faded in a
   contrast theme. While the guided tour shows a step, the faded parts of the editor are inert (D-080): confirm that
-  the tour's dialog is reachable and that the editor returns when the tour ends.
+  the tour's dialog is reachable, that the editor returns when the tour ends, and that the tour does not start
+  again when the editor is opened again in the same browser (D-069 amendment, WEBA11Y-5).
 - New activity: H5P's content-type list is a group named by its heading, but its tabs and content types still nest
   interactive elements.
 - Forced colours: the theme sets the text fill of BranchingScenario's controls to the system colour Chromium

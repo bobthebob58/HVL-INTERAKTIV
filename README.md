@@ -3,16 +3,19 @@
 **Short, accessible, interactive learning activities for asynchronous study at Høgskulen på
 Vestlandet (HVL), with feedback to teachers before the next class.**
 
-HVL Interaktiv is a planned open-source service built on H5P. A teacher takes one learning outcome,
+HVL Interaktiv is an open-source service built on H5P, in development. A teacher takes one learning outcome,
 picks a research-based *pattern* (for example "an 8-minute video with three retrieval checks" or "a
 clinical dilemma with three decisions"), and builds it in under 30 minutes. The teacher then places
 it in Canvas and, before the next seminar, sees which misconceptions to address. Students get short
 activities that explain *why* an answer is wrong, work with screen readers and on phones, and can
 be resumed where they left off.
 
-> **Status (2026-10-16): specification complete; implementation not started.**
-> This repository currently holds the full specification, the documentation standard the code must
-> follow, and a traceability tool. Build progress is in [PROGRESS.md](PROGRESS.md).
+> **Status (2026-10-24): Sessions 1–3 passed their gates; Session 4 (universal design) is in its gate.**
+> The server (`apps/server`) runs the H5P engine with the ten content types, Feide login, Canvas LTI 1.3 launches
+> and Deep Linking, and the pre-publish validator; the web app (`apps/web`) has the activity pages, the publish flow
+> and the Canvas page, with the HVL design tokens and H5P theme. The læringsdesign studio (S5) and insight, grade
+> sync and deployment (S6) are not built yet. Build progress, what is open and every gate's output are in
+> [PROGRESS.md](PROGRESS.md); the [Evaluator Guide](docs/EVALUATOR-GUIDE.md) says how to check it.
 
 ---
 
@@ -70,7 +73,7 @@ node tools/spec-trace/specTrace.mjs           # regenerates docs/TRACEABILITY.md
  PostgreSQL · Redis · S3-compatible storage (EEA)
 ```
 
-Planned stack: Node.js 24 LTS, TypeScript, Express 5, Next.js, Prisma/PostgreSQL, Redis, Vitest,
+Stack: Node.js 24 LTS, TypeScript, Express 5, Next.js, Prisma/PostgreSQL, Redis, Vitest,
 Playwright and axe-core. See [DECISIONS.md](docs/DECISIONS.md) for why it differs from the original
 plan in places (Node 24, ltijs 7, the CVE-2025-7062 mitigation, the focus-ring colour).
 

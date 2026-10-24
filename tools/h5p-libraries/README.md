@@ -21,8 +21,14 @@ node tools/h5p-libraries/fetchLibraries.mjs --resolve   # re-pin the manifest (r
 ```
 
 The first run clones 120 repositories and builds 23 of them with webpack (a few minutes); later runs reuse the
-cache and take seconds. Tests that need the packages (`describeWithRealPackages`) skip locally without them and
-fail in CI. `REAL_H5P_PACKAGES_DIR` points tests at another package folder.
+cache and take seconds. A cached checkout whose stamp (written at its checkout) matches the manifest's commit and
+build state is reused once `verifiedHead` has proved that its own `HEAD` is still that commit and that no tracked file
+differs from it; if either fails, the run fails and names the folder (and the files). Untracked files, such as a
+build's `node_modules/` and `dist/`, are copied as cached without a rebuild; in CI they rely on the cache's scope. A
+build must leave the library's tracked files as committed, or its fresh fetch fails. Any other checkout is fetched
+again. CI keeps the same folder between runs
+(`actions/cache` in `.github/workflows/ci.yml`). Tests that need the packages (`describeWithRealPackages`) skip
+locally without them and fail in CI. `REAL_H5P_PACKAGES_DIR` points tests at another package folder.
 
 ## Key flows
 
@@ -61,7 +67,7 @@ flowchart LR
 |---|---|
 | `fetchLibraries.mjs` | The command: resolve or fetch, build, copy, pack, write `SHA256SUMS` |
 | `resolveManifest.mjs` | The ten roots and the recursive, pinned dependency resolution |
-| `gitSource.mjs` | `git ls-remote` tags and depth-1 checkouts proven against a commit |
+| `gitSource.mjs` | `git ls-remote` tags, depth-1 checkouts proven against a commit, and `verifiedHead` (commit and tracked files) for a reused checkout |
 | `libraryFiles.mjs` | Which checkout files belong in a library folder |
 | `semanticDefaults.mjs` | Defaults from `semantics.json` and `language/nn.json`, merged under the example |
 | `packContentTypes.mjs` | One deterministic `.h5p` per content type |

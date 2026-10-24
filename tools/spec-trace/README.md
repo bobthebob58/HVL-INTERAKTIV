@@ -7,6 +7,11 @@ code that names it (a `Spec:` header line or an `@spec` tag) and the tests whose
 brackets (`[SEC-001] …`). In check mode it also fails on duplicate IDs, references to IDs no spec
 defines, a stale matrix, and MUST requirements of finished sessions that have no test (`DOC-004`).
 
+"Tested" is mechanical: a running test title carries the ID. The tool does not judge what that test proves. For
+`UD-031` and `NFR-003` the test is a check that the manual-testing documents agree
+(`apps/server/a11y/accessibilityDocs.a11y.test.ts`); the manual results themselves are HVL's to record (D-079), as
+the Evaluator Guide (§2) explains.
+
 ## How to run
 
 ```bash

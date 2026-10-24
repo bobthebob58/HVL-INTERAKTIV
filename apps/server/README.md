@@ -4,29 +4,38 @@
 
 The back end of HVL Interaktiv. It runs the H5P engine (Core API 1.28) for authoring and playing the ten
 content types, stores activities and learner progress, signs people in through Feide (the portal) and LTI 1.3
-launches from Canvas, and (from later sessions) runs the validator and teacher insight. It holds no learner names
-or e-mail addresses: learners are yearly pseudonyms (`DATA-002`).
+launches from Canvas, runs the pre-publish validator and the publish flow, serves the web app (`apps/web`) in its
+own process, and (from S6) teacher insight. It holds no learner names or e-mail addresses: learners are yearly
+pseudonyms (`DATA-002`).
 
-**Status after Session 3.** On top of the Session 1 foundations (configuration, privacy-safe logging,
-pseudonyms, messages in nn/nb/en, schema, storage adapters, archive guard) and the Session 2 H5P engine (the ten
-content types only, HVL's permission system, learner state under the pseudonym, upload sniffing and SVG
-sanitising, offline seeding, our own Express 5 routes), the server now listens: `npm start` runs
+**Status after Session 4 (in its gate).** On top of the Session 1 foundations (configuration, privacy-safe
+logging, pseudonyms, messages in nn/nb/en, schema, storage adapters, archive guard) and the Session 2 H5P engine
+(the ten content types only, HVL's permission system, learner state under the pseudonym, upload sniffing and SVG
+sanitising, offline seeding, our own Express 5 routes), the server listens: `npm start` runs
 `src/server/main.ts`. It has:
 
 - **Feide login** for the portal: OpenID Connect code flow with PKCE, roles from the Feide Groups API, Redis
   sessions with a CSRF token, logout through Feide's end-session endpoint.
-- **LTI 1.3 for Canvas** on ltijs 7: resource-link launches into the H5P player (`/lti/play`), the Deep Linking
+- **LTI 1.3 for Canvas** on ltijs 7: resource-link launches that land on the web app's Canvas page `/app/play`
+  (on the H5P player `/lti/play` with `WEB_APP=off`), the editor inside Canvas (`/lti/edit`), the Deep Linking
   picker (`/lti/deeplink`), deployment checks, and ltijs storage on PostgreSQL. The ltik never sits in a cookie or
   in storage.
-- **One `Principal`** for both entry points. The H5P routes and the sharing API (`PATCH
-  /api/content/:contentId/sharing`, visibility only) authenticate with it, and content files load through signed
-  URLs in a cookie-less iframe.
+- **One `Principal`** for both entry points. The H5P routes and the `/api` routes (me and notices, the content
+  list, findings, publish and unpublish, sharing, and `/api/docs` outside production) authenticate with it, and
+  content files and editor uploads load through signed URLs in a cookie-less iframe.
+- **The H5P player and editor pages** (`/h5p/play/:id`, `/h5p/edit/:id`, `/h5p/new`, and in Canvas `/lti/play`,
+  `/lti/edit`) under a strict script policy (D-070), with HVL's H5P theme, the answer prefixes and the markup
+  repairs in every document H5P renders (D-072, D-080). The real content types come from GitHub (D-078).
+- **The pre-publish validator and the publish flow** with acknowledgements, a save gate for published activities
+  and a Redis write lock (D-073, D-074).
+- **The web app** (`apps/web`, Next.js) in the same process when `WEB_APP` is `dev` or `prod` (D-068): Express hands
+  it every GET and HEAD request it does not answer itself, without cookies, tokens or the ltik, with a nonce policy.
 - **Account linking** of an author's Canvas and Feide identities, an authentication audit, and a health check
   (`/healthz`).
 
-The LTI pages (`/lti/play`, `/lti/deeplink`), the start page `/` and the friendly error pages are
-server-rendered and unstyled until `apps/web` replaces them in S4 (D-048). There is no editor page yet (S4): a
-launch and the Deep Linking picker can only use activities that already exist in the database.
+The Deep Linking picker and the friendly error pages stay server-rendered by Express, styled with the design tokens
+and, when the web app runs, with the **Hjelp** header (D-067). With `WEB_APP=off`, as in the integration tests, `/`
+is a server-rendered start page and launches land on `/lti/play` as in S3.
 
 ## How to run
 
@@ -44,13 +53,18 @@ npx playwright-core install chromium         # full Chromium for browser and e2e
 npm run boot-check --workspace apps/server   # proves the H5P engine would start (logs core 1.28 + Hub host);
                                              # needs only the fetched H5P files, no services or .env
 npx vitest run --project server              # unit + integration + browser tests (need the services, Chromium)
-npm run test:e2e                             # three Chromium flows (D-065): cookie-less Canvas iframe launch →
-                                             # play → resume, the Deep Linking round trip, portal sharing + logout
+npm run test:e2e                             # Chromium flows (D-065): cookie-less Canvas iframe launch → play →
+                                             # resume, Deep Linking, portal sharing + logout, the editor in the
+                                             # Canvas iframe; on the built web app with the real types: publishing
+                                             # with a reason and the Canvas page /app/play with Rediger
 npm run build && npm run test:a11y           # accessibility suite (UD-030, D-079): axe WCAG 2.2 AA, keyboard, reflow, motion,
                                              # target size, lang, first-party requests; needs the built web app, the real H5P
-                                             # packages and Chromium; run it on its own (about 12 min)
+                                             # packages and Chromium; run it on its own (about 15 min)
 npm run typecheck
 npm run seed:libraries                       # install the content types from the verified seed packages (offline)
+npm run h5p:fetch-libraries                  # the ten real types from GitHub at pinned commits (D-078), into var/h5p-real/;
+                                             # a cached checkout is reused only while its HEAD is the pinned commit
+npm run seed:libraries -- var/h5p-real/packages  # install those real types (what the editor and the a11y suite use)
 npm run docs:api                             # browsable API docs into docs/api/ (TypeDoc)
 NODE_USE_ENV_PROXY=1 npm run hub:check       # spike step 3: Hub registration and versions (needs the Hub)
 
@@ -96,7 +110,7 @@ test database one file at a time.
 | `src/config/productionChecks.ts` | Extra startup rules for `NODE_ENV=production`: a current-year pseudonym secret exists; no pseudonym secret or ring key is readable text, low in distinct bytes or used twice; every public, Feide, Canvas and LTI platform URL is https |
 | `src/security/keys/` | Key rings with HKDF purpose keys (D-055, D-056, D-058): stable identity hashes with rotation, AES-256-GCM encryption of secrets at rest |
 | `src/auth/Principal.ts`, `principalLocals.ts` | The one `Principal` of a portal or LTI request (D-053); `sealPrincipal` refuses an LTI admin; routes read the principal from `res.locals` only |
-| `src/auth/requestPrincipal.ts` | The authentication middleware of `/api` and `/h5p`: an ltik (Bearer, or the query on four paths) or the portal session with its CSRF token |
+| `src/auth/requestPrincipal.ts` | The authentication middleware of `/api` and `/h5p`: an ltik (Bearer, or the query only on the paths of `LTIK_QUERY_PATHS`: `/h5p/ajax`, `/h5p/contentUserData/…` and the pages `/lti/play`, `/lti/edit`, `/lti/deeplink`, D-058, D-069) or the portal session with its CSRF token |
 | `src/auth/principalToH5pActor.ts` | The one mapping from a `Principal` to the H5P actor: highest role, learnerKey, Canvas course, launched activity, URL token |
 | `src/auth/returnTo.ts` | Reduces an untrusted "after login" target to a local path or `/`, so login is never an open redirect |
 | `src/auth/feide/` | The Feide relying party (openid-client 6, PKCE S256, `client_secret_post`), login transactions, Groups API call, role mapping, Feide ID and author profile from the claims, login completion, and the `/auth/*` routes |
@@ -151,7 +165,7 @@ test database one file at a time.
 | `src/generated/` | Generated Prisma client; not in git |
 | `test/` | Vitest tests; titles start with the requirement ID, e.g. `[DATA-002] …` |
 | `test/support/appTestbed.ts`, `ltiLaunchDriver.ts` | The whole app on a real port with the mock platform pointed at it, and an LTI launch through the real ltijs routes without a browser |
-| `vitest.e2e.config.ts`, `e2e/` | The three Chromium flows of `npm run test:e2e` (D-065); the two Canvas flows run in full Chromium with third-party cookies blocked |
+| `vitest.e2e.config.ts`, `e2e/` | The Chromium flows of `npm run test:e2e` (D-065): from S3 the Canvas iframe launch, Deep Linking and portal sharing; from S4 the editor in the Canvas iframe, publishing with a reason and the Canvas page `/app/play` (the last two on the built web app with the real types), the check of what a failed flow reports (`flowRecord.e2e.test.ts`), and the check that a closed test bed removes what it created and keeps an account an earlier run left (`testbedCleanup.e2e.test.ts`). The Canvas flows run in full Chromium with third-party cookies blocked |
 | `vitest.a11y.config.ts`, `a11y/` | The accessibility suite of `npm run test:a11y` (UD-030); `a11y/support/upstreamRegister.ts` lists the H5P upstream violations it reports but cannot repair |
 | `test/support/realWebApp.ts` | The whole server with the built web app, the ten real H5P types, a signed-in Feide author and LTI launches, for the browser suites |
 | [`../../tools/mock-platform/`](../../tools/mock-platform/README.md) | The mock Feide and mock Canvas that the tests and `npm run mock:platform` use (D-049) |
@@ -207,13 +221,16 @@ flowchart TD
     In([request]) --> TP["trust proxy: TRUST_PROXY hops"]
     TP --> BH["base headers: nosniff, no-referrer, HSTS when PUBLIC_BASE_URL is https"]
     BH --> HZ["GET /healthz"]
-    HZ --> PS["portal session: __Host-hvli_sid → session in res.locals, or none"]
-    PS --> LTI["LTI router: ltijs /lti/login, /lti/launch, /lti/keys → /static/lti, /lti/play → /lti/deeplink, /lti/deeplink/response → LTI error pages"]
+    HZ --> PA["page assets: /static/pages (the server pages' token CSS)"]
+    PA --> CR["web app only: the Hjelp marker (offerHelpLink), then chromeRedirect (a top-level navigation to an H5P page → 303 to its chrome page)"]
+    CR --> PS["portal session: __Host-hvli_sid → session in res.locals, or none"]
+    PS --> LTI["LTI router: ltijs /lti/login, /lti/launch, /lti/keys → /static/lti, /lti/play → /app/play (web app only) → /lti/edit → /lti/deeplink, /lti/deeplink/response → LTI error pages"]
     LTI --> FE["Feide routes: /auth/feide/login, /auth/feide/callback, /auth/logout, /auth/session, /auth/logged-out"]
-    FE --> HOME["GET / (start page)"]
-    HOME --> API["/api: requestPrincipal → PATCH /api/content/:contentId/sharing → JSON 404 and errors"]
-    API --> H5P["/h5p: requestPrincipal → createH5pRouter (client files, signed files, h5pAuthenticate, H5P routes)"]
-    H5P --> NF["HTML 404 page"]
+    FE --> HOME["GET / (the server's start page, only with WEB_APP=off)"]
+    HOME --> API["/api: requestPrincipal → me and notices, content list, findings, publish and unpublish, sharing, /api/docs outside production → JSON 404 and errors"]
+    API --> H5P["/h5p: requestPrincipal → createH5pRouter (client files, signed files and uploads, h5pAuthenticate, H5P routes, player and editor pages)"]
+    H5P --> WEB["web app only: Next.js for GET and HEAD, with a nonce policy, without cookies, tokens or the ltik"]
+    WEB --> NF["HTML 404 page"]
     NF --> ERR["last-resort error page"]
 ```
 
@@ -227,7 +244,7 @@ sequenceDiagram
     participant LT as resolveLtik
     participant PS as portal session
     Req->>RP: ?ltik=, Authorization header, __Host-hvli_sid cookie
-    alt ?ltik= is not one string, or is on a path other than /h5p/ajax, /h5p/contentUserData/…, /lti/play, /lti/deeplink
+    alt ?ltik= is not one string, or is on a path other than /h5p/ajax, /h5p/contentUserData/…, /lti/play, /lti/edit, /lti/deeplink
         RP-->>Req: 401 hvl:ltik-invalid
     else a Bearer ltik and ?ltik= that differ
         RP-->>Req: 401 hvl:ltik-invalid
@@ -319,7 +336,8 @@ sequenceDiagram
     LJ->>RL: launch context + ltik (RS256, 24 h, names the record)
     RL->>RL: account by keyed hash of iss + sub, learnerKey, roles (never admin), audit launch.lti.author for authors
     RL->>RL: View check on custom.contentId (unknown, draft or invisible → the one 404 page), record LtiPlacement
-    RL-->>B: 302 /lti/play?ltik=… (context.redirect)
+    RL-->>B: 302 /app/play?ltik=… when the web app runs, else 302 /lti/play?ltik=… (context.redirect)
+    Note over B,P: With the web app, the LTI router resolves the ltik of /app/play (View check, launch facts in x-hvli-launch). The Next.js page takes the ltik from the address bar, keeps it in memory and frames /lti/play?ltik=… on the same origin
     B->>P: GET /lti/play?ltik=…
     P->>P: resolveLtik, then render the player as the launch's actor (View check, signed contentUrl)
     P-->>B: player page: ltikLanding.js, h5pStorageGuard.js, then H5P Core (no-store, no-referrer, strict script CSP, frame-ancestors self + CANVAS_ORIGINS)
@@ -531,4 +549,11 @@ closed), D-055 (identity key ring and rotation), D-056 (encryption at rest), D-0
 CSRF token), D-058 (H5P URL tokens and signed file URLs), D-059 (reading the role tables), D-060 (authors view a
 published activity their launch opened), D-061 (Deep Linking), D-062 (LTI-006 tabs and LTI-007 duplicate
 deferred), D-063 (account linking, amended in the S3 review), D-064 (authentication audit), D-065 (end-to-end tests), D-066 (one "not
-available" page, visibility-only sharing).
+available" page, visibility-only sharing). Session 4: D-047 (R-01 settled: Core 1.28 runs the real types), D-067
+(H5P pages stay in Express, framed by the web app's chrome pages), D-068 (Next.js inside Express), D-069 (query-ltik
+paths, editor content and upload grants), D-070 (the page policies, no YouTube, Panopto's one script), D-071
+(CC-BY-4.0 and the production licence check), D-072 (design tokens, the H5P theme and its answer prefixes), D-073
+(the pure validator), D-074 (publishing, the save gate and the write lock), D-075 (notice dismissals), D-076 (the
+web app's translations and the locale header), D-077 (API schemas and the OpenAPI document), D-078 (real H5P
+libraries from GitHub), D-079 (what is checked automatically and what HVL records by hand), D-080 (H5P markup
+repairs and the upstream register).
