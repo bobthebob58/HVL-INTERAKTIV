@@ -450,6 +450,7 @@ fails if the two disagree. Summary:
 | `TRUST_PROXY` | no | How many reverse proxies' `X-Forwarded-*` headers are trusted (0–5, default 0); never more than really run |
 | `CANVAS_ORIGINS` | no | Origins that may frame the LTI pages (`frame-ancestors`, comma-separated); empty: no framing |
 | `EXTERNAL_MEDIA_ORIGINS` | no | Origins H5P content may load outside media from (e.g. Panopto); never YouTube. A Panopto site (`*.panopto.com`, `*.panopto.eu`) also allows Panopto's embed API script (that one file on `developers.panopto.com`), which H5P.Video needs (D-070) |
+| `CAPTIONED_MEDIA_ORIGINS` | no | Origins whose videos are captioned by policy (e.g. HVL's Panopto); V-VID-CAPTIONS accepts their videos without a text track of their own (D-073) |
 | `WEB_APP` | no | `off` (default), `dev` or `prod`: whether the server also serves `apps/web` in its own process (D-068); production refuses `dev` |
 | `LTI_PLATFORMS` | no | The Canvas platforms and their deployment IDs as JSON, synced at start-up (D-051); a launch from an unlisted deployment gets no ltik. `"feideLinking": true` on a platform turns on Canvas–Feide account linking for it (default off, D-063) |
 | `LTI_TOKEN_MAX_AGE_SECONDS` | no | Oldest accepted LTI ID token by its `iat` (1–60 s, default 10) |
@@ -461,7 +462,7 @@ fails if the two disagree. Summary:
 | `AUTHOR_COURSE_GROUPS` | no | Feide course groups whose students may author (exact or `prefix:` match, D-059) |
 | `IDENTITY_HASH_KEYS` | yes | Key ring for `Identity.subjectHash` and the audit IP hash, current key first (D-055) |
 | `DATA_ENCRYPTION_KEYS` | yes | Key ring for AES-256-GCM at rest: LTI private keys, LTI access tokens, the session's Feide ID token (D-056); rotate in three steps (new key second, then first, then drop the old one), see `.env.example` |
-| `URL_SIGNING_KEYS` | yes | Key ring that signs content-file grants (D-058) |
+| `URL_SIGNING_KEYS` | yes | Key ring that signs content-file grants and editor upload grants (separate HKDF purposes, D-058, D-069) |
 
 \* when the URL contains a password.
 
