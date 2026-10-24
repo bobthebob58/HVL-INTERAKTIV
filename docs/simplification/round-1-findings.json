@@ -1,6 +1,5 @@
 {
   "note": "Simplification pass S4+, round 1: finder proposals and skeptic verdicts saved before the apply phase (workflow wf_079cd9c4-272). Working record; superseded by the report in PROGRESS.md.",
-  "savedAt": "2026-10-24T21:00:15.215Z",
   "areas": {
     "srv-lti-auth": {
       "finder": {
