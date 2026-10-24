@@ -1,9 +1,10 @@
 /**
- * portalHomeRoutes — the portal's start page in S3 (`GET /`) and the HTML 404 page for unknown paths.
+ * portalHomeRoutes — the server's own start page (`GET /`) when the web app does not run, and the HTML 404 page for
+ * unknown paths.
  *
- * Why: Feide login returns to `/` by default and logout ends there, but the real portal (`apps/web`) arrives in S4
- *      (D-048). Until then the start page only says whether the person is signed in and offers login or logout, so
- *      the login flow can be tried end to end.
+ * Why: Feide login returns to `/` by default and logout ends there. With the web app (`WEB_APP` dev or prod) `/` is
+ *      its start page (D-067) and createApp does not mount this one; with `WEB_APP=off` (integration tests, D-068)
+ *      this page says whether the person is signed in and offers login or logout, so the login flow still works.
  * Spec: AUTH-001, AUTH-003, PROD-004, DATA-011
  * Invariants:
  *   - Logout is a POST form carrying the session's CSRF token as the `csrf` field (D-057); there is no GET logout.

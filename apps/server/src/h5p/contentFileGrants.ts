@@ -1,5 +1,6 @@
 /**
- * contentFileGrants — signs and checks the grant in a content-file URL (`/h5p/files/<grant>/<contentId>/<file>`).
+ * contentFileGrants — signs and checks the grant in a content-file URL (`/h5p/files/<grant>/<contentId>/<file>`)
+ * and, with its own purpose key, in an editor upload URL (`/h5p/uploads/<grant>/<owner>/<file>`, D-069).
  *
  * Why: H5P builds an activity's file URLs as `contentUrl + "/" + path`, so neither a session cookie (blocked in a
  *      Canvas iframe) nor a query token can authorise them (D-058). The player render, which has passed the
@@ -8,7 +9,9 @@
  * Spec: H5P-007, SEC-004
  * Invariants:
  *   - Format `<keyId>.<expirySeconds>.<base64url HMAC-SHA256(purpose key, "<contentId>|<expirySeconds>")>`, where
- *     the purpose key is HKDF `content-file-url` of a `URL_SIGNING_KEYS` ring key (../security/keys/keyring.ts).
+ *     the purpose key is HKDF of a `URL_SIGNING_KEYS` ring key (../security/keys/keyring.ts): `content-file-url`
+ *     for content files, `temporary-file-url` for editor uploads (the owner's account in place of the activity), so
+ *     a grant of one kind never opens the other.
  *   - New grants use the ring's current key; a grant made with an older key stays valid until that key is removed.
  *   - The expiry is the issue time rounded up to a whole hour, plus 12 hours, so a file URL stays the same for an
  *     hour and browsers can cache the files.
@@ -17,8 +20,9 @@
  *     for another activity.
  *   - A grant names no person and carries no token; logs redact it (../logging/redactText.ts).
  * Collaborators: ../security/keys/keyring.ts, ./HvlUrlGenerator.ts, ../http/routes/signedFileRoutes.ts,
- *   ./createH5pRuntime.ts.
- * Tests: apps/server/test/h5p/contentFileGrants.test.ts, apps/server/test/http/signedFiles.int.test.ts
+ *   ../http/routes/signedUploadRoutes.ts, ./render/editorIntegration.ts, ./createH5pRuntime.ts.
+ * Tests: apps/server/test/h5p/contentFileGrants.test.ts, apps/server/test/http/signedFiles.int.test.ts,
+ *   apps/server/test/http/signedUploads.int.test.ts
  */
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { purposeKey, type Keyring } from '../security/keys/keyring.js';

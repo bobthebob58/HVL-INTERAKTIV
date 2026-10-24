@@ -67,6 +67,8 @@ export function h5pPageCsp(settings: H5pPageCspSettings, frameAncestors: readonl
   const panopto = settings.externalMediaOrigins.some(isPanoptoOrigin) ? [PANOPTO_EMBED_API_URL] : [];
   return [
     "default-src 'none'",
+    // SPEC-DEVIATION: D-070 — the <script src> tags H5P writes into its iframes carry no nonce or SRI (H5P-009);
+    // they are allowed by 'self', and Core's one constant inline script by its hash.
     ["script-src 'self'", ...settings.scriptHashes, ...panopto].join(' '),
     "style-src 'self' 'unsafe-inline'",
     withMedia("img-src 'self' data: blob:"),
