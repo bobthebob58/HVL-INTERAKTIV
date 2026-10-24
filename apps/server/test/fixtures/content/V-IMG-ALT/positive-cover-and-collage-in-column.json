@@ -1,0 +1,153 @@
+{
+  "description": "A Column with a QuestionSet 1.21 whose shown cover image has no alt-text field filled in, and a Collage clip with an empty alt text.",
+  "mainLibrary": "H5P.Column 1.22",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.QuestionSet 1.21",
+          "params": {
+            "introPage": {
+              "showIntroPage": true,
+              "title": "Faser",
+              "introduction": "<p>Fire spørsmål.</p>",
+              "startButtonText": "Start",
+              "backgroundImage": {
+                "path": "images/omslag.png",
+                "mime": "image/png",
+                "copyright": {
+                  "license": "U"
+                },
+                "width": 960,
+                "height": 540
+              }
+            },
+            "progressType": "dots",
+            "passPercentage": 50,
+            "questions": [
+              {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva fase kjem først?</p>",
+                  "answers": [
+                    {
+                      "correct": true,
+                      "text": "<div>Før</div>",
+                      "tipsAndFeedback": {
+                        "chosenFeedback": "<div>Ja, planlegginga kjem først.</div>"
+                      }
+                    },
+                    {
+                      "correct": false,
+                      "text": "<div>Etter</div>",
+                      "tipsAndFeedback": {
+                        "chosenFeedback": "<div>Nei, etterarbeidet kjem til slutt.</div>"
+                      }
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "type": "auto",
+                    "singlePoint": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000223",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              }
+            ],
+            "endGame": {
+              "showResultPage": true,
+              "showSolutionButton": true,
+              "showRetryButton": true
+            },
+            "override": {}
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000224",
+          "metadata": {
+            "contentType": "Question Set",
+            "license": "U",
+            "title": "Sett"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Collage 0.3",
+          "params": {
+            "collage": {
+              "template": "1-1",
+              "options": {
+                "heightRatio": 0.75,
+                "spacing": 0.5,
+                "frame": true
+              },
+              "clips": [
+                {
+                  "image": {
+                    "path": "images/campus.png",
+                    "mime": "image/png",
+                    "copyright": {
+                      "license": "U"
+                    },
+                    "width": 960,
+                    "height": 540
+                  },
+                  "offset": {
+                    "top": 0,
+                    "left": 0
+                  },
+                  "scale": 1,
+                  "alt": ""
+                },
+                {
+                  "image": {
+                    "path": "images/bibliotek.png",
+                    "mime": "image/png",
+                    "copyright": {
+                      "license": "U"
+                    },
+                    "width": 960,
+                    "height": 540
+                  },
+                  "offset": {
+                    "top": 0,
+                    "left": 0
+                  },
+                  "scale": 1,
+                  "alt": "Studentar les på biblioteket"
+                }
+              ]
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000225",
+          "metadata": {
+            "contentType": "Collage",
+            "license": "U",
+            "title": "Collage"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": [
+    {
+      "path": "content[0].content.params.introPage.backgroundImageAltText",
+      "message": "V-IMG-ALT.missing"
+    },
+    {
+      "path": "content[1].content.params.collage.clips[0].alt",
+      "message": "V-IMG-ALT.missing"
+    }
+  ]
+}

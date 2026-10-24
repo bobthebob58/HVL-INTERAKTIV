@@ -10,13 +10,15 @@
  *     file (it is pure, D-073). The length is known only as a lower bound: the latest interaction, bookmark or
  *     submit screen. A long video with nothing placed late in it is not detected.
  *   - Severity warning; the threshold comes from content/laeringsdesign/hint-thresholds.yaml.
+ *   - The message shows the length rounded up to a tenth of a minute (`minutesShown`), so it is always above the
+ *     threshold that triggered it ("at least 15.1", never "at least 15 (at most 15)").
  * Collaborators: ../videoTimeline.ts, ../hintThresholds.ts.
  * Tests: apps/server/test/validation/rules/videoLengthHint.test.ts
  */
 import { pathOf } from '../contentPath.js';
 import { thresholdOf } from '../hintThresholds.js';
 import { nodesOf, type RuleHit, type ValidationRule } from '../rule.js';
-import { timelineOf } from '../videoTimeline.js';
+import { minutesShown, timelineOf } from '../videoTimeline.js';
 
 /** PED-H01: long videos should be split. */
 export const videoLengthHint: ValidationRule = {
@@ -29,12 +31,12 @@ export const videoLengthHint: ValidationRule = {
     const max = thresholdOf(scope.context, 'maxVideoMinutes');
     const hits: RuleHit[] = [];
     for (const node of nodesOf(scope, 'H5P.InteractiveVideo')) {
-      const minutes = timelineOf(node.params).knownEnd / 60;
-      if (minutes <= max) continue;
+      const seconds = timelineOf(node.params).knownEnd;
+      if (seconds / 60 <= max) continue;
       hits.push({
         path: pathOf(node.path, 'interactiveVideo', 'video', 'files'),
         message: 'PED-H01.tooLong',
-        values: { minutes: Math.floor(minutes), max },
+        values: { minutes: minutesShown(seconds), max },
       });
     }
     return hits;

@@ -1,0 +1,86 @@
+{
+  "description": "A BranchingQuestion whose question is «Vel det raude alternativet.» and whose feedback says «Vel den grøne knappen neste gong.», while its choices have real text.",
+  "mainLibrary": "H5P.BranchingScenario 1.10",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "branchingScenario": {
+      "title": "Planlegg ei samling",
+      "startScreen": {
+        "startScreenTitle": "<p>Planlegg ei samling</p>",
+        "startScreenSubtitle": "<p>Vel og sjå kva som skjer.</p>"
+      },
+      "endScreens": [
+        {
+          "endScreenTitle": "<p>Slutt</p>",
+          "endScreenSubtitle": "<p>Start på nytt om du vil.</p>",
+          "endScreenScore": 0,
+          "contentId": -1
+        }
+      ],
+      "content": [
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Vel det raude alternativet.</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Vel den grøne knappen neste gong.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>Rettleiaren svarar innan to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000250",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Val"
+            }
+          },
+          "contentId": 0,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        }
+      ],
+      "scoringOptionGroup": {
+        "scoringOption": "no-score"
+      },
+      "behaviour": {
+        "enableBackwardsNavigation": false,
+        "forceContentFinished": false,
+        "randomizeBranchingQuestions": false
+      }
+    }
+  },
+  "expected": [
+    {
+      "path": "branchingScenario.content[0].type.params.branchingQuestion.question",
+      "message": "V-COLOUR-WORDS.colourOnly"
+    },
+    {
+      "path": "branchingScenario.content[0].type.params.branchingQuestion.alternatives[0].feedback.title",
+      "message": "V-COLOUR-WORDS.colourOnly"
+    }
+  ]
+}

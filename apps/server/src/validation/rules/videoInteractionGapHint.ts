@@ -10,7 +10,8 @@
  *   - Gaps are measured from 0 to the first task, between tasks, and from the last task to the latest known time
  *     (bookmark, submit screen or interaction end). Limitation: the video's real duration is not in content.json,
  *     so the stretch after the latest known time is not measured.
- *   - One hint per video, naming its longest gap.
+ *   - One hint per video, naming its longest gap rounded up to a tenth of a minute (`minutesShown`), so the
+ *     message never shows a gap at or below the threshold that triggered it.
  * Collaborators: ../videoTimeline.ts, ../contentKinds.ts, ../hintThresholds.ts.
  * Tests: apps/server/test/validation/rules/videoInteractionGapHint.test.ts
  */
@@ -18,7 +19,7 @@ import { isLearnerTask } from '../contentKinds.js';
 import { pathOf } from '../contentPath.js';
 import { thresholdOf } from '../hintThresholds.js';
 import { nodesOf, type RuleHit, type ValidationRule } from '../rule.js';
-import { timelineOf } from '../videoTimeline.js';
+import { minutesShown, timelineOf } from '../videoTimeline.js';
 
 /**
  * The longest stretch without a task.
@@ -44,12 +45,12 @@ export const videoInteractionGapHint: ValidationRule = {
     for (const node of nodesOf(scope, 'H5P.InteractiveVideo')) {
       const timeline = timelineOf(node.params);
       const tasks = timeline.interactions.filter((i) => isLearnerTask(i.machineName)).map((i) => i.from);
-      const minutes = longestGap(tasks, timeline.knownEnd) / 60;
-      if (minutes <= max) continue;
+      const seconds = longestGap(tasks, timeline.knownEnd);
+      if (seconds / 60 <= max) continue;
       hits.push({
         path: pathOf(node.path, 'interactiveVideo', 'assets', 'interactions'),
         message: 'PED-H02.gap',
-        values: { minutes: Math.round(minutes * 10) / 10, max },
+        values: { minutes: minutesShown(seconds), max },
       });
     }
     return hits;

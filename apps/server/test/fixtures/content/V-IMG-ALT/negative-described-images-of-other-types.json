@@ -1,0 +1,364 @@
+{
+  "description": "Described images in Dialogcards, MemoryGame and Collage; a QuestionSet 1.21 cover that is not shown; a QuestionSet 1.20 cover, which has no alt-text field; and a MemoryGame 1.1 card in a row, as RowColumn 1.3 offers it (1.1 has no alt-text fields).",
+  "mainLibrary": "H5P.Column 1.22",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.Dialogcards 1.9",
+          "params": {
+            "title": "<p>Omgrep</p>",
+            "mode": "normal",
+            "description": "<p>Snu korta.</p>",
+            "dialogs": [
+              {
+                "text": "<p>Føre</p>",
+                "answer": "<p>Førebuing</p>",
+                "image": {
+                  "path": "images/fase1.png",
+                  "mime": "image/png",
+                  "copyright": {
+                    "license": "U"
+                  },
+                  "width": 960,
+                  "height": 540
+                },
+                "imageAltText": "Ein kalender med samlingsdagane",
+                "tips": {}
+              },
+              {
+                "text": "<p>Etter</p>",
+                "answer": "<p>Refleksjon</p>",
+                "tips": {}
+              }
+            ],
+            "behaviour": {
+              "enableRetry": true,
+              "disableBackwardsNavigation": false,
+              "scaleTextNotCard": false,
+              "randomCards": false
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000226",
+          "metadata": {
+            "contentType": "Dialog Cards",
+            "license": "U",
+            "title": "Omgrep"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.MemoryGame 1.3",
+          "params": {
+            "cards": [
+              {
+                "image": {
+                  "path": "images/hund.png",
+                  "mime": "image/png",
+                  "copyright": {
+                    "license": "U"
+                  },
+                  "width": 960,
+                  "height": 540
+                },
+                "imageAlt": "Ein hund",
+                "match": {
+                  "path": "images/valp.png",
+                  "mime": "image/png",
+                  "copyright": {
+                    "license": "U"
+                  },
+                  "width": 960,
+                  "height": 540
+                },
+                "matchAlt": "Ein valp"
+              }
+            ],
+            "behaviour": {
+              "useGrid": true,
+              "allowRetry": true
+            },
+            "lookNFeel": {
+              "themeColor": "#909090"
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000227",
+          "metadata": {
+            "contentType": "Memory Game",
+            "license": "U",
+            "title": "Memo"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Collage 0.3",
+          "params": {
+            "collage": {
+              "template": "1-1",
+              "options": {
+                "heightRatio": 0.75,
+                "spacing": 0.5,
+                "frame": true
+              },
+              "clips": [
+                {
+                  "image": {
+                    "path": "images/campus.png",
+                    "mime": "image/png",
+                    "copyright": {
+                      "license": "U"
+                    },
+                    "width": 960,
+                    "height": 540
+                  },
+                  "offset": {
+                    "top": 0,
+                    "left": 0
+                  },
+                  "scale": 1,
+                  "alt": "HVL-campus i Bergen"
+                }
+              ]
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000228",
+          "metadata": {
+            "contentType": "Collage",
+            "license": "U",
+            "title": "Collage"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.QuestionSet 1.21",
+          "params": {
+            "introPage": {
+              "showIntroPage": false,
+              "title": "Faser",
+              "introduction": "<p>Fire spørsmål.</p>",
+              "startButtonText": "Start",
+              "backgroundImage": {
+                "path": "images/omslag.png",
+                "mime": "image/png",
+                "copyright": {
+                  "license": "U"
+                },
+                "width": 960,
+                "height": 540
+              }
+            },
+            "progressType": "dots",
+            "passPercentage": 50,
+            "questions": [
+              {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva fase kjem først?</p>",
+                  "answers": [
+                    {
+                      "correct": true,
+                      "text": "<div>Før</div>",
+                      "tipsAndFeedback": {
+                        "chosenFeedback": "<div>Ja, planlegginga kjem først.</div>"
+                      }
+                    },
+                    {
+                      "correct": false,
+                      "text": "<div>Etter</div>",
+                      "tipsAndFeedback": {
+                        "chosenFeedback": "<div>Nei, etterarbeidet kjem til slutt.</div>"
+                      }
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "type": "auto",
+                    "singlePoint": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000229",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              }
+            ],
+            "endGame": {
+              "showResultPage": true,
+              "showSolutionButton": true,
+              "showRetryButton": true
+            },
+            "override": {}
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000230",
+          "metadata": {
+            "contentType": "Question Set",
+            "license": "U",
+            "title": "Sett"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.QuestionSet 1.20",
+          "params": {
+            "introPage": {
+              "showIntroPage": true,
+              "title": "Faser",
+              "introduction": "<p>Fire spørsmål.</p>",
+              "startButtonText": "Start",
+              "backgroundImage": {
+                "path": "images/omslag.png",
+                "mime": "image/png",
+                "copyright": {
+                  "license": "U"
+                },
+                "width": 960,
+                "height": 540
+              }
+            },
+            "progressType": "dots",
+            "passPercentage": 50,
+            "questions": [
+              {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva fase kjem først?</p>",
+                  "answers": [
+                    {
+                      "correct": true,
+                      "text": "<div>Før</div>",
+                      "tipsAndFeedback": {
+                        "chosenFeedback": "<div>Ja, planlegginga kjem først.</div>"
+                      }
+                    },
+                    {
+                      "correct": false,
+                      "text": "<div>Etter</div>",
+                      "tipsAndFeedback": {
+                        "chosenFeedback": "<div>Nei, etterarbeidet kjem til slutt.</div>"
+                      }
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "type": "auto",
+                    "singlePoint": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000231",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              }
+            ],
+            "endGame": {
+              "showResultPage": true,
+              "showSolutionButton": true,
+              "showRetryButton": true
+            },
+            "override": {}
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000232",
+          "metadata": {
+            "contentType": "Question Set",
+            "license": "U",
+            "title": "Sett"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.Row 1.3",
+          "params": {
+            "columns": [
+              {
+                "content": {
+                  "library": "H5P.RowColumn 1.3",
+                  "params": {
+                    "content": [
+                      {
+                        "content": {
+                          "library": "H5P.MemoryGame 1.1",
+                          "params": {
+                            "cards": [
+                              {
+                                "image": {
+                                  "path": "images/hund.png",
+                                  "mime": "image/png",
+                                  "copyright": {
+                                    "license": "U"
+                                  },
+                                  "width": 960,
+                                  "height": 540
+                                },
+                                "match": {
+                                  "path": "images/valp.png",
+                                  "mime": "image/png",
+                                  "copyright": {
+                                    "license": "U"
+                                  },
+                                  "width": 960,
+                                  "height": 540
+                                },
+                                "description": "Ein hund og ein valp."
+                              }
+                            ],
+                            "l10n": {
+                              "cardTurns": "Snudde kort",
+                              "timeSpent": "Tid brukt",
+                              "feedback": "Bra!"
+                            }
+                          },
+                          "subContentId": "00000000-0000-4000-8000-000000000335",
+                          "metadata": {
+                            "contentType": "Memory Game",
+                            "license": "U",
+                            "title": "Memo 1.1"
+                          }
+                        },
+                        "useSeparator": "auto"
+                      }
+                    ]
+                  },
+                  "subContentId": "00000000-0000-4000-8000-000000000334",
+                  "metadata": {
+                    "contentType": "Column",
+                    "license": "U",
+                    "title": "Kolonne"
+                  }
+                },
+                "width": 100
+              }
+            ]
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000333",
+          "metadata": {
+            "contentType": "Row",
+            "license": "U",
+            "title": "Rad"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": []
+}

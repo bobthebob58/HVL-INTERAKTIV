@@ -1,5 +1,5 @@
 {
-  "description": "h2 → h3 → h3 → h2 in one text, and a text that starts at h3.",
+  "description": "h2 → h3 → h3 → h2 in one text, and a second text in the same Column that goes on at h3.",
   "mainLibrary": "H5P.Column 1.18",
   "metadata": {
     "title": "Testaktivitet",

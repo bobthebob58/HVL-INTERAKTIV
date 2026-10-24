@@ -1,0 +1,101 @@
+{
+  "description": "Two hotspots the player drops, as ImageHotspots 1.11 drops a hotspot whose content has no item with a library: one with no content and no header, high on the right, and one whose only item has no library. The shown hotspots are in reading order.",
+  "mainLibrary": "H5P.ImageHotspots 1.11",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "image": {
+      "path": "images/diagram.png",
+      "mime": "image/png",
+      "copyright": {
+        "license": "U"
+      },
+      "width": 960,
+      "height": 540
+    },
+    "backgroundImageAltText": "Diagram over tre fasar.",
+    "globalIconType": "icon",
+    "globalIcon": "plus",
+    "hotspots": [
+      {
+        "position": {
+          "x": 80,
+          "y": 20,
+          "legacyPositioning": false
+        },
+        "hotspotIconType": "default",
+        "alwaysFullscreen": false,
+        "content": []
+      },
+      {
+        "position": {
+          "x": 20,
+          "y": 22,
+          "legacyPositioning": false
+        },
+        "hotspotIconType": "default",
+        "alwaysFullscreen": false,
+        "header": "Før",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>Før</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000336",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Før"
+            }
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 90,
+          "y": 21,
+          "legacyPositioning": false
+        },
+        "hotspotIconType": "default",
+        "alwaysFullscreen": false,
+        "header": "Utkast",
+        "content": [
+          {
+            "params": {},
+            "subContentId": "00000000-0000-4000-8000-000000000337"
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 50,
+          "y": 60,
+          "legacyPositioning": false
+        },
+        "hotspotIconType": "default",
+        "alwaysFullscreen": false,
+        "header": "Etter",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>Etter</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000338",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Etter"
+            }
+          }
+        ]
+      }
+    ],
+    "untitledHotspotLabel": "Markør utan tittel",
+    "closeButtonLabel": "Lukk"
+  },
+  "expected": []
+}

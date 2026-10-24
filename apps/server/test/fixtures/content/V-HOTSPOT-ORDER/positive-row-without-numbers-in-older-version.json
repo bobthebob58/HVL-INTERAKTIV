@@ -1,0 +1,96 @@
+{
+  "description": "ImageHotspots 1.10 in a Column 1.18, a row placed by hand with the right hotspot a little higher. 1.10 has no numbers as icons, so the remedy does not offer them.",
+  "mainLibrary": "H5P.Column 1.18",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.ImageHotspots 1.10",
+          "params": {
+            "image": {
+              "path": "images/diagram.png",
+              "mime": "image/png",
+              "copyright": {
+                "license": "U"
+              },
+              "width": 960,
+              "height": 540
+            },
+            "backgroundImageAltText": "Diagram over to fasar.",
+            "iconType": "icon",
+            "icon": "plus",
+            "color": "#981d99",
+            "hotspots": [
+              {
+                "position": {
+                  "x": 10,
+                  "y": 25,
+                  "legacyPositioning": false
+                },
+                "alwaysFullscreen": false,
+                "header": "Før",
+                "content": [
+                  {
+                    "library": "H5P.Text 1.1",
+                    "params": {
+                      "text": "<p>Før</p>"
+                    },
+                    "subContentId": "00000000-0000-4000-8000-000000000340",
+                    "metadata": {
+                      "contentType": "Text",
+                      "license": "U",
+                      "title": "Før"
+                    }
+                  }
+                ]
+              },
+              {
+                "position": {
+                  "x": 90,
+                  "y": 18,
+                  "legacyPositioning": false
+                },
+                "alwaysFullscreen": false,
+                "header": "Etter",
+                "content": [
+                  {
+                    "library": "H5P.Text 1.1",
+                    "params": {
+                      "text": "<p>Etter</p>"
+                    },
+                    "subContentId": "00000000-0000-4000-8000-000000000341",
+                    "metadata": {
+                      "contentType": "Text",
+                      "license": "U",
+                      "title": "Etter"
+                    }
+                  }
+                ]
+              }
+            ],
+            "hotspotNumberLabel": "Markør #num",
+            "closeButtonLabel": "Lukk",
+            "containsAudioVideoLabel": "Inneheld lyd eller video"
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000339",
+          "metadata": {
+            "contentType": "Image Hotspots",
+            "license": "U",
+            "title": "Markørar"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": [
+    {
+      "path": "content[0].content.params.hotspots",
+      "message": "V-HOTSPOT-ORDER.unorderedWithoutNumbers"
+    }
+  ]
+}

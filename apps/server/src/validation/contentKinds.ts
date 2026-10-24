@@ -10,8 +10,9 @@
  *     returns `undefined` for anything else, so an odd `library` value is never mistaken for sub-content.
  *     `mainMachineNameOf` also accepts a bare `H5P.Name`, for the activity itself only.
  *   - A library in neither list is neither a task nor reading text (e.g. H5P.Image, H5P.Link, H5P.Column).
- * Collaborators: ./contentWalker.ts, ./rules/videoInteractionGapHint.ts, ./rules/columnActivitiesHint.ts,
- *   ./rules/chapterInteractionHint.ts, ./rules/slideWordsHint.ts.
+ *   - `isOlderThan` reads the version of a library string; without a version it assumes the current one.
+ * Collaborators: ./contentWalker.ts, ./imageAltSources.ts, ./rules/videoInteractionGapHint.ts,
+ *   ./rules/columnActivitiesHint.ts, ./rules/chapterInteractionHint.ts, ./rules/slideWordsHint.ts.
  * Tests: apps/server/test/validation/contentWalker.test.ts
  */
 
@@ -24,6 +25,20 @@ const LIBRARY = /^([A-Za-z][\w.]*)[ -](\d+)\.(\d+)$/;
  */
 export function machineNameOf(library: string): string | undefined {
   return LIBRARY.exec(library.trim())?.[1];
+}
+
+/**
+ * Tells whether a library string names a version older than the given one.
+ * @param library - e.g. `H5P.QuestionSet 1.20`.
+ * @param major - The major version to compare with.
+ * @param minor - The minor version to compare with.
+ * @returns True only when the version is known and below `major.minor`; a bare machine name is not older.
+ */
+export function isOlderThan(library: string, major: number, minor: number): boolean {
+  const match = LIBRARY.exec(library.trim());
+  if (!match) return false;
+  const [own, ownMinor] = [Number(match[2]), Number(match[3])];
+  return own < major || (own === major && ownMinor < minor);
 }
 
 const MACHINE_NAME = /^[A-Za-z][\w.]*$/;

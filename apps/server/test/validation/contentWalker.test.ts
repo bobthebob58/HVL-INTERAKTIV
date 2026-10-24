@@ -4,7 +4,7 @@
  * Spec: UD-020
  */
 import { describe, expect, it } from 'vitest';
-import { machineNameOf, mainMachineNameOf } from '../../src/validation/contentKinds.js';
+import { isOlderThan, machineNameOf, mainMachineNameOf } from '../../src/validation/contentKinds.js';
 import { comparePaths, isWithin, pathOf } from '../../src/validation/contentPath.js';
 import { nodesWithin, walkContent } from '../../src/validation/contentWalker.js';
 
@@ -126,6 +126,16 @@ describe('[UD-020] contentPath and contentKinds', () => {
     ['<script>', undefined],
   ])('[UD-020] reads the machine name of %s', (library, machineName) => {
     expect(machineNameOf(library)).toBe(machineName);
+  });
+
+  it.each([
+    ['H5P.QuestionSet 1.20', true],
+    ['H5P.QuestionSet-1.21', false],
+    ['H5P.QuestionSet 2.0', false],
+    ['H5P.QuestionSet 0.30', true],
+    ['H5P.QuestionSet', false],
+  ] as const)('[UD-020] tells whether %s is older than 1.21', (library, older) => {
+    expect(isOlderThan(library, 1, 21)).toBe(older);
   });
 
   it('[UD-020] accepts a main library without a version, but never sub-content without one', () => {

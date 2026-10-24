@@ -1,0 +1,351 @@
+{
+  "description": "A QuestionSet, a CoursePresentation and an InteractiveVideo that force retry and «Vis svar» on for their tasks, whose own settings say off; and an InteractiveVideo that keeps retry on for a task the learner must complete.",
+  "mainLibrary": "H5P.Column 1.22",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.QuestionSet 1.21",
+          "params": {
+            "introPage": {
+              "showIntroPage": false
+            },
+            "progressType": "dots",
+            "passPercentage": 50,
+            "questions": [
+              {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva fase kjem først?</p>",
+                  "answers": [
+                    {
+                      "correct": true,
+                      "text": "<div>Før</div>",
+                      "tipsAndFeedback": {
+                        "chosenFeedback": "<div>Ja, planlegginga kjem først.</div>"
+                      }
+                    },
+                    {
+                      "correct": false,
+                      "text": "<div>Etter</div>",
+                      "tipsAndFeedback": {
+                        "chosenFeedback": "<div>Nei, etterarbeidet kjem til slutt.</div>"
+                      }
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": false,
+                    "enableSolutionsButton": false,
+                    "type": "auto",
+                    "singlePoint": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000260",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              }
+            ],
+            "endGame": {
+              "showResultPage": true,
+              "showSolutionButton": true,
+              "showRetryButton": true
+            },
+            "override": {
+              "showSolutionButton": "on",
+              "retryButton": "on"
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000261",
+          "metadata": {
+            "contentType": "Question Set",
+            "license": "U",
+            "title": "Sett"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.CoursePresentation 1.27",
+          "params": {
+            "presentation": {
+              "slides": [
+                {
+                  "elements": [
+                    {
+                      "x": 3,
+                      "y": 6,
+                      "width": 90,
+                      "height": 80,
+                      "action": {
+                        "library": "H5P.MultiChoice 1.16",
+                        "params": {
+                          "question": "<p>Kva fase kjem først?</p>",
+                          "answers": [
+                            {
+                              "correct": true,
+                              "text": "<div>Før</div>",
+                              "tipsAndFeedback": {
+                                "chosenFeedback": "<div>Ja, planlegginga kjem først.</div>"
+                              }
+                            },
+                            {
+                              "correct": false,
+                              "text": "<div>Etter</div>",
+                              "tipsAndFeedback": {
+                                "chosenFeedback": "<div>Nei, etterarbeidet kjem til slutt.</div>"
+                              }
+                            }
+                          ],
+                          "behaviour": {
+                            "enableRetry": false,
+                            "enableSolutionsButton": false,
+                            "type": "auto",
+                            "singlePoint": false
+                          }
+                        },
+                        "subContentId": "00000000-0000-4000-8000-000000000262",
+                        "metadata": {
+                          "contentType": "Multiple Choice",
+                          "license": "U",
+                          "title": "Spørsmål"
+                        }
+                      },
+                      "solution": ""
+                    }
+                  ],
+                  "keywords": [
+                    {
+                      "main": "Side 1"
+                    }
+                  ],
+                  "slideBackgroundSelector": {}
+                }
+              ],
+              "keywordListEnabled": true,
+              "globalBackgroundSelector": {}
+            },
+            "override": {
+              "activeSurface": false,
+              "hideSummarySlide": false,
+              "showSolutionButton": "on",
+              "retryButton": "on"
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000263",
+          "metadata": {
+            "contentType": "Course Presentation",
+            "license": "U",
+            "title": "Presentasjon"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.InteractiveVideo 1.28",
+          "params": {
+            "interactiveVideo": {
+              "video": {
+                "startScreenOptions": {
+                  "title": "Interaktiv video",
+                  "hideStartTitle": false
+                },
+                "textTracks": {
+                  "videoTrack": []
+                },
+                "files": [
+                  {
+                    "path": "videos/lecture.mp4",
+                    "mime": "video/mp4",
+                    "copyright": {
+                      "license": "U"
+                    }
+                  }
+                ]
+              },
+              "assets": {
+                "interactions": [
+                  {
+                    "x": 10,
+                    "y": 10,
+                    "width": 10,
+                    "height": 10,
+                    "duration": {
+                      "from": 60,
+                      "to": 70
+                    },
+                    "libraryTitle": "Multiple Choice",
+                    "action": {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>Kva fase kjem først?</p>",
+                        "answers": [
+                          {
+                            "correct": true,
+                            "text": "<div>Før</div>",
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>Ja, planlegginga kjem først.</div>"
+                            }
+                          },
+                          {
+                            "correct": false,
+                            "text": "<div>Etter</div>",
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>Nei, etterarbeidet kjem til slutt.</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": false,
+                          "enableSolutionsButton": false,
+                          "type": "auto",
+                          "singlePoint": false
+                        }
+                      },
+                      "subContentId": "00000000-0000-4000-8000-000000000264",
+                      "metadata": {
+                        "contentType": "Multiple Choice",
+                        "license": "U",
+                        "title": "Spørsmål"
+                      }
+                    },
+                    "pause": true,
+                    "displayType": "poster",
+                    "buttonOnMobile": false,
+                    "adaptivity": {
+                      "correct": {
+                        "allowOptOut": false
+                      },
+                      "wrong": {
+                        "allowOptOut": false
+                      },
+                      "requireCompletion": false
+                    }
+                  }
+                ]
+              }
+            },
+            "override": {
+              "showSolutionButton": "on",
+              "retryButton": "on"
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000265",
+          "metadata": {
+            "contentType": "Interactive Video",
+            "license": "U",
+            "title": "Video"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.InteractiveVideo 1.28",
+          "params": {
+            "interactiveVideo": {
+              "video": {
+                "startScreenOptions": {
+                  "title": "Interaktiv video",
+                  "hideStartTitle": false
+                },
+                "textTracks": {
+                  "videoTrack": []
+                },
+                "files": [
+                  {
+                    "path": "videos/lecture.mp4",
+                    "mime": "video/mp4",
+                    "copyright": {
+                      "license": "U"
+                    }
+                  }
+                ]
+              },
+              "assets": {
+                "interactions": [
+                  {
+                    "x": 10,
+                    "y": 10,
+                    "width": 10,
+                    "height": 10,
+                    "duration": {
+                      "from": 60,
+                      "to": 70
+                    },
+                    "libraryTitle": "Multiple Choice",
+                    "action": {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>Kva fase kjem først?</p>",
+                        "answers": [
+                          {
+                            "correct": true,
+                            "text": "<div>Før</div>",
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>Ja, planlegginga kjem først.</div>"
+                            }
+                          },
+                          {
+                            "correct": false,
+                            "text": "<div>Etter</div>",
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>Nei, etterarbeidet kjem til slutt.</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": false,
+                          "enableSolutionsButton": false,
+                          "type": "auto",
+                          "singlePoint": false
+                        }
+                      },
+                      "subContentId": "00000000-0000-4000-8000-000000000266",
+                      "metadata": {
+                        "contentType": "Multiple Choice",
+                        "license": "U",
+                        "title": "Spørsmål"
+                      }
+                    },
+                    "pause": true,
+                    "displayType": "poster",
+                    "buttonOnMobile": false,
+                    "adaptivity": {
+                      "correct": {
+                        "allowOptOut": false
+                      },
+                      "wrong": {
+                        "allowOptOut": false
+                      },
+                      "requireCompletion": true
+                    }
+                  }
+                ]
+              }
+            },
+            "override": {
+              "showSolutionButton": "on"
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000267",
+          "metadata": {
+            "contentType": "Interactive Video",
+            "license": "U",
+            "title": "Video"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": []
+}

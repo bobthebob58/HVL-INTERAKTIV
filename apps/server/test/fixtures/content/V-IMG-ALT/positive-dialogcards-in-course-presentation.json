@@ -1,0 +1,110 @@
+{
+  "description": "Dialog cards on a slide: one card image without alt text, one whose alt text is a file name, and a card with no image.",
+  "mainLibrary": "H5P.CoursePresentation 1.28",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "presentation": {
+      "slides": [
+        {
+          "elements": [
+            {
+              "x": 3,
+              "y": 6,
+              "width": 90,
+              "height": 80,
+              "action": {
+                "library": "H5P.Dialogcards 1.9",
+                "params": {
+                  "title": "<p>Omgrep</p>",
+                  "mode": "normal",
+                  "description": "<p>Snu korta.</p>",
+                  "dialogs": [
+                    {
+                      "text": "<p>Føre</p>",
+                      "answer": "<p>Førebuing</p>",
+                      "image": {
+                        "path": "images/fase1.png",
+                        "mime": "image/png",
+                        "copyright": {
+                          "license": "U"
+                        },
+                        "width": 960,
+                        "height": 540
+                      },
+                      "imageAltText": "",
+                      "tips": {}
+                    },
+                    {
+                      "text": "<p>Under</p>",
+                      "answer": "<p>Samling</p>",
+                      "image": {
+                        "path": "images/fase2.png",
+                        "mime": "image/png",
+                        "copyright": {
+                          "license": "U"
+                        },
+                        "width": 960,
+                        "height": 540
+                      },
+                      "imageAltText": "IMG_1234",
+                      "tips": {}
+                    },
+                    {
+                      "text": "<p>Etter</p>",
+                      "answer": "<p>Refleksjon</p>",
+                      "tips": {}
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "disableBackwardsNavigation": false,
+                    "scaleTextNotCard": false,
+                    "randomCards": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000220",
+                "metadata": {
+                  "contentType": "Dialog Cards",
+                  "license": "U",
+                  "title": "Omgrep"
+                }
+              },
+              "solution": "",
+              "alwaysDisplayComments": false,
+              "backgroundOpacity": 0,
+              "displayAsButton": false,
+              "buttonSize": "big",
+              "goToSlideType": "specified",
+              "invisible": false
+            }
+          ],
+          "keywords": [
+            {
+              "main": "Side 1"
+            }
+          ],
+          "slideBackgroundSelector": {}
+        }
+      ],
+      "keywordListEnabled": true,
+      "globalBackgroundSelector": {}
+    },
+    "override": {
+      "activeSurface": false,
+      "hideSummarySlide": false
+    }
+  },
+  "expected": [
+    {
+      "path": "presentation.slides[0].elements[0].action.params.dialogs[0].imageAltText",
+      "message": "V-IMG-ALT.missing"
+    },
+    {
+      "path": "presentation.slides[0].elements[0].action.params.dialogs[1].imageAltText",
+      "message": "V-IMG-ALT.fileName"
+    }
+  ]
+}

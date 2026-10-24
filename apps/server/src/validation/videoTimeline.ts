@@ -10,6 +10,8 @@
  *   - Times are in seconds, as H5P stores them (`duration.from`, `bookmarks[].time`, `endscreens[].time`).
  *   - Interactions without a valid start time are left out.
  *   - Output is sorted by time, then by list position, so it is deterministic.
+ *   - `minutesShown` rounds up to a tenth of a minute (6 seconds) by dividing whole seconds, so floating point
+ *     never pushes an exact value (282 s = 4.7 min) up a tenth.
  * Collaborators: ./rules/videoLengthHint.ts, ./rules/videoInteractionGapHint.ts, ./rules/videoSummaryHint.ts.
  * Tests: apps/server/test/validation/rules/videoInteractionGapHint.test.ts
  */
@@ -62,3 +64,10 @@ export function timelineOf(params: unknown): VideoTimeline {
   ].filter((time): time is number => time !== undefined);
   return { interactions, knownEnd: marks.reduce((latest, time) => Math.max(latest, time), 0) };
 }
+
+/**
+ * A duration as a message shows it: minutes, rounded up to one decimal.
+ * @param seconds - A duration in seconds.
+ * @returns e.g. `15.1` for 901 s and `4.7` for 282 s; never less than the exact minutes.
+ */
+export const minutesShown = (seconds: number): number => Math.ceil(seconds / 6) / 10;

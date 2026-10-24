@@ -1,5 +1,5 @@
 {
-  "description": "Icons (not numbers) in a list order that jumps around the image, and one hotspot without a header.",
+  "description": "Icons (not numbers) on one row placed by hand, the right one a little higher, so H5P reads the row from right to left; and one hotspot without a header.",
   "mainLibrary": "H5P.ImageHotspots 1.11",
   "metadata": {
     "title": "Testaktivitet",
@@ -21,8 +21,32 @@
     "hotspots": [
       {
         "position": {
-          "x": 80,
-          "y": 20,
+          "x": 10,
+          "y": 25,
+          "legacyPositioning": false
+        },
+        "hotspotIconType": "default",
+        "alwaysFullscreen": false,
+        "header": "Før",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>Før.</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000201",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Før"
+            }
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 90,
+          "y": 18,
           "legacyPositioning": false
         },
         "hotspotIconType": "default",
@@ -34,7 +58,7 @@
             "params": {
               "text": "<p>Etter.</p>"
             },
-            "subContentId": "00000000-0000-4000-8000-000000000032",
+            "subContentId": "00000000-0000-4000-8000-000000000202",
             "metadata": {
               "contentType": "Text",
               "license": "U",
@@ -45,7 +69,7 @@
       },
       {
         "position": {
-          "x": 10,
+          "x": 50,
           "y": 70,
           "legacyPositioning": false
         },
@@ -58,35 +82,11 @@
             "params": {
               "text": "<p>Innhald.</p>"
             },
-            "subContentId": "00000000-0000-4000-8000-000000000033",
+            "subContentId": "00000000-0000-4000-8000-000000000203",
             "metadata": {
               "contentType": "Text",
               "license": "U",
               "title": "Tekst"
-            }
-          }
-        ]
-      },
-      {
-        "position": {
-          "x": 50,
-          "y": 20,
-          "legacyPositioning": false
-        },
-        "hotspotIconType": "default",
-        "alwaysFullscreen": false,
-        "header": "Under",
-        "content": [
-          {
-            "library": "H5P.Text 1.1",
-            "params": {
-              "text": "<p>Under.</p>"
-            },
-            "subContentId": "00000000-0000-4000-8000-000000000034",
-            "metadata": {
-              "contentType": "Text",
-              "license": "U",
-              "title": "Under"
             }
           }
         ]
@@ -101,7 +101,7 @@
       "message": "V-HOTSPOT-ORDER.unordered"
     },
     {
-      "path": "hotspots[1].header",
+      "path": "hotspots[2].header",
       "message": "V-HOTSPOT-ORDER.noHeader"
     }
   ]

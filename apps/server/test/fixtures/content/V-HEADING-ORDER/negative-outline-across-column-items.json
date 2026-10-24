@@ -1,0 +1,131 @@
+{
+  "description": "A chapter whose texts form one outline: it starts at h3, goes on to h4 after a task, has a text without headings, and goes back up to h2 → h3.",
+  "mainLibrary": "H5P.InteractiveBook 1.15",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "showCoverPage": false,
+    "bookCover": {},
+    "chapters": [
+      {
+        "library": "H5P.Column 1.22",
+        "params": {
+          "content": [
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<h3>Innleiing</h3><p>Kort.</p>"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000307",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Tekst"
+                }
+              },
+              "useSeparator": "auto"
+            },
+            {
+              "content": {
+                "library": "H5P.MultiChoice 1.16",
+                "params": {
+                  "question": "<p>Kva fase kjem først?</p>",
+                  "answers": [
+                    {
+                      "correct": true,
+                      "text": "<div>Før</div>",
+                      "tipsAndFeedback": {
+                        "chosenFeedback": "<div>Ja, planlegginga kjem først.</div>"
+                      }
+                    },
+                    {
+                      "correct": false,
+                      "text": "<div>Etter</div>",
+                      "tipsAndFeedback": {
+                        "chosenFeedback": "<div>Nei, etterarbeidet kjem til slutt.</div>"
+                      }
+                    }
+                  ],
+                  "behaviour": {
+                    "enableRetry": true,
+                    "enableSolutionsButton": true,
+                    "type": "auto",
+                    "singlePoint": false
+                  }
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000308",
+                "metadata": {
+                  "contentType": "Multiple Choice",
+                  "license": "U",
+                  "title": "Spørsmål"
+                }
+              },
+              "useSeparator": "auto"
+            },
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<h4>Detalj</h4><p>Utdjuping.</p>"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000309",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Tekst"
+                }
+              },
+              "useSeparator": "auto"
+            },
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<p>Utan overskrift.</p>"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000310",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Tekst"
+                }
+              },
+              "useSeparator": "auto"
+            },
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<h2>Del 2</h2><h3>Meir</h3><p>Slutt.</p>"
+                },
+                "subContentId": "00000000-0000-4000-8000-000000000311",
+                "metadata": {
+                  "contentType": "Text",
+                  "license": "U",
+                  "title": "Tekst"
+                }
+              },
+              "useSeparator": "auto"
+            }
+          ]
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000312",
+        "metadata": {
+          "contentType": "Column",
+          "license": "U",
+          "title": "Kapittel 1"
+        }
+      }
+    ],
+    "behaviour": {
+      "defaultTableOfContents": true,
+      "progressIndicators": true,
+      "displaySummary": true,
+      "enableRetry": true
+    }
+  },
+  "expected": []
+}

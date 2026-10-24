@@ -11,10 +11,14 @@
  *     CoursePresentation), QuestionSet's `endGame.showRetryButton` / `endGame.showSolutionButton` and
  *     CoursePresentation's `override.summarySlideRetryButton` / `override.summarySlideSolutionButton` set to
  *     `false`. A missing setting is the library's default (on), so it is fine.
+ *   - A child's switched-off `behaviour` setting is not reported when its container forces it on: QuestionSet,
+ *     CoursePresentation and InteractiveVideo overwrite the behaviour of their direct tasks (questions, slide
+ *     elements, interactions) with `override.* === "on"` (../containerOverrides.ts).
  *   - One hint per switched-off setting, at its path.
- * Collaborators: ../paramReaders.ts.
+ * Collaborators: ../paramReaders.ts, ../containerOverrides.ts.
  * Tests: apps/server/test/validation/rules/retryAndSolutionsHint.test.ts
  */
+import { forcedBehaviours, type ForcedBehaviour } from '../containerOverrides.js';
 import { pathOf } from '../contentPath.js';
 import { fieldAt } from '../paramReaders.js';
 import type { RuleHit, ValidationRule } from '../rule.js';
@@ -44,10 +48,13 @@ export const retryAndSolutionsHint: ValidationRule = {
   severity: 'hint',
   messages: ['PED-H07.retryOff', 'PED-H07.solutionsOff'],
   check(scope) {
+    const forced = forcedBehaviours(scope.nodes);
     const hits: RuleHit[] = [];
     for (const node of scope.nodes) {
       for (const [group, field, off, kind] of SWITCHES) {
         if (fieldAt(node.params, group, field) !== off) continue;
+        if (group === 'behaviour' && forced.get(node.path)?.[field as keyof ForcedBehaviour] === true)
+          continue;
         hits.push({ path: pathOf(node.path, group, field), message: `PED-H07.${kind}` });
       }
     }

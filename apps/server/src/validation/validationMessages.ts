@@ -9,6 +9,9 @@
  *   - `nn.json` is the reference: `ValidationMessageKey` is derived from it; doc-lint keeps nb and en in step.
  *   - A missing message falls back to Nynorsk, then to the key itself; it never throws.
  *   - `{{name}}` placeholders are filled from `values`; an unknown placeholder stays visible.
+ *   - Numbers are written the way the locale writes them, with at most one decimal (`11,5` and `1 500` in nn and
+ *     nb, `11.5` and `1,500` in en). Intl.NumberFormat with an explicit locale is pure, so the validator stays
+ *     deterministic (D-073). Rules round a value before they pass it, so that it never contradicts the trigger.
  * Collaborators: ./locales/*.json, ./validateContent.ts, ../i18n/translate.ts (the `Leaves` key type).
  * Tests: apps/server/test/validation/validationMessages.test.ts
  */
@@ -28,6 +31,12 @@ export type MessageValues = Readonly<Record<string, string | number>>;
 export type ValidationLocale = ValidationInput['locale'];
 
 const CATALOGUES: Readonly<Record<ValidationLocale, unknown>> = { nn, nb, en };
+
+const NUMBER_FORMATS: Readonly<Record<ValidationLocale, Intl.NumberFormat>> = {
+  nn: new Intl.NumberFormat('nn', { maximumFractionDigits: 1 }),
+  nb: new Intl.NumberFormat('nb', { maximumFractionDigits: 1 }),
+  en: new Intl.NumberFormat('en', { maximumFractionDigits: 1 }),
+};
 
 /**
  * Looks a key up in one catalogue only (no fallback).
@@ -58,7 +67,10 @@ export function validationMessage(
   locale: ValidationLocale = 'nn',
 ): string {
   const template = messageTemplate(key, locale) ?? messageTemplate(key, 'nn') ?? key;
-  return template.replace(/\{\{(\w+)\}\}/g, (match, name: string) =>
-    name in values ? String(values[name]) : match,
-  );
+  const numbers = NUMBER_FORMATS[locale];
+  return template.replace(/\{\{(\w+)\}\}/g, (match, name: string) => {
+    const value = Object.hasOwn(values, name) ? values[name] : undefined;
+    if (value === undefined) return match;
+    return typeof value === 'number' ? numbers.format(value) : value;
+  });
 }

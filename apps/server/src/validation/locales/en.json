@@ -8,13 +8,16 @@
   },
   "V-VID-CAPTIONS": {
     "missing": "The video has no captions. Upload a captions file (WebVTT, .vtt), or use a video from a video service set up with captions, such as Panopto.",
-    "wrongKind": "The video's text track is marked as “Descriptions” or “Chapters” and is not shown as captions. Set its kind to “Subtitles” or “Captions”."
+    "wrongKind": "The video's text track is marked as “Descriptions” or “Chapters” and is not shown as captions. Set its kind to “Subtitles” or “Captions”.",
+    "kindNotSet": "The video's text track has no kind, so H5P does not show it. Set its kind to “Subtitles” or “Captions”."
   },
   "V-VID-TRANSCRIPT": {
     "missing": "There is no transcript or text version of the video. Add a link to a transcript, or write the content as text next to the video."
   },
   "V-HOTSPOT-ORDER": {
-    "unordered": "The hotspots are not numbered, and their order in the list does not follow the image. Choose numbers as icons, or sort the hotspots from top to bottom and left to right.",
+    "unordered": "The Tab key and screen readers do not go through the hotspots in the order the image shows. H5P sorts the hotspots by height, so hotspots that are almost on one row are read from right to left when the right one sits a little higher. Place each hotspot of a row a little lower than the one to its left (and not at the very edge of the image), or choose numbers as icons, so that H5P goes through the hotspots in list order.",
+    "unorderedWithoutNumbers": "The Tab key and screen readers do not go through the hotspots in the order the image shows. H5P sorts the hotspots by height, so hotspots that are almost on one row are read from right to left when the right one sits a little higher. Place each hotspot of a row a little lower than the one to its left (and not at the very edge of the image).",
+    "partlyNumbered": "Some hotspots have their own icon and get no number, and their order in the list does not follow the image. The Tab key and screen readers go through the hotspots in list order. Give every hotspot the default icon, or sort the list from top to bottom and left to right.",
     "noHeader": "The hotspot has no header. Write a short header that says what the hotspot is about. Screen readers read it aloud."
   },
   "V-TABLE-HEADERS": {

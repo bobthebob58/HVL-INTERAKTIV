@@ -7,7 +7,8 @@
  * Spec: UD-021
  * Invariants:
  *   - A node with no video file has no video (`undefined`); rules then have nothing to check.
- *   - Track kinds are as stored; a missing kind is the player's default (subtitles).
+ *   - Track kinds are as stored; a missing or empty kind stays `undefined` or `''` (the editor always writes one,
+ *     but H5P.Video does not show a track without it, so rules must not assume a default).
  * Collaborators: ./rules/videoCaptionsRule.ts, ./rules/videoTranscriptRule.ts.
  * Tests: apps/server/test/validation/rules/videoCaptionsRule.test.ts
  */

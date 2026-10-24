@@ -51,6 +51,19 @@ describe('[UD-020] validator messages', () => {
     expect(partial).toContain('{{max}}');
   });
 
+  it.each([
+    ['nn', '11,5 minutt', '1\u00a0600 ord'],
+    ['nb', '11,5 minutter', '1\u00a0600 ord'],
+    ['en', '11.5 minutes', '1,600 words'],
+  ] as const)('[UD-020] writes numbers the way %s does', (locale, minutes, words) => {
+    // Act
+    const gap = validationMessage('PED-H02.gap', { minutes: 11.5, max: 4 }, locale);
+    const chapter = validationMessage('PED-H10.tooManyWords', { count: 1600, max: 1500 }, locale);
+    // Assert
+    expect(gap).toContain(minutes);
+    expect(chapter).toContain(words);
+  });
+
   it('[UD-020] speaks Nynorsk by default', () => {
     expect(validationMessage('V-LANG.missing')).toBe(messageTemplate('V-LANG.missing', 'nn'));
   });

@@ -8,13 +8,16 @@
   },
   "V-VID-CAPTIONS": {
     "missing": "Videoen har ikke teksting. Last opp en tekstingsfil (WebVTT, .vtt), eller bruk en video fra en videotjeneste som er satt opp med teksting, for eksempel Panopto.",
-    "wrongKind": "Tekstsporet til videoen er merket som «Beskrivelser» eller «Kapitler» og vises ikke som teksting. Sett typen til «Undertekster» eller «Teksting»."
+    "wrongKind": "Tekstsporet til videoen er merket som «Beskrivelser» eller «Kapitler» og vises ikke som teksting. Sett typen til «Undertekster» eller «Teksting».",
+    "kindNotSet": "Tekstsporet til videoen har ingen type, og da viser ikke H5P det. Sett typen til «Undertekster» eller «Teksting»."
   },
   "V-VID-TRANSCRIPT": {
     "missing": "Det finnes ingen transkripsjon eller tekstversjon av videoen. Legg ved en lenke til en transkripsjon, eller skriv innholdet som tekst ved videoen."
   },
   "V-HOTSPOT-ORDER": {
-    "unordered": "Markørene er ikke nummererte, og rekkefølgen i listen følger ikke bildet. Velg nummer som ikon, eller sorter markørene ovenfra og ned og fra venstre mot høyre.",
+    "unordered": "Tabulatortasten og skjermlesere går ikke gjennom markørene i den rekkefølgen bildet viser. H5P sorterer markørene etter høyden, så markører som står nesten på samme rad, blir lest fra høyre mot venstre når den høyre står litt høyere. Plasser hver markør på en rad litt lavere enn markøren til venstre for den (og ikke helt i kanten av bildet), eller velg nummer som ikon, så går H5P gjennom markørene i listerekkefølgen.",
+    "unorderedWithoutNumbers": "Tabulatortasten og skjermlesere går ikke gjennom markørene i den rekkefølgen bildet viser. H5P sorterer markørene etter høyden, så markører som står nesten på samme rad, blir lest fra høyre mot venstre når den høyre står litt høyere. Plasser hver markør på en rad litt lavere enn markøren til venstre for den (og ikke helt i kanten av bildet).",
+    "partlyNumbered": "Noen markører har eget ikon og får ikke nummer, og rekkefølgen i listen følger ikke bildet. Tabulatortasten og skjermlesere går gjennom markørene i listerekkefølgen. Gi alle markørene standardikonet, eller sorter listen ovenfra og ned og fra venstre mot høyre.",
     "noHeader": "Markøren har ingen overskrift. Skriv en kort overskrift som sier hva markøren handler om. Skjermlesere leser den opp."
   },
   "V-TABLE-HEADERS": {

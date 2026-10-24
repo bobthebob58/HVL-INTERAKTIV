@@ -1,0 +1,145 @@
+{
+  "description": "An H5P.Video in a Column and an InteractiveVideo whose only tracks have a file but no kind (one missing, one empty), so H5P does not add them to the video.",
+  "mainLibrary": "H5P.Column 1.22",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.Video 1.6",
+          "params": {
+            "sources": [
+              {
+                "path": "videos/clip.webm",
+                "mime": "video/webm",
+                "copyright": {
+                  "license": "U"
+                }
+              }
+            ],
+            "visuals": {
+              "fit": true,
+              "controls": true
+            },
+            "playback": {
+              "autoplay": false,
+              "loop": false
+            },
+            "a11y": [
+              {
+                "label": "Nynorsk",
+                "srcLang": "nn",
+                "track": {
+                  "path": "videos/clip.nn.vtt",
+                  "mime": "text/vtt",
+                  "copyright": {
+                    "license": "U"
+                  }
+                }
+              }
+            ]
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000240",
+          "metadata": {
+            "contentType": "Video",
+            "license": "U",
+            "title": "Video"
+          }
+        },
+        "useSeparator": "auto"
+      },
+      {
+        "content": {
+          "library": "H5P.InteractiveVideo 1.28",
+          "params": {
+            "interactiveVideo": {
+              "video": {
+                "startScreenOptions": {
+                  "title": "Interaktiv video",
+                  "hideStartTitle": false
+                },
+                "textTracks": {
+                  "videoTrack": [
+                    {
+                      "label": "Nynorsk",
+                      "kind": "",
+                      "srcLang": "nn",
+                      "track": {
+                        "path": "videos/lecture.nn.vtt",
+                        "mime": "text/vtt",
+                        "copyright": {
+                          "license": "U"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "files": [
+                  {
+                    "path": "videos/lecture.mp4",
+                    "mime": "video/mp4",
+                    "copyright": {
+                      "license": "U"
+                    }
+                  }
+                ]
+              },
+              "assets": {
+                "interactions": []
+              },
+              "summary": {
+                "task": {
+                  "library": "H5P.Summary 1.10",
+                  "params": {
+                    "intro": "Vel det rette utsegnet.",
+                    "summaries": [
+                      {
+                        "subContentId": "00000000-0000-4000-8000-000000000242",
+                        "tip": ""
+                      }
+                    ]
+                  },
+                  "subContentId": "00000000-0000-4000-8000-000000000243",
+                  "metadata": {
+                    "contentType": "Summary",
+                    "license": "U",
+                    "title": "Oppsummering"
+                  }
+                },
+                "displayAt": 3
+              }
+            },
+            "override": {
+              "autoplay": false,
+              "loop": false,
+              "showBookmarksmenuOnLoad": false,
+              "showRewind10": false,
+              "preventSkippingMode": "none",
+              "deactivateSound": false
+            }
+          },
+          "subContentId": "00000000-0000-4000-8000-000000000241",
+          "metadata": {
+            "contentType": "Interactive Video",
+            "license": "U",
+            "title": "Video"
+          }
+        },
+        "useSeparator": "auto"
+      }
+    ]
+  },
+  "expected": [
+    {
+      "path": "content[0].content.params.a11y",
+      "message": "V-VID-CAPTIONS.kindNotSet"
+    },
+    {
+      "path": "content[1].content.params.interactiveVideo.video.textTracks",
+      "message": "V-VID-CAPTIONS.kindNotSet"
+    }
+  ]
+}

@@ -14,6 +14,13 @@ describe('V-COLOUR-WORDS', () => {
     expect(hitsOf(colourWordsRule, fixture)).toEqual(fixture.expected);
   });
 
+  it('[UD-021][V-COLOUR-WORDS] leaves branching choices that are only a colour to V-BRANCH-COLOUR', () => {
+    // Arrange
+    const [colourOnlyChoices] = fixturesOf('V-BRANCH-COLOUR').filter((f) => f.name.startsWith('positive-'));
+    // Act and assert
+    expect(colourOnlyChoices && hitsOf(colourWordsRule, colourOnlyChoices)).toEqual([]);
+  });
+
   it.each([
     ['Klikk på det raude feltet.', 'raude feltet'],
     ['Vel den grøne knappen', 'grøne knappen'],

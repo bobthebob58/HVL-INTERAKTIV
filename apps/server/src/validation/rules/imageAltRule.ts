@@ -7,7 +7,8 @@
  * Invariants:
  *   - Images marked decorative (`H5P.Image` `decorative: true`) need no alt text.
  *   - Covers `H5P.Image` anywhere (also inside ImageHotspots, CoursePresentation, InteractiveBook, Column), the
- *     ImageHotspots background and the BranchingScenario start image (see ../imageAltSources.ts).
+ *     ImageHotspots background, the BranchingScenario start image, the QuestionSet cover (from 1.21), and the
+ *     images of Dialogcards, MemoryGame (from 1.2) and Collage (see ../imageAltSources.ts).
  *   - Severity error: publishing needs a fix or an acknowledgement (PROD-003).
  * Collaborators: ../imageAltSources.ts, ../richText.ts.
  * Tests: apps/server/test/validation/rules/imageAltRule.test.ts

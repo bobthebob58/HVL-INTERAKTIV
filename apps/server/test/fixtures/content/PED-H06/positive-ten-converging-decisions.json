@@ -1,0 +1,552 @@
+{
+  "description": "Ten decisions in a row, each with three explained choices that all lead on to the next decision (3^10 ways through), with backwards navigation.",
+  "mainLibrary": "H5P.BranchingScenario 1.10",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "branchingScenario": {
+      "title": "Planlegg ei samling",
+      "startScreen": {
+        "startScreenTitle": "<p>Planlegg ei samling</p>",
+        "startScreenSubtitle": "<p>Vel og sjå kva som skjer.</p>"
+      },
+      "endScreens": [
+        {
+          "endScreenTitle": "<p>Slutt</p>",
+          "endScreenSubtitle": "<p>Start på nytt om du vil.</p>",
+          "endScreenScore": 0,
+          "contentId": -1
+        }
+      ],
+      "content": [
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Steg 1: kva gjer du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren.",
+                    "nextContentId": 1,
+                    "feedback": {
+                      "title": "<p>Rettleiaren hjelper deg vidare.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post.",
+                    "nextContentId": 1,
+                    "feedback": {
+                      "title": "<p>Svaret kjem om to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Vent og sjå.",
+                    "nextContentId": 1,
+                    "feedback": {
+                      "title": "<p>Problemet veks medan du ventar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000280",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Steg 1"
+            }
+          },
+          "contentId": 0,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Steg 2: kva gjer du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren.",
+                    "nextContentId": 2,
+                    "feedback": {
+                      "title": "<p>Rettleiaren hjelper deg vidare.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post.",
+                    "nextContentId": 2,
+                    "feedback": {
+                      "title": "<p>Svaret kjem om to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Vent og sjå.",
+                    "nextContentId": 2,
+                    "feedback": {
+                      "title": "<p>Problemet veks medan du ventar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000281",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Steg 2"
+            }
+          },
+          "contentId": 1,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Steg 3: kva gjer du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren.",
+                    "nextContentId": 3,
+                    "feedback": {
+                      "title": "<p>Rettleiaren hjelper deg vidare.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post.",
+                    "nextContentId": 3,
+                    "feedback": {
+                      "title": "<p>Svaret kjem om to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Vent og sjå.",
+                    "nextContentId": 3,
+                    "feedback": {
+                      "title": "<p>Problemet veks medan du ventar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000282",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Steg 3"
+            }
+          },
+          "contentId": 2,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Steg 4: kva gjer du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren.",
+                    "nextContentId": 4,
+                    "feedback": {
+                      "title": "<p>Rettleiaren hjelper deg vidare.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post.",
+                    "nextContentId": 4,
+                    "feedback": {
+                      "title": "<p>Svaret kjem om to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Vent og sjå.",
+                    "nextContentId": 4,
+                    "feedback": {
+                      "title": "<p>Problemet veks medan du ventar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000283",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Steg 4"
+            }
+          },
+          "contentId": 3,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Steg 5: kva gjer du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren.",
+                    "nextContentId": 5,
+                    "feedback": {
+                      "title": "<p>Rettleiaren hjelper deg vidare.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post.",
+                    "nextContentId": 5,
+                    "feedback": {
+                      "title": "<p>Svaret kjem om to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Vent og sjå.",
+                    "nextContentId": 5,
+                    "feedback": {
+                      "title": "<p>Problemet veks medan du ventar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000284",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Steg 5"
+            }
+          },
+          "contentId": 4,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Steg 6: kva gjer du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren.",
+                    "nextContentId": 6,
+                    "feedback": {
+                      "title": "<p>Rettleiaren hjelper deg vidare.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post.",
+                    "nextContentId": 6,
+                    "feedback": {
+                      "title": "<p>Svaret kjem om to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Vent og sjå.",
+                    "nextContentId": 6,
+                    "feedback": {
+                      "title": "<p>Problemet veks medan du ventar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000285",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Steg 6"
+            }
+          },
+          "contentId": 5,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Steg 7: kva gjer du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren.",
+                    "nextContentId": 7,
+                    "feedback": {
+                      "title": "<p>Rettleiaren hjelper deg vidare.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post.",
+                    "nextContentId": 7,
+                    "feedback": {
+                      "title": "<p>Svaret kjem om to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Vent og sjå.",
+                    "nextContentId": 7,
+                    "feedback": {
+                      "title": "<p>Problemet veks medan du ventar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000286",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Steg 7"
+            }
+          },
+          "contentId": 6,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Steg 8: kva gjer du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren.",
+                    "nextContentId": 8,
+                    "feedback": {
+                      "title": "<p>Rettleiaren hjelper deg vidare.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post.",
+                    "nextContentId": 8,
+                    "feedback": {
+                      "title": "<p>Svaret kjem om to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Vent og sjå.",
+                    "nextContentId": 8,
+                    "feedback": {
+                      "title": "<p>Problemet veks medan du ventar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000287",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Steg 8"
+            }
+          },
+          "contentId": 7,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Steg 9: kva gjer du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren.",
+                    "nextContentId": 9,
+                    "feedback": {
+                      "title": "<p>Rettleiaren hjelper deg vidare.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post.",
+                    "nextContentId": 9,
+                    "feedback": {
+                      "title": "<p>Svaret kjem om to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Vent og sjå.",
+                    "nextContentId": 9,
+                    "feedback": {
+                      "title": "<p>Problemet veks medan du ventar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000288",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Steg 9"
+            }
+          },
+          "contentId": 8,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>Steg 10: kva gjer du?</p>",
+                "alternatives": [
+                  {
+                    "text": "Ring rettleiaren.",
+                    "nextContentId": 10,
+                    "feedback": {
+                      "title": "<p>Rettleiaren hjelper deg vidare.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Send ein e-post.",
+                    "nextContentId": 10,
+                    "feedback": {
+                      "title": "<p>Svaret kjem om to dagar.</p>",
+                      "subtitle": ""
+                    }
+                  },
+                  {
+                    "text": "Vent og sjå.",
+                    "nextContentId": 10,
+                    "feedback": {
+                      "title": "<p>Problemet veks medan du ventar.</p>",
+                      "subtitle": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000289",
+            "metadata": {
+              "contentType": "Branching Question",
+              "license": "U",
+              "title": "Steg 10"
+            }
+          },
+          "contentId": 9,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>Du har gått gjennom alle stega.</p>"
+            },
+            "subContentId": "00000000-0000-4000-8000-000000000290",
+            "metadata": {
+              "contentType": "Text",
+              "license": "U",
+              "title": "Slutt"
+            }
+          },
+          "contentId": 10,
+          "nextContentId": -1,
+          "showContentTitle": true,
+          "proceedButtonText": "Gå vidare",
+          "forceContentFinished": "useBehavioural",
+          "contentBehaviour": "useBehavioural",
+          "feedback": {}
+        }
+      ],
+      "scoringOptionGroup": {
+        "scoringOption": "no-score"
+      },
+      "behaviour": {
+        "enableBackwardsNavigation": true,
+        "forceContentFinished": false,
+        "randomizeBranchingQuestions": false
+      }
+    }
+  },
+  "expected": [
+    {
+      "path": "branchingScenario.content",
+      "message": "PED-H06.decisionPoints"
+    }
+  ]
+}
