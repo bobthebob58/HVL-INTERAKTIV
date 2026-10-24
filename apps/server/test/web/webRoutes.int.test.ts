@@ -11,25 +11,29 @@ import { Socket } from 'node:net';
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { LAUNCH_HEADER, setAppLaunch } from '../../src/web/appLaunch.js';
-import { webRoutes, webUpgrades } from '../../src/web/webRoutes.js';
+import { LAUNCH_HEADER, setAppLaunch, type AppLaunch } from '../../src/web/appLaunch.js';
+import { webRoutes, webUpgrades, type WebRouteOptions } from '../../src/web/webRoutes.js';
 
-/** An app with a fake portal session (or none) and a recording web app. */
-function appWith(locale?: 'nn' | 'nb' | 'en') {
+/** An app with a fake portal session (or none), a resolved launch (or none) and a recording web app. */
+function appWith(locale?: 'nn' | 'nb' | 'en', launch?: AppLaunch, options?: WebRouteOptions) {
   const seen: IncomingMessage[] = [];
   const app = express();
   app.use((_req, res, next) => {
     if (locale) res.locals.hvliPortalSession = { sid: 'sid', session: { locale } };
+    if (launch) setAppLaunch(res, launch);
     next();
   });
   app.use(
-    webRoutes({
-      dev: false,
-      handle: async (req, res) => {
-        seen.push(req);
-        res.end('web');
+    webRoutes(
+      {
+        dev: false,
+        handle: async (req, res) => {
+          seen.push(req);
+          res.end('web');
+        },
       },
-    }),
+      options,
+    ),
   );
   app.use((_req, res) => void res.status(404).send('express 404'));
   return { app, seen };
@@ -79,21 +83,13 @@ describe('[DATA-011] hand-over to the web app', () => {
   it('[DATA-006] a repeated lang is ignored, and a launch’s locale wins over the link’s', async () => {
     // Arrange
     const { app, seen } = appWith();
-    const launched = express();
-    const launchSeen: IncomingMessage[] = [];
-    launched.use((_req, res, next) => {
-      setAppLaunch(res, { contentId: 'c1', title: 'T', mayEdit: false, locale: 'nb' });
-      next();
-    });
-    launched.use(
-      webRoutes({ dev: false, handle: async (req, res) => void (launchSeen.push(req), res.end()) }),
-    );
+    const launched = appWith(undefined, { contentId: 'c1', title: 'T', mayEdit: false, locale: 'nb' });
     // Act
     await request(app).get('/hjelp?lang=en&lang=nb');
-    await request(launched).get('/app/play?lang=en');
+    await request(launched.app).get('/app/play?lang=en');
     // Assert
     expect(seen[0]?.headers['x-hvli-locale']).toBe('nn');
-    expect(launchSeen[0]?.headers['x-hvli-locale']).toBe('nb');
+    expect(launched.seen[0]?.headers['x-hvli-locale']).toBe('nb');
   });
 
   it('[LTI-003] other methods never reach the web app', async () => {
@@ -115,23 +111,10 @@ describe('[DATA-011] hand-over to the web app', () => {
 
   it('[LTI-006] a launch page gets the launch facts with the activity language, its locale and Canvas framing; no client can forge them', async () => {
     // Arrange
-    const seen: IncomingMessage[] = [];
-    const app = express();
-    app.use((_req, res, next) => {
-      setAppLaunch(res, {
-        contentId: 'c1',
-        title: 'Brøkar ✓',
-        mayEdit: true,
-        locale: 'en',
-        language: 'nn',
-      });
-      next();
-    });
-    app.use(
-      webRoutes(
-        { dev: false, handle: async (req, res) => void (seen.push(req), res.end('web')) },
-        { canvasOrigins: ['https://hvl.instructure.com'] },
-      ),
+    const { app, seen } = appWith(
+      undefined,
+      { contentId: 'c1', title: 'Brøkar ✓', mayEdit: true, locale: 'en', language: 'nn' },
+      { canvasOrigins: ['https://hvl.instructure.com'] },
     );
     // Act
     const res = await request(app).get('/app/play').set('x-hvli-launch', 'forged');
