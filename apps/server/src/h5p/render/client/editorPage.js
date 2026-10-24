@@ -2,25 +2,36 @@
  * editorPage — boots H5P's editor on our editor page, loads and saves the activity, and focuses a finding's field.
  *
  * Why: the page has no inline script (D-070); its own requests carry the ltik as Bearer in Canvas or the CSRF token in
- *      the portal (D-057, D-058); a refused save of a published activity announces the server's reason (D-074); and
- *      "Gå til feltet" (PROD-003) posts `hvli:go-to-field` with a finding's path for this page to follow.
- * Spec: H5P-002, H5P-007, UD-006, PROD-003
+ *      the portal (D-057, D-058); a refused save says why in the server's words (UD-013); a refused save of a
+ *      published activity also lists the errors to fix with "Gå til feltet" (D-074), since the Check tab sees only
+ *      the stored version; and "Gå til feltet" (PROD-003) posts `hvli:go-to-field` with a path for this page.
+ * Spec: H5P-002, H5P-007, UD-006, UD-013, PROD-003
  * Invariants: settings come only from `#hvl-editor-config`; `hvli:content-saved` goes to, and `hvli:go-to-field` is
- *   taken from, the parent on our own origin only; the top-level `hvli*` functions touch only what they are given.
+ *   taken from, the parent on our own origin only; server text is written as text, never as markup; the generic
+ *   failure text is used only when the answer gives no reason (network error, 5xx, unreadable body); the top-level
+ *   `hvli*` functions touch only what they are given.
  * Collaborators: ../editorPage.ts, ./editorFields.js (loaded first: following a finding's path),
- *   ../../../http/routes/contentRoutes.ts, apps/web/src/messaging/frameMessages.ts.
+ *   ../../../http/routes/contentRoutes.ts, ../../../http/h5pErrorResponse.ts, apps/web/src/messaging/frameMessages.ts.
  * Tests: apps/server/test/h5p/editorPage.browser.int.test.ts, apps/server/test/h5p/render/editorPageScript.test.ts,
- *   apps/server/test/h5p/editorGoToField.browser.int.test.ts
+ *   apps/server/test/h5p/editorGoToField.browser.int.test.ts, apps/server/test/h5p/editorBlockedSave.browser.int.test.ts
  */
 'use strict';
 /* global hvliGoToField -- from ./editorFields.js, loaded before this file */
 
-/** The status text for a refused save: the server's reason for a blocked save of a published activity, else ours. */
+/** The errors of a refused save of a published activity that no one has explained: what the author must fix. */
+function hvliOpenErrors(body) {
+  if (!body || body.errorCode !== 'hvl:published-save-blocked' || !Array.isArray(body.findings)) return [];
+  return body.findings.filter((f) => f && f.severity === 'error' && !f.acknowledgement && f.message);
+}
+
+/** The status text for a refused save: the server's reason (this page's own for a blocked save), else the generic. */
 function hvliSaveFailureText(status, body, messages) {
-  if (status !== 409 || !body || body.errorCode !== 'hvl:published-save-blocked') return messages.failed;
-  var open = (body.findings || []).filter((f) => f.severity === 'error' && !f.acknowledgement).length;
+  var reason = status >= 400 && status < 500 && body && typeof body.errorCode === 'string' && body.message;
+  if (!reason) return messages.failed;
+  if (body.errorCode !== 'hvl:published-save-blocked') return String(body.message);
+  var open = hvliOpenErrors(body).length;
   var count = open && messages.blockedErrors ? messages.blockedErrors.replace('{{count}}', open) : '';
-  return [body.message || messages.failed, count].filter(Boolean).join(' ');
+  return [messages.blocked || body.message, count].filter(Boolean).join(' ');
 }
 
 (function startEditor() {
@@ -31,6 +42,7 @@ function hvliSaveFailureText(status, body, messages) {
   var settings = window.H5PIntegration.editor;
   var saveButton = document.getElementById('hvl-editor-save');
   var status = document.getElementById('hvl-editor-status');
+  var findingList = document.getElementById('hvl-editor-findings');
   var contentId = config.contentId;
   var editor;
 
@@ -90,14 +102,43 @@ function hvliSaveFailureText(status, body, messages) {
       var fail = function (answer) {
         var error = new Error('save ' + response.status);
         error.statusText = hvliSaveFailureText(response.status, answer, config.messages);
+        error.openErrors = hvliOpenErrors(answer);
         throw error;
       };
       return response.json().then(fail, fail.bind(null, null));
     });
   }
 
+  function element(tag, text, attributes) {
+    var made = document.createElement(tag);
+    made.textContent = text;
+    Object.keys(attributes || {}).forEach((name) => made.setAttribute(name, attributes[name]));
+    return made;
+  }
+  // PROD-003: each error is named by an icon and a word, never by colour alone (UD-003), and describes its button.
+  function showErrors(errors) {
+    findingList.replaceChildren();
+    findingList.parentElement.hidden = errors.length === 0;
+    errors.forEach(function (finding, index) {
+      var label = element('strong', config.messages.errorLabel + ':');
+      label.prepend(element('span', '\u2717 ', { 'aria-hidden': 'true' }));
+      var text = element('p', ' ' + finding.message, { id: 'hvl-editor-finding-' + index });
+      text.prepend(label);
+      var item = findingList.appendChild(element('li', ''));
+      item.append(text);
+      if (typeof finding.path !== 'string' || finding.path === '') return;
+      var button = element('button', config.messages.goToField, {
+        type: 'button',
+        'aria-describedby': text.id,
+      });
+      button.addEventListener('click', () => goToField(finding.path));
+      item.append(button);
+    });
+  }
+
   function save() {
     saveButton.disabled = true;
+    showErrors([]);
     announce(config.messages.saving);
     var done = function () {
       saveButton.disabled = false;
@@ -113,6 +154,7 @@ function hvliSaveFailureText(status, body, messages) {
           })
           .catch(function (error) {
             announce(error.statusText || config.messages.failed);
+            showErrors(error.openErrors || []);
           })
           .then(done);
       },
@@ -123,14 +165,14 @@ function hvliSaveFailureText(status, body, messages) {
     );
   }
 
-  // A11Y: WCAG 2.4.3: "Gå til feltet" focuses the field itself (./editorFields.js waits while H5P builds it).
+  // A11Y: WCAG 2.4.3: "Gå til feltet" focuses the field itself (./editorFields.js waits while H5P builds it), or
+  // the closest part it can open, and then says so: focus is never dropped.
   function goToField(path) {
     var editorFrame = document.querySelector('iframe.h5p-editor-iframe');
-    hvliGoToField(
-      () => editor && editor.selector && editor.selector.form,
-      path,
-      () => editorFrame || saveButton,
-    );
+    hvliGoToField(() => editor && editor.selector && editor.selector.form, path, {
+      fallback: () => editorFrame || saveButton,
+      notReached: () => announce(config.messages.fieldNotReached),
+    });
   }
 
   window.addEventListener('message', function (event) {

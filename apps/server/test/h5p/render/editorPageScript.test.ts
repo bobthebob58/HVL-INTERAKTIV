@@ -1,31 +1,24 @@
 /**
- * Unit tests for the pure parts of the editor page's scripts (src/h5p/render/client/editorPage.js and
- * editorFields.js), run without a
- * browser: the status text of a refused save of a published activity, and how "Gå til feltet" follows a finding's
- * path through H5P's editor widgets.
+ * Unit tests for the pure parts of the editor page's script (src/h5p/render/client/editorPage.js), run without a
+ * browser: the status text of a refused save (the server's reason, or the page's own for a blocked save of a
+ * published activity) and the errors it lists with "Gå til feltet".
  *
- * Spec: PROD-003, UD-013, UD-006
+ * Spec: PROD-003, UD-013
  */
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
+import { t } from '../../../src/i18n/translate.js';
 
 interface Messages {
   readonly failed: string;
   readonly blockedErrors?: string;
-}
-
-interface Widget {
-  readonly field?: { readonly name: string };
-  readonly children?: readonly Widget[];
-  readonly currentLibrary?: string;
-  forEachChild?(task: (child: Widget, index: number) => unknown): void;
+  readonly blocked?: string;
 }
 
 interface EditorScript {
   hvliSaveFailureText(status: number, body: unknown, messages: Messages): string;
-  hvliFieldTokens(path: string): (string | number)[];
-  hvliFieldChain(form: Widget, tokens: (string | number)[]): Widget[];
+  hvliOpenErrors(body: unknown): { readonly path: string }[];
 }
 
 // WHY: the page loads ./editorFields.js before editorPage.js; both define page-level functions.
@@ -51,11 +44,13 @@ const finding = (severity: string, acknowledged = false) => ({
   message: 'Bildet manglar alternativ tekst.',
   acknowledgement: acknowledged ? { reason: 'Kjem', at: '2026-10-23T12:00:00.000Z' } : null,
 });
+// The server's own text for a blocked save, as the content API sends it (default locale nn).
+const SERVER_TEXT = t('error.publishedSaveBlocked');
 const blocked = (findings: unknown[]) => ({
   success: false,
   errorCode: 'hvl:published-save-blocked',
   httpStatusCode: 409,
-  message: 'Aktiviteten er publisert, og endringa di gir feil som ingen har grunngjeve.',
+  message: SERVER_TEXT,
   findings,
 });
 
@@ -66,68 +61,55 @@ describe('[PROD-003] the editor page announces why a save of a published activit
     // Act
     const text = script().hvliSaveFailureText(409, body, MESSAGES);
     // Assert
-    expect(text).toBe(
-      'Aktiviteten er publisert, og endringa di gir feil som ingen har grunngjeve. Feil som treng merksemd: 2.',
-    );
+    expect(text).toBe(`${SERVER_TEXT} Feil som treng merksemd: 2.`);
   });
 
   it('[UD-013] without a count text from the server, gives the server’s message alone', () => {
     const text = script().hvliSaveFailureText(409, blocked([finding('error')]), { failed: 'Feil.' });
-    expect(text).toBe('Aktiviteten er publisert, og endringa di gir feil som ingen har grunngjeve.');
+    expect(text).toBe(SERVER_TEXT);
+  });
+
+  it('[PROD-003] gives the page’s own blocked-save text, so Canvas is not told to unpublish', () => {
+    const messages = { ...MESSAGES, blocked: 'Rett feila som er lista under, og lagre på nytt.' };
+    const text = script().hvliSaveFailureText(409, blocked([finding('error')]), messages);
+    expect(text).toBe('Rett feila som er lista under, og lagre på nytt. Feil som treng merksemd: 1.');
+  });
+
+  it('[PROD-003] hands over the errors no one has explained, for the list with "Gå til feltet"', () => {
+    // Arrange
+    const body = blocked([finding('error'), finding('error', true), finding('warning')]);
+    // Act
+    const open = script().hvliOpenErrors(body);
+    // Assert
+    expect(open).toEqual([finding('error')]);
+    expect(
+      script().hvliOpenErrors({ errorCode: 'hvl:content-changed', findings: [finding('error')] }),
+    ).toEqual([]);
+    expect(script().hvliOpenErrors(null)).toEqual([]);
   });
 
   it.each([
+    [401, 'hvl:session-expired', 'Økta di har gått ut. Logg inn på nytt.'],
+    [401, 'hvl:ltik-invalid', 'Tilgangen din har gått ut. Opne aktiviteten på nytt frå Canvas.'],
+    [403, 'hvl:edit-not-allowed', 'Du har ikkje løyve til å endre denne aktiviteten.'],
+    [409, 'hvl:content-changed', 'Aktiviteten vart endra i mellomtida.'],
+    [400, 'h5p.subContentNotAllowed', 'Innhaldstypen er ikkje tillaten her.'],
+  ])(
+    '[UD-013] gives the server’s reason for a %i %s refusal, which a retry cannot fix',
+    (status, code, text) => {
+      const body = { success: false, errorCode: code, httpStatusCode: status, message: text };
+      expect(script().hvliSaveFailureText(status, body, MESSAGES)).toBe(text);
+    },
+  );
+
+  it.each([
     [500, { errorCode: 'hvl:published-save-blocked', message: 'x' }],
-    [409, { errorCode: 'hvl:content-changed', message: 'Endra i mellomtida.' }],
+    [503, { errorCode: 'hvl:unavailable', message: 'x' }],
     [409, null],
-    [403, { errorCode: 'hvl:edit-not-allowed', message: 'Ikkje lov.' }],
-  ])('[PROD-003] keeps the generic failure text for status %i and other answers', (status, body) => {
+    [403, { message: 'no code' }],
+    [400, { errorCode: 'hvl:x', message: '' }],
+    [0, undefined],
+  ])('[UD-013] keeps the generic failure text for status %i without a readable reason', (status, body) => {
     expect(script().hvliSaveFailureText(status, body, MESSAGES)).toBe(MESSAGES.failed);
-  });
-});
-
-describe('[UD-006] "Gå til feltet" follows a finding path through the editor', () => {
-  it('[UD-006] splits a path into field names and list positions, leaving out sub-content `params`', () => {
-    // Arrange
-    const { hvliFieldTokens } = script();
-    // Act and assert
-    expect(hvliFieldTokens('content[1].content.params.alt')).toEqual(['content', 1, 'content', 'alt']);
-    expect(hvliFieldTokens('questions[0].params.behaviour.feedbackOnWrong')).toEqual([
-      'questions',
-      0,
-      'behaviour',
-      'feedbackOnWrong',
-    ]);
-    expect(hvliFieldTokens('a[2][3]')).toEqual(['a', 2, 3]);
-    expect(hvliFieldTokens('paramsList[0].params')).toEqual(['paramsList', 0]);
-    expect(hvliFieldTokens('')).toEqual([]);
-  });
-
-  it('[UD-006] walks lists, groups and sub-content to the field and stops where the path leaves the form', () => {
-    // Arrange: a Column form whose second item holds an image sub-content with an alt field.
-    const alt: Widget = { field: { name: 'alt' } };
-    const image: Widget = {
-      field: { name: 'content' },
-      currentLibrary: 'H5P.Image 1.1',
-      children: [{ field: { name: 'file' } }, alt],
-    };
-    const item: Widget = {
-      field: { name: 'content' },
-      children: [image, { field: { name: 'useSeparator' } }],
-    };
-    const first: Widget = { field: { name: 'content' }, children: [] };
-    const list: Widget = {
-      field: { name: 'content' },
-      forEachChild: (task) => [first, item].forEach((child, index) => task(child, index)),
-    };
-    const form: Widget = { children: [list] };
-    const { hvliFieldChain, hvliFieldTokens } = script();
-    // Act
-    const chain = hvliFieldChain(form, hvliFieldTokens('content[1].content.params.alt'));
-    const partial = hvliFieldChain(form, hvliFieldTokens('content[1].missing.alt'));
-    // Assert
-    expect(chain).toEqual([list, item, image, alt]);
-    expect(partial).toEqual([list, item]);
-    expect(hvliFieldChain(form, hvliFieldTokens('metadata.defaultLanguage'))).toEqual([]);
   });
 });

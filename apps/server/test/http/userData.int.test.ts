@@ -113,4 +113,24 @@ describeWithServices('H5P learner state over HTTP', () => {
     expect(loaded.body).toEqual({ success: true, data: false });
     expect(await tb.db.h5PUserData.count(mine)).toBe(before);
   });
+
+  it.each([
+    'h5p-editor-branching-scenario-tour-v1-seen',
+    'h5p-editor-branching-scenario-branching-content-tour-v1-seen',
+    'h5p-editor-branching-scenario-information-content-tour-v1-seen',
+  ])(
+    '[DATA-002] BranchingScenario’s tour flag %s is answered as not kept, any other flag as not set',
+    async (flag) => {
+      // Act
+      const tour = await request(tb.app)
+        .get(`/h5p/contentUserData/0/${flag}/0`)
+        .set(...author.header);
+      const description = await request(tb.app)
+        .get('/h5p/contentUserData/0/H5P-Blanks-text-important-description-open/0')
+        .set(...author.header);
+      // Assert
+      expect(tour.body).toEqual({ success: false, message: 'hvl:editor-ui-state-not-kept' });
+      expect(description.body).toEqual({ success: true, data: false });
+    },
+  );
 });

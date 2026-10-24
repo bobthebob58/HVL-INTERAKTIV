@@ -11,11 +11,14 @@
  *   - `asUserId` in the query is refused with 400 (reading another learner's state is not a player feature).
  *   - Answers have H5P's shape: `{ success: true, data }`, with `data: false` when nothing is stored.
  *   - `data=0` deletes the state (H5P's reset), handled by the storage (D-038).
- *   - Activity `0` is the editor's own UI state (e.g. whether a field's description is open): it is answered
- *     as "nothing stored" and never written, so no table holds author UI preferences (D-069).
+ *   - Activity `0` is the editor's own UI state (whether a field's description is open, whether a guided tour was
+ *     seen); it is never written, so no table holds author UI preferences (D-069). GET answers BranchingScenario's
+ *     tour flags (`h5p-editor-branching-scenario-*tour-v1-seen`) with H5P's error shape
+ *     `{ success: false, message: 'hvl:editor-ui-state-not-kept' }`, so H5P keeps the flag the browser holds, and
+ *     every other flag with `data: false`, which H5P reads as not set (D-069 amendment).
  * Collaborators: ../../h5p/storage/PrismaContentUserDataStorage.ts, Lumi's ContentUserDataManager,
  *   ../requestBodies.ts.
- * Tests: apps/server/test/http/userData.int.test.ts
+ * Tests: apps/server/test/http/userData.int.test.ts, apps/server/test/h5p/branchingTour.browser.int.test.ts
  */
 import { Router, type Request } from 'express';
 import { asStateUser } from '../../h5p/HvlH5pUser.js';
@@ -26,6 +29,9 @@ import { formBody } from '../requestBodies.js';
 import { pathParam } from '../routeParams.js';
 
 const STATE_PARAMS = ['contentId', 'dataType', 'subContentId'] as const;
+
+/** BranchingScenario's guided-tour flags (H5PEditor.BranchingScenario 1.5.13 has three tours). */
+const BS_TOUR_FLAG = /^h5p-editor-branching-scenario-[a-z-]*tour-v1-seen$/;
 
 const refuseOtherLearner = (req: Request): void => {
   if (req.query.asUserId !== undefined) throw new HttpError(400, 'h5p.userData.asUserNotSupported');
@@ -44,11 +50,17 @@ export function userDataRoutes(deps: H5pRouteDeps): Router {
   const path = '/contentUserData/:contentId/:dataType/:subContentId';
   const manager = deps.editor.contentUserDataManager;
 
-  // WHY: H5P's editor remembers UI choices as user data of activity 0; it works without them, so they are not kept.
-  router.get(
-    '/contentUserData/0/:dataType/:subContentId',
-    (_req, res) => void res.json({ success: true, data: false }),
-  );
+  // UPSTREAM: https://github.com/h5p/h5p-editor-php-library/blob/ab2daa18bd61b19e7f8729e22eec88f3b637a868/scripts/h5peditor.js
+  // UPSTREAM: https://github.com/h5p/h5p-editor-branching-scenario/blob/8fcd92d0a5a5f6b855d9d03ce4d19ab31baa4b99/src/scripts/helpers/UserStorage.js
+  // WHY: H5P's editors keep UI flags in localStorage and let this answer override them. `data: false` reads as
+  // "not set": right for an important description (open until the author closes it), wrong for BranchingScenario's
+  // tours, which then started on every open and faded the editor. An error answer keeps the browser's flag.
+  router.get('/contentUserData/0/:dataType/:subContentId', (req, res) => {
+    const tour = BS_TOUR_FLAG.test(pathParam(req, 'dataType'));
+    res.json(
+      tour ? { success: false, message: 'hvl:editor-ui-state-not-kept' } : { success: true, data: false },
+    );
+  });
   router.post('/contentUserData/0/:dataType/:subContentId', (_req, res) => void res.json({ success: true }));
 
   router.get(path, async (req, res) => {

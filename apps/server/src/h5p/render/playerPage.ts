@@ -15,6 +15,8 @@
  *     `lang` is the UI locale.
  *   - No inline script: the integration object is an inert JSON block that ./client/h5pIntegration.js reads, so the
  *     page works under a `script-src` without `'unsafe-inline'` (D-070, DATA-011).
+ * SPEC-DEVIATION: D-070 — the page's own <script>/<link> tags carry no integrity or nonce (H5P-009):
+ *   same-origin files allowed by 'self' (amendment of 2026-10-24).
  * Collaborators: ./scriptJson.ts; ../../http/routes/playerRoutes.ts (the only caller), which gets the model from
  *   the identity renderer that ../H5pPlayerFactory.ts installs.
  * Tests: apps/server/test/h5p/render/playerPage.test.ts

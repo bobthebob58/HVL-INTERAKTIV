@@ -7,7 +7,16 @@
 import type { IIntegration } from '@lumieducation/h5p-server';
 import { describe, expect, it } from 'vitest';
 import { renderEditorPage, type EditorPageInput } from '../../../src/h5p/render/editorPage.js';
+import { t } from '../../../src/i18n/translate.js';
 import { inlineScriptTags, integrationFromPage } from '../../support/playerIntegration.js';
+
+/** The messages the page hands its script. */
+interface Messages {
+  readonly blocked: string;
+  readonly goToField: string;
+  readonly errorLabel: string;
+  readonly fieldNotReached: string;
+}
 
 const input = (over: Partial<EditorPageInput> = {}): EditorPageInput => ({
   integration: {
@@ -43,6 +52,7 @@ describe('[SEC-008] editor page template', () => {
     expect(html).toContain('<title>Edit activity</title>');
     expect(html).toContain('<button type="button" id="hvl-editor-save" disabled>Save</button>');
     expect(html).toContain('<p id="hvl-editor-status" role="status" aria-live="polite"></p>');
+    expect(html).toContain('<div class="hvl-error-summary" hidden><ul id="hvl-editor-findings"></ul></div>');
   });
 
   it('[UD-002] links the server pages’ stylesheet after H5P’s styles, so its own controls use the tokens', () => {
@@ -58,6 +68,29 @@ describe('[SEC-008] editor page template', () => {
       messages: { blockedErrors: string };
     };
     expect(config.messages.blockedErrors).toBe('Feil som må rettes eller begrunnes: {{count}}.');
+  });
+
+  it('[PROD-003] tells a Canvas author to fix the errors, and only a portal author that unpublishing is possible', () => {
+    // Arrange
+    const messagesOf = (html: string) =>
+      (
+        JSON.parse(/id="hvl-editor-config">(.*?)<\/script>/s.exec(html)?.[1] ?? '{}') as {
+          messages: Messages;
+        }
+      ).messages;
+    // Act
+    const portal = messagesOf(renderEditorPage(input(), 'nn'));
+    const canvas = messagesOf(renderEditorPage(input({ token: { name: 'ltik', value: 'l' } }), 'nn'));
+    // Assert
+    expect(portal.blocked).toBe(t('page.editor.blockedSave', {}, 'nn'));
+    expect(canvas.blocked).toBe(t('page.editor.blockedSaveCanvas', {}, 'nn'));
+    expect(canvas.blocked).not.toMatch(/utkast/);
+    expect(portal.blocked).toMatch(/utkast/);
+    expect([canvas.goToField, canvas.errorLabel, canvas.fieldNotReached]).toEqual([
+      'Gå til feltet',
+      'Feil',
+      t('page.editor.fieldNotReached', {}, 'nn'),
+    ]);
   });
 
   it('[DATA-011] loads the data blocks, then the boot script, then H5P, and our editor boot script last', () => {

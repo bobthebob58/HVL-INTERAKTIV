@@ -5,18 +5,25 @@
  *      must work under the strict H5P policy (D-070). The integration object travels as an inert JSON block, a
  *      second block carries what our boot script needs (activity ID, token, messages), and the boot script
  *      (./client/editorPage.js) starts H5P's editor, loads the parameters and saves through the content API.
- * Spec: H5P-002, H5P-007, SEC-008, UD-010, DATA-011, UD-002
+ * Spec: H5P-002, H5P-007, SEC-008, UD-010, DATA-011, UD-002, PROD-003
  * Invariants:
  *   - Every value is escaped; both JSON blocks go through `scriptJson`.
- *   - The page has a `lang`, a title, one save button and a polite status region for save results (UD-006).
+ *   - The page has a `lang`, a title, one save button and a polite status region for save results (UD-006),
+ *     followed by the error summary whose list names the errors of a refused save of a published activity
+ *     (PROD-003, D-074), hidden while it is empty.
+ *   - The blocked-save text matches where the page runs: in Canvas (ltik token) it does not send the author to
+ *     unpublish, which only the portal's "Sjekk og publiser" offers.
  *   - First scripts are only same-origin static files (`/static/…js`), e.g. the LTI landing script.
  *   - The server pages' stylesheet comes after H5P's styles, so the save button and the status use the token
  *     typography, colours and target size like every server page (UD-002, UD-005, D-067); the editor keeps its
  *     full width.
+ * SPEC-DEVIATION: D-070 — the page's own <script>/<link> tags carry no integrity or nonce (H5P-009):
+ *   same-origin files allowed by 'self' (amendment of 2026-10-24).
  * Collaborators: ./editorIntegration.ts, ./playerPage.ts (shared boot script), ./scriptJson.ts,
  *   ../../http/routes/editorRoutes.ts, ../../lti/play/ltiEditRoutes.ts, ../../http/pages/pageAssetRoutes.ts
  *   (the stylesheet).
- * Tests: apps/server/test/h5p/render/editorPage.test.ts, apps/server/test/http/pages/serverPages.browser.test.ts
+ * Tests: apps/server/test/h5p/render/editorPage.test.ts, apps/server/test/http/pages/serverPages.browser.test.ts,
+ *   apps/server/test/h5p/editorBlockedSave.browser.int.test.ts
  */
 import type { IIntegration } from '@lumieducation/h5p-server';
 import { SERVER_PAGES_STYLESHEET } from '../../http/pages/pageAssetRoutes.js';
@@ -57,6 +64,7 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
     if (!/^\/static\/(?!.*\.\.)[\w/.-]+\.js$/.test(src)) throw new Error(`invalid script path: ${src}`);
     return `<script src="${escapeHtml(src)}"></script>`;
   });
+  const inCanvas = input.token?.name === 'ltik';
   const config = {
     contentId: input.contentId ?? null,
     token: input.token ?? null,
@@ -66,6 +74,10 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
       failed: t('page.editor.saveFailed', {}, language),
       // WHY: `{{count}}` stays literal (no param given); editorPage.js fills in the number of open errors.
       blockedErrors: t('page.editor.blockedErrors', {}, language),
+      blocked: t(inCanvas ? 'page.editor.blockedSaveCanvas' : 'page.editor.blockedSave', {}, language),
+      errorLabel: t('page.editor.errorLabel', {}, language),
+      goToField: t('page.editor.goToField', {}, language),
+      fieldNotReached: t('page.editor.fieldNotReached', {}, language),
       editorFrameTitle: t('page.editor.frameTitle', {}, language),
     },
   };
@@ -89,6 +101,8 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
     '<div class="h5p-create"><div class="h5p-editor"></div></div>',
     `<p><button type="button" id="hvl-editor-save" disabled>${escapeHtml(t('page.editor.save', {}, language))}</button></p>`,
     '<p id="hvl-editor-status" role="status" aria-live="polite"></p>',
+    // WHY: the summary's stylesheet rules (no bullets, no indent) are for a list inside it, as on the other pages.
+    '<div class="hvl-error-summary" hidden><ul id="hvl-editor-findings"></ul></div>',
     '</main>',
     `<script src="${EDITOR_FIELDS_SCRIPT}"></script>`,
     `<script src="${EDITOR_BOOT_SCRIPT}"></script>`,
