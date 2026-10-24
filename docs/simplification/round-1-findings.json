@@ -1451,7 +1451,125 @@
           "An editor-config reader (`#hvl-editor-config` JSON) shared by editorRoutes.int and h5p/render/editorPage.test would still need a type argument at every call; the saving is about 2 lines.",
           "contentSave.int and editorUpload.int repeat request chains in their test bodies. Local helpers would change test bodies for little gain (taste)."
         ]
-      }
+      },
+      "skeptic_worth-rules": [
+        {
+          "id": "tests-support-http-1",
+          "verdict": "survives",
+          "reason": "This removes real duplication. Thirteen files copy the same listen, wait and build-the-URL idiom, plus two type imports, a `let server` and a close line. The new file follows the registry pattern the support folder already uses (removeSyntheticLibraryDirs, removeBuiltPackages, removeEditorTestbeds). It is 36 lines with a header and TSDoc, and it saves about 17 lines net. I checked the call sites: none uses `server` for anything but listen and close, and h5pPageCsp's two servers are started and closed in the same block. No test title, [REQ-ID] or assertion changes. Vitest isolates modules per file (no `isolate: false` in either config), so the module-level `running` list holds only that file's servers. The diff applies cleanly to the current tree, and doc-lint shows nothing for the new or changed files in the mirror.",
+          "conditions": "(1) Make the header's Collaborators line accurate: the helper does not use ./browser.ts, so say it is used beside `describeWithBrowser` from ./browser.ts, or name Express `app.listen` instead. (2) Apply it to all 13 listed files in one change, so no half-adopted pattern is left; leave realTypesPlayer.ts, thirdPartyCookies.ts and appTestbed.ts alone as proposed. (3) Regenerate docs/TRACEABILITY.md, because the new support file adds a `Spec: NFR-004` code reference."
+        },
+        {
+          "id": "tests-support-http-2",
+          "verdict": "survives",
+          "reason": "The helper is a local closure in the same file, next to the existing `api` and `checked` helpers, and the request body it sends is visible two lines below them. It replaces six copies of a 4-line check-then-publish call and saves 13 lines in a 177-line file. The order of evaluation is the same: the supertest Test is built first, then `await checked(id)`, and the request goes out when it is awaited. Every `clockOffsetMs` assignment still comes before its call. No title or assertion changes. The default `[]` matches the test titles, which say \"without an acknowledgement\".",
+          "conditions": "Leave the \"reason that names no current error\" test and publishGuards.int.test.ts unchanged, as proposed."
+        },
+        {
+          "id": "tests-support-http-3",
+          "verdict": "refuted",
+          "reason": "The gain is doubtful. The net saving is only 3 lines. Every other export in uploadFixtures.ts has @param/@returns TSDoc and a declared return type; the new export has a one-line summary and an inferred type. Bringing it up to the file's convention adds about 3 lines, so the code gets no shorter. It also widens the file's one responsibility: the header says \"small valid files and an editor-upload helper\", and this adds a builder for H5P.MultiChoice content params. Finally, contentFiles.int.test.ts reads back `stored.params.params.media.path` and `.attachment.path`. Those field names would then be defined only in a remote helper, so the test becomes less self-evident."
+        },
+        {
+          "id": "tests-support-http-4",
+          "verdict": "refuted",
+          "reason": "This couples two peer test beds that are independent today. appTestbed.ts (the whole app with mock Canvas and Feide, used by the LTI, e2e and a11y suites) and realWebApp.ts would import httpTestbed.ts at run time. No test bed does that now (uploadFixtures takes only a type). That pulls httpTestbed's whole module graph (supertest, express, createH5pRouter, pageAssetRoutes, seedLibraries, LibraryInstaller, learnerStateFixtures) into every appTestbed user. It also makes the H5P-router test bed the home of a generic database helper, which mixes responsibilities. All that saves 9 lines for one Prisma statement whose inline `{ status: 'published', visibility: 'organisation' }` documents itself. A version confined to httpTestbed's own two sites would be a different proposal."
+        },
+        {
+          "id": "tests-support-http-5",
+          "verdict": "refuted",
+          "reason": "The local QSET is the precondition of the test \"[H5P-002] the editor never offers H5P.DragQuestion inside a container\". That test guards a CLAUDE.md critical invariant with a negative assertion, `not.toContain('H5P.DragQuestion')`. Its meaning depends on the fixture offering 'H5P.DragQuestion 1.14', which a reader now sees in the same file. Importing it from tenTypeLibraries.ts, whose header calls it the HTTP tests' stand-ins, ties this unit test to a fixture that is changed for other reasons. If QUESTION_SET's options ever change, the assertion passes without proving anything. The file would also become half local (MC stays, because it differs) and half imported, which is less clear. The support header would need stretching too, all for 10 lines."
+        },
+        {
+          "id": "tests-support-http-6",
+          "verdict": "survives",
+          "reason": "This removes dead configuration. The only users of apiTestbed are meRoutes, contentListRoutes, publishRoutes, publishGuards and publishFixtures. All their `tb.content(...)` calls pass only title, status, visibility or coAuthors, and none passes params. The stored row keeps `{ question: 'Kva?' }`, and TypeScript would flag any caller that passed params. It also follows the project's no-scaffolding rule. The header, TSDoc and file responsibility are unchanged."
+        },
+        {
+          "id": "tests-support-http-7",
+          "verdict": "survives",
+          "reason": "At level 'silent', pino never writes to the destination. h5pErrorHandler only calls `logger.error` and `logger.debug`, so nothing reaches any stream either way. `createLogger({ level: 'silent' })` is the form httpTestbed and apiTestbed already use. The change drops a 4-line no-op Writable and an import, makes the intent plainer, and touches no redaction code."
+        },
+        {
+          "id": "tests-support-http-8",
+          "verdict": "survives",
+          "reason": "This replaces an `as unknown as Record<…>` double cast and a non-null assertion with a typed method union. The code becomes more explicit and type-safe, which is not a clever trick. apiDocs.int.test.ts already uses the same form. The it.each table values and the `[H5P-006] %s %s …` title are unchanged, so the generated test names are identical."
+        },
+        {
+          "id": "tests-support-http-9",
+          "verdict": "survives",
+          "reason": "`LIBRARIES` is a single-use alias with no comment or rationale, and it names the same array. Inlining it removes a pointless indirection with no loss of clarity. The cost is near zero because proposal 1 edits the same file."
+        },
+        {
+          "id": "tests-support-http-10",
+          "verdict": "survives",
+          "reason": "This fixes a duplicated computation. The same pure regex-and-JSON.parse runs twice on the same string, once for each field. One destructuring is clearer and gives the same values, and any throw happens at the same statement. The LTI semantics, header and TSDoc are untouched."
+        },
+        {
+          "id": "tests-support-http-11",
+          "verdict": "refuted",
+          "reason": "It saves one line in a permission system, which is security-adjacent code, so it is not worth it. The guard keeps `byRole` deny-by-default on its own. The narrower type does not replace the guard: `isHvlH5pUser` checks membership in the runtime ISSUED WeakSet, which the `HvlH5pUser` type cannot express. A future caller with a structurally typed user would pass the type check but no longer be denied. The check is redundant only because of today's single caller. Removing an explicit deny check from permission code for one line goes against the spirit of the security rule."
+        }
+      ],
+      "skeptic_equivalence": [
+        {
+          "id": "tests-support-http-1",
+          "verdict": "survives",
+          "reason": "I read all 13 files. Each starts exactly one server (h5pPageCsp starts two), in one describe block, and closes it in that block's afterAll. Inside a test body nothing uses `server`, so tsc would have caught any leftover. The helper runs the same listen(0,'127.0.0.1') → await 'listening' → port statements. It registers the server before the await, as `server = …` did, and close still resolves on error because the callback goes to resolve. Vitest 5 isolates each file by default: no config or script sets isolate:false, and fileParallelism is false, so the module-level `running` array holds only that file's servers. The afterAll order (servers before tb/web close; browser closed earlier by the inner block) is unchanged. The only difference is on a path that already fails. In player, serverPages and deepLinkPicker, if beforeAll failed before listen, the old afterAll threw an extra TypeError on `server.close` (and player skipped tb.close). The new one does not. The suite fails either way, so no test is weakened. Checked in my own scratch mirror with the exact diff applied: tsc (both tsconfigs) is clean, prettier and eslint are clean, and the files stay at most 195 lines. vitest list over the 56 affected server test files gives the same 309 entries, and the e2e and a11y lists match too. doc-lint shows no problem in the changed files.",
+          "conditions": "The new header's `Spec: NFR-004` adds a source to docs/TRACEABILITY.md, so regenerate it (and the spec site if its --check covers that) or spec:trace --check fails. Apply it to all 14 files together, and leave realTypesPlayer.ts, thirdPartyCookies.ts and appTestbed.ts alone. Only call `listenOnLoopback` where every server of the file is started and closed in the same describe block. Optional: `Collaborators: ./browser.ts` names a module the helper does not use."
+        },
+        {
+          "id": "tests-support-http-2",
+          "verdict": "survives",
+          "reason": "The helper body is the same expression the tests inlined. JS still runs `api('post', …)` (which builds the supertest Test and, in supertest 7, starts its ephemeral server) before `await checked(id)`, and it sends the request only when awaited. Returning the Test from an async arrow is thenable adoption, the same as awaiting it directly. The default `[]` is a fresh array on each call, like the literal. The principal is still `author`, and the bodies are byte-identical. Every clockOffsetMs assignment still comes before its call. The 'reason that names no current error' test and publishGuards are not touched. Titles and assertions are unchanged, and the test list is identical."
+        },
+        {
+          "id": "tests-support-http-3",
+          "verdict": "survives",
+          "reason": "The helper is the removed code moved verbatim: the same two uploads, in the same order, by the same actor, with the same names, bytes and fields, returning the same params object. Neither test uses `png` or `doc` after beforeAll (grep, and tsc is clean). Both files still use PNG_1X1 and rawBody. uploadFixtures already imports Express and TestActor. The test lists are identical, and eslint, prettier and doc-lint are clean."
+        },
+        {
+          "id": "tests-support-http-4",
+          "verdict": "survives",
+          "reason": "All four sites run the same single Prisma update (same where, same data) at the same point and under the same flag. In realWebApp, `contents.push` still comes first. httpTestbed imports neither appTestbed nor realWebApp, so there is no cycle. The modules this newly loads into appTestbed and realWebApp users (supertest, the router, LibraryInstaller, seedLibraries, learnerStateFixtures, testLibraryAuditSink) have no module-level side effects; the only one is learnerStateFixtures' randomBytes secret. services.ts was already loaded. No name collides with publishToHvl. tsc is clean for the server and a11y tsconfigs, and the e2e and a11y test lists are unchanged."
+        },
+        {
+          "id": "tests-support-http-5",
+          "verdict": "survives",
+          "reason": "QSET and QUESTION_SET are literally identical object literals: machineName, minorVersion 21, runnable, and one list field with options ['H5P.MultiChoice 1.16','H5P.DragQuestion 1.14']. editorTestbed → syntheticLibraryDir/writeLibrary only reads them (JSON.stringify and defaults) and never mutates them or keys anything on identity. The import comes after the existing ones, so the order in which the existing modules load is unchanged; tenTypeLibraries only adds a pure module. In my mirror the HvlH5PEditor*.test.ts, permissionSystemGuard and H5pFactories files pass 30 of 30, the same count as the original.",
+          "conditions": "QUESTION_SET must keep its 'H5P.DragQuestion 1.14' option. The '[H5P-002] the editor never offers H5P.DragQuestion inside a container' test now depends on the shared fixture, and the updated tenTypeLibraries header names that dependency."
+        },
+        {
+          "id": "tests-support-http-6",
+          "verdict": "survives",
+          "reason": "Only meRoutes, contentListRoutes, publishRoutes, publishGuards and publishFixtures (types only) use apiTestbed (grep over apps, packages and tools). Every tb.content call passes either nothing or a literal with only title, status, visibility or coAuthors. No call passes a non-literal or spread options object that could silently carry `params` past the excess-property check. `const params = { question: 'Kva?' }` inside the arrow is still a fresh object on each call, so the stored rows are identical."
+        },
+        {
+          "id": "tests-support-http-7",
+          "verdict": "survives",
+          "reason": "createLogger passes `options.destination` straight to pino. At level 'silent' every log method is a no-op, so the logMethod hook and the destination are never reached. The only logger user, h5pErrorHandler, calls just logger.error and logger.debug, with no child at another level and no level change. httpTestbed and apiTestbed already use createLogger({ level: 'silent' }), which keeps pino's default stdout destination."
+        },
+        {
+          "id": "tests-support-http-8",
+          "verdict": "survives",
+          "reason": "All 11 tuples use only get, post, put or delete. supertest's request(app) object has these as own methods that ignore `this`, so `obj[method](path)` makes the same call as the cast version (the `!` compiles away). The it.each title values are the same strings, so the 11 case titles do not change. tsc is clean in my mirror, and the test list is identical."
+        },
+        {
+          "id": "tests-support-http-9",
+          "verdict": "survives",
+          "reason": "LIBRARIES appears only in its declaration and in one use (grep: lines 23 and 34), and it is the same array object as PROBE_LIBRARIES. tsc is clean, and the test list is identical."
+        },
+        {
+          "id": "tests-support-http-10",
+          "verdict": "survives",
+          "reason": "`embedded` is pure: a new non-global RegExp exec on the same string, then JSON.parse. Destructuring both fields from one result gives the same values and types (Record<string,string>). Any throw (bad JSON, or a null destructure) still happens at the same statement, before canvas.authorize."
+        },
+        {
+          "id": "tests-support-http-11",
+          "verdict": "survives",
+          "reason": "byRole is module-private, and its only caller is decide, which returns false on `!isHvlH5pUser(user)` on the line just before `this.overrides[permission] ?? byRole(user, …)`. isHvlH5pUser is a pure WeakSet membership test, so the removed check always passed. TS narrowing lets the new `user: HvlH5pUser` parameter type-check (tsc is clean). The `calls` recording and every return value are unchanged, and the h5p unit tests pass 30 of 30, the same as the original."
+        }
+      ]
     },
     "tests-other": {
       "finder": {
@@ -1562,7 +1680,42 @@
           "ruleFixtures exports ExpectedHit/RuleFixture that are used only inside the file. Un-exporting them saves no lines, and every other export is used (grep).",
           "apps/server/test/fixtures (JSON/SVG/README) is test data, not code, and the tests' expectations depend on it."
         ]
-      }
+      },
+      "skeptic_worth-rules": [
+        {
+          "id": "tests-other-1",
+          "verdict": "survives",
+          "reason": "Three character-identical 9-line helpers (apart from the clock argument) become one exported, TSDoc'd helper in the config-test fixture module that already holds VALID_ENV and productionEnv. That is real duplication removed, and it stays within authEnv's single responsibility (environments for config tests). loadEnv(source, now = new Date()) treats an undefined now like an omitted one. The only behavioural difference is the added instanceOf check in env.test.ts's production describe, which makes that test stronger, not weaker. No config test uses expect.assertions or hasAssertions. Every importer of authEnv runs under vitest (a11y, e2e and server configs are all vitest), and other support files already import from 'vitest'. src/config/env.ts has no import-time side effects. Files after the change: authEnv 65, env.test 147, envParsers 161, productionChecks 106 lines, all within 200. I confirmed 98/98 in the mirror for config, purity and zipEntryGuard, the same count as the repo.",
+          "conditions": "authEnv.ts now has a collaborator, and DOC-001 says a label is omitted only when it truly does not apply. Add a header line such as `Collaborators: ../../src/config/env.ts (loadEnv, InvalidEnvironmentError).` Keep the TSDoc on envProblems including the @param for `now`. Keep productionChecks' local `problemsAt` wrapper so its call sites do not change."
+        },
+        {
+          "id": "tests-other-2",
+          "verdict": "survives",
+          "reason": "(x % 256) | 0x80 equals (x % 128) | 0x80 for every non-negative integer. I checked seeds 0..19999 and the base64 output was identical every time. So every secret, input and assertion stays the same. The change removes a near-duplicate key generator whose different modulus a reader would otherwise have to puzzle over, and leaves one documented generator. It is small but improves clarity, and no tests or titles change.",
+          "conditions": "If tests-other-1 is not applied, add `randomKey` to env.test.ts's existing import from '../support/authEnv.js' on its own. Replace all four calls: random(3) twice and random(1) twice."
+        },
+        {
+          "id": "tests-other-3",
+          "verdict": "survives",
+          "reason": "Four hand-written copies of test header authentication are replaced by the testbed's own handler, which app already uses. Equivalence is complete. In these files tb.actor() runs only in beforeAll (grep), making author, plus colleague in publishedSave. Those are exactly the actors the copies matched, and the map returns the same actor objects. A request without the header still gets no actor. tb.activity() already goes through tb.app. The new interface member has TSDoc, and httpTestbed grows to 168 lines. The content tests already depend on tb.actor and its header, so this adds no new coupling. This is test-only code, not production auth.",
+          "conditions": "Coordinate with any tests-support-http proposal that changes the HttpTestbed interface or the `authenticate` closure, and apply them together so they do not conflict. The editorBlockedSave.browser.int.test.ts edit is in the tests-h5p area: apply it only together with step (1) and with that area's agreement, or leave that file as it is (each content-file edit stands alone once step (1) is in)."
+        },
+        {
+          "id": "tests-other-4",
+          "verdict": "survives",
+          "reason": "tb.feideAccount('author') calls accountOfFeideUser. That looks up feideId 'author@hvl.no' (FEIDE_DEMO_USERS) and runs the same IdentityHasher.candidates('identity-subject', identitySource({kind:'feide', feideId})) computation and the same identity.findFirst query. So it returns the same userId. If the row is missing, the test now fails early in beforeAll instead of carrying '' into later tests, which is stricter, not weaker. The change removes 9 lines and two imports of security internals from the test by reusing an existing, documented testbed method. All 9 test titles are unchanged."
+        },
+        {
+          "id": "tests-other-5",
+          "verdict": "survives",
+          "reason": "A hand-written recursion with a nested ternary becomes the standard readdirSync recursive option with one explicit filter: non-directory entries ending in '.ts'. Symlinks behave the same in both, since neither follows them. The order was already readdir-dependent and was never sorted, and nothing depends on it. The mirror run gives the same 46 titles. Sorted before/after outputs differ only in timings. The result is simpler and no less explicit. Node 24 provides Dirent.parentPath."
+        },
+        {
+          "id": "tests-other-6",
+          "verdict": "survives",
+          "reason": "Three copied 3-line assertions become a loop over the same three names, in the same order. It uses the same rejection() check (instanceOf ZipRejectedError) and the same messageKey assertion. This matches the loop style the very next test already uses, and the `name` label improves failure messages. The title, test count and assertion strength are unchanged, and the security guard itself is not touched. In test code the equivalence is obvious and complete."
+        }
+      ]
     },
     "a11y-e2e": {
       "finder": {
