@@ -1715,6 +1715,44 @@
           "verdict": "survives",
           "reason": "Three copied 3-line assertions become a loop over the same three names, in the same order. It uses the same rejection() check (instanceOf ZipRejectedError) and the same messageKey assertion. This matches the loop style the very next test already uses, and the `name` label improves failure messages. The title, test count and assertion strength are unchanged, and the security guard itself is not touched. In test code the equivalence is obvious and complete."
         }
+      ],
+      "skeptic_equivalence": [
+        {
+          "id": "tests-other-1",
+          "verdict": "survives",
+          "reason": "I applied config.diff to my own mirror and could not find a difference that changes a result. loadEnv(source, now = new Date()) treats now === undefined the same as leaving it out. env.ts has no side effects at import and only ever throws InvalidEnvironmentError (lines 125, 127, 144). So the three helpers give the same results. The one change is the production describe in env.test.ts, which now also checks toBeInstanceOf(InvalidEnvironmentError). That makes the test stricter, not weaker: an error of any other kind would already have failed the toEqual on string arrays. authEnv.ts, and so the new imports of vitest and env.ts, is reached only from vitest-run files: the config tests, other unit and int tests, and engineTestbed.ts / editorTestbed.ts, which use it only for randomKey. The e2e and a11y suites also run under vitest, so no Playwright or plain-node process loads it. No authEnv importer uses vi.mock or expect.assertions. Mirror run of test/config, purity, zipEntryGuard and every unit-test importer of authEnv/engineTestbed/editorTestbed: 165/165 tests before and after, sorted full names and statuses identical, and per-file order identical outside purity. tsc --noEmit, eslint and prettier --check are clean. The new export has TSDoc and the file stays at 65 lines.",
+          "conditions": "Keep the updated authEnv header summary and the TSDoc on envProblems. authEnv.ts must stay imported only by vitest-run files: do not move the helper to a module that non-vitest code loads."
+        },
+        {
+          "id": "tests-other-2",
+          "verdict": "survives",
+          "reason": "For every non-negative integer x, (x % 256) | 0x80 === (x % 128) | 0x80: x % 256 differs from x % 128 only in bit 7, which the OR sets either way. Here seed*31 + i*7 is never negative (seeds 1 and 3, i from 0 to 31), so randomKey(1) and randomKey(3) produce exactly the same base64 secrets as random(1) and random(3). The inputs and assertions do not change. All env.test.ts tests pass in my mirror with identical titles.",
+          "conditions": "If tests-other-1 is not applied, add randomKey to the existing import from '../support/authEnv.js' and replace only the four random(...) calls."
+        },
+        {
+          "id": "tests-other-3",
+          "verdict": "survives",
+          "reason": "The testbed's handler is actors.get(String(req.headers['x-test-actor'] ?? '')) over the map that tb.actor() fills. Each hand-written copy matches the same header (a.header[0] === 'x-test-actor') against the uuid of that same actor's header. I checked each file: publishedSave creates only author and colleague, exactly the two its copy listed. saveRace, publishedSaveRealTypes and editorBlockedSave create only author. tb.activity and tb.importPackage do not go through these routers. So every request gets the same res.locals.h5pActor (the same object instance), and requests without a known header still get none. The handler holds no state besides the map, so sharing it between tb.app and the tests' routers changes nothing. saveRace's appWith is called only inside tests, after beforeAll has set tb, so reading tb.authenticate eagerly there is safe. HttpTestbed is implemented only by openHttpTestbed; realTypesPlayer.ts just holds a reference to one. Adding the required member therefore breaks no other object literal, and the file grows to 167 lines. tsc, eslint and prettier are clean in my mirror. I did not run the int or browser tests (shared database), so this verdict rests on reading the code.",
+          "conditions": "tb.authenticate must stay the exact handler the testbed's own app uses (header x-test-actor, actors from tb.actor()). Coordinate with any tests-support-http proposal that changes HttpTestbed or its authenticate. If a future change makes one of these files create another tb.actor that must stay unauthenticated, that file needs its own handler again."
+        },
+        {
+          "id": "tests-other-4",
+          "verdict": "survives",
+          "reason": "createApp.int.test.ts calls openAppTestbed() without runAuthor, so the mock's 'author' keeps feideId 'author@hvl.no': it is the demo user, normaliseFeideUser keeps spec.feideId, and loginWithFeide only calls nextLogin. tb.feideAccount('author') is accountOfFeideUser(db, env, mock.feide, 'author'), and appTestbed returns that same db and env as tb.db and tb.env. It builds the same IdentityHasher(env.IDENTITY_HASH_KEYS).candidates('identity-subject', identitySource({kind:'feide', feideId})) hashes and runs the same identity.findFirst({where:{subjectHash:{in: hashes}}}), returning row.userId. In the passing case the result is identical. The only difference is a missing row: it now throws in beforeAll instead of giving '', which is an earlier and stricter failure, never a weaker check. tsc, eslint and prettier are clean in my mirror; I did not run the int test.",
+          "conditions": "None beyond keeping portalUser assigned after loginWithFeide in the same beforeAll."
+        },
+        {
+          "id": "tests-other-5",
+          "verdict": "survives",
+          "reason": "With withFileTypes, recursive readdirSync goes into an entry only when dirent.isDirectory() is true, using the same d_type and lstat fallback as the non-recursive call. Symlinks are therefore handled the same way (none exist under src/validation anyway). The filter !isDirectory() && name.endsWith('.ts') keeps exactly the entries the old recursion kept, and parentPath gives the same absolute directory, so relative() titles are unchanged. In my mirror (Node 24.22.1; the repo requires >=24 via engines and .nvmrc) there are 46 tests before and after, with identical titles and statuses. Only their order differs: depth-first before, breadth-first now. Nothing depends on that order: each it.each case reads one file, and the count check is > 30. tsc, eslint and prettier are clean.",
+          "conditions": "The only change is the order of the it.each cases. Do not add any assertion that depends on the order of the file list."
+        },
+        {
+          "id": "tests-other-6",
+          "verdict": "survives",
+          "reason": "The same three archives are built in the same order (so the t<counter>.zip names are the same). Each still goes through rejection(), which asserts instanceOf ZipRejectedError, and gets the same messageKey toBe assertion. The added name label only makes the failure message clearer. The title and count are unchanged, and the body gets shorter, so doc-lint's Act/Assert rule for bodies over 10 lines is unaffected. In my mirror zipEntryGuard passes with identical titles in the same order. The guard itself is not touched.",
+          "conditions": "Keep the string literal '..\\\\evil.js' in the TS source (one backslash in the name), as in the verified diff."
+        }
       ]
     },
     "a11y-e2e": {
@@ -1811,7 +1849,69 @@
           "focusWalk's `settle` closure is used once, but its name documents the step. focusWalk.tabTo could call focusIs, which saves nothing.",
           "keyboardJourneys' `Parameters<typeof focusIs>[0]`, deepLinking's import order and publishWithReason's partial destructuring of `seen` are style only."
         ]
-      }
+      },
+      "skeptic_equivalence": [
+        {
+          "id": "a11y-e2e-1",
+          "verdict": "survives",
+          "reason": "I compared all four MODES copies and they match character for character: [['light','none'],['forced colours','active']] as const. COLOUR_MODES has the same values and the same readonly tuple type, so describe.each(COLOUR_MODES)('%s', (mode, forcedColors) => ...) builds the same blocks with the same titles and forcedColors values. catalogue.ts runs nothing on import (data only, and the playwright import in proposal 3 is type-only), so adding the import to axeServerPages changes nothing at load time. Nothing mutates the array, and vitest isolates each file anyway. Only these four suites call scanPage or AxeBuilder, so 'every axe suite' in the TSDoc is accurate, and no file outside apps/server/a11y imports a11y/support. In the finder's scratch copy, tsc -p a11y/tsconfig.json and eslint pass. A vitest list of the changed suites gives the same 32 entries in the real tree and in the scratch copy. No test, title or [REQ-ID] changes.",
+          "conditions": "Apply exactly as in the finder's scratch diff. If proposal 3 is applied too, both edits go in the same catalogue.ts header: one What sentence naming the colour modes and 'a frame's too', and the playwright type import above COLOUR_MODES."
+        },
+        {
+          "id": "a11y-e2e-2",
+          "verdict": "survives",
+          "reason": "Nothing calls clippedText: a whole-repo grep (excluding node_modules, .next, dist and docs/site) finds only its definition and the proposal entry in docs/simplification. No file outside apps/server/a11y imports a11y/support, and typedoc covers only src/. findClippedText stays, and markClippedText and clippedTextEverywhere still use it with the same arguments. The module header (What and Invariants) describes clippedTextEverywhere and markClippedText, not clippedText, so it stays accurate. No test, assertion or log line changes.",
+          "conditions": "The playwright import depends on proposal 3: change it to `import type { Page }` only when proposal 3 is applied too. If only this proposal is applied, keep `import type { Frame, Page }`, because the local frameName still uses Frame."
+        },
+        {
+          "id": "a11y-e2e-3",
+          "verdict": "survives",
+          "reason": "The three expressions are token for token the same: mainFrame gives 'page', an about: address gives 'H5P iframe', anything else gives new URL(frame.url()).pathname. In targetSizes and motionAndNetwork, `where` is still computed before the in-frame evaluate, so the frame.url() timing and a possible URL throw happen at the same point. layoutChecks keeps its call sites (frameName called inside the map after the evaluate), only the definition moves. horizontalOverflow keeps its own 'H5P editor iframe' label, which is correct, since swapping it would change a reported string. catalogue.ts gains only a type-only import, so no runtime dependency or import cycle appears (views.ts imports catalogue type-only, and catalogue imports nothing at runtime). No identifier clashes with frameName. tsc and eslint pass on the scratch copy, and the reported prefixes ('page: ', 'H5P iframe: ', '/lti/play: ') are unchanged.",
+          "conditions": "Apply proposal 2's import note: drop Frame from layoutChecks' playwright import only when proposal 2 is applied too. Leave horizontalOverflow's 'H5P editor iframe' expression and its WHY comment as they are."
+        },
+        {
+          "id": "a11y-e2e-4",
+          "verdict": "survives",
+          "reason": "openWebPage(context, base, path, false) runs context.newPage(), then page.goto(`${base}${path}`), skips the Next.js wait (nextPage is false), then page.waitForLoadState('networkidle'), and returns the page. Those are the same calls in the same order as the four removed lines. context.route(...) is still awaited first, so the fulfilled HTML and the route pattern are the same. Returning the promise without await inside an async function changes nothing a test observes: the same value and the same rejection reach the caller, and eslint passes. Only openFramed and openServerAnswer call openServed, and no file outside a11y imports pages.ts (test/web has its own unrelated openWebPage).",
+          "conditions": "Wording only, either way is fine: the openWebPage @param TSDoc may be widened as proposed or left as it is."
+        },
+        {
+          "id": "a11y-e2e-5",
+          "verdict": "survives",
+          "reason": "`export type { ... }` is erased at compile time, so nothing changes at runtime. H5pSurface is never imported through upstreamFindings, and UpstreamFinding is imported through it only by upstreamRegister.a11y.test.ts. That test then imports the same type from its defining module, which it already imports UPSTREAM_FINDINGS from. upstreamFindings still imports both types for its own use. The test's code, titles and assertions are unchanged: it ran 2/2 passed in the scratch copy, and tsc and eslint pass. Nothing outside the area imports either module's types."
+        }
+      ],
+      "skeptic_worth-rules": [
+        {
+          "id": "a11y-e2e-1",
+          "verdict": "survives",
+          "reason": "This removes real duplication. The four `MODES` copies are character-identical. They exist only in the four axe suites (grep: no other a11y or e2e file uses forcedColors or a mode list), so the TSDoc line 'every axe suite' is accurate. The catalogue's stated Why ('One list keeps the suites from drifting apart') and its What ('what the accessibility suites walk through') cover a shared list of modes, so it adds no new responsibility. The suites already import CONTENT_TYPES and PLAIN_ROUTES from it, so no new coupling. The name COLOUR_MODES is explicit. Titles stay 'light' and 'forced colours', the `as const` tuple type is unchanged, no [REQ-ID] moves, and catalogue.ts grows to about 71 lines. Each suite's header still says it scans 'in the light theme and with forced colours emulated', so readers lose nothing.",
+          "conditions": "Insert COLOUR_MODES with its TSDoc exactly as proposed. Update header lines 2-3 to name the colour modes, but leave out the '(a frame's too)' wording from a11y-e2e-3, which is refuted. Leave the suites' module headers unchanged. Each suite imports COLOUR_MODES from './support/catalogue.js'. No local MODES alias stays behind."
+        },
+        {
+          "id": "a11y-e2e-2",
+          "verdict": "survives",
+          "reason": "Dead export. A repository-wide grep (excluding node_modules, .next, dist and docs/site) finds `clippedText` only at its own definition, apart from the saved simplification record. Its last callers were replaced in a8ef44a. The module header, Invariants and Tests name only markClippedText and clippedTextEverywhere, and 'clipped text in a page and its frames' stays true through clippedTextEverywhere. Removing 9 lines of unused API makes the module clearer and costs no test.",
+          "conditions": "Delete only the TSDoc and the function `clippedText` (plus its trailing blank line). Keep findClippedText and the local frameName. a11y-e2e-3 is refuted, so `Frame` is still used by the local frameName: keep `import type { Frame, Page } from 'playwright-core';`. Drop `Frame` only if frameName really leaves the file."
+        },
+        {
+          "id": "a11y-e2e-3",
+          "verdict": "refuted",
+          "reason": "Not worth it, and it mixes responsibilities. By the proposer's own count it saves 0 lines: the new TSDoc, three imports and Collaborators rewrites in four headers cancel out the removed copies. It moves Playwright runtime code (a function over Page/Frame) into catalogue.ts, which today is a pure, import-free list of what the suites walk through. That module would then also hold report-labelling logic and depend on playwright-core. Three support modules (layoutChecks, targetSizes, motionAndNetwork) would newly depend on the catalogue. The duplication is not even fully removed: horizontalOverflow keeps its own variant ('H5P editor iframe'), so the frame-labelling concept would live in two places, one imported and one local, which is less clear than today's self-contained modules. Header churn in four files for a gain this doubtful fails the 'at least as clear' bar."
+        },
+        {
+          "id": "a11y-e2e-4",
+          "verdict": "survives",
+          "reason": "Same file, same calls, same order. openWebPage(context, base, path, false) runs newPage, goto, skips the Next.js wait, then networkidle, exactly the four removed lines. The route is still installed first. Passing a positional `false` is already established (keyboardJourneys and axeServerPages call openWebPage this way). The change fits the header's Why that 'the suites must all wait for the same signals'. pages.ts drops to about 181 lines. The saving is small but it removes a real copy of the open-and-wait steps without loss of clarity.",
+          "conditions": "Updating openWebPage's `@param nextPage` TSDoc is REQUIRED, not optional. It currently says 'False for a page Express renders itself (the Deep Linking picker)', which would no longer cover the pages served through Playwright routing. Use the proposed wording or equivalent (keep it at most 120 characters per line, or wrap it). Leave the `context.route(...)` call and the header's openFramed/openServerAnswer invariant as they are."
+        },
+        {
+          "id": "a11y-e2e-5",
+          "verdict": "survives",
+          "reason": "It removes needless indirection at negligible churn. The `H5pSurface` re-export is unused anywhere. `UpstreamFinding` is imported through it by one file only, upstreamRegister.a11y.test.ts, and that file already imports UPSTREAM_FINDINGS from upstreamRegister.js, where the type is defined, so importing the type there too is more direct. Nothing in docs or headers describes upstreamFindings as a facade for these types. The test's code, title and assertions are untouched. The change is type-only and has no runtime effect.",
+          "conditions": "Keep upstreamFindings.ts's own import `import { UPSTREAM_FINDINGS, type H5pSurface, type UpstreamFinding } from './upstreamRegister.js';`. Change only the two import lines of the test, as proposed."
+        }
+      ]
     },
     "web": {
       "finder": {
