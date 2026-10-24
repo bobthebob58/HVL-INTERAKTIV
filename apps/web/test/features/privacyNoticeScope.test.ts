@@ -4,7 +4,7 @@
  * sync), none says that what survives the yearly purge cannot be linked to the learner, and a check value of the IP
  * address is promised only for the events the server records it with (apps/server/src/auth/audit/AuthAuditRecorder.ts).
  *
- * Spec: DATA-006, DATA-003
+ * Spec: DATA-006
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -58,11 +58,20 @@ describe('[DATA-006] the privacy notice claims neither less nor more than is kep
     },
   );
 
-  it.each(LOCALES)('[DATA-003] in %s never claims that what survives the purge is unlinkable', (locale) => {
+  it.each(LOCALES)('[DATA-006] in %s never claims that what survives the purge is unlinkable', (locale) => {
     // WHY: the 2-year login log keeps keyed IP hashes under a key that is not rotated yearly (inventory, D-055).
     const all = sentences(locale).join(' ');
     expect(all).not.toMatch(/kan ikkje koplast til deg|kan ikke kobles til deg|cannot be linked to you/);
   });
+
+  it.each(LOCALES)(
+    '[DATA-006] in %s does not limit the logged Canvas launches to where you may edit',
+    (locale) => {
+      // WHY: onResourceLink.ts records `launch.lti.author` for every launch in a teacher or author role, before the View
+      // and Edit checks, and onDeepLinking.ts for every Deep Linking launch.
+      expect(t('privacy.staff2', locale)).not.toMatch(/der du kan redigere|where you may edit/);
+    },
+  );
 
   it('[DATA-006] promises an IP check value for Feide logins, logouts and failed launches only, as the server records', () => {
     // Arrange

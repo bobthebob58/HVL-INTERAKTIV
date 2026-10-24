@@ -41,7 +41,10 @@ export function withoutLtik(href: string): string {
  * UPSTREAM: https://github.com/vercel/next.js/blob/v16.4.2/packages/next/src/client/components/app-router.tsx
  * Next.js 16 sets its `canonicalUrl` from `location` before this page's script runs, and `HistoryUpdater` writes that
  * URL back with every router state change. Its patched `replaceState` dispatches a `restore` with the given URL (no
- * request) when the state has no `__NA`, which replaces the `canonicalUrl` that still held the ltik.
+ * request) when the state has no `__NA`, which replaces the `canonicalUrl` that still held the ltik. No issue filed
+ * (it describes how the pinned router works; D-080 amendment of 2026-10-24, V2D-5). Remove when a pinned Next.js no
+ * longer writes the start-up `canonicalUrl` back after `replaceState`: the `[LTI-003]` router-refresh check in
+ * apps/server/test/web/webChrome.browser.int.test.ts then still passes without this call.
  */
 function cleanRouterAddress(): void {
   const { [NEXT_ROUTER_MARK]: _mark, ...state } = (window.history.state ?? {}) as Record<string, unknown>;

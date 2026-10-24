@@ -178,7 +178,7 @@
     "who3": "Administratorer ved HVL ser bare data gjennom en støttehandling som blir logget.",
     "staffHeading": "For deg som lager aktiviteter",
     "staff1": "Vi lagrer navnet og e-postadressen din, slik at medforfattere kan finne deg, og hvilke aktiviteter du eier eller er medforfatter av.",
-    "staff2": "Vi husker hvilke meldinger du har lukket. Innlogginger og utlogginger blir logget slik det står ovenfor, med en kontrollverdi av IP-adressen din. Åpninger fra Canvas der du kan redigere, og koblinger av Canvas- og Feide-kontoen din, blir logget med tidspunktet og nummeret for kontoen din, men uten IP-adressen. Loggen blir slettet etter 2 år.",
+    "staff2": "Vi husker hvilke meldinger du har lukket. Innlogginger og utlogginger blir logget slik det står ovenfor, med en kontrollverdi av IP-adressen din. Åpninger fra Canvas med en lærer- eller forfatterrolle (også når du velger aktiviteter å legge inn), og koblinger av Canvas- og Feide-kontoen din, blir logget med tidspunktet og nummeret for kontoen din, men uten IP-adressen. Loggen blir slettet etter 2 år.",
     "safetyHeading": "Lagring og sikkerhet",
     "safety1": "Opplysningene er lagret kryptert i Norge eller EØS.",
     "safety2": "Sidene henter ikke skript, skrifter eller sporing fra andre nettsteder. Unntaket er video fra en videotjeneste HVL har godkjent, for eksempel Panopto, når en lærer har lagt inn en slik video.",

@@ -98,6 +98,7 @@ const PINS: readonly Pin[] = [
       nn: [
         'Innloggingar og utloggingar',
         'kontrollverdi av IP-adressa',
+        'lærar- eller forfattarrolle',
         'nummeret for kontoen',
         'utan IP-adressa',
         '2 år',
@@ -105,6 +106,7 @@ const PINS: readonly Pin[] = [
       nb: [
         'Innlogginger og utlogginger',
         'kontrollverdi av IP-adressen',
+        'lærer- eller forfatterrolle',
         'nummeret for kontoen',
         'uten IP-adressen',
         '2 år',
@@ -112,6 +114,7 @@ const PINS: readonly Pin[] = [
       en: [
         'Logins and logouts',
         'check value of your IP address',
+        'teacher or author role',
         'account number',
         'without your IP address',
         '2 years',

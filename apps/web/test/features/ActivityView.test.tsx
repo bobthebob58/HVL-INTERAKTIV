@@ -55,7 +55,8 @@ describe('[LTI-006] the activity page', () => {
     const tabs = screen.getAllByRole('tab').map((tab) => tab.textContent);
     expect(tabs).toEqual(['Spel', 'Rediger', 'Sjekk og publiser']);
     expect(screen.getByTitle('Spel: Celler og vev').getAttribute('src')).toBe(`/h5p/play/${ID}`);
-    expect(document.title).toBe('Celler og vev – HVL Interaktiv');
+    // WHY: the page names itself in an effect after the activity loads, which may run after the heading shows.
+    await waitFor(() => expect(document.title).toBe('Celler og vev – HVL Interaktiv'));
   });
 
   it('[UD-010] the heading carries the activity’s language only when it differs from the page’s', async () => {

@@ -3,25 +3,25 @@
  * the publish dialog, a new reason for a published activity with an error that has no reason that holds, and the way
  * back to draft.
  *
- * Why: PROD-003 runs the universal design validator and the pedagogical hints before publishing and lists the
- *      findings with *Go to field*. The findings belong to one `updatedAt` (D-074): they are fetched again after every
- *      save (`revision`), after publishing or unpublishing, and whenever the server says the activity changed. A reason
- *      holds for 14 days, and an error found by a later rule never had one; while such an error stays, every save of
- *      the published activity is refused, and the way to give a reason is to publish the published activity again
- *      (D-074 W3 amendment), so the dialog is offered again for exactly that case. The findings show both cases as
- *      `acknowledgement: null`, so the note names neither.
+ * Why: PROD-003 lists the validator's findings with *Go to field* before publishing. The findings belong to one
+ *      `updatedAt` (D-074): they are fetched again after every save (`revision`), after publishing or unpublishing,
+ *      and, with the activity, whenever the server says it changed. A reason holds 14 days and an error found by a
+ *      later rule never had one; both show as `acknowledgement: null` (the note names neither), every save of the
+ *      published activity is refused while one stays, and publishing again gives new reasons (D-074 W3 amendment).
  * Spec: PROD-003, UD-022, UD-013, UD-006
  * Invariants:
  *   - Publishing always sends the `updatedAt` of the findings on screen; unpublishing the same.
- *   - A published activity offers the dialog (**Grunngje på nytt**) only while an error has no reason that holds;
- *     with nothing to explain it offers only the way back to draft.
+ *   - A published activity offers the dialog (**Grunngje på nytt**) only while an error has no reason that holds and
+ *     findings and activity are of the same `updatedAt`; otherwise it offers only the way back to draft.
  *   - **Publiser** (draft) and **Gjer om til utkast** (published) are one button element, so focus stays on it when
- *     the status changes; after a successful publish focus is put on it again (UD-006, WCAG 2.4.3).
+ *     the status changes; it gets focus after a publish, and whenever the focused control went away (**Sjekk på
+ *     nytt** after a retry that worked, **Grunngje på nytt** behind its dialog), never `body` (UD-006, WCAG 2.4.3).
  *   - One request at a time: while unpublishing, the button is `aria-disabled` (it keeps focus) and presses do nothing.
  *   - Outcomes are announced in a polite status region; failures in an alert.
  * Collaborators: ../../components/FindingsList.tsx, ../../components/PublishDialog.tsx, ../../api/contentApi.ts,
  *   ../../components/useAnnouncement.ts, ./ActivityView.tsx.
- * Tests: apps/web/test/features/CheckPanel.test.tsx, apps/web/test/features/CheckPanelTransitions.test.tsx
+ * Tests: apps/web/test/features/CheckPanel.test.tsx, apps/web/test/features/CheckPanelTransitions.test.tsx,
+ *   apps/web/test/features/CheckPanelFocus.test.tsx
  */
 'use client';
 
@@ -48,6 +48,8 @@ export interface CheckPanelProps {
 type Findings = FindingsResponse | 'loading' | 'failed';
 /** Which dialog is open: a first publish, new reasons for a published activity, or none (`null`). */
 type DialogMode = 'publish' | 'renew' | null;
+/** When the render that applies a request puts focus on the main action: always (after a publish), or if it was lost. */
+type FocusAfter = 'always' | 'ifLost' | null;
 
 /**
  * The check-and-publish panel.
@@ -62,12 +64,11 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
   const [status, announce] = useAnnouncement();
   const [problem, setProblem] = useState('');
   const [busy, setBusy] = useState(false);
-  const focusMain = useRef(false);
+  const [focusRequest, setFocusRequest] = useState<{ readonly mode: FocusAfter }>({ mode: null });
   const pending = useRef(false);
   const mainAction = useRef<HTMLButtonElement>(null);
   const published = detail.status === 'published';
-  // WHY: findings and status of the same moment only; right after a publish the reloaded status may arrive before the
-  // reloaded findings, whose errors were unexplained until that publish.
+  // WHY: findings and status of one moment only (after a publish, the new status may come before the new findings).
   const renew =
     detail.mayPublish &&
     published &&
@@ -75,10 +76,14 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
     findings.updatedAt === detail.updatedAt &&
     unexplainedErrors(findings.findings).length > 0;
 
-  const load = useCallback(async () => {
-    const result = await getFindings(detail.id, auth);
-    setFindings(result.ok ? result.data : 'failed');
-  }, [detail.id, auth]);
+  const load = useCallback(
+    async (focus: FocusAfter = null) => {
+      const result = await getFindings(detail.id, auth);
+      if (result.ok && focus) setFocusRequest({ mode: focus });
+      setFindings(result.ok ? result.data : 'failed');
+    },
+    [detail.id, auth],
+  );
 
   useEffect(() => {
     let active = true;
@@ -91,12 +96,12 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
   }, [detail.id, auth, revision]);
 
   useEffect(() => {
-    if (!focusMain.current) return;
-    focusMain.current = false;
-    // A11Y: WCAG 2.4.3: runs after the dialog returned focus to its opener; **Grunngje på nytt** goes away once every
-    // error has a reason, so focus moves to the main action, which stays.
-    mainAction.current?.focus();
-  });
+    // A11Y: WCAG 2.4.3: runs once per request, after the render that closed the dialog (which returned focus to its
+    // opener if still on the page) or showed the findings; the main action stays (shown only with `mayPublish`).
+    // WHY: a request is state, not a ref, so an effect still pending from an earlier render cannot take it.
+    const lost = !document.activeElement || document.activeElement === document.body;
+    if (focusRequest.mode === 'always' || (focusRequest.mode && lost)) mainAction.current?.focus();
+  }, [focusRequest]);
 
   const unpublish = async () => {
     if (pending.current) return;
@@ -120,9 +125,17 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
     }
   };
 
-  const onMainAction = () => {
-    if (published) void unpublish();
-    else if (!pending.current) setDialog('publish');
+  // A11Y: focus goes to the main action after a publish, and after a retry or a closed dialog if its control has gone.
+  const retry = () => void load('ifLost');
+  const closeDialog = (focus: FocusAfter = 'ifLost') => {
+    setFocusRequest({ mode: focus });
+    setDialog(null);
+  };
+  const afterPublish = () => {
+    announce(t(dialog === 'renew' ? 'publish.renewed' : 'publish.published', locale));
+    closeDialog('always');
+    setProblem('');
+    void Promise.all([onStatusChange(), load()]);
   };
 
   return (
@@ -134,7 +147,7 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
       {findings === 'failed' ? (
         <p role="alert">
           {t('activity.checkFailed', locale)}{' '}
-          <button type="button" className="button-secondary" onClick={() => void load()}>
+          <button type="button" className="button-secondary" onClick={retry}>
             {t('activity.checkAgain', locale)}
           </button>
         </p>
@@ -159,7 +172,7 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
                 type="button"
                 className={published ? 'button-secondary' : 'button-primary'}
                 aria-disabled={busy || undefined}
-                onClick={onMainAction}
+                onClick={() => (published ? void unpublish() : pending.current || setDialog('publish'))}
               >
                 {t(published ? 'activity.unpublish' : 'publish.open', locale)}
               </button>
@@ -170,15 +183,9 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
             open={dialog !== null}
             renew={dialog === 'renew'}
             findings={findings}
-            onClose={() => setDialog(null)}
-            onPublished={() => {
-              announce(t(dialog === 'renew' ? 'publish.renewed' : 'publish.published', locale));
-              focusMain.current = true;
-              setDialog(null);
-              setProblem('');
-              void Promise.all([onStatusChange(), load()]);
-            }}
-            onStale={() => void load()}
+            onClose={() => closeDialog()}
+            onPublished={afterPublish}
+            onStale={() => void Promise.all([onStatusChange(), load()])}
             onFindings={(current) => setFindings({ updatedAt: findings.updatedAt, findings: [...current] })}
           />
         </>

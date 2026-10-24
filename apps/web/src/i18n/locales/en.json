@@ -178,7 +178,7 @@
     "who3": "Administrators at HVL see data only through a support action that is logged.",
     "staffHeading": "For you who create activities",
     "staff1": "We store your name and e-mail address, so co-authors can find you, and which activities you own or co-author.",
-    "staff2": "We remember which notices you have closed. Logins and logouts are logged as described above, with a check value of your IP address. Launches from Canvas where you may edit, and links between your Canvas and Feide accounts, are logged with the time and your account number, but without your IP address. The log is deleted after 2 years.",
+    "staff2": "We remember which notices you have closed. Logins and logouts are logged as described above, with a check value of your IP address. Launches from Canvas in a teacher or author role (including when you choose activities to add), and links between your Canvas and Feide accounts, are logged with the time and your account number, but without your IP address. The log is deleted after 2 years.",
     "safetyHeading": "Storage and security",
     "safety1": "The data is stored encrypted in Norway or the EEA.",
     "safety2": "The pages load no scripts, fonts or tracking from other websites. The exception is video from a video service HVL has approved, such as Panopto, when a teacher has added such a video.",
