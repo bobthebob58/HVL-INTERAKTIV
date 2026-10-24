@@ -2107,7 +2107,47 @@
           "The per-package vitest.config.ts and tsconfig.json files are near-identical, but the root Vitest run needs each as a project. Each is tiny and mostly header.",
           "The theme CSS has parallel correct/incorrect rule pairs (MultiChoice, Blanks, hotspot). Sharing them would change selector structure or specificity, the computed styles cannot be shown to stay the same, and the theme's CSS output is out of scope."
         ]
-      }
+      },
+      "skeptic_worth-rules": [
+        {
+          "id": "packages-1",
+          "verdict": "survives",
+          "reason": "This removes a real duplicate. test/support/repairDocument.ts was added in 40daf54 so that the repair tests would not each carry their own set-up (its Why line says so), and both sibling tests (a11yRepairs.test.ts, a11yEditorRepairs.test.ts) already use it. The tour test was only left out of that move, so this finishes the existing design instead of adding new coupling. No utils/helpers file is created, the tour test's header (Spec: UD-030, UD-004) and all three [UD-030] titles and test bodies stay unchanged, and the file goes from 61 to 54 lines. I checked it on a scratch copy: the 3 files pass 17/17, the same as the repo baseline. tsc -p for the package is clean, and prettier (repo config) and ESLint (repo config via --stdin-filename) are clean on both files. The new Tests: continuation line is indented, and doc-lint's testPaths reads indented continuation lines, so the new path is checked like the others.",
+          "conditions": "Write the Tests: continuation in repairDocument.ts exactly as indented ` *   packages/hvl-h5p-theme/test/a11yRepairsTour.test.ts`, with the comma at the end of the line before it. Keep the tour test's module header, EDITOR constant, its TSDoc and every test body byte-identical. openDocument must still return { document, settle, inert }."
+        },
+        {
+          "id": "packages-2",
+          "verdict": "survives",
+          "reason": "The change replaces an identical 40-character type literal repeated 8 times with one local alias, so it is type-only and emits the same JavaScript. Five rows of the it.each table now fit on one line each, so labels and mutations can be read side by side, which is clearer and not just taste. No file, export or project type is called `Tokens` (tokenModel.mjs readTokens returns a plain `object`), so the name does not clash. The alias is not exported, so TSDoc is not required, but it gets a one-line doc anyway. On a scratch copy the file passes 15/15, the same count as before, with the six `%s` titles unchanged. tsc -p packages/design-tokens is clean, prettier (repo config) and ESLint are clean, and the file goes from 170 to 157 lines.",
+          "conditions": "Keep all six labels, the `!` non-null assertions and every assigned value exactly as they are. Leave the circular-ref test's own `as { color: Record<string, unknown> }` cast alone. Only the type annotations change."
+        },
+        {
+          "id": "packages-3",
+          "verdict": "survives",
+          "reason": "The saving is small but real. The nested ternary computed `drawn(state, ownIcon)` twice, so a reader had to check that both calls were the same. The new version names the value once and returns early, the same one-line `if` style the file already uses in labelOf. The hunk is one 7-line function, the file shrinks from 169 to 167 lines, and the `// A11Y:` tag stays directly above the code it explains. On a scratch copy, `--check` reports up to date and a freshly generated hvl-feedback-prefixes.css is byte-identical to the committed dist file (cmp), so the generated CSS cannot change. prettier and ESLint (repo config) are clean. The 5 themeStructure failures in my scratch run came from stylelint.config.mjs missing outside the repo, not from this change.",
+          "conditions": "After applying, regenerating dist/hvl-feedback-prefixes.css must give a byte-identical file (`npm run check --workspace packages/hvl-h5p-theme`). Keep the `// A11Y:` comment directly above `content`, and leave `drawn`, `block` and `list` unchanged."
+        }
+      ],
+      "skeptic_equivalence": [
+        {
+          "id": "packages-1",
+          "verdict": "survives",
+          "reason": "openRepairDocument (test/support/repairDocument.ts) does what the local copy did, step for step. It builds the same document string (`<html lang=\"nn\">`), uses the same JSDOM options (`runScripts: 'outside-only'`, a fresh VirtualConsole), runs one `dom.window.eval(script)` straight after construction, and returns the same `dom.window.document` and the same `settle` (setTimeout 0 on that window). The extra `$`, `attr` and `labelledBy` closures it creates have no side effects. `repairScript('a11yEditorRepairs.js')` resolves `../../src/` from test/support, which is the same file as before, and it is still read once at module level. I tried it on a scratch copy of the package. The 3 tour tests pass with the same titles, and all 93 tests in the package pass (same count as the original). I then removed the `.tour-fade` entry from REPAIRS: the original and the new file fail the same 2 tests, so the assertions are no weaker. tsc -p tsconfig.json, prettier --check and the repo ESLint are clean (I confirmed ESLint really lints the scratch tree). doc-lint's `testPaths` finds all three paths in the new `Tests:` continuation line and `pathExists` is true for each. No generated output reads that line: TRACEABILITY.md lists files per requirement, not line numbers or imports, so it stays the same. DECISIONS.md says a11yRepairsTour.test.ts 'loads a11yEditorRepairs.js', which is still true.",
+          "conditions": "Keep the EDITOR constant, the module header and every describe/it title and body byte-identical. The helper's `Tests:` addition must be an indented continuation line right below the existing `Tests:` line (no blank line or new `Label:` line in between), so doc-lint's testPaths still reads it."
+        },
+        {
+          "id": "packages-2",
+          "verdict": "survives",
+          "reason": "This only changes types. `type Tokens = Record<string, Record<string, unknown>>` is an alias for exactly the type literal it replaces, so the emitted JS is the same. In the six it.each callbacks it gives the same parameter type, the same non-null assertions and the same `void` return compatibility with `tokensWith`. I applied it in scratch and ran prettier: the diff is exactly the one the proposal describes, and the file goes from 170 to 157 lines. The original and the prototype both run 15 tests and pass 15. The sorted lists of test titles are identical, the Daylight test ran rather than skipping, and the six `%s` titles did not change. tsc --noEmit on the package, prettier --check and ESLint are clean. doc-lint does not count the it.each table as test-body lines, and the alias has a TSDoc comment. The circular-ref test's own cast is untouched.",
+          "conditions": "Leave `readTokens() as { color: Record<string, unknown> }` in the circular-ref test as it is, and keep all six row labels and mutation expressions character-identical."
+        },
+        {
+          "id": "packages-3",
+          "verdict": "survives",
+          "reason": "`drawn` → `prefixSelectors(entries, state, ownIcon)` is pure. It filters and maps the already-checked entries into a fresh array and has no logging, no mutation and no I/O. It cannot throw on checked entries, and if it ever did, both versions would throw on the first call. So one call gives the same result as two, and nothing mocks it or counts its calls (I grepped tests, apps and tools). The new local `selectors` does not clash with `list`'s parameter. In scratch, `--check` reports up to date and the regenerated dist/hvl-feedback-prefixes.css is byte-identical to the committed file (cmp). I also compared old and new prefixCss on 3,000 random subsets of feedbackTargets.json plus edge cases (empty list, ownIcon only, no ownIcon, label-mode only, one entry, which also covers the cases with no selectors drawn). All outputs and error messages were identical, with 0 differences. The full theme package suite passes 93/93, the same as the original, and prettier and ESLint are clean.",
+          "conditions": "Keep the `// A11Y:` comment directly above `const content` and the `drawn` helper unchanged. The block body must return `[]` for an empty list and `['', block(selectors.join(',\\n'), [...])]` otherwise, with the same declaration text."
+        }
+      ]
     },
     "tools-other": {
       "finder": {
@@ -2173,7 +2213,47 @@
           "tools/privacy (PRIVACY-relevant): nothing there is clearly redundant, so I left it untouched. tools/seed/fetch-seed-packages.sh is not run in CI and is security-tagged, so I left it too. One observation that is a behaviour fix, not a simplification, so it is out of scope: its `--help` runs `sed -n '2,32p'`, which prints `set -euo pipefail` and the `readonly HUB=` line beyond the header, which ends at line 29.",
           "Observation: eslint.config.mjs is 228 lines, over the 200-line rule. doc-lint's file-size check only covers apps/, packages/ and tools/. Proposal tools-other-1 brings it to 224. Splitting the file would be restructuring, not simplification, so I did not propose it."
         ]
-      }
+      },
+      "skeptic_equivalence": [
+        {
+          "id": "tools-other-1",
+          "verdict": "survives",
+          "reason": "I evaluated the old and new COLOUR_BANS blocks on their own. The arrays come out deep-equal: JSON.stringify gives the same text, and each of the 3 entries has a selector and message that are ===, with the same key order. The rest of eslint.config.mjs (lines 1-72 and the tail) is byte-identical, so the config ESLint sees, and therefore every lint result, is unchanged. The template literals hold no backslashes, so interpolating COLOUR_LITERAL gives exactly the old single-quoted selector strings. No other file reads COLOUR_BANS or the regex as text; styleRules.test.ts only runs ESLint against the config. The root eslint.config.mjs is not covered by the COLOUR_BANS file globs, so the new string literals cannot trigger the ban on the config itself. Prettier --check and ESLint both pass on the new content. The UD-001 comment now sits directly above the regex it explains, and the UD-001/D-072 doc comment stays on COLOUR_BANS.",
+          "conditions": "Apply the block exactly as in find-tools-other/after.eslint.config.mjs, with the regex escapes (\\\\s, \\\\x27, \\\\b, \\\\() kept character for character. Do not change the spread sites at the two no-restricted-syntax rules."
+        },
+        {
+          "id": "tools-other-2",
+          "verdict": "survives",
+          "reason": "resolveManifest does not mutate `roots`: it only does `roots.map(r => ({...r, ...}))` into a fresh queue. So sharing one module-level ROOTS array across tests cannot leak state between them; registry was already shared. Each call still gets a fresh workDir(). In the two toThrow tests, workDir() still runs inside the thrower arrow, as before. Arguments are identical at every call site. The second call in test 5 (the `missing` roots) is unchanged. The test count stays at 5, titles and [H5P-003] IDs are unchanged, and every expect, matcher and regex (/no package-lock/, /holds 1.9/) is unchanged, so the assertions are as strong as before. Under doc-lint's testReadability, bodies only get shorter; tests 1 and 3 keep their Arrange/Act/Assert comments and the others stay at 10 lines or fewer. The proposed file passes 5/5 under vitest, as does the original, and Prettier and ESLint are clean at the repo path.",
+          "conditions": "Keep the repo import `../resolveManifest.mjs`, not the scratch file's absolute path. Keep the call with `roots: missing` as a direct resolveManifest call."
+        },
+        {
+          "id": "tools-other-3",
+          "verdict": "survives",
+          "reason": "I ran the old and new scripts side by side with stub git and node binaries on PATH that log their argv. Logs, stdout/stderr and exit codes matched in every case I tried: no argument, --record-editor-hashes, --other, the flag followed by another argument, the flag as the second argument, a verify failure (exit 3), a record failure, an editor commit mismatch, and with `editor_mode`/`record_editor` exported in the environment (both are assigned unconditionally first, so nothing comes in from the environment). verifyClientFiles.mjs gets the same argv words (`record` or `verify`, the dir, the list, and the same --prefix). Under set -e, a failing command inside the old if/else body aborted the script the same way the single line does. The `[[ ]] && assign` form is the same as before. bash -n passes. The header, the SECURITY: line and the hash-before-copy order are unchanged. No test or tool reads the script's text. doc-lint only checks its unchanged header.",
+          "conditions": "Keep `editor_mode=verify` as an unconditional assignment before the flag test, and keep `\"$editor_mode\"` quoted. Do not run --record-editor-hashes when testing."
+        }
+      ],
+      "skeptic_worth-rules": [
+        {
+          "id": "tools-other-1",
+          "verdict": "survives",
+          "reason": "This removes real duplication. The Literal and TemplateElement bans repeat the same ~140-character regex and the same message, and a later edit to only one of them would make the two bans disagree without anyone noticing. Naming the regex once makes COLOUR_BANS easier to read. I checked equivalence myself: imported old and new configs, all 17 blocks have identical rules, files and ignores. Prettier --check passes on the proposed file. No rule is broken. The UD-001 explanation comment moves to sit directly above the regex it explains. The `/** UD-001, D-072 ... */` doc comment stays on COLOUR_BANS. The two new consts are not exported, so they need no TSDoc. No test reads eslint.config.mjs as text: styleRules.test.ts runs ESLint with the repo config, and doc-lint only names the file. The file stays over 200 lines (228 to 224), as before. It is a root config, which doc-lint's file-size check does not cover. The change does not worsen that.",
+          "conditions": "Copy the regex text character for character from today's first selector, escapes included. Keep the `// UD-001: a hex value after a quote ...` two-line comment directly above COLOUR_LITERAL. Keep the `/** UD-001, D-072: ... */` doc comment directly above COLOUR_BANS. Leave the JSX style entry and both spreads of COLOUR_BANS unchanged. Run packages/design-tokens/test/styleRules.test.ts, npm run lint and npm run format:check."
+        },
+        {
+          "id": "tools-other-2",
+          "verdict": "survives",
+          "reason": "This removes the same root literal written five times, three of them as a 6-line call: 16 of 160 lines, all of it plumbing in one test file. The helper is local to the file, so no test files become coupled. It is not a utils/helpers file, and it has a one-line doc comment that names H5P.A 1.2, so the version each test relies on stays visible. Each call passes the same arguments as before, including a fresh workDir() per call. All five it() titles and the describe title, with their [H5P-003] IDs, are unchanged: I compared testTitles() for both versions and got the same 6 titles. Every expect() is unchanged. Test 1 and test 3 keep their Arrange/Act/Assert comments, and the bodies only get shorter, so the DOC-006 rule for long test bodies still holds. The scratch copy passes 5/5, and Prettier passes.",
+          "conditions": "Keep the repo's `../resolveManifest.mjs` import. Do not take the scratch copy's absolute path. Keep the // Arrange, // Act and // Assert comments. Leave the `missing` (H5P.Unknown) call in the last test as a direct resolveManifest call. Run the file with vitest, then npm run doc:lint and spec:trace --check."
+        },
+        {
+          "id": "tools-other-3",
+          "verdict": "survives",
+          "reason": "The editor path writes the pinned prefix h5p-editor-php-library-ab2daa18/ twice, and the two lines differ only in the mode word. After the change the prefix appears once on the editor path. Equivalence is obvious and complete. editor_mode can only be `verify` (the default, also for an unknown argument) or `record` (on the exact flag). I simulated all three cases under set -euo pipefail, and verifyClientFiles.mjs gets the same argv in each. bash -n passes. The safe default is kept: anything but the exact flag verifies, as the old else branch did. The core line stays a literal `verify`, so the core can never be recorded. The SECURITY: header line and the verify-before-copy order are untouched. The gain is small (4 lines) but real, and the variable name and the two assignments near the top keep the record path as easy to find as the if/else did. One correction to the proposal's rationale: README step 2 says to change EDITOR_COMMIT and the hash-list file name, but it does not mention the prefix. That gap is in docs prose and out of scope here.",
+          "conditions": "Apply only the two hunks shown, with editor_mode defaulting to `verify`. Keep the core verify line literal. Leave the header, the SECURITY: line and the copy steps unchanged. Test with bash -n and verify mode only. Never run --record-editor-hashes, because it rewrites the committed hash list under docs/reference."
+        }
+      ]
     },
     "tools-mock-site": {
       "finder": {
