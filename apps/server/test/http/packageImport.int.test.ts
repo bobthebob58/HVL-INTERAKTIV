@@ -8,7 +8,6 @@
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { t } from '../../src/i18n/translate.js';
 import { buildH5pPackage, removeBuiltPackages } from '../support/h5pPackageBuilder.js';
@@ -16,6 +15,7 @@ import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/ht
 import { describeWithServices } from '../support/services.js';
 import { MULTI_CHOICE, NOT_AUTHORABLE } from '../support/tenTypeLibraries.js';
 import { rawBody } from '../support/uploadFixtures.js';
+import { requestAs } from '../support/requestAs.js';
 
 const PARAMS = { question: 'Importert?', answers: ['Ja'] };
 const uploadFolders = () => readdirSync(tmpdir()).filter((name) => name.startsWith('hvli-upload-')).length;
@@ -35,10 +35,7 @@ describeWithServices('H5P package import over HTTP', () => {
   });
 
   const importAs = (who: TestActor, path: string) =>
-    request(tb.app)
-      .post('/h5p/ajax?action=library-upload')
-      .set(...who.header)
-      .attach('h5p', path);
+    requestAs(tb.app, who, 'post', '/h5p/ajax?action=library-upload').attach('h5p', path);
 
   it('[SEC-003] an author imports the content of a package whose libraries are installed unchanged', async () => {
     const path = await buildH5pPackage({ main: MULTI_CHOICE, params: PARAMS });
@@ -64,9 +61,7 @@ describeWithServices('H5P package import over HTTP', () => {
     const imported = JSON.stringify(res.body).match(/images\/[^"#]*\.svg/)?.[0];
     expect(imported).toBeDefined();
     // Act: read the stored SVG back.
-    const file = await request(tb.app)
-      .get(`/h5p/temp-files/${imported}`)
-      .set(...author.header)
+    const file = await requestAs(tb.app, author, 'get', `/h5p/temp-files/${imported}`)
       .buffer(true)
       .parse(rawBody);
     // Assert: the drawing stays; the script and the event handler are gone.

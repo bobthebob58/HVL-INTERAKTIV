@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { inlineScriptTags, integrationFromPage } from '../support/playerIntegration.js';
 import { describeWithServices } from '../support/services.js';
+import { requestAs } from '../support/requestAs.js';
 
 interface EditorIntegration {
   user: Record<string, string>;
@@ -38,9 +39,7 @@ describeWithServices('editor pages', () => {
   describe('[H5P-006] who gets the editor', () => {
     it('[H5P-006] the owner gets the editor page under the strict policy, framed by our own pages only', async () => {
       // Act
-      const res = await request(tb.app)
-        .get(`/h5p/edit/${contentId}`)
-        .set(...owner.header);
+      const res = await requestAs(tb.app, owner, 'get', `/h5p/edit/${contentId}`);
       // Assert
       expect(res.status).toBe(200);
       expect(res.headers['cache-control']).toBe('no-store');
@@ -53,12 +52,8 @@ describeWithServices('editor pages', () => {
     });
 
     it('[PROD-004] another author’s activity and an unknown ID get the same “not available” page', async () => {
-      const foreign = await request(tb.app)
-        .get(`/h5p/edit/${contentId}`)
-        .set(...other.header);
-      const unknown = await request(tb.app)
-        .get('/h5p/edit/01a00000-0000-7000-8000-000000000000')
-        .set(...owner.header);
+      const foreign = await requestAs(tb.app, other, 'get', `/h5p/edit/${contentId}`);
+      const unknown = await requestAs(tb.app, owner, 'get', '/h5p/edit/01a00000-0000-7000-8000-000000000000');
       expect([foreign.status, unknown.status]).toEqual([404, 404]);
       expect(foreign.text).toBe(unknown.text);
       expect(foreign.text).not.toContain('h5p-integration');
@@ -67,13 +62,7 @@ describeWithServices('editor pages', () => {
     it('[H5P-006] a learner gets no editor, not even a new one', async () => {
       const learner = await tb.actor('learner');
       for (const path of [`/h5p/edit/${contentId}`, '/h5p/new']) {
-        expect(
-          (
-            await request(tb.app)
-              .get(path)
-              .set(...learner.header)
-          ).status,
-        ).toBe(403);
+        expect((await requestAs(tb.app, learner, 'get', path)).status).toBe(403);
       }
     });
 
@@ -89,9 +78,7 @@ describeWithServices('editor pages', () => {
   describe('[H5P-007] what the page carries', () => {
     it('[DATA-002] no user identity; files and uploads through grant-bearing URLs; the own CSRF token only', async () => {
       // Act
-      const res = await request(tb.app)
-        .get(`/h5p/edit/${contentId}`)
-        .set(...owner.header);
+      const res = await requestAs(tb.app, owner, 'get', `/h5p/edit/${contentId}`);
       const integration = integrationFromPage<EditorIntegration>(res.text);
       // Assert
       expect(integration?.user).toEqual({ name: '', mail: '', id: '' });
@@ -106,9 +93,7 @@ describeWithServices('editor pages', () => {
     });
 
     it('[H5P-006] a new activity gets an upload grant and no content grant', async () => {
-      const res = await request(tb.app)
-        .get('/h5p/new')
-        .set(...owner.header);
+      const res = await requestAs(tb.app, owner, 'get', '/h5p/new');
       const integration = integrationFromPage<EditorIntegration>(res.text);
       expect(res.status).toBe(200);
       expect(integration?.contents).toEqual({});

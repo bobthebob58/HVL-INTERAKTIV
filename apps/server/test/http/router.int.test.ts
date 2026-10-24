@@ -10,6 +10,7 @@ import { afterAll, beforeAll, expect, it } from 'vitest';
 import { t } from '../../src/i18n/translate.js';
 import { openHttpTestbed, type HttpTestbed } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
+import { requestAs } from '../support/requestAs.js';
 
 describeWithServices('H5P router', () => {
   let tb: HttpTestbed;
@@ -88,9 +89,7 @@ describeWithServices('H5P router', () => {
     // Arrange
     const author = await tb.actor('author', { locale: 'en' });
     // Act: ask for the parameters of content the author has no access to
-    const res = await request(tb.app)
-      .get(`/h5p/params/${randomUUID()}`)
-      .set(...author.header);
+    const res = await requestAs(tb.app, author, 'get', `/h5p/params/${randomUUID()}`);
     // Assert
     expect(res.status).toBe(403);
     expect((res.body as { message: string }).message).toBe(t('error.forbidden', {}, 'en'));
@@ -107,27 +106,21 @@ describeWithServices('H5P router', () => {
     // Arrange
     const author = await tb.actor('author');
     // Act and assert: malformed JSON
-    const json = await request(tb.app)
-      .post('/h5p/content')
-      .set(...author.header)
+    const json = await requestAs(tb.app, author, 'post', '/h5p/content')
       .set('Content-Type', 'application/json')
       .send('{"library": ');
     expect(json.status).toBe(400);
     // Act and assert: a missing client file
     expect((await request(tb.app).get('/h5p/core/js/no-such-file.js')).status).toBe(404);
     // Act and assert: an unsafe file name
-    const unsafe = await request(tb.app)
-      .get('/h5p/temp-files/..%2F..%2Fsecret.png')
-      .set(...author.header);
+    const unsafe = await requestAs(tb.app, author, 'get', '/h5p/temp-files/..%2F..%2Fsecret.png');
     expect(unsafe.status).toBeGreaterThanOrEqual(400);
     expect(unsafe.status).toBeLessThan(500);
   });
 
   it('[H5P-006] a path that is not a route answers 404 in the actor’s language, also to learners', async () => {
     const learner = await tb.actor('learner', { locale: 'nb' });
-    const res = await request(tb.app)
-      .get('/h5p/no-such-route')
-      .set(...learner.header);
+    const res = await requestAs(tb.app, learner, 'get', '/h5p/no-such-route');
     expect(res.status).toBe(404);
     expect(res.body).toMatchObject({ errorCode: 'error.notFound', message: t('error.notFound', {}, 'nb') });
   });

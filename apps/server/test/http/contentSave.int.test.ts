@@ -8,12 +8,12 @@ import { randomUUID } from 'node:crypto';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { openZip, readEntries } from '../../src/security/zipEntryGuard.js';
 import { describeWithServices } from '../support/services.js';
 import { rawBody } from '../support/uploadFixtures.js';
+import { requestAs } from '../support/requestAs.js';
 
 const XSS = '<img src=x onerror=alert(1)>svar';
 const META = { title: 'Aktivitet', license: 'U', language: 'nn' };
@@ -36,19 +36,14 @@ describeWithServices('H5P content over HTTP', () => {
   afterAll(() => tb.close());
 
   const create = async (body: object = mcBody('Kva er rett?')): Promise<string> => {
-    const res = await request(tb.app)
-      .post('/h5p/content')
-      .set(...owner.header)
-      .send(body);
+    const res = await requestAs(tb.app, owner, 'post', '/h5p/content').send(body);
     expect(res.status, JSON.stringify(res.body)).toBe(201);
     return (res.body as { contentId: string }).contentId;
   };
 
   it('[SEC-008] markup in a text field, a list item and the title is stored inert', async () => {
     const id = await create(mcBody(XSS, { ...META, title: XSS }));
-    const res = await request(tb.app)
-      .get(`/h5p/params/${id}`)
-      .set(...owner.header);
+    const res = await requestAs(tb.app, owner, 'get', `/h5p/params/${id}`);
     expect(res.status).toBe(200);
     const stored = JSON.stringify(res.body);
     expect(stored).not.toContain('<img');
@@ -60,10 +55,7 @@ describeWithServices('H5P content over HTTP', () => {
   it('[H5P-002] a DragQuestion hidden under an unknown key is refused, so the player never loads it', async () => {
     const body = mcBody('Kva?');
     (body.params.params as Record<string, unknown>).extra = { library: 'H5P.DragQuestion 1.14', params: {} };
-    const res = await request(tb.app)
-      .post('/h5p/content')
-      .set(...owner.header)
-      .send(body);
+    const res = await requestAs(tb.app, owner, 'post', '/h5p/content').send(body);
     expect(res.status).toBe(403);
     expect(res.body).toMatchObject({ errorCode: 'hvl:sub-content-not-allowed' });
   });
@@ -71,20 +63,12 @@ describeWithServices('H5P content over HTTP', () => {
   it('[H5P-006] the owner updates the activity; a colleague can neither read nor change it', async () => {
     const id = await create(); // Arrange
     // Act and assert: the owner's update is saved
-    const own = await request(tb.app)
-      .put(`/h5p/content/${id}`)
-      .set(...owner.header)
-      .send(mcBody('Ny tekst'));
+    const own = await requestAs(tb.app, owner, 'put', `/h5p/content/${id}`).send(mcBody('Ny tekst'));
     expect(own.status).toBe(200);
     expect(own.body).toEqual({ contentId: id });
     // Act and assert: the colleague's read and write are refused, and the owner's text stays
-    const read = await request(tb.app)
-      .get(`/h5p/params/${id}`)
-      .set(...colleague.header);
-    const write = await request(tb.app)
-      .put(`/h5p/content/${id}`)
-      .set(...colleague.header)
-      .send(mcBody('Kapra'));
+    const read = await requestAs(tb.app, colleague, 'get', `/h5p/params/${id}`);
+    const write = await requestAs(tb.app, colleague, 'put', `/h5p/content/${id}`).send(mcBody('Kapra'));
     expect(read.status).toBe(403);
     expect(write.status).toBe(403);
     const row = await tb.db.h5PContent.findUniqueOrThrow({ where: { id } });
@@ -95,20 +79,10 @@ describeWithServices('H5P content over HTTP', () => {
     const id = await create(); // Arrange
     // Act: every write, read and delete a learner could try
     const calls = [
-      request(tb.app)
-        .post('/h5p/content')
-        .set(...learner.header)
-        .send(mcBody('x')),
-      request(tb.app)
-        .put(`/h5p/content/${id}`)
-        .set(...learner.header)
-        .send(mcBody('x')),
-      request(tb.app)
-        .get(`/h5p/params/${id}`)
-        .set(...learner.header),
-      request(tb.app)
-        .delete(`/h5p/content/${id}`)
-        .set(...learner.header),
+      requestAs(tb.app, learner, 'post', '/h5p/content').send(mcBody('x')),
+      requestAs(tb.app, learner, 'put', `/h5p/content/${id}`).send(mcBody('x')),
+      requestAs(tb.app, learner, 'get', `/h5p/params/${id}`),
+      requestAs(tb.app, learner, 'delete', `/h5p/content/${id}`),
     ];
     for (const res of await Promise.all(calls)) expect(res.status).toBe(403); // Assert
   });
@@ -116,28 +90,10 @@ describeWithServices('H5P content over HTTP', () => {
   it('[H5P-006] an unrelated colleague cannot delete; the owner can, and the activity is gone afterwards', async () => {
     const id = await create(); // Arrange
     // Act and assert: the colleague's delete is refused; the owner's succeeds and leaves nothing behind
-    expect(
-      (
-        await request(tb.app)
-          .delete(`/h5p/content/${id}`)
-          .set(...colleague.header)
-      ).status,
-    ).toBe(403);
-    expect(
-      (
-        await request(tb.app)
-          .delete(`/h5p/content/${id}`)
-          .set(...owner.header)
-      ).status,
-    ).toBe(204);
+    expect((await requestAs(tb.app, colleague, 'delete', `/h5p/content/${id}`)).status).toBe(403);
+    expect((await requestAs(tb.app, owner, 'delete', `/h5p/content/${id}`)).status).toBe(204);
     expect(await tb.db.h5PContent.findUnique({ where: { id } })).toBeNull();
-    expect(
-      (
-        await request(tb.app)
-          .get(`/h5p/params/${id}`)
-          .set(...owner.header)
-      ).status,
-    ).toBe(403);
+    expect((await requestAs(tb.app, owner, 'get', `/h5p/params/${id}`)).status).toBe(403);
   });
 
   it('[H5P-006] the owner downloads a complete .h5p package; a refusal is JSON, never an attachment', async () => {
@@ -146,11 +102,7 @@ describeWithServices('H5P content over HTTP', () => {
     const long = 'Lang tekst. '.repeat(5000);
     const id = await create(mcBody(long));
     // Act: the owner downloads
-    const ok = await request(tb.app)
-      .get(`/h5p/download/${id}`)
-      .set(...owner.header)
-      .buffer(true)
-      .parse(rawBody);
+    const ok = await requestAs(tb.app, owner, 'get', `/h5p/download/${id}`).buffer(true).parse(rawBody);
     // Assert: an attachment that unpacks to a complete package
     expect(ok.status).toBe(200);
     expect(ok.headers['content-disposition']).toBe(`attachment; filename="${id}.h5p"`);
@@ -166,9 +118,7 @@ describeWithServices('H5P content over HTTP', () => {
       rmSync(dir, { recursive: true, force: true });
     }
     // Act: a learner tries the same download
-    const refused = await request(tb.app)
-      .get(`/h5p/download/${id}`)
-      .set(...learner.header);
+    const refused = await requestAs(tb.app, learner, 'get', `/h5p/download/${id}`);
     // Assert: a JSON refusal, not an attachment
     expect(refused.status).toBe(403);
     expect(refused.headers['content-disposition']).toBeUndefined();
@@ -179,16 +129,13 @@ describeWithServices('H5P content over HTTP', () => {
     // Arrange
     const before = await tb.db.h5PContent.count({ where: { ownerUserId: owner.actor.accountId } });
     // Act and assert: a malformed save is refused
-    const malformed = await request(tb.app)
-      .post('/h5p/content')
-      .set(...owner.header)
-      .send({ library: 'H5P.MultiChoice 1.16', params: { params: [] } });
+    const malformed = await requestAs(tb.app, owner, 'post', '/h5p/content').send({
+      library: 'H5P.MultiChoice 1.16',
+      params: { params: [] },
+    });
     expect(malformed.status).toBe(400);
     // Act and assert: a save to an unknown activity is refused
-    const unknown = await request(tb.app)
-      .put(`/h5p/content/${randomUUID()}`)
-      .set(...owner.header)
-      .send(mcBody('x'));
+    const unknown = await requestAs(tb.app, owner, 'put', `/h5p/content/${randomUUID()}`).send(mcBody('x'));
     expect(unknown.status).toBe(403);
     // Assert: nothing was saved
     expect(await tb.db.h5PContent.count({ where: { ownerUserId: owner.actor.accountId } })).toBe(before);

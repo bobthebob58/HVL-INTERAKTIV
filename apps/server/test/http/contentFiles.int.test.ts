@@ -4,11 +4,11 @@
  *
  * Spec: SEC-004, H5P-004, H5P-006
  */
-import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
 import { FILE_FIELD, MINIMAL_PDF, PNG_1X1, rawBody, uploadEditorFile } from '../support/uploadFixtures.js';
+import { requestAs } from '../support/requestAs.js';
 
 describeWithServices('H5P content files', () => {
   let tb: HttpTestbed;
@@ -29,19 +29,12 @@ describeWithServices('H5P content files', () => {
       media: { path: png.path, mime: 'image/png', width: 1, height: 1 },
       attachment: { path: doc.path, mime: 'application/pdf' },
     };
-    const res = await request(tb.app)
-      .post('/h5p/content')
-      .set(...author.header)
-      .send({
-        library: 'H5P.MultiChoice 1.16',
-        params: { params, metadata: { title: 'Filer', license: 'U' } },
-      });
+    const res = await requestAs(tb.app, author, 'post', '/h5p/content').send({
+      library: 'H5P.MultiChoice 1.16',
+      params: { params, metadata: { title: 'Filer', license: 'U' } },
+    });
     contentId = (res.body as { contentId: string }).contentId;
-    const stored = (
-      await request(tb.app)
-        .get(`/h5p/params/${contentId}`)
-        .set(...author.header)
-    ).body as {
+    const stored = (await requestAs(tb.app, author, 'get', `/h5p/params/${contentId}`)).body as {
       params: { params: { media: { path: string }; attachment: { path: string } } };
     };
     image = stored.params.params.media.path;
@@ -50,11 +43,7 @@ describeWithServices('H5P content files', () => {
   afterAll(() => tb.close());
 
   const get = (who: TestActor, file: string) =>
-    request(tb.app)
-      .get(`/h5p/content/${contentId}/${file}`)
-      .set(...who.header)
-      .buffer(true)
-      .parse(rawBody);
+    requestAs(tb.app, who, 'get', `/h5p/content/${contentId}/${file}`).buffer(true).parse(rawBody);
 
   it('[SEC-004] an image is served inline with its own type, nosniff and the sandbox CSP', async () => {
     expect(image).toMatch(/^images\/.+\.png$/);
@@ -101,9 +90,7 @@ describeWithServices('H5P content files', () => {
 
   it('[H5P-004] a missing file is 404, and a traversal path never leaves the activity', async () => {
     expect((await get(author, 'images/missing.png')).status).toBe(404);
-    const res = await request(tb.app)
-      .get(`/h5p/content/${contentId}/..%2F..%2Fetc%2Fpasswd`)
-      .set(...author.header);
+    const res = await requestAs(tb.app, author, 'get', `/h5p/content/${contentId}/..%2F..%2Fetc%2Fpasswd`);
     expect(res.status).toBeGreaterThanOrEqual(400);
     expect(res.status).toBeLessThan(500);
   });

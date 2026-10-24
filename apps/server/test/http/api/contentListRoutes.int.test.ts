@@ -9,6 +9,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { openApiTestbed, type TestPrincipal } from '../../support/apiTestbed.js';
 import { describeWithServices } from '../../support/services.js';
+import { requestAs } from '../../support/requestAs.js';
 
 describeWithServices('[PROD-003] content list and detail', () => {
   const tb = openApiTestbed();
@@ -44,16 +45,11 @@ describeWithServices('[PROD-003] content list and detail', () => {
   });
   afterAll(() => tb.close());
 
-  const detail = (id: string, who: TestPrincipal) =>
-    request(tb.app)
-      .get(`/api/content/${id}`)
-      .set(...who.header);
+  const detail = (id: string, who: TestPrincipal) => requestAs(tb.app, who, 'get', `/api/content/${id}`);
 
   it('[PROD-003] the list shows only own and co-authored activities, newest change first, with the role', async () => {
     // Act
-    const res = await request(tb.app)
-      .get('/api/content')
-      .set(...owner.header);
+    const res = await requestAs(tb.app, owner, 'get', '/api/content');
     // Assert
     expect(res.status).toBe(200);
     const { items } = contentListSchema.parse(res.body);
@@ -74,9 +70,7 @@ describeWithServices('[PROD-003] content list and detail', () => {
     // Arrange
     const learner = await tb.principal('learner', { userId: owner.principal.userId });
     // Act
-    const res = await request(tb.app)
-      .get('/api/content')
-      .set(...learner.header);
+    const res = await requestAs(tb.app, learner, 'get', '/api/content');
     // Assert
     expect(res.body).toEqual({ items: [] });
     expect((await request(tb.app).get('/api/content')).status).toBe(401);
@@ -111,9 +105,7 @@ describeWithServices('[PROD-003] content list and detail', () => {
 
   it('[DATA-002] no answer names the owner or holds their ID', async () => {
     // Act
-    const list = await request(tb.app)
-      .get('/api/content')
-      .set(...coAuthor.header);
+    const list = await requestAs(tb.app, coAuthor, 'get', '/api/content');
     const one = await detail(own, coAuthor);
     // Assert
     for (const res of [list, one]) {
@@ -126,9 +118,7 @@ describeWithServices('[PROD-003] content list and detail', () => {
     const metadata = { title: 'Delt', mainLibrary: 'H5P.MultiChoice', defaultLanguage: 'nn', language: 'en' };
     await tb.db.h5PContent.update({ where: { id: shared }, data: { metadata } });
     // Act
-    const list = await request(tb.app)
-      .get('/api/content')
-      .set(...owner.header);
+    const list = await requestAs(tb.app, owner, 'get', '/api/content');
     const { items } = contentListSchema.parse(list.body);
     const one = contentDetailSchema.parse((await detail(shared, owner)).body);
     // Assert

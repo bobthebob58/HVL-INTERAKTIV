@@ -4,11 +4,11 @@
  *
  * Spec: H5P-005, PROD-008, H5P-006, DATA-002
  */
-import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { t } from '../../src/i18n/translate.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
+import { requestAs } from '../support/requestAs.js';
 
 describeWithServices('H5P learner state over HTTP', () => {
   let tb: HttpTestbed;
@@ -25,15 +25,11 @@ describeWithServices('H5P learner state over HTTP', () => {
 
   const url = (contentId: string, query = '') => `/h5p/contentUserData/${contentId}/state/0${query}`;
   const save = (who: TestActor, contentId: string, data: string, query = '') =>
-    request(tb.app)
-      .post(url(contentId, query))
-      .set(...who.header)
+    requestAs(tb.app, who, 'post', url(contentId, query))
       .type('form')
       .send({ data, preload: '1', invalidate: '1' });
   const load = (who: TestActor, contentId: string, query = '') =>
-    request(tb.app)
-      .get(url(contentId, query))
-      .set(...who.header);
+    requestAs(tb.app, who, 'get', url(contentId, query));
 
   it('[H5P-005][PROD-008] a learner resumes their answers after a reload; nothing stored reads as false', async () => {
     const learner = await tb.actor('learner');
@@ -93,11 +89,7 @@ describeWithServices('H5P learner state over HTTP', () => {
 
   it('[H5P-005] a body without a data string is refused', async () => {
     const learner = await tb.actor('learner');
-    const res = await request(tb.app)
-      .post(url(published))
-      .set(...learner.header)
-      .type('form')
-      .send({ preload: '1' });
+    const res = await requestAs(tb.app, learner, 'post', url(published)).type('form').send({ preload: '1' });
     expect(res.status).toBe(400);
   });
 
@@ -122,12 +114,9 @@ describeWithServices('H5P learner state over HTTP', () => {
     '[DATA-002] BranchingScenario’s tour flag %s is answered as not kept, any other flag as not set',
     async (flag) => {
       // Act
-      const tour = await request(tb.app)
-        .get(`/h5p/contentUserData/0/${flag}/0`)
-        .set(...author.header);
-      const description = await request(tb.app)
-        .get('/h5p/contentUserData/0/H5P-Blanks-text-important-description-open/0')
-        .set(...author.header);
+      const tour = await requestAs(tb.app, author, 'get', `/h5p/contentUserData/0/${flag}/0`);
+      const descriptionPath = '/h5p/contentUserData/0/H5P-Blanks-text-important-description-open/0';
+      const description = await requestAs(tb.app, author, 'get', descriptionPath);
       // Assert
       expect(tour.body).toEqual({ success: false, message: 'hvl:editor-ui-state-not-kept' });
       expect(description.body).toEqual({ success: true, data: false });

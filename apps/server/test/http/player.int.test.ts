@@ -10,6 +10,7 @@ import { t } from '../../src/i18n/translate.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
 import { inlineScriptTags, integrationFromPage } from '../support/playerIntegration.js';
+import { requestAs } from '../support/requestAs.js';
 
 const BREAKOUT = '</script><script>alert(1)</script>';
 
@@ -26,17 +27,12 @@ describeWithServices('H5P player page', () => {
   }, 60_000);
   afterAll(() => tb.close());
 
-  const play = (who: TestActor, id: string) =>
-    request(tb.app)
-      .get(`/h5p/play/${id}`)
-      .set(...who.header);
+  const play = (who: TestActor, id: string) => requestAs(tb.app, who, 'get', `/h5p/play/${id}`);
 
   it('[H5P-005] the page preloads the learner’s saved state and is never cached', async () => {
     // Arrange: the learner has saved state that is to be preloaded
     const learner = await tb.actor('learner', { contextId: 'course-1' });
-    await request(tb.app)
-      .post(`/h5p/contentUserData/${published}/state/0`)
-      .set(...learner.header)
+    await requestAs(tb.app, learner, 'post', `/h5p/contentUserData/${published}/state/0`)
       .type('form')
       .send({ data: '{"answers":[2]}', preload: '1', invalidate: '1' });
     // Act

@@ -5,12 +5,12 @@
  *
  * Spec: PROD-012, H5P-004, SEC-005
  */
-import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { buildH5pPackage, removeBuiltPackages } from '../support/h5pPackageBuilder.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
 import { MULTI_CHOICE } from '../support/tenTypeLibraries.js';
+import { requestAs } from '../support/requestAs.js';
 
 const nested = (levels: number): unknown => {
   let value: unknown = 'x';
@@ -34,11 +34,7 @@ describeWithServices('Malformed content input over HTTP', () => {
     params: object,
     metadata: object = { title: 'Q', license: 'U' },
     library = 'H5P.MultiChoice 1.16',
-  ) =>
-    request(tb.app)
-      .post('/h5p/content')
-      .set(...author.header)
-      .send({ library, params: { params, metadata } });
+  ) => requestAs(tb.app, author, 'post', '/h5p/content').send({ library, params: { params, metadata } });
 
   it('[PROD-012] text PostgreSQL cannot store (U+0000, a lone surrogate) is a 400, in values, keys and titles', async () => {
     // Arrange
@@ -62,9 +58,7 @@ describeWithServices('Malformed content input over HTTP', () => {
     const id = await tb.activity(author, { published: true });
     const learner = await tb.actor('learner');
     // Act
-    const res = await request(tb.app)
-      .post(`/h5p/contentUserData/${id}/state/0`)
-      .set(...learner.header)
+    const res = await requestAs(tb.app, learner, 'post', `/h5p/contentUserData/${id}/state/0`)
       .type('form')
       .send({ data: '{"a":"x\u0000y"}', preload: '1', invalidate: '1' });
     // Assert
@@ -83,10 +77,10 @@ describeWithServices('Malformed content input over HTTP', () => {
       main: MULTI_CHOICE,
       params: { question: 'Kva?', extra: nested(3000) },
     });
-    const imported = await request(tb.app)
-      .post('/h5p/ajax?action=library-upload')
-      .set(...author.header)
-      .attach('h5p', pkg);
+    const imported = await requestAs(tb.app, author, 'post', '/h5p/ajax?action=library-upload').attach(
+      'h5p',
+      pkg,
+    );
     expect(imported.status).toBe(400);
     expect(imported.body).toMatchObject({ errorCode: 'hvl:content-too-deep' });
   });

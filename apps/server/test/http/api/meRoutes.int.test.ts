@@ -9,6 +9,7 @@ import request from 'supertest';
 import { afterAll, expect, it } from 'vitest';
 import { openApiTestbed } from '../../support/apiTestbed.js';
 import { describeWithServices } from '../../support/services.js';
+import { requestAs } from '../../support/requestAs.js';
 
 describeWithServices('[PROD-011] me and notices', () => {
   const tb = openApiTestbed();
@@ -24,9 +25,7 @@ describeWithServices('[PROD-011] me and notices', () => {
       data: { displayName: 'Aud Forfattar', email: 'aud@hvl.no' },
     });
     // Act
-    const res = await request(tb.app)
-      .get('/api/me')
-      .set(...author.header);
+    const res = await requestAs(tb.app, author, 'get', '/api/me');
     // Assert
     expect(res.status).toBe(200);
     expect(res.headers['cache-control']).toBe('no-store');
@@ -54,16 +53,9 @@ describeWithServices('[PROD-011] me and notices', () => {
       },
     });
     // Act
-    const res = await request(tb.app)
-      .put(notice('formative-use'))
-      .set(...author.header)
-      .send({ version });
-    const me = await request(tb.app)
-      .get('/api/me')
-      .set(...author.header);
-    const otherMe = await request(tb.app)
-      .get('/api/me')
-      .set(...other.header);
+    const res = await requestAs(tb.app, author, 'put', notice('formative-use')).send({ version });
+    const me = await requestAs(tb.app, author, 'get', '/api/me');
+    const otherMe = await requestAs(tb.app, other, 'get', '/api/me');
     // Assert
     expect(res.status).toBe(204);
     expect(me.body.dismissedNotices).toEqual([{ noticeId: 'formative-use', version }]);
@@ -78,16 +70,11 @@ describeWithServices('[PROD-011] me and notices', () => {
     const author = await tb.principal('author');
     const current = NOTICE_VERSIONS['formative-use'];
     const put = (version: number) =>
-      request(tb.app)
-        .put(notice('formative-use'))
-        .set(...author.header)
-        .send({ version });
+      requestAs(tb.app, author, 'put', notice('formative-use')).send({ version });
     // Act
     const future = await put(current + 1);
     const outOfRange = await put(2_147_483_648);
-    const me = await request(tb.app)
-      .get('/api/me')
-      .set(...author.header);
+    const me = await requestAs(tb.app, author, 'get', '/api/me');
     // Assert
     expect([future.status, outOfRange.status]).toEqual([400, 400]);
     expect(outOfRange.body.errorCode).toBe('error.badRequest');
@@ -99,13 +86,8 @@ describeWithServices('[PROD-011] me and notices', () => {
     // Arrange
     const learner = await tb.principal('learner');
     // Act
-    const res = await request(tb.app)
-      .put(notice('formative-use'))
-      .set(...learner.header)
-      .send({ version: 1 });
-    const me = await request(tb.app)
-      .get('/api/me')
-      .set(...learner.header);
+    const res = await requestAs(tb.app, learner, 'put', notice('formative-use')).send({ version: 1 });
+    const me = await requestAs(tb.app, learner, 'get', '/api/me');
     // Assert
     expect(res.status).toBe(403);
     expect(res.body.errorCode).toBe('error.forbidden');
@@ -116,11 +98,7 @@ describeWithServices('[PROD-011] me and notices', () => {
   it('[PROD-011] an unknown notice is 404, a bad version 400, and nobody signed in 401', async () => {
     // Arrange
     const author = await tb.principal('author');
-    const put = (id: string, body: object) =>
-      request(tb.app)
-        .put(notice(id))
-        .set(...author.header)
-        .send(body);
+    const put = (id: string, body: object) => requestAs(tb.app, author, 'put', notice(id)).send(body);
     // Act and assert
     expect((await put('privacy', { version: 1 })).status).toBe(404);
     for (const body of [{ version: 0 }, { version: '1' }, { version: 1.5 }, {}, { version: 1, at: 'now' }]) {
@@ -133,10 +111,9 @@ describeWithServices('[PROD-011] me and notices', () => {
   it('[PROD-011] dismissals are deleted with the account', async () => {
     // Arrange
     const author = await tb.principal('author');
-    await request(tb.app)
-      .put(notice('formative-use'))
-      .set(...author.header)
-      .send({ version: NOTICE_VERSIONS['formative-use'] });
+    await requestAs(tb.app, author, 'put', notice('formative-use')).send({
+      version: NOTICE_VERSIONS['formative-use'],
+    });
     // Act
     await tb.db.user.delete({ where: { id: author.principal.userId } });
     // Assert

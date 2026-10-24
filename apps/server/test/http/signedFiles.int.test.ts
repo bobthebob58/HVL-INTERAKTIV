@@ -17,6 +17,7 @@ import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/ht
 import { describeWithServices } from '../support/services.js';
 import { FILE_FIELD, MINIMAL_PDF, PNG_1X1, rawBody, uploadEditorFile } from '../support/uploadFixtures.js';
 import { integrationFromPage } from '../support/playerIntegration.js';
+import { requestAs } from '../support/requestAs.js';
 
 interface PlayerIntegration {
   ajaxPath: string;
@@ -57,9 +58,7 @@ describeWithServices('signed content-file URLs', () => {
 
   const play = async (urlToken?: UrlToken) => {
     const learner = await tb.actor('learner', urlToken ? { urlToken } : {});
-    const res = await request(tb.app)
-      .get(`/h5p/play/${contentId}`)
-      .set(...learner.header);
+    const res = await requestAs(tb.app, learner, 'get', `/h5p/play/${contentId}`);
     expect(res.status).toBe(200);
     return { html: res.text, integration: integrationOf(res.text) };
   };
@@ -185,9 +184,7 @@ describeWithServices('signed content-file URLs', () => {
     const learner = await tb.actor('learner');
     const issued = vi.spyOn(tb.runtime.fileGrants, 'issueGrant');
     // Act
-    const refused = await request(tb.app)
-      .get(`/h5p/play/${draft}`)
-      .set(...learner.header);
+    const refused = await requestAs(tb.app, learner, 'get', `/h5p/play/${draft}`);
     const refusedIssues = issued.mock.calls.length;
     await play();
     // Assert: the published activity in the same runtime does get one, so the spy sees the real issuer.

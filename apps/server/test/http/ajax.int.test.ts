@@ -4,12 +4,12 @@
  *
  * Spec: H5P-002, PROD-002, H5P-004, H5P-006, H5P-008, H5P-011, SEC-003
  */
-import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { HVL_TOP10_CONTENT_TYPES } from '../../src/h5p/HvlTop10ContentTypeFilter.js';
 import { t } from '../../src/i18n/translate.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
+import { requestAs } from '../support/requestAs.js';
 
 describeWithServices('H5P editor AJAX endpoint', () => {
   let tb: HttpTestbed;
@@ -26,9 +26,7 @@ describeWithServices('H5P editor AJAX endpoint', () => {
 
   it('[H5P-002][PROD-002] lists exactly the ten types as creatable, none installable', async () => {
     for (const who of [author, admin]) {
-      const res = await request(tb.app)
-        .get('/h5p/ajax?action=content-type-cache')
-        .set(...who.header);
+      const res = await requestAs(tb.app, who, 'get', '/h5p/ajax?action=content-type-cache');
       expect(res.status).toBe(200);
       const libraries = (res.body as { libraries: { machineName: string; canInstall: boolean }[] }).libraries;
       expect(libraries.map((l) => l.machineName).sort()).toEqual([...HVL_TOP10_CONTENT_TYPES].sort());
@@ -38,12 +36,8 @@ describeWithServices('H5P editor AJAX endpoint', () => {
 
   it('[H5P-006] a learner gets 403 on the editor endpoint, GET and POST', async () => {
     // Act
-    const get = await request(tb.app)
-      .get('/h5p/ajax?action=content-type-cache')
-      .set(...learner.header);
-    const post = await request(tb.app)
-      .post('/h5p/ajax?action=libraries')
-      .set(...learner.header);
+    const get = await requestAs(tb.app, learner, 'get', '/h5p/ajax?action=content-type-cache');
+    const post = await requestAs(tb.app, learner, 'post', '/h5p/ajax?action=libraries');
     // Assert: both are refused with the translated message.
     for (const res of [get, post]) {
       expect(res.status).toBe(403);
@@ -63,10 +57,7 @@ describeWithServices('H5P editor AJAX endpoint', () => {
       [author, 'nn'],
       [english, 'en'],
     ] as const) {
-      const res = await request(tb.app)
-        .post('/h5p/content')
-        .set(...who.header)
-        .send(body);
+      const res = await requestAs(tb.app, who, 'post', '/h5p/content').send(body);
       expect(res.status).toBe(403);
       expect(res.body).toMatchObject({
         errorCode: 'hvl:content-type-not-allowed',
@@ -76,18 +67,15 @@ describeWithServices('H5P editor AJAX endpoint', () => {
   });
 
   it('[H5P-002] library data for a container never offers H5P.DragQuestion', async () => {
-    const res = await request(tb.app)
-      .get('/h5p/ajax?action=libraries&machineName=H5P.QuestionSet&majorVersion=1&minorVersion=21')
-      .set(...author.header);
+    const path = '/h5p/ajax?action=libraries&machineName=H5P.QuestionSet&majorVersion=1&minorVersion=21';
+    const res = await requestAs(tb.app, author, 'get', path);
     expect(res.status).toBe(200);
     expect(JSON.stringify(res.body)).toContain('H5P.MultiChoice 1.16');
     expect(JSON.stringify(res.body)).not.toContain('H5P.DragQuestion');
   });
 
   it('[H5P-004] the library overview reads jQuery-style form arrays (libraries[]=…)', async () => {
-    const res = await request(tb.app)
-      .post('/h5p/ajax?action=libraries')
-      .set(...author.header)
+    const res = await requestAs(tb.app, author, 'post', '/h5p/ajax?action=libraries')
       .type('form')
       .send('libraries[]=H5P.MultiChoice 1.16&libraries[]=H5P.QuestionSet 1.21');
     expect(res.status).toBe(200);
@@ -98,9 +86,8 @@ describeWithServices('H5P editor AJAX endpoint', () => {
   it('[H5P-008] library strings come in the requested language, nn falls back to nb, and an unknown code to the actor’s', async () => {
     // Arrange: fetch one library's strings in a given language.
     const strings = async (language: string) => {
-      const res = await request(tb.app)
-        .post(`/h5p/ajax?action=translations&language=${encodeURIComponent(language)}`)
-        .set(...author.header)
+      const path = `/h5p/ajax?action=translations&language=${encodeURIComponent(language)}`;
+      const res = await requestAs(tb.app, author, 'post', path)
         .type('form')
         .send('libraries[]=H5P.MultiChoice 1.16');
       expect(res.status).toBe(200);
@@ -115,9 +102,8 @@ describeWithServices('H5P editor AJAX endpoint', () => {
   });
 
   it('[H5P-011] Content Hub metadata is answered empty instead of being fetched from the Hub', async () => {
-    const res = await request(tb.app)
-      .get('/h5p/ajax?action=content-hub-metadata-cache&language=nn')
-      .set(...author.header);
+    const path = '/h5p/ajax?action=content-hub-metadata-cache&language=nn';
+    const res = await requestAs(tb.app, author, 'get', path);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       success: true,
@@ -127,9 +113,7 @@ describeWithServices('H5P editor AJAX endpoint', () => {
 
   it('[SEC-003][H5P-011] installing from the H5P Hub is refused for everyone, also admins', async () => {
     for (const who of [author, admin]) {
-      const res = await request(tb.app)
-        .post('/h5p/ajax?action=library-install&id=H5P.TrueFalse')
-        .set(...who.header);
+      const res = await requestAs(tb.app, who, 'post', '/h5p/ajax?action=library-install&id=H5P.TrueFalse');
       expect(res.status).toBe(403);
       expect(res.body).toMatchObject({ errorCode: 'hvl:hub-install-disabled' });
     }
