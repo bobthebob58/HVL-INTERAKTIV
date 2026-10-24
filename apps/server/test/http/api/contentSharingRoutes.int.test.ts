@@ -3,7 +3,6 @@
  *
  * Spec: PROD-006, DATA-007, PROD-004
  */
-import { Writable } from 'node:stream';
 import express from 'express';
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -22,10 +21,7 @@ import { describeWithServices, serviceEnv } from '../../support/services.js';
 
 describeWithServices('[PROD-006] sharing API', () => {
   const db = createPrismaClient(serviceEnv().DATABASE_URL);
-  const logger = createLogger({
-    level: 'silent',
-    destination: new Writable({ write: (_c, _e, done) => done() }),
-  });
+  const logger = createLogger({ level: 'silent' });
   let owner: string;
   let contentId: string;
 

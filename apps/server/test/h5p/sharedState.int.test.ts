@@ -7,7 +7,6 @@ import { afterAll, beforeAll, expect, it } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Writable } from 'node:stream';
 import type { S3Client } from '@aws-sdk/client-s3';
 import { createH5pConfig } from '../../src/h5p/H5pConfigFactory.js';
 import { createH5pStorage, type H5pStorage } from '../../src/h5p/h5pStorage.js';
@@ -19,10 +18,7 @@ import { createLogger } from '../../src/logging/logger.js';
 import { describeWithServices, serviceEnv, uniqueName } from '../support/services.js';
 import { createTestBucket, removeTestBucket } from '../support/storageFixtures.js';
 
-const silent = createLogger({
-  level: 'silent',
-  destination: new Writable({ write: (_c, _e, done) => done() }),
-});
+const silent = createLogger({ level: 'silent' });
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describeWithServices('[H5P-004] state shared by several server nodes', () => {

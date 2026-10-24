@@ -4,7 +4,6 @@
  *
  * Spec: LTI-001, LTI-003, PROD-004, PROD-012, UD-013
  */
-import { Writable } from 'node:stream';
 import express from 'express';
 import { LtijsError } from 'ltijs';
 import request from 'supertest';
@@ -26,10 +25,7 @@ const jwt = (name: string) => Object.assign(new Error('invalid signature'), { na
 
 const appThrowing = (error: unknown, options: { webApp?: boolean } = {}) => {
   const audited: AuthAuditInput[] = [];
-  const logger = createLogger({
-    level: 'silent',
-    destination: new Writable({ write: (_c, _e, done) => done() }),
-  });
+  const logger = createLogger({ level: 'silent' });
   const app = express();
   if (options.webApp) app.use(offerHelpLink());
   app.post('/lti/launch', () => {

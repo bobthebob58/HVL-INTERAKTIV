@@ -5,7 +5,6 @@
  * Spec: LTI-002, DATA-002
  */
 import { randomUUID } from 'node:crypto';
-import { Writable } from 'node:stream';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { createPrismaClient } from '../../../src/infra/prismaClient.js';
 import { connectRedis, type Redis } from '../../../src/infra/redisClient.js';
@@ -13,10 +12,7 @@ import { createLogger } from '../../../src/logging/logger.js';
 import { LTI_CLEANUP_LEASE_KEY, LtiRecordCleanupJob } from '../../../src/lti/storage/LtiRecordCleanupJob.js';
 import { describeWithServices, serviceEnv, uniqueName } from '../../support/services.js';
 
-const silent = createLogger({
-  level: 'silent',
-  destination: new Writable({ write: (_c, _e, done) => done() }),
-});
+const silent = createLogger({ level: 'silent' });
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // WHY: a clock in 1999 makes the job touch only this file's rows; the database is shared with other tests.
 const T = Date.UTC(1999, 4, 17, 12, 0, 0);

@@ -4,7 +4,6 @@
  *
  * Spec: AUTH-003, H5P-007
  */
-import { Writable } from 'node:stream';
 import express, { type Express } from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
@@ -13,10 +12,7 @@ import { newOpaqueId } from '../../../src/auth/session/opaqueIds.js';
 import { h5pErrorHandler } from '../../../src/http/h5pErrorHandler.js';
 import { createLogger } from '../../../src/logging/logger.js';
 
-const silent = createLogger({
-  level: 'silent',
-  destination: new Writable({ write: (_c, _e, done) => done() }),
-});
+const silent = createLogger({ level: 'silent' });
 const TOKEN = newOpaqueId();
 
 /** An app that checks the token like requestPrincipal does, then echoes the method its handler saw. */
