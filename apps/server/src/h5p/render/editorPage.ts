@@ -36,6 +36,8 @@ import { escapeHtml, scriptJson } from './scriptJson.js';
 export const EDITOR_BOOT_SCRIPT = '/h5p/boot/editorPage.js';
 /** Where the H5P router serves ./client/editorFields.js, which the boot script needs ("Gå til feltet"). */
 export const EDITOR_FIELDS_SCRIPT = '/h5p/boot/editorFields.js';
+/** Where the H5P router serves ./client/editorFieldReveal.js, which editorFields.js needs (opening a hidden field). */
+export const EDITOR_FIELD_REVEAL_SCRIPT = '/h5p/boot/editorFieldReveal.js';
 
 /** What the editor page is built from. */
 export interface EditorPageInput {
@@ -104,6 +106,7 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
     // WHY: the summary's stylesheet rules (no bullets, no indent) are for a list inside it, as on the other pages.
     '<div class="hvl-error-summary" hidden><ul id="hvl-editor-findings"></ul></div>',
     '</main>',
+    `<script src="${EDITOR_FIELD_REVEAL_SCRIPT}"></script>`,
     `<script src="${EDITOR_FIELDS_SCRIPT}"></script>`,
     `<script src="${EDITOR_BOOT_SCRIPT}"></script>`,
     '</body>',

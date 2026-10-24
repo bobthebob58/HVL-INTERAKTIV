@@ -54,7 +54,10 @@ export function userDataRoutes(deps: H5pRouteDeps): Router {
   // UPSTREAM: https://github.com/h5p/h5p-editor-branching-scenario/blob/8fcd92d0a5a5f6b855d9d03ce4d19ab31baa4b99/src/scripts/helpers/UserStorage.js
   // WHY: H5P's editors keep UI flags in localStorage and let this answer override them. `data: false` reads as
   // "not set": right for an important description (open until the author closes it), wrong for BranchingScenario's
-  // tours, which then started on every open and faded the editor. An error answer keeps the browser's flag.
+  // tours, which then started on every open and faded the editor. An error answer keeps the browser's flag. No issue
+  // filed (it follows how the pinned editors read the answer; D-080 amendment of 2026-10-24, V2D-5). Remove when HVL
+  // keeps author UI flags itself, or when H5P's editors stop letting the server's answer override localStorage.
+  // Covered by apps/server/test/http/userData.int.test.ts and apps/server/test/h5p/branchingTour.browser.int.test.ts.
   router.get('/contentUserData/0/:dataType/:subContentId', (req, res) => {
     const tour = BS_TOUR_FLAG.test(pathParam(req, 'dataType'));
     res.json(

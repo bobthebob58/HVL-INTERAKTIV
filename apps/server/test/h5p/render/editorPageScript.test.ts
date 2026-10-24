@@ -21,8 +21,8 @@ interface EditorScript {
   hvliOpenErrors(body: unknown): { readonly path: string }[];
 }
 
-// WHY: the page loads ./editorFields.js before editorPage.js; both define page-level functions.
-const SOURCE = ['editorFields.js', 'editorPage.js']
+// WHY: the page loads ./editorFieldReveal.js and ./editorFields.js before editorPage.js; all define page-level functions.
+const SOURCE = ['editorFieldReveal.js', 'editorFields.js', 'editorPage.js']
   .map((name) => readFileSync(new URL(`../../../src/h5p/render/client/${name}`, import.meta.url), 'utf8'))
   .join('\n');
 

@@ -161,7 +161,6 @@ describeWithServices('the editor page and "Gå til feltet"', () => {
           for (const [path, field, editable, messages] of steps) {
             // Act: focus starts outside the field, so each step must move it there
             await editor.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
-            await editorPage.evaluate(() => document.getElementById('hvl-editor-status')?.replaceChildren());
             for (let sent = 0; sent < messages; sent += 1) await goTo(page, path);
             // Assert
             await expect

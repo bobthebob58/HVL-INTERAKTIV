@@ -48,7 +48,7 @@ const SANDBOX_CSP = "sandbox; default-src 'none'; style-src 'unsafe-inline'";
 const CLIENT_DIR = new URL('../../h5p/render/client/', import.meta.url);
 /** The page boot files under `/boot/` (../../h5p/render/client), by name; nothing else is served there. */
 const BOOT_SCRIPTS: ReadonlyMap<string, string> = new Map(
-  ['h5pIntegration.js', 'editorFields.js', 'editorPage.js'].map((name) => [
+  ['h5pIntegration.js', 'editorFieldReveal.js', 'editorFields.js', 'editorPage.js'].map((name) => [
     name,
     fileURLToPath(new URL(name, CLIENT_DIR)),
   ]),

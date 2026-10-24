@@ -26,7 +26,7 @@
     "editNotAllowed": "You are not allowed to change this activity.",
     "contentChanged": "The activity was changed in the meantime. Reload the page and check it again.",
     "publishBlocked": "The activity has errors that must be fixed or explained before it can be published.",
-    "publishedSaveBlocked": "The activity is published, and some errors have no explanation that holds (an explanation holds for 14 days). Fix the errors, explain them with “Explain again” under “Check and publish” on the activity’s page in HVL Interaktiv, or return the activity to draft before you save."
+    "publishedSaveBlocked": "The activity is published, and some errors have no explanation that holds, so your changes are not saved. Fix the errors and save again. An error that is also in the published version (an explanation holds for 14 days) can be explained with “Explain again” under “Check and publish” on the activity’s page in HVL Interaktiv. An error that is new in your change can only be explained when you publish: return the activity to draft with “Return to draft” there, save, and then publish it with an explanation."
   },
   "upload": {
     "archive": {
@@ -103,8 +103,8 @@
       "saved": "Saved.",
       "saveFailed": "Could not save. Try again.",
       "blockedErrors": "Errors that must be fixed or explained: {{count}}.",
-      "blockedSave": "The activity is published, and some errors have no explanation that holds (an explanation holds for 14 days). Fix the errors listed below, explain them with “Explain again” under “Check and publish”, or return the activity to draft there before you save.",
-      "blockedSaveCanvas": "The activity is published, and some errors have no explanation that holds (an explanation holds for 14 days). Fix the errors listed below and save again, or explain them with “Explain again” under “Check and publish” on the activity’s page in HVL Interaktiv.",
+      "blockedSave": "The activity is published, and some errors have no explanation that holds, so your changes are not saved. Fix the errors listed below and save again. An error that is also in the published version (an explanation holds for 14 days) can be explained with “Explain again” under “Check and publish”. An error that is new in your change can only be explained when you publish: return the activity to draft with “Return to draft” under “Check and publish”, save, and then publish it with an explanation.",
+      "blockedSaveCanvas": "The activity is published, and some errors have no explanation that holds, so your changes are not saved. Fix the errors listed below and save again. An error that is also in the published version (an explanation holds for 14 days) can be explained with “Explain again” under “Check and publish” on the activity’s page in HVL Interaktiv. An error that is new in your change must be fixed while the activity is published.",
       "errorLabel": "Error",
       "goToField": "Go to the field",
       "fieldNotReached": "Could not open the field itself. Focus is on the closest part of the form; open the field by hand from there.",

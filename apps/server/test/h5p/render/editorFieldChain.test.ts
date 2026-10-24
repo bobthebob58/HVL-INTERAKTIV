@@ -2,7 +2,8 @@
  * Unit tests for how "Gå til feltet" follows a finding's path through H5P's editor widgets
  * (src/h5p/render/client/editorFields.js), run without a browser: path tokens, lists, groups and sub-content,
  * one-field groups whose value H5P stores as the group's own, and InteractiveVideo's interactions, including
- * going from one open interaction form to another.
+ * going from one open interaction form to another (src/h5p/render/client/editorFieldReveal.js); and waiting while
+ * BranchingScenario's editor still asks whether to show its guided tour.
  *
  * Spec: PROD-003, UD-006
  */
@@ -30,12 +31,13 @@ interface FieldsScript {
   hvliFieldTokens(path: string): (string | number)[];
   hvliFieldChain(form: Widget, tokens: (string | number)[]): Chain;
   hvliOpenStep(parent: object, widget: object): boolean;
+  hvliStillBuilding(form: object, chain: Widget[]): boolean;
 }
 
-const SOURCE = readFileSync(
-  new URL('../../../src/h5p/render/client/editorFields.js', import.meta.url),
-  'utf8',
-);
+// WHY: the page loads ./editorFieldReveal.js before editorFields.js; both define page-level functions.
+const SOURCE = ['editorFieldReveal.js', 'editorFields.js']
+  .map((name) => readFileSync(new URL(`../../../src/h5p/render/client/${name}`, import.meta.url), 'utf8'))
+  .join('\n');
 
 /** Runs the script, which only defines its functions. */
 const script = (): FieldsScript => {
@@ -157,5 +159,22 @@ describe('[UD-006] "Gå til feltet" follows a finding path through the editor', 
     expect([whileClosing, once]).toEqual([true, false]);
     expect(editor.openInteractionDialog).toHaveBeenCalledOnce();
     expect(editor.openInteractionDialog).toHaveBeenCalledWith(interaction);
+  });
+
+  it('[UD-006] waits while a request of BranchingScenario’s editor is unanswered, since its tour may follow', () => {
+    // Arrange: the tour flag request is in flight in the editor frame's jQuery
+    const jQuery = { active: 1 };
+    const view = {
+      document: { querySelector: (s: string) => (s === '.bswrapper' ? {} : null) },
+      H5P: { jQuery },
+    };
+    const form = { children: [], $form: [{ ownerDocument: { defaultView: view } }] };
+    const { hvliStillBuilding } = script();
+    // Act
+    const asking = hvliStillBuilding(form, []);
+    jQuery.active = 0;
+    const answered = hvliStillBuilding(form, []);
+    // Assert
+    expect([asking, answered]).toEqual([true, false]);
   });
 });

@@ -30,10 +30,10 @@ interface FieldsScript {
   hvliGoToField(formOf: () => Widget | undefined, path: string, page: Page): void;
 }
 
-const SOURCE = readFileSync(
-  new URL('../../../src/h5p/render/client/editorFields.js', import.meta.url),
-  'utf8',
-);
+// WHY: the page loads ./editorFieldReveal.js before editorFields.js; both define page-level functions.
+const SOURCE = ['editorFieldReveal.js', 'editorFields.js']
+  .map((name) => readFileSync(new URL(`../../../src/h5p/render/client/${name}`, import.meta.url), 'utf8'))
+  .join('\n');
 
 const script = (): FieldsScript => {
   const context: Record<string, unknown> = { setTimeout };

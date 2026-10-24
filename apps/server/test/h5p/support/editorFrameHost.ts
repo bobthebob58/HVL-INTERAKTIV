@@ -8,10 +8,12 @@
  * Spec: PROD-003, UD-006
  * Invariants:
  *   - The parent page (`/frame-host`) is empty and on the testbed's own origin; the editor is framed at a fixed size.
- *   - `focusedField` names only H5P's `field-name-` class of the focused control's field and whether the control is
- *     CKEditor's editable; it reads no content.
+ *   - `focusedField` names only H5P's `field-name-` class of the focused control's field, the list whose wrapper
+ *     holds it, and whether the control is CKEditor's editable; it reads no content.
+ *   - `openFramedEditorAndGoTo` posts on the editor page's load event, before H5P has built its form, as the web
+ *     app does when the Rediger tab first mounts (apps/web/src/features/activity/ActivityView.tsx).
  * Collaborators: ../../support/httpTestbed.ts, ../../../src/h5p/render/client/editorPage.js.
- * Tests: used by ../editorGoToField.browser.int.test.ts.
+ * Tests: used by ../editorGoToField.browser.int.test.ts and ../editorGoToFieldEarly.browser.int.test.ts.
  */
 import { randomUUID } from 'node:crypto';
 import type { Express } from 'express';
@@ -29,9 +31,11 @@ export function serveFrameHost(app: Express): void {
   app.get(FRAME_HOST_PATH, (_req, res) => void res.type('html').send('<!doctype html><title>host</title>'));
 }
 
-/** Where focus is in H5P's editor frame: the field's `field-name-` class, the tag, and if it is CKEditor's editable. */
+/** Where focus is in H5P's editor frame: the field's `field-name-` class, the list, the tag, and if CKEditor's. */
 export interface FocusedField {
   readonly field: string | null;
+  /** The name of the list whose wrapper holds the focused control (H5P gives a list's wrapper no `field-name-`). */
+  readonly list: string | null;
   readonly tag: string | null;
   readonly editable: boolean;
 }
@@ -45,8 +49,10 @@ export function focusedField(editor: Frame): Promise<FocusedField> {
   return editor.evaluate(() => {
     const active = document.activeElement as HTMLElement | null;
     const field = active?.closest('.field');
+    const listId = active?.closest('.field.list')?.querySelector('.h5p-ul')?.id ?? '';
     return {
       field: [...(field?.classList ?? [])].find((name) => name.startsWith('field-name-')) ?? null,
+      list: /^field-(.+)-\d+$/.exec(listId)?.[1] ?? null,
       tag: active?.tagName ?? null,
       editable: active?.classList.contains('ck-editor__editable') ?? false,
     };
@@ -68,15 +74,55 @@ export async function openFramedEditor(
   author: TestActor,
   contentId: string,
 ): Promise<{ editorPage: Frame; editor: Frame }> {
+  return openFramed(page, base, author, contentId, null);
+}
+
+/**
+ * Opens the editor inside the parent page and posts `hvli:go-to-field` on the editor page's load event, while H5P
+ * still builds its form.
+ * @param page - A new page; a fresh browser context, so no guided tour has been closed in it.
+ * @param base - The testbed server's origin.
+ * @param author - The author whose test header authenticates the requests.
+ * @param contentId - The activity to edit.
+ * @param path - The finding's path.
+ * @returns The editor page's frame and H5P's editor frame inside it, once the form exists.
+ * @throws Error when the frames do not appear.
+ */
+export function openFramedEditorAndGoTo(
+  page: Page,
+  base: string,
+  author: TestActor,
+  contentId: string,
+  path: string,
+): Promise<{ editorPage: Frame; editor: Frame }> {
+  return openFramed(page, base, author, contentId, path);
+}
+
+/** Frames the editor page; posts `path` on its load event unless it is `null`; waits for H5P's form. */
+async function openFramed(
+  page: Page,
+  base: string,
+  author: TestActor,
+  contentId: string,
+  path: string | null,
+): Promise<{ editorPage: Frame; editor: Frame }> {
   await page.setExtraHTTPHeaders({ [author.header[0]]: author.header[1] });
   await page.goto(`${base}${FRAME_HOST_PATH}`);
-  await page.evaluate((src) => {
-    const frame = document.createElement('iframe');
-    frame.src = src;
-    frame.title = 'editor';
-    frame.style.cssText = 'width:1000px;height:800px';
-    document.body.append(frame);
-  }, `/h5p/edit/${contentId}`);
+  await page.evaluate(
+    ({ src, findingPath }) => {
+      const frame = document.createElement('iframe');
+      frame.src = src;
+      frame.title = 'editor';
+      frame.style.cssText = 'width:1000px;height:800px';
+      const message = { type: 'hvli:go-to-field', path: findingPath };
+      if (findingPath !== null)
+        frame.addEventListener('load', () => frame.contentWindow?.postMessage(message, location.origin), {
+          once: true,
+        });
+      document.body.append(frame);
+    },
+    { src: `/h5p/edit/${contentId}`, findingPath: path },
+  );
   const outer = page.frameLocator('iframe[title="editor"]');
   await outer.frameLocator('iframe.h5p-editor-iframe').locator('.h5peditor-form').first().waitFor();
   const editorPage = page.frames().find((frame) => frame.url().includes('/h5p/edit/'));

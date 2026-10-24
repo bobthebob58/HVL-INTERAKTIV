@@ -103,6 +103,8 @@ describe('[SEC-008] editor page template', () => {
       'id="hvl-editor-config"',
       '/h5p/boot/h5pIntegration.js',
       'jquery.js',
+      '/h5p/boot/editorFieldReveal.js',
+      '/h5p/boot/editorFields.js',
       '/h5p/boot/editorPage.js',
     ];
     const positions = order.map((needle) => html.indexOf(needle));

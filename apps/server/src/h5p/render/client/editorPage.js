@@ -10,7 +10,7 @@
  *   taken from, the parent on our own origin only; server text is written as text, never as markup; the generic
  *   failure text is used only when the answer gives no reason (network error, 5xx, unreadable body); the top-level
  *   `hvli*` functions touch only what they are given.
- * Collaborators: ../editorPage.ts, ./editorFields.js (loaded first: following a finding's path),
+ * Collaborators: ../editorPage.ts, ./editorFields.js and ./editorFieldReveal.js (loaded first: a finding's path),
  *   ../../../http/routes/contentRoutes.ts, ../../../http/h5pErrorResponse.ts, apps/web/src/messaging/frameMessages.ts.
  * Tests: apps/server/test/h5p/editorPage.browser.int.test.ts, apps/server/test/h5p/render/editorPageScript.test.ts,
  *   apps/server/test/h5p/editorGoToField.browser.int.test.ts, apps/server/test/h5p/editorBlockedSave.browser.int.test.ts
@@ -165,10 +165,11 @@ function hvliSaveFailureText(status, body, messages) {
     );
   }
 
-  // A11Y: WCAG 2.4.3: "Gå til feltet" focuses the field itself (./editorFields.js waits while H5P builds it), or
-  // the closest part it can open, and then says so: focus is never dropped.
+  // A11Y: WCAG 2.4.3, 4.1.3: focuses the field (./editorFields.js waits while H5P builds it), or the closest part and
+  // says so; an earlier "not reached" is emptied first (a refused save's reason stays), so a new one is announced.
   function goToField(path) {
     var editorFrame = document.querySelector('iframe.h5p-editor-iframe');
+    if (status.textContent === config.messages.fieldNotReached) announce('');
     hvliGoToField(() => editor && editor.selector && editor.selector.form, path, {
       fallback: () => editorFrame || saveButton,
       notReached: () => announce(config.messages.fieldNotReached),

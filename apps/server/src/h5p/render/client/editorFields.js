@@ -1,5 +1,6 @@
 /**
- * editorFields — follows a finding's path through H5P's editor widgets, opens what hides the field and focuses it.
+ * editorFields — follows a finding's path through H5P's editor widgets, waits while H5P builds them, has
+ * ./editorFieldReveal.js open what hides the field, and focuses it.
  *
  * Why: "Gå til feltet" (PROD-003, UD-021) takes the author from a finding to the field it names. H5P builds forms,
  *      lists and sub-content forms asynchronously (each after its library loads, often only once a click opens the
@@ -7,27 +8,30 @@
  * Spec: PROD-003, UD-006, UD-021
  * Invariants:
  *   - It waits only while H5P is still building (no form yet, the deepest widget's library loading, no IV toolbar
- *     yet, a form it closed still sliding out), at most 20 s; once nothing loads, a path that leads no further
- *     (metadata, CoursePresentation's slides, BranchingScenario's nodes) gets one second.
+ *     yet, a form it closed still sliding out, a request of BranchingScenario's editor unanswered), at most 20 s;
+ *     once nothing loads, a path that leads no further (metadata, CoursePresentation's slides) gets one second.
  *   - Focus goes to a shown control that takes focus: the field's own (CKEditor's editable once it stands in for
- *     an Html field), else the closest part's found along the path, else `page.fallback()`; whenever it is not
- *     the field's own, `page.notReached()` is called.
- *   - It opens only what an author opens by hand (groups, tabs, wizard steps, an interaction's form, the "I got it"
- *     of a guided tour that fades the editor). It closes only the open sub-forms of a DragNBar form manager
- *     (InteractiveVideo, CoursePresentation) that hide the field, as their first breadcrumb does (values kept).
+ *     an Html field; a list's wrapper), else the closest part's found along the path, else `page.fallback()`;
+ *     whenever it is not the field's own (the whole form never is), `page.notReached()` is called.
+ *   - A guided tour that shows only after the field was opened, and so keeps it inert, is pressed and the path is
+ *     followed again (within the same 20 s).
  *   - The functions touch only the widgets and elements they are given.
- * Collaborators: ./editorPage.js (calls `hvliGoToField`), ../editorPage.ts (loads this file before it).
+ *   - Each UPSTREAM note links the pinned source of the editor code it relies on; no issue is filed, since it records
+ *     how that code works, not a bug (D-080 amendment of 2026-10-24, V2D-5). A note goes when a pinned version
+ *     changes that behaviour, which the browser tests named below then catch.
+ * Collaborators: ./editorFieldReveal.js (loaded before this file), ./editorPage.js (calls `hvliGoToField`),
+ *   ../editorPage.ts (loads the three in that order).
  * Tests: apps/server/test/h5p/render/editorFieldsScript.test.ts, apps/server/test/h5p/render/editorFieldChain.test.ts,
- *   apps/server/test/h5p/editorGoToField.browser.int.test.ts, apps/server/test/h5p/editorBlockedSave.browser.int.test.ts
+ *   apps/server/test/h5p/editorGoToField.browser.int.test.ts, apps/server/test/h5p/editorGoToFieldEarly.browser.int.test.ts,
+ *   apps/server/test/h5p/editorBlockedSave.browser.int.test.ts
  */
 'use strict';
 /* exported hvliGoToField */
+/* global hvliRevealField, hvliOpenAround -- from ./editorFieldReveal.js, loaded before this file */
 
 var HVLI_FOCUSABLE =
   'input:not([type=hidden]):not(:disabled),textarea:not(:disabled),select:not(:disabled),' +
   'button:not(:disabled),[contenteditable="true"],[tabindex]';
-/** Where a widget keeps its element, in order of preference (a library's sub-form before its copy buttons). */
-var HVLI_OWN_ELEMENTS = ['$input', '$item', '$group', '$libraryWrapper', '$myField', '$form'];
 var HVLI_FIELD_WAIT = { stepMs: 250, maxTries: 80, graceTries: 5 }; // 20 s at most, 1 s once nothing loads
 
 /** Splits a finding path into names and list positions; `params` names no widget (sub-content shows them itself). */
@@ -72,83 +76,6 @@ function hvliFieldChain(form, tokens) {
   return { widgets: widgets, used: missing < 0 ? tokens.length : missing };
 }
 
-/** Closes the sub-forms open in a DragNBar form manager (InteractiveVideo, CoursePresentation), keeping values. */
-function hvliCloseForms(manager) {
-  // UPSTREAM: https://github.com/h5p/h5p-drag-n-bar/blob/b475daaf1d5de8d967145072388fb4727a7d8e6a/scripts/drag-n-bar-form-manager.js
-  // While a sub-form is open (no `root-form`), the rest is hidden; the first breadcrumb closes them all.
-  if (manager && !manager.classList.contains('root-form'))
-    manager.querySelector('.form-manager-breadcrumb > .clickable:first-child')?.click();
-}
-
-/** Shows the wizard step or InteractiveVideo form of `parent` holding `widget`; true while a form still closes. */
-function hvliOpenStep(parent, widget) {
-  // UPSTREAM: https://github.com/h5p/h5p-editor-wizard/blob/4cdf5d26d998daf10191fa4dcc1fb9b2192f3dd6/Scripts/Wizard.js
-  // A wizard shows one step (child) at a time; `showTab` is what its step links call.
-  if (parent && typeof parent.showTab === 'function' && parent.$tabs && Array.isArray(parent.children)) {
-    var tab = parent.$tabs.eq(parent.children.indexOf(widget));
-    if (tab.length === 1 && !tab.hasClass('h5peditor-active')) parent.showTab(tab);
-  }
-  // WHY: the editing dialog (as a double-click opens it) needs the toolbar, and opens once no other form is left:
-  // opened while one still slides out, the form manager would make that form's breadcrumb the way back.
-  var editor = parent && parent.hvliInteractionsOf;
-  var formElement = widget.$form && widget.$form[0];
-  if (!editor || !editor.dnb || !formElement || formElement.isConnected) return false;
-  var manager = editor.$item && editor.$item[0].closest('.form-manager');
-  hvliCloseForms(manager);
-  var closing = manager?.querySelector(':scope > .form-manager-form, .form-manager-breadcrumb > * + *');
-  if (manager && !closing) editor.openInteractionDialog(widget);
-  return Boolean(closing);
-}
-
-/** Opens what holds `element`: an open sub-form over it, groups found by class, vertical tabs, BranchingScenario's. */
-function hvliOpenAround(element) {
-  if (!element.closest('.form-manager-form')) hvliCloseForms(element.closest('.form-manager'));
-  var group = element.closest('fieldset.group');
-  for (; group; group = group.parentElement.closest('fieldset.group'))
-    group.querySelector(':scope > .title[aria-expanded="false"]')?.click();
-  var form = element.closest('.h5p-vtab-form');
-  for (; form; form = form.parentElement.closest('.h5p-vtab-form')) {
-    var tabs = form.closest('.h5p-vtab-wrapper').querySelectorAll(':scope > .h5p-vtabs .h5p-vtab-li');
-    var tab = tabs[Array.prototype.indexOf.call(form.parentElement.children, form)];
-    if (tab) element.ownerDocument.defaultView.H5P.jQuery(tab).trigger('open');
-  }
-  // UPSTREAM: https://github.com/h5p/h5p-editor-branching-scenario/blob/8fcd92d0a5a5f6b855d9d03ce4d19ab31baa4b99/src/scripts/components/Tour.js
-  // A guided tour fades the editor (inert, D-080) until its "I got it" (`.tour-button`) is pressed.
-  element.ownerDocument.querySelector('.bswrapper .tour-button')?.click();
-  // UPSTREAM: https://github.com/h5p/h5p-editor-branching-scenario/blob/8fcd92d0a5a5f6b855d9d03ce4d19ab31baa4b99/src/scripts/components/TabPanel.js
-  // The tabs are <li>s with a click handler, one per `.tab-panel` in order; only the `.active` panel is shown.
-  var panel = element.closest('.tabs > .tab-panel:not(.active)');
-  var panels = panel ? [...panel.parentElement.querySelectorAll(':scope > .tab-panel')] : [];
-  if (panel) panel.parentElement.querySelectorAll(':scope > .tabs-nav > li')[panels.indexOf(panel)]?.click();
-}
-
-/** Opens what hides the chain; returns the element of each part found, deepest last, and if it reaches the field. */
-function hvliRevealField(form, widgets, rest) {
-  var root = form && form.$form ? form.$form[0] : null;
-  var scopes = [];
-  var again = false;
-  widgets.forEach(function (widget, index) {
-    // WHY: a group H5P never rendered as a fieldset (a RangeList row) has no title, and its expand() throws then.
-    if (typeof widget.expand === 'function' && widget.$title) widget.expand();
-    again = hvliOpenStep(index > 0 ? widgets[index - 1] : form, widget) || again;
-    var own = HVLI_OWN_ELEMENTS.map((name) => widget[name] && widget[name][0]).find(Boolean);
-    var within = scopes[scopes.length - 1] || root;
-    var named = within && widget.field ? within.querySelector('.field-name-' + widget.field.name) : null;
-    if (own || named) scopes.push(own || named);
-  });
-  // WHY: a custom editor that keeps no element of its own (BranchingScenario's) is the whole form here.
-  if (scopes.length === 0 && widgets.length > 0 && root) scopes.push(root);
-  // WHY: past a wrapper that hides its widget (showWhen), the rest is found by H5P's `field-name-` classes, but
-  // only by name: the first match for a list position could be another item's.
-  var complete = rest.every(function (token, index) {
-    var named = typeof token === 'string' ? scopes.at(-1)?.querySelector('.field-name-' + token) : null;
-    if (named) scopes.push(named);
-    return typeof token === 'string' && (Boolean(named) || index < rest.length - 1);
-  });
-  if (scopes.length > 0) hvliOpenAround(scopes[scopes.length - 1]);
-  return { scopes: scopes, complete: complete && widgets.length > 0, again: again };
-}
-
 /** True when the element is rendered and not hidden (a closed group, tab, step or form). */
 function hvliShown(element) {
   if (typeof element.checkVisibility !== 'function') return element.getClientRects().length > 0;
@@ -169,11 +96,15 @@ function hvliFocusIn(scope) {
   return control.contains(control.ownerDocument.activeElement);
 }
 
-/** True while H5P is still building the field: no form yet, a library still loading, or IV's toolbar missing. */
+/** True while H5P is still building the field: no form, a library or BranchingScenario request loading, no IV toolbar. */
 function hvliStillBuilding(form, chain) {
   var last = chain.length > 0 ? chain[chain.length - 1] : form;
   if (!last) return true;
   if (chain.slice(0, -1).some((w) => w.hvliInteractionsOf && !w.hvliInteractionsOf.dnb)) return true;
+  // UPSTREAM: https://github.com/h5p/h5p-editor-branching-scenario/blob/8fcd92d0a5a5f6b855d9d03ce4d19ab31baa4b99/src/scripts/helpers/UserStorage.js
+  // BranchingScenario asks for its tour flags by H5P.getUserData (jQuery ajax) and shows a tour once answered.
+  var view = form.$form && form.$form[0].ownerDocument.defaultView;
+  if (view?.document.querySelector('.bswrapper') && view.H5P.jQuery.active > 0) return true;
   var library = last.currentLibrary;
   return typeof library === 'string' && library !== '-' && last.children === undefined;
 }
@@ -194,6 +125,8 @@ function hvliGoToField(formOf, path, page, tries, grace) {
   setTimeout(function () {
     var at = target.scopes.length - 1;
     while (at >= 0 && !hvliFocusIn(target.scopes[at])) at -= 1;
+    // WHY: a tour that showed after the reveal keeps the field inert; once it is pressed, the path is followed again.
+    if (at < target.scopes.length - 1 && left > 0 && hvliOpenAround(target.scopes.at(-1))) return wait();
     if (at < 0) page.fallback().focus();
     if (at < 0 || at < target.scopes.length - 1 || !target.complete) page.notReached();
   }, 150);
