@@ -96,7 +96,8 @@ export interface GlobalAssets {
   readonly styles: string[];
 }
 
-type AssetUrls = Pick<IUrlGenerator, 'coreFile' | 'baseUrl'>;
+/** The part of Lumi's URL generator the asset lists need: Core's file URLs and the base URL. */
+export type AssetUrls = Pick<IUrlGenerator, 'coreFile' | 'baseUrl'>;
 
 /**
  * The URLs of the theme's styles or scripts.

@@ -32,6 +32,7 @@ export const APP_PLAY_PATH = '/app/play';
 
 /** What the route needs. */
 export interface AppLaunchDeps {
+  /** Resolves the ltik from the address into the launch's principal; any failure is a 401 `hvl:ltik-invalid`. */
   readonly resolveLtik: (ltik: string) => Promise<ResolvedLtik>;
   readonly access: ContentAccessRepository;
   /** The activity's title, read after the View check. */
