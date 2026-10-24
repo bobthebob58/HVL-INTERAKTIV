@@ -1233,6 +1233,36 @@
           "verdict": "refuted",
           "reason": "The saving is small (9 net lines from a 5- and 7-line jscpd-loose clone). The cost is the independence of an upstream pin, as the proposal itself notes. ltijsProvider.test.ts is the self-contained pin of ltijs 7.0.7 Provider behaviour (D-050/D-051/D-052). Its HttpResponse stub, its page-data reader and its logger are the harness through which the upstream contract is pinned. ltijsLaunchDriver.ts is a storage-integration driver that runs 'the same steps' in parallel on purpose. Sharing the stubs means any future change made for the storage tests silently changes the pin's harness. It also widens the driver's exported API with three generic helpers that are outside its one responsibility, running launches on a given storage. The change is not purely mechanical either. The pin's `embedded` falls back to `null` while the driver's returns `{}`. Every assertion gets the same pass/fail verdict, but the failure mode and message change in an upstream pin, whose value lies in failing loudly and readably when ltijs changes. Default to refuted when the gain is doubtful."
         }
+      ],
+      "skeptic_equivalence": [
+        {
+          "id": "tests-lti-auth-web-1",
+          "verdict": "survives",
+          "reason": "The moved hooks are the same code as before: loadWebApp('prod'), listen(0, '127.0.0.1'), wait for 'listening', set base, the 60_000 timeout, and close the server before the web app. They are registered before body(), so they still run ahead of the nested describeWithBrowser, as they did. Every use of base in the three files is a template interpolation (`${base}`), and each one is read inside a test or an opener that runs at test time. A missed `${base()}` would make a test fail, not pass quietly. plainServer has the same four Express lines webApp's beforeAll had. The CI guard is the same expression (`existsSync(join(WEB_APP_DIR, '.next', 'BUILD_ID'))`) and the same message. It now fires when webTestServer.ts loads, and only these three test files import that module (grep). With isolate on by default, each file still fails to load in CI without a build. Vitest's module runner awaits imports in order, so support/browser.js still finishes its Chromium probe first; at most, the first error message could differ when both prerequisites are missing in CI. spec-trace's CALL regex `(describe|it|test)((?:\\.\\w+)*)\\s*\\(` matches neither `describeWithWebApp(` nor the old `(… ? describe : describe.skip)(`. Active-test status, traceability and doc-lint's title rules therefore stay the same, and only `Spec:` lines feed traceability, which does not change. There is no ESLint vitest plugin. The test count does not change.",
+          "conditions": "Keep the import of '../support/browser.js' ahead of './webTestServer.js' in all three files. Keep each describe title exactly as it is, and change every `${base}` to `${base()}`. Keep webApp's console.warn in webApp only."
+        },
+        {
+          "id": "tests-lti-auth-web-2",
+          "verdict": "survives",
+          "reason": "webRoutes(web, options = {}) treats undefined as {}, so the existing callers of appWith are unchanged. Both rewritten tests still get a middleware that calls setAppLaunch with the same facts (locale is undefined, so no portal session), then webRoutes with dev:false and, for LTI-006, the same canvasOrigins. Both requests are GETs, and webRoutes always hands a GET to handle, which never rejects. The added 404 fallback therefore never runs. The only remaining difference is that the DATA-006 launch's stub now sends the body 'web' instead of '', and nothing asserts that body. I applied the change verbatim in a scratch mirror: webRoutes.int.test.ts passes 12/12, and every assertion, including the written-out launch-header toEqual, is untouched."
+        },
+        {
+          "id": "tests-lti-auth-web-3",
+          "verdict": "survives",
+          "reason": "createLogger passes options.destination to pino as is. At level 'silent', every log method is a no-op, so nothing is ever written to the destination. Nothing in src changes a logger's level: there is no `.level =`, and the only `.child(` call, in ltijsLogger, passes no level. LtiRecordCleanupJob and ltiErrorPages only receive the logger. The same form, `createLogger({ level: 'silent' })`, is already used in httpTestbed, apiTestbed and portalPages.test. In a scratch mirror, csrfToken.test.ts and ltiErrorPages.test.ts pass 55/55 with the change, and the output contains no '\"level\"' line. Writable has no other use in the three files."
+        },
+        {
+          "id": "tests-lti-auth-web-4",
+          "verdict": "survives",
+          "reason": "Only unread fixture values change: name, the three endpoint strings and publicKey ('public' becomes 'p' in two files). All of them are plain String columns in the LtiPlatform model. reencryptPlatformKeys selects only id and privateKeyEncrypted. LtiPlacementRecorder and LtiAccounts use only the row ID, and no test in the four files reads those fields (grep). URLs are still built at the call sites with the same uniqueName prefixes (test-canvas-, test-c-, the rotation url), so uniqueness and every afterAll cleanup match the same rows. clientId stays '1'. Each call creates a fresh Buffer.from([1]), and the rotation test still overrides privateKeyEncrypted with the real encrypted key, which the spread allows. ltiPlatformFixtures generates its key pair lazily, so importing it has no side effect beyond loading ltijs modules, which construct nothing. The paths added to the header's Tests line all exist.",
+          "conditions": "Keep the WHY comments at each cleanup, and keep the undecryptable Buffer.from([1]) as the placeholder default."
+        },
+        {
+          "id": "tests-lti-auth-web-5",
+          "verdict": "survives",
+          "reason": "SILENT_LOGGER is identical in both files. In recordResponse, redirect and html now return void instead of the Object.assign result. ltijs types both as returning void and never uses their return value (grep of node_modules/ltijs/services: launch.service and launch-context.service call response.html/redirect as statements only). embedded's fallback changes from null to {}. In the pin, loginData.targetUrl! then goes to `new URL()`, which throws in beforeAll in both cases. `toMatchObject({ idToken: run.idToken })`, where idToken is a signed JWT string, fails for both null and {}. I confirmed in a probe that both throw in vitest 5, so every assertion gets the same verdict. ltijsLaunchDriver.ts imports only jose and ltijs and has no top-level side effects, so the pin stays service-free. In a scratch mirror with the change applied, ltijsProvider.test.ts passes 7/7, with the same test titles.",
+          "conditions": "Keep the pin's own REQUEST/post, memoryDatabase and launchOnce. ltijsLaunchDriver.ts must import no service or database module, since the unit-suite pin now depends on it."
+        }
       ]
     },
     "tests-support-http": {
