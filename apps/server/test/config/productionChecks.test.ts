@@ -5,19 +5,10 @@
  * Spec: AUTH-001, LTI-001, LTI-002, DATA-002, DATA-011
  */
 import { describe, expect, it } from 'vitest';
-import { InvalidEnvironmentError, loadEnv } from '../../src/config/env.js';
-import { productionEnv, randomKey, VALID_ENV } from '../support/authEnv.js';
+import { envProblems, productionEnv, randomKey, VALID_ENV } from '../support/authEnv.js';
 
 const AUTUMN_2026 = new Date('2026-10-22T12:00:00Z');
-const problemsAt = (env: Record<string, string>): string[] => {
-  try {
-    loadEnv(env, AUTUMN_2026);
-    return [];
-  } catch (error) {
-    expect(error).toBeInstanceOf(InvalidEnvironmentError);
-    return (error as InvalidEnvironmentError).problems;
-  }
-};
+const problemsAt = (env: Record<string, string>): string[] => envProblems(env, AUTUMN_2026);
 const HTTPS_PLATFORM = {
   name: 'Canvas',
   issuer: 'https://canvas.instructure.com',

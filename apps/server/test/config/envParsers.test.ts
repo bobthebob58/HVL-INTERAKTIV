@@ -4,18 +4,8 @@
  * Spec: DOC-008, LTI-001, LTI-003, AUTH-002
  */
 import { describe, expect, it } from 'vitest';
-import { InvalidEnvironmentError, loadEnv } from '../../src/config/env.js';
-import { VALID_ENV } from '../support/authEnv.js';
-
-const problemsOf = (env: Record<string, string>): string[] => {
-  try {
-    loadEnv(env);
-    return [];
-  } catch (error) {
-    expect(error).toBeInstanceOf(InvalidEnvironmentError);
-    return (error as InvalidEnvironmentError).problems;
-  }
-};
+import { loadEnv } from '../../src/config/env.js';
+import { envProblems, VALID_ENV } from '../support/authEnv.js';
 
 const PLATFORM = {
   name: 'Canvas',
@@ -51,14 +41,14 @@ describe('[DOC-008] Session 3 defaults', () => {
   it('[DOC-008] requires the Feide client and the three key rings', () => {
     const names = ['FEIDE_CLIENT_ID', 'FEIDE_CLIENT_SECRET', 'IDENTITY_HASH_KEYS', 'DATA_ENCRYPTION_KEYS'];
     const env = Object.fromEntries(Object.entries(VALID_ENV).filter(([name]) => !names.includes(name)));
-    expect(problemsOf({ ...env, URL_SIGNING_KEYS: '' }).map((p) => p.split(':')[0])).toEqual([
+    expect(envProblems({ ...env, URL_SIGNING_KEYS: '' }).map((p) => p.split(':')[0])).toEqual([
       ...names,
       'URL_SIGNING_KEYS',
     ]);
   });
 
   it('[DOC-008] names a bad key ring without echoing it', () => {
-    const problems = problemsOf({ ...VALID_ENV, DATA_ENCRYPTION_KEYS: 'k=c2hvcnQ=' });
+    const problems = envProblems({ ...VALID_ENV, DATA_ENCRYPTION_KEYS: 'k=c2hvcnQ=' });
     expect(problems).toEqual(['DATA_ENCRYPTION_KEYS: key k is shorter than 32 bytes']);
   });
 });
@@ -68,10 +58,10 @@ describe('[LTI-003] public URL and frame origins', () => {
     expect(loadEnv({ ...VALID_ENV, PUBLIC_BASE_URL: 'https://interaktiv.hvl.no/' }).PUBLIC_BASE_URL).toBe(
       'https://interaktiv.hvl.no',
     );
-    expect(problemsOf({ ...VALID_ENV, PUBLIC_BASE_URL: 'https://hvl.no/interaktiv' })[0]).toMatch(
+    expect(envProblems({ ...VALID_ENV, PUBLIC_BASE_URL: 'https://hvl.no/interaktiv' })[0]).toMatch(
       /^PUBLIC_BASE_URL: must be an origin/,
     );
-    expect(problemsOf({ ...VALID_ENV, PUBLIC_BASE_URL: 'javascript:alert(1)' })[0]).toMatch(
+    expect(envProblems({ ...VALID_ENV, PUBLIC_BASE_URL: 'javascript:alert(1)' })[0]).toMatch(
       /^PUBLIC_BASE_URL:/,
     );
   });
@@ -91,7 +81,7 @@ describe('[LTI-003] public URL and frame origins', () => {
       'hvl.instructure.com',
       "'self'",
     ]) {
-      expect(problemsOf({ ...VALID_ENV, CANVAS_ORIGINS: `https://ok.no,${bad}` }), bad).toEqual([
+      expect(envProblems({ ...VALID_ENV, CANVAS_ORIGINS: `https://ok.no,${bad}` }), bad).toEqual([
         'CANVAS_ORIGINS: entry 2 is not an origin like https://host',
       ]);
     }
@@ -111,16 +101,16 @@ describe('[AUTH-002] Feide role lists', () => {
     expect(env.ADMIN_FEIDE_IDS).toEqual(['admin@hvl.no', 'kari@hvl.no']);
     expect(env.ALLOWED_FEIDE_ORGS).toEqual(['hvl.no']);
     expect(env.AUTHOR_COURSE_GROUPS).toEqual(['fc:fs:fs:emne:hvl.no:ppu101']);
-    expect(problemsOf({ ...VALID_ENV, ADMIN_FEIDE_IDS: 'admin' })).toEqual([
+    expect(envProblems({ ...VALID_ENV, ADMIN_FEIDE_IDS: 'admin' })).toEqual([
       'ADMIN_FEIDE_IDS: entry 1 is not a Feide ID like name@hvl.no',
     ]);
-    expect(problemsOf({ ...VALID_ENV, ALLOWED_FEIDE_ORGS: 'hvl' })[0]).toMatch(
+    expect(envProblems({ ...VALID_ENV, ALLOWED_FEIDE_ORGS: 'hvl' })[0]).toMatch(
       /^ALLOWED_FEIDE_ORGS: entry 1/,
     );
-    expect(problemsOf({ ...VALID_ENV, AUTHOR_COURSE_GROUPS: 'emne:ppu' })[0]).toMatch(
+    expect(envProblems({ ...VALID_ENV, AUTHOR_COURSE_GROUPS: 'emne:ppu' })[0]).toMatch(
       /^AUTHOR_COURSE_GROUPS:/,
     );
-    expect(problemsOf({ ...VALID_ENV, AUTHOR_COURSE_GROUPS: 'fc:fs:fs:emne:hvl.no:' })[0]).toMatch(
+    expect(envProblems({ ...VALID_ENV, AUTHOR_COURSE_GROUPS: 'fc:fs:fs:emne:hvl.no:' })[0]).toMatch(
       /^AUTHOR_COURSE_GROUPS: entry 1/,
     );
   });
@@ -139,7 +129,7 @@ describe('[LTI-001] LTI_PLATFORMS', () => {
     });
     expect(linked.LTI_PLATFORMS[0]?.feideLinking).toBe(true);
     expect(
-      problemsOf({ ...VALID_ENV, LTI_PLATFORMS: JSON.stringify([{ ...PLATFORM, feideLinking: 'yes' }]) })[0],
+      envProblems({ ...VALID_ENV, LTI_PLATFORMS: JSON.stringify([{ ...PLATFORM, feideLinking: 'yes' }]) })[0],
     ).toMatch(/^LTI_PLATFORMS\.0\.feideLinking:/);
   });
 
@@ -158,7 +148,7 @@ describe('[LTI-001] LTI_PLATFORMS', () => {
     ];
     // Act and assert
     for (const [raw, expected] of cases) {
-      const problems = problemsOf({ ...VALID_ENV, LTI_PLATFORMS: raw });
+      const problems = envProblems({ ...VALID_ENV, LTI_PLATFORMS: raw });
       expect(problems.length, raw).toBeGreaterThan(0);
       expect(problems[0], raw).toMatch(expected);
     }

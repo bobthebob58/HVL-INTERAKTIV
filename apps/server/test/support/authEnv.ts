@@ -1,12 +1,15 @@
 /**
- * authEnv — environment fixtures for configuration tests: a minimal valid development environment and a
- * production environment whose secrets and URLs pass every production check.
+ * authEnv — environment fixtures for configuration tests: a minimal valid development environment, a
+ * production environment whose secrets and URLs pass every production check, and the problems `loadEnv` reports.
  *
  * Why: each Session 3 variable adds a required secret or a production rule, and every configuration test
  *      needs the same baseline. Keeping it here keeps the tests to the one variable they are about.
  * Spec: DOC-008, DATA-002
+ * Collaborators: ../../src/config/env.ts (loadEnv, InvalidEnvironmentError).
  * Tests: shared by apps/server/test/config/*.test.ts.
  */
+import { expect } from 'vitest';
+import { InvalidEnvironmentError, loadEnv } from '../../src/config/env.js';
 
 /** 32 bytes that are not printable text and have 32 distinct values, as `openssl rand` produces. */
 export const randomKey = (seed: number): string =>
@@ -45,3 +48,19 @@ export const productionEnv = (overrides: Record<string, string> = {}): Record<st
   PUBLIC_BASE_URL: 'https://interaktiv.hvl.no',
   ...overrides,
 });
+
+/**
+ * The problems `loadEnv` reports for an environment; an error of any other kind fails the test.
+ * @param env - The environment.
+ * @param now - The time the production checks judge the academic year by (default: now).
+ * @returns The problems, or none when the environment loads.
+ */
+export const envProblems = (env: Record<string, string>, now?: Date): string[] => {
+  try {
+    loadEnv(env, now);
+    return [];
+  } catch (error) {
+    expect(error).toBeInstanceOf(InvalidEnvironmentError);
+    return (error as InvalidEnvironmentError).problems;
+  }
+};
