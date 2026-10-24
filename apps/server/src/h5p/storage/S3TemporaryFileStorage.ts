@@ -73,25 +73,14 @@ export class S3TemporaryFileStorage implements ITemporaryFileStorage {
 
   /** True when the user has an upload with this name. */
   async fileExists(filename: string, user: IUser): Promise<boolean> {
-    try {
-      await this.s3.send(new HeadObjectCommand({ Bucket: this.bucket, Key: this.key(user.id, filename) }));
-      return true;
-    } catch (error) {
-      if (isNotFound(error)) return false;
-      throw error;
-    }
+    return (await this.headIfPresent(this.key(user.id, filename))) !== undefined;
   }
 
   /** Size and upload time of the user's file. */
   async getFileStats(filename: string, user: IUser): Promise<IFileStats> {
-    try {
-      const head = await this.s3.send(
-        new HeadObjectCommand({ Bucket: this.bucket, Key: this.key(user.id, filename) }),
-      );
-      return { size: head.ContentLength ?? 0, birthtime: head.LastModified ?? new Date(0) };
-    } catch (error) {
-      throw isNotFound(error) ? notFound(filename) : error;
-    }
+    const head = await this.headIfPresent(this.key(user.id, filename));
+    if (!head) throw notFound(filename);
+    return { size: head.ContentLength ?? 0, birthtime: head.LastModified ?? new Date(0) };
   }
 
   /** Streams the user's file, optionally a byte range (inclusive). */
