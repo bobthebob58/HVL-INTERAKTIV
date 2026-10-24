@@ -27,7 +27,7 @@ export interface ExternalLinkProps {
   readonly children: ReactNode;
   /** Open in a new tab; true for links that leave the Canvas frame. */
   readonly newTab?: boolean;
-  /** False for a link to our own site that only opens in a new tab (no "external site" text or icon). */
+  /** False for a link to our own site: no "external site" text or icon, so without `newTab` a plain link. */
   readonly external?: boolean;
   readonly className?: string;
 }

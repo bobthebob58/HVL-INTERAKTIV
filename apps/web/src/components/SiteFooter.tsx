@@ -33,21 +33,15 @@ export function SiteFooter({
       <nav aria-label={t('site.footerNav', locale)} className="mx-auto max-w-6xl px-4 py-4">
         <ul className="m-0 flex list-none flex-wrap gap-4 p-0">
           <li>
-            {inCanvas ? (
-              <ExternalLink
-                href={infoHref(PRIVACY_PATH, locale)}
-                locale={locale}
-                newTab
-                external={false}
-                className="link-target"
-              >
-                {t('nav.privacy', locale)}
-              </ExternalLink>
-            ) : (
-              <a href={infoHref(PRIVACY_PATH, locale)} className="link-target">
-                {t('nav.privacy', locale)}
-              </a>
-            )}
+            <ExternalLink
+              href={infoHref(PRIVACY_PATH, locale)}
+              locale={locale}
+              newTab={inCanvas}
+              external={false}
+              className="link-target"
+            >
+              {t('nav.privacy', locale)}
+            </ExternalLink>
           </li>
         </ul>
       </nav>

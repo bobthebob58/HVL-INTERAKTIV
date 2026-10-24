@@ -55,21 +55,15 @@ export function SiteHeader({ locale, inCanvas = false }: SiteHeaderProps) {
         <nav aria-label={t('site.headerNav', locale)}>
           <ul className="m-0 flex list-none gap-4 p-0">
             <li>
-              {inCanvas ? (
-                <ExternalLink
-                  href={infoHref(HELP_PATH, locale)}
-                  locale={locale}
-                  newTab
-                  external={false}
-                  className="link-target"
-                >
-                  {t('nav.help', locale)}
-                </ExternalLink>
-              ) : (
-                <a href={infoHref(HELP_PATH, locale)} className="link-target">
-                  {t('nav.help', locale)}
-                </a>
-              )}
+              <ExternalLink
+                href={infoHref(HELP_PATH, locale)}
+                locale={locale}
+                newTab={inCanvas}
+                external={false}
+                className="link-target"
+              >
+                {t('nav.help', locale)}
+              </ExternalLink>
             </li>
           </ul>
         </nav>
