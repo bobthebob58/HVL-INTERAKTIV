@@ -7,9 +7,8 @@
  *
  * Spec: PROD-003, UD-006
  */
-import { readFileSync } from 'node:fs';
-import { runInNewContext } from 'node:vm';
 import { describe, expect, it, vi } from 'vitest';
+import { runClientScripts } from './clientScripts.js';
 
 interface Widget {
   readonly field?: { readonly name: string };
@@ -35,16 +34,9 @@ interface FieldsScript {
 }
 
 // WHY: the page loads ./editorFieldReveal.js before editorFields.js; both define page-level functions.
-const SOURCE = ['editorFieldReveal.js', 'editorFields.js']
-  .map((name) => readFileSync(new URL(`../../../src/h5p/render/client/${name}`, import.meta.url), 'utf8'))
-  .join('\n');
-
 /** Runs the script, which only defines its functions. */
-const script = (): FieldsScript => {
-  const context: Record<string, unknown> = { setTimeout };
-  runInNewContext(SOURCE, context);
-  return context as unknown as FieldsScript;
-};
+const script = () =>
+  runClientScripts<FieldsScript>(['editorFieldReveal.js', 'editorFields.js'], { setTimeout });
 
 describe('[UD-006] "Gå til feltet" follows a finding path through the editor', () => {
   it('[UD-006] splits a path into field names and list positions, leaving out sub-content `params`', () => {

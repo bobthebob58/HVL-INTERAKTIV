@@ -5,10 +5,9 @@
  *
  * Spec: PROD-003, UD-013
  */
-import { readFileSync } from 'node:fs';
-import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import { t } from '../../../src/i18n/translate.js';
+import { runClientScripts } from './clientScripts.js';
 
 interface Messages {
   readonly failed: string;
@@ -22,16 +21,11 @@ interface EditorScript {
 }
 
 // WHY: the page loads ./editorFieldReveal.js and ./editorFields.js before editorPage.js; all define page-level functions.
-const SOURCE = ['editorFieldReveal.js', 'editorFields.js', 'editorPage.js']
-  .map((name) => readFileSync(new URL(`../../../src/h5p/render/client/${name}`, import.meta.url), 'utf8'))
-  .join('\n');
+const SCRIPTS = ['editorFieldReveal.js', 'editorFields.js', 'editorPage.js'];
 
 /** Runs the script where no editor page exists: it defines its functions and starts nothing. */
-const script = (): EditorScript => {
-  const context: Record<string, unknown> = { window: {}, document: { getElementById: () => null } };
-  runInNewContext(SOURCE, context);
-  return context as unknown as EditorScript;
-};
+const script = () =>
+  runClientScripts<EditorScript>(SCRIPTS, { window: {}, document: { getElementById: () => null } });
 
 const MESSAGES: Messages = {
   failed: 'Klarte ikkje å lagre.',

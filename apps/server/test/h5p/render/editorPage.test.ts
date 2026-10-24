@@ -30,6 +30,10 @@ const input = (over: Partial<EditorPageInput> = {}): EditorPageInput => ({
   ...over,
 });
 
+/** The JSON the page hands its script in `#hvl-editor-config`. */
+const configOf = <T>(html: string): T =>
+  JSON.parse(/id="hvl-editor-config">(.*?)<\/script>/s.exec(html)?.[1] ?? '{}') as T;
+
 describe('[SEC-008] editor page template', () => {
   it('[SEC-008] has no inline script and keeps markup in the data inert and unchanged', () => {
     // Act
@@ -40,10 +44,7 @@ describe('[SEC-008] editor page template', () => {
     expect(integrationFromPage<{ l10n: { title: string } }>(html)?.l10n.title).toBe(
       '</script><script>alert(1)</script>',
     );
-    const config = JSON.parse(/id="hvl-editor-config">(.*?)<\/script>/s.exec(html)?.[1] ?? '{}') as {
-      token: { value: string };
-    };
-    expect(config.token.value).toBe('tok"en');
+    expect(configOf<{ token: { value: string } }>(html).token.value).toBe('tok"en');
   });
 
   it('[UD-010] names the page language and title and offers one save button with a polite status region', () => {
@@ -63,21 +64,13 @@ describe('[SEC-008] editor page template', () => {
   });
 
   it('[PROD-003] hands the script the blocked-save count message in the page language, with the count left open', () => {
-    const html = renderEditorPage(input(), 'nb');
-    const config = JSON.parse(/id="hvl-editor-config">(.*?)<\/script>/s.exec(html)?.[1] ?? '{}') as {
-      messages: { blockedErrors: string };
-    };
+    const config = configOf<{ messages: { blockedErrors: string } }>(renderEditorPage(input(), 'nb'));
     expect(config.messages.blockedErrors).toBe('Feil som må rettes eller begrunnes: {{count}}.');
   });
 
   it('[PROD-003] tells a Canvas author to fix the errors, and only a portal author that unpublishing is possible', () => {
     // Arrange
-    const messagesOf = (html: string) =>
-      (
-        JSON.parse(/id="hvl-editor-config">(.*?)<\/script>/s.exec(html)?.[1] ?? '{}') as {
-          messages: Messages;
-        }
-      ).messages;
+    const messagesOf = (html: string) => configOf<{ messages: Messages }>(html).messages;
     // Act
     const portal = messagesOf(renderEditorPage(input(), 'nn'));
     const canvas = messagesOf(renderEditorPage(input({ token: { name: 'ltik', value: 'l' } }), 'nn'));

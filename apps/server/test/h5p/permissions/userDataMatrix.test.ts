@@ -8,19 +8,14 @@
 import { describe, expect, it } from 'vitest';
 import { UserDataPermission } from '@lumieducation/h5p-server';
 import { HvlPermissionSystem } from '../../../src/h5p/HvlPermissionSystem.js';
-import {
-  asAccountUser,
-  asStateUser,
-  type H5pRole,
-  type H5pUserView,
-  type HvlH5pActor,
-} from '../../../src/h5p/HvlH5pUser.js';
+import { asAccountUser, asStateUser, type HvlH5pActor } from '../../../src/h5p/HvlH5pUser.js';
 import type {
   ContentFacts,
   ContentStatus,
   ContentVisibility,
 } from '../../../src/h5p/permissions/ContentAccessRepository.js';
 import type { DataSubjectAccess } from '../../../src/h5p/permissions/UserDataAccessAuditor.js';
+import { numeric, product, ROLES, VIEWS } from './matrixDimensions.js';
 
 const CONTENT_ID = '0192f0c4-0000-7000-8000-00000000c001';
 const ME = '0192f0c4-0000-7000-8000-000000000001';
@@ -38,18 +33,12 @@ const STATE = [EditState, DeleteState, ViewState, ListStates];
 
 type Relation = 'owner' | 'co-author' | 'other';
 
-const product = <T extends Record<string, readonly unknown[]>>(dims: T): { [K in keyof T]: T[K][number] }[] =>
-  Object.entries(dims).reduce<Record<string, unknown>[]>(
-    (rows, [key, values]) => rows.flatMap((row) => values.map((value) => ({ ...row, [key]: value }))),
-    [{}],
-  ) as { [K in keyof T]: T[K][number] }[];
-
 const access = {
-  role: ['learner', 'author', 'admin'] as H5pRole[],
-  permission: Object.values(UserDataPermission).filter((p): p is UserDataPermission => typeof p === 'number'),
+  role: ROLES,
+  permission: numeric(UserDataPermission),
   whose: ['own', 'named', 'unnamed', 'all'] as (keyof typeof KEYS)[],
   request: [false, true],
-  view: ['account', 'state'] as H5pUserView[],
+  view: VIEWS,
 };
 const activity = {
   relation: ['owner', 'co-author', 'other'] as Relation[],

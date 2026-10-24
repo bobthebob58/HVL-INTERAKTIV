@@ -7,9 +7,8 @@
  *
  * Spec: PROD-003, UD-006
  */
-import { readFileSync } from 'node:fs';
-import { runInNewContext } from 'node:vm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { runClientScripts } from './clientScripts.js';
 
 interface Widget {
   field?: { readonly name: string };
@@ -31,15 +30,8 @@ interface FieldsScript {
 }
 
 // WHY: the page loads ./editorFieldReveal.js before editorFields.js; both define page-level functions.
-const SOURCE = ['editorFieldReveal.js', 'editorFields.js']
-  .map((name) => readFileSync(new URL(`../../../src/h5p/render/client/${name}`, import.meta.url), 'utf8'))
-  .join('\n');
-
-const script = (): FieldsScript => {
-  const context: Record<string, unknown> = { setTimeout };
-  runInNewContext(SOURCE, context);
-  return context as unknown as FieldsScript;
-};
+const script = () =>
+  runClientScripts<FieldsScript>(['editorFieldReveal.js', 'editorFields.js'], { setTimeout });
 
 /** A stand-in for an editor control; `shown` and `takes` say whether it is rendered and accepts focus. */
 const control = (shown = true, takes = true, inside: unknown[] = [], classes: string[] = []) => {

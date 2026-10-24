@@ -7,19 +7,14 @@
 import { describe, expect, it } from 'vitest';
 import { ContentPermission } from '@lumieducation/h5p-server';
 import { HvlPermissionSystem } from '../../../src/h5p/HvlPermissionSystem.js';
-import {
-  asAccountUser,
-  asStateUser,
-  type H5pRole,
-  type H5pUserView,
-  type HvlH5pActor,
-} from '../../../src/h5p/HvlH5pUser.js';
+import { asAccountUser, asStateUser, type HvlH5pActor } from '../../../src/h5p/HvlH5pUser.js';
 import type {
   ContentFacts,
   ContentStatus,
   ContentVisibility,
 } from '../../../src/h5p/permissions/ContentAccessRepository.js';
 import type { DataSubjectAccess } from '../../../src/h5p/permissions/UserDataAccessAuditor.js';
+import { numeric, product, ROLES, VIEWS } from './matrixDimensions.js';
 
 const CONTENT_ID = '0192f0c4-0000-7000-8000-00000000c001';
 const ME = '0192f0c4-0000-7000-8000-000000000001';
@@ -29,20 +24,12 @@ const { Create, List, View, Edit, Delete, Download, Embed } = ContentPermission;
 type Relation = 'owner' | 'co-author' | 'other';
 type Reach = 'outsider' | 'hvl' | 'feide' | 'hvl+feide';
 
-const product = <T extends Record<string, readonly unknown[]>>(dims: T): { [K in keyof T]: T[K][number] }[] =>
-  Object.entries(dims).reduce<Record<string, unknown>[]>(
-    (rows, [key, values]) => rows.flatMap((row) => values.map((value) => ({ ...row, [key]: value }))),
-    [{}],
-  ) as { [K in keyof T]: T[K][number] }[];
-
-const ROLES: H5pRole[] = ['learner', 'author', 'admin'];
-const VIEWS: H5pUserView[] = ['account', 'state'];
 /** Reaches every visibility level and opened the activity through LTI. */
 const EVERYONE = { reach: 'hvl+feide', launched: true } as const;
 
 const cells = product({
   role: ROLES,
-  permission: Object.values(ContentPermission).filter((p): p is ContentPermission => typeof p === 'number'),
+  permission: numeric(ContentPermission),
   view: VIEWS,
   relation: ['owner', 'co-author', 'other'] as Relation[],
   status: ['draft', 'published'] as ContentStatus[],

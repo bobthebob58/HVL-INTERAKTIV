@@ -16,17 +16,7 @@ import {
   type HvlH5pActor,
 } from '../../../src/h5p/HvlH5pUser.js';
 import { decideGeneral, decideTemporaryFile } from '../../../src/h5p/permissions/contentRules.js';
-
-const ROLES: H5pRole[] = ['learner', 'author', 'admin'];
-const VIEWS: H5pUserView[] = ['account', 'state'];
-const numeric = <E extends object>(e: E): E[keyof E][] =>
-  Object.values(e).filter((v) => typeof v === 'number') as E[keyof E][];
-
-const product = <T extends Record<string, readonly unknown[]>>(dims: T): { [K in keyof T]: T[K][number] }[] =>
-  Object.entries(dims).reduce<Record<string, unknown>[]>(
-    (rows, [key, values]) => rows.flatMap((row) => values.map((value) => ({ ...row, [key]: value }))),
-    [{}],
-  ) as { [K in keyof T]: T[K][number] }[];
+import { numeric, product, ROLES, VIEWS } from './matrixDimensions.js';
 
 /** An actor who reaches everything else: HVL member, Feide login, an LTI launch, a data-subject request. */
 const actorFor = (role: H5pRole): HvlH5pActor => ({
