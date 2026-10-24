@@ -5,15 +5,15 @@
  * Why: ltijs sends a launch to the chrome page with the ltik in the query (LTI-003 step 1, D-069). The web app must
  *      not see the ltik (D-068), so Express checks it here, inside the LTI router where an invalid ltik gets the
  *      friendly "open it again from Canvas" page with 401, and passes on only what the page shows (./../../web/appLaunch.ts).
- * Spec: LTI-006, LTI-003, PROD-004, H5P-006
+ * Spec: LTI-006, LTI-003, PROD-004, H5P-006, UD-010
  * Invariants:
  *   - The activity is the launch's own (`principal.lti.contentId`), never from the request.
- *   - An activity the launch may not view gets the one "not available" page (D-066); its title is read only after
- *     that check.
+ *   - An activity the launch may not view gets the one "not available" page (D-066); its title and language are read
+ *     only after that check.
  *   - `mayEdit` is the H5P-006 Edit decision for the launch's account view.
  *   - The request continues to the web app (`next()`); only GET reaches this route.
  * Collaborators: ../ltikPrincipal.ts, ../../auth/principalToH5pActor.ts, ../../h5p/permissions/contentRules.ts,
- *   ../../web/appLaunch.ts, ../../web/webRoutes.ts, ../ltiRoutes.ts.
+ *   ../../validation/activityLanguage.ts (via ../ltiRoutes.ts), ../../web/appLaunch.ts, ../../web/webRoutes.ts.
  * Tests: apps/server/test/lti/appLaunch.int.test.ts
  */
 import { ContentPermission } from '@lumieducation/h5p-server';
@@ -36,11 +36,13 @@ export interface AppLaunchDeps {
   readonly access: ContentAccessRepository;
   /** The activity's title, read after the View check. */
   readonly titleOf: (contentId: string) => Promise<string>;
+  /** The activity's own language tag (../../validation/activityLanguage.ts), read after the View check. */
+  readonly languageOf?: (contentId: string) => Promise<string | undefined>;
 }
 
 /**
  * Builds the route.
- * @param deps - The ltik resolver, the activity facts and the title lookup.
+ * @param deps - The ltik resolver, the activity facts and the title and language lookups.
  * @returns A router for `GET /app/play`.
  */
 export function appLaunchRoutes(deps: AppLaunchDeps): Router {
@@ -57,11 +59,13 @@ export function appLaunchRoutes(deps: AppLaunchDeps): Router {
     if (!contentId || !facts || !decideContent(asStateUser(actor), ContentPermission.View, facts)) {
       throw authError('hvl:activity-unavailable');
     }
+    const language = await deps.languageOf?.(facts.contentId);
     setAppLaunch(res, {
       contentId: facts.contentId,
       title: await deps.titleOf(facts.contentId),
       mayEdit: decideContent(asAccountUser(actor), ContentPermission.Edit, facts),
       locale: principal.locale,
+      ...(language ? { language } : {}),
     });
     next();
   });

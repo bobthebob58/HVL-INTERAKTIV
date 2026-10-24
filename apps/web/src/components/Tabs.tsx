@@ -4,15 +4,16 @@
  * Why: the activity page and the Canvas page show **Spel**, **Rediger** and **Sjekk og publiser** as tabs (LTI-006,
  *      PROD-003). UD-006 asks custom widgets to follow the WAI-ARIA Authoring Practices: one tab stop for the list
  *      (roving `tabIndex`), arrows move between tabs, and the panel follows in the tab order.
- * Spec: UD-006, LTI-006, UD-005
+ * Spec: UD-006, LTI-006, UD-005, UD-012
  * Invariants:
  *   - `manualActivation` moves focus with the arrows and selects with Enter or Space, for panels that load
  *     slowly (the H5P editor); otherwise a tab is selected when it gets focus.
  *   - A panel mounts the first time its tab is selected and then stays mounted (hidden), so an editor keeps its
  *     unsaved work while another tab is shown.
- *   - The selected tab is shown by an underline and bold text, not by colour alone; every tab is at least 24 px high.
- * Collaborators: ../features/activity/ActivityView.tsx, ../features/lti/LtiPlayView.tsx.
- * Tests: apps/web/test/components/Tabs.test.tsx
+ *   - The selected tab is shown by an underline and bold text, not by colour alone, also under forced colours (the
+ *     `.tab` rules in ../styles/components.css, UD-012); every tab is at least 24 px high.
+ * Collaborators: ../features/activity/ActivityView.tsx, ../features/lti/LtiPlayView.tsx, ../styles/components.css.
+ * Tests: apps/web/test/components/Tabs.test.tsx, apps/server/test/web/webChrome.browser.int.test.ts
  */
 'use client';
 
@@ -105,8 +106,8 @@ export function Tabs({ label, tabs, selectedId, onSelect, manualActivation = fal
               onFocus={() => setFocusIndex(index)}
               onClick={() => onSelect(tab.id)}
               onKeyDown={(event) => onKeyDown(event, index)}
-              className={`min-h-target cursor-pointer border-0 border-b-4 bg-transparent px-4 py-2 text-hvl-primary-dark ${
-                selected ? 'border-hvl-accent font-bold' : 'border-transparent'
+              className={`tab min-h-target cursor-pointer bg-transparent px-4 py-2 text-hvl-primary-dark ${
+                selected ? 'font-bold' : ''
               }`}
             >
               {tab.label}

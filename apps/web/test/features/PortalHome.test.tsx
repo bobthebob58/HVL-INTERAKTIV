@@ -1,8 +1,9 @@
 /**
  * Tests for the start page's content: Feide login when signed out; the person's activities with status, "Ny
- * aktivitet" for authors, and logout as a POST form with the CSRF token when signed in.
+ * aktivitet" for authors, and logout as a POST form with the CSRF token when signed in. A title in another language
+ * than the page carries its `lang`.
  *
- * Spec: AUTH-001, AUTH-003, PROD-003
+ * Spec: AUTH-001, AUTH-003, PROD-003, UD-010
  */
 // @vitest-environment jsdom
 import type { ContentSummary } from '@hvl-interaktiv/api-contract';
@@ -51,6 +52,27 @@ describe('[AUTH-003] the start page', () => {
     expect(within(item).getByText('Type: Fleirval')).toBeTruthy();
     expect(within(item).getByText('Rolle: Medforfattar')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Ny aktivitet' }).getAttribute('href')).toBe('/aktivitet/ny');
+  });
+
+  it('[UD-010] a title in another language than the page carries that lang', async () => {
+    // Arrange
+    fakeFetch({
+      'GET /auth/session': session(['author']),
+      'GET /api/content': {
+        status: 200,
+        body: {
+          items: [
+            { ...ITEM, language: 'en' },
+            { ...ITEM, id: 'x', language: 'nn' },
+          ],
+        },
+      },
+    });
+    // Act
+    render(<PortalHome />);
+    const links = await screen.findAllByRole('link', { name: 'Celler og vev' });
+    // Assert
+    expect(links.map((link) => link.getAttribute('lang'))).toEqual(['en', null]);
   });
 
   it('[AUTH-003] logout is a POST form to /auth/logout with the CSRF token in the field csrf', async () => {

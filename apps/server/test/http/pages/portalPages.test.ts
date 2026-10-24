@@ -85,7 +85,9 @@ describe('[UD-013] portal pages and Hjelp', () => {
   it('[UD-013] with the web app, every portal page has the Hjelp header in the whole window', async () => {
     const app = portalApp({ webApp: true });
     for (const path of ['/h5p/play/x', '/boom', '/no-such-page']) {
-      expect((await request(app).get(path)).text, path).toContain('<a href="/hjelp" target="_top">Hjelp</a>');
+      expect((await request(app).get(path)).text, path).toContain(
+        '<a href="/hjelp?lang=nn" target="_top">Hjelp</a>',
+      );
     }
   });
 
@@ -102,7 +104,8 @@ describe('[UD-013] portal pages and Hjelp', () => {
     expect(inOurChrome.text).not.toContain('/hjelp');
     expect(inOurChrome.text).not.toContain('hvl-site-header');
     expect(inOurChrome.text).toContain('<main id="main"');
-    for (const res of [elsewhere, topLevel]) expect(res.text).toContain('<a href="/hjelp" target="_top">');
+    for (const res of [elsewhere, topLevel])
+      expect(res.text).toContain('<a href="/hjelp?lang=nn" target="_top">');
   });
 
   it('[UD-013] without the web app there is no link to a help page that does not exist', async () => {

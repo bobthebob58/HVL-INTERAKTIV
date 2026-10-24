@@ -5,8 +5,11 @@
  * Spec: DATA-006
  * Invariants:
  *   - Every key exists in nn, nb and en (the locale files are checked for the same keys).
+ *   - Each sentence about what is kept, and for how long, matches a row of docs/privacy/DATA-INVENTORY.md; the content
+ *     test pins the pairs, so a change on either side fails until both agree.
  * Collaborators: ../../components/TextSections.tsx, ../../app/(portal)/personvern/page.tsx.
- * Tests: apps/web/test/components/TextSections.test.tsx
+ * Tests: apps/web/test/components/TextSections.test.tsx, apps/web/test/features/privacyNotice.test.ts,
+ *   apps/web/test/features/privacyNoticeScope.test.ts
  */
 import type { TextSection } from '../../components/TextSections';
 
@@ -15,7 +18,18 @@ export const PRIVACY_SECTIONS: readonly TextSection[] = [
   {
     heading: 'privacy.learnersHeading',
     kind: 'paragraphs',
-    texts: ['privacy.learners1', 'privacy.learners2', 'privacy.learners3', 'privacy.learners4'],
+    texts: [
+      'privacy.learners1',
+      'privacy.learners2',
+      'privacy.learners3',
+      'privacy.learners4',
+      'privacy.learners5',
+    ],
+  },
+  {
+    heading: 'privacy.loginHeading',
+    kind: 'paragraphs',
+    texts: ['privacy.login1', 'privacy.login2', 'privacy.login3', 'privacy.login4'],
   },
   {
     heading: 'privacy.whyHeading',

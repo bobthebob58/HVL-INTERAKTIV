@@ -1,16 +1,21 @@
 /**
  * PublishDialog — publishes an activity: lists the errors that still need a reason, asks for one per error, and sends
- * `POST /api/content/:id/publish` with the `updatedAt` of the findings the author saw.
+ * `POST /api/content/:id/publish` with the `updatedAt` of the findings the author saw. For a published activity with
+ * errors that have no reason that holds (`renew`) the same request stores new reasons; the dialog then says so.
  *
  * Why: PROD-003 blocks publishing on an error unless the author records a reason (UD-022); D-074 has the server
  *      validate again and refuse a changed activity. Problems are listed in an ErrorSummary linked to their fields
  *      (UD-013), and the two conflicts get plain-language messages: still-unexplained errors (`hvl:publish-blocked`)
  *      and an activity changed in the meantime (`hvl:content-changed`, after which the findings are fetched again).
+ *      Publishing a published activity validates again and stores the new reasons (D-074 W3 amendment), so renewing a
+ *      reason needs no other request; only the dialog's title, introduction and button say what happens.
  * Spec: PROD-003, UD-022, UD-013, UD-006
  * Invariants:
  *   - Reasons are trimmed and 1 to `REASON_MAX_LENGTH` (500) characters; the server checks them again.
  *   - Typed reasons are kept, keyed by rule and path, when the findings are fetched again (WCAG 3.3.7).
  *   - Only errors without a valid acknowledgement get a field; warnings and hints never block.
+ *   - A field's label is short ("Grunngjeving for feil 1"); the finding's message is its description, so it is read
+ *     once with the field and never nested in quotation marks (UD-013).
  * Collaborators: ./Dialog.tsx, ./ErrorSummary.tsx, ./AcknowledgementField.tsx, ../api/contentApi.ts,
  *   ../features/activity/CheckPanel.tsx.
  * Tests: apps/web/test/components/PublishDialog.test.tsx
@@ -27,7 +32,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { useApiAuth } from '../api/ApiAuthContext';
 import { publishContent } from '../api/contentApi';
 import { useLocale } from '../i18n/LocaleContext';
-import { t } from '../i18n/translate';
+import { t, type MessageKey } from '../i18n/translate';
 import { AcknowledgementField } from './AcknowledgementField';
 import { Dialog } from './Dialog';
 import { ERROR_ICON, ErrorSummary, type FieldError } from './ErrorSummary';
@@ -46,7 +51,27 @@ export interface PublishDialogProps {
   readonly onStale: () => void;
   /** The server refused with its current findings. */
   readonly onFindings: (findings: readonly FindingWithAcknowledgement[]) => void;
+  /** The activity is published and some errors have no reason that holds: the dialog asks for new ones. */
+  readonly renew?: boolean;
 }
+
+/** The dialog's own texts, for a first publish and for new reasons on a published activity. */
+const TEXTS: Readonly<
+  Record<'publish' | 'renew', Readonly<Record<'title' | 'intro' | 'submit' | 'busy', MessageKey>>>
+> = {
+  publish: {
+    title: 'publish.title',
+    intro: 'publish.intro',
+    submit: 'publish.submit',
+    busy: 'publish.publishing',
+  },
+  renew: {
+    title: 'publish.renewTitle',
+    intro: 'publish.renewIntro',
+    submit: 'publish.renewSubmit',
+    busy: 'publish.renewing',
+  },
+};
 
 const keyOf = (finding: FindingWithAcknowledgement): string => `${finding.ruleId}|${finding.path}`;
 
@@ -64,7 +89,8 @@ export const unexplainedErrors = (findings: readonly FindingWithAcknowledgement[
  * @returns The dialog.
  */
 export function PublishDialog(props: PublishDialogProps) {
-  const { contentId, open, findings, onClose, onPublished, onStale, onFindings } = props;
+  const { contentId, open, findings, onClose, onPublished, onStale, onFindings, renew = false } = props;
+  const texts = TEXTS[renew ? 'renew' : 'publish'];
   const locale = useLocale();
   const auth = useApiAuth();
   const base = useId();
@@ -82,7 +108,7 @@ export function PublishDialog(props: PublishDialogProps) {
   const validate = (): FieldError[] =>
     needed.flatMap((finding, index) => {
       const reason = (reasons[keyOf(finding)] ?? '').trim();
-      const values = { message: finding.message, count: reason.length, max: REASON_MAX };
+      const values = { number: index + 1, count: reason.length, max: REASON_MAX };
       if (reason.length === 0)
         return [{ fieldId: fieldId(index), message: t('publish.reasonMissing', locale, values) }];
       if (reason.length > REASON_MAX)
@@ -126,7 +152,7 @@ export function PublishDialog(props: PublishDialogProps) {
   };
   const fieldErrors = new Map(problems.errors.map((error) => [error.fieldId, error.message]));
   return (
-    <Dialog open={open} title={t('publish.title', locale)} onClose={close}>
+    <Dialog open={open} title={t(texts.title, locale)} onClose={close}>
       <form noValidate onSubmit={(event) => void submit(event)}>
         {problems.errors.length > 0 ? <ErrorSummary key={problems.attempt} errors={problems.errors} /> : null}
         {serverProblem ? (
@@ -135,7 +161,7 @@ export function PublishDialog(props: PublishDialogProps) {
             {serverProblem}
           </p>
         ) : null}
-        <p>{t('publish.intro', locale)}</p>
+        <p>{t(texts.intro, locale)}</p>
         {needed.length === 0 ? (
           <p>{t('publish.noErrors', locale)}</p>
         ) : (
@@ -146,7 +172,8 @@ export function PublishDialog(props: PublishDialogProps) {
               <AcknowledgementField
                 key={keyOf(finding)}
                 id={fieldId(index)}
-                label={t('publish.reasonLabel', locale, { message: finding.message })}
+                label={t('publish.reasonLabel', locale, { number: index + 1 })}
+                description={finding.message}
                 hint={t('publish.reasonHint', locale, { max: REASON_MAX })}
                 value={reasons[keyOf(finding)] ?? ''}
                 onChange={(value) => setReasons({ ...reasons, [keyOf(finding)]: value })}
@@ -157,11 +184,11 @@ export function PublishDialog(props: PublishDialogProps) {
         )}
         {others > 0 ? <p>{t('publish.nonBlocking', locale, { count: others })}</p> : null}
         <p role="status" className="min-h-6">
-          {busy ? t('publish.publishing', locale) : ''}
+          {busy ? t(texts.busy, locale) : ''}
         </p>
         <div className="flex flex-wrap gap-2">
           <button type="submit" className="button-primary" disabled={busy}>
-            {t('publish.submit', locale)}
+            {t(texts.submit, locale)}
           </button>
           <button type="button" className="button-secondary" onClick={close}>
             {t('common.cancel', locale)}

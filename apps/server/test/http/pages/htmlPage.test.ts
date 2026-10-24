@@ -77,15 +77,21 @@ describe('[UD-013] the Hjelp header', () => {
     expect(body.indexOf('class="hvl-skip-link" href="#main"')).toBeLessThan(body.indexOf('<header'));
     expect(body.indexOf('</header>')).toBeLessThan(body.indexOf('<main id="main">'));
     expect(page).toContain(`<nav aria-label="${t('page.help.nav', {}, 'nn')}">`);
-    expect(page).toContain(`<a href="/hjelp" target="_top">${t('page.help.link', {}, 'nn')}</a>`);
+    expect(page).toContain(`<a href="/hjelp?lang=nn" target="_top">${t('page.help.link', {}, 'nn')}</a>`);
     expect(page).toContain('<link rel="stylesheet" href="/static/pages/serverChrome.css">');
     expect(page).not.toMatch(/style=/);
   });
 
   it('[UD-007] inside Canvas the link opens a new tab, says so, and gives the new tab no opener', () => {
     const page = pageWith({ newTab: true });
-    expect(page).toContain('<a href="/hjelp" target="_blank" rel="noopener noreferrer">');
+    expect(page).toContain('<a href="/hjelp?lang=nn" target="_blank" rel="noopener noreferrer">');
     expect(page).toContain(`<span class="hvl-visually-hidden"> ${t('page.help.newTab', {}, 'nn')}</span>`);
+  });
+
+  it('[UD-013] Hjelp carries the page language, which /hjelp follows when no launch says it (D-076)', () => {
+    const help = { newTab: true };
+    const page = htmlPage({ locale: 'en', title: 'T', main: markup`<h1>T</h1>`, help }, 'HVL Interaktiv');
+    expect(page).toContain('<a href="/hjelp?lang=en" target="_blank" rel="noopener noreferrer">');
   });
 
   it('[UD-013] without a help link (the web app does not run) there is no header and no link to /hjelp', () => {

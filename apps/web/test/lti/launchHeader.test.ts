@@ -1,8 +1,8 @@
 /**
- * Tests for reading the launch Express passes to `/app/play`: the encoded JSON with exactly the expected types is a
- * launch; anything missing, malformed or of another type is no launch.
+ * Tests for reading the launch Express passes to `/app/play`: the encoded JSON with exactly the expected types (the
+ * activity's language optional) is a launch; anything missing, malformed or of another type is no launch.
  *
- * Spec: LTI-006, LTI-003
+ * Spec: LTI-006, LTI-003, UD-010
  */
 import { describe, expect, it } from 'vitest';
 import { LAUNCH_HEADER, parseLaunch } from '../../src/lti/launchHeader';
@@ -21,6 +21,10 @@ describe('[LTI-006] the launch header', () => {
     expect(parseLaunch(encode(launch))).toEqual(launch);
   });
 
+  it('[UD-010] reads the activity’s own language when Express sends it', () => {
+    expect(parseLaunch(encode({ ...launch, language: 'en-GB' }))).toEqual({ ...launch, language: 'en-GB' });
+  });
+
   it.each([
     ['no header', null],
     ['an empty header', ''],
@@ -31,6 +35,8 @@ describe('[LTI-006] the launch header', () => {
     ['mayEdit as text', encode({ ...launch, mayEdit: 'true' })],
     ['an unknown locale', encode({ ...launch, locale: 'de' })],
     ['a title that is not text', encode({ ...launch, title: 7 })],
+    ['a language that is not a tag', encode({ ...launch, language: 'nn"><x' })],
+    ['a language that is not text', encode({ ...launch, language: 1 })],
   ])('[LTI-003] treats %s as no launch', (_case, value) => {
     expect(parseLaunch(value)).toBeUndefined();
   });

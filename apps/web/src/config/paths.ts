@@ -7,9 +7,12 @@
  * Invariants:
  *   - Every path is same-origin; an activity ID is percent-encoded into its path.
  *   - The ltik goes only into the two LTI frame addresses, as Express accepts it there (D-069).
+ *   - The help and privacy links carry the page's locale (`?lang=`), which Express accepts for a page without a launch
+ *     (apps/server/src/web/webRoutes.ts), so a page opened in a new tab from Canvas keeps the language (DATA-006).
  * Collaborators: ../components/*, ../features/*, apps/server/src/web/webRoutes.ts, apps/server/src/http/routes/*.
  * Tests: apps/web/test/config/paths.test.ts
  */
+import type { Locale } from '../i18n/translate';
 
 /** The portal's start page. */
 export const HOME_PATH = '/';
@@ -17,6 +20,18 @@ export const HOME_PATH = '/';
 export const HELP_PATH = '/hjelp';
 /** The privacy notice (DATA-006). */
 export const PRIVACY_PATH = '/personvern';
+/** The query parameter that names a page's language (same name in apps/server/src/web/webRoutes.ts). */
+export const LANG_QUERY = 'lang';
+
+/**
+ * A link to the help or privacy page in the language of the page that links to it.
+ * @param path - `HELP_PATH` or `PRIVACY_PATH`.
+ * @param locale - The linking page's locale.
+ * @returns e.g. `/personvern?lang=en`.
+ */
+export const infoHref = (path: typeof HELP_PATH | typeof PRIVACY_PATH, locale: Locale): string =>
+  `${path}?${LANG_QUERY}=${locale}`;
+
 /** The new-activity page. */
 export const NEW_ACTIVITY_PATH = '/aktivitet/ny';
 /** Express's Feide login (apps/server/src/auth/feide/feideLoginRoutes.ts). */

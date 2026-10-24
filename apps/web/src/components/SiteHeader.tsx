@@ -7,6 +7,8 @@
  * Spec: UD-013, UD-007, UD-004, UD-008
  * Invariants:
  *   - The header is the `banner` landmark; its links are in a labelled `nav`.
+ *   - The help link carries the page's locale, so help opened in a new tab from Canvas keeps the language
+ *     (../config/paths.ts `infoHref`).
  *   - The logo, when configured, has the site name as its alternative text (./../config/branding.ts).
  *   - On wide screens the header is sticky, and globals.css pads scrolling so focus is never hidden below it.
  * Collaborators: ./PortalChrome.tsx, ../features/lti/LtiChrome.tsx, ./ExternalLink.tsx, ../config/branding.ts.
@@ -14,7 +16,7 @@
  */
 import Link from 'next/link';
 import { brandLogo } from '../config/branding';
-import { HELP_PATH, HOME_PATH } from '../config/paths';
+import { HELP_PATH, HOME_PATH, infoHref } from '../config/paths';
 import { t, type Locale } from '../i18n/translate';
 import { ExternalLink } from './ExternalLink';
 
@@ -55,7 +57,7 @@ export function SiteHeader({ locale, inCanvas = false }: SiteHeaderProps) {
             <li>
               {inCanvas ? (
                 <ExternalLink
-                  href={HELP_PATH}
+                  href={infoHref(HELP_PATH, locale)}
                   locale={locale}
                   newTab
                   external={false}
@@ -64,7 +66,7 @@ export function SiteHeader({ locale, inCanvas = false }: SiteHeaderProps) {
                   {t('nav.help', locale)}
                 </ExternalLink>
               ) : (
-                <a href={HELP_PATH} className="link-target">
+                <a href={infoHref(HELP_PATH, locale)} className="link-target">
                   {t('nav.help', locale)}
                 </a>
               )}

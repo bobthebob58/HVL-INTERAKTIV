@@ -7,11 +7,20 @@
  * Collaborators: ../components/PortalChrome.tsx, ../i18n/requestLocale.ts, ../i18n/translate.ts.
  * Tests: apps/server/test/web/webApp.browser.int.test.ts, apps/server/test/web/webPages.browser.int.test.ts
  */
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PortalChrome } from '../components/PortalChrome';
 import { HOME_PATH } from '../config/paths';
 import { requestLocale } from '../i18n/requestLocale';
 import { t } from '../i18n/translate';
+
+/**
+ * The page title, "Fann ikkje sida – HVL Interaktiv" (WCAG 2.4.2).
+ * @returns The page metadata.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: t('notFound.title', await requestLocale()) };
+}
 
 /**
  * The not-found page.

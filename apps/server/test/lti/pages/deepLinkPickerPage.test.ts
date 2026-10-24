@@ -5,8 +5,9 @@
  *
  * Spec: LTI-005, PROD-005, PROD-011, UD-013
  */
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { t } from '../../../src/i18n/translate.js';
+import { LOCALES, t } from '../../../src/i18n/translate.js';
 import { deepLinkPickerPage } from '../../../src/lti/pages/deepLinkPickerPage.js';
 
 const published = { id: 'a1', title: 'Brøkar', mainLibrary: 'H5P.MultiChoice', selectable: true };
@@ -65,6 +66,19 @@ describe('deepLinkPickerPage', () => {
     expect(shown).toContain('aria-labelledby="formative-notice-title"');
     expect(page()).not.toContain('formative-notice');
   });
+
+  it.each(LOCALES)(
+    '[PROD-011] in %s, names the dismissal for good, as the web app’s notice does',
+    (locale) => {
+      // WHY: the picker records the same per-user dismissal as the web Notice, so the label must not say "close".
+      const web = JSON.parse(
+        readFileSync(new URL(`../../../../web/src/i18n/locales/${locale}.json`, import.meta.url), 'utf8'),
+      ) as { notice: { formativeUse: { dismiss: string } } };
+      const label = t('notice.formativeUse.dismiss', {}, locale);
+      expect(label).toBe(web.notice.formativeUse.dismiss);
+      expect(page({ locale, noticeVersion: 1 })).toContain(`data-notice-version="1">${label}</button>`);
+    },
+  );
 });
 
 describe('[UD-013] picker errors and help', () => {
@@ -92,7 +106,7 @@ describe('[UD-013] picker errors and help', () => {
 
   it('[UD-013] shows the Hjelp header, opening a new tab, only when the route passes it', () => {
     expect(page({ help: { newTab: true } })).toContain(
-      '<a href="/hjelp" target="_blank" rel="noopener noreferrer">',
+      '<a href="/hjelp?lang=nn" target="_blank" rel="noopener noreferrer">',
     );
     expect(page()).not.toContain('/hjelp');
   });

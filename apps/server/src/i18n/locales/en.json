@@ -26,7 +26,7 @@
     "editNotAllowed": "You are not allowed to change this activity.",
     "contentChanged": "The activity was changed in the meantime. Reload the page and check it again.",
     "publishBlocked": "The activity has errors that must be fixed or explained before it can be published.",
-    "publishedSaveBlocked": "The activity is published, and your change adds errors that nobody has explained. Fix the errors, or turn the activity back into a draft before you save."
+    "publishedSaveBlocked": "The activity is published, and some errors have no explanation that holds (an explanation holds for 14 days). Fix the errors, explain them with “Explain again” under “Check and publish” on the activity’s page in HVL Interaktiv, or return the activity to draft before you save."
   },
   "upload": {
     "archive": {
@@ -103,6 +103,11 @@
       "saved": "Saved.",
       "saveFailed": "Could not save. Try again.",
       "blockedErrors": "Errors that must be fixed or explained: {{count}}.",
+      "blockedSave": "The activity is published, and some errors have no explanation that holds (an explanation holds for 14 days). Fix the errors listed below, explain them with “Explain again” under “Check and publish”, or return the activity to draft there before you save.",
+      "blockedSaveCanvas": "The activity is published, and some errors have no explanation that holds (an explanation holds for 14 days). Fix the errors listed below and save again, or explain them with “Explain again” under “Check and publish” on the activity’s page in HVL Interaktiv.",
+      "errorLabel": "Error",
+      "goToField": "Go to the field",
+      "fieldNotReached": "Could not open the field itself. Focus is on the closest part of the form; open the field by hand from there.",
       "frameTitle": "H5P editor: new activity"
     }
   },
@@ -124,7 +129,7 @@
     "formativeUse": {
       "title": "For formative use",
       "body": "H5P activities are scored in the browser. The points are meant for learning along the way (formative assessment), not for exams or grades.",
-      "dismiss": "Close the notice"
+      "dismiss": "Do not show this notice again"
     }
   }
 }

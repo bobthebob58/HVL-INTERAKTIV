@@ -4,11 +4,14 @@
  *
  * Why: the web app's start page lists the activities a person owns or co-authors, and the activity page needs to
  *      know whether to offer editing and publishing (PROD-003, H5P-006). The server decides; the client only shows.
- * Spec: PROD-003, PROD-006, H5P-006, DOC-012
+ * Spec: PROD-003, PROD-006, H5P-006, DOC-012, UD-010
  * Invariants:
  *   - Dates are ISO 8601 strings in UTC (`2026-10-23T12:00:00.000Z`); `publishedAt` is null for a draft.
  *   - `mainLibrary` is the content type's machine name, e.g. `H5P.MultiChoice`.
  *   - A summary never names another person: no owner name, e-mail address or user ID.
+ *   - `language` is the activity's own language tag (UD-010): `defaultLanguage`, else h5p.json's `language`, which
+ *     Lumi defaults to `en` (apps/server/src/validation/activityLanguage.ts, D-069). It is absent only when neither
+ *     is a language tag.
  * Collaborators: ./apiRoutes.ts, apps/server/src/http/api/contentListRoutes.ts, apps/web.
  * Tests: packages/api-contract/test/schemas.test.ts
  */
@@ -39,6 +42,8 @@ export const contentSummarySchema = z.strictObject({
   updatedAt: z.iso.datetime(),
   publishedAt: z.iso.datetime().nullable(),
   role: contentRoleSchema,
+  /** The activity's own language tag, when it states one (UD-010). */
+  language: z.string().optional(),
 });
 /** One activity in a list. */
 export type ContentSummary = z.infer<typeof contentSummarySchema>;

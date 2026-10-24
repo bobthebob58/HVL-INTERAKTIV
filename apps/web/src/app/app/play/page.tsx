@@ -19,13 +19,13 @@ import { t } from '../../../i18n/translate';
 import { requestLaunch } from '../../../lti/launchHeader';
 
 /**
- * The page title: the activity's title, when there is a launch.
+ * The page title: the activity's title when there is a launch, else what to do (WCAG 2.4.2; the root layout adds
+ * the site name).
  * @returns The page metadata.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const launch = await requestLaunch();
-  const site = t('site.name', await requestLocale());
-  return { title: launch ? `${launch.title} – ${site}` : site };
+  const [locale, launch] = await Promise.all([requestLocale(), requestLaunch()]);
+  return { title: launch ? launch.title : t('lti.noLaunchTitle', locale) };
 }
 
 /**

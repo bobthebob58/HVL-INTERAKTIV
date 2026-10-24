@@ -1,9 +1,10 @@
 /**
  * Integration tests for `/app/play`'s launch check: a valid launch hands the web app its activity, title, Edit
- * decision and locale; an invalid ltik and an activity the launch may not view stop before the web app, and a title
- * is never read for a refused activity. The ltik resolver and the activity facts are stubs.
+ * decision, locale and the activity's own language when it states one; an invalid ltik and an activity the launch
+ * may not view stop before the web app, and a title or language is never read for a refused activity. The ltik
+ * resolver, the activity facts and the title and language lookups are stubs.
  *
- * Spec: LTI-006, LTI-003, PROD-004, H5P-006
+ * Spec: LTI-006, LTI-003, PROD-004, H5P-006, UD-010
  */
 import express, { type ErrorRequestHandler } from 'express';
 import type { LaunchContext } from 'ltijs';
@@ -39,7 +40,7 @@ const principal = (roles: Role[], contentId = ACTIVITY): Principal =>
   });
 
 /** An app with the route, stubs, and a last handler that shows what reached the web app. */
-function appWith(who: Principal, facts: Partial<ContentFacts> | undefined) {
+function appWith(who: Principal, facts: Partial<ContentFacts> | undefined, language?: string) {
   const titlesRead: string[] = [];
   const app = express();
   app.use(
@@ -62,6 +63,7 @@ function appWith(who: Principal, facts: Partial<ContentFacts> | undefined) {
             : undefined,
       },
       titleOf: async (id) => (titlesRead.push(id), 'Brøkar'),
+      languageOf: async (id) => (titlesRead.push(`language:${id}`), language),
     }),
   );
   app.use((_req, res) => void res.json({ reachedWeb: true, launch: appLaunchOf(res) ?? null }));
@@ -80,6 +82,24 @@ describe('[LTI-006] the launch check of /app/play', () => {
       reachedWeb: true,
       launch: { contentId: ACTIVITY, title: 'Brøkar', mayEdit: true, locale: 'nb' },
     });
+  });
+
+  it('[UD-010] the activity’s own language goes with the launch, so the page can mark the title with it', async () => {
+    // Arrange
+    const stated = appWith(principal(['learner']), {}, 'nn');
+    const unstated = appWith(principal(['learner']), {});
+    // Act
+    const withLanguage = await request(stated.app).get('/app/play?ltik=good');
+    const without = await request(unstated.app).get('/app/play?ltik=good');
+    // Assert
+    expect(withLanguage.body.launch).toEqual({
+      contentId: ACTIVITY,
+      title: 'Brøkar',
+      mayEdit: false,
+      locale: 'nb',
+      language: 'nn',
+    });
+    expect(without.body.launch).not.toHaveProperty('language');
   });
 
   it('[H5P-006] a student and a teacher who does not own the activity see it without the Edit right', async () => {

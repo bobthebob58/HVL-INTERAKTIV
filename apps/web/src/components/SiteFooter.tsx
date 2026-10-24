@@ -7,11 +7,12 @@
  * Spec: DATA-006, UD-007, UD-013
  * Invariants:
  *   - The footer is the `contentinfo` landmark; its links are in a labelled `nav`.
- *   - The privacy link is on every page, in the same place.
+ *   - The privacy link is on every page, in the same place, and carries the page's locale: the notice opened in a new
+ *     tab from Canvas has no launch to take the language from (DATA-006, ../config/paths.ts `infoHref`).
  * Collaborators: ./PortalChrome.tsx, ../features/lti/LtiChrome.tsx, ./ExternalLink.tsx, ../app/(portal)/personvern.
  * Tests: apps/web/test/components/SiteFooter.test.tsx
  */
-import { PRIVACY_PATH } from '../config/paths';
+import { infoHref, PRIVACY_PATH } from '../config/paths';
 import { t, type Locale } from '../i18n/translate';
 import { ExternalLink } from './ExternalLink';
 
@@ -34,7 +35,7 @@ export function SiteFooter({
           <li>
             {inCanvas ? (
               <ExternalLink
-                href={PRIVACY_PATH}
+                href={infoHref(PRIVACY_PATH, locale)}
                 locale={locale}
                 newTab
                 external={false}
@@ -43,7 +44,7 @@ export function SiteFooter({
                 {t('nav.privacy', locale)}
               </ExternalLink>
             ) : (
-              <a href={PRIVACY_PATH} className="link-target">
+              <a href={infoHref(PRIVACY_PATH, locale)} className="link-target">
                 {t('nav.privacy', locale)}
               </a>
             )}

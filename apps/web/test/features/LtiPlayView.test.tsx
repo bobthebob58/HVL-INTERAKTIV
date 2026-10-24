@@ -1,5 +1,6 @@
 /**
- * Tests for the Canvas page: the ltik is read from the address bar once and removed from it at once, the frames carry
+ * Tests for the Canvas page: the ltik is read from the address bar once and removed from it at once (also from
+ * Next.js's router state), the title carries the activity's language, the frames carry
  * it, authors get **Rediger** with the formative notice (API calls with the Bearer ltik), and a page without an ltik
  * says to open the activity again from Canvas.
  *
@@ -9,6 +10,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { LtiPlayView } from '../../src/features/lti/LtiPlayView';
+import { LocaleProvider } from '../../src/i18n/LocaleContext';
 import { resetTakenLtikForTests, takeLtik, withoutLtik } from '../../src/features/lti/ltikFromAddress';
 import type { AppLaunch } from '../../src/lti/launchHeader';
 import { fakeFetch } from '../support/fakeFetch';
@@ -41,6 +43,28 @@ describe('[LTI-003] the ltik on the Canvas page', () => {
     expect(window.location.search).toBe('?x=1');
     expect(window.location.hash).toBe('#top');
     expect(withoutLtik('https://tool.example/app/play?ltik=a&ltik=b')).toBe('/app/play');
+  });
+
+  it('[LTI-003] then hands the clean address to Next.js’s router, without its marker, once its hooks are in', async () => {
+    // Arrange
+    openAt('/app/play?ltik=secret.token');
+    window.history.replaceState({ __NA: true, tree: 'root' }, '', window.location.href);
+    const original = window.history.replaceState.bind(window.history);
+    const calls: unknown[][] = [];
+    takeLtik();
+    // WHY: stands in for Next.js's patched replaceState, which its root effect installs after the page's effect.
+    window.history.replaceState = (...args: Parameters<History['replaceState']>) => {
+      calls.push(args);
+      original(...args);
+    };
+    try {
+      // Act
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      // Assert
+      expect(calls).toEqual([[{ tree: 'root' }, '', '/app/play']]);
+    } finally {
+      window.history.replaceState = original;
+    }
   });
 
   it('[LTI-003] without an ltik the page says to open the activity again from Canvas', () => {
@@ -76,6 +100,20 @@ describe('[LTI-006] the Canvas page for an author', () => {
     expect(screen.getByTitle('Rediger: Celler og vev').getAttribute('src')).toBe('/lti/edit?ltik=abc');
     expect(await screen.findByRole('region', { name: /Til undervegsvurdering/ })).toBeTruthy();
     await waitFor(() => expect(requests[0]?.headers.Authorization).toBe('Bearer abc'));
+  });
+
+  it('[UD-010] the title carries the activity’s language when the page is in another one', () => {
+    // Arrange
+    openAt('/app/play?ltik=abc');
+    // Act
+    render(
+      <LocaleProvider locale="en">
+        <LtiPlayView launch={{ ...LAUNCH, mayEdit: false, locale: 'en', language: 'nn' }} />
+      </LocaleProvider>,
+    );
+    // Assert
+    expect(screen.getByRole('heading', { level: 1 }).getAttribute('lang')).toBe('nn');
+    expect(screen.getByTitle('Play: Celler og vev')).toBeTruthy();
   });
 
   it('[LTI-006] a learner gets the player without tabs', () => {

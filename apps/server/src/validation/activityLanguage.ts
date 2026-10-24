@@ -10,7 +10,9 @@
  *   - `defaultLanguage` wins over `language`; H5P's `und` ("undetermined"), blanks and anything that is not a
  *     language tag (`nn`, `nb`, `en`, `se`, `en-GB`, …) count as not stated.
  *   - Pure: no I/O (the validator imports it, D-073).
- * Collaborators: ./rules/languageRule.ts, ../http/routes/playerRoutes.ts, ../lti/play/ltiPlayRoutes.ts.
+ * Collaborators: ./rules/languageRule.ts, ../http/routes/playerRoutes.ts, ../lti/play/ltiPlayRoutes.ts (the
+ *   content container), ../lti/ltiRoutes.ts (for ../lti/play/appLaunchRoutes.ts, the Canvas page's title),
+ *   ../content/contentSummaries.ts (the portal's activity list and activity page).
  * Tests: apps/server/test/validation/activityLanguage.test.ts
  */
 

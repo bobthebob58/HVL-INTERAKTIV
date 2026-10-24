@@ -61,6 +61,7 @@ describe('[DATA-002] who is signed in', () => {
 describe('[PROD-003] activities and publishing', () => {
   it('[PROD-003] a summary has ISO dates and a detail adds what the person may do', () => {
     expect(contentSummarySchema.safeParse(summary).success).toBe(true);
+    expect(contentSummarySchema.safeParse({ ...summary, language: 'nn' }).success).toBe(true);
     expect(contentSummarySchema.safeParse({ ...summary, updatedAt: 'yesterday' }).success).toBe(false);
     expect(contentSummarySchema.safeParse({ ...summary, role: null }).success).toBe(false);
     const detail = { ...summary, role: null, mayEdit: false, mayPublish: false };

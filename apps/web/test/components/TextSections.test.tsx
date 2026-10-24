@@ -1,6 +1,7 @@
 /**
  * Component tests for the help page and the privacy notice: both exist in nn, nb and en, steps are numbered lists,
- * and the privacy notice says what is stored, why, how long and who sees what, with the group size of 5.
+ * and the privacy notice says what is stored, what logging in and Canvas keep, why, how long and who sees what,
+ * with the group size of 5.
  *
  * Spec: DATA-006, UD-013, UD-002
  */
@@ -21,7 +22,7 @@ describe('[DATA-006] the privacy notice', () => {
     // Assert
     const headings = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent);
     expect(headings).toEqual(PRIVACY_SECTIONS.map((section) => t(section.heading, locale)));
-    expect(headings).toHaveLength(7);
+    expect(headings).toHaveLength(8);
     for (const section of PRIVACY_SECTIONS) {
       for (const key of section.texts) expect(t(key, locale)).not.toBe(key);
     }

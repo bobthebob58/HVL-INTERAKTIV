@@ -11,13 +11,15 @@
  *   - A new `NOTICE_VERSIONS` value shows the notice again to everyone who dismissed an older one.
  *   - A failed dismissal keeps the notice and says so; the person can try again.
  *   - It is a labelled region, not an alert: it is information, not an interruption.
+ *   - Dismissing it moves focus to the panel or `main` around it, because the focused button disappears with the
+ *     notice (WCAG 2.4.3; the Deep Linking picker moves focus to its heading for the same reason).
  * Collaborators: ../api/meApi.ts, ../api/ApiAuthContext.tsx, ../features/activity/*, ../features/lti/LtiPlayView.tsx.
  * Tests: apps/web/test/components/Notice.test.tsx
  */
 'use client';
 
 import type { NoticeId } from '@hvl-interaktiv/api-contract';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useApiAuth } from '../api/ApiAuthContext';
 import { dismissNotice, getMe } from '../api/meApi';
 import { useLocale } from '../i18n/LocaleContext';
@@ -25,6 +27,9 @@ import { t } from '../i18n/translate';
 
 /** The current version of each notice's text; raise it when the text changes in substance. */
 export const NOTICE_VERSIONS: Readonly<Record<NoticeId, number>> = { 'formative-use': 1 };
+
+/** Where focus goes when the notice disappears: the tab panel around it, else the page's `main`. */
+export const FOCUS_AFTER_DISMISS = '[role="tabpanel"], main';
 
 /** The information icon shown before the notice's title. */
 export const INFO_ICON = 'ℹ︎';
@@ -42,6 +47,7 @@ export function Notice({ noticeId = 'formative-use' }: { readonly noticeId?: Not
   const titleId = useId();
   const version = NOTICE_VERSIONS[noticeId];
   const [state, setState] = useState<State>('loading');
+  const region = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -63,11 +69,18 @@ export function Notice({ noticeId = 'formative-use' }: { readonly noticeId?: Not
 
   const dismiss = async () => {
     const result = await dismissNotice(noticeId, version, auth);
-    setState(result.ok ? 'dismissed' : 'failed');
+    if (!result.ok) return setState('failed');
+    // A11Y: WCAG 2.4.3: the focused button goes away with the notice; focus stays in the same part of the page.
+    region.current?.closest<HTMLElement>(FOCUS_AFTER_DISMISS)?.focus({ preventScroll: true });
+    setState('dismissed');
   };
 
   return (
-    <section aria-labelledby={titleId} className="mb-4 bg-hvl-feedback-info-bg p-4 text-hvl-feedback-info-fg">
+    <section
+      ref={region}
+      aria-labelledby={titleId}
+      className="mb-4 bg-hvl-feedback-info-bg p-4 text-hvl-feedback-info-fg"
+    >
       <h2 id={titleId} className="text-hvl-feedback-info-fg">
         <span aria-hidden="true">{INFO_ICON} </span>
         {t('notice.formativeUse.title', locale)}

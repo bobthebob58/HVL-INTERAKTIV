@@ -47,7 +47,14 @@ describeWithServices('[LTI-006] launches into the web app’s chrome page', () =
       `frame-ancestors 'self' ${tb.env.CANVAS_ORIGINS.join(' ')}`,
     );
     const launch = JSON.parse(decodeURIComponent(String(seen[0]?.headers[LAUNCH_HEADER])));
-    expect(launch).toEqual({ contentId: published, title: 'Brøkar', mayEdit: false, locale: 'nn' });
+    // WHY: Lumi saves `language: 'en'` when the metadata states no language, so the activity says en (UD-010).
+    expect(launch).toEqual({
+      contentId: published,
+      title: 'Brøkar',
+      mayEdit: false,
+      locale: 'nn',
+      language: 'en',
+    });
     expect(seen[0]?.url).toBe('/app/play');
     expect(seen[0]?.headers.authorization).toBeUndefined();
     expect(JSON.stringify(seen[0]?.rawHeaders)).not.toContain(run.ltik ?? 'no-ltik');
@@ -95,7 +102,7 @@ describeWithServices('[LTI-006] launches into the web app’s chrome page', () =
     });
     const inCanvas = { 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Site': 'cross-site' };
     const inOurChrome = { 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Site': 'same-origin' };
-    const newTab = `<a href="/hjelp" target="_blank" rel="noopener noreferrer">${t('page.help.link', {}, 'nn')}`;
+    const newTab = `<a href="/hjelp?lang=nn" target="_blank" rel="noopener noreferrer">${t('page.help.link', {}, 'nn')}`;
     // Act
     const pickerPage = await request(tb.app)
       .get(`/lti/deeplink?ltik=${encodeURIComponent(picker.ltik ?? '')}`)

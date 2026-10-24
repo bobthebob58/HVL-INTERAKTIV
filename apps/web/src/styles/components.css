@@ -1,6 +1,6 @@
 /*
- * components — the shared classes of the web app's chrome: the skip link, the site header, stand-alone links and
- * the two button styles.
+ * components — the shared classes of the web app's chrome: the skip link, the site header, stand-alone links, the
+ * two button styles and the tabs' underline.
  *
  * Why: these few patterns repeat on every page and need rules Tailwind classes cannot say well (focus-revealed skip
  *      link, a header that is sticky only where there is room, forced-colours borders). Colours come only from the
@@ -9,8 +9,9 @@
  * Invariants:
  *   - No colour literal; system colours only under `forced-colors: active`.
  *   - `--site-header-height` is the header's minimum height and the scroll padding below it (UD-004).
- * Collaborators: ../app/globals.css (imports it), ../components/SiteHeader.tsx, ../app/layout.tsx (skip link).
- * Tests: apps/server/test/web/webPages.browser.int.test.ts
+ * Collaborators: ../app/globals.css (imports it), ../components/SiteHeader.tsx, ../app/layout.tsx (skip link),
+ *   ../components/Tabs.tsx.
+ * Tests: apps/server/test/web/webPages.browser.int.test.ts, apps/server/test/web/webChrome.browser.int.test.ts
  */
 @layer components {
   /* A11Y: WCAG 2.4.1 (UD-006): the first element on every page; visible as soon as it has focus. */
@@ -96,6 +97,34 @@
   .button-primary:disabled,
   .button-secondary:disabled {
     cursor: not-allowed;
+  }
+
+  /* A11Y: UD-003: the selected tab is underlined (with bold text, ../components/Tabs.tsx); the transparent border
+     keeps every tab the same height. */
+  .tab {
+    border: 0;
+    border-bottom: 4px solid transparent;
+  }
+
+  .tab[aria-selected='true'] {
+    border-bottom-color: var(--hvl-accent);
+  }
+
+  .button-primary[aria-disabled='true'],
+  .button-secondary[aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  /* A11Y: UD-012: forced colours draw a transparent border in the text colour, which would underline every tab;
+     only the selected tab keeps a visible underline. */
+  @media (forced-colors: active) {
+    .tab {
+      border-bottom-color: Canvas;
+    }
+
+    .tab[aria-selected='true'] {
+      border-bottom-color: Highlight;
+    }
   }
 
   /* A11Y: under forced colours the fill disappears, so the transparent border becomes the button's outline. */

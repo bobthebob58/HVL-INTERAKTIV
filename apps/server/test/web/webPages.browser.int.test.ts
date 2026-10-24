@@ -5,62 +5,24 @@
  *
  * Spec: DATA-011, UD-006, UD-008, UD-013, DATA-006, LTI-003, LTI-006
  */
-import { existsSync } from 'node:fs';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { join } from 'node:path';
-import express from 'express';
 import type { Page } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { portalNotFound } from '../../src/http/pages/portalHomeRoutes.js';
-import { baseSecurityHeaders } from '../../src/http/securityHeaders.js';
-import { setAppLaunch } from '../../src/web/appLaunch.js';
-import { loadWebApp, WEB_APP_DIR, type WebApp } from '../../src/web/nextWebApp.js';
-import { webRoutes } from '../../src/web/webRoutes.js';
+import { loadWebApp, type WebApp } from '../../src/web/nextWebApp.js';
 import { describeWithBrowser } from '../support/browser.js';
+import { ACTIVITY, LTIK, openWebPage, WEB_APP_BUILT, webTestServer } from './webTestServer.js';
 
-const BUILT = existsSync(join(WEB_APP_DIR, '.next', 'BUILD_ID'));
-if (!BUILT && process.env.CI === 'true')
+if (!WEB_APP_BUILT && process.env.CI === 'true')
   throw new Error('CI must run `npm run build` before the web app tests');
 
-const ACTIVITY = '7d3c1a8e-5b2f-4c1d-9e8f-0a1b2c3d4e5f';
-const LTIK = 'test-ltik.value';
-const SIGNED_OUT = {
-  success: false,
-  errorCode: 'hvl:unauthenticated',
-  httpStatusCode: 401,
-  message: 'Logg inn.',
-};
-/** Requests a signed-out browser makes on purpose; Chromium logs their 401 as a console error. */
-const EXPECTED_401 = /\/(auth\/session|api\/[\w/-]+)$/;
-
-/** Express with the web app, a signed-out API, stand-in H5P frames and a resolved launch for `/app/play?ltik=…`. */
-function testServer(web: WebApp) {
-  const app = express();
-  app.use(baseSecurityHeaders({ https: false }));
-  app.get(['/auth/session', '/api/{*rest}'], (_req, res) => void res.status(401).json(SIGNED_OUT));
-  app.get(
-    ['/lti/play', '/lti/edit'],
-    (_req, res) => void res.type('html').send('<!doctype html><title>H5P</title>'),
-  );
-  app.get('/app/play', (req, res, next) => {
-    // WHY: the LTI router resolves a real ltik here (apps/server/src/lti/play/appLaunchRoutes.ts); this stands in.
-    if (req.query.ltik === LTIK)
-      setAppLaunch(res, { contentId: ACTIVITY, title: 'Celler og vev', mayEdit: true, locale: 'nn' });
-    next();
-  });
-  app.use(webRoutes(web));
-  app.use(portalNotFound());
-  return app;
-}
-
-(BUILT ? describe : describe.skip)('[DATA-011] every page of the built web app', () => {
+(WEB_APP_BUILT ? describe : describe.skip)('[DATA-011] every page of the built web app', () => {
   let web: WebApp;
   let server: Server;
   let base = '';
   beforeAll(async () => {
     web = await loadWebApp('prod');
-    server = testServer(web).listen(0, '127.0.0.1');
+    server = webTestServer(web).listen(0, '127.0.0.1');
     await new Promise((resolve) => server.once('listening', resolve));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   }, 60_000);
@@ -71,29 +33,11 @@ function testServer(web: WebApp) {
 
   describeWithBrowser('[DATA-011] pages in Chromium', (browser) => {
     /** Opens a page at 320 px and records every problem a strict policy or React could report. */
-    const open = async (path: string, documentStatus = 200) => {
-      const page = await browser().newPage({ viewport: { width: 320, height: 640 } });
-      const problems: string[] = [];
-      const requests: string[] = [];
-      page.on('console', (m) => {
-        if (m.type() !== 'error') return;
-        if (/status of 401/.test(m.text()) && EXPECTED_401.test(m.location().url)) return;
-        // WHY: Chromium also logs the page's own error status, which the 404 test expects.
-        if (m.text().includes(`status of ${documentStatus}`) && m.location().url === `${base}${path}`) return;
-        problems.push(`console: ${m.text()} (${m.location().url})`);
+    const open = (path: string, documentStatus = 200) =>
+      openWebPage(browser(), `${base}${path}`, {
+        context: { viewport: { width: 320, height: 640 } },
+        documentStatus,
       });
-      page.on('pageerror', (e) => problems.push(`page: ${e.message}`));
-      page.on('request', (r) => requests.push(r.url()));
-      await page.addInitScript(() => {
-        document.addEventListener('securitypolicyviolation', (e) => {
-          console.error(`csp: ${e.violatedDirective} ${e.blockedURI}`);
-        });
-      });
-      const response = await page.goto(`${base}${path}`);
-      await page.waitForFunction(() => 'next' in window, undefined, { timeout: 10_000 });
-      await page.waitForLoadState('networkidle');
-      return { page, problems, requests, status: response?.status() };
-    };
 
     /** The shared checks of every page: chrome, skip link, reflow, first-party requests, titled frames. */
     const expectSoundPage = async (page: Page, requests: string[]) => {

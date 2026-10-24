@@ -1,8 +1,9 @@
 /**
- * Tests for the activity page: the tabs follow the server's rights, every frame has a title, the editor tab carries the
- * formative notice, a save in the editor refreshes the page, and "Gå til feltet" opens the editor at the field.
+ * Tests for the activity page: the tabs follow the server's rights, every frame has a title, the document title names
+ * the activity, the editor tab carries the formative notice, every save in the editor refreshes the page and is
+ * announced, "Gå til feltet" opens the editor at the field, and a title in another language carries its `lang`.
  *
- * Spec: PROD-003, PROD-011, LTI-006, UD-006
+ * Spec: PROD-003, PROD-011, LTI-006, UD-006, UD-010
  */
 // @vitest-environment jsdom
 import type { ContentDetail } from '@hvl-interaktiv/api-contract';
@@ -54,6 +55,17 @@ describe('[LTI-006] the activity page', () => {
     const tabs = screen.getAllByRole('tab').map((tab) => tab.textContent);
     expect(tabs).toEqual(['Spel', 'Rediger', 'Sjekk og publiser']);
     expect(screen.getByTitle('Spel: Celler og vev').getAttribute('src')).toBe(`/h5p/play/${ID}`);
+    expect(document.title).toBe('Celler og vev – HVL Interaktiv');
+  });
+
+  it('[UD-010] the heading carries the activity’s language only when it differs from the page’s', async () => {
+    fakeFetch(routes({ ...DETAIL, language: 'en' }));
+    const { unmount } = render(<ActivityView contentId={ID} />);
+    expect((await screen.findByRole('heading', { level: 1 })).getAttribute('lang')).toBe('en');
+    unmount();
+    fakeFetch(routes({ ...DETAIL, language: 'nn' }));
+    render(<ActivityView contentId={ID} />);
+    expect((await screen.findByRole('heading', { level: 1 })).hasAttribute('lang')).toBe(false);
   });
 
   it('[LTI-006] someone who may only view gets the player alone', async () => {
@@ -118,6 +130,35 @@ describe('[LTI-006] the activity page', () => {
         findingsBefore + 1,
       ),
     );
+  });
+
+  it('[PROD-003] a second save is announced again, although the words are the same', async () => {
+    // Arrange
+    fakeFetch(routes());
+    render(<ActivityView contentId={ID} />);
+    fireEvent.click(await screen.findByRole('tab', { name: 'Rediger' }));
+    const frame = screen.getByTitle('Rediger: Celler og vev') as HTMLIFrameElement;
+    const save = () =>
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            data: { type: CONTENT_SAVED, contentId: ID },
+            origin: window.location.origin,
+            source: frame.contentWindow,
+          }),
+        );
+      });
+    const region = () =>
+      screen.getAllByRole('status').find((element) => element.textContent?.startsWith('Endr'));
+    // Act
+    save();
+    const first = region()?.textContent;
+    save();
+    const second = region()?.textContent;
+    // Assert
+    expect(first).toBe('Endringane er lagra. Sjekk og publiser er oppdatert.');
+    expect(second?.trim()).toBe(first);
+    expect(second).not.toBe(first);
   });
 
   it('[LTI-006] signed out: the login link returns to this activity; unavailable: one message', async () => {

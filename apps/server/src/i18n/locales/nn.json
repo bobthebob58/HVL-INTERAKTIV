@@ -26,7 +26,7 @@
     "editNotAllowed": "Du har ikkje løyve til å endre denne aktiviteten.",
     "contentChanged": "Aktiviteten vart endra i mellomtida. Last sida på nytt og sjekk han igjen.",
     "publishBlocked": "Aktiviteten har feil som må rettast eller grunngjevast før han kan publiserast.",
-    "publishedSaveBlocked": "Aktiviteten er publisert, og endringa di gir feil som ingen har grunngjeve. Rett feila, eller gjer aktiviteten om til utkast før du lagrar."
+    "publishedSaveBlocked": "Aktiviteten er publisert, og nokre feil har inga grunngjeving som gjeld (ei grunngjeving gjeld i 14 dagar). Rett feila, grunngje dei med «Grunngje på nytt» under «Sjekk og publiser» på sida for aktiviteten i HVL Interaktiv, eller gjer aktiviteten om til utkast før du lagrar."
   },
   "upload": {
     "archive": {
@@ -103,6 +103,11 @@
       "saved": "Lagra.",
       "saveFailed": "Klarte ikkje å lagre. Prøv igjen.",
       "blockedErrors": "Feil som må rettast eller grunngjevast: {{count}}.",
+      "blockedSave": "Aktiviteten er publisert, og nokre feil har inga grunngjeving som gjeld (ei grunngjeving gjeld i 14 dagar). Rett feila som er lista under, grunngje dei med «Grunngje på nytt» under «Sjekk og publiser», eller gjer aktiviteten om til utkast der før du lagrar.",
+      "blockedSaveCanvas": "Aktiviteten er publisert, og nokre feil har inga grunngjeving som gjeld (ei grunngjeving gjeld i 14 dagar). Rett feila som er lista under og lagre på nytt, eller grunngje dei med «Grunngje på nytt» under «Sjekk og publiser» på sida for aktiviteten i HVL Interaktiv.",
+      "errorLabel": "Feil",
+      "goToField": "Gå til feltet",
+      "fieldNotReached": "Klarte ikkje å opne sjølve feltet. Fokus står på den næraste delen av skjemaet, så opne feltet for hand derifrå.",
       "frameTitle": "H5P-redigering: ny aktivitet"
     }
   },
@@ -124,7 +129,7 @@
     "formativeUse": {
       "title": "Til undervegsvurdering",
       "body": "H5P-aktivitetar blir retta i nettlesaren. Poenga er meinte for læring undervegs (undervegsvurdering), ikkje for eksamen eller karakterar.",
-      "dismiss": "Lukk meldinga"
+      "dismiss": "Ikkje vis meldinga igjen"
     }
   }
 }

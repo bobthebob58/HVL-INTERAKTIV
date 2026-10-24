@@ -26,7 +26,7 @@
     "editNotAllowed": "Du har ikke tillatelse til å endre denne aktiviteten.",
     "contentChanged": "Aktiviteten ble endret i mellomtiden. Last inn siden på nytt og sjekk den igjen.",
     "publishBlocked": "Aktiviteten har feil som må rettes eller begrunnes før den kan publiseres.",
-    "publishedSaveBlocked": "Aktiviteten er publisert, og endringen din gir feil som ingen har begrunnet. Rett feilene, eller gjør aktiviteten om til utkast før du lagrer."
+    "publishedSaveBlocked": "Aktiviteten er publisert, og noen feil har ingen begrunnelse som gjelder (en begrunnelse gjelder i 14 dager). Rett feilene, begrunn dem med «Begrunn på nytt» under «Sjekk og publiser» på siden for aktiviteten i HVL Interaktiv, eller gjør aktiviteten om til utkast før du lagrer."
   },
   "upload": {
     "archive": {
@@ -103,6 +103,11 @@
       "saved": "Lagret.",
       "saveFailed": "Kunne ikke lagre. Prøv igjen.",
       "blockedErrors": "Feil som må rettes eller begrunnes: {{count}}.",
+      "blockedSave": "Aktiviteten er publisert, og noen feil har ingen begrunnelse som gjelder (en begrunnelse gjelder i 14 dager). Rett feilene som er listet under, begrunn dem med «Begrunn på nytt» under «Sjekk og publiser», eller gjør aktiviteten om til utkast der før du lagrer.",
+      "blockedSaveCanvas": "Aktiviteten er publisert, og noen feil har ingen begrunnelse som gjelder (en begrunnelse gjelder i 14 dager). Rett feilene som er listet under og lagre på nytt, eller begrunn dem med «Begrunn på nytt» under «Sjekk og publiser» på siden for aktiviteten i HVL Interaktiv.",
+      "errorLabel": "Feil",
+      "goToField": "Gå til feltet",
+      "fieldNotReached": "Klarte ikke å åpne selve feltet. Fokus står på den nærmeste delen av skjemaet, så åpne feltet for hånd derfra.",
       "frameTitle": "H5P-redigering: ny aktivitet"
     }
   },
@@ -124,7 +129,7 @@
     "formativeUse": {
       "title": "Til underveisvurdering",
       "body": "H5P-aktiviteter blir rettet i nettleseren. Poengene er ment for læring underveis (underveisvurdering), ikke for eksamen eller karakterer.",
-      "dismiss": "Lukk meldingen"
+      "dismiss": "Ikke vis meldingen igjen"
     }
   }
 }

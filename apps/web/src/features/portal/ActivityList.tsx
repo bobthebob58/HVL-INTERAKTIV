@@ -5,11 +5,13 @@
  * Why: authors work from their own and co-authored activities (PROD-003, PROD-007); each one's status must be
  *      visible as a word, not colour alone (UD-003). A list of headed items reflows at 320 px, where a table would
  *      scroll sideways (UD-008).
- * Spec: PROD-003, UD-003, UD-008
+ * Spec: PROD-003, UD-003, UD-008, UD-010
  * Invariants:
  *   - Items keep the server's order (newest change first).
  *   - The type is the content type's name in the page language; an unknown type shows its machine name.
- * Collaborators: ./PortalHome.tsx, ../../components/StatusBadge.tsx, ../../i18n/contentTypeName.ts.
+ *   - A title in another language than the page carries that `lang` (WCAG 3.1.2, UD-010).
+ * Collaborators: ./PortalHome.tsx, ../../components/StatusBadge.tsx, ../../i18n/contentTypeName.ts,
+ *   ../../i18n/partLanguage.ts.
  * Tests: apps/web/test/features/PortalHome.test.tsx
  */
 'use client';
@@ -20,6 +22,7 @@ import { activityPath } from '../../config/paths';
 import { contentTypeName } from '../../i18n/contentTypeName';
 import { formatDateTime } from '../../i18n/formatDate';
 import { useLocale } from '../../i18n/LocaleContext';
+import { partLanguage } from '../../i18n/partLanguage';
 import { t } from '../../i18n/translate';
 
 /**
@@ -35,7 +38,11 @@ export function ActivityList({ items }: { readonly items: readonly ContentSummar
       {items.map((item) => (
         <li key={item.id} className="rounded bg-hvl-surface p-4">
           <h3 className="mb-1">
-            <a href={activityPath(item.id)} className="link-target">
+            <a
+              href={activityPath(item.id)}
+              className="link-target"
+              lang={partLanguage(item.language, locale)}
+            >
               {item.title}
             </a>
           </h3>

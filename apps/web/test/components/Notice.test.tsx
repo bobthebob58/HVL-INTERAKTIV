@@ -1,6 +1,7 @@
 /**
  * Component tests for the formative-use notice: its text in nn, nb and en, hidden once dismissed in the current
- * version, dismissal stored per user with the page's credential, and a failed dismissal that keeps the notice.
+ * version, dismissal stored per user with the page's credential, a failed dismissal that keeps the notice, and focus
+ * kept in the same part of the page when the notice goes away.
  *
  * Spec: PROD-011, UD-006
  */
@@ -116,5 +117,35 @@ describe('[PROD-011] the formative-use notice', () => {
     fakeFetch({ 'GET /api/me': { status: 401, body: errorBody(401, 'hvl:unauthenticated') } });
     show();
     expect(await screen.findByRole('region')).toBeTruthy();
+  });
+
+  it.each([
+    ['the tab panel around it', 'tabpanel'],
+    ['the page’s main', 'main'],
+  ] as const)('[UD-006] dismissing moves focus to %s, as the button disappears', async (_case, host) => {
+    // Arrange
+    fakeFetch({ 'GET /api/me': me(), 'PUT /api/me/notices/formative-use': { status: 204 } });
+    render(
+      <ApiAuthProvider auth={{ kind: 'portal', csrfToken: 'csrf-1' }}>
+        <main tabIndex={-1}>
+          {host === 'tabpanel' ? (
+            <div role="tabpanel" tabIndex={0} aria-label="Rediger">
+              <Notice />
+            </div>
+          ) : (
+            <Notice />
+          )}
+        </main>
+      </ApiAuthProvider>,
+    );
+    const button = await screen.findByRole('button', { name: 'Ikkje vis meldinga igjen' });
+    button.focus();
+    // Act
+    fireEvent.click(button);
+    // Assert
+    await waitFor(() => expect(screen.queryByRole('region')).toBeNull());
+    expect(document.activeElement).toBe(
+      host === 'tabpanel' ? screen.getByRole('tabpanel') : screen.getByRole('main'),
+    );
   });
 });

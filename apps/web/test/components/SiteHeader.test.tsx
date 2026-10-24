@@ -22,7 +22,7 @@ describe('[UD-013] the site header', () => {
       '/',
     );
     const nav = within(banner).getByRole('navigation', { name: 'Hjelp og informasjon' });
-    expect(within(nav).getByRole('link', { name: 'Hjelp' }).getAttribute('href')).toBe('/hjelp');
+    expect(within(nav).getByRole('link', { name: 'Hjelp' }).getAttribute('href')).toBe('/hjelp?lang=nn');
   });
 
   it('[UD-013] shows text until HVL supplies a logo, for every locale', () => {
@@ -39,6 +39,7 @@ describe('[UD-013] the site header', () => {
     // Assert
     const help = screen.getByRole('link', { name: 'Hjelp (åpner i ny fane)' });
     expect(help.getAttribute('target')).toBe('_blank');
+    expect(help.getAttribute('href')).toBe('/hjelp?lang=nb');
     expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 });

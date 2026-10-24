@@ -5,11 +5,14 @@
  * Why: authors play, edit, check and publish an activity in one place (PROD-003, LTI-006). The tabs frame Express's
  *      H5P pages (D-067). The editor reports each save (`hvli:content-saved`), after which the player reloads and the
  *      findings are fetched again; "Gå til feltet" opens the editor tab and asks the editor to focus the field.
- * Spec: PROD-003, PROD-011, LTI-006, UD-006, H5P-006
+ * Spec: PROD-003, PROD-011, LTI-006, UD-006, H5P-006, UD-010
  * Invariants:
  *   - The tabs offered follow the server's `mayEdit` and `mayPublish`; the server checks every request again.
  *   - The formative-use notice is on the editor tab (PROD-011).
  *   - Signed out: the Feide login link back to this page; unavailable: one message, whatever the reason (D-066).
+ *   - Once the activity has loaded, the document title names it ("<title> – HVL Interaktiv", WCAG 2.4.2), and every
+ *     save is announced, also the second save with the same words (WCAG 4.1.3, ../../components/useAnnouncement.ts).
+ *   - The heading carries the activity's own language when it differs from the page's (`lang`, UD-010).
  * Collaborators: ./CheckPanel.tsx, ../../components/Tabs.tsx, ../../components/H5pFrame.tsx,
  *   ../../components/Notice.tsx, ../../messaging/frameMessages.ts, ../../messaging/useEditorSaved.ts.
  * Tests: apps/web/test/features/ActivityView.test.tsx
@@ -29,7 +32,10 @@ import { LoginPrompt } from '../../components/LoginPrompt';
 import { Notice } from '../../components/Notice';
 import { StatusBadge } from '../../components/StatusBadge';
 import { Tabs, type TabItem } from '../../components/Tabs';
+import { useAnnouncement } from '../../components/useAnnouncement';
 import { useLocale } from '../../i18n/LocaleContext';
+import { pageTitle } from '../../i18n/pageTitle';
+import { partLanguage } from '../../i18n/partLanguage';
 import { t } from '../../i18n/translate';
 import { postGoToField } from '../../messaging/frameMessages';
 import { useEditorSaved } from '../../messaging/useEditorSaved';
@@ -51,7 +57,7 @@ function Workspace({ contentId, session }: { readonly contentId: string; readonl
   const [detail, setDetail] = useState<Detail>('loading');
   const [tab, setTab] = useState(PLAY_TAB);
   const [revision, setRevision] = useState(0);
-  const [announcement, setAnnouncement] = useState('');
+  const [announcement, announce] = useAnnouncement();
   const [editorReady, setEditorReady] = useState(false);
   const [goTo, setGoTo] = useState<{ readonly path: string; readonly at: number }>();
   const playerRef = useRef<HTMLIFrameElement>(null);
@@ -78,9 +84,14 @@ function Workspace({ contentId, session }: { readonly contentId: string; readonl
 
   useEditorSaved(editorRef, () => {
     setRevision((value) => value + 1);
-    setAnnouncement(t('activity.saved', locale));
+    announce(t('activity.saved', locale));
     void loadDetail();
   });
+
+  useEffect(() => {
+    // A11Y: WCAG 2.4.2: the server cannot know the title (D-068), so the page names the activity once it has loaded.
+    if (typeof detail === 'object') document.title = pageTitle(detail.title, locale);
+  }, [detail, locale]);
 
   useEffect(() => {
     if (!goTo || tab !== EDIT_TAB || !editorReady || postedAt.current === goTo.at) return;
@@ -136,7 +147,7 @@ function Workspace({ contentId, session }: { readonly contentId: string; readonl
             setTab(EDIT_TAB);
             setGoTo({ path, at: Date.now() });
           }}
-          onStatusChange={() => void loadDetail()}
+          onStatusChange={loadDetail}
         />
       ),
     });
@@ -144,7 +155,7 @@ function Workspace({ contentId, session }: { readonly contentId: string; readonl
 
   return (
     <ApiAuthProvider auth={auth}>
-      <h1>{detail.title}</h1>
+      <h1 lang={partLanguage(detail.language, locale)}>{detail.title}</h1>
       <p className="flex flex-wrap items-center gap-2">
         {t('activity.statusLabel', locale)}
         <StatusBadge status={detail.status} locale={locale} />

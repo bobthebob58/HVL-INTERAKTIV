@@ -13,7 +13,8 @@
  *     inline script or style: scripts are static files from our own origin (`script-src 'self'`, D-048).
  *   - Styles are the design tokens and the server pages' stylesheets, all same-origin files (D-067).
  *   - With a `help` link the page starts like the web app's: a skip link to `<main>`, then the `banner` header with
- *     the site name and **Hjelp** in a labelled `nav` (UD-013, UD-006); texts come from the locale files.
+ *     the site name and **Hjelp** in a labelled `nav` (UD-013, UD-006); texts come from the locale files. Hjelp
+ *     carries the page's locale (`?lang=`), because a new tab from Canvas has no launch to take it from (D-076).
  *   - The `ltik` and the CSRF token are never put in the page by this module; callers pass them as data
  *     attributes only where D-058 allows.
  * Collaborators: ./messagePage.ts, ./portalHomeRoutes.ts, ../../lti/pages/deepLinkPickerPage.ts, ./helpLink.ts,
@@ -101,10 +102,11 @@ export interface PageInput {
  * @returns The markup before `<main>`.
  */
 function siteHeader(locale: Locale, siteName: string, help: HelpLink): SafeHtml {
+  // WHY: /hjelp follows an allowlisted `?lang=` when there is no launch (D-076 amendment), so nb and en stay nb and en.
   // SECURITY: a new tab cannot reach this window, and gets no Referer (UD-007, as apps/web's ExternalLink).
   const link = help.newTab
-    ? markup`<a href="${HELP_PATH}" target="_blank" rel="noopener noreferrer">${t('page.help.link', {}, locale)}<span aria-hidden="true"> ↗</span><span class="hvl-visually-hidden"> ${t('page.help.newTab', {}, locale)}</span></a>`
-    : markup`<a href="${HELP_PATH}" target="_top">${t('page.help.link', {}, locale)}</a>`;
+    ? markup`<a href="${HELP_PATH}?lang=${locale}" target="_blank" rel="noopener noreferrer">${t('page.help.link', {}, locale)}<span aria-hidden="true"> ↗</span><span class="hvl-visually-hidden"> ${t('page.help.newTab', {}, locale)}</span></a>`
+    : markup`<a href="${HELP_PATH}?lang=${locale}" target="_top">${t('page.help.link', {}, locale)}</a>`;
   return markup`<a class="hvl-skip-link" href="#main">${t('page.skipToMain', {}, locale)}</a>
 <header class="hvl-site-header">
 <div class="hvl-site-header-bar">

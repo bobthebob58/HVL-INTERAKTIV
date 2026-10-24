@@ -1,6 +1,8 @@
 /**
- * Component tests for PublishDialog: one reason field per unexplained error, an error summary for missing or too
- * long reasons, the publish request with the findings' `updatedAt`, and plain-language messages for the 409 answers.
+ * Component tests for PublishDialog: one reason field per unexplained error with a short label and the error's message
+ * as its description, an error summary for missing or too long reasons, the publish request with the findings'
+ * `updatedAt`, and plain-language messages for the 409 answers. The dialog's texts for new reasons on a published
+ * activity are tested through the panel (../features/CheckPanelTransitions.test.tsx).
  *
  * Spec: PROD-003, UD-022, UD-013
  */
@@ -56,7 +58,7 @@ const show = (
     </ApiAuthProvider>,
   );
 
-const reasonField = () => screen.getByLabelText('Grunngjeving for «Biletet manglar alternativ tekst.»');
+const reasonField = () => screen.getByLabelText('Grunngjeving for feil 1');
 const submit = () => fireEvent.click(screen.getByRole('button', { name: 'Publiser no' }));
 
 describe('[PROD-003] the publish dialog', () => {
@@ -77,13 +79,13 @@ describe('[PROD-003] the publish dialog', () => {
     submit();
     // Assert
     const summary = await screen.findByRole('alert');
-    expect(summary.textContent).toContain(
-      'Skriv ei grunngjeving for feilen «Biletet manglar alternativ tekst.».',
-    );
+    expect(summary.querySelector('a')?.textContent).toBe('Skriv ei grunngjeving for feil 1.');
     const field = reasonField();
     expect(summary.querySelector('a')?.getAttribute('href')).toBe(`#${field.id}`);
     expect(field.getAttribute('aria-invalid')).toBe('true');
     expect(field.getAttribute('aria-describedby')).toContain(`${field.id}-error`);
+    const [message] = (field.getAttribute('aria-describedby') ?? '').split(' ');
+    expect(document.getElementById(message ?? '')?.textContent).toBe('Biletet manglar alternativ tekst.');
     expect(requests).toHaveLength(0);
   });
 
@@ -92,7 +94,7 @@ describe('[PROD-003] the publish dialog', () => {
     show();
     fireEvent.change(reasonField(), { target: { value: 'x'.repeat(REASON_MAX + 1) } });
     submit();
-    expect((await screen.findByRole('alert')).textContent).toContain('501 av 500 teikn');
+    expect((await screen.findByRole('alert')).textContent).toContain('feil 1 er for lang: 501 av 500 teikn.');
   });
 
   it('[PROD-003] publishes with the findings’ updatedAt, the trimmed reason and the CSRF token', async () => {

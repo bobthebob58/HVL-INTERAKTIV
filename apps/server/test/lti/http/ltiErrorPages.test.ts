@@ -137,7 +137,9 @@ describe('[LTI-001] LTI error pages', () => {
   it('[UD-013] with the web app, the page has the Hjelp header, opening a new tab so the launch is kept', async () => {
     const withWeb = await request(appThrowing(ltijs('INVALID_LTIK'), { webApp: true }).app).get('/lti/play');
     const without = await request(appThrowing(ltijs('INVALID_LTIK')).app).get('/lti/play');
-    expect(withWeb.text).toContain('<a href="/hjelp" target="_blank" rel="noopener noreferrer">Hjelp');
+    expect(withWeb.text).toContain(
+      '<a href="/hjelp?lang=nn" target="_blank" rel="noopener noreferrer">Hjelp',
+    );
     expect(without.text).not.toContain('/hjelp');
   });
 
@@ -155,7 +157,9 @@ describe('[LTI-001] LTI error pages', () => {
       expect(res.text).not.toContain('/hjelp');
       expect(res.text).not.toContain('hvl-site-header');
     }
-    expect(inCanvas.text).toContain('<a href="/hjelp" target="_blank" rel="noopener noreferrer">Hjelp');
+    expect(inCanvas.text).toContain(
+      '<a href="/hjelp?lang=nn" target="_blank" rel="noopener noreferrer">Hjelp',
+    );
   });
 
   it('[PROD-012] once a route has resolved the ltik (setLtiPageLocale), the page and the JSON are in the launch’s language', async () => {

@@ -1,7 +1,8 @@
 /**
- * Integration tests for the content list and detail: whose activities are listed, and what a person may do with one.
+ * Integration tests for the content list and detail: whose activities are listed, what a person may do with one,
+ * and the activity's own language for the title's `lang`.
  *
- * Spec: PROD-003, H5P-006, PROD-004, DATA-002
+ * Spec: PROD-003, H5P-006, PROD-004, DATA-002, UD-010
  */
 import { contentDetailSchema, contentListSchema } from '@hvl-interaktiv/api-contract';
 import request from 'supertest';
@@ -118,5 +119,22 @@ describeWithServices('[PROD-003] content list and detail', () => {
     for (const res of [list, one]) {
       expect(res.text).not.toMatch(new RegExp(`Aud|aud@hvl.no|${owner.principal.userId}`));
     }
+  });
+
+  it('[UD-010] the list and the detail carry the language an activity states, and none when it states none', async () => {
+    // Arrange
+    const metadata = { title: 'Delt', mainLibrary: 'H5P.MultiChoice', defaultLanguage: 'nn', language: 'en' };
+    await tb.db.h5PContent.update({ where: { id: shared }, data: { metadata } });
+    // Act
+    const list = await request(tb.app)
+      .get('/api/content')
+      .set(...owner.header);
+    const { items } = contentListSchema.parse(list.body);
+    const one = contentDetailSchema.parse((await detail(shared, owner)).body);
+    // Assert
+    expect(items.find((i) => i.id === shared)?.language).toBe('nn');
+    expect(items.find((i) => i.id === own)).not.toHaveProperty('language');
+    expect(one.language).toBe('nn');
+    expect(list.text).not.toContain('preloadedDependencies');
   });
 });

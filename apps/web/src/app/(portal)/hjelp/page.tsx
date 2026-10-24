@@ -5,13 +5,23 @@
  * Why: WCAG 3.2.6 (UD-013) wants help in the same place on every page; the header's Hjelp link leads here, also from
  *      Canvas (in a new tab). The steps follow the product's own flow (PROD-003, PROD-011).
  * Spec: UD-013, PROD-003, PROD-011
- * Collaborators: ../../../components/TextSections.tsx, ../../../i18n/requestLocale.ts, ../../../i18n/translate.ts.
+ * Collaborators: ../../../components/TextSections.tsx, ../../../i18n/requestLocale.ts, ../../../i18n/translate.ts,
+ *   ../../layout.tsx (title template).
  * Tests: apps/web/test/components/TextSections.test.tsx, apps/server/test/web/webApp.browser.int.test.ts
  */
+import type { Metadata } from 'next';
 import { TextSections } from '../../../components/TextSections';
 import { HELP_SECTIONS } from '../../../features/info/helpSections';
 import { requestLocale } from '../../../i18n/requestLocale';
 import { t } from '../../../i18n/translate';
+
+/**
+ * The page title, "Hjelp – HVL Interaktiv" (WCAG 2.4.2).
+ * @returns The page metadata.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: t('nav.help', await requestLocale()) };
+}
 
 /**
  * The help page.

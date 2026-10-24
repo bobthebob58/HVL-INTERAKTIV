@@ -1,9 +1,10 @@
 /**
- * Tests for the hand-over to the web app: only GET and HEAD reach it, with the session's locale, the same nonce in
+ * Tests for the hand-over to the web app: only GET and HEAD reach it, with the launch's, the link's or the session's
+ * locale, the same nonce in
  * the request and the response, and no credentials; the development server's WebSocket upgrades get no credentials
  * either. The web app is a stub that records what it received.
  *
- * Spec: DATA-011, LTI-003, PROD-012
+ * Spec: DATA-011, LTI-003, PROD-012, DATA-006, UD-010
  */
 import { IncomingMessage } from 'node:http';
 import { Socket } from 'node:net';
@@ -61,6 +62,40 @@ describe('[DATA-011] hand-over to the web app', () => {
     expect(seen[0]?.headers['x-hvli-locale']).toBe('nn');
   });
 
+  it.each([
+    ['en', undefined, 'en'],
+    ['nb', 'nn', 'nb'],
+    ['de', 'en', 'en'],
+    ['EN', undefined, 'nn'],
+  ] as const)(
+    '[DATA-006] a link with lang=%s and a %s session shows the page in %s',
+    async (lang, session, expected) => {
+      const { app, seen } = appWith(session);
+      await request(app).get(`/personvern?lang=${lang}`);
+      expect(seen[0]?.headers['x-hvli-locale']).toBe(expected);
+    },
+  );
+
+  it('[DATA-006] a repeated lang is ignored, and a launch’s locale wins over the link’s', async () => {
+    // Arrange
+    const { app, seen } = appWith();
+    const launched = express();
+    const launchSeen: IncomingMessage[] = [];
+    launched.use((_req, res, next) => {
+      setAppLaunch(res, { contentId: 'c1', title: 'T', mayEdit: false, locale: 'nb' });
+      next();
+    });
+    launched.use(
+      webRoutes({ dev: false, handle: async (req, res) => void (launchSeen.push(req), res.end()) }),
+    );
+    // Act
+    await request(app).get('/hjelp?lang=en&lang=nb');
+    await request(launched).get('/app/play?lang=en');
+    // Assert
+    expect(seen[0]?.headers['x-hvli-locale']).toBe('nn');
+    expect(launchSeen[0]?.headers['x-hvli-locale']).toBe('nb');
+  });
+
   it('[LTI-003] other methods never reach the web app', async () => {
     const { app, seen } = appWith('nn');
     for (const method of ['post', 'put', 'delete', 'patch'] as const) {
@@ -78,12 +113,18 @@ describe('[DATA-011] hand-over to the web app', () => {
     expect(new Set(nonces).size).toBe(3);
   });
 
-  it('[LTI-006] a launch page gets the launch facts, its locale and Canvas framing; no client can forge them', async () => {
+  it('[LTI-006] a launch page gets the launch facts with the activity language, its locale and Canvas framing; no client can forge them', async () => {
     // Arrange
     const seen: IncomingMessage[] = [];
     const app = express();
     app.use((_req, res, next) => {
-      setAppLaunch(res, { contentId: 'c1', title: 'Brøkar ✓', mayEdit: true, locale: 'en' });
+      setAppLaunch(res, {
+        contentId: 'c1',
+        title: 'Brøkar ✓',
+        mayEdit: true,
+        locale: 'en',
+        language: 'nn',
+      });
       next();
     });
     app.use(
@@ -101,6 +142,7 @@ describe('[DATA-011] hand-over to the web app', () => {
       title: 'Brøkar ✓',
       mayEdit: true,
       locale: 'en',
+      language: 'nn',
     });
     expect(seen[0]?.headers['x-hvli-locale']).toBe('en');
     expect(res.headers['content-security-policy']).toMatch(

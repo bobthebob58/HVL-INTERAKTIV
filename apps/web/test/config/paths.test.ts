@@ -9,6 +9,7 @@ import {
   activityPath,
   editorPath,
   HELP_PATH,
+  infoHref,
   loginHref,
   ltiFramePath,
   playerPath,
@@ -19,6 +20,11 @@ describe('[UD-013] web app addresses', () => {
   it('[UD-013] help and privacy have fixed addresses', () => {
     expect(HELP_PATH).toBe('/hjelp');
     expect(PRIVACY_PATH).toBe('/personvern');
+  });
+
+  it('[DATA-006] help and privacy links name the linking page’s language', () => {
+    expect(infoHref(PRIVACY_PATH, 'en')).toBe('/personvern?lang=en');
+    expect(infoHref(HELP_PATH, 'nb')).toBe('/hjelp?lang=nb');
   });
 
   it('[LTI-006] activity, player and editor addresses encode the ID', () => {

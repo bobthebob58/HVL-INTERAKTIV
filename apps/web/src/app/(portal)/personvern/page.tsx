@@ -8,14 +8,27 @@
  *      DPIA input (Q6, DATA-005); learning events and the Canvas gradebook arrive in S6 and are described as designed.
  * Spec: DATA-006, DATA-002, DATA-003, DATA-011
  * Invariants:
- *   - The text promises nothing the data inventory does not hold true; a change to the inventory is checked here.
+ *   - The text promises nothing the data inventory does not hold true, for learners in particular: the Feide login
+ *     token kept for the session, the Canvas ID kept for 24 h and for grade sync, and the login log with keyed IP
+ *     hashes kept for 2 years. apps/web/test/features/privacyNotice.test.ts pins each sentence to its inventory row.
+ *   - The page is titled "Personvern – HVL Interaktiv" and follows a link's `?lang=` (DATA-006, PROD-012).
  * Collaborators: ../../../components/TextSections.tsx, ../../../components/SiteFooter.tsx (`PRIVACY_PATH`).
- * Tests: apps/web/test/components/TextSections.test.tsx, apps/server/test/web/webPages.browser.int.test.ts
+ * Tests: apps/web/test/components/TextSections.test.tsx, apps/web/test/features/privacyNotice.test.ts,
+ *   apps/server/test/web/webPages.browser.int.test.ts, apps/server/test/web/webChrome.browser.int.test.ts
  */
+import type { Metadata } from 'next';
 import { TextSections } from '../../../components/TextSections';
 import { PRIVACY_SECTIONS } from '../../../features/info/privacySections';
 import { requestLocale } from '../../../i18n/requestLocale';
 import { t } from '../../../i18n/translate';
+
+/**
+ * The page title, "Personvern – HVL Interaktiv" (WCAG 2.4.2).
+ * @returns The page metadata.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: t('nav.privacy', await requestLocale()) };
+}
 
 /**
  * The privacy notice.
