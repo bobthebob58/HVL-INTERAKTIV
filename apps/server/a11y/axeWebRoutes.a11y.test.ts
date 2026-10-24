@@ -1,17 +1,19 @@
 /**
  * axe on every route of the web app, signed out and signed in as an author, in the light theme and with forced
  * colours emulated: the start page, help, privacy, the new-activity page (with H5P's content-type list), the 404
- * page, an activity page on each of its three tabs and with the publish dialog open, and the Canvas page of a
- * student's and a teacher's launch. No serious or critical violation besides the recorded H5P upstream problems;
- * lower-impact findings and checks to review are printed.
+ * page, an activity page on each of its three tabs (the formative-use notice showing on Rediger) and with the publish
+ * dialog open, and the Canvas page of a student's launch and of a teacher's launch of their own activity, on Spel and
+ * on Rediger with its notice. No serious or critical violation besides the recorded H5P upstream problems; lower-impact findings
+ * and checks to review are printed.
  *
- * Spec: UD-030, UD-012, UD-013, UD-011
+ * Spec: UD-030, UD-012, UD-013, UD-011, PROD-011
  */
-import { describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
-import { scanPage } from './support/axeScan.js';
+import { mergeReports, scanPage } from './support/axeScan.js';
 import { PLAIN_ROUTES } from './support/catalogue.js';
-import { openLaunch, openWebPage } from './support/pages.js';
+import { noticeRegion } from './support/formativeNotice.js';
+import { editorFrame, openLaunch, openWebPage } from './support/pages.js';
 import { expectOnlyRecorded, recordedFor } from './support/upstreamFindings.js';
 import { openView } from './support/views.js';
 
@@ -59,6 +61,7 @@ describeA11y('[UD-030] axe on the web routes', (env) => {
         const { app, browser } = env();
         const context = await browser.newContext({ forcedColors, storageState: app.authorStorage });
         const page = await openView(app, context, { kind: 'activity', tab });
+        if (tab === 'edit') await noticeRegion(page).waitFor({ timeout: 15_000 });
         // Act
         const report = await scanPage(page, `${mode}, signed in: /aktivitet/<MultiChoice draft> (${tab})`);
         // Assert
@@ -91,11 +94,24 @@ describeA11y('[UD-030] axe on the web routes', (env) => {
         // Arrange
         const { app, browser } = env();
         const context = await browser.newContext({ forcedColors });
-        const page = await openLaunch(context, app, app.ids.get('H5P.MultiChoice') ?? '', { teacher });
+        // WHY: the teacher launches an activity of their own, so the page also has Rediger and its notice.
+        const contentId = teacher ? await app.teacherActivity() : (app.ids.get('H5P.MultiChoice') ?? '');
+        const page = await openLaunch(context, app, contentId, { teacher });
         // Act
-        const report = await scanPage(page, `${mode}, Canvas page launched by ${who}`);
+        const reports = [await scanPage(page, `${mode}, Canvas page launched by ${who}`)];
+        if (teacher) {
+          await page.getByRole('tab', { name: 'Rediger' }).click();
+          await editorFrame(page);
+          await noticeRegion(page).waitFor({ timeout: 15_000 });
+          reports.push(await scanPage(page, `${mode}, Canvas page launched by ${who}, on Rediger`));
+        }
         // Assert
-        expectOnlyRecorded(report, recordedFor('player', 'H5P.MultiChoice', { forced }));
+        expect(reports).toHaveLength(teacher ? 2 : 1);
+        const recorded = [
+          ...recordedFor('player', 'H5P.MultiChoice', { forced }),
+          ...(teacher ? recordedFor('editor', 'H5P.MultiChoice', { forced }) : []),
+        ];
+        expectOnlyRecorded(mergeReports(`${mode}, Canvas page launched by ${who}`, reports), recorded);
         await context.close();
       },
     );

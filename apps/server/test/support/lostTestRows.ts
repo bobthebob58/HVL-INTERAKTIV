@@ -1,20 +1,23 @@
 /**
- * lostTestRows — tells a failed end-to-end flow whether the rows it set up are still in the shared database.
+ * lostTestRows — tells a failed end-to-end flow whether the rows it set up are still in the shared database, and a
+ * closed test bed that it left none of its own.
  *
- * Why: every test process uses the one development database. `openAppTestbed`'s `close` removes every user created
- *      since that testbed opened, with their content, whichever process created them (./appTestbed.ts), and
- *      ./realWebApp.ts signs every process in as the same mock Feide author. A testbed that closes in another
- *      process while a flow runs can therefore delete the flow's teacher, author or activity; the flow then sees
- *      401s and 404s and times out. A failure should say so, not look like a bug in the code under test.
+ * Why: every test process uses the one development database. `openAppTestbed`'s `close` removes its own mock
+ *      Canvas and staff users and the mock Feide users that first signed in during its run, with their content
+ *      (./appTestbed.ts). The demo Feide subjects are the same in every process, so a testbed closing in another
+ *      process while a flow runs can still delete the flow's rows; the flow then sees 401s and 404s and times out.
+ *      A failure should say so, not look like a bug in the code under test. The reverse also happened: a test bed
+ *      whose author's account had outlived an earlier run left every activity it imported (3 000+ on the start
+ *      page), so `assertRowsRemoved` checks after `close`.
  * Spec: NFR-004
  * Invariants:
- *   - It only reads; it never repairs or recreates a row.
+ *   - It only reads; it never repairs, recreates or deletes a row.
  *   - The answer names each lost row by the label the flow gave it, never by personal data.
  * Collaborators: ./appTestbed.ts, ./realWebApp.ts, ./flowRecorder.ts (the facts of a failed step).
- * Tests: apps/server/e2e/flowRecord.e2e.test.ts; used by apps/server/e2e/appPlayEditor.e2e.test.ts and
- *   apps/server/e2e/publishWithReason.e2e.test.ts
+ * Tests: apps/server/e2e/flowRecord.e2e.test.ts, apps/server/e2e/testbedCleanup.e2e.test.ts; used by
+ *   apps/server/e2e/appPlayEditor.e2e.test.ts and apps/server/e2e/publishWithReason.e2e.test.ts
  */
-import type { Database } from '../../src/infra/prismaClient.js';
+import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
 
 /** The rows a flow set up, by the label a failure names them with. */
 export interface FlowRows {
@@ -28,8 +31,9 @@ export interface FlowRows {
 
 /** How a failure explains lost rows: the cause and what to do about it. */
 export const LOST_ROWS_HINT =
-  "another process's testbed removed them on the shared database (appTestbed.close deletes every user created " +
-  'since it opened, with their content); run this flow without other test processes';
+  "another process's testbed removed them on the shared database (appTestbed.close deletes the mock Feide users " +
+  'that first signed in during its run, and the demo Feide subjects are the same in every process); run this flow ' +
+  'without other test processes';
 
 /**
  * Lists the rows of `rows` that are gone (or, for the platform, inactive).
@@ -65,5 +69,29 @@ export async function lostRowsFact(db: Database, rows: FlowRows): Promise<Record
     return lost.length > 0 ? { lostRows: lost, hint: LOST_ROWS_HINT } : { lostRows: [] };
   } catch (error) {
     return { lostRows: `unknown (${error instanceof Error ? error.message : String(error)})` };
+  }
+}
+
+/**
+ * Fails when any of a closed test bed's accounts or activities is still in the database. It reads on a connection
+ * of its own, because the test bed's is closed.
+ * @param databaseUrl - The shared database.
+ * @param rows - The accounts the run created and the activities it imported (and any activity those accounts own).
+ * @throws Error naming how many activities and accounts were left.
+ */
+export async function assertRowsRemoved(
+  databaseUrl: string,
+  rows: { readonly users: readonly string[]; readonly contents: readonly string[] },
+): Promise<void> {
+  const db = createPrismaClient(databaseUrl);
+  try {
+    const where = { OR: [{ id: { in: [...rows.contents] } }, { ownerUserId: { in: [...rows.users] } }] };
+    const activities = await db.h5PContent.count({ where });
+    const accounts = await db.user.count({ where: { id: { in: [...rows.users] } } });
+    if (activities + accounts > 0) {
+      throw new Error(`the closed test bed left ${activities} activities and ${accounts} accounts`);
+    }
+  } finally {
+    await db.$disconnect();
   }
 }

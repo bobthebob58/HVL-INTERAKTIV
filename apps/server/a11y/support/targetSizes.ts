@@ -13,10 +13,12 @@
  *   - A visually hidden checkbox or radio is measured by its label, which is what the pointer hits.
  *   - Slider thumbs (`role=slider`, `input[type=range]`) are listed as sliders: 2.5.8 judges a slider by its
  *     track and its keyboard alternative, which a person must confirm (UD-031).
+ *   - `measureTargetsEverywhere` measures the page and each frame in it (H5P's player and editor pages and the
+ *     iframes H5P writes) in its own document, and names each target with its document.
  * Collaborators: apps/server/a11y/targetSize.a11y.test.ts (prints the exceptions).
  * Tests: apps/server/a11y/targetSize.a11y.test.ts
  */
-import type { Frame } from 'playwright-core';
+import type { Frame, Page } from 'playwright-core';
 
 /** How a target meets 2.5.8, or that it does not. */
 export type TargetVerdict = 'size' | 'spacing' | 'inline' | 'slider' | 'fails';
@@ -111,4 +113,26 @@ function measureDocument(minimum: number): MeasuredTarget[] {
  */
 export function measureTargets(frame: Frame, minimum = 24): Promise<MeasuredTarget[]> {
   return frame.evaluate(measureDocument, minimum);
+}
+
+/**
+ * Measures the targets of a page and of every frame in it, each in its own document.
+ * @param page - A loaded page.
+ * @param minimum - The minimum size in CSS px; 24 for 2.5.8.
+ * @returns Every target, its name prefixed with its document (`page`, the frame's path, or `H5P iframe`).
+ */
+export async function measureTargetsEverywhere(page: Page, minimum = 24): Promise<MeasuredTarget[]> {
+  const found: MeasuredTarget[] = [];
+  for (const frame of page.frames()) {
+    if (frame.isDetached()) continue;
+    const where =
+      frame === page.mainFrame()
+        ? 'page'
+        : frame.url().startsWith('about:')
+          ? 'H5P iframe'
+          : new URL(frame.url()).pathname;
+    const targets = await measureTargets(frame, minimum);
+    found.push(...targets.map((target) => ({ ...target, name: `${where}: ${target.name}` })));
+  }
+  return found;
 }

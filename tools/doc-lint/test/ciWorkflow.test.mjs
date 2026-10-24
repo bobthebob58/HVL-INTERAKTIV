@@ -1,5 +1,5 @@
 /**
- * Tests that CI runs every maintainability and dependency gate the specs require.
+ * Tests that CI runs every maintainability and dependency gate the specs require, with time for them.
  *
  * Spec: NFR-004, SEC-007, NFR-005
  */
@@ -22,7 +22,7 @@ describe('[NFR-004] CI runs the maintainability gates', () => {
   });
 
   it('[NFR-004] runs the traceability check for every finished session', () => {
-    expect(runs('npm run spec:trace -- --check --done-through=S3')).toBe(true);
+    expect(runs('npm run spec:trace -- --check --done-through=S4')).toBe(true);
     expect(runs('npm run spec:site -- --check')).toBe(true);
   });
 
@@ -50,6 +50,14 @@ describe('[NFR-004] CI runs the maintainability gates', () => {
         expect(scriptsOf(m[2])[m[1]], `${m[1]} ${m[2] ?? ''}`).toBeDefined();
       }
     }
+  });
+
+  it('[NFR-004] gives the job time for the S4 steps and caches the H5P library checkouts', () => {
+    // WHY: the job runs the a11y suite and builds ten content types; 30 minutes cut it off (final review F3, DOC-10).
+    expect(Number(/^\s+timeout-minutes: (\d+)$/m.exec(ci)?.[1])).toBeGreaterThanOrEqual(60);
+    expect(ci).toMatch(
+      /uses: actions\/cache@v\d+\n\s+with:\n\s+path: ~\/\.cache\/hvl-interaktiv\/h5p-libraries\n/,
+    );
   });
 
   it('[NFR-004] runs integration tests against real services and never skips them', () => {

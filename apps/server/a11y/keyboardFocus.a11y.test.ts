@@ -1,9 +1,11 @@
 /**
  * Keyboard focus in the browser. On every page of the web app the first Tab reaches the skip link, which moves focus
- * to `main#main`. Tabbing through every web view, and through the player of each content type in its Canvas page,
- * every element that receives focus shows a focus indicator, is inside the viewport and is not covered (sticky
- * header included, checked with `elementFromPoint`), and focus never gets stuck. A CoursePresentation slide that
- * takes focus shows the ring around the whole slide (HVL theme).
+ * to `main#main`. Tabbing all the way through every web view, and through the player of each content type in its
+ * Canvas page, until focus comes back to the start or leaves the page, every element that receives focus shows a
+ * focus indicator it does not show unfocused, is inside the viewport and is not covered (sticky header included,
+ * checked with `elementFromPoint`), and focus never gets stuck on one element or in a cycle. A CoursePresentation
+ * slide that takes focus shows the ring around the whole slide (HVL theme). A control page whose widgets each keep
+ * focus for one press shows that the walk takes such a press for neither a cycle nor a missing ring.
  *
  * Spec: UD-004, UD-006, UD-011
  */
@@ -17,13 +19,29 @@ import { openView } from './support/views.js';
 
 const DESKTOP = { width: 1280, height: 800 };
 
+/** The most Tab presses per walk: far more stops than any view has, so only a walk that never ends reaches it. */
+const MAX_STOPS = { web: 150, player: 100 } as const;
+
+/** A page of four ringed buttons where B and C each keep focus for one Tab press (the walk's control). */
+const HOLDING_PAGE = `<!doctype html><html lang="en"><head><style>
+button:focus-visible { outline: 3px solid #004357; outline-offset: 2px; }</style></head><body>
+<button>A</button><button>B</button><button>C</button><button>D</button><script>
+for (const button of [...document.querySelectorAll('button')].slice(1, 3)) {
+  let held = false;
+  button.addEventListener('keydown', (event) => {
+    if (event.key === 'Tab' && !held) { held = true; event.preventDefault(); }
+  });
+}</script></body></html>`;
+
 /** The views a page load opens; the activity page's other tabs are the same page after a click. */
 const LOADED_VIEWS = WEB_VIEWS.filter((view) => view.kind !== 'activity' || view.tab === 'play');
 
 /** The stops that break UD-004, each with what is wrong. */
 const problems = (stops: readonly FocusStop[]): string[] =>
   stops.flatMap((stop) => [
-    ...(stop.indicator ? [] : [`${stop.name}: no focus indicator`]),
+    ...(stop.indicator
+      ? []
+      : [`${stop.name}: no focus indicator${stop.unchanged ? ` (${stop.unchanged})` : ''}`]),
     ...(stop.inViewport ? [] : [`${stop.name}: outside the viewport`]),
     ...(stop.coveredBy ? [`${stop.name}: covered by ${stop.coveredBy}`] : []),
   ]);
@@ -31,8 +49,11 @@ const problems = (stops: readonly FocusStop[]): string[] =>
 /** Tabs through a page and prints where focus went. */
 const walk = async (page: Page, label: string, maxStops: number) => {
   const result = await walkFocus(page, maxStops);
+  const end = result.complete
+    ? 'all the way round'
+    : `not complete${result.trapped ? `, trapped on ${result.trapped}` : ''}`;
   console.info(
-    `UD-004 ${label}: ${result.stops.length} focus stops\n  ${result.stops.map((s) => s.name).join('\n  ')}`,
+    `UD-004 ${label}: ${result.stops.length} focus stops, ${end}\n  ${result.stops.map((s) => s.name).join('\n  ')}`,
   );
   return result;
 };
@@ -64,9 +85,10 @@ describeA11y('[UD-004] visible focus and [UD-006] keyboard access', (env) => {
       const context = await browser.newContext({ viewport: DESKTOP, storageState: app.authorStorage });
       const page = await openView(app, context, view, { signedIn: true });
       // Act
-      const { stops, trapped } = await walk(page, name, 50);
+      const { stops, trapped, complete } = await walk(page, name, MAX_STOPS.web);
       // Assert
       expect(trapped).toBeUndefined();
+      expect(complete).toBe(true);
       expect(stops.length).toBeGreaterThan(2);
       expect(problems(stops)).toEqual([]);
       await context.close();
@@ -81,14 +103,31 @@ describeA11y('[UD-004] visible focus and [UD-006] keyboard access', (env) => {
       const context = await browser.newContext({ viewport: DESKTOP });
       const page = await openView(app, context, { kind: 'canvas' }, { contentId: app.ids.get(type) ?? '' });
       // Act
-      const { stops, trapped } = await walk(page, `${type} in Canvas`, 40);
+      const { stops, trapped, complete } = await walk(page, `${type} in Canvas`, MAX_STOPS.player);
       // Assert
       expect(trapped).toBeUndefined();
+      expect(complete).toBe(true);
       expect(stops.some((stop) => stop.name.includes(' in IFRAME'))).toBe(true);
       expect(problems(stops)).toEqual([]);
       await context.close();
     },
   );
+
+  it('[UD-006] control: widgets that each keep focus for one Tab press are neither a cycle nor unringed', async () => {
+    // Arrange: four buttons with the HVL ring; B and C each keep focus for one press, as a composite widget may
+    const { browser } = env();
+    const context = await browser.newContext({ viewport: DESKTOP });
+    const page = await context.newPage();
+    await page.setContent(HOLDING_PAGE);
+    // Act
+    const result = await walkFocus(page, 20);
+    // Assert
+    expect(result.trapped).toBeUndefined();
+    expect(result.complete).toBe(true);
+    expect(result.stops.map((stop) => stop.name)).toEqual(['A', 'B', 'C', 'D'].map((n) => `BUTTON "${n}"`));
+    expect(problems(result.stops)).toEqual([]);
+    await context.close();
+  });
 
   it('[UD-004] a CoursePresentation slide that has focus shows the two-tone ring around the slide', async () => {
     // Arrange

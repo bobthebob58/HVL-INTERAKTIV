@@ -21,7 +21,13 @@ jobs:
   gate:
     name: Session gate
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # WHY: sized from the steps' measured durations on this repository's 4-vCPU development machine, the runner's CPU
+    # count (2026-10-24, with other work on it): the accessibility suite 15 min, unit and integration
+    # tests 5-7 min, the end-to-end flows 2 min, a cold h5p:fetch-libraries about 5 min (120 checkouts, 23 builds;
+    # cached below), and npm ci, Chromium with its system packages, the Next.js build and the other checks about
+    # 6 min: about 35 min in all. 75 min gives that a 2x margin for a slower runner and stops a hung browser test
+    # long before GitHub's 6-hour limit.
+    timeout-minutes: 75
     services:
       postgres:
         image: postgres:16-alpine
@@ -65,6 +71,19 @@ jobs:
         run: npm ci
       - name: Fetch and verify H5P core 1.28.0 and the pinned editor (H5P-001, D-022, D-027)
         run: npm run h5p:fetch-core
+      # WHY: a cold fetch checks out and builds about 2 GB. The fetch step below reuses a cached checkout only when the
+      # stamp written at its checkout matches the manifest's commit and build state
+      # (tools/h5p-libraries/fetchLibraries.mjs), and proves its HEAD is still that commit and its tracked files are
+      # unedited (`verifiedHead`, gitSource.mjs) before it is copied; its untracked build output is copied without a
+      # rebuild. SECURITY: that output relies on the cache's scope. GitHub scopes a cache to the branch (or pull
+      # request) whose run saved it; a run reads only its own scope's caches and those of its base or default branch,
+      # so a pull request cannot fill main's.
+      - name: Cache the H5P library checkouts and builds
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/hvl-interaktiv/h5p-libraries
+          key: h5p-libraries-${{ runner.os }}-${{ hashFiles('tools/h5p-libraries/libraries.manifest.json', 'tools/h5p-libraries/*.mjs') }}
+          restore-keys: h5p-libraries-${{ runner.os }}-
       - name: Fetch, build and verify the ten real content types at pinned commits (D-078, D-047)
         run: npm run h5p:fetch-libraries
       - name: Generate the Prisma client and apply migrations

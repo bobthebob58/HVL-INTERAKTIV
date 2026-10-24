@@ -6,21 +6,26 @@
  *      are opened (and what each waits for) identical. Feedback states are styled by the HVL theme (UD-003, UD-011),
  *      so the suites check them answered as well as fresh. QuestionSet, InteractiveBook and BranchingScenario open
  *      on an intro screen with one button; without leaving it, their questions (and QuestionSet's progress dots)
- *      would never be checked.
+ *      would never be checked. The question of a CoursePresentation is on its second slide, InteractiveVideo's
+ *      appears while the video plays, DragText is answered by dropping a word, and ImageHotspots shows its text in
+ *      a popup: pressing a check button that is on screen reached none of these states.
  * Spec: UD-030, UD-003, UD-011, UD-005
  * Invariants:
  *   - An activity view opens the author's MultiChoice draft unless a content ID is given; the Canvas view is a
  *     student's launch of the published MultiChoice unless a content ID is given.
- *   - `startAndAnswer` presses an intro screen's start button if one shows, then picks the first option or types
- *     into the first fields and presses the visible check button; it never asserts what H5P shows, so it works for
- *     every type. It does not wait for transitions to end (`waitForStillness` does), so the reduced-motion check
- *     sees what still moves.
+ *   - `startAndAnswer` brings each type to the state `ANSWERED_STATE` names: it leaves an intro screen, moves to the
+ *     slide (CoursePresentation's next button by keyboard; its pointer barrier at 320 and 640 CSS px is checked in
+ *     reflowAndMotion.a11y.test.ts) or video moment with a question, drops a DragText word by keyboard (UD-005's
+ *     alternative) or opens a hotspot, answers (the first option, or text in the first fields), presses the check
+ *     button with a real pointer click (Playwright refuses a control something lies over); it fails when
+ *     that state does not appear, so a suite never checks a fresh activity twice and calls it answered. It does not
+ *     wait for transitions to end (`waitForStillness` does), so the reduced-motion check sees what still moves.
  * Collaborators: ./pages.ts, ./catalogue.ts, ../../test/support/realWebApp.ts.
  * Tests: apps/server/a11y/axeContentTypes.a11y.test.ts and the other suites in apps/server/a11y/.
  */
 import type { BrowserContext, Frame, Page } from 'playwright-core';
 import type { RealWebApp, UiLocale } from '../../test/support/realWebApp.js';
-import type { WebView } from './catalogue.js';
+import type { ContentType, WebView } from './catalogue.js';
 import { editorFrame, openActivityTab, openLaunch, openWebPage } from './pages.js';
 
 /** Options for `openView`. */
@@ -67,28 +72,81 @@ const CHECK_BUTTON = '.h5p-question-check-answer, .h5p-theme-check';
 const START_BUTTON =
   '.h5p-theme-primary-cta.h5p-theme-quiz, .h5p-theme-primary-cta.h5p-theme-book, .h5p-start-button';
 
-/**
- * Leaves the intro screen of the activity in a player frame (if it has one), then answers the question on screen
- * and presses its check button (if it has one).
- * @param frame - The H5P player's frame.
- * @returns True when the activity changed state (started, answered or both), so it is worth checking again.
- */
-export async function startAndAnswer(frame: Frame): Promise<boolean> {
-  const start = frame.locator(START_BUTTON).filter({ visible: true }).first();
-  const started = (await start.count()) > 0;
-  if (started) {
-    await start.click();
-    await frame.waitForTimeout(500);
-  }
-  const check = frame.locator(CHECK_BUTTON).filter({ visible: true }).first();
-  if ((await check.count()) === 0) return started;
-  const option = frame.locator('.h5p-answer').filter({ visible: true }).first();
-  if ((await option.count()) > 0) await option.click();
-  const fields = frame.locator('.h5p-text-input').filter({ visible: true });
-  for (let i = 0; i < Math.min(await fields.count(), 2); i += 1) await fields.nth(i).fill('svar');
-  await check.click();
-  await frame.waitForTimeout(300);
+/** What shows once `startAndAnswer` has answered (or, without a question, opened) each type's first task. */
+export const ANSWERED_STATE: Readonly<Record<ContentType, string>> = {
+  'H5P.Blanks': '.hvl-feedback-sr',
+  'H5P.BranchingScenario': '.h5p-current-screen:not(.h5p-start-screen)',
+  'H5P.Column': '.hvl-feedback-sr',
+  'H5P.CoursePresentation': '.hvl-feedback-sr',
+  'H5P.DragText': '.hvl-feedback-sr',
+  'H5P.ImageHotspots': '.h5p-image-hotspot-popup',
+  'H5P.InteractiveBook': '.hvl-feedback-sr',
+  'H5P.InteractiveVideo': '.hvl-feedback-sr',
+  'H5P.MultiChoice': '.hvl-feedback-sr',
+  'H5P.QuestionSet': '.hvl-feedback-sr',
+};
+
+/** Clicks the first visible element of `selector` in a frame, if there is one; true when it did. */
+async function clickIfShown(frame: Frame, selector: string): Promise<boolean> {
+  const target = frame.locator(selector).filter({ visible: true }).first();
+  if ((await target.count()) === 0) return false;
+  await target.click();
   return true;
+}
+
+/** Moves to the type's first task: the slide with a question, the video's question, or (by keyboard) a word in a gap. */
+async function reachTask(frame: Frame, type: ContentType): Promise<void> {
+  if (type === 'H5P.CoursePresentation') {
+    const checkShown = () => frame.locator(CHECK_BUTTON).filter({ visible: true }).count();
+    const next = frame.locator('.h5p-theme-next').first();
+    for (let i = 0; i < 3 && (await checkShown()) === 0; i += 1) {
+      // WHY: at 320 and 640 CSS px the progress bar's links (24 px tall by the HVL theme's target-size rule) lie over
+      // this button, so a pointer cannot press it; that barrier is reported by "a pointer can press every footer
+      // control" in reflowAndMotion.a11y.test.ts. Here, where only the question slide is needed, it is pressed as a
+      // keyboard user presses it (focus, then Enter).
+      await next.press('Enter');
+      await frame.waitForTimeout(500);
+    }
+  }
+  if (type === 'H5P.InteractiveVideo') {
+    await clickIfShown(frame, '.h5p-splash-wrapper, .h5p-control.h5p-play');
+    const question = frame.locator('.h5p-interaction .h5p-interaction-button').filter({ visible: true });
+    await question.first().click({ timeout: 20_000 });
+  }
+  if (type === 'H5P.DragText') {
+    await frame.locator('.h5p-drag-text .h5p-draggable').first().focus();
+    await frame.page().keyboard.press('Space');
+    await frame.locator('.h5p-drag-text [aria-dropeffect]').first().focus();
+    await frame.page().keyboard.press('Space');
+  }
+  if (type === 'H5P.ImageHotspots') await frame.locator('.h5p-image-hotspot').first().click();
+}
+
+/**
+ * Brings the activity in a player frame to its answered state (see `ANSWERED_STATE`): leaves its intro screen, moves
+ * to its first task, answers it and presses its check button.
+ * @param frame - The H5P player's frame.
+ * @param type - The activity's main library.
+ * @throws Error when the answered state does not appear.
+ */
+export async function startAndAnswer(frame: Frame, type: ContentType): Promise<void> {
+  if (await clickIfShown(frame, START_BUTTON)) await frame.waitForTimeout(500);
+  await reachTask(frame, type);
+  const check = frame.locator(CHECK_BUTTON).filter({ visible: true }).first();
+  if ((await check.count()) > 0) {
+    await clickIfShown(frame, '.h5p-answer');
+    const fields = frame.locator('.h5p-text-input').filter({ visible: true });
+    for (let i = 0; i < Math.min(await fields.count(), 2); i += 1) await fields.nth(i).fill('svar');
+    await check.click();
+  }
+  await frame
+    .locator(ANSWERED_STATE[type])
+    .first()
+    .waitFor({ state: 'attached', timeout: 10_000 })
+    .catch(() => {
+      throw new Error(`${type} did not reach its answered state (${ANSWERED_STATE[type]})`);
+    });
+  await frame.waitForTimeout(300);
 }
 
 /**

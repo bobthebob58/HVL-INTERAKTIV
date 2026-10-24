@@ -59,7 +59,7 @@ describeA11y('[DATA-011] no third-party requests in the browser', (env) => {
       const log = recordRequests(context);
       // Act
       const page = await openView(app, context, { kind: 'canvas' }, { contentId: app.ids.get(type) ?? '' });
-      await startAndAnswer(await playerFrame(page));
+      await startAndAnswer(await playerFrame(page), type);
       await page.waitForLoadState('networkidle');
       // Assert
       printRefused(`${type} player`, log);

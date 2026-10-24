@@ -8,16 +8,20 @@
  * Spec: H5P-003
  * Invariants:
  *   - A checkout is accepted only if `HEAD` is exactly the pinned commit; otherwise it throws and leaves nothing.
+ *     `verifiedHead` proves the same of a checkout that is reused from the cache, and that none of its tracked
+ *     files differs from that commit; untracked files (dependencies, build output) are outside its proof.
  *   - Tags are read with `ls-remote --refs`, so annotated tags show their own object, never a peeled commit; the
  *     commit is always taken from the checkout itself.
  *   - Network calls are retried four times with growing pauses; an error that outlasts them is marked
  *     `transient`, so the resolver fails instead of quietly skipping a library (a manifest must not depend on a
  *     flaky connection).
  * Collaborators: ./resolveManifest.mjs, ./fetchLibraries.mjs.
- * Tests: tools/h5p-libraries/test/resolveManifest.test.mjs (with a fake source); CI runs `npm run h5p:fetch-libraries`.
+ * Tests: tools/h5p-libraries/test/resolveManifest.test.mjs (with a fake source),
+ *   tools/h5p-libraries/test/gitSource.test.mjs; CI runs `npm run h5p:fetch-libraries`.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 
 const run = (args, cwd) =>
   execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -83,4 +87,26 @@ export function checkout(repository, ref, dir, expectedCommit) {
     rmSync(dir, { recursive: true, force: true });
     throw error;
   }
+}
+
+/**
+ * Proves that an existing checkout (one this module made) is at its pinned commit with its tracked files unedited.
+ * @param {string} dir - The checkout's folder.
+ * @param {string} expectedCommit - The pinned commit.
+ * @returns {string} The commit hash of the checkout's `HEAD`.
+ * @throws {Error} When the folder holds no checkout of its own, its `HEAD` is another commit, or a tracked file
+ *   differs from that commit (the message names the files).
+ */
+export function verifiedHead(dir, expectedCommit) {
+  // WHY: without its own .git, rev-parse would answer for whatever repository encloses the folder.
+  if (!existsSync(join(dir, '.git'))) throw new Error(`${dir} holds no checkout`);
+  const commit = run(['rev-parse', 'HEAD'], dir);
+  // SECURITY: a cached checkout moved to another commit, or with a tracked file edited, must not reach the packed
+  // libraries (D-078). Untracked files (node_modules/, a build's dist/) are not proved: in CI they rely on the
+  // cache's scope (.github/workflows/ci.yml); a local cache is the developer's own.
+  if (commit !== expectedCommit) throw new Error(`${dir} is at ${commit}, expected ${expectedCommit}`);
+  const edited = run(['diff', '--name-only', 'HEAD', '--'], dir);
+  if (edited)
+    throw new Error(`${dir} has tracked files that differ from ${commit}: ${edited.split('\n').join(', ')}`);
+  return commit;
 }

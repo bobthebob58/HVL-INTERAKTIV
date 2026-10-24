@@ -1,6 +1,7 @@
 /**
  * The register of recorded H5P upstream problems (support/upstreamRegister.ts) names the element of every entry: an
- * entry whose markup pattern also matches a bare element would cover any new violation of its rule on the pages it
+ * entry whose markup pattern also matches a bare element, or one with a class or id H5P never writes, and whose
+ * selector (if any) does not rule that element out, would cover any new violation of its rule on the pages it
  * applies to, so the register could hide a new problem (D-080). These are checks of data, so they run without a
  * browser or services.
  *
@@ -23,12 +24,27 @@ describe('[UD-030] the register of recorded H5P upstream problems', () => {
   });
 
   it('[UD-030] tells a catch-all pattern from one that names its element or is narrowed by a selector', () => {
-    const verdicts = [
-      matchesAnyElement({ ...ENTRY, html: /^</ }),
-      matchesAnyElement({ ...ENTRY, html: /^<li/ }),
-      matchesAnyElement({ ...ENTRY, html: /^<li class="reuse-question disabled"/ }),
-      matchesAnyElement({ ...ENTRY, html: /^<ol>$/, target: /iframe > ol$/ }),
+    // Arrange
+    const catchAll: Omit<UpstreamFinding, 'ruleId' | 'surfaces' | 'types' | 'why'>[] = [
+      { html: /^</ },
+      { html: /^<li/ },
+      { html: /^<li class="/ },
+      { html: /^<span class="/ },
+      { html: /^<div [^>]*>/ },
+      { html: /^</, target: /./ },
+      { html: /^<li/, target: /iframe > li$/ },
+      { html: /^<div id="/, target: /^#/ },
     ];
-    expect(verdicts).toEqual([true, true, false, false]);
+    const named: Omit<UpstreamFinding, 'ruleId' | 'surfaces' | 'types' | 'why'>[] = [
+      { html: /^<li class="reuse-question disabled"/ },
+      { html: /^<li (class="h5p-hub-tab-button"|id="h5p-[a-z]+" class="h5p-hub-media)/ },
+      { html: /^<ol>$/, target: /\.h5p-hub-content-type-list > ol$/ },
+    ];
+    // Act
+    const verdicts = (entries: typeof catchAll) =>
+      entries.map((entry) => matchesAnyElement({ ...ENTRY, ...entry }));
+    // Assert
+    expect(verdicts(catchAll)).toEqual(catchAll.map(() => true));
+    expect(verdicts(named)).toEqual(named.map(() => false));
   });
 });

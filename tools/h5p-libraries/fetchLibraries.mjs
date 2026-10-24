@@ -14,7 +14,10 @@
  *     PostCSS or browserslist configuration.
  *   - Output goes only to the destination (default `apps/server/var/h5p-real/`, gitignored): `libraries/` and
  *     `packages/` with a `SHA256SUMS` the seed command checks (`npm run seed:libraries -- <dir>`).
- *   - A finished checkout is reused only if its recorded commit and build state match the manifest.
+ *   - A finished checkout is reused only if its recorded commit and build state match the manifest, its `HEAD`
+ *     is still that commit and no tracked file differs from it (`verifiedHead`); otherwise the command fails and
+ *     names the folder. Its untracked files (dependencies, build output) are copied as cached, not rebuilt.
+ *   - A build must leave the library's tracked files as committed; one that does not fails the fresh fetch.
  * Usage: fetchLibraries.mjs [--resolve] [--dest <dir>] [--only <H5P.Name>] (`--only` packs one example).
  * Collaborators: ./resolveManifest.mjs, ./gitSource.mjs, ./libraryFiles.mjs, ./packContentTypes.mjs.
  * Tests: tools/h5p-libraries/test/manifest.test.mjs; CI runs the command before the browser and a11y suites.
@@ -25,7 +28,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkout, listVersionTags } from './gitSource.mjs';
+import { checkout, listVersionTags, verifiedHead } from './gitSource.mjs';
 import { copyLibraryFiles } from './libraryFiles.mjs';
 import { packContentType } from './packContentTypes.mjs';
 import { CONTENT_TYPE_ROOTS, resolveManifest } from './resolveManifest.mjs';
@@ -74,8 +77,12 @@ function fetchOne(entry, dest) {
       // SECURITY: `--ignore-scripts` keeps third-party install scripts from running on the build machine.
       npm(['ci', '--ignore-scripts', '--no-audit', '--no-fund']);
       npm(['run', 'build']);
+      // WHY: a reuse fails on any changed tracked file, so a build that rewrites one must fail here, by its cause.
+      verifiedHead(dir, entry.commit);
     }
     writeFileSync(stampFile, JSON.stringify({ commit: entry.commit, built: entry.build }));
+  } else {
+    verifiedHead(dir, entry.commit);
   }
   const libraryDir = join(dest, 'libraries', folderOf(entry));
   rmSync(libraryDir, { recursive: true, force: true });

@@ -7,23 +7,27 @@
  *      an explicit, reviewable list of what remains and why (./upstreamFindings.ts matches it, prints every match and
  *      fails on anything new and on any entry that no longer occurs). This list is reported to H5P and in PROGRESS.
  *      D-080: what a local, attribute-only change removes without changing H5P's behaviour is repaired at run time
- *      by packages/hvl-h5p-theme/src/a11yRepairs.js (CoursePresentation's progress bar and paste button, DragText's
- *      drop zones, the score-range "to" field, the vertical tabs, the editor-mode switch, the hotspot picker image
- *      and the hub's content-type list) and is no longer listed here. The theme (hvl-h5p-theme.css) sets the text
- *      fill of BranchingScenario's controls under forced colours, so axe's -webkit-text-fill-color reading no longer
- *      reports them, and a11yRepairs.js makes the parts the guided tour fades (`.tour-fade`) inert while it is open,
- *      so the tour adds no finding of its own.
+ *      by packages/hvl-h5p-theme/src/a11yRepairs.js (CoursePresentation's progress bar, DragText's drop zones,
+ *      H5P.Question's explanation title) and src/a11yEditorRepairs.js (the paste button, the score-range "to" field,
+ *      the vertical tabs, the editor-mode switch, the hotspot picker image and the hub's content-type list) and is no
+ *      longer listed here. The theme (hvl-h5p-theme.css) sets the text fill of BranchingScenario's controls under
+ *      forced colours, so axe's -webkit-text-fill-color reading no longer reports them, and a11yEditorRepairs.js
+ *      makes the parts the guided tour fades (`.tour-fade`) inert while it is open, so the tour adds no finding.
  * Spec: UD-030, UD-011, UD-012
+ * SPEC-DEVIATION: D-080 — an entry here is printed in every run but does not fail CI, although UD-030 fails it on
+ *   any serious or critical violation.
  * Invariants:
  *   - Every entry has an `UPSTREAM:` comment with the repository at the commit we run (D-022, D-078 manifest).
  *   - `html` matches the start of the element's markup as axe reports it; `target` narrows by axe's selector.
- *     No entry matches any element: a pattern that a bare element also matches would cover a new violation of the
- *     same rule (apps/server/a11y/upstreamRegister.a11y.test.ts fails on such an entry).
+ *     No entry matches an element it knows nothing about (a bare tag, or one with a class, id or role H5P never
+ *     writes) unless its `target` rules out such an element's selector chain: it would cover a new violation of
+ *     the same rule (./upstreamFindings.ts `matchesAnyElement`; apps/server/a11y/upstreamRegister.a11y.test.ts
+ *     fails on such an entry).
  *   - `forced` limits an entry to forced colours (`true`) or the light theme (`false`); `tour` limits it to the
  *     BranchingScenario editor while H5P's guided tour is open (`true`) or after it was closed (`false`). Only the
  *     Paste entry needs one (`tour: false`); the editor is still scanned in both states (axeEditor.a11y.test.ts).
  * Collaborators: ./upstreamFindings.ts, tools/h5p-libraries/libraries.manifest.json,
- *   packages/hvl-h5p-theme/src/a11yRepairs.js.
+ *   packages/hvl-h5p-theme/src/a11yRepairs.js, packages/hvl-h5p-theme/src/a11yEditorRepairs.js.
  * Tests: apps/server/a11y/upstreamRegister.a11y.test.ts, apps/server/a11y/axeContentTypes.a11y.test.ts,
  *   apps/server/a11y/axeEditor.a11y.test.ts, apps/server/a11y/axeWebRoutes.a11y.test.ts
  */
@@ -51,7 +55,7 @@ const BRANCHING = ['H5P.BranchingScenario'];
 
 /** The register. */
 export const UPSTREAM_FINDINGS: readonly UpstreamFinding[] = [
-  // UPSTREAM: https://github.com/h5p/h5p-editor-branching-scenario/tree/8fcd92d0a5a5f6b855d9d03ce4d19ab31baa4b99 (1.5.13, the reuse toolbar).
+  // UPSTREAM: https://github.com/h5p/h5p-editor-branching-scenario/tree/8fcd92d0a5a5f6b855d9d03ce4d19ab31baa4b99 (1.5.13, the reuse toolbar). No issue filed yet (SPEC-DEVIATION: D-080 amendment DOC-13); the entry goes when it stops occurring, which fails the suite.
   {
     ruleId: 'color-contrast',
     html: /^<li class="reuse-question disabled"/,
@@ -64,7 +68,7 @@ export const UPSTREAM_FINDINGS: readonly UpstreamFinding[] = [
       'and assistive technology does not hear that it is unavailable (while the guided tour is open the reuse ' +
       'panel is faded and inert, so it is reported after the tour only)',
   },
-  // UPSTREAM: https://github.com/h5p/h5p-editor-php-library/blob/ab2daa18bd61b19e7f8729e22eec88f3b637a868/scripts/h5p-hub-client.js (built from h5p/h5p-hub-client).
+  // UPSTREAM: https://github.com/h5p/h5p-editor-php-library/blob/ab2daa18bd61b19e7f8729e22eec88f3b637a868/scripts/h5p-hub-client.js (built from h5p/h5p-hub-client). No issue filed yet (SPEC-DEVIATION: D-080 amendment DOC-13); the entry goes when it stops occurring, which fails the suite.
   {
     ruleId: 'nested-interactive',
     html: /^<li (class="h5p-hub-tab-button"|id="h5p-[a-z]+" class="h5p-hub-media)/,

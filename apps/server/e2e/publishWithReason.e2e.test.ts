@@ -1,7 +1,8 @@
 /**
  * End-to-end test of publishing despite a validator error in Chromium: a Feide author signs in through the mock Feide
- * from the activity page, finds the error with **Gå til feltet** on **Sjekk og publiser**, is refused without a reason
- * (the error summary links to the reason field), writes one and publishes. The database then holds one
+ * from the activity page, sees the error listed on **Sjekk og publiser** and follows its **Gå til feltet** button to
+ * the image's alternative-text field in the editor on **Rediger** (focus lands in that field), goes back, is refused
+ * without a reason (the error summary links to the reason field), writes one and publishes. The database then holds one
  * ValidationAcknowledgement with the rule, path and reason; the audit and the log hold no reason text. The whole
  * server with the built web app and the real content types (../test/support/realWebApp.ts). A failed step names
  * itself, what failed before it and whether another process removed the author or the draft
@@ -24,6 +25,14 @@ const ALT_MESSAGE = 'Biletet manglar alternativ tekst.';
 
 /** The element whose `id` is `id` (React's `useId` values need no CSS escaping this way). */
 const byId = (page: Page, id: string) => page.locator(`[id="${id}"]`);
+
+/** Where focus is, followed through the editor's frames: `alt` inside the alternative-text field, else the element. */
+const focusedField = (page: Page) =>
+  page.evaluate(() => {
+    let el: Element | null = document.activeElement;
+    while (el?.tagName === 'IFRAME') el = (el as HTMLIFrameElement).contentDocument?.activeElement ?? null;
+    return el?.closest('.field-name-alt') ? 'alt' : `${el?.tagName ?? 'nothing'} ${el?.className ?? ''}`;
+  });
 
 describeWithRealWebApp('[PROD-003] publishing despite a validator error, with a reason', () => {
   let browser: Browser;
@@ -76,6 +85,12 @@ describeWithRealWebApp('[PROD-003] publishing despite a validator error, with a 
       const goTo = errors.getByRole('button', { name: 'Gå til feltet' });
       const finding = await byId(page, (await goTo.getAttribute('aria-describedby')) ?? '').textContent();
       const errorItem = await errors.getByRole('listitem').textContent();
+      // Act: "Gå til feltet" opens Rediger with focus in the image's alternative text
+      flow.step = 'go to field';
+      await goTo.click();
+      await expect.poll(() => focusedField(page), { timeout: 45_000 }).toBe('alt');
+      const editTabSelected = await page.getByRole('tab', { name: 'Rediger' }).getAttribute('aria-selected');
+      await page.getByRole('tab', { name: 'Sjekk og publiser' }).click();
       // Act: publish without a reason
       flow.step = 'refusal';
       await page.getByRole('button', { name: 'Publiser', exact: true }).click();
@@ -92,6 +107,7 @@ describeWithRealWebApp('[PROD-003] publishing despite a validator error, with a 
         invalid: await field.getAttribute('aria-invalid'),
         describedBy: (await field.getAttribute('aria-describedby'))?.split(' '),
         fieldProblem: await byId(page, `${fieldId}-error`).textContent(),
+        fieldMessage: await byId(page, `${fieldId}-message`).textContent(),
       };
       await link.click();
       const focusAfterLink = await page.evaluate(() => document.activeElement?.id);
@@ -115,6 +131,7 @@ describeWithRealWebApp('[PROD-003] publishing despite a validator error, with a 
         returnedTo,
         finding,
         errorItem,
+        editTabSelected,
         summaryHasFocus,
         fieldId,
         refusal,
@@ -133,11 +150,14 @@ describeWithRealWebApp('[PROD-003] publishing despite a validator error, with a 
     expect(returnedTo).toBe(`/aktivitet/${contentId}`);
     expect(finding?.startsWith(`✗ Feil: ${ALT_MESSAGE}`)).toBe(true);
     expect(errorItem).toContain('Regel V-IMG-ALT');
+    expect(seen.editTabSelected).toBe('true');
     // Assert: refused in the browser, with the summary linked to the reason field
     expect(summaryHasFocus).toBe(true);
-    expect(refusal.link?.startsWith(`Skriv ei grunngjeving for feilen «${ALT_MESSAGE}`)).toBe(true);
+    // WHY: the field and its summary link name the error by number; the finding's message describes the field (UD-013).
+    expect(refusal.link).toBe('Skriv ei grunngjeving for feil 1.');
     expect(refusal.invalid).toBe('true');
-    expect(refusal.describedBy).toContain(`${fieldId}-error`);
+    expect(refusal.describedBy).toEqual(expect.arrayContaining([`${fieldId}-message`, `${fieldId}-error`]));
+    expect(refusal.fieldMessage).toContain(ALT_MESSAGE);
     expect(refusal.fieldProblem).toContain(refusal.link ?? '');
     expect(focusAfterLink).toBe(fieldId);
     expect(seen.statusAfterRefusal.status).toBe('draft');

@@ -9,12 +9,14 @@
  * Invariants:
  *   - The platform sync sees only this testbed's mock Canvas, so it never deactivates another test's platform.
  *   - `close` removes the platform (its deployments, identities, tokens and placements cascade), the users of its
- *     mock Canvas and of `staffAccount`, the Feide users that first signed in during its run, their content and audit
- *     rows, and the S3 buckets. It never touches LTI or staff users of another testbed running at the same time;
- *     the mock Feide's subjects are the same in every process, so suites that sign in with it run one at a time
- *     (the e2e and a11y configs run their files sequentially).
+ *     mock Canvas and of `staffAccount`, its own mock Feide's users that first signed in during its run (by subject),
+ *     their content and audit rows, every activity `activity` saved (whoever owns it) and the S3 buckets. It never
+ *     touches LTI, staff or run-author accounts of another testbed; the demo Feide subjects are the same in every
+ *     process, so suites that sign in with them run one at a time (the e2e and a11y configs run files in turn).
+ *   - With `runAuthor`, the mock Feide's `author` is new in this run (./runFeideAuthor.ts), so `close` removes it.
  *   - Every log line is kept in `logs` so tests can prove that no token or personal value was logged.
- * Collaborators: ../../src/server/createApp.ts, ../../../../tools/mock-platform/mockPlatform.mjs, ./services.ts.
+ * Collaborators: ../../src/server/createApp.ts, ../../../../tools/mock-platform/mockPlatform.mjs, ./services.ts,
+ *   ./runFeideAuthor.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts and the other users of `openAppTestbed`.
  */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
@@ -37,6 +39,7 @@ import { createApp, type App } from '../../src/server/createApp.js';
 import { createContentValidator } from '../../src/validation/validateContent.js';
 import type { WebApp } from '../../src/web/nextWebApp.js';
 import { uniqueName } from './services.js';
+import { accountOfFeideUser, feideSubjectHashes, giveRunAuthor } from './runFeideAuthor.js';
 import { removeTestBucket } from './storageFixtures.js';
 import { syntheticLibraryDir, type SyntheticLibrary } from './syntheticLibraries.js';
 import { HTTP_TEST_LIBRARIES } from './tenTypeLibraries.js';
@@ -57,6 +60,8 @@ export interface AppTestbed extends App {
   readonly platformId: string;
   /** Creates a staff account with no identity (for content that belongs to someone else). */
   staffAccount(): Promise<string>;
+  /** The `User.id` a mock Feide user (by key, e.g. `author`) signed in to; throws when they have not signed in. */
+  feideAccount(key: string): Promise<string>;
   /** Saves an H5P.MultiChoice activity owned by `ownerUserId`; `published` also shares it with all of HVL. */
   activity(ownerUserId: string, options?: { published?: boolean; title?: string }): Promise<string>;
   close(): Promise<void>;
@@ -68,9 +73,7 @@ type PlatformManager = Provider['platformManager'];
 const scopedTo = (manager: PlatformManager, issuer: string): PlatformManager =>
   new Proxy(manager, {
     get(target, property, receiver) {
-      if (property === 'getPlatforms') {
-        return async () => target.getPlatforms({ url: issuer });
-      }
+      if (property === 'getPlatforms') return async () => target.getPlatforms({ url: issuer });
       const value: unknown = Reflect.get(target, property, receiver);
       return typeof value === 'function' ? value.bind(target) : value;
     },
@@ -79,12 +82,13 @@ const scopedTo = (manager: PlatformManager, issuer: string): PlatformManager =>
 /**
  * Starts the app, the mock Canvas and the mock Feide.
  * @param libraries - The installed H5P libraries (default: the HTTP test set).
- * @param options - `web`: a web app (a stub, or the built one from `loadWebApp`) mounted as main.ts mounts it.
+ * @param options - `web`: a web app (a stub, or the built one from `loadWebApp`) mounted as main.ts mounts it;
+ *   `runAuthor`: the mock Feide's `author` gets a Feide ID of this run (./runFeideAuthor.ts).
  * @returns The testbed.
  */
 export async function openAppTestbed(
   libraries: SyntheticLibrary[] = HTTP_TEST_LIBRARIES,
-  options: { web?: Pick<WebApp, 'dev' | 'handle'> } = {},
+  options: { web?: Pick<WebApp, 'dev' | 'handle'>; runAuthor?: boolean } = {},
 ): Promise<AppTestbed> {
   const startedAt = new Date();
   let handler = (_req: IncomingMessage, res: ServerResponse): void => void res.writeHead(503).end();
@@ -92,6 +96,7 @@ export async function openAppTestbed(
   await new Promise<void>((resolve) => server.listen(0, resolve));
   const toolUrl = `http://localhost:${(server.address() as AddressInfo).port}`;
   const mock = await startMockPlatform({ toolUrl });
+  if (options.runAuthor) giveRunAuthor(mock.feide);
   const buckets = { content: uniqueName('content'), temporary: uniqueName('temporary') };
   const env = loadEnv({
     ...process.env,
@@ -129,10 +134,13 @@ export async function openAppTestbed(
   handler = built.app;
 
   const madeHere = new Set<string>();
-  /** The users this testbed made: its staff accounts, its mock Canvas's users and Feide users new in this run. */
+  const savedHere = new Set<string>();
+  /** The users this testbed made: its staff accounts, its mock Canvas's users and its mock Feide's users new now. */
   const ownUsers = async (): Promise<string[]> => {
+    const feide = { provider: 'feide', createdAt: { gte: startedAt } } as const;
+    const subjectHash = { in: feideSubjectHashes(env, mock.feide) };
     const identities = await db.identity.findMany({
-      where: { OR: [{ platformId: platform.id }, { provider: 'feide', createdAt: { gte: startedAt } }] },
+      where: { OR: [{ platformId: platform.id }, { ...feide, subjectHash }] },
       select: { userId: true },
     });
     return [...new Set([...madeHere, ...identities.map((identity) => identity.userId)])];
@@ -147,6 +155,7 @@ export async function openAppTestbed(
     runtime,
     logs,
     platformId: platform.id,
+    feideAccount: (key) => accountOfFeideUser(db, env, mock.feide, key),
     staffAccount: async () => {
       const { id } = await db.user.create({ data: { kind: 'staff' } });
       madeHere.add(id);
@@ -161,6 +170,7 @@ export async function openAppTestbed(
         'H5P.MultiChoice 1.16',
         asAccountUser(actor),
       );
+      savedHere.add(id);
       if (options.published) {
         await db.h5PContent.update({
           where: { id },
@@ -176,7 +186,9 @@ export async function openAppTestbed(
       // WHY: before the platform goes, because its identities (which name its users) cascade with it.
       const users = await ownUsers();
       await db.ltiPlatform.deleteMany({ where: { url: mock.canvas.issuer } });
-      await db.h5PContent.deleteMany({ where: { ownerUserId: { in: users } } });
+      await db.h5PContent.deleteMany({
+        where: { OR: [{ ownerUserId: { in: users } }, { id: { in: [...savedHere] } }] },
+      });
       await db.auditEvent.deleteMany({ where: { actorUserId: { in: users } } });
       await db.authAuditEvent.deleteMany({ where: { actorUserId: { in: users } } });
       await db.user.deleteMany({ where: { id: { in: users } } });

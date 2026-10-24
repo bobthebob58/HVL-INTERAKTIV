@@ -1,6 +1,8 @@
 /**
- * Pointer targets of at least 24 × 24 CSS px (WCAG 2.5.8) on every web view and in the player of each content type,
- * fresh and once started or answered (./support/views.ts `startAndAnswer`). A smaller target passes only through
+ * Pointer targets of at least 24 × 24 CSS px (WCAG 2.5.8) on every web view, in the page and in every frame it holds
+ * (the H5P player, and on the Rediger tab and /aktivitet/ny H5P's editor and content-type list, which must be
+ * measured), and in the player of each content type, fresh and once its first task is answered
+ * (./support/views.ts `startAndAnswer`). A smaller target passes only through
  * one of 2.5.8's exceptions (spacing, a link inside a sentence) or as a slider, and every such target is printed,
  * so the H5P exceptions are on record.
  *
@@ -8,9 +10,9 @@
  */
 import { expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
-import { CONTENT_TYPES, viewName, WEB_VIEWS } from './support/catalogue.js';
+import { CONTENT_TYPES, viewName, WEB_VIEWS, type WebView } from './support/catalogue.js';
 import { playerFrame } from './support/pages.js';
-import { measureTargets, type MeasuredTarget } from './support/targetSizes.js';
+import { measureTargets, measureTargetsEverywhere, type MeasuredTarget } from './support/targetSizes.js';
 import { openView, startAndAnswer, waitForStillness } from './support/views.js';
 
 /** Prints the targets that pass only through an exception and returns the ones that fail. */
@@ -26,18 +28,24 @@ const failing = (label: string, targets: readonly MeasuredTarget[]): string[] =>
   return targets.filter((t) => t.verdict === 'fails').map((t) => `${t.name} ${t.width}×${t.height}`);
 };
 
+/** Whether a view holds H5P's editor (or its content-type list), whose targets must then be among those measured. */
+const holdsEditor = (view: WebView): boolean =>
+  (view.kind === 'activity' && view.tab === 'edit') ||
+  (view.kind === 'route' && view.path === '/aktivitet/ny');
+
 describeA11y('[UD-005] target size', (env) => {
   it.each(WEB_VIEWS.map((view) => [viewName(view), view] as const))(
-    '[UD-005] %s: every target of the page is 24 × 24 px or excepted',
+    '[UD-005] %s: every target of the page and its frames is 24 × 24 px or excepted',
     async (name, view) => {
       // Arrange
       const { app, browser } = env();
       const context = await browser.newContext({ storageState: app.authorStorage });
       const page = await openView(app, context, view, { signedIn: true });
       // Act
-      const targets = await measureTargets(page.mainFrame());
+      const targets = await measureTargetsEverywhere(page);
       // Assert
-      expect(targets.length).toBeGreaterThanOrEqual(2);
+      expect(targets.filter((t) => t.name.startsWith('page: ')).length).toBeGreaterThanOrEqual(2);
+      if (holdsEditor(view)) expect(targets.some((t) => t.name.startsWith('H5P iframe: '))).toBe(true);
       expect(failing(name, targets)).toEqual([]);
       await context.close();
     },
@@ -54,9 +62,9 @@ describeA11y('[UD-005] target size', (env) => {
       // Act
       await waitForStillness(player);
       const fresh = await measureTargets(player);
-      const changed = await startAndAnswer(player);
-      if (changed) await waitForStillness(player);
-      const answered = changed ? await measureTargets(player) : [];
+      await startAndAnswer(player, type);
+      await waitForStillness(player);
+      const answered = await measureTargets(player);
       // Assert
       expect(failing(`${type} fresh`, fresh)).toEqual([]);
       expect(failing(`${type} started or answered`, answered)).toEqual([]);

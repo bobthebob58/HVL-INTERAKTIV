@@ -11,32 +11,35 @@
  * Invariants:
  *   - The libraries are installed through the seed path (D-078), the activities through the package import, so the
  *     S2 package checks run on them; every activity belongs to the Feide author who signed in.
+ *   - The author is the mock Feide's `author` with a Feide ID of this run (./runFeideAuthor.ts): a new account with
+ *     no notice dismissals and no activities but this run's, whatever earlier runs left in the database.
  *   - `ids` hold published activities; `draftId` is a draft MultiChoice for flows that change state.
- *   - `close` removes the seed audit rows of this run and the library folder, on top of ./appTestbed.ts's cleanup.
+ *   - `close` removes the seed audit rows of this run and the library folder, on top of ./appTestbed.ts's cleanup
+ *     (which removes the author and the LTI users with all their content), and then fails if any of the author's or
+ *     the teacher's accounts or activities is still in the database.
  *   - Every launch first checks that the mock Canvas is still active, so a platform another process deactivated on
  *     the shared database is reported as such, not as ltijs's bare 403.
- * Collaborators: ./appTestbed.ts, ./realPackages.ts, ./ltiLaunchDriver.ts, ../../src/web/nextWebApp.ts,
- *   ../../src/h5p/libraries/seedLibraries.ts.
- * Tests: apps/server/a11y/axeWebRoutes.a11y.test.ts and the other suites in apps/server/a11y/.
+ * Collaborators: ./appTestbed.ts, ./runFeideAuthor.ts, ./realPackages.ts, ./ltiLaunchDriver.ts,
+ *   ../../src/web/nextWebApp.ts, ../../src/h5p/libraries/seedLibraries.ts.
+ * Tests: apps/server/e2e/testbedCleanup.e2e.test.ts; used by apps/server/a11y/ and two flows in apps/server/e2e/.
  */
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Browser, BrowserContext } from 'playwright-core';
+import type { Browser } from 'playwright-core';
 import { CANVAS_USERS } from '../../../../tools/mock-platform/mockPlatform.mjs';
-import { identitySource } from '../../src/auth/identity/subjectSources.js';
 import { asAccountUser } from '../../src/h5p/HvlH5pUser.js';
 import { PrismaLibraryAuditSink } from '../../src/h5p/libraries/LibraryAuditSink.js';
 import { LibraryInstaller } from '../../src/h5p/libraries/LibraryInstaller.js';
 import { seedLibraries } from '../../src/h5p/libraries/seedLibraries.js';
-import { IdentityHasher } from '../../src/security/keys/IdentityHasher.js';
 import { loadWebApp, type WebApp } from '../../src/web/nextWebApp.js';
 import { openAppTestbed, type AppTestbed } from './appTestbed.js';
 import { launchFromCanvas } from './ltiLaunchDriver.js';
+import { assertRowsRemoved } from './lostTestRows.js';
 import { packageExamples, REAL_PACKAGES_DIR } from './realPackages.js';
+import { AUTHOR_KEY, signInRunAuthor, type BrowserStorage } from './runFeideAuthor.js';
 import { testActor } from './testActors.js';
 
-/** A browser context's cookies and storage, as Playwright saves them. */
-export type BrowserStorage = Awaited<ReturnType<BrowserContext['storageState']>>;
+export type { BrowserStorage } from './runFeideAuthor.js';
 
 /** The UI languages (PROD-012). */
 export type UiLocale = 'nn' | 'nb' | 'en';
@@ -55,6 +58,8 @@ export interface RealWebApp {
   readonly draftId: string;
   /** The signed-in author's browser storage; pass it to `browser.newContext({ storageState })`. */
   readonly authorStorage: BrowserStorage;
+  /** The author's `User.id` (an account of this run). */
+  readonly authorId: string;
   /**
    * Launches an activity from the mock Canvas and returns the ltik for `/app/play?ltik=…`.
    * @param contentId - The activity.
@@ -73,31 +78,9 @@ export interface RealWebApp {
    * @returns The ltik for `/lti/deeplink?ltik=…`.
    */
   deepLink(): Promise<string>;
+  /** The teacher's published activity (made with `deepLink`'s two), so the teacher's Canvas page has Rediger. */
+  teacherActivity(): Promise<string>;
   close(): Promise<void>;
-}
-
-/** Signs the mock Feide author in through the start page and returns the context's storage. */
-async function signInAuthor(browser: Browser, tb: AppTestbed): Promise<BrowserStorage> {
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  tb.mock.feide.nextLogin('author');
-  await page.goto(`${tb.toolUrl}/`);
-  await page.getByRole('link', { name: 'Logg inn med Feide' }).click();
-  await page.getByRole('button', { name: 'Logg ut' }).waitFor({ timeout: 30_000 });
-  const storage = await context.storageState();
-  await context.close();
-  return storage;
-}
-
-/** The account the mock Feide author signed in to. */
-async function authorAccount(tb: AppTestbed): Promise<string> {
-  const hashes = new IdentityHasher(tb.env.IDENTITY_HASH_KEYS).candidates(
-    'identity-subject',
-    identitySource({ kind: 'feide', feideId: 'author@hvl.no' }),
-  );
-  const row = await tb.db.identity.findFirst({ where: { subjectHash: { in: hashes.map((c) => c.hash) } } });
-  if (!row) throw new Error('the Feide author has no account after signing in');
-  return row.userId;
 }
 
 /**
@@ -109,16 +92,20 @@ async function authorAccount(tb: AppTestbed): Promise<string> {
 export async function openRealWebApp(browser: Browser): Promise<RealWebApp> {
   const web: WebApp = await loadWebApp('prod');
   const startedAt = new Date();
-  const tb = await openAppTestbed([], { web });
+  const tb = await openAppTestbed([], { web, runAuthor: true });
   const { packageImporter, libraryManager } = tb.runtime.editor;
   await seedLibraries(
     REAL_PACKAGES_DIR,
     new LibraryInstaller(packageImporter, new PrismaLibraryAuditSink(tb.db), libraryManager),
   );
-  const authorStorage = await signInAuthor(browser, tb);
-  const author = asAccountUser(testActor('author', { accountId: await authorAccount(tb) }));
+  const authorStorage = await signInRunAuthor(browser, tb);
+  const authorId = await tb.feideAccount(AUTHOR_KEY);
+  const author = asAccountUser(testActor('author', { accountId: authorId }));
+  const users = [authorId];
+  const contents: string[] = [];
   const importAs = async (file: string, published: boolean, owner = author) => {
     const { id } = await packageImporter.addPackageLibrariesAndContent(join(REAL_PACKAGES_DIR, file), owner);
+    contents.push(String(id));
     if (published) {
       await tb.db.h5PContent.update({
         where: { id: String(id) },
@@ -133,7 +120,7 @@ export async function openRealWebApp(browser: Browser): Promise<RealWebApp> {
   }
   const draftId = await importAs('H5P.MultiChoice.h5p', false);
   let launches = 0;
-  let teacherHasActivities = false;
+  let teacherActivity: string | undefined;
   // WHY: a server started meanwhile on the same database (e.g. test/server/main.smoke.test.ts) runs the start-up sync
   // (src/lti/platforms/syncLtiPlatforms.ts), which deactivates every platform it is not configured with; the tool
   // then refuses this mock Canvas's logins with a bare 403. Say so instead (run the suite on its own).
@@ -155,12 +142,30 @@ export async function openRealWebApp(browser: Browser): Promise<RealWebApp> {
       resourceLinkId: `a11y-${launches}-${contentId}`,
     });
   };
+  const deepLink = async () => {
+    await assertPlatformActive();
+    const run = await launchFromCanvas(tb.app, tb.mock.canvas, {
+      messageType: 'LtiDeepLinkingRequest',
+      user: CANVAS_USERS.teacher,
+      placement: 'assignment_selection',
+    });
+    if (!run.ltik) throw new Error(`the picker launch did not reach the tool (status ${run.res.status})`);
+    if (!teacherActivity) {
+      const { userId } = (await tb.lti.resolveLtik(run.ltik)).principal;
+      users.push(userId);
+      const teacher = asAccountUser(testActor('author', { accountId: userId }));
+      teacherActivity = await importAs('H5P.MultiChoice.h5p', true, teacher);
+      await importAs('H5P.MultiChoice.h5p', false, teacher);
+    }
+    return run.ltik;
+  };
   return {
     tb,
     base: tb.toolUrl,
     ids,
     draftId,
     authorStorage,
+    authorId,
     launch: async (contentId, options) => {
       const run = await resourceLaunch(contentId, options);
       if (!run.ltik) throw new Error(`the launch did not reach the tool (status ${run.res.status})`);
@@ -170,22 +175,10 @@ export async function openRealWebApp(browser: Browser): Promise<RealWebApp> {
       const { res } = await resourceLaunch(contentId);
       return { status: res.status, html: res.text };
     },
-    deepLink: async () => {
-      await assertPlatformActive();
-      const run = await launchFromCanvas(tb.app, tb.mock.canvas, {
-        messageType: 'LtiDeepLinkingRequest',
-        user: CANVAS_USERS.teacher,
-        placement: 'assignment_selection',
-      });
-      if (!run.ltik) throw new Error(`the picker launch did not reach the tool (status ${run.res.status})`);
-      if (!teacherHasActivities) {
-        const { userId } = (await tb.lti.resolveLtik(run.ltik)).principal;
-        const teacher = asAccountUser(testActor('author', { accountId: userId }));
-        await importAs('H5P.MultiChoice.h5p', true, teacher);
-        await importAs('H5P.MultiChoice.h5p', false, teacher);
-        teacherHasActivities = true;
-      }
-      return run.ltik;
+    deepLink,
+    teacherActivity: async () => {
+      if (!teacherActivity) await deepLink();
+      return teacherActivity ?? '';
     },
     close: async () => {
       // WHY: seeding records its installs without an actor (D-041); only this run's rows go.
@@ -195,6 +188,7 @@ export async function openRealWebApp(browser: Browser): Promise<RealWebApp> {
       await tb.close();
       await web.close();
       rmSync(tb.env.H5P_LIBRARY_DIR, { recursive: true, force: true });
+      await assertRowsRemoved(tb.env.DATABASE_URL, { users, contents });
     },
   };
 }

@@ -11,8 +11,12 @@
  *     excluded.
  *   - Frames are scanned too (AxeBuilder's default), so the H5P player page in its chrome page and any iframe H5P
  *     writes are part of the same result; a finding's `target` names the frame chain.
+ *   - A scan fails unless its results reach into every shown frame that holds H5P (`unscannedH5pFrames`):
+ *     @axe-core/playwright drops a frame it cannot inject into within 1 s, or one that reloads mid-scan, without a
+ *     word, and its `frame-tested` rule is not a WCAG rule, so such a scan would pass on the chrome page alone. One
+ *     repeated scan tells a slow moment from a frame that is never scanned.
  *   - When `A11Y_REPORT_DIR` is set, every report is also appended there as JSON lines for the session gate.
- * Collaborators: @axe-core/playwright, ./upstreamFindings.ts, the suites in ../.
+ * Collaborators: @axe-core/playwright, ./axeFrames.ts, ./upstreamFindings.ts, the suites in ../.
  * Tests: apps/server/a11y/axeWebRoutes.a11y.test.ts, apps/server/a11y/axeContentTypes.a11y.test.ts,
  *   apps/server/a11y/axeEditor.a11y.test.ts, apps/server/a11y/axeServerPages.a11y.test.ts
  */
@@ -21,6 +25,7 @@ import { join } from 'node:path';
 import { AxeBuilder } from '@axe-core/playwright';
 import type { NodeResult, Result } from 'axe-core';
 import type { Page } from 'playwright-core';
+import { unscannedH5pFrames } from './axeFrames.js';
 
 /** The WCAG 2.2 A and AA rule tags UD-030 names. */
 export const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] as const;
@@ -70,10 +75,23 @@ const findingsOf = (results: readonly Result[]): AxeFinding[] =>
  * Scans a page and its frames.
  * @param page - A loaded page.
  * @param label - What is scanned, for the report.
+ * @param builder - The scanner; the suites use the default (UD-030's tags), a control passes one that cannot enter
+ *   frames.
  * @returns The sorted findings.
+ * @throws Error when a shown H5P frame was not scanned, also on a second try.
  */
-export async function scanPage(page: Page, label: string): Promise<AxeReport> {
-  const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
+export async function scanPage(
+  page: Page,
+  label: string,
+  builder: AxeBuilder = new AxeBuilder({ page }).withTags([...WCAG_TAGS]),
+): Promise<AxeReport> {
+  let results = await builder.analyze();
+  let unscanned = await unscannedH5pFrames(page, results);
+  if (unscanned.length > 0) {
+    results = await builder.analyze();
+    unscanned = await unscannedH5pFrames(page, results);
+  }
+  if (unscanned.length > 0) throw new Error(`${label}: axe did not scan inside ${unscanned.join(', ')}`);
   const violations = findingsOf(results.violations);
   const report: AxeReport = {
     label,

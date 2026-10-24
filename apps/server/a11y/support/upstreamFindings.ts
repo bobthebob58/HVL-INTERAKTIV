@@ -6,13 +6,17 @@
  *      itself is wrong, the suite must still fail on anything new, keep showing the known problems and notice when
  *      one disappears (so the entry is removed and the improvement is not lost again).
  * Spec: UD-030, UD-011
+ * SPEC-DEVIATION: D-080 — UD-030 fails CI on any serious or critical violation; a registered H5P upstream one is
+ *   printed in every run but does not fail it.
  * Invariants:
  *   - Matching is per rule ID and markup (and selector where the entry names one); a match is printed as "recorded
  *     H5P upstream problem (not passing)", never dropped.
  *   - The entries that apply to a scan are chosen by surface, content type, colour mode and tour state; each of them
  *     must match at least one finding of that scan.
- *   - No entry may match a bare element (`<div>`, `<li>` …) without a `target`: it would cover every new violation of
- *     its rule on the scanned page (`matchesAnyElement`, checked by ../upstreamRegister.a11y.test.ts).
+ *   - No entry may match an element it knows nothing about: a bare tag (`<div>`, `<li>` …), or a tag with a class,
+ *     id or role that no H5P markup has, unless its `target` names something such an element's selector chain
+ *     (`div`, `iframe > li`, `.unknown span` …) does not have. Such an entry would cover every new violation of its
+ *     rule on the pages it applies to (`matchesAnyElement`, checked by ../upstreamRegister.a11y.test.ts).
  * Collaborators: ./upstreamRegister.ts, ./axeScan.ts, the axe suites in ../.
  * Tests: apps/server/a11y/upstreamRegister.a11y.test.ts, apps/server/a11y/axeContentTypes.a11y.test.ts,
  *   apps/server/a11y/axeEditor.a11y.test.ts, apps/server/a11y/axeWebRoutes.a11y.test.ts
@@ -50,16 +54,66 @@ export function recordedFor(surface: H5pSurface, library: string, state: ScanSta
   );
 }
 
-/** Markup of elements with nothing to identify them; an entry must name more than that (D-080). */
-const BARE_ELEMENTS = ['<div>', '<span>', '<p>', '<li>', '<a href="#">', '<button>', '<img>', '<input>'];
+/** A class and id that no H5P markup has, standing for "any other element". */
+const UNKNOWN = 'not-in-h5p';
+const TAGS = [
+  'div',
+  'span',
+  'p',
+  'li',
+  'ul',
+  'ol',
+  'a',
+  'button',
+  'img',
+  'input',
+  'label',
+  'section',
+  'h2',
+  'table',
+];
+
+/** Markup of elements with nothing to identify them (D-080); an entry must name more than any of these. */
+const GENERIC_HTML = [
+  ...TAGS.flatMap((tag) => [
+    `<${tag}>`,
+    `<${tag} class="${UNKNOWN}">`,
+    `<${tag} id="${UNKNOWN}">`,
+    `<${tag} id="${UNKNOWN}" class="${UNKNOWN}">`,
+    `<${tag} class="${UNKNOWN}" role="button" tabindex="0">`,
+    `<${tag} aria-hidden="true" class="${UNKNOWN}">`,
+  ]),
+  '<a href="#">',
+  `<a href="#" class="${UNKNOWN}">`,
+  `<input type="text" class="${UNKNOWN}">`,
+  '<img src="image.png" alt="">',
+];
+
+/** Selector chains of such elements, as axe writes them; a `target` that matches one narrows nothing. */
+const GENERIC_TARGETS = [
+  ...TAGS.flatMap((tag) => [
+    tag,
+    `${tag}:nth-child(2)`,
+    `iframe > ${tag}`,
+    `iframe > iframe > ${tag}`,
+    `#${UNKNOWN} > ${tag}`,
+    `.${UNKNOWN} ${tag}`,
+    `iframe > .${UNKNOWN} > ${tag}:nth-child(3)`,
+  ]),
+  `.${UNKNOWN}`,
+  `#${UNKNOWN}`,
+  `iframe > .${UNKNOWN}`,
+];
 
 /**
- * Whether an entry would cover any element of its rule: its `html` matches a bare element and no `target` narrows it.
+ * Whether an entry would cover any element of its rule: its `html` matches an element it knows nothing about, and
+ * its `target`, if it has one, also matches such an element's selector chain.
  * @param entry - A register entry.
  * @returns True for a catch-all entry, which would hide a new violation of the same rule.
  */
 export const matchesAnyElement = (entry: UpstreamFinding): boolean =>
-  entry.target === undefined && BARE_ELEMENTS.some((html) => entry.html.test(html));
+  GENERIC_HTML.some((html) => entry.html.test(html)) &&
+  (entry.target === undefined || GENERIC_TARGETS.some((target) => entry.target?.test(target)));
 
 const matches = (entry: UpstreamFinding, finding: AxeFinding): boolean =>
   entry.ruleId === finding.ruleId &&
@@ -73,6 +127,7 @@ const matches = (entry: UpstreamFinding, finding: AxeFinding): boolean =>
  * @param recorded - The register entries that apply to the scanned page (`recordedFor`).
  */
 export function expectOnlyRecorded(report: AxeReport, recorded: readonly UpstreamFinding[]): void {
+  // SPEC-DEVIATION: D-080 — registered upstream violations are reported but do not fail (UD-030 fails on any).
   const known = report.blocking.filter((finding) => recorded.some((entry) => matches(entry, finding)));
   printReport(report, known);
   const unknown = report.blocking.filter((finding) => !known.includes(finding));

@@ -1,7 +1,8 @@
 /**
  * Language of page and parts in the browser: `<html lang>` of every web view follows the UI language, also when a
  * Canvas launch asks for Bokmål or English; the framed H5P player page has the same `lang`, and the content
- * container carries the activity's own language (the examples are Nynorsk), as does H5P's editor iframe.
+ * container carries the activity's own language (the examples are Nynorsk), as does H5P's editor iframe. The Canvas
+ * page's title heading says `lang="nn"` when the page is in another language (WCAG 3.1.2).
  *
  * Spec: UD-010, PROD-012
  */
@@ -48,6 +49,7 @@ describeA11y('[UD-010] language of page and parts', (env) => {
       await expect.poll(() => page.getByRole('link', { name: SKIP_LINK[locale] }).count()).toBe(1);
       expect(await player.locator('html').getAttribute('lang')).toBe(locale);
       expect(await player.locator('.h5p-content').getAttribute('lang')).toBe('nn');
+      expect(await page.locator('h1').getAttribute('lang')).toBe(locale === 'nn' ? null : 'nn');
       await context.close();
     },
   );
