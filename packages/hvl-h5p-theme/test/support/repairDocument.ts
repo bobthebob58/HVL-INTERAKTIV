@@ -7,7 +7,8 @@
  * Spec: UD-030
  * Invariants: scripts run only through `window.eval` of the theme's own file (`runScripts: 'outside-only'`).
  * Collaborators: ../../src/a11yRepairs.js, ../../src/a11yEditorRepairs.js.
- * Tests: packages/hvl-h5p-theme/test/a11yRepairs.test.ts, packages/hvl-h5p-theme/test/a11yEditorRepairs.test.ts
+ * Tests: packages/hvl-h5p-theme/test/a11yRepairs.test.ts, packages/hvl-h5p-theme/test/a11yEditorRepairs.test.ts,
+ *   packages/hvl-h5p-theme/test/a11yRepairsTour.test.ts
  */
 import { readFileSync } from 'node:fs';
 import { JSDOM, VirtualConsole } from 'jsdom';

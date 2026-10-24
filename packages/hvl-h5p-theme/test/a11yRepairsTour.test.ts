@@ -5,11 +5,10 @@
  *
  * Spec: UD-030, UD-004
  */
-import { readFileSync } from 'node:fs';
-import { JSDOM, VirtualConsole } from 'jsdom';
 import { describe, expect, it } from 'vitest';
+import { openRepairDocument, repairScript } from './support/repairDocument.js';
 
-const SCRIPT = readFileSync(new URL('../src/a11yEditorRepairs.js', import.meta.url), 'utf8');
+const SCRIPT = repairScript('a11yEditorRepairs.js');
 
 /** BranchingScenario's editor: a faded tree, the tour dialog outside it, and a part H5P made inert on its own. */
 const EDITOR = `<div class="editor"><div class="tree tour-fade" id="tree"><button>Legg til</button></div>
@@ -18,13 +17,7 @@ const EDITOR = `<div class="editor"><div class="tree tour-fade" id="tree"><butto
   <div class="dialog-background" id="own" inert></div></div>`;
 
 function openDocument() {
-  const dom = new JSDOM(`<!doctype html><html lang="nn"><body>${EDITOR}</body></html>`, {
-    runScripts: 'outside-only',
-    virtualConsole: new VirtualConsole(),
-  });
-  dom.window.eval(SCRIPT);
-  const { document } = dom.window;
-  const settle = () => new Promise((resolve) => dom.window.setTimeout(resolve, 0));
+  const { document, settle } = openRepairDocument(SCRIPT, EDITOR);
   const inert = (id: string) => document.getElementById(id)!.hasAttribute('inert');
   return { document, settle, inert };
 }
