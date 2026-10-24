@@ -5,19 +5,17 @@ designers, TeCopp administrators, security and privacy reviewers, examiners and 
 reviewers. It explains how to check, efficiently and independently, that the code does what the
 specifications promise.
 
-**Current state (2026-10-23):** Session 1 is done; Session 2 (the H5P engine with the ten types, the
-permission system, learner state, upload security, seeding and our own routes) passed its gate on
-2026-10-23, with spike steps 3–5 still open because the Hub is unreachable (limitation 3). Session 3 (dual
-authentication) passed its gate on 2026-10-23 after an independent review and three verification passes; HVL's own
-Feide and Canvas values are still open (Q3, Q4), so it runs against the mock platform. Session 1 built the monorepo,
-`apps/server` (configuration, log redaction, learner pseudonyms, the database schema, the H5P configuration
-and boot check, the storage adapters and the archive guard) and the tools `spec-trace`, `spec-site`,
-`doc-lint`, `dependency-check`, `privacy` and `h5p-core`. Session 2 added the H5P routes. Session 3 made the
-server a running service (`npm start`): Feide login for the portal, Canvas LTI 1.3 launches into the player
-through ltijs 7, the Deep Linking picker, Canvas–Feide account linking, the sharing API, and the H5P routes
-behind one `Principal`, all tested against the mock Feide and mock Canvas in `tools/mock-platform`
-(limitation 5). There is no web app yet (Session 4): the LTI pages and the portal start page are plain
-server-rendered pages (limitation 7). Build progress is tracked in [PROGRESS.md](../PROGRESS.md). Commands
+**Current state (2026-10-24):** Sessions 1–3 passed their gates on 2026-10-23; Session 4 (universal design) is in
+its gate. Session 1 built the monorepo, `apps/server` foundations and the tools `spec-trace`, `spec-site`,
+`doc-lint`, `dependency-check`, `privacy` and `h5p-core`. Session 2 added the H5P engine with the ten types, the
+permission system, learner state, upload security, seeding and our own H5P routes. Session 3 made the server a
+running service (`npm start`): Feide login for the portal, Canvas LTI 1.3 launches through ltijs 7, Deep Linking,
+Canvas–Feide account linking and the sharing API behind one `Principal`, tested against the mock Feide and mock
+Canvas in `tools/mock-platform` (limitation 5). Session 4 brought the ten real content types from GitHub at pinned
+commits (D-078, R-01 settled in D-047), strict script policies on every page type (D-070), the web app `apps/web`
+(Next.js inside Express, D-067, D-068) with the activity pages, the publish flow and the Canvas chrome page
+`/app/play`, the design tokens and the HVL H5P theme, the pre-publish validator (22 rules), and the accessibility
+suite `npm run test:a11y` (D-079, D-080). Build progress is tracked in [PROGRESS.md](../PROGRESS.md). Commands
 marked *(from S<n>)* below arrive with that session.
 
 ---
@@ -78,7 +76,8 @@ asserts? Does the module header's *Invariants* section match the code? Is every 
 | `node tools/spec-trace/specTrace.mjs --check` | Specs are internally consistent; traceability is current |
 | `node tools/spec-site/buildSpecSite.mjs --check` | The spec website matches the Markdown |
 | `docker compose up -d` | PostgreSQL, Redis and an S3 emulator start locally (D-023). The mock Feide and mock Canvas (`tools/mock-platform`) are not compose services: tests start them in-process, and `npm run mock:platform` runs them for manual use (D-049) |
-| `npm ci && npm run db:generate --workspace apps/server && npm run typecheck` | The monorepo installs and compiles from a clean checkout; the Prisma client is generated, not committed (`npm run build` arrives with `apps/web` in S4) |
+| `npm ci && npm run db:generate --workspace apps/server && npm run typecheck` | The monorepo installs and compiles from a clean checkout; the Prisma client is generated, not committed |
+| `npm run build` *(from S4)* | Builds `apps/web` (Next.js) and regenerates the token and theme files; needed before `WEB_APP=prod`, the e2e flows that use the web app and `npm run test:a11y` |
 | `npm run typecheck && npm run lint` | Types and lint |
 | `npm run doc:lint` | The Documentation Standard, checked by machine (`DOC-001`–`003`, `005`–`010`, `013`, `014`; `DOC-004` is `spec:trace`, `DOC-011` the commit-msg hook) |
 | `npm run privacy:inventory-check` | The data inventory matches the database schema (`DATA-001`) |
@@ -87,7 +86,11 @@ asserts? Does the module header's *Invariants* section match the code? Is every 
 | `npm run mock:platform` *(from S3)* | A mock Canvas on `http://127.0.0.1:4100` and a mock Feide on `http://localhost:4200` start for a tool on `http://localhost:3000`, and the six `.env` lines that point the server at them are printed (D-049); Ctrl+C stops both. `.env.example` already holds these values for the fixed ports; paste the printed lines into `apps/server/.env` only after changing ports or IDs (the mock Feide refuses another client ID with `unauthorized_client`; [tools/mock-platform/README.md](../tools/mock-platform/README.md)) |
 | `npm start` *(from S3)* | The server starts: tsx runs `apps/server/src/server/main.ts` (no build step), which syncs `LTI_PLATFORMS`, re-encrypts platform keys, starts the cleanup jobs and listens on `PORT`. With `npm run mock:platform` running, `curl http://localhost:3000/healthz` answers `{"status":"ok"}` and `/lti/keys` the tool's public keys. Needs the setup of `npm test` plus `npm run h5p:fetch-core`; a bad configuration exits with code 1 and names the variables, never their values (`NFR-002`) |
 | `npm run test:e2e` *(from S3)* | Three Chromium flows against the whole server and the mock platform (D-065), in CI too: launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome's partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available; the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item; portal Feide login, sharing with the CSRF token, and logout through Feide. The player plays a synthetic content type (limitation 3). Needs the setup of `npm test`. Journeys J1–J5 join in S6 |
-| `npm run test:a11y` *(from S4)* | axe-core on every route and inside each content type's iframe (`UD-030`) |
+| `npm run test:a11y` *(from S4)* | axe-core (WCAG 2.2 AA tags) on every web route, the server pages and the player and editor of all ten real types, in the light theme and with forced colours, plus reflow at 320 px, reduced motion, text spacing and 200 % zoom, keyboard walks (focus visible and not covered), target size, `lang` and first-party requests (`UD-030`, D-079). H5P's own findings are repaired at run time or listed in `apps/server/a11y/support/upstreamRegister.ts` (D-080). Needs `npm run build`, the real packages and Chromium; about 12 minutes; run it on its own |
+| `npm run h5p:fetch-libraries` *(from S4)* | Clones the ten content types and their dependencies at pinned commits, builds those without committed files and verifies every tree against `tools/h5p-libraries/libraries.manifest.json` (D-078) |
+| `npm run tokens:check && npm run lint:css` *(from S4)* | The committed token CSS matches `tokens.json`; no colour literal, upper case or justified text in any stylesheet (`UD-001`, `UD-002`, D-072) |
+| `npx vitest run -t "UD-0"` *(from S4)* | The tokens' contrast pairs, the theme inside H5P, the validator rules with their fixtures, the publish flow (`-t "PROD-003\|UD-022"`), the notices (`-t "PROD-011\|DATA-006\|DATA-011"`) and the pedagogical hints (`-t "PED-020"`) |
+| `WEB_APP=dev npm start` *(from S4)* | With `npm run mock:platform`: `/`, `/hjelp`, `/personvern` and, outside production, `/api/docs` (the OpenAPI document, `DOC-012`) |
 | `npm run spec:trace -- --check --done-through=S<n>` | Every MUST requirement up to session *n* has a test |
 | `npm run check:filesize` | No source file over 200 lines (`DOC-007`) |
 | `npm run check:audit` | No unreviewed high or critical advisory in production dependencies (`SEC-007`, D-029) |
@@ -172,7 +175,7 @@ must be pasted into `PROGRESS.md`, before the next session starts.
 | S1 | `npm run typecheck`, `npm run lint`, `npm run doc:lint`, `npx vitest run` (services up), `spec:trace --check --done-through=S1`, the inventory, pin, licence and audit checks pass; the boot check logs Core 1.28 and hub-api.h5p.org (or a recorded R-01 fallback decision) |
 | S2 | Only the ten types are creatable; non-admins cannot install libraries; the SVG corpus is neutralised; `--done-through=S2` passes |
 | S3 | Every S1 and S2 gate command stays green; the mock-OIDC and mock-LTI integration tests pass (`-t "AUTH-00"`, `-t "LTI-00"`, and each S3 requirement on its own with `-t "\[<ID>\]"`); `npm run test:e2e` passes its three Chromium flows (D-065): the cookie-less Canvas iframe launch → play → resume with third-party cookies blocked, the Deep Linking round trip whose signed JWT the mock Canvas accepts, and portal sharing with logout; `npm start` against `npm run mock:platform` answers `/healthz` and `/lti/keys`; `--done-through=S3` passes; the still open *(verify)* items (Q3, Q4) and owner questions (Q12–Q15) are listed with the gate output |
-| S4 | axe shows zero serious/critical violations on routes and all ten iframes; contrast and validator tests pass |
+| S4 | Every S1–S3 gate command stays green; `npm run build`, `npm run tokens:check`, `npm run lint:css` and `npm run h5p:fetch-libraries` pass; `npm run test:a11y` passes: no serious or critical axe violation on our own pages (web routes and server pages), and inside the player and editor of all ten types none beyond the registered upstream entries (D-080); contrast and validator tests pass (`-t "UD-0"`, `-t "PED-020"`, `-t "PROD-003\|UD-022"`, `-t "PROD-011\|DATA-006\|DATA-011"`, and each S4 requirement with `-t "\[<ID>\]"`); `npm run test:e2e` passes with the S4 flows; `--done-through=S4` passes; `WEB_APP=dev npm start` shows `/`, `/hjelp`, `/personvern` and `/api/docs`; what stays manual (`UD-031`, `NFR-003`) and the open owner items (Q2 logo and token confirmation, Q6 privacy text) are listed with the gate output |
 | S5 | Pattern, planner and mappe tests pass; locale key parity holds for `nn`/`nb`/`en`; ALU content review recorded |
 | S6 | Full `npm test`, `npm run lint`, `docker compose build`; AGS mock tests pass; conformance report and DPIA input exist |
 
@@ -184,13 +187,11 @@ must be pasted into `PROGRESS.md`, before the next session starts.
    is for formative use only (`LTI-013`, `PROD-011`).
 2. **Upstream accessibility.** Some barriers are inside H5P content types and can only be fixed
    upstream. The conformance report (`UD-040`) lists them with issue links.
-3. **H5P Core 1.28 with Lumi 10.0.4 is only partly verified** (risk R-01). The S1 spike passed steps 1–2
-   (Node 24 with core API 1.28; core and editor files verified file by file). In S2, Core 1.28 runs on our
-   player page in Chromium with the F3 styles, the Daylight tokens are active and overridable, and state
-   resumes after a reload, but only with a synthetic content type: hub-api.h5p.org is still unreachable
-   from the build environment (Q7), so Hub registration, the real seed packages and rendering the real
-   content types remain open, and so does the 1.28-or-1.27 decision (R-01, to be recorded as D-047). The S3
-   end-to-end flows play a synthetic content type as well.
+3. **The H5P Hub is still unreachable; real content types come from GitHub** (D-078, D-047). The ten content types
+   and their dependencies are cloned at pinned commits and verified file by file; all ten install through the seed
+   path, play, open in the editor and save under Core 1.28 and Lumi 10.0.4 (R-01 settled). Hub registration and
+   the Hub's own packages stay untested while hub-api.h5p.org is unreachable from the build environment (Q7); the
+   S3 end-to-end flows still use a synthetic content type, the S4 flows and the accessibility suite the real ones.
 4. **Institutional reference material is not yet in the repository** (see
    [reference/README.md](reference/README.md)). Labels, brand colours and portfolio headings are
    therefore kept in configuration, so they can be corrected without code changes.
@@ -205,11 +206,11 @@ must be pasted into `PROGRESS.md`, before the next session starts.
    code, unless they behave differently from the documented values the mocks follow.
 6. **Strict package versions.** An author's `.h5p` import is refused when any library differs from the
    installed one in its patch version (`SEC-003`, Q9), which will refuse many packages exported elsewhere.
-7. **Plain server-rendered pages until S4** (D-048). The Canvas player (`/lti/play`), the Deep Linking
-   picker (`/lti/deeplink`), the friendly error pages and the portal start page (`/`) are unstyled pages
-   rendered by the server; `apps/web` replaces them in S4. The H5P editor page exists since S4 (`/h5p/edit/:id`,
-   `/h5p/new`, and `/lti/edit` inside Canvas), but the **Rediger** and **Innsikt** tabs come with the web app's
-   chrome (S4) and insight (S6) (D-062), and no page offers sharing yet: it is an API call.
+7. **Some pages stay server-rendered** (D-067). The web app (`apps/web`) serves the start page, the activity pages,
+   `/hjelp`, `/personvern` and the Canvas chrome `/app/play`; the Deep Linking picker (`/lti/deeplink`) and the
+   friendly error pages stay server-rendered by Express (they need its 401/403/404/503 statuses) but use the token
+   CSS, the formative notice and the **Hjelp** link. The **Innsikt** tab comes with insight (S6), and no page offers
+   sharing yet: it is an API call (`PATCH /api/content/:contentId/sharing`).
 8. **The H5P pages allow inline styles** (D-070). Since S4 the player (`/h5p/play/:contentId`, `/lti/play`) and
    editor pages (`/h5p/edit/:id`, `/h5p/new`, `/lti/edit`) send `script-src 'self'` plus the hash of H5P Core's
    one constant inline script, so a script inside an activity cannot run and read the page's URL token (the ltik
@@ -239,14 +240,15 @@ must be pasted into `PROGRESS.md`, before the next session starts.
     and node-redis `LtiCacheManager` replace them, and ESLint forbids importing ltijs's
     `MongoLegacyDatabaseManager` and `RedisCacheManager`. They still count in the audit and licence checks;
     an upstream issue asks ltijs to load them lazily.
-13. **No build step.** `npm start` runs the TypeScript sources through tsx, a development dependency of the
-    repository root, so the server cannot start from an install without development dependencies
-    (`npm ci --omit=dev`), and every start compiles the sources in memory. How production builds and starts
-    the server is decided with S6's Docker images.
+13. **No build step for the server.** `npm run build` builds the web app, but `npm start` still runs the server's
+    TypeScript sources through tsx, a development dependency of the repository root, so the server cannot start from
+    an install without development dependencies (`npm ci --omit=dev`), and every start compiles the sources in
+    memory. How production builds and starts the server is decided with S6's Docker images.
 14. **Two interim rules wait for the owner** (Q12). Student authors (through `AUTHOR_COURSE_GROUPS`) may share
     an activity only as `private` until a course visibility exists (D-059), and Feide users without a Feide
     ID, such as guests, cannot log in (D-054).
-15. **Sharing changes visibility only; nothing can be published yet** (D-066, Q14).
-    `PATCH /api/content/:contentId/sharing` changes who may see an activity, never its draft or published
-    status. Publishing arrives with S4's publish flow and validator (`PROD-003`); since learners see only
-    published activities (`PROD-004`), no new activity reaches learners before then.
+15. **Accessibility is verified automatically in Chromium only; H5P's own barriers are listed, not hidden** (D-079,
+    D-080). Firefox, Safari, Edge, mobile browsers and the three screen readers are covered by the manual protocol
+    in `docs/accessibility/`, which HVL runs and records (`UD-031`, `NFR-003`). Barriers in H5P's own markup that
+    a run-time repair cannot remove safely are listed in `apps/server/a11y/support/upstreamRegister.ts` with links
+    to the upstream code; they are reported in every run but do not fail CI (`SPEC-DEVIATION` from `UD-030`).

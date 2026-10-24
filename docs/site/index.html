@@ -4703,19 +4703,17 @@ portfolio templates. It includes an example and states which tests will catch mi
 designers, TeCopp administrators, security and privacy reviewers, examiners and external code
 reviewers. It explains how to check, efficiently and independently, that the code does what the
 specifications promise.</p>
-<p><strong>Current state (2026-10-23):</strong> Session 1 is done; Session 2 (the H5P engine with the ten types, the
-permission system, learner state, upload security, seeding and our own routes) passed its gate on
-2026-10-23, with spike steps 3–5 still open because the Hub is unreachable (limitation 3). Session 3 (dual
-authentication) passed its gate on 2026-10-23 after an independent review and three verification passes; HVL&#39;s own
-Feide and Canvas values are still open (Q3, Q4), so it runs against the mock platform. Session 1 built the monorepo,
-<code>apps/server</code> (configuration, log redaction, learner pseudonyms, the database schema, the H5P configuration
-and boot check, the storage adapters and the archive guard) and the tools <code>spec-trace</code>, <code>spec-site</code>,
-<code>doc-lint</code>, <code>dependency-check</code>, <code>privacy</code> and <code>h5p-core</code>. Session 2 added the H5P routes. Session 3 made the
-server a running service (<code>npm start</code>): Feide login for the portal, Canvas LTI 1.3 launches into the player
-through ltijs 7, the Deep Linking picker, Canvas–Feide account linking, the sharing API, and the H5P routes
-behind one <code>Principal</code>, all tested against the mock Feide and mock Canvas in <code>tools/mock-platform</code>
-(limitation 5). There is no web app yet (Session 4): the LTI pages and the portal start page are plain
-server-rendered pages (limitation 7). Build progress is tracked in <a href="#progress">PROGRESS.md</a>. Commands
+<p><strong>Current state (2026-10-24):</strong> Sessions 1–3 passed their gates on 2026-10-23; Session 4 (universal design) is in
+its gate. Session 1 built the monorepo, <code>apps/server</code> foundations and the tools <code>spec-trace</code>, <code>spec-site</code>,
+<code>doc-lint</code>, <code>dependency-check</code>, <code>privacy</code> and <code>h5p-core</code>. Session 2 added the H5P engine with the ten types, the
+permission system, learner state, upload security, seeding and our own H5P routes. Session 3 made the server a
+running service (<code>npm start</code>): Feide login for the portal, Canvas LTI 1.3 launches through ltijs 7, Deep Linking,
+Canvas–Feide account linking and the sharing API behind one <code>Principal</code>, tested against the mock Feide and mock
+Canvas in <code>tools/mock-platform</code> (limitation 5). Session 4 brought the ten real content types from GitHub at pinned
+commits (D-078, R-01 settled in D-047), strict script policies on every page type (D-070), the web app <code>apps/web</code>
+(Next.js inside Express, D-067, D-068) with the activity pages, the publish flow and the Canvas chrome page
+<code>/app/play</code>, the design tokens and the HVL H5P theme, the pre-publish validator (22 rules), and the accessibility
+suite <code>npm run test:a11y</code> (D-079, D-080). Build progress is tracked in <a href="#progress">PROGRESS.md</a>. Commands
 marked <em>(from S<n>)</em> below arrive with that session.</p>
 <hr>
 <h3 id="evaluator-guide--1-orientation-in-20-minutes" tabindex="-1">1. Orientation in 20 minutes</h3>
@@ -4772,7 +4770,9 @@ asserts? Does the module header&#39;s <em>Invariants</em> section match the code
 <tr>
 <td><code>docker compose up -d</code></td><td>PostgreSQL, Redis and an S3 emulator start locally (D-023). The mock Feide and mock Canvas (<code>tools/mock-platform</code>) are not compose services: tests start them in-process, and <code>npm run mock:platform</code> runs them for manual use (D-049)</td></tr>
 <tr>
-<td><code>npm ci &amp;&amp; npm run db:generate --workspace apps/server &amp;&amp; npm run typecheck</code></td><td>The monorepo installs and compiles from a clean checkout; the Prisma client is generated, not committed (<code>npm run build</code> arrives with <code>apps/web</code> in S4)</td></tr>
+<td><code>npm ci &amp;&amp; npm run db:generate --workspace apps/server &amp;&amp; npm run typecheck</code></td><td>The monorepo installs and compiles from a clean checkout; the Prisma client is generated, not committed</td></tr>
+<tr>
+<td><code>npm run build</code> <em>(from S4)</em></td><td>Builds <code>apps/web</code> (Next.js) and regenerates the token and theme files; needed before <code>WEB_APP=prod</code>, the e2e flows that use the web app and <code>npm run test:a11y</code></td></tr>
 <tr>
 <td><code>npm run typecheck &amp;&amp; npm run lint</code></td><td>Types and lint</td></tr>
 <tr>
@@ -4790,7 +4790,15 @@ asserts? Does the module header&#39;s <em>Invariants</em> section match the code
 <tr>
 <td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Three Chromium flows against the whole server and the mock platform (D-065), in CI too: launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome&#39;s partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available; the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item; portal Feide login, sharing with the CSRF token, and logout through Feide. The player plays a synthetic content type (limitation 3). Needs the setup of <code>npm test</code>. Journeys J1–J5 join in S6</td></tr>
 <tr>
-<td><code>npm run test:a11y</code> <em>(from S4)</em></td><td>axe-core on every route and inside each content type&#39;s iframe (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>)</td></tr>
+<td><code>npm run test:a11y</code> <em>(from S4)</em></td><td>axe-core (WCAG 2.2 AA tags) on every web route, the server pages and the player and editor of all ten real types, in the light theme and with forced colours, plus reflow at 320 px, reduced motion, text spacing and 200 % zoom, keyboard walks (focus visible and not covered), target size, <code>lang</code> and first-party requests (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>, D-079). H5P&#39;s own findings are repaired at run time or listed in <code>apps/server/a11y/support/upstreamRegister.ts</code> (D-080). Needs <code>npm run build</code>, the real packages and Chromium; about 12 minutes; run it on its own</td></tr>
+<tr>
+<td><code>npm run h5p:fetch-libraries</code> <em>(from S4)</em></td><td>Clones the ten content types and their dependencies at pinned commits, builds those without committed files and verifies every tree against <code>tools/h5p-libraries/libraries.manifest.json</code> (D-078)</td></tr>
+<tr>
+<td><code>npm run tokens:check &amp;&amp; npm run lint:css</code> <em>(from S4)</em></td><td>The committed token CSS matches <code>tokens.json</code>; no colour literal, upper case or justified text in any stylesheet (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>, <a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>, D-072)</td></tr>
+<tr>
+<td><code>npx vitest run -t &quot;UD-0&quot;</code> <em>(from S4)</em></td><td>The tokens&#39; contrast pairs, the theme inside H5P, the validator rules with their fixtures, the publish flow (<code>-t &quot;PROD-003|UD-022&quot;</code>), the notices (<code>-t &quot;PROD-011|DATA-006|DATA-011&quot;</code>) and the pedagogical hints (<code>-t &quot;PED-020&quot;</code>)</td></tr>
+<tr>
+<td><code>WEB_APP=dev npm start</code> <em>(from S4)</em></td><td>With <code>npm run mock:platform</code>: <code>/</code>, <code>/hjelp</code>, <code>/personvern</code> and, outside production, <code>/api/docs</code> (the OpenAPI document, <a class="req-ref" href="#r-DOC-012"><code>DOC-012</code></a>)</td></tr>
 <tr>
 <td><code>npm run spec:trace -- --check --done-through=S&lt;n&gt;</code></td><td>Every MUST requirement up to session <em>n</em> has a test</td></tr>
 <tr>
@@ -4892,7 +4900,7 @@ must be pasted into <code>PROGRESS.md</code>, before the next session starts.</p
 <tr>
 <td>S3</td><td>Every S1 and S2 gate command stays green; the mock-OIDC and mock-LTI integration tests pass (<code>-t &quot;AUTH-00&quot;</code>, <code>-t &quot;LTI-00&quot;</code>, and each S3 requirement on its own with <code>-t &quot;\[&lt;ID&gt;\]&quot;</code>); <code>npm run test:e2e</code> passes its three Chromium flows (D-065): the cookie-less Canvas iframe launch → play → resume with third-party cookies blocked, the Deep Linking round trip whose signed JWT the mock Canvas accepts, and portal sharing with logout; <code>npm start</code> against <code>npm run mock:platform</code> answers <code>/healthz</code> and <code>/lti/keys</code>; <code>--done-through=S3</code> passes; the still open <em>(verify)</em> items (Q3, Q4) and owner questions (Q12–Q15) are listed with the gate output</td></tr>
 <tr>
-<td>S4</td><td>axe shows zero serious/critical violations on routes and all ten iframes; contrast and validator tests pass</td></tr>
+<td>S4</td><td>Every S1–S3 gate command stays green; <code>npm run build</code>, <code>npm run tokens:check</code>, <code>npm run lint:css</code> and <code>npm run h5p:fetch-libraries</code> pass; <code>npm run test:a11y</code> passes: no serious or critical axe violation on our own pages (web routes and server pages), and inside the player and editor of all ten types none beyond the registered upstream entries (D-080); contrast and validator tests pass (<code>-t &quot;UD-0&quot;</code>, <code>-t &quot;PED-020&quot;</code>, <code>-t &quot;PROD-003|UD-022&quot;</code>, <code>-t &quot;PROD-011|DATA-006|DATA-011&quot;</code>, and each S4 requirement with <code>-t &quot;\[&lt;ID&gt;\]&quot;</code>); <code>npm run test:e2e</code> passes with the S4 flows; <code>--done-through=S4</code> passes; <code>WEB_APP=dev npm start</code> shows <code>/</code>, <code>/hjelp</code>, <code>/personvern</code> and <code>/api/docs</code>; what stays manual (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>, <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>) and the open owner items (Q2 logo and token confirmation, Q6 privacy text) are listed with the gate output</td></tr>
 <tr>
 <td>S5</td><td>Pattern, planner and mappe tests pass; locale key parity holds for <code>nn</code>/<code>nb</code>/<code>en</code>; ALU content review recorded</td></tr>
 <tr>
@@ -4905,13 +4913,11 @@ must be pasted into <code>PROGRESS.md</code>, before the next session starts.</p
 is for formative use only (<a class="req-ref" href="#r-LTI-013"><code>LTI-013</code></a>, <a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>).</li>
 <li><strong>Upstream accessibility.</strong> Some barriers are inside H5P content types and can only be fixed
 upstream. The conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>) lists them with issue links.</li>
-<li><strong>H5P Core 1.28 with Lumi 10.0.4 is only partly verified</strong> (risk R-01). The S1 spike passed steps 1–2
-(Node 24 with core API 1.28; core and editor files verified file by file). In S2, Core 1.28 runs on our
-player page in Chromium with the F3 styles, the Daylight tokens are active and overridable, and state
-resumes after a reload, but only with a synthetic content type: hub-api.h5p.org is still unreachable
-from the build environment (Q7), so Hub registration, the real seed packages and rendering the real
-content types remain open, and so does the 1.28-or-1.27 decision (R-01, to be recorded as D-047). The S3
-end-to-end flows play a synthetic content type as well.</li>
+<li><strong>The H5P Hub is still unreachable; real content types come from GitHub</strong> (D-078, D-047). The ten content types
+and their dependencies are cloned at pinned commits and verified file by file; all ten install through the seed
+path, play, open in the editor and save under Core 1.28 and Lumi 10.0.4 (R-01 settled). Hub registration and
+the Hub&#39;s own packages stay untested while hub-api.h5p.org is unreachable from the build environment (Q7); the
+S3 end-to-end flows still use a synthetic content type, the S4 flows and the accessibility suite the real ones.</li>
 <li><strong>Institutional reference material is not yet in the repository</strong> (see
 <a href="#reference">reference/README.md</a>). Labels, brand colours and portfolio headings are
 therefore kept in configuration, so they can be corrected without code changes.</li>
@@ -4926,11 +4932,11 @@ URIs (Q3) and TeCopp&#39;s developer key, client ID and deployment ID (Q4) are n
 code, unless they behave differently from the documented values the mocks follow.</li>
 <li><strong>Strict package versions.</strong> An author&#39;s <code>.h5p</code> import is refused when any library differs from the
 installed one in its patch version (<a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a>, Q9), which will refuse many packages exported elsewhere.</li>
-<li><strong>Plain server-rendered pages until S4</strong> (D-048). The Canvas player (<code>/lti/play</code>), the Deep Linking
-picker (<code>/lti/deeplink</code>), the friendly error pages and the portal start page (<code>/</code>) are unstyled pages
-rendered by the server; <code>apps/web</code> replaces them in S4. The H5P editor page exists since S4 (<code>/h5p/edit/:id</code>,
-<code>/h5p/new</code>, and <code>/lti/edit</code> inside Canvas), but the <strong>Rediger</strong> and <strong>Innsikt</strong> tabs come with the web app&#39;s
-chrome (S4) and insight (S6) (D-062), and no page offers sharing yet: it is an API call.</li>
+<li><strong>Some pages stay server-rendered</strong> (D-067). The web app (<code>apps/web</code>) serves the start page, the activity pages,
+<code>/hjelp</code>, <code>/personvern</code> and the Canvas chrome <code>/app/play</code>; the Deep Linking picker (<code>/lti/deeplink</code>) and the
+friendly error pages stay server-rendered by Express (they need its 401/403/404/503 statuses) but use the token
+CSS, the formative notice and the <strong>Hjelp</strong> link. The <strong>Innsikt</strong> tab comes with insight (S6), and no page offers
+sharing yet: it is an API call (<code>PATCH /api/content/:contentId/sharing</code>).</li>
 <li><strong>The H5P pages allow inline styles</strong> (D-070). Since S4 the player (<code>/h5p/play/:contentId</code>, <code>/lti/play</code>) and
 editor pages (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>) send <code>script-src &#39;self&#39;</code> plus the hash of H5P Core&#39;s
 one constant inline script, so a script inside an activity cannot run and read the page&#39;s URL token (the ltik
@@ -4960,17 +4966,18 @@ ioredis when it loads. They are installed and loaded but never connected: our <c
 and node-redis <code>LtiCacheManager</code> replace them, and ESLint forbids importing ltijs&#39;s
 <code>MongoLegacyDatabaseManager</code> and <code>RedisCacheManager</code>. They still count in the audit and licence checks;
 an upstream issue asks ltijs to load them lazily.</li>
-<li><strong>No build step.</strong> <code>npm start</code> runs the TypeScript sources through tsx, a development dependency of the
-repository root, so the server cannot start from an install without development dependencies
-(<code>npm ci --omit=dev</code>), and every start compiles the sources in memory. How production builds and starts
-the server is decided with S6&#39;s Docker images.</li>
+<li><strong>No build step for the server.</strong> <code>npm run build</code> builds the web app, but <code>npm start</code> still runs the server&#39;s
+TypeScript sources through tsx, a development dependency of the repository root, so the server cannot start from
+an install without development dependencies (<code>npm ci --omit=dev</code>), and every start compiles the sources in
+memory. How production builds and starts the server is decided with S6&#39;s Docker images.</li>
 <li><strong>Two interim rules wait for the owner</strong> (Q12). Student authors (through <code>AUTHOR_COURSE_GROUPS</code>) may share
 an activity only as <code>private</code> until a course visibility exists (D-059), and Feide users without a Feide
 ID, such as guests, cannot log in (D-054).</li>
-<li><strong>Sharing changes visibility only; nothing can be published yet</strong> (D-066, Q14).
-<code>PATCH /api/content/:contentId/sharing</code> changes who may see an activity, never its draft or published
-status. Publishing arrives with S4&#39;s publish flow and validator (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>); since learners see only
-published activities (<a class="req-ref" href="#r-PROD-004"><code>PROD-004</code></a>), no new activity reaches learners before then.</li>
+<li><strong>Accessibility is verified automatically in Chromium only; H5P&#39;s own barriers are listed, not hidden</strong> (D-079,
+D-080). Firefox, Safari, Edge, mobile browsers and the three screen readers are covered by the manual protocol
+in <code>docs/accessibility/</code>, which HVL runs and records (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>, <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>). Barriers in H5P&#39;s own markup that
+a run-time repair cannot remove safely are listed in <code>apps/server/a11y/support/upstreamRegister.ts</code> with links
+to the upstream code; they are reported in every run but do not fail CI (<code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>).</li>
 </ol>
 
 </section>
@@ -6470,7 +6477,7 @@ is linking, that Deep Linking launch opens on the new, empty Canvas account; the
 <p>Brand tokens follow HVL&#39;s manual (D-017); HVL (<a href="mailto:profil@hvl.no" rel="noopener" class="ext">profil@hvl.no<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>) must still confirm the values and supply logo files.
 Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one go); decisions D-067…D-079.</p>
 <ul>
-<li><span class="task">✓ Done:</span> Decisions D-067…D-079 recorded; D-047 (R-01) follows the real-library probe</li>
+<li><span class="task">✓ Done:</span> Decisions D-067…D-080 recorded; D-047 (R-01) follows the real-library probe</li>
 <li><span class="task">✓ Done:</span> Real H5P content types from GitHub at pinned commits (<code>npm run h5p:fetch-libraries</code>, D-078): 120 libraries,
 ten Nynorsk example activities; all ten install through the seed path, import, save and play in Chromium;
 R-01 settled (D-047). Found and fixed: library folders refused icon fonts (SEC-002 list applied to them)</li>
@@ -6488,22 +6495,42 @@ parent, Content Hub metadata refused with 403 (page errors), and <code>base-uri 
 <li><span class="task">✓ Done:</span> <code>packages/design-tokens</code> with the contrast test and lint rules (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>): <code>tokens.json</code> → <code>tokens.css</code>,
 the Tailwind <code>@theme</code> file and the Daylight mapping, checked with <code>npm run tokens:check</code>; Stylelint and ESLint
 refuse colour literals, upper case and justified text (D-072)</li>
-<li><span class="task">○ To do:</span> Carried in by earlier decisions: the LTI views <code>/lti/play</code>, <code>/lti/deeplink</code> and the friendly pages move to
-<code>apps/web</code> <code>/app/*</code> on the same server APIs (D-048); the H5P editor page with the player&#39;s script-safe JSON
-(D-040) and the LTI-006 <strong>Rediger</strong> tab on it (D-062); an editor in a cookie-less Canvas iframe needs
-grant-bearing file URLs issued after an Edit check (D-058); <a class="req-ref" href="#r-DOC-012"><code>DOC-012</code></a> from S3</li>
-<li><span class="task">○ To do:</span> Web shell components and <code>hvl-h5p-theme.css</code> (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>…<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>, <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>)</li>
+<li><span class="task">✓ Done:</span> Carried in by earlier decisions: launches land on the web app&#39;s Canvas chrome <code>/app/play</code> (D-048 as amended
+by D-067: the Deep Linking picker and the friendly pages stay server-rendered, token-styled, with the formative
+notice and <strong>Hjelp</strong>); the H5P editor page with the player&#39;s script-safe JSON (D-040) and the LTI-006
+<strong>Rediger</strong> tab on <code>/app/play</code> (D-062); editor file and upload grants after an Edit check (D-058, D-069);
+<a class="req-ref" href="#r-DOC-012"><code>DOC-012</code></a> (<code>/api/docs</code> from the zod schemas in <code>packages/api-contract</code>, D-077). H5P pages opened on their own
+go to their chrome page (D-067)</li>
+<li><span class="task">✓ Done:</span> Web shell components and <code>hvl-h5p-theme.css</code> (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>…<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>, <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>): layout with skip link,
+<strong>Hjelp</strong> and <strong>Personvern</strong>, tabs, dialog, error summary, findings with <strong>Gå til feltet</strong>, publish dialog,
+notice, <code>ExternalLink</code>/<code>FileLink</code>; pages <code>/</code>, <code>/aktivitet/[id]</code>, <code>/aktivitet/ny</code>, <code>/app/play</code>, <code>/hjelp</code>,
+<code>/personvern</code>, 404; the H5P theme with feedback prefixes, two-tone focus, 24 px targets, reduced motion and
+forced colours. Found and fixed: logout refused by <code>form-action</code> (D-070 amendment), the editor&#39;s go-to-field
+giving up while H5P still loads, a second <strong>Publiser</strong> on published activities</li>
 <li><span class="task">✓ Done:</span> Validator engine, UD rules and pedagogical hint rules (<a class="req-ref" href="#r-UD-020"><code>UD-020</code></a>…<a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>, <a class="req-ref" href="#r-PED-020"><code>PED-020</code></a>): pure
 <code>validateContent</code> with 11 <code>V-*</code> and 11 <code>PED-H*</code> rules, fixtures per rule, messages in three languages,
 thresholds from <code>content/laeringsdesign/hint-thresholds.yaml</code> (D-073). Found and fixed: imported activities
 state <code>language</code>, the editor saves <code>defaultLanguage</code>; V-LANG and the player&#39;s <code>lang</code> read both (UD-010)</li>
-<li><span class="task">○ To do:</span> Publish flow with acknowledgements (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>), which also ends S3&#39;s visibility-only sharing (D-066, Q14);
-formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>); privacy notice (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>)</li>
-<li><span class="task">○ To do:</span> CSP that blocks third-party requests; self-hosted fonts (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>); browser and assistive-technology matrix (<a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>).
+<li><span class="task">✓ Done:</span> Publish flow with acknowledgements (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>), which also ends S3&#39;s visibility-only sharing (D-066, Q14);
+formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>); privacy notice (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>): server re-validation, reasons valid 14 days, a
+Redis write lock so a publish cannot slip between the save gate and the write (D-074 amendment), unpublish,
+notice dismissal per user with bounded versions (D-075), <code>/personvern</code> in nn/nb/en (DPO review open, Q6)</li>
+<li><span class="task">✓ Done:</span> CSP that blocks third-party requests; self-hosted fonts (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>); browser and assistive-technology matrix (<a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>).
 The player page&#39;s <code>script-src</code> must not allow <code>&#39;unsafe-inline&#39;</code>: it is the structural defence against
-markup H5P Core writes without escaping (D-039)</li>
-<li><span class="task">○ To do:</span> axe suite (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>); manual protocol document (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>)</li>
-<li><span class="task">○ To do:</span> Progress screenshots (desktop and mobile, <code>nn</code>) sent to the owner as each view is built (CLAUDE.md §4)</li>
+markup H5P Core writes without escaping (D-039). Done: first-party policies on every page type (portal pages
+too), system font stacks (D-018), a request recorder over every view and type; the one outside script is
+Panopto&#39;s embed API file, only when a Panopto site is configured (D-070 amendment). NFR-003 is a documented
+matrix; manual results open (D-079)</li>
+<li><span class="task">✓ Done:</span> axe suite (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>); manual protocol document (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>): <code>npm run test:a11y</code> (12 files, 296 tests) on every
+route and in the player and editor of all ten types, light and forced colours, plus reflow, motion, text
+spacing, zoom, keyboard, target size, <code>lang</code> and first-party checks; H5P&#39;s own findings are repaired at run
+time or registered (D-080). <code>docs/accessibility/</code> holds the protocol and the matrix; results are HVL&#39;s.
+Found and fixed: the H5P editor scrolled sideways at 320 px, CoursePresentation&#39;s focus ring was cut off,
+the new-activity editor frame had no title</li>
+<li><span class="task">✓ Done:</span> Progress screenshots (desktop and mobile, <code>nn</code>) sent to the owner as each view is built (CLAUDE.md §4):
+eleven views at 1280 and 390 px on 2026-10-24</li>
+<li><span class="task">✓ Done:</span> Early independent review of the server work (security, publishing, validator, accessibility, privacy and
+documentation; a skeptic per dimension): 36 confirmed findings, fixed in three groups and verified again</li>
 <li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S4</li>
 </ul>
 <h3 id="progress--s5--laeringsdesign-studio" tabindex="-1">S5 — Læringsdesign studio ⬜</h3>
