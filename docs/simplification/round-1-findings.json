@@ -2400,7 +2400,117 @@
           "mockFeide.mjs `clientSecret: options.clientSecret ?? ...` is not equivalent to a destructuring default (`??` also replaces null), so it stays. In the end-session route, a `const` for query.get('state') would shadow the function's `state` parameter and saves nothing.",
           "Inlining mockPlatformEnv into startMockPlatform's return was rejected: the named, documented function is clearer, and proposal 1 only un-exports it."
         ]
-      }
+      },
+      "skeptic_equivalence": [
+        {
+          "id": "tools-mock-site-1",
+          "verdict": "survives",
+          "reason": "I ran git grep over every tracked file except docs/site, docs/simplification and TRACEABILITY. It found no consumer of DEFAULT_FEIDE_LOGIN, FEIDE_ENDPOINTS, FEIDE_AFFILIATIONS, MOCK_CANVAS_DEFAULTS or mockPlatformEnv through mockPlatform.mjs. Every importer uses named imports. There is no `import * as` and no dynamic import(). The README does not name these exports. mockPlatformEnv is still called inside startMockPlatform, so `env` does not change. The defining modules keep their exports and their internal uses. On a scratch copy (git archive HEAD plus the patch): the 113 area tests pass, the list of test files and titles is the same before and after, `tsc --noEmit` passes on apps/server (including e2e/ and the a11y config) against the narrowed d.mts, and eslint, prettier and doc-lint are clean.",
+          "conditions": "Change mockPlatform.mjs and mockPlatform.d.mts together, so the d.mts invariant ('every value export is declared here') still holds. Keep the exports in mockFeide.mjs, feideDiscovery.mjs, feideUsers.mjs and mockCanvas.mjs."
+        },
+        {
+          "id": "tools-mock-site-2",
+          "verdict": "survives",
+          "reason": "Nothing reads DEEP_LINK_PROBLEMS. git grep finds only its definition, the re-export and the d.mts declaration. verify() pushes problem codes as literals in checkSignature, checkClaims and checkItems, and those do not change, so the recorded `problems` and their order stay the same. deepLinkReturn.test and ltijsInterop.test pass on the patched scratch copy, and apps/server typechecks.",
+          "conditions": "Keep the DeepLinkProblem union and its doc in canvasTypes.d.mts. If proposal 1 is not applied, change only the canvasTypes import line in the d.mts (drop DeepLinkProblem) and leave the feideTypes import as it is."
+        },
+        {
+          "id": "tools-mock-site-3",
+          "verdict": "survives",
+          "reason": "Every LTI_ROLE access in the repository uses a key that is kept: learner, instructor, administrator, institutionStudent, institutionInstructor and systemUser. Nothing uses LTI_ROLE dynamically (no LTI_ROLE[...], Object.keys/values/entries, spread or destructuring). CANVAS_USERS' frozen role lists use only kept keys, so the launch roles claims are byte-identical. The server's TestUser, TA and ContentDeveloper tests use their own constants (LtiRoleMapper.ts and its tests). apps/server tsc passes with the narrowed Record key union.",
+          "conditions": "Narrow the d.mts key union in the same change, with the trailing comma moved to `| 'systemUser',`."
+        },
+        {
+          "id": "tools-mock-site-4",
+          "verdict": "survives",
+          "reason": "Destructuring defaults fire exactly when the value is undefined. That is the same rule withoutUndefined plus the spread merge applied. Both keep null and 0 (launchTtlSeconds: 0 stays 0). The only differences would be inherited or non-enumerable option properties, and every caller passes a plain literal: mockPlatform.mjs passes {toolUrl, port}, and the six tool tests pass {toolUrl}. Reading through a getter happens once either way, with no side effects. toolBaseUrl(options?.toolUrl) still throws before destructuring when options is missing. mockCanvas.test (clientId, deploymentId, platformConfig) and canvasAuthorize.test (TTL) pass on the patched copy.",
+          "conditions": ""
+        },
+        {
+          "id": "tools-mock-site-5",
+          "verdict": "survives",
+          "reason": "scopeTest is module-private. Only feideClaims and feideGroups reach it, and their only callers are mockFeide.mjs lines 99, 121 and 147, which pass grant.scope. The one place a grant is created is mockFeide.mjs line 91, with `scope: String(req.query.scope ?? '')`. Access-token entries are `{ ...grant, expiresAt }`. Other oauth2-mock-server grants (refresh, client_credentials) never find a grant (state.codes.get(undefined)), and their tokens are not in state.tokens. So scope is always a string, and String(scope ?? '') does nothing. The AUTH-004 scope cases in mockFeide.test and mockFeideServices.test pass on the patched copy.",
+          "conditions": "Keep the String(req.query.scope ?? '') coercion at grant creation in mockFeide.mjs, because scopeTest now relies on it. Keep the `@param {string} scope` TSDoc of feideClaims and feideGroups."
+        },
+        {
+          "id": "tools-mock-site-6",
+          "verdict": "survives",
+          "reason": "Both versions build the same form, with the same fields in the same order (grant_type, code, redirect_uri, client_id, then code_verifier) and post it to the same endpoint. The only possible difference would be a falsy pkceCodeVerifier. feideLoginSteps.authorize always sets it from client.randomPKCECodeVerifier(), which is a non-empty 43-character string, so `verifier && step.checks.pkceCodeVerifier` sends a verifier exactly when the old `verifier && {...}` did. The plain redeemRaw(code) calls send the same body as before. The title, the Act calls and every assertion are unchanged, and the vitest list of titles is the same before and after.",
+          "conditions": ""
+        },
+        {
+          "id": "tools-mock-site-7",
+          "verdict": "survives",
+          "reason": "loadEnvPart gets the same six names in the same order. Its `keys` parameter is readonly and is only mapped, never changed. The expected value of the key check is still a fixed literal in the test, sorted as a copy. Sorting that list by code units gives exactly the old literal (CANVAS_ORIGINS, FEIDE_CLIENT_ID, FEIDE_CLIENT_SECRET, FEIDE_GROUPS_API_URL, FEIDE_ISSUER, LTI_PLATFORMS). A missing, extra or renamed variable in platform.env still fails. The three following expectations, the title and the test count are unchanged, and the file passes.",
+          "conditions": "Keep the expected names as a literal in the test. Do not derive them from platform.env or from the mock."
+        },
+        {
+          "id": "tools-mock-site-8",
+          "verdict": "survives",
+          "reason": "Both escapers ran the same four-replace chain. Every caller in markdownRenderer already passes a string: the requirement title (capture group `(.+)`), resolveHref's href (marked 12 token hrefs are strings, '' for an empty link), template-literal labels, and code.replace(...). So String() changes nothing there, and pageTemplate already used String(). On the scratch copy with the patch, `buildSpecSite.mjs --check` reports docs/site/index.html up to date. The --fragment output is a substring of the same html. specSite.test passes, and doc-lint and eslint are clean.",
+          "conditions": "Keep String(s) in the shared escapeHtml, and keep its TSDoc."
+        },
+        {
+          "id": "tools-mock-site-9",
+          "verdict": "survives",
+          "reason": "knownIds has only one producer that matters: buildSpecSite builds it from extractRequirements, whose id is capture group 1 of REQUIREMENT_HEADING, `([A-Z][A-Z0-9]*-\\d{3})`. That is exactly the body of ID_ONLY, so every member of knownIds matches ID_ONLY in full, for any repository content. The test's Set(['SEC-001']) matches as well. So `ID_ONLY.test(code) && knownIds.has(code)` equals `knownIds.has(code)` for every input those callers can give. marked also HTML-escapes the codespan text before the renderer sees it. The patched build is byte-identical (--check passes), and '[DOC-004] links known requirement IDs in-page' passes.",
+          "conditions": "knownIds must keep coming only from REQUIREMENT_HEADING ids (buildSpecSite line 62). Keep the codespan comment."
+        }
+      ],
+      "skeptic_worth-rules": [
+        {
+          "id": "tools-mock-site-1",
+          "verdict": "survives",
+          "reason": "This is real dead code: 21 lines of re-exports and their declarations that nothing imports. `git grep -w` outside docs/site finds the five names only in their defining modules, the entry point, the d.mts and docs/simplification/round-1-findings.json. Every importer of mockPlatform.mjs uses named imports (apps/server tests, e2e, tools tests, cli.mjs), and none of them takes these names. The README's 'Using it from tests' section does not document them. The header sentence ('re-exports the constants tests build launches and logins with') stays true. The d.mts invariant 'every value export is declared here' still holds. mockPlatformEnv keeps its TSDoc as a module-private function. No file grows. On a patched scratch copy all 11 mock-platform test files (109 tests) pass, and Prettier is clean.",
+          "conditions": "Keep the `export` on the defining modules (DEFAULT_FEIDE_LOGIN, FEIDE_ENDPOINTS, FEIDE_AFFILIATIONS, MOCK_CANVAS_DEFAULTS are used inside the mock), keep mockPlatformEnv's TSDoc and the MockPlatformEnv interface, and drop the FeideAffiliation import in the d.mts together with this proposal (not with another one)."
+        },
+        {
+          "id": "tools-mock-site-2",
+          "verdict": "survives",
+          "reason": "DEEP_LINK_PROBLEMS is a 22-line runtime copy of the DeepLinkProblem type union, and no code, test or script reads it. The verifier pushes string literals. The list of codes and their order are still documented once, in canvasTypes.d.mts ('in the order ./deepLinkReturn.mjs checks them'), and the deepLinkReturn header does not refer to the array. This removes real duplication with no loss of explicitness. deepLinkReturn.test and ltijsInterop.test pass on the patched scratch copy.",
+          "conditions": "Keep the DeepLinkProblem union and its doc line in canvasTypes.d.mts, and drop the DeepLinkProblem import in mockPlatform.d.mts together with this proposal."
+        },
+        {
+          "id": "tools-mock-site-3",
+          "verdict": "survives",
+          "reason": "Nothing uses teachingAssistant, contentDeveloper or testUser. The LTI_ROLE uses in the repository are administrator, institutionInstructor, institutionStudent, instructor, learner and systemUser, and the only `LTI_ROLE[` match is in the findings JSON. The server's LtiRoleMapper.test deliberately keeps its own literal URIs for TA, ContentDeveloper and TestUser, so the spec-relevant test coverage (LTI-004) does not depend on these entries. The module header says the vocabulary holds 'the names the mock Canvas and its tests share', and the TSDoc says 'role URIs used in tests'. After the removal both statements are more accurate. No rule is affected and no file grows.",
+          "conditions": "Edit only the LTI_ROLE object and its d.mts key union. Do not touch LtiRoleMapper.ts or its test literals."
+        },
+        {
+          "id": "tools-mock-site-4",
+          "verdict": "survives",
+          "reason": "This removes needless indirection. A module-private helper defined 80 lines below its only use, plus a spread merge, only re-implemented destructuring defaults. The result is one destructuring of `options` in which every default is visible where it applies, so the code is clearer and one line shorter. MOCK_CANVAS_DEFAULTS stays the single source of the Canvas-like values, with its TSDoc. Explicit null is kept in both versions. Inherited properties make the only theoretical difference, and every caller passes an object literal. mockCanvas.test and canvasAuthorize.test (TTL) pass on the patched copy, and Prettier keeps the layout.",
+          "conditions": "Keep the defaults as references to MOCK_CANVAS_DEFAULTS.<key> (no inlined literals) and keep MOCK_CANVAS_DEFAULTS exported with its TSDoc."
+        },
+        {
+          "id": "tools-mock-site-5",
+          "verdict": "refuted",
+          "reason": "The 4 'saved' lines are only Prettier's wrapping of one expression, so the gain is cosmetic. The code is the mock Feide's scope narrowing, which models AUTH-004 data minimisation on grant scopes, so it falls under the rule that auth/grants code is simplified only when equivalence is obvious. Here it is not obvious locally. It depends on a cross-file invariant: mockFeide.mjs line 91 coerces `req.query.scope`, and the coerced grant is then copied into the tokens map. feideClaims and feideGroups are exported functions. `String(scope ?? '')` is a cheap fail-closed default: a missing scope releases only `sub`. Removing it turns a future missing scope into a TypeError. When in doubt, leave it."
+        },
+        {
+          "id": "tools-mock-site-6",
+          "verdict": "survives",
+          "reason": "This removes an 11-line copy of the same token request inside one test file, and helpers may be shared. The form fields and their order are unchanged. `checks.pkceCodeVerifier` always comes from randomPKCECodeVerifier() in feideLoginSteps.mjs, so it is never empty, and `verifier && …` yields exactly the old with/without-verifier bodies. The title, the [AUTH-001] tag, the Act calls and all assertions are unchanged. The test count stays 11, the redeemRaw TSDoc is updated to the new parameter, and the test still fails if the verifier were dropped (first must be 200). The file passes on the patched copy and Prettier is clean.",
+          "conditions": "Update redeemRaw's TSDoc as proposed, and keep `exchange` as a named local in the PKCE test so the Act lines stay as they are."
+        },
+        {
+          "id": "tools-mock-site-7",
+          "verdict": "survives",
+          "reason": "Two copies of the same six names in one test become one literal list. The assertion is as strong: an extra, missing or renamed variable still fails, and the expected value is still a hand-written literal, only sorted. The title and [LTI-001] stay, the three following expectations stay, the test count stays 5, and Prettier keeps the layout. The gain is modest, but it is real duplication within a single test, and clarity is at least equal, because the reader no longer has to compare two lists to see that they are the same set.",
+          "conditions": "`six` must stay a hand-written literal array inside the test, not derived from mockPlatform.mjs, env.ts or envSchema, so the expectation stays independent of the code under test. Keep the Arrange/Act/Assert comments."
+        },
+        {
+          "id": "tools-mock-site-8",
+          "verdict": "survives",
+          "reason": "Two character-identical HTML escapers become one, which removes the classic risk of escapers drifting apart. pageTemplate already imports its badges from markdownRenderer, so no new coupling appears, and HTML escaping fits the renderer's responsibility. The new export gets TSDoc, and the pageTemplate header's Collaborators line is updated. No file goes over 200 lines (markdownRenderer 126 to 127). I verified on a scratch copy that `node tools/spec-site/buildSpecSite.mjs --check` still reports docs/site/index.html up to date, so the output is byte-identical, and Prettier is clean.",
+          "conditions": "Keep the `String(s)` coercion in the shared escaper, keep the `esc` call sites (import alias) rather than renaming them, and apply the header Collaborators update."
+        },
+        {
+          "id": "tools-mock-site-9",
+          "verdict": "refuted",
+          "reason": "It saves 1 line and drops an explicit local shape check. ID_ONLY is what visibly guarantees, inside markdownRenderer, that only ID-shaped code spans are linked, and so that the unescaped interpolation into `href=\"#r-${code}\"` is safe. Without it, that guarantee depends on how buildSpecSite.mjs builds knownIds from REQUIREMENT_HEADING captures, a cross-file invariant. createRenderer is an exported function whose documented contract is only 'Requirement IDs that exist'. The output is byte-identical today, but the code becomes less explicit for a negligible gain, and the rules say not to trade an explicit check for a reliance on an invariant elsewhere."
+        }
+      ]
     }
   }
 }
