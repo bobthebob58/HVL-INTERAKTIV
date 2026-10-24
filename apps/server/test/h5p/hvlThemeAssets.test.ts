@@ -31,8 +31,9 @@ const STYLE_ORDER = [
   'hvl-h5p-indicators.css',
   'hvl-feedback-prefixes.css',
 ];
-/** The answer prefixes (UD-003), the markup repairs (D-080) and the jQuery half of reduced motion (UD-009). */
-const SCRIPT_ORDER = ['feedbackPrefixes.js', 'a11yRepairs.js', 'reducedMotion.js'];
+/** The answer prefixes (UD-003), the content and editor markup repairs (D-080) and the jQuery half of reduced
+ * motion (UD-009). */
+const SCRIPT_ORDER = ['feedbackPrefixes.js', 'a11yRepairs.js', 'a11yEditorRepairs.js', 'reducedMotion.js'];
 
 describe('the HVL theme files', () => {
   it('[UD-011] resolves every theme file from its package and versions it by content', () => {

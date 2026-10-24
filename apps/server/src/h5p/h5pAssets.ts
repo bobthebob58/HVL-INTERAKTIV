@@ -1,7 +1,7 @@
 /**
  * h5pAssets — the files the player and the editor add to Lumi's lists: the H5P Core 1.28 files that h5p-server
- * 10.0.4 leaves out, and HVL's theme for H5P (tokens, Daylight mapping, theme, feedback prefixes, markup repairs,
- * reduced motion).
+ * 10.0.4 leaves out, and HVL's theme for H5P (tokens, Daylight mapping, theme, feedback prefixes, the content and
+ * editor markup repairs, reduced motion).
  *
  * Why: Lumi 10.0.4's asset lists were written for Core 1.27. Core 1.28 adds the theme ("Daylight") styles and
  *      fonts (F3 in spec 01 §1). The editor list also lacks the tooltip and table styles and two core scripts
@@ -11,9 +11,9 @@
  *      into the iframes it writes for iframe content (`H5P.getHeadTags`), and into
  *      `H5PIntegration.editor.assets`, which the editor's iframe loads. So the theme is added here too, after the
  *      core files and before the libraries' own styles.
- *      The files are added through Lumi's `customization.global` options instead of patching Lumi. The markup
- *      repair script (D-080) and the reduced-motion script (UD-009) need the same documents as the prefix script, so
- *      they are loaded the same way.
+ *      The files are added through Lumi's `customization.global` options instead of patching Lumi. The two markup
+ *      repair scripts (D-080) and the reduced-motion script (UD-009) need the same documents as the prefix script,
+ *      so they are loaded the same way.
  * Spec: H5P-001, UD-003, UD-009, UD-011, UD-030
  * Invariants:
  *   - With these additions, the player and the editor load every style and script that Core 1.28's own
@@ -76,6 +76,7 @@ const THEME_SOURCES: readonly (readonly [string, string])[] = [
   ['hvl-feedback-prefixes.css', '@hvl-interaktiv/hvl-h5p-theme/hvl-feedback-prefixes.css'],
   ['feedbackPrefixes.js', '@hvl-interaktiv/hvl-h5p-theme/feedbackPrefixes.js'],
   ['a11yRepairs.js', '@hvl-interaktiv/hvl-h5p-theme/a11yRepairs.js'],
+  ['a11yEditorRepairs.js', '@hvl-interaktiv/hvl-h5p-theme/a11yEditorRepairs.js'],
   ['reducedMotion.js', '@hvl-interaktiv/hvl-h5p-theme/reducedMotion.js'],
 ];
 

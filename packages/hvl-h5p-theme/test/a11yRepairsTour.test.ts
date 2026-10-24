@@ -1,7 +1,7 @@
 /**
- * Tests for the one repair that changes focus order (D-080 amendment): while BranchingScenario's editor tour fades a
- * part of the editor (`.tour-fade`), the part is inert, and it is given back when the fade ends; a part H5P made
- * inert itself is left alone.
+ * Tests for the one repair that changes focus order (D-080 amendment, src/a11yEditorRepairs.js): while
+ * BranchingScenario's editor tour fades a part of the editor (`.tour-fade`), the part is inert, and it is given
+ * back when the fade ends; a part H5P made inert itself is left alone.
  *
  * Spec: UD-030, UD-004
  */
@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 
-const SCRIPT = readFileSync(new URL('../src/a11yRepairs.js', import.meta.url), 'utf8');
+const SCRIPT = readFileSync(new URL('../src/a11yEditorRepairs.js', import.meta.url), 'utf8');
 
 /** BranchingScenario's editor: a faded tree, the tour dialog outside it, and a part H5P made inert on its own. */
 const EDITOR = `<div class="editor"><div class="tree tour-fade" id="tree"><button>Legg til</button></div>

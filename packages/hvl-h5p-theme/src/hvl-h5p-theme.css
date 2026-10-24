@@ -113,11 +113,25 @@ html.h5p-iframe,
   min-height: var(--hvl-target-min);
 }
 
-/* A11Y: WCAG 2.5.8: D-080's repair (a11yRepairs.js) makes CoursePresentation's progress bar a list, so its parts
-   no longer match [role='tab'] above; they keep the 24 px they had, and so do the links that fill them. */
-:root .h5p-course-presentation .h5p-progressbar-part {
+/* A11Y: WCAG 2.5.8, 1.4.10: D-080's repair (a11yRepairs.js) makes CoursePresentation's progress bar a list, so its
+   parts no longer match [role='tab'] above. The bar is 3 % of the player's height (5 px at 320 px), and 24 px parts
+   lay over the footer's controls. So the bar gets 24 px of its own and the player grows by what that adds (CP 1.28 is
+   16:9 to its width: 3 % of its height is 1.6875 % of its width). Full screen, which H5P fits to the screen, keeps
+   H5P's bar; on a phone its parts are smaller, and the side menu and slide buttons are 2.5.8's equivalent there.
+   The summary slide's part keeps its 2.2em, but at least 24 px. Remove when a pinned CP gives its bar 24 px.
+   UPSTREAM: https://github.com/h5p/h5p-course-presentation/blob/369d140c741fab528604237380c34ec1fe8f121a/src/scripts/cp.js */
+:root .h5p-course-presentation:not([class*='fullscreen']) .h5p-wrapper:not([class*='active-surface']) {
+  box-sizing: content-box;
+  padding-bottom: max(0px, var(--hvl-target-min) - 1.6875%);
+}
+
+:root .h5p-course-presentation:not([class*='fullscreen']) :is(.h5p-cp-navigation, .h5p-progressbar-part) {
   min-width: var(--hvl-target-min);
   min-height: var(--hvl-target-min);
+}
+
+:root .h5p-course-presentation .h5p-cp-navigation .h5p-progressbar-part.progressbar-part-summary-slide {
+  min-width: max(2.2em, var(--hvl-target-min));
 }
 
 /* A11Y: QuestionSet's progress dots (Components 1.0 `.h5p-progress-dot`) are 9 px links about 22 px apart; spacing

@@ -24,7 +24,7 @@ The server serves the files under `/h5p/theme/<name>?version=<content hash>` and
 `customization.global` (`apps/server/src/h5p/h5pAssets.ts`), in this order, after Core's own styles:
 `tokens.css`, `h5p-daylight.css` (both from `@hvl-interaktiv/design-tokens`), `hvl-h5p-theme.css`,
 `hvl-h5p-feedback.css`, `hvl-h5p-indicators.css`, `hvl-feedback-prefixes.css`, and the scripts
-`feedbackPrefixes.js`, `a11yRepairs.js` and `reducedMotion.js`.
+`feedbackPrefixes.js`, `a11yRepairs.js`, `a11yEditorRepairs.js` and `reducedMotion.js`.
 
 ## Folder structure
 
@@ -36,12 +36,13 @@ The server serves the files under `/h5p/theme/<name>?version=<content hash>` and
 | `src/feedbackPrefixes.js` | Browser script: adds the prefix label to each answer state (hidden, or shown where the library uses the pseudo-elements) and puts it in front of an `aria-label` name |
 | `src/feedbackTargets.json` | Per library: which element shows a state, where the visible prefix goes (`::before`, `::after` or `"label"`), whether it has its own icon |
 | `src/reducedMotion.js` | Browser script: turns H5P's jQuery animations off (`H5P.jQuery.fx.off`) while the reader asks for reduced motion |
-| `src/a11yRepairs.js` | Browser script: names, roles and labels H5P's own markup lacks (D-080; documented in its header) |
+| `src/a11yRepairs.js` | Browser script: names, roles and levels the content types' own markup (what a learner sees) lacks (D-080; documented in its header) |
+| `src/a11yEditorRepairs.js` | Browser script: names, roles and labels H5P's editor, its widgets and the hub's list lack, and `inert` on the parts BranchingScenario's tour fades (D-080; documented in its header) |
 | `src/locales/{nn,nb,en}.json` | `feedback.correctPrefix` and `feedback.incorrectPrefix` (`✓ Riktig:` / `✗ Feil:`, `✓ Correct:` / `✗ Incorrect:`) |
 | `scripts/buildFeedbackPrefixes.mjs` | Generates `dist/hvl-feedback-prefixes.css` from the locales and targets; `--check` for drift |
 | `scripts/feedbackTargetList.mjs` | Reads and checks `src/feedbackTargets.json` for the generator |
 | `dist/hvl-feedback-prefixes.css` | Generated: `:lang()` prefix texts, the target lists for the script, the `::before` and `::after` prefixes |
-| `test/` | Generator, theme structure and script (jsdom) tests; `test/support/` opens the jsdom document |
+| `test/` | Generator, theme structure and script (jsdom) tests; `test/support/` opens the jsdom documents (`prefixDocument.ts` for the prefixes, `repairDocument.ts` for both repair scripts) |
 | `.gitignore` | Re-includes `dist/` (the root ignores every `dist/`) |
 
 ## Key flows

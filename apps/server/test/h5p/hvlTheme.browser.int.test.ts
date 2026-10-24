@@ -5,7 +5,7 @@
  * ./hvlFeedback.browser.int.test.ts, ./hvlFeedbackContainers.browser.int.test.ts and
  * ./hvlFeedbackHotspot.browser.int.test.ts; drop zones and task dots: ./hvlThemeIndicators.browser.int.test.ts.
  *
- * Spec: UD-004, UD-009, UD-011, UD-012
+ * Spec: H5P-009, UD-004, UD-009, UD-011, UD-012
  */
 import type { Frame } from 'playwright-core';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -58,7 +58,7 @@ describeWithServices('the HVL theme inside H5P', () => {
     afterAll(() => server?.close());
 
     describeWithBrowser('[UD-011] in Chromium', (browser) => {
-      it('[UD-011] every type renders with the theme active in each document that holds H5P content', async () => {
+      it('[H5P-009][UD-011] every type renders with the theme active in each document that holds H5P content', async () => {
         const report: Record<string, unknown[]> = {};
         for (const library of server.ids.keys()) {
           // Arrange
@@ -78,7 +78,7 @@ describeWithServices('the HVL theme inside H5P', () => {
         );
       }, 300_000);
 
-      it("[UD-011] the editor's iframe loads the theme", async () => {
+      it("[H5P-009][UD-011] the editor's iframe loads the theme", async () => {
         // Arrange
         const page = await browser().newPage();
         await page.setExtraHTTPHeaders({ [server.author.header[0]]: server.author.header[1] });

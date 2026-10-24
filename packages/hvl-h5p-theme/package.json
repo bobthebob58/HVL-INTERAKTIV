@@ -14,6 +14,7 @@
     "./hvl-feedback-prefixes.css": "./dist/hvl-feedback-prefixes.css",
     "./feedbackPrefixes.js": "./src/feedbackPrefixes.js",
     "./a11yRepairs.js": "./src/a11yRepairs.js",
+    "./a11yEditorRepairs.js": "./src/a11yEditorRepairs.js",
     "./reducedMotion.js": "./src/reducedMotion.js",
     "./locales/*": "./src/locales/*"
   },

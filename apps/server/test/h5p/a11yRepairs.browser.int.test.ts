@@ -1,12 +1,12 @@
 /**
- * Browser tests of the H5P markup repairs (D-080, packages/hvl-h5p-theme/src/a11yRepairs.js) with the real content
- * types (D-078): the repaired controls carry their new roles and names in Chromium's accessibility tree and still
- * work by keyboard as H5P made them work (CoursePresentation's progress bar, a DragText drop, the editor's vertical
- * tabs, choosing a content type in the hub); the editor-mode switch shows its state and the score-range "to" field
- * has a name. Two keyboard gaps of H5P's editor that attributes cannot close (WCAG 2.1.1, the UD-006 barriers listed
- * in D-080 and the manual protocol §8) are `upstream pin:` tests (DOC-004): a vertical tab ignores Enter, an editor
- * mode ignores Enter and Space. A library update that closes one fails its pin, so that record is updated.
- * axe on the same markup: apps/server/a11y/.
+ * Browser tests of the H5P markup repairs (D-080, packages/hvl-h5p-theme/src/a11yRepairs.js, a11yEditorRepairs.js)
+ * with the real content types (D-078): the repaired controls carry their new roles and names in Chromium's
+ * accessibility tree and still work by keyboard as H5P made them work (CoursePresentation's progress bar, a DragText
+ * drop, the editor's vertical tabs, choosing a content type in the hub); the editor-mode switch shows its state and
+ * the score-range "to" field has a name. Two keyboard gaps of H5P's editor that attributes cannot close (WCAG 2.1.1,
+ * the UD-006 barriers in D-080 and the manual protocol §8) are `upstream pin:` tests (DOC-004): a vertical tab
+ * ignores Enter, an editor mode ignores Enter and Space; a library update that closes one fails its pin, so that
+ * record is updated. axe on the same markup: apps/server/a11y/.
  *
  * Spec: UD-006, UD-030, UD-011
  */
