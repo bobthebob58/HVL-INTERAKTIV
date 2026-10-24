@@ -1,0 +1,67 @@
+/*
+ * hvl-h5p-indicators — the cues H5P draws for where an answer goes and which tasks are answered, raised to 3 : 1
+ * against what lies next to them (WCAG 1.4.11) and kept in forced colours (UD-012).
+ *
+ * Why: UD-011 makes the HVL theme responsible for H5P's look, and UD-001 lets only the tokens decide colours. Two
+ *      such cues in the ten types fall short with the HVL palette: DragText's empty drop zone (Components 1.0) and
+ *      CoursePresentation's answered-task dot. The answer states themselves are styled in ./hvl-h5p-feedback.css.
+ * Spec: UD-001, UD-011, UD-012
+ * Invariants:
+ *   - Every rule carries a `:root` prefix, so it beats the library rule of the same shape loaded after it.
+ *   - No colour literal and no !important; each pair drawn here is declared in tokens.json and checked by
+ *     packages/design-tokens/test/contrast.test.ts.
+ *   - A cue never depends on a fill alone in forced colours, which drop fills: there it is drawn with borders, which
+ *     forced colours keep in a system colour.
+ * Collaborators: @hvl-interaktiv/design-tokens (tokens.css, h5p-daylight.css), ./hvl-h5p-feedback.css,
+ *   apps/server/src/h5p/h5pAssets.ts (loads it after hvl-h5p-feedback.css).
+ * Tests: packages/hvl-h5p-theme/test/themeStructure.test.ts,
+ *   apps/server/test/h5p/hvlThemeIndicators.browser.int.test.ts
+ */
+
+/* Components 1.0 draws an empty inline drop zone (DragText) in alternative-dark, fill and border, on
+   alternative-light: 1.38 : 1. Its border takes ink-muted (7.02 : 1); the correct, wrong and hover states keep
+   their own borders.
+   UPSTREAM: https://github.com/h5p/h5p-components/blob/223a9164259db6f9c1132791671beb1ce4d2c9c2/src/styles/h5p-dropzone.css
+   (remove when the empty zone's border reaches 3 : 1 on its container there). */
+:root
+  .h5p-dropzone--inline
+  [aria-dropeffect]:not(.h5p-dropzone-correct, .h5p-dropzone-wrong, .h5p-dropzone--hover) {
+  border-color: var(--hvl-ink-muted);
+}
+
+/* CoursePresentation 1.28 fills an answered task dot with main-contrast-cta, 2.67 : 1 against the dot's ring on a
+   slide not yet reached. An answered dot is filled with its own ring colour instead, so filled against hollow is
+   the ring colour against the part behind it (band on CP's band/ink mix 7.87 : 1, ink on band 12.6 : 1).
+   UPSTREAM: https://github.com/h5p/h5p-course-presentation/blob/369d140c741fab528604237380c34ec1fe8f121a/src/styles/navigation-line.css
+   (remove when an answered dot differs from an open one by 3 : 1 there, also in forced colours). */
+:root
+  .h5p-course-presentation
+  .h5p-progressbar
+  .h5p-progressbar-part
+  .h5p-progressbar-part-has-task.h5p-answered {
+  background: var(--h5p-theme-secondary-cta-base);
+}
+
+:root
+  .h5p-course-presentation
+  .h5p-progressbar
+  .h5p-progressbar-part.h5p-progressbar-part-show
+  .h5p-progressbar-part-has-task.h5p-answered {
+  background: var(--h5p-theme-secondary-contrast-cta);
+}
+
+/* Forced colours drop that fill, so answered and open dots looked alike (UD-012). There an answered dot is a disc
+   drawn by its ring alone: no inner area and a ring half its width, in the ring's system colour. Chromium rounds
+   ring widths down to whole device pixels, so the disc may be a pixel smaller than an open dot. The ✓/✗
+   CoursePresentation hangs above a checked dot is positioned against the part, so it does not move. */
+@media (forced-colors: active) {
+  :root
+    .h5p-course-presentation
+    .h5p-progressbar
+    .h5p-progressbar-part
+    .h5p-progressbar-part-has-task.h5p-answered {
+    width: 0;
+    height: 0;
+    border-width: calc(0.15em + 2px);
+  }
+}

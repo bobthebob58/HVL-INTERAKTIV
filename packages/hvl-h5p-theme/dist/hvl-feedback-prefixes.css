@@ -3,11 +3,15 @@
  * scripts/buildFeedbackPrefixes.mjs. Do not edit; run `npm run build --workspace packages/hvl-h5p-theme`.
  * Visible prefixes for correct and incorrect answers (UD-003), in the language of the element (UD-010).
  * Where the library draws its own ✓/✗ icon, the prefix is the label alone, so no icon appears twice.
+ * Where two entries match one element, the label rule comes later and wins over the icon-and-label rule.
+ * `--hvl-feedback-*-shown`: the targets whose label src/feedbackPrefixes.js shows as text (no pseudo-element).
  */
 
 :root {
-  --hvl-feedback-correct-targets: '.h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner, .h5p-blanks .h5p-input-wrapper.h5p-correct, .h5p-drag-text .h5p-draggable.h5p-draggable-correct > span:first-child, .h5p-question-explanation-correct';
-  --hvl-feedback-incorrect-targets: '.h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner, .h5p-blanks .h5p-input-wrapper.h5p-wrong, .h5p-drag-text .h5p-draggable.h5p-draggable-wrong > span:first-child, .h5p-question-explanation-wrong';
+  --hvl-feedback-correct-targets: '.h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner, .h5p-multichoice .h5p-answer.h5p-should .h5p-alternative-inner, .h5p-blanks .h5p-input-wrapper.h5p-correct, .h5p-drag-text .h5p-draggable.h5p-draggable-correct > span:first-child, .h5p-question-explanation-correct, .h5p-true-false-answer.correct, .h5p-mark-the-words [aria-describedby=h5p-description-correct], .h5p-mark-the-words [aria-describedby=h5p-description-missed], .h5p-sc-alternative.h5p-sc-reveal-correct.h5p-sc-drummed .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-correct.h5p-sc-drummed .h5p-sc-label:not(:has(> p)), .h5p-sc-alternative.h5p-sc-reveal-correct:not(.h5p-sc-drummed) .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-correct:not(.h5p-sc-drummed) .h5p-sc-label:not(:has(> p)), .h5p-summary .summary-container li > p:first-of-type, .h5p-summary .summary-container li:not(:has(> p)), .h5p-multi-media-choice-option:is(.h5p-multi-media-choice-correct, .h5p-multi-media-choice-show-correct), .h5p-image-hotspot-question .hotspot-feedback.correct';
+  --hvl-feedback-incorrect-targets: '.h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner, .h5p-multichoice .h5p-answer.h5p-should-not .h5p-alternative-inner, .h5p-blanks .h5p-input-wrapper.h5p-wrong, .h5p-drag-text .h5p-draggable.h5p-draggable-wrong > span:first-child, .h5p-question-explanation-wrong, .h5p-true-false-answer.wrong, .h5p-mark-the-words [aria-describedby=h5p-description-incorrect], .h5p-sc-alternative.h5p-sc-reveal-wrong.h5p-sc-drummed .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-wrong.h5p-sc-drummed .h5p-sc-label:not(:has(> p)), .h5p-sc-alternative.h5p-sc-reveal-wrong:not(.h5p-sc-drummed) .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-wrong:not(.h5p-sc-drummed) .h5p-sc-label:not(:has(> p)), .h5p-summary li.summary-failed > p:first-of-type, .h5p-summary li.summary-failed:not(:has(> p)), .h5p-multi-media-choice-option.h5p-multi-media-choice-wrong, .h5p-image-hotspot-question .hotspot-feedback:not(.correct)';
+  --hvl-feedback-correct-shown: '.h5p-true-false-answer.correct, .h5p-summary .summary-container li > p:first-of-type, .h5p-summary .summary-container li:not(:has(> p)), .h5p-multi-media-choice-option:is(.h5p-multi-media-choice-correct, .h5p-multi-media-choice-show-correct)';
+  --hvl-feedback-incorrect-shown: '.h5p-true-false-answer.wrong, .h5p-summary li.summary-failed > p:first-of-type, .h5p-summary li.summary-failed:not(:has(> p)), .h5p-multi-media-choice-option.h5p-multi-media-choice-wrong';
 }
 
 :root,
@@ -33,34 +37,56 @@
   --hvl-feedback-incorrect-label: 'Incorrect:';
 }
 
-.h5p-question-explanation-correct::before {
+.h5p-multichoice .h5p-answer.h5p-should .h5p-alternative-inner::before,
+.h5p-question-explanation-correct::before,
+.h5p-mark-the-words [aria-describedby=h5p-description-missed]::before,
+:is(.h5p-sc-alternative.h5p-sc-reveal-correct:not(.h5p-sc-drummed) .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-correct:not(.h5p-sc-drummed) .h5p-sc-label:not(:has(> p)))::before {
   content: var(--hvl-feedback-correct-prefix) / '';
 }
 
 .h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner::before,
 .h5p-blanks .h5p-input-wrapper.h5p-correct::before,
-.h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-correct)::before {
+.h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-correct)::before,
+.h5p-mark-the-words [aria-describedby=h5p-description-correct]::before,
+:is(.h5p-sc-alternative.h5p-sc-reveal-correct.h5p-sc-drummed .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-correct.h5p-sc-drummed .h5p-sc-label:not(:has(> p)))::before,
+.h5p-image-hotspot-question .image-wrapper:has(> .hotspot-feedback.correct)::after {
   content: var(--hvl-feedback-correct-label) / '';
 }
 
-.h5p-question-explanation-wrong::before {
+.h5p-multichoice .h5p-answer.h5p-should-not .h5p-alternative-inner::before,
+.h5p-question-explanation-wrong::before,
+:is(.h5p-sc-alternative.h5p-sc-reveal-wrong:not(.h5p-sc-drummed) .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-wrong:not(.h5p-sc-drummed) .h5p-sc-label:not(:has(> p)))::before {
   content: var(--hvl-feedback-incorrect-prefix) / '';
 }
 
 .h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner::before,
 .h5p-blanks .h5p-input-wrapper.h5p-wrong::before,
-.h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-wrong)::before {
+.h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-wrong)::before,
+.h5p-mark-the-words [aria-describedby=h5p-description-incorrect]::before,
+:is(.h5p-sc-alternative.h5p-sc-reveal-wrong.h5p-sc-drummed .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-wrong.h5p-sc-drummed .h5p-sc-label:not(:has(> p)))::before,
+.h5p-image-hotspot-question .image-wrapper:has(> .hotspot-feedback:not(.correct))::after {
   content: var(--hvl-feedback-incorrect-label) / '';
 }
 
+.h5p-multichoice .h5p-answer.h5p-should .h5p-alternative-inner::before,
 .h5p-question-explanation-correct::before,
+.h5p-mark-the-words [aria-describedby=h5p-description-missed]::before,
+:is(.h5p-sc-alternative.h5p-sc-reveal-correct:not(.h5p-sc-drummed) .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-correct:not(.h5p-sc-drummed) .h5p-sc-label:not(:has(> p)))::before,
 .h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner::before,
 .h5p-blanks .h5p-input-wrapper.h5p-correct::before,
 .h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-correct)::before,
+.h5p-mark-the-words [aria-describedby=h5p-description-correct]::before,
+:is(.h5p-sc-alternative.h5p-sc-reveal-correct.h5p-sc-drummed .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-correct.h5p-sc-drummed .h5p-sc-label:not(:has(> p)))::before,
+.h5p-image-hotspot-question .image-wrapper:has(> .hotspot-feedback.correct)::after,
+.h5p-multichoice .h5p-answer.h5p-should-not .h5p-alternative-inner::before,
 .h5p-question-explanation-wrong::before,
+:is(.h5p-sc-alternative.h5p-sc-reveal-wrong:not(.h5p-sc-drummed) .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-wrong:not(.h5p-sc-drummed) .h5p-sc-label:not(:has(> p)))::before,
 .h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner::before,
 .h5p-blanks .h5p-input-wrapper.h5p-wrong::before,
-.h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-wrong)::before {
+.h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-wrong)::before,
+.h5p-mark-the-words [aria-describedby=h5p-description-incorrect]::before,
+:is(.h5p-sc-alternative.h5p-sc-reveal-wrong.h5p-sc-drummed .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-wrong.h5p-sc-drummed .h5p-sc-label:not(:has(> p)))::before,
+.h5p-image-hotspot-question .image-wrapper:has(> .hotspot-feedback:not(.correct))::after {
   display: inline-block;
   margin-inline-end: 0.25em;
   font-weight: bold;

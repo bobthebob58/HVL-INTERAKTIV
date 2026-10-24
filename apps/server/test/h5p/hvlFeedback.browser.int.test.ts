@@ -1,7 +1,8 @@
 /**
  * Browser tests of the answer prefixes with the real content types (D-078): a correct or incorrect answer in
- * MultiChoice, Blanks, DragText and QuestionSet shows an icon and a text prefix, and the prefix is in the
- * accessibility tree once, in the page's language; it goes away on retry.
+ * MultiChoice (also its solution), Blanks, DragText and QuestionSet shows an icon and a text prefix, and the prefix
+ * is in the accessibility tree once, in the page's language; it goes away on retry. The question types the
+ * containers offer as sub-content: ./hvlFeedbackContainers.browser.int.test.ts.
  *
  * Spec: UD-003, UD-010
  */
@@ -42,6 +43,28 @@ describeWithServices('answer prefixes inside H5P', () => {
         await page.locator('.h5p-answer').nth(0).click();
         await checkAnswers(page);
         await expect.poll(() => contentTree(page)).toContain('Riktig: Ho gir studenten tilbakemelding');
+        await page.close();
+      }, 60_000);
+
+      it('[UD-003] MultiChoice: the solution labels every alternative with an icon and a text, not the radio alone', async () => {
+        // Arrange
+        const page = await openRealPlayer(browser(), server, 'H5P.MultiChoice');
+        await page.locator('.h5p-answer').nth(1).click();
+        await checkAnswers(page);
+        // Act
+        await page.locator('.h5p-question-show-solution').click();
+        // Assert: the chosen wrong answer keeps "Feil:" beside its own ✗; the right one it should have been gets
+        // the full "✓ Riktig:", as the solution's radio icon is no ✓/✗
+        const before = (n: number) =>
+          page
+            .locator('.h5p-answer .h5p-alternative-inner')
+            .nth(n)
+            .evaluate((el) => getComputedStyle(el, '::before').content);
+        await expect.poll(() => before(0)).toBe('"✓ Riktig:" / ""');
+        expect(await before(1)).toBe('"Feil:" / ""');
+        await expect
+          .poll(() => contentTree(page))
+          .toMatch(/listitem: "Riktig: Ho gir[\s\S]*listitem: "Feil: Ho tel med/);
         await page.close();
       }, 60_000);
 

@@ -8,6 +8,8 @@
  * Invariants:
  *   - Accepts only `#RRGGBB` (case-insensitive); anything else throws, so a typo in tokens.json fails loudly.
  *   - Ratios are not rounded; callers round for display.
+ *   - `srgbMix` reproduces `color-mix(in srgb, …)`, which a library may use to derive a shade from Daylight's
+ *     variables (CoursePresentation 1.28's progress bar), so such a drawn colour can be checked too.
  * Collaborators: ./tokenModel.mjs (resolves token names to values), ../test/contrast.test.ts.
  * Tests: packages/design-tokens/test/contrast.test.ts
  */
@@ -32,10 +34,37 @@ function linear(channel) {
  * @throws {Error} When `hex` is not `#RRGGBB`.
  */
 export function relativeLuminance(hex) {
+  const [r, g, b] = channels(hex).map(linear);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * The three 8-bit channels of a colour.
+ * @param {string} hex - `#RRGGBB`.
+ * @returns {number[]} Red, green, blue, 0…255.
+ * @throws {Error} When `hex` is not `#RRGGBB`.
+ */
+function channels(hex) {
   const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
   if (!match) throw new Error(`not a #RRGGBB colour: ${hex}`);
-  const [r, g, b] = match.slice(1).map((pair) => linear(Number.parseInt(pair, 16)));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return match.slice(1).map((pair) => Number.parseInt(pair, 16));
+}
+
+/**
+ * Mixes two colours as `color-mix(in srgb, a <percentOfA>%, b)` does: per channel, in gamma-encoded sRGB.
+ * @param {string} a - `#RRGGBB`.
+ * @param {number} percentOfA - 0…100.
+ * @param {string} b - `#RRGGBB`.
+ * @returns {string} `#RRGGBB`, each channel rounded to the nearest integer as browsers paint it.
+ * @throws {Error} When a colour is not `#RRGGBB` or the percentage lies outside 0…100.
+ */
+export function srgbMix(a, percentOfA, b) {
+  if (!(percentOfA >= 0 && percentOfA <= 100)) throw new Error(`not a percentage: ${percentOfA}`);
+  const [ca, cb] = [channels(a), channels(b)];
+  const mixed = ca.map((channel, i) =>
+    Math.round((channel * percentOfA + (cb[i] ?? 0) * (100 - percentOfA)) / 100),
+  );
+  return `#${mixed.map((channel) => channel.toString(16).padStart(2, '0').toUpperCase()).join('')}`;
 }
 
 /**

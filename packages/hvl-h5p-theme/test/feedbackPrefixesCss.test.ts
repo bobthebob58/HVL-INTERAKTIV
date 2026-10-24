@@ -1,6 +1,7 @@
 /**
  * Tests for the generated prefix stylesheet: the three locales' prefixes, the `:lang()` selection, the empty
- * alternative text of the visible prefix, and drift detection of the committed file.
+ * alternative text of the visible prefix, the targets whose label the script shows as text, the checks on the
+ * target list, and drift detection of the committed file.
  *
  * Spec: UD-003, UD-010
  */
@@ -10,13 +11,15 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { labelOf, main, OUTPUT_FILE, prefixCss, readInputs } from '../scripts/buildFeedbackPrefixes.mjs';
+import { targetEntries } from '../scripts/feedbackTargetList.mjs';
 
 const PACKAGE_DIR = fileURLToPath(new URL('../', import.meta.url));
 interface TargetEntry {
   library: string;
-  correct: string;
-  incorrect: string;
-  prefixOn?: { correct: string; incorrect: string };
+  correct?: string;
+  incorrect?: string;
+  prefixOn?: 'label' | { correct?: string; incorrect?: string };
+  prefixPseudo?: 'before' | 'after';
   ownIcon: boolean;
 }
 
@@ -24,6 +27,13 @@ const css = prefixCss(readInputs());
 const ENTRIES = (readInputs().targets as { targets: TargetEntry[] }).targets;
 const STATES = ['correct', 'incorrect'] as const;
 const temporaryDirs: string[] = [];
+const ENTRY_STATES = ENTRIES.flatMap((e) =>
+  STATES.filter((state) => e[state]).map((state) => [e, state] as const),
+);
+const DRAWN = ENTRY_STATES.filter(([e]) => e.prefixOn !== 'label');
+const SHOWN = ENTRY_STATES.filter(([e]) => e.prefixOn === 'label');
+const rulesOf = (selector: string) =>
+  css.split('\n\n').filter((r) => (r.split(' {')[0] ?? '').split(',\n').includes(selector));
 
 /** A copy of the package's inputs with one locale file changed. */
 function packageCopyWith(locale: string, prefixes: Record<string, string>): string {
@@ -52,38 +62,61 @@ describe('the prefix stylesheet', () => {
     expect(block).toContain(`--hvl-feedback-incorrect-label: '${incorrect.slice(2)}';`);
   });
 
-  it.each(ENTRIES.flatMap((e) => STATES.map((state) => [`${e.library} (${state})`, e, state] as const)))(
-    '[UD-003] %s shows an icon and a text before the answer, with empty alternative text',
+  it.each(DRAWN.map(([e, state]) => [`${e.library} (${state})`, e, state] as const))(
+    '[UD-003] %s shows an icon and a text with the answer, with empty alternative text',
     (_label, entry, state) => {
       // Arrange
-      const selector = `${entry.prefixOn?.[state] ?? entry[state]}::before`;
+      const on = (typeof entry.prefixOn === 'object' && entry.prefixOn[state]) || entry[state] || '';
+      const selector = `${on.includes(',') ? `:is(${on})` : on}::${entry.prefixPseudo ?? 'before'}`;
       // Act
-      const rule = css
-        .split('\n\n')
-        .find((r) => (r.split(' {')[0] ?? '').split(',\n').includes(selector) && r.includes('content:'));
+      const rule = rulesOf(selector).find((r) => r.includes('content:'));
       // Assert: the library's own ✓/✗ is the icon where it draws one; otherwise the prefix carries it.
       const part = entry.ownIcon ? 'label' : 'prefix';
       expect(rule).toContain(`content: var(--hvl-feedback-${state}-${part}) / '';`);
     },
   );
 
-  it('[UD-003] gives the script both target lists on :root', () => {
+  it.each(SHOWN.map(([e, state]) => [`${e.library} (${state})`, e, state] as const))(
+    '[UD-003] %s has its label shown as text by the script, beside its own icon, and no ::before',
+    (_label, entry, state) => {
+      const selector = entry[state] ?? '';
+      const shown = /--hvl-feedback-(\w+)-shown: '([^']*)';/g;
+      const lists = Object.fromEntries([...css.matchAll(shown)].map((m) => [m[1], m[2]?.split(', ') ?? []]));
+      expect(lists[state]).toEqual(expect.arrayContaining(selector.split(', ')));
+      expect(entry.ownIcon).toBe(true);
+      expect(css).not.toContain(`${selector}::before`);
+    },
+  );
+
+  it('[UD-003] gives the script both target lists on :root, with every entry that names the state', () => {
     for (const state of STATES) {
-      expect(css).toContain(`--hvl-feedback-${state}-targets: '${ENTRIES.map((e) => e[state]).join(', ')}';`);
+      const targets = ENTRIES.flatMap((e) => (e[state] ? [e[state]] : []));
+      expect(css).toContain(`--hvl-feedback-${state}-targets: '${targets.join(', ')}';`);
     }
   });
 
-  it('[UD-003] covers MultiChoice, Blanks, DragText and the explanations QuestionSet shows', () => {
-    for (const library of [
+  it('[UD-003] covers the question types the ten types offer, also inside containers', () => {
+    // Arrange: MultiChoice, Blanks, DragText, QuestionSet's explanations, and the sub-content of QuestionSet,
+    // CoursePresentation, InteractiveVideo and Column (TrueFalse, MarkTheWords, SingleChoiceSet, Summary,
+    // MultiMediaChoice, ImageHotspotQuestion)
+    const libraries = [
       '.h5p-multichoice',
       '.h5p-blanks',
       '.h5p-drag-text',
       '.h5p-question-explanation',
-    ]) {
-      expect(ENTRIES.some((e) => e.correct.startsWith(library) && e.incorrect.startsWith(library))).toBe(
-        true,
-      );
-    }
+      '.h5p-true-false',
+      '.h5p-mark-the-words',
+      '.h5p-sc-alternative',
+      '.h5p-summary',
+      '.h5p-multi-media-choice',
+      '.h5p-image-hotspot-question',
+    ];
+    // Act
+    const covered = libraries.filter((library) =>
+      STATES.every((state) => ENTRIES.some((e) => e[state]?.startsWith(library))),
+    );
+    // Assert
+    expect(covered).toEqual(libraries);
   });
 
   it('[UD-003] the committed stylesheet matches the locales and targets', () => {
@@ -105,6 +138,21 @@ describe('the prefix stylesheet', () => {
     const current = main(['--check', `--out=${out}`]);
     // Assert
     expect([stale, current]).toEqual([1, 0]);
+  });
+});
+
+describe('the target list', () => {
+  it('[UD-003] refuses an entry without a state, a shown label without the library icon, an unsafe selector and an unknown pseudo-element', () => {
+    const check = (entry: object) => () => targetEntries({ targets: [{ library: 'X', ...entry }] });
+    expect(check({ ownIcon: true })).toThrow(/neither a correct nor an incorrect/);
+    expect(check({ correct: '.a', prefixOn: 'label', ownIcon: false })).toThrow(/ownIcon: true/);
+    expect(check({ correct: "[a='b']", ownIcon: true })).toThrow(/unsafe selector/);
+    expect(check({ correct: '.a', ownIcon: 'yes' })).toThrow(/ownIcon/);
+    expect(check({ correct: '.a', prefixPseudo: 'marker', ownIcon: false })).toThrow(/prefixPseudo/);
+    expect(check({ correct: '.a', prefixOn: 'label', prefixPseudo: 'after', ownIcon: true })).toThrow(
+      /draws none/,
+    );
+    expect(check({ correct: '.a', ownIcon: false })()).toHaveLength(1);
   });
 });
 

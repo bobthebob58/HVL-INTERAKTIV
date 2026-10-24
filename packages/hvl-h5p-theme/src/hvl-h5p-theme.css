@@ -14,7 +14,8 @@
  *   - No colour literal (Stylelint, UD-001); every !important names the H5P selector it beats in a WHY comment.
  *   - Font families are set on text elements only, never on pseudo-elements, so H5P's icon fonts keep working.
  * Collaborators: @hvl-interaktiv/design-tokens (tokens.css, h5p-daylight.css), ./hvl-h5p-feedback.css,
- *   ../dist/hvl-feedback-prefixes.css, ./feedbackPrefixes.js, apps/server/src/h5p/h5pAssets.ts.
+ *   ./hvl-h5p-indicators.css, ../dist/hvl-feedback-prefixes.css, ./feedbackPrefixes.js, ./reducedMotion.js,
+ *   apps/server/src/h5p/h5pAssets.ts.
  * Tests: packages/hvl-h5p-theme/test/themeStructure.test.ts, apps/server/test/h5p/hvlTheme.browser.int.test.ts
  */
 
@@ -112,6 +113,13 @@ html.h5p-iframe,
   min-height: var(--hvl-target-min);
 }
 
+/* A11Y: WCAG 2.5.8: D-080's repair (a11yRepairs.js) makes CoursePresentation's progress bar a list, so its parts
+   no longer match [role='tab'] above; they keep the 24 px they had, and so do the links that fill them. */
+:root .h5p-course-presentation .h5p-progressbar-part {
+  min-width: var(--hvl-target-min);
+  min-height: var(--hvl-target-min);
+}
+
 /* A11Y: QuestionSet's progress dots (Components 1.0 `.h5p-progress-dot`) are 9 px links about 22 px apart; spacing
    their centres 24 px apart meets WCAG 2.5.8's spacing exception without changing how they look. */
 :root .h5p-progress-dot {
@@ -139,8 +147,9 @@ html.h5p-iframe,
 /* Motion (UD-009): no animation or transition for readers who ask for less motion. */
 @media (prefers-reduced-motion: reduce) {
   /* WHY: !important beats the libraries' transitions and animations (`.h5p-joubelui-button`,
-     `.h5p-course-presentation .h5p-slide`, `.h5p-joubelui-score-bar-star`) and jQuery's inline animation styles.
-     Durations become 0.01ms rather than none, so H5P code that waits for `transitionend` still continues. */
+     `.h5p-course-presentation .h5p-slide`, `.h5p-joubelui-score-bar-star`) and inline `transition` values.
+     Durations become 0.01ms rather than none, so H5P code that waits for `transitionend` still continues.
+     jQuery's .animate() steps styles on timers and ignores CSS; ./reducedMotion.js switches it off. */
   *,
   ::before,
   ::after {
@@ -157,5 +166,20 @@ html.h5p-iframe,
   /* WHY: !important beats the `:focus-visible` rule above, the only rule that sets the ring's width. */
   :focus-visible {
     outline-width: calc(var(--hvl-focus-outline-width) + var(--hvl-focus-inner-width)) !important;
+  }
+
+  /* Chromium paints forced text in the system colour but still reports the author's light colour as
+     -webkit-text-fill-color, which axe measures (white on the forced white Canvas). The text fill of
+     BranchingScenario's light-on-dark controls (player and editor) is set to the colour that is painted: the start
+     and end screens' buttons and the back and navigation (proceed, replay) buttons share one style there.
+     UPSTREAM: https://github.com/dequelabs/axe-core/blob/v4.13.0/lib/commons/color/get-foreground-color.js reads it
+     first; the controls: https://github.com/h5p/h5p-branching-scenario/blob/6860e97e916054c09e9f2c4bb824ca958521213a/src/styles/genericScreen.scss
+     and https://github.com/h5p/h5p-editor-branching-scenario/blob/8fcd92d0a5a5f6b855d9d03ce4d19ab31baa4b99/src/scripts/components/Toolbar.scss */
+  :root .h5p-branching-scenario :is(.h5p-start-button, .h5p-end-button, .h5p-back-button, .h5p-nav-button) {
+    -webkit-text-fill-color: ButtonText;
+  }
+
+  :root .bswrapper :is(.content-type-buttons li, .zoom-status, .fit-to-canvas) {
+    -webkit-text-fill-color: CanvasText;
   }
 }

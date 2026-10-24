@@ -112,6 +112,15 @@ Colour classes exist for every colour token with any Tailwind colour utility (`b
 | `--hvl-focus-shadow` | `0 0 0 var(--hvl-focus-inner-width) var(--hvl-focus-inner)` | — | Use as `box-shadow:` on `:focus-visible` |
 | `--hvl-space-xs` … `--hvl-space-xxl` | `0.25rem`, `0.5rem`, `1rem`, `1.5rem`, `2rem`, `3rem` | — | Spacing scale (`xs`, `s`, `m`, `l`, `xl`, `xxl`) |
 
+### Pairings
+
+`tokens.json` `pairings` lists every foreground/background pair the product draws, with its use (`text`,
+`large-text`, `non-text`), the measured ratio and where it is drawn. A side is a colour token, or
+`{ "mix": [token, percent, token] }` for a shade an H5P library derives from Daylight's variables with
+`color-mix(in srgb, …)` (CoursePresentation 1.28's progress bar). `test/contrast.test.ts` recomputes each pair, and
+checks that every pair H5P draws over Daylight (its `DAYLIGHT_PAIRS`, including the colours HVL's theme draws instead,
+such as the drop-zone border and the answered task dots) is declared here with a use at least as strict.
+
 The focus ring in plain CSS (`UD-004`):
 
 ```css

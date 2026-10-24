@@ -1036,6 +1036,24 @@ loading of one spec per session are kept.
   spec website, not product UI); (e) the generated `dist/` folders are committed through package-level `.gitignore`
   files that re-include `dist/`; (f) H5P's own hard-coded colours remain where a library ignores Daylight
   (BranchingScenario 1.10 start screen); the accessibility suite decides whether they need overrides.
+- **Amendment (2026-10-24, review A11Y-1/A11Y-2 and THEME-V1/V2/V9):** the answer prefixes also cover the question
+  types the containers offer: TrueFalse 1.8, MarkTheWords 1.11 with its missed words, SingleChoiceSet 1.11, Summary
+  1.10, MultiMediaChoice 0.3, and ImageHotspotQuestion 1.8 (offered by Column 1.18 and 1.22; none of the ten example
+  packages installs it, a Hub package of Column does). They also cover MultiChoice's solution, whose filled or empty
+  radio is no ✓/✗ and so gets the full prefix. Where a library uses the answer's pseudo-elements itself (TrueFalse,
+  Summary, MultiMediaChoice), `feedbackPrefixes.js` shows its label as text (`prefixOn: "label"`,
+  `.hvl-feedback-text`), which is then both the visible and the announced prefix beside the library's own icon.
+  `SPEC-DEVIATION`: UD-003 names a `::before` prefix plus a visually hidden text node. ImageHotspotQuestion marks a
+  click with a fixed 32 px circle that its image clips, so its visible label is the image's `::after` (`prefixPseudo:
+  "after"`), placed beside the circle with CSS anchor positioning (in the image's corner where that is not supported).
+  Where a library styles the answer's first paragraph as `:first-child` (SingleChoiceSet), the label goes into that
+  paragraph. An answer inside a radio, checkbox, option or button named by `aria-label` (Summary's wrong claim,
+  MultiMediaChoice's option) does not read its content, so the script puts the label in front of that name unless the
+  name already states the state as H5P writes it (the label's word and a full stop, Summary's "Feil. …"), and restores
+  the name when the state ends. `tokens.json` pairings may name a `color-mix(in srgb, …)` of two tokens where an H5P
+  library draws one (CoursePresentation's progress bar), and the contrast test fails when a pair drawn over Daylight
+  is not declared there. The cues for where an answer goes and which tasks are answered (DragText's empty drop zone,
+  CoursePresentation's answered-task dot, the dot also under forced colours) are in `hvl-h5p-indicators.css`.
 
 ### D-073 · The validator is pure: shape-based walk, configuration passed in
 - **Context:** `UD-020` asks for a pure, deterministic `validateContent`. The S2 parameter walker needs an
@@ -1193,3 +1211,44 @@ loading of one spec per session are kept.
   and the server-rendered pages) have no registered entries.
 - **Consequences:** The register is the list for the `UD-040` conformance report (S6) and for issues to file
   upstream. A library update (D-078) re-runs the suite: a repair that no longer matches shows up as a new failure.
+- **Amendment (2026-10-24, repairs):** `a11yRepairs.js` repairs eight barriers, each read against the pinned upstream
+  code. (1) CoursePresentation's progress bar becomes a list of links (`role="list"`/`"listitem"`, the current slide's
+  link `aria-current="step"`, a link without text named by its part's `aria-label`, the slide title). The parts keep
+  that `aria-label`, which H5P.Tooltip shows, so they cannot become presentational for a valid tab structure.
+  `aria-selected` is dropped from the list items, and so is the summary slide's `aria-controls`, which points at no
+  element (cp.js creates that slide without an index, `id="slide-undefined"`). The slides, which H5P writes as the
+  `role="tabpanel"` of those tabs, become groups still named by their part. The links keep H5P's roving tabindex: one
+  of them is in the Tab order and the arrow, Home and End keys move between them, which the list no longer announces
+  (manual protocol §8). (2) DragText's drop zones get `role="group"`, not `button`, because a dropped word (a button)
+  sits inside them. (3) The score-range "to" field is labelled by the column heading, the row's "from" value and the
+  dash, for example "Poengområde* 51 % –" in MultiChoice; the "*" is H5P's required marker, which the name of every
+  required field in H5P's editor carries ("Tittel*"). (4) The editor's vertical tabs become a list of buttons, the
+  open item `aria-current`, because a tab list may not hold the items' remove and order buttons; their forms
+  (`<fieldset role="tabpanel">`) lose the role and are native groups. (5) The editor-mode switch becomes a group named
+  by its title, the active mode `aria-pressed`. (6) The hotspot picker's copy of the background image gets `alt=""`.
+  (7) DragNBar's paste button gets its tooltip text as its name: "Paste", which DragNBar 1.5 leaves untranslated in nn
+  and nb (a translation gap to report upstream and to list for `UD-040`). (8) The hub's content-type list becomes a
+  group named by its heading. What attributes cannot remove stays recorded. The hub's `nested-interactive` entry (tabs
+  and content types) stays in the register: the tabs' focus and Enter belong to the inner link, the hub's CSS lays
+  them out by `[role=tab]`, and each content type is a button that holds its own Details button. Two keyboard barriers
+  that axe cannot see (WCAG 2.1.1, `UD-006`): QuestionSet's editor-mode switch cannot be used by keyboard (Enter and
+  Space do nothing; `tabindex="1"`), and the vertical-tab buttons open with Space only, not Enter.
+  `apps/server/test/h5p/a11yRepairs.browser.int.test.ts` holds an `upstream pin:` test for each (DOC-004), so a
+  library update that fixes one fails there and this record is updated; both belong on the `UD-040` upstream list. The
+  theme sizes CoursePresentation's progress-bar parts to 24 px itself, since they are no longer `[role=tab]`
+  (`UD-005`). The theme also removed two register entries: under forced colours it sets the text fill of
+  BranchingScenario's controls, so the forced-colours "measurement artefact" entry is gone, and while
+  BranchingScenario's guided tour is open the parts it fades are inert (amendment of review THEME-V3 below), so the
+  tour entry, whose pattern matched any element, is gone too. No entry may match a bare element
+  (`apps/server/a11y/upstreamRegister.a11y.test.ts`). The editor's disabled «Paste» item stays registered in both
+  colour modes, after the tour only, because its `opacity: .5` also fades it in a contrast theme (3.94:1). Of the
+  register's 15 entries before the repairs, 2 remain. Tests: `packages/hvl-h5p-theme/test/a11yRepairs.test.ts`,
+  `apps/server/test/h5p/a11yRepairs.browser.int.test.ts`, `apps/server/a11y/upstreamRegister.a11y.test.ts`.
+- **Amendment (2026-10-24, review THEME-V3):** one repair changes focus order. While BranchingScenario's editor tour
+  shows a step, H5P fades the rest of the editor (`.tour-fade`: opacity 0.15, `pointer-events: none`) but leaves it
+  reachable by keyboard and screen readers, where its text and focus ring are all but invisible. `a11yRepairs.js`
+  makes each faded part `inert` for as long as it has the class (marked `data-hvl-inert`, so only those parts are
+  given back), as H5P's own `pointer-events: none` intends; the tour's dialog is never inside a faded part. The theme
+  no longer keeps the faded parts at full opacity: that hid the spotlight while clicks there still did nothing. axe
+  skips inert content, so the tour adds no register entry; the reuse panel with the Paste item is faded too, so the
+  Paste entry applies after the tour only (`tour: false`).

@@ -9,11 +9,13 @@
  *   - A colour is either `#RRGGBB` or a `ref` to another colour; refs become `var(--hvl-<ref>)` in CSS and resolve
  *     to the referenced hex for contrast checks. A missing or circular ref throws.
  *   - Every `var(--hvl-…)` inside a value, every forced-colours key, Daylight mapping and pairing names a token
- *     that exists; forced-colours values are CSS system colours.
- * Collaborators: ./tokenCss.mjs, ./buildTokens.mjs, ../tokens.json, ../test/contrast.test.ts.
+ *     that exists; forced-colours values are CSS system colours. A pairing side may be a `color-mix` of two
+ *     tokens, where an H5P library draws such a shade (`{ "mix": [token, percent, token] }`).
+ * Collaborators: ./contrast.mjs, ./tokenCss.mjs, ./buildTokens.mjs, ../tokens.json, ../test/contrast.test.ts.
  * Tests: packages/design-tokens/test/contrast.test.ts, packages/design-tokens/test/buildTokens.test.ts
  */
 import { readFileSync } from 'node:fs';
+import { srgbMix } from './contrast.mjs';
 
 /** Where tokens.json lives. */
 export const TOKENS_FILE = new URL('../tokens.json', import.meta.url);
@@ -128,7 +130,35 @@ function checkReferences(tokens, names) {
     if (!names.has(`--hvl-${token}`)) throw new Error(`${daylight} maps to unknown token ${token}`);
   }
   for (const pairing of tokens.pairings ?? []) {
-    colourHex(tokens, pairing.fg);
-    colourHex(tokens, pairing.bg);
+    pairingHex(tokens, pairing.fg);
+    pairingHex(tokens, pairing.bg);
   }
+}
+
+/**
+ * The colour one side of a pairing names: a colour token, or `{ "mix": [token, percent, token] }` for a shade an
+ * H5P library derives from Daylight's variables with `color-mix(in srgb, …)`.
+ * @param {object} tokens - Parsed tokens.json.
+ * @param {string | {mix: [string, number, string]}} side - The `fg` or `bg` of a pairing.
+ * @returns {string} `#RRGGBB`.
+ * @throws {Error} For an unknown token or a malformed mix.
+ */
+export function pairingHex(tokens, side) {
+  if (typeof side === 'string') return colourHex(tokens, side);
+  const [a, percent, b] = Array.isArray(side?.mix) ? side.mix : [];
+  if (typeof a !== 'string' || typeof b !== 'string' || typeof percent !== 'number') {
+    throw new Error(
+      `a pairing colour is a token name or { mix: [token, percent, token] }: ${JSON.stringify(side)}`,
+    );
+  }
+  return srgbMix(colourHex(tokens, a), percent, colourHex(tokens, b));
+}
+
+/**
+ * The colour tokens one side of a pairing uses.
+ * @param {string | {mix: [string, number, string]}} side - The `fg` or `bg` of a pairing.
+ * @returns {string[]} Token names.
+ */
+export function pairingTokens(side) {
+  return typeof side === 'string' ? [side] : [side.mix[0], side.mix[2]];
 }

@@ -11,9 +11,11 @@
  *     H5P upstream problem (not passing)", never dropped.
  *   - The entries that apply to a scan are chosen by surface, content type, colour mode and tour state; each of them
  *     must match at least one finding of that scan.
+ *   - No entry may match a bare element (`<div>`, `<li>` …) without a `target`: it would cover every new violation of
+ *     its rule on the scanned page (`matchesAnyElement`, checked by ../upstreamRegister.a11y.test.ts).
  * Collaborators: ./upstreamRegister.ts, ./axeScan.ts, the axe suites in ../.
- * Tests: apps/server/a11y/axeContentTypes.a11y.test.ts, apps/server/a11y/axeEditor.a11y.test.ts,
- *   apps/server/a11y/axeWebRoutes.a11y.test.ts
+ * Tests: apps/server/a11y/upstreamRegister.a11y.test.ts, apps/server/a11y/axeContentTypes.a11y.test.ts,
+ *   apps/server/a11y/axeEditor.a11y.test.ts, apps/server/a11y/axeWebRoutes.a11y.test.ts
  */
 import { expect } from 'vitest';
 import { printReport, type AxeFinding, type AxeReport } from './axeScan.js';
@@ -47,6 +49,17 @@ export function recordedFor(surface: H5pSurface, library: string, state: ScanSta
       (entry.tour === undefined || entry.tour === tour),
   );
 }
+
+/** Markup of elements with nothing to identify them; an entry must name more than that (D-080). */
+const BARE_ELEMENTS = ['<div>', '<span>', '<p>', '<li>', '<a href="#">', '<button>', '<img>', '<input>'];
+
+/**
+ * Whether an entry would cover any element of its rule: its `html` matches a bare element and no `target` narrows it.
+ * @param entry - A register entry.
+ * @returns True for a catch-all entry, which would hide a new violation of the same rule.
+ */
+export const matchesAnyElement = (entry: UpstreamFinding): boolean =>
+  entry.target === undefined && BARE_ELEMENTS.some((html) => entry.html.test(html));
 
 const matches = (entry: UpstreamFinding, finding: AxeFinding): boolean =>
   entry.ruleId === finding.ruleId &&

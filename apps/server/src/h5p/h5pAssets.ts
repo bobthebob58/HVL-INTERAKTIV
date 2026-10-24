@@ -1,6 +1,7 @@
 /**
  * h5pAssets — the files the player and the editor add to Lumi's lists: the H5P Core 1.28 files that h5p-server
- * 10.0.4 leaves out, and HVL's theme for H5P (tokens, Daylight mapping, theme, feedback prefixes).
+ * 10.0.4 leaves out, and HVL's theme for H5P (tokens, Daylight mapping, theme, feedback prefixes, markup repairs,
+ * reduced motion).
  *
  * Why: Lumi 10.0.4's asset lists were written for Core 1.27. Core 1.28 adds the theme ("Daylight") styles and
  *      fonts (F3 in spec 01 §1). The editor list also lacks the tooltip and table styles and two core scripts
@@ -10,20 +11,23 @@
  *      into the iframes it writes for iframe content (`H5P.getHeadTags`), and into
  *      `H5PIntegration.editor.assets`, which the editor's iframe loads. So the theme is added here too, after the
  *      core files and before the libraries' own styles.
- *      The files are added through Lumi's `customization.global` options instead of patching Lumi.
- * Spec: H5P-001, UD-003, UD-011
+ *      The files are added through Lumi's `customization.global` options instead of patching Lumi. The markup
+ *      repair script (D-080) and the reduced-motion script (UD-009) need the same documents as the prefix script, so
+ *      they are loaded the same way.
+ * Spec: H5P-001, UD-003, UD-009, UD-011, UD-030
  * Invariants:
  *   - With these additions, the player and the editor load every style and script that Core 1.28's own
  *     H5PCore lists (`h5p.classes.php`), checked by a test against the fetched core.
  *   - Core URLs are built by Lumi's UrlGenerator, so they carry the same base URL and cache buster as Lumi's own.
  *   - Theme URLs are `<baseUrl>/theme/<name>?version=<content hash>`; only the names in `HVL_THEME_FILES` are served
  *     there (../http/routes/staticRoutes.ts). The tokens come before the Daylight mapping, which comes before the
- *     theme, the feedback styles and the prefixes; the prefix script comes after every core script.
+ *     theme, the feedback styles, the indicator styles (drop zones, task dots) and the prefixes; the prefix, repair
+ *     and reduced-motion scripts come after every core script.
  *   - The files are resolved through the packages' `exports` at start-up; a missing file stops the server.
  * Collaborators: ./H5pEditorFactory.ts, ./H5pPlayerFactory.ts, Lumi's playerAssetList.json and editorAssetList.json,
  *   ../http/routes/staticRoutes.ts, packages/design-tokens, packages/hvl-h5p-theme.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/hvlThemeAssets.test.ts,
- *   apps/server/test/h5p/hvlTheme.browser.int.test.ts
+ *   apps/server/test/h5p/hvlTheme.browser.int.test.ts, apps/server/test/h5p/a11yRepairs.browser.int.test.ts
  */
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -68,8 +72,11 @@ const THEME_SOURCES: readonly (readonly [string, string])[] = [
   ['h5p-daylight.css', '@hvl-interaktiv/design-tokens/h5p-daylight.css'],
   ['hvl-h5p-theme.css', '@hvl-interaktiv/hvl-h5p-theme/hvl-h5p-theme.css'],
   ['hvl-h5p-feedback.css', '@hvl-interaktiv/hvl-h5p-theme/hvl-h5p-feedback.css'],
+  ['hvl-h5p-indicators.css', '@hvl-interaktiv/hvl-h5p-theme/hvl-h5p-indicators.css'],
   ['hvl-feedback-prefixes.css', '@hvl-interaktiv/hvl-h5p-theme/hvl-feedback-prefixes.css'],
   ['feedbackPrefixes.js', '@hvl-interaktiv/hvl-h5p-theme/feedbackPrefixes.js'],
+  ['a11yRepairs.js', '@hvl-interaktiv/hvl-h5p-theme/a11yRepairs.js'],
+  ['reducedMotion.js', '@hvl-interaktiv/hvl-h5p-theme/reducedMotion.js'],
 ];
 
 const resolvePackageFile = createRequire(import.meta.url).resolve;

@@ -1,17 +1,13 @@
 /**
  * Tests for the prefix script in a simulated document (jsdom) with the generated prefix stylesheet: it adds one
  * visually hidden label per answer state, in the element's language, follows H5P's changes and stays inert
- * without its stylesheet. Real H5P markup in Chromium: apps/server/test/h5p/hvlTheme.browser.int.test.ts.
+ * without its stylesheet. Shown labels and names: ./feedbackNames.test.ts. Real H5P markup in Chromium:
+ * apps/server/test/h5p/hvlFeedback.browser.int.test.ts.
  *
  * Spec: UD-003, UD-010
  */
-import { readFileSync } from 'node:fs';
-import { JSDOM, VirtualConsole } from 'jsdom';
 import { describe, expect, it } from 'vitest';
-import { prefixCss, readInputs } from '../scripts/buildFeedbackPrefixes.mjs';
-
-const SCRIPT = readFileSync(new URL('../src/feedbackPrefixes.js', import.meta.url), 'utf8');
-const PREFIX_CSS = prefixCss(readInputs());
+import { openPrefixDocument, SCRIPT } from './support/prefixDocument.js';
 
 /** A MultiChoice-shaped answer list and a Blanks-shaped field, as H5P 1.16 / 1.14 write them. */
 const ANSWERS = `
@@ -21,26 +17,16 @@ const ANSWERS = `
   </ul></div>
   <div class="h5p-blanks"><span class="h5p-input-wrapper" id="b1"><input type="text"></span></div></div>`;
 
-/** Opens a document with the stylesheet (or not) and runs the script in it. */
+/** Opens a document with the stylesheet (or not) and runs the script in it; `prefixes()` lists hidden labels. */
 function openDocument(lang: string, withStylesheet = true) {
-  const style = withStylesheet ? `<style>${PREFIX_CSS}</style>` : '';
-  const dom = new JSDOM(
-    `<!doctype html><html lang="${lang}"><head>${style}</head><body>${ANSWERS}</body></html>`,
-    {
-      runScripts: 'outside-only',
-      virtualConsole: new VirtualConsole(),
-    },
-  );
-  dom.window.eval(SCRIPT);
-  const document = dom.window.document;
-  const settle = () => new Promise((resolve) => dom.window.setTimeout(resolve, 0));
+  const opened = openPrefixDocument({ lang, body: ANSWERS, withStylesheet });
   const prefixes = () =>
-    [...document.querySelectorAll('.hvl-feedback-sr')].map((n) => [
-      n.parentElement?.closest('[id]')?.id,
-      n.getAttribute('data-hvl-feedback'),
-      n.textContent,
-    ]);
-  return { window: dom.window, document, settle, prefixes };
+    opened
+      .labels()
+      .flatMap(([id, state, className, text]) =>
+        className === 'hvl-feedback-sr' ? [[id, state, text]] : [],
+      );
+  return { ...opened, prefixes };
 }
 
 describe('the feedback prefix script', () => {

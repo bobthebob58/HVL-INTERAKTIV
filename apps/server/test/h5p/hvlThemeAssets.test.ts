@@ -1,8 +1,9 @@
 /**
  * Tests that HVL's H5P theme reaches every document H5P renders in: the player page, `H5PIntegration.core` (which
- * H5P Core copies into the iframes it writes) and the editor's iframe assets, in the right order and versioned.
+ * H5P Core copies into the iframes it writes) and the editor's iframe assets, in the right order and versioned:
+ * its stylesheets and its scripts (answer prefixes, markup repairs, reduced motion).
  *
- * Spec: UD-003, UD-011
+ * Spec: UD-003, UD-009, UD-011
  */
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -27,12 +28,15 @@ const STYLE_ORDER = [
   'h5p-daylight.css',
   'hvl-h5p-theme.css',
   'hvl-h5p-feedback.css',
+  'hvl-h5p-indicators.css',
   'hvl-feedback-prefixes.css',
 ];
+/** The answer prefixes (UD-003), the markup repairs (D-080) and the jQuery half of reduced motion (UD-009). */
+const SCRIPT_ORDER = ['feedbackPrefixes.js', 'a11yRepairs.js', 'reducedMotion.js'];
 
 describe('the HVL theme files', () => {
   it('[UD-011] resolves every theme file from its package and versions it by content', () => {
-    expect(HVL_THEME_FILES.map((f) => f.name)).toEqual([...STYLE_ORDER, 'feedbackPrefixes.js']);
+    expect(HVL_THEME_FILES.map((f) => f.name)).toEqual([...STYLE_ORDER, ...SCRIPT_ORDER]);
     for (const file of HVL_THEME_FILES) {
       const hash = createHash('sha256').update(readFileSync(file.path)).digest('hex');
       expect(file.version).toBe(hash.slice(0, 12));
@@ -43,7 +47,7 @@ describe('the HVL theme files', () => {
   it('[UD-011] theme URLs live under the H5P base URL with the content version', () => {
     const [first] = HVL_THEME_FILES;
     expect(themeUrls(urls, '.css')[0]).toBe(`/h5p/theme/tokens.css?version=${first?.version}`);
-    expect(names(themeUrls(urls, '.js'))).toEqual(['feedbackPrefixes.js']);
+    expect(names(themeUrls(urls, '.js'))).toEqual(SCRIPT_ORDER);
   });
 
   it('[UD-011] the player adds the theme after the Core 1.28 styles, tokens first', () => {
@@ -53,13 +57,13 @@ describe('the HVL theme files', () => {
     expect(daylight).toBeGreaterThanOrEqual(0);
     expect(tokens).toBeGreaterThan(daylight);
     expect(names(assets.styles)).toEqual(STYLE_ORDER);
-    expect(names(assets.scripts)).toEqual(['feedbackPrefixes.js']);
+    expect(names(assets.scripts)).toEqual(SCRIPT_ORDER);
   });
 
   it('[UD-011] the editor adds the theme after its missing core files', () => {
     const assets = editorGlobalAssets(urls);
     expect(assets.scripts[0]).toBe('/h5p/core/js/request-queue.js?version=1.28.0');
-    expect(names(assets.scripts)).toEqual(['feedbackPrefixes.js']);
+    expect(names(assets.scripts)).toEqual(SCRIPT_ORDER);
     expect(names(assets.styles)).toEqual(STYLE_ORDER);
     expect(assets.styles.at(-1)).toContain('/theme/hvl-feedback-prefixes.css');
   });
@@ -74,7 +78,7 @@ describe('the engines built by the factories', () => {
     const styles = (player as unknown as { listCoreStyles(): string[] }).listCoreStyles();
     const scripts = (player as unknown as { listCoreScripts(): string[] }).listCoreScripts();
     expect(names(styles)).toEqual(STYLE_ORDER);
-    expect(names(scripts)).toEqual(['feedbackPrefixes.js']);
+    expect(names(scripts)).toEqual(SCRIPT_ORDER);
   });
 
   it("[UD-011] give the editor's iframe the theme through H5PIntegration.editor.assets", async () => {
@@ -88,7 +92,7 @@ describe('the engines built by the factories', () => {
     // Assert
     const { css, js } = model.integration.editor.assets;
     expect(names(css)).toEqual(STYLE_ORDER);
-    expect(names(js)).toEqual(['feedbackPrefixes.js']);
+    expect(names(js)).toEqual(SCRIPT_ORDER);
     expect(css.indexOf(core.coreFile('styles/h5p-theme-variables.css'))).toBeLessThan(
       css.findIndex((url) => url.includes('/theme/h5p-daylight.css')),
     );

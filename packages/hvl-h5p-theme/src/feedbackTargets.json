@@ -1,11 +1,17 @@
 {
-  "description": "Where each H5P library shows a correct or incorrect answer (UD-003). `correct`/`incorrect`: the element that gets the visually hidden label (src/feedbackPrefixes.js); pick one whose children the library does not count. `prefixOn`: the element whose ::before shows the visible prefix, when it differs (dist/hvl-feedback-prefixes.css); pick one whose ::before the library does not use and whose size it does not fix. `ownIcon`: the library already draws a ✓/✗ icon for the state, so the visible prefix is the label only.",
+  "description": "Where each H5P library shows a correct or incorrect answer (UD-003). `correct`/`incorrect`: the element that gets the label (src/feedbackPrefixes.js); pick one whose children the library does not count or select by position (`:first-child`); an entry may name one state only. `prefixOn`: the element whose pseudo-element shows the visible prefix, when it differs (dist/hvl-feedback-prefixes.css); pick one whose pseudo-element the library does not use and whose size it does not fix; a selector list is fine. `prefixPseudo`: `after` draws the prefix as `::after` instead of `::before`. `prefixOn: \"label\"`: the library uses the pseudo-elements, so the script shows its label as text instead (needs ownIcon). `ownIcon`: the library already draws a ✓/✗ icon for the state, so the visible prefix is the label only. A target inside a radio, checkbox, option or button named by aria-label also gets the label in front of that name.",
   "targets": [
     {
       "library": "H5P.MultiChoice 1.16",
       "correct": ".h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner",
       "incorrect": ".h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner",
       "ownIcon": true
+    },
+    {
+      "library": "H5P.MultiChoice 1.16 solution (a filled or empty radio or checkbox, not a ✓/✗)",
+      "correct": ".h5p-multichoice .h5p-answer.h5p-should .h5p-alternative-inner",
+      "incorrect": ".h5p-multichoice .h5p-answer.h5p-should-not .h5p-alternative-inner",
+      "ownIcon": false
     },
     {
       "library": "H5P.Blanks 1.14",
@@ -28,6 +34,61 @@
       "correct": ".h5p-question-explanation-correct",
       "incorrect": ".h5p-question-explanation-wrong",
       "ownIcon": false
+    },
+    {
+      "library": "H5P.TrueFalse 1.8 (::before is the radio, ::after the ✓/✗ box)",
+      "correct": ".h5p-true-false-answer.correct",
+      "incorrect": ".h5p-true-false-answer.wrong",
+      "prefixOn": "label",
+      "ownIcon": true
+    },
+    {
+      "library": "H5P.MarkTheWords 1.11 (the ✓/✗ is the word's ::after)",
+      "correct": ".h5p-mark-the-words [aria-describedby=h5p-description-correct]",
+      "incorrect": ".h5p-mark-the-words [aria-describedby=h5p-description-incorrect]",
+      "ownIcon": true
+    },
+    {
+      "library": "H5P.MarkTheWords 1.11 solution (a missed word: dashed border, no icon)",
+      "correct": ".h5p-mark-the-words [aria-describedby=h5p-description-missed]",
+      "ownIcon": false
+    },
+    {
+      "library": "H5P.SingleChoiceSet 1.11 chosen alternative (its ✓/✗ is .h5p-sc-status; the label goes into the answer's first paragraph, which SingleChoiceSet styles as :first-child)",
+      "correct": ".h5p-sc-alternative.h5p-sc-reveal-correct.h5p-sc-drummed .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-correct.h5p-sc-drummed .h5p-sc-label:not(:has(> p))",
+      "incorrect": ".h5p-sc-alternative.h5p-sc-reveal-wrong.h5p-sc-drummed .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-wrong.h5p-sc-drummed .h5p-sc-label:not(:has(> p))",
+      "ownIcon": true
+    },
+    {
+      "library": "H5P.SingleChoiceSet 1.11 revealed alternatives the learner did not choose (no icon)",
+      "correct": ".h5p-sc-alternative.h5p-sc-reveal-correct:not(.h5p-sc-drummed) .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-correct:not(.h5p-sc-drummed) .h5p-sc-label:not(:has(> p))",
+      "incorrect": ".h5p-sc-alternative.h5p-sc-reveal-wrong:not(.h5p-sc-drummed) .h5p-sc-label > p:first-of-type, .h5p-sc-alternative.h5p-sc-reveal-wrong:not(.h5p-sc-drummed) .h5p-sc-label:not(:has(> p))",
+      "ownIcon": false
+    },
+    {
+      "library": "H5P.Summary 1.10 (li::before is the ✓/✗; a wrong claim is named by aria-label)",
+      "correct": ".h5p-summary .summary-container li > p:first-of-type, .h5p-summary .summary-container li:not(:has(> p))",
+      "incorrect": ".h5p-summary li.summary-failed > p:first-of-type, .h5p-summary li.summary-failed:not(:has(> p))",
+      "prefixOn": "label",
+      "ownIcon": true
+    },
+    {
+      "library": "H5P.MultiMediaChoice 0.3 (::before is the ✓/✗ badge; the option is named by aria-label)",
+      "correct": ".h5p-multi-media-choice-option:is(.h5p-multi-media-choice-correct, .h5p-multi-media-choice-show-correct)",
+      "incorrect": ".h5p-multi-media-choice-option.h5p-multi-media-choice-wrong",
+      "prefixOn": "label",
+      "ownIcon": true
+    },
+    {
+      "library": "H5P.ImageHotspotQuestion 1.8 (the click mark is a fixed 32 px circle whose ::before is the ✓/✗; the image clips it, so the label is the image's ::after beside it)",
+      "correct": ".h5p-image-hotspot-question .hotspot-feedback.correct",
+      "incorrect": ".h5p-image-hotspot-question .hotspot-feedback:not(.correct)",
+      "prefixOn": {
+        "correct": ".h5p-image-hotspot-question .image-wrapper:has(> .hotspot-feedback.correct)",
+        "incorrect": ".h5p-image-hotspot-question .image-wrapper:has(> .hotspot-feedback:not(.correct))"
+      },
+      "prefixPseudo": "after",
+      "ownIcon": true
     }
   ]
 }

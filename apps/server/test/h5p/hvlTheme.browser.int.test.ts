@@ -1,7 +1,9 @@
 /**
  * Browser tests of HVL's H5P theme with the real content types (D-078): the theme is active in the document of every
  * type and in the editor's iframe, and a control focused from the keyboard shows the two-tone ring, also in forced
- * colours; transitions stop with reduced motion. Answer prefixes: ./hvlFeedback.browser.int.test.ts.
+ * colours; transitions and H5P's jQuery animations stop with reduced motion. Answer prefixes:
+ * ./hvlFeedback.browser.int.test.ts, ./hvlFeedbackContainers.browser.int.test.ts and
+ * ./hvlFeedbackHotspot.browser.int.test.ts; drop zones and task dots: ./hvlThemeIndicators.browser.int.test.ts.
  *
  * Spec: UD-004, UD-009, UD-011, UD-012
  */
@@ -17,6 +19,7 @@ const THEME_SHEETS = [
   'h5p-daylight.css',
   'hvl-h5p-theme.css',
   'hvl-h5p-feedback.css',
+  'hvl-h5p-indicators.css',
   'hvl-feedback-prefixes.css',
 ];
 const THEMED = {
@@ -132,6 +135,32 @@ describeWithServices('the HVL theme inside H5P', () => {
         const button = page.locator('.h5p-question-check-answer');
         const duration = await button.evaluate((el) => getComputedStyle(el).transitionDuration);
         expect(parseFloat(duration)).toBeLessThan(0.001);
+        await page.close();
+      }, 60_000);
+
+      it("[UD-009] H5P's jQuery motion stops too: a DragText word dropped outside a gap is back at once", async () => {
+        // Arrange: without the preference DragText slides the word back for 400 ms (`$draggable.animate`)
+        const page = await openRealPlayer(browser(), server, 'H5P.DragText');
+        const fxOff = () =>
+          page.evaluate(
+            () => (window as unknown as { H5P: { jQuery: { fx: { off?: boolean } } } }).H5P.jQuery.fx.off,
+          );
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        // WHY: a media query's change event arrives with the next frame, not with emulateMedia's promise.
+        await expect.poll(fxOff).toBe(true);
+        const word = page.locator('.h5p-drag-text .h5p-draggable').first();
+        const box = await word.boundingBox();
+        if (!box) throw new Error('the word is not on screen');
+        // Act: drag it up and away from every gap, and let go
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(box.x + 120, box.y - 80, { steps: 6 });
+        await page.mouse.up();
+        const offset = await word.evaluate((el) => [el.style.left, el.style.top]);
+        // Assert: home at once; and the switch follows the setting back
+        expect(offset).toEqual(['0px', '0px']);
+        await page.emulateMedia({ reducedMotion: 'no-preference' });
+        await expect.poll(fxOff).toBe(false);
         await page.close();
       }, 60_000);
     });

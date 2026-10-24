@@ -10,8 +10,11 @@
   "exports": {
     "./hvl-h5p-theme.css": "./src/hvl-h5p-theme.css",
     "./hvl-h5p-feedback.css": "./src/hvl-h5p-feedback.css",
+    "./hvl-h5p-indicators.css": "./src/hvl-h5p-indicators.css",
     "./hvl-feedback-prefixes.css": "./dist/hvl-feedback-prefixes.css",
     "./feedbackPrefixes.js": "./src/feedbackPrefixes.js",
+    "./a11yRepairs.js": "./src/a11yRepairs.js",
+    "./reducedMotion.js": "./src/reducedMotion.js",
     "./locales/*": "./src/locales/*"
   },
   "files": [

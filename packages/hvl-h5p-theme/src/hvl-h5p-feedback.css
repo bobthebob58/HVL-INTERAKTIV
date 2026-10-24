@@ -1,20 +1,25 @@
 /*
  * hvl-h5p-feedback — HVL's colours and borders for correct and incorrect answers in H5P libraries that do not use
- * Daylight's variables, and the visually hidden prefix text.
+ * Daylight's variables, the visually hidden prefix text and the prefix shown as text.
  *
  * Why: UD-003 asks that an answer's state is shown by an icon and a text prefix as well as by colour. Libraries on
  *      Daylight (DragText 1.10, Question's explanations, Components) take the feedback tokens through
- *      @hvl-interaktiv/design-tokens/h5p-daylight.css; MultiChoice 1.16 and Blanks 1.14 hard-code their colours,
- *      so their states are restyled here with the tokens and a 4 px left border. The prefixes themselves come
- *      from ../dist/hvl-feedback-prefixes.css (visible) and ./feedbackPrefixes.js (announced).
- * Spec: UD-003, UD-011, UD-012
+ *      @hvl-interaktiv/design-tokens/h5p-daylight.css; MultiChoice 1.16, Blanks 1.14 and ImageHotspotQuestion 1.8
+ *      hard-code their colours, so their states are restyled here with the tokens. The prefixes themselves come
+ *      from ../dist/hvl-feedback-prefixes.css (visible) and ./feedbackPrefixes.js (announced), which shows the
+ *      label as text where a library (TrueFalse, Summary, MultiMediaChoice) uses the pseudo-elements itself; this
+ *      file places the labels that cannot sit in the text flow. Drop zones and task dots: ./hvl-h5p-indicators.css.
+ * Spec: UD-001, UD-003, UD-011, UD-012
  * Invariants:
  *   - Every library rule carries a `:root` prefix, so it beats the library rule of the same shape loaded after it.
  *   - No colour literal. !important only keeps the hidden label hidden, whatever a library sets on its spans.
  *   - In forced colours the border tokens become CanvasText (tokens.css), and the prefix text carries the meaning
  *     when backgrounds are dropped (UD-012).
- * Collaborators: ./hvl-h5p-theme.css, ../dist/hvl-feedback-prefixes.css, ./feedbackPrefixes.js.
- * Tests: packages/hvl-h5p-theme/test/themeStructure.test.ts, apps/server/test/h5p/hvlTheme.browser.int.test.ts
+ * Collaborators: ./hvl-h5p-theme.css, ./hvl-h5p-indicators.css, ../dist/hvl-feedback-prefixes.css,
+ *   ./feedbackPrefixes.js.
+ * Tests: packages/hvl-h5p-theme/test/themeStructure.test.ts, apps/server/test/h5p/hvlFeedback.browser.int.test.ts,
+ *   apps/server/test/h5p/hvlFeedbackContainers.browser.int.test.ts,
+ *   apps/server/test/h5p/hvlFeedbackHotspot.browser.int.test.ts
  */
 
 /* MultiChoice 1.16 (`.h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-container` and its :hover). */
@@ -82,16 +87,90 @@
   background: var(--hvl-feedback-incorrect-bg);
 }
 
+/* ImageHotspotQuestion 1.8 marks the learner's click with a 32 px circle (`.hotspot-feedback`, `.correct` when
+   right) whose ::before is the ✓/✗, in hard-coded colours.
+   UPSTREAM: https://github.com/h5p/h5p-image-hotspot-question/blob/41aea7cf02f5873b1773d863f49460c4e827213d/image-hotspot-question.css */
+:root .h5p-image-hotspot-question .hotspot-feedback {
+  anchor-name: --hvl-hotspot-mark;
+  background: var(--hvl-feedback-incorrect-bg);
+  color: var(--hvl-feedback-incorrect-fg);
+}
+
+:root .h5p-image-hotspot-question .hotspot-feedback.correct {
+  background: var(--hvl-feedback-correct-bg);
+  color: var(--hvl-feedback-correct-fg);
+}
+
+/* The circle's size is fixed and the image clips it, so its visible label is the image's ::after: beside the
+   circle, or on its other side where the image ends (anchor positioning); without that, in the image's corner. */
+:root .h5p-image-hotspot-question .image-wrapper:has(> .hotspot-feedback)::after {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+  padding: 0 var(--hvl-space-xs);
+  border: 1px solid;
+  border-radius: var(--hvl-space-xs);
+  background: var(--hvl-surface);
+  font-size: 1rem;
+  line-height: var(--hvl-line-height-h5p);
+}
+
+@supports (position-area: center right) {
+  :root .h5p-image-hotspot-question .image-wrapper:has(> .hotspot-feedback)::after {
+    inset: auto;
+    margin-inline: var(--hvl-space-xs);
+    position-anchor: --hvl-hotspot-mark;
+    position-area: center right;
+    position-try-fallbacks: flip-inline;
+  }
+}
+
 /* The visible prefixes take the state's text colour where the library does not set one on that element. */
 :root .h5p-multichoice .h5p-answer.h5p-correct .h5p-alternative-inner::before,
 :root .h5p-blanks .h5p-input-wrapper.h5p-correct::before,
-:root .h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-correct)::before {
+:root .h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-correct)::before,
+:root .h5p-image-hotspot-question .image-wrapper:has(> .hotspot-feedback.correct)::after {
   color: var(--hvl-feedback-correct-fg);
 }
 
 :root .h5p-multichoice .h5p-answer.h5p-wrong .h5p-alternative-inner::before,
 :root .h5p-blanks .h5p-input-wrapper.h5p-wrong::before,
-:root .h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-wrong)::before {
+:root .h5p-drag-text .h5p-dropzone--inline:has(> .h5p-dropzone-wrong)::before,
+:root .h5p-image-hotspot-question .image-wrapper:has(> .hotspot-feedback:not(.correct))::after {
+  color: var(--hvl-feedback-incorrect-fg);
+}
+
+/* The label ./feedbackPrefixes.js shows as text where the library uses the answer's pseudo-elements itself
+   (TrueFalse 1.8, Summary 1.10, MultiMediaChoice 0.3; `prefixOn: "label"`). It is both the visible and the
+   announced prefix. An inline block keeps Summary's line-through on a wrong claim off the label (UD-003).
+   SPEC-DEVIATION: D-072 (UD-003 names a ::before prefix and a hidden text node; here one shown text node is both). */
+.hvl-feedback-text {
+  display: inline-block;
+  margin-inline-end: 0.25em;
+  font-weight: bold;
+  text-indent: 0;
+  white-space: nowrap;
+}
+
+/* MultiMediaChoice 0.3 lays its options out with Masonry, which fixes each card's height; the label sits in the
+   card's top corner over the picture's edge, on the card colour, so the layout does not change. */
+:root .h5p-multi-media-choice-option > .hvl-feedback-text {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 3;
+  padding: 0 var(--hvl-space-xs);
+  border-radius: 0 0 var(--hvl-space-xs) 0;
+  background: var(--hvl-surface);
+  line-height: var(--hvl-line-height-h5p);
+}
+
+:root .h5p-multi-media-choice-option > .hvl-feedback-text[data-hvl-feedback='correct'] {
+  color: var(--hvl-feedback-correct-fg);
+}
+
+:root .h5p-multi-media-choice-option > .hvl-feedback-text[data-hvl-feedback='incorrect'] {
   color: var(--hvl-feedback-incorrect-fg);
 }
 

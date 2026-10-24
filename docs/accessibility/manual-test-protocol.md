@@ -133,21 +133,31 @@ The portfolio export does not exist yet. When it arrives, run:
 ## 8. Known H5P problems to expect
 
 The automated suite records serious and critical problems in H5P's own markup that HVL Interaktiv cannot repair
-(`apps/server/a11y/support/upstreamRegister.ts`). Testers should still record what each of them means in practice
+(`apps/server/a11y/support/upstreamRegister.ts`), and repairs the others at run time (D-080). Testers should still record what each of them means in practice
 for the set-up, because the impact on a screen-reader user is what the conformance report (`UD-040`) needs:
 
-- CoursePresentation: the progress-bar links have no text; each progress-bar tab contains a link.
-- DragText: the drop zones carry a label on an element without a role.
-- Editor (several types): the "to" field of the score ranges has no label; the vertical tabs of QuestionSet,
-  InteractiveBook and ImageHotspots have a broken tab structure; the image of the hotspot position picker has no
-  alternative text; CoursePresentation's paste button has no name; QuestionSet's editor-mode switch is a list
-  without list items.
-- BranchingScenario editor: the guided tour fades the editor without hiding it from assistive technology; the
-  disabled «Paste» item is not announced as disabled.
-- New activity: H5P's content-type list nests interactive elements and its frame has an empty title.
-- Forced colours: axe reports BranchingScenario's buttons and parts of its editor as unreadable because Chromium
-  keeps the author colour in `-webkit-text-fill-color` while it paints the system colour. In a Windows contrast
-  theme, confirm that the start, back and proceed buttons are readable (protocol §7, forced colours).
+- Repaired at run time (D-080), to confirm with each screen reader: CoursePresentation's progress bar is a list of
+  links named by slide, the current slide announced as the current step, and each slide is a group named by its
+  title; DragText's drop zones are groups announced with their label when a word is dropped by keyboard; in the
+  editor, the score-range "to" field is announced by the column heading, H5P's required marker, the row's "from"
+  value and the dash (for example "Poengområde* 51 % –"; a screen reader may read the "*" as "star", as in every
+  required field of H5P's editor), the vertical tabs of QuestionSet, InteractiveBook and ImageHotspots are buttons
+  (the open item current) and their forms plain groups, CoursePresentation's paste button is named "Paste" (H5P has
+  no nn or nb text for it), and QuestionSet's editor-mode switch is a group whose active mode is pressed.
+- CoursePresentation's progress bar keeps H5P's keyboard model: only one slide link is in the Tab order, and the
+  arrow, Home and End keys move between the links, which the list does not announce. With each screen reader,
+  confirm that every slide link can be reached and activated both in browse mode and with Tab plus the arrow keys.
+- Editor, keyboard (WCAG 2.1.1, `UD-006`; axe cannot see these): QuestionSet's editor-mode switch cannot be used by
+  keyboard (Enter and Space do nothing; its items have `tabindex="1"`); the vertical-tab buttons open with Space
+  only, not Enter; the hotspot position picker works with a pointer only, and its image is decorative.
+- BranchingScenario editor: the disabled «Paste» item is not announced as disabled, and it stays faded in a
+  contrast theme. While the guided tour shows a step, the faded parts of the editor are inert (D-080): confirm that
+  the tour's dialog is reachable and that the editor returns when the tour ends.
+- New activity: H5P's content-type list is a group named by its heading, but its tabs and content types still nest
+  interactive elements.
+- Forced colours: the theme sets the text fill of BranchingScenario's controls to the system colour Chromium
+  paints, so axe no longer misreads them. In a Windows contrast theme, confirm that the start, back and proceed
+  buttons and the editor toolbar are readable (protocol §7, forced colours).
 
 Two exceptions are by design: an ImageHotspots image may pan at 320 px (`UD-008`), and in the editor the
 score-range table of the overall feedback scrolls sideways inside its own box at 320 px, because its columns

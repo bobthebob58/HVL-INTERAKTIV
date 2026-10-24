@@ -13,6 +13,7 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 const SOURCES = {
   'src/hvl-h5p-theme.css': read('../src/hvl-h5p-theme.css'),
   'src/hvl-h5p-feedback.css': read('../src/hvl-h5p-feedback.css'),
+  'src/hvl-h5p-indicators.css': read('../src/hvl-h5p-indicators.css'),
   'dist/hvl-feedback-prefixes.css': read('../dist/hvl-feedback-prefixes.css'),
 };
 const THEME = SOURCES['src/hvl-h5p-theme.css'];
@@ -89,5 +90,14 @@ describe('the theme stylesheets', () => {
       /@media \(forced-colors: active\) \{[\s\S]*?:focus-visible \{[\s\S]*?outline-width:/,
     );
     expect(TOKENS_CSS).toMatch(/@media \(forced-colors: active\)[\s\S]*--hvl-focus-outer: Highlight;/);
+  });
+
+  it('[UD-012] gives every light-on-dark BranchingScenario button the painted text fill in forced colours', () => {
+    // Start and end screen, back and navigation (proceed, replay) buttons share one style in BranchingScenario 1.10.
+    const forced = THEME.slice(THEME.indexOf('@media (forced-colors: active)'));
+    const rule =
+      rules(forced).find(([, body]) => body.includes('-webkit-text-fill-color: ButtonText'))?.[0] ?? '';
+    for (const button of ['.h5p-start-button', '.h5p-end-button', '.h5p-back-button', '.h5p-nav-button'])
+      expect(rule).toContain(button);
   });
 });
