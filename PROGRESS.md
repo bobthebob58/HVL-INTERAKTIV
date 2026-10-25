@@ -285,6 +285,14 @@ text or API, removes or weakens no test (the test count does not drop) and keeps
 ## S5 — Læringsdesign studio ⬜
 
 Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.nn.md`; ALU must confirm labels, criteria and limits.
+
+**Ask the owner at the start of S5, before planning** (owner's request, 2026-10-25):
+1. Per-session explainer: should every session end with a short explainer for the owner in Nynorsk (what was built,
+   why, how it fits together) and a five-question quiz, so the owner keeps up without reading code? The idea comes
+   from Geoffrey Litt's talk "Understanding is the new bottleneck" (explainers, a quiz before review, against
+   "cognitive debt"). If yes, propose the addition to the CLAUDE.md session protocol for the owner to approve.
+2. A second simplification round (S4+): recommended no, given round 1's numbers; the owner decides.
+3. Whether `main` exists on GitHub and CI has run (Q16); if it has run, read and fix its first results.
 - [ ] Studio routes and guide content (`PED-001`…`PED-003`); patterns and skeletons (`PED-010`, `PED-011`, `PROD-001`, `PROD-009`)
 - [ ] Metadata, planner, learner time estimate (`PED-030`…`PED-032`); co-authoring and content bank (`PROD-007`); versioning (`PROD-013`)
 - [ ] Mappe export in Markdown and tagged PDF (`MAPPE-001`…`MAPPE-004`)
