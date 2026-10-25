@@ -318,6 +318,15 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
       only on a device or with a screen reader needs a precise description and an HVL re-test; H5P's own barriers
       are repaired at run time or registered and reported (D-080). Manual results stay dated in
       `docs/accessibility/results/`
+- [ ] Light simplification check before the pilot (owner decisions 2026-10-24 and 2026-10-25), as in S4+ (two
+      independent skeptics per proposal, no behaviour change, every test kept, the full gate after), with one more
+      lens: does the code read as if a careful human wrote it? Signs of machine-written code to look for: comments
+      that restate the code, checks repeated where one layer already guarantees them, generic or overlong names,
+      boilerplate copied across files, abstractions with one user, and idioms that differ from file to file because
+      different agents wrote them. The reviewers must tell "unfamiliar but correct" from "needlessly odd": code that
+      is unusual because it is right (a security check, an H5P workaround, a timing guard) stays, and gets a short
+      WHY comment a human maintainer can follow, rather than being made ordinary and wrong. An HVL developer reads a
+      sample afterwards and has the last word
 - [ ] Gate: as in the Evaluator Guide §5, S6
 
 ---
