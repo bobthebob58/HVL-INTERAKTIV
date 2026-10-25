@@ -292,7 +292,13 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
    from Geoffrey Litt's talk "Understanding is the new bottleneck" (explainers, a quiz before review, against
    "cognitive debt"). If yes, propose the addition to the CLAUDE.md session protocol for the owner to approve.
 2. A second simplification round (S4+): recommended no, given round 1's numbers; the owner decides.
-3. Whether `main` exists on GitHub and CI has run (Q16); if it has run, read and fix its first results.
+3. Whether `main` exists on GitHub and CI has run (Q16). Status 2026-10-25: the owner created `main` from d4c632c;
+   CI #29 passed 21 422 of 21 423 tests and failed only on the stale spec site (fixed in 9377a7b on the working
+   branch; `main` gets it through a pull request the owner merges). The run stopped there, so the end-to-end and
+   accessibility steps have not yet run on GitHub: read the next run. GitHub warns that actions/checkout,
+   setup-node, cache and upload-artifact v4 run on Node 20, which it is retiring: move them to versions on Node 24.
+   The 7 open Dependabot pull requests (major bumps of redis, cache-manager, @types/node and others) fail and must
+   not be merged; decide whether to close them and how to configure Dependabot.
 - [ ] Studio routes and guide content (`PED-001`…`PED-003`); patterns and skeletons (`PED-010`, `PED-011`, `PROD-001`, `PROD-009`)
 - [ ] Metadata, planner, learner time estimate (`PED-030`…`PED-032`); co-authoring and content bank (`PROD-007`); versioning (`PROD-013`)
 - [ ] Mappe export in Markdown and tagged PDF (`MAPPE-001`…`MAPPE-004`)

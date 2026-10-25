@@ -7041,7 +7041,13 @@ why, how it fits together) and a five-question quiz, so the owner keeps up witho
 from Geoffrey Litt&#39;s talk &quot;Understanding is the new bottleneck&quot; (explainers, a quiz before review, against
 &quot;cognitive debt&quot;). If yes, propose the addition to the CLAUDE.md session protocol for the owner to approve.</li>
 <li>A second simplification round (S4+): recommended no, given round 1&#39;s numbers; the owner decides.</li>
-<li>Whether <code>main</code> exists on GitHub and CI has run (Q16); if it has run, read and fix its first results.</li>
+<li>Whether <code>main</code> exists on GitHub and CI has run (Q16). Status 2026-10-25: the owner created <code>main</code> from d4c632c;
+CI #29 passed 21 422 of 21 423 tests and failed only on the stale spec site (fixed in 9377a7b on the working
+branch; <code>main</code> gets it through a pull request the owner merges). The run stopped there, so the end-to-end and
+accessibility steps have not yet run on GitHub: read the next run. GitHub warns that actions/checkout,
+setup-node, cache and upload-artifact v4 run on Node 20, which it is retiring: move them to versions on Node 24.
+The 7 open Dependabot pull requests (major bumps of redis, cache-manager, @types/node and others) fail and must
+not be merged; decide whether to close them and how to configure Dependabot.</li>
 </ol>
 <ul>
 <li><span class="task">○ To do:</span> Studio routes and guide content (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>…<a class="req-ref" href="#r-PED-003"><code>PED-003</code></a>); patterns and skeletons (<a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>, <a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>, <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>, <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>)</li>
