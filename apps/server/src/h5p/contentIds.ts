@@ -8,7 +8,8 @@
  * Invariants:
  *   - Accepts a canonical UUID in any letter case, nothing else.
  * Collaborators: ./permissions/ContentAccessRepository.ts, ./storage/PrismaContentStorage.ts,
- *   ./storage/learnerStateRows.ts, ../lti/launchFacts.ts, ../lti/deepLinking/deepLinkActivities.ts.
+ *   ./storage/learnerStateRows.ts, ../content/PublishedSaveGate.ts, ../lti/launchFacts.ts,
+ *   ../lti/deepLinking/deepLinkActivities.ts.
  * Tests: apps/server/test/h5p/permissions/HvlPermissionSystem.int.test.ts,
  *   apps/server/test/h5p/contentStorage.int.test.ts
  */

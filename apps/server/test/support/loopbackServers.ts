@@ -11,7 +11,8 @@
  *     call it in the `afterAll` of the block that started them.
  * Collaborators: Express `app.listen`; used beside `describeWithBrowser` from ./browser.ts.
  * Tests: used by the browser tests that serve an app, such as apps/server/test/http/player.browser.int.test.ts,
- *   apps/server/test/h5p/editorPage.browser.int.test.ts and apps/server/test/web/webPages.browser.int.test.ts.
+ *   apps/server/test/h5p/editorPage.browser.int.test.ts and apps/server/test/web/webTestServer.ts (for the web app's
+ *   browser tests).
  */
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';

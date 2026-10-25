@@ -4,6 +4,7 @@
  * Why: the scripts only define page-level functions; the tests load them in the page's order into a bare VM context
  *      and call those functions, so one loader keeps the folder and the joining in one place.
  * Spec: PROD-003, UD-006
+ * Collaborators: apps/server/src/h5p/render/client/*.js, loaded in the editor page's order.
  * Tests: used by ./editorFieldChain.test.ts, ./editorFieldsScript.test.ts and ./editorPageScript.test.ts.
  */
 import { readFileSync } from 'node:fs';

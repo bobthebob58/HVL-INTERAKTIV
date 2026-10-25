@@ -4,6 +4,7 @@
  * Why: the HTTP tests send almost every request as a test actor (./httpTestbed.ts) or principal (./apiTestbed.ts);
  *      one helper keeps each such call on one line, and the header on every one of them.
  * Spec: H5P-006
+ * Collaborators: supertest; the actors of ./httpTestbed.ts and the principals of ./apiTestbed.ts.
  * Tests: shared by the tests under apps/server/test/http.
  */
 import type { Express } from 'express';

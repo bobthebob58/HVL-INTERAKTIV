@@ -4,6 +4,7 @@
  * Why: the content, user-data and general/temporary-file matrices enumerate the same roles and views and need the
  *      same cartesian product and enum reading; one definition keeps the three tables built alike.
  * Spec: H5P-006
+ * Collaborators: ../../../src/h5p/HvlH5pUser.ts (roles and views).
  * Tests: used by ./contentMatrix.test.ts, ./userDataMatrix.test.ts and ./generalAndTemporary.test.ts.
  */
 import type { H5pRole, H5pUserView } from '../../../src/h5p/HvlH5pUser.js';
