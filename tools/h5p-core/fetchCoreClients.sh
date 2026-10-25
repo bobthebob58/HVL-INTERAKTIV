@@ -29,8 +29,8 @@ EDITOR_REPO="https://github.com/h5p/h5p-editor-php-library.git"
 EDITOR_COMMIT="ab2daa18bd61b19e7f8729e22eec88f3b637a868"
 EDITOR_HASHES="$REF/h5p-editor-php-library-ab2daa18.files.sha256"
 
-record_editor=false
-[[ "${1:-}" == "--record-editor-hashes" ]] && record_editor=true
+editor_mode=verify
+[[ "${1:-}" == "--record-editor-hashes" ]] && editor_mode=record
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -55,11 +55,7 @@ $VERIFY verify "$work/core" "$CORE_HASHES" --prefix=h5p-php-library-1.28.0/
 
 echo "Fetching H5P editor at pinned commit $EDITOR_COMMIT (D-022)…"
 fetch_commit "$EDITOR_REPO" "$EDITOR_COMMIT" "$EDITOR_COMMIT" "$work/editor"
-if [[ "$record_editor" == true ]]; then
-  $VERIFY record "$work/editor" "$EDITOR_HASHES" --prefix=h5p-editor-php-library-ab2daa18/
-else
-  $VERIFY verify "$work/editor" "$EDITOR_HASHES" --prefix=h5p-editor-php-library-ab2daa18/
-fi
+$VERIFY "$editor_mode" "$work/editor" "$EDITOR_HASHES" --prefix=h5p-editor-php-library-ab2daa18/
 
 rm -rf "$DEST/core" "$DEST/editor"
 mkdir -p "$DEST"

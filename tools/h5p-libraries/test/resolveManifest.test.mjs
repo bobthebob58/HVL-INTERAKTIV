@@ -58,6 +58,9 @@ const registry = {
   'H5P.B': { repo: { url: 'b' } },
   'H5P.C': { repo: { url: 'c' } },
 };
+const ROOTS = [{ machineName: 'H5P.A', majorVersion: 1, minorVersion: 2 }];
+/** Resolves the content type H5P.A 1.2 from `source` into a fresh work folder. */
+const resolveA = (source) => resolveManifest({ roots: ROOTS, registry, source, workDir: workDir() });
 
 describe('[H5P-003] resolving the pinned library set', () => {
   it('[H5P-003] takes the newest tag of each required major.minor, follows dependencies once, and sorts', () => {
@@ -77,12 +80,7 @@ describe('[H5P-003] resolving the pinned library set', () => {
       },
     });
     // Act
-    const { libraries } = resolveManifest({
-      roots: [{ machineName: 'H5P.A', majorVersion: 1, minorVersion: 2 }],
-      registry,
-      source,
-      workDir: workDir(),
-    });
+    const { libraries } = resolveA(source);
     // Assert
     expect(libraries.map((l) => `${l.machineName} ${l.version} ${l.ref} build=${l.build}`)).toEqual([
       'H5P.A 1.2.7 refs/tags/1.2.7 build=false',
@@ -94,12 +92,7 @@ describe('[H5P-003] resolving the pinned library set', () => {
 
   it('[H5P-003] a library without a matching tag is pinned to the default branch and marked untagged', () => {
     const source = fakeSource({ a: { HEAD: lib('H5P.A', '1.2.3') } });
-    const { libraries } = resolveManifest({
-      roots: [{ machineName: 'H5P.A', majorVersion: 1, minorVersion: 2 }],
-      registry,
-      source,
-      workDir: workDir(),
-    });
+    const { libraries } = resolveA(source);
     expect(libraries[0]).toMatchObject({ ref: 'HEAD', untagged: true, version: '1.2.3' });
   });
 
@@ -125,12 +118,7 @@ describe('[H5P-003] resolving the pinned library set', () => {
       return commit;
     };
     // Act
-    const { libraries, skipped } = resolveManifest({
-      roots: [{ machineName: 'H5P.A', majorVersion: 1, minorVersion: 2 }],
-      registry,
-      source,
-      workDir: workDir(),
-    });
+    const { libraries, skipped } = resolveA(source);
     // Assert
     expect(libraries.map((l) => l.machineName)).toEqual(['H5P.A', 'H5P.C']);
     expect(skipped).toEqual([
@@ -142,16 +130,12 @@ describe('[H5P-003] resolving the pinned library set', () => {
     const source = fakeSource({
       a: { '1.2.0': lib('H5P.A', '1.2.0', [], { preloadedJs: [{ path: 'dist/a.js' }] }) },
     });
-    const roots = [{ machineName: 'H5P.A', majorVersion: 1, minorVersion: 2 }];
-    expect(() => resolveManifest({ roots, registry, source, workDir: workDir() })).toThrow(/no package-lock/);
+    expect(() => resolveA(source)).toThrow(/no package-lock/);
   });
 
   it('[H5P-003] refuses a checkout that holds another version, and a library missing from the registry', () => {
     const wrong = fakeSource({ a: { HEAD: lib('H5P.A', '1.9.0') } });
-    const roots = [{ machineName: 'H5P.A', majorVersion: 1, minorVersion: 2 }];
-    expect(() => resolveManifest({ roots, registry, source: wrong, workDir: workDir() })).toThrow(
-      /holds 1.9/,
-    );
+    expect(() => resolveA(wrong)).toThrow(/holds 1.9/);
     const missing = [{ machineName: 'H5P.Unknown', majorVersion: 1, minorVersion: 0 }];
     expect(() => resolveManifest({ roots: missing, registry, source: wrong, workDir: workDir() })).toThrow(
       /not in the H5P registry/,
