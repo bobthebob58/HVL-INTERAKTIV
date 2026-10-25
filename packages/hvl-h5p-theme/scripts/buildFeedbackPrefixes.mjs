@@ -97,13 +97,11 @@ export function prefixCss({ locales, targets }) {
   });
   const drawn = (state, ownIcon) => prefixSelectors(entries, state, ownIcon);
   // A11Y: the visible prefix has empty alternative text; the script's hidden label is what is announced (UD-003).
-  const content = (state, ownIcon, part) =>
-    drawn(state, ownIcon).length === 0
-      ? []
-      : [
-          '',
-          block(drawn(state, ownIcon).join(',\n'), [`content: var(--hvl-feedback-${state}-${part}) / '';`]),
-        ];
+  const content = (state, ownIcon, part) => {
+    const selectors = drawn(state, ownIcon);
+    if (selectors.length === 0) return [];
+    return ['', block(selectors.join(',\n'), [`content: var(--hvl-feedback-${state}-${part}) / '';`])];
+  };
   const list = (selectors) => `'${selectors.join(', ')}'`;
   return [
     '/*',

@@ -17,14 +17,17 @@ const DAYLIGHT_VARIABLES = fileURLToPath(
   new URL('../../../apps/server/h5p/core/styles/h5p-theme-variables.css', import.meta.url),
 );
 
+/** Parsed tokens.json, loose enough for a test to break it. */
+type Tokens = Record<string, Record<string, unknown>>;
+
 const temporaryDirs: string[] = [];
 const tempDir = () => {
   const dir = mkdtempSync(join(tmpdir(), 'hvl-tokens-'));
   temporaryDirs.push(dir);
   return dir;
 };
-const tokensWith = (change: (tokens: Record<string, Record<string, unknown>>) => void) => {
-  const tokens = readTokens() as Record<string, Record<string, unknown>>;
+const tokensWith = (change: (tokens: Tokens) => void) => {
+  const tokens = readTokens() as Tokens;
   change(tokens);
   const file = join(tempDir(), 'tokens.json');
   writeFileSync(file, JSON.stringify(tokens));
@@ -77,30 +80,14 @@ describe('the token generator', () => {
   });
 
   it.each([
-    [
-      'an unknown colour ref',
-      (t: Record<string, Record<string, unknown>>) => (t.color!.x = { ref: 'nope', use: 'x' }),
-    ],
-    [
-      'a short hex value',
-      (t: Record<string, Record<string, unknown>>) => (t.color!.x = { value: '#FFF', use: 'x' }),
-    ],
-    [
-      'a token without a use',
-      (t: Record<string, Record<string, unknown>>) => (t.color!.x = { value: '#FFFFFF' }),
-    ],
-    [
-      'a non-system forced colour',
-      (t: Record<string, Record<string, unknown>>) => (t.forcedColors!.ink = 'black'),
-    ],
-    [
-      'an unknown Daylight target',
-      (t: Record<string, Record<string, unknown>>) => (t.h5pDaylight!['--h5p-theme-ui-base'] = 'nope'),
-    ],
+    ['an unknown colour ref', (t: Tokens) => (t.color!.x = { ref: 'nope', use: 'x' })],
+    ['a short hex value', (t: Tokens) => (t.color!.x = { value: '#FFF', use: 'x' })],
+    ['a token without a use', (t: Tokens) => (t.color!.x = { value: '#FFFFFF' })],
+    ['a non-system forced colour', (t: Tokens) => (t.forcedColors!.ink = 'black')],
+    ['an unknown Daylight target', (t: Tokens) => (t.h5pDaylight!['--h5p-theme-ui-base'] = 'nope')],
     [
       'an unknown var() inside a value',
-      (t: Record<string, Record<string, unknown>>) =>
-        (t.focus!.outline = { value: 'var(--hvl-nope)', use: 'x' }),
+      (t: Tokens) => (t.focus!.outline = { value: 'var(--hvl-nope)', use: 'x' }),
     ],
   ])('[UD-001] refuses tokens.json with %s and writes nothing', (_label, change) => {
     // Arrange
