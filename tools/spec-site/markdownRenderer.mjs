@@ -18,8 +18,9 @@ import { Marked } from './vendor/marked.esm.js';
 import { DOCUMENTS, REQUIREMENT_HEADING, slugify } from './specParser.mjs';
 
 const ID_ONLY = /^[A-Z][A-Z0-9]*-\d{3}$/;
-const escapeHtml = (s) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+/** Escapes text for HTML element content and double-quoted attribute values. */
+export const escapeHtml = (s) =>
+  String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** Renders a priority keyword as a badge. A11Y: the word is spelled out, never colour alone. */
 export function priorityBadge(priority) {

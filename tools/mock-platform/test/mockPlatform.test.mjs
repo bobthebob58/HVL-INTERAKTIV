@@ -19,27 +19,19 @@ afterAll(() => platform.close());
 
 describe('[LTI-001] mock platform entry point', () => {
   it('[LTI-001] gives exactly the six tool variables, and the server configuration accepts them', () => {
-    // Act
-    const env = loadEnvPart(
-      [
-        'FEIDE_ISSUER',
-        'FEIDE_GROUPS_API_URL',
-        'FEIDE_CLIENT_ID',
-        'FEIDE_CLIENT_SECRET',
-        'CANVAS_ORIGINS',
-        'LTI_PLATFORMS',
-      ],
-      platform.env,
-    );
-    // Assert
-    expect(Object.keys(platform.env).sort()).toEqual([
-      'CANVAS_ORIGINS',
+    // Arrange
+    const six = [
+      'FEIDE_ISSUER',
+      'FEIDE_GROUPS_API_URL',
       'FEIDE_CLIENT_ID',
       'FEIDE_CLIENT_SECRET',
-      'FEIDE_GROUPS_API_URL',
-      'FEIDE_ISSUER',
+      'CANVAS_ORIGINS',
       'LTI_PLATFORMS',
-    ]);
+    ];
+    // Act
+    const env = loadEnvPart(six, platform.env);
+    // Assert
+    expect(Object.keys(platform.env).sort()).toEqual([...six].sort());
     expect(env.CANVAS_ORIGINS).toEqual([platform.canvas.origin]);
     expect(env.LTI_PLATFORMS).toEqual([platform.canvas.platformConfig]);
     expect(env.FEIDE_ISSUER).toBe(platform.feide.issuer);

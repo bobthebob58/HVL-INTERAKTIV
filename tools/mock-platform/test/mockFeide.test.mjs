@@ -27,8 +27,8 @@ async function authorizeRaw(params = {}) {
   return new URL((await fetch(url, { redirect: 'manual' })).headers.get('location') ?? '');
 }
 
-/** Sends a code grant without a PKCE verifier. */
-const redeemRaw = (code) =>
+/** Sends a hand-made code grant, with a PKCE verifier only when one is given. */
+const redeemRaw = (code, codeVerifier) =>
   fetch(config.serverMetadata().token_endpoint, {
     method: 'POST',
     body: new URLSearchParams({
@@ -36,6 +36,7 @@ const redeemRaw = (code) =>
       code,
       redirect_uri: REDIRECT_URI,
       client_id: feide.clientId,
+      ...(codeVerifier && { code_verifier: codeVerifier }),
     }),
   });
 
@@ -97,16 +98,7 @@ describe('[AUTH-001] mock Feide OpenID Connect provider', () => {
     // Arrange
     const [used, fresh] = [await authorize(), await authorize()];
     const exchange = (step, verifier) =>
-      fetch(config.serverMetadata().token_endpoint, {
-        method: 'POST',
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          code: step.callback.searchParams.get('code'),
-          redirect_uri: REDIRECT_URI,
-          client_id: feide.clientId,
-          ...(verifier && { code_verifier: step.checks.pkceCodeVerifier }),
-        }),
-      });
+      redeemRaw(step.callback.searchParams.get('code'), verifier && step.checks.pkceCodeVerifier);
     // Act
     const [first, replay, noVerifier] = [
       await exchange(used, true),

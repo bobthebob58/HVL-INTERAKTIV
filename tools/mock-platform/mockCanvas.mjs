@@ -55,11 +55,13 @@ export function toolBaseUrl(toolUrl) {
  */
 export async function startMockCanvas(options) {
   const toolUrl = toolBaseUrl(options?.toolUrl);
-  const { port = 0, host = '127.0.0.1' } = options;
-  const { clientId, deploymentId, launchTtlSeconds } = {
-    ...MOCK_CANVAS_DEFAULTS,
-    ...withoutUndefined(options),
-  };
+  const {
+    port = 0,
+    host = '127.0.0.1',
+    clientId = MOCK_CANVAS_DEFAULTS.clientId,
+    deploymentId = MOCK_CANVAS_DEFAULTS.deploymentId,
+    launchTtlSeconds = MOCK_CANVAS_DEFAULTS.launchTtlSeconds,
+  } = options;
   const [platformKey, foreignKey] = await Promise.all([generateKeyPair('RS256'), generateKeyPair('RS256')]);
   const publicJwk = { ...(await exportJWK(platformKey.publicKey)), alg: 'RS256', use: 'sig' };
   publicJwk.kid = await calculateJwkThumbprint(publicJwk);
@@ -136,9 +138,6 @@ export async function startMockCanvas(options) {
   pages.register(router);
   return canvas;
 }
-
-const withoutUndefined = (options) =>
-  Object.fromEntries(Object.entries(options).filter(([, value]) => value !== undefined));
 
 function registerPlatformRoutes(router, canvas) {
   router.add('GET', '/api/lti/security/jwks', (_req, res) =>

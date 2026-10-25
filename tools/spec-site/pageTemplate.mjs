@@ -8,14 +8,12 @@
  *   - Without JavaScript every view is visible, stacked in navigation order (progressive enhancement).
  *   - One <h1> for the page; each view starts with an <h2> (A11Y: WCAG 1.3.1, 2.4.6).
  *   - No colour-only meaning: badges and statuses carry words (A11Y: WCAG 1.4.1).
- * Collaborators: buildSpecSite.mjs (caller), markdownRenderer.mjs (badges).
+ * Collaborators: buildSpecSite.mjs (caller), markdownRenderer.mjs (badges, escapeHtml).
  * Tests: tools/spec-site/test/specSite.test.mjs (landmarks of the committed page).
  */
 import { AREAS } from './specParser.mjs';
-import { priorityBadge, sessionBadge } from './markdownRenderer.mjs';
+import { escapeHtml as esc, priorityBadge, sessionBadge } from './markdownRenderer.mjs';
 
-const esc = (s) =>
-  String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const STATUS_WORD = { planned: '○ Planned', 'in code': '◐ In code', tested: '● Tested' };
 
 /** Builds a <select> filter with an "All" option. */
