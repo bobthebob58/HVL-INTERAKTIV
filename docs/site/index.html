@@ -7034,6 +7034,15 @@ finds nothing new: the owner decides from these numbers</p>
 </ul>
 <h3 id="progress--s5--laeringsdesign-studio" tabindex="-1">S5 — Læringsdesign studio ⬜</h3>
 <p>Start from <code>docs/reference/proposals/phases.yaml</code> and <code>proposals/mappe-template.nn.md</code>; ALU must confirm labels, criteria and limits.</p>
+<p><strong>Ask the owner at the start of S5, before planning</strong> (owner&#39;s request, 2026-10-25):</p>
+<ol>
+<li>Per-session explainer: should every session end with a short explainer for the owner in Nynorsk (what was built,
+why, how it fits together) and a five-question quiz, so the owner keeps up without reading code? The idea comes
+from Geoffrey Litt&#39;s talk &quot;Understanding is the new bottleneck&quot; (explainers, a quiz before review, against
+&quot;cognitive debt&quot;). If yes, propose the addition to the CLAUDE.md session protocol for the owner to approve.</li>
+<li>A second simplification round (S4+): recommended no, given round 1&#39;s numbers; the owner decides.</li>
+<li>Whether <code>main</code> exists on GitHub and CI has run (Q16); if it has run, read and fix its first results.</li>
+</ol>
 <ul>
 <li><span class="task">○ To do:</span> Studio routes and guide content (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>…<a class="req-ref" href="#r-PED-003"><code>PED-003</code></a>); patterns and skeletons (<a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>, <a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>, <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>, <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>)</li>
 <li><span class="task">○ To do:</span> Metadata, planner, learner time estimate (<a class="req-ref" href="#r-PED-030"><code>PED-030</code></a>…<a class="req-ref" href="#r-PED-032"><code>PED-032</code></a>); co-authoring and content bank (<a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a>); versioning (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>)</li>
@@ -7068,6 +7077,15 @@ and merges. A problem seen only in HVL&#39;s Canvas or Feide needs the error and
 only on a device or with a screen reader needs a precise description and an HVL re-test; H5P&#39;s own barriers
 are repaired at run time or registered and reported (D-080). Manual results stay dated in
 <code>docs/accessibility/results/</code></li>
+<li><span class="task">○ To do:</span> Light simplification check before the pilot (owner decisions 2026-10-24 and 2026-10-25), as in S4+ (two
+independent skeptics per proposal, no behaviour change, every test kept, the full gate after), with one more
+lens: does the code read as if a careful human wrote it? Signs of machine-written code to look for: comments
+that restate the code, checks repeated where one layer already guarantees them, generic or overlong names,
+boilerplate copied across files, abstractions with one user, and idioms that differ from file to file because
+different agents wrote them. The reviewers must tell &quot;unfamiliar but correct&quot; from &quot;needlessly odd&quot;: code that
+is unusual because it is right (a security check, an H5P workaround, a timing guard) stays, and gets a short
+WHY comment a human maintainer can follow, rather than being made ordinary and wrong. An HVL developer reads a
+sample afterwards and has the last word</li>
 <li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S6</li>
 </ul>
 <hr>
