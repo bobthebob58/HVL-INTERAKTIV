@@ -7048,6 +7048,9 @@ accessibility steps have not yet run on GitHub: read the next run. GitHub warns 
 setup-node, cache and upload-artifact v4 run on Node 20, which it is retiring: move them to versions on Node 24.
 The 7 open Dependabot pull requests (major bumps of redis, cache-manager, @types/node and others) fail and must
 not be merged; decide whether to close them and how to configure Dependabot.</li>
+<li>Propose (owner agreed in principle, 2026-10-25): the pre-commit hook rebuilds or checks <code>docs/site/index.html</code>
+whenever a Markdown file under <code>docs/</code>, <code>PROGRESS.md</code>, <code>README.md</code> or <code>CLAUDE.md</code> is staged, so a stale spec site
+(the cause of CI #29&#39;s only failure) is caught before a commit, whoever makes it.</li>
 </ol>
 <ul>
 <li><span class="task">○ To do:</span> Studio routes and guide content (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>…<a class="req-ref" href="#r-PED-003"><code>PED-003</code></a>); patterns and skeletons (<a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>, <a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>, <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>, <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>)</li>

@@ -299,6 +299,9 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
    setup-node, cache and upload-artifact v4 run on Node 20, which it is retiring: move them to versions on Node 24.
    The 7 open Dependabot pull requests (major bumps of redis, cache-manager, @types/node and others) fail and must
    not be merged; decide whether to close them and how to configure Dependabot.
+4. Propose (owner agreed in principle, 2026-10-25): the pre-commit hook rebuilds or checks `docs/site/index.html`
+   whenever a Markdown file under `docs/`, `PROGRESS.md`, `README.md` or `CLAUDE.md` is staged, so a stale spec site
+   (the cause of CI #29's only failure) is caught before a commit, whoever makes it.
 - [ ] Studio routes and guide content (`PED-001`…`PED-003`); patterns and skeletons (`PED-010`, `PED-011`, `PROD-001`, `PROD-009`)
 - [ ] Metadata, planner, learner time estimate (`PED-030`…`PED-032`); co-authoring and content bank (`PROD-007`); versioning (`PROD-013`)
 - [ ] Mappe export in Markdown and tagged PDF (`MAPPE-001`…`MAPPE-004`)
