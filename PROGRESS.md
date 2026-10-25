@@ -13,7 +13,7 @@ what is done, what is verified, and what is blocked.
 | S2 | Ten-type whitelist, seeding, SVG sanitiser, permission system, resume | 01 (all); 00 `PROD-002`, `PROD-008` | ✅ Gate passed (2026-10-23); spike step 3 open (Q7), steps 4–5 done in S4 (D-047) |
 | S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | ✅ Gate passed (2026-10-23); HVL's Feide and Canvas values open (Q3, Q4) |
 | S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ✅ Gate passed (2026-10-24); HVL's token and logo confirmation (Q2), the DPO's review of the privacy text (Q6) and the first manual AT run open |
-| S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ⬜ Not started |
+| S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04 | ⬜ Not started |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §5–7; 05; 00 §6 | ⬜ Not started |
 
@@ -246,16 +246,41 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
       documents agree, carries their IDs; it passes without any result (Evaluator Guide §2)
 - [x] Gate: as in the Evaluator Guide §5, S4 (2026-10-24; output in the session log)
 
-## S4+ — Whole-code-base simplification ⬜ (owner decision 2026-10-24)
+## S4+ — Whole-code-base simplification ✅ (2026-10-25; owner decision 2026-10-24)
 
 Before S5 builds on the code, the owner asked for one pass over the whole code base (server, web app, packages,
 tools, tests) that makes it shorter where meaning and behaviour stay the same. The pass changes no behaviour, page,
 text or API, removes or weakens no test (the test count does not drop) and keeps every CLAUDE.md rule.
-- [ ] Measure duplication with a duplicate-code detector run outside the repository (no new dependency); before counts
-- [ ] Finders per area propose changes; two independent skeptics per proposal, and a proposal is applied only when
-      neither refutes it; refuted or behaviour-changing ideas are listed, not applied
-- [ ] Apply area by area with that area's tests; one commit per area
-- [ ] The full S4 gate again; before/after report here (lines, duplicates, test count)
+- [x] Measure duplication with a duplicate-code detector run outside the repository (no new dependency; `jscpd`
+      4.0.5 through `npx`): 43 exact clones of 6+ lines (406 lines, 0.53 % of 76 838) and 228 of 4+ lines (1 571
+      lines, 2.04 %), most of them in test setup
+- [x] Finders per area propose changes; two independent skeptics per proposal, and a proposal is applied only when
+      neither refutes it: 12 areas, 84 proposals, 62 survived both skeptics (one judged equivalence, the other worth
+      and the CLAUDE.md rules); the planner merged them into 60 and dropped 2 that clashed
+- [x] Apply area by area with that area's tests; one commit per area: 59 of 60 applied (one undone because a test
+      failed), in 23 commits after `03ba0de`. A script error first handed each area only its first batch (20 of 60);
+      a follow-up checked the count and applied the other 39
+- [x] The full S4 gate again (commit `0cda63a`), every step green with the same test counts as the S4 gate; report:
+
+      | | Before (`03ba0de`) | After (`0cda63a`) |
+      |---|---|---|
+      | Lines changed (outside `docs/`) | — | 114 files: 732 added, 1 301 removed, **−569 net** |
+      | of which server code / server tests / web / packages / tools / config | — | −44 / −389 / −21 / −21 / −90 / −4 |
+      | Lines the detector scans | 76 838 in 858 files | 76 258 in 863 files |
+      | Exact clones of 6+ lines | 43 (406 lines, 0.53 %) | 31 (286 lines, 0.38 %) |
+      | Clones of 4+ lines | 228 (1 571 lines, 2.04 %) | 202 (1 370 lines, 1.80 %) |
+      | Test definitions (`vitest list`): default / a11y / e2e | 1 676 / 48 / 15 | 1 676 / 48 / 15, every name kept |
+      | Tests run: `npx vitest run` / `test:a11y` / `test:e2e` | 21 423 / 332 / 16 | 21 423 / 332 / 16 |
+
+      What changed: shared test helpers instead of repeated set-up (`requestAs`, `listenOnLoopback`,
+      `capturedLogger`, `playerIntegration`, `appWith`, matrix dimensions, the colour modes of the axe suites), one
+      UUID check and one first-script check where the code had two, dead exports and duplicated types removed, one
+      `ExternalLink` for **Hjelp** and **Personvern**, the colour-literal rule written once. Nothing a user, Canvas,
+      Feide or H5P sees changed. The finder proposals, verdicts and plan were kept in
+      `docs/simplification/round-1-findings.json` while the pass ran (removed with this report; in the history at
+      `acd24b4`). The round-1 commits carry no `Refs:` line; this report's commit names the requirements they touched
+- [ ] Second round with smaller slices (about 2 000–3 000 lines per finder), the same two skeptics, until a round
+      finds nothing new: the owner decides from these numbers
 
 ## S5 — Læringsdesign studio ⬜
 
@@ -577,4 +602,28 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ curl http://localhost:3000/personvern              200 · <title>Personvern – HVL Interaktiv</title>
   $ curl http://localhost:3000/api/docs                200 · {"openapi":"3.1.0",…}
   $ kill -TERM <server>                                "HVL Interaktiv server stopped"
+  ```
+
+- **2026-10-25 · S4+** — Whole-code-base simplification (owner decision 2026-10-24): duplication measured, 12 finders,
+  two independent skeptics per proposal (equivalence; worth and rules), a planner, appliers one area at a time with
+  that area's tests, and a final skeptic over the whole diff. 59 of 60 approved changes applied; 114 files, 569 lines
+  shorter outside `docs/`; exact clones of 6+ lines from 43 to 31; every test name and count kept. The final checks
+  found only header lines to correct (551f958, 0cda63a). Report in section S4+. Gate output (commit 0cda63a), each
+  step as in the S4 entry and with the same test counts:
+
+  ```
+  $ npm run typecheck · lint · format:check · lint:css           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 473 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check                              ✓ 22 models, 167 fields
+  $ npm run h5p:fetch-core · h5p:fetch-libraries                 ✓ hashes match · ✓ 120 libraries and 10 packages
+  $ npm run build · tokens:check                                 exit 0 · ✓ 3 files up to date, feedback prefixes up to date
+  $ npm run spec:trace -- --check --done-through=S4              ✓ 126 requirements, traceability up to date.
+  $ npm run spec:site -- --check · docs:api · boot-check         ✓ up to date · html generated (no warnings) · Core 1.28, hub-api.h5p.org
+  $ npx vitest run                                               Test Files 315 passed (315) · Tests 21423 passed (21423)
+  $ npm run test:e2e                                             Test Files 8 passed (8) · Tests 16 passed (16)
+  $ npm run test:a11y                                            Test Files 13 passed (13) · Tests 332 passed (332)
+  $ npx vitest run -t <the S2, S3 and S4 filters of the S4 entry> every run passes with the same test counts
+  $ npx vitest run -t "\[<ID>\]", one run per S4 ID and DOC-012  every run passes with the same test counts
+  $ npm run mock:platform & WEB_APP=dev npm start                /healthz, /lti/keys, /, /hjelp, /personvern, /api/docs: 200
   ```
