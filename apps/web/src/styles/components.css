@@ -95,7 +95,9 @@
   }
 
   .button-primary:disabled,
-  .button-secondary:disabled {
+  .button-secondary:disabled,
+  .button-primary[aria-disabled='true'],
+  .button-secondary[aria-disabled='true'] {
     cursor: not-allowed;
   }
 
@@ -110,14 +112,9 @@
     border-bottom-color: var(--hvl-accent);
   }
 
-  .button-primary[aria-disabled='true'],
-  .button-secondary[aria-disabled='true'] {
-    cursor: not-allowed;
-  }
-
-  /* A11Y: UD-012: forced colours draw a transparent border in the text colour, which would underline every tab;
-     only the selected tab keeps a visible underline. */
   @media (forced-colors: active) {
+    /* A11Y: UD-012: forced colours draw a transparent border in the text colour, which would underline every tab;
+       only the selected tab keeps a visible underline. */
     .tab {
       border-bottom-color: Canvas;
     }
@@ -125,10 +122,8 @@
     .tab[aria-selected='true'] {
       border-bottom-color: Highlight;
     }
-  }
 
-  /* A11Y: under forced colours the fill disappears, so the transparent border becomes the button's outline. */
-  @media (forced-colors: active) {
+    /* A11Y: under forced colours the fill disappears, so the transparent border becomes the button's outline. */
     .button-primary,
     .button-secondary {
       border-color: ButtonText;

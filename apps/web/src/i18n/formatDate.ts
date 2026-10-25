@@ -26,6 +26,13 @@ export const INTL_LOCALE: Readonly<Record<Locale, readonly string[]>> = {
 /** The time zone HVL works in. */
 export const HVL_TIME_ZONE = 'Europe/Oslo';
 
+const format = (iso: string, locale: Locale, style: Intl.DateTimeFormatOptions): string => {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const formatter = new Intl.DateTimeFormat([...INTL_LOCALE[locale]], { ...style, timeZone: HVL_TIME_ZONE });
+  return formatter.format(date);
+};
+
 /**
  * Formats an ISO date for display.
  * @param iso - An ISO 8601 date-time from the API.
@@ -33,13 +40,7 @@ export const HVL_TIME_ZONE = 'Europe/Oslo';
  * @returns For example `23. okt. 2026, 14:05` in Nynorsk.
  */
 export function formatDateTime(iso: string, locale: Locale): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return new Intl.DateTimeFormat([...INTL_LOCALE[locale]], {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: HVL_TIME_ZONE,
-  }).format(date);
+  return format(iso, locale, { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 /**
@@ -49,10 +50,5 @@ export function formatDateTime(iso: string, locale: Locale): string {
  * @returns For example `6. nov. 2026` in Nynorsk.
  */
 export function formatDate(iso: string, locale: Locale): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return new Intl.DateTimeFormat([...INTL_LOCALE[locale]], {
-    dateStyle: 'medium',
-    timeZone: HVL_TIME_ZONE,
-  }).format(date);
+  return format(iso, locale, { dateStyle: 'medium' });
 }
