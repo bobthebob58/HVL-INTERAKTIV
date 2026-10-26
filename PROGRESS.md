@@ -335,6 +335,13 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
       only on a device or with a screen reader needs a precise description and an HVL re-test; H5P's own barriers
       are repaired at run time or registered and reported (D-080). Manual results stay dated in
       `docs/accessibility/results/`
+- [ ] Research export (owner's idea, 2026-10-26; to consider when insight is built): analysis and research scripts
+      run beside the system, in Python or R (pandas, Jupyter notebooks), which ALU and Pedagogisk akademi researchers
+      use, while everything inside the product stays TypeScript. They never touch the live database: the system
+      produces an anonymised export (pseudonyms only, groups under *k* = 5 suppressed, only the fields a question
+      needs), built and tested in TypeScript under the privacy rules, with a documented format and an example
+      notebook. Research use of student data needs its own legal basis and the DPO's approval (Q6) and belongs in
+      the DPIA input (`DATA-005`)
 - [ ] Light simplification check before the pilot (owner decisions 2026-10-24 and 2026-10-25), as in S4+ (two
       independent skeptics per proposal, no behaviour change, every test kept, the full gate after), with one more
       lens: does the code read as if a careful human wrote it? Signs of machine-written code to look for: comments

@@ -7086,6 +7086,13 @@ and merges. A problem seen only in HVL&#39;s Canvas or Feide needs the error and
 only on a device or with a screen reader needs a precise description and an HVL re-test; H5P&#39;s own barriers
 are repaired at run time or registered and reported (D-080). Manual results stay dated in
 <code>docs/accessibility/results/</code></li>
+<li><span class="task">○ To do:</span> Research export (owner&#39;s idea, 2026-10-26; to consider when insight is built): analysis and research scripts
+run beside the system, in Python or R (pandas, Jupyter notebooks), which ALU and Pedagogisk akademi researchers
+use, while everything inside the product stays TypeScript. They never touch the live database: the system
+produces an anonymised export (pseudonyms only, groups under <em>k</em> = 5 suppressed, only the fields a question
+needs), built and tested in TypeScript under the privacy rules, with a documented format and an example
+notebook. Research use of student data needs its own legal basis and the DPO&#39;s approval (Q6) and belongs in
+the DPIA input (<a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>)</li>
 <li><span class="task">○ To do:</span> Light simplification check before the pilot (owner decisions 2026-10-24 and 2026-10-25), as in S4+ (two
 independent skeptics per proposal, no behaviour change, every test kept, the full gate after), with one more
 lens: does the code read as if a careful human wrote it? Signs of machine-written code to look for: comments
