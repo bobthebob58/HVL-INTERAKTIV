@@ -79,7 +79,7 @@ jobs:
       # request) whose run saved it; a run reads only its own scope's caches and those of its base or default branch,
       # so a pull request cannot fill main's.
       - name: Cache the H5P library checkouts and builds
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/hvl-interaktiv/h5p-libraries
           key: h5p-libraries-${{ runner.os }}-${{ hashFiles('tools/h5p-libraries/libraries.manifest.json', 'tools/h5p-libraries/*.mjs') }}
