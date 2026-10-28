@@ -62,8 +62,9 @@ jobs:
       FEIDE_CLIENT_ID: hvli-ci-client
       FEIDE_CLIENT_SECRET: ci-only-feide-client-secret
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # WHY: GitHub retires Node 20 for actions; these majors run on Node 24.
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -79,7 +80,7 @@ jobs:
       # request) whose run saved it; a run reads only its own scope's caches and those of its base or default branch,
       # so a pull request cannot fill main's.
       - name: Cache the H5P library checkouts and builds
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/hvl-interaktiv/h5p-libraries
           key: h5p-libraries-${{ runner.os }}-${{ hashFiles('tools/h5p-libraries/libraries.manifest.json', 'tools/h5p-libraries/*.mjs') }}
@@ -127,7 +128,7 @@ jobs:
           A11Y_REPORT_DIR: a11y-report
       - name: Keep the accessibility report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: a11y-report
           path: a11y-report

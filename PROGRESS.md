@@ -286,22 +286,19 @@ text or API, removes or weakens no test (the test count does not drop) and keeps
 
 Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.nn.md`; ALU must confirm labels, criteria and limits.
 
-**Ask the owner at the start of S5, before planning** (owner's request, 2026-10-25):
-1. Per-session explainer: should every session end with a short explainer for the owner in Nynorsk (what was built,
-   why, how it fits together) and a five-question quiz, so the owner keeps up without reading code? The idea comes
-   from Geoffrey Litt's talk "Understanding is the new bottleneck" (explainers, a quiz before review, against
-   "cognitive debt"). If yes, propose the addition to the CLAUDE.md session protocol for the owner to approve.
-2. A second simplification round (S4+): recommended no, given round 1's numbers; the owner decides.
-3. Whether `main` exists on GitHub and CI has run (Q16). Status 2026-10-25: the owner created `main` from d4c632c;
-   CI #29 passed 21 422 of 21 423 tests and failed only on the stale spec site (fixed in 9377a7b on the working
-   branch; `main` gets it through a pull request the owner merges). The run stopped there, so the end-to-end and
-   accessibility steps have not yet run on GitHub: read the next run. GitHub warns that actions/checkout,
-   setup-node, cache and upload-artifact v4 run on Node 20, which it is retiring: move them to versions on Node 24.
-   The 7 open Dependabot pull requests (major bumps of redis, cache-manager, @types/node and others) fail and must
-   not be merged; decide whether to close them and how to configure Dependabot.
-4. Propose (owner agreed in principle, 2026-10-25): the pre-commit hook rebuilds or checks `docs/site/index.html`
-   whenever a Markdown file under `docs/`, `PROGRESS.md`, `README.md` or `CLAUDE.md` is staged, so a stale spec site
-   (the cause of CI #29's only failure) is caught before a commit, whoever makes it.
+**Asked at the start of S5 (owner's answers, 2026-10-28):**
+1. Per-session explainer and quiz: not wanted; sessions keep their summaries in chat and here.
+2. A second simplification round (S4+): skipped, as recommended; the light check before the pilot stays in S6.
+3. GitHub CI (Q16): `main` exists, protected by a ruleset; pull request #8 ran the whole gate green on GitHub
+   (2026-10-26, about 25 minutes). The owner merges it. The actions moved to versions on Node 24 (checkout v7,
+   setup-node v7, cache v6, upload-artifact v7). Dependabot's 14 pull requests are closed; it now opens one grouped
+   monthly pull request per ecosystem for minor and patch updates and never a major version (`.github/dependabot.yml`).
+4. The pre-commit hook checks the spec site whenever `PROGRESS.md`, `README.md` or a Markdown file under `docs/` is
+   staged (lint-staged in `package.json`).
+
+ALU has not yet confirmed the drafts in `docs/reference/proposals/`; S5 builds on them marked as drafts, and their
+texts stay editable without code (`PED-011`).
+
 - [ ] Studio routes and guide content (`PED-001`…`PED-003`); patterns and skeletons (`PED-010`, `PED-011`, `PROD-001`, `PROD-009`)
 - [ ] Metadata, planner, learner time estimate (`PED-030`…`PED-032`); co-authoring and content bank (`PROD-007`); versioning (`PROD-013`)
 - [ ] Mappe export in Markdown and tagged PDF (`MAPPE-001`…`MAPPE-004`)

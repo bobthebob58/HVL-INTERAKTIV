@@ -74,9 +74,14 @@ describe('[SEC-007] dependency hygiene in CI', () => {
     expect(runs('npm run check:audit')).toBe(true);
   });
 
-  it('[SEC-007] Dependabot opens weekly update pull requests', () => {
+  it('[SEC-007] Dependabot opens one grouped monthly pull request per ecosystem and never a major version', () => {
     const dependabot = readFileSync(`${root}.github/dependabot.yml`, 'utf8');
-    expect(dependabot).toMatch(/package-ecosystem: npm[\s\S]*interval: weekly/);
+    for (const ecosystem of ['npm', 'github-actions']) {
+      const block = dependabot.split(`package-ecosystem: ${ecosystem}`)[1].split('package-ecosystem:')[0];
+      expect(block).toMatch(/interval: monthly/);
+      expect(block).toMatch(/update-types: \[minor, patch\]/);
+      expect(block).toMatch(/update-types: \['version-update:semver-major'\]/);
+    }
   });
 });
 

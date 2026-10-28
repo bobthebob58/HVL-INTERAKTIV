@@ -71,6 +71,9 @@
     ],
     "*.{json,yml,yaml,css}": [
       "prettier --write"
+    ],
+    "{PROGRESS.md,README.md,docs/**/*.md}": [
+      "bash -c 'node tools/spec-site/buildSpecSite.mjs --check || { echo \"Run: node tools/spec-site/buildSpecSite.mjs\"; exit 1; }'"
     ]
   },
   "allowScripts": {
