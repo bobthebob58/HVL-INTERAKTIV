@@ -16,7 +16,8 @@
  *   ./editorSaveDialogCanvas.browser.int.test.ts (the editor page framed on our origin)
  */
 import { join } from 'node:path';
-import type { Browser, Frame, Page } from 'playwright-core';
+import type { Browser, Frame, Locator, Page } from 'playwright-core';
+import { expect } from 'vitest';
 import { closeLoopbackServers, listenOnLoopback } from '../../support/loopbackServers.js';
 import { openHttpTestbed, type HttpTestbed } from '../../support/httpTestbed.js';
 import { REAL_PACKAGES_DIR } from '../../support/realPackages.js';
@@ -105,12 +106,39 @@ export async function openEditorWithProbe(browser: Browser, bench: DialogBench):
 }
 
 /**
+ * Adds an inline `<script>` the way any page script would; records whether it ran and what the policy reported.
+ * @param frame - The editor page's document.
+ * @returns Whether the script ran, and the violated directive of each `securitypolicyviolation` event.
+ */
+export const addInlineScript = (frame: Frame): Promise<{ ran: boolean; refused: string[] }> =>
+  frame.evaluate(async () => {
+    const refused: string[] = [];
+    document.addEventListener('securitypolicyviolation', (e) => refused.push(e.violatedDirective));
+    const reported = new Promise((go) => document.addEventListener('securitypolicyviolation', go));
+    const script = document.createElement('script');
+    script.textContent = 'window.hvliProbeInlineRan = true;';
+    document.head.append(script);
+    // WHY: the report is a queued event: wait for it (10 s at most), then 100 ms, an absence margin, for others.
+    const sleep = (ms: number) => new Promise((go) => setTimeout(go, ms));
+    await Promise.race([reported, sleep(10_000)]).then(() => sleep(100));
+    return { ran: 'hvliProbeInlineRan' in window, refused };
+  });
+
+/**
+ * `expect.poll` with room for a busy runner, where reading a queued dialog event or H5P's growing form can outlast
+ * Vitest's default of 1 s.
+ * @param read - Reads the value, e.g. the probe's log.
+ * @returns The assertion to await, e.g. `await eventually(() => probeLog(frame)).toEqual(…)`.
+ */
+export const eventually = <T>(read: () => Promise<T>) => expect.poll(read, { timeout: 20_000 });
+
+/**
  * Arms the probe on the editor's save button and presses Enter on it, as a keyboard user saves.
  * @param probe - The editor page.
  * @param options - Probe options.
  */
 export async function openByKeyboard(probe: ProbePage, options: ProbeOptions = {}): Promise<void> {
-  await arm(probe, options);
+  await armProbe(probe.frame, options);
   await probe.page.focus('#hvl-editor-save');
   await probe.page.keyboard.press('Enter');
   await probe.page.locator('dialog[open]').waitFor();
@@ -120,21 +148,47 @@ export async function openByKeyboard(probe: ProbePage, options: ProbeOptions = {
  * Arms the probe on the editor's save button and clicks it, as a mouse user saves.
  * @param probe - The editor page.
  * @param options - Probe options.
- * @throws Error when three clicks did not open the dialog.
+ * @throws Error when five clicks did not open the dialog.
  */
 export async function openByMouse(probe: ProbePage, options: ProbeOptions = {}): Promise<void> {
-  await arm(probe, options);
-  // WHY: H5P resizes its editor iframe on every change inside it (h5peditor-editor.js `resize`), which can move
-  // «Lagre» between Playwright's hit check and its click; a missed click leaves the probe armed, so it is repeated.
-  for (let attempt = 0; attempt < 3; attempt++) {
-    await probe.page.click('#hvl-editor-save');
-    if ((await probe.page.locator('dialog[open]').count()) > 0) return;
-  }
-  throw new Error('three clicks on «Lagre» did not open the dialog');
+  await armProbe(probe.frame, options);
+  await clickUntilOpen(probe.frame);
 }
 
-async function arm(probe: ProbePage, options: ProbeOptions): Promise<void> {
-  await probe.frame.evaluate(
+/** Waits until a box has kept its place and size for 200 ms, for up to 10 s. */
+const standingStill = async (target: Locator): Promise<void> => {
+  let last = '';
+  for (let tries = 0; tries < 50; tries++) {
+    const box = JSON.stringify(await target.boundingBox());
+    if (box === last) return;
+    last = box;
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+};
+
+/**
+ * Clicks «Lagre» in an editor page's document until the armed probe has opened its dialog.
+ * @param frame - The editor page's own document (the top frame in the portal, Canvas's tool frame there).
+ * @throws Error when five clicks did not open the dialog.
+ */
+export async function clickUntilOpen(frame: Frame): Promise<void> {
+  // WHY: H5P resizes its editor iframe as the form fills in (h5peditor-editor.js `resize`), moving «Lagre» by a
+  // screen or more for a while after the form appears, so each click waits until the button stands still; one that
+  // still misses (the iframe grew between Playwright's hit check and its click) leaves the probe armed: try again.
+  for (let attempt = 0; (await frame.locator('dialog[open]').count()) === 0; attempt++) {
+    if (attempt === 5) throw new Error('five clicks on «Lagre» did not open the dialog');
+    await standingStill(frame.locator('#hvl-editor-save'));
+    await frame.click('#hvl-editor-save');
+  }
+}
+
+/**
+ * Arms the probe on the save button of an editor page's document: its next click opens the dialog instead of saving.
+ * @param frame - The editor page's own document.
+ * @param options - Probe options.
+ */
+export async function armProbe(frame: Frame, options: ProbeOptions): Promise<void> {
+  await frame.evaluate(
     ([texts, settings]) => {
       const button = document.getElementById('hvl-editor-save');
       const choice = (window as unknown as { hvliProbeSaveChoice: { armOn: (...a: unknown[]) => void } })

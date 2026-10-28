@@ -30,7 +30,8 @@ import {
   type MarkedActivity,
   type MarkerForm,
 } from './placeholderMarkerActivities.js';
-import { loadEveryCkeditor, openEditor, saveInEditor, selectInRichText } from './placeholderMarkerEditor.js';
+import { selectInRichText } from './placeholderMarkerCkeditor.js';
+import { loadEveryCkeditor, openEditor, saveInEditor } from './placeholderMarkerEditor.js';
 import {
   metadataOf,
   saveThroughEditor,
@@ -62,7 +63,7 @@ describeWithServices('the guidance marker through the editor and Lumi (probe P6)
       removeBuiltPackages();
       await closeLoopbackServers();
       await tb?.close();
-    });
+    }, 60_000); // WHY: on a loaded runner, removing the testbed's rows and buckets can take over 10 s.
 
     it.each(FORMS)(
       "[PROD-001] Lumi's enforcer alone stores the %s marker as ⟦ ⟧, except in a list item it never reaches",

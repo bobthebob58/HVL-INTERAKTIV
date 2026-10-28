@@ -9,7 +9,8 @@
  * Spec: PROD-013, H5P-005
  * Invariants:
  *   - The player is the production page `/h5p/play/:id`; the state is saved by H5P's own autosave (D-037).
- *   - Every edit is resumed from the same saved row, never from the row an earlier resume wrote.
+ *   - Every edit is resumed from the same saved row, never from the row an earlier resume wrote: a resumed page's
+ *     saves are answered in the browser and never reach the server.
  * Collaborators: ./learnerStateAfterEditBench.ts, ./learnerStateAfterEditLearners.ts, ../../support/browser.ts.
  * Tests: ./learnerStateAfterEdit.browser.int.test.ts, ./learnerStateAfterEditComposite.browser.int.test.ts,
  *   ./learnerStateAfterEditNavigation.browser.int.test.ts, ./learnerStateAfterEditPaths.browser.int.test.ts
@@ -30,7 +31,7 @@ export interface ResumedView {
   readonly placed: string[];
   /** The visible text of the activity, spaces collapsed. */
   readonly shown: string;
-  /** `getCurrentState()` of the main instance right after the resume, or null without one. */
+  /** `getCurrentState()` of the main instance once the view has settled, or null without one. */
   readonly state: unknown;
   /** Uncaught exceptions and console errors, in order. */
   readonly errors: string[];
@@ -51,54 +52,32 @@ export interface EditProbe {
  * @param browser - The running Chromium.
  * @param bench - The bench with the server and the learner.
  * @param contentId - The activity.
+ * @param options - `saves: false` answers H5P's state saves in the browser, so the stored rows stay as they are.
  * @returns The page and the list its errors are added to.
+ * @throws Error when H5P has not started the activity within 60 s.
  */
 export async function openAsLearner(
   browser: Browser,
   bench: StateBench,
   contentId: string,
+  options: { readonly saves?: boolean } = {},
 ): Promise<{ page: Page; errors: string[] }> {
   const page = await browser.newPage();
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => void (m.type() === 'error' && errors.push(`console: ${m.text()}`)));
   await page.setExtraHTTPHeaders({ [bench.learner.header[0]]: bench.learner.header[1] });
+  if (options.saves === false)
+    await page.route('**/h5p/contentUserData/**', (route) =>
+      route.request().method() === 'POST' ? route.fulfill({ json: { success: true } }) : route.continue(),
+    );
   await page.goto(`${bench.base}/h5p/play/${contentId}`);
-  // WHY: a constructor that throws leaves H5P.instances empty, so wait for either outcome, not for the instance.
-  await page
-    .waitForFunction(
-      () => (window as unknown as { H5P?: { instances?: unknown[] } }).H5P?.instances?.length,
-      {
-        timeout: 8_000,
-      },
-    )
-    .catch(() => undefined);
-  // WHY: some types attach their children after the main constructor; give them a moment to settle.
-  await page.waitForTimeout(500);
+  // WHY: H5P.init marks the container, then builds the activity in the same task (h5p.js:93-364): once the mark is
+  // seen the constructor has returned or thrown (leaving H5P.instances empty), so a crash needs no timeout to show.
+  await page.waitForFunction(() => document.querySelector('.h5p-content.h5p-initialized'), undefined, {
+    timeout: 60_000,
+  });
   return { page, errors };
-}
-
-/**
- * Waits until H5P's autosave (every 5 s, D-037) has stored a main state that passes `saved`.
- * @param bench - The bench.
- * @param contentId - The activity.
- * @param saved - Tells whether the parsed state holds the learner's answers yet.
- * @returns Every state row of the activity, as stored.
- * @throws Error after 15 s without such a row.
- */
-export async function savedStateRows(
-  bench: StateBench,
-  contentId: string,
-  saved: (state: unknown) => boolean,
-): Promise<StateRowSnapshot[]> {
-  const deadline = Date.now() + 15_000;
-  for (;;) {
-    const rows = await bench.stateRows(contentId);
-    const main = rows.find((row) => row.subContentId === '0' && row.dataType === 'state');
-    if (main && saved(JSON.parse(String(main.data)))) return rows;
-    if (Date.now() > deadline) throw new Error(`no matching saved state: ${JSON.stringify(rows)}`);
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  }
 }
 
 const readView = (page: Page): Promise<Omit<ResumedView, 'errors'>> =>
@@ -124,7 +103,36 @@ const readView = (page: Page): Promise<Omit<ResumedView, 'errors'>> =>
   });
 
 /**
- * Resumes the activity as the learner, reads the view and closes the page.
+ * The view once it has stopped changing. Some types finish resuming after they started: H5P.InteractiveVideo adds
+ * its end summary's state when the video's metadata has loaded (H5P.Video's `loaded`, html5.js:673).
+ * @param page - The resumed page.
+ * @returns The view after the media have loaded and it held for half a second.
+ * @throws Error when the view still changes after 30 s.
+ */
+async function settledView(page: Page): Promise<Omit<ResumedView, 'errors'>> {
+  await page.waitForFunction(
+    () =>
+      [...document.querySelectorAll('video')].every(
+        (v) => v.readyState >= 1 || v.error || v.networkState === 3 || v.preload === 'none',
+      ),
+    undefined,
+    { timeout: 30_000 },
+  );
+  const deadline = Date.now() + 30_000;
+  let [last, since] = ['', Date.now()];
+  for (;;) {
+    const view = await readView(page);
+    const now = JSON.stringify(view);
+    if (now !== last) [last, since] = [now, Date.now()];
+    // WHY: at least the half second the view used to be given, and longer while it changes; errors count until then.
+    else if (Date.now() - since >= 500) return view;
+    if (Date.now() > deadline) throw new Error(`the resumed view kept changing: ${now}`);
+    await page.waitForTimeout(100);
+  }
+}
+
+/**
+ * Resumes the activity as the learner, reads the view once it has settled, and closes the page.
  * @param browser - The running Chromium.
  * @param bench - The bench.
  * @param contentId - The activity.
@@ -135,8 +143,9 @@ export async function resumeAndRead(
   bench: StateBench,
   contentId: string,
 ): Promise<ResumedView> {
-  const { page, errors } = await openAsLearner(browser, bench, contentId);
-  const view = await readView(page);
+  // WHY: a slow read can outlast H5P's 3 s save after a resume's xAPI event; that save must not reach the next case.
+  const { page, errors } = await openAsLearner(browser, bench, contentId, { saves: false });
+  const view = await settledView(page);
   // WHY: closing without beforeunload keeps H5P's unload save from rewriting the row the next case restores.
   await page.close({ runBeforeUnload: false });
   return { ...view, errors };
@@ -163,7 +172,7 @@ export async function probeEdits(
 ): Promise<EditProbe> {
   const { page } = await openAsLearner(browser, bench, activity.id);
   await learner.play(page);
-  const rows = await savedStateRows(bench, activity.id, learner.saved);
+  const rows = await bench.savedRows(activity.id, learner.saved);
   await page.close({ runBeforeUnload: false });
   const resumed: Record<string, ResumedView> = {};
   for (const [name, params] of Object.entries(edits)) {

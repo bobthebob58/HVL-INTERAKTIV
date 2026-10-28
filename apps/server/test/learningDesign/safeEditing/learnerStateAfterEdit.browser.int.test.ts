@@ -12,6 +12,7 @@
  * Spec: PROD-013, H5P-005
  */
 import { afterAll, beforeAll, expect, it } from 'vitest';
+import { CONTENT_USER_STATE_SAVE_INTERVAL_MS } from '../../../src/h5p/H5pConfigFactory.js';
 import { describeWithBrowser } from '../../support/browser.js';
 import { describeWithRealPackages } from '../../support/realPackages.js';
 import { describeWithServices } from '../../support/services.js';
@@ -73,9 +74,12 @@ describeWithServices('[PROD-013] learner state after an author’s edit (probe P
         // Arrange
         const hotspots = await bench.importExample('H5P.ImageHotspots');
         const { page, errors } = await openAsLearner(browser(), bench, hotspots.id);
-        // Act: open a hotspot and wait past H5P's 5 s autosave
+        // Act: open a hotspot and wait past H5P's autosave
         await page.locator('.h5p-image-hotspot').first().click();
-        await page.waitForTimeout(6_500);
+        // WHY: an absence check, so the wait stays fixed: one autosave interval (D-037) and a 2.5 s margin for a save
+        // to reach the database, timed on the page, whose clock H5P's own timer (started at init, earlier) also uses.
+        const pastAutosave = CONTENT_USER_STATE_SAVE_INTERVAL_MS + 2_500;
+        await page.evaluate((ms) => new Promise((resolve) => setTimeout(resolve, ms)), pastAutosave);
         const hasStateFunction = await page.evaluate(
           () =>
             typeof (window as unknown as { H5P: { instances: { getCurrentState?: unknown }[] } }).H5P
@@ -98,7 +102,8 @@ describeWithServices('[PROD-013] learner state after an author’s edit (probe P
         const dialog = page.locator('.h5p-content-user-data-reset-dialog');
         const told = (await dialog.innerText()).replace(/\s+/g, ' ').trim();
         await dialog.locator('.h5p-dialog-ok-button').click();
-        await expect.poll(() => bench.stateRows(mc.id)).toEqual([]);
+        // WHY: OK deletes the row through a request to the server, which a busy runner answers slowly.
+        await expect.poll(() => bench.stateRows(mc.id), { timeout: 15_000 }).toEqual([]);
         await page.close({ runBeforeUnload: false });
         // Assert: Lumi's "nn" client texts are Bokmål (upstream translation)
         expect({ told, errors }).toEqual({

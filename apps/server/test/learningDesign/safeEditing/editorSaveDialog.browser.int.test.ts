@@ -20,6 +20,8 @@ import { describeWithBrowser } from '../../support/browser.js';
 import { describeWithRealPackages } from '../../support/realPackages.js';
 import { describeWithServices } from '../../support/services.js';
 import {
+  addInlineScript,
+  eventually,
   openByKeyboard,
   openDialogBench,
   openEditorWithProbe,
@@ -53,15 +55,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
         // Act: an inline <script> added the way any page script would add one
-        const inline = await probe.frame.evaluate(async () => {
-          const refused: string[] = [];
-          document.addEventListener('securitypolicyviolation', (e) => refused.push(e.violatedDirective));
-          const script = document.createElement('script');
-          script.textContent = 'window.hvliProbeInlineRan = true;';
-          document.head.append(script);
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          return { ran: 'hvliProbeInlineRan' in window, refused };
-        });
+        const inline = await addInlineScript(probe.frame);
         // Assert: the probe file (loaded by openEditorWithProbe) ran under the same policy. WHY: page.evaluate is
         // DevTools evaluation, which no page policy governs (it ran above), so it cannot stand in for a page script.
         expect(probe.csp).toMatch(/script-src 'self' 'sha256-[^']+'(;| )/);
@@ -79,9 +73,10 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
         const opened = await probe.frame.evaluate(() => document.querySelector('dialog')?.matches(':modal'));
         const initial = await focusIn(probe.frame);
         await probe.page.keyboard.press('Escape');
-        await expect
-          .poll(() => probeLog(probe.frame))
-          .toEqual({ log: ['cancel', 'close:'], results: ['cancel'] });
+        await eventually(() => probeLog(probe.frame)).toEqual({
+          log: ['cancel', 'close:'],
+          results: ['cancel'],
+        });
         // Assert
         expect(opened).toBe(true);
         expect(initial).toEqual({ at: CANCEL, visible: true });
@@ -101,7 +96,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
         const nativeShiftTab = await focusWalk(page, frame, 'Shift+Tab', 4);
         await page.keyboard.press('Escape');
         // WHY: 'close' is a queued task after Escape; the probe removes the old dialog only then.
-        await expect.poll(() => probeLog(frame).then((l) => l.results)).toEqual(['cancel']);
+        await eventually(() => probeLog(frame).then((l) => l.results)).toEqual(['cancel']);
         await openByKeyboard(probe, { wrapTab: true });
         const wrappedTab = await focusWalk(page, frame, 'Tab', 3);
         const wrappedShiftTab = await focusWalk(page, frame, 'Shift+Tab', 3);
@@ -119,9 +114,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
         const probe = await openEditorWithProbe(browser(), bench);
         // WHY: H5P adds the form's fields after `.h5peditor-form` appears (more slowly on CI runners), so the control
         // waits until the alt-text field is in the tree before it reads the tree.
-        await expect
-          .poll(() => exposedNodes(probe.page), { timeout: 20_000 })
-          .toContain('textbox:Alternativ tekst*');
+        await eventually(() => exposedNodes(probe.page)).toContain('textbox:Alternativ tekst*');
         const before = await exposedNodes(probe.page);
         // Act
         await openByKeyboard(probe);
@@ -168,14 +161,15 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
           ];
         });
         await openByKeyboard(probe, { guardFrameFocus: true });
-        await takeFocus();
-        await expect.poll(() => focusIn(probe.frame).then((f) => f.at)).toBe(CANCEL);
+        // WHY: focus starts on «Avbryt», so the wait below proves the guard only once the field had taken it.
+        expect(await takeFocus()).toBe(true);
+        await eventually(() => focusIn(probe.frame).then((f) => f.at)).toBe(CANCEL);
         await probe.page.keyboard.press('Escape');
         // Assert
         expect(taken).toBe(true);
         expect(afterEscape).toBe(true);
         expect(rightAfterClose).toEqual([]);
-        await expect.poll(() => probeLog(probe.frame).then((l) => l.log.at(-2))).toBe('cancel');
+        await eventually(() => probeLog(probe.frame).then((l) => l.log.at(-2))).toBe('cancel');
         await probe.close();
       }, 90_000);
 
@@ -185,11 +179,11 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
         // Act: as editorPage.js's save() does, the button is disabled when the dialog opens
         await openByKeyboard(probe, { disableOpener: true });
         await probe.page.keyboard.press('Escape');
-        await expect.poll(() => probeLog(probe.frame).then((l) => l.results)).toEqual(['cancel']);
+        await eventually(() => probeLog(probe.frame).then((l) => l.results)).toEqual(['cancel']);
         const native = await focusIn(probe.frame);
         await openByKeyboard(probe, { disableOpener: true, restoreFocus: true });
         await probe.page.keyboard.press('Escape');
-        await expect.poll(() => probeLog(probe.frame).then((l) => l.results.length)).toBe(2);
+        await eventually(() => probeLog(probe.frame).then((l) => l.results.length)).toBe(2);
         // Assert
         expect(native).toEqual({ at: 'BODY', visible: false });
         expect(await focusIn(probe.frame)).toEqual({ at: SAVE, visible: true });

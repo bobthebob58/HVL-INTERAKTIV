@@ -59,6 +59,14 @@ export interface StateBench {
   saveParams(activity: BenchActivity, params: object): Promise<void>;
   /** The learner state rows of an activity, as stored. */
   stateRows(contentId: string): Promise<StateRowSnapshot[]>;
+  /**
+   * Waits until H5P's autosave (every 5 s, D-037) has stored a main state that passes `saved`.
+   * @param contentId - The activity.
+   * @param saved - Tells whether the parsed state holds the learner's answers yet.
+   * @returns Every state row of the activity, as stored.
+   * @throws Error after 30 s without such a row (a few autosave rounds on a busy runner).
+   */
+  savedRows(contentId: string, saved: (state: unknown) => boolean): Promise<StateRowSnapshot[]>;
   /** Replaces the learner state rows of an activity with a snapshot. */
   restoreRows(contentId: string, rows: readonly StateRowSnapshot[]): Promise<void>;
   /** Stops the server and removes everything the bench created. */
@@ -82,6 +90,15 @@ export async function openStateBench(): Promise<StateBench> {
   const learner = await tb.actor('learner');
   const examples = await packageExamples();
   const base = await listenOnLoopback(tb.app);
+  const stateRows = (contentId: string): Promise<StateRowSnapshot[]> =>
+    tb.db.h5PUserData.findMany({
+      where: { contentId },
+      orderBy: { subContentId: 'asc' },
+      select: {
+        ...{ subContentId: true, dataType: true, learnerKey: true, contextId: true },
+        ...{ data: true, preload: true, invalidate: true },
+      },
+    });
   return {
     tb,
     base,
@@ -110,15 +127,17 @@ export async function openStateBench(): Promise<StateBench> {
         asAccountUser(author.actor),
       );
     },
-    stateRows: async (contentId) =>
-      tb.db.h5PUserData.findMany({
-        where: { contentId },
-        orderBy: { subContentId: 'asc' },
-        select: {
-          ...{ subContentId: true, dataType: true, learnerKey: true, contextId: true },
-          ...{ data: true, preload: true, invalidate: true },
-        },
-      }),
+    stateRows,
+    savedRows: async (contentId, saved) => {
+      const deadline = Date.now() + 30_000;
+      for (;;) {
+        const rows = await stateRows(contentId);
+        const main = rows.find((row) => row.subContentId === '0' && row.dataType === 'state');
+        if (main && saved(JSON.parse(String(main.data)))) return rows;
+        if (Date.now() > deadline) throw new Error(`no matching saved state: ${JSON.stringify(rows)}`);
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    },
     restoreRows: async (contentId, rows) => {
       await tb.db.h5PUserData.deleteMany({ where: { contentId } });
       await tb.db.h5PUserData.createMany({

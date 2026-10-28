@@ -16,6 +16,7 @@ import { describeWithBrowser } from '../../support/browser.js';
 import { describeWithRealPackages } from '../../support/realPackages.js';
 import { describeWithServices } from '../../support/services.js';
 import {
+  eventually,
   openByKeyboard,
   openByMouse,
   openDialogBench,
@@ -81,7 +82,7 @@ describeWithServices('[PROD-013] the save choice dialog’s look in the editor p
         await openByMouse(probe);
         const byMouse = await focusIn(probe.frame);
         await probe.page.click('#hvl-save-choice-copy');
-        await expect.poll(() => probeLog(probe.frame)).toEqual({ log: ['close:copy'], results: ['copy'] });
+        await eventually(() => probeLog(probe.frame)).toEqual({ log: ['close:copy'], results: ['copy'] });
         await openByMouse(probe, { focusVisible: true });
         const asked = await focusIn(probe.frame);
         const unstyled = await lookOf(probe.frame);

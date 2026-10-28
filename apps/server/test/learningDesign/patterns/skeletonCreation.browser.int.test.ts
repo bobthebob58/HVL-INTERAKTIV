@@ -56,7 +56,7 @@ describeWithServices('creating activities from pattern skeletons (probe P1)', ()
     afterAll(async () => {
       await closeLoopbackServers();
       await tb?.close();
-    });
+    }, 60_000); // WHY: on a loaded runner, removing the testbed's rows and buckets can take over 10 s.
 
     it('[PED-010] the editor offers each type in its newest installed minor, the version a skeleton names', async () => {
       // Act

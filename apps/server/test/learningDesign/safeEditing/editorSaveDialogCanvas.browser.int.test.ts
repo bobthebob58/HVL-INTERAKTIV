@@ -19,7 +19,14 @@ import { describeWithBrowser } from '../../support/browser.js';
 import { launchFromCanvas } from '../../support/ltiLaunchDriver.js';
 import { describeWithRealPackages } from '../../support/realPackages.js';
 import { describeWithServices } from '../../support/services.js';
-import { openDialogBench, type DialogBench } from './editorSaveDialogBench.js';
+import {
+  armProbe,
+  clickUntilOpen,
+  eventually,
+  openDialogBench,
+  type DialogBench,
+  type ProbeOptions,
+} from './editorSaveDialogBench.js';
 import {
   focusIn,
   loadProbeScript,
@@ -73,24 +80,18 @@ const frameEditor = async (page: Page, src: string): Promise<{ tool: Frame; edit
   return { tool, editor };
 };
 
-/** Arms the probe and clicks «Lagre», retried as in ./editorSaveDialogBench.ts (H5P's iframe resizing). */
-const openIn = async (tool: Frame, options: object): Promise<void> => {
-  await tool.evaluate(
-    ([texts, settings]) => {
-      const probe = (window as unknown as { hvliProbeSaveChoice: { armOn: (...a: unknown[]) => void } })
-        .hvliProbeSaveChoice;
-      probe.armOn(document.getElementById('hvl-editor-save'), texts, settings);
-    },
-    [SAVE_CHOICE_TEXTS, options] as const,
-  );
-  for (let i = 0; i < 3 && (await tool.locator('dialog[open]').count()) === 0; i++)
-    await tool.click('#hvl-editor-save');
-  await tool.locator('dialog[open]').waitFor({ timeout: 1_000 });
+/** Arms the probe and clicks «Lagre» once it stands still, as ./editorSaveDialogBench.ts opens it by mouse. */
+const openIn = async (tool: Frame, options: ProbeOptions): Promise<void> => {
+  await armProbe(tool, options);
+  await clickUntilOpen(tool);
 };
 
-/** A script in the H5P editor iframe focuses its first field. */
+/** A script in the H5P editor iframe focuses its first field; true if it did (only then can the guard act). */
 const editorTakesFocus = (editor: Frame) =>
-  editor.evaluate(() => document.querySelector<HTMLElement>('.h5peditor-form input')?.focus());
+  editor.evaluate(() => {
+    document.querySelector<HTMLElement>('.h5peditor-form input')?.focus();
+    return document.activeElement?.matches('.h5peditor-form input') === true;
+  });
 
 describeWithServices('[PROD-013] the save choice dialog in Canvas’s frame (probe P7)', () => {
   let tb: AppTestbed;
@@ -138,10 +139,10 @@ describeWithServices('[PROD-013] the save choice dialog in Canvas’s frame (pro
       await openIn(tool, { wrapTab: true, guardFrameFocus: true });
       const wrappedTab = await walk(page, tool, 'Tab', 3);
       const wrappedShiftTab = await walk(page, tool, 'Shift+Tab', 3);
-      await editorTakesFocus(editor);
-      await expect.poll(() => focusAt(page, tool)).toBe(CANCEL);
+      expect(await editorTakesFocus(editor)).toBe(true);
+      await eventually(() => focusAt(page, tool)).toBe(CANCEL);
       await page.keyboard.press('Escape');
-      await expect.poll(() => probeLog(tool).then((l) => l.log.at(-2))).toBe('cancel');
+      await eventually(() => probeLog(tool).then((l) => l.log.at(-2))).toBe('cancel');
       // Assert: the same strict policy as the portal's editor page (D-070)
       expect(await (await edit).headerValue('content-security-policy')).toMatch(/script-src 'self' 'sha256-/);
       expect(initial).toBe(CANCEL);
@@ -180,12 +181,13 @@ describeWithServices('[PROD-013] the save choice dialog in the web app’s Redig
         const stillOpen = await tool.evaluate(() => document.querySelector('dialog')?.open);
         await tool.evaluate(() => document.querySelector('dialog')?.close());
         await openIn(tool, { wrapTab: true, guardFrameFocus: true });
-        await editorTakesFocus(editor);
-        await expect.poll(() => focusAt(page, tool)).toBe(CANCEL);
+        expect(await editorTakesFocus(editor)).toBe(true);
+        await eventually(() => focusAt(page, tool)).toBe(CANCEL);
         await page.click('#outer-field');
         await page.keyboard.type('abc');
-        // WHY: a guard that answers every blur takes focus back late (its timer, then window.focus()); give it time.
-        await page.waitForTimeout(500);
+        // WHY: an absence check (nothing may take focus back), so the wait stays fixed. A guard that answers every
+        // blur takes focus back in a timer of the tool frame; 500 ms timed there fire after any shorter timer it set.
+        await tool.evaluate(() => new Promise((resolve) => setTimeout(resolve, 500)));
         // Assert
         expect(nativeTab).toEqual(['outer-after']);
         expect(stillOpen).toBe(true);

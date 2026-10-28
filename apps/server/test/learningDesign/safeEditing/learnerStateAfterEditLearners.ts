@@ -57,10 +57,15 @@ const settledBox = async (page: Page, locator: Locator) => {
 
 const dragWord = async (page: Page, word: string, zone: number): Promise<void> => {
   const source = page.locator('.h5p-drag-draggables-container .h5p-draggable', { hasText: word });
-  // WHY: a dropped word moves out of the draggables container into its zone (drag-text.js:1111, draggable.js:86).
-  // On a busy runner the line can still be reflowing from the previous drop when the next one is measured, and the
-  // drop misses (CI run 58), so a drag is repeated until the word has left the container.
+  // WHY: a dropped word moves out of the draggables container into its zone (drag-text.js:1111, draggable.js:86),
+  // so a drag is repeated until the word has left the container, each time from boxes that have stopped moving.
   for (let attempt = 0; attempt < 3 && (await source.count()) > 0; attempt++) {
+    // WHY: jQuery UI does not cancel the press, so a drag whose pointer crosses text leaves a text selection over the
+    // words (whether it does depends on H5P's shuffled order). Pressing on selected text and moving starts a native
+    // drag of the selection, which Playwright carries out as HTML5 drag and drop: jQuery UI gets no more mouse events
+    // and the word snaps back, on every try (here in 2 of 8 plays; CI run 58's missed drop fits it). The probe needs
+    // jQuery UI's drag.
+    await page.evaluate(() => window.getSelection()?.removeAllRanges());
     await source.scrollIntoViewIfNeeded();
     const from = await settledBox(page, source);
     const to = await settledBox(page, page.locator('.h5p-dropzone').nth(zone));
@@ -145,7 +150,8 @@ export const BRANCHING_SCENARIO: LearnerScript = {
 export const INTERACTIVE_VIDEO: LearnerScript = {
   play: async (page) => {
     await page.getByRole('button', { name: 'Spel av (k)' }).first().click();
-    await page.getByRole('button', { name: 'Spørsmål om undervegsvurdering' }).click({ timeout: 10_000 });
+    // WHY: the button appears when the video, streamed through the server, has played to 3 s; a busy runner is slow.
+    await page.getByRole('button', { name: 'Spørsmål om undervegsvurdering' }).click({ timeout: 30_000 });
     await page.locator('.h5p-answer:visible').nth(1).click();
   },
   saved: holds('{"answers":[1]}'),
