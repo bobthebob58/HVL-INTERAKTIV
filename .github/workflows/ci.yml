@@ -91,6 +91,13 @@ jobs:
         run: npm run db:generate --workspace apps/server && npm run db:migrate
       - name: Install full Chromium for the browser and end-to-end tests (SEC-001, D-065; never --only-shell)
         run: npx playwright-core install --with-deps chromium
+      # WHY: the PDF export keeps Chromium's sandbox (D-096); Ubuntu 24.04's AppArmor blocks the unprivileged user
+      # namespaces it needs for a non-root user, so the restriction is lifted on this throwaway runner only.
+      - name: Allow Chromium's sandbox for the non-root runner (MAPPE-004, D-096)
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
       # WHY: the workspace build regenerates the committed token and theme files, so they are checked before it.
       - name: Design tokens and theme prefixes are up to date (UD-001, UD-003, D-072)
         run: npm run tokens:check && npm run check --workspace packages/hvl-h5p-theme

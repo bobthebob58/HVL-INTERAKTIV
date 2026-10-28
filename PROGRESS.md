@@ -313,7 +313,7 @@ texts stay editable without code (`PED-011`).
 
 Steps (plan: probes first, then shared contracts, then parallel workstreams):
 - [x] 0. Start: restart task, decisions D-082…D-100, spec 02 and 04 amendments, CLAUDE.md §2–§3, Q17
-- [ ] 1. Probes P1–P7, kept as tests: skeleton creation on the server, duplicate by paste-source, learner state
+- [x] 1. Probes P1–P7, kept as tests (amendments to D-080, D-083…D-086, D-092…D-094, D-096): skeleton creation on the server, duplicate by paste-source, learner state
       after edits, tagged PDF, Markdown tree and Mustache, the `⟦…⟧` marker, the editor's `<dialog>`
 - [ ] 2. Contracts: migration `s5_learning_design`, API contract split and schemas, server wiring and env, content
       loader and `content:check`, `ContentDuplicator`, web scaffolding (tab registry, pages, navigation)
@@ -340,6 +340,10 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
 - [ ] Separate files origin for user files with signed URLs (`SEC-004`, D-045; URLs from S3's `HvlUrlGenerator`)
 - [ ] Panopto guidance (`H5P-010`); ClamAV scanning (`SEC-006`); LTI Dynamic Registration (`LTI-009`, COULD)
 - [ ] Docker images, load test, runbook (`NFR-001`, `NFR-002`, `NFR-007`); conformance report (`UD-040`)
+- [ ] Library texts that are English in `nn` and `nb` (S5 probe P1: MultiChoice, QuestionSet, InteractiveBook and
+      BranchingScenario buttons and messages; patterns set their own texts, D-084): consider an HVL language overlay
+      through Lumi's `alterLibraryLanguageFile` hook, so activities made in the editor are Norwegian too (its own
+      decision)
 - [ ] The Canvas side of the studio (D-098): the content bank and "new from a pattern" in the Deep Linking picker,
       and the `LTI-007` duplicate in `/app/play`
 - [ ] Results in the portfolio: the real `ActivityResultsSource` with *k*-suppression (D-095); Chromium and fonts

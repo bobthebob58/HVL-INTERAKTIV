@@ -525,14 +525,14 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <div class="field field-actions"><button type="button" id="req-expand">Expand all</button><button type="reset" id="req-reset">Clear filters</button></div>
 </form>
 <p class="result-count" id="req-count" aria-live="polite">Showing all 126 requirements.</p>
-<div class="req-list"><details class="req" id="x-PROD-001" data-area="PROD" data-priority="MUST" data-session="S5" data-status="planned" data-text="prod-001 create an activity from a learning-design pattern an author can create a new activity by choosing a phase (*forarbeid*, *mellomarbeid*, *etterarbeid*)
+<div class="req-list"><details class="req" id="x-PROD-001" data-area="PROD" data-priority="MUST" data-session="S5" data-status="tested" data-text="prod-001 create an activity from a learning-design pattern an author can create a new activity by choosing a phase (*forarbeid*, *mellomarbeid*, *etterarbeid*)
 and then a pattern. the h5p editor opens pre-filled with a pedagogically sound skeleton and guidance.
 - **acceptance:** every pattern in [04 §4](04-laeringsdesign-page.md#4-pattern-catalogue) can be
   instantiated. the created content passes `validatecontent` with zero *errors* before the author
   edits it, apart from placeholders that are deliberately flagged as needing input. choosing *blank
   activity* is still possible.
 - **verify:** integration test that creates each pattern; e2e for j1.">
-<summary><span class="req-id">PROD-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Create an activity from a learning-design pattern</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PROD-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Create an activity from a learning-design pattern</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>An author can create a new activity by choosing a phase (<em>Forarbeid</em>, <em>Mellomarbeid</em>, <em>Etterarbeid</em>)
 and then a pattern. The H5P editor opens pre-filled with a pedagogically sound skeleton and guidance.</p>
 <ul>
@@ -607,12 +607,12 @@ takes effect immediately.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PROD-006">00 Product and pedagogy, PROD-006</a> · Product</p></div>
 </details>
-<details class="req" id="x-PROD-007" data-area="PROD" data-priority="SHOULD" data-session="S5" data-status="planned" data-text="prod-007 co-authoring and an institutional content bank authors can add co-authors (hvl staff found by name or feide id) and can publish an activity to the
+<details class="req" id="x-PROD-007" data-area="PROD" data-priority="SHOULD" data-session="S5" data-status="tested" data-text="prod-007 co-authoring and an institutional content bank authors can add co-authors (hvl staff found by name or feide id) and can publish an activity to the
 hvl content bank so that colleagues can *duplicate and adapt* it.
 - **acceptance:** a duplicate keeps a link to its source and the original author's attribution. it
   never copies learner data.
 - **verify:** integration tests.">
-<summary><span class="req-id">PROD-007</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Co-authoring and an institutional content bank</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PROD-007</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Co-authoring and an institutional content bank</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Authors can add co-authors (HVL staff found by name or Feide ID) and can publish an activity to the
 HVL content bank so that colleagues can <em>duplicate and adapt</em> it.</p>
 <ul>
@@ -671,12 +671,12 @@ scored in the browser and are meant for formative work (<em>undervegsvurdering</
 </ul>
 <p class="req-source">Defined in <a href="#r-PROD-012">00 Product and pedagogy, PROD-012</a> · Product</p></div>
 </details>
-<details class="req" id="x-PROD-013" data-area="PROD" data-priority="SHOULD" data-session="S5" data-status="planned" data-text="prod-013 safe editing of a published activity when an author edits an activity that already has learner state, the editor warns that structural
+<details class="req" id="x-PROD-013" data-area="PROD" data-priority="SHOULD" data-session="S5" data-status="tested" data-text="prod-013 safe editing of a published activity when an author edits an activity that already has learner state, the editor warns that structural
 changes (adding, removing or reordering questions) reset saved progress. it offers *save as new version*.
 - **acceptance:** existing learner state is invalidated only when the author confirms. insight
   separates results by version.
 - **verify:** integration test.">
-<summary><span class="req-id">PROD-013</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Safe editing of a published activity</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PROD-013</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Safe editing of a published activity</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>When an author edits an activity that already has learner state, the editor warns that structural
 changes (adding, removing or reordering questions) reset saved progress. It offers <em>Save as new version</em>.</p>
 <ul>
@@ -1917,7 +1917,7 @@ build fails if a key is missing a locale.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-001">04 Læringsdesign studio, PED-001</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-PED-002" data-area="PED" data-priority="MUST" data-session="S5" data-status="planned" data-text="ped-002 guide page content the guide page contains, in this order:
+<details class="req" id="x-PED-002" data-area="PED" data-priority="MUST" data-session="S5" data-status="tested" data-text="ped-002 guide page content the guide page contains, in this order:
 1. a 3-sentence introduction to why asynchronous work often fails (passive material, high cognitive load) and what helps.
 2. a short introduction to «hvl læringsdesign» (kontekst, kunnskap, samskaping; backward planning from
    the learning outcomes) and where the activities sit in it (mikronivå), citing møgelvang &amp; isaksen (2025).
@@ -1932,7 +1932,7 @@ build fails if a key is missing a locale.</li>
 - **amended (d-083, 2026-10-28):** `spec-deviation`: the guide is commonmark markdown, `guide.{nn,nb,en}.md`, rendered
   from a closed node tree without html; the phase matrix and the catalogue are placed by marker lines.
 - **verify:** component test; alu content review is recorded in `progress.md`.">
-<summary><span class="req-id">PED-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Guide page content</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PED-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Guide page content</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The guide page contains, in this order:</p>
 <ol>
 <li>A 3-sentence introduction to why asynchronous work often fails (passive material, high cognitive load) and what helps.</li>
@@ -1963,11 +1963,11 @@ from a closed node tree without HTML; the phase matrix and the catalogue are pla
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-003">04 Læringsdesign studio, PED-003</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-PED-010" data-area="PED" data-priority="MUST" data-session="S5" data-status="planned" data-text="ped-010 all nine patterns exist and instantiate - **acceptance:** `prod-001` acceptance holds for every pattern. each pattern yaml has: `id`,
+<details class="req" id="x-PED-010" data-area="PED" data-priority="MUST" data-session="S5" data-status="tested" data-text="ped-010 all nine patterns exist and instantiate - **acceptance:** `prod-001` acceptance holds for every pattern. each pattern yaml has: `id`,
   `phase`, `contenttype`, `purpose`, `whentouse`, `whyitworks` (with reference keys),
   `buildminutes`, `skeleton`, and `nn`/`nb`/`en` text.
 - **verify:** schema validation test for all yaml files; an integration test instantiates each skeleton.">
-<summary><span class="req-id">PED-010</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">All nine patterns exist and instantiate</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PED-010</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">All nine patterns exist and instantiate</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><ul>
 <li><strong>Acceptance:</strong> <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a> acceptance holds for every pattern. Each pattern YAML has: <code>id</code>,
 <code>phase</code>, <code>contentType</code>, <code>purpose</code>, <code>whenToUse</code>, <code>whyItWorks</code> (with reference keys),
@@ -2070,7 +2070,7 @@ taken from the metadata. This helps them plan their study and self-regulate.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-001">04 Læringsdesign studio, MAPPE-001</a> · Pedagogisk mappe</p></div>
 </details>
-<details class="req" id="x-MAPPE-002" data-area="MAPPE" data-priority="SHOULD" data-session="S5" data-status="planned" data-text="mappe-002 dossier structure headings come from `content/mappe/template.{nn,nb,en}.md` and criterion texts from
+<details class="req" id="x-MAPPE-002" data-area="MAPPE" data-priority="SHOULD" data-session="S5" data-status="tested" data-text="mappe-002 dossier structure headings come from `content/mappe/template.{nn,nb,en}.md` and criterion texts from
 `content/mappe/criteria.{nn,nb,en}.yaml`, keyed by criteria set (default `hvl-merittering-2025`).
 hvl revises the merit criteria for every call (next call 2027), so a new set is a content change only.
 the proposed nynorsk template is
@@ -2098,7 +2098,7 @@ its del 1 headings wait for alu.
 - **acceptance:** switching the criteria set changes every criterion text and the reader's guide with no
   code change. the word count excludes the references and the reader's guide.
 - **verify:** integration test with two fixture criteria sets.">
-<summary><span class="req-id">MAPPE-002</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Dossier structure</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">MAPPE-002</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Dossier structure</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Headings come from <code>content/mappe/template.{nn,nb,en}.md</code> and criterion texts from
 <code>content/mappe/criteria.{nn,nb,en}.yaml</code>, keyed by criteria set (default <code>hvl-merittering-2025</code>).
 HVL revises the merit criteria for every call (next call 2027), so a new set is a content change only.
@@ -2145,10 +2145,10 @@ and <strong>not stored</strong> on the server.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-003">04 Læringsdesign studio, MAPPE-003</a> · Pedagogisk mappe</p></div>
 </details>
-<details class="req" id="x-MAPPE-004" data-area="MAPPE" data-priority="SHOULD" data-session="S5" data-status="planned" data-text="mappe-004 accessible pdf the pdf is rendered from the same semantic html template with headless chromium and **tagged-pdf**
+<details class="req" id="x-MAPPE-004" data-area="MAPPE" data-priority="SHOULD" data-session="S5" data-status="tested" data-text="mappe-004 accessible pdf the pdf is rendered from the same semantic html template with headless chromium and **tagged-pdf**
 output enabled. it has document language, a title, a heading outline and real text, never images of text.
 - **verify:** the test checks the pdf has a structure tree and outline (e.g. with `pdfjs-dist`); a manual check with pac or a screen reader is recorded in the accessibility results.">
-<summary><span class="req-id">MAPPE-004</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Accessible PDF</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">MAPPE-004</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Accessible PDF</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The PDF is rendered from the same semantic HTML template with headless Chromium and <strong>tagged-PDF</strong>
 output enabled. It has document language, a title, a heading outline and real text, never images of text.</p>
 <ul>
@@ -6778,6 +6778,12 @@ more on a 320 px phone can again lose a few pixels of the slide buttons to H5P.C
 button&#39;s focus ring are clipped by the player&#39;s <code>overflow: hidden</code>; the ring stays visible on the other sides and
 the control is not hidden, so WCAG 2.4.7 and 2.4.11 hold (<code>keyboardFocus.a11y.test.ts</code> passes). Both are items for
 the manual protocol&#39;s next run and for the S6 conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>).</li>
+<li><strong>Amendment (2026-10-28, S5 probe P1):</strong> without a start image, H5P.BranchingScenario 1.10 shows its default start
+and end pictures with no <code>alt</code> attribute (WCAG 1.1.1). The pictures are decorative, so the page repair gives them
+<code>alt=&quot;&quot;</code>, and the upstream register records the barrier. H5P.Video&#39;s &quot;Video source is missing.&quot; and
+H5P.ImageHotspots&#39; &quot;Missing required background image&quot; are English text written by the libraries themselves
+(H5P.Video overwrites any <code>l10n</code> it is given), so they go into the register too; V-PLACEHOLDER (D-086 as amended)
+keeps an activity in that state from being published by mistake.</li>
 </ul>
 <h3 id="decisions--d-081--one-nodejs-system-with-lumis-h5p-server-half-an-official-php-server-half-was-considered-and-not-chosen" tabindex="-1">D-081 · One Node.js system with Lumi&#39;s H5P server half; an official PHP server half was considered and not chosen</h3>
 <ul>
@@ -6885,6 +6891,25 @@ loader, naming the file and line.</p>
 <li><p><strong>Consequences:</strong> <code>SPEC-DEVIATION</code> in spec 04 (<a class="req-ref" href="#r-PED-002"><code>PED-002</code></a>, <a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>) and CLAUDE.md §2 (&quot;ALU-editable YAML/Markdown&quot;).
 <code>content/laeringsdesign/README.md</code> documents the conventions for ALU.</p>
 </li>
+<li><p><strong>Amendment (2026-10-28, S5 probe P5):</strong> <code>html: false</code> cannot refuse raw HTML by line: markdown-it then emits no
+HTML tokens, and <code>&lt;script&gt;</code> reaches the tree as visible text. The guide builder therefore parses with a fresh
+<code>MarkdownIt({ html: true, linkify: false, typographer: false })</code>, only reads the tokens (it never calls <code>render</code>),
+and refuses every token type outside its closed allowlist, so <code>html: true</code> opens no HTML path:</p>
+<ul>
+<li><strong>Allowed:</strong> <code>heading_open</code> at level 2 or 3 written with <code>#</code> (a setext heading made with <code>===</code> or <code>---</code> is
+refused, because ALU may mean a rule), paragraph, bullet and ordered list (the start number is ignored), list
+item, blockquote (the box), and inline text, strong, emphasis, link and soft break (rendered as a space).</li>
+<li><strong>Refused, naming the file and line:</strong> <code>html_block</code>, <code>html_inline</code>, image, table, fenced and indented code,
+inline code, rule, strikethrough, hard break, a level-1 or level-4+ heading, <code>{{</code> outside a marker line, and
+reference definitions (found in <code>env.references</code>; they would silently turn citations into links).</li>
+<li><strong>Links:</strong> <code>md.validateLink</code> lets every link through and the builder checks the <code>href</code> itself: <code>https:</code> and
+<code>mailto:</code> ignoring case, or a same-site path that starts with <code>/</code> but not <code>//</code>. A <code>title</code> attribute is dropped.
+markdown-it would otherwise drop <code>javascript:</code> links silently and let <code>http:</code> and <code>data:image</code> through.</li>
+<li><strong>Lines:</strong> a block uses <code>map[0] + 1</code>; an inline token uses its paragraph&#39;s start line plus the line breaks
+before it, which is exact unless a link destination spans lines, so such a link is refused.</li>
+<li><strong>Prose:</strong> an ALU author who writes <code>&lt;</code> before a letter gets an error and writes <code>&amp;lt;</code> instead.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-084--spec-deviation-spec-04-4-pattern-skeletons-live-in-content-with-text-tokens-and-pinned-versions" tabindex="-1">D-084 · <code>SPEC-DEVIATION</code> spec 04 §4: pattern skeletons live in <code>content/</code>, with text tokens and pinned versions</h3>
 <ul>
@@ -6905,6 +6930,31 @@ stores text fields. At creation the server:<ul>
 <li><strong>Consequences:</strong> <code>SPEC-DEVIATION</code> in spec 04 §4. <code>content/laeringsdesign/README.md</code> explains how to make a skeleton
 from an exported <code>.h5p</code> file. A library update that changes a skeleton&#39;s fields shows up in <code>content:check</code> and in
 the integration test that creates every pattern (<a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>).</li>
+<li><strong>Amendment (2026-10-28, S5 probes P1 and P6):</strong> what creating from a skeleton needs on the real libraries:<ul>
+<li><strong>Versions:</strong> the main library is the newest installed minor, the one the editor offers (Column 1.22,
+CoursePresentation 1.28, ImageHotspots 1.11 and so on). A sub-content node names exactly a version its parent
+field&#39;s semantics <code>options</code> list (BranchingScenario 1.10 offers CoursePresentation 1.27); anything else is
+refused by SubContentPolicy. <code>content:check</code> checks both against the semantics of the pinned libraries that
+<code>npm run h5p:fetch-libraries</code> installs; without them it says so and, in CI, fails.</li>
+<li><strong>Metadata:</strong> the save gets <code>title</code>, <code>license: &#39;U&#39;</code>, and both <code>defaultLanguage</code> and <code>language</code> set to the chosen
+language. Without them Lumi writes <code>language: &#39;en&#39;</code>, and V-LANG treats a Nynorsk activity as English.</li>
+<li><strong>Sub-content:</strong> every node has <code>metadata: { title, license: &#39;U&#39; }</code> (otherwise the editor writes &quot;Untitled …&quot;);
+every list item is written out (the defaults never lengthen a list); BranchingScenario question nodes leave out
+<code>nextContentId</code> (its editor removes it) and end screens use <code>contentId: -1</code>.</li>
+<li><strong>Language:</strong> many <code>nn</code> and <code>nb</code> library defaults are English (MultiChoice, QuestionSet, InteractiveBook,
+BranchingScenario buttons and messages). A pattern sets these fields from its own <code>nn</code>, <code>nb</code> and <code>en</code> texts.
+Sub-content titles that learners see (InteractiveBook chapters and their table of contents) are pattern texts
+or guidance markers too.</li>
+<li><strong>Escaping:</strong> a token value is plain text, HTML-escaped on insertion; <code>⟦</code> and <code>⟧</code> stay raw characters. Lumi
+clips a text to its field&#39;s <code>maxLength</code> after escaping (<code>&amp;</code> counts as five characters) and refuses a title over
+255 characters, so <code>content:check</code> checks every resolved value, escaped, in all three languages, against its
+field&#39;s limit. Guidance inside a Blanks blank or a DragText draggable may not contain <code>:</code> or <code>/</code>, which those
+types read as a tip or an alternative.</li>
+<li><strong>Defaults:</strong> <code>semanticDefaults.ts</code> also gives <code>isSubContent</code> groups (H5P.Summary statements) a
+<code>subContentId</code>, as the editor does, and the creation step passes a copy of the parameters, because the save
+changes them in place.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-085--creating-an-activity-from-a-pattern-is-one-server-request" tabindex="-1">D-085 · Creating an activity from a pattern is one server request</h3>
 <ul>
@@ -6931,6 +6981,11 @@ answers 409 <code>hvl:pattern-unavailable</code>.</li>
 <li><p><strong>Consequences:</strong> The created activity is a private draft like any other. The Canvas side of &quot;new from a pattern&quot;
 waits for S6 (D-098).</p>
 </li>
+<li><p><strong>Amendment (2026-10-28, S5 probe P1):</strong> &quot;unavailable&quot; covers every library the completed skeleton names, not
+only the main one: the defaults add libraries (InteractiveVideo&#39;s summary brings H5P.Summary), and some are
+installed only as dependencies. Without that check Lumi&#39;s own error would answer 500 instead of 409
+<code>hvl:pattern-unavailable</code>.</p>
+</li>
 </ul>
 <h3 id="decisions--d-086--guidance-placeholders-are-marked--and-v-placeholder-is-an-error-that-can-be-acknowledged" tabindex="-1">D-086 · Guidance placeholders are marked <code>⟦…⟧</code>, and V-PLACEHOLDER is an error that can be acknowledged</h3>
 <ul>
@@ -6944,6 +6999,21 @@ for «Gå til feltet». It can be acknowledged with a reason as D-074 sets out; 
 the marker survives CKEditor and Lumi&#39;s sanitiser.</li>
 <li><strong>Consequences:</strong> The integration test that creates every pattern expects V-PLACEHOLDER errors and no others
 (<a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>, <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>). The rule&#39;s messages exist in <code>nn</code>, <code>nb</code> and <code>en</code>.</li>
+<li><strong>Amendment (2026-10-28, S5 probes P1 and P6):</strong><ul>
+<li><strong>Where V-PLACEHOLDER looks:</strong> every string of the parameters, including the <code>UI</code>, <code>l10n</code>, <code>texts</code>, <code>a11y</code>,
+<code>confirmCheck</code> and <code>confirmRetry</code> groups the shared walker skips, plus the activity&#39;s and every sub-content&#39;s
+<code>metadata.title</code> (InteractiveBook shows chapter titles as headings). It skips <code>extraTitle</code>, which the editor
+copies from the title, so a marker is reported once.</li>
+<li><strong>How it reads them:</strong> through <code>parseRichText</code> (validation/richText.ts), which removes tags and then decodes
+every character reference exactly once, zero-padded and semicolon-less ones included. Decoding twice would turn
+the literal text <code>&amp;#10214;</code> into a marker. A lone <code>⟦</code> or <code>⟧</code> counts, because authors&#39; partial edits leave them.
+The editor sends plain-text fields back as loaded and only the save makes them raw, and package imports store
+references as they are, so the rule never assumes raw text.</li>
+<li><strong>Missing media:</strong> the rule also reports a required media slot that is empty: an InteractiveVideo without a
+video source and an ImageHotspots without a background image. Learners would see only an English error
+message instead of the activity, and nothing else flags it. The finding can be acknowledged like the others.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-087--learning-design-metadata-learner-purpose-pattern-course-code-and-access" tabindex="-1">D-087 · Learning-design metadata: learner purpose, pattern, course code and access</h3>
 <ul>
@@ -7067,6 +7137,26 @@ bank listing and the published status.</li>
 <code>HvlH5PEditor</code>&#39;s save path.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-28, S5 probe P2):</strong> Lumi does <strong>not</strong> refuse a paste source the saver may not View: it
+saves the copy with every such file path emptied, and stores no file. Therefore:<ul>
+<li><strong>Our check first:</strong> <code>ContentDuplicator</code> decides <code>duplicateRules</code> before it calls the editor and refuses with
+our own error.</li>
+<li><strong>What is rewritten:</strong> only references to files the source stores, to <code>../&lt;sourceId&gt;/&lt;file&gt;</code>. URLs and names
+the source does not store stay as they are. A <code>#tmp</code> reference is kept, because «Lagre som ny versjon» (D-093)
+saves new uploads with the copy.</li>
+<li><strong>Unsafe names:</strong> a stored name outside Lumi&#39;s pattern (<code>^[\w\-./_]+$</code>; spaces or æøå from an imported
+package) is copied by the duplicator itself, through the content storage under a safe name, and its path fixed.</li>
+<li><strong>Checked afterwards:</strong> a saved copy with an emptied path or a <code>../</code> path left is deleted and the duplicate
+fails, so nothing half-done remains. Lumi gives copied files new names (cut at the first hyphen or with stacked
+suffixes), so nothing may rely on the source&#39;s file names.</li>
+<li><strong>Speed:</strong> Lumi streams every file through the server; a large video makes a duplicate slow, so the route&#39;s time
+limit allows for it.</li>
+<li><strong>Editor saves:</strong> the editor&#39;s own save routes accept <code>../&lt;id&gt;/&lt;file&gt;</code> paths too (H5P&#39;s copy and paste).
+<code>HvlH5PEditor</code> now allows such a path only from an activity <code>duplicateRules</code> allows, and refuses a path the
+storage would refuse (<code>..</code>, a leading <code>/</code>, a backslash, control characters) before Lumi writes anything;
+before, Lumi wrote the activity and then failed with a 400, leaving a half-saved draft.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-093--safe-editing-a-structure-signature-a-confirmation-and-saving-as-a-copy" tabindex="-1">D-093 · Safe editing: a structure signature, a confirmation, and saving as a copy</h3>
 <ul>
@@ -7089,6 +7179,35 @@ leaves the original and its learner state untouched. This is the owner&#39;s cho
 (2026-10-28).</li>
 <li><strong>The dialog:</strong> a new boot script, <code>editorSaveChoice.js</code>, shows a native <code>&lt;dialog&gt;</code> in the editor page: focus
 starts on «Avbryt», and Esc cancels. In Canvas it offers only reset or cancel, with a pointer to the portal.</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-10-28, S5 probes P3 and P7):</strong><ul>
+<li><strong>The signature, in detail:</strong> a pre-order walk of every object with <code>library</code> and <code>subContentId</code>, recording its
+JSON path, its library as <code>Name major.minor</code> and its <code>subContentId</code>, plus the main library. Containers add:
+every CoursePresentation slide element&#39;s position; BranchingScenario&#39;s node count and every <code>nextContentId</code>;
+QuestionSet&#39;s <code>poolSize</code>; InteractiveVideo&#39;s video paths and its interactions sorted by start time, with the
+end summary after them. Leaves add their answer shape: MultiChoice&#39;s option count, its single or multiple mode
+and its option texts; Blanks&#39; list of blank solutions; DragText&#39;s drop-zone and distractor words; a branching
+question&#39;s alternatives. A leaf list is structural if its length changes or its texts move; a text changed in
+place is not. Appends count: an appended InteractiveBook chapter crashes the player for learners with state.</li>
+<li><strong>Two kinds of leaf:</strong> a library without <code>getCurrentState</code> (AdvancedText, Text, Image, Table and others) is
+stateless, so only its position counts and editing its text is never structural. A stateful leaf without a rule
+counts any change of its parameters as structural.</li>
+<li><strong>Old pages:</strong> a learner page opened before a structural save keeps sending old state every few seconds. The
+player therefore sends the content <code>version</code> with each state write, and a write for an older version is dropped.</li>
+<li><strong>The saver&#39;s own state:</strong> a structural save always deletes it, even with no prompt, because stale state can
+crash the author&#39;s own preview. &quot;Own&quot; means the saver&#39;s current learner key; their Canvas or last year&#39;s preview
+counts as someone else&#39;s, which errs on the safe side.</li>
+<li><strong>Reset:</strong> a confirmed reset deletes the rows, and learners start again. H5P&#39;s RESET marker is not used: its
+dialog title is hard-coded English and Lumi&#39;s Nynorsk strings are Bokmål.</li>
+<li><strong>Order:</strong> the check runs before Lumi saves and before dropped files are deleted, so a refused save changes
+neither the parameters nor the files.</li>
+<li><strong>The dialog:</strong> the editor is always in a frame (the portal&#39;s <strong>Rediger</strong> tab and Canvas), where a native modal
+dialog lets Tab leave the frame. <code>editorSaveChoice.js</code> therefore keeps Tab and Shift+Tab inside the dialog, and
+takes focus back only when the H5P editor&#39;s own frame takes it. After the dialog closes it re-enables «Lagre»,
+focuses it and only then announces the outcome. In the portal the editor page asks the activity page to make
+its own controls inert while the dialog is open; Canvas&#39;s page is out of our reach. The dialog&#39;s look comes
+from a stylesheet file under the page&#39;s policy, with the <code>:focus-visible</code> ring the rest of the service uses.</li>
 </ul>
 </li>
 </ul>
@@ -7117,6 +7236,22 @@ reasons, a link, and the aggregates of D-095.</li>
 </ul>
 </li>
 <li><strong>Consequences:</strong> Amends D-020: the reader&#39;s guide is generated, and the limits live per criteria set.</li>
+<li><strong>Amendment (2026-10-28, S5 probe P5):</strong> how Mustache is used safely:<ul>
+<li><strong>Rendering:</strong> <code>Mustache.render(template, view, undefined, { escape, tags: [&#39;{{&#39;, &#39;}}&#39;] })</code>. Never assign
+<code>Mustache.escape</code> or <code>Mustache.tags</code>, which are global to the process, and never pass <code>{}</code> as partials.</li>
+<li><strong>Loading:</strong> the loader reads <code>Mustache.parse</code>&#39;s tokens without changing them (they are cached and reused by
+<code>render</code>) and strips comments in the source text. It allows only <code>name</code>, <code>#</code>, <code>^</code> and <code>!</code> tags with allowlisted
+names, and refuses <code>&amp;</code> (which also covers triple braces), <code>&gt;</code>, <code>=</code>, images, a value inside backticks, a value
+straight after <code>](</code> or a backslash, and a value at the start of a line that follows a table header.</li>
+<li><strong>The view:</strong> every key is present on every list item (null when unknown), so a missing field never falls back
+to the parent&#39;s field of the same name. Dates and numbers are formatted as strings first.</li>
+<li><strong>Empty values:</strong> an optional value sits in a <code>{{#x}}</code> section or gets a localised placeholder, because an empty
+value can turn the template&#39;s own <code>**…**</code> into a rule, <code>## …</code> into an empty heading and <code>[…](…)</code> into an empty
+link.</li>
+<li><strong>The escaper</strong> (<code>mappe/markdownEscape.ts</code>) is safe in inline positions only: line starts, after a heading,
+list or quote marker, mid-line, table cells and link text.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-095--minimum-group-size-in-exports" tabindex="-1">D-095 · Minimum group size in exports</h3>
 <ul>
@@ -7150,6 +7285,26 @@ Chromium&#39;s sandbox.</li>
 <li><strong>Consequences:</strong> S6&#39;s production image needs Chromium and fonts with æ, ø and å. Probe P4 checks the structure
 tree, outline, <code>/Lang</code> and title with <code>pdfjs-dist</code>. Anything Chromium cannot set, such as <code>DisplayDocTitle</code>, is
 recorded as a residual for the manual PAC check.</li>
+<li><strong>Amendment (2026-10-28, S5 probe P4):</strong><ul>
+<li><strong>Launch:</strong> <code>chromium.launch({ chromiumSandbox: true, env: { PATH, HOME }, executablePath })</code>, all explicit:
+playwright-core&#39;s defaults pass the server&#39;s whole environment (secrets included) to Chromium and turn the
+sandbox off. Each export uses a fresh context with JavaScript off and <code>offline: true</code> (which blocks prefetches
+the route never sees), every request aborted, and the context closed afterwards. The mappe HTML holds no
+images; even an aborted image paints a placeholder.</li>
+<li><strong>Root:</strong> Chromium refuses its sandbox when the process runs as root, as everything does in the development
+container. A development-only <code>PDF_ALLOW_NO_SANDBOX=true</code> lets the PDF export work there; the production checks
+refuse it. Production runs the server as a non-root user whose runtime allows unprivileged user namespaces
+(S6). CI runs as a non-root user and lifts Ubuntu 24.04&#39;s AppArmor restriction on those namespaces first.</li>
+<li><strong>Tables:</strong> markdown-it writes no <code>scope</code>, so the mappe renderer gives header cells <code>scope=&quot;col&quot;</code> and makes the
+first cell of each body row a row header with <code>scope=&quot;row&quot;</code>.</li>
+<li><strong>Residuals:</strong> Chromium sets <code>DisplayDocTitle</code>, so that is not a residual. The manual PAC check records these
+instead: list numbers are untagged and lists carry no numbering attribute, caption and thead become
+<code>NonStruct</code>, there is no XMP metadata and so no PDF/UA identifier, links have no <code>/Contents</code>, and the header
+says PDF 1.4.</li>
+<li><strong>Fonts:</strong> Georgia, the body font token, is not installed here, so the PDF uses Liberation Serif. The S6 image
+installs <code>fonts-liberation</code>, or the fonts HVL licenses, so that æ, ø and å always embed.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-097--new-dependencies-in-s5" tabindex="-1">D-097 · New dependencies in S5</h3>
 <ul>
@@ -7542,8 +7697,8 @@ S5 is done), and all of S5 is done in this session.</li>
 <li>Start: restart task, decisions D-082…D-100, spec 02 and 04 amendments, CLAUDE.md §2–§3, Q17</li>
 </ol>
 </li>
-<li><span class="task">○ To do:</span> <ol>
-<li>Probes P1–P7, kept as tests: skeleton creation on the server, duplicate by paste-source, learner state
+<li><span class="task">✓ Done:</span> <ol>
+<li>Probes P1–P7, kept as tests (amendments to D-080, D-083…D-086, D-092…D-094, D-096): skeleton creation on the server, duplicate by paste-source, learner state
  after edits, tagged PDF, Markdown tree and Mustache, the <code>⟦…⟧</code> marker, the editor&#39;s <code>&lt;dialog&gt;</code></li>
 </ol>
 </li>
@@ -7596,6 +7751,10 @@ The data-subject tool must delete learner state through the storage directly: Lu
 <li><span class="task">○ To do:</span> Separate files origin for user files with signed URLs (<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, D-045; URLs from S3&#39;s <code>HvlUrlGenerator</code>)</li>
 <li><span class="task">○ To do:</span> Panopto guidance (<a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>); ClamAV scanning (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>); LTI Dynamic Registration (<a class="req-ref" href="#r-LTI-009"><code>LTI-009</code></a>, COULD)</li>
 <li><span class="task">○ To do:</span> Docker images, load test, runbook (<a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>, <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>); conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>)</li>
+<li><span class="task">○ To do:</span> Library texts that are English in <code>nn</code> and <code>nb</code> (S5 probe P1: MultiChoice, QuestionSet, InteractiveBook and
+BranchingScenario buttons and messages; patterns set their own texts, D-084): consider an HVL language overlay
+through Lumi&#39;s <code>alterLibraryLanguageFile</code> hook, so activities made in the editor are Norwegian too (its own
+decision)</li>
 <li><span class="task">○ To do:</span> The Canvas side of the studio (D-098): the content bank and &quot;new from a pattern&quot; in the Deep Linking picker,
 and the <a class="req-ref" href="#r-LTI-007"><code>LTI-007</code></a> duplicate in <code>/app/play</code></li>
 <li><span class="task">○ To do:</span> Results in the portfolio: the real <code>ActivityResultsSource</code> with <em>k</em>-suppression (D-095); Chromium and fonts

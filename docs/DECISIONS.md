@@ -1533,6 +1533,12 @@ loading of one spec per session are kept.
   button's focus ring are clipped by the player's `overflow: hidden`; the ring stays visible on the other sides and
   the control is not hidden, so WCAG 2.4.7 and 2.4.11 hold (`keyboardFocus.a11y.test.ts` passes). Both are items for
   the manual protocol's next run and for the S6 conformance report (`UD-040`).
+- **Amendment (2026-10-28, S5 probe P1):** without a start image, H5P.BranchingScenario 1.10 shows its default start
+  and end pictures with no `alt` attribute (WCAG 1.1.1). The pictures are decorative, so the page repair gives them
+  `alt=""`, and the upstream register records the barrier. H5P.Video's "Video source is missing." and
+  H5P.ImageHotspots' "Missing required background image" are English text written by the libraries themselves
+  (H5P.Video overwrites any `l10n` it is given), so they go into the register too; V-PLACEHOLDER (D-086 as amended)
+  keeps an activity in that state from being published by mistake.
 
 ### D-081 · One Node.js system with Lumi's H5P server half; an official PHP server half was considered and not chosen
 - **Context:** H5P has a browser half (Core and the editor client) and a server half (storing content, installing
@@ -1628,6 +1634,22 @@ loading of one spec per session are kept.
   loader, naming the file and line.
 - **Consequences:** `SPEC-DEVIATION` in spec 04 (`PED-002`, `PED-011`) and CLAUDE.md §2 ("ALU-editable YAML/Markdown").
   `content/laeringsdesign/README.md` documents the conventions for ALU.
+- **Amendment (2026-10-28, S5 probe P5):** `html: false` cannot refuse raw HTML by line: markdown-it then emits no
+  HTML tokens, and `<script>` reaches the tree as visible text. The guide builder therefore parses with a fresh
+  `MarkdownIt({ html: true, linkify: false, typographer: false })`, only reads the tokens (it never calls `render`),
+  and refuses every token type outside its closed allowlist, so `html: true` opens no HTML path:
+  - **Allowed:** `heading_open` at level 2 or 3 written with `#` (a setext heading made with `===` or `---` is
+    refused, because ALU may mean a rule), paragraph, bullet and ordered list (the start number is ignored), list
+    item, blockquote (the box), and inline text, strong, emphasis, link and soft break (rendered as a space).
+  - **Refused, naming the file and line:** `html_block`, `html_inline`, image, table, fenced and indented code,
+    inline code, rule, strikethrough, hard break, a level-1 or level-4+ heading, `{{` outside a marker line, and
+    reference definitions (found in `env.references`; they would silently turn citations into links).
+  - **Links:** `md.validateLink` lets every link through and the builder checks the `href` itself: `https:` and
+    `mailto:` ignoring case, or a same-site path that starts with `/` but not `//`. A `title` attribute is dropped.
+    markdown-it would otherwise drop `javascript:` links silently and let `http:` and `data:image` through.
+  - **Lines:** a block uses `map[0] + 1`; an inline token uses its paragraph's start line plus the line breaks
+    before it, which is exact unless a link destination spans lines, so such a link is refused.
+  - **Prose:** an ALU author who writes `<` before a letter gets an error and writes `&lt;` instead.
 
 ### D-084 · `SPEC-DEVIATION` spec 04 §4: pattern skeletons live in `content/`, with text tokens and pinned versions
 - **Context:** Spec 04 §4 puts the skeletons in `apps/server/src/patterns/skeletons/`, but `PED-011` asks that a new
@@ -1645,6 +1667,29 @@ loading of one spec per session are kept.
 - **Consequences:** `SPEC-DEVIATION` in spec 04 §4. `content/laeringsdesign/README.md` explains how to make a skeleton
   from an exported `.h5p` file. A library update that changes a skeleton's fields shows up in `content:check` and in
   the integration test that creates every pattern (`PED-010`).
+- **Amendment (2026-10-28, S5 probes P1 and P6):** what creating from a skeleton needs on the real libraries:
+  - **Versions:** the main library is the newest installed minor, the one the editor offers (Column 1.22,
+    CoursePresentation 1.28, ImageHotspots 1.11 and so on). A sub-content node names exactly a version its parent
+    field's semantics `options` list (BranchingScenario 1.10 offers CoursePresentation 1.27); anything else is
+    refused by SubContentPolicy. `content:check` checks both against the semantics of the pinned libraries that
+    `npm run h5p:fetch-libraries` installs; without them it says so and, in CI, fails.
+  - **Metadata:** the save gets `title`, `license: 'U'`, and both `defaultLanguage` and `language` set to the chosen
+    language. Without them Lumi writes `language: 'en'`, and V-LANG treats a Nynorsk activity as English.
+  - **Sub-content:** every node has `metadata: { title, license: 'U' }` (otherwise the editor writes "Untitled …");
+    every list item is written out (the defaults never lengthen a list); BranchingScenario question nodes leave out
+    `nextContentId` (its editor removes it) and end screens use `contentId: -1`.
+  - **Language:** many `nn` and `nb` library defaults are English (MultiChoice, QuestionSet, InteractiveBook,
+    BranchingScenario buttons and messages). A pattern sets these fields from its own `nn`, `nb` and `en` texts.
+    Sub-content titles that learners see (InteractiveBook chapters and their table of contents) are pattern texts
+    or guidance markers too.
+  - **Escaping:** a token value is plain text, HTML-escaped on insertion; `⟦` and `⟧` stay raw characters. Lumi
+    clips a text to its field's `maxLength` after escaping (`&` counts as five characters) and refuses a title over
+    255 characters, so `content:check` checks every resolved value, escaped, in all three languages, against its
+    field's limit. Guidance inside a Blanks blank or a DragText draggable may not contain `:` or `/`, which those
+    types read as a tip or an alternative.
+  - **Defaults:** `semanticDefaults.ts` also gives `isSubContent` groups (H5P.Summary statements) a
+    `subContentId`, as the editor does, and the creation step passes a copy of the parameters, because the save
+    changes them in place.
 
 ### D-085 · Creating an activity from a pattern is one server request
 - **Context:** `PROD-001` opens the editor "pre-filled with a pedagogically sound skeleton". The editor client could
@@ -1666,6 +1711,10 @@ loading of one spec per session are kept.
   `/aktivitet/ny` and from the catalogue.
 - **Consequences:** The created activity is a private draft like any other. The Canvas side of "new from a pattern"
   waits for S6 (D-098).
+- **Amendment (2026-10-28, S5 probe P1):** "unavailable" covers every library the completed skeleton names, not
+  only the main one: the defaults add libraries (InteractiveVideo's summary brings H5P.Summary), and some are
+  installed only as dependencies. Without that check Lumi's own error would answer 500 instead of 409
+  `hvl:pattern-unavailable`.
 
 ### D-086 · Guidance placeholders are marked `⟦…⟧`, and V-PLACEHOLDER is an error that can be acknowledged
 - **Context:** `PROD-001` allows a created activity to fail validation only on "placeholders that are deliberately
@@ -1678,6 +1727,19 @@ loading of one spec per session are kept.
   the marker survives CKEditor and Lumi's sanitiser.
 - **Consequences:** The integration test that creates every pattern expects V-PLACEHOLDER errors and no others
   (`PED-010`, `PROD-001`). The rule's messages exist in `nn`, `nb` and `en`.
+- **Amendment (2026-10-28, S5 probes P1 and P6):**
+  - **Where V-PLACEHOLDER looks:** every string of the parameters, including the `UI`, `l10n`, `texts`, `a11y`,
+    `confirmCheck` and `confirmRetry` groups the shared walker skips, plus the activity's and every sub-content's
+    `metadata.title` (InteractiveBook shows chapter titles as headings). It skips `extraTitle`, which the editor
+    copies from the title, so a marker is reported once.
+  - **How it reads them:** through `parseRichText` (validation/richText.ts), which removes tags and then decodes
+    every character reference exactly once, zero-padded and semicolon-less ones included. Decoding twice would turn
+    the literal text `&#10214;` into a marker. A lone `⟦` or `⟧` counts, because authors' partial edits leave them.
+    The editor sends plain-text fields back as loaded and only the save makes them raw, and package imports store
+    references as they are, so the rule never assumes raw text.
+  - **Missing media:** the rule also reports a required media slot that is empty: an InteractiveVideo without a
+    video source and an ImageHotspots without a background image. Learners would see only an English error
+    message instead of the activity, and nothing else flags it. The finding can be acknowledged like the others.
 
 ### D-087 · Learning-design metadata: learner purpose, pattern, course code and access
 - **Context:** `PED-030` lists the metadata fields. `PED-032` shows students a one-line "why this matters" that the
@@ -1783,6 +1845,24 @@ loading of one spec per session are kept.
     `sourceAuthorUserId`. The source author's name is read when the copy is shown, so a later change of name shows.
   - **API:** `POST /api/content/:id/duplicate` answers `{ contentId }`; it is audited. The copy is saved through
     `HvlH5PEditor`'s save path.
+- **Amendment (2026-10-28, S5 probe P2):** Lumi does **not** refuse a paste source the saver may not View: it
+  saves the copy with every such file path emptied, and stores no file. Therefore:
+  - **Our check first:** `ContentDuplicator` decides `duplicateRules` before it calls the editor and refuses with
+    our own error.
+  - **What is rewritten:** only references to files the source stores, to `../<sourceId>/<file>`. URLs and names
+    the source does not store stay as they are. A `#tmp` reference is kept, because «Lagre som ny versjon» (D-093)
+    saves new uploads with the copy.
+  - **Unsafe names:** a stored name outside Lumi's pattern (`^[\w\-./_]+$`; spaces or æøå from an imported
+    package) is copied by the duplicator itself, through the content storage under a safe name, and its path fixed.
+  - **Checked afterwards:** a saved copy with an emptied path or a `../` path left is deleted and the duplicate
+    fails, so nothing half-done remains. Lumi gives copied files new names (cut at the first hyphen or with stacked
+    suffixes), so nothing may rely on the source's file names.
+  - **Speed:** Lumi streams every file through the server; a large video makes a duplicate slow, so the route's time
+    limit allows for it.
+  - **Editor saves:** the editor's own save routes accept `../<id>/<file>` paths too (H5P's copy and paste).
+    `HvlH5PEditor` now allows such a path only from an activity `duplicateRules` allows, and refuses a path the
+    storage would refuse (`..`, a leading `/`, a backslash, control characters) before Lumi writes anything;
+    before, Lumi wrote the activity and then failed with a 400, leaving a half-saved draft.
 
 ### D-093 · Safe editing: a structure signature, a confirmation, and saving as a copy
 - **Context:** `PROD-013`: editing an activity that has learner state warns that structural changes reset saved
@@ -1804,6 +1884,33 @@ loading of one spec per session are kept.
     (2026-10-28).
   - **The dialog:** a new boot script, `editorSaveChoice.js`, shows a native `<dialog>` in the editor page: focus
     starts on «Avbryt», and Esc cancels. In Canvas it offers only reset or cancel, with a pointer to the portal.
+- **Amendment (2026-10-28, S5 probes P3 and P7):**
+  - **The signature, in detail:** a pre-order walk of every object with `library` and `subContentId`, recording its
+    JSON path, its library as `Name major.minor` and its `subContentId`, plus the main library. Containers add:
+    every CoursePresentation slide element's position; BranchingScenario's node count and every `nextContentId`;
+    QuestionSet's `poolSize`; InteractiveVideo's video paths and its interactions sorted by start time, with the
+    end summary after them. Leaves add their answer shape: MultiChoice's option count, its single or multiple mode
+    and its option texts; Blanks' list of blank solutions; DragText's drop-zone and distractor words; a branching
+    question's alternatives. A leaf list is structural if its length changes or its texts move; a text changed in
+    place is not. Appends count: an appended InteractiveBook chapter crashes the player for learners with state.
+  - **Two kinds of leaf:** a library without `getCurrentState` (AdvancedText, Text, Image, Table and others) is
+    stateless, so only its position counts and editing its text is never structural. A stateful leaf without a rule
+    counts any change of its parameters as structural.
+  - **Old pages:** a learner page opened before a structural save keeps sending old state every few seconds. The
+    player therefore sends the content `version` with each state write, and a write for an older version is dropped.
+  - **The saver's own state:** a structural save always deletes it, even with no prompt, because stale state can
+    crash the author's own preview. "Own" means the saver's current learner key; their Canvas or last year's preview
+    counts as someone else's, which errs on the safe side.
+  - **Reset:** a confirmed reset deletes the rows, and learners start again. H5P's RESET marker is not used: its
+    dialog title is hard-coded English and Lumi's Nynorsk strings are Bokmål.
+  - **Order:** the check runs before Lumi saves and before dropped files are deleted, so a refused save changes
+    neither the parameters nor the files.
+  - **The dialog:** the editor is always in a frame (the portal's **Rediger** tab and Canvas), where a native modal
+    dialog lets Tab leave the frame. `editorSaveChoice.js` therefore keeps Tab and Shift+Tab inside the dialog, and
+    takes focus back only when the H5P editor's own frame takes it. After the dialog closes it re-enables «Lagre»,
+    focuses it and only then announces the outcome. In the portal the editor page asks the activity page to make
+    its own controls inert while the dialog is open; Canvas's page is out of our reach. The dialog's look comes
+    from a stylesheet file under the page's policy, with the `:focus-visible` ring the rest of the service uses.
 
 ### D-094 · Rendering the pedagogisk mappe
 - **Context:** `MAPPE-002` takes headings from the template and criteria from the criteria files, keyed by criteria
@@ -1827,6 +1934,20 @@ loading of one spec per session are kept.
     `POST /api/mappe/export?format=md|pdf` answers the file, which is not stored.
   - **Opprykk:** the promotion mode waits for ALU.
 - **Consequences:** Amends D-020: the reader's guide is generated, and the limits live per criteria set.
+- **Amendment (2026-10-28, S5 probe P5):** how Mustache is used safely:
+  - **Rendering:** `Mustache.render(template, view, undefined, { escape, tags: ['{{', '}}'] })`. Never assign
+    `Mustache.escape` or `Mustache.tags`, which are global to the process, and never pass `{}` as partials.
+  - **Loading:** the loader reads `Mustache.parse`'s tokens without changing them (they are cached and reused by
+    `render`) and strips comments in the source text. It allows only `name`, `#`, `^` and `!` tags with allowlisted
+    names, and refuses `&` (which also covers triple braces), `>`, `=`, images, a value inside backticks, a value
+    straight after `](` or a backslash, and a value at the start of a line that follows a table header.
+  - **The view:** every key is present on every list item (null when unknown), so a missing field never falls back
+    to the parent's field of the same name. Dates and numbers are formatted as strings first.
+  - **Empty values:** an optional value sits in a `{{#x}}` section or gets a localised placeholder, because an empty
+    value can turn the template's own `**…**` into a rule, `## …` into an empty heading and `[…](…)` into an empty
+    link.
+  - **The escaper** (`mappe/markdownEscape.ts`) is safe in inline positions only: line starts, after a heading,
+    list or quote marker, mid-line, table cells and link text.
 
 ### D-095 · Minimum group size in exports
 - **Context:** `MAPPE-003` applies `INS-006`'s minimum group size (*k* = 5, configurable, at least 3, with
@@ -1856,6 +1977,24 @@ loading of one spec per session are kept.
 - **Consequences:** S6's production image needs Chromium and fonts with æ, ø and å. Probe P4 checks the structure
   tree, outline, `/Lang` and title with `pdfjs-dist`. Anything Chromium cannot set, such as `DisplayDocTitle`, is
   recorded as a residual for the manual PAC check.
+- **Amendment (2026-10-28, S5 probe P4):**
+  - **Launch:** `chromium.launch({ chromiumSandbox: true, env: { PATH, HOME }, executablePath })`, all explicit:
+    playwright-core's defaults pass the server's whole environment (secrets included) to Chromium and turn the
+    sandbox off. Each export uses a fresh context with JavaScript off and `offline: true` (which blocks prefetches
+    the route never sees), every request aborted, and the context closed afterwards. The mappe HTML holds no
+    images; even an aborted image paints a placeholder.
+  - **Root:** Chromium refuses its sandbox when the process runs as root, as everything does in the development
+    container. A development-only `PDF_ALLOW_NO_SANDBOX=true` lets the PDF export work there; the production checks
+    refuse it. Production runs the server as a non-root user whose runtime allows unprivileged user namespaces
+    (S6). CI runs as a non-root user and lifts Ubuntu 24.04's AppArmor restriction on those namespaces first.
+  - **Tables:** markdown-it writes no `scope`, so the mappe renderer gives header cells `scope="col"` and makes the
+    first cell of each body row a row header with `scope="row"`.
+  - **Residuals:** Chromium sets `DisplayDocTitle`, so that is not a residual. The manual PAC check records these
+    instead: list numbers are untagged and lists carry no numbering attribute, caption and thead become
+    `NonStruct`, there is no XMP metadata and so no PDF/UA identifier, links have no `/Contents`, and the header
+    says PDF 1.4.
+  - **Fonts:** Georgia, the body font token, is not installed here, so the PDF uses Liberation Serif. The S6 image
+    installs `fonts-liberation`, or the fonts HVL licenses, so that æ, ø and å always embed.
 
 ### D-097 · New dependencies in S5
 - **Context:** CLAUDE.md pins every runtime dependency exactly, and D-029's checks allow only listed licences.
