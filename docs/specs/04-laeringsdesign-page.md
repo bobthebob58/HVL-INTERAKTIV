@@ -5,7 +5,7 @@
 | **Status** | Approved for build (v1.0, 2026-10-16) |
 | **Load in sessions** | S5 (all). S4 loads §5 only, because the hint rules plug into the validator engine. |
 | **Owns requirement IDs** | `PED-*`, `MAPPE-*` |
-| **Code location** | `apps/web/src/app/laeringsdesign/`, `apps/web/src/app/mappe/`, `apps/server/src/patterns/`, `apps/server/src/validation/rules/*Hint.ts`, `content/laeringsdesign/` |
+| **Code location** | `apps/web/src/app/(portal)/laeringsdesign/`, `apps/web/src/app/(portal)/mappe/`, `apps/web/src/features/` (studio views), `apps/server/src/learningDesign/` (content loader, patterns, metadata, planner, collaboration, mappe), `apps/server/src/validation/rules/*Hint.ts`, `content/laeringsdesign/`, `content/mappe/` (amended in S5, D-084, D-089) |
 
 This is the part of HVL Interaktiv that teachers will judge it by. It turns research on asynchronous
 learning into concrete starting points. It nudges authors towards designs that work, and it gives
@@ -53,10 +53,11 @@ Interaktiv. It appears on the studio page to show where the activities fit.
 
 | Route | Purpose | Audience |
 |---|---|---|
-| `/laeringsdesign` | Guide: *Studentaktiv læring med «HVL læringsdesign»* (working title; ALU to name it). The model in brief, the research summary, the phase matrix, and the pattern catalogue with filters. | Everyone (public within HVL) |
+| `/laeringsdesign` | Guide: *Studentaktiv læring med «HVL læringsdesign»* (working title; ALU to name it). The model in brief, the research summary, the phase matrix, and the pattern catalogue with filters. | Everyone, without signing in (owner, 2026-10-28, D-089) |
 | `/laeringsdesign/monster/[patternId]` | Pattern detail: when to use it, why it works, an example, and *Create from this pattern* | Everyone; create = author |
 | `/laeringsdesign/planlegg` | Alignment planner for one course (`PED-031`) | Authors |
 | `/mappe` | Portfolio export (`MAPPE-*`) | Authors |
+| `/laeringsdesign/innhaldsbank` | The HVL content bank (`PROD-007`, D-091) | HVL authors |
 
 #### PED-002 · MUST · S5 · Guide page content
 The guide page contains, in this order:
@@ -71,6 +72,8 @@ The guide page contains, in this order:
 6. Links to ALU support (hvl.no/alu) and the *Emnedesign* module (UPED854).
 - **Acceptance:** Every factual claim has a reference. Page text lives in
   `content/laeringsdesign/guide.{nn,nb,en}.mdx`, so ALU can edit it without changing code.
+- **Amended (D-083, 2026-10-28):** `SPEC-DEVIATION`: the guide is CommonMark Markdown, `guide.{nn,nb,en}.md`, rendered
+  from a closed node tree without HTML; the phase matrix and the catalogue are placed by marker lines.
 - **Verify:** Component test; ALU content review is recorded in `PROGRESS.md`.
 
 #### PED-003 · MUST · S5 · Pattern filter
@@ -103,7 +106,9 @@ Research basis for the guide page (titles and venues must be checked by ALU befo
 ## 4. Pattern catalogue
 
 A pattern is a YAML file in `content/laeringsdesign/patterns/` (editable by ALU, `PED-011`) plus an
-H5P parameter skeleton in `apps/server/src/patterns/skeletons/`. Skeleton text is **guidance**
+H5P parameter skeleton in `apps/server/src/patterns/skeletons/` (*amended, D-084:* the skeleton sits beside the YAML in
+`content/laeringsdesign/patterns/<id>/`, with text tokens and a pinned library version; guidance is marked `⟦…⟧` and
+flagged by V-PLACEHOLDER, D-086). Skeleton text is **guidance**
 written as placeholders, e.g. "Skriv eit spørsmål som får studenten til å bruke omgrepet, ikkje
 berre kjenne det att" ("Write a question that makes the student use the concept, not just recognise it").
 
@@ -128,6 +133,8 @@ berre kjenne det att" ("Write a question that makes the student use the concept,
 #### PED-011 · MUST · S5 · Patterns are editable without code
 Adding or editing a pattern needs only YAML, MDX and a JSON skeleton, with no TypeScript changes.
 `content/laeringsdesign/README.md` explains how, for non-developers.
+- **Amended (D-083, D-084, 2026-10-28):** YAML, Markdown and a JSON skeleton, all in
+  `content/laeringsdesign/patterns/<id>/`.
 - **Verify:** A test adds a fixture pattern directory and asserts it appears.
 
 ---
