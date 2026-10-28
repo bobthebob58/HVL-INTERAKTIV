@@ -117,6 +117,11 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
       it('[PROD-013] while open, the page and the H5P editor iframe are out of reach of pointer and assistive technology', async () => {
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
+        // WHY: H5P adds the form's fields after `.h5peditor-form` appears (more slowly on CI runners), so the control
+        // waits until the alt-text field is in the tree before it reads the tree.
+        await expect
+          .poll(() => exposedNodes(probe.page), { timeout: 20_000 })
+          .toContain('textbox:Alternativ tekst*');
         const before = await exposedNodes(probe.page);
         // Act
         await openByKeyboard(probe);

@@ -17,7 +17,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { chownSync, mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { LaunchReport } from './taggedPdfLaunchChild.js';
@@ -62,9 +62,14 @@ export function runLaunchChild(mode: LaunchMode): LaunchReport {
   // /tmp would keep those files (owned by `nobody`) after the run.
   const home = mkdtempSync(join(tmpdir(), 'taggedPdf-home-'));
   if (mode.asNobody) chownSync(home, NOBODY_UID, NOBODY_UID);
-  const env: Record<string, string> = { PATH: process.env.PATH ?? '', HOME: home };
-  if (process.env.PLAYWRIGHT_BROWSERS_PATH)
-    env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH;
+  // WHY: without PLAYWRIGHT_BROWSERS_PATH, playwright-core looks for its browsers under the cache directory of HOME
+  // (XDG_CACHE_HOME, else ~/.cache), which the fresh HOME would hide, so the child gets the path this process uses.
+  const cache = process.env.XDG_CACHE_HOME ?? join(homedir(), '.cache');
+  const env: Record<string, string> = {
+    PATH: process.env.PATH ?? '',
+    HOME: home,
+    PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? join(cache, 'ms-playwright'),
+  };
   const [file = '', ...args] = command;
   let result;
   try {
