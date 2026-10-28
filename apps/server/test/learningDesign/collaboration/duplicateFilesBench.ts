@@ -3,14 +3,16 @@
  * and a second author who copies, and the few actions the probe repeats.
  *
  * Why: every probe case imports a real example as the owner, rewrites it to Lumi's paste-source form and saves it as
- *      the copier through HvlH5PEditor, as the ContentDuplicator will (D-092). One bench keeps the cases short and
- *      makes them all use the same save path.
+ *      the copier through HvlH5PEditor, as the ContentDuplicator does (D-092). One bench keeps the cases short and
+ *      makes them all use the same save path. The ContentDuplicator and paste-source guard tests reuse it.
  * Spec: PROD-007
  * Invariants:
  *   - Saves go through `HvlH5PEditor.saveOrUpdateContent`, with every HVL check, never through Lumi's storage.
  *   - Both authors are testbed actors, so `close()` removes every activity, file row and bucket they made.
  * Collaborators: ../../support/httpTestbed.ts, ../../support/realPackages.ts, ./duplicateFilesPasteSource.ts.
- * Tests: apps/server/test/learningDesign/collaboration/duplicateFiles.int.test.ts
+ * Tests: apps/server/test/learningDesign/collaboration/duplicateFiles.int.test.ts,
+ *   apps/server/test/learningDesign/collaboration/ContentDuplicator.int.test.ts,
+ *   apps/server/test/h5p/pasteSourceGuard.int.test.ts
  */
 import type { ReadStream } from 'node:fs';
 import { join } from 'node:path';
@@ -47,7 +49,10 @@ export interface DuplicateBench {
   readonly copier: TestActor;
   /** The copier as Lumi sees them. */
   readonly copierUser: HvlH5pUser;
-  /** Imports a real example (e.g. `H5P.ImageHotspots`) as the owner; `published` shares it with all of HVL. */
+  /**
+   * Imports a real example (e.g. `H5P.ImageHotspots`) as the owner; `published` shares it with all of HVL and lists it
+   * in the content bank, so the copier may duplicate it (D-092).
+   */
   importExample(type: string, published: boolean): Promise<string>;
   /** Reads a source and rewrites its stored files to the paste-source form. */
   pasteFrom(sourceId: string): Promise<PastedSource>;
@@ -94,8 +99,12 @@ export async function openDuplicateBench(): Promise<DuplicateBench> {
     owner,
     copier,
     copierUser: asCopier,
-    importExample: (type, published) =>
-      tb.importPackage(owner, join(REAL_PACKAGES_DIR, `${type}.h5p`), { published }),
+    importExample: async (type, published) => {
+      const id = await tb.importPackage(owner, join(REAL_PACKAGES_DIR, `${type}.h5p`), { published });
+      // WHY: the editor's paste-source guard admits a colleague's files only from a bank-listed activity (D-092).
+      if (published) await tb.db.h5PContent.update({ where: { id }, data: { bankListedAt: new Date() } });
+      return id;
+    },
     pasteFrom: async (sourceId) => {
       const source = await storedActivity(tb.db, sourceId);
       const files = await storedFiles(tb.db, sourceId);

@@ -87,6 +87,10 @@ jobs:
           restore-keys: h5p-libraries-${{ runner.os }}-
       - name: Fetch, build and verify the ten real content types at pinned commits (D-078, D-047)
         run: npm run h5p:fetch-libraries
+      # WHY: after the fetch, so the pattern skeletons can be checked against the installed libraries' semantics
+      # (D-084); it needs no database or service, so a broken content file fails the run before the long steps.
+      - name: Studio content in content/ loads and is complete in nn, nb and en (PED-001, D-082)
+        run: npm run content:check
       - name: Generate the Prisma client and apply migrations
         run: npm run db:generate --workspace apps/server && npm run db:migrate
       - name: Install full Chromium for the browser and end-to-end tests (SEC-001, D-065; never --only-shell)

@@ -33,6 +33,7 @@ const FACTS: ContentFacts = {
   coAuthorIds: [],
   status: 'published',
   visibility: 'feide',
+  bankListed: false,
 };
 const { View, Edit, Embed, Create, List } = ContentPermission;
 const { ViewState, DeleteState, EditFinished, ViewFinished, DeleteFinished } = UserDataPermission;
@@ -185,8 +186,7 @@ describe('[H5P-006] HvlPermissionSystem', () => {
     const stored = { dataType: 'state', subContentId: '0', userState: '{"page":2}', contentId: CONTENT_ID };
     const storage = { getContentUserData: async () => stored } as unknown as IContentUserDataStorage;
     // WHY: Lumi's constructors take IPermissionSystem<IUser>; the factories pass ours typed like this.
-    const permissions: IPermissionSystem<HvlH5pUser> = system;
-    const manager = new ContentUserDataManager(storage, permissions);
+    const manager = new ContentUserDataManager(storage, system as IPermissionSystem<HvlH5pUser>);
     const read = (user: HvlH5pUser, asUserId?: string) =>
       manager.getContentUserData(CONTENT_ID, 'state', '0', user, 'course-1', asUserId);
     // Act and assert: own state through the state view, another learner's only by an audited request.

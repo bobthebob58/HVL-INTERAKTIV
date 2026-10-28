@@ -2,15 +2,16 @@
  * ContentAccessRepository — reads the facts the permission system needs about one activity.
  *
  * Why: the permission rules are pure functions; this is the one place that asks the database who owns an
- *      activity, who co-authors it, whether it is published and who may see it (H5P-006, PROD-006).
- * Spec: H5P-006, PROD-004, PROD-006
+ *      activity, who co-authors it, whether it is published, who may see it (H5P-006, PROD-006) and whether it is
+ *      listed in the content bank (PROD-007, D-091), which decides who may duplicate it (D-092).
+ * Spec: H5P-006, PROD-004, PROD-006, PROD-007
  * Invariants:
- *   - One query per lookup: owner, status, visibility and co-authors come from a single `findUnique`.
+ *   - One query per lookup: owner, status, visibility, bank listing and co-authors come from a single `findUnique`.
  *   - A content ID that is not a UUID is unknown (`undefined`) and never reaches the database.
  *   - Only co-authors with the `coauthor` role count; a future role grants nothing until the rules know it.
  *   - Facts carry account IDs and flags only, never names or e-mail addresses.
  * Collaborators: ../HvlPermissionSystem.ts (the caller), ./contentRules.ts (reads the facts),
- *   ../../infra/prismaClient.ts.
+ *   ../../learningDesign/collaboration/duplicateRules.ts (reads `bankListed`), ../../infra/prismaClient.ts.
  * Tests: apps/server/test/h5p/permissions/HvlPermissionSystem.int.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
@@ -34,6 +35,8 @@ export interface ContentFacts {
   readonly status: ContentStatus;
   /** Who may see the activity when it is published. */
   readonly visibility: ContentVisibility;
+  /** Listed in the HVL content bank (`H5PContent.bankListedAt` is set, D-091): colleagues may duplicate it. */
+  readonly bankListed: boolean;
 }
 
 /** Looks up the facts about an activity for a permission check. */
@@ -54,7 +57,7 @@ export class PrismaContentAccessRepository implements ContentAccessRepository {
   constructor(private readonly db: Database) {}
 
   /**
-   * Reads owner, co-authors, status and visibility of one activity in one query.
+   * Reads owner, co-authors, status, visibility and bank listing of one activity in one query.
    * @param contentId - The ID Lumi asks about.
    * @returns The facts, or `undefined` for an unknown or malformed ID.
    */
@@ -68,6 +71,7 @@ export class PrismaContentAccessRepository implements ContentAccessRepository {
         ownerUserId: true,
         status: true,
         visibility: true,
+        bankListedAt: true,
         collaborators: { where: { role: 'coauthor' }, select: { userId: true } },
       },
     });
@@ -78,6 +82,7 @@ export class PrismaContentAccessRepository implements ContentAccessRepository {
       coAuthorIds: Object.freeze(row.collaborators.map((c) => c.userId)),
       status: row.status,
       visibility: row.visibility,
+      bankListed: row.bankListedAt !== null,
     });
   }
 }

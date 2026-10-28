@@ -24,7 +24,13 @@ import { ACTIVITY, LTIK, LTIK_EN, openWebPage, serveBuiltWebApp, WEB_APP_BUILT }
         [`/aktivitet/${ACTIVITY}`, 'Aktivitet – HVL Interaktiv'],
         ['/app/play', 'Opne aktiviteten frå Canvas – HVL Interaktiv'],
         [`/app/play?ltik=${LTIK}`, 'Celler og vev – HVL Interaktiv'],
+        ['/laeringsdesign', 'Læringsdesign – HVL Interaktiv'],
+        ['/laeringsdesign/monster/fa-video', 'Mønster – HVL Interaktiv'],
+        ['/laeringsdesign/planlegg', 'Planleggar – HVL Interaktiv'],
+        ['/laeringsdesign/innhaldsbank', 'Innhaldsbank – HVL Interaktiv'],
+        ['/mappe', 'Pedagogisk mappe – HVL Interaktiv'],
         ['/finst-ikkje', 'Fann ikkje sida – HVL Interaktiv', 404],
+        ['/laeringsdesign/monster/IKKJE..GYLDIG', 'Fann ikkje sida – HVL Interaktiv', 404],
       ];
       const titles: string[] = [];
       // Act

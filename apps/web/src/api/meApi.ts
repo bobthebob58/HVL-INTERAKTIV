@@ -6,7 +6,8 @@
  * Spec: PROD-011, DATA-002
  * Invariants:
  *   - Only `import type` from the contract; the notice ID is one of the contract's `NOTICE_IDS`.
- * Collaborators: ./apiRequest.ts, ../components/Notice.tsx, apps/server/src/http/api/meRoutes.ts.
+ * Collaborators: ./apiRequest.ts, ../components/Notice.tsx, ../components/StudioNav.tsx (the header's main menu),
+ *   apps/server/src/http/api/meRoutes.ts.
  * Tests: apps/web/test/components/Notice.test.tsx
  */
 import type { Me, NoticeDismissalRequest, NoticeId } from '@hvl-interaktiv/api-contract';

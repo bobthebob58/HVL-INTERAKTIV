@@ -54,6 +54,8 @@
     "subContentNotAllowed": "«{{library}}» kan ikke brukes inne i denne aktiviteten.",
     "libraryNotInstalled": "Innholdstypen «{{library}}» er ikke installert.",
     "unsafeFilePath": "En filsti i aktiviteten inneholder tegn som ikke er tillatt (anførselstegn, < eller >).",
+    "unsafeFileName": "En filsti i aktiviteten er ugyldig: den kan ikke begynne med «/» eller inneholde «..», «\\», tomme ledd eller kontrolltegn.",
+    "pasteSourceNotAllowed": "Aktiviteten bruker filer fra en annen aktivitet som du ikke kan lage kopi av. Last opp filene på nytt i stedet.",
     "hubInstallDisabled": "Innholdstyper installeres av en administrator, ikke fra H5P-huben.",
     "librariesInstalled": "Installerte innholdstyper: {{count}}.",
     "librariesUpdated": "Oppdaterte innholdstyper: {{count}}.",
@@ -130,6 +132,25 @@
       "title": "Til underveisvurdering",
       "body": "H5P-aktiviteter blir rettet i nettleseren. Poengene er ment for læring underveis (underveisvurdering), ikke for eksamen eller karakterer.",
       "dismiss": "Ikke vis meldingen igjen"
+    }
+  },
+  "learningDesign": {
+    "error": {
+      "patternUnavailable": "Mønsteret kan ikke brukes nå, fordi en innholdstype det trenger, ikke er installert. Be en administrator om hjelp, eller lag en tom aktivitet.",
+      "patternChoiceInvalid": "Velg en fase og en innholdstype som mønsteret tilbyr.",
+      "learningDesignConflict": "Læringsdesignet ble endret i mellomtiden. Last inn siden på nytt og prøv igjen.",
+      "learnerStateResetNeeded": "Endringen endrer oppbygningen av aktiviteten, og andre har lagret fremdrift i den. Bekreft at fremdriften skal nullstilles, eller lagre endringen som ny versjon.",
+      "ownerOnly": "Bare eieren av aktiviteten kan gjøre dette.",
+      "coauthorNotEligible": "Denne personen kan ikke legges til som medforfatter. Bare ansatte ved HVL kan være medforfattere.",
+      "coauthorLimit": "Aktiviteten har allerede så mange medforfattere som er tillatt.",
+      "bankNotEligible": "Bare publiserte aktiviteter som er delt med hele HVL eller flere, kan legges i innholdsbanken.",
+      "duplicateNotAllowed": "Du kan ikke lage en kopi av denne aktiviteten.",
+      "duplicateFailed": "Kopien kunne ikke lages, så ingenting ble lagret. Prøv igjen.",
+      "rateLimited": "Du har sendt for mange forespørsler på kort tid. Vent litt og prøv igjen.",
+      "mappeTooMany": "Du har valgt for mange aktiviteter til mappen. Velg færre og prøv igjen.",
+      "criteriaSetUnknown": "Kriteriesettet finnes ikke. Last inn siden på nytt og prøv igjen.",
+      "pdfUnavailable": "PDF-filen kan ikke lages akkurat nå. Last ned Markdown-filen i stedet.",
+      "pdfBusy": "Det lages mange PDF-filer akkurat nå. Vent litt og prøv igjen, eller last ned Markdown-filen."
     }
   }
 }

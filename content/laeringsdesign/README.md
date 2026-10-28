@@ -8,7 +8,7 @@
 
 Every file is checked when the server starts. `npm run content:check` (see [../README.md](../README.md)) checks
 `phases.yaml`, `references.yaml` and the studio's other texts without a server; `hint-thresholds.yaml` is checked by
-its own test instead (see [What catches mistakes](#what-catches-mistakes) under hint-thresholds.yaml).
+its own test instead (see "What catches mistakes" under hint-thresholds.yaml below).
 
 ## phases.yaml
 
@@ -39,11 +39,15 @@ The key `underveis` stays; only the label changes. To call it «Mellomøkt», ch
 
 ```yaml
   - key: underveis
+    order: 2
+    position: between-samlingar
     label:
       nn: Mellomøkt
       nb: Mellomøkt
       en: Between sessions
 ```
+
+Leave `key`, `order`, `position` and the other texts below `label` as they are.
 
 Nothing else is needed: every page, the planner and the portfolio use the new name after the next start.
 
@@ -93,7 +97,8 @@ To add a reference, add a key with `text` and `verify`, then cite it as `[@key]`
   listed twice; a reference key in capitals; a reference without `verify`; and a citation of a key this file does
   not list. Each message names the file, the line and the key.
 - The tests in `apps/server/test/learningDesign/content/` load these files on every test run, and check that a
-  renamed label reaches the pages without a code change (`PED-001`).
+  renamed label is loaded without a code change (`PED-001`). The studio pages, the planner and the portfolio take
+  every name from what is loaded here.
 
 ## hint-thresholds.yaml
 
@@ -126,8 +131,8 @@ Minutes may have decimals (`4.5`); counts are whole numbers. Lines starting with
 ### What catches mistakes
 
 - The server checks the file when it starts. A missing, misspelt, repeated or out-of-range key stops the start,
-  and the message names the key, for example
-  `maxVideoMinutes: Too big: expected number to be <=180`.
+  and the message names the key and the line, for example
+  `maxVideoMinutes: Too big: expected number to be <=180 (line 13)`.
 - The test `apps/server/test/config/validationContext.test.ts` loads this file in every test run (also in CI on a
   pull request), so a broken file is caught before it is merged.
 - Changing a number changes which hints authors see; the hint rules' own tests use fixed numbers, so they keep

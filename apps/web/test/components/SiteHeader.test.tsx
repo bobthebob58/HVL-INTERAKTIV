@@ -1,16 +1,24 @@
 /**
- * Component tests for the site chrome: the header with the site name and **Hjelp** in the same place on every page,
- * the logo slot, the `main#main` skip link target, and the Canvas variant whose help link opens a new tab.
+ * Component tests for the site chrome: the header with the site name, the main menu and **Hjelp** in the same place
+ * and order on every portal page, the logo slot, the `main#main` skip link target, and the Canvas variant whose help
+ * link opens a new tab and which has no main menu.
  *
  * Spec: UD-013, UD-006, UD-007
  */
 // @vitest-environment jsdom
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { PortalChrome } from '../../src/components/PortalChrome';
 import { SiteHeader } from '../../src/components/SiteHeader';
 import { BRAND_LOGOS, brandLogo } from '../../src/config/branding';
 import { LtiChrome } from '../../src/features/lti/LtiChrome';
+import { errorBody, fakeFetch, type RecordedRequest } from '../support/fakeFetch';
+
+let requests: RecordedRequest[] = [];
+beforeEach(() => {
+  // WHY: the portal header's main menu asks who is signed in; these tests see a signed-out visitor.
+  requests = fakeFetch({ 'GET /api/me': { status: 401, body: errorBody(401, 'hvl:unauthenticated') } });
+});
 
 describe('[UD-013] the site header', () => {
   it('[UD-013] shows the site name as a home link and Hjelp in a labelled navigation', () => {
@@ -23,6 +31,24 @@ describe('[UD-013] the site header', () => {
     );
     const nav = within(banner).getByRole('navigation', { name: 'Hjelp og informasjon' });
     expect(within(nav).getByRole('link', { name: 'Hjelp' }).getAttribute('href')).toBe('/hjelp?lang=nn');
+  });
+
+  it('[UD-013] orders the site name, the main menu and Hjelp the same way on every portal page', async () => {
+    // Act
+    render(<SiteHeader locale="nn" />);
+    await waitFor(() => expect(requests).toHaveLength(1));
+    // Assert
+    const banner = screen.getByRole('banner');
+    expect(
+      within(banner)
+        .getAllByRole('navigation')
+        .map((nav) => nav.getAttribute('aria-label')),
+    ).toEqual(['Hovudmeny', 'Hjelp og informasjon']);
+    expect(
+      within(banner)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['HVL Interaktiv', 'Læringsdesign', 'Hjelp']);
   });
 
   it('[UD-013] shows text until HVL supplies a logo, for every locale', () => {
@@ -41,6 +67,8 @@ describe('[UD-013] the site header', () => {
     expect(help.getAttribute('target')).toBe('_blank');
     expect(help.getAttribute('href')).toBe('/hjelp?lang=nb');
     expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(screen.queryByRole('navigation', { name: 'Hovedmeny' })).toBeNull();
+    expect(requests).toEqual([]);
   });
 });
 

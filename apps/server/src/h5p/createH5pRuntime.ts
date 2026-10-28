@@ -8,7 +8,8 @@
  *      own (empty content-type cache stored as `[]`, D-041).
  * Spec: H5P-001, H5P-004, H5P-006, H5P-007, SEC-001, SEC-002
  * Invariants:
- *   - The same HvlPermissionSystem instance is used by editor, player and routes; the guard checks it.
+ *   - The same HvlPermissionSystem instance is used by editor, player and routes; the guard checks it. The editor's
+ *     paste-source guard reads the same activity facts as that permission system.
  *   - Editor and player share one HvlUrlGenerator; its content-file grants are signed with `URL_SIGNING_KEYS`,
  *     and the routes verify them with the same ContentFileGrants (D-058).
  *   - File sanitisers run in this order: file-type sniffer, then the SVG sanitiser.
@@ -82,8 +83,9 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     keyValueStorage,
   };
   await keepContentTypeCacheOffline(keyValueStorage);
+  const contentFacts = new PrismaContentAccessRepository(db);
   const permissions = new HvlPermissionSystem({
-    content: new PrismaContentAccessRepository(db),
+    content: contentFacts,
     auditor: new PrismaUserDataAccessAuditor(db),
   });
   const translate = createHvlTranslationCallback();
@@ -95,6 +97,7 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     storages,
     permissionSystem: permissions,
     audit: new PrismaLibraryAuditSink(db),
+    contentFacts,
     translate,
     fileSanitizers,
     urlGenerator,

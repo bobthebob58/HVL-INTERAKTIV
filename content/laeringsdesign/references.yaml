@@ -1,0 +1,101 @@
+# content/laeringsdesign/references.yaml — the full references the læringsdesign guide and the patterns cite.
+#
+# Why: every factual claim on the guide page has a reference (spec 04 §3 and PED-002). A guide text or a pattern
+#      cites one as [@key], and the page ends with the full references it cites (D-083).
+# Source: the research table in spec 04 §3 (author, year, venue). Titles, publishers and the remaining details were
+#         written out on 2026-10-28 and are NOT checked against the sources yet: every reference says `verify: true`
+#         until ALU has checked it (open question Q17). No DOIs or page numbers are added that were not in the
+#         repository's own sources.
+# Rules for editing (see content/laeringsdesign/README.md):
+#   - A key is lower-case letters, digits and hyphens, like guo2014 (first author and year). Never rename a key that
+#     a guide or a pattern cites; `npm run content:check` reports a citation of a key that is not listed here.
+#   - `text` is the whole reference as plain text (no Markdown, no italics), at most 600 characters.
+#   - Set `verify: false` only after checking the reference against the source.
+# Spec: PED-002 · Tests: apps/server/test/learningDesign/content/referencesContent.test.ts
+version: 1
+references:
+  # Segment and retrieve
+  mayer2009:
+    text: >-
+      Mayer, R. E. (2009). Multimedia learning (2nd ed.). Cambridge University Press.
+    verify: true
+  guo2014:
+    text: >-
+      Guo, P. J., Kim, J., & Rubin, R. (2014). How video production affects student engagement: An empirical study
+      of MOOC videos. In Proceedings of the First ACM Conference on Learning @ Scale (L@S ’14). Association for
+      Computing Machinery.
+    verify: true
+  szpunar2013:
+    text: >-
+      Szpunar, K. K., Khan, N. Y., & Schacter, D. L. (2013). Interpolated memory tests reduce mind wandering and
+      improve learning of online lectures. Proceedings of the National Academy of Sciences, 110(16).
+    verify: true
+  roediger2006:
+    text: >-
+      Roediger, H. L., III, & Karpicke, J. D. (2006). Test-enhanced learning: Taking memory tests improves
+      long-term retention. Psychological Science, 17(3).
+    verify: true
+  brame2016:
+    text: >-
+      Brame, C. J. (2016). Effective educational videos: Principles and guidelines for maximizing student learning
+      from video content. CBE—Life Sciences Education, 15(4).
+    verify: true
+  # Explain, don't just mark
+  shute2008:
+    text: >-
+      Shute, V. J. (2008). Focus on formative feedback. Review of Educational Research, 78(1).
+    verify: true
+  hattie2007:
+    text: >-
+      Hattie, J., & Timperley, H. (2007). The power of feedback. Review of Educational Research, 77(1).
+    verify: true
+  nicol2006:
+    text: >-
+      Nicol, D. J., & Macfarlane-Dick, D. (2006). Formative assessment and self-regulated learning: A model and
+      seven principles of good feedback practice. Studies in Higher Education, 31(2).
+    verify: true
+  # Spacing and practice testing
+  cepeda2006:
+    text: >-
+      Cepeda, N. J., Pashler, H., Vul, E., Wixted, J. T., & Rohrer, D. (2006). Distributed practice in verbal recall
+      tasks: A review and quantitative synthesis. Psychological Bulletin, 132(3).
+    verify: true
+  dunlosky2013:
+    text: >-
+      Dunlosky, J., Rawson, K. A., Marsh, E. J., Nathan, M. J., & Willingham, D. T. (2013). Improving students’
+      learning with effective learning techniques: Promising directions from cognitive and educational psychology.
+      Psychological Science in the Public Interest, 14(1).
+    verify: true
+  # Practise judgement safely
+  schon1983:
+    text: >-
+      Schön, D. A. (1983). The reflective practitioner: How professionals think in action. Basic Books.
+    verify: true
+  vanmanen1991:
+    text: >-
+      van Manen, M. (1991). The tact of teaching: The meaning of pedagogical thoughtfulness. State University of New
+      York Press.
+    verify: true
+  # Aligning it all
+  biggs1996:
+    text: >-
+      Biggs, J. (1996). Enhancing teaching through constructive alignment. Higher Education, 32(3).
+    verify: true
+  wiggins2005:
+    text: >-
+      Wiggins, G., & McTighe, J. (2005). Understanding by design (2nd ed.). Association for Supervision and
+      Curriculum Development.
+    verify: true
+  # HVL's own model. Title, venue and pages from docs/reference/hvl-laeringsdesign-model.md §2.2 (Cristin and the
+  # HVL research-group page; the pages are of medium confidence there).
+  mogelvang2025:
+    text: >-
+      Møgelvang, A., & Isaksen, K. R. (2025). Utvikling av en kontekstuell og kunnskapsbasert modell for
+      læringsdesign. Nordic Journal of STEM Education, 9(2), 255–262.
+    verify: true
+  # Using pre-work in class
+  novak1999:
+    text: >-
+      Novak, G. M., Patterson, E. T., Gavrin, A. D., & Christian, W. (1999). Just-in-time teaching: Blending active
+      learning with web technology. Prentice Hall.
+    verify: true

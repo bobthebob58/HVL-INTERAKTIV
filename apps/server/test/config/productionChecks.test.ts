@@ -1,8 +1,8 @@
 /**
- * Tests for the production rules: https everywhere, strong ring keys, no key used twice, and no web-app
- * development server.
+ * Tests for the production rules: https everywhere, strong ring keys, no key used twice, no web-app
+ * development server, and the PDF export's sandbox kept.
  *
- * Spec: AUTH-001, LTI-001, LTI-002, DATA-002, DATA-011
+ * Spec: AUTH-001, LTI-001, LTI-002, DATA-002, DATA-011, MAPPE-004
  */
 import { describe, expect, it } from 'vitest';
 import { envProblems, productionEnv, randomKey, VALID_ENV } from '../support/authEnv.js';
@@ -102,5 +102,16 @@ describe('[DATA-011] production web app mode', () => {
     expect(problemsAt(productionEnv({ WEB_APP: 'prod' }))).toEqual([]);
     expect(problemsAt(productionEnv({ WEB_APP: 'off' }))).toEqual([]);
     expect(problemsAt({ ...VALID_ENV, WEB_APP: 'dev' })).toEqual([]);
+  });
+});
+
+describe('[MAPPE-004] production PDF export sandbox', () => {
+  it('[MAPPE-004] refuses to turn off Chromium’s sandbox in production, and allows it in development (D-096)', () => {
+    expect(problemsAt(productionEnv({ PDF_ALLOW_NO_SANDBOX: 'true' }))).toEqual([
+      "PDF_ALLOW_NO_SANDBOX: production keeps Chromium's sandbox for the PDF export; run the server as a " +
+        'non-root user instead (D-096)',
+    ]);
+    expect(problemsAt(productionEnv({ PDF_ALLOW_NO_SANDBOX: 'false' }))).toEqual([]);
+    expect(problemsAt({ ...VALID_ENV, PDF_ALLOW_NO_SANDBOX: 'true' })).toEqual([]);
   });
 });

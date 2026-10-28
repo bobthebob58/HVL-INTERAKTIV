@@ -1,7 +1,8 @@
 /**
  * Browser tests for every page of the built web app served inside Express: no console error, page error or CSP
  * violation; only first-party requests; the skip link first and a `main#main` on every page; no horizontal scrolling
- * at 320 px; and each route's signed-out, no-launch or launch state. The API answers as for a signed-out browser.
+ * at 320 px; and each route's signed-out, no-launch or launch state, the S5 studio pages included (D-089). The API
+ * answers as for a signed-out browser.
  *
  * Spec: DATA-011, UD-006, UD-008, UD-013, DATA-006, LTI-003, LTI-006
  */
@@ -51,6 +52,11 @@ import { ACTIVITY, LTIK, openWebPage, serveBuiltWebApp, WEB_APP_BUILT } from './
       [`/aktivitet/${ACTIVITY}`, /Du må logge inn for å sjå denne sida/],
       ['/aktivitet/ny', /Du må logge inn for å sjå denne sida/],
       ['/app/play', /Opne aktiviteten frå Canvas/],
+      ['/laeringsdesign', /Studentaktiv læring med «HVL læringsdesign»/],
+      ['/laeringsdesign/monster/fa-video', /Mønster/],
+      ['/laeringsdesign/planlegg', /Du må logge inn for å sjå denne sida/],
+      ['/laeringsdesign/innhaldsbank', /Du må logge inn for å sjå denne sida/],
+      ['/mappe', /Du må logge inn for å sjå denne sida/],
     ])('[UD-008] %s renders its state with no error, violation or sideways scrolling', async (path, text) => {
       // Act
       const { page, problems, requests, status } = await open(path);
@@ -79,15 +85,31 @@ import { ACTIVITY, LTIK, openWebPage, serveBuiltWebApp, WEB_APP_BUILT } from './
       await page.close();
     });
 
-    it('[UD-013] an unknown path gets the 404 page in the portal chrome', async () => {
+    it.each(['/finst-ikkje', '/laeringsdesign/monster/IKKJE..GYLDIG'])(
+      '[UD-013] %s gets the 404 page in the portal chrome',
+      async (path) => {
+        // Act
+        const { page, problems, requests, status } = await open(path, 404);
+        // Assert
+        expect(status).toBe(404);
+        expect(await page.textContent('h1')).toBe('Fann ikkje sida');
+        await expectSoundPage(page, requests);
+        expect(problems).toEqual([]);
+        await page.close();
+      },
+    );
+
+    it('[UD-013] the portal header has the main menu, which Canvas does not', async () => {
       // Act
-      const { page, problems, requests, status } = await open('/finst-ikkje', 404);
+      const portal = await open('/hjelp');
+      const canvas = await open(`/app/play?ltik=${encodeURIComponent(LTIK)}`);
       // Assert
-      expect(status).toBe(404);
-      expect(await page.textContent('h1')).toBe('Fann ikkje sida');
-      await expectSoundPage(page, requests);
-      expect(problems).toEqual([]);
-      await page.close();
+      const menu = portal.page.getByRole('banner').getByRole('navigation', { name: 'Hovudmeny' });
+      expect(await menu.getByRole('link').allTextContents()).toEqual(['Læringsdesign']);
+      expect(await canvas.page.getByRole('navigation', { name: 'Hovudmeny' }).count()).toBe(0);
+      expect([...portal.problems, ...canvas.problems]).toEqual([]);
+      await portal.page.close();
+      await canvas.page.close();
     });
   });
 });

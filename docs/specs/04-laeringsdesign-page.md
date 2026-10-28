@@ -177,6 +177,8 @@ prompted (but not required) on publish.
 | `learningOutcomes` | list of `{ text, category }` | `category` follows the Norwegian qualifications framework (NKR): `kunnskap`, `ferdigheiter`, `generell kompetanse` |
 | `rationale` | text ≤ 1 000 characters | "Why this design for this outcome?" Used in the portfolio |
 | `estimatedStudentMinutes` | integer | Shown to students before they start |
+| `learnerPurpose` | text ≤ 200 characters | *Amended (D-087, 2026-10-28):* the one-line "why this matters" of `PED-032`, shown to learners with the activity's language |
+| `patternId` | pattern key | *Amended (D-087):* the pattern the activity was created from; kept on copies, never edited by hand |
 
 - **Verify:** Component and API tests.
 

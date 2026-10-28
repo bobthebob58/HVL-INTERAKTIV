@@ -94,6 +94,9 @@ model LtiPlacement {
   lineItemUrl      String?
   attemptPolicy    AttemptPolicy @default(best)
   masteryThreshold Float?
+  /// The platform's course label from the launch's `context.label` (e.g. `SYK110`), suggested as a course code
+  /// to the author (D-087). A course label, not personal data.
+  contextLabel     String?       @db.VarChar(255)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 

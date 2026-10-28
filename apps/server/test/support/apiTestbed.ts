@@ -11,7 +11,10 @@
  *   - Every principal gets its own `User` row; `close` removes them with their activities, acknowledgements,
  *     dismissals and audit rows.
  *   - `validator` and `clockOffsetMs` are read on every request, so a test can change them between requests.
- * Collaborators: ../../src/http/api/apiRouter.ts, ../../src/http/h5pErrorHandler.ts, ./services.ts.
+ *   - The studio's routes are mounted with the real services (./apiTestbedStudio.ts) on the test Redis and the
+ *     repository's studio content (or the content a test passes); only the H5P engine is a stand-in.
+ * Collaborators: ../../src/http/api/apiRouter.ts, ../../src/http/h5pErrorHandler.ts, ./services.ts,
+ *   ./apiTestbedStudio.ts.
  * Tests: apps/server/test/http/api/publishRoutes.int.test.ts, apps/server/test/http/api/publishGuards.int.test.ts,
  *   apps/server/test/http/api/meRoutes.int.test.ts, apps/server/test/http/api/contentListRoutes.int.test.ts
  */
@@ -24,8 +27,13 @@ import { apiRouter } from '../../src/http/api/apiRouter.js';
 import { h5pErrorHandler } from '../../src/http/h5pErrorHandler.js';
 import { HttpError } from '../../src/http/HttpError.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
+import type { Redis } from '../../src/infra/redisClient.js';
+import { loadStudioContent, type StudioContent } from '../../src/learningDesign/content/loadStudioContent.js';
 import { createLogger } from '../../src/logging/logger.js';
+import { closeStudioServices, type StudioServices } from '../../src/server/studioServices.js';
 import type { ContentValidator } from '../../src/validation/types.js';
+import { createClient } from 'redis';
+import { apiTestbedStudio } from './apiTestbedStudio.js';
 import { serviceEnv } from './services.js';
 
 /** The header that makes a request a test principal's. */
@@ -49,6 +57,10 @@ export interface TestContentOptions {
 export interface ApiTestbed {
   readonly app: Express;
   readonly db: Database;
+  /** The test Redis (connected in the background; commands wait for the connection). */
+  readonly redis: Redis;
+  /** The studio's services the studio routes use. */
+  readonly studio: StudioServices;
   /** The validator the findings, publish and save code use; returns no findings until a test replaces it. */
   validator: ContentValidator;
   /** How far the publish flow's clock is ahead of the real one. */
@@ -62,16 +74,32 @@ export interface ApiTestbed {
 
 /**
  * Builds the testbed.
+ * @param options - `studioContent`: the studio content instead of the repository's `content/`.
  * @returns The testbed; call `close()` in `afterAll`.
  */
-export function openApiTestbed(): ApiTestbed {
+export function openApiTestbed(options: { studioContent?: StudioContent } = {}): ApiTestbed {
   const db = createPrismaClient(serviceEnv().DATABASE_URL);
+  // WHY: the testbed is built synchronously at collection time; the client queues commands until it is connected.
+  const redis = createClient({ url: serviceEnv().REDIS_URL }) as Redis;
+  redis.on('error', () => undefined);
+  const connecting = redis.connect();
   const principals = new Map<string, Principal>();
   const userIds: string[] = [];
   const app = express();
+  // WHY: read on every request, so a test can replace the validator or move the clock between requests.
+  const publishing = {
+    db,
+    validator: ((input) => tb.validator(input)) satisfies ContentValidator,
+    clock: () => new Date(Date.now() + tb.clockOffsetMs),
+  };
+  const access = new PrismaContentAccessRepository(db);
+  const studioContent = options.studioContent ?? loadStudioContent();
+  const studio = apiTestbedStudio({ db, redis, access, publishing, studioContent });
   const tb: ApiTestbed = {
     app,
     db,
+    redis,
+    studio,
     validator: () => [],
     clockOffsetMs: 0,
     principal: async (role, overrides = {}) => {
@@ -114,7 +142,9 @@ export function openApiTestbed(): ApiTestbed {
       await db.h5PContent.deleteMany({ where: { ownerUserId: { in: userIds } } });
       await db.auditEvent.deleteMany({ where: { actorUserId: { in: userIds } } });
       await db.user.deleteMany({ where: { id: { in: userIds } } });
-      await db.$disconnect();
+      await closeStudioServices(studio);
+      await connecting;
+      await Promise.all([redis.quit(), db.$disconnect()]);
     },
   };
   app.use((req, res, next) => {
@@ -122,15 +152,8 @@ export function openApiTestbed(): ApiTestbed {
     if (principal) setPrincipal(res, principal);
     next();
   });
-  const publishing = {
-    db,
-    validator: ((input) => tb.validator(input)) satisfies ContentValidator,
-    clock: () => new Date(Date.now() + tb.clockOffsetMs),
-  };
-  app.use(
-    '/api',
-    apiRouter({ publishing, access: new PrismaContentAccessRepository(db), serveDocs: true }),
-    (_req, _res, next) => next(new HttpError(404, 'error.notFound')),
+  app.use('/api', apiRouter({ publishing, access, studio, serveDocs: true }), (_req, _res, next) =>
+    next(new HttpError(404, 'error.notFound')),
   );
   app.use('/api', h5pErrorHandler(createLogger({ level: 'silent' })));
   return tb;

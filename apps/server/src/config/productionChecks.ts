@@ -5,8 +5,9 @@
  *      secret and run the web app's development server. In production each of these breaks a guarantee: a
  *      published secret lets anyone recompute a learnerKey or forge a signed URL (DATA-002, D-058), a missing
  *      current-year secret fails every learner request, an http issuer or platform lets a network attacker forge
- *      logins (AUTH-001, LTI-001), and the development server relaxes the web pages' policy (D-070).
- * Spec: DATA-002, DOC-008, AUTH-001, LTI-001, LTI-002, DATA-011
+ *      logins (AUTH-001, LTI-001), the development server relaxes the web pages' policy (D-070), and Chromium
+ *      without its sandbox would run a portfolio render with the server's own rights (D-096).
+ * Spec: DATA-002, DOC-008, AUTH-001, LTI-001, LTI-002, DATA-011, MAPPE-004
  * Invariants:
  *   - Production needs a pseudonym secret for the current academic year (1 August boundary, Oslo time).
  *   - Production rejects secrets and ring keys that decode to text (printable ASCII plus tab, CR and LF), as
@@ -19,6 +20,7 @@
  *     configured LTI platform URL.
  *   - Production refuses `WEB_APP=dev`: Next.js's development server compiles on demand, shows stack traces and
  *     gets `'unsafe-eval'` and inline styles in its policy (../web/webPageCsp.ts). `prod` and `off` pass.
+ *   - Production refuses `PDF_ALLOW_NO_SANDBOX=true`: the PDF export keeps Chromium's sandbox (D-096 amendment).
  *   - Messages name the variable, the year or the key ID, never a secret.
  * Collaborators: ./env.ts (calls it after parsing), ../privacy/academicYear.ts, ../security/keys/keyring.ts.
  * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/productionChecks.test.ts
@@ -49,6 +51,7 @@ export type ProductionCheckedEnv = Pick<
   | 'CANVAS_ORIGINS'
   | 'LTI_PLATFORMS'
   | 'WEB_APP'
+  | 'PDF_ALLOW_NO_SANDBOX'
 >;
 
 const RINGS = ['IDENTITY_HASH_KEYS', 'DATA_ENCRYPTION_KEYS', 'URL_SIGNING_KEYS'] as const;
@@ -122,6 +125,16 @@ const webAppProblems = (env: ProductionCheckedEnv): string[] =>
       ]
     : [];
 
+// SECURITY: Chromium renders text authors wrote; its sandbox confines an exploit in the renderer, so production never
+// turns it off. Development containers run as root, where Chromium refuses its sandbox (D-096 amendment).
+const pdfProblems = (env: ProductionCheckedEnv): string[] =>
+  env.PDF_ALLOW_NO_SANDBOX
+    ? [
+        "PDF_ALLOW_NO_SANDBOX: production keeps Chromium's sandbox for the PDF export; run the server as a " +
+          'non-root user instead (D-096)',
+      ]
+    : [];
+
 /**
  * Lists production-only configuration problems.
  * @param env - Parsed configuration.
@@ -134,5 +147,6 @@ export function productionProblems(env: ProductionCheckedEnv, now: Date): string
     ...ringProblems(env),
     ...httpsProblems(env),
     ...webAppProblems(env),
+    ...pdfProblems(env),
   ];
 }

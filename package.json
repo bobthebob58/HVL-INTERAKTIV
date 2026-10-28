@@ -39,6 +39,7 @@
     "seed:libraries": "npm run seed:libraries --workspace apps/server --",
     "hub:check": "npm run hub:check --workspace apps/server",
     "docs:api": "npm run docs:api --workspace apps/server",
+    "content:check": "npm run content:check --workspace apps/server --",
     "start": "npm run start --workspace apps/server",
     "mock:platform": "node tools/mock-platform/cli.mjs --tool-url http://localhost:3000 --canvas-port 4100 --feide-port 4200"
   },
@@ -71,6 +72,9 @@
     ],
     "*.{json,yml,yaml,css}": [
       "prettier --write"
+    ],
+    "content/**": [
+      "bash -c 'npm run --silent content:check'"
     ],
     "{PROGRESS.md,README.md,docs/**/*.md}": [
       "bash -c 'node tools/spec-site/buildSpecSite.mjs --check || { echo \"Run: node tools/spec-site/buildSpecSite.mjs\"; exit 1; }'"

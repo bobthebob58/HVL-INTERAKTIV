@@ -8,7 +8,9 @@
  *   - Only the user's ID is stored as owner; H5P's user object (name, e-mail) is never persisted.
  *   - The database row is the source of truth for which files exist; S3 holds only their bytes.
  *   - IDs that are not UUIDs are treated as "not found" instead of reaching the database.
- * Collaborators: ./S3ContentFileStore.ts, ./contentUsage.ts, ../../infra/prismaClient.ts, H5PEditor (S2).
+ *   - Every row `addContent` creates is reported to ./contentCreations.ts, so a failed duplicate can remove it.
+ * Collaborators: ./S3ContentFileStore.ts, ./contentUsage.ts, ./contentCreations.ts, ../../infra/prismaClient.ts,
+ *   H5PEditor (S2).
  * Tests: apps/server/test/h5p/contentStorage.int.test.ts
  */
 import type { Readable } from 'node:stream';
@@ -23,6 +25,7 @@ import {
 } from '@lumieducation/h5p-server';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { Database } from '../../infra/prismaClient.js';
+import { noteContentCreated } from './contentCreations.js';
 import { countLibraryUsage } from './contentUsage.js';
 import type { S3ContentFileStore } from './S3ContentFileStore.js';
 import { assertStorableText } from './storableText.js';
@@ -60,6 +63,7 @@ export class PrismaContentStorage implements IContentStorage {
         data: { ...data, ownerUserId: user.id },
         select: { id: true },
       });
+      noteContentCreated(created.id);
       return created.id;
     }
     if (!isContentUuid(contentId))

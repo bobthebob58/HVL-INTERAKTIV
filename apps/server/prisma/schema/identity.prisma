@@ -15,17 +15,25 @@ enum IdentityProvider {
 
 /// A person who uses the service. Only staff rows may hold a display name and e-mail.
 model User {
-  id          String   @id @default(uuid(7)) @db.Uuid
-  kind        UserKind
-  displayName String?
-  email       String?
-  createdAt   DateTime @default(now())
+  id                   String    @id @default(uuid(7)) @db.Uuid
+  kind                 UserKind
+  displayName          String?
+  email                String?
+  createdAt            DateTime  @default(now())
+  /// PRIVACY: set at each Feide login of an HVL member with an `employee`, `faculty` or `staff` affiliation and
+  /// cleared at a Feide login without one (D-090). Colleagues can find the person as a co-author only while it is
+  /// set and less than 13 months old. Never set for learners, student authors or LTI-only accounts.
+  coAuthorSearchableAt DateTime?
 
   identities       Identity[]
   ownedContent     H5PContent[]                @relation("ContentOwner")
+  attributedCopies H5PContent[]                @relation("ContentSourceAuthor")
   collaborations   ContentCollaborator[]
   acknowledgements ValidationAcknowledgement[]
   noticeDismissals NoticeDismissal[]
+
+  // WHY: co-author search filters on a recent `coAuthorSearchableAt` before it matches names (D-090).
+  @@index([coAuthorSearchableAt])
 }
 
 /// One way a user logs in. `subjectHash` is an HMAC of the Feide ID or of `iss|sub`, never the raw value, made

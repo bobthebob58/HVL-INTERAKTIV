@@ -210,5 +210,38 @@
   "notFound": {
     "title": "Page not found",
     "body": "This page does not exist. Check the address."
+  },
+  "studio": {
+    "navLabel": "Main menu",
+    "navGuide": "Learning design",
+    "navPlanner": "Planner",
+    "navBank": "Content bank",
+    "navMappe": "Portfolio",
+    "authorsOnly": "Only staff and students with an author role can use this page.",
+    "pageTitle": "Learning design",
+    "heading": "Student-active learning with “HVL læringsdesign”"
+  },
+  "patterns": {
+    "pageTitle": "Pattern",
+    "heading": "Pattern"
+  },
+  "learningDesign": {
+    "tab": "Learning design"
+  },
+  "planner": {
+    "pageTitle": "Planner",
+    "heading": "Planner for learning outcomes and phases"
+  },
+  "sharing": {
+    "tab": "Sharing"
+  },
+  "bank": {
+    "pageTitle": "Content bank",
+    "heading": "The HVL content bank"
+  },
+  "safeEditing": {},
+  "mappe": {
+    "pageTitle": "Teaching portfolio",
+    "heading": "Teaching portfolio"
   }
 }

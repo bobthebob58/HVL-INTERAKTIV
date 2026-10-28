@@ -1,7 +1,8 @@
 /**
  * Tests that the web app stays a rendering layer: no route handlers, server actions, middleware or API routes, so
  * every data request goes through Express's checks (D-068); no inline script or style, no third-party address and no
- * browser storage in its sources (D-070, DATA-011, LTI-003); and every page S4 promises exists.
+ * browser storage in its sources (D-070, DATA-011, LTI-003); and every page S4 and S5 promise exists (S5: the studio's
+ * pages, D-089).
  *
  * Spec: AUTH-003, LTI-003, DATA-011, UD-006
  */
@@ -48,7 +49,7 @@ describe('[DATA-011] the web app’s sources stay first-party and nonce-safe', (
   const matching = (pattern: RegExp) =>
     sources.filter(({ text }) => pattern.test(text)).map(({ file }) => file);
 
-  it('[UD-006] every page S4 promises exists, each in the right chrome', () => {
+  it('[UD-006] every page S4 and S5 promise exists, each in the right chrome', () => {
     // Act
     const pages = filesUnder(join(SOURCES, 'app'))
       .map((file) => relative(SOURCES, file))
@@ -59,6 +60,11 @@ describe('[DATA-011] the web app’s sources stay first-party and nonce-safe', (
       'app/(portal)/aktivitet/[id]/page.tsx',
       'app/(portal)/aktivitet/ny/page.tsx',
       'app/(portal)/hjelp/page.tsx',
+      'app/(portal)/laeringsdesign/innhaldsbank/page.tsx',
+      'app/(portal)/laeringsdesign/monster/[patternId]/page.tsx',
+      'app/(portal)/laeringsdesign/page.tsx',
+      'app/(portal)/laeringsdesign/planlegg/page.tsx',
+      'app/(portal)/mappe/page.tsx',
       'app/(portal)/page.tsx',
       'app/(portal)/personvern/page.tsx',
       'app/app/play/page.tsx',

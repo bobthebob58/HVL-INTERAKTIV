@@ -1764,6 +1764,14 @@ loading of one spec per session are kept.
     rationale.
   - **Publishing:** the publish dialog shows a prompt to fill in the metadata that never blocks publishing.
 - **Consequences:** Migration `s5_learning_design` and new rows in the data inventory.
+- **Amendment (2026-10-28, S5 contracts):**
+  - **Course labels and privacy:** Canvas sandbox courses often carry a teacher's name in their label. The server
+    therefore stores `LtiPlacement.contextLabel` only when the label, after D-087's normalisation, is a course code
+    that contains at least one digit (HVL course codes do; names rarely do), and stores null otherwise. It strips
+    control characters and cuts the label to 255 characters by code point. Each launch overwrites the value.
+  - **Whose labels:** "the author's own placements" means placements of activities the author owns or co-authors;
+    a placement has no user.
+  - **The pattern:** a full replace keeps the stored `patternId`; only creation and duplication write it.
 
 ### D-088 · The alignment planner: one course, outcomes × phases, two gap rules
 - **Context:** `PED-031` asks for a grid of learning outcomes × phases for one course, with gaps highlighted and
@@ -1814,6 +1822,18 @@ loading of one spec per session are kept.
   - **Audit:** every change is audited with user IDs only.
 - **Consequences:** `/personvern` says that colleagues can see staff names through co-author search and bank
   attribution.
+- **Amendment (2026-10-28, S5 contracts):**
+  - **Who can be found:** someone eligible for the co-author directory is an HVL member with the author role who is
+    not a student author (`hvlMember`, `author`, not `studentAuthor` in the Feide login's roles), not anyone of
+    kind `staff`: student authors and admin-only members are kind `staff` too. Only the Feide login path writes
+    `coAuthorSearchableAt`, never an LTI launch.
+  - **One predicate:** the name search, the exact Feide-ID lookup and the check when a co-author is added all use
+    the same rule: eligible, and `coAuthorSearchableAt` less than 13 months old.
+  - **Search:** LIKE wildcards in the query are escaped; the query is never logged or echoed in an error; a 429
+    carries `Retry-After`.
+  - **Portal only:** every studio route except the public guide and catalogue starts with
+    `requirePortalAuthor` (learningDesign/http/studioPrincipal.ts), which refuses an LTI ltik (401) and a portal
+    learner (403), so a Canvas launch can never search HVL staff names.
 
 ### D-091 · The content bank: opt-in, published, shared with HVL, for HVL authors
 - **Context:** `PROD-007` lets authors "publish an activity to the HVL content bank so that colleagues can duplicate
@@ -1828,6 +1848,11 @@ loading of one spec per session are kept.
     information and can make their own copies, and withdrawing the listing leaves existing copies with their authors.
     The text is a draft for ALU's and HVL's legal review.
   - **Audit:** listing and unlisting are audited.
+- **Amendment (2026-10-28, S5 contracts):** the bank is for HVL staff authors, the same people D-090 lets be found:
+  student authors neither see the bank nor list in it, because it shows colleagues' names, and `/personvern` says
+  colleagues see them. The header link shows to every author, since the web app knows only roles; the bank page
+  shows the server's refusal to a student author. Unpublishing an activity or making it private clears
+  `bankListedAt` in the same transaction (ContentPublisher and the sharing routes).
 
 ### D-092 · Duplicating an activity
 - **Context:** `PROD-007`: a duplicate keeps a link to its source and the original author's attribution, and never
@@ -1863,6 +1888,21 @@ loading of one spec per session are kept.
     `HvlH5PEditor` now allows such a path only from an activity `duplicateRules` allows, and refuses a path the
     storage would refuse (`..`, a leading `/`, a backslash, control characters) before Lumi writes anything;
     before, Lumi wrote the activity and then failed with a 400, leaving a half-saved draft.
+- **Amendment (2026-10-28, S5 contracts):**
+  - **The rule, exactly:** `decideDuplicate` answers unavailable (404, D-066) for an unknown activity or one the
+    person may not View, and refused (403) unless the person may create activities (an author or an admin in the
+    account view). Then Edit allows it, and otherwise a published, bank-listed activity allows it for a person the
+    bank is for (D-091 as amended: not a student author).
+  - **Errors:** a refusal the editor raises before any row exists (the sub-content policy, the paste guard, Lumi's
+    metadata schema) reaches the author unchanged as a 4xx; any failure after a row exists removes the copy and
+    answers 500 `hvl:duplicate-failed`, logged with its cause by the route. The audit details are
+    `{ sourceContentId, via, kind }`; the source author is on the copy's `sourceAuthorUserId`.
+  - **Who sees the source:** the copy's detail shows its source's title and author only to people who may Edit the
+    copy; learners and other viewers get none of it.
+  - **Editor saves:** `PasteSourceGuard` checks every `../<id>/<file>` path on every editor save against the same
+    rule, and every `#tmp` and paste path against the storage's safe-name rule, before Lumi writes anything; a web
+    address whose scheme has capitals (`Https://`) passes, as H5P plays it. An existing activity that still holds
+    a path the guard refuses must have that element removed before it can be saved.
 
 ### D-093 · Safe editing: a structure signature, a confirmation, and saving as a copy
 - **Context:** `PROD-013`: editing an activity that has learner state warns that structural changes reset saved
@@ -1995,6 +2035,10 @@ loading of one spec per session are kept.
     says PDF 1.4.
   - **Fonts:** Georgia, the body font token, is not installed here, so the PDF uses Liberation Serif. The S6 image
     installs `fonts-liberation`, or the fonts HVL licenses, so that æ, ø and å always embed.
+- **Amendment (2026-10-28, S5 contracts):** `PDF_ALLOW_NO_SANDBOX` (default false) lets the root development
+  container render PDFs; the production checks refuse it. Tests set it from whether they run as root, so the same
+  test keeps the sandbox on the non-root CI runner. `PDF_BROWSER_EXECUTABLE` must be an absolute path; start-up does
+  not require it to exist, since a missing browser only means 503 `hvl:pdf-unavailable`.
 
 ### D-097 · New dependencies in S5
 - **Context:** CLAUDE.md pins every runtime dependency exactly, and D-029's checks allow only listed licences.
@@ -2025,6 +2069,16 @@ loading of one spec per session are kept.
   are split by area.
 - **Consequences:** Amends D-077. `docs:api` and the route test keep the document and the mounted routes in step
   (`DOC-012`).
+- **Amendment (2026-10-28, S5 contracts):**
+  - **Query parameters:** a route may declare `query`, documented as `in: query` parameters (people search, course
+    code, export format).
+  - **Leaf modules:** `content.ts` imports only the leaf modules `learnerInfo.ts` and `sourceAttribution.ts`, so the
+    contract has no import cycle that would leave a schema undefined at load.
+  - **Deliberate 5xx codes:** the studio's own 5xx answers (`hvl:duplicate-failed`, `hvl:pdf-*`) keep their code
+    and translated message, like the authentication 503s.
+  - **Areas:** each studio area registers routes only, under `/api`, in its own module; a path-less `router.use`
+    would run for every later area and is refused by a test. Middleware sits on the route itself.
+  - **The web app** imports only types from the contract, so zod stays out of the browser bundle.
 
 ### D-100 · The S5 gate, and the ALU and pilot review left open (Q17)
 - **Context:** The studio's texts, patterns, references, mappe template and criteria, and the bank's consent text, are

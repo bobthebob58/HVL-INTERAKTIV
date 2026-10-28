@@ -1,0 +1,6 @@
+# Fixture: a valid references file with one reference. See ../../README.md.
+version: 1
+references:
+  guo2014:
+    text: Guo, P. J., Kim, J., & Rubin, R. (2014). A fixture reference.
+    verify: true

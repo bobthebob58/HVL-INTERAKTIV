@@ -22,6 +22,7 @@ describe('[AUTH-003] credentials on API requests', () => {
     ['PUT', { [CSRF_HEADER]: 'tok' }],
     ['POST', { [CSRF_HEADER]: 'tok' }],
     ['PATCH', { [CSRF_HEADER]: 'tok' }],
+    ['DELETE', { [CSRF_HEADER]: 'tok' }],
   ] as const)('[AUTH-003] a portal %s carries the CSRF token only on unsafe methods', (method, extra) => {
     expect(apiHeaders({ kind: 'portal', csrfToken: 'tok' }, method, false)).toEqual({
       Accept: 'application/json',
@@ -62,6 +63,23 @@ describe('[DOC-012] typed API calls', () => {
     ]);
     expect(requests[1]?.headers['Content-Type']).toBe('application/json');
     expect(requests[2]?.body).toEqual({ updatedAt: '2026-10-23T12:00:00.000Z' });
+  });
+
+  it('[DOC-012] a DELETE carries the CSRF token and no body, and an empty answer is ok (D-099)', async () => {
+    // Arrange
+    const requests = fakeFetch({ [`DELETE /api/content/${ID}/bank-listing`]: { status: 204 } });
+    // Act
+    const result = await apiRequest(
+      `/api/content/${ID}/bank-listing`,
+      { kind: 'portal', csrfToken: 'tok' },
+      {
+        method: 'DELETE',
+      },
+    );
+    // Assert
+    expect(result).toEqual({ ok: true, status: 204, data: undefined });
+    expect(requests[0]).toMatchObject({ method: 'DELETE', body: undefined, credentials: 'same-origin' });
+    expect(requests[0]?.headers).toEqual({ Accept: 'application/json', [CSRF_HEADER]: 'tok' });
   });
 
   it('[DOC-012] returns the status and the server’s error body on a refusal', async () => {

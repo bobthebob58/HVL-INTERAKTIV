@@ -66,6 +66,7 @@ npm run h5p:fetch-libraries                  # the ten real types from GitHub at
                                              # a cached checkout is reused only while its HEAD is the pinned commit
 npm run seed:libraries -- var/h5p-real/packages  # install those real types (what the editor and the a11y suite use)
 npm run docs:api                             # browsable API docs into docs/api/ (TypeDoc)
+npm run content:check                        # the studio content in content/ loads (PED-001, D-082); no services
 NODE_USE_ENV_PROXY=1 npm run hub:check       # spike step 3: Hub registration and versions (needs the Hub)
 
 # the whole server against the mock Feide and the mock Canvas (tools/mock-platform, D-049)
@@ -105,9 +106,11 @@ test database one file at a time.
 |---|---|
 | `src/server/main.ts` | `npm start`: configuration, clients, H5P engine, app, LTI platform sync and key re-encryption, cleanup jobs, then listen on `PORT`; SIGTERM/SIGINT stop it with exit code 0 |
 | `src/server/createApp.ts` | Builds the Express app in the mount order the security rules need (see Key flows) |
+| `src/server/studioServices.ts` | The læringsdesign studio's services (S5), built once from the start-up content, the editor and createApp's shared instances: the content, the `ContentDuplicator` and one slot per workstream service; `closeStudioServices` releases those that hold a resource at shutdown |
+| `src/server/feideLoginWiring.ts` | The Feide login routes built from the configuration (client, transactions, account resolver, role policy) |
 | `src/server/healthRoutes.ts` | `GET /healthz`: 200 when PostgreSQL and Redis answer within 2 s, else 503 with the names of the failing dependencies only |
 | `src/config/env.ts`, `envParsers.ts` | The zod schema of every environment variable (lists, origins, key rings, `LTI_PLATFORMS` JSON); startup fails with the variable's name |
-| `src/config/productionChecks.ts` | Extra startup rules for `NODE_ENV=production`: a current-year pseudonym secret exists; no pseudonym secret or ring key is readable text, low in distinct bytes or used twice; every public, Feide, Canvas and LTI platform URL is https |
+| `src/config/productionChecks.ts` | Extra startup rules for `NODE_ENV=production`: a current-year pseudonym secret exists; no pseudonym secret or ring key is readable text, low in distinct bytes or used twice; every public, Feide, Canvas and LTI platform URL is https; `WEB_APP` is not `dev`; `PDF_ALLOW_NO_SANDBOX` is not `true` (D-096) |
 | `src/security/keys/` | Key rings with HKDF purpose keys (D-055, D-056, D-058): stable identity hashes with rotation, AES-256-GCM encryption of secrets at rest |
 | `src/auth/Principal.ts`, `principalLocals.ts` | The one `Principal` of a portal or LTI request (D-053); `sealPrincipal` refuses an LTI admin; routes read the principal from `res.locals` only |
 | `src/auth/requestPrincipal.ts` | The authentication middleware of `/api` and `/h5p`: an ltik (Bearer, or the query only on the paths of `LTIK_QUERY_PATHS`: `/h5p/ajax`, `/h5p/contentUserData/…` and the pages `/lti/play`, `/lti/edit`, `/lti/deeplink`, D-058, D-069) or the portal session with its CSRF token |
@@ -138,7 +141,8 @@ test database one file at a time.
 | `src/h5p/createH5pRuntime.ts` | Builds the whole engine once: config check, storages, permission system, sanitisers, URL generator, editor, player, guard |
 | `src/h5p/H5pEditorFactory.ts`, `H5pPlayerFactory.ts`, `h5pAssets.ts` | Every engine option HVL depends on (F1 local ID, F3 Core 1.28 styles, language fallback, renderers); the player refuses render options that skip the View check |
 | `src/h5p/HvlUrlGenerator.ts`, `contentFileGrants.ts` | H5P URLs with the request's ltik or CSRF token (URL-encoded), and signed content-file grants (`URL_SIGNING_KEYS`, 12–13 h) in `contentUrl` (D-058) |
-| `src/h5p/HvlH5PEditor.ts`, `HvlTop10ContentTypeFilter.ts`, `semantics/` | The ten types, DragQuestion removal, sub-content policy, save order, package import rules |
+| `src/h5p/HvlH5PEditor.ts`, `HvlTop10ContentTypeFilter.ts`, `saveAdmission.ts`, `permissionCheckedExporter.ts`, `semantics/` | The ten types, DragQuestion removal, sub-content policy, save order, package import rules, the Download-checked exporter |
+| `src/h5p/pasteSourceGuard.ts`, `pasteSourcePaths.ts` | Before Lumi writes a save: a `../<id>/<file>` path needs a source the saver may duplicate (403), and every file path must be one the storage accepts (400) (D-092) |
 | `src/h5p/HvlPermissionSystem.ts`, `permissions/`, `permissionSystemGuard.ts`, `HvlH5pUser.ts` | Who may do what (`H5P-006`, with D-060 for launched activities), the actor's account and state views (D-036), and the start-up check that every Lumi component uses it |
 | `src/h5p/HvlTranslationCallback.ts`, `h5pTranslationResources.ts` | Lumi's strings in nn → nb → en (`H5P-008`) |
 | `src/h5p/libraries/` | Package manifest and version checks, library audit, the offline seeder (`seed:libraries`) |
@@ -146,10 +150,13 @@ test database one file at a time.
 | `src/h5p/hubCheck.ts` | `hub:check`: registration and Hub versions, on demand only (D-041) |
 | `src/http/` | `createH5pRouter`: public client files, then the grant-checked content files and editor uploads, then `h5pAuthenticate`, the AJAX, file, state, content, player and editor-page routes (`/h5p/edit/:id`, `/h5p/new`), and the translated error handler; `editorView.ts` (the Edit check, then the editor page with grants, shared by portal and Canvas); `securityHeaders.ts` (headers of every response), `h5pPageCsp.ts` (the strict policy of the pages that run H5P, D-070), `authErrors.ts` (one status and message per refusal code) |
 | `src/http/pages/` | Server-rendered pages with an escaping `markup` template, the friendly message page, the S3 start page `/` and the HTML 404 page (D-048, D-066), all with a first-party policy (`portalPageCsp`, DATA-011); `helpLink.ts` gives them the header with **Hjelp** when the web app runs (UD-013, D-067) |
-| `src/http/api/` | The `/api` router (`apiRouter.ts`): `GET /api/me`, `PUT /api/me/notices/:noticeId`, the content list and detail, findings, publish and unpublish, sharing, and `/api/docs` outside production; bodies are checked with `@hvl-interaktiv/api-contract` (DOC-012, D-074, D-075, D-077) |
+| `src/http/api/` | The `/api` router (`apiRouter.ts`): `GET /api/me`, `PUT /api/me/notices/:noticeId`, the content list and detail, findings, publish and unpublish, sharing, the studio's areas (`studioRouter.ts`), and `/api/docs` outside production; bodies are checked with `@hvl-interaktiv/api-contract` (DOC-012, D-074, D-075, D-077) |
 | `src/content/` | The publish flow: acknowledgement coverage (14 days), stored-content validation, `ContentPublisher` (one conditional transaction with audit), `PublishedSaveGate` (the gate and the version count on saves), access from the H5P-006 matrix, content summaries (D-074) |
 | `src/validation/` | The pure pre-publish validator (UD-020, D-073): shape-based walk (`contentWalker.ts`), htmlparser2 rich text (`richText.ts`), one rule per file in `rules/` (11 V-* UD-021 rules, 11 PED-H* hints), messages in `locales/`, `validateContent` / `createContentValidator`, `activityLanguage` |
 | `src/config/validationContext.ts` | Loads `content/laeringsdesign/hint-thresholds.yaml` (zod) and `CAPTIONED_MEDIA_ORIGINS` once at start-up; a bad key stops the server |
+| `src/learningDesign/collaboration/` | Duplicates (PROD-007, D-092): `duplicateRules.ts` (the pure "may copy" table), `ContentDuplicator` (`duplicate` and «Lagre som ny versjon»'s `saveAsCopy`: paste-source rewrite, own copies of names Lumi will not copy, a check of the stored copy, removal of anything half-made, then attribution, learning-design data and audit in one transaction) |
+| `src/learningDesign/http/` | The studio's `/api` areas, one router each, mounted by `studioRouter.ts` from the same `StudioRouteDeps`: `studioContentRoutes.ts` (public guide and catalogue), `patternRoutes.ts`, `learningDesignRoutes.ts`, `collaborationRoutes.ts`, `mappeRoutes.ts`; an area registers routes only, with its middleware on each route; `studioPrincipal.ts` (`requirePortalAuthor`: the portal-only areas refuse a signed-out request and a Canvas ltik with 401, a portal learner with 403) |
+| `src/learningDesign/content/` | The studio content loader (PED-001, D-082): `loadStudioContent` reads `content/` once at start-up (phases, references, and the guide, pattern and mappe sections), strict zod, frozen; `yamlContentFile.ts` is the YAML reader with file, line and key in every problem (also used by `validationContext.ts`); `contentCheckCli.ts` is `npm run content:check` |
 | `src/http/pages/assets/`, `pageAssetRoutes.ts` | The server pages' stylesheets at `/static/pages/` (token CSS, D-067): `serverPages.css` (also on the editor's outer page) and `serverChrome.css` (skip link and Hjelp header) |
 | `src/h5p/coreVersionCheck.ts`, `h5pServerInit.ts`, `bootCheck.ts` | Refuse to start when the fetched core files are not API 1.28 |
 | `src/h5p/h5pStorage.ts` | Builds every storage adapter from the clients (the `H5P-004` table) |
@@ -205,12 +212,13 @@ sequenceDiagram
     participant LTI as LTI platforms
     Main->>Env: process.env (tsx reads apps/server/.env when it exists)
     Env-->>Main: Env, or the list of problems on stderr (names, never values) and exit code 1
+    Main->>Main: hint thresholds, then loadStudioContent(content/): a bad file prints every problem (file, line, key), exit code 1
     Main->>Clients: createPrismaClient, connectRedis, createS3Client
     Main->>App: H5P engine (core 1.28 check, permission guard), then the Express app with the ltijs provider
     Main->>LTI: syncLtiPlatforms(LTI_PLATFORMS): register, update, deactivate removed, replace deployments
     Main->>LTI: reencryptPlatformKeys: private keys on an older DATA_ENCRYPTION_KEYS key get the current key
     Main->>Main: start TemporaryFileCleanupJob and LtiRecordCleanupJob, then listen on PORT
-    Note over Main: SIGTERM or SIGINT: stop the jobs, close idle connections and the server, quit Redis, disconnect Prisma, exit code 0
+    Note over Main: SIGTERM or SIGINT: stop the jobs, close idle connections and the server, close the studio's services, quit Redis, disconnect Prisma, exit code 0
 ```
 
 **Mount order (`createApp`).** Each stage either answers or passes the request on, so the order decides which
@@ -227,7 +235,7 @@ flowchart TD
     PS --> LTI["LTI router: ltijs /lti/login, /lti/launch, /lti/keys → /static/lti, /lti/play → /app/play (web app only) → /lti/edit → /lti/deeplink, /lti/deeplink/response → LTI error pages"]
     LTI --> FE["Feide routes: /auth/feide/login, /auth/feide/callback, /auth/logout, /auth/session, /auth/logged-out"]
     FE --> HOME["GET / (the server's start page, only with WEB_APP=off)"]
-    HOME --> API["/api: requestPrincipal → me and notices, content list, findings, publish and unpublish, sharing, /api/docs outside production → JSON 404 and errors"]
+    HOME --> API["/api: requestPrincipal → me and notices, content list, findings, publish and unpublish, sharing, the studio's areas, /api/docs outside production → JSON 404 and errors"]
     API --> H5P["/h5p: requestPrincipal → createH5pRouter (client files, signed files and uploads, h5pAuthenticate, H5P routes, player and editor pages)"]
     H5P --> WEB["web app only: Next.js for GET and HEAD, with a nonce policy, without cookies, tokens or the ltik"]
     WEB --> NF["HTML 404 page"]
@@ -486,12 +494,17 @@ fails if the two disagree. Summary:
 | `IDENTITY_HASH_KEYS` | yes | Key ring for `Identity.subjectHash` and the audit IP hash, current key first (D-055) |
 | `DATA_ENCRYPTION_KEYS` | yes | Key ring for AES-256-GCM at rest: LTI private keys, LTI access tokens, the session's Feide ID token (D-056); rotate in three steps (new key second, then first, then drop the old one), see `.env.example` |
 | `URL_SIGNING_KEYS` | yes | Key ring that signs content-file grants and editor upload grants (separate HKDF purposes, D-058, D-069) |
+| `MIN_GROUP_SIZE` | no | The minimum group size *k* of aggregates in exports (integer ≥ 3, default 5; MAPPE-003, INS-006, D-095) |
+| `PDF_BROWSER_EXECUTABLE` | no | Absolute path of the Chromium that prints the mappe PDF; empty: playwright-core's own build (D-096) |
+| `PDF_MAX_CONCURRENCY` | no | PDF exports rendered at once per process (1–8, default 2; one per person, D-096) |
+| `PDF_ALLOW_NO_SANDBOX` | no | Development only: start Chromium without its sandbox when the server runs as root (default `false`); production refuses `true` (D-096) |
 
 \* when the URL contains a password.
 
 With `NODE_ENV=production`, `src/config/productionChecks.ts` also requires https for `PUBLIC_BASE_URL`, the Feide
 URLs, `CANVAS_ORIGINS` and the `LTI_PLATFORMS` endpoints, and refuses ring keys that are readable text (like the
-examples), low in distinct bytes or used twice. `.env.example` says how to rotate each key ring.
+examples), low in distinct bytes or used twice, `WEB_APP=dev` and `PDF_ALLOW_NO_SANDBOX=true`. `.env.example` says
+how to rotate each key ring.
 
 ## Implements
 
@@ -513,7 +526,7 @@ examples), low in distinct bytes or used twice. `.env.example` says how to rotat
 | `DATA-002` Pseudonymous learners | `src/privacy/*`, `src/config/productionChecks.ts`, `src/auth/identity/subjectSources.ts`, `AccountResolver.ts`, `src/lti/launch/ltiAccount.ts`, `src/lti/storage/ltiIdTokenClaims.ts`, `src/security/keys/IdentityHasher.ts`, CHECK constraint in the first migration | `test/privacy/deriveLearnerKey.test.ts`, `test/config/env.test.ts`, `test/db/schema.int.test.ts`, `test/auth/identity/subjectSources.test.ts`, `test/auth/identity/AccountResolver.int.test.ts`, `test/lti/launch/ltiAccount.int.test.ts`, `test/lti/storage/ltiIdTokenClaims.test.ts`, `test/security/keys/IdentityHasher.test.ts` |
 | `DATA-009`, `NFR-006` No personal data in logs | `src/logging/*`, `src/lti/ltijsLogger.ts` | `test/logging/logger.test.ts`, `test/logging/loggerMessages.test.ts`, `test/logging/redactText.test.ts`, `test/logging/authRedaction.test.ts`, `test/lti/ltijsLogger.test.ts` |
 | `PROD-012`, `DOC-009` Three languages, Nynorsk first | `src/i18n/*`, `src/lti/ltiLocale.ts` | `test/i18n/translate.test.ts`, `test/lti/ltiLocale.test.ts` |
-| `DOC-008` Configuration documented | `src/config/env.ts`, `envParsers.ts`, `.env.example` | `test/config/env.test.ts`, `test/config/envParsers.test.ts` |
+| `DOC-008` Configuration documented | `src/config/env.ts`, `envParsers.ts`, `.env.example` | `test/config/env.test.ts`, `test/config/envParsers.test.ts`, `test/config/studioEnv.test.ts` |
 | `AUTH-001` Feide login (code flow + PKCE) | `src/auth/feide/FeideClient.ts`, `loginTransactions.ts`, `completeFeideLogin.ts`, `feideLoginRoutes.ts`, `src/auth/session/sessionCookies.ts`, `src/auth/audit/AuthAuditRecorder.ts` | `test/auth/feide/FeideClient.test.ts`, `test/auth/feide/loginTransactions.int.test.ts`, `test/auth/feide/feideLogin.int.test.ts`, `test/auth/upstream/openidClientMock.test.ts`, `test/auth/audit/AuthAuditRecorder.int.test.ts`, `test/config/productionChecks.test.ts` |
 | `AUTH-002` Feide affiliation → roles | `src/auth/feide/FeideRoleMapper.ts`, `feideGroups.ts`, `feideClaims.ts`, `src/auth/Principal.ts` | `test/auth/feide/FeideRoleMapper*.test.ts`, `test/auth/feide/feideGroups.test.ts`, `test/auth/feide/feideClaims.test.ts`, `test/auth/feide/feideLogin.int.test.ts`, `test/auth/Principal.test.ts`, `test/config/envParsers.test.ts` |
 | `AUTH-003` Portal session, CSRF, logout | `src/auth/session/*`, `src/auth/requestPrincipal.ts`, `src/auth/returnTo.ts`, `src/auth/feide/feideLoginRoutes.ts`, `src/http/h5pAuthenticate.ts` | `test/auth/session/*`, `test/auth/requestPrincipal.test.ts`, `test/auth/returnTo.test.ts`, `test/auth/feide/feideLogout.int.test.ts`, `test/auth/feide/loginTransactions.int.test.ts`, `test/http/h5pAuthenticate.int.test.ts`, `test/server/createApp.int.test.ts` |
@@ -533,6 +546,8 @@ examples), low in distinct bytes or used twice. `.env.example` says how to rotat
 | `PROD-003`, `UD-022` Check and publish with acknowledgements | `src/content/*`, `src/http/api/publishRoutes.ts`, `src/http/routes/contentRoutes.ts` (save gate) | `test/http/api/publishRoutes.int.test.ts`, `test/http/api/publishGuards.int.test.ts`, `test/content/*` |
 | `PROD-011` Formative-use notice, dismissal remembered | `src/http/api/meRoutes.ts`, `src/lti/pages/deepLinkPickerPage.ts`, `src/lti/pages/client/deepLinkPicker.js` | `test/http/api/meRoutes.int.test.ts`, `test/lti/deepLinking/pickerNotice.int.test.ts`, `test/lti/pages/deepLinkPickerPage.test.ts`, `e2e/deepLinking.e2e.test.ts` |
 | `DOC-012` Self-describing API | `src/http/api/*`, `packages/api-contract` | `test/http/api/apiDocs.int.test.ts`, `packages/api-contract/test/*` |
+| `PED-001` Phases and labels from content files (and the studio content pipeline, D-082) | `src/learningDesign/content/*`, `content/laeringsdesign/phases.yaml`, `references.yaml` | `test/learningDesign/content/*.test.ts`, fixtures in `test/fixtures/studio-content/` |
+| `PROD-007` Duplicate an activity: who may copy, what travels, paste paths (D-092) | `src/learningDesign/collaboration/*`, `src/h5p/pasteSourceGuard.ts`, `pasteSourcePaths.ts`, `storage/contentCreations.ts` | `test/learningDesign/collaboration/*`, `test/h5p/pasteSourceGuard.int.test.ts`, `test/h5p/pasteSourcePaths.test.ts`, `test/h5p/contentCreations.test.ts` |
 | `UD-020`, `UD-021`, `PED-020` Pre-publish validator and hint rules | `src/validation/*`, `src/config/validationContext.ts`, `content/laeringsdesign/hint-thresholds.yaml` | `test/validation/*`, `test/validation/rules/*`, `test/config/validationContext.test.ts` |
 | `UD-003`, `UD-004`, `UD-011` HVL theme inside H5P | `src/h5p/h5pAssets.ts`, `src/http/routes/staticRoutes.ts` (`/h5p/theme`), `packages/hvl-h5p-theme` | `test/h5p/hvlTheme.browser.int.test.ts`, `test/h5p/hvlFeedback.browser.int.test.ts`, `test/h5p/hvlThemeAssets.test.ts`, `test/http/themeRoutes.int.test.ts` |
 | `UD-010` Language of page and content | `src/h5p/render/playerPage.ts`, `src/validation/activityLanguage.ts`, `src/web/webRoutes.ts` | `test/h5p/render/playerPage.test.ts`, `test/http/player.int.test.ts`, `test/validation/activityLanguage.test.ts`, `test/web/webApp.browser.int.test.ts` |

@@ -20,22 +20,29 @@ enum CollaboratorRole {
 
 /// One H5P activity. `params` and `metadata` are H5P's own JSON (content.json and h5p.json).
 model H5PContent {
-  id              String            @id @default(uuid(7)) @db.Uuid
-  mainLibrary     String
-  title           String
-  params          Json
-  metadata        Json
-  status          ContentStatus     @default(draft)
-  visibility      ContentVisibility @default(private)
-  ownerUserId     String            @db.Uuid
-  version         Int               @default(1)
-  sourceContentId String?           @db.Uuid
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id                 String            @id @default(uuid(7)) @db.Uuid
+  mainLibrary        String
+  title              String
+  params             Json
+  metadata           Json
+  status             ContentStatus     @default(draft)
+  visibility         ContentVisibility @default(private)
+  ownerUserId        String            @db.Uuid
+  version            Int               @default(1)
+  sourceContentId    String?           @db.Uuid
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
   /// When the activity was last published through the publish flow (PROD-003); null while it is a draft.
-  publishedAt     DateTime?
+  publishedAt        DateTime?
+  /// When the owner listed the activity in the HVL content bank (PROD-007, D-091); null when it is not listed.
+  /// Making the activity private or unpublishing it clears it in the same transaction.
+  bankListedAt       DateTime?
+  /// The owner of `sourceContentId` when this copy was made (PROD-007, D-092), for attribution; the name is read
+  /// when the copy is shown. Null for an original, and set to null when that account is deleted.
+  sourceAuthorUserId String?           @db.Uuid
 
   owner            User                        @relation("ContentOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  sourceAuthor     User?                       @relation("ContentSourceAuthor", fields: [sourceAuthorUserId], references: [id], onDelete: SetNull)
   source           H5PContent?                 @relation("ContentCopies", fields: [sourceContentId], references: [id], onDelete: SetNull)
   copies           H5PContent[]                @relation("ContentCopies")
   files            H5PContentFile[]
@@ -49,6 +56,8 @@ model H5PContent {
 
   @@index([ownerUserId])
   @@index([mainLibrary])
+  // WHY: the content bank page lists the bank-listed activities, newest listing first (D-091).
+  @@index([bankListedAt])
 }
 
 /// A file used by an activity (image, video, audio). The bytes live in S3 under `s3Key`.

@@ -9,6 +9,7 @@ import {
   buildOpenApiDocument,
   CSRF_HEADER_NAME,
   PORTAL_SESSION_COOKIE,
+  type ApiRoute,
 } from '@hvl-interaktiv/api-contract';
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -22,6 +23,25 @@ import { loginWithFeide } from '../../support/feideTestbed.js';
 import { launchFromCanvas } from '../../support/ltiLaunchDriver.js';
 import { describeWithServices } from '../../support/services.js';
 
+// WHY: one sample value per path or query parameter name any area uses, so a workstream that adds a route with
+// these names never edits this test; an unknown name fails loudly. A public (`auth: 'none'`) route must answer 200
+// to these samples.
+const SAMPLE_PARAMETERS: Readonly<Record<string, () => string>> = {
+  contentId: () => crypto.randomUUID(),
+  noticeId: () => 'formative-use',
+  userId: () => crypto.randomUUID(),
+  patternId: () => 'fa-video',
+  locale: () => 'nn',
+  courseCode: () => 'SYK110',
+  q: () => 'Kari',
+  format: () => 'md',
+};
+const sampleParameter = (name: string): string => {
+  const sample = SAMPLE_PARAMETERS[name];
+  if (!sample) throw new Error(`apiDocs test: add a sample value for the parameter "${name}"`);
+  return sample();
+};
+
 describeWithServices('[DOC-012] the /api surface', () => {
   let tb: AppTestbed;
   let cookie: string;
@@ -30,6 +50,7 @@ describeWithServices('[DOC-012] the /api surface', () => {
     apiRouter({
       publishing: { db: tb.db, validator: () => [], clock: () => new Date() },
       access: new PrismaContentAccessRepository(tb.db),
+      studio: tb.studio,
       serveDocs,
     });
   const portal = (method: 'put' | 'post', path: string) =>
@@ -59,12 +80,14 @@ describeWithServices('[DOC-012] the /api surface', () => {
     // Assert
     expect(docs.status).toBe(200);
     expect(docs.body).toEqual(JSON.parse(JSON.stringify(buildOpenApiDocument())));
-    for (const route of API_ROUTES) {
+    const routes: readonly ApiRoute[] = API_ROUTES;
+    for (const route of routes) {
       expect(docs.body.paths[`/api${route.path.replace(/:(\w+)/g, '{$1}')}`]?.[route.method]).toBeDefined();
-      const path = route.path
-        .replace(':contentId', crypto.randomUUID())
-        .replace(':noticeId', 'formative-use');
-      const res = await request(tb.app)[route.method](`/api${path}`);
+      const path = route.path.replace(/:(\w+)/g, (_, name: string) => sampleParameter(name));
+      const query = new URLSearchParams(
+        Object.keys(route.query?.shape ?? {}).map((name) => [name, sampleParameter(name)]),
+      ).toString();
+      const res = await request(tb.app)[route.method](`/api${path}${query ? `?${query}` : ''}`);
       // WHY: nobody is signed in, so a mounted route says 401; only an unmounted path gets the 404 fallback.
       expect(res.status, `${route.method} ${route.path}`).toBe(route.auth === 'none' ? 200 : 401);
     }

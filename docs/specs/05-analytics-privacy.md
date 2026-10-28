@@ -181,8 +181,8 @@ personal data; **P** marks pseudonymous fields.
 
 | Entity | Owner spec | Notable fields |
 |---|---|---|
-| `User`, `Identity` | 02 | `displayName`/`email` for staff only (**PII**); `subjectHash` (**P**) |
-| `H5PContent`, `H5PContentFile`, `ContentCollaborator`, `LibraryAuditEvent` | 01 | `ownerUserId` |
+| `User`, `Identity` | 02 | `displayName`/`email` for staff only (**PII**; from S5 the name is shown to HVL colleagues in co-author search, bank listings and copy attribution, D-090–D-092); `coAuthorSearchableAt` (staff, D-090); `subjectHash` (**P**) |
+| `H5PContent`, `H5PContentFile`, `ContentCollaborator`, `LibraryAuditEvent` | 01 | `ownerUserId`; `sourceAuthorUserId` on copies (S5, D-092) |
 | `H5PUserData` | 01 | `learnerKey` (**P**), `data` (**P**) |
 | `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken`, `LtiPlacement` | 02 | ID tokens (**PII**, 24 h) |
 | `GradeSyncJob` | 02 | `ltiSub` (**PII**, encrypted, 30 days after success) |

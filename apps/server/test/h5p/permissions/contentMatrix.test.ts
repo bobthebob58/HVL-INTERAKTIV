@@ -84,6 +84,7 @@ const factsFor = (c: Pick<Cell, 'relation' | 'status' | 'visibility'>): ContentF
   coAuthorIds: c.relation === 'co-author' ? [SOMEONE_ELSE, ME] : [SOMEONE_ELSE],
   status: c.status,
   visibility: c.visibility,
+  bankListed: false,
 });
 
 async function check(cell: Cell, facts: ContentFacts | undefined): Promise<boolean> {

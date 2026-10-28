@@ -1,17 +1,26 @@
 /**
- * Tests for the addresses the web app links to and frames: same-origin paths, encoded activity IDs, and the ltik only
- * in the two LTI frame addresses.
+ * Tests for the addresses the web app links to and frames: same-origin paths, encoded activity IDs, the ltik only in
+ * the two LTI frame addresses, the activity page's `?fane=`, and the studio's pages with their filters and course in
+ * the query.
  *
- * Spec: UD-013, DATA-006, LTI-006, AUTH-001
+ * Spec: UD-013, DATA-006, LTI-006, AUTH-001, PED-003, PED-031
  */
 import { describe, expect, it } from 'vitest';
 import {
   activityPath,
+  BANK_PATH,
+  CATALOGUE_ID,
+  catalogueHref,
   editorPath,
+  GUIDE_PATH,
   HELP_PATH,
   infoHref,
   loginHref,
   ltiFramePath,
+  MAPPE_PATH,
+  patternPath,
+  plannerHref,
+  PLANNER_PATH,
   playerPath,
   PRIVACY_PATH,
 } from '../../src/config/paths';
@@ -42,5 +51,47 @@ describe('[UD-013] web app addresses', () => {
     expect(loginHref('/aktivitet/ny')).toBe('/auth/feide/login?returnTo=%2Faktivitet%2Fny');
     expect(loginHref('/')).toBe('/auth/feide/login');
     expect(loginHref()).toBe('/auth/feide/login');
+  });
+
+  it('[LTI-006] the activity page can be opened on a tab, with the tab encoded', () => {
+    expect(activityPath('id-1', 'edit')).toBe('/aktivitet/id-1?fane=edit');
+    expect(activityPath('id-1', 'a&b')).toBe('/aktivitet/id-1?fane=a%26b');
+    expect(activityPath('id-1', '')).toBe('/aktivitet/id-1');
+  });
+});
+
+describe('[PED-003] studio addresses', () => {
+  it('[PED-003] the studio pages have fixed addresses under /laeringsdesign, and /mappe', () => {
+    expect([GUIDE_PATH, PLANNER_PATH, BANK_PATH, MAPPE_PATH]).toEqual([
+      '/laeringsdesign',
+      '/laeringsdesign/planlegg',
+      '/laeringsdesign/innhaldsbank',
+      '/mappe',
+    ]);
+  });
+
+  it('[PED-003] the catalogue carries its filters in the query and scrolls to the catalogue', () => {
+    // Act
+    const all = catalogueHref();
+    const filtered = catalogueHref({
+      phase: 'etterarbeid',
+      type: 'H5P.MultiChoice',
+      buildTime: 30,
+      course: 'SYK110',
+    });
+    // Assert
+    expect(all).toBe(`/laeringsdesign#${CATALOGUE_ID}`);
+    expect(filtered).toBe(
+      '/laeringsdesign?fase=etterarbeid&type=H5P.MultiChoice&tid=30&emne=SYK110#monsterkatalog',
+    );
+  });
+
+  it('[PED-031] a pattern page and the planner carry the phase and course, encoded', () => {
+    expect(patternPath('fa-video')).toBe('/laeringsdesign/monster/fa-video');
+    expect(patternPath('a/b', { phase: 'forarbeid', course: 'ÆØÅ100' })).toBe(
+      '/laeringsdesign/monster/a%2Fb?fase=forarbeid&emne=%C3%86%C3%98%C3%85100',
+    );
+    expect(plannerHref('SYK110')).toBe('/laeringsdesign/planlegg?emne=SYK110');
+    expect(plannerHref()).toBe('/laeringsdesign/planlegg');
   });
 });

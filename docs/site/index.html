@@ -1906,10 +1906,10 @@ its uustatus.no statement.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-040">03 Universal design, UD-040</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-PED-001" data-area="PED" data-priority="MUST" data-session="S5" data-status="planned" data-text="ped-001 phases and labels load from content files - **acceptance:** renaming a label in `phases.yaml` changes it everywhere with no code change. the
+<details class="req" id="x-PED-001" data-area="PED" data-priority="MUST" data-session="S5" data-status="tested" data-text="ped-001 phases and labels load from content files - **acceptance:** renaming a label in `phases.yaml` changes it everywhere with no code change. the
   build fails if a key is missing a locale.
 - **verify:** unit test of the loader; key-parity test (`prod-012`).">
-<summary><span class="req-id">PED-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Phases and labels load from content files</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PED-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Phases and labels load from content files</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><ul>
 <li><strong>Acceptance:</strong> Renaming a label in <code>phases.yaml</code> changes it everywhere with no code change. The
 build fails if a key is missing a locale.</li>
@@ -1954,9 +1954,9 @@ from a closed node tree without HTML; the phase matrix and the catalogue are pla
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-002">04 Læringsdesign studio, PED-002</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-PED-003" data-area="PED" data-priority="MUST" data-session="S5" data-status="planned" data-text="ped-003 pattern filter authors filter patterns by phase, content type and estimated build time. the filter state is in the url, so a filtered view can be shared.
+<details class="req" id="x-PED-003" data-area="PED" data-priority="MUST" data-session="S5" data-status="tested" data-text="ped-003 pattern filter authors filter patterns by phase, content type and estimated build time. the filter state is in the url, so a filtered view can be shared.
 - **verify:** component test.">
-<summary><span class="req-id">PED-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Pattern filter</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PED-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Pattern filter</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Authors filter patterns by phase, content type and estimated build time. The filter state is in the URL, so a filtered view can be shared.</p>
 <ul>
 <li><strong>Verify:</strong> Component test.</li>
@@ -1976,12 +1976,12 @@ from a closed node tree without HTML; the phase matrix and the catalogue are pla
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-010">04 Læringsdesign studio, PED-010</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-PED-011" data-area="PED" data-priority="MUST" data-session="S5" data-status="planned" data-text="ped-011 patterns are editable without code adding or editing a pattern needs only yaml, mdx and a json skeleton, with no typescript changes.
+<details class="req" id="x-PED-011" data-area="PED" data-priority="MUST" data-session="S5" data-status="in code" data-text="ped-011 patterns are editable without code adding or editing a pattern needs only yaml, mdx and a json skeleton, with no typescript changes.
 `content/laeringsdesign/readme.md` explains how, for non-developers.
 - **amended (d-083, d-084, 2026-10-28):** yaml, markdown and a json skeleton, all in
   `content/laeringsdesign/patterns/&lt;id&gt;/`.
 - **verify:** a test adds a fixture pattern directory and asserts it appears.">
-<summary><span class="req-id">PED-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Patterns are editable without code</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PED-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Patterns are editable without code</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>Adding or editing a pattern needs only YAML, MDX and a JSON skeleton, with no TypeScript changes.
 <code>content/laeringsdesign/README.md</code> explains how, for non-developers.</p>
 <ul>
@@ -2000,7 +2000,7 @@ from a closed node tree without HTML; the phase matrix and the catalogue are pla
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-020">04 Læringsdesign studio, PED-020</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-PED-030" data-area="PED" data-priority="MUST" data-session="S5" data-status="planned" data-text="ped-030 tag each activity authors can attach `learningdesignmetadata` to an activity. it is optional while in draft and
+<details class="req" id="x-PED-030" data-area="PED" data-priority="MUST" data-session="S5" data-status="tested" data-text="ped-030 tag each activity authors can attach `learningdesignmetadata` to an activity. it is optional while in draft and
 prompted (but not required) on publish.
 
 | field | type | notes |
@@ -2010,9 +2010,11 @@ prompted (but not required) on publish.
 | `learningoutcomes` | list of `{ text, category }` | `category` follows the norwegian qualifications framework (nkr): `kunnskap`, `ferdigheiter`, `generell kompetanse` |
 | `rationale` | text ≤ 1 000 characters | &quot;why this design for this outcome?&quot; used in the portfolio |
 | `estimatedstudentminutes` | integer | shown to students before they start |
+| `learnerpurpose` | text ≤ 200 characters | *amended (d-087, 2026-10-28):* the one-line &quot;why this matters&quot; of `ped-032`, shown to learners with the activity's language |
+| `patternid` | pattern key | *amended (d-087):* the pattern the activity was created from; kept on copies, never edited by hand |
 
 - **verify:** component and api tests.">
-<summary><span class="req-id">PED-030</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Tag each activity</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PED-030</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Tag each activity</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Authors can attach <code>LearningDesignMetadata</code> to an activity. It is optional while in draft and
 prompted (but not required) on publish.</p>
 <div class="table-wrap" role="region" aria-label="Table 1, PED-030 Tag each activity" tabindex="0"><table><thead><tr>
@@ -2027,18 +2029,22 @@ prompted (but not required) on publish.</p>
 <td><code>rationale</code></td><td>text ≤ 1 000 characters</td><td>&quot;Why this design for this outcome?&quot; Used in the portfolio</td></tr>
 <tr>
 <td><code>estimatedStudentMinutes</code></td><td>integer</td><td>Shown to students before they start</td></tr>
+<tr>
+<td><code>learnerPurpose</code></td><td>text ≤ 200 characters</td><td><em>Amended (D-087, 2026-10-28):</em> the one-line &quot;why this matters&quot; of <a class="req-ref" href="#r-PED-032"><code>PED-032</code></a>, shown to learners with the activity&#39;s language</td></tr>
+<tr>
+<td><code>patternId</code></td><td>pattern key</td><td><em>Amended (D-087):</em> the pattern the activity was created from; kept on copies, never edited by hand</td></tr>
 </tbody></table></div>
 <ul>
 <li><strong>Verify:</strong> Component and API tests.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-030">04 Læringsdesign studio, PED-030</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-PED-031" data-area="PED" data-priority="SHOULD" data-session="S5" data-status="planned" data-text="ped-031 constructive alignment planner for one course, the planner shows a grid of **learning outcomes × phases** filled with the author's
+<details class="req" id="x-PED-031" data-area="PED" data-priority="SHOULD" data-session="S5" data-status="tested" data-text="ped-031 constructive alignment planner for one course, the planner shows a grid of **learning outcomes × phases** filled with the author's
 tagged activities. it highlights gaps, such as an outcome with no *etterarbeid* activity or a phase
 with no activities. it offers *create from pattern* inside any empty cell.
 - **acceptance:** the grid is an accessible html table with row and column headers, not only a visual canvas.
 - **verify:** component test; axe.">
-<summary><span class="req-id">PED-031</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Constructive alignment planner</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PED-031</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Constructive alignment planner</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>For one course, the planner shows a grid of <strong>learning outcomes × phases</strong> filled with the author&#39;s
 tagged activities. It highlights gaps, such as an outcome with no <em>etterarbeid</em> activity or a phase
 with no activities. It offers <em>Create from pattern</em> inside any empty cell.</p>
@@ -2048,10 +2054,10 @@ with no activities. It offers <em>Create from pattern</em> inside any empty cell
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-031">04 Læringsdesign studio, PED-031</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-PED-032" data-area="PED" data-priority="SHOULD" data-session="S5" data-status="planned" data-text="ped-032 students see time estimate and purpose before an activity starts, learners see the estimated time and a one-line &quot;why this matters&quot; text
+<details class="req" id="x-PED-032" data-area="PED" data-priority="SHOULD" data-session="S5" data-status="tested" data-text="ped-032 students see time estimate and purpose before an activity starts, learners see the estimated time and a one-line &quot;why this matters&quot; text
 taken from the metadata. this helps them plan their study and self-regulate.
 - **verify:** component test.">
-<summary><span class="req-id">PED-032</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Students see time estimate and purpose</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PED-032</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Students see time estimate and purpose</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Before an activity starts, learners see the estimated time and a one-line &quot;why this matters&quot; text
 taken from the metadata. This helps them plan their study and self-regulate.</p>
 <ul>
@@ -2059,10 +2065,10 @@ taken from the metadata. This helps them plan their study and self-regulate.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-032">04 Læringsdesign studio, PED-032</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-MAPPE-001" data-area="MAPPE" data-priority="SHOULD" data-session="S5" data-status="planned" data-text="mappe-001 select and export on `/mappe`, an author selects activities, filtered by course, phase or date. the author exports
+<details class="req" id="x-MAPPE-001" data-area="MAPPE" data-priority="SHOULD" data-session="S5" data-status="tested" data-text="mappe-001 select and export on `/mappe`, an author selects activities, filtered by course, phase or date. the author exports
 **markdown** (for editing) and **pdf** (for submission).
 - **verify:** integration test produces both files from fixtures.">
-<summary><span class="req-id">MAPPE-001</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Select and export</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">MAPPE-001</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Select and export</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>On <code>/mappe</code>, an author selects activities, filtered by course, phase or date. The author exports
 <strong>Markdown</strong> (for editing) and <strong>PDF</strong> (for submission).</p>
 <ul>
@@ -2132,11 +2138,11 @@ code change. The word count excludes the references and the reader&#39;s guide.<
 </ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-002">04 Læringsdesign studio, MAPPE-002</a> · Pedagogisk mappe</p></div>
 </details>
-<details class="req" id="x-MAPPE-003" data-area="MAPPE" data-priority="MUST" data-session="S5" data-status="planned" data-text="mappe-003 privacy in the export aggregates apply the same minimum group size as insight (`ins-006`, default *k* = 5). no learner
+<details class="req" id="x-MAPPE-003" data-area="MAPPE" data-priority="MUST" data-session="S5" data-status="in code" data-text="mappe-003 privacy in the export aggregates apply the same minimum group size as insight (`ins-006`, default *k* = 5). no learner
 identifiers, free-text answers or individual scores ever appear. the export is generated on demand
 and **not stored** on the server.
 - **verify:** a test with a 4-learner fixture asserts suppression.">
-<summary><span class="req-id">MAPPE-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Privacy in the export</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">MAPPE-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Privacy in the export</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>Aggregates apply the same minimum group size as insight (<a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>, default <em>k</em> = 5). No learner
 identifiers, free-text answers or individual scores ever appear. The export is generated on demand
 and <strong>not stored</strong> on the server.</p>
@@ -4286,6 +4292,10 @@ prompted (but not required) on publish.</p>
 <td><code>rationale</code></td><td>text ≤ 1 000 characters</td><td>&quot;Why this design for this outcome?&quot; Used in the portfolio</td></tr>
 <tr>
 <td><code>estimatedStudentMinutes</code></td><td>integer</td><td>Shown to students before they start</td></tr>
+<tr>
+<td><code>learnerPurpose</code></td><td>text ≤ 200 characters</td><td><em>Amended (D-087, 2026-10-28):</em> the one-line &quot;why this matters&quot; of <a class="req-ref" href="#r-PED-032"><code>PED-032</code></a>, shown to learners with the activity&#39;s language</td></tr>
+<tr>
+<td><code>patternId</code></td><td>pattern key</td><td><em>Amended (D-087):</em> the pattern the activity was created from; kept on copies, never edited by hand</td></tr>
 </tbody></table></div>
 <ul>
 <li><strong>Verify:</strong> Component and API tests.</li>
@@ -4557,9 +4567,9 @@ personal data; <strong>P</strong> marks pseudonymous fields.</p>
 <div class="table-wrap" role="region" aria-label="Table 3, 4. Consolidated logical data model" tabindex="0"><table><thead><tr>
 <th scope="col">Entity</th><th scope="col">Owner spec</th><th scope="col">Notable fields</th></tr>
 </thead><tbody><tr>
-<td><code>User</code>, <code>Identity</code></td><td>02</td><td><code>displayName</code>/<code>email</code> for staff only (<strong>PII</strong>); <code>subjectHash</code> (<strong>P</strong>)</td></tr>
+<td><code>User</code>, <code>Identity</code></td><td>02</td><td><code>displayName</code>/<code>email</code> for staff only (<strong>PII</strong>; from S5 the name is shown to HVL colleagues in co-author search, bank listings and copy attribution, D-090–D-092); <code>coAuthorSearchableAt</code> (staff, D-090); <code>subjectHash</code> (<strong>P</strong>)</td></tr>
 <tr>
-<td><code>H5PContent</code>, <code>H5PContentFile</code>, <code>ContentCollaborator</code>, <code>LibraryAuditEvent</code></td><td>01</td><td><code>ownerUserId</code></td></tr>
+<td><code>H5PContent</code>, <code>H5PContentFile</code>, <code>ContentCollaborator</code>, <code>LibraryAuditEvent</code></td><td>01</td><td><code>ownerUserId</code>; <code>sourceAuthorUserId</code> on copies (S5, D-092)</td></tr>
 <tr>
 <td><code>H5PUserData</code></td><td>01</td><td><code>learnerKey</code> (<strong>P</strong>), <code>data</code> (<strong>P</strong>)</td></tr>
 <tr>
@@ -7041,6 +7051,16 @@ rationale.</li>
 </ul>
 </li>
 <li><strong>Consequences:</strong> Migration <code>s5_learning_design</code> and new rows in the data inventory.</li>
+<li><strong>Amendment (2026-10-28, S5 contracts):</strong><ul>
+<li><strong>Course labels and privacy:</strong> Canvas sandbox courses often carry a teacher&#39;s name in their label. The server
+therefore stores <code>LtiPlacement.contextLabel</code> only when the label, after D-087&#39;s normalisation, is a course code
+that contains at least one digit (HVL course codes do; names rarely do), and stores null otherwise. It strips
+control characters and cuts the label to 255 characters by code point. Each launch overwrites the value.</li>
+<li><strong>Whose labels:</strong> &quot;the author&#39;s own placements&quot; means placements of activities the author owns or co-authors;
+a placement has no user.</li>
+<li><strong>The pattern:</strong> a full replace keeps the stored <code>patternId</code>; only creation and duplication write it.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-088--the-alignment-planner-one-course-outcomes--phases-two-gap-rules" tabindex="-1">D-088 · The alignment planner: one course, outcomes × phases, two gap rules</h3>
 <ul>
@@ -7100,6 +7120,20 @@ Only a person who can be found may be added, so student authors are refused (<co
 </li>
 <li><strong>Consequences:</strong> <code>/personvern</code> says that colleagues can see staff names through co-author search and bank
 attribution.</li>
+<li><strong>Amendment (2026-10-28, S5 contracts):</strong><ul>
+<li><strong>Who can be found:</strong> someone eligible for the co-author directory is an HVL member with the author role who is
+not a student author (<code>hvlMember</code>, <code>author</code>, not <code>studentAuthor</code> in the Feide login&#39;s roles), not anyone of
+kind <code>staff</code>: student authors and admin-only members are kind <code>staff</code> too. Only the Feide login path writes
+<code>coAuthorSearchableAt</code>, never an LTI launch.</li>
+<li><strong>One predicate:</strong> the name search, the exact Feide-ID lookup and the check when a co-author is added all use
+the same rule: eligible, and <code>coAuthorSearchableAt</code> less than 13 months old.</li>
+<li><strong>Search:</strong> LIKE wildcards in the query are escaped; the query is never logged or echoed in an error; a 429
+carries <code>Retry-After</code>.</li>
+<li><strong>Portal only:</strong> every studio route except the public guide and catalogue starts with
+<code>requirePortalAuthor</code> (learningDesign/http/studioPrincipal.ts), which refuses an LTI ltik (401) and a portal
+learner (403), so a Canvas launch can never search HVL staff names.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-091--the-content-bank-opt-in-published-shared-with-hvl-for-hvl-authors" tabindex="-1">D-091 · The content bank: opt-in, published, shared with HVL, for HVL authors</h3>
 <ul>
@@ -7117,6 +7151,11 @@ The text is a draft for ALU&#39;s and HVL&#39;s legal review.</li>
 <li><strong>Audit:</strong> listing and unlisting are audited.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-28, S5 contracts):</strong> the bank is for HVL staff authors, the same people D-090 lets be found:
+student authors neither see the bank nor list in it, because it shows colleagues&#39; names, and <code>/personvern</code> says
+colleagues see them. The header link shows to every author, since the web app knows only roles; the bank page
+shows the server&#39;s refusal to a student author. Unpublishing an activity or making it private clears
+<code>bankListedAt</code> in the same transaction (ContentPublisher and the sharing routes).</li>
 </ul>
 <h3 id="decisions--d-092--duplicating-an-activity" tabindex="-1">D-092 · Duplicating an activity</h3>
 <ul>
@@ -7155,6 +7194,23 @@ limit allows for it.</li>
 <code>HvlH5PEditor</code> now allows such a path only from an activity <code>duplicateRules</code> allows, and refuses a path the
 storage would refuse (<code>..</code>, a leading <code>/</code>, a backslash, control characters) before Lumi writes anything;
 before, Lumi wrote the activity and then failed with a 400, leaving a half-saved draft.</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-10-28, S5 contracts):</strong><ul>
+<li><strong>The rule, exactly:</strong> <code>decideDuplicate</code> answers unavailable (404, D-066) for an unknown activity or one the
+person may not View, and refused (403) unless the person may create activities (an author or an admin in the
+account view). Then Edit allows it, and otherwise a published, bank-listed activity allows it for a person the
+bank is for (D-091 as amended: not a student author).</li>
+<li><strong>Errors:</strong> a refusal the editor raises before any row exists (the sub-content policy, the paste guard, Lumi&#39;s
+metadata schema) reaches the author unchanged as a 4xx; any failure after a row exists removes the copy and
+answers 500 <code>hvl:duplicate-failed</code>, logged with its cause by the route. The audit details are
+<code>{ sourceContentId, via, kind }</code>; the source author is on the copy&#39;s <code>sourceAuthorUserId</code>.</li>
+<li><strong>Who sees the source:</strong> the copy&#39;s detail shows its source&#39;s title and author only to people who may Edit the
+copy; learners and other viewers get none of it.</li>
+<li><strong>Editor saves:</strong> <code>PasteSourceGuard</code> checks every <code>../&lt;id&gt;/&lt;file&gt;</code> path on every editor save against the same
+rule, and every <code>#tmp</code> and paste path against the storage&#39;s safe-name rule, before Lumi writes anything; a web
+address whose scheme has capitals (<code>Https://</code>) passes, as H5P plays it. An existing activity that still holds
+a path the guard refuses must have that element removed before it can be saved.</li>
 </ul>
 </li>
 </ul>
@@ -7305,6 +7361,10 @@ says PDF 1.4.</li>
 installs <code>fonts-liberation</code>, or the fonts HVL licenses, so that æ, ø and å always embed.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-28, S5 contracts):</strong> <code>PDF_ALLOW_NO_SANDBOX</code> (default false) lets the root development
+container render PDFs; the production checks refuse it. Tests set it from whether they run as root, so the same
+test keeps the sandbox on the non-root CI runner. <code>PDF_BROWSER_EXECUTABLE</code> must be an absolute path; start-up does
+not require it to exist, since a missing browser only means 503 <code>hvl:pdf-unavailable</code>.</li>
 </ul>
 <h3 id="decisions--d-097--new-dependencies-in-s5" tabindex="-1">D-097 · New dependencies in S5</h3>
 <ul>
@@ -7341,6 +7401,18 @@ lines.</li>
 are split by area.</li>
 <li><strong>Consequences:</strong> Amends D-077. <code>docs:api</code> and the route test keep the document and the mounted routes in step
 (<a class="req-ref" href="#r-DOC-012"><code>DOC-012</code></a>).</li>
+<li><strong>Amendment (2026-10-28, S5 contracts):</strong><ul>
+<li><strong>Query parameters:</strong> a route may declare <code>query</code>, documented as <code>in: query</code> parameters (people search, course
+code, export format).</li>
+<li><strong>Leaf modules:</strong> <code>content.ts</code> imports only the leaf modules <code>learnerInfo.ts</code> and <code>sourceAttribution.ts</code>, so the
+contract has no import cycle that would leave a schema undefined at load.</li>
+<li><strong>Deliberate 5xx codes:</strong> the studio&#39;s own 5xx answers (<code>hvl:duplicate-failed</code>, <code>hvl:pdf-*</code>) keep their code
+and translated message, like the authentication 503s.</li>
+<li><strong>Areas:</strong> each studio area registers routes only, under <code>/api</code>, in its own module; a path-less <code>router.use</code>
+would run for every later area and is refused by a test. Middleware sits on the route itself.</li>
+<li><strong>The web app</strong> imports only types from the contract, so zod stays out of the browser bundle.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-100--the-s5-gate-and-the-alu-and-pilot-review-left-open-q17" tabindex="-1">D-100 · The S5 gate, and the ALU and pilot review left open (Q17)</h3>
 <ul>

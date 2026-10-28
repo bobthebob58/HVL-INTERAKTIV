@@ -2,13 +2,14 @@
  * portalSession — asks Express whether the browser has a Feide session, and for its CSRF token.
  *
  * Why: the web app never sees the session cookie (D-068), so a portal page learns in the browser whether someone is
- *      signed in (`GET /auth/session`, AUTH-003). The answer carries the CSRF token that PUT, POST and PATCH need, and
- *      the roles that decide what the page offers; it carries no name, e-mail address or ID (DATA-002).
+ *      signed in (`GET /auth/session`, AUTH-003). The answer carries the CSRF token that PUT, POST, PATCH and DELETE
+ *      need, and the roles that decide what the page offers; it carries no name, e-mail address or ID (DATA-002).
  * Spec: AUTH-003, DATA-002
  * Invariants:
  *   - 401 means signed out; any other failure is an error, never a session.
  *   - Only the fields below are kept; anything else in the answer is dropped.
- * Collaborators: apps/server/src/auth/feide/feideLoginRoutes.ts (`/auth/session`), ./usePortalSession.ts.
+ * Collaborators: apps/server/src/auth/feide/feideLoginRoutes.ts (`/auth/session`), ./usePortalSession.ts,
+ *   ../components/StudioNav.tsx (`hasAuthorRole` on the `/api/me` roles).
  * Tests: apps/web/test/api/portalSession.test.ts
  */
 import type { ApiLocale, ApiRole } from '@hvl-interaktiv/api-contract';
@@ -32,12 +33,19 @@ export type PortalSessionResult =
 export const SESSION_PATH = '/auth/session';
 
 /**
+ * Whether a set of roles may create and edit activities (the server checks it again on every request).
+ * @param roles - The roles from `GET /auth/session` or `GET /api/me`.
+ * @returns True for authors and admins.
+ */
+export const hasAuthorRole = (roles: readonly ApiRole[]): boolean =>
+  roles.includes('author') || roles.includes('admin');
+
+/**
  * Whether the person may create and edit activities (the server checks it again on every request).
  * @param session - The portal session.
  * @returns True for authors and admins.
  */
-export const isAuthor = (session: PortalSession): boolean =>
-  session.roles.includes('author') || session.roles.includes('admin');
+export const isAuthor = (session: PortalSession): boolean => hasAuthorRole(session.roles);
 
 /**
  * Asks for the session.

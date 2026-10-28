@@ -1,0 +1,8 @@
+# Fixture: one key in capitals and one reference without verify. See ../../README.md.
+version: 1
+references:
+  Guo2014:
+    text: Guo, P. J., Kim, J., & Rubin, R. (2014). A fixture reference.
+    verify: true
+  szpunar2013:
+    text: Szpunar, K. K., Khan, N. Y., & Schacter, D. L. (2013). A fixture reference.

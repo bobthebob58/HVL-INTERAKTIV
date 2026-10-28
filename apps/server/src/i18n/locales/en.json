@@ -54,6 +54,8 @@
     "subContentNotAllowed": "“{{library}}” cannot be used inside this activity.",
     "libraryNotInstalled": "The content type “{{library}}” is not installed.",
     "unsafeFilePath": "A file path in the activity contains characters that are not allowed (quotes, < or >).",
+    "unsafeFileName": "A file path in the activity is not valid: it cannot start with “/” or contain “..”, “\\”, empty parts or control characters.",
+    "pasteSourceNotAllowed": "The activity uses files from another activity that you cannot copy. Upload the files again instead.",
     "hubInstallDisabled": "Content types are installed by an administrator, not from the H5P Hub.",
     "librariesInstalled": "Content types installed: {{count}}.",
     "librariesUpdated": "Content types updated: {{count}}.",
@@ -130,6 +132,25 @@
       "title": "For formative use",
       "body": "H5P activities are scored in the browser. The points are meant for learning along the way (formative assessment), not for exams or grades.",
       "dismiss": "Do not show this notice again"
+    }
+  },
+  "learningDesign": {
+    "error": {
+      "patternUnavailable": "This pattern cannot be used right now because a content type it needs is not installed. Ask an administrator for help, or create a blank activity.",
+      "patternChoiceInvalid": "Choose a phase and a content type that this pattern offers.",
+      "learningDesignConflict": "The learning design was changed in the meantime. Reload the page and try again.",
+      "learnerStateResetNeeded": "This change alters the structure of the activity, and others have saved progress in it. Confirm that their progress should be reset, or save the change as a new version.",
+      "ownerOnly": "Only the owner of the activity can do this.",
+      "coauthorNotEligible": "This person cannot be added as a co-author. Only HVL staff can be co-authors.",
+      "coauthorLimit": "The activity already has as many co-authors as allowed.",
+      "bankNotEligible": "Only published activities shared with all of HVL or more widely can be added to the content bank.",
+      "duplicateNotAllowed": "You cannot make a copy of this activity.",
+      "duplicateFailed": "The copy could not be made, so nothing was saved. Try again.",
+      "rateLimited": "You have sent too many requests in a short time. Wait a moment and try again.",
+      "mappeTooMany": "You have chosen too many activities for the portfolio. Choose fewer and try again.",
+      "criteriaSetUnknown": "This set of criteria does not exist. Reload the page and try again.",
+      "pdfUnavailable": "The PDF cannot be made right now. Download the Markdown file instead.",
+      "pdfBusy": "Many PDFs are being made right now. Wait a moment and try again, or download the Markdown file."
     }
   }
 }

@@ -15,7 +15,8 @@
     "boot-check": "tsx --env-file-if-exists=.env src/h5p/bootCheck.ts",
     "seed:libraries": "tsx --env-file-if-exists=.env src/h5p/libraries/seedCli.ts",
     "hub:check": "tsx --env-file-if-exists=.env src/h5p/hubCheckCli.ts",
-    "docs:api": "typedoc"
+    "docs:api": "typedoc",
+    "content:check": "tsx src/learningDesign/content/contentCheckCli.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1155.0",

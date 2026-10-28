@@ -71,6 +71,8 @@ export async function engineTestbed(
     config,
     storages,
     permissionSystem: permissions,
+    // WHY: no database here, so no activity is a paste source anyone may copy from (the guard refuses them all).
+    contentFacts: { factsFor: async () => undefined },
     audit,
     translate,
     fileSanitizers,

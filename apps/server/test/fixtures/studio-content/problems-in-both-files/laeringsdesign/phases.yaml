@@ -1,0 +1,71 @@
+# Fixture: the anchor description has no en text. See ../../README.md.
+version: 1
+status: proposed
+anchor:
+  key: samling
+  authored: false
+  label:
+    nn: Samling
+    nb: Samling
+    en: Session
+  description:
+    nn: Den synkrone økta.
+    nb: Den synkrone økten.
+phases:
+  - key: forarbeid
+    order: 1
+    position: before-samling
+    label:
+      nn: Forarbeid
+      nb: Forarbeid
+      en: Pre-work
+    description:
+      nn: Skildring av forarbeid.
+      nb: Beskrivelse av forarbeid.
+      en: Description of forarbeid.
+    purpose:
+      nn: Føremålet med forarbeid.
+      nb: Formålet med forarbeid.
+      en: The purpose of forarbeid.
+    canvasPlacement:
+      nn: Plassering i Canvas.
+      nb: Plassering i Canvas.
+      en: Placement in Canvas.
+  - key: underveis
+    order: 2
+    position: between-samlingar
+    label:
+      nn: Mellomarbeid
+      nb: Mellomarbeid
+      en: Intermediate work
+    description:
+      nn: Skildring av underveis.
+      nb: Beskrivelse av underveis.
+      en: Description of underveis.
+    purpose:
+      nn: Føremålet med underveis.
+      nb: Formålet med underveis.
+      en: The purpose of underveis.
+    canvasPlacement:
+      nn: Plassering i Canvas.
+      nb: Plassering i Canvas.
+      en: Placement in Canvas.
+  - key: etterarbeid
+    order: 3
+    position: after-samling
+    label:
+      nn: Etterarbeid
+      nb: Etterarbeid
+      en: Post-work
+    description:
+      nn: Skildring av etterarbeid.
+      nb: Beskrivelse av etterarbeid.
+      en: Description of etterarbeid.
+    purpose:
+      nn: Føremålet med etterarbeid.
+      nb: Formålet med etterarbeid.
+      en: The purpose of etterarbeid.
+    canvasPlacement:
+      nn: Plassering i Canvas.
+      nb: Plassering i Canvas.
+      en: Placement in Canvas.

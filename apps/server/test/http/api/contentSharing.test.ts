@@ -13,6 +13,7 @@ const FACTS: ContentFacts = {
   coAuthorIds: ['co'],
   status: 'published',
   visibility: 'private',
+  bankListed: false,
 };
 const who = (userId: string, roles: ('learner' | 'author' | 'admin')[], studentAuthor = false) => ({
   userId,

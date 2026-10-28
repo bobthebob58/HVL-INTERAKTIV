@@ -6,7 +6,8 @@
  *      can build an editor that misses one (H5P-002, H5P-006, H5P-008, SEC-001/002).
  * Spec: H5P-002, H5P-006, H5P-007, H5P-008, SEC-001, SEC-002, SEC-008
  * Invariants:
- *   - `options.permissionSystem` and the editor policy hold the same HvlPermissionSystem instance.
+ *   - `options.permissionSystem` and the editor policy hold the same HvlPermissionSystem instance, and the policy's
+ *     activity facts are the ones that permission system reads (the paste-source guard, D-092).
  *   - Every URL comes from the HvlUrlGenerator passed in (tokens on H5P's AJAX URLs, H5P-007, D-058).
  *   - The library storage is the language-fallback wrapper; DragQuestion is removed from every semantics.
  *   - F1: `local_id` is at most 15 characters; F3: Core 1.28 styles and scripts are added (./h5pAssets.ts).
@@ -30,6 +31,7 @@ import { HvlH5PEditor } from './HvlH5PEditor.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import type { HvlUrlGenerator } from './HvlUrlGenerator.js';
 import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
+import type { ContentAccessRepository } from './permissions/ContentAccessRepository.js';
 import { removeDragQuestion } from './semantics/removeDragQuestion.js';
 import { withLanguageFallback } from './storage/LanguageFallbackLibraryStorage.js';
 
@@ -43,6 +45,8 @@ export interface EditorFactoryInputs {
   readonly storages: EditorStorages;
   readonly permissionSystem: IPermissionSystem<HvlH5pUser>;
   readonly audit: LibraryAuditSink;
+  /** The activity facts the permission system reads, for the editor's paste-source guard (D-092). */
+  readonly contentFacts: ContentAccessRepository;
   readonly translate: ITranslationFunction;
   readonly fileSanitizers: readonly IFileSanitizer[];
   /** Builds every URL of the editor page; shared with the player (H5P-007). */
@@ -51,7 +55,8 @@ export interface EditorFactoryInputs {
 
 /**
  * Builds the editor.
- * @param inputs - Config, storages, permission system, audit sink, translation, sanitisers and URL generator.
+ * @param inputs - Config, storages, permission system, audit sink, activity facts, translation, sanitisers and URL
+ *   generator.
  * @returns The editor; check it with `assertPermissionSystem` before use.
  */
 export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
@@ -79,7 +84,7 @@ export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
       },
       storages.contentUserDataStorage,
     ],
-    { permissionSystem, audit: inputs.audit },
+    { permissionSystem, audit: inputs.audit, contentFacts: inputs.contentFacts },
   );
   // SECURITY: Lumi's editor template puts the integration JSON in a <script> unescaped (D-040); S4 brings ours.
   editor.setRenderer((model) => model);

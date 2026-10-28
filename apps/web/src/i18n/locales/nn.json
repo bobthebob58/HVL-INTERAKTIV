@@ -210,5 +210,38 @@
   "notFound": {
     "title": "Fann ikkje sida",
     "body": "Sida finst ikkje. Sjekk adressa."
+  },
+  "studio": {
+    "navLabel": "Hovudmeny",
+    "navGuide": "Læringsdesign",
+    "navPlanner": "Planleggar",
+    "navBank": "Innhaldsbank",
+    "navMappe": "Mappe",
+    "authorsOnly": "Berre tilsette og studentar med forfattarrolle har tilgang til denne sida.",
+    "pageTitle": "Læringsdesign",
+    "heading": "Studentaktiv læring med «HVL læringsdesign»"
+  },
+  "patterns": {
+    "pageTitle": "Mønster",
+    "heading": "Mønster"
+  },
+  "learningDesign": {
+    "tab": "Læringsdesign"
+  },
+  "planner": {
+    "pageTitle": "Planleggar",
+    "heading": "Planleggar for læringsutbytte og fasar"
+  },
+  "sharing": {
+    "tab": "Deling"
+  },
+  "bank": {
+    "pageTitle": "Innhaldsbank",
+    "heading": "Innhaldsbanken til HVL"
+  },
+  "safeEditing": {},
+  "mappe": {
+    "pageTitle": "Pedagogisk mappe",
+    "heading": "Pedagogisk mappe"
   }
 }

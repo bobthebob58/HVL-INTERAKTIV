@@ -2,17 +2,17 @@
  * Probe P2 (D-092): how Lumi 10.0.4 copies another activity's files when a duplicate is saved through
  * HvlH5PEditor, on the real examples of the six types whose examples have files.
  *
- * Why: the ContentDuplicator rewrites each file path to Lumi's paste-source form `../<sourceId>/<file>` and saves
- *      the clone as a new activity. These tests pin what Lumi then does: the references it finds (nested ones too),
- *      how it renames and stores copies, how new uploads in the same save are stored (D-093's save as a copy), what
- *      it does, silently, when it cannot copy a file, and how a `#tmp` suffix on a paste path half-saves.
+ * Why: the ContentDuplicator rewrites each file path to Lumi's paste-source form `../<sourceId>/<file>` and saves the
+ *      clone as a new activity. These tests pin what Lumi then does: the references it finds (nested ones too), how
+ *      it renames and stores copies, how new uploads in the same save are stored (D-093's save as a copy), and what
+ *      it does, silently, when it cannot copy a file. The probe also found that Lumi saves a paste from a source the
+ *      saver may not View with the path emptied, and half-saves a `#tmp` paste path; the editor's paste-source guard
+ *      now refuses both before Lumi writes anything (apps/server/test/h5p/pasteSourceGuard.int.test.ts).
  * Spec: PROD-007
  * Invariants: every activity is owned by a bench author, so `bench.close()` removes its rows and the bucket.
  * Collaborators: ./duplicateFilesBench.ts, ./duplicateFilesPasteSource.ts, ../../support/realPackages.ts.
  */
-import { afterAll, beforeAll, expect, it, vi } from 'vitest';
-import { UnsafeObjectNameError } from '../../../src/h5p/storage/s3Objects.js';
-import { toErrorResponse } from '../../../src/http/h5pErrorResponse.js';
+import { afterAll, beforeAll, expect, it } from 'vitest';
 import { describeWithRealPackages } from '../../support/realPackages.js';
 import { describeWithServices } from '../../support/services.js';
 import {
@@ -133,38 +133,14 @@ describeWithServices('[PROD-007] a duplicate copies its files through the paste-
       expect(JSON.stringify(await bench.paramsOf(copyId))).not.toMatch(/#tmp|\.\.\//);
     }, 60_000);
 
-    it('[PROD-007] without View on the source the save still succeeds: a draft copy with an emptied path and no file', async () => {
-      // Arrange: a draft that only its owner may View
-      const sourceId = await bench.importExample('H5P.ImageHotspots', false);
-      const { source, files, params } = await bench.pasteFrom(sourceId);
-      const reads = vi.spyOn(bench.tb.runtime.editor.contentManager, 'getContentFileStream');
-      // Act
-      const copyId = await bench.saveCopy(params, source);
-      // Assert: Lumi asks for View, is refused, swallows the 403 (ContentStorer) and saves the rest
-      expect(await bench.copierMayView(sourceId)).toBe(false);
-      expect(reads).toHaveBeenCalledWith(sourceId, 'images/diagram.png', bench.copierUser);
-      await expect(reads.mock.results[0]?.value).rejects.toMatchObject({
-        errorId: 'h5p-server:content-missing-view-permission',
-        httpStatusCode: 403,
-      });
-      reads.mockRestore();
-      const copy = await bench.tb.db.h5PContent.findUniqueOrThrow({ where: { id: copyId } });
-      expect(copy).toMatchObject({ ownerUserId: bench.copier.actor.accountId, status: 'draft' });
-      expect((copy.params as unknown as ImageParams).image.path).toBe('');
-      expect(await bench.filesOf(copyId)).toEqual([]);
-      expect(await bench.filesOf(sourceId)).toEqual(files);
-    }, 60_000);
-
     it.each([
-      ['a file the source does not store', 'videos/missing.webm', 'video/webm', false, 'emptied'],
-      ['a stored name outside Lumi’s pattern', 'videos/klipp av hav æ.webm', 'video/webm', true, 'kept'],
-      ['a protocol-less video link', 'youtu.be/abc', 'video/YouTube', false, 'kept'],
+      ['a file the source does not store', 'videos/missing.webm', 'video/webm', 'emptied'],
+      ['a protocol-less video link', 'youtu.be/abc', 'video/YouTube', 'kept'],
     ] as const)(
       '[PROD-007] a paste reference to %s is not copied, and the save succeeds',
-      async (_case, name, mime, stored, outcome) => {
+      async (_case, name, mime, outcome) => {
         // Arrange
         const sourceId = await bench.importExample('H5P.InteractiveVideo', true);
-        if (stored) await bench.storeAs(sourceId, 'videos/clip.webm', name);
         const { source, params } = await bench.pasteFrom(sourceId);
         const pasted = `../${sourceId}/${name}`;
         (params as unknown as VideoParams).interactiveVideo.video.files = [{ path: pasted, mime }];
@@ -178,23 +154,5 @@ describeWithServices('[PROD-007] a duplicate copies its files through the paste-
       },
       60_000,
     );
-
-    it('[PROD-007] a paste path with a #tmp suffix fails the save (400) after the activity row is written', async () => {
-      // Arrange
-      const sourceId = await bench.importExample('H5P.ImageHotspots', true);
-      const { source, params } = await bench.pasteFrom(sourceId);
-      (params as unknown as ImageParams).image.path = `../${sourceId}/images/diagram.png#tmp`;
-      const before = await bench.copierActivityIds();
-      // Act: Lumi looks for a temporary file "../<id>/…", which our temporary storage refuses
-      const error = await bench.saveCopy(params, source).catch((e: unknown) => e);
-      // Assert: a 400, not a 500; the row Lumi wrote first stays, holding the un-copied path and no files
-      expect(error).toBeInstanceOf(UnsafeObjectNameError);
-      expect(toErrorResponse(error, 'nn').status).toBe(400);
-      const [orphanId = '', ...more] = (await bench.copierActivityIds()).filter((id) => !before.includes(id));
-      expect(more).toEqual([]);
-      const orphan = (await bench.paramsOf(orphanId)) as unknown as ImageParams;
-      expect(orphan.image.path).toBe(`../${sourceId}/images/diagram.png`);
-      expect(await bench.filesOf(orphanId)).toEqual([]);
-    }, 60_000);
   });
 });

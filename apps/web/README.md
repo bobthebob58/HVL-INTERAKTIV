@@ -5,8 +5,9 @@
 The web pages of HVL Interaktiv, built with Next.js (App Router), React and Tailwind CSS v4 on HVL's design tokens.
 They are the application around the H5P pages: the start page with the person's activities, the activity page with
 the tabs **Spel**, **Rediger** and **Sjekk og publiser**, the new-activity page, the Canvas page `/app/play`, help and
-the privacy notice. The H5P player and editor themselves stay server-rendered by Express under their own strict
-policy (D-067); these pages frame them on the same origin.
+the privacy notice, and from S5 the læringsdesign studio: the public guide and pattern pages, and the planner, the
+content bank and the pedagogisk mappe for authors (D-089). The H5P player and editor themselves stay server-rendered
+by Express under their own strict policy (D-067); these pages frame them on the same origin.
 
 The app has **no server endpoints of its own**: no route handlers, server actions, middleware or API routes
 (`test/appStructure.test.ts` enforces it). Every data request goes from the browser to the Express API, which checks
@@ -17,6 +18,10 @@ shell and the locale; client components fetch the data.
 **Status (Session 4).** Shell, components and pages are in place. HVL's logo files are not yet supplied (Q2): the
 header shows the site name as text until `src/config/branding.ts` names them. HVL's data protection officer must
 review the privacy notice (Q6).
+
+**Status (Session 5, scaffolding).** The studio's pages exist with their headings, titles, the header's main menu and
+the sign-in and refusal states of the author pages; their content arrives with the S5 workstreams. The activity page's
+tabs come from a registry (`src/features/activity/tabs/activityTabs.ts`), so a new tab is one file and one line.
 
 ## How to run
 
@@ -40,15 +45,15 @@ first.
 | Path | What it holds |
 |---|---|
 | `src/app/layout.tsx` | The document: `<html lang>` from the request's locale, the title template ("<page> – HVL Interaktiv"), the skip link, the locale for client components |
-| `src/app/(portal)/` | The portal pages in the portal chrome: `/`, `/aktivitet/[id]`, `/aktivitet/ny`, `/hjelp`, `/personvern` |
+| `src/app/(portal)/` | The portal pages in the portal chrome: `/`, `/aktivitet/[id]`, `/aktivitet/ny`, `/hjelp`, `/personvern`; the studio's `/laeringsdesign`, `/laeringsdesign/monster/[patternId]`, `/laeringsdesign/planlegg`, `/laeringsdesign/innhaldsbank` and `/mappe`; `not-found.tsx` for a portal page that calls `notFound()` |
 | `src/app/app/play/page.tsx` | `/app/play`, the Canvas page: reads Express's `x-hvli-launch` header |
 | `src/app/not-found.tsx` | The translated 404 page in the portal chrome |
 | `src/app/globals.css`, `src/styles/components.css` | Tailwind v4 with the token theme; base rules, focus ring, reduced motion; skip link, header, buttons |
-| `src/components/` | One component per file: ExternalLink, FileLink, ErrorSummary, Tabs, Dialog, Notice, FindingsList, PublishDialog, AcknowledgementField, H5pFrame, StatusBadge, LoginPrompt, TextSections, SiteHeader, SiteFooter, PortalChrome |
-| `src/features/` | The pages' client views: `portal/` (start page), `activity/` (activity and new-activity pages), `lti/` (Canvas page), `info/` (help and privacy sections) |
-| `src/api/` | Browser calls of the Express API with the right credential (`apiRequest.ts`), the portal session, typed by `@hvl-interaktiv/api-contract` |
+| `src/components/` | One component per file: ExternalLink, FileLink, ErrorSummary, Tabs, Dialog, Notice, FindingsList, PublishDialog, AcknowledgementField, H5pFrame, StatusBadge, LoginPrompt, AuthorGate (signed-out, refused or author content), TextSections, SiteHeader, StudioNav (the header's main menu), SiteFooter, PortalChrome, NotFoundContent |
+| `src/features/` | The pages' client views: `portal/` (start page), `activity/` (activity and new-activity pages; `activity/tabs/` holds one file per tab and the registry `activityTabs.ts`), `lti/` (Canvas page), `info/` (help and privacy sections), `studio/` (guide and pattern page), `planner/`, `bank/`, `mappe/` |
+| `src/api/` | Browser calls of the Express API with the right credential (`apiRequest.ts`: JSON answers, `DELETE`, and file answers for downloads with `apiFileRequest`), the portal session, typed by `@hvl-interaktiv/api-contract` |
 | `src/messaging/` | Messages with the framed H5P pages: `hvli:content-saved`, `hvli:go-to-field`, H5P's resize protocol |
-| `src/config/` | Every address the app links to or frames (`paths.ts`); the logo slot (`branding.ts`) |
+| `src/config/` | Every address the app links to or frames (`paths.ts`, with the studio's query `?fase=&type=&tid=&emne=` and the activity page's `?fane=`); reading the studio's query back (`studioFilters.ts`); the logo slot (`branding.ts`) |
 | `src/i18n/` | Typed `t()`, `locales/{nn,nb,en}.json` (Nynorsk is the reference, D-076), the request locale, page titles, the `lang` of an activity's title, dates, type names |
 | `src/lti/launchHeader.ts` | Parses the launch Express resolved for `/app/play` |
 | `next.config.mjs`, `postcss.config.mjs` | No image optimiser, no `X-Powered-By`, the contract package compiled; Tailwind through PostCSS |
@@ -124,3 +129,7 @@ and by the server before Next.js loads). The logo files are configured in `src/c
 | `DATA-011` First-party pages under a strict policy | `next.config.mjs`, `apps/server/src/web/` | `test/appStructure.test.ts`, `apps/server/test/web/webPages.browser.int.test.ts` |
 | `PROD-012` Nynorsk first, nb and en | `src/i18n/` | `test/i18n/translate.test.ts` |
 | `AUTH-003` No credentials or endpoints in the web app | `src/api/`, `apps/server/src/web/webRequestContract.ts` | `test/appStructure.test.ts`, `test/api/apiRequest.test.ts` |
+| `UD-013`, `UD-006` The studio's main menu in the same place on every portal page; the current page marked | `src/components/StudioNav.tsx`, `SiteHeader.tsx` | `test/components/StudioNav.test.tsx`, `SiteHeader.test.tsx`, `apps/server/test/web/webPages.browser.int.test.ts` |
+| `PED-003`, `PED-031` Studio filters and course in the address | `src/config/paths.ts`, `src/config/studioFilters.ts` | `test/config/paths.test.ts`, `test/config/studioFilters.test.ts` |
+| `AUTH-001` Author-only studio pages: sign-in and refusal | `src/components/AuthorGate.tsx`, `src/features/planner/`, `bank/`, `mappe/` | `test/components/AuthorGate.test.tsx`, `test/features/studioPages.test.tsx` |
+| `MAPPE-001`, `DOC-012` File answers and `DELETE` (D-099) | `src/api/apiRequest.ts`, `src/api/contentDisposition.ts` | `test/api/apiFileRequest.test.ts`, `test/api/apiRequest.test.ts` |

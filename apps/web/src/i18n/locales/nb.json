@@ -210,5 +210,38 @@
   "notFound": {
     "title": "Fant ikke siden",
     "body": "Siden finnes ikke. Sjekk adressen."
+  },
+  "studio": {
+    "navLabel": "Hovedmeny",
+    "navGuide": "Læringsdesign",
+    "navPlanner": "Planlegger",
+    "navBank": "Innholdsbank",
+    "navMappe": "Mappe",
+    "authorsOnly": "Bare ansatte og studenter med forfatterrolle har tilgang til denne siden.",
+    "pageTitle": "Læringsdesign",
+    "heading": "Studentaktiv læring med «HVL læringsdesign»"
+  },
+  "patterns": {
+    "pageTitle": "Mønster",
+    "heading": "Mønster"
+  },
+  "learningDesign": {
+    "tab": "Læringsdesign"
+  },
+  "planner": {
+    "pageTitle": "Planlegger",
+    "heading": "Planlegger for læringsutbytte og faser"
+  },
+  "sharing": {
+    "tab": "Deling"
+  },
+  "bank": {
+    "pageTitle": "Innholdsbank",
+    "heading": "Innholdsbanken til HVL"
+  },
+  "safeEditing": {},
+  "mappe": {
+    "pageTitle": "Pedagogisk mappe",
+    "heading": "Pedagogisk mappe"
   }
 }

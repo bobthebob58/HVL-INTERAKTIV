@@ -3,62 +3,36 @@
  *
  * Why: DOC-012 asks for an OpenAPI document generated from the request and response schemas; D-077 builds it with
  *      zod 4's own `z.toJSONSchema` instead of adding an OpenAPI library. Named components keep the document readable
- *      for reviewers and the web app.
- * Spec: DOC-012
+ *      for reviewers and the web app. D-099 adds file answers (`mediaType`) and query parameters.
+ * Spec: DOC-012, MAPPE-001
  * Invariants:
  *   - Pure: the same registry gives the same document; nothing is registered globally.
  *   - Request bodies are described as zod's input, answers as its output; every schema a route names must be listed
- *     here, else building throws (a test builds the document).
+ *     in ./apiSchemaNames.ts, else building throws (a test builds the document).
+ *   - A file answer is documented with its media type, a string schema (binary unless it is text) and a required
+ *     `Content-Disposition: attachment` header.
  *   - The security schemes name the server's real cookie and CSRF header; a server test compares them.
- * Collaborators: ./apiRoutes.ts, ./apiRouteTypes.ts, apps/server/src/http/api/apiDocsRoutes.ts.
- * Tests: packages/api-contract/test/openApi.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
+ * Collaborators: ./apiRoutes.ts, ./apiSchemaNames.ts, ./apiRouteTypes.ts, apps/server/src/http/api/apiDocsRoutes.ts.
+ * Tests: packages/api-contract/test/openApi.test.ts, packages/api-contract/test/openApiFiles.test.ts,
+ *   apps/server/test/http/api/apiDocs.int.test.ts
  */
 import { z } from 'zod';
 import { API_ROUTES } from './apiRoutes.js';
-import { API_CONTRACT_VERSION, openApiDocumentSchema, type ApiRoute } from './apiRouteTypes.js';
-import { contentDetailSchema, contentListSchema, contentSummarySchema } from './content.js';
-import { errorBodySchema, publishBlockedBodySchema, publishConflictBodySchema } from './errors.js';
 import {
-  acknowledgementSchema,
-  findingsResponseSchema,
-  findingWithAcknowledgementSchema,
-} from './findings.js';
-import { dismissedNoticeSchema, meSchema, noticeDismissalRequestSchema } from './me.js';
-import * as publishing from './publishing.js';
-import { sharingRequestSchema, sharingResponseSchema } from './sharing.js';
+  API_CONTRACT_VERSION,
+  openApiDocumentSchema,
+  type ApiFileMediaType,
+  type ApiResponse,
+  type ApiRoute,
+} from './apiRouteTypes.js';
+import { REQUEST_SCHEMAS, RESPONSE_SCHEMAS } from './apiSchemaNames.js';
+
+export { REQUEST_SCHEMAS, RESPONSE_SCHEMAS } from './apiSchemaNames.js';
 
 /** The portal session cookie (apps/server/src/auth/session/sessionCookies.ts, AUTH-003). */
 export const PORTAL_SESSION_COOKIE = '__Host-hvli_sid';
 /** The header that carries the session's CSRF token (apps/server/src/auth/session/csrfToken.ts, D-057). */
 export const CSRF_HEADER_NAME = 'x-csrf-token';
-
-/** Named request schemas, described as zod's input. */
-export const REQUEST_SCHEMAS: Readonly<Record<string, z.ZodType>> = {
-  NoticeDismissalRequest: noticeDismissalRequestSchema,
-  AcknowledgementInput: publishing.acknowledgementInputSchema,
-  PublishRequest: publishing.publishRequestSchema,
-  UnpublishRequest: publishing.unpublishRequestSchema,
-  SharingRequest: sharingRequestSchema,
-};
-
-/** Named answer schemas, described as zod's output. */
-export const RESPONSE_SCHEMAS: Readonly<Record<string, z.ZodType>> = {
-  Me: meSchema,
-  DismissedNotice: dismissedNoticeSchema,
-  ContentSummary: contentSummarySchema,
-  ContentList: contentListSchema,
-  ContentDetail: contentDetailSchema,
-  Acknowledgement: acknowledgementSchema,
-  FindingWithAcknowledgement: findingWithAcknowledgementSchema,
-  FindingsResponse: findingsResponseSchema,
-  PublishResponse: publishing.publishResponseSchema,
-  UnpublishResponse: publishing.unpublishResponseSchema,
-  SharingResponse: sharingResponseSchema,
-  ErrorBody: errorBodySchema,
-  PublishBlockedBody: publishBlockedBodySchema,
-  PublishConflictBody: publishConflictBodySchema,
-  OpenApiDocument: openApiDocumentSchema,
-};
 
 /** An OpenAPI 3.1 document as plain JSON. */
 export type OpenApiDocument = z.infer<typeof openApiDocumentSchema>;
@@ -100,20 +74,52 @@ function securityOf(route: ApiRoute): Record<string, string[]>[] {
   }
 }
 
+/** Path or query parameters, each with its own inline JSON Schema. */
+function parametersOf(shape: Readonly<Record<string, unknown>> | undefined, place: 'path' | 'query') {
+  return Object.entries(shape ?? {}).map(([name, schema]) => {
+    const zod = schema as z.ZodType;
+    const { $schema: _dialect, ...json } = z.toJSONSchema(zod, { target: 'draft-2020-12', io: 'input' });
+    return { name, in: place, required: place === 'path' || !zod.safeParse(undefined).success, schema: json };
+  });
+}
+
+/** A file answer (D-099): one content entry per media type, and the attachment header. */
+function fileAnswer(description: string, mediaType: ApiFileMediaType | readonly ApiFileMediaType[]) {
+  const types: readonly ApiFileMediaType[] = typeof mediaType === 'string' ? [mediaType] : mediaType;
+  return {
+    description,
+    headers: {
+      'Content-Disposition': {
+        description: 'Always `attachment`, with the file name, e.g. `attachment; filename="mappe.md"`.',
+        required: true,
+        schema: { type: 'string' },
+      },
+    },
+    content: Object.fromEntries(
+      types.map((type) => [
+        type,
+        { schema: type.startsWith('text/') ? { type: 'string' } : { type: 'string', format: 'binary' } },
+      ]),
+    ),
+  };
+}
+
 function operationOf(route: ApiRoute) {
   const where = `${route.method.toUpperCase()} ${route.path}`;
   const json = (schema: z.ZodType, named: Readonly<Record<string, z.ZodType>>) => ({
     content: { 'application/json': { schema: refTo(named, schema, where) } },
   });
-  const parameters = Object.entries(route.params?.shape ?? {}).map(([name, schema]) => {
-    const { $schema: _dialect, ...json } = z.toJSONSchema(schema as z.ZodType, { target: 'draft-2020-12' });
-    return { name, in: 'path', required: true, schema: json };
-  });
+  const answer = ({ description, schema, mediaType }: ApiResponse) => {
+    if (schema && mediaType) throw new Error(`${where}: an answer has both a schema and a mediaType`);
+    if (mediaType) return fileAnswer(description, mediaType);
+    return { description, ...(schema ? json(schema, RESPONSE_SCHEMAS) : {}) };
+  };
+  const parameters = [
+    ...parametersOf(route.params?.shape, 'path'),
+    ...parametersOf(route.query?.shape, 'query'),
+  ];
   const responses = Object.fromEntries(
-    Object.entries(route.responses).map(([status, { description, schema }]) => [
-      status,
-      { description, ...(schema ? json(schema, RESPONSE_SCHEMAS) : {}) },
-    ]),
+    Object.entries(route.responses).map(([status, response]) => [status, answer(response)]),
   );
   return {
     operationId: route.operationId,
@@ -130,7 +136,8 @@ function operationOf(route: ApiRoute) {
  * Builds the OpenAPI 3.1 document of the `/api` routes.
  * @param routes - The route registry; the real one by default.
  * @returns The document as plain JSON; paths include the `/api` prefix.
- * @throws Error when a route names a schema that is not listed in `REQUEST_SCHEMAS` or `RESPONSE_SCHEMAS`.
+ * @throws Error when a route names a schema that is not listed in `REQUEST_SCHEMAS` or `RESPONSE_SCHEMAS`, or an
+ *   answer has both a schema and a media type.
  * @spec DOC-012
  */
 export function buildOpenApiDocument(routes: readonly ApiRoute[] = API_ROUTES): OpenApiDocument {

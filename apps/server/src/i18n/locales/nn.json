@@ -54,6 +54,8 @@
     "subContentNotAllowed": "«{{library}}» kan ikkje brukast inne i denne aktiviteten.",
     "libraryNotInstalled": "Innhaldstypen «{{library}}» er ikkje installert.",
     "unsafeFilePath": "Ein filsti i aktiviteten inneheld teikn som ikkje er tillatne (anførselsteikn, < eller >).",
+    "unsafeFileName": "Ein filsti i aktiviteten er ugyldig: han kan ikkje byrje med «/» eller innehalde «..», «\\», tomme ledd eller kontrollteikn.",
+    "pasteSourceNotAllowed": "Aktiviteten brukar filer frå ein annan aktivitet som du ikkje kan lage kopi av. Last opp filene på nytt i staden.",
     "hubInstallDisabled": "Innhaldstypar blir installerte av ein administrator, ikkje frå H5P-huben.",
     "librariesInstalled": "Installerte innhaldstypar: {{count}}.",
     "librariesUpdated": "Oppdaterte innhaldstypar: {{count}}.",
@@ -130,6 +132,25 @@
       "title": "Til undervegsvurdering",
       "body": "H5P-aktivitetar blir retta i nettlesaren. Poenga er meinte for læring undervegs (undervegsvurdering), ikkje for eksamen eller karakterar.",
       "dismiss": "Ikkje vis meldinga igjen"
+    }
+  },
+  "learningDesign": {
+    "error": {
+      "patternUnavailable": "Mønsteret kan ikkje brukast no, fordi ein innhaldstype det treng, ikkje er installert. Be ein administrator om hjelp, eller lag ein tom aktivitet.",
+      "patternChoiceInvalid": "Vel ein fase og ein innhaldstype som mønsteret tilbyr.",
+      "learningDesignConflict": "Læringsdesignet vart endra i mellomtida. Last sida på nytt og prøv igjen.",
+      "learnerStateResetNeeded": "Endringa endrar oppbygginga av aktiviteten, og andre har lagra framdrift i han. Stadfest at framdrifta skal nullstillast, eller lagre endringa som ny versjon.",
+      "ownerOnly": "Berre eigaren av aktiviteten kan gjere dette.",
+      "coauthorNotEligible": "Denne personen kan ikkje leggjast til som medforfattar. Berre tilsette ved HVL kan vere medforfattarar.",
+      "coauthorLimit": "Aktiviteten har allereie så mange medforfattarar som er tillate.",
+      "bankNotEligible": "Berre publiserte aktivitetar som er delte med heile HVL eller fleire, kan leggjast i innhaldsbanken.",
+      "duplicateNotAllowed": "Du kan ikkje lage ein kopi av denne aktiviteten.",
+      "duplicateFailed": "Kopien kunne ikkje lagast, så ingenting vart lagra. Prøv igjen.",
+      "rateLimited": "Du har sendt for mange førespurnader på kort tid. Vent litt og prøv igjen.",
+      "mappeTooMany": "Du har valt for mange aktivitetar til mappa. Vel færre og prøv igjen.",
+      "criteriaSetUnknown": "Kriteriesettet finst ikkje. Last sida på nytt og prøv igjen.",
+      "pdfUnavailable": "PDF-fila kan ikkje lagast akkurat no. Last ned Markdown-fila i staden.",
+      "pdfBusy": "Det blir laga mange PDF-filer akkurat no. Vent litt og prøv igjen, eller last ned Markdown-fila."
     }
   }
 }
