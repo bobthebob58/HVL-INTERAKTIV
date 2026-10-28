@@ -22,6 +22,10 @@ describe('[H5P-002] the new-activity page', () => {
     const navigate = vi.fn();
     render(<NewActivityView navigate={navigate} />);
     const frame = (await screen.findByTitle('Lag ny aktivitet')) as HTMLIFrameElement;
+    // WHY: the save listener is added in an effect after the frame renders, and findByTitle can resolve before that
+    // effect runs (CI run 56 lost the message). The notice comes from a later render (after /api/me), so once it
+    // shows, the listener is in place.
+    expect(await screen.findByRole('region', { name: /Til undervegsvurdering/ })).toBeTruthy();
     // Act
     act(() => {
       window.dispatchEvent(
@@ -34,7 +38,6 @@ describe('[H5P-002] the new-activity page', () => {
     });
     // Assert
     expect(frame.getAttribute('src')).toBe('/h5p/new');
-    expect(await screen.findByRole('region', { name: /Til undervegsvurdering/ })).toBeTruthy();
     await waitFor(() => expect(navigate).toHaveBeenCalledWith(`/aktivitet/${ID}`));
     expect(screen.getByText('Opnar aktiviteten …')).toBeTruthy();
   });
