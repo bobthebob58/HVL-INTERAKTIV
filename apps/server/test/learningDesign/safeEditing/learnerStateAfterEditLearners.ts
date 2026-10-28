@@ -13,7 +13,7 @@
  * Tests: ./learnerStateAfterEdit.browser.int.test.ts, ./learnerStateAfterEditComposite.browser.int.test.ts,
  *   ./learnerStateAfterEditNavigation.browser.int.test.ts, ./learnerStateAfterEditPaths.browser.int.test.ts
  */
-import type { Page } from 'playwright-core';
+import type { Locator, Page } from 'playwright-core';
 
 /** A learner's input and the sign that H5P has stored it. */
 export interface LearnerScript {
@@ -43,19 +43,35 @@ export const BLANKS: LearnerScript = {
   saved: holds('"samtale"'),
 };
 
+/** A box once it has stopped moving (the same position and size twice, 100 ms apart). */
+const settledBox = async (page: Page, locator: Locator) => {
+  let last = await locator.boundingBox();
+  for (let tries = 0; tries < 30; tries++) {
+    await page.waitForTimeout(100);
+    const box = await locator.boundingBox();
+    if (box && last && JSON.stringify(box) === JSON.stringify(last)) return box;
+    last = box;
+  }
+  return last;
+};
+
 const dragWord = async (page: Page, word: string, zone: number): Promise<void> => {
   const source = page.locator('.h5p-drag-draggables-container .h5p-draggable', { hasText: word });
-  await source.scrollIntoViewIfNeeded();
-  const from = await source.boundingBox();
-  const to = await page.locator('.h5p-dropzone').nth(zone).boundingBox();
-  if (!from || !to) throw new Error(`cannot drag ${word} to zone ${zone}`);
-  // WHY: jQuery UI's draggable needs real pointer moves between press and release, not a synthetic drop event.
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 10 });
-  await page.mouse.up();
-  // WHY: the dropped word animates into its zone and the line reflows before the next word can be dragged.
-  await page.waitForTimeout(500);
+  // WHY: a dropped word moves out of the draggables container into its zone (drag-text.js:1111, draggable.js:86).
+  // On a busy runner the line can still be reflowing from the previous drop when the next one is measured, and the
+  // drop misses (CI run 58), so a drag is repeated until the word has left the container.
+  for (let attempt = 0; attempt < 3 && (await source.count()) > 0; attempt++) {
+    await source.scrollIntoViewIfNeeded();
+    const from = await settledBox(page, source);
+    const to = await settledBox(page, page.locator('.h5p-dropzone').nth(zone));
+    if (!from || !to) throw new Error(`cannot drag ${word} to zone ${zone}`);
+    // WHY: jQuery UI's draggable needs real pointer moves between press and release, not a synthetic drop event.
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 10 });
+    await page.mouse.up();
+  }
+  if ((await source.count()) > 0) throw new Error(`${word} did not land in zone ${zone}`);
 };
 
 /** Drags the second text word into the first zone and the distractor into the second (the words are shuffled). */
