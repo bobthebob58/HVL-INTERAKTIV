@@ -39,7 +39,8 @@ export interface SemanticsSource {
 /** The languages an activity can be created in. */
 export type ActivityLanguage = 'nn' | 'nb' | 'en';
 
-type Params = Record<string, unknown>;
+/** H5P parameters as JSON: a skeleton's, or a sub-content node's `params`. */
+export type Params = Record<string, unknown>;
 type Field = ISemanticsEntry & { readonly isSubContent?: boolean };
 interface Fill {
   readonly semanticsOf: (library: string) => Promise<readonly Field[]>;
