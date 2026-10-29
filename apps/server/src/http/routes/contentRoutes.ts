@@ -23,7 +23,8 @@
  *     progress is 409 `hvl:learner-state-reset-needed` (no counts) and nothing is saved, unless the body says
  *     `confirmLearnerStateReset: true`; a structural save that goes through deletes the activity's learner state
  *     and raises `H5PContent.version`; a text-only save keeps both. The 409 has H5P's error shape
- *     `{ success: false, errorCode, httpStatusCode: 409, message }`. The editor page's save choice
+ *     `{ success: false, errorCode, httpStatusCode: 409, message }`; from Canvas (an ltik) its message offers reset
+ *     or cancel only (../../learningDesign/safeEditing/resetNeededWording.ts). The editor page's save choice
  *     (`editorSaveChoice.js`, its texts from ../../learningDesign/safeEditing/saveChoiceMessages.ts) answers it by
  *     sending the same PUT body again with `confirmLearnerStateReset: true`, or, in the portal, by posting
  *     `JSON.parse(content.params)` to the copy route.
@@ -49,6 +50,7 @@ import { asAccountUser } from '../../h5p/HvlH5pUser.js';
 import type { ContentDuplicator } from '../../learningDesign/collaboration/ContentDuplicator.js';
 import { requirePortalAuthor } from '../../learningDesign/http/studioPrincipal.js';
 import type { SaveChoice } from '../../learningDesign/safeEditing/LearnerStateGate.js';
+import { inWordsOfSaver } from '../../learningDesign/safeEditing/resetNeededWording.js';
 import { HttpError } from '../HttpError.js';
 import { requireActor, requireRole } from '../h5pLocals.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
@@ -119,7 +121,11 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
     const user = asAccountUser(actor);
     const { library, params, metadata, choice } = saveRequest(req.body);
     const id = pathParam(req, 'contentId');
-    const write = () => deps.editor.saveOrUpdateContent(id, params, metadata, library, user, choice);
+    // WHY: Canvas has no «Lagre som ny versjon» (D-098), so its 409 does not offer one.
+    const write = () =>
+      deps.editor
+        .saveOrUpdateContent(id, params, metadata, library, user, choice)
+        .catch((error: unknown) => Promise.reject(inWordsOfSaver(error, actor)));
     const gate = deps.saveGate;
     // WHY: only someone who may edit learns the gate's findings or holds the lock; anyone else meets the editor's 403.
     const mayEdit =

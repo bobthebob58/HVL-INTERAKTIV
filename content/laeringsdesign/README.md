@@ -242,13 +242,26 @@ The easiest way to make a skeleton is to build an example activity in the editor
 - `npm run content:check` (with the pinned content types installed by `npm run h5p:fetch-libraries`; CI always has
   them) stops on: a text missing in `nn`, `nb` or `en`; a misspelt key; an ID that is not the folder's name; a phase
   or content type that does not exist; a missing skeleton or a file that does not belong; a skeleton that is not
-  valid JSON; a token without a text, or a text no token uses; a wrong library version; a filled-in text too long for
-  its field; a title over 255 characters; guidance with `:` or `/` in a blank; a citation of a key `references.yaml`
-  does not list. Each message names the file, the line and the key. Without the pinned content types on your own
-  machine, the versions and length limits are not checked; the summary line says so.
+  valid JSON; a token without a text, or a text no token uses; a wrong library version; a key in the skeleton that
+  the content type does not have (a misspelt setting such as `enableRetyr` would otherwise be ignored by H5P, and
+  retry would quietly stay as the content type's default); a filled-in text too long for its field; a title over 255
+  characters; guidance with `:` or `/` in a blank; a citation of a key `references.yaml` does not list. Each message
+  names the file, the line and the key. Without the pinned content types on your own machine, the versions, keys and
+  length limits are not checked; the summary line says so.
 - The tests in `apps/server/test/learningDesign/content/` (the loader) and `apps/server/test/learningDesign/patterns/`
   (creating an activity) run on every pull request. A test pattern in `apps/server/test/fixtures/studio-content/`
   shows that a new pattern folder loads and can be created without a code change (`PED-011`).
+- The tests `apps/server/test/learningDesign/patterns/realPattern*.int.test.ts` create every folder in `patterns/`
+  in each of its content types and phases, in Nynorsk, Bokmål and English, and stop on: any check error other than
+  V-PLACEHOLDER; a V-PLACEHOLDER on a field that holds no guidance; retry or «Vis svar» switched off, a time limit, or
+  a pass mark that ends the attempts (`PROD-009`); and a new activity with no V-PLACEHOLDER at all, since every
+  pattern starts as guidance. They compare no text with a fixed wording, so rewording a text does not break them; a
+  text breaks them only when it makes another check report an error, or when it removes the last `⟦…⟧` from a
+  pattern that has no video or image slot to report.
+
+The nine patterns in `patterns/` (spec 04 §4) are drafts for ALU and the pilot teachers to review (open question
+Q17): their texts, times, and the choices written into their skeletons may all change. Each `pattern.yaml` starts with
+a comment that says what its skeleton holds.
 
 ## hint-thresholds.yaml
 

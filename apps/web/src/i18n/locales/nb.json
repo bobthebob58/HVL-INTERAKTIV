@@ -239,7 +239,9 @@
     "pageTitle": "Innholdsbank",
     "heading": "Innholdsbanken til HVL"
   },
-  "safeEditing": {},
+  "safeEditing": {
+    "openingCopy": "Endringen er lagret som en ny versjon. Åpner den nye versjonen i Rediger …"
+  },
   "mappe": {
     "pageTitle": "Pedagogisk mappe",
     "heading": "Pedagogisk mappe"

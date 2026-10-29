@@ -110,6 +110,7 @@
       "errorLabel": "Feil",
       "goToField": "Gå til feltet",
       "fieldNotReached": "Klarte ikke å åpne selve feltet. Fokus står på den nærmeste delen av skjemaet, så åpne feltet for hånd derfra.",
+      "titleNotReached": "Denne delen av aktiviteten har ingen tittel du kan endre i redigeringsverktøyet, så fokus står på den nærmeste delen av skjemaet.",
       "frameTitle": "H5P-redigering: ny aktivitet"
     }
   },
@@ -148,7 +149,8 @@
       "resetAndSaved": "Endringen er lagret, og fremgangen til studentene er nullstilt.",
       "savedAsCopy": "Endringen er lagret som en ny versjon. Originalen og fremgangen til studentene er ikke endret.",
       "cancelled": "Endringen er ikke lagret."
-    }
+    },
+    "resetNeededCanvas": "Endringen endrer oppbygningen av aktiviteten, og andre har lagret fremgang i den. Bekreft at fremgangen skal nullstilles, eller avbryt. En ny versjon kan du lagre i HVL Interaktiv-portalen."
   },
   "learningDesign": {
     "error": {

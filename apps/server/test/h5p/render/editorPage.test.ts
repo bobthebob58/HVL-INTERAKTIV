@@ -1,13 +1,15 @@
 /**
  * Tests for our editor page template: no inline script, inert and escaped JSON blocks, the page language and title,
- * a save button with a polite status region, the server pages' stylesheet, and only same-origin first scripts.
+ * a save button with a polite status region, the server pages' and the save choice's stylesheets, the save choice's
+ * texts for the portal and Canvas, and only same-origin first scripts.
  *
- * Spec: SEC-008, H5P-007, UD-010, DATA-011, PROD-003, UD-002
+ * Spec: SEC-008, H5P-007, UD-010, DATA-011, PROD-003, UD-002, PROD-013
  */
 import type { IIntegration } from '@lumieducation/h5p-server';
 import { describe, expect, it } from 'vitest';
 import { renderEditorPage, type EditorPageInput } from '../../../src/h5p/render/editorPage.js';
 import { t } from '../../../src/i18n/translate.js';
+import { saveChoiceMessages } from '../../../src/learningDesign/safeEditing/saveChoiceMessages.js';
 import { inlineScriptTags, integrationFromPage } from '../../support/playerIntegration.js';
 
 /** The messages the page hands its script. */
@@ -16,6 +18,7 @@ interface Messages {
   readonly goToField: string;
   readonly errorLabel: string;
   readonly fieldNotReached: string;
+  readonly titleNotReached: string;
 }
 
 const input = (over: Partial<EditorPageInput> = {}): EditorPageInput => ({
@@ -63,6 +66,27 @@ describe('[SEC-008] editor page template', () => {
     expect(html).toContain('<main class="hvl-editor">');
   });
 
+  it('[PROD-013] links the save choice’s stylesheet after the server pages’ one', () => {
+    const html = renderEditorPage(input(), 'nn');
+    const pages = html.indexOf('href="/static/pages/serverPages.css"');
+    expect(html.indexOf('<link rel="stylesheet" href="/static/pages/editorSaveChoice.css">')).toBeGreaterThan(
+      pages,
+    );
+  });
+
+  it('[PROD-013] hands the script the save choice of where it runs: the portal’s with a copy, Canvas’s with the pointer', () => {
+    // Arrange
+    type Config = { inCanvas: boolean; saveChoice: Record<string, string> };
+    // Act
+    const portal = configOf<Config>(renderEditorPage(input(), 'nb'));
+    const canvas = configOf<Config>(renderEditorPage(input({ token: { name: 'ltik', value: 'l' } }), 'nb'));
+    // Assert
+    expect(portal).toMatchObject({ inCanvas: false, saveChoice: saveChoiceMessages('nb', false) });
+    expect(canvas).toMatchObject({ inCanvas: true, saveChoice: saveChoiceMessages('nb', true) });
+    expect(Object.keys(canvas.saveChoice)).not.toContain('saveAsCopy');
+    expect(Object.keys(portal.saveChoice)).not.toContain('canvasPointer');
+  });
+
   it('[PROD-003] hands the script the blocked-save count message in the page language, with the count left open', () => {
     const config = configOf<{ messages: { blockedErrors: string } }>(renderEditorPage(input(), 'nb'));
     expect(config.messages.blockedErrors).toBe('Feil som må rettes eller begrunnes: {{count}}.');
@@ -79,10 +103,11 @@ describe('[SEC-008] editor page template', () => {
     expect(canvas.blocked).toBe(t('page.editor.blockedSaveCanvas', {}, 'nn'));
     expect(canvas.blocked).not.toMatch(/utkast/);
     expect(portal.blocked).toMatch(/utkast/);
-    expect([canvas.goToField, canvas.errorLabel, canvas.fieldNotReached]).toEqual([
+    expect([canvas.goToField, canvas.errorLabel, canvas.fieldNotReached, canvas.titleNotReached]).toEqual([
       'Gå til feltet',
       'Feil',
       t('page.editor.fieldNotReached', {}, 'nn'),
+      t('page.editor.titleNotReached', {}, 'nn'),
     ]);
   });
 
@@ -98,6 +123,8 @@ describe('[SEC-008] editor page template', () => {
       'jquery.js',
       '/h5p/boot/editorFieldReveal.js',
       '/h5p/boot/editorFields.js',
+      '/h5p/boot/editorSaveRequests.js',
+      '/h5p/boot/editorSaveChoice.js',
       '/h5p/boot/editorPage.js',
     ];
     const positions = order.map((needle) => html.indexOf(needle));

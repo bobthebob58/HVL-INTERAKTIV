@@ -1,0 +1,19 @@
+{
+  "library": "H5P.DragText 1.10",
+  "metadataTitle": "{{title}}",
+  "params": {
+    "taskDescription": "<p>{{dragTask}}</p>",
+    "textField": "{{termsText}}",
+    "overallFeedback": [
+      {
+        "from": 0,
+        "to": 100,
+        "feedback": "{{overallFeedback}}"
+      }
+    ],
+    "behaviour": {
+      "enableRetry": true,
+      "enableSolutionsButton": true
+    }
+  }
+}

@@ -1,0 +1,210 @@
+# content/laeringsdesign/patterns/uv-case/pattern.yaml — «Profesjonelt dilemma» (spec 04 §4).
+# DRAFT for ALU and the pilot teachers to review (open question Q17); texts, times and choices may change.
+# How to edit: content/laeringsdesign/README.md, section "patterns/". Checked by npm run content:check.
+# The case: the situation, then three decisions. A choice that leads astray shows what happens and offers
+# «Prøv avgjerda på nytt»; the last decision leads to two endings. Every ending gives the same score, so the score
+# shows that the student has worked through the case, not which way they chose.
+id: uv-case
+phases:
+  - underveis
+contentTypes:
+  - H5P.BranchingScenario
+name:
+  nn: Profesjonelt dilemma
+  nb: Profesjonelt dilemma
+  en: Professional dilemma
+purpose:
+  nn: Eit kort case med tre avgjerder, der kvart val får ei forklaring, og der studenten kan prøve ei avgjerd på nytt.
+  nb: En kort case med tre avgjørelser, der hvert valg får en forklaring, og der studenten kan prøve en avgjørelse på nytt.
+  en: A short case with three decisions, where every choice is explained and the student can try a decision again.
+whenToUse:
+  nn: >-
+    Når studentane skal øve på profesjonelle val der det ikkje finst eitt rett svar, til dømes i møte med
+    pasientar, elevar eller brukarar. Bygg helst på ein situasjon du kjenner frå praksis, og hald caset til tre
+    avgjerder.
+  nb: >-
+    Når studentene skal øve på profesjonelle valg der det ikke finnes ett riktig svar, for eksempel i møte med
+    pasienter, elever eller brukere. Bygg helst på en situasjon du kjenner fra praksis, og hold casen til tre
+    avgjørelser.
+  en: >-
+    When students are to practise professional choices that have no single right answer, for example with
+    patients, pupils or service users. Base it on a situation you know from practice if you can, and keep the case
+    to three decisions.
+example:
+  nn: >-
+    Ein lærarstudent i praksis ser at ein elev blir halden utanfor i friminuttet. Studenten vel mellom å gripe inn
+    med ein gong, å snakke med eleven seinare eller å ta det opp med kontaktlæraren, og ser kva vala fører til.
+  nb: >-
+    En lærerstudent i praksis ser at en elev blir holdt utenfor i friminuttet. Studenten velger mellom å gripe inn
+    med en gang, å snakke med eleven senere eller å ta det opp med kontaktlæreren, og ser hva valgene fører til.
+  en: >-
+    A student teacher on placement sees a pupil being left out at break time. The student chooses between stepping
+    in at once, talking to the pupil later or raising it with the class teacher, and sees where each choice leads.
+whyItWorks:
+  nn: >-
+    Profesjonell dømmekraft veks når ein må handle i ein situasjon, sjå følgjene og tenkje over dei, det Schön
+    kallar refleksjon i handling [@schon1983]. Eit case lèt studenten øve på dette utan at nokon tek skade, og
+    utvikle det van Manen kallar pedagogisk takt: kjensla for kva situasjonen krev [@vanmanen1991]. Forklarande
+    tilbakemelding på kvart val gjer at studenten lærer av vegen og ikkje berre av utfallet [@shute2008], og
+    høvet til å prøve ei avgjerd på nytt gjer det trygt å velje feil.
+  nb: >-
+    Profesjonell dømmekraft vokser når man må handle i en situasjon, se følgene og tenke over dem, det Schön
+    kaller refleksjon i handling [@schon1983]. En case lar studenten øve på dette uten at noen tar skade, og
+    utvikle det van Manen kaller pedagogisk takt: følelsen for hva situasjonen krever [@vanmanen1991].
+    Forklarende tilbakemelding på hvert valg gjør at studenten lærer av veien og ikke bare av utfallet
+    [@shute2008], og muligheten til å prøve en avgjørelse på nytt gjør det trygt å velge feil.
+  en: >-
+    Professional judgement grows when one has to act in a situation, see the consequences and think about them,
+    what Schön calls reflection-in-action [@schon1983]. A case lets students practise this without anyone being
+    harmed, and develop what van Manen calls pedagogical tact: a sense of what the situation calls for
+    [@vanmanen1991]. Explanatory feedback on every choice lets students learn from the path and not only from the
+    outcome [@shute2008], and the chance to try a decision again makes it safe to choose wrongly.
+buildMinutes: 60
+studentMinutes: 20
+texts:
+  title:
+    nn: ⟦Gje caset ein tittel som seier kva dilemmaet handlar om⟧
+    nb: ⟦Gi casen en tittel som sier hva dilemmaet handler om⟧
+    en: ⟦Give the case a title that says what the dilemma is about⟧
+  caseTitle:
+    nn: ⟦Tittel på caset⟧
+    nb: ⟦Tittel på casen⟧
+    en: ⟦Title of the case⟧
+  caseIntro:
+    nn: ⟦Skriv kort kva rolle studenten har i caset, og kva situasjon det handlar om⟧
+    nb: ⟦Skriv kort hvilken rolle studenten har i casen, og hvilken situasjon det handler om⟧
+    en: ⟦Write briefly what role the student has in the case, and what situation it is about⟧
+  startImageAlt:
+    nn: '⟦Om du legg til eit startbilete: skriv kva det viser. Utan bilete: slett denne teksten⟧'
+    nb: '⟦Hvis du legger til et startbilde: skriv hva det viser. Uten bilde: slett denne teksten⟧'
+    en: '⟦If you add a start image: write what it shows. Without an image: delete this text⟧'
+  introTitle:
+    nn: Situasjonen
+    nb: Situasjonen
+    en: The situation
+  introText:
+    nn: >-
+      ⟦Beskriv det profesjonelle dilemmaet: kven er med, kva har skjedd, og kva står på spel? Skriv det slik
+      studenten vil møte det i praksis⟧
+    nb: >-
+      ⟦Beskriv det profesjonelle dilemmaet: hvem er med, hva har skjedd, og hva står på spill? Skriv det slik
+      studenten vil møte det i praksis⟧
+    en: >-
+      ⟦Describe the professional dilemma: who is involved, what has happened, and what is at stake? Write it the
+      way the student will meet it in practice⟧
+  decision1Title:
+    nn: Avgjerd 1
+    nb: Avgjørelse 1
+    en: Decision 1
+  decision1Question:
+    nn: >-
+      ⟦Avgjerd 1: spør kva studenten vil gjere først. Begge vala bør vere noko ein fagperson faktisk kunne
+      ha gjort⟧
+    nb: >-
+      ⟦Avgjørelse 1: spør hva studenten vil gjøre først. Begge valgene bør være noe en fagperson faktisk kunne
+      ha gjort⟧
+    en: >-
+      ⟦Decision 1: ask what the student will do first. Both choices should be something a professional could
+      really have done⟧
+  decision2Title:
+    nn: Avgjerd 2
+    nb: Avgjørelse 2
+    en: Decision 2
+  decision2Question:
+    nn: '⟦Avgjerd 2: situasjonen har utvikla seg. Skriv kva studenten no må ta stilling til⟧'
+    nb: '⟦Avgjørelse 2: situasjonen har utviklet seg. Skriv hva studenten nå må ta stilling til⟧'
+    en: '⟦Decision 2: the situation has moved on. Write what the student now has to decide⟧'
+  decision3Title:
+    nn: Avgjerd 3
+    nb: Avgjørelse 3
+    en: Decision 3
+  decision3Question:
+    nn: '⟦Avgjerd 3: skriv det siste valet i caset, der begge vala fører til ein slutt⟧'
+    nb: '⟦Avgjørelse 3: skriv det siste valget i casen, der begge valgene fører til en slutt⟧'
+    en: '⟦Decision 3: write the last choice in the case, where both choices lead to an ending⟧'
+  choiceOnward:
+    nn: ⟦Skriv eit val som fører caset vidare⟧
+    nb: ⟦Skriv et valg som fører casen videre⟧
+    en: ⟦Write a choice that takes the case further⟧
+  choiceDetour:
+    nn: ⟦Skriv eit val som har ei følgje studenten bør tenkje over⟧
+    nb: ⟦Skriv et valg som har en følge studenten bør tenke over⟧
+    en: ⟦Write a choice with a consequence the student should think about⟧
+  choiceEnding1:
+    nn: ⟦Skriv eit val som fører til den første slutten⟧
+    nb: ⟦Skriv et valg som fører til den første slutten⟧
+    en: ⟦Write a choice that leads to the first ending⟧
+  choiceEnding2:
+    nn: ⟦Skriv eit val som fører til den andre slutten⟧
+    nb: ⟦Skriv et valg som fører til den andre slutten⟧
+    en: ⟦Write a choice that leads to the second ending⟧
+  feedbackTitle:
+    nn: ⟦Kort tittel på det som skjer etter valet⟧
+    nb: ⟦Kort tittel på det som skjer etter valget⟧
+    en: ⟦Short title for what happens after the choice⟧
+  feedbackText:
+    nn: ⟦Forklar kvifor valet får denne følgja, og kva fagkunnskap som ligg bak⟧
+    nb: ⟦Forklar hvorfor valget får denne følgen, og hvilken fagkunnskap som ligger bak⟧
+    en: ⟦Explain why the choice has this consequence, and what professional knowledge lies behind it⟧
+  consequenceTitle:
+    nn: Følgja av valet
+    nb: Følgen av valget
+    en: The consequence of the choice
+  consequenceText:
+    nn: ⟦Beskriv kva som skjer etter dette valet, og kvifor. Etterpå kan studenten prøve avgjerda på nytt⟧
+    nb: ⟦Beskriv hva som skjer etter dette valget, og hvorfor. Etterpå kan studenten prøve avgjørelsen på nytt⟧
+    en: ⟦Describe what happens after this choice, and why. The student can then try the decision again⟧
+  ending1Title:
+    nn: ⟦Tittel på den første slutten⟧
+    nb: ⟦Tittel på den første slutten⟧
+    en: ⟦Title of the first ending⟧
+  ending2Title:
+    nn: ⟦Tittel på den andre slutten⟧
+    nb: ⟦Tittel på den andre slutten⟧
+    en: ⟦Title of the second ending⟧
+  endTitle:
+    nn: ⟦Tittel på avslutninga⟧
+    nb: ⟦Tittel på avslutningen⟧
+    en: ⟦Title of the ending⟧
+  endingReflection:
+    nn: >-
+      ⟦Skriv kva denne slutten viser, utan å kalle han rett eller feil, og still eit spørsmål som får studenten til
+      å tenkje over vala sine⟧
+    nb: >-
+      ⟦Skriv hva denne slutten viser, uten å kalle den riktig eller feil, og still et spørsmål som får studenten
+      til å tenke over valgene sine⟧
+    en: >-
+      ⟦Write what this ending shows, without calling it right or wrong, and ask a question that makes the student
+      reflect on their choices⟧
+  proceed:
+    nn: Gå vidare
+    nb: Gå videre
+    en: Continue
+  tryDecisionAgain:
+    nn: Prøv avgjerda på nytt
+    nb: Prøv avgjørelsen på nytt
+    en: Try this decision again
+  startButton:
+    nn: Start caset
+    nb: Start casen
+    en: Start the case
+  restartButton:
+    nn: Start caset på nytt
+    nb: Start casen på nytt
+    en: Restart the case
+  backButton:
+    nn: Tilbake
+    nb: Tilbake
+    en: Back
+  disabledProceed:
+    nn: Fullfør denne delen først
+    nb: Fullfør denne delen først
+    en: Complete this part first
+  replayVideo:
+    nn: Spel av videoen på nytt
+    nb: Spill av videoen på nytt
+    en: Replay the video
+  fullscreen:
+    nn: Fullskjerm
+    nb: Fullskjerm
+    en: Fullscreen

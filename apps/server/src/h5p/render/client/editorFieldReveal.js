@@ -1,15 +1,19 @@
 /**
  * editorFieldReveal — opens what hides a field in H5P's editor: groups, tabs, wizard steps, an interaction's form, a
- * DragNBar sub-form over it, and a guided tour that fades the editor.
+ * DragNBar sub-form over it, a guided tour that fades the editor, and the metadata form that holds a title.
  *
  * Why: "Gå til feltet" (PROD-003, UD-021) focuses the field a finding names, and a field in a closed group, a hidden
  *      tab or step, or under an open sub-form cannot take focus. Custom editors keep fields in their own places
- *      (UPSTREAM notes below). ./editorFields.js follows the path and calls `hvliRevealField`.
+ *      (UPSTREAM notes below). ./editorFields.js follows the path and calls `hvliRevealField`. V-PLACEHOLDER also
+ *      names titles (`metadata.title`, `<sub-content>.metadata.title`, D-086), which H5P keeps in its metadata form,
+ *      not in the content's fields; `hvliRevealTitle` reaches them.
  * Spec: PROD-003, UD-006, UD-021
  * Invariants:
  *   - It opens only what an author opens by hand (groups, tabs, wizard steps, an interaction's form, a guided tour's
- *     "I got it"); it closes only the open sub-forms of a DragNBar form manager (InteractiveVideo,
- *     CoursePresentation) that hide the field, as their first breadcrumb does (values kept).
+ *     "I got it", a sub-content's "Metadata" button); it closes only the open sub-forms of a DragNBar form manager
+ *     (InteractiveVideo, CoursePresentation) that hide the field, as their first breadcrumb does (values kept).
+ *   - A title is the visible title field (the extra title, or a legacy form's title) or, where H5P shows none, the
+ *     title in the metadata popup; a sub-content whose library has metadata turned off has no title to reach.
  *   - Each part found is given as its own element: a widget's own, its `field-name-` wrapper, or a list's wrapper
  *     (found by the list element's ID); the whole form stands in only for a custom editor and never counts as the
  *     field's own.
@@ -22,7 +26,7 @@
  *   apps/server/test/h5p/editorGoToField.browser.int.test.ts, apps/server/test/h5p/editorGoToFieldEarly.browser.int.test.ts
  */
 'use strict';
-/* exported hvliOpenStep, hvliOpenAround, hvliRevealField */
+/* exported hvliOpenStep, hvliOpenAround, hvliRevealField, hvliRevealTitle */
 
 /** Where a widget keeps its element, in order of preference (a library's sub-form before its copy buttons). */
 var HVLI_OWN_ELEMENTS = ['$input', '$item', '$group', '$libraryWrapper', '$myField', '$form'];
@@ -107,4 +111,28 @@ function hvliRevealField(form, widgets, rest) {
   });
   if (scopes.length > 0) hvliOpenAround(scopes[scopes.length - 1]);
   return { scopes: scopes, complete: complete && widgets.length > 0 && scopes.at(-1) !== root, again: again };
+}
+
+/**
+ * Focuses the title of `owner`'s metadata: the activity's (the form) or a sub-content's (its library widget).
+ * @returns `focused`, `none` when the editor shows no title for it (metadata off), or `missed`.
+ */
+function hvliRevealTitle(owner) {
+  // UPSTREAM: https://github.com/h5p/h5p-editor-php-library/blob/ab2daa18bd61b19e7f8729e22eec88f3b637a868/scripts/h5peditor-metadata.js
+  // A library's `metadataSettings` turn the form off (`metadataForm` null) or hide its extra title field; then the
+  // title is only in the popup the "Metadata" button opens (`openPopup` focuses it), placed in the first field's label.
+  var metadata = owner && owner.metadataForm;
+  if (!metadata) return 'none';
+  var extra = typeof metadata.getExtraTitleField === 'function' ? metadata.getExtraTitleField() : undefined;
+  var input = extra && extra.$input && extra.$input[0];
+  var wrapper = owner.$libraryWrapper && owner.$libraryWrapper[0];
+  var button = !input && wrapper ? wrapper.querySelector('.h5p-metadata-button-wrapper') : null;
+  var control = input || button;
+  if (!control || !control.isConnected) return 'missed';
+  hvliOpenAround(control);
+  if (input) input.focus();
+  else button.click();
+  var active = control.ownerDocument.activeElement;
+  var popup = active && active.closest('.h5p-metadata-popup-overlay .field-name-title');
+  return active === input || (button && popup) ? 'focused' : 'missed';
 }

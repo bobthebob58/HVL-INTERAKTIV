@@ -1,0 +1,93 @@
+# content/laeringsdesign/patterns/ea-terms/pattern.yaml — «Fagomgrep i kontekst» (spec 04 §4).
+# DRAFT for ALU and the pilot teachers to review (open question Q17); texts, times and choices may change.
+# How to edit: content/laeringsdesign/README.md, section "patterns/". Checked by npm run content:check.
+# Two content types: the author chooses dragging the words (skeleton.H5P.DragText.json) or typing them
+# (skeleton.H5P.Blanks.json, not case-sensitive and tolerant of small typos). Both start from the same paragraph.
+id: ea-terms
+phases:
+  - etterarbeid
+contentTypes:
+  - H5P.DragText
+  - H5P.Blanks
+name:
+  nn: Fagomgrep i kontekst
+  nb: Fagbegreper i kontekst
+  en: Key terms in context
+purpose:
+  nn: Eit avsnitt frå faget med 6–8 nøkkelomgrep som studenten drar på plass eller skriv inn.
+  nb: Et avsnitt fra faget med 6–8 nøkkelbegreper som studenten drar på plass eller skriver inn.
+  en: A paragraph from the subject with 6–8 key terms that the student drags into place or types in.
+whenToUse:
+  nn: >-
+    Etter ei samling, når studentane skal feste fagomgrep og sjå korleis dei blir brukte saman. La studenten dra
+    orda på plass når omgrepa er nye, og skrive dei inn når dei skal hugsast utan hjelp.
+  nb: >-
+    Etter en samling, når studentene skal feste fagbegreper og se hvordan de brukes sammen. La studenten dra
+    ordene på plass når begrepene er nye, og skrive dem inn når de skal huskes uten hjelp.
+  en: >-
+    After a session, when students are to consolidate key terms and see how they are used together. Let students
+    drag the words into place when the terms are new, and type them in when they should be recalled unaided.
+example:
+  nn: >-
+    Eit avsnitt om fotosyntesen der studenten set inn klorofyll, karbondioksid, glukose, oksygen, lysenergi og
+    spalteopningar.
+  nb: >-
+    Et avsnitt om fotosyntesen der studenten setter inn klorofyll, karbondioksid, glukose, oksygen, lysenergi og
+    spalteåpninger.
+  en: >-
+    A paragraph on photosynthesis in which the student puts in chlorophyll, carbon dioxide, glucose, oxygen, light
+    energy and stomata.
+whyItWorks:
+  nn: >-
+    Å setje fagomgrep inn i ein samanhengande tekst krev at studenten hentar dei fram og forstår korleis dei heng
+    saman, ikkje berre kva dei heiter [@roediger2006]. Slik øvingstesting er blant dei læringsstrategiane som har
+    best dokumentert effekt [@dunlosky2013], og effekten varer lengst når øvinga blir gjenteken med nokre dagar
+    mellom [@cepeda2006]. Å skrive omgrepa krev meir av minnet enn å dra dei, så vel utfylling når omgrepa er
+    kjende frå før.
+  nb: >-
+    Å sette fagbegreper inn i en sammenhengende tekst krever at studenten henter dem fram og forstår hvordan de
+    henger sammen, ikke bare hva de heter [@roediger2006]. Slik øvingstesting er blant de læringsstrategiene som
+    har best dokumentert effekt [@dunlosky2013], og effekten varer lengst når øvingen gjentas med noen dager
+    mellom [@cepeda2006]. Å skrive begrepene krever mer av hukommelsen enn å dra dem, så velg utfylling når
+    begrepene er kjent fra før.
+  en: >-
+    Putting key terms into a coherent text requires students to retrieve them and understand how they fit
+    together, not just what they are called [@roediger2006]. Practice testing of this kind is among the learning
+    strategies with the best documented effect [@dunlosky2013], and the effect lasts longest when practice is
+    repeated a few days apart [@cepeda2006]. Typing the terms asks more of memory than dragging them, so choose
+    typing once the terms are familiar.
+buildMinutes: 15
+studentMinutes: 5
+texts:
+  title:
+    nn: ⟦Gje oppgåva ein tittel som seier kva fagområde omgrepa høyrer til⟧
+    nb: ⟦Gi oppgaven en tittel som sier hvilket fagområde begrepene hører til⟧
+    en: ⟦Give the task a title that names the field the terms belong to⟧
+  dragTask:
+    nn: >-
+      ⟦Skriv kva studenten skal gjere. Byt ut avsnittet under med eit avsnitt frå faget med 6–8 sentrale omgrep,
+      og set * før og etter kvart omgrep studenten skal dra på plass⟧
+    nb: >-
+      ⟦Skriv hva studenten skal gjøre. Bytt ut avsnittet under med et avsnitt fra faget med 6–8 sentrale begreper,
+      og sett * før og etter hvert begrep studenten skal dra på plass⟧
+    en: >-
+      ⟦Write what the student should do. Replace the paragraph below with a paragraph from the subject with 6–8 key
+      terms, and put * before and after each term the student should drag into place⟧
+  blanksTask:
+    nn: >-
+      ⟦Skriv kva studenten skal gjere. Byt ut avsnittet under med eit avsnitt frå faget med 6–8 sentrale omgrep,
+      og set * før og etter kvart omgrep studenten skal skrive inn⟧
+    nb: >-
+      ⟦Skriv hva studenten skal gjøre. Bytt ut avsnittet under med et avsnitt fra faget med 6–8 sentrale begreper,
+      og sett * før og etter hvert begrep studenten skal skrive inn⟧
+    en: >-
+      ⟦Write what the student should do. Replace the paragraph below with a paragraph from the subject with 6–8 key
+      terms, and put * before and after each term the student should type in⟧
+  termsText:
+    nn: '⟦Eit avsnitt der⟧ *⟦omgrep 1⟧* ⟦og⟧ *⟦omgrep 2⟧* ⟦heng saman med⟧ *⟦omgrep 3⟧*. ⟦Vidare i avsnittet⟧ *⟦omgrep 4⟧*, *⟦omgrep 5⟧* ⟦og⟧ *⟦omgrep 6⟧*.'
+    nb: '⟦Et avsnitt der⟧ *⟦begrep 1⟧* ⟦og⟧ *⟦begrep 2⟧* ⟦henger sammen med⟧ *⟦begrep 3⟧*. ⟦Videre i avsnittet⟧ *⟦begrep 4⟧*, *⟦begrep 5⟧* ⟦og⟧ *⟦begrep 6⟧*.'
+    en: '⟦A paragraph in which⟧ *⟦term 1⟧* ⟦and⟧ *⟦term 2⟧* ⟦relate to⟧ *⟦term 3⟧*. ⟦Later in the paragraph⟧ *⟦term 4⟧*, *⟦term 5⟧* ⟦and⟧ *⟦term 6⟧*.'
+  overallFeedback:
+    nn: ⟦Skriv kva studenten kan gjere vidare, til dømes å lese avsnittet om igjen og prøve på nytt om nokre dagar⟧
+    nb: ⟦Skriv hva studenten kan gjøre videre, for eksempel å lese avsnittet om igjen og prøve på nytt om noen dager⟧
+    en: ⟦Write what the student can do next, for example read the paragraph again and try again in a few days⟧

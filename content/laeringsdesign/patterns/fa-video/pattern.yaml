@@ -1,0 +1,233 @@
+# content/laeringsdesign/patterns/fa-video/pattern.yaml — «Kort video med kontrollspørsmål» (spec 04 §4).
+# DRAFT for ALU and the pilot teachers to review (open question Q17); texts, times and choices may change.
+# How to edit: content/laeringsdesign/README.md, section "patterns/". Checked by npm run content:check.
+# The skeleton has no video and no caption file: the author adds both (V-PLACEHOLDER reports the missing video,
+# and V-VID-CAPTIONS the missing captions once a video is there).
+id: fa-video
+phases:
+  - forarbeid
+contentTypes:
+  - H5P.InteractiveVideo
+name:
+  nn: Kort video med kontrollspørsmål
+  nb: Kort video med kontrollspørsmål
+  en: Short video with check questions
+purpose:
+  nn: Ein kort video med tre kontrollspørsmål undervegs og ei oppsummering til slutt, så studenten må hente fram det videoen viser.
+  nb: En kort video med tre kontrollspørsmål underveis og en oppsummering til slutt, så studenten må hente fram det videoen viser.
+  en: A short video with three check questions along the way and a summary at the end, so students retrieve what the video shows.
+whenToUse:
+  nn: >-
+    Når studentane skal møte eit nytt tema eller nøkkelomgrep før samlinga, og du har eller kan lage ein kort video
+    om det. Hald videoen på 6–9 minutt, og del ein lengre video i fleire. Videoen treng teksting.
+  nb: >-
+    Når studentene skal møte et nytt tema eller nøkkelbegrep før samlingen, og du har eller kan lage en kort video
+    om det. Hold videoen på 6–9 minutter, og del en lengre video i flere. Videoen trenger teksting.
+  en: >-
+    When students are to meet a new topic or key concept before the session, and you have or can make a short video
+    about it. Keep the video to 6–9 minutes, and split a longer video into several. The video needs captions.
+example:
+  nn: >-
+    Ein video på åtte minutt om blodtrykksmåling, med eitt spørsmål etter kvart av dei tre stega og ei
+    oppsummering til slutt, som studentane ser før ferdigheitstreninga.
+  nb: >-
+    En video på åtte minutter om blodtrykksmåling, med ett spørsmål etter hvert av de tre trinnene og en
+    oppsummering til slutt, som studentene ser før ferdighetstreningen.
+  en: >-
+    An eight-minute video on measuring blood pressure, with one question after each of its three steps and a
+    summary at the end, which students watch before the skills training.
+whyItWorks:
+  nn: >-
+    Korte videoar held betre på merksemda: i ein stor studie av videoar i nettkurs fall engasjementet tydeleg etter
+    rundt seks minutt [@guo2014]. Å dele stoffet i bitar som studenten styrer farten på sjølv, gjer det lettare å
+    forstå [@mayer2009], og spørsmål undervegs reduserer tankevandring og gjev betre læring [@szpunar2013].
+    Innebygde spørsmål gjer at studenten hentar fram stoffet i staden for berre å sjå på [@brame2016]. Før
+    samlinga viser svara deg kva som sit, og kva du bør ta opp [@novak1999].
+  nb: >-
+    Korte videoer holder bedre på oppmerksomheten: i en stor studie av videoer i nettkurs falt engasjementet
+    tydelig etter rundt seks minutter [@guo2014]. Å dele stoffet i biter som studenten styrer farten på selv, gjør
+    det lettere å forstå [@mayer2009], og spørsmål underveis reduserer tankevandring og gir bedre læring
+    [@szpunar2013]. Innebygde spørsmål gjør at studenten henter fram stoffet i stedet for bare å se på
+    [@brame2016]. Før samlingen viser svarene deg hva som sitter, og hva du bør ta opp [@novak1999].
+  en: >-
+    Short videos hold attention better: in a large study of videos in online courses, engagement dropped clearly
+    after about six minutes [@guo2014]. Splitting the material into pieces that students pace themselves makes it
+    easier to understand [@mayer2009], and questions along the way reduce mind wandering and improve learning
+    [@szpunar2013]. Embedded questions make students retrieve the material instead of just watching [@brame2016].
+    Before the session, the answers show you what has stuck and what to take up [@novak1999].
+buildMinutes: 30
+studentMinutes: 15
+texts:
+  title:
+    nn: ⟦Gje aktiviteten ein tittel som seier kva videoen handlar om⟧
+    nb: ⟦Gi aktiviteten en tittel som sier hva videoen handler om⟧
+    en: ⟦Give the activity a title that says what the video is about⟧
+  videoTitle:
+    nn: ⟦Tittel på videoen⟧
+    nb: ⟦Tittel på videoen⟧
+    en: ⟦Title of the video⟧
+  videoDescription:
+    nn: ⟦Skriv kva studenten skal sjå etter. Hald videoen på 6–9 minutt⟧
+    nb: ⟦Skriv hva studenten skal se etter. Hold videoen på 6–9 minutter⟧
+    en: ⟦Write what the student should look for. Keep the video to 6–9 minutes⟧
+  captionsLabel:
+    nn: Teksting
+    nb: Teksting
+    en: Captions
+  captionsLanguage:
+    nn: nn
+    nb: nb
+    en: en
+  interactionLabel:
+    nn: Kontrollspørsmål
+    nb: Kontrollspørsmål
+    en: Check question
+  question1Title:
+    nn: Kontrollspørsmål 1
+    nb: Kontrollspørsmål 1
+    en: Check question 1
+  question1:
+    nn: >-
+      ⟦Skriv eit spørsmål om det viktigaste i dei første minutta av videoen. La studenten bruke omgrepet, ikkje
+      berre kjenne det att⟧
+    nb: >-
+      ⟦Skriv et spørsmål om det viktigste i de første minuttene av videoen. La studenten bruke begrepet, ikke bare
+      kjenne det igjen⟧
+    en: >-
+      ⟦Write a question about the main point of the first minutes of the video. Make the student use the concept,
+      not just recognise it⟧
+  question2Title:
+    nn: Kontrollspørsmål 2
+    nb: Kontrollspørsmål 2
+    en: Check question 2
+  blanksTask:
+    nn: ⟦Skriv kva studenten skal fylle inn, ut frå den midtre delen av videoen⟧
+    nb: ⟦Skriv hva studenten skal fylle inn, ut fra den midtre delen av videoen⟧
+    en: ⟦Write what the student should fill in, based on the middle part of the video⟧
+  blanksSentence:
+    nn: ⟦Skriv ei setning om eit nøkkelpunkt i videoen, der studenten fyller inn⟧
+    nb: ⟦Skriv en setning om et nøkkelpunkt i videoen, der studenten fyller inn⟧
+    en: ⟦Write a sentence about a key point in the video, in which the student fills in⟧
+  blanksAnswer:
+    nn: ⟦omgrepet⟧
+    nb: ⟦begrepet⟧
+    en: ⟦the concept⟧
+  question3Title:
+    nn: Kontrollspørsmål 3
+    nb: Kontrollspørsmål 3
+    en: Check question 3
+  question3:
+    nn: >-
+      ⟦Skriv eit spørsmål som får studenten til å knyte saman det videoen har vist, og bruke det på eit nytt døme⟧
+    nb: >-
+      ⟦Skriv et spørsmål som får studenten til å knytte sammen det videoen har vist, og bruke det på et nytt eksempel⟧
+    en: >-
+      ⟦Write a question that makes the student connect what the video has shown and apply it to a new example⟧
+  correctAnswer:
+    nn: ⟦Skriv det rette svaret⟧
+    nb: ⟦Skriv det riktige svaret⟧
+    en: ⟦Write the correct answer⟧
+  correctFeedback:
+    nn: ⟦Forklar kvifor svaret er rett⟧
+    nb: ⟦Forklar hvorfor svaret er riktig⟧
+    en: ⟦Explain why the answer is correct⟧
+  wrongAnswer1:
+    nn: ⟦Skriv eit feil svar som byggjer på ei vanleg misoppfatning⟧
+    nb: ⟦Skriv et feil svar som bygger på en vanlig misoppfatning⟧
+    en: ⟦Write a wrong answer that rests on a common misconception⟧
+  wrongAnswer2:
+    nn: ⟦Skriv eit feil svar som liknar det rette, men manglar noko viktig⟧
+    nb: ⟦Skriv et feil svar som ligner det riktige, men mangler noe viktig⟧
+    en: ⟦Write a wrong answer that resembles the correct one but misses something important⟧
+  wrongFeedback:
+    nn: ⟦Forklar kvifor dette svaret er feil, og vis til kvar i videoen det blir forklart⟧
+    nb: ⟦Forklar hvorfor dette svaret er feil, og vis til hvor i videoen det blir forklart⟧
+    en: ⟦Explain why this answer is wrong, and point to where the video explains it⟧
+  summaryTitle:
+    nn: Oppsummering
+    nb: Oppsummering
+    en: Summary
+  summaryIntro:
+    nn: ⟦Skriv kva studenten skal gjere, til dømes å velje påstanden som stemmer med videoen⟧
+    nb: ⟦Skriv hva studenten skal gjøre, for eksempel å velge påstanden som stemmer med videoen⟧
+    en: ⟦Write what the student should do, for example choose the statement that matches the video⟧
+  summaryTrue1:
+    nn: '⟦Hovudpoeng 1: skriv ein påstand som stemmer⟧'
+    nb: '⟦Hovedpoeng 1: skriv en påstand som stemmer⟧'
+    en: '⟦Main point 1: write a statement that is true⟧'
+  summaryFalse1:
+    nn: '⟦Hovudpoeng 1: skriv ein påstand som ikkje stemmer⟧'
+    nb: '⟦Hovedpoeng 1: skriv en påstand som ikke stemmer⟧'
+    en: '⟦Main point 1: write a statement that is not true⟧'
+  summaryTrue2:
+    nn: '⟦Hovudpoeng 2: skriv ein påstand som stemmer⟧'
+    nb: '⟦Hovedpoeng 2: skriv en påstand som stemmer⟧'
+    en: '⟦Main point 2: write a statement that is true⟧'
+  summaryFalse2:
+    nn: '⟦Hovudpoeng 2: skriv ein påstand som ikkje stemmer⟧'
+    nb: '⟦Hovedpoeng 2: skriv en påstand som ikke stemmer⟧'
+    en: '⟦Main point 2: write a statement that is not true⟧'
+  summaryTrue3:
+    nn: '⟦Hovudpoeng 3: skriv ein påstand som stemmer⟧'
+    nb: '⟦Hovedpoeng 3: skriv en påstand som stemmer⟧'
+    en: '⟦Main point 3: write a statement that is true⟧'
+  summaryFalse3:
+    nn: '⟦Hovudpoeng 3: skriv ein påstand som ikkje stemmer⟧'
+    nb: '⟦Hovedpoeng 3: skriv en påstand som ikke stemmer⟧'
+    en: '⟦Main point 3: write a statement that is not true⟧'
+  summaryIncorrect:
+    nn: Feil! Prøv igjen.
+    nb: Feil! Prøv igjen.
+    en: Incorrect! Please try again.
+  summaryIncorrectShort:
+    nn: Feil
+    nb: Feil
+    en: Incorrect
+  summaryProgress:
+    nn: Framgang :num av :total
+    nb: Fremdrift :num av :total
+    en: Progress :num of :total
+  endcardQuestion:
+    nn: Spørsmål
+    nb: Spørsmål
+    en: Question
+  endcardRowWithScore:
+    nn: Du fekk @score av @total poeng for @question, som kom etter @minutes minutt og @seconds sekund.
+    nb: Du fikk @score av @total poeng for @question, som kom etter @minutes minutter og @seconds sekunder.
+    en: You got @score out of @total points for the @question that appeared after @minutes minutes and @seconds seconds.
+  endcardRowWithoutScore:
+    nn: Du har svart på @question, som kom etter @minutes minutt og @seconds sekund.
+    nb: Du har svart på @question, som kom etter @minutes minutter og @seconds sekunder.
+    en: You have answered the @question that appeared after @minutes minutes and @seconds seconds.
+  submitButton:
+    nn: Send inn
+    nb: Send inn
+    en: Submit
+  readFeedback:
+    nn: Les tilbakemeldinga
+    nb: Les tilbakemeldingen
+    en: Read feedback
+  correctAnswerLabel:
+    nn: Rett svar
+    nb: Riktig svar
+    en: Correct answer
+  scoreBarLabel:
+    nn: Du fekk :num av :total poeng
+    nb: Du fikk :num av :total poeng
+    en: You got :num out of :total points
+  a11yCheck:
+    nn: Sjekk svara. Svara blir merkte som rette, feil eller utan svar.
+    nb: Sjekk svarene. Svarene blir merket som riktige, feil eller ubesvarte.
+    en: Check the answers. The responses will be marked as correct, incorrect, or unanswered.
+  a11yShowSolution:
+    nn: Vis svaret. Oppgåva blir merkt med det rette svaret.
+    nb: Vis svaret. Oppgaven blir merket med det riktige svaret.
+    en: Show the solution. The task will be marked with its correct solution.
+  a11yRetry:
+    nn: Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt.
+    nb: Prøv igjen. Alle svarene blir nullstilt, og oppgaven starter på nytt.
+    en: Retry the task. Reset all responses and start the task over again.
+  confirmCheckHeader:
+    nn: Ferdig?
+    nb: Ferdig?
+    en: Finish?

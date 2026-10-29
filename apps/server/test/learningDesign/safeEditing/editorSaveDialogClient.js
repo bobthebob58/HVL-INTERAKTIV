@@ -10,6 +10,9 @@
  * Invariants:
  *   - Texts come from the caller and are written as text, never as markup.
  *   - Only `window.hvliProbeSaveChoice` is added to the page; the dialog is removed again when it closes.
+ *   - The dialog's class is the probe's own (`hvl-probe-save-choice`): the editor page now links the production
+ *     dialog's stylesheet (editorSaveChoice.css, for `.hvl-save-choice`), and the probe still shows the browser's own
+ *     look before its stand-in stylesheet is linked.
  *   - `armOn` intercepts one click on the opener before editorPage.js sees it, so the probe never saves.
  * Collaborators: ./editorSaveDialogPage.ts (serves and loads this file), ./editorSaveDialogStyles.css.
  * Tests: ./editorSaveDialog.browser.int.test.ts, ./editorSaveDialogLook.browser.int.test.ts,
@@ -70,7 +73,7 @@
   function build(texts) {
     var dialog = element('dialog', '', {
       id: 'hvl-save-choice',
-      class: 'hvl-save-choice',
+      class: 'hvl-probe-save-choice',
       'aria-labelledby': 'hvl-save-choice-title',
       'aria-describedby': 'hvl-save-choice-text',
     });

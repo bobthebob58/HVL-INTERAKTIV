@@ -94,12 +94,12 @@ export function loadPatternContent(context: StudioContentContext): ContentLoadRe
 /**
  * This section's part of the one-line `npm run content:check` summary.
  * @param content - The loaded patterns.
- * @returns e.g. `9 patterns`, with a note when the library versions and field limits could not be checked.
+ * @returns e.g. `9 patterns`, with a note when the library versions, keys and field limits could not be checked.
  * @spec PED-011
  */
 export function describePatternContent(content: PatternContent): string | undefined {
   const count = content.patterns.length;
   const counted = `${count} pattern${count === 1 ? '' : 's'}`;
   if (content.libraryCheck !== 'libraries-missing' || count === 0) return counted;
-  return `${counted} (library versions and field limits not checked: run npm run h5p:fetch-libraries)`;
+  return `${counted} (library versions, keys and field limits not checked: run npm run h5p:fetch-libraries)`;
 }

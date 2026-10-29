@@ -1,8 +1,8 @@
 /**
  * Integration tests for the server pages' stylesheet route: the files are served with nosniff, nothing else is, and
- * the stylesheets use design tokens only.
+ * the stylesheets (the pages', the header's and the editor's save choice dialog's) use design tokens only.
  *
- * Spec: UD-001, LTI-003
+ * Spec: UD-001, LTI-003, PROD-013
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +10,7 @@ import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import {
+  EDITOR_SAVE_CHOICE_STYLESHEET,
   pageAssetRoutes,
   SERVER_CHROME_STYLESHEET,
   SERVER_PAGES_STYLESHEET,
@@ -18,8 +19,8 @@ import {
 const app = express().use(pageAssetRoutes());
 
 describe('[UD-001] server pages stylesheet', () => {
-  it('[UD-001] is served as CSS with nosniff, as is the header stylesheet', async () => {
-    for (const path of [SERVER_PAGES_STYLESHEET, SERVER_CHROME_STYLESHEET]) {
+  it('[UD-001] is served as CSS with nosniff, as are the header and save choice stylesheets', async () => {
+    for (const path of [SERVER_PAGES_STYLESHEET, SERVER_CHROME_STYLESHEET, EDITOR_SAVE_CHOICE_STYLESHEET]) {
       const res = await request(app).get(path);
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toMatch(/^text\/css/);
@@ -34,7 +35,7 @@ describe('[UD-001] server pages stylesheet', () => {
   });
 
   it('[UD-001] names colours only through design tokens', () => {
-    for (const file of ['serverPages.css', 'serverChrome.css']) {
+    for (const file of ['serverPages.css', 'serverChrome.css', 'editorSaveChoice.css']) {
       const css = readFileSync(
         fileURLToPath(new URL(`../../../src/http/pages/assets/${file}`, import.meta.url)),
         'utf8',

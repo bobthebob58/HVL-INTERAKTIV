@@ -1,0 +1,137 @@
+# content/laeringsdesign/patterns/ea-diagnose/pattern.yaml — «Misoppfatningssjekk» (spec 04 §4).
+# DRAFT for ALU and the pilot teachers to review (open question Q17); texts, times and choices may change.
+# How to edit: content/laeringsdesign/README.md, section "patterns/". Checked by npm run content:check.
+id: ea-diagnose
+phases:
+  - forarbeid
+  - etterarbeid
+contentTypes:
+  - H5P.MultiChoice
+name:
+  nn: Misoppfatningssjekk
+  nb: Misoppfatningssjekk
+  en: Misconception check
+purpose:
+  nn: Eitt spørsmål med fire svar, der kvart feil svar står for ei kjend misoppfatning og tilbakemeldinga forklarer ho.
+  nb: Ett spørsmål med fire svar, der hvert feil svar står for en kjent misoppfatning og tilbakemeldingen forklarer den.
+  en: One question with four answers, where each wrong answer stands for a known misconception that the feedback explains.
+whenToUse:
+  nn: >-
+    Når du veit om misoppfatningar som går igjen i emnet, og vil vite kor utbreidde dei er. Som forarbeid viser
+    svara kva du bør ta opp i samlinga; som etterarbeid viser dei om misoppfatninga er borte.
+  nb: >-
+    Når du vet om misoppfatninger som går igjen i emnet, og vil vite hvor utbredt de er. Som forarbeid viser
+    svarene hva du bør ta opp i samlingen; som etterarbeid viser de om misoppfatningen er borte.
+  en: >-
+    When you know of misconceptions that recur in the course and want to know how widespread they are. As pre-work
+    the answers show what to take up in the session; as post-work they show whether the misconception has gone.
+example:
+  nn: >-
+    I sjukepleie: «Kvifor gjev ein oksygen med forsiktigheit til pasientar med KOLS?» Eitt feil svar byggjer på
+    misoppfatninga at oksygen alltid er ufarleg, eit anna på at metningsmålet alltid er 98–100 %.
+  nb: >-
+    I sykepleie: «Hvorfor gir man oksygen med forsiktighet til pasienter med KOLS?» Ett feil svar bygger på
+    misoppfatningen at oksygen alltid er ufarlig, et annet på at metningsmålet alltid er 98–100 %.
+  en: >-
+    In nursing: "Why is oxygen given with caution to patients with COPD?" One wrong answer rests on the
+    misconception that oxygen is always harmless, another on the idea that the saturation target is always 98–100%.
+whyItWorks:
+  nn: >-
+    Ei misoppfatning forsvinn sjeldan av seg sjølv: studenten må sjå at ho ikkje held, og forstå kvifor.
+    Tilbakemelding som forklarer, verkar betre enn ei melding om at svaret er feil [@shute2008], og ho hjelper mest
+    når ho seier kvar studenten står og kva neste steg er [@hattie2007]. Når kvart feil svar står for ei bestemt
+    misoppfatning, ser du i resultata kva studentane faktisk trur, og kan byggje samlinga på det, slik
+    just-in-time teaching gjer [@novak1999].
+  nb: >-
+    En misoppfatning forsvinner sjelden av seg selv: studenten må se at den ikke holder, og forstå hvorfor.
+    Tilbakemelding som forklarer, virker bedre enn en melding om at svaret er feil [@shute2008], og den hjelper
+    mest når den sier hvor studenten står og hva neste steg er [@hattie2007]. Når hvert feil svar står for en
+    bestemt misoppfatning, ser du i resultatene hva studentene faktisk tror, og kan bygge samlingen på det, slik
+    just-in-time teaching gjør [@novak1999].
+  en: >-
+    A misconception rarely goes away by itself: students must see that it does not hold, and understand why.
+    Feedback that explains works better than being told an answer is wrong [@shute2008], and it helps most when it
+    tells students where they stand and what to do next [@hattie2007]. When each wrong answer stands for one
+    misconception, the results show what students actually believe, and you can build the session on that, as
+    just-in-time teaching does [@novak1999].
+buildMinutes: 10
+studentMinutes: 3
+texts:
+  title:
+    nn: ⟦Gje sjekken ein tittel som seier kva omgrep han gjeld⟧
+    nb: ⟦Gi sjekken en tittel som sier hvilket begrep den gjelder⟧
+    en: ⟦Give the check a title that names the concept it is about⟧
+  question:
+    nn: >-
+      ⟦Skriv eitt spørsmål som skil studentar som har forstått omgrepet, frå dei som har ei vanleg misoppfatning.
+      Spør om noko dei må bruke omgrepet for å svare på, ikkje berre kjenne att⟧
+    nb: >-
+      ⟦Skriv ett spørsmål som skiller studenter som har forstått begrepet, fra dem som har en vanlig misoppfatning.
+      Spør om noe de må bruke begrepet for å svare på, ikke bare kjenne igjen⟧
+    en: >-
+      ⟦Write one question that separates students who have understood the concept from those who hold a common
+      misconception. Ask something they must use the concept to answer, not just recognise⟧
+  correctAnswer:
+    nn: ⟦Skriv det rette svaret⟧
+    nb: ⟦Skriv det riktige svaret⟧
+    en: ⟦Write the correct answer⟧
+  correctFeedback:
+    nn: ⟦Forklar kvifor svaret er rett, slik at også den som gjetta, lærer noko⟧
+    nb: ⟦Forklar hvorfor svaret er riktig, slik at også den som gjettet, lærer noe⟧
+    en: ⟦Explain why the answer is correct, so that a student who guessed also learns something⟧
+  misconception1:
+    nn: '⟦Feil svar 1: skriv det slik ein student med misoppfatning 1 ville svart⟧'
+    nb: '⟦Feil svar 1: skriv det slik en student med misoppfatning 1 ville svart⟧'
+    en: '⟦Wrong answer 1: write it the way a student with misconception 1 would answer⟧'
+  misconception1Feedback:
+    nn: ⟦Namngje misoppfatning 1, som dette svaret byggjer på, og forklar kvifor ho ikkje held⟧
+    nb: ⟦Navngi misoppfatning 1, som dette svaret bygger på, og forklar hvorfor den ikke holder⟧
+    en: ⟦Name misconception 1, which this answer rests on, and explain why it does not hold⟧
+  misconception2:
+    nn: '⟦Feil svar 2: skriv det slik ein student med misoppfatning 2 ville svart⟧'
+    nb: '⟦Feil svar 2: skriv det slik en student med misoppfatning 2 ville svart⟧'
+    en: '⟦Wrong answer 2: write it the way a student with misconception 2 would answer⟧'
+  misconception2Feedback:
+    nn: ⟦Namngje misoppfatning 2, som dette svaret byggjer på, og forklar kvifor ho ikkje held⟧
+    nb: ⟦Navngi misoppfatning 2, som dette svaret bygger på, og forklar hvorfor den ikke holder⟧
+    en: ⟦Name misconception 2, which this answer rests on, and explain why it does not hold⟧
+  misconception3:
+    nn: '⟦Feil svar 3: skriv det slik ein student med misoppfatning 3 ville svart⟧'
+    nb: '⟦Feil svar 3: skriv det slik en student med misoppfatning 3 ville svart⟧'
+    en: '⟦Wrong answer 3: write it the way a student with misconception 3 would answer⟧'
+  misconception3Feedback:
+    nn: ⟦Namngje misoppfatning 3, som dette svaret byggjer på, og forklar kvifor ho ikkje held⟧
+    nb: ⟦Navngi misoppfatning 3, som dette svaret bygger på, og forklar hvorfor den ikke holder⟧
+    en: ⟦Name misconception 3, which this answer rests on, and explain why it does not hold⟧
+  submitButton:
+    nn: Send inn
+    nb: Send inn
+    en: Submit
+  readFeedback:
+    nn: Les tilbakemeldinga
+    nb: Les tilbakemeldingen
+    en: Read feedback
+  correctAnswerLabel:
+    nn: Rett svar
+    nb: Riktig svar
+    en: Correct answer
+  scoreBarLabel:
+    nn: Du fekk :num av :total poeng
+    nb: Du fikk :num av :total poeng
+    en: You got :num out of :total points
+  a11yCheck:
+    nn: Sjekk svara. Svara blir merkte som rette, feil eller utan svar.
+    nb: Sjekk svarene. Svarene blir merket som riktige, feil eller ubesvarte.
+    en: Check the answers. The responses will be marked as correct, incorrect, or unanswered.
+  a11yShowSolution:
+    nn: Vis svaret. Oppgåva blir merkt med det rette svaret.
+    nb: Vis svaret. Oppgaven blir merket med det riktige svaret.
+    en: Show the solution. The task will be marked with its correct solution.
+  a11yRetry:
+    nn: Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt.
+    nb: Prøv igjen. Alle svarene blir nullstilt, og oppgaven starter på nytt.
+    en: Retry the task. Reset all responses and start the task over again.
+  confirmCheckHeader:
+    nn: Ferdig?
+    nb: Ferdig?
+    en: Finish?

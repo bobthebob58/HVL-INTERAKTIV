@@ -239,7 +239,9 @@
     "pageTitle": "Content bank",
     "heading": "The HVL content bank"
   },
-  "safeEditing": {},
+  "safeEditing": {
+    "openingCopy": "Your change was saved as a new version. Opening the new version in Edit …"
+  },
   "mappe": {
     "pageTitle": "Teaching portfolio",
     "heading": "Teaching portfolio"

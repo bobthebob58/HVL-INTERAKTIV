@@ -12,8 +12,11 @@
  *     unknown key a compile error, and doc-lint keeps nn, nb and en in step.
  *   - Codes with a status of 500 or above are deliberate: ./h5pErrorResponse.ts keeps their code and message instead
  *     of answering `error.generic`. A message never carries counts of learners (D-093) or internal details.
+ *   - One refusal has a second wording: from Canvas, `hvl:learner-state-reset-needed` keeps its status and code but
+ *     says `safeEditing.resetNeededCanvas`, as Canvas has no «Lagre som ny versjon» (D-098,
+ *     ../learningDesign/safeEditing/resetNeededWording.ts).
  * Collaborators: @hvl-interaktiv/api-contract (`LEARNING_DESIGN_ERROR_STATUS`), ./HttpError.ts,
- *   ./h5pErrorResponse.ts, ../i18n/locales/*.json.
+ *   ./h5pErrorResponse.ts, ../i18n/locales/*.json, ../learningDesign/safeEditing/resetNeededWording.ts.
  * Tests: apps/server/test/http/learningDesignErrors.test.ts
  */
 import {

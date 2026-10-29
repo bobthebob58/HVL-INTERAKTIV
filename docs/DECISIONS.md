@@ -1692,6 +1692,7 @@ loading of one spec per session are kept.
   - **Defaults:** `semanticDefaults.ts` also gives `isSubContent` groups (H5P.Summary statements) a
     `subContentId`, as the editor does, and the creation step passes a copy of the parameters, because the save
     changes them in place.
+- **Amendment (2026-10-29, S5 W2b):** `content:check` also refuses a skeleton key that the library's semantics do not define, so a misspelt behaviour switch cannot silently leave a `PROD-009` setting at its default. A sub-content node may hold only `library`, `params`, `metadata` and `subContentId`; a key a library's own editor writes beside its semantics (BranchingScenario's `contentId` on each content item) is accepted, so a skeleton made from an exported `.h5p` passes as exported. A test runs the check on every real seed package.
 
 ### D-085 · Creating an activity from a pattern is one server request
 - **Context:** `PROD-001` opens the editor "pre-filled with a pedagogically sound skeleton". The editor client could
@@ -1981,6 +1982,10 @@ loading of one spec per session are kept.
     activity to the newest installed minor version of its library when it saves it; as the signature compares
     `Name major.minor`, the first save after HVL installs a newer minor version is structural and asks, which errs
     on the strict side.
+- **Amendment (2026-10-29, S5 W5b):**
+  - **Canvas wording:** from Canvas, the 409 keeps its status and code but its message (`safeEditing.resetNeededCanvas`) does not offer a new version, which Canvas does not have (D-098).
+  - **«Gå til feltet» on titles:** `metadata.title` and a sub-content's title reach the title field (Column, QuestionSet, InteractiveBook and InteractiveVideo interactions) or the metadata popup (AdvancedText, ImageHotspots content). BranchingScenario node titles and CoursePresentation element titles are not reached by those custom editors; the page says so («feltet kan ikkje opnast») rather than failing silently, as for their other fields.
+  - **The activity page:** while the dialog is open, the portal's activity page and `/app/play` make their own controls inert; after «Lagre som ny versjon» the portal opens the copy's editor tab.
 
 ### D-094 · Rendering the pedagogisk mappe
 - **Context:** `MAPPE-002` takes headings from the template and criteria from the criteria files, keyed by criteria

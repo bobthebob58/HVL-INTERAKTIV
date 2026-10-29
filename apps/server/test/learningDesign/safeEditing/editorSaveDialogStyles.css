@@ -11,10 +11,11 @@
  *   - Values are design tokens only (UD-001); the backdrop is decoration with no text on it, as in apps/web's
  *     Dialog.tsx (ink at 60 % opacity).
  *   - The buttons keep serverPages.css's look; the two-tone ring also shows on plain :focus (UD-004).
- * Collaborators: ./editorSaveDialogClient.js (the class), ./editorSaveDialogPage.ts (serves and links this file).
+ * Collaborators: ./editorSaveDialogClient.js (the probe's own class, apart from the production dialog's rules in
+ *   apps/server/src/http/pages/assets/editorSaveChoice.css), ./editorSaveDialogPage.ts (serves and links this file).
  * Tests: ./editorSaveDialogLook.browser.int.test.ts
  */
-dialog.hvl-save-choice {
+dialog.hvl-probe-save-choice {
   box-sizing: border-box;
   max-width: min(var(--hvl-measure), calc(100% - 2 * var(--hvl-space-m)));
   padding: var(--hvl-space-l);
@@ -24,24 +25,24 @@ dialog.hvl-save-choice {
   color: var(--hvl-ink);
 }
 
-dialog.hvl-save-choice::backdrop {
+dialog.hvl-probe-save-choice::backdrop {
   background: var(--hvl-ink);
   opacity: 0.6;
 }
 
-dialog.hvl-save-choice h2 {
+dialog.hvl-probe-save-choice h2 {
   margin-top: 0;
 }
 
 /* A11Y: after a mouse click on «Lagre», Chromium gives the programmatically focused «Avbryt» no :focus-visible and
    ignores focus({ focusVisible: true }), so the dialog's buttons show the ring on :focus. WCAG 2.4.7 is already met
    by :focus-visible (the ring appears once the keyboard is used); this rule goes further, an open choice (P7). */
-dialog.hvl-save-choice button:focus {
+dialog.hvl-probe-save-choice button:focus {
   outline: var(--hvl-focus-outline);
   outline-offset: var(--hvl-focus-offset);
   box-shadow: var(--hvl-focus-shadow);
 }
 
-dialog.hvl-save-choice button {
+dialog.hvl-probe-save-choice button {
   margin: var(--hvl-space-xs) var(--hvl-space-s) var(--hvl-space-xs) 0;
 }

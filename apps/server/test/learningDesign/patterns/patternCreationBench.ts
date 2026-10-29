@@ -1,10 +1,11 @@
 /**
- * patternCreationBench — the whole app (`openAppTestbed`) with the ten real content types (D-078), offering the
- * fixture pattern and a variant of it that names a library that is not installed, with a signed-in portal author;
- * plus the readings the creation tests make of a created activity.
+ * patternCreationBench — the whole app (`openAppTestbed`) with the ten real content types (D-078) and a signed-in
+ * portal author, offering either the fixture pattern and a variant of it that names a library that is not installed,
+ * or the repository's own patterns in `content/`; plus the readings the creation tests make of a created activity.
  *
  * Why: PROD-001 creates an activity through the real route, the real editor save path and the real libraries, so the
- *      tests run the app as main.ts builds it; only the studio content's patterns are the fixture's (PED-011).
+ *      tests run the app as main.ts builds it; only the studio content's patterns are the fixture's (PED-011), or,
+ *      for the tests that create every real pattern (PED-010), none are replaced.
  * Spec: PROD-001, PED-011
  * Invariants:
  *   - The author is the mock Feide's run author (../../support/runFeideAuthor.ts), so the testbed's close removes
@@ -14,7 +15,8 @@
  * Collaborators: ../../support/appTestbed.ts, ../../support/fixturePattern.ts, ../../support/feideTestbed.ts,
  *   ../../support/realPackages.ts, ../../support/testLibraryAuditSink.ts.
  * Tests: apps/server/test/learningDesign/patterns/patternCreation.int.test.ts,
- *   apps/server/test/learningDesign/patterns/patternCreationGuards.int.test.ts
+ *   apps/server/test/learningDesign/patterns/patternCreationGuards.int.test.ts, and the real-pattern tests
+ *   (apps/server/test/learningDesign/patterns/realPattern*.int.test.ts)
  */
 import { rmSync } from 'node:fs';
 import type { IUser } from '@lumieducation/h5p-server';
@@ -22,6 +24,7 @@ import request from 'supertest';
 import { CSRF_HEADER } from '../../../src/auth/session/csrfToken.js';
 import { loadValidationContext } from '../../../src/config/validationContext.js';
 import { asAccountUser } from '../../../src/h5p/HvlH5pUser.js';
+import type { StudioContent } from '../../../src/learningDesign/content/loadStudioContent.js';
 import { LibraryInstaller } from '../../../src/h5p/libraries/LibraryInstaller.js';
 import { seedLibraries } from '../../../src/h5p/libraries/seedLibraries.js';
 import type { Finding, ValidationMetadata } from '../../../src/validation/types.js';
@@ -69,19 +72,8 @@ const unavailableVariant = () => {
   return fixturePatterns(root).patterns;
 };
 
-/**
- * Starts the app with the real libraries and the fixture patterns, and signs the author in.
- * @returns The bench; call `close` in `afterAll`.
- */
-export async function openPatternCreationBench(): Promise<PatternCreationBench> {
-  const patterns = {
-    patterns: [...fixturePatterns().patterns, ...unavailableVariant()],
-    libraryCheck: 'not-requested',
-  } as const;
-  const tb = await openAppTestbed([], {
-    runAuthor: true,
-    studioContent: studioContentWithPatterns(patterns),
-  });
+async function openBench(studioContent?: StudioContent): Promise<PatternCreationBench> {
+  const tb = await openAppTestbed([], { runAuthor: true, ...(studioContent ? { studioContent } : {}) });
   const seedAudit = new TestLibraryAuditSink(tb.db);
   const { packageImporter, libraryManager } = tb.runtime.editor;
   await seedLibraries(REAL_PACKAGES_DIR, new LibraryInstaller(packageImporter, seedAudit, libraryManager));
@@ -106,6 +98,26 @@ export async function openPatternCreationBench(): Promise<PatternCreationBench> 
       removePatternFixtureCopies();
     },
   };
+}
+
+/**
+ * Starts the app with the real libraries and the fixture patterns, and signs the author in.
+ * @returns The bench; call `close` in `afterAll`.
+ */
+export function openPatternCreationBench(): Promise<PatternCreationBench> {
+  const patterns = {
+    patterns: [...fixturePatterns().patterns, ...unavailableVariant()],
+    libraryCheck: 'not-requested',
+  } as const;
+  return openBench(studioContentWithPatterns(patterns));
+}
+
+/**
+ * Starts the app with the real libraries and the repository's own patterns (`content/`), and signs the author in.
+ * @returns The bench; call `close` in `afterAll`.
+ */
+export function openRealPatternBench(): Promise<PatternCreationBench> {
+  return openBench();
 }
 
 const validate = createContentValidator(loadValidationContext({ CAPTIONED_MEDIA_ORIGINS: [] }));

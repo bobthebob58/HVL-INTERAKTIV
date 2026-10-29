@@ -3,9 +3,11 @@
  *
  * Why: Lumi's editor template writes the integration JSON into an inline script unescaped (D-040), and the page
  *      must work under the strict H5P policy (D-070). The integration object travels as an inert JSON block, a
- *      second block carries what our boot script needs (activity ID, token, messages), and the boot script
- *      (./client/editorPage.js) starts H5P's editor, loads the parameters and saves through the content API.
- * Spec: H5P-002, H5P-007, SEC-008, UD-010, DATA-011, UD-002, PROD-003
+ *      second block carries what our boot script needs (activity ID, token, messages, the save choice's texts), and
+ *      the boot script (./client/editorPage.js) starts H5P's editor, loads the parameters and saves through the
+ *      content API; a structural save that would reset other people's progress opens the save choice
+ *      (./client/editorSaveChoice.js, PROD-013, D-093).
+ * Spec: H5P-002, H5P-007, SEC-008, UD-010, DATA-011, UD-002, PROD-003, PROD-013
  * Invariants:
  *   - Every value is escaped; both JSON blocks go through `scriptJson`.
  *   - The page has a `lang`, a title, one save button and a polite status region for save results (UD-006),
@@ -13,21 +15,24 @@
  *     (PROD-003, D-074), hidden while it is empty.
  *   - The blocked-save text matches where the page runs: in Canvas (ltik token) it does not send the author to
  *     unpublish, which only the portal's "Sjekk og publiser" offers.
+ *   - The save choice matches it too (`inCanvas`, `saveChoice`): Canvas offers reset or cancel with a pointer to the
+ *     portal, the portal also «Lagre som ny versjon» (D-098).
  *   - First scripts are only same-origin static files (`/static/…js`), e.g. the LTI landing script.
  *   - The server pages' stylesheet comes after H5P's styles, so the save button and the status use the token
  *     typography, colours and target size like every server page (UD-002, UD-005, D-067); the editor keeps its
- *     full width.
+ *     full width. The save choice's stylesheet comes after it.
  * SPEC-DEVIATION: D-070 — the page's own <script>/<link> tags carry no integrity or nonce (H5P-009):
  *   same-origin files allowed by 'self' (amendment of 2026-10-24).
  * Collaborators: ./editorIntegration.ts, ./playerPage.ts (shared boot script and first-script check),
  *   ./scriptJson.ts, ../../http/routes/editorRoutes.ts, ../../lti/play/ltiEditRoutes.ts,
- *   ../../http/pages/pageAssetRoutes.ts (the stylesheet).
+ *   ../../http/pages/pageAssetRoutes.ts (the stylesheets), ../../learningDesign/safeEditing/saveChoiceMessages.ts.
  * Tests: apps/server/test/h5p/render/editorPage.test.ts, apps/server/test/http/pages/serverPages.browser.test.ts,
  *   apps/server/test/h5p/editorBlockedSave.browser.int.test.ts
  */
 import type { IIntegration } from '@lumieducation/h5p-server';
-import { SERVER_PAGES_STYLESHEET } from '../../http/pages/pageAssetRoutes.js';
+import { EDITOR_SAVE_CHOICE_STYLESHEET, SERVER_PAGES_STYLESHEET } from '../../http/pages/pageAssetRoutes.js';
 import { t, type Locale } from '../../i18n/translate.js';
+import { saveChoiceMessages } from '../../learningDesign/safeEditing/saveChoiceMessages.js';
 import type { UrlToken } from '../HvlH5pUser.js';
 import { firstScriptTags, H5P_INTEGRATION_SCRIPT } from './playerPage.js';
 import { escapeHtml, scriptJson } from './scriptJson.js';
@@ -38,6 +43,10 @@ export const EDITOR_BOOT_SCRIPT = '/h5p/boot/editorPage.js';
 export const EDITOR_FIELDS_SCRIPT = '/h5p/boot/editorFields.js';
 /** Where the H5P router serves ./client/editorFieldReveal.js, which editorFields.js needs (opening a hidden field). */
 export const EDITOR_FIELD_REVEAL_SCRIPT = '/h5p/boot/editorFieldReveal.js';
+/** Where the H5P router serves ./client/editorSaveRequests.js, the boot script's requests (load, save, copy). */
+export const EDITOR_SAVE_REQUESTS_SCRIPT = '/h5p/boot/editorSaveRequests.js';
+/** Where the H5P router serves ./client/editorSaveChoice.js, the save choice dialog of PROD-013. */
+export const EDITOR_SAVE_CHOICE_SCRIPT = '/h5p/boot/editorSaveChoice.js';
 
 /** What the editor page is built from. */
 export interface EditorPageInput {
@@ -66,6 +75,8 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
   const config = {
     contentId: input.contentId ?? null,
     token: input.token ?? null,
+    inCanvas,
+    saveChoice: saveChoiceMessages(language, inCanvas),
     messages: {
       saving: t('page.editor.saving', {}, language),
       saved: t('page.editor.saved', {}, language),
@@ -76,6 +87,7 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
       errorLabel: t('page.editor.errorLabel', {}, language),
       goToField: t('page.editor.goToField', {}, language),
       fieldNotReached: t('page.editor.fieldNotReached', {}, language),
+      titleNotReached: t('page.editor.titleNotReached', {}, language),
       editorFrameTitle: t('page.editor.frameTitle', {}, language),
     },
   };
@@ -92,6 +104,7 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
     `<script src="${H5P_INTEGRATION_SCRIPT}"></script>`,
     ...input.styles.map((href) => `<link rel="stylesheet" href="${escapeHtml(href)}">`),
     `<link rel="stylesheet" href="${SERVER_PAGES_STYLESHEET}">`,
+    `<link rel="stylesheet" href="${EDITOR_SAVE_CHOICE_STYLESHEET}">`,
     ...input.scripts.map((src) => `<script src="${escapeHtml(src)}"></script>`),
     '</head>',
     '<body>',
@@ -104,6 +117,8 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
     '</main>',
     `<script src="${EDITOR_FIELD_REVEAL_SCRIPT}"></script>`,
     `<script src="${EDITOR_FIELDS_SCRIPT}"></script>`,
+    `<script src="${EDITOR_SAVE_REQUESTS_SCRIPT}"></script>`,
+    `<script src="${EDITOR_SAVE_CHOICE_SCRIPT}"></script>`,
     `<script src="${EDITOR_BOOT_SCRIPT}"></script>`,
     '</body>',
     '</html>',

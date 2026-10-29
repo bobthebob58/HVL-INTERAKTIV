@@ -321,11 +321,12 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
 - [ ] 3. Guide, phase matrix and catalogue (`PED-001`…`PED-003`); patterns and V-PLACEHOLDER (`PED-010`, `PED-011`,
       `PROD-001`, `PROD-009`)
       — stage 1 done: pattern format, loader and checks, creation API, V-PLACEHOLDER incl. missing media, the
-        BranchingScenario picture repair (W2a); the nine patterns' content follows (W2b)
+        BranchingScenario picture repair (W2a); stage 2 done: the nine patterns in nn, nb and en, created on the
+        real types in every type and phase (W2b; drafts for ALU, Q17)
 - [ ] 3. Metadata, planner, learner time and purpose (`PED-030`…`PED-032`)
 - [ ] 3. Co-authors, content bank and duplicate (`PROD-007`); safe editing (`PROD-013`)
       — stage 1 done: structure signature, the 409 save gate, stale state writes dropped, the copy route (W5a);
-        the editor dialog follows (W5b)
+        stage 2 done: the save choice dialog in the editor, portal and Canvas, inert page while open (W5b)
 - [ ] 3. Mappe export in Markdown and tagged PDF (`MAPPE-001`…`MAPPE-004`)
 - [ ] 4. Integration: axe suite for the new pages and the dialog, e2e flows, screenshots in `nn` to the owner
 - [ ] 5. Docs: `content/` READMEs for ALU, GLOSSARY, Evaluator Guide, `/personvern`, ALU review packet

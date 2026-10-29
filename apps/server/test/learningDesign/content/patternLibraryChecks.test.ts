@@ -1,11 +1,12 @@
 /**
  * Tests for the pattern checks against the installed libraries (D-084 amendment): the main library must be the
- * version the editor offers, each sub-content a version its field offers, and every filled-in text must fit its
- * field's limit; and what `content:check` does when the libraries are not installed. The library tests read the
- * pinned libraries `npm run h5p:fetch-libraries` installs, so they skip without them locally and fail in CI; a
- * sub-content version a field offers but no folder holds is shown with a stand-in catalogue.
+ * version the editor offers, each sub-content a version its field offers, every key one its semantics define (so
+ * a misspelt formative switch is caught, PROD-009), and every filled-in text must fit its field's limit; and what
+ * `content:check` does when the libraries are not installed. The library tests read the pinned libraries
+ * `npm run h5p:fetch-libraries` installs, so they skip without them locally and fail in CI; a sub-content version a
+ * field offers but no folder holds is shown with a stand-in catalogue.
  *
- * Spec: PED-010, PED-011
+ * Spec: PED-010, PED-011, PROD-009
  */
 import { afterAll, describe, expect, it } from 'vitest';
 import type { ContentProblem } from '../../../src/learningDesign/content/contentProblem.js';
@@ -106,6 +107,36 @@ describeWithRealPackages('[PED-010] skeletons against the installed libraries', 
         'allows at most 2048, and H5P would cut the rest',
     );
   });
+
+  it('[PROD-009] names a key the semantics do not define, such as a misspelt behaviour switch, in any node', () => {
+    // Act
+    const problems = problemsOf({
+      [QUESTION_SET]: (t) =>
+        t
+          .replace('"progressType"', '"progresType"')
+          .replace('"enableSolutionsButton": true, "type"', '"enableSolutionButton": true, "type"')
+          .replace('"metadata": { "title": "{{tfTitle}}"', '"metdata": { "title": "{{tfTitle}}"'),
+    });
+    // Assert
+    expect(problems.map((p) => [p.key, p.message.split(' (')[0]])).toEqual([
+      [
+        'params.progresType',
+        'is "progresType", which H5P.QuestionSet 1.21 does not define here, so H5P would ignore it; check the spelling',
+      ],
+      [
+        'params.questions[#1].params.behaviour.enableSolutionButton',
+        'is "enableSolutionButton", which H5P.MultiChoice 1.16 does not define here, so H5P would ignore it; check the spelling',
+      ],
+      [
+        'params.questions[#3].metdata',
+        'is "metdata", which H5P.TrueFalse 1.8 does not define here, so H5P would ignore it; check the spelling',
+      ],
+    ]);
+    expect(problems[2]?.message).toContain('(the keys here are library, params, metadata, subContentId)');
+    expect(problems.map((p) => [p.file, typeof p.line])).toEqual(
+      problems.map(() => ['skeleton.H5P.QuestionSet.json', 'number']),
+    );
+  });
 });
 
 describe('[PED-010] a sub-content version its field offers but that is not installed', () => {
@@ -140,7 +171,7 @@ describe('[PED-011] content:check without the installed libraries', () => {
     const ci = loadFixturePatterns(PATTERN_FIXTURE_ROOT, { installedLibraries: missing(true) });
     // Assert
     expect(local.ok && describePatternContent(local.value)).toBe(
-      '1 pattern (library versions and field limits not checked: run npm run h5p:fetch-libraries)',
+      '1 pattern (library versions, keys and field limits not checked: run npm run h5p:fetch-libraries)',
     );
     expect(ci.ok ? [] : ci.problems).toEqual([
       {

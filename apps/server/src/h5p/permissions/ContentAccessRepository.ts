@@ -7,12 +7,14 @@
  * Spec: H5P-006, PROD-004, PROD-006, PROD-007
  * Invariants:
  *   - One query per lookup: owner, status, visibility, bank listing and co-authors come from a single `findUnique`.
- *   - A content ID that is not a UUID is unknown (`undefined`) and never reaches the database.
+ *   - A content ID that is not a UUID is unknown (`undefined`) and never reaches the database; a UUID is looked up in
+ *     lower case, as PostgreSQL stores it, so look-ups Prisma batches find it in any spelling.
  *   - Only co-authors with the `coauthor` role count; a future role grants nothing until the rules know it.
  *   - Facts carry account IDs and flags only, never names or e-mail addresses.
  * Collaborators: ../HvlPermissionSystem.ts (the caller), ./contentRules.ts (reads the facts),
  *   ../../learningDesign/collaboration/duplicateRules.ts (reads `bankListed`), ../../infra/prismaClient.ts.
- * Tests: apps/server/test/h5p/permissions/HvlPermissionSystem.int.test.ts
+ * Tests: apps/server/test/h5p/permissions/HvlPermissionSystem.int.test.ts,
+ *   apps/server/test/h5p/permissions/contentFactsBatching.int.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
 import { isContentUuid } from '../contentIds.js';
@@ -64,8 +66,10 @@ export class PrismaContentAccessRepository implements ContentAccessRepository {
   async factsFor(contentId: string): Promise<ContentFacts | undefined> {
     // SECURITY: a malformed ID would make PostgreSQL raise an error; unknown is the fail-closed answer.
     if (!isContentUuid(contentId)) return undefined;
+    // WHY: Prisma batches the `findUnique` calls of one tick into one `IN (…)` query and matches the rows back by
+    // string equality; PostgreSQL finds an upper-case UUID, but its stored lower-case ID would then match no call.
     const row = await this.db.h5PContent.findUnique({
-      where: { id: contentId },
+      where: { id: contentId.toLowerCase() },
       select: {
         id: true,
         ownerUserId: true,

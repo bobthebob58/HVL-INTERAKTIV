@@ -118,7 +118,8 @@ export class ContentDuplicator {
    * @returns The new activity and the route that allowed it; the source is not changed.
    * @throws as {@link ContentDuplicator.duplicate}.
    * @example
-   * const { contentId } = await duplicator.saveAsCopy(id, body.params.params, body.params.metadata, actor);
+   * // The copy route's body is `{ params, metadata }`, as H5P's editor gives them (`JSON.parse(content.params)`).
+   * const { contentId } = await duplicator.saveAsCopy(id, req.body.params, req.body.metadata, actor);
    * @spec PROD-007
    */
   async saveAsCopy(

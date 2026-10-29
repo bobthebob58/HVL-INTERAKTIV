@@ -6968,6 +6968,7 @@ types read as a tip or an alternative.</li>
 changes them in place.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-29, S5 W2b):</strong> <code>content:check</code> also refuses a skeleton key that the library&#39;s semantics do not define, so a misspelt behaviour switch cannot silently leave a <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a> setting at its default. A sub-content node may hold only <code>library</code>, <code>params</code>, <code>metadata</code> and <code>subContentId</code>; a key a library&#39;s own editor writes beside its semantics (BranchingScenario&#39;s <code>contentId</code> on each content item) is accepted, so a skeleton made from an exported <code>.h5p</code> passes as exported. A test runs the check on every real seed package.</li>
 </ul>
 <h3 id="decisions--d-085--creating-an-activity-from-a-pattern-is-one-server-request" tabindex="-1">D-085 · Creating an activity from a pattern is one server request</h3>
 <ul>
@@ -7297,6 +7298,12 @@ which the player reads as -1 when it is missing, so a missing one counts as -1. 
 activity to the newest installed minor version of its library when it saves it; as the signature compares
 <code>Name major.minor</code>, the first save after HVL installs a newer minor version is structural and asks, which errs
 on the strict side.</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-10-29, S5 W5b):</strong><ul>
+<li><strong>Canvas wording:</strong> from Canvas, the 409 keeps its status and code but its message (<code>safeEditing.resetNeededCanvas</code>) does not offer a new version, which Canvas does not have (D-098).</li>
+<li><strong>«Gå til feltet» on titles:</strong> <code>metadata.title</code> and a sub-content&#39;s title reach the title field (Column, QuestionSet, InteractiveBook and InteractiveVideo interactions) or the metadata popup (AdvancedText, ImageHotspots content). BranchingScenario node titles and CoursePresentation element titles are not reached by those custom editors; the page says so («feltet kan ikkje opnast») rather than failing silently, as for their other fields.</li>
+<li><strong>The activity page:</strong> while the dialog is open, the portal&#39;s activity page and <code>/app/play</code> make their own controls inert; after «Lagre som ny versjon» the portal opens the copy&#39;s editor tab.</li>
 </ul>
 </li>
 </ul>
@@ -7817,7 +7824,8 @@ S5 is done), and all of S5 is done in this session.</li>
 <li>Guide, phase matrix and catalogue (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>…<a class="req-ref" href="#r-PED-003"><code>PED-003</code></a>); patterns and V-PLACEHOLDER (<a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>, <a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>,
  <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>, <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>)
  — stage 1 done: pattern format, loader and checks, creation API, V-PLACEHOLDER incl. missing media, the
-   BranchingScenario picture repair (W2a); the nine patterns&#39; content follows (W2b)</li>
+   BranchingScenario picture repair (W2a); stage 2 done: the nine patterns in nn, nb and en, created on the
+   real types in every type and phase (W2b; drafts for ALU, Q17)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="3">
@@ -7827,7 +7835,7 @@ S5 is done), and all of S5 is done in this session.</li>
 <li><span class="task">○ To do:</span> <ol start="3">
 <li>Co-authors, content bank and duplicate (<a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a>); safe editing (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>)
  — stage 1 done: structure signature, the 409 save gate, stale state writes dropped, the copy route (W5a);
-   the editor dialog follows (W5b)</li>
+   stage 2 done: the save choice dialog in the editor, portal and Canvas, inert page while open (W5b)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="3">

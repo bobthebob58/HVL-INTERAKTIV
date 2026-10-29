@@ -1,0 +1,211 @@
+# content/laeringsdesign/patterns/fa-slides/pattern.yaml — «Omgrepspresentasjon» (spec 04 §4).
+# DRAFT for ALU and the pilot teachers to review (open question Q17); texts, times and choices may change.
+# How to edit: content/laeringsdesign/README.md, section "patterns/". Checked by npm run content:check.
+# Six slides: a title slide, four slides with one concept and one check each, and a summary slide. Keyboard
+# navigation stays on (`activeSurface: false` in the skeleton).
+id: fa-slides
+phases:
+  - forarbeid
+contentTypes:
+  - H5P.CoursePresentation
+name:
+  nn: Omgrepspresentasjon
+  nb: Begrepspresentasjon
+  en: Concept presentation
+purpose:
+  nn: Ein presentasjon med eitt omgrep og éin kort sjekk per lysbilete, frå tittel til oppsummering.
+  nb: En presentasjon med ett begrep og én kort sjekk per lysbilde, fra tittel til oppsummering.
+  en: A presentation with one concept and one short check per slide, from title to summary.
+whenToUse:
+  nn: >-
+    Når studentane skal møte fire nøkkelomgrep før samlinga, og omgrepa kan forklarast kort med tekst og bilete.
+    Passar godt når omgrepa byggjer på kvarandre, så rekkjefølgja betyr noko.
+  nb: >-
+    Når studentene skal møte fire nøkkelbegreper før samlingen, og begrepene kan forklares kort med tekst og bilder.
+    Passer godt når begrepene bygger på hverandre, så rekkefølgen betyr noe.
+  en: >-
+    When students are to meet four key concepts before the session, and the concepts can be explained briefly in
+    text and pictures. It suits concepts that build on each other, so that their order matters.
+example:
+  nn: >-
+    Fire omgrep frå barnehagelærarutdanninga – leik, omsorg, læring og danning – med eitt lysbilete og eitt
+    kontrollspørsmål kvar, før ei samling om rammeplanen.
+  nb: >-
+    Fire begreper fra barnehagelærerutdanningen – lek, omsorg, læring og danning – med ett lysbilde og ett
+    kontrollspørsmål hver, før en samling om rammeplanen.
+  en: >-
+    Four concepts from kindergarten teacher education – play, care, learning and formation – with one slide and one
+    check question each, before a session on the framework plan.
+whyItWorks:
+  nn: >-
+    Eitt omgrep per lysbilete deler stoffet i bitar som studenten tek i sitt eige tempo, og det gjer nytt stoff
+    lettare å forstå [@mayer2009]. Ein kort sjekk rett etter kvart omgrep gjer at studenten må hente fram stoffet
+    med ein gong, og det gjev betre langtidsminne enn å lese om igjen [@roediger2006]. Når studentane har gått
+    gjennom omgrepa før samlinga, viser svara deg kva de bør bruke tida på saman [@novak1999].
+  nb: >-
+    Ett begrep per lysbilde deler stoffet i biter som studenten tar i sitt eget tempo, og det gjør nytt stoff
+    lettere å forstå [@mayer2009]. En kort sjekk rett etter hvert begrep gjør at studenten må hente fram stoffet
+    med en gang, og det gir bedre langtidshukommelse enn å lese om igjen [@roediger2006]. Når studentene har gått
+    gjennom begrepene før samlingen, viser svarene deg hva dere bør bruke tiden på sammen [@novak1999].
+  en: >-
+    One concept per slide splits the material into pieces that students take at their own pace, which makes new
+    material easier to understand [@mayer2009]. A short check right after each concept makes students retrieve the
+    material at once, which gives better long-term retention than reading it again [@roediger2006]. When students
+    have worked through the concepts before the session, their answers show you what to spend your time together
+    on [@novak1999].
+buildMinutes: 30
+studentMinutes: 15
+texts:
+  title:
+    nn: ⟦Gje presentasjonen ein tittel som seier kva omgrep han handlar om⟧
+    nb: ⟦Gi presentasjonen en tittel som sier hvilke begreper den handler om⟧
+    en: ⟦Give the presentation a title that names the concepts it covers⟧
+  introName:
+    nn: Innleiing
+    nb: Innledning
+    en: Introduction
+  presentationHeading:
+    nn: ⟦Tittel på presentasjonen⟧
+    nb: ⟦Tittel på presentasjonen⟧
+    en: ⟦Title of the presentation⟧
+  presentationIntro:
+    nn: >-
+      ⟦Skriv kva studentane skal lære, og kvifor omgrepa er viktige i faget. Kvart av dei fire neste lysbileta tek
+      for seg eitt omgrep og har ein kort sjekk⟧
+    nb: >-
+      ⟦Skriv hva studentene skal lære, og hvorfor begrepene er viktige i faget. Hvert av de fire neste lysbildene tar
+      for seg ett begrep og har en kort sjekk⟧
+    en: >-
+      ⟦Write what students will learn, and why the concepts matter in the subject. Each of the next four slides
+      covers one concept and has a short check⟧
+  concept1Name:
+    nn: ⟦Namnet på omgrep 1⟧
+    nb: ⟦Navnet på begrep 1⟧
+    en: ⟦Name of concept 1⟧
+  concept2Name:
+    nn: ⟦Namnet på omgrep 2⟧
+    nb: ⟦Navnet på begrep 2⟧
+    en: ⟦Name of concept 2⟧
+  concept3Name:
+    nn: ⟦Namnet på omgrep 3⟧
+    nb: ⟦Navnet på begrep 3⟧
+    en: ⟦Name of concept 3⟧
+  concept4Name:
+    nn: ⟦Namnet på omgrep 4⟧
+    nb: ⟦Navnet på begrep 4⟧
+    en: ⟦Name of concept 4⟧
+  conceptText:
+    nn: ⟦Forklar omgrepet med eigne ord på høgst 150 ord, og gje eitt døme frå praksis⟧
+    nb: ⟦Forklar begrepet med egne ord på høyst 150 ord, og gi ett eksempel fra praksis⟧
+    en: ⟦Explain the concept in your own words in at most 150 words, and give one example from practice⟧
+  textTitle:
+    nn: Tekst
+    nb: Tekst
+    en: Text
+  checkTitle:
+    nn: Sjekk
+    nb: Sjekk
+    en: Check
+  checkQuestion:
+    nn: ⟦Skriv eit spørsmål som får studenten til å bruke omgrepet, ikkje berre kjenne det att⟧
+    nb: ⟦Skriv et spørsmål som får studenten til å bruke begrepet, ikke bare kjenne det igjen⟧
+    en: ⟦Write a question that makes the student use the concept, not just recognise it⟧
+  correctAnswer:
+    nn: ⟦Skriv det rette svaret⟧
+    nb: ⟦Skriv det riktige svaret⟧
+    en: ⟦Write the correct answer⟧
+  correctFeedback:
+    nn: ⟦Forklar kvifor svaret er rett⟧
+    nb: ⟦Forklar hvorfor svaret er riktig⟧
+    en: ⟦Explain why the answer is correct⟧
+  wrongAnswer1:
+    nn: ⟦Skriv eit feil svar som byggjer på ei vanleg misoppfatning⟧
+    nb: ⟦Skriv et feil svar som bygger på en vanlig misoppfatning⟧
+    en: ⟦Write a wrong answer that rests on a common misconception⟧
+  wrongAnswer2:
+    nn: ⟦Skriv eit feil svar som blandar omgrepet med eit omgrep som liknar⟧
+    nb: ⟦Skriv et feil svar som blander begrepet med et begrep som ligner⟧
+    en: ⟦Write a wrong answer that confuses the concept with a similar one⟧
+  wrongFeedback:
+    nn: ⟦Forklar kvifor dette svaret er feil, og kva som skil det frå det rette⟧
+    nb: ⟦Forklar hvorfor dette svaret er feil, og hva som skiller det fra det riktige⟧
+    en: ⟦Explain why this answer is wrong, and what sets it apart from the correct one⟧
+  blanksTask:
+    nn: ⟦Skriv kva studenten skal fylle inn⟧
+    nb: ⟦Skriv hva studenten skal fylle inn⟧
+    en: ⟦Write what the student should fill in⟧
+  blanksSentence:
+    nn: ⟦Skriv ei setning som brukar omgrepet, der studenten fyller inn⟧
+    nb: ⟦Skriv en setning som bruker begrepet, der studenten fyller inn⟧
+    en: ⟦Write a sentence that uses the concept, in which the student fills in⟧
+  blanksAnswer:
+    nn: ⟦omgrepet⟧
+    nb: ⟦begrepet⟧
+    en: ⟦the concept⟧
+  summaryName:
+    nn: Oppsummering
+    nb: Oppsummering
+    en: Summary
+  summaryText:
+    nn: >-
+      ⟦Samanfatt kvart av dei fire omgrepa i éi setning, og skriv kva studentane skal ta med seg til samlinga⟧
+    nb: >-
+      ⟦Oppsummer hvert av de fire begrepene i én setning, og skriv hva studentene skal ta med seg til samlingen⟧
+    en: >-
+      ⟦Sum up each of the four concepts in one sentence, and write what students should bring to the session⟧
+  cpSlides:
+    nn: Sider
+    nb: Sider
+    en: Slides
+  cpResults:
+    nn: Resultat
+    nb: Resultat
+    en: Results
+  cpAmountCorrect:
+    nn: '@value / @max rette'
+    nb: '@value / @max riktige'
+    en: '@value / @max correct'
+  cpAmountCorrectAria:
+    nn: '@value av @max rette'
+    nb: '@value av @max riktige'
+    en: '@value out of @max correct'
+  cpConfirm:
+    nn: Stadfest
+    nb: Bekreft
+    en: Confirm
+  cpCancel:
+    nn: Avbryt
+    nb: Avbryt
+    en: Cancel
+  submitButton:
+    nn: Send inn
+    nb: Send inn
+    en: Submit
+  readFeedback:
+    nn: Les tilbakemeldinga
+    nb: Les tilbakemeldingen
+    en: Read feedback
+  correctAnswerLabel:
+    nn: Rett svar
+    nb: Riktig svar
+    en: Correct answer
+  scoreBarLabel:
+    nn: Du fekk :num av :total poeng
+    nb: Du fikk :num av :total poeng
+    en: You got :num out of :total points
+  a11yCheck:
+    nn: Sjekk svara. Svara blir merkte som rette, feil eller utan svar.
+    nb: Sjekk svarene. Svarene blir merket som riktige, feil eller ubesvarte.
+    en: Check the answers. The responses will be marked as correct, incorrect, or unanswered.
+  a11yShowSolution:
+    nn: Vis svaret. Oppgåva blir merkt med det rette svaret.
+    nb: Vis svaret. Oppgaven blir merket med det riktige svaret.
+    en: Show the solution. The task will be marked with its correct solution.
+  a11yRetry:
+    nn: Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt.
+    nb: Prøv igjen. Alle svarene blir nullstilt, og oppgaven starter på nytt.
+    en: Retry the task. Reset all responses and start the task over again.
+  confirmCheckHeader:
+    nn: Ferdig?
+    nb: Ferdig?
+    en: Finish?

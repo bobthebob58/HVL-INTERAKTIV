@@ -1,18 +1,21 @@
 /**
  * skeletonLibraryChecks — the checks of a pattern skeleton against the installed libraries: the main library is the
- * version the editor offers, each sub-content names a version its field offers, and every text, filled in nn, nb
- * and en, fits its field's length limit.
+ * version the editor offers, each sub-content names a version its field offers, every key is one the semantics
+ * define, and every text, filled in nn, nb and en, fits its field's length limit.
  *
  * Why: the editor offers each type in its newest installed minor version, and the sub-content policy refuses a
  *      version a field does not list (BranchingScenario 1.10 offers CoursePresentation 1.27, not 1.28). Lumi clips a
  *      text to its field's `maxLength` after escaping, so a long Bokmål text would be cut silently (D-084
- *      amendment). `content:check` finds all of these before a pattern reaches an author.
- * Spec: PED-010, PED-011
+ *      amendment). H5P keeps a key its semantics do not define but never reads it, so a misspelt
+ *      `enableSolutionsButton` would leave a formative switch at the library's default unseen (PROD-009).
+ *      `content:check` finds all of these before a pattern reaches an author.
+ * Spec: PED-010, PED-011, PROD-009
  * Invariants:
  *   - Runs only with the installed libraries (`InstalledLibraryCatalogue`); without them the loader reports that
  *     instead (./patternContent.ts).
  *   - Lengths are counted as Lumi stores the text: token values escaped (`&` is five characters).
  *   - The sub-content policy compares the exact `H5P.Name x.y` string, and so does this check.
+ *   - An unknown key is named with the library it sits in and the keys defined there; its value is not checked.
  * Collaborators: ./patternFolder.ts (the caller), ./skeletonFieldWalk.ts, ./installedLibraries.ts,
  *   ./patternTokenChecks.ts (`tokenValuesOf`), ../patterns/skeletonTokens.ts.
  * Tests: apps/server/test/learningDesign/content/patternLibraryChecks.test.ts
@@ -24,7 +27,7 @@ import { parseLibraryName, type InstalledLibraryCatalogue } from './installedLib
 import { tokenValuesOf } from './patternTokenChecks.js';
 import type { PatternFile } from './patternYaml.js';
 import type { SkeletonFile } from './skeletonFile.js';
-import { walkSkeletonFields, type SkeletonTextField } from './skeletonFieldWalk.js';
+import { walkSkeletonFields, type SkeletonTextField, type SkeletonUnknownKey } from './skeletonFieldWalk.js';
 import { resolveTokens } from '../patterns/skeletonTokens.js';
 
 const FETCH = 'run npm run h5p:fetch-libraries to install the pinned libraries';
@@ -73,6 +76,20 @@ function lengthProblem(
   );
 }
 
+function unknownKeyProblem(
+  skeleton: ContentSource<SkeletonFile>,
+  unknown: SkeletonUnknownKey,
+): ContentProblem {
+  const key = String(unknown.path[unknown.path.length - 1]);
+  const known = unknown.known.length > 0 ? unknown.known.join(', ') : 'none';
+  return problemAt(
+    skeleton,
+    unknown.path,
+    `is "${key}", which ${unknown.library} does not define here, so H5P would ignore it; check the spelling ` +
+      `(the keys here are ${known})`,
+  );
+}
+
 /**
  * Checks one skeleton against the installed libraries.
  * @param skeleton - The loaded skeleton.
@@ -97,7 +114,7 @@ export function skeletonLibraryProblems(
         `has no readable semantics.json in the installed libraries (${FETCH})`,
       ),
     ];
-  const fields = walkSkeletonFields(skeleton.value.params, semantics, catalogue);
+  const fields = walkSkeletonFields(skeleton.value.params, skeleton.value.library, semantics, catalogue);
   const problems: ContentProblem[] = [];
   for (const use of fields.libraries) {
     if (!use.offered.includes(use.library)) {
@@ -113,6 +130,7 @@ export function skeletonLibraryProblems(
       problems.push(problemAt(skeleton, use.path, `names ${use.library}, which is not installed (${FETCH})`));
     }
   }
+  problems.push(...fields.unknownKeys.map((unknown) => unknownKeyProblem(skeleton, unknown)));
   for (const field of fields.texts) {
     const problem = lengthProblem(skeleton, field, texts);
     if (problem) problems.push(problem);

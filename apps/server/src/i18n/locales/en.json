@@ -110,6 +110,7 @@
       "errorLabel": "Error",
       "goToField": "Go to the field",
       "fieldNotReached": "Could not open the field itself. Focus is on the closest part of the form; open the field by hand from there.",
+      "titleNotReached": "This part of the activity has no title you can change in the editor, so focus is on the closest part of the form.",
       "frameTitle": "H5P editor: new activity"
     }
   },
@@ -148,7 +149,8 @@
       "resetAndSaved": "The change is saved, and the students’ progress is reset.",
       "savedAsCopy": "The change is saved as a new version. The original and the students’ progress are unchanged.",
       "cancelled": "The change is not saved."
-    }
+    },
+    "resetNeededCanvas": "This change alters the structure of the activity, and others have saved progress in it. Confirm that their progress should be reset, or cancel. You can save a new version in the HVL Interaktiv portal."
   },
   "learningDesign": {
     "error": {
