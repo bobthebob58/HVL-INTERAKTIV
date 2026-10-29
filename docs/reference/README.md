@@ -7,6 +7,9 @@ below was **assembled from public sources**, with every value cited and graded b
 checked again from different sources (see *Verification* in the provenance table). **None of these files is an HVL original.** Each says
 exactly what HVL still has to supply or confirm.
 
+The studio's texts, patterns, mappe template and criteria built from these inputs go to ALU and the pilot teachers
+with the review packet [alu-review-s5.md](alu-review-s5.md) (open question Q17, D-100).
+
 ## Status
 
 | # | Original we still need from HVL | What is here now | Status | Needed by |

@@ -10,9 +10,11 @@
  *   - The phase labels come from `GET /api/studio` (the studio content, PED-001), never from this file; when they
  *     cannot be read, the entries show without a phase.
  *   - The count is plain text, not a live region: it is read with the page, which changes only when it loads.
+ *   - A11Y: the page has one polite status region for every card's «Lag ein kopi» (WCAG 4.1.3), mounted with the
+ *     cards, rather than an empty region per card that a screen reader lists or reads out of turn.
  *   - An empty bank says so; a refusal or a failure is an alert.
  * Collaborators: ./BankView.tsx, ./BankEntryCard.tsx, ../../api/collaborationApi.ts (`getBank`),
- *   ../../api/learningDesignApi.ts (`getStudioPhases`).
+ *   ../../api/studioApi.ts (`getStudioOverview`), ../../components/useAnnouncement.ts.
  * Tests: apps/web/test/features/BankView.test.tsx, apps/web/test/features/studioPages.test.tsx
  */
 'use client';
@@ -20,8 +22,9 @@
 import type { BankList, StudioOverview } from '@hvl-interaktiv/api-contract';
 import { useEffect, useState } from 'react';
 import { useApiAuth } from '../../api/ApiAuthContext';
+import { useAnnouncement } from '../../components/useAnnouncement';
 import { getBank } from '../../api/collaborationApi';
-import { getStudioPhases } from '../../api/learningDesignApi';
+import { getStudioOverview } from '../../api/studioApi';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
 import { BankEntryCard } from './BankEntryCard';
@@ -38,6 +41,7 @@ export function BankWorkspace({ navigate }: { readonly navigate?: (path: string)
   const auth = useApiAuth();
   const [bank, setBank] = useState<BankState>('loading');
   const [overview, setOverview] = useState<StudioOverview>();
+  const [said, announce] = useAnnouncement();
 
   useEffect(() => {
     let active = true;
@@ -48,7 +52,7 @@ export function BankWorkspace({ navigate }: { readonly navigate?: (path: string)
         setBank('student');
       else setBank(result.status === 403 ? 'refused' : 'failed');
     });
-    void getStudioPhases(auth).then((result) => {
+    void getStudioOverview(auth).then((result) => {
       if (active && result.ok) setOverview(result.data);
     });
     return () => {
@@ -70,6 +74,9 @@ export function BankWorkspace({ navigate }: { readonly navigate?: (path: string)
       ) : (
         <>
           <p>{t('bank.count', locale, { count: bank.items.length })}</p>
+          <p role="status" className="sr-only">
+            {said}
+          </p>
           {bank.items.map((entry) => {
             const label = phaseLabel(entry.phase);
             return (
@@ -77,6 +84,7 @@ export function BankWorkspace({ navigate }: { readonly navigate?: (path: string)
                 key={entry.contentId}
                 entry={entry}
                 {...(label ? { phaseLabel: label } : {})}
+                announce={announce}
                 {...(navigate ? { navigate } : {})}
               />
             );

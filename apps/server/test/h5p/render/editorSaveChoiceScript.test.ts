@@ -1,8 +1,9 @@
 /**
  * Unit tests for the save choice script (src/h5p/render/client/editorSaveChoice.js) in a simulated document (jsdom):
- * what the dialog holds in the portal and in Canvas, and what each choice does after the 409
- * `hvl:learner-state-reset-needed` (D-093, D-098). jsdom has no `showModal`, so opening, focus, Tab, Escape and the
- * page's status are proven in Chromium: ../../learningDesign/safeEditing/saveChoiceRoundTrip.browser.int.test.ts.
+ * what the dialog holds in the portal and in Canvas, what each choice does after the 409
+ * `hvl:learner-state-reset-needed`, and what the status region is told while its request runs (D-093, D-098). jsdom
+ * has no `showModal`, so opening, focus, Tab, Escape and the page's status are proven in Chromium:
+ * ../../learningDesign/safeEditing/saveChoiceRoundTrip.browser.int.test.ts.
  *
  * Spec: PROD-013, UD-006
  */
@@ -40,7 +41,7 @@ const load = () => {
   return { posted, run: runClientScripts<ChoiceScript>(['editorSaveChoice.js'], globals) };
 };
 
-/** Answers the choice with `choice`, records each request, and returns what the page was told to settle. */
+/** Answers the choice with `choice`, records each request, and returns what the page announced and settled. */
 const answer = async (choice: Choice, inCanvas: boolean, fail?: object) => {
   const { posted, run } = load();
   const requests: string[] = [];
@@ -53,15 +54,18 @@ const answer = async (choice: Choice, inCanvas: boolean, fail?: object) => {
   run.hvliSaveAsCopy = () => respond('copy');
   const settled: unknown[][] = [];
   const saved: unknown[] = [];
+  /** Each announcement while a request runs, with the number of requests sent before it. */
+  const announced: [string, number][] = [];
   const config = { inCanvas, saveChoice: inCanvas ? CANVAS : PORTAL, messages: { failed: 'Feil.' } };
   const page = {
     config,
     contentId: 'c1',
     saved: (result: unknown) => saved.push(result),
     settle: (...settledWith: unknown[]) => settled.push(settledWith),
+    announce: (text: string) => announced.push([text, requests.length]),
   };
   await run.hvliAnswerResetNeeded({ library: 'H5P.MultiChoice 1.16', params: '{}' }, page);
-  return { requests, settled, saved, posted };
+  return { requests, settled, saved, posted, announced };
 };
 
 describe('[PROD-013] the save choice dialog', () => {
@@ -104,15 +108,17 @@ describe('[PROD-013] the save choice dialog', () => {
     expect(dialog.querySelector('h2')?.textContent).toBe('<img src=x onerror=alert(1)>');
   });
 
-  it('[PROD-013] «Nullstill framgangen og lagre» resends the refused content confirmed and reports the reset', async () => {
-    const { requests, settled, saved } = await answer('reset', false);
+  it('[PROD-013] «Nullstill framgangen og lagre» says it runs, resends the refused content confirmed and reports the reset', async () => {
+    const { requests, settled, saved, announced } = await answer('reset', false);
+    expect(announced).toEqual([[PORTAL.resetting, 0]]);
     expect(requests).toEqual(['save true']);
     expect(saved).toEqual([{ contentId: 'copy-1' }]);
     expect(settled).toEqual([[PORTAL.resetAndSaved]]);
   });
 
-  it('[PROD-013] «Lagre som ny versjon» saves a copy and asks the framing page to open its editor', async () => {
-    const { requests, settled, posted } = await answer('copy', false);
+  it('[PROD-013] «Lagre som ny versjon» says it runs, saves a copy and asks the framing page to open its editor', async () => {
+    const { requests, settled, posted, announced } = await answer('copy', false);
+    expect(announced).toEqual([[PORTAL.copying, 0]]);
     expect(requests).toEqual(['copy']);
     expect(settled).toEqual([[PORTAL.savedAsCopy]]);
     expect(posted).toEqual([{ type: 'hvli:content-copied', contentId: 'copy-1' }]);
@@ -125,6 +131,7 @@ describe('[PROD-013] the save choice dialog', () => {
     // Assert
     expect([cancelled.requests, cancelled.settled]).toEqual([[], [[PORTAL.cancelled]]]);
     expect([canvasCopy.requests, canvasCopy.settled]).toEqual([[], [[CANVAS.cancelled]]]);
+    expect([cancelled.announced, canvasCopy.announced]).toEqual([[], []]);
   });
 
   it('[UD-013] a refused retry settles with the server’s reason and the errors to list', async () => {

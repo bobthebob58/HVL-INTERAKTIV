@@ -12,7 +12,7 @@
  *     it could not load. The overview and the planner are fetched only for a chosen course.
  *   - Only the author's own and co-authored activities appear: the server decides (D-088).
  * Collaborators: ./PlannerView.tsx, ./PlannerCourseChooser.tsx, ./PlannerTable.tsx, ./PlannerGaps.tsx,
- *   ./PlannerUntagged.tsx, ../../api/learningDesignApi.ts.
+ *   ./PlannerUntagged.tsx, ../../api/learningDesignApi.ts, ../../api/studioApi.ts (`getStudioOverview`).
  * Tests: apps/web/test/features/PlannerView.test.tsx
  */
 'use client';
@@ -20,7 +20,8 @@
 import type { PhaseKey, Planner, StudioOverview } from '@hvl-interaktiv/api-contract';
 import { useEffect, useState } from 'react';
 import { useApiAuth } from '../../api/ApiAuthContext';
-import { getCourseCodes, getPlanner, getStudioPhases } from '../../api/learningDesignApi';
+import { getCourseCodes, getPlanner } from '../../api/learningDesignApi';
+import { getStudioOverview } from '../../api/studioApi';
 import { readStudioFilters } from '../../config/studioFilters';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
@@ -52,7 +53,9 @@ export function PlannerWorkspace({ navigate }: { readonly navigate: (path: strin
     let active = true;
     void getCourseCodes(auth).then((result) => active && setCodes(result.ok ? result.data.inUse : 'failed'));
     if (course) {
-      void getStudioPhases(auth).then((result) => active && setOverview(result.ok ? result.data : 'failed'));
+      void getStudioOverview(auth).then(
+        (result) => active && setOverview(result.ok ? result.data : 'failed'),
+      );
       void getPlanner(course, auth).then(
         (result) => active && setPlanner(result.ok ? result.data : 'failed'),
       );

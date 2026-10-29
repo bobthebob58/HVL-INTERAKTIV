@@ -6,7 +6,7 @@
  */
 // @vitest-environment jsdom
 import type { ContentDetail } from '@hvl-interaktiv/api-contract';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SharingPanel } from '../../src/features/sharing/SharingPanel';
 import { errorBody, fakeFetch, type FakeRoutes } from '../support/fakeFetch';
@@ -97,7 +97,7 @@ describe('[PROD-007] the Deling tab', () => {
     const requests = fakeFetch(
       routes({ [`POST /api/content/${ID}/duplicate`]: { status: 201, body: { contentId: COPY_ID } } }),
     );
-    const { navigate } = show();
+    const { navigate, announce } = show();
     const button = screen.getByRole('button', { name: 'Lag ein kopi' });
     // Act
     fireEvent.click(button);
@@ -105,7 +105,14 @@ describe('[PROD-007] the Deling tab', () => {
     // Assert
     await waitFor(() => expect(navigate).toHaveBeenCalledWith(`/aktivitet/${COPY_ID}?fane=edit`));
     expect(requests.filter((r) => r.method === 'POST')).toHaveLength(1);
-    expect(screen.getByText('Kopien er laga. Opnar han no.').getAttribute('role')).toBe('status');
+    expect(screen.getByText('Kopien er laga. Opnar han no.')).toBeTruthy();
+    expect(announce.mock.calls.map(([message]) => message)).toEqual([
+      'Lagar kopien …',
+      'Kopien er laga. Opnar han no.',
+    ]);
+    expect(
+      within(screen.getByRole('region', { name: 'Lag ein kopi' })).queryAllByRole('status'),
+    ).toHaveLength(0);
   });
 
   it('[PROD-007] a refused copy says why and opens nothing', async () => {

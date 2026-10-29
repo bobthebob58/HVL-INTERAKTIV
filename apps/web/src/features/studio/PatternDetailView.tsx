@@ -12,6 +12,8 @@
  *   - The ID has the pattern-ID form (the page answers 404 otherwise); the API decides whether the pattern exists.
  *   - The address may carry the phase and course to pre-fill (`?fase=&emne=`, ../../config/studioFilters.ts).
  *   - Texts are the pattern's in the page language; the draft banner shows while the content is proposed.
+ *   - A loaded pattern is shown even when the overview (`GET /api/studio`, the phase labels and the draft status)
+ *     fails: its phases are then named by a neutral text, never by their keys, and no phase choice is offered.
  * Collaborators: ../../app/(portal)/laeringsdesign/monster/[patternId]/page.tsx, ../../api/studioApi.ts,
  *   ./useApiLoad.ts, ./pattern/PatternFacts.tsx, ./pattern/CreateFromPattern.tsx, ./guide/GuideProse.tsx,
  *   ./guide/ReferenceList.tsx, ./DraftBanner.tsx.
@@ -82,7 +84,7 @@ export function PatternDetailView({
     return (
       <>
         <h1>{t('patterns.heading', locale)}</h1>
-        {detail.status === 'failed' || overview.status === 'failed' ? (
+        {detail.status === 'failed' ? (
           <p role="alert">{t('common.loadFailed', locale)}</p>
         ) : (
           <p role="status">{t('common.loading', locale)}</p>
@@ -90,8 +92,12 @@ export function PatternDetailView({
       </>
     );
   const pattern = detail.data;
-  const phases = overview.status === 'loaded' ? overview.data.phases : [];
-  const phaseLabel = (key: PhaseKey) => phases.find((phase) => phase.key === key)?.label[locale] ?? key;
+  const labels = new Map(
+    overview.status === 'loaded' ? overview.data.phases.map((phase) => [phase.key, phase.label[locale]]) : [],
+  );
+  // PED-001: a phase is named by its content label or not at all, so a failed overview never shows a raw key.
+  const named = pattern.phases.every((key) => labels.has(key));
+  const phaseLabel = named ? (key: PhaseKey) => labels.get(key) ?? '' : undefined;
   const { phase, course } = readStudioFilters(query);
   const returnTo = `${window.location.pathname}${window.location.search}`;
   return (
@@ -99,7 +105,11 @@ export function PatternDetailView({
       <h1>{pattern.name[locale]}</h1>
       {overview.status === 'loaded' ? <DraftBanner status={overview.data.status} locale={locale} /> : null}
       <p className="text-lg">{pattern.purpose[locale]}</p>
-      <PatternFacts pattern={pattern} phases={phases} locale={locale} />
+      <PatternFacts
+        pattern={pattern}
+        phaseNames={phaseLabel && pattern.phases.map(phaseLabel)}
+        locale={locale}
+      />
       <h2>{t('patterns.whenToUse', locale)}</h2>
       {paragraphs(pattern.whenToUse[locale])}
       <h2>{t('patterns.whyItWorks', locale)}</h2>

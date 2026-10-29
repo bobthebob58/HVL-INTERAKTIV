@@ -38,7 +38,12 @@ import type { PatternCreator } from '../patterns/PatternCreator.js';
 /** What the answers ask the pattern creator: whether a pattern can be created now. */
 export type PatternAvailabilityLookup = Pick<PatternCreator, 'availability'>;
 
-const reference = ({ key, text, verify }: StudioReference): Reference => ({ key, text, verify });
+const reference = ({ key, text, verify, language }: StudioReference): Reference => ({
+  key,
+  text,
+  verify,
+  language,
+});
 
 const card = async (pattern: StudioPattern, creator: PatternAvailabilityLookup): Promise<PatternSummary> => ({
   ...patternCard(pattern),

@@ -2675,7 +2675,7 @@ variable and pointing to <code>.env.example</code>.</p>
 <details class="req" id="x-DOC-009" data-area="DOC" data-priority="MUST" data-session="S1" data-status="tested" data-text="doc-009 language conventions - code, comments and developer docs are in **english**, so international reviewers and the
   open-source community can read them.
 - norwegian domain terms keep their norwegian form in identifiers and enums (`forarbeid`,
-  `laeringsutbytte`, `pedagogiskmappe`) and are explained in [glossary.md](glossary.md). do not
+  `laeringsutbytte`, `mappe`) and are explained in [glossary.md](glossary.md). do not
   invent english translations that a teacher at hvl would not recognise.
 - **no user-facing string is hard-coded.** ui text lives in `nn`/`nb`/`en` locale files.
   *checked by:* `eslint-plugin-i18next` (`no-literal-string` in jsx) and the key-parity test (`prod-012`).">
@@ -2684,7 +2684,7 @@ variable and pointing to <code>.env.example</code>.</p>
 <li>Code, comments and developer docs are in <strong>English</strong>, so international reviewers and the
 open-source community can read them.</li>
 <li>Norwegian domain terms keep their Norwegian form in identifiers and enums (<code>forarbeid</code>,
-<code>laeringsutbytte</code>, <code>pedagogiskMappe</code>) and are explained in <a href="#glossary">GLOSSARY.md</a>. Do not
+<code>laeringsutbytte</code>, <code>mappe</code>) and are explained in <a href="#glossary">GLOSSARY.md</a>. Do not
 invent English translations that a teacher at HVL would not recognise.</li>
 <li><strong>No user-facing string is hard-coded.</strong> UI text lives in <code>nn</code>/<code>nb</code>/<code>en</code> locale files.
 <em>Checked by:</em> <code>eslint-plugin-i18next</code> (<code>no-literal-string</code> in JSX) and the key-parity test (<a class="req-ref" href="#r-PROD-012"><code>PROD-012</code></a>).</li>
@@ -4754,7 +4754,7 @@ variable and pointing to <code>.env.example</code>.</p>
 <li>Code, comments and developer docs are in <strong>English</strong>, so international reviewers and the
 open-source community can read them.</li>
 <li>Norwegian domain terms keep their Norwegian form in identifiers and enums (<code>forarbeid</code>,
-<code>laeringsutbytte</code>, <code>pedagogiskMappe</code>) and are explained in <a href="#glossary">GLOSSARY.md</a>. Do not
+<code>laeringsutbytte</code>, <code>mappe</code>) and are explained in <a href="#glossary">GLOSSARY.md</a>. Do not
 invent English translations that a teacher at HVL would not recognise.</li>
 <li><strong>No user-facing string is hard-coded.</strong> UI text lives in <code>nn</code>/<code>nb</code>/<code>en</code> locale files.
 <em>Checked by:</em> <code>eslint-plugin-i18next</code> (<code>no-literal-string</code> in JSX) and the key-parity test (<a class="req-ref" href="#r-PROD-012"><code>PROD-012</code></a>).</li>
@@ -4800,8 +4800,9 @@ portfolio templates. It includes an example and states which tests will catch mi
 designers, TeCopp administrators, security and privacy reviewers, examiners and external code
 reviewers. It explains how to check, efficiently and independently, that the code does what the
 specifications promise.</p>
-<p><strong>Current state (2026-10-24):</strong> Sessions 1–3 passed their gates on 2026-10-23; Session 4 (universal design) is in
-its gate. Session 1 built the monorepo, <code>apps/server</code> foundations and the tools <code>spec-trace</code>, <code>spec-site</code>,
+<p><strong>Current state (2026-10-29):</strong> Sessions 1–3 passed their gates on 2026-10-23 and Session 4 (universal design) on
+2026-10-24; Session 5 (the læringsdesign studio) is built and in integration and review, and its gate (§5) has not
+run yet. Session 1 built the monorepo, <code>apps/server</code> foundations and the tools <code>spec-trace</code>, <code>spec-site</code>,
 <code>doc-lint</code>, <code>dependency-check</code>, <code>privacy</code> and <code>h5p-core</code>. Session 2 added the H5P engine with the ten types, the
 permission system, learner state, upload security, seeding and our own H5P routes. Session 3 made the server a
 running service (<code>npm start</code>): Feide login for the portal, Canvas LTI 1.3 launches through ltijs 7, Deep Linking,
@@ -4810,8 +4811,15 @@ Canvas in <code>tools/mock-platform</code> (limitation 5). Session 4 brought the
 commits (D-078, R-01 settled in D-047), strict script policies on every page type (D-070), the web app <code>apps/web</code>
 (Next.js inside Express, D-067, D-068) with the activity pages, the publish flow and the Canvas chrome page
 <code>/app/play</code>, the design tokens and the HVL H5P theme, the pre-publish validator (22 rules), and the accessibility
-suite <code>npm run test:a11y</code> (D-079, D-080). Build progress is tracked in <a href="#progress">PROGRESS.md</a>. Commands
-marked <em>(from S<n>)</em> below arrive with that session.</p>
+suite <code>npm run test:a11y</code> (D-079, D-080). Session 5 added the læringsdesign studio of spec 04, in the portal only
+(the Canvas side waits for S6, D-098): the public guide and pattern catalogue on <code>/laeringsdesign</code> with ALU&#39;s texts
+loaded from <code>content/</code> and checked by <code>npm run content:check</code> (D-082, D-083); nine patterns that create a draft
+activity with marked guidance (<code>⟦…⟧</code>, rule V-PLACEHOLDER; D-084–D-086); the <strong>Læringsdesign</strong> tab with outcomes,
+rationale, time and purpose, and the alignment planner (D-087, D-088); co-authors, the content bank and copies on the
+<strong>Deling</strong> tab (D-090–D-092); a save choice in the editor so that a structural change does not silently reset
+students&#39; progress (D-093); and the pedagogisk mappe export as Markdown and as a tagged PDF printed by Chromium on the
+server (D-094–D-096). Its texts are drafts for ALU (Q17, limitation 16). Build progress is tracked in
+<a href="#progress">PROGRESS.md</a>. Commands marked <em>(from S<n>)</em> below arrive with that session.</p>
 <hr>
 <h3 id="evaluator-guide--1-orientation-in-20-minutes" tabindex="-1">1. Orientation in 20 minutes</h3>
 <p>Prefer a browser? <code>docs/site/index.html</code> holds the same documents as one searchable page, with a
@@ -4829,6 +4837,8 @@ requirement explorer. Regenerate it with <code>node tools/spec-site/buildSpecSit
 <tr>
 <td>3</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/apps/server/README.md" rel="noopener" class="ext">apps/server README<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a></td><td>How to run the server against the mock platform, what each folder does, and the start-up, Feide login, LTI launch and Deep Linking flows</td></tr>
 <tr>
+<td>2</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/content/README.md" rel="noopener" class="ext">content/README.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> <em>(from S5)</em></td><td>What ALU edits without code (phases, guide, patterns, mappe template and criteria) and how <code>npm run content:check</code> catches mistakes; the review packet for ALU is <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/alu-review-s5.md" rel="noopener" class="ext">reference/alu-review-s5.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a></td></tr>
+<tr>
 <td>2</td><td><a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/TRACEABILITY.md" rel="noopener" class="ext">TRACEABILITY<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a></td><td>Which requirements are planned, in code or tested</td></tr>
 </tbody></table></div>
 <p><strong>To see it run</strong> <em>(from S3; the web app and the real content types from S4)</em>: set up the services, the H5P files
@@ -4842,6 +4852,17 @@ publish it from <strong>Sjekk og publiser</strong>; the mock Canvas can then lau
 (<code>/aktivitet/&lt;id&gt;</code>) or place it through Deep Linking. With <code>WEB_APP=prod</code>, run <code>npm run build</code> first. The e2e tests
 (<code>npm run test:e2e</code>) create their own activities and show the whole flows in a browser. Details:
 <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/tools/mock-platform/README.md" rel="noopener" class="ext">tools/mock-platform/README.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>.</p>
+<p><strong>The studio</strong> <em>(from S5)</em>: with the server running as above, <code>/laeringsdesign</code> shows the guide, the phase matrix and
+the pattern catalogue to anyone, signed in or not, and each pattern has a page <code>/laeringsdesign/monster/&lt;id&gt;</code> (for
+example <code>fa-video</code>). Signed in as the mock <code>author</code> (HVL staff), «Lag frå dette mønsteret» creates a draft and opens
+its <strong>Rediger</strong> tab; the activity page also has the <strong>Læringsdesign</strong> and <strong>Deling</strong> tabs. Give a few activities a
+course code, a phase and outcomes, then open <code>/laeringsdesign/planlegg</code> (the planner), list a published activity
+shared with HVL in the bank from its <strong>Deling</strong> tab and open <code>/laeringsdesign/innhaldsbank</code>, and choose activities
+on <code>/mappe</code> to download the portfolio as Markdown and as PDF. The PDF needs a Chromium the server can start:
+<code>npx playwright-core install chromium</code> (or <code>PDF_BROWSER_EXECUTABLE</code>), and, in a container that runs as root, the
+development-only <code>PDF_ALLOW_NO_SANDBOX=true</code> in <code>apps/server/.env</code> (D-096); without it the PDF button answers that the
+PDF is unavailable and points to the Markdown file, which always works. A banner on the studio pages says their
+texts are drafts until ALU confirms them (Q17).</p>
 <hr>
 <h3 id="evaluator-guide--2-checking-one-requirement-end-to-end" tabindex="-1">2. Checking one requirement end-to-end</h3>
 <p>Every requirement has an ID such as <a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>. The same ID appears in the spec heading, in the
@@ -4898,9 +4919,9 @@ whose results HVL records (D-079); <a class="req-ref" href="#r-UD-031"><code>UD-
 <tr>
 <td><code>npm start</code> <em>(from S3)</em></td><td>The server starts: tsx runs <code>apps/server/src/server/main.ts</code> (no build step), which syncs <code>LTI_PLATFORMS</code>, re-encrypts platform keys, starts the cleanup jobs and listens on <code>PORT</code>. With <code>npm run mock:platform</code> running, <code>curl http://localhost:3000/healthz</code> answers <code>{&quot;status&quot;:&quot;ok&quot;}</code> and <code>/lti/keys</code> the tool&#39;s public keys. Needs the setup of <code>npm test</code> plus <code>npm run h5p:fetch-core</code>; a bad configuration exits with code 1 and names the variables, never their values (<a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>)</td></tr>
 <tr>
-<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Chromium flows against the whole server and the mock platform (D-065), in CI too: from S3, launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome&#39;s partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available; the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item; portal Feide login, sharing with the CSRF token, and logout through Feide. These play a synthetic content type (limitation 3). From S4: the owner edits and saves in the H5P editor inside the cookie-less Canvas iframe with the Bearer ltik (<code>ltiEditor.e2e.test.ts</code>); on the built web app with the real content types, a Feide author is refused without a reason and then publishes despite a validator error with one, which stores one ValidationAcknowledgement and leaves no reason in the audit or the log (<code>publishWithReason.e2e.test.ts</code>, PROD-003, UD-022); and the teacher&#39;s Canvas page <code>/app/play</code> with Spel and Rediger, where frame storage is blocked (LTI Platform Storage), saves from the editor inside its chrome with the teacher&#39;s ltik as Bearer, with no Set-Cookie from the tool and no ltik in any frame address (<code>appPlayEditor.e2e.test.ts</code>, LTI-006, LTI-003). A failed step names itself, what failed before it (ltik redacted) and whether another process removed its rows (<code>flowRecord.e2e.test.ts</code> tests this); a closed test bed removes what it created and keeps an account an earlier run left (<code>testbedCleanup.e2e.test.ts</code>). Needs the setup of <code>npm test</code>; the web app flows also need <code>npm run build</code> and <code>npm run h5p:fetch-libraries</code> (skipped without them locally, failing in CI). Run it without other test processes on the same database. Journeys J1–J5 join in S6</td></tr>
+<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Chromium flows against the whole server and the mock platform (D-065), in CI too: from S3, launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome&#39;s partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available; the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item; portal Feide login, sharing with the CSRF token, and logout through Feide. These play a synthetic content type (limitation 3). From S4: the owner edits and saves in the H5P editor inside the cookie-less Canvas iframe with the Bearer ltik (<code>ltiEditor.e2e.test.ts</code>); on the built web app with the real content types, a Feide author is refused without a reason and then publishes despite a validator error with one, which stores one ValidationAcknowledgement and leaves no reason in the audit or the log (<code>publishWithReason.e2e.test.ts</code>, PROD-003, UD-022); and the teacher&#39;s Canvas page <code>/app/play</code> with Spel and Rediger, where frame storage is blocked (LTI Platform Storage), saves from the editor inside its chrome with the teacher&#39;s ltik as Bearer, with no Set-Cookie from the tool and no ltik in any frame address (<code>appPlayEditor.e2e.test.ts</code>, LTI-006, LTI-003). A failed step names itself, what failed before it (ltik redacted) and whether another process removed its rows (<code>flowRecord.e2e.test.ts</code> tests this); a closed test bed removes what it created and keeps an account an earlier run left (<code>testbedCleanup.e2e.test.ts</code>). From S5, on the built web app: J1&#39;s portal part from the filtered catalogue through a pattern, a filled placeholder and the learning design to publishing with reasons (<code>patternToPublish.e2e.test.ts</code>); a colleague&#39;s copy from the content bank (<code>bankDuplicate.e2e.test.ts</code>); both mappe downloads with nothing stored (<code>mappeDownloads.e2e.test.ts</code>); and a confirmed reset of a Canvas student&#39;s saved progress (<code>safeEditReset.e2e.test.ts</code>). Needs the setup of <code>npm test</code>; the web app flows also need <code>npm run build</code> and <code>npm run h5p:fetch-libraries</code> (skipped without them locally, failing in CI). Run it without other test processes on the same database. The full journeys J1–J5, Canvas side included, join in S6</td></tr>
 <tr>
-<td><code>npm run test:a11y</code> <em>(from S4)</em></td><td>axe-core (WCAG 2.2 AA tags) on every web route, the server pages and the player and editor of all ten real types, in the light theme and with forced colours, plus reflow at 320 px, reduced motion, text spacing and 200 % zoom, keyboard walks (focus visible and not covered), target size, <code>lang</code> and first-party requests (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>, D-079). H5P&#39;s own findings are repaired at run time or listed in <code>apps/server/a11y/support/upstreamRegister.ts</code> (D-080). Needs <code>npm run build</code>, the real packages and Chromium; about 15 minutes; run it on its own</td></tr>
+<td><code>npm run test:a11y</code> <em>(from S4)</em></td><td>axe-core (WCAG 2.2 AA tags) on every web route, the server pages and the player and editor of all ten real types, in the light theme and with forced colours, plus reflow at 320 px, reduced motion, text spacing and 200 % zoom, keyboard walks (focus visible and not covered), target size, <code>lang</code> and first-party requests (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>, D-079). H5P&#39;s own findings are repaired at run time or listed in <code>apps/server/a11y/support/upstreamRegister.ts</code> (D-080). From S5 every check also walks the studio&#39;s pages, signed in with seeded data (a pattern page, the planner with gaps, the bank, <code>/mappe</code> with a word count, the <strong>Læringsdesign</strong> and <strong>Deling</strong> tabs, a copy&#39;s page), plus keyboard scripts of the studio&#39;s journeys and the editor&#39;s save choice dialog with the page around it inert (<code>axeStudioViews</code>, <code>keyboardStudioJourneys</code>, <code>axeSaveChoice</code>). Needs <code>npm run build</code>, the real packages and Chromium; about 15 minutes; run it on its own</td></tr>
 <tr>
 <td><code>npm run h5p:fetch-libraries</code> <em>(from S4)</em></td><td>Clones the ten content types and their dependencies at pinned commits, builds those without committed files and verifies every tree against <code>tools/h5p-libraries/libraries.manifest.json</code> (D-078); a cached checkout is reused only while its <code>HEAD</code> is still the pinned commit, which CI&#39;s cache of the checkouts relies on</td></tr>
 <tr>
@@ -4908,7 +4929,11 @@ whose results HVL records (D-079); <a class="req-ref" href="#r-UD-031"><code>UD-
 <tr>
 <td><code>npx vitest run -t &quot;UD-0&quot;</code> <em>(from S4)</em></td><td>The tokens&#39; contrast pairs, the theme inside H5P, the validator rules with their fixtures, the publish flow (<code>-t &quot;PROD-003|UD-022&quot;</code>), the notices (<code>-t &quot;PROD-011|DATA-006|DATA-011&quot;</code>) and the pedagogical hints (<code>-t &quot;PED-020&quot;</code>)</td></tr>
 <tr>
-<td><code>WEB_APP=dev npm start</code> <em>(from S4)</em></td><td>With <code>npm run mock:platform</code>: <code>/</code>, <code>/hjelp</code>, <code>/personvern</code> and, outside production, <code>/api/docs</code> (the OpenAPI document, <a class="req-ref" href="#r-DOC-012"><code>DOC-012</code></a>)</td></tr>
+<td><code>WEB_APP=dev npm start</code> <em>(from S4)</em></td><td>With <code>npm run mock:platform</code>: <code>/</code>, <code>/hjelp</code>, <code>/personvern</code> and, outside production, <code>/api/docs</code> (the OpenAPI document, <a class="req-ref" href="#r-DOC-012"><code>DOC-012</code></a>). From S5 also the studio (§1, <em>The studio</em>): <code>/laeringsdesign</code> and a pattern page signed out, and signed in the planner <code>/laeringsdesign/planlegg</code>, the content bank <code>/laeringsdesign/innhaldsbank</code> and <code>/mappe</code>, whose Markdown and PDF downloads both arrive</td></tr>
+<tr>
+<td><code>npm run content:check</code> <em>(from S5)</em></td><td>ALU&#39;s files in <code>content/</code> load exactly as the server loads them at start-up: phases, references, the guide in nn, nb and en (closed Markdown, same headings, markers and citations), the patterns and the mappe template and criteria. Every mistake is printed with its file, line and key, and the command fails; the <code>✓</code> line summarises what loaded (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>, <a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>, <a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a>, D-082). With the pinned content types installed (<code>npm run h5p:fetch-libraries</code>; CI always has them) it also checks each skeleton&#39;s library versions, keys and field lengths. CI runs it, and so does the pre-commit hook when a file under <code>content/</code> is staged. Needs no services</td></tr>
+<tr>
+<td><code>npx vitest run -t &quot;PED-0&quot;</code> <em>(from S5)</em></td><td>The studio: phases and labels from content, the guide&#39;s node tree and its refusals, the catalogue filters in the address, the patterns on the real types, the <strong>Læringsdesign</strong> tab&#39;s routes and limits, the planner&#39;s gaps and the time and purpose learners see (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>…<a class="req-ref" href="#r-PED-032"><code>PED-032</code></a>). Also <code>-t &quot;PROD-001|PROD-009&quot;</code> (creating from a pattern; formative defaults), <code>-t &quot;PROD-007|PROD-013&quot;</code> (co-authors, the bank and copies; the save choice and its reset) and <code>-t &quot;MAPPE-&quot;</code> (the portfolio; its PDF tests need Chromium). The integration tests among them need the services and the real packages</td></tr>
 <tr>
 <td><code>npm run spec:trace -- --check --done-through=S&lt;n&gt;</code></td><td>Every MUST requirement up to session <em>n</em> has a test</td></tr>
 <tr>
@@ -4944,18 +4969,31 @@ whose results HVL records (D-079); <a class="req-ref" href="#r-UD-031"><code>UD-
 <li><strong>Good:</strong> Teachers start from patterns (<a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>), not a blank list. Defaults are formative:
 retries on, no timers (<a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>). Hints nudge towards short segments and explanatory feedback
 (<a class="req-ref" href="#r-PED-020"><code>PED-020</code></a>). Insight answers &quot;what should I address in the next session?&quot; (<a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>, <a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>).</li>
-<li><strong>Look at:</strong> <code>content/laeringsdesign/</code>, <code>apps/server/src/patterns/</code>,
-<code>apps/server/src/validation/rules/*Hint.ts</code>, the <code>/laeringsdesign</code> and <code>/innsikt</code> pages.</li>
+<li><strong>Look at:</strong> <code>content/laeringsdesign/</code> (the guide, the phases and the nine patterns with their skeletons),
+<code>apps/server/src/learningDesign/patterns/</code>, <code>apps/server/src/validation/rules/*Hint.ts</code> and
+<code>placeholderRule.ts</code>, and the <code>/innsikt</code> page <em>(from S6)</em>. In the studio <em>(from S5)</em>: the guide on
+<code>/laeringsdesign</code>, whose research claims cite <code>references.yaml</code> (<a class="req-ref" href="#r-PED-002"><code>PED-002</code></a>); each pattern&#39;s page, with when to
+use it, why it works and the times it asks of authors and students (<a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>); a new activity from a pattern,
+whose guidance «⟦…⟧» the check reports until the author replaces it (D-086); the <strong>Læringsdesign</strong> tab, which asks
+for outcomes and a rationale before publishing without blocking it (<a class="req-ref" href="#r-PED-030"><code>PED-030</code></a>); the planner&#39;s gaps
+(<a class="req-ref" href="#r-PED-031"><code>PED-031</code></a>); and the pedagogisk mappe, which turns that rationale into the author&#39;s own teaching portfolio
+(<a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a>). What ALU and the pilot teachers are asked to judge is listed in
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/alu-review-s5.md" rel="noopener" class="ext">reference/alu-review-s5.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>.</li>
 <li><strong>Red flags:</strong> Thresholds without a <code>PEDAGOGY:</code> reference. Hints that <em>block</em> publishing. Insight
-that ranks individual students. Pattern text that is not editable without code (<a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>).</li>
-<li><strong>Best evidence:</strong> Pilot results against the success measures in spec 00 §8.</li>
+that ranks individual students. Pattern text that is not editable without code (<a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>). A phase label
+written in code rather than read from <code>phases.yaml</code> (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>). A research claim in the guide or a pattern
+without a citation. A pattern whose skeleton turns retries or «Vis svar» off or sets a timer (<a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>).
+Students&#39; scores presented in the mappe as evidence of learning rather than as formative aggregates (<a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>).</li>
+<li><strong>Best evidence:</strong> Pilot results against the success measures in spec 00 §8, and ALU&#39;s review of the studio&#39;s
+drafts (Q17).</li>
 </ul>
 <h4 id="evaluator-guide--42-accessibility-wcag-22-aa-and-hvl-house-rules" tabindex="-1">4.2 Accessibility (WCAG 2.2 AA and HVL house rules)</h4>
 <ul>
 <li><strong>Good:</strong> All colour comes from tokens, with a contrast test (<a class="req-ref" href="#r-UD-001"><code>UD-001</code></a>). Feedback shows text and an
 icon (<a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>). Two-tone focus ring (<a class="req-ref" href="#r-UD-004"><code>UD-004</code></a>). The validator blocks missing alt text and
 captions unless acknowledged (<a class="req-ref" href="#r-UD-021"><code>UD-021</code></a>, <a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>). axe runs inside H5P iframes (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>). Manual
-screen-reader results are recorded (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>).</li>
+screen-reader results are recorded (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>). The portfolio PDF is tagged, with an outline, a language and a
+title (<a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>), and what Chromium cannot tag is checked by hand with PAC and NVDA (D-096, protocol J4).</li>
 <li><strong>Look at:</strong> <code>packages/design-tokens/</code>, <code>packages/hvl-h5p-theme/</code>, <code>docs/accessibility/</code>.</li>
 <li><strong>Red flags:</strong> Hex colours outside the tokens package. <code>outline: none</code> without a replacement.
 <code>!important</code> without a <code>WHY:</code> comment. <code>H5P.DragQuestion</code> creatable anywhere.</li>
@@ -4975,7 +5013,9 @@ URLs and logs (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>). N
 <ul>
 <li><strong>Good:</strong> Learners exist only as HMAC pseudonyms (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>). No insight cell under <em>k</em> = 5 (<a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>,
 backed by a property test). Yearly purge with secret destruction (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>). The data inventory
-matches the schema (<a class="req-ref" href="#r-DATA-001"><code>DATA-001</code></a>). Logs are redacted (<a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>). No third-party requests (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>).</li>
+matches the schema (<a class="req-ref" href="#r-DATA-001"><code>DATA-001</code></a>). Logs are redacted (<a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>). No third-party requests (<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>). Staff names
+reach colleagues only through co-author search and the content bank, which <code>/personvern</code> says (D-090, D-091), and
+the portfolio export shows learners only as aggregates of at least <em>k</em> and stores nothing (<a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, D-095).</li>
 <li><strong>Look at:</strong> <code>docs/privacy/</code>, <code>apps/server/src/privacy/</code>, <code>apps/server/src/insight/</code>, <code>apps/server/prisma/schema/</code>.</li>
 <li><strong>Red flags:</strong> Learner names or e-mails in any table. An endpoint returning per-learner rows to
 teachers. <code>actor.name</code> or <code>mbox</code> persisted from xAPI.</li>
@@ -5012,7 +5052,7 @@ must be pasted into <code>PROGRESS.md</code>, before the next session starts.</p
 <tr>
 <td>S4</td><td>Every S1–S3 gate command stays green; <code>npm run build</code>, <code>npm run tokens:check</code>, <code>npm run lint:css</code> and <code>npm run h5p:fetch-libraries</code> pass; <code>npm run test:a11y</code> passes: no serious or critical axe violation on our own pages (web routes and server pages), and inside the player and editor of all ten types none beyond the registered upstream entries (D-080); contrast and validator tests pass (<code>-t &quot;UD-0&quot;</code>, <code>-t &quot;PED-020&quot;</code>, <code>-t &quot;PROD-003|UD-022&quot;</code>, <code>-t &quot;PROD-011|DATA-006|DATA-011&quot;</code>, and each S4 requirement with <code>-t &quot;\[&lt;ID&gt;\]&quot;</code>); <code>npm run test:e2e</code> passes with the S4 flows; <code>--done-through=S4</code> passes; <code>WEB_APP=dev npm start</code> shows <code>/</code>, <code>/hjelp</code>, <code>/personvern</code> and <code>/api/docs</code>; what stays manual (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>, <a class="req-ref" href="#r-NFR-003"><code>NFR-003</code></a>) and the open owner items (Q2 logo and token confirmation, Q6 privacy text) are listed with the gate output</td></tr>
 <tr>
-<td>S5</td><td>Pattern, planner and mappe tests pass; locale key parity holds for <code>nn</code>/<code>nb</code>/<code>en</code>; ALU content review recorded</td></tr>
+<td>S5</td><td>Every S1–S4 gate command stays green: among them <code>npm run build</code>, <code>npm run tokens:check</code>, <code>npm run lint:css</code>, <code>npm run h5p:fetch-libraries</code>, <code>npm run test:a11y</code> (now with the studio&#39;s pages and the editor&#39;s save choice dialog), <code>npm run test:e2e</code> (now with the S5 flows: pattern → publish, bank copy, both mappe downloads, safe-edit reset) and the S2–S4 <code>-t</code> filters; <code>npm run content:check</code> passes on the real <code>content/</code>; <code>npx vitest run -t &quot;PED-0&quot;</code>, <code>-t &quot;PROD-001|PROD-009&quot;</code>, <code>-t &quot;PROD-007|PROD-013&quot;</code> and <code>-t &quot;MAPPE-&quot;</code> pass, and so does each S5 requirement on its own with <code>-t &quot;\[&lt;ID&gt;\]&quot;</code> (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>, <a class="req-ref" href="#r-PED-002"><code>PED-002</code></a>, <a class="req-ref" href="#r-PED-003"><code>PED-003</code></a>, <a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>, <a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>, <a class="req-ref" href="#r-PED-030"><code>PED-030</code></a>, <a class="req-ref" href="#r-PED-031"><code>PED-031</code></a>, <a class="req-ref" href="#r-PED-032"><code>PED-032</code></a>, <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>, <a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a>, <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>, <a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>, <a class="req-ref" href="#r-MAPPE-001"><code>MAPPE-001</code></a>, <a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a>, <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>); <code>npm run spec:trace -- --check --done-through=S5</code> passes; <code>WEB_APP=dev npm start</code> against <code>npm run mock:platform</code> shows <code>/laeringsdesign</code>, a pattern page, the planner, the content bank and <code>/mappe</code>, and both exports (Markdown and PDF) download; the ALU and pilot review is recorded as requested and open (Q17, D-100, packet <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/alu-review-s5.md" rel="noopener" class="ext">reference/alu-review-s5.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>), and the other open items are listed with the gate output: the bank consent text (ALU and HVL legal), the manual PDF check with PAC and NVDA, the Canvas side of the studio (S6, D-098), results in the mappe (S6, D-095), and Chromium with æøå fonts in the S6 image (D-096)</td></tr>
 <tr>
 <td>S6</td><td>Full <code>npm test</code>, <code>npm run lint</code>, <code>docker compose build</code>; AGS mock tests pass; conformance report and DPIA input exist</td></tr>
 </tbody></table></div>
@@ -5045,8 +5085,8 @@ installed one in its patch version (<a class="req-ref" href="#r-SEC-003"><code>S
 <li><strong>Some pages stay server-rendered</strong> (D-067). The web app (<code>apps/web</code>) serves the start page, the activity pages,
 <code>/hjelp</code>, <code>/personvern</code> and the Canvas chrome <code>/app/play</code>; the Deep Linking picker (<code>/lti/deeplink</code>) and the
 friendly error pages stay server-rendered by Express (they need its 401/403/404/503 statuses) but use the token
-CSS, the formative notice and the <strong>Hjelp</strong> link. The <strong>Innsikt</strong> tab comes with insight (S6), and no page offers
-sharing yet: it is an API call (<code>PATCH /api/content/:contentId/sharing</code>).</li>
+CSS, the formative notice and the <strong>Hjelp</strong> link. The <strong>Innsikt</strong> tab comes with insight (S6). Sharing had only an
+API until S5; the activity page&#39;s <strong>Deling</strong> tab now sets the visibility through it (<code>PATCH /api/content/:contentId/sharing</code>).</li>
 <li><strong>The H5P pages allow inline styles, and Panopto&#39;s script once a Panopto site is configured</strong> (D-070). Since S4
 the player (<code>/h5p/play/:contentId</code>, <code>/lti/play</code>) and editor pages (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>)
 send <code>script-src &#39;self&#39;</code> plus the hash of H5P Core&#39;s one constant inline script, so a script inside an activity
@@ -5086,7 +5126,8 @@ TypeScript sources through tsx, a development dependency of the repository root,
 an install without development dependencies (<code>npm ci --omit=dev</code>), and every start compiles the sources in
 memory. How production builds and starts the server is decided with S6&#39;s Docker images.</li>
 <li><strong>Two interim rules wait for the owner</strong> (Q12). Student authors (through <code>AUTHOR_COURSE_GROUPS</code>) may share
-an activity only as <code>private</code> until a course visibility exists (D-059), and Feide users without a Feide
+an activity only as <code>private</code> until a course visibility exists (D-059), and from S5 they neither add co-authors
+nor see or list in the content bank, which shows colleagues&#39; names (D-090, D-091); Feide users without a Feide
 ID, such as guests, cannot log in (D-054).</li>
 <li><strong>Accessibility is verified automatically in Chromium only; H5P&#39;s own barriers are listed, not hidden</strong> (D-079,
 D-080). Firefox, Safari, Edge, mobile browsers and the three screen readers are covered by the manual protocol
@@ -5094,6 +5135,46 @@ in <code>docs/accessibility/</code>, which HVL runs and records (<a class="req-r
 &quot;tested&quot; status of both in <code>docs/TRACEABILITY.md</code> comes from a check of the documents (§2). Barriers in H5P&#39;s own markup that
 a run-time repair cannot remove safely are listed in <code>apps/server/a11y/support/upstreamRegister.ts</code> with links
 to the upstream code; they are reported in every run but do not fail CI (<code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>).</li>
+<li><strong>The studio&#39;s texts are drafts until ALU confirms them</strong> (Q17, D-100). The phase labels and texts
+(<code>phases.yaml</code> says <code>status: proposed</code>, so the studio pages show a draft banner), the guide in three languages,
+the sixteen references (every one <code>verify: true</code>), the nine patterns, the mappe template, the criteria and their
+limits (7 500 words and 11 attachments, <em>(verify)</em>), the content bank&#39;s consent text (also for HVL&#39;s lawyers)
+and the privacy sentences about colleagues seeing staff names were written by the build from public sources
+and have not been reviewed by ALU or tried by pilot teachers. Some guide claims rest on search excerpts of
+Møgelvang &amp; Isaksen (2025), and some criteria are translations or paraphrases. The review packet
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/alu-review-s5.md" rel="noopener" class="ext">reference/alu-review-s5.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> lists each; the review is required before the pilot.
+The English guide keeps Norwegian terms such as <em>kontekst</em> and <em>samskaping</em> in running text, which its Markdown
+cannot mark with their own language (WCAG 3.1.2 allows such terms).</li>
+<li><strong>The portfolio PDF needs Chromium on the server</strong> (D-096). <code>playwright-core</code> 1.56.1 prints it with the server&#39;s
+own Chromium, in a fresh context per export with JavaScript off, offline and every request aborted; at most
+<code>PDF_MAX_CONCURRENCY</code> exports at once (2) and one per person, 30 seconds each. Where no browser starts, the PDF
+export answers 503 and the page points to the Markdown export, which always works. S6&#39;s production image must
+install Chromium and fonts with æ, ø and å (here the PDF uses Liberation Serif, because Georgia, the body font
+token, is not installed), run the server as a non-root user whose runtime allows unprivileged user namespaces
+(Chromium refuses its sandbox as root; the development-only <code>PDF_ALLOW_NO_SANDBOX=true</code> is refused in
+production), and keep Chromium patched.</li>
+<li><strong>What the PDF does not tag yet is checked by hand</strong> (D-096, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>). The automated test reads the
+structure tree, the outline, <code>/Lang</code>, the title and the text with <code>pdfjs-dist</code>; a person checks the rest with PAC
+and NVDA (protocol J4 in <code>docs/accessibility/manual-test-protocol.md</code>). Known residuals to record there: list
+numbers are untagged, list items have no <code>Lbl</code> or <code>LBody</code>, and lists carry no numbering attribute; a table&#39;s
+caption and header row become <code>NonStruct</code>; there is no XMP metadata and so no PDF/UA identifier; links have no
+<code>/Contents</code>; the header says PDF 1.4; activity titles carry no language of their own; and an activity&#39;s address
+is plain text, not a link. No manual check is recorded yet.</li>
+<li><strong>No students&#39; results in the mappe before S6</strong> (D-095). No results are stored before S6&#39;s xAPI and grade work,
+so <code>ActivityResultsSource</code> answers &quot;no results yet&quot; and the portfolio says so in one sentence per activity. The
+minimum group size (<code>MIN_GROUP_SIZE</code>, <em>k</em> = 5 by default, never below 3) and its two-sided suppression are built
+and tested against a fixture source; S6 adds the real source.</li>
+<li><strong>The Canvas side of the studio waits for S6</strong> (D-098). The content bank and &quot;new from a pattern&quot; in the Deep
+Linking picker and the <a class="req-ref" href="#r-LTI-007"><code>LTI-007</code></a> duplicate in <code>/app/play</code> are S6 items. In Canvas the editor&#39;s save choice offers
+only resetting the students&#39; progress or cancelling, with a pointer to the portal for saving a new version.</li>
+<li><strong>Known limits of collaboration and copies, accepted for now</strong> (D-091, D-092, D-093). The content bank shows
+the 200 newest listings without paging, and a listing only while its owner is findable HVL staff (an eligible
+Feide login in the last 13 months). People search allows 30 searches a minute per person, a fixed number. A copy
+whose source and source author are both deleted shows no «Kopi av …» sign and looks like an original. On the
+<strong>Deling</strong> tab a student-author owner still sees the people search, because the web app knows roles but not that
+fact, and gets the server&#39;s explanation (<code>hvl:sharing-not-allowed</code>) when searching (D-092). When HVL
+installs a newer minor version of a content type, the first save of each older activity counts as structural,
+because H5P&#39;s editor upgrades it, so authors whose students have saved progress are asked to reset or copy.</li>
 </ol>
 
 </section>
@@ -6879,6 +6960,12 @@ its patterns unavailable at runtime (D-085), not a boot failure. The shared YAML
 </li>
 <li><p><strong>Amendment (2026-10-29, S5 W2a):</strong> skeleton versions are checked by <code>content:check</code> against the installed libraries&#39; own semantics (the main library is the newest installed minor; each sub-content is a version its field offers), which CI runs after <code>h5p:fetch-libraries</code>. The server&#39;s start-up checks only the <code>H5P.X a.b</code> form, not the pinned list; a skeleton naming a library that is not installed is answered 409 <code>hvl:pattern-unavailable</code> at creation instead.</p>
 </li>
+<li><p><strong>Amendment (2026-10-29, S5 integration of the accessibility suite):</strong> a reference in <code>references.yaml</code> states the
+language it is written in (<code>language</code>, a language tag such as <code>nb</code>; English when left out, as most research is),
+the contract&#39;s <code>Reference</code> carries it, and the guide and pattern pages give the reference&#39;s text that <code>lang</code> when it
+differs from the page&#39;s (<a class="req-ref" href="#r-UD-010"><code>UD-010</code></a>, WCAG 3.1.2): on a Nynorsk page an English reference was read with Norwegian
+pronunciation. A malformed tag is refused by <code>content:check</code>. <code>mogelvang2025</code> is in Bokmål and says <code>nb</code>.</p>
+</li>
 </ul>
 <h3 id="decisions--d-083--spec-deviation-ped-002-the-guide-is-commonmark-markdown-not-mdx" tabindex="-1">D-083 · <code>SPEC-DEVIATION</code> PED-002: the guide is CommonMark Markdown, not MDX</h3>
 <ul>
@@ -7417,6 +7504,15 @@ and the copy is saved with it when it has the source&#39;s machine name and majo
 the navigation was cut off.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-29, S5 integration of the accessibility suite):</strong> besides making everything around the editor
+frame inert, the page takes the <code>tabindex</code> of the elements that hold the frame (the tab panel&#39;s <code>0</code>, <code>main</code>&#39;s <code>-1</code>
+as the skip link&#39;s target) while the dialog is open and gives it back afterwards: a click beside the frame focused
+the tab panel and left the dialog. <code>a11y/axeSaveChoice.a11y.test.ts</code> checks that nothing outside the frame takes
+focus or is exposed in the accessibility tree while the dialog is open.</li>
+<li><strong>Amendment (2026-10-29, S5 integration):</strong> while «Nullstill …» or «Lagre som ny versjon» runs, the editor page&#39;s
+status region says so («Nullstiller framgangen og lagrar endringa …», <code>safeEditing.busy.*</code>) before the result, so a
+screen-reader user knows the request has started. While the dialog is open, the holders of the editor frame also
+lose their <code>tabindex</code> (given back afterwards), because a click beside the frame otherwise sent Tab out of the dialog.</li>
 </ul>
 <h3 id="decisions--d-094--rendering-the-pedagogisk-mappe" tabindex="-1">D-094 · Rendering the pedagogisk mappe</h3>
 <ul>
@@ -7493,6 +7589,10 @@ default set; new schemas <code>MappeCriteriaSet</code> and <code>MappeCriteriaSe
 Oslo time), and the portfolio&#39;s language is chosen apart from the page&#39;s.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-29, S5 integration):</strong> <code>SPEC-DEVIATION</code> UD-007: the /mappe download buttons name the file type
+but not its size, because the server makes the file only when asked and stores nothing (MAPPE-003); the size is
+unknown until then. The reference list of the export carries no language per reference yet, so an English
+reference in a Nynorsk PDF is not tagged with <code>/Lang</code> (a residual for the manual PAC check, D-096).</li>
 </ul>
 <h3 id="decisions--d-095--minimum-group-size-in-exports" tabindex="-1">D-095 · Minimum group size in exports</h3>
 <ul>
@@ -7564,6 +7664,11 @@ forgotten on <code>disconnected</code> and started again on the next export.</li
 lines («emneom»), so a screen reader&#39;s bookmark list ran words together for long activity titles. The PDF&#39;s
 headings now have <code>white-space: pre-wrap</code>, which keeps the space and renders a one-line Markdown heading the same;
 the PDF browser test has a title that wraps, and its outline must equal the Markdown headings.</li>
+<li><strong>Amendment (2026-10-29, S5 integration):</strong> the full residual list for the manual PAC check, in one place: list
+items have no <code>Lbl</code>/<code>LBody</code> and lists no numbering attribute; captions, <code>thead</code> and <code>tbody</code> give no <code>Caption</code>,
+<code>THead</code> or <code>TBody</code> element (<code>NonStruct</code>); no XMP metadata, so no PDF/UA identifier; links have no <code>/Contents</code>;
+the header says PDF 1.4; activity titles have no language of their own; references have no language of their own
+(D-094 amendment); the activity address is plain text, not a link. <code>taggedPdf.browser.test.ts</code> pins the first two.</li>
 </ul>
 <h3 id="decisions--d-097--new-dependencies-in-s5" tabindex="-1">D-097 · New dependencies in S5</h3>
 <ul>
@@ -8015,12 +8120,19 @@ S5 is done), and all of S5 is done in this session.</li>
    PDF outline keeps spaces where a heading wraps (D-096)</li>
 </ol>
 </li>
-<li><span class="task">○ To do:</span> <ol start="4">
-<li>Integration: axe suite for the new pages and the dialog, e2e flows, screenshots in <code>nn</code> to the owner</li>
+<li><span class="task">✓ Done:</span> <ol start="4">
+<li>Integration: axe suite for the new pages and the dialog, e2e flows, screenshots in <code>nn</code> to the owner
+ — every studio page and view in the a11y suite (axe signed out and in, forced colours, keyboard journeys,
+   reflow, spacing, language; the dialog leaves the page inert); four new e2e flows (pattern → publish, bank
+   copy, mappe downloads, safe-edit reset) and every pattern played once; fixes found on the way (planner and
+   /mappe reflow, one bank live region, the dialog&#39;s tab stops, references with <code>lang</code>, busy texts);
+   screenshots of every new view sent to the owner (2026-10-29)</li>
 </ol>
 </li>
-<li><span class="task">○ To do:</span> <ol start="5">
-<li>Docs: <code>content/</code> READMEs for ALU, GLOSSARY, Evaluator Guide, <code>/personvern</code>, ALU review packet</li>
+<li><span class="task">✓ Done:</span> <ol start="5">
+<li>Docs: <code>content/</code> READMEs for ALU, GLOSSARY, Evaluator Guide, <code>/personvern</code>, ALU review packet
+ — numbered how-tos for ALU, glossary terms, the S5 gate row and limitations, the PDF check in the manual
+   protocol, <code>docs/reference/alu-review-s5.md</code> (Q17)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="6">
@@ -8030,6 +8142,29 @@ S5 is done), and all of S5 is done in this session.</li>
 <li><span class="task">○ To do:</span> Pilot evaluators from ALU and Pedagogisk akademi review the studio content (Q17; may stay open, record the outcome here)</li>
 <li><span class="task">○ To do:</span> Gate: as in the Evaluator Guide §5, S5 (D-100)</li>
 </ul>
+<p><strong>Open items at the end of S5</strong> (listed with the gate output, D-100; limitations 16–21 in the Evaluator Guide §6):</p>
+<ol>
+<li><strong>The ALU and pilot review (Q17):</strong> the phase labels and texts, the guide in three languages and its sixteen
+references (all <code>verify: true</code>), the nine patterns with their skeletons&#39; guidance, the mappe template, criteria and
+limits (7 500 words, 11 attachments, <em>(verify)</em>); pilot teachers try the patterns. Packet with a checklist for the
+outcome: <code>docs/reference/alu-review-s5.md</code>. Required before the pilot.</li>
+<li><strong>The content bank&#39;s consent text</strong> (<code>sharing.bankConsent</code>, version 1): ALU and HVL&#39;s lawyers (D-091); a new text
+raises <code>BANK_CONSENT_VERSION</code> and <code>SHOWN_CONSENT_VERSION</code> together. The privacy page&#39;s sentences about colleagues
+seeing staff names (<code>privacy.staff1</code>–<code>staff3</code>) go to the DPO with the rest of the page (Q6).</li>
+<li><strong>The manual checks:</strong> the portfolio PDF with PAC and NVDA, recording the D-096 residuals (<a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>; protocol
+J4.5–J4.10), and the studio&#39;s steps J1.10–J1.13 and J4.1–J4.4 with the screen readers; both are listed as to do
+under «Runs due» in <code>docs/accessibility/results/README.md</code>.</li>
+<li><strong>The Canvas side of the studio (S6, D-098):</strong> the content bank and &quot;new from a pattern&quot; in the Deep Linking
+picker, and the <a class="req-ref" href="#r-LTI-007"><code>LTI-007</code></a> duplicate in <code>/app/play</code>.</li>
+<li><strong>Results in the mappe (S6, D-095):</strong> the real <code>ActivityResultsSource</code>; S5&#39;s export says there are no results yet.</li>
+<li><strong>Chromium in the S6 image (D-096):</strong> Chromium and fonts with æ, ø and å, a non-root user with unprivileged user
+namespaces for the sandbox, and Chromium kept patched.</li>
+<li><strong>Known limits, accepted for now (D-091, D-092, D-093):</strong> the bank shows the 200 newest listings without paging,
+and a listing only while its owner is findable staff; people search allows a fixed 30 searches a minute per
+person; a copy whose source and source author are both deleted shows
+no «Kopi av …» sign; on the <strong>Deling</strong> tab a student-author owner still sees people search and gets the server&#39;s
+refusal; the first save after HVL installs a newer minor version of a content type counts as structural.</li>
+</ol>
 <h3 id="progress--s6--grade-bridge-insight-privacy-deployment" tabindex="-1">S6 — Grade bridge, insight, privacy, deployment ⬜</h3>
 <ul>
 <li><span class="task">○ To do:</span> xAPI bridge, ingestion, minimal storage (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>, <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>, <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>)</li>
@@ -8415,6 +8550,8 @@ container could not reach hvl.no, feide.no, instructure.com or h5p.org (network 
 below was <strong>assembled from public sources</strong>, with every value cited and graded by confidence. Each was then
 checked again from different sources (see <em>Verification</em> in the provenance table). <strong>None of these files is an HVL original.</strong> Each says
 exactly what HVL still has to supply or confirm.</p>
+<p>The studio&#39;s texts, patterns, mappe template and criteria built from these inputs go to ALU and the pilot teachers
+with the review packet <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/reference/alu-review-s5.md" rel="noopener" class="ext">alu-review-s5.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> (open question Q17, D-100).</p>
 <h3 id="reference--status" tabindex="-1">Status</h3>
 <div class="table-wrap" role="region" aria-label="Table 1, Status" tabindex="0"><table><thead><tr>
 <th scope="col">#</th><th scope="col">Original we still need from HVL</th><th scope="col">What is here now</th><th scope="col">Status</th><th scope="col">Needed by</th></tr>
@@ -8510,7 +8647,7 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <tr>
 <td><em>Opprykk</em></td><td>—</td><td>Academic promotion.</td></tr>
 <tr>
-<td><em>Pedagogisk mappe</em></td><td><code>pedagogiskMappe</code></td><td>Teaching portfolio that documents practice and the reasoning behind it. Required for merit and promotion applications. For merit it has three parts: Del 1 <em>samanhengande framstilling</em> (nb: <em>sammenhengende fremstilling</em>), Del 2 <em>pedagogisk CV</em>, Del 3 attachments.</td></tr>
+<td><em>Pedagogisk mappe</em></td><td><code>mappe</code></td><td>Teaching portfolio that documents practice and the reasoning behind it. Required for merit and promotion applications. For merit it has three parts: Del 1 <em>samanhengande framstilling</em> (nb: <em>sammenhengende fremstilling</em>), Del 2 <em>pedagogisk CV</em>, Del 3 attachments. In HVL Interaktiv the page <code>/mappe</code> (menu «Mappe», en &quot;Portfolio&quot;) exports a draft of it from the author&#39;s own and co-authored activities, as Markdown to edit or as a tagged PDF (<a class="req-ref" href="#r-MAPPE-001"><code>MAPPE-001</code></a>…<a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>, D-094); its template and criteria are in <code>content/mappe/</code>.</td></tr>
 <tr>
 <td><em>Emnedesign</em></td><td>—</td><td>Course design; also the name of HVL&#39;s course-design module for staff (UPED854).</td></tr>
 <tr>
@@ -8526,13 +8663,13 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <tr>
 <td><em>Kunnskap / ferdigheiter / generell kompetanse</em> (nb: <em>ferdigheter</em>)</td><td><code>kunnskap</code>, <code>ferdigheiter</code>, <code>generellKompetanse</code></td><td>The three outcome categories of the Norwegian Qualifications Framework (NKR).</td></tr>
 <tr>
-<td><em>Forarbeid</em></td><td><code>forarbeid</code></td><td>Asynchronous pre-work before a session.</td></tr>
+<td><em>Forarbeid</em></td><td><code>forarbeid</code></td><td>Asynchronous pre-work before a session (en label &quot;Pre-work&quot;). The first of the studio&#39;s three phases; pattern IDs <code>fa-…</code>. Every phase label is read from <code>content/laeringsdesign/phases.yaml</code>, so ALU renames a phase without code (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>); code and the database know only the key.</td></tr>
 <tr>
-<td><em>Samling</em> / <em>nettsamling</em></td><td>—</td><td>The synchronous session: seminar, lecture, lab or online meeting (<em>nettsamling</em>).</td></tr>
+<td><em>Samling</em> / <em>nettsamling</em></td><td><code>samling</code></td><td>The synchronous session: seminar, lecture, lab or online meeting (<em>nettsamling</em>); en &quot;Session&quot;. The anchor the three phases sit around (<code>anchor</code> in <code>phases.yaml</code>), shown as its own column in the phase matrix on <code>/laeringsdesign</code>; never authored.</td></tr>
 <tr>
-<td><em>Mellomarbeid</em></td><td><code>underveis</code></td><td>Asynchronous work between sessions or during placement. The code key keeps its earlier name (D-019).</td></tr>
+<td><em>Mellomarbeid</em></td><td><code>underveis</code></td><td>Asynchronous work between sessions or during placement (en label &quot;Intermediate work&quot;); pattern IDs <code>uv-…</code>. The code key keeps its earlier name (D-019).</td></tr>
 <tr>
-<td><em>Etterarbeid</em></td><td><code>etterarbeid</code></td><td>Asynchronous consolidation after a session.</td></tr>
+<td><em>Etterarbeid</em></td><td><code>etterarbeid</code></td><td>Asynchronous consolidation after a session (en label &quot;Post-work&quot;); pattern IDs <code>ea-…</code>. The planner marks a learning outcome with no Etterarbeid activity as a gap (D-088).</td></tr>
 <tr>
 <td><em>Eigenvurdering</em> (nb: <em>egenvurdering</em>)</td><td>—</td><td>Self-assessment.</td></tr>
 <tr>
@@ -8592,10 +8729,42 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <tr>
 <td><em>Gå til feltet</em></td><td>&quot;Go to the field&quot;: the link from a finding to the field in the editor (<a class="req-ref" href="#r-UD-021"><code>UD-021</code></a>)</td></tr>
 <tr>
-<td><em>Eigar</em> / <em>Medforfattar</em> (nb: <em>Eier</em> / <em>Medforfatter</em>)</td><td>Owner / Co-author of an activity</td></tr>
+<td><em>Eigar</em> / <em>Medforfattar</em> (nb: <em>Eier</em> / <em>Medforfatter</em>)</td><td>Owner / Co-author of an activity. A co-author may edit, publish and share it (<code>ContentCollaborator</code>, role <code>coauthor</code>). On the <strong>Deling</strong> tab the owner adds co-authors by name or Feide ID from HVL staff authors only, at most 20, and a co-author may remove themselves (<a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a>, D-090)</td></tr>
+<tr>
+<td><em>Læringsdesign</em> / <em>Deling</em></td><td>The activity page&#39;s <strong>Learning design</strong> and <strong>Sharing</strong> tabs (S5, D-089): see the studio section below; <em>Deling</em> holds visibility, co-authors, the content bank listing and «Lag ein kopi»</td></tr>
+<tr>
+<td><em>Lagre som ny versjon</em></td><td>&quot;Save as new version&quot;: in the editor&#39;s save choice, when a structural change would reset other people&#39;s saved progress, the change is saved as a private copy and the original and its learner state stay untouched (portal only; <a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>, D-093). The other choices are «Nullstill framgangen og lagre» (nb: «Nullstill fremgangen og lagre») and «Avbryt»</td></tr>
+</tbody></table></div>
+<h3 id="glossary--the-laeringsdesign-studio-and-the-pedagogisk-mappe-session-5" tabindex="-1">The læringsdesign studio and the pedagogisk mappe (Session 5)</h3>
+<p>The studio&#39;s own words, as the pages show them in Nynorsk, with Bokmål where it differs and the English UI text in
+the meaning. Spec 04 and D-082…D-100 hold the rules; ALU edits the texts behind them in <code>content/</code>.</p>
+<div class="table-wrap" role="region" aria-label="Table 3, The læringsdesign studio and the pedagogisk mappe (Session 5)" tabindex="0"><table><thead><tr>
+<th scope="col">Term</th><th scope="col">Code key</th><th scope="col">Meaning</th></tr>
+</thead><tbody><tr>
+<td><em>Læringsdesign-rettleiinga</em> (nb: <em>-veiledningen</em>)</td><td><code>guide.{nn,nb,en}.md</code></td><td><strong>The guide</strong> on the public page <code>/laeringsdesign</code> (menu «Læringsdesign», en &quot;Learning design&quot;): why asynchronous work often fails, «HVL læringsdesign» in brief, three mechanisms each with a box «Kva dette betyr for aktiviteten din» (nb: «Hva dette betyr for aktiviteten din», en &quot;What this means for your activity&quot;), the phase matrix and the pattern catalogue, and where to get help (<a class="req-ref" href="#r-PED-002"><code>PED-002</code></a>). ALU&#39;s Markdown, shown through a closed node tree (D-083).</td></tr>
+<tr>
+<td><em>Mønster</em> (nb: plural <em>mønstre</em>)</td><td><code>patternId</code>; <code>content/laeringsdesign/patterns/&lt;id&gt;/</code></td><td><strong>Pattern</strong>: a tried way of building one kind of activity: what it is for, when to use it, an example, why it works (with research references), build and student minutes, and a skeleton the new activity starts from (spec 04 §4, <a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>, D-084). ALU adds a pattern as a folder, with no code (<a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>). Each pattern has its page <code>/laeringsdesign/monster/&lt;id&gt;</code> with «Lag frå dette mønsteret» (nb: «Lag fra dette mønsteret», en &quot;Create from this pattern&quot;), which creates a private draft in one request (<a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>, D-085).</td></tr>
+<tr>
+<td><em>Mønsterkatalog</em> (nb: same)</td><td><code>#monsterkatalog</code>; <code>?fase=&amp;type=&amp;tid=&amp;emne=</code></td><td><strong>Pattern catalogue</strong>: the patterns on <code>/laeringsdesign</code>, headed «Mønsterkatalogen», filtered by phase, content type and longest build time. The filters live in the address, so a shared link restores them (<a class="req-ref" href="#r-PED-003"><code>PED-003</code></a>); the guide places the catalogue with its <code>{{pattern-catalogue}}</code> marker.</td></tr>
+<tr>
+<td><em>Plassheldar</em> (nb: <em>plassholder</em>)</td><td><code>⟦…⟧</code>; <code>V-PLACEHOLDER</code></td><td><strong>Placeholder</strong>: guidance a pattern&#39;s skeleton puts where the author&#39;s own content goes, wrapped in <code>⟦</code> and <code>⟧</code> (U+27E6, U+27E7). The pages call it «rettleiing frå mønsteret» (nb: «veiledning fra mønsteret», en &quot;guidance from the pattern&quot;). The validator rule V-PLACEHOLDER reports every field that still holds one, and an empty video or background image, as an error that can be published past only with a reason (D-086, D-074).</td></tr>
+<tr>
+<td><em>Læringsdesign-fana</em> (nb: <em>Læringsdesign-fanen</em>)</td><td><code>?fane=learning-design</code></td><td><strong>Learning design tab</strong> («Læringsdesign», en &quot;Learning design&quot;) on an activity&#39;s page <code>/aktivitet/&lt;id&gt;</code>, for the people who may edit it: phase, course code (<em>emnekode</em>), learning outcomes with their NKR category, the didactic rationale (<em>grunngjeving</em>), the student minutes and the one-line purpose students see before they start (<a class="req-ref" href="#r-PED-030"><code>PED-030</code></a>, <a class="req-ref" href="#r-PED-032"><code>PED-032</code></a>, D-087). The publish dialog asks for it but never blocks.</td></tr>
+<tr>
+<td><em>Planleggar</em> (nb: <em>planlegger</em>)</td><td><code>/laeringsdesign/planlegg</code>; <code>planner</code></td><td><strong>Alignment planner</strong> (UI en &quot;Planner&quot;): for one course code, a table of the author&#39;s learning outcomes × the three phases, built from their own and co-authored activities. It marks two gaps with an icon and a text: an outcome with no Etterarbeid activity, and a phase with no activity. An empty cell offers «Lag frå mønster» (<a class="req-ref" href="#r-PED-031"><code>PED-031</code></a>, D-088). Authors only.</td></tr>
+<tr>
+<td><em>Innhaldsbank</em> (nb: <em>innholdsbank</em>)</td><td><code>/laeringsdesign/innhaldsbank</code>; <code>H5PContent.bankListedAt</code></td><td><strong>Content bank</strong>: published activities, shared with HVL or wider, that their owners have listed so that colleagues can copy and adapt them (<a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a>, D-091). Listing needs the owner&#39;s consent to a text that is a draft for ALU and HVL&#39;s lawyers (Q17); unpublishing the activity or making it private takes it out. Only HVL staff authors see it, list in it and copy from it, because it shows colleagues&#39; names.</td></tr>
+<tr>
+<td><em>Kopi</em> / <em>kjelde</em> (nb: <em>kopi</em> / <em>kilde</em>)</td><td><code>sourceContentId</code>, <code>sourceAuthorUserId</code></td><td><strong>Copy</strong> / <strong>source</strong>: «Lag ein kopi» (nb: «Lag en kopi», en &quot;Make a copy&quot;, on the <strong>Deling</strong> tab and in the content bank) and «Lagre som ny versjon» make a private draft that remembers the activity it came from and that activity&#39;s author. The copy&#39;s page shows «Kopi av «tittel» av namn» (en: Copy of “title” by name) to the people who may edit it: the source attribution (D-092). Learner data, co-authors, placements and the bank listing are never copied.</td></tr>
+<tr>
+<td><em>Lesarrettleiing</em> (nb: <em>leserveiledning</em>)</td><td><code>{{lesarrettleiing}}</code></td><td><strong>Reader&#39;s guide</strong> at the start of the pedagogisk mappe: a table of every criterion of the chosen criteria set, where in the portfolio it is answered and which attachment documents it. The server builds it from the criteria file, not from the template, and its words do not count in Del 1 (<a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a>, D-094).</td></tr>
+<tr>
+<td><em>Del 1</em> (en: Part 1)</td><td><code>{{del1_start}}</code> … <code>{{del1_slutt}}</code></td><td>The first part of a merit portfolio, <em>samanhengande framstilling</em> (nb: <em>sammenhengende fremstilling</em>, en &quot;continuous text&quot;); Del 2 is the <em>pedagogisk CV</em> (teaching CV) and Del 3 the attachments (<em>vedlegg</em>). The export counts the words between the two markers only, without the reader&#39;s guide and the references, against the set&#39;s limit (7 500 in HVL&#39;s 2025 call, <em>(verify)</em>; D-094).</td></tr>
+<tr>
+<td><em>Kriteriesett</em> (nb: same)</td><td><code>criteria.{nn,nb,en}.yaml</code>; <code>hvl-merittering-2025</code></td><td><strong>Criteria set</strong>: the merit criteria of one HVL call (1.1–3.3 in 2025), with that call&#39;s limits for Del 1 words and attachments. The author chooses the set on <code>/mappe</code>; another set changes every criterion text, the reader&#39;s guide and the limits, with no code change (<a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a>).</td></tr>
 </tbody></table></div>
 <h3 id="glossary--technical-terms" tabindex="-1">Technical terms</h3>
-<div class="table-wrap" role="region" aria-label="Table 3, Technical terms" tabindex="0"><table><thead><tr>
+<div class="table-wrap" role="region" aria-label="Table 4, Technical terms" tabindex="0"><table><thead><tr>
 <th scope="col">Term</th><th scope="col">Meaning</th></tr>
 </thead><tbody><tr>
 <td><strong>H5P</strong></td><td>Open-source framework for interactive HTML5 learning content. Content is a JSON parameter object (<code>content.json</code>) rendered by a <em>content type</em> library.</td></tr>

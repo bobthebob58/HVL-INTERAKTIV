@@ -11,8 +11,8 @@
  * Spec: PROD-013, PROD-012
  * Invariants:
  *   - Every text is a `safeEditing.*` locale key in nn, nb and en.
- *   - The Canvas variant has no copy button, hint or copy outcome, and has the pointer; the portal variant has no
- *     pointer.
+ *   - The Canvas variant has no copy button, hint, copy progress or copy outcome, and has the pointer; the portal
+ *     variant has no pointer.
  * Collaborators: ../../i18n/translate.ts, ../../h5p/render/editorPage.ts (puts them in the page's config).
  * Tests: apps/server/test/learningDesign/safeEditing/saveChoiceMessages.test.ts
  */
@@ -32,8 +32,12 @@ export interface SaveChoiceMessages {
   readonly saveAsCopyHint?: string;
   /** Why Canvas offers no copy, and where to make one (Canvas only). */
   readonly canvasPointer?: string;
+  /** Announced while the confirmed reset and save runs. */
+  readonly resetting: string;
   /** Announced after a confirmed reset and save. */
   readonly resetAndSaved: string;
+  /** Announced while «Lagre som ny versjon» runs (portal only). */
+  readonly copying?: string;
   /** Announced after «Lagre som ny versjon» (portal only). */
   readonly savedAsCopy?: string;
   /** Announced after «Avbryt». */
@@ -53,6 +57,7 @@ export function saveChoiceMessages(language: Locale, inCanvas: boolean): SaveCho
     body: t('safeEditing.dialog.body', {}, language),
     cancel: t('safeEditing.dialog.cancel', {}, language),
     reset: t('safeEditing.dialog.reset', {}, language),
+    resetting: t('safeEditing.busy.resetting', {}, language),
     resetAndSaved: t('safeEditing.outcome.resetAndSaved', {}, language),
     cancelled: t('safeEditing.outcome.cancelled', {}, language),
   };
@@ -61,6 +66,7 @@ export function saveChoiceMessages(language: Locale, inCanvas: boolean): SaveCho
     ...common,
     saveAsCopy: t('safeEditing.dialog.saveAsCopy', {}, language),
     saveAsCopyHint: t('safeEditing.dialog.saveAsCopyHint', {}, language),
+    copying: t('safeEditing.busy.copying', {}, language),
     savedAsCopy: t('safeEditing.outcome.savedAsCopy', {}, language),
   };
 }

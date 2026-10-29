@@ -21,6 +21,7 @@
  *     page can make its own controls inert, and after a copy `hvli:content-copied` so it opens the copy's editor
  *     (apps/web/src/messaging/frameMessages.ts).
  *   - Reset resends exactly the refused content, with `confirmLearnerStateReset: true`; Canvas never sends a copy.
+ *   - While the reset or the copy request runs, the status region says so (`page.announce`), once the dialog is gone.
  *   - No storage, no cookies; the functions touch only the dialog they build and the window's own listeners.
  * Collaborators: ./editorPage.js (opens it on the 409), ./editorSaveRequests.js,
  *   ../../../http/pages/assets/editorSaveChoice.css (the look), ../editorPage.ts (loads both),
@@ -158,9 +159,9 @@ function hvliSaveChoice(texts, inCanvas) {
  * Answers a 409 `hvl:learner-state-reset-needed`: asks for the choice and carries it out. «Nullstill framgangen og
  * lagre» resends the same content with `confirmLearnerStateReset: true`; «Lagre som ny versjon» (portal only) saves
  * it as a new private draft and asks the framing page to open that draft's editor (`hvli:content-copied`); «Avbryt»
- * saves nothing. Each way ends with `page.settle(text, errors)`.
+ * saves nothing. While a request runs, `page.announce(text)` says so; each way ends with `page.settle(text, errors)`.
  * @param content - The editor's content of the refused save (`editor.getContent`).
- * @param page - `{ config, contentId, saved(result), settle(text, errors) }` of ./editorPage.js.
+ * @param page - `{ config, contentId, saved(result), settle(text, errors), announce(text) }` of ./editorPage.js.
  * @returns A promise that resolves once the choice has been carried out and settled.
  */
 function hvliAnswerResetNeeded(content, page) {
@@ -169,7 +170,9 @@ function hvliAnswerResetNeeded(content, page) {
   var inCanvas = config.inCanvas === true;
   var failed = (error) => page.settle(error.statusText || config.messages.failed, error.openErrors);
   var chosen = function (choice) {
+    // A11Y: WCAG 4.1.3: a reset or a copy can take a while; the polite status region says what runs meanwhile.
     if (choice === 'reset') {
+      page.announce(texts.resetting);
       return hvliSaveContent(content, page.contentId, config, true)
         .then(function (result) {
           page.saved(result);
@@ -179,6 +182,7 @@ function hvliAnswerResetNeeded(content, page) {
     }
     // SECURITY: Canvas never asks for a copy (D-098); the copy route refuses an ltik as well.
     if (choice !== 'copy' || inCanvas) return page.settle(texts.cancelled);
+    page.announce(texts.copying);
     return hvliSaveAsCopy(content, page.contentId, config)
       .then(function (result) {
         page.settle(texts.savedAsCopy);

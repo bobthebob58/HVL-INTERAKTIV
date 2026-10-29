@@ -281,7 +281,9 @@
     "notAuthor": "Berre tilsette og studentar med forfattarrolle kan lage aktivitetar frå mønster.",
     "unavailable": "Du kan ikkje lage frå dette mønsteret no, fordi ein innhaldstype som det treng, ikkje er installert. Ein administrator kan installere han.",
     "notFound": "Det finst ikkje noko mønster med denne adressa.",
-    "backToCatalogue": "Til mønsterkatalogen"
+    "backToCatalogue": "Til mønsterkatalogen",
+    "phasesUnavailable": "Namna på fasane kunne ikkje hentast no.",
+    "phaseLater": "Namna på fasane kunne ikkje hentast no. Når aktiviteten er laga, kan du velje fase på fana Læringsdesign."
   },
   "learningDesign": {
     "tab": "Læringsdesign",

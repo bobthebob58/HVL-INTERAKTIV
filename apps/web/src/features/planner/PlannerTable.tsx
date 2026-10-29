@@ -77,7 +77,9 @@ export function PlannerTable({ planner, phaseLabel }: PlannerTableProps) {
       </>
     );
   return (
-    <div role="region" aria-labelledby={captionId} tabIndex={0} className="mb-6 overflow-x-auto">
+    // WHY: `relative` makes the region the containing block of the cells' visually hidden texts (absolutely
+    // positioned), so the region clips them too; otherwise they widened the page at 320 px (WCAG 1.4.10).
+    <div role="region" aria-labelledby={captionId} tabIndex={0} className="relative mb-6 overflow-x-auto">
       <table className="min-w-2xl border-collapse text-left">
         <caption id={captionId} className="mb-2 text-left text-lg font-bold">
           {t('planner.caption', locale, { course })}

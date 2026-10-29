@@ -11,6 +11,8 @@
  *     (e.g. `guo2014`); a key is listed once.
  *   - `text` is the full reference as one line of plain text (no Markdown), at most 600 characters; `verify` is
  *     required, so a reference is never marked checked by omission.
+ *   - `language` is the language the reference is written in, a language tag such as `en` or `nb`, English when left
+ *     out (most research is); the page marks a reference in another language than its own (UD-010, WCAG 3.1.2).
  *   - The returned list keeps the file's order and matches `Reference` in `@hvl-interaktiv/api-contract`.
  * Collaborators: ./yamlContentFile.ts, ./contentText.ts, ./loadStudioContent.ts; the guide and pattern loaders use
  *   `unresolvedCitationProblems`; content/laeringsdesign/README.md (the guide for ALU).
@@ -28,6 +30,12 @@ export const REFERENCES_FILE = 'laeringsdesign/references.yaml';
 /** The form of a reference key, e.g. `guo2014` or `mogelvang2025`. */
 export const REFERENCE_KEY_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
+/** The form of a reference's language: a BCP 47 tag of a language and optional subtags, e.g. `en`, `nb`, `en-GB`. */
+export const REFERENCE_LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
+
+/** The language of a reference that does not state one. */
+export const DEFAULT_REFERENCE_LANGUAGE = 'en';
+
 /** One full reference. */
 export interface StudioReference {
   /** The key cited as `[@key]`. */
@@ -36,6 +44,8 @@ export interface StudioReference {
   readonly text: string;
   /** True until ALU has checked the reference against the source (Q17). */
   readonly verify: boolean;
+  /** The language the reference is written in, e.g. `en` or `nb`, for its `lang` on the page (UD-010). */
+  readonly language: string;
 }
 
 /** The loaded references.yaml. */
@@ -56,7 +66,18 @@ const referenceKey = z
 export const referencesFileSchema: z.ZodType<ReferencesContent> = z.strictObject({
   version: z.literal(1),
   references: z
-    .record(referenceKey, z.strictObject({ text: contentText({ maxLength: 600 }), verify: z.boolean() }))
+    .record(
+      referenceKey,
+      z.strictObject({
+        text: contentText({ maxLength: 600 }),
+        verify: z.boolean(),
+        // A11Y: WCAG 3.1.2: the page gives an English reference `lang="en"` on a Norwegian page (UD-010).
+        language: z
+          .string()
+          .regex(REFERENCE_LANGUAGE_PATTERN, 'is not a language tag: use a code such as en, nb or nn')
+          .default(DEFAULT_REFERENCE_LANGUAGE),
+      }),
+    )
     .refine((references) => Object.keys(references).length > 0, 'lists no references')
     .transform((references) => Object.entries(references).map(([key, entry]) => ({ key, ...entry }))),
 });

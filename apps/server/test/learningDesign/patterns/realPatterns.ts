@@ -15,7 +15,8 @@
  * Tests: apps/server/test/learningDesign/patterns/realPatternCreation.int.test.ts,
  *   apps/server/test/learningDesign/patterns/realPatternFindings.int.test.ts,
  *   apps/server/test/learningDesign/patterns/realPatternDefaults.int.test.ts,
- *   apps/server/test/learningDesign/content/realPatternContent.test.ts (the folder list)
+ *   apps/server/test/learningDesign/content/realPatternContent.test.ts (the folder list),
+ *   apps/server/test/learningDesign/patterns/realPatternPlay.browser.int.test.ts (every creation in the player)
  */
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';

@@ -342,11 +342,40 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
         size, the PDF from Chromium with bounded slots and time limits, the routes and the /mappe page (W6a);
         stage 5 done: the template and the 2025 criteria set in nn, nb and en (W6b; drafts for ALU, Q17), and the
         PDF outline keeps spaces where a heading wraps (D-096)
-- [ ] 4. Integration: axe suite for the new pages and the dialog, e2e flows, screenshots in `nn` to the owner
-- [ ] 5. Docs: `content/` READMEs for ALU, GLOSSARY, Evaluator Guide, `/personvern`, ALU review packet
+- [x] 4. Integration: axe suite for the new pages and the dialog, e2e flows, screenshots in `nn` to the owner
+      — every studio page and view in the a11y suite (axe signed out and in, forced colours, keyboard journeys,
+        reflow, spacing, language; the dialog leaves the page inert); four new e2e flows (pattern → publish, bank
+        copy, mappe downloads, safe-edit reset) and every pattern played once; fixes found on the way (planner and
+        /mappe reflow, one bank live region, the dialog's tab stops, references with `lang`, busy texts);
+        screenshots of every new view sent to the owner (2026-10-29)
+- [x] 5. Docs: `content/` READMEs for ALU, GLOSSARY, Evaluator Guide, `/personvern`, ALU review packet
+      — numbered how-tos for ALU, glossary terms, the S5 gate row and limitations, the PDF check in the manual
+        protocol, `docs/reference/alu-review-s5.md` (Q17)
 - [ ] 6. Review with skeptics, two verification passes
 - [ ] Pilot evaluators from ALU and Pedagogisk akademi review the studio content (Q17; may stay open, record the outcome here)
 - [ ] Gate: as in the Evaluator Guide §5, S5 (D-100)
+
+**Open items at the end of S5** (listed with the gate output, D-100; limitations 16–21 in the Evaluator Guide §6):
+1. **The ALU and pilot review (Q17):** the phase labels and texts, the guide in three languages and its sixteen
+   references (all `verify: true`), the nine patterns with their skeletons' guidance, the mappe template, criteria and
+   limits (7 500 words, 11 attachments, *(verify)*); pilot teachers try the patterns. Packet with a checklist for the
+   outcome: `docs/reference/alu-review-s5.md`. Required before the pilot.
+2. **The content bank's consent text** (`sharing.bankConsent`, version 1): ALU and HVL's lawyers (D-091); a new text
+   raises `BANK_CONSENT_VERSION` and `SHOWN_CONSENT_VERSION` together. The privacy page's sentences about colleagues
+   seeing staff names (`privacy.staff1`–`staff3`) go to the DPO with the rest of the page (Q6).
+3. **The manual checks:** the portfolio PDF with PAC and NVDA, recording the D-096 residuals (`MAPPE-004`; protocol
+   J4.5–J4.10), and the studio's steps J1.10–J1.13 and J4.1–J4.4 with the screen readers; both are listed as to do
+   under «Runs due» in `docs/accessibility/results/README.md`.
+4. **The Canvas side of the studio (S6, D-098):** the content bank and "new from a pattern" in the Deep Linking
+   picker, and the `LTI-007` duplicate in `/app/play`.
+5. **Results in the mappe (S6, D-095):** the real `ActivityResultsSource`; S5's export says there are no results yet.
+6. **Chromium in the S6 image (D-096):** Chromium and fonts with æ, ø and å, a non-root user with unprivileged user
+   namespaces for the sandbox, and Chromium kept patched.
+7. **Known limits, accepted for now (D-091, D-092, D-093):** the bank shows the 200 newest listings without paging,
+   and a listing only while its owner is findable staff; people search allows a fixed 30 searches a minute per
+   person; a copy whose source and source author are both deleted shows
+   no «Kopi av …» sign; on the **Deling** tab a student-author owner still sees people search and gets the server's
+   refusal; the first save after HVL installs a newer minor version of a content type counts as structural.
 
 ## S6 — Grade bridge, insight, privacy, deployment ⬜
 

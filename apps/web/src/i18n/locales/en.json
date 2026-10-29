@@ -281,7 +281,9 @@
     "notAuthor": "Only staff and students with an author role can create activities from patterns.",
     "unavailable": "You cannot create from this pattern now, because a content type it needs is not installed. An administrator can install it.",
     "notFound": "There is no pattern at this address.",
-    "backToCatalogue": "To the pattern catalogue"
+    "backToCatalogue": "To the pattern catalogue",
+    "phasesUnavailable": "The names of the phases could not be loaded right now.",
+    "phaseLater": "The names of the phases could not be loaded right now. Once the activity is created, you can choose its phase on the Learning design tab."
   },
   "learningDesign": {
     "tab": "Learning design",

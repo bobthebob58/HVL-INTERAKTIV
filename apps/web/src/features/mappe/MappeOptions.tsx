@@ -9,6 +9,9 @@
  *   - A11Y: both selects have visible labels in one fieldset with a legend; a set whose limits ALU has not confirmed
  *     says so in its option text.
  *   - The set titles come from the content files (the server), never from code.
+ *   - A11Y: WCAG 1.4.10: a long set title never widens the page at 320 px; the select shrinks to the page's width
+ *     (its full text is in the open list and its accessible value), since a fieldset is as wide as its widest
+ *     content unless told otherwise.
  * Collaborators: ./MappeWorkspace.tsx.
  * Tests: apps/web/test/features/MappeView.test.tsx
  */
@@ -34,7 +37,7 @@ const LANGUAGE_NAME: Readonly<Record<Locale, MessageKey>> = {
   en: 'mappe.languageEn',
 };
 
-const CONTROL = 'min-h-target rounded border-2 border-hvl-ink-muted bg-hvl-surface p-1';
+const CONTROL = 'min-h-target max-w-full rounded border-2 border-hvl-ink-muted bg-hvl-surface p-1';
 
 /**
  * The criteria set and language selects.
@@ -45,10 +48,10 @@ export function MappeOptions({ sets, criteriaSet, onCriteriaSet, language, onLan
   const locale = useLocale();
   const id = useId();
   return (
-    <fieldset className="mb-4 border-0 p-0">
+    <fieldset className="mb-4 min-w-0 border-0 p-0">
       <legend className="mb-1 text-lg font-bold">{t('mappe.optionsLegend', locale)}</legend>
       <div className="flex flex-wrap items-end gap-4">
-        <div>
+        <div className="min-w-0 max-w-full">
           <label htmlFor={`${id}-set`} className="block font-bold">
             {t('mappe.criteriaSetLabel', locale)}
           </label>

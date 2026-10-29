@@ -7,6 +7,17 @@
 **Status:** no manual run has been recorded yet. The first run is due before the first pilot release (S4 gate
 lists it as open). Nothing in this folder may be written by a tool or filled in from the automated suite.
 
+## Runs due
+
+What each session's gate left for HVL to run by hand. A row changes to *Done* only with the names of its dated
+result files; it is never ticked from the automated suite.
+
+| Session | What to run | Set-ups | Status |
+|---|---|---|---|
+| S4 | The first complete run: J1.1–J1.9, J2 for the ten content types, the checks of §7 (`UD-031`, `NFR-003`) | AT-1, AT-2, AT-3, KB, Z400 | To do |
+| S5 | The studio: J1.10–J1.13 (a pattern, its placeholders, the save choice) and J4.1–J4.4 (the **Læringsdesign** tab, the planner, `/mappe` and its downloads) | AT-1, AT-2, KB, Z400 | To do |
+| S5 | The portfolio PDF with PAC and NVDA, recording the D-096 residuals: J4.5–J4.10 (`MAPPE-004`) | PDF | To do |
+
 ## One file per set-up and run
 
 - Name: `YYYY-MM-DD-<release>-<set-up>.md`, for example `2026-11-20-v0.4.0-AT-1.md`. `<release>` is the git tag,

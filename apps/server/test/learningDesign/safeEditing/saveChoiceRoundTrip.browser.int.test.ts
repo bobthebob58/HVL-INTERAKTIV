@@ -3,7 +3,8 @@
  * page of ours as the activity page's Rediger tab frames it, the whole app, a real MultiChoice another learner has
  * saved progress in, and a structural edit made in H5P's own form. «Lagre» meets the 409, the dialog asks, and each
  * choice is carried out: reset (saved, state gone, version raised), save as a new version (a new draft, the framing
- * page told to open it) and «Avbryt» (nothing saved). Afterwards «Lagre» has focus before the outcome is announced.
+ * page told to open it) and «Avbryt» (nothing saved). While a reset or a copy runs the status region says so, and
+ * afterwards «Lagre» has focus before the outcome is announced.
  * The keyboard: ./saveChoiceKeyboard.browser.int.test.ts; Canvas: ./saveChoiceCanvas.browser.int.test.ts.
  *
  * Spec: PROD-013, UD-006
@@ -39,6 +40,7 @@ describeWithServices('[PROD-013] the save choice’s round trip in the portal', 
     const answers = (params: unknown) => (params as { answers: unknown[] }).answers.length;
     const settled = (editor: FramedEditor, text: string) =>
       eventually(() => editor.statusLog().then((log) => log.find((entry) => entry.text === text)));
+    const lastTexts = async (editor: FramedEditor) => (await editor.statusLog()).map((e) => e.text).slice(-2);
 
     describeWithBrowser('[UD-006] the dialog on the real editor page', (browser) => {
       it('[PROD-013] a structural save meets the 409, opens the dialog on «Avbryt», and the frame’s page is told', async () => {
@@ -66,6 +68,7 @@ describeWithServices('[PROD-013] the save choice’s round trip in the portal', 
           focus: 'hvl-editor-save',
         });
         // Assert
+        expect(await lastTexts(editor)).toEqual([TEXTS.resetting, TEXTS.resetAndSaved]);
         const [first, retry] = editor.requests;
         expect([first?.status, retry?.status]).toEqual([409, 200]);
         expect(retry?.body).toEqual({ ...first?.body, confirmLearnerStateReset: true });
@@ -90,6 +93,7 @@ describeWithServices('[PROD-013] the save choice’s round trip in the portal', 
         await editor.tool.click('#hvl-save-choice-copy');
         await settled(editor, TEXTS.savedAsCopy ?? '').toMatchObject({ focus: 'hvl-editor-save' });
         // Assert
+        expect(await lastTexts(editor)).toEqual([TEXTS.copying, TEXTS.savedAsCopy]);
         const copy = editor.requests.at(-1);
         expect([copy?.method, copy?.path, copy?.status]).toEqual(['POST', `/h5p/content/${mc.id}/copy`, 201]);
         const copyId = await copyOf(bench, mc);

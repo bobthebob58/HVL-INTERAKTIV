@@ -11,7 +11,8 @@
  *     and the course codes are extras whose failure leaves the form usable (no phase radios, no suggestions).
  *   - `reload` fetches the stored metadata again (after a conflict), and a late answer for an earlier activity is
  *     ignored.
- * Collaborators: ../../api/learningDesignApi.ts, ./LearningDesignPanel.tsx.
+ * Collaborators: ../../api/learningDesignApi.ts, ../../api/studioApi.ts (`getStudioOverview`),
+ *   ./LearningDesignPanel.tsx.
  * Tests: apps/web/test/features/LearningDesignPanel.test.tsx
  */
 'use client';
@@ -19,7 +20,8 @@
 import type { LearningDesign, StudioOverview } from '@hvl-interaktiv/api-contract';
 import { useCallback, useEffect, useState } from 'react';
 import { useApiAuth } from '../../api/ApiAuthContext';
-import { getCourseCodes, getLearningDesign, getStudioPhases } from '../../api/learningDesignApi';
+import { getCourseCodes, getLearningDesign } from '../../api/learningDesignApi';
+import { getStudioOverview } from '../../api/studioApi';
 
 /** The stored metadata: loading, failed, or loaded. */
 export type StoredDesign = LearningDesign | 'loading' | 'failed';
@@ -53,7 +55,7 @@ export function useLearningDesignData(contentId: string): LearningDesignData {
     void getLearningDesign(contentId, auth).then((result) => {
       if (active) setDesign(result.ok ? result.data : 'failed');
     });
-    void getStudioPhases(auth).then((result) => {
+    void getStudioOverview(auth).then((result) => {
       if (active) setOverview(result.ok ? result.data : 'failed');
     });
     void getCourseCodes(auth).then((result) => {

@@ -6,32 +6,32 @@
  * Spec: PED-010, PED-001
  * Invariants:
  *   - A description list, so each value is read with its name (WCAG 1.3.1).
+ *   - A phase is named only by its content label, never by its key: without the labels (`GET /api/studio` failed)
+ *     the phases' value is a neutral text that says so.
  * Collaborators: ../PatternDetailView.tsx, ../../../i18n/contentTypeName.ts.
  * Tests: apps/web/test/features/PatternDetailView.test.tsx
  */
-import type { Phase, PatternDetail } from '@hvl-interaktiv/api-contract';
+import type { PatternDetail } from '@hvl-interaktiv/api-contract';
 import { contentTypeName } from '../../../i18n/contentTypeName';
 import { t, type Locale } from '../../../i18n/translate';
 
 /**
  * A pattern's facts.
- * @param props - The pattern, the phases (for their labels) and the locale.
+ * @param props - The pattern, its phases' labels in its own order (undefined when they could not be loaded), and the
+ *   locale.
  * @returns The description list.
  */
 export function PatternFacts({
   pattern,
-  phases,
+  phaseNames,
   locale,
 }: {
   readonly pattern: PatternDetail;
-  readonly phases: readonly Phase[];
+  readonly phaseNames: readonly string[] | undefined;
   readonly locale: Locale;
 }) {
   const facts: readonly (readonly [string, string])[] = [
-    [
-      t('studio.cardPhases', locale),
-      pattern.phases.map((key) => phases.find((phase) => phase.key === key)?.label[locale] ?? key).join(', '),
-    ],
+    [t('studio.cardPhases', locale), phaseNames?.join(', ') ?? t('patterns.phasesUnavailable', locale)],
     [
       t('studio.cardTypes', locale),
       pattern.contentTypes.map((type) => contentTypeName(type, locale)).join(', '),

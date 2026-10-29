@@ -12,6 +12,10 @@ Every file is checked when the server starts. `npm run content:check` (see [../R
 `phases.yaml`, `references.yaml`, the patterns and the studio's other texts without a server; `hint-thresholds.yaml`
 is checked by its own test instead (see "What catches mistakes" under hint-thresholds.yaml below).
 
+The phases, references, guide and patterns here are drafts written from public sources until ALU confirms them
+(open question Q17). What ALU is asked to review, and where to record the outcome, is in the review packet
+[`docs/reference/alu-review-s5.md`](../../docs/reference/alu-review-s5.md).
+
 ## phases.yaml
 
 The studio sorts activities into three phases around the *samling*, the synchronous session (spec 04 §1). Code and
@@ -27,17 +31,31 @@ Each phase has:
 | `order` | 1, 2 or 3: the order of the columns | matrix, filters, planner |
 | `position` | `before-samling`, `between-samlingar` or `after-samling` | where the phase sits around the *samling* |
 | `label` | The phase's name, at most 60 characters | everywhere |
-| `description` | One or two sentences on what the phase is | studio page |
-| `purpose` | The pedagogical purpose (spec 04 §3, phase matrix) | phase matrix |
-| `canvasPlacement` | Where the activity goes in Canvas, and how many attempts students get | phase matrix |
+| `description` | One or two sentences on what the phase is, at most 400 characters | studio page |
+| `purpose` | The pedagogical purpose (spec 04 §3, phase matrix), at most 400 characters | phase matrix |
+| `canvasPlacement` | Where the activity goes in Canvas, and how many attempts students get, at most 400 characters | phase matrix |
 
 `anchor` describes the *samling* itself, with a `label` and a `description`. `status: proposed` means ALU has not
 yet confirmed the texts; while it says so, the studio pages show a banner saying the texts are a draft. Change it to
 `status: confirmed-by-alu` when ALU has approved them.
 
-### Example: rename a phase
+### Change a phase's name or text, step by step
 
-The key `underveis` stays; only the label changes. To call it «Mellomøkt», change the three lines under `label`:
+1. Open `phases.yaml` and find the phase by its `key` (`forarbeid`, `underveis` or `etterarbeid`), or `anchor` for
+   the *samling*.
+2. Change the text under `label`, `description`, `purpose` or `canvasPlacement`, in all three languages: `nn`,
+   `nb` and `en` each need a text. A label is at most 60 characters and the other texts at most 400; every text is
+   one line (see "Writing long texts" below).
+3. Leave `key`, `order` and `position` as they are, and do not add or remove a phase: the file always has the three
+   keys, each once, with `order` 1, 2 and 3.
+4. Run `npm run content:check` (see [../README.md](../README.md)). It prints `✓` and the three labels, or names the
+   line and key of each mistake.
+5. Propose the change as a pull request. After the next start, every page, the planner and the portfolio use the new
+   words; activities keep their phase, because they store only the key.
+6. When ALU has approved all the studio's texts, change `status: proposed` to `status: confirmed-by-alu` the same
+   way; that removes the draft banner.
+
+For example, to call the second phase «Mellomøkt», change the three lines under its `label`:
 
 ```yaml
   - key: underveis
@@ -48,10 +66,6 @@ The key `underveis` stays; only the label changes. To call it «Mellomøkt», ch
       nb: Mellomøkt
       en: Between sessions
 ```
-
-Leave `key`, `order`, `position` and the other texts below `label` as they are.
-
-Nothing else is needed: every page, the planner and the portfolio use the new name after the next start.
 
 ### Writing long texts
 
@@ -88,16 +102,20 @@ references:
   The references were written from the research table in spec 04 §3; titles and publishers have not been checked
   yet, and no DOIs or page numbers were added that the project's own sources do not give. Set `verify: false` only
   after checking.
+- **`language`** is the language the reference is written in. Leave it out for English. For any other language, add
+  a line such as `language: nb` (or `nn`, `sv`, `da`, `de`) under `verify`: the page then tells screen readers to
+  read that reference in its own language (`UD-010`). `mogelvang2025` is written in Bokmål and says `language: nb`.
 
-To add a reference, add a key with `text` and `verify`, then cite it as `[@key]` in a guide text or a pattern.
+To add a reference, add a key with `text` and `verify` (and `language` if it is not in English), then cite it as
+`[@key]` in a guide text or a pattern.
 
 ## What catches mistakes in phases.yaml and references.yaml
 
 - `npm run content:check`, the pre-commit check on this folder, CI on every pull request, and the server's start
   all stop on: a text missing in `nn`, `nb` or `en`; a key the file does not know (a misspelling such as `lable`);
   a key written twice; a phase key other than `forarbeid`, `underveis` and `etterarbeid`, or one of them missing or
-  listed twice; a reference key in capitals; a reference without `verify`; and a citation of a key this file does
-  not list. Each message names the file, the line and the key.
+  listed twice; a reference key in capitals; a reference without `verify`; a `language` that is not a language code
+  (such as `norsk` instead of `nb`); and a citation of a key this file does not list. Each message names the file, the line and the key.
 - The tests in `apps/server/test/learningDesign/content/` load these files on every test run, and check that a
   renamed label is loaded without a code change (`PED-001`). The studio pages, the planner and the portfolio take
   every name from what is loaded here.
@@ -125,6 +143,21 @@ The guide follows the order spec 04 sets (`PED-002`), which its test checks by t
    mark; practise judgement safely;
 4. `##` where the activity belongs, with `{{phase-matrix}}` and then `{{pattern-catalogue}}`, each after a paragraph;
 5. `##` help and further learning, with the two links (ALU and Emnedesign).
+
+### Edit the guide, step by step
+
+1. Open `guide.nn.md`. Nynorsk is the reference: the check compares the Bokmål and English files with it.
+2. Change the wording with the marks in "What you can write" below. Keep the `##` and `###` headings in their order,
+   the box (`>`) after each `###` mechanism, the two marker lines, and the citations `[@key]` in their order.
+3. Make the same change in `guide.nb.md` and `guide.en.md`: the same headings by level and order, the same markers
+   and the same citations in the same order. The wording may differ between the languages.
+4. To cite a new source, first add it to `references.yaml` (see above), then write its `[@key]` at the same place in
+   all three files.
+5. Run `npm run content:check`. It prints `guide in nn, nb and en (… sections, … citations)` in its `✓` line, or the
+   file and line of each mistake (the rules are under "The rules, and why" below).
+6. Propose the change as a pull request. A new `##` section, a new `###` mechanism or a new box changes the order
+   spec 04 sets, so the repository's test of the guide fails on purpose: agree on it with the developers, who
+   change `PED-002` in spec 04 and the test first.
 
 ### What you can write
 
@@ -321,23 +354,68 @@ author and never occur in ordinary text, so the system can find guidance that is
 Every learner-facing title of a part should be a token or guidance as well, for example an Interactive Book chapter's
 title, which students see as a heading.
 
+### Add a pattern, step by step
+
+1. Choose the pattern's ID: lower-case letters, digits and hyphens, starting with a letter. The nine patterns start
+   with the phase they suit (`fa-` Forarbeid, `uv-` Mellomarbeid, `ea-` Etterarbeid). Make the folder
+   `patterns/<ID>/`, named exactly as the ID.
+2. Write `pattern.yaml` with every field of the table above, each text in `nn`, `nb` and `en`. `id` is the folder's
+   name; `phases` and `contentTypes` list one or two each. Start the file with a comment that says what the skeleton
+   holds, as most of the other patterns do.
+3. Make the skeleton, best from an activity built in the editor (next section). Name it `skeleton.json`, or, for a
+   pattern with two content types, one `skeleton.<content type>.json` per type, such as `skeleton.H5P.Blanks.json`.
+4. Put every text the activity gets under `texts` in `pattern.yaml` and use it in the skeleton as `{{name}}`;
+   wrap guidance in `⟦…⟧`. Every token needs a text, and every text must be used.
+5. If `whyItWorks` cites research that `references.yaml` does not list yet, add the reference there first.
+6. Run `npm run content:check` and fix each mistake it names; its `✓` line counts the patterns. On your own machine,
+   run `npm run h5p:fetch-libraries` once first, so that the check can also read the content types and check the
+   skeleton's versions, keys and field lengths; CI always does.
+7. Propose the folder as a pull request. The tests create the new pattern in each of its content types, phases and
+   languages (see "What catches mistakes in a pattern" below). After the next start the catalogue shows it, with no
+   code change (`PED-011`).
+8. On the test server, use «Lag frå dette mønsteret» on the new pattern, replace the guidance, and check and publish
+   the activity, to see it as an author will.
+
+### Edit a pattern, step by step
+
+1. Open the pattern's `pattern.yaml` and change the texts, in all three languages. Do not change `id`: activities
+   made from the pattern remember it.
+2. To change what a new activity contains (a question more, another setting), change the skeleton too: a new text
+   needs a token in the skeleton and a text under `texts`, and a text you remove from the skeleton must go from
+   `texts` as well.
+3. Run `npm run content:check`, then propose the change as a pull request.
+
+Activities already made from the pattern do not change: a pattern is where an activity starts, not a link to it.
+
 ### Making a skeleton from an exported .h5p file
 
 The easiest way to make a skeleton is to build an example activity in the editor and take its content.
 
-1. Build the activity in HVL Interaktiv, in Nynorsk, the way the pattern should start. Leave out images and videos.
+1. Build the activity in HVL Interaktiv, in Nynorsk, the way the pattern should start: every question, option or
+   slide it needs, and the settings the pattern is about (retry and «Vis svar» on, no time limit). Leave out images,
+   videos and other files: a skeleton holds no media, and the author adds them.
 2. Download it as an `.h5p` file: signed in, open `/h5p/download/<ID>`, where `<ID>` is the last part of the
-   activity's address (`/aktivitet/<ID>`). Rename the file to end in `.zip` and unzip it.
-3. Open `h5p.json`. Under `preloadedDependencies`, find the entry whose `machineName` is the `mainLibrary`, and write
-   it as `"library": "<machineName> <majorVersion>.<minorVersion>"`, for example `"H5P.QuestionSet 1.21"`.
-4. Open `content/content.json` and put all of it under `"params"` in the skeleton.
-5. Replace every text a student reads with a token, for example `"<p>{{question1}}</p>"`, and put the text,
-   wrapped in `⟦…⟧` where it is guidance, under `texts` in `pattern.yaml`, in `nn`, `nb` and `en`.
-6. Give every part (sub-content) a title, `"metadata": { "title": "{{question1Title}}", "license": "U" }`.
-   You may delete the `subContentId` lines; the system gives every part a new one anyway. Keep every item of a list
-   (questions, answers, slides): the defaults never add items.
-7. Delete settings you did not choose on purpose: the content type's defaults come back in the author's language.
-8. Run `npm run content:check` and fix what it names.
+   activity's address (`/aktivitet/<ID>`). Rename the file to end in `.zip` and unzip it into an empty folder.
+3. Pin the version: open `h5p.json`, find the entry under `preloadedDependencies` whose `machineName` is the
+   `mainLibrary`, and write it as `"library": "<machineName> <majorVersion>.<minorVersion>"`, for example
+   `"H5P.QuestionSet 1.21"`. HVL's editor saves an activity with the newest version installed, which is the one the
+   check expects.
+4. Start the skeleton file with three keys: `"library"` from step 3, `"metadataTitle": "{{title}}"` (the new
+   activity's title, a token), and `"params"`, which holds all of `content/content.json`. The parts inside it
+   (sub-content) already name their own library and version, such as `"library": "H5P.MultiChoice 1.16"`; keep them.
+5. Replace every text a student reads with a token, keeping the HTML around it, for example
+   `"<p>{{question1}}</p>"`. Put the text under `texts` in `pattern.yaml`, in `nn`, `nb` and `en`, wrapped in `⟦…⟧`
+   where it is guidance. In a Fill in the Blanks or Drag the Words answer (between `*`), guidance may not hold `:` or
+   `/`.
+6. Give every part a title: `"metadata": { "title": "{{question1Title}}", "license": "U" }`. You may delete the
+   `subContentId` lines; the system gives every part a new one anyway. Keep every item of a list (questions,
+   answers, slides): the defaults never add items.
+7. Delete the settings you did not choose on purpose; the content type's defaults come back in the author's
+   language. Keep or set with tokens the buttons and messages of Multiple Choice, Question Set, Interactive Book and
+   Branching Scenario, whose defaults are English (see above). Keys the editor wrote are fine as they are, including
+   Branching Scenario's `contentId` on each part.
+8. Run `npm run content:check` and fix what it names: a version the editor does not offer, a key the content type
+   does not have, a text too long for its field, a token without a text or a text without a token.
 
 ### What catches mistakes in a pattern
 
@@ -363,8 +441,8 @@ The easiest way to make a skeleton is to build an example activity in the editor
   pattern that has no video or image slot to report.
 
 The nine patterns in `patterns/` (spec 04 §4) are drafts for ALU and the pilot teachers to review (open question
-Q17): their texts, times, and the choices written into their skeletons may all change. Each `pattern.yaml` starts with
-a comment that says what its skeleton holds.
+Q17): their texts, times, and the choices written into their skeletons may all change. Every `pattern.yaml` but
+`ea-diagnose` (a single question) starts with a comment that says what its skeleton holds.
 
 ## hint-thresholds.yaml
 

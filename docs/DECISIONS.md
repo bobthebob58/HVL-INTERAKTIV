@@ -1616,6 +1616,11 @@ loading of one spec per session are kept.
   its patterns unavailable at runtime (D-085), not a boot failure. The shared YAML error reporting moves out of
   `validationContext.ts` into the new loader's folder, `apps/server/src/learningDesign/content/`.
 - **Amendment (2026-10-29, S5 W2a):** skeleton versions are checked by `content:check` against the installed libraries' own semantics (the main library is the newest installed minor; each sub-content is a version its field offers), which CI runs after `h5p:fetch-libraries`. The server's start-up checks only the `H5P.X a.b` form, not the pinned list; a skeleton naming a library that is not installed is answered 409 `hvl:pattern-unavailable` at creation instead.
+- **Amendment (2026-10-29, S5 integration of the accessibility suite):** a reference in `references.yaml` states the
+  language it is written in (`language`, a language tag such as `nb`; English when left out, as most research is),
+  the contract's `Reference` carries it, and the guide and pattern pages give the reference's text that `lang` when it
+  differs from the page's (`UD-010`, WCAG 3.1.2): on a Nynorsk page an English reference was read with Norwegian
+  pronunciation. A malformed tag is refused by `content:check`. `mogelvang2025` is in Bokmål and says `nb`.
 
 ### D-083 · `SPEC-DEVIATION` PED-002: the guide is CommonMark Markdown, not MDX
 - **Context:** `PED-002` puts the guide in `guide.{nn,nb,en}.mdx`. MDX is compiled to JavaScript, so a content file
@@ -2083,6 +2088,15 @@ loading of one spec per session are kept.
   - **Who sees where it came from:** the copy's page shows «Kopi av <tittel> av <namn>» to the people who may edit it
     (D-092), so the copy «Lagre som ny versjon» opened says lastingly what it is, also when the announcement before
     the navigation was cut off.
+- **Amendment (2026-10-29, S5 integration of the accessibility suite):** besides making everything around the editor
+  frame inert, the page takes the `tabindex` of the elements that hold the frame (the tab panel's `0`, `main`'s `-1`
+  as the skip link's target) while the dialog is open and gives it back afterwards: a click beside the frame focused
+  the tab panel and left the dialog. `a11y/axeSaveChoice.a11y.test.ts` checks that nothing outside the frame takes
+  focus or is exposed in the accessibility tree while the dialog is open.
+- **Amendment (2026-10-29, S5 integration):** while «Nullstill …» or «Lagre som ny versjon» runs, the editor page's
+  status region says so («Nullstiller framgangen og lagrar endringa …», `safeEditing.busy.*`) before the result, so a
+  screen-reader user knows the request has started. While the dialog is open, the holders of the editor frame also
+  lose their `tabindex` (given back afterwards), because a click beside the frame otherwise sent Tab out of the dialog.
 
 ### D-094 · Rendering the pedagogisk mappe
 - **Context:** `MAPPE-002` takes headings from the template and criteria from the criteria files, keyed by criteria
@@ -2152,6 +2166,10 @@ loading of one spec per session are kept.
     `hvl:activity-unavailable`, like an unknown one. The file name is ASCII, `pedagogisk-mappe-YYYY-MM-DD.md|pdf`.
   - **The page** filters the author's list in the browser (course, phase from `GET /api/studio`, change dates in
     Oslo time), and the portfolio's language is chosen apart from the page's.
+- **Amendment (2026-10-29, S5 integration):** `SPEC-DEVIATION` UD-007: the /mappe download buttons name the file type
+  but not its size, because the server makes the file only when asked and stores nothing (MAPPE-003); the size is
+  unknown until then. The reference list of the export carries no language per reference yet, so an English
+  reference in a Nynorsk PDF is not tagged with `/Lang` (a residual for the manual PAC check, D-096).
 
 ### D-095 · Minimum group size in exports
 - **Context:** `MAPPE-003` applies `INS-006`'s minimum group size (*k* = 5, configurable, at least 3, with
@@ -2217,6 +2235,11 @@ loading of one spec per session are kept.
   lines («emneom»), so a screen reader's bookmark list ran words together for long activity titles. The PDF's
   headings now have `white-space: pre-wrap`, which keeps the space and renders a one-line Markdown heading the same;
   the PDF browser test has a title that wraps, and its outline must equal the Markdown headings.
+- **Amendment (2026-10-29, S5 integration):** the full residual list for the manual PAC check, in one place: list
+  items have no `Lbl`/`LBody` and lists no numbering attribute; captions, `thead` and `tbody` give no `Caption`,
+  `THead` or `TBody` element (`NonStruct`); no XMP metadata, so no PDF/UA identifier; links have no `/Contents`;
+  the header says PDF 1.4; activity titles have no language of their own; references have no language of their own
+  (D-094 amendment); the activity address is plain text, not a link. `taggedPdf.browser.test.ts` pins the first two.
 
 ### D-097 · New dependencies in S5
 - **Context:** CLAUDE.md pins every runtime dependency exactly, and D-029's checks allow only listed licences.

@@ -21,7 +21,8 @@
  *     the shared database is reported as such, not as ltijs's bare 403.
  * Collaborators: ./appTestbed.ts, ./runFeideAuthor.ts, ./realPackages.ts, ./ltiLaunchDriver.ts,
  *   ../../src/web/nextWebApp.ts, ../../src/h5p/libraries/seedLibraries.ts.
- * Tests: apps/server/e2e/testbedCleanup.e2e.test.ts; used by apps/server/a11y/ and two flows in apps/server/e2e/.
+ * Tests: apps/server/e2e/testbedCleanup.e2e.test.ts; used by apps/server/a11y/ and the flows on the built web app in
+ *   apps/server/e2e/ (two from S4, four from S5).
  */
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';

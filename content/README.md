@@ -7,7 +7,26 @@ settings, and the phases, references, patterns, guide texts and portfolio templa
 | Folder | What it holds | Guide |
 |---|---|---|
 | `laeringsdesign/` | The limits of the pedagogical hints the validator gives authors before publishing (`hint-thresholds.yaml`); the names and texts of the three phases (`phases.yaml`); the references the guide and the patterns cite (`references.yaml`); the patterns, one folder each (`patterns/<id>/`); the guide in three languages (`guide.{nn,nb,en}.md`) | [laeringsdesign/README.md](laeringsdesign/README.md) |
-| `mappe/` | The template and the criteria of the *pedagogisk mappe* export (`template.{nn,nb,en}.md`, `criteria.{nn,nb,en}.yaml`; the loader accepts all six or none, never some) | [mappe/README.md](mappe/README.md) |
+| `mappe/` | The template and the criteria of the *pedagogisk mappe* export (`template.{nn,nb,en}.md`, `criteria.{nn,nb,en}.yaml`; all six are there, and the loader refuses a set with some of them missing) | [mappe/README.md](mappe/README.md) |
+
+Everything the studio shows from here is a draft written from public sources until ALU confirms it (open question
+Q17). The review packet [`docs/reference/alu-review-s5.md`](../docs/reference/alu-review-s5.md) lists what to review,
+the open questions, and where to record the outcome.
+
+## Common changes, step by step
+
+| To … | Follow |
+|---|---|
+| change a phase's name or text | [laeringsdesign/README.md](laeringsdesign/README.md), «Change a phase's name or text, step by step» |
+| add or correct a reference | [laeringsdesign/README.md](laeringsdesign/README.md), section `references.yaml` |
+| edit the guide | [laeringsdesign/README.md](laeringsdesign/README.md), «Edit the guide, step by step» |
+| add a pattern, or edit one | [laeringsdesign/README.md](laeringsdesign/README.md), «Add a pattern, step by step», «Edit a pattern, step by step» and «Making a skeleton from an exported .h5p file» |
+| edit the mappe template | [mappe/README.md](mappe/README.md), «Edit the template, step by step» |
+| edit the criteria, or add a criteria set for a new call | [mappe/README.md](mappe/README.md), «Edit the criteria, step by step» |
+| change a hint's limit | [laeringsdesign/README.md](laeringsdesign/README.md), section `hint-thresholds.yaml` |
+
+Texts that belong to the pages themselves (buttons, headings, the content bank's consent text, the privacy page) are
+not here: they are in the web app's language files, which a developer changes.
 
 ## How to edit
 

@@ -1,7 +1,7 @@
 /**
  * a11ySuite — the describe block every accessibility suite runs in: services, the real H5P packages, the built web
- * app and Chromium must all be there; then one server (../../test/support/realWebApp.ts) and one browser are shared
- * by the block's tests.
+ * app and Chromium must all be there; then one server (../../test/support/realWebApp.ts), seeded with the studio's
+ * data (./studioSeed.ts), and one browser are shared by the block's tests.
  *
  * Why: UD-030's checks mean nothing on stand-ins, so the suite needs the real content types (D-078) and the built
  *      Next.js app (D-068). Locally a missing prerequisite skips the suite with the command that provides it; in CI
@@ -9,9 +9,11 @@
  * Spec: UD-030, NFR-004
  * Invariants:
  *   - Chromium starts once per block and closes after it; the server closes before the browser.
+ *   - The studio data is seeded before the first test, so every test of the block sees the same pages (a planner
+ *     with gaps, a bank with entries, activities with learning design) whatever order the tests run in.
  *   - The prerequisites are checked when the file loads, so a skipped suite says why.
- * Collaborators: ../../test/support/realWebApp.ts, ../../test/support/services.ts,
- *   ../../test/support/realPackages.ts, ../../test/support/browser.ts.
+ * Collaborators: ../../test/support/realWebApp.ts, ./studioViews.ts (`seedStudioOnce`),
+ *   ../../test/support/services.ts, ../../test/support/realPackages.ts, ../../test/support/browser.ts.
  * Tests: apps/server/a11y/axeWebRoutes.a11y.test.ts and every other suite in apps/server/a11y/.
  */
 import { existsSync } from 'node:fs';
@@ -22,11 +24,15 @@ import { WEB_APP_DIR } from '../../src/web/nextWebApp.js';
 import { hasRealPackages } from '../../test/support/realPackages.js';
 import { openRealWebApp, type RealWebApp } from '../../test/support/realWebApp.js';
 import { describeWithServices } from '../../test/support/services.js';
+import type { StudioSeed } from './studioSeed.js';
+import { seedStudioOnce } from './studioViews.js';
 
 /** What a suite's tests use. */
 export interface A11yEnv {
   readonly app: RealWebApp;
   readonly browser: Browser;
+  /** What the studio seed made on this server (./studioSeed.ts). */
+  readonly studio: StudioSeed;
 }
 
 /** Why the suite cannot run here, or undefined when everything is in place. */
@@ -62,17 +68,19 @@ export function describeA11y(name: string, body: (env: () => A11yEnv) => void): 
   describe(name, () => {
     let browser: Browser | undefined;
     let app: RealWebApp | undefined;
+    let studio: StudioSeed | undefined;
     beforeAll(async () => {
       browser = await chromium.launch();
       app = await openRealWebApp(browser);
+      studio = await seedStudioOnce(app);
     }, 240_000);
     afterAll(async () => {
       await app?.close();
       await browser?.close();
     });
     body(() => {
-      if (!app || !browser) throw new Error('the accessibility server is not running');
-      return { app, browser };
+      if (!app || !browser || !studio) throw new Error('the accessibility server is not running');
+      return { app, browser, studio };
     });
   });
 }

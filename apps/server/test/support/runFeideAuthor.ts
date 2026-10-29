@@ -97,15 +97,17 @@ export async function accountOfFeideUser(
  * Signs the mock Feide author in through the start page, as a person does, and returns the context's storage.
  * @param browser - A running Chromium.
  * @param tb - The test bed whose app and mock Feide are used.
+ * @param key - The mock Feide user to sign in; the run author by default (a flow's second author passes its own).
  * @returns The signed-in storage; pass it to `browser.newContext({ storageState })`.
  */
 export async function signInRunAuthor(
   browser: Browser,
   tb: { readonly toolUrl: string; readonly mock: { readonly feide: MockFeide } },
+  key: string = AUTHOR_KEY,
 ): Promise<BrowserStorage> {
   const context = await browser.newContext();
   const page = await context.newPage();
-  tb.mock.feide.nextLogin(AUTHOR_KEY);
+  tb.mock.feide.nextLogin(key);
   await page.goto(`${tb.toolUrl}/`);
   await page.getByRole('link', { name: 'Logg inn med Feide' }).click();
   await page.getByRole('button', { name: 'Logg ut' }).waitFor({ timeout: 30_000 });

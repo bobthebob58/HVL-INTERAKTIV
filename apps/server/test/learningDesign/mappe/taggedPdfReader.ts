@@ -9,7 +9,8 @@
  *   - Reads only; the PDF bytes are copied, so the caller's buffer is never detached by pdf.js.
  *   - The loading task is destroyed after reading, so no fake worker stays alive between tests.
  * Collaborators: pdfjs-dist/legacy/build/pdf.mjs (the build for Node, with its fake worker).
- * Tests: apps/server/test/learningDesign/mappe/taggedPdf.browser.test.ts
+ * Tests: apps/server/test/learningDesign/mappe/taggedPdf.browser.test.ts; also used by
+ *   apps/server/e2e/mappeDownloads.e2e.test.ts
  */
 import {
   getDocument,

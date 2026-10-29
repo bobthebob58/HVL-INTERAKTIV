@@ -150,6 +150,10 @@
       "savedAsCopy": "The change is saved as a new version. The original and the students’ progress are unchanged.",
       "cancelled": "The change is not saved."
     },
+    "busy": {
+      "resetting": "Resetting the progress and saving the change …",
+      "copying": "Saving the change as a new version …"
+    },
     "resetNeededCanvas": "This change alters the structure of the activity, and others have saved progress in it. Confirm that their progress should be reset, or cancel. You can save a new version in the HVL Interaktiv portal."
   },
   "learningDesign": {

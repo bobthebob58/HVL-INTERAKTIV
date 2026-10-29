@@ -88,11 +88,15 @@ export const phaseSchema = z.strictObject({
 /** One phase. */
 export type Phase = z.infer<typeof phaseSchema>;
 
-/** One full reference, cited with `[@key]`; `verify` stays true until ALU has checked it. */
+/**
+ * One full reference, cited with `[@key]`; `verify` stays true until ALU has checked it, and `language` is the
+ * language it is written in (a tag such as `en` or `nb`), which the page marks when it differs from its own (UD-010).
+ */
 export const referenceSchema = z.strictObject({
   key: referenceKeySchema,
   text: z.string().min(1),
   verify: z.boolean(),
+  language: z.string().regex(/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/),
 });
 /** One reference. */
 export type Reference = z.infer<typeof referenceSchema>;

@@ -84,7 +84,21 @@ describe('[PED-002] the guide page', () => {
     expect(entries[0]?.textContent).toBe(
       'Forfattar, A. (2026). Den første kjelda. (ikkje kontrollert mot kjelda enno)',
     );
-    expect(entries[1]?.textContent).toBe('Forfattar, B. (2026). Den andre kjelda.');
+    expect(entries[1]?.textContent).toBe('Author, B. (2026). The second source.');
+  });
+
+  it('[UD-010][PED-002] marks a reference in another language than the page with its own lang, and only its text', async () => {
+    // Arrange
+    fakeFetch(studioRoutes());
+    // Act
+    renderGuide();
+    await screen.findByRole('link', { name: 'Kjelde [1]' });
+    // Assert
+    const entries = within(screen.getByRole('region', { name: 'Kjelder' })).getAllByRole('listitem');
+    const langs = entries.map((entry) => entry.querySelector('[lang]')?.getAttribute('lang') ?? null);
+    expect(langs).toEqual([null, 'en']);
+    expect(entries.map((entry) => entry.getAttribute('lang'))).toEqual([null, null]);
+    expect(entries[1]?.querySelector('[lang]')?.textContent).toBe('Author, B. (2026). The second source.');
   });
 
   it('[PED-002] marks an external link as one, and keeps a same-site link plain', async () => {

@@ -2,15 +2,20 @@
  * Language of page and parts in the browser: `<html lang>` of every web view follows the UI language, also when a
  * Canvas launch asks for Bokmål or English; the framed H5P player page has the same `lang`, and the content
  * container carries the activity's own language (the examples are Nynorsk), as does H5P's editor iframe. The Canvas
- * page's title heading says `lang="nn"` when the page is in another language (WCAG 3.1.2).
+ * page's title heading says `lang="nn"` when the page is in another language (WCAG 3.1.2). In the studio (S5), text
+ * in another language than the page carries its own `lang`: the guide's references (most are English), and a learner
+ * purpose before the activity, in the portal, in Canvas and on the content bank's cards.
  *
- * Spec: UD-010, PROD-012
+ * Spec: UD-010, PROD-012, PED-002, PED-032
  */
+import type { Guide } from '@hvl-interaktiv/api-contract';
+import type { Page } from 'playwright-core';
 import { expect, it } from 'vitest';
 import type { UiLocale } from '../test/support/realWebApp.js';
 import { describeA11y } from './support/a11ySuite.js';
 import { CONTENT_TYPES, viewName, WEB_VIEWS } from './support/catalogue.js';
-import { playerFrame } from './support/pages.js';
+import { openActivityTab, openLaunch, openWebPage, playerFrame } from './support/pages.js';
+import { SEED_PURPOSES } from './support/studioSeed.js';
 import { openView } from './support/views.js';
 
 /** The skip link's text per UI language (apps/web `common.skipToMain`). */
@@ -73,4 +78,46 @@ describeA11y('[UD-010] language of page and parts', (env) => {
       await context.close();
     },
   );
+
+  it('[UD-010][PED-002] the guide page marks every reference that is not in Nynorsk with its own lang', async () => {
+    // Arrange: the real guide and its references, as the server answers them
+    const { app, browser } = env();
+    const guide = (await (await fetch(`${app.base}/api/studio/guide/nn`)).json()) as Guide;
+    const context = await browser.newContext();
+    const page = await openWebPage(context, app.base, '/laeringsdesign');
+    // Act
+    // WHY: read in the page, so a reference without `lang` reads as null instead of waiting for an element.
+    const marked = await Promise.all(
+      guide.references.map((r) =>
+        page
+          .locator(`[id="kjelde-${r.key}"]`)
+          .evaluate((entry) => entry.querySelector('[lang]')?.getAttribute('lang') ?? null),
+      ),
+    );
+    // Assert
+    expect(guide.references.length).toBeGreaterThan(0);
+    expect(marked).toEqual(
+      guide.references.map((r) => (r.language.split('-')[0] === 'nn' ? null : r.language)),
+    );
+    await context.close();
+  });
+
+  it('[UD-010][PED-032] a learner purpose carries the activity’s language where the page has another', async () => {
+    // Arrange: the author's Nynorsk activity launched in English, and a colleague's English one in the portal
+    const { app, browser, studio } = env();
+    const canvas = await browser.newContext();
+    const portal = await browser.newContext({ storageState: app.authorStorage });
+    const purpose = (page: Page, text: string) => page.locator('main dd').filter({ hasText: text });
+    // Act
+    const launched = await openLaunch(canvas, app, studio.designedId, { locale: 'en' });
+    const played = await openActivityTab(portal, app.base, studio.colleagueActivityId, 'play');
+    const bank = await openWebPage(portal, app.base, '/laeringsdesign/innhaldsbank');
+    const card = bank.locator('main article').filter({ hasText: SEED_PURPOSES.en });
+    // Assert
+    expect(await purpose(launched, SEED_PURPOSES.nn).getAttribute('lang')).toBe('nn');
+    expect(await purpose(played, SEED_PURPOSES.en).getAttribute('lang')).toBe('en');
+    expect(await purpose(bank, SEED_PURPOSES.en).getAttribute('lang')).toBe('en');
+    expect(await card.locator('h2').getAttribute('lang')).toBe('en');
+    await Promise.all([canvas.close(), portal.close()]);
+  });
 });

@@ -14,7 +14,9 @@
  * Collaborators: ./skeletonCreationPages.ts (P1's editor and player), ./placeholderMarkerEditor.ts (P6's editor),
  *   apps/server/h5p/editor/scripts/h5peditor.js (the loading state it reads).
  * Tests: apps/server/test/learningDesign/patterns/skeletonCreation.browser.int.test.ts,
- *   apps/server/test/learningDesign/patterns/placeholderMarker.browser.int.test.ts
+ *   apps/server/test/learningDesign/patterns/placeholderMarker.browser.int.test.ts; also used by
+ *   apps/server/test/learningDesign/patterns/realPatternPlay.browser.int.test.ts and
+ *   apps/server/e2e/support/portalFrames.ts
  */
 import type { Frame, Page } from 'playwright-core';
 import { expect } from 'vitest';

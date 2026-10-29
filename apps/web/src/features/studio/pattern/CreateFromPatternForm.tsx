@@ -10,6 +10,8 @@
  *   - Sends only choices the pattern offers; the course code is normalised as the server does (D-087), and one that
  *     is not valid is reported on the field and in the error summary, without a request (WCAG 3.3.1, 3.3.3).
  *   - The request carries the session's CSRF token; a refusal shows the server's translated message in an alert.
+ *   - The phase choice names phases by their content labels only (PED-001); without the labels it is not offered,
+ *     and the form says the phase can be chosen on the Læringsdesign tab (the carried or first phase is sent).
  *   - Only the created activity's own ID is navigated to: `/aktivitet/<id>?fane=edit` (D-085).
  * Collaborators: ./CreateFromPattern.tsx, ../../../api/studioApi.ts, ../../../config/studioFilters.ts,
  *   ../../../config/paths.ts, ../../../components/ErrorSummary.tsx.
@@ -36,8 +38,8 @@ export interface CreateFromPatternFormProps {
   readonly locale: Locale;
   /** The phase and course the address carried, already checked. */
   readonly carried: { readonly phase?: PhaseKey; readonly course?: string };
-  /** The phase labels, by key. */
-  readonly phaseLabel: (key: PhaseKey) => string;
+  /** The phase labels, by key; undefined when they could not be loaded. */
+  readonly phaseLabel: ((key: PhaseKey) => string) | undefined;
   readonly navigate: (path: string) => void;
 }
 
@@ -124,7 +126,7 @@ export function CreateFromPatternForm({
           label={(type) => contentTypeName(type, locale)}
         />
       ) : null}
-      {pattern.phases.length > 1 && phase ? (
+      {pattern.phases.length > 1 && phase && phaseLabel ? (
         <ChoiceGroup
           legend={t('patterns.phase', locale)}
           values={pattern.phases}
@@ -133,6 +135,7 @@ export function CreateFromPatternForm({
           label={phaseLabel}
         />
       ) : null}
+      {pattern.phases.length > 1 && !phaseLabel ? <p>{t('patterns.phaseLater', locale)}</p> : null}
       <div className="mb-4">
         <label htmlFor={courseId} className="block font-bold">
           {t('patterns.courseCode', locale)}

@@ -1,18 +1,16 @@
 /**
  * learningDesignApi — typed calls of the learning-design routes: an activity's metadata, the author's course codes,
- * the outcomes already used in a course, the alignment planner, and the studio overview the forms take the phase
- * labels from.
+ * the outcomes already used in a course and the alignment planner.
  *
  * Why: the **Læringsdesign** tab (PED-030), the publish prompt (D-087) and the planner (PED-031) read and write
  *      through these routes; the server decides every right and checks every limit again (D-087, D-088). Phase labels
- *      come only from content (PED-001), so the forms read them from `GET /api/studio`.
- * Spec: PED-030, PED-031, PED-001, DOC-012
+ *      come only from content (PED-001): the forms read them with ./studioApi.ts `getStudioOverview`.
+ * Spec: PED-030, PED-031, DOC-012
  * Invariants:
  *   - Only `import type` from the contract, so zod stays out of the browser bundle.
  *   - The activity ID and the course code are percent-encoded into the address.
  *   - A replace sends the `updatedAt` it read; the answer to a stale one is 409 `hvl:learning-design-conflict`.
- * Collaborators: ./apiRequest.ts, apps/server/src/learningDesign/http/learningDesignRoutes.ts,
- *   apps/server/src/learningDesign/http/studioContentRoutes.ts (`GET /api/studio`).
+ * Collaborators: ./apiRequest.ts, apps/server/src/learningDesign/http/learningDesignRoutes.ts.
  * Tests: apps/web/test/features/LearningDesignPanel.test.tsx, apps/web/test/features/PlannerView.test.tsx
  */
 import type {
@@ -21,7 +19,6 @@ import type {
   LearningDesign,
   LearningDesignUpdate,
   Planner,
-  StudioOverview,
 } from '@hvl-interaktiv/api-contract';
 import { apiRequest, type ApiAuth, type ApiResult } from './apiRequest';
 
@@ -77,11 +74,3 @@ export const getCourseOutcomes = (courseCode: string, auth: ApiAuth): Promise<Ap
  */
 export const getPlanner = (courseCode: string, auth: ApiAuth): Promise<ApiResult<Planner>> =>
   apiRequest<Planner>(`/api/learning-design/planner${courseQuery(courseCode)}`, auth);
-
-/**
- * The studio overview, for the phase labels from content (PED-001) and the pattern names.
- * @param auth - The credential (the route is public; the session is sent as on every call).
- * @returns The overview.
- */
-export const getStudioPhases = (auth: ApiAuth): Promise<ApiResult<StudioOverview>> =>
-  apiRequest<StudioOverview>('/api/studio', auth);

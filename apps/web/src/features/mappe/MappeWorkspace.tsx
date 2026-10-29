@@ -14,7 +14,7 @@
  *   - The note that students' results come later (D-095) is always shown with the export.
  * Collaborators: ./MappeView.tsx, ./MappeFilters.tsx, ./MappeActivityPicker.tsx, ./MappeOptions.tsx,
  *   ./MappeWordCount.tsx, ./MappeDownloads.tsx, ./useMappePreview.ts, ./mappeFilter.ts, ../../api/mappeApi.ts,
- *   ../../api/learningDesignApi.ts (`getStudioPhases`).
+ *   ../../api/studioApi.ts (`getStudioOverview`).
  * Tests: apps/web/test/features/MappeView.test.tsx, apps/web/test/features/MappeDownloads.test.tsx
  */
 'use client';
@@ -28,8 +28,8 @@ import type {
 } from '@hvl-interaktiv/api-contract';
 import { useEffect, useMemo, useState } from 'react';
 import { useApiAuth } from '../../api/ApiAuthContext';
-import { getStudioPhases } from '../../api/learningDesignApi';
 import { getMappeActivities, getMappeCriteriaSets } from '../../api/mappeApi';
+import { getStudioOverview } from '../../api/studioApi';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t, type Locale } from '../../i18n/translate';
 import { MappeActivityPicker } from './MappeActivityPicker';
@@ -68,7 +68,7 @@ export function MappeWorkspace() {
         active &&
         setSets(r.ok ? r.data : r.error?.errorCode === 'hvl:mappe-not-ready' ? 'not-ready' : 'failed'),
     );
-    void getStudioPhases(auth).then((r) => active && setOverview(r.ok ? r.data : 'failed'));
+    void getStudioOverview(auth).then((r) => active && setOverview(r.ok ? r.data : 'failed'));
     return () => {
       active = false;
     };

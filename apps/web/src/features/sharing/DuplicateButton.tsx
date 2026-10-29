@@ -7,8 +7,10 @@
  *      opens the copy, where its source is shown (../activity/SourceAttributionNote.tsx).
  * Spec: PROD-007, UD-006, UD-013
  * Invariants:
- *   - A11Y: one request at a time: while it runs the button is `aria-disabled` (still focusable) and the status says
- *     so (WCAG 4.1.3); a second press does nothing.
+ *   - A11Y: one request at a time: while it runs the button is `aria-disabled` (still focusable), the line under it
+ *     says so, and the page's one polite status region announces it (WCAG 4.1.3); a second press does nothing.
+ *   - A11Y: the button has no live region of its own: a page with many buttons (the bank, one per card) would
+ *     otherwise hold as many empty status regions, which some screen readers list or read out of turn.
  *   - A11Y: `accessibleName` names the activity when several buttons share a page (the bank: «Lag ein kopi av …»,
  *     WCAG 2.4.6).
  *   - A refusal shows the server's own message, else a plain one, with the ✗ icon (never colour alone, UD-003).
@@ -33,18 +35,21 @@ export interface DuplicateButtonProps {
   readonly contentId: string;
   /** The button's accessible name when the visible «Lag ein kopi» is not enough, e.g. «Lag ein kopi av Celler». */
   readonly accessibleName?: string;
+  /** Says something in the page's polite status region. */
+  readonly announce: (message: string) => void;
   /** Opens a page; the browser's own navigation by default. */
   readonly navigate?: (path: string) => void;
 }
 
 /**
- * The «Lag ein kopi» button and its status line.
- * @param props - The activity, an optional accessible name and the navigation.
+ * The «Lag ein kopi» button and the line under it that says what happens.
+ * @param props - The activity, an optional accessible name, the page's announcer and the navigation.
  * @returns The button.
  */
 export function DuplicateButton({
   contentId,
   accessibleName,
+  announce,
   navigate = (path: string) => window.location.assign(path),
 }: DuplicateButtonProps) {
   const locale = useLocale();
@@ -54,12 +59,14 @@ export function DuplicateButton({
   const copy = async () => {
     if (state === 'busy' || state === 'done') return;
     setState('busy');
+    announce(t('sharing.duplicating', locale));
     const result = await duplicateContent(contentId, auth);
     if (!result.ok) {
       setState({ error: result.error?.message ?? t('sharing.duplicateFailed', locale) });
       return;
     }
     setState('done');
+    announce(t('sharing.duplicated', locale));
     navigate(activityPath(result.data.contentId, EDIT_TAB_ID));
   };
   const busy = state === 'busy' || state === 'done';
@@ -80,9 +87,7 @@ export function DuplicateButton({
       >
         {t('sharing.duplicate', locale)}
       </button>
-      <p role="status" className="m-0 min-h-6">
-        {status}
-      </p>
+      <p className="m-0 min-h-6">{status}</p>
       {typeof state === 'object' ? <SharingProblem text={state.error} /> : null}
     </div>
   );

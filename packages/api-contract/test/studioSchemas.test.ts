@@ -180,7 +180,12 @@ describe('[PED-010] pattern cards and pages', () => {
       example: text('Ein video om blodtrykk.'),
       studentMinutes: 15,
       references: [
-        { key: 'guo2014', text: 'Guo, P. J., Kim, J. & Rubin, R. (2014). L@S ’14.', verify: true },
+        {
+          key: 'guo2014',
+          text: 'Guo, P. J., Kim, J. & Rubin, R. (2014). L@S ’14.',
+          verify: true,
+          language: 'en',
+        },
       ],
     };
     // Act and assert

@@ -10,6 +10,8 @@
 #   - A key is lower-case letters, digits and hyphens, like guo2014 (first author and year). Never rename a key that
 #     a guide or a pattern cites; `npm run content:check` reports a citation of a key that is not listed here.
 #   - `text` is the whole reference as plain text (no Markdown, no italics), at most 600 characters.
+#   - `language` is the language the reference is written in: leave it out for English, write `language: nb` (or
+#     nn, sv, da, de …) for any other, so screen readers read it in the right language.
 #   - Set `verify: false` only after checking the reference against the source.
 # Spec: PED-002 · Tests: apps/server/test/learningDesign/content/referencesContent.test.ts
 version: 1
@@ -93,6 +95,7 @@ references:
       Møgelvang, A., & Isaksen, K. R. (2025). Utvikling av en kontekstuell og kunnskapsbasert modell for
       læringsdesign. Nordic Journal of STEM Education, 9(2), 255–262.
     verify: true
+    language: nb
   # Using pre-work in class
   novak1999:
     text: >-

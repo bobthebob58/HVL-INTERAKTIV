@@ -101,8 +101,8 @@ export const GUIDE: Guide = {
     { type: 'marker', name: 'pattern-catalogue' },
   ],
   references: [
-    { key: 'ref-a', text: 'Forfattar, A. (2026). Den første kjelda.', verify: true },
-    { key: 'ref-b', text: 'Forfattar, B. (2026). Den andre kjelda.', verify: false },
+    { key: 'ref-a', text: 'Forfattar, A. (2026). Den første kjelda.', verify: true, language: 'nn' },
+    { key: 'ref-b', text: 'Author, B. (2026). The second source.', verify: false, language: 'en' },
   ],
 };
 
@@ -125,7 +125,9 @@ export const DETAIL: PatternDetail = {
   },
   example: text('Ein dra-og-slepp-tekst om cellar.'),
   studentMinutes: 10,
-  references: [{ key: 'ref-a', text: 'Forfattar, A. (2026). Den første kjelda.', verify: true }],
+  references: [
+    { key: 'ref-a', text: 'Forfattar, A. (2026). Den første kjelda.', verify: true, language: 'nn' },
+  ],
 };
 
 /**

@@ -160,7 +160,7 @@ variable and pointing to `.env.example`.
 - Code, comments and developer docs are in **English**, so international reviewers and the
   open-source community can read them.
 - Norwegian domain terms keep their Norwegian form in identifiers and enums (`forarbeid`,
-  `laeringsutbytte`, `pedagogiskMappe`) and are explained in [GLOSSARY.md](GLOSSARY.md). Do not
+  `laeringsutbytte`, `mappe`) and are explained in [GLOSSARY.md](GLOSSARY.md). Do not
   invent English translations that a teacher at HVL would not recognise.
 - **No user-facing string is hard-coded.** UI text lives in `nn`/`nb`/`en` locale files.
   *Checked by:* `eslint-plugin-i18next` (`no-literal-string` in JSX) and the key-parity test (`PROD-012`).

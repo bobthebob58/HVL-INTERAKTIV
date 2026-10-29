@@ -10,6 +10,8 @@
  *   - A11Y: progress and success are a polite status, a refusal an alert, both in text (WCAG 4.1.3); the buttons stay
  *     enabled and say what is missing when nothing is chosen (WCAG 3.3.1); one download at a time.
  *   - PRIVACY: the file goes from the answer straight to the browser's save (./saveDownloadedFile.ts).
+ *   - SPEC-DEVIATION: UD-007 asks file links to show type and size; the buttons name the type only, because the
+ *     server makes the file on request and stores nothing, so its size is unknown (D-094 amendment 2026-10-29).
  * Collaborators: ./MappeWorkspace.tsx, ./saveDownloadedFile.ts, ../../api/mappeApi.ts.
  * Tests: apps/web/test/features/MappeDownloads.test.tsx
  */

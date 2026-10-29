@@ -20,13 +20,15 @@
  *     button with a real pointer click (Playwright refuses a control something lies over); it fails when
  *     that state does not appear, so a suite never checks a fresh activity twice and calls it answered. It does not
  *     wait for transitions to end (`waitForStillness` does), so the reduced-motion check sees what still moves.
- * Collaborators: ./pages.ts, ./catalogue.ts, ../../test/support/realWebApp.ts.
+ * Collaborators: ./pages.ts, ./catalogue.ts, ./studioViews.ts (the studio's seeded views),
+ *   ../../test/support/realWebApp.ts.
  * Tests: apps/server/a11y/axeContentTypes.a11y.test.ts and the other suites in apps/server/a11y/.
  */
 import type { BrowserContext, Frame, Page } from 'playwright-core';
 import type { RealWebApp, UiLocale } from '../../test/support/realWebApp.js';
 import type { ContentType, WebView } from './catalogue.js';
 import { editorFrame, openActivityTab, openLaunch, openWebPage } from './pages.js';
+import { openStudioView } from './studioViews.js';
 
 /** Options for `openView`. */
 export interface ViewOptions {
@@ -34,7 +36,8 @@ export interface ViewOptions {
   readonly contentId?: string;
   /** Language of a Canvas launch. */
   readonly locale?: UiLocale;
-  /** Whether the context is signed in; `/aktivitet/ny` then waits for H5P's content-type list. */
+  /** Whether the context is signed in; `/aktivitet/ny` then waits for H5P's content-type list, a pattern page for
+   * its create form. */
   readonly signedIn?: boolean;
 }
 
@@ -59,6 +62,7 @@ export async function openView(
     const contentId = options.contentId ?? app.ids.get('H5P.MultiChoice') ?? '';
     return openLaunch(context, app, contentId, options.locale ? { locale: options.locale } : {});
   }
+  if (view.kind === 'studio') return openStudioView(app, context, view.view, options.signedIn ?? true);
   const page = await openWebPage(context, app.base, view.path);
   if (view.path === '/aktivitet/ny' && options.signedIn) await editorFrame(page);
   return page;

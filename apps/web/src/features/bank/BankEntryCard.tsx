@@ -31,16 +31,18 @@ export interface BankEntryCardProps {
   readonly entry: BankEntry;
   /** The label of the entry's phase in the page's language, when the studio content has it. */
   readonly phaseLabel?: string;
+  /** Says something in the bank page's one polite status region (../sharing/DuplicateButton.tsx). */
+  readonly announce: (message: string) => void;
   /** Opens a page; the browser's own navigation by default. */
   readonly navigate?: (path: string) => void;
 }
 
 /**
  * One bank entry.
- * @param props - The entry, its phase label and the navigation.
+ * @param props - The entry, its phase label, the page's announcer and the navigation.
  * @returns The card.
  */
-export function BankEntryCard({ entry, phaseLabel, navigate }: BankEntryCardProps) {
+export function BankEntryCard({ entry, phaseLabel, announce, navigate }: BankEntryCardProps) {
   const locale = useLocale();
   const headingId = useId();
   const lang = partLanguage(entry.language, locale);
@@ -84,6 +86,7 @@ export function BankEntryCard({ entry, phaseLabel, navigate }: BankEntryCardProp
       <DuplicateButton
         contentId={entry.contentId}
         accessibleName={t('sharing.duplicateOf', locale, { title: entry.title })}
+        announce={announce}
         {...(navigate ? { navigate } : {})}
       />
     </article>

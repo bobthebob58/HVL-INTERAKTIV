@@ -138,6 +138,7 @@
               // WHY: "saving" is not true while the author chooses; the outcome replaces the empty text afterwards.
               announce('');
               var page = { config: config, contentId: contentId, saved: saved, settle: settle };
+              page.announce = announce;
               return hvliAnswerResetNeeded(content, page);
             }
             announce(error.statusText || config.messages.failed);

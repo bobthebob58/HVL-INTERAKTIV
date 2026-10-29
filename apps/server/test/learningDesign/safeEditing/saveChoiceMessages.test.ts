@@ -26,8 +26,10 @@ describe('[PROD-013] saveChoiceMessages', () => {
       'body',
       'cancel',
       'cancelled',
+      'copying',
       'reset',
       'resetAndSaved',
+      'resetting',
       'saveAsCopy',
       'saveAsCopyHint',
       'savedAsCopy',
@@ -40,6 +42,7 @@ describe('[PROD-013] saveChoiceMessages', () => {
       'canvasPointer',
       'reset',
       'resetAndSaved',
+      'resetting',
       'title',
     ]);
   });

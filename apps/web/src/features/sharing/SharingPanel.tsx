@@ -57,7 +57,7 @@ export function SharingPanel({ detail, announce, reloadDetail, navigate }: Shari
       <section aria-labelledby={copyId}>
         <h3 id={copyId}>{t('sharing.duplicateHeading', locale)}</h3>
         <p>{t('sharing.duplicateIntro', locale)}</p>
-        <DuplicateButton contentId={detail.id} {...(navigate ? { navigate } : {})} />
+        <DuplicateButton contentId={detail.id} announce={announce} {...(navigate ? { navigate } : {})} />
       </section>
     </>
   );

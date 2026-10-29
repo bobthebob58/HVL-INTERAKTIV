@@ -17,7 +17,8 @@
  * Collaborators: ./safeEditingBench.ts (the app and the state rows), ../../support/runFeideAuthor.ts (the sign-in),
  *   ./editorSaveDialogBench.ts (`eventually`), ../../../src/h5p/render/client/editorSaveChoice.js.
  * Tests: ./saveChoiceRoundTrip.browser.int.test.ts, ./saveChoiceKeyboard.browser.int.test.ts,
- *   ./saveChoiceCanvas.browser.int.test.ts, apps/server/a11y/axeSaveChoice.a11y.test.ts (`addOption`)
+ *   ./saveChoiceCanvas.browser.int.test.ts, apps/server/a11y/axeSaveChoice.a11y.test.ts (`addOption`),
+ *   apps/server/e2e/safeEditReset.e2e.test.ts (`addOption`)
  */
 import type { Browser, Frame, Page } from 'playwright-core';
 import type { BrowserStorage } from '../../support/runFeideAuthor.js';

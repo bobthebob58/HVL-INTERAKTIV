@@ -1,8 +1,9 @@
 /**
  * Tests for content/laeringsdesign/references.yaml: every reference of spec 04 §3's research table is there; bad keys,
- * missing fields and `__proto__` are refused by line and key; unknown citations are reported.
+ * missing fields and `__proto__` are refused by line and key; unknown citations are reported; a reference's language
+ * is English unless it says otherwise, and a malformed language is refused.
  *
- * Spec: PED-001
+ * Spec: PED-001, UD-010
  */
 import { describe, expect, it } from 'vitest';
 import { STUDIO_CONTENT_ROOT } from '../../../src/learningDesign/content/loadStudioContent.js';
@@ -92,8 +93,27 @@ describe('[PED-001] references.yaml', () => {
       5,
       'references.a1.doi',
     ],
+    [
+      'a language that is not a language tag',
+      'references:\n  a1:\n    text: T\n    verify: true\n    language: norsk',
+      5,
+      'references.a1.language',
+    ],
   ])('[PED-001] refuses %s, naming the line and the key', (_, body, line, key) => {
     expect(problemsOf(`version: 1\n${body}\n`)).toEqual([expect.objectContaining({ line: line + 1, key })]);
+  });
+
+  it('[UD-010] gives each reference its language, English when the file leaves it out', () => {
+    // Arrange
+    const yaml =
+      'version: 1\nreferences:\n  a1:\n    text: T\n    verify: true\n  b2:\n    text: U\n    verify: true\n    language: nb\n';
+    // Act
+    const result = parseYamlContent(yaml, referencesFileSchema, 'references.yaml');
+    // Assert
+    expect(result.ok ? result.value.references.map((r) => [r.key, r.language]) : result.problems).toEqual([
+      ['a1', 'en'],
+      ['b2', 'nb'],
+    ]);
   });
 
   it('[PED-001] refuses a file without references', () => {

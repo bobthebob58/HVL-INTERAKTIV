@@ -40,9 +40,8 @@ tables and links written as `[text](https://…)`. Three things are special:
 - **Markers** are names alone on their own line, such as `{{del1_start}}`. They place what the server builds itself
   and mark the parts it counts. Each marker stands exactly once, never inside a list.
 
-Keep each heading short enough to fit on one line in the PDF (about 40 characters for `#` and 50 for `##`). Where a
-heading wraps onto a second line, the PDF's bookmark for it loses the space at the line break, so a screen reader
-reads two words as one (a limit of the Chromium version the server uses, recorded for the manual PDF check).
+Short headings read best, but a heading may wrap onto a second line in the PDF: the PDF keeps the space where it
+wraps, so its bookmark reads as the heading does (D-096; the server's own PDF test has a heading that wraps).
 
 Notes for the people who edit the file go between `<!--` and `-->`; they never reach the portfolio, and names written
 in them are not checked. A block between two `---` lines at the very top (front matter) is ignored too: the limits
@@ -152,6 +151,21 @@ line right after a table line. A list opened where it does not belong and a valu
 {{vedlegg_slutt}}
 ```
 
+### Edit the template, step by step
+
+1. Open `template.nn.md`. Nynorsk is the reference: the check compares the Bokmål and English templates with it.
+2. Change the headings, the writing prompts and the fixed text freely. Write a value only with a name from the
+   tables above, and only where plain text is safe (see "What the check refuses").
+3. Keep the six markers, each alone on its line, once, and outside every list: `{{del1_start}}` before
+   `{{del1_slutt}}`, `{{vedlegg_start}}` before `{{vedlegg_slutt}}`, and the two pairs apart from each other. What
+   stands between `{{del1_start}}` and `{{del1_slutt}}` is what the word count counts.
+4. Make the same change of structure in `template.nb.md` and `template.en.md`: the same markers in the same order,
+   the same lists, the same values in each list and the same headings by level. The wording may differ.
+5. Run `npm run content:check`. Its `✓` line says `mappe template and … criteria set(s) in nn, nb and en`, or it
+   names the file and line of each mistake.
+6. On the test server, choose a few activities on `/mappe` and download the Markdown file and the PDF to see the
+   result, then propose the change as a pull request.
+
 ## The criteria
 
 Each criteria file lists the sets in the same order, with the same criteria in the same order; only the texts are in
@@ -186,6 +200,21 @@ sets:
 
 Choosing another set changes every criterion text, the reader's guide and the limits, with no code change.
 
+### Edit the criteria, step by step
+
+1. Open `criteria.nn.yaml` and find the set by its `id`, and the criterion by its `id` (`"1.1"` …).
+2. To correct a criterion, change its `text`, `chapter` or `attachment`. Keep its `id`, in quotes. Every text is one
+   line (write a long one after `>-`, as in `laeringsdesign/README.md`, "Writing long texts").
+3. To confirm a limit, write the confirmed number as its `value` and set its `verify: false`.
+4. For a new call (for example 2027), add a set with a new `id` (lower-case letters, digits and hyphens, such as
+   `hvl-merittering-2027`), its `title`, its `limits` and all its `criteria`. Keep the set `hvl-merittering-2025`:
+   the export uses it when the teacher chooses no set, and only a developer can make another set the default.
+5. Make the same change in `criteria.nb.yaml` and `criteria.en.yaml`: the same sets in the same order, the same
+   criteria with the same IDs in the same order, the same limits, and an attachment hint on the same criteria; only
+   the texts are in the file's language.
+6. Run `npm run content:check`, then propose the change as a pull request. On `/mappe`, the new set appears in the
+   choice of criteria set after the next start.
+
 ## The three languages
 
 The three templates must match: the same markers in the same order, the same lists, the same values in each list and
@@ -211,5 +240,4 @@ it breaks a rule above:
 set; the word count of Del 1 leaves out the reader's guide and the references; the languages have the same headings
 and suggested attachments, no more than the limit; no tag is left), `mappeRealContent.int.test.ts` (the same through
 the export route) and `mappeRealContentPdf.browser.int.test.ts` (the PDF is tagged, its bookmarks are the headings,
-and it has the language and the title). The PDF test runs only where Chromium is installed (always in CI), and it is
-the one that fails when a heading is too long for one line, since the bookmark then differs from the heading.
+and it has the language and the title). The PDF test runs only where Chromium is installed (always in CI).

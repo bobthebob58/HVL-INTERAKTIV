@@ -1,9 +1,9 @@
 /**
  * Tests for the content bank page: each entry with what colleagues choose by (the phase label from content), the
- * owner's name and a «Lag ein kopi» named after the activity; the student author's refusal explained; the empty
- * state.
+ * owner's name and a «Lag ein kopi» named after the activity; one status region for the whole page; the student
+ * author's refusal explained; the empty state.
  *
- * Spec: PROD-007, PED-001, UD-010, UD-013
+ * Spec: PROD-007, PED-001, UD-010, UD-013, UD-006
  */
 // @vitest-environment jsdom
 import type { BankEntry } from '@hvl-interaktiv/api-contract';
@@ -75,6 +75,26 @@ describe('[PROD-007] the content bank page', () => {
     // Assert
     await waitFor(() => expect(navigate).toHaveBeenCalledWith(`/aktivitet/${COPY_ID}?fane=edit`));
     expect(requests.find((r) => r.method === 'POST')?.headers).toMatchObject({ 'x-csrf-token': 'csrf-1' });
+  });
+
+  it('[UD-006][PROD-007] the page has one status region for every card, and it announces the copy', async () => {
+    // Arrange
+    show(
+      { status: 200, body: { items: [ENTRY, { ...ENTRY, contentId: COPY_ID, title: 'Andre' }] } },
+      { [`POST /api/content/${COPY_ID}/duplicate`]: { status: 201, body: { contentId: ENTRY.contentId } } },
+    );
+    const button = await screen.findByRole('button', { name: 'Lag ein kopi av Andre' });
+    // Act
+    const regionsBefore = screen.getAllByRole('status').length;
+    fireEvent.click(button);
+    // Assert
+    expect(regionsBefore).toBe(1);
+    await waitFor(() =>
+      expect(screen.getByRole('status').textContent?.trim()).toBe('Kopien er laga. Opnar han no.'),
+    );
+    expect(
+      within(screen.getByRole('article', { name: 'Andre' })).getByText('Kopien er laga. Opnar han no.'),
+    ).toBeTruthy();
   });
 
   it('[PROD-007] explains the refusal to a student author', async () => {

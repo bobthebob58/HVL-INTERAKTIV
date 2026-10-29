@@ -2,9 +2,11 @@
  * axe on the editor's save choice dialog (PROD-013, D-093) as an author meets it: the activity page's **Rediger** tab
  * on a draft MultiChoice another learner has saved progress in, an option added in H5P's form, «Lagre» pressed, and
  * the dialog open. The whole page is scanned with every frame, in the light theme and with forced colours emulated;
- * only the recorded H5P upstream problems of the MultiChoice editor may remain.
+ * only the recorded H5P upstream problems of the MultiChoice editor may remain. While the dialog is open, the
+ * activity page around the editor frame is inert: nothing outside the frame takes focus or is read, in the DOM and in
+ * Chromium's accessibility tree, where before the dialog opened the page's header, tabs and notice were.
  *
- * Spec: UD-030, PROD-013, UD-004
+ * Spec: UD-030, PROD-013, UD-004, UD-006
  */
 import type { Frame } from 'playwright-core';
 import { describe, expect, it } from 'vitest';
@@ -13,9 +15,13 @@ import { addOption } from '../test/learningDesign/safeEditing/saveChoiceBench.js
 import { describeA11y } from './support/a11ySuite.js';
 import { scanPage } from './support/axeScan.js';
 import { COLOUR_MODES } from './support/catalogue.js';
+import { exposedInPage, reachableOutsideFrame } from './support/inertPage.js';
 import { editorFrame } from './support/pages.js';
 import { expectOnlyRecorded, recordedFor } from './support/upstreamFindings.js';
 import { openView } from './support/views.js';
+
+/** The activity page's frame with the editor page, which the dialog lives in. */
+const EDITOR_PAGE_FRAME = 'iframe[src*="/h5p/edit/"]';
 
 /** Presses «Lagre» in the editor page until the save choice is open (a click H5P's resizing moved is repeated). */
 async function openSaveChoice(tool: Frame): Promise<void> {
@@ -51,11 +57,20 @@ describeA11y('[UD-030] axe on the editor’s save choice dialog', (env) => {
         const tool = form.parentFrame();
         if (!tool) throw new Error('the editor page has no frame of its own');
         await addOption(form);
+        const reachableBefore = await reachableOutsideFrame(page, EDITOR_PAGE_FRAME);
+        const exposedBefore = await exposedInPage(page);
         // Act
         await openSaveChoice(tool);
+        await expect
+          .poll(() => reachableOutsideFrame(page, EDITOR_PAGE_FRAME), { timeout: 5_000 })
+          .toEqual([]);
+        const exposed = await exposedInPage(page);
         const report = await scanPage(page, `${mode}, the save choice dialog`);
         // Assert
         expect(await tool.evaluate(() => document.activeElement?.id)).toBe('hvl-save-choice-cancel');
+        expect(reachableBefore.length).toBeGreaterThan(0);
+        expect(exposedBefore.length).toBeGreaterThan(0);
+        expect(exposed).toEqual([]);
         expectOnlyRecorded(
           report,
           recordedFor('editor', 'H5P.MultiChoice', { forced: forcedColors === 'active' }),

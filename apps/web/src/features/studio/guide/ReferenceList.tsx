@@ -8,12 +8,15 @@
  * Invariants:
  *   - The order is the answer's (first-citation order), so entry n is citation "[n]".
  *   - Each entry has the `id` its citations link to and takes focus when one is followed (WCAG 2.4.3).
+ *   - A11Y: a reference in another language than the page carries its own `lang` (WCAG 3.1.2, UD-010), on the
+ *     reference's text only: the "not checked yet" note is in the page's language.
  *   - Renders nothing for an empty list.
  * Collaborators: ./guideCitations.ts, ../GuideView.tsx, ../PatternDetailView.tsx.
  * Tests: apps/web/test/features/GuideView.test.tsx, apps/web/test/features/PatternDetailView.test.tsx
  */
 import type { Reference } from '@hvl-interaktiv/api-contract';
 import { useId } from 'react';
+import { partLanguage } from '../../../i18n/partLanguage';
 import { t, type Locale } from '../../../i18n/translate';
 import { referenceAnchorId } from './guideCitations';
 
@@ -38,7 +41,7 @@ export function ReferenceList({
         {references.map((reference) => (
           // A11Y: tabIndex −1 lets a followed citation move focus here, so reading continues at the reference.
           <li key={reference.key} id={referenceAnchorId(reference.key)} tabIndex={-1} className="mb-2">
-            {reference.text}
+            <span lang={partLanguage(reference.language, locale)}>{reference.text}</span>
             {reference.verify ? (
               <span className="text-hvl-ink-muted"> {t('studio.referenceUnchecked', locale)}</span>
             ) : null}

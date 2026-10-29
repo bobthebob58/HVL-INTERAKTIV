@@ -150,6 +150,10 @@
       "savedAsCopy": "Endringen er lagret som en ny versjon. Originalen og fremgangen til studentene er ikke endret.",
       "cancelled": "Endringen er ikke lagret."
     },
+    "busy": {
+      "resetting": "Nullstiller fremgangen og lagrer endringen …",
+      "copying": "Lagrer endringen som en ny versjon …"
+    },
     "resetNeededCanvas": "Endringen endrer oppbygningen av aktiviteten, og andre har lagret fremgang i den. Bekreft at fremgangen skal nullstilles, eller avbryt. En ny versjon kan du lagre i HVL Interaktiv-portalen."
   },
   "learningDesign": {
