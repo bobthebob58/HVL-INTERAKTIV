@@ -163,14 +163,22 @@ export const studioOverviewSchema = z.strictObject({
 export type StudioOverview = z.infer<typeof studioOverviewSchema>;
 
 /**
- * The guide in one language: its block nodes and every reference it cites, in citation order (PED-002).
+ * The guide in one language: its block nodes and every reference it cites, in citation order (PED-002). Both are
+ * empty while the guide is not written yet; the page then shows the phase matrix and the catalogue alone.
  * @spec PED-002
  */
 export const guideSchema = z.strictObject({
   locale: localeSchema,
   status: contentReviewStatusSchema,
-  nodes: z.array(guideBlockNodeSchema).min(1),
+  nodes: z
+    .array(guideBlockNodeSchema)
+    .describe('The guide’s blocks; empty while no guide is written yet (content/laeringsdesign/guide.*.md).'),
   references: z.array(referenceSchema),
 });
 /** The guide in one language. */
 export type Guide = z.infer<typeof guideSchema>;
+
+/** Path parameters of `GET /api/studio/guide/:locale`: the guide's language. */
+export const guideParamsSchema = z.strictObject({ locale: localeSchema });
+/** The path parameters of the guide route. */
+export type GuideParams = z.infer<typeof guideParamsSchema>;

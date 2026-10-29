@@ -1,15 +1,17 @@
 /**
  * Tests for the studio pages' views: each has its one `h1` in every language; the guide and a pattern's page are
- * public and never ask who is signed in; the planner, the content bank and the portfolio ask signed-out visitors to
- * log in and come back, and refuse people who are not authors (D-089). The pages' own requirements (PED-002, PED-031,
- * PROD-007, MAPPE-001) are tested by the workstreams that fill them, so these tests carry only the access IDs.
+ * public: the guide reads only the public studio routes and never asks who is signed in, and a pattern's page shows
+ * the pattern to anyone and asks who is signed in only for «Lag frå dette mønsteret»; the planner, the content bank
+ * and the portfolio ask signed-out visitors to log in and come back, and refuse people who are not authors (D-089).
+ * The pages' own requirements (PED-002, PED-031, PROD-007, MAPPE-001) are tested by the workstreams that fill them,
+ * so these tests carry only the access IDs.
  *
  * Spec: AUTH-001, AUTH-003, UD-013
  */
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import type { ComponentType } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { STUDIO_NAV_ITEMS } from '../../src/components/StudioNav';
 import { BankView } from '../../src/features/bank/BankView';
 import { MappeView } from '../../src/features/mappe/MappeView';
@@ -19,6 +21,9 @@ import { PatternDetailView } from '../../src/features/studio/PatternDetailView';
 import { LocaleProvider } from '../../src/i18n/LocaleContext';
 import type { Locale } from '../../src/i18n/translate';
 import { errorBody, fakeFetch } from '../support/fakeFetch';
+import { DETAIL, OVERVIEW, studioRoutes } from '../support/studioFixtures';
+
+vi.mock('next/navigation', () => import('../support/nextNavigationMock'));
 
 const PatternView = () => <PatternDetailView patternId="fa-video" />;
 const SIGNED_OUT = { 'GET /auth/session': { status: 401, body: errorBody(401, 'hvl:unauthenticated') } };
@@ -66,14 +71,36 @@ describe('[UD-013] the studio pages', () => {
     expect(screen.getAllByRole('heading', { level: 1 }).map((heading) => heading.textContent)).toEqual([en]);
   });
 
-  it.each([
-    ['GuideView', GuideView],
-    ['PatternDetailView', PatternView],
-  ] as const)('[AUTH-003] %s is public: it never asks who is signed in', (_name, View) => {
-    const requests = fakeFetch({});
-    inLocale('nn', View);
-    expect(requests).toEqual([]);
+  it('[AUTH-003] GuideView is public: it reads only the public studio routes, sends no credential and never asks who is signed in', async () => {
+    // Arrange
+    const requests = fakeFetch(studioRoutes());
+    // Act
+    inLocale('nn', GuideView);
+    await screen.findByRole('region', { name: 'Mønsterkatalogen' });
+    // Assert
+    expect(requests.map((request) => request.path).sort()).toEqual(['/api/studio', '/api/studio/guide/nn']);
+    expect(requests.every(({ headers }) => !headers.Authorization && !headers['x-csrf-token'])).toBe(true);
     expect(screen.queryByRole('link', { name: 'Logg inn med Feide' })).toBeNull();
+  });
+
+  it('[AUTH-003] PatternDetailView shows the pattern signed out; only «Lag frå dette mønsteret» asks who is signed in', async () => {
+    // Arrange
+    const requests = fakeFetch({
+      ...SIGNED_OUT,
+      'GET /api/studio': { status: 200, body: OVERVIEW },
+      'GET /api/studio/patterns/fa-video': { status: 200, body: { ...DETAIL, id: 'fa-video' } },
+    });
+    // Act
+    inLocale('nn', PatternView);
+    const create = await screen.findByRole('region', { name: 'Lag frå dette mønsteret' });
+    // Assert
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(DETAIL.name.nn);
+    expect(requests.map((request) => request.path).sort()).toEqual([
+      '/api/studio',
+      '/api/studio/patterns/fa-video',
+      '/auth/session',
+    ]);
+    expect(await within(create).findByRole('link', { name: 'Logg inn med Feide' })).toBeTruthy();
   });
 
   it.each(AUTHOR_PAGES)(
@@ -105,6 +132,8 @@ describe('[UD-013] the studio pages', () => {
       // Arrange
       const requests = fakeFetch({
         'GET /auth/session': { status: 200, body: { roles: ['author'], locale: 'nn', csrfToken: 'c' } },
+        // WHY: the planner (W3) first lists the author's course codes; an author with none gets the chooser's text.
+        'GET /api/learning-design/course-codes': { status: 200, body: { inUse: [], fromCanvas: [] } },
       });
       // Act
       inLocale('nn', View);
@@ -113,7 +142,10 @@ describe('[UD-013] the studio pages', () => {
       await expect.poll(() => screen.queryByRole('status')).toBeNull();
       expect(screen.queryByRole('alert')).toBeNull();
       expect(screen.queryByRole('link', { name: 'Logg inn med Feide' })).toBeNull();
-      expect(requests.map((request) => request.path)).toEqual(['/auth/session']);
+      // WHY: the session comes first; a page's own data comes from the Express API only (D-068).
+      const paths = requests.map((request) => request.path);
+      expect(paths[0]).toBe('/auth/session');
+      expect(paths.slice(1).every((path) => path.startsWith('/api/'))).toBe(true);
     },
   );
 

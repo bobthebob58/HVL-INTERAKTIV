@@ -322,8 +322,13 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
       `PROD-001`, `PROD-009`)
       — stage 1 done: pattern format, loader and checks, creation API, V-PLACEHOLDER incl. missing media, the
         BranchingScenario picture repair (W2a); stage 2 done: the nine patterns in nn, nb and en, created on the
-        real types in every type and phase (W2b; drafts for ALU, Q17)
+        real types in every type and phase (W2b; drafts for ALU, Q17); stage 3 done: the guide loader and its
+        closed node tree, the public studio routes, the guide page with the phase matrix and the catalogue with
+        filters in the address, the pattern page with «Lag frå dette mønsteret» (W1a; the guide text follows in W1b)
 - [ ] 3. Metadata, planner, learner time and purpose (`PED-030`…`PED-032`)
+      — stage 3 done: the Læringsdesign tab and its routes, the publish prompt, course codes from Canvas labels
+        (privacy filter), the planner with gaps, time and purpose before the activity in the portal and Canvas (W3);
+        screenshots in `nn` sent to the owner (2026-10-29)
 - [ ] 3. Co-authors, content bank and duplicate (`PROD-007`); safe editing (`PROD-013`)
       — stage 1 done: structure signature, the 409 save gate, stale state writes dropped, the copy route (W5a);
         stage 2 done: the save choice dialog in the editor, portal and Canvas, inert page while open (W5b)

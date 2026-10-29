@@ -8,7 +8,15 @@
  */
 import { describe, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
-import { ACTIVITY, LTIK, LTIK_EN, openWebPage, serveBuiltWebApp, WEB_APP_BUILT } from './webTestServer.js';
+import {
+  ACTIVITY,
+  FIXTURE_PATTERN_PATH,
+  LTIK,
+  LTIK_EN,
+  openWebPage,
+  serveBuiltWebApp,
+  WEB_APP_BUILT,
+} from './webTestServer.js';
 
 (WEB_APP_BUILT ? describe : describe.skip)('[UD-013] the chrome of the built web app', () => {
   const base = serveBuiltWebApp();
@@ -25,7 +33,7 @@ import { ACTIVITY, LTIK, LTIK_EN, openWebPage, serveBuiltWebApp, WEB_APP_BUILT }
         ['/app/play', 'Opne aktiviteten frå Canvas – HVL Interaktiv'],
         [`/app/play?ltik=${LTIK}`, 'Celler og vev – HVL Interaktiv'],
         ['/laeringsdesign', 'Læringsdesign – HVL Interaktiv'],
-        ['/laeringsdesign/monster/fa-video', 'Mønster – HVL Interaktiv'],
+        [FIXTURE_PATTERN_PATH, 'Testmønster for ein sjekk – HVL Interaktiv'],
         ['/laeringsdesign/planlegg', 'Planleggar – HVL Interaktiv'],
         ['/laeringsdesign/innhaldsbank', 'Innhaldsbank – HVL Interaktiv'],
         ['/mappe', 'Pedagogisk mappe – HVL Interaktiv'],

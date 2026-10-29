@@ -8,7 +8,8 @@
  *      and, with the activity, whenever the server says it changed. A reason holds 14 days and an error found by a
  *      later rule never had one; both show as `acknowledgement: null` (the note names neither), every save of the
  *      published activity is refused while one stays, and publishing again gives new reasons (D-074 W3 amendment).
- * Spec: PROD-003, UD-022, UD-013, UD-006
+ *      The tab may add a notice to the first-publish dialog (the learning-design prompt, D-087); it never blocks.
+ * Spec: PROD-003, UD-022, UD-013, UD-006, PED-030
  * Invariants:
  *   - Publishing always sends the `updatedAt` of the findings on screen; unpublishing the same.
  *   - A published activity offers the dialog (**Grunngje på nytt**) only while an error has no reason that holds and
@@ -19,14 +20,14 @@
  *   - One request at a time: while unpublishing, the button is `aria-disabled` (it keeps focus) and presses do nothing.
  *   - Outcomes are announced in a polite status region; failures in an alert.
  * Collaborators: ../../components/FindingsList.tsx, ../../components/PublishDialog.tsx, ../../api/contentApi.ts,
- *   ../../components/useAnnouncement.ts, ./ActivityView.tsx.
+ *   ../../components/useAnnouncement.ts, ./useMainActionFocus.ts, ./tabs/CheckTab.tsx, ./ActivityView.tsx.
  * Tests: apps/web/test/features/CheckPanel.test.tsx, apps/web/test/features/CheckPanelTransitions.test.tsx,
  *   apps/web/test/features/CheckPanelFocus.test.tsx
  */
 'use client';
 
 import type { ContentDetail, FindingsResponse } from '@hvl-interaktiv/api-contract';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useApiAuth } from '../../api/ApiAuthContext';
 import { getFindings, unpublishContent } from '../../api/contentApi';
 import { FindingsList } from '../../components/FindingsList';
@@ -34,6 +35,7 @@ import { PublishDialog, unexplainedErrors } from '../../components/PublishDialog
 import { useAnnouncement } from '../../components/useAnnouncement';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
+import { useMainActionFocus, type FocusAfter } from './useMainActionFocus';
 
 /** What the panel needs. */
 export interface CheckPanelProps {
@@ -43,20 +45,26 @@ export interface CheckPanelProps {
   readonly onGoToField: (path: string) => void;
   /** The status changed (published or draft): the page reloads the activity; the panel waits for it. */
   readonly onStatusChange: () => void | Promise<void>;
+  /** A notice for the first-publish dialog, given the way to close it; it never takes part in publishing. */
+  readonly publishNotice?: (closeDialog: () => void) => ReactNode;
 }
 
 type Findings = FindingsResponse | 'loading' | 'failed';
 /** Which dialog is open: a first publish, new reasons for a published activity, or none (`null`). */
 type DialogMode = 'publish' | 'renew' | null;
-/** When the render that applies a request puts focus on the main action: always (after a publish), or if it was lost. */
-type FocusAfter = 'always' | 'ifLost' | null;
 
 /**
  * The check-and-publish panel.
  * @param props - The activity, the save revision and the handlers.
  * @returns The panel's content.
  */
-export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: CheckPanelProps) {
+export function CheckPanel({
+  detail,
+  revision,
+  onGoToField,
+  onStatusChange,
+  publishNotice,
+}: CheckPanelProps) {
   const locale = useLocale();
   const auth = useApiAuth();
   const [findings, setFindings] = useState<Findings>('loading');
@@ -64,9 +72,8 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
   const [status, announce] = useAnnouncement();
   const [problem, setProblem] = useState('');
   const [busy, setBusy] = useState(false);
-  const [focusRequest, setFocusRequest] = useState<{ readonly mode: FocusAfter }>({ mode: null });
+  const { mainAction, requestFocus } = useMainActionFocus();
   const pending = useRef(false);
-  const mainAction = useRef<HTMLButtonElement>(null);
   const published = detail.status === 'published';
   // WHY: findings and status of one moment only (after a publish, the new status may come before the new findings).
   const renew =
@@ -79,10 +86,10 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
   const load = useCallback(
     async (focus: FocusAfter = null) => {
       const result = await getFindings(detail.id, auth);
-      if (result.ok && focus) setFocusRequest({ mode: focus });
+      if (result.ok && focus) requestFocus(focus);
       setFindings(result.ok ? result.data : 'failed');
     },
-    [detail.id, auth],
+    [detail.id, auth, requestFocus],
   );
 
   useEffect(() => {
@@ -94,14 +101,6 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
       active = false;
     };
   }, [detail.id, auth, revision]);
-
-  useEffect(() => {
-    // A11Y: WCAG 2.4.3: runs once per request, after the render that closed the dialog (which returned focus to its
-    // opener if still on the page) or showed the findings; the main action stays (shown only with `mayPublish`).
-    // WHY: a request is state, not a ref, so an effect still pending from an earlier render cannot take it.
-    const lost = !document.activeElement || document.activeElement === document.body;
-    if (focusRequest.mode === 'always' || (focusRequest.mode && lost)) mainAction.current?.focus();
-  }, [focusRequest]);
 
   const unpublish = async () => {
     if (pending.current) return;
@@ -128,7 +127,7 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
   // A11Y: focus goes to the main action after a publish, and after a retry or a closed dialog if its control has gone.
   const retry = () => void load('ifLost');
   const closeDialog = (focus: FocusAfter = 'ifLost') => {
-    setFocusRequest({ mode: focus });
+    requestFocus(focus);
     setDialog(null);
   };
   const afterPublish = () => {
@@ -187,6 +186,7 @@ export function CheckPanel({ detail, revision, onGoToField, onStatusChange }: Ch
             onPublished={afterPublish}
             onStale={() => void Promise.all([onStatusChange(), load()])}
             onFindings={(current) => setFindings({ updatedAt: findings.updatedAt, findings: [...current] })}
+            notice={dialog === 'publish' ? publishNotice?.(() => closeDialog()) : undefined}
           />
         </>
       ) : null}

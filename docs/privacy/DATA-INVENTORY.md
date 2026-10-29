@@ -231,7 +231,7 @@ An activity placed in a Canvas course.
 | `lineItemUrl` | Gradebook column, if graded | None | n/a | While placed | PG |
 | `attemptPolicy` | Best, latest or mastery (LTI-012) | None | n/a | While placed | PG |
 | `masteryThreshold` | Score needed for mastery | None | n/a | While placed | PG |
-| `contextLabel` | The course label from the launch (`context.label`, e.g. `SYK110`), suggested to the author as a course code (D-087) | None | n/a | While placed | PG |
+| `contextLabel` | The course label from the launch (`context.label`, e.g. `SYK110`), suggested to the author as a course code (D-087); kept only when, normalised, it is a course code with a digit, else null, because a sandbox label may hold a teacher's name; overwritten at each launch | None | n/a | While placed | PG |
 | `createdAt` | Audit | None | n/a | While placed | PG |
 | `updatedAt` | Audit | None | n/a | While placed | PG |
 

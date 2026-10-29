@@ -6,29 +6,36 @@
  *      the author's own and co-authored activities, so it is for signed-in authors only (D-089).
  * Spec: PED-031, AUTH-001
  * Invariants:
- *   - The heading is always shown; the content only to a signed-in author (../../components/AuthorGate.tsx), and
- *     the server checks every request again.
+ *   - The heading and the introduction are always shown; the planner only to a signed-in author
+ *     (../../components/AuthorGate.tsx), and the server checks every request again.
  *   - The course comes from the address (`?emne=`, ../../config/studioFilters.ts), so a planner view can be shared.
  * Collaborators: ../../app/(portal)/laeringsdesign/planlegg/page.tsx, ../../components/AuthorGate.tsx,
- *   ../../config/paths.ts (`plannerHref`, `catalogueHref`).
- * Tests: apps/web/test/features/studioPages.test.tsx
+ *   ./PlannerWorkspace.tsx, ../../config/paths.ts (`plannerHref`, `catalogueHref`).
+ * Tests: apps/web/test/features/studioPages.test.tsx, apps/web/test/features/PlannerView.test.tsx
  */
 'use client';
 
 import { AuthorGate } from '../../components/AuthorGate';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
+import { PlannerWorkspace } from './PlannerWorkspace';
 
 /**
  * The planner page's content.
+ * @param props - How to open another course's plan (the browser's own navigation by default).
  * @returns The heading and, for authors, the planner.
  */
-export function PlannerView() {
+export function PlannerView({
+  navigate = (path: string) => window.location.assign(path),
+}: {
+  readonly navigate?: (path: string) => void;
+}) {
   const locale = useLocale();
   return (
     <>
       <h1>{t('planner.heading', locale)}</h1>
-      <AuthorGate>{() => null}</AuthorGate>
+      <p>{t('planner.intro', locale)}</p>
+      <AuthorGate>{() => <PlannerWorkspace navigate={navigate} />}</AuthorGate>
     </>
   );
 }

@@ -5,7 +5,7 @@
  * Why: LTI-006 gives learners the player and authors the player plus **Rediger** (D-062, D-067). The ltik arrives in
  *      the address bar once (D-069): the page reads it, keeps it in memory only, removes it from the address bar at
  *      once, and passes it to the framed H5P pages in their query and to the API as `Authorization: Bearer`.
- * Spec: LTI-006, LTI-003, PROD-011, UD-010, PROD-013
+ * Spec: LTI-006, LTI-003, PROD-011, UD-010, PROD-013, PED-032
  * Invariants:
  *   - The ltik is never written to storage, a cookie or a log; it is read from the address bar exactly once.
  *   - Without an ltik the page says to open the activity again from Canvas.
@@ -13,10 +13,12 @@
  *   - While the editor's save choice is open, the page's own controls are inert (PROD-013, D-093); Canvas offers no
  *     copy, so no copy is opened here (D-098).
  *   - The title carries the activity's own language when it differs from the page's (WCAG 3.1.2, UD-010).
+ *   - Before the player, the **Spel** tab shows the estimated time and the purpose from the launch (PED-032), which
+ *     Express read after the View check (D-087); the purpose carries the activity's language.
  * Collaborators: ../../lti/launchHeader.ts (the launch facts), ./LtiChrome.tsx, ../../components/Tabs.tsx,
- *   ../../messaging/useEditorSaveChoice.ts,
+ *   ../../messaging/useEditorSaveChoice.ts, ../../components/LearnerInfo.tsx,
  *   ../../components/H5pFrame.tsx, ../../components/Notice.tsx, ../../api/ApiAuthContext.tsx.
- * Tests: apps/web/test/features/LtiPlayView.test.tsx
+ * Tests: apps/web/test/features/LtiPlayView.test.tsx, apps/web/test/features/learnerInfoViews.test.tsx
  */
 'use client';
 
@@ -24,6 +26,7 @@ import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { ApiAuthProvider } from '../../api/ApiAuthContext';
 import type { ApiAuth } from '../../api/apiRequest';
 import { H5pFrame } from '../../components/H5pFrame';
+import { LearnerInfo } from '../../components/LearnerInfo';
 import { ltiFramePath } from '../../config/paths';
 import { Notice } from '../../components/Notice';
 import { Tabs, type TabItem } from '../../components/Tabs';
@@ -80,12 +83,19 @@ export function LtiPlayView({ launch }: { readonly launch: AppLaunch }) {
       id: PLAY_TAB,
       label: t('activity.tabPlay', locale),
       panel: (
-        <H5pFrame
-          key={revision}
-          src={ltiFramePath(PLAY_TAB, ltik)}
-          title={t('activity.playFrame', locale, { title: launch.title })}
-          frameRef={playerRef}
-        />
+        <>
+          <LearnerInfo
+            estimatedStudentMinutes={launch.estimatedStudentMinutes}
+            learnerPurpose={launch.learnerPurpose}
+            language={launch.language}
+          />
+          <H5pFrame
+            key={revision}
+            src={ltiFramePath(PLAY_TAB, ltik)}
+            title={t('activity.playFrame', locale, { title: launch.title })}
+            frameRef={playerRef}
+          />
+        </>
       ),
     },
   ];

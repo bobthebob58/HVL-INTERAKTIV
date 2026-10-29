@@ -45,14 +45,14 @@ const routes = (detail: ContentDetail) => ({
 });
 
 describe('[UD-006] the activity page’s tab registry', () => {
-  it('[UD-006] lists Spel, Rediger and Sjekk og publiser in that order, each id once', () => {
-    expect(ids(ACTIVITY_TABS)).toEqual(['play', 'edit', 'check']);
+  it('[UD-006] lists Spel, Rediger, Læringsdesign and Sjekk og publiser in that order, each id once', () => {
+    expect(ids(ACTIVITY_TABS)).toEqual(['play', 'edit', 'learning-design', 'check']);
     expect(new Set(ids(ACTIVITY_TABS)).size).toBe(ACTIVITY_TABS.length);
   });
 
   it.each([
-    ['an owner', DETAIL, ['play', 'edit', 'check']],
-    ['an editor who may not publish', { ...DETAIL, mayPublish: false }, ['play', 'edit']],
+    ['an owner', DETAIL, ['play', 'edit', 'learning-design', 'check']],
+    ['an editor who may not publish', { ...DETAIL, mayPublish: false }, ['play', 'edit', 'learning-design']],
     ['a viewer', VIEWER, ['play']],
   ] as const)('[LTI-006] %s gets the tabs the server’s answer allows', (_case, detail, expected) => {
     expect(ids(activityTabsFor(detail))).toEqual(expected);
@@ -69,7 +69,7 @@ describe('[UD-006] the activity page’s tab registry', () => {
     // Arrange
     const Extra: ActivityTab = {
       id: 'extra',
-      labelKey: 'learningDesign.tab',
+      labelKey: 'studio.navPlanner',
       shows: forEditors,
       Panel: ({ detail, selectTab }) => (
         <button type="button" onClick={() => selectTab('play')}>
@@ -79,12 +79,12 @@ describe('[UD-006] the activity page’s tab registry', () => {
     };
     // Act
     const shown = activityTabsFor(DETAIL, [...ACTIVITY_TABS, Extra]);
-    const Panel = shown[3]?.Panel;
+    const Panel = shown[4]?.Panel;
     let selected = '';
     render(Panel ? <Panel {...panelProps(DETAIL, (id) => (selected = id))} /> : null);
     fireEvent.click(screen.getByRole('button', { name: 'Celler og vev' }));
     // Assert
-    expect(ids(shown)).toEqual(['play', 'edit', 'check', 'extra']);
+    expect(ids(shown)).toEqual(['play', 'edit', 'learning-design', 'check', 'extra']);
     expect(selected).toBe('play');
     expect(ids(activityTabsFor(VIEWER, [...ACTIVITY_TABS, Extra]))).toEqual(['play']);
   });

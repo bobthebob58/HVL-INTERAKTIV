@@ -6923,6 +6923,35 @@ before it, which is exact unless a link destination spans lines, so such a link 
 <li><strong>Prose:</strong> an ALU author who writes <code>&lt;</code> before a letter gets an error and writes <code>&amp;lt;</code> instead.</li>
 </ul>
 </li>
+<li><p><strong>Amendment (2026-10-29, S5 W1a):</strong></p>
+<ul>
+<li><strong>No guide yet:</strong> the three guide files are optional until written: all three absent is &quot;no guide yet&quot; (the guide
+route answers no nodes and no references, so the contract&#39;s <code>Guide.nodes</code> may be empty, and the page shows the
+phase matrix and the catalogue alone); one or two present is an error naming each missing file.</li>
+<li><strong>Markers:</strong> each marker stands exactly once in each language, since the page shows each component once and the
+catalogue&#39;s section <code>id</code> must be unique; a missing marker would hide the catalogue (<a class="req-ref" href="#r-PED-003"><code>PED-003</code></a>). The matrix has
+its own caption and the catalogue its own heading.</li>
+<li><strong>Links:</strong> a same-site path is also refused when it decodes to <code>//</code> or <code>/\</code> (for example <code>/%2F%2Fhost</code>), and a
+link whose text is empty or only spaces is refused, since nobody could see or name it.</li>
+<li><strong>Patterns:</strong> each pattern&#39;s <code>whyItWorks</code> is built with the same tree builder in prose mode (paragraphs and lists
+only) and checked when the pattern folder loads, so the pattern route never meets a text it cannot build.</li>
+<li><strong>Routes:</strong> <code>GET /api/studio</code> (phases, anchor, status and the catalogue with each pattern&#39;s <code>available</code>, asked per
+request), <code>GET /api/studio/guide/:locale</code> and <code>GET /api/studio/patterns/:patternId</code>, public (<code>auth: &#39;none&#39;</code>); an
+unknown pattern or language is 404 <code>error.notFound</code>.</li>
+<li><strong>Phase matrix:</strong> the phases are columns with the <em>samling</em> as a column between the first and the second, and
+each phase has a link that filters the catalogue by it (spec 04 <a class="req-ref" href="#r-PED-002"><code>PED-002</code></a> §4: &quot;a filter by phase that also
+filters the pattern catalogue&quot;); the filters live only in the address. Following that link moves focus to the
+catalogue&#39;s heading, because a Next.js link scrolls to <code>#monsterkatalog</code> but leaves focus on the link.</li>
+</ul>
+</li>
+<li><p><strong>Amendment (2026-10-29, S5 integration of stage 3):</strong> the public <code>GET /api/studio</code> and
+<code>GET /api/studio/patterns/:patternId</code> keep each pattern&#39;s availability for 60 seconds
+(<code>learningDesign/http/patternAvailabilityMemo.ts</code>), because working it out builds every skeleton and these routes
+need no sign-in (&quot;asked per request&quot; above now means within that minute). Requests that arrive during a build
+share it, and a failure is never kept. A library installed or removed shows in the catalogue within a minute;
+creating an activity always checks the libraries itself. Each guide box is a region named by its own heading and
+the guide heading it follows, so the three mechanisms&#39; boxes have distinct names.</p>
+</li>
 </ul>
 <h3 id="decisions--d-084--spec-deviation-spec-04-4-pattern-skeletons-live-in-content-with-text-tokens-and-pinned-versions" tabindex="-1">D-084 · <code>SPEC-DEVIATION</code> spec 04 §4: pattern skeletons live in <code>content/</code>, with text tokens and pinned versions</h3>
 <ul>
@@ -7065,6 +7094,19 @@ a placement has no user.</li>
 <li><strong>The pattern:</strong> a full replace keeps the stored <code>patternId</code>; only creation and duplication write it.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-29, S5 W3):</strong><ul>
+<li><strong>The purpose:</strong> besides a line break, any control character (a pasted tab) is refused (400). The web app&#39;s strict
+<code>x-hvli-launch</code> parser refuses the whole header on one, so a single stored tab would have shown «no launch» to
+every learner of the activity in Canvas. The server also leaves out such a stored purpose, and a language tag
+longer than the parser&#39;s 35 characters, rather than send them.</li>
+<li><strong>The stored label:</strong> <code>LtiPlacement.contextLabel</code> holds the cleaned label (control characters removed, at most
+255 code points), not the normalised code; suggestions normalise it when read. Residual risk, accepted: a
+sandbox label that normalises to a code with a digit, such as «Kari 2025», is stored as if it were a course code.
+It is never shown to anyone but the authors of activities placed in that course.</li>
+<li><strong>The prompt:</strong> the metadata prompt shows in the first-publish dialog only, not when an already published
+activity is published again with new reasons.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-088--the-alignment-planner-one-course-outcomes--phases-two-gap-rules" tabindex="-1">D-088 · The alignment planner: one course, outcomes × phases, two gap rules</h3>
 <ul>
@@ -7085,6 +7127,10 @@ catalogue filtered by that phase, carrying the course code, which creation then 
 outcomes, inside a focusable, labelled region that scrolls sideways on narrow screens.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-29, S5 W3):</strong> the course chooser lists the codes the author&#39;s own and co-authored activities
+use; Canvas labels are only suggestions in the Læringsdesign tab. The outcomes of an activity that has the course
+code but no phase still become rows (with empty cells and the no-Etterarbeid gap), and the activity is also listed
+as untagged, so an outcome is never hidden. The empty-phase gap counts only activities that have a phase.</li>
 </ul>
 <h3 id="decisions--d-089--studio-access-routes-and-tabs" tabindex="-1">D-089 · Studio access, routes and tabs</h3>
 <ul>
@@ -7825,11 +7871,16 @@ S5 is done), and all of S5 is done in this session.</li>
  <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>, <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>)
  — stage 1 done: pattern format, loader and checks, creation API, V-PLACEHOLDER incl. missing media, the
    BranchingScenario picture repair (W2a); stage 2 done: the nine patterns in nn, nb and en, created on the
-   real types in every type and phase (W2b; drafts for ALU, Q17)</li>
+   real types in every type and phase (W2b; drafts for ALU, Q17); stage 3 done: the guide loader and its
+   closed node tree, the public studio routes, the guide page with the phase matrix and the catalogue with
+   filters in the address, the pattern page with «Lag frå dette mønsteret» (W1a; the guide text follows in W1b)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="3">
-<li>Metadata, planner, learner time and purpose (<a class="req-ref" href="#r-PED-030"><code>PED-030</code></a>…<a class="req-ref" href="#r-PED-032"><code>PED-032</code></a>)</li>
+<li>Metadata, planner, learner time and purpose (<a class="req-ref" href="#r-PED-030"><code>PED-030</code></a>…<a class="req-ref" href="#r-PED-032"><code>PED-032</code></a>)
+ — stage 3 done: the Læringsdesign tab and its routes, the publish prompt, course codes from Canvas labels
+   (privacy filter), the planner with gaps, time and purpose before the activity in the portal and Canvas (W3);
+   screenshots in <code>nn</code> sent to the owner (2026-10-29)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="3">

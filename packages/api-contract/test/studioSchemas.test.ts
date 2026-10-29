@@ -93,6 +93,12 @@ describe('[PED-002] the guide’s closed node tree', () => {
     expect(guide.success).toBe(true);
   });
 
+  it('[PED-002] a guide with no nodes and no references is the answer while no guide is written yet', () => {
+    const empty = { locale: 'nb', status: 'proposed', nodes: [], references: [] };
+    expect(guideSchema.safeParse(empty).success).toBe(true);
+    expect(guideSchema.safeParse({ ...empty, locale: 'se' }).success).toBe(false);
+  });
+
   it('[PED-002] refuses unknown nodes and fields, h1 and h4, empty text, unknown markers and boxes in boxes', () => {
     // Arrange
     const refused = [

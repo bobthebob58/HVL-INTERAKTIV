@@ -18,8 +18,8 @@
  *   - A service that holds a resource (a browser, a timer) has `close()`; `closeStudioServices` calls each once.
  * Collaborators: ./createApp.ts (builds them), ./main.ts (closes them), ../http/api/studioRouter.ts,
  *   ../learningDesign/http/studioRouteDeps.ts, ../learningDesign/content/loadStudioContent.ts,
- *   ../learningDesign/collaboration/ContentDuplicator.ts, ../learningDesign/patterns/PatternCreator.ts; each
- *   workstream's service as it is added.
+ *   ../learningDesign/collaboration/ContentDuplicator.ts, ../learningDesign/patterns/PatternCreator.ts,
+ *   ../learningDesign/metadata/LearningDesignStore.ts; each workstream's service as it is added.
  * Tests: apps/server/test/server/studioServices.test.ts
  */
 import type { Logger } from 'pino';
@@ -31,6 +31,7 @@ import type { Database } from '../infra/prismaClient.js';
 import type { Redis } from '../infra/redisClient.js';
 import { ContentDuplicator } from '../learningDesign/collaboration/ContentDuplicator.js';
 import type { StudioContent } from '../learningDesign/content/loadStudioContent.js';
+import { LearningDesignStore } from '../learningDesign/metadata/LearningDesignStore.js';
 import { PatternCreator } from '../learningDesign/patterns/PatternCreator.js';
 import type { IdentityHasher } from '../security/keys/IdentityHasher.js';
 
@@ -72,7 +73,7 @@ export interface StudioServices {
   /** W2: creates an activity from a pattern, with its metadata, in one request, and says which can be (D-085). */
   readonly patternCreator: PatternCreator;
   /** W3: reads and replaces an activity's learning-design metadata, and builds the planner's grid (D-087, D-088). */
-  readonly learningDesignStore: PendingStudioService;
+  readonly learningDesignStore: LearningDesignStore;
   /** W4: finds HVL staff who may be co-authors, rate-limited per person (D-090). */
   readonly peopleDirectory: PendingStudioService;
   /** W6: renders the pedagogisk mappe as Markdown, with the minimum group size applied (D-094, D-095). */
@@ -111,7 +112,10 @@ export function createStudioServices(inputs: StudioServiceInputs): StudioService
       editor: inputs.h5p.editor,
       patterns: inputs.studioContent.patterns,
     }),
-    learningDesignStore: undefined,
+    learningDesignStore: new LearningDesignStore({
+      db,
+      phases: inputs.studioContent.phases.phases.map((phase) => phase.key),
+    }),
     peopleDirectory: undefined,
     mappeRenderer: undefined,
     pdfRenderer: undefined,

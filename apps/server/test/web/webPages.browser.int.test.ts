@@ -2,14 +2,21 @@
  * Browser tests for every page of the built web app served inside Express: no console error, page error or CSP
  * violation; only first-party requests; the skip link first and a `main#main` on every page; no horizontal scrolling
  * at 320 px; and each route's signed-out, no-launch or launch state, the S5 studio pages included (D-089). The API
- * answers as for a signed-out browser.
+ * answers as for a signed-out browser; the public studio routes answer the fixture guide and pattern.
  *
  * Spec: DATA-011, UD-006, UD-008, UD-013, DATA-006, LTI-003, LTI-006
  */
 import type { Page } from 'playwright-core';
 import { describe, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
-import { ACTIVITY, LTIK, openWebPage, serveBuiltWebApp, WEB_APP_BUILT } from './webTestServer.js';
+import {
+  ACTIVITY,
+  FIXTURE_PATTERN_PATH,
+  LTIK,
+  openWebPage,
+  serveBuiltWebApp,
+  WEB_APP_BUILT,
+} from './webTestServer.js';
 
 (WEB_APP_BUILT ? describe : describe.skip)('[DATA-011] every page of the built web app', () => {
   const base = serveBuiltWebApp();
@@ -53,7 +60,7 @@ import { ACTIVITY, LTIK, openWebPage, serveBuiltWebApp, WEB_APP_BUILT } from './
       ['/aktivitet/ny', /Du må logge inn for å sjå denne sida/],
       ['/app/play', /Opne aktiviteten frå Canvas/],
       ['/laeringsdesign', /Studentaktiv læring med «HVL læringsdesign»/],
-      ['/laeringsdesign/monster/fa-video', /Mønster/],
+      [FIXTURE_PATTERN_PATH, /Testmønster for ein sjekk/],
       ['/laeringsdesign/planlegg', /Du må logge inn for å sjå denne sida/],
       ['/laeringsdesign/innhaldsbank', /Du må logge inn for å sjå denne sida/],
       ['/mappe', /Du må logge inn for å sjå denne sida/],

@@ -4,6 +4,7 @@
 |---|---|
 | `phases.yaml` | The names and texts of the three phases (Forarbeid, Mellomarbeid, Etterarbeid) and of the *samling* |
 | `references.yaml` | The full references that the guide and the patterns cite |
+| `guide.nn.md`, `guide.nb.md`, `guide.en.md` | The guide on the page `/laeringsdesign`, in Nynorsk, Bokmål and English (not written yet) |
 | `patterns/<id>/` | One folder per pattern: what it is for (`pattern.yaml`) and the activity it starts from (a skeleton) |
 | `hint-thresholds.yaml` | The limits of the pedagogical hints the validator gives before publishing |
 
@@ -101,6 +102,87 @@ To add a reference, add a key with `text` and `verify`, then cite it as `[@key]`
   renamed label is loaded without a code change (`PED-001`). The studio pages, the planner and the portfolio take
   every name from what is loaded here.
 
+## guide.nn.md, guide.nb.md and guide.en.md — the guide
+
+The page `/laeringsdesign` shows the guide: why asynchronous work often fails and what helps, the phase matrix and
+the pattern catalogue (spec 04 §2, `PED-002`). The guide is three files, one per language, written in Markdown: plain
+text with a few marks for headings, lists and links. The page shows the guide in the reader's language; the three
+files have the same structure, and their wording may differ.
+
+**Not written yet.** Until the three files exist, the page shows the phase matrix and the catalogue alone, and
+`npm run content:check` says `no guide yet`. Add all three files at once: one or two of them alone is an error.
+
+### What you can write
+
+| You write | The page shows |
+|---|---|
+| `## Heading` and `### Heading` | a heading and a subheading |
+| an empty line between two paragraphs | two paragraphs (lines without an empty line between them are one paragraph) |
+| `**word**` and `*word*` | bold and italics |
+| `- item` or `1. item`; indent by two spaces for a list in a list | a bulleted or a numbered list (numbers always start at 1) |
+| `> text`, on every line of the box | a box headed «Kva dette betyr for aktiviteten din» (the heading comes from the system) |
+| `[@guo2014]` | a numbered citation, linked to the list of references at the end of the page |
+| `[text](https://www.hvl.no/alu)`, `[text](mailto:alu@hvl.no)`, `[text](/laeringsdesign/monster/fa-video)` | a link; a link to another website says so |
+| `{{phase-matrix}}` alone on its line | the phase matrix |
+| `{{pattern-catalogue}}` alone on its line | the pattern catalogue with its filters |
+
+### Example
+
+```markdown
+## Kvifor asynkront arbeid ofte sviktar
+
+Lange videoar utan oppgåver gir lite læring: engasjementet fell etter rundt seks minutt [@guo2014].
+
+> Del videoen i bitar på under seks minutt, og legg inn eit spørsmål i kvar bit [@szpunar2013].
+>
+> - Spørsmålet skal få studenten til å bruke stoffet.
+
+{{phase-matrix}}
+
+Vel eit mønster som passar til fasen og emnet ditt.
+
+{{pattern-catalogue}}
+
+## Hjelp og vidare lesing
+
+Hjelp får du hos [ALU](https://www.hvl.no/alu).
+```
+
+### The rules, and why
+
+- **Headings start at `##`.** The page's own title (`#`) comes from the system. Write `##` or `###` in front of the
+  heading; a heading underlined with `===` or `---` is refused, because an underline can be a rule by mistake.
+- **Markers.** `{{phase-matrix}}` and `{{pattern-catalogue}}` each stand exactly once in each language, alone on
+  their line, not in a list, a box or bold text. The phase matrix has its own caption and the catalogue its own
+  heading («Mønsterkatalogen»), so do not write a heading for them just before the marker.
+- **Boxes.** A box holds paragraphs and lists: no heading, and no box in a box or in a list.
+- **Citations.** A citation is `[@key]` with a key from `references.yaml` (lower-case letters, digits and hyphens).
+  The list at the end of the page holds each cited reference once, numbered in the order it is first cited. A
+  citation cannot stand inside a link's text; put it after the link.
+- **Links** go to `https:` addresses, `mailto:` addresses or a page of this site starting with a single `/`. An
+  `http:` address is refused: use `https:`. A link needs text that readers can see: `[](…)` and `[ ](…)` are refused.
+- **The same structure in three languages.** The three files have the same headings (`##` and `###` in the same
+  order), the same markers and the same citations in the same order. A difference is reported in the Bokmål or
+  English file, at its first differing line, compared with Nynorsk.
+- **Refused, with the file and the line:** HTML (a `<` followed by a letter; write `&lt;` when you mean the
+  character), images, tables, code (between backticks, or a line indented by four spaces), rules (`---`, `***`),
+  struck-through text (`~~`), a hard line break (two spaces or a `\` at the end of a line), `{{` anywhere but a
+  marker line, headings with one `#` or with four or more, and reference definitions (`[label]: address`), which
+  would silently turn a citation into a link. The page shows only what the system knows how to show safely and
+  accessibly (D-083): no file can add code, unlabelled images or tables that do not fit a phone.
+
+A pattern's `whyItWorks` follows the same rules, but holds only paragraphs and lists: no headings, boxes or markers.
+
+### What catches mistakes in the guide
+
+- `npm run content:check`, the pre-commit check on this folder, CI on every pull request, and the server's start
+  all stop on: one or two of the three files missing; an empty file; anything the rules above refuse; a missing or
+  repeated marker; a citation of a key `references.yaml` does not list; and a heading, marker or citation that differs
+  from the Nynorsk file. Each message names the file and the line.
+- The tests of the guide loader (`apps/server/test/learningDesign/content/`) use a test guide in
+  `apps/server/test/fixtures/studio-content/guide-fixture/`, and the page's tests (`apps/web/test/features/`) their
+  own, never the texts here, so rewording the guide breaks no test.
+
 ## patterns/ — the pattern catalogue
 
 A pattern is a tried way of building one kind of activity, such as «Kort video med kontrollspørsmål» (spec 04 §4).
@@ -140,7 +222,7 @@ patterns/
 | `purpose` | One line on what it does, at most 200 characters |
 | `whenToUse` | When to choose it, at most 600 characters |
 | `example` | A short example of it in use, at most 600 characters |
-| `whyItWorks` | Why it works, at most 2 000 characters, citing research as `[@key]` from `references.yaml`. All three languages cite the same references in the same order. |
+| `whyItWorks` | Why it works, at most 2 000 characters, citing research as `[@key]` from `references.yaml`. All three languages cite the same references in the same order. It is Markdown with the guide's rules (see the guide's section above), holding paragraphs and lists only. |
 | `buildMinutes` | About how many minutes an author needs to build it (1–600) |
 | `studentMinutes` | About how many minutes a student needs; the new activity gets this as its suggested time (1–600) |
 | `texts` | Every text the skeleton's tokens are filled with, in `nn`, `nb` and `en`, each one line of at most 1 000 characters (its field in the activity may allow less; see below). A text's name is a letter followed by letters, digits or hyphens, e.g. `question1`. |
@@ -245,7 +327,8 @@ The easiest way to make a skeleton is to build an example activity in the editor
   valid JSON; a token without a text, or a text no token uses; a wrong library version; a key in the skeleton that
   the content type does not have (a misspelt setting such as `enableRetyr` would otherwise be ignored by H5P, and
   retry would quietly stay as the content type's default); a filled-in text too long for its field; a title over 255
-  characters; guidance with `:` or `/` in a blank; a citation of a key `references.yaml` does not list. Each message
+  characters; guidance with `:` or `/` in a blank; a citation of a key `references.yaml` does not list; a `whyItWorks`
+  that breaks the guide's Markdown rules or holds a heading, a box or a marker. Each message
   names the file, the line and the key. Without the pinned content types on your own machine, the versions, keys and
   length limits are not checked; the summary line says so.
 - The tests in `apps/server/test/learningDesign/content/` (the loader) and `apps/server/test/learningDesign/patterns/`

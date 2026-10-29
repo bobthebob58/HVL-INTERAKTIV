@@ -3,16 +3,21 @@
  *
  * Why: LTI-006 records or updates an `LtiPlacement (platformId, contextId, resourceLinkId, contentId, lineItemUrl)`
  *      at each launch. S6's grade bridge and insight read it per course; a course copy gives a new context with its
- *      own placement for the same activity (LTI-007).
- * Spec: LTI-006, LTI-007
+ *      own placement for the same activity (LTI-007). D-087 keeps the course label too, as a course-code suggestion
+ *      for the activity's authors (PED-030).
+ * Spec: LTI-006, LTI-007, PED-030, DATA-002
  * Invariants:
- *   - One row per (platform, course, resource link); a later launch updates its activity and line item.
+ *   - One row per (platform, course, resource link); a later launch updates its activity, line item and label.
  *   - The caller has already checked that the activity exists and is available to this launch.
  *   - Concurrent first launches of one link create one row.
- * Collaborators: ../launch/onResourceLink.ts, ../../infra/prismaClient.ts.
- * Tests: apps/server/test/lti/placements/LtiPlacementRecorder.int.test.ts
+ *   - PRIVACY: the course label is stored only when it is a course code with a digit (./courseLabel.ts), else null;
+ *     each launch overwrites it, so a label renamed to a name is dropped at the next launch.
+ * Collaborators: ../launch/onResourceLink.ts, ./courseLabel.ts, ../../infra/prismaClient.ts.
+ * Tests: apps/server/test/lti/placements/LtiPlacementRecorder.int.test.ts,
+ *   apps/server/test/lti/placements/courseLabel.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
+import { placementCourseLabel } from './courseLabel.js';
 
 /** A placement as a launch reports it. */
 export interface PlacementInput {
@@ -26,6 +31,8 @@ export interface PlacementInput {
   readonly contentId: string;
   /** The AGS line item, when the placement is graded. */
   readonly lineItemUrl?: string;
+  /** The launch's `context.label` claim as sent (untrusted); only a course code of it is stored (D-087). */
+  readonly contextLabel?: unknown;
 }
 
 const isUniqueViolation = (error: unknown): boolean =>
@@ -46,7 +53,11 @@ export class LtiPlacementRecorder {
   async record(input: PlacementInput): Promise<string> {
     const { platformId, contextId, resourceLinkId, contentId } = input;
     const where = { platformId_contextId_resourceLinkId: { platformId, contextId, resourceLinkId } };
-    const data = { contentId, lineItemUrl: input.lineItemUrl ?? null };
+    const data = {
+      contentId,
+      lineItemUrl: input.lineItemUrl ?? null,
+      contextLabel: placementCourseLabel(input.contextLabel),
+    };
     const upsert = () =>
       this.db.ltiPlacement.upsert({
         where,

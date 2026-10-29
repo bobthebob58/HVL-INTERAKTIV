@@ -1,7 +1,7 @@
 /**
- * webTestServer — Express in front of the built web app for the browser tests of its pages: a signed-out API, stand-in
- * H5P frames, resolved Canvas launches for fixed test ltiks, a page opener that records every problem, and the
- * lifecycle that serves the built web app for a test block.
+ * webTestServer — Express in front of the built web app for the browser tests of its pages: a signed-out API with the
+ * real public studio routes, stand-in H5P frames, resolved Canvas launches for fixed test ltiks, a page opener that
+ * records every problem, and the lifecycle that serves the built web app for a test block.
  *
  * Why: the page tests (./webPages.browser.int.test.ts) and the chrome tests (./webChrome.browser.int.test.ts) need the
  *      same server and the same strict checks (no console error, page error or CSP violation); one helper keeps them
@@ -11,11 +11,15 @@
  * Spec: DATA-011, LTI-003, LTI-006, DATA-006
  * Invariants:
  *   - Only `LAUNCHES`' ltiks get a launch; any other `/app/play` request reaches the web app without one.
+ *   - The public studio routes (`/api/studio…`, D-089) answer from the real content with the fixture guide and the
+ *     fixture pattern `fixture-check` (../support/guideFixture.ts), every pattern available; the tests assert only
+ *     fixture texts, never ALU's.
  *   - Expected 401 answers of the signed-out API and a page's own expected status are not reported as problems.
  *   - `serveBuiltWebApp` starts and stops the server in the caller's describe block; an unbuilt web app skips the
  *     tests locally and is an error in CI.
  * Collaborators: ../../src/web/webRoutes.ts, ../../src/web/appLaunch.ts, ../../src/web/nextWebApp.ts,
- *   ../support/browser.ts, ../support/loopbackServers.ts.
+ *   ../../src/learningDesign/http/studioContentRoutes.ts, ../support/browser.ts, ../support/loopbackServers.ts,
+ *   ../support/guideFixture.ts.
  * Tests: used by ./webPages.browser.int.test.ts, ./webChrome.browser.int.test.ts and ./webApp.browser.int.test.ts.
  */
 import { existsSync } from 'node:fs';
@@ -23,11 +27,17 @@ import { join } from 'node:path';
 import express, { type Express } from 'express';
 import type { Browser, BrowserContextOptions } from 'playwright-core';
 import { afterAll, beforeAll } from 'vitest';
+import { h5pErrorHandler } from '../../src/http/h5pErrorHandler.js';
 import { portalNotFound } from '../../src/http/pages/portalHomeRoutes.js';
+import { findPattern } from '../../src/learningDesign/content/patternAccessors.js';
+import { studioContentRoutes } from '../../src/learningDesign/http/studioContentRoutes.js';
+import type { StudioRouteDeps } from '../../src/learningDesign/http/studioRouteDeps.js';
+import { createLogger } from '../../src/logging/logger.js';
 import { baseSecurityHeaders } from '../../src/http/securityHeaders.js';
 import { setAppLaunch, type AppLaunch } from '../../src/web/appLaunch.js';
 import { loadWebApp, WEB_APP_DIR, type WebApp } from '../../src/web/nextWebApp.js';
 import { webRoutes } from '../../src/web/webRoutes.js';
+import { studioContentWithFixtures } from '../support/guideFixture.js';
 import { closeLoopbackServers, listenOnLoopback } from '../support/loopbackServers.js';
 
 /** Whether `npm run build` has built apps/web; the tests skip otherwise (and CI fails). */
@@ -41,6 +51,19 @@ export const ACTIVITY = '7d3c1a8e-5b2f-4c1d-9e8f-0a1b2c3d4e5f';
 export const LTIK = 'test-ltik.value';
 /** The ltik of an English learner launch of a Nynorsk activity. */
 export const LTIK_EN = 'test-ltik.english';
+
+/** The pattern page the browser tests open: the fixture pattern, whose texts the tests own. */
+export const FIXTURE_PATTERN_PATH = '/laeringsdesign/monster/fixture-check';
+
+/** The public studio routes on the real content with the fixtures, every pattern available (no H5P engine here). */
+function publicStudioRoutes(): express.Router {
+  const content = studioContentWithFixtures({ pattern: true });
+  const patternCreator = {
+    availability: async (id: string) =>
+      findPattern(content.patterns, id) ? { available: true, contentTypes: [] } : undefined,
+  };
+  return studioContentRoutes({ studio: { content, patternCreator } } as unknown as StudioRouteDeps);
+}
 
 /** The launches Express resolves for the test ltiks. */
 export const LAUNCHES: Readonly<Record<string, AppLaunch>> = {
@@ -65,6 +88,7 @@ const EXPECTED_401 = /\/(auth\/session|api\/[\w/-]+)$/;
 export function webTestServer(web: WebApp): Express {
   const app = express();
   app.use(baseSecurityHeaders({ https: false }));
+  app.use('/api', publicStudioRoutes(), h5pErrorHandler(createLogger({ level: 'silent' })));
   app.get(['/auth/session', '/api/{*rest}'], (_req, res) => void res.status(401).json(SIGNED_OUT));
   app.get(
     ['/lti/play', '/lti/edit'],

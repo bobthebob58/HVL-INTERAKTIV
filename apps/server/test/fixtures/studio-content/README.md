@@ -15,9 +15,10 @@ a file, and update the test's expected line.
 | `wrong-phase-key/` | The second phase has the key `undervegs` instead of `underveis` | refused: `phases.yaml:35`, key `phases[undervegs].key`, "is not a phase key" |
 | `problems-in-both-files/` | The anchor description has no `en`; references.yaml has a key in capitals (`Guo2014`) and a reference without `verify` | refused with all three problems in one error, ordered by file and line |
 
-The guide and portfolio loaders read no files yet; when they do, `loadStudioContent(<fixture>)` also reports their
-missing files, so a test checks only the problems in the file it is about. The pattern loader finds no
-`laeringsdesign/patterns/` folder in these, which is no patterns, not a problem. A test that shows a renamed label
+These folders have no guide files, which the guide loader reads as "no guide yet", not as a problem; the portfolio
+loader reads no files yet, and when it does, `loadStudioContent(<fixture>)` also reports its missing files, so a test
+checks only the problems in the file it is about. The pattern loader finds no `laeringsdesign/patterns/` folder in
+these, which is no patterns, not a problem. A test that shows a renamed label
 reaching a page, the planner or the portfolio does not load `renamed-label/` in full: it uses
 `studioContentWithRenamedLabel()` from `test/support/renamedPhaseLabels.ts`, which is the real `content/` with this
 folder's phases, so no workstream has to copy its files here.
@@ -41,3 +42,21 @@ folder and add one mistake each (a missing language, an unknown key, a token wit
 version, a text too long for its field, `:` in a blank), so no broken copy is kept here. The creation tests offer it,
 and a variant whose TrueFalse names a version that is not installed (`fixture-unavailable`), in the whole app on the
 real libraries; the route's permission matrix offers it on the `/api` router without the H5P engine.
+
+## `guide-fixture/` (`PED-002`, `PED-001`)
+
+A partial content folder: only `laeringsdesign/references.yaml` (two references, `fixture-guide2026` and
+`fixture-box2026`, which only this fixture cites) and the three guide files. It is read with `loadGuideContent` through
+`test/support/guideFixture.ts`, never with `loadStudioContent`, so it needs no copy of the other sections' files;
+`studioContentWithFixtures()` puts its guide (and its references) into the real `content/` for the route tests and the
+browser page tests. Its texts are test texts, so the tests may assert them; ALU's guide is never asserted.
+
+| File | What it represents |
+|---|---|
+| `guide.nn.md` | A guide that uses every node the tree allows: `##` and `###` headings, bold and italics, a soft line break, an `https:`, a `mailto:` and a same-site link, three citations of two keys (lines 3, 13 and 15), a nested bulleted list, a numbered list, a box with a paragraph and a list, and both markers |
+| `guide.nb.md`, `guide.en.md` | The same structure in Bokmål and English: the same headings, markers and citations on the same lines |
+| `references.yaml` | The two references the guide cites; one still to verify, one checked |
+
+The fixture loads as written. The loader tests copy it to a temporary folder and replace, edit or remove a file each
+(a missing language, an unknown citation, a refused construct, a missing or repeated marker, a parity mismatch), so no
+broken copy is kept here.

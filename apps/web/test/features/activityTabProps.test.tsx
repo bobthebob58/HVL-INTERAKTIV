@@ -19,7 +19,8 @@ vi.mock('../../src/features/activity/tabs/activityTabs', async (importOriginal) 
   const actual = await importOriginal<typeof import('../../src/features/activity/tabs/activityTabs')>();
   const probe = {
     id: 'probe',
-    labelKey: 'learningDesign.tab',
+    // WHY: a label no real tab has, so the stand-in is never confused with a workstream's tab.
+    labelKey: 'studio.navPlanner',
     shows: actual.forEveryone,
     Panel: ProbePanel,
   } as const;
@@ -81,17 +82,17 @@ describe('[UD-006] what the activity page gives a registered tab', () => {
     // Arrange
     fakeFetch(routes(VIEWER));
     const viewer = render(<ActivityView contentId={ID} />);
-    fireEvent.click(await screen.findByRole('tab', { name: 'Læringsdesign' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Planleggar' }));
     // Act
     fireEvent.click(screen.getByRole('button', { name: 'Til sjekk' }));
     const viewerTab = selected();
     viewer.unmount();
     fakeFetch(routes(DETAIL));
     render(<ActivityView contentId={ID} />);
-    fireEvent.click(await screen.findByRole('tab', { name: 'Læringsdesign' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Planleggar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Til sjekk' }));
     // Assert
-    expect(viewerTab).toBe('Læringsdesign');
+    expect(viewerTab).toBe('Planleggar');
     expect(selected()).toBe('Sjekk og publiser');
   });
 
@@ -99,7 +100,7 @@ describe('[UD-006] what the activity page gives a registered tab', () => {
     // Arrange
     const requests = fakeFetch(routes(DETAIL));
     render(<ActivityView contentId={ID} />);
-    fireEvent.click(await screen.findByRole('tab', { name: 'Læringsdesign' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Planleggar' }));
     const loads = () => requests.filter((request) => request.path === `/api/content/${ID}`).length;
     const before = loads();
     // Act

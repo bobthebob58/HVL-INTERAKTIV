@@ -52,6 +52,8 @@ describe('[PED-030] learning-design metadata', () => {
     expect(accepts({ learnerPurpose: 'x'.repeat(LEARNER_PURPOSE_MAX_LENGTH) })).toBe(true);
     expect(accepts({ learnerPurpose: 'x'.repeat(LEARNER_PURPOSE_MAX_LENGTH + 1) })).toBe(false);
     expect(accepts({ learnerPurpose: 'Første linje\nAndre linje' })).toBe(false);
+    expect(accepts({ learnerPurpose: 'Ein\tto' })).toBe(false);
+    expect(accepts({ learnerPurpose: 'Ein\u0007to' })).toBe(false);
   });
 
   it('[PED-030] a PUT replaces everything, needs the updatedAt it read and refuses the read-only patternId', () => {

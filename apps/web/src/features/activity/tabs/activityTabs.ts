@@ -10,13 +10,15 @@
  *     the activity, so there is always a tab to select.
  *   - `shows` reads only the server's answer (`mayEdit`, `mayPublish`); the server checks every request again.
  *   - Tab `id`s are unique (apps/web/test/features/activityTabs.test.tsx).
- * Collaborators: ./activityTab.ts, ./PlayTab.tsx, ./EditTab.tsx, ./CheckTab.tsx, ../ActivityView.tsx.
+ * Collaborators: ./activityTab.ts, ./PlayTab.tsx, ./EditTab.tsx, ./LearningDesignTab.tsx, ./CheckTab.tsx,
+ *   ../ActivityView.tsx.
  * Tests: apps/web/test/features/activityTabs.test.tsx, apps/web/test/features/ActivityView.test.tsx
  */
 import type { ContentDetail } from '@hvl-interaktiv/api-contract';
 import type { ActivityTab } from './activityTab';
 import { CHECK_TAB_ID, CheckTab } from './CheckTab';
 import { EDIT_TAB_ID, EditTab } from './EditTab';
+import { LEARNING_DESIGN_TAB_ID, LearningDesignTab } from './LearningDesignTab';
 import { PLAY_TAB_ID, PlayTab } from './PlayTab';
 
 /**
@@ -46,6 +48,8 @@ export const forPublishers = (detail: ContentDetail): boolean => detail.mayPubli
 export const ACTIVITY_TABS: readonly ActivityTab[] = [
   { id: PLAY_TAB_ID, labelKey: 'activity.tabPlay', shows: forEveryone, Panel: PlayTab },
   { id: EDIT_TAB_ID, labelKey: 'activity.tabEdit', shows: forEditors, Panel: EditTab },
+  // PED-030: the learning design is for people who may edit; the server never gives it to others (D-087).
+  { id: LEARNING_DESIGN_TAB_ID, labelKey: 'learningDesign.tab', shows: forEditors, Panel: LearningDesignTab },
   { id: CHECK_TAB_ID, labelKey: 'activity.tabCheck', shows: forPublishers, Panel: CheckTab },
 ];
 

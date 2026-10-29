@@ -1652,6 +1652,31 @@ loading of one spec per session are kept.
   - **Lines:** a block uses `map[0] + 1`; an inline token uses its paragraph's start line plus the line breaks
     before it, which is exact unless a link destination spans lines, so such a link is refused.
   - **Prose:** an ALU author who writes `<` before a letter gets an error and writes `&lt;` instead.
+- **Amendment (2026-10-29, S5 W1a):**
+  - **No guide yet:** the three guide files are optional until written: all three absent is "no guide yet" (the guide
+    route answers no nodes and no references, so the contract's `Guide.nodes` may be empty, and the page shows the
+    phase matrix and the catalogue alone); one or two present is an error naming each missing file.
+  - **Markers:** each marker stands exactly once in each language, since the page shows each component once and the
+    catalogue's section `id` must be unique; a missing marker would hide the catalogue (`PED-003`). The matrix has
+    its own caption and the catalogue its own heading.
+  - **Links:** a same-site path is also refused when it decodes to `//` or `/\` (for example `/%2F%2Fhost`), and a
+    link whose text is empty or only spaces is refused, since nobody could see or name it.
+  - **Patterns:** each pattern's `whyItWorks` is built with the same tree builder in prose mode (paragraphs and lists
+    only) and checked when the pattern folder loads, so the pattern route never meets a text it cannot build.
+  - **Routes:** `GET /api/studio` (phases, anchor, status and the catalogue with each pattern's `available`, asked per
+    request), `GET /api/studio/guide/:locale` and `GET /api/studio/patterns/:patternId`, public (`auth: 'none'`); an
+    unknown pattern or language is 404 `error.notFound`.
+  - **Phase matrix:** the phases are columns with the *samling* as a column between the first and the second, and
+    each phase has a link that filters the catalogue by it (spec 04 `PED-002` §4: "a filter by phase that also
+    filters the pattern catalogue"); the filters live only in the address. Following that link moves focus to the
+    catalogue's heading, because a Next.js link scrolls to `#monsterkatalog` but leaves focus on the link.
+- **Amendment (2026-10-29, S5 integration of stage 3):** the public `GET /api/studio` and
+  `GET /api/studio/patterns/:patternId` keep each pattern's availability for 60 seconds
+  (`learningDesign/http/patternAvailabilityMemo.ts`), because working it out builds every skeleton and these routes
+  need no sign-in ("asked per request" above now means within that minute). Requests that arrive during a build
+  share it, and a failure is never kept. A library installed or removed shows in the catalogue within a minute;
+  creating an activity always checks the libraries itself. Each guide box is a region named by its own heading and
+  the guide heading it follows, so the three mechanisms' boxes have distinct names.
 
 ### D-084 · `SPEC-DEVIATION` spec 04 §4: pattern skeletons live in `content/`, with text tokens and pinned versions
 - **Context:** Spec 04 §4 puts the skeletons in `apps/server/src/patterns/skeletons/`, but `PED-011` asks that a new
@@ -1775,6 +1800,17 @@ loading of one spec per session are kept.
   - **Whose labels:** "the author's own placements" means placements of activities the author owns or co-authors;
     a placement has no user.
   - **The pattern:** a full replace keeps the stored `patternId`; only creation and duplication write it.
+- **Amendment (2026-10-29, S5 W3):**
+  - **The purpose:** besides a line break, any control character (a pasted tab) is refused (400). The web app's strict
+    `x-hvli-launch` parser refuses the whole header on one, so a single stored tab would have shown «no launch» to
+    every learner of the activity in Canvas. The server also leaves out such a stored purpose, and a language tag
+    longer than the parser's 35 characters, rather than send them.
+  - **The stored label:** `LtiPlacement.contextLabel` holds the cleaned label (control characters removed, at most
+    255 code points), not the normalised code; suggestions normalise it when read. Residual risk, accepted: a
+    sandbox label that normalises to a code with a digit, such as «Kari 2025», is stored as if it were a course code.
+    It is never shown to anyone but the authors of activities placed in that course.
+  - **The prompt:** the metadata prompt shows in the first-publish dialog only, not when an already published
+    activity is published again with new reasons.
 
 ### D-088 · The alignment planner: one course, outcomes × phases, two gap rules
 - **Context:** `PED-031` asks for a grid of learning outcomes × phases for one course, with gaps highlighted and
@@ -1792,6 +1828,10 @@ loading of one spec per session are kept.
     catalogue filtered by that phase, carrying the course code, which creation then pre-fills.
   - **Markup:** a `<table>` with a `<caption>`, `th scope="col"` for the phases and `th scope="row"` for the
     outcomes, inside a focusable, labelled region that scrolls sideways on narrow screens.
+- **Amendment (2026-10-29, S5 W3):** the course chooser lists the codes the author's own and co-authored activities
+  use; Canvas labels are only suggestions in the Læringsdesign tab. The outcomes of an activity that has the course
+  code but no phase still become rows (with empty cells and the no-Etterarbeid gap), and the activity is also listed
+  as untagged, so an outcome is never hidden. The empty-phase gap counts only activities that have a phase.
 
 ### D-089 · Studio access, routes and tabs
 - **Context:** Spec 04 §2 says the guide is "public within HVL". The owner decided on 2026-10-28 that the guide and

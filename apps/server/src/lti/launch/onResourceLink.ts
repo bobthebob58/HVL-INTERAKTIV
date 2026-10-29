@@ -5,13 +5,14 @@
  *      player. An unknown, draft or invisible activity gives the friendly "not available" page (PROD-004, D-066);
  *      the activity's owner may preview a draft. The same View rule as everywhere else decides, including D-060
  *      (an instructor of a copied course may view the published activity their launch opened).
- * Spec: LTI-006, LTI-007, LTI-001, PROD-004
+ * Spec: LTI-006, LTI-007, LTI-001, PROD-004, PED-030
  * Invariants:
  *   - The account is created or found here (the only LTI path that may write it); the `sub` is never stored.
  *   - Nothing is recorded for an activity the launch may not view; the answer is the one 404 page.
  *   - The player (or, when the web app runs, its chrome page `/app/play`) is opened with `context.redirect`, which
  *     appends the ltik (LTI-003 step 1).
  *   - Author launches are audited; learner launches are not (D-064).
+ *   - The placement gets the launch's course label, which the recorder keeps only when it is a course code (D-087).
  * Collaborators: ../launchFacts.ts, ../ltikPrincipal.ts, ./ltiAccount.ts, ../placements/LtiPlacementRecorder.ts,
  *   ../../auth/principalToH5pActor.ts, ../../h5p/permissions/contentRules.ts, ../ltiRoutes.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts
@@ -75,6 +76,8 @@ export function onResourceLink(deps: ResourceLinkDeps): OnLaunchHandler {
         resourceLinkId: facts.resourceLinkId,
         contentId: activity.contentId,
         ...(facts.lineItemUrl ? { lineItemUrl: facts.lineItemUrl } : {}),
+        // PRIVACY: the recorder keeps the label only when it is a course code (D-087, ../placements/courseLabel.ts).
+        contextLabel: context.idToken.launch.context?.label,
       });
     }
     context.redirect(response, deps.landingPath ?? LTI_PLAY_PATH);

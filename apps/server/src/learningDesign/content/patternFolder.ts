@@ -14,7 +14,8 @@
  *     start-up does not, and a pattern whose library is missing is then shown as unavailable (D-085).
  *   - Nothing is returned when any file has a problem.
  * Collaborators: ./patternContent.ts (the caller), ./contentSource.ts, ./patternYaml.ts, ./skeletonFile.ts,
- *   ./patternTokenChecks.ts, ./patternCitations.ts, ./skeletonLibraryChecks.ts, ./studioContentContext.ts.
+ *   ./patternTokenChecks.ts, ./patternCitations.ts, ./patternProse.ts ("why it works" builds into the guide's
+ *   prose nodes, D-083), ./skeletonLibraryChecks.ts, ./studioContentContext.ts.
  * Tests: apps/server/test/learningDesign/content/patternContent.test.ts,
  *   apps/server/test/learningDesign/content/patternLibraryChecks.test.ts
  */
@@ -24,6 +25,7 @@ import type { AuthorableContentType } from '@hvl-interaktiv/api-contract';
 import { contentDisplayPath, type ContentProblem } from './contentProblem.js';
 import { problemAt, readContentSource, type ContentSource } from './contentSource.js';
 import { citedReferenceKeys, patternCitationProblems } from './patternCitations.js';
+import { patternProseProblems } from './patternProse.js';
 import { patternTokenProblems } from './patternTokenChecks.js';
 import { patternFileSchema, type PatternFile } from './patternYaml.js';
 import { skeletonFileName, skeletonFileSchema, type SkeletonFile } from './skeletonFile.js';
@@ -122,7 +124,11 @@ export function loadPatternFolder(
       ),
     );
   const skeletons = readSkeletons(folder, pattern.value);
-  problems.push(...skeletons.problems, ...patternCitationProblems(pattern, context.references));
+  problems.push(
+    ...skeletons.problems,
+    ...patternCitationProblems(pattern, context.references),
+    ...patternProseProblems(pattern),
+  );
   const sources = skeletons.loaded.map(({ source }) => source);
   if (skeletons.problems.length === 0) problems.push(...patternTokenProblems(pattern, sources));
   const libraries = context.installedLibraries;
