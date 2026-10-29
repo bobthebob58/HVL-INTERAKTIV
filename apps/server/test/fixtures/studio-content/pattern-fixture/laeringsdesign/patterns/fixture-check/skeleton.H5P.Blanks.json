@@ -1,0 +1,15 @@
+{
+  "library": "H5P.Blanks 1.14",
+  "metadataTitle": "{{title}}",
+  "params": {
+    "text": "<p>{{blanksTask}}</p>",
+    "questions": ["<p>{{blanksSentence}}: *{{blanksAnswer}}*</p>"],
+    "overallFeedback": [{ "from": 0, "to": 100, "feedback": "{{overallFeedback}}" }],
+    "behaviour": {
+      "enableRetry": true,
+      "enableSolutionsButton": true,
+      "caseSensitive": false,
+      "acceptSpellingErrors": true
+    }
+  }
+}

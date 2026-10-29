@@ -48,6 +48,8 @@ export interface PlayerView extends PageReport {
   readonly tree: string;
   /** `<img>` elements in the activity that have no `alt` attribute (their `src`). */
   readonly imagesWithoutAlt: string[];
+  /** `<img>` elements marked decorative with `alt=""` (their `src`), e.g. by the page repairs (D-080). */
+  readonly decorativeImages: string[];
 }
 
 async function openAs(browser: Browser, actor: TestActor): Promise<{ page: Page } & PageReport> {
@@ -126,6 +128,9 @@ export async function viewInPlayer(
     tree: await page.locator('.h5p-content').ariaSnapshot(),
     imagesWithoutAlt: await page
       .locator('.h5p-content img:not([alt])')
+      .evaluateAll((images) => images.map((image) => image.getAttribute('src') ?? '')),
+    decorativeImages: await page
+      .locator('.h5p-content img[alt=""]')
       .evaluateAll((images) => images.map((image) => image.getAttribute('src') ?? '')),
   });
   // WHY: a content type goes on rendering after H5P has created its instance (a book its pages, a scenario its

@@ -1,18 +1,20 @@
 /**
- * PublishedSaveGate — runs a save of an existing activity: the publish gate when the activity is published, Lumi's
- * write, and the version count, as one step that no publish of the same activity can interleave with.
+ * PublishedSaveGate — runs a save of an existing activity: the publish gate when the activity is published, then
+ * the editor's write, as one step that no publish of the same activity can interleave with.
  *
  * Why: D-074 says saving a published activity runs the same gate as publishing: learners see the saved version at
  *      once, so a save that adds an error nobody has explained is refused, while warnings and hints never block
- *      (PROD-003). Every save of an existing activity increases `H5PContent.version`, which xAPI statements record so
- *      insight compares like with like (DATA-012).
- * Spec: PROD-003, UD-022
+ *      (PROD-003). `H5PContent.version`, which xAPI statements record so insight compares like with like
+ *      (DATA-012), is raised by the editor's write itself, and only for a structural edit (D-093 amends D-074's
+ *      "every save"): a text-only edit keeps the learners' state and the version they saved it under.
+ * Spec: PROD-003, UD-022, PROD-013
  * Invariants:
  *   - Drafts pass without validation. A published activity is validated as the editor will store it (./savedForm.ts),
  *     never as the request says; a refused save writes nothing.
- *   - The status read, the gate, Lumi's write and the version count run inside the activity's ContentWriteLock,
- *     which the publish also holds: a publish either commits before the read (the gate then sees `published`) or
- *     waits until the save is written (its `updatedAt` check then answers 409 `hvl:content-changed`).
+ *   - The status read, the gate and the editor's write (with its version raise) run inside the activity's
+ *     ContentWriteLock, which the publish also holds: a publish either commits before the read (the gate then sees
+ *     `published`) or waits until the save is written (its `updatedAt` check then answers 409
+ *     `hvl:content-changed`).
  *   - An error is covered by a stored acknowledgement for the same rule and path younger than 14 days; a save cannot
  *     add acknowledgements (that is the publish request's job).
  *   - The caller checks Edit permission first and calls `save` only for someone who may edit, so the findings, and
@@ -24,7 +26,8 @@
  * Collaborators: ./savedForm.ts, ./ContentWriteLock.ts, ./storedContent.ts, ./acknowledgementCoverage.ts,
  *   ./PublishBlockedError.ts, ../http/routes/contentRoutes.ts, ../server/createApp.ts.
  * Tests: apps/server/test/content/publishedSave.int.test.ts, apps/server/test/content/saveRace.int.test.ts,
- *   apps/server/test/content/publishedSaveRealTypes.int.test.ts
+ *   apps/server/test/content/publishedSaveRealTypes.int.test.ts,
+ *   apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts
  */
 import { isContentUuid } from '../h5p/contentIds.js';
 import type { Locale } from '../i18n/translate.js';
@@ -44,10 +47,10 @@ export interface SubmittedSave extends SubmittedContent {
 /** The save of an existing activity, as the H5P content route runs it (../http/routes/contentRoutes.ts). */
 export interface ContentSaveGate {
   /**
-   * Saves an existing activity: for a published one the publish gate first, then `write`, then the version count.
+   * Saves an existing activity: for a published one the publish gate first, then `write`.
    * @param contentId - The activity ID from the request path.
    * @param submitted - What the save submits, and the language of the findings.
-   * @param write - Lumi's save; it returns the saved activity's ID.
+   * @param write - The editor's save (with its learner-state step, D-093); it returns the saved activity's ID.
    * @returns The saved activity's ID.
    * @throws PublishBlockedError (409 `hvl:published-save-blocked`) with the findings; HttpError 409
    *   `hvl:content-changed` when another save or a publish holds the activity for longer than the lock's wait.
@@ -72,9 +75,7 @@ export class PublishedSaveGate implements ContentSaveGate {
     const lock = this.deps.writeLock ?? IN_PROCESS_WRITE_LOCK;
     return lock.hold(contentId, async () => {
       await this.check(contentId, submitted);
-      const saved = await write();
-      await this.deps.db.h5PContent.update({ where: { id: saved }, data: { version: { increment: 1 } } });
-      return saved;
+      return write();
     });
   }
 

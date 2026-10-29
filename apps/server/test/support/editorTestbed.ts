@@ -2,9 +2,9 @@
  * editorTestbed — builds an HvlH5PEditor on temporary folders for unit tests (no database, no S3).
  *
  * Why: the editor's rules (content types, save order, package import) are tested in isolation on Lumi's own
- *      file-based storages, with synthetic libraries and a rule-based permission system. The editor is built by
- *      the production factory, so the tests see the same options (language fallback, assets, DragQuestion
- *      removal, Hub disconnection) as the server.
+ *      file-based storages, with synthetic libraries, a rule-based permission system and recorded learner-state
+ *      resets (D-093). The editor is built by the production factory, so the tests see the same options (language
+ *      fallback, assets, DragQuestion removal, Hub disconnection) as the server.
  * Spec: H5P-002, SEC-003
  * Tests: shared by apps/server/test/h5p/HvlH5PEditor*.test.ts.
  */
@@ -17,6 +17,7 @@ import {
   type IContentUserDataStorage,
   type ILibraryInstallResult,
 } from '@lumieducation/h5p-server';
+import type { LearnerStateStore } from '../../src/learningDesign/safeEditing/LearnerStateGate.js';
 import { ContentFileGrants } from '../../src/h5p/contentFileGrants.js';
 import { createH5pConfig } from '../../src/h5p/H5pConfigFactory.js';
 import { createHvlEditor } from '../../src/h5p/H5pEditorFactory.js';
@@ -39,7 +40,8 @@ export interface EditorTestbed {
   audited: { results: readonly ILibraryInstallResult[]; change: LibraryChange }[];
   /** Set `auditFails` to make every audit write throw (the audit store is down). */
   control: { auditFails: boolean };
-  invalidated: string[];
+  /** The learner-state rows as the editor sees them: set `othersHaveState`; `resets` lists each reset activity. */
+  learnerStates: LearnerStateStore & { othersHaveState: boolean; readonly resets: string[] };
   libraryDir: string;
   user(role: H5pRole): HvlH5pUser;
 }
@@ -61,10 +63,15 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
   const permissions = new RulePermissions();
   const audited: EditorTestbed['audited'] = [];
   const control = { auditFails: false };
-  const invalidated: string[] = [];
-  const userData = {
-    deleteInvalidatedContentUserData: async (contentId: string) => void invalidated.push(contentId),
-  } as unknown as IContentUserDataStorage;
+  // WHY: the editor no longer deletes Lumi's invalidated state (D-093); a call would show here as a TypeError.
+  const userData = {} as unknown as IContentUserDataStorage;
+  const resets: string[] = [];
+  const learnerStates = {
+    othersHaveState: false,
+    resets,
+    hasOtherLearnersState: async () => learnerStates.othersHaveState,
+    resetLearnerState: async (contentId: string) => void resets.push(contentId),
+  };
   const editor = createHvlEditor({
     config,
     storages: {
@@ -78,6 +85,7 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
     permissionSystem: permissions,
     // WHY: no database here, so no activity is a paste source anyone may copy from (the guard refuses them all).
     contentFacts: { factsFor: async () => undefined },
+    learnerStates,
     audit: {
       record: async (results, change) => {
         if (control.auditFails) throw new Error('audit store unavailable');
@@ -89,7 +97,7 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
     urlGenerator: new HvlUrlGenerator(config, new ContentFileGrants(parseKeyring(`t1=${randomKey(9)}`))),
   });
   const user = (role: H5pRole): HvlH5pUser => asAccountUser(testActor(role));
-  return { editor, permissions, audited, control, invalidated, libraryDir, user };
+  return { editor, permissions, audited, control, learnerStates, libraryDir, user };
 }
 
 /** Removes every folder made by `editorTestbed` (call in `afterAll`). */

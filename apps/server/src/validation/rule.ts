@@ -4,7 +4,7 @@
  *
  * Why: UD-020 puts each rule in its own file under ./rules/; one interface lets the engine run them all the same
  *      way and lets the tests check, for every rule, its fixtures and that its messages exist in nn, nb and en.
- * Spec: UD-020, UD-021, PED-020
+ * Spec: UD-020, UD-021, PED-020, PROD-001
  * Invariants:
  *   - A rule's `check` is pure: it reads the scope and returns hits, nothing else.
  *   - Every hit's `message` is one of the rule's `messages`.
@@ -37,7 +37,8 @@ export interface RuleHit {
 export interface ValidationRule {
   /** e.g. `V-IMG-ALT` or `PED-H05`. */
   readonly id: string;
-  readonly requirement: 'UD-021' | 'PED-020';
+  /** The requirement the rule implements: `UD-021`, `PED-020`, or `PROD-001` for V-PLACEHOLDER (D-086). */
+  readonly requirement: 'UD-021' | 'PED-020' | 'PROD-001';
   readonly severity: FindingSeverity;
   /** Every message key the rule may report. */
   readonly messages: readonly ValidationMessageKey[];

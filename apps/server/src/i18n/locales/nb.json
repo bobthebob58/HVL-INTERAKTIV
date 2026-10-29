@@ -134,12 +134,28 @@
       "dismiss": "Ikke vis meldingen igjen"
     }
   },
+  "safeEditing": {
+    "dialog": {
+      "title": "Endringen nullstiller fremgangen til studentene",
+      "body": "Strukturelle endringer, som å legge til, fjerne eller bytte rekkefølge på spørsmål eller svaralternativer, nullstiller fremgangen studentene har lagret i aktiviteten. Skriver du om et svaralternativ, endrer du også hva de lagrede valgene betyr.",
+      "cancel": "Avbryt",
+      "reset": "Nullstill fremgangen og lagre",
+      "saveAsCopy": "Lagre som ny versjon",
+      "saveAsCopyHint": "Den nye versjonen blir et privat utkast. Originalen og fremgangen til studentene blir ikke endret.",
+      "canvasPointer": "I Canvas kan du bare nullstille fremgangen eller avbryte. Vil du heller lagre endringen som en ny versjon, åpner du aktiviteten i HVL Interaktiv-portalen og lagrer den der."
+    },
+    "outcome": {
+      "resetAndSaved": "Endringen er lagret, og fremgangen til studentene er nullstilt.",
+      "savedAsCopy": "Endringen er lagret som en ny versjon. Originalen og fremgangen til studentene er ikke endret.",
+      "cancelled": "Endringen er ikke lagret."
+    }
+  },
   "learningDesign": {
     "error": {
       "patternUnavailable": "Mønsteret kan ikke brukes nå, fordi en innholdstype det trenger, ikke er installert. Be en administrator om hjelp, eller lag en tom aktivitet.",
       "patternChoiceInvalid": "Velg en fase og en innholdstype som mønsteret tilbyr.",
       "learningDesignConflict": "Læringsdesignet ble endret i mellomtiden. Last inn siden på nytt og prøv igjen.",
-      "learnerStateResetNeeded": "Endringen endrer oppbygningen av aktiviteten, og andre har lagret fremdrift i den. Bekreft at fremdriften skal nullstilles, eller lagre endringen som ny versjon.",
+      "learnerStateResetNeeded": "Endringen endrer oppbygningen av aktiviteten, og andre har lagret fremgang i den. Bekreft at fremgangen skal nullstilles, eller lagre endringen som ny versjon.",
       "ownerOnly": "Bare eieren av aktiviteten kan gjøre dette.",
       "coauthorNotEligible": "Denne personen kan ikke legges til som medforfatter. Bare ansatte ved HVL kan være medforfattere.",
       "coauthorLimit": "Aktiviteten har allerede så mange medforfattere som er tillatt.",

@@ -13,10 +13,11 @@
  *   - Any further field is optional and comes from the caller (`StudioContentInputs`): `npm run content:check` may
  *     pass what the server's start-up does not have (the installed libraries' semantics, D-084 amendment).
  * Collaborators: ./loadStudioContent.ts (builds it), ./runContentCheck.ts and ./contentCheckCli.ts (pass the inputs),
- *   ./guideContent.ts, ./patternContent.ts, ./mappeContent.ts.
+ *   ./guideContent.ts, ./patternContent.ts, ./mappeContent.ts, ./installedLibraries.ts.
  * Tests: apps/server/test/learningDesign/content/loadStudioContent.test.ts
  */
 import { join } from 'node:path';
+import type { InstalledLibraries } from './installedLibraries.js';
 import type { PhasesContent } from './phasesContent.js';
 import type { ReferencesContent } from './referencesContent.js';
 
@@ -28,12 +29,17 @@ export interface StudioContentContext {
   readonly phases: PhasesContent | undefined;
   /** The loaded references.yaml, or undefined when it has problems. */
   readonly references: ReferencesContent | undefined;
+  /**
+   * The installed H5P libraries the pattern skeletons are checked against (D-084 amendment); `content:check`
+   * passes them, the server's start-up does not (it then skips those checks).
+   */
+  readonly installedLibraries?: InstalledLibraries;
 }
 
 /**
  * What a caller hands the section loaders beyond the folder and the loaded files: every other field of
- * `StudioContentContext`. None yet; a workstream that needs one (the pattern workstream's installed libraries, D-084
- * amendment) adds it to `StudioContentContext` as an optional field, and it reaches the loaders through
+ * `StudioContentContext` (so far the pattern workstream's installed libraries, D-084 amendment). A workstream that
+ * needs another adds it to `StudioContentContext` as an optional field, and it reaches the loaders through
  * `loadStudioContent(root, inputs)` without a change there.
  */
 export type StudioContentInputs = Omit<StudioContentContext, 'root' | 'phases' | 'references'>;

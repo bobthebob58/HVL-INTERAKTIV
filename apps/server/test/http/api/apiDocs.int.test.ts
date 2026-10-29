@@ -131,7 +131,7 @@ describeWithServices('[DOC-012] the /api surface', () => {
     });
   });
 
-  it('[PROD-003] through the app, an author publishes with the CSRF token and every save counts a version', async () => {
+  it('[PROD-003] through the app, an author publishes with the CSRF token; only a structural save raises the version', async () => {
     // Arrange
     const body = {
       library: 'H5P.MultiChoice 1.16',
@@ -146,12 +146,17 @@ describeWithServices('[DOC-012] the /api surface', () => {
       updatedAt,
       acknowledgements: [],
     });
-    const publishedSave = await portal('put', `/h5p/content/${id}`).send(body);
+    // WHY: an added option is structural (D-093); nobody has learner state, so it saves without asking.
+    const withOption = {
+      ...body,
+      params: { ...body.params, params: { question: 'Kva?', answers: ['Ja', 'Nei'] } },
+    };
+    const publishedSave = await portal('put', `/h5p/content/${id}`).send(withOption);
     // Assert
     expect([draftSave.status, published.status, publishedSave.status]).toEqual([200, 200, 200]);
     expect(await tb.db.h5PContent.findUniqueOrThrow({ where: { id } })).toMatchObject({
       status: 'published',
-      version: 3,
+      version: 2,
     });
   });
 });

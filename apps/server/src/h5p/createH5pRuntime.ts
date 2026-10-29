@@ -6,7 +6,7 @@
  *      built one way. Building it here keeps every safety option in one reviewed place, runs the H5P-001 start
  *      check and the permission guard before anything is served, and never lets the server call the Hub on its
  *      own (empty content-type cache stored as `[]`, D-041).
- * Spec: H5P-001, H5P-004, H5P-006, H5P-007, SEC-001, SEC-002
+ * Spec: H5P-001, H5P-004, H5P-006, H5P-007, SEC-001, SEC-002, PROD-013
  * Invariants:
  *   - The same HvlPermissionSystem instance is used by editor, player and routes; the guard checks it. The editor's
  *     paste-source guard reads the same activity facts as that permission system.
@@ -14,6 +14,8 @@
  *     and the routes verify them with the same ContentFileGrants (D-058).
  *   - File sanitisers run in this order: file-type sniffer, then the SVG sanitiser.
  *   - The cleanup job is created but not started; the server starts and stops it (S3 entry point).
+ *   - The editor resets learner state only on a structural save, and the player's state URLs carry the activity's
+ *     version, both on PostgreSQL (D-093, ../learningDesign/safeEditing/).
  * Collaborators: ./h5pServerInit.ts, ./h5pStorage.ts, ./H5pEditorFactory.ts, ./H5pPlayerFactory.ts,
  *   ./HvlUrlGenerator.ts, ./contentFileGrants.ts, ./permissionSystemGuard.ts, ./HvlPermissionSystem.ts,
  *   ../security/FileTypeSniffer.ts, ../security/SvgSanitizer.ts, ../http/createH5pRouter.ts.
@@ -26,6 +28,8 @@ import type { Env } from '../config/env.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import type { Database } from '../infra/prismaClient.js';
 import type { Redis } from '../infra/redisClient.js';
+import { PrismaContentVersionReader } from '../learningDesign/safeEditing/contentVersionOnPages.js';
+import { PrismaLearnerStateStore } from '../learningDesign/safeEditing/PrismaLearnerStateStore.js';
 import { FileTypeSniffer } from '../security/FileTypeSniffer.js';
 import { SvgSanitizer } from '../security/SvgSanitizer.js';
 import { ContentFileGrants } from './contentFileGrants.js';
@@ -98,6 +102,7 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     permissionSystem: permissions,
     audit: new PrismaLibraryAuditSink(db),
     contentFacts,
+    learnerStates: new PrismaLearnerStateStore(db),
     translate,
     fileSanitizers,
     urlGenerator,
@@ -108,6 +113,7 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     permissionSystem: permissions,
     translate,
     urlGenerator,
+    contentVersions: new PrismaContentVersionReader(db),
   });
   assertPermissionSystem({ editor, player }, permissions);
   const cleanupJob = new TemporaryFileCleanupJob({

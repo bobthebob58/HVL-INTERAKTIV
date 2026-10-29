@@ -315,12 +315,17 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
 - [x] 0. Start: restart task, decisions D-082…D-100, spec 02 and 04 amendments, CLAUDE.md §2–§3, Q17
 - [x] 1. Probes P1–P7, kept as tests (amendments to D-080, D-083…D-086, D-092…D-094, D-096): skeleton creation on the server, duplicate by paste-source, learner state
       after edits, tagged PDF, Markdown tree and Mustache, the `⟦…⟧` marker, the editor's `<dialog>`
-- [ ] 2. Contracts: migration `s5_learning_design`, API contract split and schemas, server wiring and env, content
-      loader and `content:check`, `ContentDuplicator`, web scaffolding (tab registry, pages, navigation)
+- [x] 2. Contracts: migration `s5_learning_design`, API contract split and schemas, server wiring and env, content
+      loader and `content:check`, `ContentDuplicator`, web scaffolding (tab registry, pages, navigation) (309fc19;
+      amendments to D-087, D-090…D-092, D-096, D-099); the probes hardened for slow CI runners (e4621d5)
 - [ ] 3. Guide, phase matrix and catalogue (`PED-001`…`PED-003`); patterns and V-PLACEHOLDER (`PED-010`, `PED-011`,
       `PROD-001`, `PROD-009`)
+      — stage 1 done: pattern format, loader and checks, creation API, V-PLACEHOLDER incl. missing media, the
+        BranchingScenario picture repair (W2a); the nine patterns' content follows (W2b)
 - [ ] 3. Metadata, planner, learner time and purpose (`PED-030`…`PED-032`)
 - [ ] 3. Co-authors, content bank and duplicate (`PROD-007`); safe editing (`PROD-013`)
+      — stage 1 done: structure signature, the 409 save gate, stale state writes dropped, the copy route (W5a);
+        the editor dialog follows (W5b)
 - [ ] 3. Mappe export in Markdown and tagged PDF (`MAPPE-001`…`MAPPE-004`)
 - [ ] 4. Integration: axe suite for the new pages and the dialog, e2e flows, screenshots in `nn` to the owner
 - [ ] 5. Docs: `content/` READMEs for ALU, GLOSSARY, Evaluator Guide, `/personvern`, ALU review packet

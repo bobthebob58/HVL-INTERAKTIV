@@ -5,7 +5,7 @@
  *      integration object into a `<script>` unescaped (D-040). The factory sets HVL's permission system, the
  *      learner-state storage, Nynorsk-first strings and the Core 1.28 styles (F3), and makes `render` return
  *      the model so ../http/routes/playerRoutes.ts renders it with our template.
- * Spec: H5P-004, H5P-005, H5P-006, H5P-007, H5P-008, SEC-008
+ * Spec: H5P-004, H5P-005, H5P-006, H5P-007, H5P-008, SEC-008, PROD-013
  * Invariants:
  *   - The renderer returns the model unchanged; HTML is produced only by ./render/playerPage.ts.
  *   - Every URL comes from the HvlUrlGenerator passed in: tokens on H5P's AJAX URLs and a signed `contentUrl`
@@ -14,8 +14,11 @@
  *     signed: `ignoreUserPermissions`, `parametersOverride` and `metadataOverride` are refused (D-058).
  *   - Built by createH5pRuntime with the editor's inputs: one permission system, one state storage, and the
  *     same library storage, each engine behind its own language-fallback wrapper.
+ *   - With `contentVersions` (createH5pRuntime always passes it), every rendered model's learner-state URL carries
+ *     the activity's version, so a page opened before a structural save cannot write its old state (D-093).
  * Collaborators: ./h5pAssets.ts, ./HvlUrlGenerator.ts, ./render/playerPage.ts,
- *   ./storage/LanguageFallbackLibraryStorage.ts, ./createH5pRuntime.ts.
+ *   ./storage/LanguageFallbackLibraryStorage.ts, ./createH5pRuntime.ts,
+ *   ../learningDesign/safeEditing/contentVersionOnPages.ts.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts,
  *   apps/server/test/h5p/HvlUrlGenerator.test.ts
  */
@@ -30,6 +33,10 @@ import {
   type IPlayerModel,
   type ITranslationFunction,
 } from '@lumieducation/h5p-server';
+import {
+  stampContentVersion,
+  type ContentVersionReader,
+} from '../learningDesign/safeEditing/contentVersionOnPages.js';
 import { playerGlobalAssets } from './h5pAssets.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import type { HvlUrlGenerator } from './HvlUrlGenerator.js';
@@ -47,6 +54,8 @@ export interface PlayerFactoryInputs {
   readonly translate: ITranslationFunction;
   /** Builds every URL of the player page; shared with the editor (H5P-007). */
   readonly urlGenerator: HvlUrlGenerator;
+  /** Reads an activity's version for its learner-state URL (D-093); absent in engine-only tests. */
+  readonly contentVersions?: ContentVersionReader;
 }
 
 /** The renderer that hands Lumi's model to our template instead of Lumi's HTML. */
@@ -73,8 +82,9 @@ function refuseUncheckedRenders(player: H5PPlayer): void {
 
 /**
  * Builds the player.
- * @param inputs - Config, storages, permission system, translation and URL generator.
- * @returns The player; `render` resolves to an `IPlayerModel` and refuses `UNCHECKED_RENDER_OPTIONS`.
+ * @param inputs - Config, storages, permission system, translation, URL generator and the version reader.
+ * @returns The player; `render` resolves to an `IPlayerModel` (with the version in its state URL when a reader is
+ *   given) and refuses `UNCHECKED_RENDER_OPTIONS`.
  */
 export function createHvlPlayer(inputs: PlayerFactoryInputs): H5PPlayer {
   const urls = inputs.urlGenerator;
@@ -95,5 +105,6 @@ export function createHvlPlayer(inputs: PlayerFactoryInputs): H5PPlayer {
   );
   player.setRenderer(modelRenderer);
   refuseUncheckedRenders(player);
+  if (inputs.contentVersions) stampContentVersion(player, inputs.contentVersions);
   return player;
 }

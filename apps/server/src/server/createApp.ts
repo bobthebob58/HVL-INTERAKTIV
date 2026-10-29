@@ -132,7 +132,7 @@ export function createApp(inputs: AppInputs): App {
   const studio = createStudioServices({ ...inputs, access, hasher, publishing });
   // WHY: the content routes inside the H5P router run the same publish gate on saves of published activities.
   const saveGate = new PublishedSaveGate(publishing, editorSavedForm(inputs.h5p.editor.libraryManager));
-  const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, saveGate };
+  const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, saveGate, duplicator: studio.duplicator };
 
   const app = express();
   app.disable('x-powered-by');

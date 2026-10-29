@@ -1,0 +1,33 @@
+{
+  "description": "A Column holding an interactive video without a video and image hotspots without a background image, both as sub-content.",
+  "mainLibrary": "H5P.Column 1.22",
+  "metadata": { "title": "Celler", "defaultLanguage": "nn" },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.InteractiveVideo 1.28",
+          "params": { "interactiveVideo": { "video": { "startScreenOptions": { "title": "Celler" } } } },
+          "subContentId": "c1"
+        }
+      },
+      {
+        "content": {
+          "library": "H5P.ImageHotspots 1.11",
+          "params": {
+            "backgroundImageAltText": "Ei celle med kjerne og mitokondriar",
+            "hotspots": []
+          },
+          "subContentId": "c2"
+        }
+      }
+    ]
+  },
+  "expected": [
+    {
+      "path": "content[0].content.params.interactiveVideo.video.files",
+      "message": "V-PLACEHOLDER.videoMissing"
+    },
+    { "path": "content[1].content.params.image", "message": "V-PLACEHOLDER.backgroundImageMissing" }
+  ]
+}

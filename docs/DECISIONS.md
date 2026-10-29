@@ -1234,8 +1234,8 @@ loading of one spec per session are kept.
   already published runs the same gate. Only those who may edit (H5P-006) may publish.
 - **Consequences:** Acknowledgements keyed on a path ask again when list items move; that fails safe.
 - **Amendment (2026-10-23, W3):** every save of an existing activity increases `H5PContent.version` (the inventory
-  used to say "on structural change"); a refused save of a published activity is 409 `hvl:published-save-blocked`
-  with the findings, and nothing is saved; findings, publish and unpublish answer 404 when the person may not view
+  used to say "on structural change"; since D-093's 2026-10-29 amendment only a structural save does); a refused
+  save of a published activity is 409 `hvl:published-save-blocked` with the findings, and nothing is saved; findings, publish and unpublish answer 404 when the person may not view
   the activity and 403 `hvl:edit-not-allowed` when they may view but not edit; unpublish clears `publishedAt`, and
   publishing an activity that is already published validates again and moves `publishedAt` to now.
 - **Amendment (2026-10-24, review fixes F-01, F-02):** the save gate validates what the editor will store, not the
@@ -1539,6 +1539,7 @@ loading of one spec per session are kept.
   H5P.ImageHotspots' "Missing required background image" are English text written by the libraries themselves
   (H5P.Video overwrites any `l10n` it is given), so they go into the register too; V-PLACEHOLDER (D-086 as amended)
   keeps an activity in that state from being published by mistake.
+- **Amendment (2026-10-29, S5 W2a):** BranchingScenario's default pictures are now repaired (`alt=""`), so the upstream register names them in its header among the page repairs, still to be reported upstream for the conformance report (UD-040), rather than as an entry: an entry that no longer occurs would fail the suite. The two English library texts are entries in the register's `UPSTREAM_ENGLISH_TEXTS`, pinned by a test against the libraries' code.
 
 ### D-081 · One Node.js system with Lumi's H5P server half; an official PHP server half was considered and not chosen
 - **Context:** H5P has a browser half (Core and the editor client) and a server half (storing content, installing
@@ -1614,6 +1615,7 @@ loading of one spec per session are kept.
 - **Consequences:** Renaming a label is a content change (`PED-001`). A library that is pinned but not installed makes
   its patterns unavailable at runtime (D-085), not a boot failure. The shared YAML error reporting moves out of
   `validationContext.ts` into the new loader's folder, `apps/server/src/learningDesign/content/`.
+- **Amendment (2026-10-29, S5 W2a):** skeleton versions are checked by `content:check` against the installed libraries' own semantics (the main library is the newest installed minor; each sub-content is a version its field offers), which CI runs after `h5p:fetch-libraries`. The server's start-up checks only the `H5P.X a.b` form, not the pinned list; a skeleton naming a library that is not installed is answered 409 `hvl:pattern-unavailable` at creation instead.
 
 ### D-083 · `SPEC-DEVIATION` PED-002: the guide is CommonMark Markdown, not MDX
 - **Context:** `PED-002` puts the guide in `guide.{nn,nb,en}.mdx`. MDX is compiled to JavaScript, so a content file
@@ -1951,6 +1953,34 @@ loading of one spec per session are kept.
     focuses it and only then announces the outcome. In the portal the editor page asks the activity page to make
     its own controls inert while the dialog is open; Canvas's page is out of our reach. The dialog's look comes
     from a stylesheet file under the page's policy, with the `:focus-visible` ring the rest of the service uses.
+- **Amendment (2026-10-29, S5 server side):**
+  - **The version:** only a structural save that goes through raises `H5PContent.version`, not every save as D-074's
+    2026-10-23 amendment said: a text-only save keeps the learners' state, so the pages they have open must go on
+    saving under the same version. This amends D-074 and the data inventory.
+  - **What a reset deletes:** every structural save that goes through deletes all the activity's state rows and
+    raises the version in one transaction, also when the check found only the saver's: a row written between the
+    check and the write belongs to the old structure.
+  - **The confirmation:** `confirmLearnerStateReset` (a boolean, else 400) in the body of `PUT /h5p/content/:id`
+    reaches `HvlH5PEditor.saveOrUpdateContent` as an explicit last argument (`SaveChoice`), not through the
+    request's async context: every save of an existing activity comes through that route, so a save without it can
+    never reset by accident. `POST /h5p/content` creates an activity, which has no state.
+  - **Old pages:** the player's state URL (the portal and `/lti/play`) carries `contentVersion=<version>`, read
+    before Lumi renders. The state route makes such a write only while the activity has that version, checked in
+    the write's own transaction under a `FOR SHARE` lock on the activity row, which the reset's version update waits
+    for. A stale write is answered 200 `{ success: false, message: 'hvl:learner-state-stale' }`: h5p.js hands it to
+    an error callback the players' autosave does not set, so nothing is retried or shown. A write without the
+    parameter is not checked; a malformed one is 400.
+  - **Save as a copy:** `POST /h5p/content/:id/copy` takes `{ params, metadata }` as the editor gives them, is for
+    portal authors only (an ltik is 401 `hvl:unauthenticated`, a portal learner 403, the CSRF token as on every
+    unsafe method), answers 201 `{ contentId }`, and passes the duplicator's errors on unchanged.
+  - **Shuffling:** MultiChoice's `randomAnswers` and QuestionSet's `randomQuestions` are not structural (a resumed
+    attempt keeps its saved order, questionset.js:391); `poolSize` is.
+  - **The real editor's round trip:** an unchanged save through the editor page must stay text-only for every type
+    (`editorRoundTrip.browser.int.test.ts`). H5P's editor drops a branching-question node's own `nextContentId: -1`,
+    which the player reads as -1 when it is missing, so a missing one counts as -1. The editor also upgrades an
+    activity to the newest installed minor version of its library when it saves it; as the signature compares
+    `Name major.minor`, the first save after HVL installs a newer minor version is structural and asks, which errs
+    on the strict side.
 
 ### D-094 · Rendering the pedagogisk mappe
 - **Context:** `MAPPE-002` takes headings from the template and criteria from the criteria files, keyed by criteria

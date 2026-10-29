@@ -83,11 +83,21 @@
     set(element, 'aria-level', '2');
   }
 
+  // UPSTREAM: https://github.com/h5p/h5p-branching-scenario/blob/6860e97e916054c09e9f2c4bb824ca958521213a/src/scripts/genericScreen.js (no issue filed yet; SPEC-DEVIATION: D-080 amendment of 2026-10-28 says why; the repair goes when a pinned BranchingScenario writes an alt itself)
+  // Without a start or end image, BranchingScenario 1.10 shows its own default pictures (dist/assets/*-screen-
+  // default.jpg) as an <img> with no alt (WCAG 1.1.1). They are decorative, so they get alt="". An author's image
+  // keeps H5P's markup: V-IMG-ALT asks the author for its alt text, which H5P writes as aria-label.
+  var DEFAULT_PICTURE = /\/dist\/assets\/(?:start|end)-screen-default\.jpg$/;
+  function defaultPicture(image) {
+    if (DEFAULT_PICTURE.test(image.getAttribute('src') || '')) set(image, 'alt', '');
+  }
+
   var REPAIRS = [
     ['.h5p-course-presentation .h5p-progressbar', progressBar],
     ['.h5p-course-presentation .h5p-slide[role="tabpanel"]', asGroup],
     ['[aria-dropeffect][aria-label]:not([role])', asGroup],
     ['.h5p-question-explanation-title[role="heading"]:not([aria-level])', explanationTitle],
+    ['img.h5p-background-image:not([alt]):not([aria-label])', defaultPicture],
   ];
 
   function repairAll() {

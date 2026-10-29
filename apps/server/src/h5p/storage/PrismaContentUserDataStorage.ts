@@ -4,7 +4,7 @@
  * Why: a learner who leaves an activity and comes back on any device or server node resumes where they
  *      left off (H5P-005, PROD-008), and state from one Canvas course never leaks into another. Lumi hands
  *      this store the state view of the actor (D-036), so every user ID it sees is already the learnerKey.
- * Spec: H5P-005, PROD-008, DATA-002
+ * Spec: H5P-005, PROD-008, DATA-002, PROD-013
  * Invariants:
  *   - Key: (contentId, subContentId, dataType, learnerKey, contextId). `learnerKey` is exactly the ID Lumi
  *     passes; an ID that is not shaped like a pseudonym is refused on save and finds nothing (DATA-002).
@@ -13,26 +13,29 @@
  *   - Lists for the player hold exactly one context and put the main state ('0') first (D-038).
  *   - Finished data is off: nothing is stored or returned (D-037, ./FinishedDataSwitchedOff.ts).
  *   - Content IDs that are not UUIDs are "not found" and never reach the database.
- * Collaborators: ./learnerStateRows.ts, ./FinishedDataSwitchedOff.ts, ../../infra/prismaClient.ts,
- *   ../h5pStorage.ts, Lumi's ContentUserDataManager (calls it after the permission check),
- *   ../HvlH5pUser.ts (the state view).
+ *   - A write the state route runs inside `withStateWriteVersion` is made only while the activity has the version
+ *     the learner's page was rendered with, checked in the write's own transaction (D-093, ./learnerStateWrites.ts).
+ * Collaborators: ./learnerStateRows.ts, ./learnerStateWrites.ts, ./stateWriteVersion.ts,
+ *   ./FinishedDataSwitchedOff.ts, ../../infra/prismaClient.ts, ../h5pStorage.ts, Lumi's ContentUserDataManager
+ *   (calls it after the permission check), ../HvlH5pUser.ts (the state view).
  * Tests: apps/server/test/h5p/PrismaContentUserDataStorage.int.test.ts,
- *   apps/server/test/h5p/PrismaContentUserDataStorage.cleanup.int.test.ts
+ *   apps/server/test/h5p/PrismaContentUserDataStorage.cleanup.int.test.ts,
+ *   apps/server/test/learningDesign/safeEditing/staleStateWrites.int.test.ts
  */
 import type { ContentId, IContentUserData, IContentUserDataStorage, IUser } from '@lumieducation/h5p-server';
 import type { Database } from '../../infra/prismaClient.js';
 import { FinishedDataSwitchedOff } from './FinishedDataSwitchedOff.js';
-import { assertStorableText } from './storableText.js';
 import {
   NO_CONTEXT,
   isContentUuid,
-  isDeleteSignal,
   isLearnerKey,
   mainStateFirst,
   stateKey,
   stateKeyOf,
   toUserData,
 } from './learnerStateRows.js';
+import { stateWrite, writeIfVersion } from './learnerStateWrites.js';
+import { stateWriteExpectation } from './stateWriteVersion.js';
 
 // UPSTREAM: a miss is null, as in https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/implementation/fs/FileContentUserDataStorage.ts
 // The interface types a value, but Lumi's ContentUserDataManager passes null on to its caller unchanged.
@@ -49,28 +52,19 @@ export class PrismaContentUserDataStorage extends FinishedDataSwitchedOff implem
   }
 
   /**
-   * Saves one state, or deletes it when h5p.js posts `data=0`.
+   * Saves one state, or deletes it when h5p.js posts `data=0`; inside `withStateWriteVersion` only while the
+   * activity still has the version the learner's page was rendered with (D-093).
    * @param userData - The state; `userId` is the learnerKey (state view, D-036).
-   * @returns Nothing; a content ID that is not a UUID is ignored.
+   * @returns Nothing; a content ID that is not a UUID is ignored, and a stale write is dropped and marked stale.
    * @throws TypeError when `contentId` is missing, `userId` is not a learnerKey or the state is not a string.
    */
   async createOrUpdateContentUserData(userData: IContentUserData): Promise<void> {
     if (!userData.contentId) throw new TypeError('content user data needs a contentId');
     const key = stateKeyOf(userData, userData.contentId);
     if (!isContentUuid(key.contentId)) return;
-    if (isDeleteSignal(userData.userState)) {
-      await this.db.h5PUserData.deleteMany({ where: key });
-      return;
-    }
-    // WHY: h5p.js always posts a JSON string; storing it as one JSON string value needs no migration (D-038).
-    if (typeof userData.userState !== 'string') throw new TypeError('content user state must be a string');
-    assertStorableText(userData.userState);
-    const values = { data: userData.userState, preload: userData.preload, invalidate: userData.invalidate };
-    await this.db.h5PUserData.upsert({
-      where: { contentId_subContentId_dataType_learnerKey_contextId: key },
-      update: values,
-      create: { ...key, ...values },
-    });
+    const write = stateWrite(key, userData);
+    const expectation = stateWriteExpectation();
+    await (expectation ? writeIfVersion(this.db, key.contentId, expectation, write) : write(this.db));
   }
 
   /**

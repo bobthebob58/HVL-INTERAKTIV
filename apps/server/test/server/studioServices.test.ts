@@ -1,8 +1,9 @@
 /**
  * Unit tests for the studio's services: built once from createApp's inputs with the start-up content unchanged, a
- * duplicator and one slot per workstream service, and closed at shutdown, every resource even when one fails.
+ * duplicator, the pattern creator and one slot per workstream service, and closed at shutdown, every resource even
+ * when one fails.
  *
- * Spec: PED-001, PROD-007, MAPPE-004
+ * Spec: PED-001, PROD-001, PROD-007, MAPPE-004
  */
 import { describe, expect, it, vi } from 'vitest';
 import { loadEnv } from '../../src/config/env.js';
@@ -10,6 +11,7 @@ import type { HvlH5PEditor } from '../../src/h5p/HvlH5PEditor.js';
 import { ContentDuplicator } from '../../src/learningDesign/collaboration/ContentDuplicator.js';
 import { loadStudioContent } from '../../src/learningDesign/content/loadStudioContent.js';
 import { createLogger } from '../../src/logging/logger.js';
+import { PatternCreator } from '../../src/learningDesign/patterns/PatternCreator.js';
 import {
   closeStudioServices,
   createStudioServices,
@@ -64,6 +66,16 @@ describe('[PED-001] createStudioServices', () => {
         'pdfRenderer',
       ]),
     );
+  });
+
+  it('[PROD-001] builds the pattern creator over the patterns loaded at start-up, without contacting the editor', async () => {
+    // Arrange
+    const given = inputs();
+    // Act
+    const services = createStudioServices(given);
+    // Assert
+    expect(services.patternCreator).toBeInstanceOf(PatternCreator);
+    await expect(services.patternCreator.availability('no-such-pattern')).resolves.toBeUndefined();
   });
 });
 

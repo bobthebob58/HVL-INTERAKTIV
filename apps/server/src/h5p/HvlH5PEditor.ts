@@ -3,25 +3,27 @@
  *
  * Why: several rules must hold on every path into the editor, and Lumi 10.0.4 offers no extension point for
  *      them: only the ten types are creatable (`H5P-002`); a save checks the permission before it touches
- *      learner state (D-038, Lumi deletes invalidated state first); sub-content is checked on save (D-039);
+ *      learner state, which only a structural edit resets, after the author's confirmation when others have
+ *      some (D-038 as amended by D-093; Lumi deletes invalidated state first); sub-content is checked (D-039);
  *      file paths that copy from another activity or that the storage would refuse are refused before Lumi
  *      writes anything (D-092); an author's package import never installs or swaps code (`SEC-003`); library
  *      changes are audited and never come from the Hub (`H5P-011`, D-041); and the download path asks our
  *      permission system (Lumi builds its exporter without one).
- * Spec: H5P-002, H5P-006, H5P-011, SEC-003, SEC-005, SEC-008, PROD-007
+ * Spec: H5P-002, H5P-006, H5P-011, SEC-003, SEC-005, SEC-008, PROD-007, PROD-013
  * Invariants:
  *   - The content-type list holds only installed members of the ten (all four Lumi paths that return it).
- *   - Save order: permission → main library is one of the ten and installed (./saveAdmission.ts) → sub-content
- *     policy → paste-source guard (./pasteSourceGuard.ts) → Lumi's save → delete dropped files as the author →
- *     (saveOrUpdateContent only) invalidate learner state.
+ *   - Save order (./editorSaveSteps.ts): permission and main library → stored files → sub-content policy →
+ *     paste-source guard → learner-state check (409 for an unconfirmed structural edit while others have state) →
+ *     Lumi's save → state reset and version raise of a structural edit → delete dropped files as the author.
+ *     Both save methods take the author's `SaveChoice`; a text-only save keeps every state row.
  *   - Package import: path only (never a buffer), `inspectZip`, manifest, main library one of the ten, for
  *     non-admins every library already installed in the same version, Lumi's import, audit for admins.
  *   - Hub install and Content Hub download are refused for everyone.
- * Collaborators: ./HvlTop10ContentTypeFilter.ts, ./saveAdmission.ts, ./semantics/SubContentPolicy.ts,
- *   ./pasteSourceGuard.ts, ./contentFileCleanup.ts, ./permissionCheckedExporter.ts, ./libraries/*,
- *   ../security/zipEntryGuard.ts; built only by ./H5pEditorFactory.ts.
+ * Collaborators: ./HvlTop10ContentTypeFilter.ts, ./editorSaveSteps.ts, ./permissionCheckedExporter.ts,
+ *   ./libraries/*, ../security/zipEntryGuard.ts; built only by ./H5pEditorFactory.ts.
  * Tests: apps/server/test/h5p/HvlH5PEditor.test.ts, apps/server/test/h5p/HvlH5PEditor.upload.test.ts,
- *   apps/server/test/h5p/HvlH5PEditor.library.test.ts, apps/server/test/h5p/pasteSourceGuard.int.test.ts
+ *   apps/server/test/h5p/HvlH5PEditor.library.test.ts, apps/server/test/h5p/pasteSourceGuard.int.test.ts,
+ *   apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts
  */
 import {
   GeneralPermission,
@@ -34,8 +36,9 @@ import {
   type IUser,
 } from '@lumieducation/h5p-server';
 import type { IHubInfo } from '@lumieducation/h5p-server/build/src/types.js';
+import type { LearnerStateStore, SaveChoice } from '../learningDesign/safeEditing/LearnerStateGate.js';
 import { inspectZip } from '../security/zipEntryGuard.js';
-import { ContentFileCleanup } from './contentFileCleanup.js';
+import { EditorSaveSteps } from './editorSaveSteps.js';
 import { filterContentTypeCache, isAuthorableType } from './HvlTop10ContentTypeFilter.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import { auditBeforeInstall } from './libraries/auditBeforeInstall.js';
@@ -44,11 +47,8 @@ import { disconnectFromHub } from './offlineContentTypeCache.js';
 import { assertPackageLibrariesInstalled } from './libraries/packageLibraryCheck.js';
 import { readPackageManifest } from './libraries/packageManifest.js';
 import { sha256File } from './libraries/sha256Sums.js';
-import { PasteSourceGuard } from './pasteSourceGuard.js';
 import { usePermissionCheckedExporter } from './permissionCheckedExporter.js';
 import type { ContentAccessRepository } from './permissions/ContentAccessRepository.js';
-import { admitSave } from './saveAdmission.js';
-import { SubContentPolicy } from './semantics/SubContentPolicy.js';
 
 /** What HvlH5PEditor needs beyond Lumi's constructor arguments. */
 export interface HvlEditorPolicy {
@@ -58,6 +58,8 @@ export interface HvlEditorPolicy {
   readonly audit: LibraryAuditSink;
   /** The activity facts the permission system reads; the paste-source guard decides duplicates on them (D-092). */
   readonly contentFacts: ContentAccessRepository;
+  /** The learner-state rows a structural save checks and resets (D-093). */
+  readonly learnerStates: LearnerStateStore;
 }
 
 type UploadResult = Awaited<ReturnType<H5PEditor['uploadPackage']>>;
@@ -68,21 +70,17 @@ const hubDisabled = (): H5pError => new H5pError('hvl:hub-install-disabled', {},
 /** The H5P editor with HVL's content-type, save, import and library rules. */
 export class HvlH5PEditor extends H5PEditor {
   private readonly policy: HvlEditorPolicy;
-  private readonly subContent: SubContentPolicy;
-  private readonly pasteSources: PasteSourceGuard;
-  private readonly files: ContentFileCleanup;
+  private readonly saveSteps: EditorSaveSteps;
 
   /**
    * @param args - Lumi's H5PEditor constructor arguments, unchanged.
-   * @param policy - Permission system, audit sink and activity facts.
+   * @param policy - Permission system, audit sink, activity facts and learner-state rows.
    */
   constructor(args: ConstructorParameters<typeof H5PEditor>, policy: HvlEditorPolicy) {
     super(...args);
     this.policy = policy;
     disconnectFromHub(this);
-    this.subContent = new SubContentPolicy(this.libraryManager);
-    this.pasteSources = new PasteSourceGuard(this.libraryManager, policy.contentFacts);
-    this.files = new ContentFileCleanup(this.libraryManager, this.contentManager);
+    this.saveSteps = new EditorSaveSteps(this.libraryManager, this.contentManager, policy);
     usePermissionCheckedExporter(this, policy.permissionSystem);
   }
 
@@ -91,23 +89,21 @@ export class HvlH5PEditor extends H5PEditor {
     return filterContentTypeCache(await super.getContentTypeCache(user, language));
   }
 
-  /** Saves with HVL's checks in the order described in the module header; learner state is not touched. */
+  /**
+   * Saves with HVL's checks in the order described in the module header.
+   * @param choice - The author's answer to the save choice dialog (PROD-013); none by default.
+   * @throws HttpError 409 `hvl:learner-state-reset-needed` for an unconfirmed structural edit while others have state.
+   */
   override async saveOrUpdateContentReturnMetaData(
     contentId: ContentId | undefined,
     parameters: ContentParameters,
     metadata: IContentMetadata,
     mainLibraryUbername: string,
     user: IUser,
+    choice?: SaveChoice,
   ): Promise<SaveResult> {
-    const main = await admitSave(
-      { permissionSystem: this.policy.permissionSystem, libraryManager: this.libraryManager },
-      contentId,
-      mainLibraryUbername,
-      user,
-    );
-    const before = contentId === undefined ? [] : await this.files.storedFiles(contentId, main, user);
-    await this.subContent.enforce(parameters as Record<string, unknown>, metadata, main);
-    await this.pasteSources.enforce(parameters, main, user);
+    const save = { contentId, parameters, metadata, mainLibraryUbername, user, choice };
+    const checked = await this.saveSteps.beforeWrite(save);
     const result = await super.saveOrUpdateContentReturnMetaData(
       // WHY: Lumi types the ID as a string but treats undefined as "new content".
       contentId as ContentId,
@@ -116,20 +112,18 @@ export class HvlH5PEditor extends H5PEditor {
       mainLibraryUbername,
       user,
     );
-    if (contentId !== undefined) {
-      const after = await this.files.referencedFiles(parameters, main);
-      await this.files.deleteDropped(result.id, before, after, user);
-    }
+    await this.saveSteps.afterWrite(save, result.id, checked);
     return result;
   }
 
-  /** Saves, then drops invalidated learner state, only after the save passed every check (D-038). */
+  /** Saves as `saveOrUpdateContentReturnMetaData`; unlike Lumi's, it never deletes state before the checks (D-093). */
   override async saveOrUpdateContent(
     contentId: ContentId | undefined,
     parameters: ContentParameters,
     metadata: IContentMetadata,
     mainLibraryUbername: string,
     user: IUser,
+    choice?: SaveChoice,
   ): Promise<ContentId> {
     const { id } = await this.saveOrUpdateContentReturnMetaData(
       contentId,
@@ -137,8 +131,8 @@ export class HvlH5PEditor extends H5PEditor {
       metadata,
       mainLibraryUbername,
       user,
+      choice,
     );
-    await this.contentUserDataManager.deleteInvalidatedContentUserDataByContentId(id);
     return id;
   }
 

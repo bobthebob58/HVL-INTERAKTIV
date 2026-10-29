@@ -5,23 +5,33 @@
  *      learner's pseudonym in the course they came from, so the routes use the actor's state view
  *      (`id` = learnerKey) and the actor's context. Lumi would take both from the query (`contextId`,
  *      `asUserId`); here the query cannot choose whose or which course's state is read (D-036).
- * Spec: H5P-005, PROD-008, H5P-006, DATA-002
+ * Spec: H5P-005, PROD-008, H5P-006, DATA-002, PROD-013
  * Invariants:
  *   - The user is `asStateUser(actor)`; `contextId` is the actor's; a `contextId` query value is ignored.
  *   - `asUserId` in the query is refused with 400 (reading another learner's state is not a player feature).
  *   - Answers have H5P's shape: `{ success: true, data }`, with `data: false` when nothing is stored.
  *   - `data=0` deletes the state (H5P's reset), handled by the storage (D-038).
+ *   - A write that names `contentVersion` (every player page's state URL does, D-093) is made only while the
+ *     activity has that version; a write from a page opened before a structural save is dropped and answered
+ *     `{ success: false, message: 'hvl:learner-state-stale' }` with status 200, which h5p.js hands to an error
+ *     callback the players' autosave does not set: nothing is retried or shown. A malformed version is 400.
  *   - Activity `0` is the editor's own UI state (whether a field's description is open, whether a guided tour was
  *     seen); it is never written, so no table holds author UI preferences (D-069). GET answers BranchingScenario's
  *     tour flags (`h5p-editor-branching-scenario-*tour-v1-seen`) with H5P's error shape
  *     `{ success: false, message: 'hvl:editor-ui-state-not-kept' }`, so H5P keeps the flag the browser holds, and
  *     every other flag with `data: false`, which H5P reads as not set (D-069 amendment).
- * Collaborators: ../../h5p/storage/PrismaContentUserDataStorage.ts, Lumi's ContentUserDataManager,
- *   ../requestBodies.ts.
- * Tests: apps/server/test/http/userData.int.test.ts, apps/server/test/h5p/branchingTour.browser.int.test.ts
+ * Collaborators: ../../h5p/storage/PrismaContentUserDataStorage.ts, ../../h5p/storage/stateWriteVersion.ts,
+ *   ../../learningDesign/safeEditing/contentVersionOnPages.ts, Lumi's ContentUserDataManager, ../requestBodies.ts.
+ * Tests: apps/server/test/http/userData.int.test.ts, apps/server/test/h5p/branchingTour.browser.int.test.ts,
+ *   apps/server/test/learningDesign/safeEditing/staleStateWrites.int.test.ts
  */
 import { Router, type Request } from 'express';
 import { asStateUser } from '../../h5p/HvlH5pUser.js';
+import { withStateWriteVersion } from '../../h5p/storage/stateWriteVersion.js';
+import {
+  CONTENT_VERSION_PARAM,
+  contentVersionOf,
+} from '../../learningDesign/safeEditing/contentVersionOnPages.js';
 import { HttpError } from '../HttpError.js';
 import { requireActor } from '../h5pLocals.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
@@ -36,6 +46,9 @@ const BS_TOUR_FLAG = /^h5p-editor-branching-scenario-[a-z-]*tour-v1-seen$/;
 const refuseOtherLearner = (req: Request): void => {
   if (req.query.asUserId !== undefined) throw new HttpError(400, 'h5p.userData.asUserNotSupported');
 };
+
+/** The answer's message for a write from a page opened before a structural save (D-093); never shown. */
+const STALE_STATE = 'hvl:learner-state-stale';
 
 /** H5P sends flags as the strings "1" and "0". */
 const flag = (value: unknown): boolean => value === '1' || value === 1 || value === true;
@@ -94,17 +107,24 @@ export function userDataRoutes(deps: H5pRouteDeps): Router {
     ];
     const body = req.body as Record<string, unknown>;
     if (typeof body.data !== 'string') throw new HttpError(400, 'error.badRequest');
-    await manager.createOrUpdateContentUserData(
-      contentId,
-      dataType,
-      subContentId,
-      body.data,
-      flag(body.invalidate),
-      flag(body.preload),
-      asStateUser(actor),
-      actor.contextId,
-    );
-    res.json({ success: true });
+    const data = body.data;
+    const version = contentVersionOf(req.query[CONTENT_VERSION_PARAM]);
+    const write = () =>
+      manager.createOrUpdateContentUserData(
+        contentId,
+        dataType,
+        subContentId,
+        data,
+        flag(body.invalidate),
+        flag(body.preload),
+        asStateUser(actor),
+        actor.contextId,
+      );
+    let stale = false;
+    if (version === undefined) await write();
+    else ({ stale } = await withStateWriteVersion(version, write));
+    // WHY: 200, not 409: a refused request would show as a console error on the learner's page (see the header).
+    res.json(stale ? { success: false, message: STALE_STATE } : { success: true });
   });
   return router;
 }

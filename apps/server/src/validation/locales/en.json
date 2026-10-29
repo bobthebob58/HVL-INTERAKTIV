@@ -39,6 +39,11 @@
   "V-BRANCH-COLOUR": {
     "colourOnly": "The choice is only a colour. Not everyone sees colours, and screen readers read only the text. Write what the choice is about."
   },
+  "V-PLACEHOLDER": {
+    "guidance": "This field still holds guidance from the pattern: “{{text}}”. Write your own content instead, and remove the ⟦ and ⟧ marks.",
+    "videoMissing": "The interactive video has no video yet. Add a video. Without one, students see only an error message in English.",
+    "backgroundImageMissing": "The “Image Hotspots” activity has no background image yet. Add an image. Without one, students see only an error message in English."
+  },
   "PED-H01": {
     "tooLong": "The video is at least {{minutes}} minutes long (recommended at most {{max}}). Split it into segments of 6–9 minutes so students stay engaged (Guo, Kim & Rubin 2014)."
   },

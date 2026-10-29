@@ -1,7 +1,7 @@
 /**
- * Tests for the editor rules: creatable types, save order and checks, file cleanup.
+ * Tests for the editor rules: creatable types, save order and checks, learner-state resets, file cleanup.
  *
- * Spec: H5P-002, PROD-002, H5P-005, H5P-006, SEC-008
+ * Spec: H5P-002, PROD-002, H5P-005, H5P-006, SEC-008, PROD-013
  */
 import { describe, it, expect, afterAll } from 'vitest';
 import { Readable } from 'node:stream';
@@ -99,39 +99,60 @@ describe('[H5P-006] saving', () => {
     expect(JSON.stringify([stored, metadata.title])).not.toMatch(/onerror|<img/);
   });
 
-  it('[H5P-005] a refused save leaves learner state alone; an allowed save drops invalidated state', async () => {
-    // Arrange: an existing activity
+  it('[PROD-013] a refused save and a text-only save leave learner state alone', async () => {
+    // Arrange: an existing activity whose learners have state
     const testbed = await editorTestbed(LIBS);
     const author = testbed.user('author');
-    const id = await testbed.editor.saveOrUpdateContent(
-      undefined,
-      { question: 'Q', answers: [] },
-      META,
-      'H5P.MultiChoice 1.16',
-      author,
-    );
-    // Act and assert: a refused save
-    testbed.permissions.overrides.Edit = false;
-    await expect(
+    const save = (id: string | undefined, question: string) =>
       testbed.editor.saveOrUpdateContent(
         id,
-        { question: 'Q2', answers: [] },
+        { question, answers: ['Ja'] },
         META,
         'H5P.MultiChoice 1.16',
         author,
-      ),
-    ).rejects.toMatchObject({ httpStatusCode: 403 });
-    expect(testbed.invalidated).toEqual([id]);
-    // Act and assert: an allowed save
+      );
+    const id = await save(undefined, 'Q');
+    testbed.learnerStates.othersHaveState = true;
+    // Act: a save the permission system refuses, then a reworded question
+    testbed.permissions.overrides.Edit = false;
+    const refused = save(id, 'Q2');
+    await expect(refused).rejects.toMatchObject({ httpStatusCode: 403 });
     delete testbed.permissions.overrides.Edit;
-    await testbed.editor.saveOrUpdateContent(
-      id,
-      { question: 'Q3', answers: [] },
-      META,
-      'H5P.MultiChoice 1.16',
-      author,
-    );
-    expect(testbed.invalidated).toEqual([id, id]);
+    await save(id, 'Q3');
+    // Assert: no reset, not even for the new activity
+    expect(testbed.learnerStates.resets).toEqual([]);
+  });
+
+  it('[PROD-013] a structural save resets learner state, and needs confirmation while others have some', async () => {
+    // Arrange
+    const testbed = await editorTestbed(LIBS);
+    const author = testbed.user('author');
+    const save = (id: string | undefined, answers: string[], confirm?: boolean) =>
+      testbed.editor.saveOrUpdateContent(
+        id,
+        { question: 'Q', answers },
+        META,
+        'H5P.MultiChoice 1.16',
+        author,
+        {
+          confirmLearnerStateReset: confirm,
+        },
+      );
+    const id = await save(undefined, ['Ja']);
+    // Act and assert: nobody else has state, so the added option resets the author's own at once
+    await save(id, ['Ja', 'Nei']);
+    expect(testbed.learnerStates.resets).toEqual([id]);
+    // Act and assert: others have state, so the next structural save is refused until it is confirmed
+    testbed.learnerStates.othersHaveState = true;
+    await expect(save(id, ['Ja'])).rejects.toMatchObject({
+      status: 409,
+      errorCode: 'hvl:learner-state-reset-needed',
+    });
+    expect(await testbed.editor.contentManager.getContentParameters(id, author)).toMatchObject({
+      answers: ['Ja', 'Nei'],
+    });
+    await save(id, ['Ja'], true);
+    expect(testbed.learnerStates.resets).toEqual([id, id]);
   });
 
   it('[H5P-006] deletes the files an author removed from the activity', async () => {

@@ -151,8 +151,9 @@ describeWithServices('creating activities from pattern skeletons (probe P1)', ()
         );
         // WHY: the button's name ends with an icon-font glyph (U+F178).
         expect(branching?.tree).toMatch(/- button "Start kurset[^"]*"/);
-        // UD-021: without a start image, BranchingScenario shows its own default pictures, which have no alt text.
-        expect(branching?.imagesWithoutAlt.map((src) => src.split('/').pop())).toEqual([
+        // D-080: BranchingScenario's own start and end pictures (no start image) get alt="" from a11yRepairs.js.
+        expect(branching?.imagesWithoutAlt).toEqual([]);
+        expect(branching?.decorativeImages.map((src) => src.split('/').pop())).toEqual([
           'start-screen-default.jpg',
           'end-screen-default.jpg',
         ]);

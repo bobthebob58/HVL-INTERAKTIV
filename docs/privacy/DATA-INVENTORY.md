@@ -86,7 +86,7 @@ One H5P activity.
 | `status` | Draft or published | None | n/a | Until deleted by the author | PG |
 | `visibility` | Who may open it outside Canvas (PROD-006) | None | n/a | Until deleted by the author | PG |
 | `ownerUserId` | The author who owns it | Staff PII (by reference) | 6(1)(e) | Until deleted by the author | PG |
-| `version` | Increments on every save of the activity (D-074); xAPI statements record it, so insight compares like with like | None | n/a | Until deleted by the author | PG |
+| `version` | Increments on a structural save of the activity, which resets learners' saved progress (D-093, amending D-074); xAPI statements record it, so insight compares like with like; learner pages send it with each state write | None | n/a | Until deleted by the author | PG |
 | `sourceContentId` | The activity this one was copied from | None | n/a | Until deleted by the author | PG |
 | `createdAt` | Sorting and audit | None | n/a | Until deleted by the author | PG |
 | `updatedAt` | Sorting and audit; the publish flow checks it so a changed activity is never published unseen (D-074) | None | n/a | Until deleted by the author | PG |

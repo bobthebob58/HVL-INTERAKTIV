@@ -627,12 +627,12 @@ never copies learner data.</li>
 <div class="req-body"><p>A learner who leaves an activity and returns on any device resumes with their previous answers and position. See <a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a>.</p>
 <p class="req-source">Defined in <a href="#r-PROD-008">00 Product and pedagogy, PROD-008</a> · Product</p></div>
 </details>
-<details class="req" id="x-PROD-009" data-area="PROD" data-priority="MUST" data-session="S5" data-status="planned" data-text="prod-009 formative defaults for all patterns, *retry* and *show solution* are enabled, there are no time limits, and pass
+<details class="req" id="x-PROD-009" data-area="PROD" data-priority="MUST" data-session="S5" data-status="tested" data-text="prod-009 formative defaults for all patterns, *retry* and *show solution* are enabled, there are no time limits, and pass
 thresholds are informative rather than gatekeeping.
 - **acceptance:** pattern skeletons set the relevant behaviour fields. the hint rule `ped-h07`
   flags activities where an author has turned these off.
 - **verify:** unit tests on skeleton parameters.">
-<summary><span class="req-id">PROD-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Formative defaults</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">PROD-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Formative defaults</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>For all patterns, <em>Retry</em> and <em>Show solution</em> are enabled, there are no time limits, and pass
 thresholds are informative rather than gatekeeping.</p>
 <ul>
@@ -1976,12 +1976,12 @@ from a closed node tree without HTML; the phase matrix and the catalogue are pla
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-010">04 Læringsdesign studio, PED-010</a> · Læringsdesign</p></div>
 </details>
-<details class="req" id="x-PED-011" data-area="PED" data-priority="MUST" data-session="S5" data-status="in code" data-text="ped-011 patterns are editable without code adding or editing a pattern needs only yaml, mdx and a json skeleton, with no typescript changes.
+<details class="req" id="x-PED-011" data-area="PED" data-priority="MUST" data-session="S5" data-status="tested" data-text="ped-011 patterns are editable without code adding or editing a pattern needs only yaml, mdx and a json skeleton, with no typescript changes.
 `content/laeringsdesign/readme.md` explains how, for non-developers.
 - **amended (d-083, d-084, 2026-10-28):** yaml, markdown and a json skeleton, all in
   `content/laeringsdesign/patterns/&lt;id&gt;/`.
 - **verify:** a test adds a fixture pattern directory and asserts it appears.">
-<summary><span class="req-id">PED-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Patterns are editable without code</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">PED-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Patterns are editable without code</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Adding or editing a pattern needs only YAML, MDX and a JSON skeleton, with no TypeScript changes.
 <code>content/laeringsdesign/README.md</code> explains how, for non-developers.</p>
 <ul>
@@ -6483,8 +6483,8 @@ acknowledgements and an audit event (rule IDs only, no reason text, <a class="re
 already published runs the same gate. Only those who may edit (H5P-006) may publish.</li>
 <li><strong>Consequences:</strong> Acknowledgements keyed on a path ask again when list items move; that fails safe.</li>
 <li><strong>Amendment (2026-10-23, W3):</strong> every save of an existing activity increases <code>H5PContent.version</code> (the inventory
-used to say &quot;on structural change&quot;); a refused save of a published activity is 409 <code>hvl:published-save-blocked</code>
-with the findings, and nothing is saved; findings, publish and unpublish answer 404 when the person may not view
+used to say &quot;on structural change&quot;; since D-093&#39;s 2026-10-29 amendment only a structural save does); a refused
+save of a published activity is 409 <code>hvl:published-save-blocked</code> with the findings, and nothing is saved; findings, publish and unpublish answer 404 when the person may not view
 the activity and 403 <code>hvl:edit-not-allowed</code> when they may view but not edit; unpublish clears <code>publishedAt</code>, and
 publishing an activity that is already published validates again and moves <code>publishedAt</code> to now.</li>
 <li><strong>Amendment (2026-10-24, review fixes F-01, F-02):</strong> the save gate validates what the editor will store, not the
@@ -6794,6 +6794,7 @@ and end pictures with no <code>alt</code> attribute (WCAG 1.1.1). The pictures a
 H5P.ImageHotspots&#39; &quot;Missing required background image&quot; are English text written by the libraries themselves
 (H5P.Video overwrites any <code>l10n</code> it is given), so they go into the register too; V-PLACEHOLDER (D-086 as amended)
 keeps an activity in that state from being published by mistake.</li>
+<li><strong>Amendment (2026-10-29, S5 W2a):</strong> BranchingScenario&#39;s default pictures are now repaired (<code>alt=&quot;&quot;</code>), so the upstream register names them in its header among the page repairs, still to be reported upstream for the conformance report (UD-040), rather than as an entry: an entry that no longer occurs would fail the suite. The two English library texts are entries in the register&#39;s <code>UPSTREAM_ENGLISH_TEXTS</code>, pinned by a test against the libraries&#39; code.</li>
 </ul>
 <h3 id="decisions--d-081--one-nodejs-system-with-lumis-h5p-server-half-an-official-php-server-half-was-considered-and-not-chosen" tabindex="-1">D-081 · One Node.js system with Lumi&#39;s H5P server half; an official PHP server half was considered and not chosen</h3>
 <ul>
@@ -6875,6 +6876,8 @@ a file under <code>content/</code> is staged. The web app gets the content as re
 <li><p><strong>Consequences:</strong> Renaming a label is a content change (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>). A library that is pinned but not installed makes
 its patterns unavailable at runtime (D-085), not a boot failure. The shared YAML error reporting moves out of
 <code>validationContext.ts</code> into the new loader&#39;s folder, <code>apps/server/src/learningDesign/content/</code>.</p>
+</li>
+<li><p><strong>Amendment (2026-10-29, S5 W2a):</strong> skeleton versions are checked by <code>content:check</code> against the installed libraries&#39; own semantics (the main library is the newest installed minor; each sub-content is a version its field offers), which CI runs after <code>h5p:fetch-libraries</code>. The server&#39;s start-up checks only the <code>H5P.X a.b</code> form, not the pinned list; a skeleton naming a library that is not installed is answered 409 <code>hvl:pattern-unavailable</code> at creation instead.</p>
 </li>
 </ul>
 <h3 id="decisions--d-083--spec-deviation-ped-002-the-guide-is-commonmark-markdown-not-mdx" tabindex="-1">D-083 · <code>SPEC-DEVIATION</code> PED-002: the guide is CommonMark Markdown, not MDX</h3>
@@ -7264,6 +7267,36 @@ takes focus back only when the H5P editor&#39;s own frame takes it. After the di
 focuses it and only then announces the outcome. In the portal the editor page asks the activity page to make
 its own controls inert while the dialog is open; Canvas&#39;s page is out of our reach. The dialog&#39;s look comes
 from a stylesheet file under the page&#39;s policy, with the <code>:focus-visible</code> ring the rest of the service uses.</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-10-29, S5 server side):</strong><ul>
+<li><strong>The version:</strong> only a structural save that goes through raises <code>H5PContent.version</code>, not every save as D-074&#39;s
+2026-10-23 amendment said: a text-only save keeps the learners&#39; state, so the pages they have open must go on
+saving under the same version. This amends D-074 and the data inventory.</li>
+<li><strong>What a reset deletes:</strong> every structural save that goes through deletes all the activity&#39;s state rows and
+raises the version in one transaction, also when the check found only the saver&#39;s: a row written between the
+check and the write belongs to the old structure.</li>
+<li><strong>The confirmation:</strong> <code>confirmLearnerStateReset</code> (a boolean, else 400) in the body of <code>PUT /h5p/content/:id</code>
+reaches <code>HvlH5PEditor.saveOrUpdateContent</code> as an explicit last argument (<code>SaveChoice</code>), not through the
+request&#39;s async context: every save of an existing activity comes through that route, so a save without it can
+never reset by accident. <code>POST /h5p/content</code> creates an activity, which has no state.</li>
+<li><strong>Old pages:</strong> the player&#39;s state URL (the portal and <code>/lti/play</code>) carries <code>contentVersion=&lt;version&gt;</code>, read
+before Lumi renders. The state route makes such a write only while the activity has that version, checked in
+the write&#39;s own transaction under a <code>FOR SHARE</code> lock on the activity row, which the reset&#39;s version update waits
+for. A stale write is answered 200 <code>{ success: false, message: &#39;hvl:learner-state-stale&#39; }</code>: h5p.js hands it to
+an error callback the players&#39; autosave does not set, so nothing is retried or shown. A write without the
+parameter is not checked; a malformed one is 400.</li>
+<li><strong>Save as a copy:</strong> <code>POST /h5p/content/:id/copy</code> takes <code>{ params, metadata }</code> as the editor gives them, is for
+portal authors only (an ltik is 401 <code>hvl:unauthenticated</code>, a portal learner 403, the CSRF token as on every
+unsafe method), answers 201 <code>{ contentId }</code>, and passes the duplicator&#39;s errors on unchanged.</li>
+<li><strong>Shuffling:</strong> MultiChoice&#39;s <code>randomAnswers</code> and QuestionSet&#39;s <code>randomQuestions</code> are not structural (a resumed
+attempt keeps its saved order, questionset.js:391); <code>poolSize</code> is.</li>
+<li><strong>The real editor&#39;s round trip:</strong> an unchanged save through the editor page must stay text-only for every type
+(<code>editorRoundTrip.browser.int.test.ts</code>). H5P&#39;s editor drops a branching-question node&#39;s own <code>nextContentId: -1</code>,
+which the player reads as -1 when it is missing, so a missing one counts as -1. The editor also upgrades an
+activity to the newest installed minor version of its library when it saves it; as the signature compares
+<code>Name major.minor</code>, the first save after HVL installs a newer minor version is structural and asks, which errs
+on the strict side.</li>
 </ul>
 </li>
 </ul>
@@ -7774,14 +7807,17 @@ S5 is done), and all of S5 is done in this session.</li>
  after edits, tagged PDF, Markdown tree and Mustache, the <code>⟦…⟧</code> marker, the editor&#39;s <code>&lt;dialog&gt;</code></li>
 </ol>
 </li>
-<li><span class="task">○ To do:</span> <ol start="2">
+<li><span class="task">✓ Done:</span> <ol start="2">
 <li>Contracts: migration <code>s5_learning_design</code>, API contract split and schemas, server wiring and env, content
- loader and <code>content:check</code>, <code>ContentDuplicator</code>, web scaffolding (tab registry, pages, navigation)</li>
+ loader and <code>content:check</code>, <code>ContentDuplicator</code>, web scaffolding (tab registry, pages, navigation) (309fc19;
+ amendments to D-087, D-090…D-092, D-096, D-099); the probes hardened for slow CI runners (e4621d5)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="3">
 <li>Guide, phase matrix and catalogue (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>…<a class="req-ref" href="#r-PED-003"><code>PED-003</code></a>); patterns and V-PLACEHOLDER (<a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>, <a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>,
- <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>, <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>)</li>
+ <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>, <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>)
+ — stage 1 done: pattern format, loader and checks, creation API, V-PLACEHOLDER incl. missing media, the
+   BranchingScenario picture repair (W2a); the nine patterns&#39; content follows (W2b)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="3">
@@ -7789,7 +7825,9 @@ S5 is done), and all of S5 is done in this session.</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="3">
-<li>Co-authors, content bank and duplicate (<a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a>); safe editing (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>)</li>
+<li>Co-authors, content bank and duplicate (<a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a>); safe editing (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>)
+ — stage 1 done: structure signature, the 409 save gate, stale state writes dropped, the copy route (W5a);
+   the editor dialog follows (W5b)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="3">

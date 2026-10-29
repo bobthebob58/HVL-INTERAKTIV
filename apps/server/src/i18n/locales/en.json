@@ -134,6 +134,22 @@
       "dismiss": "Do not show this notice again"
     }
   },
+  "safeEditing": {
+    "dialog": {
+      "title": "This change resets students’ progress",
+      "body": "Structural changes, such as adding, removing or reordering questions or answer options, reset the progress students have saved in the activity. Rewording an answer option also changes what the saved choices mean.",
+      "cancel": "Cancel",
+      "reset": "Reset progress and save",
+      "saveAsCopy": "Save as new version",
+      "saveAsCopyHint": "The new version is a private draft. The original and the students’ progress stay unchanged.",
+      "canvasPointer": "In Canvas you can only reset the progress or cancel. To save the change as a new version instead, open the activity in the HVL Interaktiv portal and save it there."
+    },
+    "outcome": {
+      "resetAndSaved": "The change is saved, and the students’ progress is reset.",
+      "savedAsCopy": "The change is saved as a new version. The original and the students’ progress are unchanged.",
+      "cancelled": "The change is not saved."
+    }
+  },
   "learningDesign": {
     "error": {
       "patternUnavailable": "This pattern cannot be used right now because a content type it needs is not installed. Ask an administrator for help, or create a blank activity.",

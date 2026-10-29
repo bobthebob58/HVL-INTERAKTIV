@@ -1,11 +1,10 @@
 /**
- * learnerStateAfterEditBench — a server with the real content types where an author's edit keeps the learner state
- * rows, so probe P3 can see what a learner meets when an activity changed under their saved state.
+ * learnerStateAfterEditBench — a server with the real content types where the learner's state rows are put back
+ * after an author's edit, so probe P3 can see what a learner meets when an activity changed under their saved state.
  *
- * Why: today every save deletes the state H5P marks as invalidated (D-038, HvlH5PEditor.saveOrUpdateContent). PROD-013
- *      keeps state after non-structural edits (D-093), so the probe must observe resume behaviour after each kind of
- *      edit. It saves through `saveOrUpdateContentReturnMetaData`, which runs every HVL save check but never touches
- *      learner state, and it puts the learner's saved row back before each edit is played.
+ * Why: the probe must observe what a learner meets after each kind of edit with the old state still there. Since
+ *      PROD-013 (D-093) a structural save resets learner state once the author confirms, so the bench saves with
+ *      every HVL check and the confirmation, and puts the learner's saved row back before each edit is played.
  * Spec: PROD-013, H5P-005
  * Invariants:
  *   - Activities are the packages' own examples, imported with their files and published, so learners may view them.
@@ -55,7 +54,7 @@ export interface StateBench {
   readonly learner: TestActor;
   /** Imports the example of one type (e.g. `H5P.MultiChoice`) as a published activity. */
   importExample(machineName: string): Promise<BenchActivity>;
-  /** Saves new parameters as the author with every HVL check, keeping all learner state rows. */
+  /** Saves new parameters as the author with every HVL check and a confirmed reset; `restoreRows` puts rows back. */
   saveParams(activity: BenchActivity, params: object): Promise<void>;
   /** The learner state rows of an activity, as stored. */
   stateRows(contentId: string): Promise<StateRowSnapshot[]>;
@@ -117,14 +116,15 @@ export async function openStateBench(): Promise<StateBench> {
       };
     },
     saveParams: async (activity, params) => {
-      // WHY: the ReturnMetaData variant runs permission, library, sub-content and file checks but, unlike
-      // saveOrUpdateContent, never deletes invalidated learner state (D-038), which is what the probe must keep.
-      await tb.runtime.editor.saveOrUpdateContentReturnMetaData(
+      // WHY: confirmed, because the learner's row makes a structural edit ask first (D-093); the caller then puts
+      // the row back that the reset deleted, so the learner resumes the old state on the new parameters.
+      await tb.runtime.editor.saveOrUpdateContent(
         activity.id,
         params as ContentParameters,
         activity.metadata as IContentMetadata,
         activity.ubername,
         asAccountUser(author.actor),
+        { confirmLearnerStateReset: true },
       );
     },
     stateRows,

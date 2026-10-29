@@ -2,7 +2,7 @@
  * Tests for the validator engine: the rule set, nested paths, determinism, purity of input, unknown libraries and
  * robustness on malformed parameters.
  *
- * Spec: UD-020, UD-021, PED-020
+ * Spec: UD-020, UD-021, PED-020, PROD-001
  */
 import { describe, expect, it } from 'vitest';
 import { compareFindings, orderFindings } from '../../src/validation/findingOrder.js';
@@ -21,6 +21,8 @@ const UD_RULES_2 = [
   'V-COLOUR-WORDS',
   'V-BRANCH-COLOUR',
 ];
+/** Rules for what a pattern leaves behind (PROD-001, D-086), after the universal-design rules. */
+const PATTERN_RULES = ['V-PLACEHOLDER'];
 const PED_RULES = Array.from({ length: 11 }, (_, i) => `PED-H${String(i + 1).padStart(2, '0')}`);
 
 const sub = (library: string, params: unknown) => ({ library, params, subContentId: 's' });
@@ -53,13 +55,14 @@ const deepFreeze = <T>(value: T): T => {
 };
 
 describe('[UD-020] validateContent', () => {
-  it('[UD-020] runs the 11 rules of UD-021 and the 11 of spec 04 §5, and pedagogy never blocks publishing', () => {
+  it('[UD-020] runs the 11 rules of UD-021, V-PLACEHOLDER and the 11 of spec 04 §5, and pedagogy never blocks publishing', () => {
     // Act
     const ids = RULES.map((rule) => rule.id);
     // Assert
-    expect(ids).toEqual([...UD_RULES, ...UD_RULES_2, ...PED_RULES]);
-    for (const rule of RULES)
-      expect(rule.requirement).toBe(rule.id.startsWith('PED-') ? 'PED-020' : 'UD-021');
+    expect(ids).toEqual([...UD_RULES, ...UD_RULES_2, ...PATTERN_RULES, ...PED_RULES]);
+    const requirementOf = (id: string) =>
+      id.startsWith('PED-') ? 'PED-020' : PATTERN_RULES.includes(id) ? 'PROD-001' : 'UD-021';
+    for (const rule of RULES) expect(rule.requirement).toBe(requirementOf(rule.id));
     expect(RULES.filter((r) => r.id.startsWith('PED-')).map((r) => r.severity)).not.toContain('error');
   });
 

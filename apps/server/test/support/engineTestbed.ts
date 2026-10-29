@@ -73,6 +73,8 @@ export async function engineTestbed(
     permissionSystem: permissions,
     // WHY: no database here, so no activity is a paste source anyone may copy from (the guard refuses them all).
     contentFacts: { factsFor: async () => undefined },
+    // WHY: no database here; nobody else has learner state, and a structural save's reset has nothing to delete.
+    learnerStates: { hasOtherLearnersState: async () => false, resetLearnerState: async () => undefined },
     audit,
     translate,
     fileSanitizers,

@@ -39,6 +39,11 @@
   "V-BRANCH-COLOUR": {
     "colourOnly": "Valet er berre ein farge. Ikkje alle ser fargar, og skjermlesarar les berre teksten. Skriv kva valet går ut på."
   },
+  "V-PLACEHOLDER": {
+    "guidance": "Feltet har framleis rettleiing frå mønsteret: «{{text}}». Skriv ditt eige innhald i staden, og ta bort teikna ⟦ og ⟧.",
+    "videoMissing": "Den interaktive videoen har ingen video enno. Legg til ein video. Utan han ser studentane berre ei feilmelding på engelsk.",
+    "backgroundImageMissing": "«Bilete med klikkpunkt» har ikkje noko bakgrunnsbilete enno. Legg til eit bilete. Utan det ser studentane berre ei feilmelding på engelsk."
+  },
   "PED-H01": {
     "tooLong": "Videoen er minst {{minutes}} minutt lang (tilrådd høgst {{max}}). Del han i bolkar på 6–9 minutt, slik at studentane held på merksemda (Guo, Kim & Rubin 2014)."
   },

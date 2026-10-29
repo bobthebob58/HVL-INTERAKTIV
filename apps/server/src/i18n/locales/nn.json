@@ -134,12 +134,28 @@
       "dismiss": "Ikkje vis meldinga igjen"
     }
   },
+  "safeEditing": {
+    "dialog": {
+      "title": "Endringa nullstiller framgangen til studentane",
+      "body": "Strukturelle endringar, som å leggje til, fjerne eller byte rekkjefølgje på spørsmål eller svaralternativ, nullstiller framgangen studentane har lagra i aktiviteten. Skriv du om eit svaralternativ, endrar du òg kva dei lagra vala betyr.",
+      "cancel": "Avbryt",
+      "reset": "Nullstill framgangen og lagre",
+      "saveAsCopy": "Lagre som ny versjon",
+      "saveAsCopyHint": "Den nye versjonen blir eit privat utkast. Originalen og framgangen til studentane blir ikkje endra.",
+      "canvasPointer": "I Canvas kan du berre nullstille framgangen eller avbryte. Vil du heller lagre endringa som ein ny versjon, opnar du aktiviteten i HVL Interaktiv-portalen og lagrar ho der."
+    },
+    "outcome": {
+      "resetAndSaved": "Endringa er lagra, og framgangen til studentane er nullstilt.",
+      "savedAsCopy": "Endringa er lagra som ein ny versjon. Originalen og framgangen til studentane er ikkje endra.",
+      "cancelled": "Endringa er ikkje lagra."
+    }
+  },
   "learningDesign": {
     "error": {
       "patternUnavailable": "Mønsteret kan ikkje brukast no, fordi ein innhaldstype det treng, ikkje er installert. Be ein administrator om hjelp, eller lag ein tom aktivitet.",
       "patternChoiceInvalid": "Vel ein fase og ein innhaldstype som mønsteret tilbyr.",
       "learningDesignConflict": "Læringsdesignet vart endra i mellomtida. Last sida på nytt og prøv igjen.",
-      "learnerStateResetNeeded": "Endringa endrar oppbygginga av aktiviteten, og andre har lagra framdrift i han. Stadfest at framdrifta skal nullstillast, eller lagre endringa som ny versjon.",
+      "learnerStateResetNeeded": "Endringa endrar oppbygginga av aktiviteten, og andre har lagra framgang i han. Stadfest at framgangen skal nullstillast, eller lagre endringa som ny versjon.",
       "ownerOnly": "Berre eigaren av aktiviteten kan gjere dette.",
       "coauthorNotEligible": "Denne personen kan ikkje leggjast til som medforfattar. Berre tilsette ved HVL kan vere medforfattarar.",
       "coauthorLimit": "Aktiviteten har allereie så mange medforfattarar som er tillate.",
