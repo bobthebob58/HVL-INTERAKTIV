@@ -90,6 +90,9 @@ function hvliSaveContent(content, contentId, config, confirmLearnerStateReset) {
 /** «Lagre som ny versjon» (portal only): saves the edit as a new private draft linked to the activity. */
 function hvliSaveAsCopy(content, contentId, config) {
   var url = '/h5p/content/' + encodeURIComponent(contentId) + '/copy';
-  // WHY: H5P's editor gives `{ params, metadata }` as a JSON string; the copy route takes that object as it is.
-  return hvliSendJson(url, 'POST', JSON.parse(content.params), config);
+  // WHY: H5P's editor gives `{ params, metadata }` as a JSON string; the copy route takes that object as it is, and
+  // the library the editor shaped the parameters for, which may be a newer minor version (D-093, S5 W4).
+  var body = JSON.parse(content.params);
+  body.library = content.library;
+  return hvliSendJson(url, 'POST', body, config);
 }

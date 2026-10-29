@@ -75,6 +75,7 @@ const actorFor = (c: Pick<Cell, 'role' | 'reach' | 'launched'>): HvlH5pActor => 
   locale: 'nn',
   hvlMember: c.reach.includes('hvl'),
   feideAuthenticated: c.reach.includes('feide'),
+  studentAuthor: false,
   ltiLaunchContentIds: c.launched ? [CONTENT_ID] : [],
 });
 

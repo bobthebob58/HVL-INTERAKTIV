@@ -331,8 +331,15 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
         screenshots in `nn` sent to the owner (2026-10-29)
 - [ ] 3. Co-authors, content bank and duplicate (`PROD-007`); safe editing (`PROD-013`)
       — stage 1 done: structure signature, the 409 save gate, stale state writes dropped, the copy route (W5a);
-        stage 2 done: the save choice dialog in the editor, portal and Canvas, inert page while open (W5b)
+        stage 2 done: the save choice dialog in the editor, portal and Canvas, inert page while open (W5b);
+        stage 4 done: staff eligibility written at Feide login, people search (rate-limited, never logged),
+        co-authors, the content bank for HVL staff authors (listing cleared on unpublish or private), duplicate with
+        attribution for editors, the copy's library version, the Deling tab, the bank page, /personvern (W4)
 - [ ] 3. Mappe export in Markdown and tagged PDF (`MAPPE-001`…`MAPPE-004`)
+      — stage 4 done: template and criteria loader (optional until written), Mustache rendering with the Markdown
+        escaper and refused value places, the reader's guide from the criteria, the Del 1 word count, minimum group
+        size, the PDF from Chromium with bounded slots and time limits, the routes and the /mappe page (W6a; the
+        template and criteria text follow in W6b)
 - [ ] 4. Integration: axe suite for the new pages and the dialog, e2e flows, screenshots in `nn` to the owner
 - [ ] 5. Docs: `content/` READMEs for ALU, GLOSSARY, Evaluator Guide, `/personvern`, ALU review packet
 - [ ] 6. Review with skeptics, two verification passes

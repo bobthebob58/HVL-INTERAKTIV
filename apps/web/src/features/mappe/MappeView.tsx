@@ -7,26 +7,29 @@
  *      is a file answer (../../api/apiRequest.ts `apiFileRequest`, D-099) that the server never stores (MAPPE-003).
  * Spec: MAPPE-001, MAPPE-003, AUTH-001
  * Invariants:
- *   - The heading is always shown; the content only to a signed-in author (../../components/AuthorGate.tsx).
- * Collaborators: ../../app/(portal)/mappe/page.tsx, ../../components/AuthorGate.tsx, ../../api/apiRequest.ts.
- * Tests: apps/web/test/features/studioPages.test.tsx
+ *   - The heading and the introduction are always shown; the export only to a signed-in author
+ *     (../../components/AuthorGate.tsx), and the server checks every request again.
+ * Collaborators: ../../app/(portal)/mappe/page.tsx, ../../components/AuthorGate.tsx, ./MappeWorkspace.tsx.
+ * Tests: apps/web/test/features/studioPages.test.tsx, apps/web/test/features/MappeView.test.tsx
  */
 'use client';
 
 import { AuthorGate } from '../../components/AuthorGate';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
+import { MappeWorkspace } from './MappeWorkspace';
 
 /**
  * The portfolio page's content.
- * @returns The heading and, for authors, the export.
+ * @returns The heading, the introduction and, for authors, the export.
  */
 export function MappeView() {
   const locale = useLocale();
   return (
     <>
       <h1>{t('mappe.heading', locale)}</h1>
-      <AuthorGate>{() => null}</AuthorGate>
+      <p>{t('mappe.intro', locale)}</p>
+      <AuthorGate>{() => <MappeWorkspace />}</AuthorGate>
     </>
   );
 }

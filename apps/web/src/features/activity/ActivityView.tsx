@@ -20,7 +20,8 @@
  *   - Once the activity has loaded, the document title names it ("<title> – HVL Interaktiv", WCAG 2.4.2), and every
  *     save is announced, also the second save with the same words (WCAG 4.1.3, ../../components/useAnnouncement.ts).
  *   - The heading carries the activity's own language when it differs from the page's (`lang`, UD-010).
- *   - After «Lagre som ny versjon» the page says it opens the new version, then goes to its Rediger tab.
+ *   - After «Lagre som ny versjon» the page says it opens the new version, then goes to its Rediger tab; a copy's
+ *     page shows where it came from to its editors (./SourceAttributionNote.tsx, PROD-007).
  * Collaborators: ./tabs/activityTabs.ts, ./tabs/activityTab.ts, ../../components/Tabs.tsx, ./useActivityEditor.ts
  *   (the editor frame's messages).
  * Tests: apps/web/test/features/ActivityView.test.tsx, apps/web/test/features/activityTabs.test.tsx,
@@ -44,6 +45,7 @@ import { useLocale } from '../../i18n/LocaleContext';
 import { pageTitle } from '../../i18n/pageTitle';
 import { partLanguage } from '../../i18n/partLanguage';
 import { t } from '../../i18n/translate';
+import { SourceAttributionNote } from './SourceAttributionNote';
 import type { ActivityTabProps } from './tabs/activityTab';
 import { activityTabsFor, selectableTabId } from './tabs/activityTabs';
 import { EDIT_TAB_ID } from './tabs/EditTab';
@@ -153,6 +155,7 @@ function Workspace({
         <StatusBadge status={detail.status} locale={locale} />
       </p>
       {detail.status === 'published' && detail.mayEdit ? <p>{t('activity.publishedNote', locale)}</p> : null}
+      <SourceAttributionNote detail={detail} />
       <p role="status" className="sr-only">
         {announcement}
       </p>

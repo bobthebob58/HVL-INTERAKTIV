@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAPPE_MAX_ACTIVITIES,
   mappeActivityListSchema,
+  mappeCriteriaSetListSchema,
   mappeExportQuerySchema,
   mappePreviewSchema,
   mappeRequestSchema,
@@ -66,5 +67,25 @@ describe('[MAPPE-002] the word-count preview', () => {
     expect(mappePreviewSchema.safeParse(preview).success).toBe(true);
     expect(mappePreviewSchema.safeParse({ ...preview, words: -1 }).success).toBe(false);
     expect(mappePreviewSchema.safeParse({ ...preview, wordLimit: 0 }).success).toBe(false);
+  });
+
+  it('[MAPPE-002] the criteria sets name the default set and each set with its title in three languages and limits', () => {
+    // Arrange
+    const set = {
+      id: 'hvl-merittering-2025',
+      title: { nn: 'Merittering 2025', nb: 'Merittering 2025', en: 'Merit 2025' },
+      wordLimit: 7500,
+      attachmentLimit: 11,
+      limitsToVerify: true,
+    };
+    // Act and assert
+    expect(mappeCriteriaSetListSchema.safeParse({ defaultSet: set.id, sets: [set] }).success).toBe(true);
+    expect(mappeCriteriaSetListSchema.safeParse({ defaultSet: set.id, sets: [] }).success).toBe(false);
+    expect(
+      mappeCriteriaSetListSchema.safeParse({
+        defaultSet: set.id,
+        sets: [{ ...set, title: { nn: 'Berre nynorsk' } }],
+      }).success,
+    ).toBe(false);
   });
 });

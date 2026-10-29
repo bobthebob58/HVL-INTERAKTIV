@@ -29,7 +29,7 @@ A person who uses the service. Learner rows have no name or e-mail (database CHE
 | `displayName` | Name shown to co-authors and in the portfolio export (staff only); from S5 also to HVL colleagues in co-author search (D-090), on the owner's content-bank listings (D-091) and as the source author of a copy (D-092) | Staff PII | 6(1)(e) | Account | PG |
 | `email` | Contact for co-author invitations (staff only) | Staff PII | 6(1)(e) | Account | PG |
 | `createdAt` | Account age, for purge and audit | None | n/a | Account; learner rows: yearly purge | PG |
-| `coAuthorSearchableAt` | Lets colleagues find an HVL staff member as a co-author (PROD-007, D-090): set at each Feide login with an `employee`, `faculty` or `staff` affiliation, cleared at a Feide login without one, and ignored once 13 months old. Never set for learners, student authors or LTI-only accounts | Staff PII | 6(1)(e) | Account; replaced at each Feide login, not searchable after 13 months | PG |
+| `coAuthorSearchableAt` | Lets colleagues find an HVL staff member as a co-author (PROD-007, D-090): set at each Feide login of an HVL staff author (an HVL member with the author role, i.e. an `employee`, `faculty` or `staff` affiliation, who is not a student author), cleared at a Feide login that is not one, never changed by an LTI launch, and ignored once 13 months old. Never set for learners, student authors, admin-only members or LTI-only accounts | Staff PII | 6(1)(e) | Account; replaced at each Feide login, not searchable after 13 months | PG |
 
 ## Identity
 
@@ -91,7 +91,7 @@ One H5P activity.
 | `createdAt` | Sorting and audit | None | n/a | Until deleted by the author | PG |
 | `updatedAt` | Sorting and audit; the publish flow checks it so a changed activity is never published unseen (D-074) | None | n/a | Until deleted by the author | PG |
 | `publishedAt` | When the activity was last published through the publish flow (PROD-003); empty while it is a draft | None | n/a | Until deleted by the author | PG |
-| `bankListedAt` | When the owner listed the activity in the HVL content bank, where HVL authors see it and may copy it (PROD-007, D-091); empty when not listed | None | n/a | Until the owner withdraws the listing, makes the activity private or unpublishes it | PG |
+| `bankListedAt` | When the owner listed the activity in the HVL content bank, where HVL staff authors (not student authors) see it and may copy it (PROD-007, D-091 as amended); empty when not listed | None | n/a | Until the owner withdraws the listing, makes the activity private or unpublishes it | PG |
 | `sourceAuthorUserId` | The owner of the source activity when this copy was made, so the copy credits them; their name is read when the copy is shown (PROD-007, D-092) | Staff PII (by reference) | 6(1)(e) | Until the copy is deleted; set to empty when the source author's account is deleted | PG |
 
 ## H5PContentFile
@@ -373,3 +373,4 @@ cookie (D-057). Learner state is never in Redis: it lives in PostgreSQL (`H5PUse
 | H5P locks `@simple-redis-mutex:lock-install-library:<library>` and `…:lock-install-from-directory:<library>` (Lumi's `RedisLockProvider`; no `hvli:` prefix) | Serialise library installs across servers | None | n/a | Seconds (while the install runs) | Redis |
 | `@simple-redis-mutex:fencing-tokens` | The lock library's fencing counter (an integer) | None | n/a | Never expires | Redis |
 | lease `hvli:h5p:temporary-file-cleanup` | A random node ID: one server cleans temporary editor files per interval | None | n/a | About 5 minutes | Redis |
+| counter `hvli:people-search:<userId>` | How many co-author searches the person made in the current minute, for the rate limit (D-090); a number, never the query | Staff PII (by reference) | 6(1)(e) | 60 seconds | Redis |

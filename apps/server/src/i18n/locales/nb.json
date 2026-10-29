@@ -168,7 +168,73 @@
       "mappeTooMany": "Du har valgt for mange aktiviteter til mappen. Velg færre og prøv igjen.",
       "criteriaSetUnknown": "Kriteriesettet finnes ikke. Last inn siden på nytt og prøv igjen.",
       "pdfUnavailable": "PDF-filen kan ikke lages akkurat nå. Last ned Markdown-filen i stedet.",
-      "pdfBusy": "Det lages mange PDF-filer akkurat nå. Vent litt og prøv igjen, eller last ned Markdown-filen."
+      "pdfBusy": "Det lages mange PDF-filer akkurat nå. Vent litt og prøv igjen, eller last ned Markdown-filen.",
+      "mappeNotReady": "Malen og kriteriene for den pedagogiske mappen er ikke lagt inn ennå, så mappen kan ikke lages. Prøv igjen senere."
     }
+  },
+  "mappe": {
+    "placeholder": {
+      "author": "[navnet ditt]",
+      "untitled": "[uten tittel]",
+      "phase": "ingen fase valgt",
+      "course": "ingen emnekode",
+      "outcomes": "ingen læringsutbytter skrevet",
+      "rationale": "ingen begrunnelse skrevet",
+      "notPublished": "ikke publisert",
+      "attachment": "[fyll inn vedlegg]"
+    },
+    "status": {
+      "draft": "utkast",
+      "published": "publisert"
+    },
+    "contentType": {
+      "CoursePresentation": "Kurspresentasjon",
+      "InteractiveVideo": "Interaktiv video",
+      "QuestionSet": "Spørsmålssett",
+      "InteractiveBook": "Interaktiv bok",
+      "Column": "Kolonne",
+      "DragText": "Dra ordene",
+      "MultiChoice": "Flervalg",
+      "Blanks": "Fyll inn ordene",
+      "ImageHotspots": "Bilde med klikkpunkter",
+      "BranchingScenario": "Forgrenet scenario"
+    },
+    "outcomeCategory": {
+      "kunnskap": "kunnskap",
+      "ferdigheiter": "ferdigheter",
+      "generell-kompetanse": "generell kompetanse"
+    },
+    "outcome": "{{text}} ({{category}})",
+    "phaseCount": "{{phase}}: {{count}}",
+    "noPhase": "uten fase",
+    "readersGuide": {
+      "criterion": "Kriterium",
+      "chapter": "Hvor i mappen",
+      "attachment": "Vedlegg"
+    },
+    "references": {
+      "none": "Ingen av de valgte aktivitetene er laget fra et mønster med referanser. Skriv inn referansene dine her."
+    },
+    "findings": {
+      "none": "Sjekken for universell utforming fant ingen feil eller advarsler.",
+      "summary": "Sjekken for universell utforming: {{errors}} feil, av dem {{acknowledged}} begrunnet, og {{warnings}} advarsler.",
+      "error": "Feil",
+      "warning": "Advarsel",
+      "hint": "Tips",
+      "acknowledged": "begrunnet {{date}}: «{{reason}}»",
+      "notAcknowledged": "ikke begrunnet",
+      "noReasonNeeded": "trenger ingen begrunnelse"
+    },
+    "results": {
+      "notYet": "Ingen resultater ennå: HVL Interaktiv lagrer ikke resultater fra studentene i denne versjonen.",
+      "suppressed": "Færre enn {{k}} deltakere, så resultatene vises ikke.",
+      "summary": "{{participants}} deltakere, fullført: {{completion}}, median {{median}} forsøk, endring fra første til siste forsøk: {{change}} (formativt).",
+      "hidden": "ikke vist",
+      "notRecorded": "ingen data ennå",
+      "points": "{{value}} prosentpoeng",
+      "noteNotYet": "Resultater fra studentene kommer i en senere versjon av HVL Interaktiv, så aktivitetene under har ingen tall ennå.",
+      "noteRecorded": "Resultatene er formative og anonymiserte sammendrag for grupper med minst {{k}} studenter. De er ikke dokumentasjon av eksamensresultater."
+    },
+    "pdfTitle": "Pedagogisk mappe"
   }
 }

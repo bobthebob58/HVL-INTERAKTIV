@@ -77,6 +77,7 @@ const actorFor = (c: AccessCell & { launched: boolean }): HvlH5pActor => ({
   locale: 'nn',
   hvlMember: true,
   feideAuthenticated: false,
+  studentAuthor: false,
   ltiLaunchContentIds: c.launched ? [CONTENT_ID] : [],
   ...(c.request ? { dataSubjectRequest: REQUEST } : {}),
 });

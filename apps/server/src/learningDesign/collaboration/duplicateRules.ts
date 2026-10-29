@@ -10,12 +10,15 @@
  *   - A copy is a new activity, so only someone who may create activities (`ContentPermission.Create`: an author or
  *     admin in the account view) may duplicate at all.
  *   - Allowed through Edit: the person may Edit the source (owner, co-author or admin, H5P-006).
- *   - Allowed through the bank: the source is published AND listed in the content bank AND the person may View it.
+ *   - Allowed through the bank: the source is published AND listed in the content bank AND the person may View it
+ *     AND the person is one the bank is for: an HVL staff author signed in with Feide, not a student author
+ *     (./staffEligibility.ts, D-091 and D-092 as amended). A Canvas launch never copies through the bank (D-098).
  *   - Unknown content, or content the person may not View, is `unavailable` (404, D-066), never `refused`, so a
  *     refusal reveals nothing about activities the person cannot see.
  *   - `via: 'edit'` wins when both apply: only then are the rationale and course code copied (D-092).
- * Collaborators: ../../h5p/permissions/contentRules.ts (`decideContent`),
- *   ../../h5p/permissions/ContentAccessRepository.ts (facts, including `bankListed`), ./ContentDuplicator.ts,
+ * Collaborators: ../../h5p/permissions/contentRules.ts (`decideContent`), ./staffEligibility.ts
+ *   (`isBankReaderActor`), ../../h5p/permissions/ContentAccessRepository.ts (facts, including `bankListed`),
+ *   ./ContentDuplicator.ts,
  *   ../../h5p/pasteSourceGuard.ts.
  * Tests: apps/server/test/learningDesign/collaboration/duplicateRules.test.ts
  */
@@ -23,6 +26,7 @@ import { ContentPermission } from '@lumieducation/h5p-server';
 import type { HvlH5pUser } from '../../h5p/HvlH5pUser.js';
 import type { ContentFacts } from '../../h5p/permissions/ContentAccessRepository.js';
 import { decideContent } from '../../h5p/permissions/contentRules.js';
+import { isBankReaderActor } from './staffEligibility.js';
 
 /** How a person who may duplicate reached the source: as one who may Edit it, or through the content bank. */
 export type DuplicateRoute = 'edit' | 'bank';
@@ -57,8 +61,10 @@ export function decideDuplicate(user: HvlH5pUser, facts: ContentFacts | undefine
   if (!decideContent(user, ContentPermission.Create, undefined)) return REFUSED;
   if (decideContent(user, ContentPermission.Edit, facts)) return BY_EDIT;
   // SECURITY: a colleague's activity may be copied only once its owner has listed it in the bank (D-091), which
-  // needs it to be published; View alone (e.g. an activity shared with all of HVL) is not consent to copying.
-  return facts.status === 'published' && facts.bankListed ? BY_BANK : REFUSED;
+  // needs it to be published; View alone (e.g. an activity shared with all of HVL) is not consent to copying. The
+  // bank shows colleagues' names, so it is only for HVL staff authors, never a student author (D-091 as amended).
+  const listed = facts.status === 'published' && facts.bankListed;
+  return listed && isBankReaderActor(user.actor) ? BY_BANK : REFUSED;
 }
 
 /**

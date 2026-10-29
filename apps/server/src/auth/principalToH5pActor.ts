@@ -9,6 +9,8 @@
  *   - `contextId` is the Canvas course of the launch, empty in the portal, so learner state is kept per course.
  *   - `ltiLaunchContentIds` holds only the activity the launch itself opened.
  *   - `urlToken` is the ltik (LTI) or the session's CSRF token (portal); nothing else goes into H5P URLs.
+ *   - `studentAuthor` travels as the login computed it, so copying through the content bank is refused to a student
+ *     author in the editor's paste guard as in the duplicate route (D-091, D-092).
  * Collaborators: ./Principal.ts, ../h5p/HvlH5pUser.ts, ./requestPrincipal.ts, ../lti/play/ltiPlayRoutes.ts.
  * Tests: apps/server/test/auth/principalToH5pActor.test.ts
  */
@@ -31,6 +33,7 @@ export function principalToH5pActor(principal: Principal, urlToken?: UrlToken): 
     locale: principal.locale,
     hvlMember: principal.hvlMember,
     feideAuthenticated: principal.feideAuthenticated,
+    studentAuthor: principal.studentAuthor,
     ltiLaunchContentIds: contentId ? [contentId] : [],
     ...(urlToken && urlToken.value !== '' ? { urlToken } : {}),
   };

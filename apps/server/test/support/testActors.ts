@@ -27,6 +27,7 @@ export function testActor(role: H5pRole, overrides: Partial<HvlH5pActor> = {}): 
     locale: 'nn',
     hvlMember: true,
     feideAuthenticated: true,
+    studentAuthor: false,
     ltiLaunchContentIds: [],
     ...overrides,
   };

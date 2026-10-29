@@ -2138,11 +2138,11 @@ code change. The word count excludes the references and the reader&#39;s guide.<
 </ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-002">04 Læringsdesign studio, MAPPE-002</a> · Pedagogisk mappe</p></div>
 </details>
-<details class="req" id="x-MAPPE-003" data-area="MAPPE" data-priority="MUST" data-session="S5" data-status="in code" data-text="mappe-003 privacy in the export aggregates apply the same minimum group size as insight (`ins-006`, default *k* = 5). no learner
+<details class="req" id="x-MAPPE-003" data-area="MAPPE" data-priority="MUST" data-session="S5" data-status="tested" data-text="mappe-003 privacy in the export aggregates apply the same minimum group size as insight (`ins-006`, default *k* = 5). no learner
 identifiers, free-text answers or individual scores ever appear. the export is generated on demand
 and **not stored** on the server.
 - **verify:** a test with a 4-learner fixture asserts suppression.">
-<summary><span class="req-id">MAPPE-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Privacy in the export</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">MAPPE-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Privacy in the export</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Aggregates apply the same minimum group size as insight (<a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>, default <em>k</em> = 5). No learner
 identifiers, free-text answers or individual scores ever appear. The export is generated on demand
 and <strong>not stored</strong> on the server.</p>
@@ -2229,13 +2229,13 @@ serves as a proxy for how far they watched. The spike in Session 6 decides wheth
 <code>progressed</code> statements are reliable enough for a drop-off curve.</p>
 <p class="req-source">Defined in <a href="#r-INS-005">05 Insight and privacy, INS-005</a> · Teacher insight</p></div>
 </details>
-<details class="req" id="x-INS-006" data-area="INS" data-priority="MUST" data-session="S6" data-status="planned" data-text="ins-006 minimum group size and no individual view any cell, bar or list item that represents fewer than **k = 5** distinct learners is shown as
+<details class="req" id="x-INS-006" data-area="INS" data-priority="MUST" data-session="S6" data-status="in code" data-text="ins-006 minimum group size and no individual view any cell, bar or list item that represents fewer than **k = 5** distinct learners is shown as
 &quot;&lt; 5&quot; and its value is suppressed. *k* is configurable, with a minimum of 3. if suppression of one
 cell would let a hidden value be worked out from the totals, the next-smallest cell is suppressed
 too. the insight api has **no endpoint** that returns per-learner rows.
 - **acceptance:** property-based test: for random datasets, no api response contains a group smaller than *k*.
 - **verify:** `fast-check` property test `[ins-006] …`.">
-<summary><span class="req-id">INS-006</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Minimum group size and no individual view</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">INS-006</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Minimum group size and no individual view</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>Any cell, bar or list item that represents fewer than <strong>k = 5</strong> distinct learners is shown as
 &quot;&lt; 5&quot; and its value is suppressed. <em>k</em> is configurable, with a minimum of 3. If suppression of one
 cell would let a hidden value be worked out from the totals, the next-smallest cell is suppressed
@@ -7184,6 +7184,20 @@ carries <code>Retry-After</code>.</li>
 learner (403), so a Canvas launch can never search HVL staff names.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-29, S5 W4):</strong><ul>
+<li><strong>Who may search and add:</strong> only an HVL staff author (the same rule): a student author is refused with 403
+<code>hvl:sharing-not-allowed</code> (D-059: they share nothing beyond their own work), an admin-only member with 403
+<code>error.forbidden</code>. A student-author owner therefore adds no co-authors either; removing is always allowed.</li>
+<li><strong>The limit:</strong> 30 searches per person in a fixed 60-second window in Redis (<code>hvli:people-search:&lt;userId&gt;</code>, a
+count only); every valid search counts; the 429&#39;s <code>Retry-After</code> is the rest of the window, at least 1 second.</li>
+<li><strong>The routes:</strong> listing the authors needs Edit; adding and removing answer the list as it is afterwards; adding
+an existing co-author and removing someone who is not one change nothing and write no audit event. Adding locks
+the activity&#39;s row, so two concurrent adds never pass 20. The permission facts are read on every request, so a
+removed co-author loses Edit at the next one.</li>
+<li><strong>The predicate:</strong> <code>learningDesign/collaboration/staffEligibility.ts</code>; the Feide login writes
+<code>coAuthorSearchableAt</code> through <code>AccountResolver</code>, which ignores the field for an LTI launch.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-091--the-content-bank-opt-in-published-shared-with-hvl-for-hvl-authors" tabindex="-1">D-091 · The content bank: opt-in, published, shared with HVL, for HVL authors</h3>
 <ul>
@@ -7206,6 +7220,25 @@ student authors neither see the bank nor list in it, because it shows colleagues
 colleagues see them. The header link shows to every author, since the web app knows only roles; the bank page
 shows the server&#39;s refusal to a student author. Unpublishing an activity or making it private clears
 <code>bankListedAt</code> in the same transaction (ContentPublisher and the sharing routes).</li>
+<li><strong>Amendment (2026-10-29, S5 W4):</strong><ul>
+<li><strong>Who sees and changes the listing:</strong> people who may edit the activity read its listing (<code>{ listedAt, eligible }</code>),
+so a co-author sees it on the <strong>Deling</strong> tab; only the owner lists and unlists. A student author&#39;s <code>GET /api/bank</code>
+and listing are 403 <code>hvl:sharing-not-allowed</code>, which the bank page explains.</li>
+<li><strong>&quot;Eligible&quot;:</strong> published, <code>organisation</code> or <code>feide</code>, and an owner who is HVL staff: the owner&#39;s own login facts
+when the owner asks, else the owner&#39;s <code>coAuthorSearchableAt</code> (an owner who has not signed in as staff for 13
+months is not eligible).</li>
+<li><strong>Not a change of the activity:</strong> listing and unlisting do not move <code>H5PContent.updatedAt</code>, so the publish flow&#39;s
+precondition and the &quot;newest change first&quot; lists stay as they were. Listing is one conditional update, so an
+activity unpublished or made private meanwhile is never listed. Each real change is audited
+(<code>content.bank.list</code> with <code>{ consentVersion }</code>, <code>content.bank.unlist</code> with <code>{ cause: owner | unpublish | private }</code>).</li>
+<li><strong>The bank list:</strong> the 200 newest listings the reader may view, each passing the same View rule as opening it.</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-10-29, S5 integration of stage 4):</strong> the bank shows a listing only while its owner is findable staff
+(D-090: an eligible Feide login in the last 13 months), checked each time the bank is read. The name of someone who
+has left HVL, or who now signs in as a student author, then stops showing to colleagues without anyone unlisting,
+and the listing returns at the owner&#39;s next eligible login. The bank shows the 200 newest listings, without paging,
+until use shows a need.</li>
 </ul>
 <h3 id="decisions--d-092--duplicating-an-activity" tabindex="-1">D-092 · Duplicating an activity</h3>
 <ul>
@@ -7263,6 +7296,25 @@ address whose scheme has capitals (<code>Https://</code>) passes, as H5P plays i
 a path the guard refuses must have that element removed before it can be saved.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-29, S5 W4):</strong><ul>
+<li><strong>The bank branch in the actor:</strong> <code>HvlH5pActor</code> carries the login&#39;s <code>studentAuthor</code>, so <code>duplicateRules</code>
+allows a bank copy only to an author signed in with Feide who is an HVL member and not a student author
+(<code>isBankReaderActor</code>); the editor&#39;s paste guard decides with the same rule. A Canvas launch never copies through
+the bank (D-098).</li>
+<li><strong>The route:</strong> <code>POST /api/content/:contentId/duplicate</code> (portal authors, CSRF) answers 201 <code>{ contentId }</code> and
+lets its socket stay idle for up to 15 minutes while Lumi streams a large video&#39;s files; a proxy in front must
+allow as long.</li>
+<li><strong>Who sees the source:</strong> the copy&#39;s detail names its source (ID and title) only while the person may View the
+source, and its author by the account&#39;s current display name; an unknown part is left out, and the page says so
+in words.</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-10-29, S5 integration of stage 4):</strong> known limit, accepted: both links of a copy are <code>SetNull</code>, so
+a copy whose source and source author are both deleted (or whose source is deleted and whose author has no name)
+shows no «Kopi av …» sign and looks like an original. Telling it apart would need a column that survives the
+deletion; that waits until someone needs it. On the Deling tab a student-author owner still sees people search (the
+web app knows roles, not the student-author fact) and gets the server&#39;s explanation (<code>hvl:sharing-not-allowed</code>) when
+searching.</li>
 </ul>
 <h3 id="decisions--d-093--safe-editing-a-structure-signature-a-confirmation-and-saving-as-a-copy" tabindex="-1">D-093 · Safe editing: a structure signature, a confirmation, and saving as a copy</h3>
 <ul>
@@ -7352,6 +7404,19 @@ on the strict side.</li>
 <li><strong>The activity page:</strong> while the dialog is open, the portal&#39;s activity page and <code>/app/play</code> make their own controls inert; after «Lagre som ny versjon» the portal opens the copy&#39;s editor tab.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-29, S5 W4):</strong><ul>
+<li><strong>The copy&#39;s library version:</strong> H5P&#39;s editor upgrades an activity to the newest installed minor version of its
+library and shapes the parameters for it, so «Lagre som ny versjon» saving them under the source&#39;s older version
+stored parameters its semantics did not describe. The editor page now sends its <code>content.library</code> with the copy
+(<code>POST /h5p/content/:id/copy</code> takes <code>{ params, metadata, library? }</code>; a <code>library</code> that is not a string is 400),
+and the copy is saved with it when it has the source&#39;s machine name and major version and is installed
+(<code>learningDesign/collaboration/copyLibraryChoice.ts</code>); anything else keeps the source&#39;s version without an error.
+«Lag ein kopi» names no library and always keeps the source&#39;s version.</li>
+<li><strong>Who sees where it came from:</strong> the copy&#39;s page shows «Kopi av <tittel> av <namn>» to the people who may edit it
+(D-092), so the copy «Lagre som ny versjon» opened says lastingly what it is, also when the announcement before
+the navigation was cut off.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-094--rendering-the-pedagogisk-mappe" tabindex="-1">D-094 · Rendering the pedagogisk mappe</h3>
 <ul>
@@ -7394,6 +7459,40 @@ link.</li>
 list or quote marker, mid-line, table cells and link text.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-29, S5 W6a):</strong> how the template, the counts and the routes are built:<ul>
+<li><strong>No portfolio yet:</strong> the six files (<code>template.{nn,nb,en}.md</code>, <code>criteria.{nn,nb,en}.yaml</code>) are optional until
+written, all six or none, as the guide is (D-083 amendment). Without them the mappe routes answer 409
+<code>hvl:mappe-not-ready</code> (new in the contract), which the page explains; the activity list still answers.</li>
+<li><strong>Markers:</strong> the reader&#39;s guide and the references are blocks the server builds, so they are placed by markers
+instead of <code>{{{…}}}</code>: a line that is only <code>{{lesarrettleiing}}</code> or <code>{{referansar}}</code>. Two pairs mark the counted
+parts: <code>{{del1_start}}</code> … <code>{{del1_slutt}}</code> (the word count) and <code>{{vedlegg_start}}</code> … <code>{{vedlegg_slutt}}</code> (the
+suggested attachments, counted as the outermost list items between them, which the preview&#39;s <code>attachments</code>
+reports against the set&#39;s limit). Each marker stands once, outside every section; the loader cuts the template at
+the marker lines and Mustache parses each part, so a section cannot span a marker.</li>
+<li><strong>Names:</strong> the allowlist is a tree of Nynorsk names (<code>apps/server/src/learningDesign/mappe/mappeVariables.ts</code>): top
+values, the lists <code>aktivitetar</code> (with <code>uu_merknader</code> inside) and <code>emneoversikt</code>; a list opens only where it is
+defined. Every value is text and never empty: the view gives a localised placeholder for anything unknown, so no
+<code>{{#x}}</code> guard is needed around a single value.</li>
+<li><strong>Value places:</strong> besides the probe&#39;s refusals, a value may not stand straight after <code>&lt;</code> (a title such as
+<code>script&gt;</code> would open raw HTML in a renderer with HTML on) or straight after <code>]</code> (a value starting with <code>(</code> would
+turn the brackets into a link to the value). So <code>{{lenke}}</code> is written as plain text; the PDF does not make it a
+link.</li>
+<li><strong>Word count:</strong> what markdown-it reads as text in Del 1, without the blocks; a word is a run between spaces that
+holds a letter or a digit, and a no-break space joins, so a grouped number (<code>7 500</code>) is one word. The template
+is rendered twice, the second time with the count; the count cannot change between them.</li>
+<li><strong>References:</strong> the full references the chosen activities&#39; patterns cite, each once, sorted by text.</li>
+<li><strong>Validator result:</strong> the UD-021 findings of the stored activity (the findings route&#39;s validator and input),
+each error with the newest reason given for it at any age: the 14 days decide whether publishing asks again,
+not whether a reason was given. Who gave it is not read.</li>
+<li><strong>Routes:</strong> <code>GET /api/mappe/activities</code>, <code>GET /api/mappe/criteria-sets</code> (the sets with their limits and the
+default set; new schemas <code>MappeCriteriaSet</code> and <code>MappeCriteriaSetList</code>), <code>POST /api/mappe/preview</code> and
+<code>POST /api/mappe/export?format=md|pdf</code>, all <code>requirePortalAuthor</code>. More than 50 IDs is 400
+<code>hvl:mappe-too-many</code> before the body&#39;s schema; an ID that is not the author&#39;s own or co-authored is 404
+<code>hvl:activity-unavailable</code>, like an unknown one. The file name is ASCII, <code>pedagogisk-mappe-YYYY-MM-DD.md|pdf</code>.</li>
+<li><strong>The page</strong> filters the author&#39;s list in the browser (course, phase from <code>GET /api/studio</code>, change dates in
+Oslo time), and the portfolio&#39;s language is chosen apart from the page&#39;s.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-095--minimum-group-size-in-exports" tabindex="-1">D-095 · Minimum group size in exports</h3>
 <ul>
@@ -7406,6 +7505,11 @@ non-completers number fewer than <em>k</em>, so a hidden value cannot be worked 
 <code>ActivityResultsSource</code> answers &quot;no results yet&quot;, and the export says so. S6 adds the real source and the insight
 views on the same module.</li>
 <li><strong>Consequences:</strong> The 4-learner test of <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a> runs against a fixture source.</li>
+<li><strong>Amendment (2026-10-29, S5 W6a):</strong> <code>ActivityResultsSource.learnerSummaries</code> hands over one summary per learner
+(attempts, completed, the first and last scaled score) and no identifier or answer text; only aggregates leave
+<code>activityResults.ts</code>. Below <em>k</em> learners nothing at all is shown, not even the count; the median attempts need <em>k</em>
+learners, and the change from the first to the last attempt (the mean, in percentage points) needs <em>k</em> learners
+with both scores. A rate of 0 % or 100 % is always hidden by the two-sided rule.</li>
 </ul>
 <h3 id="decisions--d-096--the-portfolio-pdf-is-rendered-by-chromium-on-the-server" tabindex="-1">D-096 · The portfolio PDF is rendered by Chromium on the server</h3>
 <ul>
@@ -7451,6 +7555,11 @@ installs <code>fonts-liberation</code>, or the fonts HVL licenses, so that æ, �
 container render PDFs; the production checks refuse it. Tests set it from whether they run as root, so the same
 test keeps the sandbox on the non-root CI runner. <code>PDF_BROWSER_EXECUTABLE</code> must be an absolute path; start-up does
 not require it to exist, since a missing browser only means 503 <code>hvl:pdf-unavailable</code>.</li>
+<li><strong>Amendment (2026-10-29, S5 W6a):</strong> the limits in numbers: one export may take 30 seconds and a launch 20; past
+either, or when the browser will not start, the answer is 503 <code>hvl:pdf-unavailable</code>, and the next export tries
+again. A full process or a person&#39;s second export is 503 <code>hvl:pdf-busy</code> at once (no queue) with <code>Retry-After: 10</code>.
+Playwright&#39;s signal handlers are off, so only the server&#39;s shutdown closes the browser. A crashed browser is
+forgotten on <code>disconnected</code> and started again on the next export.</li>
 </ul>
 <h3 id="decisions--d-097--new-dependencies-in-s5" tabindex="-1">D-097 · New dependencies in S5</h3>
 <ul>
@@ -7886,11 +7995,18 @@ S5 is done), and all of S5 is done in this session.</li>
 <li><span class="task">○ To do:</span> <ol start="3">
 <li>Co-authors, content bank and duplicate (<a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a>); safe editing (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>)
  — stage 1 done: structure signature, the 409 save gate, stale state writes dropped, the copy route (W5a);
-   stage 2 done: the save choice dialog in the editor, portal and Canvas, inert page while open (W5b)</li>
+   stage 2 done: the save choice dialog in the editor, portal and Canvas, inert page while open (W5b);
+   stage 4 done: staff eligibility written at Feide login, people search (rate-limited, never logged),
+   co-authors, the content bank for HVL staff authors (listing cleared on unpublish or private), duplicate with
+   attribution for editors, the copy&#39;s library version, the Deling tab, the bank page, /personvern (W4)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="3">
-<li>Mappe export in Markdown and tagged PDF (<a class="req-ref" href="#r-MAPPE-001"><code>MAPPE-001</code></a>…<a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>)</li>
+<li>Mappe export in Markdown and tagged PDF (<a class="req-ref" href="#r-MAPPE-001"><code>MAPPE-001</code></a>…<a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>)
+ — stage 4 done: template and criteria loader (optional until written), Mustache rendering with the Markdown
+   escaper and refused value places, the reader&#39;s guide from the criteria, the Del 1 word count, minimum group
+   size, the PDF from Chromium with bounded slots and time limits, the routes and the /mappe page (W6a; the
+   template and criteria text follow in W6b)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="4">

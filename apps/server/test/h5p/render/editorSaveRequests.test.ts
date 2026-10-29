@@ -76,15 +76,18 @@ describe('[PROD-013] the editor page’s save and copy requests', () => {
     expect(bodies[2]).not.toHaveProperty('confirmLearnerStateReset');
   });
 
-  it('[PROD-013] posts «Lagre som ny versjon» as `{ params, metadata }` to the copy route with the CSRF token', async () => {
+  it('[PROD-013] posts «Lagre som ny versjon» as `{ params, metadata, library }` to the copy route with the CSRF token', async () => {
     // Arrange
     const { sent, run } = script(201);
     // Act
     await run.hvliSaveAsCopy(CONTENT, 'c 1', PORTAL);
-    // Assert
+    // Assert: the editor's library goes along, so an upgraded minor version is kept (D-093, S5 W4)
     expect(sent[0]?.url).toBe('/h5p/content/c%201/copy');
     expect(sent[0]?.init.method).toBe('POST');
-    expect(JSON.parse(sent[0]?.init.body ?? '')).toEqual(JSON.parse(CONTENT.params));
+    expect(JSON.parse(sent[0]?.init.body ?? '')).toEqual({
+      ...(JSON.parse(CONTENT.params) as object),
+      library: CONTENT.library,
+    });
     expect(sent[0]?.init.headers).toMatchObject({ 'X-CSRF-Token': 'csrf-1' });
   });
 

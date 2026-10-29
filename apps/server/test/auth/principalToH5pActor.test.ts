@@ -1,7 +1,7 @@
 /**
  * Tests for the mapping from a principal to the H5P actor.
  *
- * Spec: H5P-006, H5P-007, LTI-007
+ * Spec: H5P-006, H5P-007, LTI-007, PROD-007
  */
 import { describe, expect, it } from 'vitest';
 import type { Principal } from '../../src/auth/Principal.js';
@@ -43,9 +43,16 @@ describe('[H5P-006] principal to H5P actor', () => {
       locale: 'nb',
       hvlMember: true,
       feideAuthenticated: true,
+      studentAuthor: false,
       ltiLaunchContentIds: [],
       urlToken: { name: 'csrf', value: 't' },
     });
+  });
+
+  it('[PROD-007] a student author stays one in the actor, so the paste guard refuses bank copies too', () => {
+    expect(principalToH5pActor({ ...PORTAL, roles: ['author'], studentAuthor: true }).studentAuthor).toBe(
+      true,
+    );
   });
 
   it('[LTI-007] an LTI learner keeps state per course and may view the launched activity only', () => {

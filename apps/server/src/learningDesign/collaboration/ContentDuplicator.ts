@@ -12,19 +12,22 @@
  *     (D-066), visible but not copyable is 403 `hvl:duplicate-not-allowed`.
  *   - The copy is saved through `HvlH5PEditor.saveOrUpdateContent` as a new activity of the source's main library,
  *     with the source's h5p.json (its `defaultLanguage` and `language` included), so every editor check runs; the
- *     editor's paste-source guard admits the paths because the same rule allowed them.
+ *     editor's paste-source guard admits the paths because the same rule allowed them. «Lagre som ny versjon» may
+ *     name the editor's minor version of that library instead (./copyLibraryChoice.ts, D-093 amendment S5 W4).
  *   - Any failure after the editor created a row removes every row it created (with its files), and answers 500
  *     `hvl:duplicate-failed` with the cause attached; a refusal (4xx) raised before any row was written is passed on.
  *   - The copy is a private draft owned by the person; learner data, placements, acknowledgements, co-authors, the
  *     bank listing and the published status never travel (./copyRecords.ts).
- * Collaborators: ./duplicateRules.ts, ./copySource.ts, ./pasteSourceRewrite.ts, ./ownFileCopies.ts,
- *   ./copyVerification.ts, ./copyRecords.ts, ../../h5p/HvlH5PEditor.ts, ../../h5p/storage/contentCreations.ts,
+ * Collaborators: ./duplicateRules.ts, ./copySource.ts, ./copyLibraryChoice.ts, ./pasteSourceRewrite.ts,
+ *   ./ownFileCopies.ts, ./copyVerification.ts, ./copyRecords.ts, ../../h5p/HvlH5PEditor.ts,
+ *   ../../h5p/storage/contentCreations.ts,
  *   ../../http/learningDesignErrors.ts, ../../http/h5pErrorResponse.ts (what counts as a refusal); W4's duplicate
  *   route and W5's copy route call it.
  * Tests: apps/server/test/learningDesign/collaboration/ContentDuplicator.int.test.ts,
  *   apps/server/test/learningDesign/collaboration/ContentDuplicatorData.int.test.ts,
  *   apps/server/test/learningDesign/collaboration/ContentDuplicatorFailures.int.test.ts,
- *   apps/server/test/learningDesign/collaboration/ContentDuplicatorSaveAsCopy.int.test.ts
+ *   apps/server/test/learningDesign/collaboration/ContentDuplicatorSaveAsCopy.int.test.ts,
+ *   apps/server/test/learningDesign/collaboration/copyLibraryChoice.int.test.ts
  */
 import {
   ContentFileScanner,
@@ -40,6 +43,7 @@ import { authError } from '../../http/authErrors.js';
 import { toErrorResponse } from '../../http/h5pErrorResponse.js';
 import { learningDesignError } from '../../http/learningDesignErrors.js';
 import type { Database } from '../../infra/prismaClient.js';
+import { chooseCopyLibrary } from './copyLibraryChoice.js';
 import { readCopySource, withSourceLanguages, type CopySourceActivity } from './copySource.js';
 import { findCopyDefect } from './copyVerification.js';
 import { recordCopy, type CopyKind } from './copyRecords.js';
@@ -72,10 +76,11 @@ interface Admitted {
   readonly via: DuplicateRoute;
 }
 
-/** What the copy is saved with, chosen from the stored source. */
+/** What the copy is saved with, chosen from the stored source; `editorLibrary` is the editor's, if it sent one. */
 type CopyContent = (source: CopySourceActivity) => {
   readonly params: ContentParameters;
   readonly metadata: IContentMetadata;
+  readonly editorLibrary?: string;
 };
 
 // WHY: classified exactly as the error handler will answer it, so Lumi's plain Error for metadata its schema refuses
@@ -115,6 +120,8 @@ export class ContentDuplicator {
    * @param params - The edited parameters; `#tmp` uploads are saved with the copy.
    * @param metadata - The edited H5P metadata; a missing `defaultLanguage` or `language` is taken from the source.
    * @param actor - The person saving; the copy is theirs.
+   * @param library - The editor's main library (`H5P.Name major.minor`); used when it is an installed minor version
+   *   of the source's library, else the source's own version is kept.
    * @returns The new activity and the route that allowed it; the source is not changed.
    * @throws as {@link ContentDuplicator.duplicate}.
    * @example
@@ -127,10 +134,12 @@ export class ContentDuplicator {
     params: ContentParameters,
     metadata: IContentMetadata,
     actor: HvlH5pActor,
+    library?: string,
   ): Promise<DuplicateResult> {
     return this.copy(await this.admit(sourceId, actor), 'save-as-copy', (source) => ({
       params,
       metadata: withSourceLanguages(metadata, source.metadata),
+      ...(library === undefined ? {} : { editorLibrary: library }),
     }));
   }
 
@@ -152,11 +161,16 @@ export class ContentDuplicator {
     const created: string[] = [];
     try {
       const source = await readCopySource(editor.contentManager, sourceId, user);
-      const { library } = source;
-      const { params, metadata } = contentOf(source);
+      const content = contentOf(source);
+      const { library, ubername } = await chooseCopyLibrary(
+        source,
+        content.editorLibrary,
+        editor.libraryManager,
+      );
+      const { params, metadata } = content;
       const plan = await planCopy(this.scanner, { params, library, sourceId, sourceFiles: source.files });
       const copyId = await trackContentCreations(created, () =>
-        editor.saveOrUpdateContent(undefined, plan.params, metadata, source.ubername, user),
+        editor.saveOrUpdateContent(undefined, plan.params, metadata, ubername, user),
       );
       await copyOwnFiles(tools, { sourceId, copyId, library, names: plan.ownCopies, user });
       const defect = await findCopyDefect(tools, { copyId, library, user }, plan);

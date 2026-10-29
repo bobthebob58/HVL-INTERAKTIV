@@ -53,6 +53,7 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
     locale: 'nn',
     hvlMember: false,
     feideAuthenticated: false,
+    studentAuthor: false,
     ltiLaunchContentIds: [],
     ...extra,
   });

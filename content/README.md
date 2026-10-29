@@ -7,7 +7,7 @@ settings, and the phases, references, patterns, guide texts and portfolio templa
 | Folder | What it holds | Guide |
 |---|---|---|
 | `laeringsdesign/` | The limits of the pedagogical hints the validator gives authors before publishing (`hint-thresholds.yaml`); the names and texts of the three phases (`phases.yaml`); the references the guide and the patterns cite (`references.yaml`); the patterns, one folder each (`patterns/<id>/`); later the guide texts | [laeringsdesign/README.md](laeringsdesign/README.md) |
-| `mappe/` | The template and the criteria of the *pedagogisk mappe* export (coming in this session) | [mappe/README.md](mappe/README.md) |
+| `mappe/` | The template and the criteria of the *pedagogisk mappe* export (`template.{nn,nb,en}.md`, `criteria.{nn,nb,en}.yaml`; all six or none yet) | [mappe/README.md](mappe/README.md) |
 
 ## How to edit
 

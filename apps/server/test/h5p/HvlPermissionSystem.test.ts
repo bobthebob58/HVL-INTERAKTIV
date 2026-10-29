@@ -20,6 +20,7 @@ import { asAccountUser, asStateUser } from '../../src/h5p/HvlH5pUser.js';
 import type { H5pRole, HvlH5pActor, HvlH5pUser } from '../../src/h5p/HvlH5pUser.js';
 import type { ContentFacts } from '../../src/h5p/permissions/ContentAccessRepository.js';
 import type { DataSubjectAccess } from '../../src/h5p/permissions/UserDataAccessAuditor.js';
+import { testActor } from '../support/testActors.js';
 
 const CONTENT_ID = '0192f0c4-0000-7000-8000-00000000c001';
 const ME = '0192f0c4-0000-7000-8000-000000000001';
@@ -39,18 +40,15 @@ const { View, Edit, Embed, Create, List } = ContentPermission;
 const { ViewState, DeleteState, EditFinished, ViewFinished, DeleteFinished } = UserDataPermission;
 
 /** An actor who reaches everything: HVL member, Feide login, an LTI launch and a data-subject request. */
-const actor = (role: H5pRole, extra: Partial<HvlH5pActor> = {}): HvlH5pActor => ({
-  accountId: ME,
-  role,
-  learnerKey: OWN_KEY,
-  contextId: 'course-1',
-  locale: 'nn',
-  hvlMember: true,
-  feideAuthenticated: true,
-  ltiLaunchContentIds: [CONTENT_ID],
-  dataSubjectRequest: REQUEST,
-  ...extra,
-});
+const actor = (role: H5pRole, extra: Partial<HvlH5pActor> = {}): HvlH5pActor =>
+  testActor(role, {
+    accountId: ME,
+    learnerKey: OWN_KEY,
+    contextId: 'course-1',
+    ltiLaunchContentIds: [CONTENT_ID],
+    dataSubjectRequest: REQUEST,
+    ...extra,
+  });
 const account = (role: H5pRole) => asAccountUser(actor(role));
 const state = (role: H5pRole) => asStateUser(actor(role));
 const deleteRecord = (contentId: string | undefined): DataSubjectAccess => ({

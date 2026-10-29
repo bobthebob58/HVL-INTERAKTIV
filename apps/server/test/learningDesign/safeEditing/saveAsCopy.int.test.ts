@@ -86,5 +86,26 @@ describeWithServices('[PROD-013] saving an edit as a copy', () => {
       const res = await bench.copy(mc, 'not parameters' as unknown as object);
       expect(res.status).toBe(400);
     });
+
+    it('[PROD-013] the editor’s library goes through the route; a library that is not a string is 400 and copies nothing', async () => {
+      // Arrange: the body the editor page sends (D-093 amendment, S5 W4)
+      const mc = await bench.importExample('H5P.MultiChoice');
+      const send = (library: unknown) =>
+        request(bench.tb.app)
+          .post(`/h5p/content/${mc.id}/copy`)
+          .set('Cookie', bench.author.cookie)
+          .set('x-csrf-token', bench.author.csrf)
+          .send({ params: mc.params, metadata: mc.metadata, library });
+      const copies = () => bench.tb.db.h5PContent.count({ where: { sourceContentId: mc.id } });
+      // Act
+      const refused = await send(42);
+      const before = await copies();
+      const accepted = await send(mc.library);
+      // Assert
+      expect([refused.status, refused.body.errorCode]).toEqual([400, 'error.badRequest']);
+      expect(before).toBe(0);
+      expect(accepted.status).toBe(201);
+      expect(await copies()).toBe(1);
+    });
   });
 });

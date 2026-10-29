@@ -18,6 +18,8 @@ export const MAPPE_SCHEMA_NAMES: ApiSchemaNames = {
   response: {
     MappeActivity: mappe.mappeActivitySchema,
     MappeActivityList: mappe.mappeActivityListSchema,
+    MappeCriteriaSet: mappe.mappeCriteriaSetSchema,
+    MappeCriteriaSetList: mappe.mappeCriteriaSetListSchema,
     MappePreview: mappe.mappePreviewSchema,
   },
 };

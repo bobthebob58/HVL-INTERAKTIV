@@ -45,14 +45,18 @@ const routes = (detail: ContentDetail) => ({
 });
 
 describe('[UD-006] the activity page’s tab registry', () => {
-  it('[UD-006] lists Spel, Rediger, Læringsdesign and Sjekk og publiser in that order, each id once', () => {
-    expect(ids(ACTIVITY_TABS)).toEqual(['play', 'edit', 'learning-design', 'check']);
+  it('[UD-006] lists Spel, Rediger, Læringsdesign, Deling and Sjekk og publiser in that order, each id once', () => {
+    expect(ids(ACTIVITY_TABS)).toEqual(['play', 'edit', 'learning-design', 'sharing', 'check']);
     expect(new Set(ids(ACTIVITY_TABS)).size).toBe(ACTIVITY_TABS.length);
   });
 
   it.each([
-    ['an owner', DETAIL, ['play', 'edit', 'learning-design', 'check']],
-    ['an editor who may not publish', { ...DETAIL, mayPublish: false }, ['play', 'edit', 'learning-design']],
+    ['an owner', DETAIL, ['play', 'edit', 'learning-design', 'sharing', 'check']],
+    [
+      'an editor who may not publish',
+      { ...DETAIL, mayPublish: false },
+      ['play', 'edit', 'learning-design', 'sharing'],
+    ],
     ['a viewer', VIEWER, ['play']],
   ] as const)('[LTI-006] %s gets the tabs the server’s answer allows', (_case, detail, expected) => {
     expect(ids(activityTabsFor(detail))).toEqual(expected);
@@ -79,12 +83,12 @@ describe('[UD-006] the activity page’s tab registry', () => {
     };
     // Act
     const shown = activityTabsFor(DETAIL, [...ACTIVITY_TABS, Extra]);
-    const Panel = shown[4]?.Panel;
+    const Panel = shown[5]?.Panel;
     let selected = '';
     render(Panel ? <Panel {...panelProps(DETAIL, (id) => (selected = id))} /> : null);
     fireEvent.click(screen.getByRole('button', { name: 'Celler og vev' }));
     // Assert
-    expect(ids(shown)).toEqual(['play', 'edit', 'learning-design', 'check', 'extra']);
+    expect(ids(shown)).toEqual(['play', 'edit', 'learning-design', 'sharing', 'check', 'extra']);
     expect(selected).toBe('play');
     expect(ids(activityTabsFor(VIEWER, [...ACTIVITY_TABS, Extra]))).toEqual(['play']);
   });

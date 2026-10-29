@@ -12,8 +12,11 @@
  * Invariants:
  *   - The list holds only activities the account owns or co-authors; learners get an empty list.
  *   - The detail is answered only when the person may view the activity.
- * Collaborators: ./apiRouter.ts, ../../content/contentSummaries.ts, ../../content/contentAccess.ts.
- * Tests: apps/server/test/http/api/contentListRoutes.int.test.ts
+ *   - PRIVACY: a copy's source and source author (D-092) are in the detail only for people who may Edit the copy.
+ * Collaborators: ./apiRouter.ts, ../../content/contentSummaries.ts, ../../content/contentAccess.ts,
+ *   ../../learningDesign/collaboration/sourceAttributionReader.ts.
+ * Tests: apps/server/test/http/api/contentListRoutes.int.test.ts,
+ *   apps/server/test/learningDesign/collaboration/sourceAttribution.int.test.ts
  */
 import type { ContentDetail, ContentList } from '@hvl-interaktiv/api-contract';
 import { Router } from 'express';
@@ -23,6 +26,7 @@ import { viewableContent } from '../../content/contentAccess.js';
 import { authoredContent, summaryFields, summaryRow } from '../../content/contentSummaries.js';
 import type { ContentAccessRepository } from '../../h5p/permissions/ContentAccessRepository.js';
 import type { Database } from '../../infra/prismaClient.js';
+import { readSourceAttribution } from '../../learningDesign/collaboration/sourceAttributionReader.js';
 import { authError } from '../authErrors.js';
 import { pathParam } from '../routeParams.js';
 
@@ -51,6 +55,7 @@ export function contentListRoutes(deps: { db: Database; access: ContentAccessRep
       role: access.role,
       mayEdit: access.mayEdit,
       mayPublish: access.mayEdit,
+      ...(access.mayEdit ? await readSourceAttribution(deps, principal, row.id) : {}),
     };
     res.json(detail);
   });

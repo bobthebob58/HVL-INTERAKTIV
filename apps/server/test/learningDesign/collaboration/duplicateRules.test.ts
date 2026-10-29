@@ -1,6 +1,7 @@
 /**
  * Table-driven test of the PROD-007 duplicate rule (D-092): every role x view x relation x status x visibility x
- * reach x LTI launch x bank listing, against the rule as D-092 states it, plus hand-written anchor rows.
+ * reach x LTI launch x bank listing x student author, against the rule as D-092 states it (with its contracts
+ * amendment: the bank branch only for an HVL staff author signed in with Feide), plus hand-written anchor rows.
  *
  * Spec: PROD-007, H5P-006
  */
@@ -23,7 +24,8 @@ const ME = '0192f0c4-0000-7000-8000-000000000001';
 const SOMEONE_ELSE = '0192f0c4-0000-7000-8000-000000000002';
 
 type Relation = 'owner' | 'co-author' | 'other';
-type Reach = 'outsider' | 'hvl' | 'feide';
+/** `hvl-feide` is a portal principal (an HVL member signed in with Feide); the others isolate one fact each. */
+type Reach = 'outsider' | 'hvl' | 'feide' | 'hvl-feide';
 
 const cells = product({
   role: ROLES,
@@ -31,37 +33,46 @@ const cells = product({
   relation: ['owner', 'co-author', 'other'] as Relation[],
   status: ['draft', 'published'] as ContentStatus[],
   visibility: ['private', 'organisation', 'feide'] as ContentVisibility[],
-  reach: ['outsider', 'hvl', 'feide'] as Reach[],
+  reach: ['outsider', 'hvl', 'feide', 'hvl-feide'] as Reach[],
   launched: [false, true],
   bankListed: [false, true],
+  studentAuthor: [false, true],
 });
 type Cell = (typeof cells)[number];
 
-/** D-092 read literally: View decides "available"; Create, then Edit or (published AND bank-listed) decide the rest. */
+const hvlMember = (reach: Reach): boolean => reach === 'hvl' || reach === 'hvl-feide';
+const feideAuthenticated = (reach: Reach): boolean => reach === 'feide' || reach === 'hvl-feide';
+
+/**
+ * D-092 read literally: View decides "available"; Create, then Edit or (published AND bank-listed AND a person the
+ * bank is for: an author, HVL member, signed in with Feide, not a student author) decide the rest.
+ */
 function expected(c: Cell): DuplicateDecision['kind'] | 'allowed:edit' | 'allowed:bank' {
   const account = c.view === 'account';
   const ownerOrCoAuthor = c.relation !== 'other';
   const published = c.status === 'published';
   const visible =
     ownerOrCoAuthor ||
-    (c.visibility === 'organisation' && c.reach === 'hvl') ||
-    (c.visibility === 'feide' && c.reach === 'feide');
+    (c.visibility === 'organisation' && hvlMember(c.reach)) ||
+    (c.visibility === 'feide' && feideAuthenticated(c.reach));
   const mayView =
     c.role === 'admin' || (c.role === 'author' && ownerOrCoAuthor) || (published && (visible || c.launched));
   if (!mayView) return 'unavailable';
   if (!account || c.role === 'learner') return 'refused';
   if (c.role === 'admin' || ownerOrCoAuthor) return 'allowed:edit';
-  return published && c.bankListed ? 'allowed:bank' : 'refused';
+  const bankReader = c.role === 'author' && c.reach === 'hvl-feide' && !c.studentAuthor;
+  return published && c.bankListed && bankReader ? 'allowed:bank' : 'refused';
 }
 
-const actorFor = (c: Pick<Cell, 'role' | 'reach' | 'launched'>): HvlH5pActor => ({
+const actorFor = (c: Pick<Cell, 'role' | 'reach' | 'launched' | 'studentAuthor'>): HvlH5pActor => ({
   accountId: ME,
   role: c.role,
   learnerKey: 'my-learner-key',
   contextId: c.launched ? 'course-1' : '',
   locale: 'nn',
-  hvlMember: c.reach === 'hvl',
-  feideAuthenticated: c.reach === 'feide',
+  hvlMember: hvlMember(c.reach),
+  feideAuthenticated: feideAuthenticated(c.reach),
+  studentAuthor: c.studentAuthor,
   ltiLaunchContentIds: c.launched ? [CONTENT_ID] : [],
 });
 
@@ -89,21 +100,22 @@ const BASE: Cell = {
   relation: 'other',
   status: 'published',
   visibility: 'organisation',
-  reach: 'hvl',
+  reach: 'hvl-feide',
   launched: false,
   bankListed: true,
+  studentAuthor: false,
 };
 
 describe('[PROD-007] duplicate rule: every cell', () => {
   it('[PROD-007] the table covers every combination and reaches all four outcomes', () => {
-    expect(rows).toHaveLength(3 * 2 * 3 * 2 * 3 * 3 * 2 * 2);
+    expect(rows).toHaveLength(3 * 2 * 3 * 2 * 3 * 4 * 2 * 2 * 2);
     expect(new Set(rows.map((r) => r.outcome))).toEqual(
       new Set(['unavailable', 'refused', 'allowed:edit', 'allowed:bank']),
     );
   });
 
   it.each(rows)(
-    '[PROD-007] $role ($view view): $relation, $status, $visibility, reach $reach, LTI $launched, bank $bankListed -> $outcome',
+    '[PROD-007] $role ($view view): $relation, $status, $visibility, reach $reach, LTI $launched, bank $bankListed, student author $studentAuthor -> $outcome',
     (row) => {
       expect(decide(row)).toBe(row.outcome);
       expect(mayDuplicate(userFor(row), factsFor(row))).toBe(row.outcome.startsWith('allowed'));
@@ -139,9 +151,20 @@ describe('[PROD-007] duplicate rule: anchor cells written out by hand', () => {
     ['a learner may view but never copy', { role: 'learner' }, 'refused'],
     ['the player’s state view never copies', { view: 'state' }, 'refused'],
     [
-      'a Canvas author copies a bank activity their launch opened',
+      'a Canvas author may not copy a bank activity their launch opened (D-098)',
       { reach: 'outsider', launched: true },
-      'allowed:bank',
+      'refused',
+    ],
+    ['a student author may not copy through the bank (D-091)', { studentAuthor: true }, 'refused'],
+    [
+      'a student author copies their own activity through Edit',
+      { studentAuthor: true, relation: 'owner', visibility: 'private' },
+      'allowed:edit',
+    ],
+    [
+      'an author who is an HVL member but not signed in with Feide does not reach the bank',
+      { reach: 'hvl' },
+      'refused',
     ],
   ])('[PROD-007] %s', (_name, change, outcome) => {
     expect(decide({ ...BASE, ...change })).toBe(outcome);

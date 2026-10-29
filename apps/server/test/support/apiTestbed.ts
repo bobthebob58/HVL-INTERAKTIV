@@ -20,6 +20,7 @@
  */
 import { randomUUID } from 'node:crypto';
 import express, { type Express } from 'express';
+import type { Logger } from 'pino';
 import type { Principal, Role } from '../../src/auth/Principal.js';
 import { setPrincipal } from '../../src/auth/principalLocals.js';
 import { PrismaContentAccessRepository } from '../../src/h5p/permissions/ContentAccessRepository.js';
@@ -74,10 +75,11 @@ export interface ApiTestbed {
 
 /**
  * Builds the testbed.
- * @param options - `studioContent`: the studio content instead of the repository's `content/`.
+ * @param options - `studioContent`: the studio content instead of the repository's `content/`; `logger`: the error
+ *   handler's logger instead of a silent one (e.g. ./capturedLogger.ts, to read what was logged).
  * @returns The testbed; call `close()` in `afterAll`.
  */
-export function openApiTestbed(options: { studioContent?: StudioContent } = {}): ApiTestbed {
+export function openApiTestbed(options: { studioContent?: StudioContent; logger?: Logger } = {}): ApiTestbed {
   const db = createPrismaClient(serviceEnv().DATABASE_URL);
   // WHY: the testbed is built synchronously at collection time; the client queues commands until it is connected.
   const redis = createClient({ url: serviceEnv().REDIS_URL }) as Redis;
@@ -155,6 +157,6 @@ export function openApiTestbed(options: { studioContent?: StudioContent } = {}):
   app.use('/api', apiRouter({ publishing, access, studio, serveDocs: true }), (_req, _res, next) =>
     next(new HttpError(404, 'error.notFound')),
   );
-  app.use('/api', h5pErrorHandler(createLogger({ level: 'silent' })));
+  app.use('/api', h5pErrorHandler(options.logger ?? createLogger({ level: 'silent' })));
   return tb;
 }

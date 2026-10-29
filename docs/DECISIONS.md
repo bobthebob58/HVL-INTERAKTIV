@@ -1877,6 +1877,18 @@ loading of one spec per session are kept.
   - **Portal only:** every studio route except the public guide and catalogue starts with
     `requirePortalAuthor` (learningDesign/http/studioPrincipal.ts), which refuses an LTI ltik (401) and a portal
     learner (403), so a Canvas launch can never search HVL staff names.
+- **Amendment (2026-10-29, S5 W4):**
+  - **Who may search and add:** only an HVL staff author (the same rule): a student author is refused with 403
+    `hvl:sharing-not-allowed` (D-059: they share nothing beyond their own work), an admin-only member with 403
+    `error.forbidden`. A student-author owner therefore adds no co-authors either; removing is always allowed.
+  - **The limit:** 30 searches per person in a fixed 60-second window in Redis (`hvli:people-search:<userId>`, a
+    count only); every valid search counts; the 429's `Retry-After` is the rest of the window, at least 1 second.
+  - **The routes:** listing the authors needs Edit; adding and removing answer the list as it is afterwards; adding
+    an existing co-author and removing someone who is not one change nothing and write no audit event. Adding locks
+    the activity's row, so two concurrent adds never pass 20. The permission facts are read on every request, so a
+    removed co-author loses Edit at the next one.
+  - **The predicate:** `learningDesign/collaboration/staffEligibility.ts`; the Feide login writes
+    `coAuthorSearchableAt` through `AccountResolver`, which ignores the field for an LTI launch.
 
 ### D-091 · The content bank: opt-in, published, shared with HVL, for HVL authors
 - **Context:** `PROD-007` lets authors "publish an activity to the HVL content bank so that colleagues can duplicate
@@ -1896,6 +1908,23 @@ loading of one spec per session are kept.
   colleagues see them. The header link shows to every author, since the web app knows only roles; the bank page
   shows the server's refusal to a student author. Unpublishing an activity or making it private clears
   `bankListedAt` in the same transaction (ContentPublisher and the sharing routes).
+- **Amendment (2026-10-29, S5 W4):**
+  - **Who sees and changes the listing:** people who may edit the activity read its listing (`{ listedAt, eligible }`),
+    so a co-author sees it on the **Deling** tab; only the owner lists and unlists. A student author's `GET /api/bank`
+    and listing are 403 `hvl:sharing-not-allowed`, which the bank page explains.
+  - **"Eligible":** published, `organisation` or `feide`, and an owner who is HVL staff: the owner's own login facts
+    when the owner asks, else the owner's `coAuthorSearchableAt` (an owner who has not signed in as staff for 13
+    months is not eligible).
+  - **Not a change of the activity:** listing and unlisting do not move `H5PContent.updatedAt`, so the publish flow's
+    precondition and the "newest change first" lists stay as they were. Listing is one conditional update, so an
+    activity unpublished or made private meanwhile is never listed. Each real change is audited
+    (`content.bank.list` with `{ consentVersion }`, `content.bank.unlist` with `{ cause: owner | unpublish | private }`).
+  - **The bank list:** the 200 newest listings the reader may view, each passing the same View rule as opening it.
+- **Amendment (2026-10-29, S5 integration of stage 4):** the bank shows a listing only while its owner is findable staff
+  (D-090: an eligible Feide login in the last 13 months), checked each time the bank is read. The name of someone who
+  has left HVL, or who now signs in as a student author, then stops showing to colleagues without anyone unlisting,
+  and the listing returns at the owner's next eligible login. The bank shows the 200 newest listings, without paging,
+  until use shows a need.
 
 ### D-092 · Duplicating an activity
 - **Context:** `PROD-007`: a duplicate keeps a link to its source and the original author's attribution, and never
@@ -1946,6 +1975,23 @@ loading of one spec per session are kept.
     rule, and every `#tmp` and paste path against the storage's safe-name rule, before Lumi writes anything; a web
     address whose scheme has capitals (`Https://`) passes, as H5P plays it. An existing activity that still holds
     a path the guard refuses must have that element removed before it can be saved.
+- **Amendment (2026-10-29, S5 W4):**
+  - **The bank branch in the actor:** `HvlH5pActor` carries the login's `studentAuthor`, so `duplicateRules`
+    allows a bank copy only to an author signed in with Feide who is an HVL member and not a student author
+    (`isBankReaderActor`); the editor's paste guard decides with the same rule. A Canvas launch never copies through
+    the bank (D-098).
+  - **The route:** `POST /api/content/:contentId/duplicate` (portal authors, CSRF) answers 201 `{ contentId }` and
+    lets its socket stay idle for up to 15 minutes while Lumi streams a large video's files; a proxy in front must
+    allow as long.
+  - **Who sees the source:** the copy's detail names its source (ID and title) only while the person may View the
+    source, and its author by the account's current display name; an unknown part is left out, and the page says so
+    in words.
+- **Amendment (2026-10-29, S5 integration of stage 4):** known limit, accepted: both links of a copy are `SetNull`, so
+  a copy whose source and source author are both deleted (or whose source is deleted and whose author has no name)
+  shows no «Kopi av …» sign and looks like an original. Telling it apart would need a column that survives the
+  deletion; that waits until someone needs it. On the Deling tab a student-author owner still sees people search (the
+  web app knows roles, not the student-author fact) and gets the server's explanation (`hvl:sharing-not-allowed`) when
+  searching.
 
 ### D-093 · Safe editing: a structure signature, a confirmation, and saving as a copy
 - **Context:** `PROD-013`: editing an activity that has learner state warns that structural changes reset saved
@@ -2026,6 +2072,17 @@ loading of one spec per session are kept.
   - **Canvas wording:** from Canvas, the 409 keeps its status and code but its message (`safeEditing.resetNeededCanvas`) does not offer a new version, which Canvas does not have (D-098).
   - **«Gå til feltet» on titles:** `metadata.title` and a sub-content's title reach the title field (Column, QuestionSet, InteractiveBook and InteractiveVideo interactions) or the metadata popup (AdvancedText, ImageHotspots content). BranchingScenario node titles and CoursePresentation element titles are not reached by those custom editors; the page says so («feltet kan ikkje opnast») rather than failing silently, as for their other fields.
   - **The activity page:** while the dialog is open, the portal's activity page and `/app/play` make their own controls inert; after «Lagre som ny versjon» the portal opens the copy's editor tab.
+- **Amendment (2026-10-29, S5 W4):**
+  - **The copy's library version:** H5P's editor upgrades an activity to the newest installed minor version of its
+    library and shapes the parameters for it, so «Lagre som ny versjon» saving them under the source's older version
+    stored parameters its semantics did not describe. The editor page now sends its `content.library` with the copy
+    (`POST /h5p/content/:id/copy` takes `{ params, metadata, library? }`; a `library` that is not a string is 400),
+    and the copy is saved with it when it has the source's machine name and major version and is installed
+    (`learningDesign/collaboration/copyLibraryChoice.ts`); anything else keeps the source's version without an error.
+    «Lag ein kopi» names no library and always keeps the source's version.
+  - **Who sees where it came from:** the copy's page shows «Kopi av <tittel> av <namn>» to the people who may edit it
+    (D-092), so the copy «Lagre som ny versjon» opened says lastingly what it is, also when the announcement before
+    the navigation was cut off.
 
 ### D-094 · Rendering the pedagogisk mappe
 - **Context:** `MAPPE-002` takes headings from the template and criteria from the criteria files, keyed by criteria
@@ -2063,6 +2120,38 @@ loading of one spec per session are kept.
     link.
   - **The escaper** (`mappe/markdownEscape.ts`) is safe in inline positions only: line starts, after a heading,
     list or quote marker, mid-line, table cells and link text.
+- **Amendment (2026-10-29, S5 W6a):** how the template, the counts and the routes are built:
+  - **No portfolio yet:** the six files (`template.{nn,nb,en}.md`, `criteria.{nn,nb,en}.yaml`) are optional until
+    written, all six or none, as the guide is (D-083 amendment). Without them the mappe routes answer 409
+    `hvl:mappe-not-ready` (new in the contract), which the page explains; the activity list still answers.
+  - **Markers:** the reader's guide and the references are blocks the server builds, so they are placed by markers
+    instead of `{{{…}}}`: a line that is only `{{lesarrettleiing}}` or `{{referansar}}`. Two pairs mark the counted
+    parts: `{{del1_start}}` … `{{del1_slutt}}` (the word count) and `{{vedlegg_start}}` … `{{vedlegg_slutt}}` (the
+    suggested attachments, counted as the outermost list items between them, which the preview's `attachments`
+    reports against the set's limit). Each marker stands once, outside every section; the loader cuts the template at
+    the marker lines and Mustache parses each part, so a section cannot span a marker.
+  - **Names:** the allowlist is a tree of Nynorsk names (`apps/server/src/learningDesign/mappe/mappeVariables.ts`): top
+    values, the lists `aktivitetar` (with `uu_merknader` inside) and `emneoversikt`; a list opens only where it is
+    defined. Every value is text and never empty: the view gives a localised placeholder for anything unknown, so no
+    `{{#x}}` guard is needed around a single value.
+  - **Value places:** besides the probe's refusals, a value may not stand straight after `<` (a title such as
+    `script>` would open raw HTML in a renderer with HTML on) or straight after `]` (a value starting with `(` would
+    turn the brackets into a link to the value). So `{{lenke}}` is written as plain text; the PDF does not make it a
+    link.
+  - **Word count:** what markdown-it reads as text in Del 1, without the blocks; a word is a run between spaces that
+    holds a letter or a digit, and a no-break space joins, so a grouped number (`7 500`) is one word. The template
+    is rendered twice, the second time with the count; the count cannot change between them.
+  - **References:** the full references the chosen activities' patterns cite, each once, sorted by text.
+  - **Validator result:** the UD-021 findings of the stored activity (the findings route's validator and input),
+    each error with the newest reason given for it at any age: the 14 days decide whether publishing asks again,
+    not whether a reason was given. Who gave it is not read.
+  - **Routes:** `GET /api/mappe/activities`, `GET /api/mappe/criteria-sets` (the sets with their limits and the
+    default set; new schemas `MappeCriteriaSet` and `MappeCriteriaSetList`), `POST /api/mappe/preview` and
+    `POST /api/mappe/export?format=md|pdf`, all `requirePortalAuthor`. More than 50 IDs is 400
+    `hvl:mappe-too-many` before the body's schema; an ID that is not the author's own or co-authored is 404
+    `hvl:activity-unavailable`, like an unknown one. The file name is ASCII, `pedagogisk-mappe-YYYY-MM-DD.md|pdf`.
+  - **The page** filters the author's list in the browser (course, phase from `GET /api/studio`, change dates in
+    Oslo time), and the portfolio's language is chosen apart from the page's.
 
 ### D-095 · Minimum group size in exports
 - **Context:** `MAPPE-003` applies `INS-006`'s minimum group size (*k* = 5, configurable, at least 3, with
@@ -2074,6 +2163,11 @@ loading of one spec per session are kept.
   `ActivityResultsSource` answers "no results yet", and the export says so. S6 adds the real source and the insight
   views on the same module.
 - **Consequences:** The 4-learner test of `MAPPE-003` runs against a fixture source.
+- **Amendment (2026-10-29, S5 W6a):** `ActivityResultsSource.learnerSummaries` hands over one summary per learner
+  (attempts, completed, the first and last scaled score) and no identifier or answer text; only aggregates leave
+  `activityResults.ts`. Below *k* learners nothing at all is shown, not even the count; the median attempts need *k*
+  learners, and the change from the first to the last attempt (the mean, in percentage points) needs *k* learners
+  with both scores. A rate of 0 % or 100 % is always hidden by the two-sided rule.
 
 ### D-096 · The portfolio PDF is rendered by Chromium on the server
 - **Context:** `MAPPE-004` asks for a tagged PDF with language, title, outline and real text from the same semantic
@@ -2114,6 +2208,11 @@ loading of one spec per session are kept.
   container render PDFs; the production checks refuse it. Tests set it from whether they run as root, so the same
   test keeps the sandbox on the non-root CI runner. `PDF_BROWSER_EXECUTABLE` must be an absolute path; start-up does
   not require it to exist, since a missing browser only means 503 `hvl:pdf-unavailable`.
+- **Amendment (2026-10-29, S5 W6a):** the limits in numbers: one export may take 30 seconds and a launch 20; past
+  either, or when the browser will not start, the answer is 503 `hvl:pdf-unavailable`, and the next export tries
+  again. A full process or a person's second export is 503 `hvl:pdf-busy` at once (no queue) with `Retry-After: 10`.
+  Playwright's signal handlers are off, so only the server's shutdown closes the browser. A crashed browser is
+  forgotten on `disconnected` and started again on the next export.
 
 ### D-097 · New dependencies in S5
 - **Context:** CLAUDE.md pins every runtime dependency exactly, and D-029's checks allow only listed licences.

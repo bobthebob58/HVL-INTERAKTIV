@@ -21,6 +21,7 @@ import { PatternDetailView } from '../../src/features/studio/PatternDetailView';
 import { LocaleProvider } from '../../src/i18n/LocaleContext';
 import type { Locale } from '../../src/i18n/translate';
 import { errorBody, fakeFetch } from '../support/fakeFetch';
+import { MAPPE_CRITERIA_SETS } from '../support/mappeFixtures';
 import { DETAIL, OVERVIEW, studioRoutes } from '../support/studioFixtures';
 
 vi.mock('next/navigation', () => import('../support/nextNavigationMock'));
@@ -134,6 +135,12 @@ describe('[UD-013] the studio pages', () => {
         'GET /auth/session': { status: 200, body: { roles: ['author'], locale: 'nn', csrfToken: 'c' } },
         // WHY: the planner (W3) first lists the author's course codes; an author with none gets the chooser's text.
         'GET /api/learning-design/course-codes': { status: 200, body: { inUse: [], fromCanvas: [] } },
+        // WHY: the portfolio (W6) loads the author's activities, the criteria sets and the phase labels.
+        'GET /api/mappe/activities': { status: 200, body: { items: [] } },
+        'GET /api/mappe/criteria-sets': { status: 200, body: MAPPE_CRITERIA_SETS },
+        'GET /api/studio': { status: 200, body: OVERVIEW },
+        // WHY: the content bank (W4) loads its entries; an empty bank shows its empty text.
+        'GET /api/bank': { status: 200, body: { items: [] } },
       });
       // Act
       inLocale('nn', View);

@@ -44,6 +44,7 @@ export const LEARNING_DESIGN_ERROR_KEYS = {
   'hvl:criteria-set-unknown': 'learningDesign.error.criteriaSetUnknown',
   'hvl:pdf-unavailable': 'learningDesign.error.pdfUnavailable',
   'hvl:pdf-busy': 'learningDesign.error.pdfBusy',
+  'hvl:mappe-not-ready': 'learningDesign.error.mappeNotReady',
 } as const satisfies Record<LearningDesignErrorCode, MessageKey>;
 
 /**

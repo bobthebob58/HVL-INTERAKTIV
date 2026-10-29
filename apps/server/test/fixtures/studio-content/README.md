@@ -15,9 +15,9 @@ a file, and update the test's expected line.
 | `wrong-phase-key/` | The second phase has the key `undervegs` instead of `underveis` | refused: `phases.yaml:35`, key `phases[undervegs].key`, "is not a phase key" |
 | `problems-in-both-files/` | The anchor description has no `en`; references.yaml has a key in capitals (`Guo2014`) and a reference without `verify` | refused with all three problems in one error, ordered by file and line |
 
-These folders have no guide files, which the guide loader reads as "no guide yet", not as a problem; the portfolio
-loader reads no files yet, and when it does, `loadStudioContent(<fixture>)` also reports its missing files, so a test
-checks only the problems in the file it is about. The pattern loader finds no `laeringsdesign/patterns/` folder in
+These folders have no guide files, which the guide loader reads as "no guide yet", not as a problem; they have no
+`mappe/` files either, which the portfolio loader reads as "no portfolio yet". A test checks only the problems in the
+file it is about. The pattern loader finds no `laeringsdesign/patterns/` folder in
 these, which is no patterns, not a problem. A test that shows a renamed label
 reaching a page, the planner or the portfolio does not load `renamed-label/` in full: it uses
 `studioContentWithRenamedLabel()` from `test/support/renamedPhaseLabels.ts`, which is the real `content/` with this
@@ -60,3 +60,21 @@ browser page tests. Its texts are test texts, so the tests may assert them; ALU'
 The fixture loads as written. The loader tests copy it to a temporary folder and replace, edit or remove a file each
 (a missing language, an unknown citation, a refused construct, a missing or repeated marker, a parity mismatch), so no
 broken copy is kept here.
+
+## `mappe-fixture/` (`MAPPE-001`, `MAPPE-002`, `MAPPE-003`)
+
+A partial content folder: only `mappe/`, the six files of the pedagogisk mappe. It is read with `loadMappeContent`
+through `test/support/mappeFixture.ts`, never with `loadStudioContent`; `studioContentWithMappe()` puts it into the real
+`content/` for the renderer, route and browser tests. Its texts are test texts, so the tests may assert them; ALU's
+template and criteria are never asserted.
+
+| File | What it represents |
+|---|---|
+| `mappe/template.nn.md` | A template that uses every value, list and marker the server knows: front matter and a comment (with an unknown name in it, which the loader never sees), the reader's guide, Del 1 between its markers with the course overview, the activities with their findings and figures, the references, Del 2, and three suggested attachments between their markers |
+| `mappe/template.nb.md`, `mappe/template.en.md` | The same structure in Bokmål and English: the same values, lists, markers and headings |
+| `mappe/criteria.nn.yaml` | Two sets: `hvl-merittering-2025` (three criteria, two with an attachment hint; 7 500 words and 11 attachments, to verify) and `fixture-2027` (two criteria; 100 words and 2 attachments, confirmed), so switching sets and going over a limit are testable |
+| `mappe/criteria.nb.yaml`, `mappe/criteria.en.yaml` | The same sets, criteria, limits and hints in Bokmål and English |
+
+The fixture loads as written. The loader tests copy it to a temporary folder and replace, edit or remove a file each
+(a refused tag, a value in an unsafe place, a missing or repeated marker, a parity mismatch, a criterion ID written as
+a number, a missing file), so no broken copy is kept here.

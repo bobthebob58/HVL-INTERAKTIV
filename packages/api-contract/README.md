@@ -36,11 +36,12 @@ The server serves the document at `GET /api/docs` when `NODE_ENV` is not `produc
 | `src/planner.ts` | The alignment planner (`PED-031`, D-088) |
 | `src/collaboration.ts` | People search, co-authors, the content bank and duplicating (`PROD-007`, D-090–D-092) |
 | `src/sourceAttribution.ts` | Where a copy came from, in the activity detail (D-092); a leaf module |
-| `src/mappe.ts` | The pedagogisk mappe picker, preview and export (`MAPPE-001`, `MAPPE-002`, D-094) |
+| `src/mappe.ts` | The pedagogisk mappe picker, criteria sets, preview and export (`MAPPE-001`, `MAPPE-002`, D-094); `hvl:mappe-not-ready` answers while the content has no mappe files |
 | `src/learningDesignErrors.ts` | The S5 error codes and their HTTP statuses, shared by the server and the web app |
 | `src/routes/routeResponses.ts` | The answers every area shares (401, 400, 404, 403) and the `:contentId` parameter |
 | `src/routes/<area>Routes.ts` | One route registry per area: `core` (before S5), `studio`, `pattern`, `learningDesign`, `collaboration`, `mappe` |
 | `src/routes/<area>SchemaNames.ts` | The component names of the schemas each area's routes use |
+| `src/routes/collaborationResponses.ts` | The refusals and the co-author path parameter the collaboration routes share |
 | `src/apiRoutes.ts` | `API_ROUTES`: the area registries concatenated in document order |
 | `src/apiSchemaNames.ts` | `REQUEST_SCHEMAS` and `RESPONSE_SCHEMAS`: the name lists merged, refusing a name used twice |
 | `src/apiRouteTypes.ts` | The types of a route, an answer (JSON or file) and a name list; the file media types |
@@ -87,7 +88,7 @@ sequenceDiagram
   end
 ```
 
-Portal requests send the session cookie and, on `PUT`, `POST` and `PATCH`, the `x-csrf-token` header with the
+Portal requests send the session cookie and, on `PUT`, `POST`, `PATCH` and `DELETE`, the `x-csrf-token` header with the
 `csrfToken` from `GET /auth/session`. LTI requests send the ltik as `Authorization: Bearer`.
 
 ## Configuration

@@ -19,7 +19,9 @@
  * Collaborators: ./createApp.ts (builds them), ./main.ts (closes them), ../http/api/studioRouter.ts,
  *   ../learningDesign/http/studioRouteDeps.ts, ../learningDesign/content/loadStudioContent.ts,
  *   ../learningDesign/collaboration/ContentDuplicator.ts, ../learningDesign/patterns/PatternCreator.ts,
- *   ../learningDesign/metadata/LearningDesignStore.ts; each workstream's service as it is added.
+ *   ../learningDesign/metadata/LearningDesignStore.ts, ../learningDesign/collaboration/PeopleDirectory.ts,
+ *   ../learningDesign/mappe/MappeRenderer.ts, ../learningDesign/mappe/pdf/PdfRenderer.ts,
+ *   ../privacy/minimumGroupSize.ts; each workstream's service as it is added.
  * Tests: apps/server/test/server/studioServices.test.ts
  */
 import type { Logger } from 'pino';
@@ -30,9 +32,14 @@ import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import type { Database } from '../infra/prismaClient.js';
 import type { Redis } from '../infra/redisClient.js';
 import { ContentDuplicator } from '../learningDesign/collaboration/ContentDuplicator.js';
+import { PeopleDirectory } from '../learningDesign/collaboration/PeopleDirectory.js';
 import type { StudioContent } from '../learningDesign/content/loadStudioContent.js';
 import { LearningDesignStore } from '../learningDesign/metadata/LearningDesignStore.js';
+import { NO_RESULTS_YET } from '../learningDesign/mappe/activityResults.js';
+import { MappeRenderer } from '../learningDesign/mappe/MappeRenderer.js';
+import { PdfRenderer } from '../learningDesign/mappe/pdf/PdfRenderer.js';
 import { PatternCreator } from '../learningDesign/patterns/PatternCreator.js';
+import { minimumGroupSize } from '../privacy/minimumGroupSize.js';
 import type { IdentityHasher } from '../security/keys/IdentityHasher.js';
 
 /** What the studio's services are built from: createApp's inputs and the single instances it makes. */
@@ -56,12 +63,6 @@ export interface StudioServiceInputs {
 }
 
 /**
- * The type of a service whose workstream has not built it yet. The workstream replaces it with its service's type
- * in `StudioServices` and replaces `undefined` with the construction in `createStudioServices`.
- */
-export type PendingStudioService = undefined;
-
-/**
  * The studio's services. Each workstream owns its fields and may add more next to them; a service whose object has a
  * `close()` method is closed at shutdown, so `close` means "release your resources" on every service here.
  */
@@ -74,12 +75,12 @@ export interface StudioServices {
   readonly patternCreator: PatternCreator;
   /** W3: reads and replaces an activity's learning-design metadata, and builds the planner's grid (D-087, D-088). */
   readonly learningDesignStore: LearningDesignStore;
-  /** W4: finds HVL staff who may be co-authors, rate-limited per person (D-090). */
-  readonly peopleDirectory: PendingStudioService;
+  /** W4: finds HVL staff who may be co-authors, rate-limited per person, and says who may be added (D-090). */
+  readonly peopleDirectory: PeopleDirectory;
   /** W6: renders the pedagogisk mappe as Markdown, with the minimum group size applied (D-094, D-095). */
-  readonly mappeRenderer: PendingStudioService;
+  readonly mappeRenderer: MappeRenderer;
   /** W6: prints the mappe's HTML as a tagged PDF in a shared, lazily started Chromium (D-096). */
-  readonly pdfRenderer: PendingStudioService;
+  readonly pdfRenderer: PdfRenderer;
 }
 
 /** A studio service that holds a resource, such as a browser, which must be released at shutdown. */
@@ -116,9 +117,19 @@ export function createStudioServices(inputs: StudioServiceInputs): StudioService
       db,
       phases: inputs.studioContent.phases.phases.map((phase) => phase.key),
     }),
-    peopleDirectory: undefined,
-    mappeRenderer: undefined,
-    pdfRenderer: undefined,
+    // PRIVACY: an exact Feide-ID search hashes the query with the login's own key ring (D-090, D-055).
+    peopleDirectory: new PeopleDirectory({ db, hasher: inputs.hasher, redis: inputs.redis }),
+    // PRIVACY: S5 records no learner results, so the mappe says "no results yet" (D-095); S6 passes the real source.
+    mappeRenderer: new MappeRenderer({
+      db,
+      content: inputs.studioContent,
+      validator: inputs.publishing.validator,
+      results: NO_RESULTS_YET,
+      groupSize: minimumGroupSize(inputs.env.MIN_GROUP_SIZE),
+      publicBaseUrl: inputs.env.PUBLIC_BASE_URL,
+    }),
+    // WHY: the browser starts on the first PDF export, not here (building contacts nothing, D-096).
+    pdfRenderer: new PdfRenderer({ env: inputs.env, logger: inputs.logger }),
   });
 }
 

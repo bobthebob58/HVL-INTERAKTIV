@@ -19,7 +19,7 @@ import { z } from 'zod';
 import { contentStatusSchema } from './content.js';
 import { courseCodeSchema } from './learningDesign.js';
 import { localeSchema } from './me.js';
-import { phaseKeySchema } from './studio.js';
+import { localeTextSchema, phaseKeySchema } from './studio.js';
 
 /** The most activities one portfolio may include. */
 export const MAPPE_MAX_ACTIVITIES = 50;
@@ -53,6 +53,32 @@ export type MappeActivity = z.infer<typeof mappeActivitySchema>;
 export const mappeActivityListSchema = z.strictObject({ items: z.array(mappeActivitySchema) });
 /** The activities to pick from. */
 export type MappeActivityList = z.infer<typeof mappeActivityListSchema>;
+
+/** A criteria set the page offers, with its limits (MAPPE-002, D-094). */
+export const mappeCriteriaSetSchema = z.strictObject({
+  id: criteriaSetIdSchema,
+  /** The set's name in nn, nb and en, e.g. «HVL merittering 2025». */
+  title: localeTextSchema,
+  /** The most words in Del 1. */
+  wordLimit: z.int().min(1),
+  /** The most attachments. */
+  attachmentLimit: z.int().min(1),
+  /** True while ALU has not confirmed one of the limits *(verify)*. */
+  limitsToVerify: z.boolean(),
+});
+/** A criteria set the page offers. */
+export type MappeCriteriaSet = z.infer<typeof mappeCriteriaSetSchema>;
+
+/**
+ * `GET /api/mappe/criteria-sets` → 200: the criteria sets in the content files and the one used by default.
+ * @spec MAPPE-002
+ */
+export const mappeCriteriaSetListSchema = z.strictObject({
+  defaultSet: criteriaSetIdSchema,
+  sets: z.array(mappeCriteriaSetSchema).min(1),
+});
+/** The criteria sets the page offers. */
+export type MappeCriteriaSetList = z.infer<typeof mappeCriteriaSetListSchema>;
 
 /**
  * `POST /api/mappe/preview` and `POST /api/mappe/export` body: the chosen activities, the criteria set and the

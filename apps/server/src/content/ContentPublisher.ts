@@ -14,10 +14,12 @@
  *     Lumi's write (./PublishedSaveGate.ts), so a save never lands unvalidated on an activity the publish just made
  *     visible (D-074). Unpublishing needs no lock: hiding an activity never shows unvalidated content.
  *   - Audit details hold rule IDs, the previous status and the mode only, never a reason (DATA-007).
+ *   - Unpublishing removes the content-bank listing in the same transaction, audited with its cause (D-091).
  * Collaborators: ./storedContent.ts, ./acknowledgementCoverage.ts, ./PublishBlockedError.ts, ./ContentWriteLock.ts,
- *   ../http/api/publishRoutes.ts.
+ *   ../http/api/publishRoutes.ts, ../learningDesign/collaboration/bankListingWrites.ts.
  * Tests: apps/server/test/http/api/publishRoutes.int.test.ts, apps/server/test/http/api/publishGuards.int.test.ts,
- *   apps/server/test/content/saveRace.int.test.ts
+ *   apps/server/test/content/saveRace.int.test.ts,
+ *   apps/server/test/learningDesign/collaboration/bankListingCleared.int.test.ts
  */
 import type {
   FindingsResponse,
@@ -28,6 +30,7 @@ import type {
 } from '@hvl-interaktiv/api-contract';
 import type { AuthMode } from '../auth/Principal.js';
 import { authError } from '../http/authErrors.js';
+import { clearBankListing } from '../learningDesign/collaboration/bankListingWrites.js';
 import type { Locale } from '../i18n/translate.js';
 import { decidePublish, withAcknowledgements } from './acknowledgementCoverage.js';
 import { IN_PROCESS_WRITE_LOCK } from './ContentWriteLock.js';
@@ -138,7 +141,7 @@ export class ContentPublisher {
   }
 
   /**
-   * Returns an activity to draft, so learners no longer see it.
+   * Returns an activity to draft, so learners no longer see it, and takes it out of the content bank (D-091).
    * @param contentId - The canonical activity ID.
    * @param by - Who unpublishes.
    * @param request - The checked `updatedAt`.
@@ -159,6 +162,8 @@ export class ContentPublisher {
         data: { status: 'draft', publishedAt: null },
       });
       if (count === 0) throw authError('hvl:content-changed');
+      // PROD-007: only a published activity may be in the bank, so the listing ends with it (D-091 as amended).
+      await clearBankListing(tx, { contentId: row.id, actorUserId: by.userId }, 'unpublish');
       await tx.auditEvent.create({
         data: {
           actorUserId: by.userId,

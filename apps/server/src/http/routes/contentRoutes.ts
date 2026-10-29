@@ -28,10 +28,12 @@
  *     (`editorSaveChoice.js`, its texts from ../../learningDesign/safeEditing/saveChoiceMessages.ts) answers it by
  *     sending the same PUT body again with `confirmLearnerStateReset: true`, or, in the portal, by posting
  *     `JSON.parse(content.params)` to the copy route.
- *   - `POST /content/:contentId/copy` with `{ params: object, metadata: object }` (what H5P's editor gives as
- *     `content.params`) saves the edit as a new private draft linked to the activity, which stays untouched, and
- *     answers 201 `{ contentId }`. Portal only: an ltik is 401 `hvl:unauthenticated` (D-098), a portal learner 403;
- *     the duplicator's refusals pass through (404 `hvl:activity-unavailable`, 403 `hvl:duplicate-not-allowed`, the
+ *   - `POST /content/:contentId/copy` with `{ params: object, metadata: object, library?: string }` (what H5P's
+ *     editor gives as `content.params`, and its `content.library`) saves the edit as a new private draft linked to
+ *     the activity, which stays untouched, and answers 201 `{ contentId }`; the copy keeps the source's library
+ *     unless `library` is an installed minor version of it (D-093 amendment, S5 W4); a `library` that is not a
+ *     string is 400. Portal only: an ltik is 401 `hvl:unauthenticated` (D-098), a portal learner 403; the
+ *     duplicator's refusals pass through (404 `hvl:activity-unavailable`, 403 `hvl:duplicate-not-allowed`, the
  *     editor's 4xx, 500 `hvl:duplicate-failed`).
  *   - The export is always a download (`attachment`, `nosniff`) named after the content ID, never a title, and
  *     the response ends only when Lumi's zip stream has been written completely.
@@ -145,8 +147,10 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
   if (duplicator) {
     router.post('/content/:contentId/copy', portalAuthorsOnly, ...jsonBody, async (req, res) => {
       const { params, metadata } = editedContent(req.body);
+      const library: unknown = (req.body as Record<string, unknown>).library;
+      if (library !== undefined && typeof library !== 'string') throw new HttpError(400, 'error.badRequest');
       const id = pathParam(req, 'contentId');
-      const { contentId } = await duplicator.saveAsCopy(id, params, metadata, requireActor(res));
+      const { contentId } = await duplicator.saveAsCopy(id, params, metadata, requireActor(res), library);
       res.status(201).json({ contentId });
     });
   }

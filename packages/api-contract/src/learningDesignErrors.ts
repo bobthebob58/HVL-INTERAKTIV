@@ -51,6 +51,11 @@ export const LEARNING_DESIGN_ERROR_STATUS = {
   'hvl:pdf-unavailable': 503,
   /** Every PDF slot is in use, or the person is already making one (D-096). */
   'hvl:pdf-busy': 503,
+  /**
+   * No portfolio yet: none of the mappe's template and criteria files is in the content (D-094); the page explains
+   * it, and nothing can be exported until ALU adds them.
+   */
+  'hvl:mappe-not-ready': 409,
 } as const;
 
 /** A stable S5 error code. */
