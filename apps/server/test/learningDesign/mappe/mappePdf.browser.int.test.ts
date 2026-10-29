@@ -40,6 +40,9 @@ const headingsOf = (markdown: string): string[] => {
 const flatten = (entries: readonly OutlineEntry[]): string[] =>
   entries.flatMap((entry) => [entry.title, ...flatten(entry.items)]);
 
+/** An activity title that wraps on an A4 page, so the outline test covers a heading's line break. */
+const LONG_TITLE =
+  'Undervegsvurdering med tilbakemelding på kvart svar i eit langt emne om formativ vurdering og læringsdesign';
 describeWithBrowser('[MAPPE-004] the portfolio PDF from the server’s Chromium', () => {
   describeWithServices('[MAPPE-004] through the export route', () => {
     let tb: ApiTestbed;
@@ -72,6 +75,8 @@ describeWithBrowser('[MAPPE-004] the portfolio PDF from the server’s Chromium'
           status: 'published',
         }),
         await tb.content(author.principal.userId, { title: 'Åtte spørsmål' }),
+        // WHY: a title long enough to wrap: Chromium's outline joins the words at a wrap unless headings keep it.
+        await tb.content(author.principal.userId, { title: LONG_TITLE }),
       ];
     });
     afterAll(async () => {

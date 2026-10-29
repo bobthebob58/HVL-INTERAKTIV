@@ -2213,6 +2213,10 @@ loading of one spec per session are kept.
   again. A full process or a person's second export is 503 `hvl:pdf-busy` at once (no queue) with `Retry-After: 10`.
   Playwright's signal handlers are off, so only the server's shutdown closes the browser. A crashed browser is
   forgotten on `disconnected` and started again on the next export.
+- **Amendment (2026-10-29, S5 stage 5):** Chromium's tagged-PDF outline drops the space where a heading wraps over two
+  lines («emneom»), so a screen reader's bookmark list ran words together for long activity titles. The PDF's
+  headings now have `white-space: pre-wrap`, which keeps the space and renders a one-line Markdown heading the same;
+  the PDF browser test has a title that wraps, and its outline must equal the Markdown headings.
 
 ### D-097 · New dependencies in S5
 - **Context:** CLAUDE.md pins every runtime dependency exactly, and D-029's checks allow only listed licences.

@@ -1,0 +1,100 @@
+# content/mappe/criteria.nn.yaml: the criteria of the pedagogisk mappe in Nynorsk, one set per HVL merit call
+# (spec 04 §7, MAPPE-002, D-020, D-094).
+#
+# DRAFT, not confirmed by ALU (open question Q17).
+# Source: docs/reference/hvl-pedagogisk-mappe-criteria.md §3 (HVL's 2025 merit call, «Merittert underviser –
+#   utlysning 2025», compiled on 2026-10-16 through web search, so every text is a search excerpt, not the page
+#   itself). The criteria below are that extract: quoted where the extract is verbatim, translated faithfully where it
+#   is verbatim in Bokmål only, and paraphrased where it is a paraphrase (1.4). No criterion is added or left out.
+#   Each criterion follows the lead-in «Dette inneber at søkaren:», so the texts start in lower case.
+# How to edit: content/mappe/README.md. The Bokmål and English files have the same sets, criteria, limits and
+#   attachment hints in the same order. `chapter` names the chapters of template.nn.md. Run `npm run content:check`.
+# Limits: «inntil 7500 ord» (the 2023 and 2025 calls) and «inntil 11 vedlegg» (the 2025 call); verify: true until ALU
+#   confirms them for the call.
+version: 1
+sets:
+  - id: hvl-merittering-2025
+    title: HVL merittering, utlysinga 2025
+    limits:
+      del1Words:
+        value: 7500
+        verify: true
+      attachments:
+        value: 11
+        verify: true
+    criteria:
+      # Verbatim (Nynorsk, from HVL's article on the 2025 awardees).
+      - id: '1.1'
+        text: >-
+          har brei erfaring med undervisning og rettleiing og reflekterer over korleis eigen undervisningspraksis
+          støttar studentane sin læringsprosess
+        chapter: Del 1, kap. 1 og 2.1
+      # Verbatim in Bokmål only («har arbeidet systematisk over tid med å utvikle sin undervisning og reflekterer over
+      # denne utviklingen»); translated.
+      - id: '1.2'
+        text: >-
+          har arbeidd systematisk over tid med å utvikle undervisninga si og reflekterer over denne utviklinga
+        chapter: Del 1, kap. 2.2
+      # Verbatim in Bokmål only («arbeider systematisk med tilbakemeldinger fra studenter og eventuelt kolleger og
+      # anvender dem for å videreutvikle undervisning»); translated.
+      - id: '1.3'
+        text: >-
+          arbeider systematisk med tilbakemeldingar frå studentar og eventuelt kollegaer og nyttar dei til å
+          vidareutvikle undervisning
+        chapter: Del 1, kap. 2.3 og aktivitetane i 3.3
+        attachment: Samanstilling av tilbakemeldingar frå studentar (sjå Del 3)
+      # PARAPHRASE ONLY (low confidence): no verbatim text was retrieved. ALU must give HVL's wording.
+      - id: '1.4'
+        text: >-
+          samarbeider med studentar, kollegaer og/eller leiinga om å utvikle undervisninga og reflekterer over kvifor
+          dette samarbeidet er viktig
+        chapter: Del 1, kap. 2.4
+      # Verbatim in Bokmål only, without its number («jobber utforskende og systematisk med utviklingsarbeid,
+      # innovasjon og/eller forskning om undervisning»); translated.
+      - id: '2.1'
+        text: >-
+          arbeider utforskande og systematisk med utviklingsarbeid, innovasjon og/eller forsking om undervisning
+        chapter: Del 1, kap. 3.1
+      # Verbatim in Bokmål only («begrunner og reflekterer over sin måte å løse undervisningsoppgavene på gjennom å
+      # forankre valg i relevant forskning og teori»); translated. The rest of the criterion (theory on teaching and
+      # learning in higher education and/or the subject) is only a search summary, so it is left out (verify).
+      - id: '2.2'
+        text: >-
+          grunngjev og reflekterer over måten sin å løyse undervisningsoppgåvene på ved å forankre vala i relevant
+          forsking og teori
+        chapter: Del 1, kap. 1 og 3.2
+      # Verbatim in Bokmål only («er systematisk når det gjelder utvikling og utprøving av undervisnings- og
+      # vurderingsformer, eller varierte læremidler som støtter studentenes læringsprosess»); translated.
+      - id: '2.3'
+        text: >-
+          er systematisk når det gjeld utvikling og utprøving av undervisnings- og vurderingsformer, eller varierte
+          læremiddel som støttar studentane sin læringsprosess
+        chapter: Del 1, kap. 3.3
+        attachment: Dokumentasjon og døme på utvikling av læringsressursar (sjå Del 3)
+      # Verbatim (Nynorsk).
+      - id: '2.4'
+        text: formidlar kompetanse frå arbeid med undervisning på ulike måtar
+        chapter: Del 1, kap. 3.4
+      # Verbatim in Bokmål only («deler erfaringer og samhandler med ledelse, kollegaer, studenter eller andre for å
+      # utvikle faglige fellesskap om kvalitet i undervisning»); translated.
+      - id: '3.1'
+        text: >-
+          deler erfaringar og samhandlar med leiing, kollegaer, studentar eller andre for å utvikle faglege
+          fellesskap om kvalitet i undervisning
+        chapter: Del 1, kap. 4.1
+      # Verbatim in Bokmål only and without its first words («initiert, stått sentralt i eller ledet studieplanarbeid,
+      # pedagogisk eller fagdidaktisk utviklingsarbeid, studiekvalitetsarbeid eller utredningsarbeid forankret i HVLs
+      # strategiske planer»); translated, with «har» added at the start so it reads as a sentence (verify).
+      - id: '3.2'
+        text: >-
+          har initiert, stått sentralt i eller leidd studieplanarbeid, pedagogisk eller fagdidaktisk
+          utviklingsarbeid, studiekvalitetsarbeid eller utgreiingsarbeid forankra i dei strategiske planane til HVL
+        chapter: Del 1, kap. 4.2
+        attachment: Rapport om utvikling av emne eller studieprogram (sjå Del 3)
+      # Verbatim in Bokmål («har en begrunnet plan for utvikling av undervisning og videre strategisk
+      # utviklingsarbeid for å heve undervisningskvaliteten i fagmiljøet»); the Nynorsk version reads «grunngitt plan».
+      - id: '3.3'
+        text: >-
+          har ein grunngitt plan for utvikling av undervisning og vidare strategisk utviklingsarbeid for å heve
+          undervisningskvaliteten i fagmiljøet
+        chapter: Del 1, kap. 4.3

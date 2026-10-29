@@ -7560,6 +7560,10 @@ either, or when the browser will not start, the answer is 503 <code>hvl:pdf-unav
 again. A full process or a person&#39;s second export is 503 <code>hvl:pdf-busy</code> at once (no queue) with <code>Retry-After: 10</code>.
 Playwright&#39;s signal handlers are off, so only the server&#39;s shutdown closes the browser. A crashed browser is
 forgotten on <code>disconnected</code> and started again on the next export.</li>
+<li><strong>Amendment (2026-10-29, S5 stage 5):</strong> Chromium&#39;s tagged-PDF outline drops the space where a heading wraps over two
+lines («emneom»), so a screen reader&#39;s bookmark list ran words together for long activity titles. The PDF&#39;s
+headings now have <code>white-space: pre-wrap</code>, which keeps the space and renders a one-line Markdown heading the same;
+the PDF browser test has a title that wraps, and its outline must equal the Markdown headings.</li>
 </ul>
 <h3 id="decisions--d-097--new-dependencies-in-s5" tabindex="-1">D-097 · New dependencies in S5</h3>
 <ul>
@@ -7975,24 +7979,25 @@ S5 is done), and all of S5 is done in this session.</li>
  amendments to D-087, D-090…D-092, D-096, D-099); the probes hardened for slow CI runners (e4621d5)</li>
 </ol>
 </li>
-<li><span class="task">○ To do:</span> <ol start="3">
+<li><span class="task">✓ Done:</span> <ol start="3">
 <li>Guide, phase matrix and catalogue (<a class="req-ref" href="#r-PED-001"><code>PED-001</code></a>…<a class="req-ref" href="#r-PED-003"><code>PED-003</code></a>); patterns and V-PLACEHOLDER (<a class="req-ref" href="#r-PED-010"><code>PED-010</code></a>, <a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>,
  <a class="req-ref" href="#r-PROD-001"><code>PROD-001</code></a>, <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>)
  — stage 1 done: pattern format, loader and checks, creation API, V-PLACEHOLDER incl. missing media, the
    BranchingScenario picture repair (W2a); stage 2 done: the nine patterns in nn, nb and en, created on the
    real types in every type and phase (W2b; drafts for ALU, Q17); stage 3 done: the guide loader and its
    closed node tree, the public studio routes, the guide page with the phase matrix and the catalogue with
-   filters in the address, the pattern page with «Lag frå dette mønsteret» (W1a; the guide text follows in W1b)</li>
+   filters in the address, the pattern page with «Lag frå dette mønsteret» (W1a); stage 5 done: the guide text in
+   nn, nb and en, in PED-002&#39;s order with every research claim cited (W1b; draft for ALU, Q17)</li>
 </ol>
 </li>
-<li><span class="task">○ To do:</span> <ol start="3">
+<li><span class="task">✓ Done:</span> <ol start="3">
 <li>Metadata, planner, learner time and purpose (<a class="req-ref" href="#r-PED-030"><code>PED-030</code></a>…<a class="req-ref" href="#r-PED-032"><code>PED-032</code></a>)
  — stage 3 done: the Læringsdesign tab and its routes, the publish prompt, course codes from Canvas labels
    (privacy filter), the planner with gaps, time and purpose before the activity in the portal and Canvas (W3);
    screenshots in <code>nn</code> sent to the owner (2026-10-29)</li>
 </ol>
 </li>
-<li><span class="task">○ To do:</span> <ol start="3">
+<li><span class="task">✓ Done:</span> <ol start="3">
 <li>Co-authors, content bank and duplicate (<a class="req-ref" href="#r-PROD-007"><code>PROD-007</code></a>); safe editing (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>)
  — stage 1 done: structure signature, the 409 save gate, stale state writes dropped, the copy route (W5a);
    stage 2 done: the save choice dialog in the editor, portal and Canvas, inert page while open (W5b);
@@ -8001,12 +8006,13 @@ S5 is done), and all of S5 is done in this session.</li>
    attribution for editors, the copy&#39;s library version, the Deling tab, the bank page, /personvern (W4)</li>
 </ol>
 </li>
-<li><span class="task">○ To do:</span> <ol start="3">
+<li><span class="task">✓ Done:</span> <ol start="3">
 <li>Mappe export in Markdown and tagged PDF (<a class="req-ref" href="#r-MAPPE-001"><code>MAPPE-001</code></a>…<a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>)
  — stage 4 done: template and criteria loader (optional until written), Mustache rendering with the Markdown
    escaper and refused value places, the reader&#39;s guide from the criteria, the Del 1 word count, minimum group
-   size, the PDF from Chromium with bounded slots and time limits, the routes and the /mappe page (W6a; the
-   template and criteria text follow in W6b)</li>
+   size, the PDF from Chromium with bounded slots and time limits, the routes and the /mappe page (W6a);
+   stage 5 done: the template and the 2025 criteria set in nn, nb and en (W6b; drafts for ALU, Q17), and the
+   PDF outline keeps spaces where a heading wraps (D-096)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> <ol start="4">

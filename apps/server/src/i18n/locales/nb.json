@@ -217,7 +217,7 @@
     },
     "findings": {
       "none": "Sjekken for universell utforming fant ingen feil eller advarsler.",
-      "summary": "Sjekken for universell utforming: {{errors}} feil, av dem {{acknowledged}} begrunnet, og {{warnings}} advarsler.",
+      "summary": "Sjekken for universell utforming: feil: {{errors}} (begrunnet: {{acknowledged}}), advarsler: {{warnings}}.",
       "error": "Feil",
       "warning": "Advarsel",
       "hint": "Tips",

@@ -86,12 +86,12 @@ phases:
       nb: Etterarbeid # medium — HVL nb: "Etter samlingen …"
       en: Post-work # medium — HVL en: "pre- and post-work"
     description:
-      nn: Konsolidering etter samlinga – repetisjon, gjenhenting og eigenvurdering mot læringsutbytet.
+      nn: Konsolidering etter samlinga – repetisjon, gjenhenting og eigenvurdering mot læringsutbyttet.
       nb: Konsolidering etter samlingen – repetisjon, gjenhenting og egenvurdering mot læringsutbyttet.
       en: Consolidation after the session – spaced retrieval and self-assessment against the learning outcomes.
     # Spec 04 §3: "Consolidate through spaced retrieval; check the learning outcomes (læringsutbytte)".
     purpose:
-      nn: Konsolidere gjennom spreidd gjenhenting, og sjekke kor langt studentane har kome mot læringsutbytet.
+      nn: Konsolidere gjennom spreidd gjenhenting, og sjekke kor langt studentane har kome mot læringsutbyttet.
       nb: Konsolidere gjennom spredt gjenhenting, og sjekke hvor langt studentene har kommet mot læringsutbyttet.
       en: Consolidate through spaced retrieval practice, and check progress towards the learning outcomes.
     # Spec 04 §3: "Graded through AGS with the mastery or best policy (LTI-012), unlimited attempts. Suggested

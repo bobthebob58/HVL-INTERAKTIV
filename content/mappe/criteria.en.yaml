@@ -1,0 +1,76 @@
+# content/mappe/criteria.en.yaml: the criteria of the pedagogisk mappe in English, one set per HVL merit call
+# (spec 04 §7, MAPPE-002, D-020, D-094).
+#
+# DRAFT, not confirmed by ALU (open question Q17).
+# Source: docs/reference/hvl-pedagogisk-mappe-criteria.md §3 (HVL's 2025 merit call, through web search excerpts).
+#   The sources hold the criteria in Norwegian only, so these are faithful translations of the Nynorsk and Bokmål
+#   texts, and 1.4 of the extract's paraphrase. The comments in criteria.nn.yaml say which text is verbatim.
+# How to edit: content/mappe/README.md. Keep the same sets, criteria, limits and attachment hints as criteria.nn.yaml,
+#   in the same order. Run `npm run content:check`.
+version: 1
+sets:
+  - id: hvl-merittering-2025
+    title: HVL merit scheme, 2025 call
+    limits:
+      del1Words:
+        value: 7500
+        verify: true
+      attachments:
+        value: 11
+        verify: true
+    criteria:
+      - id: '1.1'
+        text: >-
+          has broad experience of teaching and supervision and reflects on how their own teaching practice supports
+          students’ learning process
+        chapter: Part 1, chapters 1 and 2.1
+      - id: '1.2'
+        text: has worked systematically over time to develop their teaching and reflects on this development
+        chapter: Part 1, chapter 2.2
+      - id: '1.3'
+        text: >-
+          works systematically with feedback from students and, where relevant, colleagues, and uses it to develop
+          their teaching further
+        chapter: Part 1, chapter 2.3 and the activities in 3.3
+        attachment: Summary of feedback from students (see Part 3)
+      # PARAPHRASE ONLY (low confidence): ALU must give HVL's wording.
+      - id: '1.4'
+        text: >-
+          works with students, colleagues and/or management on developing teaching, and reflects on why this
+          collaboration matters
+        chapter: Part 1, chapter 2.4
+      - id: '2.1'
+        text: >-
+          works in an exploratory and systematic way on development work, innovation and/or research on teaching
+        chapter: Part 1, chapter 3.1
+      - id: '2.2'
+        text: >-
+          explains and reflects on how they carry out their teaching tasks by grounding their choices in relevant
+          research and theory
+        chapter: Part 1, chapters 1 and 3.2
+      - id: '2.3'
+        text: >-
+          is systematic in developing and trying out forms of teaching and assessment, or varied learning materials
+          that support students’ learning process
+        chapter: Part 1, chapter 3.3
+        attachment: Documentation and examples of learning resources you have developed (see Part 3)
+      - id: '2.4'
+        text: shares expertise from work on teaching in different ways
+        chapter: Part 1, chapter 3.4
+      - id: '3.1'
+        text: >-
+          shares experience and works with management, colleagues, students or others to develop professional
+          communities around quality in teaching
+        chapter: Part 1, chapter 4.1
+      # «has» starts the sentence as in the Norwegian files (verify).
+      - id: '3.2'
+        text: >-
+          has initiated, played a central part in or led work on study programmes, educational or subject-didactic
+          development work, study quality work or reviews grounded in HVL’s strategic plans
+        chapter: Part 1, chapter 4.2
+        attachment: Report on developing a course or study programme (see Part 3)
+      - id: '3.3'
+        text: >-
+          has a reasoned plan for developing teaching and for further strategic development work to raise the
+          quality of teaching in their academic community
+        chapter: Part 1, chapter 4.3

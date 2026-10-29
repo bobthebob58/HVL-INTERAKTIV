@@ -92,7 +92,7 @@ describe('[MAPPE-002] the view of a portfolio', () => {
     // Assert
     const activity = view.aktivitetar[0];
     expect(activity?.uu_status).toBe(
-      'Sjekken for universell utforming: 1 feil, av dei 1 grunngjevne, og 1 åtvaringar.',
+      'Sjekken for universell utforming: feil: 1 (grunngjevne: 1), åtvaringar: 1.',
     );
     expect(activity?.uu_merknader).toEqual([
       {

@@ -1,0 +1,86 @@
+# content/mappe/criteria.nb.yaml: the criteria of the pedagogisk mappe in Bokmål, one set per HVL merit call
+# (spec 04 §7, MAPPE-002, D-020, D-094).
+#
+# DRAFT, not confirmed by ALU (open question Q17).
+# Source: docs/reference/hvl-pedagogisk-mappe-criteria.md §3 (HVL's 2025 merit call, «Merittert underviser –
+#   utlysning 2025», through web search excerpts). Most HVL texts in that extract are in Bokmål and are quoted as they
+#   are; 1.1 is translated from the Nynorsk quote; 1.4 is a paraphrase. The comments in criteria.nn.yaml say which.
+# How to edit: content/mappe/README.md. Keep the same sets, criteria, limits and attachment hints as criteria.nn.yaml,
+#   in the same order. Run `npm run content:check`.
+version: 1
+sets:
+  - id: hvl-merittering-2025
+    title: HVL merittering, utlysningen 2025
+    limits:
+      del1Words:
+        value: 7500
+        verify: true
+      attachments:
+        value: 11
+        verify: true
+    criteria:
+      # Translated from the Nynorsk quote.
+      - id: '1.1'
+        text: >-
+          har bred erfaring med undervisning og veiledning og reflekterer over hvordan egen undervisningspraksis
+          støtter studentenes læringsprosess
+        chapter: Del 1, kap. 1 og 2.1
+      # Verbatim.
+      - id: '1.2'
+        text: >-
+          har arbeidet systematisk over tid med å utvikle sin undervisning og reflekterer over denne utviklingen
+        chapter: Del 1, kap. 2.2
+      # Verbatim.
+      - id: '1.3'
+        text: >-
+          arbeider systematisk med tilbakemeldinger fra studenter og eventuelt kolleger og anvender dem for å
+          videreutvikle undervisning
+        chapter: Del 1, kap. 2.3 og aktivitetene i 3.3
+        attachment: Sammenstilling av tilbakemeldinger fra studenter (se Del 3)
+      # PARAPHRASE ONLY (low confidence): ALU must give HVL's wording.
+      - id: '1.4'
+        text: >-
+          samarbeider med studenter, kolleger og/eller ledelsen om å utvikle undervisningen og reflekterer over
+          hvorfor dette samarbeidet er viktig
+        chapter: Del 1, kap. 2.4
+      # Verbatim, without its number.
+      - id: '2.1'
+        text: >-
+          jobber utforskende og systematisk med utviklingsarbeid, innovasjon og/eller forskning om undervisning
+        chapter: Del 1, kap. 3.1
+      # Verbatim as far as the extract is verbatim; the rest is left out (verify).
+      - id: '2.2'
+        text: >-
+          begrunner og reflekterer over sin måte å løse undervisningsoppgavene på gjennom å forankre valg i relevant
+          forskning og teori
+        chapter: Del 1, kap. 1 og 3.2
+      # Verbatim.
+      - id: '2.3'
+        text: >-
+          er systematisk når det gjelder utvikling og utprøving av undervisnings- og vurderingsformer, eller
+          varierte læremidler som støtter studentenes læringsprosess
+        chapter: Del 1, kap. 3.3
+        attachment: Dokumentasjon og eksempler på utvikling av læringsressurser (se Del 3)
+      # Verbatim.
+      - id: '2.4'
+        text: formidler kompetanse fra arbeid med undervisning på ulike måter
+        chapter: Del 1, kap. 3.4
+      # Verbatim.
+      - id: '3.1'
+        text: >-
+          deler erfaringer og samhandler med ledelse, kollegaer, studenter eller andre for å utvikle faglige
+          fellesskap om kvalitet i undervisning
+        chapter: Del 1, kap. 4.1
+      # Verbatim, with «har» added at the start so it reads as a sentence (verify).
+      - id: '3.2'
+        text: >-
+          har initiert, stått sentralt i eller ledet studieplanarbeid, pedagogisk eller fagdidaktisk
+          utviklingsarbeid, studiekvalitetsarbeid eller utredningsarbeid forankret i HVLs strategiske planer
+        chapter: Del 1, kap. 4.2
+        attachment: Rapport om utvikling av emner eller studieprogram (se Del 3)
+      # Verbatim.
+      - id: '3.3'
+        text: >-
+          har en begrunnet plan for utvikling av undervisning og videre strategisk utviklingsarbeid for å heve
+          undervisningskvaliteten i fagmiljøet
+        chapter: Del 1, kap. 4.3

@@ -125,9 +125,7 @@ describeWithServices('[MAPPE-001] exporting a pedagogisk mappe', () => {
     expect(res.text).toContain('- **Læringsutbytte:** Forklare blodtrykk (kunnskap)');
     expect(res.text).toContain('- **Didaktisk grunngjeving:** Studentane ser videoen før samlinga.');
     expect(res.text).toContain(`/aktivitet/${ids.own}`);
-    expect(res.text).toContain(
-      'Sjekken for universell utforming: 1 feil, av dei 1 grunngjevne, og 0 åtvaringar.',
-    );
+    expect(res.text).toContain('Sjekken for universell utforming: feil: 1 (grunngjevne: 1), åtvaringar: 0.');
     expect(res.text).toMatch(
       /- Feil: Biletet manglar alternativ tekst\. \(grunngjeve .+: «Biletet er pynt\.»\)/,
     );

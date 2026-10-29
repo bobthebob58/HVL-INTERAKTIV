@@ -2,13 +2,13 @@
  * Tests for the guide loader (D-082, D-083): the fixture guide loads into three node trees with the references each
  * cites; no guide files is "no guide yet"; a missing language, an unknown citation, a refused construct, a missing
  * or repeated marker and a parity mismatch between nn, nb and en each stop the load, naming the file and the line.
+ * The repository's own guide is tested in ./realGuideContent.test.ts.
  *
  * Spec: PED-001, PED-002
  */
 import { afterAll, describe, expect, it } from 'vitest';
 import type { ContentProblem } from '../../../src/learningDesign/content/contentProblem.js';
 import { describeGuideContent, loadGuideContent } from '../../../src/learningDesign/content/guideContent.js';
-import { loadStudioContent } from '../../../src/learningDesign/content/loadStudioContent.js';
 import {
   editedGuideFixture,
   fixtureGuide,
@@ -63,15 +63,6 @@ describe('[PED-002] loading the guide', () => {
     // Assert
     expect(loaded).toEqual({ ok: true, value: {} });
     expect(loaded.ok && describeGuideContent(loaded.value)).toBe('no guide yet');
-  });
-
-  it('[PED-002] the guide in content/ loads, as no guide yet or in all three languages with one outline', () => {
-    // Act
-    const { guide } = loadStudioContent();
-    // Assert: ALU writes the text, so only its shape is checked
-    const outlines = Object.values(guide.documents ?? {}).map(({ outline }) => outline.headings.length);
-    expect(outlines.length === 0 || outlines.length === 3).toBe(true);
-    expect(new Set(outlines).size).toBeLessThanOrEqual(1);
   });
 
   it('[PED-001] refuses a guide that is missing a language, naming the missing file', () => {

@@ -13,6 +13,21 @@ The six files come together: while none of them exists, the page `/mappe` says t
 some exist, the server does not start and names each missing file. Until ALU confirms them, the files are drafts
 (open question Q17).
 
+## Status
+
+All six files were written on 2026-10-29 (S5). Every one of them is a **draft** until ALU confirms it (open question
+Q17; the review packet is `docs/reference/alu-review-s5.md`, D-100). The sources are
+[`docs/reference/hvl-pedagogisk-mappe-criteria.md`](../../docs/reference/hvl-pedagogisk-mappe-criteria.md), which was
+put together from public HVL pages through web search and is not ALU's own document, and the proposal
+[`docs/reference/proposals/mappe-template.nn.md`](../../docs/reference/proposals/mappe-template.nn.md).
+
+| File | Status | What ALU decides |
+|---|---|---|
+| `template.nn.md` | Draft: the proposal, adapted to the values, lists and markers below. The notes in it name the HVL source of every rule it states | The headings and writing prompts, among them chapters 2 and 3, whose 2025 wording of main criteria 1 and 2 was not found; whether the reader's guide stands before Del 1 (as now) or inside it; the Del 2 headings, once HVL's CV template is known; the *opprykk* mode |
+| `template.nb.md`, `template.en.md` | Drafts translated from the Nynorsk one, with the same structure | The wording |
+| `criteria.nn.yaml` | Draft of the set `hvl-merittering-2025`: HVL's 2025 criteria 1.1–1.4, 2.1–2.4 and 3.1–3.3, each with its chapter, three of them with an attachment hint. A note at each criterion says whether its text is quoted, translated from Bokmål or paraphrased | HVL's exact wording of 1.4 (only a paraphrase was found), the rest of 2.2 and the first word of 3.2; the attachment hints; the limits, 7 500 words and 11 attachments, both `verify: true` |
+| `criteria.nb.yaml`, `criteria.en.yaml` | Drafts with the same set, criteria, limits and hints | The wording; the sources hold the criteria in Norwegian only, so the English texts are translations |
+
 ## The template
 
 The template is ordinary Markdown: `#` headings, paragraphs, lists, `*italics*` for writing prompts, `**bold**`,
@@ -24,6 +39,10 @@ tables and links written as `[text](https://…)`. Three things are special:
   for each activity the teacher chose. Inside a list you may use its own values and the values of the levels around it.
 - **Markers** are names alone on their own line, such as `{{del1_start}}`. They place what the server builds itself
   and mark the parts it counts. Each marker stands exactly once, never inside a list.
+
+Keep each heading short enough to fit on one line in the PDF (about 40 characters for `#` and 50 for `##`). Where a
+heading wraps onto a second line, the PDF's bookmark for it loses the space at the line break, so a screen reader
+reads two words as one (a limit of the Chromium version the server uses, recorded for the manual PDF check).
 
 Notes for the people who edit the file go between `<!--` and `-->`; they never reach the portfolio, and names written
 in them are not checked. A block between two `---` lines at the very top (front matter) is ignored too: the limits
@@ -185,4 +204,12 @@ about students are totals for groups of at least `k` students; a smaller group s
 starts: a missing file, an unknown or repeated key, a name the server does not know, a value in an unsafe place, a
 missing or repeated marker, or a difference between the languages. Each message names the file, the line and, in the
 criteria, the key. The server's tests check the rules with a fixture of their own
-(`apps/server/test/fixtures/studio-content/mappe-fixture/`), never these files' texts.
+(`apps/server/test/fixtures/studio-content/mappe-fixture/`), never these files' texts. Three more tests render these
+files as they are, in all three languages, and check only their structure, so changing a text breaks them only when
+it breaks a rule above:
+`apps/server/test/learningDesign/mappe/mappeRealContent.test.ts` (the reader's guide has one row per criterion of the
+set; the word count of Del 1 leaves out the reader's guide and the references; the languages have the same headings
+and suggested attachments, no more than the limit; no tag is left), `mappeRealContent.int.test.ts` (the same through
+the export route) and `mappeRealContentPdf.browser.int.test.ts` (the PDF is tagged, its bookmarks are the headings,
+and it has the language and the title). The PDF test runs only where Chromium is installed (always in CI), and it is
+the one that fails when a heading is too long for one line, since the bookmark then differs from the heading.

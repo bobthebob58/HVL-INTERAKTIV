@@ -19,6 +19,7 @@
  * Collaborators: ./loadStudioContent.ts (calls it), ./runContentCheck.ts (the summary), ./guideMarkdownTree.ts,
  *   ./guideParity.ts, ./referencesContent.ts, ./studioContentContext.ts, ../http/studioContentAnswers.ts.
  * Tests: apps/server/test/learningDesign/content/guideContent.test.ts,
+ *   apps/server/test/learningDesign/content/realGuideContent.test.ts,
  *   apps/server/test/learningDesign/content/loadStudioContent.test.ts
  */
 import { readFileSync } from 'node:fs';

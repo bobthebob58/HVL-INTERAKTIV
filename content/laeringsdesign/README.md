@@ -4,7 +4,7 @@
 |---|---|
 | `phases.yaml` | The names and texts of the three phases (Forarbeid, Mellomarbeid, Etterarbeid) and of the *samling* |
 | `references.yaml` | The full references that the guide and the patterns cite |
-| `guide.nn.md`, `guide.nb.md`, `guide.en.md` | The guide on the page `/laeringsdesign`, in Nynorsk, Bokmål and English (not written yet) |
+| `guide.nn.md`, `guide.nb.md`, `guide.en.md` | The guide on the page `/laeringsdesign`, in Nynorsk, Bokmål and English (a draft for ALU to review, Q17) |
 | `patterns/<id>/` | One folder per pattern: what it is for (`pattern.yaml`) and the activity it starts from (a skeleton) |
 | `hint-thresholds.yaml` | The limits of the pedagogical hints the validator gives before publishing |
 
@@ -109,8 +109,22 @@ the pattern catalogue (spec 04 §2, `PED-002`). The guide is three files, one pe
 text with a few marks for headings, lists and links. The page shows the guide in the reader's language; the three
 files have the same structure, and their wording may differ.
 
-**Not written yet.** Until the three files exist, the page shows the phase matrix and the catalogue alone, and
-`npm run content:check` says `no guide yet`. Add all three files at once: one or two of them alone is an error.
+**Status: draft (2026-10-29).** The three files are a first draft for ALU and the pilot teachers to review (open
+question Q17); ALU names the page, whose working title comes from the system, not from these files. Every research claim
+cites a reference in `references.yaml`, all of which still say `verify: true`, and the links go to the ALU page and the
+Emnedesign module (UPED854) as `docs/reference/hvl-laeringsdesign-model.md` gives them. Rewrite the wording freely. If
+all three files are removed, the page shows the phase matrix and the catalogue alone, and `npm run content:check` says
+`no guide yet`; one or two of them alone is an error. Spec 04 requires the guide (`PED-002`), so the repository's own
+test (below) then fails until the guide is back.
+
+The guide follows the order spec 04 sets (`PED-002`), which its test checks by the headings, boxes and markers only:
+
+1. `##` why asynchronous work often fails, and what helps (three sentences);
+2. `##` «HVL læringsdesign» in brief, citing Møgelvang & Isaksen (2025) as `[@mogelvang2025]`;
+3. `##` the three mechanisms, each a `###` heading followed by its own box: segment and retrieve; explain, don't just
+   mark; practise judgement safely;
+4. `##` where the activity belongs, with `{{phase-matrix}}` and then `{{pattern-catalogue}}`, each after a paragraph;
+5. `##` help and further learning, with the two links (ALU and Emnedesign).
 
 ### What you can write
 
@@ -182,6 +196,12 @@ A pattern's `whyItWorks` follows the same rules, but holds only paragraphs and l
 - The tests of the guide loader (`apps/server/test/learningDesign/content/`) use a test guide in
   `apps/server/test/fixtures/studio-content/guide-fixture/`, and the page's tests (`apps/web/test/features/`) their
   own, never the texts here, so rewording the guide breaks no test.
+- `apps/server/test/learningDesign/content/realGuideContent.test.ts` loads the three files here and checks only their
+  structure against the order above: five `##` sections; three `###` headings in the third, each followed by a box;
+  both markers in the fourth, the phase matrix first, neither straight after a heading; at least two `https:` links
+  in the last; `[@mogelvang2025]` in the second; and every citation listed in `references.yaml`. Rewording, a new
+  paragraph or list, or another link breaks nothing; a new `##` section, `###` heading or box breaks it on purpose:
+  change `PED-002` in spec 04 first, then the test.
 
 ## patterns/ — the pattern catalogue
 

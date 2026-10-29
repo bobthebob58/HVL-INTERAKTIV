@@ -13,7 +13,7 @@ import {
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { openApiTestbed, type TestPrincipal } from '../../support/apiTestbed.js';
-import { studioContentWithMappe } from '../../support/mappeFixture.js';
+import { studioContentWithMappe, studioContentWithoutMappe } from '../../support/mappeFixture.js';
 import { requestAs } from '../../support/requestAs.js';
 import { describeWithServices } from '../../support/services.js';
 import { REFUSED_CALLERS } from '../metadata/metadataFixtures.js';
@@ -27,7 +27,8 @@ const ROUTES = [
 
 describeWithServices('[MAPPE-001] the pedagogisk mappe routes', () => {
   const tb = openApiTestbed({ studioContent: studioContentWithMappe() });
-  const empty = openApiTestbed();
+  // WHY: the real content now has its mappe files (W6b), so "no portfolio yet" is the real content without them.
+  const empty = openApiTestbed({ studioContent: studioContentWithoutMappe() });
   let author: TestPrincipal;
   let mine: string;
   const body = () => ({ contentIds: [mine], locale: 'nn' });

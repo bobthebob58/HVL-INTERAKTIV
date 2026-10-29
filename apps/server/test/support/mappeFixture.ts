@@ -1,16 +1,19 @@
 /**
  * mappeFixture — the test fixture of the pedagogisk mappe (apps/server/test/fixtures/studio-content/mappe-fixture/)
  * loaded as the server loads it, copies of it with edits for the loader tests, and the real studio content with the
- * fixture's template and criteria, for the renderer, route and page tests.
+ * fixture's template and criteria, for the renderer, route and page tests; and the real content without its mappe, for
+ * the "no portfolio yet" answer.
  *
- * Why: the real template and criteria are ALU's and may not exist yet (D-082), so tests never assert their texts.
+ * Why: the real template and criteria are ALU's drafts (D-082, Q17) and change with every edit, so tests never assert
+ *      their texts.
  *      One fixture with two criteria sets (so switching sets is testable, MAPPE-002) keeps the tests independent of
  *      ALU's edits.
  * Spec: MAPPE-002
  * Invariants:
  *   - The fixture folder holds only `mappe/`, read with `loadMappeContent`, never with `loadStudioContent`.
  *   - Edited copies live in fresh temporary folders, removed by `removeMappeFixtureCopies`.
- *   - `studioContentWithMappe` is the real content with the fixture's mappe, frozen like the real content.
+ *   - `studioContentWithMappe` is the real content with the fixture's mappe, and `studioContentWithoutMappe` the real
+ *     content with none, both frozen like the real content.
  * Collaborators: ../../src/learningDesign/content/mappeContent.ts, ../../src/learningDesign/content/
  *   loadStudioContent.ts, ../fixtures/studio-content/README.md.
  * Tests: apps/server/test/learningDesign/content/mappeCriteria.test.ts and the other users of this file.
@@ -92,4 +95,13 @@ export function removeMappeFixtureCopies(): void {
  */
 export function studioContentWithMappe(base: StudioContent = loadStudioContent()): StudioContent {
   return deepFreeze({ ...base, mappe: fixtureMappe() });
+}
+
+/**
+ * The repository's studio content as it is before the six mappe files are written: no portfolio yet.
+ * @param base - The content to start from; the real `content/` by default.
+ * @returns Frozen content whose `mappe` has no portfolio, so the mappe routes answer `hvl:mappe-not-ready`.
+ */
+export function studioContentWithoutMappe(base: StudioContent = loadStudioContent()): StudioContent {
+  return deepFreeze({ ...base, mappe: {} });
 }

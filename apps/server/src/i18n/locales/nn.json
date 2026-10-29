@@ -217,7 +217,7 @@
     },
     "findings": {
       "none": "Sjekken for universell utforming fann ingen feil eller åtvaringar.",
-      "summary": "Sjekken for universell utforming: {{errors}} feil, av dei {{acknowledged}} grunngjevne, og {{warnings}} åtvaringar.",
+      "summary": "Sjekken for universell utforming: feil: {{errors}} (grunngjevne: {{acknowledged}}), åtvaringar: {{warnings}}.",
       "error": "Feil",
       "warning": "Åtvaring",
       "hint": "Tips",
