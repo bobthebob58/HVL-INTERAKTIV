@@ -15,6 +15,8 @@
  *     once, as one problem only when the check must have them (CI) and there is a pattern to check; otherwise the
  *     summary says what was not checked.
  *   - Its part of the `npm run content:check` summary comes from `describePatternContent` here.
+ * SPEC-DEVIATION: D-084 — spec 04 §4 puts skeletons in `apps/server/src/patterns/skeletons/`; they are read from the
+ *   pattern folders in `content/`, which ALU edits without code (PED-011).
  * Collaborators: ./loadStudioContent.ts (calls it), ./runContentCheck.ts (the summary), ./patternFolder.ts,
  *   ./installedLibraries.ts, ./studioContentContext.ts, ./patternAccessors.ts.
  * Tests: apps/server/test/learningDesign/content/patternContent.test.ts,

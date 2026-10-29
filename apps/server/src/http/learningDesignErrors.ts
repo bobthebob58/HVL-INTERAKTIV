@@ -4,8 +4,8 @@
  *
  * Why: the contract's `LEARNING_DESIGN_ERROR_STATUS` gives each S5 code its status, so the server and the web app
  *      agree on it (D-099); this table adds each code's locale key, so a route raises `learningDesignError(code)` and
- *      never picks a status or a message itself. It is apart from ./authErrors.ts so that the S5 workstreams do not
- *      all edit one shared table.
+ *      never picks a status or a message itself. It is apart from ./authErrors.ts, whose codes keep their status in
+ *      that file's own table, because these take theirs from the contract.
  * Spec: PROD-012, PROD-001, PROD-007, PROD-013, PED-030, MAPPE-001
  * Invariants:
  *   - Every contract code has exactly one key under `learningDesign.error`; `satisfies` makes a missing code or an

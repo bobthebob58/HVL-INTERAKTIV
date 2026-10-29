@@ -96,8 +96,8 @@ sequenceDiagram
     participant E as Express
     participant N as Next.js
     C->>E: GET /app/play?ltik=… (after the LTI launch)
-    E->>E: resolve the ltik, check View, decide mayEdit
-    E->>N: request without the ltik; x-hvli-launch = encoded { contentId, title, mayEdit, locale, language? }
+    E->>E: resolve the ltik, check View, decide mayEdit, then read the learner info (PED-032, D-087)
+    E->>N: request without the ltik; x-hvli-launch = encoded { contentId, title, mayEdit, locale, language?, estimatedStudentMinutes?, learnerPurpose? }
     N-->>C: the Canvas chrome; Hjelp and Personvern open in a new tab
     C->>C: read the ltik from the address bar once, history.replaceState without it (and once more for Next.js's router)
     C->>E: GET /lti/play?ltik=… (Spel) and, for authors, /lti/edit?ltik=… (Rediger)

@@ -12,6 +12,7 @@ import {
   isBankReader,
   isBankReaderActor,
   isEligibleStaffAuthor,
+  isFindableStaff,
   isSearchable,
   searchableCutoff,
 } from '../../../src/learningDesign/collaboration/staffEligibility.js';
@@ -74,5 +75,20 @@ describe('[PROD-007] findable for 13 months after a Feide login', () => {
     expect(isSearchable(cutoff, now)).toBe(false);
     expect(isSearchable(null, now)).toBe(false);
     expect(findableStaffWhere(now)).toEqual({ kind: 'staff', coAuthorSearchableAt: { gt: cutoff } });
+  });
+
+  it('[PROD-007] a stored account is findable staff as the bank list’s filter says: kind staff and a recent date', () => {
+    // Arrange
+    const now = new Date('2026-10-29T10:00:00.000Z');
+    const recent = new Date(searchableCutoff(now).getTime() + 1);
+    // Act
+    const findable = [
+      isFindableStaff({ kind: 'staff', coAuthorSearchableAt: recent }, now),
+      isFindableStaff({ kind: 'learner', coAuthorSearchableAt: recent }, now),
+      isFindableStaff({ kind: 'staff', coAuthorSearchableAt: searchableCutoff(now) }, now),
+      isFindableStaff({ kind: 'staff', coAuthorSearchableAt: null }, now),
+    ];
+    // Assert
+    expect(findable).toEqual([true, false, false, false]);
   });
 });

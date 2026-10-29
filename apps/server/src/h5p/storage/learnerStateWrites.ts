@@ -3,9 +3,10 @@
  *
  * Why: a learner's page that was opened before a structural save must not write its old state afterwards (D-093,
  *      ./stateWriteVersion.ts). The check and the write share one transaction, and the check holds the activity's
- *      row in share mode, so a reset (../../learningDesign/safeEditing/PrismaLearnerStateStore.ts, which updates
- *      that row first) either waits for the write and then deletes its row, or makes the write wait and see the
- *      new version. A check outside the transaction could pass just before a reset and write just after it.
+ *      row in share mode, so a reset (./PrismaContentStorage.ts with the save's parameters, or
+ *      ../../learningDesign/safeEditing/PrismaLearnerStateStore.ts; both update that row first) either waits for the
+ *      write and then deletes its row, or makes the write wait and see the new version. A check outside the
+ *      transaction could pass just before a reset and write just after it.
  * Spec: PROD-013, H5P-005, DATA-002
  * Invariants:
  *   - The state is validated before anything touches the database (a string, storable text), as before.

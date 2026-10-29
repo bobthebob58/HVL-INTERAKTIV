@@ -1,11 +1,14 @@
 /**
  * Tests the collaboration shapes: people search returns staff as `{ userId, displayName }` only, the co-author and
- * bank limits, the bank entry without the author's private fields, and a copy's attribution.
+ * bank limits, the bank entry without the author's private fields, a copy's attribution, and the 429 that people
+ * search and duplicating document for their per-person limits.
  *
  * Spec: PROD-007, DATA-002
  */
 import { describe, expect, it } from 'vitest';
 import {
+  API_ROUTES,
+  type ApiRoute,
   bankEntrySchema,
   bankListingRequestSchema,
   coAuthorListSchema,
@@ -78,7 +81,7 @@ describe('[PROD-007] the content bank and copies', () => {
     expect(bankEntrySchema.safeParse({ ...entry, ownerEmail: 'kari@hvl.no' }).success).toBe(false);
   });
 
-  it('[PROD-007] an activity detail may say where a copy came from, by ID, title and the source author’s name', () => {
+  it('[PROD-007] an activity detail may say where a copy came from, by ID, title, its language and the source author’s name', () => {
     // Arrange
     const detail = {
       id: contentId,
@@ -92,10 +95,26 @@ describe('[PROD-007] the content bank and copies', () => {
       mayEdit: true,
       mayPublish: true,
     };
-    const source = { sourceContentId: userId, sourceTitle: 'Quiz', sourceAuthorName: 'Kari Nordmann' };
+    const source = {
+      sourceContentId: userId,
+      sourceTitle: 'Quiz',
+      sourceLanguage: 'en',
+      sourceAuthorName: 'Kari Nordmann',
+    };
     // Act and assert
     expect(contentDetailSchema.safeParse(detail).success).toBe(true);
     expect(contentDetailSchema.safeParse({ ...detail, ...source }).success).toBe(true);
     expect(contentDetailSchema.safeParse({ ...detail, sourceAuthorUserId: userId }).success).toBe(false);
+  });
+
+  it('[PROD-007] people search and duplicating document their per-person limit as 429 with Retry-After', () => {
+    // Arrange
+    const routes: readonly ApiRoute[] = API_ROUTES;
+    const tooOften = (operationId: string) =>
+      routes.find((route) => route.operationId === operationId)?.responses[429]?.description;
+    // Act and assert (D-090, D-092 amendment 2026-10-29, S5 review)
+    for (const operationId of ['searchPeople', 'duplicateContent']) {
+      expect(tooOften(operationId), operationId).toMatch(/^`hvl:rate-limited`: .+; `Retry-After` says when/);
+    }
   });
 });

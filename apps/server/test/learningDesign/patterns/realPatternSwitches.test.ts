@@ -1,8 +1,9 @@
 /**
  * Tests for the formative rules the real-pattern tests apply (./realPatternSwitches.ts): each rule names a switched-off
  * retry or «Vis svar», a pass mark that cannot be retried, a forced completion, a timer, a presentation without
- * keyboard navigation and strict matching in a fill-in task, at the node where it is, and leaves formative content
- * alone. Without these, a rule that never fires would let the integration test pass on anything.
+ * keyboard navigation and case-sensitive matching in a fill-in task, at the node where it is, and leaves formative
+ * content alone, including a fill-in task without typo tolerance (D-084 amendment). Without these, a rule that never
+ * fires would let the integration test pass on anything.
  *
  * Spec: PROD-009
  */
@@ -72,17 +73,10 @@ describe('[PROD-009] the formative rules of the real-pattern tests', () => {
       ],
     ],
     [
-      'a case-sensitive fill-in task without typo tolerance',
+      'a case-sensitive fill-in task',
       'H5P.Blanks 1.14',
-      {
-        behaviour: {
-          enableRetry: true,
-          enableSolutionsButton: true,
-          caseSensitive: true,
-          acceptSpellingErrors: false,
-        },
-      },
-      ['behaviour.caseSensitive is true', 'behaviour.acceptSpellingErrors is not on'],
+      { behaviour: { enableRetry: true, enableSolutionsButton: true, caseSensitive: true } },
+      ['behaviour.caseSensitive is true'],
     ],
     [
       'a book without retry',
@@ -119,6 +113,22 @@ describe('[PROD-009] the formative rules of the real-pattern tests', () => {
     };
     // Act
     const violations = violationsOf('H5P.QuestionSet 1.21', params);
+    // Assert
+    expect(violations).toEqual([]);
+  });
+
+  it('[PROD-009] leaves typo tolerance to the pattern: a fill-in task that matches exactly is still formative', () => {
+    // Arrange: PEDAGOGY: exact matching keeps a number with one wrong digit wrong (D-084 amendment, 2026-10-29)
+    const params = {
+      behaviour: {
+        enableRetry: true,
+        enableSolutionsButton: true,
+        caseSensitive: false,
+        acceptSpellingErrors: false,
+      },
+    };
+    // Act
+    const violations = violationsOf('H5P.Blanks 1.14', params);
     // Assert
     expect(violations).toEqual([]);
   });

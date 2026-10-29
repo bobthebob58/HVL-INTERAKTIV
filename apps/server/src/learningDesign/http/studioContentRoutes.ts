@@ -1,10 +1,11 @@
 /**
- * studioContentRoutes — the public studio routes under `/api` (workstream W1): the overview (the phases, the
- * *samling* anchor and the pattern catalogue), the guide in one language as a closed node tree, and one pattern's
- * detail, all from the studio content loaded at start-up.
+ * studioContentRoutes — the public studio routes under `/api`: the overview (the phases, the *samling* anchor and
+ * the pattern catalogue), the guide in one language as a closed node tree, and one pattern's detail, all from the
+ * studio content loaded at start-up.
  *
  * Why: the web app reads no files (D-068), so the guide and the catalogue reach it as read-only JSON (D-082), and
- *      the owner made them public on 2026-10-28 (D-089). This is W1's one router, mounted by the studio router.
+ *      the owner made them public on 2026-10-28 (D-089). This is the area's one router, mounted by the studio router
+ *      (../../http/api/studioRouter.ts).
  * Spec: PED-001, PED-002, PED-003, PED-011
  * Auth: none — anyone may read these routes, signed in or not (D-089): the authentication middleware sets no
  *   principal for a signed-out request, so a route here never calls `requirePrincipal`, and an LTI launch or a

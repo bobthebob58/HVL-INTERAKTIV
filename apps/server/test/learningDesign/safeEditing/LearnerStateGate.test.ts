@@ -7,6 +7,7 @@
 import type { IUser } from '@lumieducation/h5p-server';
 import { describe, expect, it } from 'vitest';
 import { asAccountUser } from '../../../src/h5p/HvlH5pUser.js';
+import { claimLearnerStateReset } from '../../../src/h5p/storage/learnerStateResetWrite.js';
 import {
   LearnerStateGate,
   type SaveChoice,
@@ -37,7 +38,7 @@ function gateWith(othersHaveState: boolean) {
     },
   );
   const save = async (params: object, user: IUser, choice?: SaveChoice) =>
-    gate.settle(await gate.admit('c1', params, 'H5P.MultiChoice 1.16', user, choice));
+    gate.runSave(await gate.admit('c1', params, 'H5P.MultiChoice 1.16', user, choice), async () => 'saved');
   return { gate, asked, resets, save };
 }
 
@@ -68,6 +69,23 @@ describe('[PROD-013] LearnerStateGate', () => {
     const ownOnly = gateWith(false);
     await ownOnly.save(twoOptions, author);
     expect([confirmed.resets, ownOnly.resets]).toEqual([['c1'], ['c1']]);
+  });
+
+  it('[PROD-013] leaves the reset to a storage that claims it with its write, and resets after a write that did not', async () => {
+    // Arrange
+    const claimed = gateWith(false);
+    const unclaimed = gateWith(false);
+    const plan = await claimed.gate.admit('c1', twoOptions, 'H5P.MultiChoice 1.16', author);
+    // Act
+    const results = [
+      await claimed.gate.runSave(plan, async () => claimLearnerStateReset('C1') && 'claimed'),
+      await unclaimed.gate.runSave(plan, async () => claimLearnerStateReset('other') || 'unclaimed'),
+    ];
+    // Assert
+    expect({ results, resets: [claimed.resets, unclaimed.resets] }).toEqual({
+      results: ['claimed', 'unclaimed'],
+      resets: [[], ['c1']],
+    });
   });
 
   it('[PROD-013] counts every row as someone else’s when the saver is not a user it can read a learnerKey from', async () => {

@@ -3,10 +3,11 @@
  * Canvas launch asks for Bokmål or English; the framed H5P player page has the same `lang`, and the content
  * container carries the activity's own language (the examples are Nynorsk), as does H5P's editor iframe. The Canvas
  * page's title heading says `lang="nn"` when the page is in another language (WCAG 3.1.2). In the studio (S5), text
- * in another language than the page carries its own `lang`: the guide's references (most are English), and a learner
- * purpose before the activity, in the portal, in Canvas and on the content bank's cards.
+ * in another language than the page carries its own `lang`: the guide's references (most are English), a learner
+ * purpose before the activity, in the portal, in Canvas and on the content bank's cards, and the source's title in a
+ * copy's attribution sign.
  *
- * Spec: UD-010, PROD-012, PED-002, PED-032
+ * Spec: UD-010, PROD-012, PED-002, PED-032, PROD-007
  */
 import type { Guide } from '@hvl-interaktiv/api-contract';
 import type { Page } from 'playwright-core';
@@ -16,7 +17,9 @@ import { describeA11y } from './support/a11ySuite.js';
 import { CONTENT_TYPES, viewName, WEB_VIEWS } from './support/catalogue.js';
 import { openActivityTab, openLaunch, openWebPage, playerFrame } from './support/pages.js';
 import { SEED_PURPOSES } from './support/studioSeed.js';
+import { openStudioView } from './support/studioViews.js';
 import { openView } from './support/views.js';
+import { webTextPattern } from '../test/support/webAppTexts.js';
 
 /** The skip link's text per UI language (apps/web `common.skipToMain`). */
 const SKIP_LINK: Record<UiLocale, string> = {
@@ -119,5 +122,22 @@ describeA11y('[UD-010] language of page and parts', (env) => {
     expect(await purpose(bank, SEED_PURPOSES.en).getAttribute('lang')).toBe('en');
     expect(await card.locator('h2').getAttribute('lang')).toBe('en');
     await Promise.all([canvas.close(), portal.close()]);
+  });
+
+  it('[UD-010][PROD-007] a copy’s attribution sign marks the English source’s title with lang="en"', async () => {
+    // Arrange: the author's copy of the colleague's English activity, on a Nynorsk page
+    const { app, browser, studio } = env();
+    const context = await browser.newContext({ storageState: app.authorStorage });
+    const source = await app.tb.db.h5PContent.findUniqueOrThrow({
+      where: { id: studio.colleagueActivityId },
+      select: { title: true },
+    });
+    // Act
+    const page = await openStudioView(app, context, 'copy');
+    const sign = page.locator('main p').filter({ hasText: webTextPattern('sharing.attribution') });
+    // Assert
+    expect(await page.locator('html').getAttribute('lang')).toBe('nn');
+    expect(await sign.getByText(source.title, { exact: true }).getAttribute('lang')).toBe('en');
+    await context.close();
   });
 });

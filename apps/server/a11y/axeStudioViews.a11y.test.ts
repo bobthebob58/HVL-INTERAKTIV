@@ -20,7 +20,7 @@ import { COLOUR_MODES, STUDIO_VIEW_NAMES, type StudioView } from './support/cata
 import { openWebPage } from './support/pages.js';
 import { openStudioView } from './support/studioViews.js';
 import { expectOnlyRecorded, recordedFor } from './support/upstreamFindings.js';
-import { webText } from './support/webLocale.js';
+import { webText } from '../test/support/webAppTexts.js';
 
 /** The regions named by `aria-labelledby` inside `main`: sections and `role="region"` scroll boxes. */
 const NAMED_REGIONS = 'main :is(section, [role=region])[aria-labelledby]';

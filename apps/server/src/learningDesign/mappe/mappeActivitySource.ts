@@ -10,6 +10,7 @@
  *   - Only activities the account owns or co-authors (../metadata/authorScope.ts `authoredBy`); a stranger's activity
  *     is never read, and a request naming one is refused as unavailable, like an unknown one (D-066).
  *   - Only reads: no row is created, changed or deleted (MAPPE-003: the export is not stored).
+ *   - An activity ID matches in either case, like every other S5 lookup (D-094 S5 review amendment).
  *   - PRIVACY: of an acknowledgement only the rule, path, reason and date are read, never who gave it; of the
  *     collaborators only whether there are any; nothing about learners is read here.
  *   - The rationale is read only for the author, who may edit the activity (D-087).
@@ -87,7 +88,8 @@ const optional = <K extends string, V>(key: K, value: V | null | undefined): Par
  * The selected activities with what the export shows, in the order requested.
  * @param db - The database.
  * @param userId - The author's `User.id`.
- * @param contentIds - The selected activities (distinct UUIDs, already checked by the contract's schema).
+ * @param contentIds - The selected activities (distinct UUIDs in either case, already checked by the contract's
+ *   schema).
  * @returns One entry per ID.
  * @throws HttpError 404 `hvl:activity-unavailable` when any ID is not an activity the author owns or co-authors.
  * @spec MAPPE-001
@@ -97,8 +99,11 @@ export async function mappeSourceActivities(
   userId: string,
   contentIds: readonly string[],
 ): Promise<MappeSourceActivity[]> {
+  // WHY: PostgreSQL finds an upper-case UUID but answers the stored lower-case ID, and the rows are matched back by
+  // string equality (as in ContentAccessRepository.factsFor).
+  const ids = contentIds.map((id) => id.toLowerCase());
   const rows = await db.h5PContent.findMany({
-    where: { AND: [authoredBy(userId), { id: { in: [...contentIds] } }] },
+    where: { AND: [authoredBy(userId), { id: { in: ids } }] },
     select: {
       id: true,
       title: true,
@@ -127,7 +132,7 @@ export async function mappeSourceActivities(
     },
   });
   const byId = new Map(rows.map((row) => [row.id, row]));
-  return contentIds.map((contentId) => {
+  return ids.map((contentId) => {
     const row = byId.get(contentId);
     // SECURITY: an unknown activity and someone else's answer alike, so the export reveals nothing (D-066).
     if (!row) throw authError('hvl:activity-unavailable');

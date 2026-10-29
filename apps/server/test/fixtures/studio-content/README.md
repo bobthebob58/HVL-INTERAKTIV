@@ -21,7 +21,7 @@ file it is about. The pattern loader finds no `laeringsdesign/patterns/` folder 
 these, which is no patterns, not a problem. A test that shows a renamed label
 reaching a page, the planner or the portfolio does not load `renamed-label/` in full: it uses
 `studioContentWithRenamedLabel()` from `test/support/renamedPhaseLabels.ts`, which is the real `content/` with this
-folder's phases, so no workstream has to copy its files here.
+folder's phases, so no other content file has to be copied here.
 
 ## `pattern-fixture/` (`PED-010`, `PED-011`, `PROD-001`, `PROD-009`)
 

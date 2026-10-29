@@ -121,7 +121,8 @@ describeWithBrowser('[MAPPE-004] the portfolio PDF from the server’s Chromium'
     });
 
     it('[MAPPE-003] leaves no temporary file behind: only the shared browser’s profile, removed when it closes', async () => {
-      // Arrange: the browser is running after the exports above
+      // Arrange: an export of its own starts the shared browser, so the test passes when run on its own (D-100)
+      await exportAs(tb, 'pdf');
       const before = readdirSync(temporary);
       // Act
       await exportAs(tb, 'pdf');

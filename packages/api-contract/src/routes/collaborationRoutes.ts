@@ -1,9 +1,9 @@
 /**
  * collaborationRoutes — the registry of the collaboration routes under `/api`: people search, co-authors, the
- * content bank and duplicating (W4).
+ * content bank and duplicating.
  *
- * Why: D-099 splits the `/api` registry by area, so each workstream adds its routes to its own table and never edits
- *      another's; ../apiRoutes.ts concatenates the areas in document order.
+ * Why: D-099 splits the `/api` registry by area, so each area's routes are in its own table and a change to one area
+ *      never edits another's; ../apiRoutes.ts concatenates the areas in document order.
  * Spec: DOC-012, PROD-007
  * Invariants:
  *   - `path` is below `/api`, in Express form; every `:name` has a schema in `params`, every query parameter one in
@@ -12,8 +12,7 @@
  *   - Removing a co-author or a bank listing is a `DELETE` (D-099); people search never logs its query (D-090).
  *   - Every route is portal-only (`auth: 'portal'`, D-090 as amended, D-098): an ltik answers 401, a learner 403.
  * Collaborators: ./routeResponses.ts, ./collaborationResponses.ts, ./collaborationSchemaNames.ts, ../collaboration.ts,
- *   ../apiRoutes.ts,
- *   apps/server/src/learningDesign/http/collaborationRoutes.ts.
+ *   ../apiRoutes.ts, apps/server/src/learningDesign/http/collaborationRoutes.ts.
  * Tests: packages/api-contract/test/openApi.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
 import type { ApiRoute } from '../apiRouteTypes.js';
@@ -42,7 +41,7 @@ import { contentParams, failure, unauthenticated, unavailable } from './routeRes
 const COAUTHORS = '/content/:contentId/coauthors';
 const BANK_LISTING = '/content/:contentId/bank';
 
-/** The routes of this area (W4), in the order of the OpenAPI document. */
+/** The routes of this area, in the order of the OpenAPI document. */
 export const COLLABORATION_ROUTES = [
   {
     operationId: 'searchPeople',
@@ -58,7 +57,7 @@ export const COLLABORATION_ROUTES = [
       400: badPeopleQuery,
       401: unauthenticated,
       403: staffOnly,
-      429: rateLimited,
+      429: rateLimited('too many searches in a minute'),
     },
   },
   {
@@ -194,6 +193,7 @@ export const COLLABORATION_ROUTES = [
       401: unauthenticated,
       403: duplicateRefused,
       404: unavailable,
+      429: rateLimited('more than 20 copies in ten minutes, «Lagre som ny versjon» included'),
       500: failure('`hvl:duplicate-failed`: the copy could not be made completely and was removed.'),
     },
   },

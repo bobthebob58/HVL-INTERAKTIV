@@ -105,7 +105,10 @@ describeWithServices('what the validator says about every real pattern', () => {
             name,
             findings.some((f) => f.ruleId === 'V-PLACEHOLDER' && f.path === MEDIA_SLOT[contentType]),
           ]);
-        // Assert
+        // Assert: both kinds were created, so the check cannot pass on an empty list
+        expect(
+          new Set(checked.map(({ contentType }) => contentType).filter((type) => type in MEDIA_SLOT)),
+        ).toEqual(new Set(Object.keys(MEDIA_SLOT)));
         expect(media.filter(([, reported]) => !reported)).toEqual([]);
       });
 

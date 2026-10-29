@@ -13,18 +13,25 @@
  *     a marker the guide lacks is placed at its end, so neither component is ever missing.
  *   - The catalogue's filters live in the address (./catalogue/useCatalogueFilters.ts); its section has the `id`
  *     `CATALOGUE_ID` (../../config/paths.ts).
+ *   - A11Y: a page opened at `#monsterkatalog` (the planner's «Lag frå mønster», a pattern page's way back) scrolls
+ *     to the catalogue and focuses its heading once the content has loaded, since the browser looked for the target
+ *     before it existed; only the first time, so a later reload or filter change never takes focus (WCAG 2.4.3,
+ *     3.2.2).
  * Collaborators: ../../app/(portal)/laeringsdesign/page.tsx, ../../api/studioApi.ts, ./useApiLoad.ts,
  *   ./guide/GuideBlocks.tsx, ./guide/ReferenceList.tsx, ./PhaseMatrix.tsx, ./catalogue/PatternCatalogue.tsx,
  *   ./DraftBanner.tsx.
- * Tests: apps/web/test/features/GuideView.test.tsx, apps/web/test/features/studioPages.test.tsx
+ * Tests: apps/web/test/features/GuideView.test.tsx, apps/web/test/features/studioPages.test.tsx,
+ *   apps/web/test/features/CatalogueArrival.test.tsx
  */
 'use client';
 
 import type { GuideBlockNode, StudioOverview } from '@hvl-interaktiv/api-contract';
+import { useEffect, useRef } from 'react';
 import { getStudioGuide, getStudioOverview } from '../../api/studioApi';
+import { CATALOGUE_ID } from '../../config/paths';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
-import { PatternCatalogue } from './catalogue/PatternCatalogue';
+import { CATALOGUE_HEADING_ID, PatternCatalogue } from './catalogue/PatternCatalogue';
 import { useCatalogueFilters } from './catalogue/useCatalogueFilters';
 import { DraftBanner } from './DraftBanner';
 import { GuideBlocks, type GuideMarkerName } from './guide/GuideBlocks';
@@ -44,6 +51,17 @@ const withEveryMarker = (nodes: readonly GuideBlockNode[]): GuideBlockNode[] => 
 ];
 
 /**
+ * Brings the catalogue into view and focuses its heading when the page was opened at its address.
+ * A11Y: WCAG 2.4.3: the catalogue renders after the API answers, so the browser's own jump to the fragment found
+ * nothing; scrolling the section keeps the header's scroll padding, as the phase matrix's link does.
+ */
+const arriveAtCatalogue = (): void => {
+  if (window.location.hash !== `#${CATALOGUE_ID}`) return;
+  document.getElementById(CATALOGUE_ID)?.scrollIntoView?.();
+  document.getElementById(CATALOGUE_HEADING_ID)?.focus({ preventScroll: true });
+};
+
+/**
  * The guide page's content.
  * @returns The heading, then the guide with the matrix and the catalogue, or the loading or failed state.
  */
@@ -56,6 +74,14 @@ export function GuideView() {
   const failed = overview.status === 'failed' || guide.status === 'failed';
   const nodes = guide.status === 'loaded' ? guide.data.nodes : [];
   const references = guide.status === 'loaded' ? guide.data.references : [];
+  const shown = !loading && overview.status === 'loaded';
+  const arrived = useRef(false);
+  useEffect(() => {
+    // WHY: only on the first showing; the filters keep the fragment in the address (WCAG 3.2.2).
+    if (!shown || arrived.current) return;
+    arrived.current = true;
+    arriveAtCatalogue();
+  }, [shown]);
   const renderMarker = (studio: StudioOverview) => (name: GuideMarkerName) =>
     name === 'phase-matrix' ? (
       <PhaseMatrix overview={studio} filters={filters} locale={locale} />
@@ -67,7 +93,7 @@ export function GuideView() {
       <h1>{t('studio.heading', locale)}</h1>
       {loading ? <p role="status">{t('common.loading', locale)}</p> : null}
       {!loading && failed ? <p role="alert">{t('common.loadFailed', locale)}</p> : null}
-      {!loading && overview.status === 'loaded' ? (
+      {shown && overview.status === 'loaded' ? (
         <>
           <DraftBanner status={overview.data.status} locale={locale} />
           {guide.status === 'loaded' && nodes.length === 0 ? <p>{t('studio.noGuideYet', locale)}</p> : null}

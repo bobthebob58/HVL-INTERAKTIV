@@ -98,7 +98,7 @@ describeWithServices('[PED-032] the estimated time and purpose in the activity s
     // Arrange
     const odd = await tb.content(owner.principal.userId, { status: 'published', visibility: 'organisation' });
     await storeMetadata(tb.db, odd, { estimatedStudentMinutes: 900, learnerPurpose: 'Linje ein\nLinje to' });
-    // WHY: the contract's one-line rule lets a pasted tab through a PUT; the Canvas page refuses a launch with one.
+    // WHY: a row stored before the W3 rule may hold a tab; the contract now refuses one, and Canvas a launch with one.
     const tabbed = await tb.content(owner.principal.userId, {
       status: 'published',
       visibility: 'organisation',

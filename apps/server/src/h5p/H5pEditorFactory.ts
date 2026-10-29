@@ -30,6 +30,7 @@ import type { H5pStorage } from './h5pStorage.js';
 import { HvlH5PEditor } from './HvlH5PEditor.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import type { HvlUrlGenerator } from './HvlUrlGenerator.js';
+import type { PersonLimit } from '../learningDesign/collaboration/PersonRateLimit.js';
 import type { LearnerStateStore } from '../learningDesign/safeEditing/LearnerStateGate.js';
 import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
 import type { ContentAccessRepository } from './permissions/ContentAccessRepository.js';
@@ -50,6 +51,8 @@ export interface EditorFactoryInputs {
   readonly contentFacts: ContentAccessRepository;
   /** The learner-state rows a structural save checks and resets (D-093). */
   readonly learnerStates: LearnerStateStore;
+  /** The per-person copy limit the duplicator counts (D-092 amendment 2026-10-29). */
+  readonly copyLimit: PersonLimit;
   readonly translate: ITranslationFunction;
   readonly fileSanitizers: readonly IFileSanitizer[];
   /** Builds every URL of the editor page; shared with the player (H5P-007). */
@@ -58,8 +61,8 @@ export interface EditorFactoryInputs {
 
 /**
  * Builds the editor.
- * @param inputs - Config, storages, permission system, audit sink, activity facts, learner-state rows, translation,
- *   sanitisers and URL generator.
+ * @param inputs - Config, storages, permission system, audit sink, activity facts, learner-state rows, copy limit,
+ *   translation, sanitisers and URL generator.
  * @returns The editor; check it with `assertPermissionSystem` before use.
  */
 export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
@@ -92,6 +95,7 @@ export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
       audit: inputs.audit,
       contentFacts: inputs.contentFacts,
       learnerStates: inputs.learnerStates,
+      copyLimit: inputs.copyLimit,
     },
   );
   // SECURITY: Lumi's editor template puts the integration JSON in a <script> unescaped (D-040); S4 brings ours.

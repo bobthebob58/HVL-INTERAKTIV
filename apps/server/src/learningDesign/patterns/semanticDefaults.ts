@@ -20,7 +20,8 @@
  *     editor's group widget gives it; ./subContentIds.ts then renews every ID, which it can only find by shape.
  *   - The result shares no object with the input or the semantics cache (callers change it in place, e.g. the
  *     sub-content policy on save), and the input is never mutated.
- * Collaborators: Lumi's LibraryManager (`getSemantics`, `getLanguage`), the pattern instantiation of W2 (D-085).
+ * Collaborators: Lumi's LibraryManager (`getSemantics`, `getLanguage`); ./patternActivityBuild.ts and
+ *   ./patternLibraries.ts, which create an activity from a pattern (D-085).
  * Tests: apps/server/test/learningDesign/patterns/semanticDefaults.test.ts,
  *   apps/server/test/learningDesign/patterns/skeletonCreation.browser.int.test.ts
  */

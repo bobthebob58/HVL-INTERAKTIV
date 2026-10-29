@@ -351,7 +351,15 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
 - [x] 5. Docs: `content/` READMEs for ALU, GLOSSARY, Evaluator Guide, `/personvern`, ALU review packet
       — numbered how-tos for ALU, glossary terms, the S5 gate row and limitations, the PDF check in the manual
         protocol, `docs/reference/alu-review-s5.md` (Q17)
-- [ ] 6. Review with skeptics, two verification passes
+- [x] 6. Review with skeptics, two verification passes
+      — seven reviewers (security, privacy, accessibility, pedagogy and content, correctness, tests, documentation)
+        reported 49 findings, each checked by its own skeptic: 13 rejected (recorded or intended), one overturned
+        against the player's code (the fa-video timing; now an ALU review point), two duplicates; 33 fixed in five
+        groups (mappe and PDF, server, web, content and docs, workstream labels), each fix with a test that fails
+        without it, then two independent verification passes and a last round for cross-group items. Notable fixes:
+        the PDF time limit now covers a stalled browser; staff e-mail is no longer stored; a hidden bank listing can
+        no longer be copied; a per-person copy limit; numeric blanks never accept typos; focus after every studio
+        action; the D-083/D-084 deviations marked in code. Decisions D-083…D-096 amended (2026-10-29, S5 review)
 - [ ] Pilot evaluators from ALU and Pedagogisk akademi review the studio content (Q17; may stay open, record the outcome here)
 - [ ] Gate: as in the Evaluator Guide §5, S5 (D-100)
 

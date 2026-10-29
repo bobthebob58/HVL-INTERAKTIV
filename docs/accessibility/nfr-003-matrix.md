@@ -25,9 +25,9 @@ H5P content types (D-078) and the server's own pages, all behind the production 
 | Keyboard-only scripts of J1 (picker, tabs, publish dialog) and J2 (answer in Canvas) | As named | `UD-006` | `keyboardJourneys.a11y.test.ts` |
 | axe on the læringsdesign studio in its seeded states (S5), light and forced colours; the guide also held to `landmark-unique` and `region` | A pattern page signed out and in, the planner with gaps, the content bank, `/mappe` with a word count, the **Læringsdesign** and **Deling** tabs, a copy's page | `UD-030` | `axeStudioViews.a11y.test.ts` |
 | axe on the editor's save choice dialog (S5), with the page around the editor frame inert | The **Rediger** tab of an activity a learner has saved progress in | `UD-030`, `UD-006` | `axeSaveChoice.a11y.test.ts` |
-| Keyboard-only scripts of the studio (S5): the catalogue filter, the planner's table region, the people search, J4's start on `/mappe` | As named | `UD-006` | `keyboardStudioJourneys.a11y.test.ts` |
+| Keyboard-only scripts of the studio (S5): the catalogue filter, the planner's table region and its «Lag frå mønster» link (the catalogue's heading focused and in view), the people search, a co-author's «Fjern meg» (focus on the lasting message), J4's start on `/mappe` | As named | `UD-006` | `keyboardStudioJourneys.a11y.test.ts` |
 | Pointer targets ≥ 24 × 24 px or a 2.5.8 exception, printed | Every web view, the player of every type | `UD-005` | `targetSize.a11y.test.ts` |
-| `lang` on `<html>` and on the content container | Every web view, launches in nn, nb, en, player and editor of every type | `UD-010` | `language.a11y.test.ts` |
+| `lang` on `<html>` and on the content container; on a part in another language than the page: the Canvas page's title heading, and in the studio (S5) the guide's references, a learner purpose and a copy's source title | Every web view, launches in nn, nb, en, player and editor of every type; the guide, the **Spel** tab, the content bank and a copy's page | `UD-010` | `language.a11y.test.ts` |
 | Only first-party requests | Every web view, player and editor of every type | `DATA-011` | `firstParty.a11y.test.ts` |
 
 "Started" means that QuestionSet, InteractiveBook and BranchingScenario have left their intro screen; the checks of

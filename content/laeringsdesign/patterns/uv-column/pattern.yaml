@@ -2,7 +2,8 @@
 # DRAFT for ALU and the pilot teachers to review (open question Q17); texts, times and choices may change.
 # How to edit: content/laeringsdesign/README.md, section "patterns/". Checked by npm run content:check.
 # A text introduction and two tasks on the same material; the introduction's guidance reminds the author to keep
-# the session to at most three tasks (the validator's PED-H08 hint says the same).
+# the session to at most three tasks (the validator's PED-H08 hint says the same). The fill-in task matches exactly,
+# without typo tolerance, so a number with one wrong digit is never marked correct (D-084 amendment, 2026-10-29).
 id: uv-column
 phases:
   - underveis
@@ -78,17 +79,29 @@ texts:
     nb: Utfylling
     en: Fill in the blanks
   blanksTask:
-    nn: ⟦Skriv kva studenten skal fylle inn, og kva omgrep eller prosedyre det gjeld⟧
-    nb: ⟦Skriv hva studenten skal fylle inn, og hvilket begrep eller hvilken prosedyre det gjelder⟧
-    en: ⟦Write what the student should fill in, and which concept or procedure it concerns⟧
+    nn: >-
+      ⟦Skriv kva studenten skal fylle inn, og kva omgrep, prosedyre eller utrekning det gjeld. Eit svar blir rekna
+      som rett berre når det er skrive nøyaktig, så eit tal med eitt siffer feil blir aldri godteke. Skriv kvar form
+      du godtek som eit alternativ, til dømes 12,5/12.5. Slå på «Godta mindre skrivefeil» under
+      «Oppgåveinnstillingar» berre når alle svara er ord⟧
+    nb: >-
+      ⟦Skriv hva studenten skal fylle inn, og hvilket begrep, hvilken prosedyre eller utregning det gjelder. Et svar
+      regnes som riktig bare når det er skrevet nøyaktig, så et tall med ett siffer feil blir aldri godtatt. Skriv
+      hver form du godtar som et alternativ, for eksempel 12,5/12.5. Slå på «Godta mindre skrivefeil» under
+      «Oppgaveinnstillinger» bare når alle svarene er ord⟧
+    en: >-
+      ⟦Write what the student should fill in, and which concept, procedure or calculation it concerns. An answer
+      counts as correct only when it is written exactly, so a number with one wrong digit is never accepted. Give
+      every form you accept as an alternative, for example 12.5/12,5. Turn on «Accept minor spelling errors» under
+      «Behavioural settings» only when every answer is a word⟧
   blanksSentence:
     nn: ⟦Skriv ei setning der studenten fyller inn⟧
     nb: ⟦Skriv en setning der studenten fyller inn⟧
     en: ⟦Write a sentence in which the student fills in⟧
   blanksAnswer:
-    nn: ⟦eit nøkkelord⟧
-    nb: ⟦et nøkkelord⟧
-    en: ⟦a key word⟧
+    nn: ⟦eit nøkkelord eller eit tal⟧
+    nb: ⟦et nøkkelord eller et tall⟧
+    en: ⟦a key word or a number⟧
   mcTitle:
     nn: Fleirval
     nb: Flervalg

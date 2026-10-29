@@ -95,14 +95,15 @@ phases:
       nb: Konsolidere gjennom spredt gjenhenting, og sjekke hvor langt studentene har kommet mot læringsutbyttet.
       en: Consolidate through spaced retrieval practice, and check progress towards the learning outcomes.
     # Spec 04 §3: "Graded through AGS with the mastery or best policy (LTI-012), unlimited attempts. Suggested
-    # repetition dates (PROD-014)." Scores are formative (CLAUDE.md §1), never exam evidence.
+    # repetition dates (PROD-014)." Both arrive in S6, and PROD-014 shows the dates to the author, not to students,
+    # so until then the text promises neither and tells the teacher how to space the practice (S5 review, 2026-10-29).
     canvasPlacement:
       nn: >-
-        Poengsummen går til Canvas som formativ vurdering, etter beste forsøk eller meistring, og studentane har
-        uavgrensa tal på forsøk. Dei får forslag til datoar for repetisjon.
+        Studentane har uavgrensa tal på forsøk. Legg den same aktiviteten inn att i ein seinare Canvas-modul nokre
+        dagar og veker etter, så studentane øver med mellomrom.
       nb: >-
-        Poengsummen går til Canvas som formativ vurdering, etter beste forsøk eller mestring, og studentene har
-        ubegrenset antall forsøk. De får forslag til datoer for repetisjon.
+        Studentene har ubegrenset antall forsøk. Legg den samme aktiviteten inn igjen i en senere Canvas-modul noen
+        dager og uker etter, så studentene øver med mellomrom.
       en: >-
-        The score goes to Canvas as formative assessment, by best attempt or mastery, and students have unlimited
-        attempts. They get suggested dates for repetition.
+        Students have unlimited attempts. Place the same activity again in a later Canvas module a few days and
+        weeks later, so that students practise with spacing.

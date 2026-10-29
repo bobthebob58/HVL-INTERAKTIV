@@ -12,7 +12,8 @@
  *     by text. An activity with several outcomes appears in several rows.
  *   - Only the author's own and co-authored activities appear; drafts are included and marked by `status`.
  *   - The answer names no person.
- * Collaborators: ./learningDesign.ts, ./studio.ts, ./content.ts, apps/server (W3), apps/web (PlannerTable).
+ * Collaborators: ./learningDesign.ts, ./studio.ts, ./content.ts,
+ *   apps/server/src/learningDesign/http/learningDesignRoutes.ts, apps/web (PlannerTable).
  * Tests: packages/api-contract/test/learningDesignSchemas.test.ts
  */
 import { z } from 'zod';

@@ -3,9 +3,9 @@
  * filters, a changed filter is written into the address with `router.replace` (keeping the course, never scrolling),
  * focus stays on the control, the number of matches is announced in a status region, and a filter that matches
  * nothing offers «Vis alle mønstera», which moves focus back to the first filter; the phase matrix's filter link
- * moves focus to the catalogue's heading.
+ * moves focus to the catalogue's heading; and the way to a blank activity beside the patterns.
  *
- * Spec: PED-003
+ * Spec: PED-003, PROD-001
  */
 // @vitest-environment jsdom
 import { fireEvent, render, screen, within } from '@testing-library/react';
@@ -165,8 +165,13 @@ describe('[PED-003] the catalogue’s filters', () => {
     expect(quiz?.textContent).toContain(
       '⚠ Ikkje tilgjengeleg no: ein innhaldstype som mønsteret treng, er ikkje installert.',
     );
-    expect(
-      within(catalogue).getByRole('link', { name: 'Eller lag ein tom aktivitet utan mønster' }),
-    ).toBeTruthy();
+  });
+
+  it('[PROD-001] the catalogue offers a blank activity at /aktivitet/ny', async () => {
+    // Act
+    const catalogue = await openAt('/laeringsdesign?fase=etterarbeid');
+    // Assert
+    const blank = within(catalogue).getByRole('link', { name: 'Eller lag ein tom aktivitet utan mønster' });
+    expect(blank.getAttribute('href')).toBe('/aktivitet/ny');
   });
 });

@@ -92,6 +92,11 @@ build on. You will find it under References.*
 *The activities below are digital learning materials you have made in HVL Interaktiv, alone or with others. Choose
 the ones that best show how you develop and try out forms of teaching and assessment.*
 
+*The link to an activity opens it only for people who may view it: only you and your co-authors can open a draft or
+a private activity. Before you submit the portfolio, publish the activities you refer to and choose «Everyone with a
+Feide login» on the «Sharing» tab, so that assessors outside HVL can open them too. If you would rather not share an
+activity that way, attach screenshots instead.*
+
 {{resultat_merknad}}
 
 {{#aktivitetar}}

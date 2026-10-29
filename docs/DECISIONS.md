@@ -1723,6 +1723,21 @@ loading of one spec per session are kept.
     `subContentId`, as the editor does, and the creation step passes a copy of the parameters, because the save
     changes them in place.
 - **Amendment (2026-10-29, S5 W2b):** `content:check` also refuses a skeleton key that the library's semantics do not define, so a misspelt behaviour switch cannot silently leave a `PROD-009` setting at its default. A sub-content node may hold only `library`, `params`, `metadata` and `subContentId`; a key a library's own editor writes beside its semantics (BranchingScenario's `contentId` on each content item) is accepted, so a skeleton made from an exported `.h5p` passes as exported. A test runs the check on every real seed package.
+- **Amendment (2026-10-29, S5 review): typo tolerance in fill-in tasks.** H5P.Blanks' «Godta mindre skrivefeil»
+  (`acceptSpellingErrors`) counts an answer as correct when it is one edit away from a solution longer than three
+  characters (two edits beyond nine), and numbers get no exception: «125» and «1,25» both pass for «12,5». Spec 04 §4
+  asks for typo tolerance only in `ea-terms`, whose answers are terms; the real-pattern tests had widened it to every
+  Blanks task without a record. Now:
+  - `ea-terms`' Blanks accepts small typos (spec 04 §4).
+  - `uv-column`, whose example is a dosage calculation, matches exactly (`acceptSpellingErrors: false`), so a number
+    with one wrong or swapped digit is never marked correct. Its guidance tells the author to give each accepted
+    form of a number as an alternative (`12,5/12.5`) and to switch typo tolerance on only when every answer is a
+    word.
+  - The other patterns' Blanks keep typo tolerance as ALU's draft choice; the tests no longer require it, so ALU
+    can make a pattern strict with no code change (`PED-011`). Every Blanks task stays case-insensitive.
+  - `apps/server/test/learningDesign/patterns/realPatternSkeletons.test.ts` pins the setting of `ea-terms` and
+    `uv-column`; `content/laeringsdesign/README.md` («What catches mistakes in a pattern») and the ALU packet §6.2
+    say so.
 
 ### D-085 · Creating an activity from a pattern is one server request
 - **Context:** `PROD-001` opens the editor "pre-filled with a pedagogically sound skeleton". The editor client could
@@ -1748,6 +1763,12 @@ loading of one spec per session are kept.
   only the main one: the defaults add libraries (InteractiveVideo's summary brings H5P.Summary), and some are
   installed only as dependencies. Without that check Lumi's own error would answer 500 instead of 409
   `hvl:pattern-unavailable`.
+- **Amendment (2026-10-29, S5 review):** an installed library whose skeleton cannot be built for another reason (a
+  `semantics.json` that does not parse, which Lumi's package validator lets through, or a damaged library folder)
+  makes only the patterns that use it unavailable in the overview and the pattern pages, as a missing library does;
+  before, one such pattern made `GET /api/studio` answer 500, and with it the guide, the planner and `/mappe`. The
+  failure is logged once per pattern and content type (a warning with the pattern ID, the content type and the
+  error's name) until a build succeeds again. Creating from such a pattern still fails (500): the overview has already called it unavailable.
 
 ### D-086 · Guidance placeholders are marked `⟦…⟧`, and V-PLACEHOLDER is an error that can be acknowledged
 - **Context:** `PROD-001` allows a created activity to fail validation only on "placeholders that are deliberately
@@ -1894,6 +1915,15 @@ loading of one spec per session are kept.
     removed co-author loses Edit at the next one.
   - **The predicate:** `learningDesign/collaboration/staffEligibility.ts`; the Feide login writes
     `coAuthorSearchableAt` through `AccountResolver`, which ignores the field for an LTI launch.
+- **Amendment (2026-10-29, S5 review): staff e-mail is no longer stored.** `SPEC-DEVIATION` AUTH-004 ("store a display
+  name and e-mail only for authors and admins"). AUTH-004 kept the e-mail for co-author search and attribution, but
+  search matches the display name or the Feide-ID hash and answers `{ userId, displayName }`, the bank and a copy
+  show the name only, and nothing in the code base reads `User.email`. Keeping it had no purpose (GDPR Art. 5(1)(b)
+  and (c)), and `/personvern` and the data inventory named a use that does not exist. The Feide login therefore keeps
+  only the display name (`authorProfile`), and `AccountResolver` writes `email: null` at each staff login, so an
+  address stored before is cleared at the next one; there is no migration, as nothing is deployed yet. The column
+  stays until a schema change drops it. `FEIDE_SCOPE` keeps `email` (AUTH-001 fixes the scope string): the claim is
+  only in the encrypted ID token kept for Feide logout, as `/personvern` already says.
 
 ### D-091 · The content bank: opt-in, published, shared with HVL, for HVL authors
 - **Context:** `PROD-007` lets authors "publish an activity to the HVL content bank so that colleagues can duplicate
@@ -1997,6 +2027,33 @@ loading of one spec per session are kept.
   deletion; that waits until someone needs it. On the Deling tab a student-author owner still sees people search (the
   web app knows roles, not the student-author fact) and gets the server's explanation (`hvl:sharing-not-allowed`) when
   searching.
+- **Amendment (2026-10-29, S5 review): a bank copy needs the listing to be in the bank now.** The bank shows a listing
+  only while its owner is findable staff (D-091 amendment, S5 integration of stage 4), but the bank branch of
+  `duplicateRules` checked only `bankListedAt`, so a colleague who knew the ID could still copy a hidden listing (by
+  the duplicate route, «Lagre som ny versjon» or an editor paste), and the copy named the departed owner. The facts'
+  `bankListed` (`ContentAccessRepository.factsFor`) now means "listed, and its owner is findable staff"
+  (`isFindableStaff`, the in-memory form of the bank list's `findableStaffWhere`), so the duplicator, the copy route
+  and the editor's paste guard refuse such a source with 403 `hvl:duplicate-not-allowed` until the owner's next
+  eligible login. Copying through Edit is unchanged.
+- **Amendment (2026-10-29, S5 review): copies are limited per person.** A duplicate and «Lagre som ny versjon» each
+  stream every file of the source through the server, and nothing bounded how many one person could start. Both now
+  count against one per-person fixed window in Redis, the people search's pattern (D-090): at most 20 copies in 10
+  minutes (`hvli:copies:<userId>`, a count only), counted once the duplicate rule has allowed the copy, so an
+  unknown or refused source answers as before. Past the limit the answer is 429 `hvl:rate-limited`, and
+  `POST /api/content/:contentId/duplicate` sends `Retry-After` with the rest of the window (at least 1 second). The
+  limiter is built with the H5P runtime and reaches the duplicator through the editor it saves with
+  (`HvlH5PEditor.copyLimit`), because the studio services take only the editor from the runtime. Not covered: the
+  bytes of one copy (a source that repeats one stored file many times) and the editor's own saves of pasted paths;
+  both stay open for a per-save copy budget.
+- **Amendment (2026-10-29, S5 review): the source's title carries its language.** The «Kopi av …» sign put the
+  source's title in the page's language, so an English source on a Nynorsk page was read with a Norwegian voice
+  (UD-010, WCAG 3.1.2). The attribution now also has `sourceLanguage`, the source's own language tag
+  (`activityLanguage` of its metadata), given only together with `sourceTitle` and under the same View check; the
+  sign marks the title with `lang` when it differs from the page's language.
+- **Amendment (2026-10-29, S5 review leftovers): both copy routes send `Retry-After`.** «Lagre som ny versjon»
+  (`POST /h5p/content/:contentId/copy`) answered the copy limit's 429 `hvl:rate-limited` without `Retry-After`, so
+  only the duplicate route told the person when to try again. Now both send it, with the same seconds, and the
+  `/api` contract documents the 429 of `duplicateContent` as it does people search's.
 
 ### D-093 · Safe editing: a structure signature, a confirmation, and saving as a copy
 - **Context:** `PROD-013`: editing an activity that has learner state warns that structural changes reset saved
@@ -2095,8 +2152,24 @@ loading of one spec per session are kept.
   focus or is exposed in the accessibility tree while the dialog is open.
 - **Amendment (2026-10-29, S5 integration):** while «Nullstill …» or «Lagre som ny versjon» runs, the editor page's
   status region says so («Nullstiller framgangen og lagrar endringa …», `safeEditing.busy.*`) before the result, so a
-  screen-reader user knows the request has started. While the dialog is open, the holders of the editor frame also
-  lose their `tabindex` (given back afterwards), because a click beside the frame otherwise sent Tab out of the dialog.
+  screen-reader user knows the request has started. (The `tabindex` of the frame's holders while the dialog is open is
+  recorded once, in the amendment above; S5 review, 2026-10-29.)
+- **Amendment (2026-10-29, S5 review): the reset is part of the parameter write.** A structural save's reset (state
+  rows deleted, version raised) used to be its own transaction after Lumi's save. Lumi's first parameter write commits
+  before it copies files and writes a second time, so a failed reset, a failed file copy or a restart in between left
+  the new structure with the old state and the old version, and the next save, comparing against the new structure,
+  never reset it. Now the editor's learner-state step marks the save in its async context
+  (`h5p/storage/learnerStateResetWrite.ts`), and `PrismaContentStorage`'s first update of that activity writes the
+  parameters, raises the version (that update comes first, for the `FOR SHARE` order) and deletes every state row in
+  one transaction. A save that fails before that write changes nothing; one that fails after it leaves the new
+  structure with its reset. A storage without the hook (the unit tests' file storage) gets the separate reset after
+  the write, as before.
+- **Amendment (2026-10-29, S5 review): focus while a chosen request runs.** The dialog's close removed the focused
+  choice while «Lagre» was still natively disabled, so focus fell to the page's `<body>` for the whole reset or copy
+  (a copy may take minutes), and Tab went into H5P's form. Now, once the author has chosen «Nullstill …» or «Lagre
+  som ny versjon», the editor page focuses «Lagre» before the busy text is announced, keeping it unavailable with
+  `aria-disabled="true"` (a click is ignored) instead of `disabled`, which cannot hold focus. When the request ends,
+  «Lagre» is available again and the outcome is announced, as before. The ordinary save keeps its native `disabled`.
 
 ### D-094 · Rendering the pedagogisk mappe
 - **Context:** `MAPPE-002` takes headings from the template and criteria from the criteria files, keyed by criteria
@@ -2170,6 +2243,19 @@ loading of one spec per session are kept.
   but not its size, because the server makes the file only when asked and stores nothing (MAPPE-003); the size is
   unknown until then. The reference list of the export carries no language per reference yet, so an English
   reference in a Nynorsk PDF is not tagged with `/Lang` (a residual for the manual PAC check, D-096).
+- **Amendment (2026-10-29, S5 review): link destinations over two lines, and activity IDs in either case.**
+  - **Value places:** CommonMark lets a link destination start on the line after `](` or `]:`, so the loader looks
+    for an open destination in the whole paragraph before the value, not only on its line. It refuses a value in a
+    destination that starts on the next line (also when the template writes the start of the address), and any
+    value in a paragraph that holds a link reference definition. A value after a closed link, or in link text over
+    two lines, is allowed. The verification of the review added: a `](` stays open until the `)` that balances it
+    (a destination may hold balanced parentheses or an escaped `\)`), and a reference definition counts also in a
+    block quote or a list item (`> [a]:`, `- [a]:`, `1. [a]:`); all three passed the loader before. A second
+    verification added two more that had passed: a definition whose label holds an escaped bracket (`[a\]b]:`),
+    and one whose label runs over a line that holds only a no-break space, because only a line of spaces and tabs
+    ends a paragraph in CommonMark, and the scan had taken any white space for a blank line.
+  - **IDs:** the mappe routes match an activity ID without regard to case, as the other S5 lookups do: an upper-case
+    ID finds the author's activity, and the same ID twice in two cases is 400 `error.badRequest` ("named twice").
 
 ### D-095 · Minimum group size in exports
 - **Context:** `MAPPE-003` applies `INS-006`'s minimum group size (*k* = 5, configurable, at least 3, with
@@ -2240,6 +2326,22 @@ loading of one spec per session are kept.
   `THead` or `TBody` element (`NonStruct`); no XMP metadata, so no PDF/UA identifier; links have no `/Contents`;
   the header says PDF 1.4; activity titles have no language of their own; references have no language of their own
   (D-094 amendment); the activity address is plain text, not a link. `taggedPdf.browser.test.ts` pins the first two.
+- **Amendment (2026-10-29, S5 review): the time limit covers opening the context, and a stalled browser is
+  replaced.** In the review, a Chromium that was frozen (SIGSTOP) but still connected never answered `newContext`.
+  That call ran before the 30-second limit started, so the export waited for good, and two such exports left every
+  later one 503 `hvl:pdf-busy` until a restart.
+  - **The limit** now starts before the context opens and covers opening, loading and printing. Past it the answer
+    is 503 `hvl:pdf-unavailable`, and a context that opens late is closed at once. The launch keeps its own 20
+    seconds.
+  - **Discarding:** a browser that fails to open a context, or does not open one or finish closing one within the
+    limit, is treated like a crashed one. It is forgotten and closed without waiting, and the next export starts a
+    new one. An export that is only slow to print keeps the browser, so other exports running in it are not cut off.
+    The context's close after an export still waits at most one more limit, so a browser that stalls during a
+    print gets its answer after at most two limits (60 seconds), and its slots are free then.
+  - **Tests:** `pdfRendererTimeLimit.test.ts` (a `newContext` that never answers, a late context, a hung close, a
+    slow print). `pdfRenderer.test.ts` pins the request handler (abort, never continue), and
+    `pdfRendererIsolation.browser.test.ts` shows with the real renderer and Chromium that no stylesheet, image or
+    frame of the document reaches a local listener; `offline` alone does not stop a frame, so the abort is needed.
 
 ### D-097 · New dependencies in S5
 - **Context:** CLAUDE.md pins every runtime dependency exactly, and D-029's checks allow only listed licences.

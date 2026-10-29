@@ -5,6 +5,8 @@
  * Why: D-084 puts the skeleton beside `pattern.yaml`, pinned to a library version, so ALU can make one from an
  *      exported `.h5p` without code (PED-011). Its form must be checked like any content file, by file and key.
  * Spec: PED-010, PED-011
+ * SPEC-DEVIATION: D-084 — spec 04 §4 puts skeletons in `apps/server/src/patterns/skeletons/`; they are content files in
+ *   `content/laeringsdesign/patterns/<id>/`, with text tokens, so a new pattern needs no code change.
  * Invariants:
  *   - A skeleton is a JSON object with exactly `library` (`H5P.Name major.minor`), `metadataTitle` (the activity's
  *     title, which may hold tokens) and `params` (content.json, an object).

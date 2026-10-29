@@ -1,7 +1,8 @@
 /**
  * Browser tests for the look of the server's own pages with their real stylesheets: the editor's outer page uses the
- * token typography and target size for its save button and status (A11Y-4), and a page with the Hjelp header has a
- * skip link that appears on focus and a Hjelp link at least 24 px tall (UD-013, UD-006, UD-005).
+ * token typography and target size for its save button and status (A11Y-4), and its «Lagre» held with
+ * `aria-disabled` looks like a disabled button (D-093 amendment 2026-10-29, S5 review); a page with the Hjelp header
+ * has a skip link that appears on focus and a Hjelp link at least 24 px tall (UD-013, UD-006, UD-005).
  *
  * Spec: UD-002, UD-005, UD-006, UD-013
  */
@@ -81,6 +82,37 @@ describeWithBrowser('[UD-002] server pages in Chromium', (browser) => {
     expect(looks.statusSize).toBe('16px');
     expect(looks.statusLineHeight).toBe('24px');
     expect(looks.mainWidth).toBeGreaterThan(1200);
+  }, 30_000);
+
+  it('[UD-002] a button held with aria-disabled looks like a disabled one, also in forced colours', async () => {
+    // Arrange: «Lagre» while a chosen reset or copy runs (D-093 amendment 2026-10-29, S5 review)
+    const page = await open('/editor');
+    const looks = () =>
+      page.evaluate(() => {
+        const button = document.querySelector('#hvl-editor-save') as HTMLButtonElement;
+        const look = () => {
+          const style = getComputedStyle(button);
+          return [style.borderColor, style.backgroundColor, style.color, style.cursor].join(' / ');
+        };
+        button.disabled = false;
+        const available = look();
+        button.disabled = true;
+        const disabled = look();
+        button.disabled = false;
+        button.setAttribute('aria-disabled', 'true');
+        const held = look();
+        button.removeAttribute('aria-disabled');
+        return { available, disabled, held };
+      });
+    // Act
+    const normal = await looks();
+    await page.emulateMedia({ forcedColors: 'active' });
+    const forced = await looks();
+    // Assert
+    expect(normal.held).toBe(normal.disabled);
+    expect(normal.held).not.toBe(normal.available);
+    expect(forced.held).toBe(forced.disabled);
+    expect(forced.held).not.toBe(forced.available);
   }, 30_000);
 
   it('[UD-006] the skip link appears when focused and the Hjelp link is a 24 px target in the header', async () => {

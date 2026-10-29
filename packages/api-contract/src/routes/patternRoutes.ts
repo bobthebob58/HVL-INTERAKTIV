@@ -1,8 +1,8 @@
 /**
- * patternRoutes — the registry of the route that creates an activity from a pattern (W2).
+ * patternRoutes — the registry of the route that creates an activity from a pattern.
  *
- * Why: D-099 splits the `/api` registry by area, so each workstream adds its routes to its own table and never edits
- *      another's; ../apiRoutes.ts concatenates the areas in document order.
+ * Why: D-099 splits the `/api` registry by area, so each area's routes are in its own table and a change to one area
+ *      never edits another's; ../apiRoutes.ts concatenates the areas in document order.
  * Spec: DOC-012, PROD-001, PED-010
  * Invariants:
  *   - `path` is below `/api`, in Express form; every `:name` has a schema in `params`, every query parameter one in
@@ -22,7 +22,7 @@ import {
 } from '../patterns.js';
 import { failure, unauthenticated } from './routeResponses.js';
 
-/** The routes of this area (W2), in the order of the OpenAPI document. */
+/** The routes of this area, in the order of the OpenAPI document. */
 export const PATTERN_ROUTES = [
   {
     operationId: 'createActivityFromPattern',

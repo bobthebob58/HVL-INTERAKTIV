@@ -20,7 +20,7 @@ import { openRealWebApp, type RealWebApp } from '../test/support/realWebApp.js';
 import { describeWithRealWebApp } from '../test/support/realWebAppPrerequisites.js';
 import { pressEditorSave } from './support/editorSave.js';
 import { deepFocus, editorFrames, pathOf } from './support/portalFrames.js';
-import { webText, webTextPattern } from './support/webTexts.js';
+import { webText, webTextPattern } from '../test/support/webAppTexts.js';
 
 /** Single-type patterns whose fields «Gå til feltet» reaches, best first (D-093 amendment, W5b). */
 const PREFERRED = ['H5P.MultiChoice', 'H5P.QuestionSet', 'H5P.Blanks', 'H5P.DragText'] as const;

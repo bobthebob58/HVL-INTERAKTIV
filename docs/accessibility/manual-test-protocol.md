@@ -138,7 +138,7 @@ what a person hears and what PAC reports.
 | J4.4 | Download «Last ned Markdown (til å redigere)» and «Last ned PDF». | Each button names the file type, and «Fila … er lasta ned» is announced. The size is not known until the server has made the file, so it is not shown: record whether that is a problem for `UD-007` («file links show type and size»). |
 | J4.5 | Run PAC on the PDF and record its PDF/UA and WCAG results. | No failure other than the residuals listed below. The document has a title, shown in the title bar instead of the file name, and the language `nn` (`MAPPE-004`). |
 | J4.6 | In PAC's logical-structure view (or Acrobat's Tags pane), compare the tags with the Markdown file's headings. | The headings are tagged H1–H4 in the Markdown's order and levels; the reader's guide is a Table of TR rows whose header cells are TH (with column and row scopes); lists are L with LI items; text is P. There is no image, and no untagged text beyond the residuals below. |
-| J4.7 | Open the PDF in Adobe Acrobat Reader with NVDA and read it from the start with NVDA's say all. | The reading order follows the Markdown file: the title, the author and date, the reader's guide, Del 1 with its chapters and the activities, the references, Del 2 and Del 3. Nothing is read twice or skipped; æ, ø and å are read correctly; NVDA uses its Norwegian voice (with automatic language switching on). |
+| J4.7 | Open the PDF in Adobe Acrobat Reader with NVDA and read it from the start with NVDA's say all. | The reading order follows the Markdown file: the title, the author and date, the reader's guide, Del 1 with its chapters and the activities, the references, Del 2 and Del 3. Nothing is read twice or skipped; æ, ø and å are read correctly; NVDA uses its Norwegian voice (with automatic language switching on), also for English titles and references (residuals below). |
 | J4.8 | Move by headings (H, and the elements list NVDA+F7) and open Acrobat's bookmarks. | Every heading is reachable at its level; there is one bookmark per heading with the same text, also for the long activity title that wraps, whose words keep their space (D-096). |
 | J4.9 | In the reader's guide, move through the table with NVDA's table commands (Ctrl+Alt+arrows). | Each cell is read with its column header, and each row's first cell, the criterion, as its row header. |
 | J4.10 | Export the same activities in English and repeat J4.5 and J4.7. | The language is `en` and NVDA reads with its English voice; the result is otherwise the same. |
@@ -148,7 +148,9 @@ barriers:** list numbers («1.») are not tagged, list items have no `Lbl` or `L
 attribute; a table's caption and its header row group become `NonStruct`, and there are no `Caption`, `THead` or
 `TBody` elements; there is no XMP metadata, so no PDF/UA identifier; links have no `/Contents`; the file header says
 PDF 1.4; activity titles carry no language of their own, so an English title in a Nynorsk portfolio is read with
-the Norwegian voice (WCAG 3.1.2); and an activity's address is plain text, not a link. Anything PAC or the screen
+the Norwegian voice (WCAG 3.1.2); references carry no language of their own either, so an English reference in a
+Nynorsk portfolio, or a Norwegian one in an English portfolio, is read with the portfolio's voice (D-094
+amendment); and an activity's address is plain text, not a link. Anything PAC or the screen
 reader reports beyond these is a new finding. Record the outcome as `MAPPE-004`'s manual check (spec 04), which the
 S5 gate lists as open until it is done; `apps/server/test/learningDesign/mappe/taggedPdf.browser.test.ts` pins the
 structure Chromium makes today, so a Chromium update that changes it fails that test first.

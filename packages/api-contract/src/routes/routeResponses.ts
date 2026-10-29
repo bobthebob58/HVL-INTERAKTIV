@@ -3,7 +3,7 @@
  * their codes, and the activity ID in the path.
  *
  * Why: every area registry (./coreRoutes.ts, ./studioRoutes.ts, …) documents 401, 400 and 404 the same way. One
- *      definition keeps the OpenAPI document consistent and lets workstreams add routes without copying texts.
+ *      definition keeps the OpenAPI document consistent and lets an area add routes without copying texts.
  * Spec: DOC-012
  * Invariants:
  *   - Every error answer uses `errorBodySchema`.

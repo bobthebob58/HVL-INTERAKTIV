@@ -2,10 +2,12 @@
  * PrismaLearnerStateStore — the learner-state rows the safe-editing gate reads and resets, on PostgreSQL.
  *
  * Why: the gate (./LearnerStateGate.ts) asks whether anyone but the saver has saved progress, and a structural save
- *      resets all of it and raises the activity's version (D-093). The version raise and the deletion are one
- *      transaction whose first statement locks the activity's row: a state write from a learner's page holds that
- *      row in share mode while it checks its version (../../h5p/storage/PrismaContentUserDataStorage.ts), so a
- *      write either lands before the reset (and is deleted by it) or after it (and is dropped as stale).
+ *      resets all of it and raises the activity's version (D-093). On PostgreSQL the content storage resets with the
+ *      save's parameter write (../../h5p/storage/PrismaContentStorage.ts); `resetLearnerState` is the gate's fallback
+ *      for a storage without that hook. Either way the version raise and the deletion are one transaction whose
+ *      first statement locks the activity's row: a state write from a learner's page holds that row in share mode
+ *      while it checks its version (../../h5p/storage/PrismaContentUserDataStorage.ts), so a write either lands
+ *      before the reset (and is deleted by it) or after it (and is dropped as stale).
  * Spec: PROD-013, DATA-002
  * Invariants:
  *   - Reads only whether a row exists (`findFirst` of the ID), never a learnerKey, a count or a state.

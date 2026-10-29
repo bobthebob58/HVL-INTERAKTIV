@@ -135,6 +135,9 @@ and admins**, who need them for co-author search and attribution. Feide never ve
 addresses (`email_verified` is always `false`), so e-mail is never used as an identifier; use `sub` or
 the Feide ID.
 - **Verify:** Unit test asserts the scope string. Integration test asserts that no learner row has a name or e-mail.
+- **Amended (D-090, 2026-10-29, S5 review):** `SPEC-DEVIATION`: the e-mail is no longer stored for anyone. Co-author
+  search matches the display name or the Feide ID's hash, and the bank and copies show the name only, so a stored
+  address had no use; each staff login now clears `User.email`.
 
 #### AUTH-005 · SHOULD · S3 · Link an author's Canvas identity to their Feide identity
 The aim is one personal library whether a teacher arrives through Canvas or the portal. To link
@@ -299,7 +302,7 @@ decision for HVL and ALU *(verify)*.
 
 | Entity | Key fields | Personal data? |
 |---|---|---|
-| `User` | `id`, `kind (staff/learner)`, `displayName?`, `email?` (staff only), `createdAt` | Staff only |
+| `User` | `id`, `kind (staff/learner)`, `displayName?`, `email?` (kept null since S5, D-090), `createdAt` | Staff only |
 | `Identity` | `userId`, `provider (feide/lti)`, `subjectHash` (HMAC of `feide\|<Feide ID>` or `lti\|<iss>\|<sub>`, D-054), `subjectKeyId` (the `IDENTITY_HASH_KEYS` key that made the hash, D-055), `platformId?` | Pseudonymous |
 | `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken` | as required by ltijs `DatabaseManager`; `LtiPlatform.privateKeyEncrypted` and `LtiAccessToken.tokenEncrypted` are encrypted with `DATA_ENCRYPTION_KEYS` (D-056) | `LtiIdToken.claims` holds an allowlist of launch claims, including `sub` but no name, e-mail, `lis` or `feide_login` (D-052). Kept for 24 h only; nonces 10 min. |
 | `LtiDeployment` | `platformId`, `deploymentId`; replaced from `LTI_PLATFORMS` at start-up (D-051) | No |

@@ -139,6 +139,17 @@ describeWithServices('[MAPPE-001] exporting a pedagogisk mappe', () => {
     expect([res.status, res.body.errorCode]).toEqual([404, 'hvl:activity-unavailable']);
   });
 
+  it('[MAPPE-001] finds the author’s activity by an ID in upper case, and refuses one ID named in two cases', async () => {
+    // Act
+    const upper = await exportMd({ contentIds: [ids.own!.toUpperCase()] });
+    const twice = await exportMd({ contentIds: [ids.own, ids.own!.toUpperCase()] });
+    const strangerUpper = await exportMd({ contentIds: [ids.stranger!.toUpperCase()] });
+    // Assert
+    expect([upper.status, upper.text]).toEqual([200, expect.stringContaining('Eiga blodtrykksvideo')]);
+    expect([twice.status, twice.body.errorCode]).toEqual([400, 'error.badRequest']);
+    expect([strangerUpper.status, strangerUpper.body.errorCode]).toEqual([404, 'hvl:activity-unavailable']);
+  });
+
   it('[MAPPE-002] switching the criteria set changes the criterion texts, the reader’s guide and the limits', async () => {
     // Act
     const first = await exportMd({ contentIds: [ids.own] }, FIXTURE_SETS.default);

@@ -1,13 +1,13 @@
 /**
- * Probe P7 (S5): the save choice dialog of PROD-013 in a framed editor page, as authors always meet it: `/lti/edit`
- * inside a Canvas page from another origin (D-093, D-098), and `/h5p/edit` inside the web app's activity page on
- * our own origin (the Rediger tab, apps/web/src/features/activity/ActivityView.tsx). Both send the strict policy.
+ * Probe P7 (S5): the save choice dialog of PROD-013 in a framed editor page, as authors meet it: `/lti/edit` in a
+ * Canvas page of another origin (D-093, D-098), and `/h5p/edit` in the web app's Rediger tab; both send the policy.
  *
- * Found: showModal works in the frame, but it is modal only inside the frame: the page around it stays live, and
- * natively Tab moves on from the last button to that page's next link while the dialog stays open. Wrapping Tab
- * in the dialog keeps focus in it; Escape then cancels and focus returns to «Lagre». The guard that takes focus
- * back from the H5P editor iframe must act only when focus went into a frame of ours; one that answers every
- * window `blur` also takes focus back from the page around ours, and the keys typed there land in the dialog.
+ * Found: showModal is modal only inside the frame: natively Tab moves on to the page around it while the dialog stays
+ * open, and wrapping Tab keeps focus in it. A guard that takes focus back from the H5P editor iframe must act only on
+ * a frame of ours; one that answers every window `blur` also takes it from the page around ours.
+ *
+ * Pins, not evidence (DOC-004): these run a stand-in of the dialog, so every title starts `upstream pin: ` and
+ * records what Chromium does (./editorSaveDialogPage.ts says why); the production dialog's tests are listed there.
  *
  * Spec: PROD-013, UD-006
  */
@@ -114,7 +114,7 @@ describeWithServices('[PROD-013] the save choice dialog in Canvas’s frame (pro
   afterAll(() => tb?.close());
 
   describeWithBrowser('[UD-006] the dialog in the tool frame of a Canvas page', (browser) => {
-    it('[PROD-013] it is modal only in the frame: Tab moves on to Canvas’s page, unless the dialog wraps Tab', async () => {
+    it('upstream pin: a dialog in Canvas’s frame is modal only in the frame: Tab moves on to Canvas’s page unless wrapped', async () => {
       // Arrange: Canvas's page with our editor frame between two of Canvas's own links
       const context = await browser().newContext();
       await routeProbeFiles(context, tb.toolUrl);
@@ -166,7 +166,7 @@ describeWithServices('[PROD-013] the save choice dialog in the web app’s Redig
     afterAll(() => bench?.close());
 
     describeWithBrowser('[UD-006] the dialog in the frame of the activity page', (browser) => {
-      it('[PROD-013] Tab leaves for the web app’s page too; the frame-focus guard leaves focus there alone', async () => {
+      it('upstream pin: in the web app’s frame Tab leaves for its page too; a frame-focus guard must leave focus there alone', async () => {
         // Arrange: a page of ours frames the editor page, as ActivityView.tsx's Rediger tab does
         const context = await browser().newContext();
         await context.setExtraHTTPHeaders({ [bench.authorHeader[0]]: bench.authorHeader[1] });

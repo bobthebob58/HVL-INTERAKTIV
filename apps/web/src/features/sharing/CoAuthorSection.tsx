@@ -9,9 +9,10 @@
  * Invariants:
  *   - Remove buttons follow the server's answer: every co-author's for the owner (`mayManage`), only the own one
  *     (`isSelf`) for a co-author; the search only for the owner.
- *   - A11Y: after adding, focus returns to the search field; after removing someone, focus goes to the list's heading
- *     (the pressed button is gone); after «Fjern meg», to a lasting message with a link to the person's activities.
- *     Each change is announced politely (WCAG 2.4.3, 4.1.3).
+ *   - A11Y: once a change has rendered (an effect, not a timer), focus returns to the search field after adding,
+ *     goes to the list's heading after removing someone (the pressed button is gone), and after «Fjern meg» to a
+ *     lasting message with a link to the person's activities, never to `body`. Each change is announced politely
+ *     (WCAG 2.4.3, 4.1.3).
  *   - Every name is shown as given; a missing one says so in words.
  * Collaborators: ../../api/collaborationApi.ts, ./PeopleSearch.tsx, ./SharingFeedback.tsx, ./SharingPanel.tsx,
  *   ../../config/paths.ts.
@@ -51,6 +52,14 @@ export function CoAuthorSection({ contentId, announce }: CoAuthorSectionProps) {
   const leftMessage = useRef<HTMLParagraphElement>(null);
   const [list, setList] = useState<CoAuthorList | 'loading' | 'failed' | 'left'>('loading');
   const [problem, setProblem] = useState<string>();
+  const focusAfterChange = useRef<(() => void) | undefined>(undefined);
+
+  useEffect(() => {
+    // A11Y: WCAG 2.4.3: runs once the change has rendered, so the lasting message after «Fjern meg» is on screen.
+    // Chromium may run a 0 ms timer before that render, as it did for the bank listing (S5 review).
+    focusAfterChange.current?.();
+    focusAfterChange.current = undefined;
+  }, [list]);
 
   useEffect(() => {
     let active = true;
@@ -69,10 +78,9 @@ export function CoAuthorSection({ contentId, announce }: CoAuthorSectionProps) {
       setProblem(result.error?.message ?? t('sharing.changeFailed', locale));
       return;
     }
+    focusAfterChange.current = focus;
     setList(result.data);
     announce(said);
-    // WHY: the pressed button is gone after the render this change causes; focus moves once it is on screen.
-    window.setTimeout(focus, 0);
   };
   const add = (person: Person) =>
     void change(
@@ -84,9 +92,9 @@ export function CoAuthorSection({ contentId, announce }: CoAuthorSectionProps) {
     if (coAuthor.isSelf) {
       void removeCoAuthor(contentId, coAuthor.userId, auth).then((result) => {
         if (!result.ok) return setProblem(result.error?.message ?? t('sharing.changeFailed', locale));
+        focusAfterChange.current = () => leftMessage.current?.focus();
         setList('left');
         announce(t('sharing.removedSelf', locale));
-        window.setTimeout(() => leftMessage.current?.focus(), 0);
       });
       return;
     }

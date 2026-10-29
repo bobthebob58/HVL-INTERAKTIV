@@ -1241,7 +1241,10 @@ drops them for learners before anything is stored. store a display name and e-ma
 and admins**, who need them for co-author search and attribution. feide never verifies e-mail
 addresses (`email_verified` is always `false`), so e-mail is never used as an identifier; use `sub` or
 the feide id.
-- **verify:** unit test asserts the scope string. integration test asserts that no learner row has a name or e-mail.">
+- **verify:** unit test asserts the scope string. integration test asserts that no learner row has a name or e-mail.
+- **amended (d-090, 2026-10-29, s5 review):** `spec-deviation`: the e-mail is no longer stored for anyone. co-author
+  search matches the display name or the feide id's hash, and the bank and copies show the name only, so a stored
+  address had no use; each staff login now clears `user.email`.">
 <summary><span class="req-id">AUTH-004</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Data minimisation at login</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Request only the scopes listed in <a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>. <strong>Never</strong> request <code>userid-nin</code> or read the claim
 <code>https://n.feide.no/claims/nin</code> (national identity number), or other extended attributes. Feide releases
@@ -1252,6 +1255,9 @@ addresses (<code>email_verified</code> is always <code>false</code>), so e-mail 
 the Feide ID.</p>
 <ul>
 <li><strong>Verify:</strong> Unit test asserts the scope string. Integration test asserts that no learner row has a name or e-mail.</li>
+<li><strong>Amended (D-090, 2026-10-29, S5 review):</strong> <code>SPEC-DEVIATION</code>: the e-mail is no longer stored for anyone. Co-author
+search matches the display name or the Feide ID&#39;s hash, and the bank and copies show the name only, so a stored
+address had no use; each staff login now clears <code>User.email</code>.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-AUTH-004">02 Feide, LTI and grades, AUTH-004</a> · Feide login</p></div>
 </details>
@@ -3568,6 +3574,9 @@ addresses (<code>email_verified</code> is always <code>false</code>), so e-mail 
 the Feide ID.</p>
 <ul>
 <li><strong>Verify:</strong> Unit test asserts the scope string. Integration test asserts that no learner row has a name or e-mail.</li>
+<li><strong>Amended (D-090, 2026-10-29, S5 review):</strong> <code>SPEC-DEVIATION</code>: the e-mail is no longer stored for anyone. Co-author
+search matches the display name or the Feide ID&#39;s hash, and the bank and copies show the name only, so a stored
+address had no use; each staff login now clears <code>User.email</code>.</li>
 </ul>
 <h4 id="r-AUTH-005" class="req-heading" tabindex="-1"><a class="req-id" href="#r-AUTH-005">AUTH-005</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Link an author's Canvas identity to their Feide identity</span></h4>
 <p>The aim is one personal library whether a teacher arrives through Canvas or the portal. To link
@@ -3742,7 +3751,7 @@ decision for HVL and ALU <em>(verify)</em>.</p>
 <div class="table-wrap" role="region" aria-label="Table 6, 7. Logical data owned by this module" tabindex="0"><table><thead><tr>
 <th scope="col">Entity</th><th scope="col">Key fields</th><th scope="col">Personal data?</th></tr>
 </thead><tbody><tr>
-<td><code>User</code></td><td><code>id</code>, <code>kind (staff/learner)</code>, <code>displayName?</code>, <code>email?</code> (staff only), <code>createdAt</code></td><td>Staff only</td></tr>
+<td><code>User</code></td><td><code>id</code>, <code>kind (staff/learner)</code>, <code>displayName?</code>, <code>email?</code> (kept null since S5, D-090), <code>createdAt</code></td><td>Staff only</td></tr>
 <tr>
 <td><code>Identity</code></td><td><code>userId</code>, <code>provider (feide/lti)</code>, <code>subjectHash</code> (HMAC of <code>feide|&lt;Feide ID&gt;</code> or <code>lti|&lt;iss&gt;|&lt;sub&gt;</code>, D-054), <code>subjectKeyId</code> (the <code>IDENTITY_HASH_KEYS</code> key that made the hash, D-055), <code>platformId?</code></td><td>Pseudonymous</td></tr>
 <tr>
@@ -4567,7 +4576,7 @@ personal data; <strong>P</strong> marks pseudonymous fields.</p>
 <div class="table-wrap" role="region" aria-label="Table 3, 4. Consolidated logical data model" tabindex="0"><table><thead><tr>
 <th scope="col">Entity</th><th scope="col">Owner spec</th><th scope="col">Notable fields</th></tr>
 </thead><tbody><tr>
-<td><code>User</code>, <code>Identity</code></td><td>02</td><td><code>displayName</code>/<code>email</code> for staff only (<strong>PII</strong>; from S5 the name is shown to HVL colleagues in co-author search, bank listings and copy attribution, D-090–D-092); <code>coAuthorSearchableAt</code> (staff, D-090); <code>subjectHash</code> (<strong>P</strong>)</td></tr>
+<td><code>User</code>, <code>Identity</code></td><td>02</td><td><code>displayName</code> for staff only (<strong>PII</strong>; <code>email</code> is kept null since S5, D-090; from S5 the name is shown to HVL colleagues in co-author search, bank listings and copy attribution, D-090–D-092); <code>coAuthorSearchableAt</code> (staff, D-090); <code>subjectHash</code> (<strong>P</strong>)</td></tr>
 <tr>
 <td><code>H5PContent</code>, <code>H5PContentFile</code>, <code>ContentCollaborator</code>, <code>LibraryAuditEvent</code></td><td>01</td><td><code>ownerUserId</code>; <code>sourceAuthorUserId</code> on copies (S5, D-092)</td></tr>
 <tr>
@@ -5158,8 +5167,8 @@ structure tree, the outline, <code>/Lang</code>, the title and the text with <co
 and NVDA (protocol J4 in <code>docs/accessibility/manual-test-protocol.md</code>). Known residuals to record there: list
 numbers are untagged, list items have no <code>Lbl</code> or <code>LBody</code>, and lists carry no numbering attribute; a table&#39;s
 caption and header row become <code>NonStruct</code>; there is no XMP metadata and so no PDF/UA identifier; links have no
-<code>/Contents</code>; the header says PDF 1.4; activity titles carry no language of their own; and an activity&#39;s address
-is plain text, not a link. No manual check is recorded yet.</li>
+<code>/Contents</code>; the header says PDF 1.4; activity titles and references carry no language of their own (D-094
+amendment); and an activity&#39;s address is plain text, not a link. No manual check is recorded yet.</li>
 <li><strong>No students&#39; results in the mappe before S6</strong> (D-095). No results are stored before S6&#39;s xAPI and grade work,
 so <code>ActivityResultsSource</code> answers &quot;no results yet&quot; and the portfolio says so in one sentence per activity. The
 minimum group size (<code>MIN_GROUP_SIZE</code>, <em>k</em> = 5 by default, never below 3) and its two-sided suppression are built
@@ -7085,6 +7094,23 @@ changes them in place.</li>
 </ul>
 </li>
 <li><strong>Amendment (2026-10-29, S5 W2b):</strong> <code>content:check</code> also refuses a skeleton key that the library&#39;s semantics do not define, so a misspelt behaviour switch cannot silently leave a <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a> setting at its default. A sub-content node may hold only <code>library</code>, <code>params</code>, <code>metadata</code> and <code>subContentId</code>; a key a library&#39;s own editor writes beside its semantics (BranchingScenario&#39;s <code>contentId</code> on each content item) is accepted, so a skeleton made from an exported <code>.h5p</code> passes as exported. A test runs the check on every real seed package.</li>
+<li><strong>Amendment (2026-10-29, S5 review): typo tolerance in fill-in tasks.</strong> H5P.Blanks&#39; «Godta mindre skrivefeil»
+(<code>acceptSpellingErrors</code>) counts an answer as correct when it is one edit away from a solution longer than three
+characters (two edits beyond nine), and numbers get no exception: «125» and «1,25» both pass for «12,5». Spec 04 §4
+asks for typo tolerance only in <code>ea-terms</code>, whose answers are terms; the real-pattern tests had widened it to every
+Blanks task without a record. Now:<ul>
+<li><code>ea-terms</code>&#39; Blanks accepts small typos (spec 04 §4).</li>
+<li><code>uv-column</code>, whose example is a dosage calculation, matches exactly (<code>acceptSpellingErrors: false</code>), so a number
+with one wrong or swapped digit is never marked correct. Its guidance tells the author to give each accepted
+form of a number as an alternative (<code>12,5/12.5</code>) and to switch typo tolerance on only when every answer is a
+word.</li>
+<li>The other patterns&#39; Blanks keep typo tolerance as ALU&#39;s draft choice; the tests no longer require it, so ALU
+can make a pattern strict with no code change (<a class="req-ref" href="#r-PED-011"><code>PED-011</code></a>). Every Blanks task stays case-insensitive.</li>
+<li><code>apps/server/test/learningDesign/patterns/realPatternSkeletons.test.ts</code> pins the setting of <code>ea-terms</code> and
+<code>uv-column</code>; <code>content/laeringsdesign/README.md</code> («What catches mistakes in a pattern») and the ALU packet §6.2
+say so.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-085--creating-an-activity-from-a-pattern-is-one-server-request" tabindex="-1">D-085 · Creating an activity from a pattern is one server request</h3>
 <ul>
@@ -7115,6 +7141,13 @@ waits for S6 (D-098).</p>
 only the main one: the defaults add libraries (InteractiveVideo&#39;s summary brings H5P.Summary), and some are
 installed only as dependencies. Without that check Lumi&#39;s own error would answer 500 instead of 409
 <code>hvl:pattern-unavailable</code>.</p>
+</li>
+<li><p><strong>Amendment (2026-10-29, S5 review):</strong> an installed library whose skeleton cannot be built for another reason (a
+<code>semantics.json</code> that does not parse, which Lumi&#39;s package validator lets through, or a damaged library folder)
+makes only the patterns that use it unavailable in the overview and the pattern pages, as a missing library does;
+before, one such pattern made <code>GET /api/studio</code> answer 500, and with it the guide, the planner and <code>/mappe</code>. The
+failure is logged once per pattern and content type (a warning with the pattern ID, the content type and the
+error&#39;s name) until a build succeeds again. Creating from such a pattern still fails (500): the overview has already called it unavailable.</p>
 </li>
 </ul>
 <h3 id="decisions--d-086--guidance-placeholders-are-marked--and-v-placeholder-is-an-error-that-can-be-acknowledged" tabindex="-1">D-086 · Guidance placeholders are marked <code>⟦…⟧</code>, and V-PLACEHOLDER is an error that can be acknowledged</h3>
@@ -7285,6 +7318,15 @@ removed co-author loses Edit at the next one.</li>
 <code>coAuthorSearchableAt</code> through <code>AccountResolver</code>, which ignores the field for an LTI launch.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-10-29, S5 review): staff e-mail is no longer stored.</strong> <code>SPEC-DEVIATION</code> AUTH-004 (&quot;store a display
+name and e-mail only for authors and admins&quot;). AUTH-004 kept the e-mail for co-author search and attribution, but
+search matches the display name or the Feide-ID hash and answers <code>{ userId, displayName }</code>, the bank and a copy
+show the name only, and nothing in the code base reads <code>User.email</code>. Keeping it had no purpose (GDPR Art. 5(1)(b)
+and (c)), and <code>/personvern</code> and the data inventory named a use that does not exist. The Feide login therefore keeps
+only the display name (<code>authorProfile</code>), and <code>AccountResolver</code> writes <code>email: null</code> at each staff login, so an
+address stored before is cleared at the next one; there is no migration, as nothing is deployed yet. The column
+stays until a schema change drops it. <code>FEIDE_SCOPE</code> keeps <code>email</code> (AUTH-001 fixes the scope string): the claim is
+only in the encrypted ID token kept for Feide logout, as <code>/personvern</code> already says.</li>
 </ul>
 <h3 id="decisions--d-091--the-content-bank-opt-in-published-shared-with-hvl-for-hvl-authors" tabindex="-1">D-091 · The content bank: opt-in, published, shared with HVL, for HVL authors</h3>
 <ul>
@@ -7402,6 +7444,33 @@ shows no «Kopi av …» sign and looks like an original. Telling it apart would
 deletion; that waits until someone needs it. On the Deling tab a student-author owner still sees people search (the
 web app knows roles, not the student-author fact) and gets the server&#39;s explanation (<code>hvl:sharing-not-allowed</code>) when
 searching.</li>
+<li><strong>Amendment (2026-10-29, S5 review): a bank copy needs the listing to be in the bank now.</strong> The bank shows a listing
+only while its owner is findable staff (D-091 amendment, S5 integration of stage 4), but the bank branch of
+<code>duplicateRules</code> checked only <code>bankListedAt</code>, so a colleague who knew the ID could still copy a hidden listing (by
+the duplicate route, «Lagre som ny versjon» or an editor paste), and the copy named the departed owner. The facts&#39;
+<code>bankListed</code> (<code>ContentAccessRepository.factsFor</code>) now means &quot;listed, and its owner is findable staff&quot;
+(<code>isFindableStaff</code>, the in-memory form of the bank list&#39;s <code>findableStaffWhere</code>), so the duplicator, the copy route
+and the editor&#39;s paste guard refuse such a source with 403 <code>hvl:duplicate-not-allowed</code> until the owner&#39;s next
+eligible login. Copying through Edit is unchanged.</li>
+<li><strong>Amendment (2026-10-29, S5 review): copies are limited per person.</strong> A duplicate and «Lagre som ny versjon» each
+stream every file of the source through the server, and nothing bounded how many one person could start. Both now
+count against one per-person fixed window in Redis, the people search&#39;s pattern (D-090): at most 20 copies in 10
+minutes (<code>hvli:copies:&lt;userId&gt;</code>, a count only), counted once the duplicate rule has allowed the copy, so an
+unknown or refused source answers as before. Past the limit the answer is 429 <code>hvl:rate-limited</code>, and
+<code>POST /api/content/:contentId/duplicate</code> sends <code>Retry-After</code> with the rest of the window (at least 1 second). The
+limiter is built with the H5P runtime and reaches the duplicator through the editor it saves with
+(<code>HvlH5PEditor.copyLimit</code>), because the studio services take only the editor from the runtime. Not covered: the
+bytes of one copy (a source that repeats one stored file many times) and the editor&#39;s own saves of pasted paths;
+both stay open for a per-save copy budget.</li>
+<li><strong>Amendment (2026-10-29, S5 review): the source&#39;s title carries its language.</strong> The «Kopi av …» sign put the
+source&#39;s title in the page&#39;s language, so an English source on a Nynorsk page was read with a Norwegian voice
+(UD-010, WCAG 3.1.2). The attribution now also has <code>sourceLanguage</code>, the source&#39;s own language tag
+(<code>activityLanguage</code> of its metadata), given only together with <code>sourceTitle</code> and under the same View check; the
+sign marks the title with <code>lang</code> when it differs from the page&#39;s language.</li>
+<li><strong>Amendment (2026-10-29, S5 review leftovers): both copy routes send <code>Retry-After</code>.</strong> «Lagre som ny versjon»
+(<code>POST /h5p/content/:contentId/copy</code>) answered the copy limit&#39;s 429 <code>hvl:rate-limited</code> without <code>Retry-After</code>, so
+only the duplicate route told the person when to try again. Now both send it, with the same seconds, and the
+<code>/api</code> contract documents the 429 of <code>duplicateContent</code> as it does people search&#39;s.</li>
 </ul>
 <h3 id="decisions--d-093--safe-editing-a-structure-signature-a-confirmation-and-saving-as-a-copy" tabindex="-1">D-093 · Safe editing: a structure signature, a confirmation, and saving as a copy</h3>
 <ul>
@@ -7511,8 +7580,24 @@ the tab panel and left the dialog. <code>a11y/axeSaveChoice.a11y.test.ts</code> 
 focus or is exposed in the accessibility tree while the dialog is open.</li>
 <li><strong>Amendment (2026-10-29, S5 integration):</strong> while «Nullstill …» or «Lagre som ny versjon» runs, the editor page&#39;s
 status region says so («Nullstiller framgangen og lagrar endringa …», <code>safeEditing.busy.*</code>) before the result, so a
-screen-reader user knows the request has started. While the dialog is open, the holders of the editor frame also
-lose their <code>tabindex</code> (given back afterwards), because a click beside the frame otherwise sent Tab out of the dialog.</li>
+screen-reader user knows the request has started. (The <code>tabindex</code> of the frame&#39;s holders while the dialog is open is
+recorded once, in the amendment above; S5 review, 2026-10-29.)</li>
+<li><strong>Amendment (2026-10-29, S5 review): the reset is part of the parameter write.</strong> A structural save&#39;s reset (state
+rows deleted, version raised) used to be its own transaction after Lumi&#39;s save. Lumi&#39;s first parameter write commits
+before it copies files and writes a second time, so a failed reset, a failed file copy or a restart in between left
+the new structure with the old state and the old version, and the next save, comparing against the new structure,
+never reset it. Now the editor&#39;s learner-state step marks the save in its async context
+(<code>h5p/storage/learnerStateResetWrite.ts</code>), and <code>PrismaContentStorage</code>&#39;s first update of that activity writes the
+parameters, raises the version (that update comes first, for the <code>FOR SHARE</code> order) and deletes every state row in
+one transaction. A save that fails before that write changes nothing; one that fails after it leaves the new
+structure with its reset. A storage without the hook (the unit tests&#39; file storage) gets the separate reset after
+the write, as before.</li>
+<li><strong>Amendment (2026-10-29, S5 review): focus while a chosen request runs.</strong> The dialog&#39;s close removed the focused
+choice while «Lagre» was still natively disabled, so focus fell to the page&#39;s <code>&lt;body&gt;</code> for the whole reset or copy
+(a copy may take minutes), and Tab went into H5P&#39;s form. Now, once the author has chosen «Nullstill …» or «Lagre
+som ny versjon», the editor page focuses «Lagre» before the busy text is announced, keeping it unavailable with
+<code>aria-disabled=&quot;true&quot;</code> (a click is ignored) instead of <code>disabled</code>, which cannot hold focus. When the request ends,
+«Lagre» is available again and the outcome is announced, as before. The ordinary save keeps its native <code>disabled</code>.</li>
 </ul>
 <h3 id="decisions--d-094--rendering-the-pedagogisk-mappe" tabindex="-1">D-094 · Rendering the pedagogisk mappe</h3>
 <ul>
@@ -7593,6 +7678,21 @@ Oslo time), and the portfolio&#39;s language is chosen apart from the page&#39;s
 but not its size, because the server makes the file only when asked and stores nothing (MAPPE-003); the size is
 unknown until then. The reference list of the export carries no language per reference yet, so an English
 reference in a Nynorsk PDF is not tagged with <code>/Lang</code> (a residual for the manual PAC check, D-096).</li>
+<li><strong>Amendment (2026-10-29, S5 review): link destinations over two lines, and activity IDs in either case.</strong><ul>
+<li><strong>Value places:</strong> CommonMark lets a link destination start on the line after <code>](</code> or <code>]:</code>, so the loader looks
+for an open destination in the whole paragraph before the value, not only on its line. It refuses a value in a
+destination that starts on the next line (also when the template writes the start of the address), and any
+value in a paragraph that holds a link reference definition. A value after a closed link, or in link text over
+two lines, is allowed. The verification of the review added: a <code>](</code> stays open until the <code>)</code> that balances it
+(a destination may hold balanced parentheses or an escaped <code>\)</code>), and a reference definition counts also in a
+block quote or a list item (<code>&gt; [a]:</code>, <code>- [a]:</code>, <code>1. [a]:</code>); all three passed the loader before. A second
+verification added two more that had passed: a definition whose label holds an escaped bracket (<code>[a\]b]:</code>),
+and one whose label runs over a line that holds only a no-break space, because only a line of spaces and tabs
+ends a paragraph in CommonMark, and the scan had taken any white space for a blank line.</li>
+<li><strong>IDs:</strong> the mappe routes match an activity ID without regard to case, as the other S5 lookups do: an upper-case
+ID finds the author&#39;s activity, and the same ID twice in two cases is 400 <code>error.badRequest</code> (&quot;named twice&quot;).</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-095--minimum-group-size-in-exports" tabindex="-1">D-095 · Minimum group size in exports</h3>
 <ul>
@@ -7669,6 +7769,24 @@ items have no <code>Lbl</code>/<code>LBody</code> and lists no numbering attribu
 <code>THead</code> or <code>TBody</code> element (<code>NonStruct</code>); no XMP metadata, so no PDF/UA identifier; links have no <code>/Contents</code>;
 the header says PDF 1.4; activity titles have no language of their own; references have no language of their own
 (D-094 amendment); the activity address is plain text, not a link. <code>taggedPdf.browser.test.ts</code> pins the first two.</li>
+<li><strong>Amendment (2026-10-29, S5 review): the time limit covers opening the context, and a stalled browser is
+replaced.</strong> In the review, a Chromium that was frozen (SIGSTOP) but still connected never answered <code>newContext</code>.
+That call ran before the 30-second limit started, so the export waited for good, and two such exports left every
+later one 503 <code>hvl:pdf-busy</code> until a restart.<ul>
+<li><strong>The limit</strong> now starts before the context opens and covers opening, loading and printing. Past it the answer
+is 503 <code>hvl:pdf-unavailable</code>, and a context that opens late is closed at once. The launch keeps its own 20
+seconds.</li>
+<li><strong>Discarding:</strong> a browser that fails to open a context, or does not open one or finish closing one within the
+limit, is treated like a crashed one. It is forgotten and closed without waiting, and the next export starts a
+new one. An export that is only slow to print keeps the browser, so other exports running in it are not cut off.
+The context&#39;s close after an export still waits at most one more limit, so a browser that stalls during a
+print gets its answer after at most two limits (60 seconds), and its slots are free then.</li>
+<li><strong>Tests:</strong> <code>pdfRendererTimeLimit.test.ts</code> (a <code>newContext</code> that never answers, a late context, a hung close, a
+slow print). <code>pdfRenderer.test.ts</code> pins the request handler (abort, never continue), and
+<code>pdfRendererIsolation.browser.test.ts</code> shows with the real renderer and Chromium that no stylesheet, image or
+frame of the document reaches a local listener; <code>offline</code> alone does not stop a frame, so the abort is needed.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-097--new-dependencies-in-s5" tabindex="-1">D-097 · New dependencies in S5</h3>
 <ul>
@@ -8135,8 +8253,16 @@ S5 is done), and all of S5 is done in this session.</li>
    protocol, <code>docs/reference/alu-review-s5.md</code> (Q17)</li>
 </ol>
 </li>
-<li><span class="task">○ To do:</span> <ol start="6">
-<li>Review with skeptics, two verification passes</li>
+<li><span class="task">✓ Done:</span> <ol start="6">
+<li>Review with skeptics, two verification passes
+ — seven reviewers (security, privacy, accessibility, pedagogy and content, correctness, tests, documentation)
+   reported 49 findings, each checked by its own skeptic: 13 rejected (recorded or intended), one overturned
+   against the player&#39;s code (the fa-video timing; now an ALU review point), two duplicates; 33 fixed in five
+   groups (mappe and PDF, server, web, content and docs, workstream labels), each fix with a test that fails
+   without it, then two independent verification passes and a last round for cross-group items. Notable fixes:
+   the PDF time limit now covers a stalled browser; staff e-mail is no longer stored; a hidden bank listing can
+   no longer be copied; a per-person copy limit; numeric blanks never accept typos; focus after every studio
+   action; the D-083/D-084 deviations marked in code. Decisions D-083…D-096 amended (2026-10-29, S5 review)</li>
 </ol>
 </li>
 <li><span class="task">○ To do:</span> Pilot evaluators from ALU and Pedagogisk akademi review the studio content (Q17; may stay open, record the outcome here)</li>

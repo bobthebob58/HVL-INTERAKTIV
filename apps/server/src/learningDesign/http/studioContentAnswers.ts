@@ -11,7 +11,9 @@
  *   - Reads only the frozen `StudioContent` and the pattern creator's `availability`; never the database, so an
  *     answer holds nothing about people (D-089).
  *   - Phase labels and texts come only from the content (PED-001): a renamed label changes every answer.
- *   - `available` is asked per request, since an administrator may install a library at any time (D-085).
+ *   - `available` is asked per request, since an administrator may install a library at any time (D-085); a pattern
+ *     whose availability cannot be told counts as unavailable, so one bad library never fails the overview (D-085
+ *     amendment 2026-10-29; PatternCreator logs the cause once).
  *   - The guide answer is empty (no nodes, no references) while no guide is written yet.
  * Collaborators: ./studioContentRoutes.ts, ../content/loadStudioContent.ts, ../content/patternAccessors.ts,
  *   ../content/patternProse.ts, ../content/guideContent.ts, ../patterns/PatternCreator.ts,
@@ -47,7 +49,11 @@ const reference = ({ key, text, verify, language }: StudioReference): Reference 
 
 const card = async (pattern: StudioPattern, creator: PatternAvailabilityLookup): Promise<PatternSummary> => ({
   ...patternCard(pattern),
-  available: (await creator.availability(pattern.id))?.available ?? false,
+  // WHY: one pattern whose availability cannot be told is unavailable; it never fails the whole answer (D-085).
+  available: await creator.availability(pattern.id).then(
+    (availability) => availability?.available ?? false,
+    () => false,
+  ),
 });
 
 /**

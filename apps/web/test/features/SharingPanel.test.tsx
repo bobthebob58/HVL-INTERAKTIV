@@ -1,6 +1,7 @@
 /**
  * Tests for the **Deling** tab as a whole: its headings in order, saving the visibility (and a student author's
- * refusal), and «Lag ein kopi», which copies the activity and opens the copy's Rediger tab.
+ * refusal, which a second press shows as a new alert), and «Lag ein kopi», which copies the activity and opens the
+ * copy's Rediger tab.
  *
  * Spec: PROD-007, PROD-006, UD-006, UD-013
  */
@@ -90,6 +91,30 @@ describe('[PROD-007] the Deling tab', () => {
     // Assert
     expect((await screen.findByRole('alert')).textContent).toBe(`✗ ${message}`);
     expect(reloadDetail).not.toHaveBeenCalled();
+  });
+
+  it('[PROD-006] the same refusal a second time is a new alert, so it is announced again', async () => {
+    // Arrange
+    const message = 'Du kan ikkje dele.';
+    const requests = fakeFetch(
+      routes({
+        [`PATCH /api/content/${ID}/sharing`]: {
+          status: 403,
+          body: errorBody(403, 'hvl:sharing-not-allowed', message),
+        },
+      }),
+    );
+    show();
+    fireEvent.click(screen.getByRole('radio', { name: 'Alle ved HVL' }));
+    const save = screen.getByRole('button', { name: 'Lagre delinga' });
+    fireEvent.click(save);
+    const first = await screen.findByRole('alert');
+    // Act
+    fireEvent.click(save);
+    // Assert
+    await waitFor(() => expect(screen.getByRole('alert')).not.toBe(first));
+    expect(screen.getByRole('alert').textContent).toBe(`✗ ${message}`);
+    expect(requests.filter((r) => r.method === 'PATCH')).toHaveLength(2);
   });
 
   it('[PROD-007] «Lag ein kopi» copies the activity once and opens the copy’s Rediger tab', async () => {

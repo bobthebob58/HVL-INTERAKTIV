@@ -78,23 +78,25 @@ describeWithServices('[DATA-002] accounts by identity hash', () => {
     ).toBe(userId);
   });
 
-  it('[AUTH-004] upgrades a learner who now authors, stores the staff profile, and never downgrades', async () => {
-    // Arrange
+  it('[AUTH-004] upgrades a learner who now authors, stores the name only, clears an e-mail stored before, never downgrades', async () => {
+    // Arrange: an account that became staff and holds an e-mail address stored before the D-090 amendment
     const source = feide();
-    await resolver().resolve({ provider: 'feide', source, kind: 'learner' });
-    // Act
-    const staff = await resolver().resolve({
+    const staffLogin = {
       provider: 'feide',
       source,
       kind: 'staff',
-      profile: { displayName: 'Kari Lærar', email: 'kari@hvl.no' },
-    });
+      profile: { displayName: 'Kari Lærar' },
+    } as const;
+    await resolver().resolve({ provider: 'feide', source, kind: 'learner' });
+    const staff = await resolver().resolve(staffLogin);
+    await db.user.update({ where: { id: staff.userId }, data: { email: 'kari@hvl.no' } });
+    // Act
+    const again = await resolver().resolve(staffLogin);
     const later = await resolver().resolve({ provider: 'feide', source, kind: 'learner' });
     // Assert
-    expect(staff.kind).toBe('staff');
-    expect(later.kind).toBe('staff');
+    expect([staff.kind, again.kind, later.kind]).toEqual(['staff', 'staff', 'staff']);
     const user = await db.user.findUniqueOrThrow({ where: { id: staff.userId } });
-    expect(user).toMatchObject({ kind: 'staff', displayName: 'Kari Lærar', email: 'kari@hvl.no' });
+    expect(user).toMatchObject({ kind: 'staff', displayName: 'Kari Lærar', email: null });
   });
 
   it('[AUTH-001] creates one account when the first logins of a person arrive at the same time', async () => {

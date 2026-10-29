@@ -6,8 +6,8 @@
  *      options) reset learners' saved progress and that rewording an option changes what saved choices mean, and
  *      offers «Avbryt», «Nullstill framgangen og lagre» and, in the portal, «Lagre som ny versjon». Canvas offers
  *      reset or cancel only, with a pointer to the portal (D-098). The editor page's boot script
- *      (`editorSaveChoice.js`, W5b) reads these from the page's config block, so every text comes from the locale
- *      files (DOC-009) and the two variants cannot drift apart.
+ *      (../../h5p/render/client/editorSaveChoice.js) reads these from the page's config block, so every text comes
+ *      from the locale files (DOC-009) and the two variants cannot drift apart.
  * Spec: PROD-013, PROD-012
  * Invariants:
  *   - Every text is a `safeEditing.*` locale key in nn, nb and en.

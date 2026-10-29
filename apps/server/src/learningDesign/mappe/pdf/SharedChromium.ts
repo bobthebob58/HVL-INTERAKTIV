@@ -12,10 +12,14 @@
  *     true, which production refuses (../../../config/productionChecks.ts); the root development container needs it.
  *   - Nothing is started until the first `browser()`; exports that ask while it starts share the one launch.
  *   - A failed launch, or a browser that disconnects (a crash), is forgotten, so the next export starts a new one.
+ *   - A browser that stops answering while still connected is discarded (`discard`): forgotten the same way and
+ *     closed without waiting, since a stalled browser may never finish closing (D-096 S5 review amendment).
  *   - Playwright installs no signal handlers: the server's own shutdown closes the browser (`close`).
  *   - After `close`, no browser is started again.
  * Collaborators: ./PdfRenderer.ts, playwright-core 1.56.1, ../../../config/env.ts (`PDF_*`).
- * Tests: apps/server/test/learningDesign/mappe/mappePdf.browser.int.test.ts
+ * Tests: apps/server/test/learningDesign/mappe/mappePdf.browser.int.test.ts,
+ *   apps/server/test/learningDesign/mappe/pdfRenderer.test.ts,
+ *   apps/server/test/learningDesign/mappe/pdfRendererTimeLimit.test.ts
  */
 import { chromium, type Browser, type LaunchOptions } from 'playwright-core';
 import type { Env } from '../../../config/env.js';
@@ -55,6 +59,8 @@ export function pdfBrowserLaunchOptions(
 export class SharedChromium {
   private starting: Promise<Browser> | undefined;
   private closed = false;
+  /** The launch each running browser came from, so forgetting one never forgets a newer launch. */
+  private readonly launchOf = new WeakMap<Browser, Promise<Browser>>();
 
   /**
    * @param options - The launch options (`pdfBrowserLaunchOptions`).
@@ -74,10 +80,9 @@ export class SharedChromium {
     if (this.closed) return Promise.reject(new Error('the PDF browser is closed'));
     if (this.starting) return this.starting;
     const attempt = this.launch(this.options).then((browser) => {
+      this.launchOf.set(browser, attempt);
       // WHY: a crashed or killed browser disconnects; forgetting it lets the next export start a new one.
-      browser.on('disconnected', () => {
-        if (this.starting === attempt) this.starting = undefined;
-      });
+      browser.on('disconnected', () => this.forget(browser));
       return browser;
     });
     this.starting = attempt;
@@ -85,6 +90,21 @@ export class SharedChromium {
       if (this.starting === attempt) this.starting = undefined;
     });
     return attempt;
+  }
+
+  /**
+   * Discards a browser that stopped answering: the next `browser()` starts a new one.
+   * @param browser - The browser an export got from `browser()`; a newer one is kept.
+   */
+  discard(browser: Browser): void {
+    this.forget(browser);
+    // WHY: a stalled browser may never finish closing; nothing waits for it, and playwright kills it at exit.
+    browser.close().catch(() => undefined);
+  }
+
+  private forget(browser: Browser): void {
+    if (this.starting !== undefined && this.starting === this.launchOf.get(browser))
+      this.starting = undefined;
   }
 
   /** Closes the browser if one runs; later calls of `browser` fail. */

@@ -9,13 +9,15 @@
  * Invariants:
  *   - Sends only choices the pattern offers; the course code is normalised as the server does (D-087), and one that
  *     is not valid is reported on the field and in the error summary, without a request (WCAG 3.3.1, 3.3.3).
+ *   - A11Y: the summary takes focus once per failed submit (keyed by the attempt), never while the author corrects
+ *     the field (WCAG 3.2.2).
  *   - The request carries the session's CSRF token; a refusal shows the server's translated message in an alert.
  *   - The phase choice names phases by their content labels only (PED-001); without the labels it is not offered,
  *     and the form says the phase can be chosen on the Læringsdesign tab (the carried or first phase is sent).
  *   - Only the created activity's own ID is navigated to: `/aktivitet/<id>?fane=edit` (D-085).
  * Collaborators: ./CreateFromPattern.tsx, ../../../api/studioApi.ts, ../../../config/studioFilters.ts,
  *   ../../../config/paths.ts, ../../../components/ErrorSummary.tsx.
- * Tests: apps/web/test/features/PatternDetailView.test.tsx
+ * Tests: apps/web/test/features/PatternDetailView.test.tsx, apps/web/test/features/CreateFromPatternFocus.test.tsx
  */
 'use client';
 
@@ -69,13 +71,18 @@ export function CreateFromPatternForm({
   const [state, setState] = useState<
     { status: 'idle' | 'busy' | 'invalid' } | { status: 'failed'; message: string }
   >({ status: 'idle' });
+  // A11Y: WCAG 3.2.2: the error summary is keyed by the failed submit, so typing in the field never remounts it.
+  const [attempt, setAttempt] = useState(0);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     // WHY: one draft per press; a second press while the first request runs would create a second activity.
     if (state.status === 'busy') return;
     const courseCode = course.trim() === '' ? undefined : normaliseCourseCode(course);
-    if (course.trim() !== '' && !courseCode) return setState({ status: 'invalid' });
+    if (course.trim() !== '' && !courseCode) {
+      setAttempt(attempt + 1);
+      return setState({ status: 'invalid' });
+    }
     setState({ status: 'busy' });
     const result = await createFromPattern(
       pattern.id,
@@ -96,7 +103,7 @@ export function CreateFromPatternForm({
     <form onSubmit={(event) => void submit(event)} noValidate>
       {invalid ? (
         <ErrorSummary
-          key={course}
+          key={attempt}
           errors={[{ fieldId: courseId, message: t('patterns.courseCodeInvalid', locale) }]}
         />
       ) : null}

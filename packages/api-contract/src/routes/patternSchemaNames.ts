@@ -1,5 +1,5 @@
 /**
- * patternSchemaNames — the component names of the schemas that pattern routes (W2) use.
+ * patternSchemaNames — the component names of the schemas that pattern routes use.
  *
  * Why: the OpenAPI document refers to request and answer schemas by name (D-077); D-099 splits the name lists by
  *      area like the registry (./patternRoutes.ts), so parallel work never edits the same list.
@@ -12,7 +12,7 @@
 import type { ApiSchemaNames } from '../apiRouteTypes.js';
 import { patternActivityRequestSchema, patternActivityResponseSchema } from '../patterns.js';
 
-/** The named schemas of this area; workstreams add the ones their routes use (W2). */
+/** The named schemas of this area: every request and answer schema its routes name. */
 export const PATTERN_SCHEMA_NAMES: ApiSchemaNames = {
   request: { PatternActivityRequest: patternActivityRequestSchema },
   response: { PatternActivityResponse: patternActivityResponseSchema },

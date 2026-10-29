@@ -16,6 +16,8 @@
  *     marker stands once in each.
  *   - A guide's references are the ones it cites, each once, in first-citation order.
  *   - Its part of the `npm run content:check` summary comes from `describeGuideContent`.
+ * SPEC-DEVIATION: D-083 — PED-002 names `guide.{nn,nb,en}.mdx`; the guide is CommonMark (`.md`) read into a closed
+ *   node tree, never compiled to code.
  * Collaborators: ./loadStudioContent.ts (calls it), ./runContentCheck.ts (the summary), ./guideMarkdownTree.ts,
  *   ./guideParity.ts, ./referencesContent.ts, ./studioContentContext.ts, ../http/studioContentAnswers.ts.
  * Tests: apps/server/test/learningDesign/content/guideContent.test.ts,

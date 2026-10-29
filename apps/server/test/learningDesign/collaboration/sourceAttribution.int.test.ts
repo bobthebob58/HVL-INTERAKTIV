@@ -1,8 +1,9 @@
 /**
  * Integration tests of a copy's source attribution in `GET /api/content/:contentId` (D-092 as amended): the source's
- * title and its author's current name for people who may edit the copy only; unknown parts left out.
+ * title with its language and its author's current name for people who may edit the copy only; unknown parts left
+ * out.
  *
- * Spec: PROD-007, DATA-002, H5P-006
+ * Spec: PROD-007, DATA-002, H5P-006, UD-010
  */
 import { contentDetailSchema } from '@hvl-interaktiv/api-contract';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -12,19 +13,27 @@ import { describeWithServices } from '../../support/services.js';
 import { personNamed, runToken } from './collaborationFixtures.js';
 
 const TOKEN = runToken();
-const ATTRIBUTION_KEYS = ['sourceContentId', 'sourceTitle', 'sourceAuthorName'];
+const ATTRIBUTION_KEYS = ['sourceContentId', 'sourceTitle', 'sourceLanguage', 'sourceAuthorName'];
 
 describeWithServices('[PROD-007] where a copy came from', () => {
   const tb = openApiTestbed();
   let author: TestPrincipal;
   let copier: TestPrincipal;
 
-  /** A published source shared with HVL, and a copy of it owned by the copier, linked as the duplicator links it. */
+  /**
+   * A published source in English, and a copy of it owned by the copier, linked as the duplicator links it.
+   * WHY: every source states its language, so a test that expects no `sourceLanguage` proves it was held back.
+   */
   const copyOf = async (source: { visibility: 'organisation' | 'private' }, copy = {}) => {
     const sourceId = await tb.content(author.principal.userId, {
       title: `Kjelde ${TOKEN}`,
       status: 'published',
       visibility: source.visibility,
+    });
+    const stored = await tb.db.h5PContent.findUniqueOrThrow({ where: { id: sourceId } });
+    await tb.db.h5PContent.update({
+      where: { id: sourceId },
+      data: { metadata: { ...(stored.metadata as object), defaultLanguage: 'en' } },
     });
     const copyId = await tb.content(copier.principal.userId, { title: `Kopi ${TOKEN}`, ...copy });
     await tb.db.h5PContent.update({
@@ -42,7 +51,7 @@ describeWithServices('[PROD-007] where a copy came from', () => {
   });
   afterAll(() => tb.close());
 
-  it('[PROD-007] the copy’s editor sees the source’s title and the author’s current name', async () => {
+  it('[PROD-007] the copy’s editor sees the source’s title, its language and the author’s current name', async () => {
     // Arrange
     const { sourceId, copyId } = await copyOf({ visibility: 'organisation' });
     await tb.db.user.update({
@@ -55,6 +64,7 @@ describeWithServices('[PROD-007] where a copy came from', () => {
     expect(seen).toMatchObject({
       sourceContentId: sourceId,
       sourceTitle: `Kjelde ${TOKEN}`,
+      sourceLanguage: 'en',
       sourceAuthorName: `Ola ${TOKEN} Nytt`,
     });
   });
@@ -81,6 +91,7 @@ describeWithServices('[PROD-007] where a copy came from', () => {
     const seen = await detail(copier, copyId);
     expect(seen).not.toHaveProperty('sourceContentId');
     expect(seen).not.toHaveProperty('sourceTitle');
+    expect(seen).not.toHaveProperty('sourceLanguage');
     expect(seen.sourceAuthorName).toContain(`Ola ${TOKEN}`);
   });
 

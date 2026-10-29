@@ -33,7 +33,8 @@ export type EstimatedStudentMinutes = z.infer<typeof estimatedStudentMinutesSche
 
 // WHY: learners see the purpose as one line before the activity, so a line break is refused rather than shown. Any
 // other control character (a pasted tab) is refused too: the web app's strict launch-header parser refuses the whole
-// `x-hvli-launch` header on one, which would turn the Canvas page into "no launch" for every learner (S5 W3 review).
+// `x-hvli-launch` header on one, which would turn the Canvas page into "no launch" for every learner (D-087 amendment
+// 2026-10-29).
 /** The learner purpose: plain text on one line without control characters, trimmed, 1 to 200 characters. */
 export const learnerPurposeSchema = z
   .string()

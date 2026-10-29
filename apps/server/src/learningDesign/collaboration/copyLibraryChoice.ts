@@ -5,7 +5,8 @@
  * Why: H5P's editor upgrades an activity to the newest installed minor version of its library when it opens it, and
  *      the parameters it sends are shaped for that version (D-093 as amended, S5 server side). Saving them under the
  *      source's older version would store parameters its semantics do not describe. A different machine name or
- *      major version is not an upgrade the editor makes, so the source's version is kept (D-093 amendment, S5 W4).
+ *      major version is not an upgrade the editor makes, so the source's version is kept (D-093 amendment 2026-10-29,
+ *      the copy's library version).
  * Spec: PROD-013, PROD-007, H5P-002
  * Invariants:
  *   - Accepted only with the same machine name and major version as the source, and only when the library manager

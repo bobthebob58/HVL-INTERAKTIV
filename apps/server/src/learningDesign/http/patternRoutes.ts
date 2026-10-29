@@ -1,10 +1,10 @@
 /**
- * patternRoutes — the pattern routes under `/api` (workstream W2): `POST /api/patterns/:patternId/activities` creates
- * a draft activity from a pattern, with its learning-design metadata, in one request.
+ * patternRoutes — the pattern routes under `/api`: `POST /api/patterns/:patternId/activities` creates a draft
+ * activity from a pattern, with its learning-design metadata, in one request.
  *
  * Why: `PROD-001` opens the editor on a pedagogically sound skeleton, and D-085 builds that skeleton on the server so
- *      the metadata never travels through the browser and a test can create every pattern. This is W2's one router,
- *      mounted by the studio router.
+ *      the metadata never travels through the browser and a test can create every pattern. This is the area's one
+ *      router, mounted by the studio router (../../http/api/studioRouter.ts).
  * Spec: PROD-001, PED-010, PED-011
  * Auth: portal — a signed-in portal author (Feide session) with the CSRF token; an LTI launch is refused (the Canvas
  *   side waits for S6, D-098). Every route starts with `requirePortalAuthor` (./studioPrincipal.ts).

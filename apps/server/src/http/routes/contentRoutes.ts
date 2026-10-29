@@ -31,15 +31,16 @@
  *   - `POST /content/:contentId/copy` with `{ params: object, metadata: object, library?: string }` (what H5P's
  *     editor gives as `content.params`, and its `content.library`) saves the edit as a new private draft linked to
  *     the activity, which stays untouched, and answers 201 `{ contentId }`; the copy keeps the source's library
- *     unless `library` is an installed minor version of it (D-093 amendment, S5 W4); a `library` that is not a
- *     string is 400. Portal only: an ltik is 401 `hvl:unauthenticated` (D-098), a portal learner 403; the
- *     duplicator's refusals pass through (404 `hvl:activity-unavailable`, 403 `hvl:duplicate-not-allowed`, the
- *     editor's 4xx, 500 `hvl:duplicate-failed`).
+ *     unless `library` is an installed minor version of it (D-093 amendment 2026-10-29, the copy's library
+ *     version); a `library` that is not a string is 400. Portal only: an ltik is 401 `hvl:unauthenticated`
+ *     (D-098), a portal learner 403; the duplicator's refusals pass through (404 `hvl:activity-unavailable`, 403
+ *     `hvl:duplicate-not-allowed`, 429 `hvl:rate-limited` past the person's copy limit, with `Retry-After` as the
+ *     duplicate route sends it, the editor's 4xx, 500 `hvl:duplicate-failed`).
  *   - The export is always a download (`attachment`, `nosniff`) named after the content ID, never a title, and
  *     the response ends only when Lumi's zip stream has been written completely.
  * Collaborators: ../../h5p/HvlH5PEditor.ts, ../requestBodies.ts, Lumi's H5PAjaxEndpoint,
  *   ../../content/PublishedSaveGate.ts, ../../learningDesign/collaboration/ContentDuplicator.ts,
- *   ../../learningDesign/http/studioPrincipal.ts.
+ *   ../../learningDesign/collaboration/CopyRateLimit.ts, ../../learningDesign/http/studioPrincipal.ts.
  * Tests: apps/server/test/http/contentSave.int.test.ts, apps/server/test/content/publishedSave.int.test.ts,
  *   apps/server/test/content/saveRace.int.test.ts, apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/saveAsCopy.int.test.ts
@@ -50,6 +51,7 @@ import { Router, type RequestHandler } from 'express';
 import type { ContentSaveGate } from '../../content/PublishedSaveGate.js';
 import { asAccountUser } from '../../h5p/HvlH5pUser.js';
 import type { ContentDuplicator } from '../../learningDesign/collaboration/ContentDuplicator.js';
+import { retryAfterOf } from '../../learningDesign/collaboration/CopyRateLimit.js';
 import { requirePortalAuthor } from '../../learningDesign/http/studioPrincipal.js';
 import type { SaveChoice } from '../../learningDesign/safeEditing/LearnerStateGate.js';
 import { inWordsOfSaver } from '../../learningDesign/safeEditing/resetNeededWording.js';
@@ -150,7 +152,13 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
       const library: unknown = (req.body as Record<string, unknown>).library;
       if (library !== undefined && typeof library !== 'string') throw new HttpError(400, 'error.badRequest');
       const id = pathParam(req, 'contentId');
-      const { contentId } = await duplicator.saveAsCopy(id, params, metadata, requireActor(res), library);
+      const copying = duplicator.saveAsCopy(id, params, metadata, requireActor(res), library);
+      const { contentId } = await copying.catch((error: unknown) => {
+        // WHY: past the per-person copy limit the editor page, like any client, learns when to try again (D-092).
+        const retryAfter = retryAfterOf(error);
+        if (retryAfter !== undefined) res.set('Retry-After', String(retryAfter));
+        throw error;
+      });
       res.status(201).json({ contentId });
     });
   }

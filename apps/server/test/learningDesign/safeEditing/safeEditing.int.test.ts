@@ -1,7 +1,8 @@
 /**
  * Integration tests for safe editing through the editor's save route on the real content types: a text-only save
  * keeps learner state, a structural save asks first while others have state and resets it once confirmed, the
- * saver's own state never asks, and the publish gate still runs first (D-093, D-074).
+ * saver's own state never asks, and the publish gate still runs first (D-093, D-074). A failed reset:
+ * ./safeEditingFailures.int.test.ts.
  *
  * Spec: PROD-013, PROD-003
  */

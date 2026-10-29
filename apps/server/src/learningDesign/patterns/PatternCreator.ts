@@ -14,11 +14,13 @@
  *   - The metadata row holds the phase, the pattern ID, the normalised course code (D-087) and the pattern's
  *     student minutes. If saving or writing it fails, every activity row the save created is removed (with its
  *     files), and the failure is passed on.
- *   - Availability is decided per request from the installed libraries (an admin may install one meanwhile).
+ *   - Availability is decided per request from the installed libraries (an admin may install one meanwhile). A
+ *     skeleton that cannot be built for another reason is unavailable too, and logged once (./patternBuildFailures.ts,
+ *     D-085 amendment 2026-10-29): `availability` never rejects for a build, so one bad library cannot fail a page.
  * Collaborators: ./patternChoice.ts, ./patternActivityBuild.ts, ./patternLibraries.ts,
  *   ../content/patternAccessors.ts, ../../h5p/HvlH5PEditor.ts, ../../h5p/storage/contentCreations.ts,
- *   ../../http/learningDesignErrors.ts; built in ../../server/studioServices.ts, used by ../http/patternRoutes.ts and
- *   the catalogue routes (W1).
+ *   ../../http/learningDesignErrors.ts; built in ../../server/studioServices.ts, used by ../http/patternRoutes.ts and,
+ *   for `availability`, by ../http/studioContentRoutes.ts (through ../http/patternAvailabilityMemo.ts).
  * Tests: apps/server/test/learningDesign/patterns/patternCreation.int.test.ts,
  *   apps/server/test/learningDesign/patterns/patternCreationGuards.int.test.ts,
  *   apps/server/test/learningDesign/http/patternRoutes.int.test.ts
@@ -39,6 +41,7 @@ import type { Database } from '../../infra/prismaClient.js';
 import { findPattern } from '../content/patternAccessors.js';
 import type { PatternContent, StudioPattern, StudioPatternSkeleton } from '../content/patternContent.js';
 import { buildPatternActivity, type PatternActivity } from './patternActivityBuild.js';
+import { PatternBuildFailures, type PatternBuildLog } from './patternBuildFailures.js';
 import { choosePatternOption } from './patternChoice.js';
 import { MissingPatternLibraryError } from './patternLibraries.js';
 
@@ -49,6 +52,8 @@ export interface PatternCreatorDeps {
   readonly editor: Pick<HvlH5PEditor, 'saveOrUpdateContent' | 'libraryManager' | 'contentStorage'>;
   /** The patterns loaded at start-up (D-082). */
   readonly patterns: PatternContent;
+  /** Where a skeleton that cannot be built is reported once (the server's logger); none writes nothing. */
+  readonly log?: PatternBuildLog;
 }
 
 /** Whether a pattern can be created now, as a whole and per content type. */
@@ -66,10 +71,14 @@ const unavailable = (cause: unknown) =>
 
 /** Creates activities from patterns. */
 export class PatternCreator {
+  private readonly buildFailures: PatternBuildFailures;
+
   /**
-   * @param deps - Database, editor and the loaded patterns.
+   * @param deps - Database, editor, the loaded patterns and the logger.
    */
-  constructor(private readonly deps: PatternCreatorDeps) {}
+  constructor(private readonly deps: PatternCreatorDeps) {
+    this.buildFailures = new PatternBuildFailures(deps.log);
+  }
 
   /**
    * Whether a pattern can be created with the libraries installed now.
@@ -84,10 +93,12 @@ export class PatternCreator {
       pattern.skeletons.map(async (skeleton) => ({
         contentType: skeleton.contentType,
         available: await this.build(pattern, skeleton, 'nn').then(
-          () => true,
+          () => (this.buildFailures.succeeded(pattern.id, skeleton.contentType), true),
           (error: unknown) => {
-            if (isLearningDesignError(error, 'hvl:pattern-unavailable')) return false;
-            throw error;
+            // WHY: a library that is installed but unreadable makes only its patterns unavailable (D-085 amendment).
+            if (!isLearningDesignError(error, 'hvl:pattern-unavailable'))
+              this.buildFailures.failed(pattern.id, skeleton.contentType, error);
+            return false;
           },
         ),
       })),

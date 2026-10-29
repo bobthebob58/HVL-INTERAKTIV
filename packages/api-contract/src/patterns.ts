@@ -11,7 +11,8 @@
  *   - `phase` must be one of the pattern's phases and `contentType` one of its content types; a pattern with two
  *     content types needs `contentType`. Otherwise the server answers 400 `hvl:pattern-choice-invalid`.
  *   - The answer names only the new activity; the web app opens `/aktivitet/:id` on the Rediger tab.
- * Collaborators: ./studio.ts, ./learningDesign.ts, ./me.ts, apps/server (W2), apps/web.
+ * Collaborators: ./studio.ts, ./learningDesign.ts, ./me.ts, apps/server/src/learningDesign/http/patternRoutes.ts,
+ *   apps/web.
  * Tests: packages/api-contract/test/learningDesignSchemas.test.ts
  */
 import { z } from 'zod';

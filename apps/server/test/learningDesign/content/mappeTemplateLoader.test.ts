@@ -1,8 +1,10 @@
 /**
  * Tests for the pedagogisk mappe template loader's tags (D-094 and its probe P5 amendment): comments and front matter
  * are removed; only allowlisted values, lists and comments pass; triple braces, `{{&…}}`, partials, delimiter changes,
- * raw HTML and images are refused; a value inside backticks, in a link address, after a backslash or at the start of
- * a line after a table line is refused. Every problem names the file and the line.
+ * raw HTML and images are refused; a value inside backticks, in a link address (also one that starts on the next
+ * line, holds parentheses, is defined in a quote or list or has an escaped bracket in its label, also over a line that
+ * holds only a no-break space), after a backslash or at the start of a line after a table line is refused. Every
+ * problem names the file and the line.
  *
  * Spec: MAPPE-002
  */
@@ -111,6 +113,56 @@ describe('[MAPPE-002] the mappe template loader', () => {
         message: expect.stringMatching(/inside backticks or a code block/),
       }),
     ]);
+  });
+
+  it.each([
+    ['[Opne aktiviteten](\n{{dato}})', 2],
+    ['[Opne aktiviteten]( \n  {{dato}} )', 2],
+    ['[Opne aktiviteten](\nhttps://hvl.no/{{dato}})', 2],
+    ['[a]:\n  {{dato}}', 2],
+    ['[y]: https://hvl.no/\n[x]:\n{{dato}}', 3],
+    ['[Opne](https://hvl.no/(a)/{{dato}})', 1],
+    ['[Opne](https://hvl.no/\\)/{{dato}})', 1],
+    ['> [a]: {{dato}}', 1],
+    ['- [a]: {{dato}}', 1],
+    ['1. [a]:\n   {{dato}}', 2],
+    ['[a\\]b]: {{dato}}', 1],
+    ['[a\n\u00a0\nb]: {{dato}}', 3],
+  ])(
+    '[MAPPE-002] refuses a value in a link address over lines, after parentheses, in a quote or list, or after an escaped ]: %j',
+    (bad, line) => {
+      // Act
+      const problems = templateProblems(`${bad}\n${MIN}`);
+      // Assert
+      expect(problems).toContainEqual({
+        file: 'template.nn.md',
+        line,
+        message: 'a value cannot stand in a link address; put it in the link text or after the link',
+      });
+    },
+  );
+
+  it('[MAPPE-002] allows a value after a link closed on the line before or with parentheses, in link text over two lines, and after a blank line', () => {
+    // Arrange
+    const good = [
+      '[Opne](\nhttps://www.hvl.no/) {{dato}}',
+      '[Opne](https://www.hvl.no/)\n{{dato}}',
+      '[Opne](https://www.hvl.no/(a)) {{dato}}',
+      '**[Merk]:** {{dato}}',
+      '[Opne\n{{dato}}](https://www.hvl.no/)',
+      '[Opne](\n\n{{dato}})',
+      MIN,
+    ].join('\n\n');
+    // Act
+    const loaded = loadFixtureMappe(
+      editedMappeFixture({
+        'mappe/template.nn.md': good,
+        'mappe/template.nb.md': good,
+        'mappe/template.en.md': good,
+      }),
+    );
+    // Assert
+    expect(loaded.ok ? 'loaded' : loaded.problems).toBe('loaded');
   });
 
   it('[MAPPE-002] allows values in a list, inside a list item’s nested list, in table cells and in link text', () => {

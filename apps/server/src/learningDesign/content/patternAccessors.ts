@@ -2,17 +2,18 @@
  * patternAccessors — typed reads of the loaded patterns for the routes: finding a pattern, its catalogue card, the
  * fields of its page, the references it cites, and the skeleton of one content type.
  *
- * Why: the catalogue and the pattern page (PED-003, PED-010, workstream W1) and creation (PROD-001, D-085) read the
- *      same frozen patterns (D-082). These accessors give them the contract's shapes, so no route reaches into the
- *      loader's types or repeats a lookup.
+ * Why: the catalogue and the pattern page (PED-003, PED-010) and creation (PROD-001, D-085) read the same frozen
+ *      patterns (D-082). These accessors give them the contract's shapes, so no route reaches into the loader's
+ *      types or repeats a lookup.
  * Spec: PED-010, PED-011, PROD-001
  * Invariants:
  *   - Pure reads of frozen content; nothing here reads a file or changes a pattern.
  *   - Unknown IDs and content types give undefined, never a throw, so a route decides its own answer (404, 400).
  *   - `available` is not part of a card: it depends on the installed libraries at the moment of the request
  *     (`PatternCreator.availability`, D-085).
- * Collaborators: ./patternContent.ts, ./referencesContent.ts, ../patterns/PatternCreator.ts, the studio routes (W1),
- *   @hvl-interaktiv/api-contract (`PatternSummary`, `PatternDetail`).
+ * Collaborators: ./patternContent.ts, ./referencesContent.ts, ../patterns/PatternCreator.ts,
+ *   ../patterns/patternChoice.ts, ../http/studioContentAnswers.ts (catalogue and pattern page),
+ *   ../mappe/mappeBlocks.ts (cited references), @hvl-interaktiv/api-contract (`PatternSummary`, `PatternDetail`).
  * Tests: apps/server/test/learningDesign/content/patternContent.test.ts
  */
 import type { AuthorableContentType, PatternDetail, PatternSummary } from '@hvl-interaktiv/api-contract';
@@ -23,7 +24,10 @@ import { findReference, type ReferencesContent, type StudioReference } from './r
 /** A pattern's catalogue card without `available` (which the creator decides per request). */
 export type PatternCardFields = Omit<PatternSummary, 'available'>;
 
-/** The fields of a pattern's page beyond its card; `whyItWorks` is Markdown for the guide's node builder (W1). */
+/**
+ * The fields of a pattern's page beyond its card; `whyItWorks` is Markdown that ./patternProse.ts builds into the
+ * guide's prose nodes.
+ */
 export interface PatternPageFields extends Pick<PatternDetail, 'studentMinutes'> {
   readonly whenToUse: LocalisedText;
   readonly example: LocalisedText;

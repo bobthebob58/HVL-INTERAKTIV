@@ -1,9 +1,10 @@
 /**
- * mappeRoutes — the pedagogisk mappe routes under `/api` (workstream W6): the activities to pick from, the criteria
- * sets, the word-count preview and the Markdown and PDF export.
+ * mappeRoutes — the pedagogisk mappe routes under `/api`: the activities to pick from, the criteria sets, the
+ * word-count preview and the Markdown and PDF export.
  *
  * Why: `MAPPE-001` exports a teaching portfolio built from the author's activities, and `MAPPE-004` makes it a tagged
- *      PDF (D-094, D-096). This is W6's one router, mounted by the studio router.
+ *      PDF (D-094, D-096). This is the area's one router, mounted by the studio router
+ *      (../../http/api/studioRouter.ts).
  * Spec: MAPPE-001, MAPPE-002, MAPPE-003, MAPPE-004
  * Auth: portal — a signed-in author (Feide session), with the CSRF token on the two POSTs. Every route starts with
  *   `requirePortalAuthor` (./studioPrincipal.ts).

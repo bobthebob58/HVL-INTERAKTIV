@@ -7,8 +7,9 @@
  *      `updatedAt` (D-074): they are fetched again after every save (`revision`), after publishing or unpublishing,
  *      and, with the activity, whenever the server says it changed. A reason holds 14 days and an error found by a
  *      later rule never had one; both show as `acknowledgement: null` (the note names neither), every save of the
- *      published activity is refused while one stays, and publishing again gives new reasons (D-074 W3 amendment).
- *      The tab may add a notice to the first-publish dialog (the learning-design prompt, D-087); it never blocks.
+ *      published activity is refused while one stays, and publishing again gives new reasons (D-074 amendment
+ *      2026-10-23). The tab may add a notice to the first-publish dialog (the learning-design prompt, D-087); it
+ *      never blocks.
  * Spec: PROD-003, UD-022, UD-013, UD-006, PED-030
  * Invariants:
  *   - Publishing always sends the `updatedAt` of the findings on screen; unpublishing the same.

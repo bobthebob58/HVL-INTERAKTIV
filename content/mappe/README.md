@@ -80,7 +80,7 @@ Inside `{{#aktivitetar}}` … `{{/aktivitetar}}`, once per chosen activity:
 | `laeringsutbytte` | The learning outcomes with their category, separated by `;` |
 | `grunngjeving` | The didactic rationale from the **Læringsdesign** tab |
 | `uu_status` | One sentence with the universal design check's errors, how many of them were explained, and warnings |
-| `lenke` | The activity's address in HVL Interaktiv |
+| `lenke` | The activity's address in HVL Interaktiv. It opens only for people who may view the activity, so the template's 3.3 tells the teacher to publish it and choose «Alle med Feide-innlogging» before sending the portfolio |
 | `resultat` | One sentence with the anonymised results, or why there are none |
 | `deltakarar`, `fullforing`, `median_forsok`, `endring` | The same figures one by one: participants, completion rate, median attempts, change from the first to the last attempt |
 | `oppretta`, `endra`, `publisert` | When the activity was made, last changed and published |
@@ -107,9 +107,11 @@ in each phase).
 
 `{{{…}}}` and `{{&…}}` (they would show a teacher's text as Markdown), partials `{{> …}}`, changed delimiters
 `{{=… =}}`, HTML such as `<b>` (write `&lt;` for a literal `<`), images, and a value in a place where plain text is
-not safe: inside backticks or a code block, in a link address (`[text](https://…/{{x}})`), straight after `\`, `<`
-or `]` (so `<{{lenke}}>` and `[Opne]{{lenke}}` are refused: write `{{lenke}}` as plain text), or at the start of a
-line right after a table line. A list opened where it does not belong and a value outside its list are refused too.
+not safe: inside backticks or a code block, in a link address (`[text](https://…/{{x}})`, also when the address
+starts on the next line or holds parentheses), anywhere in a paragraph with a link reference definition
+(`[x]: https://…`, also after `>` or a list marker), straight after `\`, `<` or `]` (so `<{{lenke}}>` and
+`[Opne]{{lenke}}` are refused: write `{{lenke}}` as plain text), or at the start of a line right after a table line.
+A list opened where it does not belong and a value outside its list are refused too.
 
 ### A short example
 

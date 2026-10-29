@@ -10,6 +10,8 @@
  *   - The choice is saved only when the button is pressed, never on an arrow key (WCAG 3.2.2).
  *   - A refusal shows the server's message (e.g. `hvl:sharing-not-allowed`) with the ✗ icon; success is announced
  *     politely and shown with the ✓ icon (never colour alone, UD-003).
+ *   - A11Y: each save clears the last outcome before it asks, so the same refusal twice is a new alert and is
+ *     announced again (WCAG 4.1.3).
  * Collaborators: ../../api/collaborationApi.ts (`changeVisibility`), ./SharingFeedback.tsx, ./SharingPanel.tsx.
  * Tests: apps/web/test/features/SharingPanel.test.tsx
  */
@@ -53,6 +55,8 @@ export function VisibilityControl({ detail, announce, reloadDetail }: Visibility
 
   const save = async (event: FormEvent) => {
     event.preventDefault();
+    // WHY: an alert is announced when it appears or changes; a second identical refusal would change nothing.
+    setOutcome(undefined);
     const result = await changeVisibility(detail.id, chosen, auth);
     if (!result.ok) {
       setOutcome({ error: result.error?.message ?? t('sharing.visibilityFailed', locale) });

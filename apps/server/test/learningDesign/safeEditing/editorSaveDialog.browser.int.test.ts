@@ -12,6 +12,9 @@
  * runs; a script inside the inert H5P editor iframe can still take focus, after which Escape misses the dialog; and
  * 'close' is a queued task, so nothing is logged right after close().
  *
+ * Pins, not evidence (DOC-004): these run a stand-in of the dialog, so every title starts `upstream pin: ` and
+ * records what Chromium does (./editorSaveDialogPage.ts says why); the production dialog's tests are listed there.
+ *
  * Spec: PROD-013, UD-006
  */
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -51,7 +54,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
     afterAll(() => bench?.close());
 
     describeWithBrowser('[UD-006] a native <dialog> under the strict page policy', (browser) => {
-      it('[PROD-013] the policy refuses an inline script, while a same-origin script file runs', async () => {
+      it('upstream pin: the page policy refuses an inline script in Chromium, while a same-origin script file runs', async () => {
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
         // Act: an inline <script> added the way any page script would add one
@@ -65,7 +68,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
         await probe.close();
       }, 90_000);
 
-      it('[PROD-013] showModal opens the choice with focus on «Avbryt»; Escape fires cancel, closes and returns focus', async () => {
+      it('upstream pin: showModal opens on the autofocus button; Escape fires cancel, closes the dialog and returns focus', async () => {
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
         // Act
@@ -86,7 +89,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
         await probe.close();
       }, 90_000);
 
-      it('[UD-006] natively, Tab leaves the document after the last button; with wrapping it stays in the dialog', async () => {
+      it('upstream pin: natively, Tab leaves the document after the last button; only a script that wraps it keeps it in', async () => {
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
         const { page, frame } = probe;
@@ -109,7 +112,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
         await probe.close();
       }, 90_000);
 
-      it('[PROD-013] while open, the page and the H5P editor iframe are out of reach of pointer and assistive technology', async () => {
+      it('upstream pin: while a modal dialog is open, the page and the H5P editor iframe are out of reach of pointer and AT', async () => {
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
         // WHY: H5P adds the form's fields after `.h5peditor-form` appears (more slowly on CI runners), so the control
@@ -173,7 +176,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
         await probe.close();
       }, 90_000);
 
-      it('[PROD-013] focus does not return to a save button disabled while it saves; the script must focus it', async () => {
+      it('upstream pin: focus does not return to an opener disabled while it saves; a script must focus it', async () => {
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
         // Act: as editorPage.js's save() does, the button is disabled when the dialog opens

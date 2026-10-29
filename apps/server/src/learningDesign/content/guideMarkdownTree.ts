@@ -10,6 +10,8 @@
  *   - Pure: no file, no network; a fresh parser per call (./guideMarkdownParser.ts).
  *   - `nodes` is meaningful only when `problems` is empty; every problem has a 1-based line when one exists.
  *   - Reference definitions (`[label]: address`) are refused, since they silently turn a citation into a link.
+ * SPEC-DEVIATION: D-083 — PED-002 names MDX for the guide; this reads CommonMark into a closed node tree that the web
+ *   app renders without HTML, so no content file ever runs as code.
  * Collaborators: ./guideMarkdownParser.ts, ./guideBlockNodes.ts, ./guideInlineNodes.ts, ./guideContent.ts,
  *   ./patternProse.ts.
  * Tests: apps/server/test/learningDesign/content/guideMarkdownTree.test.ts,

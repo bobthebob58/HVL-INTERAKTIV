@@ -16,7 +16,8 @@
  *   - An H5P actor is eligible for the bank only when signed in with Feide (an LTI actor is never an HVL member).
  * Collaborators: ../../auth/feide/completeFeideLogin.ts (writes the date), ./PeopleDirectory.ts (search and the
  *   add check), ./coAuthorRequests.ts (who may add), ./contentBank.ts and ./bankEntries.ts (the bank),
- *   ../http/collaborationRoutes.ts (who may search and read the bank), ./duplicateRules.ts (copying through the bank).
+ *   ../http/collaborationRoutes.ts (who may search and read the bank), ./duplicateRules.ts (copying through the bank),
+ *   ../../h5p/permissions/ContentAccessRepository.ts (a bank listing counts only while its owner is findable).
  * Tests: apps/server/test/learningDesign/collaboration/staffEligibility.test.ts,
  *   apps/server/test/auth/feide/coAuthorSearchable.int.test.ts
  */
@@ -84,6 +85,19 @@ export function searchableCutoff(now: Date): Date {
  */
 export const isSearchable = (searchableAt: Date | null, now: Date): boolean =>
   searchableAt !== null && searchableAt.getTime() > searchableCutoff(now).getTime();
+
+/**
+ * Tells whether a stored account is findable staff at `now`: the in-memory form of {@link findableStaffWhere}, for a
+ * row already read (whether a bank listing's owner still lets it show and be copied, D-091 and D-092 as amended).
+ * @param user - The account's kind and `coAuthorSearchableAt`.
+ * @param now - The current moment.
+ * @returns True for kind `staff` with a `coAuthorSearchableAt` after the cut-off.
+ * @spec PROD-007
+ */
+export const isFindableStaff = (
+  user: { readonly kind: string; readonly coAuthorSearchableAt: Date | null },
+  now: Date,
+): boolean => user.kind === 'staff' && isSearchable(user.coAuthorSearchableAt, now);
 
 /**
  * The Prisma filter of the accounts that may be found and added as co-authors at `now`.

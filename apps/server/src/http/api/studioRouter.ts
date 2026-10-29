@@ -1,11 +1,10 @@
 /**
- * studioRouter — the læringsdesign studio's routes under `/api`, one router per area: the public guide and catalogue
- * (W1), patterns (W2), learning-design metadata and the planner (W3), collaboration and the content bank (W4), and the
- * pedagogisk mappe (W6).
+ * studioRouter — the læringsdesign studio's routes under `/api`, one router per area: the public guide and catalogue,
+ * patterns, learning-design metadata and the planner, collaboration and the content bank, and the pedagogisk mappe.
  *
- * Why: S5's workstreams add routes in parallel; one router per area keeps each area's routes in its own file
- *      (../../learningDesign/http/), and mounting them all here, inside ./apiRouter.ts, lets the registry test compare
- *      every studio route with the contract (DOC-012, D-099).
+ * Why: one router per area keeps each area's routes in its own file (../../learningDesign/http/), and mounting them
+ *      all here, inside ./apiRouter.ts, lets the registry test compare every studio route with the contract (DOC-012,
+ *      D-099).
  * Spec: DOC-012, PED-001, PED-030, PROD-001, PROD-007, MAPPE-001
  * Auth: each area states its own. The authentication middleware runs before `/api` (../../server/createApp.ts) and
  *   sets no principal for a signed-out request, so a public route (`auth: 'none'`) answers it; a signed-in route

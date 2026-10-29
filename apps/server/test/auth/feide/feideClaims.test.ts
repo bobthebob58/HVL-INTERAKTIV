@@ -1,6 +1,7 @@
 /**
- * Tests for reading Feide claims: the Feide ID as the Feide subject (D-054), and data minimisation of name and
- * e-mail (authors and admins only; the national identity number never read).
+ * Tests for reading Feide claims: the Feide ID as the Feide subject (D-054), and data minimisation: a name for
+ * authors and admins only, the e-mail for nobody (D-090 amendment 2026-10-29), the national identity number never
+ * read.
  *
  * Spec: AUTH-004, AUTH-002
  */
@@ -10,7 +11,6 @@ import {
   FEIDE_ID_CLAIM,
   FEIDE_USERID_SEC_CLAIM,
   MAX_DISPLAY_NAME_LENGTH,
-  MAX_EMAIL_LENGTH,
   readFeideIdentity,
 } from '../../../src/auth/feide/feideClaims.js';
 import type { Role } from '../../../src/auth/Principal.js';
@@ -110,15 +110,18 @@ describe('[AUTH-002] Feide ID from the claims (D-054)', () => {
   });
 });
 
-describe('[AUTH-004] name and e-mail kept for authors and admins only', () => {
+describe('[AUTH-004] a name kept for authors and admins only, an e-mail for nobody', () => {
   it.each<[string, Role[]]>([
     ['author', ['author']],
     ['admin', ['learner', 'admin']],
-  ])('[AUTH-004] keeps the display name and e-mail of an %s', (_case, roles) => {
-    expect(authorProfile(CLAIMS, roles)).toEqual({
-      displayName: 'Ola Nordmann',
-      email: 'ola.nordmann@hvl.no',
-    });
+  ])('[AUTH-004] keeps the display name of an %s and never reads the e-mail claim', (_case, roles) => {
+    // Arrange
+    const { claims, read } = watched(CLAIMS);
+    // Act
+    const profile = authorProfile(claims, roles);
+    // Assert
+    expect(profile).toEqual({ displayName: 'Ola Nordmann' });
+    expect(read).not.toContain('email');
   });
 
   it('[AUTH-004] drops name and e-mail for a learner and reads neither', () => {
@@ -138,32 +141,22 @@ describe('[AUTH-004] name and e-mail kept for authors and admins only', () => {
   });
 
   it.each([
-    ['blank', '   ', 'ola@hvl.no', { email: 'ola@hvl.no' }],
-    ['too long', 'x'.repeat(MAX_DISPLAY_NAME_LENGTH + 1), 'ola@hvl.no', { email: 'ola@hvl.no' }],
+    ['blank', '   ', {}],
+    ['too long', 'x'.repeat(MAX_DISPLAY_NAME_LENGTH + 1), {}],
     [
       'at the limit',
       'x'.repeat(MAX_DISPLAY_NAME_LENGTH),
-      undefined,
       { displayName: 'x'.repeat(MAX_DISPLAY_NAME_LENGTH) },
     ],
-    ['with a line break', 'Ola\nNordmann', undefined, {}],
-    ['not text', ['Ola'], 42, {}],
-  ])('[AUTH-004] leaves out a name that is %s', (_case, name, email, expected) => {
-    expect(authorProfile({ name, email }, ['author'])).toEqual(expected);
+    ['with a line break', 'Ola\nNordmann', {}],
+    ['not text', ['Ola'], {}],
+  ])('[AUTH-004] leaves out a name that is %s', (_case, name, expected) => {
+    expect(authorProfile({ name, email: 'ola@hvl.no' }, ['author'])).toEqual(expected);
   });
 
-  it.each([
-    ['without an @', 'ola.hvl.no'],
-    ['with a space', 'ola nordmann@hvl.no'],
-    ['too long', `${'o'.repeat(MAX_EMAIL_LENGTH)}@hvl.no`],
-    ['with a control character', 'ola@hvl.no\r\nBcc: x@evil.example'],
-  ])('[AUTH-004] leaves out an e-mail address %s', (_case, email) => {
-    expect(authorProfile({ name: 'Ola', email }, ['author'])).toEqual({ displayName: 'Ola' });
-  });
-
-  it('[AUTH-004] trims the stored values and returns a frozen profile', () => {
+  it('[AUTH-004] trims the stored name and returns a frozen profile', () => {
     const profile = authorProfile({ name: '  Ola  ', email: ' ola@hvl.no ' }, ['author']);
-    expect(profile).toEqual({ displayName: 'Ola', email: 'ola@hvl.no' });
+    expect(profile).toEqual({ displayName: 'Ola' });
     expect(Object.isFrozen(profile)).toBe(true);
   });
 });

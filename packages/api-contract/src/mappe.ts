@@ -7,12 +7,12 @@
  *      word count from a preview. The export is a file (D-099 `mediaType`) and is never stored (MAPPE-003).
  * Spec: MAPPE-001, MAPPE-002, MAPPE-003, MAPPE-004
  * Invariants:
- *   - A request names 1 to 50 distinct activities; the server answers only for activities the author owns or
- *     co-authors.
+ *   - A request names 1 to 50 distinct activities (an ID in two cases counts once); the server answers only for
+ *     activities the author owns or co-authors.
  *   - PRIVACY: nothing here carries learner data; aggregates in the file follow the minimum group size (D-095).
  *   - The criteria set defaults to `hvl-merittering-2025` (MAPPE-002).
  * Collaborators: ./me.ts, ./content.ts, ./learningDesign.ts, ./studio.ts, ./apiRouteTypes.ts (media types),
- *   apps/server (W6), apps/web.
+ *   apps/server/src/learningDesign/http/mappeRoutes.ts, apps/web.
  * Tests: packages/api-contract/test/mappeSchemas.test.ts
  */
 import { z } from 'zod';
@@ -90,7 +90,11 @@ export const mappeRequestSchema = z.strictObject({
     .array(z.uuid())
     .min(1)
     .max(MAPPE_MAX_ACTIVITIES)
-    .refine((ids) => new Set(ids).size === ids.length, 'An activity is named twice.')
+    // WHY: a UUID names the same activity in either case, so `[id, ID]` names it twice (D-094 S5 review amendment).
+    .refine(
+      (ids) => new Set(ids.map((id) => id.toLowerCase())).size === ids.length,
+      'An activity is named twice.',
+    )
     .describe('1 to 50 distinct activity IDs, in the order the portfolio lists them.'),
   criteriaSet: criteriaSetIdSchema.optional(),
   locale: localeSchema,

@@ -1,6 +1,6 @@
 /**
  * collaborationResponses — the answers and path parameters the collaboration routes (./collaborationRoutes.ts) share:
- * who is refused which way, and the co-author in the path.
+ * who is refused which way, the per-person limits, and the co-author in the path.
  *
  * Why: several collaboration routes refuse the same people the same way (D-090, D-091 as amended); one definition
  *      keeps their OpenAPI texts alike, and keeps the registry under the file-size limit (DOC-007).
@@ -8,9 +8,10 @@
  * Invariants:
  *   - Every error answer uses the shared error shape (./routeResponses.ts `failure`).
  * Collaborators: ./collaborationRoutes.ts, ./routeResponses.ts.
- * Tests: packages/api-contract/test/openApi.test.ts
+ * Tests: packages/api-contract/test/openApi.test.ts, packages/api-contract/test/collaborationSchemas.test.ts
  */
 import { z } from 'zod';
+import type { ApiResponse } from '../apiRouteTypes.js';
 import { contentParams, failure } from './routeResponses.js';
 
 /** 403 of search and the bank list: they are for HVL staff authors only (D-090, D-091 as amended). */
@@ -41,10 +42,14 @@ export const badPeopleQuery = failure(
   '`error.badRequest`: no query, a repeated one, or one shorter than 3 or longer than 100.',
 );
 
-/** 429 of people search: the per-person limit (D-090). */
-export const rateLimited = failure(
-  '`hvl:rate-limited`: too many searches in a minute; `Retry-After` says when to try again.',
-);
+/**
+ * 429 of a route with a per-person limit: people search (D-090) and duplicating (D-092 as amended). The server
+ * sends `Retry-After` with the seconds until the window ends.
+ * @param limit - What the person did too often, e.g. "too many searches in a minute".
+ * @returns The answer.
+ */
+export const rateLimited = (limit: string): ApiResponse =>
+  failure(`\`hvl:rate-limited\`: ${limit}; \`Retry-After\` says when to try again.`);
 
 /** 403 of duplicating (D-092). */
 export const duplicateRefused = failure(

@@ -9,9 +9,12 @@
  *   - The database row is the source of truth for which files exist; S3 holds only their bytes.
  *   - IDs that are not UUIDs are treated as "not found" instead of reaching the database.
  *   - Every row `addContent` creates is reported to ./contentCreations.ts, so a failed duplicate can remove it.
- * Collaborators: ./S3ContentFileStore.ts, ./contentUsage.ts, ./contentCreations.ts, ../../infra/prismaClient.ts,
- *   H5PEditor (S2).
- * Tests: apps/server/test/h5p/contentStorage.int.test.ts
+ *   - The first update of an activity whose editor save resets learner state (./learnerStateResetWrite.ts) writes
+ *     the parameters, raises `version` and deletes every state row of the activity in one transaction (D-093).
+ * Collaborators: ./S3ContentFileStore.ts, ./contentUsage.ts, ./contentCreations.ts, ./learnerStateResetWrite.ts,
+ *   ../../infra/prismaClient.ts, H5PEditor (S2).
+ * Tests: apps/server/test/h5p/contentStorage.int.test.ts,
+ *   apps/server/test/learningDesign/safeEditing/safeEditingFailures.int.test.ts
  */
 import type { Readable } from 'node:stream';
 import {
@@ -27,6 +30,7 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import type { Database } from '../../infra/prismaClient.js';
 import { noteContentCreated } from './contentCreations.js';
 import { countLibraryUsage } from './contentUsage.js';
+import { claimLearnerStateReset } from './learnerStateResetWrite.js';
 import type { S3ContentFileStore } from './S3ContentFileStore.js';
 import { assertStorableText } from './storableText.js';
 import { isContentUuid } from '../contentIds.js';
@@ -44,7 +48,7 @@ export class PrismaContentStorage implements IContentStorage {
     private readonly files: S3ContentFileStore,
   ) {}
 
-  /** Creates an activity, or replaces metadata and parameters of an existing one. */
+  /** Creates an activity, or replaces metadata and parameters of an existing one (resetting state when marked). */
   async addContent(
     metadata: IContentMetadata,
     content: unknown,
@@ -68,11 +72,16 @@ export class PrismaContentStorage implements IContentStorage {
     }
     if (!isContentUuid(contentId))
       throw new H5pError('storage-file-implementations:content-not-found', { contentId }, 404);
-    await this.db.h5PContent.upsert({
+    const reset = claimLearnerStateReset(contentId);
+    const write = this.db.h5PContent.upsert({
       where: { id: contentId },
-      update: data,
+      // WHY: the version raise is part of the row update, so its lock comes first, as a state write expects (D-093).
+      update: reset ? { ...data, version: { increment: 1 } } : data,
       create: { id: contentId, ...data, ownerUserId: user.id },
     });
+    // WHY: a structural save's reset commits with its parameters or not at all (D-093 amendment, S5 review).
+    if (reset) await this.db.$transaction([write, this.db.h5PUserData.deleteMany({ where: { contentId } })]);
+    else await write;
     return contentId;
   }
 

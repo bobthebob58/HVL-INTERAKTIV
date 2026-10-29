@@ -7,6 +7,9 @@
  * the two-tone ring; the <dialog> box itself keeps the browser's CanvasText/Canvas colours and a 10 % black
  * backdrop until a stylesheet sets them, and `::backdrop` can use the tokens on :root.
  *
+ * Pins, not evidence (DOC-004): these run a stand-in of the dialog, so every title starts `upstream pin: ` and
+ * records what Chromium does (./editorSaveDialogPage.ts says why); the production dialog's tests are listed there.
+ *
  * Spec: PROD-013, UD-030, UD-004
  */
 import { AxeBuilder } from '@axe-core/playwright';
@@ -75,7 +78,7 @@ describeWithServices('[PROD-013] the save choice dialog’s look in the editor p
     afterAll(() => bench?.close());
 
     describeWithBrowser('[UD-030] the open dialog in Chromium', (browser) => {
-      it('[PROD-013] after a mouse click «Avbryt» has focus but no :focus-visible; a :focus rule shows the ring', async () => {
+      it('upstream pin: after a mouse click the autofocus button has focus but no :focus-visible; only a :focus rule shows a ring', async () => {
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
         // Act
@@ -102,7 +105,7 @@ describeWithServices('[PROD-013] the save choice dialog’s look in the editor p
         await probe.close();
       }, 90_000);
 
-      it('[UD-030] axe finds no WCAG 2.2 A or AA violation in the open dialog, unstyled or with the token stylesheet', async () => {
+      it('upstream pin: axe finds no WCAG 2.2 A or AA violation in a native modal dialog, unstyled or with token colours', async () => {
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
         await openByKeyboard(probe);
@@ -121,7 +124,7 @@ describeWithServices('[PROD-013] the save choice dialog’s look in the editor p
         await probe.close();
       }, 90_000);
 
-      it('[UD-004] the page’s stylesheets give the buttons the token look and two-tone ring; the box and backdrop need a sheet', async () => {
+      it('upstream pin: the page’s sheets give a dialog’s buttons the token look and ring; its box and backdrop keep the browser’s', async () => {
         // Arrange
         const probe = await openEditorWithProbe(browser(), bench);
         await openByKeyboard(probe);

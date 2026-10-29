@@ -7,10 +7,10 @@
  *      validate again and refuse a changed activity. Problems are listed in an ErrorSummary linked to their fields
  *      (UD-013), and the two conflicts get plain-language messages: still-unexplained errors (`hvl:publish-blocked`)
  *      and an activity changed in the meantime (`hvl:content-changed`, after which the findings are fetched again).
- *      Publishing a published activity validates again and stores the new reasons (D-074 W3 amendment), so renewing a
- *      reason needs no other request; only the dialog's title, introduction and button say what happens. A caller
- *      may add a `notice` below the introduction, such as the learning-design prompt (D-087); it never takes part in
- *      the request.
+ *      Publishing a published activity validates again and stores the new reasons (D-074 amendment 2026-10-23), so
+ *      renewing a reason needs no other request; only the dialog's title, introduction and button say what happens.
+ *      A caller may add a `notice` below the introduction, such as the learning-design prompt (D-087); it never takes
+ *      part in the request.
  * Spec: PROD-003, UD-022, UD-013, UD-006, PED-030
  * Invariants:
  *   - Reasons are trimmed and 1 to `REASON_MAX_LENGTH` (500) characters (./publishReasons.ts); the server checks

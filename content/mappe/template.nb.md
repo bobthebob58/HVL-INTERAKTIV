@@ -89,6 +89,11 @@ bygge videre på. Du finner den under Referanser.*
 *Aktivitetene under er digitale læremidler du har laget, alene eller sammen med andre, i HVL Interaktiv. Velg ut
 de som best viser hvordan du utvikler og prøver ut undervisnings- og vurderingsformer.*
 
+*Lenken til en aktivitet åpner den bare for dem som har lov til å se den: et utkast eller en privat aktivitet kan
+bare du og medforfatterne åpne. Før du sender mappen, publiser aktivitetene du viser til, og velg «Alle med
+Feide-innlogging» på fanen «Deling», så kan også vurderere utenfor HVL åpne dem. Vil du ikke dele en aktivitet slik,
+legg ved skjermbilder i stedet.*
+
 {{resultat_merknad}}
 
 {{#aktivitetar}}

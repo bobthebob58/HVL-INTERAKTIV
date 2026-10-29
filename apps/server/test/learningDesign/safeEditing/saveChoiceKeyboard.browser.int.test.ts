@@ -2,8 +2,9 @@
  * Browser test of the save choice by keyboard only (PROD-013, UD-006, D-093): «Lagre» pressed with Enter in the real
  * editor page framed as the Rediger tab frames it; focus starts on «Avbryt», Tab and Shift+Tab stay inside the
  * dialog (natively they would leave the frame for the page around it, probe P7), also after a click on its text, and
- * Escape cancels, saves nothing and gives focus back to «Lagre» before the outcome is announced. The mouse round trip:
- * ./saveChoiceRoundTrip.browser.int.test.ts.
+ * Escape cancels, saves nothing and gives focus back to «Lagre» before the outcome is announced. When a script in
+ * the inert H5P editor iframe takes focus, the production guard (`hvliGuardFrameFocus` in editorSaveChoice.js) gives
+ * it back to «Avbryt», so Escape still cancels. The mouse round trip: ./saveChoiceRoundTrip.browser.int.test.ts.
  *
  * Spec: PROD-013, UD-006
  */
@@ -61,6 +62,30 @@ describeWithServices('[PROD-013] the save choice by keyboard', () => {
         expect(await bench.stateKeys(mc.id)).toEqual([other]);
         expect(await editor.tool.locator('dialog').count()).toBe(0);
         expect(await focusedIn(editor.tool)).toBe('hvl-editor-save');
+        await editor.close();
+      }, 180_000);
+
+      it('[UD-006] when a script in the inert editor frame takes focus, it returns to «Avbryt» and Escape still cancels', async () => {
+        // Arrange: Chromium lets a script inside the inert H5P iframe focus its own fields (probe P7, D-093 amendment)
+        const { mc, other, editor } = await askedSave(browser(), bench, 'keyboard');
+        const before = await bench.stored(mc.id);
+        // Act
+        const taken = await editor.form.evaluate(() => {
+          const field = document.querySelector<HTMLElement>('.h5peditor-form input');
+          field?.focus();
+          return field !== null && document.activeElement === field;
+        });
+        // WHY: focus starts on «Avbryt», so only a wait after the field had taken it proves the guard.
+        await eventually(() => focusedIn(editor.tool)).toBe(CANCEL);
+        await editor.page.keyboard.press('Escape');
+        const log = () => editor.statusLog().then((l) => l.find((entry) => entry.text === TEXTS.cancelled));
+        await eventually(log).toEqual({ text: TEXTS.cancelled, focus: 'hvl-editor-save' });
+        // Assert
+        expect(taken).toBe(true);
+        expect(editor.requests.map((r) => r.status)).toEqual([409]);
+        expect(await bench.stored(mc.id)).toEqual(before);
+        expect(await bench.stateKeys(mc.id)).toEqual([other]);
+        expect(await editor.tool.locator('dialog').count()).toBe(0);
         await editor.close();
       }, 180_000);
 

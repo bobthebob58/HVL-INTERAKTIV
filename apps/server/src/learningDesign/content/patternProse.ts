@@ -10,6 +10,8 @@
  *   - Prose mode: paragraphs and lists only, with the guide's inline rules (./guideInlineNodes.ts).
  *   - A problem names the YAML line and key of the language's text (`whyItWorks.nb`) and the line inside the text.
  *   - `patternProseNodes` is called only on texts that passed `patternProseProblems` at start-up.
+ * SPEC-DEVIATION: D-083 — PED-011 lists MDX among a pattern's files; "why it works" is CommonMark inside
+ *   `pattern.yaml`, built into the guide's prose nodes.
  * Collaborators: ./patternFolder.ts (runs the check), ./guideMarkdownTree.ts, ./contentSource.ts, ./patternYaml.ts,
  *   ../http/studioContentAnswers.ts (builds the nodes for the pattern route).
  * Tests: apps/server/test/learningDesign/content/patternProse.test.ts

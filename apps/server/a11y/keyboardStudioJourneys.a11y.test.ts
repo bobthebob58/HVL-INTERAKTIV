@@ -1,10 +1,11 @@
 /**
  * Keyboard-only scripts of the studio's journeys (S5): the pattern catalogue filtered with a select (focus stays on
  * the control, the address keeps the filter, the count is announced in a status region); the planner's table region
- * reached with Tab and scrolled sideways with the arrow keys at a phone's width; the **Deling** tab's people search,
- * where adding a colleague returns focus to the search field and announces the change; and J4's start on `/mappe`:
- * «Vel alle som passar» and «Fjern alle» in the picker, then the Markdown download. Only Tab, Shift+Tab, arrows, Enter
- * and typing are used.
+ * reached with Tab and scrolled sideways with the arrow keys at a phone's width, and its «Lag frå mønster» link,
+ * which opens the catalogue with its heading focused and in view; the **Deling** tab's people search, where adding a
+ * colleague returns focus to the search field and announces the change, and a co-author's «Fjern meg», after which
+ * focus is on the lasting message; and J4's start on `/mappe`: «Vel alle som passar» and «Fjern alle» in the
+ * picker, then the Markdown download. Only Tab, Shift+Tab, arrows, Enter and typing are used.
  *
  * Spec: UD-006, PED-003, PED-031, PROD-007, MAPPE-001
  */
@@ -12,14 +13,18 @@ import { MAPPE_MAX_ACTIVITIES, type StudioOverview } from '@hvl-interaktiv/api-c
 import type { Page } from 'playwright-core';
 import { expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
+import { inspectFocus } from './support/focusInspect.js';
 import { focusIs, tabTo } from './support/focusWalk.js';
 import { openWebPage } from './support/pages.js';
+import { coAuthoredActivity } from './support/staffActivities.js';
 import { openStudioView } from './support/studioViews.js';
-import { webText } from './support/webLocale.js';
+import { webText } from '../test/support/webAppTexts.js';
 
-/** The text of the element that has focus. */
+/** The text of the element that has focus, or `<body>` when focus is on none (not the whole page's text). */
 const focusedText = (page: Page): Promise<string | undefined> =>
-  page.evaluate(() => document.activeElement?.textContent?.trim());
+  page.evaluate(() =>
+    document.activeElement === document.body ? '<body>' : document.activeElement?.textContent?.trim(),
+  );
 
 /** Presses Tab (or Shift+Tab) until the focused element's text is `text`. */
 async function tabToText(page: Page, text: string, key = 'Tab'): Promise<void> {
@@ -76,6 +81,24 @@ describeA11y('[UD-006] keyboard-only journeys in the studio', (env) => {
     await context.close();
   });
 
+  it('[UD-006][PED-031] the planner’s «Lag frå mønster» opens the catalogue with its heading focused and in view', async () => {
+    // Arrange: a phone's width, where the catalogue is far below the start of the guide
+    const { app, browser } = env();
+    const viewport = { width: 390, height: 844 };
+    const context = await browser.newContext({ viewport, storageState: app.authorStorage });
+    const page = await openStudioView(app, context, 'planner');
+    // Act
+    await tabTo(page, 'main table a[href*="#monsterkatalog"]');
+    await page.keyboard.press('Enter');
+    await page.waitForURL(/\/laeringsdesign\?[^#]*#monsterkatalog$/);
+    // Assert: the heading has focus, and part of it is in the viewport, not under the sticky header
+    await expect.poll(() => focusIs(page, '#monsterkatalog-overskrift'), { timeout: 15_000 }).toBe(true);
+    const { stop } = await page.evaluate(inspectFocus);
+    expect(stop?.inViewport).toBe(true);
+    expect(stop?.coveredBy).toBeUndefined();
+    await context.close();
+  });
+
   it('[UD-006][PROD-007] Deling: a colleague is found and added by keyboard, and focus returns to the search field', async () => {
     // Arrange
     const { app, browser, studio } = env();
@@ -94,6 +117,28 @@ describeA11y('[UD-006] keyboard-only journeys in the studio', (env) => {
     const announced = page.getByRole('status').filter({ hasText: webText('sharing.added', { name }) });
     await expect.poll(() => announced.count()).toBe(1);
     expect(await page.locator('[role=tabpanel] li').filter({ hasText: name }).count()).toBe(1);
+    await context.close();
+  });
+
+  it('[UD-006][PROD-007] Deling: a co-author leaves by keyboard with «Fjern meg», and focus lands on the lasting message', async () => {
+    // Arrange: a findable colleague's activity, with the run author as its co-author
+    const { app, browser } = env();
+    const contentId = await coAuthoredActivity(app, 'Eva Eigar');
+    const context = await browser.newContext({ storageState: app.authorStorage });
+    const page = await openWebPage(context, app.base, `/aktivitet/${contentId}?fane=sharing`);
+    await page
+      .getByRole('button', { name: webText('sharing.removeSelf'), exact: true })
+      .waitFor({ timeout: 15_000 });
+    // Act
+    await tabToText(page, webText('sharing.removeSelf'));
+    await page.keyboard.press('Enter');
+    // Assert: the message the button leaves behind has focus, and the change is announced
+    const message = `${webText('sharing.removedSelf')} ${webText('sharing.backHome')}`;
+    await expect.poll(() => focusedText(page)).toBe(message);
+    const announced = page.getByRole('status').filter({ hasText: webText('sharing.removedSelf') });
+    await expect.poll(() => announced.count()).toBe(1);
+    const left = await app.tb.db.contentCollaborator.count({ where: { contentId, userId: app.authorId } });
+    expect(left).toBe(0);
     await context.close();
   });
 

@@ -1,68 +1,16 @@
 /**
  * Tests for the PDF renderer's rules (D-096 and its probe P4 amendment) with a stand-in browser: the launch options
  * (sandbox, scrubbed environment, explicit executable, no signal handlers), one lazily started shared browser that is
- * started again after a crash, an isolated context per export closed afterwards, the slots (per process and one per
- * person, 503 `hvl:pdf-busy`), and 503 `hvl:pdf-unavailable` without a browser or past the time limit.
+ * started again after a crash, an isolated context per export closed afterwards whose request handler aborts every
+ * request, the slots (per process and one per person, 503 `hvl:pdf-busy`), and 503 `hvl:pdf-unavailable` without a
+ * browser. The time limit is tested in ./pdfRendererTimeLimit.test.ts.
  *
  * Spec: MAPPE-004
  */
 import type { Browser, LaunchOptions } from 'playwright-core';
 import { describe, expect, it, vi } from 'vitest';
-import { HttpError } from '../../../src/http/HttpError.js';
 import { pdfBrowserLaunchOptions } from '../../../src/learningDesign/mappe/pdf/SharedChromium.js';
-import { PdfRenderer } from '../../../src/learningDesign/mappe/pdf/PdfRenderer.js';
-import { createLogger } from '../../../src/logging/logger.js';
-
-const PDF = Buffer.from('%PDF-1.4 stand-in');
-
-/** A stand-in browser that records what the renderer asks of it. */
-function fakeBrowser(options: { readonly print?: () => Promise<Buffer>; readonly hang?: boolean } = {}) {
-  const contexts: { options: unknown; routes: string[]; closed: boolean; pdfOptions?: unknown }[] = [];
-  let disconnect: () => void = () => undefined;
-  const browser = {
-    on: (event: string, listener: () => void) => {
-      if (event === 'disconnected') disconnect = listener;
-    },
-    close: vi.fn(async () => disconnect()),
-    newContext: async (contextOptions: unknown) => {
-      const record: (typeof contexts)[number] = { options: contextOptions, routes: [], closed: false };
-      contexts.push(record);
-      return {
-        route: async (pattern: string) => void record.routes.push(pattern),
-        newPage: async () => ({
-          setContent: async () => undefined,
-          pdf: async (pdfOptions: unknown) => {
-            record.pdfOptions = pdfOptions;
-            return options.print ? options.print() : PDF;
-          },
-        }),
-        // WHY: `hang` stands for a browser that never finishes closing the context.
-        close: () => (
-          (record.closed = true),
-          options.hang ? new Promise<void>(() => undefined) : Promise.resolve()
-        ),
-      };
-    },
-  };
-  return {
-    browser: browser as unknown as Browser,
-    contexts,
-    crash: () => disconnect(),
-    close: browser.close,
-  };
-}
-
-const ENV = {
-  PDF_ALLOW_NO_SANDBOX: false,
-  PDF_MAX_CONCURRENCY: 2,
-  PDF_BROWSER_EXECUTABLE: '/usr/bin/chromium',
-};
-
-const renderer = (launch: (options: LaunchOptions) => Promise<Browser>, extra: object = {}) =>
-  new PdfRenderer({ env: ENV, logger: createLogger({ level: 'silent' }), launch, ...extra });
-
-const codeOf = (error: unknown) =>
-  error instanceof HttpError ? `${error.status} ${error.errorCode}` : String(error);
+import { codeOf, ENV, fakeBrowser, PDF, renderer } from './pdfFakeBrowser.js';
 
 describe('[MAPPE-004] the PDF renderer', () => {
   it('[MAPPE-004] launches Chromium with the sandbox, only PATH and HOME, an explicit executable and no signal handlers', () => {
@@ -120,6 +68,22 @@ describe('[MAPPE-004] the PDF renderer', () => {
     });
   });
 
+  it('[MAPPE-004] the export context’s request handler aborts every request and lets none through', async () => {
+    // Arrange
+    const fake = fakeBrowser();
+    const pdf = renderer(async () => fake.browser);
+    await pdf.render('<html><img src="http://127.0.0.1/x"></html>', 'kari');
+    const route = { abort: vi.fn(), continue: vi.fn(), fallback: vi.fn(), fulfill: vi.fn() };
+    // Act
+    await fake.contexts[0]?.handlers[0]?.(route);
+    // Assert
+    expect(fake.contexts[0]?.handlers).toHaveLength(1);
+    expect(route.abort).toHaveBeenCalledTimes(1);
+    expect([route.continue, route.fallback, route.fulfill].map((call) => call.mock.calls.length)).toEqual([
+      0, 0, 0,
+    ]);
+  });
+
   it('[MAPPE-004] answers 503 hvl:pdf-busy for a second export of the same person and when every slot is taken', async () => {
     // Arrange
     let finish: (pdf: Buffer) => void = () => undefined;
@@ -174,17 +138,5 @@ describe('[MAPPE-004] the PDF renderer', () => {
     expect(launch).toHaveBeenCalledTimes(2);
     expect(fakes[1]?.close).toHaveBeenCalledTimes(1);
     expect(afterClose).toBe('503 hvl:pdf-unavailable');
-  });
-
-  it('[MAPPE-004] answers 503 hvl:pdf-unavailable past the time limit, and frees the slot even if the close hangs', async () => {
-    // Arrange
-    const fake = fakeBrowser({ print: () => new Promise<Buffer>(() => undefined), hang: true });
-    const pdf = renderer(async () => fake.browser, { timeLimitMs: 50 });
-    // Act
-    const answer = await pdf.render('<html></html>', 'kari').catch(codeOf);
-    // Assert: the same person's next export is not busy, so the hung export's slot is free again
-    expect(answer).toBe('503 hvl:pdf-unavailable');
-    expect(fake.contexts[0]?.closed).toBe(true);
-    await expect(pdf.render('<html></html>', 'kari').catch(codeOf)).resolves.toBe('503 hvl:pdf-unavailable');
   });
 });

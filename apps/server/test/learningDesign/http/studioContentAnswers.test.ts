@@ -2,7 +2,7 @@
  * Tests for the public studio answers built from the loaded content (no HTTP, no services): a renamed phase label
  * reaches the overview that the phase matrix and the catalogue read; the fixture pattern appears in the overview and
  * has its own detail; the guide answer carries the fixture guide's tree and references, or nothing before a guide is
- * written; every answer has the contract's shape.
+ * written; every answer has the contract's shape; one pattern whose availability fails is unavailable, not a 500.
  *
  * Spec: PED-001, PED-002, PED-003, PED-011
  */
@@ -72,6 +72,23 @@ describe('[PED-001] the studio answers', () => {
     // Assert: ALU writes the texts, so only the shapes are checked
     expect(studioOverviewSchema.safeParse(overview).success).toBe(true);
     for (const detail of details) expect(patternDetailSchema.safeParse(detail).success).toBe(true);
+  });
+
+  it('[PED-001] a pattern whose availability cannot be told is unavailable, and the overview still answers', async () => {
+    // Arrange: one pattern's lookup fails (e.g. a library whose semantics.json does not parse)
+    const content = loadStudioContent();
+    const [broken, ...others] = content.patterns.patterns.map((pattern) => pattern.id);
+    const lookup: PatternAvailabilityLookup = {
+      availability: async (id) => {
+        if (id === broken) throw new SyntaxError('Unexpected token');
+        return { available: true, contentTypes: [] };
+      },
+    };
+    // Act
+    const overview = await studioOverviewAnswer(content, lookup);
+    // Assert
+    const available = Object.fromEntries(overview.patterns.map((card) => [card.id, card.available]));
+    expect(available).toEqual(Object.fromEntries([[broken, false], ...others.map((id) => [id, true])]));
   });
 });
 

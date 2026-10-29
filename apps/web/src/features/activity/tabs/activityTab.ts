@@ -2,8 +2,9 @@
  * activityTab — what the activity page (`/aktivitet/[id]`) shares with each of its tabs, and what a tab declares about
  * itself in the registry (./activityTabs.ts).
  *
- * Why: the activity page grows a tab per S5 workstream (**Læringsdesign**, **Deling**, D-089). Every tab gets the same
- *      props, so a new tab is one file and one registry line, and the page never needs to know what a tab shows.
+ * Why: the activity page has a tab per area of work, the studio's among them (**Læringsdesign**, **Deling**,
+ *      D-089). Every tab gets the same props, so a new tab is one file and one registry line, and the page never
+ *      needs to know what a tab shows.
  * Spec: UD-006, LTI-006, PROD-003
  * Invariants:
  *   - Which tabs show is decided by `shows` from the server's `mayEdit` and `mayPublish`; the server checks every

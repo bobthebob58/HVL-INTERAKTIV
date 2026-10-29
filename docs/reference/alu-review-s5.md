@@ -58,9 +58,12 @@ phase matrix in spec 04 §3.
 - Are these the words HVL uses for the three phases and the *samling*, in all three languages? (Møgelvang &
   Isaksen 2025 describe levels and the parts *kontekst*, *kunnskap* and *samskaping*, not phases; the phases sit at
   the model's *mikronivå* around one *samling*.)
-- The Canvas placements describe things that arrive only in Session 6: the insight «Før samlinga» (Forarbeid), and
-  scores sent to Canvas as formative assessment with suggested repetition dates (Etterarbeid). Keep them as the
-  intended practice, or soften them until S6?
+- Forarbeid's Canvas placement describes the insight «Før samlinga», which arrives only in Session 6. Keep it as the
+  intended practice, or soften it until S6?
+- Etterarbeid's Canvas placement no longer promises what Session 6 brings (scores sent to Canvas by best attempt or
+  mastery, `LTI-012`; suggested repetition dates, `PROD-014`, which spec 00 shows to the author, not to students).
+  It now tells the teacher to place the same activity again in a later Canvas module, a few days and weeks on (S5
+  review, 2026-10-29). Is that the advice ALU wants, and how should the text read once S6 has added both?
 - When everything in this packet is approved, change `status: proposed` to `status: confirmed-by-alu`. That removes
   the draft banner from every studio page (one switch for all studio texts).
 
@@ -152,8 +155,12 @@ their skeleton holds (`ea-diagnose`, a single question, has none).
   students see before they start.
 - Is the guidance in each `⟦…⟧` clear enough for a teacher who has not read the guide?
 - The formative settings are fixed in every skeleton (`PROD-009`): retry and «Vis svar» on, no time limits, a pass
-  mark that is information only. Every Blanks task is not case-sensitive and accepts small typos. A pattern that
-  should be strict needs that decided here.
+  mark that is information only. Every Blanks task is not case-sensitive. «Godta mindre skrivefeil» accepts an
+  answer one edit away from a solution longer than three characters, and that includes one wrong or swapped digit:
+  «125» and «1,25» both pass for «12,5». So `uv-column`, whose example is a dosage calculation, matches exactly, and
+  its guidance says how to accept both «12,5» and «12.5»; `ea-terms` accepts small typos, as spec 04 asks; `fa-video`
+  and `fa-slides` accept them too, for terms (D-084 amendment, 2026-10-29). Is that right for each pattern? A
+  pattern whose answers can be numbers should not accept typos.
 - Several content types have English buttons and messages even in Nynorsk and Bokmål (MultiChoice, QuestionSet,
   InteractiveBook, BranchingScenario). The patterns set those texts themselves in all three languages; please check
   that every word a student sees in an activity made from a pattern is in the activity's language. (Interactive
@@ -173,6 +180,30 @@ in §10 with the pattern's ID.
 **How to change a pattern:** the steps «Edit a pattern» and «Add a pattern» in `content/laeringsdesign/README.md`
 (including how to make a skeleton from an exported `.h5p` file). `npm run content:check`, with the content types
 installed, checks every text against the length of its field.
+
+### 6.4 Points from the S5 code review (for ALU to judge, not defects)
+
+- **`fa-video`, the third check on a shorter video.** The skeleton shows its checks at 2:30, 5:00 and 7:30, ten
+  seconds each. When the video ends before a check does, H5P.InteractiveVideo 1.28 moves that check to the video's
+  last ten seconds as the player loads (`loaded()`), so any video shorter than 7:40 has its third check just before
+  the end. With a six-minute video, the shortest the guidance suggests, the third check comes at 5:50, 40 seconds
+  after the second, and the summary task follows three seconds before the end. Should the guidance ask the author
+  to move the checks to the video's own steps, or should the skeleton place them differently?
+- **`uv-case`, «no single right answer».** `whenToUse` says the pattern is for choices «der det ikkje finst eitt
+  rett svar», but the skeleton has one way forward: at the first two decisions one choice goes on and the other
+  leads astray and back to the same decision («Prøv avgjerda på nytt»); only the third decision leads to the
+  endings, which give the same score. Students may read every detour as a wrong answer. Should the wording change,
+  or should both choices at a decision go on, each with its own consequences?
+- **Claims in «why it works» without a citation.** Each reads as a reasoned step rather than a research finding,
+  but ALU may want a source or a softer wording (the nb and en texts say the same):
+  - `ea-diagnose`: «Ei misoppfatning forsvinn sjeldan av seg sjølv: studenten må sjå at ho ikkje held, og forstå
+    kvifor.»
+  - `ea-terms`: «Å skrive omgrepa krev meir av minnet enn å dra dei, så vel utfylling når omgrepa er kjende frå
+    før.»
+  - `fa-hotspots`: «Nummererte punkt deler forklaringa i små bitar som studenten opnar i sitt eige tempo, og
+    rekkjefølgja viser kvar blikket skal gå.»
+  - `uv-case`: the last clause, «… og høvet til å prøve ei avgjerd på nytt gjer det trygt å velje feil.»
+  - `uv-module`: «Samandraget til slutt viser kva som sit, og kva studenten bør gå tilbake til.»
 
 ## 7. The pedagogisk mappe: `content/mappe/`
 
@@ -217,6 +248,10 @@ merit call, not ALU's guidance) and the proposal [proposals/mappe-template.nn.md
   writing.
 - An activity's address is plain text in both files, not a link, because the template may not place a value inside
   a link (a safety rule of D-094).
+- The address opens the activity only for people who may view it. Activities start as private drafts, so an
+  assessor who follows it meets «not available» unless the teacher has published the activity and chosen «Alle med
+  Feide-innlogging» («Alle ved HVL» leaves out assessors from other institutions). The template's 3.3 now tells the
+  teacher so, and offers screenshots instead (S5 review, 2026-10-29): is that the advice ALU wants?
 - The template's own links are not limited to `https:` and `mailto:` addresses as the guide's are; the PDF never
   follows them, so this is a question of what the portfolio should point to: check any link the template adds.
 - In the downloaded Markdown file, a date such as «29. oktober 2026» shows as «29\. oktober 2026» in a plain-text
@@ -253,9 +288,9 @@ are equal), so that later listings record the new version.
 
 ## 9. The privacy sentences about colleagues (`/personvern`)
 
-**What:** the section «For deg som lagar aktivitetar» on the privacy page says that HVL stores a teacher's name and
-e-mail address so that co-authors can find them, and that colleagues who make activities can see the name in
-co-author search, on activities in the content bank and on copies, and can find the teacher in the search for 13
+**What:** the section «For deg som lagar aktivitetar» on the privacy page says that HVL stores a teacher's name so
+that co-authors can find them, and no longer the e-mail address (D-090 amendment of 2026-10-29), and that colleagues
+who make activities can see the name in co-author search, on activities in the content bank and on copies, and can find the teacher in the search for 13
 months after the last Feide login as staff; students cannot search for staff. (`privacy.staff2`, between them, is
 about the login records.)
 

@@ -10,12 +10,16 @@
  *   - Before Lumi's write, in this order: permission and main library (./saveAdmission.ts) → the files the stored
  *     version references → sub-content policy (D-039) → paste-source guard (D-092) → learner-state check (D-093).
  *     Any refusal is thrown here, so a refused save changes neither the parameters, nor the files, nor the state.
- *   - After Lumi's write: first the learner-state reset of a structural edit (state rows deleted, version raised),
- *     then the dropped files are deleted as the author (./contentFileCleanup.ts); a new activity has neither.
+ *   - Lumi's write runs through `write`: a structural edit's learner-state reset (state rows deleted, version
+ *     raised) commits in the same transaction as Lumi's first parameter write (./storage/learnerStateResetWrite.ts),
+ *     so no later failure leaves the new structure with the old state.
+ *   - After Lumi's write, the dropped files are deleted as the author (./contentFileCleanup.ts); a new activity has
+ *     none.
  * Collaborators: ./HvlH5PEditor.ts, ./saveAdmission.ts, ./contentFileCleanup.ts, ./semantics/SubContentPolicy.ts,
  *   ./pasteSourceGuard.ts, ../learningDesign/safeEditing/LearnerStateGate.ts.
  * Tests: apps/server/test/h5p/HvlH5PEditor.test.ts, apps/server/test/h5p/pasteSourceGuard.int.test.ts,
- *   apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts
+ *   apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts,
+ *   apps/server/test/learningDesign/safeEditing/safeEditingFailures.int.test.ts
  */
 import type {
   ContentParameters,
@@ -60,7 +64,7 @@ export interface EditorSave {
   readonly choice?: SaveChoice;
 }
 
-/** What `beforeWrite` found, for `afterWrite`. */
+/** What `beforeWrite` found, for `write` and `afterWrite`. */
 export interface CheckedSave {
   readonly main: ILibraryName;
   readonly filesBefore: readonly string[];
@@ -93,7 +97,7 @@ export class EditorSaveSteps {
   /**
    * Every check before Lumi's write; the parameters and metadata are cleaned in place.
    * @param save - The save.
-   * @returns What `afterWrite` needs.
+   * @returns What `write` and `afterWrite` need.
    * @throws The first refusal: H5pError 403/404 (permission, library, sub-content, paste source), 400 (paths,
    *   nesting, text), HttpError 409 `hvl:learner-state-reset-needed`.
    */
@@ -115,14 +119,22 @@ export class EditorSaveSteps {
   }
 
   /**
+   * Runs Lumi's write; a structural save's learner-state reset commits with its first parameter write (D-093).
+   * @param checked - From `beforeWrite`.
+   * @param lumiSave - Lumi's save of the parameters and files.
+   * @returns What `lumiSave` returned.
+   */
+  write<T>(checked: CheckedSave, lumiSave: () => Promise<T>): Promise<T> {
+    return this.learnerState.runSave(checked.learnerState, lumiSave);
+  }
+
+  /**
    * The steps after Lumi's write.
    * @param save - The save.
    * @param savedId - The ID Lumi saved under.
    * @param checked - From `beforeWrite`.
    */
   async afterWrite(save: EditorSave, savedId: string, checked: CheckedSave): Promise<void> {
-    // WHY: before the file clean-up, so a failing delete cannot leave old state on a structurally changed activity.
-    await this.learnerState.settle(checked.learnerState);
     if (save.contentId === undefined) return;
     const after = await this.files.referencedFiles(save.parameters, checked.main);
     await this.files.deleteDropped(savedId, [...checked.filesBefore], after, save.user);

@@ -54,7 +54,7 @@ const answer = async (choice: Choice, inCanvas: boolean, fail?: object) => {
   run.hvliSaveAsCopy = () => respond('copy');
   const settled: unknown[][] = [];
   const saved: unknown[] = [];
-  /** Each announcement while a request runs, with the number of requests sent before it. */
+  /** Each announcement while a request runs (and `held` when «Lagre» took focus), with the requests sent before. */
   const announced: [string, number][] = [];
   const config = { inCanvas, saveChoice: inCanvas ? CANVAS : PORTAL, messages: { failed: 'Feil.' } };
   const page = {
@@ -63,6 +63,7 @@ const answer = async (choice: Choice, inCanvas: boolean, fail?: object) => {
     saved: (result: unknown) => saved.push(result),
     settle: (...settledWith: unknown[]) => settled.push(settledWith),
     announce: (text: string) => announced.push([text, requests.length]),
+    holdSave: () => announced.push(['held', requests.length]),
   };
   await run.hvliAnswerResetNeeded({ library: 'H5P.MultiChoice 1.16', params: '{}' }, page);
   return { requests, settled, saved, posted, announced };
@@ -110,7 +111,10 @@ describe('[PROD-013] the save choice dialog', () => {
 
   it('[PROD-013] «Nullstill framgangen og lagre» says it runs, resends the refused content confirmed and reports the reset', async () => {
     const { requests, settled, saved, announced } = await answer('reset', false);
-    expect(announced).toEqual([[PORTAL.resetting, 0]]);
+    expect(announced).toEqual([
+      ['held', 0],
+      [PORTAL.resetting, 0],
+    ]);
     expect(requests).toEqual(['save true']);
     expect(saved).toEqual([{ contentId: 'copy-1' }]);
     expect(settled).toEqual([[PORTAL.resetAndSaved]]);
@@ -118,7 +122,10 @@ describe('[PROD-013] the save choice dialog', () => {
 
   it('[PROD-013] «Lagre som ny versjon» says it runs, saves a copy and asks the framing page to open its editor', async () => {
     const { requests, settled, posted, announced } = await answer('copy', false);
-    expect(announced).toEqual([[PORTAL.copying, 0]]);
+    expect(announced).toEqual([
+      ['held', 0],
+      [PORTAL.copying, 0],
+    ]);
     expect(requests).toEqual(['copy']);
     expect(settled).toEqual([[PORTAL.savedAsCopy]]);
     expect(posted).toEqual([{ type: 'hvli:content-copied', contentId: 'copy-1' }]);

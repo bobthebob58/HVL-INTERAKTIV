@@ -5,15 +5,18 @@
  * Why: the planner's rows are distinct outcomes (D-088), so an outcome typed slightly differently in two activities
  *      would split into two rows. D-087 offers the outcomes already used for the same course code as checkboxes;
  *      ticking one adds it, unticking removes it again.
- * Spec: PED-030, PED-031
+ * Spec: PED-030, PED-031, UD-006
  * Invariants:
  *   - Shown only for a valid course code with outcomes in use; the list is fetched again when the code changes, and
  *     a late answer for an earlier code is ignored.
  *   - A box is ticked when the form holds an outcome with the same identity (D-087); unticking removes every such
- *     outcome. While the form holds 20 outcomes, an unticked box is disabled and says nothing more is possible.
+ *     outcome.
+ *   - A11Y: while the form holds 20 outcomes, the group says so, and an unticked box stays in the Tab order, is
+ *     marked `aria-disabled`, is described by that sentence and ignores a press (WCAG 3.3.2, 2.1.1), as
+ *     ../mappe/MappeActivityPicker.tsx does at its limit.
  * Collaborators: ./LearningDesignPanel.tsx, ./learningDesignForm.ts, ./OutcomeFields.tsx (`CATEGORY_LABEL`),
  *   ../../api/learningDesignApi.ts.
- * Tests: apps/web/test/features/LearningDesignPanel.test.tsx
+ * Tests: apps/web/test/features/LearningDesignPanel.test.tsx, apps/web/test/features/UsedOutcomeChoices.test.tsx
  */
 'use client';
 
@@ -72,17 +75,27 @@ export function UsedOutcomeChoices({ courseCode, outcomes, onToggle }: UsedOutco
       <p id={`${base}-hint`} className="m-0 text-hvl-ink-muted">
         {t('learningDesign.usedHint', locale)}
       </p>
+      {full ? (
+        <p id={`${base}-full`} className="m-0 font-bold">
+          {t('learningDesign.outcomesFull', locale, { max: MAX_OUTCOMES })}
+        </p>
+      ) : null}
       {used.outcomes.map((outcome, index) => {
         const id = `${base}-${index}`;
         const checked = inForm.has(outcomeIdentity(outcome));
+        const blocked = full && !checked;
         return (
           <div key={outcomeIdentity(outcome)} className="mt-1 flex items-start gap-2">
             <input
               type="checkbox"
               id={id}
               checked={checked}
-              disabled={!checked && full}
-              onChange={(event) => onToggle(outcome, event.target.checked)}
+              aria-disabled={blocked || undefined}
+              aria-describedby={blocked ? `${base}-full` : undefined}
+              onChange={(event) => {
+                // WHY: a controlled box: ignoring the press keeps it unticked.
+                if (!blocked) onToggle(outcome, event.target.checked);
+              }}
               className="mt-1 min-h-target min-w-target"
             />
             <label htmlFor={id}>

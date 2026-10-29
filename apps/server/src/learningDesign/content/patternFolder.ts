@@ -13,6 +13,8 @@
  *   - The library checks run only when the caller passes the installed libraries (`content:check`); the server's
  *     start-up does not, and a pattern whose library is missing is then shown as unavailable (D-085).
  *   - Nothing is returned when any file has a problem.
+ * SPEC-DEVIATION: D-084 — spec 04 §4 puts skeletons in `apps/server/src/patterns/skeletons/`; each sits beside its
+ *   `pattern.yaml` in `content/laeringsdesign/patterns/<id>/`, with text tokens and a pinned library version.
  * Collaborators: ./patternContent.ts (the caller), ./contentSource.ts, ./patternYaml.ts, ./skeletonFile.ts,
  *   ./patternTokenChecks.ts, ./patternCitations.ts, ./patternProse.ts ("why it works" builds into the guide's
  *   prose nodes, D-083), ./skeletonLibraryChecks.ts, ./studioContentContext.ts.

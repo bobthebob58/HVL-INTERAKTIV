@@ -95,7 +95,8 @@ model LtiPlacement {
   attemptPolicy    AttemptPolicy @default(best)
   masteryThreshold Float?
   /// The platform's course label from the launch's `context.label` (e.g. `SYK110`), suggested as a course code
-  /// to the author (D-087). A course label, not personal data.
+  /// to the author (D-087). Kept only when it looks like a course code with a digit; a sandbox label such as
+  /// «Kari 2025» can still pass, an accepted residual (D-087 amendment, data inventory).
   contextLabel     String?       @db.VarChar(255)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt

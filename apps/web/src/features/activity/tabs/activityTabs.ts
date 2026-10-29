@@ -1,8 +1,8 @@
 /**
  * activityTabs — the registry of the activity page's tabs: which tabs exist, in which order, and who gets each one.
  *
- * Why: each S5 workstream adds its own tab to `/aktivitet/[id]` (D-089: **Læringsdesign** for people who may edit,
- *      **Deling**); one list keeps the order in one place, so a new tab is one file and one line here, and
+ * Why: `/aktivitet/[id]` has a tab per area of work, the studio's among them (D-089: **Læringsdesign** for people who
+ *      may edit, **Deling**); one list keeps the order in one place, so a new tab is one file and one line here, and
  *      ../ActivityView.tsx stays the same.
  * Spec: UD-006, LTI-006, PROD-003
  * Invariants:
@@ -43,7 +43,7 @@ export const forEditors = (detail: ContentDetail): boolean => detail.mayEdit;
 export const forPublishers = (detail: ContentDetail): boolean => detail.mayPublish;
 
 /**
- * Every tab of the activity page, in the order shown. A workstream adds its tab with one line here, e.g.
+ * Every tab of the activity page, in the order shown. A new tab is one line here, e.g.
  * `{ id: LEARNING_DESIGN_TAB_ID, labelKey: 'learningDesign.tab', shows: forEditors, Panel: LearningDesignTab }`.
  */
 export const ACTIVITY_TABS: readonly ActivityTab[] = [

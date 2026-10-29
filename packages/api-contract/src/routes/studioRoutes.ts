@@ -1,9 +1,9 @@
 /**
- * studioRoutes — the registry of the public studio routes under `/api` (W1): the overview (the phases, the *samling*
+ * studioRoutes — the registry of the public studio routes under `/api`: the overview (the phases, the *samling*
  * anchor and the pattern catalogue), the guide in one language, and one pattern's detail.
  *
- * Why: D-099 splits the `/api` registry by area, so each workstream adds its routes to its own table and never edits
- *      another's; ../apiRoutes.ts concatenates the areas in document order.
+ * Why: D-099 splits the `/api` registry by area, so each area's routes are in its own table and a change to one area
+ *      never edits another's; ../apiRoutes.ts concatenates the areas in document order.
  * Spec: DOC-012, PED-001, PED-002, PED-003, PED-011
  * Invariants:
  *   - `path` is below `/api`, in Express form; every `:name` has a schema in `params`, every query parameter one in
@@ -20,7 +20,7 @@ import { patternParamsSchema } from '../patterns.js';
 import { guideParamsSchema, guideSchema, patternDetailSchema, studioOverviewSchema } from '../studio.js';
 import { failure } from './routeResponses.js';
 
-/** The routes of this area (W1), in the order of the OpenAPI document. */
+/** The routes of this area, in the order of the OpenAPI document. */
 export const STUDIO_ROUTES = [
   {
     operationId: 'getStudioOverview',

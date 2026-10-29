@@ -3,8 +3,8 @@
  * content folder and the phases and references already loaded, for cross-checks.
  *
  * Why: the guide and the patterns cite references, and patterns name phases (D-082); their loaders check those
- *      against the loaded files instead of reading them again. One context type lets each workstream fill in its own
- *      loader without changing the entry point's signature.
+ *      against the loaded files instead of reading them again. One context type lets each section loader take what
+ *      it needs without a change to the entry point's signature.
  * Spec: PED-001
  * Invariants:
  *   - `root` is an absolute path; section loaders read only files under it, plus what an input names.
@@ -38,8 +38,8 @@ export interface StudioContentContext {
 
 /**
  * What a caller hands the section loaders beyond the folder and the loaded files: every other field of
- * `StudioContentContext` (so far the pattern workstream's installed libraries, D-084 amendment). A workstream that
- * needs another adds it to `StudioContentContext` as an optional field, and it reaches the loaders through
+ * `StudioContentContext` (today the installed libraries the pattern checks use, D-084 amendment). A loader that
+ * needs another input adds it to `StudioContentContext` as an optional field, and it reaches the loaders through
  * `loadStudioContent(root, inputs)` without a change there.
  */
 export type StudioContentInputs = Omit<StudioContentContext, 'root' | 'phases' | 'references'>;

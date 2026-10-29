@@ -1,9 +1,10 @@
 /**
- * collaborationRoutes — the collaboration routes under `/api` (workstream W4): finding HVL staff, co-authors, the
- * content bank and duplicating an activity.
+ * collaborationRoutes — the collaboration routes under `/api`: finding HVL staff, co-authors, the content bank and
+ * duplicating an activity.
  *
  * Why: `PROD-007` lets HVL authors work on an activity together, share it through the content bank and copy it with
- *      its source kept (D-090, D-091, D-092, each as amended). This is W4's one router, mounted by the studio router.
+ *      its source kept (D-090, D-091, D-092, each as amended). This is the area's one router, mounted by the studio
+ *      router (../../http/api/studioRouter.ts).
  * Spec: PROD-007
  * Auth: portal — a signed-in author (Feide session), with the CSRF token on writes (checked by the authentication
  *   middleware). Every route starts with `requirePortalAuthor` (./studioPrincipal.ts): an ltik is 401, a portal
@@ -19,8 +20,9 @@
  *     refused caller learns nothing from a 400.
  *   - PRIVACY: the people search answers `{ userId, displayName }` only, and its query is never logged, audited or
  *     echoed: it reaches only the directory, whose errors name no value (D-090, DATA-009).
- *   - Copies go through `studio.duplicator`, which decides `duplicateRules` first (D-092); the route allows a copy
- *     as long as Lumi takes to stream a large video's files (`DUPLICATE_TIME_LIMIT_MS`).
+ *   - Copies go through `studio.duplicator`, which decides `duplicateRules` first and then counts the person's copy
+ *     limit (D-092 as amended; a 429 carries `Retry-After`); the route allows a copy as long as Lumi takes to stream
+ *     a large video's files (`DUPLICATE_TIME_LIMIT_MS`).
  *   - Registered with full paths below `/api` and the body parser on each route that has a body (no path-less
  *     `use`); every route here is listed in packages/api-contract/src/routes/collaborationRoutes.ts (DOC-012).
  * Collaborators: ../../http/api/studioRouter.ts (mounts it), ./studioRouteDeps.ts, ./studioPrincipal.ts,
@@ -34,6 +36,7 @@
  *   apps/server/test/learningDesign/collaboration/contentBank.int.test.ts,
  *   apps/server/test/learningDesign/collaboration/bankList.int.test.ts,
  *   apps/server/test/learningDesign/collaboration/duplicateRoute.int.test.ts,
+ *   apps/server/test/learningDesign/collaboration/copyRateLimit.int.test.ts,
  *   apps/server/test/learningDesign/collaboration/collaborationSession.int.test.ts (CSRF and a real ltik),
  *   apps/server/test/http/api/studioRouter.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
@@ -57,6 +60,7 @@ import {
   removeCoAuthorRequest,
 } from '../collaboration/coAuthorRequests.js';
 import { listInBankRequest, readBankListing, unlistFromBankRequest } from '../collaboration/contentBank.js';
+import { retryAfterOf } from '../collaboration/CopyRateLimit.js';
 import { isBankReader } from '../collaboration/staffEligibility.js';
 import { requirePortalAuthor } from './studioPrincipal.js';
 import type { StudioRouteDeps } from './studioRouteDeps.js';
@@ -153,7 +157,12 @@ export function collaborationRoutes(deps: StudioRouteDeps): Router {
     // limit of its own (`server.timeout` is 0), so this is an explicit bound that leaves such a copy room to finish.
     req.setTimeout(DUPLICATE_TIME_LIMIT_MS);
     const actor = principalToH5pActor(principal);
-    const { contentId } = await deps.studio.duplicator.duplicate(pathParam(req, 'contentId'), actor);
+    const copying = deps.studio.duplicator.duplicate(pathParam(req, 'contentId'), actor);
+    const { contentId } = await copying.catch((error: unknown) => {
+      const retryAfter = retryAfterOf(error);
+      if (retryAfter !== undefined) res.set('Retry-After', String(retryAfter));
+      throw error;
+    });
     res.status(201).json({ contentId } satisfies DuplicateResponse);
   });
   return router;

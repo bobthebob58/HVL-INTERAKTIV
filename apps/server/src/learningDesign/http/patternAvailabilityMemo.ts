@@ -5,7 +5,7 @@
  * Why: `PatternCreator.availability` builds each of a pattern's skeletons (library and semantics reads, the
  *      semantic-defaults walk) to tell whether its libraries are installed. `GET /api/studio` asks this for every
  *      pattern, and it needs no sign-in (D-089), so without a memo any visitor could make the server repeat that work
- *      at will (S5 W1a review; D-083 amendment 2026-10-29, S5 integration).
+ *      at will (D-083 amendment 2026-10-29 that keeps availability for 60 seconds).
  * Spec: PED-001, PROD-001
  * Invariants:
  *   - An answer is kept for `ttlMs` (60 s by default): a library an administrator installs or removes shows within

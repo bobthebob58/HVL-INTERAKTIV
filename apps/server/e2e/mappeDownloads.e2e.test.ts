@@ -20,7 +20,7 @@ import { readTaggedPdf } from '../test/learningDesign/mappe/taggedPdfReader.js';
 import { recordFlow } from '../test/support/flowRecorder.js';
 import { openRealWebApp, type RealWebApp } from '../test/support/realWebApp.js';
 import { describeWithRealWebApp } from '../test/support/realWebAppPrerequisites.js';
-import { webText, webTextPattern } from './support/webTexts.js';
+import { webText, webTextPattern } from '../test/support/webAppTexts.js';
 
 /** The two activities the author puts in the portfolio (main libraries of realWebApp's published examples). */
 const CHOSEN = ['H5P.QuestionSet', 'H5P.CoursePresentation'] as const;

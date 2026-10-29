@@ -177,7 +177,7 @@
     "who2": "Poeng frå ei oppgåve med poeng ser lærarane dine i karakterboka i Canvas, slik dei ser andre oppgåver.",
     "who3": "Administratorar ved HVL ser berre data gjennom ei støttehandling som blir logga.",
     "staffHeading": "For deg som lagar aktivitetar",
-    "staff1": "Vi lagrar namnet og e-postadressa di, slik at medforfattarar kan finne deg, og kva aktivitetar du eig eller er medforfattar av.",
+    "staff1": "Vi lagrar namnet ditt, slik at medforfattarar kan finne deg, og kva aktivitetar du eig eller er medforfattar av. E-postadressa di blir ikkje lagra på kontoen din.",
     "staff2": "Vi hugsar kva meldingar du har lukka. Innloggingar og utloggingar blir logga slik det står ovanfor, med ein kontrollverdi av IP-adressa di. Opningar frå Canvas med ei lærar- eller forfattarrolle (også når du vel aktivitetar å leggje inn), og koplingar av Canvas- og Feide-kontoen din, blir logga med tidspunktet og nummeret for kontoen din, men utan IP-adressa. Loggen blir sletta etter 2 år.",
     "staff3": "Kollegaer ved HVL som lagar aktivitetar, kan sjå namnet ditt når dei søkjer etter medforfattarar, på aktivitetar du har lagt i innhaldsbanken, og på kopiar av aktivitetane dine. I søket kan dei finne deg i 13 månader etter at du sist logga inn med Feide som tilsett. Studentar kan ikkje søkje etter deg.",
     "safetyHeading": "Lagring og tryggleik",

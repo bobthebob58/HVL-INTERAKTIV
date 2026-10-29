@@ -16,7 +16,8 @@
  *     author's activities (copies included), whose state rows cascade.
  * Collaborators: ../../support/appTestbed.ts, ../../support/feideTestbed.ts, ../../support/ltiLaunchDriver.ts,
  *   ../../support/realPackages.ts, ../../support/testLibraryAuditSink.ts.
- * Tests: ./safeEditing.int.test.ts, ./staleStateWrites.int.test.ts, ./saveAsCopy.int.test.ts
+ * Tests: ./safeEditing.int.test.ts, ./safeEditingFailures.int.test.ts, ./staleStateWrites.int.test.ts,
+ *   ./saveAsCopy.int.test.ts
  */
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';

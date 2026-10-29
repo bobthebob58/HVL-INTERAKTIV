@@ -10,8 +10,9 @@
  * Spec: H5P-002, H5P-007, UD-006, UD-013, PROD-003, PROD-013
  * Invariants: settings come only from `#hvl-editor-config`; `hvli:content-saved` and `hvli:content-copied` go to, and
  *   `hvli:go-to-field` is taken from, the parent on our own origin only; server text is written as text, never as
- *   markup; the save choice replaces the failure text of its 409, and after it «Lagre» is enabled and focused before
- *   the outcome is announced; «Avbryt» saves nothing; Canvas never sends a copy request (D-098).
+ *   markup; the save choice replaces the failure text of its 409; while a chosen reset or copy runs «Lagre» holds
+ *   focus with `aria-disabled` (a click is ignored), and after it «Lagre» is enabled and focused before the outcome
+ *   is announced; «Avbryt» saves nothing; Canvas never sends a copy request (D-098).
  * Collaborators: ../editorPage.ts, ./editorFields.js and ./editorFieldReveal.js (a finding's path),
  *   ./editorSaveRequests.js (the requests) and ./editorSaveChoice.js (the dialog), all loaded first;
  *   ../../../http/routes/contentRoutes.ts, apps/web/src/messaging/frameMessages.ts.
@@ -36,6 +37,7 @@
   var findingList = document.getElementById('hvl-editor-findings');
   var contentId = config.contentId;
   var editor;
+  var held = false;
 
   ns.$ = window.H5P.jQuery;
   ns.basePath = settings.libraryUrl;
@@ -109,21 +111,29 @@
     var message = { type: 'hvli:content-saved', contentId: contentId };
     if (window.parent !== window) window.parent.postMessage(message, location.origin);
   }
+  // A11Y: WCAG 2.4.3: «Lagre» holds focus while a chosen request runs, unavailable by `aria-disabled` (D-093).
+  function holdSave() {
+    held = true;
+    saveButton.disabled = false;
+    saveButton.setAttribute('aria-disabled', 'true');
+    saveButton.focus();
+  }
   // A11Y: WCAG 2.4.3, 4.1.3: after the save choice, «Lagre» is enabled and focused first, then the outcome is
   // announced in the status region, which the open dialog kept inert (D-093).
   function settle(text, errors) {
+    held = false;
+    saveButton.removeAttribute('aria-disabled');
     saveButton.disabled = false;
     saveButton.focus();
     announce(text);
     showErrors(errors || []);
   }
   function save() {
+    if (held) return;
     saveButton.disabled = true;
     showErrors([]);
     announce(config.messages.saving);
-    var done = function () {
-      saveButton.disabled = false;
-    };
+    var done = () => void (saveButton.disabled = false);
     editor.getContent(
       function (content) {
         hvliSaveContent(content, contentId, config)
@@ -138,7 +148,7 @@
               // WHY: "saving" is not true while the author chooses; the outcome replaces the empty text afterwards.
               announce('');
               var page = { config: config, contentId: contentId, saved: saved, settle: settle };
-              page.announce = announce;
+              Object.assign(page, { announce: announce, holdSave: holdSave });
               return hvliAnswerResetNeeded(content, page);
             }
             announce(error.statusText || config.messages.failed);

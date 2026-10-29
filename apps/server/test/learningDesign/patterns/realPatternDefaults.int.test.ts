@@ -1,9 +1,9 @@
 /**
  * Integration tests for the formative defaults of every real pattern, read from what H5P stores once the activity is
  * created through the whole app on the real content types: retry and «Vis svar» on, no time limit, pass marks that
- * never end the attempts, keyboard navigation in presentations, and forgiving matching in fill-in tasks (PROD-009,
- * spec 04 §4). The rules per content type are in ./realPatternSwitches.ts; the patterns are ALU's drafts, so no
- * test names a pattern or reads its texts.
+ * never end the attempts, keyboard navigation in presentations, and case-insensitive matching in fill-in tasks
+ * (PROD-009, spec 04 §4; typo tolerance is each pattern's choice, D-084 amendment). The rules per content type are
+ * in ./realPatternSwitches.ts; the patterns are ALU's drafts, so these tests name no pattern and read no text.
  *
  * Spec: PROD-009, PED-010
  */

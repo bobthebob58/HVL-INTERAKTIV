@@ -11,8 +11,8 @@
  *   - A search query is trimmed and 3 to 100 characters; at most 10 people come back (D-090).
  *   - An activity has at most 20 co-authors (D-090).
  *   - A bank entry never carries the rationale or the course code, which belong to the source's author (D-092).
- * Collaborators: ./learningDesign.ts, ./learnerInfo.ts, ./studio.ts, ./sourceAttribution.ts, apps/server (W4),
- *   apps/web.
+ * Collaborators: ./learningDesign.ts, ./learnerInfo.ts, ./studio.ts, ./sourceAttribution.ts,
+ *   apps/server/src/learningDesign/http/collaborationRoutes.ts, apps/web.
  * Tests: packages/api-contract/test/collaborationSchemas.test.ts
  */
 import { z } from 'zod';

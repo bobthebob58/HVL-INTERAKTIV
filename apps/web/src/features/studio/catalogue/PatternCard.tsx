@@ -10,7 +10,7 @@
  *     catalogue's phase and course to the pattern's page, which creation pre-fills (D-088).
  *   - Phase labels come from the content (PED-001); the unavailable state is an icon and a sentence, not colour.
  * Collaborators: ./PatternCatalogue.tsx, ../../../config/paths.ts (`patternPath`), ../../../i18n/contentTypeName.ts.
- * Tests: apps/web/test/features/PatternCatalogue.test.tsx
+ * Tests: apps/web/test/features/PatternCard.test.tsx, apps/web/test/features/PatternCatalogue.test.tsx
  */
 import type { Phase, PatternSummary } from '@hvl-interaktiv/api-contract';
 import Link from 'next/link';

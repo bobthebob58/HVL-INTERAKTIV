@@ -10,10 +10,10 @@
  *      same states (UD-030).
  * Spec: UD-030, PED-010, PED-030, PED-031, PROD-007, MAPPE-001
  * Invariants:
- *   - Controls and messages are found by structure or by the web app's own Nynorsk texts (./webLocale.ts), never by
- *     ALU's content texts.
+ *   - Controls and messages are found by structure or by the web app's own Nynorsk texts
+ *     (../../test/support/webAppTexts.ts), never by ALU's content texts.
  *   - The seed of the running server is looked up by the app (`studioSeedOf`); a view opened before seeding throws.
- * Collaborators: ./studioSeed.ts, ./pages.ts, ./views.ts, ./catalogue.ts, ./webLocale.ts.
+ * Collaborators: ./studioSeed.ts, ./pages.ts, ./views.ts, ./catalogue.ts, ../../test/support/webAppTexts.ts.
  * Tests: apps/server/a11y/axeStudioViews.a11y.test.ts and every suite that walks ./catalogue.ts's views.
  */
 import type { BrowserContext, Page } from 'playwright-core';
@@ -21,7 +21,7 @@ import type { RealWebApp } from '../../test/support/realWebApp.js';
 import type { StudioView } from './catalogue.js';
 import { openActivityTab, openWebPage } from './pages.js';
 import { seedStudio, type StudioSeed } from './studioSeed.js';
-import { webText, webTextPattern } from './webLocale.js';
+import { webText, webTextPattern } from '../../test/support/webAppTexts.js';
 
 const seeds = new WeakMap<RealWebApp, StudioSeed>();
 

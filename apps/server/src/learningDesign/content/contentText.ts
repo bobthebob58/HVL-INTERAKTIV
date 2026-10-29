@@ -9,8 +9,8 @@
  *   - A text is trimmed, never blank, at most `maxLength` characters, and holds no control characters; a one-line
  *     text holds no line break either (YAML's `>-` folds a long line into one).
  *   - The output matches `LocaleText` in `@hvl-interaktiv/api-contract`, so routes pass it through unchanged.
- * Collaborators: ./phasesContent.ts, ./referencesContent.ts and the workstreams' content loaders;
- *   ../../i18n/translate.ts (`LOCALES`).
+ * Collaborators: ./phasesContent.ts, ./referencesContent.ts, ./patternYaml.ts, ./mappeCriteriaFile.ts and the other
+ *   content section loaders; ../../i18n/translate.ts (`LOCALES`).
  * Tests: apps/server/test/learningDesign/content/contentText.test.ts
  */
 import { z } from 'zod';

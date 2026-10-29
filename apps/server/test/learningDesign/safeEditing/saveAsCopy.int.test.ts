@@ -1,12 +1,14 @@
 /**
  * Integration tests for «Lagre som ny versjon» (`POST /h5p/content/:contentId/copy`) on the real content types: the
  * edit becomes a new private draft linked to the original, the original and its learners' state stay as they
- * were, and Canvas cannot make a copy (D-093, D-098).
+ * were, Canvas cannot make a copy (D-093, D-098), and past the person's copy limit the route answers 429 with
+ * `Retry-After`, as the duplicate route does (D-092 amendment 2026-10-29, S5 review).
  *
  * Spec: PROD-013, PROD-007
  */
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
+import { COPY_KEY_PREFIX, COPY_LIMIT } from '../../../src/learningDesign/collaboration/CopyRateLimit.js';
 import { describeWithRealPackages } from '../../support/realPackages.js';
 import { describeWithServices } from '../../support/services.js';
 import { edited, type MultiChoiceParams } from './learnerStateAfterEditEdits.js';
@@ -106,6 +108,22 @@ describeWithServices('[PROD-013] saving an edit as a copy', () => {
       expect(before).toBe(0);
       expect(accepted.status).toBe(201);
       expect(await copies()).toBe(1);
+    });
+
+    it('[PROD-013] past the person’s copy limit the copy is 429 `hvl:rate-limited` with Retry-After, and copies nothing', async () => {
+      // Arrange: the author has used up the window, which ends in two minutes
+      const mc = await bench.importExample('H5P.MultiChoice');
+      const { ownerUserId } = await bench.tb.db.h5PContent.findUniqueOrThrow({ where: { id: mc.id } });
+      const counter = COPY_KEY_PREFIX + ownerUserId;
+      await bench.tb.redis.set(counter, String(COPY_LIMIT), { EX: 120 });
+      // Act
+      const res = await bench.copy(mc, appended(mc.params));
+      await bench.tb.redis.del(counter);
+      // Assert
+      expect([res.status, res.body.errorCode]).toEqual([429, 'hvl:rate-limited']);
+      const retryAfter = Number(res.headers['retry-after']);
+      expect(retryAfter >= 1 && retryAfter <= 120, `Retry-After: ${res.headers['retry-after']}`).toBe(true);
+      expect(await bench.tb.db.h5PContent.count({ where: { sourceContentId: mc.id } })).toBe(0);
     });
   });
 });

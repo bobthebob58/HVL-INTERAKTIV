@@ -10,8 +10,8 @@
  *   - Every section is loaded even when an earlier one fails, so one error lists every problem in every file.
  *   - The returned object and everything in it is frozen; it is built only when no section has a problem.
  *   - Reads files only under `root` (and what `inputs` names); contacts no service, no database and no network.
- * Collaborators: ./phasesContent.ts, ./referencesContent.ts, ./guideContent.ts (W1), ./patternContent.ts (W2),
- *   ./mappeContent.ts (W6), ./StudioContentError.ts, ./runContentCheck.ts; the server's start-up wiring.
+ * Collaborators: ./phasesContent.ts, ./referencesContent.ts, ./guideContent.ts, ./patternContent.ts,
+ *   ./mappeContent.ts, ./StudioContentError.ts, ./runContentCheck.ts; the server's start-up wiring.
  * Tests: apps/server/test/learningDesign/content/loadStudioContent.test.ts,
  *   apps/server/test/learningDesign/content/phasesContent.test.ts
  */
@@ -36,11 +36,11 @@ export interface StudioContent {
   readonly phases: PhasesContent;
   /** `laeringsdesign/references.yaml`: the full references cited as `[@key]`. */
   readonly references: ReferencesContent;
-  /** `laeringsdesign/guide.{nn,nb,en}.md` (guide workstream W1). */
+  /** `laeringsdesign/guide.{nn,nb,en}.md`: the guide (./guideContent.ts). */
   readonly guide: GuideContent;
-  /** `laeringsdesign/patterns/<id>/` (pattern workstream W2). */
+  /** `laeringsdesign/patterns/<id>/`: the patterns (./patternContent.ts). */
   readonly patterns: PatternContent;
-  /** `mappe/template.*.md` and `mappe/criteria.*.yaml` (portfolio workstream W6). */
+  /** `mappe/template.*.md` and `mappe/criteria.*.yaml`: the portfolio (./mappeContent.ts). */
   readonly mappe: MappeContent;
 }
 

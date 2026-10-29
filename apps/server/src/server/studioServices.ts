@@ -4,8 +4,8 @@
  *
  * Why: the studio's `/api` routes (../http/api/studioRouter.ts), the editor's «Lagre som ny versjon» route and
  *      main.ts's shutdown need the same instances, built one way. Building them here keeps createApp.ts to the mount
- *      order, and gives each S5 workstream one place for its service: a field in `StudioServices` and its
- *      construction in `createStudioServices`.
+ *      order, and gives each studio service one place: a field in `StudioServices` and its construction in
+ *      `createStudioServices`.
  * Spec: PED-001, PROD-007, PROD-013
  * Invariants:
  *   - Built once per app, so every route shares one instance of each service (the PDF renderer's one browser and
@@ -21,7 +21,7 @@
  *   ../learningDesign/collaboration/ContentDuplicator.ts, ../learningDesign/patterns/PatternCreator.ts,
  *   ../learningDesign/metadata/LearningDesignStore.ts, ../learningDesign/collaboration/PeopleDirectory.ts,
  *   ../learningDesign/mappe/MappeRenderer.ts, ../learningDesign/mappe/pdf/PdfRenderer.ts,
- *   ../privacy/minimumGroupSize.ts; each workstream's service as it is added.
+ *   ../privacy/minimumGroupSize.ts.
  * Tests: apps/server/test/server/studioServices.test.ts
  */
 import type { Logger } from 'pino';
@@ -63,23 +63,26 @@ export interface StudioServiceInputs {
 }
 
 /**
- * The studio's services. Each workstream owns its fields and may add more next to them; a service whose object has a
- * `close()` method is closed at shutdown, so `close` means "release your resources" on every service here.
+ * The studio's services, one field each. A service whose object has a `close()` method is closed at shutdown, so
+ * `close` means "release your resources" on every service here.
  */
 export interface StudioServices {
   /** The studio content from `content/` (D-082): phases, references, guide, patterns and the mappe template. */
   readonly content: StudioContent;
-  /** Copies activities: «Lag ein kopi» (W4, D-092) and the editor's «Lagre som ny versjon» (W5, D-093). */
+  /** Copies activities: «Lag ein kopi» (D-092) and the editor's «Lagre som ny versjon» (D-093). */
   readonly duplicator: ContentDuplicator;
-  /** W2: creates an activity from a pattern, with its metadata, in one request, and says which can be (D-085). */
+  /**
+   * Creates an activity from a pattern, with its metadata, in one request, and says which can be (D-085); a skeleton
+   * that cannot be built is logged once to the server's logger.
+   */
   readonly patternCreator: PatternCreator;
-  /** W3: reads and replaces an activity's learning-design metadata, and builds the planner's grid (D-087, D-088). */
+  /** Reads and replaces an activity's learning-design metadata, and builds the planner's grid (D-087, D-088). */
   readonly learningDesignStore: LearningDesignStore;
-  /** W4: finds HVL staff who may be co-authors, rate-limited per person, and says who may be added (D-090). */
+  /** Finds HVL staff who may be co-authors, rate-limited per person, and says who may be added (D-090). */
   readonly peopleDirectory: PeopleDirectory;
-  /** W6: renders the pedagogisk mappe as Markdown, with the minimum group size applied (D-094, D-095). */
+  /** Renders the pedagogisk mappe as Markdown, with the minimum group size applied (D-094, D-095). */
   readonly mappeRenderer: MappeRenderer;
-  /** W6: prints the mappe's HTML as a tagged PDF in a shared, lazily started Chromium (D-096). */
+  /** Prints the mappe's HTML as a tagged PDF in a shared, lazily started Chromium (D-096). */
   readonly pdfRenderer: PdfRenderer;
 }
 
@@ -108,10 +111,12 @@ export function createStudioServices(inputs: StudioServiceInputs): StudioService
   return Object.freeze({
     content: inputs.studioContent,
     duplicator: new ContentDuplicator({ db, editor: inputs.h5p.editor, access }),
+    // WHY: a skeleton that cannot be built is logged once, so an administrator learns of it (D-085 amendment).
     patternCreator: new PatternCreator({
       db,
       editor: inputs.h5p.editor,
       patterns: inputs.studioContent.patterns,
+      log: inputs.logger,
     }),
     learningDesignStore: new LearningDesignStore({
       db,

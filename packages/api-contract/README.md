@@ -48,7 +48,7 @@ The server serves the document at `GET /api/docs` when `NODE_ENV` is not `produc
 | `src/openApi.ts` | `buildOpenApiDocument()`: the OpenAPI 3.1 document with named components |
 | `test/` | Schema tests per area and document tests |
 
-### Adding a route (S5 workstreams)
+### Adding a route to an area
 
 1. Put the request and answer schemas in your area's schema file (strict objects, `.describe()` texts, an inferred
    type and TSDoc for each export).

@@ -2,10 +2,14 @@
  * editorSaveDialogPage — probe P7's bench: serves the stand-in dialog script and stylesheet the way the editor page's
  * own files are served, loads them into an open editor page, and reads focus, events and the accessibility tree.
  *
- * Why: the production script (`editorSaveChoice.js`, D-093) does not exist yet and the boot route serves only its
- *      allowlist, so the probe adds its files in front of the app with the boot route's headers (portal), or answers
- *      the same-origin request in the browser (Canvas, whose test app listens by itself). Either way the browser
- *      checks them against the page's own policy, unlike DevTools evaluation, which the policy does not govern.
+ * Why: the probe ran before the production script (`editorSaveChoice.js`, D-093) existed, and the boot route serves
+ *      only its allowlist, so the probe adds its files in front of the app with the boot route's headers (portal), or
+ *      answers the same-origin request in the browser (Canvas, whose test app listens by itself). Either way the
+ *      browser checks them against the page's own policy, unlike DevTools evaluation, which the policy does not govern.
+ *      As the stand-in passes whatever production does, the probe's tests are pins of what Chromium does, titled
+ *      `upstream pin: ` (DOC-004), not evidence for PROD-013. The production dialog's tests:
+ *      ./saveChoiceRoundTrip.browser.int.test.ts, ./saveChoiceKeyboard.browser.int.test.ts,
+ *      ./saveChoiceCanvas.browser.int.test.ts and apps/server/a11y/axeSaveChoice.a11y.test.ts.
  * Spec: PROD-013, UD-030
  * Invariants:
  *   - Probe files are served only at their two fixed paths, as `text/javascript` / `text/css` with `nosniff` and
@@ -18,7 +22,7 @@ import { readFileSync } from 'node:fs';
 import express, { type Express } from 'express';
 import type { BrowserContext, Frame, Page } from 'playwright-core';
 
-/** Where the probe script is served: beside the boot scripts, as `editorSaveChoice.js` will be. */
+/** Where the probe script is served: beside the boot scripts, next to the production `editorSaveChoice.js`. */
 export const PROBE_SCRIPT_PATH = '/h5p/boot/editorSaveDialogClient.js';
 /** Where the probe stylesheet is served: beside the server pages' stylesheet. */
 export const PROBE_STYLES_PATH = '/static/pages/editorSaveDialogStyles.css';

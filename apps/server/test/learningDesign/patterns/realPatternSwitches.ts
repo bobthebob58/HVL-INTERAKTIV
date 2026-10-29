@@ -14,8 +14,9 @@
  *   - A pass mark is informative when the attempt that misses it can be retried: wherever `passPercentage` is
  *     stored (QuestionSet's own, MultiChoice's `behaviour.passPercentage`), the node's own retry switch is on.
  *   - No key anywhere looks like a timer or a time limit.
- *   - Blanks matches case-insensitively and accepts small typos (spec 04 §4, `ea-terms`); every pattern's Blanks
- *     does, as forgiving matching is part of the formative defaults.
+ *   - Blanks matches case-insensitively. Typo tolerance is each pattern's choice, not a formative default: spec 04 §4
+ *     asks for it only in `ea-terms`, and it lets a number pass with one wrong digit (12,5 ← 125), so
+ *     ./realPatternSkeletons.test.ts pins it on in `ea-terms` and off in `uv-column` (D-084 amendment, 2026-10-29).
  *   - Messages name the node's path and the setting, never a content text.
  * Collaborators: ./realPatternDefaults.int.test.ts and ./realPatternSkeletons.test.ts (apply it),
  *   ../../../src/validation/contentWalker.ts.
@@ -59,11 +60,7 @@ const RULES: Readonly<Record<string, Rule>> = {
   'H5P.MultiChoice': TASK_SWITCHES,
   'H5P.TrueFalse': TASK_SWITCHES,
   'H5P.DragText': TASK_SWITCHES,
-  'H5P.Blanks': all(
-    TASK_SWITCHES,
-    mustNotBe(['behaviour', 'caseSensitive'], true),
-    mustBeOn(['behaviour', 'acceptSpellingErrors']),
-  ),
+  'H5P.Blanks': all(TASK_SWITCHES, mustNotBe(['behaviour', 'caseSensitive'], true)),
   'H5P.QuestionSet': all(
     mustBeOn(
       ['endGame', 'showResultPage'],

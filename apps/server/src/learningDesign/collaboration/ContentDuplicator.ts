@@ -9,11 +9,13 @@
  * Spec: PROD-007, PROD-013, DATA-007
  * Invariants:
  *   - `duplicateRules` is decided before anything is read: unknown or invisible is 404 `hvl:activity-unavailable`
- *     (D-066), visible but not copyable is 403 `hvl:duplicate-not-allowed`.
+ *     (D-066), visible but not copyable is 403 `hvl:duplicate-not-allowed`. An allowed copy then counts against the
+ *     person's copy limit (`editor.copyLimit`, ./CopyRateLimit.ts): past it, 429 `hvl:rate-limited` (D-092).
  *   - The copy is saved through `HvlH5PEditor.saveOrUpdateContent` as a new activity of the source's main library,
  *     with the source's h5p.json (its `defaultLanguage` and `language` included), so every editor check runs; the
  *     editor's paste-source guard admits the paths because the same rule allowed them. «Lagre som ny versjon» may
- *     name the editor's minor version of that library instead (./copyLibraryChoice.ts, D-093 amendment S5 W4).
+ *     name the editor's minor version of that library instead (./copyLibraryChoice.ts; D-093 amendment 2026-10-29,
+ *     the copy's library version).
  *   - Any failure after the editor created a row removes every row it created (with its files), and answers 500
  *     `hvl:duplicate-failed` with the cause attached; a refusal (4xx) raised before any row was written is passed on.
  *   - The copy is a private draft owned by the person; learner data, placements, acknowledgements, co-authors, the
@@ -21,8 +23,8 @@
  * Collaborators: ./duplicateRules.ts, ./copySource.ts, ./copyLibraryChoice.ts, ./pasteSourceRewrite.ts,
  *   ./ownFileCopies.ts, ./copyVerification.ts, ./copyRecords.ts, ../../h5p/HvlH5PEditor.ts,
  *   ../../h5p/storage/contentCreations.ts,
- *   ../../http/learningDesignErrors.ts, ../../http/h5pErrorResponse.ts (what counts as a refusal); W4's duplicate
- *   route and W5's copy route call it.
+ *   ../../http/learningDesignErrors.ts, ../../http/h5pErrorResponse.ts (what counts as a refusal); called by
+ *   ../http/collaborationRoutes.ts («Lag ein kopi») and ../../http/routes/contentRoutes.ts («Lagre som ny versjon»).
  * Tests: apps/server/test/learningDesign/collaboration/ContentDuplicator.int.test.ts,
  *   apps/server/test/learningDesign/collaboration/ContentDuplicatorData.int.test.ts,
  *   apps/server/test/learningDesign/collaboration/ContentDuplicatorFailures.int.test.ts,
@@ -45,6 +47,7 @@ import { learningDesignError } from '../../http/learningDesignErrors.js';
 import type { Database } from '../../infra/prismaClient.js';
 import { chooseCopyLibrary } from './copyLibraryChoice.js';
 import { readCopySource, withSourceLanguages, type CopySourceActivity } from './copySource.js';
+import { copyLimitedError } from './CopyRateLimit.js';
 import { findCopyDefect } from './copyVerification.js';
 import { recordCopy, type CopyKind } from './copyRecords.js';
 import { decideDuplicate, type DuplicateRoute } from './duplicateRules.js';
@@ -150,6 +153,9 @@ export class ContentDuplicator {
     // SECURITY: one answer for unknown and invisible activities, so a refusal reveals nothing (D-066).
     if (!facts || decision.kind === 'unavailable') throw authError('hvl:activity-unavailable');
     if (decision.kind === 'refused') throw learningDesignError('hvl:duplicate-not-allowed');
+    // SECURITY: every copy streams all the source's files; one person may start only so many (D-092 amendment).
+    const limit = await this.deps.editor.copyLimit.take(actor.accountId);
+    if (!limit.allowed) throw copyLimitedError(limit.retryAfterSeconds);
     const ids = { actorUserId: actor.accountId, sourceAuthorUserId: facts.ownerUserId };
     return { user, ...ids, sourceId: facts.contentId, via: decision.via };
   }

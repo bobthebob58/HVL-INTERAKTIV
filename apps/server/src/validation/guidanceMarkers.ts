@@ -25,11 +25,6 @@ import { pathOf } from './contentPath.js';
 import { asObject, asString, fieldAt } from './paramReaders.js';
 import { plainTextOf } from './richText.js';
 
-/** The opening and closing marks of pattern guidance (U+27E6, U+27E7). */
-export const GUIDANCE_OPEN = '⟦';
-/** The closing mark of pattern guidance. */
-export const GUIDANCE_CLOSE = '⟧';
-
 /** A field that still holds guidance. */
 export interface GuidanceField {
   /** Path from the params root, or `metadata.title` for the activity's title. */
@@ -40,6 +35,7 @@ export interface GuidanceField {
 
 // WHY: content.json from H5P nests about 15 levels deep; a limit keeps hostile input from exhausting the stack.
 const MAX_DEPTH = 100;
+// WHY: D-086 is the one record of the marker, `⟦` (U+27E6) and `⟧` (U+27E7); a change there changes these patterns.
 const MARK = /[⟦⟧]/;
 
 function scan(

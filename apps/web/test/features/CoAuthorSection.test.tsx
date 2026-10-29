@@ -1,6 +1,7 @@
 /**
  * Tests for the co-author list on the **Deling** tab: the owner's remove buttons and search, a co-author's «Fjern
- * meg», and where focus goes after adding and removing, with each change announced.
+ * meg», and where focus goes after adding and removing, with each change announced; also when a 0 ms timer runs
+ * before React renders, as in Chromium.
  *
  * Spec: PROD-007, UD-006, UD-013
  */
@@ -86,6 +87,31 @@ describe('[PROD-007] the co-author list', () => {
     await waitFor(() => expect(document.activeElement).toBe(message));
     expect(screen.getByRole('link', { name: 'Til aktivitetane dine' }).getAttribute('href')).toBe('/');
     expect(announce).toHaveBeenCalledWith('Du er ikkje lenger medforfattar på aktiviteten.');
+  });
+
+  it('[UD-006] after «Fjern meg», focus moves to the lasting message, not to the page, whatever runs first', async () => {
+    // Arrange
+    const self = { ...KARI, isSelf: true };
+    fakeFetch({
+      [`GET ${PATH}`]: { status: 200, body: { owner: OWNER, coAuthors: [OLA, self], mayManage: false } },
+      [`DELETE ${PATH}/${KARI.userId}`]: {
+        status: 200,
+        body: { owner: OWNER, coAuthors: [OLA], mayManage: false },
+      },
+    });
+    show();
+    const removeSelf = within(await screen.findByRole('list')).getByRole('button', { name: 'Fjern meg' });
+    removeSelf.focus();
+    // WHY: Chromium ran a 0 ms timer before React rendered the bank listing (real-browser probe, S5 review); a
+    // microtask models that order, so focus must not wait on a timer.
+    const realTimeout = window.setTimeout;
+    vi.spyOn(window, 'setTimeout').mockImplementation(((run: () => void, ms?: number) =>
+      ms ? realTimeout(run, ms) : (queueMicrotask(run), 0)) as typeof window.setTimeout);
+    // Act
+    fireEvent.click(removeSelf);
+    // Assert
+    const message = await screen.findByText(/Du er ikkje lenger medforfattar på aktiviteten\./);
+    await waitFor(() => expect(document.activeElement).toBe(message));
   });
 
   it('[PROD-007] a refused change shows the server’s reason with the ✗ icon and keeps the list', async () => {

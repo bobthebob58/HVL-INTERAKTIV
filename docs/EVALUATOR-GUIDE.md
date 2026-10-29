@@ -335,8 +335,8 @@ must be pasted into `PROGRESS.md`, before the next session starts.
     and NVDA (protocol J4 in `docs/accessibility/manual-test-protocol.md`). Known residuals to record there: list
     numbers are untagged, list items have no `Lbl` or `LBody`, and lists carry no numbering attribute; a table's
     caption and header row become `NonStruct`; there is no XMP metadata and so no PDF/UA identifier; links have no
-    `/Contents`; the header says PDF 1.4; activity titles carry no language of their own; and an activity's address
-    is plain text, not a link. No manual check is recorded yet.
+    `/Contents`; the header says PDF 1.4; activity titles and references carry no language of their own (D-094
+    amendment); and an activity's address is plain text, not a link. No manual check is recorded yet.
 19. **No students' results in the mappe before S6** (D-095). No results are stored before S6's xAPI and grade work,
     so `ActivityResultsSource` answers "no results yet" and the portfolio says so in one sentence per activity. The
     minimum group size (`MIN_GROUP_SIZE`, *k* = 5 by default, never below 3) and its two-sided suppression are built

@@ -6,7 +6,8 @@
  *      filtered view can be shared (PED-003). A blank activity stays available beside the patterns (D-085).
  * Spec: PED-003, PED-002, UD-006
  * Invariants:
- *   - The section has the `id` `CATALOGUE_ID`, which filtered links (`catalogueHref`) scroll to, and its own `h2`.
+ *   - The section has the `id` `CATALOGUE_ID`, which filtered links (`catalogueHref`) scroll to, and its own `h2`;
+ *     a page opened at that address scrolls there and focuses the `h2` once loaded (../GuideView.tsx).
  *   - The count is a status region that stays mounted, so each change is announced (WCAG 4.1.3); focus stays on the
  *     control that changed (WCAG 3.2.2).
  *   - With no match, «Vis alle mønstera» clears the filters (keeping the course) and moves focus to the phase
@@ -15,7 +16,7 @@
  *     (`focusCatalogueHeading`): a Next.js link scrolls to the catalogue but leaves focus behind (WCAG 2.4.3).
  * Collaborators: ../GuideView.tsx, ./CatalogueFilters.tsx, ./PatternCard.tsx, ./catalogueFilter.ts,
  *   ../../../config/paths.ts (`CATALOGUE_ID`, `NEW_ACTIVITY_PATH`).
- * Tests: apps/web/test/features/PatternCatalogue.test.tsx
+ * Tests: apps/web/test/features/PatternCatalogue.test.tsx, apps/web/test/features/CatalogueArrival.test.tsx
  */
 import type { StudioOverview } from '@hvl-interaktiv/api-contract';
 import Link from 'next/link';

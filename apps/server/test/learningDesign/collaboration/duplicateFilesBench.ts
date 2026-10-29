@@ -8,6 +8,7 @@
  * Spec: PROD-007
  * Invariants:
  *   - Saves go through `HvlH5PEditor.saveOrUpdateContent`, with every HVL check, never through Lumi's storage.
+ *   - The owner is findable staff (`coAuthorSearchableAt` now), so a published, listed source is in the bank.
  *   - Both authors are testbed actors, so `close()` removes every activity, file row and bucket they made.
  * Collaborators: ../../support/httpTestbed.ts, ../../support/realPackages.ts, ./duplicateFilesPasteSource.ts.
  * Tests: apps/server/test/learningDesign/collaboration/duplicateFiles.int.test.ts,
@@ -90,6 +91,11 @@ export async function openDuplicateBench(): Promise<DuplicateBench> {
   const { contentManager, libraryManager } = tb.runtime.editor;
   const scanner = new ContentFileScanner(libraryManager);
   const owner = await tb.actor('author');
+  // WHY: a bank listing counts only while its owner is findable staff, as after an eligible login (D-092 amendment).
+  await tb.db.user.update({
+    where: { id: owner.actor.accountId },
+    data: { coAuthorSearchableAt: new Date() },
+  });
   const copier = await tb.actor('author');
   const asOwner = asAccountUser(owner.actor);
   const asCopier = asAccountUser(copier.actor);

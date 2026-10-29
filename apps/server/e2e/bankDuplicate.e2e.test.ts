@@ -21,7 +21,7 @@ import { describeWithRealWebApp } from '../test/support/realWebAppPrerequisites.
 import { REAL_PACKAGES_DIR } from '../test/support/realPackages.js';
 import { testActor } from '../test/support/testActors.js';
 import { signInColleague, type Colleague } from './support/runColleague.js';
-import { webText } from './support/webTexts.js';
+import { webText } from '../test/support/webAppTexts.js';
 
 /** Author A's learning design of the source: the bank copies the first three, never the last two (D-092). */
 const DESIGN = {

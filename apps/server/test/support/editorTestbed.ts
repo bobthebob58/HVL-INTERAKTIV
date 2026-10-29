@@ -86,6 +86,8 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
     // WHY: no database here, so no activity is a paste source anyone may copy from (the guard refuses them all).
     contentFacts: { factsFor: async () => undefined },
     learnerStates,
+    // WHY: no Redis here; nothing in these tests copies an activity through the duplicator.
+    copyLimit: { take: async () => ({ allowed: true }) },
     audit: {
       record: async (results, change) => {
         if (control.auditFails) throw new Error('audit store unavailable');

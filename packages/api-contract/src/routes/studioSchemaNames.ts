@@ -1,5 +1,5 @@
 /**
- * studioSchemaNames — the component names of the schemas that studio routes (W1) use.
+ * studioSchemaNames — the component names of the schemas that studio routes use.
  *
  * Why: the OpenAPI document refers to request and answer schemas by name (D-077); D-099 splits the name lists by
  *      area like the registry (./studioRoutes.ts), so parallel work never edits the same list.
@@ -13,7 +13,7 @@ import type { ApiSchemaNames } from '../apiRouteTypes.js';
 import * as studio from '../studio.js';
 import * as guide from '../guideNodes.js';
 
-/** The named schemas of this area; workstreams add the ones their routes use (W1). */
+/** The named schemas of this area: every request and answer schema its routes name. */
 export const STUDIO_SCHEMA_NAMES: ApiSchemaNames = {
   request: {},
   response: {

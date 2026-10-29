@@ -7,8 +7,9 @@
  * Spec: DATA-002, AUTH-001, AUTH-004, LTI-001
  * Invariants:
  *   - Only the hash and its key ID are stored, never the source text.
- *   - Learner rows never get a name or e-mail (the database refuses it, DATA-002); a profile is stored only for
- *     staff (AUTH-004) and refreshed at each staff login.
+ *   - Learner rows never get a name or e-mail (the database refuses it, DATA-002); a profile (the display name) is
+ *     stored only for staff (AUTH-004) and refreshed at each staff login, which also clears `email` (D-090
+ *     amendment 2026-10-29: no e-mail is kept).
  *   - A learner account becomes staff when the person now authors; a staff account is never downgraded, because it
  *     may own content that co-authors know by name.
  *   - PRIVACY: `User.coAuthorSearchableAt` is written only for a Feide login that states it (D-090): set when the
@@ -35,8 +36,8 @@ export interface AccountRequest {
   readonly platformId?: string;
   /** `staff` when the person authors or administers now; `learner` otherwise. */
   readonly kind: 'staff' | 'learner';
-  /** Name and e-mail for staff (AUTH-004); ignored for learners. */
-  readonly profile?: { readonly displayName?: string; readonly email?: string };
+  /** The display name for staff (AUTH-004); ignored for learners. */
+  readonly profile?: { readonly displayName?: string };
   /**
    * Feide logins only (D-090): the login time when this login makes the person findable as a co-author, or null
    * to clear an earlier one (../../learningDesign/collaboration/staffEligibility.ts). Ignored for LTI launches.
@@ -144,12 +145,12 @@ export class AccountResolver {
     return provider === 'feide' && coAuthorSearchableAt !== undefined ? { coAuthorSearchableAt } : {};
   }
 
-  private profileOf(request: AccountRequest): { displayName?: string; email?: string } {
-    // PRIVACY: only staff profiles are stored, and only what Feide released for co-author search (AUTH-004).
-    const profile = request.kind === 'staff' ? (request.profile ?? {}) : {};
-    return {
-      ...(profile.displayName !== undefined ? { displayName: profile.displayName } : {}),
-      ...(profile.email !== undefined ? { email: profile.email } : {}),
-    };
+  private profileOf(request: AccountRequest): { displayName?: string; email?: null } {
+    // PRIVACY: only staff profiles are stored, and only the name co-author search shows (AUTH-004).
+    if (request.kind !== 'staff') return {};
+    const { displayName } = request.profile ?? {};
+    // SPEC-DEVIATION: D-090 amendment 2026-10-29: AUTH-004 kept staff e-mail, which nothing uses, so every staff
+    // write clears one stored before.
+    return { ...(displayName !== undefined ? { displayName } : {}), email: null };
   }
 }

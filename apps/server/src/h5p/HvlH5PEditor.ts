@@ -14,7 +14,8 @@
  *   - The content-type list holds only installed members of the ten (all four Lumi paths that return it).
  *   - Save order (./editorSaveSteps.ts): permission and main library → stored files → sub-content policy →
  *     paste-source guard → learner-state check (409 for an unconfirmed structural edit while others have state) →
- *     Lumi's save → state reset and version raise of a structural edit → delete dropped files as the author.
+ *     Lumi's save, whose first parameter write also resets the state and raises the version of a structural edit
+ *     in one transaction (D-093 amendment 2026-10-29) → delete dropped files as the author.
  *     Both save methods take the author's `SaveChoice`; a text-only save keeps every state row.
  *   - Package import: path only (never a buffer), `inspectZip`, manifest, main library one of the ten, for
  *     non-admins every library already installed in the same version, Lumi's import, audit for admins.
@@ -36,6 +37,7 @@ import {
   type IUser,
 } from '@lumieducation/h5p-server';
 import type { IHubInfo } from '@lumieducation/h5p-server/build/src/types.js';
+import type { PersonLimit } from '../learningDesign/collaboration/PersonRateLimit.js';
 import type { LearnerStateStore, SaveChoice } from '../learningDesign/safeEditing/LearnerStateGate.js';
 import { inspectZip } from '../security/zipEntryGuard.js';
 import { EditorSaveSteps } from './editorSaveSteps.js';
@@ -60,6 +62,8 @@ export interface HvlEditorPolicy {
   readonly contentFacts: ContentAccessRepository;
   /** The learner-state rows a structural save checks and resets (D-093). */
   readonly learnerStates: LearnerStateStore;
+  /** The per-person limit on copies saved through this editor (D-092 amendment 2026-10-29). */
+  readonly copyLimit: PersonLimit;
 }
 
 type UploadResult = Awaited<ReturnType<H5PEditor['uploadPackage']>>;
@@ -71,14 +75,20 @@ const hubDisabled = (): H5pError => new H5pError('hvl:hub-install-disabled', {},
 export class HvlH5PEditor extends H5PEditor {
   private readonly policy: HvlEditorPolicy;
   private readonly saveSteps: EditorSaveSteps;
+  /**
+   * How many copies one person may start (D-092 amendment 2026-10-29); the duplicator counts each copy here, as the
+   * studio services take only the editor from the H5P runtime.
+   */
+  readonly copyLimit: PersonLimit;
 
   /**
    * @param args - Lumi's H5PEditor constructor arguments, unchanged.
-   * @param policy - Permission system, audit sink, activity facts and learner-state rows.
+   * @param policy - Permission system, audit sink, activity facts, learner-state rows and the copy limit.
    */
   constructor(args: ConstructorParameters<typeof H5PEditor>, policy: HvlEditorPolicy) {
     super(...args);
     this.policy = policy;
+    this.copyLimit = policy.copyLimit;
     disconnectFromHub(this);
     this.saveSteps = new EditorSaveSteps(this.libraryManager, this.contentManager, policy);
     usePermissionCheckedExporter(this, policy.permissionSystem);
@@ -104,13 +114,15 @@ export class HvlH5PEditor extends H5PEditor {
   ): Promise<SaveResult> {
     const save = { contentId, parameters, metadata, mainLibraryUbername, user, choice };
     const checked = await this.saveSteps.beforeWrite(save);
-    const result = await super.saveOrUpdateContentReturnMetaData(
-      // WHY: Lumi types the ID as a string but treats undefined as "new content".
-      contentId as ContentId,
-      parameters,
-      metadata,
-      mainLibraryUbername,
-      user,
+    const result = await this.saveSteps.write(checked, () =>
+      super.saveOrUpdateContentReturnMetaData(
+        // WHY: Lumi types the ID as a string but treats undefined as "new content".
+        contentId as ContentId,
+        parameters,
+        metadata,
+        mainLibraryUbername,
+        user,
+      ),
     );
     await this.saveSteps.afterWrite(save, result.id, checked);
     return result;

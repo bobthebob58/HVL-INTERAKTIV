@@ -434,11 +434,19 @@ The easiest way to make a skeleton is to build an example activity in the editor
   shows that a new pattern folder loads and can be created without a code change (`PED-011`).
 - The tests `apps/server/test/learningDesign/patterns/realPattern*.int.test.ts` create every folder in `patterns/`
   in each of its content types and phases, in Nynorsk, Bokmål and English, and stop on: any check error other than
-  V-PLACEHOLDER; a V-PLACEHOLDER on a field that holds no guidance; retry or «Vis svar» switched off, a time limit, or
-  a pass mark that ends the attempts (`PROD-009`); and a new activity with no V-PLACEHOLDER at all, since every
-  pattern starts as guidance. They compare no text with a fixed wording, so rewording a text does not break them; a
-  text breaks them only when it makes another check report an error, or when it removes the last `⟦…⟧` from a
-  pattern that has no video or image slot to report.
+  V-PLACEHOLDER; a V-PLACEHOLDER on a field that holds no guidance; retry or «Vis svar» switched off, a time limit, a
+  pass mark that ends the attempts (`PROD-009`), or a case-sensitive fill-in task; and a new activity with no
+  V-PLACEHOLDER at all, since every pattern starts as guidance. They compare no text with a fixed wording, so
+  rewording a text does not break them; a text breaks them only when it makes another check report an error, or when
+  it removes the last `⟦…⟧` from a pattern that has no video or image slot to report.
+- Two tests name patterns, for what the specification and the decisions fix, never for ALU's wording.
+  `apps/server/test/learningDesign/content/realPatternContent.test.ts` stops when one of the nine patterns of spec 04
+  §4 is missing, or has other phases or content types than the table there (`PED-010`); a new pattern beside them
+  breaks nothing (`PED-011`). `apps/server/test/learningDesign/patterns/realPatternSkeletons.test.ts` stops when
+  `ea-terms`' fill-in task does not accept small typos (spec 04 §4), or when `uv-column`'s does (D-084): «Godta
+  mindre skrivefeil» also accepts one wrong or swapped digit in an answer longer than three characters, so «125»
+  passes for «12,5». In every other pattern typo tolerance is your choice; leave it off wherever an answer can be a
+  number.
 
 The nine patterns in `patterns/` (spec 04 §4) are drafts for ALU and the pilot teachers to review (open question
 Q17): their texts, times, and the choices written into their skeletons may all change. Every `pattern.yaml` but

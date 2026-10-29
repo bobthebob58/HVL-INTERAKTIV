@@ -61,7 +61,8 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
     system.checkForContent(asStateUser(a), ContentPermission.View, id);
 
   beforeAll(async () => {
-    for (const role of ROLES) ids[role] = (await db.user.create({ data: { kind: 'staff' } })).id;
+    const staff = { kind: 'staff', coAuthorSearchableAt: new Date() } as const; // findable: the listing counts
+    for (const role of ROLES) ids[role] = (await db.user.create({ data: staff })).id;
     const base = {
       mainLibrary: 'H5P.MultiChoice',
       title: 'Test',
@@ -83,7 +84,6 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
     await db.user.deleteMany({ where: { id: { in: Object.values(ids) } } });
     await db.$disconnect();
   });
-
   it('[H5P-006] reads owner, co-authors, status, visibility and bank listing with one findUnique', async () => {
     const calls: string[] = []; // Arrange
     const facts = await new PrismaContentAccessRepository(recording(db, calls)).factsFor(contentId); // Act and assert

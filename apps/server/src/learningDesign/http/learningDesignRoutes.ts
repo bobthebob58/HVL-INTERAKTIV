@@ -1,9 +1,9 @@
 /**
- * learningDesignRoutes — the learning-design routes under `/api` (workstream W3): an activity's metadata, the course
- * codes and outcomes the author already uses, and the alignment planner.
+ * learningDesignRoutes — the learning-design routes under `/api`: an activity's metadata, the course codes and
+ * outcomes the author already uses, and the alignment planner.
  *
  * Why: `PED-030` gives every activity learning-design metadata, and `PED-031` plans one course's outcomes × phases
- *      (D-087, D-088). This is W3's one router, mounted by the studio router.
+ *      (D-087, D-088). This is the area's one router, mounted by the studio router (../../http/api/studioRouter.ts).
  * Spec: PED-030, PED-031
  * Auth: portal — a signed-in author, with the CSRF token on writes; only people who may Edit an activity read or
  *   write its metadata (D-087). Every route starts with `requirePortalAuthor` (./studioPrincipal.ts).

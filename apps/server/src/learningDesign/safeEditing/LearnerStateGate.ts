@@ -6,7 +6,7 @@
  *      Resumed state is restored by position, so after a structural edit learners could see another question's
  *      answer, lose their input or meet a crash; after a text-only edit they resume correctly. The author decides
  *      before anything is written: HvlH5PEditor calls `admit` after its own checks and before Lumi's write, and
- *      `settle` right after Lumi's write.
+ *      runs Lumi's write through `runSave`, so a reset commits with the new parameters or not at all.
  * Spec: PROD-013
  * Invariants:
  *   - New activities (no ID) and text-only saves keep every state row and the version.
@@ -16,18 +16,24 @@
  *   - "The saver" is the saver's current learnerKey, as the state routes derive it (`asStateUser(actor).id`); their
  *     Canvas or last year's preview counts as someone else's, which errs on the safe side.
  *   - Every structural save that goes through (confirmed, or with nobody else's state) deletes all the activity's
- *     state rows and raises `H5PContent.version` in one transaction (./PrismaLearnerStateStore.ts). Deleting all,
- *     not only the saver's, also removes rows that another learner's old page wrote between `admit` and the save.
+ *     state rows and raises `H5PContent.version` in the same transaction as the storage's first parameter write
+ *     (../../h5p/storage/PrismaContentStorage.ts; D-093 amendment 2026-10-29, S5 review), so a failure later in
+ *     Lumi's save never leaves the new structure with the old state. A storage without that hook gets
+ *     ./PrismaLearnerStateStore.ts's own transaction right after the write. Deleting all, not only the saver's,
+ *     also removes rows that another learner's old page wrote between `admit` and the save.
  *   - The stored side is read with the saver's rights through Lumi's ContentManager, as the editor reads it.
  * Collaborators: ./structureSignature.ts, ./structuralChange.ts, ./PrismaLearnerStateStore.ts,
- *   ../../h5p/HvlH5PEditor.ts (calls it), ../../content/storedContent.ts (`mainLibraryUbername`),
+ *   ../../h5p/storage/learnerStateResetWrite.ts, ../../h5p/HvlH5PEditor.ts (calls it),
+ *   ../../content/storedContent.ts (`mainLibraryUbername`),
  *   ../../http/learningDesignErrors.ts.
  * Tests: apps/server/test/learningDesign/safeEditing/LearnerStateGate.test.ts,
- *   apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts
+ *   apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts,
+ *   apps/server/test/learningDesign/safeEditing/safeEditingFailures.int.test.ts
  */
 import type { H5PEditor, IUser } from '@lumieducation/h5p-server';
 import { mainLibraryUbername } from '../../content/storedContent.js';
 import { asStateUser, isHvlH5pUser } from '../../h5p/HvlH5pUser.js';
+import { withLearnerStateReset } from '../../h5p/storage/learnerStateResetWrite.js';
 import { learningDesignError } from '../../http/learningDesignErrors.js';
 import { structuralDifference } from './structuralChange.js';
 import { structureSignature } from './structureSignature.js';
@@ -50,7 +56,8 @@ export interface LearnerStateStore {
    */
   hasOtherLearnersState(contentId: string, ownLearnerKey: string | undefined): Promise<boolean>;
   /**
-   * Deletes every state row of an activity and raises its version, in one transaction.
+   * Deletes every state row of an activity and raises its version, in one transaction; used only when the content
+   * storage did not reset them with its write.
    * @param contentId - The activity.
    */
   resetLearnerState(contentId: string): Promise<void>;
@@ -62,7 +69,7 @@ export type StoredContentReader = Pick<
   'getContentParameters' | 'getContentMetadata'
 >;
 
-/** What `admit` decided; `settle` carries it out after Lumi's write. */
+/** What `admit` decided; `runSave` carries it out with Lumi's write. */
 export interface LearnerStatePlan {
   /** The activity whose state is reset after the write; absent when the save keeps all state. */
   readonly resetContentId?: string;
@@ -91,7 +98,7 @@ export class LearnerStateGate {
    * @param mainLibrary - The save's main library, e.g. `H5P.MultiChoice 1.16`.
    * @param user - The saver (account view).
    * @param choice - The author's answer to the save choice dialog; none by default.
-   * @returns The plan for `settle`.
+   * @returns The plan for `runSave`.
    * @throws HttpError 409 `hvl:learner-state-reset-needed` for an unconfirmed structural save while anyone else has
    *   saved state of the activity.
    * @spec PROD-013
@@ -120,11 +127,19 @@ export class LearnerStateGate {
   }
 
   /**
-   * Carries out the plan right after Lumi's write: resets the state of a structurally changed activity.
+   * Runs Lumi's write under the plan: a structural save's reset commits in the same transaction as the storage's
+   * first parameter write (../../h5p/storage/learnerStateResetWrite.ts); a storage without that hook gets the reset
+   * right after the write.
    * @param plan - From `admit`.
-   * @returns When the reset (if any) is committed.
+   * @param save - Lumi's write of the save.
+   * @returns What `save` returned, once the reset (if any) is committed.
+   * @spec PROD-013
    */
-  async settle(plan: LearnerStatePlan): Promise<void> {
-    if (plan.resetContentId !== undefined) await this.store.resetLearnerState(plan.resetContentId);
+  async runSave<T>(plan: LearnerStatePlan, save: () => Promise<T>): Promise<T> {
+    const contentId = plan.resetContentId;
+    if (contentId === undefined) return save();
+    const { result, claimed } = await withLearnerStateReset(contentId, save);
+    if (!claimed) await this.store.resetLearnerState(contentId);
+    return result;
   }
 }

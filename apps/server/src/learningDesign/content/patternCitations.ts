@@ -11,8 +11,8 @@
  *   - The three languages cite the same keys in the same order; a difference is one problem on the language that
  *     differs from nn.
  *   - Unknown keys are reported with `unresolvedCitationProblems`, at the line and key of that language's text.
- * Collaborators: ./patternFolder.ts (the caller), ./referencesContent.ts, ./contentSource.ts; the guide and catalogue
- *   workstream (W1) reads `citedReferenceKeys`.
+ * Collaborators: ./patternFolder.ts (the caller; it stores `citedReferenceKeys` as the pattern's `citations`, which
+ *   ./patternAccessors.ts reads), ./referencesContent.ts, ./contentSource.ts.
  * Tests: apps/server/test/learningDesign/content/patternContent.test.ts
  */
 import type { ContentProblem } from './contentProblem.js';

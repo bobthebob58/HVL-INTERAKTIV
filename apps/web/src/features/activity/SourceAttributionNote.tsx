@@ -10,9 +10,11 @@
  * Invariants:
  *   - Shown only when the detail carries any attribution field; an original shows nothing.
  *   - A source the person may no longer view is not named (the server leaves its title out); a missing author is
- *     "an unknown author". The title keeps the page's language (the source's own language is not known here).
- * Collaborators: ./ActivityView.tsx, ../../config/paths.ts (`activityPath`), packages/api-contract
- *   `sourceAttribution.ts`.
+ *     "an unknown author".
+ *   - A11Y: the title is the source author's text; it carries `lang` when the source's language (`sourceLanguage`)
+ *     differs from the page's (WCAG 3.1.2, UD-010, D-092 amendment 2026-10-29).
+ * Collaborators: ./ActivityView.tsx, ../../config/paths.ts (`activityPath`), ../../i18n/partLanguage.ts,
+ *   packages/api-contract `sourceAttribution.ts`.
  * Tests: apps/web/test/features/SourceAttributionNote.test.tsx
  */
 'use client';
@@ -20,7 +22,33 @@
 import type { ContentDetail } from '@hvl-interaktiv/api-contract';
 import { activityPath } from '../../config/paths';
 import { useLocale } from '../../i18n/LocaleContext';
-import { t } from '../../i18n/translate';
+import { partLanguage } from '../../i18n/partLanguage';
+import { t, type Locale } from '../../i18n/translate';
+
+const TITLE_PLACEHOLDER = '{{title}}';
+
+/**
+ * «Kopi av «<tittel>» av <namn>.», with the title in its own language.
+ * @param title - The source's title.
+ * @param language - The source's language tag, if known.
+ * @param author - The author's name, or the words for an unknown one.
+ * @param locale - The page's locale.
+ * @returns The sentence, with the title as its own part.
+ */
+const titledSign = (title: string, language: string | undefined, author: string, locale: Locale) => {
+  // WHY: `t` leaves a placeholder it is not given, so the sentence is split around the title.
+  const sentence = t('sharing.attribution', locale, { author });
+  const at = sentence.indexOf(TITLE_PLACEHOLDER);
+  if (at < 0) return t('sharing.attribution', locale, { title, author });
+  const lang = partLanguage(language, locale);
+  return (
+    <>
+      {sentence.slice(0, at)}
+      {lang ? <span lang={lang}>{title}</span> : title}
+      {sentence.slice(at + TITLE_PLACEHOLDER.length)}
+    </>
+  );
+};
 
 /**
  * The attribution sign of a copy, or nothing for an original.
@@ -29,11 +57,11 @@ import { t } from '../../i18n/translate';
  */
 export function SourceAttributionNote({ detail }: { readonly detail: ContentDetail }) {
   const locale = useLocale();
-  const { sourceContentId, sourceTitle, sourceAuthorName } = detail;
+  const { sourceContentId, sourceTitle, sourceLanguage, sourceAuthorName } = detail;
   if (!sourceContentId && !sourceTitle && !sourceAuthorName) return null;
   const author = sourceAuthorName ?? t('sharing.attributionUnknownAuthor', locale);
   const text = sourceTitle
-    ? t('sharing.attribution', locale, { title: sourceTitle, author })
+    ? titledSign(sourceTitle, sourceLanguage, author, locale)
     : t('sharing.attributionNoTitle', locale, { author });
   return (
     <p className="border-l-4 border-hvl-primary-dark bg-hvl-surface-alt p-3">

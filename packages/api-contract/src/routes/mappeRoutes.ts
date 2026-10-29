@@ -1,9 +1,9 @@
 /**
  * mappeRoutes — the registry of the pedagogisk mappe routes under `/api`: the activity picker, the criteria sets, the
- * word-count preview and the Markdown and PDF export (W6).
+ * word-count preview and the Markdown and PDF export.
  *
- * Why: D-099 splits the `/api` registry by area, so each workstream adds its routes to its own table and never edits
- *      another's; ../apiRoutes.ts concatenates the areas in document order.
+ * Why: D-099 splits the `/api` registry by area, so each area's routes are in its own table and a change to one area
+ *      never edits another's; ../apiRoutes.ts concatenates the areas in document order.
  * Spec: DOC-012, MAPPE-001, MAPPE-003, MAPPE-004
  * Invariants:
  *   - `path` is below `/api`, in Express form; every `:name` has a schema in `params`, every query parameter one in
@@ -44,7 +44,7 @@ const activityUnavailable = failure(
   '`hvl:activity-unavailable`: an activity is unknown, or is not one the author owns or co-authors (D-066).',
 );
 
-/** The routes of this area (W6), in the order of the OpenAPI document. */
+/** The routes of this area, in the order of the OpenAPI document. */
 export const MAPPE_ROUTES = [
   {
     operationId: 'getMappeActivities',

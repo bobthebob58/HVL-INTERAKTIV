@@ -1,5 +1,5 @@
 /**
- * learningDesignSchemaNames — the component names of the schemas that learningDesign routes (W3) use.
+ * learningDesignSchemaNames — the component names of the schemas that learningDesign routes use.
  *
  * Why: the OpenAPI document refers to request and answer schemas by name (D-077); D-099 splits the name lists by
  *      area like the registry (./learningDesignRoutes.ts), so parallel work never edits the same list.
@@ -13,7 +13,7 @@ import type { ApiSchemaNames } from '../apiRouteTypes.js';
 import * as learningDesign from '../learningDesign.js';
 import * as planner from '../planner.js';
 
-/** The named schemas of this area; workstreams add the ones their routes use (W3). */
+/** The named schemas of this area: every request and answer schema its routes name. */
 export const LEARNING_DESIGN_SCHEMA_NAMES: ApiSchemaNames = {
   request: {
     LearningDesignUpdate: learningDesign.learningDesignUpdateSchema,

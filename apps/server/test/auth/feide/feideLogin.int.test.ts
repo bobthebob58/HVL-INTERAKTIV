@@ -47,7 +47,8 @@ describeWithServices('[AUTH-001] Feide login', () => {
       locale: 'nn',
     });
     const user = await tb.db.user.findUniqueOrThrow({ where: { id: session?.userId ?? '' } });
-    expect(user).toMatchObject({ kind: 'staff', displayName: 'Aud Forfattar', email: 'author@hvl.no' });
+    // PRIVACY: the name only; Feide released an e-mail address, which nothing uses (D-090 amendment 2026-10-29)
+    expect(user).toMatchObject({ kind: 'staff', displayName: 'Aud Forfattar', email: null });
     expect(
       await tb.db.authAuditEvent.count({
         where: { actorUserId: user.id, event: 'login.feide', at: { gte: started } },

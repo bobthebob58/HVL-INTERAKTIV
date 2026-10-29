@@ -177,7 +177,7 @@
     "who2": "Your teachers see points from a graded assignment in the Canvas gradebook, as they see other assignments.",
     "who3": "Administrators at HVL see data only through a support action that is logged.",
     "staffHeading": "For you who create activities",
-    "staff1": "We store your name and e-mail address, so co-authors can find you, and which activities you own or co-author.",
+    "staff1": "We store your name, so co-authors can find you, and which activities you own or co-author. Your e-mail address is not kept with your account.",
     "staff2": "We remember which notices you have closed. Logins and logouts are logged as described above, with a check value of your IP address. Launches from Canvas in a teacher or author role (including when you choose activities to add), and links between your Canvas and Feide accounts, are logged with the time and your account number, but without your IP address. The log is deleted after 2 years.",
     "staff3": "Colleagues at HVL who create activities can see your name when they search for co-authors, on activities you have put in the content bank, and on copies of your activities. In the search they can find you for 13 months after you last logged in with Feide as staff. Students cannot search for you.",
     "safetyHeading": "Storage and security",

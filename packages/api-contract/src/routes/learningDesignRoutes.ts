@@ -1,9 +1,9 @@
 /**
  * learningDesignRoutes — the registry of the learning-design routes under `/api`: an activity's metadata,
- * course-code suggestions, the outcomes already used in a course, and the alignment planner (W3).
+ * course-code suggestions, the outcomes already used in a course, and the alignment planner.
  *
- * Why: D-099 splits the `/api` registry by area, so each workstream adds its routes to its own table and never edits
- *      another's; ../apiRoutes.ts concatenates the areas in document order.
+ * Why: D-099 splits the `/api` registry by area, so each area's routes are in its own table and a change to one area
+ *      never edits another's; ../apiRoutes.ts concatenates the areas in document order.
  * Spec: DOC-012, PED-030, PED-031
  * Invariants:
  *   - `path` is below `/api`, in Express form; every `:name` has a schema in `params`, every query parameter one in
@@ -40,7 +40,7 @@ const badCourseCode = failure(
   '`error.badRequest`: the query has no valid course code (after D-087’s normalisation), or other parameters.',
 );
 
-/** The routes of this area (W3), in the order of the OpenAPI document. */
+/** The routes of this area, in the order of the OpenAPI document. */
 export const LEARNING_DESIGN_ROUTES = [
   {
     operationId: 'getLearningDesign',

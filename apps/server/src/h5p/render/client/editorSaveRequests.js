@@ -91,7 +91,8 @@ function hvliSaveContent(content, contentId, config, confirmLearnerStateReset) {
 function hvliSaveAsCopy(content, contentId, config) {
   var url = '/h5p/content/' + encodeURIComponent(contentId) + '/copy';
   // WHY: H5P's editor gives `{ params, metadata }` as a JSON string; the copy route takes that object as it is, and
-  // the library the editor shaped the parameters for, which may be a newer minor version (D-093, S5 W4).
+  // the library the editor shaped the parameters for, which may be a newer minor version (D-093 amendment
+  // 2026-10-29, the copy's library version).
   var body = JSON.parse(content.params);
   body.library = content.library;
   return hvliSendJson(url, 'POST', body, config);

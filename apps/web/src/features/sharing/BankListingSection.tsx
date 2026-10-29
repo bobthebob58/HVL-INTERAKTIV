@@ -13,6 +13,9 @@
  *     owner gets buttons, a co-author the state and why.
  *   - Each change is announced politely and the section shows the server's answer; the listing is read again when the
  *     activity's status or visibility changes (another tab, or a change to private, may have ended it).
+ *   - A11Y: the pressed button is gone after a change, so once the change has rendered (an effect, not a timer), focus
+ *     moves to «Ta ut av innhaldsbanken» after listing and to the state sentence after unlisting, never to `body`
+ *     (WCAG 2.4.3).
  * Collaborators: ../../api/collaborationApi.ts, ./BankConditions.tsx, ./SharingFeedback.tsx, ./SharingPanel.tsx.
  * Tests: apps/web/test/features/BankListingSection.test.tsx
  */
@@ -49,10 +52,20 @@ export function BankListingSection({ detail, announce }: BankListingSectionProps
   const auth = useApiAuth();
   const base = useId();
   const box = useRef<HTMLInputElement>(null);
+  const unlistButton = useRef<HTMLButtonElement>(null);
+  const stateText = useRef<HTMLParagraphElement>(null);
   const [listing, setListing] = useState<BankListing | 'loading' | 'failed'>('loading');
   const [consented, setConsented] = useState(false);
   const [problem, setProblem] = useState<{ readonly text: string; readonly atBox?: boolean }>();
+  const focusAfterChange = useRef<(() => void) | undefined>(undefined);
   const owner = detail.role === 'owner';
+
+  useEffect(() => {
+    // A11Y: WCAG 2.4.3: runs once the change has rendered, so the control to focus is on screen; Chromium may run a
+    // 0 ms timer before that render (the pressed button is gone either way).
+    focusAfterChange.current?.();
+    focusAfterChange.current = undefined;
+  }, [listing]);
 
   useEffect(() => {
     let active = true;
@@ -65,10 +78,15 @@ export function BankListingSection({ detail, announce }: BankListingSectionProps
     // WHY: the listing depends on the status and visibility, which other tabs change; read it again after each.
   }, [detail.id, detail.status, detail.visibility, auth]);
 
-  const change = async (request: () => Promise<ApiResult<BankListing>>, said: string) => {
+  const change = async (
+    request: () => Promise<ApiResult<BankListing>>,
+    said: string,
+    focusAfter: () => void,
+  ) => {
     setProblem(undefined);
     const result = await request();
     if (!result.ok) return setProblem({ text: result.error?.message ?? t('sharing.bankFailed', locale) });
+    focusAfterChange.current = focusAfter;
     setListing(result.data);
     setConsented(false);
     announce(said);
@@ -79,7 +97,11 @@ export function BankListingSection({ detail, announce }: BankListingSectionProps
       box.current?.focus();
       return;
     }
-    void change(() => listInBank(detail.id, SHOWN_CONSENT_VERSION, auth), t('sharing.bankListedNow', locale));
+    void change(
+      () => listInBank(detail.id, SHOWN_CONSENT_VERSION, auth),
+      t('sharing.bankListedNow', locale),
+      () => unlistButton.current?.focus(),
+    );
   };
 
   if (listing === 'loading') return <p role="status">{t('common.loading', locale)}</p>;
@@ -87,7 +109,7 @@ export function BankListingSection({ detail, announce }: BankListingSectionProps
   const listed = listing.listedAt !== null;
   return (
     <>
-      <p>
+      <p ref={stateText} tabIndex={-1}>
         {listing.listedAt
           ? t('sharing.bankListed', locale, { date: formatDate(listing.listedAt, locale) })
           : t('sharing.bankNotListed', locale)}
@@ -96,10 +118,15 @@ export function BankListingSection({ detail, announce }: BankListingSectionProps
       {!listed && !listing.eligible ? <BankConditions detail={detail} /> : null}
       {owner && listed ? (
         <button
+          ref={unlistButton}
           type="button"
           className="button-secondary"
           onClick={() =>
-            void change(() => unlistFromBank(detail.id, auth), t('sharing.bankUnlistedNow', locale))
+            void change(
+              () => unlistFromBank(detail.id, auth),
+              t('sharing.bankUnlistedNow', locale),
+              () => stateText.current?.focus(),
+            )
           }
         >
           {t('sharing.bankUnlist', locale)}

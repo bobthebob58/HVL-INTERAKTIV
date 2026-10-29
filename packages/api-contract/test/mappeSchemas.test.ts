@@ -17,7 +17,7 @@ import {
 const id = (n: number) => `0192f0c4-0000-7000-8000-${String(n).padStart(12, '0')}`;
 
 describe('[MAPPE-001] choosing activities and exporting', () => {
-  it('[MAPPE-001] a request names 1 to 50 distinct activities and the language; the criteria set is optional', () => {
+  it('[MAPPE-001] a request names 1 to 50 distinct activities in either case and the language; the criteria set is optional', () => {
     // Arrange
     const request = (contentIds: string[], extra: object = {}) =>
       mappeRequestSchema.safeParse({ contentIds, locale: 'nn', ...extra }).success;
@@ -28,6 +28,8 @@ describe('[MAPPE-001] choosing activities and exporting', () => {
     expect(request([])).toBe(false);
     expect(request(many(MAPPE_MAX_ACTIVITIES + 1))).toBe(false);
     expect(request([id(1), id(1)])).toBe(false);
+    expect(request([id(1).toUpperCase()])).toBe(true);
+    expect(request([id(1), id(1).toUpperCase()])).toBe(false);
     expect(request(['not-a-uuid'])).toBe(false);
     expect(request([id(1)], { criteriaSet: 'HVL 2025' })).toBe(false);
     expect(mappeRequestSchema.safeParse({ contentIds: [id(1)] }).success).toBe(false);

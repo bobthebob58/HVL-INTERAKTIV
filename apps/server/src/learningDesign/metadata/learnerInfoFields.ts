@@ -10,11 +10,12 @@
  * Invariants:
  *   - PRIVACY and pedagogy: only `estimatedStudentMinutes` and `learnerPurpose` are selected; never the rationale,
  *     the course code, the outcomes or the pattern, which are the author's (D-087).
- *   - A stored value outside the contract's limits (1–600 whole minutes; one line of 1–200 characters) is left out,
- *     never passed on; an absent value is left out, never `null`.
- *   - A purpose with a control character (Unicode `Cc`, e.g. a pasted tab, which the contract's one-line rule lets
- *     through) is left out too: the Canvas page's strict launch parser (apps/web/src/lti/launchHeader.ts) treats a
- *     launch carrying one as no launch at all, so passing it on would lock every learner out of the activity.
+ *   - A stored value outside the contract's limits (1–600 whole minutes; 1–200 characters without a line break or
+ *     any other control character) is left out, never passed on; an absent value is left out, never `null`.
+ *   - The control-character rule is the contract's own (`learnerPurposeSchema`, D-087 amendment 2026-10-29), so a
+ *     purpose stored before that rule (e.g. with a pasted tab) is left out too: the Canvas page's strict launch
+ *     parser (apps/web/src/lti/launchHeader.ts) treats a launch carrying one as no launch at all, so passing it on
+ *     would lock every learner out of the activity.
  *   - The callers read these only after the View check; nothing here checks permissions.
  * Collaborators: ../../content/contentSummaries.ts, ../../lti/ltiRoutes.ts, @hvl-interaktiv/api-contract.
  * Tests: apps/server/test/learningDesign/metadata/learnerInfo.int.test.ts,
@@ -26,8 +27,6 @@ import {
   type LearnerInfo,
 } from '@hvl-interaktiv/api-contract';
 import type { Database } from '../../infra/prismaClient.js';
-
-const CONTROL_CHARACTER = /\p{Cc}/u;
 
 /** The Prisma `select` of the learner-facing metadata fields, and nothing else. */
 export const LEARNER_INFO_SELECT = { estimatedStudentMinutes: true, learnerPurpose: true } as const;
@@ -49,12 +48,11 @@ export type LearnerInfoFields = Pick<LearnerInfo, 'estimatedStudentMinutes' | 'l
  */
 export function learnerInfoFields(row: StoredLearnerInfo | null | undefined): LearnerInfoFields {
   const minutes = estimatedStudentMinutesSchema.safeParse(row?.estimatedStudentMinutes);
+  // WHY: the schema refuses every control character, which would make the Canvas page refuse the whole launch.
   const purpose = learnerPurposeSchema.safeParse(row?.learnerPurpose);
-  // WHY: a control character would make the Canvas page refuse the whole launch (see the invariants above).
-  const plainPurpose = purpose.success && !CONTROL_CHARACTER.test(purpose.data);
   return {
     ...(minutes.success ? { estimatedStudentMinutes: minutes.data } : {}),
-    ...(plainPurpose ? { learnerPurpose: purpose.data } : {}),
+    ...(purpose.success ? { learnerPurpose: purpose.data } : {}),
   };
 }
 

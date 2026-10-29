@@ -13,7 +13,8 @@
  *   - A course code is normalised before it is checked (NFC, trimmed, upper case, no spaces, D-087).
  *   - `patternId` is read only: the `PUT` body has no such field, so a strict parse refuses it.
  *   - Outcome categories follow NKR with `generell-kompetanse` hyphenated (the database enum uses `_`).
- * Collaborators: ./learnerInfo.ts, ./studio.ts, ./planner.ts, ./collaboration.ts, apps/server (W3), apps/web.
+ * Collaborators: ./learnerInfo.ts, ./studio.ts, ./planner.ts, ./collaboration.ts,
+ *   apps/server/src/learningDesign/http/learningDesignRoutes.ts, apps/web.
  * Tests: packages/api-contract/test/learningDesignSchemas.test.ts
  */
 import { z } from 'zod';

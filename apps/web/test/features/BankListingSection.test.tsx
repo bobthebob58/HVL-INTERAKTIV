@@ -1,8 +1,9 @@
 /**
  * Tests for the content-bank part of the **Deling** tab: the consent required before listing (with the consent
- * text's version), unlisting, the unmet conditions in words, and a co-author who sees the state but no buttons.
+ * text's version), unlisting, where focus goes after each (the pressed button is gone), the unmet conditions in
+ * words, and a co-author who sees the state but no buttons.
  *
- * Spec: PROD-007, UD-013, UD-003
+ * Spec: PROD-007, UD-013, UD-003, UD-006
  */
 // @vitest-environment jsdom
 import { BANK_CONSENT_VERSION, type ContentDetail } from '@hvl-interaktiv/api-contract';
@@ -58,6 +59,28 @@ describe('[PROD-007] the activity in the content bank', () => {
     expect(screen.getByRole('button', { name: 'Ta ut av innhaldsbanken' })).toBeTruthy();
   });
 
+  it('[UD-006] after listing, focus moves to «Ta ut av innhaldsbanken», not to the page, whatever runs first', async () => {
+    // Arrange
+    fakeFetch({
+      [`GET ${PATH}`]: { status: 200, body: { listedAt: null, eligible: true } },
+      [`PUT ${PATH}`]: { status: 200, body: { listedAt: LISTED_AT, eligible: true } },
+    });
+    show();
+    fireEvent.click(await screen.findByRole('checkbox'));
+    const list = screen.getByRole('button', { name: 'Legg i innhaldsbanken' });
+    list.focus();
+    // WHY: Chromium ran a 0 ms timer before React rendered the listing (real-browser probe, S5 review); a microtask
+    // models that order, so focus must not wait on a timer.
+    const realTimeout = window.setTimeout;
+    vi.spyOn(window, 'setTimeout').mockImplementation(((run: () => void, ms?: number) =>
+      ms ? realTimeout(run, ms) : (queueMicrotask(run), 0)) as typeof window.setTimeout);
+    // Act
+    fireEvent.click(list);
+    // Assert
+    const unlist = await screen.findByRole('button', { name: 'Ta ut av innhaldsbanken' });
+    await waitFor(() => expect(document.activeElement).toBe(unlist));
+  });
+
   it('[PROD-007] the owner takes a listed activity out of the bank', async () => {
     // Arrange
     const requests = fakeFetch({
@@ -74,6 +97,28 @@ describe('[PROD-007] the activity in the content bank', () => {
       'Aktiviteten er teken ut av innhaldsbanken. Kopiar som alt er laga, blir verande.',
     );
   });
+
+  it.each([
+    ['still eligible', true],
+    ['no longer eligible', false],
+  ])(
+    '[UD-006] after unlisting (%s), focus moves to the state sentence, not to the page',
+    async (_name, eligible) => {
+      // Arrange
+      fakeFetch({
+        [`GET ${PATH}`]: { status: 200, body: { listedAt: LISTED_AT, eligible: true } },
+        [`DELETE ${PATH}`]: { status: 200, body: { listedAt: null, eligible } },
+      });
+      show();
+      const unlist = await screen.findByRole('button', { name: 'Ta ut av innhaldsbanken' });
+      unlist.focus();
+      // Act
+      fireEvent.click(unlist);
+      // Assert
+      const state = await screen.findByText('Aktiviteten er ikkje i innhaldsbanken.');
+      await waitFor(() => expect(document.activeElement).toBe(state));
+    },
+  );
 
   it.each([
     [

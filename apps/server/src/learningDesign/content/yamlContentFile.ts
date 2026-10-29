@@ -13,7 +13,7 @@
  *   - A returned value is deeply frozen; nothing is returned when there is any problem.
  *   - Problems name keys and lines only; the file's text is never echoed beyond what zod's message says.
  * Collaborators: ./yamlKeyPaths.ts, ./contentProblem.ts, ./deepFreeze.ts; callers ../../config/validationContext.ts,
- *   ./phasesContent.ts, ./referencesContent.ts and the workstreams' content loaders.
+ *   ./phasesContent.ts, ./referencesContent.ts, ./contentSource.ts and the guide, pattern and mappe loaders.
  * Tests: apps/server/test/learningDesign/content/yamlContentFile.test.ts,
  *   apps/server/test/config/validationContext.test.ts
  */

@@ -1,7 +1,8 @@
 /**
  * Tests for the `/mappe` page's downloads: the Markdown export is a POST with the CSRF token whose file the browser
  * saves under the server's name, and the page says so; a PDF the server cannot make (no browser, or every slot busy)
- * is explained in words with a pointer to the Markdown file; nothing is sent while no activity is chosen.
+ * is explained in words with a pointer to the Markdown file; nothing is sent while no activity is chosen, and pressing
+ * again then is a new alert.
  *
  * Spec: MAPPE-001, MAPPE-003, MAPPE-004
  */
@@ -80,6 +81,22 @@ describe('[MAPPE-001] downloading the portfolio', () => {
       'Vel minst éin aktivitet før du lastar ned.',
     );
     expect(requests.some((request) => request.path.startsWith('/api/mappe/export'))).toBe(false);
+  });
+
+  it('[MAPPE-001] a second press with nothing chosen shows the refusal as a new alert, so it is announced again', async () => {
+    // Arrange
+    fakeFetch(mappeRoutes());
+    render(<MappeView />);
+    const downloads = await screen.findByRole('region', { name: 'Last ned mappa' });
+    const markdown = within(downloads).getByRole('button', { name: 'Last ned Markdown (til å redigere)' });
+    fireEvent.click(markdown);
+    const first = within(downloads).getByRole('alert');
+    // Act
+    fireEvent.click(markdown);
+    // Assert
+    const second = within(downloads).getByRole('alert');
+    expect(second).not.toBe(first);
+    expect(second.textContent).toBe('Vel minst éin aktivitet før du lastar ned.');
   });
 });
 

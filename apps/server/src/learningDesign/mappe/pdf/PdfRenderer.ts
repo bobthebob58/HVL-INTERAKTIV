@@ -10,6 +10,10 @@
  *   - SECURITY: a fresh context per export (`javaScriptEnabled: false`, `offline: true`), every request aborted so a
  *     crafted link or image can never make the server fetch anything (SSRF), and the context closed in `finally`
  *     (waiting at most one time limit for it, so a hung browser cannot keep a slot taken).
+ *   - One time limit covers opening the context, loading and printing; a context that opens after it is closed at
+ *     once. A browser that fails to open a context, or does not open or close one within the limit, is discarded,
+ *     so the next export starts a new one; an export that is only slow to print keeps it (D-096 S5 review
+ *     amendment).
  *   - At most `PDF_MAX_CONCURRENCY` exports per process and one per person; otherwise 503 `hvl:pdf-busy` at once.
  *   - No browser (none installed, or it will not start) or an export over the time limit: 503
  *     `hvl:pdf-unavailable`; the Markdown export always works. The log line names no person and no content.
@@ -18,17 +22,22 @@
  * Collaborators: ./SharedChromium.ts, ./PdfSlots.ts, ./mappeHtml.ts, ../../../server/studioServices.ts (builds it),
  *   ../../http/mappeRoutes.ts, ../../../http/learningDesignErrors.ts.
  * Tests: apps/server/test/learningDesign/mappe/mappePdf.browser.int.test.ts,
- *   apps/server/test/learningDesign/mappe/pdfRenderer.test.ts
+ *   apps/server/test/learningDesign/mappe/pdfRenderer.test.ts,
+ *   apps/server/test/learningDesign/mappe/pdfRendererTimeLimit.test.ts,
+ *   apps/server/test/learningDesign/mappe/pdfRendererIsolation.browser.test.ts
  */
 import type { Logger } from 'pino';
-import type { Browser } from 'playwright-core';
+import type { Browser, BrowserContext } from 'playwright-core';
 import type { Env } from '../../../config/env.js';
 import { HttpError } from '../../../http/HttpError.js';
 import { learningDesignError } from '../../../http/learningDesignErrors.js';
 import { PdfSlots } from './PdfSlots.js';
 import { pdfBrowserLaunchOptions, SharedChromium, type LaunchBrowser } from './SharedChromium.js';
 
-/** How long one export may take, from taking a slot to the last byte of the PDF. */
+/**
+ * How long one export may take, from opening its context to the last byte of the PDF; starting the browser has its
+ * own limit (`BROWSER_LAUNCH_TIMEOUT_MS`).
+ */
 export const PDF_EXPORT_TIME_LIMIT_MS = 30_000;
 
 /** What the renderer is built from. */
@@ -85,9 +94,6 @@ export class PdfRenderer {
   }
 
   private async print(browser: Browser, html: string): Promise<Buffer> {
-    const context = await browser
-      .newContext({ javaScriptEnabled: false, offline: true })
-      .catch((error: unknown) => this.unavailable(error));
     let timer: NodeJS.Timeout | undefined;
     const overTime = new Promise<never>((_, reject) => {
       timer = setTimeout(
@@ -95,6 +101,19 @@ export class PdfRenderer {
         this.timeLimitMs,
       );
     });
+    // WHY: the limit starts before the context opens: a browser that stalls while it stays connected never answers
+    // `newContext`, and an export waiting for it would keep its slot for good (D-096 S5 review amendment).
+    const opening = browser.newContext({ javaScriptEnabled: false, offline: true });
+    let context: BrowserContext;
+    try {
+      context = await Promise.race([opening, overTime]);
+    } catch (error) {
+      clearTimeout(timer);
+      // WHY: a context that opens after the limit is closed at once, and a browser that cannot open one is replaced.
+      opening.then((late) => late.close()).catch(() => undefined);
+      this.browser.discard(browser);
+      return this.unavailable(error);
+    }
     try {
       const printing = (async () => {
         // SECURITY: abort every request, so nothing in the document can reach the network or the server (SSRF).
@@ -112,14 +131,24 @@ export class PdfRenderer {
     } finally {
       clearTimeout(timer);
       // WHY: a browser that hangs may never finish closing the context; waiting at most one time limit for it frees
-      // the person's slot and the process's, so a hung export cannot leave every later one answered as busy.
-      let closeTimer: NodeJS.Timeout | undefined;
-      await Promise.race([
-        context.close().catch(() => undefined),
-        new Promise<void>((resolve) => (closeTimer = setTimeout(resolve, this.timeLimitMs))),
-      ]);
-      clearTimeout(closeTimer);
+      // the person's slot and the process's, so a hung export cannot leave every later one answered as busy, and
+      // the browser is replaced. A close that finishes keeps it, so a slow print never cuts off other exports.
+      if (!(await this.closedInTime(context))) this.browser.discard(browser);
     }
+  }
+
+  /** Closes a context, waiting at most one time limit; false when it did not finish in time. */
+  private async closedInTime(context: BrowserContext): Promise<boolean> {
+    let closeTimer: NodeJS.Timeout | undefined;
+    const closed = await Promise.race([
+      context.close().then(
+        () => true,
+        () => true,
+      ),
+      new Promise<boolean>((resolve) => (closeTimer = setTimeout(() => resolve(false), this.timeLimitMs))),
+    ]);
+    clearTimeout(closeTimer);
+    return closed;
   }
 
   private unavailable(error: unknown): never {

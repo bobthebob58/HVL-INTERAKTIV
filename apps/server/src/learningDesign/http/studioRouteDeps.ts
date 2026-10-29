@@ -2,9 +2,9 @@
  * studioRouteDeps — what every area router of the læringsdesign studio is built from: the database, the activity
  * facts, the clock and the studio's services.
  *
- * Why: five area routers (guide and catalogue, patterns, learning design, collaboration, mappe) are written in
- *      parallel (S5 workstreams W1–W4 and W6). One shared input type means a workstream that adds a service to
- *      `StudioServices` (../../server/studioServices.ts) reaches it in its routes without changing the studio router.
+ * Why: five area routers (guide and catalogue, patterns, learning design, collaboration, mappe) share one input
+ *      type, so a service added to `StudioServices` (../../server/studioServices.ts) reaches every area's routes
+ *      without a change to the studio router.
  * Spec: DOC-012, PED-001
  * Invariants:
  *   - `db` and `clock` are the publish flow's, and `access` is createApp's one instance, so a studio route sees the

@@ -1,9 +1,9 @@
 /**
  * Tests for the attribution sign on a copy's page («Kopi av <tittel> av <namn>»): with a link to the original while
- * it can be opened, the unknown parts said in words, nothing on an original, and on the activity page itself, where
- * it stays after «Lagre som ny versjon» opened the copy.
+ * it can be opened, the source's title marked with its own language, the unknown parts said in words, nothing on an
+ * original, and on the activity page itself, where it stays after «Lagre som ny versjon» opened the copy.
  *
- * Spec: PROD-007, PROD-013
+ * Spec: PROD-007, PROD-013, UD-010
  */
 // @vitest-environment jsdom
 import type { ContentDetail } from '@hvl-interaktiv/api-contract';
@@ -29,6 +29,36 @@ describe('[PROD-007] the attribution sign of a copy', () => {
     expect(screen.getByRole('link', { name: 'Opne originalen' }).getAttribute('href')).toBe(
       `/aktivitet/${SOURCE_ID}`,
     );
+  });
+
+  it('[UD-010] marks a source title in another language than the page with its lang, and only the title', () => {
+    // Act
+    const { container } = render(
+      <SourceAttributionNote
+        detail={{
+          ...COPY,
+          sourceTitle: 'Check what you know',
+          sourceLanguage: 'en',
+          sourceAuthorName: 'Kari',
+        }}
+      />,
+    );
+    // Assert
+    const parts = [...container.querySelectorAll('[lang]')];
+    expect(parts.map((part) => [part.getAttribute('lang'), part.textContent])).toEqual([
+      ['en', 'Check what you know'],
+    ]);
+    expect(container.querySelector('p')?.textContent).toBe(
+      'Kopi av «Check what you know» av Kari. Opne originalen',
+    );
+  });
+
+  it('[UD-010] leaves a source title in the page’s language without a lang of its own', () => {
+    // Act
+    const { container } = render(<SourceAttributionNote detail={{ ...COPY, sourceLanguage: 'nn' }} />);
+    // Assert
+    expect(container.querySelectorAll('[lang]')).toHaveLength(0);
+    expect(screen.getByText(/Kopi av «Celler og vev» av Ola Opphav\./)).toBeTruthy();
   });
 
   it.each([

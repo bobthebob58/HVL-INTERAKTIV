@@ -1,5 +1,5 @@
 /**
- * mappeSchemaNames — the component names of the schemas that mappe routes (W6) use.
+ * mappeSchemaNames — the component names of the schemas that mappe routes use.
  *
  * Why: the OpenAPI document refers to request and answer schemas by name (D-077); D-099 splits the name lists by
  *      area like the registry (./mappeRoutes.ts), so parallel work never edits the same list.
@@ -12,7 +12,7 @@
 import type { ApiSchemaNames } from '../apiRouteTypes.js';
 import * as mappe from '../mappe.js';
 
-/** The named schemas of this area; workstreams add the ones their routes use (W6). */
+/** The named schemas of this area: every request and answer schema its routes name. */
 export const MAPPE_SCHEMA_NAMES: ApiSchemaNames = {
   request: { MappeRequest: mappe.mappeRequestSchema },
   response: {

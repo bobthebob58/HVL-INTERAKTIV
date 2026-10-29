@@ -10,9 +10,11 @@
  *   - A copy is a new activity, so only someone who may create activities (`ContentPermission.Create`: an author or
  *     admin in the account view) may duplicate at all.
  *   - Allowed through Edit: the person may Edit the source (owner, co-author or admin, H5P-006).
- *   - Allowed through the bank: the source is published AND listed in the content bank AND the person may View it
- *     AND the person is one the bank is for: an HVL staff author signed in with Feide, not a student author
- *     (./staffEligibility.ts, D-091 and D-092 as amended). A Canvas launch never copies through the bank (D-098).
+ *   - Allowed through the bank: the source is published AND in the content bank now (listed, and its owner still
+ *     findable staff: the bank list's own rule, so a listing the bank hides is not copyable either; the facts'
+ *     `bankListed`) AND the person may View it AND the person is one the bank is for: an HVL staff author signed in
+ *     with Feide, not a student author (./staffEligibility.ts, D-091 and D-092 as amended). A Canvas launch never
+ *     copies through the bank (D-098).
  *   - Unknown content, or content the person may not View, is `unavailable` (404, D-066), never `refused`, so a
  *     refusal reveals nothing about activities the person cannot see.
  *   - `via: 'edit'` wins when both apply: only then are the rationale and course code copied (D-092).
@@ -63,6 +65,7 @@ export function decideDuplicate(user: HvlH5pUser, facts: ContentFacts | undefine
   // SECURITY: a colleague's activity may be copied only once its owner has listed it in the bank (D-091), which
   // needs it to be published; View alone (e.g. an activity shared with all of HVL) is not consent to copying. The
   // bank shows colleagues' names, so it is only for HVL staff authors, never a student author (D-091 as amended).
+  // PRIVACY: `bankListed` is false while the owner is not findable staff, so the copy cannot name them (D-092).
   const listed = facts.status === 'published' && facts.bankListed;
   return listed && isBankReaderActor(user.actor) ? BY_BANK : REFUSED;
 }
