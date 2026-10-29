@@ -54,12 +54,16 @@ describeA11y('[UD-006] keyboard-only journeys', (env) => {
     const page = await openView(app, context, { kind: 'activity', tab: 'play' });
     const tab = (name: string) => page.getByRole('tab', { name });
     // Act
+    // WHY: the number of tabs between Spel and «Sjekk og publiser» grows as S5 adds tabs, so it is read, not fixed.
+    const steps = (await page.getByRole('tab').allTextContents()).indexOf('Sjekk og publiser');
     await tabTo(page, '[role=tab][aria-selected=true]');
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('ArrowRight');
+    for (let step = 0; step < steps; step += 1) await page.keyboard.press('ArrowRight');
+    const focusedName = await page.evaluate(() => document.activeElement?.textContent);
     const movedOnly = await tab('Sjekk og publiser').getAttribute('aria-selected');
     await page.keyboard.press('Enter');
     // Assert
+    expect(steps).toBeGreaterThan(1);
+    expect(focusedName).toBe('Sjekk og publiser');
     expect(await focusIs(page, '[role=tab]')).toBe(true);
     expect(movedOnly).toBe('false');
     await expect.poll(() => tab('Sjekk og publiser').getAttribute('aria-selected')).toBe('true');
