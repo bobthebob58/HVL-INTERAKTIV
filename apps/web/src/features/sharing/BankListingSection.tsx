@@ -12,20 +12,28 @@
  *   - When the activity may not be listed, the unmet conditions are listed in words (never colour alone); only the
  *     owner gets buttons, a co-author the state and why.
  *   - Each change is announced politely and the section shows the server's answer; the listing is read again when the
- *     activity's status or visibility changes (another tab, or a change to private, may have ended it).
- *   - A11Y: the pressed button is gone after a change, so once the change has rendered (an effect, not a timer), focus
- *     moves to «Ta ut av innhaldsbanken» after listing and to the state sentence after unlisting, never to `body`
- *     (WCAG 2.4.3).
- * Collaborators: ../../api/collaborationApi.ts, ./BankConditions.tsx, ./SharingFeedback.tsx, ./SharingPanel.tsx.
- * Tests: apps/web/test/features/BankListingSection.test.tsx
+ *     activity's status or visibility changes (another tab, or a change to private, may have ended it). The server may
+ *     handle a read before or after a change sent earlier, so a re-read asked for while changes are on their way is
+ *     sent once the last of them has answered (a refused one too) and shows the state they left, and a re-read sent
+ *     before a change is dropped once a later request's answer is shown: a re-read never replaces a later request's
+ *     answer. Changes that overlap (a second press before the first answer) show their answers as they arrive.
+ *   - A11Y: the pressed button is gone after a change, so once its answer has rendered (the effect of the commit that
+ *     renders the request, never an earlier commit's effect or a timer), focus the change took away moves to «Ta ut av
+ *     innhaldsbanken» after listing and to the state sentence after unlisting; focus the person has moved elsewhere,
+ *     e.g. to save the visibility, stays there (WCAG 2.4.3).
+ * Collaborators: ../../api/collaborationApi.ts, ../../components/useFocusAfterChange.ts, ./BankConditions.tsx,
+ *   ./SharingFeedback.tsx, ./SharingPanel.tsx.
+ * Tests: apps/web/test/features/BankListingSection.test.tsx, apps/web/test/features/BankListingOrder.test.tsx,
+ *   apps/web/test/features/sharingFocusRace.test.tsx
  */
 'use client';
 
 import type { BankListing, ContentDetail } from '@hvl-interaktiv/api-contract';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type RefObject } from 'react';
 import { useApiAuth } from '../../api/ApiAuthContext';
 import type { ApiResult } from '../../api/apiRequest';
 import { getBankListing, listInBank, unlistFromBank } from '../../api/collaborationApi';
+import { useFocusAfterChange } from '../../components/useFocusAfterChange';
 import { formatDate } from '../../i18n/formatDate';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
@@ -34,6 +42,13 @@ import { SharingProblem } from './SharingFeedback';
 
 /** The version of the consent text shown: the contract's `BANK_CONSENT_VERSION` (a test keeps the two equal). */
 export const SHOWN_CONSENT_VERSION = 1;
+
+/** A focus step for `focusAfter` that focuses `target` only if focus was lost (nothing, or `body`, has it). */
+const focusIfLost = (target: RefObject<HTMLElement | null>) => () => {
+  // A11Y: WCAG 2.4.3: the pressed button is gone, so focus moves on; someone who moved elsewhere while the change was
+  // on its way keeps their place (as `'ifLost'` in ../activity/useMainActionFocus.ts).
+  if (!document.activeElement || document.activeElement === document.body) target.current?.focus();
+};
 
 /** What the section needs. */
 export interface BankListingSectionProps {
@@ -57,36 +72,51 @@ export function BankListingSection({ detail, announce }: BankListingSectionProps
   const [listing, setListing] = useState<BankListing | 'loading' | 'failed'>('loading');
   const [consented, setConsented] = useState(false);
   const [problem, setProblem] = useState<{ readonly text: string; readonly atBox?: boolean }>();
-  const focusAfterChange = useRef<(() => void) | undefined>(undefined);
+  // A11Y: WCAG 2.4.3: each focus waits for the commit that renders it with the answer, so the control to focus is on
+  // screen; neither a 0 ms timer (Chromium) nor the late effect of a re-read that rendered first may run it.
+  const focusAfter = useFocusAfterChange();
+  // WHY: answers may arrive out of order; each request takes the next number when sent (`sent`), `shown` is the
+  // highest number whose answer is shown, `changing` counts changes on their way, `waiting` marks a waiting re-read.
+  const order = useRef({ sent: 0, shown: 0, changing: 0, waiting: false });
+  const [rereads, setRereads] = useState(0);
   const owner = detail.role === 'owner';
 
   useEffect(() => {
-    // A11Y: WCAG 2.4.3: runs once the change has rendered, so the control to focus is on screen; Chromium may run a
-    // 0 ms timer before that render (the pressed button is gone either way).
-    focusAfterChange.current?.();
-    focusAfterChange.current = undefined;
-  }, [listing]);
-
-  useEffect(() => {
+    // WHY: the server may handle a read sent now before or after a change on its way; it waits until all have answered.
+    if (order.current.changing > 0) {
+      order.current.waiting = true;
+      return;
+    }
     let active = true;
+    const asked = ++order.current.sent;
     void getBankListing(detail.id, auth).then((result) => {
-      if (active) setListing(result.ok ? result.data : 'failed');
+      // WHY: a re-read sent before a change may have been read on the server before it; once a later request's
+      // answer is shown, this one is older and would undo the change on screen (and remove the focused button).
+      if (!active || asked < order.current.shown) return;
+      order.current.shown = asked;
+      setListing(result.ok ? result.data : 'failed');
     });
     return () => {
       active = false;
     };
-    // WHY: the listing depends on the status and visibility, which other tabs change; read it again after each.
-  }, [detail.id, detail.status, detail.visibility, auth]);
+    // WHY: the listing depends on the status and visibility, which other tabs change; read it again after each, and
+    // when a read waited for a change (`rereads`).
+  }, [detail.id, detail.status, detail.visibility, auth, rereads]);
 
-  const change = async (
-    request: () => Promise<ApiResult<BankListing>>,
-    said: string,
-    focusAfter: () => void,
-  ) => {
+  const change = async (request: () => Promise<ApiResult<BankListing>>, said: string, focus: () => void) => {
     setProblem(undefined);
+    const now = order.current;
+    const asked = ++now.sent;
+    now.changing += 1;
     const result = await request();
+    now.changing -= 1;
+    if (now.changing === 0 && now.waiting) {
+      now.waiting = false;
+      setRereads((count) => count + 1);
+    }
     if (!result.ok) return setProblem({ text: result.error?.message ?? t('sharing.bankFailed', locale) });
-    focusAfterChange.current = focusAfter;
+    now.shown = Math.max(now.shown, asked);
+    focusAfter(focus);
     setListing(result.data);
     setConsented(false);
     announce(said);
@@ -100,7 +130,7 @@ export function BankListingSection({ detail, announce }: BankListingSectionProps
     void change(
       () => listInBank(detail.id, SHOWN_CONSENT_VERSION, auth),
       t('sharing.bankListedNow', locale),
-      () => unlistButton.current?.focus(),
+      focusIfLost(unlistButton),
     );
   };
 
@@ -125,7 +155,7 @@ export function BankListingSection({ detail, announce }: BankListingSectionProps
             void change(
               () => unlistFromBank(detail.id, auth),
               t('sharing.bankUnlistedNow', locale),
-              () => stateText.current?.focus(),
+              focusIfLost(stateText),
             )
           }
         >
