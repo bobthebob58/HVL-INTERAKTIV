@@ -54,6 +54,7 @@ const BOOT_SCRIPTS: ReadonlyMap<string, string> = new Map(
     'editorFields.js',
     'editorSaveRequests.js',
     'editorSaveChoice.js',
+    'editorStart.js',
     'editorPage.js',
   ].map((name) => [name, fileURLToPath(new URL(name, CLIENT_DIR))]),
 );

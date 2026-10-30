@@ -5,7 +5,9 @@
  * ltik as a Bearer token; the player reloads, the tool sends no Set-Cookie, and no frame keeps the ltik in its
  * address. Full Chromium (D-065), the whole server with the built web app and the real content types. A failed
  * step names itself, what failed before it and whether another process removed this flow's rows
- * (../test/support/flowRecorder.ts, ../test/support/lostTestRows.ts).
+ * (../test/support/flowRecorder.ts, ../test/support/lostTestRows.ts). It saves once «Lagre» is enabled, which the
+ * editor page does only when H5P's editor can save (src/h5p/render/client/editorStart.js), and repeats a click that
+ * sent nothing (./support/editorSave.ts): CI run 41075981429 lost one that landed in H5P's growing iframe.
  *
  * Spec: LTI-006, LTI-003, H5P-007, DATA-011
  */
@@ -21,6 +23,7 @@ import { openRealWebApp, type RealWebApp } from '../test/support/realWebApp.js';
 import { describeWithRealWebApp } from '../test/support/realWebAppPrerequisites.js';
 import { testActor } from '../test/support/testActors.js';
 import { launchCookieTestChromium, startCookieCanary } from '../test/support/thirdPartyCookies.js';
+import { pressEditorSave } from './support/editorSave.js';
 
 /** The path of a frame's current address (`about:blank` has none of ours). */
 const pathOf = (url: string): string => (url.startsWith('http') ? new URL(url).pathname : url);
@@ -139,14 +142,13 @@ describeWithRealWebApp('[LTI-006] the Canvas page with Spel and Rediger, frame s
       flow.step = 'editor';
       await tool.getByRole('tab', { name: 'Rediger' }).click();
       const editor = (editorFrame = await frameAt(page, '/lti/edit'));
-      const form = editor.frameLocator('iframe.h5p-editor-iframe').locator('.h5peditor-form').first();
-      await form.waitFor({ timeout: 45_000 });
+      // WHY: «Lagre» is enabled only once H5P's editor can save; a visible form was all this waited for when CI
+      // run 41075981429 failed. H5P still grows its iframe above «Lagre» afterwards (fields that come with a later
+      // request), so a click can land in that iframe, where Playwright's hit check cannot see it: pressEditorSave
+      // repeats only a click that sent nothing.
+      await editor.locator('#hvl-editor-save:enabled').waitFor({ timeout: 45_000 });
       flow.step = 'save';
-      const saved = page.waitForResponse(
-        (r) => r.url() === `${app.base}${savePath}` && r.request().method() === 'PUT',
-      );
-      await editor.click('#hvl-editor-save');
-      const response = await saved;
+      const response = await pressEditorSave(page, editor, contentId);
       await expect.poll(() => editor.textContent('#hvl-editor-status')).toBe('Lagra.');
       // Act: the saved activity reloads in the player
       flow.step = 'player reload';

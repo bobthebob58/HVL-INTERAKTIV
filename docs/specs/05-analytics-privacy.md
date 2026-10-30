@@ -5,7 +5,7 @@
 | **Status** | Approved for build (v1.0, 2026-10-16) |
 | **Load in sessions** | S1: §2 (`DATA-001`, `DATA-002`, `DATA-009`), §4, §5 · S4: `DATA-006`, `DATA-011` · S6: all |
 | **Owns requirement IDs** | `INS-*`, `DATA-*` |
-| **Code location** | `apps/server/src/insight/`, `apps/server/src/privacy/`, `apps/server/src/web/`, `apps/server/src/http/h5pPageCsp.ts`, `apps/web/src/app/innsikt/` |
+| **Code location** | `apps/server/src/insight/`, `apps/server/src/privacy/`, `apps/server/src/web/`, `apps/server/src/http/h5pPageCsp.ts`, `apps/web/src/features/` (the **Innsikt** tab on the activity page `/aktivitet/[id]` and in the Canvas view `/app/play`; there is no `/innsikt` page) (amended in S6, D-101, D-106) |
 
 Insight exists for one purpose: to help a teacher decide what to do in the next synchronous
 session (Just-in-Time Teaching). It is **not** for surveilling or ranking individual students.
@@ -17,6 +17,15 @@ Every design choice below follows from that purpose.
 
 The default view is **Før samlinga** ("before the session"): results since a chosen date (default
 7 days ago), for one activity, in one Canvas context (or all portal users for that activity).
+
+- **Amended (D-101, D-103, D-106, 2026-10-30):** insight is an **Innsikt** tab, on the activity page and in the
+  Canvas view `/app/play`, never a page of its own, and it shows one activity, one content version (the current one by
+  default, `PROD-013`) and one context at a time: a Canvas context the activity is placed in, or the portal's plays.
+  There is no view across contexts. A Canvas context is stored and compared as `<platformId>:<contextId>` (D-103), so
+  courses from two of HVL's Canvas instances never merge. `SPEC-DEVIATION` D-106: the period is chosen from fixed
+  values, the last 7 (the default), 14 or 30 days or since the semester started, each starting at midnight Oslo time,
+  not from any date, so that two overlapping views cannot isolate one learner. The semester starts on 1 January or
+  1 August until HVL gives its semester dates.
 
 #### INS-001 · MUST · S6 · Participation overview
 Shows: learners who **started**, learners who **completed**, completion rate (denominator from NRPS
@@ -55,6 +64,10 @@ Any cell, bar or list item that represents fewer than **k = 5** distinct learner
 "< 5" and its value is suppressed. *k* is configurable, with a minimum of 3. If suppression of one
 cell would let a hidden value be worked out from the totals, the next-smallest cell is suppressed
 too. The insight API has **no endpoint** that returns per-learner rows.
+- **Amended (D-106, 2026-10-30):** applied as written: a value about fewer than *k* learners is shown as «< *k*» and
+  the API answer carries no value for it. The mappe's two-sided rule (D-095, a rate of 0 % or 100 % hidden) is not
+  added for insight. The grade-sync status counts are exempt (§3), and the property tests cover the insight endpoints
+  and the CSV.
 - **Acceptance:** Property-based test: for random datasets, no API response contains a group smaller than *k*.
 - **Verify:** `fast-check` property test `[INS-006] …`.
 
@@ -63,6 +76,11 @@ Owners and co-authors of an activity can see its insight. In LTI mode, authors o
 see results for *that context only*. Admins can see it only through an audited support action. Each
 view writes an audit event (`DATA-007`).
 - **Verify:** Permission tests.
+- **Amended (D-106, 2026-10-30):** for a context: the activity's owner and co-authors, and an LTI author whose launch
+  comes from that context, whether or not they own the activity (after a course copy, `LTI-007`). In `/app/play` the
+  context is the launch's and cannot be changed. The audited support action for admins is not built in S6, so admins
+  see no insight. A view writes `insight.view` and a CSV download `insight.export`, with details limited to the view,
+  the period, the context and the content version: no learner key, count or answer.
 
 #### INS-008 · MUST · S6 · Accessible charts
 Each chart has a visible data table alternative and a text summary (e.g. "Question 2: 38 % correct
@@ -99,6 +117,8 @@ year, and destroyed when that year's data is purged. Learner rows store **no** n
 addresses, Feide IDs, national ID numbers or raw LTI `sub` values. The one exception is the encrypted
 `ltiSub` in `GradeSyncJob`, which AGS needs; it is deleted 30 days after a successful sync.
 - **Verify:** Unit tests for key derivation; schema test asserting no PII columns on learner tables.
+- **Amended (D-104, 2026-10-30):** the encrypted `ltiSub` is deleted 30 days after the job stops, whether it
+  succeeded, failed or was orphaned, so a job that never succeeds keeps it no longer.
 
 #### DATA-003 · MUST · S6 · Annual retention purge
 A scheduled job runs on a configured date (default 15 August), for the academic year that has
@@ -108,6 +128,17 @@ than the academic-year boundary plus 30 days, then learner `User` rows that have
 aggregate snapshots that already satisfy *k*-suppression are kept, for the *pedagogisk mappe*.
 - **Acceptance:** A dry-run mode reports counts without deleting. Each run writes an audit event with the counts.
 - **Verify:** Integration test with time travel.
+- **Amended (D-107, 2026-10-30):** `SPEC-DEVIATION` in two points. (1) The default date: the job runs by default on
+  **31 August**, Oslo time, for the academic year that ended on 31 July, because the boundary plus 30 days ends on
+  30 August; the date is configurable, but not to a day before 31 August. (2) Which rows go: `XapiStatement`,
+  `H5PUserData` and `GradeSyncJob` carry the academic year of the secret that made each row's `learnerKey`, and the
+  purge deletes the ended year's rows by that stored year, then the learner `Identity` rows created before that year
+  ended, then learner `User` rows left without an `Identity` (D-034); not every row "older than the academic-year
+  boundary plus 30 days", which, read on the run date, would also take the new year's first 30 days. Before anything
+  is deleted, the year's *k*-suppressed `InsightSnapshot` rows are written; only they outlive the purge. The dry run
+  and the audit event are as written. Destroying the year's pseudonym secret is an operations step in the runbook
+  (the secrets are an environment value the server cannot destroy); at start-up the server names, by year only, a
+  secret still configured for a purged year.
 
 #### DATA-004 · MUST · S6 · EEA residency and encryption
 PostgreSQL, Redis and S3-compatible storage are hosted in Norway or the EEA. All traffic uses TLS
@@ -160,6 +191,12 @@ For each statement, store only: `contentId`, `subContentId?`, `contentVersion`, 
 `response?` (choice indices or short gap text), `durationMs?`, `attemptId`, `timestamp`. Everything
 else is dropped, including actor names, mailboxes and extensions.
 - **Verify:** Unit test of the mapper.
+- **Amended (D-102, D-103, 2026-10-30):** `contextId` holds the platform-scoped `<platformId>:<contextId>` (null for a
+  portal play; one module builds and parses it), `attemptId` is made by the xAPI bridge, since H5P sends none, and
+  `timestamp` is when the server received the batch. Only learner principals' statements are stored.
+- **Amended (D-107, 2026-10-30):** `SPEC-DEVIATION`: `XapiStatement` also stores `academicYear`, a field outside the
+  list above. It holds no statement data, only the academic year of the secret behind the row's `learnerKey`, which
+  the key cannot reveal and a timestamp can misstate; the annual purge (`DATA-003` as amended) deletes by it.
 
 ---
 
@@ -185,11 +222,11 @@ personal data; **P** marks pseudonymous fields.
 | `H5PContent`, `H5PContentFile`, `ContentCollaborator`, `LibraryAuditEvent` | 01 | `ownerUserId`; `sourceAuthorUserId` on copies (S5, D-092) |
 | `H5PUserData` | 01 | `learnerKey` (**P**), `data` (**P**) |
 | `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken`, `LtiPlacement` | 02 | ID tokens (**PII**, 24 h) |
-| `GradeSyncJob` | 02 | `ltiSub` (**PII**, encrypted, 30 days after success) |
+| `GradeSyncJob` | 02 | `ltiSub` (**PII**, encrypted, 30 days after success; amended, D-104: 30 days after the job stops, whatever its outcome) |
 | `LearningDesignMetadata`, `LearningOutcome` | 04 | none |
 | `ValidationAcknowledgement` | 03 | `userId` (author) |
-| `XapiStatement` | 05 | `learnerKey` (**P**), `response` (**P**) |
-| `InsightSnapshot` | 05 | aggregates only, already *k*-suppressed |
+| `XapiStatement` | 05 | `learnerKey` (**P**), `response` (**P**); `contextId` as `<platformId>:<contextId>` (D-103) |
+| `InsightSnapshot` | 05 | aggregates only, already *k*-suppressed; `contextId` as `<platformId>:<contextId>` (D-103) |
 | `AuditEvent` | 05 | `actorUserId` |
 
 ## 5. Pseudonymisation sequence (for evaluators)

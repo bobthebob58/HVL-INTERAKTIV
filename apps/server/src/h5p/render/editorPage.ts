@@ -4,15 +4,16 @@
  * Why: Lumi's editor template writes the integration JSON into an inline script unescaped (D-040), and the page
  *      must work under the strict H5P policy (D-070). The integration object travels as an inert JSON block, a
  *      second block carries what our boot script needs (activity ID, token, messages, the save choice's texts), and
- *      the boot script (./client/editorPage.js) starts H5P's editor, loads the parameters and saves through the
- *      content API; a structural save that would reset other people's progress opens the save choice
- *      (./client/editorSaveChoice.js, PROD-013, D-093).
+ *      the boot script (./client/editorPage.js) starts H5P's editor (./client/editorStart.js), loads the parameters
+ *      and saves through the content API; a structural save that would reset other people's progress opens the save
+ *      choice (./client/editorSaveChoice.js, PROD-013, D-093).
  * Spec: H5P-002, H5P-007, SEC-008, UD-010, DATA-011, UD-002, PROD-003, PROD-013
  * Invariants:
  *   - Every value is escaped; both JSON blocks go through `scriptJson`.
  *   - The page has a `lang`, a title, one save button and a polite status region for save results (UD-006),
  *     followed by the error summary whose list names the errors of a refused save of a published activity
- *     (PROD-003, D-074), hidden while it is empty.
+ *     (PROD-003, D-074), hidden while it is empty. The save button is rendered disabled; the boot script enables it
+ *     once H5P's editor can save, and says meanwhile that the activity is opening (`messages.loading`).
  *   - The blocked-save text matches where the page runs: in Canvas (ltik token) it does not send the author to
  *     unpublish, which only the portal's "Sjekk og publiser" offers.
  *   - The save choice matches it too (`inCanvas`, `saveChoice`): Canvas offers reset or cancel with a pointer to the
@@ -27,7 +28,7 @@
  *   ./scriptJson.ts, ../../http/routes/editorRoutes.ts, ../../lti/play/ltiEditRoutes.ts,
  *   ../../http/pages/pageAssetRoutes.ts (the stylesheets), ../../learningDesign/safeEditing/saveChoiceMessages.ts.
  * Tests: apps/server/test/h5p/render/editorPage.test.ts, apps/server/test/http/pages/serverPages.browser.test.ts,
- *   apps/server/test/h5p/editorBlockedSave.browser.int.test.ts
+ *   apps/server/test/h5p/editorBlockedSave.browser.int.test.ts, apps/server/test/h5p/editorReadiness.browser.int.test.ts
  */
 import type { IIntegration } from '@lumieducation/h5p-server';
 import { EDITOR_SAVE_CHOICE_STYLESHEET, SERVER_PAGES_STYLESHEET } from '../../http/pages/pageAssetRoutes.js';
@@ -47,6 +48,8 @@ export const EDITOR_FIELD_REVEAL_SCRIPT = '/h5p/boot/editorFieldReveal.js';
 export const EDITOR_SAVE_REQUESTS_SCRIPT = '/h5p/boot/editorSaveRequests.js';
 /** Where the H5P router serves ./client/editorSaveChoice.js, the save choice dialog of PROD-013. */
 export const EDITOR_SAVE_CHOICE_SCRIPT = '/h5p/boot/editorSaveChoice.js';
+/** Where the H5P router serves ./client/editorStart.js, which starts H5P's editor and says when it can save. */
+export const EDITOR_START_SCRIPT = '/h5p/boot/editorStart.js';
 
 /** What the editor page is built from. */
 export interface EditorPageInput {
@@ -78,6 +81,8 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
     inCanvas,
     saveChoice: saveChoiceMessages(language, inCanvas),
     messages: {
+      // WHY: the status while H5P's editor opens the activity and «Lagre» waits for it (./client/editorStart.js).
+      loading: t('page.loading', {}, language),
       saving: t('page.editor.saving', {}, language),
       saved: t('page.editor.saved', {}, language),
       failed: t('page.editor.saveFailed', {}, language),
@@ -119,6 +124,7 @@ export function renderEditorPage(input: EditorPageInput, language: Locale): stri
     `<script src="${EDITOR_FIELDS_SCRIPT}"></script>`,
     `<script src="${EDITOR_SAVE_REQUESTS_SCRIPT}"></script>`,
     `<script src="${EDITOR_SAVE_CHOICE_SCRIPT}"></script>`,
+    `<script src="${EDITOR_START_SCRIPT}"></script>`,
     `<script src="${EDITOR_BOOT_SCRIPT}"></script>`,
     '</body>',
     '</html>',

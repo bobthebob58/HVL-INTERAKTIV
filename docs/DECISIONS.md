@@ -111,6 +111,20 @@ with the commands given.
 | D-098 | The Canvas side of the studio moves to S6 | Accepted (2026-10-28) |
 | D-099 | The API contract gets binary responses and `DELETE` | Accepted (2026-10-28) |
 | D-100 | The S5 gate, and the ALU and pilot review left open (Q17) | Accepted (2026-10-28) |
+| D-101 | Session 6: order, specs to load, insight in tabs, and what passes to the bachelor students | Accepted (2026-10-30) |
+| D-102 | `SPEC-DEVIATION` LTI-010: the xAPI bridge is plain JavaScript in the player document, for learners only | Accepted (2026-10-30) |
+| D-103 | Course contexts are stored with their platform: `<platformId>:<contextId>` | Accepted (2026-10-30) |
+| D-104 | `SPEC-DEVIATION` LTI-012: our own minimal AGS client in a durable worker, not ltijs's `submitScore` | Accepted (2026-10-30) |
+| D-105 | The formative line-item label is configurable, and scores are labelled formative wherever shown | Accepted (2026-10-30), HVL and ALU to answer Q8 |
+| D-106 | `SPEC-DEVIATION` spec 05 §1: insight per context, fixed periods, suppression as `INS-006` writes it | Accepted (2026-10-30), residuals to the DPO (Q6) |
+| D-107 | `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year | Accepted (2026-10-30) |
+| D-108 | Data-subject requests: a server CLI that HVL operations run | Accepted (2026-10-30) |
+| D-109 | Database roles, encrypted-connection checks in production, and a request log without personal data | Accepted (2026-10-30) |
+| D-110 | Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV | Accepted (2026-10-30), HVL's runtime and DNS open (Q5) |
+| D-111 | An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it | Accepted (2026-10-30), texts to HVL's language advisers and ALU (Q2, Q17) |
+| D-112 | Upstream reports drafted for the owner to file; Lumi stays at 10.0.4 | Accepted (2026-10-30) |
+| D-113 | The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard | Accepted (2026-10-30) |
+| D-114 | New development dependencies in S6 | Accepted (2026-10-30) |
 
 ---
 
@@ -2397,3 +2411,577 @@ loading of one spec per session are kept.
   The review is open question Q17, with a review packet in `docs/reference/alu-review-s5.md`.
 - **Consequences:** Q17 must be answered before the pilot. The manual PDF check with PAC or NVDA is recorded in the
   accessibility results.
+
+### D-101 · Session 6: order, specs to load, insight in tabs, and what passes to the bachelor students
+- **Context:** S5 passed its gate on 2026-10-30 (`b8ab740`), and PR #8 merged it into `main` (`47e235e`), which also
+  answers Q16: GitHub now runs CI. S6 is the last planned session: the xAPI → Canvas grade bridge, teacher insight
+  with *k*-suppression, the privacy jobs, deployment and operations, and the carry-overs from S4 and S5 (PROGRESS,
+  S6). It is too large for the days before 1 November 2026, when the project proposal for HVL's bachelor students in
+  programming (spring 2027) goes to HVL; their project is to review this AI-written code with their own tools and to
+  finish the Canvas integration against ALU's test instance. Mapping S6 (six agents, 2026-10-30) also found that
+  PROGRESS's spec-load row for S6 ("02 §5–7; 05; 00 §6") is narrower than its checklist, while CLAUDE.md §4 says to
+  read only the listed specs, and that several parts need HVL's own Canvas, Feide or servers, which this environment
+  cannot reach.
+- **Decision:** The owner decided on 2026-10-30:
+  - **Order: learning data first.** (1) The grade bridge: `LTI-010`…`LTI-013`, `DATA-012`, `LTI-008` and the bridge
+    part of `H5P-009`. (2) Insight: `INS-001`…`INS-010`, `PROD-010`, the **Innsikt** tab of `LTI-006`, results by
+    version (`PROD-013`) and the mappe's real results source (`MAPPE-003`, D-095). (3) The privacy operations:
+    `DATA-003`…`DATA-005`, `DATA-007`, `DATA-008`, `DATA-010` and `NFR-006`. Then deployment and operations
+    (`NFR-001`, `NFR-002`, `NFR-007`, `SEC-004`, `SEC-006`, `UD-040`, Chromium in the image for `MAPPE-004`), then the
+    carry-overs (the language overlay with `H5P-010`, problem reporting, upstream drafts). Before 1 November the
+    realistic target is the start, the probes, the shared infrastructure, the grade bridge and insight, with parts of
+    the privacy operations; the rest continues afterwards or passes to the students.
+  - **Specs to load in S6:** 02 §4–§8; 05 (all); 00 §3 (journeys J1–J5) and §6; 01 `H5P-009`, `H5P-010`, `SEC-004`
+    and `SEC-006`; 03 `UD-003` and §6 (`UD-040`); 04 `MAPPE-003` and `MAPPE-004`.
+  - **Insight lives in tabs only:** an **Innsikt** tab on the activity page `/aktivitet/[id]` and in the Canvas view
+    `/app/play`, one context at a time (D-106). There is no `/innsikt` page, so CLAUDE.md §2 (the `apps/web` routes),
+    spec 05's code location (`apps/web/src/app/innsikt/`) and the Evaluator Guide §4.1 are amended.
+  - **Running the session:** the hourly restart task stays on until S6's gate passes, and the gate keeps its full
+    form, run in parts (D-113).
+  - **What passes to the students** when S6 does not reach it, each with a design, a seam or a checklist:
+    - the Canvas side of the studio that D-098 moved to S6: the content bank and "new from a pattern" in the Deep
+      Linking picker, and the `LTI-007` duplicate in `/app/play`;
+    - `LTI-009` Dynamic Registration (COULD), which needs a Canvas administrator to try and must not be undone by the
+      start-up sync of `LTI_PLATFORMS` (D-051); S6 writes its design only;
+    - confirming against the real services what S6 can only mock: HVL's Feide client (Q3); the developer key, the
+      client and deployment IDs and `feide_login` (Q4); the AGS token audience, content type and error answers
+      (D-104); how Canvas shows the line-item label (D-105, Q8); NRPS paging and role filter (`LTI-008`); a course
+      copy keeping `custom.contentId` (`LTI-007`);
+    - the Lumi path (D-112), including the `image-size` audit exceptions that expire on 2027-01-31 (D-030), early in
+      the students' term, after which `check:audit` fails unless one of D-112's choices has been made;
+    - whatever of the operations and carry-over steps is not reached.
+
+    One index, `docs/handoff/README.md` (written in S6's step 7), says what is done, what needs HVL, where the
+    live-contract seam is (`apps/server/live/`: an opt-in suite that runs the mock-platform tests against HVL's test
+    Canvas and real Feide) and what the Canvas acceptance checklist holds. It links the runbook, the deployment
+    checklist and the privacy documents instead of repeating them.
+- **Alternatives considered:** (a) Operations first, so that a deployable image exists early: the owner chose
+  learning data, which is the product's purpose (spec 05: insight for the next seminar) and the part nobody can
+  build from the specs alone. (b) A separate `/innsikt` overview across activities and courses: spec 05 §1 defines the
+  view as one activity in one context, and an overview across contexts invites the differencing D-106 guards
+  against. (c) Reaching everything before 1 November by testing less: the owner kept the full gate (D-113).
+- **Consequences:** PROGRESS's S6 row and checklist change in the same step. A part handed to the students is listed
+  in the hand-off index, in PROGRESS's open items and in the Evaluator Guide's limitations, and its requirement is
+  tested only for what S6 built. Where a MUST cannot pass without such a part (J1's Canvas half, "new from a pattern"
+  in the picker, which `LTI-005`'s "E2e in J1" needs), the J1 test is split and the gap gets its own `SPEC-DEVIATION`
+  amendment once it is certain, not before. What J5's end-to-end test covers (its staging-to-production promotion is
+  an operations procedure, not a page) is decided at the integration step, also by amendment.
+
+### D-102 · `SPEC-DEVIATION` LTI-010: the xAPI bridge is plain JavaScript in the player document, for learners only
+- **Context:** `LTI-010` puts the bridge in `packages/hvl-h5p-theme/src/xapiBridge.ts`: it subscribes to
+  `H5P.externalDispatcher` and posts statements to `/api/h5p/xapi` every 2 s and on `pagehide`, with the ltik or the
+  CSRF token, retrying from an in-memory queue and never slowing the activity down. `H5P-009` injects it "inside the
+  H5P iframe", CLAUDE.md §2 describes the theme package as "injected into H5P player and editor iframes", and `UD-003`
+  says the bridge adds the visually hidden ✓/✗ text. What S4–S6 found:
+  - The theme's client scripts are plain JavaScript (an IIFE with JSDoc: `feedbackPrefixes.js`, `a11yRepairs.js`,
+    `reducedMotion.js`), which the package exports from `src/` and the server serves unbundled under
+    `script-src 'self'` (D-070). There is no browser build for TypeScript.
+  - H5P Core relays every event raised in an iframe it wrote itself (`H5P.isFramed && H5P.externalEmbed === false`)
+    to `window.parent.H5P.externalDispatcher` (`h5p.js`). The document that holds `H5PIntegration` therefore sees the
+    statements of div-embedded and iframe-embedded content alike. A bridge only inside the iframes would miss
+    div-embedded content, one in both places would send each iframe statement twice, and every frame would need the
+    credential.
+  - The hidden prefix already comes from `feedbackPrefixes.js` (D-072 amendment (a)); a second one from the bridge
+    would be announced twice.
+  - H5P sends no attempt identifier, but `DATA-012` stores an `attemptId`.
+  - Authors play activities too: the portal's **Spel** tab is the author's preview, and teachers open `/app/play`.
+- **Decision:**
+  - **File and place:** `packages/hvl-h5p-theme/src/xapiBridge.js`, plain JavaScript in the style of its siblings.
+    It runs only in the player document that `h5p/render/playerPage.ts` renders (`/h5p/play/:contentId` in the portal,
+    `/lti/play` in Canvas): not in Core's iframes, not in the Next.js page around them, and never in the editor.
+  - **Once per statement:** it subscribes to that document's `H5P.externalDispatcher` and queues a statement object
+    once, so a statement relayed from a Core iframe is not queued twice. Probe P1 checks this on the ten real types.
+  - **Learners only:** the player page loads the bridge only for a learner principal (whose highest role is
+    `learner`), and the server stores and grades statements only from one; anyone else's request stores nothing.
+    `LTI-011`'s View check still applies, and in Canvas the content must also be the launched activity.
+    Previews in the portal and teachers' plays in Canvas never reach insight or the gradebook.
+  - **Attempts:** the bridge makes a random `attemptId` for the root activity when the page loads, and a new one after
+    the root's scored `completed` or `answered` statement, so a retry is a new attempt. Probe P1 records the real
+    attempt boundaries of the ten types; a different rule is an amendment made before the mapper is written.
+  - **Credentials:** in Canvas, the ltik as `Authorization: Bearer` from the page's memory (`LTI-003`); in the portal,
+    the session cookie with the `X-CSRF-Token` header (D-057). `/api/h5p/xapi` takes no ltik in the query (D-058,
+    D-069).
+  - **Sending:** a batch every 2 s. On `pagehide`, `fetch` with `keepalive: true`, which can carry those headers
+    (`navigator.sendBeacon` cannot). A failed batch stays in the in-memory queue and is retried while the page lives;
+    nothing goes to browser storage, and the activity never waits for the bridge. Browsers limit keepalive requests
+    to 64 KiB in flight per page, so a very large last flush can lose its tail; for formative data that is accepted.
+  - **Time:** the stored `timestamp` is when the server received the batch, not what the browser claims.
+  - **No feedback text:** the bridge adds no ✓/✗ prefix; `feedbackPrefixes.js` does (D-072).
+- **Alternatives considered:** (a) A bridge inside every H5P iframe, as `H5P-009` reads: statements missed or sent
+  twice, and the ltik or CSRF token handed to every frame. (b) TypeScript compiled for the browser: a build step for
+  one file that its siblings do not have. (c) Storing everyone's statements and filtering when reading: previews
+  would still be stored as learning data, and the grade worker would need the same filter.
+- **Consequences:** `SPEC-DEVIATION` from `LTI-010` (the file is JavaScript, `xapiBridge.js`) and, for the bridge,
+  from `H5P-009`: it runs in the player document, not "inside the H5P iframe", so the acceptance's check of the
+  iframe document becomes a check of the player document (the theme part is unchanged; D-070 deviated from `H5P-009`
+  the same way for nonces). The code carries `SPEC-DEVIATION: D-102`. Amended in the same step: CLAUDE.md §2 (the
+  bridge's file and where it runs), `H5P-009`, and `UD-003` (the hidden prefix comes from `feedbackPrefixes.js`,
+  never from the bridge, as D-072 amendment (a) already decided). Residuals, for the DPIA input and the students'
+  checklist: Canvas's Student View sends the `TestUser` role, which D-059 maps to `learner`, so a teacher's Student
+  View play counts as one learner in insight and is graded for Canvas's test student; reloading the page in
+  the middle of an attempt starts a new `attemptId`, which inflates `INS-001`'s median attempts; and a learner can
+  forge their own statements and attempt IDs, which `LTI-013` already accepts.
+
+### D-103 · Course contexts are stored with their platform: `<platformId>:<contextId>`
+- **Context:** `DATA-012` stores a `contextId?` per statement, `InsightSnapshot` has one, `LTI-008` caches a learner
+  count per context, and `INS-007` limits a Canvas author to "that context only". A Canvas context ID is unique within
+  one Canvas only. Every hosted Canvas shares the issuer `https://canvas.instructure.com`, so a platform is known by
+  issuer and client ID (`docs/reference/canvas-platform-values.md`, D-051), and Canvas's test and beta instances are
+  copies of production with the same course IDs *(verify with TeCopp)*. `LtiPlacement` keeps `platformId` and
+  `contextId` apart, but `XapiStatement.contextId` and `InsightSnapshot.contextId` hold the bare ID, so courses from
+  two of HVL's Canvas instances could merge in insight.
+- **Decision:** Wherever S6 stores or compares a course for insight and grades, it uses the string
+  `<LtiPlatform.id>:<context ID>`, where the context ID is the launch's context claim (`idToken.launch.context.id`,
+  read in `lti/launchFacts.ts`; never ltijs's `LaunchContext.contextId`, CLAUDE.md §5). That covers
+  `XapiStatement.contextId`, `InsightSnapshot.contextId`, the Redis key of the NRPS learner count, the insight scope
+  and its list of contexts (D-106), and the data-subject export (D-108). The platform ID is a UUID, so the first `:`
+  splits the string whatever the context ID contains. A portal play has no context (null). One module builds and
+  parses the string; nothing else joins or splits it.
+- **Alternatives considered:** (a) A `platformId` column beside `contextId` on the analytics tables: tidier, but a
+  field outside `DATA-012`'s list (a `SPEC-DEVIATION`), and every index and query would need both. (b) Keeping the bare
+  ID: a teacher in HVL's production Canvas could see aggregates that include plays from a test instance.
+- **Consequences:** `DATA-012`'s field list is unchanged; the data inventory says what the value holds. The platform
+  ID is stable while the platform stays in `LTI_PLATFORMS`, and a removed platform is deactivated, not deleted
+  (D-051), so stored contexts still resolve. The NRPS count key and the xAPI rate-limit key are added by hand to the
+  inventory's Redis section, which the inventory check does not read. `H5PUserData.contextId` (learner state per
+  course, `auth/principalToH5pActor.ts`) keeps the bare ID: a collision there only shares one learner's own saved
+  state between two copies of the same course, while changing the key would reset every learner's saved progress.
+  The students' checklist names it.
+
+### D-104 · `SPEC-DEVIATION` LTI-012: our own minimal AGS client in a durable worker, not ltijs's `submitScore`
+- **Context:** `LTI-012` has a worker call `context.grading.submitScore(lineItemUrl, …)`; spec 02 §1 lists
+  `grading.submitScore` on ltijs's `LaunchContext` among "the APIs used below"; and CLAUDE.md §5 names
+  `context.grading.submitScore` among the ltijs 7 calls to use (D-005). In ltijs 7.0.7 that method exists only on a
+  `LaunchContext`, which `Provider.getLaunchContext(ltik)` rebuilds from a live ltik (24 h). It takes the platform and
+  the learner's `sub` from that context, and its token from an internal `AccessTokenManager`
+  (`services/grading/grading.service.js`). The package exports only `Provider` and types (its `exports` map has `"."`
+  alone), so neither service can be used without a launch. A durable worker runs after the learner's request is gone
+  and holds no ltik; keeping one for it would store a bearer credential for the learner's whole launch, against
+  CLAUDE.md §1 (the ltik is kept in memory only). `LTI-012` itself already lets a job that outlives the 24 h "request
+  a new client-credentials token itself".
+- **Decision:**
+  - **Token:** `AgsScoreClient` in `apps/server/src/grades/` requests the client-credentials token itself, from the
+    first attempt. Its JWT client assertion is signed RS256 with the tool's private key for that platform, read through
+    ltijs's `Provider.platformManager` (`getPlatformById`, `getPrivateKey`; our `PrismaLtiDatabaseManager` decrypts
+    it, D-056). It carries the claims ltijs's own token manager signs: `iss` = `sub` = the client ID; `aud` = the
+    platform's token endpoint (ltijs's default while `authorizationServer` stays unset, which Canvas accepts,
+    `canvas-platform-values.md` §2); a fresh `jti`; a 60 s lifetime; and `kid` = the platform ID, which `/lti/keys`
+    publishes. Scopes: `…/lti-ags/scope/score` and `…/lti-ags/scope/lineitem.readonly`. A token is cached per platform
+    and scope until shortly before it expires, and is never logged.
+  - **Score:** a `POST` to the line item's URL with `/scores` added to its path (any query string kept, as ltijs
+    does), with the content type `application/vnd.ims.lis.v1.score+json` and `LTI-012`'s body: the learner's `sub` as
+    `userId`, `scoreGiven`, `scoreMaximum: 100`, `activityProgress: 'Completed'`, `gradingProgress: 'FullyGraded'`
+    and `timestamp`.
+  - **Queue:** a `GradeSyncJob` is written only for a learner principal in a Canvas launch (D-102), a root statement
+    (no `subContentId`) with the verb `completed` or `answered` and a `result.score`, and a placement found by
+    `(platformId, contextId, resourceLinkId)` that has a `lineItemUrl`. Jobs are idempotent per
+    `(placement, learnerKey, attemptId)`: a later scored statement of the same attempt updates its job. The learner's
+    `sub` comes from the request's launch and is stored only encrypted (`ltiSubEncrypted`, D-056).
+  - **Worker:** a `LeasedIntervalJob` (one node at a time) claims due jobs about every 15 s (`FOR UPDATE SKIP LOCKED`
+    on the new `nextAttemptAt`) and coalesces them per `(placement, learnerKey)`. It applies the placement's stored
+    attempt policy (`best`, `latest`, or `mastery` with its threshold; defaults as in `LTI-012`) to that learner's
+    attempt scores in the placement's jobs (an `XapiStatement` has no placement, and `DATA-012` fixes its fields),
+    sends one score with `timestamp` = the time of sending, and settles the coalesced jobs together. AGS lets a
+    platform ignore a score older than the result it holds; sending one current score means that a late retry can
+    never put an old result back.
+  - **Outcomes:** a 2xx answer succeeds. A line item that no longer exists (404, confirmed with a `lineitem.readonly`
+    read) marks the job `orphaned`, a new status, and it is not retried. A 429, a 5xx or a network error is retried
+    with exponential backoff and jitter, at most 8 attempts, the last within 24 h of the first; then the job is
+    `failed`. A 401 fetches a new token once. Any other 4xx fails the job at once. The new `terminalAt` records when a
+    job stopped.
+  - **The `sub`:** `ltiSubEncrypted` is set to null 30 days after `terminalAt`, whether the job succeeded, failed or
+    was orphaned (`DATA-002` names success; a job that never succeeds keeps it no longer). A failed job retried after
+    that has no `sub`; it stays failed, and the learner's next scored play makes a new job.
+  - **Authors** see the counts sent, pending, failed and orphaned per placement on the activity page and in
+    `/app/play`, and retry failed jobs there (`LTI-012`'s acceptance). Who may see them follows D-106; the counts are
+    not *k*-suppressed (spec 05 §3).
+  - **NRPS** (`LTI-008`) still uses ltijs's `context.namesAndRoles`: it runs during a launch, while the context lives.
+- **Alternatives considered:** (a) `submitScore` with a stored ltik: a 24-hour bearer credential stored per learner,
+  and the job still fails once it expires. (b) `submitScore` inside the learner's own request: learning would wait
+  for Canvas, against `LTI-012`'s acceptance, and nothing would retry once the page is closed. (c) ltijs within the
+  24 h and our client after, the spec's literal reading: two code paths for one request, and the first still needs an
+  ltik in the worker. (d) Importing ltijs's internal `AccessTokenManager` by file path: refused by the package's
+  `exports`, and it would break silently with an ltijs update.
+- **Consequences:** `SPEC-DEVIATION`, exactly from: `LTI-012`'s sentence "A worker calls
+  `context.grading.submitScore(…)`"; spec 02 §1's row naming `grading.submitScore` among the APIs used; and CLAUDE.md
+  §5's list of ltijs calls, which repeats D-005's API context. D-005's decision (ltijs 7 with our
+  `PrismaLtiDatabaseManager`) is unchanged, and ltijs still handles launches, Deep Linking, NRPS and the key set
+  (D-061 likewise replaced `createDeepLinkingForm` with ltijs's message and our own form). Not deviated: the score
+  body, the policies, the retry limit, idempotency, `orphaned` and the developer key's scopes. The code carries
+  `SPEC-DEVIATION: D-104`; spec 02 §1 and §6 and CLAUDE.md §5 get amendment notes. Migration
+  `s6_grade_bridge_insight` adds `orphaned`, `nextAttemptAt`, `attemptId` and `terminalAt`. What Canvas does that S6
+  can only mock (the token's `aud` on HVL's instance, the answers for a deleted assignment and for a learner who has
+  left the course) goes into the students' Canvas acceptance checklist (D-101). Residual: the learner key changes on
+  1 August (D-011), so a learner's policy history starts again, and in a course that runs across 1 August an earlier
+  best score can be replaced by a lower later one; accepted for D-011's reason (the summer break) and named in the
+  checklist.
+
+### D-105 · The formative line-item label is configurable, and scores are labelled formative wherever shown
+- **Context:** `LTI-013` labels AGS scores formative with the suffix "(formativ)" on the line-item `label`. On
+  `assignment_selection` Canvas uses that label as the assignment name and overwrites the teacher's own; spec 02
+  leaves to HVL and ALU whether the suffix belongs there, or in the content item's description with Canvas's
+  `preserveExistingAssignmentName` extension (Q8, open). `lti/deepLinking/deepLinkItems.ts` sends the plain title
+  today. `LTI-013` (c) also says that these scores are never presented as exam evidence, and S6 shows scores in three
+  new places: the insight views, the `INS-009` CSV and the grade-sync status.
+- **Decision:**
+  - `AGS_LABEL_MODE`, read at start-up, chooses between:
+    - `suffix`, the default and the spec as written: the line item's `label` is «Tittel (formativ)», the title cut
+      when needed so the suffix is never lost;
+    - `preserve`: the label is the title, the content item carries
+      `"https://canvas.instructure.com/lti/preserveExistingAssignmentName": true`, and its description says that the
+      score is formative.
+  - The suffix is «(formativ)», as `LTI-013` writes it, in every language.
+  - The insight views, the CSV and the grade-sync status say that the scores are formative, computed in the browser
+    and not exam evidence, with `PROD-011`'s notice or a label from the same locale texts.
+  - Q8 stays open; HVL and ALU's answer changes the setting, not the code.
+- **Alternatives considered:** (a) Only the suffix, waiting for Q8: a "no" from HVL would need a new release.
+  (b) Only `preserve`: it departs from `LTI-013` (a) before HVL has decided.
+- **Consequences:** A unit test checks the label in both modes (`LTI-013`'s Verify). A change of mode affects new
+  placements only; assignments already in Canvas keep their names. How Canvas shows the name in each mode is on the
+  students' Canvas acceptance checklist *(verify)*.
+
+### D-106 · `SPEC-DEVIATION` spec 05 §1: insight per context, fixed periods, suppression as `INS-006` writes it
+- **Context:**
+  - `INS-007`: owners and co-authors see an activity's insight; in LTI mode, authors of the launch context see that
+    context only; admins only through an audited support action; every view is audited (`DATA-007`).
+  - Spec 05 §1: the view covers one activity in one Canvas context (or all portal users), with results "since a
+    chosen date (default 7 days ago)". §3: teachers cannot see data from other courses' contexts, and they can see
+    grade-sync status counts, which, unlike the learner counts and answer distributions there, carry no
+    "(groups ≥ k)".
+  - `INS-006`: a cell, bar or list item about fewer than *k* learners shows "< 5" and hides its value; the
+    next-smallest cell is hidden too when a hidden value could be worked out from the totals; and there is no
+    per-learner endpoint. `privacy/minimumGroupSize.ts` (D-095) shows nothing at all below *k* and also hides a rate
+    of 0 % or 100 % (the two-sided rule).
+  - Found while mapping: a free "since" date lets two overlapping views isolate one learner (differencing);
+    `PROD-013` wants results separated by version; `tokens.json` has one non-text colour for chart marks (`accent`),
+    and derived shades wait for HVL (D-017, D-072, Q2). Spec 00 §8 measures from the audit log whether pilot
+    teachers opened *Før samlinga*.
+- **Decision:** The owner decided on 2026-10-30 that insight is shown in tabs, one context at a time (D-101). In
+  detail:
+  - **One view:** one activity, one content version (the current one by default; `PROD-013`, D-093) and one context:
+    a Canvas context the activity is placed in (D-103), or the portal's plays. There is no view across contexts.
+  - **Who:** for a context, the activity's owner and co-authors, and an LTI author whose launch comes from that
+    context, whether or not they own the activity (after a course copy, `LTI-007`). On the activity page the owner or
+    co-author picks one of the activity's contexts, labelled with `LtiPlacement.contextLabel` where one is stored
+    (D-087); in `/app/play` the context is the launch's and cannot be changed. An admin gets no insight through the
+    role: `INS-007`'s audited support action is not built in S6, so admins see none.
+  - **Periods:** fixed choices only: the last 7, 14 or 30 days, or since the semester started. Each starts at
+    midnight, Oslo time, so a teacher cannot place two start dates to difference two views. The semester starts on
+    1 January or 1 August until HVL gives its semester dates (open; HVL and ALU decide).
+  - **Suppression as `INS-006` writes it:** each value is about a known number of distinct learners. A value about
+    fewer than *k* is shown as «< *k*» (for example «< 5»), and the API answer carries no value for it; when a hidden
+    value could be worked out from a shown total and the other cells, the next-smallest cell is hidden too. A
+    free-text answer appears only when *k* distinct learners gave it (`INS-003`). D-095's two-sided rate rule is not
+    added: a rate of 0 % or 100 % over at least *k* learners is shown, because "nobody got question 3 right" is the
+    signal a seminar needs. `minimumGroupSize.ts` gets the insight rules beside the mappe's, and its "never shown as
+    fewer than" stays true for the mappe.
+  - **Exempt:** the grade-sync status counts (spec 05 §3), which Canvas's gradebook shows per learner anyway. The
+    `INS-006` property tests (D-114) cover the insight endpoints and the CSV, not those counts.
+  - **Charts (`INS-008`):** a single hue, the `accent` token, with each value written as a label next to its bar, a
+    visible data table and a text summary; no new colours. A suppressed cell shows its «< *k*» text and no bar.
+  - **Audit:** a view writes `insight.view` and a CSV download `insight.export` (`DATA-007`), with the activity as
+    the target and details limited to the view, the period, the context (D-103's string, or the portal) and the
+    content version: no learner key, count or answer. That is enough for spec 00 §8's measure.
+  - **The formative label:** D-105.
+- **Alternatives considered:** (a) An all-contexts view for owners: not in spec 05, and "all contexts minus one"
+  differences out a single course. (b) A free "since" date, as spec 05 §1 reads: open to differencing. (c) The
+  mappe's two-sided rule for insight rates too: it would hide the items a teacher most needs to see. (d) New chart
+  colours: they need HVL's approval (Q2).
+- **Consequences:** `SPEC-DEVIATION` spec 05 §1: the period is chosen from fixed values, not any date; the code that
+  builds periods carries `SPEC-DEVIATION: D-106`, and spec 05 gets an amendment note. Residuals for the DPIA input
+  (`DATA-005`) and the DPO (Q6): views of the same period on two days differ by one day's learners; an owner or
+  co-author sees aggregates for every course their activity is placed in, including a colleague's course that placed
+  it from the bank or copied it, which spec 05 §3's "data from other courses' contexts" can be read to forbid, so the
+  DPO and the owner may narrow it by amendment; and a 0 % or 100 % rate tells what every learner in a group of at
+  least *k* did.
+
+### D-107 · `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year
+- **Context:** `DATA-003` runs the purge "on a configured date (default 15 August)" for the academic year that has
+  ended, deleting rows "older than the academic-year boundary plus 30 days", keeping only *k*-suppressed snapshots
+  for the mappe, and destroying that year's pseudonym secret. The academic year ends on 31 July
+  (`privacy/academicYear.ts`, D-011), so the 30 days end on 30 August, and on 15 August nothing is old enough yet. The
+  tables keep timestamps, not years, while a learner's rows belong to the year whose secret made their `learnerKey`
+  (`privacy/deriveLearnerKey.ts`); a cut by timestamp can split them. The secrets are an environment value
+  (`PSEUDONYM_SECRETS`), which the server cannot destroy.
+- **Decision:**
+  - **When:** by default on 31 August, Oslo time, for the academic year that ended on 31 July; the date is
+    configurable, but not to a day before 31 August, so the 30 days always pass first. A leased job runs it on one
+    node, and a CLI runs the same code by hand.
+  - **What:** `XapiStatement`, `H5PUserData` and `GradeSyncJob` get an `academicYear` column, set when a row is
+    written to the year of the secret that made its `learnerKey`. The purge deletes the ended year's rows by that
+    column, in batched transactions; then the learner `Identity` rows created before that year ended; then learner
+    `User` rows left without an `Identity` (D-034).
+  - **Snapshots first:** before anything is deleted, it writes the year's `InsightSnapshot` rows per activity, context
+    (D-103) and content version, already suppressed with the configured *k* (D-106). Only these outlive the purge.
+    They are kept for the mappe (`DATA-003`), so the values the mappe reads from them also follow D-095's rules, the
+    two-sided rate rule included, which D-106 leaves out of the insight views only.
+  - **Dry run:** counts per table and deletes nothing. Every run, dry or real, writes an audit event with the counts
+    (`DATA-003`, `DATA-007`).
+  - **The secret:** destroying the year's pseudonym secret is an operations step in the runbook: after the real run,
+    HVL removes it from the secret store and from `PSEUDONYM_SECRETS`. At start-up the server names, by year only, any
+    secret still configured for a year the purge has completed, so a forgotten step shows.
+- **Alternatives considered:** (a) 15 August with a timestamp cut: it deletes nothing on that day, or splits a
+  learner's year. (b) The server destroying secrets itself: it would need write access to HVL's secret store.
+- **Consequences:** `SPEC-DEVIATION` from `DATA-003` in two points: the default date (31 August instead of
+  15 August), and which rows go. The purge takes the ended year's rows by their stored year, and learner `Identity`
+  rows created before 1 August, not every row "older than the academic-year boundary plus 30 days", which, read on
+  the run date, would also take the new year's first 30 days. The 30 days after the boundary are kept, as the time
+  before the purge may run. `academicYear` on `XapiStatement` is a field outside `DATA-012`'s list, so this is a
+  `SPEC-DEVIATION` from `DATA-012` too: it holds no statement data, only the year of the secret behind the row's
+  `learnerKey`, which the key cannot reveal and a timestamp can misstate (a portal session made before 1 August can
+  keep its `learnerKey` for up to 12 hours after it, D-057). D-103 (a) refused a `platformId` column partly for this
+  reason; there the context string can carry the platform, while nothing else carries the year. Spec 05 gets
+  amendment notes on `DATA-003` and `DATA-012`. Migration `s6_grade_bridge_insight` adds the column, and a
+  `contentVersion` to `InsightSnapshot`, which has none today. A learner who comes back after the purge gets new
+  rows, as the new year's key already makes them a new pseudonym. The integration test travels through a year in
+  time (`DATA-003`'s Verify) and checks D-034's rule.
+
+### D-108 · Data-subject requests: a server CLI that HVL operations run
+- **Context:** `DATA-008` asks for an admin-only tool that takes a Feide ID or an `(iss, sub)` pair, derives the
+  learner keys for the retained academic years, and exports (JSON) or deletes that learner's data, with every use
+  audited. Lumi 10.0.4's `ContentUserDataManager.deleteAllContentUserDataByUser` checks the permission for the user
+  named but deletes the acting user's data (`ContentUserDataManager.js:39-43`, unchanged on Lumi's `master`, D-081).
+  Such a request reaches HVL through its data protection officer, not through the app, and the identifiers it needs
+  are exactly those the app never stores (`DATA-002`).
+- **Decision:**
+  - **Form:** a CLI in `apps/server` (export, delete, and a dry run that counts), run by HVL operations where the
+    server runs. No web page and no HTTP route.
+  - **Finding the learner:** from the Feide ID and/or `(iss, sub)`, in memory only, the CLI derives the `learnerKey`
+    for every year in `PSEUDONYM_SECRETS` and the `Identity.subjectHash` for every key in `IDENTITY_HASH_KEYS`
+    (D-055).
+  - **Scope:** the learner's `XapiStatement`, `H5PUserData` and `GradeSyncJob` rows, their learner `Identity` rows and
+    the learner `User` rows then left without one (D-034). `H5PUserData` is deleted through our own storage
+    (`h5p/storage/PrismaContentUserDataStorage.ts`), never through Lumi's manager. *k*-suppressed snapshots hold no
+    learner data and stay. The export is JSON with the stored fields, contexts as D-103's strings.
+  - **Audit:** each run writes an audit event (export or deletion) with the counts. Its target is a random request ID,
+    never the Feide ID, the `sub` or a learner key. The operator names their own HVL admin account (a Feide ID in
+    `ADMIN_FEIDE_IDS` that has a staff account), which is recorded as the actor; nothing else about them is stored.
+- **Alternatives considered:** (a) An admin web page with a Feide admin session and the CSRF token: a page that
+  accepts other people's Feide IDs and Canvas subjects over the web, for a rare task that the DPO's process brings to
+  HVL operations anyway. (b) Lumi's `deleteAllContentUserDataByUser`: it deletes the wrong person's data.
+- **Consequences:** `DATA-008`'s "admin-only" holds twice over: only operations can run the CLI, and only for an HVL
+  admin. A staff member's own data (account, authored content, co-authorships) is outside the CLI; the runbook says
+  how HVL handles such a request by hand until that is decided (open; HVL's DPO, Q6). The Lumi bug goes into the
+  upstream drafts (D-112). The integration test exports and deletes a learner with rows in two academic years and
+  checks that another learner's rows remain.
+
+### D-109 · Database roles, encrypted-connection checks in production, and a request log without personal data
+- **Context:** `DATA-010` asks for separate database roles for the app, for migrations and for read-only analytics,
+  with the migration role used only in CI/CD; today one user, `hvli`, does everything (compose, `.env.example`, CI).
+  `DATA-004` asks for EEA hosting, TLS 1.2 or later and encryption at rest, verified by a deployment checklist in
+  `docs/ops/`. `config/productionChecks.ts` already refuses some unsafe production settings (an http Feide issuer,
+  `PDF_ALLOW_NO_SANDBOX`), but not an unencrypted database, Redis or S3 connection. `NFR-006` asks for structured logs
+  with request ID, route, status and latency and no personal data; pino redacts by key (`DATA-009`), but there is no
+  request log yet, and a raw URL can carry an ltik, a file grant or IDs.
+- **Decision:**
+  - **Roles:** an SQL script creates `hvli_migrator` (owns the schema and runs `prisma migrate deploy`), `hvli_app`
+    (reads and writes rows only, with default privileges for the tables the migrator adds later) and `hvli_analytics`
+    (read-only, without the encrypted and token columns, which the script and the data inventory list). The server
+    connects with `DATABASE_URL` (the app role); migrations use their own URL, set only in CI/CD and in the
+    deployment's migrate step. Development and CI may keep one user; a test proves that the app role cannot change
+    the schema. Creating the roles in production is a step for HVL's database administrator (Q5).
+  - **Production checks:** in production the server refuses to start with a `DATABASE_URL` whose `sslmode` is not
+    `require` or `verify-full`, a `REDIS_URL` that is `redis://` rather than `rediss://`, or an `http:`
+    `S3_ENDPOINT`. Residency in the EEA cannot be read from a setting: it stays a checklist item with the provider's
+    facts (Q5), and the start-up log names the configured S3 region and the database and Redis hosts (never
+    credentials), so the checklist can be ticked against them. If HVL's set-up protects a hop another way, the
+    exception comes by amendment.
+  - **Request log (`NFR-006`):** one structured line per response with a request ID (a well-formed inbound
+    `X-Request-Id`, otherwise a random one, sent back in the response), the method, the matched route pattern (never
+    the raw path or query), the status and the time taken in milliseconds. No user ID, IP address or body. The
+    redaction key list (`DATA-009`) gains S6's keys (statement answers, the `sub`, client assertions and tokens).
+- **Alternatives considered:** (a) TLS as a checklist item only: a missing `sslmode` is easy to overlook and silently
+  unencrypted. (b) Logging the URL with its query redacted: the path itself carries grants and IDs
+  (`/h5p/files/<grant>/…`).
+- **Consequences:** `docs/ops/` (the deployment checklist and the runbook) describes the roles, the second URL, the
+  TLS settings and the 30-day log retention (`DATA-009`); `.env.example` documents the migration URL. The checklist
+  recommends `verify-full`, since `require` encrypts without checking the server's certificate.
+
+### D-110 · Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV
+- **Context:** `NFR-007` asks for Docker images and compose files for local and staging use; `NFR-002` for daily
+  backups and a tested restore; `SEC-004` for a separate files origin in production (D-012, D-045); `SEC-006` for
+  ClamAV when `CLAMAV_HOST` is set; D-096 for Chromium with æ, ø and å in the image. Found while mapping:
+  - `npm start` runs the server's TypeScript through `tsx`, a development dependency of the repository root, so the
+    server cannot start from a production install (Evaluator Guide limitation 13). A bundle or a `tsc` emit would
+    break at least nine `import.meta.url` anchors (`SERVER_ROOT` and `WEB_APP_DIR` among them).
+  - The real content types come only from `npm run h5p:fetch-libraries`, which needs GitHub (D-078);
+    `apps/server/var/` is not committed, the seed folder holds only hashes (Q10), the Hub is out of reach (Q7), and
+    HVL's hosts may have no GitHub access.
+  - Chromium refuses its sandbox as root (D-096), and playwright-core 1.56.1 is made for one Chromium build.
+  - `@lumieducation/h5p-clamav-scanner` 10.0.4 (GPL-3.0-or-later; it brings `clamscan` 2.4.x, MIT, and
+    `ts-deepmerge` 7, ISC) answers `NotScanned` when ClamAV fails, and Lumi refuses an upload only on `MalwareFound`
+    (`ContentStorer.js`, `H5PEditor.js`), so it fails open. It also reads `CLAMSCAN_*` and `CLAMDSCAN_*`
+    environment variables, which override the options passed to it. clamd's default stream limit (25 MB) is below
+    `SEC-005`'s 50 MB.
+  - A files origin would fail the `DATA-011` tests, which count every other origin as third-party
+    (`apps/server/a11y/support/motionAndNetwork.ts`).
+  - Whether Docker runs in this environment is known only after probe P3.
+- **Decision:** a design that steps 1 and 6 build; what they find changes it by amendment.
+  - **Runtime:** `tsx` (4.23.15, already pinned) becomes an exact-pinned runtime dependency of `apps/server`, and
+    `npm start` keeps running the sources. A build step waits for a reason worth reworking the anchors.
+  - **Image:** one multi-stage `Dockerfile`. The build stage installs everything, generates Prisma, builds the tokens,
+    theme and web app, and fetches H5P core and editor with their hash checks (D-027). The runtime stage has
+    production dependencies only, runs as a non-root user, and carries the Chromium that Playwright 1.56.1 pins, with
+    `fonts-liberation` (or fonts HVL licenses) so that æ, ø and å embed (D-096); the sandbox runs on unprivileged user
+    namespaces or a seccomp profile, whichever HVL's runtime allows (Q5). No secret is baked into an image.
+  - **Compose:** the app, a migrate step (with D-109's migration role) and a seed step go under a compose profile
+    `app`, so plain `docker compose up -d` still starts only the test services (D-023, CLAUDE.md §3). A smoke test
+    starts the profile and checks health, a launch and a player page (`NFR-007`'s Verify).
+  - **Content types:** a bundle of the libraries D-078 pins, built with `npm run h5p:fetch-libraries` where GitHub is
+    reachable, with a SHA-256 manifest kept in the repository. The seeder installs from the bundle and refuses any
+    file whose hash differs. Committing the bundle itself waits for Q10.
+  - **Files origin (`SEC-004`):** `FILES_BASE_URL`, which in production must be https and another host than
+    `PUBLIC_BASE_URL`; by default `files.<host>`, as spec 02 §2 draws it. The player's signed content-file URLs
+    (D-058) move there first; the editor's cookie-authenticated file route stays on the main origin until a later
+    step. The files origin serves files only, with `SEC-004`'s headers, no cookies and no ltik, and with CORS for the
+    app origin and H5P's `crossorigin` setting, so captions (VTT) still load. The `DATA-011` tests count the configured
+    files origin as first-party, since it is ours (D-012), and the player page's policy (D-070) gains it in the
+    directives that load content files (at least `img-src` and `media-src`), and nowhere else. A separate registrable
+    domain would isolate more (a same-site subdomain still gets `SameSite` cookies sent with requests a file could
+    start, although it cannot set our `__Host-` cookies and a file cannot run script under `CSP: sandbox`); the
+    domain is HVL's choice (Q5).
+  - **ClamAV (`SEC-006`):** when `CLAMAV_HOST` is set (with a port and a time limit), the scanner is registered in
+    `malwareScanners`, which covers editor uploads and package imports alike. Our wrapper makes it fail closed: a
+    `NotScanned` answer or a time-out refuses the upload with our own error, not "malware found". The scanner gets its
+    options only from our checked configuration; the checklist says not to set `CLAMSCAN_*` or `CLAMDSCAN_*`, and
+    that clamd's `StreamMaxLength` must be at least 50 MB. Signature updates are HVL's (runbook). The package is
+    pinned at 10.0.4, the version that matches Lumi 10.0.4's scanner interface (D-112).
+  - **Backups and runbook (`NFR-002`):** backup and restore scripts with a round-trip test on PostgreSQL 16,
+    `docs/ops/RUNBOOK.md` and `docs/ops/DEPLOYMENT-CHECKLIST.md`. The real daily backups, their 30-day retention and
+    the restore drill each semester are HVL's.
+- **Alternatives considered:** (a) A compiled server (a bundle or `tsc` output): every path anchor reworked, to save
+  the in-memory compile at start-up. (b) Debian's Chromium package: the distribution's security updates, but its
+  DevTools protocol can drift from playwright-core 1.56.1. (c) Our own clamd client instead of Lumi's scanner: no new
+  dependency and explicit failure handling, but a `SPEC-DEVIATION` from `SEC-006`, which names the package; a wrapper
+  gives the same handling. (d) The editor's files on the files origin at once: that needs a grant model for the
+  editor's cookie-authenticated requests, while the player is where learners meet uploaded files.
+- **Consequences:** Limitation 13 closes when this is built. The runtime dependency changes (`tsx` moved,
+  `@lumieducation/h5p-clamav-scanner` 10.0.4 with `clamscan` and `ts-deepmerge`) pass `check:pins`, `check:licences`
+  and `check:audit`.
+  Until the editor's file route moves, `SEC-004`'s "in production, content files are served from a separate origin"
+  holds for the player only: a `SPEC-DEVIATION` for the editor route (marked `SPEC-DEVIATION: D-110`), mitigated
+  because every file keeps `nosniff`, the sandbox CSP and `attachment` for all but media (D-045). If Docker does not
+  run here, the image and compose files are written here and GitHub CI runs them (D-113). HVL decides the runtime (a
+  Docker host, Kubernetes or OpenShift), the sandbox settings, DNS and certificates (Q5).
+
+### D-111 · An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it
+- **Context:** S5's probe P1 found that many `nn` and `nb` defaults of the real libraries are English (MultiChoice,
+  QuestionSet, InteractiveBook and BranchingScenario buttons and messages). Patterns set their own texts (D-084), but
+  activities made in the editor stay English. PROGRESS suggested Lumi's `alterLibraryLanguageFile` hook; in 10.0.4,
+  once that hook is set, `LibraryManager.getLanguageWithoutFallback` returns only `{ semantics }` for every library's
+  language file, so the editor libraries lose their `libraryStrings`, the editor's own texts. `H5P-010` replaces the
+  video upload field's description with `alterLibrarySemantics`, but the `language/nn.json` and `nb.json` of
+  H5P.InteractiveVideo and H5P.Video override a description in the semantics, so that change alone never reaches a
+  Norwegian author. D-046 already wraps the library storage for the nn → nb → en fallback.
+- **Decision:** a design that step 7 builds.
+  - **Mechanism:** a library-storage wrapper after D-046's. For `language/nn.json` and `language/nb.json` of a listed
+    library version (major.minor), it sets the `default` (and, for `H5P-010`, the `description`) of each field an
+    overlay entry names by its semantics path, on a copy, never on the cached object (D-046). Each entry also states
+    the English text it translates; when a library update changes that text, the entry is skipped and
+    `content:check` reports it, so a changed field never gets a stale translation.
+  - **Scope:** learner-facing defaults in `nn` and `nb` for the ten types and the sub-content they usually hold (about
+    60 texts per language). Editor labels and the editor's `libraryStrings` are outside S6.
+  - **Texts:** in `content/`, under D-082's pipeline (loaded and checked at start-up and by `npm run content:check`),
+    so that ALU and HVL's language advisers edit them without code. They are drafts until reviewed (Q2, Q17).
+  - **`H5P-010`:** `alterLibrarySemantics` (composed with the DragQuestion filter) sets the English guidance, and the
+    overlay the `nn` and `nb` guidance. HVL's Panopto host name and the guidance texts are for HVL and ALU to confirm
+    (open, with Q17's review).
+- **Alternatives considered:** (a) Lumi's `alterLibraryLanguageFile`: it breaks the editor's texts. (b) Editing the
+  libraries' language files: that changes files fetched and pinned by hash (D-078). (c) Only upstream translations:
+  right in the long run (D-112), but slow, and the pilot needs Norwegian now.
+- **Consequences:** An extension of `H5P-008`, as D-046 was; spec 01 gets amendment notes on `H5P-008` and
+  `H5P-010`, and PROGRESS's mention of the hook is corrected. Only new activities and fields left at their defaults
+  change; existing activities keep the English they stored, and pattern texts still win. A few English texts come
+  from library code, not language files (H5P.Video's "Video source is missing.", ImageHotspots' "Missing required
+  background image"); D-086's missing-media check reports the empty slot to the author before publishing (an error
+  that can be acknowledged, so it warns rather than blocks). Tests that pin English on purpose (probe P1's
+  `ENGLISH_IN_NYNORSK`) change where the overlay reaches them.
+
+### D-112 · Upstream reports drafted for the owner to file; Lumi stays at 10.0.4
+- **Context:** D-081 left two items for S6: ask Lumi's maintainers for a release with their unreleased file-security
+  work, or review and pin a Lumi commit built from source; and report our fixes and the D-080 barriers upstream.
+  npm's newest `@lumieducation/h5p-server` is still 10.0.4 (2025-03-08), while the repository is active (R-09).
+  Pinning a commit changes a CLAUDE.md invariant (`@lumieducation/h5p-server@10.0.4`); `check:pins` accepts only
+  registry versions; the sanitiser, Redis-lock and ClamAV packages would have to move with it (`master` changed the
+  malware-scanner interface); and it needs a review of about 620 commits in D-022's manner and the full gate. The
+  `image-size` audit exceptions (D-030, R-08) expire on 2027-01-31, and only a Lumi version with `image-size` 2.0.3 or
+  later removes their cause. Filing needs a GitHub account, and H5P's reporting channel per library must be checked
+  *(verify)*.
+- **Decision:**
+  - **Lumi stays at 10.0.4 in S6.** No commit is pinned; our adapters and our own file security stay (D-003, D-081).
+  - **Drafts the owner files:** `docs/upstream/` holds texts ready to file: a release request to Lumi naming the
+    unreleased changes we need and the `image-size` advisories; Lumi issues for `deleteAllContentUserDataByUser`
+    deleting the acting user's data (D-108), `alterLibraryLanguageFile` dropping `libraryStrings` (D-111), the ClamAV
+    scanner's `NotScanned` being accepted (D-110), and Core 1.28 with the new Hub (the adapters of spec 01 §1); and
+    H5P reports for the barriers in D-080's register (`upstreamRegister.ts`). The owner files them from an account of
+    their choice; the agent files nothing. Each filed issue's link goes back into the register and into `UD-040`'s
+    report.
+  - **Before 2027-01-31,** HVL or the bachelor students choose one of: a Lumi release with a fixed `image-size`; a
+    reviewed Lumi commit pinned by its own decision; or a reviewed renewal of the exception with a new expiry
+    (`SEC-007`). Until then `check:audit` passes; after it, CI turns red, as designed.
+- **Alternatives considered:** (a) Pinning a reviewed Lumi commit in S6: a long review of a security-relevant
+  dependency, not possible before 1 November beside the MUSTs. (b) A probe build of `master` without switching: useful
+  evidence, left to the students with the drafts. (c) The agent filing from the owner's account: the owner decides
+  what is published under their name.
+- **Consequences:** R-09 stays open, and the hand-off index (D-101) carries the expiry date and the three choices.
+
+### D-113 · The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard
+- **Context:** S5's gate took about 5 hours here, in parts of under 2 hours (the limit of a background command), and
+  its runs under full load found three timing faults. S6 adds more tests and the Docker steps. Since PR #8, GitHub
+  runs CI on `main`; the push run 41075981429 on the merge failed one e2e test (`appPlayEditor.e2e`: its click on
+  «Lagre» landed in H5P's editor iframe while H5P was still growing it, so no save was sent; reproducing it also found
+  that «Lagre» was enabled before H5P's editor could save), fixed at the start of S6. CI checks
+  traceability only through S4 (`--done-through=S4` in `ci.yml`, pinned by `ciWorkflow.test.mjs`). The per-ID runs
+  for `NFR-003` and `UD-031` select no tests in the root Vitest project, because their tests are in the accessibility
+  suite, and `check:licences` passed while a stray `node_modules/node_modules` link hid the workspaces and it counted
+  1 production package instead of 482 (S5 open item 8). Some MUSTs can only be checked as documents here
+  (`DATA-004`, `DATA-005`, `DATA-010`, `NFR-002`'s restore drill, `UD-040`), as with `UD-031` and `NFR-003` (D-079).
+- **Decision:** The owner decided on 2026-10-30 that the gate keeps its full form.
+  - **What it runs:** every S1–S5 gate command and per-ID run (Evaluator Guide §5), plus S6's: `-t "LTI-01"`,
+    `-t "INS-0"`, `-t "DATA-0"` and `-t "NFR-00"`; each S6 ID alone;
+    `npm run spec:trace -- --check --done-through=S6`; the Docker build and the compose smoke; the conformance report
+    and the DPIA input (with `npm run a11y:report` regenerating the automated parts unchanged); and the running server
+    showing the insight and grade-sync views. The Evaluator Guide's S6 row is rewritten in S5's manner.
+  - **How:** in parts of under 2 hours, each a tracked background task whose output goes into PROGRESS; the hourly
+    restart task stays on until the gate passes (D-101).
+  - **IDs tested only in the accessibility suite** (`NFR-003`, `UD-031`, and any S6 ID whose tests are only there)
+    run as `npm run test:a11y -- -t "\[<ID>\]"`, so no per-ID row selects zero tests.
+  - **CI:** `--done-through=S5` now (with `ciWorkflow.test.mjs`), and `S6` once S6's gate passes.
+  - **Licence guard:** `check:licences` fails when a workspace named in the root `workspaces`, or a runtime
+    dependency declared in the root or a workspace manifest, is missing from the production set it checked; the
+    expected set comes from the manifests, so no minimum count is needed.
+  - **Evidence from CI:** a step this environment cannot run (the image with Chromium, the compose smoke, ClamAV) may
+    cite GitHub CI's run on the gate commit by its run ID.
+  - **Document checks:** tests that compare a document with its sources (for example, the DPIA input's custom fields
+    with the developer key's) count as tested for `DATA-004`, `DATA-005`, `DATA-010`, `NFR-002` and `UD-040`, as
+    D-079 decided for `UD-031` and `NFR-003`; the Evaluator Guide lists them as not verified until HVL acts.
+  - **`NFR-001`:** a reduced-scale load smoke with the spec's p95 limits here; the 200-learner run on HVL's hardware
+    stays open.
+  - **Listed as open with the output:** Q2–Q8, Q13, Q15 and Q17, the confirmation against real Canvas, the
+    200-learner load test, the manual assistive-technology run and the DPO's review.
+- **Alternatives considered:** (a) Counting the S1–S5 per-ID evidence from one full run's reports, which would save
+  about 3 hours a gate: the owner kept the full form. (b) A separate "documented" status in spec-trace: a second
+  record of what PROGRESS tracks (D-079's reasoning).
+- **Consequences:** Extends D-100's gate to S6 and amends the Evaluator Guide §5. The gate output says which parts
+  ran where.
+
+### D-114 · New development dependencies in S6
+- **Context:** CLAUDE.md pins every dependency exactly, and D-029's checks allow only listed licences. `INS-006` asks
+  for a `fast-check` property test. `NFR-001` asks for "a k6 or Artillery load test script in `tools/load/`" and
+  Lighthouse CI on the player route. Here, k6's download host is refused and its container image needs Docker (probe
+  P3).
+- **Decision:**
+  - `fast-check` (MIT; one dependency, `pure-rand`, MIT), a development dependency pinned exactly at the version
+    current when it is added (4.10.2 on 2026-10-30).
+  - **The load tool** is chosen in the operations probe and recorded here by amendment, with its exact version and
+    licence: k6 as a pinned container image (AGPL-3.0, a separate program outside the npm tree), Artillery from npm
+    (MPL-2.0, a large development tree), or a small harness of our own in Node, which departs from `NFR-001`'s "k6 or
+    Artillery" and would make that amendment a `SPEC-DEVIATION`. Lighthouse CI (`@lhci/cli`, Apache-2.0), if the
+    player timing uses it, is added the same way.
+
+  Each passes `check:pins`, `check:licences` and `check:audit`. The runtime changes (`tsx`, the ClamAV scanner) are
+  in D-110.
+- **Alternatives considered:** Hand-written random cases for `INS-006`: no shrinking to a smallest failing dataset,
+  and the spec names `fast-check`.
+- **Consequences:** The property tests are titled `[INS-006]` and run in `npm test`; this is D-097's rule applied to
+  S6.

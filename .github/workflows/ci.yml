@@ -147,7 +147,7 @@ jobs:
       - name: API documentation builds without warnings (TypeDoc, DOC-002)
         run: npm run docs:api
       - name: Traceability (every MUST of a finished session has a running test)
-        run: npm run spec:trace -- --check --done-through=S4
+        run: npm run spec:trace -- --check --done-through=S5
       - name: Spec website is up to date
         run: npm run spec:site -- --check
       - name: H5P boot check (H5P-001)

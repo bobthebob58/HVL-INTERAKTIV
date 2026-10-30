@@ -34,10 +34,11 @@
 
 - `apps/server`: Express 5 + TypeScript, `@lumieducation/h5p-server` (own routes in `src/http`), `ltijs` 7,
   `openid-client` 6 (Feide), Prisma (PostgreSQL 16), Redis 7, S3-compatible storage (moto emulator locally and in CI, D-023), pino.
-- `apps/web`: Next.js (App Router) + React + TypeScript + Tailwind (token preset), `/laeringsdesign`,
-  `/innsikt`, `/mappe`, `/app/*` (LTI views).
+- `apps/web`: Next.js (App Router) + React + TypeScript + Tailwind (token preset), `/aktivitet/*`,
+  `/laeringsdesign`, `/mappe`, `/app/*` (LTI views). Insight is an «Innsikt» tab, not a page (D-101, D-106).
 - `packages/design-tokens`: `tokens.json` → CSS variables + Tailwind preset, with a contrast test.
-- `packages/hvl-h5p-theme`: `hvl-h5p-theme.css` + `xapiBridge.ts`, injected into H5P player and editor iframes.
+- `packages/hvl-h5p-theme`: `hvl-h5p-theme.css` and plain-JS client scripts, injected into H5P player and editor
+  iframes; `xapiBridge.js` runs only in the top player document, for learners (D-102).
 - `content/`: ALU-editable YAML/Markdown (phases, patterns, guide text, portfolio templates; D-083). No code.
 - `tools/`: `spec-trace`, `spec-site`, `doc-lint`, `dependency-check`, `privacy`, `h5p-core`, `seed`,
   `mock-platform` (S3: mock OIDC + LTI platform for tests).
@@ -82,9 +83,11 @@ Operational rules:
 - 10.0.4 vs the new Hub: `local_id` must be ≤ 15 chars (`getLocalIdOverride`), `/v1/sites` returns a non-200 2xx
   (pre-set `uuid`), and Core 1.28 theme CSS is missing from the asset lists (inject it). See spec 01 §1.
 - Library installation is `GeneralPermission.*`, not `ContentPermission.*` (D-004).
-- Most ltijs examples online are v5 (`lti.setup`, `ltiaas`, `lti.redirect`). Use the v7 API:
+- Most ltijs examples online are v5 (`lti.setup`, `ltiaas`, `lti.redirect`). Use the v7 API (D-005):
   `new Provider(...)`, `onResourceLink`, `onDeepLinking`, `context.redirect`,
-  `context.deepLinking.createDeepLinkingForm`, `context.grading.submitScore` (D-005).
+  `context.deepLinking.createDeepLinkingMessage` with our own form (D-061). `context.grading.submitScore` works only
+  inside a live launch (it needs the ltik), so we do not use it: the background grade worker sends scores with our
+  own AGS client and the tool key ltijs stores (D-104, SPEC-DEVIATION).
 - `openid-client` 6 is ESM-only and functional (`discovery`, `authorizationCodeGrant`); v5 `Issuer`/`Client` examples do not apply.
 - ltijs 7 does NOT validate the deployment ID, and `getLaunchContext(ltik)` ignores `platform.active`: both are our
   checks (D-050, D-051). `LaunchContext.contextId` is the ID-token record, not the course (`idToken.launch.context.id`).

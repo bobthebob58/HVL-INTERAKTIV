@@ -46,4 +46,4 @@ Output lines look like `✗ apps/server/src/x.ts:12 [DOC-002 export-docs] export
 | `lib/repo.mjs` | Which files count as source, and which requirement IDs exist |
 | `checkCommitMessage.mjs` | Commit-message rule for the `commit-msg` hook |
 | `test/tempRepo.mjs` | Builds the small example trees the tests lint |
-| `test/ciWorkflow.test.mjs` | Checks that CI runs every gate of `NFR-004` |
+| `test/ciWorkflow.test.mjs` | Checks that CI runs every gate of `NFR-004`, and that its `--done-through` is the last session `PROGRESS.md` marks ✅ (`DOC-004`) |

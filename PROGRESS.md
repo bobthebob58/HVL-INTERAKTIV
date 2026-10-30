@@ -15,7 +15,7 @@ what is done, what is verified, and what is blocked.
 | S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ✅ Gate passed (2026-10-24); HVL's token and logo confirmation (Q2), the DPO's review of the privacy text (Q6) and the first manual AT run open |
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
-| S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §5–7; 05; 00 §6 | ⬜ Not started |
+| S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | 🟨 In progress (started 2026-10-30; plan approved, D-101…D-114) |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -395,62 +395,158 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
    in the order they arrive.
 8. **Notes from the gate:** `check:licences` passed while a stray `node_modules/node_modules` link hid the
    workspaces from npm and it counted 1 production package instead of 482 (the link was removed before the gate;
-   a guard that fails on an implausibly small production set is S6 work). The per-ID runs for `NFR-003` and
+   a guard that fails when a workspace or a declared runtime dependency is missing from the production set was
+   added at the start of S6). The per-ID runs for `NFR-003` and
    `UD-031` select no tests in the root Vitest project: their tests are in the accessibility suite, which the gate
    runs as `npm run test:a11y`.
+   **Licence half closed in S6 (2026-10-30, D-113):** before it checks licences, `check:licences` now fails when the
+   production set it checked lacks a workspace that the root `workspaces` names or a runtime dependency that the
+   root or a workspace manifest declares, naming each one and the likely cause; the manifests are the expectation,
+   not a minimum count (`tools/dependency-check/productionSetGuard.mjs`). The per-ID half: from S6
+   the gate runs such IDs as `npm run test:a11y -- -t "\[<ID>\]"` (D-113).
 
-## S6 — Grade bridge, insight, privacy, deployment ⬜
+## S6 — Grade bridge, insight, privacy, deployment 🟨 (started 2026-10-30)
 
-- [ ] xAPI bridge, ingestion, minimal storage (`LTI-010`, `LTI-011`, `DATA-012`)
-- [ ] AGS queue and worker, sync status, honest labelling (`LTI-012`, `LTI-013`); NRPS counts (`LTI-008`)
-- [ ] Insight views with *k*-suppression (`INS-001`…`INS-010`, `PROD-010`); spaced-retrieval suggestion (`PROD-014`, COULD)
-- [ ] Purge, audit, data-subject requests, DPIA input (`DATA-003`…`DATA-008`, `DATA-010`); log redaction review (`NFR-006`).
-      The data-subject tool must delete learner state through the storage directly: Lumi 10.0.4's
-      `deleteAllContentUserDataByUser` checks permission for one user and deletes the acting user's data
-      (`ContentUserDataManager.js:39-43`)
-- [ ] Separate files origin for user files with signed URLs (`SEC-004`, D-045; URLs from S3's `HvlUrlGenerator`)
-- [ ] Panopto guidance (`H5P-010`); ClamAV scanning (`SEC-006`); LTI Dynamic Registration (`LTI-009`, COULD)
-- [ ] Docker images, load test, runbook (`NFR-001`, `NFR-002`, `NFR-007`); conformance report (`UD-040`)
-- [ ] Library texts that are English in `nn` and `nb` (S5 probe P1: MultiChoice, QuestionSet, InteractiveBook and
-      BranchingScenario buttons and messages; patterns set their own texts, D-084): consider an HVL language overlay
-      through Lumi's `alterLibraryLanguageFile` hook, so activities made in the editor are Norwegian too (its own
-      decision)
-- [ ] The Canvas side of the studio (D-098): the content bank and "new from a pattern" in the Deep Linking picker,
-      and the `LTI-007` duplicate in `/app/play`
-- [ ] Results in the portfolio: the real `ActivityResultsSource` with *k*-suppression (D-095); Chromium and fonts
-      with æ, ø and å in the production image for the PDF (D-096)
-- [ ] Lumi's server half (D-081): ask Lumi's maintainers for a release with their unreleased file-security work, or
-      review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
-      10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
-      upstream to Lumi and H5P
-- [ ] Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in `docs/` and
-      GitHub issue templates in `.github/ISSUE_TEMPLATE/` (a fault; an accessibility barrier) asking for the steps,
-      what was expected and what happened, device, browser, assistive technology and zoom, the activity type or
-      page, a screenshot, and the severity (cannot use, or privacy or security; accessibility barrier; cosmetic),
-      with matching labels. Rule: no personal data in an issue (no student names, e-mails or Feide IDs; log lines are
-      safe by design, `DATA-009`). The guide describes how a problem is fixed: reproduced in the test set-up, a test
-      that fails first, the cause fixed, the area's tests and the gate, a branch and pull request that HVL reviews
-      and merges. A problem seen only in HVL's Canvas or Feide needs the error and the server's log lines; one seen
-      only on a device or with a screen reader needs a precise description and an HVL re-test; H5P's own barriers
-      are repaired at run time or registered and reported (D-080). Manual results stay dated in
-      `docs/accessibility/results/`
-- [ ] Research export (owner's idea, 2026-10-26; to consider when insight is built): analysis and research scripts
-      run beside the system, in Python or R (pandas, Jupyter notebooks), which ALU and Pedagogisk akademi researchers
-      use, while everything inside the product stays TypeScript. They never touch the live database: the system
-      produces an anonymised export (pseudonyms only, groups under *k* = 5 suppressed, only the fields a question
-      needs), built and tested in TypeScript under the privacy rules, with a documented format and an example
-      notebook. Research use of student data needs its own legal basis and the DPO's approval (Q6) and belongs in
-      the DPIA input (`DATA-005`)
-- [ ] Light simplification check before the pilot (owner decisions 2026-10-24 and 2026-10-25), as in S4+ (two
-      independent skeptics per proposal, no behaviour change, every test kept, the full gate after), with one more
-      lens: does the code read as if a careful human wrote it? Signs of machine-written code to look for: comments
-      that restate the code, checks repeated where one layer already guarantees them, generic or overlong names,
-      boilerplate copied across files, abstractions with one user, and idioms that differ from file to file because
-      different agents wrote them. The reviewers must tell "unfamiliar but correct" from "needlessly odd": code that
-      is unusual because it is right (a security check, an H5P workaround, a timing guard) stays, and gets a short
-      WHY comment a human maintainer can follow, rather than being made ordinary and wrong. An HVL developer reads a
-      sample afterwards and has the last word
-- [ ] Gate: as in the Evaluator Guide §5, S6
+S6 is the last planned session: the xAPI → Canvas grade bridge, teacher insight with *k*-suppression, the privacy
+jobs, deployment and operations, and the carry-overs from S4 and S5. It is too large for the days before 1 November,
+when the project proposal for HVL's bachelor students in programming (spring 2027) goes to HVL; their project is to
+review this AI-written code with their own tools and to finish the Canvas integration against ALU's test instance.
+Plan approved 2026-10-30; decisions D-101…D-114.
+
+**Decided while planning S6 (owner, 2026-10-30; recorded as D-101, D-106 and D-113):**
+1. **Learning data first:** the grade bridge, then insight, then the privacy operations; then operations and
+   security, then the carry-overs. Before 1 November the realistic target is steps 0–4 with parts of step 5 (D-101).
+2. **Insight in tabs only:** an **Innsikt** tab on the activity page `/aktivitet/[id]` and in the Canvas view
+   `/app/play`, one context at a time; no `/innsikt` page. CLAUDE.md §2, spec 05's code location and the Evaluator
+   Guide §4.1 are amended (D-101, D-106).
+3. **Running the session:** the hourly restart task is on until S6's gate passes (D-101).
+4. **The gate keeps its full form** (every S1–S6 per-ID run), run in parts of under 2 hours as tracked background
+   tasks (D-113).
+5. **What passes to the students:** what needs HVL's real Canvas, Feide or servers, and whatever S6 does not reach,
+   as designs, seams and checklists, indexed in `docs/handoff/README.md` (D-101).
+
+**Found while mapping S6 (six agents, 2026-10-30):** `main` was red after PR #8's merge (CI run 41075981429:
+`appPlayEditor.e2e`'s click on «Lagre» landed in H5P's editor iframe while H5P was still growing it, so no save was
+sent; reproducing it also found a real fault: «Lagre» was enabled before H5P's editor could save); the xAPI
+bridge does not exist yet, while `XapiStatement`, `GradeSyncJob` and `LtiPlacement.lineItemUrl`/`attemptPolicy` do;
+ltijs's `context.grading.submitScore` needs a live ltik, so it cannot run in a background worker (D-104); Lumi's
+`alterLibraryLanguageFile` drops the editor libraries' `libraryStrings` (D-111); a files origin would trip the
+`DATA-011` third-party tests unless they know it (D-110); the Docker images have no source for the real content
+types (Q10, D-110); and the S6 spec-load row was narrower than this checklist (D-101).
+
+Steps (one conventional commit per step, `Refs:` with requirement IDs, pushed as we go; each earlier S6 item is kept
+under the step that does it):
+- [x] 0. Start (housekeeping)
+  - [x] Decisions D-101…D-114 recorded in `docs/DECISIONS.md`
+  - [x] PROGRESS: S6 🟨, the spec-load row widened (D-101), these steps, the owner decisions above, Q16 closed and S5
+        open item 8's licence half closed
+  - [x] CLAUDE.md §2 (the xAPI bridge in the top player document, D-102; no `/innsikt`, D-101, D-106) and §5 (the
+        grade worker's own AGS client, D-104; the Deep Linking call corrected to D-061's); spec amendments: 01 `H5P-008`, `H5P-009`, `H5P-010` (D-102, D-111);
+        02 §1, `LTI-008`, `LTI-009`, `LTI-010`, `LTI-011`, `LTI-012`, `LTI-013`, §7 (D-101…D-105); 03 `UD-003`
+        (D-102); 05 code location, §1, `INS-006`, `INS-007`, `DATA-002`, `DATA-003`, `DATA-012`, §4 (D-101…D-104,
+        D-106, D-107); the S6 load rows of specs 01–04 (D-101); the Evaluator Guide §4.1 and §5 (D-101, D-113)
+  - [x] CI `--done-through=S5`, with `ciWorkflow.test.mjs` (D-113)
+  - [x] Licence guard: `check:licences` fails when a workspace or a declared runtime dependency is missing from the
+        production set (`productionSetGuard.mjs`; D-113, S5 open item 8)
+  - [x] The hourly restart task is on until S6's gate passes (D-101)
+  - [x] The red `main` fixed: «Lagre» stays disabled until H5P's editor can save (`editorStart.js`), and the e2e
+        tests wait for it and repeat a click that sent nothing, since H5P can still grow its iframe under the button
+        after that (CI run 41075981429, D-113)
+- [ ] 1. Probes, kept as tests: P1 xAPI on the ten real types (verbs, root vs sub-content, scores, response format,
+      size, iframe duplicates, attempt boundaries; D-102); P2 the mock AGS token round trip (D-104); P3 Docker
+      (dockerd, image pull, Chromium in an image; D-110)
+- [ ] 2. Shared infrastructure: migration `s6_grade_bridge_insight` (`orphaned`, `nextAttemptAt`, `attemptId`,
+      `terminalAt`, `academicYear`); api-contract schemas (xAPI batch, grade sync, insight); mock Canvas token, AGS
+      and NRPS endpoints with fault injection; an injectable clock and `runOnce` seams; a 30-learner insight fixture
+      with hand-calculated values
+- [ ] 3. A — Grade bridge (`LTI-010`, `LTI-011`, `DATA-012`, `LTI-012`, `LTI-013`, `LTI-008`, `H5P-009`): the
+      `DATA-012` mapper → `POST /api/h5p/xapi` (auth, View and launch checks, zod, rate limit, 202) → `xapiBridge.js`
+      and its wiring → attempt policy → enqueuer → AGS client → worker → status and retry API and UI (portal tab and
+      `/app/play`) → label mode → NRPS counter → the `ltiSub` 30-day cleanup
+  - [ ] xAPI bridge, ingestion, minimal storage (`LTI-010`, `LTI-011`, `DATA-012`): plain JavaScript in the top player
+        document, learners only (D-102); contexts as `<platformId>:<contextId>` (D-103)
+  - [ ] AGS queue and worker, sync status, honest labelling (`LTI-012`, `LTI-013`); NRPS counts (`LTI-008`): our own
+        AGS client in a durable worker (D-104), `AGS_LABEL_MODE` `suffix` or `preserve` with Q8 open (D-105)
+- [ ] 4. B — Insight (`INS-001`…`INS-010`, `PROD-010`, the `LTI-006` **Innsikt** tab, `PROD-013` by version,
+      `MAPPE-003` real source): the suppression core with property tests → aggregators `INS-001`, `INS-002`,
+      `INS-003` (`INS-004`, `INS-005` if time) → access and audit → insight API → the web **Innsikt** tabs (charts,
+      suppressed cells, shortlist, CSV, findings) → the mappe's real results source; `PROD-014` (COULD) if time
+  - [ ] Insight views with *k*-suppression (`INS-001`…`INS-010`, `PROD-010`); spaced-retrieval suggestion
+        (`PROD-014`, COULD): as tabs, per context, fixed periods, `INS-006` as written (D-106)
+  - [ ] Results in the portfolio: the real `ActivityResultsSource` with *k*-suppression (D-095)
+- [ ] 5. C — Privacy operations (`DATA-003`, `DATA-004`, `DATA-005`, `DATA-007`, `DATA-008`, `DATA-010`, `NFR-006`):
+      purge with a dry run → the data-subject CLI → the database roles script → production checks → the request log
+      → DPIA input → DATA-INVENTORY rows (with the Redis keys) → the research export, design only (Q6)
+  - [ ] Purge, audit, data-subject requests, DPIA input (`DATA-003`…`DATA-008`, `DATA-010`); log redaction review
+        (`NFR-006`). The data-subject tool must delete learner state through the storage directly: Lumi 10.0.4's
+        `deleteAllContentUserDataByUser` checks permission for one user and deletes the acting user's data
+        (`ContentUserDataManager.js:39-43`). Designs: D-107 (purge on 31 August by a stored academic year), D-108
+        (a server CLI for HVL operations), D-109 (database roles, production TLS checks, the request log)
+  - [ ] Research export (owner's idea, 2026-10-26; to consider when insight is built): analysis and research scripts
+        run beside the system, in Python or R (pandas, Jupyter notebooks), which ALU and Pedagogisk akademi
+        researchers use, while everything inside the product stays TypeScript. They never touch the live database:
+        the system produces an anonymised export (pseudonyms only, groups under *k* = 5 suppressed, only the fields a
+        question needs), built and tested in TypeScript under the privacy rules, with a documented format and an
+        example notebook. Research use of student data needs its own legal basis and the DPO's approval (Q6) and
+        belongs in the DPIA input (`DATA-005`). In S6: the design only (plan step 5)
+- [ ] 6. D — Operations and security (`NFR-007`, `SEC-004`, `SEC-006`, `NFR-002`, `NFR-001`, `UD-040`, the
+      `MAPPE-004` image), designed in D-110: the Dockerfile and compose profile with a smoke test (or written only if
+      dockerd will not run here; then CI runs it) → the files origin → ClamAV → runbook, backup and restore scripts
+      with a round-trip test → the load harness with a reduced-scale smoke (tool chosen by amendment to D-114) →
+      `npm run a11y:report` for the conformance report → the PDF availability probe
+  - [ ] Separate files origin for user files with signed URLs (`SEC-004`, D-045; URLs from S3's `HvlUrlGenerator`):
+        the player's files first, the editor's route later (D-110)
+  - [ ] ClamAV scanning (`SEC-006`): Lumi's scanner 10.0.4 wrapped to fail closed (D-110)
+  - [ ] Docker images, load test, runbook (`NFR-001`, `NFR-002`, `NFR-007`); conformance report (`UD-040`)
+  - [ ] Chromium and fonts with æ, ø and å in the production image for the PDF (D-096)
+- [ ] 7. E — Carry-overs: the language overlay and `H5P-010`'s texts (drafts for ALU) → problem reporting (the
+      Nynorsk tester guide, GitHub issue forms) → upstream drafts → the **students' hand-off index**
+      (`docs/handoff/README.md`: what is done, what needs HVL, the live-contract seam `apps/server/live/` and the
+      Canvas acceptance checklist)
+  - [ ] Library texts that are English in `nn` and `nb` (S5 probe P1: MultiChoice, QuestionSet, InteractiveBook and
+        BranchingScenario buttons and messages; patterns set their own texts, D-084): an HVL language overlay, so
+        activities made in the editor are Norwegian too. Decided in D-111: not through Lumi's
+        `alterLibraryLanguageFile` hook, which in 10.0.4 drops the editor libraries' `libraryStrings`, but through a
+        library-storage wrapper after D-046's, with the texts in `content/` for ALU
+  - [ ] Panopto guidance (`H5P-010`), through the same overlay for `nn` and `nb` (D-111)
+  - [ ] The Canvas side of the studio (D-098): the content bank and "new from a pattern" in the Deep Linking picker,
+        and the `LTI-007` duplicate in `/app/play`; passes to the students when S6 does not reach it (D-101)
+  - [ ] LTI Dynamic Registration (`LTI-009`, COULD): the design only; the build passes to the students (D-101)
+  - [ ] Lumi's server half (D-081): ask Lumi's maintainers for a release with their unreleased file-security work, or
+        review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
+        10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
+        upstream to Lumi and H5P. Decided in D-112: Lumi stays at 10.0.4 in S6; the release request, the Lumi issues
+        and the H5P barrier reports are drafted in `docs/upstream/` for the owner to file; before 2027-01-31 HVL or
+        the students choose how the `image-size` exceptions end
+  - [ ] Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in `docs/` and
+        GitHub issue templates in `.github/ISSUE_TEMPLATE/` (a fault; an accessibility barrier) asking for the steps,
+        what was expected and what happened, device, browser, assistive technology and zoom, the activity type or
+        page, a screenshot, and the severity (cannot use, or privacy or security; accessibility barrier; cosmetic),
+        with matching labels. Rule: no personal data in an issue (no student names, e-mails or Feide IDs; log lines
+        are safe by design, `DATA-009`). The guide describes how a problem is fixed: reproduced in the test set-up, a
+        test that fails first, the cause fixed, the area's tests and the gate, a branch and pull request that HVL
+        reviews and merges. A problem seen only in HVL's Canvas or Feide needs the error and the server's log lines;
+        one seen only on a device or with a screen reader needs a precise description and an HVL re-test; H5P's own
+        barriers are repaired at run time or registered and reported (D-080). Manual results stay dated in
+        `docs/accessibility/results/`
+  - [ ] The students' hand-off index `docs/handoff/README.md` (D-101)
+- [ ] 8. Integration: the accessibility suite for every new view; e2e journeys (J1 split if the Canvas studio is not
+      reached, xAPI → AGS, insight, purge and data-subject requests); screenshots in `nn` at 1280 and 390 px sent to
+      the owner as the views appear (CLAUDE.md §4)
+- [ ] 9. Docs: READMEs, GLOSSARY, the Evaluator Guide (S6 row, limitations), PROGRESS
+- [ ] 10. Review and verification: an independent review with a skeptic per finding, two verification passes
+  - [ ] Light simplification check before the pilot (owner decisions 2026-10-24 and 2026-10-25), as in S4+ (two
+        independent skeptics per proposal, no behaviour change, every test kept, the full gate after), with one more
+        lens: does the code read as if a careful human wrote it? Signs of machine-written code to look for: comments
+        that restate the code, checks repeated where one layer already guarantees them, generic or overlong names,
+        boilerplate copied across files, abstractions with one user, and idioms that differ from file to file because
+        different agents wrote them. The reviewers must tell "unfamiliar but correct" from "needlessly odd": code that
+        is unusual because it is right (a security check, an H5P workaround, a timing guard) stays, and gets a short
+        WHY comment a human maintainer can follow, rather than being made ordinary and wrong. An HVL developer reads a
+        sample afterwards and has the last word. If time allows; otherwise carried to the pilot list
+- [ ] 11. Gate (the full form, in parts of under 2 hours; D-113), its output in the session log, push, the restart
+      task off. A pull request only when the owner asks
+  - [ ] Gate: as in the Evaluator Guide §5, S6
 
 ---
 
@@ -470,7 +566,7 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
 | Q15 | Learner LTI launches are not written to the authentication audit (D-064) | HVL DPO | S6 |
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous and equals the Feide ID; only then set `"feideLinking": true` for that platform in `LTI_PLATFORMS` (AUTH-005, D-063) | TeCopp | S3 |
-| Q16 | The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).** | Repository owner | Confidence in every gate; the pilot |
+| Q16 | ~~The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).**~~ Resolved 2026-10-30 (D-101): GitHub CI runs on `main` and on pull requests. `main` is protected by a ruleset that requires a pull request and CI's «Session gate» check; that check passed on pull request #8 (run 41066236672, on `72e5516`), which was then merged (`47e235e`); Dependabot opens one grouped monthly pull request per ecosystem (S5 start). The push run on the merge (run 41075981429) was red: its end-to-end step failed in `appPlayEditor.e2e`, which pressed «Lagre» before the editor could save, a real slow-device fault. It is fixed in S6 step 0; GitHub's confirmation comes with that step's push | — | — |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
 | Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`) | HVL DPO | S6, pilot |
 | Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns. Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
@@ -810,3 +906,13 @@ Append one entry per session: date, session, what was done, gate output, and any
   ```
 
   Open at the end of S5: the items listed in section S5 (Q17 first). The hourly restart task is switched off.
+- **2026-10-30 · S6 start** — The owner approved the S6 plan with five decisions (section S6): learning data first,
+  insight as tabs only (no `/innsikt` page), the hourly restart task on until S6's gate passes, the full gate run in
+  parts of under 2 hours, and what S6 does not reach passing to HVL's bachelor students through a hand-off index. Mapping S6 (six agents) found `main` red after PR #8's merge (run 41075981429, the editor
+  save race), no xAPI bridge yet, ltijs's `submitScore` tied to a live ltik, Lumi's `alterLibraryLanguageFile`
+  dropping the editor's texts, and a spec-load row narrower than the checklist. Recorded D-101…D-114; fixed `main`
+  («Lagre» waits until H5P's editor can save); raised CI to `--done-through=S5`; added the licence check's
+  production-set guard (S5 open item 8); amended CLAUDE.md §2 and §5, specs 01 (`H5P-008`…`H5P-010`), 02 (§1, §5–§7),
+  03 (`UD-003`) and 05 (code location, §1, `INS-006`, `INS-007`, `DATA-002`, `DATA-003`, `DATA-012`, §4), the S6
+  load rows of specs 01–04 and the Evaluator Guide (§4.1, §5); closed Q16. The hourly restart task is on until S6's
+  gate passes.

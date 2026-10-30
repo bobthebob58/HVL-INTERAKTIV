@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Status** | Approved for build (v1.0, 2026-10-16) |
-| **Load in sessions** | S3: §1–§4, §7, §8 · S6: §5–§8 (NRPS, grade bridge, data, S3 code map) |
+| **Load in sessions** | S3: §1–§4, §7, §8 · S6: §4–§8 (launches and Deep Linking, NRPS, grade bridge, data, S3 code map; widened by D-101) |
 | **Owns requirement IDs** | `AUTH-*`, `LTI-*` |
 | **Code location** | `apps/server/src/auth/`, `apps/server/src/lti/`, `apps/server/src/web/`, `apps/server/src/grades/`, `apps/web/src/api/`, `apps/web/src/features/lti/` |
 
@@ -17,7 +17,7 @@
 | ltijs 7 engine requirement | `node >= 24` | The runtime is **Node.js 24 LTS**, not 22. (D-001) |
 | ltijs 7 storage | Pluggable `DatabaseManager` interface with 14 methods. Ships only MongoDB implementations. Redis cache via `RedisCacheManager`. | We write `PrismaLtiDatabaseManager` for PostgreSQL rather than add MongoDB. `ltijs-postgresql` and `ltijs-sequelize` target v5 and have not been updated since 2022. (D-005) |
 | ltijs 7 launch tokens | Each launch yields a signed **ltik** (24 h lifetime). `LaunchContext.redirect()` appends it to the URL. `Provider.getLaunchContext(ltik)` resumes the launch. No session cookie is needed. | This solves the third-party-cookie problem in Canvas iframes by design. |
-| ltijs 7 services on `LaunchContext` | `deepLinking.createDeepLinkingForm(items, options)`, `grading.submitScore(lineItemId, score)`, Names & Roles, Dynamic Registration | These are the APIs used below. |
+| ltijs 7 services on `LaunchContext` | `deepLinking.createDeepLinkingForm(items, options)`, `grading.submitScore(lineItemId, score)`, Names & Roles, Dynamic Registration | These are the APIs used below. *Amended:* Deep Linking signs with `createDeepLinkingMessage` and our own form (D-061). `SPEC-DEVIATION` D-104 (2026-10-30): `grading.submitScore` is not used, because it works only from a live ltik; the grade worker has its own AGS client (`LTI-012`). Names & Roles still runs through ltijs during a launch. |
 | `openid-client` | **6.x** (ESM-only, functional API: `discovery()`, `buildAuthorizationUrl()`, `authorizationCodeGrant()`) | Older `Issuer`/`Client` class examples do not apply. |
 | Canvas platform values (checked 2026-10-21) | `iss` `https://canvas.instructure.com`; OIDC auth `https://sso.canvaslms.com/api/lti/authorize_redirect`; JWKS `https://sso.canvaslms.com/api/lti/security/jwks`; token `https://sso.canvaslms.com/login/oauth2/token` (or `https://<institution-domain>/login/oauth2/token`); `privacy_level` values `anonymous`, `name_only`, `email_only`, `public` | Recorded with Canvas doc and source citations in [`docs/reference/canvas-platform-values.md`](../reference/canvas-platform-values.md); paste-ready key in [`canvas-lti13-developer-key.json`](../reference/canvas-lti13-developer-key.json). |
 | Feide OIDC provider (checked 2026-10-16) | Issuer `https://auth.dataporten.no`; endpoints `/oauth/authorization`, `/oauth/token`, `/openid/userinfo`, `/openid/jwks`, `/openid/endsession`; PKCE `S256`; ID tokens `RS256`; Groups API `https://groups-api.dataporten.no/groups` | Recorded with evidence in [`docs/reference/feide-oidc-config.example.json`](../reference/feide-oidc-config.example.json) and [`feide-values.md`](../reference/feide-values.md). Assembled from Feide's documentation and public code; HVL's own client values still come from the Customer Portal. |
@@ -238,10 +238,17 @@ stored**, never member names or e-mail addresses. This needs the developer-key s
 `https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly`; with `privacy_level`
 `anonymous`, NRPS members carry no name, e-mail or picture in any case.
 - **Verify:** Integration test with a mock NRPS endpoint.
+- **Amended (D-103, D-104, 2026-10-30):** the count is fetched with ltijs's `context.namesAndRoles` during a launch,
+  while the launch context lives, and cached under the platform-scoped context `<platformId>:<contextId>` (D-103), so
+  courses with the same ID in two of HVL's Canvas instances never share a count. NRPS paging and role filtering on
+  HVL's Canvas are on the students' Canvas acceptance checklist *(verify)* (D-101).
 
 #### LTI-009 · COULD · S6 · LTI Dynamic Registration
 Support Canvas's LTI Dynamic Registration through ltijs 7, so TeCopp can install the tool from one
 URL. The JSON developer key in `docs/reference/canvas-lti13-developer-key.json` remains the fallback.
+- **Amended (D-101, 2026-10-30):** S6 writes the design only. Trying it needs a Canvas administrator, and a dynamic
+  registration must not be undone by the start-up sync of `LTI_PLATFORMS` (D-051). The build passes to HVL's bachelor
+  students through the hand-off index (`docs/handoff/README.md`).
 
 ---
 
@@ -253,6 +260,17 @@ The injected client script (`packages/hvl-h5p-theme/src/xapiBridge.ts`, `H5P-009
 2 s and flushed on `pagehide`, with the ltik or CSRF token. Failed posts are retried from an
 in-memory queue. They never block or slow down the activity.
 - **Verify:** Unit test of the batching queue; Playwright test that statements arrive.
+- **Amended (D-102, 2026-10-30):** `SPEC-DEVIATION`: the bridge is plain JavaScript,
+  `packages/hvl-h5p-theme/src/xapiBridge.js`, like the theme's other client scripts (there is no browser build for
+  TypeScript). It runs once in the top player document (`h5p/render/playerPage.ts`: `/h5p/play/:contentId` in the
+  portal, `/lti/play` in Canvas), not inside H5P's iframes (`H5P-009` as amended), and queues each statement once,
+  also one that H5P Core relays from its own iframe. The player page loads it only for a learner principal, so
+  previews and teachers' plays are never sent. It makes a random `attemptId` for the root activity when the page
+  loads and a new one after the root's scored `completed` or `answered` statement (probe P1 checks the real attempt
+  boundaries). Credentials: in Canvas the ltik as `Authorization: Bearer` from the page's memory, in the portal the
+  session cookie with the `X-CSRF-Token` header; never an ltik in the query. On `pagehide` it flushes with `fetch`
+  and `keepalive: true` (not `sendBeacon`, which cannot carry those headers); nothing goes to browser storage. It adds
+  no ✓/✗ text (`UD-003` as amended).
 
 #### LTI-011 · MUST · S6 · Validate and store statements
 `/api/h5p/xapi` validates statements with a zod schema. It accepts only verbs it uses
@@ -261,6 +279,10 @@ to content the principal may view, and that `0 ≤ score.raw ≤ score.max` and 
 rate-limits each learner and activity to 120 statements per minute. Then it stores the minimal
 fields defined in `DATA-012` and drops the rest of the statement (including `actor.name` and `actor.mbox`).
 - **Verify:** Unit tests for the schema; integration test for rate limiting.
+- **Amended (D-102, D-103, 2026-10-30):** statements are stored only from a learner principal; anyone else's request
+  stores nothing. In Canvas the content must also be the launched activity. The stored `contextId` is the
+  platform-scoped `<platformId>:<contextId>` (D-103, null for a portal play), and the stored `timestamp` is when the
+  server received the batch, not what the browser claims.
 
 #### LTI-012 · MUST · S6 · Publish scores to the Canvas gradebook (AGS)
 When a statement concerns the **root** content (no `subContentId`), has the verb `completed` or
@@ -284,6 +306,21 @@ a new client-credentials token itself, or is marked failed for the author to ret
 - **Acceptance:** Learning never waits for grade sync. Authors see a per-activity sync status
   (counts of sent / pending / failed) and can retry failed jobs.
 - **Verify:** Integration tests with a mock AGS endpoint (success, 5xx retry, 404 orphaned, idempotency).
+- **Amended (D-104, 2026-10-30):** `SPEC-DEVIATION` from the sentence "A worker calls
+  `context.grading.submitScore(…)`" only: that method works only from a live ltik, which a background worker does not
+  hold and must not store. `AgsScoreClient` (`apps/server/src/grades/`) requests the client-credentials token itself,
+  from the first attempt, with a JWT assertion signed by the tool key ltijs stores for the platform, and posts the
+  same score body to the line item's `/scores` URL. A job is written only for a learner in a Canvas launch, a root
+  statement with `completed` or `answered` and a score, and a placement with a `lineItemUrl`; jobs stay idempotent per
+  `(placement, learnerKey, attemptId)`, so a later scored statement of the same attempt updates its job. The worker
+  (one node at a time, about every 15 s) coalesces due jobs per `(placement, learnerKey)`, applies the placement's attempt policy to that learner's attempt scores, sends one
+  current score and settles the coalesced jobs together. Outcomes: 2xx succeeds; a 404 confirmed with a
+  `lineitem.readonly` read marks the job `orphaned`, not retried; a 429, 5xx or network error is retried with
+  exponential backoff and jitter, at most 8 attempts, the last within 24 h of the first, then `failed`; a 401 fetches
+  a new token once; any other 4xx fails at once. The encrypted `sub` is removed 30 days after the job stops, whatever
+  its outcome. Authors see sent, pending, failed and orphaned counts per placement on the activity page and in
+  `/app/play` and retry failed jobs there. Not deviated: the score body, the policies, the retry limit, idempotency,
+  `orphaned` and the developer key's scopes.
 
 #### LTI-013 · MUST · S6 · Score integrity is honest
 H5P computes scores in the browser, so a determined student can forge them. The system therefore
@@ -295,6 +332,13 @@ overwrites the teacher's own name. Whether "(formativ)" belongs in the assignmen
 content item's description instead (with Canvas's `preserveExistingAssignmentName` extension), is a
 decision for HVL and ALU *(verify)*.
 - **Verify:** Review item in the evaluator guide; unit test for the label suffix.
+- **Amended (D-105, 2026-10-30):** `AGS_LABEL_MODE` chooses: `suffix` (the default, as written above: the label is
+  «Tittel (formativ)», the title cut when needed so the suffix is never lost) or `preserve` (the label is the title,
+  the content item carries Canvas's `preserveExistingAssignmentName`, and its description says the score is
+  formative). The suffix is «(formativ)» in every language. Q8 stays open; HVL and ALU's answer changes the setting,
+  not the code, and a change affects new placements only. The insight views, the `INS-009` CSV and the grade-sync
+  status also say that the scores are formative, computed in the browser and not exam evidence. The unit test checks
+  the label in both modes.
 
 ---
 
@@ -307,7 +351,7 @@ decision for HVL and ALU *(verify)*.
 | `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken` | as required by ltijs `DatabaseManager`; `LtiPlatform.privateKeyEncrypted` and `LtiAccessToken.tokenEncrypted` are encrypted with `DATA_ENCRYPTION_KEYS` (D-056) | `LtiIdToken.claims` holds an allowlist of launch claims, including `sub` but no name, e-mail, `lis` or `feide_login` (D-052). Kept for 24 h only; nonces 10 min. |
 | `LtiDeployment` | `platformId`, `deploymentId`; replaced from `LTI_PLATFORMS` at start-up (D-051) | No |
 | `LtiPlacement` | `platformId`, `contextId`, `resourceLinkId`, `contentId`, `lineItemUrl?`, `attemptPolicy`, `masteryThreshold?` | No |
-| `GradeSyncJob` | `placementId`, `learnerKey`, `ltiSub (encrypted)`, `scoreGiven`, `status`, `attempts`, `lastError`, `idempotencyKey` | `ltiSub` is needed for AGS; encrypted, deleted 30 days after success |
+| `GradeSyncJob` | `placementId`, `learnerKey`, `ltiSub (encrypted)`, `scoreGiven`, `status` (with `orphaned`), `attempts`, `lastError`, `idempotencyKey`; from S6 also `attemptId`, `nextAttemptAt`, `terminalAt` (D-104) and `academicYear` (D-107) | `ltiSub` is needed for AGS; encrypted, deleted 30 days after success (amended, D-104: 30 days after `terminalAt`, whether the job succeeded, failed or was orphaned) |
 | `AuthAuditEvent` | `at`, `actorUserId?`, `event`, `reason?` (a fixed code), `ipHash?`, `ipKeyId?` (the `IDENTITY_HASH_KEYS` key that made `ipHash`) (D-055, D-064) | Minimal |
 | Portal session (Redis, not a table) | `userId`, `roles`, `hvlMember`, `studentAuthor`, `locale`, `learnerKey`, `csrfToken`, `idTokenEncrypted`, `createdAt`, `lastSeenAt`, under a SHA-256 of the session ID (D-057) | The Feide ID token, encrypted (D-021, D-056). Gone at logout, 2 h idle or 12 h. |
 | Login transaction (Redis, not a table) | `state`, `nonce`, `codeVerifier`, `returnTo`, `createdAt`, under a SHA-256 of the transaction ID (D-057) | No. Single use, at most 10 min. |

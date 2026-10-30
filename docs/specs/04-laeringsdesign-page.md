@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Status** | Approved for build (v1.0, 2026-10-16) |
-| **Load in sessions** | S5 (all). S4 loads §5 only, because the hint rules plug into the validator engine. |
+| **Load in sessions** | S5 (all). S4 loads §5 only, because the hint rules plug into the validator engine. S6 loads `MAPPE-003` and `MAPPE-004` (the mappe's real results and the PDF in the image; D-101). |
 | **Owns requirement IDs** | `PED-*`, `MAPPE-*` |
 | **Code location** | `apps/web/src/app/(portal)/laeringsdesign/`, `apps/web/src/app/(portal)/mappe/`, `apps/web/src/features/` (studio views), `apps/server/src/learningDesign/` (content loader, patterns, metadata, planner, collaboration, mappe), `apps/server/src/validation/rules/*Hint.ts`, `content/laeringsdesign/`, `content/mappe/` (amended in S5, D-084, D-089) |
 
