@@ -1,0 +1,30 @@
+// HVL Interaktiv in GitHub Codespaces (or any Dev Container host): Node.js 24, Docker for docker-compose.yml's
+// PostgreSQL, Redis and S3 emulator, full Chromium, and the documented setup run once by setup.sh. Open the codespace
+// in VS Code on your own computer, so the ports below arrive as localhost there, as the mock Feide and the mock Canvas
+// need. How to use it: README.md in this folder. Versions are exact, as everywhere in the repository.
+{
+  "name": "HVL Interaktiv",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:5.2.5-24-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:4.1.3": {}
+  },
+  // WHY: the web app build, PostgreSQL and Chromium together need more than the smallest machine.
+  "hostRequirements": { "cpus": 4, "memory": "16gb", "storage": "32gb" },
+  "forwardPorts": [3000, 4100, 4200],
+  // WHY: the tool, the mock Feide and the mock Canvas address each other by these fixed ports
+  // (apps/server/.env.example), so a different local port would break the logins.
+  "portsAttributes": {
+    "3000": { "label": "HVL Interaktiv", "requireLocalPort": true, "onAutoForward": "notify" },
+    "4100": { "label": "Mock Canvas", "requireLocalPort": true, "onAutoForward": "silent" },
+    "4200": { "label": "Mock Feide", "requireLocalPort": true, "onAutoForward": "silent" }
+  },
+  "otherPortsAttributes": { "onAutoForward": "ignore" },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/services.sh",
+  "customizations": {
+    "codespaces": { "openFiles": [".devcontainer/README.md"] },
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "vitest.explorer"]
+    }
+  }
+}
