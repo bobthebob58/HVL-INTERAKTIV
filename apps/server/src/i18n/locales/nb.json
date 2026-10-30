@@ -54,6 +54,8 @@
     "subContentNotAllowed": "«{{library}}» kan ikke brukes inne i denne aktiviteten.",
     "libraryNotInstalled": "Innholdstypen «{{library}}» er ikke installert.",
     "unsafeFilePath": "En filsti i aktiviteten inneholder tegn som ikke er tillatt (anførselstegn, < eller >).",
+    "unsafeFileName": "En filsti i aktiviteten er ugyldig: den kan ikke begynne med «/» eller inneholde «..», «\\», tomme ledd eller kontrolltegn.",
+    "pasteSourceNotAllowed": "Aktiviteten bruker filer fra en annen aktivitet som du ikke kan lage kopi av. Last opp filene på nytt i stedet.",
     "hubInstallDisabled": "Innholdstyper installeres av en administrator, ikke fra H5P-huben.",
     "librariesInstalled": "Installerte innholdstyper: {{count}}.",
     "librariesUpdated": "Oppdaterte innholdstyper: {{count}}.",
@@ -108,6 +110,7 @@
       "errorLabel": "Feil",
       "goToField": "Gå til feltet",
       "fieldNotReached": "Klarte ikke å åpne selve feltet. Fokus står på den nærmeste delen av skjemaet, så åpne feltet for hånd derfra.",
+      "titleNotReached": "Denne delen av aktiviteten har ingen tittel du kan endre i redigeringsverktøyet, så fokus står på den nærmeste delen av skjemaet.",
       "frameTitle": "H5P-redigering: ny aktivitet"
     }
   },
@@ -131,5 +134,111 @@
       "body": "H5P-aktiviteter blir rettet i nettleseren. Poengene er ment for læring underveis (underveisvurdering), ikke for eksamen eller karakterer.",
       "dismiss": "Ikke vis meldingen igjen"
     }
+  },
+  "safeEditing": {
+    "dialog": {
+      "title": "Endringen nullstiller fremgangen til studentene",
+      "body": "Strukturelle endringer, som å legge til, fjerne eller bytte rekkefølge på spørsmål eller svaralternativer, nullstiller fremgangen studentene har lagret i aktiviteten. Skriver du om et svaralternativ, endrer du også hva de lagrede valgene betyr.",
+      "cancel": "Avbryt",
+      "reset": "Nullstill fremgangen og lagre",
+      "saveAsCopy": "Lagre som ny versjon",
+      "saveAsCopyHint": "Den nye versjonen blir et privat utkast. Originalen og fremgangen til studentene blir ikke endret.",
+      "canvasPointer": "I Canvas kan du bare nullstille fremgangen eller avbryte. Vil du heller lagre endringen som en ny versjon, åpner du aktiviteten i HVL Interaktiv-portalen og lagrer den der."
+    },
+    "outcome": {
+      "resetAndSaved": "Endringen er lagret, og fremgangen til studentene er nullstilt.",
+      "savedAsCopy": "Endringen er lagret som en ny versjon. Originalen og fremgangen til studentene er ikke endret.",
+      "cancelled": "Endringen er ikke lagret."
+    },
+    "busy": {
+      "resetting": "Nullstiller fremgangen og lagrer endringen …",
+      "copying": "Lagrer endringen som en ny versjon …"
+    },
+    "resetNeededCanvas": "Endringen endrer oppbygningen av aktiviteten, og andre har lagret fremgang i den. Bekreft at fremgangen skal nullstilles, eller avbryt. En ny versjon kan du lagre i HVL Interaktiv-portalen."
+  },
+  "learningDesign": {
+    "error": {
+      "patternUnavailable": "Mønsteret kan ikke brukes nå, fordi en innholdstype det trenger, ikke er installert. Be en administrator om hjelp, eller lag en tom aktivitet.",
+      "patternChoiceInvalid": "Velg en fase og en innholdstype som mønsteret tilbyr.",
+      "learningDesignConflict": "Læringsdesignet ble endret i mellomtiden. Last inn siden på nytt og prøv igjen.",
+      "learnerStateResetNeeded": "Endringen endrer oppbygningen av aktiviteten, og andre har lagret fremgang i den. Bekreft at fremgangen skal nullstilles, eller lagre endringen som ny versjon.",
+      "ownerOnly": "Bare eieren av aktiviteten kan gjøre dette.",
+      "coauthorNotEligible": "Denne personen kan ikke legges til som medforfatter. Bare ansatte ved HVL kan være medforfattere.",
+      "coauthorLimit": "Aktiviteten har allerede så mange medforfattere som er tillatt.",
+      "bankNotEligible": "Bare publiserte aktiviteter som er delt med hele HVL eller flere, kan legges i innholdsbanken.",
+      "duplicateNotAllowed": "Du kan ikke lage en kopi av denne aktiviteten.",
+      "duplicateFailed": "Kopien kunne ikke lages, så ingenting ble lagret. Prøv igjen.",
+      "rateLimited": "Du har sendt for mange forespørsler på kort tid. Vent litt og prøv igjen.",
+      "mappeTooMany": "Du har valgt for mange aktiviteter til mappen. Velg færre og prøv igjen.",
+      "criteriaSetUnknown": "Kriteriesettet finnes ikke. Last inn siden på nytt og prøv igjen.",
+      "pdfUnavailable": "PDF-filen kan ikke lages akkurat nå. Last ned Markdown-filen i stedet.",
+      "pdfBusy": "Det lages mange PDF-filer akkurat nå. Vent litt og prøv igjen, eller last ned Markdown-filen.",
+      "mappeNotReady": "Malen og kriteriene for den pedagogiske mappen er ikke lagt inn ennå, så mappen kan ikke lages. Prøv igjen senere."
+    }
+  },
+  "mappe": {
+    "placeholder": {
+      "author": "[navnet ditt]",
+      "untitled": "[uten tittel]",
+      "phase": "ingen fase valgt",
+      "course": "ingen emnekode",
+      "outcomes": "ingen læringsutbytter skrevet",
+      "rationale": "ingen begrunnelse skrevet",
+      "notPublished": "ikke publisert",
+      "attachment": "[fyll inn vedlegg]"
+    },
+    "status": {
+      "draft": "utkast",
+      "published": "publisert"
+    },
+    "contentType": {
+      "CoursePresentation": "Kurspresentasjon",
+      "InteractiveVideo": "Interaktiv video",
+      "QuestionSet": "Spørsmålssett",
+      "InteractiveBook": "Interaktiv bok",
+      "Column": "Kolonne",
+      "DragText": "Dra ordene",
+      "MultiChoice": "Flervalg",
+      "Blanks": "Fyll inn ordene",
+      "ImageHotspots": "Bilde med klikkpunkter",
+      "BranchingScenario": "Forgrenet scenario"
+    },
+    "outcomeCategory": {
+      "kunnskap": "kunnskap",
+      "ferdigheiter": "ferdigheter",
+      "generell-kompetanse": "generell kompetanse"
+    },
+    "outcome": "{{text}} ({{category}})",
+    "phaseCount": "{{phase}}: {{count}}",
+    "noPhase": "uten fase",
+    "readersGuide": {
+      "criterion": "Kriterium",
+      "chapter": "Hvor i mappen",
+      "attachment": "Vedlegg"
+    },
+    "references": {
+      "none": "Ingen av de valgte aktivitetene er laget fra et mønster med referanser. Skriv inn referansene dine her."
+    },
+    "findings": {
+      "none": "Sjekken for universell utforming fant ingen feil eller advarsler.",
+      "summary": "Sjekken for universell utforming: feil: {{errors}} (begrunnet: {{acknowledged}}), advarsler: {{warnings}}.",
+      "error": "Feil",
+      "warning": "Advarsel",
+      "hint": "Tips",
+      "acknowledged": "begrunnet {{date}}: «{{reason}}»",
+      "notAcknowledged": "ikke begrunnet",
+      "noReasonNeeded": "trenger ingen begrunnelse"
+    },
+    "results": {
+      "notYet": "Ingen resultater ennå: HVL Interaktiv lagrer ikke resultater fra studentene i denne versjonen.",
+      "suppressed": "Færre enn {{k}} deltakere, så resultatene vises ikke.",
+      "summary": "{{participants}} deltakere, fullført: {{completion}}, median {{median}} forsøk, endring fra første til siste forsøk: {{change}} (formativt).",
+      "hidden": "ikke vist",
+      "notRecorded": "ingen data ennå",
+      "points": "{{value}} prosentpoeng",
+      "noteNotYet": "Resultater fra studentene kommer i en senere versjon av HVL Interaktiv, så aktivitetene under har ingen tall ennå.",
+      "noteRecorded": "Resultatene er formative og anonymiserte sammendrag for grupper med minst {{k}} studenter. De er ikke dokumentasjon av eksamensresultater."
+    },
+    "pdfTitle": "Pedagogisk mappe"
   }
 }

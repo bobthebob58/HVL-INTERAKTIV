@@ -1,0 +1,117 @@
+{
+  "library": "H5P.ImageHotspots 1.11",
+  "metadataTitle": "{{title}}",
+  "params": {
+    "backgroundImageAltText": "{{imageAlt}}",
+    "globalIconType": "numbers",
+    "hotspots": [
+      {
+        "position": {
+          "x": 20,
+          "y": 30,
+          "legacyPositioning": false
+        },
+        "alwaysFullscreen": false,
+        "header": "{{hotspot1Header}}",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>{{hotspot1Text}}</p>"
+            },
+            "metadata": {
+              "title": "{{hotspotTextTitle}}",
+              "license": "U"
+            }
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 50,
+          "y": 30,
+          "legacyPositioning": false
+        },
+        "alwaysFullscreen": false,
+        "header": "{{hotspot2Header}}",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>{{hotspotText}}</p>"
+            },
+            "metadata": {
+              "title": "{{hotspotTextTitle}}",
+              "license": "U"
+            }
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 80,
+          "y": 30,
+          "legacyPositioning": false
+        },
+        "alwaysFullscreen": false,
+        "header": "{{hotspot3Header}}",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>{{hotspotText}}</p>"
+            },
+            "metadata": {
+              "title": "{{hotspotTextTitle}}",
+              "license": "U"
+            }
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 35,
+          "y": 70,
+          "legacyPositioning": false
+        },
+        "alwaysFullscreen": false,
+        "header": "{{hotspot4Header}}",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>{{hotspotText}}</p>"
+            },
+            "metadata": {
+              "title": "{{hotspotTextTitle}}",
+              "license": "U"
+            }
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 65,
+          "y": 70,
+          "legacyPositioning": false
+        },
+        "alwaysFullscreen": false,
+        "header": "{{hotspot5Header}}",
+        "content": [
+          {
+            "library": "H5P.Text 1.1",
+            "params": {
+              "text": "<p>{{hotspotText}}</p>"
+            },
+            "metadata": {
+              "title": "{{hotspotTextTitle}}",
+              "license": "U"
+            }
+          }
+        ]
+      }
+    ],
+    "untitledHotspotLabel": "{{untitledHotspot}}",
+    "containsAudioVideoLabel": "{{containsAudioVideo}}"
+  }
+}

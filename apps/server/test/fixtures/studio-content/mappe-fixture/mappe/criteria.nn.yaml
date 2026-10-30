@@ -1,0 +1,41 @@
+# Fixture criteria (Nynorsk): two sets, so a test can switch between them. Test texts, not HVL's.
+version: 1
+sets:
+  - id: hvl-merittering-2025
+    title: Testsett 2025
+    limits:
+      del1Words:
+        value: 7500
+        verify: true
+      attachments:
+        value: 11
+        verify: true
+    criteria:
+      - id: '1.1'
+        text: Kriterietekst ein-ein frå testsettet 2025
+        chapter: Del 1, kap. 1
+        attachment: Vedlegg om læringsressursar
+      - id: '2.3'
+        text: Kriterietekst to-tre frå testsettet 2025
+        chapter: Del 1, kap. 2
+      - id: '3.1'
+        text: Kriterietekst tre-ein frå testsettet 2025
+        chapter: Del 1, kap. 2 og Del 3
+        attachment: Samanstilling av tilbakemeldingar
+  - id: fixture-2027
+    title: Testsett 2027
+    limits:
+      del1Words:
+        value: 100
+        verify: false
+      attachments:
+        value: 2
+        verify: false
+    criteria:
+      - id: A.1
+        text: Kriterietekst A-ein frå testsettet 2027
+        chapter: Del 1, kap. 2
+        attachment: Testvedlegg A
+      - id: A.2
+        text: Kriterietekst A-to frå testsettet 2027
+        chapter: Del 3

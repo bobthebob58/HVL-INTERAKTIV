@@ -8,12 +8,23 @@
  */
 import { describe, expect, it } from 'vitest';
 import { describeWithBrowser } from '../support/browser.js';
-import { ACTIVITY, LTIK, LTIK_EN, openWebPage, serveBuiltWebApp, WEB_APP_BUILT } from './webTestServer.js';
+import {
+  ACTIVITY,
+  FIXTURE_PATTERN_PATH,
+  LTIK,
+  LTIK_EN,
+  openWebPage,
+  serveBuiltWebApp,
+  settledTitle,
+  WEB_APP_BUILT,
+} from './webTestServer.js';
 
 (WEB_APP_BUILT ? describe : describe.skip)('[UD-013] the chrome of the built web app', () => {
   const base = serveBuiltWebApp();
 
   describeWithBrowser('[UD-013] chrome in Chromium', (browser) => {
+    // WHY: fourteen pages under load (10 s in a loaded gate) plus up to 10 s for a title that never comes must end in
+    // the title diff, not in the 20 s default timeout.
     it('[UD-013] every route has its own title, its name first and the site name last (WCAG 2.4.2)', async () => {
       // Arrange
       const routes: readonly (readonly [string, string, number?])[] = [
@@ -24,21 +35,28 @@ import { ACTIVITY, LTIK, LTIK_EN, openWebPage, serveBuiltWebApp, WEB_APP_BUILT }
         [`/aktivitet/${ACTIVITY}`, 'Aktivitet – HVL Interaktiv'],
         ['/app/play', 'Opne aktiviteten frå Canvas – HVL Interaktiv'],
         [`/app/play?ltik=${LTIK}`, 'Celler og vev – HVL Interaktiv'],
+        ['/laeringsdesign', 'Læringsdesign – HVL Interaktiv'],
+        [FIXTURE_PATTERN_PATH, 'Testmønster for ein sjekk – HVL Interaktiv'],
+        ['/laeringsdesign/planlegg', 'Planleggar – HVL Interaktiv'],
+        ['/laeringsdesign/innhaldsbank', 'Innhaldsbank – HVL Interaktiv'],
+        ['/mappe', 'Pedagogisk mappe – HVL Interaktiv'],
         ['/finst-ikkje', 'Fann ikkje sida – HVL Interaktiv', 404],
+        ['/laeringsdesign/monster/IKKJE..GYLDIG', 'Fann ikkje sida – HVL Interaktiv', 404],
       ];
       const titles: string[] = [];
       // Act
-      for (const [path, , status] of routes) {
+      for (const [path, title, status] of routes) {
         const { page, problems } = await openWebPage(browser(), `${base()}${path}`, {
           documentStatus: status,
         });
-        titles.push(await page.title());
+        // WHY: the pattern page names itself after its API answer; the server renders every other title at once.
+        titles.push(await settledTitle(page, title));
         expect(problems).toEqual([]);
         await page.close();
       }
       // Assert
       expect(titles).toEqual(routes.map(([, title]) => title));
-    });
+    }, 60_000);
 
     it.each([
       [

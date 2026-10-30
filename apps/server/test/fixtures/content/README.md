@@ -115,6 +115,17 @@ missing from this README.
 | `V-BRANCH-COLOUR/negative-text-choices.json` | Choices with real text, one of which mentions a colour in passing. |
 | `V-BRANCH-COLOUR/positive-colour-only-choices.json` | Three choices that are only a colour: «Raud», a green circle and «The green one». |
 
+## V-PLACEHOLDER
+
+Pattern guidance `⟦…⟧` left in an activity, and required media still missing (`PROD-001`, D-086).
+
+| Fixture | What it represents |
+|---|---|
+| `V-PLACEHOLDER/negative-own-content-and-media.json` | Near misses: the author's own texts, the literal text `&#10214;` an author typed (stored escaped), a marker only in `extraTitle`, other brackets, a video with a file and image hotspots with an image. |
+| `V-PLACEHOLDER/positive-guidance-in-every-kind-of-field.json` | Guidance in the title, a sub-content title, rich text, a button label (`UI`) and a list item, raw and as decimal, hexadecimal and named references, plus a lone `⟧` an edit left; `extraTitle` is not reported again. |
+| `V-PLACEHOLDER/positive-interactive-video-without-video.json` | An interactive video whose one file entry has an empty path. |
+| `V-PLACEHOLDER/positive-missing-media-as-sub-content.json` | A Column with an interactive video without a video and image hotspots without a background image. |
+
 ## PED-H01
 
 | Fixture | What it represents |

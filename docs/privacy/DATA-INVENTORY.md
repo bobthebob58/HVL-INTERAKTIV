@@ -26,9 +26,10 @@ A person who uses the service. Learner rows have no name or e-mail (database CHE
 |---|---|---|---|---|---|
 | `id` | Internal key | None | n/a | Account; learner rows: yearly purge | PG |
 | `kind` | Staff or learner; decides which fields may be filled | None | n/a | Account; learner rows: yearly purge | PG |
-| `displayName` | Name shown to co-authors and in the portfolio export (staff only) | Staff PII | 6(1)(e) | Account | PG |
-| `email` | Contact for co-author invitations (staff only) | Staff PII | 6(1)(e) | Account | PG |
+| `displayName` | Name shown to co-authors and in the portfolio export (staff only); from S5 also to HVL colleagues in co-author search (D-090), on the owner's content-bank listings (D-091) and as the source author of a copy (D-092) | Staff PII | 6(1)(e) | Account | PG |
+| `email` | Not stored (D-090 amendment 2026-10-29: nothing uses it; co-author search matches names and Feide IDs). Each staff login writes null, so an address stored before is cleared; the column stays until a migration drops it | Staff PII (none stored) | n/a | Cleared at the next staff login | PG |
 | `createdAt` | Account age, for purge and audit | None | n/a | Account; learner rows: yearly purge | PG |
+| `coAuthorSearchableAt` | Lets colleagues find an HVL staff member as a co-author (PROD-007, D-090): set at each Feide login of an HVL staff author (an HVL member with the author role, i.e. an `employee`, `faculty` or `staff` affiliation, who is not a student author), cleared at a Feide login that is not one, never changed by an LTI launch, and ignored once 13 months old. Never set for learners, student authors, admin-only members or LTI-only accounts | Staff PII | 6(1)(e) | Account; replaced at each Feide login, not searchable after 13 months | PG |
 
 ## Identity
 
@@ -85,11 +86,13 @@ One H5P activity.
 | `status` | Draft or published | None | n/a | Until deleted by the author | PG |
 | `visibility` | Who may open it outside Canvas (PROD-006) | None | n/a | Until deleted by the author | PG |
 | `ownerUserId` | The author who owns it | Staff PII (by reference) | 6(1)(e) | Until deleted by the author | PG |
-| `version` | Increments on every save of the activity (D-074); xAPI statements record it, so insight compares like with like | None | n/a | Until deleted by the author | PG |
+| `version` | Increments on a structural save of the activity, which resets learners' saved progress (D-093, amending D-074); xAPI statements record it, so insight compares like with like; learner pages send it with each state write | None | n/a | Until deleted by the author | PG |
 | `sourceContentId` | The activity this one was copied from | None | n/a | Until deleted by the author | PG |
 | `createdAt` | Sorting and audit | None | n/a | Until deleted by the author | PG |
 | `updatedAt` | Sorting and audit; the publish flow checks it so a changed activity is never published unseen (D-074) | None | n/a | Until deleted by the author | PG |
 | `publishedAt` | When the activity was last published through the publish flow (PROD-003); empty while it is a draft | None | n/a | Until deleted by the author | PG |
+| `bankListedAt` | When the owner listed the activity in the HVL content bank, where HVL staff authors (not student authors) see it and may copy it while the owner is findable staff (PROD-007, D-091 and D-092 as amended); empty when not listed | None | n/a | Until the owner withdraws the listing, makes the activity private or unpublishes it | PG |
+| `sourceAuthorUserId` | The owner of the source activity when this copy was made, so the copy credits them; their name is read when the copy is shown (PROD-007, D-092) | Staff PII (by reference) | 6(1)(e) | Until the copy is deleted; set to empty when the source author's account is deleted | PG |
 
 ## H5PContentFile
 
@@ -228,6 +231,7 @@ An activity placed in a Canvas course.
 | `lineItemUrl` | Gradebook column, if graded | None | n/a | While placed | PG |
 | `attemptPolicy` | Best, latest or mastery (LTI-012) | None | n/a | While placed | PG |
 | `masteryThreshold` | Score needed for mastery | None | n/a | While placed | PG |
+| `contextLabel` | The course label from the launch (`context.label`, e.g. `SYK110`), suggested to the author as a course code (D-087); kept only when, normalised, it is a course code with a digit, else null, because a sandbox label may hold a teacher's name; overwritten at each launch. Residual risk, accepted in D-087 (W3 amendment): a sandbox label that normalises to a code with a digit, such as «Kari 2025», is stored as if it were a course code and may name a teacher; it is shown only to the authors of activities placed in that course | None (a course code); Staff PII in the accepted residual | 6(1)(e) | While placed | PG |
 | `createdAt` | Audit | None | n/a | While placed | PG |
 | `updatedAt` | Audit | None | n/a | While placed | PG |
 
@@ -261,6 +265,8 @@ Pedagogical metadata on an activity (PED-030).
 | `courseCode` | Course, e.g. `SYK110` | None | n/a | With the activity | PG |
 | `rationale` | The author's reasoning, used in the portfolio | Staff PII (authored text) | 6(1)(e) | With the activity | PG |
 | `estimatedStudentMinutes` | Shown to students before they start | None | n/a | With the activity | PG |
+| `patternId` | The pattern the activity was created from (D-085, D-087), e.g. `ea-retrieval`; copied with a duplicate (D-092) | None | n/a | With the activity | PG |
+| `learnerPurpose` | One line, at most 200 characters, on why the activity matters, shown to learners before they start (PED-032, D-087); copied with a duplicate (D-092) | None | n/a | With the activity | PG |
 | `updatedAt` | Audit | None | n/a | With the activity | PG |
 
 ## LearningOutcome
@@ -339,7 +345,7 @@ Who did what to which object (DATA-007).
 | `action` | Action code, e.g. `insight.view` | None | n/a | 2 years | PG |
 | `targetType` | Kind of object | None | n/a | 2 years | PG |
 | `targetId` | Which object | None; Pseudonymous when the target is a learner (data-subject actions, `DATA-008`) | 6(1)(e) | 2 years | PG |
-| `details` | Structured details, never free text with personal data | None | n/a | 2 years | PG |
+| `details` | Structured details, never free text with personal data; in `content.coauthor.add` and `content.coauthor.remove` it holds the co-author's `User.id` (D-090), so a search for a person's audit events reads it as well as `actorUserId` | None; Staff PII (by reference) in `content.coauthor.*` | 6(1)(e) | 2 years | PG |
 
 ## Redis keys
 
@@ -367,3 +373,5 @@ cookie (D-057). Learner state is never in Redis: it lives in PostgreSQL (`H5PUse
 | H5P locks `@simple-redis-mutex:lock-install-library:<library>` and `…:lock-install-from-directory:<library>` (Lumi's `RedisLockProvider`; no `hvli:` prefix) | Serialise library installs across servers | None | n/a | Seconds (while the install runs) | Redis |
 | `@simple-redis-mutex:fencing-tokens` | The lock library's fencing counter (an integer) | None | n/a | Never expires | Redis |
 | lease `hvli:h5p:temporary-file-cleanup` | A random node ID: one server cleans temporary editor files per interval | None | n/a | About 5 minutes | Redis |
+| counter `hvli:people-search:<userId>` | How many co-author searches the person made in the current minute, for the rate limit (D-090); a number, never the query | Staff PII (by reference) | 6(1)(e) | 60 seconds | Redis |
+| counter `hvli:copies:<userId>` | How many copies (duplicates and «Lagre som ny versjon») the author started in the current ten minutes, for the copy limit (D-092 amendment 2026-10-29); a number, never the source | Staff PII (by reference) | 6(1)(e) | 10 minutes | Redis |

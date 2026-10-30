@@ -1,7 +1,7 @@
 /**
- * Unit tests for the pure parts of the editor page's script (src/h5p/render/client/editorPage.js), run without a
- * browser: the status text of a refused save (the server's reason, or the page's own for a blocked save of a
- * published activity) and the errors it lists with "Gå til feltet".
+ * Unit tests for the pure parts of the editor page's scripts (src/h5p/render/client/editorSaveRequests.js, used by
+ * editorPage.js), run without a browser: the status text of a refused save (the server's reason, or the page's own
+ * for a blocked save of a published activity) and the errors it lists with "Gå til feltet".
  *
  * Spec: PROD-003, UD-013
  */
@@ -20,8 +20,14 @@ interface EditorScript {
   hvliOpenErrors(body: unknown): { readonly path: string }[];
 }
 
-// WHY: the page loads ./editorFieldReveal.js and ./editorFields.js before editorPage.js; all define page-level functions.
-const SCRIPTS = ['editorFieldReveal.js', 'editorFields.js', 'editorPage.js'];
+// WHY: the page loads these in this order (../../../src/h5p/render/editorPage.ts); all define page-level functions.
+const SCRIPTS = [
+  'editorFieldReveal.js',
+  'editorFields.js',
+  'editorSaveRequests.js',
+  'editorSaveChoice.js',
+  'editorPage.js',
+];
 
 /** Runs the script where no editor page exists: it defines its functions and starts nothing. */
 const script = () =>

@@ -54,6 +54,8 @@
     "subContentNotAllowed": "“{{library}}” cannot be used inside this activity.",
     "libraryNotInstalled": "The content type “{{library}}” is not installed.",
     "unsafeFilePath": "A file path in the activity contains characters that are not allowed (quotes, < or >).",
+    "unsafeFileName": "A file path in the activity is not valid: it cannot start with “/” or contain “..”, “\\”, empty parts or control characters.",
+    "pasteSourceNotAllowed": "The activity uses files from another activity that you cannot copy. Upload the files again instead.",
     "hubInstallDisabled": "Content types are installed by an administrator, not from the H5P Hub.",
     "librariesInstalled": "Content types installed: {{count}}.",
     "librariesUpdated": "Content types updated: {{count}}.",
@@ -108,6 +110,7 @@
       "errorLabel": "Error",
       "goToField": "Go to the field",
       "fieldNotReached": "Could not open the field itself. Focus is on the closest part of the form; open the field by hand from there.",
+      "titleNotReached": "This part of the activity has no title you can change in the editor, so focus is on the closest part of the form.",
       "frameTitle": "H5P editor: new activity"
     }
   },
@@ -131,5 +134,111 @@
       "body": "H5P activities are scored in the browser. The points are meant for learning along the way (formative assessment), not for exams or grades.",
       "dismiss": "Do not show this notice again"
     }
+  },
+  "safeEditing": {
+    "dialog": {
+      "title": "This change resets students’ progress",
+      "body": "Structural changes, such as adding, removing or reordering questions or answer options, reset the progress students have saved in the activity. Rewording an answer option also changes what the saved choices mean.",
+      "cancel": "Cancel",
+      "reset": "Reset progress and save",
+      "saveAsCopy": "Save as new version",
+      "saveAsCopyHint": "The new version is a private draft. The original and the students’ progress stay unchanged.",
+      "canvasPointer": "In Canvas you can only reset the progress or cancel. To save the change as a new version instead, open the activity in the HVL Interaktiv portal and save it there."
+    },
+    "outcome": {
+      "resetAndSaved": "The change is saved, and the students’ progress is reset.",
+      "savedAsCopy": "The change is saved as a new version. The original and the students’ progress are unchanged.",
+      "cancelled": "The change is not saved."
+    },
+    "busy": {
+      "resetting": "Resetting the progress and saving the change …",
+      "copying": "Saving the change as a new version …"
+    },
+    "resetNeededCanvas": "This change alters the structure of the activity, and others have saved progress in it. Confirm that their progress should be reset, or cancel. You can save a new version in the HVL Interaktiv portal."
+  },
+  "learningDesign": {
+    "error": {
+      "patternUnavailable": "This pattern cannot be used right now because a content type it needs is not installed. Ask an administrator for help, or create a blank activity.",
+      "patternChoiceInvalid": "Choose a phase and a content type that this pattern offers.",
+      "learningDesignConflict": "The learning design was changed in the meantime. Reload the page and try again.",
+      "learnerStateResetNeeded": "This change alters the structure of the activity, and others have saved progress in it. Confirm that their progress should be reset, or save the change as a new version.",
+      "ownerOnly": "Only the owner of the activity can do this.",
+      "coauthorNotEligible": "This person cannot be added as a co-author. Only HVL staff can be co-authors.",
+      "coauthorLimit": "The activity already has as many co-authors as allowed.",
+      "bankNotEligible": "Only published activities shared with all of HVL or more widely can be added to the content bank.",
+      "duplicateNotAllowed": "You cannot make a copy of this activity.",
+      "duplicateFailed": "The copy could not be made, so nothing was saved. Try again.",
+      "rateLimited": "You have sent too many requests in a short time. Wait a moment and try again.",
+      "mappeTooMany": "You have chosen too many activities for the portfolio. Choose fewer and try again.",
+      "criteriaSetUnknown": "This set of criteria does not exist. Reload the page and try again.",
+      "pdfUnavailable": "The PDF cannot be made right now. Download the Markdown file instead.",
+      "pdfBusy": "Many PDFs are being made right now. Wait a moment and try again, or download the Markdown file.",
+      "mappeNotReady": "The template and criteria of the teaching portfolio have not been added yet, so the portfolio cannot be made. Try again later."
+    }
+  },
+  "mappe": {
+    "placeholder": {
+      "author": "[your name]",
+      "untitled": "[untitled]",
+      "phase": "no phase chosen",
+      "course": "no course code",
+      "outcomes": "no learning outcomes written",
+      "rationale": "no rationale written",
+      "notPublished": "not published",
+      "attachment": "[add an attachment]"
+    },
+    "status": {
+      "draft": "draft",
+      "published": "published"
+    },
+    "contentType": {
+      "CoursePresentation": "Course Presentation",
+      "InteractiveVideo": "Interactive Video",
+      "QuestionSet": "Question Set",
+      "InteractiveBook": "Interactive Book",
+      "Column": "Column",
+      "DragText": "Drag the Words",
+      "MultiChoice": "Multiple Choice",
+      "Blanks": "Fill in the Blanks",
+      "ImageHotspots": "Image Hotspots",
+      "BranchingScenario": "Branching Scenario"
+    },
+    "outcomeCategory": {
+      "kunnskap": "knowledge",
+      "ferdigheiter": "skills",
+      "generell-kompetanse": "general competence"
+    },
+    "outcome": "{{text}} ({{category}})",
+    "phaseCount": "{{phase}}: {{count}}",
+    "noPhase": "no phase",
+    "readersGuide": {
+      "criterion": "Criterion",
+      "chapter": "Where in the portfolio",
+      "attachment": "Attachment"
+    },
+    "references": {
+      "none": "None of the chosen activities was made from a pattern with references. Write your references here."
+    },
+    "findings": {
+      "none": "The universal design check found no errors or warnings.",
+      "summary": "The universal design check: errors: {{errors}} ({{acknowledged}} explained), warnings: {{warnings}}.",
+      "error": "Error",
+      "warning": "Warning",
+      "hint": "Hint",
+      "acknowledged": "explained {{date}}: “{{reason}}”",
+      "notAcknowledged": "not explained",
+      "noReasonNeeded": "needs no reason"
+    },
+    "results": {
+      "notYet": "No results yet: this version of HVL Interaktiv does not store students’ results.",
+      "suppressed": "Fewer than {{k}} participants, so the results are not shown.",
+      "summary": "{{participants}} participants, completed: {{completion}}, median {{median}} attempts, change from first to last attempt: {{change}} (formative).",
+      "hidden": "not shown",
+      "notRecorded": "no data yet",
+      "points": "{{value}} percentage points",
+      "noteNotYet": "Students’ results come in a later version of HVL Interaktiv, so the activities below have no figures yet.",
+      "noteRecorded": "The results are formative, anonymised summaries for groups of at least {{k}} students. They are not evidence of exam results."
+    },
+    "pdfTitle": "Teaching portfolio"
   }
 }

@@ -37,13 +37,23 @@ major version of the browser (`NFR-003`); record the exact versions.
 Optional, recorded when available: Windows contrast themes (forced colours) in Edge, TalkBack with Chrome on
 Android, VoiceOver with Safari on macOS.
 
+The portfolio PDF (from Session 5, `MAPPE-004`) has one more set-up, **PDF**, which is a check of a file rather than
+of a browser: PAC 2024 (or PAC 3, the PDF Accessibility Checker of the PDF/UA Foundation) on Windows 11, and NVDA
+(current release) with Adobe Acrobat Reader (current release; in its reading preferences, «Override the reading
+order in tagged documents» off). Record the versions of all three. Its steps are J4.5–J4.10.
+
 ## 4. Preparation
 
 1. Note the release (git tag or commit SHA shown in the deployment) and the date.
 2. In Canvas (test instance): a course with the HVL Interaktiv tool, a test teacher and a test student.
 3. In HVL Interaktiv: the ten example activities of `npm run h5p:fetch-libraries` (one per content type, all in
    Nynorsk) imported and published by the test teacher, plus one draft MultiChoice activity.
-4. Copy the result template from [results/README.md](results/README.md) into a new, dated file **before** starting,
+4. From Session 5, for J1.10–J1.13 and J4: the test teacher is signed in to the portal as HVL staff, the studio's
+   patterns load (`npm run content:check` on the release), and the teacher has at least three activities with a
+   phase, the same course code, learning outcomes and a rationale on the **Læringsdesign** tab: one published with an
+   error and a reason, one whose title is long enough to wrap onto a second line in the PDF, and one draft. For
+   J1.13, a test student has saved progress in a published MultiChoice activity (J2.5).
+5. Copy the result template from [results/README.md](results/README.md) into a new, dated file **before** starting,
    and fill it in as you go.
 
 ## 5. How to judge a step
@@ -62,9 +72,10 @@ The UI texts below are in Nynorsk (`nn`, the default). Run every task once in `n
 
 ### J1 — Create and place an activity in Canvas (teacher; `LTI-005`, `PROD-003`, `UD-006`, `UD-013`)
 
-Spec 00 §3 starts J1 with a phase and a pattern (**Forarbeid**, *Short video with retrieval checks*); the
-patterns arrive with the læringsdesign studio in Session 5. Until then J1 starts from the draft activity of §4,
-and the pattern steps are added here when the studio exists.
+Spec 00 §3 starts J1 with a phase and a pattern (**Forarbeid**, *Short video with retrieval checks*). The patterns
+came with the læringsdesign studio in Session 5, in the portal only: creating from a pattern inside Canvas's picker
+waits for S6 (D-098). J1.1–J1.9 therefore start from the draft activity of §4, and J1.10–J1.13 start from a pattern
+in the portal.
 
 | Step | Action | Expected result |
 |---|---|---|
@@ -77,6 +88,10 @@ and the pattern steps are added here when the studio exists.
 | J1.7 | In «Sjekk og publiser», read the findings and use «Gå til feltet» on one. | Each finding states severity in text. «Gå til feltet» moves focus to the field in the editor. |
 | J1.8 | Activate «Publiser». | A dialog «Publiser aktiviteten» opens and takes focus; Tab stays inside it; Escape closes it and focus returns to «Publiser». |
 | J1.9 | Open it again; give a reason for each error if asked; activate «Publiser no». | Errors in the form are listed at the top and linked to their fields (`UD-013`). After publishing, the status «Publisert» is announced, and focus stays on the same button, now «Gjer om til utkast». |
+| J1.10 | Open «Læringsdesign» in the main menu (`/laeringsdesign`). Move by headings to «Mønsterkatalogen» and set «Fase» to Forarbeid. | The guide's boxes are regions with distinct names. The phase matrix is a table with its caption «Fasane rundt samlinga»; its link «Alle mønstera for … i katalogen» moves focus to the catalogue's heading. Choosing a phase keeps focus on the select and announces «Viser … av … mønster»; the address keeps the filter (`PED-003`). |
+| J1.11 | Open the short-video pattern (`/laeringsdesign/monster/fa-video`), read it, and under «Lag frå dette mønsteret» activate «Lag aktiviteten». | The page reads in order: what it is for, when it fits, why it works with its references (an English reference read with an English voice). The fields have labels and hints. The new draft opens on «Rediger» with the editor frame announced (`PROD-001`). |
+| J1.12 | In «Sjekk og publiser», read the errors and use «Gå til feltet» on one. | Each placeholder error says in text that the field still holds guidance from the pattern, quotes the guidance (without the marks) and asks the author to remove the marks «⟦» and «⟧» (V-PLACEHOLDER, D-086). «Gå til feltet» reaches the field, or says that the field cannot be opened. |
+| J1.13 | Open the published MultiChoice with a student's progress (§4), add an answer option in «Rediger» and activate «Lagre». | A dialog «Endringa nullstiller framgangen til studentane» opens with focus on «Avbryt»; Tab and Shift+Tab stay inside it; Escape cancels, and focus returns to «Lagre». Nothing of the page around the editor is read while it is open. «Lagre som ny versjon» opens the copy, whose page says «Kopi av …» (`PROD-013`, D-093). |
 
 ### J2 — Study on a phone and resume (student; `UD-003`, `UD-006`, `UD-008`, `PROD-008`)
 
@@ -110,13 +125,35 @@ The insight pages do not exist yet. When they arrive, run:
 
 ### J4 — Document practice for the teaching portfolio (teacher; `PED-030`, `MAPPE-001`…`MAPPE-004`) — from Session 5
 
-The portfolio export does not exist yet. When it arrives, run:
+Run J4.1–J4.4 with the browser set-ups and J4.5–J4.10 with the set-up **PDF** (§3), on the PDF exported in J4.4.
+The PDF is printed by Chromium on the server; the automated test (`apps/server/test/learningDesign/mappe/`) already
+finds its structure tree, an outline equal to the headings, `/Lang`, the title and real text, so these steps check
+what a person hears and what PAC reports.
 
 | Step | Action | Expected result |
 |---|---|---|
-| J4.1 | Tag an activity with phase, learning outcomes and a rationale. | Every field has a label and an error message tied to it. |
-| J4.2 | Choose **Pedagogisk mappe → Export**. | The file links state type and size (`UD-007`). |
-| J4.3 | Open the exported PDF with the screen reader. | The PDF is tagged: headings, reading order, alternative text, document language Nynorsk. |
+| J4.1 | On an activity's «Læringsdesign» tab, set the phase, the course code, two learning outcomes with their category, a rationale, the minutes and the purpose; remove an outcome; save with «Lagre læringsdesignet». | Every field has a label, and its hint and error are read with it; the course code's suggestions can be chosen by keyboard. Adding or removing an outcome moves focus to a sensible place and says so. «Læringsdesignet er lagra.» is announced; errors are listed at the top and linked to their fields (`PED-030`, `UD-013`). |
+| J4.2 | Open «Planleggar», choose the course and «Vis planen». | The table has the caption «Læringsutbytte og fasar i …», column headers for the phases and a row header for each outcome. The table region is reached with Tab and scrolls sideways with the arrow keys at 320 px. Gaps are read as text («Hol»), never shown by colour alone, and each «Lag frå mønster» link names its phase and outcome (`PED-031`). |
+| J4.3 | Open «Mappe» (`/mappe`), filter by the course, choose the activities with «Vel alle som passar», and pick the criteria set and the language Nynorsk. | The filters' result («… av … aktivitetar passar med filtera») and the Del 1 word count are announced politely, the word count with a text prefix besides its icon; the picker is a group of checkboxes with its legend, and its limit of 50 is said in text (`MAPPE-001`, `MAPPE-002`). |
+| J4.4 | Download «Last ned Markdown (til å redigere)» and «Last ned PDF». | Each button names the file type, and «Fila … er lasta ned» is announced. The size is not known until the server has made the file, so it is not shown: record whether that is a problem for `UD-007` («file links show type and size»). |
+| J4.5 | Run PAC on the PDF and record its PDF/UA and WCAG results. | No failure other than the residuals listed below. The document has a title, shown in the title bar instead of the file name, and the language `nn` (`MAPPE-004`). |
+| J4.6 | In PAC's logical-structure view (or Acrobat's Tags pane), compare the tags with the Markdown file's headings. | The headings are tagged H1–H4 in the Markdown's order and levels; the reader's guide is a Table of TR rows whose header cells are TH (with column and row scopes); lists are L with LI items; text is P. There is no image, and no untagged text beyond the residuals below. |
+| J4.7 | Open the PDF in Adobe Acrobat Reader with NVDA and read it from the start with NVDA's say all. | The reading order follows the Markdown file: the title, the author and date, the reader's guide, Del 1 with its chapters and the activities, the references, Del 2 and Del 3. Nothing is read twice or skipped; æ, ø and å are read correctly; NVDA uses its Norwegian voice (with automatic language switching on), also for English titles and references (residuals below). |
+| J4.8 | Move by headings (H, and the elements list NVDA+F7) and open Acrobat's bookmarks. | Every heading is reachable at its level; there is one bookmark per heading with the same text, also for the long activity title that wraps, whose words keep their space (D-096). |
+| J4.9 | In the reader's guide, move through the table with NVDA's table commands (Ctrl+Alt+arrows). | Each cell is read with its column header, and each row's first cell, the criterion, as its row header. |
+| J4.10 | Export the same activities in English and repeat J4.5 and J4.7. | The language is `en` and NVDA reads with its English voice; the result is otherwise the same. |
+
+**Known residuals of the PDF (D-096), to record in J4.5–J4.9 with PAC's or NVDA's own wording, not as new
+barriers:** list numbers («1.») are not tagged, list items have no `Lbl` or `LBody`, and lists carry no numbering
+attribute; a table's caption and its header row group become `NonStruct`, and there are no `Caption`, `THead` or
+`TBody` elements; there is no XMP metadata, so no PDF/UA identifier; links have no `/Contents`; the file header says
+PDF 1.4; activity titles carry no language of their own, so an English title in a Nynorsk portfolio is read with
+the Norwegian voice (WCAG 3.1.2); references carry no language of their own either, so an English reference in a
+Nynorsk portfolio, or a Norwegian one in an English portfolio, is read with the portfolio's voice (D-094
+amendment); and an activity's address is plain text, not a link. Anything PAC or the screen
+reader reports beyond these is a new finding. Record the outcome as `MAPPE-004`'s manual check (spec 04), which the
+S5 gate lists as open until it is done; `apps/server/test/learningDesign/mappe/taggedPdf.browser.test.ts` pins the
+structure Chromium makes today, so a Chromium update that changes it fails that test first.
 
 ## 7. Checks for every page (all set-ups)
 

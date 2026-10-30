@@ -93,7 +93,10 @@ button {
   cursor: pointer;
 }
 
-button:disabled {
+/* A11Y: «Lagre» held while a chosen reset or copy runs is aria-disabled, so it keeps focus (D-093 amendment
+   2026-10-29, S5 review); it looks unavailable like a disabled button. */
+button:disabled,
+button[aria-disabled='true'] {
   border-color: var(--hvl-ink-muted);
   background: var(--hvl-surface);
   color: var(--hvl-ink-muted);
@@ -152,5 +155,11 @@ form > button {
 
   .hvl-notice {
     border-left-color: CanvasText;
+  }
+
+  /* WHY: forced colours give a disabled button GrayText; a held one is not disabled, so it is given the same. */
+  button[aria-disabled='true'] {
+    border-color: GrayText;
+    color: GrayText;
   }
 }

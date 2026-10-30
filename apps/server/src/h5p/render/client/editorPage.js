@@ -1,38 +1,30 @@
 /**
- * editorPage — boots H5P's editor on our editor page, loads and saves the activity, and focuses a finding's field.
+ * editorPage — boots H5P's editor on our editor page, loads and saves the activity, answers a structural save with
+ * the save choice, and focuses a finding's field.
  *
- * Why: the page has no inline script (D-070); its own requests carry the ltik as Bearer in Canvas or the CSRF token in
- *      the portal (D-057, D-058); a refused save says why in the server's words (UD-013); a refused save of a
- *      published activity also lists the errors to fix with "Gå til feltet" (D-074), since the Check tab sees only
- *      the stored version; and "Gå til feltet" (PROD-003) posts `hvli:go-to-field` with a path for this page.
- * Spec: H5P-002, H5P-007, UD-006, UD-013, PROD-003
- * Invariants: settings come only from `#hvl-editor-config`; `hvli:content-saved` goes to, and `hvli:go-to-field` is
- *   taken from, the parent on our own origin only; server text is written as text, never as markup; the generic
- *   failure text is used only when the answer gives no reason (network error, 5xx, unreadable body); the top-level
- *   `hvli*` functions touch only what they are given.
- * Collaborators: ../editorPage.ts, ./editorFields.js and ./editorFieldReveal.js (loaded first: a finding's path),
- *   ../../../http/routes/contentRoutes.ts, ../../../http/h5pErrorResponse.ts, apps/web/src/messaging/frameMessages.ts.
+ * Why: the page has no inline script (D-070); a refused save says why in the server's words (UD-013) and, for a
+ *      published activity, lists the errors to fix with "Gå til feltet" (D-074), since the Check tab sees only the
+ *      stored version; a structural save while others have saved progress is refused with 409
+ *      `hvl:learner-state-reset-needed` and answered by the author's choice (PROD-013, D-093); and "Gå til feltet"
+ *      (PROD-003) posts `hvli:go-to-field` with a path for this page.
+ * Spec: H5P-002, H5P-007, UD-006, UD-013, PROD-003, PROD-013
+ * Invariants: settings come only from `#hvl-editor-config`; `hvli:content-saved` and `hvli:content-copied` go to, and
+ *   `hvli:go-to-field` is taken from, the parent on our own origin only; server text is written as text, never as
+ *   markup; the save choice replaces the failure text of its 409; while a chosen reset or copy runs «Lagre» holds
+ *   focus with `aria-disabled` (a click is ignored), and after it «Lagre» is enabled and focused before the outcome
+ *   is announced; «Avbryt» saves nothing; Canvas never sends a copy request (D-098).
+ * Collaborators: ../editorPage.ts, ./editorFields.js and ./editorFieldReveal.js (a finding's path),
+ *   ./editorSaveRequests.js (the requests) and ./editorSaveChoice.js (the dialog), all loaded first;
+ *   ../../../http/routes/contentRoutes.ts, apps/web/src/messaging/frameMessages.ts.
  * Tests: apps/server/test/h5p/editorPage.browser.int.test.ts, apps/server/test/h5p/render/editorPageScript.test.ts,
- *   apps/server/test/h5p/editorGoToField.browser.int.test.ts, apps/server/test/h5p/editorBlockedSave.browser.int.test.ts
+ *   apps/server/test/h5p/editorGoToField.browser.int.test.ts, apps/server/test/h5p/editorBlockedSave.browser.int.test.ts,
+ *   apps/server/test/learningDesign/safeEditing/saveChoiceRoundTrip.browser.int.test.ts,
+ *   apps/server/test/learningDesign/safeEditing/saveChoiceCanvas.browser.int.test.ts
  */
 'use strict';
 /* global hvliGoToField -- from ./editorFields.js, loaded before this file */
-
-/** The errors of a refused save of a published activity that no one has explained: what the author must fix. */
-function hvliOpenErrors(body) {
-  if (!body || body.errorCode !== 'hvl:published-save-blocked' || !Array.isArray(body.findings)) return [];
-  return body.findings.filter((f) => f && f.severity === 'error' && !f.acknowledgement && f.message);
-}
-
-/** The status text for a refused save: the server's reason (this page's own for a blocked save), else the generic. */
-function hvliSaveFailureText(status, body, messages) {
-  var reason = status >= 400 && status < 500 && body && typeof body.errorCode === 'string' && body.message;
-  if (!reason) return messages.failed;
-  if (body.errorCode !== 'hvl:published-save-blocked') return String(body.message);
-  var open = hvliOpenErrors(body).length;
-  var count = open && messages.blockedErrors ? messages.blockedErrors.replace('{{count}}', open) : '';
-  return [messages.blocked || body.message, count].filter(Boolean).join(' ');
-}
+/* global hvliRequestHeaders, hvliSaveContent -- from ./editorSaveRequests.js, loaded before this file */
+/* global hvliAnswerResetNeeded -- from ./editorSaveChoice.js, loaded before this file */
 
 (function startEditor() {
   var block = document.getElementById('hvl-editor-config');
@@ -45,6 +37,7 @@ function hvliSaveFailureText(status, body, messages) {
   var findingList = document.getElementById('hvl-editor-findings');
   var contentId = config.contentId;
   var editor;
+  var held = false;
 
   ns.$ = window.H5P.jQuery;
   ns.basePath = settings.libraryUrl;
@@ -71,13 +64,6 @@ function hvliSaveFailureText(status, body, messages) {
     return url;
   };
 
-  function headers(json) {
-    var result = { Accept: 'application/json' };
-    if (json) result['Content-Type'] = 'application/json';
-    if (config.token && config.token.name === 'ltik') result.Authorization = 'Bearer ' + config.token.value;
-    if (config.token && config.token.name === 'csrf') result['X-CSRF-Token'] = config.token.value;
-    return result;
-  }
   function announce(text) {
     status.textContent = text;
   }
@@ -92,22 +78,6 @@ function hvliSaveFailureText(status, body, messages) {
       window.hvliGuardFrameStorage(frame.contentWindow);
     saveButton.disabled = false;
   }
-  function send(content) {
-    var body = JSON.stringify({ library: content.library, params: JSON.parse(content.params) });
-    var url = contentId ? '/h5p/content/' + encodeURIComponent(contentId) : '/h5p/content';
-    var method = contentId ? 'PUT' : 'POST';
-    var init = { method: method, headers: headers(true), body: body, credentials: 'same-origin' };
-    return fetch(url, init).then(function (response) {
-      if (response.ok) return response.json();
-      var fail = function (answer) {
-        var error = new Error('save ' + response.status);
-        error.statusText = hvliSaveFailureText(response.status, answer, config.messages);
-        error.openErrors = hvliOpenErrors(answer);
-        throw error;
-      };
-      return response.json().then(fail, fail.bind(null, null));
-    });
-  }
 
   function element(tag, text, attributes) {
     var made = document.createElement(tag);
@@ -121,7 +91,7 @@ function hvliSaveFailureText(status, body, messages) {
     findingList.parentElement.hidden = errors.length === 0;
     errors.forEach(function (finding, index) {
       var label = element('strong', config.messages.errorLabel + ':');
-      label.prepend(element('span', '\u2717 ', { 'aria-hidden': 'true' }));
+      label.prepend(element('span', '✗ ', { 'aria-hidden': 'true' }));
       var text = element('p', ' ' + finding.message, { id: 'hvl-editor-finding-' + index });
       text.prepend(label);
       var item = findingList.appendChild(element('li', ''));
@@ -136,27 +106,55 @@ function hvliSaveFailureText(status, body, messages) {
     });
   }
 
+  function saved(result) {
+    contentId = result.contentId;
+    var message = { type: 'hvli:content-saved', contentId: contentId };
+    if (window.parent !== window) window.parent.postMessage(message, location.origin);
+  }
+  // A11Y: WCAG 2.4.3: «Lagre» holds focus while a chosen request runs, unavailable by `aria-disabled` (D-093).
+  function holdSave() {
+    held = true;
+    saveButton.disabled = false;
+    saveButton.setAttribute('aria-disabled', 'true');
+    saveButton.focus();
+  }
+  // A11Y: WCAG 2.4.3, 4.1.3: after the save choice, «Lagre» is enabled and focused first, then the outcome is
+  // announced in the status region, which the open dialog kept inert (D-093).
+  function settle(text, errors) {
+    held = false;
+    saveButton.removeAttribute('aria-disabled');
+    saveButton.disabled = false;
+    saveButton.focus();
+    announce(text);
+    showErrors(errors || []);
+  }
   function save() {
+    if (held) return;
     saveButton.disabled = true;
     showErrors([]);
     announce(config.messages.saving);
-    var done = function () {
-      saveButton.disabled = false;
-    };
+    var done = () => void (saveButton.disabled = false);
     editor.getContent(
       function (content) {
-        send(content)
+        hvliSaveContent(content, contentId, config)
           .then(function (result) {
-            contentId = result.contentId;
+            saved(result);
             announce(config.messages.saved);
-            var saved = { type: 'hvli:content-saved', contentId: contentId };
-            if (window.parent !== window) window.parent.postMessage(saved, location.origin);
+            done();
           })
           .catch(function (error) {
+            // PROD-013: the dialog answers this 409 instead of the failure text (D-093).
+            if (error.resetNeeded && contentId && config.saveChoice) {
+              // WHY: "saving" is not true while the author chooses; the outcome replaces the empty text afterwards.
+              announce('');
+              var page = { config: config, contentId: contentId, saved: saved, settle: settle };
+              Object.assign(page, { announce: announce, holdSave: holdSave });
+              return hvliAnswerResetNeeded(content, page);
+            }
             announce(error.statusText || config.messages.failed);
             showErrors(error.openErrors || []);
-          })
-          .then(done);
+            done();
+          });
       },
       function () {
         announce(config.messages.failed);
@@ -169,10 +167,12 @@ function hvliSaveFailureText(status, body, messages) {
   // says so; an earlier "not reached" is emptied first (a refused save's reason stays), so a new one is announced.
   function goToField(path) {
     var editorFrame = document.querySelector('iframe.h5p-editor-iframe');
-    if (status.textContent === config.messages.fieldNotReached) announce('');
+    var notReached = [config.messages.fieldNotReached, config.messages.titleNotReached];
+    if (notReached.includes(status.textContent)) announce('');
     hvliGoToField(() => editor && editor.selector && editor.selector.form, path, {
       fallback: () => editorFrame || saveButton,
       notReached: () => announce(config.messages.fieldNotReached),
+      titleNotReached: () => announce(config.messages.titleNotReached),
     });
   }
 
@@ -185,7 +185,7 @@ function hvliSaveFailureText(status, body, messages) {
   });
   saveButton.addEventListener('click', save);
   if (!contentId) return start(undefined, undefined);
-  var paramsInit = { headers: headers(false), credentials: 'same-origin' };
+  var paramsInit = { headers: hvliRequestHeaders(config.token, false), credentials: 'same-origin' };
   fetch('/h5p/params/' + encodeURIComponent(contentId), paramsInit)
     .then(function (response) {
       if (!response.ok) throw new Error('params ' + response.status);

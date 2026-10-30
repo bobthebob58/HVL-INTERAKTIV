@@ -15,8 +15,8 @@
  *   - `failed` and `requests` hold paths only, never query strings; `setCookies` holds cookie names, never values.
  *   - Only responses from the tool's origin count as failed requests or cookies.
  * Collaborators: playwright-core 1.56.1 (`Response.headerValue` reads the raw headers, Set-Cookie included).
- * Tests: apps/server/e2e/flowRecord.e2e.test.ts; used by apps/server/e2e/appPlayEditor.e2e.test.ts and
- *   apps/server/e2e/publishWithReason.e2e.test.ts
+ * Tests: apps/server/e2e/flowRecord.e2e.test.ts; used by apps/server/e2e/appPlayEditor.e2e.test.ts,
+ *   apps/server/e2e/publishWithReason.e2e.test.ts and the S5 flows in apps/server/e2e/
  */
 import type { ConsoleMessage, Page } from 'playwright-core';
 

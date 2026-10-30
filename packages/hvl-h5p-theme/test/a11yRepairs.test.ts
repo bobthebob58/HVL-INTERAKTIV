@@ -82,6 +82,25 @@ describe('the H5P content markup repair script', () => {
     expect(attr('#explained', 'role')).toBe('heading');
   });
 
+  it('[UD-030] gives BranchingScenario\'s default start and end pictures alt="", and leaves an author\'s image as H5P wrote it', async () => {
+    // Arrange: genericScreen.js of BranchingScenario 1.10, without a start image (the end screen comes later)
+    const library = '/h5p/libraries/H5P.BranchingScenario-1.10/dist/assets';
+    const { document, attr, settle } = openDocument(
+      `<div class="h5p-screen-background"><div class="h5p-screen-banner"></div><img class="h5p-background-image" src="${library}/start-screen-default.jpg" id="start"></div>
+<img class="h5p-background-image" src="/h5p/content/1/images/own.jpg" id="own">
+<img class="h5p-background-image" src="${library}/end-screen-default.jpg" aria-label="Avslutning" id="labelled">`,
+    );
+    // Act
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `<img class="h5p-background-image" src="${library}/end-screen-default.jpg" id="end">`,
+    );
+    await settle();
+    // Assert
+    expect([attr('#start', 'alt'), attr('#end', 'alt')]).toEqual(['', '']);
+    expect([attr('#own', 'alt'), attr('#labelled', 'alt')]).toEqual([null, null]);
+  });
+
   it('[UD-030] is idempotent: a second copy and later changes write nothing more', async () => {
     // Arrange
     const { window, document, settle } = openDocument(PLAYER);

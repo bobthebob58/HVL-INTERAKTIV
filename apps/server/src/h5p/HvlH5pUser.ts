@@ -54,6 +54,11 @@ export interface HvlH5pActor {
   readonly hvlMember: boolean;
   /** True when signed in with Feide: may view activities shared with "anyone with Feide". */
   readonly feideAuthenticated: boolean;
+  /**
+   * A student who may author through `AUTHOR_COURSE_GROUPS` (D-059): the content bank is not for them, so they may
+   * not copy a colleague's activity through it (D-091, D-092). Always false for an LTI launch.
+   */
+  readonly studentAuthor: boolean;
   /** Activities this LTI launch opened; a learner may view these even when not otherwise visible. */
   readonly ltiLaunchContentIds: readonly string[];
   /** Present only in the data-subject-request tool. */

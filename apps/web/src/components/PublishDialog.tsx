@@ -7,17 +7,20 @@
  *      validate again and refuse a changed activity. Problems are listed in an ErrorSummary linked to their fields
  *      (UD-013), and the two conflicts get plain-language messages: still-unexplained errors (`hvl:publish-blocked`)
  *      and an activity changed in the meantime (`hvl:content-changed`, after which the findings are fetched again).
- *      Publishing a published activity validates again and stores the new reasons (D-074 W3 amendment), so renewing a
- *      reason needs no other request; only the dialog's title, introduction and button say what happens.
- * Spec: PROD-003, UD-022, UD-013, UD-006
+ *      Publishing a published activity validates again and stores the new reasons (D-074 amendment 2026-10-23), so
+ *      renewing a reason needs no other request; only the dialog's title, introduction and button say what happens.
+ *      A caller may add a `notice` below the introduction, such as the learning-design prompt (D-087); it never takes
+ *      part in the request.
+ * Spec: PROD-003, UD-022, UD-013, UD-006, PED-030
  * Invariants:
- *   - Reasons are trimmed and 1 to `REASON_MAX_LENGTH` (500) characters; the server checks them again.
+ *   - Reasons are trimmed and 1 to `REASON_MAX_LENGTH` (500) characters (./publishReasons.ts); the server checks
+ *     them again.
  *   - Typed reasons are kept, keyed by rule and path, when the findings are fetched again (WCAG 3.3.7).
  *   - Only errors without a valid acknowledgement get a field; warnings and hints never block.
  *   - A field's label is short ("Grunngjeving for feil 1"); the finding's message is its description, so it is read
  *     once with the field and never nested in quotation marks (UD-013).
- * Collaborators: ./Dialog.tsx, ./ErrorSummary.tsx, ./AcknowledgementField.tsx, ../api/contentApi.ts,
- *   ../features/activity/CheckPanel.tsx.
+ * Collaborators: ./Dialog.tsx, ./ErrorSummary.tsx, ./AcknowledgementField.tsx, ./publishReasons.ts,
+ *   ../api/contentApi.ts, ../features/activity/CheckPanel.tsx.
  * Tests: apps/web/test/components/PublishDialog.test.tsx
  */
 'use client';
@@ -28,17 +31,18 @@ import type {
   PublishBlockedBody,
   PublishResponse,
 } from '@hvl-interaktiv/api-contract';
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { useApiAuth } from '../api/ApiAuthContext';
 import { publishContent } from '../api/contentApi';
 import { useLocale } from '../i18n/LocaleContext';
-import { t, type MessageKey } from '../i18n/translate';
+import { t } from '../i18n/translate';
 import { AcknowledgementField } from './AcknowledgementField';
 import { Dialog } from './Dialog';
 import { ERROR_ICON, ErrorSummary, type FieldError } from './ErrorSummary';
+import { PUBLISH_DIALOG_TEXTS, REASON_MAX, reasonKey as keyOf, reasonProblems } from './publishReasons';
 
-/** The longest reason; api-contract's `REASON_MAX_LENGTH` (a test checks that they agree). */
-export const REASON_MAX = 500;
+/** The longest reason (./publishReasons.ts), re-exported for the dialog's callers and tests. */
+export { REASON_MAX } from './publishReasons';
 
 /** What the dialog needs. */
 export interface PublishDialogProps {
@@ -53,27 +57,9 @@ export interface PublishDialogProps {
   readonly onFindings: (findings: readonly FindingWithAcknowledgement[]) => void;
   /** The activity is published and some errors have no reason that holds: the dialog asks for new ones. */
   readonly renew?: boolean;
+  /** Shown below the introduction, e.g. the learning-design prompt (D-087); never blocks publishing. */
+  readonly notice?: ReactNode;
 }
-
-/** The dialog's own texts, for a first publish and for new reasons on a published activity. */
-const TEXTS: Readonly<
-  Record<'publish' | 'renew', Readonly<Record<'title' | 'intro' | 'submit' | 'busy', MessageKey>>>
-> = {
-  publish: {
-    title: 'publish.title',
-    intro: 'publish.intro',
-    submit: 'publish.submit',
-    busy: 'publish.publishing',
-  },
-  renew: {
-    title: 'publish.renewTitle',
-    intro: 'publish.renewIntro',
-    submit: 'publish.renewSubmit',
-    busy: 'publish.renewing',
-  },
-};
-
-const keyOf = (finding: FindingWithAcknowledgement): string => `${finding.ruleId}|${finding.path}`;
 
 /**
  * The errors that still need a reason before the activity can be published.
@@ -89,8 +75,18 @@ export const unexplainedErrors = (findings: readonly FindingWithAcknowledgement[
  * @returns The dialog.
  */
 export function PublishDialog(props: PublishDialogProps) {
-  const { contentId, open, findings, onClose, onPublished, onStale, onFindings, renew = false } = props;
-  const texts = TEXTS[renew ? 'renew' : 'publish'];
+  const {
+    contentId,
+    open,
+    findings,
+    onClose,
+    onPublished,
+    onStale,
+    onFindings,
+    renew = false,
+    notice,
+  } = props;
+  const texts = PUBLISH_DIALOG_TEXTS[renew ? 'renew' : 'publish'];
   const locale = useLocale();
   const auth = useApiAuth();
   const base = useId();
@@ -105,20 +101,9 @@ export function PublishDialog(props: PublishDialogProps) {
   const others = findings.findings.filter((finding) => finding.severity !== 'error').length;
   const fieldId = (index: number) => `${base}-reason-${index}`;
 
-  const validate = (): FieldError[] =>
-    needed.flatMap((finding, index) => {
-      const reason = (reasons[keyOf(finding)] ?? '').trim();
-      const values = { number: index + 1, count: reason.length, max: REASON_MAX };
-      if (reason.length === 0)
-        return [{ fieldId: fieldId(index), message: t('publish.reasonMissing', locale, values) }];
-      if (reason.length > REASON_MAX)
-        return [{ fieldId: fieldId(index), message: t('publish.reasonTooLong', locale, values) }];
-      return [];
-    });
-
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const errors = validate();
+    const errors = reasonProblems(needed, reasons, fieldId, locale);
     setProblems({ attempt: problems.attempt + 1, errors });
     setServerProblem(undefined);
     if (errors.length > 0) return;
@@ -162,6 +147,7 @@ export function PublishDialog(props: PublishDialogProps) {
           </p>
         ) : null}
         <p>{t(texts.intro, locale)}</p>
+        {notice}
         {needed.length === 0 ? (
           <p>{t('publish.noErrors', locale)}</p>
         ) : (

@@ -12,16 +12,19 @@
  *   - `message` always comes from the locale files; `errorCode` is a stable machine code, never free text.
  *   - Errors with a numeric 4xx `status`/`statusCode` (body parsers, express.static, storage guards) keep it.
  *   - Unknown errors and server faults (5xx) are reported as `error.generic`, except the deliberate 503s in
- *     ./authErrors.ts (a dependency is down), which keep their status and message.
- * Collaborators: ./h5pErrorHandler.ts, ./HttpError.ts, ./authErrors.ts, ../i18n/translate.ts,
- *   ../content/PublishBlockedError.ts.
- * Tests: apps/server/test/http/h5pErrorResponse.test.ts, apps/server/test/http/api/publishRoutes.int.test.ts
+ *     ./authErrors.ts (a dependency is down) and the deliberate 5xx codes of ./learningDesignErrors.ts (no PDF
+ *     browser, a failed duplicate), which keep their status and message.
+ * Collaborators: ./h5pErrorHandler.ts, ./HttpError.ts, ./authErrors.ts, ./learningDesignErrors.ts,
+ *   ../i18n/translate.ts, ../content/PublishBlockedError.ts.
+ * Tests: apps/server/test/http/h5pErrorResponse.test.ts, apps/server/test/http/api/publishRoutes.int.test.ts,
+ *   apps/server/test/http/learningDesignErrors.test.ts
  */
 import type { CoveredFinding } from '../content/acknowledgementCoverage.js';
 import { PublishBlockedError } from '../content/PublishBlockedError.js';
 import { MAX_FILE_SIZE } from '../h5p/H5pConfigFactory.js';
 import { t, type Locale, type MessageKey } from '../i18n/translate.js';
 import { SERVICE_UNAVAILABLE_CODES } from './authErrors.js';
+import { isDeliberateLearningDesignFault } from './learningDesignErrors.js';
 
 const MB = 1024 * 1024;
 /** Lumi's message for metadata that its save schema refuses (an author error, not a server fault). */
@@ -45,6 +48,8 @@ const BY_ERROR_ID: Record<string, MessageKey> = {
   'hvl:sub-content-not-allowed': 'h5p.subContentNotAllowed',
   'hvl:library-not-installed': 'h5p.libraryNotInstalled',
   'hvl:unsafe-file-path': 'h5p.unsafeFilePath',
+  'hvl:unsafe-file-name': 'h5p.unsafeFileName',
+  'hvl:paste-source-not-allowed': 'h5p.pasteSourceNotAllowed',
   'hvl:hub-install-disabled': 'h5p.hubInstallDisabled',
   'hvl:package-libraries-not-installed': 'upload.package.librariesNotInstalled',
   'hvl:package-library-version-mismatch': 'upload.package.libraryVersionMismatch',
@@ -125,9 +130,12 @@ function describe(error: unknown): Described {
  */
 export function toErrorResponse(error: unknown, locale: Locale): { status: number; body: ErrorBody } {
   const described = describe(error);
-  // WHY: a 503 the auth layer raised on purpose (Feide's Groups API is down) is shown as such, not as a fault.
-  const unavailable = described.status === 503 && SERVICE_UNAVAILABLE_CODES.has(described.code);
-  const serverFault = !unavailable && (described.status < 400 || described.status >= 500);
+  // WHY: a 5xx raised on purpose (Feide's Groups API is down, no PDF browser, a failed duplicate) is shown as such,
+  // with its own code and message, not as a fault.
+  const deliberate =
+    (described.status === 503 && SERVICE_UNAVAILABLE_CODES.has(described.code)) ||
+    isDeliberateLearningDesignFault(described.code, described.status);
+  const serverFault = !deliberate && (described.status < 400 || described.status >= 500);
   const { status, code, key, params } = serverFault
     ? { status: 500, code: 'internal', key: 'error.generic' as MessageKey, params: {} }
     : described;

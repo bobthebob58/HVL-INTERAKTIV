@@ -1,0 +1,628 @@
+{
+  "library": "H5P.InteractiveBook 1.15",
+  "metadataTitle": "{{title}}",
+  "params": {
+    "showCoverPage": false,
+    "chapters": [
+      {
+        "library": "H5P.Column 1.22",
+        "params": {
+          "content": [
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<p>{{chapterText}}</p>"
+                },
+                "metadata": {
+                  "title": "{{textTitle}}",
+                  "license": "U"
+                }
+              }
+            },
+            {
+              "content": {
+                "library": "H5P.QuestionSet 1.21",
+                "params": {
+                  "introPage": {
+                    "showIntroPage": false
+                  },
+                  "questions": [
+                    {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>{{question1}}</p>",
+                        "answers": [
+                          {
+                            "text": "<div>{{correctAnswer}}</div>",
+                            "correct": true,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{correctFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer1}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer2}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": true,
+                          "enableSolutionsButton": true
+                        },
+                        "UI": {
+                          "submitAnswerButton": "{{submitButton}}",
+                          "readFeedback": "{{readFeedback}}",
+                          "correctAnswer": "{{correctAnswerLabel}}",
+                          "scoreBarLabel": "{{scoreBarLabel}}",
+                          "a11yCheck": "{{a11yCheck}}",
+                          "a11yShowSolution": "{{a11yShowSolution}}",
+                          "a11yRetry": "{{a11yRetry}}"
+                        },
+                        "confirmCheck": {
+                          "header": "{{confirmCheckHeader}}"
+                        }
+                      },
+                      "metadata": {
+                        "title": "{{question1Title}}",
+                        "license": "U"
+                      }
+                    },
+                    {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>{{question2}}</p>",
+                        "answers": [
+                          {
+                            "text": "<div>{{correctAnswer}}</div>",
+                            "correct": true,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{correctFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer1}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer2}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": true,
+                          "enableSolutionsButton": true
+                        },
+                        "UI": {
+                          "submitAnswerButton": "{{submitButton}}",
+                          "readFeedback": "{{readFeedback}}",
+                          "correctAnswer": "{{correctAnswerLabel}}",
+                          "scoreBarLabel": "{{scoreBarLabel}}",
+                          "a11yCheck": "{{a11yCheck}}",
+                          "a11yShowSolution": "{{a11yShowSolution}}",
+                          "a11yRetry": "{{a11yRetry}}"
+                        },
+                        "confirmCheck": {
+                          "header": "{{confirmCheckHeader}}"
+                        }
+                      },
+                      "metadata": {
+                        "title": "{{question2Title}}",
+                        "license": "U"
+                      }
+                    },
+                    {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>{{question3}}</p>",
+                        "answers": [
+                          {
+                            "text": "<div>{{correctAnswer}}</div>",
+                            "correct": true,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{correctFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer1}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer2}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": true,
+                          "enableSolutionsButton": true
+                        },
+                        "UI": {
+                          "submitAnswerButton": "{{submitButton}}",
+                          "readFeedback": "{{readFeedback}}",
+                          "correctAnswer": "{{correctAnswerLabel}}",
+                          "scoreBarLabel": "{{scoreBarLabel}}",
+                          "a11yCheck": "{{a11yCheck}}",
+                          "a11yShowSolution": "{{a11yShowSolution}}",
+                          "a11yRetry": "{{a11yRetry}}"
+                        },
+                        "confirmCheck": {
+                          "header": "{{confirmCheckHeader}}"
+                        }
+                      },
+                      "metadata": {
+                        "title": "{{question3Title}}",
+                        "license": "U"
+                      }
+                    }
+                  ],
+                  "texts": {
+                    "previous": "{{previousLabel}}",
+                    "next": "{{nextLabel}}",
+                    "questionSetInstruction": "{{setInstruction}}",
+                    "noQuestionAdded": "{{setNoQuestion}}"
+                  },
+                  "endGame": {
+                    "showResultPage": true,
+                    "showSolutionButton": true,
+                    "showRetryButton": true,
+                    "message": "{{setResults}}",
+                    "amountCorrect": "{{setAmountCorrect}}",
+                    "scoreHeader": "{{setScoreHeader}}"
+                  },
+                  "override": {
+                    "showSolutionButton": "on",
+                    "retryButton": "on"
+                  }
+                },
+                "metadata": {
+                  "title": "{{check1Title}}",
+                  "license": "U"
+                }
+              }
+            }
+          ]
+        },
+        "metadata": {
+          "title": "{{chapter1Title}}",
+          "license": "U"
+        }
+      },
+      {
+        "library": "H5P.Column 1.22",
+        "params": {
+          "content": [
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<p>{{chapterText}}</p>"
+                },
+                "metadata": {
+                  "title": "{{textTitle}}",
+                  "license": "U"
+                }
+              }
+            },
+            {
+              "content": {
+                "library": "H5P.QuestionSet 1.21",
+                "params": {
+                  "introPage": {
+                    "showIntroPage": false
+                  },
+                  "questions": [
+                    {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>{{question1}}</p>",
+                        "answers": [
+                          {
+                            "text": "<div>{{correctAnswer}}</div>",
+                            "correct": true,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{correctFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer1}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer2}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": true,
+                          "enableSolutionsButton": true
+                        },
+                        "UI": {
+                          "submitAnswerButton": "{{submitButton}}",
+                          "readFeedback": "{{readFeedback}}",
+                          "correctAnswer": "{{correctAnswerLabel}}",
+                          "scoreBarLabel": "{{scoreBarLabel}}",
+                          "a11yCheck": "{{a11yCheck}}",
+                          "a11yShowSolution": "{{a11yShowSolution}}",
+                          "a11yRetry": "{{a11yRetry}}"
+                        },
+                        "confirmCheck": {
+                          "header": "{{confirmCheckHeader}}"
+                        }
+                      },
+                      "metadata": {
+                        "title": "{{question1Title}}",
+                        "license": "U"
+                      }
+                    },
+                    {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>{{question2}}</p>",
+                        "answers": [
+                          {
+                            "text": "<div>{{correctAnswer}}</div>",
+                            "correct": true,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{correctFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer1}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer2}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": true,
+                          "enableSolutionsButton": true
+                        },
+                        "UI": {
+                          "submitAnswerButton": "{{submitButton}}",
+                          "readFeedback": "{{readFeedback}}",
+                          "correctAnswer": "{{correctAnswerLabel}}",
+                          "scoreBarLabel": "{{scoreBarLabel}}",
+                          "a11yCheck": "{{a11yCheck}}",
+                          "a11yShowSolution": "{{a11yShowSolution}}",
+                          "a11yRetry": "{{a11yRetry}}"
+                        },
+                        "confirmCheck": {
+                          "header": "{{confirmCheckHeader}}"
+                        }
+                      },
+                      "metadata": {
+                        "title": "{{question2Title}}",
+                        "license": "U"
+                      }
+                    },
+                    {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>{{question3}}</p>",
+                        "answers": [
+                          {
+                            "text": "<div>{{correctAnswer}}</div>",
+                            "correct": true,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{correctFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer1}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer2}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": true,
+                          "enableSolutionsButton": true
+                        },
+                        "UI": {
+                          "submitAnswerButton": "{{submitButton}}",
+                          "readFeedback": "{{readFeedback}}",
+                          "correctAnswer": "{{correctAnswerLabel}}",
+                          "scoreBarLabel": "{{scoreBarLabel}}",
+                          "a11yCheck": "{{a11yCheck}}",
+                          "a11yShowSolution": "{{a11yShowSolution}}",
+                          "a11yRetry": "{{a11yRetry}}"
+                        },
+                        "confirmCheck": {
+                          "header": "{{confirmCheckHeader}}"
+                        }
+                      },
+                      "metadata": {
+                        "title": "{{question3Title}}",
+                        "license": "U"
+                      }
+                    }
+                  ],
+                  "texts": {
+                    "previous": "{{previousLabel}}",
+                    "next": "{{nextLabel}}",
+                    "questionSetInstruction": "{{setInstruction}}",
+                    "noQuestionAdded": "{{setNoQuestion}}"
+                  },
+                  "endGame": {
+                    "showResultPage": true,
+                    "showSolutionButton": true,
+                    "showRetryButton": true,
+                    "message": "{{setResults}}",
+                    "amountCorrect": "{{setAmountCorrect}}",
+                    "scoreHeader": "{{setScoreHeader}}"
+                  },
+                  "override": {
+                    "showSolutionButton": "on",
+                    "retryButton": "on"
+                  }
+                },
+                "metadata": {
+                  "title": "{{check2Title}}",
+                  "license": "U"
+                }
+              }
+            }
+          ]
+        },
+        "metadata": {
+          "title": "{{chapter2Title}}",
+          "license": "U"
+        }
+      },
+      {
+        "library": "H5P.Column 1.22",
+        "params": {
+          "content": [
+            {
+              "content": {
+                "library": "H5P.AdvancedText 1.1",
+                "params": {
+                  "text": "<p>{{chapterText}}</p>"
+                },
+                "metadata": {
+                  "title": "{{textTitle}}",
+                  "license": "U"
+                }
+              }
+            },
+            {
+              "content": {
+                "library": "H5P.QuestionSet 1.21",
+                "params": {
+                  "introPage": {
+                    "showIntroPage": false
+                  },
+                  "questions": [
+                    {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>{{question1}}</p>",
+                        "answers": [
+                          {
+                            "text": "<div>{{correctAnswer}}</div>",
+                            "correct": true,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{correctFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer1}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer2}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": true,
+                          "enableSolutionsButton": true
+                        },
+                        "UI": {
+                          "submitAnswerButton": "{{submitButton}}",
+                          "readFeedback": "{{readFeedback}}",
+                          "correctAnswer": "{{correctAnswerLabel}}",
+                          "scoreBarLabel": "{{scoreBarLabel}}",
+                          "a11yCheck": "{{a11yCheck}}",
+                          "a11yShowSolution": "{{a11yShowSolution}}",
+                          "a11yRetry": "{{a11yRetry}}"
+                        },
+                        "confirmCheck": {
+                          "header": "{{confirmCheckHeader}}"
+                        }
+                      },
+                      "metadata": {
+                        "title": "{{question1Title}}",
+                        "license": "U"
+                      }
+                    },
+                    {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>{{question2}}</p>",
+                        "answers": [
+                          {
+                            "text": "<div>{{correctAnswer}}</div>",
+                            "correct": true,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{correctFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer1}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer2}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": true,
+                          "enableSolutionsButton": true
+                        },
+                        "UI": {
+                          "submitAnswerButton": "{{submitButton}}",
+                          "readFeedback": "{{readFeedback}}",
+                          "correctAnswer": "{{correctAnswerLabel}}",
+                          "scoreBarLabel": "{{scoreBarLabel}}",
+                          "a11yCheck": "{{a11yCheck}}",
+                          "a11yShowSolution": "{{a11yShowSolution}}",
+                          "a11yRetry": "{{a11yRetry}}"
+                        },
+                        "confirmCheck": {
+                          "header": "{{confirmCheckHeader}}"
+                        }
+                      },
+                      "metadata": {
+                        "title": "{{question2Title}}",
+                        "license": "U"
+                      }
+                    },
+                    {
+                      "library": "H5P.MultiChoice 1.16",
+                      "params": {
+                        "question": "<p>{{question3}}</p>",
+                        "answers": [
+                          {
+                            "text": "<div>{{correctAnswer}}</div>",
+                            "correct": true,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{correctFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer1}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          },
+                          {
+                            "text": "<div>{{wrongAnswer2}}</div>",
+                            "correct": false,
+                            "tipsAndFeedback": {
+                              "chosenFeedback": "<div>{{wrongFeedback}}</div>"
+                            }
+                          }
+                        ],
+                        "behaviour": {
+                          "enableRetry": true,
+                          "enableSolutionsButton": true
+                        },
+                        "UI": {
+                          "submitAnswerButton": "{{submitButton}}",
+                          "readFeedback": "{{readFeedback}}",
+                          "correctAnswer": "{{correctAnswerLabel}}",
+                          "scoreBarLabel": "{{scoreBarLabel}}",
+                          "a11yCheck": "{{a11yCheck}}",
+                          "a11yShowSolution": "{{a11yShowSolution}}",
+                          "a11yRetry": "{{a11yRetry}}"
+                        },
+                        "confirmCheck": {
+                          "header": "{{confirmCheckHeader}}"
+                        }
+                      },
+                      "metadata": {
+                        "title": "{{question3Title}}",
+                        "license": "U"
+                      }
+                    }
+                  ],
+                  "texts": {
+                    "previous": "{{previousLabel}}",
+                    "next": "{{nextLabel}}",
+                    "questionSetInstruction": "{{setInstruction}}",
+                    "noQuestionAdded": "{{setNoQuestion}}"
+                  },
+                  "endGame": {
+                    "showResultPage": true,
+                    "showSolutionButton": true,
+                    "showRetryButton": true,
+                    "message": "{{setResults}}",
+                    "amountCorrect": "{{setAmountCorrect}}",
+                    "scoreHeader": "{{setScoreHeader}}"
+                  },
+                  "override": {
+                    "showSolutionButton": "on",
+                    "retryButton": "on"
+                  }
+                },
+                "metadata": {
+                  "title": "{{check3Title}}",
+                  "license": "U"
+                }
+              }
+            }
+          ]
+        },
+        "metadata": {
+          "title": "{{chapter3Title}}",
+          "license": "U"
+        }
+      }
+    ],
+    "behaviour": {
+      "displaySummary": true,
+      "enableRetry": true
+    },
+    "page": "{{pageLabel}}",
+    "next": "{{nextLabel}}",
+    "previous": "{{previousLabel}}"
+  }
+}

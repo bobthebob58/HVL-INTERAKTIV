@@ -1,0 +1,59 @@
+{
+  "description": "Guidance left in the title, in sub-content titles, in rich text, in a button label and in a list item, written raw and as decimal, hexadecimal and named references; a lone closing mark left by an edit; extraTitle is not reported again.",
+  "mainLibrary": "H5P.QuestionSet 1.21",
+  "metadata": {
+    "title": "⟦Tittel på sjekken⟧",
+    "extraTitle": "⟦Tittel på sjekken⟧",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "introPage": { "showIntroPage": false },
+    "questions": [
+      {
+        "library": "H5P.MultiChoice 1.16",
+        "params": {
+          "question": "<p>&#10214;Skriv spørsmålet her&#10215;</p>",
+          "answers": [
+            {
+              "text": "<div>&#x27E6;Rett <strong>svar</strong>&#x27E7;</div>",
+              "correct": true,
+              "tipsAndFeedback": { "chosenFeedback": "<div>Riktig, fordi kvadratroten av 9 er 3.</div>" }
+            },
+            {
+              "text": "<div>&lobrk;Feil svar&robrk;</div>",
+              "correct": false,
+              "tipsAndFeedback": {
+                "chosenFeedback": "<div>Nei, 9 delt på 3 er 3, men det er ikkje kvadratrota.</div>"
+              }
+            }
+          ],
+          "UI": { "checkAnswerButton": "⟦Sjekk &amp; send⟧" }
+        },
+        "metadata": {
+          "title": "⟦Tittel på spørsmålet⟧",
+          "extraTitle": "⟦Tittel på spørsmålet⟧",
+          "license": "U"
+        },
+        "subContentId": "a1"
+      },
+      {
+        "library": "H5P.Blanks 1.14",
+        "params": {
+          "text": "<p>Fyll inn det som manglar.</p>",
+          "questions": ["<p>Kva spørsmålet her⟧ *kvadratrot*</p>"]
+        },
+        "metadata": { "title": "Utfylling", "license": "U" },
+        "subContentId": "a2"
+      }
+    ]
+  },
+  "expected": [
+    { "path": "metadata.title", "message": "V-PLACEHOLDER.guidance" },
+    { "path": "questions[0].metadata.title", "message": "V-PLACEHOLDER.guidance" },
+    { "path": "questions[0].params.question", "message": "V-PLACEHOLDER.guidance" },
+    { "path": "questions[0].params.answers[0].text", "message": "V-PLACEHOLDER.guidance" },
+    { "path": "questions[0].params.answers[1].text", "message": "V-PLACEHOLDER.guidance" },
+    { "path": "questions[0].params.UI.checkAnswerButton", "message": "V-PLACEHOLDER.guidance" },
+    { "path": "questions[1].params.questions[0]", "message": "V-PLACEHOLDER.guidance" }
+  ]
+}

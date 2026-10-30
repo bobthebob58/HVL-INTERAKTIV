@@ -62,8 +62,9 @@ jobs:
       FEIDE_CLIENT_ID: hvli-ci-client
       FEIDE_CLIENT_SECRET: ci-only-feide-client-secret
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # WHY: GitHub retires Node 20 for actions; these majors run on Node 24.
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -79,17 +80,28 @@ jobs:
       # request) whose run saved it; a run reads only its own scope's caches and those of its base or default branch,
       # so a pull request cannot fill main's.
       - name: Cache the H5P library checkouts and builds
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/hvl-interaktiv/h5p-libraries
           key: h5p-libraries-${{ runner.os }}-${{ hashFiles('tools/h5p-libraries/libraries.manifest.json', 'tools/h5p-libraries/*.mjs') }}
           restore-keys: h5p-libraries-${{ runner.os }}-
       - name: Fetch, build and verify the ten real content types at pinned commits (D-078, D-047)
         run: npm run h5p:fetch-libraries
+      # WHY: after the fetch, so the pattern skeletons can be checked against the installed libraries' semantics
+      # (D-084); it needs no database or service, so a broken content file fails the run before the long steps.
+      - name: Studio content in content/ loads and is complete in nn, nb and en (PED-001, D-082)
+        run: npm run content:check
       - name: Generate the Prisma client and apply migrations
         run: npm run db:generate --workspace apps/server && npm run db:migrate
       - name: Install full Chromium for the browser and end-to-end tests (SEC-001, D-065; never --only-shell)
         run: npx playwright-core install --with-deps chromium
+      # WHY: the PDF export keeps Chromium's sandbox (D-096); Ubuntu 24.04's AppArmor blocks the unprivileged user
+      # namespaces it needs for a non-root user, so the restriction is lifted on this throwaway runner only.
+      - name: Allow Chromium's sandbox for the non-root runner (MAPPE-004, D-096)
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
       # WHY: the workspace build regenerates the committed token and theme files, so they are checked before it.
       - name: Design tokens and theme prefixes are up to date (UD-001, UD-003, D-072)
         run: npm run tokens:check && npm run check --workspace packages/hvl-h5p-theme
@@ -127,7 +139,7 @@ jobs:
           A11Y_REPORT_DIR: a11y-report
       - name: Keep the accessibility report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: a11y-report
           path: a11y-report

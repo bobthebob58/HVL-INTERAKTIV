@@ -5,19 +5,29 @@
  * Why: the web app's start page lists an author's activities (PROD-003 needs their status at a glance), and the
  *      activity page shows one. Only the fields the contract names are read, so no name, e-mail address or other
  *      person's ID leaves the server (DATA-002). The activity's own language goes with its title, so the web app can
- *      mark the title with `lang` (WCAG 3.1.2, UD-010).
- * Spec: PROD-003, PROD-006, DATA-002, UD-010
+ *      mark the title with `lang` (WCAG 3.1.2, UD-010). Learners see the estimated minutes and the purpose before
+ *      they start (PED-032), so a summary carries those two fields of the learning design (D-087).
+ * Spec: PROD-003, PROD-006, DATA-002, UD-010, PED-032
  * Invariants:
  *   - The list holds exactly the activities the account owns or co-authors with the `coauthor` role, newest change
  *     first (ties broken by ID, so the order is stable).
  *   - Dates are ISO strings in UTC; `publishedAt` is null while it was never published through the flow.
  *   - PRIVACY: of the stored metadata only the language tag leaves the server (`activityLanguage`), never its
  *     authors or other fields; `language` is absent when the activity states none.
- * Collaborators: ../http/api/contentListRoutes.ts, ./contentAccess.ts, ../validation/activityLanguage.ts.
- * Tests: apps/server/test/http/api/contentListRoutes.int.test.ts
+ *   - PRIVACY and pedagogy: of the learning design only the minutes and the purpose are read, never the rationale,
+ *     the course code or the outcomes (D-087); the detail is read only after the View check (its route's job).
+ * Collaborators: ../http/api/contentListRoutes.ts, ./contentAccess.ts, ../validation/activityLanguage.ts,
+ *   ../learningDesign/metadata/learnerInfoFields.ts.
+ * Tests: apps/server/test/http/api/contentListRoutes.int.test.ts,
+ *   apps/server/test/learningDesign/metadata/learnerInfo.int.test.ts
  */
 import type { ContentSummary } from '@hvl-interaktiv/api-contract';
 import type { Database } from '../infra/prismaClient.js';
+import {
+  LEARNER_INFO_SELECT,
+  learnerInfoFields,
+  type StoredLearnerInfo,
+} from '../learningDesign/metadata/learnerInfoFields.js';
 import { activityLanguage } from '../validation/activityLanguage.js';
 
 const SUMMARY_FIELDS = {
@@ -30,6 +40,7 @@ const SUMMARY_FIELDS = {
   publishedAt: true,
   ownerUserId: true,
   metadata: true,
+  learningDesign: { select: LEARNER_INFO_SELECT },
 } as const;
 
 /** The stored fields a summary is made of. */
@@ -44,6 +55,8 @@ export interface SummaryRow {
   readonly ownerUserId: string;
   /** The stored h5p.json-style metadata; only its language is used. */
   readonly metadata: unknown;
+  /** The learner-facing learning-design fields (PED-032), or null without metadata. */
+  readonly learningDesign: StoredLearnerInfo | null;
 }
 
 /**
@@ -62,6 +75,7 @@ export const summaryFields = (row: SummaryRow): Omit<ContentSummary, 'role'> => 
     updatedAt: row.updatedAt.toISOString(),
     publishedAt: row.publishedAt?.toISOString() ?? null,
     ...(language ? { language } : {}),
+    ...learnerInfoFields(row.learningDesign),
   };
 };
 

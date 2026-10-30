@@ -12,7 +12,7 @@
 import { expect, it } from 'vitest';
 import type { Page } from 'playwright-core';
 import { describeA11y } from './support/a11ySuite.js';
-import { CONTENT_TYPES, viewName, WEB_VIEWS } from './support/catalogue.js';
+import { CONTENT_TYPES, loadsByAddress, viewName, WEB_VIEWS } from './support/catalogue.js';
 import { tabTo, walkFocus, type FocusStop } from './support/focusWalk.js';
 import { playerFrame } from './support/pages.js';
 import { openView } from './support/views.js';
@@ -22,10 +22,13 @@ const DESKTOP = { width: 1280, height: 800 };
 /** The most Tab presses per walk: far more stops than any view has, so only a walk that never ends reaches it. */
 const MAX_STOPS = { web: 150, player: 100 } as const;
 
-/** A page of four ringed buttons where B and C each keep focus for one Tab press (the walk's control). */
+/**
+ * A page of four ringed buttons where B and C each keep focus for one Tab press, and a date field between C and D
+ * whose day, month and year each take a press (the walk's control).
+ */
 const HOLDING_PAGE = `<!doctype html><html lang="en"><head><style>
-button:focus-visible { outline: 3px solid #004357; outline-offset: 2px; }</style></head><body>
-<button>A</button><button>B</button><button>C</button><button>D</button><script>
+:is(button, input):focus-visible { outline: 3px solid #004357; outline-offset: 2px; }</style></head><body>
+<button>A</button><button>B</button><button>C</button><input type="date" aria-label="E"><button>D</button><script>
 for (const button of [...document.querySelectorAll('button')].slice(1, 3)) {
   let held = false;
   button.addEventListener('keydown', (event) => {
@@ -34,7 +37,7 @@ for (const button of [...document.querySelectorAll('button')].slice(1, 3)) {
 }</script></body></html>`;
 
 /** The views a page load opens; the activity page's other tabs are the same page after a click. */
-const LOADED_VIEWS = WEB_VIEWS.filter((view) => view.kind !== 'activity' || view.tab === 'play');
+const LOADED_VIEWS = WEB_VIEWS.filter(loadsByAddress);
 
 /** The stops that break UD-004, each with what is wrong. */
 const problems = (stops: readonly FocusStop[]): string[] =>
@@ -113,8 +116,9 @@ describeA11y('[UD-004] visible focus and [UD-006] keyboard access', (env) => {
     },
   );
 
-  it('[UD-006] control: widgets that each keep focus for one Tab press are neither a cycle nor unringed', async () => {
-    // Arrange: four buttons with the HVL ring; B and C each keep focus for one press, as a composite widget may
+  it('[UD-006] control: widgets and a date field that keep focus for some Tab presses are neither a cycle nor unringed', async () => {
+    // Arrange: four buttons and a date field with the HVL ring; B and C each keep focus for one press, as a composite
+    // widget may, and the date field for one press per part
     const { browser } = env();
     const context = await browser.newContext({ viewport: DESKTOP });
     const page = await context.newPage();
@@ -124,7 +128,11 @@ describeA11y('[UD-004] visible focus and [UD-006] keyboard access', (env) => {
     // Assert
     expect(result.trapped).toBeUndefined();
     expect(result.complete).toBe(true);
-    expect(result.stops.map((stop) => stop.name)).toEqual(['A', 'B', 'C', 'D'].map((n) => `BUTTON "${n}"`));
+    expect(result.stops.map((stop) => stop.name)).toEqual([
+      ...['A', 'B', 'C'].map((n) => `BUTTON "${n}"`),
+      'INPUT[type=date] "E"',
+      'BUTTON "D"',
+    ]);
     expect(problems(result.stops)).toEqual([]);
     await context.close();
   });

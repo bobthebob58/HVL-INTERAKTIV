@@ -1,0 +1,216 @@
+# content/laeringsdesign/patterns/uv-module/pattern.yaml — «Studiemodul» (spec 04 §4).
+# DRAFT for ALU and the pilot teachers to review (open question Q17); texts, times and choices may change.
+# How to edit: content/laeringsdesign/README.md, section "patterns/". Checked by npm run content:check.
+# Three chapters, each a text of at most 1 000 words followed by a check of three questions, and the book's
+# summary page at the end. Chapter titles are headings learners see, so they are guidance too.
+id: uv-module
+phases:
+  - underveis
+contentTypes:
+  - H5P.InteractiveBook
+name:
+  nn: Studiemodul
+  nb: Studiemodul
+  en: Study module
+purpose:
+  nn: Ei interaktiv bok i tre kapittel, der kvart kapittel sluttar med tre kontrollspørsmål, og eit samandrag til slutt.
+  nb: En interaktiv bok i tre kapitler, der hvert kapittel slutter med tre kontrollspørsmål, og et sammendrag til slutt.
+  en: An interactive book in three chapters, each ending with three check questions, and a summary at the end.
+whenToUse:
+  nn: >-
+    Når studentane skal arbeide seg gjennom eit større tema mellom samlingane, med tekst, bilete og video i fleire
+    delar. Kvart kapittel bør kunne lesast på under ti minutt.
+  nb: >-
+    Når studentene skal arbeide seg gjennom et større tema mellom samlingene, med tekst, bilder og video i flere
+    deler. Hvert kapittel bør kunne leses på under ti minutter.
+  en: >-
+    When students are to work through a larger topic between sessions, with text, pictures and video in several
+    parts. Each chapter should take less than ten minutes to read.
+example:
+  nn: >-
+    Ein modul om samtalar med pårørande i tre kapittel – å lytte, å informere og å handtere usemje – med tre
+    spørsmål etter kvart kapittel.
+  nb: >-
+    En modul om samtaler med pårørende i tre kapitler – å lytte, å informere og å håndtere uenighet – med tre
+    spørsmål etter hvert kapittel.
+  en: >-
+    A module on conversations with next of kin in three chapters – listening, informing and handling disagreement –
+    with three questions after each chapter.
+whyItWorks:
+  nn: >-
+    Ein lang tekst blir lettare å forstå når han er delt i kapittel som studenten går gjennom i sitt eige tempo
+    [@mayer2009]. Tre spørsmål på slutten av kvart kapittel gjer at studenten må hente fram det som nettopp stod
+    der, og det gjev betre langtidsminne enn å lese om igjen [@roediger2006]. Små og hyppige testar er blant dei
+    læringsstrategiane som har best dokumentert effekt [@dunlosky2013]. Samandraget til slutt viser kva som sit,
+    og kva studenten bør gå tilbake til.
+  nb: >-
+    En lang tekst blir lettere å forstå når den er delt i kapitler som studenten går gjennom i sitt eget tempo
+    [@mayer2009]. Tre spørsmål på slutten av hvert kapittel gjør at studenten må hente fram det som nettopp stod
+    der, og det gir bedre langtidshukommelse enn å lese om igjen [@roediger2006]. Små og hyppige tester er blant
+    de læringsstrategiene som har best dokumentert effekt [@dunlosky2013]. Sammendraget til slutt viser hva som
+    sitter, og hva studenten bør gå tilbake til.
+  en: >-
+    A long text is easier to understand when it is split into chapters that students work through at their own
+    pace [@mayer2009]. Three questions at the end of each chapter make students retrieve what it just said, which
+    gives better long-term retention than reading it again [@roediger2006]. Small, frequent tests are among the
+    learning strategies with the best documented effect [@dunlosky2013]. The summary at the end shows what has
+    stuck, and what the student should go back to.
+buildMinutes: 90
+studentMinutes: 45
+texts:
+  title:
+    nn: ⟦Gje modulen ein tittel som seier kva tema han dekkjer⟧
+    nb: ⟦Gi modulen en tittel som sier hvilket tema den dekker⟧
+    en: ⟦Give the module a title that names the topic it covers⟧
+  chapter1Title:
+    nn: ⟦Tittel på kapittel 1⟧
+    nb: ⟦Tittel på kapittel 1⟧
+    en: ⟦Title of chapter 1⟧
+  chapter2Title:
+    nn: ⟦Tittel på kapittel 2⟧
+    nb: ⟦Tittel på kapittel 2⟧
+    en: ⟦Title of chapter 2⟧
+  chapter3Title:
+    nn: ⟦Tittel på kapittel 3⟧
+    nb: ⟦Tittel på kapittel 3⟧
+    en: ⟦Title of chapter 3⟧
+  chapterText:
+    nn: >-
+      ⟦Skriv fagteksten til kapittelet, høgst 1 000 ord. Del han opp med mellomtitlar, og avslutt med det
+      viktigaste studenten skal hugse⟧
+    nb: >-
+      ⟦Skriv fagteksten til kapitlet, høyst 1 000 ord. Del den opp med mellomtitler, og avslutt med det viktigste
+      studenten skal huske⟧
+    en: >-
+      ⟦Write the chapter's text, at most 1,000 words. Break it up with subheadings, and end with what the student
+      should remember most⟧
+  textTitle:
+    nn: Fagtekst
+    nb: Fagtekst
+    en: Text
+  check1Title:
+    nn: Sjekk til kapittel 1
+    nb: Sjekk til kapittel 1
+    en: Check for chapter 1
+  check2Title:
+    nn: Sjekk til kapittel 2
+    nb: Sjekk til kapittel 2
+    en: Check for chapter 2
+  check3Title:
+    nn: Sjekk til kapittel 3
+    nb: Sjekk til kapittel 3
+    en: Check for chapter 3
+  question1Title:
+    nn: Spørsmål 1
+    nb: Spørsmål 1
+    en: Question 1
+  question1:
+    nn: >-
+      ⟦Spørsmål 1: spør etter hovudpoenget i kapittelet, slik at studenten må forklare det, ikkje berre kjenne det
+      att⟧
+    nb: >-
+      ⟦Spørsmål 1: spør etter hovedpoenget i kapitlet, slik at studenten må forklare det, ikke bare kjenne det
+      igjen⟧
+    en: >-
+      ⟦Question 1: ask for the main point of the chapter, so that the student must explain it, not just recognise
+      it⟧
+  question2Title:
+    nn: Spørsmål 2
+    nb: Spørsmål 2
+    en: Question 2
+  question2:
+    nn: '⟦Spørsmål 2: be studenten bruke stoffet i kapittelet på eit døme frå praksis⟧'
+    nb: '⟦Spørsmål 2: be studenten bruke stoffet i kapitlet på et eksempel fra praksis⟧'
+    en: '⟦Question 2: ask the student to apply the chapter to an example from practice⟧'
+  question3Title:
+    nn: Spørsmål 3
+    nb: Spørsmål 3
+    en: Question 3
+  question3:
+    nn: '⟦Spørsmål 3: knyt kapittelet til det førre kapittelet eller til noko studenten kan frå før⟧'
+    nb: '⟦Spørsmål 3: knytt kapitlet til det forrige kapitlet eller til noe studenten kan fra før⟧'
+    en: '⟦Question 3: link the chapter to the previous one or to something the student already knows⟧'
+  correctAnswer:
+    nn: ⟦Skriv det rette svaret⟧
+    nb: ⟦Skriv det riktige svaret⟧
+    en: ⟦Write the correct answer⟧
+  correctFeedback:
+    nn: ⟦Forklar kvifor svaret er rett⟧
+    nb: ⟦Forklar hvorfor svaret er riktig⟧
+    en: ⟦Explain why the answer is correct⟧
+  wrongAnswer1:
+    nn: ⟦Skriv eit feil svar som byggjer på ei vanleg misoppfatning⟧
+    nb: ⟦Skriv et feil svar som bygger på en vanlig misoppfatning⟧
+    en: ⟦Write a wrong answer that rests on a common misconception⟧
+  wrongAnswer2:
+    nn: ⟦Skriv eit feil svar som liknar det rette, men manglar noko viktig⟧
+    nb: ⟦Skriv et feil svar som ligner det riktige, men mangler noe viktig⟧
+    en: ⟦Write a wrong answer that resembles the correct one but misses something important⟧
+  wrongFeedback:
+    nn: ⟦Forklar kvifor dette svaret er feil, og vis til kvar i kapittelet det står⟧
+    nb: ⟦Forklar hvorfor dette svaret er feil, og vis til hvor i kapitlet det står⟧
+    en: ⟦Explain why this answer is wrong, and point to where the chapter says it⟧
+  pageLabel:
+    nn: Side
+    nb: Side
+    en: Page
+  nextLabel:
+    nn: Neste
+    nb: Neste
+    en: Next
+  previousLabel:
+    nn: Førre
+    nb: Forrige
+    en: Previous
+  setInstruction:
+    nn: Vel kva spørsmål som skal visast
+    nb: Velg hvilket spørsmål som skal vises
+    en: Choose question to display
+  setNoQuestion:
+    nn: Det er ikkje lagt til noko spørsmål
+    nb: Det er ikke lagt til noe spørsmål
+    en: No question has been added
+  setResults:
+    nn: Resultat
+    nb: Resultat
+    en: Results
+  setAmountCorrect:
+    nn: '@finals av @totals rette'
+    nb: '@finals av @totals riktige'
+    en: '@finals of @totals correct'
+  setScoreHeader:
+    nn: Poeng
+    nb: Poeng
+    en: Score
+  submitButton:
+    nn: Send inn
+    nb: Send inn
+    en: Submit
+  readFeedback:
+    nn: Les tilbakemeldinga
+    nb: Les tilbakemeldingen
+    en: Read feedback
+  correctAnswerLabel:
+    nn: Rett svar
+    nb: Riktig svar
+    en: Correct answer
+  scoreBarLabel:
+    nn: Du fekk :num av :total poeng
+    nb: Du fikk :num av :total poeng
+    en: You got :num out of :total points
+  a11yCheck:
+    nn: Sjekk svara. Svara blir merkte som rette, feil eller utan svar.
+    nb: Sjekk svarene. Svarene blir merket som riktige, feil eller ubesvarte.
+    en: Check the answers. The responses will be marked as correct, incorrect, or unanswered.
+  a11yShowSolution:
+    nn: Vis svaret. Oppgåva blir merkt med det rette svaret.
+    nb: Vis svaret. Oppgaven blir merket med det riktige svaret.
+    en: Show the solution. The task will be marked with its correct solution.
+  a11yRetry:
+    nn: Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt.
+    nb: Prøv igjen. Alle svarene blir nullstilt, og oppgaven starter på nytt.
+    en: Retry the task. Reset all responses and start the task over again.
+  confirmCheckHeader:
+    nn: Ferdig?
+    nb: Ferdig?
+    en: Finish?

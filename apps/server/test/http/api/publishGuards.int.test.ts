@@ -5,6 +5,7 @@
  * Spec: PROD-003, DATA-007, H5P-006, DOC-012
  */
 import { API_ROUTES, buildOpenApiDocument } from '@hvl-interaktiv/api-contract';
+import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { ContentPublisher } from '../../../src/content/ContentPublisher.js';
@@ -164,7 +165,9 @@ describeWithServices('[PROD-003] publish flow guards', () => {
     // Act
     const answers = await Promise.all(
       routes.map((route) => {
-        const call = request(tb.app)[route.method](`/api${route.path.replace(':contentId', 'not-a-uuid')}`);
+        // WHY: only the activity ID is malformed; another path parameter (a co-author's user ID) is a valid UUID.
+        const path = route.path.replace(':contentId', 'not-a-uuid').replace(/:\w+/g, randomUUID());
+        const call = request(tb.app)[route.method](`/api${path}`);
         return call.set(...author.header).send(bodies[route.operationId]);
       }),
     );
@@ -177,8 +180,7 @@ describeWithServices('[PROD-003] publish flow guards', () => {
         'hvl:activity-unavailable',
       ]);
       expect(answer?.headers['cache-control'], route.operationId).toBe('no-store');
-      const responses =
-        paths[`/api${route.path.replace(':contentId', '{contentId}')}`]?.[route.method]?.responses;
+      const responses = paths[`/api${route.path.replace(/:(\w+)/g, '{$1}')}`]?.[route.method]?.responses;
       expect(JSON.stringify(responses), route.operationId).toMatch(/malformed ID/);
     });
   });

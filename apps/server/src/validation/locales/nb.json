@@ -39,6 +39,11 @@
   "V-BRANCH-COLOUR": {
     "colourOnly": "Valget er bare en farge. Ikke alle ser farger, og skjermlesere leser bare teksten. Skriv hva valget går ut på."
   },
+  "V-PLACEHOLDER": {
+    "guidance": "Feltet har fortsatt veiledning fra mønsteret: «{{text}}». Skriv ditt eget innhold i stedet, og fjern tegnene ⟦ og ⟧.",
+    "videoMissing": "Den interaktive videoen har ingen video ennå. Legg til en video. Uten den ser studentene bare en feilmelding på engelsk.",
+    "backgroundImageMissing": "«Bilde med klikkpunkter» har ikke noe bakgrunnsbilde ennå. Legg til et bilde. Uten det ser studentene bare en feilmelding på engelsk."
+  },
   "PED-H01": {
     "tooLong": "Videoen er minst {{minutes}} minutter lang (anbefalt høyst {{max}}). Del den i bolker på 6–9 minutter, slik at studentene holder på oppmerksomheten (Guo, Kim & Rubin 2014)."
   },

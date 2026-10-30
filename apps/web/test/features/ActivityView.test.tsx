@@ -48,12 +48,12 @@ const routes = (detail: ContentDetail = DETAIL): FakeRoutes => ({
 });
 
 describe('[LTI-006] the activity page', () => {
-  it('[LTI-006] an author gets Spel, Rediger and Sjekk og publiser, and the player frame has a title', async () => {
+  it('[LTI-006] an author gets Spel, Rediger, Læringsdesign, Deling and Sjekk og publiser, and the player frame has a title', async () => {
     fakeFetch(routes());
     render(<ActivityView contentId={ID} />);
     expect(await screen.findByRole('heading', { level: 1, name: 'Celler og vev' })).toBeTruthy();
     const tabs = screen.getAllByRole('tab').map((tab) => tab.textContent);
-    expect(tabs).toEqual(['Spel', 'Rediger', 'Sjekk og publiser']);
+    expect(tabs).toEqual(['Spel', 'Rediger', 'Læringsdesign', 'Deling', 'Sjekk og publiser']);
     expect(screen.getByTitle('Spel: Celler og vev').getAttribute('src')).toBe(`/h5p/play/${ID}`);
     // WHY: the page names itself in an effect after the activity loads, which may run after the heading shows.
     await waitFor(() => expect(document.title).toBe('Celler og vev – HVL Interaktiv'));

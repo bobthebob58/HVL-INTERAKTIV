@@ -58,6 +58,7 @@ function appWith(who: Principal, facts: Partial<ContentFacts> | undefined, langu
                 coAuthorIds: [],
                 status: 'published',
                 visibility: 'organisation',
+                bankListed: false,
                 ...facts,
               }
             : undefined,

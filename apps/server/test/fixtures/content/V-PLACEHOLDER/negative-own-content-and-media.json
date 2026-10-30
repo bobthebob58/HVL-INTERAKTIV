@@ -1,0 +1,51 @@
+{
+  "description": "Near misses: the author's own texts, the literal text &#10214; written by the author (stored escaped), a marker only in extraTitle, other brackets, a video with a file and image hotspots with an image.",
+  "mainLibrary": "H5P.Column 1.22",
+  "metadata": { "title": "Celler", "extraTitle": "⟦Tittel⟧", "defaultLanguage": "nn" },
+  "params": {
+    "content": [
+      {
+        "content": {
+          "library": "H5P.AdvancedText 1.1",
+          "params": {
+            "text": "<p>Teiknet &amp;#10214; er ei venstre kvit hakeparentes. [Sjå] ‹òg› 〚dette〛.</p>"
+          },
+          "subContentId": "n1"
+        }
+      },
+      {
+        "content": {
+          "library": "H5P.InteractiveVideo 1.28",
+          "params": {
+            "interactiveVideo": {
+              "video": {
+                "startScreenOptions": { "title": "Celler" },
+                "files": [
+                  {
+                    "path": "https://hvl.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=1",
+                    "mime": "video/Panopto"
+                  }
+                ]
+              }
+            },
+            "l10n": { "play": "Spel av" }
+          },
+          "subContentId": "n2"
+        }
+      },
+      {
+        "content": {
+          "library": "H5P.ImageHotspots 1.11",
+          "params": {
+            "image": { "path": "images/celle.png", "mime": "image/png", "width": 800, "height": 600 },
+            "backgroundImageAltText": "Ei celle med kjerne og mitokondriar",
+            "hotspots": []
+          },
+          "metadata": { "title": "Cella" },
+          "subContentId": "n3"
+        }
+      }
+    ]
+  },
+  "expected": []
+}

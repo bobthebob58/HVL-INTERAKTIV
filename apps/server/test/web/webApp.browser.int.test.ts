@@ -1,7 +1,8 @@
 /**
  * Browser tests for the built web app (apps/web) served inside Express: Next.js runs under the nonce policy with
  * no blocked script, no console or hydration error, only first-party requests, Express's locale decision and its
- * own translated 404 page.
+ * own translated 404 page. The bare app answers only `/api/me`, which the portal header's main menu asks (D-089), as
+ * for a signed-out browser.
  *
  * Spec: DATA-011, H5P-009, UD-010, PROD-012
  */
@@ -15,10 +16,18 @@ import { serveBuiltWebApp, WEB_APP_BUILT } from './webTestServer.js';
 
 if (!WEB_APP_BUILT) console.warn('Web app tests skipped: apps/web is not built (npm run build).');
 
+const SIGNED_OUT = {
+  success: false,
+  errorCode: 'hvl:unauthenticated',
+  httpStatusCode: 401,
+  message: 'Logg inn.',
+};
+
 (WEB_APP_BUILT ? describe : describe.skip)('[DATA-011] the built web app inside Express', () => {
   const base = serveBuiltWebApp((web) =>
     express()
       .use(baseSecurityHeaders({ https: false }))
+      .get('/api/me', (_req, res) => void res.status(401).json(SIGNED_OUT))
       .use(webRoutes(web))
       .use(portalNotFound()),
   );
@@ -29,7 +38,12 @@ if (!WEB_APP_BUILT) console.warn('Web app tests skipped: apps/web is not built (
       const page = await browser().newPage({ extraHTTPHeaders: headers });
       const problems: string[] = [];
       const requests: string[] = [];
-      page.on('console', (m) => void (m.type() === 'error' && problems.push(`console: ${m.text()}`)));
+      page.on('console', (m) => {
+        if (m.type() !== 'error') return;
+        // WHY: Chromium logs the signed-out answer to the header's own `/api/me` request, which is expected.
+        if (/status of 401/.test(m.text()) && m.location().url === `${base()}/api/me`) return;
+        problems.push(`console: ${m.text()}`);
+      });
       page.on('pageerror', (e) => problems.push(`page: ${e.message}`));
       page.on('request', (r) => requests.push(r.url()));
       await page.addInitScript(() => {

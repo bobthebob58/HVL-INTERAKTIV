@@ -1,0 +1,65 @@
+/*
+ * editorSaveChoice — the look of the editor page's save choice dialog (PROD-013, D-093): the box, its backdrop, its
+ * buttons and their focus ring, in design tokens.
+ *
+ * Why: the browser's own rules give a <dialog> CanvasText on Canvas, a medium black border and a 10 % black backdrop,
+ *      and `::backdrop` cannot be set from a style attribute, so the dialog needs a linked stylesheet under the
+ *      page's policy (probe P7). serverPages.css already gives its buttons the token look and the two-tone ring.
+ * Spec: PROD-013, UD-001, UD-002, UD-004, UD-005
+ * Invariants:
+ *   - Values are design tokens only (UD-001); the backdrop is decoration with no text on it, as in apps/web's
+ *     Dialog.tsx (ink at 60 % opacity); system colours only under `forced-colors: active`.
+ *   - Loaded after ./serverPages.css on the editor page only; «Avbryt» is the secondary button, outlined.
+ *   - The two-tone ring also shows on plain :focus inside the dialog (UD-004): after a mouse click on «Lagre»,
+ *     Chromium gives the focused «Avbryt» no :focus-visible.
+ *   - Body text keeps the page's line height (1.5) and is left-aligned (UD-002).
+ * Collaborators: ../../../h5p/render/client/editorSaveChoice.js (the classes), ../../../h5p/render/editorPage.ts
+ *   (links it), ../pageAssetRoutes.ts (serves it), ./serverPages.css.
+ * Tests: apps/server/test/learningDesign/safeEditing/saveChoiceRoundTrip.browser.int.test.ts,
+ *   apps/server/a11y/axeSaveChoice.a11y.test.ts, apps/server/test/http/pages/pageAssets.int.test.ts
+ */
+dialog.hvl-save-choice {
+  box-sizing: border-box;
+  max-width: min(var(--hvl-measure), calc(100% - 2 * var(--hvl-space-m)));
+  padding: var(--hvl-space-l);
+  border: 2px solid var(--hvl-primary-dark);
+  border-radius: 4px;
+  background: var(--hvl-surface);
+  color: var(--hvl-ink);
+  line-height: var(--hvl-line-height-body);
+  text-align: left;
+}
+
+dialog.hvl-save-choice::backdrop {
+  background: var(--hvl-ink);
+  opacity: 0.6;
+}
+
+dialog.hvl-save-choice h2 {
+  margin-top: 0;
+}
+
+dialog.hvl-save-choice .hvl-save-choice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--hvl-space-s);
+  margin-bottom: 0;
+}
+
+dialog.hvl-save-choice button.hvl-secondary {
+  background: var(--hvl-surface);
+  color: var(--hvl-primary-dark);
+}
+
+/* A11Y: WCAG 2.4.7 is met by :focus-visible; this rule also shows the ring when the dialog opened after a click. */
+dialog.hvl-save-choice button:focus {
+  outline: var(--hvl-focus-outline);
+  outline-offset: var(--hvl-focus-offset);
+  box-shadow: var(--hvl-focus-shadow);
+}
+
+@media (forced-colors: active) {
+  dialog.hvl-save-choice button:focus {
+    outline-width: calc(var(--hvl-focus-outline-width) + var(--hvl-focus-inner-width));
+  }
+}

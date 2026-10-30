@@ -1,0 +1,164 @@
+# content/laeringsdesign/patterns/uv-column/pattern.yaml — «Fokusert arbeidsøkt» (spec 04 §4).
+# DRAFT for ALU and the pilot teachers to review (open question Q17); texts, times and choices may change.
+# How to edit: content/laeringsdesign/README.md, section "patterns/". Checked by npm run content:check.
+# A text introduction and two tasks on the same material; the introduction's guidance reminds the author to keep
+# the session to at most three tasks (the validator's PED-H08 hint says the same). The fill-in task matches exactly,
+# without typo tolerance, so a number with one wrong digit is never marked correct (D-084 amendment, 2026-10-29).
+id: uv-column
+phases:
+  - underveis
+contentTypes:
+  - H5P.Column
+name:
+  nn: Fokusert arbeidsøkt
+  nb: Fokusert arbeidsøkt
+  en: Focused work session
+purpose:
+  nn: Ei kort økt med ei innleiing og to oppgåver om same stoff, ei utfylling og eitt fleirvalsspørsmål.
+  nb: En kort økt med en innledning og to oppgaver om samme stoff, en utfylling og ett flervalgsspørsmål.
+  en: A short session with an introduction and two tasks on the same material, a fill-in task and a multiple-choice question.
+whenToUse:
+  nn: >-
+    Når studentane skal øve på éin ting mellom samlingane, og ei kort økt på ei Canvas-side er nok. Legg ikkje inn
+    meir enn tre oppgåver; del heller opp i fleire økter.
+  nb: >-
+    Når studentene skal øve på én ting mellom samlingene, og en kort økt på en Canvas-side er nok. Legg ikke inn
+    mer enn tre oppgaver; del heller opp i flere økter.
+  en: >-
+    When students are to practise one thing between sessions, and a short session on one Canvas page is enough. Do
+    not add more than three tasks; split it into several sessions instead.
+example:
+  nn: >-
+    Ei økt om dosering: ein kort tekst om omrekning frå milligram til milliliter, ei utfylling med tre utrekningar
+    og eitt fleirvalsspørsmål om ein dosefeil.
+  nb: >-
+    En økt om dosering: en kort tekst om omregning fra milligram til milliliter, en utfylling med tre utregninger
+    og ett flervalgsspørsmål om en dosefeil.
+  en: >-
+    A session on dosage: a short text on converting milligrams to millilitres, a fill-in task with three
+    calculations and one multiple-choice question about a dosage error.
+whyItWorks:
+  nn: >-
+    Ei økt med få oppgåver held merksemda på det som skal øvast, og lèt studenten bruke kreftene på stoffet i
+    staden for på å finne fram [@mayer2009]. To ulike oppgåver om same stoff gjer at studenten må hente det fram
+    på to måtar, og å hente fram er i seg sjølv læring [@roediger2006]. Øvingstesting av denne typen er blant dei
+    læringsstrategiane som har best dokumentert effekt [@dunlosky2013].
+  nb: >-
+    En økt med få oppgaver holder oppmerksomheten på det som skal øves, og lar studenten bruke kreftene på stoffet
+    i stedet for på å finne fram [@mayer2009]. To ulike oppgaver om samme stoff gjør at studenten må hente det fram
+    på to måter, og å hente fram er i seg selv læring [@roediger2006]. Øvingstesting av denne typen er blant de
+    læringsstrategiene som har best dokumentert effekt [@dunlosky2013].
+  en: >-
+    A session with few tasks keeps attention on what is to be practised, and lets students spend their effort on
+    the material instead of on finding their way [@mayer2009]. Two different tasks on the same material make
+    students retrieve it in two ways, and retrieving is itself learning [@roediger2006]. Practice testing of this
+    kind is among the learning strategies with the best documented effect [@dunlosky2013].
+buildMinutes: 20
+studentMinutes: 10
+texts:
+  title:
+    nn: ⟦Gje økta ein tittel som seier kva studenten skal øve på⟧
+    nb: ⟦Gi økten en tittel som sier hva studenten skal øve på⟧
+    en: ⟦Give the session a title that says what the student will practise⟧
+  introTitle:
+    nn: Innleiing
+    nb: Innledning
+    en: Introduction
+  introText:
+    nn: >-
+      ⟦Skriv ei kort innleiing: kva skal studenten øve på, og kvifor? Hald økta til høgst tre oppgåver, så ho
+      blir fokusert⟧
+    nb: >-
+      ⟦Skriv en kort innledning: hva skal studenten øve på, og hvorfor? Hold økten til høyst tre oppgaver, så den
+      blir fokusert⟧
+    en: >-
+      ⟦Write a short introduction: what will the student practise, and why? Keep the session to at most three
+      tasks, so that it stays focused⟧
+  blanksTitle:
+    nn: Utfylling
+    nb: Utfylling
+    en: Fill in the blanks
+  blanksTask:
+    nn: >-
+      ⟦Skriv kva studenten skal fylle inn, og kva omgrep, prosedyre eller utrekning det gjeld. Eit svar blir rekna
+      som rett berre når det er skrive nøyaktig, så eit tal med eitt siffer feil blir aldri godteke. Skriv kvar form
+      du godtek som eit alternativ, til dømes 12,5/12.5. Slå på «Godta mindre skrivefeil» under
+      «Oppgåveinnstillingar» berre når alle svara er ord⟧
+    nb: >-
+      ⟦Skriv hva studenten skal fylle inn, og hvilket begrep, hvilken prosedyre eller utregning det gjelder. Et svar
+      regnes som riktig bare når det er skrevet nøyaktig, så et tall med ett siffer feil blir aldri godtatt. Skriv
+      hver form du godtar som et alternativ, for eksempel 12,5/12.5. Slå på «Godta mindre skrivefeil» under
+      «Oppgaveinnstillinger» bare når alle svarene er ord⟧
+    en: >-
+      ⟦Write what the student should fill in, and which concept, procedure or calculation it concerns. An answer
+      counts as correct only when it is written exactly, so a number with one wrong digit is never accepted. Give
+      every form you accept as an alternative, for example 12.5/12,5. Turn on «Accept minor spelling errors» under
+      «Behavioural settings» only when every answer is a word⟧
+  blanksSentence:
+    nn: ⟦Skriv ei setning der studenten fyller inn⟧
+    nb: ⟦Skriv en setning der studenten fyller inn⟧
+    en: ⟦Write a sentence in which the student fills in⟧
+  blanksAnswer:
+    nn: ⟦eit nøkkelord eller eit tal⟧
+    nb: ⟦et nøkkelord eller et tall⟧
+    en: ⟦a key word or a number⟧
+  mcTitle:
+    nn: Fleirval
+    nb: Flervalg
+    en: Multiple choice
+  mcQuestion:
+    nn: ⟦Skriv eit spørsmål der studenten må bruke det same stoffet som i utfyllinga, men i ein ny situasjon⟧
+    nb: ⟦Skriv et spørsmål der studenten må bruke det samme stoffet som i utfyllingen, men i en ny situasjon⟧
+    en: ⟦Write a question in which the student must use the same material as in the fill-in task, but in a new situation⟧
+  correctAnswer:
+    nn: ⟦Skriv det rette svaret⟧
+    nb: ⟦Skriv det riktige svaret⟧
+    en: ⟦Write the correct answer⟧
+  correctFeedback:
+    nn: ⟦Forklar kvifor svaret er rett⟧
+    nb: ⟦Forklar hvorfor svaret er riktig⟧
+    en: ⟦Explain why the answer is correct⟧
+  wrongAnswer1:
+    nn: ⟦Skriv eit feil svar som byggjer på ei vanleg misoppfatning⟧
+    nb: ⟦Skriv et feil svar som bygger på en vanlig misoppfatning⟧
+    en: ⟦Write a wrong answer that rests on a common misconception⟧
+  wrongAnswer2:
+    nn: ⟦Skriv eit feil svar som liknar det rette, men manglar noko viktig⟧
+    nb: ⟦Skriv et feil svar som ligner det riktige, men mangler noe viktig⟧
+    en: ⟦Write a wrong answer that resembles the correct one but misses something important⟧
+  wrongFeedback:
+    nn: ⟦Forklar kvifor dette svaret er feil, og kva studenten bør sjå på igjen⟧
+    nb: ⟦Forklar hvorfor dette svaret er feil, og hva studenten bør se på igjen⟧
+    en: ⟦Explain why this answer is wrong, and what the student should look at again⟧
+  submitButton:
+    nn: Send inn
+    nb: Send inn
+    en: Submit
+  readFeedback:
+    nn: Les tilbakemeldinga
+    nb: Les tilbakemeldingen
+    en: Read feedback
+  correctAnswerLabel:
+    nn: Rett svar
+    nb: Riktig svar
+    en: Correct answer
+  scoreBarLabel:
+    nn: Du fekk :num av :total poeng
+    nb: Du fikk :num av :total poeng
+    en: You got :num out of :total points
+  a11yCheck:
+    nn: Sjekk svara. Svara blir merkte som rette, feil eller utan svar.
+    nb: Sjekk svarene. Svarene blir merket som riktige, feil eller ubesvarte.
+    en: Check the answers. The responses will be marked as correct, incorrect, or unanswered.
+  a11yShowSolution:
+    nn: Vis svaret. Oppgåva blir merkt med det rette svaret.
+    nb: Vis svaret. Oppgaven blir merket med det riktige svaret.
+    en: Show the solution. The task will be marked with its correct solution.
+  a11yRetry:
+    nn: Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt.
+    nb: Prøv igjen. Alle svarene blir nullstilt, og oppgaven starter på nytt.
+    en: Retry the task. Reset all responses and start the task over again.
+  confirmCheckHeader:
+    nn: Ferdig?
+    nb: Ferdig?
+    en: Finish?

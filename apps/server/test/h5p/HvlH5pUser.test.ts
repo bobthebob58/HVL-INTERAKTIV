@@ -14,6 +14,7 @@ const ACTOR: HvlH5pActor = {
   locale: 'nn',
   hvlMember: true,
   feideAuthenticated: true,
+  studentAuthor: false,
   ltiLaunchContentIds: ['c1'],
 };
 

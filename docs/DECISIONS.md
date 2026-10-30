@@ -92,6 +92,25 @@ with the commands given.
 | D-079 | What S4 verifies automatically and what HVL records by hand | Accepted (2026-10-23) |
 | D-080 | H5P markup barriers: repaired in the page where we can, registered where we cannot | Accepted (2026-10-24) |
 | D-081 | One Node.js system with Lumi's H5P server half; a PHP server half considered and not chosen | Accepted (2026-10-24) |
+| D-082 | The studio's content pipeline: files in `content/`, loaded and checked at start-up | Accepted (2026-10-28), ALU to confirm the texts (Q17) |
+| D-083 | `SPEC-DEVIATION` PED-002: the guide is CommonMark Markdown, not MDX | Accepted (2026-10-28) |
+| D-084 | `SPEC-DEVIATION` spec 04 §4: pattern skeletons live in `content/`, with text tokens and pinned versions | Accepted (2026-10-28) |
+| D-085 | Creating an activity from a pattern is one server request | Accepted (2026-10-28) |
+| D-086 | Guidance placeholders are marked `⟦…⟧`, and V-PLACEHOLDER is an error that can be acknowledged | Accepted (2026-10-28) |
+| D-087 | Learning-design metadata: learner purpose, pattern, course code and access | Accepted (2026-10-28) |
+| D-088 | The alignment planner: one course, outcomes × phases, two gap rules | Accepted (2026-10-28) |
+| D-089 | Studio access, routes and tabs | Accepted (2026-10-28) |
+| D-090 | Finding co-authors: HVL staff only, rate-limited, audited | Accepted (2026-10-28) |
+| D-091 | The content bank: opt-in, published, shared with HVL, for HVL authors | Accepted (2026-10-28), consent text to ALU and HVL legal (Q17) |
+| D-092 | Duplicating an activity | Accepted (2026-10-28) |
+| D-093 | Safe editing: a structure signature, a confirmation, and saving as a copy | Accepted (2026-10-28) |
+| D-094 | Rendering the pedagogisk mappe | Accepted (2026-10-28), ALU to confirm limits and criteria (Q17) |
+| D-095 | Minimum group size in exports | Accepted (2026-10-28) |
+| D-096 | The portfolio PDF is rendered by Chromium on the server | Accepted (2026-10-28) |
+| D-097 | New dependencies in S5 | Accepted (2026-10-28) |
+| D-098 | The Canvas side of the studio moves to S6 | Accepted (2026-10-28) |
+| D-099 | The API contract gets binary responses and `DELETE` | Accepted (2026-10-28) |
+| D-100 | The S5 gate, and the ALU and pilot review left open (Q17) | Accepted (2026-10-28) |
 
 ---
 
@@ -1215,8 +1234,8 @@ loading of one spec per session are kept.
   already published runs the same gate. Only those who may edit (H5P-006) may publish.
 - **Consequences:** Acknowledgements keyed on a path ask again when list items move; that fails safe.
 - **Amendment (2026-10-23, W3):** every save of an existing activity increases `H5PContent.version` (the inventory
-  used to say "on structural change"); a refused save of a published activity is 409 `hvl:published-save-blocked`
-  with the findings, and nothing is saved; findings, publish and unpublish answer 404 when the person may not view
+  used to say "on structural change"; since D-093's 2026-10-29 amendment only a structural save does); a refused
+  save of a published activity is 409 `hvl:published-save-blocked` with the findings, and nothing is saved; findings, publish and unpublish answer 404 when the person may not view
   the activity and 403 `hvl:edit-not-allowed` when they may view but not edit; unpublish clears `publishedAt`, and
   publishing an activity that is already published validates again and moves `publishedAt` to now.
 - **Amendment (2026-10-24, review fixes F-01, F-02):** the save gate validates what the editor will store, not the
@@ -1514,6 +1533,13 @@ loading of one spec per session are kept.
   button's focus ring are clipped by the player's `overflow: hidden`; the ring stays visible on the other sides and
   the control is not hidden, so WCAG 2.4.7 and 2.4.11 hold (`keyboardFocus.a11y.test.ts` passes). Both are items for
   the manual protocol's next run and for the S6 conformance report (`UD-040`).
+- **Amendment (2026-10-28, S5 probe P1):** without a start image, H5P.BranchingScenario 1.10 shows its default start
+  and end pictures with no `alt` attribute (WCAG 1.1.1). The pictures are decorative, so the page repair gives them
+  `alt=""`, and the upstream register records the barrier. H5P.Video's "Video source is missing." and
+  H5P.ImageHotspots' "Missing required background image" are English text written by the libraries themselves
+  (H5P.Video overwrites any `l10n` it is given), so they go into the register too; V-PLACEHOLDER (D-086 as amended)
+  keeps an activity in that state from being published by mistake.
+- **Amendment (2026-10-29, S5 W2a):** BranchingScenario's default pictures are now repaired (`alt=""`), so the upstream register names them in its header among the page repairs, still to be reported upstream for the conformance report (UD-040), rather than as an entry: an entry that no longer occurs would fail the suite. The two English library texts are entries in the register's `UPSTREAM_ENGLISH_TEXTS`, pinned by a test against the libraries' code.
 
 ### D-081 · One Node.js system with Lumi's H5P server half; an official PHP server half was considered and not chosen
 - **Context:** H5P has a browser half (Core and the editor client) and a server half (storing content, installing
@@ -1557,3 +1583,817 @@ loading of one spec per session are kept.
 - **Revisit when:** Lumi's repository has no commit for 12 months; a serious security flaw in Lumi can be neither
   fixed nor contained in our code; a Core version Lumi cannot support becomes necessary; or HVL decides to run regular
   H5P (h5p.com or a Moodle or WordPress installation) and give up the HVL-specific parts.
+
+### D-082 · The studio's content pipeline: files in `content/`, loaded and checked at start-up
+- **Context:** Spec 04 puts the phase labels, the guide, the patterns and the portfolio template in files that ALU edits
+  without code (`PED-001`, `PED-011`, `MAPPE-002`). The web app reads no files (D-068), and the server already loads
+  the hint thresholds from `content/` at start-up and refuses a bad value by name (D-073, `config/validationContext.ts`).
+  ALU has not yet confirmed the proposals in `docs/reference/proposals/`.
+- **Decision:** The studio's content lives in:
+  - `content/laeringsdesign/phases.yaml`: the proposal (`status: proposed`), plus each phase's pedagogical purpose
+    and Canvas placement for the phase matrix (spec 04 §3). The recommended patterns per phase come from the
+    patterns' own `phase` field, so the matrix and the catalogue cannot disagree.
+  - `content/laeringsdesign/references.yaml`: reference key → the full reference, with a `verify` flag until ALU has
+    checked it.
+  - `content/laeringsdesign/guide.{nn,nb,en}.md` (D-083).
+  - `content/laeringsdesign/patterns/<id>/pattern.yaml` and `skeleton.json`, or `skeleton.<type>.json` for a pattern
+    with two content types (D-084).
+  - `content/mappe/template.{nn,nb,en}.md` and `content/mappe/criteria.{nn,nb,en}.yaml` (D-094).
+
+  The server loads all of it once at start-up, checks it with strict zod schemas and freezes it; any error stops the
+  start with a message that names the file and the key, as D-073 does. The checks:
+  - every text exists in `nn`, `nb` and `en`; unknown and repeated keys are refused;
+  - the three guides have the same headings (by level and order), markers and citation keys in the same order;
+  - the three templates have the same template variables, and the three criteria files the same criteria IDs;
+  - every reference key cited by a guide or a pattern exists;
+  - every skeleton names its main library with a version (`H5P.X a.b`) that the pinned library list of D-078
+    contains.
+
+  `npm run content:check` runs the same loader without starting the server; CI runs it, and lint-staged runs it when
+  a file under `content/` is staged. The web app gets the content as read-only JSON from `/api` routes. While
+  `phases.yaml` says `status: proposed`, the studio pages show a banner saying the texts are a draft awaiting ALU.
+- **Consequences:** Renaming a label is a content change (`PED-001`). A library that is pinned but not installed makes
+  its patterns unavailable at runtime (D-085), not a boot failure. The shared YAML error reporting moves out of
+  `validationContext.ts` into the new loader's folder, `apps/server/src/learningDesign/content/`.
+- **Amendment (2026-10-29, S5 W2a):** skeleton versions are checked by `content:check` against the installed libraries' own semantics (the main library is the newest installed minor; each sub-content is a version its field offers), which CI runs after `h5p:fetch-libraries`. The server's start-up checks only the `H5P.X a.b` form, not the pinned list; a skeleton naming a library that is not installed is answered 409 `hvl:pattern-unavailable` at creation instead.
+- **Amendment (2026-10-29, S5 integration of the accessibility suite):** a reference in `references.yaml` states the
+  language it is written in (`language`, a language tag such as `nb`; English when left out, as most research is),
+  the contract's `Reference` carries it, and the guide and pattern pages give the reference's text that `lang` when it
+  differs from the page's (`UD-010`, WCAG 3.1.2): on a Nynorsk page an English reference was read with Norwegian
+  pronunciation. A malformed tag is refused by `content:check`. `mogelvang2025` is in Bokmål and says `nb`.
+
+### D-083 · `SPEC-DEVIATION` PED-002: the guide is CommonMark Markdown, not MDX
+- **Context:** `PED-002` puts the guide in `guide.{nn,nb,en}.mdx`. MDX is compiled to JavaScript, so a content file
+  becomes code: ALU could break the build or run script, and the web app bans `dangerouslySetInnerHTML` and reads no
+  files (D-068). The guide needs headings, paragraphs, lists, emphasis, links, the "what this means for your activity"
+  boxes, citations and the places where the phase matrix and the catalogue go.
+- **Decision:** The guide is CommonMark, parsed on the server by `markdown-it` 14.3.3 with `html: false`, into a
+  closed tree of nodes: heading, paragraph, list, list item, text, strong, emphasis, link, box, citation and marker.
+  React renders the tree; links go through the existing `ExternalLink` component; there is no `innerHTML`.
+  Conventions:
+  - a line that is only `{{phase-matrix}}` or `{{pattern-catalogue}}` places that component;
+  - a blockquote becomes the box, a `<section>` with its own heading «Kva dette betyr for aktiviteten din» (from the
+    locale files);
+  - a citation is `[@key]`, resolved against `references.yaml`, and the page ends with the references it cites;
+  - headings start at `##`, because the page's `h1` comes from the locale files.
+
+  Raw HTML, images, tables, code and links other than `https:`, `mailto:` and same-site paths are refused by the
+  loader, naming the file and line.
+- **Consequences:** `SPEC-DEVIATION` in spec 04 (`PED-002`, `PED-011`) and CLAUDE.md §2 ("ALU-editable YAML/Markdown").
+  `content/laeringsdesign/README.md` documents the conventions for ALU.
+- **Amendment (2026-10-28, S5 probe P5):** `html: false` cannot refuse raw HTML by line: markdown-it then emits no
+  HTML tokens, and `<script>` reaches the tree as visible text. The guide builder therefore parses with a fresh
+  `MarkdownIt({ html: true, linkify: false, typographer: false })`, only reads the tokens (it never calls `render`),
+  and refuses every token type outside its closed allowlist, so `html: true` opens no HTML path:
+  - **Allowed:** `heading_open` at level 2 or 3 written with `#` (a setext heading made with `===` or `---` is
+    refused, because ALU may mean a rule), paragraph, bullet and ordered list (the start number is ignored), list
+    item, blockquote (the box), and inline text, strong, emphasis, link and soft break (rendered as a space).
+  - **Refused, naming the file and line:** `html_block`, `html_inline`, image, table, fenced and indented code,
+    inline code, rule, strikethrough, hard break, a level-1 or level-4+ heading, `{{` outside a marker line, and
+    reference definitions (found in `env.references`; they would silently turn citations into links).
+  - **Links:** `md.validateLink` lets every link through and the builder checks the `href` itself: `https:` and
+    `mailto:` ignoring case, or a same-site path that starts with `/` but not `//`. A `title` attribute is dropped.
+    markdown-it would otherwise drop `javascript:` links silently and let `http:` and `data:image` through.
+  - **Lines:** a block uses `map[0] + 1`; an inline token uses its paragraph's start line plus the line breaks
+    before it, which is exact unless a link destination spans lines, so such a link is refused.
+  - **Prose:** an ALU author who writes `<` before a letter gets an error and writes `&lt;` instead.
+- **Amendment (2026-10-29, S5 W1a):**
+  - **No guide yet:** the three guide files are optional until written: all three absent is "no guide yet" (the guide
+    route answers no nodes and no references, so the contract's `Guide.nodes` may be empty, and the page shows the
+    phase matrix and the catalogue alone); one or two present is an error naming each missing file.
+  - **Markers:** each marker stands exactly once in each language, since the page shows each component once and the
+    catalogue's section `id` must be unique; a missing marker would hide the catalogue (`PED-003`). The matrix has
+    its own caption and the catalogue its own heading.
+  - **Links:** a same-site path is also refused when it decodes to `//` or `/\` (for example `/%2F%2Fhost`), and a
+    link whose text is empty or only spaces is refused, since nobody could see or name it.
+  - **Patterns:** each pattern's `whyItWorks` is built with the same tree builder in prose mode (paragraphs and lists
+    only) and checked when the pattern folder loads, so the pattern route never meets a text it cannot build.
+  - **Routes:** `GET /api/studio` (phases, anchor, status and the catalogue with each pattern's `available`, asked per
+    request), `GET /api/studio/guide/:locale` and `GET /api/studio/patterns/:patternId`, public (`auth: 'none'`); an
+    unknown pattern or language is 404 `error.notFound`.
+  - **Phase matrix:** the phases are columns with the *samling* as a column between the first and the second, and
+    each phase has a link that filters the catalogue by it (spec 04 `PED-002` §4: "a filter by phase that also
+    filters the pattern catalogue"); the filters live only in the address. Following that link moves focus to the
+    catalogue's heading, because a Next.js link scrolls to `#monsterkatalog` but leaves focus on the link.
+- **Amendment (2026-10-29, S5 integration of stage 3):** the public `GET /api/studio` and
+  `GET /api/studio/patterns/:patternId` keep each pattern's availability for 60 seconds
+  (`learningDesign/http/patternAvailabilityMemo.ts`), because working it out builds every skeleton and these routes
+  need no sign-in ("asked per request" above now means within that minute). Requests that arrive during a build
+  share it, and a failure is never kept. A library installed or removed shows in the catalogue within a minute;
+  creating an activity always checks the libraries itself. Each guide box is a region named by its own heading and
+  the guide heading it follows, so the three mechanisms' boxes have distinct names.
+
+### D-084 · `SPEC-DEVIATION` spec 04 §4: pattern skeletons live in `content/`, with text tokens and pinned versions
+- **Context:** Spec 04 §4 puts the skeletons in `apps/server/src/patterns/skeletons/`, but `PED-011` asks that a new
+  pattern needs no code change, and ALU edits `content/`. A skeleton holds H5P parameters, and its texts must exist
+  in three languages. Creating content on the server lacks the editor's localised semantics defaults and
+  `subContentId`s.
+- **Decision:** Each pattern is a folder `content/laeringsdesign/patterns/<id>/` with `pattern.yaml` (the fields of
+  `PED-010` and the texts in `nn`, `nb` and `en`) and its skeleton JSON. The skeleton names its main library as
+  `H5P.X a.b`, pinned to the versions of D-078. A text in the skeleton is a token `{{key}}` resolved from
+  `pattern.yaml` in the language the author chooses; the value is plain text and is HTML-escaped on insertion, as H5P
+  stores text fields. At creation the server:
+  - fills in the fields the skeleton leaves out with the library's localised semantics defaults (a port of
+    `tools/h5p-libraries/semanticDefaults.mjs`);
+  - gives every sub-content node a fresh `subContentId` (UUID), ignoring any in the skeleton.
+- **Consequences:** `SPEC-DEVIATION` in spec 04 §4. `content/laeringsdesign/README.md` explains how to make a skeleton
+  from an exported `.h5p` file. A library update that changes a skeleton's fields shows up in `content:check` and in
+  the integration test that creates every pattern (`PED-010`).
+- **Amendment (2026-10-28, S5 probes P1 and P6):** what creating from a skeleton needs on the real libraries:
+  - **Versions:** the main library is the newest installed minor, the one the editor offers (Column 1.22,
+    CoursePresentation 1.28, ImageHotspots 1.11 and so on). A sub-content node names exactly a version its parent
+    field's semantics `options` list (BranchingScenario 1.10 offers CoursePresentation 1.27); anything else is
+    refused by SubContentPolicy. `content:check` checks both against the semantics of the pinned libraries that
+    `npm run h5p:fetch-libraries` installs; without them it says so and, in CI, fails.
+  - **Metadata:** the save gets `title`, `license: 'U'`, and both `defaultLanguage` and `language` set to the chosen
+    language. Without them Lumi writes `language: 'en'`, and V-LANG treats a Nynorsk activity as English.
+  - **Sub-content:** every node has `metadata: { title, license: 'U' }` (otherwise the editor writes "Untitled …");
+    every list item is written out (the defaults never lengthen a list); BranchingScenario question nodes leave out
+    `nextContentId` (its editor removes it) and end screens use `contentId: -1`.
+  - **Language:** many `nn` and `nb` library defaults are English (MultiChoice, QuestionSet, InteractiveBook,
+    BranchingScenario buttons and messages). A pattern sets these fields from its own `nn`, `nb` and `en` texts.
+    Sub-content titles that learners see (InteractiveBook chapters and their table of contents) are pattern texts
+    or guidance markers too.
+  - **Escaping:** a token value is plain text, HTML-escaped on insertion; `⟦` and `⟧` stay raw characters. Lumi
+    clips a text to its field's `maxLength` after escaping (`&` counts as five characters) and refuses a title over
+    255 characters, so `content:check` checks every resolved value, escaped, in all three languages, against its
+    field's limit. Guidance inside a Blanks blank or a DragText draggable may not contain `:` or `/`, which those
+    types read as a tip or an alternative.
+  - **Defaults:** `semanticDefaults.ts` also gives `isSubContent` groups (H5P.Summary statements) a
+    `subContentId`, as the editor does, and the creation step passes a copy of the parameters, because the save
+    changes them in place.
+- **Amendment (2026-10-29, S5 W2b):** `content:check` also refuses a skeleton key that the library's semantics do not define, so a misspelt behaviour switch cannot silently leave a `PROD-009` setting at its default. A sub-content node may hold only `library`, `params`, `metadata` and `subContentId`; a key a library's own editor writes beside its semantics (BranchingScenario's `contentId` on each content item) is accepted, so a skeleton made from an exported `.h5p` passes as exported. A test runs the check on every real seed package.
+- **Amendment (2026-10-29, S5 review): typo tolerance in fill-in tasks.** H5P.Blanks' «Godta mindre skrivefeil»
+  (`acceptSpellingErrors`) counts an answer as correct when it is one edit away from a solution longer than three
+  characters (two edits beyond nine), and numbers get no exception: «125» and «1,25» both pass for «12,5». Spec 04 §4
+  asks for typo tolerance only in `ea-terms`, whose answers are terms; the real-pattern tests had widened it to every
+  Blanks task without a record. Now:
+  - `ea-terms`' Blanks accepts small typos (spec 04 §4).
+  - `uv-column`, whose example is a dosage calculation, matches exactly (`acceptSpellingErrors: false`), so a number
+    with one wrong or swapped digit is never marked correct. Its guidance tells the author to give each accepted
+    form of a number as an alternative (`12,5/12.5`) and to switch typo tolerance on only when every answer is a
+    word.
+  - The other patterns' Blanks keep typo tolerance as ALU's draft choice; the tests no longer require it, so ALU
+    can make a pattern strict with no code change (`PED-011`). Every Blanks task stays case-insensitive.
+  - `apps/server/test/learningDesign/patterns/realPatternSkeletons.test.ts` pins the setting of `ea-terms` and
+    `uv-column`; `content/laeringsdesign/README.md` («What catches mistakes in a pattern») and the ALU packet §6.2
+    say so.
+
+### D-085 · Creating an activity from a pattern is one server request
+- **Context:** `PROD-001` opens the editor "pre-filled with a pedagogically sound skeleton". The editor client could
+  prefill, but then the metadata and the skeleton would travel through the browser, and no test could create every
+  pattern without one. Two patterns have a choice: `ea-terms` has two content types and `ea-diagnose` two phases.
+- **Decision:** `POST /api/patterns/:patternId/activities` with `{ language, phase?, courseCode?, contentType? }`:
+  - **who:** a signed-in portal author (Feide), with the CSRF token;
+  - **what:** the server builds the skeleton (D-084) and saves it through `HvlH5PEditor`'s save path, so the
+    whitelist, the sub-content policy and the installed-library check run as for any save. In the same request it
+    writes the learning-design metadata (the phase, the `patternId`, the course code and the pattern's suggested
+    student minutes) and answers `{ contentId }`. If writing the metadata fails, the new activity is deleted;
+  - **language:** the activity's language is the one chosen (`nn`, `nb` or `en`), defaulting to the page's language;
+  - **choices:** a pattern with two types needs `contentType`, and one with two phases takes `phase` from its own
+    list; anything else is a 400;
+  - **unavailable patterns:** a pattern whose library is not installed is shown as unavailable, and creating from it
+    answers 409 `hvl:pattern-unavailable`.
+
+  The web app then opens `/aktivitet/:id` on the **Rediger** tab. A blank activity stays available from
+  `/aktivitet/ny` and from the catalogue.
+- **Consequences:** The created activity is a private draft like any other. The Canvas side of "new from a pattern"
+  waits for S6 (D-098).
+- **Amendment (2026-10-28, S5 probe P1):** "unavailable" covers every library the completed skeleton names, not
+  only the main one: the defaults add libraries (InteractiveVideo's summary brings H5P.Summary), and some are
+  installed only as dependencies. Without that check Lumi's own error would answer 500 instead of 409
+  `hvl:pattern-unavailable`.
+- **Amendment (2026-10-29, S5 review):** an installed library whose skeleton cannot be built for another reason (a
+  `semantics.json` that does not parse, which Lumi's package validator lets through, or a damaged library folder)
+  makes only the patterns that use it unavailable in the overview and the pattern pages, as a missing library does;
+  before, one such pattern made `GET /api/studio` answer 500, and with it the guide, the planner and `/mappe`. The
+  failure is logged once per pattern and content type (a warning with the pattern ID, the content type and the
+  error's name) until a build succeeds again. Creating from such a pattern still fails (500): the overview has already called it unavailable.
+
+### D-086 · Guidance placeholders are marked `⟦…⟧`, and V-PLACEHOLDER is an error that can be acknowledged
+- **Context:** `PROD-001` allows a created activity to fail validation only on "placeholders that are deliberately
+  flagged as needing input". Guidance text published to students by mistake is a real defect. D-074 lets an author
+  publish past an error by acknowledging it with a reason.
+- **Decision:** Skeleton guidance is wrapped in `⟦` and `⟧` (U+27E6, U+27E7), which do not occur in ordinary text and
+  are visible to the author. A new validator rule, **V-PLACEHOLDER**, has severity *error*. It reports every marked
+  text in the parameters and in the metadata title, after decoding entities and removing tags, with the field's path
+  for «Gå til feltet». It can be acknowledged with a reason as D-074 sets out; D-074 is unchanged. Probe P6 shows that
+  the marker survives CKEditor and Lumi's sanitiser.
+- **Consequences:** The integration test that creates every pattern expects V-PLACEHOLDER errors and no others
+  (`PED-010`, `PROD-001`). The rule's messages exist in `nn`, `nb` and `en`.
+- **Amendment (2026-10-28, S5 probes P1 and P6):**
+  - **Where V-PLACEHOLDER looks:** every string of the parameters, including the `UI`, `l10n`, `texts`, `a11y`,
+    `confirmCheck` and `confirmRetry` groups the shared walker skips, plus the activity's and every sub-content's
+    `metadata.title` (InteractiveBook shows chapter titles as headings). It skips `extraTitle`, which the editor
+    copies from the title, so a marker is reported once.
+  - **How it reads them:** through `parseRichText` (validation/richText.ts), which removes tags and then decodes
+    every character reference exactly once, zero-padded and semicolon-less ones included. Decoding twice would turn
+    the literal text `&#10214;` into a marker. A lone `⟦` or `⟧` counts, because authors' partial edits leave them.
+    The editor sends plain-text fields back as loaded and only the save makes them raw, and package imports store
+    references as they are, so the rule never assumes raw text.
+  - **Missing media:** the rule also reports a required media slot that is empty: an InteractiveVideo without a
+    video source and an ImageHotspots without a background image. Learners would see only an English error
+    message instead of the activity, and nothing else flags it. The finding can be acknowledged like the others.
+
+### D-087 · Learning-design metadata: learner purpose, pattern, course code and access
+- **Context:** `PED-030` lists the metadata fields. `PED-032` shows students a one-line "why this matters" that the
+  model lacks. The planner and the portfolio need a course code that matches across activities, and outcomes that can
+  be recognised again.
+- **Decision:**
+  - **New fields:** `learnerPurpose` (plain text, at most 200 characters, shown to learners in the activity's
+    language) and `patternId` (the pattern the activity came from).
+  - **Course code:** normalised (Unicode NFC, trimmed, upper case, inner spaces removed) and checked against
+    `^[A-ZÆØÅ0-9][A-ZÆØÅ0-9-]{1,19}$`. The field suggests the course labels of the author's own Canvas placements,
+    stored from the launch's `context.label` in the new `LtiPlacement.contextLabel` (a course label, not personal
+    data).
+  - **Outcomes:** two outcomes are the same when their category matches and their text matches after normalising
+    (NFC, trimmed, inner whitespace collapsed, case ignored). The form offers the outcomes the author already uses
+    for the same course code as checkboxes.
+  - **API:** `GET` and `PUT /api/content/:id/learning-design`. `PUT` replaces everything and must send the `updatedAt`
+    it read (409 `hvl:learning-design-conflict` when stale). Only people who may Edit the activity read or write it.
+  - **Limits:** at most 20 outcomes of 1–300 characters, a rationale of at most 1 000 characters and 1–600 student
+    minutes.
+  - **What learners get:** the minutes and the purpose only, and only after the View check: in `/app/play` through
+    the `x-hvli-launch` header, and in the portal's **Spel** tab through the activity summary. They never get the
+    rationale.
+  - **Publishing:** the publish dialog shows a prompt to fill in the metadata that never blocks publishing.
+- **Consequences:** Migration `s5_learning_design` and new rows in the data inventory.
+- **Amendment (2026-10-28, S5 contracts):**
+  - **Course labels and privacy:** Canvas sandbox courses often carry a teacher's name in their label. The server
+    therefore stores `LtiPlacement.contextLabel` only when the label, after D-087's normalisation, is a course code
+    that contains at least one digit (HVL course codes do; names rarely do), and stores null otherwise. It strips
+    control characters and cuts the label to 255 characters by code point. Each launch overwrites the value.
+  - **Whose labels:** "the author's own placements" means placements of activities the author owns or co-authors;
+    a placement has no user.
+  - **The pattern:** a full replace keeps the stored `patternId`; only creation and duplication write it.
+- **Amendment (2026-10-29, S5 W3):**
+  - **The purpose:** besides a line break, any control character (a pasted tab) is refused (400). The web app's strict
+    `x-hvli-launch` parser refuses the whole header on one, so a single stored tab would have shown «no launch» to
+    every learner of the activity in Canvas. The server also leaves out such a stored purpose, and a language tag
+    longer than the parser's 35 characters, rather than send them.
+  - **The stored label:** `LtiPlacement.contextLabel` holds the cleaned label (control characters removed, at most
+    255 code points), not the normalised code; suggestions normalise it when read. Residual risk, accepted: a
+    sandbox label that normalises to a code with a digit, such as «Kari 2025», is stored as if it were a course code.
+    It is never shown to anyone but the authors of activities placed in that course.
+  - **The prompt:** the metadata prompt shows in the first-publish dialog only, not when an already published
+    activity is published again with new reasons.
+
+### D-088 · The alignment planner: one course, outcomes × phases, two gap rules
+- **Context:** `PED-031` asks for a grid of learning outcomes × phases for one course, with gaps highlighted and
+  *Create from pattern* in empty cells, as an accessible table.
+- **Decision:**
+  - **Scope:** one course code at a time, chosen from the author's own. The grid holds the author's own and
+    co-authored activities with that code; drafts are included and marked as drafts.
+  - **Rows and columns:** rows are the distinct outcomes (D-087), ordered by category (kunnskap, ferdigheiter,
+    generell kompetanse) and then by text; columns are the three phases in content order.
+  - **Untagged activities:** activities with the course code but no outcomes or no phase are listed below the table,
+    not hidden.
+  - **Gaps:** an outcome with no *Etterarbeid* activity, and a phase with no activity at all. Each gap is shown with
+    an icon and a text, never by colour alone.
+  - **Empty cells:** a link «Lag frå mønster» whose accessible name names the phase and the outcome. It opens the
+    catalogue filtered by that phase, carrying the course code, which creation then pre-fills.
+  - **Markup:** a `<table>` with a `<caption>`, `th scope="col"` for the phases and `th scope="row"` for the
+    outcomes, inside a focusable, labelled region that scrolls sideways on narrow screens.
+- **Amendment (2026-10-29, S5 W3):** the course chooser lists the codes the author's own and co-authored activities
+  use; Canvas labels are only suggestions in the Læringsdesign tab. The outcomes of an activity that has the course
+  code but no phase still become rows (with empty cells and the no-Etterarbeid gap), and the activity is also listed
+  as untagged, so an outcome is never hidden. The empty-phase gap counts only activities that have a phase.
+
+### D-089 · Studio access, routes and tabs
+- **Context:** Spec 04 §2 says the guide is "public within HVL". The owner decided on 2026-10-28 that the guide and
+  the catalogue are public: they hold research summaries and patterns, nothing about people.
+- **Decision:**
+  - **Public (no sign-in):** `/laeringsdesign` (guide, phase matrix and the catalogue, with its filters in the URL)
+    and `/laeringsdesign/monster/[patternId]`. «Lag frå dette mønsteret» asks a signed-out visitor to sign in.
+  - **Authors only:** `/laeringsdesign/planlegg`, `/laeringsdesign/innhaldsbank` (the content bank, D-091) and
+    `/mappe`, with the same sign-in redirect and refusal pages as the other portal pages.
+  - **New tabs on `/aktivitet/[id]`:** **Læringsdesign** (people who may Edit) and **Deling** (visibility, which
+    until now had only an API, plus co-authors, the bank listing and «Lag ein kopi»).
+  - **Navigation:** the header has the studio links in the same place on every portal page.
+  - **Code location:** the pages are `apps/web/src/app/(portal)/laeringsdesign/…` and
+    `apps/web/src/app/(portal)/mappe/`.
+- **Consequences:** Spec 04 §2 and its code location are amended. `ActivityView` is split into a tab registry so that
+  no file passes 200 lines.
+
+### D-090 · Finding co-authors: HVL staff only, rate-limited, audited
+- **Context:** `PROD-007` finds co-authors "by name or Feide ID" among HVL staff. Staff names come from Feide at login
+  and are stored only for staff (D-021, DATA-001). Student authors may not share beyond their own work (D-059).
+- **Decision:**
+  - **Who can be found:** a person can be found only while `User.coAuthorSearchableAt` is set and less than 13
+    months old. It is set at each Feide login of an HVL member with an `employee`, `faculty` or `staff` affiliation,
+    and cleared at a Feide login without one. Student authors, LTI accounts and learners are never listed.
+  - **Search:** `GET /api/people?q=` by name needs at least 3 characters and returns at most 10 matches as
+    `{ userId, displayName }`, with no e-mail and no Feide ID. A query in the form of a Feide ID is an exact lookup
+    through the identity's login hash. Searches are limited per user in Redis (429 when exceeded), and the query is
+    never logged.
+  - **Co-authors:** the owner adds and removes them; a co-author may remove themselves; an activity has at most 20.
+    Only a person who can be found may be added, so student authors are refused (`hvl:coauthor-not-eligible`).
+  - **Audit:** every change is audited with user IDs only.
+- **Consequences:** `/personvern` says that colleagues can see staff names through co-author search and bank
+  attribution.
+- **Amendment (2026-10-28, S5 contracts):**
+  - **Who can be found:** someone eligible for the co-author directory is an HVL member with the author role who is
+    not a student author (`hvlMember`, `author`, not `studentAuthor` in the Feide login's roles), not anyone of
+    kind `staff`: student authors and admin-only members are kind `staff` too. Only the Feide login path writes
+    `coAuthorSearchableAt`, never an LTI launch.
+  - **One predicate:** the name search, the exact Feide-ID lookup and the check when a co-author is added all use
+    the same rule: eligible, and `coAuthorSearchableAt` less than 13 months old.
+  - **Search:** LIKE wildcards in the query are escaped; the query is never logged or echoed in an error; a 429
+    carries `Retry-After`.
+  - **Portal only:** every studio route except the public guide and catalogue starts with
+    `requirePortalAuthor` (learningDesign/http/studioPrincipal.ts), which refuses an LTI ltik (401) and a portal
+    learner (403), so a Canvas launch can never search HVL staff names.
+- **Amendment (2026-10-29, S5 W4):**
+  - **Who may search and add:** only an HVL staff author (the same rule): a student author is refused with 403
+    `hvl:sharing-not-allowed` (D-059: they share nothing beyond their own work), an admin-only member with 403
+    `error.forbidden`. A student-author owner therefore adds no co-authors either; removing is always allowed.
+  - **The limit:** 30 searches per person in a fixed 60-second window in Redis (`hvli:people-search:<userId>`, a
+    count only); every valid search counts; the 429's `Retry-After` is the rest of the window, at least 1 second.
+  - **The routes:** listing the authors needs Edit; adding and removing answer the list as it is afterwards; adding
+    an existing co-author and removing someone who is not one change nothing and write no audit event. Adding locks
+    the activity's row, so two concurrent adds never pass 20. The permission facts are read on every request, so a
+    removed co-author loses Edit at the next one.
+  - **The predicate:** `learningDesign/collaboration/staffEligibility.ts`; the Feide login writes
+    `coAuthorSearchableAt` through `AccountResolver`, which ignores the field for an LTI launch.
+- **Amendment (2026-10-29, S5 review): staff e-mail is no longer stored.** `SPEC-DEVIATION` AUTH-004 ("store a display
+  name and e-mail only for authors and admins"). AUTH-004 kept the e-mail for co-author search and attribution, but
+  search matches the display name or the Feide-ID hash and answers `{ userId, displayName }`, the bank and a copy
+  show the name only, and nothing in the code base reads `User.email`. Keeping it had no purpose (GDPR Art. 5(1)(b)
+  and (c)), and `/personvern` and the data inventory named a use that does not exist. The Feide login therefore keeps
+  only the display name (`authorProfile`), and `AccountResolver` writes `email: null` at each staff login, so an
+  address stored before is cleared at the next one; there is no migration, as nothing is deployed yet. The column
+  stays until a schema change drops it. `FEIDE_SCOPE` keeps `email` (AUTH-001 fixes the scope string): the claim is
+  only in the encrypted ID token kept for Feide logout, as `/personvern` already says.
+
+### D-091 · The content bank: opt-in, published, shared with HVL, for HVL authors
+- **Context:** `PROD-007` lets authors "publish an activity to the HVL content bank so that colleagues can duplicate
+  and adapt it".
+- **Decision:**
+  - **Listing:** the owner lists an activity in the bank (`H5PContent.bankListedAt`). Listing needs a published
+    activity whose visibility is HVL (`organisation`) or wider, and an owner who is not a student author.
+  - **Unlisting:** making the activity private, or unpublishing it, removes the listing in the same transaction.
+  - **Who sees it:** the bank page lists the activities for HVL authors only, with title, type, phase, purpose,
+    minutes, outcomes and the owner's name.
+  - **Consent text:** listing shows a consent text: colleagues see the activity, your name and its learning-design
+    information and can make their own copies, and withdrawing the listing leaves existing copies with their authors.
+    The text is a draft for ALU's and HVL's legal review.
+  - **Audit:** listing and unlisting are audited.
+- **Amendment (2026-10-28, S5 contracts):** the bank is for HVL staff authors, the same people D-090 lets be found:
+  student authors neither see the bank nor list in it, because it shows colleagues' names, and `/personvern` says
+  colleagues see them. The header link shows to every author, since the web app knows only roles; the bank page
+  shows the server's refusal to a student author. Unpublishing an activity or making it private clears
+  `bankListedAt` in the same transaction (ContentPublisher and the sharing routes).
+- **Amendment (2026-10-29, S5 W4):**
+  - **Who sees and changes the listing:** people who may edit the activity read its listing (`{ listedAt, eligible }`),
+    so a co-author sees it on the **Deling** tab; only the owner lists and unlists. A student author's `GET /api/bank`
+    and listing are 403 `hvl:sharing-not-allowed`, which the bank page explains.
+  - **"Eligible":** published, `organisation` or `feide`, and an owner who is HVL staff: the owner's own login facts
+    when the owner asks, else the owner's `coAuthorSearchableAt` (an owner who has not signed in as staff for 13
+    months is not eligible).
+  - **Not a change of the activity:** listing and unlisting do not move `H5PContent.updatedAt`, so the publish flow's
+    precondition and the "newest change first" lists stay as they were. Listing is one conditional update, so an
+    activity unpublished or made private meanwhile is never listed. Each real change is audited
+    (`content.bank.list` with `{ consentVersion }`, `content.bank.unlist` with `{ cause: owner | unpublish | private }`).
+  - **The bank list:** the 200 newest listings the reader may view, each passing the same View rule as opening it.
+- **Amendment (2026-10-29, S5 integration of stage 4):** the bank shows a listing only while its owner is findable staff
+  (D-090: an eligible Feide login in the last 13 months), checked each time the bank is read. The name of someone who
+  has left HVL, or who now signs in as a student author, then stops showing to colleagues without anyone unlisting,
+  and the listing returns at the owner's next eligible login. The bank shows the 200 newest listings, without paging,
+  until use shows a need.
+
+### D-092 · Duplicating an activity
+- **Context:** `PROD-007`: a duplicate keeps a link to its source and the original author's attribution, and never
+  copies learner data. Lumi copies a duplicate's files only when their paths are rewritten to the paste-source form
+  `../<sourceId>/<file>`, and it checks View on the source.
+- **Decision:**
+  - **Permission:** a pure rule table (`duplicateRules`): a person may duplicate an activity they may Edit, or a
+    published, bank-listed activity they may View.
+  - **Copied:** the parameters, the H5P metadata and the files, through the paste-source rewrite. Of the
+    learning-design data, the phase, `patternId`, outcomes, minutes and purpose are copied. A copy made through the
+    bank leaves out the rationale and the course code, which belong to the source's author.
+  - **Never copied:** learner state, statements, insight snapshots, placements, acknowledgements, co-authors, the
+    bank listing and the published status.
+  - **The copy:** a private draft owned by the person who copied it, with `sourceContentId` and the new
+    `sourceAuthorUserId`. The source author's name is read when the copy is shown, so a later change of name shows.
+  - **API:** `POST /api/content/:id/duplicate` answers `{ contentId }`; it is audited. The copy is saved through
+    `HvlH5PEditor`'s save path.
+- **Amendment (2026-10-28, S5 probe P2):** Lumi does **not** refuse a paste source the saver may not View: it
+  saves the copy with every such file path emptied, and stores no file. Therefore:
+  - **Our check first:** `ContentDuplicator` decides `duplicateRules` before it calls the editor and refuses with
+    our own error.
+  - **What is rewritten:** only references to files the source stores, to `../<sourceId>/<file>`. URLs and names
+    the source does not store stay as they are. A `#tmp` reference is kept, because «Lagre som ny versjon» (D-093)
+    saves new uploads with the copy.
+  - **Unsafe names:** a stored name outside Lumi's pattern (`^[\w\-./_]+$`; spaces or æøå from an imported
+    package) is copied by the duplicator itself, through the content storage under a safe name, and its path fixed.
+  - **Checked afterwards:** a saved copy with an emptied path or a `../` path left is deleted and the duplicate
+    fails, so nothing half-done remains. Lumi gives copied files new names (cut at the first hyphen or with stacked
+    suffixes), so nothing may rely on the source's file names.
+  - **Speed:** Lumi streams every file through the server; a large video makes a duplicate slow, so the route's time
+    limit allows for it.
+  - **Editor saves:** the editor's own save routes accept `../<id>/<file>` paths too (H5P's copy and paste).
+    `HvlH5PEditor` now allows such a path only from an activity `duplicateRules` allows, and refuses a path the
+    storage would refuse (`..`, a leading `/`, a backslash, control characters) before Lumi writes anything;
+    before, Lumi wrote the activity and then failed with a 400, leaving a half-saved draft.
+- **Amendment (2026-10-28, S5 contracts):**
+  - **The rule, exactly:** `decideDuplicate` answers unavailable (404, D-066) for an unknown activity or one the
+    person may not View, and refused (403) unless the person may create activities (an author or an admin in the
+    account view). Then Edit allows it, and otherwise a published, bank-listed activity allows it for a person the
+    bank is for (D-091 as amended: not a student author).
+  - **Errors:** a refusal the editor raises before any row exists (the sub-content policy, the paste guard, Lumi's
+    metadata schema) reaches the author unchanged as a 4xx; any failure after a row exists removes the copy and
+    answers 500 `hvl:duplicate-failed`, logged with its cause by the route. The audit details are
+    `{ sourceContentId, via, kind }`; the source author is on the copy's `sourceAuthorUserId`.
+  - **Who sees the source:** the copy's detail shows its source's title and author only to people who may Edit the
+    copy; learners and other viewers get none of it.
+  - **Editor saves:** `PasteSourceGuard` checks every `../<id>/<file>` path on every editor save against the same
+    rule, and every `#tmp` and paste path against the storage's safe-name rule, before Lumi writes anything; a web
+    address whose scheme has capitals (`Https://`) passes, as H5P plays it. An existing activity that still holds
+    a path the guard refuses must have that element removed before it can be saved.
+- **Amendment (2026-10-29, S5 W4):**
+  - **The bank branch in the actor:** `HvlH5pActor` carries the login's `studentAuthor`, so `duplicateRules`
+    allows a bank copy only to an author signed in with Feide who is an HVL member and not a student author
+    (`isBankReaderActor`); the editor's paste guard decides with the same rule. A Canvas launch never copies through
+    the bank (D-098).
+  - **The route:** `POST /api/content/:contentId/duplicate` (portal authors, CSRF) answers 201 `{ contentId }` and
+    lets its socket stay idle for up to 15 minutes while Lumi streams a large video's files; a proxy in front must
+    allow as long.
+  - **Who sees the source:** the copy's detail names its source (ID and title) only while the person may View the
+    source, and its author by the account's current display name; an unknown part is left out, and the page says so
+    in words.
+- **Amendment (2026-10-29, S5 integration of stage 4):** known limit, accepted: both links of a copy are `SetNull`, so
+  a copy whose source and source author are both deleted (or whose source is deleted and whose author has no name)
+  shows no «Kopi av …» sign and looks like an original. Telling it apart would need a column that survives the
+  deletion; that waits until someone needs it. On the Deling tab a student-author owner still sees people search (the
+  web app knows roles, not the student-author fact) and gets the server's explanation (`hvl:sharing-not-allowed`) when
+  searching.
+- **Amendment (2026-10-29, S5 review): a bank copy needs the listing to be in the bank now.** The bank shows a listing
+  only while its owner is findable staff (D-091 amendment, S5 integration of stage 4), but the bank branch of
+  `duplicateRules` checked only `bankListedAt`, so a colleague who knew the ID could still copy a hidden listing (by
+  the duplicate route, «Lagre som ny versjon» or an editor paste), and the copy named the departed owner. The facts'
+  `bankListed` (`ContentAccessRepository.factsFor`) now means "listed, and its owner is findable staff"
+  (`isFindableStaff`, the in-memory form of the bank list's `findableStaffWhere`), so the duplicator, the copy route
+  and the editor's paste guard refuse such a source with 403 `hvl:duplicate-not-allowed` until the owner's next
+  eligible login. Copying through Edit is unchanged.
+- **Amendment (2026-10-29, S5 review): copies are limited per person.** A duplicate and «Lagre som ny versjon» each
+  stream every file of the source through the server, and nothing bounded how many one person could start. Both now
+  count against one per-person fixed window in Redis, the people search's pattern (D-090): at most 20 copies in 10
+  minutes (`hvli:copies:<userId>`, a count only), counted once the duplicate rule has allowed the copy, so an
+  unknown or refused source answers as before. Past the limit the answer is 429 `hvl:rate-limited`, and
+  `POST /api/content/:contentId/duplicate` sends `Retry-After` with the rest of the window (at least 1 second). The
+  limiter is built with the H5P runtime and reaches the duplicator through the editor it saves with
+  (`HvlH5PEditor.copyLimit`), because the studio services take only the editor from the runtime. Not covered: the
+  bytes of one copy (a source that repeats one stored file many times) and the editor's own saves of pasted paths;
+  both stay open for a per-save copy budget.
+- **Amendment (2026-10-29, S5 review): the source's title carries its language.** The «Kopi av …» sign put the
+  source's title in the page's language, so an English source on a Nynorsk page was read with a Norwegian voice
+  (UD-010, WCAG 3.1.2). The attribution now also has `sourceLanguage`, the source's own language tag
+  (`activityLanguage` of its metadata), given only together with `sourceTitle` and under the same View check; the
+  sign marks the title with `lang` when it differs from the page's language.
+- **Amendment (2026-10-29, S5 review leftovers): both copy routes send `Retry-After`.** «Lagre som ny versjon»
+  (`POST /h5p/content/:contentId/copy`) answered the copy limit's 429 `hvl:rate-limited` without `Retry-After`, so
+  only the duplicate route told the person when to try again. Now both send it, with the same seconds, and the
+  `/api` contract documents the 429 of `duplicateContent` as it does people search's.
+
+### D-093 · Safe editing: a structure signature, a confirmation, and saving as a copy
+- **Context:** `PROD-013`: editing an activity that has learner state warns that structural changes reset saved
+  progress, offers *Save as new version*, and invalidates state only when the author confirms. Today every save deletes
+  the state H5P marks as invalidated (D-038, `HvlH5PEditor.ts`), including after a typo fix and including the author's
+  own preview state.
+- **Decision:**
+  - **Structure signature:** for each sub-content node, its library, `subContentId` and position, plus the answer
+    shape of leaf questions (for example the number of options or blanks). Probe P3 on the ten types settles the
+    details, erring on the strict side. Any difference counts as structural.
+  - **Whose state counts:** other people's. The saver's own state never prompts.
+  - **Non-structural save:** keeps all learner state. This amends D-038.
+  - **Structural save, other people's state present:** answers 409 `hvl:learner-state-reset-needed` and saves
+    nothing. The answer has no counts, so it reveals nothing about how many learners there are.
+  - **Confirmed reset:** a retry with `confirmLearnerStateReset: true` saves, deletes the activity's learner state and
+    raises `H5PContent.version`, so S6 insight can separate results by version.
+  - **Save as a copy:** `POST /h5p/content/:id/copy` saves the edited parameters as a copy (D-092, owner's copy) and
+    leaves the original and its learner state untouched. This is the owner's choice for «Lagre som ny versjon»
+    (2026-10-28).
+  - **The dialog:** a new boot script, `editorSaveChoice.js`, shows a native `<dialog>` in the editor page: focus
+    starts on «Avbryt», and Esc cancels. In Canvas it offers only reset or cancel, with a pointer to the portal.
+- **Amendment (2026-10-28, S5 probes P3 and P7):**
+  - **The signature, in detail:** a pre-order walk of every object with `library` and `subContentId`, recording its
+    JSON path, its library as `Name major.minor` and its `subContentId`, plus the main library. Containers add:
+    every CoursePresentation slide element's position; BranchingScenario's node count and every `nextContentId`;
+    QuestionSet's `poolSize`; InteractiveVideo's video paths and its interactions sorted by start time, with the
+    end summary after them. Leaves add their answer shape: MultiChoice's option count, its single or multiple mode
+    and its option texts; Blanks' list of blank solutions; DragText's drop-zone and distractor words; a branching
+    question's alternatives. A leaf list is structural if its length changes or its texts move; a text changed in
+    place is not. Appends count: an appended InteractiveBook chapter crashes the player for learners with state.
+  - **Two kinds of leaf:** a library without `getCurrentState` (AdvancedText, Text, Image, Table and others) is
+    stateless, so only its position counts and editing its text is never structural. A stateful leaf without a rule
+    counts any change of its parameters as structural.
+  - **Old pages:** a learner page opened before a structural save keeps sending old state every few seconds. The
+    player therefore sends the content `version` with each state write, and a write for an older version is dropped.
+  - **The saver's own state:** a structural save always deletes it, even with no prompt, because stale state can
+    crash the author's own preview. "Own" means the saver's current learner key; their Canvas or last year's preview
+    counts as someone else's, which errs on the safe side.
+  - **Reset:** a confirmed reset deletes the rows, and learners start again. H5P's RESET marker is not used: its
+    dialog title is hard-coded English and Lumi's Nynorsk strings are Bokmål.
+  - **Order:** the check runs before Lumi saves and before dropped files are deleted, so a refused save changes
+    neither the parameters nor the files.
+  - **The dialog:** the editor is always in a frame (the portal's **Rediger** tab and Canvas), where a native modal
+    dialog lets Tab leave the frame. `editorSaveChoice.js` therefore keeps Tab and Shift+Tab inside the dialog, and
+    takes focus back only when the H5P editor's own frame takes it. After the dialog closes it re-enables «Lagre»,
+    focuses it and only then announces the outcome. In the portal the editor page asks the activity page to make
+    its own controls inert while the dialog is open; Canvas's page is out of our reach. The dialog's look comes
+    from a stylesheet file under the page's policy, with the `:focus-visible` ring the rest of the service uses.
+- **Amendment (2026-10-29, S5 server side):**
+  - **The version:** only a structural save that goes through raises `H5PContent.version`, not every save as D-074's
+    2026-10-23 amendment said: a text-only save keeps the learners' state, so the pages they have open must go on
+    saving under the same version. This amends D-074 and the data inventory.
+  - **What a reset deletes:** every structural save that goes through deletes all the activity's state rows and
+    raises the version in one transaction, also when the check found only the saver's: a row written between the
+    check and the write belongs to the old structure.
+  - **The confirmation:** `confirmLearnerStateReset` (a boolean, else 400) in the body of `PUT /h5p/content/:id`
+    reaches `HvlH5PEditor.saveOrUpdateContent` as an explicit last argument (`SaveChoice`), not through the
+    request's async context: every save of an existing activity comes through that route, so a save without it can
+    never reset by accident. `POST /h5p/content` creates an activity, which has no state.
+  - **Old pages:** the player's state URL (the portal and `/lti/play`) carries `contentVersion=<version>`, read
+    before Lumi renders. The state route makes such a write only while the activity has that version, checked in
+    the write's own transaction under a `FOR SHARE` lock on the activity row, which the reset's version update waits
+    for. A stale write is answered 200 `{ success: false, message: 'hvl:learner-state-stale' }`: h5p.js hands it to
+    an error callback the players' autosave does not set, so nothing is retried or shown. A write without the
+    parameter is not checked; a malformed one is 400.
+  - **Save as a copy:** `POST /h5p/content/:id/copy` takes `{ params, metadata }` as the editor gives them, is for
+    portal authors only (an ltik is 401 `hvl:unauthenticated`, a portal learner 403, the CSRF token as on every
+    unsafe method), answers 201 `{ contentId }`, and passes the duplicator's errors on unchanged.
+  - **Shuffling:** MultiChoice's `randomAnswers` and QuestionSet's `randomQuestions` are not structural (a resumed
+    attempt keeps its saved order, questionset.js:391); `poolSize` is.
+  - **The real editor's round trip:** an unchanged save through the editor page must stay text-only for every type
+    (`editorRoundTrip.browser.int.test.ts`). H5P's editor drops a branching-question node's own `nextContentId: -1`,
+    which the player reads as -1 when it is missing, so a missing one counts as -1. The editor also upgrades an
+    activity to the newest installed minor version of its library when it saves it; as the signature compares
+    `Name major.minor`, the first save after HVL installs a newer minor version is structural and asks, which errs
+    on the strict side.
+- **Amendment (2026-10-29, S5 W5b):**
+  - **Canvas wording:** from Canvas, the 409 keeps its status and code but its message (`safeEditing.resetNeededCanvas`) does not offer a new version, which Canvas does not have (D-098).
+  - **«Gå til feltet» on titles:** `metadata.title` and a sub-content's title reach the title field (Column, QuestionSet, InteractiveBook and InteractiveVideo interactions) or the metadata popup (AdvancedText, ImageHotspots content). BranchingScenario node titles and CoursePresentation element titles are not reached by those custom editors; the page says so («feltet kan ikkje opnast») rather than failing silently, as for their other fields.
+  - **The activity page:** while the dialog is open, the portal's activity page and `/app/play` make their own controls inert; after «Lagre som ny versjon» the portal opens the copy's editor tab.
+- **Amendment (2026-10-29, S5 W4):**
+  - **The copy's library version:** H5P's editor upgrades an activity to the newest installed minor version of its
+    library and shapes the parameters for it, so «Lagre som ny versjon» saving them under the source's older version
+    stored parameters its semantics did not describe. The editor page now sends its `content.library` with the copy
+    (`POST /h5p/content/:id/copy` takes `{ params, metadata, library? }`; a `library` that is not a string is 400),
+    and the copy is saved with it when it has the source's machine name and major version and is installed
+    (`learningDesign/collaboration/copyLibraryChoice.ts`); anything else keeps the source's version without an error.
+    «Lag ein kopi» names no library and always keeps the source's version.
+  - **Who sees where it came from:** the copy's page shows «Kopi av <tittel> av <namn>» to the people who may edit it
+    (D-092), so the copy «Lagre som ny versjon» opened says lastingly what it is, also when the announcement before
+    the navigation was cut off.
+- **Amendment (2026-10-29, S5 integration of the accessibility suite):** besides making everything around the editor
+  frame inert, the page takes the `tabindex` of the elements that hold the frame (the tab panel's `0`, `main`'s `-1`
+  as the skip link's target) while the dialog is open and gives it back afterwards: a click beside the frame focused
+  the tab panel and left the dialog. `a11y/axeSaveChoice.a11y.test.ts` checks that nothing outside the frame takes
+  focus or is exposed in the accessibility tree while the dialog is open.
+- **Amendment (2026-10-29, S5 integration):** while «Nullstill …» or «Lagre som ny versjon» runs, the editor page's
+  status region says so («Nullstiller framgangen og lagrar endringa …», `safeEditing.busy.*`) before the result, so a
+  screen-reader user knows the request has started. (The `tabindex` of the frame's holders while the dialog is open is
+  recorded once, in the amendment above; S5 review, 2026-10-29.)
+- **Amendment (2026-10-29, S5 review): the reset is part of the parameter write.** A structural save's reset (state
+  rows deleted, version raised) used to be its own transaction after Lumi's save. Lumi's first parameter write commits
+  before it copies files and writes a second time, so a failed reset, a failed file copy or a restart in between left
+  the new structure with the old state and the old version, and the next save, comparing against the new structure,
+  never reset it. Now the editor's learner-state step marks the save in its async context
+  (`h5p/storage/learnerStateResetWrite.ts`), and `PrismaContentStorage`'s first update of that activity writes the
+  parameters, raises the version (that update comes first, for the `FOR SHARE` order) and deletes every state row in
+  one transaction. A save that fails before that write changes nothing; one that fails after it leaves the new
+  structure with its reset. A storage without the hook (the unit tests' file storage) gets the separate reset after
+  the write, as before.
+- **Amendment (2026-10-29, S5 review): focus while a chosen request runs.** The dialog's close removed the focused
+  choice while «Lagre» was still natively disabled, so focus fell to the page's `<body>` for the whole reset or copy
+  (a copy may take minutes), and Tab went into H5P's form. Now, once the author has chosen «Nullstill …» or «Lagre
+  som ny versjon», the editor page focuses «Lagre» before the busy text is announced, keeping it unavailable with
+  `aria-disabled="true"` (a click is ignored) instead of `disabled`, which cannot hold focus. When the request ends,
+  «Lagre» is available again and the outcome is announced, as before. The ordinary save keeps its native `disabled`.
+
+### D-094 · Rendering the pedagogisk mappe
+- **Context:** `MAPPE-002` takes headings from the template and criteria from the criteria files, keyed by criteria
+  set; switching the set changes every criterion text and the reader's guide. The word count excludes the references
+  and the reader's guide. Activity titles and texts come from authors and must not turn into Markdown structure.
+- **Decision:**
+  - **Template:** `content/mappe/template.{nn,nb,en}.md` uses Mustache 4.2.0. The loader removes comments and front
+    matter and checks every tag against an allowlist of variables; triple braces and `{{& }}` are refused.
+  - **Escaping:** Mustache's escape function is replaced by a Markdown escaper, so a title such as `# x` or
+    `[a](b)` stays text.
+  - **Reader's guide:** built from the criteria data (criterion → chapter and attachment), not written in the
+    template.
+  - **Limits:** `criteria.{nn,nb,en}.yaml` holds, per set, the criteria and the limits: Del 1 words (default 7 500)
+    and attachments (default 11). Both are marked *(verify)*.
+  - **Word count:** counts Del 1 only, between markers the loader requires, without the reader's guide and the
+    references.
+  - **Activities:** the author's own and co-authored activities, filtered by course, phase and date. Each gives its
+    title, type, phase, course, outcomes, rationale, the validator's result with any acknowledgements and their
+    reasons, a link, and the aggregates of D-095.
+  - **API:** `POST /api/mappe/preview` answers the word count, which the page announces politely.
+    `POST /api/mappe/export?format=md|pdf` answers the file, which is not stored.
+  - **Opprykk:** the promotion mode waits for ALU.
+- **Consequences:** Amends D-020: the reader's guide is generated, and the limits live per criteria set.
+- **Amendment (2026-10-28, S5 probe P5):** how Mustache is used safely:
+  - **Rendering:** `Mustache.render(template, view, undefined, { escape, tags: ['{{', '}}'] })`. Never assign
+    `Mustache.escape` or `Mustache.tags`, which are global to the process, and never pass `{}` as partials.
+  - **Loading:** the loader reads `Mustache.parse`'s tokens without changing them (they are cached and reused by
+    `render`) and strips comments in the source text. It allows only `name`, `#`, `^` and `!` tags with allowlisted
+    names, and refuses `&` (which also covers triple braces), `>`, `=`, images, a value inside backticks, a value
+    straight after `](` or a backslash, and a value at the start of a line that follows a table header.
+  - **The view:** every key is present on every list item (null when unknown), so a missing field never falls back
+    to the parent's field of the same name. Dates and numbers are formatted as strings first.
+  - **Empty values:** an optional value sits in a `{{#x}}` section or gets a localised placeholder, because an empty
+    value can turn the template's own `**…**` into a rule, `## …` into an empty heading and `[…](…)` into an empty
+    link.
+  - **The escaper** (`mappe/markdownEscape.ts`) is safe in inline positions only: line starts, after a heading,
+    list or quote marker, mid-line, table cells and link text.
+- **Amendment (2026-10-29, S5 W6a):** how the template, the counts and the routes are built:
+  - **No portfolio yet:** the six files (`template.{nn,nb,en}.md`, `criteria.{nn,nb,en}.yaml`) are optional until
+    written, all six or none, as the guide is (D-083 amendment). Without them the mappe routes answer 409
+    `hvl:mappe-not-ready` (new in the contract), which the page explains; the activity list still answers.
+  - **Markers:** the reader's guide and the references are blocks the server builds, so they are placed by markers
+    instead of `{{{…}}}`: a line that is only `{{lesarrettleiing}}` or `{{referansar}}`. Two pairs mark the counted
+    parts: `{{del1_start}}` … `{{del1_slutt}}` (the word count) and `{{vedlegg_start}}` … `{{vedlegg_slutt}}` (the
+    suggested attachments, counted as the outermost list items between them, which the preview's `attachments`
+    reports against the set's limit). Each marker stands once, outside every section; the loader cuts the template at
+    the marker lines and Mustache parses each part, so a section cannot span a marker.
+  - **Names:** the allowlist is a tree of Nynorsk names (`apps/server/src/learningDesign/mappe/mappeVariables.ts`): top
+    values, the lists `aktivitetar` (with `uu_merknader` inside) and `emneoversikt`; a list opens only where it is
+    defined. Every value is text and never empty: the view gives a localised placeholder for anything unknown, so no
+    `{{#x}}` guard is needed around a single value.
+  - **Value places:** besides the probe's refusals, a value may not stand straight after `<` (a title such as
+    `script>` would open raw HTML in a renderer with HTML on) or straight after `]` (a value starting with `(` would
+    turn the brackets into a link to the value). So `{{lenke}}` is written as plain text; the PDF does not make it a
+    link.
+  - **Word count:** what markdown-it reads as text in Del 1, without the blocks; a word is a run between spaces that
+    holds a letter or a digit, and a no-break space joins, so a grouped number (`7 500`) is one word. The template
+    is rendered twice, the second time with the count; the count cannot change between them.
+  - **References:** the full references the chosen activities' patterns cite, each once, sorted by text.
+  - **Validator result:** the UD-021 findings of the stored activity (the findings route's validator and input),
+    each error with the newest reason given for it at any age: the 14 days decide whether publishing asks again,
+    not whether a reason was given. Who gave it is not read.
+  - **Routes:** `GET /api/mappe/activities`, `GET /api/mappe/criteria-sets` (the sets with their limits and the
+    default set; new schemas `MappeCriteriaSet` and `MappeCriteriaSetList`), `POST /api/mappe/preview` and
+    `POST /api/mappe/export?format=md|pdf`, all `requirePortalAuthor`. More than 50 IDs is 400
+    `hvl:mappe-too-many` before the body's schema; an ID that is not the author's own or co-authored is 404
+    `hvl:activity-unavailable`, like an unknown one. The file name is ASCII, `pedagogisk-mappe-YYYY-MM-DD.md|pdf`.
+  - **The page** filters the author's list in the browser (course, phase from `GET /api/studio`, change dates in
+    Oslo time), and the portfolio's language is chosen apart from the page's.
+- **Amendment (2026-10-29, S5 integration):** `SPEC-DEVIATION` UD-007: the /mappe download buttons name the file type
+  but not its size, because the server makes the file only when asked and stores nothing (MAPPE-003); the size is
+  unknown until then. The reference list of the export carries no language per reference yet, so an English
+  reference in a Nynorsk PDF is not tagged with `/Lang` (a residual for the manual PAC check, D-096).
+- **Amendment (2026-10-29, S5 review): link destinations over two lines, and activity IDs in either case.**
+  - **Value places:** CommonMark lets a link destination start on the line after `](` or `]:`, so the loader looks
+    for an open destination in the whole paragraph before the value, not only on its line. It refuses a value in a
+    destination that starts on the next line (also when the template writes the start of the address), and any
+    value in a paragraph that holds a link reference definition. A value after a closed link, or in link text over
+    two lines, is allowed. The verification of the review added: a `](` stays open until the `)` that balances it
+    (a destination may hold balanced parentheses or an escaped `\)`), and a reference definition counts also in a
+    block quote or a list item (`> [a]:`, `- [a]:`, `1. [a]:`); all three passed the loader before. A second
+    verification added two more that had passed: a definition whose label holds an escaped bracket (`[a\]b]:`),
+    and one whose label runs over a line that holds only a no-break space, because only a line of spaces and tabs
+    ends a paragraph in CommonMark, and the scan had taken any white space for a blank line.
+  - **IDs:** the mappe routes match an activity ID without regard to case, as the other S5 lookups do: an upper-case
+    ID finds the author's activity, and the same ID twice in two cases is 400 `error.badRequest` ("named twice").
+
+### D-095 · Minimum group size in exports
+- **Context:** `MAPPE-003` applies `INS-006`'s minimum group size (*k* = 5, configurable, at least 3, with
+  complementary suppression) to the portfolio's aggregates. No results are stored before S6: `setFinished` is off and
+  no xAPI is recorded.
+- **Decision:** `privacy/minimumGroupSize.ts` reads *k* from `MIN_GROUP_SIZE` (an integer of at least 3, default 5).
+  It suppresses a count below *k*, and suppresses the completion rate when either the completers or the
+  non-completers number fewer than *k*, so a hidden value cannot be worked out from the other. In S5,
+  `ActivityResultsSource` answers "no results yet", and the export says so. S6 adds the real source and the insight
+  views on the same module.
+- **Consequences:** The 4-learner test of `MAPPE-003` runs against a fixture source.
+- **Amendment (2026-10-29, S5 W6a):** `ActivityResultsSource.learnerSummaries` hands over one summary per learner
+  (attempts, completed, the first and last scaled score) and no identifier or answer text; only aggregates leave
+  `activityResults.ts`. Below *k* learners nothing at all is shown, not even the count; the median attempts need *k*
+  learners, and the change from the first to the last attempt (the mean, in percentage points) needs *k* learners
+  with both scores. A rate of 0 % or 100 % is always hidden by the two-sided rule.
+
+### D-096 · The portfolio PDF is rendered by Chromium on the server
+- **Context:** `MAPPE-004` asks for a tagged PDF with language, title, outline and real text from the same semantic
+  HTML. The owner decided on 2026-10-28 that the server renders it with Chromium. `playwright-core` 1.56.1 is already
+  pinned as a development dependency, and its `page.pdf` has `tagged` and `outline`.
+- **Decision:**
+  - **Dependency:** `playwright-core` 1.56.1 becomes a production dependency.
+  - **Rendering:** Markdown → semantic HTML with `lang` and `<title>` (markdown-it, `html: false`) →
+    `page.pdf({ tagged: true, outline: true })`.
+  - **Isolation:** one shared browser per process, started lazily, and a fresh context per export with JavaScript
+    off, offline, and every request aborted. The browser starts with a scrubbed environment (no secrets) and keeps
+    Chromium's sandbox.
+  - **Limits:** at most `PDF_MAX_CONCURRENCY` (default 2) exports per process and one per user, with a time limit.
+  - **No browser:** answers 503 `hvl:pdf-unavailable`, and the page points to the Markdown export, which always works.
+    `PDF_BROWSER_EXECUTABLE` names the browser.
+- **Consequences:** S6's production image needs Chromium and fonts with æ, ø and å. Probe P4 checks the structure
+  tree, outline, `/Lang` and title with `pdfjs-dist`. Anything Chromium cannot set, such as `DisplayDocTitle`, is
+  recorded as a residual for the manual PAC check.
+- **Amendment (2026-10-28, S5 probe P4):**
+  - **Launch:** `chromium.launch({ chromiumSandbox: true, env: { PATH, HOME }, executablePath })`, all explicit:
+    playwright-core's defaults pass the server's whole environment (secrets included) to Chromium and turn the
+    sandbox off. Each export uses a fresh context with JavaScript off and `offline: true` (which blocks prefetches
+    the route never sees), every request aborted, and the context closed afterwards. The mappe HTML holds no
+    images; even an aborted image paints a placeholder.
+  - **Root:** Chromium refuses its sandbox when the process runs as root, as everything does in the development
+    container. A development-only `PDF_ALLOW_NO_SANDBOX=true` lets the PDF export work there; the production checks
+    refuse it. Production runs the server as a non-root user whose runtime allows unprivileged user namespaces
+    (S6). CI runs as a non-root user and lifts Ubuntu 24.04's AppArmor restriction on those namespaces first.
+  - **Tables:** markdown-it writes no `scope`, so the mappe renderer gives header cells `scope="col"` and makes the
+    first cell of each body row a row header with `scope="row"`.
+  - **Residuals:** Chromium sets `DisplayDocTitle`, so that is not a residual. The manual PAC check records these
+    instead: list numbers are untagged and lists carry no numbering attribute, caption and thead become
+    `NonStruct`, there is no XMP metadata and so no PDF/UA identifier, links have no `/Contents`, and the header
+    says PDF 1.4.
+  - **Fonts:** Georgia, the body font token, is not installed here, so the PDF uses Liberation Serif. The S6 image
+    installs `fonts-liberation`, or the fonts HVL licenses, so that æ, ø and å always embed.
+- **Amendment (2026-10-28, S5 contracts):** `PDF_ALLOW_NO_SANDBOX` (default false) lets the root development
+  container render PDFs; the production checks refuse it. Tests set it from whether they run as root, so the same
+  test keeps the sandbox on the non-root CI runner. `PDF_BROWSER_EXECUTABLE` must be an absolute path; start-up does
+  not require it to exist, since a missing browser only means 503 `hvl:pdf-unavailable`.
+- **Amendment (2026-10-29, S5 W6a):** the limits in numbers: one export may take 30 seconds and a launch 20; past
+  either, or when the browser will not start, the answer is 503 `hvl:pdf-unavailable`, and the next export tries
+  again. A full process or a person's second export is 503 `hvl:pdf-busy` at once (no queue) with `Retry-After: 10`.
+  Playwright's signal handlers are off, so only the server's shutdown closes the browser. A crashed browser is
+  forgotten on `disconnected` and started again on the next export.
+- **Amendment (2026-10-29, S5 stage 5):** Chromium's tagged-PDF outline drops the space where a heading wraps over two
+  lines («emneom»), so a screen reader's bookmark list ran words together for long activity titles. The PDF's
+  headings now have `white-space: pre-wrap`, which keeps the space and renders a one-line Markdown heading the same;
+  the PDF browser test has a title that wraps, and its outline must equal the Markdown headings.
+- **Amendment (2026-10-29, S5 integration):** the full residual list for the manual PAC check, in one place: list
+  items have no `Lbl`/`LBody` and lists no numbering attribute; captions, `thead` and `tbody` give no `Caption`,
+  `THead` or `TBody` element (`NonStruct`); no XMP metadata, so no PDF/UA identifier; links have no `/Contents`;
+  the header says PDF 1.4; activity titles have no language of their own; references have no language of their own
+  (D-094 amendment); the activity address is plain text, not a link. `taggedPdf.browser.test.ts` pins the first two.
+- **Amendment (2026-10-29, S5 review): the time limit covers opening the context, and a stalled browser is
+  replaced.** In the review, a Chromium that was frozen (SIGSTOP) but still connected never answered `newContext`.
+  That call ran before the 30-second limit started, so the export waited for good, and two such exports left every
+  later one 503 `hvl:pdf-busy` until a restart.
+  - **The limit** now starts before the context opens and covers opening, loading and printing. Past it the answer
+    is 503 `hvl:pdf-unavailable`, and a context that opens late is closed at once. The launch keeps its own 20
+    seconds.
+  - **Discarding:** a browser that fails to open a context, or does not open one or finish closing one within the
+    limit, is treated like a crashed one. It is forgotten and closed without waiting, and the next export starts a
+    new one. An export that is only slow to print keeps the browser, so other exports running in it are not cut off.
+    The context's close after an export still waits at most one more limit, so a browser that stalls during a
+    print gets its answer after at most two limits (60 seconds), and its slots are free then.
+  - **Tests:** `pdfRendererTimeLimit.test.ts` (a `newContext` that never answers, a late context, a hung close, a
+    slow print). `pdfRenderer.test.ts` pins the request handler (abort, never continue), and
+    `pdfRendererIsolation.browser.test.ts` shows with the real renderer and Chromium that no stylesheet, image or
+    frame of the document reaches a local listener; `offline` alone does not stop a frame, so the abort is needed.
+
+### D-097 · New dependencies in S5
+- **Context:** CLAUDE.md pins every runtime dependency exactly, and D-029's checks allow only listed licences.
+- **Decision:**
+  - `markdown-it` 14.3.3 (MIT). 15.x would bring a dependency whose licence is not on the allowlist.
+  - `mustache` 4.2.0 (MIT, no dependencies).
+  - `@types/markdown-it` 14.2.0 and `@types/mustache` 4.2.6 (MIT, development).
+  - `pdfjs-dist` 6.4.299 (Apache-2.0, development, for the PDF test).
+  - `playwright-core` 1.56.1 (Apache-2.0) moves from development to production (D-096).
+
+  All are pinned exactly and pass `check:pins`, `check:licences` and `check:audit`.
+
+### D-098 · The Canvas side of the studio moves to S6
+- **Context:** `LTI-005`'s picker includes the content bank and "new from a pattern" (D-061), and `LTI-007`'s
+  duplicate was to come with `PROD-007` (D-062). LTI principals are not HVL members (`hvlMember` is false), Canvas and
+  Feide accounts stay separate while `feideLinking` is off (D-063), and Canvas has no publish interface, so a draft
+  from a pattern could not be placed.
+- **Decision:** The owner decided on 2026-10-28 that the bank in the picker, "new from a pattern" in Canvas and the
+  `LTI-007` duplicate in `/app/play` move to S6. In Canvas, S5's safe-editing dialog offers reset or cancel (D-093).
+- **Consequences:** Amends D-061 and D-062. S6's checklist carries the three items.
+
+### D-099 · The API contract gets binary responses and `DELETE`
+- **Context:** D-077 describes every route as JSON in `packages/api-contract`. The portfolio returns Markdown and PDF
+  files, and removing a co-author or a bank listing is a `DELETE`. `apiRoutes.ts` and `openApi` are close to 200
+  lines.
+- **Decision:** A route may declare `mediaType` for a binary or text answer, which the OpenAPI document shows with
+  `Content-Disposition: attachment`. The web app's `apiRequest` gets `DELETE`. The route list and the OpenAPI builder
+  are split by area.
+- **Consequences:** Amends D-077. `docs:api` and the route test keep the document and the mounted routes in step
+  (`DOC-012`).
+- **Amendment (2026-10-28, S5 contracts):**
+  - **Query parameters:** a route may declare `query`, documented as `in: query` parameters (people search, course
+    code, export format).
+  - **Leaf modules:** `content.ts` imports only the leaf modules `learnerInfo.ts` and `sourceAttribution.ts`, so the
+    contract has no import cycle that would leave a schema undefined at load.
+  - **Deliberate 5xx codes:** the studio's own 5xx answers (`hvl:duplicate-failed`, `hvl:pdf-*`) keep their code
+    and translated message, like the authentication 503s.
+  - **Areas:** each studio area registers routes only, under `/api`, in its own module; a path-less `router.use`
+    would run for every later area and is refused by a test. Middleware sits on the route itself.
+  - **The web app** imports only types from the contract, so zod stays out of the browser bundle.
+
+### D-100 · The S5 gate, and the ALU and pilot review left open (Q17)
+- **Context:** The studio's texts, patterns, references, mappe template and criteria, and the bank's consent text, are
+  drafts until ALU confirms them. Teachers in the pilot have not tried the patterns. The owner decided on 2026-10-28
+  that S5 may close with this review requested and open.
+- **Decision:** The S5 gate is the S1–S4 gate plus:
+  - `npm run content:check`;
+  - `npx vitest run -t "PED-0"`, `-t "PROD-001|PROD-009"`, `-t "PROD-007|PROD-013"` and `-t "MAPPE-"`, and each S5 ID
+    on its own;
+  - `npm run spec:trace -- --check --done-through=S5`;
+  - `WEB_APP=dev npm start` showing the studio pages and downloading both exports.
+
+  The review is open question Q17, with a review packet in `docs/reference/alu-review-s5.md`.
+- **Consequences:** Q17 must be answered before the pilot. The manual PDF check with PAC or NVDA is recorded in the
+  accessibility results.

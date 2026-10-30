@@ -1,0 +1,6 @@
+# Test fixture (apps/server/test/fixtures/studio-content/README.md): the one reference the fixture pattern cites.
+version: 1
+references:
+  fixture2026:
+    text: Fixture, A. (2026). A reference that exists only for the tests of the pattern loader. Test Press.
+    verify: true

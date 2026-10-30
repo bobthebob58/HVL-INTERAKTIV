@@ -1,0 +1,108 @@
+# content/laeringsdesign/patterns/fa-hotspots/pattern.yaml — «Visuell gjennomgang» (spec 04 §4).
+# DRAFT for ALU and the pilot teachers to review (open question Q17); texts, times and choices may change.
+# How to edit: content/laeringsdesign/README.md, section "patterns/". Checked by npm run content:check.
+# The skeleton has no image: the author adds it and its alternative text (V-PLACEHOLDER reports both until then).
+# The five hotspots are numbered and placed in reading order, left to right and top to bottom.
+id: fa-hotspots
+phases:
+  - forarbeid
+contentTypes:
+  - H5P.ImageHotspots
+name:
+  nn: Visuell gjennomgang
+  nb: Visuell gjennomgang
+  en: Visual walk-through
+purpose:
+  nn: Eit bilete med fem nummererte punkt som studenten opnar i rekkjefølgje, kvart med overskrift og forklaring.
+  nb: Et bilde med fem nummererte punkter som studenten åpner i rekkefølge, hvert med overskrift og forklaring.
+  en: An image with five numbered hotspots that students open in order, each with a heading and an explanation.
+whenToUse:
+  nn: >-
+    Når studentane skal bli kjende med eit bilete, ein figur eller ein stad før samlinga, til dømes ein anatomisk
+    figur, eit kart, ein arbeidsplass eller eit diagram. Biletet treng ein alternativ tekst.
+  nb: >-
+    Når studentene skal bli kjent med et bilde, en figur eller et sted før samlingen, for eksempel en anatomisk
+    figur, et kart, en arbeidsplass eller et diagram. Bildet trenger en alternativ tekst.
+  en: >-
+    When students are to get to know an image, a figure or a place before the session, for example an anatomical
+    figure, a map, a workplace or a diagram. The image needs an alternative text.
+example:
+  nn: >-
+    Eit bilete av eit pasientrom med fem nummererte punkt om smittevern, frå handvasken ved døra til
+    avfallsbehaldaren, som studentane går gjennom før praksis.
+  nb: >-
+    Et bilde av et pasientrom med fem nummererte punkter om smittevern, fra håndvasken ved døra til
+    avfallsbeholderen, som studentene går gjennom før praksis.
+  en: >-
+    A picture of a patient room with five numbered hotspots on infection control, from the sink by the door to the
+    waste bin, which students go through before their placement.
+whyItWorks:
+  nn: >-
+    Nummererte punkt deler forklaringa i små bitar som studenten opnar i sitt eige tempo, og rekkjefølgja viser
+    kvar blikket skal gå. Det gjer det lettare å forstå eit samansett bilete [@mayer2009]. Som forarbeid gjev det
+    studentane eit felles bilete å peike på i samlinga, og du kan byggje vidare på det dei har sett [@novak1999].
+  nb: >-
+    Nummererte punkter deler forklaringen i små biter som studenten åpner i sitt eget tempo, og rekkefølgen viser
+    hvor blikket skal gå. Det gjør det lettere å forstå et sammensatt bilde [@mayer2009]. Som forarbeid gir det
+    studentene et felles bilde å peke på i samlingen, og du kan bygge videre på det de har sett [@novak1999].
+  en: >-
+    Numbered hotspots split the explanation into small pieces that students open at their own pace, and their order
+    shows where to look. This makes a complex image easier to understand [@mayer2009]. As pre-work it gives the
+    students a shared picture to point to in the session, and you can build on what they have seen [@novak1999].
+buildMinutes: 20
+studentMinutes: 10
+texts:
+  title:
+    nn: ⟦Gje aktiviteten ein tittel som seier kva biletet viser⟧
+    nb: ⟦Gi aktiviteten en tittel som sier hva bildet viser⟧
+    en: ⟦Give the activity a title that says what the image shows⟧
+  imageAlt:
+    nn: ⟦Skriv ein alternativ tekst som seier kva biletet viser, og kva studenten skal leggje merke til⟧
+    nb: ⟦Skriv en alternativ tekst som sier hva bildet viser, og hva studenten skal legge merke til⟧
+    en: ⟦Write an alternative text that says what the image shows and what the student should notice⟧
+  hotspot1Header:
+    nn: ⟦Overskrift for punkt 1⟧
+    nb: ⟦Overskrift for punkt 1⟧
+    en: ⟦Heading for hotspot 1⟧
+  hotspot1Text:
+    nn: >-
+      ⟦Forklar det første studenten skal leggje merke til. Plasser punkta i den rekkjefølgja dei skal lesast, frå
+      venstre mot høgre og ovanfrå og ned⟧
+    nb: >-
+      ⟦Forklar det første studenten skal legge merke til. Plasser punktene i den rekkefølgen de skal leses, fra
+      venstre mot høyre og ovenfra og ned⟧
+    en: >-
+      ⟦Explain the first thing the student should notice. Place the hotspots in the order they are to be read, left
+      to right and top to bottom⟧
+  hotspot2Header:
+    nn: ⟦Overskrift for punkt 2⟧
+    nb: ⟦Overskrift for punkt 2⟧
+    en: ⟦Heading for hotspot 2⟧
+  hotspot3Header:
+    nn: ⟦Overskrift for punkt 3⟧
+    nb: ⟦Overskrift for punkt 3⟧
+    en: ⟦Heading for hotspot 3⟧
+  hotspot4Header:
+    nn: ⟦Overskrift for punkt 4⟧
+    nb: ⟦Overskrift for punkt 4⟧
+    en: ⟦Heading for hotspot 4⟧
+  hotspot5Header:
+    nn: ⟦Overskrift for punkt 5⟧
+    nb: ⟦Overskrift for punkt 5⟧
+    en: ⟦Heading for hotspot 5⟧
+  hotspotText:
+    nn: ⟦Forklar kva studenten ser i dette punktet, og kvifor det er viktig, i to eller tre setningar⟧
+    nb: ⟦Forklar hva studenten ser i dette punktet, og hvorfor det er viktig, i to eller tre setninger⟧
+    en: ⟦Explain what the student sees at this hotspot, and why it matters, in two or three sentences⟧
+  hotspotTextTitle:
+    nn: Forklaring
+    nb: Forklaring
+    en: Explanation
+  untitledHotspot:
+    nn: Punkt utan tittel
+    nb: Punkt uten tittel
+    en: Untitled hotspot
+  containsAudioVideo:
+    nn: Inneheld lyd eller video
+    nb: Inneholder lyd eller video
+    en: Contains audio or video

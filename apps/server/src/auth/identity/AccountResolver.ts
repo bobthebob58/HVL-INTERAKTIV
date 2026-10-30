@@ -7,16 +7,20 @@
  * Spec: DATA-002, AUTH-001, AUTH-004, LTI-001
  * Invariants:
  *   - Only the hash and its key ID are stored, never the source text.
- *   - Learner rows never get a name or e-mail (the database refuses it, DATA-002); a profile is stored only for
- *     staff (AUTH-004) and refreshed at each staff login.
+ *   - Learner rows never get a name or e-mail (the database refuses it, DATA-002); a profile (the display name) is
+ *     stored only for staff (AUTH-004) and refreshed at each staff login, which also clears `email` (D-090
+ *     amendment 2026-10-29: no e-mail is kept).
  *   - A learner account becomes staff when the person now authors; a staff account is never downgraded, because it
  *     may own content that co-authors know by name.
+ *   - PRIVACY: `User.coAuthorSearchableAt` is written only for a Feide login that states it (D-090): set when the
+ *     login makes the person findable as a co-author, cleared when it does not. An LTI launch never changes it.
  *   - Two first logins at the same moment create one account: the loser of the unique-key race re-reads it.
  *   - When one person has rows under several keys (mixed key rings during a rotation), the row under the current
  *     key wins, else the oldest; a re-hash that collides keeps the login working instead of failing it.
  * Collaborators: ./subjectSources.ts, ./identityLookup.ts (which row wins), ../../security/keys/IdentityHasher.ts, ../feide/completeFeideLogin.ts,
  *   ../../lti/launch/ltiAccount.ts.
- * Tests: apps/server/test/auth/identity/AccountResolver.int.test.ts, apps/server/test/auth/identity/AccountResolver.test.ts
+ * Tests: apps/server/test/auth/identity/AccountResolver.int.test.ts,
+ *   apps/server/test/auth/identity/AccountResolver.test.ts, apps/server/test/auth/feide/coAuthorSearchable.int.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
 import type { IdentityHasher } from '../../security/keys/IdentityHasher.js';
@@ -32,8 +36,13 @@ export interface AccountRequest {
   readonly platformId?: string;
   /** `staff` when the person authors or administers now; `learner` otherwise. */
   readonly kind: 'staff' | 'learner';
-  /** Name and e-mail for staff (AUTH-004); ignored for learners. */
-  readonly profile?: { readonly displayName?: string; readonly email?: string };
+  /** The display name for staff (AUTH-004); ignored for learners. */
+  readonly profile?: { readonly displayName?: string };
+  /**
+   * Feide logins only (D-090): the login time when this login makes the person findable as a co-author, or null
+   * to clear an earlier one (../../learningDesign/collaboration/staffEligibility.ts). Ignored for LTI launches.
+   */
+  readonly coAuthorSearchableAt?: Date | null;
 }
 
 /** The account found or created. */
@@ -103,7 +112,10 @@ export class AccountResolver {
     }
     const kind = identity.user.kind === 'staff' || request.kind === 'staff' ? 'staff' : 'learner';
     if (kind === 'staff') {
-      await db.user.update({ where: { id: identity.userId }, data: { kind, ...this.profileOf(request) } });
+      await db.user.update({
+        where: { id: identity.userId },
+        data: { kind, ...this.profileOf(request), ...this.searchableOf(request) },
+      });
     }
     return { userId: identity.userId, kind, created: false };
   }
@@ -113,7 +125,7 @@ export class AccountResolver {
     const user = await this.deps.db.user.create({
       data: {
         kind: request.kind,
-        ...(request.kind === 'staff' ? this.profileOf(request) : {}),
+        ...(request.kind === 'staff' ? { ...this.profileOf(request), ...this.searchableOf(request) } : {}),
         identities: {
           create: {
             provider: request.provider,
@@ -127,12 +139,18 @@ export class AccountResolver {
     return { userId: user.id, kind: request.kind, created: true };
   }
 
-  private profileOf(request: AccountRequest): { displayName?: string; email?: string } {
-    // PRIVACY: only staff profiles are stored, and only what Feide released for co-author search (AUTH-004).
-    const profile = request.kind === 'staff' ? (request.profile ?? {}) : {};
-    return {
-      ...(profile.displayName !== undefined ? { displayName: profile.displayName } : {}),
-      ...(profile.email !== undefined ? { email: profile.email } : {}),
-    };
+  private searchableOf(request: AccountRequest): { coAuthorSearchableAt?: Date | null } {
+    // SECURITY: only the Feide login decides who colleagues can find; a Canvas launch can never make anyone findable.
+    const { provider, coAuthorSearchableAt } = request;
+    return provider === 'feide' && coAuthorSearchableAt !== undefined ? { coAuthorSearchableAt } : {};
+  }
+
+  private profileOf(request: AccountRequest): { displayName?: string; email?: null } {
+    // PRIVACY: only staff profiles are stored, and only the name co-author search shows (AUTH-004).
+    if (request.kind !== 'staff') return {};
+    const { displayName } = request.profile ?? {};
+    // SPEC-DEVIATION: D-090 amendment 2026-10-29: AUTH-004 kept staff e-mail, which nothing uses, so every staff
+    // write clears one stored before.
+    return { ...(displayName !== undefined ? { displayName } : {}), email: null };
   }
 }

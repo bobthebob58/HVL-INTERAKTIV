@@ -1,0 +1,95 @@
+# Test fixture (apps/server/test/fixtures/studio-content/README.md), not a real pattern: a check with two content
+# types and two phases, so the tests cover every choice a pattern can offer.
+id: fixture-check
+phases:
+  - etterarbeid
+  - forarbeid
+contentTypes:
+  - H5P.QuestionSet
+  - H5P.Blanks
+name:
+  nn: Testmønster for ein sjekk
+  nb: Testmønster for en sjekk
+  en: Test pattern for a check
+purpose:
+  nn: Viser at ei mønstermappe blir lasta og kan brukast utan kodeendring.
+  nb: Viser at en mønstermappe blir lastet og kan brukes uten kodeendring.
+  en: Shows that a pattern folder is loaded and can be used without a code change.
+whenToUse:
+  nn: Berre i testane til tenaren.
+  nb: Bare i testene til tjeneren.
+  en: Only in the server's tests.
+example:
+  nn: Ein sjekk med tre spørsmål om eitt omgrep.
+  nb: En sjekk med tre spørsmål om ett begrep.
+  en: A check with three questions on one concept.
+whyItWorks:
+  nn: >-
+    Å hente fram det ein har lært, styrkjer minnet [@fixture2026].
+  nb: >-
+    Å hente fram det en har lært, styrker hukommelsen [@fixture2026].
+  en: >-
+    Retrieving what one has learnt strengthens memory [@fixture2026].
+buildMinutes: 15
+studentMinutes: 10
+texts:
+  title:
+    nn: ⟦Tittel på sjekken⟧
+    nb: ⟦Tittel på sjekken⟧
+    en: ⟦Title of the check⟧
+  mcTitle:
+    nn: ⟦Tittel på fleirvalsspørsmålet⟧
+    nb: ⟦Tittel på flervalgsspørsmålet⟧
+    en: ⟦Title of the multiple-choice question⟧
+  mcQuestion:
+    nn: ⟦Skriv eit spørsmål som får studenten til å bruke omgrepet, ikkje berre kjenne det att⟧
+    nb: ⟦Skriv et spørsmål som får studenten til å bruke begrepet, ikke bare kjenne det igjen⟧
+    en: ⟦Write a question that makes the student use the concept, not just recognise it⟧
+  mcRight:
+    nn: ⟦Rett svar⟧
+    nb: ⟦Riktig svar⟧
+    en: ⟦Correct answer⟧
+  mcRightFeedback:
+    nn: ⟦Forklar kvifor svaret er rett⟧
+    nb: ⟦Forklar hvorfor svaret er riktig⟧
+    en: ⟦Explain why the answer is correct⟧
+  mcWrong:
+    nn: ⟦Feil svar som er ei vanleg misoppfatning⟧
+    nb: ⟦Feil svar som er en vanlig misoppfatning⟧
+    en: ⟦Wrong answer that is a common misconception⟧
+  mcWrongFeedback:
+    nn: ⟦Forklar misoppfatninga⟧
+    nb: ⟦Forklar misoppfatningen⟧
+    en: ⟦Explain the misconception⟧
+  blanksTitle:
+    nn: ⟦Tittel på utfyllingsoppgåva⟧
+    nb: ⟦Tittel på utfyllingsoppgaven⟧
+    en: ⟦Title of the fill-in task⟧
+  blanksTask:
+    nn: ⟦Skriv kva studenten skal fylle inn⟧
+    nb: ⟦Skriv hva studenten skal fylle inn⟧
+    en: ⟦Write what the student should fill in⟧
+  blanksSentence:
+    nn: ⟦Skriv ei setning der studenten fyller inn omgrepet⟧
+    nb: ⟦Skriv en setning der studenten fyller inn begrepet⟧
+    en: ⟦Write a sentence in which the student fills in the concept⟧
+  blanksAnswer:
+    nn: ⟦omgrepet⟧
+    nb: ⟦begrepet⟧
+    en: ⟦the concept⟧
+  tfTitle:
+    nn: ⟦Tittel på påstanden⟧
+    nb: ⟦Tittel på påstanden⟧
+    en: ⟦Title of the statement⟧
+  tfStatement:
+    nn: ⟦Skriv ein påstand om omgrepet som er rett eller feil⟧
+    nb: ⟦Skriv en påstand om begrepet som er riktig eller feil⟧
+    en: ⟦Write a statement about the concept that is true or false⟧
+  tfFeedback:
+    nn: ⟦Forklar kvifor påstanden er rett eller feil⟧
+    nb: ⟦Forklar hvorfor påstanden er riktig eller feil⟧
+    en: ⟦Explain why the statement is true or false⟧
+  overallFeedback:
+    nn: ⟦Skriv kva studenten kan gjere vidare⟧
+    nb: ⟦Skriv hva studenten kan gjøre videre⟧
+    en: ⟦Write what the student can do next⟧

@@ -7,12 +7,17 @@
  *      tab), so the field may not exist yet; custom editors keep fields in their own places (UPSTREAM notes below).
  * Spec: PROD-003, UD-006, UD-021
  * Invariants:
- *   - It waits only while H5P is still building (no form yet, the deepest widget's library loading, no IV toolbar
- *     yet, a form it closed still sliding out, a request of BranchingScenario's editor unanswered), at most 20 s;
+ *   - It waits only while H5P is still building (no form yet, the deepest widget's library loading, a title's
+ *     metadata form not made yet, no IV toolbar yet, a form it closed still sliding out, a request of
+ *     BranchingScenario's editor unanswered), at most 20 s;
  *     once nothing loads, a path that leads no further (metadata, CoursePresentation's slides) gets one second.
  *   - Focus goes to a shown control that takes focus: the field's own (CKEditor's editable once it stands in for
  *     an Html field; a list's wrapper), else the closest part's found along the path, else `page.fallback()`;
  *     whenever it is not the field's own (the whole form never is), `page.notReached()` is called.
+ *   - A path that ends in `metadata.title` (the activity's, or the sub-content's the path leads to) focuses that title
+ *     (./editorFieldReveal.js `hvliRevealTitle`); a title that does not take focus yet is tried again within that
+ *     second; when the editor shows no title for it, focus goes to the closest part and `page.titleNotReached()`
+ *     says why, never silently.
  *   - A guided tour that shows only after the field was opened, and so keeps it inert, is pressed and the path is
  *     followed again (within the same 20 s).
  *   - The functions touch only the widgets and elements they are given.
@@ -27,7 +32,7 @@
  */
 'use strict';
 /* exported hvliGoToField */
-/* global hvliRevealField, hvliOpenAround -- from ./editorFieldReveal.js, loaded before this file */
+/* global hvliRevealField, hvliOpenAround, hvliRevealTitle -- from ./editorFieldReveal.js, loaded before this file */
 
 var HVLI_FOCUSABLE =
   'input:not([type=hidden]):not(:disabled),textarea:not(:disabled),select:not(:disabled),' +
@@ -109,25 +114,48 @@ function hvliStillBuilding(form, chain) {
   return typeof library === 'string' && library !== '-' && last.children === undefined;
 }
 
+/** True when the rest of a path names a metadata title (`metadata.title`), which H5P keeps outside the fields. */
+function hvliNamesTitle(rest) {
+  return rest.length === 2 && rest[0] === 'metadata' && rest[1] === 'title';
+}
+
+/** True while the metadata form holding a title is not made yet: H5P makes a sub-content's once its library loads. */
+function hvliTitleLoading(owner, form) {
+  // UPSTREAM: https://github.com/h5p/h5p-editor-php-library/blob/ab2daa18bd61b19e7f8729e22eec88f3b637a868/scripts/h5peditor-library.js
+  // `metadataForm` is unset until `loadLibrary`'s callback, and `null` there when the library turns metadata off.
+  return (owner === form || typeof owner.loadLibrary === 'function') && owner.metadataForm === undefined;
+}
+
 /** Follows `path` in the form `formOf()` gives, waiting while H5P builds it; focuses the field, or the closest part. */
 function hvliGoToField(formOf, path, page, tries, grace) {
   var form = formOf();
   var tokens = hvliFieldTokens(path);
   var found = form ? hvliFieldChain(form, tokens) : { widgets: [], used: 0 };
   var left = tries ?? HVLI_FIELD_WAIT.maxTries;
-  var building = hvliStillBuilding(form, found.widgets);
+  var title = form && hvliNamesTitle(tokens.slice(found.used));
+  var owner = found.widgets.length > 0 ? found.widgets.at(-1) : form;
+  var building = hvliStillBuilding(form, found.widgets) || Boolean(title && hvliTitleLoading(owner, form));
   var graceLeft = building ? HVLI_FIELD_WAIT.graceTries : (grace ?? HVLI_FIELD_WAIT.graceTries) - 1;
   var wait = () => setTimeout(hvliGoToField, HVLI_FIELD_WAIT.stepMs, formOf, path, page, left - 1, graceLeft);
-  if ((building || found.used < tokens.length) && left > 0 && graceLeft > 0) return wait();
-  var target = hvliRevealField(form, found.widgets, tokens.slice(found.used));
+  if ((building || (found.used < tokens.length && !title)) && left > 0 && graceLeft > 0) return wait();
+  var target = hvliRevealField(form, found.widgets, title ? [] : tokens.slice(found.used));
   if (target.again && left > 0) return wait();
   // WHY: H5P opens a group 100 ms after `expand()`, and a field in a closed group cannot take focus.
   setTimeout(function () {
+    var titled = title ? hvliRevealTitle(owner) : '';
+    if (titled === 'focused') return;
+    // WHY: on a busy machine H5P may not show the title yet when the timer fires; the path is followed again first.
+    if (titled === 'missed' && left > 0 && graceLeft > 0) return wait();
     var at = target.scopes.length - 1;
     while (at >= 0 && !hvliFocusIn(target.scopes[at])) at -= 1;
+    if (titled === 'none') {
+      if (at < 0) page.fallback().focus();
+      return page.titleNotReached();
+    }
     // WHY: a tour that showed after the reveal keeps the field inert; once it is pressed, the path is followed again.
     if (at < target.scopes.length - 1 && left > 0 && hvliOpenAround(target.scopes.at(-1))) return wait();
     if (at < 0) page.fallback().focus();
-    if (at < 0 || at < target.scopes.length - 1 || !target.complete) page.notReached();
+    var partial = at < 0 || at < target.scopes.length - 1 || !target.complete;
+    if (titled === 'missed' || partial) page.notReached();
   }, 150);
 }

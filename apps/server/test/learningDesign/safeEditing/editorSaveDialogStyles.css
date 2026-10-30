@@ -1,0 +1,48 @@
+/*
+ * editorSaveDialogStyles — probe P7's stand-in for the save choice dialog's rules (D-093): the box and the backdrop
+ * in design tokens, linked as a same-origin stylesheet.
+ *
+ * Why: the editor page already styles plain buttons and the two-tone focus ring (serverPages.css and the H5P theme),
+ *      but not a <dialog>: the browser's own rules give it CanvasText on Canvas, a medium black border and a 10 %
+ *      black backdrop. `::backdrop` cannot be set from a style attribute, so it needs a stylesheet; this file shows
+ *      that a linked one works under the page's `style-src` and that `::backdrop` sees the tokens on :root.
+ * Spec: PROD-013, UD-001, UD-002, UD-004
+ * Invariants:
+ *   - Values are design tokens only (UD-001); the backdrop is decoration with no text on it, as in apps/web's
+ *     Dialog.tsx (ink at 60 % opacity).
+ *   - The buttons keep serverPages.css's look; the two-tone ring also shows on plain :focus (UD-004).
+ * Collaborators: ./editorSaveDialogClient.js (the probe's own class, apart from the production dialog's rules in
+ *   apps/server/src/http/pages/assets/editorSaveChoice.css), ./editorSaveDialogPage.ts (serves and links this file).
+ * Tests: ./editorSaveDialogLook.browser.int.test.ts
+ */
+dialog.hvl-probe-save-choice {
+  box-sizing: border-box;
+  max-width: min(var(--hvl-measure), calc(100% - 2 * var(--hvl-space-m)));
+  padding: var(--hvl-space-l);
+  border: 2px solid var(--hvl-primary-dark);
+  border-radius: 4px;
+  background: var(--hvl-surface);
+  color: var(--hvl-ink);
+}
+
+dialog.hvl-probe-save-choice::backdrop {
+  background: var(--hvl-ink);
+  opacity: 0.6;
+}
+
+dialog.hvl-probe-save-choice h2 {
+  margin-top: 0;
+}
+
+/* A11Y: after a mouse click on «Lagre», Chromium gives the programmatically focused «Avbryt» no :focus-visible and
+   ignores focus({ focusVisible: true }), so the dialog's buttons show the ring on :focus. WCAG 2.4.7 is already met
+   by :focus-visible (the ring appears once the keyboard is used); this rule goes further, an open choice (P7). */
+dialog.hvl-probe-save-choice button:focus {
+  outline: var(--hvl-focus-outline);
+  outline-offset: var(--hvl-focus-offset);
+  box-shadow: var(--hvl-focus-shadow);
+}
+
+dialog.hvl-probe-save-choice button {
+  margin: var(--hvl-space-xs) var(--hvl-space-s) var(--hvl-space-xs) 0;
+}

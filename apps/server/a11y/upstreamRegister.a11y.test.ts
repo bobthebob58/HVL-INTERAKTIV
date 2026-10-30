@@ -3,13 +3,22 @@
  * entry whose markup pattern also matches a bare element, or one with a class or id H5P never writes (also one that
  * only shares the prefix the pattern names), and whose selector (if any) does not rule that element out, would cover
  * any new violation of its rule on the pages it applies to, so the register could hide a new problem (D-080). These
- * are checks of data, so they run without a browser or services.
+ * are checks of data, so they run without a browser or services. Each recorded English text must still be in the
+ * code of the pinned library that writes it, so an entry goes when a library update fixes it (D-080).
  *
- * Spec: UD-030
+ * Spec: UD-030, UD-010
  */
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { PINNED_LIBRARIES_DIR } from '../src/learningDesign/content/installedLibraries.js';
+import { describeWithRealPackages } from '../test/support/realPackages.js';
 import { matchesAnyElement } from './support/upstreamFindings.js';
-import { UPSTREAM_FINDINGS, type UpstreamFinding } from './support/upstreamRegister.js';
+import {
+  UPSTREAM_ENGLISH_TEXTS,
+  UPSTREAM_FINDINGS,
+  type UpstreamFinding,
+} from './support/upstreamRegister.js';
 
 const ENTRY: Omit<UpstreamFinding, 'html'> = {
   ruleId: 'color-contrast',
@@ -55,4 +64,23 @@ describe('[UD-030] the register of recorded H5P upstream problems', () => {
     expect(verdicts(catchAll)).toEqual(catchAll.map(() => true));
     expect(verdicts(named)).toEqual(named.map(() => false));
   });
+});
+
+/** The text of every script file of an installed library folder. */
+const scriptsOf = (folder: string): string =>
+  readdirSync(folder, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.js'))
+    .map((entry) => readFileSync(join(entry.parentPath, entry.name), 'utf8'))
+    .join('\n');
+
+describeWithRealPackages('[UD-010] the recorded English texts of the pinned libraries', () => {
+  it.each(UPSTREAM_ENGLISH_TEXTS.map((entry) => [entry.text, entry] as const))(
+    '[UD-010] "%s" is still written by the pinned library, so its entry still holds',
+    (text, entry) => {
+      // Act
+      const scripts = scriptsOf(join(PINNED_LIBRARIES_DIR, entry.library.replace(' ', '-')));
+      // Assert
+      expect(scripts).toContain(text);
+    },
+  );
 });

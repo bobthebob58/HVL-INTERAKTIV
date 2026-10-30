@@ -1,0 +1,15 @@
+{
+  "description": "An interactive video made from a pattern before the author added the video: no file, and a file entry with an empty path.",
+  "mainLibrary": "H5P.InteractiveVideo 1.28",
+  "metadata": { "title": "Fotosyntesen", "defaultLanguage": "nn" },
+  "params": {
+    "interactiveVideo": {
+      "video": {
+        "startScreenOptions": { "title": "Fotosyntesen" },
+        "files": [{ "path": "", "mime": "video/mp4" }]
+      },
+      "assets": { "interactions": [] }
+    }
+  },
+  "expected": [{ "path": "interactiveVideo.video.files", "message": "V-PLACEHOLDER.videoMissing" }]
+}

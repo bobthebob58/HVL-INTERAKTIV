@@ -77,6 +77,7 @@ const actorFor = (c: AccessCell & { launched: boolean }): HvlH5pActor => ({
   locale: 'nn',
   hvlMember: true,
   feideAuthenticated: false,
+  studentAuthor: false,
   ltiLaunchContentIds: c.launched ? [CONTENT_ID] : [],
   ...(c.request ? { dataSubjectRequest: REQUEST } : {}),
 });
@@ -87,6 +88,7 @@ const factsFor = (c: Cell): ContentFacts => ({
   coAuthorIds: c.relation === 'co-author' ? [SOMEONE_ELSE, ME] : [SOMEONE_ELSE],
   status: c.status,
   visibility: c.visibility,
+  bankListed: false,
 });
 
 /** Runs one check against an in-memory repository and returns the decision and what was audited. */

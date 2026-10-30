@@ -9,12 +9,16 @@
  *      conformance report and for the upstream issues still to be filed (S6, D-080); PROGRESS summarises it.
  *      D-080: what a local, attribute-only change removes without changing H5P's behaviour is repaired at run time
  *      by packages/hvl-h5p-theme/src/a11yRepairs.js (CoursePresentation's progress bar, DragText's drop zones,
- *      H5P.Question's explanation title) and src/a11yEditorRepairs.js (the paste button, the score-range "to" field,
- *      the vertical tabs, the editor-mode switch, the hotspot picker image and the hub's content-type list) and is no
- *      longer listed here. The theme (hvl-h5p-theme.css) sets the text fill of BranchingScenario's controls under
- *      forced colours, so axe's -webkit-text-fill-color reading no longer reports them, and a11yEditorRepairs.js
- *      makes the parts the guided tour fades (`.tour-fade`) inert while it is open, so the tour adds no finding.
- * Spec: UD-030, UD-011, UD-012
+ *      H5P.Question's explanation title, BranchingScenario's default start and end pictures, which have no alt
+ *      (D-080 amendment of 2026-10-28; still to be reported upstream for UD-040)) and src/a11yEditorRepairs.js (the
+ *      paste button, the score-range "to" field, the vertical tabs, the editor-mode switch, the hotspot picker image
+ *      and the hub's content-type list) and is no longer listed here. The theme (hvl-h5p-theme.css) sets the text
+ *      fill of BranchingScenario's controls under forced colours, so axe's -webkit-text-fill-color reading no longer
+ *      reports them, and a11yEditorRepairs.js makes the parts the guided tour fades (`.tour-fade`) inert while it is
+ *      open, so the tour adds no finding.
+ *      A second list, `UPSTREAM_ENGLISH_TEXTS`, records what axe cannot see: learner-facing text a library writes in
+ *      English whatever the activity's language (D-080 amendment of 2026-10-28), for UD-040.
+ * Spec: UD-030, UD-011, UD-012, UD-010
  * SPEC-DEVIATION: D-080 — an entry here is printed in every run but does not fail CI, although UD-030 fails it on
  *   any serious or critical violation.
  * Invariants:
@@ -82,5 +86,39 @@ export const UPSTREAM_FINDINGS: readonly UpstreamFinding[] = [
       'and h5p-hub-client.css lays the tabs out by [role=tab] on the <li> and [role=tab] > a, so moving the role ' +
       'unstyles them and dropping the link drops Enter; a content type is a role="button" <li> (Space uses it) ' +
       'holding its own "Details" button, and no attribute separates the two without removing one control',
+  },
+];
+
+/** Learner-facing text a pinned library writes in English in every language, which axe cannot see (WCAG 3.1.2). */
+export interface UpstreamEnglishText {
+  /** The library, as `H5P.Name major.minor`, that writes it. */
+  readonly library: string;
+  /** The text exactly as the library writes it. */
+  readonly text: string;
+  /** When a learner sees it. */
+  readonly shownWhen: string;
+  /** Why it cannot be translated or repaired here, and what keeps it from learners. */
+  readonly why: string;
+}
+
+/** English texts of the pinned libraries that no language file reaches (D-080 amendment of 2026-10-28). */
+export const UPSTREAM_ENGLISH_TEXTS: readonly UpstreamEnglishText[] = [
+  // UPSTREAM: https://github.com/h5p/h5p-video/blob/af25aef6e9eb8f84db037d564d82494c7d44e267/scripts/video.js (1.6.80). No issue filed yet (SPEC-DEVIATION: D-080 amendment DOC-13); the entry goes when a pinned H5P.Video keeps the l10n it is given.
+  {
+    library: 'H5P.Video 1.6',
+    text: 'Video source is missing.',
+    shownWhen: 'an InteractiveVideo (or another type holding an H5P.Video) has no video source',
+    why:
+      'H5P.Video merges its English defaults over the l10n it is given ($.extend), so no translation reaches it; ' +
+      'V-PLACEHOLDER reports the missing video as an error, so such an activity is not published by mistake',
+  },
+  // UPSTREAM: https://github.com/h5p/h5p-image-hotspots/blob/adc855f17f2c86e8741c9299f6d834f8fabc7417/scripts/image-hotspots.js (1.11.6). No issue filed yet (SPEC-DEVIATION: D-080 amendment DOC-13); the entry goes when a pinned ImageHotspots takes the text from its semantics.
+  {
+    library: 'H5P.ImageHotspots 1.11',
+    text: 'Missing required background image',
+    shownWhen: 'an ImageHotspots has no background image',
+    why:
+      'the text is written into the markup in English and has no field in the semantics or language files; ' +
+      'V-PLACEHOLDER reports the missing image as an error, so such an activity is not published by mistake',
   },
 ];

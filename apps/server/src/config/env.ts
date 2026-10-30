@@ -3,16 +3,19 @@
  *
  * Why: a missing or malformed setting should stop the server at boot with a message that names the
  *      variable, rather than fail later inside a request. Every variable is documented in .env.example.
- * Spec: DOC-008
+ * Spec: DOC-008, MAPPE-003, MAPPE-004
  * Invariants:
  *   - Every variable read anywhere in the server is declared here, one per line as `NAME: z…`
  *     (doc-lint compares this list with .env.example).
  *   - Error messages name variables, never their values (values can be secrets).
  *   - With NODE_ENV=production, the checks in ./productionChecks.ts also apply.
+ *   - The portfolio's minimum group size is never below 3 (INS-006, D-095); the PDF export runs 1–8 renders at a
+ *     time, and its sandbox is on unless development turns it off (D-096).
  * Collaborators: apps/server/.env.example, ./envParsers.ts, ./productionChecks.ts,
  *   ../privacy/pseudonymSecrets.ts, ../h5p/H5pConfigFactory.ts.
- * Tests: apps/server/test/config/env.test.ts
+ * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/studioEnv.test.ts
  */
+import { isAbsolute } from 'node:path';
 import { z } from 'zod';
 import { parsePseudonymSecrets } from '../privacy/pseudonymSecrets.js';
 import {
@@ -81,6 +84,13 @@ export const envSchema = z.object({
   IDENTITY_HASH_KEYS: z.string().transform(toKeyring),
   DATA_ENCRYPTION_KEYS: z.string().transform(toKeyring),
   URL_SIGNING_KEYS: z.string().transform(toKeyring),
+  MIN_GROUP_SIZE: z.coerce.number().int().min(3, 'must be an integer of at least 3 (INS-006)').default(5),
+  PDF_BROWSER_EXECUTABLE: z.string().refine(isAbsolute, 'must be an absolute path').optional(),
+  PDF_MAX_CONCURRENCY: z.coerce.number().int().min(1).max(8).default(2),
+  PDF_ALLOW_NO_SANDBOX: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 
 /** The parsed configuration. */

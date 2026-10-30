@@ -27,6 +27,7 @@ const actorFor = (role: H5pRole): HvlH5pActor => ({
   locale: 'nn',
   hvlMember: true,
   feideAuthenticated: true,
+  studentAuthor: false,
   ltiLaunchContentIds: ['0192f0c4-0000-7000-8000-00000000c001'],
   dataSubjectRequest: { requestId: 'DSR-2026-0001', learnerKey: 'named-learner-key' },
 });

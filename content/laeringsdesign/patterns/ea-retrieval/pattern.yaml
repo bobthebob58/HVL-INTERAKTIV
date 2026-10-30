@@ -1,0 +1,253 @@
+# content/laeringsdesign/patterns/ea-retrieval/pattern.yaml — «Repetisjonssett» (spec 04 §4).
+# DRAFT for ALU and the pilot teachers to review (open question Q17); texts, times and choices may change.
+# How to edit: content/laeringsdesign/README.md, section "patterns/". Checked by npm run content:check.
+# Ten multiple-choice questions on one concept, from definition to transfer, each option with its own feedback.
+# The pass mark of 80 % only chooses which overall feedback is shown; retry and «Vis svar» are always there.
+id: ea-retrieval
+phases:
+  - etterarbeid
+contentTypes:
+  - H5P.QuestionSet
+name:
+  nn: Repetisjonssett
+  nb: Repetisjonssett
+  en: Retrieval set
+purpose:
+  nn: Ti fleirvalsspørsmål om eitt omgrep, med tilbakemelding på kvart svar, som kan takast så mange gonger studenten vil.
+  nb: Ti flervalgsspørsmål om ett begrep, med tilbakemelding på hvert svar, som kan tas så mange ganger studenten vil.
+  en: Ten multiple-choice questions on one concept, with feedback on every answer, which students can take as often as they like.
+whenToUse:
+  nn: >-
+    Etter ei samling eller ein modul, når studentane skal hente fram og feste eitt sentralt omgrep. Gje studentane
+    beskjed om å ta settet fleire gonger, med nokre dagar mellom.
+  nb: >-
+    Etter en samling eller en modul, når studentene skal hente fram og feste ett sentralt begrep. Gi studentene
+    beskjed om å ta settet flere ganger, med noen dager mellom.
+  en: >-
+    After a session or a module, when students are to retrieve and consolidate one central concept. Tell the
+    students to take the set several times, a few days apart.
+example:
+  nn: >-
+    Ti spørsmål om omgrepet «informert samtykke» etter ei samling i helserett, frå kva omgrepet betyr til korleis
+    det blir brukt i nye pasientsituasjonar.
+  nb: >-
+    Ti spørsmål om begrepet «informert samtykke» etter en samling i helserett, fra hva begrepet betyr til hvordan
+    det brukes i nye pasientsituasjoner.
+  en: >-
+    Ten questions on the concept of "informed consent" after a session in health law, from what the concept means
+    to how it applies in new patient situations.
+whyItWorks:
+  nn: >-
+    Å hente fram det ein har lært, styrkjer minnet meir enn å lese det om igjen [@roediger2006], og øvingstesting
+    er blant dei læringsstrategiane som har best dokumentert effekt [@dunlosky2013]. Effekten blir størst når
+    øvinga blir spreidd over tid, så settet bør takast igjen etter nokre dagar [@cepeda2006]. Tilbakemelding på
+    kvart svaralternativ forklarer kvifor eit svar er feil, og hjelper meir enn berre rett eller feil
+    [@shute2008]. Når spørsmåla speglar læringsutbyttet i emnet, viser resultata om studentane når det
+    [@biggs1996].
+  nb: >-
+    Å hente fram det man har lært, styrker hukommelsen mer enn å lese det om igjen [@roediger2006], og
+    øvingstesting er blant de læringsstrategiene som har best dokumentert effekt [@dunlosky2013]. Effekten blir
+    størst når øvingen blir spredt over tid, så settet bør tas igjen etter noen dager [@cepeda2006].
+    Tilbakemelding på hvert svaralternativ forklarer hvorfor et svar er feil, og hjelper mer enn bare riktig eller
+    feil [@shute2008]. Når spørsmålene speiler læringsutbyttet i emnet, viser resultatene om studentene når det
+    [@biggs1996].
+  en: >-
+    Retrieving what one has learnt strengthens memory more than reading it again [@roediger2006], and practice
+    testing is among the learning strategies with the best documented effect [@dunlosky2013]. The effect is
+    greatest when practice is spread over time, so the set should be taken again after a few days [@cepeda2006].
+    Feedback on every option explains why an answer is wrong, which helps more than just right or wrong
+    [@shute2008]. When the questions reflect the course's learning outcomes, the results show whether students
+    reach them [@biggs1996].
+buildMinutes: 45
+studentMinutes: 15
+texts:
+  title:
+    nn: ⟦Gje settet ein tittel som namngjev omgrepet det øver på⟧
+    nb: ⟦Gi settet en tittel som navngir begrepet det øver på⟧
+    en: ⟦Give the set a title that names the concept it practises⟧
+  introTitle:
+    nn: ⟦Namnet på omgrepet settet øver på⟧
+    nb: ⟦Navnet på begrepet settet øver på⟧
+    en: ⟦Name of the concept the set practises⟧
+  introText:
+    nn: >-
+      ⟦Skriv kva omgrep settet øver på. Fortel at det er ei øving som kan takast så mange gonger ein vil, og at
+      80 % rette er eit teikn på at omgrepet sit, ikkje eit krav⟧
+    nb: >-
+      ⟦Skriv hvilket begrep settet øver på. Fortell at det er en øvelse som kan tas så mange ganger man vil, og at
+      80 % riktige er et tegn på at begrepet sitter, ikke et krav⟧
+    en: >-
+      ⟦Write which concept the set practises. Say that it is practice that can be taken as many times as one
+      likes, and that 80% correct is a sign that the concept has stuck, not a requirement⟧
+  question1Title:
+    nn: Spørsmål 1
+    nb: Spørsmål 1
+    en: Question 1
+  question1:
+    nn: '⟦Spørsmål 1: be studenten velje den mest presise forklaringa av omgrepet⟧'
+    nb: '⟦Spørsmål 1: be studenten velge den mest presise forklaringen av begrepet⟧'
+    en: '⟦Question 1: ask the student to choose the most precise explanation of the concept⟧'
+  question2Title:
+    nn: Spørsmål 2
+    nb: Spørsmål 2
+    en: Question 2
+  question2:
+    nn: '⟦Spørsmål 2: be studenten velje eit døme på omgrepet⟧'
+    nb: '⟦Spørsmål 2: be studenten velge et eksempel på begrepet⟧'
+    en: '⟦Question 2: ask the student to choose an example of the concept⟧'
+  question3Title:
+    nn: Spørsmål 3
+    nb: Spørsmål 3
+    en: Question 3
+  question3:
+    nn: '⟦Spørsmål 3: be studenten finne det som ikkje er eit døme på omgrepet⟧'
+    nb: '⟦Spørsmål 3: be studenten finne det som ikke er et eksempel på begrepet⟧'
+    en: '⟦Question 3: ask the student to find what is not an example of the concept⟧'
+  question4Title:
+    nn: Spørsmål 4
+    nb: Spørsmål 4
+    en: Question 4
+  question4:
+    nn: '⟦Spørsmål 4: be studenten skilje omgrepet frå eit omgrep som liknar⟧'
+    nb: '⟦Spørsmål 4: be studenten skille begrepet fra et begrep som ligner⟧'
+    en: '⟦Question 4: ask the student to tell the concept apart from a similar one⟧'
+  question5Title:
+    nn: Spørsmål 5
+    nb: Spørsmål 5
+    en: Question 5
+  question5:
+    nn: '⟦Spørsmål 5: beskriv ein situasjon frå praksis, og spør kva omgrepet seier om han⟧'
+    nb: '⟦Spørsmål 5: beskriv en situasjon fra praksis, og spør hva begrepet sier om den⟧'
+    en: '⟦Question 5: describe a situation from practice, and ask what the concept says about it⟧'
+  question6Title:
+    nn: Spørsmål 6
+    nb: Spørsmål 6
+    en: Question 6
+  question6:
+    nn: '⟦Spørsmål 6: spør kva som følgjer av omgrepet i ein konkret situasjon⟧'
+    nb: '⟦Spørsmål 6: spør hva som følger av begrepet i en konkret situasjon⟧'
+    en: '⟦Question 6: ask what follows from the concept in a concrete situation⟧'
+  question7Title:
+    nn: Spørsmål 7
+    nb: Spørsmål 7
+    en: Question 7
+  question7:
+    nn: '⟦Spørsmål 7: bygg spørsmålet rundt ei vanleg misoppfatning av omgrepet⟧'
+    nb: '⟦Spørsmål 7: bygg spørsmålet rundt en vanlig misoppfatning av begrepet⟧'
+    en: '⟦Question 7: build the question around a common misconception of the concept⟧'
+  question8Title:
+    nn: Spørsmål 8
+    nb: Spørsmål 8
+    en: Question 8
+  question8:
+    nn: '⟦Spørsmål 8: be studenten knyte omgrepet til eit anna omgrep i emnet⟧'
+    nb: '⟦Spørsmål 8: be studenten knytte begrepet til et annet begrep i emnet⟧'
+    en: '⟦Question 8: ask the student to link the concept to another concept in the course⟧'
+  question9Title:
+    nn: Spørsmål 9
+    nb: Spørsmål 9
+    en: Question 9
+  question9:
+    nn: '⟦Spørsmål 9: gje to eller tre tiltak, og spør kva for eitt som byggjer best på omgrepet⟧'
+    nb: '⟦Spørsmål 9: gi to eller tre tiltak, og spør hvilket som bygger best på begrepet⟧'
+    en: '⟦Question 9: give two or three courses of action, and ask which one builds best on the concept⟧'
+  question10Title:
+    nn: Spørsmål 10
+    nb: Spørsmål 10
+    en: Question 10
+  question10:
+    nn: '⟦Spørsmål 10: be studenten bruke omgrepet i ein situasjon som ikkje var med i undervisninga⟧'
+    nb: '⟦Spørsmål 10: be studenten bruke begrepet i en situasjon som ikke var med i undervisningen⟧'
+    en: '⟦Question 10: ask the student to use the concept in a situation the teaching did not cover⟧'
+  correctAnswer:
+    nn: ⟦Skriv det rette svaret⟧
+    nb: ⟦Skriv det riktige svaret⟧
+    en: ⟦Write the correct answer⟧
+  correctFeedback:
+    nn: ⟦Forklar kvifor svaret er rett, med fagleg grunngjeving⟧
+    nb: ⟦Forklar hvorfor svaret er riktig, med faglig begrunnelse⟧
+    en: ⟦Explain why the answer is correct, with the subject's reasons⟧
+  wrongAnswer1:
+    nn: ⟦Skriv eit feil svar som byggjer på ei vanleg misoppfatning⟧
+    nb: ⟦Skriv et feil svar som bygger på en vanlig misoppfatning⟧
+    en: ⟦Write a wrong answer that rests on a common misconception⟧
+  wrongAnswer1Feedback:
+    nn: ⟦Forklar kva misoppfatning dette svaret byggjer på, og kvifor ho ikkje held⟧
+    nb: ⟦Forklar hvilken misoppfatning dette svaret bygger på, og hvorfor den ikke holder⟧
+    en: ⟦Explain which misconception this answer rests on, and why it does not hold⟧
+  wrongAnswer2:
+    nn: ⟦Skriv eit feil svar som liknar det rette, men manglar noko viktig⟧
+    nb: ⟦Skriv et feil svar som ligner det riktige, men mangler noe viktig⟧
+    en: ⟦Write a wrong answer that resembles the correct one but misses something important⟧
+  wrongAnswer2Feedback:
+    nn: ⟦Forklar kva som manglar i dette svaret, og kva som gjer det rette svaret rett⟧
+    nb: ⟦Forklar hva som mangler i dette svaret, og hva som gjør det riktige svaret riktig⟧
+    en: ⟦Explain what this answer misses, and what makes the correct answer correct⟧
+  feedbackBelowPassMark:
+    nn: '⟦Under 80 %: skriv kva studenten bør repetere, og oppmod til å prøve igjen om nokre dagar⟧'
+    nb: '⟦Under 80 %: skriv hva studenten bør repetere, og oppfordre til å prøve igjen om noen dager⟧'
+    en: '⟦Below 80%: write what the student should revise, and encourage another try in a few days⟧'
+  feedbackFromPassMark:
+    nn: '⟦80 % eller meir: stadfest at omgrepet sit, og foreslå å ta settet igjen om ei veke⟧'
+    nb: '⟦80 % eller mer: bekreft at begrepet sitter, og foreslå å ta settet igjen om en uke⟧'
+    en: '⟦80% or more: confirm that the concept has stuck, and suggest taking the set again in a week⟧'
+  previousLabel:
+    nn: Førre
+    nb: Forrige
+    en: Previous
+  nextLabel:
+    nn: Neste
+    nb: Neste
+    en: Next
+  setInstruction:
+    nn: Vel kva spørsmål som skal visast
+    nb: Velg hvilket spørsmål som skal vises
+    en: Choose question to display
+  setNoQuestion:
+    nn: Det er ikkje lagt til noko spørsmål
+    nb: Det er ikke lagt til noe spørsmål
+    en: No question has been added
+  setResults:
+    nn: Resultat
+    nb: Resultat
+    en: Results
+  setAmountCorrect:
+    nn: '@finals av @totals rette'
+    nb: '@finals av @totals riktige'
+    en: '@finals of @totals correct'
+  setScoreHeader:
+    nn: Poeng
+    nb: Poeng
+    en: Score
+  submitButton:
+    nn: Send inn
+    nb: Send inn
+    en: Submit
+  readFeedback:
+    nn: Les tilbakemeldinga
+    nb: Les tilbakemeldingen
+    en: Read feedback
+  correctAnswerLabel:
+    nn: Rett svar
+    nb: Riktig svar
+    en: Correct answer
+  scoreBarLabel:
+    nn: Du fekk :num av :total poeng
+    nb: Du fikk :num av :total poeng
+    en: You got :num out of :total points
+  a11yCheck:
+    nn: Sjekk svara. Svara blir merkte som rette, feil eller utan svar.
+    nb: Sjekk svarene. Svarene blir merket som riktige, feil eller ubesvarte.
+    en: Check the answers. The responses will be marked as correct, incorrect, or unanswered.
+  a11yShowSolution:
+    nn: Vis svaret. Oppgåva blir merkt med det rette svaret.
+    nb: Vis svaret. Oppgaven blir merket med det riktige svaret.
+    en: Show the solution. The task will be marked with its correct solution.
+  a11yRetry:
+    nn: Prøv igjen. Alle svara blir nullstilte, og oppgåva startar på nytt.
+    nb: Prøv igjen. Alle svarene blir nullstilt, og oppgaven starter på nytt.
+    en: Retry the task. Reset all responses and start the task over again.
+  confirmCheckHeader:
+    nn: Ferdig?
+    nb: Ferdig?
+    en: Finish?

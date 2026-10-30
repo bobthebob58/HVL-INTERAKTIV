@@ -1,0 +1,194 @@
+{
+  "library": "H5P.BranchingScenario 1.10",
+  "metadataTitle": "{{title}}",
+  "params": {
+    "branchingScenario": {
+      "title": "{{caseTitle}}",
+      "startScreen": {
+        "startScreenTitle": "<p>{{caseTitle}}</p>",
+        "startScreenSubtitle": "<p>{{caseIntro}}</p>",
+        "startScreenAltText": "{{startImageAlt}}"
+      },
+      "content": [
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>{{introText}}</p>"
+            },
+            "metadata": {
+              "title": "{{introTitle}}",
+              "license": "U"
+            }
+          },
+          "showContentTitle": true,
+          "proceedButtonText": "{{proceed}}",
+          "nextContentId": 1,
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>{{decision1Question}}</p>",
+                "alternatives": [
+                  {
+                    "text": "{{choiceOnward}}",
+                    "nextContentId": 2,
+                    "feedback": {
+                      "title": "<p>{{feedbackTitle}}</p>",
+                      "subtitle": "<p>{{feedbackText}}</p>"
+                    }
+                  },
+                  {
+                    "text": "{{choiceDetour}}",
+                    "nextContentId": 4,
+                    "feedback": {
+                      "title": "<p>{{feedbackTitle}}</p>",
+                      "subtitle": "<p>{{feedbackText}}</p>"
+                    }
+                  }
+                ]
+              }
+            },
+            "metadata": {
+              "title": "{{decision1Title}}",
+              "license": "U"
+            }
+          },
+          "showContentTitle": false,
+          "proceedButtonText": "{{proceed}}",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>{{decision2Question}}</p>",
+                "alternatives": [
+                  {
+                    "text": "{{choiceOnward}}",
+                    "nextContentId": 3,
+                    "feedback": {
+                      "title": "<p>{{feedbackTitle}}</p>",
+                      "subtitle": "<p>{{feedbackText}}</p>"
+                    }
+                  },
+                  {
+                    "text": "{{choiceDetour}}",
+                    "nextContentId": 5,
+                    "feedback": {
+                      "title": "<p>{{feedbackTitle}}</p>",
+                      "subtitle": "<p>{{feedbackText}}</p>"
+                    }
+                  }
+                ]
+              }
+            },
+            "metadata": {
+              "title": "{{decision2Title}}",
+              "license": "U"
+            }
+          },
+          "showContentTitle": false,
+          "proceedButtonText": "{{proceed}}",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.BranchingQuestion 1.0",
+            "params": {
+              "branchingQuestion": {
+                "question": "<p>{{decision3Question}}</p>",
+                "alternatives": [
+                  {
+                    "text": "{{choiceEnding1}}",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>{{ending1Title}}</p>",
+                      "subtitle": "<p>{{endingReflection}}</p>",
+                      "endScreenScore": 10
+                    }
+                  },
+                  {
+                    "text": "{{choiceEnding2}}",
+                    "nextContentId": -1,
+                    "feedback": {
+                      "title": "<p>{{ending2Title}}</p>",
+                      "subtitle": "<p>{{endingReflection}}</p>",
+                      "endScreenScore": 10
+                    }
+                  }
+                ]
+              }
+            },
+            "metadata": {
+              "title": "{{decision3Title}}",
+              "license": "U"
+            }
+          },
+          "showContentTitle": false,
+          "proceedButtonText": "{{proceed}}",
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>{{consequenceText}}</p>"
+            },
+            "metadata": {
+              "title": "{{consequenceTitle}}",
+              "license": "U"
+            }
+          },
+          "showContentTitle": true,
+          "proceedButtonText": "{{tryDecisionAgain}}",
+          "nextContentId": 1,
+          "feedback": {}
+        },
+        {
+          "type": {
+            "library": "H5P.AdvancedText 1.1",
+            "params": {
+              "text": "<p>{{consequenceText}}</p>"
+            },
+            "metadata": {
+              "title": "{{consequenceTitle}}",
+              "license": "U"
+            }
+          },
+          "showContentTitle": true,
+          "proceedButtonText": "{{tryDecisionAgain}}",
+          "nextContentId": 2,
+          "feedback": {}
+        }
+      ],
+      "endScreens": [
+        {
+          "endScreenTitle": "<p>{{endTitle}}</p>",
+          "endScreenSubtitle": "<p>{{endingReflection}}</p>",
+          "endScreenScore": 10,
+          "contentId": -1
+        }
+      ],
+      "scoringOptionGroup": {
+        "scoringOption": "static-end-score"
+      },
+      "behaviour": {
+        "enableBackwardsNavigation": true,
+        "forceContentFinished": false
+      },
+      "l10n": {
+        "startScreenButtonText": "{{startButton}}",
+        "endScreenButtonText": "{{restartButton}}",
+        "backButtonText": "{{backButton}}",
+        "disableProceedButtonText": "{{disabledProceed}}",
+        "replayButtonText": "{{replayVideo}}",
+        "fullscreenAria": "{{fullscreen}}"
+      }
+    }
+  }
+}

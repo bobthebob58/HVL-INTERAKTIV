@@ -15,15 +15,16 @@
  *     process, so suites that sign in with them run one at a time (the e2e and a11y configs run files in turn).
  *   - With `runAuthor`, the mock Feide's `author` is new in this run (./runFeideAuthor.ts), so `close` removes it.
  *   - Every log line is kept in `logs` so tests can prove that no token or personal value was logged.
- * Collaborators: ../../src/server/createApp.ts, ../../../../tools/mock-platform/mockPlatform.mjs, ./services.ts,
- *   ./runFeideAuthor.ts.
+ *   - The studio content is the repository's `content/`, loaded as main.ts loads it, unless a test passes its own
+ *     (e.g. ./renamedPhaseLabels.ts); `close` closes the studio's services as main.ts's shutdown does.
+ * Collaborators: ../../src/server/createApp.ts, ../../src/server/studioServices.ts,
+ *   ../../../../tools/mock-platform/mockPlatform.mjs, ./services.ts, ./runFeideAuthor.ts, ./issuerScopedPlatforms.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts and the other users of `openAppTestbed`.
  */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { CreateBucketCommand } from '@aws-sdk/client-s3';
 import type { IContentMetadata } from '@lumieducation/h5p-server';
-import type { Provider } from 'ltijs';
 import { startMockPlatform, type MockPlatform } from '../../../../tools/mock-platform/mockPlatform.mjs';
 import { loadEnv, type Env } from '../../src/config/env.js';
 import { loadValidationContext } from '../../src/config/validationContext.js';
@@ -32,11 +33,14 @@ import { asAccountUser } from '../../src/h5p/HvlH5pUser.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
 import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
 import { createS3Client } from '../../src/infra/s3Client.js';
+import { loadStudioContent, type StudioContent } from '../../src/learningDesign/content/loadStudioContent.js';
 import { syncLtiPlatforms } from '../../src/lti/platforms/syncLtiPlatforms.js';
 import { createApp, type App } from '../../src/server/createApp.js';
+import { closeStudioServices } from '../../src/server/studioServices.js';
 import { createContentValidator } from '../../src/validation/validateContent.js';
 import type { WebApp } from '../../src/web/nextWebApp.js';
 import { capturedLogger } from './capturedLogger.js';
+import { scopedTo } from './issuerScopedPlatforms.js';
 import { uniqueName } from './services.js';
 import { accountOfFeideUser, feideSubjectHashes, giveRunAuthor } from './runFeideAuthor.js';
 import { removeTestBucket } from './storageFixtures.js';
@@ -66,28 +70,17 @@ export interface AppTestbed extends App {
   close(): Promise<void>;
 }
 
-type PlatformManager = Provider['platformManager'];
-
-/** The platform manager as the sync sees it: only the platforms of one issuer. */
-const scopedTo = (manager: PlatformManager, issuer: string): PlatformManager =>
-  new Proxy(manager, {
-    get(target, property, receiver) {
-      if (property === 'getPlatforms') return async () => target.getPlatforms({ url: issuer });
-      const value: unknown = Reflect.get(target, property, receiver);
-      return typeof value === 'function' ? value.bind(target) : value;
-    },
-  });
-
 /**
  * Starts the app, the mock Canvas and the mock Feide.
  * @param libraries - The installed H5P libraries (default: the HTTP test set).
  * @param options - `web`: a web app (a stub, or the built one from `loadWebApp`) mounted as main.ts mounts it;
- *   `runAuthor`: the mock Feide's `author` gets a Feide ID of this run (./runFeideAuthor.ts).
+ *   `runAuthor`: the mock Feide's `author` gets a Feide ID of this run (./runFeideAuthor.ts); `studioContent`: the
+ *   studio content instead of the repository's `content/`.
  * @returns The testbed.
  */
 export async function openAppTestbed(
   libraries: SyntheticLibrary[] = HTTP_TEST_LIBRARIES,
-  options: { web?: Pick<WebApp, 'dev' | 'handle'>; runAuthor?: boolean } = {},
+  options: { web?: Pick<WebApp, 'dev' | 'handle'>; runAuthor?: boolean; studioContent?: StudioContent } = {},
 ): Promise<AppTestbed> {
   const startedAt = new Date();
   let handler = (_req: IncomingMessage, res: ServerResponse): void => void res.writeHead(503).end();
@@ -120,6 +113,7 @@ export async function openAppTestbed(
     redis,
     h5p: runtime,
     validator,
+    studioContent: options.studioContent ?? loadStudioContent(),
     ...(options.web ? { web: options.web } : {}),
   });
   const platforms = scopedTo(built.lti.provider.platformManager, mock.canvas.issuer);
@@ -188,6 +182,7 @@ export async function openAppTestbed(
       await db.authAuditEvent.deleteMany({ where: { actorUserId: { in: users } } });
       await db.user.deleteMany({ where: { id: { in: users } } });
       for (const bucket of Object.values(buckets)) await removeTestBucket(s3, bucket);
+      await closeStudioServices(built.studio);
       await Promise.all([redis.quit(), db.$disconnect()]);
     },
   };

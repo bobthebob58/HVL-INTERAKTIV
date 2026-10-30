@@ -14,7 +14,7 @@ what is done, what is verified, and what is blocked.
 | S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | ✅ Gate passed (2026-10-23); HVL's Feide and Canvas values open (Q3, Q4) |
 | S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ✅ Gate passed (2026-10-24); HVL's token and logo confirmation (Q2), the DPO's review of the privacy text (Q6) and the first manual AT run open |
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
-| S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04 | ⬜ Not started |
+| S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §5–7; 05; 00 §6 | ⬜ Not started |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
@@ -282,22 +282,122 @@ text or API, removes or weakens no test (the test count does not drop) and keeps
 - [ ] Second round with smaller slices (about 2 000–3 000 lines per finder), the same two skeptics, until a round
       finds nothing new: the owner decides from these numbers
 
-## S5 — Læringsdesign studio ⬜
+## S5 — Læringsdesign studio ✅ (gate passed 2026-10-30; Q17 and the open items below)
 
 Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.nn.md`; ALU must confirm labels, criteria and limits.
 
-**Ask the owner at the start of S5, before planning** (owner's request, 2026-10-25):
-1. Per-session explainer: should every session end with a short explainer for the owner in Nynorsk (what was built,
-   why, how it fits together) and a five-question quiz, so the owner keeps up without reading code? The idea comes
-   from Geoffrey Litt's talk "Understanding is the new bottleneck" (explainers, a quiz before review, against
-   "cognitive debt"). If yes, propose the addition to the CLAUDE.md session protocol for the owner to approve.
-2. A second simplification round (S4+): recommended no, given round 1's numbers; the owner decides.
-3. Whether `main` exists on GitHub and CI has run (Q16); if it has run, read and fix its first results.
-- [ ] Studio routes and guide content (`PED-001`…`PED-003`); patterns and skeletons (`PED-010`, `PED-011`, `PROD-001`, `PROD-009`)
-- [ ] Metadata, planner, learner time estimate (`PED-030`…`PED-032`); co-authoring and content bank (`PROD-007`); versioning (`PROD-013`)
-- [ ] Mappe export in Markdown and tagged PDF (`MAPPE-001`…`MAPPE-004`)
-- [ ] Pilot evaluators from ALU and Pedagogisk akademi review the studio content (record the outcome here)
-- [ ] Gate: as in the Evaluator Guide §5, S5
+**Asked at the start of S5 (owner's answers, 2026-10-28):**
+1. Per-session explainer and quiz: not wanted; sessions keep their summaries in chat and here.
+2. A second simplification round (S4+): skipped, as recommended; the light check before the pilot stays in S6.
+3. GitHub CI (Q16): `main` exists, protected by a ruleset; pull request #8 ran the whole gate green on GitHub
+   (2026-10-26, about 25 minutes). The owner merges it. The actions moved to versions on Node 24 (checkout v7,
+   setup-node v7, cache v6, upload-artifact v7). Dependabot's 14 pull requests are closed; it now opens one grouped
+   monthly pull request per ecosystem for minor and patch updates and never a major version (`.github/dependabot.yml`).
+4. The pre-commit hook checks the spec site whenever `PROGRESS.md`, `README.md` or a Markdown file under `docs/` is
+   staged (lint-staged in `package.json`).
+
+ALU has not yet confirmed the drafts in `docs/reference/proposals/`; S5 builds on them marked as drafts, and their
+texts stay editable without code (`PED-011`).
+
+**Decided while planning S5 (owner, 2026-10-28; recorded as D-082…D-100):**
+1. **Running the session:** work restarts by itself after a usage limit (an hourly scheduled task, switched off when
+   S5 is done), and all of S5 is done in this session.
+2. **Copies:** «Lagre som ny versjon» saves a copy linked to the original (D-093).
+3. **The PDF:** the portfolio PDF is rendered by Chromium on the server (D-096).
+4. **Placeholders:** guidance placeholders are an error that can be acknowledged with a reason; D-074 is unchanged
+   (D-086).
+5. **The guide:** the guide and the pattern catalogue are public, with no sign-in (D-089).
+6. **The Canvas side moves to S6:** the bank in the Deep Linking picker, "new from a pattern" in Canvas and the
+   `LTI-007` duplicate in `/app/play` (D-098).
+7. **The review:** S5 may close with the ALU and pilot review requested and open (Q17, D-100).
+
+Steps (plan: probes first, then shared contracts, then parallel workstreams):
+- [x] 0. Start: restart task, decisions D-082…D-100, spec 02 and 04 amendments, CLAUDE.md §2–§3, Q17
+- [x] 1. Probes P1–P7, kept as tests (amendments to D-080, D-083…D-086, D-092…D-094, D-096): skeleton creation on the server, duplicate by paste-source, learner state
+      after edits, tagged PDF, Markdown tree and Mustache, the `⟦…⟧` marker, the editor's `<dialog>`
+- [x] 2. Contracts: migration `s5_learning_design`, API contract split and schemas, server wiring and env, content
+      loader and `content:check`, `ContentDuplicator`, web scaffolding (tab registry, pages, navigation) (309fc19;
+      amendments to D-087, D-090…D-092, D-096, D-099); the probes hardened for slow CI runners (e4621d5)
+- [x] 3. Guide, phase matrix and catalogue (`PED-001`…`PED-003`); patterns and V-PLACEHOLDER (`PED-010`, `PED-011`,
+      `PROD-001`, `PROD-009`)
+      — stage 1 done: pattern format, loader and checks, creation API, V-PLACEHOLDER incl. missing media, the
+        BranchingScenario picture repair (W2a); stage 2 done: the nine patterns in nn, nb and en, created on the
+        real types in every type and phase (W2b; drafts for ALU, Q17); stage 3 done: the guide loader and its
+        closed node tree, the public studio routes, the guide page with the phase matrix and the catalogue with
+        filters in the address, the pattern page with «Lag frå dette mønsteret» (W1a); stage 5 done: the guide text in
+        nn, nb and en, in PED-002's order with every research claim cited (W1b; draft for ALU, Q17)
+- [x] 3. Metadata, planner, learner time and purpose (`PED-030`…`PED-032`)
+      — stage 3 done: the Læringsdesign tab and its routes, the publish prompt, course codes from Canvas labels
+        (privacy filter), the planner with gaps, time and purpose before the activity in the portal and Canvas (W3);
+        screenshots in `nn` sent to the owner (2026-10-29)
+- [x] 3. Co-authors, content bank and duplicate (`PROD-007`); safe editing (`PROD-013`)
+      — stage 1 done: structure signature, the 409 save gate, stale state writes dropped, the copy route (W5a);
+        stage 2 done: the save choice dialog in the editor, portal and Canvas, inert page while open (W5b);
+        stage 4 done: staff eligibility written at Feide login, people search (rate-limited, never logged),
+        co-authors, the content bank for HVL staff authors (listing cleared on unpublish or private), duplicate with
+        attribution for editors, the copy's library version, the Deling tab, the bank page, /personvern (W4)
+- [x] 3. Mappe export in Markdown and tagged PDF (`MAPPE-001`…`MAPPE-004`)
+      — stage 4 done: template and criteria loader (optional until written), Mustache rendering with the Markdown
+        escaper and refused value places, the reader's guide from the criteria, the Del 1 word count, minimum group
+        size, the PDF from Chromium with bounded slots and time limits, the routes and the /mappe page (W6a);
+        stage 5 done: the template and the 2025 criteria set in nn, nb and en (W6b; drafts for ALU, Q17), and the
+        PDF outline keeps spaces where a heading wraps (D-096)
+- [x] 4. Integration: axe suite for the new pages and the dialog, e2e flows, screenshots in `nn` to the owner
+      — every studio page and view in the a11y suite (axe signed out and in, forced colours, keyboard journeys,
+        reflow, spacing, language; the dialog leaves the page inert); four new e2e flows (pattern → publish, bank
+        copy, mappe downloads, safe-edit reset) and every pattern played once; fixes found on the way (planner and
+        /mappe reflow, one bank live region, the dialog's tab stops, references with `lang`, busy texts);
+        screenshots of every new view sent to the owner (2026-10-29)
+- [x] 5. Docs: `content/` READMEs for ALU, GLOSSARY, Evaluator Guide, `/personvern`, ALU review packet
+      — numbered how-tos for ALU, glossary terms, the S5 gate row and limitations, the PDF check in the manual
+        protocol, `docs/reference/alu-review-s5.md` (Q17)
+- [x] 6. Review with skeptics, two verification passes
+      — seven reviewers (security, privacy, accessibility, pedagogy and content, correctness, tests, documentation)
+        reported 49 findings, each checked by its own skeptic: 13 rejected (recorded or intended), one overturned
+        against the player's code (the fa-video timing; now an ALU review point), two duplicates; 33 fixed in five
+        groups (mappe and PDF, server, web, content and docs, workstream labels), each fix with a test that fails
+        without it, then two independent verification passes and a last round for cross-group items. Notable fixes:
+        the PDF time limit now covers a stalled browser; staff e-mail is no longer stored; a hidden bank listing can
+        no longer be copied; a per-person copy limit; numeric blanks never accept typos; focus after every studio
+        action; the D-083/D-084 deviations marked in code. Decisions D-083…D-096 amended (2026-10-29, S5 review)
+- [ ] Pilot evaluators from ALU and Pedagogisk akademi review the studio content (Q17; may stay open, record the outcome here)
+      — outcome at the end of S5 (2026-10-30): requested, not yet done; the packet is `docs/reference/alu-review-s5.md`
+- [x] Gate: as in the Evaluator Guide §5, S5 (D-100) (2026-10-30, commit `b8ab740`; output in the session log)
+      — the first gate runs under full CPU load found three faults, each reproduced and fixed before the passing run:
+        on the **Deling** tab a focus request could be used up by an earlier commit's late effect, so focus fell to
+        the page after «Fjern meg» (`useFocusAfterChange`; the bank section's re-reads also no longer overtake a
+        change, 72fbcb2); React's late metadata `<title>` put the server's title back over a pattern's or an
+        activity's loaded name on a slow device (`useLoadedPageTitle`); and the title test and the accessibility
+        suites now wait until a view has loaded before they check it (b8ab740)
+
+**Open items at the end of S5** (listed with the gate output, D-100; limitations 16–21 in the Evaluator Guide §6):
+1. **The ALU and pilot review (Q17):** the phase labels and texts, the guide in three languages and its sixteen
+   references (all `verify: true`), the nine patterns with their skeletons' guidance, the mappe template, criteria and
+   limits (7 500 words, 11 attachments, *(verify)*); pilot teachers try the patterns. Packet with a checklist for the
+   outcome: `docs/reference/alu-review-s5.md`. Required before the pilot.
+2. **The content bank's consent text** (`sharing.bankConsent`, version 1): ALU and HVL's lawyers (D-091); a new text
+   raises `BANK_CONSENT_VERSION` and `SHOWN_CONSENT_VERSION` together. The privacy page's sentences about colleagues
+   seeing staff names (`privacy.staff1`–`staff3`) go to the DPO with the rest of the page (Q6).
+3. **The manual checks:** the portfolio PDF with PAC and NVDA, recording the D-096 residuals (`MAPPE-004`; protocol
+   J4.5–J4.10), and the studio's steps J1.10–J1.13 and J4.1–J4.4 with the screen readers; both are listed as to do
+   under «Runs due» in `docs/accessibility/results/README.md`.
+4. **The Canvas side of the studio (S6, D-098):** the content bank and "new from a pattern" in the Deep Linking
+   picker, and the `LTI-007` duplicate in `/app/play`.
+5. **Results in the mappe (S6, D-095):** the real `ActivityResultsSource`; S5's export says there are no results yet.
+6. **Chromium in the S6 image (D-096):** Chromium and fonts with æ, ø and å, a non-root user with unprivileged user
+   namespaces for the sandbox, and Chromium kept patched.
+7. **Known limits, accepted for now (D-091, D-092, D-093):** the bank shows the 200 newest listings without paging,
+   and a listing only while its owner is findable staff; people search allows a fixed 30 searches a minute per
+   person; a copy whose source and source author are both deleted shows
+   no «Kopi av …» sign; on the **Deling** tab a student-author owner still sees people search and gets the server's
+   refusal; the first save after HVL installs a newer minor version of a content type counts as structural; two
+   changes to the co-authors or the bank that overlap (a second press before the first answer) show their answers
+   in the order they arrive.
+8. **Notes from the gate:** `check:licences` passed while a stray `node_modules/node_modules` link hid the
+   workspaces from npm and it counted 1 production package instead of 482 (the link was removed before the gate;
+   a guard that fails on an implausibly small production set is S6 work). The per-ID runs for `NFR-003` and
+   `UD-031` select no tests in the root Vitest project: their tests are in the accessibility suite, which the gate
+   runs as `npm run test:a11y`.
 
 ## S6 — Grade bridge, insight, privacy, deployment ⬜
 
@@ -311,6 +411,14 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 - [ ] Separate files origin for user files with signed URLs (`SEC-004`, D-045; URLs from S3's `HvlUrlGenerator`)
 - [ ] Panopto guidance (`H5P-010`); ClamAV scanning (`SEC-006`); LTI Dynamic Registration (`LTI-009`, COULD)
 - [ ] Docker images, load test, runbook (`NFR-001`, `NFR-002`, `NFR-007`); conformance report (`UD-040`)
+- [ ] Library texts that are English in `nn` and `nb` (S5 probe P1: MultiChoice, QuestionSet, InteractiveBook and
+      BranchingScenario buttons and messages; patterns set their own texts, D-084): consider an HVL language overlay
+      through Lumi's `alterLibraryLanguageFile` hook, so activities made in the editor are Norwegian too (its own
+      decision)
+- [ ] The Canvas side of the studio (D-098): the content bank and "new from a pattern" in the Deep Linking picker,
+      and the `LTI-007` duplicate in `/app/play`
+- [ ] Results in the portfolio: the real `ActivityResultsSource` with *k*-suppression (D-095); Chromium and fonts
+      with æ, ø and å in the production image for the PDF (D-096)
 - [ ] Lumi's server half (D-081): ask Lumi's maintainers for a release with their unreleased file-security work, or
       review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
       10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
@@ -326,6 +434,13 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
       only on a device or with a screen reader needs a precise description and an HVL re-test; H5P's own barriers
       are repaired at run time or registered and reported (D-080). Manual results stay dated in
       `docs/accessibility/results/`
+- [ ] Research export (owner's idea, 2026-10-26; to consider when insight is built): analysis and research scripts
+      run beside the system, in Python or R (pandas, Jupyter notebooks), which ALU and Pedagogisk akademi researchers
+      use, while everything inside the product stays TypeScript. They never touch the live database: the system
+      produces an anonymised export (pseudonyms only, groups under *k* = 5 suppressed, only the fields a question
+      needs), built and tested in TypeScript under the privacy rules, with a documented format and an example
+      notebook. Research use of student data needs its own legal basis and the DPO's approval (Q6) and belongs in
+      the DPIA input (`DATA-005`)
 - [ ] Light simplification check before the pilot (owner decisions 2026-10-24 and 2026-10-25), as in S4+ (two
       independent skeptics per proposal, no behaviour change, every test kept, the full gate after), with one more
       lens: does the code read as if a careful human wrote it? Signs of machine-written code to look for: comments
@@ -358,6 +473,7 @@ Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.
 | Q16 | The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).** | Repository owner | Confidence in every gate; the pilot |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
 | Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`) | HVL DPO | S6, pilot |
+| Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns. Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
 
 ## Risk register
 
@@ -644,3 +760,53 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npx vitest run -t "\[<ID>\]", one run per S4 ID and DOC-012  every run passes with the same test counts
   $ npm run mock:platform & WEB_APP=dev npm start                /healthz, /lti/keys, /, /hjelp, /personvern, /api/docs: 200
   ```
+
+- **2026-10-28 · S5 start** — The owner answered the start questions (no per-session explainer, no second
+  simplification round, Dependabot tamed, a pre-commit spec-site check) and approved the S5 plan with seven decisions
+  (section S5). Recorded D-082…D-100; amended spec 04 (code locations, Markdown instead of MDX, skeletons in
+  `content/`, public guide), spec 02 (`LTI-005`, `LTI-007`: the Canvas side in S6) and CLAUDE.md §2–§3; added Q17.
+  The hourly restart task is on until S5 is done.
+- **2026-10-30 · S5 gate** — The review fixes (49219ce) went green on GitHub; the local gate under full load then
+  found three faults, each reproduced deterministically and fixed with tests that fail without the fix: the
+  **Deling** tab's focus after a change (72fbcb2, three verification rounds), the loaded page title on slow devices
+  and the checks that ran before a view had loaded (b8ab740). GitHub CI green on both. Gate output (commit b8ab740,
+  run in parts of under 2 hours; every step exit 0):
+
+  ```
+  $ npm run typecheck · lint · format:check · lint:css           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 482 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check                              ✓ 22 models, 173 fields
+  $ npm run h5p:fetch-core · h5p:fetch-libraries                 ✓ hashes match · ✓ 120 libraries and 10 packages
+  $ npm run build · tokens:check                                 exit 0 · ✓ 3 files up to date, feedback prefixes up to date
+  $ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set
+  $ npm run spec:trace -- --check --done-through=S4 · S5         ✓ 126 requirements, traceability up to date (both)
+  $ npm run spec:site -- --check · docs:api · boot-check         ✓ up to date · html generated · exit 0
+  $ npx vitest run                                               Test Files 504 passed (504) · Tests 26316 passed (26316)
+  $ npm run test:e2e                                             Test Files 12 passed (12) · Tests 20 passed (20)
+  $ npm run test:a11y                                            Test Files 16 passed (16) · Tests 497 passed (497)
+  $ npx vitest run -t <filter>, files/tests passed               AUTH-00 58/429 · LTI-00 79/438 · H5P-002|PROD-002 18/43 ·
+                                                                   SEC-003|H5P-011|H5P-006 31/18720 · SEC-001 8/111 ·
+                                                                   PROD-004|PROD-005|PROD-006|H5P-007 36/122 · UD-0 134/1050 ·
+                                                                   PED-020 16/129 · PROD-003|UD-022 29/159 ·
+                                                                   PROD-011|DATA-006|DATA-011 32/144 · PED-0 86/601 ·
+                                                                   PROD-001|PROD-009 24/103 · PROD-007|PROD-013 74/3904 · MAPPE- 30/262
+  $ npx vitest run -t "\[<ID>\]", tests passed                  PROD-003 156 · PROD-011 27 · NFR-003 0* · H5P-009 6 · UD-001 126 ·
+                                                                   UD-002 7 · UD-003 67 · UD-004 5 · UD-005 3 · UD-006 151 · UD-007 13 ·
+                                                                   UD-008 14 · UD-009 8 · UD-010 31 · UD-011 62 · UD-012 7 · UD-013 131 ·
+                                                                   UD-020 272 · UD-021 216 · UD-022 20 · UD-030 23 · UD-031 0* ·
+                                                                   PED-020 118 · DATA-006 63 · DATA-011 58 · DOC-012 53 · PED-001 88 ·
+                                                                   PED-002 132 · PED-003 34 · PED-010 72 · PED-011 12 · PED-030 105 ·
+                                                                   PED-031 32 · PED-032 21 · PROD-001 86 · PROD-007 3706 · PROD-009 18 ·
+                                                                   PROD-013 201 · MAPPE-001 68 · MAPPE-002 145 · MAPPE-003 18 · MAPPE-004 39
+                                                                   (* tested in the accessibility suite above)
+  $ npm run mock:platform & WEB_APP=dev npm start                /healthz, /lti/keys, /, /hjelp, /personvern, /api/docs: 200;
+                                                                   /laeringsdesign signed out; Feide sign-in (mock); pattern ea-diagnose →
+                                                                   a new activity's Rediger tab; /laeringsdesign/planlegg,
+                                                                   /laeringsdesign/innhaldsbank, /mappe: 200; downloads
+                                                                   pedagogisk-mappe-2026-10-30.md (44 021 bytes) and .pdf (491 186 bytes,
+                                                                   %PDF-1.4); 0 page errors
+  ```
+
+  Open at the end of S5: the items listed in section S5 (Q17 first). The hourly restart task is switched off.

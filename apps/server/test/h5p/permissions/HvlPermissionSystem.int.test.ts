@@ -1,9 +1,9 @@
 /**
  * Integration tests on PostgreSQL for the content facts behind H5P-006 and the data-subject audit log:
- * owner, co-authors, status and visibility in one query; unknown and malformed IDs; every visibility level
- * and a change of it through HvlPermissionSystem; one AuditEvent per granted data-subject access.
+ * owner, co-authors, status, visibility and bank listing in one query; unknown and malformed IDs; every visibility
+ * level and a change of it through HvlPermissionSystem; one AuditEvent per granted data-subject access.
  *
- * Spec: H5P-006, PROD-004, PROD-006, DATA-007
+ * Spec: H5P-006, PROD-004, PROD-006, PROD-007, DATA-007
  */
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -53,6 +53,7 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
     locale: 'nn',
     hvlMember: false,
     feideAuthenticated: false,
+    studentAuthor: false,
     ltiLaunchContentIds: [],
     ...extra,
   });
@@ -60,7 +61,8 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
     system.checkForContent(asStateUser(a), ContentPermission.View, id);
 
   beforeAll(async () => {
-    for (const role of ROLES) ids[role] = (await db.user.create({ data: { kind: 'staff' } })).id;
+    const staff = { kind: 'staff', coAuthorSearchableAt: new Date() } as const; // findable: the listing counts
+    for (const role of ROLES) ids[role] = (await db.user.create({ data: staff })).id;
     const base = {
       mainLibrary: 'H5P.MultiChoice',
       title: 'Test',
@@ -69,7 +71,7 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
       ownerUserId: ids.owner,
     };
     const content = await db.h5PContent.create({
-      data: { ...base, status: 'published', visibility: 'organisation' },
+      data: { ...base, status: 'published', visibility: 'organisation', bankListedAt: new Date() },
     });
     contentId = content.id;
     await db.contentCollaborator.create({ data: { contentId, userId: ids.coAuthor } });
@@ -82,8 +84,7 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
     await db.user.deleteMany({ where: { id: { in: Object.values(ids) } } });
     await db.$disconnect();
   });
-
-  it('[H5P-006] reads owner, co-authors, status and visibility with one findUnique', async () => {
+  it('[H5P-006] reads owner, co-authors, status, visibility and bank listing with one findUnique', async () => {
     const calls: string[] = []; // Arrange
     const facts = await new PrismaContentAccessRepository(recording(db, calls)).factsFor(contentId); // Act and assert
     expect(facts).toEqual({
@@ -92,12 +93,14 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
       coAuthorIds: [ids.coAuthor],
       status: 'published',
       visibility: 'organisation',
+      bankListed: true,
     });
     expect(calls).toEqual(['h5PContent.findUnique']);
     expect(await repository.factsFor(draftId)).toMatchObject({
       coAuthorIds: [],
       status: 'draft',
       visibility: 'private',
+      bankListed: false,
     });
   });
 
@@ -142,11 +145,8 @@ describeWithServices('[H5P-006] content facts and data-subject audit on PostgreS
   });
 
   it('[PROD-004] a draft is hidden from learners even through an LTI launch, but its authors preview it', async () => {
-    const launched = actor(randomUUID(), {
-      hvlMember: true,
-      feideAuthenticated: true,
-      ltiLaunchContentIds: [draftId],
-    });
+    const reachesEverything = { hvlMember: true, feideAuthenticated: true };
+    const launched = actor(randomUUID(), { ...reachesEverything, ltiLaunchContentIds: [draftId] });
     expect(await mayView(launched, draftId)).toBe(false);
     expect(await mayView(actor(ids.owner, { role: 'author' }), draftId)).toBe(true);
     expect(await mayView(actor(ids.colleague, { role: 'author', hvlMember: true }), draftId)).toBe(false);

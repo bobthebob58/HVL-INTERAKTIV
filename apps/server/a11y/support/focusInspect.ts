@@ -14,6 +14,7 @@
  *     `__hvlFocusWalk`; `seenAt` is the element's index there (by identity, so scrolling or a layout change cannot
  *     make one element look like two), -1 for a new one. A press that leaves focus on the same element adds
  *     nothing, so the list stays index for index with ./focusWalk.ts's stops.
+ *   - A stop's name is its tag, its role and, for a date or time field, its type (`INPUT[type=date] ""`).
  *   - A look is the outline (style, width, colour, offset) and the box-shadow; `ring` means an outline of at least
  *     2 px or any box-shadow. Only CSS transitions are finished; nothing else of the page is changed.
  *   - The rectangles of the element and of its ring (outline offset and width added) are clipped to each frame's
@@ -60,7 +61,12 @@ export function inspectFocus(): FocusReading {
   };
   const label = (el: Element): string => {
     const text = (el.getAttribute('aria-label') ?? el.getAttribute('title') ?? el.textContent ?? '').trim();
-    return `${el.tagName}${el.getAttribute('role') ? `[role=${el.getAttribute('role')}]` : ''} "${text.replace(/\s+/g, ' ').slice(0, 40)}"`;
+    // WHY: a date or time field takes one Tab press per part (day, month, year), so ./focusWalk.ts must know it.
+    const segmented = /^(date|time|datetime-local|month|week)$/.test(el.getAttribute('type') ?? '');
+    const kind = `${el.getAttribute('role') ? `[role=${el.getAttribute('role')}]` : ''}${
+      el.tagName === 'INPUT' && segmented ? `[type=${el.getAttribute('type')}]` : ''
+    }`;
+    return `${el.tagName}${kind} "${text.replace(/\s+/g, ' ').slice(0, 40)}"`;
   };
   let doc: Document = document;
   let el: Element | null = doc.activeElement;

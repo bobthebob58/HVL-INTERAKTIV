@@ -1,8 +1,9 @@
 /**
  * Integration tests for the publish gate on saves (D-074): saving a published activity through the H5P content
- * route, with injected validators, judged as the editor stores it, and the version count of every save.
+ * route, with injected validators, judged as the editor stores it, and the version: kept by a text-only save,
+ * raised by a structural one (D-093 amends D-074's "every save").
  *
- * Spec: PROD-003, UD-022, H5P-006
+ * Spec: PROD-003, UD-022, H5P-006, PROD-013
  */
 import type { Express } from 'express';
 import request from 'supertest';
@@ -41,13 +42,13 @@ describeWithServices('[PROD-003] saving a published activity', () => {
   let colleague: TestActor;
   const validated: ValidationInput[] = [];
 
-  const save = (id: string, question: string, who: TestActor = author) =>
+  const save = (id: string, question: string, who: TestActor = author, answers = ['Ja']) =>
     request(app)
       .put(`/h5p/content/${id}`)
       .set(...who.header)
       .send({
         library: 'H5P.MultiChoice 1.16',
-        params: { params: { question, answers: ['Ja'] }, metadata: { title: 'Q', license: 'U' } },
+        params: { params: { question, answers }, metadata: { title: 'Q', license: 'U' } },
       });
   const stored = (id: string) => tb.db.h5PContent.findUniqueOrThrow({ where: { id } });
 
@@ -97,14 +98,14 @@ describeWithServices('[PROD-003] saving a published activity', () => {
     expect(await stored(id)).toMatchObject({ params: { question: 'Kva?' }, status: 'published', version: 1 });
   });
 
-  it('[PROD-003] a save with only warnings and hints goes through, and the version goes up by one', async () => {
+  it('[PROD-003] a save with only warnings and hints goes through; a text-only edit keeps the version', async () => {
     // Arrange
     const id = await tb.activity(author, { published: true });
     // Act
     const res = await save(id, 'Klikk på lenkje');
     // Assert
     expect(res.status).toBe(200);
-    expect(await stored(id)).toMatchObject({ params: { question: 'Klikk på lenkje' }, version: 2 });
+    expect(await stored(id)).toMatchObject({ params: { question: 'Klikk på lenkje' }, version: 1 });
   });
 
   it('[UD-022] an error explained less than 14 days ago does not block the save; one older than 14 days does', async () => {
@@ -132,19 +133,21 @@ describeWithServices('[PROD-003] saving a published activity', () => {
     expect(recent.status).toBe(200);
     expect(expired.status).toBe(409);
     expect(expired.body.findings).toEqual([{ ...altError, acknowledgement: null }]);
-    expect(await stored(id)).toMatchObject({ params: { question: 'Framleis utan alt' }, version: 2 });
+    expect(await stored(id)).toMatchObject({ params: { question: 'Framleis utan alt' }, version: 1 });
   });
 
-  it('[PROD-003] a draft is saved without the gate, and every save increases the version', async () => {
+  it('[PROD-013] a draft is saved without the gate, and only a structural save raises the version', async () => {
     // Arrange
     const id = await tb.activity(author);
-    // Act
+    // Act: a reworded question, then an added option (structural; nobody has state, so nothing asks first)
     const first = await save(id, 'Utkast utan alt');
-    const second = await save(id, 'Utkast utan alt igjen');
+    const afterText = (await stored(id)).version;
+    const second = await save(id, 'Utkast utan alt igjen', author, ['Ja', 'Nei']);
     // Assert
     expect([first.status, second.status]).toEqual([200, 200]);
     expect(validated).toEqual([]);
-    expect(await stored(id)).toMatchObject({ status: 'draft', version: 3 });
+    expect(afterText).toBe(1);
+    expect(await stored(id)).toMatchObject({ status: 'draft', version: 2 });
   });
 
   it('[H5P-006] someone who may not edit meets the editor’s 403 and never learns the findings', async () => {

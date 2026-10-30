@@ -12,13 +12,18 @@
  *   - Values are range-checked; `minDecisionPoints` may not exceed `maxDecisionPoints`.
  *   - The returned context is frozen; the file is read once, synchronously, before the server listens.
  * Collaborators: ../validation/hintThresholds.ts (the keys), ../validation/types.ts (`ValidationContext`),
- *   ./env.ts (`CAPTIONED_MEDIA_ORIGINS`), content/laeringsdesign/README.md (the guide for ALU).
+ *   ./env.ts (`CAPTIONED_MEDIA_ORIGINS`), ../learningDesign/content/yamlContentFile.ts (the YAML reading and
+ *   problem reporting shared with the studio content, D-082), content/laeringsdesign/README.md (the guide for ALU).
  * Tests: apps/server/test/config/validationContext.test.ts
  */
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { isMap, parseDocument } from 'yaml';
 import { z } from 'zod';
+import { contentDisplayPath, formatKeyedContentProblem } from '../learningDesign/content/contentProblem.js';
+import {
+  parseYamlContent,
+  readYamlContentFile,
+  type ContentLoadResult,
+} from '../learningDesign/content/yamlContentFile.js';
 import type { HintThresholdKey } from '../validation/hintThresholds.js';
 import type { HintThresholds, ValidationContext } from '../validation/types.js';
 import type { Env } from './env.js';
@@ -27,7 +32,7 @@ import type { Env } from './env.js';
 export const HINT_THRESHOLDS_FILE = fileURLToPath(
   new URL('../../../../content/laeringsdesign/hint-thresholds.yaml', import.meta.url),
 );
-const DISPLAY_NAME = 'content/laeringsdesign/hint-thresholds.yaml';
+const DISPLAY_NAME = contentDisplayPath(HINT_THRESHOLDS_FILE);
 
 const minutes = (max: number) => z.number().positive().max(max);
 const count = (min: number, max: number) => z.number().int().min(min).max(max);
@@ -70,10 +75,10 @@ export class InvalidValidationContextError extends Error {
   }
 }
 
-const repeatedKeys = (contents: unknown): string[] => {
-  if (!isMap(contents)) return [];
-  const keys = contents.items.map((pair) => String(pair.key));
-  return [...new Set(keys.filter((key, i) => keys.indexOf(key) !== i))];
+const thresholdsOrThrow = (result: ContentLoadResult<HintThresholds>, file: string): HintThresholds => {
+  if (!result.ok)
+    throw new InvalidValidationContextError(result.problems.map(formatKeyedContentProblem), file);
+  return result.value;
 };
 
 /**
@@ -81,29 +86,11 @@ const repeatedKeys = (contents: unknown): string[] => {
  * @param source - The YAML text.
  * @param file - The file name shown in error messages.
  * @returns The thresholds.
- * @throws InvalidValidationContextError naming each bad, missing, unknown or repeated key, or the syntax error.
+ * @throws InvalidValidationContextError naming each bad, missing, unknown or repeated key with its line, or the
+ *   syntax error.
  */
 export function parseHintThresholds(source: string, file: string = DISPLAY_NAME): HintThresholds {
-  // WHY: repeated keys are allowed through the parser and reported by name below; YAML's own error does not name them.
-  const document = parseDocument(source, { uniqueKeys: false });
-  const syntax = document.errors[0];
-  if (syntax)
-    throw new InvalidValidationContextError([`YAML syntax: ${syntax.message.split('\n')[0]}`], file);
-  const repeated = repeatedKeys(document.contents);
-  if (repeated.length > 0) {
-    throw new InvalidValidationContextError(
-      repeated.map((key) => `${key}: appears more than once`),
-      file,
-    );
-  }
-  const result = hintThresholdsSchema.safeParse(document.toJS());
-  if (!result.success) {
-    const problems = result.error.issues.map(
-      (issue) => `${issue.path.join('.') || '(file)'}: ${issue.message}`,
-    );
-    throw new InvalidValidationContextError(problems, file);
-  }
-  return Object.freeze({ ...result.data });
+  return thresholdsOrThrow(parseYamlContent(source, hintThresholdsSchema, file), file);
 }
 
 /**
@@ -118,15 +105,8 @@ export function loadValidationContext(
   env: Pick<Env, 'CAPTIONED_MEDIA_ORIGINS'>,
   file: string = HINT_THRESHOLDS_FILE,
 ): ValidationContext {
-  let source: string;
-  try {
-    source = readFileSync(file, 'utf8');
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code ?? 'unknown error';
-    throw new InvalidValidationContextError([`cannot read the file (${code})`], file);
-  }
   return Object.freeze({
-    thresholds: parseHintThresholds(source, file === HINT_THRESHOLDS_FILE ? DISPLAY_NAME : file),
+    thresholds: thresholdsOrThrow(readYamlContentFile(file, hintThresholdsSchema), contentDisplayPath(file)),
     captionedMediaOrigins: Object.freeze([...env.CAPTIONED_MEDIA_ORIGINS]),
   });
 }

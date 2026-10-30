@@ -1,7 +1,9 @@
 /**
  * axe on every route of the web app, signed out and signed in as an author, in the light theme and with forced
  * colours emulated: the start page, help, privacy, the new-activity page (with H5P's content-type list), the 404
- * page, an activity page on each of its three tabs (the formative-use notice showing on Rediger) and with the publish
+ * page, the læringsdesign studio's pages (the guide with the real guide text, the planner's course chooser, the
+ * content bank and `/mappe` with the author's activities; their seeded states are in axeStudioViews.a11y.test.ts),
+ * an activity page on each of its three tabs (the formative-use notice showing on Rediger) and with the publish
  * dialog open, and the Canvas page of a student's launch and of a teacher's launch of their own activity, on Spel and
  * on Rediger with its notice. No serious or critical violation besides the recorded H5P upstream problems; lower-impact findings
  * and checks to review are printed.

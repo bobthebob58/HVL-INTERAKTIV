@@ -1,0 +1,68 @@
+{
+  "library": "H5P.QuestionSet 1.21",
+  "metadataTitle": "{{title}}",
+  "params": {
+    "introPage": { "showIntroPage": false },
+    "progressType": "dots",
+    "passPercentage": 80,
+    "questions": [
+      {
+        "library": "H5P.MultiChoice 1.16",
+        "params": {
+          "question": "<p>{{mcQuestion}}</p>",
+          "answers": [
+            {
+              "text": "<div>{{mcRight}}</div>",
+              "correct": true,
+              "tipsAndFeedback": { "chosenFeedback": "<div>{{mcRightFeedback}}</div>" }
+            },
+            {
+              "text": "<div>{{mcWrong}}</div>",
+              "correct": false,
+              "tipsAndFeedback": { "chosenFeedback": "<div>{{mcWrongFeedback}}</div>" }
+            }
+          ],
+          "behaviour": { "enableRetry": true, "enableSolutionsButton": true, "type": "single" }
+        },
+        "metadata": { "title": "{{mcTitle}}", "license": "U" }
+      },
+      {
+        "library": "H5P.Blanks 1.14",
+        "params": {
+          "text": "<p>{{blanksTask}}</p>",
+          "questions": ["<p>{{blanksSentence}}: *{{blanksAnswer}}*</p>"],
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "caseSensitive": false,
+            "acceptSpellingErrors": true
+          }
+        },
+        "metadata": { "title": "{{blanksTitle}}", "license": "U" }
+      },
+      {
+        "library": "H5P.TrueFalse 1.8",
+        "params": {
+          "question": "<p>{{tfStatement}}</p>",
+          "correct": "true",
+          "behaviour": {
+            "enableRetry": true,
+            "enableSolutionsButton": true,
+            "feedbackOnCorrect": "{{tfFeedback}}",
+            "feedbackOnWrong": "{{tfFeedback}}"
+          }
+        },
+        "metadata": { "title": "{{tfTitle}}", "license": "U" }
+      }
+    ],
+    "disableBackwardsNavigation": false,
+    "randomQuestions": false,
+    "endGame": {
+      "showResultPage": true,
+      "showSolutionButton": true,
+      "showRetryButton": true,
+      "overallFeedback": [{ "from": 0, "to": 100, "feedback": "{{overallFeedback}}" }]
+    },
+    "override": { "showSolutionButton": "on", "retryButton": "on" }
+  }
+}

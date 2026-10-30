@@ -2,18 +2,27 @@
  * ContentAccessRepository — reads the facts the permission system needs about one activity.
  *
  * Why: the permission rules are pure functions; this is the one place that asks the database who owns an
- *      activity, who co-authors it, whether it is published and who may see it (H5P-006, PROD-006).
- * Spec: H5P-006, PROD-004, PROD-006
+ *      activity, who co-authors it, whether it is published, who may see it (H5P-006, PROD-006) and whether it is
+ *      in the content bank now (PROD-007, D-091), which decides who may duplicate it (D-092).
+ * Spec: H5P-006, PROD-004, PROD-006, PROD-007
  * Invariants:
- *   - One query per lookup: owner, status, visibility and co-authors come from a single `findUnique`.
- *   - A content ID that is not a UUID is unknown (`undefined`) and never reaches the database.
+ *   - One query per lookup: owner, status, visibility, bank listing and co-authors come from a single `findUnique`.
+ *   - A content ID that is not a UUID is unknown (`undefined`) and never reaches the database; a UUID is looked up in
+ *     lower case, as PostgreSQL stores it, so look-ups Prisma batches find it in any spelling.
  *   - Only co-authors with the `coauthor` role count; a future role grants nothing until the rules know it.
  *   - Facts carry account IDs and flags only, never names or e-mail addresses.
+ *   - `bankListed` is the bank list's own rule (../../learningDesign/collaboration/bankEntries.ts): listed, and the
+ *     owner is findable staff now (D-091 and D-092 amendments, 2026-10-29), so a listing the bank hides cannot be
+ *     copied through the bank either.
  * Collaborators: ../HvlPermissionSystem.ts (the caller), ./contentRules.ts (reads the facts),
- *   ../../infra/prismaClient.ts.
- * Tests: apps/server/test/h5p/permissions/HvlPermissionSystem.int.test.ts
+ *   ../../learningDesign/collaboration/duplicateRules.ts (reads `bankListed`),
+ *   ../../learningDesign/collaboration/staffEligibility.ts (`isFindableStaff`), ../../infra/prismaClient.ts.
+ * Tests: apps/server/test/h5p/permissions/HvlPermissionSystem.int.test.ts,
+ *   apps/server/test/h5p/permissions/contentFactsBatching.int.test.ts,
+ *   apps/server/test/learningDesign/collaboration/bankOwnerFindable.int.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
+import { isFindableStaff } from '../../learningDesign/collaboration/staffEligibility.js';
 import { isContentUuid } from '../contentIds.js';
 
 /** Whether learners may see an activity at all (`PROD-004`). */
@@ -34,6 +43,11 @@ export interface ContentFacts {
   readonly status: ContentStatus;
   /** Who may see the activity when it is published. */
   readonly visibility: ContentVisibility;
+  /**
+   * In the HVL content bank now: `H5PContent.bankListedAt` is set and the owner is findable staff (D-091 as amended),
+   * so colleagues may duplicate it (D-092).
+   */
+  readonly bankListed: boolean;
 }
 
 /** Looks up the facts about an activity for a permission check. */
@@ -54,20 +68,24 @@ export class PrismaContentAccessRepository implements ContentAccessRepository {
   constructor(private readonly db: Database) {}
 
   /**
-   * Reads owner, co-authors, status and visibility of one activity in one query.
+   * Reads owner, co-authors, status, visibility and bank listing (with the owner's findability) in one query.
    * @param contentId - The ID Lumi asks about.
    * @returns The facts, or `undefined` for an unknown or malformed ID.
    */
   async factsFor(contentId: string): Promise<ContentFacts | undefined> {
     // SECURITY: a malformed ID would make PostgreSQL raise an error; unknown is the fail-closed answer.
     if (!isContentUuid(contentId)) return undefined;
+    // WHY: Prisma batches the `findUnique` calls of one tick into one `IN (…)` query and matches the rows back by
+    // string equality; PostgreSQL finds an upper-case UUID, but its stored lower-case ID would then match no call.
     const row = await this.db.h5PContent.findUnique({
-      where: { id: contentId },
+      where: { id: contentId.toLowerCase() },
       select: {
         id: true,
         ownerUserId: true,
         status: true,
         visibility: true,
+        bankListedAt: true,
+        owner: { select: { kind: true, coAuthorSearchableAt: true } },
         collaborators: { where: { role: 'coauthor' }, select: { userId: true } },
       },
     });
@@ -78,6 +96,8 @@ export class PrismaContentAccessRepository implements ContentAccessRepository {
       coAuthorIds: Object.freeze(row.collaborators.map((c) => c.userId)),
       status: row.status,
       visibility: row.visibility,
+      // PRIVACY: a listing whose owner left HVL staff is hidden from the bank, and so not copyable through it.
+      bankListed: row.bankListedAt !== null && isFindableStaff(row.owner, new Date()),
     });
   }
 }

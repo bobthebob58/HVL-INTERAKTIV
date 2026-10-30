@@ -3,8 +3,9 @@
  * Deep Linking picker and publishes a draft through the activity page's tabs and the publish dialog (focus stays on
  * the button, now **Gjer om til utkast**), and the author dismisses the formative-use notice on the Rediger tab
  * (focus stays in the tab panel, the dismissal is kept); J2, a student answers a question in Canvas. Only Tab,
- * Shift+Tab, arrows, Space, Enter, Escape and typing are used. J3 (insight, S6) and J4 (portfolio, S5) do not exist
- * yet; their manual scripts are in docs/accessibility/manual-test-protocol.md.
+ * Shift+Tab, arrows, Space, Enter, Escape and typing are used. The studio's journeys (S5), with J4's start on
+ * `/mappe`, are in keyboardStudioJourneys.a11y.test.ts; J3 (insight, S6) does not exist yet. The manual scripts are
+ * in docs/accessibility/manual-test-protocol.md.
  *
  * Spec: UD-006, UD-004, UD-003, LTI-005, PROD-003, PROD-011
  */
@@ -54,12 +55,16 @@ describeA11y('[UD-006] keyboard-only journeys', (env) => {
     const page = await openView(app, context, { kind: 'activity', tab: 'play' });
     const tab = (name: string) => page.getByRole('tab', { name });
     // Act
+    // WHY: the number of tabs between Spel and «Sjekk og publiser» grows as S5 adds tabs, so it is read, not fixed.
+    const steps = (await page.getByRole('tab').allTextContents()).indexOf('Sjekk og publiser');
     await tabTo(page, '[role=tab][aria-selected=true]');
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('ArrowRight');
+    for (let step = 0; step < steps; step += 1) await page.keyboard.press('ArrowRight');
+    const focusedName = await page.evaluate(() => document.activeElement?.textContent);
     const movedOnly = await tab('Sjekk og publiser').getAttribute('aria-selected');
     await page.keyboard.press('Enter');
     // Assert
+    expect(steps).toBeGreaterThan(1);
+    expect(focusedName).toBe('Sjekk og publiser');
     expect(await focusIs(page, '[role=tab]')).toBe(true);
     expect(movedOnly).toBe('false');
     await expect.poll(() => tab('Sjekk og publiser').getAttribute('aria-selected')).toBe('true');

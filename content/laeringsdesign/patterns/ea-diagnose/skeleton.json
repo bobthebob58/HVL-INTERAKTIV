@@ -1,0 +1,40 @@
+{
+  "library": "H5P.MultiChoice 1.16",
+  "metadataTitle": "{{title}}",
+  "params": {
+    "question": "<p>{{question}}</p>",
+    "answers": [
+      {
+        "text": "<div>{{correctAnswer}}</div>",
+        "correct": true,
+        "tipsAndFeedback": { "chosenFeedback": "<div>{{correctFeedback}}</div>" }
+      },
+      {
+        "text": "<div>{{misconception1}}</div>",
+        "correct": false,
+        "tipsAndFeedback": { "chosenFeedback": "<div>{{misconception1Feedback}}</div>" }
+      },
+      {
+        "text": "<div>{{misconception2}}</div>",
+        "correct": false,
+        "tipsAndFeedback": { "chosenFeedback": "<div>{{misconception2Feedback}}</div>" }
+      },
+      {
+        "text": "<div>{{misconception3}}</div>",
+        "correct": false,
+        "tipsAndFeedback": { "chosenFeedback": "<div>{{misconception3Feedback}}</div>" }
+      }
+    ],
+    "behaviour": { "enableRetry": true, "enableSolutionsButton": true },
+    "UI": {
+      "submitAnswerButton": "{{submitButton}}",
+      "readFeedback": "{{readFeedback}}",
+      "correctAnswer": "{{correctAnswerLabel}}",
+      "scoreBarLabel": "{{scoreBarLabel}}",
+      "a11yCheck": "{{a11yCheck}}",
+      "a11yShowSolution": "{{a11yShowSolution}}",
+      "a11yRetry": "{{a11yRetry}}"
+    },
+    "confirmCheck": { "header": "{{confirmCheckHeader}}" }
+  }
+}

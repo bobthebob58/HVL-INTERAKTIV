@@ -169,8 +169,9 @@ describeWithServices('signed content-file URLs', () => {
     // Assert
     const encoded = encodeURIComponent(ltik);
     expect(integration.ajaxPath).toBe(`/h5p/ajax?ltik=${encoded}&action=`);
+    // WHY: the activity's version follows the token in the state URL (D-093), so old pages' writes can be dropped.
     expect(integration.ajax.contentUserData).toMatch(
-      new RegExp(`[?&]ltik=${encoded.replace(/[.]/g, '\\.')}$`),
+      new RegExp(`[?&]ltik=${encoded.replace(/[.]/g, '\\.')}&contentVersion=\\d+$`),
     );
     expect(integration.ajax.setFinished).toBe(`/h5p/finishedData?ltik=${encoded}`);
     expect(integration.contents[`cid-${contentId}`]?.contentUrl).not.toContain('ltik');

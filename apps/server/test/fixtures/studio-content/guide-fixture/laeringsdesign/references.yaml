@@ -1,0 +1,9 @@
+# Test fixture (apps/server/test/fixtures/studio-content/README.md): the two references the fixture guide cites.
+version: 1
+references:
+  fixture-guide2026:
+    text: Fixture, A. (2026). A reference that exists only for the tests of the guide loader. Test Press.
+    verify: true
+  fixture-box2026:
+    text: Fixture, B. (2026). A second reference, cited by the guide fixture's numbered list. Test Press.
+    verify: false

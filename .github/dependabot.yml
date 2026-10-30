@@ -1,23 +1,29 @@
-# Dependabot: weekly update pull requests for npm packages and GitHub Actions (SEC-007).
+# Dependabot: one grouped pull request a month per ecosystem for minor and patch updates (SEC-007; owner, 2026-10-28).
+# WHY: major versions change behaviour and are upgraded on purpose, with a decision and the full gate, not by a bot;
+# an advisory that only a major version fixes still fails `npm run check:audit` in CI, so it cannot go unnoticed.
 # Every update still goes through review, the exact-pin check and the audit check in CI.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
     versioning-strategy: increase
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 2
     groups:
-      h5p:
-        patterns: ['@lumieducation/*']
-      prisma:
-        patterns: ['prisma', '@prisma/*']
-      aws-sdk:
-        patterns: ['@aws-sdk/*']
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']

@@ -46,7 +46,12 @@ export const PRIVACY_SECTIONS: readonly TextSection[] = [
     kind: 'paragraphs',
     texts: ['privacy.who1', 'privacy.who2', 'privacy.who3'],
   },
-  { heading: 'privacy.staffHeading', kind: 'paragraphs', texts: ['privacy.staff1', 'privacy.staff2'] },
+  {
+    heading: 'privacy.staffHeading',
+    kind: 'paragraphs',
+    // PRIVACY: staff names are visible to colleagues through co-author search and the bank (D-090, D-091, DATA-006).
+    texts: ['privacy.staff1', 'privacy.staff2', 'privacy.staff3'],
+  },
   { heading: 'privacy.safetyHeading', kind: 'paragraphs', texts: ['privacy.safety1', 'privacy.safety2'] },
   { heading: 'privacy.rightsHeading', kind: 'paragraphs', texts: ['privacy.rights1'] },
 ];

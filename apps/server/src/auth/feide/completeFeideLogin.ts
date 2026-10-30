@@ -12,12 +12,15 @@
  *     token (which may hold them) is handed to the session store, which keeps it only encrypted until logout or
  *     expiry (D-021, D-056).
  *   - Every outcome is audited with a fixed code (D-064).
+ *   - PRIVACY: each login records whether colleagues may find the person as a co-author (`coAuthorSearchableAt`,
+ *     D-090): the login time for an eligible staff author, else null; only this path writes it.
  * Collaborators: ./FeideClient.ts, ./feideGroups.ts, ./FeideRoleMapper.ts, ./feideClaims.ts,
  *   ../identity/AccountResolver.ts, ../identity/subjectSources.ts, ../audit/AuthAuditRecorder.ts,
- *   ./feideLoginRoutes.ts.
- * Tests: apps/server/test/auth/feide/feideLogin.int.test.ts
+ *   ./feideLoginRoutes.ts, ../../learningDesign/collaboration/staffEligibility.ts.
+ * Tests: apps/server/test/auth/feide/feideLogin.int.test.ts, apps/server/test/auth/feide/coAuthorSearchable.int.test.ts
  */
 import type { HttpError } from '../../http/HttpError.js';
+import { coAuthorSearchableAtFor } from '../../learningDesign/collaboration/staffEligibility.js';
 import { authError, isAuthError } from '../../http/authErrors.js';
 import { deriveLearnerKey } from '../../privacy/deriveLearnerKey.js';
 import type { PseudonymSecrets } from '../../privacy/pseudonymSecrets.js';
@@ -90,6 +93,7 @@ export async function completeFeideLogin(
     kind: staff ? 'staff' : 'learner',
     // PRIVACY: authorProfile returns nothing for learners (AUTH-004, DATA-002).
     profile: authorProfile(tokens.claims, roles.roles),
+    coAuthorSearchableAt: coAuthorSearchableAtFor(roles, now),
   });
   await deps.audit.record({ event: 'login.feide', actorUserId: account.userId, ip });
   return {

@@ -1,21 +1,31 @@
 /**
- * ActivityView — the activity page (`/aktivitet/[id]`): its title and status, and the tabs **Spel**, **Rediger**
- * (for those who may edit) and **Sjekk og publiser** (for those who may publish).
+ * ActivityView — the activity page (`/aktivitet/[id]`): its title and status, and the tabs of the registry
+ * (./tabs/activityTabs.ts): **Spel**, **Rediger** (for those who may edit) and **Sjekk og publiser** (for those who
+ * may publish), plus the tabs S5 adds.
  *
  * Why: authors play, edit, check and publish an activity in one place (PROD-003, LTI-006). The tabs frame Express's
  *      H5P pages (D-067). The editor reports each save (`hvli:content-saved`), after which the player reloads and the
- *      findings are fetched again; "Gå til feltet" opens the editor tab and asks the editor to focus the field.
- * Spec: PROD-003, PROD-011, LTI-006, UD-006, H5P-006, UD-010
+ *      findings are fetched again; "Gå til feltet" opens the editor tab and asks the editor to focus the field. The
+ *      page owns this shared state and gives every tab the same props (./tabs/activityTab.ts), so a tab is one file.
+ *      While the editor's save choice is open the page's own controls are inert, and «Lagre som ny versjon» opens
+ *      the new version's editor (PROD-013, D-093).
+ * Spec: PROD-003, PROD-011, LTI-006, UD-006, H5P-006, UD-010, PROD-013
  * Invariants:
  *   - The tabs offered follow the server's `mayEdit` and `mayPublish`; the server checks every request again.
+ *   - The address may ask for a tab (`?fane=edit`, ../../config/paths.ts `activityPath`), e.g. after an activity was
+ *     created from a pattern (D-085); a tab this person does not get falls back to **Spel**.
  *   - The formative-use notice is on the editor tab (PROD-011).
- *   - Signed out: the Feide login link back to this page; unavailable: one message, whatever the reason (D-066).
+ *   - Signed out: the Feide login link back to this page and the tab it asked for; unavailable: one message, whatever
+ *     the reason (D-066).
  *   - Once the activity has loaded, the document title names it ("<title> – HVL Interaktiv", WCAG 2.4.2), and every
  *     save is announced, also the second save with the same words (WCAG 4.1.3, ../../components/useAnnouncement.ts).
  *   - The heading carries the activity's own language when it differs from the page's (`lang`, UD-010).
- * Collaborators: ./CheckPanel.tsx, ../../components/Tabs.tsx, ../../components/H5pFrame.tsx,
- *   ../../components/Notice.tsx, ../../messaging/frameMessages.ts, ../../messaging/useEditorSaved.ts.
- * Tests: apps/web/test/features/ActivityView.test.tsx
+ *   - After «Lagre som ny versjon» the page says it opens the new version, then goes to its Rediger tab; a copy's
+ *     page shows where it came from to its editors (./SourceAttributionNote.tsx, PROD-007).
+ * Collaborators: ./tabs/activityTabs.ts, ./tabs/activityTab.ts, ../../components/Tabs.tsx, ./useActivityEditor.ts
+ *   (the editor frame's messages), ../../i18n/useLoadedPageTitle.ts (the document title).
+ * Tests: apps/web/test/features/ActivityView.test.tsx, apps/web/test/features/activityTabs.test.tsx,
+ *   apps/web/test/features/activityTabProps.test.tsx, apps/web/test/features/ActivitySaveChoice.test.tsx
  */
 'use client';
 
@@ -26,10 +36,8 @@ import type { ApiAuth } from '../../api/apiRequest';
 import { getContent } from '../../api/contentApi';
 import type { PortalSession } from '../../api/portalSession';
 import { usePortalSession } from '../../api/usePortalSession';
-import { activityPath, editorPath, playerPath } from '../../config/paths';
-import { H5pFrame } from '../../components/H5pFrame';
+import { ACTIVITY_TAB_QUERY, activityPath } from '../../config/paths';
 import { LoginPrompt } from '../../components/LoginPrompt';
-import { Notice } from '../../components/Notice';
 import { StatusBadge } from '../../components/StatusBadge';
 import { Tabs, type TabItem } from '../../components/Tabs';
 import { useAnnouncement } from '../../components/useAnnouncement';
@@ -37,32 +45,48 @@ import { useLocale } from '../../i18n/LocaleContext';
 import { pageTitle } from '../../i18n/pageTitle';
 import { partLanguage } from '../../i18n/partLanguage';
 import { t } from '../../i18n/translate';
-import { postGoToField } from '../../messaging/frameMessages';
-import { useEditorSaved } from '../../messaging/useEditorSaved';
-import { CheckPanel } from './CheckPanel';
+import { useLoadedPageTitle } from '../../i18n/useLoadedPageTitle';
+import { SourceAttributionNote } from './SourceAttributionNote';
+import type { ActivityTabProps } from './tabs/activityTab';
+import { activityTabsFor, selectableTabId } from './tabs/activityTabs';
+import { EDIT_TAB_ID } from './tabs/EditTab';
+import { useActivityEditor } from './useActivityEditor';
 
 type Detail = ContentDetail | 'loading' | 'unavailable' | 'failed';
 
-/** The tabs' identifiers. */
-const PLAY_TAB = 'play';
-const EDIT_TAB = 'edit';
-const CHECK_TAB = 'check';
+/**
+ * The tab the address asks for (`?fane=`).
+ * @returns The requested tab `id`, or undefined.
+ */
+const requestedTab = (): string | undefined =>
+  // WHY: the workspace and the login prompt render only in the browser, after the session has answered, so reading
+  // the address here never differs from a server render.
+  typeof window === 'undefined'
+    ? undefined
+    : (new URLSearchParams(window.location.search).get(ACTIVITY_TAB_QUERY) ?? undefined);
 
-function Workspace({ contentId, session }: { readonly contentId: string; readonly session: PortalSession }) {
+/** Where the page goes after «Lagre som ny versjon»: the browser's own navigation by default. */
+type Navigate = (path: string) => void;
+
+function Workspace({
+  contentId,
+  session,
+  navigate,
+}: {
+  readonly contentId: string;
+  readonly session: PortalSession;
+  readonly navigate: Navigate;
+}) {
   const locale = useLocale();
   const auth = useMemo<ApiAuth>(
     () => ({ kind: 'portal', csrfToken: session.csrfToken }),
     [session.csrfToken],
   );
   const [detail, setDetail] = useState<Detail>('loading');
-  const [tab, setTab] = useState(PLAY_TAB);
+  const [tab, setTab] = useState<string | undefined>(requestedTab);
   const [revision, setRevision] = useState(0);
   const [announcement, announce] = useAnnouncement();
-  const [editorReady, setEditorReady] = useState(false);
-  const [goTo, setGoTo] = useState<{ readonly path: string; readonly at: number }>();
   const playerRef = useRef<HTMLIFrameElement>(null);
-  const editorRef = useRef<HTMLIFrameElement>(null);
-  const postedAt = useRef(0);
 
   const loadDetail = useCallback(async () => {
     const result = await getContent(contentId, auth);
@@ -82,76 +106,46 @@ function Workspace({ contentId, session }: { readonly contentId: string; readonl
     };
   }, [contentId, auth]);
 
-  useEditorSaved(editorRef, () => {
-    setRevision((value) => value + 1);
-    announce(t('activity.saved', locale));
-    void loadDetail();
+  const editor = useActivityEditor({
+    tab,
+    setTab,
+    onSaved: () => {
+      setRevision((value) => value + 1);
+      announce(t('activity.saved', locale));
+      void loadDetail();
+    },
+    // PROD-013: the edit now lives in the new private draft, so its editor opens (D-093).
+    onCopied: (copyId) => {
+      announce(t('safeEditing.openingCopy', locale));
+      navigate(activityPath(copyId, EDIT_TAB_ID));
+    },
   });
 
-  useEffect(() => {
-    // A11Y: WCAG 2.4.2: the server cannot know the title (D-068), so the page names the activity once it has loaded.
-    if (typeof detail === 'object') document.title = pageTitle(detail.title, locale);
-  }, [detail, locale]);
-
-  useEffect(() => {
-    if (!goTo || tab !== EDIT_TAB || !editorReady || postedAt.current === goTo.at) return;
-    postedAt.current = goTo.at;
-    postGoToField(editorRef.current, goTo.path);
-  }, [goTo, tab, editorReady]);
+  // A11Y: WCAG 2.4.2: the server cannot know the title (D-068), so the page names the activity once it has loaded.
+  const loadedTitle = typeof detail === 'object' ? pageTitle(detail.title, locale) : undefined;
+  useLoadedPageTitle(loadedTitle, pageTitle(t('activity.pageTitle', locale), locale));
 
   if (detail === 'loading') return <p role="status">{t('common.loading', locale)}</p>;
   if (detail === 'unavailable') return <p role="alert">{t('activity.unavailable', locale)}</p>;
   if (detail === 'failed') return <p role="alert">{t('common.loadFailed', locale)}</p>;
 
-  const tabs: TabItem[] = [
-    {
-      id: PLAY_TAB,
-      label: t('activity.tabPlay', locale),
-      panel: (
-        <H5pFrame
-          key={revision}
-          src={playerPath(detail.id)}
-          title={t('activity.playFrame', locale, { title: detail.title })}
-          frameRef={playerRef}
-        />
-      ),
+  const shown = activityTabsFor(detail);
+  const tabProps: ActivityTabProps = {
+    detail,
+    revision,
+    reloadDetail: loadDetail,
+    goToField: editor.goToField,
+    selectTab: (id) => {
+      if (shown.some((item) => item.id === id)) setTab(id);
     },
-  ];
-  if (detail.mayEdit) {
-    tabs.push({
-      id: EDIT_TAB,
-      label: t('activity.tabEdit', locale),
-      panel: (
-        <>
-          <Notice />
-          <H5pFrame
-            editor
-            src={editorPath(detail.id)}
-            title={t('activity.editFrame', locale, { title: detail.title })}
-            frameRef={editorRef}
-            onLoad={() => setEditorReady(true)}
-          />
-        </>
-      ),
-    });
-  }
-  if (detail.mayPublish) {
-    tabs.push({
-      id: CHECK_TAB,
-      label: t('activity.tabCheck', locale),
-      panel: (
-        <CheckPanel
-          detail={detail}
-          revision={revision}
-          onGoToField={(path) => {
-            setTab(EDIT_TAB);
-            setGoTo({ path, at: Date.now() });
-          }}
-          onStatusChange={loadDetail}
-        />
-      ),
-    });
-  }
+    announce,
+    frames: { playerRef, editorRef: editor.editorRef, onEditorLoad: editor.onEditorLoad },
+  };
+  const tabs: TabItem[] = shown.map(({ id, labelKey, Panel }) => ({
+    id,
+    label: t(labelKey, locale),
+    panel: <Panel {...tabProps} />,
+  }));
 
   return (
     <ApiAuthProvider auth={auth}>
@@ -161,13 +155,14 @@ function Workspace({ contentId, session }: { readonly contentId: string; readonl
         <StatusBadge status={detail.status} locale={locale} />
       </p>
       {detail.status === 'published' && detail.mayEdit ? <p>{t('activity.publishedNote', locale)}</p> : null}
+      <SourceAttributionNote detail={detail} />
       <p role="status" className="sr-only">
         {announcement}
       </p>
       <Tabs
         label={t('activity.tabsLabel', locale)}
         tabs={tabs}
-        selectedId={tab}
+        selectedId={selectableTabId(tab, shown)}
         onSelect={setTab}
         manualActivation
       />
@@ -177,18 +172,29 @@ function Workspace({ contentId, session }: { readonly contentId: string; readonl
 
 /**
  * The activity page's content.
- * @param props - The activity's ID from the address.
+ * @param props - The activity's ID from the address, and where to go after «Lagre som ny versjon» (the browser's
+ *   own navigation by default).
  * @returns The signed-out prompt or the workspace.
  */
-export function ActivityView({ contentId }: { readonly contentId: string }) {
+export function ActivityView({
+  contentId,
+  navigate = (path: string) => window.location.assign(path),
+}: {
+  readonly contentId: string;
+  readonly navigate?: Navigate;
+}) {
   const locale = useLocale();
   const session = usePortalSession();
   if (session.status === 'loading') return <p role="status">{t('common.loading', locale)}</p>;
   if (session.status === 'error') return <p role="alert">{t('common.loadFailed', locale)}</p>;
   if (session.status === 'signedOut') {
     return (
-      <LoginPrompt locale={locale} message={t('login.required', locale)} returnTo={activityPath(contentId)} />
+      <LoginPrompt
+        locale={locale}
+        message={t('login.required', locale)}
+        returnTo={activityPath(contentId, requestedTab())}
+      />
     );
   }
-  return <Workspace contentId={contentId} session={session.session} />;
+  return <Workspace contentId={contentId} session={session.session} navigate={navigate} />;
 }

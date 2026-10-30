@@ -10,7 +10,8 @@
  *   - `path` is a JSON path into the activity's parameters (content.json) in dot-and-bracket form, e.g.
  *     `questions[2].params.answers[1].tipsAndFeedback.chosenFeedback`; the empty string means the activity as a
  *     whole, and `metadata.<field>` points into the metadata instead.
- *   - `requirement` is `UD-021` for `V-*` rules and `PED-020` for `PED-H*` rules.
+ *   - `requirement` is `UD-021` for the `V-*` rules of UD-021, `PROD-001` for V-PLACEHOLDER (pattern guidance,
+ *     D-086) and `PED-020` for `PED-H*` rules.
  *   - `message` is plain language in the requested locale and says what to do.
  * Collaborators: ./validateContent.ts, ../http/api (findings and publish), ../config/validationContext.ts.
  * Tests: types only, checked by the compiler wherever they are used.
@@ -24,7 +25,7 @@ export interface Finding {
   /** e.g. `V-IMG-ALT` or `PED-H05`. */
   readonly ruleId: string;
   readonly severity: FindingSeverity;
-  /** The spec ID the rule implements: `UD-021` or `PED-020`. */
+  /** The spec ID the rule implements: `UD-021`, `PED-020` or `PROD-001` (V-PLACEHOLDER). */
   readonly requirement: string;
   /** Where in the parameters (see the module header), for "Go to field". */
   readonly path: string;

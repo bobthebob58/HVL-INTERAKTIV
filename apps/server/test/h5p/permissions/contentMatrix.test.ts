@@ -75,6 +75,7 @@ const actorFor = (c: Pick<Cell, 'role' | 'reach' | 'launched'>): HvlH5pActor => 
   locale: 'nn',
   hvlMember: c.reach.includes('hvl'),
   feideAuthenticated: c.reach.includes('feide'),
+  studentAuthor: false,
   ltiLaunchContentIds: c.launched ? [CONTENT_ID] : [],
 });
 
@@ -84,6 +85,7 @@ const factsFor = (c: Pick<Cell, 'relation' | 'status' | 'visibility'>): ContentF
   coAuthorIds: c.relation === 'co-author' ? [SOMEONE_ELSE, ME] : [SOMEONE_ELSE],
   status: c.status,
   visibility: c.visibility,
+  bankListed: false,
 });
 
 async function check(cell: Cell, facts: ContentFacts | undefined): Promise<boolean> {

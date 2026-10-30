@@ -5,20 +5,30 @@
  *      launch opened, its title and whether the person may edit it (the **Rediger** tab, LTI-006). Express resolves
  *      the ltik first (../lti/play/appLaunchRoutes.ts) and hands these facts over in one request header it always
  *      overwrites, so a client cannot forge them (./webRequestContract.ts removes every client-sent `x-hvli-*`).
- * Spec: LTI-006, LTI-003, UD-010, D-069
+ * Spec: LTI-006, LTI-003, UD-010, D-069, PED-032
  * Invariants:
  *   - The header value is `encodeURIComponent(JSON.stringify(launch))`: header values must be Latin-1, titles are not.
  *   - It carries no token, no user ID and no learner data: activity ID, title, the Edit decision, the locale and,
  *     when the activity states one, its own language for the title's `lang` (UD-010): `defaultLanguage`, else
- *     h5p.json's `language`, which Lumi defaults to `en` (../validation/activityLanguage.ts, D-069).
+ *     h5p.json's `language`, which Lumi defaults to `en` (../validation/activityLanguage.ts, D-069), and only when it
+ *     has at most `LAUNCH_LANGUAGE_MAX_LENGTH` characters, which the web app's strict parser accepts; and, when set,
+ *     the learner-facing learning design: the estimated minutes and the one-line purpose (PED-032, D-087), never
+ *     the rationale, the course code or the outcomes.
  * Collaborators: ../lti/play/appLaunchRoutes.ts (sets it), ./webRoutes.ts (forwards it), apps/web's `/app/play` page.
- * Tests: apps/server/test/web/webRoutes.int.test.ts, apps/server/test/lti/appLaunch.int.test.ts
+ * Tests: apps/server/test/web/webRoutes.int.test.ts, apps/server/test/lti/appLaunch.int.test.ts,
+ *   apps/server/test/lti/appLaunchLearnerInfo.int.test.ts, apps/server/test/lti/appLaunchLearnerInfoWiring.int.test.ts
  */
 import type { Response } from 'express';
 import type { Locale } from '../i18n/translate.js';
 
 /** The request header that carries the launch to the web app (same name in apps/web). */
 export const LAUNCH_HEADER = 'x-hvli-launch';
+
+/**
+ * The longest language tag the header carries (RFC 5646 §4.4.1); the web app's strict parser treats a launch with a
+ * longer one as no launch (`LANGUAGE_TAG_MAX_LENGTH` in apps/web/src/lti/launchHeader.ts), so a longer tag is left out.
+ */
+export const LAUNCH_LANGUAGE_MAX_LENGTH = 35;
 
 const LOCALS_KEY = 'hvliAppLaunch';
 
@@ -34,6 +44,10 @@ export interface AppLaunch {
    * the title with it (WCAG 3.1.2, UD-010).
    */
   readonly language?: string;
+  /** Estimated student minutes, shown before the activity (PED-032); absent when not set. */
+  readonly estimatedStudentMinutes?: number;
+  /** One line on why the activity matters, in the activity's language (PED-032); absent when not set. */
+  readonly learnerPurpose?: string;
 }
 
 /**

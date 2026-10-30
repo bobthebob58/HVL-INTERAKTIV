@@ -12,8 +12,9 @@
  *   - Each press is inspected in the page (./focusInspect.ts). A stop has an indicator when its focused look has
  *     a ring and differs from its look once focus has moved on (read at the next press).
  *   - `complete` is true only when focus came back to the first stop or left the page; `trapped` names the element
- *     when focus stayed on it for three presses, or came back to an earlier stop other than the first (a cycle that
- *     never returns to the page). The walk stops at either, or after `maxStops` presses.
+ *     when focus stayed on it for three presses (seven for a date or time field, whose day, month, year, hour and
+ *     minute each take one press inside the one element), or came back to an earlier stop other than the first (a
+ *     cycle that never returns to the page). The walk stops at either, or after `maxStops` presses.
  * Collaborators: ./focusInspect.ts; the keyboard suites in ../ (`walkFocus`, and `tabTo`/`focusIs` for
  *   keyboard-only scripts).
  * Tests: apps/server/a11y/keyboardFocus.a11y.test.ts, apps/server/a11y/keyboardJourneys.a11y.test.ts
@@ -45,6 +46,12 @@ export interface FocusWalk {
 }
 
 type Reached = NonNullable<FocusReading['stop']>;
+
+/** A date or time field, named so by ./focusInspect.ts: each of its parts takes one Tab press. */
+const SEGMENTED_FIELD = /^INPUT\[type=(date|time|datetime-local|month|week)\]/;
+
+/** How many more presses an element may keep focus before the walk calls it a trap. */
+const holdLimit = (name: string): number => (SEGMENTED_FIELD.test(name) ? 6 : 2);
 
 /** A stop of the walk, judged against how the element looked once focus had left it. */
 const judged = (stop: Reached, rest: string | undefined): FocusStop => {
@@ -78,7 +85,7 @@ export async function walkFocus(page: Page, maxStops = 60): Promise<FocusWalk> {
     const { stop, previousRest } = await page.evaluate(inspectFocus);
     if (stop?.seenAt === reached.length - 1 && stop.seenAt >= 0) {
       repeats += 1;
-      if (repeats >= 2)
+      if (repeats >= holdLimit(stop.name))
         return { stops: [...stops, judged(stop, undefined)], complete: false, trapped: stop.name };
       continue;
     }

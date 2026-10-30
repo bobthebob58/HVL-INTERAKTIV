@@ -16,15 +16,20 @@
  *   - The update and its audit record are written in one transaction, and the update applies only if the visibility
  *     is still the one checked; otherwise 409 `hvl:sharing-changed` (a concurrent change), so the audit trail holds.
  *   - The canonical activity ID is updated, audited and returned, whatever letter case the path used.
+ *   - Making an activity private removes its content-bank listing in the same transaction, audited with its cause
+ *     (D-091 as amended): the bank lists only activities shared with HVL or wider.
  * Collaborators: ./contentSharing.ts, ./apiBodies.ts, ../../auth/principalLocals.ts,
+ *   ../../learningDesign/collaboration/bankListingWrites.ts,
  *   ../../h5p/permissions/ContentAccessRepository.ts, @hvl-interaktiv/api-contract (`sharingRequestSchema`).
- * Tests: apps/server/test/http/api/contentSharingRoutes.int.test.ts
+ * Tests: apps/server/test/http/api/contentSharingRoutes.int.test.ts,
+ *   apps/server/test/learningDesign/collaboration/bankListingCleared.int.test.ts
  */
 import { sharingRequestSchema, type SharingResponse } from '@hvl-interaktiv/api-contract';
 import { Router } from 'express';
 import { requirePrincipal } from '../../auth/principalLocals.js';
 import type { ContentAccessRepository } from '../../h5p/permissions/ContentAccessRepository.js';
 import type { Database } from '../../infra/prismaClient.js';
+import { clearBankListing } from '../../learningDesign/collaboration/bankListingWrites.js';
 import { authError } from '../authErrors.js';
 import { pathParam } from '../routeParams.js';
 import { apiJson, parseBody } from './apiBodies.js';
@@ -52,6 +57,9 @@ export function contentSharingRoutes(deps: { db: Database; access: ContentAccess
         data: { visibility: to },
       });
       if (count === 0) throw authError('hvl:sharing-changed');
+      if (to === 'private') {
+        await clearBankListing(tx, { contentId: id, actorUserId: principal.userId }, 'private');
+      }
       await tx.auditEvent.create({
         data: {
           actorUserId: principal.userId,

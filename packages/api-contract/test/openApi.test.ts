@@ -30,18 +30,24 @@ const refsIn = (node: unknown): string[] =>
 
 describe('[DOC-012] OpenAPI document', () => {
   it('[DOC-012] lists every registered route with its operation, auth mode, parameters and answers', () => {
+    // Arrange
+    // WHY: typed as plain routes, because a route with `query` may not exist yet in the `as const` registry.
+    const routes: readonly ApiRoute[] = API_ROUTES;
+    const namesIn = (operation: Operation, where: string) =>
+      (operation.parameters ?? []).filter((p) => p.in === where).map((p) => p.name);
     // Act
-    const missing = API_ROUTES.filter((route) => !operationOf(route));
+    const missing = routes.filter((route) => !operationOf(route));
     // Assert
     expect(document.openapi).toBe('3.1.0');
     expect(missing).toEqual([]);
-    for (const route of API_ROUTES) {
+    for (const route of routes) {
       const operation = operationOf(route) as Operation;
       expect(operation.operationId).toBe(route.operationId);
       expect(operation['x-hvl-auth']).toBe(route.auth);
       expect(Object.keys(operation.responses).sort()).toEqual(Object.keys(route.responses).sort());
       const names = [...route.path.matchAll(/:(\w+)/g)].map((m) => m[1]);
-      expect(operation.parameters?.map((p) => p.name) ?? [], route.path).toEqual(names);
+      expect(namesIn(operation, 'path'), route.path).toEqual(names);
+      expect(namesIn(operation, 'query'), route.path).toEqual(Object.keys(route.query?.shape ?? {}));
     }
   });
 

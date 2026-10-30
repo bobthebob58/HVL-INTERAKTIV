@@ -9,8 +9,8 @@
  * Invariants:
  *   - No colour literal; system colours only under `forced-colors: active`.
  *   - `--site-header-height` is the header's minimum height and the scroll padding below it (UD-004).
- * Collaborators: ../app/globals.css (imports it), ../components/SiteHeader.tsx, ../app/layout.tsx (skip link),
- *   ../components/Tabs.tsx.
+ * Collaborators: ../app/globals.css (imports it), ../components/SiteHeader.tsx, ../components/StudioNav.tsx,
+ *   ../app/layout.tsx (skip link), ../components/Tabs.tsx.
  * Tests: apps/server/test/web/webPages.browser.int.test.ts, apps/server/test/web/webChrome.browser.int.test.ts
  */
 @layer components {
@@ -54,6 +54,14 @@
 
   .site-header-bar {
     min-height: var(--site-header-height);
+  }
+
+  /* A11Y: WCAG 1.4.1 and 2.4.8: the main menu's link to the current page (or its section) is bold with a thicker
+     underline, so it is marked by shape, not by colour alone, also under forced colours
+     (../components/StudioNav.tsx). */
+  .site-header a[aria-current] {
+    font-weight: 700;
+    text-decoration-thickness: 0.2em;
   }
 
   .button-primary {

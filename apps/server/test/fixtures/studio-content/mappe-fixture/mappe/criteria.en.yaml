@@ -1,0 +1,41 @@
+# Fixture criteria (English): two sets, so a test can switch between them. Test texts, not HVL's.
+version: 1
+sets:
+  - id: hvl-merittering-2025
+    title: Test set 2025
+    limits:
+      del1Words:
+        value: 7500
+        verify: true
+      attachments:
+        value: 11
+        verify: true
+    criteria:
+      - id: '1.1'
+        text: Criterion text one-one from the 2025 test set
+        chapter: Part 1, ch. 1
+        attachment: Attachment on learning resources
+      - id: '2.3'
+        text: Criterion text two-three from the 2025 test set
+        chapter: Part 1, ch. 2
+      - id: '3.1'
+        text: Criterion text three-one from the 2025 test set
+        chapter: Part 1, ch. 2 and Part 3
+        attachment: Summary of feedback
+  - id: fixture-2027
+    title: Test set 2027
+    limits:
+      del1Words:
+        value: 100
+        verify: false
+      attachments:
+        value: 2
+        verify: false
+    criteria:
+      - id: A.1
+        text: Criterion text A-one from the 2027 test set
+        chapter: Part 1, ch. 2
+        attachment: Test attachment A
+      - id: A.2
+        text: Criterion text A-two from the 2027 test set
+        chapter: Part 3

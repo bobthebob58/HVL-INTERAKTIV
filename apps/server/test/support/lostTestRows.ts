@@ -17,7 +17,8 @@
  *   - The answer names each lost row by the label the flow gave it, never by personal data.
  * Collaborators: ./appTestbed.ts, ./realWebApp.ts, ./flowRecorder.ts (the facts of a failed step).
  * Tests: apps/server/e2e/flowRecord.e2e.test.ts, apps/server/e2e/testbedCleanup.e2e.test.ts; used by
- *   apps/server/e2e/appPlayEditor.e2e.test.ts and apps/server/e2e/publishWithReason.e2e.test.ts
+ *   apps/server/e2e/appPlayEditor.e2e.test.ts, apps/server/e2e/publishWithReason.e2e.test.ts,
+ *   apps/server/e2e/bankDuplicate.e2e.test.ts and apps/server/e2e/safeEditReset.e2e.test.ts
  */
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
 

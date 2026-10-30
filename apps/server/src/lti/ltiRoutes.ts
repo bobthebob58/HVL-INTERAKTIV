@@ -5,7 +5,7 @@
  * Why: the app mounts one router for Canvas (spec 02 LTI-001…007). The ltik resolver built here is also what the
  *      H5P and API routes use to authenticate LTI requests (../auth/requestPrincipal.ts), so the same platform,
  *      deployment and account checks run everywhere (D-050, D-051).
- * Spec: LTI-001, LTI-003, LTI-005, LTI-006, AUTH-005, PROD-012, UD-010
+ * Spec: LTI-001, LTI-003, LTI-005, LTI-006, AUTH-005, PROD-012, UD-010, PED-032
  * Invariants:
  *   - ltijs's routes come first, so its login and launch see the request before anything else of ours.
  *   - Errors from any of these routes end in `ltiErrorPages` (a page, or JSON for API calls), never in ltijs's JSON.
@@ -15,7 +15,8 @@
  * Collaborators: ./LtiProviderFactory.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts,
  *   ./play/ltiPlayRoutes.ts, ./play/ltiEditRoutes.ts, ./play/appLaunchRoutes.ts, ./deepLinking/deepLinkRoutes.ts,
  *   ./http/ltiErrorPages.ts, ./ltikPrincipal.ts, ../validation/activityLanguage.ts (the activity's language for
- *   the Canvas page's title, UD-010), ../server/createApp.ts.
+ *   the Canvas page's title, UD-010), ../learningDesign/metadata/learnerInfoFields.ts (minutes and purpose, PED-032),
+ *   ../server/createApp.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/deepLinking/deepLinking.int.test.ts,
  *   apps/server/test/lti/ltiPageLocale.int.test.ts
  */
@@ -31,6 +32,7 @@ import type { EditorViewDeps } from '../http/editorView.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import type { Database } from '../infra/prismaClient.js';
 import type { Redis } from '../infra/redisClient.js';
+import { readLearnerInfo } from '../learningDesign/metadata/learnerInfoFields.js';
 import type { PseudonymSecrets } from '../privacy/pseudonymSecrets.js';
 import type { DataEncryption } from '../security/keys/DataEncryption.js';
 import type { IdentityHasher } from '../security/keys/IdentityHasher.js';
@@ -175,7 +177,10 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
     const titleOf = async (id: string) =>
       (await db.h5PContent.findUnique({ where: { id }, select: { title: true } }))?.title ?? '';
     const languageOf = async (id: string) => activityLanguage(await contentStorage.getMetadata(id));
-    router.use(appLaunchRoutes({ resolveLtik: resolve, access: deps.access, titleOf, languageOf }));
+    const learnerInfoOf = (id: string) => readLearnerInfo(db, id);
+    router.use(
+      appLaunchRoutes({ resolveLtik: resolve, access: deps.access, titleOf, languageOf, learnerInfoOf }),
+    );
   }
   router.use(
     ltiEditRoutes({ editor: deps.editorView, pageCsp: deps.pageCsp, resolveLtik: resolve, canvasOrigins }),

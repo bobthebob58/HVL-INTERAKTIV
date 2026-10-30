@@ -10,7 +10,8 @@
  * Invariants:
  *   - The page's name comes first, so the part that differs is read first; the site name follows after " – ".
  *   - The start page keeps the site name alone (its `h1` is the site name).
- * Collaborators: ../app/layout.tsx (template), the pages under ../app, ../features/activity/ActivityView.tsx.
+ * Collaborators: ../app/layout.tsx (template), the pages under ../app, ./useLoadedPageTitle.ts (a title that loads in
+ *   the browser), ../features/activity/ActivityView.tsx.
  * Tests: apps/web/test/i18n/pageTitle.test.ts, apps/server/test/web/webChrome.browser.int.test.ts
  */
 import { t, type Locale } from './translate';

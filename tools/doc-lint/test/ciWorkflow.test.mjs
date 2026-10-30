@@ -1,7 +1,7 @@
 /**
  * Tests that CI runs every maintainability and dependency gate the specs require, with time for them.
  *
- * Spec: NFR-004, SEC-007, NFR-005
+ * Spec: NFR-004, SEC-007, NFR-005, PED-001
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -42,6 +42,13 @@ describe('[NFR-004] CI runs the maintainability gates', () => {
     expect(runs('playwright-core install --with-deps chromium')).toBe(true);
   });
 
+  it('[PED-001] checks the studio content after the H5P libraries are fetched (D-082, D-084)', () => {
+    const fetched = runLines.findIndex((line) => line.includes('npm run h5p:fetch-libraries'));
+    const checked = runLines.findIndex((line) => line.includes('npm run content:check'));
+    expect(checked).toBeGreaterThan(fetched);
+    expect(fetched).toBeGreaterThanOrEqual(0);
+  });
+
   it('[NFR-004] every npm script CI calls exists', () => {
     const scriptsOf = (workspace) =>
       workspace ? JSON.parse(readFileSync(`${root}${workspace}/package.json`, 'utf8')).scripts : scripts;
@@ -74,9 +81,14 @@ describe('[SEC-007] dependency hygiene in CI', () => {
     expect(runs('npm run check:audit')).toBe(true);
   });
 
-  it('[SEC-007] Dependabot opens weekly update pull requests', () => {
+  it('[SEC-007] Dependabot opens one grouped monthly pull request per ecosystem and never a major version', () => {
     const dependabot = readFileSync(`${root}.github/dependabot.yml`, 'utf8');
-    expect(dependabot).toMatch(/package-ecosystem: npm[\s\S]*interval: weekly/);
+    for (const ecosystem of ['npm', 'github-actions']) {
+      const block = dependabot.split(`package-ecosystem: ${ecosystem}`)[1].split('package-ecosystem:')[0];
+      expect(block).toMatch(/interval: monthly/);
+      expect(block).toMatch(/update-types: \[minor, patch\]/);
+      expect(block).toMatch(/update-types: \['version-update:semver-major'\]/);
+    }
   });
 });
 

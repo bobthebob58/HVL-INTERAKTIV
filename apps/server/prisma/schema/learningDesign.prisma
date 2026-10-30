@@ -22,6 +22,10 @@ model LearningDesignMetadata {
   courseCode              String?
   rationale               String?  @db.VarChar(1000)
   estimatedStudentMinutes Int?
+  /// The pattern the activity was created from (D-085, D-087), e.g. `ea-retrieval`; null otherwise.
+  patternId               String?  @db.VarChar(64)
+  /// One line on why the activity matters, shown to learners in the activity's language (PED-032, D-087).
+  learnerPurpose          String?  @db.VarChar(200)
   updatedAt               DateTime @updatedAt
 
   content  H5PContent        @relation(fields: [contentId], references: [id], onDelete: Cascade)
