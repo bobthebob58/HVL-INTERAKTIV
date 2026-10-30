@@ -14,7 +14,7 @@ what is done, what is verified, and what is blocked.
 | S3 | Feide OIDC + LTI 1.3 (ltijs 7) dual authentication, Deep Linking | 02 §1–4, §7 | ✅ Gate passed (2026-10-23); HVL's Feide and Canvas values open (Q3, Q4) |
 | S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ✅ Gate passed (2026-10-24); HVL's token and logo confirmation (Q2), the DPO's review of the privacy text (Q6) and the first manual AT run open |
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
-| S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | 🟨 In progress (started 2026-10-28; plan approved, D-082…D-100) |
+| S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §5–7; 05; 00 §6 | ⬜ Not started |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
@@ -282,7 +282,7 @@ text or API, removes or weakens no test (the test count does not drop) and keeps
 - [ ] Second round with smaller slices (about 2 000–3 000 lines per finder), the same two skeptics, until a round
       finds nothing new: the owner decides from these numbers
 
-## S5 — Læringsdesign studio 🟨 (started 2026-10-28)
+## S5 — Læringsdesign studio ✅ (gate passed 2026-10-30; Q17 and the open items below)
 
 Start from `docs/reference/proposals/phases.yaml` and `proposals/mappe-template.nn.md`; ALU must confirm labels, criteria and limits.
 
@@ -361,7 +361,14 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
         no longer be copied; a per-person copy limit; numeric blanks never accept typos; focus after every studio
         action; the D-083/D-084 deviations marked in code. Decisions D-083…D-096 amended (2026-10-29, S5 review)
 - [ ] Pilot evaluators from ALU and Pedagogisk akademi review the studio content (Q17; may stay open, record the outcome here)
-- [ ] Gate: as in the Evaluator Guide §5, S5 (D-100)
+      — outcome at the end of S5 (2026-10-30): requested, not yet done; the packet is `docs/reference/alu-review-s5.md`
+- [x] Gate: as in the Evaluator Guide §5, S5 (D-100) (2026-10-30, commit `b8ab740`; output in the session log)
+      — the first gate runs under full CPU load found three faults, each reproduced and fixed before the passing run:
+        on the **Deling** tab a focus request could be used up by an earlier commit's late effect, so focus fell to
+        the page after «Fjern meg» (`useFocusAfterChange`; the bank section's re-reads also no longer overtake a
+        change, 72fbcb2); React's late metadata `<title>` put the server's title back over a pattern's or an
+        activity's loaded name on a slow device (`useLoadedPageTitle`); and the title test and the accessibility
+        suites now wait until a view has loaded before they check it (b8ab740)
 
 **Open items at the end of S5** (listed with the gate output, D-100; limitations 16–21 in the Evaluator Guide §6):
 1. **The ALU and pilot review (Q17):** the phase labels and texts, the guide in three languages and its sixteen
@@ -383,7 +390,14 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
    and a listing only while its owner is findable staff; people search allows a fixed 30 searches a minute per
    person; a copy whose source and source author are both deleted shows
    no «Kopi av …» sign; on the **Deling** tab a student-author owner still sees people search and gets the server's
-   refusal; the first save after HVL installs a newer minor version of a content type counts as structural.
+   refusal; the first save after HVL installs a newer minor version of a content type counts as structural; two
+   changes to the co-authors or the bank that overlap (a second press before the first answer) show their answers
+   in the order they arrive.
+8. **Notes from the gate:** `check:licences` passed while a stray `node_modules/node_modules` link hid the
+   workspaces from npm and it counted 1 production package instead of 482 (the link was removed before the gate;
+   a guard that fails on an implausibly small production set is S6 work). The per-ID runs for `NFR-003` and
+   `UD-031` select no tests in the root Vitest project: their tests are in the accessibility suite, which the gate
+   runs as `npm run test:a11y`.
 
 ## S6 — Grade bridge, insight, privacy, deployment ⬜
 
@@ -752,3 +766,47 @@ Append one entry per session: date, session, what was done, gate output, and any
   (section S5). Recorded D-082…D-100; amended spec 04 (code locations, Markdown instead of MDX, skeletons in
   `content/`, public guide), spec 02 (`LTI-005`, `LTI-007`: the Canvas side in S6) and CLAUDE.md §2–§3; added Q17.
   The hourly restart task is on until S5 is done.
+- **2026-10-30 · S5 gate** — The review fixes (49219ce) went green on GitHub; the local gate under full load then
+  found three faults, each reproduced deterministically and fixed with tests that fail without the fix: the
+  **Deling** tab's focus after a change (72fbcb2, three verification rounds), the loaded page title on slow devices
+  and the checks that ran before a view had loaded (b8ab740). GitHub CI green on both. Gate output (commit b8ab740,
+  run in parts of under 2 hours; every step exit 0):
+
+  ```
+  $ npm run typecheck · lint · format:check · lint:css           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 482 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check                              ✓ 22 models, 173 fields
+  $ npm run h5p:fetch-core · h5p:fetch-libraries                 ✓ hashes match · ✓ 120 libraries and 10 packages
+  $ npm run build · tokens:check                                 exit 0 · ✓ 3 files up to date, feedback prefixes up to date
+  $ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set
+  $ npm run spec:trace -- --check --done-through=S4 · S5         ✓ 126 requirements, traceability up to date (both)
+  $ npm run spec:site -- --check · docs:api · boot-check         ✓ up to date · html generated · exit 0
+  $ npx vitest run                                               Test Files 504 passed (504) · Tests 26316 passed (26316)
+  $ npm run test:e2e                                             Test Files 12 passed (12) · Tests 20 passed (20)
+  $ npm run test:a11y                                            Test Files 16 passed (16) · Tests 497 passed (497)
+  $ npx vitest run -t <filter>, files/tests passed               AUTH-00 58/429 · LTI-00 79/438 · H5P-002|PROD-002 18/43 ·
+                                                                   SEC-003|H5P-011|H5P-006 31/18720 · SEC-001 8/111 ·
+                                                                   PROD-004|PROD-005|PROD-006|H5P-007 36/122 · UD-0 134/1050 ·
+                                                                   PED-020 16/129 · PROD-003|UD-022 29/159 ·
+                                                                   PROD-011|DATA-006|DATA-011 32/144 · PED-0 86/601 ·
+                                                                   PROD-001|PROD-009 24/103 · PROD-007|PROD-013 74/3904 · MAPPE- 30/262
+  $ npx vitest run -t "\[<ID>\]", tests passed                  PROD-003 156 · PROD-011 27 · NFR-003 0* · H5P-009 6 · UD-001 126 ·
+                                                                   UD-002 7 · UD-003 67 · UD-004 5 · UD-005 3 · UD-006 151 · UD-007 13 ·
+                                                                   UD-008 14 · UD-009 8 · UD-010 31 · UD-011 62 · UD-012 7 · UD-013 131 ·
+                                                                   UD-020 272 · UD-021 216 · UD-022 20 · UD-030 23 · UD-031 0* ·
+                                                                   PED-020 118 · DATA-006 63 · DATA-011 58 · DOC-012 53 · PED-001 88 ·
+                                                                   PED-002 132 · PED-003 34 · PED-010 72 · PED-011 12 · PED-030 105 ·
+                                                                   PED-031 32 · PED-032 21 · PROD-001 86 · PROD-007 3706 · PROD-009 18 ·
+                                                                   PROD-013 201 · MAPPE-001 68 · MAPPE-002 145 · MAPPE-003 18 · MAPPE-004 39
+                                                                   (* tested in the accessibility suite above)
+  $ npm run mock:platform & WEB_APP=dev npm start                /healthz, /lti/keys, /, /hjelp, /personvern, /api/docs: 200;
+                                                                   /laeringsdesign signed out; Feide sign-in (mock); pattern ea-diagnose →
+                                                                   a new activity's Rediger tab; /laeringsdesign/planlegg,
+                                                                   /laeringsdesign/innhaldsbank, /mappe: 200; downloads
+                                                                   pedagogisk-mappe-2026-10-30.md (44 021 bytes) and .pdf (491 186 bytes,
+                                                                   %PDF-1.4); 0 page errors
+  ```
+
+  Open at the end of S5: the items listed in section S5 (Q17 first). The hourly restart task is switched off.
