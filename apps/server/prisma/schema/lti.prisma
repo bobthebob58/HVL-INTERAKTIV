@@ -8,11 +8,14 @@ enum AttemptPolicy {
   mastery
 }
 
-/// State of one grade passback.
+/// State of one grade passback (LTI-012, D-104). Only `pending` is worked on; an author's retry makes a `failed` job
+/// pending again, while `succeeded` and `orphaned` are final.
 enum GradeSyncStatus {
   pending
   succeeded
   failed
+  /// The line item is gone (404, confirmed with a `lineitem.readonly` read); never retried (D-104).
+  orphaned
 }
 
 /// A registered LMS (e.g. HVL's Canvas). `url` is the issuer; the tool's private key is encrypted.
@@ -109,26 +112,48 @@ model LtiPlacement {
   @@index([contentId])
 }
 
-/// One score waiting to be sent to Canvas (AGS). PRIVACY: `ltiSubEncrypted` is the only raw learner ID kept
-/// longer than 24 hours (LtiIdToken.claims holds `sub` for 24 h); it is set to null 30 days after a successful
-/// sync (DATA-002).
+/// One formative score for one attempt, waiting to be sent to Canvas (AGS, LTI-012, D-104). The worker coalesces a
+/// learner's due jobs per placement, sends one score by the placement's attempt policy and settles them together.
+/// PRIVACY: `ltiSubEncrypted` is the only raw learner ID kept longer than 24 hours (LtiIdToken.claims holds `sub` for
+/// 24 h); it is set to null 30 days after `terminalAt`, whatever the outcome (DATA-002 as amended, D-104).
 model GradeSyncJob {
   id              String          @id @default(uuid(7)) @db.Uuid
   placementId     String          @db.Uuid
   learnerKey      String
   ltiSubEncrypted Bytes?
+  /// The bridge's attempt, `<viewId>:<n>`, whose gradable root result made the job (D-115).
+  attemptId       String
+  /// That result's `scaled × 100` (D-115); the attempt policy chooses among a learner's job scores (D-104).
   scoreGiven      Float
+  /// When the server stored that result (its statement's `timestamp`, D-115); orders the attempts for `latest`.
+  resultAt        DateTime
   status          GradeSyncStatus @default(pending)
   attempts        Int             @default(0)
   lastError       String?
+  /// `<placementId>:<learnerKey>:<attemptId>`: one job per placement, learner and attempt (D-104); a repeated
+  /// result of the same attempt updates its job.
   idempotencyKey  String          @unique
+  /// When the worker may next try; null once the job is no longer `pending` (D-104).
+  nextAttemptAt   DateTime?       @default(now())
   succeededAt     DateTime?
+  /// When the job stopped (succeeded, failed or orphaned); `ltiSubEncrypted` is cleared 30 days later (D-104).
+  terminalAt      DateTime?
+  /// The academic year of the pseudonym secret that made `learnerKey`; the yearly purge deletes by it (D-107). A job
+  /// comes from a Canvas request, which derives its key when it is made, so the database default (the year of the
+  /// write in Oslo) is that key's year; the enqueuer may still set it explicitly.
+  academicYear    Int             @default(dbgenerated("(EXTRACT(year FROM ((now() AT TIME ZONE 'Europe/Oslo'::text) - '7 mons'::interval)))::integer"))
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
   placement LtiPlacement @relation(fields: [placementId], references: [id], onDelete: Cascade)
 
-  @@index([status])
-  @@index([succeededAt])
+  // WHY: the worker claims due jobs by status and time (`FOR UPDATE SKIP LOCKED`, D-104).
+  @@index([status, nextAttemptAt])
+  // WHY: coalescing and the attempt policy read one learner's jobs in one placement (D-104).
+  @@index([placementId, learnerKey])
+  // WHY: the authors' status counts are per placement and status (LTI-012).
+  @@index([placementId, status])
+  @@index([terminalAt])
   @@index([learnerKey])
+  @@index([academicYear])
 }

@@ -9,6 +9,8 @@
  * Invariants:
  *   - The routes before S5 come first, unchanged in content and order (./routes/coreRoutes.ts).
  *   - Operation IDs and method-and-path pairs are unique across all areas (a test checks it).
+ *   - An area joins this list in the change that mounts its routes, since the server test compares the two: the S6
+ *     grade-bridge routes (./routes/gradeBridgeRoutes.ts) are described, and join when step 3 mounts them.
  * Collaborators: ./routes/*Routes.ts, ./apiRouteTypes.ts, ./openApi.ts, apps/server/src/http/api/apiRouter.ts.
  * Tests: packages/api-contract/test/openApi.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */

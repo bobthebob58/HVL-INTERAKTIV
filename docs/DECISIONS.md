@@ -120,11 +120,12 @@ with the commands given.
 | D-107 | `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year | Accepted (2026-10-30) |
 | D-108 | Data-subject requests: a server CLI that HVL operations run | Accepted (2026-10-30) |
 | D-109 | Database roles, encrypted-connection checks in production, and a request log without personal data | Accepted (2026-10-30) |
-| D-110 | Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV | Accepted (2026-10-30), HVL's runtime and DNS open (Q5) |
+| D-110 | Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV | Accepted (2026-10-30), HVL's runtime and DNS open (Q5), build egress to the owner (Q21) |
 | D-111 | An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it | Accepted (2026-10-30), texts to HVL's language advisers and ALU (Q2, Q17) |
 | D-112 | Upstream reports drafted for the owner to file; Lumi stays at 10.0.4 | Accepted (2026-10-30) |
 | D-113 | The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard | Accepted (2026-10-30) |
 | D-114 | New development dependencies in S6 | Accepted (2026-10-30) |
+| D-115 | xAPI capture, statement identity, attempts and gradable results (probe P1) | Accepted (2026-10-30), ALU and the owner to answer Q18–Q20 |
 
 ---
 
@@ -2521,6 +2522,15 @@ loading of one spec per session are kept.
   View play counts as one learner in insight and is graded for Canvas's test student; reloading the page in
   the middle of an attempt starts a new `attemptId`, which inflates `INS-001`'s median attempts; and a learner can
   forge their own statements and attempt IDs, which `LTI-013` already accepts.
+- **Amendment (2026-10-30, probe P1):** D-115 makes three parts of this decision concrete. *Once per statement:* the
+  bridge registers only in a document that is not one of Core's iframes (`window.frameElement` is not an
+  `h5p-iframe`) and ignores an event that `H5P.isFramed && H5P.externalEmbed === false` marks as relayed; a set of
+  seen events cannot work, because each window's bridge has its own. *Learners only:* the bridge is the last script
+  in `playerGlobalAssets`, and the player page leaves it and its configuration out for anyone but a learner
+  principal; without a configuration it does nothing. The server's own check is unchanged.
+  *Attempts:* the rule stands, written as `attemptId` = `<viewId>:<n>`. The bridge sends only the statements the
+  server stores, each with a `statementId` that the server inserts once, and the stored `timestamp` keeps the
+  batch's order (D-115).
 
 ### D-103 · Course contexts are stored with their platform: `<platformId>:<contextId>`
 - **Context:** `DATA-012` stores a `contextId?` per statement, `InsightSnapshot` has one, `LTI-008` caches a learner
@@ -2615,6 +2625,12 @@ loading of one spec per session are kept.
   1 August (D-011), so a learner's policy history starts again, and in a course that runs across 1 August an earlier
   best score can be replaced by a lower later one; accepted for D-011's reason (the summer break) and named in the
   checklist.
+- **Amendment (2026-10-30, probe P1):** "a root statement (no `subContentId`) with the verb `completed` or
+  `answered` and a `result.score`" is D-115's gradable root result: the root by three structural tests, the
+  activity's main library in its category, `score.max` above 0, and not a replay. `scoreGiven` is `scaled × 100`.
+  Each attempt holds at most one such result, so `latest` is the job created last. "A later scored statement of the
+  same attempt" is then a duplicate, which the statement's ID already stops, or a forged one (`LTI-013`), which still
+  updates its job as above (D-115).
 
 ### D-105 · The formative line-item label is configurable, and scores are labelled formative wherever shown
 - **Context:** `LTI-013` labels AGS scores formative with the suffix "(formativ)" on the line-item `label`. On
@@ -2722,16 +2738,19 @@ loading of one spec per session are kept.
     secret still configured for a year the purge has completed, so a forgotten step shows.
 - **Alternatives considered:** (a) 15 August with a timestamp cut: it deletes nothing on that day, or splits a
   learner's year. (b) The server destroying secrets itself: it would need write access to HVL's secret store.
-- **Consequences:** `SPEC-DEVIATION` from `DATA-003` in two points: the default date (31 August instead of
-  15 August), and which rows go. The purge takes the ended year's rows by their stored year, and learner `Identity`
-  rows created before 1 August, not every row "older than the academic-year boundary plus 30 days", which, read on
-  the run date, would also take the new year's first 30 days. The 30 days after the boundary are kept, as the time
-  before the purge may run. `academicYear` on `XapiStatement` is a field outside `DATA-012`'s list, so this is a
-  `SPEC-DEVIATION` from `DATA-012` too: it holds no statement data, only the year of the secret behind the row's
-  `learnerKey`, which the key cannot reveal and a timestamp can misstate (a portal session made before 1 August can
-  keep its `learnerKey` for up to 12 hours after it, D-057). D-103 (a) refused a `platformId` column partly for this
-  reason; there the context string can carry the platform, while nothing else carries the year. Spec 05 gets
-  amendment notes on `DATA-003` and `DATA-012`. Migration `s6_grade_bridge_insight` adds the column, and a
+- **Consequences:** `SPEC-DEVIATION` from `DATA-003` in three points: the default date (31 August instead of
+  15 August), which rows go, and who destroys the pseudonym secret. The purge takes the ended year's rows by their
+  stored year, and learner `Identity` rows created before 1 August, not every row "older than the academic-year
+  boundary plus 30 days", which, read on the run date, would also take the new year's first 30 days. The 30 days
+  after the boundary are kept, as the time before the purge may run. `DATA-003` has the scheduled job destroy that
+  year's secret; here the job cannot, so HVL operations destroy it in a runbook step after the real run, and the
+  start-up warning shows a forgotten one. `DATA-002`'s rule that a year's secret is destroyed when that year's data
+  is purged still holds, through that step. `academicYear` on `XapiStatement` is a field outside `DATA-012`'s list,
+  so this is a `SPEC-DEVIATION` from `DATA-012` too: it holds no statement data, only the year of the secret behind
+  the row's `learnerKey`, which the key cannot reveal and a timestamp can misstate (a portal session made before
+  1 August can keep its `learnerKey` for up to 12 hours after it, D-057). D-103 (a) refused a `platformId` column
+  partly for this reason; there the context string can carry the platform, while nothing else carries the year.
+  Spec 05 gets amendment notes on `DATA-003` and `DATA-012`. Migration `s6_grade_bridge_insight` adds the column, and a
   `contentVersion` to `InsightSnapshot`, which has none today. A learner who comes back after the purge gets new
   rows, as the new year's key already makes them a new pseudonym. The integration test travels through a year in
   time (`DATA-003`'s Verify) and checks D-034's rule.
@@ -2863,6 +2882,90 @@ loading of one spec per session are kept.
   because every file keeps `nosniff`, the sandbox CSP and `attachment` for all but media (D-045). If Docker does not
   run here, the image and compose files are written here and GitHub CI runs them (D-113). HVL decides the runtime (a
   Docker host, Kubernetes or OpenShift), the sandbox settings, DNS and certificates (Q5).
+- **Amendment (2026-10-30, probe P3):** Docker works here (Docker 29.8.2 with BuildKit and compose 5.6.0: builds with
+  network steps, compose with health checks, and Chromium's sandbox as a non-root user), and a second agent re-ran
+  every decisive step. So one `Dockerfile` and one smoke script run both here and in GitHub CI, and the fallback
+  above ("written here, and GitHub CI runs them") is not needed. What changes:
+  - **Base:** the builder and runtime stages start from
+    `ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852`, with Node 24 copied from
+    `node:24-bookworm-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c`
+    (`/usr/local/bin/node` and `/usr/local/lib/node_modules`, with links for `npm` and `npx`). That digest holds
+    v24.22.2, this host v24.22.1 and `.nvmrc` says `24`: the digest decides. Ubuntu, because apt works here only from
+    `archive.ubuntu.com` (`deb.debian.org` is refused), playwright-core 1.56.1's `install-deps` targets it, CI runs
+    `ubuntu-24.04`, and its `libssl3` makes Prisma 7.10.1 install its OpenSSL 3 schema engine. Not used: Debian slim
+    (no libssl, so Prisma falls back to its OpenSSL 1.1 engine with a warning, and apt cannot fix that here), Alpine,
+    and `mcr.microsoft.com/playwright:v1.56.1-noble` (Node 22.20.0, root, 3.68 GB).
+  - **Build:** `npm ci` runs on the Ubuntu builder, with install scripts (the `@prisma/engines` postinstall fetches
+    the schema engine from `binaries.prisma.sh`) and with the root `package.json`, whose `allowScripts` names
+    `prisma`, `@prisma/engines` and `esbuild` at their pinned versions, so a bump of one changes `allowScripts` in the
+    same commit. Network steps use the bridge network. The agent proxy's CA reaches them only as an optional BuildKit
+    secret (`RUN --mount=type=secret,id=proxy_ca,required=false`, which sets `NODE_EXTRA_CA_CERTS` only when the
+    file exists), passed here and never in CI; it never enters a layer (checked with `docker history`). apt uses plain
+    HTTP and needs no CA. Not used: `--network host` with proxy build arguments, which breaks apt (the agent proxy
+    answers 405 to plain HTTP).
+  - **Egress:** a build fetches only from Ubuntu's archive (`archive.ubuntu.com`, `security.ubuntu.com`),
+    `registry.npmjs.org` (every package in the lockfile resolves there) and `binaries.prisma.sh`, and in CI from
+    Playwright's download host for Chromium. It never
+    fetches GitHub repository content: GitHub is gated per repository for this session, `raw.githubusercontent.com`
+    answering is not a sanctioned route, and testing GitHub from inside a container was refused as a containment
+    escape. So the H5P core and editor, fetched and hash-checked on the host by `npm run h5p:fetch-core` (D-027), and
+    the content-type bundle above come into the build as build contexts, and their hashes are checked again there;
+    this replaces "fetches H5P core and editor" under **Image**. The owner is asked to confirm the bridge network's
+    direct egress (Q21).
+  - **Chromium:** full Chromium (`chromium-1194`, about 597 MB), not the headless shell (about 323 MB):
+    `SharedChromium`'s default `chromium.executablePath()` finds it, so no new setting is needed, and the image runs
+    the binary the tests run (D-065). The browsers come from a stage `pwbrowsers` (`FROM scratch`), filled in CI by
+    `npx playwright-core@1.56.1 install chromium` and replaced here by `--build-context pwbrowsers=/opt/pw-browsers`,
+    since Playwright's download hosts are refused here. The host's `headless_shell` is never copied: it is a shell
+    wrapper with an absolute path. The host's `chrome` binary changed after its install marker, so the smoke prints
+    `chrome --version` and the binary's SHA-256, and an image built here can be compared with CI's.
+  - **Sandbox:** the app runs as a non-root user (uid 10001), `PDF_ALLOW_NO_SANDBOX` stays unset (D-096), and the app
+    service gets `security_opt: ['seccomp=<file>']` with Playwright's v1.56.1 seccomp profile vendored in the
+    repository (`utils/docker/seccomp_profile.json` at tag `v1.56.1`, 12 997 bytes, SHA-256
+    `cc3e61cabda6bbc1e53e54d27ba4d55a9d3be829b6dd1a596f4a7b31b1cc7849`, Apache-2.0), with its source in a README
+    beside it and a test of the hash. It is taken from that tag through `git`, the route D-027 and D-078 use, and
+    checked against the hash; P3's copy came over `raw.githubusercontent.com` (see **Egress**) and is not committed.
+    Under Docker's default profile Chromium stops with "No usable sandbox!", as root it refuses its sandbox, and
+    `seccomp=unconfined` or `SYS_ADMIN` work but allow far more. This replaces
+    "unprivileged user namespaces or a seccomp profile" under **Image**. Whether HVL's runtime allows a custom seccomp
+    profile joins Q5; if it does not, PDF export needs a renderer container of its own, never `--no-sandbox`. CI keeps
+    its `kernel.apparmor_restrict_unprivileged_userns=0` step before the container smoke; whether AppArmor needs more
+    there cannot be tested here.
+  - **Fonts:** `install-deps chromium`, and `fonts-dejavu-core` named so the image does not depend on what
+    `install-deps` brings; Chromium picks Liberation Sans, which embeds æ, ø and å. The smoke checks one PDF with
+    `pdftotext` (the æ, ø and å text), `pdffonts` (embedded subsets), `pdfinfo` (tagged, A4) and the launch log (no
+    "No usable sandbox", no `--no-sandbox`); poppler-utils run on the host or in CI, never in the image.
+  - **Compose:** the app's stack (the app, the migrate and seed steps, and its own PostgreSQL 16, Redis 7 and S3
+    emulator) is a separate compose file with its own project name, not a profile `app` in `docker-compose.yml`:
+    that file's services have no profile, so they start with any profile, and they publish 5432, 6379 and 5000, which
+    the native services hold here ("address already in use", observed). The new file publishes only the app, on
+    127.0.0.1, reaches the other containers by service name, and pins every image by digest; `docker-compose.yml`
+    keeps the test services for `docker compose up -d` (D-023), and it and CI's service containers take the same
+    digests. `SPEC-DEVIATION` from
+    `NFR-007`, the file name only: the app's local and staging stack is not in `docker-compose.yml`.
+  - **Docker Hub through a mirror here:** the anonymous pull quota counts per address of a rotating egress pool and
+    was used up on two of three addresses, so this sandbox's `dockerd` runs with
+    `--registry-mirror=https://mirror.gcr.io`, which serves the same digests. Dockerfiles and compose files keep plain
+    `docker.io` names pinned by digest, and scripts resolve images only through the daemon (`docker pull`,
+    `docker build`), never with client-side registry calls (`docker buildx imagetools inspect`,
+    `docker manifest inspect`), which bypass the mirror. CI needs no mirror.
+  - **`dockerd` here:** it does not persist (PID 1 is Firecracker's `process_api`, with no systemd), so it is
+    started by hand with the mirror flag. The smoke script starts no daemon: it checks `docker info` and stops with
+    that instruction. The sandbox's extras (the CA secret and the browser build context) are passed only when
+    `HVLI_DOCKER_SANDBOX=1` is set, never because a path exists, so CI cannot pick them up by accident.
+  - **Disk:** the image is about 2.2 GB, an `npm ci` stage about 1.7 GB and the build cache up to about 6 GB, against
+    about 17 GB free here at rest (the probes reached 92 % use). The smoke script prints the free space before and
+    after, ends with `docker compose down -v`, removes its own image tags and prunes only its own build cache (its
+    own buildx builder), never `docker builder prune -af` or `docker system prune`, which would remove other sessions'
+    cache. The stopped `hvli-pg`, `hvli-redis` and `hvli-s3` containers and their volumes (2026-10-21) are left to
+    the owner.
+  - **Load test (`NFR-001`, D-114):** k6, as
+    `grafana/k6:2.3.0@sha256:2dd4756ec6e14e62778916e1eb850108e4b499304c02df56760fa0bdb0fba0b8` (AGPL-3.0, a separate
+    program outside the npm tree), observed working against a local target on the host and bridge networks (p95
+    about 4 ms, no failed requests). Not Artillery: 2.0.34 adds about 463 MB and a second Playwright (1.62.1 beside
+    the pinned 1.56.1), and its floating ranges already broke 2.0.30 ("Cannot find module
+    '@smithy/node-config-provider'"). 2.3.0 rather than the 1.x line, because the scripts are new and it is the
+    version tested; the image rather than the release binary, so one pinned digest serves here and in CI.
 
 ### D-111 · An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it
 - **Context:** S5's probe P1 found that many `nn` and `nb` defaults of the real libraries are English (MultiChoice,
@@ -2924,6 +3027,9 @@ loading of one spec per session are kept.
   evidence, left to the students with the drafts. (c) The agent filing from the owner's account: the owner decides
   what is published under their name.
 - **Consequences:** R-09 stays open, and the hand-off index (D-101) carries the expiry date and the three choices.
+- **Amendment (2026-10-30, probe P1):** the drafts also hold an H5P report for QuestionSet 1.21, whose `resetTask`
+  resets every `.h5p-progress-dot` in the document, so its «Prøv igjen» fails on a page with several sets
+  (D-115, Q20).
 
 ### D-113 · The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard
 - **Context:** S5's gate took about 5 hours here, in parts of under 2 hours (the limit of a background command), and
@@ -2964,6 +3070,9 @@ loading of one spec per session are kept.
   record of what PROGRESS tracks (D-079's reasoning).
 - **Consequences:** Extends D-100's gate to S6 and amends the Evaluator Guide §5. The gate output says which parts
   ran where.
+- **Amendment (2026-10-30, probes P1 and P3):** Q18–Q20 (D-115) and Q21 (D-110's P3 amendment) join the questions
+  listed as open with the gate output. The image with Chromium and the compose smoke run here as well as in CI
+  (D-110's P3 amendment), so the gate runs them here; **Evidence from CI** stays for a step that still cannot.
 
 ### D-114 · New development dependencies in S6
 - **Context:** CLAUDE.md pins every dependency exactly, and D-029's checks allow only listed licences. `INS-006` asks
@@ -2985,3 +3094,214 @@ loading of one spec per session are kept.
   and the spec names `fast-check`.
 - **Consequences:** The property tests are titled `[INS-006]` and run in `npm test`; this is D-097's rule applied to
   S6.
+- **Amendment (2026-10-30, probe P3):** the load tool is **k6**, the container image
+  `grafana/k6:2.3.0@sha256:2dd4756ec6e14e62778916e1eb850108e4b499304c02df56760fa0bdb0fba0b8`, AGPL-3.0, run as a
+  separate program outside the npm tree, so `check:pins`, `check:licences` and `check:audit` see nothing new. Its
+  scripts are ours, in `tools/load/` as `NFR-001` asks, so this is no `SPEC-DEVIATION`. The reasons, and why not
+  Artillery, are in D-110's P3 amendment.
+
+### D-115 · xAPI capture, statement identity, attempts and gradable results (probe P1)
+- **Context:** Probe P1 played the ten real types (D-078) in Chromium on the production player and router, and
+  recorded every statement with its document, timing and size (332 statements); a second agent re-ran seven types,
+  the S5 pattern `uv-module` and a stand-in bridge (188 statements). D-102 left the attempt rule and the
+  de-duplication to this probe. Observed:
+  - **Where:** all ten types run div-embedded in the player document (`playerPage.ts` renders
+    `<div class="h5p-content">`, although nine of the libraries declare `embedTypes: ["iframe"]`), and every statement
+    arrives there exactly once. None reaches the web app's top window, which has no `window.H5P`. With H5P's own
+    `<iframe class="h5p-iframe">` embedding, which the production CSP allows and only our div template prevents, each
+    statement arrives twice, in the iframe and relayed to the player document as the same event object, and a
+    `playerGlobalAssets` script runs in both documents, because H5P copies `H5PIntegration.core.scripts` into the
+    iframe. In that iframe `H5P.externalEmbed` is still undefined while scripts are evaluated (H5P sets it to `false`
+    later), a set of seen events kept per window misses the other window's copy, and `location.href` is the player's
+    URL in both.
+  - **Shape:** no `id` and no `timestamp`; the actor is always `{"name":"","mbox":"mailto:"}`; `object.id` is the
+    bare content ID or `<contentId>?subContentId=<uuid>`; the verbs are exactly `LTI-011`'s five.
+  - **Volume:** `interacted` and `progressed` are 38–76 % of all statements, and none of them carries what an `INS`
+    requirement uses: BranchingScenario's choice `interacted` has no response, and InteractiveVideo sends no
+    `progressed` at all. The peak was 43 statements a minute at automated speed, 22 without those two verbs.
+    Statements are 681 B at the median and 1 524 B at p95, but H5P does not bound answers: one gap of 5 000
+    characters made a statement of 7 967 B.
+  - **Attempts:** H5P marks none. A retry sends nothing, or only `progressed` (CoursePresentation,
+    BranchingScenario). Root `attempted` means "the page loaded": it comes again on every reload, never on a retry,
+    and never from Column or ImageHotspots, nor from InteractiveBook before «Les». On resume, CoursePresentation
+    re-sends its scored `completed` with no learner action when it opens on the summary slide, and InteractiveBook
+    offers the same submission again. Column sends a scored root `completed` after every «Sjekk» once all its tasks
+    are answered, and InteractiveBook sends each chapter's `completed` twice within about 30 ms.
+  - **The root:** no single test finds it. H5P's own (no `contextActivities.parent`) takes InteractiveBook's chapter
+    `completed` for the root; `LTI-012`'s (no `subContentId`) takes the context-less `interacted` that DragText sends
+    while it restores state inside a QuestionSet, and every child of content saved without `subContentId`s, which
+    `POST /h5p/content` accepts. InteractiveBook without a cover sends one root `attempted` with no context at all.
+  - **Scores:** `result.success` comes at the root only from MultiChoice and QuestionSet. InteractiveBook (its «Send
+    inn rapport» needs `H5PIntegration.reportingIsEnabled`, which we do not set) and InteractiveVideo (no submit
+    screen in our example or in `fa-video`) send no root score, and ImageHotspots sends no statement at all. Every
+    ending of `uv-case` scores 10 of 10 (read from the pattern). In `uv-module`, a chapter check's «Prøv igjen»
+    throws in QuestionSet 1.21 (its `resetTask` walks every `.h5p-progress-dot` in the document, and the book holds
+    three sets), and the results page stays.
+  - **Durations** mean different things by type: summed across retries, reset by DragText's retry, counted from
+    pre-rendering in nested content, or absent from a nested QuestionSet.
+
+  Not observed: a play through the real portal page or a Canvas launch into `/app/play`; the code renders the same
+  div template there.
+- **Decision:** binding for step 3. Where a point is ALU's or the owner's, the default below holds until they answer
+  (Q18–Q20), so nothing waits.
+  - **Where the bridge runs:** `xapiBridge.js` is the last script in `playerGlobalAssets`, after the theme scripts,
+    and never in `editorGlobalAssets`. It is therefore evaluated after `h5p.js` and the `x-api` scripts and before the
+    library scripts and document-ready, where H5P sends root `attempted`. While it is evaluated, it registers
+    synchronously with its own document's `H5P.externalDispatcher.on('xAPI', …)`, unless `window.frameElement` has
+    the class `h5p-iframe` (a Core iframe, whose events the parent's bridge sees; a cross-origin parent such as Canvas
+    gives `null`, and the web app's frame never carries that class). At event time it also ignores an event when
+    `H5P.isFramed && H5P.externalEmbed === false`. The player page includes the script, and renders its configuration
+    (the endpoint and the content's ID and version; no identity), only for a learner principal; for anyone else it
+    leaves both out (D-102), and without a configuration the script does nothing. The div template stays; the guard
+    covers a future iframe embedding. `H5P.externalEmbed` read at evaluation, a per-window set of seen events and
+    `location.href` are not used: each failed in the probe.
+  - **What the bridge sends:** only what the server may store: the first root `attempted` of the page load, every
+    `answered`, and a root `completed`; never `interacted`, `progressed`, or a sub-content `attempted` or
+    `completed`. Each statement is cut down to what the server reads: `verb.id`; `object.id` and
+    `object.definition.interactionType`; `context.contextActivities.parent` and `category`; the extensions
+    `h5p-subContentId` and `h5p-local-content-id`; and `result.score`, `success`, `completion`, `duration` and
+    `response`, capped as below. No `actor`, question text, choices, feedback or other extensions. Each item carries
+    a `statementId` (`crypto.randomUUID()`, one per dispatched event) and an `attemptId`.
+  - **Batches:** every 2 s, at most 50 items and 60 000 bytes of JSON, one request in flight. A batch that fails
+    with a network error, a 5xx or a 429 goes back to the head of the queue; one refused with any other 4xx is
+    dropped. On `pagehide`, everything not yet acknowledged, the request in flight included, goes in one `keepalive`
+    request, within the browser's 64 KiB and the same 50 items and 60 000 bytes, oldest first; what does not fit is
+    lost, as D-102 accepts for a large last flush. The server skips what an earlier request already stored. A batch
+    names its content and version once: the version the page was rendered with (D-093), which the server accepts from
+    1 up to the current version, so a page opened before a structural save never labels its statements with the new
+    one.
+  - **What the server accepts and stores (`LTI-011`, `DATA-012`):** it still accepts all five verbs. It ignores
+    `actor`, since the learner comes only from the request's principal (D-102), and it accepts a bare UUID as
+    `object.id`, a missing `context` and a numeric `response` (stored as text). Each item is checked on its own: an
+    invalid one (including one about another activity) is discarded and counted in the log, without its content, so
+    one odd statement never blocks its batch. A batch for an activity the principal may not view (in Canvas, any but
+    the launched one), or with over 50 items or over 64 KiB, is refused with 403, 400 or 413, and the bridge drops it.
+    Stored: a root `attempted`; an `answered` of the root or of sub-content (its `subContentId` from the extension,
+    else from `object.id`); a root `completed` that is not a replay. Discarded: `interacted`, `progressed`, a
+    sub-content `attempted` or `completed`, a sub-content statement without a `subContentId`, and a replay. The answer
+    is 202, with no detail per item.
+  - **Identity and time:** the `statementId` becomes `XapiStatement.id`, inserted so that an existing ID is skipped
+    (the `pagehide` flush, a request retried after a lost answer); `DATA-012` gains no field. A content hash is never
+    an identity, since identical statements are normal (seven identical Blanks `interacted` within 100 ms). The
+    stored `timestamp` is the server's receive time plus the item's place in the batch in milliseconds, so the
+    batch's order survives as a strict order (D-102's receive time, within 49 ms); the browser's clock is never read.
+  - **The root and gradable results:** a statement is **root** when `object.id` is the content ID with no
+    `?subContentId=`, it has no `h5p-subContentId` extension, and it has no `contextActivities.parent`. A **root
+    result** is a root `answered` or `completed` whose `category[0].id` names the activity's main library
+    (`http://h5p.org/libraries/<machineName>-<major>.<minor>`); it is **gradable** when `result.score.max` is above 0
+    and it is not a replay. Each test alone misclassifies a case above; a root `attempted` needs no category, since
+    InteractiveBook's has none. The score is `scaled`, checked against `raw / max` within 0.0001 (Core rounds it to
+    four decimals; an item outside is discarded), never `success`. One server module holds these tests, the bridge
+    repeats them for its attempt counter, and both are tested on P1's fixtures.
+  - **Attempts:** `attemptId` is `<viewId>:<n>`. `viewId` is a `crypto.randomUUID()` made once per page load, and
+    `n` starts at 1 and goes up by one right after the bridge sends a root result with `score.max` above 0 (the
+    bridge cannot tell a replay; the server can). An attempt therefore holds at most one result, and a retry, which
+    H5P does not announce, becomes a new attempt at its next result; statements after the last result form an open
+    attempt. The server checks the shape (a UUID, a colon, a positive integer) and reads the view part only for the
+    replay rule. This keeps D-102's rule.
+  - **The attempt policy (`LTI-012`, D-104):** each stored gradable result in a Canvas launch writes a
+    `GradeSyncJob` per `(placement, learnerKey, attemptId)`, with `scoreGiven` = `scaled × 100`. `best` sends the
+    learner's highest job score in the placement, `latest` the score of the job created last (jobs are created in
+    result order), and `mastery` 100 once any job's score reaches the threshold, else `latest`.
+  - **Replays and repeats:** a root `completed` is a **replay** when its page load stored no `answered` since its
+    previous root result (or since the load), and its `scoreRaw` and `scoreMax` equal those of the learner's latest
+    stored root result for the same content, context and version. BranchingScenario is exempt: an end screen is
+    reached by navigation alone, its choices are `interacted`, and it was not seen to replay. The rule drops
+    CoursePresentation's `completed` re-sent on resume or on a revisit of the summary slide, and a re-submission of
+    InteractiveBook or QuestionSet after a reload; it keeps a first submission after a reload (there is no earlier
+    result) and a check after changed answers. P1's guard in the bridge (no learner activity since the page loaded)
+    is not used: it would drop that first submission. Column's `completed` after each «Sjekk» follows an `answered`,
+    so each is a result and an attempt, and D-104's coalescing sends one current score. InteractiveBook's double
+    chapter `completed` and DragText's context-less `interacted` are never sent.
+  - **Gradable root result per type:**
+
+    | Type | Gradable root result | Score | `success` at root |
+    |---|---|---|---|
+    | MultiChoice 1.16 | `answered`, at every «Sjekk» | H5P's | yes |
+    | Blanks 1.14 | `answered`, at every «Sjekk» | correct gaps | no |
+    | DragText 1.10 | `answered`, at every «Sjekk» | correct drops | no |
+    | QuestionSet 1.21 | `completed`, at every finish («Avslutt») | sum of the questions | yes (pass mark) |
+    | Column 1.18, 1.22 | `completed`, at every «Sjekk» once all tasks are answered | sum of the tasks | no |
+    | CoursePresentation 1.28 | `completed`, at every arrival on the summary slide | sum of the tasks | no |
+    | InteractiveBook 1.15 | `completed`, at «Send inn rapport», with `reportingIsEnabled` (the default, Q18) | sum of the chapters | no |
+    | InteractiveVideo 1.28 | `completed`, at «Send inn svar», only with a submit screen its author added (Q18) | sum of the interactions | no |
+    | BranchingScenario 1.10 | `completed`, at an end screen, unless its scoring is `no-score` (maximum 0) | the end screen's or the path's | no |
+    | ImageHotspots 1.11 | none: it sends no statement | none | none |
+
+  - **InteractiveBook and InteractiveVideo (Q18):** the player page sets `reportingIsEnabled: true`, H5P's switch
+    for a platform that records results, which ours is. Of the ten types only InteractiveBook reads it (so does
+    DocumentationTool, which is not offered). The learner then sees «Send inn rapport» on the book's summary page,
+    and H5P's own score reaches Canvas as QuestionSet's does at its finish; the library's text after sending («Svara
+    dine er sende inn til vurdering») can get a formative wording through D-111's overlay if ALU wants one. An
+    InteractiveVideo is graded only when its author adds a submit screen: no validator rule and no pattern change in
+    S6, so `fa-video` sends no score. Not chosen: a score the bridge computes from `getScore()` (a statement H5P never
+    sent), or no grade for the main InteractiveBook pattern.
+  - **`uv-case` (Q19):** unchanged. Its pattern gives every ending 10 on purpose ("the score shows that the student
+    has worked through the case"), so Canvas gets 100 for every completed case: a completion mark, and formative like
+    every score here (D-105). Not chosen without ALU: scores per choice (a pattern change that would grade
+    professional judgement) or no Canvas score for it.
+  - **`uv-module`'s chapter checks (Q20):** the pattern sets `endGame.showRetryButton: false` on its three
+    QuestionSets, so the failing «Prøv igjen» is not offered, and each question keeps its own «Prøv igjen»
+    (`override.retryButton: "on"`). If the regression test shows that the book's own «Prøv igjen» fails the same
+    way, the pattern turns that off too. A teacher's own page with two or more QuestionSets is expected to keep the
+    fault (read from the code, not observed): an accepted limitation for the pilot, drafted as an upstream report
+    (D-112). Not chosen now: a run-time repair of QuestionSet's `resetTask`, which would change library behaviour,
+    not attributes as D-080's repairs do, and needs its own decision.
+  - **Activities that send no score** (ImageHotspots, InteractiveVideo without a submit screen, BranchingScenario
+    with `no-score`): no `GradeSyncJob` is ever written, and the Deep Linking picker says so when the placement is
+    `assignment_selection`, in `nn`, `nb` and `en`.
+  - **What insight reads (`INS-001`…`INS-005`):** a learner has **started** with any stored statement for the
+    activity, so InteractiveBook without a cover counts at load, Column counts from the first answer, and no statement
+    is made up. **Completed** is a stored root result, **attempts** are the stored root results, and **time on task**
+    comes from the stored timestamps of each page load, never from `durationMs`. Where a type cannot send a root
+    result, completed, the rate and attempts are shown as not available, never as 0, and ImageHotspots' tab says that
+    it sends no learning data. `INS-002` and `INS-003` read `answered` by `subContentId` (correct is `success`, or
+    full marks where H5P sends no `success`). `INS-005`: InteractiveVideo sends no `progressed`, so there is no
+    drop-off curve, and the share of learners who answered each interaction is the measure, as `INS-005` allows.
+    `INS-004` (SHOULD) is not built in S6: BranchingScenario's choices are in no dispatched statement, only in its
+    `getXAPIData()` and saved state, and the last choice before an end screen sends nothing at all; building it
+    means statements the bridge makes (a `SPEC-DEVIATION`), after a probe shows that retried choices are kept. The
+    mappe's `ActivityResultsSource` (D-095) reads the same: attempts and completed as here, and the first and last
+    scaled score from the learner's first and last root results with `score.max` above 0.
+  - **Answers, durations and rates:** `response` is kept only for the interaction types `choice` and `fill-in`
+    (`INS-003`). Each gap (between `[,]`) is cut to 100 characters, which is enough to group the answers *k* learners
+    share; a response still over 1 000 characters (the column's limit) is not stored, because a shortened list would
+    shift its gaps. The bridge applies the same caps to keep batches small; the server enforces them. `durationMs` is
+    parsed from `result.duration` and stored, as `DATA-012` lists it (null when absent, unreadable or over 24 hours),
+    and no insight reads it. `LTI-011`'s 120 statements a minute per learner and activity stays: the measured peak
+    without `interacted` and `progressed` is 22, and the bridge sends fewer still, so a 429 (with `Retry-After`;
+    nothing from that batch is stored, and the bridge retries after it) means misuse.
+  - **Missing `subContentId`s:** creating, copying and importing content fill in each missing `subContentId` and keep
+    the existing ones; a save of stored content does not, since that would change D-093's structure signature. (The
+    pattern builder instead gives every node a new ID, since a skeleton's IDs must never be shared, D-084.) Nodes are
+    found by shape, as `learningDesign/patterns/subContentIds.ts` finds them, so a sub-content group with no
+    `subContentId` key still gets none until the editor adds it. A child of content without them sends statements the
+    server does not store.
+- **Alternatives considered:** (a) Identity by `(attemptId, seq)`: a field outside `DATA-012`, where the row's own ID
+  does the same. (b) Sending every statement, as `LTI-010` reads: 38–76 % more statements, raw statements of up to
+  8 KB with question text in a 64 KiB `keepalive` budget, and data no requirement uses. (c) A root `attempted` that
+  the bridge makes on H5P's `initialized` event for Column, ImageHotspots and InteractiveBook before «Les»: more
+  learners counted as started, from a statement H5P never sent. (d) One attempt per page load: a retry in the same
+  load would replace the better result under `best`. (e) P1's guard in the bridge: see **Replays and repeats**.
+  (f) Storing replays with a flag: a field outside `DATA-012`. (g) Any one of the root tests alone: each
+  misclassifies an observed case.
+- **Consequences:**
+  - `SPEC-DEVIATION`, exactly: `LTI-010` ("It POSTs each statement"): the bridge sends only what the server stores,
+    cut down, with a `statementId` and an `attemptId`. `LTI-011` ("Then it stores the minimal fields"): `interacted`,
+    `progressed`, sub-content `attempted` and `completed`, replays, and sub-content statements without a
+    `subContentId` are accepted and not stored, and an invalid item is discarded on its own. `LTI-012` (the root as
+    "no `subContentId`"): the tests above. The code carries `SPEC-DEVIATION: D-115`. Not deviated: `DATA-012`'s
+    fields, the five verbs, the score checks and the rate limit.
+  - D-102, D-104 and D-112 get amendments that point here, and D-113 lists Q18–Q20 as open. Step 3 adds amendment
+    notes to spec 02 (`LTI-010`, `LTI-011`, `LTI-012`) and spec 05 (`DATA-012`, `INS-001`, `INS-004`, `INS-005`).
+  - Tests: the mapper and the root tests on P1's fixtures (`[DATA-012]`, `[LTI-012]`); the bridge capturing each
+    statement once in H5P's iframe mode, and through the real portal page and a mock-platform launch into
+    `/app/play`, which P1 could not run (`[LTI-010]`); the replay rule on CoursePresentation's resume and
+    InteractiveBook's re-submission; and the nested QuestionSet retry in `uv-module`, pinned to the upstream
+    behaviour, so that a fixed version shows.
+  - Residuals, for the DPIA input and the students' checklist: `INS-001`'s attempts count each Column re-check and
+    each CoursePresentation summary reached after new answers; a learner who opens a Column and never checks is not
+    counted as started; ImageHotspots gives no insight and no grade; on a teacher's page with several QuestionSets a
+    set cannot be retried; content stored without `subContentId`s gives no insight per question; and time on task
+    runs only from a page load's first to its last stored statement, so reading before the first answer of a Column
+    and time after the last stored statement are not counted.

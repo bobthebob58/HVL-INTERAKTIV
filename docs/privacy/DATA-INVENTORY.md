@@ -130,11 +130,12 @@ Resume state of one learner in one activity (H5P-005).
 | `subContentId` | Part of the activity (`0` = whole) | None | n/a | Yearly purge | PG |
 | `dataType` | H5P state type, e.g. `state` | None | n/a | Yearly purge | PG |
 | `learnerKey` | The learner's yearly pseudonym (DATA-002) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
-| `contextId` | Canvas course, so state is separate per course; empty outside Canvas | None | n/a | Yearly purge | PG |
+| `contextId` | Canvas course, so state is separate per course; empty outside Canvas. The bare launch context ID, not `<platformId>:<contextId>`: a collision between two Canvas instances only shares one learner's own saved state, and changing the key would reset everyone's progress (D-103) | None | n/a | Yearly purge | PG |
 | `data` | The learner's answers so far, so they can resume (H5P's state as a JSON string, D-038) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `preload` | H5P: send with the player | None | n/a | Yearly purge | PG |
 | `invalidate` | H5P: drop when the activity changes | None | n/a | Yearly purge | PG |
-| `updatedAt` | Purge boundary | None | n/a | Yearly purge | PG |
+| `updatedAt` | When the state was last saved | None | n/a | Yearly purge | PG |
+| `academicYear` | The academic year (e.g. `2026` for 2026/27) of the pseudonym secret that made `learnerKey`; the yearly purge deletes the ended year's rows by it (`DATA-003`, D-107). The database default is the year of the write in Oslo time; migration `s6_grade_bridge_insight` set existing rows from `updatedAt`. A portal session keeps its key up to 12 hours past 1 August (D-057), so the writer sets the key's year itself. PRIVACY: a year, not about the learner | None | n/a | Yearly purge | PG |
 
 ## LibraryAuditEvent
 
@@ -237,20 +238,27 @@ An activity placed in a Canvas course.
 
 ## GradeSyncJob
 
-One score waiting to be sent to the Canvas gradebook.
+One formative score for one attempt, waiting to be sent to the Canvas gradebook (`LTI-012`, D-104, D-115). The
+worker sends one score per learner and placement, chosen by the placement's attempt policy, and settles that learner's
+due jobs together.
 
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
 | `id` | Internal key | None | n/a | Yearly purge | PG |
 | `placementId` | Which placement | None | n/a | Yearly purge | PG |
 | `learnerKey` | The learner's pseudonym | Pseudonymous | 6(1)(e) | Yearly purge | PG |
-| `ltiSubEncrypted` | Canvas user ID, which AGS requires; the only raw learner ID kept longer than 24 hours (`LtiIdToken.claims` holds `sub` for 24 h) (DATA-002) | Learner PII (encrypted) | 6(1)(e) | Set to null 30 days after success | PG |
-| `scoreGiven` | Formative score to send | Pseudonymous | 6(1)(e) | Yearly purge | PG |
-| `status` | Pending, succeeded or failed | None | n/a | Yearly purge | PG |
-| `attempts` | Retry count | None | n/a | Yearly purge | PG |
+| `ltiSubEncrypted` | Canvas user ID, which AGS requires; the only raw learner ID kept longer than 24 hours (`LtiIdToken.claims` holds `sub` for 24 h) (DATA-002) | Learner PII (encrypted) | 6(1)(e) | Set to null 30 days after `terminalAt`, whether the job succeeded, failed or was orphaned (D-104) | PG |
+| `attemptId` | The bridge's attempt (`<viewId>:<n>`, a random page-load ID and a counter) whose gradable result made the job (D-115) | None | n/a | Yearly purge | PG |
+| `scoreGiven` | The attempt's formative score (`scaled × 100`), from which the attempt policy chooses the score to send | Pseudonymous | 6(1)(e) | Yearly purge | PG |
+| `resultAt` | When the server stored that result (its statement's `timestamp`); orders a learner's attempts for the `latest` policy (D-115) | None | n/a | Yearly purge | PG |
+| `status` | Pending, succeeded, failed or orphaned (the assignment is gone from Canvas, D-104) | None | n/a | Yearly purge | PG |
+| `attempts` | How many times the worker has tried to send it (at most 8, D-104) | None | n/a | Yearly purge | PG |
 | `lastError` | Error code and HTTP status from Canvas, no response body | None | n/a | Yearly purge | PG |
-| `idempotencyKey` | Prevents sending the same score twice | None | n/a | Yearly purge | PG |
-| `succeededAt` | Starts the 30-day clock for `ltiSubEncrypted` | None | n/a | Yearly purge | PG |
+| `idempotencyKey` | `<placementId>:<learnerKey>:<attemptId>`: one job per placement, learner and attempt, so a repeated result updates its job instead of sending twice (D-104). PRIVACY: it holds the learner's pseudonym, as `learnerKey` does | Pseudonymous | 6(1)(e) | Yearly purge | PG |
+| `nextAttemptAt` | When the worker may next try (backoff); null once the job is no longer pending | None | n/a | Yearly purge | PG |
+| `succeededAt` | When Canvas accepted the score | None | n/a | Yearly purge | PG |
+| `terminalAt` | When the job stopped (succeeded, failed or orphaned); starts the 30-day clock for `ltiSubEncrypted` (D-104) | None | n/a | Yearly purge | PG |
+| `academicYear` | The academic year of the pseudonym secret that made `learnerKey`; the yearly purge deletes by it (`DATA-003`, D-107). Database default: the year of the write in Oslo time. PRIVACY: a year, not about the learner | None | n/a | Yearly purge | PG |
 | `createdAt` | Audit | None | n/a | Yearly purge | PG |
 | `updatedAt` | Audit | None | n/a | Yearly purge | PG |
 
@@ -297,15 +305,15 @@ An author published despite a validator error (UD-022).
 
 ## XapiStatement
 
-One learning event, reduced to the DATA-012 fields.
+One learning event, reduced to the DATA-012 fields (D-115: only what insight and grading read is stored).
 
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
-| `id` | Internal key | None | n/a | Yearly purge | PG |
+| `id` | The bridge's random `statementId`, so a statement sent twice is stored once (D-115) | None | n/a | Yearly purge | PG |
 | `contentId` | The activity | None | n/a | Yearly purge | PG |
 | `subContentId` | The question inside it | None | n/a | Yearly purge | PG |
 | `contentVersion` | Compare like with like across edits | None | n/a | Yearly purge | PG |
-| `contextId` | Canvas course, for per-course insight | None | n/a | Yearly purge | PG |
+| `contextId` | Canvas course, for per-course insight, as `<LtiPlatform.id>:<context ID>` so courses of two Canvas instances never merge (D-103); null for a portal play. A database CHECK refuses any other shape | None | n/a | Yearly purge | PG |
 | `learnerKey` | Counts distinct learners for *k*-suppression | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `verb` | answered, completed, … | None | n/a | Yearly purge | PG |
 | `scoreRaw` | Item difficulty (INS-002) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
@@ -315,8 +323,9 @@ One learning event, reduced to the DATA-012 fields.
 | `completion` | Completed or not | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `response` | Choice indices or short gap text, for misconceptions (INS-003) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `durationMs` | Time on task | Pseudonymous | 6(1)(e) | Yearly purge | PG |
-| `attemptId` | Groups events of one attempt | None | n/a | Yearly purge | PG |
-| `timestamp` | Insight period and purge boundary | None | n/a | Yearly purge | PG |
+| `attemptId` | Groups events of one attempt: `<viewId>:<n>`, a random page-load ID and a counter made by the bridge (D-115) | None | n/a | Yearly purge | PG |
+| `timestamp` | When the server received the statement (plus its place in the batch in milliseconds, never the browser's clock, D-115); insight periods and time on task | None | n/a | Yearly purge | PG |
+| `academicYear` | The academic year of the pseudonym secret that made `learnerKey`; the yearly purge deletes by it (`DATA-003`). A field outside `DATA-012`'s list (`SPEC-DEVIATION`, D-107). Database default: the year of the write in Oslo time; migration `s6_grade_bridge_insight` set existing rows from `timestamp`. A portal session keeps its key up to 12 hours past 1 August (D-057), so the writer of a portal play's row sets the key's year itself. PRIVACY: a year, not about the learner | None | n/a | Yearly purge | PG |
 
 ## InsightSnapshot
 
@@ -326,7 +335,8 @@ Aggregates already suppressed below *k* learners; no row identifies anyone.
 |---|---|---|---|---|---|
 | `id` | Internal key | None | n/a | With the activity (survives the purge) | PG |
 | `contentId` | The activity | None | n/a | With the activity (survives the purge) | PG |
-| `contextId` | Canvas course | None | n/a | With the activity (survives the purge) | PG |
+| `contextId` | Canvas course as `<LtiPlatform.id>:<context ID>` (D-103), null for the portal; a database CHECK refuses any other shape | None | n/a | With the activity (survives the purge) | PG |
+| `contentVersion` | The content version the aggregates describe (`PROD-013`); the purge writes one snapshot per activity, context and version (D-107) | None | n/a | With the activity (survives the purge) | PG |
 | `periodStart` | Period covered | None | n/a | With the activity (survives the purge) | PG |
 | `periodEnd` | Period covered | None | n/a | With the activity (survives the purge) | PG |
 | `k` | Suppression threshold used | None | n/a | With the activity (survives the purge) | PG |

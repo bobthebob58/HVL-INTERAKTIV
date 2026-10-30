@@ -4,16 +4,17 @@
  *
  * Why: the server's integration and end-to-end tests are strict TypeScript; the mock is plain ESM JavaScript like
  *      the other tools (D-049). These declarations describe exactly what ./mockPlatform.mjs exports.
- * Spec: LTI-001, LTI-003, LTI-005, AUTH-001, AUTH-002
+ * Spec: LTI-001, LTI-003, LTI-005, LTI-008, LTI-012, AUTH-001, AUTH-002
  * Invariants: every value export of ./mockPlatform.mjs is declared here with the same name; the object shapes live
- *   in ./feideTypes.d.mts and ./canvasTypes.d.mts and are re-exported.
- * Collaborators: ./mockPlatform.mjs, ./feideTypes.d.mts, ./canvasTypes.d.mts.
+ *   in ./feideTypes.d.mts, ./canvasTypes.d.mts and ./canvasServiceTypes.d.mts and are re-exported.
+ * Collaborators: ./mockPlatform.mjs, ./feideTypes.d.mts, ./canvasTypes.d.mts, ./canvasServiceTypes.d.mts.
  * Tests: tools/mock-platform/test/ (behaviour); `npx tsc -p apps/server --noEmit` checks callers against these types.
  */
 import type { CanvasUser, MockCanvas } from './canvasTypes.mjs';
 import type { FeideUserSpec, MockFeide } from './feideTypes.mjs';
 
 export type * from './canvasTypes.mjs';
+export type * from './canvasServiceTypes.mjs';
 export type * from './feideTypes.mjs';
 
 /** The six tool environment variables that point at the running mocks. */
@@ -60,6 +61,8 @@ export function startMockCanvas(options: {
   clientId?: string;
   deploymentId?: string;
   launchTtlSeconds?: number;
+  /** The developer key's scopes (AGS and NRPS scope URIs); default `MOCK_CANVAS_SCOPES`. */
+  scopes?: readonly string[];
 }): Promise<MockCanvas>;
 
 /** The preloaded demo users. */
@@ -102,6 +105,19 @@ export const LTI_ROLE: Readonly<
     string
   >
 >;
+/** OAuth scopes of the AGS and NRPS services. */
+export const LTI_SCOPE: Readonly<
+  Record<'lineItem' | 'lineItemReadonly' | 'score' | 'resultReadonly' | 'contextMembershipReadonly', string>
+>;
+/** Media types of AGS and NRPS messages. */
+export const LTI_MEDIA_TYPE: Readonly<{
+  lineItem: 'application/vnd.ims.lis.v2.lineitem+json';
+  lineItemContainer: 'application/vnd.ims.lis.v2.lineitemcontainer+json';
+  score: 'application/vnd.ims.lis.v1.score+json';
+  membershipContainer: 'application/vnd.ims.lti-nrps.v2.membershipcontainer+json';
+}>;
+/** The scopes the mock Canvas's developer key grants by default: HVL's developer key's three. */
+export const MOCK_CANVAS_SCOPES: readonly string[];
 /** Canvas demo users; the teacher's `loginId` is the Feide demo author's Feide ID. */
 export const CANVAS_USERS: Readonly<{ teacher: Readonly<CanvasUser>; student: Readonly<CanvasUser> }>;
 /** The two message types the mock Canvas launches. */

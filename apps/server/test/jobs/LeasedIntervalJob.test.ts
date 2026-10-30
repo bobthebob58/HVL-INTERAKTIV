@@ -1,7 +1,8 @@
 /**
- * Unit tests for the leased interval job: the Redis lease per interval, what is logged, and the timer.
+ * Unit tests for the leased interval job: the Redis lease per interval, what is logged, the timer, the moment each
+ * tick hands to the work, and a slow run that is never started on top of itself.
  *
- * Spec: H5P-004, LTI-002
+ * Spec: H5P-004, LTI-002, LTI-012, DATA-003
  */
 import { Writable } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -120,5 +121,67 @@ describe('[LTI-002] leased interval job', () => {
     await job.runOnce();
     // Assert
     expect(set.mock.calls[0]![2]).toEqual({ NX: true, PX: 1 });
+  });
+});
+
+describe('[DATA-003] the moment a tick hands to the work', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('[DATA-003] runOnce(now) runs the work at the moment a test names, with no clock read', async () => {
+    // Arrange: a clock that must not be read, and the purge's run date a year ahead
+    const clock = vi.fn(() => new Date('2026-10-30T12:00:00Z'));
+    const { job, run } = testJob({ clock });
+    const purgeDay = new Date('2027-08-30T22:00:00Z');
+    // Act
+    const outcome = await job.runOnce(purgeDay);
+    // Assert
+    expect(outcome).toBe('ran');
+    expect(run).toHaveBeenCalledWith(purgeDay);
+    expect(clock).not.toHaveBeenCalled();
+  });
+
+  it('[LTI-012] each timer tick reads the injected clock once and gives that moment to the work', async () => {
+    // Arrange
+    vi.useFakeTimers();
+    const moments = [new Date('2026-10-30T12:00:15Z'), new Date('2026-10-30T12:00:30Z')];
+    const clock = vi.fn(() => moments[clock.mock.calls.length - 1]!);
+    const { job, run } = testJob({ clock });
+    // Act
+    job.start();
+    await vi.advanceTimersByTimeAsync(2000);
+    job.stop();
+    // Assert
+    expect(clock).toHaveBeenCalledTimes(2);
+    expect(run.mock.calls).toEqual([[moments[0]], [moments[1]]]);
+  });
+
+  it('[DATA-003] without a clock, the work gets the system time of the tick', async () => {
+    // Arrange
+    const { job, run } = testJob();
+    const before = Date.now();
+    // Act
+    await job.runOnce();
+    // Assert
+    const [at] = run.mock.calls[0] as unknown as [Date];
+    expect(at.getTime()).toBeGreaterThanOrEqual(before);
+    expect(at.getTime()).toBeLessThanOrEqual(Date.now());
+  });
+
+  it('[LTI-012] a tick while this instance’s run is still going is skipped, and the next one after it runs', async () => {
+    // Arrange: a first run that waits until the test lets it finish, like a worker waiting on a slow Canvas
+    let finish: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => (finish = resolve));
+    const slow = vi.fn(() => gate);
+    const { job, set } = testJob({ run: slow });
+    // Act
+    const first = job.runOnce();
+    await vi.waitFor(() => expect(slow).toHaveBeenCalledTimes(1));
+    const overlapping = await job.runOnce();
+    finish();
+    const outcomes = [await first, overlapping, await job.runOnce()];
+    // Assert: the overlapping tick took no lease and started no second run
+    expect(outcomes).toEqual(['ran', 'skipped', 'ran']);
+    expect(set).toHaveBeenCalledTimes(2);
+    expect(slow).toHaveBeenCalledTimes(2);
   });
 });

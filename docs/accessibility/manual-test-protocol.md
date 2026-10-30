@@ -115,7 +115,8 @@ result screen.
 
 ### J3 — Prepare the seminar from evidence (teacher; `INS-001`…`INS-006`) — from Session 6
 
-The insight pages do not exist yet. When they arrive, run:
+Insight is not built yet. It comes as an **Innsikt** tab, on the activity page `/aktivitet/[id]` and in the Canvas
+view `/app/play`, one context at a time, never as a page of its own (D-101, D-106). When it arrives, run:
 
 | Step | Action | Expected result |
 |---|---|---|

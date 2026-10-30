@@ -109,8 +109,9 @@ library, add an entry to `src/feedbackTargets.json` (choose an element whose `::
 - `UD-011` — the theme on top of Daylight in every H5P document; every `!important` names the H5P selector it beats.
 - `UD-003` — icon and text prefix for answer states in MultiChoice, Blanks, DragText, QuestionSet (its questions and
   explanations) and the question types the containers offer (TrueFalse, MarkTheWords, SingleChoiceSet, Summary,
-  MultiMediaChoice, ImageHotspotQuestion); the prefix is in the accessibility tree. The spec names the xAPI bridge for the hidden text node;
-  that bridge arrives in S6, so `src/feedbackPrefixes.js` does it now.
+  MultiMediaChoice, ImageHotspotQuestion); the prefix is in the accessibility tree. The visually hidden text node
+  comes from `src/feedbackPrefixes.js` (D-072 amendment (a)). The spec first named the xAPI bridge for it; `UD-003`
+  as amended by D-102 rules that out, so that no prefix is announced twice.
 - `UD-002`, `UD-004`, `UD-005`, `UD-009`, `UD-012` — inside H5P, with the values of `@hvl-interaktiv/design-tokens`;
   `UD-009` also for jQuery's animations (`src/reducedMotion.js`).
 - `UD-001` — non-text contrast of what Daylight draws below 3 : 1 (DragText's empty drop zones, CoursePresentation's

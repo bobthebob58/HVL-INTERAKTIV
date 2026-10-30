@@ -41,6 +41,7 @@ const row = (overrides: Partial<H5PUserData>): H5PUserData => ({
   preload: true,
   invalidate: false,
   updatedAt: new Date('2026-10-22T10:00:00Z'),
+  academicYear: 2026,
   ...overrides,
 });
 

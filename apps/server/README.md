@@ -44,6 +44,7 @@ is a server-rendered start page and launches land on `/lti/play` as in S3.
 npm install                                  # from the repository root
 cp apps/server/.env.example apps/server/.env # local settings; matches docker-compose.yml
 docker compose up -d                         # PostgreSQL 16, Redis 7, S3 emulator
+node .devcontainer/createS3Buckets.mjs       # the server's two S3 buckets; again after every emulator restart (below)
 npm run h5p:fetch-core                       # H5P core 1.28.0 + pinned editor, verified (D-027)
 npm run db:generate --workspace apps/server  # Prisma client into src/generated/
 npm run db:migrate                           # apply prisma/migrations
@@ -76,6 +77,17 @@ npm run mock:platform                        # terminal 1: mock Canvas on http:/
 npm start                                    # terminal 2: tsx src/server/main.ts (no build step), port PORT (3000)
 curl http://localhost:3000/healthz           # {"status":"ok"}, or 503 {"status":"unavailable","failing":[…]}
 ```
+
+**Why the S3 buckets need a step.** The server never creates its buckets (`S3_CONTENT_BUCKET` and
+`S3_TEMPORARY_BUCKET`: `hvli-content` and `hvli-temporary` in `.env.example`); its storage only reads and writes
+objects, and the test beds create buckets of their own. `docker-compose.yml`'s S3 emulator (moto) keeps everything
+in memory, so whenever its container starts again (after a stop, a restart or a reboot) the buckets are gone: file
+uploads fail, and so does anything that reads or writes an activity's files, while `/healthz` still answers ok (it
+checks only PostgreSQL and Redis). So run `node .devcontainer/createS3Buckets.mjs` from the repository root after
+every `docker compose up -d` that started the emulator. It reads `apps/server/.env`, creates the buckets that are
+missing, leaves the others as they are, and refuses any `S3_ENDPOINT` that is not on `localhost` or `127.0.0.1`. The
+dev container runs it on every start (`.devcontainer/services.sh`; see
+[.devcontainer/README.md](../../.devcontainer/README.md)).
 
 **Pointing `.env` at the mock.** `.env.example` already holds the mock's values for the fixed ports of
 `npm run mock:platform` (mock Feide client ID, mock Canvas client and deployment IDs). The mock also prints six

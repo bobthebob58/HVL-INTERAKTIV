@@ -128,17 +128,22 @@ than the academic-year boundary plus 30 days, then learner `User` rows that have
 aggregate snapshots that already satisfy *k*-suppression are kept, for the *pedagogisk mappe*.
 - **Acceptance:** A dry-run mode reports counts without deleting. Each run writes an audit event with the counts.
 - **Verify:** Integration test with time travel.
-- **Amended (D-107, 2026-10-30):** `SPEC-DEVIATION` in two points. (1) The default date: the job runs by default on
-  **31 August**, Oslo time, for the academic year that ended on 31 July, because the boundary plus 30 days ends on
-  30 August; the date is configurable, but not to a day before 31 August. (2) Which rows go: `XapiStatement`,
-  `H5PUserData` and `GradeSyncJob` carry the academic year of the secret that made each row's `learnerKey`, and the
-  purge deletes the ended year's rows by that stored year, then the learner `Identity` rows created before that year
+- **Amended (D-107, 2026-10-30):** `SPEC-DEVIATION` in three points. (1) The default date: the job runs by default
+  on **31 August**, Oslo time, for the academic year that ended on 31 July, because the boundary plus 30 days ends on
+  30 August; the date is configurable, but not to a day before 31 August, so the 30 days always pass first. (2) Which
+  rows go: `XapiStatement`, `H5PUserData` and `GradeSyncJob` store an `academicYear`, set, when a row is written, to
+  the year of the secret that made its `learnerKey` (`DATA-012` as amended, §4), and the purge deletes the ended
+  year's rows by that stored year, in batched transactions, then the learner `Identity` rows created before that year
   ended, then learner `User` rows left without an `Identity` (D-034); not every row "older than the academic-year
-  boundary plus 30 days", which, read on the run date, would also take the new year's first 30 days. Before anything
-  is deleted, the year's *k*-suppressed `InsightSnapshot` rows are written; only they outlive the purge. The dry run
-  and the audit event are as written. Destroying the year's pseudonym secret is an operations step in the runbook
-  (the secrets are an environment value the server cannot destroy); at start-up the server names, by year only, a
-  secret still configured for a purged year.
+  boundary plus 30 days", which, read on the run date, would also take the new year's first 30 days. The 30 days after
+  the boundary are kept as the time before the purge may run. (3) Who destroys the secret: not the job. The secrets
+  are an environment value (`PSEUDONYM_SECRETS`) that the server cannot destroy, so HVL operations remove the year's
+  secret in a runbook step after the real run, and `DATA-002`'s rule holds through that step; at start-up the server
+  names, by year only, any secret still configured for a purged year, so a forgotten step shows. Before anything is
+  deleted, the year's `InsightSnapshot` rows are written per activity, context (D-103) and content version, already
+  suppressed with the configured *k* (D-106); only they outlive the purge, and the values the mappe reads from them
+  follow D-095's rules. The dry run (counts per table, nothing deleted) and the audit event of every run are as
+  written. A leased job runs the purge on one node, and a CLI runs the same code by hand.
 
 #### DATA-004 · MUST · S6 · EEA residency and encryption
 PostgreSQL, Redis and S3-compatible storage are hosted in Norway or the EEA. All traffic uses TLS
@@ -195,8 +200,10 @@ else is dropped, including actor names, mailboxes and extensions.
   portal play; one module builds and parses it), `attemptId` is made by the xAPI bridge, since H5P sends none, and
   `timestamp` is when the server received the batch. Only learner principals' statements are stored.
 - **Amended (D-107, 2026-10-30):** `SPEC-DEVIATION`: `XapiStatement` also stores `academicYear`, a field outside the
-  list above. It holds no statement data, only the academic year of the secret behind the row's `learnerKey`, which
-  the key cannot reveal and a timestamp can misstate; the annual purge (`DATA-003` as amended) deletes by it.
+  list above, set when the row is written. It holds no statement data, only the academic year of the secret behind
+  the row's `learnerKey`, which the key cannot reveal and a timestamp can misstate (a portal session made before
+  1 August can keep its `learnerKey` for up to 12 hours after it, D-057); the annual purge (`DATA-003` as amended)
+  deletes by it. `H5PUserData` and `GradeSyncJob` store it too (§4).
 
 ---
 
@@ -220,13 +227,13 @@ personal data; **P** marks pseudonymous fields.
 |---|---|---|
 | `User`, `Identity` | 02 | `displayName` for staff only (**PII**; `email` is kept null since S5, D-090; from S5 the name is shown to HVL colleagues in co-author search, bank listings and copy attribution, D-090–D-092); `coAuthorSearchableAt` (staff, D-090); `subjectHash` (**P**) |
 | `H5PContent`, `H5PContentFile`, `ContentCollaborator`, `LibraryAuditEvent` | 01 | `ownerUserId`; `sourceAuthorUserId` on copies (S5, D-092) |
-| `H5PUserData` | 01 | `learnerKey` (**P**), `data` (**P**) |
+| `H5PUserData` | 01 | `learnerKey` (**P**), `data` (**P**); `academicYear`, as on `XapiStatement` (D-107) |
 | `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken`, `LtiPlacement` | 02 | ID tokens (**PII**, 24 h) |
-| `GradeSyncJob` | 02 | `ltiSub` (**PII**, encrypted, 30 days after success; amended, D-104: 30 days after the job stops, whatever its outcome) |
+| `GradeSyncJob` | 02 | `ltiSub` (**PII**, encrypted, 30 days after success; amended, D-104: 30 days after the job stops, whatever its outcome); `academicYear`, as on `XapiStatement` (D-107) |
 | `LearningDesignMetadata`, `LearningOutcome` | 04 | none |
 | `ValidationAcknowledgement` | 03 | `userId` (author) |
-| `XapiStatement` | 05 | `learnerKey` (**P**), `response` (**P**); `contextId` as `<platformId>:<contextId>` (D-103) |
-| `InsightSnapshot` | 05 | aggregates only, already *k*-suppressed; `contextId` as `<platformId>:<contextId>` (D-103) |
+| `XapiStatement` | 05 | `learnerKey` (**P**), `response` (**P**); `contextId` as `<platformId>:<contextId>` (D-103); `academicYear`, the year of the secret behind `learnerKey`, by which the yearly purge deletes (`SPEC-DEVIATION` from `DATA-012`, D-107) |
+| `InsightSnapshot` | 05 | aggregates only, already *k*-suppressed; `contextId` as `<platformId>:<contextId>` (D-103); `contentVersion` (D-107: the purge writes one snapshot per activity, context and content version) |
 | `AuditEvent` | 05 | `actorUserId` |
 
 ## 5. Pseudonymisation sequence (for evaluators)
@@ -240,5 +247,6 @@ learnerKey = HMAC_SHA256(secret[yyyy], "lti|" + iss + "|" + sub)
    ├─► H5PUserData.learnerKey     (resume state)
    ├─► XapiStatement.learnerKey   (insight aggregates, k ≥ 5)
    └─► GradeSyncJob.ltiSub (encrypted) only while a Canvas grade is pending
-At the yearly purge: rows deleted, secret[yyyy] destroyed → any remaining aggregate can no longer be linked to anyone.
+At the yearly purge: rows deleted; after the real run, operations destroy secret[yyyy] (runbook, D-107)
+   → any remaining aggregate can no longer be linked to anyone.
 ```

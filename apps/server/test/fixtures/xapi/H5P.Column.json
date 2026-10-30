@@ -1,0 +1,399 @@
+{
+  "library": "H5P.Column 1.18",
+  "contentId": "{{contentId}}",
+  "recordedBy": "apps/server/test/h5p/support/xapiTypeRun.ts (probe P1)",
+  "actions": [
+    "load: opens the activity",
+    "task1: picks the right option in the first MultiChoice and checks",
+    "task2: picks a wrong option in the second MultiChoice and checks"
+  ],
+  "statements": [
+    {
+      "view": 1,
+      "step": "task1",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b03",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b03"
+            },
+            "name": {
+              "en-US": "Kvifor førebuing før samlinga?"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "task1",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://id.tincanapi.com/extension/ending-point": 1
+            },
+            "name": {
+              "en-US": "Samlingsbasert undervisning: før, under og etter"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Column-1.18",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "task1",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b03",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b03"
+            },
+            "name": {
+              "en-US": "Kvifor førebuing før samlinga?"
+            },
+            "description": {
+              "en-US": "<p>Kvifor er det lurt å leggje førebuinga med video og quiz til fasen <em>før</em> samlinga?</p>"
+            },
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "interactionType": "choice",
+            "correctResponsesPattern": ["0"],
+            "choices": [
+              {
+                "id": "0",
+                "description": {
+                  "en-US": "Då kan tida på samlinga brukast til samtale og problemløysing, fordi alle kjem med eit felles grunnlag."
+                }
+              },
+              {
+                "id": "1",
+                "description": {
+                  "en-US": "Då slepp læraren å gi tilbakemelding undervegs i emnet."
+                }
+              },
+              {
+                "id": "2",
+                "description": {
+                  "en-US": "Då kan quizen telje med i sluttkarakteren i emnet."
+                }
+              }
+            ]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 1,
+            "raw": 1,
+            "scaled": 1
+          },
+          "completion": true,
+          "success": true,
+          "response": "0"
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "task2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b04",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b04"
+            },
+            "name": {
+              "en-US": "Kvifor førebuing før samlinga?"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "task2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://id.tincanapi.com/extension/ending-point": 2
+            },
+            "name": {
+              "en-US": "Samlingsbasert undervisning: før, under og etter"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Column-1.18",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "task2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b04",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "3f6a2c1e-8b4d-4e7f-9a1c-5d2e6f7a8b04"
+            },
+            "name": {
+              "en-US": "Kvifor førebuing før samlinga?"
+            },
+            "description": {
+              "en-US": "<p>Kvifor er det lurt å leggje førebuinga med video og quiz til fasen <em>før</em> samlinga?</p>"
+            },
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "interactionType": "choice",
+            "correctResponsesPattern": ["0"],
+            "choices": [
+              {
+                "id": "0",
+                "description": {
+                  "en-US": "Då kan tida på samlinga brukast til samtale og problemløysing, fordi alle kjem med eit felles grunnlag."
+                }
+              },
+              {
+                "id": "1",
+                "description": {
+                  "en-US": "Då slepp læraren å gi tilbakemelding undervegs i emnet."
+                }
+              },
+              {
+                "id": "2",
+                "description": {
+                  "en-US": "Då kan quizen telje med i sluttkarakteren i emnet."
+                }
+              }
+            ]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 1,
+            "raw": 0,
+            "scaled": 0
+          },
+          "completion": true,
+          "success": false,
+          "response": "1"
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "task2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/completed",
+          "display": {
+            "en-US": "completed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Samlingsbasert undervisning: før, under og etter"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Column-1.18",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 2,
+            "raw": 1,
+            "scaled": 0.5
+          },
+          "completion": true,
+          "duration": "PT1.89S"
+        }
+      }
+    }
+  ]
+}

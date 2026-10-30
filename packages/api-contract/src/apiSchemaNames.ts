@@ -19,6 +19,7 @@ import type { z } from 'zod';
 import type { ApiSchemaNames } from './apiRouteTypes.js';
 import { COLLABORATION_SCHEMA_NAMES } from './routes/collaborationSchemaNames.js';
 import { CORE_SCHEMA_NAMES } from './routes/coreSchemaNames.js';
+import { GRADE_BRIDGE_SCHEMA_NAMES } from './routes/gradeBridgeSchemaNames.js';
 import { LEARNING_DESIGN_SCHEMA_NAMES } from './routes/learningDesignSchemaNames.js';
 import { MAPPE_SCHEMA_NAMES } from './routes/mappeSchemaNames.js';
 import { PATTERN_SCHEMA_NAMES } from './routes/patternSchemaNames.js';
@@ -57,6 +58,7 @@ const MERGED = mergeSchemaNames([
   LEARNING_DESIGN_SCHEMA_NAMES,
   COLLABORATION_SCHEMA_NAMES,
   MAPPE_SCHEMA_NAMES,
+  GRADE_BRIDGE_SCHEMA_NAMES,
 ]);
 
 /** Named request schemas of every area, described as zod's input. */

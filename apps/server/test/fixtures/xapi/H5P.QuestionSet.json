@@ -1,0 +1,1182 @@
+{
+  "library": "H5P.QuestionSet 1.21",
+  "contentId": "{{contentId}}",
+  "recordedBy": "apps/server/test/h5p/support/xapiTypeRun.ts (probe P1)",
+  "actions": [
+    "load: opens the activity",
+    "start: presses «Start»",
+    "q1: picks the right option, checks and goes on",
+    "q2: fills two of the three gaps right, checks and goes on",
+    "q3: drops one right and one wrong word, checks and goes on",
+    "q4: picks both right options and checks",
+    "finish: presses «Avslutt»"
+  ],
+  "statements": [
+    {
+      "view": 1,
+      "step": "load",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign for ei samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.QuestionSet-1.21",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "load",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=6c1f0a52-3d8e-4b7a-9f21-5e4c8b0d7a11",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "6c1f0a52-3d8e-4b7a-9f21-5e4c8b0d7a11"
+            },
+            "name": {
+              "en-US": "Quiz før samlinga"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 1
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q1",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=6c1f0a52-3d8e-4b7a-9f21-5e4c8b0d7a11",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "6c1f0a52-3d8e-4b7a-9f21-5e4c8b0d7a11"
+            },
+            "name": {
+              "en-US": "Quiz før samlinga"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 1
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q1",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=6c1f0a52-3d8e-4b7a-9f21-5e4c8b0d7a11",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "6c1f0a52-3d8e-4b7a-9f21-5e4c8b0d7a11"
+            },
+            "name": {
+              "en-US": "Quiz før samlinga"
+            },
+            "description": {
+              "en-US": "<p>Studentane tek ein kort quiz før samlinga. Kva er det viktigaste føremålet med quizen?</p>"
+            },
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "interactionType": "choice",
+            "correctResponsesPattern": ["0"],
+            "choices": [
+              {
+                "id": "0",
+                "description": {
+                  "en-US": "Å vise studentane og læraren kva studentane alt kan, slik at samlinga kan byggje vidare på det."
+                }
+              },
+              {
+                "id": "1",
+                "description": {
+                  "en-US": "Å gi studentane ein del av sluttkarakteren i emnet."
+                }
+              },
+              {
+                "id": "2",
+                "description": {
+                  "en-US": "Å erstatte undervisninga på samlinga, slik at samlinga kan bli kortare."
+                }
+              }
+            ]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 1
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 1,
+            "raw": 1,
+            "scaled": 1
+          },
+          "completion": true,
+          "success": true,
+          "duration": "PT1.04S",
+          "response": "0"
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q1",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22"
+            },
+            "name": {
+              "en-US": "Undervegsvurdering og tilbakemelding"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 2
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q1",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign for ei samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.QuestionSet-1.21",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 2
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22"
+            },
+            "name": {
+              "en-US": "Undervegsvurdering og tilbakemelding"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 2
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22"
+            },
+            "name": {
+              "en-US": "Undervegsvurdering og tilbakemelding"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 2
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22"
+            },
+            "name": {
+              "en-US": "Undervegsvurdering og tilbakemelding"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 2
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "a83e5d27-91b4-4c6f-8e02-7d3b1f9c4e22",
+              "https://h5p.org/x-api/case-sensitivity": false,
+              "https://h5p.org/x-api/alternatives": [
+                ["undervegsvurdering", "formativ vurdering"],
+                ["framover", "vidare"],
+                ["medstudentvurdering", "fagfellevurdering"]
+              ]
+            },
+            "name": {
+              "en-US": "Undervegsvurdering og tilbakemelding"
+            },
+            "description": {
+              "en-US": "<p>Fyll inn orda som manglar i setningane om undervegsvurdering. Står du fast, kan du opne tipset ved feltet.</p><p>Vurdering som skal hjelpe studenten medan læringa framleis held på, kallar vi __________.</p><p>Ei god tilbakemelding seier ikkje berre kva som er feil, men peikar òg __________ mot neste steg.</p><p>Når studentane gir kvarandre tilbakemelding på arbeidet, kallar vi det __________.</p>"
+            },
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "interactionType": "fill-in",
+            "correctResponsesPattern": [
+              "{case_matters=false}undervegsvurdering[,]framover[,]medstudentvurdering"
+            ]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "https://h5p.org/x-api/h5p-reporting-version": "1.1.0",
+            "http://id.tincanapi.com/extension/ending-point": 2
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 3,
+            "raw": 2,
+            "scaled": 0.6667
+          },
+          "completion": true,
+          "duration": "PT0.13S",
+          "response": "undervegsvurdering[,]framover[,]zzz"
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=2f7b9c41-6e0a-4d58-b3c7-9a1e5d8f0b33",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "2f7b9c41-6e0a-4d58-b3c7-9a1e5d8f0b33"
+            },
+            "name": {
+              "en-US": "Universell utforming av læringsressursar"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.DragText-1.10",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 3
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign for ei samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.QuestionSet-1.21",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 3
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q3",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=2f7b9c41-6e0a-4d58-b3c7-9a1e5d8f0b33",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "2f7b9c41-6e0a-4d58-b3c7-9a1e5d8f0b33"
+            },
+            "name": {
+              "en-US": "Universell utforming av læringsressursar"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.DragText-1.10",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 3
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q3",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=2f7b9c41-6e0a-4d58-b3c7-9a1e5d8f0b33",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "2f7b9c41-6e0a-4d58-b3c7-9a1e5d8f0b33"
+            },
+            "name": {
+              "en-US": "Universell utforming av læringsressursar"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.DragText-1.10",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 3
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q3",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=2f7b9c41-6e0a-4d58-b3c7-9a1e5d8f0b33",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "2f7b9c41-6e0a-4d58-b3c7-9a1e5d8f0b33"
+            },
+            "name": {
+              "en-US": "Universell utforming av læringsressursar"
+            },
+            "interactionType": "fill-in",
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "description": {
+              "en-US": "<p>Dra orda inn i dei rette lukene, slik at kvar setning beskriv eit tiltak for universell utforming. Eitt av orda passar ikkje nokon stad.</p><br/>Ein video med __________ kan følgjast utan lyd.<br/>Eit bilete med __________ kan òg forståast av studentar som bruker skjermlesar.<br/>Eit dokument med tydelege __________ er lettare å finne fram i med skjermlesar."
+            },
+            "correctResponsesPattern": ["teksting[,]alternativ tekst[,]overskrifter"]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.DragText-1.10",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 3
+          }
+        },
+        "result": {
+          "response": "teksting[,]lydspor[,]",
+          "score": {
+            "min": 0,
+            "raw": 1,
+            "max": 3,
+            "scaled": 0.3333
+          },
+          "duration": "PT1.94S",
+          "completion": true
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q3",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=d4e8a1f6-0b3c-4e9d-a5f2-8c7b6e1d2a44",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "d4e8a1f6-0b3c-4e9d-a5f2-8c7b6e1d2a44"
+            },
+            "name": {
+              "en-US": "Ei universelt utforma samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 4
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q3",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign for ei samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.QuestionSet-1.21",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 4
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q4",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=d4e8a1f6-0b3c-4e9d-a5f2-8c7b6e1d2a44",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "d4e8a1f6-0b3c-4e9d-a5f2-8c7b6e1d2a44"
+            },
+            "name": {
+              "en-US": "Ei universelt utforma samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 4
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q4",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=d4e8a1f6-0b3c-4e9d-a5f2-8c7b6e1d2a44",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "d4e8a1f6-0b3c-4e9d-a5f2-8c7b6e1d2a44"
+            },
+            "name": {
+              "en-US": "Ei universelt utforma samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 4
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "q4",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=d4e8a1f6-0b3c-4e9d-a5f2-8c7b6e1d2a44",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "d4e8a1f6-0b3c-4e9d-a5f2-8c7b6e1d2a44"
+            },
+            "name": {
+              "en-US": "Ei universelt utforma samling"
+            },
+            "description": {
+              "en-US": "<p>Kva for tiltak gjer ei samling meir universelt utforma? Vel alle som passar.</p>"
+            },
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "interactionType": "choice",
+            "correctResponsesPattern": ["0[,]1"],
+            "choices": [
+              {
+                "id": "0",
+                "description": {
+                  "en-US": "Lysbileta blir delte digitalt før samlinga."
+                }
+              },
+              {
+                "id": "1",
+                "description": {
+                  "en-US": "Opptak og videoar frå samlinga får teksting."
+                }
+              },
+              {
+                "id": "2",
+                "description": {
+                  "en-US": "Viktige beskjedar blir gitt berre munnleg på samlinga."
+                }
+              },
+              {
+                "id": "3",
+                "description": {
+                  "en-US": "Arbeidsoppgåvene blir delte ut berre på papir under samlinga."
+                }
+              }
+            ]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 4
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 2,
+            "raw": 2,
+            "scaled": 1
+          },
+          "completion": true,
+          "success": true,
+          "duration": "PT0.19S",
+          "response": "0[,]1"
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "finish",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/completed",
+          "display": {
+            "en-US": "completed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign for ei samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.QuestionSet-1.21",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 9,
+            "raw": 6,
+            "scaled": 0.6667
+          },
+          "completion": true,
+          "success": true,
+          "duration": "PT2.5S"
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "finish",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign for ei samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.QuestionSet-1.21",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 4
+          }
+        }
+      }
+    }
+  ]
+}

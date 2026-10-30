@@ -80,7 +80,14 @@ describeWithServices('[PROD-007] what a duplicate takes along', () => {
         },
       });
       await db.insightSnapshot.create({
-        data: { contentId: sourceId, periodStart: at, periodEnd: at, k: 5, aggregates: {} },
+        data: {
+          contentId: sourceId,
+          contentVersion: 1,
+          periodStart: at,
+          periodEnd: at,
+          k: 5,
+          aggregates: {},
+        },
       });
       const acknowledgement = {
         ruleId: 'V-ALT',

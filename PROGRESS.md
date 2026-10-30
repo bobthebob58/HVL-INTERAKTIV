@@ -452,13 +452,38 @@ under the step that does it):
   - [x] The red `main` fixed: «Lagre» stays disabled until H5P's editor can save (`editorStart.js`), and the e2e
         tests wait for it and repeat a click that sent nothing, since H5P can still grow its iframe under the button
         after that (CI run 41075981429, D-113)
-- [ ] 1. Probes, kept as tests: P1 xAPI on the ten real types (verbs, root vs sub-content, scores, response format,
+- [x] 1. Probes, kept as tests: P1 xAPI on the ten real types (verbs, root vs sub-content, scores, response format,
       size, iframe duplicates, attempt boundaries; D-102); P2 the mock AGS token round trip (D-104); P3 Docker
       (dockerd, image pull, Chromium in an image; D-110)
-- [ ] 2. Shared infrastructure: migration `s6_grade_bridge_insight` (`orphaned`, `nextAttemptAt`, `attemptId`,
+  - [x] P1: `xapiQuestionTypes.browser.int.test.ts` and `xapiContainerTypes.browser.int.test.ts` play the ten real
+        types as a learner in full Chromium and pin P1's findings per type; ten curated statement fixtures in
+        `apps/server/test/fixtures/xapi/` for step 3 (`readXapiFixture`)
+  - [x] P2: `agsClientCredentialsProbe.int.test.ts`: D-104's client credentials, signed with the stored tool key,
+        get a token from the mock Canvas, post a score it records and confirm a deleted line item; no ltik
+  - [x] P3: recorded in D-110's amendment (and D-114's, k6); the Docker build and compose smoke test are step 6's
+  - Probe findings (2026-10-30; kept by the tests above). **P1** played the ten real types
+    (332 statements), and a second run replayed seven of them and the `uv-module` pattern (188): every statement
+    arrives once, in the player document, with no ID, no timestamp and an anonymous actor; `interacted` and
+    `progressed` are 38–76 % of them and serve no `INS` requirement; H5P marks no attempts and re-sends some results
+    on resume; no single root test works; InteractiveBook, InteractiveVideo and ImageHotspots send no root score as
+    configured today, `uv-case` gives 10 of 10 on every path, and `uv-module`'s chapter «Prøv igjen» fails upstream.
+    Step 3's rules, with defaults for Q18–Q20, are [D-115](docs/DECISIONS.md#d-115--xapi-capture-statement-identity-attempts-and-gradable-results-probe-p1).
+    **P3**: Docker, compose and Chromium's sandbox work here, behind a registry mirror and a `dockerd` started by
+    hand: an Ubuntu 24.04 image with Node 24 copied in, full Chromium as a non-root user under Playwright's seccomp
+    profile, a separate compose file for the smoke, no GitHub content fetched in a build (Q21), and k6 for the load
+    test, in
+    [D-110's amendment](docs/DECISIONS.md#d-110--deployment-and-operations-design-runtime-image-compose-content-types-files-origin-clamav)
+    (and D-114's).
+- [x] 2. Shared infrastructure: migration `s6_grade_bridge_insight` (`orphaned`, `nextAttemptAt`, `attemptId`,
       `terminalAt`, `academicYear`); api-contract schemas (xAPI batch, grade sync, insight); mock Canvas token, AGS
-      and NRPS endpoints with fault injection; an injectable clock and `runOnce` seams; a 30-learner insight fixture
-      with hand-calculated values
+      and NRPS endpoints with fault injection; an injectable clock and `runOnce` seams. The 30-learner insight
+      fixture with hand-calculated values moved to step 4, with the aggregators it checks
+  - [x] Migration `s6_grade_bridge_insight`: also `resultAt` (D-115), `InsightSnapshot.contentVersion` (D-107) and
+        the platform-scoped context checks (D-103), proved by `s6Schema.int.test.ts`; DATA-INVENTORY rows
+  - [x] api-contract schemas: the xAPI batch with D-115's response caps, grade sync, insight cells, and the grade
+        bridge's routes (described now; they join `API_ROUTES` when step 3 mounts them)
+  - [x] Mock Canvas: token endpoint, AGS line items and scores, NRPS memberships, fault injection, ltijs interop
+  - [x] Injectable clock (`jobClock.ts`) and `runOnce(now)` in `LeasedIntervalJob`
 - [ ] 3. A — Grade bridge (`LTI-010`, `LTI-011`, `DATA-012`, `LTI-012`, `LTI-013`, `LTI-008`, `H5P-009`): the
       `DATA-012` mapper → `POST /api/h5p/xapi` (auth, View and launch checks, zod, rate limit, 202) → `xapiBridge.js`
       and its wiring → attempt policy → enqueuer → AGS client → worker → status and retry API and UI (portal tab and
@@ -468,7 +493,8 @@ under the step that does it):
   - [ ] AGS queue and worker, sync status, honest labelling (`LTI-012`, `LTI-013`); NRPS counts (`LTI-008`): our own
         AGS client in a durable worker (D-104), `AGS_LABEL_MODE` `suffix` or `preserve` with Q8 open (D-105)
 - [ ] 4. B — Insight (`INS-001`…`INS-010`, `PROD-010`, the `LTI-006` **Innsikt** tab, `PROD-013` by version,
-      `MAPPE-003` real source): the suppression core with property tests → aggregators `INS-001`, `INS-002`,
+      `MAPPE-003` real source): the suppression core with property tests → a 30-learner insight fixture with
+      hand-calculated values (moved from step 2) → aggregators `INS-001`, `INS-002`,
       `INS-003` (`INS-004`, `INS-005` if time) → access and audit → insight API → the web **Innsikt** tabs (charts,
       suppressed cells, shortlist, CSV, findings) → the mappe's real results source; `PROD-014` (COULD) if time
   - [ ] Insight views with *k*-suppression (`INS-001`…`INS-010`, `PROD-010`); spaced-retrieval suggestion
@@ -570,6 +596,10 @@ under the step that does it):
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
 | Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`) | HVL DPO | S6, pilot |
 | Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns. Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
+| Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
+| Q19 | Every ending of the `uv-case` pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give `uv-case` no Canvas score? | ALU | The pilot |
+| Q20 | In `uv-module`, a chapter check's «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question's own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision | ALU | The pilot |
+| Q21 | Confirm that container builds here may use the bridge network's direct egress, outside the agent proxy, for apt, npm and Prisma's engines only, and never for GitHub repository content (D-110, probe P3); S6 proceeds on that rule | Repository owner | — |
 
 ## Risk register
 

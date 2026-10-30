@@ -1,0 +1,322 @@
+{
+  "library": "H5P.InteractiveBook 1.15",
+  "contentId": "{{contentId}}",
+  "recordedBy": "apps/server/test/h5p/support/xapiTypeRun.ts (probe P1)",
+  "actions": [
+    "load: opens the activity",
+    "cover: presses «Les» on the cover",
+    "check: picks the right option in chapter 1 and presses «Sjekk»",
+    "summary: goes to the summary page"
+  ],
+  "statements": [
+    {
+      "view": 1,
+      "step": "cover",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Planlegg ei god samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.InteractiveBook-1.15",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e612",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e612"
+            },
+            "name": {
+              "en-US": "Tilbakemelding som hjelper studenten vidare"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}?subContentId=5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e610",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/completed",
+          "display": {
+            "en-US": "completed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e610",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e610"
+            },
+            "name": {
+              "en-US": "Undervegsvurdering"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Column-1.22",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 1,
+            "raw": 1,
+            "scaled": 1
+          },
+          "completion": true,
+          "duration": "PT0.98S"
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e610",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e610",
+              "http://id.tincanapi.com/extension/ending-point": 1
+            },
+            "name": {
+              "en-US": "Undervegsvurdering"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Column-1.22",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e612",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e612"
+            },
+            "name": {
+              "en-US": "Tilbakemelding som hjelper studenten vidare"
+            },
+            "description": {
+              "en-US": "<p>Ein student har skrive ein refleksjon etter samlinga. Kva for ei tilbakemelding hjelper studenten best vidare?</p>"
+            },
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "interactionType": "choice",
+            "correctResponsesPattern": ["0"],
+            "choices": [
+              {
+                "id": "0",
+                "description": {
+                  "en-US": "«Du forklarer omgrepa godt. Neste steg er å knyte dei til eit døme frå praksis.»"
+                }
+              },
+              {
+                "id": "1",
+                "description": {
+                  "en-US": "«4 av 6 poeng.»"
+                }
+              },
+              {
+                "id": "2",
+                "description": {
+                  "en-US": "«Godt arbeid!»"
+                }
+              }
+            ]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}?subContentId=5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e610",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 1,
+            "raw": 1,
+            "scaled": 1
+          },
+          "completion": true,
+          "success": true,
+          "response": "0"
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/completed",
+          "display": {
+            "en-US": "completed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e610",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "5e8c2a17-9b4d-4c6e-8f31-a7d0b2c4e610"
+            },
+            "name": {
+              "en-US": "Undervegsvurdering"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Column-1.22",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 1,
+            "raw": 1,
+            "scaled": 1
+          },
+          "completion": true,
+          "duration": "PT1.06S"
+        }
+      }
+    }
+  ]
+}

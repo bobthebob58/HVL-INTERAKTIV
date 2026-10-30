@@ -5,7 +5,9 @@
 The zod request and response schemas of the `/api` routes, shared by the server (which validates request bodies with
 them) and the web app (which types its requests with them), the registry of every `/api` route, and the OpenAPI 3.1
 document built from both with zod 4's `z.toJSONSchema` (`DOC-012`, D-077). Since S5 the registry is split by area,
-a route may answer a file (`mediaType`) and take query parameters (D-099), and the S5 error codes live here too.
+a route may answer a file (`mediaType`) and take query parameters (D-099), and the S5 error codes live here too. S6
+adds the xAPI batch the player's bridge posts, the grade-sync status and retry, and the parts every insight answer
+shares (D-104, D-106, D-115).
 
 ## How to run
 
@@ -38,8 +40,12 @@ The server serves the document at `GET /api/docs` when `NODE_ENV` is not `produc
 | `src/sourceAttribution.ts` | Where a copy came from, in the activity detail (D-092); a leaf module |
 | `src/mappe.ts` | The pedagogisk mappe picker, criteria sets, preview and export (`MAPPE-001`, `MAPPE-002`, D-094); `hvl:mappe-not-ready` answers while the content has no mappe files |
 | `src/learningDesignErrors.ts` | The S5 error codes and their HTTP statuses, shared by the server and the web app |
+| `src/xapi.ts` | `POST /api/h5p/xapi`: the batch envelope (one activity and version, 1–50 items), each item cut down to the fields the server reads with the bridge's `statementId` and `attemptId`, the score checks and the batch limits (`LTI-011`, D-115) |
+| `src/xapiResponseCaps.ts` | Which answers are stored, each gap cut to 100 characters and an answer over 1 000 dropped (`DATA-012`, `INS-003`, D-115) |
+| `src/gradeSync.ts` | `GET …/grade-sync` and `POST …/grade-sync/retry`: job counts per placement, not *k*-suppressed (`LTI-012`, D-104) |
+| `src/insight.ts` | What every insight answer shares: the fixed periods, the context and version, and a cell that is shown or `{ suppressed: true }` with no value (`INS-006`, D-106) |
 | `src/routes/routeResponses.ts` | The answers every area shares (401, 400, 404, 403) and the `:contentId` parameter |
-| `src/routes/<area>Routes.ts` | One route registry per area: `core` (before S5), `studio`, `pattern`, `learningDesign`, `collaboration`, `mappe` |
+| `src/routes/<area>Routes.ts` | One route registry per area: `core` (before S5), `studio`, `pattern`, `learningDesign`, `collaboration`, `mappe`, `gradeBridge` (S6; joins `API_ROUTES` when step 3 mounts its routes) |
 | `src/routes/<area>SchemaNames.ts` | The component names of the schemas each area's routes use |
 | `src/routes/collaborationResponses.ts` | The refusals and the co-author path parameter the collaboration routes share |
 | `src/apiRoutes.ts` | `API_ROUTES`: the area registries concatenated in document order |
@@ -98,4 +104,5 @@ None. The server decides whether to serve `/api/docs` from `NODE_ENV` (see `apps
 ## Implements
 
 `DOC-012` (schemas and document), and the shapes of `PROD-003`, `UD-022`, `PROD-011`, `PROD-006`, `DATA-002`,
-`PED-001`, `PED-002`, `PED-010`, `PED-030`, `PED-031`, `PED-032`, `PROD-001`, `PROD-007` and `MAPPE-001`.
+`PED-001`, `PED-002`, `PED-010`, `PED-030`, `PED-031`, `PED-032`, `PROD-001`, `PROD-007`, `MAPPE-001`, and from S6
+`LTI-011`, `DATA-012`, `LTI-012` and `INS-006` (with the shared parts of `INS-001`–`INS-007`).

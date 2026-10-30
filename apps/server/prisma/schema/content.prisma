@@ -101,6 +101,10 @@ model H5PUserData {
   preload      Boolean  @default(false)
   invalidate   Boolean  @default(false)
   updatedAt    DateTime @updatedAt
+  /// The academic year of the pseudonym secret that made `learnerKey`; the yearly purge deletes by it (D-107). The
+  /// database default is the year of the write in Oslo, which a portal session's key can predate by up to 12 hours
+  /// after 1 August (D-057), so the writer of a portal learner's row sets the key's year itself.
+  academicYear Int      @default(dbgenerated("(EXTRACT(year FROM ((now() AT TIME ZONE 'Europe/Oslo'::text) - '7 mons'::interval)))::integer"))
 
   content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
@@ -109,6 +113,7 @@ model H5PUserData {
   @@index([contentId, learnerKey, contextId])
   @@index([learnerKey])
   @@index([updatedAt])
+  @@index([academicYear])
 }
 
 /// How a library change arrived (D-041): the seed command or an admin's package import.

@@ -1,0 +1,356 @@
+{
+  "library": "H5P.Blanks 1.14",
+  "contentId": "{{contentId}}",
+  "recordedBy": "apps/server/test/h5p/support/xapiTypeRun.ts (probe P1)",
+  "actions": [
+    "load: opens the activity",
+    "answer: fills six of the seven gaps right and leaves the last empty",
+    "check: presses «Sjekk»"
+  ],
+  "statements": [
+    {
+      "view": 1,
+      "step": "load",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign i samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "answer",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign i samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "answer",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign i samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "answer",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign i samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "answer",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign i samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "answer",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign i samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "answer",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign i samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "https://h5p.org/x-api/case-sensitivity": false,
+              "https://h5p.org/x-api/alternatives": [
+                ["quiz", "test"],
+                ["samtale", "samtalar", "diskusjon", "drøfting"],
+                ["refleksjon", "refleksjonstekst", "refleksjonsnotat"],
+                ["formativ"],
+                ["vidare"],
+                ["teksting", "undertekstar", "undertekst"],
+                ["alternativ tekst", "alternativtekst", "alt-tekst"]
+              ]
+            },
+            "name": {
+              "en-US": "Læringsdesign i samlingsbasert undervisning"
+            },
+            "description": {
+              "en-US": "<p>Eit læringsdesign for samlingsbasert undervisning har tre fasar: før, under og etter samlinga. Fyll inn orda som manglar i setningane under. Står du fast, kan du opne tipset ved feltet.</p><p>Før samlinga førebur studentane seg med ein kort video og ein __________, slik at alle kjem til samlinga med eit felles grunnlag.</p><p>Under samlinga bruker vi tida på __________ og problemløysing, for det er då studentane har mest nytte av å vere saman.</p><p>Etter samlinga skriv studentane ein kort __________ over kva dei har lært, og kva dei vil arbeide vidare med.</p><p>Undervegsvurdering blir òg kalla __________ vurdering, fordi ho skal hjelpe studenten medan læringa framleis held på.</p><p>Ei god tilbakemelding svarer på tre spørsmål: Kvar skal eg? Kvar står eg no? Korleis kjem eg __________?</p><p>Når ein video har __________, kan òg studentar som ikkje høyrer lyden, følgje med på innhaldet.</p><p>Eit bilete som formidlar innhald, treng ein __________, slik at alle får den same informasjonen.</p>"
+            },
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "interactionType": "fill-in",
+            "correctResponsesPattern": [
+              "{case_matters=false}quiz[,]samtale[,]refleksjon[,]formativ[,]vidare[,]teksting[,]alternativ tekst"
+            ]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.Blanks-1.14",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "https://h5p.org/x-api/h5p-reporting-version": "1.1.0"
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 7,
+            "raw": 6,
+            "scaled": 0.8571
+          },
+          "completion": true,
+          "duration": "PT0.99S",
+          "response": "quiz[,]samtale[,]refleksjon[,]formativ[,]vidare[,]teksting[,]"
+        }
+      }
+    }
+  ]
+}

@@ -5,8 +5,8 @@
 #
 # Why:   the owner and HVL's testers can try the app without installing Node.js or Docker (owner request,
 #        2026-10-30). The steps and their order are those of apps/server/README.md ("How to run") and CI
-#        (.github/workflows/ci.yml), so nothing here is new. Beyond them, services.sh creates the S3 buckets, which
-#        the test beds create for themselves and the server never does.
+#        (.github/workflows/ci.yml), so nothing here is new. services.sh runs that README's bucket step
+#        (createS3Buckets.mjs) on every start, because the S3 emulator keeps its buckets in memory.
 # Spec:  none of its own: development tooling (H5P-001 core fetch, D-078 real content types, D-068 web app build).
 # Invariants:
 #   - An existing apps/server/.env is never overwritten. A new one is apps/server/.env.example with the built web app

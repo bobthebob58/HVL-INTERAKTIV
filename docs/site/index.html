@@ -505,7 +505,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>D-109</td><td>Database roles, encrypted-connection checks in production, and a request log without personal data</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
-<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), HVL&#39;s runtime and DNS open (Q5)</td></tr>
+<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
 <tr>
 <td>D-111</td><td>An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</td><td>Accepted (2026-10-30), texts to HVL&#39;s language advisers and ALU (Q2, Q17)</td></tr>
 <tr>
@@ -514,6 +514,8 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <td>D-113</td><td>The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
 <td>D-114</td><td>New development dependencies in S6</td><td>Accepted (2026-10-30)</td></tr>
+<tr>
+<td>D-115</td><td>xAPI capture, statement identity, attempts and gradable results (probe P1)</td><td>Accepted (2026-10-30), ALU and the owner to answer Q18–Q20</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--references" tabindex="-1">Reference inputs from HVL</h3>
@@ -1024,11 +1026,10 @@ inside the h5p iframe.
 - **amended (d-102, 2026-10-30):** `spec-deviation` for the bridge: it is not injected inside the h5p iframe. it is
   plain javascript, `packages/hvl-h5p-theme/src/xapibridge.js`, and runs once in the top player document that
   `h5p/render/playerpage.ts` renders (`/h5p/play/:contentid`, `/lti/play`), only for a learner principal; h5p core
-  relays the statements of its
-  own iframes to that document's `h5p.externaldispatcher`. it never runs in core's iframes, in the next.js page
-  around them or in the editor. the theme part of this requirement is unchanged. for the bridge, the acceptance
-  therefore looks at the player document: the bridge loads there for a learner, under the page's script policy, and
-  not for anyone else (d-102; `lti-010` checks that statements arrive).">
+  relays the statements of its own iframes to that document's `h5p.externaldispatcher`. it never runs in core's
+  iframes, in the next.js page around them or in the editor. the theme part of this requirement is unchanged. for
+  the bridge, the acceptance therefore looks at the player document: the bridge loads there for a learner, under the
+  page's script policy, and not for anyone else (d-102; `lti-010` checks that statements arrive).">
 <summary><span class="req-id">H5P-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Inject theme and client scripts into player and editor</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Use <code>customization.global.styles</code> and <code>customization.global.scripts</code>, or <code>alterLibraryFiles</code>, to add
 <code>packages/hvl-h5p-theme/dist/hvl-h5p-theme.css</code> (<a class="req-ref" href="#r-UD-011"><code>UD-011</code></a>) and the xAPI bridge script (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>)
@@ -1049,11 +1050,10 @@ What remains of the acceptance in S4 is the theme in each document that holds H5
 <li><strong>Amended (D-102, 2026-10-30):</strong> <code>SPEC-DEVIATION</code> for the bridge: it is not injected inside the H5P iframe. It is
 plain JavaScript, <code>packages/hvl-h5p-theme/src/xapiBridge.js</code>, and runs once in the top player document that
 <code>h5p/render/playerPage.ts</code> renders (<code>/h5p/play/:contentId</code>, <code>/lti/play</code>), only for a learner principal; H5P Core
-relays the statements of its
-own iframes to that document&#39;s <code>H5P.externalDispatcher</code>. It never runs in Core&#39;s iframes, in the Next.js page
-around them or in the editor. The theme part of this requirement is unchanged. For the bridge, the acceptance
-therefore looks at the player document: the bridge loads there for a learner, under the page&#39;s script policy, and
-not for anyone else (D-102; <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> checks that statements arrive).</li>
+relays the statements of its own iframes to that document&#39;s <code>H5P.externalDispatcher</code>. It never runs in Core&#39;s
+iframes, in the Next.js page around them or in the editor. The theme part of this requirement is unchanged. For
+the bridge, the acceptance therefore looks at the player document: the bridge loads there for a learner, under the
+page&#39;s script policy, and not for anyone else (D-102; <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> checks that statements arrive).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-H5P-009">01 H5P engine and security, H5P-009</a> · H5P engine</p></div>
 </details>
@@ -1503,7 +1503,7 @@ into their own library, but cannot edit the original unless they are co-authors.
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-007">02 Feide, LTI and grades, LTI-007</a> · Canvas LTI and grades</p></div>
 </details>
-<details class="req" id="x-LTI-008" data-area="LTI" data-priority="SHOULD" data-session="S6" data-status="planned" data-text="lti-008 participation denominators via nrps if the launch includes the names and roles claim, fetch the number of active learners in the
+<details class="req" id="x-LTI-008" data-area="LTI" data-priority="SHOULD" data-session="S6" data-status="tested" data-text="lti-008 participation denominators via nrps if the launch includes the names and roles claim, fetch the number of active learners in the
 context. cache it for 1 hour, and use it as the denominator in insight (`ins-001`). **only counts are
 stored**, never member names or e-mail addresses. this needs the developer-key scope
 `https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly`; with `privacy_level`
@@ -1513,7 +1513,7 @@ stored**, never member names or e-mail addresses. this needs the developer-key s
   while the launch context lives, and cached under the platform-scoped context `&lt;platformid&gt;:&lt;contextid&gt;` (d-103), so
   courses with the same id in two of hvl's canvas instances never share a count. nrps paging and role filtering on
   hvl's canvas are on the students' canvas acceptance checklist *(verify)* (d-101).">
-<summary><span class="req-id">LTI-008</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Participation denominators via NRPS</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">LTI-008</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Participation denominators via NRPS</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>If the launch includes the Names and Roles claim, fetch the number of active learners in the
 context. Cache it for 1 hour, and use it as the denominator in insight (<a class="req-ref" href="#r-INS-001"><code>INS-001</code></a>). <strong>Only counts are
 stored</strong>, never member names or e-mail addresses. This needs the developer-key scope
@@ -1543,7 +1543,7 @@ students through the hand-off index (<code>docs/handoff/README.md</code>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-009">02 Feide, LTI and grades, LTI-009</a> · Canvas LTI and grades</p></div>
 </details>
-<details class="req" id="x-LTI-010" data-area="LTI" data-priority="MUST" data-session="S6" data-status="planned" data-text="lti-010 capture xapi in the player the injected client script (`packages/hvl-h5p-theme/src/xapibridge.ts`, `h5p-009`) subscribes with
+<details class="req" id="x-LTI-010" data-area="LTI" data-priority="MUST" data-session="S6" data-status="in code" data-text="lti-010 capture xapi in the player the injected client script (`packages/hvl-h5p-theme/src/xapibridge.ts`, `h5p-009`) subscribes with
 `h5p.externaldispatcher.on('xapi', …)`. it posts each statement to `/api/h5p/xapi`, batched every
 2 s and flushed on `pagehide`, with the ltik or csrf token. failed posts are retried from an
 in-memory queue. they never block or slow down the activity.
@@ -1559,7 +1559,7 @@ in-memory queue. they never block or slow down the activity.
   session cookie with the `x-csrf-token` header; never an ltik in the query. on `pagehide` it flushes with `fetch`
   and `keepalive: true` (not `sendbeacon`, which cannot carry those headers); nothing goes to browser storage. it adds
   no ✓/✗ text (`ud-003` as amended).">
-<summary><span class="req-id">LTI-010</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Capture xAPI in the player</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">LTI-010</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Capture xAPI in the player</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>The injected client script (<code>packages/hvl-h5p-theme/src/xapiBridge.ts</code>, <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>) subscribes with
 <code>H5P.externalDispatcher.on(&#39;xAPI&#39;, …)</code>. It POSTs each statement to <code>/api/h5p/xapi</code>, batched every
 2 s and flushed on <code>pagehide</code>, with the ltik or CSRF token. Failed posts are retried from an
@@ -1580,7 +1580,7 @@ no ✓/✗ text (<a class="req-ref" href="#r-UD-003"><code>UD-003</code></a> as 
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-010">02 Feide, LTI and grades, LTI-010</a> · Canvas LTI and grades</p></div>
 </details>
-<details class="req" id="x-LTI-011" data-area="LTI" data-priority="MUST" data-session="S6" data-status="planned" data-text="lti-011 validate and store statements `/api/h5p/xapi` validates statements with a zod schema. it accepts only verbs it uses
+<details class="req" id="x-LTI-011" data-area="LTI" data-priority="MUST" data-session="S6" data-status="tested" data-text="lti-011 validate and store statements `/api/h5p/xapi` validates statements with a zod schema. it accepts only verbs it uses
 (`answered`, `completed`, `attempted`, `interacted`, `progressed`). it checks that the object belongs
 to content the principal may view, and that `0 ≤ score.raw ≤ score.max` and `0 ≤ scaled ≤ 1`. it
 rate-limits each learner and activity to 120 statements per minute. then it stores the minimal
@@ -1590,7 +1590,7 @@ fields defined in `data-012` and drops the rest of the statement (including `act
   stores nothing. in canvas the content must also be the launched activity. the stored `contextid` is the
   platform-scoped `&lt;platformid&gt;:&lt;contextid&gt;` (d-103, null for a portal play), and the stored `timestamp` is when the
   server received the batch, not what the browser claims.">
-<summary><span class="req-id">LTI-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Validate and store statements</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">LTI-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Validate and store statements</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>/api/h5p/xapi</code> validates statements with a zod schema. It accepts only verbs it uses
 (<code>answered</code>, <code>completed</code>, <code>attempted</code>, <code>interacted</code>, <code>progressed</code>). It checks that the object belongs
 to content the principal may view, and that <code>0 ≤ score.raw ≤ score.max</code> and <code>0 ≤ scaled ≤ 1</code>. It
@@ -1605,7 +1605,7 @@ server received the batch, not what the browser claims.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-011">02 Feide, LTI and grades, LTI-011</a> · Canvas LTI and grades</p></div>
 </details>
-<details class="req" id="x-LTI-012" data-area="LTI" data-priority="MUST" data-session="S6" data-status="planned" data-text="lti-012 publish scores to the canvas gradebook (ags) when a statement concerns the **root** content (no `subcontentid`), has the verb `completed` or
+<details class="req" id="x-LTI-012" data-area="LTI" data-priority="MUST" data-session="S6" data-status="tested" data-text="lti-012 publish scores to the canvas gradebook (ags) when a statement concerns the **root** content (no `subcontentid`), has the verb `completed` or
 `answered`, and carries `result.score`, the server applies the activity's attempt policy:
 
 | policy (author setting) | score sent to canvas |
@@ -1641,7 +1641,7 @@ a new client-credentials token itself, or is marked failed for the author to ret
   its outcome. authors see sent, pending, failed and orphaned counts per placement on the activity page and in
   `/app/play` and retry failed jobs there. not deviated: the score body, the policies, the retry limit, idempotency,
   `orphaned` and the developer key's scopes.">
-<summary><span class="req-id">LTI-012</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Publish scores to the Canvas gradebook (AGS)</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">LTI-012</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Publish scores to the Canvas gradebook (AGS)</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>When a statement concerns the <strong>root</strong> content (no <code>subContentId</code>), has the verb <code>completed</code> or
 <code>answered</code>, and carries <code>result.score</code>, the server applies the activity&#39;s attempt policy:</p>
 <div class="table-wrap" role="region" aria-label="Table 1, LTI-012 Publish scores to the Canvas gradebook (AGS)" tabindex="0"><table><thead><tr>
@@ -1683,7 +1683,7 @@ its outcome. Authors see sent, pending, failed and orphaned counts per placement
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-012">02 Feide, LTI and grades, LTI-012</a> · Canvas LTI and grades</p></div>
 </details>
-<details class="req" id="x-LTI-013" data-area="LTI" data-priority="MUST" data-session="S6" data-status="planned" data-text="lti-013 score integrity is honest h5p computes scores in the browser, so a determined student can forge them. the system therefore
+<details class="req" id="x-LTI-013" data-area="LTI" data-priority="MUST" data-session="S6" data-status="in code" data-text="lti-013 score integrity is honest h5p computes scores in the browser, so a determined student can forge them. the system therefore
 (a) labels ags scores as formative in the line-item `label` suffix &quot;(formativ)&quot;, (b) shows the
 formative notice (`prod-011`), and (c) never presents these scores as exam evidence. server checks in
 `lti-011` reduce accidental and casual manipulation. they are not claimed to prevent deliberate
@@ -1699,7 +1699,7 @@ decision for hvl and alu *(verify)*.
   not the code, and a change affects new placements only. the insight views, the `ins-009` csv and the grade-sync
   status also say that the scores are formative, computed in the browser and not exam evidence. the unit test checks
   the label in both modes.">
-<summary><span class="req-id">LTI-013</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Score integrity is honest</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">LTI-013</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Score integrity is honest</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>H5P computes scores in the browser, so a determined student can forge them. The system therefore
 (a) labels AGS scores as formative in the line-item <code>label</code> suffix &quot;(formativ)&quot;, (b) shows the
 formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>), and (c) never presents these scores as exam evidence. Server checks in
@@ -2326,12 +2326,12 @@ output enabled. It has document language, a title, a heading outline and real te
 </ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-004">04 Læringsdesign studio, MAPPE-004</a> · Pedagogisk mappe</p></div>
 </details>
-<details class="req" id="x-INS-001" data-area="INS" data-priority="MUST" data-session="S6" data-status="planned" data-text="ins-001 participation overview shows: learners who **started**, learners who **completed**, completion rate (denominator from nrps
+<details class="req" id="x-INS-001" data-area="INS" data-priority="MUST" data-session="S6" data-status="in code" data-text="ins-001 participation overview shows: learners who **started**, learners who **completed**, completion rate (denominator from nrps
 when available, `lti-008`, otherwise &quot;of those who started&quot;), median time on task, and median
 number of attempts.
 - **acceptance:** numbers match a hand-calculated fixture of 30 synthetic learners.
 - **verify:** unit tests of the aggregation queries.">
-<summary><span class="req-id">INS-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Participation overview</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">INS-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Participation overview</span> <span class="status" data-status="in code">◐ In code</span></summary>
 <div class="req-body"><p>Shows: learners who <strong>started</strong>, learners who <strong>completed</strong>, completion rate (denominator from NRPS
 when available, <a class="req-ref" href="#r-LTI-008"><code>LTI-008</code></a>, otherwise &quot;of those who started&quot;), median time on task, and median
 number of attempts.</p>
@@ -2354,14 +2354,14 @@ is shown next to each item so the teacher does not need to open the editor.</p>
 </ul>
 <p class="req-source">Defined in <a href="#r-INS-002">05 Insight and privacy, INS-002</a> · Teacher insight</p></div>
 </details>
-<details class="req" id="x-INS-003" data-area="INS" data-priority="MUST" data-session="S6" data-status="planned" data-text="ins-003 misconceptions for choice questions, it shows how answers are distributed across options, with the **teacher's own
+<details class="req" id="x-INS-003" data-area="INS" data-priority="MUST" data-session="S6" data-status="tested" data-text="ins-003 misconceptions for choice questions, it shows how answers are distributed across options, with the **teacher's own
 feedback text** for each wrong option next to it. for blanks and dragtext, it shows the most frequent
 wrong answers per gap, normalised (trimmed, case-folded) and limited to the top 5. a free-text answer
 is displayed only if at least *k* distinct learners gave it (`ins-006`), so a rare and identifiable
 answer is never shown. a **&quot;ta opp i samlinga&quot;** (&quot;bring to seminar&quot;) button adds the item to a
 shortlist that can be printed or projected.
 - **verify:** unit tests, including the *k* rule for free text.">
-<summary><span class="req-id">INS-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Misconceptions</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">INS-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Misconceptions</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>For choice questions, it shows how answers are distributed across options, with the <strong>teacher&#39;s own
 feedback text</strong> for each wrong option next to it. For Blanks and DragText, it shows the most frequent
 wrong answers per gap, normalised (trimmed, case-folded) and limited to the top 5. A free-text answer
@@ -2393,7 +2393,7 @@ serves as a proxy for how far they watched. The spike in Session 6 decides wheth
 <code>progressed</code> statements are reliable enough for a drop-off curve.</p>
 <p class="req-source">Defined in <a href="#r-INS-005">05 Insight and privacy, INS-005</a> · Teacher insight</p></div>
 </details>
-<details class="req" id="x-INS-006" data-area="INS" data-priority="MUST" data-session="S6" data-status="in code" data-text="ins-006 minimum group size and no individual view any cell, bar or list item that represents fewer than **k = 5** distinct learners is shown as
+<details class="req" id="x-INS-006" data-area="INS" data-priority="MUST" data-session="S6" data-status="tested" data-text="ins-006 minimum group size and no individual view any cell, bar or list item that represents fewer than **k = 5** distinct learners is shown as
 &quot;&lt; 5&quot; and its value is suppressed. *k* is configurable, with a minimum of 3. if suppression of one
 cell would let a hidden value be worked out from the totals, the next-smallest cell is suppressed
 too. the insight api has **no endpoint** that returns per-learner rows.
@@ -2403,7 +2403,7 @@ too. the insight api has **no endpoint** that returns per-learner rows.
   and the csv.
 - **acceptance:** property-based test: for random datasets, no api response contains a group smaller than *k*.
 - **verify:** `fast-check` property test `[ins-006] …`.">
-<summary><span class="req-id">INS-006</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Minimum group size and no individual view</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">INS-006</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Minimum group size and no individual view</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Any cell, bar or list item that represents fewer than <strong>k = 5</strong> distinct learners is shown as
 &quot;&lt; 5&quot; and its value is suppressed. <em>k</em> is configurable, with a minimum of 3. If suppression of one
 cell would let a hidden value be worked out from the totals, the next-smallest cell is suppressed
@@ -2418,7 +2418,7 @@ and the CSV.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-INS-006">05 Insight and privacy, INS-006</a> · Teacher insight</p></div>
 </details>
-<details class="req" id="x-INS-007" data-area="INS" data-priority="MUST" data-session="S6" data-status="planned" data-text="ins-007 who can see insight owners and co-authors of an activity can see its insight. in lti mode, authors of the launch context
+<details class="req" id="x-INS-007" data-area="INS" data-priority="MUST" data-session="S6" data-status="tested" data-text="ins-007 who can see insight owners and co-authors of an activity can see its insight. in lti mode, authors of the launch context
 see results for *that context only*. admins can see it only through an audited support action. each
 view writes an audit event (`data-007`).
 - **verify:** permission tests.
@@ -2427,7 +2427,7 @@ view writes an audit event (`data-007`).
   context is the launch's and cannot be changed. the audited support action for admins is not built in s6, so admins
   see no insight. a view writes `insight.view` and a csv download `insight.export`, with details limited to the view,
   the period, the context and the content version: no learner key, count or answer.">
-<summary><span class="req-id">INS-007</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Who can see insight</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">INS-007</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Who can see insight</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Owners and co-authors of an activity can see its insight. In LTI mode, authors of the launch context
 see results for <em>that context only</em>. Admins can see it only through an audited support action. Each
 view writes an audit event (<a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>).</p>
@@ -2504,25 +2504,30 @@ succeeded, failed or was orphaned, so a job that never succeeds keeps it no long
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-002">05 Insight and privacy, DATA-002</a> · Data protection</p></div>
 </details>
-<details class="req" id="x-DATA-003" data-area="DATA" data-priority="MUST" data-session="S6" data-status="in code" data-text="data-003 annual retention purge a scheduled job runs on a configured date (default 15 august), for the academic year that has
+<details class="req" id="x-DATA-003" data-area="DATA" data-priority="MUST" data-session="S6" data-status="tested" data-text="data-003 annual retention purge a scheduled job runs on a configured date (default 15 august), for the academic year that has
 ended. it deletes `xapistatement`, `h5puserdata`, `gradesyncjob` and learner `identity` rows older
 than the academic-year boundary plus 30 days, then learner `user` rows that have no `identity` left
 (d-034), and destroys that year's pseudonym secret. only
 aggregate snapshots that already satisfy *k*-suppression are kept, for the *pedagogisk mappe*.
 - **acceptance:** a dry-run mode reports counts without deleting. each run writes an audit event with the counts.
 - **verify:** integration test with time travel.
-- **amended (d-107, 2026-10-30):** `spec-deviation` in two points. (1) the default date: the job runs by default on
-  **31 august**, oslo time, for the academic year that ended on 31 july, because the boundary plus 30 days ends on
-  30 august; the date is configurable, but not to a day before 31 august. (2) which rows go: `xapistatement`,
-  `h5puserdata` and `gradesyncjob` carry the academic year of the secret that made each row's `learnerkey`, and the
-  purge deletes the ended year's rows by that stored year, then the learner `identity` rows created before that year
+- **amended (d-107, 2026-10-30):** `spec-deviation` in three points. (1) the default date: the job runs by default
+  on **31 august**, oslo time, for the academic year that ended on 31 july, because the boundary plus 30 days ends on
+  30 august; the date is configurable, but not to a day before 31 august, so the 30 days always pass first. (2) which
+  rows go: `xapistatement`, `h5puserdata` and `gradesyncjob` store an `academicyear`, set, when a row is written, to
+  the year of the secret that made its `learnerkey` (`data-012` as amended, §4), and the purge deletes the ended
+  year's rows by that stored year, in batched transactions, then the learner `identity` rows created before that year
   ended, then learner `user` rows left without an `identity` (d-034); not every row &quot;older than the academic-year
-  boundary plus 30 days&quot;, which, read on the run date, would also take the new year's first 30 days. before anything
-  is deleted, the year's *k*-suppressed `insightsnapshot` rows are written; only they outlive the purge. the dry run
-  and the audit event are as written. destroying the year's pseudonym secret is an operations step in the runbook
-  (the secrets are an environment value the server cannot destroy); at start-up the server names, by year only, a
-  secret still configured for a purged year.">
-<summary><span class="req-id">DATA-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span> <span class="status" data-status="in code">◐ In code</span></summary>
+  boundary plus 30 days&quot;, which, read on the run date, would also take the new year's first 30 days. the 30 days after
+  the boundary are kept as the time before the purge may run. (3) who destroys the secret: not the job. the secrets
+  are an environment value (`pseudonym_secrets`) that the server cannot destroy, so hvl operations remove the year's
+  secret in a runbook step after the real run, and `data-002`'s rule holds through that step; at start-up the server
+  names, by year only, any secret still configured for a purged year, so a forgotten step shows. before anything is
+  deleted, the year's `insightsnapshot` rows are written per activity, context (d-103) and content version, already
+  suppressed with the configured *k* (d-106); only they outlive the purge, and the values the mappe reads from them
+  follow d-095's rules. the dry run (counts per table, nothing deleted) and the audit event of every run are as
+  written. a leased job runs the purge on one node, and a cli runs the same code by hand.">
+<summary><span class="req-id">DATA-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>A scheduled job runs on a configured date (default 15 August), for the academic year that has
 ended. It deletes <code>XapiStatement</code>, <code>H5PUserData</code>, <code>GradeSyncJob</code> and learner <code>Identity</code> rows older
 than the academic-year boundary plus 30 days, then learner <code>User</code> rows that have no <code>Identity</code> left
@@ -2531,17 +2536,22 @@ aggregate snapshots that already satisfy <em>k</em>-suppression are kept, for th
 <ul>
 <li><strong>Acceptance:</strong> A dry-run mode reports counts without deleting. Each run writes an audit event with the counts.</li>
 <li><strong>Verify:</strong> Integration test with time travel.</li>
-<li><strong>Amended (D-107, 2026-10-30):</strong> <code>SPEC-DEVIATION</code> in two points. (1) The default date: the job runs by default on
-<strong>31 August</strong>, Oslo time, for the academic year that ended on 31 July, because the boundary plus 30 days ends on
-30 August; the date is configurable, but not to a day before 31 August. (2) Which rows go: <code>XapiStatement</code>,
-<code>H5PUserData</code> and <code>GradeSyncJob</code> carry the academic year of the secret that made each row&#39;s <code>learnerKey</code>, and the
-purge deletes the ended year&#39;s rows by that stored year, then the learner <code>Identity</code> rows created before that year
+<li><strong>Amended (D-107, 2026-10-30):</strong> <code>SPEC-DEVIATION</code> in three points. (1) The default date: the job runs by default
+on <strong>31 August</strong>, Oslo time, for the academic year that ended on 31 July, because the boundary plus 30 days ends on
+30 August; the date is configurable, but not to a day before 31 August, so the 30 days always pass first. (2) Which
+rows go: <code>XapiStatement</code>, <code>H5PUserData</code> and <code>GradeSyncJob</code> store an <code>academicYear</code>, set, when a row is written, to
+the year of the secret that made its <code>learnerKey</code> (<a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a> as amended, §4), and the purge deletes the ended
+year&#39;s rows by that stored year, in batched transactions, then the learner <code>Identity</code> rows created before that year
 ended, then learner <code>User</code> rows left without an <code>Identity</code> (D-034); not every row &quot;older than the academic-year
-boundary plus 30 days&quot;, which, read on the run date, would also take the new year&#39;s first 30 days. Before anything
-is deleted, the year&#39;s <em>k</em>-suppressed <code>InsightSnapshot</code> rows are written; only they outlive the purge. The dry run
-and the audit event are as written. Destroying the year&#39;s pseudonym secret is an operations step in the runbook
-(the secrets are an environment value the server cannot destroy); at start-up the server names, by year only, a
-secret still configured for a purged year.</li>
+boundary plus 30 days&quot;, which, read on the run date, would also take the new year&#39;s first 30 days. The 30 days after
+the boundary are kept as the time before the purge may run. (3) Who destroys the secret: not the job. The secrets
+are an environment value (<code>PSEUDONYM_SECRETS</code>) that the server cannot destroy, so HVL operations remove the year&#39;s
+secret in a runbook step after the real run, and <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>&#39;s rule holds through that step; at start-up the server
+names, by year only, any secret still configured for a purged year, so a forgotten step shows. Before anything is
+deleted, the year&#39;s <code>InsightSnapshot</code> rows are written per activity, context (D-103) and content version, already
+suppressed with the configured <em>k</em> (D-106); only they outlive the purge, and the values the mappe reads from them
+follow D-095&#39;s rules. The dry run (counts per table, nothing deleted) and the audit event of every run are as
+written. A leased job runs the purge on one node, and a CLI runs the same code by hand.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-003">05 Insight and privacy, DATA-003</a> · Data protection</p></div>
 </details>
@@ -2643,7 +2653,7 @@ author has explicitly added (e.g. a Panopto video). Fonts are self-hosted. A
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-011">05 Insight and privacy, DATA-011</a> · Data protection</p></div>
 </details>
-<details class="req" id="x-DATA-012" data-area="DATA" data-priority="MUST" data-session="S6" data-status="planned" data-text="data-012 minimal xapi storage for each statement, store only: `contentid`, `subcontentid?`, `contentversion`, `contextid?`,
+<details class="req" id="x-DATA-012" data-area="DATA" data-priority="MUST" data-session="S6" data-status="tested" data-text="data-012 minimal xapi storage for each statement, store only: `contentid`, `subcontentid?`, `contentversion`, `contextid?`,
 `learnerkey`, `verb`, `scoreraw?`, `scoremax?`, `scaled?`, `success?`, `completion?`,
 `response?` (choice indices or short gap text), `durationms?`, `attemptid`, `timestamp`. everything
 else is dropped, including actor names, mailboxes and extensions.
@@ -2652,9 +2662,11 @@ else is dropped, including actor names, mailboxes and extensions.
   portal play; one module builds and parses it), `attemptid` is made by the xapi bridge, since h5p sends none, and
   `timestamp` is when the server received the batch. only learner principals' statements are stored.
 - **amended (d-107, 2026-10-30):** `spec-deviation`: `xapistatement` also stores `academicyear`, a field outside the
-  list above. it holds no statement data, only the academic year of the secret behind the row's `learnerkey`, which
-  the key cannot reveal and a timestamp can misstate; the annual purge (`data-003` as amended) deletes by it.">
-<summary><span class="req-id">DATA-012</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Minimal xAPI storage</span> <span class="status" data-status="planned">○ Planned</span></summary>
+  list above, set when the row is written. it holds no statement data, only the academic year of the secret behind
+  the row's `learnerkey`, which the key cannot reveal and a timestamp can misstate (a portal session made before
+  1 august can keep its `learnerkey` for up to 12 hours after it, d-057); the annual purge (`data-003` as amended)
+  deletes by it. `h5puserdata` and `gradesyncjob` store it too (§4).">
+<summary><span class="req-id">DATA-012</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Minimal xAPI storage</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>For each statement, store only: <code>contentId</code>, <code>subContentId?</code>, <code>contentVersion</code>, <code>contextId?</code>,
 <code>learnerKey</code>, <code>verb</code>, <code>scoreRaw?</code>, <code>scoreMax?</code>, <code>scaled?</code>, <code>success?</code>, <code>completion?</code>,
 <code>response?</code> (choice indices or short gap text), <code>durationMs?</code>, <code>attemptId</code>, <code>timestamp</code>. Everything
@@ -2665,8 +2677,10 @@ else is dropped, including actor names, mailboxes and extensions.</p>
 portal play; one module builds and parses it), <code>attemptId</code> is made by the xAPI bridge, since H5P sends none, and
 <code>timestamp</code> is when the server received the batch. Only learner principals&#39; statements are stored.</li>
 <li><strong>Amended (D-107, 2026-10-30):</strong> <code>SPEC-DEVIATION</code>: <code>XapiStatement</code> also stores <code>academicYear</code>, a field outside the
-list above. It holds no statement data, only the academic year of the secret behind the row&#39;s <code>learnerKey</code>, which
-the key cannot reveal and a timestamp can misstate; the annual purge (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> as amended) deletes by it.</li>
+list above, set when the row is written. It holds no statement data, only the academic year of the secret behind
+the row&#39;s <code>learnerKey</code>, which the key cannot reveal and a timestamp can misstate (a portal session made before
+1 August can keep its <code>learnerKey</code> for up to 12 hours after it, D-057); the annual purge (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> as amended)
+deletes by it. <code>H5PUserData</code> and <code>GradeSyncJob</code> store it too (§4).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-012">05 Insight and privacy, DATA-012</a> · Data protection</p></div>
 </details>
@@ -3555,11 +3569,10 @@ What remains of the acceptance in S4 is the theme in each document that holds H5
 <li><strong>Amended (D-102, 2026-10-30):</strong> <code>SPEC-DEVIATION</code> for the bridge: it is not injected inside the H5P iframe. It is
 plain JavaScript, <code>packages/hvl-h5p-theme/src/xapiBridge.js</code>, and runs once in the top player document that
 <code>h5p/render/playerPage.ts</code> renders (<code>/h5p/play/:contentId</code>, <code>/lti/play</code>), only for a learner principal; H5P Core
-relays the statements of its
-own iframes to that document&#39;s <code>H5P.externalDispatcher</code>. It never runs in Core&#39;s iframes, in the Next.js page
-around them or in the editor. The theme part of this requirement is unchanged. For the bridge, the acceptance
-therefore looks at the player document: the bridge loads there for a learner, under the page&#39;s script policy, and
-not for anyone else (D-102; <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> checks that statements arrive).</li>
+relays the statements of its own iframes to that document&#39;s <code>H5P.externalDispatcher</code>. It never runs in Core&#39;s
+iframes, in the Next.js page around them or in the editor. The theme part of this requirement is unchanged. For
+the bridge, the acceptance therefore looks at the player document: the bridge loads there for a learner, under the
+page&#39;s script policy, and not for anyone else (D-102; <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> checks that statements arrive).</li>
 </ul>
 <h4 id="r-H5P-010" class="req-heading" tabindex="-1"><a class="req-id" href="#r-H5P-010">H5P-010</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Panopto-first video guidance</span></h4>
 <p>Use <code>alterLibrarySemantics</code> on <code>H5P.InteractiveVideo</code> and <code>H5P.Video</code> to replace the upload field&#39;s
@@ -3652,7 +3665,7 @@ stored and rendered value is escaped.</p>
 <tr>
 <td><code>ContentCollaborator</code></td><td><code>contentId</code>, <code>userId</code>, <code>role (coauthor)</code></td><td>Author ID</td></tr>
 <tr>
-<td><code>H5PUserData</code></td><td><code>contentId</code>, <code>subContentId</code>, <code>dataType</code>, <code>learnerKey</code>, <code>contextId</code>, <code>data (jsonb)</code>, <code>preload</code>, <code>invalidate</code>, <code>updatedAt</code></td><td>Pseudonymous learner data</td></tr>
+<td><code>H5PUserData</code></td><td><code>contentId</code>, <code>subContentId</code>, <code>dataType</code>, <code>learnerKey</code>, <code>contextId</code>, <code>data (jsonb)</code>, <code>preload</code>, <code>invalidate</code>, <code>updatedAt</code>; from S6 also <code>academicYear</code>, the year of the secret behind <code>learnerKey</code>, by which the yearly purge deletes (D-107)</td><td>Pseudonymous learner data</td></tr>
 <tr>
 <td><code>LibraryAuditEvent</code></td><td><code>actorUserId?</code> (empty for the seed command), <code>source (seed/upload)</code>, <code>machineName</code>, <code>fromVersion?</code>, <code>toVersion?</code>, <code>sha256?</code>, <code>at</code></td><td>Admin ID (D-041)</td></tr>
 </tbody></table></div>
@@ -4795,17 +4808,22 @@ aggregate snapshots that already satisfy <em>k</em>-suppression are kept, for th
 <ul>
 <li><strong>Acceptance:</strong> A dry-run mode reports counts without deleting. Each run writes an audit event with the counts.</li>
 <li><strong>Verify:</strong> Integration test with time travel.</li>
-<li><strong>Amended (D-107, 2026-10-30):</strong> <code>SPEC-DEVIATION</code> in two points. (1) The default date: the job runs by default on
-<strong>31 August</strong>, Oslo time, for the academic year that ended on 31 July, because the boundary plus 30 days ends on
-30 August; the date is configurable, but not to a day before 31 August. (2) Which rows go: <code>XapiStatement</code>,
-<code>H5PUserData</code> and <code>GradeSyncJob</code> carry the academic year of the secret that made each row&#39;s <code>learnerKey</code>, and the
-purge deletes the ended year&#39;s rows by that stored year, then the learner <code>Identity</code> rows created before that year
+<li><strong>Amended (D-107, 2026-10-30):</strong> <code>SPEC-DEVIATION</code> in three points. (1) The default date: the job runs by default
+on <strong>31 August</strong>, Oslo time, for the academic year that ended on 31 July, because the boundary plus 30 days ends on
+30 August; the date is configurable, but not to a day before 31 August, so the 30 days always pass first. (2) Which
+rows go: <code>XapiStatement</code>, <code>H5PUserData</code> and <code>GradeSyncJob</code> store an <code>academicYear</code>, set, when a row is written, to
+the year of the secret that made its <code>learnerKey</code> (<a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a> as amended, §4), and the purge deletes the ended
+year&#39;s rows by that stored year, in batched transactions, then the learner <code>Identity</code> rows created before that year
 ended, then learner <code>User</code> rows left without an <code>Identity</code> (D-034); not every row &quot;older than the academic-year
-boundary plus 30 days&quot;, which, read on the run date, would also take the new year&#39;s first 30 days. Before anything
-is deleted, the year&#39;s <em>k</em>-suppressed <code>InsightSnapshot</code> rows are written; only they outlive the purge. The dry run
-and the audit event are as written. Destroying the year&#39;s pseudonym secret is an operations step in the runbook
-(the secrets are an environment value the server cannot destroy); at start-up the server names, by year only, a
-secret still configured for a purged year.</li>
+boundary plus 30 days&quot;, which, read on the run date, would also take the new year&#39;s first 30 days. The 30 days after
+the boundary are kept as the time before the purge may run. (3) Who destroys the secret: not the job. The secrets
+are an environment value (<code>PSEUDONYM_SECRETS</code>) that the server cannot destroy, so HVL operations remove the year&#39;s
+secret in a runbook step after the real run, and <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>&#39;s rule holds through that step; at start-up the server
+names, by year only, any secret still configured for a purged year, so a forgotten step shows. Before anything is
+deleted, the year&#39;s <code>InsightSnapshot</code> rows are written per activity, context (D-103) and content version, already
+suppressed with the configured <em>k</em> (D-106); only they outlive the purge, and the values the mappe reads from them
+follow D-095&#39;s rules. The dry run (counts per table, nothing deleted) and the audit event of every run are as
+written. A leased job runs the purge on one node, and a CLI runs the same code by hand.</li>
 </ul>
 <h4 id="r-DATA-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DATA-004">DATA-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">EEA residency and encryption</span></h4>
 <p>PostgreSQL, Redis and S3-compatible storage are hosted in Norway or the EEA. All traffic uses TLS
@@ -4871,8 +4889,10 @@ else is dropped, including actor names, mailboxes and extensions.</p>
 portal play; one module builds and parses it), <code>attemptId</code> is made by the xAPI bridge, since H5P sends none, and
 <code>timestamp</code> is when the server received the batch. Only learner principals&#39; statements are stored.</li>
 <li><strong>Amended (D-107, 2026-10-30):</strong> <code>SPEC-DEVIATION</code>: <code>XapiStatement</code> also stores <code>academicYear</code>, a field outside the
-list above. It holds no statement data, only the academic year of the secret behind the row&#39;s <code>learnerKey</code>, which
-the key cannot reveal and a timestamp can misstate; the annual purge (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> as amended) deletes by it.</li>
+list above, set when the row is written. It holds no statement data, only the academic year of the secret behind
+the row&#39;s <code>learnerKey</code>, which the key cannot reveal and a timestamp can misstate (a portal session made before
+1 August can keep its <code>learnerKey</code> for up to 12 hours after it, D-057); the annual purge (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> as amended)
+deletes by it. <code>H5PUserData</code> and <code>GradeSyncJob</code> store it too (§4).</li>
 </ul>
 <hr>
 <h3 id="spec-05--3-what-teachers-can-and-cannot-see-summary-for-privacy-notices-and-evaluators" tabindex="-1">3. What teachers can and cannot see (summary for privacy notices and evaluators)</h3>
@@ -4898,19 +4918,19 @@ personal data; <strong>P</strong> marks pseudonymous fields.</p>
 <tr>
 <td><code>H5PContent</code>, <code>H5PContentFile</code>, <code>ContentCollaborator</code>, <code>LibraryAuditEvent</code></td><td>01</td><td><code>ownerUserId</code>; <code>sourceAuthorUserId</code> on copies (S5, D-092)</td></tr>
 <tr>
-<td><code>H5PUserData</code></td><td>01</td><td><code>learnerKey</code> (<strong>P</strong>), <code>data</code> (<strong>P</strong>)</td></tr>
+<td><code>H5PUserData</code></td><td>01</td><td><code>learnerKey</code> (<strong>P</strong>), <code>data</code> (<strong>P</strong>); <code>academicYear</code>, as on <code>XapiStatement</code> (D-107)</td></tr>
 <tr>
 <td><code>LtiPlatform</code>, <code>LtiIdToken</code>, <code>LtiNonce</code>, <code>LtiAccessToken</code>, <code>LtiPlacement</code></td><td>02</td><td>ID tokens (<strong>PII</strong>, 24 h)</td></tr>
 <tr>
-<td><code>GradeSyncJob</code></td><td>02</td><td><code>ltiSub</code> (<strong>PII</strong>, encrypted, 30 days after success; amended, D-104: 30 days after the job stops, whatever its outcome)</td></tr>
+<td><code>GradeSyncJob</code></td><td>02</td><td><code>ltiSub</code> (<strong>PII</strong>, encrypted, 30 days after success; amended, D-104: 30 days after the job stops, whatever its outcome); <code>academicYear</code>, as on <code>XapiStatement</code> (D-107)</td></tr>
 <tr>
 <td><code>LearningDesignMetadata</code>, <code>LearningOutcome</code></td><td>04</td><td>none</td></tr>
 <tr>
 <td><code>ValidationAcknowledgement</code></td><td>03</td><td><code>userId</code> (author)</td></tr>
 <tr>
-<td><code>XapiStatement</code></td><td>05</td><td><code>learnerKey</code> (<strong>P</strong>), <code>response</code> (<strong>P</strong>); <code>contextId</code> as <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (D-103)</td></tr>
+<td><code>XapiStatement</code></td><td>05</td><td><code>learnerKey</code> (<strong>P</strong>), <code>response</code> (<strong>P</strong>); <code>contextId</code> as <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (D-103); <code>academicYear</code>, the year of the secret behind <code>learnerKey</code>, by which the yearly purge deletes (<code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>, D-107)</td></tr>
 <tr>
-<td><code>InsightSnapshot</code></td><td>05</td><td>aggregates only, already <em>k</em>-suppressed; <code>contextId</code> as <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (D-103)</td></tr>
+<td><code>InsightSnapshot</code></td><td>05</td><td>aggregates only, already <em>k</em>-suppressed; <code>contextId</code> as <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (D-103); <code>contentVersion</code> (D-107: the purge writes one snapshot per activity, context and content version)</td></tr>
 <tr>
 <td><code>AuditEvent</code></td><td>05</td><td><code>actorUserId</code></td></tr>
 </tbody></table></div>
@@ -4923,7 +4943,8 @@ learnerKey = HMAC_SHA256(secret[yyyy], &quot;lti|&quot; + iss + &quot;|&quot; + 
    ├─► H5PUserData.learnerKey     (resume state)
    ├─► XapiStatement.learnerKey   (insight aggregates, k ≥ 5)
    └─► GradeSyncJob.ltiSub (encrypted) only while a Canvas grade is pending
-At the yearly purge: rows deleted, secret[yyyy] destroyed → any remaining aggregate can no longer be linked to anyone.</code></pre>
+At the yearly purge: rows deleted; after the real run, operations destroy secret[yyyy] (runbook, D-107)
+   → any remaining aggregate can no longer be linked to anyone.</code></pre>
 
 </section>
 <section class="view doc" id="doc-standard" aria-labelledby="doc-standard-h">
@@ -5737,7 +5758,7 @@ with the commands given.</p>
 <tr>
 <td>D-109</td><td>Database roles, encrypted-connection checks in production, and a request log without personal data</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
-<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), HVL&#39;s runtime and DNS open (Q5)</td></tr>
+<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
 <tr>
 <td>D-111</td><td>An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</td><td>Accepted (2026-10-30), texts to HVL&#39;s language advisers and ALU (Q2, Q17)</td></tr>
 <tr>
@@ -5746,6 +5767,8 @@ with the commands given.</p>
 <td>D-113</td><td>The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
 <td>D-114</td><td>New development dependencies in S6</td><td>Accepted (2026-10-30)</td></tr>
+<tr>
+<td>D-115</td><td>xAPI capture, statement identity, attempts and gradable results (probe P1)</td><td>Accepted (2026-10-30), ALU and the owner to answer Q18–Q20</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="decisions--d-001--nodejs-24-lts-instead-of-22" tabindex="-1">D-001 · Node.js 24 LTS instead of 22</h3>
@@ -8327,6 +8350,15 @@ checklist: Canvas&#39;s Student View sends the <code>TestUser</code> role, which
 View play counts as one learner in insight and is graded for Canvas&#39;s test student; reloading the page in
 the middle of an attempt starts a new <code>attemptId</code>, which inflates <a class="req-ref" href="#r-INS-001"><code>INS-001</code></a>&#39;s median attempts; and a learner can
 forge their own statements and attempt IDs, which <a class="req-ref" href="#r-LTI-013"><code>LTI-013</code></a> already accepts.</li>
+<li><strong>Amendment (2026-10-30, probe P1):</strong> D-115 makes three parts of this decision concrete. <em>Once per statement:</em> the
+bridge registers only in a document that is not one of Core&#39;s iframes (<code>window.frameElement</code> is not an
+<code>h5p-iframe</code>) and ignores an event that <code>H5P.isFramed &amp;&amp; H5P.externalEmbed === false</code> marks as relayed; a set of
+seen events cannot work, because each window&#39;s bridge has its own. <em>Learners only:</em> the bridge is the last script
+in <code>playerGlobalAssets</code>, and the player page leaves it and its configuration out for anyone but a learner
+principal; without a configuration it does nothing. The server&#39;s own check is unchanged.
+<em>Attempts:</em> the rule stands, written as <code>attemptId</code> = <code>&lt;viewId&gt;:&lt;n&gt;</code>. The bridge sends only the statements the
+server stores, each with a <code>statementId</code> that the server inserts once, and the stored <code>timestamp</code> keeps the
+batch&#39;s order (D-115).</li>
 </ul>
 <h3 id="decisions--d-103--course-contexts-are-stored-with-their-platform-platformidcontextid" tabindex="-1">D-103 · Course contexts are stored with their platform: <code>&lt;platformId&gt;:&lt;contextId&gt;</code></h3>
 <ul>
@@ -8425,6 +8457,12 @@ left the course) goes into the students&#39; Canvas acceptance checklist (D-101)
 1 August (D-011), so a learner&#39;s policy history starts again, and in a course that runs across 1 August an earlier
 best score can be replaced by a lower later one; accepted for D-011&#39;s reason (the summer break) and named in the
 checklist.</li>
+<li><strong>Amendment (2026-10-30, probe P1):</strong> &quot;a root statement (no <code>subContentId</code>) with the verb <code>completed</code> or
+<code>answered</code> and a <code>result.score</code>&quot; is D-115&#39;s gradable root result: the root by three structural tests, the
+activity&#39;s main library in its category, <code>score.max</code> above 0, and not a replay. <code>scoreGiven</code> is <code>scaled × 100</code>.
+Each attempt holds at most one such result, so <code>latest</code> is the job created last. &quot;A later scored statement of the
+same attempt&quot; is then a duplicate, which the statement&#39;s ID already stops, or a forged one (<a class="req-ref" href="#r-LTI-013"><code>LTI-013</code></a>), which still
+updates its job as above (D-115).</li>
 </ul>
 <h3 id="decisions--d-105--the-formative-line-item-label-is-configurable-and-scores-are-labelled-formative-wherever-shown" tabindex="-1">D-105 · The formative line-item label is configurable, and scores are labelled formative wherever shown</h3>
 <ul>
@@ -8545,16 +8583,19 @@ secret still configured for a year the purge has completed, so a forgotten step 
 </li>
 <li><strong>Alternatives considered:</strong> (a) 15 August with a timestamp cut: it deletes nothing on that day, or splits a
 learner&#39;s year. (b) The server destroying secrets itself: it would need write access to HVL&#39;s secret store.</li>
-<li><strong>Consequences:</strong> <code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> in two points: the default date (31 August instead of
-15 August), and which rows go. The purge takes the ended year&#39;s rows by their stored year, and learner <code>Identity</code>
-rows created before 1 August, not every row &quot;older than the academic-year boundary plus 30 days&quot;, which, read on
-the run date, would also take the new year&#39;s first 30 days. The 30 days after the boundary are kept, as the time
-before the purge may run. <code>academicYear</code> on <code>XapiStatement</code> is a field outside <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>&#39;s list, so this is a
-<code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a> too: it holds no statement data, only the year of the secret behind the row&#39;s
-<code>learnerKey</code>, which the key cannot reveal and a timestamp can misstate (a portal session made before 1 August can
-keep its <code>learnerKey</code> for up to 12 hours after it, D-057). D-103 (a) refused a <code>platformId</code> column partly for this
-reason; there the context string can carry the platform, while nothing else carries the year. Spec 05 gets
-amendment notes on <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> and <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>. Migration <code>s6_grade_bridge_insight</code> adds the column, and a
+<li><strong>Consequences:</strong> <code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> in three points: the default date (31 August instead of
+15 August), which rows go, and who destroys the pseudonym secret. The purge takes the ended year&#39;s rows by their
+stored year, and learner <code>Identity</code> rows created before 1 August, not every row &quot;older than the academic-year
+boundary plus 30 days&quot;, which, read on the run date, would also take the new year&#39;s first 30 days. The 30 days
+after the boundary are kept, as the time before the purge may run. <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> has the scheduled job destroy that
+year&#39;s secret; here the job cannot, so HVL operations destroy it in a runbook step after the real run, and the
+start-up warning shows a forgotten one. <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>&#39;s rule that a year&#39;s secret is destroyed when that year&#39;s data
+is purged still holds, through that step. <code>academicYear</code> on <code>XapiStatement</code> is a field outside <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>&#39;s list,
+so this is a <code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a> too: it holds no statement data, only the year of the secret behind
+the row&#39;s <code>learnerKey</code>, which the key cannot reveal and a timestamp can misstate (a portal session made before
+1 August can keep its <code>learnerKey</code> for up to 12 hours after it, D-057). D-103 (a) refused a <code>platformId</code> column
+partly for this reason; there the context string can carry the platform, while nothing else carries the year.
+Spec 05 gets amendment notes on <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> and <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>. Migration <code>s6_grade_bridge_insight</code> adds the column, and a
 <code>contentVersion</code> to <code>InsightSnapshot</code>, which has none today. A learner who comes back after the purge gets new
 rows, as the new year&#39;s key already makes them a new pseudonym. The integration test travels through a year in
 time (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>&#39;s Verify) and checks D-034&#39;s rule.</li>
@@ -8697,6 +8738,92 @@ holds for the player only: a <code>SPEC-DEVIATION</code> for the editor route (m
 because every file keeps <code>nosniff</code>, the sandbox CSP and <code>attachment</code> for all but media (D-045). If Docker does not
 run here, the image and compose files are written here and GitHub CI runs them (D-113). HVL decides the runtime (a
 Docker host, Kubernetes or OpenShift), the sandbox settings, DNS and certificates (Q5).</li>
+<li><strong>Amendment (2026-10-30, probe P3):</strong> Docker works here (Docker 29.8.2 with BuildKit and compose 5.6.0: builds with
+network steps, compose with health checks, and Chromium&#39;s sandbox as a non-root user), and a second agent re-ran
+every decisive step. So one <code>Dockerfile</code> and one smoke script run both here and in GitHub CI, and the fallback
+above (&quot;written here, and GitHub CI runs them&quot;) is not needed. What changes:<ul>
+<li><strong>Base:</strong> the builder and runtime stages start from
+<code>ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852</code>, with Node 24 copied from
+<code>node:24-bookworm-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c</code>
+(<code>/usr/local/bin/node</code> and <code>/usr/local/lib/node_modules</code>, with links for <code>npm</code> and <code>npx</code>). That digest holds
+v24.22.2, this host v24.22.1 and <code>.nvmrc</code> says <code>24</code>: the digest decides. Ubuntu, because apt works here only from
+<code>archive.ubuntu.com</code> (<code>deb.debian.org</code> is refused), playwright-core 1.56.1&#39;s <code>install-deps</code> targets it, CI runs
+<code>ubuntu-24.04</code>, and its <code>libssl3</code> makes Prisma 7.10.1 install its OpenSSL 3 schema engine. Not used: Debian slim
+(no libssl, so Prisma falls back to its OpenSSL 1.1 engine with a warning, and apt cannot fix that here), Alpine,
+and <code>mcr.microsoft.com/playwright:v1.56.1-noble</code> (Node 22.20.0, root, 3.68 GB).</li>
+<li><strong>Build:</strong> <code>npm ci</code> runs on the Ubuntu builder, with install scripts (the <code>@prisma/engines</code> postinstall fetches
+the schema engine from <code>binaries.prisma.sh</code>) and with the root <code>package.json</code>, whose <code>allowScripts</code> names
+<code>prisma</code>, <code>@prisma/engines</code> and <code>esbuild</code> at their pinned versions, so a bump of one changes <code>allowScripts</code> in the
+same commit. Network steps use the bridge network. The agent proxy&#39;s CA reaches them only as an optional BuildKit
+secret (<code>RUN --mount=type=secret,id=proxy_ca,required=false</code>, which sets <code>NODE_EXTRA_CA_CERTS</code> only when the
+file exists), passed here and never in CI; it never enters a layer (checked with <code>docker history</code>). apt uses plain
+HTTP and needs no CA. Not used: <code>--network host</code> with proxy build arguments, which breaks apt (the agent proxy
+answers 405 to plain HTTP).</li>
+<li><strong>Egress:</strong> a build fetches only from Ubuntu&#39;s archive (<code>archive.ubuntu.com</code>, <code>security.ubuntu.com</code>),
+<code>registry.npmjs.org</code> (every package in the lockfile resolves there) and <code>binaries.prisma.sh</code>, and in CI from
+Playwright&#39;s download host for Chromium. It never
+fetches GitHub repository content: GitHub is gated per repository for this session, <code>raw.githubusercontent.com</code>
+answering is not a sanctioned route, and testing GitHub from inside a container was refused as a containment
+escape. So the H5P core and editor, fetched and hash-checked on the host by <code>npm run h5p:fetch-core</code> (D-027), and
+the content-type bundle above come into the build as build contexts, and their hashes are checked again there;
+this replaces &quot;fetches H5P core and editor&quot; under <strong>Image</strong>. The owner is asked to confirm the bridge network&#39;s
+direct egress (Q21).</li>
+<li><strong>Chromium:</strong> full Chromium (<code>chromium-1194</code>, about 597 MB), not the headless shell (about 323 MB):
+<code>SharedChromium</code>&#39;s default <code>chromium.executablePath()</code> finds it, so no new setting is needed, and the image runs
+the binary the tests run (D-065). The browsers come from a stage <code>pwbrowsers</code> (<code>FROM scratch</code>), filled in CI by
+<code>npx playwright-core@1.56.1 install chromium</code> and replaced here by <code>--build-context pwbrowsers=/opt/pw-browsers</code>,
+since Playwright&#39;s download hosts are refused here. The host&#39;s <code>headless_shell</code> is never copied: it is a shell
+wrapper with an absolute path. The host&#39;s <code>chrome</code> binary changed after its install marker, so the smoke prints
+<code>chrome --version</code> and the binary&#39;s SHA-256, and an image built here can be compared with CI&#39;s.</li>
+<li><strong>Sandbox:</strong> the app runs as a non-root user (uid 10001), <code>PDF_ALLOW_NO_SANDBOX</code> stays unset (D-096), and the app
+service gets <code>security_opt: [&#39;seccomp=&lt;file&gt;&#39;]</code> with Playwright&#39;s v1.56.1 seccomp profile vendored in the
+repository (<code>utils/docker/seccomp_profile.json</code> at tag <code>v1.56.1</code>, 12 997 bytes, SHA-256
+<code>cc3e61cabda6bbc1e53e54d27ba4d55a9d3be829b6dd1a596f4a7b31b1cc7849</code>, Apache-2.0), with its source in a README
+beside it and a test of the hash. It is taken from that tag through <code>git</code>, the route D-027 and D-078 use, and
+checked against the hash; P3&#39;s copy came over <code>raw.githubusercontent.com</code> (see <strong>Egress</strong>) and is not committed.
+Under Docker&#39;s default profile Chromium stops with &quot;No usable sandbox!&quot;, as root it refuses its sandbox, and
+<code>seccomp=unconfined</code> or <code>SYS_ADMIN</code> work but allow far more. This replaces
+&quot;unprivileged user namespaces or a seccomp profile&quot; under <strong>Image</strong>. Whether HVL&#39;s runtime allows a custom seccomp
+profile joins Q5; if it does not, PDF export needs a renderer container of its own, never <code>--no-sandbox</code>. CI keeps
+its <code>kernel.apparmor_restrict_unprivileged_userns=0</code> step before the container smoke; whether AppArmor needs more
+there cannot be tested here.</li>
+<li><strong>Fonts:</strong> <code>install-deps chromium</code>, and <code>fonts-dejavu-core</code> named so the image does not depend on what
+<code>install-deps</code> brings; Chromium picks Liberation Sans, which embeds æ, ø and å. The smoke checks one PDF with
+<code>pdftotext</code> (the æ, ø and å text), <code>pdffonts</code> (embedded subsets), <code>pdfinfo</code> (tagged, A4) and the launch log (no
+&quot;No usable sandbox&quot;, no <code>--no-sandbox</code>); poppler-utils run on the host or in CI, never in the image.</li>
+<li><strong>Compose:</strong> the app&#39;s stack (the app, the migrate and seed steps, and its own PostgreSQL 16, Redis 7 and S3
+emulator) is a separate compose file with its own project name, not a profile <code>app</code> in <code>docker-compose.yml</code>:
+that file&#39;s services have no profile, so they start with any profile, and they publish 5432, 6379 and 5000, which
+the native services hold here (&quot;address already in use&quot;, observed). The new file publishes only the app, on
+127.0.0.1, reaches the other containers by service name, and pins every image by digest; <code>docker-compose.yml</code>
+keeps the test services for <code>docker compose up -d</code> (D-023), and it and CI&#39;s service containers take the same
+digests. <code>SPEC-DEVIATION</code> from
+<a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>, the file name only: the app&#39;s local and staging stack is not in <code>docker-compose.yml</code>.</li>
+<li><strong>Docker Hub through a mirror here:</strong> the anonymous pull quota counts per address of a rotating egress pool and
+was used up on two of three addresses, so this sandbox&#39;s <code>dockerd</code> runs with
+<code>--registry-mirror=https://mirror.gcr.io</code>, which serves the same digests. Dockerfiles and compose files keep plain
+<code>docker.io</code> names pinned by digest, and scripts resolve images only through the daemon (<code>docker pull</code>,
+<code>docker build</code>), never with client-side registry calls (<code>docker buildx imagetools inspect</code>,
+<code>docker manifest inspect</code>), which bypass the mirror. CI needs no mirror.</li>
+<li><strong><code>dockerd</code> here:</strong> it does not persist (PID 1 is Firecracker&#39;s <code>process_api</code>, with no systemd), so it is
+started by hand with the mirror flag. The smoke script starts no daemon: it checks <code>docker info</code> and stops with
+that instruction. The sandbox&#39;s extras (the CA secret and the browser build context) are passed only when
+<code>HVLI_DOCKER_SANDBOX=1</code> is set, never because a path exists, so CI cannot pick them up by accident.</li>
+<li><strong>Disk:</strong> the image is about 2.2 GB, an <code>npm ci</code> stage about 1.7 GB and the build cache up to about 6 GB, against
+about 17 GB free here at rest (the probes reached 92 % use). The smoke script prints the free space before and
+after, ends with <code>docker compose down -v</code>, removes its own image tags and prunes only its own build cache (its
+own buildx builder), never <code>docker builder prune -af</code> or <code>docker system prune</code>, which would remove other sessions&#39;
+cache. The stopped <code>hvli-pg</code>, <code>hvli-redis</code> and <code>hvli-s3</code> containers and their volumes (2026-10-21) are left to
+the owner.</li>
+<li><strong>Load test (<a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>, D-114):</strong> k6, as
+<code>grafana/k6:2.3.0@sha256:2dd4756ec6e14e62778916e1eb850108e4b499304c02df56760fa0bdb0fba0b8</code> (AGPL-3.0, a separate
+program outside the npm tree), observed working against a local target on the host and bridge networks (p95
+about 4 ms, no failed requests). Not Artillery: 2.0.34 adds about 463 MB and a second Playwright (1.62.1 beside
+the pinned 1.56.1), and its floating ranges already broke 2.0.30 (&quot;Cannot find module
+&#39;@smithy/node-config-provider&#39;&quot;). 2.3.0 rather than the 1.x line, because the scripts are new and it is the
+version tested; the image rather than the release binary, so one pinned digest serves here and in CI.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-111--an-hvl-language-overlay-in-a-library-storage-wrapper-h5p-010s-guidance-through-it" tabindex="-1">D-111 · An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</h3>
 <ul>
@@ -8764,6 +8891,9 @@ dependency, not possible before 1 November beside the MUSTs. (b) A probe build o
 evidence, left to the students with the drafts. (c) The agent filing from the owner&#39;s account: the owner decides
 what is published under their name.</li>
 <li><strong>Consequences:</strong> R-09 stays open, and the hand-off index (D-101) carries the expiry date and the three choices.</li>
+<li><strong>Amendment (2026-10-30, probe P1):</strong> the drafts also hold an H5P report for QuestionSet 1.21, whose <code>resetTask</code>
+resets every <code>.h5p-progress-dot</code> in the document, so its «Prøv igjen» fails on a page with several sets
+(D-115, Q20).</li>
 </ul>
 <h3 id="decisions--d-113--the-s6-gate-in-full-run-in-parts-ci-raised-to-s5-per-id-runs-that-select-tests-a-licence-guard" tabindex="-1">D-113 · The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard</h3>
 <ul>
@@ -8807,6 +8937,9 @@ about 3 hours a gate: the owner kept the full form. (b) A separate &quot;documen
 record of what PROGRESS tracks (D-079&#39;s reasoning).</li>
 <li><strong>Consequences:</strong> Extends D-100&#39;s gate to S6 and amends the Evaluator Guide §5. The gate output says which parts
 ran where.</li>
+<li><strong>Amendment (2026-10-30, probes P1 and P3):</strong> Q18–Q20 (D-115) and Q21 (D-110&#39;s P3 amendment) join the questions
+listed as open with the gate output. The image with Chromium and the compose smoke run here as well as in CI
+(D-110&#39;s P3 amendment), so the gate runs them here; <strong>Evidence from CI</strong> stays for a step that still cannot.</li>
 </ul>
 <h3 id="decisions--d-114--new-development-dependencies-in-s6" tabindex="-1">D-114 · New development dependencies in S6</h3>
 <ul>
@@ -8833,6 +8966,254 @@ and the spec names <code>fast-check</code>.</p>
 </li>
 <li><p><strong>Consequences:</strong> The property tests are titled <code>[INS-006]</code> and run in <code>npm test</code>; this is D-097&#39;s rule applied to
 S6.</p>
+</li>
+<li><p><strong>Amendment (2026-10-30, probe P3):</strong> the load tool is <strong>k6</strong>, the container image
+<code>grafana/k6:2.3.0@sha256:2dd4756ec6e14e62778916e1eb850108e4b499304c02df56760fa0bdb0fba0b8</code>, AGPL-3.0, run as a
+separate program outside the npm tree, so <code>check:pins</code>, <code>check:licences</code> and <code>check:audit</code> see nothing new. Its
+scripts are ours, in <code>tools/load/</code> as <a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a> asks, so this is no <code>SPEC-DEVIATION</code>. The reasons, and why not
+Artillery, are in D-110&#39;s P3 amendment.</p>
+</li>
+</ul>
+<h3 id="decisions--d-115--xapi-capture-statement-identity-attempts-and-gradable-results-probe-p1" tabindex="-1">D-115 · xAPI capture, statement identity, attempts and gradable results (probe P1)</h3>
+<ul>
+<li><p><strong>Context:</strong> Probe P1 played the ten real types (D-078) in Chromium on the production player and router, and
+recorded every statement with its document, timing and size (332 statements); a second agent re-ran seven types,
+the S5 pattern <code>uv-module</code> and a stand-in bridge (188 statements). D-102 left the attempt rule and the
+de-duplication to this probe. Observed:</p>
+<ul>
+<li><strong>Where:</strong> all ten types run div-embedded in the player document (<code>playerPage.ts</code> renders
+<code>&lt;div class=&quot;h5p-content&quot;&gt;</code>, although nine of the libraries declare <code>embedTypes: [&quot;iframe&quot;]</code>), and every statement
+arrives there exactly once. None reaches the web app&#39;s top window, which has no <code>window.H5P</code>. With H5P&#39;s own
+<code>&lt;iframe class=&quot;h5p-iframe&quot;&gt;</code> embedding, which the production CSP allows and only our div template prevents, each
+statement arrives twice, in the iframe and relayed to the player document as the same event object, and a
+<code>playerGlobalAssets</code> script runs in both documents, because H5P copies <code>H5PIntegration.core.scripts</code> into the
+iframe. In that iframe <code>H5P.externalEmbed</code> is still undefined while scripts are evaluated (H5P sets it to <code>false</code>
+later), a set of seen events kept per window misses the other window&#39;s copy, and <code>location.href</code> is the player&#39;s
+URL in both.</li>
+<li><strong>Shape:</strong> no <code>id</code> and no <code>timestamp</code>; the actor is always <code>{&quot;name&quot;:&quot;&quot;,&quot;mbox&quot;:&quot;mailto:&quot;}</code>; <code>object.id</code> is the
+bare content ID or <code>&lt;contentId&gt;?subContentId=&lt;uuid&gt;</code>; the verbs are exactly <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>&#39;s five.</li>
+<li><strong>Volume:</strong> <code>interacted</code> and <code>progressed</code> are 38–76 % of all statements, and none of them carries what an <code>INS</code>
+requirement uses: BranchingScenario&#39;s choice <code>interacted</code> has no response, and InteractiveVideo sends no
+<code>progressed</code> at all. The peak was 43 statements a minute at automated speed, 22 without those two verbs.
+Statements are 681 B at the median and 1 524 B at p95, but H5P does not bound answers: one gap of 5 000
+characters made a statement of 7 967 B.</li>
+<li><strong>Attempts:</strong> H5P marks none. A retry sends nothing, or only <code>progressed</code> (CoursePresentation,
+BranchingScenario). Root <code>attempted</code> means &quot;the page loaded&quot;: it comes again on every reload, never on a retry,
+and never from Column or ImageHotspots, nor from InteractiveBook before «Les». On resume, CoursePresentation
+re-sends its scored <code>completed</code> with no learner action when it opens on the summary slide, and InteractiveBook
+offers the same submission again. Column sends a scored root <code>completed</code> after every «Sjekk» once all its tasks
+are answered, and InteractiveBook sends each chapter&#39;s <code>completed</code> twice within about 30 ms.</li>
+<li><strong>The root:</strong> no single test finds it. H5P&#39;s own (no <code>contextActivities.parent</code>) takes InteractiveBook&#39;s chapter
+<code>completed</code> for the root; <a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a>&#39;s (no <code>subContentId</code>) takes the context-less <code>interacted</code> that DragText sends
+while it restores state inside a QuestionSet, and every child of content saved without <code>subContentId</code>s, which
+<code>POST /h5p/content</code> accepts. InteractiveBook without a cover sends one root <code>attempted</code> with no context at all.</li>
+<li><strong>Scores:</strong> <code>result.success</code> comes at the root only from MultiChoice and QuestionSet. InteractiveBook (its «Send
+inn rapport» needs <code>H5PIntegration.reportingIsEnabled</code>, which we do not set) and InteractiveVideo (no submit
+screen in our example or in <code>fa-video</code>) send no root score, and ImageHotspots sends no statement at all. Every
+ending of <code>uv-case</code> scores 10 of 10 (read from the pattern). In <code>uv-module</code>, a chapter check&#39;s «Prøv igjen»
+throws in QuestionSet 1.21 (its <code>resetTask</code> walks every <code>.h5p-progress-dot</code> in the document, and the book holds
+three sets), and the results page stays.</li>
+<li><strong>Durations</strong> mean different things by type: summed across retries, reset by DragText&#39;s retry, counted from
+pre-rendering in nested content, or absent from a nested QuestionSet.</li>
+</ul>
+<p>Not observed: a play through the real portal page or a Canvas launch into <code>/app/play</code>; the code renders the same
+div template there.</p>
+</li>
+<li><p><strong>Decision:</strong> binding for step 3. Where a point is ALU&#39;s or the owner&#39;s, the default below holds until they answer
+(Q18–Q20), so nothing waits.</p>
+<ul>
+<li><p><strong>Where the bridge runs:</strong> <code>xapiBridge.js</code> is the last script in <code>playerGlobalAssets</code>, after the theme scripts,
+and never in <code>editorGlobalAssets</code>. It is therefore evaluated after <code>h5p.js</code> and the <code>x-api</code> scripts and before the
+library scripts and document-ready, where H5P sends root <code>attempted</code>. While it is evaluated, it registers
+synchronously with its own document&#39;s <code>H5P.externalDispatcher.on(&#39;xAPI&#39;, …)</code>, unless <code>window.frameElement</code> has
+the class <code>h5p-iframe</code> (a Core iframe, whose events the parent&#39;s bridge sees; a cross-origin parent such as Canvas
+gives <code>null</code>, and the web app&#39;s frame never carries that class). At event time it also ignores an event when
+<code>H5P.isFramed &amp;&amp; H5P.externalEmbed === false</code>. The player page includes the script, and renders its configuration
+(the endpoint and the content&#39;s ID and version; no identity), only for a learner principal; for anyone else it
+leaves both out (D-102), and without a configuration the script does nothing. The div template stays; the guard
+covers a future iframe embedding. <code>H5P.externalEmbed</code> read at evaluation, a per-window set of seen events and
+<code>location.href</code> are not used: each failed in the probe.</p>
+</li>
+<li><p><strong>What the bridge sends:</strong> only what the server may store: the first root <code>attempted</code> of the page load, every
+<code>answered</code>, and a root <code>completed</code>; never <code>interacted</code>, <code>progressed</code>, or a sub-content <code>attempted</code> or
+<code>completed</code>. Each statement is cut down to what the server reads: <code>verb.id</code>; <code>object.id</code> and
+<code>object.definition.interactionType</code>; <code>context.contextActivities.parent</code> and <code>category</code>; the extensions
+<code>h5p-subContentId</code> and <code>h5p-local-content-id</code>; and <code>result.score</code>, <code>success</code>, <code>completion</code>, <code>duration</code> and
+<code>response</code>, capped as below. No <code>actor</code>, question text, choices, feedback or other extensions. Each item carries
+a <code>statementId</code> (<code>crypto.randomUUID()</code>, one per dispatched event) and an <code>attemptId</code>.</p>
+</li>
+<li><p><strong>Batches:</strong> every 2 s, at most 50 items and 60 000 bytes of JSON, one request in flight. A batch that fails
+with a network error, a 5xx or a 429 goes back to the head of the queue; one refused with any other 4xx is
+dropped. On <code>pagehide</code>, everything not yet acknowledged, the request in flight included, goes in one <code>keepalive</code>
+request, within the browser&#39;s 64 KiB and the same 50 items and 60 000 bytes, oldest first; what does not fit is
+lost, as D-102 accepts for a large last flush. The server skips what an earlier request already stored. A batch
+names its content and version once: the version the page was rendered with (D-093), which the server accepts from
+1 up to the current version, so a page opened before a structural save never labels its statements with the new
+one.</p>
+</li>
+<li><p><strong>What the server accepts and stores (<a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>, <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>):</strong> it still accepts all five verbs. It ignores
+<code>actor</code>, since the learner comes only from the request&#39;s principal (D-102), and it accepts a bare UUID as
+<code>object.id</code>, a missing <code>context</code> and a numeric <code>response</code> (stored as text). Each item is checked on its own: an
+invalid one (including one about another activity) is discarded and counted in the log, without its content, so
+one odd statement never blocks its batch. A batch for an activity the principal may not view (in Canvas, any but
+the launched one), or with over 50 items or over 64 KiB, is refused with 403, 400 or 413, and the bridge drops it.
+Stored: a root <code>attempted</code>; an <code>answered</code> of the root or of sub-content (its <code>subContentId</code> from the extension,
+else from <code>object.id</code>); a root <code>completed</code> that is not a replay. Discarded: <code>interacted</code>, <code>progressed</code>, a
+sub-content <code>attempted</code> or <code>completed</code>, a sub-content statement without a <code>subContentId</code>, and a replay. The answer
+is 202, with no detail per item.</p>
+</li>
+<li><p><strong>Identity and time:</strong> the <code>statementId</code> becomes <code>XapiStatement.id</code>, inserted so that an existing ID is skipped
+(the <code>pagehide</code> flush, a request retried after a lost answer); <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a> gains no field. A content hash is never
+an identity, since identical statements are normal (seven identical Blanks <code>interacted</code> within 100 ms). The
+stored <code>timestamp</code> is the server&#39;s receive time plus the item&#39;s place in the batch in milliseconds, so the
+batch&#39;s order survives as a strict order (D-102&#39;s receive time, within 49 ms); the browser&#39;s clock is never read.</p>
+</li>
+<li><p><strong>The root and gradable results:</strong> a statement is <strong>root</strong> when <code>object.id</code> is the content ID with no
+<code>?subContentId=</code>, it has no <code>h5p-subContentId</code> extension, and it has no <code>contextActivities.parent</code>. A <strong>root
+result</strong> is a root <code>answered</code> or <code>completed</code> whose <code>category[0].id</code> names the activity&#39;s main library
+(<code>http://h5p.org/libraries/&lt;machineName&gt;-&lt;major&gt;.&lt;minor&gt;</code>); it is <strong>gradable</strong> when <code>result.score.max</code> is above 0
+and it is not a replay. Each test alone misclassifies a case above; a root <code>attempted</code> needs no category, since
+InteractiveBook&#39;s has none. The score is <code>scaled</code>, checked against <code>raw / max</code> within 0.0001 (Core rounds it to
+four decimals; an item outside is discarded), never <code>success</code>. One server module holds these tests, the bridge
+repeats them for its attempt counter, and both are tested on P1&#39;s fixtures.</p>
+</li>
+<li><p><strong>Attempts:</strong> <code>attemptId</code> is <code>&lt;viewId&gt;:&lt;n&gt;</code>. <code>viewId</code> is a <code>crypto.randomUUID()</code> made once per page load, and
+<code>n</code> starts at 1 and goes up by one right after the bridge sends a root result with <code>score.max</code> above 0 (the
+bridge cannot tell a replay; the server can). An attempt therefore holds at most one result, and a retry, which
+H5P does not announce, becomes a new attempt at its next result; statements after the last result form an open
+attempt. The server checks the shape (a UUID, a colon, a positive integer) and reads the view part only for the
+replay rule. This keeps D-102&#39;s rule.</p>
+</li>
+<li><p><strong>The attempt policy (<a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a>, D-104):</strong> each stored gradable result in a Canvas launch writes a
+<code>GradeSyncJob</code> per <code>(placement, learnerKey, attemptId)</code>, with <code>scoreGiven</code> = <code>scaled × 100</code>. <code>best</code> sends the
+learner&#39;s highest job score in the placement, <code>latest</code> the score of the job created last (jobs are created in
+result order), and <code>mastery</code> 100 once any job&#39;s score reaches the threshold, else <code>latest</code>.</p>
+</li>
+<li><p><strong>Replays and repeats:</strong> a root <code>completed</code> is a <strong>replay</strong> when its page load stored no <code>answered</code> since its
+previous root result (or since the load), and its <code>scoreRaw</code> and <code>scoreMax</code> equal those of the learner&#39;s latest
+stored root result for the same content, context and version. BranchingScenario is exempt: an end screen is
+reached by navigation alone, its choices are <code>interacted</code>, and it was not seen to replay. The rule drops
+CoursePresentation&#39;s <code>completed</code> re-sent on resume or on a revisit of the summary slide, and a re-submission of
+InteractiveBook or QuestionSet after a reload; it keeps a first submission after a reload (there is no earlier
+result) and a check after changed answers. P1&#39;s guard in the bridge (no learner activity since the page loaded)
+is not used: it would drop that first submission. Column&#39;s <code>completed</code> after each «Sjekk» follows an <code>answered</code>,
+so each is a result and an attempt, and D-104&#39;s coalescing sends one current score. InteractiveBook&#39;s double
+chapter <code>completed</code> and DragText&#39;s context-less <code>interacted</code> are never sent.</p>
+</li>
+<li><p><strong>Gradable root result per type:</strong></p>
+<div class="table-wrap" role="region" aria-label="Table 2, D-115 · xAPI capture, statement identity, attempts and gradable results (probe P1)" tabindex="0"><table><thead><tr>
+<th scope="col">Type</th><th scope="col">Gradable root result</th><th scope="col">Score</th><th scope="col"><code>success</code> at root</th></tr>
+</thead><tbody><tr>
+<td>MultiChoice 1.16</td><td><code>answered</code>, at every «Sjekk»</td><td>H5P&#39;s</td><td>yes</td></tr>
+<tr>
+<td>Blanks 1.14</td><td><code>answered</code>, at every «Sjekk»</td><td>correct gaps</td><td>no</td></tr>
+<tr>
+<td>DragText 1.10</td><td><code>answered</code>, at every «Sjekk»</td><td>correct drops</td><td>no</td></tr>
+<tr>
+<td>QuestionSet 1.21</td><td><code>completed</code>, at every finish («Avslutt»)</td><td>sum of the questions</td><td>yes (pass mark)</td></tr>
+<tr>
+<td>Column 1.18, 1.22</td><td><code>completed</code>, at every «Sjekk» once all tasks are answered</td><td>sum of the tasks</td><td>no</td></tr>
+<tr>
+<td>CoursePresentation 1.28</td><td><code>completed</code>, at every arrival on the summary slide</td><td>sum of the tasks</td><td>no</td></tr>
+<tr>
+<td>InteractiveBook 1.15</td><td><code>completed</code>, at «Send inn rapport», with <code>reportingIsEnabled</code> (the default, Q18)</td><td>sum of the chapters</td><td>no</td></tr>
+<tr>
+<td>InteractiveVideo 1.28</td><td><code>completed</code>, at «Send inn svar», only with a submit screen its author added (Q18)</td><td>sum of the interactions</td><td>no</td></tr>
+<tr>
+<td>BranchingScenario 1.10</td><td><code>completed</code>, at an end screen, unless its scoring is <code>no-score</code> (maximum 0)</td><td>the end screen&#39;s or the path&#39;s</td><td>no</td></tr>
+<tr>
+<td>ImageHotspots 1.11</td><td>none: it sends no statement</td><td>none</td><td>none</td></tr>
+</tbody></table></div>
+</li>
+<li><p><strong>InteractiveBook and InteractiveVideo (Q18):</strong> the player page sets <code>reportingIsEnabled: true</code>, H5P&#39;s switch
+for a platform that records results, which ours is. Of the ten types only InteractiveBook reads it (so does
+DocumentationTool, which is not offered). The learner then sees «Send inn rapport» on the book&#39;s summary page,
+and H5P&#39;s own score reaches Canvas as QuestionSet&#39;s does at its finish; the library&#39;s text after sending («Svara
+dine er sende inn til vurdering») can get a formative wording through D-111&#39;s overlay if ALU wants one. An
+InteractiveVideo is graded only when its author adds a submit screen: no validator rule and no pattern change in
+S6, so <code>fa-video</code> sends no score. Not chosen: a score the bridge computes from <code>getScore()</code> (a statement H5P never
+sent), or no grade for the main InteractiveBook pattern.</p>
+</li>
+<li><p><strong><code>uv-case</code> (Q19):</strong> unchanged. Its pattern gives every ending 10 on purpose (&quot;the score shows that the student
+has worked through the case&quot;), so Canvas gets 100 for every completed case: a completion mark, and formative like
+every score here (D-105). Not chosen without ALU: scores per choice (a pattern change that would grade
+professional judgement) or no Canvas score for it.</p>
+</li>
+<li><p><strong><code>uv-module</code>&#39;s chapter checks (Q20):</strong> the pattern sets <code>endGame.showRetryButton: false</code> on its three
+QuestionSets, so the failing «Prøv igjen» is not offered, and each question keeps its own «Prøv igjen»
+(<code>override.retryButton: &quot;on&quot;</code>). If the regression test shows that the book&#39;s own «Prøv igjen» fails the same
+way, the pattern turns that off too. A teacher&#39;s own page with two or more QuestionSets is expected to keep the
+fault (read from the code, not observed): an accepted limitation for the pilot, drafted as an upstream report
+(D-112). Not chosen now: a run-time repair of QuestionSet&#39;s <code>resetTask</code>, which would change library behaviour,
+not attributes as D-080&#39;s repairs do, and needs its own decision.</p>
+</li>
+<li><p><strong>Activities that send no score</strong> (ImageHotspots, InteractiveVideo without a submit screen, BranchingScenario
+with <code>no-score</code>): no <code>GradeSyncJob</code> is ever written, and the Deep Linking picker says so when the placement is
+<code>assignment_selection</code>, in <code>nn</code>, <code>nb</code> and <code>en</code>.</p>
+</li>
+<li><p><strong>What insight reads (<a class="req-ref" href="#r-INS-001"><code>INS-001</code></a>…<a class="req-ref" href="#r-INS-005"><code>INS-005</code></a>):</strong> a learner has <strong>started</strong> with any stored statement for the
+activity, so InteractiveBook without a cover counts at load, Column counts from the first answer, and no statement
+is made up. <strong>Completed</strong> is a stored root result, <strong>attempts</strong> are the stored root results, and <strong>time on task</strong>
+comes from the stored timestamps of each page load, never from <code>durationMs</code>. Where a type cannot send a root
+result, completed, the rate and attempts are shown as not available, never as 0, and ImageHotspots&#39; tab says that
+it sends no learning data. <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a> and <a class="req-ref" href="#r-INS-003"><code>INS-003</code></a> read <code>answered</code> by <code>subContentId</code> (correct is <code>success</code>, or
+full marks where H5P sends no <code>success</code>). <a class="req-ref" href="#r-INS-005"><code>INS-005</code></a>: InteractiveVideo sends no <code>progressed</code>, so there is no
+drop-off curve, and the share of learners who answered each interaction is the measure, as <a class="req-ref" href="#r-INS-005"><code>INS-005</code></a> allows.
+<a class="req-ref" href="#r-INS-004"><code>INS-004</code></a> (SHOULD) is not built in S6: BranchingScenario&#39;s choices are in no dispatched statement, only in its
+<code>getXAPIData()</code> and saved state, and the last choice before an end screen sends nothing at all; building it
+means statements the bridge makes (a <code>SPEC-DEVIATION</code>), after a probe shows that retried choices are kept. The
+mappe&#39;s <code>ActivityResultsSource</code> (D-095) reads the same: attempts and completed as here, and the first and last
+scaled score from the learner&#39;s first and last root results with <code>score.max</code> above 0.</p>
+</li>
+<li><p><strong>Answers, durations and rates:</strong> <code>response</code> is kept only for the interaction types <code>choice</code> and <code>fill-in</code>
+(<a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>). Each gap (between <code>[,]</code>) is cut to 100 characters, which is enough to group the answers <em>k</em> learners
+share; a response still over 1 000 characters (the column&#39;s limit) is not stored, because a shortened list would
+shift its gaps. The bridge applies the same caps to keep batches small; the server enforces them. <code>durationMs</code> is
+parsed from <code>result.duration</code> and stored, as <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a> lists it (null when absent, unreadable or over 24 hours),
+and no insight reads it. <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>&#39;s 120 statements a minute per learner and activity stays: the measured peak
+without <code>interacted</code> and <code>progressed</code> is 22, and the bridge sends fewer still, so a 429 (with <code>Retry-After</code>;
+nothing from that batch is stored, and the bridge retries after it) means misuse.</p>
+</li>
+<li><p><strong>Missing <code>subContentId</code>s:</strong> creating, copying and importing content fill in each missing <code>subContentId</code> and keep
+the existing ones; a save of stored content does not, since that would change D-093&#39;s structure signature. (The
+pattern builder instead gives every node a new ID, since a skeleton&#39;s IDs must never be shared, D-084.) Nodes are
+found by shape, as <code>learningDesign/patterns/subContentIds.ts</code> finds them, so a sub-content group with no
+<code>subContentId</code> key still gets none until the editor adds it. A child of content without them sends statements the
+server does not store.</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Alternatives considered:</strong> (a) Identity by <code>(attemptId, seq)</code>: a field outside <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>, where the row&#39;s own ID
+does the same. (b) Sending every statement, as <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> reads: 38–76 % more statements, raw statements of up to
+8 KB with question text in a 64 KiB <code>keepalive</code> budget, and data no requirement uses. (c) A root <code>attempted</code> that
+the bridge makes on H5P&#39;s <code>initialized</code> event for Column, ImageHotspots and InteractiveBook before «Les»: more
+learners counted as started, from a statement H5P never sent. (d) One attempt per page load: a retry in the same
+load would replace the better result under <code>best</code>. (e) P1&#39;s guard in the bridge: see <strong>Replays and repeats</strong>.
+(f) Storing replays with a flag: a field outside <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>. (g) Any one of the root tests alone: each
+misclassifies an observed case.</p>
+</li>
+<li><p><strong>Consequences:</strong></p>
+<ul>
+<li><code>SPEC-DEVIATION</code>, exactly: <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> (&quot;It POSTs each statement&quot;): the bridge sends only what the server stores,
+cut down, with a <code>statementId</code> and an <code>attemptId</code>. <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> (&quot;Then it stores the minimal fields&quot;): <code>interacted</code>,
+<code>progressed</code>, sub-content <code>attempted</code> and <code>completed</code>, replays, and sub-content statements without a
+<code>subContentId</code> are accepted and not stored, and an invalid item is discarded on its own. <a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a> (the root as
+&quot;no <code>subContentId</code>&quot;): the tests above. The code carries <code>SPEC-DEVIATION: D-115</code>. Not deviated: <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>&#39;s
+fields, the five verbs, the score checks and the rate limit.</li>
+<li>D-102, D-104 and D-112 get amendments that point here, and D-113 lists Q18–Q20 as open. Step 3 adds amendment
+notes to spec 02 (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>, <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>, <a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a>) and spec 05 (<a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>, <a class="req-ref" href="#r-INS-001"><code>INS-001</code></a>, <a class="req-ref" href="#r-INS-004"><code>INS-004</code></a>, <a class="req-ref" href="#r-INS-005"><code>INS-005</code></a>).</li>
+<li>Tests: the mapper and the root tests on P1&#39;s fixtures (<code>[DATA-012]</code>, <code>[LTI-012]</code>); the bridge capturing each
+statement once in H5P&#39;s iframe mode, and through the real portal page and a mock-platform launch into
+<code>/app/play</code>, which P1 could not run (<code>[LTI-010]</code>); the replay rule on CoursePresentation&#39;s resume and
+InteractiveBook&#39;s re-submission; and the nested QuestionSet retry in <code>uv-module</code>, pinned to the upstream
+behaviour, so that a fixed version shows.</li>
+<li>Residuals, for the DPIA input and the students&#39; checklist: <a class="req-ref" href="#r-INS-001"><code>INS-001</code></a>&#39;s attempts count each Column re-check and
+each CoursePresentation summary reached after new answers; a learner who opens a Column and never checks is not
+counted as started; ImageHotspots gives no insight and no grade; on a teacher&#39;s page with several QuestionSets a
+set cannot be retried; content stored without <code>subContentId</code>s gives no insight per question; and time on task
+runs only from a page load&#39;s first to its last stored statement, so reading before the first answer of a Column
+and time after the last stored statement are not counted.</li>
+</ul>
 </li>
 </ul>
 
@@ -9341,18 +9722,47 @@ tests wait for it and repeat a click that sent nothing, since H5P can still grow
 after that (CI run 41075981429, D-113)</li>
 </ul>
 </li>
-<li><span class="task">○ To do:</span> <ol>
+<li><span class="task">✓ Done:</span> <ol>
 <li>Probes, kept as tests: P1 xAPI on the ten real types (verbs, root vs sub-content, scores, response format,
  size, iframe duplicates, attempt boundaries; D-102); P2 the mock AGS token round trip (D-104); P3 Docker
  (dockerd, image pull, Chromium in an image; D-110)</li>
 </ol>
+<ul>
+<li><span class="task">✓ Done:</span> P1: <code>xapiQuestionTypes.browser.int.test.ts</code> and <code>xapiContainerTypes.browser.int.test.ts</code> play the ten real
+types as a learner in full Chromium and pin P1&#39;s findings per type; ten curated statement fixtures in
+<code>apps/server/test/fixtures/xapi/</code> for step 3 (<code>readXapiFixture</code>)</li>
+<li><span class="task">✓ Done:</span> P2: <code>agsClientCredentialsProbe.int.test.ts</code>: D-104&#39;s client credentials, signed with the stored tool key,
+get a token from the mock Canvas, post a score it records and confirm a deleted line item; no ltik</li>
+<li><span class="task">✓ Done:</span> P3: recorded in D-110&#39;s amendment (and D-114&#39;s, k6); the Docker build and compose smoke test are step 6&#39;s</li>
+<li>Probe findings (2026-10-30; kept by the tests above). <strong>P1</strong> played the ten real types
+(332 statements), and a second run replayed seven of them and the <code>uv-module</code> pattern (188): every statement
+arrives once, in the player document, with no ID, no timestamp and an anonymous actor; <code>interacted</code> and
+<code>progressed</code> are 38–76 % of them and serve no <code>INS</code> requirement; H5P marks no attempts and re-sends some results
+on resume; no single root test works; InteractiveBook, InteractiveVideo and ImageHotspots send no root score as
+configured today, <code>uv-case</code> gives 10 of 10 on every path, and <code>uv-module</code>&#39;s chapter «Prøv igjen» fails upstream.
+Step 3&#39;s rules, with defaults for Q18–Q20, are <a href="#decisions--d-115--xapi-capture-statement-identity-attempts-and-gradable-results-probe-p1">D-115</a>.
+<strong>P3</strong>: Docker, compose and Chromium&#39;s sandbox work here, behind a registry mirror and a <code>dockerd</code> started by
+hand: an Ubuntu 24.04 image with Node 24 copied in, full Chromium as a non-root user under Playwright&#39;s seccomp
+profile, a separate compose file for the smoke, no GitHub content fetched in a build (Q21), and k6 for the load
+test, in
+<a href="#decisions--d-110--deployment-and-operations-design-runtime-image-compose-content-types-files-origin-clamav">D-110&#39;s amendment</a>
+(and D-114&#39;s).</li>
+</ul>
 </li>
-<li><span class="task">○ To do:</span> <ol start="2">
+<li><span class="task">✓ Done:</span> <ol start="2">
 <li>Shared infrastructure: migration <code>s6_grade_bridge_insight</code> (<code>orphaned</code>, <code>nextAttemptAt</code>, <code>attemptId</code>,
  <code>terminalAt</code>, <code>academicYear</code>); api-contract schemas (xAPI batch, grade sync, insight); mock Canvas token, AGS
- and NRPS endpoints with fault injection; an injectable clock and <code>runOnce</code> seams; a 30-learner insight fixture
- with hand-calculated values</li>
+ and NRPS endpoints with fault injection; an injectable clock and <code>runOnce</code> seams. The 30-learner insight
+ fixture with hand-calculated values moved to step 4, with the aggregators it checks</li>
 </ol>
+<ul>
+<li><span class="task">✓ Done:</span> Migration <code>s6_grade_bridge_insight</code>: also <code>resultAt</code> (D-115), <code>InsightSnapshot.contentVersion</code> (D-107) and
+the platform-scoped context checks (D-103), proved by <code>s6Schema.int.test.ts</code>; DATA-INVENTORY rows</li>
+<li><span class="task">✓ Done:</span> api-contract schemas: the xAPI batch with D-115&#39;s response caps, grade sync, insight cells, and the grade
+bridge&#39;s routes (described now; they join <code>API_ROUTES</code> when step 3 mounts them)</li>
+<li><span class="task">✓ Done:</span> Mock Canvas: token endpoint, AGS line items and scores, NRPS memberships, fault injection, ltijs interop</li>
+<li><span class="task">✓ Done:</span> Injectable clock (<code>jobClock.ts</code>) and <code>runOnce(now)</code> in <code>LeasedIntervalJob</code></li>
+</ul>
 </li>
 <li><span class="task">○ To do:</span> <ol start="3">
 <li>A — Grade bridge (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>, <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>, <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>, <a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a>, <a class="req-ref" href="#r-LTI-013"><code>LTI-013</code></a>, <a class="req-ref" href="#r-LTI-008"><code>LTI-008</code></a>, <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>): the
@@ -9369,7 +9779,8 @@ AGS client in a durable worker (D-104), <code>AGS_LABEL_MODE</code> <code>suffix
 </li>
 <li><span class="task">○ To do:</span> <ol start="4">
 <li>B — Insight (<a class="req-ref" href="#r-INS-001"><code>INS-001</code></a>…<a class="req-ref" href="#r-INS-010"><code>INS-010</code></a>, <a class="req-ref" href="#r-PROD-010"><code>PROD-010</code></a>, the <a class="req-ref" href="#r-LTI-006"><code>LTI-006</code></a> <strong>Innsikt</strong> tab, <a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a> by version,
- <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a> real source): the suppression core with property tests → aggregators <a class="req-ref" href="#r-INS-001"><code>INS-001</code></a>, <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>,
+ <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a> real source): the suppression core with property tests → a 30-learner insight fixture with
+ hand-calculated values (moved from step 2) → aggregators <a class="req-ref" href="#r-INS-001"><code>INS-001</code></a>, <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>,
  <a class="req-ref" href="#r-INS-003"><code>INS-003</code></a> (<a class="req-ref" href="#r-INS-004"><code>INS-004</code></a>, <a class="req-ref" href="#r-INS-005"><code>INS-005</code></a> if time) → access and audit → insight API → the web <strong>Innsikt</strong> tabs (charts,
  suppressed cells, shortlist, CSV, findings) → the mappe&#39;s real results source; <a class="req-ref" href="#r-PROD-014"><code>PROD-014</code></a> (COULD) if time</li>
 </ol>
@@ -9520,6 +9931,14 @@ task off. A pull request only when the owner asks</li>
 <td>Q6</td><td>Data protection officer confirms the legal basis and reviews DPIA input (<a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>)</td><td>HVL DPO</td><td>S6, pilot</td></tr>
 <tr>
 <td>Q17</td><td>Review the studio&#39;s drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank&#39;s consent text (with HVL&#39;s lawyers); pilot teachers try the patterns. Packet: <code>docs/reference/alu-review-s5.md</code> (D-100). <strong>Required before the pilot.</strong></td><td>ALU, Pedagogisk akademi, HVL legal</td><td>The pilot</td></tr>
+<tr>
+<td>Q18</td><td>Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P&#39;s own «Send inn rapport» on the summary page (<code>reportingIsEnabled</code>; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the <code>fa-video</code> pattern sends none</td><td>ALU / owner</td><td>The pilot</td></tr>
+<tr>
+<td>Q19</td><td>Every ending of the <code>uv-case</code> pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give <code>uv-case</code> no Canvas score?</td><td>ALU</td><td>The pilot</td></tr>
+<tr>
+<td>Q20</td><td>In <code>uv-module</code>, a chapter check&#39;s «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question&#39;s own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision</td><td>ALU</td><td>The pilot</td></tr>
+<tr>
+<td>Q21</td><td>Confirm that container builds here may use the bridge network&#39;s direct egress, outside the agent proxy, for apt, npm and Prisma&#39;s engines only, and never for GitHub repository content (D-110, probe P3); S6 proceeds on that rule</td><td>Repository owner</td><td>—</td></tr>
 </tbody></table></div>
 <h3 id="progress--risk-register" tabindex="-1">Risk register</h3>
 <div class="table-wrap" role="region" aria-label="Table 4, Risk register" tabindex="0"><table><thead><tr>

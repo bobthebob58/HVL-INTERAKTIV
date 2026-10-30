@@ -1,11 +1,16 @@
 // Analytics: the minimal xAPI record (DATA-012) and k-suppressed aggregates for teacher insight (spec 05).
+// A stored course context is `<LtiPlatform.id>:<context ID>` (D-103), never a bare Canvas ID; a CHECK constraint in
+// migration `s6_grade_bridge_insight` refuses any other shape, because Prisma cannot express one.
 
 /// One learning event, reduced to the fields insight needs. Everything else in the xAPI statement is dropped.
+/// `id` is the bridge's `statementId`, so a statement sent twice is stored once; `timestamp` is the server's receive
+/// time plus the item's place in its batch, never the browser's clock (D-115).
 model XapiStatement {
   id             String   @id @default(uuid(7)) @db.Uuid
   contentId      String   @db.Uuid
   subContentId   String?
   contentVersion Int
+  /// `<platformId>:<contextId>` of the Canvas launch (D-103); null for a portal play.
   contextId      String?
   learnerKey     String
   verb           String
@@ -16,26 +21,39 @@ model XapiStatement {
   completion     Boolean?
   response       String?  @db.VarChar(1000)
   durationMs     Int?
+  /// `<viewId>:<n>`, made by the bridge: one page load's n-th attempt (D-115).
   attemptId      String
   timestamp      DateTime
+  /// The academic year of the pseudonym secret that made `learnerKey`, set when the row is written; the yearly purge
+  /// deletes by it (D-107, a field outside DATA-012's list). The database default is the year of the write in Oslo,
+  /// which is the key's year for an LTI request (it derives its key) but not always for a portal session, which keeps
+  /// its key up to 12 hours past 1 August (D-057): the writer of a portal play's row sets the key's year itself.
+  academicYear   Int      @default(dbgenerated("(EXTRACT(year FROM ((now() AT TIME ZONE 'Europe/Oslo'::text) - '7 mons'::interval)))::integer"))
 
   content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
   @@index([contentId, contextId, timestamp])
-  @@index([learnerKey])
+  // WHY: the replay rule reads a learner's latest results for one activity (D-115); a data-subject request reads by
+  // learner (D-108), which this index's first column also serves.
+  @@index([learnerKey, contentId, timestamp])
   @@index([timestamp])
+  @@index([academicYear])
 }
 
-/// Aggregates for one activity and period, stored only after k-suppression (INS-006). Kept after the purge.
+/// Aggregates for one activity, context, content version and period, stored only after k-suppression (INS-006).
+/// Kept after the purge (D-107).
 model InsightSnapshot {
-  id          String   @id @default(uuid(7)) @db.Uuid
-  contentId   String   @db.Uuid
-  contextId   String?
-  periodStart DateTime
-  periodEnd   DateTime
-  k           Int
-  aggregates  Json
-  createdAt   DateTime @default(now())
+  id             String   @id @default(uuid(7)) @db.Uuid
+  contentId      String   @db.Uuid
+  /// `<platformId>:<contextId>` (D-103); null for the portal's plays.
+  contextId      String?
+  /// The content version the aggregates describe (PROD-013, D-107).
+  contentVersion Int
+  periodStart    DateTime
+  periodEnd      DateTime
+  k              Int
+  aggregates     Json
+  createdAt      DateTime @default(now())
 
   content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
