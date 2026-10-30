@@ -5,7 +5,7 @@
  *      integration object into a `<script>` unescaped (D-040). The factory sets HVL's permission system, the
  *      learner-state storage, Nynorsk-first strings and the Core 1.28 styles (F3), and makes `render` return
  *      the model so ../http/routes/playerRoutes.ts renders it with our template.
- * Spec: H5P-004, H5P-005, H5P-006, H5P-007, H5P-008, SEC-008, PROD-013
+ * Spec: H5P-004, H5P-005, H5P-006, H5P-007, H5P-008, SEC-008, PROD-013, LTI-010
  * Invariants:
  *   - The renderer returns the model unchanged; HTML is produced only by ./render/playerPage.ts.
  *   - Every URL comes from the HvlUrlGenerator passed in: tokens on H5P's AJAX URLs and a signed `contentUrl`
@@ -16,7 +16,10 @@
  *     same library storage, each engine behind its own language-fallback wrapper.
  *   - With `contentVersions` (createH5pRuntime always passes it), every rendered model's learner-state URL carries
  *     the activity's version, so a page opened before a structural save cannot write its old state (D-093).
- * Collaborators: ./h5pAssets.ts, ./HvlUrlGenerator.ts, ./render/playerPage.ts,
+ *   - The player's global scripts end with the xAPI bridge's (./h5pAssets.ts) for every model; the page removes them,
+ *     and adds the bridge's configuration, per viewer (./render/xapiBridgeConfig.ts, D-102), so the one shared player
+ *     and the models it renders never depend on who views them.
+ * Collaborators: ./h5pAssets.ts, ./HvlUrlGenerator.ts, ./render/playerPage.ts, ./render/xapiBridgeConfig.ts,
  *   ./storage/LanguageFallbackLibraryStorage.ts, ./createH5pRuntime.ts,
  *   ../learningDesign/safeEditing/contentVersionOnPages.ts.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts,

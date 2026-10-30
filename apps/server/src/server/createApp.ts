@@ -6,7 +6,8 @@
  * Why: spec 02 joins two entry points (Canvas via LTI, the portal via Feide) into one principal; the mount order
  *      decides which checks a request meets. The app is built from connected clients so tests and `main.ts` run the
  *      same code. The studio's services are built in ./studioServices.ts.
- * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, PROD-003, DOC-012, NFR-002, PED-001
+ * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, PROD-003, DOC-012, NFR-002, PED-001, LTI-011,
+ *   LTI-012
  * Invariants:
  *   - Order: trust proxy → base headers → `/healthz` → page assets → the Hjelp marker and the chrome redirect (with
  *     the web app) → portal session → LTI (ltijs first) → Feide routes → start page (only without the web app) →
@@ -20,10 +21,13 @@
  *     production (D-077).
  *   - The studio's services are built once, from the same activity facts, identity hasher and publish flow as the
  *     S4 routes, and are returned so main.ts can close them at shutdown.
+ *   - The xAPI ingestion (`POST /api/h5p/xapi`) shares the activity facts; its listener of stored rows is the input
+ *     `onXapiStored`, where the grade enqueuer is wired (LTI-012).
  * Collaborators: ../lti/ltiRoutes.ts, ./feideLoginWiring.ts, ../auth/requestPrincipal.ts,
  *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/apiRouter.ts,
  *   ../content/PublishedSaveGate.ts, ../content/ContentWriteLock.ts, ../content/savedForm.ts, ../web/webRoutes.ts,
- *   ../web/chromeRedirect.ts, ../http/pages/helpLink.ts, ./healthRoutes.ts, ./studioServices.ts, ./main.ts.
+ *   ../web/chromeRedirect.ts, ../http/pages/helpLink.ts, ./healthRoutes.ts, ./studioServices.ts, ./main.ts,
+ *   ../xapi/XapiIngest.ts.
  * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
 import express, { type ErrorRequestHandler, type Express } from 'express';
@@ -60,6 +64,10 @@ import type { WebApp } from '../web/nextWebApp.js';
 import { chromeRedirect } from '../web/chromeRedirect.js';
 import { offerHelpLink } from '../http/pages/helpLink.js';
 import { webRoutes } from '../web/webRoutes.js';
+import { GradeSyncRetryRateLimit } from '../grades/status/GradeSyncRetryRateLimit.js';
+import { XapiIngest, type XapiStoredListener } from '../xapi/XapiIngest.js';
+import { XapiRateLimit } from '../xapi/XapiRateLimit.js';
+import { XapiStatementStore } from '../xapi/XapiStatementStore.js';
 import { portalFeideLoginRoutes } from './feideLoginWiring.js';
 import { healthRoutes } from './healthRoutes.js';
 import { createStudioServices, type StudioServices } from './studioServices.js';
@@ -78,6 +86,8 @@ export interface AppInputs {
   readonly validator?: ContentValidator;
   /** The studio content, loaded and checked once at start-up (D-082, ../learningDesign/content/). */
   readonly studioContent: StudioContent;
+  /** Called with a learner's new xAPI rows after they are stored; the grade enqueuer (LTI-012, D-104). */
+  readonly onXapiStored?: XapiStoredListener;
 }
 
 /** The app and the parts `main.ts` needs at start-up. */
@@ -133,6 +143,16 @@ export function createApp(inputs: AppInputs): App {
   // WHY: the content routes inside the H5P router run the same publish gate on saves of published activities.
   const saveGate = new PublishedSaveGate(publishing, editorSavedForm(inputs.h5p.editor.libraryManager));
   const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, saveGate, duplicator: studio.duplicator };
+  const xapi = new XapiIngest({
+    access,
+    db,
+    statements: new XapiStatementStore(db),
+    rateLimit: new XapiRateLimit(redis),
+    clock: () => new Date(),
+    logger,
+    ...(inputs.onXapiStored ? { onStored: inputs.onXapiStored } : {}),
+  });
+  const gradeSync = { retryLimit: new GradeSyncRetryRateLimit(redis) };
 
   const app = express();
   app.disable('x-powered-by');
@@ -152,7 +172,7 @@ export function createApp(inputs: AppInputs): App {
   app.use(
     '/api',
     authenticate,
-    apiRouter({ publishing, access, studio, serveDocs: env.NODE_ENV !== 'production' }),
+    apiRouter({ publishing, access, studio, xapi, gradeSync, serveDocs: env.NODE_ENV !== 'production' }),
     (_req, _res, next) => next(new HttpError(404, 'error.notFound')),
   );
   app.use('/api', h5pErrorHandler(logger));

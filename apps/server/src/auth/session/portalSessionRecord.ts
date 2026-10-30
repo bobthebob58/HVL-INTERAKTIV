@@ -5,10 +5,12 @@
  * Why: DATA-INVENTORY ("Redis keys") lists exactly which fields a session may
  *      hold. One schema keeps the store from writing anything else and turns a malformed or foreign value into
  *      "no session" instead of a half-trusted object (D-057).
- * Spec: AUTH-003, DATA-001
+ * Spec: AUTH-003, DATA-001, DATA-012
  * Invariants:
- *   - The stored record has exactly: userId, roles, hvlMember, studentAuthor, locale, learnerKey, csrfToken,
- *     idTokenEncrypted (base64 of the D-056 format), createdAt and lastSeenAt (epoch milliseconds).
+ *   - The stored record has exactly: userId, roles, hvlMember, studentAuthor, locale, learnerKey, learnerKeyYear,
+ *     csrfToken, idTokenEncrypted (base64 of the D-056 format), createdAt and lastSeenAt (epoch milliseconds).
+ *   - `learnerKeyYear` is the academic year of the secret that made `learnerKey` at login, so rows written for the
+ *     session carry the key's year even after 1 August (D-107); a record without it is not a session.
  *   - No name, e-mail, Feide ID, Feide `sub` or session ID is ever part of it in plaintext; Feide's ID token (which
  *     holds such claims) is kept only inside `idTokenEncrypted` (D-021, D-056).
  *   - `toPortalSession` drops the encrypted ID token; only `SessionStore.destroy` reads it.
@@ -29,6 +31,7 @@ export const PortalSessionRecordSchema = z.object({
   studentAuthor: z.boolean(),
   locale: z.enum(LOCALES),
   learnerKey: z.string().min(1),
+  learnerKeyYear: z.int(),
   csrfToken: z.string().min(1),
   idTokenEncrypted: z.string().min(1),
   createdAt: z.number().int(),
@@ -52,6 +55,8 @@ export interface PortalSession {
   readonly locale: Locale;
   /** The learner pseudonym (DATA-002). */
   readonly learnerKey: string;
+  /** The academic year of the pseudonym secret that made `learnerKey` at login (D-107), e.g. 2026 for 2026/27. */
+  readonly learnerKeyYear: number;
   /** The synchronizer CSRF token of this session. */
   readonly csrfToken: string;
   /** When the session was created (login). */

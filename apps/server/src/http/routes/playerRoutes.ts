@@ -4,14 +4,16 @@
  * Why: learners (and authors previewing) open an activity here; S3 embeds this page in Canvas. Lumi builds the
  *      player model with the actor's state view, so the learner's saved state is preloaded for their course,
  *      and our template (D-040) turns it into HTML without Lumi's unescaped JSON.
- * Spec: H5P-004, H5P-005, H5P-006, SEC-008, PROD-004
+ * Spec: H5P-004, H5P-005, H5P-006, SEC-008, PROD-004, LTI-010
  * Invariants:
  *   - The user is `asStateUser(actor)` and the context is the actor's; the page never carries a user identifier.
  *   - No download, embed or copy buttons (exports go through the author's editor, H5P-006).
  *   - The page is never cached (it contains the learner's preloaded state).
+ *   - The xAPI bridge (LTI-010) is on the page only for a learner, with the session's CSRF token (D-102).
  *   - Without a session the browser goes to Feide login and back (S3); an unknown, draft or invisible activity is
  *     the one friendly 404 page (PROD-004). Portal pages are framed only by our own origin.
- * Collaborators: ../../h5p/render/playerPage.ts, ../../h5p/H5pPlayerFactory.ts (identity renderer),
+ * Collaborators: ../../h5p/render/playerPage.ts, ../../h5p/render/xapiBridgeConfig.ts,
+ *   ../../h5p/H5pPlayerFactory.ts (identity renderer),
  *   ../../validation/activityLanguage.ts (the content container's `lang`, UD-010).
  * Tests: apps/server/test/http/player.int.test.ts
  */
@@ -20,6 +22,7 @@ import { Router } from 'express';
 import { safeReturnTo } from '../../auth/returnTo.js';
 import { asStateUser, type HvlH5pActor } from '../../h5p/HvlH5pUser.js';
 import { renderPlayerPage } from '../../h5p/render/playerPage.js';
+import { xapiBridgeConfig } from '../../h5p/render/xapiBridgeConfig.js';
 import { activityLanguage } from '../../validation/activityLanguage.js';
 import { sendPortalPage } from '../pages/portalPages.js';
 import { setPortalFrameHeaders } from '../securityHeaders.js';
@@ -75,7 +78,14 @@ export function playerRoutes(deps: H5pRouteDeps): Router {
     // SECURITY: no inline script, first-party sources only (D-070, DATA-011); framed by our own pages only.
     res.set('Content-Security-Policy', h5pPageCsp(deps.pageCsp, ["'self'"]));
     const contentLanguage = activityLanguage(await deps.editor.contentManager.contentStorage.getMetadata(id));
-    res.type('html').send(renderPlayerPage(model, actor.locale, contentLanguage ? { contentLanguage } : {}));
+    // PRIVACY: the xAPI bridge only for a learner: an author's preview is never sent as learning data (DATA-012, D-102).
+    const xapiBridge = xapiBridgeConfig(model, actor);
+    res.type('html').send(
+      renderPlayerPage(model, actor.locale, {
+        xapiBridge,
+        ...(contentLanguage ? { contentLanguage } : {}),
+      }),
+    );
   });
   return router;
 }

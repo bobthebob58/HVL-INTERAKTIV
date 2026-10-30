@@ -30,6 +30,7 @@ const LOGIN: NewPortalSession = {
   studentAuthor: false,
   locale: 'nn',
   learnerKey: 'learner-key-1',
+  learnerKeyYear: 2026,
   idToken: ID_TOKEN,
 };
 
@@ -85,7 +86,15 @@ describeWithServices('[AUTH-003] portal sessions in Redis', () => {
     for (const part of ID_TOKEN.split('.')) expect(raw).not.toContain(part);
     expect(raw).not.toContain(Buffer.from(ID_TOKEN).toString('base64'));
     expect(Object.keys(JSON.parse(raw) as object).sort()).toEqual(
-      ['createdAt', 'csrfToken', 'hvlMember', 'idTokenEncrypted', 'lastSeenAt', 'learnerKey']
+      [
+        'createdAt',
+        'csrfToken',
+        'hvlMember',
+        'idTokenEncrypted',
+        'lastSeenAt',
+        'learnerKey',
+        'learnerKeyYear',
+      ]
         .concat(['locale', 'roles', 'studentAuthor', 'userId'])
         .sort(),
     );

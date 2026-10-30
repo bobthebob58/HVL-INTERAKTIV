@@ -2,7 +2,7 @@
  * Tests for the activity page's tab registry: the tabs and their order, who gets each one, the tab the address asks
  * for, and that a tab panel gets the page's shared props (so a workstream's tab is one file and one registry line).
  *
- * Spec: UD-006, LTI-006, PROD-003
+ * Spec: UD-006, LTI-006, PROD-003, LTI-012
  */
 // @vitest-environment jsdom
 import type { ContentDetail } from '@hvl-interaktiv/api-contract';
@@ -45,17 +45,23 @@ const routes = (detail: ContentDetail) => ({
 });
 
 describe('[UD-006] the activity page’s tab registry', () => {
-  it('[UD-006] lists Spel, Rediger, Læringsdesign, Deling and Sjekk og publiser in that order, each id once', () => {
-    expect(ids(ACTIVITY_TABS)).toEqual(['play', 'edit', 'learning-design', 'sharing', 'check']);
+  it('[UD-006] lists Spel, Rediger, Læringsdesign, Deling, Sjekk og publiser and Poeng til Canvas in that order, each id once', () => {
+    expect(ids(ACTIVITY_TABS)).toEqual(['play', 'edit', 'learning-design', 'sharing', 'check', 'grade-sync']);
     expect(new Set(ids(ACTIVITY_TABS)).size).toBe(ACTIVITY_TABS.length);
   });
 
   it.each([
-    ['an owner', DETAIL, ['play', 'edit', 'learning-design', 'sharing', 'check']],
+    ['an owner', DETAIL, ['play', 'edit', 'learning-design', 'sharing', 'check', 'grade-sync']],
     [
       'an editor who may not publish',
       { ...DETAIL, mayPublish: false },
-      ['play', 'edit', 'learning-design', 'sharing'],
+      ['play', 'edit', 'learning-design', 'sharing', 'grade-sync'],
+    ],
+    // LTI-012: an admin may edit, but sees the scores sent to Canvas only as an owner or co-author (D-106)
+    [
+      'an admin who neither owns nor co-authors it',
+      { ...DETAIL, role: null },
+      ['play', 'edit', 'learning-design', 'sharing', 'check'],
     ],
     ['a viewer', VIEWER, ['play']],
   ] as const)('[LTI-006] %s gets the tabs the server’s answer allows', (_case, detail, expected) => {
@@ -83,12 +89,20 @@ describe('[UD-006] the activity page’s tab registry', () => {
     };
     // Act
     const shown = activityTabsFor(DETAIL, [...ACTIVITY_TABS, Extra]);
-    const Panel = shown[5]?.Panel;
+    const Panel = shown[6]?.Panel;
     let selected = '';
     render(Panel ? <Panel {...panelProps(DETAIL, (id) => (selected = id))} /> : null);
     fireEvent.click(screen.getByRole('button', { name: 'Celler og vev' }));
     // Assert
-    expect(ids(shown)).toEqual(['play', 'edit', 'learning-design', 'sharing', 'check', 'extra']);
+    expect(ids(shown)).toEqual([
+      'play',
+      'edit',
+      'learning-design',
+      'sharing',
+      'check',
+      'grade-sync',
+      'extra',
+    ]);
     expect(selected).toBe('play');
     expect(ids(activityTabsFor(VIEWER, [...ACTIVITY_TABS, Extra]))).toEqual(['play']);
   });

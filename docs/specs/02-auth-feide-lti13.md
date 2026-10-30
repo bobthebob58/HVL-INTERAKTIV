@@ -271,6 +271,20 @@ in-memory queue. They never block or slow down the activity.
   session cookie with the `X-CSRF-Token` header; never an ltik in the query. On `pagehide` it flushes with `fetch`
   and `keepalive: true` (not `sendBeacon`, which cannot carry those headers); nothing goes to browser storage. It adds
   no ✓/✗ text (`UD-003` as amended).
+- **Amended (D-115, 2026-10-30, probe P1):** `SPEC-DEVIATION` from "It POSTs each statement": the bridge sends only
+  what the server stores (`LTI-011` as amended): the page load's first root `attempted`, every `answered` and a root
+  `completed`; never `interacted`, `progressed`, or a sub-content `attempted` or `completed`. Each statement is cut
+  down to the fields the server reads, with no `actor`, question text, choices or feedback, and answers capped as
+  `DATA-012` (as amended) stores them. Each carries a `statementId` (`crypto.randomUUID()`, one per dispatched event)
+  and an `attemptId` `<viewId>:<n>`: `viewId` is made once per page load, and `n` starts at 1 and goes up by one right
+  after a root result with `score.max` above 0, so a retry, which H5P does not announce, is a new attempt at its next
+  result. A batch names its content and the version the page was rendered with, and holds at most 50 items and
+  60 000 bytes of JSON, one request in flight; after a network error, a 5xx or a 429 it goes back to the head of the
+  queue, after any other 4xx it is dropped. On `pagehide` everything not yet acknowledged, the request in flight
+  included, goes in one `keepalive` request within the same limits, oldest first. The bridge is the last script in
+  the player's global assets, never the editor's. It registers in a document that is not one of Core's iframes and
+  ignores an event that H5P marks as relayed, so each statement is queued once also if H5P's iframe embedding is
+  used.
 
 #### LTI-011 · MUST · S6 · Validate and store statements
 `/api/h5p/xapi` validates statements with a zod schema. It accepts only verbs it uses
@@ -283,6 +297,25 @@ fields defined in `DATA-012` and drops the rest of the statement (including `act
   stores nothing. In Canvas the content must also be the launched activity. The stored `contextId` is the
   platform-scoped `<platformId>:<contextId>` (D-103, null for a portal play), and the stored `timestamp` is when the
   server received the batch, not what the browser claims.
+- **Amended (D-115, 2026-10-30, probe P1):** `SPEC-DEVIATION` from "Then it stores the minimal fields": all five verbs
+  are still accepted, but not every accepted statement is stored. Stored: a root `attempted`; an `answered` of the
+  root or of sub-content; a root `completed` that is not a replay. Accepted and not stored: `interacted`,
+  `progressed`, a sub-content `attempted` or `completed`, a sub-content statement without a `subContentId`, and a
+  replay: a root `completed` after no stored `answered` since its page load's previous root result (or since the
+  load), whose raw score and maximum equal the learner's latest stored root result for the same content, context and
+  version (CoursePresentation re-sends its result on resume; BranchingScenario is exempt). A statement is root when
+  `object.id` is the content ID with no `?subContentId=`, it has no `h5p-subContentId` extension and no
+  `contextActivities.parent` (`LTI-012` as amended). Each item is checked on its own: an invalid one, including one
+  about another activity or whose `scaled` differs from `raw / max` by more than 0.0001, is discarded and counted in
+  the log without its content, so it never blocks its batch. A whole batch is refused only for an activity the
+  principal may not view (403; in Canvas, any but the launched one), over 50 items (400) or over 64 KiB (413). The
+  schema ignores `actor` (the learner comes only from the principal), and accepts a bare UUID as `object.id`, a missing
+  `context`, a numeric `response` (stored as text) and a score without `scaled` when its maximum is 0. The item's
+  `statementId` becomes the row's ID and is inserted once, so a batch sent twice (the `pagehide` flush, a request
+  retried after a lost answer) stores nothing twice; the stored `timestamp` is the receive time plus the item's place
+  in the batch in milliseconds, which keeps the batch's order. A 429 carries `Retry-After`, and nothing from that batch
+  is stored. The answer is 202, with no detail per item. Not deviated: the five verbs, the score checks, the View
+  check and the rate limit.
 
 #### LTI-012 · MUST · S6 · Publish scores to the Canvas gradebook (AGS)
 When a statement concerns the **root** content (no `subContentId`), has the verb `completed` or
@@ -321,6 +354,23 @@ a new client-credentials token itself, or is marked failed for the author to ret
   its outcome. Authors see sent, pending, failed and orphaned counts per placement on the activity page and in
   `/app/play` and retry failed jobs there. Not deviated: the score body, the policies, the retry limit, idempotency,
   `orphaned` and the developer key's scopes.
+- **Amended (D-115, 2026-10-30, probe P1):** `SPEC-DEVIATION` from the root as "no `subContentId`": no single test
+  finds the root (that one takes DragText's context-less `interacted` inside a QuestionSet, and every child of content
+  saved without `subContentId`s; H5P's own, no `contextActivities.parent`, takes InteractiveBook's chapter
+  `completed`). A statement is **root** when `object.id` is the content ID with no `?subContentId=`, it has no
+  `h5p-subContentId` extension and no `contextActivities.parent`. A grade job is written only for a **gradable root
+  result**: a root `answered` or `completed` whose `category[0].id` names the activity's main library
+  (`http://h5p.org/libraries/<machineName>-<major>.<minor>`), with `score.max` above 0, and not a replay (`LTI-011` as
+  amended). `scoreGiven` is `scaled × 100`, never `success`. An attempt holds at most one result (`LTI-010` as
+  amended), so each job is one attempt; `latest`, and `mastery` below its threshold, send the score of the job whose
+  result was stored last, by `GradeSyncJob.resultAt` (that result's stored `timestamp`), then by the attempt number `n`
+  of `<viewId>:<n>`. Which result each type sends is D-115's table: MultiChoice, Blanks and DragText an `answered` at
+  every «Sjekk»; QuestionSet, Column, CoursePresentation and BranchingScenario a root `completed`; InteractiveBook at
+  «Send inn rapport», which the player page offers a learner by setting H5P's `reportingIsEnabled` (Q18);
+  InteractiveVideo only with a submit screen its author added; BranchingScenario nothing gradable when its scoring is
+  `no-score`; ImageHotspots no statement at all. An activity that sends no score never gets a job, and the Deep
+  Linking picker says so for `assignment_selection`. Not deviated: the two verbs, `result.score`, the policies and
+  their table.
 
 #### LTI-013 · MUST · S6 · Score integrity is honest
 H5P computes scores in the browser, so a determined student can forge them. The system therefore
@@ -351,7 +401,7 @@ decision for HVL and ALU *(verify)*.
 | `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken` | as required by ltijs `DatabaseManager`; `LtiPlatform.privateKeyEncrypted` and `LtiAccessToken.tokenEncrypted` are encrypted with `DATA_ENCRYPTION_KEYS` (D-056) | `LtiIdToken.claims` holds an allowlist of launch claims, including `sub` but no name, e-mail, `lis` or `feide_login` (D-052). Kept for 24 h only; nonces 10 min. |
 | `LtiDeployment` | `platformId`, `deploymentId`; replaced from `LTI_PLATFORMS` at start-up (D-051) | No |
 | `LtiPlacement` | `platformId`, `contextId`, `resourceLinkId`, `contentId`, `lineItemUrl?`, `attemptPolicy`, `masteryThreshold?` | No |
-| `GradeSyncJob` | `placementId`, `learnerKey`, `ltiSub (encrypted)`, `scoreGiven`, `status` (with `orphaned`), `attempts`, `lastError`, `idempotencyKey`; from S6 also `attemptId`, `nextAttemptAt`, `terminalAt` (D-104) and `academicYear` (D-107) | `ltiSub` is needed for AGS; encrypted, deleted 30 days after success (amended, D-104: 30 days after `terminalAt`, whether the job succeeded, failed or was orphaned) |
+| `GradeSyncJob` | `placementId`, `learnerKey`, `ltiSub (encrypted)`, `scoreGiven`, `status` (with `orphaned`), `attempts`, `lastError`, `idempotencyKey`; from S6 also `attemptId`, `nextAttemptAt`, `terminalAt` (D-104), `resultAt` (when the job's result was stored; orders the attempts for `latest`, D-115) and `academicYear` (D-107) | `ltiSub` is needed for AGS; encrypted, deleted 30 days after success (amended, D-104: 30 days after `terminalAt`, whether the job succeeded, failed or was orphaned) |
 | `AuthAuditEvent` | `at`, `actorUserId?`, `event`, `reason?` (a fixed code), `ipHash?`, `ipKeyId?` (the `IDENTITY_HASH_KEYS` key that made `ipHash`) (D-055, D-064) | Minimal |
 | Portal session (Redis, not a table) | `userId`, `roles`, `hvlMember`, `studentAuthor`, `locale`, `learnerKey`, `csrfToken`, `idTokenEncrypted`, `createdAt`, `lastSeenAt`, under a SHA-256 of the session ID (D-057) | The Feide ID token, encrypted (D-021, D-056). Gone at logout, 2 h idle or 12 h. |
 | Login transaction (Redis, not a table) | `state`, `nonce`, `codeVerifier`, `returnTo`, `createdAt`, under a SHA-256 of the transaction ID (D-057) | No. Single use, at most 10 min. |

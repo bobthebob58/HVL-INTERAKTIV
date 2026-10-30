@@ -56,22 +56,30 @@ describeWithServices('[H5P-009] xAPI statements of the real container and media 
       );
 
       it(
-        '[H5P-009] H5P.InteractiveBook: nothing before «Les»; no root score and no «Send inn rapport»',
+        '[H5P-009] H5P.InteractiveBook: nothing before «Les»; «Send inn rapport» sends the root completed',
         async () => {
           // Act
           const run = await playRealType(browser(), server, 'H5P.InteractiveBook');
-          // Assert: this holds until step 3 sets reportingIsEnabled (D-115, Q18), which adds «Send inn rapport»
+          // Assert: step 3 sets reportingIsEnabled for learners (D-115, Q18), which adds «Send inn rapport»; the root
+          // score is the sum of the chapters, of which the learner answered one
           expectP1(run, {
             onLoad: [[]],
-            kinds: ['root attempted', 'sub answered', 'sub completed', 'sub interacted', 'sub progressed'],
-            rootResults: [],
+            kinds: [
+              'root attempted',
+              'root completed',
+              'sub answered',
+              'sub completed',
+              'sub interacted',
+              'sub progressed',
+            ],
+            rootResults: [{ view: 1, verb: 'completed', score: '1/4' }],
             subResults: [
               'H5P.Column-1.22 completed 1/1',
               'H5P.MultiChoice-1.16 answered 1/1',
               'H5P.Column-1.22 completed 1/1',
             ],
             responses: { choice: ['0'] },
-            observed: { submitButtons: 0 },
+            observed: { submitButtons: 1 },
           });
         },
         PLAY_MS,

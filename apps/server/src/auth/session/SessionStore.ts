@@ -99,6 +99,7 @@ export class SessionStore {
       studentAuthor: data.studentAuthor,
       locale: data.locale,
       learnerKey: data.learnerKey,
+      learnerKeyYear: data.learnerKeyYear,
       csrfToken: newOpaqueId(),
       // PRIVACY: the ID token can carry name and e-mail; it is stored encrypted only (D-021, D-056, DATA-001).
       idTokenEncrypted: this.encryption.encrypt('session-id-token', data.idToken).toString('base64'),

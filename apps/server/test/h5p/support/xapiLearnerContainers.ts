@@ -4,7 +4,8 @@
  *
  * Why: probe P1 (D-102) found where these types send their gradable root result, or that they send none, and that a
  *      resumed CoursePresentation re-sends its root result without any learner action; step 3's attempt and
- *      replay rules rest on that, so CoursePresentation is played again after a reload.
+ *      replay rules rest on that, so CoursePresentation is played again after a reload. Since step 3 the learner's
+ *      page has reportingIsEnabled, so InteractiveBook is submitted with «Send inn rapport» (D-115, Q18).
  * Spec: H5P-009
  * Invariants:
  *   - Button names are the Nynorsk texts of the package examples (D-078).
@@ -63,6 +64,7 @@ export const CONTAINER_SCRIPTS: Record<string, LearnerScript> = {
       'cover: presses «Les» on the cover',
       'check: picks the right option in chapter 1 and presses «Sjekk»',
       'summary: goes to the summary page',
+      'submit: presses «Send inn rapport», which reportingIsEnabled shows to learners (D-115, Q18)',
     ],
     play: async (p) => {
       const f = p.frame();
@@ -87,7 +89,12 @@ export const CONTAINER_SCRIPTS: Record<string, LearnerScript> = {
         .click();
       await f.locator('.h5p-interactive-book-summary-progress-container').first().waitFor();
       await p.quiet();
-      return { submitButtons: await f.getByRole('button', { name: /Send inn rapport/ }).count() };
+      const submit = f.getByRole('button', { name: /Send inn rapport/ });
+      const submitButtons = await submit.count();
+      p.step('submit');
+      await submit.first().click();
+      await p.until('root completed', rootSent(p, 'completed'));
+      return { submitButtons };
     },
   },
   'H5P.ImageHotspots': {

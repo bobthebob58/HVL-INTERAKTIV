@@ -3305,3 +3305,20 @@ loading of one spec per session are kept.
     set cannot be retried; content stored without `subContentId`s gives no insight per question; and time on task
     runs only from a page load's first to its last stored statement, so reading before the first answer of a Column
     and time after the last stored statement are not counted.
+- **Amendment (2026-10-30, step 3):** three points made concrete while building. *`latest`:* migration
+  `s6_grade_bridge_insight` also adds `GradeSyncJob.resultAt`, the stored `timestamp` of the result that made the job
+  or last updated it, and `latest` (and `mastery` below its threshold) sends the score of the job with the latest
+  `resultAt`, then the highest attempt number `n` of `<viewId>:<n>`, then the attempt ID as text, so equal times still
+  give one answer. Creation order is not used: it can differ from result order when two requests of one learner are
+  handled at once (the `pagehide` flush beside the request in flight), and a job that a later result of its attempt
+  updates (`LTI-013`) keeps its creation time. This replaces "the job created last" above and in D-104's P1
+  amendment; spec 02 §7 and the data inventory list the field. *`reportingIsEnabled`:* the player page sets it only
+  together with the bridge, for a learner principal, so an author's preview never offers «Send inn rapport». *Q20:*
+  `uv-module`'s skeleton stores `endGame.showRetryButton: false` on its three QuestionSets, pending ALU's review of
+  the patterns (Q17). Each question keeps its own «Prøv igjen» until the set is finished (`override.retryButton:
+  "on"` sets its `behaviour.enableRetry`, the field spec 04's `PED-H07` names), and the book keeps its own
+  (`behaviour.enableRetry`); only the set's results-page button is off, so a finished chapter check is retried only
+  through the book's «Prøv igjen», which the regression test above checks. The S5 real-pattern tests (`PROD-009`) and
+  `PED-H07`'s implementation also read that switch, which spec 04 does not name, and the tests report each set's
+  stored pass mark (the library's default `passPercentage`) as one that cannot be retried; how they treat a set whose
+  questions keep their retry is settled at the step's integration, by amendment.

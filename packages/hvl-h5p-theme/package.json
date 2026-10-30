@@ -17,6 +17,9 @@
     "./a11yRepairs.js": "./src/a11yRepairs.js",
     "./a11yEditorRepairs.js": "./src/a11yEditorRepairs.js",
     "./reducedMotion.js": "./src/reducedMotion.js",
+    "./xapiStatements.js": "./src/xapiStatements.js",
+    "./xapiBatching.js": "./src/xapiBatching.js",
+    "./xapiBridge.js": "./src/xapiBridge.js",
     "./locales/*": "./src/locales/*"
   },
   "files": [

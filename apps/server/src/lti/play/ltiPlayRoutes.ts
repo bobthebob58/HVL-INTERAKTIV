@@ -4,14 +4,16 @@
  * Why: after a launch ltijs redirects to `/lti/play?ltik=…` (LTI-003 step 1). The page plays the activity the
  *      launch opened, for the launch's person and course; its first script removes the ltik from the address bar
  *      (step 2), and H5P's own AJAX and user-data URLs carry the ltik (D-058).
- * Spec: LTI-003, LTI-006, LTI-007, H5P-007, PROD-004, PROD-012
+ * Spec: LTI-003, LTI-006, LTI-007, H5P-007, PROD-004, PROD-012, LTI-010
  * Invariants:
  *   - The ltik in the query is accepted here (D-058); the activity comes from the stored launch, never the request.
  *   - Unknown, draft or invisible activities give the one 404 page; an invalid ltik the "reopen from Canvas" page.
  *   - The page is `no-store`, `no-referrer`, framed only by `CANVAS_ORIGINS`, and never sends `X-Frame-Options`.
  *   - Lumi's render runs with the View check (the player factory refuses the options that skip it).
  *   - Before H5P Core loads, the storage guard makes blocked frame storage safe for H5P (D-050).
+ *   - The xAPI bridge (LTI-010) is on the page only for a learner launch, with the ltik as its token (D-102).
  * Collaborators: ../ltikPrincipal.ts, ../../auth/principalToH5pActor.ts, ../../h5p/render/playerPage.ts,
+ *   ../../h5p/render/xapiBridgeConfig.ts,
  *   ../http/ltiPageHeaders.ts, ../pages/client/ltikLanding.js, ../pages/client/h5pStorageGuard.js, ../ltiRoutes.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/ltiPlay.int.test.ts
  */
@@ -21,6 +23,7 @@ import express, { Router } from 'express';
 import { principalToH5pActor } from '../../auth/principalToH5pActor.js';
 import { asStateUser } from '../../h5p/HvlH5pUser.js';
 import { renderPlayerPage } from '../../h5p/render/playerPage.js';
+import { xapiBridgeConfig } from '../../h5p/render/xapiBridgeConfig.js';
 import { activityLanguage } from '../../validation/activityLanguage.js';
 import { authError } from '../../http/authErrors.js';
 import type { H5pRouteDeps } from '../../http/h5pRouteDeps.js';
@@ -89,6 +92,9 @@ export function ltiPlayRoutes(deps: LtiPlayDeps): Router {
     res.type('html').send(
       renderPlayerPage(model, actor.locale, {
         firstScripts: [LTIK_LANDING_SCRIPT, H5P_STORAGE_GUARD_SCRIPT],
+        // PRIVACY: the xAPI bridge only for a learner launch: a teacher's play is never sent as learning data
+        // (DATA-012, D-102); the ltik is its Bearer token, never put in a URL (LTI-003).
+        xapiBridge: xapiBridgeConfig(model, actor),
         ...(contentLanguage ? { contentLanguage } : {}),
       }),
     );

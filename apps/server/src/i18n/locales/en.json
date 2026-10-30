@@ -240,5 +240,13 @@
       "noteRecorded": "The results are formative, anonymised summaries for groups of at least {{k}} students. They are not evidence of exam results."
     },
     "pdfTitle": "Teaching portfolio"
+  },
+  "deepLinkGrading": {
+    "formativeDescription": "The points from HVL Interaktiv are formative: they are calculated in the browser and are not exam evidence.",
+    "noScore": {
+      "noStatements": "No points for the gradebook: image hotspots send no results, so this assignment’s column in Canvas stays empty.",
+      "noSubmitScreen": "No points for the gradebook: the video has no submit screen, so this assignment’s column in Canvas stays empty. Add a submit screen to the video if you want points.",
+      "noScoring": "No points for the gradebook: the scenario is set up without scoring (“No scoring” under “Scoring options”), so this assignment’s column in Canvas stays empty. Choose a scoring option there if you want points."
+    }
   }
 }

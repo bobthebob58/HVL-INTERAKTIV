@@ -240,5 +240,13 @@
       "noteRecorded": "Resultatene er formative og anonymiserte sammendrag for grupper med minst {{k}} studenter. De er ikke dokumentasjon av eksamensresultater."
     },
     "pdfTitle": "Pedagogisk mappe"
+  },
+  "deepLinkGrading": {
+    "formativeDescription": "Poengene fra HVL Interaktiv er formative: de blir regnet ut i nettleseren og er ikke eksamensgrunnlag.",
+    "noScore": {
+      "noStatements": "Ingen poeng til karakterboken: bilde med klikkpunkter sender ingen resultater, så kolonnen for denne oppgaven i Canvas blir stående tom.",
+      "noSubmitScreen": "Ingen poeng til karakterboken: videoen har ingen innsendingsside, så kolonnen for denne oppgaven i Canvas blir stående tom. Legg til en innsendingsside i videoen hvis du vil ha poeng.",
+      "noScoring": "Ingen poeng til karakterboken: scenarioet er satt opp uten poeng («No scoring» under «Scoring options»), så kolonnen for denne oppgaven i Canvas blir stående tom. Velg poeng der hvis du vil ha poeng."
+    }
   }
 }

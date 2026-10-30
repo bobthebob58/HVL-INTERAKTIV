@@ -3,7 +3,7 @@
  *
  * Why: a missing or malformed setting should stop the server at boot with a message that names the
  *      variable, rather than fail later inside a request. Every variable is documented in .env.example.
- * Spec: DOC-008, MAPPE-003, MAPPE-004
+ * Spec: DOC-008, MAPPE-003, MAPPE-004, LTI-013, LTI-008
  * Invariants:
  *   - Every variable read anywhere in the server is declared here, one per line as `NAME: z…`
  *     (doc-lint compares this list with .env.example).
@@ -11,12 +11,15 @@
  *   - With NODE_ENV=production, the checks in ./productionChecks.ts also apply.
  *   - The portfolio's minimum group size is never below 3 (INS-006, D-095); the PDF export runs 1–8 renders at a
  *     time, and its sandbox is on unless development turns it off (D-096).
+ *   - `AGS_LABEL_MODE` is `suffix` unless HVL and ALU answer Q8 otherwise (D-105); the NRPS learner count reads at
+ *     most `NRPS_MAX_PAGES` pages of 50 learners (LTI-008).
  * Collaborators: apps/server/.env.example, ./envParsers.ts, ./productionChecks.ts,
  *   ../privacy/pseudonymSecrets.ts, ../h5p/H5pConfigFactory.ts.
  * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/studioEnv.test.ts
  */
 import { isAbsolute } from 'node:path';
 import { z } from 'zod';
+import { AGS_LABEL_MODES } from '../lti/deepLinking/formativeLabel.js';
 import { parsePseudonymSecrets } from '../privacy/pseudonymSecrets.js';
 import {
   FEIDE_GROUP_PATTERN,
@@ -65,6 +68,8 @@ export const envSchema = z.object({
   WEB_APP: z.enum(['off', 'dev', 'prod']).default('off'),
   LTI_PLATFORMS: z.string().transform(toJson).pipe(ltiPlatformList).default([]),
   LTI_TOKEN_MAX_AGE_SECONDS: z.coerce.number().int().min(1).max(60).default(10),
+  AGS_LABEL_MODE: z.enum(AGS_LABEL_MODES).default('suffix'),
+  NRPS_MAX_PAGES: z.coerce.number().int().min(1).max(1000).default(100),
   FEIDE_ISSUER: z.url({ protocol: /^https?$/ }).default('https://auth.dataporten.no'),
   FEIDE_CLIENT_ID: z.string().min(1),
   FEIDE_CLIENT_SECRET: z.string().min(1),

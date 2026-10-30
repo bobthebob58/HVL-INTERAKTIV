@@ -4,11 +4,12 @@
  * Why: LTI-005 lets a teacher pick activities in Canvas. In S3 the page is a small server-rendered form (D-048);
  *      its script (./client/deepLinkPicker.js) sends the choice with the ltik as a Bearer token and posts the
  *      signed answer to Canvas. It stays server-rendered in S4, with the token CSS (D-067 amendment).
- * Spec: LTI-005, PROD-005, LTI-003, UD-013
+ * Spec: LTI-005, PROD-005, LTI-003, UD-013, LTI-013
  * Invariants:
  *   - Checkboxes only when the platform accepts several items (`accept_multiple === true`), else radio buttons.
  *   - Drafts are listed but disabled, with the reason in text tied to the input (D-061; not by colour alone).
- *   - The graded placement says the points are formative, never exam evidence.
+ *   - The graded placement says the points are formative, never exam evidence, and an activity that can never send
+ *     Canvas a score says so and why, in text tied to its input like a draft's reason (D-115).
  *   - The formative-use notice (PROD-011) is shown unless the teacher dismissed its current version; its button
  *     carries that version for ./client/deepLinkPicker.js.
  *   - Errors go into the summary right below the heading (`#deep-link-errors`, hidden until the script fills it),
@@ -75,6 +76,27 @@ function errorSummary(locale: Locale): SafeHtml {
 </div>`;
 }
 
+/**
+ * The note that Canvas will get no score from an activity (D-115), with its ID for `aria-describedby`.
+ * @param activity - The listed activity; only one with `noScore` gets a note.
+ * @param id - The activity's input ID.
+ * @param locale - The page language.
+ * @returns The note's ID and markup, or undefined.
+ */
+function noScoreNote(
+  activity: PickerActivity,
+  id: string,
+  locale: Locale,
+): { readonly id: string; readonly html: SafeHtml } | undefined {
+  if (!activity.noScore) return undefined;
+  const noteId = `${id}-no-score`;
+  // PEDAGOGY: the teacher learns before placing it that the gradebook column will stay empty, and how to change that.
+  return {
+    id: noteId,
+    html: markup` <span id="${noteId}">${t(`deepLinkGrading.noScore.${activity.noScore}`, {}, locale)}</span>`,
+  };
+}
+
 function choice(
   activity: PickerActivity,
   index: number,
@@ -82,13 +104,16 @@ function choice(
   locale: Locale,
 ): SafeHtml {
   const id = `activity-${index}`;
+  const note = noScoreNote(activity, id, locale);
   if (activity.selectable) {
-    return markup`<li><input type="${type}" name="contentId" id="${id}" value="${activity.id}">
-<label for="${id}">${activity.title}</label></li>`;
+    const described = note ? markup` aria-describedby="${note.id}"` : undefined;
+    return markup`<li><input type="${type}" name="contentId" id="${id}" value="${activity.id}"${described}>
+<label for="${id}">${activity.title}</label>${note?.html}</li>`;
   }
   // A11Y: the reason a draft cannot be chosen is read out with the disabled input, not shown by greying alone.
-  return markup`<li><input type="${type}" name="contentId" id="${id}" value="${activity.id}" disabled aria-describedby="${id}-draft">
-<label for="${id}">${activity.title}</label> <span id="${id}-draft">(${t('deepLink.draft', {}, locale)})</span></li>`;
+  const describedBy = note ? `${id}-draft ${note.id}` : `${id}-draft`;
+  return markup`<li><input type="${type}" name="contentId" id="${id}" value="${activity.id}" disabled aria-describedby="${describedBy}">
+<label for="${id}">${activity.title}</label> <span id="${id}-draft">(${t('deepLink.draft', {}, locale)})</span>${note?.html}</li>`;
 }
 
 /**

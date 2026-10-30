@@ -4,18 +4,22 @@
  * Why: LTI-005 lets an author pick existing activities to place in Canvas; in S3 these are their own and
  *      co-authored activities (D-061). Drafts are listed so the author sees them, but cannot be returned to Canvas
  *      (LTI-005 acceptance, PROD-004).
- * Spec: LTI-005, PROD-005, PROD-004
+ * Spec: LTI-005, PROD-005, PROD-004, LTI-012
  * Invariants:
  *   - Only activities the author owns or co-authors are listed or accepted; anything else is "not available" (404),
  *     whether it exists or not.
  *   - A chosen draft is refused with 409 `hvl:deep-link-draft`, before any JWT is signed.
  *   - The list is bounded and ordered by last change, newest first.
- * Collaborators: ./deepLinkRoutes.ts, ./deepLinkItems.ts, ../../http/authErrors.ts, ../../h5p/contentIds.ts.
+ *   - For a graded placement each activity that can never send Canvas a score carries the reason (D-115,
+ *     ./noScoreActivities.ts); it stays selectable, since the teacher may still want the assignment.
+ * Collaborators: ./deepLinkRoutes.ts, ./deepLinkItems.ts, ./noScoreActivities.ts, ../../http/authErrors.ts,
+ *   ../../h5p/contentIds.ts.
  * Tests: apps/server/test/lti/deepLinking/deepLinkActivities.int.test.ts
  */
 import { isContentUuid } from '../../h5p/contentIds.js';
 import { authError } from '../../http/authErrors.js';
 import type { Database } from '../../infra/prismaClient.js';
+import { noScoreReasons, type NoScoreReason } from './noScoreActivities.js';
 
 /** The most activities the picker lists. */
 export const PICKER_LIMIT = 200;
@@ -30,6 +34,8 @@ export interface PickerActivity {
   readonly mainLibrary: string;
   /** Only published activities can be placed. */
   readonly selectable: boolean;
+  /** For a graded placement: why Canvas will never get a score from it (D-115); absent when it can. */
+  readonly noScore?: NoScoreReason;
 }
 
 const ownOrCoAuthored = (userId: string) => ({
@@ -40,21 +46,32 @@ const ownOrCoAuthored = (userId: string) => ({
  * Lists the activities an author may place.
  * @param db - The database.
  * @param userId - The author's `User.id`.
+ * @param options - `graded`: the placement creates a gradebook column, so activities that send no score say why.
  * @returns Own and co-authored activities, newest first; drafts marked not selectable.
  */
-export async function listPickerActivities(db: Database, userId: string): Promise<PickerActivity[]> {
+export async function listPickerActivities(
+  db: Database,
+  userId: string,
+  options: { readonly graded?: boolean } = {},
+): Promise<PickerActivity[]> {
   const rows = await db.h5PContent.findMany({
     where: ownOrCoAuthored(userId),
     select: { id: true, title: true, mainLibrary: true, status: true },
     orderBy: { updatedAt: 'desc' },
     take: PICKER_LIMIT,
   });
-  return rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    mainLibrary: row.mainLibrary,
-    selectable: row.status === 'published',
-  }));
+  // PEDAGOGY: only a graded placement makes a gradebook column, so only there does "no score" matter (D-115).
+  const noScore = options.graded ? await noScoreReasons(db, rows) : new Map<string, NoScoreReason>();
+  return rows.map((row) => {
+    const reason = noScore.get(row.id);
+    return {
+      id: row.id,
+      title: row.title,
+      mainLibrary: row.mainLibrary,
+      selectable: row.status === 'published',
+      ...(reason ? { noScore: reason } : {}),
+    };
+  });
 }
 
 /**

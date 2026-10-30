@@ -33,6 +33,16 @@ when available, `LTI-008`, otherwise "of those who started"), median time on tas
 number of attempts.
 - **Acceptance:** Numbers match a hand-calculated fixture of 30 synthetic learners.
 - **Verify:** Unit tests of the aggregation queries.
+- **Amended (D-115, 2026-10-30, probe P1):** what each number reads, since H5P marks no attempts. A learner has
+  **started** with any stored statement for the activity (InteractiveBook without a cover counts at load, Column from
+  its first answer; no statement is made up). **Completed** is a stored root result (`LTI-012` as amended), and
+  **attempts** are the stored root results. **Time on task** comes from the stored timestamps of each page load, from
+  its first to its last stored statement, never from `durationMs`. Where a type cannot send a root result, completed,
+  the completion rate and attempts are shown as not available, never as 0; ImageHotspots sends no statement at all,
+  and its tab says that it sends no learning data. Residuals, named in the DPIA input and the students' checklist:
+  attempts count each Column re-check and each CoursePresentation summary slide reached after new answers; a learner
+  who opens a Column and never checks is not counted as started; and reading before the first stored statement and
+  time after the last are not counted.
 
 #### INS-002 · MUST · S6 · Item difficulty
 For each question (sub-content) the view shows: % correct on the first attempt, % correct on the
@@ -53,11 +63,20 @@ shortlist that can be printed or projected.
 For BranchingScenario, the view shows the distribution of choices at each decision node and how
 many learners used a retry path.
 - **Verify:** Unit tests.
+- **Amended (D-115, 2026-10-30, probe P1):** not built in S6. BranchingScenario's choices are in no statement H5P
+  dispatches (its choice `interacted` carries no response), only in its `getXAPIData()` and saved state, and the last
+  choice before an end screen sends nothing at all. Building it needs statements that the bridge makes itself, a
+  `SPEC-DEVIATION` from `LTI-010` and `LTI-011` that needs its own decision, after a probe shows that retried choices
+  are kept. It passes to HVL's bachelor students through the hand-off index (D-101).
 
 #### INS-005 · COULD · S6 · Video engagement
 For InteractiveVideo, it shows the share of learners who answered each embedded interaction. This
 serves as a proxy for how far they watched. The spike in Session 6 decides whether H5P's
 `progressed` statements are reliable enough for a drop-off curve.
+- **Amended (D-115, 2026-10-30, probe P1):** the spike's answer: InteractiveVideo sends no `progressed` statement at
+  all, so there is no drop-off curve, and the bridge sends no `progressed` from any type (`LTI-010` as amended). The
+  measure is the share of learners who answered each interaction, read from the stored `answered` statements by
+  `subContentId`, with `INS-006`'s suppression.
 
 #### INS-006 · MUST · S6 · Minimum group size and no individual view
 Any cell, bar or list item that represents fewer than **k = 5** distinct learners is shown as
@@ -204,6 +223,17 @@ else is dropped, including actor names, mailboxes and extensions.
   the row's `learnerKey`, which the key cannot reveal and a timestamp can misstate (a portal session made before
   1 August can keep its `learnerKey` for up to 12 hours after it, D-057); the annual purge (`DATA-003` as amended)
   deletes by it. `H5PUserData` and `GradeSyncJob` store it too (§4).
+- **Amended (D-115, 2026-10-30, probe P1):** the field list is unchanged; what fills it is made exact. Which
+  statements become rows is `LTI-011` as amended: a root `attempted`, an `answered` of the root or of sub-content with
+  a `subContentId`, and a root `completed` that is not a replay. A row's ID is the bridge's `statementId`, inserted once, so a batch sent twice stores nothing twice; a
+  content hash is never an identity, because identical statements are normal. `timestamp` is the receive time plus
+  the item's place in its batch in milliseconds, so the batch's order survives; the browser's clock is never read.
+  `attemptId` is `<viewId>:<n>` (`LTI-010` as amended). `subContentId` comes from the `h5p-subContentId` extension,
+  else from `object.id`. `response` is kept only for the interaction types `choice` and `fill-in`: each gap (between
+  `[,]`) is cut to 100 characters, enough to group the answers *k* learners share, and a response still over 1 000
+  characters is not stored, since a shortened list would shift its gaps; a numeric response is stored as text.
+  `durationMs` is parsed from `result.duration` (null when absent, unreadable or over 24 hours), and no insight reads
+  it, because H5P's durations mean different things by type.
 
 ---
 

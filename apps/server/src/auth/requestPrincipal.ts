@@ -13,6 +13,8 @@
  *   - An ltik wins over a session cookie: inside Canvas, a portal cookie never changes who the request acts as.
  *   - Portal requests pass the CSRF check where `csrfRequired` says so (unsafe methods, any H5P AJAX/user data).
  *   - No principal is set when nobody is signed in; routes that need one answer 401 (`requirePrincipal`).
+ *   - A portal principal carries its session's `learnerKeyYear` (D-107); an LTI request's `sub` is kept beside its
+ *     principal (`ltiSubjectOf`), never in it.
  * Collaborators: ../lti/ltikPrincipal.ts, ./session/portalSessionMiddleware.ts, ./session/csrfToken.ts,
  *   ./principalLocals.ts, ../http/h5pAuthenticate.ts, ../server/createApp.ts.
  * Tests: apps/server/test/auth/requestPrincipal.test.ts
@@ -22,7 +24,7 @@ import type { UrlToken } from '../h5p/HvlH5pUser.js';
 import { authError } from '../http/authErrors.js';
 import type { ResolvedLtik } from '../lti/ltikPrincipal.js';
 import { sealPrincipal } from './Principal.js';
-import { setPrincipal } from './principalLocals.js';
+import { setLtiSubject, setPrincipal } from './principalLocals.js';
 import { assertCsrfWhenRequired } from './session/csrfToken.js';
 import { portalSessionOf } from './session/portalSessionMiddleware.js';
 
@@ -77,8 +79,10 @@ export function requestPrincipal(resolveLtik: (ltik: string) => Promise<Resolved
       throw authError('hvl:ltik-invalid');
     const ltik = bearer ?? queryLtik;
     if (ltik !== undefined) {
-      const { principal } = await resolveLtik(ltik);
+      const { principal, facts } = await resolveLtik(ltik);
       setPrincipal(res, principal);
+      // PRIVACY: the `sub` stays beside the principal, for this request only; AGS needs it (D-104).
+      if (typeof facts.subject === 'string') setLtiSubject(res, facts.subject);
       res.locals[URL_TOKEN] = { name: 'ltik', value: ltik } satisfies UrlToken;
       return next();
     }
@@ -87,12 +91,15 @@ export function requestPrincipal(resolveLtik: (ltik: string) => Promise<Resolved
     if (active) {
       // SECURITY: the cookie is sent by the browser on its own, so the request must prove it came from our page.
       assertCsrfWhenRequired(req, active.session);
-      const { userId, learnerKey, roles, locale, hvlMember, studentAuthor, csrfToken } = active.session;
+      const { userId, learnerKey, learnerKeyYear, roles, locale, hvlMember, studentAuthor, csrfToken } =
+        active.session;
       setPrincipal(
         res,
         sealPrincipal({
           userId,
           learnerKey,
+          // PRIVACY: the session's key was made at login, so rows it writes carry that year, not today's (D-107).
+          learnerKeyYear,
           roles,
           locale,
           hvlMember,

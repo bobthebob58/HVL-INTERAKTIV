@@ -5,14 +5,17 @@
  * Why: LTI-005 and PROD-005: after a Deep Linking launch the teacher picks own or co-authored activities, and the
  *      tool returns a signed `LtiDeepLinkingResponse` to `deep_link_return_url`. ltijs signs it with the platform's
  *      key (`createDeepLinkingMessage`); this module decides what may be signed (D-061).
- * Spec: LTI-005, PROD-005, LTI-003, LTI-004, PROD-012
+ * Spec: LTI-005, PROD-005, LTI-003, LTI-004, PROD-012, LTI-013
  * Invariants:
  *   - Both routes need the ltik of a Deep Linking launch by an author; any other ltik is 403
  *     `hvl:deep-link-not-allowed`. The page takes it from the query (D-058), the API only as a Bearer token.
  *   - Only own or co-authored published activities are signed (404 for anything else, 409 for a draft).
  *   - The return URL must be absolute http(s); the page's CSP lets forms go only to it and to us.
  *   - Responses are `no-store` with `Referrer-Policy: no-referrer`, framed only by `CANVAS_ORIGINS`.
- * Collaborators: ./deepLinkActivities.ts, ./deepLinkItems.ts, ../pages/deepLinkPickerPage.ts,
+ *   - Graded items say their points are formative as `AGS_LABEL_MODE` chooses (D-105, `suffix` unless the app
+ *     passes another mode); in `preserve` mode the description is in the launch's language.
+ *   - On a graded placement the picker says which activities can never send Canvas a score (D-115).
+ * Collaborators: ./deepLinkActivities.ts, ./deepLinkItems.ts, ./formativeLabel.ts, ../pages/deepLinkPickerPage.ts,
  *   ../ltikPrincipal.ts, ../http/ltiPageHeaders.ts, ../ltiRoutes.ts.
  * Tests: apps/server/test/lti/deepLinking/deepLinking.int.test.ts
  */
@@ -28,6 +31,7 @@ import { LTI_DEEP_LINK_PATH } from '../launch/onDeepLinking.js';
 import type { ResolvedLtik } from '../ltikPrincipal.js';
 import { DEEP_LINK_RESPONSE_PATH, deepLinkPickerPage } from '../pages/deepLinkPickerPage.js';
 import { helpLinkFor } from '../../http/pages/helpLink.js';
+import { t, type Locale } from '../../i18n/translate.js';
 import { chosenActivities, listPickerActivities, PICKER_LIMIT } from './deepLinkActivities.js';
 import {
   buildDeepLinkItems,
@@ -37,6 +41,7 @@ import {
   type DeepLinkPlacement,
   type DeepLinkSettings,
 } from './deepLinkItems.js';
+import { DEFAULT_AGS_LABEL_MODE, type AgsLabelMode, type LineItemLabelling } from './formativeLabel.js';
 
 const DEEP_LINKING_SETTINGS_CLAIM = 'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings';
 const DEEP_LINKING_REQUEST = 'LtiDeepLinkingRequest';
@@ -49,6 +54,8 @@ export interface DeepLinkRouteDeps {
   readonly canvasOrigins: readonly string[];
   /** `PUBLIC_BASE_URL`, for the launch URL of each item. */
   readonly publicBaseUrl: string;
+  /** `AGS_LABEL_MODE` (D-105); `suffix` when left out. */
+  readonly labelMode?: AgsLabelMode;
 }
 
 /** The Deep Linking request a resolved ltik continues. */
@@ -88,6 +95,12 @@ async function formativeNoticeVersion(db: Database, userId: string): Promise<num
   return dismissal && dismissal.noticeVersion >= current ? undefined : current;
 }
 
+/** How graded items are labelled formative in this mode and language (D-105). */
+const labellingFor = (mode: AgsLabelMode, locale: Locale): LineItemLabelling =>
+  mode === 'preserve'
+    ? { mode, description: t('deepLinkGrading.formativeDescription', {}, locale) }
+    : { mode };
+
 const bearerOf = (req: Request): string | undefined =>
   /^Bearer ([\w.~+/=-]+)$/i.exec(req.headers.authorization ?? '')?.[1];
 
@@ -112,7 +125,8 @@ export function deepLinkRoutes(deps: DeepLinkRouteDeps): Router {
     const resolved = await deps.resolveLtik(ltik);
     setLtiPageLocale(res, resolved.principal.locale);
     const request = deepLinkRequestOf(resolved);
-    const activities = await listPickerActivities(deps.db, resolved.principal.userId);
+    const graded = request.placement === 'assignment_selection';
+    const activities = await listPickerActivities(deps.db, resolved.principal.userId, { graded });
     const noticeVersion = await formativeNoticeVersion(deps.db, resolved.principal.userId);
     // SECURITY: the page's forms may go only to us and to the platform's return URL (D-061).
     const formAction = `form-action 'self' ${new URL(request.returnUrl).origin}`;
@@ -122,7 +136,7 @@ export function deepLinkRoutes(deps: DeepLinkRouteDeps): Router {
         locale: resolved.principal.locale,
         activities,
         multiple: request.settings.accept_multiple === true,
-        graded: request.placement === 'assignment_selection',
+        graded,
         help: helpLinkFor(res, 'canvas'),
         ...(noticeVersion === undefined ? {} : { noticeVersion }),
       }),
@@ -144,6 +158,7 @@ export function deepLinkRoutes(deps: DeepLinkRouteDeps): Router {
         placement: request.placement,
         publicBaseUrl: deps.publicBaseUrl,
         settings: request.settings,
+        labelling: labellingFor(deps.labelMode ?? DEFAULT_AGS_LABEL_MODE, resolved.principal.locale),
       });
     } catch (error) {
       if (error instanceof DeepLinkItemsError) throw authError('hvl:deep-link-choice-invalid');

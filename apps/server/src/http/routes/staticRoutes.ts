@@ -5,8 +5,10 @@
  * Why: the player and editor load these through <script> and <link> tags (also inside cookie-less LMS iframes
  *      in S3), so they cannot require a signed-in person. They are the same for everyone and contain no user data.
  *      The fetched core folder also holds PHP sources and documents that must never be served. The theme
- *      (UD-011) lives in workspace packages, so it is served by exact name from an allowlist, never by path.
- * Spec: H5P-004, SEC-004, UD-011
+ *      (UD-011) and the xAPI bridge's scripts (LTI-010) live in workspace packages, so they are served by exact name
+ *      from an allowlist, never by path. The bridge's file holds no token or configuration: the player page gives
+ *      those to a learner only (D-102), so serving the file to anyone reveals nothing.
+ * Spec: H5P-004, SEC-004, UD-011, LTI-010
  * Invariants:
  *   - Only asset extensions are served (scripts, styles, fonts, images, JSON); everything else is 404.
  *   - `/boot/<name>` and `/theme/<name>` serve only the names in their allowlists; any other name is 404.
@@ -22,7 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { pipeline } from 'node:stream/promises';
 import express, { Router, type NextFunction, type Request, type Response } from 'express';
 import { HttpError } from '../HttpError.js';
-import { HVL_THEME_FILES, THEME_PATH, type ThemeFile } from '../../h5p/h5pAssets.js';
+import { SERVED_THEME_FILES, THEME_PATH, type ThemeFile } from '../../h5p/h5pAssets.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
 import { pathParam, wildcardParam } from '../routeParams.js';
 
@@ -59,8 +61,10 @@ const BOOT_SCRIPTS: ReadonlyMap<string, string> = new Map(
   ].map((name) => [name, fileURLToPath(new URL(name, CLIENT_DIR))]),
 );
 const YEAR_SECONDS = 365 * 24 * 60 * 60;
-/** HVL's theme files under `/theme/`, by served name; nothing else is served there. */
-const THEME_FILES: ReadonlyMap<string, ThemeFile> = new Map(HVL_THEME_FILES.map((file) => [file.name, file]));
+/** HVL's theme files and the xAPI bridge's scripts under `/theme/`, by served name; nothing else is served there. */
+const THEME_FILES: ReadonlyMap<string, ThemeFile> = new Map(
+  SERVED_THEME_FILES.map((file) => [file.name, file]),
+);
 
 const assetsOnly = (req: Request, _res: Response, next: NextFunction): void => {
   if (!STATIC_ASSET_EXTENSIONS.has(extname(req.path).toLowerCase()))

@@ -15,8 +15,8 @@
  *   F7  score {min 0, raw, max, scaled = raw/max rounded to 4 decimals, absent when max is 0}; duration
  *       `PT<seconds>S`.
  *   F8  a choice response is the option indices joined by `[,]`; fill-in joins the gaps by `[,]` and keeps empty ones.
- *   F11 H5PIntegration has no reportingIsEnabled, and ajax.contentUserData carries `contentVersion`. D-115 (Q18)
- *       turns reportingIsEnabled on in step 3; that change updates this check and the InteractiveBook test.
+ *   F11 H5PIntegration.reportingIsEnabled is true on the learner's page (step 3 sets it with the bridge, for
+ *       learners only: D-115, Q18), and ajax.contentUserData carries `contentVersion`.
  * Spec: H5P-009
  * Invariants:
  *   - `findingViolations` returns one line per broken expectation, each starting with its finding label.
@@ -127,7 +127,8 @@ export function findingViolations(play: XapiPlay): string[] {
         `F1 ${view} H5P embeds differently (isFramed ${f.isFramed}, externalEmbed ${String(f.externalEmbed)}, ` +
           `${f.h5pIframes} H5P iframes), so its iframe relay may send statements twice`,
       );
-    if (f.reportingIsEnabled !== undefined) out.push(`F11 ${view} H5PIntegration.reportingIsEnabled is set`);
+    if (f.reportingIsEnabled !== true)
+      out.push(`F11 ${view} H5PIntegration.reportingIsEnabled is not on for the learner (D-115, Q18)`);
     if (!/[?&]contentVersion=\d+/.test(f.contentUserDataUrl))
       out.push(`F11 ${view} ajax.contentUserData carries no contentVersion: ${f.contentUserDataUrl}`);
   });

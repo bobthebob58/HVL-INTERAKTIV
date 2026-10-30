@@ -1543,7 +1543,7 @@ students through the hand-off index (<code>docs/handoff/README.md</code>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-009">02 Feide, LTI and grades, LTI-009</a> · Canvas LTI and grades</p></div>
 </details>
-<details class="req" id="x-LTI-010" data-area="LTI" data-priority="MUST" data-session="S6" data-status="in code" data-text="lti-010 capture xapi in the player the injected client script (`packages/hvl-h5p-theme/src/xapibridge.ts`, `h5p-009`) subscribes with
+<details class="req" id="x-LTI-010" data-area="LTI" data-priority="MUST" data-session="S6" data-status="tested" data-text="lti-010 capture xapi in the player the injected client script (`packages/hvl-h5p-theme/src/xapibridge.ts`, `h5p-009`) subscribes with
 `h5p.externaldispatcher.on('xapi', …)`. it posts each statement to `/api/h5p/xapi`, batched every
 2 s and flushed on `pagehide`, with the ltik or csrf token. failed posts are retried from an
 in-memory queue. they never block or slow down the activity.
@@ -1558,8 +1558,22 @@ in-memory queue. they never block or slow down the activity.
   boundaries). credentials: in canvas the ltik as `authorization: bearer` from the page's memory, in the portal the
   session cookie with the `x-csrf-token` header; never an ltik in the query. on `pagehide` it flushes with `fetch`
   and `keepalive: true` (not `sendbeacon`, which cannot carry those headers); nothing goes to browser storage. it adds
-  no ✓/✗ text (`ud-003` as amended).">
-<summary><span class="req-id">LTI-010</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Capture xAPI in the player</span> <span class="status" data-status="in code">◐ In code</span></summary>
+  no ✓/✗ text (`ud-003` as amended).
+- **amended (d-115, 2026-10-30, probe p1):** `spec-deviation` from &quot;it posts each statement&quot;: the bridge sends only
+  what the server stores (`lti-011` as amended): the page load's first root `attempted`, every `answered` and a root
+  `completed`; never `interacted`, `progressed`, or a sub-content `attempted` or `completed`. each statement is cut
+  down to the fields the server reads, with no `actor`, question text, choices or feedback, and answers capped as
+  `data-012` (as amended) stores them. each carries a `statementid` (`crypto.randomuuid()`, one per dispatched event)
+  and an `attemptid` `&lt;viewid&gt;:&lt;n&gt;`: `viewid` is made once per page load, and `n` starts at 1 and goes up by one right
+  after a root result with `score.max` above 0, so a retry, which h5p does not announce, is a new attempt at its next
+  result. a batch names its content and the version the page was rendered with, and holds at most 50 items and
+  60 000 bytes of json, one request in flight; after a network error, a 5xx or a 429 it goes back to the head of the
+  queue, after any other 4xx it is dropped. on `pagehide` everything not yet acknowledged, the request in flight
+  included, goes in one `keepalive` request within the same limits, oldest first. the bridge is the last script in
+  the player's global assets, never the editor's. it registers in a document that is not one of core's iframes and
+  ignores an event that h5p marks as relayed, so each statement is queued once also if h5p's iframe embedding is
+  used.">
+<summary><span class="req-id">LTI-010</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Capture xAPI in the player</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The injected client script (<code>packages/hvl-h5p-theme/src/xapiBridge.ts</code>, <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>) subscribes with
 <code>H5P.externalDispatcher.on(&#39;xAPI&#39;, …)</code>. It POSTs each statement to <code>/api/h5p/xapi</code>, batched every
 2 s and flushed on <code>pagehide</code>, with the ltik or CSRF token. Failed posts are retried from an
@@ -1577,6 +1591,20 @@ boundaries). Credentials: in Canvas the ltik as <code>Authorization: Bearer</cod
 session cookie with the <code>X-CSRF-Token</code> header; never an ltik in the query. On <code>pagehide</code> it flushes with <code>fetch</code>
 and <code>keepalive: true</code> (not <code>sendBeacon</code>, which cannot carry those headers); nothing goes to browser storage. It adds
 no ✓/✗ text (<a class="req-ref" href="#r-UD-003"><code>UD-003</code></a> as amended).</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> <code>SPEC-DEVIATION</code> from &quot;It POSTs each statement&quot;: the bridge sends only
+what the server stores (<a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> as amended): the page load&#39;s first root <code>attempted</code>, every <code>answered</code> and a root
+<code>completed</code>; never <code>interacted</code>, <code>progressed</code>, or a sub-content <code>attempted</code> or <code>completed</code>. Each statement is cut
+down to the fields the server reads, with no <code>actor</code>, question text, choices or feedback, and answers capped as
+<a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a> (as amended) stores them. Each carries a <code>statementId</code> (<code>crypto.randomUUID()</code>, one per dispatched event)
+and an <code>attemptId</code> <code>&lt;viewId&gt;:&lt;n&gt;</code>: <code>viewId</code> is made once per page load, and <code>n</code> starts at 1 and goes up by one right
+after a root result with <code>score.max</code> above 0, so a retry, which H5P does not announce, is a new attempt at its next
+result. A batch names its content and the version the page was rendered with, and holds at most 50 items and
+60 000 bytes of JSON, one request in flight; after a network error, a 5xx or a 429 it goes back to the head of the
+queue, after any other 4xx it is dropped. On <code>pagehide</code> everything not yet acknowledged, the request in flight
+included, goes in one <code>keepalive</code> request within the same limits, oldest first. The bridge is the last script in
+the player&#39;s global assets, never the editor&#39;s. It registers in a document that is not one of Core&#39;s iframes and
+ignores an event that H5P marks as relayed, so each statement is queued once also if H5P&#39;s iframe embedding is
+used.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-010">02 Feide, LTI and grades, LTI-010</a> · Canvas LTI and grades</p></div>
 </details>
@@ -1589,7 +1617,26 @@ fields defined in `data-012` and drops the rest of the statement (including `act
 - **amended (d-102, d-103, 2026-10-30):** statements are stored only from a learner principal; anyone else's request
   stores nothing. in canvas the content must also be the launched activity. the stored `contextid` is the
   platform-scoped `&lt;platformid&gt;:&lt;contextid&gt;` (d-103, null for a portal play), and the stored `timestamp` is when the
-  server received the batch, not what the browser claims.">
+  server received the batch, not what the browser claims.
+- **amended (d-115, 2026-10-30, probe p1):** `spec-deviation` from &quot;then it stores the minimal fields&quot;: all five verbs
+  are still accepted, but not every accepted statement is stored. stored: a root `attempted`; an `answered` of the
+  root or of sub-content; a root `completed` that is not a replay. accepted and not stored: `interacted`,
+  `progressed`, a sub-content `attempted` or `completed`, a sub-content statement without a `subcontentid`, and a
+  replay: a root `completed` after no stored `answered` since its page load's previous root result (or since the
+  load), whose raw score and maximum equal the learner's latest stored root result for the same content, context and
+  version (coursepresentation re-sends its result on resume; branchingscenario is exempt). a statement is root when
+  `object.id` is the content id with no `?subcontentid=`, it has no `h5p-subcontentid` extension and no
+  `contextactivities.parent` (`lti-012` as amended). each item is checked on its own: an invalid one, including one
+  about another activity or whose `scaled` differs from `raw / max` by more than 0.0001, is discarded and counted in
+  the log without its content, so it never blocks its batch. a whole batch is refused only for an activity the
+  principal may not view (403; in canvas, any but the launched one), over 50 items (400) or over 64 kib (413). the
+  schema ignores `actor` (the learner comes only from the principal), and accepts a bare uuid as `object.id`, a missing
+  `context`, a numeric `response` (stored as text) and a score without `scaled` when its maximum is 0. the item's
+  `statementid` becomes the row's id and is inserted once, so a batch sent twice (the `pagehide` flush, a request
+  retried after a lost answer) stores nothing twice; the stored `timestamp` is the receive time plus the item's place
+  in the batch in milliseconds, which keeps the batch's order. a 429 carries `retry-after`, and nothing from that batch
+  is stored. the answer is 202, with no detail per item. not deviated: the five verbs, the score checks, the view
+  check and the rate limit.">
 <summary><span class="req-id">LTI-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Validate and store statements</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>/api/h5p/xapi</code> validates statements with a zod schema. It accepts only verbs it uses
 (<code>answered</code>, <code>completed</code>, <code>attempted</code>, <code>interacted</code>, <code>progressed</code>). It checks that the object belongs
@@ -1602,6 +1649,25 @@ fields defined in <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a
 stores nothing. In Canvas the content must also be the launched activity. The stored <code>contextId</code> is the
 platform-scoped <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (D-103, null for a portal play), and the stored <code>timestamp</code> is when the
 server received the batch, not what the browser claims.</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> <code>SPEC-DEVIATION</code> from &quot;Then it stores the minimal fields&quot;: all five verbs
+are still accepted, but not every accepted statement is stored. Stored: a root <code>attempted</code>; an <code>answered</code> of the
+root or of sub-content; a root <code>completed</code> that is not a replay. Accepted and not stored: <code>interacted</code>,
+<code>progressed</code>, a sub-content <code>attempted</code> or <code>completed</code>, a sub-content statement without a <code>subContentId</code>, and a
+replay: a root <code>completed</code> after no stored <code>answered</code> since its page load&#39;s previous root result (or since the
+load), whose raw score and maximum equal the learner&#39;s latest stored root result for the same content, context and
+version (CoursePresentation re-sends its result on resume; BranchingScenario is exempt). A statement is root when
+<code>object.id</code> is the content ID with no <code>?subContentId=</code>, it has no <code>h5p-subContentId</code> extension and no
+<code>contextActivities.parent</code> (<a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a> as amended). Each item is checked on its own: an invalid one, including one
+about another activity or whose <code>scaled</code> differs from <code>raw / max</code> by more than 0.0001, is discarded and counted in
+the log without its content, so it never blocks its batch. A whole batch is refused only for an activity the
+principal may not view (403; in Canvas, any but the launched one), over 50 items (400) or over 64 KiB (413). The
+schema ignores <code>actor</code> (the learner comes only from the principal), and accepts a bare UUID as <code>object.id</code>, a missing
+<code>context</code>, a numeric <code>response</code> (stored as text) and a score without <code>scaled</code> when its maximum is 0. The item&#39;s
+<code>statementId</code> becomes the row&#39;s ID and is inserted once, so a batch sent twice (the <code>pagehide</code> flush, a request
+retried after a lost answer) stores nothing twice; the stored <code>timestamp</code> is the receive time plus the item&#39;s place
+in the batch in milliseconds, which keeps the batch&#39;s order. A 429 carries <code>Retry-After</code>, and nothing from that batch
+is stored. The answer is 202, with no detail per item. Not deviated: the five verbs, the score checks, the View
+check and the rate limit.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-011">02 Feide, LTI and grades, LTI-011</a> · Canvas LTI and grades</p></div>
 </details>
@@ -1640,7 +1706,24 @@ a new client-credentials token itself, or is marked failed for the author to ret
   a new token once; any other 4xx fails at once. the encrypted `sub` is removed 30 days after the job stops, whatever
   its outcome. authors see sent, pending, failed and orphaned counts per placement on the activity page and in
   `/app/play` and retry failed jobs there. not deviated: the score body, the policies, the retry limit, idempotency,
-  `orphaned` and the developer key's scopes.">
+  `orphaned` and the developer key's scopes.
+- **amended (d-115, 2026-10-30, probe p1):** `spec-deviation` from the root as &quot;no `subcontentid`&quot;: no single test
+  finds the root (that one takes dragtext's context-less `interacted` inside a questionset, and every child of content
+  saved without `subcontentid`s; h5p's own, no `contextactivities.parent`, takes interactivebook's chapter
+  `completed`). a statement is **root** when `object.id` is the content id with no `?subcontentid=`, it has no
+  `h5p-subcontentid` extension and no `contextactivities.parent`. a grade job is written only for a **gradable root
+  result**: a root `answered` or `completed` whose `category[0].id` names the activity's main library
+  (`http://h5p.org/libraries/&lt;machinename&gt;-&lt;major&gt;.&lt;minor&gt;`), with `score.max` above 0, and not a replay (`lti-011` as
+  amended). `scoregiven` is `scaled × 100`, never `success`. an attempt holds at most one result (`lti-010` as
+  amended), so each job is one attempt; `latest`, and `mastery` below its threshold, send the score of the job whose
+  result was stored last, by `gradesyncjob.resultat` (that result's stored `timestamp`), then by the attempt number `n`
+  of `&lt;viewid&gt;:&lt;n&gt;`. which result each type sends is d-115's table: multichoice, blanks and dragtext an `answered` at
+  every «sjekk»; questionset, column, coursepresentation and branchingscenario a root `completed`; interactivebook at
+  «send inn rapport», which the player page offers a learner by setting h5p's `reportingisenabled` (q18);
+  interactivevideo only with a submit screen its author added; branchingscenario nothing gradable when its scoring is
+  `no-score`; imagehotspots no statement at all. an activity that sends no score never gets a job, and the deep
+  linking picker says so for `assignment_selection`. not deviated: the two verbs, `result.score`, the policies and
+  their table.">
 <summary><span class="req-id">LTI-012</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Publish scores to the Canvas gradebook (AGS)</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>When a statement concerns the <strong>root</strong> content (no <code>subContentId</code>), has the verb <code>completed</code> or
 <code>answered</code>, and carries <code>result.score</code>, the server applies the activity&#39;s attempt policy:</p>
@@ -1680,10 +1763,27 @@ a new token once; any other 4xx fails at once. The encrypted <code>sub</code> is
 its outcome. Authors see sent, pending, failed and orphaned counts per placement on the activity page and in
 <code>/app/play</code> and retry failed jobs there. Not deviated: the score body, the policies, the retry limit, idempotency,
 <code>orphaned</code> and the developer key&#39;s scopes.</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> <code>SPEC-DEVIATION</code> from the root as &quot;no <code>subContentId</code>&quot;: no single test
+finds the root (that one takes DragText&#39;s context-less <code>interacted</code> inside a QuestionSet, and every child of content
+saved without <code>subContentId</code>s; H5P&#39;s own, no <code>contextActivities.parent</code>, takes InteractiveBook&#39;s chapter
+<code>completed</code>). A statement is <strong>root</strong> when <code>object.id</code> is the content ID with no <code>?subContentId=</code>, it has no
+<code>h5p-subContentId</code> extension and no <code>contextActivities.parent</code>. A grade job is written only for a <strong>gradable root
+result</strong>: a root <code>answered</code> or <code>completed</code> whose <code>category[0].id</code> names the activity&#39;s main library
+(<code>http://h5p.org/libraries/&lt;machineName&gt;-&lt;major&gt;.&lt;minor&gt;</code>), with <code>score.max</code> above 0, and not a replay (<a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> as
+amended). <code>scoreGiven</code> is <code>scaled × 100</code>, never <code>success</code>. An attempt holds at most one result (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> as
+amended), so each job is one attempt; <code>latest</code>, and <code>mastery</code> below its threshold, send the score of the job whose
+result was stored last, by <code>GradeSyncJob.resultAt</code> (that result&#39;s stored <code>timestamp</code>), then by the attempt number <code>n</code>
+of <code>&lt;viewId&gt;:&lt;n&gt;</code>. Which result each type sends is D-115&#39;s table: MultiChoice, Blanks and DragText an <code>answered</code> at
+every «Sjekk»; QuestionSet, Column, CoursePresentation and BranchingScenario a root <code>completed</code>; InteractiveBook at
+«Send inn rapport», which the player page offers a learner by setting H5P&#39;s <code>reportingIsEnabled</code> (Q18);
+InteractiveVideo only with a submit screen its author added; BranchingScenario nothing gradable when its scoring is
+<code>no-score</code>; ImageHotspots no statement at all. An activity that sends no score never gets a job, and the Deep
+Linking picker says so for <code>assignment_selection</code>. Not deviated: the two verbs, <code>result.score</code>, the policies and
+their table.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-012">02 Feide, LTI and grades, LTI-012</a> · Canvas LTI and grades</p></div>
 </details>
-<details class="req" id="x-LTI-013" data-area="LTI" data-priority="MUST" data-session="S6" data-status="in code" data-text="lti-013 score integrity is honest h5p computes scores in the browser, so a determined student can forge them. the system therefore
+<details class="req" id="x-LTI-013" data-area="LTI" data-priority="MUST" data-session="S6" data-status="tested" data-text="lti-013 score integrity is honest h5p computes scores in the browser, so a determined student can forge them. the system therefore
 (a) labels ags scores as formative in the line-item `label` suffix &quot;(formativ)&quot;, (b) shows the
 formative notice (`prod-011`), and (c) never presents these scores as exam evidence. server checks in
 `lti-011` reduce accidental and casual manipulation. they are not claimed to prevent deliberate
@@ -1699,7 +1799,7 @@ decision for hvl and alu *(verify)*.
   not the code, and a change affects new placements only. the insight views, the `ins-009` csv and the grade-sync
   status also say that the scores are formative, computed in the browser and not exam evidence. the unit test checks
   the label in both modes.">
-<summary><span class="req-id">LTI-013</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Score integrity is honest</span> <span class="status" data-status="in code">◐ In code</span></summary>
+<summary><span class="req-id">LTI-013</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Score integrity is honest</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>H5P computes scores in the browser, so a determined student can forge them. The system therefore
 (a) labels AGS scores as formative in the line-item <code>label</code> suffix &quot;(formativ)&quot;, (b) shows the
 formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>), and (c) never presents these scores as exam evidence. Server checks in
@@ -2326,18 +2426,38 @@ output enabled. It has document language, a title, a heading outline and real te
 </ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-004">04 Læringsdesign studio, MAPPE-004</a> · Pedagogisk mappe</p></div>
 </details>
-<details class="req" id="x-INS-001" data-area="INS" data-priority="MUST" data-session="S6" data-status="in code" data-text="ins-001 participation overview shows: learners who **started**, learners who **completed**, completion rate (denominator from nrps
+<details class="req" id="x-INS-001" data-area="INS" data-priority="MUST" data-session="S6" data-status="tested" data-text="ins-001 participation overview shows: learners who **started**, learners who **completed**, completion rate (denominator from nrps
 when available, `lti-008`, otherwise &quot;of those who started&quot;), median time on task, and median
 number of attempts.
 - **acceptance:** numbers match a hand-calculated fixture of 30 synthetic learners.
-- **verify:** unit tests of the aggregation queries.">
-<summary><span class="req-id">INS-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Participation overview</span> <span class="status" data-status="in code">◐ In code</span></summary>
+- **verify:** unit tests of the aggregation queries.
+- **amended (d-115, 2026-10-30, probe p1):** what each number reads, since h5p marks no attempts. a learner has
+  **started** with any stored statement for the activity (interactivebook without a cover counts at load, column from
+  its first answer; no statement is made up). **completed** is a stored root result (`lti-012` as amended), and
+  **attempts** are the stored root results. **time on task** comes from the stored timestamps of each page load, from
+  its first to its last stored statement, never from `durationms`. where a type cannot send a root result, completed,
+  the completion rate and attempts are shown as not available, never as 0; imagehotspots sends no statement at all,
+  and its tab says that it sends no learning data. residuals, named in the dpia input and the students' checklist:
+  attempts count each column re-check and each coursepresentation summary slide reached after new answers; a learner
+  who opens a column and never checks is not counted as started; and reading before the first stored statement and
+  time after the last are not counted.">
+<summary><span class="req-id">INS-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Participation overview</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Shows: learners who <strong>started</strong>, learners who <strong>completed</strong>, completion rate (denominator from NRPS
 when available, <a class="req-ref" href="#r-LTI-008"><code>LTI-008</code></a>, otherwise &quot;of those who started&quot;), median time on task, and median
 number of attempts.</p>
 <ul>
 <li><strong>Acceptance:</strong> Numbers match a hand-calculated fixture of 30 synthetic learners.</li>
 <li><strong>Verify:</strong> Unit tests of the aggregation queries.</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> what each number reads, since H5P marks no attempts. A learner has
+<strong>started</strong> with any stored statement for the activity (InteractiveBook without a cover counts at load, Column from
+its first answer; no statement is made up). <strong>Completed</strong> is a stored root result (<a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a> as amended), and
+<strong>attempts</strong> are the stored root results. <strong>Time on task</strong> comes from the stored timestamps of each page load, from
+its first to its last stored statement, never from <code>durationMs</code>. Where a type cannot send a root result, completed,
+the completion rate and attempts are shown as not available, never as 0; ImageHotspots sends no statement at all,
+and its tab says that it sends no learning data. Residuals, named in the DPIA input and the students&#39; checklist:
+attempts count each Column re-check and each CoursePresentation summary slide reached after new answers; a learner
+who opens a Column and never checks is not counted as started; and reading before the first stored statement and
+time after the last are not counted.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-INS-001">05 Insight and privacy, INS-001</a> · Teacher insight</p></div>
 </details>
@@ -2375,22 +2495,42 @@ shortlist that can be printed or projected.</p>
 </details>
 <details class="req" id="x-INS-004" data-area="INS" data-priority="SHOULD" data-session="S6" data-status="planned" data-text="ins-004 branching paths for branchingscenario, the view shows the distribution of choices at each decision node and how
 many learners used a retry path.
-- **verify:** unit tests.">
+- **verify:** unit tests.
+- **amended (d-115, 2026-10-30, probe p1):** not built in s6. branchingscenario's choices are in no statement h5p
+  dispatches (its choice `interacted` carries no response), only in its `getxapidata()` and saved state, and the last
+  choice before an end screen sends nothing at all. building it needs statements that the bridge makes itself, a
+  `spec-deviation` from `lti-010` and `lti-011` that needs its own decision, after a probe shows that retried choices
+  are kept. it passes to hvl's bachelor students through the hand-off index (d-101).">
 <summary><span class="req-id">INS-004</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Branching paths</span> <span class="status" data-status="planned">○ Planned</span></summary>
 <div class="req-body"><p>For BranchingScenario, the view shows the distribution of choices at each decision node and how
 many learners used a retry path.</p>
 <ul>
 <li><strong>Verify:</strong> Unit tests.</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> not built in S6. BranchingScenario&#39;s choices are in no statement H5P
+dispatches (its choice <code>interacted</code> carries no response), only in its <code>getXAPIData()</code> and saved state, and the last
+choice before an end screen sends nothing at all. Building it needs statements that the bridge makes itself, a
+<code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> and <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> that needs its own decision, after a probe shows that retried choices
+are kept. It passes to HVL&#39;s bachelor students through the hand-off index (D-101).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-INS-004">05 Insight and privacy, INS-004</a> · Teacher insight</p></div>
 </details>
 <details class="req" id="x-INS-005" data-area="INS" data-priority="COULD" data-session="S6" data-status="planned" data-text="ins-005 video engagement for interactivevideo, it shows the share of learners who answered each embedded interaction. this
 serves as a proxy for how far they watched. the spike in session 6 decides whether h5p's
-`progressed` statements are reliable enough for a drop-off curve.">
+`progressed` statements are reliable enough for a drop-off curve.
+- **amended (d-115, 2026-10-30, probe p1):** the spike's answer: interactivevideo sends no `progressed` statement at
+  all, so there is no drop-off curve, and the bridge sends no `progressed` from any type (`lti-010` as amended). the
+  measure is the share of learners who answered each interaction, read from the stored `answered` statements by
+  `subcontentid`, with `ins-006`'s suppression.">
 <summary><span class="req-id">INS-005</span> <span class="badge pri pri-could" title="RFC 2119 COULD">Could</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Video engagement</span> <span class="status" data-status="planned">○ Planned</span></summary>
 <div class="req-body"><p>For InteractiveVideo, it shows the share of learners who answered each embedded interaction. This
 serves as a proxy for how far they watched. The spike in Session 6 decides whether H5P&#39;s
 <code>progressed</code> statements are reliable enough for a drop-off curve.</p>
+<ul>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> the spike&#39;s answer: InteractiveVideo sends no <code>progressed</code> statement at
+all, so there is no drop-off curve, and the bridge sends no <code>progressed</code> from any type (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> as amended). The
+measure is the share of learners who answered each interaction, read from the stored <code>answered</code> statements by
+<code>subContentId</code>, with <a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>&#39;s suppression.</li>
+</ul>
 <p class="req-source">Defined in <a href="#r-INS-005">05 Insight and privacy, INS-005</a> · Teacher insight</p></div>
 </details>
 <details class="req" id="x-INS-006" data-area="INS" data-priority="MUST" data-session="S6" data-status="tested" data-text="ins-006 minimum group size and no individual view any cell, bar or list item that represents fewer than **k = 5** distinct learners is shown as
@@ -2665,7 +2805,18 @@ else is dropped, including actor names, mailboxes and extensions.
   list above, set when the row is written. it holds no statement data, only the academic year of the secret behind
   the row's `learnerkey`, which the key cannot reveal and a timestamp can misstate (a portal session made before
   1 august can keep its `learnerkey` for up to 12 hours after it, d-057); the annual purge (`data-003` as amended)
-  deletes by it. `h5puserdata` and `gradesyncjob` store it too (§4).">
+  deletes by it. `h5puserdata` and `gradesyncjob` store it too (§4).
+- **amended (d-115, 2026-10-30, probe p1):** the field list is unchanged; what fills it is made exact. which
+  statements become rows is `lti-011` as amended: a root `attempted`, an `answered` of the root or of sub-content with
+  a `subcontentid`, and a root `completed` that is not a replay. a row's id is the bridge's `statementid`, inserted once, so a batch sent twice stores nothing twice; a
+  content hash is never an identity, because identical statements are normal. `timestamp` is the receive time plus
+  the item's place in its batch in milliseconds, so the batch's order survives; the browser's clock is never read.
+  `attemptid` is `&lt;viewid&gt;:&lt;n&gt;` (`lti-010` as amended). `subcontentid` comes from the `h5p-subcontentid` extension,
+  else from `object.id`. `response` is kept only for the interaction types `choice` and `fill-in`: each gap (between
+  `[,]`) is cut to 100 characters, enough to group the answers *k* learners share, and a response still over 1 000
+  characters is not stored, since a shortened list would shift its gaps; a numeric response is stored as text.
+  `durationms` is parsed from `result.duration` (null when absent, unreadable or over 24 hours), and no insight reads
+  it, because h5p's durations mean different things by type.">
 <summary><span class="req-id">DATA-012</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Minimal xAPI storage</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>For each statement, store only: <code>contentId</code>, <code>subContentId?</code>, <code>contentVersion</code>, <code>contextId?</code>,
 <code>learnerKey</code>, <code>verb</code>, <code>scoreRaw?</code>, <code>scoreMax?</code>, <code>scaled?</code>, <code>success?</code>, <code>completion?</code>,
@@ -2681,6 +2832,17 @@ list above, set when the row is written. It holds no statement data, only the ac
 the row&#39;s <code>learnerKey</code>, which the key cannot reveal and a timestamp can misstate (a portal session made before
 1 August can keep its <code>learnerKey</code> for up to 12 hours after it, D-057); the annual purge (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> as amended)
 deletes by it. <code>H5PUserData</code> and <code>GradeSyncJob</code> store it too (§4).</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> the field list is unchanged; what fills it is made exact. Which
+statements become rows is <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> as amended: a root <code>attempted</code>, an <code>answered</code> of the root or of sub-content with
+a <code>subContentId</code>, and a root <code>completed</code> that is not a replay. A row&#39;s ID is the bridge&#39;s <code>statementId</code>, inserted once, so a batch sent twice stores nothing twice; a
+content hash is never an identity, because identical statements are normal. <code>timestamp</code> is the receive time plus
+the item&#39;s place in its batch in milliseconds, so the batch&#39;s order survives; the browser&#39;s clock is never read.
+<code>attemptId</code> is <code>&lt;viewId&gt;:&lt;n&gt;</code> (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> as amended). <code>subContentId</code> comes from the <code>h5p-subContentId</code> extension,
+else from <code>object.id</code>. <code>response</code> is kept only for the interaction types <code>choice</code> and <code>fill-in</code>: each gap (between
+<code>[,]</code>) is cut to 100 characters, enough to group the answers <em>k</em> learners share, and a response still over 1 000
+characters is not stored, since a shortened list would shift its gaps; a numeric response is stored as text.
+<code>durationMs</code> is parsed from <code>result.duration</code> (null when absent, unreadable or over 24 hours), and no insight reads
+it, because H5P&#39;s durations mean different things by type.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-012">05 Insight and privacy, DATA-012</a> · Data protection</p></div>
 </details>
@@ -3963,6 +4125,20 @@ boundaries). Credentials: in Canvas the ltik as <code>Authorization: Bearer</cod
 session cookie with the <code>X-CSRF-Token</code> header; never an ltik in the query. On <code>pagehide</code> it flushes with <code>fetch</code>
 and <code>keepalive: true</code> (not <code>sendBeacon</code>, which cannot carry those headers); nothing goes to browser storage. It adds
 no ✓/✗ text (<a class="req-ref" href="#r-UD-003"><code>UD-003</code></a> as amended).</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> <code>SPEC-DEVIATION</code> from &quot;It POSTs each statement&quot;: the bridge sends only
+what the server stores (<a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> as amended): the page load&#39;s first root <code>attempted</code>, every <code>answered</code> and a root
+<code>completed</code>; never <code>interacted</code>, <code>progressed</code>, or a sub-content <code>attempted</code> or <code>completed</code>. Each statement is cut
+down to the fields the server reads, with no <code>actor</code>, question text, choices or feedback, and answers capped as
+<a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a> (as amended) stores them. Each carries a <code>statementId</code> (<code>crypto.randomUUID()</code>, one per dispatched event)
+and an <code>attemptId</code> <code>&lt;viewId&gt;:&lt;n&gt;</code>: <code>viewId</code> is made once per page load, and <code>n</code> starts at 1 and goes up by one right
+after a root result with <code>score.max</code> above 0, so a retry, which H5P does not announce, is a new attempt at its next
+result. A batch names its content and the version the page was rendered with, and holds at most 50 items and
+60 000 bytes of JSON, one request in flight; after a network error, a 5xx or a 429 it goes back to the head of the
+queue, after any other 4xx it is dropped. On <code>pagehide</code> everything not yet acknowledged, the request in flight
+included, goes in one <code>keepalive</code> request within the same limits, oldest first. The bridge is the last script in
+the player&#39;s global assets, never the editor&#39;s. It registers in a document that is not one of Core&#39;s iframes and
+ignores an event that H5P marks as relayed, so each statement is queued once also if H5P&#39;s iframe embedding is
+used.</li>
 </ul>
 <h4 id="r-LTI-011" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-011">LTI-011</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Validate and store statements</span></h4>
 <p><code>/api/h5p/xapi</code> validates statements with a zod schema. It accepts only verbs it uses
@@ -3976,6 +4152,25 @@ fields defined in <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a
 stores nothing. In Canvas the content must also be the launched activity. The stored <code>contextId</code> is the
 platform-scoped <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (D-103, null for a portal play), and the stored <code>timestamp</code> is when the
 server received the batch, not what the browser claims.</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> <code>SPEC-DEVIATION</code> from &quot;Then it stores the minimal fields&quot;: all five verbs
+are still accepted, but not every accepted statement is stored. Stored: a root <code>attempted</code>; an <code>answered</code> of the
+root or of sub-content; a root <code>completed</code> that is not a replay. Accepted and not stored: <code>interacted</code>,
+<code>progressed</code>, a sub-content <code>attempted</code> or <code>completed</code>, a sub-content statement without a <code>subContentId</code>, and a
+replay: a root <code>completed</code> after no stored <code>answered</code> since its page load&#39;s previous root result (or since the
+load), whose raw score and maximum equal the learner&#39;s latest stored root result for the same content, context and
+version (CoursePresentation re-sends its result on resume; BranchingScenario is exempt). A statement is root when
+<code>object.id</code> is the content ID with no <code>?subContentId=</code>, it has no <code>h5p-subContentId</code> extension and no
+<code>contextActivities.parent</code> (<a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a> as amended). Each item is checked on its own: an invalid one, including one
+about another activity or whose <code>scaled</code> differs from <code>raw / max</code> by more than 0.0001, is discarded and counted in
+the log without its content, so it never blocks its batch. A whole batch is refused only for an activity the
+principal may not view (403; in Canvas, any but the launched one), over 50 items (400) or over 64 KiB (413). The
+schema ignores <code>actor</code> (the learner comes only from the principal), and accepts a bare UUID as <code>object.id</code>, a missing
+<code>context</code>, a numeric <code>response</code> (stored as text) and a score without <code>scaled</code> when its maximum is 0. The item&#39;s
+<code>statementId</code> becomes the row&#39;s ID and is inserted once, so a batch sent twice (the <code>pagehide</code> flush, a request
+retried after a lost answer) stores nothing twice; the stored <code>timestamp</code> is the receive time plus the item&#39;s place
+in the batch in milliseconds, which keeps the batch&#39;s order. A 429 carries <code>Retry-After</code>, and nothing from that batch
+is stored. The answer is 202, with no detail per item. Not deviated: the five verbs, the score checks, the View
+check and the rate limit.</li>
 </ul>
 <h4 id="r-LTI-012" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-012">LTI-012</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Publish scores to the Canvas gradebook (AGS)</span></h4>
 <p>When a statement concerns the <strong>root</strong> content (no <code>subContentId</code>), has the verb <code>completed</code> or
@@ -4016,6 +4211,23 @@ a new token once; any other 4xx fails at once. The encrypted <code>sub</code> is
 its outcome. Authors see sent, pending, failed and orphaned counts per placement on the activity page and in
 <code>/app/play</code> and retry failed jobs there. Not deviated: the score body, the policies, the retry limit, idempotency,
 <code>orphaned</code> and the developer key&#39;s scopes.</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> <code>SPEC-DEVIATION</code> from the root as &quot;no <code>subContentId</code>&quot;: no single test
+finds the root (that one takes DragText&#39;s context-less <code>interacted</code> inside a QuestionSet, and every child of content
+saved without <code>subContentId</code>s; H5P&#39;s own, no <code>contextActivities.parent</code>, takes InteractiveBook&#39;s chapter
+<code>completed</code>). A statement is <strong>root</strong> when <code>object.id</code> is the content ID with no <code>?subContentId=</code>, it has no
+<code>h5p-subContentId</code> extension and no <code>contextActivities.parent</code>. A grade job is written only for a <strong>gradable root
+result</strong>: a root <code>answered</code> or <code>completed</code> whose <code>category[0].id</code> names the activity&#39;s main library
+(<code>http://h5p.org/libraries/&lt;machineName&gt;-&lt;major&gt;.&lt;minor&gt;</code>), with <code>score.max</code> above 0, and not a replay (<a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> as
+amended). <code>scoreGiven</code> is <code>scaled × 100</code>, never <code>success</code>. An attempt holds at most one result (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> as
+amended), so each job is one attempt; <code>latest</code>, and <code>mastery</code> below its threshold, send the score of the job whose
+result was stored last, by <code>GradeSyncJob.resultAt</code> (that result&#39;s stored <code>timestamp</code>), then by the attempt number <code>n</code>
+of <code>&lt;viewId&gt;:&lt;n&gt;</code>. Which result each type sends is D-115&#39;s table: MultiChoice, Blanks and DragText an <code>answered</code> at
+every «Sjekk»; QuestionSet, Column, CoursePresentation and BranchingScenario a root <code>completed</code>; InteractiveBook at
+«Send inn rapport», which the player page offers a learner by setting H5P&#39;s <code>reportingIsEnabled</code> (Q18);
+InteractiveVideo only with a submit screen its author added; BranchingScenario nothing gradable when its scoring is
+<code>no-score</code>; ImageHotspots no statement at all. An activity that sends no score never gets a job, and the Deep
+Linking picker says so for <code>assignment_selection</code>. Not deviated: the two verbs, <code>result.score</code>, the policies and
+their table.</li>
 </ul>
 <h4 id="r-LTI-013" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-013">LTI-013</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Score integrity is honest</span></h4>
 <p>H5P computes scores in the browser, so a determined student can forge them. The system therefore
@@ -4051,7 +4263,7 @@ the label in both modes.</li>
 <tr>
 <td><code>LtiPlacement</code></td><td><code>platformId</code>, <code>contextId</code>, <code>resourceLinkId</code>, <code>contentId</code>, <code>lineItemUrl?</code>, <code>attemptPolicy</code>, <code>masteryThreshold?</code></td><td>No</td></tr>
 <tr>
-<td><code>GradeSyncJob</code></td><td><code>placementId</code>, <code>learnerKey</code>, <code>ltiSub (encrypted)</code>, <code>scoreGiven</code>, <code>status</code> (with <code>orphaned</code>), <code>attempts</code>, <code>lastError</code>, <code>idempotencyKey</code>; from S6 also <code>attemptId</code>, <code>nextAttemptAt</code>, <code>terminalAt</code> (D-104) and <code>academicYear</code> (D-107)</td><td><code>ltiSub</code> is needed for AGS; encrypted, deleted 30 days after success (amended, D-104: 30 days after <code>terminalAt</code>, whether the job succeeded, failed or was orphaned)</td></tr>
+<td><code>GradeSyncJob</code></td><td><code>placementId</code>, <code>learnerKey</code>, <code>ltiSub (encrypted)</code>, <code>scoreGiven</code>, <code>status</code> (with <code>orphaned</code>), <code>attempts</code>, <code>lastError</code>, <code>idempotencyKey</code>; from S6 also <code>attemptId</code>, <code>nextAttemptAt</code>, <code>terminalAt</code> (D-104), <code>resultAt</code> (when the job&#39;s result was stored; orders the attempts for <code>latest</code>, D-115) and <code>academicYear</code> (D-107)</td><td><code>ltiSub</code> is needed for AGS; encrypted, deleted 30 days after success (amended, D-104: 30 days after <code>terminalAt</code>, whether the job succeeded, failed or was orphaned)</td></tr>
 <tr>
 <td><code>AuthAuditEvent</code></td><td><code>at</code>, <code>actorUserId?</code>, <code>event</code>, <code>reason?</code> (a fixed code), <code>ipHash?</code>, <code>ipKeyId?</code> (the <code>IDENTITY_HASH_KEYS</code> key that made <code>ipHash</code>) (D-055, D-064)</td><td>Minimal</td></tr>
 <tr>
@@ -4708,6 +4920,16 @@ number of attempts.</p>
 <ul>
 <li><strong>Acceptance:</strong> Numbers match a hand-calculated fixture of 30 synthetic learners.</li>
 <li><strong>Verify:</strong> Unit tests of the aggregation queries.</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> what each number reads, since H5P marks no attempts. A learner has
+<strong>started</strong> with any stored statement for the activity (InteractiveBook without a cover counts at load, Column from
+its first answer; no statement is made up). <strong>Completed</strong> is a stored root result (<a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a> as amended), and
+<strong>attempts</strong> are the stored root results. <strong>Time on task</strong> comes from the stored timestamps of each page load, from
+its first to its last stored statement, never from <code>durationMs</code>. Where a type cannot send a root result, completed,
+the completion rate and attempts are shown as not available, never as 0; ImageHotspots sends no statement at all,
+and its tab says that it sends no learning data. Residuals, named in the DPIA input and the students&#39; checklist:
+attempts count each Column re-check and each CoursePresentation summary slide reached after new answers; a learner
+who opens a Column and never checks is not counted as started; and reading before the first stored statement and
+time after the last are not counted.</li>
 </ul>
 <h4 id="r-INS-002" class="req-heading" tabindex="-1"><a class="req-id" href="#r-INS-002">INS-002</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Item difficulty</span></h4>
 <p>For each question (sub-content) the view shows: % correct on the first attempt, % correct on the
@@ -4731,11 +4953,22 @@ shortlist that can be printed or projected.</p>
 many learners used a retry path.</p>
 <ul>
 <li><strong>Verify:</strong> Unit tests.</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> not built in S6. BranchingScenario&#39;s choices are in no statement H5P
+dispatches (its choice <code>interacted</code> carries no response), only in its <code>getXAPIData()</code> and saved state, and the last
+choice before an end screen sends nothing at all. Building it needs statements that the bridge makes itself, a
+<code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> and <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> that needs its own decision, after a probe shows that retried choices
+are kept. It passes to HVL&#39;s bachelor students through the hand-off index (D-101).</li>
 </ul>
 <h4 id="r-INS-005" class="req-heading" tabindex="-1"><a class="req-id" href="#r-INS-005">INS-005</a> <span class="badge pri pri-could" title="RFC 2119 COULD">Could</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Video engagement</span></h4>
 <p>For InteractiveVideo, it shows the share of learners who answered each embedded interaction. This
 serves as a proxy for how far they watched. The spike in Session 6 decides whether H5P&#39;s
 <code>progressed</code> statements are reliable enough for a drop-off curve.</p>
+<ul>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> the spike&#39;s answer: InteractiveVideo sends no <code>progressed</code> statement at
+all, so there is no drop-off curve, and the bridge sends no <code>progressed</code> from any type (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> as amended). The
+measure is the share of learners who answered each interaction, read from the stored <code>answered</code> statements by
+<code>subContentId</code>, with <a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>&#39;s suppression.</li>
+</ul>
 <h4 id="r-INS-006" class="req-heading" tabindex="-1"><a class="req-id" href="#r-INS-006">INS-006</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Minimum group size and no individual view</span></h4>
 <p>Any cell, bar or list item that represents fewer than <strong>k = 5</strong> distinct learners is shown as
 &quot;&lt; 5&quot; and its value is suppressed. <em>k</em> is configurable, with a minimum of 3. If suppression of one
@@ -4893,6 +5126,17 @@ list above, set when the row is written. It holds no statement data, only the ac
 the row&#39;s <code>learnerKey</code>, which the key cannot reveal and a timestamp can misstate (a portal session made before
 1 August can keep its <code>learnerKey</code> for up to 12 hours after it, D-057); the annual purge (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> as amended)
 deletes by it. <code>H5PUserData</code> and <code>GradeSyncJob</code> store it too (§4).</li>
+<li><strong>Amended (D-115, 2026-10-30, probe P1):</strong> the field list is unchanged; what fills it is made exact. Which
+statements become rows is <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> as amended: a root <code>attempted</code>, an <code>answered</code> of the root or of sub-content with
+a <code>subContentId</code>, and a root <code>completed</code> that is not a replay. A row&#39;s ID is the bridge&#39;s <code>statementId</code>, inserted once, so a batch sent twice stores nothing twice; a
+content hash is never an identity, because identical statements are normal. <code>timestamp</code> is the receive time plus
+the item&#39;s place in its batch in milliseconds, so the batch&#39;s order survives; the browser&#39;s clock is never read.
+<code>attemptId</code> is <code>&lt;viewId&gt;:&lt;n&gt;</code> (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> as amended). <code>subContentId</code> comes from the <code>h5p-subContentId</code> extension,
+else from <code>object.id</code>. <code>response</code> is kept only for the interaction types <code>choice</code> and <code>fill-in</code>: each gap (between
+<code>[,]</code>) is cut to 100 characters, enough to group the answers <em>k</em> learners share, and a response still over 1 000
+characters is not stored, since a shortened list would shift its gaps; a numeric response is stored as text.
+<code>durationMs</code> is parsed from <code>result.duration</code> (null when absent, unreadable or over 24 hours), and no insight reads
+it, because H5P&#39;s durations mean different things by type.</li>
 </ul>
 <hr>
 <h3 id="spec-05--3-what-teachers-can-and-cannot-see-summary-for-privacy-notices-and-evaluators" tabindex="-1">3. What teachers can and cannot see (summary for privacy notices and evaluators)</h3>
@@ -9215,6 +9459,23 @@ runs only from a page load&#39;s first to its last stored statement, so reading 
 and time after the last stored statement are not counted.</li>
 </ul>
 </li>
+<li><p><strong>Amendment (2026-10-30, step 3):</strong> three points made concrete while building. <em><code>latest</code>:</em> migration
+<code>s6_grade_bridge_insight</code> also adds <code>GradeSyncJob.resultAt</code>, the stored <code>timestamp</code> of the result that made the job
+or last updated it, and <code>latest</code> (and <code>mastery</code> below its threshold) sends the score of the job with the latest
+<code>resultAt</code>, then the highest attempt number <code>n</code> of <code>&lt;viewId&gt;:&lt;n&gt;</code>, then the attempt ID as text, so equal times still
+give one answer. Creation order is not used: it can differ from result order when two requests of one learner are
+handled at once (the <code>pagehide</code> flush beside the request in flight), and a job that a later result of its attempt
+updates (<a class="req-ref" href="#r-LTI-013"><code>LTI-013</code></a>) keeps its creation time. This replaces &quot;the job created last&quot; above and in D-104&#39;s P1
+amendment; spec 02 §7 and the data inventory list the field. <em><code>reportingIsEnabled</code>:</em> the player page sets it only
+together with the bridge, for a learner principal, so an author&#39;s preview never offers «Send inn rapport». <em>Q20:</em>
+<code>uv-module</code>&#39;s skeleton stores <code>endGame.showRetryButton: false</code> on its three QuestionSets, pending ALU&#39;s review of
+the patterns (Q17). Each question keeps its own «Prøv igjen» until the set is finished (<code>override.retryButton: &quot;on&quot;</code> sets its <code>behaviour.enableRetry</code>, the field spec 04&#39;s <code>PED-H07</code> names), and the book keeps its own
+(<code>behaviour.enableRetry</code>); only the set&#39;s results-page button is off, so a finished chapter check is retried only
+through the book&#39;s «Prøv igjen», which the regression test above checks. The S5 real-pattern tests (<a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a>) and
+<code>PED-H07</code>&#39;s implementation also read that switch, which spec 04 does not name, and the tests report each set&#39;s
+stored pass mark (the library&#39;s default <code>passPercentage</code>) as one that cannot be retried; how they treat a set whose
+questions keep their retry is settled at the step&#39;s integration, by amendment.</p>
+</li>
 </ul>
 
 </section>
@@ -9771,6 +10032,13 @@ bridge&#39;s routes (described now; they join <code>API_ROUTES</code> when step 
  <code>/app/play</code>) → label mode → NRPS counter → the <code>ltiSub</code> 30-day cleanup</li>
 </ol>
 <ul>
+<li><strong>Paused 2026-10-30, work in progress (owner&#39;s decision, near the weekly usage limit).</strong> Built by one agent
+each, not yet verified: the ingestion route and mapper (<code>src/xapi/</code>), the bridge (<code>packages/hvl-h5p-theme/src/ xapi*.js</code>), the grade queue, AGS client and worker (<code>src/grades/</code>), the «Poeng til Canvas» status panel and API,
+the label mode and the picker&#39;s no-score notice, and the spec notes. Unfinished: the <a class="req-ref" href="#r-LTI-008"><code>LTI-008</code></a> NRPS counter.
+Still to do before step 3 is ticked: a skeptic per part, the wiring and the end-to-end xAPI → AGS test, the
+accessibility scans, the security and privacy review, screenshots, and the full checks (three S5 pattern tests
+fail after the <code>uv-module</code> retry setting and must be updated). Resume: the step 3 workflow run
+<code>wf_524ce60e-e0e</code> from this session, or a new verify-and-finish run from this commit.</li>
 <li><span class="task">○ To do:</span> xAPI bridge, ingestion, minimal storage (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>, <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>, <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>): plain JavaScript in the top player
 document, learners only (D-102); contexts as <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (D-103)</li>
 <li><span class="task">○ To do:</span> AGS queue and worker, sync status, honest labelling (<a class="req-ref" href="#r-LTI-012"><code>LTI-012</code></a>, <a class="req-ref" href="#r-LTI-013"><code>LTI-013</code></a>); NRPS counts (<a class="req-ref" href="#r-LTI-008"><code>LTI-008</code></a>): our own
@@ -9936,7 +10204,7 @@ task off. A pull request only when the owner asks</li>
 <tr>
 <td>Q19</td><td>Every ending of the <code>uv-case</code> pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give <code>uv-case</code> no Canvas score?</td><td>ALU</td><td>The pilot</td></tr>
 <tr>
-<td>Q20</td><td>In <code>uv-module</code>, a chapter check&#39;s «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question&#39;s own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision</td><td>ALU</td><td>The pilot</td></tr>
+<td>Q20</td><td>In <code>uv-module</code>, a chapter check&#39;s «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question&#39;s own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision. <strong>Default applied (2026-10-30, S6 step 3):</strong> the three chapter checks in <code>uv-module</code>&#39;s skeleton store <code>endGame.showRetryButton: false</code>, and each question and the book keep their own «Prøv igjen»; pending ALU&#39;s review of the patterns (Q17)</td><td>ALU</td><td>The pilot</td></tr>
 <tr>
 <td>Q21</td><td>Confirm that container builds here may use the bridge network&#39;s direct egress, outside the agent proxy, for apt, npm and Prisma&#39;s engines only, and never for GitHub repository content (D-110, probe P3); S6 proceeds on that rule</td><td>Repository owner</td><td>—</td></tr>
 </tbody></table></div>

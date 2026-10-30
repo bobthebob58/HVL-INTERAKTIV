@@ -488,6 +488,14 @@ under the step that does it):
       `DATA-012` mapper → `POST /api/h5p/xapi` (auth, View and launch checks, zod, rate limit, 202) → `xapiBridge.js`
       and its wiring → attempt policy → enqueuer → AGS client → worker → status and retry API and UI (portal tab and
       `/app/play`) → label mode → NRPS counter → the `ltiSub` 30-day cleanup
+  - **Paused 2026-10-30, work in progress (owner's decision, near the weekly usage limit).** Built by one agent
+    each, not yet verified: the ingestion route and mapper (`src/xapi/`), the bridge (`packages/hvl-h5p-theme/src/
+    xapi*.js`), the grade queue, AGS client and worker (`src/grades/`), the «Poeng til Canvas» status panel and API,
+    the label mode and the picker's no-score notice, and the spec notes. Unfinished: the `LTI-008` NRPS counter.
+    Still to do before step 3 is ticked: a skeptic per part, the wiring and the end-to-end xAPI → AGS test, the
+    accessibility scans, the security and privacy review, screenshots, and the full checks (three S5 pattern tests
+    fail after the `uv-module` retry setting and must be updated). Resume: the step 3 workflow run
+    `wf_524ce60e-e0e` from this session, or a new verify-and-finish run from this commit.
   - [ ] xAPI bridge, ingestion, minimal storage (`LTI-010`, `LTI-011`, `DATA-012`): plain JavaScript in the top player
         document, learners only (D-102); contexts as `<platformId>:<contextId>` (D-103)
   - [ ] AGS queue and worker, sync status, honest labelling (`LTI-012`, `LTI-013`); NRPS counts (`LTI-008`): our own
@@ -598,7 +606,7 @@ under the step that does it):
 | Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns. Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
 | Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
 | Q19 | Every ending of the `uv-case` pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give `uv-case` no Canvas score? | ALU | The pilot |
-| Q20 | In `uv-module`, a chapter check's «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question's own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision | ALU | The pilot |
+| Q20 | In `uv-module`, a chapter check's «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question's own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision. **Default applied (2026-10-30, S6 step 3):** the three chapter checks in `uv-module`'s skeleton store `endGame.showRetryButton: false`, and each question and the book keep their own «Prøv igjen»; pending ALU's review of the patterns (Q17) | ALU | The pilot |
 | Q21 | Confirm that container builds here may use the bridge network's direct egress, outside the agent proxy, for apt, npm and Prisma's engines only, and never for GitHub repository content (D-110, probe P3); S6 proceeds on that rule | Repository owner | — |
 
 ## Risk register

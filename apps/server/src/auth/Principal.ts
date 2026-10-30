@@ -5,18 +5,22 @@
  * Why: spec 02 §2 gives both entry points one server-side identity, so every route and the H5P permission
  *      system read one set of facts (D-053). The roles are computed once, at login or launch, from Feide's
  *      affiliation or the LTI roles; a request never raises them.
- * Spec: AUTH-002, LTI-004, LTI-001, DATA-002
+ * Spec: AUTH-002, LTI-004, LTI-001, DATA-002, DATA-012
  * Invariants:
  *   - `userId` is always set; learners have pseudonymous User rows (D-034, D-053).
  *   - `learnerKey` is the HMAC pseudonym, never a raw ID (DATA-002).
+ *   - `learnerKeyYear` is the academic year of the secret that made `learnerKey`: a portal principal carries the
+ *     year its session stored at login; an LTI principal derives its key for each request, so `learnerKeyYearOf`
+ *     gives it the year of the request (D-107).
  *   - An LTI principal never has `admin`, `hvlMember` or `feideAuthenticated` (LTI-004, D-053, D-059).
  *   - The principal holds no name, e-mail, Feide ID, LTI `sub` or token.
  * Collaborators: ./principalToH5pActor.ts, ./requestPrincipal.ts, ./feide/FeideRoleMapper.ts,
- *   ../lti/LtiRoleMapper.ts.
- * Tests: apps/server/test/auth/Principal.test.ts
+ *   ../lti/LtiRoleMapper.ts, ../privacy/academicYear.ts, ../xapi/XapiIngest.ts (stores the year, D-107).
+ * Tests: apps/server/test/auth/Principal.test.ts, apps/server/test/auth/requestPrincipal.test.ts
  */
 import type { H5pRole } from '../h5p/HvlH5pUser.js';
 import type { Locale } from '../i18n/translate.js';
+import { academicYearOf } from '../privacy/academicYear.js';
 
 /** A role in HVL Interaktiv (spec 02 `AUTH-002`, `LTI-004`). */
 export type Role = H5pRole;
@@ -51,6 +55,12 @@ export interface Principal {
   readonly userId: string;
   /** HMAC pseudonym for H5P state and statistics (DATA-002). */
   readonly learnerKey: string;
+  /**
+   * The academic year of the pseudonym secret that made `learnerKey` (D-107), e.g. 2026 for 2026/27. Set for a portal
+   * principal from its session, whose key was made at login and can outlive 1 August by up to 12 hours (D-057);
+   * unset for an LTI principal, whose key is derived for each request. Read it through `learnerKeyYearOf`.
+   */
+  readonly learnerKeyYear?: number;
   /** Every role the person holds; the H5P role is the highest. */
   readonly roles: readonly Role[];
   /** Portal (Feide session) or LTI (ltik). */
@@ -75,6 +85,18 @@ export interface Principal {
 export function highestRole(roles: readonly Role[]): Role {
   return ROLE_ORDER.reduce<Role>((best, role) => (roles.includes(role) ? role : best), 'learner');
 }
+
+/**
+ * The academic year of the secret behind a principal's `learnerKey`, stored on the learner's rows so that the yearly
+ * purge deletes them by year (D-107).
+ * @param principal - Who made the request.
+ * @param receivedAt - When the request arrived.
+ * @returns The year the portal session stored at login; otherwise the academic year of `receivedAt`, since an LTI
+ *   principal's key is derived for each request in that request's year.
+ * @spec DATA-012
+ */
+export const learnerKeyYearOf = (principal: Pick<Principal, 'learnerKeyYear'>, receivedAt: Date): number =>
+  principal.learnerKeyYear ?? academicYearOf(receivedAt);
 
 /**
  * Tells whether a principal may author (create and edit their own activities).

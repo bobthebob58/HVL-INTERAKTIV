@@ -76,7 +76,7 @@ describe('[LTI-003] the ltik on the Canvas page', () => {
 });
 
 describe('[LTI-006] the Canvas page for an author', () => {
-  it('[LTI-006] shows Spel and Rediger, and the frames carry the ltik in their query', () => {
+  it('[LTI-006] shows Spel, Rediger and Poeng til Canvas, and the frames carry the ltik in their query', () => {
     // Arrange
     openAt('/app/play?ltik=abc');
     fakeFetch({ 'GET /api/me': ME });
@@ -84,7 +84,11 @@ describe('[LTI-006] the Canvas page for an author', () => {
     render(<LtiPlayView launch={LAUNCH} />);
     // Assert
     expect(screen.getByRole('heading', { level: 1, name: 'Celler og vev' })).toBeTruthy();
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Spel', 'Rediger']);
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Spel',
+      'Rediger',
+      'Poeng til Canvas',
+    ]);
     expect(screen.getByTitle('Spel: Celler og vev').getAttribute('src')).toBe('/lti/play?ltik=abc');
     expect(window.location.search).toBe('');
   });

@@ -25,6 +25,7 @@ const LOGIN: NewPortalSession = {
   studentAuthor: false,
   locale: 'en',
   learnerKey: 'learner-key-1',
+  learnerKeyYear: 2026,
   idToken: 'header.payload.signature',
 };
 
@@ -83,6 +84,8 @@ describeWithServices('[AUTH-003] session store integrity', () => {
     ['an unknown role', JSON.stringify({ ...record, roles: ['owner'] })],
     ['an unknown locale', JSON.stringify({ ...record, locale: 'sv' })],
     ['a time that is not a number', JSON.stringify({ ...record, createdAt: 'yesterday' })],
+    ['no academic year for its learnerKey (D-107)', JSON.stringify({ ...record, learnerKeyYear: undefined })],
+    ['an academic year that is not a whole number', JSON.stringify({ ...record, learnerKeyYear: 2026.5 })],
   ])('[AUTH-003] treats a stored value with %s as no session and deletes it', async (_case, value) => {
     // Arrange
     const sid = newOpaqueId();

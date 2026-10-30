@@ -6,7 +6,8 @@
     "load: opens the activity",
     "cover: presses «Les» on the cover",
     "check: picks the right option in chapter 1 and presses «Sjekk»",
-    "summary: goes to the summary page"
+    "summary: goes to the summary page",
+    "submit: presses «Send inn rapport», which reportingIsEnabled shows to learners (D-115, Q18)"
   ],
   "statements": [
     {
@@ -140,7 +141,7 @@
             "scaled": 1
           },
           "completion": true,
-          "duration": "PT0.98S"
+          "duration": "PT1.07S"
         }
       }
     },
@@ -314,7 +315,56 @@
             "scaled": 1
           },
           "completion": true,
-          "duration": "PT1.06S"
+          "duration": "PT1.15S"
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "submit",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/completed",
+          "display": {
+            "en-US": "completed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Planlegg ei god samling"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.InteractiveBook-1.15",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 4,
+            "raw": 1,
+            "scaled": 0.25
+          },
+          "completion": true,
+          "duration": "PT1.46S"
         }
       }
     }
