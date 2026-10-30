@@ -18,6 +18,7 @@ import { describeA11y } from './support/a11ySuite.js';
 import { scanPage, type AxeReport } from './support/axeScan.js';
 import { COLOUR_MODES, STUDIO_VIEW_NAMES, type StudioView } from './support/catalogue.js';
 import { openWebPage } from './support/pages.js';
+import { waitUntilLoaded } from './support/loadingState.js';
 import { openStudioView } from './support/studioViews.js';
 import { expectOnlyRecorded, recordedFor } from './support/upstreamFindings.js';
 import { webText } from '../test/support/webAppTexts.js';
@@ -48,8 +49,12 @@ describeA11y('[UD-030] axe on the læringsdesign studio', (env) => {
         view === 'bank'
           ? await openWebPage(context, app.base, '/laeringsdesign/innhaldsbank')
           : await openStudioView(app, context, view, signedIn);
-      // WHY: an empty bank would show none of the cards the scan is for.
-      if (view === 'bank') expect(await page.locator('main article').count()).toBeGreaterThanOrEqual(2);
+      // WHY: the bank's entries arrive from the API after hydration; an empty bank would show none of the cards the
+      // scan is for.
+      if (view === 'bank') {
+        await waitUntilLoaded(page);
+        expect(await page.locator('main article').count()).toBeGreaterThanOrEqual(2);
+      }
       const name = view === 'bank' ? '/laeringsdesign/innhaldsbank (with entries)' : STUDIO_VIEW_NAMES[view];
       const report = await scanPage(page, `${mode}, ${signedIn ? 'signed in' : 'signed out'}: ${name}`);
       await context.close();
@@ -96,6 +101,8 @@ describeA11y('[UD-030] axe on the læringsdesign studio', (env) => {
     const boxCount = guide.nodes.filter((node) => node.type === 'box').length;
     const context = await browser.newContext();
     const page = await openWebPage(context, app.base, '/laeringsdesign');
+    // WHY: the guide arrives from the API after hydration; its regions are counted once it is there.
+    await waitUntilLoaded(page);
     // Act
     const results = await new AxeBuilder({ page }).withRules(['landmark-unique', 'region']).analyze();
     const names = await page.locator(NAMED_REGIONS).evaluateAll(regionNames);

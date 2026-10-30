@@ -11,11 +11,12 @@
  *     by their translated titles, so the same helpers work in nn, nb and en.
  *   - `openFramed` and `openServerAnswer` serve their page only to the test's own browser context (Playwright
  *     routing) on the server's origin; the server is unchanged, and the framed page is a real same-origin load.
- * Collaborators: ../../test/support/realWebApp.ts, the suites in ../.
+ * Collaborators: ../../test/support/realWebApp.ts, ./loadingState.ts, the suites in ../.
  * Tests: apps/server/a11y/axeWebRoutes.a11y.test.ts and the other suites in apps/server/a11y/.
  */
 import type { BrowserContext, Frame, Page } from 'playwright-core';
 import type { RealWebApp, UiLocale } from '../../test/support/realWebApp.js';
+import { waitUntilLoaded } from './loadingState.js';
 
 /** The activity page's tabs by their Nynorsk names (apps/web `activity.tab*`). */
 export const ACTIVITY_TABS = { play: 'Spel', edit: 'Rediger', check: 'Sjekk og publiser' } as const;
@@ -27,7 +28,8 @@ const PLAYER_FRAME = 'iframe[src*="/h5p/play/"], iframe[src*="/lti/play"]';
 const EDITOR_FRAME = 'iframe[src*="/h5p/edit/"], iframe[src*="/h5p/new"], iframe[src*="/lti/edit"]';
 
 /**
- * Opens a path and waits until Next.js has hydrated (for a page of the web app) and the network is quiet.
+ * Opens a path and waits until Next.js has hydrated, the network is quiet and, for a page of the web app, no view is
+ * still loading (./loadingState.ts).
  * @param context - The browser context (signed in or not).
  * @param base - The server's origin.
  * @param path - The path, e.g. `/hjelp`.
@@ -45,6 +47,7 @@ export async function openWebPage(
   await page.goto(`${base}${path}`);
   if (nextPage) await page.waitForFunction(() => 'next' in window, undefined, { timeout: 15_000 });
   await page.waitForLoadState('networkidle');
+  if (nextPage) await waitUntilLoaded(page);
   return page;
 }
 

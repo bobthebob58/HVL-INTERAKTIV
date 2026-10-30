@@ -8,7 +8,7 @@
  * Spec: PED-010, PROD-001, PED-002, UD-013
  * Invariants:
  *   - The page's only `h1`: «Mønster» while loading, then the pattern's name, or «Fann ikkje sida» for an unknown
- *     pattern; the document title follows (WCAG 2.4.2).
+ *     pattern; the document title follows and stays (WCAG 2.4.2, ../../i18n/useLoadedPageTitle.ts).
  *   - The ID has the pattern-ID form (the page answers 404 otherwise); the API decides whether the pattern exists.
  *   - The address may carry the phase and course to pre-fill (`?fase=&emne=`, ../../config/studioFilters.ts).
  *   - Texts are the pattern's in the page language; the draft banner shows while the content is proposed.
@@ -24,13 +24,13 @@
 import type { PhaseKey } from '@hvl-interaktiv/api-contract';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
 import { getPatternDetail, getStudioOverview } from '../../api/studioApi';
 import { catalogueHref } from '../../config/paths';
 import { readStudioFilters } from '../../config/studioFilters';
 import { useLocale } from '../../i18n/LocaleContext';
 import { pageTitle } from '../../i18n/pageTitle';
 import { t } from '../../i18n/translate';
+import { useLoadedPageTitle } from '../../i18n/useLoadedPageTitle';
 import { DraftBanner } from './DraftBanner';
 import { citationNumbers } from './guide/guideCitations';
 import { GuideProse } from './guide/GuideProse';
@@ -65,11 +65,11 @@ export function PatternDetailView({
   const overview = useApiLoad(getStudioOverview, 'overview');
   const notFound = detail.status === 'failed' && detail.httpStatus === 404;
   const name = detail.status === 'loaded' ? detail.data.name[locale] : undefined;
-  useEffect(() => {
-    // A11Y: WCAG 2.4.2: the title names the pattern once it has loaded, or says the page was not found.
-    if (name) document.title = pageTitle(name, locale);
-    else if (notFound) document.title = pageTitle(t('notFound.title', locale), locale);
-  }, [name, notFound, locale]);
+  // A11Y: WCAG 2.4.2: the title names the pattern once it has loaded, or says the page was not found.
+  useLoadedPageTitle(
+    name ? pageTitle(name, locale) : notFound ? pageTitle(t('notFound.title', locale), locale) : undefined,
+    pageTitle(t('patterns.pageTitle', locale), locale),
+  );
   if (notFound)
     return (
       <>

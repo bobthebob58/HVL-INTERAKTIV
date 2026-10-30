@@ -2,7 +2,8 @@
  * studioViews — opens the læringsdesign studio's views (S5) in the states the seed (./studioSeed.ts) gives them: a
  * pattern page, the planner of a course with gaps, `/mappe` after a word count, an activity's **Læringsdesign** and
  * **Deling** tabs, and a copy's page with its attribution sign; each waits until its content is there (the planner
- * until its table, both kinds of gap and the activity without tags show; the copy until its sign shows).
+ * until its table, both kinds of gap and the activity without tags show; the copy until its sign shows; a pattern
+ * page until its create form or, signed out, its sign-in prompt shows).
  *
  * Why: the studio's pages fetch their data in the browser after hydration, and some of their states exist only after
  *      a step (the planner needs `?emne=`, the word count needs a choice). Every suite that walks ./catalogue.ts's
@@ -90,6 +91,8 @@ export async function openStudioView(
   if (view === 'pattern') {
     const page = await open(`/laeringsdesign/monster/${encodeURIComponent(seed.patternId)}`);
     if (signedIn) await page.locator('main form button[type=submit]').waitFor({ timeout: 15_000 });
+    // WHY: the pattern and the session load in the browser; a scan of «Hentar …» would check nothing of the page.
+    else await shows(page, 'patterns.signedOut');
     return page;
   }
   if (view === 'planner') {

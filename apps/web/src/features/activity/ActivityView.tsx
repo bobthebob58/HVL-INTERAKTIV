@@ -23,7 +23,7 @@
  *   - After «Lagre som ny versjon» the page says it opens the new version, then goes to its Rediger tab; a copy's
  *     page shows where it came from to its editors (./SourceAttributionNote.tsx, PROD-007).
  * Collaborators: ./tabs/activityTabs.ts, ./tabs/activityTab.ts, ../../components/Tabs.tsx, ./useActivityEditor.ts
- *   (the editor frame's messages).
+ *   (the editor frame's messages), ../../i18n/useLoadedPageTitle.ts (the document title).
  * Tests: apps/web/test/features/ActivityView.test.tsx, apps/web/test/features/activityTabs.test.tsx,
  *   apps/web/test/features/activityTabProps.test.tsx, apps/web/test/features/ActivitySaveChoice.test.tsx
  */
@@ -45,6 +45,7 @@ import { useLocale } from '../../i18n/LocaleContext';
 import { pageTitle } from '../../i18n/pageTitle';
 import { partLanguage } from '../../i18n/partLanguage';
 import { t } from '../../i18n/translate';
+import { useLoadedPageTitle } from '../../i18n/useLoadedPageTitle';
 import { SourceAttributionNote } from './SourceAttributionNote';
 import type { ActivityTabProps } from './tabs/activityTab';
 import { activityTabsFor, selectableTabId } from './tabs/activityTabs';
@@ -120,10 +121,9 @@ function Workspace({
     },
   });
 
-  useEffect(() => {
-    // A11Y: WCAG 2.4.2: the server cannot know the title (D-068), so the page names the activity once it has loaded.
-    if (typeof detail === 'object') document.title = pageTitle(detail.title, locale);
-  }, [detail, locale]);
+  // A11Y: WCAG 2.4.2: the server cannot know the title (D-068), so the page names the activity once it has loaded.
+  const loadedTitle = typeof detail === 'object' ? pageTitle(detail.title, locale) : undefined;
+  useLoadedPageTitle(loadedTitle, pageTitle(t('activity.pageTitle', locale), locale));
 
   if (detail === 'loading') return <p role="status">{t('common.loading', locale)}</p>;
   if (detail === 'unavailable') return <p role="alert">{t('activity.unavailable', locale)}</p>;
