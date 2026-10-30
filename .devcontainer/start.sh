@@ -33,6 +33,17 @@ for attempt in $(seq 1 30); do
   sleep 1
 done
 
+# WHY: a codespace opens in the browser editor by default, whose forwarded addresses are https://…app.github.dev;
+# the pages load there but the logins send the browser to localhost:4200, which then refuses (owner's first try).
+if [ "${CODESPACES:-}" = 'true' ]; then
+  cat <<'TEXT'
+
+Check the Ports tab: «Forwarded Address» must say localhost:3000, localhost:4100 and localhost:4200. If it says
+https://…app.github.dev, this is the browser editor and the logins will not work: press Ctrl+C, then connect from
+the VS Code app on your computer (Ctrl+Shift+P → «Codespaces: Connect to Codespace») and run this script there.
+TEXT
+fi
+
 cat <<'TEXT'
 
 Open on your own computer (VS Code or `gh codespace ports forward` forwards these addresses):

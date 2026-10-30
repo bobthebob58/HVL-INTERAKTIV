@@ -18,8 +18,13 @@ and no HVL accounts. It is for trying and reviewing the app, never for real data
    choose **…** next to the codespace → **Open in** → **Visual Studio Code** (in the browser editor, the menu (☰) →
    **Open in VS Code Desktop** does the same). VS Code needs the **GitHub Codespaces** extension, signed in to your
    GitHub account. This matters: VS Code then forwards the app's ports to `localhost` (`127.0.0.1`) on your computer,
-   which the mock Feide and the mock Canvas need. In the browser editor the ports get `*.app.github.dev` addresses,
-   and the logins do not work there. Without VS Code, keep the browser editor and run
+   which the mock Feide and the mock Canvas need. In the browser editor the ports get `*.app.github.dev` addresses:
+   the pages load there, but «Logg inn med Feide» ends on `localhost:4200` with «connection refused», and the mock
+   Canvas does not load. The Ports tab tells you which you have: its «Forwarded Address» column must say
+   `localhost:3000`, not `https://…app.github.dev`. In VS Code, Ctrl+Shift+P → **Codespaces: Connect to Codespace**
+   opens an existing codespace, and **Editor preference → Visual Studio Code** on
+   [github.com/settings/codespaces](https://github.com/settings/codespaces) opens new ones there. Without VS Code,
+   keep the browser editor and run
    `gh codespace ports forward 3000:3000 4100:4100 4200:4200` on your own computer (GitHub CLI; it asks which
    codespace and listens on `127.0.0.1` too) while you try the app.
 5. When `setup.sh` has printed `Ready`, run `bash .devcontainer/start.sh` in a VS Code terminal. Ctrl+C stops it.
