@@ -10,8 +10,9 @@
  *   - A recorded post keeps the scheme of its credential (`Bearer`, `csrf` or none) and never its value (LTI-003).
  *   - The right options are read from the stored activity, so the flow follows the real content, not a guess; the
  *     check requires `randomAnswers: false`, so H5P shows the options in stored order.
- *   - The worker is built as main.ts builds it: the server's database, Redis and encryption keys, and our AGS client
- *     over ltijs's platform manager.
+ *   - The worker is built as main.ts builds it: the server's database, Redis and encryption keys, our AGS client over
+ *     ltijs's platform manager, and the line item rules from `CANVAS_ORIGINS` and `NODE_ENV` (D-104's amendment of
+ *     2026-11-04).
  * Collaborators: ./portalFrames.ts, ../xapiToCanvas.e2e.test.ts, ../../src/grades/GradeSyncWorker.ts,
  *   ../../test/support/realWebApp.ts, ../../test/support/capturedLogger.ts.
  * Tests: apps/server/e2e/xapiToCanvas.e2e.test.ts
@@ -130,6 +131,7 @@ export function gradeWorkerOf(app: RealWebApp, placementIds: readonly string[]):
     logger: capturedLogger('debug').logger,
     encryption: new DataEncryption(env.DATA_ENCRYPTION_KEYS),
     platforms: lti.provider.platformManager,
+    lineItemRules: { origins: env.CANVAS_ORIGINS, requireHttps: env.NODE_ENV === 'production' },
     placementIds,
   });
 }

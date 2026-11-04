@@ -514,8 +514,16 @@ under the step that does it):
   - **Finish (2026-11-04):** a new advisory, GHSA-mrwp-f3q8-3g9p (`follow-redirects` ≤ 1.16.1, via `axios` in
     h5p-server; published after the S5 gate), failed `check:audit`; the lock file now takes the patch release 1.16.2
     (no override, no exception). Every check then passed (session log, «2026-11-04 · S6 step 3»).
-  - Still open for step 3, so the step stays unticked: the `uv-module` book-retry regression test and the owner's Q20
-    call (D-115); decisions on the review's findings; the step's commit. Not step 3's: `H5PUserData.academicYear` for
+  - **Found in step 4's checks (2026-11-04):** the worker's claim (`gradeJobClaims.ts`) could take every due job
+    whatever its limit. As `WHERE "id" IN (… LIMIT n FOR UPDATE SKIP LOCKED)`, PostgreSQL may rescan the subquery
+    once per row of a nested-loop semi join (its plan while the table looks empty), and each rescan skips the rows
+    the statement has just updated. `gradeSyncFlood.int.test.ts` caught it in the full server run (3 claimed with a
+    limit of 1; a prepared generic plan on a copy of the table updated 3 rows for `LIMIT 1`). The claim is now a
+    materialized CTE that runs once: with the old query the test failed again in one of two runs after `ANALYZE` of
+    the empty table, and with the new one it passed all five. No decision changes (D-104's "claims due jobs
+    (`FOR UPDATE SKIP LOCKED`)" still holds).
+  - Still open for step 3, so the step stays unticked: the step's commit (with step 4's work, both in the working tree
+    since 2026-11-04) and the owner's Q20 call (D-115). Not step 3's: `H5PUserData.academicYear` for
     portal sessions that cross 1 August (step 5, D-107 amendment); CLAUDE.md §2 names `xapiBridge.js` alone (the
     bridge is three scripts, D-102 amendment; the owner's file).
   - [x] xAPI bridge, ingestion, minimal storage (`LTI-010`, `LTI-011`, `DATA-012`): plain JavaScript in the top player
@@ -529,9 +537,14 @@ under the step that does it):
   - [x] The grade-sync panel in the accessibility suite (axe, light and forced colours); screenshots in `nn` at 1280
         and 390 px
   - [x] Review: a skeptic with mutation checks per workstream, then the security and privacy review above
-  - [ ] `uv-module`: the regression test that pins the book's failing «Prøv igjen», then the owner's Q20 call on
-        turning the book's retry off (a `PROD-009` `SPEC-DEVIATION` or not; D-115's 2026-11-04 amendments)
-  - [ ] Decisions on the review's findings (each changes D-104, D-106 or D-115 first, CLAUDE.md §1): **(1, medium)**
+  - [x] `uv-module`: the regression test that pins the book's failing «Prøv igjen»
+        (`uvModuleBookRetry.browser.int.test.ts`, an upstream pin; D-115's 2026-11-04 amendments); the owner's Q20 call
+        on turning the book's retry off (a `PROD-009` `SPEC-DEVIATION` or not) stays open
+  - [x] Decisions on the review's findings (each changes D-104, D-106 or D-115 first, CLAUDE.md §1), taken
+        2026-11-04: findings 1 and 4 by D-104's queue amendment (one job per placement and learner, the score from the
+        stored results at send time, fair claims, a reconcile pass), finding 2 by D-104's line-item URL amendment
+        (wired in `main.ts` and `ltiRoutes.ts` with `CANVAS_ORIGINS` and https in production), finding 3 recorded for
+        the DPO (`docs/privacy/DPIA-INPUT.md` R1, Q22); D-115's two amendments of the same day. The findings were: **(1, medium)**
         one learner can delay everyone's grades: 120 made-up scored results a minute per activity (`LTI-011`'s
         limit) each become a new job, while the worker sends about 200 a minute; remedies to weigh: cap new jobs per
         placement and learner, settle a group's pending jobs after a send, or claim fairly per group. **(2, low)** the
@@ -546,9 +559,52 @@ under the step that does it):
       hand-calculated values (moved from step 2) → aggregators `INS-001`, `INS-002`,
       `INS-003` (`INS-004`, `INS-005` if time) → access and audit → insight API → the web **Innsikt** tabs (charts,
       suppressed cells, shortlist, CSV, findings) → the mappe's real results source; `PROD-014` (COULD) if time
-  - [ ] Insight views with *k*-suppression (`INS-001`…`INS-010`, `PROD-010`); spaced-retrieval suggestion
-        (`PROD-014`, COULD): as tabs, per context, fixed periods, `INS-006` as written (D-106)
-  - [ ] Results in the portfolio: the real `ActivityResultsSource` with *k*-suppression (D-095)
+  - **Built 2026-11-04** by four workstreams, each reviewed by a skeptic with mutation checks (insight core, insight
+    API, the web **Innsikt** tabs, the mappe's results), then integrated: `createApp` passes the insight services
+    (content store, NRPS counts, `MIN_GROUP_SIZE`) to `/api`, and the test beds do the same; `fast-check` 4.10.2 is
+    pinned as D-114 says. The core's review found that "the next-smallest cell" let hidden counts be worked out, and
+    that `INS-002`'s share gave away `INS-003` cells; the stronger rule is D-106's amendment of 2026-11-04 (a 0 shown,
+    `SPEC-DEVIATION`; complements; parts; `INS-003` for the current version only, `SPEC-DEVIATION`), with residuals
+    R6–R9 in the DPIA input. The mappe counts only groups of at least *k* per course, version and semester (D-095's
+    amendment). New end-to-end test `e2e/insightInCanvas.e2e.test.ts`: six learners of one course (two through the
+    real bridge, four through the ingestion route) on the teacher's **Innsikt** tab in `/app/play`, two of another
+    course as «< 5», a learner refused, another course's teacher kept to their own course. Not built: `INS-004`
+    (deferred by D-115) and `PROD-014` (COULD).
+  - [x] Insight views with *k*-suppression (`INS-001`…`INS-003`, `INS-005`…`INS-010`, `PROD-010`): as tabs, per
+        context, fixed periods, `INS-006` as D-106 and its amendment of 2026-11-04 apply it; the spaced-retrieval
+        suggestion (`PROD-014`, COULD) is not built
+  - [x] Results in the portfolio: the real `ActivityResultsSource` with *k*-suppression (D-095 and its amendment)
+  - [x] Integration: the insight services in `createApp` and the test beds; `e2e/insightInCanvas.e2e.test.ts` in full
+        Chromium (D-065); the **Innsikt** tab in the accessibility suite (`axeInsight.a11y.test.ts`, on routed data so
+        every kind of section shows; the real API path is the e2e test's); the Canvas tab lists in
+        `appPlayEditor.e2e`, `webPages` and `webChrome` include **Innsikt**; screenshots in `nn` at 1280 and 390 px
+        sent to the owner
+  - [x] Review: a skeptic with mutation checks per workstream, then a privacy and security review of step 4 and step
+        3's hardening (2026-11-04). Fixed: a listed wrong gap answer, which `INS-003`'s public rule says has at least
+        *k* learners, could be hidden as a complement and then pin the other hidden counts (*k* = 5, 17 learners:
+        right = 1, other = 1). Listed answers are now always shown; per gap, right, «other wrong» and «empty» form one
+        additive group (`gapMisconceptions.ts`; a new `[INS-006]` exhaustive test that fails on the old code). Found
+        sound: access (404 before 403), audit before the answer, the rate limit, CSV formula guards, sort order, no
+        differencing path across versions, contexts, the CSV or the mappe, and the grade hardening
+  - [x] Checks, with `docs/TRACEABILITY.md` and the spec site regenerated (session log, «2026-11-04 · S6 step 4»)
+  - [ ] Decisions on the privacy review's findings (each changes a decision first, CLAUDE.md §1): **(high)** every
+        period ends at the request (`insightPeriod.ts`, `end: now`), so two views minutes apart show the cells one
+        known learner moved; remedy: end periods at the last Oslo midnight, or publish a new snapshot only after *k*
+        new learners (D-106; DPIA R3 and R8 understate it). **(medium)** Canvas Student View makes fake learners (the
+        test user maps to learner, and each «Reset Student» is a new `learnerKey`), so *k* − 1 of them expose a real
+        learner's answers; remedy: a test-user flag in the launch facts, left out of storage or of insight, the mappe
+        and the counts (D-102). **(low–medium)** 7-, 14- and 30-day views opened from 1 to 30 August span the yearly
+        key change, so one learner can count twice; remedy: no period before 1 August, or a DPIA residual (D-106,
+        D-107). Lower residuals for the DPIA input: unsuppressed differences in `INS-001` and `INS-005`, the minimum
+        a multi-gap or multi-answer share sets, chart summaries that say "most common" among shown cells only, and
+        the NRPS URL's origin, which is not checked
+  - [ ] Docs for the review's gap fix: D-106's amendment of 2026-11-04 still puts a gap's listed wrong answers in its
+        additive group (spec 05's `INS-006` note may name the gap rule too); `additiveGroupExhaustive.test.ts`'s new
+        test joins D-106's *Verified by*
+  - [ ] The commit (with step 3's), `Refs:` `INS-001`…`INS-003`, `INS-005`…`INS-010`, `PROD-010`, `PROD-013`,
+        `LTI-006`, `MAPPE-003`
+  - Still open for step 4, so the step stays unticked: the three items above (the commit, the review's decisions and
+    the gap rule's docs, which only the integrator or the hardening workstream may write in `docs/DECISIONS.md`).
 - [ ] 5. C — Privacy operations (`DATA-003`, `DATA-004`, `DATA-005`, `DATA-007`, `DATA-008`, `DATA-010`, `NFR-006`):
       purge with a dry run → the data-subject CLI → the database roles script → production checks → the request log
       → DPIA input → DATA-INVENTORY rows (with the Redis keys) → the research export, design only (Q6)
@@ -647,8 +703,10 @@ under the step that does it):
 | Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns. Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
 | Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`, set for learners only, so an author's preview never offers it; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
 | Q19 | Every ending of the `uv-case` pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give `uv-case` no Canvas score? | ALU | The pilot |
-| Q20 | In `uv-module`, a chapter check's «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question's own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision. **Default applied (2026-10-30, S6 step 3):** the three chapter checks in `uv-module`'s skeleton store `endGame.showRetryButton: false`, and each question keeps its own «Prøv igjen» until its check is finished; pending ALU's review of the patterns (Q17). **Found 2026-11-04:** the book's own «Prøv igjen» fails the same way (its reset throws in the first chapter check), so a finished chapter check cannot be retried at all; D-115 then turns the book's retry off too, once the regression test pins it, which `PED-H07` and `PROD-009` must allow (D-115's 2026-11-04 amendment) | ALU | The pilot |
+| Q20 | In `uv-module`, a chapter check's «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question's own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision. **Default applied (2026-10-30, S6 step 3):** the three chapter checks in `uv-module`'s skeleton store `endGame.showRetryButton: false`, and each question keeps its own «Prøv igjen» until its check is finished; pending ALU's review of the patterns (Q17). **Found 2026-11-04:** the book's own «Prøv igjen» fails the same way (its reset throws in the first chapter check), so a finished chapter check cannot be retried at all; D-115 then turns the book's retry off too, once the regression test pins it, which `PED-H07` and `PROD-009` must allow (D-115's 2026-11-04 amendment). **Pinned 2026-11-04:** `uvModuleBookRetry.browser.int.test.ts` (an upstream pin) finishes the first chapter check and presses the book's «Prøv igjen» on its summary page: one `TypeError` (reading `classList`, from QuestionSet's reset), the book stays on its summary page, and the check keeps its results (D-115's amendment of the same day). **Open for the owner:** turn the book's retry off in the pattern (`behaviour.enableRetry: false`, a `PROD-009` `SPEC-DEVIATION`), or keep it on with the fault for the pilot; until then it stays on | ALU, owner | The pilot |
 | Q21 | Confirm that container builds here may use the bridge network's direct egress, outside the agent proxy, for apt, npm and Prisma's engines only, and never for GitHub repository content (D-110, probe P3); S6 proceeds on that rule | Repository owner | — |
+| Q22 | For the DPIA (`DATA-005`, D-106 residual): the grade-sync status counts (sent, pending, failed, orphaned; since D-104's amendment of 2026-11-04 one per learner and placement) are not *k*-suppressed (spec 05 §3). In `/app/play` a Canvas author sees only the launch's course; on the activity page the activity's owner and co-authors see the counts of every course it is placed in, also a colleague's course that placed it from the bank or copied it, where they are not teachers and Canvas's gradebook would not show them anything. A count there can be about one learner. Keep (the counts carry no learner, score or name), suppress below *k* for courses the viewer does not teach, or show a portal owner only the courses they launched as a teacher (`docs/privacy/DPIA-INPUT.md`) | HVL DPO, owner | The pilot |
+| Q23 | A statement names no Canvas link (`DATA-012`), so since D-104's amendment of 2026-11-04 a learner's score in a graded link counts their plays of the same activity in the same course through any other link too, an ungraded practice link included, whose newer results also reopen the graded job. Keep it, or store the resource link with each statement (a `DATA-012` change) so that each link counts its own plays? | Owner | The pilot |
 
 ## Risk register
 
@@ -1019,4 +1077,42 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npx vitest run <the other 15 server test folders>            Test Files 263 passed (263) · Tests 5911 passed (5911)
   $ npm run test:e2e                                             Test Files 14 passed (14) · Tests 23 passed (23)
   $ npx vitest run … a11y/axeGradeSync.a11y.test.ts              Test Files 1 passed (1) · Tests 5 passed (5)
+  ```
+- **2026-11-04 · S6 step 4** — Five workstreams (step 3's hardening, the insight core, the insight API, the web
+  **Innsikt** tabs, the mappe's results), each verified by a skeptic with mutation checks, then integrated:
+  `createApp` passes the insight services to `/api` (the test beds too); the grade worker and the placement recorder
+  get D-104's line item rules (`CANVAS_ORIGINS`, https in production); the `GradeSyncJob` schema comments, the
+  grade-sync contract header and spec 02 `LTI-012` follow D-104's amendments; `fast-check` 4.10.2 is pinned (D-114;
+  two date generators now say `noInvalidDate`); D-095's and D-106's amendments and the `SPEC-DEVIATION` marks for a
+  shown 0 and `INS-003` on older versions; DPIA input R6–R9; Q23; the web says when answer distributions are for the
+  current version only. New end-to-end test `e2e/insightInCanvas.e2e.test.ts`; `appPlayEditor.e2e.test.ts` now
+  expects **Innsikt** among an author's Canvas tabs. Screenshots in `nn` at 1280 and 390 px with nine real learners
+  (portal, `/app/play`, and a course below *k*) sent to the owner. A privacy and security review of step 4 and step
+  3's hardening then fixed one leak (a listed wrong gap answer, hidden as a complement, pinned the other hidden
+  counts; listed answers are now always shown, with a new exhaustive `[INS-006]` test) and left three design
+  findings for decisions (section S6, step 4). The finish run regenerated `docs/TRACEABILITY.md` and the spec site and
+  fixed what the full server run found: the grade worker's claim took every due job under a nested-loop plan (now a
+  materialized CTE; section S6, step 3), and `webPages` and `webChrome` still listed the Canvas tabs without
+  **Innsikt**. Not committed. Check output (every step exit 0 after the fixes; tests with `CI=true`, so nothing
+  skips):
+
+  ```
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 482 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · tokens:check               ✓ 22 models, 181 fields · ✓ 3 files up to date
+  $ npm run build                                                exit 0
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements, traceability up to date · ✓ up to date
+  $ npm run spec:trace -- --check --done-through=S5              ✓ 126 requirements, traceability up to date.
+  $ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                                 Test Files 165 passed (165) · Tests 1380 passed (1380)
+  $ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 168 passed, 1 failed (169) · Tests 19766 passed, 1 failed
+    (apps/server)                                                  (gradeSyncFlood: 3 jobs claimed with a limit of 1; fixed)
+  $ npx vitest run <the other 16 server test folders>            Test Files 285 passed, 2 failed (287) · Tests 6088 passed, 2 failed
+                                                                   (webPages, webChrome: Canvas tabs without «Innsikt»; fixed)
+  $ npx vitest run test/grades test/web (after the fixes)        Test Files 29 passed (29) · Tests 241 passed (241)
+  $ npm run test:e2e                                             Test Files 15 passed (15) · Tests 24 passed (24)
+  $ npx vitest run … a11y/axeInsight.a11y.test.ts axeGradeSync   Test Files 2 passed (2) · Tests 11 passed (11)
   ```

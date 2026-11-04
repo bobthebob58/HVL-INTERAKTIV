@@ -381,6 +381,18 @@ a new client-credentials token itself, or is marked failed for the author to ret
   `no-score`; ImageHotspots no statement at all. An activity that sends no score never gets a job, and the Deep
   Linking picker says so for `assignment_selection`. Not deviated: the two verbs, `result.score`, the policies and
   their table.
+- **Amended (D-104, two amendments of 2026-11-04, the step-3 security review):** jobs are one per
+  `(placement, learnerKey)` (`idempotencyKey` `<placementId>:<learnerKey>`), so one learner can never flood the queue;
+  idempotency per `(placement, learnerKey, attemptId)` holds a fortiori. Each new gradable result updates the job, and
+  a stopped job is reopened with a new window of 8 attempts in 24 h. The score is computed when it is sent, by the
+  placement's policy over the learner's stored gradable results of that activity in that course, in D-115's result
+  order. Claiming is fair (one place per learner a run); a job that takes in a result while its score is in flight is
+  due again at the next run; each run first reopens a stopped job whose learner stored a newer result 15 to 1 minutes
+  earlier (the reconcile pass). The line item URL must parse, use https in production, hold no credentials and have an
+  origin in `CANVAS_ORIGINS` or among the platform's own (issuer, authorisation and token endpoints); it is checked
+  when a launch records the placement (refused: stored as none, the link is ungraded) and again by the worker before
+  any request (refused: the job fails as `line-item-url`). Not deviated: the score body, the policies, the retry limit,
+  `orphaned` and the scopes.
 
 #### LTI-013 · MUST · S6 · Score integrity is honest
 H5P computes scores in the browser, so a determined student can forge them. The system therefore

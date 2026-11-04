@@ -8,7 +8,6 @@
  */
 import { S3Client } from '@aws-sdk/client-s3';
 import { afterAll, beforeAll, expect, it, vi } from 'vitest';
-import type { Database } from '../../../src/infra/prismaClient.js';
 import type {
   ActivityResultsSource,
   LearnerAttemptSummary,
@@ -19,42 +18,19 @@ import { openApiTestbed, type TestPrincipal } from '../../support/apiTestbed.js'
 import { studioContentWithMappe } from '../../support/mappeFixture.js';
 import { requestAs } from '../../support/requestAs.js';
 import { describeWithServices } from '../../support/services.js';
+import { readOnlyDatabase as readOnly } from './readOnlyDatabase.js';
 
 /** One learner as a results source might hold them, with what must never reach an export. */
 const learner = (n: number, completed: boolean): LearnerAttemptSummary & Record<string, unknown> => ({
   learnerKey: `learner-key-${n}-qx7`,
   response: `Fritekstsvar nummer ${n} om blodtrykk`,
+  group: 0,
   attempts: n % 3 === 0 ? 3 : 1,
   completed,
   // WHY: odd thousandths, so every individual score written as a percentage has a decimal no aggregate shares.
   firstScore: (113 + 2 * n) / 1000,
   lastScore: (877 - 2 * n) / 1000,
 });
-
-const WRITES = /^(create|createMany|createManyAndReturn|update|updateMany|upsert|delete|deleteMany)$/;
-
-/** The database, with every write recorded and refused. */
-function readOnly(db: Database, writes: string[]): Database {
-  return new Proxy(db, {
-    get(target, property, receiver) {
-      const value: unknown = Reflect.get(target, property, receiver);
-      if (typeof property === 'string' && /^\$(execute|transaction)/.test(property)) {
-        return (...args: unknown[]) => {
-          writes.push(property);
-          return (value as (...a: unknown[]) => unknown).apply(target, args);
-        };
-      }
-      if (typeof value !== 'object' || value === null) return value;
-      return new Proxy(value, {
-        get(model, method, modelReceiver) {
-          const fn: unknown = Reflect.get(model, method, modelReceiver);
-          if (typeof method === 'string' && WRITES.test(method)) writes.push(`${String(property)}.${method}`);
-          return typeof fn === 'function' ? fn.bind(model) : fn;
-        },
-      });
-    },
-  });
-}
 
 describeWithServices('[MAPPE-003] privacy in the pedagogisk mappe', () => {
   const content = studioContentWithMappe();

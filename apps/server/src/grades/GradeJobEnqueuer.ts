@@ -1,11 +1,13 @@
 /**
- * GradeJobEnqueuer — turns a learner's newly stored gradable results into grade jobs for the Canvas gradebook; the
- * xAPI ingestion calls it after its rows commit.
+ * GradeJobEnqueuer — takes a learner's newly stored gradable results into their grade job for the Canvas gradebook;
+ * the xAPI ingestion calls it after its rows commit.
  *
  * Why: LTI-012 queues a score for every scored root result in a graded Canvas placement, and learning must never
  *      wait for Canvas, so the queue is a table (`GradeSyncJob`) that a worker drains. D-104 writes a job only for a
  *      learner principal in a Canvas launch, a gradable root result and a placement with a line item; D-115 defines
- *      the gradable root result and its score (`scaled × 100`).
+ *      the gradable root result and its score (`scaled × 100`). D-104's amendment of 2026-11-04 keeps one job per
+ *      placement and learner, whose score the worker computes from the stored results when it sends, so a learner
+ *      who stores a flood of results still holds one place in the queue.
  * Spec: LTI-012, DATA-002
  * Invariants:
  *   - Nothing is written for anyone whose highest role is not `learner`, for a portal play, for a launch without a
@@ -14,10 +16,13 @@
  *     queue a score; LTI-012's "no `subContentId`" alone is not the root test.
  *   - The placement is the launch's `(platformId, contextId, resourceLinkId)`, and a row about another activity than
  *     the placement's is skipped, so a link pointed at a new activity never grades the old one into its column.
+ *   - One job write per call, whatever number of rows: the newest gradable row in D-115's result order is taken in
+ *     (./gradeJobUpsert.ts), since the worker reads every stored result anyway.
  *   - PRIVACY: the `sub` is encrypted (`grade-lti-sub`) before it reaches the database and is never logged; logs hold
  *     counts only (DATA-002, DATA-009).
- * Collaborators: ./gradeJobUpsert.ts, ../xapi/xapiRootTests.ts (`isGradableResult`), ../xapi/XapiIngest.ts (calls
- *   `onStored`), ../auth/Principal.ts, ../security/keys/DataEncryption.ts.
+ * Collaborators: ./gradeJobUpsert.ts, ./attemptPolicyScore.ts (`compareResultOrder`), ./storedResultScores.ts
+ *   (`scoreGivenOf`), ../xapi/xapiRootTests.ts (`isGradableResult`), ../xapi/XapiIngest.ts (calls `onStored`),
+ *   ../auth/Principal.ts, ../security/keys/DataEncryption.ts.
  * Tests: apps/server/test/grades/gradeJobEnqueuer.int.test.ts
  */
 import type { Logger } from 'pino';
@@ -25,7 +30,9 @@ import { highestRole, type Principal } from '../auth/Principal.js';
 import type { Database } from '../infra/prismaClient.js';
 import type { DataEncryption } from '../security/keys/DataEncryption.js';
 import { isGradableResult } from '../xapi/xapiRootTests.js';
+import { compareResultOrder, type AttemptScore } from './attemptPolicyScore.js';
 import { upsertGradeJob } from './gradeJobUpsert.js';
+import { scoreGivenOf } from './storedResultScores.js';
 
 /** The fields of a stored `XapiStatement` that the enqueuer reads; a stored row has them all. */
 export interface GradableRow {
@@ -51,13 +58,20 @@ export interface GradeJobEnqueuerDeps {
   readonly clock?: () => Date;
 }
 
-/** How many jobs one call wrote. */
+/** How many jobs one call wrote: at most one, created or updated. */
 export interface EnqueueCounts {
   readonly created: number;
   readonly updated: number;
 }
 
 const NONE: EnqueueCounts = { created: 0, updated: 0 };
+
+/** A stored row as an attempt score, for D-115's result order. */
+const attemptScoreOf = (row: GradableRow): AttemptScore => ({
+  attemptId: row.attemptId,
+  scoreGiven: scoreGivenOf(row.scaled ?? 0),
+  resultAt: row.timestamp,
+});
 
 /** Writes grade jobs for stored gradable results (LTI-012, D-104). */
 export class GradeJobEnqueuer {
@@ -82,11 +96,11 @@ export class GradeJobEnqueuer {
   };
 
   /**
-   * Queues a job for each gradable result among the rows.
+   * Takes the newest gradable result among the rows into the learner's job in the launch's placement.
    * @param rows - Stored statements of one learner and activity.
    * @param principal - Who sent them.
    * @param ltiSubject - The request's LTI `sub`; PRIVACY: stored only encrypted.
-   * @returns How many jobs were created and updated.
+   * @returns Whether a job was created or updated.
    * @spec LTI-012
    */
   async enqueue(
@@ -117,28 +131,28 @@ export class GradeJobEnqueuer {
       select: { id: true, contentId: true, lineItemUrl: true },
     });
     if (!placement?.lineItemUrl) return NONE;
+    const ofActivity = gradable.filter(
+      (row) => row.contentId.toLowerCase() === placement.contentId.toLowerCase(),
+    );
+    const newest = ofActivity
+      .map((row) => ({ row, score: attemptScoreOf(row) }))
+      .sort((a, b) => compareResultOrder(a.score, b.score))
+      .at(-1);
+    if (newest === undefined) return NONE;
     const now = (this.deps.clock ?? (() => new Date()))();
     // PRIVACY: the only raw learner ID kept beyond the launch, encrypted, and cleared 30 days after the job stops.
     const ltiSubEncrypted = new Uint8Array(this.deps.encryption.encrypt('grade-lti-sub', ltiSubject));
-    const counts = { created: 0, updated: 0 };
-    for (const row of gradable) {
-      if (row.contentId.toLowerCase() !== placement.contentId.toLowerCase()) continue;
-      const write = await upsertGradeJob(
-        this.deps.db,
-        {
-          placementId: placement.id,
-          learnerKey: principal.learnerKey,
-          attemptId: row.attemptId,
-          // WHY: H5P rounds `scaled` to four decimals, so two decimals keep the score exact without float noise.
-          scoreGiven: Math.round((row.scaled ?? 0) * 10_000) / 100,
-          resultAt: row.timestamp,
-          academicYear: row.academicYear,
-          ltiSubEncrypted,
-        },
-        now,
-      );
-      counts[write] += 1;
-    }
-    return counts;
+    const write = await upsertGradeJob(
+      this.deps.db,
+      {
+        placementId: placement.id,
+        learnerKey: principal.learnerKey,
+        ...newest.score,
+        academicYear: newest.row.academicYear,
+        ltiSubEncrypted,
+      },
+      now,
+    );
+    return { ...NONE, [write]: 1 };
   }
 }

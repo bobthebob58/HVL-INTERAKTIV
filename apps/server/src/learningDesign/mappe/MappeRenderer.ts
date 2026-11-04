@@ -14,8 +14,8 @@
  *     more than `MAPPE_MAX_ACTIVITIES`: 400 `hvl:mappe-too-many`. Over a limit is never a refusal (D-094).
  *   - Building it contacts nothing; reading starts with a request.
  * Collaborators: ../../server/studioServices.ts (builds it), ../http/mappeRoutes.ts, ./mappeActivitySource.ts,
- *   ./mappeFindings.ts, ./activityResults.ts, ./mappeView.ts, ./mappeBlocks.ts, ./mappeRender.ts,
- *   ../content/mappeContent.ts.
+ *   ./mappeFindings.ts, ./activityResults.ts, ./storedActivityResults.ts (the results source), ./mappeView.ts,
+ *   ./mappeBlocks.ts, ./mappeRender.ts, ../content/mappeContent.ts.
  * Tests: apps/server/test/learningDesign/mappe/mappeExport.int.test.ts,
  *   apps/server/test/learningDesign/mappe/mappePrivacy.int.test.ts
  */
@@ -47,7 +47,7 @@ export interface MappeRendererDeps {
   readonly content: StudioContent;
   /** The pre-publish validator, the same as the findings route's. */
   readonly validator: ContentValidator;
-  /** Where learner results come from: `NO_RESULTS_YET` in S5 (D-095). */
+  /** Where learner results come from: the stored learning data (`StoredActivityResults`, D-095). */
   readonly results: ActivityResultsSource;
   readonly groupSize: MinimumGroupSize;
   /** The portal's origin, for each activity's link. */
@@ -121,7 +121,10 @@ export class MappeRenderer {
       mappeSourceActivities(db, request.userId, request.contentIds),
       mappeAuthorName(db, request.userId),
     ]);
-    const learners = await results.learnerSummaries(activities.map((activity) => activity.id));
+    const learners = await results.learnerSummaries(
+      activities.map((activity) => activity.id),
+      groupSize,
+    );
     const { locale } = request;
     const format = mappeFormat(locale);
     const phases = content.phases.phases.map((phase) => ({ key: phase.key, label: phase.label[locale] }));

@@ -5,8 +5,8 @@
  * Why: INS-006 hides any value about fewer than k distinct learners, and the API answer carries no value for it
  *      (D-106), so a suppressed cell is `{ suppressed: true }` and nothing else. D-106 allows only fixed periods, each
  *      from midnight Oslo time, so two overlapping views cannot isolate one learner, and one context at a time: a
- *      Canvas course as `<platformId>:<contextId>` (D-103) or the portal's plays. The INS-001…INS-005 answers (step 4)
- *      are built from these parts.
+ *      Canvas course as `<platformId>:<contextId>` (D-103) or the portal's plays. The INS-001…INS-005 answer
+ *      (./insightReport.ts) is built from these parts.
  * Spec: INS-006, INS-007, INS-001, PROD-013
  * Invariants:
  *   - A suppressed cell has exactly one key, `suppressed: true`; a shown cell has `suppressed: false` and `value`.
@@ -15,7 +15,8 @@
  *   - PRIVACY: no shape here has a learner key, attempt ID, account or per-learner row (INS-006).
  *   - k is at least 3 (INS-006); a measure an activity type cannot send is null, never 0 (D-115).
  * Collaborators: ./gradeSync.ts (whose counts are exempt from suppression), apps/server/src/privacy/minimumGroupSize.ts,
- *   apps/server (the insight routes, step 4), apps/web (the Innsikt tabs).
+ *   ./insightReport.ts, ./insightContextList.ts, ./routes/insightRoutes.ts, apps/server/src/insight/http (the insight
+ *   routes), apps/web (the Innsikt tabs).
  * Tests: packages/api-contract/test/insightSchemas.test.ts
  */
 import { z } from 'zod';

@@ -13,8 +13,8 @@
  * Collaborators: ./me.ts, ./content.ts, ./findings.ts, ./publishing.ts, ./sharing.ts, ./errors.ts, ./studio.ts,
  *   ./guideNodes.ts, ./patterns.ts, ./learnerInfo.ts, ./learningDesign.ts, ./planner.ts, ./collaboration.ts,
  *   ./sourceAttribution.ts, ./mappe.ts, ./learningDesignErrors.ts, ./xapi.ts, ./xapiResponseCaps.ts, ./gradeSync.ts,
- *   ./insight.ts, ./apiRoutes.ts, ./apiRouteTypes.ts, ./apiSchemaNames.ts, ./openApi.ts, apps/server/src/http/api/,
- *   apps/web.
+ *   ./insight.ts, ./insightReport.ts, ./insightContextList.ts, ./insightFindings.ts, ./apiRoutes.ts,
+ *   ./apiRouteTypes.ts, ./apiSchemaNames.ts, ./openApi.ts, apps/server/src/http/api/, apps/web.
  * Tests: packages/api-contract/test/
  */
 export * from './apiRoutes.js';
@@ -26,6 +26,9 @@ export * from './findings.js';
 export * from './gradeSync.js';
 export * from './guideNodes.js';
 export * from './insight.js';
+export * from './insightContextList.js';
+export * from './insightFindings.js';
+export * from './insightReport.js';
 export * from './learnerInfo.js';
 export * from './learningDesign.js';
 export * from './learningDesignErrors.js';

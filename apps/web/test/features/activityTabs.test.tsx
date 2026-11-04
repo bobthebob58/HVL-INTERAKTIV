@@ -45,19 +45,28 @@ const routes = (detail: ContentDetail) => ({
 });
 
 describe('[UD-006] the activity page’s tab registry', () => {
-  it('[UD-006] lists Spel, Rediger, Læringsdesign, Deling, Sjekk og publiser and Poeng til Canvas in that order, each id once', () => {
-    expect(ids(ACTIVITY_TABS)).toEqual(['play', 'edit', 'learning-design', 'sharing', 'check', 'grade-sync']);
+  it('[UD-006] lists Spel, Rediger, Læringsdesign, Deling, Sjekk og publiser, Innsikt and Poeng til Canvas in that order, each id once', () => {
+    expect(ids(ACTIVITY_TABS)).toEqual([
+      'play',
+      'edit',
+      'learning-design',
+      'sharing',
+      'check',
+      'insight',
+      'grade-sync',
+    ]);
     expect(new Set(ids(ACTIVITY_TABS)).size).toBe(ACTIVITY_TABS.length);
   });
 
   it.each([
-    ['an owner', DETAIL, ['play', 'edit', 'learning-design', 'sharing', 'check', 'grade-sync']],
+    ['an owner', DETAIL, ['play', 'edit', 'learning-design', 'sharing', 'check', 'insight', 'grade-sync']],
     [
       'an editor who may not publish',
       { ...DETAIL, mayPublish: false },
-      ['play', 'edit', 'learning-design', 'sharing', 'grade-sync'],
+      ['play', 'edit', 'learning-design', 'sharing', 'insight', 'grade-sync'],
     ],
-    // LTI-012: an admin may edit, but sees the scores sent to Canvas only as an owner or co-author (D-106)
+    // LTI-012, INS-007: an admin may edit, but sees insight and the scores sent to Canvas only as an owner or
+    // co-author (D-106)
     [
       'an admin who neither owns nor co-authors it',
       { ...DETAIL, role: null },
@@ -89,7 +98,7 @@ describe('[UD-006] the activity page’s tab registry', () => {
     };
     // Act
     const shown = activityTabsFor(DETAIL, [...ACTIVITY_TABS, Extra]);
-    const Panel = shown[6]?.Panel;
+    const Panel = shown[7]?.Panel;
     let selected = '';
     render(Panel ? <Panel {...panelProps(DETAIL, (id) => (selected = id))} /> : null);
     fireEvent.click(screen.getByRole('button', { name: 'Celler og vev' }));
@@ -100,6 +109,7 @@ describe('[UD-006] the activity page’s tab registry', () => {
       'learning-design',
       'sharing',
       'check',
+      'insight',
       'grade-sync',
       'extra',
     ]);

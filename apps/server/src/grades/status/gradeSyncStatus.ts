@@ -3,9 +3,10 @@
  * course, policy and its jobs counted by state (sent, pending, failed, orphaned).
  *
  * Why: LTI-012's acceptance: authors see a per-activity sync status. D-104 shows the counts per placement, on the
- *      activity page and in `/app/play`, with orphaned beside sent, pending and failed. The counts are of jobs (one
- *      per attempt with a gradable result, D-115) and are not k-suppressed (spec 05 §3, D-106): Canvas's gradebook
- *      shows each learner's score to the same teachers anyway.
+ *      activity page and in `/app/play`, with orphaned beside sent, pending and failed. The counts are of jobs, one
+ *      per learner and placement (D-104's amendment of 2026-11-04), so each is a learner's score in that state; they
+ *      are not k-suppressed (spec 05 §3, D-106): Canvas's gradebook shows each learner's score to the course's
+ *      teachers anyway.
  * Spec: LTI-012, LTI-006
  * Invariants:
  *   - PRIVACY: only counts leave this module: no learner key, Canvas user ID, score or error text is read into the

@@ -45,9 +45,13 @@ uses the key in `monospace` (`DOC-009`).
 
 | UI text (nn) | Meaning |
 |---|---|
-| *Innsikt* | Insight (teacher analytics) |
-| *Før samlinga* | "Before the session" (the default insight view) |
-| *Ta opp i samlinga* | "Bring to the session" (shortlist button) |
+| *Innsikt* | Insight (teacher analytics): the **Innsikt** tab on the activity page and on an author's Canvas page, one activity, version, context and fixed period at a time (S6, D-101, D-106) |
+| *Før samlinga* (nb: *før samlingen*) | "Before the session" (the default insight view); the tab's heading is «Innsikt før samlinga» |
+| *Ta opp i samlinga* (nb: *Ta opp i samlingen*) | "Bring to the session" (shortlist button); the list can be printed or shown «på storskjerm» (projected) |
+| *Deltaking* / *Starta* / *Fullført* / *Fullføringsgrad* (nb: *Deltakelse* / *Startet* / *Fullført* / *Fullføringsgrad*) | Participation / Started / Completed / Completion rate on the **Innsikt** tab (`INS-001`); started is any stored statement, completed a stored final result (D-115) |
+| *Misoppfatningar* (nb: *Misoppfatninger*) | Misconceptions: the first answers to choice and gap questions, with the teacher's own feedback by each wrong option (`INS-003`) |
+| *Skjult av omsyn til personvernet* (nb: *skjult av hensyn til personvernet*) | "Hidden for privacy": what a screen reader hears after «< 5», a value about fewer than *k* learners or one hidden so that another cannot be worked out (`INS-006`, D-106) |
+| *Poeng til Canvas* | "Scores to Canvas": the tab with the counts of formative scores sent to the course's gradebook, waiting or failed, and the retry (`LTI-012`, D-104) |
 | *Rediger* | Edit |
 | *Riktig / Feil* | Correct / Incorrect (feedback prefixes) |
 | *Hjelp* | Help |

@@ -248,5 +248,71 @@
       "noSubmitScreen": "No points for the gradebook: the video has no submit screen, so this assignment’s column in Canvas stays empty. Add a submit screen to the video if you want points.",
       "noScoring": "No points for the gradebook: the scenario is set up without scoring (“No scoring” under “Scoring options”), so this assignment’s column in Canvas stays empty. Choose a scoring option there if you want points."
     }
+  },
+  "insight": {
+    "csv": {
+      "filename": "insight",
+      "column": {
+        "section": "Section",
+        "item": "Question ID",
+        "part": "No. or second",
+        "label": "Text",
+        "measure": "Measure",
+        "value": "Value"
+      },
+      "section": {
+        "note": "Note",
+        "scope": "Selection",
+        "participation": "Participation",
+        "items": "Questions",
+        "choices": "Answer distribution",
+        "gaps": "Gaps",
+        "video": "Video"
+      },
+      "note": {
+        "formative": "Formative assessment",
+        "suppressed": "Hidden values",
+        "suppressedText": "“< {{k}}” means that the number is based on fewer than {{k}} students, or could reveal such a number, and is therefore hidden. An empty cell means that the number does not exist for this selection: the type of activity does not send it, or Canvas has given no count of the students in the course."
+      },
+      "scope": {
+        "activity": "Activity (ID)",
+        "contentVersion": "Version",
+        "currentVersion": "Current version",
+        "period": "Period",
+        "periodStart": "From",
+        "periodEnd": "To",
+        "context": "Course",
+        "minimumGroupSize": "Smallest group (k)"
+      },
+      "period": {
+        "7d": "Last 7 days",
+        "14d": "Last 14 days",
+        "30d": "Last 30 days",
+        "semester": "Since the semester started"
+      },
+      "portal": "The portal (played outside Canvas)",
+      "measure": {
+        "started": "Started",
+        "completed": "Completed",
+        "completionRate": "Completion rate (share)",
+        "completionRateOfCourse": "Completion rate (share of the students in the course)",
+        "completionRateOfStarted": "Completion rate (share of those who started)",
+        "courseLearners": "Students in the course (Canvas)",
+        "medianMinutesOnTask": "Median time on the activity (minutes)",
+        "medianAttempts": "Median number of attempts",
+        "learners": "Students who answered",
+        "firstCorrect": "Correct on the first attempt (share)",
+        "latestCorrect": "Correct on the latest attempt (share)",
+        "rightOption": "Right option (students, first answer)",
+        "wrongOption": "Wrong option (students, first answer)",
+        "noAnswer": "None of the options (students, first answer)",
+        "gapCorrect": "Right answers in the gap (students, first answer)",
+        "wrongAnswer": "Wrong answer in the gap (students, first answer)",
+        "otherWrong": "Other wrong answers (students, first answer)",
+        "empty": "Empty gap (students, first answer)",
+        "answered": "Students who answered",
+        "share": "Share of those who started"
+      }
+    }
   }
 }

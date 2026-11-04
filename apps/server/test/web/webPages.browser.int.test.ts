@@ -81,7 +81,13 @@ import {
       // Assert
       await page.getByRole('heading', { level: 1, name: 'Celler og vev' }).waitFor();
       expect(new URL(page.url()).search).toBe('');
-      expect(await page.getByRole('tab').allTextContents()).toEqual(['Spel', 'Rediger', 'Poeng til Canvas']);
+      // WHY: an author's Canvas page has «Innsikt» (PROD-010, D-106) and «Poeng til Canvas» (LTI-012) too.
+      expect(await page.getByRole('tab').allTextContents()).toEqual([
+        'Spel',
+        'Rediger',
+        'Innsikt',
+        'Poeng til Canvas',
+      ]);
       expect(await page.getByTitle('Spel: Celler og vev').getAttribute('src')).toBe(
         `/lti/play?ltik=${encodeURIComponent(LTIK)}`,
       );

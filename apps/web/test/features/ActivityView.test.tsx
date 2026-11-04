@@ -48,7 +48,7 @@ const routes = (detail: ContentDetail = DETAIL): FakeRoutes => ({
 });
 
 describe('[LTI-006] the activity page', () => {
-  it('[LTI-006] an author gets Spel, Rediger, Læringsdesign, Deling, Sjekk og publiser and Poeng til Canvas, and the player frame has a title', async () => {
+  it('[LTI-006] an author gets Spel, Rediger, Læringsdesign, Deling, Sjekk og publiser, Innsikt and Poeng til Canvas, and the player frame has a title', async () => {
     fakeFetch(routes());
     render(<ActivityView contentId={ID} />);
     expect(await screen.findByRole('heading', { level: 1, name: 'Celler og vev' })).toBeTruthy();
@@ -59,6 +59,7 @@ describe('[LTI-006] the activity page', () => {
       'Læringsdesign',
       'Deling',
       'Sjekk og publiser',
+      'Innsikt',
       'Poeng til Canvas',
     ]);
     expect(screen.getByTitle('Spel: Celler og vev').getAttribute('src')).toBe(`/h5p/play/${ID}`);

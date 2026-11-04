@@ -2287,6 +2287,23 @@ loading of one spec per session are kept.
   `activityResults.ts`. Below *k* learners nothing at all is shown, not even the count; the median attempts need *k*
   learners, and the change from the first to the last attempt (the mean, in percentage points) needs *k* learners
   with both scores. A rate of 0 % or 100 % is always hidden by the two-sided rule.
+- **Amendment (2026-11-04, S6 step 4, `MAPPE-003`: the real results source):** `StoredActivityResults`
+  (`learningDesign/mappe/storedActivityResults.ts`) replaces S5's "no results yet". It reads the stored
+  `XapiStatement` rows of the export's activities (the author's own and co-authored ones only, D-066), with no period:
+  every row until the yearly purge (D-107). A learner's figures mean what insight's do (D-115): started with any stored
+  statement, completed with a stored root result, attempts are the stored root results, and the scores are those of
+  root results with a maximum above 0. *Decided:* the mappe adds up what insight shows one group at a time (D-106), so
+  an activity's learners are grouped by context (a Canvas course as `<platformId>:<contextId>`, D-103, or the
+  portal), content version (`PROD-013`) and semester (from midnight Oslo time on 1 January or 1 August, as insight's
+  `semester` period), and only groups of at least *k* distinct learners count; a learner in two groups gives one
+  summary in each. Otherwise the mappe's totals less insight's views would give a group that insight hides (the "all
+  contexts minus one" D-106 refused), or tell how many learners played in two groups. When a counted group's
+  completers number 1 to *k* − 1 (insight hides them), the completion rate and the median attempts are shown only if
+  those groups' completers and non-completers each number at least *k* together. First and last scores are given only
+  to a learner with two or more scored results in the group, so a single attempt never shows as a change.
+  *Consequences:* an activity played only in small groups shows no figures in the mappe, even when its learners
+  together number *k* or more, so the mappe's participants can be fewer than all who played; the hand-worked figures
+  are tested on stored rows (`storedActivityResults.int.test.ts`, `learnerSummaries.test.ts`).
 
 ### D-096 · The portfolio PDF is rendered by Chromium on the server
 - **Context:** `MAPPE-004` asks for a tagged PDF with language, title, outline and real text from the same semantic
@@ -2650,6 +2667,69 @@ loading of one spec per session are kept.
 - **Amendment (2026-10-30, S6 step 3):** `latest` is not "the job created last" (P1 amendment above): it is the job
   whose result was stored last, by `GradeSyncJob.resultAt`, then by attempt number and attempt ID (D-115's step-3
   amendment).
+- **Amendment (2026-11-04, the step-3 security review, findings 1 and 4: the queue):** *Found:* jobs were per attempt,
+  and D-115 makes every gradable root result an attempt, so one Canvas learner could write a job for each of the 120
+  statements a minute that `LTI-011` lets them post per activity, all made up. The worker claims at most 50 due jobs a
+  run, oldest first, every 15 s (about 200 a minute), so one learner could hold back every other learner's score, and
+  the table grew with every result. Separately (finding 4), a job was lost when its write failed after the batch's
+  statements were stored, since the batch is answered 202 and a resend is skipped. *Decided, in place of "Jobs are
+  idempotent per `(placement, learnerKey, attemptId)`" above and the two amendments before this one:*
+  - **One job per placement and learner.** `idempotencyKey` is `<placementId>:<learnerKey>`, so the queue holds at
+    most one job per pair, however many results a learner stores. The job is that learner's score in that gradebook
+    column. A newly stored gradable result updates its `attemptId`, `scoreGiven` and `resultAt` (the result the job
+    took in last, which the worker's settlement compares) and the encrypted `sub` (from the request); a pending job
+    keeps its attempts and `nextAttemptAt`; a stopped job (succeeded, failed or orphaned) becomes pending at once,
+    with its attempts, `terminalAt`, `succeededAt` and `lastError` reset and `createdAt` set to that moment, so each
+    reopening gets the 8 attempts within 24 hours again. An author's retry still keeps `createdAt` (one attempt per
+    retry after the 24 hours). `LTI-012`'s idempotency per `(placement, learnerKey, attemptId)` holds a fortiori: a
+    result taken in twice changes nothing but the job's state.
+  - **The score comes from the stored results, read when it is sent.** The worker applies the placement's policy to
+    the learner's stored gradable root results (D-115) of the placement's activity in the placement's course
+    (`<platformId>:<contextId>`, D-103): `best` the highest, `latest` the last in D-115's result order (`timestamp`,
+    then attempt number, then attempt ID), `mastery` 100 once any reaches the threshold, else the latest. It reads the
+    best result and the results with the latest timestamp, which give the same score as all of them. A job with no
+    stored result (a data-subject erasure, or a link that now opens another activity) fails as `no-result`, unsent.
+  - **Fair claiming.** A run still claims at most 50 jobs, oldest due first; as a job is one learner's score, one
+    learner takes at most one place a run. A job that takes in a result while its score is in flight is not settled
+    over: it is due again at once (a retry keeps its backoff), so the new result goes at the next run, not after the
+    30-minute claim.
+  - **Reconciling (finding 4).** Each run also reopens a stopped job, `sub` still kept, whose learner has a gradable
+    result in the job's activity and course stored after the job's `resultAt`, from 15 minutes up to 1 minute before
+    the run (the minute lets the ingestion's own job write finish first), and takes that result in as above. This
+    mends a failed job write for a learner who already has the job. One whose first job write failed has no job, and
+    so no `sub` in our records: their next gradable result in that placement writes the job, whose send includes the
+    lost result; if they never play again it never reaches Canvas. A failure while the worker was down for more than
+    15 minutes is likewise left to the learner's next result. Both are residuals for the students' checklist; an
+    outbox in the ingestion's transaction would close them, at the price of a grade write in every batch.
+  - **No cap on stored results per minute:** with the queue bounded by pairs, a flood costs at most one score post
+    per learner and run; `LTI-011`'s limit still bounds the statements, whose table grows with it as before.
+  - *Consequences:* the status counts (D-106) are learners' scores in each state, one per learner and placement, not
+    attempts; they are still `LTI-012`'s "counts of sent / pending / failed". That a count can then be about one
+    learner, also in a colleague's course whose counts an owner or co-author sees unsuppressed (D-106's residual),
+    is recorded for the DPO (`docs/privacy/DPIA-INPUT.md`, R1; Q22). Two links to one activity in one course read
+    the same stored results (a statement names no link, `DATA-012`), graded or not: each graded link applies its own
+    policy and has a job only for a learner who played that link, and that learner's score there also counts plays
+    through the other link, an ungraded practice link included, whose newer results also reopen the stopped job
+    (the reconciling pass). Keeping them apart needs the link in the statement, a `DATA-012` change for the owner to
+    weigh (the skeptic review of 2026-11-04). The S6 migration is unchanged; the meaning of `idempotencyKey`,
+    `attemptId`, `scoreGiven`, `resultAt` and `createdAt` changes as above, which the schema's comments and the data
+    inventory must say. Rows written per attempt before this amendment (development databases; S6 is not deployed) are
+    still sent and settled; their learner's next result writes the per-learner job. Spec 02 `LTI-012` gets an
+    amendment note.
+- **Amendment (2026-11-04, the step-3 security review, finding 2: the line item's URL):** the worker sends the
+  learner's `sub` and a bearer token to the `lineItemUrl` that the launch's AGS claim names, and nothing checked it.
+  Canvas serves AGS on the institution's own domain (`canvas-platform-values.md` §1, the AGS service URLs row), the
+  domain `CANVAS_ORIGINS` already lists so that Canvas may frame the tool. *Decided:* a line item URL is allowed only
+  when it parses as a URL, holds no user name or password, uses https where https is required (production), and its
+  origin is in `CANVAS_ORIGINS` or is the origin of one of the platform's own configured URLs (its issuer, as a
+  self-hosted Canvas serves AGS on its issuer's host, and its authorisation and token endpoints). The placement
+  recorder checks it at every launch and stores none instead (the link is then not graded; the refusal is logged with
+  its origin only); the worker checks it again before it asks for a token, and fails the job as `line-item-url`
+  without any request (a URL stored before this rule, or after `CANVAS_ORIGINS` changed). Redirects were already
+  refused. *Wiring:* the server passes `CANVAS_ORIGINS` and `NODE_ENV === 'production'` to both; without them only the
+  platform's own origins are allowed, and production's checks keep those on https (`productionChecks.ts`). *Not
+  chosen:* a per-platform origin list in `LTI_PLATFORMS` (a configuration change, while HVL's `CANVAS_ORIGINS` names
+  HVL's own Canvas domains only); a DNS check against private addresses, which the allow-list makes unnecessary.
 
 ### D-105 · The formative line-item label is configurable, and scores are labelled formative wherever shown
 - **Context:** `LTI-013` labels AGS scores formative with the suffix "(formativ)" on the line-item `label`. On
@@ -2729,6 +2809,49 @@ loading of one spec per session are kept.
   it from the bank or copied it, which spec 05 §3's "data from other courses' contexts" can be read to forbid, so the
   DPO and the owner may narrow it by amendment; and a 0 % or 100 % rate tells what every learner in a group of at
   least *k* did.
+- **Amendment (2026-11-04, S6 step 4: suppression and the tab as built):** *Found* in the insight core's review: an
+  exhaustive check of every group of two to five cells for *k* = 3 to 6 showed that hiding only "the next-smallest
+  cell" lets a reader who knows the rule (it is public, here and in `INS-006`) work hidden counts out in about one
+  answer in ten (with *k* = 5, the cells `(hidden, 0, hidden, 5)` of a total of 6 can only be `[0, 0, 1, 5]`); and
+  `INS-002`'s share right times its learners tells how many chose the right options, which `INS-003` may hide.
+  *Decided, in place of "the next-smallest cell is hidden too" and "`minimumGroupSize.ts` gets the insight rules
+  beside the mappe's" above:*
+  - **A 0 is shown.** A count of 0 is about no learner, so it singles no one out, and it is the "nobody chose this" a
+    seminar needs, as a rate of 0 % is. A 0 is hidden only as a complement or inside a hidden group (below).
+    `SPEC-DEVIATION` `INS-006`, whose "fewer than *k*" read literally takes in 0 (`insight/suppression/insightCells.ts`).
+  - **Complementary suppression.** In a group whose cells add up to a shown total (a choice question's options and
+    «no answer»; a gap's right answers, listed wrong answers, other wrong answers and empty gaps), a complement is
+    needed when exactly one cell is hidden, or when two or more are and all hold 1 or all hold *k* − 1. Then every
+    shown 0 is hidden; in a group without a 0, the smallest shown count is hidden, then each next shown count less
+    than *k* above the last one hidden. A hidden total hides every cell of its group. This hides more than one
+    "next-smallest cell" where that is needed, and never less. The tab's privacy note says that a hidden cell may hold
+    more than *k* − 1 learners; nothing says which cells are complements.
+  - **Parts another view gives away.** A single-answer choice question is protected as two parts, its right options
+    and its wrong options with «no answer», each with its own total, since `INS-002`'s share gives the right options'
+    total; a task with one gap likewise (right, and the rest). A multi-answer question stays one group, since
+    `INS-002` counts only fully right answers there.
+  - **A hidden starter group hides every question cell.** When the learners who started number 1 to *k* − 1, every
+    `INS-002` and `INS-003` cell is hidden, zeros included, as participation and video engagement already are.
+  - **`INS-003` for the current content version only.** A version is raised only by a structural save (D-093), which
+    may reorder options or change gaps, and older parameters are not stored, so an older version's option numbers
+    and gap answers cannot be matched to texts. For an older version the tab says that answer distributions are shown
+    for the current version only; participation, `INS-002` and `INS-005` read by sub-content and are shown for every
+    version. `SPEC-DEVIATION` `INS-003` for older versions (`insight/buildInsightReport.ts`, the web's
+    `MisconceptionSection.tsx`).
+  - **Where the rules are:** `apps/server/src/insight/suppression/` (`insightCells.ts`, `additiveGroupCells.ts`),
+    with *k* from `minimumGroupSize()` (`MIN_GROUP_SIZE`); `privacy/minimumGroupSize.ts` keeps the mappe's rules.
+  - **The Canvas tab:** `/app/play` shows **Innsikt** to a launch that may edit the activity, as it shows **Poeng til
+    Canvas**, since the launch tells the page only `mayEdit`. The API admits every LTI author of the launch's course
+    where the activity is placed (as above), so a course copy's teacher who may not edit can read the view through
+    the API but has no tab yet.
+  - *Verified by* `additiveGroupExhaustive.test.ts` (every group of two to five cells, *k* = 3–6, with `INS-002`'s
+    share as known) and the `[INS-006]` property tests over the report, the CSV rows, and the API's JSON and CSV.
+  - *Residuals for the DPIA input (`DATA-005`, `docs/privacy/DPIA-INPUT.md` R6–R9) and the DPO (Q6):* a share in
+    `INS-002` over *k* or more learners can give a count below *k* (10 % of 20 is 2) that `INS-003` hides; when *k* or
+    more learners each hold a cell of their own and no cell is empty, every cell is hidden yet each must be 1; the
+    fixed periods are nested (7 ⊂ 14 ⊂ 30 days ⊂ the semester), so two views of the same day can isolate the learners
+    active only in their difference; and a "first answer" is the first within the chosen period, while answers H5P
+    accepts as small spelling errors are listed as wrong in `INS-003`.
 
 ### D-107 · `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year
 - **Context:** `DATA-003` runs the purge "on a configured date (default 15 August)" for the academic year that has
@@ -3370,3 +3493,20 @@ loading of one spec per session are kept.
   in `uv-module` (the step-3 review amendment). Its regression test is still to be written, and whether the pattern
   then turns the book's retry off, and so departs from `PROD-009` with a `SPEC-DEVIATION`, stays the owner's call
   (Q20); until then the book's retry stays on and the tests above require it.
+- **Amendment (2026-11-04, the step-3 security review):** *The attempt policy:* D-104's amendment of the same day
+  replaces "each stored gradable result in a Canvas launch writes a `GradeSyncJob` per `(placement, learnerKey,
+  attemptId)`" and the step-3 amendment's `latest` by `GradeSyncJob.resultAt`: there is one job per placement and
+  learner, and the policy reads the stored gradable results themselves, in the same result order (`timestamp`, then
+  the attempt number `n` of `<viewId>:<n>`, then the attempt ID as text). The attempt rule itself is unchanged.
+- **Amendment (2026-11-04, the step-3 security review): *the book's «Prøv igjen» (Q20), pinned.*** The regression test
+  the step-3 review amendment asked for is `uvModuleBookRetry.browser.int.test.ts` (an upstream pin, DOC-004). It
+  creates `uv-module` through the pattern route on the real content types, plays it as its author in Chromium in
+  Nynorsk, finishes the first chapter check and presses «Prøv igjen» on the book's summary page. It pins what
+  QuestionSet 1.21 and InteractiveBook 1.15 do today: the document holds six progress dots at load (two sets) and nine
+  on the summary page; the check's results page offers no «Prøv igjen» (`endGame.showRetryButton: false`); the book's
+  «Prøv igjen» raises one `TypeError` (reading `classList`, in `toggleFilledDot` of H5P.Components 1.0, which
+  QuestionSet's reset calls for a dot that is not its own); the book stays on its summary page; and the first check
+  keeps its results page, so a finished chapter check cannot be retried at all. An upstream fix, or a change of the
+  pattern's retry switches, fails the pin. Not decided here: whether the pattern turns the book's retry off
+  (`behaviour.enableRetry: false`), and so departs from `PROD-009` with a `SPEC-DEVIATION`; that stays the owner's
+  call (Q20), and until then the book's retry stays on, as the S5 tests require.

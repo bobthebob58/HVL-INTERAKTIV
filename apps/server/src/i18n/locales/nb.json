@@ -248,5 +248,71 @@
       "noSubmitScreen": "Ingen poeng til karakterboken: videoen har ingen innsendingsside, så kolonnen for denne oppgaven i Canvas blir stående tom. Legg til en innsendingsside i videoen hvis du vil ha poeng.",
       "noScoring": "Ingen poeng til karakterboken: scenarioet er satt opp uten poeng («No scoring» under «Scoring options»), så kolonnen for denne oppgaven i Canvas blir stående tom. Velg et annet alternativ der hvis du vil ha poeng."
     }
+  },
+  "insight": {
+    "csv": {
+      "filename": "innsikt",
+      "column": {
+        "section": "Del",
+        "item": "Spørsmåls-ID",
+        "part": "Nr. eller sekund",
+        "label": "Tekst",
+        "measure": "Mål",
+        "value": "Verdi"
+      },
+      "section": {
+        "note": "Merknad",
+        "scope": "Utvalg",
+        "participation": "Deltakelse",
+        "items": "Spørsmål",
+        "choices": "Svarfordeling",
+        "gaps": "Luker",
+        "video": "Video"
+      },
+      "note": {
+        "formative": "Underveisvurdering",
+        "suppressed": "Skjulte verdier",
+        "suppressedText": "«< {{k}}» betyr at tallet bygger på færre enn {{k}} studenter, eller at det kunne avsløre et slikt tall, og derfor er skjult. En tom celle betyr at tallet ikke finnes for dette utvalget: aktivitetstypen sender det ikke, eller Canvas har ikke gitt noe antall studenter i emnet."
+      },
+      "scope": {
+        "activity": "Aktivitet (ID)",
+        "contentVersion": "Versjon",
+        "currentVersion": "Gjeldende versjon",
+        "period": "Periode",
+        "periodStart": "Fra",
+        "periodEnd": "Til",
+        "context": "Emne",
+        "minimumGroupSize": "Minste gruppe (k)"
+      },
+      "period": {
+        "7d": "Siste 7 dager",
+        "14d": "Siste 14 dager",
+        "30d": "Siste 30 dager",
+        "semester": "Siden semesterstart"
+      },
+      "portal": "Portalen (spilt utenom Canvas)",
+      "measure": {
+        "started": "Startet",
+        "completed": "Fullført",
+        "completionRate": "Fullføringsgrad (andel)",
+        "completionRateOfCourse": "Fullføringsgrad (andel av studentene i emnet)",
+        "completionRateOfStarted": "Fullføringsgrad (andel av dem som startet)",
+        "courseLearners": "Studenter i emnet (Canvas)",
+        "medianMinutesOnTask": "Median tid på aktiviteten (minutter)",
+        "medianAttempts": "Median antall forsøk",
+        "learners": "Studenter som svarte",
+        "firstCorrect": "Riktig på første forsøk (andel)",
+        "latestCorrect": "Riktig på siste forsøk (andel)",
+        "rightOption": "Riktig alternativ (studenter, første svar)",
+        "wrongOption": "Feil alternativ (studenter, første svar)",
+        "noAnswer": "Ingen av alternativene (studenter, første svar)",
+        "gapCorrect": "Riktige svar i luken (studenter, første svar)",
+        "wrongAnswer": "Feil svar i luken (studenter, første svar)",
+        "otherWrong": "Andre feil svar (studenter, første svar)",
+        "empty": "Tom luke (studenter, første svar)",
+        "answered": "Studenter som svarte",
+        "share": "Andel av dem som startet"
+      }
+    }
   }
 }

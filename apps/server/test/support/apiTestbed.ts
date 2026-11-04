@@ -13,6 +13,7 @@
  *   - `validator` and `clockOffsetMs` are read on every request, so a test can change them between requests.
  *   - The studio's routes are mounted with the real services (./apiTestbedStudio.ts) on the test Redis and the
  *     repository's studio content (or the content a test passes); only the H5P engine is a stand-in.
+ *   - The grade bridge's and insight's routes get their services as createApp gives them (*k* = 5).
  * Collaborators: ../../src/http/api/apiRouter.ts, ../../src/http/h5pErrorHandler.ts, ./services.ts,
  *   ./apiTestbedStudio.ts.
  * Tests: apps/server/test/http/api/publishRoutes.int.test.ts, apps/server/test/http/api/publishGuards.int.test.ts,
@@ -26,6 +27,9 @@ import { setPrincipal } from '../../src/auth/principalLocals.js';
 import { PrismaContentAccessRepository } from '../../src/h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../../src/http/api/apiRouter.js';
 import { gradeBridgeApi } from '../../src/server/gradeBridgeApi.js';
+import { PrismaContentStorage } from '../../src/h5p/storage/PrismaContentStorage.js';
+import type { S3ContentFileStore } from '../../src/h5p/storage/S3ContentFileStore.js';
+import { insightApi } from '../../src/insight/http/insightApi.js';
 import { h5pErrorHandler } from '../../src/http/h5pErrorHandler.js';
 import { HttpError } from '../../src/http/HttpError.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
@@ -161,9 +165,12 @@ export function openApiTestbed(options: { studioContent?: StudioContent; logger?
     redis,
     logger: options.logger ?? createLogger({ level: 'silent' }),
   });
+  // WHY: insight reads only parameters and metadata from the content store; the S3 file store is never touched.
+  const content = new PrismaContentStorage(db, {} as S3ContentFileStore);
+  const insight = insightApi({ db, redis, content, minGroupSize: 5 });
   app.use(
     '/api',
-    apiRouter({ publishing, access, studio, ...gradeBridge, serveDocs: true }),
+    apiRouter({ publishing, access, studio, ...gradeBridge, insight, serveDocs: true }),
     (_req, _res, next) => next(new HttpError(404, 'error.notFound')),
   );
   app.use('/api', h5pErrorHandler(options.logger ?? createLogger({ level: 'silent' })));

@@ -14,6 +14,8 @@
  *   - A launch handler's refusal is shown in the launch's language (`inLaunchLocale`, PROD-012).
  *   - A resource-link launch refreshes its course's NRPS learner count after the redirect when `nrps` is given
  *     (LTI-008); Deep Linking labels graded items by `labelMode` (LTI-013, D-105).
+ *   - SECURITY: a launch's line item URL is recorded only on an allowed origin (`canvasOrigins` or the platform's
+ *     own), and only on https with `requireHttps` (D-104 amendment of 2026-11-04).
  * Collaborators: ./LtiProviderFactory.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts,
  *   ./play/ltiPlayRoutes.ts, ./play/ltiEditRoutes.ts, ./play/appLaunchRoutes.ts, ./deepLinking/deepLinkRoutes.ts,
  *   ./http/ltiErrorPages.ts, ./ltikPrincipal.ts, ./nrps/nrpsServices.ts, ../validation/activityLanguage.ts (the
@@ -76,6 +78,8 @@ export interface LtiRouteDeps {
   readonly chromePages?: boolean;
   /** `CANVAS_ORIGINS`. */
   readonly canvasOrigins: readonly string[];
+  /** Production: a line item URL must be https (D-104); any web scheme when left out. */
+  readonly requireHttps?: boolean;
   /** `LTI_TOKEN_MAX_AGE_SECONDS`. */
   readonly tokenMaxAgeSeconds: number;
   /** `PUBLIC_BASE_URL`. */
@@ -123,19 +127,16 @@ const inLaunchLocale =
  * @returns The router, the ltik resolver, the provider and the deployment guard.
  */
 export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
-  const { db, canvasOrigins } = deps;
-  const {
-    provider,
-    router: ltijsRouter,
-    deployments,
-  } = createLtiProvider({
+  const { db, canvasOrigins, requireHttps, logger } = deps;
+  const ltijs = createLtiProvider({
     db,
     redis: deps.redis,
     encryption: deps.encryption,
-    logger: deps.logger,
+    logger,
     canvasOrigins,
     tokenMaxAgeSeconds: deps.tokenMaxAgeSeconds,
   });
+  const { provider, deployments } = ltijs;
   const accounts = new LtiAccounts({
     accounts: new AccountResolver({ db, hasher: deps.hasher }),
     secrets: deps.secrets,
@@ -145,7 +146,7 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
       onResourceLink({
         accounts,
         access: deps.access,
-        placements: new LtiPlacementRecorder(db),
+        placements: new LtiPlacementRecorder(db, { origins: canvasOrigins, requireHttps, logger }),
         audit: deps.audit,
         ...(deps.chromePages ? { landingPath: APP_PLAY_PATH } : {}),
         nrps: deps.nrps,
@@ -169,7 +170,7 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
   const resolve = (ltik: string): Promise<ResolvedLtik> =>
     resolveLtik({ provider, deployments, accounts }, ltik);
   const router = Router();
-  router.use(ltijsRouter);
+  router.use(ltijs.router);
   const { contentStorage } = deps.editorView.editor.contentManager;
   router.use(
     ltiPlayRoutes({

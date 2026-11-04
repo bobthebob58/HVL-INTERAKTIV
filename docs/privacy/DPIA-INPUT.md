@@ -1,0 +1,24 @@
+# DPIA input
+
+> Requirement `DATA-005`. HVL is the data controller; its data protection officer (DPO) completes the formal DPIA
+> from this input (open question Q6). **Status: started 2026-11-04 with the residual risks below, which earlier
+> decisions left for the DPO.** S6 step 5 completes the file with the processing operations, the data flows (with a
+> diagram), the risks and their mitigations, and the Canvas developer key's `privacy_level` and custom fields, as
+> spec 05 `DATA-005` asks. Every field and its retention is in [DATA-INVENTORY.md](DATA-INVENTORY.md).
+
+## Residual risks for the DPO
+
+Each row is a risk that a decision accepted, narrowed or left open. The DPO may accept it, or ask for a change by an
+amendment of the decision named.
+
+| # | Residual | Where decided | What the DPO is asked |
+|---|---|---|---|
+| R1 | **Grade-sync counts in colleagues' courses.** The counts of scores sent to Canvas, pending, failed and orphaned are not *k*-suppressed (spec 05 §3 exempts them; D-104, D-106). Since 2026-11-04 there is one count per learner and placement (D-104's amendment of that day), so a count can be about a single learner. In `/app/play`, a Canvas author sees only the course of the launch, whose gradebook already shows each learner's score. On the activity page, the activity's owner and co-authors see the counts of every course the activity is placed in, also a colleague's course that placed it from the content bank or copied it. There they are not teachers, and Canvas would show them nothing. No name, learner key, Canvas ID, score or error text is shown, only numbers per course. | D-106 (who may see), D-104 (the counts), Q22 | Keep it as it is; suppress counts below *k* for courses the viewer does not teach; or show portal owners and co-authors only the courses they have launched as teachers. |
+| R2 | **Insight in colleagues' courses.** An owner or co-author sees *k*-suppressed aggregates for every course their activity is placed in, including a colleague's course; spec 05 §3's "data from other courses' contexts" can be read to forbid it. | D-106 | The same choice as R1, for the insight views. |
+| R3 | **Two views a day apart.** Fixed periods stop a teacher from differencing two chosen dates, but views of the same period on two days differ by one day's learners. | D-106 | Accept, or ask for snapshots that change only once a week. |
+| R4 | **0 % and 100 %.** A rate of 0 % or 100 % over at least *k* learners tells what every learner in that group did; D-106 shows it, because "nobody got question 3 right" is what a seminar needs. | D-106 | Accept, or hide those rates as the mappe does (D-095). |
+| R5 | **The encrypted Canvas user ID.** `GradeSyncJob.ltiSubEncrypted` is the only raw learner ID kept after a launch's 24 hours; it is cleared 30 days after the job stops, whatever the outcome. Since 2026-11-04 a learner's job in a placement is reopened by each new scored result, which writes the ID again, so it is kept while the learner keeps playing and for 30 days after the last send. | D-104 and its amendment of 2026-11-04, `DATA-002` | Accept the period, or shorten it. |
+| R6 | **A share that gives a small count.** Insight's share right on a question (`INS-002`) is shown when *k* or more learners answered it, so 10 % of 20 tells that 2 learners answered right, a count that the answer distribution (`INS-003`) hides. Only 0 % and 100 % were named in R4. | D-106 and its amendment of 2026-11-04 | Accept, or show shares only when the right and the wrong answers each number at least *k*. |
+| R7 | **One learner per cell.** When *k* or more learners each chose a different option and no option or «no answer» is left empty of them, every option count is hidden, yet each must be 1. Only hiding the question's learner count would protect it. The exhaustive test of the suppression rule allows exactly this case. | D-106's amendment of 2026-11-04 | Accept (the answers are not linked to anyone), or hide the learner count of such a question. |
+| R8 | **Nested periods.** The fixed periods are nested (7, 14 and 30 days and the semester), so a teacher who opens two of them on the same day sees the learners active only in their difference: started 30 in 14 days and 29 in 7 days means one learner played only on days 8–14, and that learner's first answers shift the option counts. R3 names only the same period on two days. | D-106 | Accept, or show the longer periods only as weekly snapshots. |
+| R9 | **What a number means.** A "first answer" is the first one within the chosen period, so an answer given before the period starts is not seen; and answers that H5P accepts as small spelling errors are listed as wrong in the answer distribution. Neither identifies anyone, but a teacher may misread a learner group (accuracy). | D-106's amendment of 2026-11-04, D-115 | Accept with the explanations on the tab, or ask for a period-free "first answer". |

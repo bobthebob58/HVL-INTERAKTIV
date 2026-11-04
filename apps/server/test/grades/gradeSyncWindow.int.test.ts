@@ -1,7 +1,9 @@
 /**
  * Integration tests for the grade worker's limits over time, travelling with the worker's clock (LTI-012, D-104): at
  * most 8 attempts on the backoff schedule, no attempt later than 24 hours after the job was created, one attempt for
- * a job found after its 24 hours, and a job that changes while its score is in flight is sent again with the change.
+ * a job found after its 24 hours, a new result after the job stopped gives it 24 hours of its own and the new
+ * launch's `sub` (also after the old one was cleared), and a job that takes in a result while its score is in flight
+ * is sent again at the next run, or after its backoff when Canvas was down (D-104's amendment of 2026-11-04).
  *
  * Spec: LTI-012
  */
@@ -91,8 +93,27 @@ describeWithServices('[LTI-012] grade worker limits over time', () => {
     });
   });
 
-  it('[LTI-012] sends again a job whose score changed while its send was in flight', async () => {
-    // Arrange: a repeated result of the same attempt (LTI-013's forged case) arrives during the send
+  it('[LTI-012] gives a job that a new result reopens after it stopped 24 hours of its own', async () => {
+    // Arrange: a score sent on day 0; two days later the learner plays again while Canvas is down
+    const { placement, learners } = await bench.placement({ policy: 'latest' });
+    await bench.result(placement, learners[0]!, 1, 0.6, 0);
+    await bench.run(1, placement);
+    await bench.result(placement, learners[0]!, 2, 0.8, 2 * DAY);
+    canvas().ags.failNextScores({ count: 1, status: 503 });
+    // Act
+    const down = await bench.run(2 * DAY + 1, placement);
+    const [waiting] = await bench.jobs(placement);
+    const back = await bench.run(2 * DAY + 2, placement);
+    // Assert: retried on the backoff, not failed as one past its first 24 hours
+    expect(down).toMatchObject({ retried: 1, failed: 0 });
+    expect(waiting).toMatchObject({ status: 'pending', attempts: 1, createdAt: at(2 * DAY) });
+    expect(back).toMatchObject({ sent: 1, succeeded: 1 });
+    const sent = canvas().ags.scores.filter((s) => s.lineItemUrl === placement.lineItemUrl);
+    expect(sent.map((s) => s.score.scoreGiven)).toEqual([60, 80]);
+  });
+
+  it('[LTI-012] sends again, at the next run, a job that took in a result while its send was in flight', async () => {
+    // Arrange: a repeated result of the same attempt (LTI-013's forged case) is stored during the send
     const { placement, learners } = await bench.placement({ policy: 'latest' });
     await bench.result(placement, learners[0]!, 1, 0.6, 0);
     const sender = bench.runDeps.sender;
@@ -108,14 +129,66 @@ describeWithServices('[LTI-012] grade worker limits over time', () => {
       at(1),
     );
     const [changed] = await bench.jobs(placement);
-    const beforeLease = await bench.run(20, placement);
-    const afterLease = await bench.run(31, placement);
-    // Assert: the stale send is not settled; the claim's lease (30 minutes) passes and the new score goes
+    const next = await bench.run(2, placement);
+    // Assert: the stale send is not settled over; the job is due at once, not after the claim's 30 minutes
     expect(first).toMatchObject({ sent: 1, changed: 1, succeeded: 0 });
-    expect(changed).toMatchObject({ status: 'pending', scoreGiven: 90, attempts: 0 });
-    expect(beforeLease.claimed).toBe(0);
-    expect(afterLease).toMatchObject({ sent: 1, succeeded: 1 });
+    expect(changed).toMatchObject({ status: 'pending', scoreGiven: 90, attempts: 0, nextAttemptAt: at(1) });
+    expect(next).toMatchObject({ claimed: 1, sent: 1, succeeded: 1 });
     const sent = canvas().ags.scores.filter((s) => s.lineItemUrl === placement.lineItemUrl);
     expect(sent.map((s) => s.score.scoreGiven)).toEqual([60, 90]);
+  });
+
+  it('[LTI-012] keeps the backoff and counts the send of a job that took in a result while Canvas was down', async () => {
+    // Arrange: Canvas answers 503 while the learner stores a new result during the send
+    const { placement, learners } = await bench.placement({ policy: 'latest' });
+    await bench.result(placement, learners[0]!, 1, 0.6, 0);
+    canvas().ags.failNextScores({ count: 1, status: 503 });
+    const sender = bench.runDeps.sender;
+    const racing = {
+      postScore: async (request: Parameters<typeof sender.postScore>[0]) => {
+        await bench.result(placement, learners[0]!, 2, 0.9, 1);
+        return sender.postScore(request);
+      },
+    };
+    // Act
+    const first = await runGradeSync(
+      { ...bench.runDeps, sender: racing, placementIds: [placement.id] },
+      at(1),
+    );
+    const [changed] = await bench.jobs(placement);
+    const early = await bench.run(1.5, placement);
+    const due = await bench.run(2, placement);
+    // Assert: a learner who keeps posting cannot make the worker skip the backoff or the 8-attempt limit
+    expect(first).toMatchObject({ changed: 1, retried: 0 });
+    expect(changed).toMatchObject({
+      status: 'pending',
+      attempts: 1,
+      nextAttemptAt: at(2),
+      lastError: 'http-503',
+    });
+    expect([early.claimed, due.succeeded]).toEqual([0, 1]);
+    const sent = canvas().ags.scores.filter((s) => s.lineItemUrl === placement.lineItemUrl);
+    expect(sent.map((s) => s.score.scoreGiven)).toEqual([90]);
+  });
+
+  it('[LTI-012] sends a returning learner’s score with the new launch’s sub after the old one was cleared', async () => {
+    // Arrange: a score sent on day 0; 30 days after the job stopped its sub was cleared (DATA-002)
+    const { placement, learners } = await bench.placement();
+    await bench.result(placement, learners[0]!, 1, 0.6, 0);
+    await bench.run(1, placement);
+    await bench.bed.db.gradeSyncJob.updateMany({
+      where: { placementId: placement.id },
+      data: { ltiSubEncrypted: null },
+    });
+    await bench.result(placement, learners[0]!, 2, 0.8, 40 * DAY);
+    // Act
+    const counts = await bench.run(40 * DAY + 1, placement);
+    // Assert: the reopened job took in the new request's sub, so the score reaches the learner's row
+    expect(counts).toMatchObject({ sent: 1, succeeded: 1 });
+    const sent = canvas().ags.scores.filter((s) => s.lineItemUrl === placement.lineItemUrl);
+    expect(sent.map((s) => [s.score.userId, s.score.scoreGiven])).toEqual([
+      [learners[0]!.sub, 60],
+      [learners[0]!.sub, 80],
+    ]);
   });
 });

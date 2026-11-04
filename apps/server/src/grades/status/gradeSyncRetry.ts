@@ -4,8 +4,8 @@
  *
  * Why: LTI-012's acceptance lets authors retry failed jobs, from the activity page or `/app/play` (D-104). A job
  *      that never succeeded loses its encrypted `sub` 30 days after it stopped (D-104, DATA-002); it cannot be sent
- *      without it, so it stays failed, and the learner's next scored play makes a new job. Every retry is audited
- *      (DATA-007).
+ *      without it, so it stays failed until the learner's next scored play reopens it with a new `sub` (D-104's
+ *      amendment of 2026-11-04: one job per learner and placement). Every retry is audited (DATA-007).
  * Spec: LTI-012, DATA-007, DATA-002
  * Invariants:
  *   - Only `failed` jobs of the one placement change. `orphaned` jobs are never retried (LTI-012, D-104): the line

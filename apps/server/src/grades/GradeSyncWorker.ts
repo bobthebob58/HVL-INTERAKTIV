@@ -6,6 +6,8 @@
  *      page is closed. SPEC-DEVIATION: D-104 — the worker uses our own AGS client (./AgsScoreClient.ts) with its own
  *      client-credentials token, not ltijs's `context.grading.submitScore`, which needs a live ltik. A Redis lease
  *      (../jobs/LeasedIntervalJob.ts) runs it on one node at a time, and its claims keep overlapping runs apart.
+ *      D-104's amendment of 2026-11-04 adds the line item rules (`CANVAS_ORIGINS`, https in production), which the
+ *      server passes in `lineItemRules`.
  * Spec: LTI-012
  * Invariants:
  *   - Each tick reads the injectable clock once and runs `runGradeSync` at that moment; a test calls `runOnce(now)`.
@@ -27,7 +29,7 @@ export const GRADE_SYNC_INTERVAL_MS = 15_000;
 /** Redis key of the worker's lease. */
 export const GRADE_SYNC_LEASE_KEY = 'hvli:grades:sync';
 
-/** Inputs of the worker. */
+/** Inputs of the worker; `lineItemRules` comes from `CANVAS_ORIGINS` and `NODE_ENV` (D-104's 2026-11-04 amendment). */
 export interface GradeSyncWorkerOptions extends Omit<GradeSyncRunDeps, 'sender'> {
   /** Redis client that holds the lease. */
   readonly redis: Pick<Redis, 'set'>;

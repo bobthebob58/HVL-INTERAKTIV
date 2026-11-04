@@ -1,26 +1,30 @@
 /**
- * gradeJobUpsert — writes one grade job per placement, learner and attempt, or updates the one that is there.
+ * gradeJobUpsert — writes a learner's one grade job in a placement, or takes a new result into the one that is there.
  *
- * Why: LTI-012 makes jobs idempotent per `(placement, learnerKey, attemptId)`; D-104 has "a later scored statement of
- *      the same attempt" update its job. D-115 makes that a forged result (`LTI-013` accepts the risk) or a duplicate
- *      the statement ID already stops, so the update must be safe, not clever: the job takes the new score, and a job
- *      that had stopped is sent again.
+ * Why: LTI-012 queues a score for each scored root result, idempotently. D-104's amendment of 2026-11-04 (the step-3
+ *      security review) keeps one job per `(placement, learnerKey)`: a job per attempt let one learner flood the queue
+ *      with made-up results, so the job is now the learner's score in that gradebook column, and the worker reads the
+ *      stored results when it sends (./storedResultScores.ts). Taking a result in twice changes nothing but the
+ *      job's state, so LTI-012's idempotency per `(placement, learnerKey, attemptId)` holds a fortiori.
  * Spec: LTI-012
  * Invariants:
- *   - One row per `idempotencyKey` = `<placementId>:<learnerKey>:<attemptId>`; a concurrent first write of the same
- *     key ends as one row (the loser of the insert updates instead).
+ *   - One row per `idempotencyKey` = `<placementId>:<learnerKey>`; a concurrent first write of the same key ends as
+ *     one row (the loser of the insert updates instead).
  *   - The existing row is locked (`FOR UPDATE`) while it is read and updated, so its status cannot change between.
- *   - A pending job keeps its attempts and `nextAttemptAt` (a backoff or the worker's claim stays); a stopped job
+ *   - The job takes the result in: `attemptId`, `scoreGiven`, `resultAt` (which the worker's settlement compares, so a
+ *     result taken in during a send is sent again) and the encrypted `sub` of the request.
+ *   - A pending job keeps its attempts and `nextAttemptAt` (a backoff or the worker's claim stays). A stopped job
  *     (succeeded, failed, orphaned) becomes pending at once with its attempts, `terminalAt`, `succeededAt` and
- *     `lastError` reset. `createdAt` never changes, so the 24 hours of ./gradeRetrySchedule.ts still run from it.
+ *     `lastError` reset and `createdAt` set to now, the start of its new 24 hours (./gradeRetrySchedule.ts).
  *   - PRIVACY: the learner's `sub` arrives already encrypted (`grade-lti-sub`, DATA-002) and is the only learner ID
  *     written besides the pseudonym `learnerKey`.
- * Collaborators: ./GradeJobEnqueuer.ts (the caller), ./gradeJobClaims.ts (the worker's side of the same rows).
- * Tests: apps/server/test/grades/gradeJobEnqueuer.int.test.ts
+ * Collaborators: ./GradeJobEnqueuer.ts (the caller), ./gradeJobClaims.ts (the worker's side of the same rows),
+ *   ./gradeJobReconcile.ts (reopens a job in SQL by the same rules).
+ * Tests: apps/server/test/grades/gradeJobEnqueuer.int.test.ts, apps/server/test/grades/gradeSyncWindow.int.test.ts
  */
 import type { Database } from '../infra/prismaClient.js';
 
-/** One gradable result to write as a job. */
+/** One gradable result to take into a learner's job. */
 export interface GradeJobDraft {
   readonly placementId: string;
   readonly learnerKey: string;
@@ -40,23 +44,22 @@ export interface GradeJobDraft {
 export type GradeJobWrite = 'created' | 'updated';
 
 /**
- * The idempotency key of a job.
+ * The idempotency key of a learner's job in a placement (D-104's amendment of 2026-11-04).
  * @param placementId - `LtiPlacement.id`.
  * @param learnerKey - The learner's pseudonym.
- * @param attemptId - The attempt.
- * @returns `<placementId>:<learnerKey>:<attemptId>`.
+ * @returns `<placementId>:<learnerKey>`.
  */
-export const gradeJobIdempotencyKey = (placementId: string, learnerKey: string, attemptId: string): string =>
-  `${placementId}:${learnerKey}:${attemptId}`;
+export const gradeJobIdempotencyKey = (placementId: string, learnerKey: string): string =>
+  `${placementId}:${learnerKey}`;
 
 const isUniqueViolation = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && (error as { code?: unknown }).code === 'P2002';
 
 /**
- * Creates the job of a result, or updates the attempt's job.
+ * Creates the learner's job in the placement, or takes the result into it.
  * @param db - The database.
  * @param draft - The result.
- * @param now - The moment of the write: a new job's `createdAt` and `nextAttemptAt`.
+ * @param now - The moment of the write: a new or reopened job's `createdAt` and `nextAttemptAt`.
  * @returns `created` or `updated`.
  * @spec LTI-012
  */
@@ -71,8 +74,9 @@ export async function upsertGradeJob(db: Database, draft: GradeJobDraft, now: Da
 }
 
 async function writeOnce(db: Database, draft: GradeJobDraft, now: Date): Promise<GradeJobWrite> {
-  const idempotencyKey = gradeJobIdempotencyKey(draft.placementId, draft.learnerKey, draft.attemptId);
+  const idempotencyKey = gradeJobIdempotencyKey(draft.placementId, draft.learnerKey);
   const result = {
+    attemptId: draft.attemptId,
     scoreGiven: draft.scoreGiven,
     resultAt: draft.resultAt,
     ltiSubEncrypted: draft.ltiSubEncrypted,
@@ -86,6 +90,7 @@ async function writeOnce(db: Database, draft: GradeJobDraft, now: Date): Promise
       });
       return 'created';
     }
+    // WHY: a new result after the job stopped is a new sending, with D-104's 8 attempts in 24 hours of its own.
     const reopen =
       current.status === 'pending'
         ? {}
@@ -93,6 +98,7 @@ async function writeOnce(db: Database, draft: GradeJobDraft, now: Date): Promise
             status: 'pending' as const,
             attempts: 0,
             nextAttemptAt: now,
+            createdAt: now,
             terminalAt: null,
             succeededAt: null,
             lastError: null,

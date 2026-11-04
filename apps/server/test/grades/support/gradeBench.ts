@@ -1,7 +1,7 @@
 /**
  * gradeBench — the whole app with the mock Canvas, set up for the grade worker: graded placements with their own
- * mock line items and rosters, learners launched into them, results queued through the real enqueuer, and worker
- * runs at moments the test names.
+ * mock line items and rosters, learners launched into them, results stored as the ingestion stores them and queued
+ * through the real enqueuer, and worker runs at moments the test names.
  *
  * Why: LTI-012's Verify asks for integration tests with a mock AGS endpoint (success, 5xx retry, 404 orphaned,
  *      idempotency); D-104's client signs with the tool key ltijs stores for the platform, so the bench registers
@@ -12,13 +12,16 @@
  *     never finds these jobs due; each run claims only this bench's placements.
  *   - The score sender lives as long as the bench, so its token is reused as in production.
  *   - The jitter is fixed (0.5), so a retry falls exactly 1, 3, 9, … minutes later.
- * Collaborators: ../../support/appTestbed.ts, ../../../src/grades/gradeSyncRun.ts,
- *   ../../../src/grades/GradeJobEnqueuer.ts, ../../../../../tools/mock-platform/mockPlatform.mjs.
+ *   - A result is stored as an `XapiStatement` before the enqueuer sees it, since the worker reads the stored results
+ *     when it sends (D-104's amendment of 2026-11-04); `store` alone is a result whose job write failed.
+ * Collaborators: ./benchLearner.ts, ./storedResult.ts, ../../support/appTestbed.ts,
+ *   ../../../src/grades/gradeSyncRun.ts, ../../../src/grades/GradeJobEnqueuer.ts,
+ *   ../../../../../tools/mock-platform/mockPlatform.mjs.
  * Tests: apps/server/test/grades/gradeSyncWorker.int.test.ts, gradeSyncFaults.int.test.ts, gradeSyncWindow.int.test.ts
  */
 import { randomUUID } from 'node:crypto';
 import { CANVAS_USERS, LTI_ROLE } from '../../../../../tools/mock-platform/mockPlatform.mjs';
-import { sealPrincipal, type Principal } from '../../../src/auth/Principal.js';
+import type { Principal } from '../../../src/auth/Principal.js';
 import type { GradeSyncJob } from '../../../src/generated/prisma/client.js';
 import { GradeJobEnqueuer } from '../../../src/grades/GradeJobEnqueuer.js';
 import { agsScoreSender } from '../../../src/grades/GradeSyncWorker.js';
@@ -31,7 +34,8 @@ import { DataEncryption } from '../../../src/security/keys/DataEncryption.js';
 import { openAppTestbed, type AppTestbed } from '../../support/appTestbed.js';
 import { capturedLogger } from '../../support/capturedLogger.js';
 import { uniqueName } from '../../support/services.js';
-import { gradableRow } from './gradeDbFixture.js';
+import { learnerOf } from './benchLearner.js';
+import { storeGradableResult } from './storedResult.js';
 
 /** The bench's moments start here. */
 export const BENCH_EPOCH = Date.UTC(2099, 0, 1);
@@ -56,10 +60,21 @@ export interface BenchLearner {
   readonly sub: string;
 }
 
+/** A learner's gradable result in a placement: its attempt number, scaled score (0–1) and bench minute. */
+export type BenchResult = (
+  placement: BenchPlacement,
+  learner: BenchLearner,
+  attempt: number,
+  scaled: number,
+  minute: number,
+) => Promise<void>;
+
 /** The bench. */
 export interface GradeBench {
   readonly bed: AppTestbed;
   readonly runDeps: GradeSyncRunDeps;
+  /** The activity every placement opens. */
+  readonly contentId: string;
   /** A placement with its own course; `learners` mock Canvas users are on its roster as learners. */
   placement(options?: {
     policy?: 'best' | 'latest' | 'mastery';
@@ -69,14 +84,10 @@ export interface GradeBench {
     placement: BenchPlacement;
     learners: BenchLearner[];
   }>;
-  /** Queues a gradable result through the enqueuer at a bench moment. */
-  result(
-    placement: BenchPlacement,
-    learner: BenchLearner,
-    attempt: number,
-    scaled: number,
-    minute: number,
-  ): Promise<void>;
+  /** Stores a gradable result at a bench moment and queues it through the enqueuer. */
+  readonly result: BenchResult;
+  /** Stores a gradable result at a bench moment without queuing it (a job write that failed). */
+  readonly store: BenchResult;
   /** Runs the worker once at a bench moment, over the given placements. */
   run(minute: number, ...placements: BenchPlacement[]): Promise<GradeSyncRunCounts>;
   /** A placement's jobs, by attempt. */
@@ -101,9 +112,27 @@ export async function openGradeBench(): Promise<GradeBench> {
   };
   const content = await bed.activity(await bed.staffAccount());
   const viewId = randomUUID();
+  const store = (
+    placement: BenchPlacement,
+    learner: BenchLearner,
+    attempt: number,
+    scaled: number,
+    minute: number,
+  ) =>
+    storeGradableResult(
+      bed.db,
+      {
+        contentId: content,
+        platformId: bed.platformId,
+        contextId: placement.contextId,
+        learnerKey: learner.principal.learnerKey,
+      },
+      { attemptId: `${viewId}:${attempt}`, scaled, timestamp: at(minute) },
+    );
   return {
     bed,
     runDeps,
+    contentId: content,
     placement: async (options = {}) => {
       const contextId = uniqueName('course');
       const subs = [
@@ -141,8 +170,11 @@ export async function openGradeBench(): Promise<GradeBench> {
     },
     result: async (placement, learner, attempt, scaled, minute) => {
       const enqueuer = new GradeJobEnqueuer({ db: bed.db, encryption, logger, clock: () => at(minute) });
-      const row = gradableRow(content, { attemptId: `${viewId}:${attempt}`, scaled, timestamp: at(minute) });
+      const row = await store(placement, learner, attempt, scaled, minute);
       await enqueuer.enqueue([row], learner.principal, learner.sub);
+    },
+    store: async (placement, learner, attempt, scaled, minute) => {
+      await store(placement, learner, attempt, scaled, minute);
     },
     run: (minute, ...placements) =>
       runGradeSync({ ...runDeps, placementIds: placements.map((p) => p.id) }, at(minute)),
@@ -150,27 +182,4 @@ export async function openGradeBench(): Promise<GradeBench> {
       bed.db.gradeSyncJob.findMany({ where: { placementId: placement.id }, orderBy: { attemptId: 'asc' } }),
     close: () => bed.close(),
   };
-}
-
-/** A learner principal from a launch into the placement. */
-function learnerOf(platformId: string, placement: BenchPlacement, contentId: string): Principal {
-  return sealPrincipal({
-    userId: randomUUID(),
-    learnerKey: uniqueName('learner'),
-    roles: ['learner'],
-    mode: 'lti',
-    locale: 'nn',
-    hvlMember: false,
-    feideAuthenticated: false,
-    studentAuthor: false,
-    lti: {
-      platformId,
-      deploymentId: '1',
-      contextId: placement.contextId,
-      resourceLinkId: placement.resourceLinkId,
-      contentId,
-      lineItemUrl: placement.lineItemUrl,
-      messageType: 'LtiResourceLinkRequest',
-    },
-  });
 }

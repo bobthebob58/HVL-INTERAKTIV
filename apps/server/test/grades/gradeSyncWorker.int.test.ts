@@ -1,7 +1,8 @@
 /**
  * Integration tests for the grade worker against the mock Canvas (LTI-012, D-104): a stored result reaches the
  * gradebook with LTI-012's score body, the job settles, the worker runs on its lease, a result sent twice is one job
- * and one score, and a learner's due jobs coalesce into one current policy score, ordered by result time.
+ * and one score, and each learner's one job sends one current policy score over the stored results, ordered by
+ * result time (D-104's amendment of 2026-11-04).
  *
  * Spec: LTI-012
  */
@@ -72,8 +73,8 @@ describeWithServices('[LTI-012] grade worker against the mock Canvas', () => {
     expect(acceptedFor(placement.lineItemUrl).map((s) => s.scoreGiven)).toEqual([50]);
   });
 
-  it('[LTI-012] coalesces a learner’s due jobs into one score, the latest by result time, not by creation', async () => {
-    // Arrange: attempt 3's result came first in time but its job was written last
+  it('[LTI-012] keeps one job per learner and sends one score, the latest by result time, not by arrival', async () => {
+    // Arrange: attempt 3's result came first in time but was taken in last
     const { placement, learners } = await bench.placement({ policy: 'latest', learners: 2 });
     const [kari, ola] = learners;
     await bench.result(placement, kari!, 1, 0.4, 1);
@@ -83,7 +84,8 @@ describeWithServices('[LTI-012] grade worker against the mock Canvas', () => {
     // Act
     const counts = await bench.run(5, placement);
     // Assert
-    expect(counts).toMatchObject({ claimed: 4, sent: 2, succeeded: 4 });
+    expect(await bench.jobs(placement)).toHaveLength(2);
+    expect(counts).toMatchObject({ claimed: 2, sent: 2, succeeded: 2 });
     const sent = acceptedFor(placement.lineItemUrl);
     expect(sent.map((s) => [s.userId, s.scoreGiven])).toEqual(
       expect.arrayContaining([
@@ -100,9 +102,9 @@ describeWithServices('[LTI-012] grade worker against the mock Canvas', () => {
     ['mastery', 0.8, [100, 100]],
     ['mastery', 0.9, [80, 30]],
   ] as const)(
-    '[LTI-012] applies %s (threshold %s) over the attempts already sent: %j',
+    '[LTI-012] applies %s (threshold %s) over the stored results, the one already sent included: %j',
     async (policy, threshold, expected) => {
-      // Arrange: an earlier attempt was sent; a later, lower one is queued
+      // Arrange: an earlier attempt was sent; a later, lower one is stored and taken into the same job
       const { placement, learners } = await bench.placement({ policy, ...(threshold ? { threshold } : {}) });
       await bench.result(placement, learners[0]!, 1, 0.8, 0);
       await bench.run(1, placement);
@@ -111,7 +113,7 @@ describeWithServices('[LTI-012] grade worker against the mock Canvas', () => {
       await bench.run(11, placement);
       // Assert
       expect(acceptedFor(placement.lineItemUrl).map((s) => s.scoreGiven)).toEqual(expected);
-      expect((await bench.jobs(placement)).map((job) => job.status)).toEqual(['succeeded', 'succeeded']);
+      expect((await bench.jobs(placement)).map((job) => job.status)).toEqual(['succeeded']);
     },
   );
 });

@@ -238,9 +238,9 @@ An activity placed in a Canvas course.
 
 ## GradeSyncJob
 
-One formative score for one attempt, waiting to be sent to the Canvas gradebook (`LTI-012`, D-104, D-115). The
-worker sends one score per learner and placement, chosen by the placement's attempt policy, and settles that learner's
-due jobs together.
+One learner's formative score in one Canvas gradebook column: one job per placement and learner (`LTI-012`, D-104 and
+its amendment of 2026-11-04, D-115). Each new gradable result reopens the job; the worker sends the score that the
+placement's attempt policy gives over the learner's stored results (`XapiStatement`), read when it sends.
 
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
@@ -248,18 +248,18 @@ due jobs together.
 | `placementId` | Which placement | None | n/a | Yearly purge | PG |
 | `learnerKey` | The learner's pseudonym | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `ltiSubEncrypted` | Canvas user ID, which AGS requires; the only raw learner ID kept longer than 24 hours (`LtiIdToken.claims` holds `sub` for 24 h) (DATA-002) | Learner PII (encrypted) | 6(1)(e) | Set to null 30 days after `terminalAt`, whether the job succeeded, failed or was orphaned (D-104) | PG |
-| `attemptId` | The bridge's attempt (`<viewId>:<n>`, a random page-load ID and a counter) whose gradable result made the job (D-115) | None | n/a | Yearly purge | PG |
-| `scoreGiven` | The attempt's formative score (`scaled × 100`), from which the attempt policy chooses the score to send | Pseudonymous | 6(1)(e) | Yearly purge | PG |
-| `resultAt` | When the server stored that result (its statement's `timestamp`); orders a learner's attempts for the `latest` policy (D-115) | None | n/a | Yearly purge | PG |
+| `attemptId` | The bridge's attempt (`<viewId>:<n>`, a random page-load ID and a counter) of the result the job took in last (D-115, D-104 amendment of 2026-11-04) | None | n/a | Yearly purge | PG |
+| `scoreGiven` | That result's formative score (`scaled × 100`); the worker compares it to see whether a result came in while a score was being sent (the score sent is computed from the stored results) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
+| `resultAt` | When the server stored that result (its statement's `timestamp`); compared like `scoreGiven`, and read by the reconciling pass, which reopens a stopped job for a newer stored result (D-104 amendment of 2026-11-04) | None | n/a | Yearly purge | PG |
 | `status` | Pending, succeeded, failed or orphaned (the assignment is gone from Canvas, D-104) | None | n/a | Yearly purge | PG |
 | `attempts` | How many times the worker has tried to send it (at most 8, D-104) | None | n/a | Yearly purge | PG |
 | `lastError` | Error code and HTTP status from Canvas, no response body | None | n/a | Yearly purge | PG |
-| `idempotencyKey` | `<placementId>:<learnerKey>:<attemptId>`: one job per placement, learner and attempt, so a repeated result updates its job instead of sending twice (D-104). PRIVACY: it holds the learner's pseudonym, as `learnerKey` does | Pseudonymous | 6(1)(e) | Yearly purge | PG |
+| `idempotencyKey` | `<placementId>:<learnerKey>`: one job per placement and learner, so the queue never grows with the number of results and a repeated result updates the job instead of sending twice (D-104 and its amendment of 2026-11-04). PRIVACY: it holds the learner's pseudonym, as `learnerKey` does | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `nextAttemptAt` | When the worker may next try (backoff); null once the job is no longer pending | None | n/a | Yearly purge | PG |
 | `succeededAt` | When Canvas accepted the score | None | n/a | Yearly purge | PG |
 | `terminalAt` | When the job stopped (succeeded, failed or orphaned); starts the 30-day clock for `ltiSubEncrypted` (D-104) | None | n/a | Yearly purge | PG |
 | `academicYear` | The academic year of the pseudonym secret that made `learnerKey`; the yearly purge deletes by it (`DATA-003`, D-107). Database default: the year of the write in Oslo time. PRIVACY: a year, not about the learner | None | n/a | Yearly purge | PG |
-| `createdAt` | Audit | None | n/a | Yearly purge | PG |
+| `createdAt` | When the job's current sending began: its creation, or the moment a new result reopened it after it had stopped; the 8 attempts fall within 24 hours of it (D-104 amendment of 2026-11-04) | None | n/a | Yearly purge | PG |
 | `updatedAt` | Audit | None | n/a | Yearly purge | PG |
 
 ## LearningDesignMetadata
@@ -314,17 +314,17 @@ One learning event, reduced to the DATA-012 fields (D-115: only what insight and
 | `subContentId` | The question inside it | None | n/a | Yearly purge | PG |
 | `contentVersion` | Compare like with like across edits | None | n/a | Yearly purge | PG |
 | `contextId` | Canvas course, for per-course insight, as `<LtiPlatform.id>:<context ID>` so courses of two Canvas instances never merge (D-103); null for a portal play. A database CHECK refuses any other shape | None | n/a | Yearly purge | PG |
-| `learnerKey` | Counts distinct learners for *k*-suppression | Pseudonymous | 6(1)(e) | Yearly purge | PG |
+| `learnerKey` | Counts distinct learners for *k*-suppression (insight numbers each view's learners and never returns the key; the mappe groups by it the same way, D-095's amendment of 2026-11-04); the grade worker reads a learner's own gradable results by it when it sends their score to Canvas (D-104 amendment of 2026-11-04) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `verb` | answered, completed, … | None | n/a | Yearly purge | PG |
 | `scoreRaw` | Item difficulty (INS-002) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `scoreMax` | Item difficulty | None | n/a | Yearly purge | PG |
-| `scaled` | Item difficulty | Pseudonymous | 6(1)(e) | Yearly purge | PG |
+| `scaled` | Item difficulty; for a gradable root result, its formative score, from which the grade worker computes the placement's policy score when it sends (D-115, D-104 amendment of 2026-11-04) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `success` | Correct or not | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `completion` | Completed or not | Pseudonymous | 6(1)(e) | Yearly purge | PG |
-| `response` | Choice indices or short gap text, for misconceptions (INS-003) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
+| `response` | Choice indices or short gap text, for misconceptions (INS-003); a wrong gap answer is shown only when *k* or more learners gave it, and only for the current content version (D-106's amendment of 2026-11-04) | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `durationMs` | Time on task | Pseudonymous | 6(1)(e) | Yearly purge | PG |
 | `attemptId` | Groups events of one attempt: `<viewId>:<n>`, a random page-load ID and a counter made by the bridge (D-115) | None | n/a | Yearly purge | PG |
-| `timestamp` | When the server received the statement (plus its place in the batch in milliseconds, never the browser's clock, D-115); insight periods and time on task | None | n/a | Yearly purge | PG |
+| `timestamp` | When the server received the statement (plus its place in the batch in milliseconds, never the browser's clock, D-115); insight periods and time on task; orders a learner's results for the `latest` policy and bounds the grade worker's reconciling pass (D-104 amendment of 2026-11-04) | None | n/a | Yearly purge | PG |
 | `academicYear` | The academic year of the pseudonym secret that made `learnerKey`; the yearly purge deletes by it (`DATA-003`). A field outside `DATA-012`'s list (`SPEC-DEVIATION`, D-107). Database default: the year of the write in Oslo time; migration `s6_grade_bridge_insight` set existing rows from `timestamp`. A portal session keeps its key up to 12 hours past 1 August (D-057), so the writer of a portal play's row sets the key's year itself. PRIVACY: a year, not about the learner | None | n/a | Yearly purge | PG |
 
 ## InsightSnapshot
@@ -355,7 +355,7 @@ Who did what to which object (DATA-007).
 | `action` | Action code, e.g. `insight.view` | None | n/a | 2 years | PG |
 | `targetType` | Kind of object | None | n/a | 2 years | PG |
 | `targetId` | Which object | None; Pseudonymous when the target is a learner (data-subject actions, `DATA-008`) | 6(1)(e) | 2 years | PG |
-| `details` | Structured details, never free text with personal data; in `content.coauthor.add` and `content.coauthor.remove` it holds the co-author's `User.id` (D-090), so a search for a person's audit events reads it as well as `actorUserId` | None; Staff PII (by reference) in `content.coauthor.*` | 6(1)(e) | 2 years | PG |
+| `details` | Structured details, never free text with personal data; `insight.view` and `insight.export` hold only the view (`beforeSession`), the period, the context (D-103's key or `portal`) and the content version, never a count, answer or learner (D-106); in `content.coauthor.add` and `content.coauthor.remove` it holds the co-author's `User.id` (D-090), so a search for a person's audit events reads it as well as `actorUserId` | None; Staff PII (by reference) in `content.coauthor.*` | 6(1)(e) | 2 years | PG |
 
 ## Redis keys
 
@@ -390,5 +390,6 @@ cookie (D-057). Learner state is never in Redis: it lives in PostgreSQL (`H5PUse
 | counter `hvli:grade-sync-retries:<userId>` | How many grade-sync retries the author asked for in the current ten minutes, for the retry limit (`LTI-012`, D-104); a number, never the activity, placement or learners | Staff PII (by reference) | 6(1)(e) | 10 minutes | Redis |
 | count `hvli:nrps:count:<platformId>:<contextId>` | The number of active learners in a Canvas course and when it was counted, read from NRPS after a launch: insight's denominator (`LTI-008`, `INS-001`, D-103); never a member, ID or role | None (an aggregate) | n/a | 30 days after the last successful count | Redis |
 | mark `hvli:nrps:fresh:<platformId>:<contextId>` | The course's count is fresh, so no launch reads the roster again within the hour (`LTI-008`) | None | n/a | 1 hour; 5 minutes after a failed read | Redis |
+| counter `hvli:insight-requests:<userId>` | How many insight views, contexts, CSV downloads and findings the person asked for in the current minute, for the limit of 60 (`INS-007`); a number, never the activity, context or period | Staff PII (by reference) | 6(1)(e) | 60 seconds | Redis |
 | lease `hvli:grades:sync` | A random node ID: one server sends queued grades per interval (D-104) | None | n/a | About 15 seconds | Redis |
 | lease `hvli:grades:subject-cleanup` | A random node ID: one server clears expired encrypted Canvas `sub`s per interval (`DATA-002`, D-104) | None | n/a | About 1 hour | Redis |

@@ -8,8 +8,8 @@
  *      score anyway. D-105 has the view say that the scores are formative.
  * Spec: LTI-012, LTI-013
  * Invariants:
- *   - Counts are of jobs (one per attempt with a gradable result, D-115), never of named learners; no learner key,
- *     Canvas user ID or score is in any answer.
+ *   - Counts are of jobs (one per learner and placement with a gradable result, D-104 amendment of 2026-11-04),
+ *     never of named learners; no learner key, Canvas user ID or score is in any answer.
  *   - A retry names one placement; orphaned jobs are never retried, and a failed job whose encrypted Canvas user ID
  *     is gone (30 days after it stopped, D-104) stays failed and is counted as such.
  * Collaborators: ./routes/gradeBridgeRoutes.ts, apps/server (the status and retry routes, step 3), apps/web.

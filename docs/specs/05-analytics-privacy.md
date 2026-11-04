@@ -58,6 +58,10 @@ is displayed only if at least *k* distinct learners gave it (`INS-006`), so a ra
 answer is never shown. A **"Ta opp i samlinga"** ("bring to seminar") button adds the item to a
 shortlist that can be printed or projected.
 - **Verify:** Unit tests, including the *k* rule for free text.
+- **Amended (D-106, 2026-11-04):** `SPEC-DEVIATION` for older content versions only: the distributions are shown for
+  the current version, whose options and gaps the stored parameters describe; for an older version the tab says so.
+  A single-answer question's right options and wrong options (with «no answer») are suppressed as two groups, since
+  `INS-002`'s share gives the right options' total.
 
 #### INS-004 · SHOULD · S6 · Branching paths
 For BranchingScenario, the view shows the distribution of choices at each decision node and how
@@ -87,6 +91,11 @@ too. The insight API has **no endpoint** that returns per-learner rows.
   the API answer carries no value for it. The mappe's two-sided rule (D-095, a rate of 0 % or 100 % hidden) is not
   added for insight. The grade-sync status counts are exempt (§3), and the property tests cover the insight endpoints
   and the CSV.
+- **Amended (D-106, 2026-11-04):** `SPEC-DEVIATION`: a count of 0 is shown, since it is about no learner; it is hidden
+  only as a complement or in a hidden group. "The next-smallest cell" becomes the rule that leaves no hidden value to
+  work out: in a group with a shown total, when one cell is hidden (or several, all 1 or all *k* − 1), every shown 0 is
+  hidden, or, without a 0, the smallest shown count and each next one less than *k* above it. When the learners who
+  started are hidden, every question cell is. An exhaustive test checks every group of two to five cells for *k* = 3–6.
 - **Acceptance:** Property-based test: for random datasets, no API response contains a group smaller than *k*.
 - **Verify:** `fast-check` property test `[INS-006] …`.
 

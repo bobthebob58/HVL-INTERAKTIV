@@ -245,6 +245,10 @@ Aggregates apply the same minimum group size as insight (`INS-006`, default *k* 
 identifiers, free-text answers or individual scores ever appear. The export is generated on demand
 and **not stored** on the server.
 - **Verify:** A test with a 4-learner fixture asserts suppression.
+- **Amended (D-095, 2026-11-04, S6 step 4):** the results come from the stored learning data, read on demand and
+  written nowhere. Because the mappe adds up what insight shows one course, version and period at a time, only groups
+  of at least *k* learners per course (or the portal), content version and semester count, and a completion rate or
+  median is hidden when it would let a count insight hides be worked out.
 
 #### MAPPE-004 · SHOULD · S5 · Accessible PDF
 The PDF is rendered from the same semantic HTML template with headless Chromium and **tagged-PDF**

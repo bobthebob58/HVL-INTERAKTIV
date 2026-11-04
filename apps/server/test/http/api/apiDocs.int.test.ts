@@ -38,6 +38,9 @@ const SAMPLE_PARAMETERS: Readonly<Record<string, () => string>> = {
   courseCode: () => 'SYK110',
   q: () => 'Kari',
   format: () => 'md',
+  period: () => '7d',
+  context: () => 'portal',
+  version: () => '1',
 };
 const sampleParameter = (name: string): string => {
   const sample = SAMPLE_PARAMETERS[name];

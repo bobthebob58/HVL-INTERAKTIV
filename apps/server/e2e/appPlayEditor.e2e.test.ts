@@ -162,8 +162,9 @@ describeWithRealWebApp('[LTI-006] the Canvas page with Spel and Rediger, frame s
       .userId;
     // Assert: the Canvas page, its tabs and the editor inside its chrome
     expect(pathOf(seen.toolFrame.url())).toBe('/app/play');
-    // WHY: an author's Canvas page also has «Poeng til Canvas», the grade sync of this course (LTI-012, D-104).
-    expect(seen.tabs).toEqual(['Spel', 'Rediger', 'Poeng til Canvas']);
+    // WHY: an author's Canvas page also has «Innsikt», this course's insight (PROD-010, D-106), and «Poeng til Canvas»,
+    // the grade sync of this course (LTI-012, D-104).
+    expect(seen.tabs).toEqual(['Spel', 'Rediger', 'Innsikt', 'Poeng til Canvas']);
     expect(seen.editor.parentFrame()).toBe(seen.toolFrame);
     // Assert: the save used the teacher's ltik as Bearer; no cookie, no ltik in any address, nothing failed
     expect(seen.response.status()).toBe(200);

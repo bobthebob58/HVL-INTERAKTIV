@@ -132,9 +132,10 @@ import {
         }),
       );
       // Assert
-      // WHY: Spel, Rediger and «Poeng til Canvas» (LTI-012), the author's three tabs.
+      // WHY: Spel, Rediger, «Innsikt» (PROD-010, D-106) and «Poeng til Canvas» (LTI-012), the author's four tabs.
       expect(borders).toEqual([
         { selected: 'true', width: '4px', visible: true },
+        { selected: 'false', width: '4px', visible: false },
         { selected: 'false', width: '4px', visible: false },
         { selected: 'false', width: '4px', visible: false },
       ]);

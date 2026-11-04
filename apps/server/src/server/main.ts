@@ -14,7 +14,8 @@
  *   - The server listens only after the platform sync and the platform-key re-encryption (D-056) have finished.
  *   - The xAPI ingestion hands a learner's stored rows to the grade enqueuer (LTI-012), and each resource-link launch
  *     refreshes its course's NRPS learner count (LTI-008). The grade worker (D-104) and the cleanup of its jobs' LTI
- *     subjects (DATA-002) start with the cleanup jobs and stop with them; each runs on one node per interval.
+ *     subjects (DATA-002) start with the cleanup jobs and stop with them; each runs on one node per interval. The
+ *     worker sends only to line item URLs on `CANVAS_ORIGINS` or the platform's own origins, https in production.
  *   - A port that cannot be opened stops the start with exit code 1 instead of a process that serves nothing.
  *   - SIGTERM and SIGINT stop the jobs, stop accepting connections, close the studio's services (the PDF export's
  *     browser, D-096), then the clients, even when a service fails to close; exit code 0, or 1 after such a failure.
@@ -104,10 +105,19 @@ export async function startServer(env: Env, options: StartOptions = {}): Promise
   const rewritten = await reencryptPlatformKeys(db, encryption);
   // WHY: not `reencrypted`: keys ending in "encrypted" are redacted, which would hide the count (DATA-009).
   logger.info({ platformKeysRewritten: rewritten }, 'LTI platform keys on the current encryption key');
+  // SECURITY: the worker re-checks each line item URL before it sends a token or a `sub` to it (D-104 amendment).
+  const lineItemRules = { origins: env.CANVAS_ORIGINS, requireHttps: env.NODE_ENV === 'production' };
   const jobs = [
     h5p.cleanupJob,
     new LtiRecordCleanupJob({ db, redis, logger }),
-    new GradeSyncWorker({ db, redis, logger, encryption, platforms: lti.provider.platformManager }),
+    new GradeSyncWorker({
+      db,
+      redis,
+      logger,
+      encryption,
+      platforms: lti.provider.platformManager,
+      lineItemRules,
+    }),
     new GradeSubjectCleanupJob({ db, redis, logger }),
   ];
   for (const job of jobs) job.start();

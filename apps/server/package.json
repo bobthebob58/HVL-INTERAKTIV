@@ -61,6 +61,7 @@
     "@types/supertest": "7.2.1",
     "@types/yauzl": "2.10.3",
     "@types/yazl": "3.3.0",
+    "fast-check": "4.10.2",
     "pdfjs-dist": "6.4.299",
     "prisma": "7.10.1",
     "supertest": "7.3.1",
