@@ -13,6 +13,8 @@
  *     once (`platform-key`); a 429, a 5xx or no answer is retried; any other answer fails (`token-http-<status>`).
  *   - SECURITY: redirects are never followed, so neither the assertion nor a token goes to another host; the token,
  *     the assertion and the key are never logged, stored or put into a reason.
+ *   - The body of an answer that is not a token (a 3xx, 4xx or 5xx) is cancelled unread, so it never holds its
+ *     connection to the platform open.
  * Collaborators: ./agsClientAssertion.ts, ./agsSendOutcome.ts, ./agsVocabulary.ts, ./AgsScoreClient.ts,
  *   ltijs's `Provider.platformManager`.
  * Tests: apps/server/test/grades/AgsAccessTokens.test.ts, apps/server/test/grades/gradeSyncWorker.int.test.ts
@@ -150,8 +152,11 @@ export class AgsAccessTokens {
     } catch {
       return networkOutcome('token-');
     }
-    if (!response.ok)
+    if (!response.ok) {
+      // WHY: a refusal's body is never read; left unread, it would hold its connection open (as in ./AgsScoreClient.ts).
+      await response.body?.cancel().catch(() => undefined);
       return outcomeOfStatus(response.status, response.headers.get('retry-after'), now, 'token-');
+    }
     const answer = tokenAnswer.safeParse(await response.json().catch(() => undefined));
     // WHY: a 2xx that is not a token (a proxy's page) is treated as passing, like a 5xx.
     if (!answer.success) return { kind: 'retry', reason: 'token-answer' };

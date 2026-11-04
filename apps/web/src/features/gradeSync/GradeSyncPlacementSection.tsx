@@ -8,12 +8,13 @@
  * Invariants:
  *   - A11Y: a section named by its `h3` (WCAG 1.3.1, 2.4.6); the heading takes focus (tabIndex -1) when the retry
  *     button it replaced is gone, so focus never falls to the page (WCAG 2.4.3).
- *   - The button shows only while there are failed scores; while its request runs it is `aria-disabled`, keeps
- *     focus and ignores presses (one request at a time).
+ *   - The button shows only while there are failed scores. While any retry in the panel runs, every retry button is
+ *     `aria-disabled`, keeps focus and ignores presses (one request at a time); only this placement's says «Sender …».
  *   - Feedback is words with ✓ or ✗ (UD-003): a problem is an alert, mounted anew for each refusal so a repeated one
  *     is read again; an outcome is plain text, because the panel's status region announces it.
  * Collaborators: ./GradeSyncPanel.tsx, ./GradeSyncCounts.tsx, ./gradeSyncTexts.ts, ./gradeSyncIcons.ts.
- * Tests: apps/web/test/features/gradeSync/GradeSyncPanel.test.tsx
+ * Tests: apps/web/test/features/gradeSync/GradeSyncPanel.test.tsx,
+ *   apps/web/test/features/gradeSync/GradeSyncPanelRetry.test.tsx
  */
 'use client';
 
@@ -39,6 +40,11 @@ export interface GradeSyncPlacementSectionProps {
   readonly headingRef: Ref<HTMLHeadingElement>;
   /** This placement's retry is on its way. */
   readonly busy: boolean;
+  /**
+   * Some retry in the panel is on its way, this one or another placement's. WHY: the panel sends one retry at a time,
+   * so a button that would ignore a press says so (`aria-disabled`) instead of doing nothing silently.
+   */
+  readonly locked: boolean;
   readonly feedback: GradeSyncFeedback | undefined;
   /** Sends the failed scores again. */
   readonly onRetry: () => void;
@@ -54,6 +60,7 @@ export function GradeSyncPlacementSection({
   heading,
   headingRef,
   busy,
+  locked,
   feedback,
   onRetry,
 }: GradeSyncPlacementSectionProps) {
@@ -79,9 +86,9 @@ export function GradeSyncPlacementSection({
         <button
           type="button"
           className="button-primary mt-3"
-          aria-disabled={busy || undefined}
+          aria-disabled={locked || undefined}
           onClick={() => {
-            if (!busy) onRetry();
+            if (!locked) onRetry();
           }}
         >
           {busy ? t('gradeSync.retrying', locale) : t('gradeSync.retry', locale)}

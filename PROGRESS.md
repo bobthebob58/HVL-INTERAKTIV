@@ -488,18 +488,59 @@ under the step that does it):
       `DATA-012` mapper → `POST /api/h5p/xapi` (auth, View and launch checks, zod, rate limit, 202) → `xapiBridge.js`
       and its wiring → attempt policy → enqueuer → AGS client → worker → status and retry API and UI (portal tab and
       `/app/play`) → label mode → NRPS counter → the `ltiSub` 30-day cleanup
-  - **Paused 2026-10-30, work in progress (owner's decision, near the weekly usage limit).** Built by one agent
-    each, not yet verified: the ingestion route and mapper (`src/xapi/`), the bridge (`packages/hvl-h5p-theme/src/
-    xapi*.js`), the grade queue, AGS client and worker (`src/grades/`), the «Poeng til Canvas» status panel and API,
-    the label mode and the picker's no-score notice, and the spec notes. Unfinished: the `LTI-008` NRPS counter.
-    Still to do before step 3 is ticked: a skeptic per part, the wiring and the end-to-end xAPI → AGS test, the
-    accessibility scans, the security and privacy review, screenshots, and the full checks (three S5 pattern tests
-    fail after the `uv-module` retry setting and must be updated). Resume: the step 3 workflow run
-    `wf_524ce60e-e0e` from this session, or a new verify-and-finish run from this commit.
-  - [ ] xAPI bridge, ingestion, minimal storage (`LTI-010`, `LTI-011`, `DATA-012`): plain JavaScript in the top player
+  - **Paused 2026-10-30, work in progress (owner's decision, near the weekly usage limit); resumed 2026-11-04** with a
+    verify-and-finish run of six workstreams (ingest, bridge, grades, status UI, Canvas extras, and the integration),
+    each built part reviewed by a skeptic who mutated its code to prove the tests catch it. Fixed in review: a racing
+    request could make a real result a "replay" (stored IDs are now read before the replay history); a Canvas launch
+    without a course made every batch fail with 500 (now 202, nothing stored, D-103 amendment); the bridge's
+    same-origin check let `'/\t/host'` through (now path segments only); and the gaps the mutations showed.
+  - **Integration (2026-11-04):** the ingestion hands stored rows to the grade enqueuer and the NRPS counter runs
+    after each launch (main.ts; `createApp`'s `onXapiStored` and `nrps`; test beds as main.ts, the NRPS counter on
+    request); `AGS_LABEL_MODE` reaches the Deep Linking routes; the grade worker and the `sub` cleanup run with the
+    cleanup jobs; the three grade-bridge routes joined `API_ROUTES`; an LTI principal carries the year of its key
+    (D-107 amendment); ESLint's `LTI-003` storage ban covers the bridge's scripts; the privacy notice says the Canvas
+    ID goes 30 days after the sending stops, as the inventory says (D-104); the S5 pattern tests and `PED-H07` treat
+    a QuestionSet whose questions keep their own «Prøv igjen» as retry on (D-115 amendment; the book's own retry in
+    `uv-module` stays the owner's call, Q20). New end-to-end test `e2e/xapiToCanvas.e2e.test.ts`: a Canvas student's
+    right answer in `/app/play` → bridge (Bearer ltik) → stored under the learnerKey → one job → the worker's
+    `runOnce(now)` → 100 of 100 for the student's `sub` in the mock Canvas → the teacher's «Poeng til Canvas» shows
+    1 sent; a portal author's preview loads no bridge and stores nothing. READMEs (server, web, theme) and the data
+    inventory's Redis keys updated.
+  - **Security and privacy review (2026-11-04):** no leak of personal data or tokens and no way to read or change
+    another person's data was found (forged and replayed batches, prototype keys, size and depth limits, the rate
+    limit, grade tampering, the formative labels, the AGS client, the status API's scope, NRPS, logs, the player
+    page). Fixed: `AgsAccessTokens` now cancels the unread body of a refused token answer, as `AgsScoreClient` does
+    (`[LTI-012]` regression test). Four findings need a decision before any code changes (listed below).
+  - **Finish (2026-11-04):** a new advisory, GHSA-mrwp-f3q8-3g9p (`follow-redirects` ≤ 1.16.1, via `axios` in
+    h5p-server; published after the S5 gate), failed `check:audit`; the lock file now takes the patch release 1.16.2
+    (no override, no exception). Every check then passed (session log, «2026-11-04 · S6 step 3»).
+  - Still open for step 3, so the step stays unticked: the `uv-module` book-retry regression test and the owner's Q20
+    call (D-115); decisions on the review's findings; the step's commit. Not step 3's: `H5PUserData.academicYear` for
+    portal sessions that cross 1 August (step 5, D-107 amendment); CLAUDE.md §2 names `xapiBridge.js` alone (the
+    bridge is three scripts, D-102 amendment; the owner's file).
+  - [x] xAPI bridge, ingestion, minimal storage (`LTI-010`, `LTI-011`, `DATA-012`): plain JavaScript in the top player
         document, learners only (D-102); contexts as `<platformId>:<contextId>` (D-103)
-  - [ ] AGS queue and worker, sync status, honest labelling (`LTI-012`, `LTI-013`); NRPS counts (`LTI-008`): our own
+  - [x] AGS queue and worker, sync status, honest labelling (`LTI-012`, `LTI-013`); NRPS counts (`LTI-008`): our own
         AGS client in a durable worker (D-104), `AGS_LABEL_MODE` `suffix` or `preserve` with Q8 open (D-105)
+  - [x] Status and retry API and the «Poeng til Canvas» panel in the portal tab and `/app/play`, always with the
+        formative notice (D-106); the `ltiSub` 30-day cleanup runs with the cleanup jobs (D-104)
+  - [x] Wiring in `main.ts` and `createApp`, and the end-to-end tests `e2e/xapiToCanvas.e2e.test.ts` and
+        `e2e/xapiPortal.e2e.test.ts` in full Chromium (D-065)
+  - [x] The grade-sync panel in the accessibility suite (axe, light and forced colours); screenshots in `nn` at 1280
+        and 390 px
+  - [x] Review: a skeptic with mutation checks per workstream, then the security and privacy review above
+  - [ ] `uv-module`: the regression test that pins the book's failing «Prøv igjen», then the owner's Q20 call on
+        turning the book's retry off (a `PROD-009` `SPEC-DEVIATION` or not; D-115's 2026-11-04 amendments)
+  - [ ] Decisions on the review's findings (each changes D-104, D-106 or D-115 first, CLAUDE.md §1): **(1, medium)**
+        one learner can delay everyone's grades: 120 made-up scored results a minute per activity (`LTI-011`'s
+        limit) each become a new job, while the worker sends about 200 a minute; remedies to weigh: cap new jobs per
+        placement and learner, settle a group's pending jobs after a send, or claim fairly per group. **(2, low)** the
+        worker never checks the launch's line-item URL (https, an origin in `CANVAS_ORIGINS`). **(3, low)** a portal
+        owner or co-author sees exact grade-sync counts for a colleague's course (D-106 residual for the DPO).
+        **(4, info)** a grade job is lost when its write fails after the statements are stored (already answered
+        202); an outbox, or jobs re-derived from stored root results, if passback must be exact
+  - [ ] The step's commit, with `Refs:` `LTI-010`, `LTI-011`, `DATA-012`, `LTI-012`, `LTI-013`, `LTI-008`,
+        `H5P-009`
 - [ ] 4. B — Insight (`INS-001`…`INS-010`, `PROD-010`, the `LTI-006` **Innsikt** tab, `PROD-013` by version,
       `MAPPE-003` real source): the suppression core with property tests → a 30-learner insight fixture with
       hand-calculated values (moved from step 2) → aggregators `INS-001`, `INS-002`,
@@ -604,9 +645,9 @@ under the step that does it):
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
 | Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`) | HVL DPO | S6, pilot |
 | Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns. Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
-| Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
+| Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`, set for learners only, so an author's preview never offers it; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
 | Q19 | Every ending of the `uv-case` pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give `uv-case` no Canvas score? | ALU | The pilot |
-| Q20 | In `uv-module`, a chapter check's «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question's own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision. **Default applied (2026-10-30, S6 step 3):** the three chapter checks in `uv-module`'s skeleton store `endGame.showRetryButton: false`, and each question and the book keep their own «Prøv igjen»; pending ALU's review of the patterns (Q17) | ALU | The pilot |
+| Q20 | In `uv-module`, a chapter check's «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question's own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision. **Default applied (2026-10-30, S6 step 3):** the three chapter checks in `uv-module`'s skeleton store `endGame.showRetryButton: false`, and each question keeps its own «Prøv igjen» until its check is finished; pending ALU's review of the patterns (Q17). **Found 2026-11-04:** the book's own «Prøv igjen» fails the same way (its reset throws in the first chapter check), so a finished chapter check cannot be retried at all; D-115 then turns the book's retry off too, once the regression test pins it, which `PED-H07` and `PROD-009` must allow (D-115's 2026-11-04 amendment) | ALU | The pilot |
 | Q21 | Confirm that container builds here may use the bridge network's direct egress, outside the agent proxy, for apt, npm and Prisma's engines only, and never for GitHub repository content (D-110, probe P3); S6 proceeds on that rule | Repository owner | — |
 
 ## Risk register
@@ -954,3 +995,28 @@ Append one entry per session: date, session, what was done, gate output, and any
   03 (`UD-003`) and 05 (code location, §1, `INS-006`, `INS-007`, `DATA-002`, `DATA-003`, `DATA-012`, §4), the S6
   load rows of specs 01–04 and the Evaluator Guide (§4.1, §5); closed Q16. The hourly restart task is on until S6's
   gate passes.
+- **2026-11-04 · S6 step 3** — Resumed after the paused work in progress (4bf4634): six workstreams verified and
+  finished the grade bridge (ingest, bridge, grades, status UI, Canvas extras, integration), each reviewed by a skeptic
+  with mutation checks, then a security and privacy review (one fix; four findings for decisions, listed under step 3).
+  `follow-redirects` 1.16.1 → 1.16.2 in the lock file for the new advisory GHSA-mrwp-f3q8-3g9p. Not yet committed;
+  step 3 stays open for the `uv-module` book-retry test (Q20) and the review's decisions. Check output (every step
+  exit 0; tests with `CI=true`, so nothing skips):
+
+  ```
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 482 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check                              ✓ 22 models, 181 fields
+  $ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set
+  $ npm run build · tokens:check · theme check · docs:api        exit 0 · ✓ 3 files · ✓ feedback prefixes · html generated
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements, traceability up to date · ✓ up to date
+  $ npm run spec:trace -- --check --done-through=S5              ✓ 126 requirements, traceability up to date.
+  $ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                                 Test Files 151 passed (151) · Tests 1305 passed (1305)
+  $ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 164 passed (164) · Tests 19727 passed (19727)
+    (apps/server)
+  $ npx vitest run <the other 15 server test folders>            Test Files 263 passed (263) · Tests 5911 passed (5911)
+  $ npm run test:e2e                                             Test Files 14 passed (14) · Tests 23 passed (23)
+  $ npx vitest run … a11y/axeGradeSync.a11y.test.ts              Test Files 1 passed (1) · Tests 5 passed (5)
+  ```

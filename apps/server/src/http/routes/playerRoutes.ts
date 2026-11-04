@@ -15,7 +15,7 @@
  * Collaborators: ../../h5p/render/playerPage.ts, ../../h5p/render/xapiBridgeConfig.ts,
  *   ../../h5p/H5pPlayerFactory.ts (identity renderer),
  *   ../../validation/activityLanguage.ts (the content container's `lang`, UD-010).
- * Tests: apps/server/test/http/player.int.test.ts
+ * Tests: apps/server/test/http/player.int.test.ts, apps/server/test/http/playerXapiBridge.int.test.ts
  */
 import type { IPlayerModel } from '@lumieducation/h5p-server';
 import { Router } from 'express';

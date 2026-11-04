@@ -1,8 +1,9 @@
 /**
  * Integration tests for the `/api` surface through the whole app: the registry, the OpenAPI document, the
- * authentication of the new routes and the save gate's version count.
+ * authentication of the new routes and the save gate's version count. The grade bridge's routes (xAPI batches,
+ * grade-sync status and retry) are mounted with the services createApp builds for them.
  *
- * Spec: DOC-012, PROD-011, PROD-003
+ * Spec: DOC-012, PROD-011, PROD-003, LTI-011, LTI-012
  */
 import {
   API_ROUTES,
@@ -17,6 +18,8 @@ import { CSRF_HEADER } from '../../../src/auth/session/csrfToken.js';
 import { SESSION_COOKIE } from '../../../src/auth/session/sessionCookies.js';
 import { PrismaContentAccessRepository } from '../../../src/h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../../../src/http/api/apiRouter.js';
+import { createLogger } from '../../../src/logging/logger.js';
+import { gradeBridgeApi } from '../../../src/server/gradeBridgeApi.js';
 import { openAppTestbed, type AppTestbed } from '../../support/appTestbed.js';
 import { mountedRoutes } from '../../support/expressRoutes.js';
 import { loginWithFeide } from '../../support/feideTestbed.js';
@@ -46,13 +49,17 @@ describeWithServices('[DOC-012] the /api surface', () => {
   let tb: AppTestbed;
   let cookie: string;
   let csrf: string;
-  const routerFor = (serveDocs: boolean) =>
-    apiRouter({
+  const routerFor = (serveDocs: boolean) => {
+    const access = new PrismaContentAccessRepository(tb.db);
+    const logger = createLogger({ level: 'silent' });
+    return apiRouter({
       publishing: { db: tb.db, validator: () => [], clock: () => new Date() },
-      access: new PrismaContentAccessRepository(tb.db),
+      access,
       studio: tb.studio,
+      ...gradeBridgeApi({ access, db: tb.db, redis: tb.redis, logger }),
       serveDocs,
     });
+  };
   const portal = (method: 'put' | 'post', path: string) =>
     request(tb.app)[method](path).set('Cookie', cookie).set(CSRF_HEADER, csrf);
 

@@ -162,7 +162,7 @@
     "loginHeading": "When you log in or come from Canvas",
     "login1": "When you log in with Feide, we keep Feide’s login token, encrypted, while you are logged in: until you log out, after 2 hours without use and at the latest after 12 hours. The token contains your name, your e-mail address and your Feide ID, and we use it only to log you out of Feide.",
     "login2": "When you open an activity from Canvas, we receive your Canvas ID, but not your name or e-mail address. The launch data is deleted after 24 hours.",
-    "login3": "When an activity sends points to the Canvas gradebook, we store your Canvas ID encrypted, because Canvas requires it. It is deleted 30 days after the points have arrived, and at the latest when the academic year’s data is deleted.",
+    "login3": "When an activity sends points to the Canvas gradebook, we store your Canvas ID encrypted, because Canvas requires it. It is deleted 30 days after the sending stops, whether the points arrived or not, and at the latest when the academic year’s data is deleted.",
     "login4": "When you log in or out with Feide, we store the time, an internal number for your account and a check value of your IP address (not the IP address itself), to detect misuse. Failed logins and launches from Canvas are stored the same way, without the account number. The log is deleted after 2 years.",
     "whyHeading": "Why we store it",
     "why1": "So you can continue where you left off, and so teachers can see what the student group finds hard and plan their teaching around it.",

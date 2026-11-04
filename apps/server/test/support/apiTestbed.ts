@@ -25,6 +25,7 @@ import type { Principal, Role } from '../../src/auth/Principal.js';
 import { setPrincipal } from '../../src/auth/principalLocals.js';
 import { PrismaContentAccessRepository } from '../../src/h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../../src/http/api/apiRouter.js';
+import { gradeBridgeApi } from '../../src/server/gradeBridgeApi.js';
 import { h5pErrorHandler } from '../../src/http/h5pErrorHandler.js';
 import { HttpError } from '../../src/http/HttpError.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
@@ -154,8 +155,16 @@ export function openApiTestbed(options: { studioContent?: StudioContent; logger?
     if (principal) setPrincipal(res, principal);
     next();
   });
-  app.use('/api', apiRouter({ publishing, access, studio, serveDocs: true }), (_req, _res, next) =>
-    next(new HttpError(404, 'error.notFound')),
+  const gradeBridge = gradeBridgeApi({
+    access,
+    db,
+    redis,
+    logger: options.logger ?? createLogger({ level: 'silent' }),
+  });
+  app.use(
+    '/api',
+    apiRouter({ publishing, access, studio, ...gradeBridge, serveDocs: true }),
+    (_req, _res, next) => next(new HttpError(404, 'error.notFound')),
   );
   app.use('/api', h5pErrorHandler(options.logger ?? createLogger({ level: 'silent' })));
   return tb;

@@ -15,7 +15,8 @@
  *   - The fresh mark lives one hour (LTI-008); after a failed read it is shortened to five minutes, so the next
  *     launch after that tries again, while a course too large to count keeps the full hour.
  *   - A stored value that is not a well-formed count reads as no count; a reader never throws on stored data.
- * Collaborators: ./NrpsLearnerCounter.ts (writes), the insight denominators (S6 step 4, read), ../../infra/redisClient.ts,
+ * Collaborators: ./NrpsLearnerCounter.ts (writes), ./nrpsServices.ts (builds it; the insight denominators read it, S6
+ *   step 4), ../../infra/redisClient.ts,
  *   ../../xapi/platformContextKey.ts (the key's context part).
  * Tests: apps/server/test/lti/nrps/NrpsLearnerCountStore.int.test.ts
  */

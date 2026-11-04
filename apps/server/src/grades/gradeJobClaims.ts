@@ -15,7 +15,8 @@
  *   - Every settlement counts the send in `attempts`; a final one sets `terminalAt` and clears `nextAttemptAt`, and
  *     `succeeded` also sets `succeededAt`. `lastError` holds a fixed reason code only (DATA-009).
  * Collaborators: ./gradeSyncRun.ts (the caller), ./gradeRetrySchedule.ts (the settlements), ./gradeJobUpsert.ts.
- * Tests: apps/server/test/grades/gradeSyncWorker.int.test.ts, apps/server/test/grades/gradeSyncWindow.int.test.ts
+ * Tests: apps/server/test/grades/gradeSyncWorker.int.test.ts, apps/server/test/grades/gradeSyncWindow.int.test.ts,
+ *   apps/server/test/grades/gradeSyncEdges.int.test.ts
  */
 import { Prisma } from '../generated/prisma/client.js';
 import type { Database } from '../infra/prismaClient.js';

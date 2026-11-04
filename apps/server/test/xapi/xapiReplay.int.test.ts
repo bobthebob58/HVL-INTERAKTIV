@@ -1,6 +1,7 @@
 /**
  * Integration tests of D-115's replay rule on PostgreSQL across requests: CoursePresentation's resume, a QuestionSet
- * re-submitted after a reload, and the scope of "the learner's latest result" (activity, course and version).
+ * re-submitted after a reload, the scope of "the learner's latest result" (activity, course and version), and a
+ * racing request whose answer the batch skips as stored.
  *
  * Spec: DATA-012, LTI-012
  */
@@ -14,15 +15,26 @@ import { openXapiBench, type XapiBench } from './support/xapiBench.js';
 
 const QS = 'H5P.QuestionSet 1.21';
 const QS_CATEGORY = 'http://h5p.org/libraries/H5P.QuestionSet-1.21';
+const PART = '6c1f0a52-3d8e-4b7a-9f21-5e4c8b0d7a11';
 
-/** A QuestionSet's root `completed` with this score, in a new page load. */
-const finish = (contentId: string, raw: number) => ({
+/** A QuestionSet's root `completed` with this score, by default in a new page load. */
+const finish = (contentId: string, raw: number, attemptId = `${randomUUID()}:1`) => ({
   statementId: randomUUID(),
-  attemptId: `${randomUUID()}:1`,
+  attemptId,
   verb: { id: 'http://adlnet.gov/expapi/verbs/completed' },
   object: { id: contentId },
   context: { contextActivities: { category: [{ id: QS_CATEGORY }] } },
   result: { score: { raw, max: 9, scaled: Math.round((raw / 9) * 10000) / 10000 } },
+});
+
+/** A correct answer to one of the set's questions. */
+const answer = (contentId: string, attemptId: string) => ({
+  statementId: randomUUID(),
+  attemptId,
+  verb: { id: 'http://adlnet.gov/expapi/verbs/answered' },
+  object: { id: `${contentId}?subContentId=${PART}` },
+  context: { contextActivities: { parent: [{ id: contentId }] } },
+  result: { score: { raw: 1, max: 1, scaled: 1 } },
 });
 
 describeWithServices('[DATA-012] replays across requests', () => {
@@ -70,6 +82,21 @@ describeWithServices('[DATA-012] replays across requests', () => {
     ]);
   });
 
+  it('[DATA-012] never compares with another learner’s result: two learners’ equal first scores are both kept', async () => {
+    // Arrange
+    const contentId = await bench.activity(QS);
+    const [first, second] = [await bench.principal('learner'), await bench.principal('learner')];
+    // Act
+    await post(first.header, contentId, [finish(contentId, 6)]);
+    await post(second.header, contentId, [finish(contentId, 6)]);
+    // Assert
+    const rows = await bench.rowsOf(contentId);
+    expect(rows.map((row) => row.learnerKey)).toEqual([
+      first.principal.learnerKey,
+      second.principal.learnerKey,
+    ]);
+  });
+
   it('[DATA-012] compares only with the learner’s latest result in the same course and version', async () => {
     // Arrange
     const contentId = await bench.activity(QS, { version: 2 });
@@ -100,6 +127,27 @@ describeWithServices('[DATA-012] replays across requests', () => {
       'A v2',
       'B v2',
       'A v1',
+    ]);
+  });
+
+  it('[DATA-012] counts a racing request’s answer that the batch skips as stored, so a new result is no replay', async () => {
+    // Arrange
+    const contentId = await bench.activity(QS);
+    const { header } = await bench.principal('learner');
+    await post(header, contentId, [finish(contentId, 6)]);
+    const attemptId = `${randomUUID()}:1`;
+    const answered = answer(contentId, attemptId);
+    // WHY: the request in flight stores the answer just as the `pagehide` flush, which repeats it, reads what is stored.
+    bench.beforeStoredIds = async () => {
+      await post(header, contentId, [answered]);
+    };
+    // Act
+    await post(header, contentId, [answered, finish(contentId, 6, attemptId)]);
+    // Assert (sorted: the racing request started after this batch's receive time, so its row is stamped later)
+    expect((await bench.rowsOf(contentId)).map(rowLine).sort()).toEqual([
+      'answered part …7a11 1/1 #1',
+      'completed root 6/9 #1',
+      'completed root 6/9 #1',
     ]);
   });
 });

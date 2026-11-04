@@ -81,7 +81,7 @@ import {
       // Assert
       await page.getByRole('heading', { level: 1, name: 'Celler og vev' }).waitFor();
       expect(new URL(page.url()).search).toBe('');
-      expect(await page.getByRole('tab').allTextContents()).toEqual(['Spel', 'Rediger']);
+      expect(await page.getByRole('tab').allTextContents()).toEqual(['Spel', 'Rediger', 'Poeng til Canvas']);
       expect(await page.getByTitle('Spel: Celler og vev').getAttribute('src')).toBe(
         `/lti/play?ltik=${encodeURIComponent(LTIK)}`,
       );

@@ -14,12 +14,14 @@
  *   - A job whose placement has no line item, or whose learner's `sub` is gone or unreadable, fails without a send.
  *   - An unexpected error while sending one group is counted against that group as a retry (`internal`), so it is
  *     still limited by the 8 attempts and 24 hours; the other groups go on.
+ *   - A score's `timestamp` is the wall clock when its group is sent, never earlier than the run's moment (a test's
+ *     moment may lie ahead of the wall clock); the run's moment alone decides what is due and when to retry.
  *   - PRIVACY: the `sub` is decrypted only to build the request; the run reports and logs counts and reason codes,
  *     never a learner key, `sub`, score or URL (DATA-009).
  * Collaborators: ./gradeJobClaims.ts, ./gradeRetrySchedule.ts, ./attemptPolicyScore.ts, ./AgsScoreClient.ts,
  *   ./GradeSyncWorker.ts (runs it on a leased timer).
  * Tests: apps/server/test/grades/gradeSyncWorker.int.test.ts, apps/server/test/grades/gradeSyncFaults.int.test.ts,
- *   apps/server/test/grades/gradeSyncWindow.int.test.ts
+ *   apps/server/test/grades/gradeSyncWindow.int.test.ts, apps/server/test/grades/gradeSyncEdges.int.test.ts
  */
 import type { Logger } from 'pino';
 import type { Database } from '../infra/prismaClient.js';
@@ -49,6 +51,8 @@ export interface GradeSyncRunDeps {
   readonly claimLeaseMs?: number;
   /** Only these placements' jobs, for a test that shares the database; production leaves it out. */
   readonly placementIds?: readonly string[];
+  /** The wall clock in milliseconds, for each score's `timestamp`; defaults to `Date.now`. */
+  readonly wallClock?: () => number;
 }
 
 /** What a run did, by count. */
@@ -66,7 +70,11 @@ export interface GradeSyncRunCounts {
 
 /** The default number of jobs one run claims. */
 export const GRADE_SYNC_CLAIM_LIMIT = 50;
-/** The default claim lease: 50 sends of at most three 10-second requests each fit with room to spare. */
+/**
+ * The default claim lease. 50 posts that each time out after 10 seconds (Canvas down) take about 8 minutes; only a
+ * run whose groups mostly need four or five slow requests (a 401, a new token, a 404 and its read) could outlive it,
+ * and then another run may claim and send the rest again, which the settlement's claim check keeps harmless.
+ */
 export const GRADE_SYNC_CLAIM_LEASE_MS = 30 * 60 * 1000;
 
 const SETTLED_COUNT = {
@@ -110,12 +118,15 @@ async function sendGroup(
     return { kind: 'failed', reason: 'subject-unreadable' };
   }
   const attempts = await learnerAttemptScores(deps.db, first.placementId, first.learnerKey);
+  // WHY: D-104's "time of sending". Canvas refuses (400) a score older than the one it holds, so the run's moment,
+  // which a long run leaves behind, could make this send lose to a later-started run on another node that sent first.
+  const sentAt = Math.max(now.getTime(), (deps.wallClock ?? Date.now)());
   return deps.sender.postScore({
     platformId: placement.platformId,
     lineItemUrl: placement.lineItemUrl,
     userId,
     scoreGiven: policyScore(placement, attempts),
-    timestamp: now,
+    timestamp: new Date(sentAt),
   });
 }
 

@@ -2,7 +2,7 @@
  * Integration tests for `POST /api/content/:contentId/grade-sync/retry`: a placement's failed jobs become pending and
  * due now, except those whose encrypted Canvas user ID is gone; orphaned and sent jobs stay; each retry is audited
  * with its counts; another activity's or another course's placement is "not available"; and the per-person limit
- * answers 429 with `Retry-After` on the test Redis.
+ * counts only retries the person may make and answers 429 with `Retry-After` on the test Redis.
  *
  * Spec: LTI-012, DATA-007, DATA-002
  */
@@ -125,6 +125,28 @@ describeWithServices('[LTI-012] retrying failed grade-sync jobs', () => {
     // Assert
     expect([learner.status, colleague.status, malformed.status, extra.status]).toEqual([403, 403, 400, 400]);
     expect((await jobsOf(fx.placements.a110)).filter((job) => job.status === 'pending')).toHaveLength(0);
+  });
+
+  it('[LTI-012] only a retry the person may make counts against the limit; refusals take nothing from it', async () => {
+    // Arrange: a limit that records who it was asked for
+    const taken: string[] = [];
+    const counting: PersonLimit = {
+      take: async (userId) => {
+        taken.push(userId);
+        return { allowed: true };
+      },
+    };
+    // Act
+    const refused = [
+      await retry(portalPrincipal(fx.colleagueId), { placementId: fx.placements.a110 }, counting),
+      await retry(portalPrincipal(fx.ownerId), { placementId: fx.otherPlacement }, counting),
+      await retry(portalPrincipal(fx.ownerId), { placementId: 'nope' }, counting),
+    ];
+    const allowed = await retry(portalPrincipal(fx.ownerId), { placementId: fx.placements.a110 }, counting);
+    // Assert
+    expect(refused.map((res) => res.status)).toEqual([403, 404, 400]);
+    expect(allowed.status).toBe(200);
+    expect(taken).toEqual([fx.ownerId]);
   });
 
   it('[LTI-012] past the per-person limit the retry is 429 with Retry-After, changes nothing and is not audited', async () => {

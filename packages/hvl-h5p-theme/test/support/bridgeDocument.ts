@@ -11,7 +11,8 @@
  *   - The timer never runs by itself: `tick()` is the bridge's 2-second interval; answers come only from `answer()`.
  * Collaborators: ../../src/xapiStatements.js, ../../src/xapiBatching.js, ../../src/xapiBridge.js.
  * Tests: packages/hvl-h5p-theme/test/xapiBridge.test.ts, packages/hvl-h5p-theme/test/xapiBridgeSending.test.ts,
- *   packages/hvl-h5p-theme/test/xapiStatements.test.ts
+ *   packages/hvl-h5p-theme/test/xapiBridgeRecovery.test.ts, packages/hvl-h5p-theme/test/xapiStatements.test.ts,
+ *   packages/hvl-h5p-theme/test/xapiBatching.test.ts
  */
 import { readFileSync } from 'node:fs';
 import { JSDOM, VirtualConsole } from 'jsdom';

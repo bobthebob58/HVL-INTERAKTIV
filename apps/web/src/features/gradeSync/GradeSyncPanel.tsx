@@ -12,12 +12,14 @@
  *   - A11Y: one `h2`; the formative label and each placement are sections named by their `h3`. A retry's outcome is
  *     said in the panel's own polite status region, which stays mounted and repeats the same words when they come
  *     twice (WCAG 4.1.3); focus the removed button held moves to the placement's heading (WCAG 2.4.3).
- *   - One retry at a time; after it the counts are read again, so the panel shows what the server holds.
+ *   - One retry at a time: while one runs, every placement's retry button is `aria-disabled`; after it the counts are
+ *     read again, so the panel shows what the server holds.
  *   - Works with the page's credential (`useApiAuth`): the session and CSRF token, or the Canvas ltik.
  * Collaborators: ./gradeSyncApi.ts, ./GradeSyncPlacementSection.tsx, ./FormativeScoresNote.tsx, ./gradeSyncTexts.ts,
  *   ../activity/tabs/GradeSyncTab.tsx, ../lti/LtiPlayView.tsx, ../../components/useAnnouncement.ts,
  *   ../../components/useFocusAfterChange.ts.
- * Tests: apps/web/test/features/gradeSync/GradeSyncPanel.test.tsx
+ * Tests: apps/web/test/features/gradeSync/GradeSyncPanel.test.tsx,
+ *   apps/web/test/features/gradeSync/GradeSyncPanelRetry.test.tsx
  */
 'use client';
 
@@ -112,6 +114,7 @@ export function GradeSyncPanel({ contentId }: { readonly contentId: string }) {
             else headings.current.delete(placement.placementId);
           }}
           busy={busy === placement.placementId}
+          locked={busy !== undefined}
           feedback={feedback[placement.placementId]}
           onRetry={() => void retry(placement, heading)}
         />

@@ -104,6 +104,16 @@ describeWithServices('[LTI-011] who may send xAPI statements', () => {
     expect(await tb.db.xapiStatement.count({ where: { contentId: other } })).toBe(0);
   });
 
+  it('[LTI-011] refuses a Canvas learner’s body over 64 KiB with 413, with no earlier parser of the app reading it', async () => {
+    // Arrange
+    const ltik = await ltikOf(CANVAS_USERS.student.roles, 'student');
+    const big = { ...batch(contentId), statements: [{ padding: 'x'.repeat(65 * 1024) }] };
+    // Act
+    const res = await request(tb.app).post(XAPI).set('Authorization', `Bearer ${ltik}`).send(big);
+    // Assert
+    expect([res.status, res.body.errorCode]).toEqual([413, 'too-large']);
+  });
+
   it('[LTI-011] answers a Canvas teacher’s batch 202 and stores nothing (D-102)', async () => {
     // Arrange
     await tb.db.xapiStatement.deleteMany({ where: { contentId } });

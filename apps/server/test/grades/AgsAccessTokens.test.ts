@@ -1,7 +1,7 @@
 /**
  * Unit tests for the grade worker's token source (D-104): the client-credentials request it sends, the cache until
  * 60 seconds before expiry, `forget` after a 401, and the outcomes of an unknown platform, a refused or failed
- * request, a redirect and an answer that is not a token.
+ * request, a redirect and an answer that is not a token, whose unread body is cancelled.
  *
  * Spec: LTI-012
  */
@@ -124,4 +124,24 @@ describe('[LTI-012] AGS access tokens', () => {
     expect(next).toEqual({ kind: 'token', accessToken: 'after' });
     expect(requests).toHaveLength(2);
   });
+
+  it.each([503, 400, 302])(
+    '[LTI-012] cancels the unread body of a %i token answer, so its connection is never held open',
+    async (status) => {
+      // Arrange
+      let cancelled = false;
+      const body = new ReadableStream<Uint8Array>({
+        cancel: () => {
+          cancelled = true;
+        },
+      });
+      const fetch = (() => Promise.resolve(new Response(body, { status }))) as typeof globalThis.fetch;
+      const tokens = new AgsAccessTokens({ platforms: fakeDirectory(fakePlatform()), fetch });
+      // Act
+      const outcome = await tokens.token(PLATFORM, now);
+      // Assert
+      expect(outcome.kind).not.toBe('token');
+      expect(cancelled).toBe(true);
+    },
+  );
 });

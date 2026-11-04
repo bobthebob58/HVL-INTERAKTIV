@@ -64,7 +64,9 @@ const PINS: readonly Pin[] = [
     key: 'privacy.login3',
     row: ['GradeSyncJob', '`ltiSubEncrypted`'],
     category: /^Learner PII \(encrypted\)$/,
-    retention: /^Set to null 30 days after success$/,
+    // WHY: D-104 clears it 30 days after the job stopped, whether it succeeded, failed or was orphaned.
+    retention:
+      /^Set to null 30 days after `terminalAt`, whether the job succeeded, failed or was orphaned \(D-104\)$/,
     says: {
       nn: ['Canvas-ID-en', 'kryptert', '30 dagar'],
       nb: ['Canvas-ID-en', 'kryptert', '30 dager'],

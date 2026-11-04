@@ -28,12 +28,14 @@
  * Collaborators: ./xapiStatements.js, ./xapiBatching.js, apps/server/src/h5p/h5pAssets.ts (the last player scripts,
  *   never the editor's), apps/server/src/h5p/render/xapiBridgeConfig.ts (the configuration), `POST /api/h5p/xapi`.
  * Tests: packages/hvl-h5p-theme/test/xapiBridge.test.ts, packages/hvl-h5p-theme/test/xapiBridgeSending.test.ts,
- *   apps/server/test/h5p/xapiBridge.browser.int.test.ts
+ *   packages/hvl-h5p-theme/test/xapiBridgeRecovery.test.ts, apps/server/test/h5p/xapiBridge.browser.int.test.ts
  */
 (function hvlXapiBridge() {
   'use strict';
   var MAX_QUEUE = 1000;
-  var SAME_ORIGIN_PATH = /^\/(?![/\\])/;
+  // SECURITY: path segments of letters, digits, `_` and `-` only. A looser test lets `/\t/host` through, which the URL
+  // parser turns into `//host`, another origin that would get the token header.
+  var SAME_ORIGIN_PATH = /^(?:\/[\w-]+)+$/;
 
   var frame;
   try {

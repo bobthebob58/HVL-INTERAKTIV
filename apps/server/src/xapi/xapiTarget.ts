@@ -16,7 +16,8 @@
  *     from a statement.
  * Collaborators: ../content/contentAccess.ts, ../content/storedContent.ts (`mainLibraryUbername`),
  *   ./xapiRootTests.ts (`mainLibraryCategory`), ./XapiIngest.ts.
- * Tests: apps/server/test/xapi/xapiRouteAuth.int.test.ts, apps/server/test/xapi/xapiIngest.int.test.ts
+ * Tests: apps/server/test/xapi/xapiRouteAuth.int.test.ts, apps/server/test/xapi/xapiIngest.int.test.ts,
+ *   apps/server/test/xapi/xapiLaunchScope.int.test.ts
  */
 import type { Principal } from '../auth/Principal.js';
 import { viewableContent } from '../content/contentAccess.js';

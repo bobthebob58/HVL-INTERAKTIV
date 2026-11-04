@@ -1,7 +1,8 @@
 /**
- * Integration tests for LTI accounts: created at the launch, found by later requests, with the yearly pseudonym.
+ * Integration tests for LTI accounts: created at the launch, found by later requests, with the yearly pseudonym and
+ * the academic year it was derived in.
  *
- * Spec: LTI-001, DATA-002
+ * Spec: LTI-001, DATA-002, DATA-003
  */
 import { afterAll, expect, it } from 'vitest';
 import { AccountResolver } from '../../../src/auth/identity/AccountResolver.js';
@@ -68,6 +69,22 @@ describeWithServices('[LTI-001] LTI accounts', () => {
     expect(user).toMatchObject({ kind: 'learner', displayName: null, email: null });
     expect(user.identities[0]).toMatchObject({ provider: 'lti', platformId: platform.id });
     expect(JSON.stringify(user)).not.toContain(identity.subject);
+  });
+
+  it('[DATA-003] the key and its academic year come from the same moment, also at the turn of the year', async () => {
+    // Arrange: 23:59 and 00:01 on 1 August 2026, Oslo time (UTC+2)
+    const platform = await fixturePlatform();
+    const launch = { ...newIdentity('learner'), platformId: platform.id };
+    const at = (iso: string) =>
+      new LtiAccounts({ accounts, secrets: env.PSEUDONYM_SECRETS, now: () => new Date(iso) });
+    // Act
+    const before = await at('2026-07-31T21:59:00Z').atLaunch(launch);
+    const after = await at('2026-07-31T22:01:00Z').forRequest(launch);
+    // Assert
+    expect(before.learnerKeyYear).toBe(2025);
+    expect(after?.learnerKeyYear).toBe(2026);
+    expect(after?.learnerKey).not.toBe(before.learnerKey);
+    expect((await lti.atLaunch(launch)).learnerKeyYear).toBe(2026);
   });
 
   it('[DATA-002] a resumed request for an unknown person finds nothing and creates nothing', async () => {

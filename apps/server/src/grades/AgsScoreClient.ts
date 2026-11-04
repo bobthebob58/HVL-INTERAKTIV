@@ -34,7 +34,7 @@ export interface AgsScoreRequest {
   readonly userId: string;
   /** The attempt policy's score, 0–100. */
   readonly scoreGiven: number;
-  /** The moment of sending, the worker's tick (D-104). */
+  /** The moment of sending (D-104); never earlier than the worker's tick. */
   readonly timestamp: Date;
 }
 

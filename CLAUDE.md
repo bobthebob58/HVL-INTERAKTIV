@@ -38,7 +38,8 @@
   `/laeringsdesign`, `/mappe`, `/app/*` (LTI views). Insight is an «Innsikt» tab, not a page (D-101, D-106).
 - `packages/design-tokens`: `tokens.json` → CSS variables + Tailwind preset, with a contrast test.
 - `packages/hvl-h5p-theme`: `hvl-h5p-theme.css` and plain-JS client scripts, injected into H5P player and editor
-  iframes; `xapiBridge.js` runs only in the top player document, for learners (D-102).
+  iframes; the xAPI bridge (`xapiStatements.js`, `xapiBatching.js`, `xapiBridge.js`) runs only in the top player
+  document, for learners (D-102).
 - `content/`: ALU-editable YAML/Markdown (phases, patterns, guide text, portfolio templates; D-083). No code.
 - `tools/`: `spec-trace`, `spec-site`, `doc-lint`, `dependency-check`, `privacy`, `h5p-core`, `seed`,
   `mock-platform` (S3: mock OIDC + LTI platform for tests).

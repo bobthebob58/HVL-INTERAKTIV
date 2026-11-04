@@ -17,7 +17,9 @@
  *   - Every log line is kept in `logs` so tests can prove that no token or personal value was logged.
  *   - The studio content is the repository's `content/`, loaded as main.ts loads it, unless a test passes its own
  *     (e.g. ./renamedPhaseLabels.ts); `close` closes the studio's services as main.ts's shutdown does.
- * Collaborators: ../../src/server/createApp.ts, ../../src/server/studioServices.ts,
+ *   - Stored xAPI results reach the grade enqueuer as in main.ts (LTI-012); the NRPS count after a launch (LTI-008)
+ *     runs only with `nrps`, since it reads the mock Canvas's roster in the background of every launch.
+ * Collaborators: ../../src/server/createApp.ts, ../../src/server/studioServices.ts, ./gradeBridgeInputs.ts,
  *   ../../../../tools/mock-platform/mockPlatform.mjs, ./services.ts, ./runFeideAuthor.ts, ./issuerScopedPlatforms.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts and the other users of `openAppTestbed`.
  */
@@ -40,6 +42,7 @@ import { closeStudioServices } from '../../src/server/studioServices.js';
 import { createContentValidator } from '../../src/validation/validateContent.js';
 import type { WebApp } from '../../src/web/nextWebApp.js';
 import { capturedLogger } from './capturedLogger.js';
+import { gradeBridgeInputs } from './gradeBridgeInputs.js';
 import { scopedTo } from './issuerScopedPlatforms.js';
 import { uniqueName } from './services.js';
 import { accountOfFeideUser, feideSubjectHashes, giveRunAuthor } from './runFeideAuthor.js';
@@ -75,12 +78,17 @@ export interface AppTestbed extends App {
  * @param libraries - The installed H5P libraries (default: the HTTP test set).
  * @param options - `web`: a web app (a stub, or the built one from `loadWebApp`) mounted as main.ts mounts it;
  *   `runAuthor`: the mock Feide's `author` gets a Feide ID of this run (./runFeideAuthor.ts); `studioContent`: the
- *   studio content instead of the repository's `content/`.
+ *   studio content instead of the repository's `content/`; `nrps`: count each launched course's learners (LTI-008).
  * @returns The testbed.
  */
 export async function openAppTestbed(
   libraries: SyntheticLibrary[] = HTTP_TEST_LIBRARIES,
-  options: { web?: Pick<WebApp, 'dev' | 'handle'>; runAuthor?: boolean; studioContent?: StudioContent } = {},
+  options: {
+    web?: Pick<WebApp, 'dev' | 'handle'>;
+    runAuthor?: boolean;
+    studioContent?: StudioContent;
+    nrps?: boolean;
+  } = {},
 ): Promise<AppTestbed> {
   const startedAt = new Date();
   let handler = (_req: IncomingMessage, res: ServerResponse): void => void res.writeHead(503).end();
@@ -114,6 +122,7 @@ export async function openAppTestbed(
     h5p: runtime,
     validator,
     studioContent: options.studioContent ?? loadStudioContent(),
+    ...gradeBridgeInputs({ env, db, redis, logger }, options.nrps),
     ...(options.web ? { web: options.web } : {}),
   });
   const platforms = scopedTo(built.lti.provider.platformManager, mock.canvas.issuer);

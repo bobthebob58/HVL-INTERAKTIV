@@ -1,0 +1,73 @@
+{
+  "description": "A QuestionSet that hides its own results-page «Prøv igjen» while it forces every question's «Prøv igjen» on (D-115, Q20): retry stays on, so no hint.",
+  "mainLibrary": "H5P.QuestionSet 1.21",
+  "metadata": {
+    "title": "Testaktivitet",
+    "defaultLanguage": "nn"
+  },
+  "params": {
+    "introPage": {
+      "showIntroPage": false,
+      "title": "Quiz"
+    },
+    "progressType": "dots",
+    "passPercentage": 50,
+    "questions": [
+      {
+        "library": "H5P.MultiChoice 1.16",
+        "params": {
+          "question": "<p>Spørsmål?</p>",
+          "answers": [
+            {
+              "text": "<div>A</div>",
+              "correct": true,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Ja, fordi A.</div>",
+                "notChosenFeedback": ""
+              }
+            },
+            {
+              "text": "<div>B</div>",
+              "correct": false,
+              "tipsAndFeedback": {
+                "tip": "",
+                "chosenFeedback": "<div>Nei, fordi B.</div>",
+                "notChosenFeedback": ""
+              }
+            }
+          ],
+          "overallFeedback": [
+            {
+              "from": 0,
+              "to": 100,
+              "feedback": ""
+            }
+          ],
+          "behaviour": {
+            "enableRetry": false,
+            "enableSolutionsButton": true
+          }
+        },
+        "subContentId": "00000000-0000-4000-8000-000000000095",
+        "metadata": {
+          "contentType": "Multiple Choice",
+          "license": "U",
+          "title": "Spørsmål"
+        }
+      }
+    ],
+    "disableBackwardsNavigation": false,
+    "randomQuestions": false,
+    "endGame": {
+      "showResultPage": true,
+      "showSolutionButton": true,
+      "showRetryButton": false
+    },
+    "override": {
+      "checkButton": true,
+      "retryButton": "on"
+    }
+  },
+  "expected": []
+}

@@ -15,7 +15,8 @@
  * Collaborators: ../ltikPrincipal.ts, ../../auth/principalToH5pActor.ts, ../../h5p/render/playerPage.ts,
  *   ../../h5p/render/xapiBridgeConfig.ts,
  *   ../http/ltiPageHeaders.ts, ../pages/client/ltikLanding.js, ../pages/client/h5pStorageGuard.js, ../ltiRoutes.ts.
- * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/ltiPlay.int.test.ts
+ * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/ltiPlay.int.test.ts,
+ *   apps/server/test/lti/ltiPlayXapiBridge.int.test.ts
  */
 import { fileURLToPath } from 'node:url';
 import type { IPlayerModel } from '@lumieducation/h5p-server';

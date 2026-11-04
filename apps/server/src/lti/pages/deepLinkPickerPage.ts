@@ -18,7 +18,8 @@
  *   - Every text comes from the locale files; every value is escaped (`markup`).
  * Collaborators: ../deepLinking/deepLinkRoutes.ts, ./client/deepLinkPicker.js, ../../http/pages/htmlPage.ts,
  *   ../../http/pages/helpLink.ts.
- * Tests: apps/server/test/lti/pages/deepLinkPickerPage.test.ts, apps/server/test/lti/pages/deepLinkPicker.browser.test.ts
+ * Tests: apps/server/test/lti/pages/deepLinkPickerPage.test.ts, apps/server/test/lti/pages/deepLinkPicker.browser.test.ts,
+ *   apps/server/test/lti/pages/deepLinkPickerNoScore.test.ts
  */
 import type { HelpLink } from '../../http/pages/helpLink.js';
 import { htmlPage, markup, type SafeHtml } from '../../http/pages/htmlPage.js';

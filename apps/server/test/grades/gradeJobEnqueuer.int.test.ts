@@ -13,7 +13,8 @@ import { describeWithServices, serviceEnv } from '../support/services.js';
 import { gradableRow, openGradeDbFixture, VIEW_ID, type GradeDbFixture } from './support/gradeDbFixture.js';
 
 const SUB = 'canvas-sub-4f1e2d';
-const NOW = new Date('2026-10-30T10:00:05.000Z');
+// WHY: jobs due in 2099 are never claimed by a grade worker that a dev or e2e server runs on the shared database.
+const NOW = new Date('2099-10-30T10:00:05.000Z');
 
 describeWithServices('[LTI-012] grade enqueuer', () => {
   let fx: GradeDbFixture;
@@ -122,7 +123,7 @@ describeWithServices('[LTI-012] grade enqueuer', () => {
       gradableRow(fx.contentId, { attemptId }),
     );
     await enqueuer.enqueue([a!, b!], learner, SUB);
-    const backoff = new Date('2026-10-30T10:30:00.000Z');
+    const backoff = new Date('2099-10-30T10:30:00.000Z');
     await fx.db.gradeSyncJob.updateMany({
       where: { placementId: placement.id, attemptId: a!.attemptId },
       data: { attempts: 3, nextAttemptAt: backoff, lastError: 'http-503' },
@@ -135,7 +136,7 @@ describeWithServices('[LTI-012] grade enqueuer', () => {
       db: fx.db,
       encryption,
       logger,
-      clock: () => new Date('2026-10-30T11:00:00Z'),
+      clock: () => new Date('2099-10-30T11:00:00Z'),
     });
     // Act: the same attempts again, with other scores (LTI-013's forged case)
     const counts = await later.enqueue(
@@ -163,7 +164,7 @@ describeWithServices('[LTI-012] grade enqueuer', () => {
       scoreGiven: 25,
       status: 'pending',
       attempts: 0,
-      nextAttemptAt: new Date('2026-10-30T11:00:00Z'),
+      nextAttemptAt: new Date('2099-10-30T11:00:00Z'),
       terminalAt: null,
       succeededAt: null,
       lastError: null,
@@ -171,7 +172,7 @@ describeWithServices('[LTI-012] grade enqueuer', () => {
     });
   });
 
-  it('[DATA-002] onStored, the ingestion listener, queues the same jobs as enqueue', async () => {
+  it('[LTI-012] onStored, the ingestion listener, queues the same jobs as enqueue', async () => {
     // Arrange
     const placement = await fx.placement();
     const learner = fx.principal(placement);

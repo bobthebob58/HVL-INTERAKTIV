@@ -104,6 +104,13 @@ describe('[DATA-012] the platform-scoped context (D-103)', () => {
     expect(() => platformContextKey(platformId, contextId)).toThrow();
   });
 
+  const LAUNCH = {
+    platformId: PLATFORM,
+    deploymentId: 'd',
+    contextId: 'SYK110-H26',
+    messageType: 'LtiResourceLinkRequest',
+  } as const;
+
   it('[DATA-012] gives an LTI principal its launch’s course and a portal principal none', () => {
     // Arrange
     const lti = sealPrincipal({
@@ -115,17 +122,15 @@ describe('[DATA-012] the platform-scoped context (D-103)', () => {
       hvlMember: false,
       feideAuthenticated: false,
       studentAuthor: false,
-      lti: {
-        platformId: PLATFORM,
-        deploymentId: 'd',
-        contextId: 'SYK110-H26',
-        messageType: 'LtiResourceLinkRequest',
-      },
+      lti: LAUNCH,
     });
     // Act
     const [canvas, portal] = [principalContextKey(lti), principalContextKey({})];
+    const courseless = principalContextKey({ lti: { ...LAUNCH, contextId: '' } });
     // Assert
     expect(canvas).toBe(`${PLATFORM}:SYK110-H26`);
     expect(portal).toBeNull();
+    // WHY: a launch with no course is told apart from a portal play, so it is never stored as one (D-103).
+    expect(courseless).toBeUndefined();
   });
 });

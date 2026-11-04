@@ -10,6 +10,10 @@
  * Invariants:
  *   - Order: the activity check (403), the version check (400), the rate limit (429, nothing stored), then the
  *     learner check. Everyone gets the same answers, so a 202 never tells whose statements are kept (D-102).
+ *   - A Canvas launch with no course that D-103 can store (no context claim) stores nothing and answers 202, like a
+ *     non-learner's batch: never under null, which means a portal play, and never a 500 the bridge would resend.
+ *   - The stored IDs are read before the replay history, so a racing request's rows that this batch skips as
+ *     duplicates are always in the history too (D-115's "answered since its previous result").
  *   - PRIVACY: the learner comes from the principal, never the body: `learnerKey`, its academic year (D-107) and the
  *     platform-scoped context of the launch (D-103, null in the portal). Logs hold counts only (DATA-009).
  *   - PRIVACY: an LTI request's `sub` passes through to the listener only (D-104), never into a row or a log.
@@ -19,7 +23,8 @@
  * Collaborators: ./xapiTarget.ts, ./XapiRateLimit.ts, ./XapiStatementStore.ts, ./xapiBatchPlan.ts,
  *   ./platformContextKey.ts, ../auth/Principal.ts, ./xapiRoutes.ts, ../server/createApp.ts (wires the listener).
  * Tests: apps/server/test/xapi/xapiIngest.int.test.ts, apps/server/test/xapi/xapiLimits.int.test.ts,
- *   apps/server/test/xapi/xapiRouteAuth.int.test.ts
+ *   apps/server/test/xapi/xapiRouteAuth.int.test.ts, apps/server/test/xapi/xapiLaunchScope.int.test.ts,
+ *   apps/server/test/xapi/xapiReplay.int.test.ts
  */
 import type { XapiBatchEnvelope } from '@hvl-interaktiv/api-contract';
 import type { Logger } from 'pino';
@@ -106,20 +111,23 @@ export class XapiIngest {
     if (!decision.allowed) return { kind: 'limited', retryAfterSeconds: decision.retryAfterSeconds };
     // PRIVACY: previews and teachers' plays are not learning data; their batches store nothing (D-102).
     if (highestRole(principal.roles) !== 'learner') return { kind: 'accepted', stored: 0 };
+    const contextId = principalContextKey(principal);
+    // WHY: a launch outside a course has no course to store under, and null would make it a portal play (D-103).
+    if (contextId === undefined) return this.skipCourseless(count);
     const facts: XapiBatchFacts = {
       contentId: target.contentId,
       contentVersion: batch.contentVersion,
-      contextId: principalContextKey(principal),
+      contextId,
       learnerKey: principal.learnerKey,
       academicYear: learnerKeyYearOf(principal, receivedAt),
       mainCategory: target.mainCategory,
     };
     const items = parseXapiItems(batch.statements);
     const keys = batchKeys(items);
-    const [storedIds, history] = await Promise.all([
-      this.deps.statements.storedIds(keys.statementIds),
-      this.deps.statements.replayHistory(facts, keys.viewIds),
-    ]);
+    // WHY: one after the other: a racing request's answer that this batch skips as stored must be in the history too,
+    // or a new result could be taken for a replay (D-115). Read together, the history could miss what IDs found.
+    const storedIds = await this.deps.statements.storedIds(keys.statementIds);
+    const history = await this.deps.statements.replayHistory(facts, keys.viewIds);
     const plan = planXapiBatch({
       items,
       facts,
@@ -133,6 +141,15 @@ export class XapiIngest {
     this.logBatch(count, rows.length, plan);
     await this.notify(rows, principal, request);
     return { kind: 'accepted', stored: rows.length };
+  }
+
+  private skipCourseless(received: number): XapiIngestOutcome {
+    // PRIVACY: a count only (DATA-009); the launch is not named.
+    this.deps.logger.info(
+      { event: 'xapi.batch', received, stored: 0, noCourse: received },
+      'xapi batch had no course',
+    );
+    return { kind: 'accepted', stored: 0 };
   }
 
   private logBatch(received: number, stored: number, plan: XapiBatchPlan): void {

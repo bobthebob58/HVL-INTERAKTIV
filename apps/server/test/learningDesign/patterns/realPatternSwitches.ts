@@ -5,7 +5,7 @@
  * Why: PROD-009 asks that every pattern keeps retry and «Vis svar» on, sets no time limit, and makes pass marks
  *      informative rather than gatekeeping. The creation tests check this on what H5P stores after the skeleton,
  *      the library defaults and the save path have all had their say, not on the skeleton files.
- * Spec: PROD-009, PED-010
+ * Spec: PROD-009, PED-010, PED-020
  * Invariants:
  *   - One rule per content type, applied to every node of that type (the activity itself and every sub-content),
  *     read through the validator's walker (../../../src/validation/contentWalker.ts).
@@ -13,6 +13,9 @@
  *     the tasks' own switches then apply, and those are checked on the tasks.
  *   - A pass mark is informative when the attempt that misses it can be retried: wherever `passPercentage` is
  *     stored (QuestionSet's own, MultiChoice's `behaviour.passPercentage`), the node's own retry switch is on.
+ *   - QuestionSet's results-page «Prøv igjen» (`endGame.showRetryButton`) may be off when the set forces each
+ *     question's retry on (`override.retryButton: "on"`), which then also keeps its pass mark informative: D-115's
+ *     Q20 default, since that button fails when a page holds several sets (the validator's PED-H07 agrees).
  *   - No key anywhere looks like a timer or a time limit.
  *   - Blanks matches case-insensitively. Typo tolerance is each pattern's choice, not a formative default: spec 04 §4
  *     asks for it only in `ea-terms`, and it lets a number pass with one wrong digit (12,5 ← 125), so
@@ -53,6 +56,9 @@ const all =
   (params) =>
     rules.flatMap((rule) => rule(params));
 
+/** The set forces each question's «Prøv igjen» on (D-115, Q20). */
+const questionsKeepRetry = (params: unknown): boolean => fieldAt(params, 'override', 'retryButton') === 'on';
+
 const TASK_SWITCHES = mustBeOn(['behaviour', 'enableRetry'], ['behaviour', 'enableSolutionsButton']);
 
 /** The rule of each content type a pattern may hold; a type without a rule has no formative switch. */
@@ -62,11 +68,8 @@ const RULES: Readonly<Record<string, Rule>> = {
   'H5P.DragText': TASK_SWITCHES,
   'H5P.Blanks': all(TASK_SWITCHES, mustNotBe(['behaviour', 'caseSensitive'], true)),
   'H5P.QuestionSet': all(
-    mustBeOn(
-      ['endGame', 'showResultPage'],
-      ['endGame', 'showRetryButton'],
-      ['endGame', 'showSolutionButton'],
-    ),
+    mustBeOn(['endGame', 'showResultPage'], ['endGame', 'showSolutionButton']),
+    (params) => (questionsKeepRetry(params) ? [] : mustBeOn(['endGame', 'showRetryButton'])(params)),
     mustNotBe(['disableBackwardsNavigation'], true),
     overridesNotOff,
   ),
@@ -108,7 +111,7 @@ const PASS_MARKS: readonly (readonly string[])[] = [['passPercentage'], ['behavi
 
 const passMarkGates: Rule = (params) =>
   PASS_MARKS.filter((path) => fieldAt(params, ...path) !== undefined)
-    .filter(() => !RETRY_OF.some((path) => ON.has(fieldAt(params, ...path))))
+    .filter(() => !RETRY_OF.some((path) => ON.has(fieldAt(params, ...path))) && !questionsKeepRetry(params))
     .map((path) => `${path.join('.')} is set, but a missed pass mark cannot be retried`);
 
 const TIMER_KEY = /time.?limit|timer|countdown/i;

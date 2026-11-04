@@ -180,9 +180,11 @@ Pattern guidance `⟦…⟧` left in an activity, and required media still missi
 |---|---|
 | `PED-H07/negative-forced-on-by-container.json` | A QuestionSet, a CoursePresentation and an InteractiveVideo that force retry and «Vis svar» on for tasks whose own settings say off (and a task the learner must complete, whose retry InteractiveVideo keeps on). |
 | `PED-H07/negative-on-or-default.json` | Retry and solutions on, set explicitly or left to the defaults. |
+| `PED-H07/negative-set-retry-off-questions-keep-theirs.json` | A QuestionSet that hides its own results-page «Prøv igjen» while it forces every question's «Prøv igjen» on (D-115, Q20). |
 | `PED-H07/positive-course-presentation-summary-slide.json` | A CoursePresentation whose summary slide hides «Vis svar». |
 | `PED-H07/positive-override-sets-only-solutions.json` | An InteractiveVideo that forces «Vis svar» on but leaves retry to its task, which turns retry off. |
 | `PED-H07/positive-retry-and-solutions-off.json` | A QuestionSet that turns retry off for all questions and hides the solution at the end, with a MultiChoice that turns retry off itself. |
+| `PED-H07/positive-set-retry-off-without-override.json` | A QuestionSet that hides its own results-page «Prøv igjen» and leaves its questions' retry to them. |
 
 ## PED-H08
 

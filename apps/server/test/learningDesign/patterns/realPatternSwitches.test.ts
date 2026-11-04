@@ -2,7 +2,8 @@
  * Tests for the formative rules the real-pattern tests apply (./realPatternSwitches.ts): each rule names a switched-off
  * retry or «Vis svar», a pass mark that cannot be retried, a forced completion, a timer, a presentation without
  * keyboard navigation and case-sensitive matching in a fill-in task, at the node where it is, and leaves formative
- * content alone, including a fill-in task without typo tolerance (D-084 amendment). Without these, a rule that never
+ * content alone, including a fill-in task without typo tolerance (D-084 amendment) and a set whose questions keep
+ * their own retry while its results-page retry is off (D-115, Q20). Without these, a rule that never
  * fires would let the integration test pass on anything.
  *
  * Spec: PROD-009
@@ -110,6 +111,25 @@ describe('[PROD-009] the formative rules of the real-pattern tests', () => {
       passPercentage: 80,
       endGame: { showResultPage: true, showRetryButton: true, showSolutionButton: true },
       override: {},
+    };
+    // Act
+    const violations = violationsOf('H5P.QuestionSet 1.21', params);
+    // Assert
+    expect(violations).toEqual([]);
+  });
+
+  it('[PROD-009] accepts a set that hides its own «Prøv igjen» while each question keeps its own (D-115, Q20)', () => {
+    // Arrange: the set forces its questions' retry on; its results-page button is off on purpose
+    const params = {
+      questions: [
+        {
+          library: 'H5P.MultiChoice 1.16',
+          params: { behaviour: { enableRetry: true, enableSolutionsButton: true } },
+        },
+      ],
+      passPercentage: 80,
+      endGame: { showResultPage: true, showRetryButton: false, showSolutionButton: true },
+      override: { retryButton: 'on' },
     };
     // Act
     const violations = violationsOf('H5P.QuestionSet 1.21', params);

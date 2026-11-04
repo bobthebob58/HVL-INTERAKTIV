@@ -132,8 +132,10 @@ import {
         }),
       );
       // Assert
+      // WHY: Spel, Rediger and «Poeng til Canvas» (LTI-012), the author's three tabs.
       expect(borders).toEqual([
         { selected: 'true', width: '4px', visible: true },
+        { selected: 'false', width: '4px', visible: false },
         { selected: 'false', width: '4px', visible: false },
       ]);
       expect(problems).toEqual([]);

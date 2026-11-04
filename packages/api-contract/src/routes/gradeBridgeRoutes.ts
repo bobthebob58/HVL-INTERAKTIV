@@ -10,12 +10,13 @@
  *   - `path` is below `/api`, in Express form; every `:name` has a schema in `params`, and every schema a route names
  *     is listed in ./gradeBridgeSchemaNames.ts. Every route documents 401 and works with a portal session (with the
  *     CSRF token on `POST`) or an ltik (`auth: 'either'`).
- *   - Not yet in ../apiRoutes.ts: apps/server/test/http/api/apiDocs.int.test.ts requires the registry and the mounted
- *     routes to agree, so step 3 adds `GRADE_BRIDGE_ROUTES` there in the change that mounts them.
+ *   - Part of ../apiRoutes.ts since S6 step 3 mounted the routes; apps/server/test/http/api/apiDocs.int.test.ts requires
+ *     the registry and the mounted routes to agree.
  *   - PRIVACY: a non-learner's batch is answered 202 like a learner's and stores nothing (D-102), so the answer never
  *     tells whose statements are kept.
  * Collaborators: ./routeResponses.ts, ./collaborationResponses.ts (`rateLimited`), ./gradeBridgeSchemaNames.ts,
- *   ../xapi.ts, ../gradeSync.ts, apps/server (the routes, step 3).
+ *   ../xapi.ts, ../gradeSync.ts, apps/server/src/xapi/xapiRoutes.ts and
+ *   apps/server/src/grades/status/gradeSyncRoutes.ts (the routes).
  * Tests: packages/api-contract/test/gradeBridgeRoutes.test.ts
  */
 import type { ApiRoute } from '../apiRouteTypes.js';
@@ -100,8 +101,8 @@ export const GRADE_BRIDGE_ROUTES = [
       401: unauthenticated,
       403: gradeSyncRefused,
       404: failure(
-        '`hvl:activity-unavailable`: the activity is unknown or not viewable (D-066), or the placement is not ' +
-          'one of its placements that the person may see.',
+        '`hvl:activity-unavailable`: the activity is unknown (also a malformed ID) or not viewable (D-066), or the ' +
+          'placement is not one of its placements that the person may see.',
       ),
     },
   },

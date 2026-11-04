@@ -12,6 +12,8 @@
  *     cascade), the users and the rate-limit counters of those users.
  *   - The listener records the rows, principal and request facts it gets, and how many of the rows the database
  *     already holds when it runs. An LTI principal's request carries the `sub` `sub-of-<userId>`.
+ *   - `beforeStoredIds` runs once, right before the next batch reads its stored IDs, to stand in for a racing
+ *     request that commits at that moment; the store is otherwise the server's own.
  * Collaborators: ../../../src/xapi/xapiRoutes.ts, ../../../src/xapi/XapiIngest.ts, ../../support/services.ts,
  *   ../../support/capturedLogger.ts.
  * Tests: apps/server/test/xapi/xapiIngest.int.test.ts, apps/server/test/xapi/xapiLimits.int.test.ts
@@ -55,6 +57,8 @@ export interface XapiBench {
   listenerFails: boolean;
   /** The ingestion's clock: a fixed moment, or the real clock when undefined (the default). */
   now: Date | undefined;
+  /** Runs once, right before the next batch reads its stored IDs (a racing request committing then). */
+  beforeStoredIds: (() => Promise<void>) | undefined;
   /** A principal with a `User` row, and the header that makes a request theirs. */
   principal(
     role: Role,
@@ -92,6 +96,7 @@ export async function openXapiBench(): Promise<XapiBench> {
     calls: [],
     listenerFails: false,
     now: undefined,
+    beforeStoredIds: undefined,
     principal: async (role, overrides = {}) => {
       const principal: Principal = {
         userId: await newUser(role === 'learner' ? 'learner' : 'staff'),
@@ -144,10 +149,20 @@ export async function openXapiBench(): Promise<XapiBench> {
       await Promise.all([redis.quit(), db.$disconnect()]);
     },
   };
+  const store = new XapiStatementStore(db);
   const ingest = new XapiIngest({
     access: new PrismaContentAccessRepository(db),
     db,
-    statements: new XapiStatementStore(db),
+    statements: {
+      storedIds: async (ids) => {
+        const racing = bench.beforeStoredIds;
+        bench.beforeStoredIds = undefined;
+        await racing?.();
+        return store.storedIds(ids);
+      },
+      replayHistory: (scope, viewIds) => store.replayHistory(scope, viewIds),
+      insert: (rows) => store.insert(rows),
+    },
     rateLimit: new XapiRateLimit(redis),
     clock: () => bench.now ?? new Date(),
     logger,

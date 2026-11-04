@@ -10,8 +10,8 @@
  *   - Every row the fixture creates is removed by `close` (platforms cascade to placements and jobs; activities and
  *     users by ID), so parallel and repeated runs never see each other's rows.
  *   - Learner keys and `sub`s are made-up test values; the encrypted `sub` is a placeholder the status never reads.
- * Collaborators: ../gradeSyncRoutes.int.test.ts, ../gradeSyncRetry.int.test.ts,
- *   apps/server/a11y/support/gradeSyncSeed.ts.
+ * Collaborators: ../gradeSyncRoutes.int.test.ts, ../gradeSyncRetry.int.test.ts, ../gradeSyncMounted.int.test.ts,
+ *   apps/server/a11y/support/gradeSyncViews.ts.
  * Tests: shared by the tests named above.
  */
 import { randomUUID } from 'node:crypto';

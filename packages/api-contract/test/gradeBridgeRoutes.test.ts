@@ -1,6 +1,6 @@
 /**
  * Tests the grade-bridge route registry: it builds an OpenAPI document whose references resolve, it documents the
- * answers D-115 and D-104 fix, and it is kept out of `API_ROUTES` until the server mounts the routes.
+ * answers D-115 and D-104 fix, and it is part of `API_ROUTES` (since S6 step 3 mounted the routes), once each.
  *
  * Spec: DOC-012, LTI-011, LTI-012
  */
@@ -61,14 +61,16 @@ describe('[DOC-012] grade-bridge routes', () => {
       expect(RESPONSE_SCHEMAS).toHaveProperty(name);
   });
 
-  it('[DOC-012] stays out of API_ROUTES until mounted, with operation IDs and paths that no other area uses', () => {
+  it('[DOC-012] is in API_ROUTES once each, after the other areas, with operation IDs and paths no other area uses', () => {
     // Arrange
     const registered: readonly ApiRoute[] = API_ROUTES;
     const key = (route: ApiRoute) => `${route.method} ${route.path}`;
+    const others = registered.slice(0, registered.length - GRADE_BRIDGE_ROUTES.length);
     // Act
-    const ids = new Set(registered.map((route) => route.operationId));
-    const pairs = new Set(registered.map(key));
+    const ids = new Set(others.map((route) => route.operationId));
+    const pairs = new Set(others.map(key));
     // Assert
+    expect(registered.slice(-GRADE_BRIDGE_ROUTES.length)).toEqual(GRADE_BRIDGE_ROUTES);
     for (const route of GRADE_BRIDGE_ROUTES) {
       expect(ids.has(route.operationId), route.operationId).toBe(false);
       expect(pairs.has(key(route)), key(route)).toBe(false);

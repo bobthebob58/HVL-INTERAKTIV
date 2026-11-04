@@ -246,7 +246,7 @@
     "noScore": {
       "noStatements": "Ingen poeng til karakterboken: bilde med klikkpunkter sender ingen resultater, så kolonnen for denne oppgaven i Canvas blir stående tom.",
       "noSubmitScreen": "Ingen poeng til karakterboken: videoen har ingen innsendingsside, så kolonnen for denne oppgaven i Canvas blir stående tom. Legg til en innsendingsside i videoen hvis du vil ha poeng.",
-      "noScoring": "Ingen poeng til karakterboken: scenarioet er satt opp uten poeng («No scoring» under «Scoring options»), så kolonnen for denne oppgaven i Canvas blir stående tom. Velg poeng der hvis du vil ha poeng."
+      "noScoring": "Ingen poeng til karakterboken: scenarioet er satt opp uten poeng («No scoring» under «Scoring options»), så kolonnen for denne oppgaven i Canvas blir stående tom. Velg et annet alternativ der hvis du vil ha poeng."
     }
   }
 }

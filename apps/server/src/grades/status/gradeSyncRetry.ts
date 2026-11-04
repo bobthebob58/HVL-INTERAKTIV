@@ -10,13 +10,14 @@
  * Invariants:
  *   - Only `failed` jobs of the one placement change. `orphaned` jobs are never retried (LTI-012, D-104): the line
  *     item is gone, so a retry could only fail again.
- *   - A requeued job is pending, due at once, with no stop time, error or attempts counted, so the worker gives it
- *     D-104's full budget again.
+ *   - A requeued job is pending, due at once, with no stop time, error or attempts counted. The worker sends it again
+ *     with what is left of D-104's 24 hours, counted from the job's creation (../gradeRetrySchedule.ts), so a job
+ *     retried after them gets one attempt per retry.
  *   - The update, the count of jobs that must stay failed and the audit record are one transaction, so the audit's
  *     counts are the ones applied.
  *   - PRIVACY: the audit names the placement, the counts and the mode only: no learner key, `sub` or score (DATA-007).
  * Collaborators: ./gradeSyncRoutes.ts (the caller, after the scope and rate-limit checks), ../../infra/prismaClient.ts,
- *   the grade worker (claims the requeued jobs, D-104).
+ *   the grade worker (claims the requeued jobs, D-104), ../GradeSubjectCleanupJob.ts (removes the `sub`).
  * Tests: apps/server/test/grades/status/gradeSyncRetry.int.test.ts
  */
 import type { GradeSyncRetryResponse } from '@hvl-interaktiv/api-contract';
@@ -50,13 +51,15 @@ export async function retryFailedJobs(
 ): Promise<GradeSyncRetryResponse> {
   const { placementId, now } = request;
   return db.$transaction(async (tx) => {
-    // PRIVACY: a job without its encrypted `sub` cannot be sent (D-104); it is counted, never touched.
-    const stillFailed = await tx.gradeSyncJob.count({
-      where: { placementId, status: 'failed', ltiSubEncrypted: null },
-    });
     const { count: requeued } = await tx.gradeSyncJob.updateMany({
       where: { placementId, status: 'failed', ltiSubEncrypted: { not: null } },
       data: { status: 'pending', nextAttemptAt: now, attempts: 0, lastError: null, terminalAt: null },
+    });
+    // PRIVACY: a job without its encrypted `sub` cannot be sent (D-104); it is counted, never touched.
+    // WHY: counted after the update, so a `sub` the cleanup job (../GradeSubjectCleanupJob.ts) removes between the two
+    // statements is still counted here, and every failed job is in one count or the other.
+    const stillFailed = await tx.gradeSyncJob.count({
+      where: { placementId, status: 'failed', ltiSubEncrypted: null },
     });
     await tx.auditEvent.create({
       data: {

@@ -10,11 +10,14 @@
  * Spec: LTI-013, LTI-005
  * Invariants:
  *   - `suffix` (the default): the label is the title and « (formativ)», the same in every language (D-105). A title
- *     too long for a Canvas assignment name is cut and ends with «…», so the suffix is never lost.
+ *     too long for a Canvas assignment name is cut and ends with «…», so the suffix is never lost. Canvas names the
+ *     assignment from `lineItem.label` before the item's `title`
+ *     (C:`ui/features/assignment_edit/backbone/views/EditView.jsx:797-800`), so the plain `title` never wins.
  *   - `preserve`: the label is the title (cut the same way, without the suffix); the item also carries
  *     `https://canvas.instructure.com/lti/preserveExistingAssignmentName: true` and a `text` that says the points
- *     are formative, in the launch's language. Canvas writes a non-empty `text` into the assignment's description
- *     (C:`doc/api/content_item.md:155-165`) *(verify on HVL's Canvas, D-105)*.
+ *     are formative, in the launch's language. Canvas keeps a name the teacher typed (an empty name still gets the
+ *     label), and a non-empty `text` REPLACES the assignment's description, a description the teacher wrote
+ *     included (C:`doc/api/content_item.md:155-165`, C:`…/EditView.jsx:803`) *(verify on HVL's Canvas, D-105, Q8)*.
  *   - A Canvas assignment name holds 255 characters (C:`app/models/abstract_assignment.rb:717-723`, unless the
  *     account enforces a shorter SIS name length) *(verify)*. Characters are counted as code points, as Canvas
  *     counts them, so a cut never splits a surrogate pair.

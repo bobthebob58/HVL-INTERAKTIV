@@ -13,7 +13,7 @@
  *     role (the full URI, a sub-role of it, or the deprecated short name); each `user_id` counts once, even if a
  *     roster that changed while it was paged lists it twice.
  *   - PRIVACY: the members and their IDs live only in memory while they are counted; only the number is returned.
- * Collaborators: ./NrpsLearnerCounter.ts.
+ * Collaborators: ./nrpsRosterRead.ts (asks NRPS for the role), ./NrpsLearnerCounter.ts (counts).
  * Tests: apps/server/test/lti/nrps/activeLearners.test.ts
  */
 

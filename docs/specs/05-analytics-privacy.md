@@ -224,10 +224,13 @@ else is dropped, including actor names, mailboxes and extensions.
   1 August can keep its `learnerKey` for up to 12 hours after it, D-057); the annual purge (`DATA-003` as amended)
   deletes by it. `H5PUserData` and `GradeSyncJob` store it too (§4).
 - **Amended (D-115, 2026-10-30, probe P1):** the field list is unchanged; what fills it is made exact. Which
-  statements become rows is `LTI-011` as amended: a root `attempted`, an `answered` of the root or of sub-content with
-  a `subContentId`, and a root `completed` that is not a replay. A row's ID is the bridge's `statementId`, inserted once, so a batch sent twice stores nothing twice; a
-  content hash is never an identity, because identical statements are normal. `timestamp` is the receive time plus
-  the item's place in its batch in milliseconds, so the batch's order survives; the browser's clock is never read.
+  statements become rows is `LTI-011` as amended: a root `attempted`, a root `answered` or `completed` only as a root
+  result (`LTI-012` as amended; a root `completed` only when it is not a replay), and a sub-content `answered` with a
+  `subContentId`. Every stored root `answered` and `completed` is therefore a root result, which `INS-001` counts
+  without a category field. A row's ID is the bridge's `statementId`, inserted once, so a batch sent twice stores
+  nothing twice; a content hash is never an identity, because identical statements are normal. `timestamp` is the
+  receive time plus the item's place in its batch in milliseconds, so the batch's order survives; the browser's clock
+  is never read.
   `attemptId` is `<viewId>:<n>` (`LTI-010` as amended). `subContentId` comes from the `h5p-subContentId` extension,
   else from `object.id`. `response` is kept only for the interaction types `choice` and `fill-in`: each gap (between
   `[,]`) is cut to 100 characters, enough to group the answers *k* learners share, and a response still over 1 000

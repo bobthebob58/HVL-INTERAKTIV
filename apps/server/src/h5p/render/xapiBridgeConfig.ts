@@ -23,7 +23,8 @@
  *   ../../learningDesign/safeEditing/contentVersionOnPages.ts (the version in the state URL),
  *   ../../http/routes/playerRoutes.ts and ../../lti/play/ltiPlayRoutes.ts (the callers),
  *   packages/hvl-h5p-theme/src/xapiBridge.js (the reader).
- * Tests: apps/server/test/h5p/render/xapiBridgeConfig.test.ts, apps/server/test/h5p/xapiBridge.browser.int.test.ts
+ * Tests: apps/server/test/h5p/render/xapiBridgeConfig.test.ts, apps/server/test/h5p/xapiBridge.browser.int.test.ts,
+ *   apps/server/test/http/playerXapiBridge.int.test.ts, apps/server/test/lti/ltiPlayXapiBridge.int.test.ts
  */
 import type { IPlayerModel } from '@lumieducation/h5p-server';
 import { CONTENT_VERSION_PARAM } from '../../learningDesign/safeEditing/contentVersionOnPages.js';

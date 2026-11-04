@@ -52,6 +52,7 @@ export function principalOfLaunch(
   return sealPrincipal({
     userId: account.userId,
     learnerKey: account.learnerKey,
+    learnerKeyYear: account.learnerKeyYear,
     roles: mapLtiRoles(facts.roles),
     mode: 'lti',
     locale: localeFromLaunch(context.rawIdToken),

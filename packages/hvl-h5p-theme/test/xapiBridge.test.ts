@@ -49,12 +49,19 @@ describe('[LTI-010] where the bridge starts', () => {
     expect(openBridgeDocument({ frameClass: 'hvl-player-frame' }).listening()).toBe(1);
   });
 
-  it.each(['//evil.example/x', 'https://evil.example/api/h5p/xapi', '/\\evil.example', 'api/h5p/xapi'])(
-    '[LTI-010] refuses to start when the endpoint %s is not a same-origin path',
-    (endpoint) => {
-      expect(openBridgeDocument({ config: { ...portalConfig(), endpoint } }).listening()).toBe(0);
-    },
-  );
+  // WHY: the URL parser drops tabs and newlines, so `/\t/evil.example/x` is `//evil.example/x`, another origin.
+  it.each([
+    '//evil.example/x',
+    'https://evil.example/api/h5p/xapi',
+    '/\\evil.example',
+    'api/h5p/xapi',
+    '/\t/evil.example/x',
+    '/\n/evil.example/x',
+    '/../api/h5p/xapi',
+    '/api/h5p/xapi?to=//evil.example',
+  ])('[LTI-010] refuses to start when the endpoint %j is not a same-origin path', (endpoint) => {
+    expect(openBridgeDocument({ config: { ...portalConfig(), endpoint } }).listening()).toBe(0);
+  });
 
   it.each([{ contentVersion: 0 }, { contentVersion: '2' }, { contentId: 7 }])(
     '[LTI-010] refuses a configuration with %o',
@@ -76,7 +83,11 @@ describe('[LTI-010] where the bridge starts', () => {
 describe('[LTI-010] what the bridge sends', () => {
   it.each([
     ['H5P.MultiChoice', 1, ['attempted root', 'answered root']],
+    ['H5P.Blanks', 1, ['attempted root', 'answered root']],
     ['H5P.DragText', 2, ['attempted root']],
+    // WHY: the chapters' `completed` (with a subContentId, no parent) are never sent; the book's own one is (D-115).
+    ['H5P.InteractiveBook', 1, ['attempted root', 'answered sub', 'completed root']],
+    ['H5P.InteractiveVideo', 1, ['attempted root', 'answered sub']],
     ['H5P.QuestionSet', 1, ['attempted root', ...Array<string>(4).fill('answered sub'), 'completed root']],
     ['H5P.Column', 1, ['answered sub', 'answered sub', 'completed root']],
     ['H5P.CoursePresentation', 2, ['attempted root', 'completed root']],

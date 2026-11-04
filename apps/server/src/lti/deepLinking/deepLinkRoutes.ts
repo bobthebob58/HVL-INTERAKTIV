@@ -17,7 +17,8 @@
  *   - On a graded placement the picker says which activities can never send Canvas a score (D-115).
  * Collaborators: ./deepLinkActivities.ts, ./deepLinkItems.ts, ./formativeLabel.ts, ../pages/deepLinkPickerPage.ts,
  *   ../ltikPrincipal.ts, ../http/ltiPageHeaders.ts, ../ltiRoutes.ts.
- * Tests: apps/server/test/lti/deepLinking/deepLinking.int.test.ts
+ * Tests: apps/server/test/lti/deepLinking/deepLinking.int.test.ts, apps/server/test/lti/deepLinking/labelMode.int.test.ts,
+ *   apps/server/test/lti/deepLinking/noScoreNotice.int.test.ts
  */
 import { NOTICE_VERSIONS } from '@hvl-interaktiv/api-contract';
 import express, { Router, type Request } from 'express';

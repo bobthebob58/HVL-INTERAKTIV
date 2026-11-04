@@ -15,7 +15,8 @@
  *     most `NRPS_MAX_PAGES` pages of 50 learners (LTI-008).
  * Collaborators: apps/server/.env.example, ./envParsers.ts, ./productionChecks.ts,
  *   ../privacy/pseudonymSecrets.ts, ../h5p/H5pConfigFactory.ts.
- * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/studioEnv.test.ts
+ * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/studioEnv.test.ts,
+ *   apps/server/test/config/canvasExtrasEnv.test.ts
  */
 import { isAbsolute } from 'node:path';
 import { z } from 'zod';

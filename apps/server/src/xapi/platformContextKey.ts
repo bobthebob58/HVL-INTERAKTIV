@@ -12,10 +12,13 @@
  *   - A key always matches the contract's `PLATFORM_CONTEXT` and the database's CHECK on `XapiStatement.contextId`;
  *     building one from anything else throws (a programming error), so no malformed context is ever stored.
  *   - The context ID is the launch's context claim (`idToken.launch.context.id`, `LtiLaunchFacts.contextId`), never
- *     ltijs's `LaunchContext.contextId` (CLAUDE.md §5). A portal play has no context: null.
+ *     ltijs's `LaunchContext.contextId` (CLAUDE.md §5). A portal play has no context: null. A Canvas launch whose
+ *     context cannot form a key (no context claim, or one over 255 characters) has none either, and is told apart
+ *     from the portal by `principalContextKey`'s undefined, so it is never stored as a portal play.
  * Collaborators: @hvl-interaktiv/api-contract (`PLATFORM_CONTEXT`), ../auth/Principal.ts, ./xapiTarget.ts;
  *   the NRPS counter and the insight scope (S6 steps 3–4) build and read their keys here.
- * Tests: apps/server/test/xapi/xapiStatementRow.test.ts, apps/server/test/xapi/xapiRouteAuth.int.test.ts
+ * Tests: apps/server/test/xapi/xapiStatementRow.test.ts, apps/server/test/xapi/xapiRouteAuth.int.test.ts,
+ *   apps/server/test/xapi/xapiLaunchScope.int.test.ts
  */
 import { PLATFORM_CONTEXT } from '@hvl-interaktiv/api-contract';
 import type { Principal } from '../auth/Principal.js';
@@ -37,15 +40,21 @@ export interface PlatformContext {
  * @spec DATA-012
  */
 export function platformContextKey(platformId: string, contextId: string): string {
-  const key = `${platformId}:${contextId}`;
+  const key = storableKey(platformId, contextId);
   // SECURITY: one malformed key would fail its whole batch at the database's CHECK; refusing it here names the cause.
-  // WHY: the pattern starts with a UUID and a colon, so the first colon must also end the platform ID given here.
-  if (!PLATFORM_CONTEXT.test(key) || key.indexOf(':') !== platformId.length) {
+  if (key === undefined) {
     throw new Error(
       'a platform context needs a lower-case platform UUID and a context ID of 1–255 characters',
     );
   }
   return key;
+}
+
+/** The key, or undefined when the parts cannot form one that the contract and the database's CHECK accept. */
+function storableKey(platformId: string, contextId: string): string | undefined {
+  const key = `${platformId}:${contextId}`;
+  // WHY: the pattern starts with a UUID and a colon, so the first colon must also end the platform ID given here.
+  return PLATFORM_CONTEXT.test(key) && key.indexOf(':') === platformId.length ? key : undefined;
 }
 
 /**
@@ -62,10 +71,11 @@ export function parsePlatformContextKey(key: string): PlatformContext | undefine
 /**
  * The stored context of a request: the Canvas course of an LTI principal's launch, or none in the portal.
  * @param principal - Who made the request.
- * @returns `<platformId>:<contextId>` for an LTI principal; null for a portal principal.
- * @throws Error when the launch's facts cannot form a key (see `platformContextKey`).
+ * @returns `<platformId>:<contextId>` for an LTI principal; null for a portal principal; undefined for an LTI
+ *   principal whose launch has no course that can be stored (no context claim, or one over 255 characters), which
+ *   the caller must not store as a portal play.
  * @spec DATA-012
  */
-export function principalContextKey(principal: Pick<Principal, 'lti'>): string | null {
-  return principal.lti ? platformContextKey(principal.lti.platformId, principal.lti.contextId) : null;
+export function principalContextKey(principal: Pick<Principal, 'lti'>): string | null | undefined {
+  return principal.lti ? storableKey(principal.lti.platformId, principal.lti.contextId) : null;
 }

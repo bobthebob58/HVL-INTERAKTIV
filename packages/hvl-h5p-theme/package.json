@@ -30,5 +30,8 @@
     "build": "node scripts/buildFeedbackPrefixes.mjs",
     "check": "node scripts/buildFeedbackPrefixes.mjs --check",
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@hvl-interaktiv/api-contract": "0.1.0"
   }
 }

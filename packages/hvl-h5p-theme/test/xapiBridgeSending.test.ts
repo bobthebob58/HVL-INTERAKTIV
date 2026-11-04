@@ -69,12 +69,12 @@ describe('[LTI-010] how the bridge sends', () => {
   it.each([500, 503, 429, null])(
     '[LTI-010] puts a batch answered %s back at the head of the queue',
     async (status) => {
-      // Arrange
+      // Arrange: two in flight, and a newer statement queued behind them meanwhile
       const page = pageWith(2);
       page.tick();
+      page.dispatch(statement('answered'));
       // Act
       await page.answer(0, status);
-      page.dispatch(statement('answered'));
       page.tick();
       // Assert
       expect(ids(page.requests[1]).slice(0, 2)).toEqual(ids(page.requests[0]));

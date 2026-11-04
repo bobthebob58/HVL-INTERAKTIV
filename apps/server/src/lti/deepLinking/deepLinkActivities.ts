@@ -14,7 +14,8 @@
  *     ./noScoreActivities.ts); it stays selectable, since the teacher may still want the assignment.
  * Collaborators: ./deepLinkRoutes.ts, ./deepLinkItems.ts, ./noScoreActivities.ts, ../../http/authErrors.ts,
  *   ../../h5p/contentIds.ts.
- * Tests: apps/server/test/lti/deepLinking/deepLinkActivities.int.test.ts
+ * Tests: apps/server/test/lti/deepLinking/deepLinkActivities.int.test.ts,
+ *   apps/server/test/lti/deepLinking/noScoreNotice.int.test.ts
  */
 import { isContentUuid } from '../../h5p/contentIds.js';
 import { authError } from '../../http/authErrors.js';

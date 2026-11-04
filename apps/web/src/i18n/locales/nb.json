@@ -162,7 +162,7 @@
     "loginHeading": "Når du logger inn eller kommer fra Canvas",
     "login1": "Når du logger inn med Feide, tar vi vare på innloggingsbeviset fra Feide, kryptert, så lenge du er innlogget: til du logger ut, etter 2 timer uten bruk og senest etter 12 timer. Beviset inneholder navnet ditt, e-postadressen din og Feide-ID-en din, og vi bruker det bare til å logge deg ut av Feide.",
     "login2": "Når du åpner en aktivitet fra Canvas, får vi Canvas-ID-en din, men ikke navnet eller e-postadressen din. Opplysningene fra oppstarten blir slettet etter 24 timer.",
-    "login3": "Når en aktivitet sender poeng til karakterboken i Canvas, lagrer vi Canvas-ID-en din kryptert, fordi Canvas krever den. Den blir slettet 30 dager etter at poengene har kommet fram, og senest når opplysningene for studieåret blir slettet.",
+    "login3": "Når en aktivitet sender poeng til karakterboken i Canvas, lagrer vi Canvas-ID-en din kryptert, fordi Canvas krever den. Den blir slettet 30 dager etter at sendingen stoppet, enten poengene kom fram eller ikke, og senest når opplysningene for studieåret blir slettet.",
     "login4": "Når du logger inn eller ut med Feide, lagrer vi tidspunktet, et internt nummer for kontoen din og en kontrollverdi av IP-adressen din (ikke IP-adressen selv), for å oppdage misbruk. Mislykkede innlogginger og oppstarter fra Canvas blir lagret på samme måte, uten nummeret for kontoen. Loggen blir slettet etter 2 år.",
     "whyHeading": "Hvorfor vi lagrer det",
     "why1": "Slik at du kan fortsette der du slapp, og slik at lærerne kan se hva studentgruppen strever med og planlegge undervisningen etter det.",

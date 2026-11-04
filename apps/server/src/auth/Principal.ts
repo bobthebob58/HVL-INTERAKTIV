@@ -10,8 +10,9 @@
  *   - `userId` is always set; learners have pseudonymous User rows (D-034, D-053).
  *   - `learnerKey` is the HMAC pseudonym, never a raw ID (DATA-002).
  *   - `learnerKeyYear` is the academic year of the secret that made `learnerKey`: a portal principal carries the
- *     year its session stored at login; an LTI principal derives its key for each request, so `learnerKeyYearOf`
- *     gives it the year of the request (D-107).
+ *     year its session stored at login; an LTI principal the year its key was derived in for this request
+ *     (../lti/launch/ltiAccount.ts); `learnerKeyYearOf` falls back to the request's year only for a principal
+ *     built without it, such as a test's (D-107).
  *   - An LTI principal never has `admin`, `hvlMember` or `feideAuthenticated` (LTI-004, D-053, D-059).
  *   - The principal holds no name, e-mail, Feide ID, LTI `sub` or token.
  * Collaborators: ./principalToH5pActor.ts, ./requestPrincipal.ts, ./feide/FeideRoleMapper.ts,
@@ -57,8 +58,8 @@ export interface Principal {
   readonly learnerKey: string;
   /**
    * The academic year of the pseudonym secret that made `learnerKey` (D-107), e.g. 2026 for 2026/27. Set for a portal
-   * principal from its session, whose key was made at login and can outlive 1 August by up to 12 hours (D-057);
-   * unset for an LTI principal, whose key is derived for each request. Read it through `learnerKeyYearOf`.
+   * principal from its session, whose key was made at login and can outlive 1 August by up to 12 hours (D-057), and
+   * for an LTI principal from the same moment its key was derived for the request. Read it through `learnerKeyYearOf`.
    */
   readonly learnerKeyYear?: number;
   /** Every role the person holds; the H5P role is the highest. */
@@ -91,8 +92,8 @@ export function highestRole(roles: readonly Role[]): Role {
  * purge deletes them by year (D-107).
  * @param principal - Who made the request.
  * @param receivedAt - When the request arrived.
- * @returns The year the portal session stored at login; otherwise the academic year of `receivedAt`, since an LTI
- *   principal's key is derived for each request in that request's year.
+ * @returns The year the principal carries (the portal session's, or the one an LTI request's key was derived in);
+ *   otherwise the academic year of `receivedAt`.
  * @spec DATA-012
  */
 export const learnerKeyYearOf = (principal: Pick<Principal, 'learnerKeyYear'>, receivedAt: Date): number =>

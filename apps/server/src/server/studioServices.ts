@@ -103,7 +103,7 @@ const isClosable = (service: unknown): service is ClosableStudioService =>
  * @returns The services, frozen; build them once per app.
  * @example
  * const studio = createStudioServices({ ...appInputs, access, hasher, publishing });
- * app.use('/api', authenticate, apiRouter({ publishing, access, studio, serveDocs }));
+ * app.use('/api', authenticate, apiRouter({ publishing, access, studio, ...gradeBridge, serveDocs }));
  * @spec PED-001
  */
 export function createStudioServices(inputs: StudioServiceInputs): StudioServices {

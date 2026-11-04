@@ -2531,6 +2531,16 @@ loading of one spec per session are kept.
   *Attempts:* the rule stands, written as `attemptId` = `<viewId>:<n>`. The bridge sends only the statements the
   server stores, each with a `statementId` that the server inserts once, and the stored `timestamp` keeps the
   batch's order (D-115).
+- **Amendment (2026-11-04, step 3 integration):** the bridge is three player-only scripts, not one file, to keep
+  within DOC-007's 200 lines: `xapiStatements.js` (D-115's root tests and the cut), `xapiBatching.js` (sizes, fitting,
+  back-off) and `xapiBridge.js`, still the last script in `playerGlobalAssets` (`XAPI_BRIDGE_FILES`, never in
+  `HVL_THEME_FILES`, so never in the editor). Its configuration is a separate inert JSON block `#hvl-xapi-bridge`
+  (endpoint, content ID and version, and the request's own ltik or CSRF token), not a key of `H5PIntegration`, so
+  Core's iframes, which copy `H5PIntegration`, never see the token. The endpoint must be same-origin path segments
+  (`/api/h5p/xapi`), or the bridge does not start. ESLint's `LTI-003` storage ban covers the three scripts. Where
+  CLAUDE.md §2 and spec 01's `H5P-009` and spec 02's `LTI-010` notes name `xapiBridge.js` alone, they mean these
+  three (CLAUDE.md is the owner's to amend). The end-to-end test `e2e/xapiToCanvas.e2e.test.ts` runs the bridge in a
+  real Canvas launch into `/app/play` and checks that a portal author's preview loads none of it.
 
 ### D-103 · Course contexts are stored with their platform: `<platformId>:<contextId>`
 - **Context:** `DATA-012` stores a `contextId?` per statement, `InsightSnapshot` has one, `LTI-008` caches a learner
@@ -2557,6 +2567,12 @@ loading of one spec per session are kept.
   course, `auth/principalToH5pActor.ts`) keeps the bare ID: a collision there only shares one learner's own saved
   state between two copies of the same course, while changing the key would reset every learner's saved progress.
   The students' checklist names it.
+- **Amendment (2026-11-04, step 3 integration):** the one module is `apps/server/src/xapi/platformContextKey.ts`
+  (`platformContextKey`, `parsePlatformContextKey`, `principalContextKey`); the NRPS count imports it. *A Canvas
+  launch without a storable course* (an empty context claim, over 255 characters, or with a line break; ltijs accepts
+  such a launch): a learner's xAPI batch is answered 202, nothing is stored, and the log counts it as `noCourse`.
+  Storing it under null would make it a portal play, 403 would misread a launched activity, and a 500 would make the
+  bridge resend for as long as the page is open. Spec 02's `LTI-011` note says the same.
 
 ### D-104 · `SPEC-DEVIATION` LTI-012: our own minimal AGS client in a durable worker, not ltijs's `submitScore`
 - **Context:** `LTI-012` has a worker call `context.grading.submitScore(lineItemUrl, …)`; spec 02 §1 lists
@@ -2631,6 +2647,9 @@ loading of one spec per session are kept.
   Each attempt holds at most one such result, so `latest` is the job created last. "A later scored statement of the
   same attempt" is then a duplicate, which the statement's ID already stops, or a forged one (`LTI-013`), which still
   updates its job as above (D-115).
+- **Amendment (2026-10-30, S6 step 3):** `latest` is not "the job created last" (P1 amendment above): it is the job
+  whose result was stored last, by `GradeSyncJob.resultAt`, then by attempt number and attempt ID (D-115's step-3
+  amendment).
 
 ### D-105 · The formative line-item label is configurable, and scores are labelled formative wherever shown
 - **Context:** `LTI-013` labels AGS scores formative with the suffix "(formativ)" on the line-item `label`. On
@@ -2754,6 +2773,15 @@ loading of one spec per session are kept.
   `contentVersion` to `InsightSnapshot`, which has none today. A learner who comes back after the purge gets new
   rows, as the new year's key already makes them a new pseudonym. The integration test travels through a year in
   time (`DATA-003`'s Verify) and checks D-034's rule.
+- **Amendment (2026-11-04, step 3 integration):** where the year comes from. A portal session stores
+  `learnerKeyYear`, computed at login from the same moment as its key (a session field; the data inventory's Redis
+  section lists it); an LTI request's key and its year come from one moment in `LtiAccounts` (`lti/launch/
+  ltiAccount.ts`), and `principalOfLaunch` puts the year on the principal, so no request at the turn of the year pairs
+  a key with the other year. `learnerKeyYearOf(principal, receivedAt)` falls back to the request's year only for a
+  principal built without one. `XapiStatement` rows (`XapiIngest`) and `GradeSyncJob` rows (from those statements)
+  carry it. *Still open, for step 5:* `H5PUserData` rows are written without it (`h5p/storage/learnerStateWrites.ts`
+  takes the database default, the year of the write), which is wrong for a portal session made before 1 August and
+  used up to 12 hours after; the purge step carries `learnerKeyYear` through `principalToH5pActor` into that write.
 
 ### D-108 · Data-subject requests: a server CLI that HVL operations run
 - **Context:** `DATA-008` asks for an admin-only tool that takes a Feide ID or an `(iss, sub)` pair, derives the
@@ -3315,10 +3343,30 @@ loading of one spec per session are kept.
   amendment; spec 02 §7 and the data inventory list the field. *`reportingIsEnabled`:* the player page sets it only
   together with the bridge, for a learner principal, so an author's preview never offers «Send inn rapport». *Q20:*
   `uv-module`'s skeleton stores `endGame.showRetryButton: false` on its three QuestionSets, pending ALU's review of
-  the patterns (Q17). Each question keeps its own «Prøv igjen» until the set is finished (`override.retryButton:
-  "on"` sets its `behaviour.enableRetry`, the field spec 04's `PED-H07` names), and the book keeps its own
-  (`behaviour.enableRetry`); only the set's results-page button is off, so a finished chapter check is retried only
-  through the book's «Prøv igjen», which the regression test above checks. The S5 real-pattern tests (`PROD-009`) and
-  `PED-H07`'s implementation also read that switch, which spec 04 does not name, and the tests report each set's
-  stored pass mark (the library's default `passPercentage`) as one that cannot be retried; how they treat a set whose
-  questions keep their retry is settled at the step's integration, by amendment.
+  the patterns (Q17). Each question keeps its own «Prøv igjen» until its set is finished (`override.retryButton:
+  "on"` sets its `behaviour.enableRetry`, the field spec 04's `PED-H07` names). The S5 real-pattern tests
+  (`PROD-009`) and `PED-H07`'s implementation also read `endGame.showRetryButton`, which spec 04's `PED-H07` does not
+  name, and the tests report each set's stored pass mark (the library's default `passPercentage`) as one that cannot
+  be retried; how they treat these switches is settled at the step's integration, by amendment.
+- **Amendment (2026-11-04, step 3 review):** two more points. *What is stored:* a root `answered` or `completed` is
+  stored only as a root result; one whose category does not name the main library is discarded, since `DATA-012`
+  stores no category and insight (completed, attempts) and the grade queue read every stored root `answered` and
+  `completed` as a root result (spec 02 `LTI-011` and spec 05 `DATA-012` as amended say so). *The book's «Prøv
+  igjen» (Q20):* it is no way round the hidden set button. In a scratch run (not kept as a test) a freshly loaded
+  `uv-module` held six progress dots, and the book's `resetTask`, which its summary page's «Prøv igjen» calls, threw
+  QuestionSet's `TypeError` in the first chapter check, so the book is not reset either: a finished chapter check
+  cannot be retried in this pattern at all. The regression test listed above is not written yet; once it pins this,
+  the rule above turns the book's retry off too (`behaviour.enableRetry: false`), which `PED-H07` reports on a field
+  spec 04 names. Whether the pattern then departs from `PROD-009` ("*Retry* … enabled" for all patterns), and so
+  needs a `SPEC-DEVIATION`, is the owner's call at the step's integration, together with the S5 tests above.
+- **Amendment (2026-11-04, step 3 integration):** the S5 tests and `PED-H07`, settled as the step-3 amendment asked.
+  A QuestionSet whose results-page «Prøv igjen» is off (`endGame.showRetryButton: false`) while it forces each
+  question's own «Prøv igjen» on (`override.retryButton: "on"`) keeps retry on, in the sense of spec 04's `PED-H07`
+  (`enableRetry`) and `PROD-009`: `PED-H07` gives no hint for that switch then (a hint would send the author back to a
+  button that breaks when a page holds several sets), the real-pattern tests (`realPatternSwitches.ts`) accept it,
+  and its pass mark counts as informative, since each question can be retried until the set is finished. Without the
+  override, the hint and the tests' report stay. Fixtures `PED-H07/negative-set-retry-off-questions-keep-theirs.json`
+  and `positive-set-retry-off-without-override.json` pin both sides. *Not settled here:* the book's own «Prøv igjen»
+  in `uv-module` (the step-3 review amendment). Its regression test is still to be written, and whether the pattern
+  then turns the book's retry off, and so departs from `PROD-009` with a `SPEC-DEVIATION`, stays the owner's call
+  (Q20); until then the book's retry stays on and the tests above require it.

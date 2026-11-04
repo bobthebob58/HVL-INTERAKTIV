@@ -369,6 +369,7 @@ cookie (D-057). Learner state is never in Redis: it lives in PostgreSQL (`H5PUse
 | session `userId` | Who is logged in | Staff PII (by reference); learner: Pseudonymous (stable key, by reference) | 6(1)(e) | Logout, 2 h idle or 12 h absolute | Redis |
 | session `roles`, `hvlMember`, `studentAuthor`, `locale` | Permissions computed at login (D-057) | None | n/a | Logout, 2 h idle or 12 h absolute | Redis |
 | session `learnerKey` | The learner pseudonym for H5P state, computed at login | Pseudonymous | 6(1)(e) | Logout, 2 h idle or 12 h absolute | Redis |
+| session `learnerKeyYear` | The academic year of the secret behind `learnerKey`, computed at login from the same moment, so a learner's rows carry the year the yearly purge deletes them by (D-107) | None | n/a | Logout, 2 h idle or 12 h absolute | Redis |
 | session `csrfToken` | Synchronizer token for state-changing requests (AUTH-003) | Secret | n/a | Logout, 2 h idle or 12 h absolute | Redis |
 | session `idTokenEncrypted` | Feide ID token for `id_token_hint` at logout (D-021), encrypted (D-056) | Staff or learner PII (encrypted) | 6(1)(e) | Logout, 2 h idle or 12 h absolute | Redis |
 | session `createdAt`, `lastSeenAt` | Idle and absolute expiry | None | n/a | Logout, 2 h idle or 12 h absolute | Redis |
@@ -385,3 +386,9 @@ cookie (D-057). Learner state is never in Redis: it lives in PostgreSQL (`H5PUse
 | lease `hvli:h5p:temporary-file-cleanup` | A random node ID: one server cleans temporary editor files per interval | None | n/a | About 5 minutes | Redis |
 | counter `hvli:people-search:<userId>` | How many co-author searches the person made in the current minute, for the rate limit (D-090); a number, never the query | Staff PII (by reference) | 6(1)(e) | 60 seconds | Redis |
 | counter `hvli:copies:<userId>` | How many copies (duplicates and «Lagre som ny versjon») the author started in the current ten minutes, for the copy limit (D-092 amendment 2026-10-29); a number, never the source | Staff PII (by reference) | 6(1)(e) | 10 minutes | Redis |
+| counter `hvli:xapi:<userId>:<contentId>` | How many xAPI statements the learner sent about the activity in the current minute, for `LTI-011`'s limit of 120 (D-115); a number, never a statement | Pseudonymous (by reference) | 6(1)(e) | 60 seconds | Redis |
+| counter `hvli:grade-sync-retries:<userId>` | How many grade-sync retries the author asked for in the current ten minutes, for the retry limit (`LTI-012`, D-104); a number, never the activity, placement or learners | Staff PII (by reference) | 6(1)(e) | 10 minutes | Redis |
+| count `hvli:nrps:count:<platformId>:<contextId>` | The number of active learners in a Canvas course and when it was counted, read from NRPS after a launch: insight's denominator (`LTI-008`, `INS-001`, D-103); never a member, ID or role | None (an aggregate) | n/a | 30 days after the last successful count | Redis |
+| mark `hvli:nrps:fresh:<platformId>:<contextId>` | The course's count is fresh, so no launch reads the roster again within the hour (`LTI-008`) | None | n/a | 1 hour; 5 minutes after a failed read | Redis |
+| lease `hvli:grades:sync` | A random node ID: one server sends queued grades per interval (D-104) | None | n/a | About 15 seconds | Redis |
+| lease `hvli:grades:subject-cleanup` | A random node ID: one server clears expired encrypted Canvas `sub`s per interval (`DATA-002`, D-104) | None | n/a | About 1 hour | Redis |
