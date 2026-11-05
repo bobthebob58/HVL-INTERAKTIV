@@ -13,14 +13,20 @@
  *     deletes nothing; a dry run may run on any day.
  *   - Every run is audited by ./retentionPurge.ts with `trigger: "cli"` and no actor.
  *   - Prints counts, years and dates only, one JSON line per result; never a secret, key or learner value. A failure
- *     prints its message and exits 1.
+ *     exits 1 with one line (`purgeFailureLine`): a Prisma or driver error by its name and database code only, as the
+ *     data-subject CLI does, because Prisma renders a call's arguments into its message (DATA-009); any other error by
+ *     its message with credential shapes masked.
  * Collaborators: ./retentionPurge.ts, ./purgeCalendar.ts, ./purgeAudit.ts, ./RetentionPurgeJob.ts (`PurgeEnv`),
- *   ../../config/env.ts, ../../infra/prismaClient.ts, docs/ops/yearly-purge.md.
- * Tests: apps/server/test/privacy/purge/retentionPurge.int.test.ts
+ *   ../../config/env.ts, ../../infra/prismaClient.ts, ../../logging/prismaErrorSummary.ts,
+ *   ../../logging/redactText.ts, docs/ops/yearly-purge.md.
+ * Tests: apps/server/test/privacy/purge/retentionPurge.int.test.ts,
+ *   apps/server/test/privacy/purge/purgeCliFailure.test.ts
  */
 import { pathToFileURL } from 'node:url';
 import { loadEnv } from '../../config/env.js';
 import { createPrismaClient, type Database } from '../../infra/prismaClient.js';
+import { isPrismaError, prismaErrorLine } from '../../logging/prismaErrorSummary.js';
+import { redactText } from '../../logging/redactText.js';
 import { minimumGroupSize } from '../minimumGroupSize.js';
 import { DEFAULT_PURGE_RUN_DATE, isPurgeDue, purgeRunsFrom, purgeScopeAt } from './purgeCalendar.js';
 import { latestPurgedYear, staleSecretYears } from './purgeAudit.js';
@@ -98,6 +104,19 @@ export async function runPurgeCli(argv: readonly string[], deps: PurgeCliDeps): 
   return 0;
 }
 
+/**
+ * Describes a failed run for standard error.
+ * @param error - What the run threw.
+ * @returns One line: a Prisma or driver error's name and database code (`PrismaClientKnownRequestError P2002`), or
+ *   another error's message (a configuration problem names variables, never values) with credential shapes masked.
+ * @spec DATA-003
+ */
+export function purgeFailureLine(error: unknown): string {
+  // PRIVACY: Prisma renders the call's arguments into `message`; its name and code are enough (DATA-009).
+  if (isPrismaError(error)) return prismaErrorLine(error);
+  return error instanceof Error ? redactText(error.message) : 'Error';
+}
+
 async function main(): Promise<void> {
   try {
     const env = loadEnv(process.env);
@@ -109,8 +128,8 @@ async function main(): Promise<void> {
       await db.$disconnect();
     }
   } catch (error) {
-    // SECURITY: the environment's problem list names variables, never their values; a database error is its message.
-    process.stderr.write(`retention purge failed: ${(error as Error).message}\n`);
+    // SECURITY: the environment's problem list names variables, never their values; a database error is its code.
+    process.stderr.write(`retention purge failed: ${purgeFailureLine(error)}\n`);
     process.exitCode = 1;
   }
 }

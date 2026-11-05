@@ -1,0 +1,161 @@
+# deploy/compose.app.yml — the app's own local stack: the server image with its own PostgreSQL 16, Redis 7, S3
+# emulator and ClamAV, a bucket step, the migration, the content-type seed, then the app.
+#
+# Why:   NFR-007 asks for compose files for local and staging use, with a smoke test. The app's stack is a file of its
+#        own, not a profile in ../docker-compose.yml, whose test services publish 5432, 6379 and 5000 and start with
+#        any profile (D-110, probe P3; SPEC-DEVIATION: D-110, the file name only).
+# Spec:  NFR-007, MAPPE-004, H5P-003, SEC-006, SEC-004
+# Tests: tools/deploy-check/test/deployFiles.test.mjs (digests, ports, hardening, no secrets in the file);
+#        deploy/smoke/dockerSmoke.sh starts it and checks it.
+# Invariants:
+#   - Every image is pinned by digest; only the app is published, and only on 127.0.0.1.
+#   - SECURITY: keys, passwords and secrets come from the environment (`${NAME:?}`), never from this file; the smoke
+#     script makes random throwaway ones.
+#   - The app and its one-off steps run as uid 10001 with a read-only root file system, no new privileges and
+#     Playwright's seccomp profile, and with every capability dropped but SYS_CHROOT for the app, so Chromium keeps
+#     its sandbox (D-096); never PDF_ALLOW_NO_SANDBOX.
+#   - Local only: NODE_ENV=development, because the production checks rightly refuse plain-HTTP database, Redis,
+#     S3 and public URLs. Staging runs the same image with NODE_ENV=production, TLS endpoints and D-109's two
+#     database URLs (docs/ops/docker.md).
+#   - Uploads are scanned as in production: CLAMAV_HOST names the stack's clamd and the app starts only when clamd is
+#     healthy (SEC-006, D-110 integration amendment). Its signatures are the image's own (freshclam off); HVL runs
+#     its own clamd with updates (docs/ops/clamav.md). The files origin is files.localhost (SEC-004).
+# Usage: HVLI_IMAGE=<tag> docker compose -f deploy/compose.app.yml --env-file <file> up -d --wait app
+
+name: hvli-app
+
+x-app-env: &app-env
+  NODE_ENV: development
+  LOG_LEVEL: info
+  DATABASE_URL: postgresql://hvli:${HVLI_DB_PASSWORD:?}@postgres:5432/hvli
+  REDIS_URL: redis://redis:6379
+  S3_ENDPOINT: http://s3:5000
+  S3_ACCESS_KEY_ID: ${HVLI_S3_ACCESS_KEY_ID:?}
+  S3_SECRET_ACCESS_KEY: ${HVLI_S3_SECRET_ACCESS_KEY:?}
+  # WHY: a host name, not an IP address, so the files origin is files.localhost (D-110 files-origin amendment).
+  PUBLIC_BASE_URL: http://localhost:${HVLI_APP_PORT:-18080}
+  WEB_APP: prod
+  PSEUDONYM_SECRETS: ${PSEUDONYM_SECRETS:?}
+  IDENTITY_HASH_KEYS: ${IDENTITY_HASH_KEYS:?}
+  DATA_ENCRYPTION_KEYS: ${DATA_ENCRYPTION_KEYS:?}
+  URL_SIGNING_KEYS: ${URL_SIGNING_KEYS:?}
+  FEIDE_CLIENT_ID: ${FEIDE_CLIENT_ID:?}
+  FEIDE_CLIENT_SECRET: ${FEIDE_CLIENT_SECRET:?}
+  # PRIVACY: Prisma's update check contacts its vendor; the steps below need no network beyond the stack.
+  CHECKPOINT_DISABLE: '1'
+  # SECURITY: every upload is scanned before it is stored and refused when clamd cannot answer (SEC-006).
+  CLAMAV_HOST: clamav
+  CLAMAV_PORT: '3310'
+
+x-hardened: &hardened
+  image: ${HVLI_IMAGE:?}
+  user: '10001:10001'
+  read_only: true
+  cap_drop: [ALL]
+  security_opt:
+    - no-new-privileges:true
+    - seccomp=./seccomp/playwright-v1.56.1.seccomp
+  tmpfs:
+    - /tmp:size=512m,mode=1777
+    - /home/hvli:size=64m,uid=10001,gid=10001,mode=0700
+  environment: *app-env
+
+services:
+  postgres:
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    environment:
+      POSTGRES_USER: hvli
+      POSTGRES_PASSWORD: ${HVLI_DB_PASSWORD:?}
+      POSTGRES_DB: hvli
+    volumes: ['postgres-data:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'hvli']
+      interval: 2s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      retries: 30
+
+  s3:
+    image: motoserver/moto:5.1.16@sha256:f78c8e0370cabe2516395f351fb27e1df1aa6dc2d728d6de16d5dfbc9ccf595d
+    healthcheck:
+      test:
+        ['CMD', 'python3', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/')"]
+      interval: 2s
+      retries: 30
+
+  # ClamAV 1.4.6 by digest, as the ClamAV amendment of D-110 measured it; not published. freshclam is off: the
+  # stack is local, and its smoke needs only the image's own signatures (EICAR among them).
+  clamav:
+    image: clamav/clamav:1.4@sha256:8ad6197396974726c35d017e50aaaaf4b91745726a04faec8480c203edd98052
+    environment:
+      CLAMAV_NO_FRESHCLAMD: 'true'
+      CLAMAV_NO_MILTERD: 'true'
+    healthcheck:
+      test: ['CMD-SHELL', 'clamdcheck.sh']
+      interval: 5s
+      retries: 60
+      start_period: 120s
+
+  # The emulator starts empty; HVL creates the real buckets once (docs/ops/docker.md).
+  buckets:
+    <<: *hardened
+    command:
+      - node
+      - -e
+      - >-
+        Promise.all(['hvli-content', 'hvli-temporary'].map((bucket) => fetch('http://s3:5000/' + bucket, { method:
+        'PUT' }).then((answer) => { if (!answer.ok && answer.status !== 409) throw new Error(bucket + ' ' +
+        answer.status); }))).then(() => console.log('buckets ready'), (error) => { console.error(error.message);
+        process.exit(1); });
+    depends_on:
+      s3: { condition: service_healthy }
+
+  migrate:
+    <<: *hardened
+    command: ['node', '/app/node_modules/prisma/build/index.js', 'migrate', 'deploy']
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  # Installs the ten content types from the checked bundle into the library volume (H5P-003; idempotent).
+  seed:
+    <<: *hardened
+    command: ['node', '--import', 'tsx', 'src/h5p/libraries/seedCli.ts', '/app/h5p-bundle']
+    volumes: ['h5p-libraries:/app/apps/server/var/h5p/libraries']
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      buckets: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
+  app:
+    <<: *hardened
+    # WHY: Chromium's sandbox chroots into /proc/self/fdinfo after it creates its namespaces, which needs
+    # CAP_SYS_CHROOT in the container's bounding set; without it the launch fails (smoke test, 2026-11-05). Only this
+    # one capability comes back, and only for the app, which prints the PDF.
+    cap_add: [SYS_CHROOT]
+    ports: ['127.0.0.1:${HVLI_APP_PORT:-18080}:3000']
+    volumes: ['h5p-libraries:/app/apps/server/var/h5p/libraries']
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+      - /home/hvli:size=64m,uid=10001,gid=10001,mode=0700
+      - /app/apps/web/.next/cache:size=64m,uid=10001,gid=10001
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/healthz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 3s
+      retries: 40
+      start_period: 10s
+    depends_on:
+      seed: { condition: service_completed_successfully }
+      clamav: { condition: service_healthy }
+
+volumes:
+  postgres-data:
+  h5p-libraries:

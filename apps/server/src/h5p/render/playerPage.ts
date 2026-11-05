@@ -5,10 +5,12 @@
  *      be script-safe, must not carry who is viewing (the pseudonym or account ID would be readable by any
  *      script in the activity), and must name the page language for screen readers (WCAG 3.1.1). For a learner it
  *      also carries the xAPI bridge and its configuration (LTI-010, D-102); for anyone else neither.
- * Spec: SEC-008, DATA-002, H5P-005, H5P-009, DATA-011, LTI-010
+ * Spec: SEC-008, DATA-002, H5P-005, H5P-009, DATA-011, LTI-010, SEC-004
  * Invariants:
  *   - Every URL, ID and the language are escaped; the integration object goes through `scriptJson`.
  *   - `H5PIntegration.user` is always `{ name: '', mail: '', id: '' }`; the preloaded learner state stays.
+ *   - `H5PIntegration.crossorigin` is `anonymous`: H5P loads the activity's files in CORS mode without credentials,
+ *     so captions and images keep working from the separate files origin (SEC-004, D-110 amendment of 2026-11-05).
  *   - No download link: downloads are a separate, permission-checked route.
  *   - Extra scripts run first and are only same-origin static files (`/static/…js`), e.g. the LTI landing script
  *     that removes the ltik from the address bar (LTI-003).
@@ -35,6 +37,12 @@ export const H5P_INTEGRATION_SCRIPT = '/h5p/boot/h5pIntegration.js';
 
 /** The user object H5P sees: nobody in particular. */
 export const ANONYMOUS_H5P_USER = Object.freeze({ name: '', mail: '', id: '' });
+
+/**
+ * H5P's `crossorigin` setting for the player: `H5P.setSource` gives every content file this attribute, and H5P.Video
+ * its captions. A cross-origin `<track>` loads only in CORS mode; `anonymous` never sends credentials.
+ */
+export const PLAYER_CROSSORIGIN = 'anonymous';
 
 /**
  * Script tags for same-origin static scripts that run before H5P's, e.g. the LTI landing script.
@@ -74,7 +82,11 @@ export function renderPlayerPage(
 ): string {
   const first = firstScriptTags(options.firstScripts);
   const shown = playerModelFor(model, options.xapiBridge);
-  const integration = { ...(shown.integration as object), user: ANONYMOUS_H5P_USER };
+  const integration = {
+    ...(shown.integration as object),
+    user: ANONYMOUS_H5P_USER,
+    crossorigin: PLAYER_CROSSORIGIN,
+  };
   const styles = shown.styles.map((href) => `<link rel="stylesheet" href="${escapeHtml(href)}">`);
   const scripts = shown.scripts.map((src) => `<script src="${escapeHtml(src)}"></script>`);
   const bridge = options.xapiBridge

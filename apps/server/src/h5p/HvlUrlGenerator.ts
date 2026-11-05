@@ -6,21 +6,25 @@
  *      D-058). Lumi's `queryParamGenerator` writes the token unencoded into the AJAX and set-finished URLs, but
  *      encoded into the user-data URL, and always adds a pair to set-finished, even for a user without a token;
  *      and `contentFilesUrl` receives no user at all. So this class adds the token itself, URL-encoded, and gives
- *      content files a signed grant (./contentFileGrants.ts) instead of a token.
+ *      content files a signed grant (./contentFileGrants.ts) instead of a token, on the separate files origin
+ *      (`SEC-004`, D-110 amendment of 2026-11-05).
  * Spec: H5P-007, SEC-004
  * Invariants:
  *   - `name=value` (both URL-encoded) is added only to `ajaxEndpoint`, `contentUserData` and `setFinished`, and
  *     only when the user is an issued HvlH5pUser whose actor has a non-empty `urlToken`; never to another URL.
  *   - `ajaxEndpoint` keeps `action=` last, because H5P appends the action name to it.
- *   - `contentFilesUrl` is `<baseUrl>/files/<grant>/<contentId>`: no token and no user. Lumi calls it only while
- *     rendering the player, after the View check on the activity's parameters; the player factory refuses the
- *     render options that skip that check (./H5pPlayerFactory.ts, `UNCHECKED_RENDER_OPTIONS`).
+ *   - `contentFilesUrl` is `<files origin><baseUrl>/files/<grant>/<contentId>`: no token and no user. Lumi calls it
+ *     only while rendering the player, after the View check on the activity's parameters; the player factory refuses
+ *     the render options that skip that check (./H5pPlayerFactory.ts, `UNCHECKED_RENDER_OPTIONS`). The editor never
+ *     uses it: its files have their own grants on the app origin (./render/editorIntegration.ts).
  *   - Every other URL is Lumi's own, unchanged (tested against Lumi's UrlGenerator).
  * SPEC-DEVIATION: D-058 — H5P-007 names Lumi's `queryParamGenerator`; it cannot encode the token correctly for all
  *   three URLs (see Why), so the token is added here and the generator is not used.
  * Collaborators: ./HvlH5pUser.ts (`urlToken`), ./contentFileGrants.ts, ./H5pEditorFactory.ts,
- *   ./H5pPlayerFactory.ts, ./createH5pRuntime.ts, ../http/routes/signedFileRoutes.ts (serves the file URLs).
- * Tests: apps/server/test/h5p/HvlUrlGenerator.test.ts, apps/server/test/http/signedFiles.int.test.ts
+ *   ./H5pPlayerFactory.ts, ./createH5pRuntime.ts, ../config/filesOrigin.ts (the files origin),
+ *   ../http/filesOriginRouter.ts and ../http/routes/signedFileRoutes.ts (serve the file URLs).
+ * Tests: apps/server/test/h5p/HvlUrlGenerator.test.ts, apps/server/test/http/signedFiles.int.test.ts,
+ *   apps/server/test/http/filesOrigin.int.test.ts
  */
 import { UrlGenerator, type ContentId, type IH5PConfig, type IUser } from '@lumieducation/h5p-server';
 import type { ContentFileGrants } from './contentFileGrants.js';
@@ -29,7 +33,7 @@ import { isHvlH5pUser } from './HvlH5pUser.js';
 /** Lumi's AJAX URL ends with this; H5P appends the action name to it. */
 const ACTION_QUERY = '?action=';
 
-/** The path under the H5P base URL where ../http/routes/signedFileRoutes.ts serves content files. */
+/** The path under the H5P base URL where the files origin serves the player's files (../http/filesOriginRouter.ts). */
 export const SIGNED_FILES_PATH = '/files';
 
 /**
@@ -59,12 +63,15 @@ function insertBeforeAction(url: string, query: string | undefined): string {
 export class HvlUrlGenerator extends UrlGenerator {
   /**
    * @param config - The H5P config (base URL and route paths).
-   * @param grants - Signs the content-file URLs.
+   * @param grants - Signs the content-file URLs (purpose `content-file-url`).
+   * @param filesOrigin - The files origin (../config/filesOrigin.ts), e.g. `https://files.interaktiv.hvl.no`; `''`
+   *   gives relative file URLs, for a test server that serves the player's file route itself.
    * @param clock - The current time; tests pass a fixed one.
    */
   constructor(
     config: IH5PConfig,
     private readonly grants: ContentFileGrants,
+    private readonly filesOrigin: string,
     private readonly clock: () => Date = () => new Date(),
   ) {
     super(config);
@@ -82,13 +89,13 @@ export class HvlUrlGenerator extends UrlGenerator {
   }
 
   /**
-   * The base of an activity's file URLs, with a fresh grant (H5P appends `/<path>`).
+   * The base of an activity's file URLs on the files origin, with a fresh grant (H5P appends `/<path>`).
    * @param contentId - The activity whose player is being rendered.
-   * @returns `<baseUrl>/files/<grant>/<contentId>`.
+   * @returns `<files origin><baseUrl>/files/<grant>/<contentId>`.
    */
   override contentFilesUrl(contentId: ContentId): string {
     const id = String(contentId);
     const grant = this.grants.issueGrant(id, this.clock());
-    return `${this.baseUrl()}${SIGNED_FILES_PATH}/${grant}/${encodeURIComponent(id)}`;
+    return `${this.filesOrigin}${this.baseUrl()}${SIGNED_FILES_PATH}/${grant}/${encodeURIComponent(id)}`;
   }
 }

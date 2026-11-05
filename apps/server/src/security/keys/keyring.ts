@@ -44,6 +44,7 @@ export type KeyPurpose =
   | 'session-id-token'
   | 'grade-lti-sub'
   | 'content-file-url'
+  | 'editor-file-url'
   | 'temporary-file-url';
 
 /**

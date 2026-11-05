@@ -145,6 +145,10 @@ whose results HVL records (D-079); `UD-031`'s own check, a dated result file for
 | `npx vitest run -t "DATA-0"` *(from S6)* | The privacy operations: the yearly purge and its dry run (`DATA-003`), the production checks for TLS and the EEA (`DATA-004`), the DPIA check (`DATA-005`), the append-only audit (`DATA-007`), the data-subject CLI (`DATA-008`), the database roles on a throwaway database (`DATA-010`) and the xAPI fields (`DATA-012`); needs the services and a local PostgreSQL superuser for the role tests |
 | `npm run --silent privacy:purge -- --dry-run` *(from S6, in `apps/server`)* | What the yearly purge would delete and write, as counts per table and year; nothing is deleted, and the run is audited (`DATA-003`, D-107, [ops/yearly-purge.md](ops/yearly-purge.md)) |
 | `npx vitest run apps/server/test/privacy/operationsClis.int.test.ts` *(from S6)* | The operations CLIs together, each through its npm script, on a database only they set up: `db:roles` (roles and the migrate step), a data-subject export, the purge's dry run and real run as `hvli_app`, then an erasure; every run audited with counts only (`DATA-010`, `DATA-003`, `DATA-008`, `DATA-007`) |
+| `npm run deploy:check && npm run docker:smoke` *(from S6)* | The deploy files keep D-110's rules (images by digest, uid 10001, no GitHub fetch, the CA only as a secret, Playwright's seccomp profile, only `SYS_CHROOT` added back); then the image builds and the app stack (`deploy/compose.app.yml`, with its own clamd) starts: `/healthz`, every migration, the seeded types, pages from the image, an upload scanned by clamd (EICAR refused) and served from the files origin with the sandbox policy, the mappe PDF tagged A4 with æ, ø and å embedded and Chromium's sandbox seen in `/proc`, and the server's own start-up probe line (`NFR-007`, `SEC-006`, `SEC-004`, `MAPPE-004`; [ops/docker.md](ops/docker.md)). Needs Docker, about 8 GB free and 2.5 minutes; GitHub runs it in `.github/workflows/docker.yml` |
+| `npx vitest run tools/ops` *(from S6)* | The backup round trip on the local services: back up, wipe, restore and compare every table's count and an object's SHA-256; a tampered backup, a non-empty target and a backup that differs are refused or reported (`NFR-002`, [ops/runbook.md](ops/runbook.md) §6) |
+| `npm run load:smoke` *(from S6)* | k6 2.3.0 (by digest, in Docker) against the whole app on one node with the mock Canvas and the ten real types: 20 learners for 30 s, each a real launch, the player page with its assets, xAPI batches and state saves; exit 0 only when every threshold holds (`NFR-001`, D-114; `npm run load:full` is HVL's 200-learner run, [ops/runbook.md](ops/runbook.md) §8) |
+| `npm run a11y:report -- --check` *(from S6)* | The conformance report `docs/accessibility/WCAG-CONFORMANCE-REPORT.md` matches its sources (the 56 WCAG 2.2 A/AA criteria, axe-core's rules, the committed run summary, the protocol and the upstream register), with HVL's manual blocks kept byte for byte (`UD-040`, D-079's amendments) |
 | `NODE_USE_ENV_PROXY=1 npm run hub:check` *(from S2)* | Spike step 3: Hub registration status, the 15-character `local_id`, versions of the ten types |
 
 ---
@@ -253,12 +257,18 @@ start-up refusals (D-113); they stay *not verified* until HVL acts, and the gate
 | Requirement | Verified here by | Not verified until |
 |---|---|---|
 | `DATA-003` Yearly purge | `-t "\[DATA-003\]"`: the purge with time travel at 31 July, 1 August and 31 August in Oslo time, the dry run, idempotency, the current year untouched, a login that races it (`test/privacy/purge/`, `test/auth/identity/accountPurgeRace.int.test.ts`), and the CLI's real run on a fresh database (`operationsClis.int.test.ts`) | HVL operations destroy the ended year's pseudonym secret ([ops/yearly-purge.md](ops/yearly-purge.md), step 4) |
-| `DATA-004` Data in Norway or the EEA | `-t "\[DATA-004\]"`: production refuses clear-text database, Redis and S3 connections, storage outside the EEA list and the AWS SDK's own endpoint variables (`test/config/`, `test/infra/s3Client.test.ts`, `test/server/main.smoke.test.ts`); document review of [ops/database-roles.md](ops/database-roles.md) | HVL names its hosting (Q5) and the deployment checklist (S6 step 6) is ticked against the start-up line `deployment locations` |
+| `DATA-004` Data in Norway or the EEA | `-t "\[DATA-004\]"`: production refuses clear-text database, Redis and S3 connections, storage outside the EEA list, a bucket variable that is not a plain bucket name (an access point or Outposts ARN would route past the list; `bucketNameProblems` in `test/config/storageResidency.test.ts`) and the AWS SDK's own endpoint variables (`test/config/`, `test/infra/s3Client.test.ts`, `test/server/main.smoke.test.ts`); `npm run db:roles` refuses a clear-text URL to a database on another host before it connects (`test/db/databaseRolesTls.test.ts`); document review of [ops/database-roles.md](ops/database-roles.md) | HVL names its hosting (Q5) and the deployment checklist ([ops/runbook.md](ops/runbook.md) §9) is ticked against the start-up line `deployment locations` |
 | `DATA-005` DPIA input | Document review of [privacy/DPIA-INPUT.md](privacy/DPIA-INPUT.md); `npm run privacy:dpia-check` and `-t "\[DATA-005\]"` compare it with the developer key and the inventory | HVL's data protection officer has reviewed it (Q6) |
 | `DATA-007` Audit | `-t "\[DATA-007\]"`: `purge.run`, `dataSubject.export` and `dataSubject.erase` with counts, years and fixed words only; the app role cannot change or delete audit rows (`test/db/databaseRoles.int.test.ts`, `auditAppendOnly.test.ts`) | The 2-year deletion of audit rows is built (no job yet; Q26, DPIA R27) |
 | `DATA-008` Data-subject requests | `-t "\[DATA-008\]"`: export and erasure in two years and under both pseudonym variants, the operator check, the dry run, a failed or interrupted run, and both through `npm run privacy:dsr` on a fresh database | HVL's DPO approves the routine; a Canvas admin confirms how to read a user's `lti_id` *(verify)* |
 | `DATA-010` Database roles | `-t "\[DATA-010\]"`: each role logs in to a throwaway database and may run only its statements; the migrate step (`views-down`, migration, `grants`); `db:roles` on a new database | HVL's database administrator runs `01-roles.sql` on the real database |
-| `NFR-006` Request log | `-t "\[NFR-006\]"`: one line per request with the route pattern, status and duration, an `X-Request-Id` that a client cannot fill with text of its choice, and no ltik, learner key or activity ID in any line through a whole launch, play and xAPI batch (`test/http/requestLog*.test.ts`) | The reverse proxy's access log leaves out the query string (deployment checklist) |
+| `NFR-006` Request log | `-t "\[NFR-006\]"`: one line per request with the route pattern, status and duration, an `X-Request-Id` that a client cannot fill with text of its choice, and no ltik, learner key or activity ID in any line through a whole launch, play and xAPI batch (`test/http/requestLog*.test.ts`); the LTI error pages log their route pattern and a fixed code, never the path or a client's text (`test/lti/http/ltiErrorLog.test.ts`) | The reverse proxy's access log leaves out the query string (deployment checklist) |
+| `NFR-001` Performance | `npm run load:smoke` (20 learners for 30 s, here: page ready p95 1.1–1.5 s against 3 s, API p95 22–27 ms against 300 ms, no failed request) and `-t "\[NFR-001\]"` (the k6 profiles, batches and summary in `tools/load/test/`) | HVL runs `npm run load:full` (200 learners) on a node like production ([ops/runbook.md](ops/runbook.md) §8); Lighthouse on Fast 4G is not added (D-114) |
+| `NFR-002` Availability, backups | `-t "\[NFR-002\]"`: the backup round trip and the restore's refusals (`tools/ops/test/`), the health check and clean start and stop (`test/server/`); document review of [ops/runbook.md](ops/runbook.md) §6 | HVL schedules the daily backup with its encrypted off-server copy and logs the restore drill each semester |
+| `NFR-007` Docker | `npm run docker:smoke` here (2026-11-05, on the integrated tree: passed in 155 s) and in GitHub's `docker.yml`; `-t "\[NFR-007\]"` (`tools/deploy-check`, `tools/h5p-bundle`) | `docker.yml`'s first run on GitHub (Chromium from Playwright's CDN, its SHA-256, AppArmor); HVL's runtime allows the seccomp profile and `CAP_SYS_CHROOT` (Q5) |
+| `SEC-004` Files origin | `-t "\[SEC-004\]"`: headers, files-origin-only serving, expiry, other activities refused, CORS, the editor's own grants (`test/http/filesOrigin.int.test.ts`, `editorFiles.int.test.ts`), the page policies, and `e2e/filesOrigin.e2e.test.ts` in full Chromium (images and captions from the files origin, no cookie or ltik sent, a scripted SVG never runs); the image's smoke serves an uploaded file from `files.localhost` | HVL's DNS name and certificate for the files host (Q5, deployment checklist) |
+| `SEC-006` Malware scanning | `-t "\[SEC-006\]"`: fail-closed on both upload paths against a fake clamd, the start-up rules; the real-clamd tests with `CLAMAV_TEST_HOST` (CI's clamav service); the image's smoke against the stack's clamd | HVL runs clamd with daily signatures and TLS ([ops/clamav.md](ops/clamav.md)) |
+| `UD-040` Conformance report | `npm run a11y:report -- --check` and `-t "\[UD-040\]"` (`tools/a11y-report/test/`): every criterion present, manual blocks kept, no verdict without a dated HVL evaluation, a failed or partial run never recorded as passed | HVL/ALU run the manual protocol, set the 56 verdicts (each with a dated `**Evaluated by HVL:**` line, or the generator stops) and write the uustatus.no notes (`UD-031`) |
 
 ---
 
@@ -310,9 +320,12 @@ start-up refusals (D-113); they stay *not verified* until HVL acts, and the gate
    because H5P builds those URLs itself. Our logs redact these values (`DATA-009`), but a reverse proxy, load
    balancer or CDN in front of the server must not log query strings and must not cache responses that set
    cookies. The S6 runbook has to carry this rule.
-10. **User files are not yet on a separate origin** (D-045). Content files load through signed, expiring
-    URLs on the tool's own origin (`/h5p/files/…`, D-058), with `nosniff` and a sandbox CSP; the separate
-    files origin that `SEC-004` asks for in production is S6 work.
+10. **Only the player's files are on the separate origin** (D-045, D-110's amendment of 2026-11-05). The player's
+    content files load from `files.<host>` (or `FILES_BASE_URL`) through signed, expiring URLs (D-058), with
+    `nosniff`, a sandbox CSP, no cookie and no ltik. The editor's saved files (`/h5p/editor-files/…`), fresh uploads
+    and H5P's cookie fallback routes stay on the app origin, behind the same headers (`SPEC-DEVIATION: D-110`: H5P's
+    image editor draws into a canvas without `crossorigin`). `files.<host>` is the same site as the app; a separate
+    registrable domain is HVL's choice (Q5). A grant opens every file of one activity for 12–13 hours.
 11. **No launch where frame storage is blocked and the platform offers no Platform Storage** (D-050). ltijs
     keeps a short-lived recovery token for its login state in the frame's `localStorage` or, where the browser
     blocks that, in LTI Platform Storage. With storage blocked and no `lti_storage_target` in the login
@@ -327,10 +340,10 @@ start-up refusals (D-113); they stay *not verified* until HVL acts, and the gate
     and node-redis `LtiCacheManager` replace them, and ESLint forbids importing ltijs's
     `MongoLegacyDatabaseManager` and `RedisCacheManager`. They still count in the audit and licence checks;
     an upstream issue asks ltijs to load them lazily.
-13. **No build step for the server.** `npm run build` builds the web app, but `npm start` still runs the server's
-    TypeScript sources through tsx, a development dependency of the repository root, so the server cannot start from
-    an install without development dependencies (`npm ci --omit=dev`), and every start compiles the sources in
-    memory. How production builds and starts the server is decided with S6's Docker images.
+13. **No build step for the server.** `npm run build` builds the web app, but the server runs its TypeScript
+    sources through tsx, so every start compiles them in memory. Since S6, tsx is a runtime dependency of
+    `apps/server` (D-110), so `npm ci --omit=dev` and the Docker image start it (`node --import tsx
+    src/server/main.ts`); a compiled server would need its `import.meta.url` anchors reworked.
 14. **Two interim rules wait for the owner** (Q12). Student authors (through `AUTHOR_COURSE_GROUPS`) may share
     an activity only as `private` until a course visibility exists (D-059), and from S5 they neither add co-authors
     nor see or list in the content bank, which shows colleagues' names (D-090, D-091); Feide users without a Feide
@@ -354,11 +367,12 @@ start-up refusals (D-113); they stay *not verified* until HVL acts, and the gate
 17. **The portfolio PDF needs Chromium on the server** (D-096). `playwright-core` 1.56.1 prints it with the server's
     own Chromium, in a fresh context per export with JavaScript off, offline and every request aborted; at most
     `PDF_MAX_CONCURRENCY` exports at once (2) and one per person, 30 seconds each. Where no browser starts, the PDF
-    export answers 503 and the page points to the Markdown export, which always works. S6's production image must
-    install Chromium and fonts with æ, ø and å (here the PDF uses Liberation Serif, because Georgia, the body font
-    token, is not installed), run the server as a non-root user whose runtime allows unprivileged user namespaces
-    (Chromium refuses its sandbox as root; the development-only `PDF_ALLOW_NO_SANDBOX=true` is refused in
-    production), and keep Chromium patched.
+    export answers 503 and the page points to the Markdown export, which always works. The S6 image carries
+    Playwright's full Chromium 141 and fonts with æ, ø and å (the PDF uses Liberation Serif, because Georgia, the body
+    font token, is not installed) and runs the server as uid 10001; Chromium keeps its sandbox only with Playwright's
+    seccomp profile and `CAP_SYS_CHROOT`, which OpenShift's `restricted-v2` does not allow (Q5; the
+    development-only `PDF_ALLOW_NO_SANDBOX=true` is refused in production). The server logs at start whether the
+    export works (`PDF export availability`). HVL keeps Chromium patched by rebuilding the image.
 18. **What the PDF does not tag yet is checked by hand** (D-096, `MAPPE-004`). The automated test reads the
     structure tree, the outline, `/Lang`, the title and the text with `pdfjs-dist`; a person checks the rest with PAC
     and NVDA (protocol J4 in `docs/accessibility/manual-test-protocol.md`). Known residuals to record there: list

@@ -5,7 +5,7 @@
  *      never reveal internal messages, stack traces or file paths. Lumi's own Express error handler returned
  *      raw error messages (D-035); here every known error maps to a locale key and everything else becomes
  *      "something went wrong" with status 500.
- * Spec: PROD-012, H5P-002, SEC-003, H5P-006, PROD-003
+ * Spec: PROD-012, H5P-002, SEC-003, H5P-006, PROD-003, SEC-006
  * Invariants:
  *   - The body is H5P's AJAX error shape `{ success: false, errorCode, httpStatusCode, message }`; a blocked publish
  *     or save (PublishBlockedError, 409) adds the server's own `findings` (PROD-003).
@@ -56,6 +56,8 @@ const BY_ERROR_ID: Record<string, MessageKey> = {
   'install-missing-libraries': 'upload.package.librariesNotInstalled',
   'missing-h5p-extension': 'upload.package.notH5p',
   'unable-to-unzip': 'upload.archive.unreadable',
+  // SECURITY: a safety net; our fail-closed scanner refuses a finding with its own error first (SEC-006, D-110).
+  'upload-malware-found': 'upload.file.malwareFound',
 };
 
 const BY_STATUS: Record<number, MessageKey> = {

@@ -83,7 +83,7 @@ describeWithServices('editor pages', () => {
       // Assert
       expect(integration?.user).toEqual({ name: '', mail: '', id: '' });
       expect(integration?.contents?.[`cid-${contentId}`]?.contentUrl).toMatch(
-        new RegExp(`^/h5p/files/[\\w-]+\\.\\d+\\.[\\w-]{43}/${contentId}$`),
+        new RegExp(`^/h5p/editor-files/[\\w-]+\\.\\d+\\.[\\w-]{43}/${contentId}$`),
       );
       expect(integration?.editor.filesPath).toMatch(
         new RegExp(`^/h5p/uploads/[\\w-]+\\.\\d+\\.[\\w-]{43}/${owner.actor.accountId}$`),

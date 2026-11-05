@@ -46,7 +46,9 @@
       "notAllowed": "The file type “.{{extension}}” is not allowed.",
       "typeMismatch": "The content of the file does not match its type “.{{extension}}”.",
       "svgRejected": "The SVG file cannot be used because it contains definitions that could be harmful.",
-      "tooLarge": "The file is larger than {{maxMb}} MB."
+      "tooLarge": "The file is larger than {{maxMb}} MB.",
+      "malwareFound": "The virus check found harmful content in the file, so it was not saved.",
+      "scanUnavailable": "The file could not be checked for viruses right now, so it was not saved. Please try again shortly."
     }
   },
   "h5p": {

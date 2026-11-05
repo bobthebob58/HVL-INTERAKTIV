@@ -5,7 +5,9 @@
 > [manual test protocol](../manual-test-protocol.md); CI does not and cannot produce these files.
 
 **Status:** no manual run has been recorded yet. The first run is due before the first pilot release (S4 gate
-lists it as open). Nothing in this folder may be written by a tool or filled in from the automated suite.
+lists it as open). Nothing in this folder may be written by a tool or filled in from the automated suite. The
+conformance report [../WCAG-CONFORMANCE-REPORT.md](../WCAG-CONFORMANCE-REPORT.md) (`UD-040`) lists these files per
+criterion once a verdict cites them (protocol §9, step 4).
 
 ## Runs due
 

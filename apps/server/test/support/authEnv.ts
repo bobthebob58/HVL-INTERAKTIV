@@ -50,6 +50,8 @@ export const productionEnv = (overrides: Record<string, string> = {}): Record<st
   // in the default region eu-north-1.
   DATABASE_URL: 'postgresql://u:p@db.hvl.no:5432/db?sslmode=verify-full',
   REDIS_URL: 'rediss://redis.hvl.no:6380',
+  // WHY: production scans uploads (SEC-006, D-110); a clamd on the loopback, a sidecar, needs no TLS.
+  CLAMAV_HOST: '127.0.0.1',
   ...overrides,
 });
 

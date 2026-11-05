@@ -1,18 +1,21 @@
 /**
- * contentFileGrants — signs and checks the grant in a content-file URL (`/h5p/files/<grant>/<contentId>/<file>`)
- * and, with its own purpose key, in an editor upload URL (`/h5p/uploads/<grant>/<owner>/<file>`, D-069).
+ * contentFileGrants — signs and checks the grant in a player's content-file URL (`/h5p/files/<grant>/<contentId>/<file>`
+ * on the files origin) and, each with its own purpose key, in the editor's content-file URL
+ * (`/h5p/editor-files/<grant>/<contentId>/<file>`) and upload URL (`/h5p/uploads/<grant>/<owner>/<file>`, D-069).
  *
  * Why: H5P builds an activity's file URLs as `contentUrl + "/" + path`, so neither a session cookie (blocked in a
  *      Canvas iframe) nor a query token can authorise them (D-058). The player render, which has passed the
  *      View check, puts a grant into `contentUrl` instead: an HMAC over the activity ID and an expiry, valid for
  *      about 12 hours, which the public file route checks before it reads storage (D-045 moved signed URLs here).
- *      The editor render, after the Edit check, does the same for the signed-in owner's uploads (D-069).
+ *      The editor render, after the Edit check, does the same for the activity's files and the signed-in owner's
+ *      uploads (D-069), which stay on the app origin while the player's move to the files origin (D-110 amendment of
+ *      2026-11-05), so each kind has its own key.
  * Spec: H5P-007, SEC-004
  * Invariants:
  *   - Format `<keyId>.<expirySeconds>.<base64url HMAC-SHA256(purpose key, "<contentId>|<expirySeconds>")>`, where
  *     the purpose key is HKDF of a `URL_SIGNING_KEYS` ring key (../security/keys/keyring.ts): `content-file-url`
- *     for content files, `temporary-file-url` for editor uploads (the owner's account in place of the activity), so
- *     a grant of one kind never opens the other.
+ *     for the player's files, `editor-file-url` for the editor's, `temporary-file-url` for editor uploads (the
+ *     owner's account in place of the activity), so a grant of one kind never opens another.
  *   - New grants use the ring's current key; a grant made with an older key stays valid until that key is removed.
  *   - The expiry is the issue time rounded up to a whole hour, plus 12 hours, so a file URL stays the same for an
  *     hour and browsers can cache the files.
@@ -21,9 +24,10 @@
  *     for another activity (or another owner).
  *   - A grant names no person and carries no token; logs redact it (../logging/redactText.ts).
  * Collaborators: ../security/keys/keyring.ts, ./HvlUrlGenerator.ts, ../http/routes/signedFileRoutes.ts,
- *   ../http/routes/signedUploadRoutes.ts, ./render/editorIntegration.ts, ./createH5pRuntime.ts.
+ *   ../http/routes/signedUploadRoutes.ts, ../http/filesOriginRouter.ts, ./render/editorIntegration.ts,
+ *   ./createH5pRuntime.ts.
  * Tests: apps/server/test/h5p/contentFileGrants.test.ts, apps/server/test/http/signedFiles.int.test.ts,
- *   apps/server/test/http/signedUploads.int.test.ts
+ *   apps/server/test/http/signedUploads.int.test.ts, apps/server/test/http/filesOrigin.int.test.ts
  */
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { purposeKey, type Keyring } from '../security/keys/keyring.js';
@@ -53,6 +57,9 @@ export type GrantCheck =
 
 const toSeconds = (at: Date): number => Math.floor(at.getTime() / 1000);
 
+/** What a grant is for: the player's files, the editor's files, or an author's editor uploads. */
+export type FileGrantPurpose = 'content-file-url' | 'editor-file-url' | 'temporary-file-url';
+
 /** Issues and verifies content-file or editor-upload grants with the `URL_SIGNING_KEYS` ring, one purpose per instance. */
 export class ContentFileGrants {
   private readonly keys: ReadonlyMap<string, Buffer>;
@@ -60,19 +67,21 @@ export class ContentFileGrants {
 
   /**
    * @param ring - `URL_SIGNING_KEYS`; the first key signs, every key verifies.
-   * @param purpose - `content-file-url` (subject: an activity ID) or `temporary-file-url` (subject: the account ID
-   *   that owns an editor upload, D-069); separate keys, so a grant for one never verifies as the other.
+   * @param purpose - `content-file-url` (the player's files; subject: an activity ID), `editor-file-url` (the
+   *   editor's files; subject: an activity ID) or `temporary-file-url` (subject: the account ID that owns an editor
+   *   upload, D-069); separate keys, so a grant for one never verifies as another.
    */
-  constructor(ring: Keyring, purpose: 'content-file-url' | 'temporary-file-url' = 'content-file-url') {
+  constructor(ring: Keyring, purpose: FileGrantPurpose = 'content-file-url') {
     this.keys = new Map(ring.keys.map((key) => [key.id, purposeKey(key, purpose)]));
     this.currentKeyId = ring.current.id;
   }
 
   /**
-   * Issues a grant for the files of one subject. Call only after the View check on that activity (content files),
-   * or for the signed-in owner after the Edit check (uploads, ./render/editorIntegration.ts).
-   * @param subject - The activity ID for `content-file-url`, or the account ID that owns the uploads for
-   *   `temporary-file-url`, exactly as it appears in the file URL.
+   * Issues a grant for the files of one subject. Call only after the View check on that activity (the player's
+   * files), or after the Edit check (the editor's files, and the signed-in owner's uploads,
+   * ./render/editorIntegration.ts).
+   * @param subject - The activity ID for `content-file-url` and `editor-file-url`, or the account ID that owns the
+   *   uploads for `temporary-file-url`, exactly as it appears in the file URL.
    * @param now - The issue time.
    * @returns The grant, safe to put into a URL path segment as it is.
    */
@@ -84,8 +93,8 @@ export class ContentFileGrants {
   /**
    * Checks a grant from a file or upload URL.
    * @param grant - The grant path segment.
-   * @param subject - The subject from the same URL: the activity ID (`content-file-url`) or the owning account's ID
-   *   (`temporary-file-url`).
+   * @param subject - The subject from the same URL: the activity ID (`content-file-url`, `editor-file-url`) or the
+   *   owning account's ID (`temporary-file-url`).
    * @param now - The time of the request.
    * @returns `valid` with the expiry (Unix seconds), or the reason for the refusal.
    */

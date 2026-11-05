@@ -218,3 +218,8 @@ with the keyboard and at 400 % zoom.
 2. File each new H5P barrier upstream (the repository is in `tools/h5p-libraries/libraries.manifest.json`) and
    add it to the register if the automated suite does not already show it.
 3. Update `PROGRESS.md` with the date of the latest complete run per set-up.
+4. Write the verdicts into the conformance report [WCAG-CONFORMANCE-REPORT.md](WCAG-CONFORMANCE-REPORT.md)
+   (`UD-040`): only between its `manual:start` and `manual:end` markers, one `**Verdict:**` line per criterion and,
+   for any verdict other than *Not yet determined*, a line `**Evaluated by HVL:** YYYY-MM-DD …` naming the result
+   files. Then run `npm run a11y:report` (it keeps those blocks byte for byte and stops on a malformed one) and
+   `npm run a11y:report -- --check` (D-079's amendments).

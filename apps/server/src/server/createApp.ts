@@ -1,24 +1,23 @@
 /**
- * createApp — builds the Express app: health check, portal session, LTI, Feide login, the `/api` routes (me,
- * content, publishing, sharing, the studio, docs), the H5P routes and the fallback pages, in the order the security
- * rules need.
+ * createApp — builds the Express app: health check, portal session, LTI, Feide login, the `/api` routes (me, content,
+ * publishing, sharing, the studio, docs), the H5P routes and the fallback pages, in the order the security rules need.
  *
  * Why: spec 02 joins two entry points (Canvas via LTI, the portal via Feide) into one principal; the mount order
  *      decides which checks a request meets. The app is built from connected clients so tests and `main.ts` run the
  *      same code. The studio's services are built in ./studioServices.ts.
  * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, PROD-003, DOC-012, NFR-002, PED-001, LTI-011,
- *   LTI-012, LTI-008, LTI-013, INS-007, NFR-006
+ *   LTI-012, LTI-008, LTI-013, INS-007, NFR-006, SEC-004
  * Invariants:
  *   - Order: trust proxy → request log → base headers → `/healthz` → page assets → the Hjelp marker and the chrome
  *     redirect (with the web app) → portal session → LTI (ltijs first) → Feide routes → start page (only without the
  *     web app) → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page. With
  *     the web app, launches land on `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
+ *   - Right after the base headers, the files host (`FILES_BASE_URL`) gets its own router and nothing else (SEC-004).
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
- *     session with CSRF); signed file URLs are checked before it, inside the H5P router (D-058).
+ *     session with CSRF); the editor's file grants are checked before it, inside the H5P router (D-058).
  *   - `X-Powered-By` is off; every response gets `X-Request-Id`, `nosniff`, `no-referrer`, and HSTS over https.
  *   - The findings API, the publish API and the save gate of `/h5p` share one validator and one Redis write lock
- *     (D-074); the gate reads what the editor will store; `/api/docs` is mounted only when NODE_ENV is not
- *     production (D-077).
+ *     (D-074); the gate reads what the editor will store; `/api/docs` is mounted only when NODE_ENV is not production (D-077).
  *   - The studio's services are built once, from the same activity facts, identity hasher and publish flow as the
  *     S4 routes, and are returned so main.ts can close them at shutdown.
  *   - The xAPI ingestion (`POST /api/h5p/xapi`) shares the activity facts; its listener of stored rows is the input
@@ -31,7 +30,7 @@
  *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/apiRouter.ts,
  *   ../content/PublishedSaveGate.ts, ../content/ContentWriteLock.ts, ../content/savedForm.ts, ../web/webRoutes.ts,
  *   ../web/chromeRedirect.ts, ../http/pages/helpLink.ts, ./healthRoutes.ts, ./studioServices.ts, ./main.ts,
- *   ./gradeBridgeApi.ts, ../insight/http/insightApi.ts, ../http/requestLog.ts (NFR-006).
+ *   ./gradeBridgeApi.ts, ../insight/http/insightApi.ts, ../http/requestLog.ts (NFR-006), ../http/filesOriginRouter.ts.
  * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
 import express, { type ErrorRequestHandler, type Express } from 'express';
@@ -48,7 +47,7 @@ import { editorSavedForm } from '../content/savedForm.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import { PrismaContentAccessRepository } from '../h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../http/api/apiRouter.js';
-import { createH5pRouter } from '../http/createH5pRouter.js';
+import { createFilesHostRouter, createH5pRouter } from '../http/createH5pRouter.js';
 import { h5pAuthenticate } from '../http/h5pAuthenticate.js';
 import { h5pErrorHandler } from '../http/h5pErrorHandler.js';
 import { HttpError } from '../http/HttpError.js';
@@ -161,6 +160,7 @@ export function createApp(inputs: AppInputs): App {
   // SECURITY: `req.ip` (audit hash, rate limits) trusts only as many proxies as are really in front (TRUST_PROXY).
   app.set('trust proxy', env.TRUST_PROXY);
   app.use(requestLog(logger), baseSecurityHeaders({ https: base.startsWith('https:') }));
+  app.use(createFilesHostRouter(inputs.h5p, env));
   app.use(healthRoutes({ database: () => db.$queryRaw`SELECT 1`, redis: () => redis.ping() }));
   app.use(pageAssetRoutes());
   // WHY: with the web app, an H5P page opened on its own goes to the chrome page that frames it (D-067), and /hjelp

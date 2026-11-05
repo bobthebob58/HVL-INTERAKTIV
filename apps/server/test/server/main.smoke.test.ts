@@ -2,9 +2,9 @@
  * Smoke tests for the entry point: `src/server/main.ts` started as its own process against the mock platform
  * answers `/healthz` and `/lti/keys` and stops cleanly on SIGTERM; a broken configuration or a taken port stops it with exit code 1
  * and names the variable without printing any secret; in production, a clear-text database, Redis or S3 connection
- * stops it the same way (D-109).
+ * stops it the same way (D-109). After listening it logs whether the PDF export works, and stops only after that.
  *
- * Spec: NFR-002, LTI-001, DATA-004
+ * Spec: NFR-002, LTI-001, DATA-004, MAPPE-004
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -133,6 +133,11 @@ describeWithServices('[NFR-002] the server entry point', () => {
     expect(keys.length).toBeGreaterThan(0);
     expect(run.output).toContain('HVL Interaktiv server stopped');
     expect(run.code).toBe(0);
+    // Assert: one reason-coded line on the PDF export, written before the server stopped (MAPPE-004, D-110)
+    expect(run.output).toMatch(
+      /"pdfAvailable":\w+,"pdfSandbox":\w+,"reason":"[a-z-]+".*"msg":"PDF export availability"/,
+    );
+    expect(run.output.indexOf('PDF export availability')).toBeLessThan(run.output.indexOf('server stopped'));
     // Assert: a start names where the data lives, by host and region only (DATA-004, D-109's amendment)
     expect(run.output).toMatch(/"databaseHost":"[^"]+".*"msg":"deployment locations"/);
     expect(run.output).not.toContain(new URL(String(process.env.DATABASE_URL)).password);

@@ -505,7 +505,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>D-109</td><td>Database roles, encrypted-connection checks in production, and a request log without personal data</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
-<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
+<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
 <tr>
 <td>D-111</td><td>An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</td><td>Accepted (2026-10-30), texts to HVL&#39;s language advisers and ALU (Q2, Q17)</td></tr>
 <tr>
@@ -727,10 +727,10 @@ example +7 and +21 days) and a one-click copy to place in a later Canvas module.
 </ul>
 <p class="req-source">Defined in <a href="#r-PROD-014">00 Product and pedagogy, PROD-014</a> · Product</p></div>
 </details>
-<details class="req" id="x-NFR-001" data-area="NFR" data-priority="MUST" data-session="S6" data-status="planned" data-text="nfr-001 performance an activity page (player plus content) becomes interactive in ≤ 3 s at p95 on a simulated &quot;fast 4g&quot;
+<details class="req" id="x-NFR-001" data-area="NFR" data-priority="MUST" data-session="S6" data-status="tested" data-text="nfr-001 performance an activity page (player plus content) becomes interactive in ≤ 3 s at p95 on a simulated &quot;fast 4g&quot;
 profile with 200 concurrent learners on one application node. api p95 is ≤ 300 ms excluding file downloads.
 - **verify:** k6 or artillery load test script in `tools/load/`; lighthouse ci on the player route.">
-<summary><span class="req-id">NFR-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Performance</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">NFR-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Performance</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>An activity page (player plus content) becomes interactive in ≤ 3 s at p95 on a simulated &quot;Fast 4G&quot;
 profile with 200 concurrent learners on one application node. API p95 is ≤ 300 ms excluding file downloads.</p>
 <ul>
@@ -791,10 +791,10 @@ e-mail addresses, Feide IDs, LTI <code>sub</code> values, ltik tokens, or answer
 </ul>
 <p class="req-source">Defined in <a href="#r-NFR-006">00 Product and pedagogy, NFR-006</a> · Non-functional</p></div>
 </details>
-<details class="req" id="x-NFR-007" data-area="NFR" data-priority="MUST" data-session="S6" data-status="planned" data-text="nfr-007 deployable on hvl or sikt infrastructure docker images and `docker-compose.yml` for local and staging environments. only eea-hosted
+<details class="req" id="x-NFR-007" data-area="NFR" data-priority="MUST" data-session="S6" data-status="tested" data-text="nfr-007 deployable on hvl or sikt infrastructure docker images and `docker-compose.yml` for local and staging environments. only eea-hosted
 postgresql, redis and s3-compatible storage. no runtime calls to third-party cdns (see `data-011`).
 - **verify:** `docker compose up` smoke test in ci.">
-<summary><span class="req-id">NFR-007</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Deployable on HVL or Sikt infrastructure</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">NFR-007</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Deployable on HVL or Sikt infrastructure</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Docker images and <code>docker-compose.yml</code> for local and staging environments. Only EEA-hosted
 PostgreSQL, Redis and S3-compatible storage. No runtime calls to third-party CDNs (see <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>).</p>
 <ul>
@@ -1147,7 +1147,12 @@ with `content-security-policy: sandbox; default-src 'none'; style-src 'unsafe-in
 types are served with `content-disposition: attachment`. in production, content files are served from
 a **separate origin** (e.g. `files.interaktiv.hvl.no`), so a script in a file cannot reach the app's
 origin, cookies or ltik.
-- **verify:** integration test of headers; deployment checklist item.">
+- **verify:** integration test of headers; deployment checklist item.
+- **amended (d-110, 2026-11-05):** built in s6: the player's files come from `files.&lt;host&gt;` of `public_base_url` (or
+  `files_base_url`, https in production), with cors for the app origin and h5p's `crossorigin`, and the main origin
+  answers their path with 404. the editor's saved files, fresh uploads and h5p's cookie routes stay on the main
+  origin with the headers above (`spec-deviation: d-110`: h5p's image editor draws into a canvas without
+  `crossorigin`). verified by the files-origin integration and e2e tests and the image's smoke test.">
 <summary><span class="req-id">SEC-004</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Serve user content defensively</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Content files are served with <code>X-Content-Type-Options: nosniff</code>. SVG and document files are served
 with <code>Content-Security-Policy: sandbox; default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;</code>. Non-media
@@ -1156,6 +1161,11 @@ a <strong>separate origin</strong> (e.g. <code>files.interaktiv.hvl.no</code>), 
 origin, cookies or ltik.</p>
 <ul>
 <li><strong>Verify:</strong> Integration test of headers; deployment checklist item.</li>
+<li><strong>Amended (D-110, 2026-11-05):</strong> built in S6: the player&#39;s files come from <code>files.&lt;host&gt;</code> of <code>PUBLIC_BASE_URL</code> (or
+<code>FILES_BASE_URL</code>, https in production), with CORS for the app origin and H5P&#39;s <code>crossorigin</code>, and the main origin
+answers their path with 404. The editor&#39;s saved files, fresh uploads and H5P&#39;s cookie routes stay on the main
+origin with the headers above (<code>SPEC-DEVIATION: D-110</code>: H5P&#39;s image editor draws into a canvas without
+<code>crossorigin</code>). Verified by the files-origin integration and e2e tests and the image&#39;s smoke test.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-004">01 H5P engine and security, SEC-004</a> · Upload security</p></div>
 </details>
@@ -1170,12 +1180,22 @@ path traversal or absolute paths. Package imports are processed in a temporary d
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-005">01 H5P engine and security, SEC-005</a> · Upload security</p></div>
 </details>
-<details class="req" id="x-SEC-006" data-area="SEC" data-priority="SHOULD" data-session="S6" data-status="planned" data-text="sec-006 malware scanning when `clamav_host` is configured, register `@lumieducation/h5p-clamav-scanner` in `malwarescanners`.
-- **verify:** integration test with the eicar test string (skipped when clamav is absent).">
-<summary><span class="req-id">SEC-006</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Malware scanning</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<details class="req" id="x-SEC-006" data-area="SEC" data-priority="SHOULD" data-session="S6" data-status="tested" data-text="sec-006 malware scanning when `clamav_host` is configured, register `@lumieducation/h5p-clamav-scanner` in `malwarescanners`.
+- **verify:** integration test with the eicar test string (skipped when clamav is absent).
+- **amended (d-110, 2026-11-05):** the scanner fails closed (only &quot;clean&quot; stores a file, on both upload paths) and gets
+  its settings only from our checked configuration; production requires `clamav_host` unless
+  `clamav_allow_unscanned_uploads` is set, and tls off the loopback. verified by fake-clamd tests in every run, the
+  real eicar tests when `clamav_test_host` names a clamd (ci runs one as a service), and the image's smoke test
+  against its stack's clamd.">
+<summary><span class="req-id">SEC-006</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Malware scanning</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>When <code>CLAMAV_HOST</code> is configured, register <code>@lumieducation/h5p-clamav-scanner</code> in <code>malwareScanners</code>.</p>
 <ul>
 <li><strong>Verify:</strong> Integration test with the EICAR test string (skipped when ClamAV is absent).</li>
+<li><strong>Amended (D-110, 2026-11-05):</strong> the scanner fails closed (only &quot;clean&quot; stores a file, on both upload paths) and gets
+its settings only from our checked configuration; production requires <code>CLAMAV_HOST</code> unless
+<code>CLAMAV_ALLOW_UNSCANNED_UPLOADS</code> is set, and TLS off the loopback. Verified by fake-clamd tests in every run, the
+real EICAR tests when <code>CLAMAV_TEST_HOST</code> names a clamd (CI runs one as a service), and the image&#39;s smoke test
+against its stack&#39;s clamd.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-006">01 H5P engine and security, SEC-006</a> · Upload security</p></div>
 </details>
@@ -2198,12 +2218,12 @@ VoiceOver + Safari on iOS, keyboard only, and 400 % zoom. Results are recorded p
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-031">03 Universal design, UD-031</a> · Universal design</p></div>
 </details>
-<details class="req" id="x-UD-040" data-area="UD" data-priority="MUST" data-session="S6" data-status="planned" data-text="ud-040 wcag conformance report `docs/accessibility/wcag-conformance-report.md` maps every wcag 2.2 a/aa criterion to: *supports /
+<details class="req" id="x-UD-040" data-area="UD" data-priority="MUST" data-session="S6" data-status="tested" data-text="ud-040 wcag conformance report `docs/accessibility/wcag-conformance-report.md` maps every wcag 2.2 a/aa criterion to: *supports /
 partially supports / does not support / not applicable*, the evidence (test file, manual protocol
 result), and known h5p upstream limitations with links to the issues. it is the input hvl needs for
 its uustatus.no statement.
 - **verify:** evaluator review; the script `npm run a11y:report` regenerates the automated parts.">
-<summary><span class="req-id">UD-040</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">WCAG conformance report</span> <span class="status" data-status="planned">○ Planned</span></summary>
+<summary><span class="req-id">UD-040</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">WCAG conformance report</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>docs/accessibility/WCAG-CONFORMANCE-REPORT.md</code> maps every WCAG 2.2 A/AA criterion to: <em>Supports /
 Partially supports / Does not support / Not applicable</em>, the evidence (test file, manual protocol
 result), and known H5P upstream limitations with links to the issues. It is the input HVL needs for
@@ -3660,7 +3680,7 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
   HvlTop10ContentTypeFilter.ts restricts the authoring list to the ten types         H5P-002
   HvlPermissionSystem.ts       IPermissionSystem implementation (role matrix §4)     H5P-006
   HvlUrlGenerator.ts           UrlGenerator that appends ltik / CSRF parameters, URL-encoded, and signs
-                               `contentUrl` with a file grant (S3)                    H5P-007 (D-058)
+                               `contentUrl` with a file grant (S3), on the files origin (S6)  H5P-007, SEC-004 (D-058, D-110)
   contentFileGrants.ts         signed, expiring grants for content-file URLs         H5P-007, SEC-004 (S3, D-058)
   HvlTranslationCallback.ts    i18next nn → nb → en (resources: h5pTranslationResources.ts)  H5P-008
   HvlH5PEditor.ts              editor subclass: ten-type filter, save order, package rules  H5P-002, SEC-003 (S2)
@@ -3693,11 +3713,13 @@ apps/server/src/security/
   FileTypeSniffer.ts + sniff/  compares magic bytes with the extension               SEC-002
   ContentFileHeaders.ts        CSP sandbox, nosniff, Content-Disposition             SEC-004
   RejectedUploadError.ts       a refused upload with its translated message key      SEC-001, SEC-002 (S2)
+  malware/                     ClamAV through Lumi's scanner, failing closed; clamd client, turns, reasons  SEC-006 (S6, D-110)
   fileExtension.ts             the lower-cased extension of a file name              SEC-002 (S2)
 apps/server/src/http/
   createH5pRouter.ts + routes/ Express 5 routes on H5PAjaxEndpoint (D-035): static files, AJAX, uploads,
                                content and temporary files, user data, content, player  H5P-005, SEC-004 (S2)
   routes/signedFileRoutes.ts   public content files behind a signed grant (D-058)   H5P-007, SEC-004 (S3)
+  filesOriginRouter.ts         the files origin: signed player files only, sandbox policy, CORS for the app  SEC-004 (S6, D-110)
   h5pAuthenticate.ts           the S3 `authenticate`: the request's Principal → H5P actor with the ltik or
                                CSRF token as `urlToken` (auth/principalToH5pActor.ts)  H5P-007 (S3, D-053, D-058)
   h5pErrorResponse.ts …        translated errors, multipart uploads (D-043), byte ranges, body parsers
@@ -3936,6 +3958,11 @@ a <strong>separate origin</strong> (e.g. <code>files.interaktiv.hvl.no</code>), 
 origin, cookies or ltik.</p>
 <ul>
 <li><strong>Verify:</strong> Integration test of headers; deployment checklist item.</li>
+<li><strong>Amended (D-110, 2026-11-05):</strong> built in S6: the player&#39;s files come from <code>files.&lt;host&gt;</code> of <code>PUBLIC_BASE_URL</code> (or
+<code>FILES_BASE_URL</code>, https in production), with CORS for the app origin and H5P&#39;s <code>crossorigin</code>, and the main origin
+answers their path with 404. The editor&#39;s saved files, fresh uploads and H5P&#39;s cookie routes stay on the main
+origin with the headers above (<code>SPEC-DEVIATION: D-110</code>: H5P&#39;s image editor draws into a canvas without
+<code>crossorigin</code>). Verified by the files-origin integration and e2e tests and the image&#39;s smoke test.</li>
 </ul>
 <h4 id="r-SEC-005" class="req-heading" tabindex="-1"><a class="req-id" href="#r-SEC-005">SEC-005</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Size limits and archive safety</span></h4>
 <p><code>maxFileSize</code> is 50 MB and <code>maxTotalSize</code> is 200 MB per package. The server rejects zip entries with
@@ -3947,6 +3974,11 @@ path traversal or absolute paths. Package imports are processed in a temporary d
 <p>When <code>CLAMAV_HOST</code> is configured, register <code>@lumieducation/h5p-clamav-scanner</code> in <code>malwareScanners</code>.</p>
 <ul>
 <li><strong>Verify:</strong> Integration test with the EICAR test string (skipped when ClamAV is absent).</li>
+<li><strong>Amended (D-110, 2026-11-05):</strong> the scanner fails closed (only &quot;clean&quot; stores a file, on both upload paths) and gets
+its settings only from our checked configuration; production requires <code>CLAMAV_HOST</code> unless
+<code>CLAMAV_ALLOW_UNSCANNED_UPLOADS</code> is set, and TLS off the loopback. Verified by fake-clamd tests in every run, the
+real EICAR tests when <code>CLAMAV_TEST_HOST</code> names a clamd (CI runs one as a service), and the image&#39;s smoke test
+against its stack&#39;s clamd.</li>
 </ul>
 <h4 id="r-SEC-007" class="req-heading" tabindex="-1"><a class="req-id" href="#r-SEC-007">SEC-007</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Dependency hygiene</span></h4>
 <p>All runtime dependencies are pinned exactly (no <code>^</code>) and listed in <code>package-lock.json</code>. CI runs
@@ -4036,9 +4068,10 @@ recorded with evidence in <code>docs/reference/</code> (<a href="#reference">ref
  files.interaktiv.hvl.no  → user-uploaded H5P content files only (SEC-004), no cookies, no ltik</code></pre>
 <p><em>In S3 (D-048, D-058):</em> <code>apps/web</code> does not exist yet, so <code>apps/server</code> itself renders the start page <code>/</code>, the
 player <code>/lti/play</code> and the Deep Linking picker <code>/lti/deeplink</code>; ltijs redirects to those pages with <code>?ltik=…</code>
-instead of <code>/app/…</code>. <code>apps/web</code> takes over <code>/</code> and <code>/app/*</code> in S4. Until the files origin arrives in S6 (D-045),
-the player loads content files from <code>/h5p/files/&lt;grant&gt;/…</code> on the main origin, authorised by a signed grant
-rather than a cookie or an ltik.</p>
+instead of <code>/app/…</code>. <code>apps/web</code> takes over <code>/</code> and <code>/app/*</code> in S4. From S6 the player loads content files from the
+files origin (<code>files.&lt;host&gt;/h5p/files/&lt;grant&gt;/…</code>, or <code>FILES_BASE_URL</code>), authorised by a signed grant rather than a
+cookie or an ltik; the main origin answers that path with 404, and the editor&#39;s files stay there under grants of
+their own (D-045, D-110&#39;s amendment of 2026-11-05, <code>SPEC-DEVIATION: D-110</code>).</p>
 <p><em>From S4 (D-067, D-068, D-069):</em> when the web app runs (<code>WEB_APP</code> is not <code>off</code>), ltijs sends resource-link launches
 to <code>/app/play</code>, which Next.js renders after Express has resolved the ltik and removed it from what Next.js sees. The
 page keeps the ltik in memory and frames the H5P pages <code>/lti/play?ltik=…</code> (player) and <code>/lti/edit?ltik=…</code> (the
@@ -5794,6 +5827,14 @@ whose results HVL records (D-079); <a class="req-ref" href="#r-UD-031"><code>UD-
 <tr>
 <td><code>npx vitest run apps/server/test/privacy/operationsClis.int.test.ts</code> <em>(from S6)</em></td><td>The operations CLIs together, each through its npm script, on a database only they set up: <code>db:roles</code> (roles and the migrate step), a data-subject export, the purge&#39;s dry run and real run as <code>hvli_app</code>, then an erasure; every run audited with counts only (<a class="req-ref" href="#r-DATA-010"><code>DATA-010</code></a>, <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>, <a class="req-ref" href="#r-DATA-008"><code>DATA-008</code></a>, <a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>)</td></tr>
 <tr>
+<td><code>npm run deploy:check &amp;&amp; npm run docker:smoke</code> <em>(from S6)</em></td><td>The deploy files keep D-110&#39;s rules (images by digest, uid 10001, no GitHub fetch, the CA only as a secret, Playwright&#39;s seccomp profile, only <code>SYS_CHROOT</code> added back); then the image builds and the app stack (<code>deploy/compose.app.yml</code>, with its own clamd) starts: <code>/healthz</code>, every migration, the seeded types, pages from the image, an upload scanned by clamd (EICAR refused) and served from the files origin with the sandbox policy, the mappe PDF tagged A4 with æ, ø and å embedded and Chromium&#39;s sandbox seen in <code>/proc</code>, and the server&#39;s own start-up probe line (<a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>; <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/docker.md" rel="noopener" class="ext">ops/docker.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>). Needs Docker, about 8 GB free and 2.5 minutes; GitHub runs it in <code>.github/workflows/docker.yml</code></td></tr>
+<tr>
+<td><code>npx vitest run tools/ops</code> <em>(from S6)</em></td><td>The backup round trip on the local services: back up, wipe, restore and compare every table&#39;s count and an object&#39;s SHA-256; a tampered backup, a non-empty target and a backup that differs are refused or reported (<a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>, <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §6)</td></tr>
+<tr>
+<td><code>npm run load:smoke</code> <em>(from S6)</em></td><td>k6 2.3.0 (by digest, in Docker) against the whole app on one node with the mock Canvas and the ten real types: 20 learners for 30 s, each a real launch, the player page with its assets, xAPI batches and state saves; exit 0 only when every threshold holds (<a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>, D-114; <code>npm run load:full</code> is HVL&#39;s 200-learner run, <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §8)</td></tr>
+<tr>
+<td><code>npm run a11y:report -- --check</code> <em>(from S6)</em></td><td>The conformance report <code>docs/accessibility/WCAG-CONFORMANCE-REPORT.md</code> matches its sources (the 56 WCAG 2.2 A/AA criteria, axe-core&#39;s rules, the committed run summary, the protocol and the upstream register), with HVL&#39;s manual blocks kept byte for byte (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>, D-079&#39;s amendments)</td></tr>
+<tr>
 <td><code>NODE_USE_ENV_PROXY=1 npm run hub:check</code> <em>(from S2)</em></td><td>Spike step 3: Hub registration status, the 15-character <code>local_id</code>, versions of the ten types</td></tr>
 </tbody></table></div>
 <hr>
@@ -5909,7 +5950,7 @@ start-up refusals (D-113); they stay <em>not verified</em> until HVL acts, and t
 </thead><tbody><tr>
 <td><a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> Yearly purge</td><td><code>-t &quot;\[DATA-003\]&quot;</code>: the purge with time travel at 31 July, 1 August and 31 August in Oslo time, the dry run, idempotency, the current year untouched, a login that races it (<code>test/privacy/purge/</code>, <code>test/auth/identity/accountPurgeRace.int.test.ts</code>), and the CLI&#39;s real run on a fresh database (<code>operationsClis.int.test.ts</code>)</td><td>HVL operations destroy the ended year&#39;s pseudonym secret (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/yearly-purge.md" rel="noopener" class="ext">ops/yearly-purge.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>, step 4)</td></tr>
 <tr>
-<td><a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a> Data in Norway or the EEA</td><td><code>-t &quot;\[DATA-004\]&quot;</code>: production refuses clear-text database, Redis and S3 connections, storage outside the EEA list and the AWS SDK&#39;s own endpoint variables (<code>test/config/</code>, <code>test/infra/s3Client.test.ts</code>, <code>test/server/main.smoke.test.ts</code>); document review of <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/database-roles.md" rel="noopener" class="ext">ops/database-roles.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a></td><td>HVL names its hosting (Q5) and the deployment checklist (S6 step 6) is ticked against the start-up line <code>deployment locations</code></td></tr>
+<td><a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a> Data in Norway or the EEA</td><td><code>-t &quot;\[DATA-004\]&quot;</code>: production refuses clear-text database, Redis and S3 connections, storage outside the EEA list, a bucket variable that is not a plain bucket name (an access point or Outposts ARN would route past the list; <code>bucketNameProblems</code> in <code>test/config/storageResidency.test.ts</code>) and the AWS SDK&#39;s own endpoint variables (<code>test/config/</code>, <code>test/infra/s3Client.test.ts</code>, <code>test/server/main.smoke.test.ts</code>); <code>npm run db:roles</code> refuses a clear-text URL to a database on another host before it connects (<code>test/db/databaseRolesTls.test.ts</code>); document review of <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/database-roles.md" rel="noopener" class="ext">ops/database-roles.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a></td><td>HVL names its hosting (Q5) and the deployment checklist (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §9) is ticked against the start-up line <code>deployment locations</code></td></tr>
 <tr>
 <td><a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a> DPIA input</td><td>Document review of <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/privacy/DPIA-INPUT.md" rel="noopener" class="ext">privacy/DPIA-INPUT.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>; <code>npm run privacy:dpia-check</code> and <code>-t &quot;\[DATA-005\]&quot;</code> compare it with the developer key and the inventory</td><td>HVL&#39;s data protection officer has reviewed it (Q6)</td></tr>
 <tr>
@@ -5919,7 +5960,19 @@ start-up refusals (D-113); they stay <em>not verified</em> until HVL acts, and t
 <tr>
 <td><a class="req-ref" href="#r-DATA-010"><code>DATA-010</code></a> Database roles</td><td><code>-t &quot;\[DATA-010\]&quot;</code>: each role logs in to a throwaway database and may run only its statements; the migrate step (<code>views-down</code>, migration, <code>grants</code>); <code>db:roles</code> on a new database</td><td>HVL&#39;s database administrator runs <code>01-roles.sql</code> on the real database</td></tr>
 <tr>
-<td><a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a> Request log</td><td><code>-t &quot;\[NFR-006\]&quot;</code>: one line per request with the route pattern, status and duration, an <code>X-Request-Id</code> that a client cannot fill with text of its choice, and no ltik, learner key or activity ID in any line through a whole launch, play and xAPI batch (<code>test/http/requestLog*.test.ts</code>)</td><td>The reverse proxy&#39;s access log leaves out the query string (deployment checklist)</td></tr>
+<td><a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a> Request log</td><td><code>-t &quot;\[NFR-006\]&quot;</code>: one line per request with the route pattern, status and duration, an <code>X-Request-Id</code> that a client cannot fill with text of its choice, and no ltik, learner key or activity ID in any line through a whole launch, play and xAPI batch (<code>test/http/requestLog*.test.ts</code>); the LTI error pages log their route pattern and a fixed code, never the path or a client&#39;s text (<code>test/lti/http/ltiErrorLog.test.ts</code>)</td><td>The reverse proxy&#39;s access log leaves out the query string (deployment checklist)</td></tr>
+<tr>
+<td><a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a> Performance</td><td><code>npm run load:smoke</code> (20 learners for 30 s, here: page ready p95 1.1–1.5 s against 3 s, API p95 22–27 ms against 300 ms, no failed request) and <code>-t &quot;\[NFR-001\]&quot;</code> (the k6 profiles, batches and summary in <code>tools/load/test/</code>)</td><td>HVL runs <code>npm run load:full</code> (200 learners) on a node like production (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §8); Lighthouse on Fast 4G is not added (D-114)</td></tr>
+<tr>
+<td><a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a> Availability, backups</td><td><code>-t &quot;\[NFR-002\]&quot;</code>: the backup round trip and the restore&#39;s refusals (<code>tools/ops/test/</code>), the health check and clean start and stop (<code>test/server/</code>); document review of <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §6</td><td>HVL schedules the daily backup with its encrypted off-server copy and logs the restore drill each semester</td></tr>
+<tr>
+<td><a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a> Docker</td><td><code>npm run docker:smoke</code> here (2026-11-05, on the integrated tree: passed in 155 s) and in GitHub&#39;s <code>docker.yml</code>; <code>-t &quot;\[NFR-007\]&quot;</code> (<code>tools/deploy-check</code>, <code>tools/h5p-bundle</code>)</td><td><code>docker.yml</code>&#39;s first run on GitHub (Chromium from Playwright&#39;s CDN, its SHA-256, AppArmor); HVL&#39;s runtime allows the seccomp profile and <code>CAP_SYS_CHROOT</code> (Q5)</td></tr>
+<tr>
+<td><a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a> Files origin</td><td><code>-t &quot;\[SEC-004\]&quot;</code>: headers, files-origin-only serving, expiry, other activities refused, CORS, the editor&#39;s own grants (<code>test/http/filesOrigin.int.test.ts</code>, <code>editorFiles.int.test.ts</code>), the page policies, and <code>e2e/filesOrigin.e2e.test.ts</code> in full Chromium (images and captions from the files origin, no cookie or ltik sent, a scripted SVG never runs); the image&#39;s smoke serves an uploaded file from <code>files.localhost</code></td><td>HVL&#39;s DNS name and certificate for the files host (Q5, deployment checklist)</td></tr>
+<tr>
+<td><a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a> Malware scanning</td><td><code>-t &quot;\[SEC-006\]&quot;</code>: fail-closed on both upload paths against a fake clamd, the start-up rules; the real-clamd tests with <code>CLAMAV_TEST_HOST</code> (CI&#39;s clamav service); the image&#39;s smoke against the stack&#39;s clamd</td><td>HVL runs clamd with daily signatures and TLS (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/clamav.md" rel="noopener" class="ext">ops/clamav.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</td></tr>
+<tr>
+<td><a class="req-ref" href="#r-UD-040"><code>UD-040</code></a> Conformance report</td><td><code>npm run a11y:report -- --check</code> and <code>-t &quot;\[UD-040\]&quot;</code> (<code>tools/a11y-report/test/</code>): every criterion present, manual blocks kept, no verdict without a dated HVL evaluation, a failed or partial run never recorded as passed</td><td>HVL/ALU run the manual protocol, set the 56 verdicts (each with a dated <code>**Evaluated by HVL:**</code> line, or the generator stops) and write the uustatus.no notes (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>)</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="evaluator-guide--6-known-limitations-stated-honestly" tabindex="-1">6. Known limitations (stated honestly)</h3>
@@ -5969,9 +6022,12 @@ address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF
 because H5P builds those URLs itself. Our logs redact these values (<a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>), but a reverse proxy, load
 balancer or CDN in front of the server must not log query strings and must not cache responses that set
 cookies. The S6 runbook has to carry this rule.</li>
-<li><strong>User files are not yet on a separate origin</strong> (D-045). Content files load through signed, expiring
-URLs on the tool&#39;s own origin (<code>/h5p/files/…</code>, D-058), with <code>nosniff</code> and a sandbox CSP; the separate
-files origin that <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a> asks for in production is S6 work.</li>
+<li><strong>Only the player&#39;s files are on the separate origin</strong> (D-045, D-110&#39;s amendment of 2026-11-05). The player&#39;s
+content files load from <code>files.&lt;host&gt;</code> (or <code>FILES_BASE_URL</code>) through signed, expiring URLs (D-058), with
+<code>nosniff</code>, a sandbox CSP, no cookie and no ltik. The editor&#39;s saved files (<code>/h5p/editor-files/…</code>), fresh uploads
+and H5P&#39;s cookie fallback routes stay on the app origin, behind the same headers (<code>SPEC-DEVIATION: D-110</code>: H5P&#39;s
+image editor draws into a canvas without <code>crossorigin</code>). <code>files.&lt;host&gt;</code> is the same site as the app; a separate
+registrable domain is HVL&#39;s choice (Q5). A grant opens every file of one activity for 12–13 hours.</li>
 <li><strong>No launch where frame storage is blocked and the platform offers no Platform Storage</strong> (D-050). ltijs
 keeps a short-lived recovery token for its login state in the frame&#39;s <code>localStorage</code> or, where the browser
 blocks that, in LTI Platform Storage. With storage blocked and no <code>lti_storage_target</code> in the login
@@ -5986,10 +6042,9 @@ ioredis when it loads. They are installed and loaded but never connected: our <c
 and node-redis <code>LtiCacheManager</code> replace them, and ESLint forbids importing ltijs&#39;s
 <code>MongoLegacyDatabaseManager</code> and <code>RedisCacheManager</code>. They still count in the audit and licence checks;
 an upstream issue asks ltijs to load them lazily.</li>
-<li><strong>No build step for the server.</strong> <code>npm run build</code> builds the web app, but <code>npm start</code> still runs the server&#39;s
-TypeScript sources through tsx, a development dependency of the repository root, so the server cannot start from
-an install without development dependencies (<code>npm ci --omit=dev</code>), and every start compiles the sources in
-memory. How production builds and starts the server is decided with S6&#39;s Docker images.</li>
+<li><strong>No build step for the server.</strong> <code>npm run build</code> builds the web app, but the server runs its TypeScript
+sources through tsx, so every start compiles them in memory. Since S6, tsx is a runtime dependency of
+<code>apps/server</code> (D-110), so <code>npm ci --omit=dev</code> and the Docker image start it (<code>node --import tsx src/server/main.ts</code>); a compiled server would need its <code>import.meta.url</code> anchors reworked.</li>
 <li><strong>Two interim rules wait for the owner</strong> (Q12). Student authors (through <code>AUTHOR_COURSE_GROUPS</code>) may share
 an activity only as <code>private</code> until a course visibility exists (D-059), and from S5 they neither add co-authors
 nor see or list in the content bank, which shows colleagues&#39; names (D-090, D-091); Feide users without a Feide
@@ -6013,11 +6068,12 @@ cannot mark with their own language (WCAG 3.1.2 allows such terms).</li>
 <li><strong>The portfolio PDF needs Chromium on the server</strong> (D-096). <code>playwright-core</code> 1.56.1 prints it with the server&#39;s
 own Chromium, in a fresh context per export with JavaScript off, offline and every request aborted; at most
 <code>PDF_MAX_CONCURRENCY</code> exports at once (2) and one per person, 30 seconds each. Where no browser starts, the PDF
-export answers 503 and the page points to the Markdown export, which always works. S6&#39;s production image must
-install Chromium and fonts with æ, ø and å (here the PDF uses Liberation Serif, because Georgia, the body font
-token, is not installed), run the server as a non-root user whose runtime allows unprivileged user namespaces
-(Chromium refuses its sandbox as root; the development-only <code>PDF_ALLOW_NO_SANDBOX=true</code> is refused in
-production), and keep Chromium patched.</li>
+export answers 503 and the page points to the Markdown export, which always works. The S6 image carries
+Playwright&#39;s full Chromium 141 and fonts with æ, ø and å (the PDF uses Liberation Serif, because Georgia, the body
+font token, is not installed) and runs the server as uid 10001; Chromium keeps its sandbox only with Playwright&#39;s
+seccomp profile and <code>CAP_SYS_CHROOT</code>, which OpenShift&#39;s <code>restricted-v2</code> does not allow (Q5; the
+development-only <code>PDF_ALLOW_NO_SANDBOX=true</code> is refused in production). The server logs at start whether the
+export works (<code>PDF export availability</code>). HVL keeps Chromium patched by rebuilding the image.</li>
 <li><strong>What the PDF does not tag yet is checked by hand</strong> (D-096, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>). The automated test reads the
 structure tree, the outline, <code>/Lang</code>, the title and the text with <code>pdfjs-dist</code>; a person checks the rest with PAC
 and NVDA (protocol J4 in <code>docs/accessibility/manual-test-protocol.md</code>). Known residuals to record there: list
@@ -6273,7 +6329,7 @@ with the commands given.</p>
 <tr>
 <td>D-109</td><td>Database roles, encrypted-connection checks in production, and a request log without personal data</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
-<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
+<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
 <tr>
 <td>D-111</td><td>An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</td><td>Accepted (2026-10-30), texts to HVL&#39;s language advisers and ALU (Q2, Q17)</td></tr>
 <tr>
@@ -6797,6 +6853,9 @@ images, audio, video and VTT captions is served as <code>attachment</code>. The 
 <li><strong>Consequences:</strong> A stricter superset of <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a> in S2; the origin isolation follows in S3/S6. Text types,
 SVG included, carry <code>charset=utf-8</code>. An SVG is an <code>attachment</code> too: a browser still draws it in <code>&lt;img&gt;</code>, but
 opening it directly downloads it instead of showing it as a page.</li>
+<li><strong>Amendment (2026-11-05):</strong> the separate origin is built in S6 as D-110&#39;s amendment of the same day describes: the
+player&#39;s files come from <code>FILES_BASE_URL</code> (by default <code>files.&lt;host&gt;</code>), every answer there carries these headers, and
+the editor&#39;s files stay on the app origin for now (<code>SPEC-DEVIATION: D-110</code>).</li>
 </ul>
 <h3 id="decisions--d-046--library-language-files-fall-back-nn--nb--en" tabindex="-1">D-046 · Library language files fall back nn → nb → en</h3>
 <ul>
@@ -6943,6 +7002,12 @@ verification): (1) add the new key second and restart every server, so every ser
 first and restart every server; (3) remove the old key 12 hours after the last step-2 restart. Putting the new key
 first in one step would break LTI on servers not yet restarted, and a key that has been first must stay in every
 ring until nothing uses it.</li>
+<li><strong>Amendment (2026-11-05, S6 step 6 integration):</strong> step (3) waits at least <strong>31 days</strong> after the last step-2
+restart, not 12 hours. Since S6, <code>GradeSyncJob.ltiSubEncrypted</code> stays under the key of the job&#39;s last write until
+the job&#39;s subject is cleared, 30 days after the job stopped (D-104, <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>,
+<code>apps/server/src/grades/GradeSubjectCleanupJob.ts</code>), and a job whose key is gone fails as <code>subject-unreadable</code>
+(<code>apps/server/src/grades/gradeJobSend.ts</code>). Found by the skeptic review of the backup and runbook work (D-110&#39;s
+backup amendment); <code>apps/server/.env.example</code> and <code>docs/ops/runbook.md</code> §4 say the same.</li>
 </ul>
 <h3 id="decisions--d-057--own-redis-portal-sessions-login-transactions-and-a-synchronizer-csrf-token" tabindex="-1">D-057 · Own Redis portal sessions, login transactions and a synchronizer CSRF token</h3>
 <ul>
@@ -7591,6 +7656,61 @@ hand inside the generator would be a second record of what PROGRESS already trac
 HVL records results. The open work is the unchecked S4 item &quot;First manual run of the protocol and the matrix&quot; in
 PROGRESS.md. The matrix (§1, §3), the Evaluator Guide (§2, limitation 15) and <code>tools/spec-trace/README.md</code> say
 what &quot;tested&quot; means for these two.</li>
+<li><strong>Amendment (2026-11-05, S6 step 6: the conformance report, <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>):</strong> the split of this decision continues
+inside <code>docs/accessibility/WCAG-CONFORMANCE-REPORT.md</code>, which <code>npm run a11y:report</code> (<code>tools/a11y-report/</code>) writes
+with one section for each WCAG 2.2 Level A and AA success criterion: 56, counting 4.1.1 <em>Parsing</em>, which WCAG 2.2
+marks obsolete but WCAG 2.1 and EN 301 549, on which the Norwegian regulation rests, still list.<ul>
+<li><strong>Generated parts:</strong> per criterion, how it is tested (the axe rules that carry the criterion&#39;s tag in the
+axe-core that <code>@axe-core/playwright</code> runs, under the suite&#39;s own tags, without the rules axe excludes by default;
+our own checks by requirement ID and suite file), which views, the result of the last full run of
+<code>npm run test:a11y</code>, links to the tests, the manual protocol&#39;s steps and §7 checks for it, and the upstream
+entries of <code>apps/server/a11y/support/upstreamRegister.ts</code> it concerns, with their issue links (none filed yet,
+D-112). Also a summary table, the dated manual results in <code>docs/accessibility/results/</code>, the register in full,
+and an appendix of the last run. The mapping from criterion to our checks is data in the tool, reviewed like
+code; a protocol step it names must exist in the protocol, or the generator stops.</li>
+<li><strong>Manual parts:</strong> text between <code>&lt;!-- manual:start &lt;id&gt; --&gt;</code> and <code>&lt;!-- manual:end &lt;id&gt; --&gt;</code>: per criterion the
+verdict (<em>Supports</em>, <em>Partially supports</em>, <em>Does not support</em>, <em>Not applicable</em> or <em>Not yet determined</em>) and the
+manual evidence; and the scope, the assistive-technology runs, the cognitive review, the barriers axe cannot see
+and the notes for the uustatus.no statement. The generator copies each block as it is; it stops on a broken,
+duplicate or unknown marker, a missing verdict line or an unknown verdict instead of dropping or guessing text,
+and seeds a missing block with <em>Not yet determined</em> and <em>Not yet tested by HVL</em>. No verdict is derived from the
+automated results: axe and our checks find only part of the barriers (the protocol&#39;s §1), so a <em>Supports</em> from
+them would overstate; the summary table copies the verdict people wrote.</li>
+<li><strong>Determinism:</strong> a run enters through a distilled, committed summary, <code>docs/accessibility/automated-run.json</code>
+(<code>--from-run=&lt;dir&gt;</code> reads Vitest&#39;s JSON report and the axe JSON lines of <code>A11Y_REPORT_DIR</code>; <code>--run</code> runs the
+suite first and needs <code>npm run build</code>). The report carries no time except the run&#39;s date and commit from that
+summary, so regenerating an unchanged tree gives the same file, and <code>--check</code> fails when the committed report
+differs from what its sources give: the gate&#39;s «regenerates the automated parts unchanged» (D-113). A new test
+file whose title opens with a mapped ID, a new suite or a new register entry therefore needs a regeneration in the
+same commit, as <code>docs/TRACEABILITY.md</code> does.</li>
+<li><strong>Alternatives considered:</strong> (a) reading the raw run outputs on every regeneration: a fresh checkout could not
+regenerate the report, and two runs never give the same file; (b) one table for all criteria: the manual blocks
+need a place per criterion; (c) a status kept in spec-trace: rejected above for <a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>, for the same reason.</li>
+<li><strong>Consequences:</strong> <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>&#39;s tests (<code>tools/a11y-report/test/</code>, <code>[UD-040]</code>) are its document check under D-113:
+the manual blocks survive a regeneration byte for byte, two regenerations give the same file, every criterion is
+listed and the committed report&#39;s blocks parse. HVL&#39;s evaluation of each criterion stays open until HVL acts.</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-11-05, S6 step 6 review of the <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a> generator):</strong> the review found four ways in which the
+report could say more than is true. They are closed as follows.<ul>
+<li><strong>A failed file is a failure.</strong> Vitest 5 reports a file whose hook (<code>beforeAll</code>, e.g. the browser or the services
+not starting) or import failed as <code>failed</code>, with its tests <code>skipped</code> or none at all; the summary then said
+&quot;0 failed&quot;. The summary (format 2) now records such files in <code>failedFiles</code>, the report names them in the run&#39;s
+header, in the criterion lines of their checks and in appendix A, and <code>--from-run</code> exits 1 for a failed run, as
+<code>--run</code> does. A run is &quot;clean&quot; only when <code>git status --porcelain</code> shows nothing, untracked files included,
+since an untracked test or source file changes what ran.</li>
+<li><strong>Only the whole suite is &quot;the last full run&quot;.</strong> <code>--from-run</code> and <code>--run</code> refuse, writing nothing, a run that
+lacks a suite file with running tests (a run of one file or a filtered folder), and a run with two suite files
+of the same path. Files are keyed by their path under <code>apps/server/a11y/</code>.</li>
+<li><strong>No HVL verdict without a dated HVL evaluation.</strong> A criterion block whose verdict is not <em>Not yet determined</em>
+needs the line <code>**Evaluated by HVL:**</code> beginning with a date (<code>YYYY-MM-DD</code>), and a block holds one verdict line
+only; otherwise the generator stops. So the summary&#39;s «Verdict (HVL)» column never shows a verdict that no dated
+evaluation stands behind, nor one of two contradicting lines.</li>
+<li><strong>No text is lost to a marker the parser does not see.</strong> Markers are found whatever their letter case (a
+<code>&lt;!-- Manual:start … --&gt;</code> stops the generator instead of its block being rewritten as generated text), and the
+composed report is read back before it is returned: it must give exactly the blocks that went in, byte for byte.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-080--h5p-markup-barriers-repaired-in-the-page-where-we-can-registered-where-we-cannot" tabindex="-1">D-080 · H5P markup barriers: repaired in the page where we can, registered where we cannot</h3>
 <ul>
@@ -9326,8 +9446,8 @@ the mappe&#39;s totals cannot be differenced against insight&#39;s views. <em>De
 stored before the latest midnight in Oslo at the moment of the export (presences and root results alike), so two
 exports on one day are the same and an export never holds today&#39;s plays. <em>The trade-off:</em> as for insight, a teacher
 sees today&#39;s plays in the mappe tomorrow (PROGRESS Q24 applies to both). The yearly purge&#39;s snapshots cover ended
-years only and are unchanged. <em>Verified by</em> <code>storedActivityResults.int.test.ts</code> (a learner who played today is in no
-group until the next day).</li>
+years only and are unchanged. <em>Verified by</em> <code>storedResultsBeforeToday.int.test.ts</code> (a learner who played today is in
+no group until the next day).</li>
 </ul>
 <h3 id="decisions--d-107--spec-deviation-data-003-the-yearly-purge-runs-on-31-august-and-deletes-by-a-stored-academic-year" tabindex="-1">D-107 · <code>SPEC-DEVIATION</code> DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year</h3>
 <ul>
@@ -9850,6 +9970,379 @@ the pinned 1.56.1), and its floating ranges already broke 2.0.30 (&quot;Cannot f
 version tested; the image rather than the release binary, so one pinned digest serves here and in CI.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-11-05, step 6: the files origin, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>):</strong> decided before the code; it settles what
+<strong>Files origin</strong> above leaves open.<ul>
+<li><strong>Setting:</strong> <code>FILES_BASE_URL</code>, an origin. Unset, it is <code>files.&lt;host&gt;</code> of <code>PUBLIC_BASE_URL</code> with the same scheme
+and port, so development gets <code>http://files.localhost:3000</code> (Chromium and Firefox resolve every <code>*.localhost</code>
+name to the loopback, RFC 6761 §6.3; Node does not, so server tests name the files host in the <code>Host</code> header). A
+<code>PUBLIC_BASE_URL</code> whose host is an IP address has no <code>files.</code> name, so <code>FILES_BASE_URL</code> must then be set. In every
+environment the files host must differ from the app&#39;s host: a second port on the same host is refused, because
+a browser sends a host&#39;s cookies to all its ports (RFC 6265 §8.5). Production also requires https. The start
+stops with a message that names the variable, never its value.</li>
+<li><strong>One process, two host names:</strong> the server tells the origins apart by the request&#39;s host (<code>req.hostname</code>, so
+<code>X-Forwarded-Host</code> counts only behind <code>TRUST_PROXY</code>). A request for the files host goes to a files-only router
+right after the request log and the base headers, before the portal session, LTI, Feide, <code>/api</code>, <code>/h5p</code> and the
+web app, so nothing there reads a cookie, an ltik or a session, and nothing sets one. HVL&#39;s reverse proxy sends
+both names to the same upstream and passes <code>Host</code> on (deployment checklist). Not chosen: a second listener, which
+needs a second port in every deployment and gains nothing, since the files router reads no credential.</li>
+<li><strong>What the files origin serves:</strong> only <code>GET</code> and <code>HEAD /h5p/files/&lt;grant&gt;/&lt;contentId&gt;/&lt;file&gt;</code> with a player
+grant (purpose <code>content-file-url</code>, issued by the player render after the View check, D-058), and <code>OPTIONS</code> for a
+CORS preflight of those; everything else is 404. Every answer, refusals included, carries D-045&#39;s <code>nosniff</code> and
+sandbox policy, and files keep <code>attachment</code> for all but media and <code>Cache-Control: private</code>. Answers allow the app
+origin by CORS (<code>Access-Control-Allow-Origin: &lt;PUBLIC_BASE_URL&gt;</code>, never credentials), and the player&#39;s
+integration sets H5P&#39;s <code>crossorigin: &#39;anonymous&#39;</code>: H5P then loads content files in CORS mode (<code>H5P.setSource</code>),
+and H5P.Video&#39;s captions (<code>&lt;track&gt;</code>), which a browser refuses from another origin without CORS, keep working.</li>
+<li><strong>The app origin</strong> no longer answers a player grant: <code>/h5p/files/…</code> there is 404 whatever the grant, with no
+redirect (every player render issues new URLs, and a redirect would make the app origin answer for grants and
+copy them into <code>Location</code>).</li>
+<li><strong>The editor stays on the app origin</strong>, as decided above, with a grant of its own: saved files at
+<code>/h5p/editor-files/&lt;grant&gt;/&lt;contentId&gt;/&lt;file&gt;</code> under a new purpose <code>editor-file-url</code>, issued only by the editor
+render after the Edit check, and fresh uploads at <code>/h5p/uploads/…</code> as before (D-069). A player grant opens nothing
+on the app origin, and an editor grant nothing on the files origin. Why the editor waits: H5P&#39;s image editor
+(<code>scripts/h5peditor-image-popup.js</code>, <code>libs/cropper.js</code>) draws a saved image into a canvas without <code>crossorigin</code>
+and exports it with <code>toBlob</code>, which a cross-origin image would refuse, so cropping and rotating would break. The
+code marks this <code>SPEC-DEVIATION: D-110</code>; it is mitigated by D-045&#39;s headers and because only people who may edit
+the activity get these URLs. The cookie-authenticated <code>/h5p/content/:id/*file</code> and <code>/h5p/temp-files/*file</code> stay
+(H5P&#39;s fallback when an integration names no <code>contentUrl</code>, e.g. a pasted file from another activity).</li>
+<li><strong>Page policy:</strong> the player pages (portal and Canvas) name the files origin in <code>img-src</code> and <code>media-src</code> only;
+the editor page&#39;s policy does not name it.</li>
+<li><strong>Lifetime and scope of a URL:</strong> D-058&#39;s grant lifetime stays (12 to 13 hours): a player page fetches files long
+after it opened (InteractiveBook chapters, video seeking), so a shorter grant would break long sessions. A grant
+opens the registered files of one activity, never another activity&#39;s: H5P appends each file&#39;s path to one
+<code>contentUrl</code>, so a grant per file would mean patching H5P Core.</li>
+<li><strong>Tests:</strong> the <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a> helper counts the configured files origin as first-party. Test beds that serve the H5P
+router alone on one loopback server (<code>httpTestbed</code>) keep relative file URLs and mount the player&#39;s file route
+themselves; the app test bed, the e2e set and the accessibility suite run the real split on <code>files.localhost</code>.</li>
+<li><strong>Residual:</strong> <code>files.&lt;host&gt;</code> is the same site as the app; a separate registrable domain (HVL&#39;s choice, Q5) would
+also keep <code>SameSite</code> cookies set with a <code>Domain</code> away from file requests (see <strong>Files origin</strong> above).</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-11-05, step 6: the image, the app stack and its smoke test, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>):</strong> decided
+before the code, after the P3 amendment; what the smoke test measures is added at the end of this block.<ul>
+<li><strong>Files:</strong> <code>deploy/Dockerfile</code> (with <code>deploy/Dockerfile.dockerignore</code>), <code>deploy/compose.app.yml</code>,
+<code>deploy/seccomp/</code>, <code>deploy/smoke/</code> (the smoke script), <code>tools/h5p-bundle/</code> (the content-type bundle) and
+<code>.github/workflows/docker.yml</code>, apart from <code>ci.yml</code>. The runbook is <code>docs/ops/docker.md</code>.</li>
+<li><strong>Stages:</strong> <code>node</code> (only the source of <code>/usr/local/bin/node</code> and npm), <code>base</code> (the Ubuntu digest with Node copied
+in), <code>deps</code> (<code>npm ci</code> with install scripts and the optional CA secret), <code>build</code> (<code>prisma generate</code> and
+<code>npm run build</code>: tokens, theme, web app), <code>prod-deps</code>, <code>pwbrowsers-download</code> and <code>pwbrowsers</code> (P3), the empty
+stages <code>h5pcore</code> and <code>h5pbundle</code> that the build contexts of the same names replace, <code>inputs</code> (their checks) and
+<code>runtime</code>. Only <code>runtime</code> is tagged.</li>
+<li><strong>Runtime dependencies (narrows <strong>Runtime</strong> for now):</strong> <code>prod-deps</code> is the <code>npm ci</code> tree after
+<code>npm prune --omit=dev</code>, plus <code>tsx</code> and the packages it needs, taken from the same tree before the prune
+(<code>npm query &#39;#tsx, #tsx *&#39;</code>), because <code>tsx</code> is still a development dependency of the repository root. Moving it to
+<code>apps/server</code>&#39;s dependencies, as <strong>Runtime</strong> decides, is a change to shared files left to the integrator; the copy
+is then a no-op. <code>prisma</code> stays in the pruned tree as <code>@prisma/client</code>&#39;s optional peer (<code>devOptional</code> in the
+lockfile), so the migrate step runs <code>prisma migrate deploy</code> from the same image, with the OpenSSL 3 schema engine
+the Ubuntu <code>deps</code> stage installed. The build fails if <code>tsx</code>, <code>prisma</code> or <code>playwright-core</code> is missing after it.</li>
+<li><strong>Runtime image:</strong> H5P core and editor and the bundle are copied only from <code>inputs</code>, after their checks. Chromium
+<code>chromium-1194</code> lives in <code>/ms-playwright</code> (<code>PLAYWRIGHT_BROWSERS_PATH</code>), with <code>install-deps chromium</code>,
+<code>fonts-dejavu-core</code> and <code>tini</code> from Ubuntu&#39;s archive; poppler stays out. The code is owned by root and read-only to
+the app&#39;s user <code>hvli</code> (uid and gid 10001), who owns only the H5P library folder (a volume). <code>tini</code> is PID 1, so
+Chromium&#39;s exited children are reaped, and the command is <code>node --import tsx src/server/main.ts</code>, not npm, so
+<code>SIGTERM</code> reaches the server&#39;s own shutdown. <code>NODE_ENV=production</code> and <code>WEB_APP=prod</code> are the image&#39;s defaults.</li>
+<li><strong>Content types (narrows <strong>Content types</strong> and the P3 <strong>Egress</strong> point):</strong> <code>tools/h5p-bundle</code> builds the bundle
+from <code>apps/server/var/h5p-real/packages</code> (or another folder) into a folder of its own: exactly the ten types&#39;
+packages, each matching the fetch&#39;s <code>SHA256SUMS</code> (a changed, missing or extra file is refused), copied with a
+<code>SHA256SUMS</code> the build stage <code>inputs</code> checks again and the seeder a third time. <strong>SECURITY:</strong> it also refuses a
+package that carries an environment variable whose name says secret (<code>TOKEN</code>, <code>SECRET</code>, <code>PASSWORD</code>, <code>API_KEY</code>,
+<code>ACCESS_KEY</code>, <code>PRIVATE_KEY</code>, <code>CREDENTIAL</code>) with a value, and names the package, the file and the variable, never
+the value. Found while building it: <code>H5P.AudioRecorder</code> 1.0 and <code>H5PEditor.AudioRecorder</code> 1.0 (in the
+CoursePresentation and BranchingScenario packages) build with webpack&#39;s
+<code>DefinePlugin({ &#39;process.env&#39;: JSON.stringify(process.env) })</code>, so <code>npm run h5p:fetch-libraries</code> writes the build
+machine&#39;s whole environment into JavaScript the player sends to every learner; here that included a session
+token. The fix belongs to D-078&#39;s tools (build those libraries with a minimal environment) and upstream (D-112).
+Until the packages are reproducible across machines, which this also prevents, the SHA-256 list <strong>kept in the
+repository</strong> waits: the bundle carries the list its builder wrote after these checks, and the GitHub workflow
+fetches the libraries with a scrubbed environment (<code>env -i</code> with <code>PATH</code> and <code>HOME</code>) and a cache key of its own.</li>
+<li><strong>Seccomp profile:</strong> <code>deploy/seccomp/playwright-v1.56.1.seccomp</code>, fetched with <code>git</code> from
+<code>https://github.com/microsoft/playwright</code> tag <code>v1.56.1</code> (commit <code>54c711571a37de525377e6f3d3608c3e029b1829</code>),
+file <code>utils/docker/seccomp_profile.json</code>, byte for byte (12 997 bytes, SHA-256 as in the P3 amendment). The file
+name has no <code>.json</code>, so no formatter rewrites it; <code>deploy/seccomp/README.md</code> names the source, and a test checks
+the hash and that <code>clone</code>, <code>setns</code> and <code>unshare</code> are allowed.</li>
+<li><strong>The app stack (<code>deploy/compose.app.yml</code>, project <code>hvli-app</code>):</strong> PostgreSQL 16, Redis 7 and moto 5.1.16 by
+digest, no published ports; one-off services <code>buckets</code> (creates the two buckets in moto), <code>migrate</code> and <code>seed</code>
+(from the bundle, into the library volume); then <code>app</code>, on <code>127.0.0.1</code> only, with the seccomp profile,
+<code>no-new-privileges</code>, every capability dropped but <code>SYS_CHROOT</code> (see <em>Measured</em> below), a read-only root file
+system and <code>tmpfs</code> for <code>/tmp</code>, the user&#39;s home and Next.js&#39;s cache. The keys and secrets come from the environment and are never in the file; the smoke script makes random
+throwaway ones. This stack is local: it sets <code>NODE_ENV=development</code>, because the production checks rightly
+refuse its plain-HTTP database, Redis, S3 and public URL; staging sets <code>production</code> with TLS endpoints and D-109&#39;s
+two database URLs (runbook). Its public URL is <code>http://localhost:&lt;port&gt;</code>, so the files origin is
+<code>files.localhost</code> (amendment above).</li>
+<li><strong>The smoke script (<code>deploy/smoke/dockerSmoke.sh</code>):</strong> prints the free disk space; builds with its own buildx
+builder (<code>docker-container</code> driver, <code>moby/buildkit:v0.33.1</code> by digest) and <code>--load</code>s the image; brings the stack
+up with <code>up --wait</code>; checks <code>/healthz</code>, the migration and a seeded content type (its library folder and audit
+row); renders a sample mappe through <code>mappeHtml</code> and the real <code>PdfRenderer</code> inside the app container with the
+sandbox on (the probe below), and checks the PDF on the host with <code>pdftotext</code> (<code>æ ø å Æ Ø Å</code>), <code>pdffonts</code> (every
+font embedded) and <code>pdfinfo</code> (<code>Tagged: yes</code>, A4); prints <code>chrome --version</code> and the binary&#39;s SHA-256; then
+<code>down -v</code>, removes its image tags and removes its builder with that builder&#39;s cache. A BuildKit container resolves
+images itself, not through the daemon, so with <code>HVLI_DOCKER_SANDBOX=1</code> the builder gets the mirror and the proxy&#39;s
+CA in its own configuration (refines the P3 <strong>Docker Hub</strong> point); the CA secret and the <code>pwbrowsers</code> context are
+passed under the same flag, never because a path exists.</li>
+<li><strong>PDF availability probe (<a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>):</strong> <code>apps/server/src/learningDesign/mappe/pdf/pdfAvailability.ts</code> starts
+Chromium with the export&#39;s own launch options, opens one offline context and page with JavaScript off, closes
+it, and logs one line with <code>pdfAvailable</code>, <code>pdfSandbox</code> and a reason code (<code>ok</code>, <code>sandbox-off</code>, <code>no-browser</code>,
+<code>no-usable-sandbox</code>, <code>root-without-no-sandbox</code>, <code>launch-timeout</code>, <code>launch-failed</code>, <code>page-failed</code>), never an error
+text or path; it never throws. <code>pdfCheckCli.ts</code> beside it runs the probe and prints one sample PDF for the smoke.
+Calling the probe once after the server listens is a line in <code>main.ts</code>, left to the integrator.</li>
+<li><strong>GitHub workflow (<code>docker.yml</code>):</strong> on pull requests and pushes to <code>main</code>: <code>npm ci</code>, <code>h5p:fetch-core</code>, the
+scrubbed library fetch, the bundle, poppler-utils, the AppArmor step of <code>ci.yml</code>, then the same smoke script
+without the sandbox flag, so Chromium comes from Playwright&#39;s download host and images from Docker Hub.</li>
+<li><em>Measured here (2026-11-05, three runs on a snapshot of <code>5064a49</code> with this step&#39;s files, 4 vCPU):</em><ul>
+<li><em>Changes:</em> Chromium&#39;s namespace sandbox also needs <code>CAP_SYS_CHROOT</code> in the container&#39;s bounding set. With every
+capability dropped the launch fails (<code>Check failed: sys_chroot(&quot;/proc/self/fdinfo/&quot;) == 0</code>, after the
+namespaces are made), and with <code>--cap-drop ALL --cap-add SYS_CHROOT</code>, the seccomp profile,
+<code>no-new-privileges</code> and a read-only root it prints. So the app, and only the app, adds back <code>SYS_CHROOT</code>
+(<code>tools/deploy-check</code> refuses any other added capability), the probe reports that failure as
+<code>no-usable-sandbox</code>, and Q5 gains it: OpenShift&#39;s <code>restricted-v2</code> allows neither the profile nor the
+capability.</li>
+<li><em>Passed</em> (<code>HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh</code>, 152 s with a cold builder): image build
+105 s, image 2 776 MB; <code>up --wait</code> with the one-off steps 24 s; <code>/healthz</code> <code>{&quot;status&quot;:&quot;ok&quot;}</code>; 7 of 7
+migrations; 77 libraries and 77 seed audit rows from the 10 packages; the probe
+<code>{pdfAvailable: true, pdfSandbox: true, reason: &quot;ok&quot;}</code> as uid 10001; a 25 179-byte PDF with
+<code>æ ø å Æ Ø Å — Lærar, øving, årsplan.</code>, <code>LiberationSans-Bold</code> and <code>LiberationSerif</code> embedded as subsets,
+<code>Tagged: yes</code>, A4; Chromium 141.0.7390.37, SHA-256 of the host cache&#39;s <code>chrome</code>
+<code>dd794b4e31017bc184f872bb65f1d8e5a2986a896f09d559b903bd0eaf83144a</code> (CI&#39;s CDN copy to be compared). Free disk
+went from 16 GB to 8.2 GB at the peak and back to 16 GB; no container, volume, image tag or build cache of the
+run was left, and <code>moby/buildkit:v0.33.1</code> stays pulled for the next run.</li>
+<li><em>The bundle here</em> was built from packages repacked in the scratchpad after the two AudioRecorder libraries were
+rebuilt with <code>env -i PATH HOME</code>; the repository&#39;s <code>apps/server/var/h5p-real</code> packages are refused by the guard
+(CoursePresentation and BranchingScenario), as they should be.</li>
+<li><em>Fixed in D-078&#39;s tools (2026-11-05, the step-5 follow-ups):</em> <code>tools/h5p-libraries/libraryBuild.mjs</code> runs each
+library&#39;s <code>npm run build</code> with <code>PATH</code> (Node&#39;s own folder and the system folders), <code>HOME</code> (an empty folder of its
+own, made anew for each build) and <code>NODE_ENV=production</code> only, plus what npm itself sets for a script (<code>npm_*</code>,
+<code>INIT_CWD</code>, <code>NODE</code>, <code>COLOR</code>, <code>EDITOR</code>); <code>npm ci --ignore-scripts</code> keeps <code>PATH</code>, <code>HOME</code> and the proxy and CA
+variables it needs (<code>HTTPS_PROXY</code>, <code>NO_PROXY</code>, <code>NODE_EXTRA_CA_CERTS</code>, npm&#39;s <code>registry</code>, <code>cafile</code>, proxy and
+<code>userconfig</code> settings), which never reach the build; the stamp&#39;s <code>buildEnv</code> version makes every cached build
+rebuild in place (<code>git clean -ffdx</code> after <code>verifiedHead</code>, no new checkout), and <code>[H5P-003]</code> tests prove that a
+build sees no other variable. <em>Verified here:</em> the two rebuilt AudioRecorder files now carry 28 variables, all
+npm&#39;s own and <code>PATH</code>, <code>HOME</code> and <code>NODE_ENV</code> (the old ones carried 111, tokens among them); the other 21 builds
+came out byte for byte the same; the bundle guard accepted the new packages and refused the old ones; the local
+library storage was re-seeded from the new ones. <em>Residual for HVL:</em> every <code>.h5p</code> package, library folder or
+library storage built or seeded before this fix, on any machine or from a CI cache, carries that machine&#39;s
+environment: rebuild and re-seed it, and rotate any token it held.</li>
+<li><em>Follow-ups review (2026-11-05), decided before the code:</em> &quot;npm&#39;s own script variables&quot; were not all npm&#39;s own.
+npm exports every setting that is not its default as <code>npm_config_&lt;name&gt;</code>, also those read from the Node
+install&#39;s global <code>npmrc</code> (<code>&lt;prefix&gt;/etc/npmrc</code>), which an administrator may have given a proxy with its password
+(<code>https-proxy=http://user:password@…</code>). A probe here with a planted global <code>npmrc</code> found its value in the
+build&#39;s environment, so AudioRecorder would have baked it in. The build therefore also gets
+<code>npm_config_globalconfig</code>, naming a file in its own empty <code>HOME</code> that never exists, so no global <code>npmrc</code> is read;
+the user <code>npmrc</code> was already out of reach. The recipe becomes <code>buildEnv</code> 3, and an <code>[H5P-003]</code> test runs a build
+under a Node whose global <code>npmrc</code> holds a planted proxy password. npm&#39;s built-in <code>npmrc</code> inside its own install
+folder is still read; it is part of npm, not of the machine&#39;s settings. <em>Verified here:</em> without the setting
+that test fails on the planted password; a full fetch rebuilt the 23 builds in place in 137 s, and only the two
+AudioRecorder files changed (still 28 variables, <code>npm_config_globalconfig</code> now inside the build&#39;s <code>HOME</code>), with
+them the CoursePresentation and BranchingScenario packages; the bundle guard accepted these, and the local
+library storage was re-seeded from them.</li>
+<li><em>Skeptic review (2026-11-05), recorded with its fixes, before the final smoke runs:</em> three of the smoke test&#39;s
+proofs were weaker than this block says, and two static guards failed open. (1) The CA check read
+<code>docker history</code>, which shows instructions, never file contents; the smoke now searches <strong>every file</strong> of the
+image for the lines of the proxy CA bundle&#39;s own certificates (those that are not among the image&#39;s Node roots;
+a CA planted in a test image was found). (2) <code>pdfSandbox: true</code> only repeats the launch option; the smoke now
+also reads the kernel&#39;s view while a page renders (<code>deploy/smoke/sandboxProof.mjs</code>): every renderer must have a
+PID namespace of its own and Chromium&#39;s seccomp filter on top of the container&#39;s (measured here: 3 <code>NSpid</code>
+levels and 2 filters with the sandbox, 1 and 1 with <code>--no-sandbox</code>). (3) Nothing showed the built web app or H5P
+core served from the image; the smoke now fetches <code>/hjelp</code> (nn), one of its scripts and <code>/h5p/core/js/h5p.js</code>. A
+player page and a launch (<strong>Compose</strong> above) still need content and a platform, so they stay with the e2e
+suites. The guards: <code>tools/deploy-check</code> missed plural secret names (<code>PSEUDONYM_SECRETS</code> written in the compose
+file passed), a password in a URL other than <code>DATABASE_URL</code>, list-form <code>environment</code>, and <code>privileged</code>,
+<code>unconfined</code> or host namespaces on any service; the bundle guard missed this server&#39;s own key lists
+(<code>URL_SIGNING_KEYS</code>, <code>DATA_ENCRYPTION_KEYS</code>), <code>_KEY</code> and <code>_AUTH</code> names, single-quoted values and <code>…_URL</code> values
+with a password, and scanned only some text types. All of these are refused now, with tests. PRIVACY: only the
+stack turned off Prisma&#39;s usage report (<code>CHECKPOINT_DISABLE</code>); the image now sets it beside
+<code>NEXT_TELEMETRY_DISABLED</code>, so a staging run of the same image and its <code>prisma generate</code> do not report either.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-11-05, step 6: ClamAV, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>):</strong> decided before the code; it settles what <strong>ClamAV</strong> above
+leaves open. Read in <code>@lumieducation/h5p-clamav-scanner</code> 10.0.4 and <code>clamscan</code> 2.4.0, and measured against
+<code>clamav/clamav:1.4@sha256:8ad6197396974726c35d017e50aaaaf4b91745726a04faec8480c203edd98052</code> (ClamAV 1.4.6 with
+signatures 28171 in the image), pulled through the mirror in 7 s:<ul>
+<li><em>Found:</em> Lumi&#39;s <code>ClamAVScanner.create</code> merges <code>CLAMSCAN_*</code> and <code>CLAMDSCAN_*</code> over the options passed to it and
+asks clamd for its version before it returns. Its <code>scan</code> reports every answer that is not &quot;infected&quot; as
+<code>Clean</code>, while <code>clamscan</code> gives no verdict (<code>isInfected: null</code>) for a reply it cannot read: an empty file
+(<code>clamscan</code> then never sends <code>INSTREAM</code>; measured), clamd&#39;s <code>COMMAND READ TIMED OUT</code>, a service that is not
+clamd, or a connection closed after <code>clamscan</code>&#39;s idle time-out with no reply. Wrapping only <code>NotScanned</code> would
+pass all of these as clean. <code>clamscan</code>&#39;s time-out is an idle time-out per socket, so a clamd that reads and never
+answers can hold an upload indefinitely, and by default it falls back to a local <code>clamdscan</code> or <code>clamscan</code> binary.
+ClamAV 1.4.6&#39;s <code>StreamMaxLength</code> is 100 MiB by default (measured; the 25 MB above is an older default); 30 MB and
+60 MB streams were scanned, and a 110 MB stream was answered <code>INSTREAM size limit exceeded. ERROR</code>, which Lumi
+reports as <code>NotScanned</code>. EICAR comes back as <code>Eicar-Test-Signature</code>.</li>
+<li><em>Adapter</em> (<code>apps/server/src/security/malware/</code>): we build <code>clamscan</code>&#39;s client ourselves from our checked settings
+only (TCP or TLS to <code>CLAMAV_HOST</code>:<code>CLAMAV_PORT</code>, no local binary and no fallback to one, no connection test at
+start, never remove, quarantine or log files), and hand it to Lumi&#39;s <code>ClamAVScanner</code> through its constructor,
+which is private in TypeScript only (<code>UPSTREAM:</code>; <code>create</code> is not used, so the environment variables above are
+never read). Lumi&#39;s <code>scan</code> still turns the verdict into <code>MalwareFound</code>, <code>Clean</code> or <code>NotScanned</code>; a strict client
+between the two makes a missing verdict an error, so Lumi answers <code>NotScanned</code>. The scanner registered in
+<code>malwareScanners</code> (<code>FailClosedMalwareScanner</code>) refuses with our own <code>RejectedUploadError</code>:
+<code>upload.file.malwareFound</code> on a finding, <code>upload.file.scanUnavailable</code> on <code>NotScanned</code>, a thrown error or its own
+limit on the whole scan (<code>CLAMAV_TIMEOUT_MS</code>). Both are 400 with a translated message, which the H5P editor shows
+whatever the status. An empty file is clean without asking clamd. At most four scans run at once in one process,
+because a package import scans its files in parallel; the time limit counts the wait for a turn, and a turn ends
+only when <code>clamscan</code> has finished with its socket. <code>clamscan</code> 2.4.0 becomes an exact pin of its own (MIT, the
+version Lumi&#39;s <code>^2.4.0</code> resolves to) and <code>@types/clamscan</code> 2.4.1 a development one.</li>
+<li><em>Logs:</em> one <code>warn</code> line per refusal with a reason code (<code>malware-found</code> with the signature names, <code>unreachable</code>,
+<code>timeout</code>, <code>tls</code>, <code>connection-lost</code>, <code>size-limit</code>, <code>no-verdict</code>, <code>scanner-error</code>), never a file name, a path or
+text from clamd; one line at start says whether scanning is on. <code>clamscan</code> itself writes socket errors to stderr
+(<code>console.error</code>, Node&#39;s error text, no personal data; <code>UPSTREAM:</code>), and Lumi logs to its <code>debug</code> logger, which is
+silent unless <code>DEBUG=h5p:*</code> is set.</li>
+<li><em>Configuration:</em> <code>CLAMAV_HOST</code> (a host name or IP address), <code>CLAMAV_PORT</code> (3310), <code>CLAMAV_TIMEOUT_MS</code> (30 000;
+1 000 to 600 000) and <code>CLAMAV_TLS</code> (false). With no host there is no scanner: the default in development and
+tests. Production refuses to start without <code>CLAMAV_HOST</code> unless <code>CLAMAV_ALLOW_UNSCANNED_UPLOADS=true</code> says so
+(for a pilot without ClamAV, <code>docs/ops/clamav.md</code>; the start then logs a warning), and every environment refuses
+the two together, so the override can never be read as &quot;let files through when clamd is down&quot;. Every environment
+refuses a <code>CLAMSCAN_*</code> or <code>CLAMDSCAN_*</code> variable by name, since nothing reads it. Production requires
+<code>CLAMAV_TLS=true</code> unless the host is the loopback (<code>localhost</code>, <code>127.0.0.0/8</code>, <code>::1</code>, e.g. a sidecar), because
+uploaded files would cross the network in clear text (<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>); clamd has no TLS of its own, so HVL puts a TLS
+proxy in front of it (runbook). Messages name variables, never values.</li>
+<li><em>Scope:</em> both upload paths, editor uploads (<code>H5PEditor.saveContentFile</code>) and package imports (<code>ContentStorer</code>),
+through <code>malwareScanners</code>, before a file is stored; the editor-upload route still runs the sanitisers first for
+their reasons, so an SVG is scanned after sanitising. Library files in a package are not scanned (admins only,
+D-004; the seed bundle is hash-checked). Signature updates (<code>freshclam</code>) and clamd&#39;s limits stay HVL&#39;s (runbook).</li>
+<li><em>Tests:</em> a fake clamd that speaks <code>INSTREAM</code> (EICAR found, clean, no verdict, an error reply, an answer that never
+comes, a closed port, TLS against a plain clamd), the configuration rules, and both upload paths over HTTP; one
+more test runs against a real clamd only when <code>CLAMAV_TEST_HOST</code> is set (run here with the image above and
+<code>freshclam</code> off, so <code>database.clamav.net</code> was not needed).</li>
+<li><em>Residual:</em> after a time-out, <code>clamscan</code>&#39;s socket stays half-closed until clamd closes it (its <code>ReadTimeout</code>,
+120 s by default), so a hung clamd holds at most four connections, and uploads meanwhile are refused at the time
+limit. If clamd&#39;s host vanishes from the network instead, the kernel ends those connections only after its TCP
+retransmissions give up (about 15 minutes on Linux); uploads are refused, never let through, meanwhile.</li>
+<li><em>Skeptic review (2026-11-05), with its fixes:</em> no fail-open path was found. Both upload paths reach the scanner
+(production builds the editor only in <code>createH5pRuntime</code>; package imports use <code>ContentStorer</code>&#39;s temporary-files
+path, which scans every referenced file before it is copied, and files the parameters do not reference are never
+stored); refusals leave no temporary file (the route&#39;s cleanup and <code>PackageImporter</code>&#39;s <code>finally</code>). Measured with
+a TLS endpoint here: with <code>CLAMAV_TLS=true</code> an untrusted certificate and a certificate for another name are
+refused (<code>reason: &quot;tls&quot;</code>) and the endpoint receives no byte of the file; a trusted one is scanned. One test was
+missing: dropping the signature-name filter passed every test, so a fake clamd now answers a finding named like a
+person and a file, which must still be refused while the name stays out of the log. The <code>UPSTREAM:</code> mark for
+<code>clamscan</code>&#39;s <code>console.error</code> (<em>Logs</em> above) is now in <code>clamdClient.ts</code>, and the runbook says that files stored
+while no scanner was configured are never scanned later, and that <code>DEBUG=h5p:*</code> makes Lumi log file paths.</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-11-05, step 6: backups, restore and the runbook, <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>):</strong> decided before the code; it
+settles what <strong>Backups and runbook</strong> above leaves open. What the round-trip test measures is added at the end.<ul>
+<li><strong>Files:</strong> <code>tools/ops/</code> (the CLI <code>backupCli.mjs</code> and its modules, with tests), the runbook
+<code>docs/ops/runbook.md</code> (lower case, as the other runbooks in <code>docs/ops/</code>; it replaces the planned <code>RUNBOOK.md</code>),
+and the deployment checklist as a section of that runbook rather than a file of its own, so the start, the
+settings and the checklist are read together. Root scripts: <code>ops:backup</code>, <code>ops:backup-verify</code>, <code>ops:restore</code>.</li>
+<li><strong>What a backup holds:</strong> the database as <code>pg_dump --format=custom</code> (every table, <code>_prisma_migrations</code> and the
+<code>analytics</code> views) and the objects of the content bucket (<code>S3_CONTENT_BUCKET</code>). Not the temporary bucket: its
+files are editor uploads not yet saved, with a 1-day lifecycle; after a restore nothing refers to them, and a
+30-day backup would keep them 30 times longer than the bucket does. Not the H5P library folder: the deployment&#39;s
+seed step installs the libraries again from the hash-checked bundle (the step-6 image amendment above); a
+library an administrator installed by hand needs that volume copied too (runbook).</li>
+<li><strong>Format:</strong> one folder <code>hvli-backup-&lt;UTC yyyymmddThhmmssZ&gt;</code> with <code>database.dump</code>, <code>objects/&lt;sha256&gt;</code> (each
+object stored once under its own hash, never under its key, so no key can name a path on restore),
+<code>MANIFEST.json</code> (format, time, the PostgreSQL major version, each table&#39;s row count, and each object&#39;s key,
+size, content type and SHA-256) and <code>SHA256SUMS</code> over every other file. It is written as a hidden
+<code>.hvli-backup-….partial</code> folder, renamed only when complete, and removed if the run fails. Folders are 0700 and
+files 0600.</li>
+<li><strong>Exact counts:</strong> the manifest&#39;s row counts are read from the dump itself (<code>pg_restore --data-only</code> to a
+stream, counting each table&#39;s <code>COPY</code> lines), so they describe exactly the snapshot <code>pg_dump</code> took, also while the
+server writes. Order: the database first, then the bucket, so an object added meanwhile is only an extra file;
+the restore reports <code>H5PContentFile</code> rows whose object is missing.</li>
+<li><strong>Restore:</strong> checks <code>SHA256SUMS</code> first (a changed, missing or extra file stops it and names the file), then
+refuses a target database that has any table or view in <code>public</code> or <code>analytics</code>, and a target bucket that holds
+any object, so it can never overwrite data; it then runs <code>pg_restore --no-owner --no-privileges --single-transaction --exit-on-error</code>, uploads the objects, and verifies: every table&#39;s count against the manifest, every object read
+back and hashed, and every content-file row&#39;s object present. It prints one JSON line and exits 1 on any
+difference. The grants come back with <code>db:roles -- grants</code> (D-109), as after a migration.</li>
+<li><strong>Who runs it, with which role:</strong> the same environment variables as the server (<code>DATABASE_URL</code>, the <code>S3_*</code>
+settings), so the CLI needs no settings of its own. A backup needs a role that can read every table, which
+<code>hvli_app</code> cannot (<code>_prisma_migrations</code>, D-109): it runs with the migration URL, or with a backup role holding
+<code>pg_read_all_data</code> if HVL&#39;s database administrator creates one (open for D-109&#39;s roles). A restore runs as
+<code>hvli_migrator</code> into a new database set up with <code>01-roles.sql</code>.</li>
+<li><strong>SECURITY:</strong> the password reaches <code>pg_dump</code>, <code>pg_restore</code> and <code>psql</code> only as <code>PGPASSWORD</code> in their own
+environment, which holds nothing else of the caller&#39;s, never in arguments, output or the manifest; a database or
+S3 endpoint not on the loopback needs TLS that checks the server (<code>sslmode=verify-full</code> or <code>verify-ca</code>, an
+<code>https</code> endpoint), as in production (<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>, D-109); <code>AWS_ENDPOINT_URL_S3</code> and <code>AWS_ENDPOINT_URL</code> are refused
+and the SDK&#39;s configured endpoints ignored, as in the server&#39;s client; the client tools and both servers must
+share one PostgreSQL major version (16), which the tool checks, because a newer <code>pg_dump</code>&#39;s output can fail on an
+older server. Messages name a variable or a file, never a value.</li>
+<li><strong>Retention:</strong> after a successful backup, <code>--keep-days</code> (default 30, <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>) removes older complete backups
+in the same folder, recognised by their exact name, and nothing else.</li>
+<li><strong>HVL&#39;s part (runbook):</strong> the daily schedule, an encrypted copy outside the server (in the EEA, <a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>), the
+restore drill each semester with its log, and the managed database&#39;s own backups where HVL uses one. A backup
+holds pseudonymised learner rows; while a year&#39;s pseudonym secret exists, that year&#39;s backups can still be linked
+to people (docs/ops/yearly-purge.md, step 4).</li>
+<li><strong>Tests:</strong> <code>tools/ops/test/</code> titled <code>[NFR-002]</code>: the round trip on the local services (a database migrated
+with the real migrations, seeded rows and objects, back up, wipe, restore, compare every table&#39;s count and an
+object&#39;s SHA-256), a tampered file refused, a non-empty target refused, and the connection and retention rules
+as unit tests. In CI it needs <code>pg_dump</code> and <code>pg_restore</code> 16 on the runner.</li>
+<li><strong>What the round trip measures (2026-11-05, built):</strong> <code>tools/ops/test/backupRoundTrip.test.mjs</code> migrates a
+database of its own with the real migrations (23 tables with <code>_prisma_migrations</code>), seeds six of them (250
+<code>XapiStatement</code> rows, 40 <code>H5PUserData</code> rows, content-file rows naming two objects, one of 300 KiB and one with
+æ, ø and å in its key), backs up through the CLI, drops and re-creates the database and the bucket, restores, and
+finds every table&#39;s count equal and the image&#39;s SHA-256 unchanged; a dump with one byte changed is refused by
+<code>verify</code> and <code>restore</code> alike (&quot;database.dump has changed&quot;) and nothing is written; a second restore into the
+filled database is refused; and no run printed the password, a URL or an object key, also when the server refused
+a wrong password. Two mutations (the upload skipped; each <code>COPY</code> line counted twice) each fail the round trip.
+The whole drill of the runbook ran once by hand on role-managed databases: a source deployed as the migrate step
+does (<code>01-roles.sql</code>, <code>views-down</code>, <code>migrate deploy</code>, <code>grants</code>), backed up with the migration role&#39;s
+<code>sslmode=require&amp;sslaccept=strict</code> URL (read as libpq&#39;s <code>verify-full</code>), restored as <code>hvli_migrator</code> into a new
+database set up with <code>01-roles.sql</code> and a new bucket (<code>&quot;ok&quot;:true</code>, 23 tables, 0 differing), then <code>grants</code>:
+<code>hvli_migrator</code> owns every table and the view, <code>hvli_app</code> reads the rows, <code>hvli_analytics</code> reads its view.
+Added while building: a missing bucket is a named error (<code>S3_CONTENT_BUCKET names does not exist</code>), as is a
+missing PostgreSQL tool. The runbook is <code>docs/ops/runbook.md</code>, its section 9 the deployment checklist.</li>
+<li><em>Skeptic review (2026-11-05), with its fixes:</em> no row or object was lost, and no secret reached a dump, a
+manifest or the output; the round trip passes again. Found and fixed: (1) the restore&#39;s own checks were untested
+in the direction a drill depends on: with the table, object and content-file comparisons forced to 0 and the
+empty-bucket check removed, every test still passed. <code>tools/ops/test/backupRestoreChecks.test.mjs</code> now restores a
+copy whose manifest (its checksums made again) expects one more user, a larger object and no second object, and
+must report <code>tablesDiffering</code>, <code>objectsDiffering</code> and <code>contentFilesMissing</code> of 1 each, <code>&quot;ok&quot;:false</code> and exit 1;
+and it refuses a bucket holding an object while the database is empty, writing no row. Each of the four
+mutations now fails a test. (2) A run stopped by SIGTERM, SIGKILL or a reboot left its hidden
+<code>.hvli-backup-&lt;time&gt;.partial</code> folder, with learner rows, for ever; a backup now also removes such a folder once
+it is a day old (<code>stalePartials</code>, counted in <code>removedExpired</code>), tested alone and through the CLI. (3) The runbook
+gave <code>db:roles</code>, <code>privacy:purge</code> and <code>privacy:dsr</code> as root scripts; they are the server&#39;s (<code>npm run db:roles</code> at
+the root fails with &quot;Missing script&quot;), so those steps now say &quot;from <code>apps/server</code>&quot;. (4) The runbook&#39;s
+<code>DATA_ENCRYPTION_KEYS</code> rotation removed the old key 12 hours after step 2 (D-056, written before the grade jobs),
+but <code>GradeSyncJob.ltiSubEncrypted</code> keeps the key of the job&#39;s last result write until 30 days after the job
+stops (D-104), and a job whose key is gone fails as <code>subject-unreadable</code>; the runbook now says at least 31 days.
+D-056 and <code>apps/server/.env.example</code> still say 12 hours (for their owners). (5) The runbook&#39;s Redis row says what
+is lost with Redis (the sessions; the NRPS counts until the next launches). Residual: a content file deleted
+between the dump and the bucket copy is not in that backup, and the restore reports it as
+<code>contentFilesMissing</code> (runbook section 6, step 3).</li>
+</ul>
+</li>
+<li><strong>Amendment (2026-11-05, step 6 integration):</strong> decided before the integration&#39;s code; it settles what the five
+step-6 amendments above left to the integrator.<ul>
+<li><strong>Runtime (ends the image amendment&#39;s narrowing):</strong> <code>tsx</code> 4.23.15 moves from the repository root&#39;s development
+dependencies to <code>apps/server</code>&#39;s dependencies, as <strong>Runtime</strong> decides, so <code>npm ci --omit=dev</code> keeps it (Evaluator
+Guide limitation 13). The image&#39;s copy of <code>tsx</code>&#39;s closure becomes a no-op and stays as a guard; the build still
+fails if <code>tsx</code> is missing.</li>
+<li><strong>Start-up probe:</strong> <code>startServer</code> (<code>apps/server/src/server/main.ts</code>) runs the PDF availability probe once after it
+listens, and its <code>stop()</code> waits for the probe before closing the clients, so no probe browser outlives a server,
+also where a test starts and stops one at once. The smoke test now requires that line with the sandbox
+(<code>&quot;pdfAvailable&quot;:true,&quot;pdfSandbox&quot;:true,&quot;reason&quot;:&quot;ok&quot;</code>) instead of noting that it is missing.</li>
+<li><strong>ClamAV in the app stack:</strong> <code>deploy/compose.app.yml</code> gains <code>clamav</code>
+(<code>clamav/clamav:1.4@sha256:8ad6197396974726c35d017e50aaaaf4b91745726a04faec8480c203edd98052</code>, the ClamAV 1.4.6
+the ClamAV amendment measured), not published, with <code>freshclam</code> off (<code>CLAMAV_NO_FRESHCLAMD</code>): the stack is local,
+and the smoke needs only the image&#39;s own signatures; HVL runs its own clamd with signature updates
+(<code>docs/ops/clamav.md</code>). Every service built from the app image gets <code>CLAMAV_HOST=clamav</code> and <code>CLAMAV_PORT=3310</code>,
+and the app waits until clamd is healthy (the image&#39;s own <code>clamdcheck.sh</code>, checked every 5 s), so the stack scans
+as production does, without TLS, which only production requires off the loopback.</li>
+<li><strong>The smoke proves an upload in the image (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>):</strong> <code>deploy/smoke/uploadProof.mjs</code> runs in the
+app container with the app&#39;s environment, builds the engine with <code>createH5pRuntime</code> as the server does, and
+uploads through the editor&#39;s own upload method (<code>saveContentFile</code>, which the AJAX route calls): the stack&#39;s clamd
+must refuse the EICAR test file as <code>upload.file.malwareFound</code>, with the scanner&#39;s <code>malware-found</code> log line, and a
+clean PNG must be stored after its scan. It saves a draft MultiChoice with that image as a fresh staff account
+with no person behind it, renders the player, and prints the player&#39;s file URL. On the host the smoke fetches
+that URL from the running app with the files host in <code>Host</code> (<code>files.localhost:&lt;port&gt;</code>): 200, the PNG&#39;s bytes,
+<code>Content-Security-Policy</code> with <code>sandbox</code>, <code>nosniff</code>, no <code>Set-Cookie</code>; the same path on the app&#39;s host answers<ol start="404">
+<li>The upload does not go through the HTTP route, because the stack has no Feide or LTI platform to log in
+with; the route is covered by <code>apps/server/test/http/malwareScan.int.test.ts</code> (fake clamd) and, in CI, by the
+real-clamd tests below. The grant in the URL is never printed. As a safety net, Lumi&#39;s own <code>upload-malware-found</code>
+answers with the scanner&#39;s translated message (<code>h5pErrorResponse.ts</code>), although our scanner refuses first;
+<code>upload.file.scanUnavailable</code> stays 400, since a 503 is a change for the owner of the HTTP errors.</li>
+</ol>
+</li>
+<li><strong>CI:</strong> <code>ci.yml</code> gains a <code>clamav</code> service (the same digest, <code>freshclam</code> off) and <code>CLAMAV_TEST_HOST</code> and
+<code>CLAMAV_TEST_PORT</code>, so the real-clamd <code>[SEC-006]</code> tests (<code>realClamd.test.ts</code>) run on every push rather than only
+by hand; and the step <code>npm run a11y:report -- --check</code>, which D-079&#39;s amendment of 2026-11-05 makes part of the
+gate. Its cache comment names the build recipe (<code>buildEnv</code>, the image amendment&#39;s follow-ups).</li>
+<li><strong>Key rotation:</strong> the old <code>DATA_ENCRYPTION_KEYS</code> key now stays at least 31 days (D-056&#39;s amendment of today).</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-111--an-hvl-language-overlay-in-a-library-storage-wrapper-h5p-010s-guidance-through-it" tabindex="-1">D-111 · An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</h3>
 <ul>
@@ -9998,6 +10491,87 @@ S6.</p>
 separate program outside the npm tree, so <code>check:pins</code>, <code>check:licences</code> and <code>check:audit</code> see nothing new. Its
 scripts are ours, in <code>tools/load/</code> as <a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a> asks, so this is no <code>SPEC-DEVIATION</code>. The reasons, and why not
 Artillery, are in D-110&#39;s P3 amendment.</p>
+</li>
+<li><p><strong>Amendment (2026-11-05, step 6: the load harness, <a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>):</strong> decided before the code; what the smoke measures
+is added at the end of this block.</p>
+<ul>
+<li><strong>Files:</strong> <code>tools/load/</code> (the k6 scripts in <code>tools/load/k6/</code>, the runner <code>runLoad.mjs</code>, a README and tests) and
+the bench <code>apps/server/test/load/loadBench.ts</code>, which uses the test beds&#39; code and so lives beside them. Root
+scripts: <code>load:smoke</code> and <code>load:full</code>.</li>
+<li><strong>The server under load (the bench):</strong> the server as <code>createApp</code> builds it in one Node process, so one
+application node (<a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>), through the app test bed (the mock Canvas and Feide pointed at it), in a PostgreSQL
+database of its own that the bench creates, migrates and drops, so a run never adds rows to the shared
+development database; Redis and S3 are the local services. It installs the ten real content types from the D-078
+packages and publishes the QuestionSet example (four questions of three types: one of the larger player pages).
+It writes the mock Canvas&#39;s launch addresses for its learners to a file (addresses, no tokens), prints one ready
+line, and on <code>SIGTERM</code> prints the rows the load stored, then closes and drops its database. The mock Canvas runs
+in the same process; its answers are taken out of the measured time (below).</li>
+<li><strong>A virtual user is one learner in one Canvas course; one iteration is one visit:</strong> the LTI launch over HTTP as a
+browser makes it (the mock&#39;s login form, <code>POST /lti/login</code>, the mock&#39;s authorization answer, <code>POST /lti/launch</code>
+and ltijs&#39;s second post with the recovered state), the player page <code>/lti/play?ltik=…</code> and every script and
+stylesheet it names, fetched like a browser with an empty cache (at most 6 connections per host); then the
+root <code>attempted</code> batch the page sends when it opens, and <code>rounds</code> answers, each after a think time: one xAPI
+batch with one question&#39;s <code>answered</code> and its score, and one state save (H5P saves every 5 s while something
+changed, so once per answer); and at the end the root <code>completed</code> with the total. These are the items the bridge
+sends and the server stores (D-115), with the activity&#39;s real question IDs, valid under the contract&#39;s schema,
+with the ltik as <code>Bearer</code>.</li>
+<li><strong>Measured, with the spec&#39;s numbers as thresholds:</strong> <code>hvli_player_ready</code>, from the tool&#39;s <code>/lti/login</code> to the
+last script or stylesheet, less the mock Canvas&#39;s answer, p95 &lt; 3 000 ms; <code>http_req_duration{kind:api}</code> (the
+xAPI batches and state saves) p95 &lt; 300 ms; <code>http_req_failed</code> &lt; 1 %; checks &gt; 99 %. Also shown: the page alone,
+the launch, each API route, and the bytes a visit fetched.</li>
+<li><strong>Not measured by k6 (stays open):</strong> the browser&#39;s own work (parsing, running H5P, layout) and Fast 4G&#39;s latency
+and bandwidth, since k6 runs no browser and throttles nothing; the bytes per visit are reported so they can be
+held against Fast 4G&#39;s throughput. The in-browser half of <a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>&#39;s Verify (Lighthouse CI on the player route
+with Fast 4G) is not added here (D-114&#39;s Lighthouse option waits). Content files from the files origin (images,
+video) are file downloads, outside the API limit, and not needed before the player answers; they are not fetched.</li>
+<li><strong>Scale:</strong> <code>full</code> is <a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>&#39;s 200 learners (ramp up 60 s, hold 10 min, ramp down 30 s), thinking 5–15 s,
+6 answers per visit; <code>smoke</code> is 20 learners for 30 s, thinking 2–4 s, 4 answers (about the request rate of 60
+learners of the full model). Both use the same thresholds. The full run is HVL&#39;s, on hardware like a production
+node (Q5), with the command in the runbook; its output goes into PROGRESS like the smoke&#39;s.</li>
+<li><strong>k6:</strong> the image by digest above, with <code>--network host</code>, the caller&#39;s uid and gid, the scripts mounted read-only
+and one writable output folder; its only settings are <code>HVLI_LOAD_*</code> variables. <code>handleSummary</code> writes
+<code>summary.json</code> and our own short text summary, so no script loads anything at run time (k6&#39;s summary helpers
+are a remote module).</li>
+<li><strong>SECURITY and PRIVACY:</strong> an ltik lives only in its virtual user&#39;s memory and travels as on a real page (the
+landing query, the <code>Bearer</code> header and H5P&#39;s state URL), never in a file or an argument; every request has a
+fixed <code>name</code> tag, so no URL with an ltik becomes a metric name or a line of the summary. The learners are random
+<code>sub</code> values of the mock Canvas, gone with the bench&#39;s database. The runner gives k6 no other environment.</li>
+<li><strong>Residuals:</strong> the test bed logs every line at <code>debug</code> into memory, more work than production&#39;s <code>info</code> to a
+stream, so the numbers err on the slow side; there is no grade worker (the launches have no line item), so AGS
+sending is not under load; the in-browser time and Fast 4G above.</li>
+<li><strong>Tests:</strong> <code>tools/load/test/</code> titled <code>[NFR-001]</code>: the thresholds and both profiles against the spec&#39;s numbers,
+the batch against <code>xapiBatchSchema</code>, the launch-form parsing against the real mock Canvas, and the <code>docker run</code>
+arguments (digest, read-only mount, no extra environment).</li>
+<li><strong>What the smoke measures (2026-11-05, built and run here):</strong> <code>npm run load:smoke</code> on the development sandbox
+(4 CPUs, PostgreSQL, Redis, the S3 emulator and k6 on the same machine): 20 learners for 30 s made 60 visits and
+6 180 requests; <code>hvli_player_ready</code> p95 1 235 ms (median 102 ms; the slow ones are the first visits, before the
+server&#39;s caches are warm), the API p95 22 ms (xAPI 31 ms, state saves 14 ms), no failed request, every check
+passed, and 360 statements and 20 learner states stored (6 statements per visit, 1 state per learner); exit 0.
+An earlier run of the same code gave 1 351 ms and 38 ms. A visit fetches 1 496 KiB (the player page with its 49
+scripts and 37 stylesheets, and the script of ltijs&#39;s login page), which the app sends <strong>uncompressed</strong>: at Fast
+4G that transfer alone is about 1.3 s, so the reverse proxy must compress scripts and styles (the runbook&#39;s
+checklist). What changed from the design while building:
+k6 2.3.0 has no <code>noUsageReport</code> option, so the runner passes <code>--no-usage-report</code> (and <code>--quiet</code>); the container
+also gets <code>--cap-drop ALL</code> and <code>no-new-privileges</code>; <code>url</code> is left out of k6&#39;s system tags and the runner removes
+<code>ltik=…</code>, <code>Bearer …</code> and JWT-shaped values from k6&#39;s output, because k6 prints a failed request&#39;s URL; the
+scripts of ltijs&#39;s login and launch pages count as assets of the visit, as a browser loads them before it goes
+on; each question scores 0 or 1 out of 1. The bench and the runner are split into <code>loadDatabase.ts</code>,
+<code>benchProcess.mjs</code> and <code>k6Container.mjs</code> to stay within 200 lines, and <code>tools/load/test/loadBench.test.mjs</code> makes
+one visit with the same readers and builders in Node against the real bench (every asset 200, four batches 202,
+the state read back) and checks that the bench drops its database.</li>
+<li><em>Skeptic review (2026-11-05), with its fixes:</em> the smoke ran again here, and once with the API limit set to 5 ms,
+which printed <code>FAIL http_req_duration{kind:api} p(95)&lt;5</code> and exited 99 through <code>npm run</code>, so the thresholds can
+fail and the exit code reaches the caller. Fixed: (1) the runner redacted k6&#39;s output per pipe chunk, so a chunk
+boundary inside <code>ltik=…</code> let the rest of the token through; it now redacts whole lines (<code>pipeRedactedLines</code>),
+and a test that cuts a line inside the token fails with the old code. (2) The container&#39;s own file system was
+writable; it now runs with <code>--read-only</code>, so the output folder is the one place k6 can write, as the design
+says. The final smoke with both: exit 0, <code>hvli_player_ready</code> p95 1 506 ms (median 82 ms), the API p95 22 ms, no
+failed request, every check passed, 60 visits, 6 180 requests, 360 statements and 20 learner states stored
+(runbook section 8). Across the five smoke runs of this step the p95 lies between 1 136 and 1 506 ms while the
+median stays near 0.1 s, a slow tail that fits the 20 first, concurrent visits before the caches are warm (a
+third of the 60). Residual: where the caller is root (as in this sandbox) k6 runs as uid 0 in its container,
+without capabilities or new privileges; elsewhere it runs as the caller.</li>
+</ul>
 </li>
 </ul>
 <h3 id="decisions--d-115--xapi-capture-statement-identity-attempts-and-gradable-results-probe-p1" tabindex="-1">D-115 · xAPI capture, statement identity, attempts and gradable results (probe P1)</h3>
@@ -11036,22 +11610,23 @@ CLI&#39;s keys, deletes and output, the database roles&#39; grants, the TLS and 
 (route patterns only, also for 404s and bad JSON)</li>
 <li><span class="task">✓ Done:</span> <code>docs/TRACEABILITY.md</code> and the spec site regenerated; every check, test set, the e2e set and the insight and
 grade-sync accessibility files pass (session log, «2026-11-05 · S6 step 5»)</li>
+<li><span class="task">✓ Done:</span> The step-5 review&#39;s follow-ups, done in step 6 (the follow-ups workstream, 2026-11-05, each with a test):
+the LTI error handler logs a route label, never <code>req.path</code> or serve-static&#39;s <code>err.path</code> (<code>ltiErrorLog.ts</code>);
+<code>db:roles</code> refuses a migration URL to another host without an encrypting <code>sslmode</code>; <code>purgeCli.ts</code> prints
+<code>purgeFailureLine</code>, not a raw error message; the documents for the review&#39;s two fixes (DPIA R3, R8 and R24,
+the <a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a> items of the deployment checklist in <code>docs/ops/runbook.md</code> §9, the server README&#39;s mappe row,
+the Evaluator Guide&#39;s <a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a> row, and D-106&#39;s <em>Verified by</em> naming <code>storedResultsBeforeToday.int.test.ts</code>).
+Verified again in the step-6 finish run (session log, «2026-11-05 · S6 step 6»)</li>
 <li><span class="task">○ To do:</span> The commit, <code>Refs:</code> <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>, <a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>, <a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>, <a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>, <a class="req-ref" href="#r-DATA-008"><code>DATA-008</code></a>, <a class="req-ref" href="#r-DATA-010"><code>DATA-010</code></a>, <a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a>,
 <a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>, <a class="req-ref" href="#r-INS-008"><code>INS-008</code></a>, <a class="req-ref" href="#r-LTI-008"><code>LTI-008</code></a>, <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>, <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a></li>
 <li>Still open, not blocking the step: the mappe does not read the purge snapshots (a D-095/D-107 amendment for the
-mappe&#39;s owner); no job deletes audit rows after 2 years (Q26); the deployment checklist (step 6); the dormant
-admin branch of <code>UserDataAccessAuditor</code> that would audit a learner key (the H5P permissions owner); the web
-privacy notice&#39;s texts after the DPO&#39;s review (DPIA R32). From the step-5 review, three low findings, each in
-another owner&#39;s file: the LTI error handler logs <code>req.path</code> and serve-static&#39;s <code>err.path</code>, so a client can put
-text of its choice in a log line (<code>ltiErrorPages.ts</code>; log the route pattern or a page label instead);
-<code>db:roles</code> runs a migration URL without TLS unrefused (refuse a weak <code>sslmode</code> unless the host is local);
-<code>purgeCli.ts</code> prints a raw error message (print <code>prismaErrorLine(error)</code>, as the data-subject CLI does). The
-review&#39;s two fixes are not yet in the documents: DPIA R3 and R8 (the mappe ends at midnight too), R24 and the
-<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a> deployment checklist in <code>docs/ops/</code> (plain bucket names), the server README&#39;s mappe row, the
-Evaluator Guide&#39;s <a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a> row, and D-106&#39;s amendment, whose <em>Verified by</em> names
-<code>storedActivityResults.int.test.ts</code> for tests that are in <code>storedResultsBeforeToday.int.test.ts</code>. A residual
-for the DPO: the grade-sync counts are live (no midnight cut), not <em>k</em>-suppressed and include the test student
-(DPIA R1, R13; Q22)</li>
+mappe&#39;s owner); no job deletes audit rows after 2 years (Q26); the dormant admin branch of
+<code>UserDataAccessAuditor</code> that would audit a learner key (the H5P permissions owner); the web privacy notice&#39;s
+texts after the DPO&#39;s review (DPIA R32). A residual for the DPO: the grade-sync counts are live (no midnight cut),
+not <em>k</em>-suppressed and include the test student (DPIA R1, R13; Q22). The step-5 review&#39;s three low findings and
+its document gaps were closed in step 6 (the follow-ups workstream: <code>ltiErrorLog.ts</code>, the <code>db:roles</code> TLS rule,
+<code>purgeFailureLine</code>, DPIA R3, R8 and R24, the <a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a> checklist, the README and Evaluator Guide rows, D-106&#39;s
+file name), and the deployment checklist is section 9 of <code>docs/ops/runbook.md</code></li>
 </ul>
 </li>
 <li><span class="task">○ To do:</span> <ol start="6">
@@ -11062,11 +11637,67 @@ for the DPO: the grade-sync counts are live (no midnight cut), not <em>k</em>-su
  <code>npm run a11y:report</code> for the conformance report → the PDF availability probe</li>
 </ol>
 <ul>
-<li><span class="task">○ To do:</span> Separate files origin for user files with signed URLs (<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, D-045; URLs from S3&#39;s <code>HvlUrlGenerator</code>):
-the player&#39;s files first, the editor&#39;s route later (D-110)</li>
-<li><span class="task">○ To do:</span> ClamAV scanning (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>): Lumi&#39;s scanner 10.0.4 wrapped to fail closed (D-110)</li>
-<li><span class="task">○ To do:</span> Docker images, load test, runbook (<a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>, <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>); conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>)</li>
-<li><span class="task">○ To do:</span> Chromium and fonts with æ, ø and å in the production image for the PDF (D-096)</li>
+<li><strong>Built 2026-11-05</strong> by six workstreams (the image and app stack, the files origin, ClamAV, backups with the
+runbook and the load harness, the conformance report, and the step-5 follow-ups with the library-build fix),
+each verified by a skeptic with mutation checks, then integrated (2026-11-05). Each decision&#39;s amendment came
+before its code: D-110 (the files origin; the image, the app stack and its smoke; ClamAV; backups and the runbook;
+the integration), D-114 (the load harness), D-079 (the conformance report and its review), D-045 (pointer),
+D-056 (the old data key stays 31 days). Runbooks: <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/docker.md" rel="noopener" class="ext">docker.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>, <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/clamav.md" rel="noopener" class="ext">clamav.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>,
+<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> with the deployment checklist (§9)</li>
+<li><span class="task">✓ Done:</span> Separate files origin for user files with signed URLs (<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, D-045; URLs from S3&#39;s <code>HvlUrlGenerator</code>):
+the player&#39;s files on <code>files.&lt;host&gt;</code> (or <code>FILES_BASE_URL</code>), served only there by <code>filesOriginRouter.ts</code> with
+the sandbox policy and CORS for the app; the editor&#39;s files stay on the app origin under grants of their own
+(<code>SPEC-DEVIATION: D-110</code>). The <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a> tests count the files origin as first-party</li>
+<li><span class="task">✓ Done:</span> ClamAV scanning (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>): Lumi&#39;s scanner 10.0.4 wrapped to fail closed on both upload paths, its client
+built from our checked settings only; required in production unless explicitly turned off; real-clamd tests in
+CI against a clamav service (D-110)</li>
+<li><span class="task">✓ Done:</span> Docker images, load test, runbook (<a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>, <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>); conformance report (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>):
+<code>deploy/</code> (Ubuntu 24.04 and Node 24 by digest, uid 10001, the app stack with its own clamd, the smoke test
+here and in <code>.github/workflows/docker.yml</code>); <code>tools/ops</code> (backup and restore with a round-trip test);
+<code>tools/load</code> (k6 2.3.0, <code>npm run load:smoke</code>; the 200-learner run is HVL&#39;s); <code>npm run a11y:report</code> writes
+<code>docs/accessibility/WCAG-CONFORMANCE-REPORT.md</code> (56 criteria, every verdict <em>Not yet determined</em> until HVL
+tests); <code>tsx</code> is a runtime dependency of <code>apps/server</code></li>
+<li><span class="task">✓ Done:</span> Chromium and fonts with æ, ø and å in the production image for the PDF (D-096): full Chromium 141 with
+Playwright&#39;s seccomp profile and <code>CAP_SYS_CHROOT</code>, the sandbox seen in <code>/proc</code>; the server logs at start
+whether the export works (<code>pdfAvailability.ts</code>)</li>
+<li><span class="task">✓ Done:</span> SECURITY (found while building the bundle): <code>H5P.AudioRecorder</code> 1.0&#39;s build baked the build machine&#39;s whole
+environment, tokens included, into JavaScript served to learners. <code>tools/h5p-libraries</code> now builds every
+library with a minimal environment (<code>buildEnv</code> 3), the bundle refuses secret-named variables, and the leaky
+builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Tokens that were in the old builds
+should be rotated (owner)</li>
+<li><span class="task">✓ Done:</span> Integration (2026-11-05): <code>main.ts</code> runs the PDF probe after listening and waits for it on stop; <code>tsx</code> moved
+to <code>apps/server</code>&#39;s dependencies; scripts <code>deploy:check</code>, <code>docker:smoke</code>, <code>pdf:check</code>; the app stack has its
+own clamd, and the smoke proves an upload scanned (EICAR refused) and served from the files origin; CI runs
+the real-clamd tests and <code>a11y:report -- --check</code>; <code>.env.example</code>&#39;s production rules and key rotation; the
+documents (session log, «2026-11-05 · S6 step 6 (integration)»)</li>
+<li><span class="task">✓ Done:</span> Security review of step 6 (2026-11-05, after the integration): files origin, grants, SVG and other uploads
+(CVE-2025-7062), the scanner, the image, the app stack, backups and the load harness attacked or read against
+their decisions; no high or medium defect in the code. One low fix with a regression test that fails without
+it: a NUL byte in a granted file path reached PostgreSQL and gave 500 with an error-level log line on demand;
+<code>signedFileRoutes.ts</code> now answers 404 before storage for any name <code>assertSafeObjectName</code> refuses
+(<code>[SEC-004]</code> in <code>filesOrigin.int.test.ts</code>). Its other findings are under «Still open» below</li>
+<li><span class="task">✓ Done:</span> <code>docs/TRACEABILITY.md</code> and the spec site regenerated; every check, every test set, the e2e set, the
+accessibility files for the player, editor, insight and grade sync, and the Docker smoke on the final working
+tree pass (session log, «2026-11-05 · S6 step 6»)</li>
+<li><span class="task">○ To do:</span> The conformance report&#39;s run summary regenerated from the gate&#39;s full accessibility run; the commit, <code>Refs:</code>
+<a class="req-ref" href="#r-NFR-001"><code>NFR-001</code></a>, <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>, <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>, <a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a>, <a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>,
+<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>, <a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a></li>
+<li>Still open: <code>docker.yml</code>&#39;s first run on GitHub (Chromium from Playwright&#39;s CDN and its SHA-256, AppArmor, the
+<code>/proc</code> check on the runner); HVL&#39;s runtime, DNS and clamd (Q5); the 200-learner load test and the restore drill
+on HVL&#39;s hardware; the manual accessibility run and the 56 verdicts (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>); upstream reports for Lumi&#39;s
+scanner, clamscan and AudioRecorder (step 7, D-112); the SHA-256 list of the content types kept in the repository
+(D-110, waits for reproducible builds); <code>upload.file.scanUnavailable</code> answers 400, not 503 (the HTTP-errors
+owner); the cookie-authenticated <code>/h5p/content/…</code> fallback route on the app origin (a D-110 amendment to narrow
+or retire it; until then a NUL byte in its path gives a signed-in user a 500, which <code>PrismaContentStorage</code>&#39;s
+<code>requireFile</code> and <code>fileExists</code> should answer as not found). From the step-6 security review: clamd passes files
+it did not scan in full (over ClamAV&#39;s size, recursion or file-count limits, or encrypted) unless
+<code>AlertExceedsMax</code> and <code>AlertEncrypted</code> are set, so a D-110 amendment should make both required in <code>clamav.md</code>
+and runbook §9 (medium–low); the root <code>docker-compose.yml</code> publishes PostgreSQL, Redis and moto on every
+interface, and runbook §8 runs it on a production-like node, so bind them to 127.0.0.1 and warn in §8 (medium
+on a networked host; a shared file); optional: refuse a request whose <code>Host</code> and <code>X-Forwarded-Host</code> disagree
+about the files host; <code>frame-ancestors &#39;none&#39;</code> for user files; runbook §6 to keep local backups on an encrypted
+volume and restore from the authenticated off-server copy; <code>persist-credentials: false</code> in <code>ci.yml</code> and
+<code>docker.yml</code>; <code>clamav.md</code>&#39;s TLS note on clamscan 2.4.0 sending no SNI (D-112)</li>
 </ul>
 </li>
 <li><span class="task">○ To do:</span> <ol start="7">
@@ -11170,7 +11801,7 @@ task off. A pull request only when the owner asks</li>
 <tr>
 <td>Q16</td><td><del>The repository has no <code>main</code> branch, and CI (<code>.github/workflows/ci.yml</code>) runs only on pushes to <code>main</code> and on pull requests, so GitHub has never run the gate: every session&#39;s gate ran locally only. Create <code>main</code> from <code>ccr-07f63266-6cere5</code> or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). <strong>Required before the pilot (owner, 2026-10-24).</strong></del> Resolved 2026-10-30 (D-101): GitHub CI runs on <code>main</code> and on pull requests. <code>main</code> is protected by a ruleset that requires a pull request and CI&#39;s «Session gate» check; that check passed on pull request #8 (run 41066236672, on <code>72e5516</code>), which was then merged (<code>47e235e</code>); Dependabot opens one grouped monthly pull request per ecosystem (S5 start). The push run on the merge (run 41075981429) was red: its end-to-end step failed in <code>appPlayEditor.e2e</code>, which pressed «Lagre» before the editor could save, a real slow-device fault. It is fixed in S6 step 0; GitHub&#39;s confirmation comes with that step&#39;s push</td><td>—</td><td>—</td></tr>
 <tr>
-<td>Q5</td><td>Hosting: HVL on-premises or Sikt, both in the EEA (<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>)</td><td>HVL IT</td><td>S6</td></tr>
+<td>Q5</td><td>Hosting: HVL on-premises or Sikt, both in the EEA (<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>). The container runtime must allow Playwright&#39;s seccomp profile and <code>CAP_SYS_CHROOT</code> for the PDF export&#39;s sandbox (OpenShift&#39;s <code>restricted-v2</code> allows neither), a DNS name and certificate for the files host (<code>files.&lt;host&gt;</code>, or a separate registrable domain), and a clamd with daily signatures (D-110&#39;s step-6 amendments)</td><td>HVL IT</td><td>S6</td></tr>
 <tr>
 <td>Q6</td><td>Data protection officer confirms the legal basis and reviews DPIA input (<a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>). <strong>Input complete 2026-11-05:</strong> <code>docs/privacy/DPIA-INPUT.md</code> (purposes, operations, data flows with a diagram, the Canvas key&#39;s <code>privacy_level</code> and custom fields, recipients, retention, rights, security measures, residuals R1–R37, and the DPO&#39;s questions in its §13)</td><td>HVL DPO</td><td>S6, pilot</td></tr>
 <tr>
@@ -11654,6 +12285,94 @@ $ npx vitest run &lt;the other 17 server test folders&gt;            Test Files 
 $ npm run test:e2e                                             Test Files 15 passed (15) · Tests 24 passed (24)
 $ npx vitest run … a11y/axeInsight.a11y.test.ts axeGradeSync   Test Files 2 passed (2) · Tests 11 passed (11)</code></pre>
 </li>
+<li><p><strong>2026-11-05 · S6 step 6 (integration)</strong> — Six workstreams (the image and app stack, the files origin, ClamAV,
+backups with the runbook and the load harness, the conformance report, the step-5 follow-ups with the library-build
+fix), each verified by a skeptic with mutation checks, then integrated. Decisions first: D-110&#39;s integration
+amendment and D-056&#39;s (the old data key stays at least 31 days, for the grade jobs&#39; <code>sub</code>). Wiring: <code>main.ts</code> runs
+the PDF probe after listening and <code>stop</code> waits for it (<code>main.smoke.test.ts</code> checks the line); <code>tsx</code> moved from the
+root&#39;s development dependencies to <code>apps/server</code>&#39;s (the image&#39;s copy is now a guard); scripts <code>deploy:check</code>,
+<code>docker:smoke</code>, <code>pdf:check</code>; the app stack has its own clamd (<code>clamav/clamav:1.4</code> by digest) and <code>CLAMAV_HOST</code> on
+every service from the image; the smoke test proves an upload in the image (<code>deploy/smoke/uploadProof.mjs</code>); CI
+runs the real-clamd tests against a clamav service and <code>a11y:report -- --check</code>; Dependabot proposes the image&#39;s
+digests; Lumi&#39;s own <code>upload-malware-found</code> gets the scanner&#39;s message (a safety net); <code>.env.example</code>&#39;s production
+rules and key rotation; the unknown test ID in <code>reportGuards.test.mjs</code> built at run time so <code>spec:trace</code> does not
+read it. Leaked build environments (the old AudioRecorder builds, with this session&#39;s tokens) deleted from 20 test
+temp folders and the scratchpad; the 26 build-cache records (2.8 GB) a skeptic&#39;s test left on the default builder
+removed by ID. Docs: <code>docs/ops/README.md</code>, <code>docker.md</code>, <code>clamav.md</code>, the runbook&#39;s checklist, the server README (module map, diagram,
+trace rows), the Evaluator Guide (commands, the six S6 rows, limitations 10, 13 and 17), the GLOSSARY, DPIA F13,
+F14, §9 and R38–R39, the inventory&#39;s log rows, specs 01 (code map, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a> and <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a> amendments) and 02 (§2),
+the protocol&#39;s §9 and the results README. No view changed, so no screenshots. Not regenerated, by the run&#39;s
+instruction: <code>docs/TRACEABILITY.md</code> and the spec site (so <code>spec:trace --check</code> and <code>specSite.test.mjs</code> report them
+out of date). Not committed. Check output:</p>
+<pre class="code" tabindex="0" role="region" aria-label="Code 14, Session log"><code>$ HVLI_DOCKER_SANDBOX=1 HVLI_APP_PORT=18093 bash deploy/smoke/dockerSmoke.sh   (the working tree, all six workstreams)
+    ✓ deploy files · ✓ bundle (10 packages) · image 2777 MB · ✓ proxy CA in no file of the image
+    ✓ /healthz {&quot;status&quot;:&quot;ok&quot;} · ✓ 7 of 7 migrations · ✓ 77 libraries, 77 seed audit rows
+    ✓ pages: /hjelp (nn), a script and /h5p/core/js/h5p.js from the image
+    ✓ upload: the stack's clamd refused EICAR (Eicar-Test-Signature) and passed a clean PNG;
+      files.localhost:18093 serves it (200, CSP sandbox, nosniff, no cookie); the app origin answers 404
+    ✓ PDF with the sandbox: 25 179 bytes, æ ø å, LiberationSans-Bold and LiberationSerif embedded, Tagged, A4
+    ✓ sandbox in /proc: 2 renderers, NSpid [3,3], filters [2,2] · ✓ start-up probe: pdfSandbox true, reason ok
+    Chromium 141.0.7390.37 (dd794b4e…144a) · disk 17 GB → 9.3 GB → 17 GB · ✓ docker smoke passed in 155 s
+$ npm run test:e2e                                             Test Files 16 passed (16) · Tests 27 passed (27)
+$ vitest a11y: axeContentTypes, axeEditor, firstParty          Test Files 3 passed (3) · Tests 91 passed (91)
+$ CI=true npx vitest run tools/ops                             Test Files 4 passed (4) · Tests 34 passed (34)
+$ npm run load:smoke                                           exit 0 · player ready p95 1267 ms · API p95 26 ms ·
+                                                                 0.00 % failed · 60 visits · 6180 requests
+$ CLAMAV_TEST_HOST=127.0.0.1 … realClamd.test.ts (clamd 1.4.6) Tests 2 passed (2)
+$ CI=true npx vitest run test/config test/security test/http test/server test/logging test/lti test/db
+    test/privacy test/learningDesign/mappe test/infra (apps/server)
+                                                               Test Files 193 passed, 1 skipped (realClamd) · Tests 1494 passed
+$ CI=true npx vitest run --project tools                       Test Files 60 passed, 1 failed: specSite (site not regenerated)
+$ npm run typecheck · lint · lint:css · format:check           exit 0
+$ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+$ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 488 packages · ✓ 2 advisories, all reviewed
+$ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+$ npm run a11y:report -- --check · content:check               exit 0 · ✓
+$ node tools/spec-trace/specTrace.mjs --check --done-through=S6   only: TRACEABILITY.md is out of date</code></pre>
+</li>
+<li><p><strong>2026-11-05 · S6 step 6</strong> — A security review of the integrated step 6, then the finish run. The review attacked
+the files origin (traversal, host variants, methods, cookies), the grants, the SVG and upload paths, the scanner,
+the image, the app stack, backups and the load harness, and found no high or medium defect in the code. One low fix,
+with a regression test that fails without it: a NUL byte in a granted file path reached PostgreSQL and answered 500
+with an error-level log line; <code>signedFileRoutes.ts</code> now answers 404 before storage for any name the storage refuses
+(<code>[SEC-004]</code> in <code>filesOrigin.int.test.ts</code>). Its other findings (clamd&#39;s <code>AlertExceedsMax</code> and <code>AlertEncrypted</code>,
+the root compose file&#39;s published ports, the cookie route&#39;s NUL 500 and smaller hardening) are under step 6&#39;s
+«Still open». The finish run regenerated <code>docs/TRACEABILITY.md</code> and the spec site, reworded the step-6 integration
+entry so it no longer names an unknown requirement ID (<code>spec:trace --check</code> refused it), and ran every check and
+test set, and the Docker smoke again, because the image copies the source tree and the review&#39;s fix came after the
+integration&#39;s smoke. Nothing else needed fixing. No view changed, so no screenshots. Not committed. Check output
+(every step exit 0; tests with <code>CI=true</code>; the spec site was built again after this entry and its <code>--check</code> passed):</p>
+<pre class="code" tabindex="0" role="region" aria-label="Code 15, Session log"><code>$ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements · ✓ docs/site/index.html is up to date
+$ npm run spec:trace -- --check --done-through=S5              ✓ 126 requirements, traceability up to date.
+$ npm run typecheck · lint · lint:css · format:check           exit 0
+$ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+$ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                 25 citations), 9 patterns, mappe template and 1 criteria set
+$ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 488 packages · ✓ 2 advisories, all reviewed
+$ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+$ npm run tokens:check · deploy:check · a11y:report -- --check ✓ 3 files up to date · ✓ deploy files as D-110 sets them · exit 0
+$ npm run build                                                exit 0
+$ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                               Test Files 186 passed (186) · Tests 1524 passed (1524)
+$ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 171 passed (171) · Tests 19789 passed (19789)
+  (apps/server)
+$ npx vitest run &lt;the other 18 server test folders&gt;            Test Files 334 passed, 1 skipped (realClamd: no clamd host)
+                                                                 · Tests 6449 passed, 2 skipped
+$ npm run test:e2e                                             Test Files 16 passed (16) · Tests 27 passed (27)
+$ npx vitest run … a11y/axeContentTypes axeEditor axeInsight axeGradeSync firstParty
+                                                               Test Files 5 passed (5) · Tests 102 passed (102)
+                                                                 (one policy refusal: BranchingScenario's documentation frame)
+$ HVLI_DOCKER_SANDBOX=1 HVLI_APP_PORT=18094 bash deploy/smoke/dockerSmoke.sh   (the final working tree)
+    ✓ deploy files · ✓ bundle (10 packages) · ✓ core and editor match their hash lists · image 2777 MB
+    ✓ proxy CA in no file of the image · ✓ /healthz {&quot;status&quot;:&quot;ok&quot;} · ✓ 7 of 7 migrations
+    ✓ 77 libraries, 77 seed audit rows · ✓ pages: /hjelp (nn), a script and /h5p/core/js/h5p.js from the image
+    ✓ upload: the stack's clamd refused EICAR (Eicar-Test-Signature) and passed a clean PNG;
+      files.localhost:18094 serves it (200, CSP sandbox, nosniff, no cookie); the app origin answers 404
+    ✓ PDF with the sandbox: 25 179 bytes, æ ø å, LiberationSans-Bold and LiberationSerif embedded, Tagged, A4
+    ✓ sandbox in /proc: 2 renderers, NSpid [3,3], filters [2,2] · ✓ start-up probe: pdfSandbox true, reason ok
+    Chromium 141.0.7390.37 · disk 17 GB → 10 GB → 17 GB · no image, container, volume, builder or cache left
+    ✓ docker smoke passed in 154 s</code></pre>
+</li>
 </ul>
 
 </section>
@@ -11942,7 +12661,11 @@ the meaning. Spec 04 and D-082…D-100 hold the rules; ALU edits the texts behin
 <tr>
 <td><strong>Principal</strong></td><td>Who a request acts for, in the same shape for both entry points: user ID, learnerKey, roles, mode (<code>portal</code> or <code>lti</code>), locale and, for LTI, the launch facts (<code>apps/server/src/auth/Principal.ts</code>). Built from the portal session or the ltik; it never holds a name, e-mail, Feide ID, LTI <code>sub</code> or token (spec 02 §2, D-053).</td></tr>
 <tr>
-<td><strong>Signed file grant</strong></td><td>The part of a content-file URL <code>/h5p/files/&lt;grant&gt;/&lt;contentId&gt;/&lt;file&gt;</code> that authorises it: a key ID, an expiry and an HMAC over <code>contentId|expiry</code> made with <code>URL_SIGNING_KEYS</code>. A player render issues it after the View check, and the editor page after the Edit check (D-069). It lasts 12 to 13 hours and names no person, so <code>&lt;img&gt;</code> and <code>&lt;video&gt;</code> tags work in a cookie-less iframe (D-058). An editor&#39;s fresh uploads load through an upload grant of the same form, <code>/h5p/uploads/&lt;grant&gt;/&lt;accountId&gt;/&lt;file&gt;</code>, an HMAC over <code>accountId|expiry</code> under its own HKDF purpose (<code>temporary-file-url</code>), so neither kind of grant opens the other (D-069).</td></tr>
+<td><strong>Signed file grant</strong></td><td>The part of a content-file URL <code>/h5p/files/&lt;grant&gt;/&lt;contentId&gt;/&lt;file&gt;</code> that authorises it: a key ID, an expiry and an HMAC over <code>contentId|expiry</code> made with <code>URL_SIGNING_KEYS</code>. A player render issues it after the View check, for the <strong>files origin</strong>; the editor page issues one of its own purpose (<code>editor-file-url</code>) after the Edit check, for <code>/h5p/editor-files/&lt;grant&gt;/…</code> on the app origin (D-069, D-110&#39;s amendment). It lasts 12 to 13 hours and names no person, so <code>&lt;img&gt;</code> and <code>&lt;video&gt;</code> tags work in a cookie-less iframe (D-058). An editor&#39;s fresh uploads load through an upload grant of the same form, <code>/h5p/uploads/&lt;grant&gt;/&lt;accountId&gt;/&lt;file&gt;</code>, an HMAC over <code>accountId|expiry</code> under its own HKDF purpose (<code>temporary-file-url</code>), so no kind of grant opens another (D-069).</td></tr>
+<tr>
+<td><strong>Files origin</strong></td><td>The separate origin the player&#39;s user files are served from (<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>): <code>files.&lt;host&gt;</code> of <code>PUBLIC_BASE_URL</code>, or <code>FILES_BASE_URL</code>. It answers only signed file requests, with <code>CSP: sandbox</code> and <code>nosniff</code>, reads and sets no cookie, and allows the app origin by CORS without credentials; the app origin answers the same paths with 404 (D-045, D-110&#39;s amendment).</td></tr>
+<tr>
+<td><strong>ClamAV / clamd</strong></td><td>The open-source virus scanner and its daemon, which HVL runs. When <code>CLAMAV_HOST</code> is set, every uploaded file is streamed to clamd before it is stored, and refused unless clamd answers &quot;clean&quot; (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>, fail closed). The <strong>EICAR test file</strong> is a harmless text every scanner reports, used to check that refusals work (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/clamav.md" rel="noopener" class="ext">ops/clamav.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>).</td></tr>
 <tr>
 <td><strong>Key ring</strong></td><td>An environment value <code>id=base64,id=base64,…</code> whose first key is current; older keys still verify or decrypt, so keys rotate without downtime when the new key is first added in second place and moved first only once every server holds it (the three steps are in D-056; D-055 and D-058 apply them to the other two rings). HKDF derives one key per purpose from each key. <code>IDENTITY_HASH_KEYS</code>: identity and audit-IP hashes (D-055). <code>DATA_ENCRYPTION_KEYS</code>: AES-256-GCM for LTI private keys, LTI access tokens and the session&#39;s Feide ID token (D-056). <code>URL_SIGNING_KEYS</code>: signed file grants (D-058) and editor upload grants, each under its own HKDF purpose (D-069). <code>PSEUDONYM_SECRETS</code> is keyed by academic year instead (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>).</td></tr>
 <tr>
@@ -11957,6 +12680,8 @@ the meaning. Spec 04 and D-082…D-100 hold the rules; ALU edits the texts behin
 <td><strong>Nonce (CSP)</strong></td><td>A random value made for each response and named in its <code>script-src</code>; only scripts carrying it run. Next.js pages use one; H5P pages use <code>&#39;self&#39;</code> and a hash instead, because H5P writes <code>&lt;script&gt;</code> tags a nonce cannot reach (D-070).</td></tr>
 <tr>
 <td><strong>WCAG 2.2 AA</strong></td><td>Web Content Accessibility Guidelines, version 2.2, conformance level AA.</td></tr>
+<tr>
+<td><strong>Conformance report</strong></td><td><code>docs/accessibility/WCAG-CONFORMANCE-REPORT.md</code> (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>): one section per WCAG 2.2 A/AA criterion with the automated evidence (axe rules, our checks, the last full run) generated by <code>npm run a11y:report</code>, and HVL&#39;s manual verdicts kept between <code>manual:start</code> and <code>manual:end</code> markers. It is the source for the <em>tilgjengelegheitserklæring</em> on uustatus.no (D-079&#39;s amendments).</td></tr>
 <tr>
 <td><strong>DPIA</strong></td><td>Data Protection Impact Assessment (GDPR Art. 35).</td></tr>
 <tr>

@@ -76,7 +76,7 @@ export function playerRoutes(deps: H5pRouteDeps): Router {
     res.set('Cache-Control', 'no-store');
     setPortalFrameHeaders(res);
     // SECURITY: no inline script, first-party sources only (D-070, DATA-011); framed by our own pages only.
-    res.set('Content-Security-Policy', h5pPageCsp(deps.pageCsp, ["'self'"]));
+    res.set('Content-Security-Policy', h5pPageCsp(deps.pageCsp, ["'self'"], { playerFiles: true }));
     const contentLanguage = activityLanguage(await deps.editor.contentManager.contentStorage.getMetadata(id));
     // PRIVACY: the xAPI bridge only for a learner: an author's preview is never sent as learning data (DATA-012, D-102).
     const xapiBridge = xapiBridgeConfig(model, actor);

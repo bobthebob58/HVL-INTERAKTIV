@@ -1,7 +1,7 @@
 /**
  * Tests for turning route errors into translated H5P error answers without leaking internal messages.
  *
- * Spec: PROD-012, H5P-002, H5P-006, SEC-005
+ * Spec: PROD-012, H5P-002, H5P-006, SEC-005, SEC-006
  */
 import { H5pError } from '@lumieducation/h5p-server';
 import { describe, expect, it } from 'vitest';
@@ -34,6 +34,15 @@ describe('toErrorResponse', () => {
     expect(status).toBe(403);
     expect(body.errorCode).toBe('hvl:content-type-not-allowed');
     expect(body.message).toBe(t('h5p.contentTypeNotAllowed', { library: 'H5P.TrueFalse' }, 'en'));
+  });
+
+  it('[SEC-006] Lumi’s own malware refusal gets the scanner’s translated message, not a generic 400', () => {
+    const { status, body } = toErrorResponse(new H5pError('upload-malware-found', {}, 400), 'nb');
+    expect(status).toBe(400);
+    expect(body).toMatchObject({
+      errorCode: 'upload-malware-found',
+      message: t('upload.file.malwareFound', {}, 'nb'),
+    });
   });
 
   it('[H5P-006] other Lumi refusals fall back to the message of their status', () => {

@@ -5,7 +5,7 @@
 | **Requirements** | `DATA-010` (separate roles; production data never in development), `DATA-004` (EEA, TLS), `DATA-007` (audit) |
 | **Decisions** | D-109 and its amendments of 2026-11-04 and 2026-11-05 |
 | **Code** | `apps/server/prisma/roles/` (the three SQL scripts), `apps/server/src/infra/databaseRolesCli.ts` (the runner), `apps/server/src/config/connectionEncryption.ts` and `storageResidency.ts` (the start-up checks) |
-| **Tests** | `apps/server/test/db/databaseRoles.int.test.ts` logs in as each role and proves what it may and may not do; `databaseRolesDeploy.int.test.ts` runs a migration that changes a column a view reads |
+| **Tests** | `apps/server/test/db/databaseRoles.int.test.ts` logs in as each role and proves what it may and may not do; `databaseRolesDeploy.int.test.ts` runs a migration that changes a column a view reads; `databaseRolesTls.test.ts` proves the runner's TLS rule; `test/config/storageResidency.test.ts` the plain bucket names |
 | **Who** | HVL's database administrator (once per database), the deployment's migrate step (every deployment) |
 
 Development and CI keep one database user (`hvli`); everything below is for staging and production.
@@ -66,6 +66,12 @@ the app its rows (new tables are covered by default privileges anyway), keeps th
 the analytics views again. If the migration fails, run the grants step anyway once the migration is fixed or rolled
 back, so the views come back.
 
+The runner applies the server's production TLS rule to its own `DATABASE_URL` in every environment: unless the
+database is on the same machine (a socket, `localhost`, `127.x.y.z` or `::1`), it refuses a URL without `sslmode`
+`require`, `verify-ca` or `verify-full`, read as node-postgres reads it (the last `sslmode`, the last `host` parameter,
+`PGHOST` when the URL names no host). It then prints `database roles refused: DATABASE_URL: …` without the URL and
+exits 1 before it connects (`DATA-004`).
+
 ## A database that already runs with one user
 
 If the tables belong to an earlier single user (for example `hvli`), give them to the migrator once, as a superuser,
@@ -103,6 +109,10 @@ With `NODE_ENV=production` the server stops at start-up, naming the variable, wh
 - `AWS_ENDPOINT_URL_S3` or `AWS_ENDPOINT_URL` is set: the AWS SDK would send the files there instead, past these
   checks. Use `S3_ENDPOINT`. For the same reason, mount no AWS config file (`~/.aws/config`, `AWS_CONFIG_FILE`) with an
   `endpoint_url` into the server's container; the server cannot see that file.
+- `S3_CONTENT_BUCKET` or `S3_TEMPORARY_BUCKET` is not a plain bucket name (3 to 63 lower-case letters, digits, dots
+  and hyphens, beginning and ending with a letter or digit). An S3 access point or Outposts ARN is refused: the AWS
+  SDK sends its files to the ARN's own region, past the EEA check below. An access point alias (`…-s3alias`) is a
+  plain name and stays in `S3_REGION`. The message names the variable only (an ARN holds an account ID).
 - The storage is outside the EEA allow-list in `apps/server/src/config/storageResidency.ts`: without `S3_ENDPOINT`
   (AWS itself), `S3_REGION` must be `eu-north-1`, `eu-west-1`, `eu-west-3`, `eu-central-1`, `eu-south-1` or
   `eu-south-2` *(verify)*; with `S3_ENDPOINT`, its host must be AWS's endpoint of one of those regions or lie under

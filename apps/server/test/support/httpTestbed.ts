@@ -6,9 +6,12 @@
  *      request names its actor in the `x-test-actor` header, and requests without it have no actor at all.
  *      With `seedFrom`, real packages are installed through the seed path first (D-078), so real content types
  *      run behind the same router.
- * Spec: H5P-004, H5P-006
+ * Spec: H5P-004, H5P-006, SEC-004
  * Invariants: every testbed has its own library folder and buckets, which `close()` removes, and its rows use fresh
  *   IDs, so test files can run in parallel; `close()` removes only the seed audit rows its own seeding wrote, by ID.
+ *   The player's file URLs are relative and this app serves the player's file route itself, before the H5P router,
+ *   so a test server on any loopback port shows images; the real split onto the files origin is tested on the whole
+ *   app (./appTestbed.ts, apps/server/test/http/filesOrigin.int.test.ts; D-110 amendment of 2026-11-05).
  * Collaborators: ../../src/h5p/createH5pRuntime.ts, ../../src/http/createH5pRouter.ts, ./syntheticLibraries.ts,
  *   ./realPackages.ts, ./testActors.ts, ./testLibraryAuditSink.ts, ../../src/http/routes/contentRoutes.ts.
  * Tests: shared by apps/server/test/http/*.int.test.ts; `appWith` by the save-gate tests in
@@ -22,6 +25,9 @@ import request from 'supertest';
 import { createH5pRuntime, type H5pRuntime } from '../../src/h5p/createH5pRuntime.js';
 import { asAccountUser, type H5pRole, type HvlH5pActor } from '../../src/h5p/HvlH5pUser.js';
 import { createH5pRouter } from '../../src/http/createH5pRouter.js';
+import { h5pErrorHandler } from '../../src/http/h5pErrorHandler.js';
+import { signedFileRoutes } from '../../src/http/routes/signedFileRoutes.js';
+import { SIGNED_FILES_PATH } from '../../src/h5p/HvlUrlGenerator.js';
 import { pageAssetRoutes } from '../../src/http/pages/pageAssetRoutes.js';
 import type { ContentRouteDeps } from '../../src/http/routes/contentRoutes.js';
 import { createPrismaClient, type Database } from '../../src/infra/prismaClient.js';
@@ -91,7 +97,7 @@ export async function openHttpTestbed(
   const db = createPrismaClient(env.DATABASE_URL);
   const redis: Redis = await connectRedis(env.REDIS_URL);
   const logger = createLogger({ level: 'silent' });
-  const runtime = await createH5pRuntime({ env, logger, db, redis, s3 });
+  const runtime = await createH5pRuntime({ env, logger, db, redis, s3, filesOrigin: '' });
   const seedAudit = new TestLibraryAuditSink(db);
   if (options.seedFrom) {
     const { packageImporter, libraryManager } = runtime.editor;
@@ -103,9 +109,17 @@ export async function openHttpTestbed(
     if (actor) res.locals.h5pActor = actor;
     next();
   };
-  // WHY: as createApp does: the editor's outer page links /static/pages/serverPages.css (A11Y-4).
+  // WHY: as createApp does: the editor's outer page links /static/pages/serverPages.css (A11Y-4). The player's files
+  // come first, on this same test server, where the whole app would send them to the files origin.
+  const playerFiles = signedFileRoutes(
+    { editor: runtime.editor, grants: runtime.fileGrants },
+    SIGNED_FILES_PATH,
+  );
   const routerApp = (deps: ContentRouteDeps): Express =>
-    express().use(pageAssetRoutes()).use('/h5p', createH5pRouter(deps, authenticate));
+    express()
+      .use('/h5p', playerFiles, h5pErrorHandler(logger))
+      .use(pageAssetRoutes())
+      .use('/h5p', createH5pRouter(deps, authenticate));
   const app = routerApp(runtime);
   const userIds: string[] = [];
   return {

@@ -3,7 +3,7 @@
  *
  * Why: a missing or malformed setting should stop the server at boot with a message that names the
  *      variable, rather than fail later inside a request. Every variable is documented in .env.example.
- * Spec: DOC-008, MAPPE-003, MAPPE-004, LTI-013, LTI-008, DATA-003
+ * Spec: DOC-008, MAPPE-003, MAPPE-004, LTI-013, LTI-008, DATA-003, SEC-004
  * Invariants:
  *   - Every variable read anywhere in the server is declared here, one per line as `NAME: z…`
  *     (doc-lint compares this list with .env.example).
@@ -15,7 +15,11 @@
  *     most `NRPS_MAX_PAGES` pages of 50 learners (LTI-008).
  *   - `PURGE_RUN_DATE` is a day from 31 August to 31 December (`MM-DD`, default `08-31`); any other value stops the
  *     start (DATA-003, D-107).
- * Collaborators: apps/server/.env.example, ./envParsers.ts, ./productionChecks.ts,
+ *   - The files origin (`FILES_BASE_URL`, or `files.<host>` of `PUBLIC_BASE_URL`) names another host than the app in
+ *     every environment, and https in production (./filesOrigin.ts, SEC-004, D-110 amendment of 2026-11-05).
+ *   - Uploads are scanned only with `CLAMAV_HOST`; production needs it, or `CLAMAV_ALLOW_UNSCANNED_UPLOADS=true`, and
+ *     TLS off the loopback; `CLAMSCAN_*` and `CLAMDSCAN_*` are refused (./malwareScanConfig.ts, SEC-006, D-110).
+ * Collaborators: apps/server/.env.example, ./envParsers.ts, ./productionChecks.ts, ./filesOrigin.ts,
  *   ../privacy/pseudonymSecrets.ts, ../privacy/purge/purgeCalendar.ts, ../h5p/H5pConfigFactory.ts.
  * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/studioEnv.test.ts,
  *   apps/server/test/config/canvasExtrasEnv.test.ts, apps/server/test/config/purgeEnv.test.ts
@@ -37,6 +41,8 @@ import {
   toOrigin,
   toOriginList,
 } from './envParsers.js';
+import { filesOriginProblems } from './filesOrigin.js';
+import { malwareScanProblems } from './malwareScanConfig.js';
 import { productionProblems } from './productionChecks.js';
 
 /** The schema of every environment variable the server reads. */
@@ -64,6 +70,10 @@ export const envSchema = z.object({
     .url({ protocol: /^https?$/ })
     .transform(toOrigin)
     .default('http://localhost:3000'),
+  FILES_BASE_URL: z
+    .url({ protocol: /^https?$/ })
+    .transform(toOrigin)
+    .optional(),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
   CANVAS_ORIGINS: z.string().transform(toOriginList).default([]),
@@ -98,6 +108,17 @@ export const envSchema = z.object({
   PDF_BROWSER_EXECUTABLE: z.string().refine(isAbsolute, 'must be an absolute path').optional(),
   PDF_MAX_CONCURRENCY: z.coerce.number().int().min(1).max(8).default(2),
   PDF_ALLOW_NO_SANDBOX: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  CLAMAV_HOST: z.union([z.ipv4(), z.ipv6(), z.hostname()], 'must be a host name or IP address').optional(),
+  CLAMAV_PORT: z.coerce.number().int().min(1).max(65535).default(3310),
+  CLAMAV_TIMEOUT_MS: z.coerce.number().int().min(1000).max(600_000).default(30_000),
+  CLAMAV_TLS: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  CLAMAV_ALLOW_UNSCANNED_UPLOADS: z
     .enum(['true', 'false'])
     .default('false')
     .transform((v) => v === 'true'),
@@ -137,7 +158,12 @@ const withoutEmpty = (source: NodeJS.ProcessEnv) =>
 export function loadEnv(source: NodeJS.ProcessEnv = process.env, now: Date = new Date()): Env {
   const result = envSchema.safeParse(withoutEmpty(source));
   if (!result.success) throw new InvalidEnvironmentError(problemsOf(result.error));
-  const problems = result.data.NODE_ENV === 'production' ? productionProblems(result.data, now, source) : [];
+  const production = result.data.NODE_ENV === 'production';
+  const problems = [
+    ...filesOriginProblems(result.data, production),
+    ...malwareScanProblems(result.data, production, source),
+    ...(production ? productionProblems(result.data, now, source) : []),
+  ];
   if (problems.length > 0) throw new InvalidEnvironmentError(problems);
   return result.data;
 }

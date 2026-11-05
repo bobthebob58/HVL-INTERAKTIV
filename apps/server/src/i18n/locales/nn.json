@@ -46,7 +46,9 @@
       "notAllowed": "Filtypen «.{{extension}}» er ikkje tillaten.",
       "typeMismatch": "Innhaldet i fila passar ikkje til filtypen «.{{extension}}».",
       "svgRejected": "SVG-fila kan ikkje brukast fordi ho inneheld definisjonar som kan vere skadelege.",
-      "tooLarge": "Fila er større enn {{maxMb}} MB."
+      "tooLarge": "Fila er større enn {{maxMb}} MB.",
+      "malwareFound": "Viruskontrollen fann skadeleg innhald i fila, så ho vart ikkje lagra.",
+      "scanUnavailable": "Fila kunne ikkje kontrollerast for virus akkurat no, så ho vart ikkje lagra. Prøv igjen om litt."
     }
   },
   "h5p": {

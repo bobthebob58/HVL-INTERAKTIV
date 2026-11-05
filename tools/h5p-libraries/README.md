@@ -55,6 +55,15 @@ flowchart LR
 - **Builds:** `npm ci --ignore-scripts` (no third-party install scripts) and the library's own `build` script. The
   checkouts live outside the repository (`H5P_LIBRARIES_CACHE`, default `~/.cache/hvl-interaktiv/h5p-libraries`)
   so a library build never picks up this repository's TypeScript or PostCSS configuration.
+- **SECURITY: a minimal environment** (`libraryBuild.mjs`, D-110's amendment of 2026-11-05). `H5P.AudioRecorder` 1.0
+  and `H5PEditor.AudioRecorder` 1.0 bake their build's whole `process.env` into the JavaScript learners get, so the
+  build step sees only `PATH` (Node's folder and the system folders), `HOME` (an empty folder in the cache, made anew
+  for each build) and `NODE_ENV=production`, plus npm's own script variables; `npm_config_globalconfig` names a file
+  in that `HOME` that never exists, because npm exports every setting of the Node install's global `npmrc` (a proxy
+  password too) to the script it runs. The install keeps `PATH`, `HOME` and the proxy and CA variables it needs; they
+  never reach the build. A cached build whose stamp names an older recipe (`BUILD_ENV_VERSION`) is cleaned
+  (`git clean -ffdx`) and built again from its proven commit, without a new checkout. Packages built before this
+  recipe carry their machine's environment: rebuild and re-seed them.
 - **Files:** only extensions the server accepts in library folders are copied (`libraryFiles.mjs`, checked against
   `apps/server/src/h5p/H5pConfigFactory.ts`); tests, tooling, `node_modules` and documentation stay out.
 - **Packages:** `h5p.json`, `content/content.json` (the example, completed with each library's Nynorsk defaults as
@@ -68,6 +77,7 @@ flowchart LR
 | `fetchLibraries.mjs` | The command: resolve or fetch, build, copy, pack, write `SHA256SUMS` |
 | `resolveManifest.mjs` | The ten roots and the recursive, pinned dependency resolution |
 | `gitSource.mjs` | `git ls-remote` tags, depth-1 checkouts proven against a commit, and `verifiedHead` (commit and tracked files) for a reused checkout |
+| `libraryBuild.mjs` | A library's install and build with a minimal, explicit environment (`BUILD_ENV_VERSION` in the stamp) |
 | `libraryFiles.mjs` | Which checkout files belong in a library folder |
 | `semanticDefaults.mjs` | Defaults from `semantics.json` and `language/nn.json`, merged under the example |
 | `packContentTypes.mjs` | One deterministic `.h5p` per content type |

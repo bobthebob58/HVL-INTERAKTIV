@@ -14,6 +14,7 @@
  *   - The author is the mock Feide's `author` with a Feide ID of this run (./runFeideAuthor.ts): a new account with
  *     no notice dismissals and no activities but this run's, whatever earlier runs left in the database.
  *   - `ids` hold published activities; `draftId` is a draft MultiChoice for flows that change state.
+ *   - `filesBase` is the files origin the player's files come from (SEC-004, D-110), ours and so first-party (DATA-011).
  *   - `close` removes the seed audit rows this run wrote (by ID, ./testLibraryAuditSink.ts) and the library folder,
  *     on top of ./appTestbed.ts's cleanup (which removes the author and the LTI users with all their content), and
  *     then fails if any of the author's or the teacher's accounts or activities is still in the database.
@@ -27,6 +28,7 @@
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Browser } from 'playwright-core';
+import { filesOriginOf } from '../../src/config/filesOrigin.js';
 import { CANVAS_USERS } from '../../../../tools/mock-platform/mockPlatform.mjs';
 import { asAccountUser } from '../../src/h5p/HvlH5pUser.js';
 import { TestLibraryAuditSink } from './testLibraryAuditSink.js';
@@ -53,6 +55,8 @@ export interface RealWebApp {
   readonly tb: AppTestbed;
   /** `http://localhost:<port>`. */
   readonly base: string;
+  /** The files origin the player's files come from, `http://files.localhost:<port>` (SEC-004). */
+  readonly filesBase: string;
   /** Main library name (e.g. `H5P.MultiChoice`) → published activity of the author. */
   readonly ids: ReadonlyMap<string, string>;
   /** A draft H5P.MultiChoice activity of the author. */
@@ -160,6 +164,7 @@ export async function openRealWebApp(browser: Browser): Promise<RealWebApp> {
   return {
     tb,
     base: tb.toolUrl,
+    filesBase: filesOriginOf(tb.env),
     ids,
     draftId,
     authorStorage,

@@ -660,32 +660,89 @@ under the step that does it):
         (route patterns only, also for 404s and bad JSON)
   - [x] `docs/TRACEABILITY.md` and the spec site regenerated; every check, test set, the e2e set and the insight and
         grade-sync accessibility files pass (session log, «2026-11-05 · S6 step 5»)
+  - [x] The step-5 review's follow-ups, done in step 6 (the follow-ups workstream, 2026-11-05, each with a test):
+        the LTI error handler logs a route label, never `req.path` or serve-static's `err.path` (`ltiErrorLog.ts`);
+        `db:roles` refuses a migration URL to another host without an encrypting `sslmode`; `purgeCli.ts` prints
+        `purgeFailureLine`, not a raw error message; the documents for the review's two fixes (DPIA R3, R8 and R24,
+        the `DATA-004` items of the deployment checklist in `docs/ops/runbook.md` §9, the server README's mappe row,
+        the Evaluator Guide's `DATA-004` row, and D-106's *Verified by* naming `storedResultsBeforeToday.int.test.ts`).
+        Verified again in the step-6 finish run (session log, «2026-11-05 · S6 step 6»)
   - [ ] The commit, `Refs:` `DATA-003`, `DATA-004`, `DATA-005`, `DATA-007`, `DATA-008`, `DATA-010`, `NFR-006`,
         `INS-006`, `INS-008`, `LTI-008`, `DATA-012`, `MAPPE-003`
   - Still open, not blocking the step: the mappe does not read the purge snapshots (a D-095/D-107 amendment for the
-    mappe's owner); no job deletes audit rows after 2 years (Q26); the deployment checklist (step 6); the dormant
-    admin branch of `UserDataAccessAuditor` that would audit a learner key (the H5P permissions owner); the web
-    privacy notice's texts after the DPO's review (DPIA R32). From the step-5 review, three low findings, each in
-    another owner's file: the LTI error handler logs `req.path` and serve-static's `err.path`, so a client can put
-    text of its choice in a log line (`ltiErrorPages.ts`; log the route pattern or a page label instead);
-    `db:roles` runs a migration URL without TLS unrefused (refuse a weak `sslmode` unless the host is local);
-    `purgeCli.ts` prints a raw error message (print `prismaErrorLine(error)`, as the data-subject CLI does). The
-    review's two fixes are not yet in the documents: DPIA R3 and R8 (the mappe ends at midnight too), R24 and the
-    `DATA-004` deployment checklist in `docs/ops/` (plain bucket names), the server README's mappe row, the
-    Evaluator Guide's `DATA-004` row, and D-106's amendment, whose *Verified by* names
-    `storedActivityResults.int.test.ts` for tests that are in `storedResultsBeforeToday.int.test.ts`. A residual
-    for the DPO: the grade-sync counts are live (no midnight cut), not *k*-suppressed and include the test student
-    (DPIA R1, R13; Q22)
+    mappe's owner); no job deletes audit rows after 2 years (Q26); the dormant admin branch of
+    `UserDataAccessAuditor` that would audit a learner key (the H5P permissions owner); the web privacy notice's
+    texts after the DPO's review (DPIA R32). A residual for the DPO: the grade-sync counts are live (no midnight cut),
+    not *k*-suppressed and include the test student (DPIA R1, R13; Q22). The step-5 review's three low findings and
+    its document gaps were closed in step 6 (the follow-ups workstream: `ltiErrorLog.ts`, the `db:roles` TLS rule,
+    `purgeFailureLine`, DPIA R3, R8 and R24, the `DATA-004` checklist, the README and Evaluator Guide rows, D-106's
+    file name), and the deployment checklist is section 9 of `docs/ops/runbook.md`
 - [ ] 6. D — Operations and security (`NFR-007`, `SEC-004`, `SEC-006`, `NFR-002`, `NFR-001`, `UD-040`, the
       `MAPPE-004` image), designed in D-110: the Dockerfile and compose profile with a smoke test (or written only if
       dockerd will not run here; then CI runs it) → the files origin → ClamAV → runbook, backup and restore scripts
       with a round-trip test → the load harness with a reduced-scale smoke (tool chosen by amendment to D-114) →
       `npm run a11y:report` for the conformance report → the PDF availability probe
-  - [ ] Separate files origin for user files with signed URLs (`SEC-004`, D-045; URLs from S3's `HvlUrlGenerator`):
-        the player's files first, the editor's route later (D-110)
-  - [ ] ClamAV scanning (`SEC-006`): Lumi's scanner 10.0.4 wrapped to fail closed (D-110)
-  - [ ] Docker images, load test, runbook (`NFR-001`, `NFR-002`, `NFR-007`); conformance report (`UD-040`)
-  - [ ] Chromium and fonts with æ, ø and å in the production image for the PDF (D-096)
+  - **Built 2026-11-05** by six workstreams (the image and app stack, the files origin, ClamAV, backups with the
+    runbook and the load harness, the conformance report, and the step-5 follow-ups with the library-build fix),
+    each verified by a skeptic with mutation checks, then integrated (2026-11-05). Each decision's amendment came
+    before its code: D-110 (the files origin; the image, the app stack and its smoke; ClamAV; backups and the runbook;
+    the integration), D-114 (the load harness), D-079 (the conformance report and its review), D-045 (pointer),
+    D-056 (the old data key stays 31 days). Runbooks: [docker.md](docs/ops/docker.md), [clamav.md](docs/ops/clamav.md),
+    [runbook.md](docs/ops/runbook.md) with the deployment checklist (§9)
+  - [x] Separate files origin for user files with signed URLs (`SEC-004`, D-045; URLs from S3's `HvlUrlGenerator`):
+        the player's files on `files.<host>` (or `FILES_BASE_URL`), served only there by `filesOriginRouter.ts` with
+        the sandbox policy and CORS for the app; the editor's files stay on the app origin under grants of their own
+        (`SPEC-DEVIATION: D-110`). The `DATA-011` tests count the files origin as first-party
+  - [x] ClamAV scanning (`SEC-006`): Lumi's scanner 10.0.4 wrapped to fail closed on both upload paths, its client
+        built from our checked settings only; required in production unless explicitly turned off; real-clamd tests in
+        CI against a clamav service (D-110)
+  - [x] Docker images, load test, runbook (`NFR-001`, `NFR-002`, `NFR-007`); conformance report (`UD-040`):
+        `deploy/` (Ubuntu 24.04 and Node 24 by digest, uid 10001, the app stack with its own clamd, the smoke test
+        here and in `.github/workflows/docker.yml`); `tools/ops` (backup and restore with a round-trip test);
+        `tools/load` (k6 2.3.0, `npm run load:smoke`; the 200-learner run is HVL's); `npm run a11y:report` writes
+        `docs/accessibility/WCAG-CONFORMANCE-REPORT.md` (56 criteria, every verdict *Not yet determined* until HVL
+        tests); `tsx` is a runtime dependency of `apps/server`
+  - [x] Chromium and fonts with æ, ø and å in the production image for the PDF (D-096): full Chromium 141 with
+        Playwright's seccomp profile and `CAP_SYS_CHROOT`, the sandbox seen in `/proc`; the server logs at start
+        whether the export works (`pdfAvailability.ts`)
+  - [x] SECURITY (found while building the bundle): `H5P.AudioRecorder` 1.0's build baked the build machine's whole
+        environment, tokens included, into JavaScript served to learners. `tools/h5p-libraries` now builds every
+        library with a minimal environment (`buildEnv` 3), the bundle refuses secret-named variables, and the leaky
+        builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Tokens that were in the old builds
+        should be rotated (owner)
+  - [x] Integration (2026-11-05): `main.ts` runs the PDF probe after listening and waits for it on stop; `tsx` moved
+        to `apps/server`'s dependencies; scripts `deploy:check`, `docker:smoke`, `pdf:check`; the app stack has its
+        own clamd, and the smoke proves an upload scanned (EICAR refused) and served from the files origin; CI runs
+        the real-clamd tests and `a11y:report -- --check`; `.env.example`'s production rules and key rotation; the
+        documents (session log, «2026-11-05 · S6 step 6 (integration)»)
+  - [x] Security review of step 6 (2026-11-05, after the integration): files origin, grants, SVG and other uploads
+        (CVE-2025-7062), the scanner, the image, the app stack, backups and the load harness attacked or read against
+        their decisions; no high or medium defect in the code. One low fix with a regression test that fails without
+        it: a NUL byte in a granted file path reached PostgreSQL and gave 500 with an error-level log line on demand;
+        `signedFileRoutes.ts` now answers 404 before storage for any name `assertSafeObjectName` refuses
+        (`[SEC-004]` in `filesOrigin.int.test.ts`). Its other findings are under «Still open» below
+  - [x] `docs/TRACEABILITY.md` and the spec site regenerated; every check, every test set, the e2e set, the
+        accessibility files for the player, editor, insight and grade sync, and the Docker smoke on the final working
+        tree pass (session log, «2026-11-05 · S6 step 6»)
+  - [ ] The conformance report's run summary regenerated from the gate's full accessibility run; the commit, `Refs:`
+        `NFR-001`, `NFR-002`, `NFR-007`, `SEC-004`, `SEC-006`, `UD-040`, `MAPPE-004`, `NFR-006`, `DATA-004`,
+        `DATA-003`, `H5P-003`
+  - Still open: `docker.yml`'s first run on GitHub (Chromium from Playwright's CDN and its SHA-256, AppArmor, the
+    `/proc` check on the runner); HVL's runtime, DNS and clamd (Q5); the 200-learner load test and the restore drill
+    on HVL's hardware; the manual accessibility run and the 56 verdicts (`UD-031`); upstream reports for Lumi's
+    scanner, clamscan and AudioRecorder (step 7, D-112); the SHA-256 list of the content types kept in the repository
+    (D-110, waits for reproducible builds); `upload.file.scanUnavailable` answers 400, not 503 (the HTTP-errors
+    owner); the cookie-authenticated `/h5p/content/…` fallback route on the app origin (a D-110 amendment to narrow
+    or retire it; until then a NUL byte in its path gives a signed-in user a 500, which `PrismaContentStorage`'s
+    `requireFile` and `fileExists` should answer as not found). From the step-6 security review: clamd passes files
+    it did not scan in full (over ClamAV's size, recursion or file-count limits, or encrypted) unless
+    `AlertExceedsMax` and `AlertEncrypted` are set, so a D-110 amendment should make both required in `clamav.md`
+    and runbook §9 (medium–low); the root `docker-compose.yml` publishes PostgreSQL, Redis and moto on every
+    interface, and runbook §8 runs it on a production-like node, so bind them to 127.0.0.1 and warn in §8 (medium
+    on a networked host; a shared file); optional: refuse a request whose `Host` and `X-Forwarded-Host` disagree
+    about the files host; `frame-ancestors 'none'` for user files; runbook §6 to keep local backups on an encrypted
+    volume and restore from the authenticated off-server copy; `persist-credentials: false` in `ci.yml` and
+    `docker.yml`; `clamav.md`'s TLS note on clamscan 2.4.0 sending no SNI (D-112)
 - [ ] 7. E — Carry-overs: the language overlay and `H5P-010`'s texts (drafts for ALU) → problem reporting (the
       Nynorsk tester guide, GitHub issue forms) → upstream drafts → the **students' hand-off index**
       (`docs/handoff/README.md`: what is done, what needs HVL, the live-contract seam `apps/server/live/` and the
@@ -754,7 +811,7 @@ under the step that does it):
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous and equals the Feide ID; only then set `"feideLinking": true` for that platform in `LTI_PLATFORMS` (AUTH-005, D-063) | TeCopp | S3 |
 | Q16 | ~~The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).**~~ Resolved 2026-10-30 (D-101): GitHub CI runs on `main` and on pull requests. `main` is protected by a ruleset that requires a pull request and CI's «Session gate» check; that check passed on pull request #8 (run 41066236672, on `72e5516`), which was then merged (`47e235e`); Dependabot opens one grouped monthly pull request per ecosystem (S5 start). The push run on the merge (run 41075981429) was red: its end-to-end step failed in `appPlayEditor.e2e`, which pressed «Lagre» before the editor could save, a real slow-device fault. It is fixed in S6 step 0; GitHub's confirmation comes with that step's push | — | — |
-| Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
+| Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`). The container runtime must allow Playwright's seccomp profile and `CAP_SYS_CHROOT` for the PDF export's sandbox (OpenShift's `restricted-v2` allows neither), a DNS name and certificate for the files host (`files.<host>`, or a separate registrable domain), and a clamd with daily signatures (D-110's step-6 amendments) | HVL IT | S6 |
 | Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`). **Input complete 2026-11-05:** `docs/privacy/DPIA-INPUT.md` (purposes, operations, data flows with a diagram, the Canvas key's `privacy_level` and custom fields, recipients, retention, rights, security measures, residuals R1–R37, and the DPO's questions in its §13) | HVL DPO | S6, pilot |
 | Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns. Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
 | Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`, set for learners only, so an author's preview never offers it; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
@@ -1239,4 +1296,96 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npx vitest run <the other 17 server test folders>            Test Files 320 passed (320) · Tests 6360 passed (6360)
   $ npm run test:e2e                                             Test Files 15 passed (15) · Tests 24 passed (24)
   $ npx vitest run … a11y/axeInsight.a11y.test.ts axeGradeSync   Test Files 2 passed (2) · Tests 11 passed (11)
+  ```
+- **2026-11-05 · S6 step 6 (integration)** — Six workstreams (the image and app stack, the files origin, ClamAV,
+  backups with the runbook and the load harness, the conformance report, the step-5 follow-ups with the library-build
+  fix), each verified by a skeptic with mutation checks, then integrated. Decisions first: D-110's integration
+  amendment and D-056's (the old data key stays at least 31 days, for the grade jobs' `sub`). Wiring: `main.ts` runs
+  the PDF probe after listening and `stop` waits for it (`main.smoke.test.ts` checks the line); `tsx` moved from the
+  root's development dependencies to `apps/server`'s (the image's copy is now a guard); scripts `deploy:check`,
+  `docker:smoke`, `pdf:check`; the app stack has its own clamd (`clamav/clamav:1.4` by digest) and `CLAMAV_HOST` on
+  every service from the image; the smoke test proves an upload in the image (`deploy/smoke/uploadProof.mjs`); CI
+  runs the real-clamd tests against a clamav service and `a11y:report -- --check`; Dependabot proposes the image's
+  digests; Lumi's own `upload-malware-found` gets the scanner's message (a safety net); `.env.example`'s production
+  rules and key rotation; the unknown test ID in `reportGuards.test.mjs` built at run time so `spec:trace` does not
+  read it. Leaked build environments (the old AudioRecorder builds, with this session's tokens) deleted from 20 test
+  temp folders and the scratchpad; the 26 build-cache records (2.8 GB) a skeptic's test left on the default builder
+  removed by ID. Docs: `docs/ops/README.md`, `docker.md`, `clamav.md`, the runbook's checklist, the server README (module map, diagram,
+  trace rows), the Evaluator Guide (commands, the six S6 rows, limitations 10, 13 and 17), the GLOSSARY, DPIA F13,
+  F14, §9 and R38–R39, the inventory's log rows, specs 01 (code map, `SEC-004` and `SEC-006` amendments) and 02 (§2),
+  the protocol's §9 and the results README. No view changed, so no screenshots. Not regenerated, by the run's
+  instruction: `docs/TRACEABILITY.md` and the spec site (so `spec:trace --check` and `specSite.test.mjs` report them
+  out of date). Not committed. Check output:
+
+  ```
+  $ HVLI_DOCKER_SANDBOX=1 HVLI_APP_PORT=18093 bash deploy/smoke/dockerSmoke.sh   (the working tree, all six workstreams)
+      ✓ deploy files · ✓ bundle (10 packages) · image 2777 MB · ✓ proxy CA in no file of the image
+      ✓ /healthz {"status":"ok"} · ✓ 7 of 7 migrations · ✓ 77 libraries, 77 seed audit rows
+      ✓ pages: /hjelp (nn), a script and /h5p/core/js/h5p.js from the image
+      ✓ upload: the stack's clamd refused EICAR (Eicar-Test-Signature) and passed a clean PNG;
+        files.localhost:18093 serves it (200, CSP sandbox, nosniff, no cookie); the app origin answers 404
+      ✓ PDF with the sandbox: 25 179 bytes, æ ø å, LiberationSans-Bold and LiberationSerif embedded, Tagged, A4
+      ✓ sandbox in /proc: 2 renderers, NSpid [3,3], filters [2,2] · ✓ start-up probe: pdfSandbox true, reason ok
+      Chromium 141.0.7390.37 (dd794b4e…144a) · disk 17 GB → 9.3 GB → 17 GB · ✓ docker smoke passed in 155 s
+  $ npm run test:e2e                                             Test Files 16 passed (16) · Tests 27 passed (27)
+  $ vitest a11y: axeContentTypes, axeEditor, firstParty          Test Files 3 passed (3) · Tests 91 passed (91)
+  $ CI=true npx vitest run tools/ops                             Test Files 4 passed (4) · Tests 34 passed (34)
+  $ npm run load:smoke                                           exit 0 · player ready p95 1267 ms · API p95 26 ms ·
+                                                                   0.00 % failed · 60 visits · 6180 requests
+  $ CLAMAV_TEST_HOST=127.0.0.1 … realClamd.test.ts (clamd 1.4.6) Tests 2 passed (2)
+  $ CI=true npx vitest run test/config test/security test/http test/server test/logging test/lti test/db
+      test/privacy test/learningDesign/mappe test/infra (apps/server)
+                                                                 Test Files 193 passed, 1 skipped (realClamd) · Tests 1494 passed
+  $ CI=true npx vitest run --project tools                       Test Files 60 passed, 1 failed: specSite (site not regenerated)
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 488 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+  $ npm run a11y:report -- --check · content:check               exit 0 · ✓
+  $ node tools/spec-trace/specTrace.mjs --check --done-through=S6   only: TRACEABILITY.md is out of date
+  ```
+- **2026-11-05 · S6 step 6** — A security review of the integrated step 6, then the finish run. The review attacked
+  the files origin (traversal, host variants, methods, cookies), the grants, the SVG and upload paths, the scanner,
+  the image, the app stack, backups and the load harness, and found no high or medium defect in the code. One low fix,
+  with a regression test that fails without it: a NUL byte in a granted file path reached PostgreSQL and answered 500
+  with an error-level log line; `signedFileRoutes.ts` now answers 404 before storage for any name the storage refuses
+  (`[SEC-004]` in `filesOrigin.int.test.ts`). Its other findings (clamd's `AlertExceedsMax` and `AlertEncrypted`,
+  the root compose file's published ports, the cookie route's NUL 500 and smaller hardening) are under step 6's
+  «Still open». The finish run regenerated `docs/TRACEABILITY.md` and the spec site, reworded the step-6 integration
+  entry so it no longer names an unknown requirement ID (`spec:trace --check` refused it), and ran every check and
+  test set, and the Docker smoke again, because the image copies the source tree and the review's fix came after the
+  integration's smoke. Nothing else needed fixing. No view changed, so no screenshots. Not committed. Check output
+  (every step exit 0; tests with `CI=true`; the spec site was built again after this entry and its `--check` passed):
+
+  ```
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements · ✓ docs/site/index.html is up to date
+  $ npm run spec:trace -- --check --done-through=S5              ✓ 126 requirements, traceability up to date.
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 488 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+  $ npm run tokens:check · deploy:check · a11y:report -- --check ✓ 3 files up to date · ✓ deploy files as D-110 sets them · exit 0
+  $ npm run build                                                exit 0
+  $ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                                 Test Files 186 passed (186) · Tests 1524 passed (1524)
+  $ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 171 passed (171) · Tests 19789 passed (19789)
+    (apps/server)
+  $ npx vitest run <the other 18 server test folders>            Test Files 334 passed, 1 skipped (realClamd: no clamd host)
+                                                                   · Tests 6449 passed, 2 skipped
+  $ npm run test:e2e                                             Test Files 16 passed (16) · Tests 27 passed (27)
+  $ npx vitest run … a11y/axeContentTypes axeEditor axeInsight axeGradeSync firstParty
+                                                                 Test Files 5 passed (5) · Tests 102 passed (102)
+                                                                   (one policy refusal: BranchingScenario's documentation frame)
+  $ HVLI_DOCKER_SANDBOX=1 HVLI_APP_PORT=18094 bash deploy/smoke/dockerSmoke.sh   (the final working tree)
+      ✓ deploy files · ✓ bundle (10 packages) · ✓ core and editor match their hash lists · image 2777 MB
+      ✓ proxy CA in no file of the image · ✓ /healthz {"status":"ok"} · ✓ 7 of 7 migrations
+      ✓ 77 libraries, 77 seed audit rows · ✓ pages: /hjelp (nn), a script and /h5p/core/js/h5p.js from the image
+      ✓ upload: the stack's clamd refused EICAR (Eicar-Test-Signature) and passed a clean PNG;
+        files.localhost:18094 serves it (200, CSP sandbox, nosniff, no cookie); the app origin answers 404
+      ✓ PDF with the sandbox: 25 179 bytes, æ ø å, LiberationSans-Bold and LiberationSerif embedded, Tagged, A4
+      ✓ sandbox in /proc: 2 renderers, NSpid [3,3], filters [2,2] · ✓ start-up probe: pdfSandbox true, reason ok
+      Chromium 141.0.7390.37 · disk 17 GB → 10 GB → 17 GB · no image, container, volume, builder or cache left
+      ✓ docker smoke passed in 154 s
   ```

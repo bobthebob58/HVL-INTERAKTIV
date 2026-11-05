@@ -4,7 +4,7 @@
  * Why: Lumi's defaults are unsafe or wrong for HVL (allow-everything permissions, Core 1.27 assets, a 64-char
  *      Hub `local_id`, English-only strings, no upload sanitisers). One factory sets them all, so no code path
  *      can build an editor that misses one (H5P-002, H5P-006, H5P-008, SEC-001/002).
- * Spec: H5P-002, H5P-006, H5P-007, H5P-008, SEC-001, SEC-002, SEC-008
+ * Spec: H5P-002, H5P-006, H5P-007, H5P-008, SEC-001, SEC-002, SEC-008, SEC-006
  * Invariants:
  *   - `options.permissionSystem` and the editor policy hold the same HvlPermissionSystem instance, and the policy's
  *     activity facts are the ones that permission system reads (the paste-source guard, D-092).
@@ -12,6 +12,8 @@
  *   - The library storage is the language-fallback wrapper; DragQuestion is removed from every semantics.
  *   - F1: `local_id` is at most 15 characters; F3: Core 1.28 styles and scripts are added (./h5pAssets.ts).
  *   - The file sanitisers run on every uploaded file (editor uploads and package import).
+ *   - The malware scanners, when configured, scan every uploaded file before it is stored, on the same two paths
+ *     (../security/malware/, SEC-006, D-110 amendment of 2026-11-05).
  *   - `render` returns Lumi's model, never Lumi's HTML (its template is unsafe, D-040).
  * Collaborators: ./HvlH5PEditor.ts, ./HvlUrlGenerator.ts, ./h5pAssets.ts, ./H5pConfigFactory.ts,
  *   ./h5pStorage.ts, ./semantics/removeDragQuestion.ts, ./storage/LanguageFallbackLibraryStorage.ts,
@@ -19,6 +21,7 @@
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts
  */
 import type {
+  IFileMalwareScanner,
   IFileSanitizer,
   IH5PConfig,
   IPermissionSystem,
@@ -55,6 +58,8 @@ export interface EditorFactoryInputs {
   readonly copyLimit: PersonLimit;
   readonly translate: ITranslationFunction;
   readonly fileSanitizers: readonly IFileSanitizer[];
+  /** Malware scanners for uploads (none by default; ../security/malware/createMalwareScanners.ts). */
+  readonly malwareScanners?: readonly IFileMalwareScanner[];
   /** Builds every URL of the editor page; shared with the player (H5P-007). */
   readonly urlGenerator: HvlUrlGenerator;
 }
@@ -62,7 +67,7 @@ export interface EditorFactoryInputs {
 /**
  * Builds the editor.
  * @param inputs - Config, storages, permission system, audit sink, activity facts, learner-state rows, copy limit,
- *   translation, sanitisers and URL generator.
+ *   translation, sanitisers, malware scanners and URL generator.
  * @returns The editor; check it with `assertPermissionSystem` before use.
  */
 export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
@@ -82,6 +87,7 @@ export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
         permissionSystem: permissionSystem as unknown as IPermissionSystem,
         lockProvider: storages.lockProvider,
         fileSanitizers: [...inputs.fileSanitizers],
+        malwareScanners: [...(inputs.malwareScanners ?? [])],
         customization: { alterLibrarySemantics: removeDragQuestion, global: editorGlobalAssets(urls) },
         // WHY: F1, the new Hub refuses a local_id over 15 characters; read lazily, the UUID may arrive later.
         getLocalIdOverride: () => localIdFor(config.uuid),

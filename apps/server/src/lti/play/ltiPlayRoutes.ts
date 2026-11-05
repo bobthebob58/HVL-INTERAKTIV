@@ -88,7 +88,10 @@ export function ltiPlayRoutes(deps: LtiPlayDeps): Router {
       throw error;
     }
     // SECURITY: the strict H5P page policy (D-070); framed by our LTI chrome page and by Canvas (D-067).
-    setLtiPageHeaders(res, h5pPageCsp(deps.pageCsp, ["'self'", ...deps.canvasOrigins]));
+    setLtiPageHeaders(
+      res,
+      h5pPageCsp(deps.pageCsp, ["'self'", ...deps.canvasOrigins], { playerFiles: true }),
+    );
     const contentLanguage = deps.metadataOf ? activityLanguage(await deps.metadataOf(contentId)) : undefined;
     res.type('html').send(
       renderPlayerPage(model, actor.locale, {

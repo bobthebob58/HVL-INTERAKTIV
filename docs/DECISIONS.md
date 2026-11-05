@@ -120,7 +120,7 @@ with the commands given.
 | D-107 | `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year | Accepted (2026-10-30) |
 | D-108 | Data-subject requests: a server CLI that HVL operations run | Accepted (2026-10-30) |
 | D-109 | Database roles, encrypted-connection checks in production, and a request log without personal data | Accepted (2026-10-30) |
-| D-110 | Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV | Accepted (2026-10-30), HVL's runtime and DNS open (Q5), build egress to the owner (Q21) |
+| D-110 | Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV | Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05), HVL's runtime and DNS open (Q5), build egress to the owner (Q21) |
 | D-111 | An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it | Accepted (2026-10-30), texts to HVL's language advisers and ALU (Q2, Q17) |
 | D-112 | Upstream reports drafted for the owner to file; Lumi stays at 10.0.4 | Accepted (2026-10-30) |
 | D-113 | The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard | Accepted (2026-10-30) |
@@ -607,6 +607,9 @@ loading of one spec per session are kept.
 - **Consequences:** A stricter superset of `SEC-004` in S2; the origin isolation follows in S3/S6. Text types,
   SVG included, carry `charset=utf-8`. An SVG is an `attachment` too: a browser still draws it in `<img>`, but
   opening it directly downloads it instead of showing it as a page.
+- **Amendment (2026-11-05):** the separate origin is built in S6 as D-110's amendment of the same day describes: the
+  player's files come from `FILES_BASE_URL` (by default `files.<host>`), every answer there carries these headers, and
+  the editor's files stay on the app origin for now (`SPEC-DEVIATION: D-110`).
 
 ### D-046 · Library language files fall back nn → nb → en
 - **Context:** `H5P-008` asks that a content type without `language/nn.json` uses its `nb` strings, then `en`.
@@ -743,6 +746,12 @@ loading of one spec per session are kept.
   first and restart every server; (3) remove the old key 12 hours after the last step-2 restart. Putting the new key
   first in one step would break LTI on servers not yet restarted, and a key that has been first must stay in every
   ring until nothing uses it.
+- **Amendment (2026-11-05, S6 step 6 integration):** step (3) waits at least **31 days** after the last step-2
+  restart, not 12 hours. Since S6, `GradeSyncJob.ltiSubEncrypted` stays under the key of the job's last write until
+  the job's subject is cleared, 30 days after the job stopped (D-104, `DATA-002`,
+  `apps/server/src/grades/GradeSubjectCleanupJob.ts`), and a job whose key is gone fails as `subject-unreadable`
+  (`apps/server/src/grades/gradeJobSend.ts`). Found by the skeptic review of the backup and runbook work (D-110's
+  backup amendment); `apps/server/.env.example` and `docs/ops/runbook.md` §4 say the same.
 
 ### D-057 · Own Redis portal sessions, login transactions and a synchronizer CSRF token
 - **Context:** `AUTH-003` asks for a Redis session behind an opaque `__Host-hvli_sid` cookie (idle 2 h, absolute
@@ -1376,6 +1385,57 @@ loading of one spec per session are kept.
   HVL records results. The open work is the unchecked S4 item "First manual run of the protocol and the matrix" in
   PROGRESS.md. The matrix (§1, §3), the Evaluator Guide (§2, limitation 15) and `tools/spec-trace/README.md` say
   what "tested" means for these two.
+- **Amendment (2026-11-05, S6 step 6: the conformance report, `UD-040`):** the split of this decision continues
+  inside `docs/accessibility/WCAG-CONFORMANCE-REPORT.md`, which `npm run a11y:report` (`tools/a11y-report/`) writes
+  with one section for each WCAG 2.2 Level A and AA success criterion: 56, counting 4.1.1 *Parsing*, which WCAG 2.2
+  marks obsolete but WCAG 2.1 and EN 301 549, on which the Norwegian regulation rests, still list.
+  - **Generated parts:** per criterion, how it is tested (the axe rules that carry the criterion's tag in the
+    axe-core that `@axe-core/playwright` runs, under the suite's own tags, without the rules axe excludes by default;
+    our own checks by requirement ID and suite file), which views, the result of the last full run of
+    `npm run test:a11y`, links to the tests, the manual protocol's steps and §7 checks for it, and the upstream
+    entries of `apps/server/a11y/support/upstreamRegister.ts` it concerns, with their issue links (none filed yet,
+    D-112). Also a summary table, the dated manual results in `docs/accessibility/results/`, the register in full,
+    and an appendix of the last run. The mapping from criterion to our checks is data in the tool, reviewed like
+    code; a protocol step it names must exist in the protocol, or the generator stops.
+  - **Manual parts:** text between `<!-- manual:start <id> -->` and `<!-- manual:end <id> -->`: per criterion the
+    verdict (*Supports*, *Partially supports*, *Does not support*, *Not applicable* or *Not yet determined*) and the
+    manual evidence; and the scope, the assistive-technology runs, the cognitive review, the barriers axe cannot see
+    and the notes for the uustatus.no statement. The generator copies each block as it is; it stops on a broken,
+    duplicate or unknown marker, a missing verdict line or an unknown verdict instead of dropping or guessing text,
+    and seeds a missing block with *Not yet determined* and *Not yet tested by HVL*. No verdict is derived from the
+    automated results: axe and our checks find only part of the barriers (the protocol's §1), so a *Supports* from
+    them would overstate; the summary table copies the verdict people wrote.
+  - **Determinism:** a run enters through a distilled, committed summary, `docs/accessibility/automated-run.json`
+    (`--from-run=<dir>` reads Vitest's JSON report and the axe JSON lines of `A11Y_REPORT_DIR`; `--run` runs the
+    suite first and needs `npm run build`). The report carries no time except the run's date and commit from that
+    summary, so regenerating an unchanged tree gives the same file, and `--check` fails when the committed report
+    differs from what its sources give: the gate's «regenerates the automated parts unchanged» (D-113). A new test
+    file whose title opens with a mapped ID, a new suite or a new register entry therefore needs a regeneration in the
+    same commit, as `docs/TRACEABILITY.md` does.
+  - **Alternatives considered:** (a) reading the raw run outputs on every regeneration: a fresh checkout could not
+    regenerate the report, and two runs never give the same file; (b) one table for all criteria: the manual blocks
+    need a place per criterion; (c) a status kept in spec-trace: rejected above for `UD-031`, for the same reason.
+  - **Consequences:** `UD-040`'s tests (`tools/a11y-report/test/`, `[UD-040]`) are its document check under D-113:
+    the manual blocks survive a regeneration byte for byte, two regenerations give the same file, every criterion is
+    listed and the committed report's blocks parse. HVL's evaluation of each criterion stays open until HVL acts.
+- **Amendment (2026-11-05, S6 step 6 review of the `UD-040` generator):** the review found four ways in which the
+  report could say more than is true. They are closed as follows.
+  - **A failed file is a failure.** Vitest 5 reports a file whose hook (`beforeAll`, e.g. the browser or the services
+    not starting) or import failed as `failed`, with its tests `skipped` or none at all; the summary then said
+    "0 failed". The summary (format 2) now records such files in `failedFiles`, the report names them in the run's
+    header, in the criterion lines of their checks and in appendix A, and `--from-run` exits 1 for a failed run, as
+    `--run` does. A run is "clean" only when `git status --porcelain` shows nothing, untracked files included,
+    since an untracked test or source file changes what ran.
+  - **Only the whole suite is "the last full run".** `--from-run` and `--run` refuse, writing nothing, a run that
+    lacks a suite file with running tests (a run of one file or a filtered folder), and a run with two suite files
+    of the same path. Files are keyed by their path under `apps/server/a11y/`.
+  - **No HVL verdict without a dated HVL evaluation.** A criterion block whose verdict is not *Not yet determined*
+    needs the line `**Evaluated by HVL:**` beginning with a date (`YYYY-MM-DD`), and a block holds one verdict line
+    only; otherwise the generator stops. So the summary's «Verdict (HVL)» column never shows a verdict that no dated
+    evaluation stands behind, nor one of two contradicting lines.
+  - **No text is lost to a marker the parser does not see.** Markers are found whatever their letter case (a
+    `<!-- Manual:start … -->` stops the generator instead of its block being rewritten as generated text), and the
+    composed report is read back before it is returned: it must give exactly the blocks that went in, byte for byte.
 
 ### D-080 · H5P markup barriers: repaired in the page where we can, registered where we cannot
 - **Context:** `UD-030` lets CI fail on any serious or critical axe violation on every route and inside each type's
@@ -2961,8 +3021,8 @@ loading of one spec per session are kept.
   stored before the latest midnight in Oslo at the moment of the export (presences and root results alike), so two
   exports on one day are the same and an export never holds today's plays. *The trade-off:* as for insight, a teacher
   sees today's plays in the mappe tomorrow (PROGRESS Q24 applies to both). The yearly purge's snapshots cover ended
-  years only and are unchanged. *Verified by* `storedActivityResults.int.test.ts` (a learner who played today is in no
-  group until the next day).
+  years only and are unchanged. *Verified by* `storedResultsBeforeToday.int.test.ts` (a learner who played today is in
+  no group until the next day).
 
 ### D-107 · `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year
 - **Context:** `DATA-003` runs the purge "on a configured date (default 15 August)" for the academic year that has
@@ -3461,6 +3521,366 @@ loading of one spec per session are kept.
     the pinned 1.56.1), and its floating ranges already broke 2.0.30 ("Cannot find module
     '@smithy/node-config-provider'"). 2.3.0 rather than the 1.x line, because the scripts are new and it is the
     version tested; the image rather than the release binary, so one pinned digest serves here and in CI.
+- **Amendment (2026-11-05, step 6: the files origin, `SEC-004`):** decided before the code; it settles what
+  **Files origin** above leaves open.
+  - **Setting:** `FILES_BASE_URL`, an origin. Unset, it is `files.<host>` of `PUBLIC_BASE_URL` with the same scheme
+    and port, so development gets `http://files.localhost:3000` (Chromium and Firefox resolve every `*.localhost`
+    name to the loopback, RFC 6761 §6.3; Node does not, so server tests name the files host in the `Host` header). A
+    `PUBLIC_BASE_URL` whose host is an IP address has no `files.` name, so `FILES_BASE_URL` must then be set. In every
+    environment the files host must differ from the app's host: a second port on the same host is refused, because
+    a browser sends a host's cookies to all its ports (RFC 6265 §8.5). Production also requires https. The start
+    stops with a message that names the variable, never its value.
+  - **One process, two host names:** the server tells the origins apart by the request's host (`req.hostname`, so
+    `X-Forwarded-Host` counts only behind `TRUST_PROXY`). A request for the files host goes to a files-only router
+    right after the request log and the base headers, before the portal session, LTI, Feide, `/api`, `/h5p` and the
+    web app, so nothing there reads a cookie, an ltik or a session, and nothing sets one. HVL's reverse proxy sends
+    both names to the same upstream and passes `Host` on (deployment checklist). Not chosen: a second listener, which
+    needs a second port in every deployment and gains nothing, since the files router reads no credential.
+  - **What the files origin serves:** only `GET` and `HEAD /h5p/files/<grant>/<contentId>/<file>` with a player
+    grant (purpose `content-file-url`, issued by the player render after the View check, D-058), and `OPTIONS` for a
+    CORS preflight of those; everything else is 404. Every answer, refusals included, carries D-045's `nosniff` and
+    sandbox policy, and files keep `attachment` for all but media and `Cache-Control: private`. Answers allow the app
+    origin by CORS (`Access-Control-Allow-Origin: <PUBLIC_BASE_URL>`, never credentials), and the player's
+    integration sets H5P's `crossorigin: 'anonymous'`: H5P then loads content files in CORS mode (`H5P.setSource`),
+    and H5P.Video's captions (`<track>`), which a browser refuses from another origin without CORS, keep working.
+  - **The app origin** no longer answers a player grant: `/h5p/files/…` there is 404 whatever the grant, with no
+    redirect (every player render issues new URLs, and a redirect would make the app origin answer for grants and
+    copy them into `Location`).
+  - **The editor stays on the app origin**, as decided above, with a grant of its own: saved files at
+    `/h5p/editor-files/<grant>/<contentId>/<file>` under a new purpose `editor-file-url`, issued only by the editor
+    render after the Edit check, and fresh uploads at `/h5p/uploads/…` as before (D-069). A player grant opens nothing
+    on the app origin, and an editor grant nothing on the files origin. Why the editor waits: H5P's image editor
+    (`scripts/h5peditor-image-popup.js`, `libs/cropper.js`) draws a saved image into a canvas without `crossorigin`
+    and exports it with `toBlob`, which a cross-origin image would refuse, so cropping and rotating would break. The
+    code marks this `SPEC-DEVIATION: D-110`; it is mitigated by D-045's headers and because only people who may edit
+    the activity get these URLs. The cookie-authenticated `/h5p/content/:id/*file` and `/h5p/temp-files/*file` stay
+    (H5P's fallback when an integration names no `contentUrl`, e.g. a pasted file from another activity).
+  - **Page policy:** the player pages (portal and Canvas) name the files origin in `img-src` and `media-src` only;
+    the editor page's policy does not name it.
+  - **Lifetime and scope of a URL:** D-058's grant lifetime stays (12 to 13 hours): a player page fetches files long
+    after it opened (InteractiveBook chapters, video seeking), so a shorter grant would break long sessions. A grant
+    opens the registered files of one activity, never another activity's: H5P appends each file's path to one
+    `contentUrl`, so a grant per file would mean patching H5P Core.
+  - **Tests:** the `DATA-011` helper counts the configured files origin as first-party. Test beds that serve the H5P
+    router alone on one loopback server (`httpTestbed`) keep relative file URLs and mount the player's file route
+    themselves; the app test bed, the e2e set and the accessibility suite run the real split on `files.localhost`.
+  - **Residual:** `files.<host>` is the same site as the app; a separate registrable domain (HVL's choice, Q5) would
+    also keep `SameSite` cookies set with a `Domain` away from file requests (see **Files origin** above).
+- **Amendment (2026-11-05, step 6: the image, the app stack and its smoke test, `NFR-007`, `MAPPE-004`):** decided
+  before the code, after the P3 amendment; what the smoke test measures is added at the end of this block.
+  - **Files:** `deploy/Dockerfile` (with `deploy/Dockerfile.dockerignore`), `deploy/compose.app.yml`,
+    `deploy/seccomp/`, `deploy/smoke/` (the smoke script), `tools/h5p-bundle/` (the content-type bundle) and
+    `.github/workflows/docker.yml`, apart from `ci.yml`. The runbook is `docs/ops/docker.md`.
+  - **Stages:** `node` (only the source of `/usr/local/bin/node` and npm), `base` (the Ubuntu digest with Node copied
+    in), `deps` (`npm ci` with install scripts and the optional CA secret), `build` (`prisma generate` and
+    `npm run build`: tokens, theme, web app), `prod-deps`, `pwbrowsers-download` and `pwbrowsers` (P3), the empty
+    stages `h5pcore` and `h5pbundle` that the build contexts of the same names replace, `inputs` (their checks) and
+    `runtime`. Only `runtime` is tagged.
+  - **Runtime dependencies (narrows **Runtime** for now):** `prod-deps` is the `npm ci` tree after
+    `npm prune --omit=dev`, plus `tsx` and the packages it needs, taken from the same tree before the prune
+    (`npm query '#tsx, #tsx *'`), because `tsx` is still a development dependency of the repository root. Moving it to
+    `apps/server`'s dependencies, as **Runtime** decides, is a change to shared files left to the integrator; the copy
+    is then a no-op. `prisma` stays in the pruned tree as `@prisma/client`'s optional peer (`devOptional` in the
+    lockfile), so the migrate step runs `prisma migrate deploy` from the same image, with the OpenSSL 3 schema engine
+    the Ubuntu `deps` stage installed. The build fails if `tsx`, `prisma` or `playwright-core` is missing after it.
+  - **Runtime image:** H5P core and editor and the bundle are copied only from `inputs`, after their checks. Chromium
+    `chromium-1194` lives in `/ms-playwright` (`PLAYWRIGHT_BROWSERS_PATH`), with `install-deps chromium`,
+    `fonts-dejavu-core` and `tini` from Ubuntu's archive; poppler stays out. The code is owned by root and read-only to
+    the app's user `hvli` (uid and gid 10001), who owns only the H5P library folder (a volume). `tini` is PID 1, so
+    Chromium's exited children are reaped, and the command is `node --import tsx src/server/main.ts`, not npm, so
+    `SIGTERM` reaches the server's own shutdown. `NODE_ENV=production` and `WEB_APP=prod` are the image's defaults.
+  - **Content types (narrows **Content types** and the P3 **Egress** point):** `tools/h5p-bundle` builds the bundle
+    from `apps/server/var/h5p-real/packages` (or another folder) into a folder of its own: exactly the ten types'
+    packages, each matching the fetch's `SHA256SUMS` (a changed, missing or extra file is refused), copied with a
+    `SHA256SUMS` the build stage `inputs` checks again and the seeder a third time. **SECURITY:** it also refuses a
+    package that carries an environment variable whose name says secret (`TOKEN`, `SECRET`, `PASSWORD`, `API_KEY`,
+    `ACCESS_KEY`, `PRIVATE_KEY`, `CREDENTIAL`) with a value, and names the package, the file and the variable, never
+    the value. Found while building it: `H5P.AudioRecorder` 1.0 and `H5PEditor.AudioRecorder` 1.0 (in the
+    CoursePresentation and BranchingScenario packages) build with webpack's
+    `DefinePlugin({ 'process.env': JSON.stringify(process.env) })`, so `npm run h5p:fetch-libraries` writes the build
+    machine's whole environment into JavaScript the player sends to every learner; here that included a session
+    token. The fix belongs to D-078's tools (build those libraries with a minimal environment) and upstream (D-112).
+    Until the packages are reproducible across machines, which this also prevents, the SHA-256 list **kept in the
+    repository** waits: the bundle carries the list its builder wrote after these checks, and the GitHub workflow
+    fetches the libraries with a scrubbed environment (`env -i` with `PATH` and `HOME`) and a cache key of its own.
+  - **Seccomp profile:** `deploy/seccomp/playwright-v1.56.1.seccomp`, fetched with `git` from
+    `https://github.com/microsoft/playwright` tag `v1.56.1` (commit `54c711571a37de525377e6f3d3608c3e029b1829`),
+    file `utils/docker/seccomp_profile.json`, byte for byte (12 997 bytes, SHA-256 as in the P3 amendment). The file
+    name has no `.json`, so no formatter rewrites it; `deploy/seccomp/README.md` names the source, and a test checks
+    the hash and that `clone`, `setns` and `unshare` are allowed.
+  - **The app stack (`deploy/compose.app.yml`, project `hvli-app`):** PostgreSQL 16, Redis 7 and moto 5.1.16 by
+    digest, no published ports; one-off services `buckets` (creates the two buckets in moto), `migrate` and `seed`
+    (from the bundle, into the library volume); then `app`, on `127.0.0.1` only, with the seccomp profile,
+    `no-new-privileges`, every capability dropped but `SYS_CHROOT` (see *Measured* below), a read-only root file
+    system and `tmpfs` for `/tmp`, the user's home and Next.js's cache. The keys and secrets come from the environment and are never in the file; the smoke script makes random
+    throwaway ones. This stack is local: it sets `NODE_ENV=development`, because the production checks rightly
+    refuse its plain-HTTP database, Redis, S3 and public URL; staging sets `production` with TLS endpoints and D-109's
+    two database URLs (runbook). Its public URL is `http://localhost:<port>`, so the files origin is
+    `files.localhost` (amendment above).
+  - **The smoke script (`deploy/smoke/dockerSmoke.sh`):** prints the free disk space; builds with its own buildx
+    builder (`docker-container` driver, `moby/buildkit:v0.33.1` by digest) and `--load`s the image; brings the stack
+    up with `up --wait`; checks `/healthz`, the migration and a seeded content type (its library folder and audit
+    row); renders a sample mappe through `mappeHtml` and the real `PdfRenderer` inside the app container with the
+    sandbox on (the probe below), and checks the PDF on the host with `pdftotext` (`æ ø å Æ Ø Å`), `pdffonts` (every
+    font embedded) and `pdfinfo` (`Tagged: yes`, A4); prints `chrome --version` and the binary's SHA-256; then
+    `down -v`, removes its image tags and removes its builder with that builder's cache. A BuildKit container resolves
+    images itself, not through the daemon, so with `HVLI_DOCKER_SANDBOX=1` the builder gets the mirror and the proxy's
+    CA in its own configuration (refines the P3 **Docker Hub** point); the CA secret and the `pwbrowsers` context are
+    passed under the same flag, never because a path exists.
+  - **PDF availability probe (`MAPPE-004`):** `apps/server/src/learningDesign/mappe/pdf/pdfAvailability.ts` starts
+    Chromium with the export's own launch options, opens one offline context and page with JavaScript off, closes
+    it, and logs one line with `pdfAvailable`, `pdfSandbox` and a reason code (`ok`, `sandbox-off`, `no-browser`,
+    `no-usable-sandbox`, `root-without-no-sandbox`, `launch-timeout`, `launch-failed`, `page-failed`), never an error
+    text or path; it never throws. `pdfCheckCli.ts` beside it runs the probe and prints one sample PDF for the smoke.
+    Calling the probe once after the server listens is a line in `main.ts`, left to the integrator.
+  - **GitHub workflow (`docker.yml`):** on pull requests and pushes to `main`: `npm ci`, `h5p:fetch-core`, the
+    scrubbed library fetch, the bundle, poppler-utils, the AppArmor step of `ci.yml`, then the same smoke script
+    without the sandbox flag, so Chromium comes from Playwright's download host and images from Docker Hub.
+  - *Measured here (2026-11-05, three runs on a snapshot of `5064a49` with this step's files, 4 vCPU):*
+    - *Changes:* Chromium's namespace sandbox also needs `CAP_SYS_CHROOT` in the container's bounding set. With every
+      capability dropped the launch fails (`Check failed: sys_chroot("/proc/self/fdinfo/") == 0`, after the
+      namespaces are made), and with `--cap-drop ALL --cap-add SYS_CHROOT`, the seccomp profile,
+      `no-new-privileges` and a read-only root it prints. So the app, and only the app, adds back `SYS_CHROOT`
+      (`tools/deploy-check` refuses any other added capability), the probe reports that failure as
+      `no-usable-sandbox`, and Q5 gains it: OpenShift's `restricted-v2` allows neither the profile nor the
+      capability.
+    - *Passed* (`HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh`, 152 s with a cold builder): image build
+      105 s, image 2 776 MB; `up --wait` with the one-off steps 24 s; `/healthz` `{"status":"ok"}`; 7 of 7
+      migrations; 77 libraries and 77 seed audit rows from the 10 packages; the probe
+      `{pdfAvailable: true, pdfSandbox: true, reason: "ok"}` as uid 10001; a 25 179-byte PDF with
+      `æ ø å Æ Ø Å — Lærar, øving, årsplan.`, `LiberationSans-Bold` and `LiberationSerif` embedded as subsets,
+      `Tagged: yes`, A4; Chromium 141.0.7390.37, SHA-256 of the host cache's `chrome`
+      `dd794b4e31017bc184f872bb65f1d8e5a2986a896f09d559b903bd0eaf83144a` (CI's CDN copy to be compared). Free disk
+      went from 16 GB to 8.2 GB at the peak and back to 16 GB; no container, volume, image tag or build cache of the
+      run was left, and `moby/buildkit:v0.33.1` stays pulled for the next run.
+    - *The bundle here* was built from packages repacked in the scratchpad after the two AudioRecorder libraries were
+      rebuilt with `env -i PATH HOME`; the repository's `apps/server/var/h5p-real` packages are refused by the guard
+      (CoursePresentation and BranchingScenario), as they should be.
+    - *Fixed in D-078's tools (2026-11-05, the step-5 follow-ups):* `tools/h5p-libraries/libraryBuild.mjs` runs each
+      library's `npm run build` with `PATH` (Node's own folder and the system folders), `HOME` (an empty folder of its
+      own, made anew for each build) and `NODE_ENV=production` only, plus what npm itself sets for a script (`npm_*`,
+      `INIT_CWD`, `NODE`, `COLOR`, `EDITOR`); `npm ci --ignore-scripts` keeps `PATH`, `HOME` and the proxy and CA
+      variables it needs (`HTTPS_PROXY`, `NO_PROXY`, `NODE_EXTRA_CA_CERTS`, npm's `registry`, `cafile`, proxy and
+      `userconfig` settings), which never reach the build; the stamp's `buildEnv` version makes every cached build
+      rebuild in place (`git clean -ffdx` after `verifiedHead`, no new checkout), and `[H5P-003]` tests prove that a
+      build sees no other variable. *Verified here:* the two rebuilt AudioRecorder files now carry 28 variables, all
+      npm's own and `PATH`, `HOME` and `NODE_ENV` (the old ones carried 111, tokens among them); the other 21 builds
+      came out byte for byte the same; the bundle guard accepted the new packages and refused the old ones; the local
+      library storage was re-seeded from the new ones. *Residual for HVL:* every `.h5p` package, library folder or
+      library storage built or seeded before this fix, on any machine or from a CI cache, carries that machine's
+      environment: rebuild and re-seed it, and rotate any token it held.
+    - *Follow-ups review (2026-11-05), decided before the code:* "npm's own script variables" were not all npm's own.
+      npm exports every setting that is not its default as `npm_config_<name>`, also those read from the Node
+      install's global `npmrc` (`<prefix>/etc/npmrc`), which an administrator may have given a proxy with its password
+      (`https-proxy=http://user:password@…`). A probe here with a planted global `npmrc` found its value in the
+      build's environment, so AudioRecorder would have baked it in. The build therefore also gets
+      `npm_config_globalconfig`, naming a file in its own empty `HOME` that never exists, so no global `npmrc` is read;
+      the user `npmrc` was already out of reach. The recipe becomes `buildEnv` 3, and an `[H5P-003]` test runs a build
+      under a Node whose global `npmrc` holds a planted proxy password. npm's built-in `npmrc` inside its own install
+      folder is still read; it is part of npm, not of the machine's settings. *Verified here:* without the setting
+      that test fails on the planted password; a full fetch rebuilt the 23 builds in place in 137 s, and only the two
+      AudioRecorder files changed (still 28 variables, `npm_config_globalconfig` now inside the build's `HOME`), with
+      them the CoursePresentation and BranchingScenario packages; the bundle guard accepted these, and the local
+      library storage was re-seeded from them.
+    - *Skeptic review (2026-11-05), recorded with its fixes, before the final smoke runs:* three of the smoke test's
+      proofs were weaker than this block says, and two static guards failed open. (1) The CA check read
+      `docker history`, which shows instructions, never file contents; the smoke now searches **every file** of the
+      image for the lines of the proxy CA bundle's own certificates (those that are not among the image's Node roots;
+      a CA planted in a test image was found). (2) `pdfSandbox: true` only repeats the launch option; the smoke now
+      also reads the kernel's view while a page renders (`deploy/smoke/sandboxProof.mjs`): every renderer must have a
+      PID namespace of its own and Chromium's seccomp filter on top of the container's (measured here: 3 `NSpid`
+      levels and 2 filters with the sandbox, 1 and 1 with `--no-sandbox`). (3) Nothing showed the built web app or H5P
+      core served from the image; the smoke now fetches `/hjelp` (nn), one of its scripts and `/h5p/core/js/h5p.js`. A
+      player page and a launch (**Compose** above) still need content and a platform, so they stay with the e2e
+      suites. The guards: `tools/deploy-check` missed plural secret names (`PSEUDONYM_SECRETS` written in the compose
+      file passed), a password in a URL other than `DATABASE_URL`, list-form `environment`, and `privileged`,
+      `unconfined` or host namespaces on any service; the bundle guard missed this server's own key lists
+      (`URL_SIGNING_KEYS`, `DATA_ENCRYPTION_KEYS`), `_KEY` and `_AUTH` names, single-quoted values and `…_URL` values
+      with a password, and scanned only some text types. All of these are refused now, with tests. PRIVACY: only the
+      stack turned off Prisma's usage report (`CHECKPOINT_DISABLE`); the image now sets it beside
+      `NEXT_TELEMETRY_DISABLED`, so a staging run of the same image and its `prisma generate` do not report either.
+- **Amendment (2026-11-05, step 6: ClamAV, `SEC-006`):** decided before the code; it settles what **ClamAV** above
+  leaves open. Read in `@lumieducation/h5p-clamav-scanner` 10.0.4 and `clamscan` 2.4.0, and measured against
+  `clamav/clamav:1.4@sha256:8ad6197396974726c35d017e50aaaaf4b91745726a04faec8480c203edd98052` (ClamAV 1.4.6 with
+  signatures 28171 in the image), pulled through the mirror in 7 s:
+  - *Found:* Lumi's `ClamAVScanner.create` merges `CLAMSCAN_*` and `CLAMDSCAN_*` over the options passed to it and
+    asks clamd for its version before it returns. Its `scan` reports every answer that is not "infected" as
+    `Clean`, while `clamscan` gives no verdict (`isInfected: null`) for a reply it cannot read: an empty file
+    (`clamscan` then never sends `INSTREAM`; measured), clamd's `COMMAND READ TIMED OUT`, a service that is not
+    clamd, or a connection closed after `clamscan`'s idle time-out with no reply. Wrapping only `NotScanned` would
+    pass all of these as clean. `clamscan`'s time-out is an idle time-out per socket, so a clamd that reads and never
+    answers can hold an upload indefinitely, and by default it falls back to a local `clamdscan` or `clamscan` binary.
+    ClamAV 1.4.6's `StreamMaxLength` is 100 MiB by default (measured; the 25 MB above is an older default); 30 MB and
+    60 MB streams were scanned, and a 110 MB stream was answered `INSTREAM size limit exceeded. ERROR`, which Lumi
+    reports as `NotScanned`. EICAR comes back as `Eicar-Test-Signature`.
+  - *Adapter* (`apps/server/src/security/malware/`): we build `clamscan`'s client ourselves from our checked settings
+    only (TCP or TLS to `CLAMAV_HOST`:`CLAMAV_PORT`, no local binary and no fallback to one, no connection test at
+    start, never remove, quarantine or log files), and hand it to Lumi's `ClamAVScanner` through its constructor,
+    which is private in TypeScript only (`UPSTREAM:`; `create` is not used, so the environment variables above are
+    never read). Lumi's `scan` still turns the verdict into `MalwareFound`, `Clean` or `NotScanned`; a strict client
+    between the two makes a missing verdict an error, so Lumi answers `NotScanned`. The scanner registered in
+    `malwareScanners` (`FailClosedMalwareScanner`) refuses with our own `RejectedUploadError`:
+    `upload.file.malwareFound` on a finding, `upload.file.scanUnavailable` on `NotScanned`, a thrown error or its own
+    limit on the whole scan (`CLAMAV_TIMEOUT_MS`). Both are 400 with a translated message, which the H5P editor shows
+    whatever the status. An empty file is clean without asking clamd. At most four scans run at once in one process,
+    because a package import scans its files in parallel; the time limit counts the wait for a turn, and a turn ends
+    only when `clamscan` has finished with its socket. `clamscan` 2.4.0 becomes an exact pin of its own (MIT, the
+    version Lumi's `^2.4.0` resolves to) and `@types/clamscan` 2.4.1 a development one.
+  - *Logs:* one `warn` line per refusal with a reason code (`malware-found` with the signature names, `unreachable`,
+    `timeout`, `tls`, `connection-lost`, `size-limit`, `no-verdict`, `scanner-error`), never a file name, a path or
+    text from clamd; one line at start says whether scanning is on. `clamscan` itself writes socket errors to stderr
+    (`console.error`, Node's error text, no personal data; `UPSTREAM:`), and Lumi logs to its `debug` logger, which is
+    silent unless `DEBUG=h5p:*` is set.
+  - *Configuration:* `CLAMAV_HOST` (a host name or IP address), `CLAMAV_PORT` (3310), `CLAMAV_TIMEOUT_MS` (30 000;
+    1 000 to 600 000) and `CLAMAV_TLS` (false). With no host there is no scanner: the default in development and
+    tests. Production refuses to start without `CLAMAV_HOST` unless `CLAMAV_ALLOW_UNSCANNED_UPLOADS=true` says so
+    (for a pilot without ClamAV, `docs/ops/clamav.md`; the start then logs a warning), and every environment refuses
+    the two together, so the override can never be read as "let files through when clamd is down". Every environment
+    refuses a `CLAMSCAN_*` or `CLAMDSCAN_*` variable by name, since nothing reads it. Production requires
+    `CLAMAV_TLS=true` unless the host is the loopback (`localhost`, `127.0.0.0/8`, `::1`, e.g. a sidecar), because
+    uploaded files would cross the network in clear text (`DATA-004`); clamd has no TLS of its own, so HVL puts a TLS
+    proxy in front of it (runbook). Messages name variables, never values.
+  - *Scope:* both upload paths, editor uploads (`H5PEditor.saveContentFile`) and package imports (`ContentStorer`),
+    through `malwareScanners`, before a file is stored; the editor-upload route still runs the sanitisers first for
+    their reasons, so an SVG is scanned after sanitising. Library files in a package are not scanned (admins only,
+    D-004; the seed bundle is hash-checked). Signature updates (`freshclam`) and clamd's limits stay HVL's (runbook).
+  - *Tests:* a fake clamd that speaks `INSTREAM` (EICAR found, clean, no verdict, an error reply, an answer that never
+    comes, a closed port, TLS against a plain clamd), the configuration rules, and both upload paths over HTTP; one
+    more test runs against a real clamd only when `CLAMAV_TEST_HOST` is set (run here with the image above and
+    `freshclam` off, so `database.clamav.net` was not needed).
+  - *Residual:* after a time-out, `clamscan`'s socket stays half-closed until clamd closes it (its `ReadTimeout`,
+    120 s by default), so a hung clamd holds at most four connections, and uploads meanwhile are refused at the time
+    limit. If clamd's host vanishes from the network instead, the kernel ends those connections only after its TCP
+    retransmissions give up (about 15 minutes on Linux); uploads are refused, never let through, meanwhile.
+  - *Skeptic review (2026-11-05), with its fixes:* no fail-open path was found. Both upload paths reach the scanner
+    (production builds the editor only in `createH5pRuntime`; package imports use `ContentStorer`'s temporary-files
+    path, which scans every referenced file before it is copied, and files the parameters do not reference are never
+    stored); refusals leave no temporary file (the route's cleanup and `PackageImporter`'s `finally`). Measured with
+    a TLS endpoint here: with `CLAMAV_TLS=true` an untrusted certificate and a certificate for another name are
+    refused (`reason: "tls"`) and the endpoint receives no byte of the file; a trusted one is scanned. One test was
+    missing: dropping the signature-name filter passed every test, so a fake clamd now answers a finding named like a
+    person and a file, which must still be refused while the name stays out of the log. The `UPSTREAM:` mark for
+    `clamscan`'s `console.error` (*Logs* above) is now in `clamdClient.ts`, and the runbook says that files stored
+    while no scanner was configured are never scanned later, and that `DEBUG=h5p:*` makes Lumi log file paths.
+- **Amendment (2026-11-05, step 6: backups, restore and the runbook, `NFR-002`):** decided before the code; it
+  settles what **Backups and runbook** above leaves open. What the round-trip test measures is added at the end.
+  - **Files:** `tools/ops/` (the CLI `backupCli.mjs` and its modules, with tests), the runbook
+    `docs/ops/runbook.md` (lower case, as the other runbooks in `docs/ops/`; it replaces the planned `RUNBOOK.md`),
+    and the deployment checklist as a section of that runbook rather than a file of its own, so the start, the
+    settings and the checklist are read together. Root scripts: `ops:backup`, `ops:backup-verify`, `ops:restore`.
+  - **What a backup holds:** the database as `pg_dump --format=custom` (every table, `_prisma_migrations` and the
+    `analytics` views) and the objects of the content bucket (`S3_CONTENT_BUCKET`). Not the temporary bucket: its
+    files are editor uploads not yet saved, with a 1-day lifecycle; after a restore nothing refers to them, and a
+    30-day backup would keep them 30 times longer than the bucket does. Not the H5P library folder: the deployment's
+    seed step installs the libraries again from the hash-checked bundle (the step-6 image amendment above); a
+    library an administrator installed by hand needs that volume copied too (runbook).
+  - **Format:** one folder `hvli-backup-<UTC yyyymmddThhmmssZ>` with `database.dump`, `objects/<sha256>` (each
+    object stored once under its own hash, never under its key, so no key can name a path on restore),
+    `MANIFEST.json` (format, time, the PostgreSQL major version, each table's row count, and each object's key,
+    size, content type and SHA-256) and `SHA256SUMS` over every other file. It is written as a hidden
+    `.hvli-backup-….partial` folder, renamed only when complete, and removed if the run fails. Folders are 0700 and
+    files 0600.
+  - **Exact counts:** the manifest's row counts are read from the dump itself (`pg_restore --data-only` to a
+    stream, counting each table's `COPY` lines), so they describe exactly the snapshot `pg_dump` took, also while the
+    server writes. Order: the database first, then the bucket, so an object added meanwhile is only an extra file;
+    the restore reports `H5PContentFile` rows whose object is missing.
+  - **Restore:** checks `SHA256SUMS` first (a changed, missing or extra file stops it and names the file), then
+    refuses a target database that has any table or view in `public` or `analytics`, and a target bucket that holds
+    any object, so it can never overwrite data; it then runs `pg_restore --no-owner --no-privileges --single-transaction
+    --exit-on-error`, uploads the objects, and verifies: every table's count against the manifest, every object read
+    back and hashed, and every content-file row's object present. It prints one JSON line and exits 1 on any
+    difference. The grants come back with `db:roles -- grants` (D-109), as after a migration.
+  - **Who runs it, with which role:** the same environment variables as the server (`DATABASE_URL`, the `S3_*`
+    settings), so the CLI needs no settings of its own. A backup needs a role that can read every table, which
+    `hvli_app` cannot (`_prisma_migrations`, D-109): it runs with the migration URL, or with a backup role holding
+    `pg_read_all_data` if HVL's database administrator creates one (open for D-109's roles). A restore runs as
+    `hvli_migrator` into a new database set up with `01-roles.sql`.
+  - **SECURITY:** the password reaches `pg_dump`, `pg_restore` and `psql` only as `PGPASSWORD` in their own
+    environment, which holds nothing else of the caller's, never in arguments, output or the manifest; a database or
+    S3 endpoint not on the loopback needs TLS that checks the server (`sslmode=verify-full` or `verify-ca`, an
+    `https` endpoint), as in production (`DATA-004`, D-109); `AWS_ENDPOINT_URL_S3` and `AWS_ENDPOINT_URL` are refused
+    and the SDK's configured endpoints ignored, as in the server's client; the client tools and both servers must
+    share one PostgreSQL major version (16), which the tool checks, because a newer `pg_dump`'s output can fail on an
+    older server. Messages name a variable or a file, never a value.
+  - **Retention:** after a successful backup, `--keep-days` (default 30, `NFR-002`) removes older complete backups
+    in the same folder, recognised by their exact name, and nothing else.
+  - **HVL's part (runbook):** the daily schedule, an encrypted copy outside the server (in the EEA, `DATA-004`), the
+    restore drill each semester with its log, and the managed database's own backups where HVL uses one. A backup
+    holds pseudonymised learner rows; while a year's pseudonym secret exists, that year's backups can still be linked
+    to people (docs/ops/yearly-purge.md, step 4).
+  - **Tests:** `tools/ops/test/` titled `[NFR-002]`: the round trip on the local services (a database migrated
+    with the real migrations, seeded rows and objects, back up, wipe, restore, compare every table's count and an
+    object's SHA-256), a tampered file refused, a non-empty target refused, and the connection and retention rules
+    as unit tests. In CI it needs `pg_dump` and `pg_restore` 16 on the runner.
+  - **What the round trip measures (2026-11-05, built):** `tools/ops/test/backupRoundTrip.test.mjs` migrates a
+    database of its own with the real migrations (23 tables with `_prisma_migrations`), seeds six of them (250
+    `XapiStatement` rows, 40 `H5PUserData` rows, content-file rows naming two objects, one of 300 KiB and one with
+    æ, ø and å in its key), backs up through the CLI, drops and re-creates the database and the bucket, restores, and
+    finds every table's count equal and the image's SHA-256 unchanged; a dump with one byte changed is refused by
+    `verify` and `restore` alike ("database.dump has changed") and nothing is written; a second restore into the
+    filled database is refused; and no run printed the password, a URL or an object key, also when the server refused
+    a wrong password. Two mutations (the upload skipped; each `COPY` line counted twice) each fail the round trip.
+    The whole drill of the runbook ran once by hand on role-managed databases: a source deployed as the migrate step
+    does (`01-roles.sql`, `views-down`, `migrate deploy`, `grants`), backed up with the migration role's
+    `sslmode=require&sslaccept=strict` URL (read as libpq's `verify-full`), restored as `hvli_migrator` into a new
+    database set up with `01-roles.sql` and a new bucket (`"ok":true`, 23 tables, 0 differing), then `grants`:
+    `hvli_migrator` owns every table and the view, `hvli_app` reads the rows, `hvli_analytics` reads its view.
+    Added while building: a missing bucket is a named error (`S3_CONTENT_BUCKET names does not exist`), as is a
+    missing PostgreSQL tool. The runbook is `docs/ops/runbook.md`, its section 9 the deployment checklist.
+  - *Skeptic review (2026-11-05), with its fixes:* no row or object was lost, and no secret reached a dump, a
+    manifest or the output; the round trip passes again. Found and fixed: (1) the restore's own checks were untested
+    in the direction a drill depends on: with the table, object and content-file comparisons forced to 0 and the
+    empty-bucket check removed, every test still passed. `tools/ops/test/backupRestoreChecks.test.mjs` now restores a
+    copy whose manifest (its checksums made again) expects one more user, a larger object and no second object, and
+    must report `tablesDiffering`, `objectsDiffering` and `contentFilesMissing` of 1 each, `"ok":false` and exit 1;
+    and it refuses a bucket holding an object while the database is empty, writing no row. Each of the four
+    mutations now fails a test. (2) A run stopped by SIGTERM, SIGKILL or a reboot left its hidden
+    `.hvli-backup-<time>.partial` folder, with learner rows, for ever; a backup now also removes such a folder once
+    it is a day old (`stalePartials`, counted in `removedExpired`), tested alone and through the CLI. (3) The runbook
+    gave `db:roles`, `privacy:purge` and `privacy:dsr` as root scripts; they are the server's (`npm run db:roles` at
+    the root fails with "Missing script"), so those steps now say "from `apps/server`". (4) The runbook's
+    `DATA_ENCRYPTION_KEYS` rotation removed the old key 12 hours after step 2 (D-056, written before the grade jobs),
+    but `GradeSyncJob.ltiSubEncrypted` keeps the key of the job's last result write until 30 days after the job
+    stops (D-104), and a job whose key is gone fails as `subject-unreadable`; the runbook now says at least 31 days.
+    D-056 and `apps/server/.env.example` still say 12 hours (for their owners). (5) The runbook's Redis row says what
+    is lost with Redis (the sessions; the NRPS counts until the next launches). Residual: a content file deleted
+    between the dump and the bucket copy is not in that backup, and the restore reports it as
+    `contentFilesMissing` (runbook section 6, step 3).
+- **Amendment (2026-11-05, step 6 integration):** decided before the integration's code; it settles what the five
+  step-6 amendments above left to the integrator.
+  - **Runtime (ends the image amendment's narrowing):** `tsx` 4.23.15 moves from the repository root's development
+    dependencies to `apps/server`'s dependencies, as **Runtime** decides, so `npm ci --omit=dev` keeps it (Evaluator
+    Guide limitation 13). The image's copy of `tsx`'s closure becomes a no-op and stays as a guard; the build still
+    fails if `tsx` is missing.
+  - **Start-up probe:** `startServer` (`apps/server/src/server/main.ts`) runs the PDF availability probe once after it
+    listens, and its `stop()` waits for the probe before closing the clients, so no probe browser outlives a server,
+    also where a test starts and stops one at once. The smoke test now requires that line with the sandbox
+    (`"pdfAvailable":true,"pdfSandbox":true,"reason":"ok"`) instead of noting that it is missing.
+  - **ClamAV in the app stack:** `deploy/compose.app.yml` gains `clamav`
+    (`clamav/clamav:1.4@sha256:8ad6197396974726c35d017e50aaaaf4b91745726a04faec8480c203edd98052`, the ClamAV 1.4.6
+    the ClamAV amendment measured), not published, with `freshclam` off (`CLAMAV_NO_FRESHCLAMD`): the stack is local,
+    and the smoke needs only the image's own signatures; HVL runs its own clamd with signature updates
+    (`docs/ops/clamav.md`). Every service built from the app image gets `CLAMAV_HOST=clamav` and `CLAMAV_PORT=3310`,
+    and the app waits until clamd is healthy (the image's own `clamdcheck.sh`, checked every 5 s), so the stack scans
+    as production does, without TLS, which only production requires off the loopback.
+  - **The smoke proves an upload in the image (`SEC-006`, `SEC-004`):** `deploy/smoke/uploadProof.mjs` runs in the
+    app container with the app's environment, builds the engine with `createH5pRuntime` as the server does, and
+    uploads through the editor's own upload method (`saveContentFile`, which the AJAX route calls): the stack's clamd
+    must refuse the EICAR test file as `upload.file.malwareFound`, with the scanner's `malware-found` log line, and a
+    clean PNG must be stored after its scan. It saves a draft MultiChoice with that image as a fresh staff account
+    with no person behind it, renders the player, and prints the player's file URL. On the host the smoke fetches
+    that URL from the running app with the files host in `Host` (`files.localhost:<port>`): 200, the PNG's bytes,
+    `Content-Security-Policy` with `sandbox`, `nosniff`, no `Set-Cookie`; the same path on the app's host answers
+    404. The upload does not go through the HTTP route, because the stack has no Feide or LTI platform to log in
+    with; the route is covered by `apps/server/test/http/malwareScan.int.test.ts` (fake clamd) and, in CI, by the
+    real-clamd tests below. The grant in the URL is never printed. As a safety net, Lumi's own `upload-malware-found`
+    answers with the scanner's translated message (`h5pErrorResponse.ts`), although our scanner refuses first;
+    `upload.file.scanUnavailable` stays 400, since a 503 is a change for the owner of the HTTP errors.
+  - **CI:** `ci.yml` gains a `clamav` service (the same digest, `freshclam` off) and `CLAMAV_TEST_HOST` and
+    `CLAMAV_TEST_PORT`, so the real-clamd `[SEC-006]` tests (`realClamd.test.ts`) run on every push rather than only
+    by hand; and the step `npm run a11y:report -- --check`, which D-079's amendment of 2026-11-05 makes part of the
+    gate. Its cache comment names the build recipe (`buildEnv`, the image amendment's follow-ups).
+  - **Key rotation:** the old `DATA_ENCRYPTION_KEYS` key now stays at least 31 days (D-056's amendment of today).
 
 ### D-111 · An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it
 - **Context:** S5's probe P1 found that many `nn` and `nb` defaults of the real libraries are English (MultiChoice,
@@ -3594,6 +4014,84 @@ loading of one spec per session are kept.
   separate program outside the npm tree, so `check:pins`, `check:licences` and `check:audit` see nothing new. Its
   scripts are ours, in `tools/load/` as `NFR-001` asks, so this is no `SPEC-DEVIATION`. The reasons, and why not
   Artillery, are in D-110's P3 amendment.
+- **Amendment (2026-11-05, step 6: the load harness, `NFR-001`):** decided before the code; what the smoke measures
+  is added at the end of this block.
+  - **Files:** `tools/load/` (the k6 scripts in `tools/load/k6/`, the runner `runLoad.mjs`, a README and tests) and
+    the bench `apps/server/test/load/loadBench.ts`, which uses the test beds' code and so lives beside them. Root
+    scripts: `load:smoke` and `load:full`.
+  - **The server under load (the bench):** the server as `createApp` builds it in one Node process, so one
+    application node (`NFR-001`), through the app test bed (the mock Canvas and Feide pointed at it), in a PostgreSQL
+    database of its own that the bench creates, migrates and drops, so a run never adds rows to the shared
+    development database; Redis and S3 are the local services. It installs the ten real content types from the D-078
+    packages and publishes the QuestionSet example (four questions of three types: one of the larger player pages).
+    It writes the mock Canvas's launch addresses for its learners to a file (addresses, no tokens), prints one ready
+    line, and on `SIGTERM` prints the rows the load stored, then closes and drops its database. The mock Canvas runs
+    in the same process; its answers are taken out of the measured time (below).
+  - **A virtual user is one learner in one Canvas course; one iteration is one visit:** the LTI launch over HTTP as a
+    browser makes it (the mock's login form, `POST /lti/login`, the mock's authorization answer, `POST /lti/launch`
+    and ltijs's second post with the recovered state), the player page `/lti/play?ltik=…` and every script and
+    stylesheet it names, fetched like a browser with an empty cache (at most 6 connections per host); then the
+    root `attempted` batch the page sends when it opens, and `rounds` answers, each after a think time: one xAPI
+    batch with one question's `answered` and its score, and one state save (H5P saves every 5 s while something
+    changed, so once per answer); and at the end the root `completed` with the total. These are the items the bridge
+    sends and the server stores (D-115), with the activity's real question IDs, valid under the contract's schema,
+    with the ltik as `Bearer`.
+  - **Measured, with the spec's numbers as thresholds:** `hvli_player_ready`, from the tool's `/lti/login` to the
+    last script or stylesheet, less the mock Canvas's answer, p95 < 3 000 ms; `http_req_duration{kind:api}` (the
+    xAPI batches and state saves) p95 < 300 ms; `http_req_failed` < 1 %; checks > 99 %. Also shown: the page alone,
+    the launch, each API route, and the bytes a visit fetched.
+  - **Not measured by k6 (stays open):** the browser's own work (parsing, running H5P, layout) and Fast 4G's latency
+    and bandwidth, since k6 runs no browser and throttles nothing; the bytes per visit are reported so they can be
+    held against Fast 4G's throughput. The in-browser half of `NFR-001`'s Verify (Lighthouse CI on the player route
+    with Fast 4G) is not added here (D-114's Lighthouse option waits). Content files from the files origin (images,
+    video) are file downloads, outside the API limit, and not needed before the player answers; they are not fetched.
+  - **Scale:** `full` is `NFR-001`'s 200 learners (ramp up 60 s, hold 10 min, ramp down 30 s), thinking 5–15 s,
+    6 answers per visit; `smoke` is 20 learners for 30 s, thinking 2–4 s, 4 answers (about the request rate of 60
+    learners of the full model). Both use the same thresholds. The full run is HVL's, on hardware like a production
+    node (Q5), with the command in the runbook; its output goes into PROGRESS like the smoke's.
+  - **k6:** the image by digest above, with `--network host`, the caller's uid and gid, the scripts mounted read-only
+    and one writable output folder; its only settings are `HVLI_LOAD_*` variables. `handleSummary` writes
+    `summary.json` and our own short text summary, so no script loads anything at run time (k6's summary helpers
+    are a remote module).
+  - **SECURITY and PRIVACY:** an ltik lives only in its virtual user's memory and travels as on a real page (the
+    landing query, the `Bearer` header and H5P's state URL), never in a file or an argument; every request has a
+    fixed `name` tag, so no URL with an ltik becomes a metric name or a line of the summary. The learners are random
+    `sub` values of the mock Canvas, gone with the bench's database. The runner gives k6 no other environment.
+  - **Residuals:** the test bed logs every line at `debug` into memory, more work than production's `info` to a
+    stream, so the numbers err on the slow side; there is no grade worker (the launches have no line item), so AGS
+    sending is not under load; the in-browser time and Fast 4G above.
+  - **Tests:** `tools/load/test/` titled `[NFR-001]`: the thresholds and both profiles against the spec's numbers,
+    the batch against `xapiBatchSchema`, the launch-form parsing against the real mock Canvas, and the `docker run`
+    arguments (digest, read-only mount, no extra environment).
+  - **What the smoke measures (2026-11-05, built and run here):** `npm run load:smoke` on the development sandbox
+    (4 CPUs, PostgreSQL, Redis, the S3 emulator and k6 on the same machine): 20 learners for 30 s made 60 visits and
+    6 180 requests; `hvli_player_ready` p95 1 235 ms (median 102 ms; the slow ones are the first visits, before the
+    server's caches are warm), the API p95 22 ms (xAPI 31 ms, state saves 14 ms), no failed request, every check
+    passed, and 360 statements and 20 learner states stored (6 statements per visit, 1 state per learner); exit 0.
+    An earlier run of the same code gave 1 351 ms and 38 ms. A visit fetches 1 496 KiB (the player page with its 49
+    scripts and 37 stylesheets, and the script of ltijs's login page), which the app sends **uncompressed**: at Fast
+    4G that transfer alone is about 1.3 s, so the reverse proxy must compress scripts and styles (the runbook's
+    checklist). What changed from the design while building:
+    k6 2.3.0 has no `noUsageReport` option, so the runner passes `--no-usage-report` (and `--quiet`); the container
+    also gets `--cap-drop ALL` and `no-new-privileges`; `url` is left out of k6's system tags and the runner removes
+    `ltik=…`, `Bearer …` and JWT-shaped values from k6's output, because k6 prints a failed request's URL; the
+    scripts of ltijs's login and launch pages count as assets of the visit, as a browser loads them before it goes
+    on; each question scores 0 or 1 out of 1. The bench and the runner are split into `loadDatabase.ts`,
+    `benchProcess.mjs` and `k6Container.mjs` to stay within 200 lines, and `tools/load/test/loadBench.test.mjs` makes
+    one visit with the same readers and builders in Node against the real bench (every asset 200, four batches 202,
+    the state read back) and checks that the bench drops its database.
+  - *Skeptic review (2026-11-05), with its fixes:* the smoke ran again here, and once with the API limit set to 5 ms,
+    which printed `FAIL http_req_duration{kind:api} p(95)<5` and exited 99 through `npm run`, so the thresholds can
+    fail and the exit code reaches the caller. Fixed: (1) the runner redacted k6's output per pipe chunk, so a chunk
+    boundary inside `ltik=…` let the rest of the token through; it now redacts whole lines (`pipeRedactedLines`),
+    and a test that cuts a line inside the token fails with the old code. (2) The container's own file system was
+    writable; it now runs with `--read-only`, so the output folder is the one place k6 can write, as the design
+    says. The final smoke with both: exit 0, `hvli_player_ready` p95 1 506 ms (median 82 ms), the API p95 22 ms, no
+    failed request, every check passed, 60 visits, 6 180 requests, 360 statements and 20 learner states stored
+    (runbook section 8). Across the five smoke runs of this step the p95 lies between 1 136 and 1 506 ms while the
+    median stays near 0.1 s, a slow tail that fits the 20 first, concurrent visits before the caches are warm (a
+    third of the 60). Residual: where the caller is root (as in this sandbox) k6 runs as uid 0 in its container,
+    without capabilities or new privileges; elsewhere it runs as the caller.
 
 ### D-115 · xAPI capture, statement identity, attempts and gradable results (probe P1)
 - **Context:** Probe P1 played the ten real types (D-078) in Chromium on the production player and router, and

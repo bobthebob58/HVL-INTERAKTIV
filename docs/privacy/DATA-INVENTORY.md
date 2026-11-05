@@ -427,5 +427,11 @@ the inventory check does not read this section.
 | request log `method`, `status`, `durationMs`, `aborted` | Observability: what kind of request, its outcome, its time to 0.1 ms, and whether the client left first | None | n/a | 30 days | Log store |
 | request log `route` | The route pattern Express matched (e.g. `/api/content/:contentId`), or its router's mount path with `/*`; never the path or query, which can carry an ltik, a signed file grant or IDs (D-109) | None | n/a | 30 days | Log store |
 
+| upload scanner `reason`, `signatures` | Why an upload was refused (`SEC-006`, D-110's amendment): a reason code (`malware-found`, `unreachable`, `timeout`, `tls`, `connection-lost`, `size-limit`, `no-verdict`, `scanner-error`) and, for a finding, at most five signature names filtered to `[A-Za-z0-9._:-]`; never a file name, path, user or clamd's text | None | n/a | 30 days | Log store |
+| `PDF export availability` (`pdfAvailable`, `pdfSandbox`, `reason`) | One start-up line on whether the mappe PDF can print with Chromium's sandbox (`MAPPE-004`, D-110's amendment); never Chromium's error text | None | n/a | 30 days | Log store |
+| LTI error-page line (`route`, `status`, `requestId`, `code`) | Why an LTI request was refused: the route pattern and a fixed code, never the path, the body or a client's error text (`NFR-006`) | None | n/a | 30 days | Log store |
+
 The reverse proxy in front of the server keeps its own access log, outside this application. It must not log the
-query string, because some routes accept `?ltik=` (`docs/ops/`, DPIA input R26).
+query string, because some routes accept `?ltik=` (`docs/ops/`, DPIA input R26). clamd keeps its own log on HVL's
+host (DPIA input R38). Backups made with `npm run ops:backup` hold the database's rows and the content bucket's
+objects as they are, so every table above is in them for 30 days (`NFR-002`; DPIA input F13).

@@ -151,7 +151,7 @@ describe('[SEC-007] dependency hygiene in CI', () => {
 
   it('[SEC-007] Dependabot opens one grouped monthly pull request per ecosystem and never a major version', () => {
     const dependabot = readFileSync(`${root}.github/dependabot.yml`, 'utf8');
-    for (const ecosystem of ['npm', 'github-actions']) {
+    for (const ecosystem of ['npm', 'github-actions', 'docker']) {
       const block = dependabot.split(`package-ecosystem: ${ecosystem}`)[1].split('package-ecosystem:')[0];
       expect(block).toMatch(/interval: monthly/);
       expect(block).toMatch(/update-types: \[minor, patch\]/);

@@ -22,6 +22,7 @@
     "test": "vitest run",
     "test:e2e": "vitest run --root apps/server --config vitest.e2e.config.ts",
     "test:a11y": "vitest run --root apps/server --config vitest.a11y.config.ts",
+    "a11y:report": "node tools/a11y-report/a11yReport.mjs",
     "tokens:build": "node packages/design-tokens/scripts/buildTokens.mjs",
     "tokens:check": "node packages/design-tokens/scripts/buildTokens.mjs --check",
     "lint:css": "stylelint \"**/*.css\"",
@@ -42,7 +43,14 @@
     "docs:api": "npm run docs:api --workspace apps/server",
     "content:check": "npm run content:check --workspace apps/server --",
     "start": "npm run start --workspace apps/server",
-    "mock:platform": "node tools/mock-platform/cli.mjs --tool-url http://localhost:3000 --canvas-port 4100 --feide-port 4200"
+    "mock:platform": "node tools/mock-platform/cli.mjs --tool-url http://localhost:3000 --canvas-port 4100 --feide-port 4200",
+    "ops:backup": "node --env-file-if-exists=apps/server/.env tools/ops/backupCli.mjs backup",
+    "ops:backup-verify": "node tools/ops/backupCli.mjs verify",
+    "ops:restore": "node --env-file-if-exists=apps/server/.env tools/ops/backupCli.mjs restore",
+    "load:smoke": "node tools/load/runLoad.mjs --profile smoke",
+    "load:full": "node tools/load/runLoad.mjs --profile full",
+    "deploy:check": "node tools/deploy-check/checkDeployFiles.mjs",
+    "docker:smoke": "bash deploy/smoke/dockerSmoke.sh"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -59,7 +67,6 @@
     "oauth2-mock-server": "9.2.0",
     "prettier": "3.9.10",
     "stylelint": "17.16.0",
-    "tsx": "4.23.15",
     "typedoc": "0.28.20",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.0",

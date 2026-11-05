@@ -8,23 +8,27 @@
  *      amendment of 2026-11-04). The scripts are plain SQL that an administrator can read and run with psql; this
  *      runner lets a deployment step run them with the server's own database client, without psql, and without the
  *      connection URL in a process list.
- * Spec: DATA-010
+ * Spec: DATA-010, DATA-004
  * Invariants:
  *   - Exactly one argument, a key of `DATABASE_ROLE_SCRIPTS`; anything else prints the usage and exits 2, running
  *     nothing.
  *   - The connection is this run's `DATABASE_URL` (the administrator's for `roles`, the migration URL for the other
  *     two, as `prisma migrate deploy` reads it); it is never printed. `00-views-down.sql` and `02-grants.sql` refuse any
  *     user but the migrator.
+ *   - SECURITY: the connection is encrypted (`sslmode` `require`, `verify-ca` or `verify-full`, as the server's
+ *     production rule asks, ../config/connectionEncryption.ts) unless the database is on this machine (a socket,
+ *     `localhost`, `127.x.y.z` or `::1`); otherwise the run is refused with exit 1 before it connects (DATA-004).
  *   - A script is sent as one batch, which PostgreSQL runs in one transaction: it applies fully or not at all.
  *   - Prints one JSON line naming the script and the database user it ran as; a failure prints the database's
  *     message (credential shapes masked) and exits 1.
  * Collaborators: apps/server/prisma/roles/ (00-views-down.sql, 01-roles.sql, 02-grants.sql), ./prismaClient.ts,
- *   ../config/env.ts,
- *   ../logging/redactText.ts, docs/ops/database-roles.md.
- * Tests: apps/server/test/db/databaseRoles.int.test.ts, apps/server/test/db/databaseRolesDeploy.int.test.ts
+ *   ../config/env.ts, ../config/connectionEncryption.ts, ../logging/redactText.ts, docs/ops/database-roles.md.
+ * Tests: apps/server/test/db/databaseRoles.int.test.ts, apps/server/test/db/databaseRolesDeploy.int.test.ts,
+ *   apps/server/test/db/databaseRolesTls.test.ts
  */
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { ENCRYPTED_SSL_MODES } from '../config/connectionEncryption.js';
 import { loadEnvPart } from '../config/env.js';
 import { redactText } from '../logging/redactText.js';
 import { createPrismaClient, type Database } from './prismaClient.js';
@@ -90,6 +94,53 @@ export async function applyDatabaseRoleScript(
   return row?.user ?? '';
 }
 
+/** The refusal of a connection that is neither encrypted nor on this machine; it names no value (D-109). */
+export const DATABASE_ROLES_TLS_PROBLEM =
+  'DATABASE_URL: a database on another host needs an encrypted connection; add sslmode=verify-full, or ' +
+  'sslmode=require&sslaccept=strict for the migration URL (docs/ops/database-roles.md) (DATA-004)';
+
+const LOOPBACK_IPV4 = /^127(?:\.\d{1,3}){3}$/;
+
+/** A host on this machine: a socket (none named, or a directory), `localhost`, `127.x.y.z` or `::1`. */
+const isLocalHost = (host: string): boolean =>
+  host === '' ||
+  host.startsWith('/') ||
+  ['localhost', '::1', '[::1]'].includes(host.toLowerCase()) ||
+  LOOPBACK_IPV4.test(host);
+
+/** Parses a connection URL as node-postgres does: one with credentials and no host (`u:p@/db`) has no host. */
+const parseConnectionUrl = (url: string): { parsed: URL; hostname: string } => {
+  try {
+    const parsed = new URL(url);
+    return { parsed, hostname: decodeURIComponent(parsed.hostname) };
+  } catch {
+    return { parsed: new URL(url.replace('@/', '@no-host.invalid/')), hostname: '' };
+  }
+};
+
+/**
+ * Applies the production TLS rule to a role script's connection, except for a database on this machine.
+ * @param url - This run's `DATABASE_URL`.
+ * @param defaultHost - Where node-postgres connects when the URL names no host (`PGHOST`).
+ * @returns `DATABASE_ROLES_TLS_PROBLEM` when the run must be refused, else undefined.
+ */
+export function databaseRolesUrlProblem(
+  url: string,
+  defaultHost = process.env.PGHOST ?? '',
+): string | undefined {
+  try {
+    const { parsed, hostname } = parseConnectionUrl(url);
+    // WHY: node-postgres reads the last `sslmode` and connects to the last `host` parameter when there is one.
+    const host = parsed.searchParams.getAll('host').at(-1) || hostname || defaultHost;
+    if (isLocalHost(host)) return undefined;
+    return ENCRYPTED_SSL_MODES.includes(parsed.searchParams.getAll('sslmode').at(-1) ?? '')
+      ? undefined
+      : DATABASE_ROLES_TLS_PROBLEM;
+  } catch {
+    return DATABASE_ROLES_TLS_PROBLEM;
+  }
+}
+
 async function main(): Promise<void> {
   const step = databaseRoleStepOf(process.argv.slice(2));
   if (!step) {
@@ -99,6 +150,13 @@ async function main(): Promise<void> {
   }
   try {
     const { DATABASE_URL } = loadEnvPart(['DATABASE_URL']);
+    const refused = databaseRolesUrlProblem(DATABASE_URL);
+    if (refused) {
+      // SECURITY: before any connection, so no credential crosses the network in clear text (DATA-004).
+      process.stderr.write(`database roles refused: ${refused}\n`);
+      process.exitCode = 1;
+      return;
+    }
     const db = createPrismaClient(DATABASE_URL);
     try {
       const user = await applyDatabaseRoleScript(db, step);

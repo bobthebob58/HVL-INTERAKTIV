@@ -5,13 +5,14 @@
  *
  * Why: one entry point for `npm start`, the e2e tests and production. ltijs never listens itself (D-050), and the
  *      platforms in `LTI_PLATFORMS` are synchronised before the first launch can arrive (D-051).
- * Spec: NFR-002, LTI-001, LTI-002, H5P-001, PED-001, LTI-012, LTI-008, DATA-003, DATA-004
+ * Spec: NFR-002, LTI-001, LTI-002, H5P-001, PED-001, LTI-012, LTI-008, DATA-003, DATA-004, MAPPE-004
  * Invariants:
  *   - Invalid configuration stops the start with the list of problems and exit code 1; secrets are never printed.
  *     That includes the validator's hint thresholds (content/laeringsdesign/hint-thresholds.yaml), read before any
  *     connection is made (D-073), and the studio content in `content/` (D-082), read next: a bad file stops the start
  *     with every problem named, by file, line and key.
- *   - The server listens only after the platform sync and the platform-key re-encryption (D-056) have finished.
+ *   - The server listens only after the platform sync and the platform-key re-encryption (D-056) have finished; then
+ *     it logs whether the PDF export works with its sandbox, and `stop` waits for that probe (D-110 amendments).
  *   - The xAPI ingestion hands a learner's stored rows to the grade enqueuer (LTI-012), and each resource-link launch
  *     refreshes its course's NRPS learner count (LTI-008). The grade worker (D-104) and the cleanup of its jobs' LTI
  *     subjects (DATA-002) and the yearly purge (D-107) start with the cleanup jobs and stop with them; each runs on
@@ -24,12 +25,12 @@
  *     browser, D-096), then the clients, even when a service fails to close; exit code 0, or 1 after such a failure.
  *   - The web app is loaded only when `WEB_APP` is not `off`; only its development server takes WebSocket upgrades,
  *     only under `/_next/`, and without cookies, tokens or the ltik, like every request it gets (D-068).
- * Collaborators: ./createApp.ts, ./studioServices.ts, ../h5p/createH5pRuntime.ts,
- *   ../lti/platforms/syncLtiPlatforms.ts, ../lti/platforms/reencryptPlatformKeys.ts,
- *   ../lti/storage/LtiRecordCleanupJob.ts, ../grades/GradeJobEnqueuer.ts, ../grades/GradeSyncWorker.ts,
- *   ../grades/GradeSubjectCleanupJob.ts, ../privacy/purge/RetentionPurgeJob.ts, ../lti/nrps/nrpsServices.ts,
- *   ../config/env.ts, ../config/storageResidency.ts, ../config/validationContext.ts, ../validation/validateContent.ts,
- *   ../learningDesign/content/loadStudioContent.ts, ../web/nextWebApp.ts, ../web/webRoutes.ts (`webUpgrades`).
+ * Collaborators: ./createApp.ts, ./studioServices.ts, ../h5p/createH5pRuntime.ts, ../lti/platforms/syncLtiPlatforms.ts,
+ *   ../lti/platforms/reencryptPlatformKeys.ts, ../lti/storage/LtiRecordCleanupJob.ts, ../grades/GradeJobEnqueuer.ts,
+ *   ../grades/GradeSyncWorker.ts, ../grades/GradeSubjectCleanupJob.ts, ../privacy/purge/RetentionPurgeJob.ts,
+ *   ../lti/nrps/nrpsServices.ts, ../config/env.ts, ../config/storageResidency.ts, ../config/validationContext.ts,
+ *   ../validation/validateContent.ts, ../learningDesign/content/loadStudioContent.ts, ../web/nextWebApp.ts,
+ *   ../web/webRoutes.ts (`webUpgrades`), ../learningDesign/mappe/pdf/pdfAvailability.ts.
  * Tests: apps/server/test/server/main.smoke.test.ts, apps/server/test/server/startupContent.test.ts
  */
 import type { Server } from 'node:http';
@@ -45,6 +46,7 @@ import { createPrismaClient } from '../infra/prismaClient.js';
 import { connectRedis } from '../infra/redisClient.js';
 import { createS3Client } from '../infra/s3Client.js';
 import { loadStudioContent } from '../learningDesign/content/loadStudioContent.js';
+import { logPdfAvailability } from '../learningDesign/mappe/pdf/pdfAvailability.js';
 import { StudioContentError } from '../learningDesign/content/StudioContentError.js';
 import { reencryptPlatformKeys } from '../lti/platforms/reencryptPlatformKeys.js';
 import { syncLtiPlatforms } from '../lti/platforms/syncLtiPlatforms.js';
@@ -142,11 +144,13 @@ export async function startServer(env: Env, options: StartOptions = {}): Promise
   });
   if (web?.dev) server.on('upgrade', webUpgrades(web));
   logger.info({ port: env.PORT, webApp: env.WEB_APP }, 'HVL Interaktiv server listening');
+  // WHY: the operator learns at start whether the PDF export can print (D-096); it never throws (MAPPE-004).
+  const pdfProbe = logPdfAvailability({ env, logger });
   return {
     server,
     stop: async () => {
       for (const job of jobs) job.stop();
-      await new Promise<void>((resolve) => server.close(() => resolve()));
+      await Promise.all([pdfProbe, new Promise<void>((resolve) => server.close(() => resolve()))]);
       // WHY: a studio service may still use a client while it closes, so the clients close after it, even if it fails.
       try {
         await closeStudioServices(studio);

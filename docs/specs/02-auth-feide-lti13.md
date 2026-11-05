@@ -44,9 +44,10 @@ recorded with evidence in `docs/reference/` ([reference README](../reference/REA
 
 *In S3 (D-048, D-058):* `apps/web` does not exist yet, so `apps/server` itself renders the start page `/`, the
 player `/lti/play` and the Deep Linking picker `/lti/deeplink`; ltijs redirects to those pages with `?ltik=…`
-instead of `/app/…`. `apps/web` takes over `/` and `/app/*` in S4. Until the files origin arrives in S6 (D-045),
-the player loads content files from `/h5p/files/<grant>/…` on the main origin, authorised by a signed grant
-rather than a cookie or an ltik.
+instead of `/app/…`. `apps/web` takes over `/` and `/app/*` in S4. From S6 the player loads content files from the
+files origin (`files.<host>/h5p/files/<grant>/…`, or `FILES_BASE_URL`), authorised by a signed grant rather than a
+cookie or an ltik; the main origin answers that path with 404, and the editor's files stay there under grants of
+their own (D-045, D-110's amendment of 2026-11-05, `SPEC-DEVIATION: D-110`).
 
 *From S4 (D-067, D-068, D-069):* when the web app runs (`WEB_APP` is not `off`), ltijs sends resource-link launches
 to `/app/play`, which Next.js renders after Express has resolved the ltik and removed it from what Next.js sees. The

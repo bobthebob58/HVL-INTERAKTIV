@@ -1,6 +1,7 @@
 # CI: the Session gate from docs/EVALUATOR-GUIDE.md §5, on every push to main and every pull request.
 # Requirements: NFR-004 (typecheck, lint, tests, traceability), SEC-007 (pins, audit), NFR-005 (licences),
-# DATA-001 (data inventory), H5P-001 (verified H5P client files and the boot check), D-023 (services).
+# DATA-001 (data inventory), H5P-001 (verified H5P client files and the boot check), D-023 (services), SEC-006
+# (the fail-closed scanner against a real clamd), UD-040 (the conformance report matches its sources).
 # CI never contacts the H5P Hub (D-041). The ten real content types are fetched from GitHub at pinned commits and
 # verified (D-078); unit tests use synthetic packages, the real-type browser tests the fetched ones.
 name: CI
@@ -46,6 +47,14 @@ jobs:
       s3:
         image: motoserver/moto:5.1.16
         ports: ['5000:5000']
+      # WHY: the real-clamd SEC-006 tests run only where CLAMAV_TEST_HOST names a clamd (D-110 integration amendment).
+      # freshclam is off: the image's own signatures hold EICAR, and the run needs no signature server.
+      clamav:
+        image: clamav/clamav:1.4@sha256:8ad6197396974726c35d017e50aaaaf4b91745726a04faec8480c203edd98052
+        env:
+          CLAMAV_NO_FRESHCLAMD: 'true'
+          CLAMAV_NO_MILTERD: 'true'
+        ports: ['3310:3310']
     env:
       CI: 'true'
       DATABASE_URL: postgresql://hvli:hvli-dev@localhost:5432/hvli
@@ -61,6 +70,9 @@ jobs:
       # Mock Feide and mock Canvas from tools/mock-platform; tests start them in-process (D-049).
       FEIDE_CLIENT_ID: hvli-ci-client
       FEIDE_CLIENT_SECRET: ci-only-feide-client-secret
+      # The clamav service above, for apps/server/test/security/malware/realClamd.test.ts only (SEC-006).
+      CLAMAV_TEST_HOST: 127.0.0.1
+      CLAMAV_TEST_PORT: '3310'
     steps:
       # WHY: GitHub retires Node 20 for actions; these majors run on Node 24.
       - uses: actions/checkout@v7
@@ -73,8 +85,8 @@ jobs:
       - name: Fetch and verify H5P core 1.28.0 and the pinned editor (H5P-001, D-022, D-027)
         run: npm run h5p:fetch-core
       # WHY: a cold fetch checks out and builds about 2 GB. The fetch step below reuses a cached checkout only when the
-      # stamp written at its checkout matches the manifest's commit and build state
-      # (tools/h5p-libraries/fetchLibraries.mjs), and proves its HEAD is still that commit and its tracked files are
+      # stamp written at its checkout matches the manifest's commit, build state and build recipe (`buildEnv`,
+      # tools/h5p-libraries/libraryBuild.mjs; an older recipe rebuilds in place), and proves its HEAD is still that commit and its tracked files are
       # unedited (`verifiedHead`, gitSource.mjs) before it is copied; its untracked build output is copied without a
       # rebuild. SECURITY: that output relies on the cache's scope. GitHub scopes a cache to the branch (or pull
       # request) whose run saved it; a run reads only its own scope's caches and those of its base or default branch,
@@ -150,5 +162,7 @@ jobs:
         run: npm run spec:trace -- --check --done-through=S5
       - name: Spec website is up to date
         run: npm run spec:site -- --check
+      - name: Conformance report matches its sources (UD-040, D-079)
+        run: npm run a11y:report -- --check
       - name: H5P boot check (H5P-001)
         run: npm run boot-check --workspace apps/server

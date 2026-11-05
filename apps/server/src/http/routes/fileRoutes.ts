@@ -1,12 +1,15 @@
 /**
  * fileRoutes — streams the files of an activity and the editor's temporary uploads, for a signed-in person.
  *
- * Why: images, audio and video of an activity, and files an author just uploaded in the editor, are fetched by
- *      the editor (whose integration has no `contentUrl`, so H5P asks for `<url>/content/<id>/…`). Since S3 the
- *      player uses signed URLs instead (./signedFileRoutes.ts, D-058). Lumi checks the permission (View for content files, the uploader for
- *      temporary files) with the account view of the actor, because both are tied to the person's account,
- *      not to a learner pseudonym. Every answer carries the D-045 headers and correct byte ranges.
+ * Why: H5P asks for `<url>/content/<id>/…` when an integration names no `contentUrl` for an activity, and for the
+ *      editor's temporary files. The player's files come from the files origin behind a grant, and the editor's from
+ *      `/h5p/editor-files` (./signedFileRoutes.ts, D-058, D-110 amendment of 2026-11-05); these cookie routes stay as
+ *      H5P's fallback. Lumi checks the permission (View for content files, the uploader for temporary files) with
+ *      the account view of the actor, because both are tied to the person's account, not to a learner pseudonym.
+ *      Every answer carries the D-045 headers and correct byte ranges.
  * Spec: H5P-004, SEC-004, H5P-006
+ * SPEC-DEVIATION: D-110 — these routes answer on the app origin, not on SEC-004's separate files origin; D-045's
+ *   headers keep a crafted file inert there, and no player page points H5P at them.
  * Invariants:
  *   - The actor's account view is the user; nothing in the request names another person.
  *   - Headers come from ../sendUserFile.ts (nosniff, sandbox CSP, attachment for non-media files).
