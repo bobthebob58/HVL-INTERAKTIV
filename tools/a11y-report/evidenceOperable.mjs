@@ -28,8 +28,9 @@ export const OPERABLE = {
       suiteCheck(
         'keyboardJourneys.a11y.test.ts',
         ['UD-006'],
-        'Journeys J1 and J2 by keyboard alone: an activity picked in the Deep Linking picker, the tabs, the ' +
-          'publish dialog, a MultiChoice answer in Canvas and the formative notice',
+        'Journeys J1, J2 and J3 by keyboard alone: an activity picked in the Deep Linking picker, the tabs, the ' +
+          'publish dialog, a MultiChoice answer in Canvas, the formative notice, and Innsikt with its period ' +
+          'and the big-screen dialog',
         CANVAS_PICKER,
       ),
       suiteCheck(

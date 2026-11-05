@@ -7,12 +7,13 @@
  *      (./insightHttpBench.ts). The routes, the query and CSV code and the error handler are the server's own.
  * Spec: INS-006, INS-009, DATA-007
  * Invariants:
- *   - The principal is the activity's owner in the portal, with no rate limit; `forActivity` always answers the
- *     given report, and the contexts are never read except by the contexts route.
+ *   - The principal is the activity's owner in the portal, with no rate limit unless a test passes one;
+ *     `forActivity` always answers the given report, and the contexts are never read except by the contexts route.
  *   - The audit store records each event's data, or rejects every write when `auditFails` is set.
  * Collaborators: ../../../../src/insight/http/insightRoutes.ts, ../../../../src/http/h5pErrorHandler.ts,
  *   ../../../grades/status/support/gradeSyncApp.ts (`portalPrincipal`, `NO_LIMIT`).
- * Tests: used by ../insightSuppressionApi.property.test.ts and ../insightAuditFirst.test.ts.
+ * Tests: used by ../insightSuppressionApi.property.test.ts, ../insightAuditFirst.test.ts and
+ *   ../insightForeignRequest.test.ts.
  */
 import express, { type Express } from 'express';
 import { setPrincipal } from '../../../../src/auth/principalLocals.js';
@@ -21,6 +22,7 @@ import { h5pErrorHandler } from '../../../../src/http/h5pErrorHandler.js';
 import { insightRoutes } from '../../../../src/insight/http/insightRoutes.js';
 import type { InsightReport } from '../../../../src/insight/insightReport.js';
 import type { Database } from '../../../../src/infra/prismaClient.js';
+import type { PersonLimit } from '../../../../src/learningDesign/collaboration/PersonRateLimit.js';
 import { createLogger } from '../../../../src/logging/logger.js';
 import { NO_LIMIT, portalPrincipal } from '../../../grades/status/support/gradeSyncApp.js';
 
@@ -37,12 +39,13 @@ export interface InsightStubApp {
 /**
  * Builds the routes answering one report.
  * @param report - What the insight core answers for every view.
- * @param options - `auditFails`: every audit write rejects, as a database that is down would.
+ * @param options - `auditFails`: every audit write rejects, as a database that is down would; `limit`: the
+ *   per-person limit, none by default.
  * @returns The app, with the routes under `/api`, and the audit events it wrote.
  */
 export function insightStubApp(
   report: InsightReport,
-  options: { readonly auditFails?: boolean } = {},
+  options: { readonly auditFails?: boolean; readonly limit?: PersonLimit } = {},
 ): InsightStubApp {
   const audited: unknown[] = [];
   const access: ContentAccessRepository = {
@@ -74,7 +77,10 @@ export function insightStubApp(
         db: { auditEvent } as unknown as Database,
         access,
         findings: () => Promise.reject(new Error('not used')),
-        services: { insight: { forActivity: async () => report, contexts: async () => [] }, limit: NO_LIMIT },
+        services: {
+          insight: { forActivity: async () => report, contexts: async () => [] },
+          limit: options.limit ?? NO_LIMIT,
+        },
       }),
     )
     .use(h5pErrorHandler(createLogger({ level: 'silent' })));

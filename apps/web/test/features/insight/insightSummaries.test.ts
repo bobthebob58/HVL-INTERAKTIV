@@ -11,8 +11,10 @@ import {
   commonestWrongOption,
   gapSummary,
   itemsSummary,
+  questionLabel,
   videoSummary,
 } from '../../../src/features/insight/insightSummaries';
+import { shortlistEntry } from '../../../src/features/insight/shortlistEntries';
 import type { ChoiceMisconception } from '../../../src/features/insight/insightReportShape';
 import { HIDDEN, plain, REPORT, shown } from './insightAnswers';
 import { VIDEO_REPORT } from './insightOtherAnswers';
@@ -32,6 +34,28 @@ describe('[INS-008] chart summaries', () => {
     expect(itemsSummary([REPORT.items[2]!], 5, 'nn')).toBe(
       'Ingen spørsmål har svar frå nok studentar til at delen riktige kan visast.',
     );
+  });
+
+  it.each([
+    ['nn', 'Spørsmål 2 (utan tekst)', 'Spørsmål 3 (finst ikkje lenger i aktiviteten)'],
+    ['nb', 'Spørsmål 2 (uten tekst)', 'Spørsmål 3 (finnes ikke lenger i aktiviteten)'],
+    ['en', 'Question 2 (no text)', 'Question 3 (no longer in the activity)'],
+  ] as const)(
+    '[INS-002] in %s, a question without text or no longer there is named by its place',
+    (locale, empty, gone) => {
+      expect(questionLabel('', 2, locale)).toBe(empty);
+      expect(questionLabel(null, 3, locale)).toBe(gone);
+      expect(questionLabel('Kva er 2+2?', 2, locale)).toBe('Kva er 2+2?');
+    },
+  );
+
+  it('[INS-003] a question without text goes on the shortlist under its place, not as an empty line', () => {
+    // Arrange: the second item's text could not be read (a SingleChoiceSet before the server read it)
+    const items = [REPORT.items[0]!, { ...REPORT.items[1]!, item: 'q-set', questionText: '' }];
+    // Act
+    const entry = shortlistEntry({ ...REPORT, items }, 'q-set', 'nn');
+    // Assert
+    expect(entry?.question).toBe('Spørsmål 2 (utan tekst)');
   });
 
   it('[INS-003][INS-006] the commonest wrong option is among the shown counts, never a right or hidden one', () => {

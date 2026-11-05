@@ -7,13 +7,14 @@
  *      insight prepare the next synchronous session (Just-in-Time Teaching). Printing uses a print stylesheet that
  *      leaves out the page around the list (./insightPrint.css); projecting opens the list in a modal dialog in large
  *      type, which the teacher can show full screen.
- * Spec: INS-003, UD-006, UD-002
+ * Spec: INS-003, UD-006, UD-002, UD-010
  * Invariants:
  *   - PRIVACY: the list holds aggregates and the teacher's texts only (./shortlistEntries.ts); so do its printout and
  *     its projection.
  *   - A11Y: a section named by its `h3`; the list is an ordered list; «Ta ut av lista» names its question; after a
  *     removal focus moves to the section's heading, never to `body` (WCAG 2.4.3). The dialog returns focus on close.
  *   - Print and project are offered only when the list has questions.
+ *   - A question's own text carries the activity's language, in the list and in the projection (UD-010).
  * Collaborators: ./shortlistContext.tsx, ./printShortlist.ts, ./insightPrint.css, ../../components/Dialog.tsx,
  *   ./InsightPanel.tsx.
  * Tests: apps/web/test/features/insight/InsightShortlist.test.tsx
@@ -24,9 +25,10 @@ import { useId, useRef, useState } from 'react';
 import { Dialog } from '../../components/Dialog';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
+import { useAuthoredLang } from './authoredLanguage';
 import './insightPrint.css';
 import { printShortlist } from './printShortlist';
-import { useShortlist } from './shortlistContext';
+import { shortlistCount, useShortlist } from './shortlistContext';
 import type { ShortlistEntry } from './shortlistEntries';
 
 /** The questions as an ordered list, in normal or large type. */
@@ -40,11 +42,14 @@ function ShortlistItems({
   readonly onRemove?: (entry: ShortlistEntry) => void;
 }) {
   const locale = useLocale();
+  const authoredLang = useAuthoredLang();
   return (
     <ol className={`m-0 mb-4 pl-8 ${large ? 'text-2xl' : ''}`}>
       {entries.map((entry) => (
         <li key={entry.key} className="mb-4">
-          <p className="m-0 font-bold">{entry.question}</p>
+          <p className="m-0 font-bold" lang={entry.authored ? authoredLang : undefined}>
+            {entry.question}
+          </p>
           <p className="m-0">{entry.view}</p>
           {entry.lines.map((line) => (
             <p key={line} className="m-0">
@@ -54,7 +59,10 @@ function ShortlistItems({
           {onRemove ? (
             <button type="button" className="button-secondary mt-2" onClick={() => onRemove(entry)}>
               {t('insight.shortlist.remove', locale)}
-              <span className="sr-only"> ({entry.question})</span>
+              <span className="sr-only" lang={entry.authored ? authoredLang : undefined}>
+                {' '}
+                ({entry.question})
+              </span>
             </button>
           ) : null}
         </li>
@@ -87,8 +95,7 @@ export function InsightShortlist({ title }: { readonly title: string }) {
     <section aria-labelledby={headingId} className="insight-shortlist mb-6 border-l-4 border-hvl-accent pl-4">
       <p className="hidden text-2xl font-bold print:block">{listTitle}</p>
       <h3 id={headingId} ref={heading} tabIndex={-1}>
-        {t('insight.shortlist.heading', locale)} (
-        {t('insight.shortlist.count', locale, { count: entries.length })})
+        {t('insight.shortlist.heading', locale)} ({shortlistCount(entries.length, locale)})
       </h3>
       <p className="print:hidden">{t('insight.shortlist.intro', locale)}</p>
       {entries.length === 0 ? (

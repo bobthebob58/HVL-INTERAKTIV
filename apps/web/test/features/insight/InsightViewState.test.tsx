@@ -1,10 +1,10 @@
 /**
  * Tests for how the Innsikt tab moves from one view to the next: only the newest answer is shown when two cross, a
- * refused view (403 or 404) says so, an invalid version keeps the versions to choose from, the CSV is of the view on
- * screen rather than the form's unapplied choice, and the shortlist keeps its entries, each naming its view, when the
- * view changes or fails.
+ * refused view (403 or 404) says so, a repeated refusal is announced again, an invalid version keeps the versions
+ * to choose from, the CSV is of the view on screen rather than the form's unapplied choice, and the shortlist keeps
+ * its entries, each naming its view, when the view changes or fails.
  *
- * Spec: INS-007, PROD-013, INS-009, INS-003, LTI-003
+ * Spec: INS-007, PROD-013, INS-009, INS-003, LTI-003, UD-013
  */
 // @vitest-environment jsdom
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -80,6 +80,24 @@ describe('[INS-007] the Innsikt tab from one view to the next', () => {
       // Assert
       expect((await screen.findByRole('alert')).textContent).toMatch(/^Du har ikkje tilgang/);
       expect(screen.queryByRole('button', { name: 'Vis innsikt' })).toBeNull();
+    },
+  );
+
+  it.each([400, 403, 500])(
+    '[UD-013] the same refusal (%i) twice mounts a new alert, so it is announced again',
+    async (status) => {
+      // Arrange
+      const refused = { status, body: errorBody(status, 'error.x') };
+      fakeFetch(routes({ [`GET ${VIEW}?period=14d&context=portal`]: refused }));
+      await openPortal();
+      choose('Periode', '14d');
+      show();
+      const first = await screen.findByRole('alert');
+      // Act
+      show();
+      // Assert: the same words, but in a new alert element, which screen readers announce
+      await waitFor(() => expect(screen.getByRole('alert')).not.toBe(first));
+      expect(screen.getByRole('alert').textContent).toBe(first.textContent);
     },
   );
 
@@ -174,7 +192,7 @@ describe('[INS-009] the CSV and the shortlist across views', () => {
     // Assert: the entry still names the 7-day view it was taken from, and the list can still be printed
     expect(within(list()).getAllByRole('listitem')).toHaveLength(1);
     expect(plain(within(list()).getByText(/^Tal frå /).textContent)).toBe(
-      'Tal frå Portalen (spelt utanom Canvas), siste 7 dagar (frå 28. okt. 2026), versjon 3.',
+      'Tal frå portalen (spelt utanom Canvas), siste 7 dagar (frå 28. okt. 2026), versjon 3.',
     );
     expect(within(list()).getByRole('button', { name: 'Skriv ut lista' })).toBeTruthy();
   });

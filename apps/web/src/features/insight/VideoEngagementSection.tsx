@@ -5,11 +5,12 @@
  * Why: INS-005 (COULD) uses the share who answered each interaction as a proxy for how far learners watched; D-115
  *      found no `progressed` statement, so there is no drop-off curve, only this measure. INS-008 gives the chart a
  *      visible table and a summary.
- * Spec: INS-005, INS-008, INS-006
+ * Spec: INS-005, INS-008, INS-006, UD-010
  * Invariants:
  *   - Shown only when the view has video engagement (an InteractiveVideo); the server's order is kept.
  *   - A suppressed share has no bar and shows «< k»; the summary task at the end is at «Slutten».
- *   - A11Y: a figure whose caption is the summary; the chart is `aria-hidden`, the table carries every value.
+ *   - A11Y: a figure whose caption is the summary; the chart is `aria-hidden`, the table carries every value. A
+ *     task's own label or question carries the activity's language (UD-010); «Oppgåve utan tittel» does not.
  * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./InsightReportView.tsx.
  * Tests: apps/web/test/features/insight/InsightCharts.test.tsx
  */
@@ -18,6 +19,7 @@
 import { useId } from 'react';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
+import { useAuthoredLang } from './authoredLanguage';
 import { BarChart, SOLID, type ChartRow } from './BarChart';
 import { CellValue } from './CellValue';
 import { cellText, shownValue, videoTime, KIND } from './insightFormat';
@@ -38,6 +40,7 @@ export function VideoEngagementSection({
   readonly k: number;
 }) {
   const locale = useLocale();
+  const authoredLang = useAuthoredLang();
   const headingId = useId();
   const rows: ChartRow[] = interactions.map((interaction) => ({
     key: interaction.item,
@@ -79,7 +82,11 @@ export function VideoEngagementSection({
             {interactions.map((interaction) => (
               <tr key={interaction.item}>
                 <td className={DATA_CELL}>{videoTime(interaction.atSeconds, locale)}</td>
-                <th scope="row" className={ROW_HEAD_CELL}>
+                <th
+                  scope="row"
+                  className={ROW_HEAD_CELL}
+                  lang={(interaction.label ?? interaction.questionText) === null ? undefined : authoredLang}
+                >
                   {interactionName(interaction, locale)}
                 </th>
                 <td className={DATA_CELL}>

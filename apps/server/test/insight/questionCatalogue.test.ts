@@ -60,6 +60,32 @@ describe('[INS-002] the questions of an activity', () => {
     ]);
   });
 
+  it('[INS-002] reads the text a SingleChoiceSet and an ImageHotspotQuestion keep below the top level', () => {
+    // Arrange: the set's text is all its questions' (one empty); the hotspot question's is in its hotspot settings
+    const hotspots = {
+      imageHotspotQuestion: { hotspotSettings: { taskDescription: '<p>Klikk på kjernen.</p>' } },
+    };
+    const params = {
+      a: node('H5P.SingleChoiceSet 1.11', 'scs', {
+        choices: [
+          { question: '<p>Kva er 2+2?</p>' },
+          { question: '<p> </p>' },
+          { question: '<p>3 &lt; 4?</p>' },
+        ],
+      }),
+      b: node('H5P.ImageHotspotQuestion 1.8', 'ihq', hotspots),
+      c: node('H5P.SingleChoiceSet 1.11', 'empty', { choices: 'x' }),
+    };
+    // Act
+    const questions = questionCatalogue('H5P.Column', params);
+    // Assert
+    expect(questions.map(({ item, text }) => [item, text])).toEqual([
+      ['scs', 'Kva er 2+2? / 3 < 4?'],
+      ['ihq', 'Klikk på kjernen.'],
+      ['empty', ''],
+    ]);
+  });
+
   it('[INS-002] never throws on malformed parameters and stops at 100 levels', () => {
     let deep: object = node('H5P.TrueFalse 1.8', 'deepest', { question: 'Djupt' });
     for (let i = 0; i < 150; i += 1) deep = { child: deep };

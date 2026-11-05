@@ -157,6 +157,27 @@ describe('[UD-040] the conformance report generator', () => {
     expect(fresh).toContain('*not yet tested by HVL*');
   });
 
+  it('[UD-040] links an end-to-end test under `npm run test:e2e`, and under `npm test` only what it runs', () => {
+    // Arrange: an end-to-end test that speaks to 1.4.1, as step 8's J2 test does
+    const e2e = { file: 'apps/server/e2e/aFlow.e2e.test.ts', titles: ['[UD-003] a flow shows ✓ Riktig:'] };
+    // WHY: the root Vitest run (vitest.config.mjs and the projects it loads) includes only these files.
+    const runByNpmTest = /^(apps\/(server|web)\/test\/|packages\/[^/]+\/test\/|tools\/.+\.test\.mjs$)/;
+    const linksIn = (text) => [...text.matchAll(/\[`([^`]+)`\]/g)].map((m) => m[1]);
+
+    // Act
+    const report = composeReport({ ...sources, index: [...sources.index, e2e] }, undefined, fresh);
+    const runs = report
+      .split('\n')
+      .filter((line) => line.includes('Runs in `npm test`: '))
+      .map((line) => line.split('Runs in `npm test`: ')[1].split('; in `')[0]);
+
+    // Assert
+    const [, e2eOf141 = ''] = sectionOf(report, '1.4.1').split('; in `npm run test:e2e`: ');
+    expect(linksIn(e2eOf141.split('; in `')[0])).toContain(e2e.file);
+    expect(runs.length).toBeGreaterThan(0);
+    for (const npmTest of runs) for (const file of linksIn(npmTest)) expect(file).toMatch(runByNpmTest);
+  });
+
   it('[UD-040] the committed report and run summary exist, and every manual block of the report parses', () => {
     // Act
     const text = committedReport(ROOT);

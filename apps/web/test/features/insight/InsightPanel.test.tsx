@@ -67,7 +67,7 @@ describe('[PROD-010] the Innsikt tab', () => {
     const privacy = screen.getByRole('region', { name: 'Berre samla tal' });
     expect(privacy.textContent).toContain('færre enn 5 studentar, blir vist som «< 5»');
     expect(plain(screen.getByText(/^Viser /).textContent)).toBe(
-      'Viser Portalen (spelt utanom Canvas), siste 7 dagar (frå 28. okt. 2026), versjon 3.',
+      'Viser portalen (spelt utanom Canvas), siste 7 dagar (frå 28. okt. 2026), versjon 3.',
     );
   });
 

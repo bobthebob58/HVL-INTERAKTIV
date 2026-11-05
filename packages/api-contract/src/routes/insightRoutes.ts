@@ -9,8 +9,9 @@
  * Invariants:
  *   - `path` is below `/api`, in Express form; every `:name` has a schema in `params`, every query parameter one in
  *     `query`, and every schema a route names is listed in ./insightSchemaNames.ts.
- *   - Every route is `auth: 'either'` (a portal session or an ltik; GET needs no CSRF token) and documents 401, 403,
- *     404 and 429. No route takes a learner or returns a per-learner row (INS-006).
+ *   - Every route is `auth: 'either'` (a portal session or an ltik; GET needs no CSRF token, but a browser request
+ *     that is not the app's own fetch is 403, D-106) and documents 401, 403, 404 and 429. No route takes a learner or
+ *     returns a per-learner row (INS-006).
  *   - The answers to 403 and 404 follow D-066: an activity the person may not view is 404 like an unknown one.
  * Collaborators: ./routeResponses.ts, ./collaborationResponses.ts (`rateLimited`), ./insightSchemaNames.ts,
  *   ../insight.ts, ../insightReport.ts, ../insightContextList.ts, ../insightFindings.ts, ../apiRoutes.ts,
@@ -28,8 +29,9 @@ import { contentParams, failure, unauthenticated, unavailable } from './routeRes
 /** 403 of every insight route. */
 const insightRefused = failure(
   '`error.forbidden`: a learner; an admin, or a colleague who may only view the activity, who neither owns nor ' +
-    'co-authors it; a Canvas author whose launch’s course the activity is not placed in; or, in Canvas, a context ' +
-    'other than the launch’s (INS-007, D-106).',
+    'co-authors it; a Canvas author whose launch’s course the activity is not placed in; in Canvas, a context ' +
+    'other than the launch’s (INS-007, D-106); or a browser request that is not a script’s fetch from the app’s own ' +
+    'origin, such as a navigation, another origin’s request or an image (`Sec-Fetch-*`, DATA-007, D-106).',
 );
 
 /** 400 of the routes that take the view's query. */

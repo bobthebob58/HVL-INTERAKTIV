@@ -10,7 +10,8 @@
  * Invariants:
  *   - Output depends only on its inputs: no clock, no environment, no file system.
  *   - A check that matches no test throws (the map is stale); a suite check's result comes from the run summary
- *     only, every other check is linked as part of `npm test`.
+ *     only, every other check's tests are linked under the command that runs them: `npm test` first, then
+ *     `npm run test:e2e` (./testIndex.mjs `commandOf`).
  *   - Links are relative to docs/accessibility/, where the report lives.
  * Collaborators: ./renderReport.mjs, ./testIndex.mjs, ./runResults.mjs, ./axeRuleIndex.mjs, ./protocolIndex.mjs,
  *   ./manualBlocks.mjs.
@@ -20,7 +21,7 @@ import { rulesOfCriterion } from './axeRuleIndex.mjs';
 import { criterionBlockId, manualBlock } from './manualBlocks.mjs';
 import { protocolText } from './protocolIndex.mjs';
 import { axeFindings, findingsText, resultText, suiteResult } from './runResults.mjs';
-import { testsOfCheck } from './testIndex.mjs';
+import { NPM_TEST, commandOf, testsOfCheck } from './testIndex.mjs';
 import { ENGLISH_TEXT_CRITERION, issueText } from './upstreamEntries.mjs';
 import { understandingUrl } from './wcagCriteria.mjs';
 
@@ -99,10 +100,17 @@ function checkLine(check, { index, summary, criterionId }) {
       `criterion ${criterionId}: no running test matches [${check.match.join('][')}] ${check.suite ?? ''}`,
     );
   const ids = check.match.map((m) => `\`${m}\``).join(' ');
-  const links = files.map((f) => `${fileLink(f.file)} (${plural(f.titles.length, 'test title')})`).join(', ');
+  const linksOf = (group) =>
+    group.map((f) => `${fileLink(f.file)} (${plural(f.titles.length, 'test title')})`).join(', ');
   if (check.suite)
-    return `- ${ids}, accessibility suite: ${check.how}. Views: ${check.views}. Last run: ${resultText(suiteResult(summary, check))}. Tests: ${links}.`;
-  return `- ${ids}: ${check.how}. Runs in \`npm test\`: ${links}.`;
+    return `- ${ids}, accessibility suite: ${check.how}. Views: ${check.views}. Last run: ${resultText(suiteResult(summary, check))}. Tests: ${linksOf(files)}.`;
+  // WHY: an end-to-end test linked as part of `npm test` sends an auditor to a run that never starts it.
+  const byCommand = Map.groupBy(files, (f) => commandOf(f.file));
+  const commands = [...byCommand.keys()].sort((a, b) =>
+    a === NPM_TEST ? -1 : b === NPM_TEST ? 1 : a.localeCompare(b),
+  );
+  const runs = commands.map((command) => `\`${command}\`: ${linksOf(byCommand.get(command))}`).join('; in ');
+  return `- ${ids}: ${check.how}. Runs in ${runs}.`;
 }
 
 /**

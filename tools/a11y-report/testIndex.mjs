@@ -12,6 +12,8 @@
  *     such as `V-IMG-ALT` included) and, when the check has `contains`, it holds one of those texts.
  *   - A suite check looks only in its own file in apps/server/a11y/; any other check never looks there.
  *   - Files are in path order and titles in source order, so the links never change between runs.
+ *   - A test file runs in `npm test` unless its folder has a command of its own (apps/server/e2e/, apps/server/live/:
+ *     their Vitest configs, which the root run does not load), so the report never sends a reader to the wrong one.
  * Collaborators: ../spec-trace/testTitles.mjs, ../doc-lint/lib/repo.mjs, ./renderCriterion.mjs, ./runResults.mjs.
  * Tests: tools/a11y-report/test/a11yReport.test.mjs
  */
@@ -20,6 +22,26 @@ import { testTitles } from '../spec-trace/testTitles.mjs';
 
 /** The folder of the accessibility suite (`npm run test:a11y`). */
 export const SUITE_DIR = 'apps/server/a11y';
+
+/** The command of the root Vitest run (vitest.config.mjs), which runs every other test file. */
+export const NPM_TEST = 'npm test';
+
+/**
+ * The test folders outside the suite with a command of their own: apps/server's other Vitest configs, which
+ * `npm test` does not load.
+ */
+export const OWN_COMMANDS = [
+  { dir: 'apps/server/e2e', command: 'npm run test:e2e' },
+  { dir: 'apps/server/live', command: 'npm run test:live' },
+];
+
+/**
+ * The command that runs a test file outside the accessibility suite.
+ * @param {string} file - Repository-relative path of a test file.
+ * @returns {string} Its folder's own command, else {@link NPM_TEST}.
+ */
+export const commandOf = (file) =>
+  OWN_COMMANDS.find(({ dir }) => file.startsWith(`${dir}/`))?.command ?? NPM_TEST;
 
 /**
  * The bracketed IDs that open a title: `[UD-021][V-IMG-ALT] …` gives `UD-021` and `V-IMG-ALT`.

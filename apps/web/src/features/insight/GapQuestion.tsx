@@ -7,12 +7,13 @@
  *      answer only when at least k distinct learners gave it, so a rare and identifiable answer is never shown; the
  *      server has already left those out and counts them under «Andre feil svar». INS-008 gives the chart a visible
  *      table and a summary.
- * Spec: INS-003, INS-008, INS-006
+ * Spec: INS-003, INS-008, INS-006, UD-010
  * Invariants:
  *   - PRIVACY: a wrong answer appears only as the server listed it; the tab adds none.
  *   - Rows: the right answers, each listed wrong answer most frequent first, the other wrong answers, empty gaps.
  *   - A suppressed count has no bar and shows «< k».
- *   - A11Y: each gap is named by its own `h5` heading, under the question's `h4`.
+ *   - A11Y: each gap is named by its own `h5` heading, under the question's `h4`. The accepted answers and the
+ *     listed wrong answers, given in the activity, carry its language (UD-010); the row names around them do not.
  * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./ChoiceQuestion.tsx
  *   (`barBase`), ./MisconceptionSection.tsx.
  * Tests: apps/web/test/features/insight/InsightMisconceptions.test.tsx
@@ -22,22 +23,27 @@
 import { useId } from 'react';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t, type Locale } from '../../i18n/translate';
+import { useAuthoredLang } from './authoredLanguage';
 import { BarChart, SOLID, type ChartRow } from './BarChart';
 import { CellValue } from './CellValue';
 import { barBase } from './ChoiceQuestion';
-import { acceptedAnswers, cellText, shownValue, type AnyCell, KIND } from './insightFormat';
+import { acceptedAnswerParts, cellText, shownValue, type AnyCell, KIND } from './insightFormat';
 import type { GapInsight, GapMisconception } from './insightReportShape';
 import { gapSummary } from './insightSummaries';
 import { DATA_CELL, HEAD_CELL, ROW_HEAD_CELL, ScrollTable } from './ScrollTable';
 
-/** One gap's rows. */
-function gapRows(gap: GapInsight, locale: Locale): { key: string; label: string; cell: AnyCell }[] {
+/** One gap's rows; `answer` marks a row named by an answer given in the activity rather than by the tab. */
+function gapRows(
+  gap: GapInsight,
+  locale: Locale,
+): { key: string; label: string; cell: AnyCell; answer?: boolean }[] {
   return [
     { key: 'correct', label: t('insight.gaps.correct', locale), cell: gap.correct },
     ...gap.wrongAnswers.map((wrong, index) => ({
       key: `w${index}`,
       label: wrong.answer,
       cell: wrong.learners,
+      answer: true,
     })),
     { key: 'other', label: t('insight.gaps.otherWrong', locale), cell: gap.otherWrong },
     { key: 'empty', label: t('insight.gaps.empty', locale), cell: gap.empty },
@@ -55,8 +61,11 @@ function Gap({
   readonly k: number;
 }) {
   const locale = useLocale();
+  const lang = useAuthoredLang();
   const headingId = useId();
   const number = gap.index + 1;
+  // A11Y: UD-010: only the answers carry the activity's language; «Riktig:» and the list words stay the page's.
+  const [before, after] = t('insight.gaps.accepted', locale).split('{{answers}}');
   const rowsOf = gapRows(gap, locale);
   const base = barBase(
     learners,
@@ -82,7 +91,17 @@ function Gap({
         {t('insight.gaps.heading', locale, { number })}
       </h5>
       <p className="mb-2">
-        {t('insight.gaps.accepted', locale, { answers: acceptedAnswers(gap.correctAnswers, locale) })}
+        {before}
+        {acceptedAnswerParts(gap.correctAnswers, locale).map((part, index) =>
+          part.answer ? (
+            <span key={index} lang={lang}>
+              {part.text}
+            </span>
+          ) : (
+            part.text
+          ),
+        )}
+        {after}
       </p>
       <figure className="m-0">
         <figcaption className="mb-2 font-bold">{gapSummary(gap, locale)}</figcaption>
@@ -101,7 +120,7 @@ function Gap({
           <tbody>
             {rowsOf.map((row) => (
               <tr key={row.key}>
-                <th scope="row" className={ROW_HEAD_CELL}>
+                <th scope="row" className={ROW_HEAD_CELL} lang={row.answer ? lang : undefined}>
                   {row.label}
                 </th>
                 <td className={DATA_CELL}>

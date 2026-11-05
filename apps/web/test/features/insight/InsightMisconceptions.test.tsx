@@ -1,7 +1,8 @@
 /**
  * Tests for the misconceptions on the Innsikt tab: a choice question's options with right and wrong in words and an
  * icon, the learners' first answers and the teacher's feedback by each wrong option; a gap task's accepted answers,
- * listed wrong answers, other wrong answers and empty gaps; and each question named by its heading.
+ * listed wrong answers, other wrong answers and empty gaps; and each question named by its heading, by its place in
+ * the item table when it has no text.
  *
  * Spec: INS-003, INS-006, INS-008, UD-003, PROD-013
  */
@@ -32,7 +33,14 @@ const rowsOf = (table: HTMLElement) =>
 describe('[INS-003] misconceptions', () => {
   it('[INS-003][UD-003] shows each option with right or wrong in words, the first answers and the teacher’s feedback by each wrong one', () => {
     // Act
-    render(<MisconceptionSection misconceptions={REPORT.misconceptions} k={5} olderVersion={false} />);
+    render(
+      <MisconceptionSection
+        misconceptions={REPORT.misconceptions}
+        items={REPORT.items}
+        k={5}
+        olderVersion={false}
+      />,
+    );
     // Assert
     const question = screen.getByRole('region', { name: 'Kva gjer mitokondriane?' });
     const table = within(question).getByRole('table', { name: 'Svara på «Kva gjer mitokondriane?»' });
@@ -60,7 +68,9 @@ describe('[INS-003] misconceptions', () => {
     if (choice?.kind !== 'choice') throw new Error('the fixture starts with a choice question');
     const question = { ...choice, learners: HIDDEN, noAnswer: shown(0) };
     // Act
-    render(<MisconceptionSection misconceptions={[question]} k={5} olderVersion={false} />);
+    render(
+      <MisconceptionSection misconceptions={[question]} items={REPORT.items} k={5} olderVersion={false} />,
+    );
     // Assert
     const region = screen.getByRole('region', { name: 'Kva gjer mitokondriane?' });
     expect(
@@ -73,11 +83,18 @@ describe('[INS-003] misconceptions', () => {
 
   it('[INS-003][INS-006] shows a gap’s accepted answers, the listed wrong answers, the other wrong answers hidden below k, and empty gaps', () => {
     // Act
-    render(<MisconceptionSection misconceptions={REPORT.misconceptions} k={5} olderVersion={false} />);
+    render(
+      <MisconceptionSection
+        misconceptions={REPORT.misconceptions}
+        items={REPORT.items}
+        k={5}
+        olderVersion={false}
+      />,
+    );
     // Assert
     const question = screen.getByRole('region', { name: 'Fyll inn namnet på organellen.' });
     const gap = within(question).getByRole('region', { name: 'Luke 1' });
-    expect(within(gap).getByText('Riktig: «mitokondrie» eller «mitokondria»')).toBeTruthy();
+    expect(within(gap).getByText(/^Riktig: /).textContent).toBe('Riktig: «mitokondrie» eller «mitokondria»');
     expect(rowsOf(within(gap).getByRole('table', { name: 'Svara i luke 1' }))).toEqual([
       ['Riktige svar', '10'],
       ['ribosom', '6'],
@@ -105,7 +122,14 @@ describe('[INS-003] misconceptions', () => {
       options: choice.options.map((o) => ({ ...o, learners: o.correct ? shown(9) : shown(0) })),
     };
     // Act
-    render(<MisconceptionSection misconceptions={[hidden, allRight]} k={5} olderVersion={false} />);
+    render(
+      <MisconceptionSection
+        misconceptions={[hidden, allRight]}
+        items={REPORT.items}
+        k={5}
+        olderVersion={false}
+      />,
+    );
     // Assert
     const captions = screen
       .getAllByRole('figure')
@@ -116,9 +140,30 @@ describe('[INS-003] misconceptions', () => {
     ]);
   });
 
+  it('[INS-002][INS-003] names a question without text by its place in its heading, button and table', () => {
+    // Arrange: the item table's first question, with no text in the activity
+    const [choice] = REPORT.misconceptions;
+    if (choice?.kind !== 'choice') throw new Error('the fixture starts with a choice question');
+    // Act
+    render(
+      <MisconceptionSection
+        misconceptions={[{ ...choice, questionText: '' }]}
+        items={REPORT.items}
+        k={5}
+        olderVersion={false}
+      />,
+    );
+    // Assert
+    const region = screen.getByRole('region', { name: 'Spørsmål 1 (utan tekst)' });
+    expect(
+      within(region).getByRole('button', { name: 'Ta opp i samlinga (Spørsmål 1 (utan tekst))' }),
+    ).toBeTruthy();
+    expect(within(region).getByRole('table', { name: 'Svara på «Spørsmål 1 (utan tekst)»' })).toBeTruthy();
+  });
+
   it('[INS-003] says so when no choice or gap question has answers', () => {
     // Act
-    render(<MisconceptionSection misconceptions={[]} k={5} olderVersion={false} />);
+    render(<MisconceptionSection misconceptions={[]} items={[]} k={5} olderVersion={false} />);
     // Assert
     expect(
       screen.getByText('Ingen fleirvals- eller utfyllingsspørsmål har svar i denne perioden.'),
@@ -128,7 +173,7 @@ describe('[INS-003] misconceptions', () => {
 
   it('[INS-003][PROD-013] says that answer distributions are for the current version only when an older one is viewed', () => {
     // Act
-    render(<MisconceptionSection misconceptions={[]} k={5} olderVersion />);
+    render(<MisconceptionSection misconceptions={[]} items={[]} k={5} olderVersion />);
     // Assert
     expect(screen.getByText(/^Svarfordelinga blir berre vist for den gjeldande versjonen/)).toBeTruthy();
     expect(screen.queryByText(/Ingen fleirvals- eller utfyllingsspørsmål/)).toBeNull();

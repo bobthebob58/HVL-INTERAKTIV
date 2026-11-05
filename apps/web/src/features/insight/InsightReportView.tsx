@@ -81,6 +81,7 @@ export function InsightReportView({
         <ItemDifficultySection items={report.items} k={k} />
         <MisconceptionSection
           misconceptions={report.misconceptions}
+          items={report.items}
           k={k}
           olderVersion={report.scope.contentVersion < report.scope.currentVersion}
         />

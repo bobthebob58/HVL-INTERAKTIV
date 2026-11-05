@@ -9,21 +9,28 @@
  * Invariants:
  *   - Shown only to people who may publish (`mayPublish`, ./activityTabs.ts); the server checks again.
  *   - The prompt's link closes the dialog, opens the **Læringsdesign** tab and moves focus to its heading.
- * Collaborators: ./activityTab.ts, ./activityTabs.ts, ../CheckPanel.tsx, ./LearningDesignTab.tsx,
+ *   - `focusCheckHeading` moves focus to this tab's heading when another tab opens it (UD-006, WCAG 2.4.3).
+ * Collaborators: ./activityTab.ts, ./activityTabs.ts, ../CheckPanel.tsx, ./LearningDesignTab.tsx, ./InsightTab.tsx,
  *   ../../learningDesign/LearningDesignPrompt.tsx, ../../learningDesign/LearningDesignPanel.tsx.
  * Tests: apps/web/test/features/ActivityView.test.tsx, apps/web/test/features/CheckPanel.test.tsx,
- *   apps/web/test/features/LearningDesignPrompt.test.tsx
+ *   apps/web/test/features/LearningDesignPrompt.test.tsx, apps/web/test/features/insight/InsightTabs.test.tsx
  */
 'use client';
 
 import { focusLearningDesignHeading } from '../../learningDesign/LearningDesignPanel';
 import { LearningDesignPrompt } from '../../learningDesign/LearningDesignPrompt';
-import { CheckPanel } from '../CheckPanel';
+import { CHECK_HEADING_ID, CheckPanel } from '../CheckPanel';
 import type { ActivityTabProps } from './activityTab';
 import { LEARNING_DESIGN_TAB_ID } from './LearningDesignTab';
 
 /** The **Sjekk og publiser** tab's `id`. */
 export const CHECK_TAB_ID = 'check';
+
+/** Moves focus to the tab's heading once the current render is on screen. */
+export const focusCheckHeading = (): void => {
+  // WHY: the tab panel is shown (and its heading mounted) by the render this call is part of.
+  window.setTimeout(() => document.getElementById(CHECK_HEADING_ID)?.focus(), 0);
+};
 
 /**
  * The check-and-publish panel.

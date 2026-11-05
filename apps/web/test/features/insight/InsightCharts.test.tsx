@@ -85,7 +85,7 @@ describe('[INS-008] the Innsikt tab’s charts', () => {
     const table = screen.getByRole('table', { name: 'Spørsmåla, vanskelegast først' });
     expect(rowsOf(table)[2]?.slice(0, 5)).toEqual([
       '3',
-      'Spørsmålet finst ikkje lenger i aktiviteten',
+      'Spørsmål 3 (finst ikkje lenger i aktiviteten)',
       HIDDEN_TEXT,
       HIDDEN_TEXT,
       HIDDEN_TEXT,
@@ -100,7 +100,7 @@ describe('[INS-008] the Innsikt tab’s charts', () => {
     expect(rowsOf(table).map((row) => row.slice(0, 5))).toEqual([
       ['1', 'Kva gjer mitokondriane?', '20', '40 %', '65 %'],
       ['2', 'Fyll inn namnet på organellen.', '19', '53 %', '79 %'],
-      ['3', 'Spørsmålet finst ikkje lenger i aktiviteten', HIDDEN_TEXT, HIDDEN_TEXT, HIDDEN_TEXT],
+      ['3', 'Spørsmål 3 (finst ikkje lenger i aktiviteten)', HIDDEN_TEXT, HIDDEN_TEXT, HIDDEN_TEXT],
     ]);
     expect(within(table).getAllByRole('rowheader')[0]?.textContent).toBe('Kva gjer mitokondriane?');
     // WHY: the order is by shown shares only, so the text says where a hidden one goes (D-106's amendment).
@@ -109,6 +109,33 @@ describe('[INS-008] the Innsikt tab’s charts', () => {
     );
     expect(plain(screen.getByRole('figure').querySelector('strong')?.textContent)).toBe(
       'Av spørsmåla der delen riktige kan visast, er spørsmål 1 vanskelegast, «Kva gjer mitokondriane?»: 40 % riktig på første forsøk og 65 % på siste.',
+    );
+  });
+
+  it('[INS-002] names a question without text by its place, so no row header or button name is empty or repeated', () => {
+    // Arrange: a SingleChoiceSet whose text the server could not read, twice, then a gone question
+    const untitled = { ...REPORT.items[0]!, questionText: '' };
+    const items = [untitled, { ...untitled, item: 'q-two' }, REPORT.items[2]!];
+    // Act
+    render(<ItemDifficultySection items={items} k={5} />);
+    // Assert
+    const table = screen.getByRole('table', { name: 'Spørsmåla, vanskelegast først' });
+    expect(
+      within(table)
+        .getAllByRole('rowheader')
+        .map((header) => header.textContent),
+    ).toEqual([
+      'Spørsmål 1 (utan tekst)',
+      'Spørsmål 2 (utan tekst)',
+      'Spørsmål 3 (finst ikkje lenger i aktiviteten)',
+    ]);
+    const names = within(table)
+      .getAllByRole('button')
+      .map((button) => plain(button.textContent));
+    expect(names[0]).toBe('+ Ta opp i samlinga (Spørsmål 1 (utan tekst))');
+    expect(new Set(names).size).toBe(3);
+    expect(plain(screen.getByRole('figure').querySelector('strong')?.textContent)).toContain(
+      'er spørsmål 1 vanskelegast, «Spørsmål 1 (utan tekst)»:',
     );
   });
 

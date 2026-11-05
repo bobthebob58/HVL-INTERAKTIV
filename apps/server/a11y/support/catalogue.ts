@@ -1,17 +1,18 @@
 /**
  * catalogue — what the accessibility suites walk through: the colour modes of the axe scans, the ten content
- * types, the web app's routes (the læringsdesign studio's among them) and the studio's seeded views, by the names
- * the suites print.
+ * types, the web app's routes (the læringsdesign studio's among them), the studio's seeded views and the S6 tabs
+ * that show learning data, by the names the suites print.
  *
  * Why: UD-030, UD-008 and DATA-011 say "every route" and "every type". One list keeps the suites from drifting
  *      apart: a route added to the web app is added here once and every check covers it.
- * Spec: UD-030, UD-008, DATA-011, PROD-002
+ * Spec: UD-030, UD-008, DATA-011, PROD-002, LTI-012, INS-008
  * Invariants:
  *   - `CONTENT_TYPES` is exactly the ten authorable types (PROD-002); never `H5P.DragQuestion`.
  *   - Routes are paths of the built web app (apps/web/src/app); `activity` and `canvas` are opened through their
- *     helpers in ./pages.ts, because they need an activity or a launch, and `studio` through ./studioViews.ts,
- *     because it needs the seeded data (./studioSeed.ts) or a step after loading.
- * Collaborators: ./pages.ts, ./studioViews.ts, the suites in ../.
+ *     helpers in ./pages.ts, because they need an activity or a launch, `studio` through ./studioViews.ts,
+ *     because it needs the seeded data (./studioSeed.ts) or a step after loading, and `dataTab` through
+ *     ./dataTabViews.ts, because «Poeng til Canvas» and «Innsikt» show their content only once there is data.
+ * Collaborators: ./pages.ts, ./studioViews.ts, ./dataTabViews.ts, the suites in ../.
  * Tests: apps/server/a11y/axeWebRoutes.a11y.test.ts and the other suites in apps/server/a11y/.
  */
 
@@ -80,12 +81,31 @@ export const STUDIO_VIEW_NAMES: Readonly<Record<StudioView, string>> = {
   copy: '/aktivitet/<copy> (attribution)',
 };
 
-/** Every view of the web app a suite opens: a plain route, an activity on one tab, the Canvas page or a studio view. */
+/** The S6 tabs that show learning data (D-104, D-106): «Poeng til Canvas» and «Innsikt». */
+export const DATA_TABS = ['gradeSync', 'insight'] as const;
+
+/** One of the tabs that show learning data. */
+export type DataTab = (typeof DATA_TABS)[number];
+
+/** Each data tab's Nynorsk name (apps/web `gradeSync.tab`, `insight.tab`), in test titles and reports. */
+export const DATA_TAB_NAMES: Readonly<Record<DataTab, string>> = {
+  gradeSync: 'Poeng til Canvas',
+  insight: 'Innsikt',
+};
+
+/** Where an author meets a data tab: the portal's activity page, or the Canvas page of a teacher's launch. */
+export type DataTabPlace = 'portal' | 'canvas';
+
+/**
+ * Every view of the web app a suite opens: a plain route, an activity on one tab, the Canvas page, a studio view or a
+ * tab that shows learning data.
+ */
 export type WebView =
   | { readonly kind: 'route'; readonly path: (typeof PLAIN_ROUTES)[number] }
   | { readonly kind: 'activity'; readonly tab: 'play' | 'edit' | 'check' }
   | { readonly kind: 'canvas' }
-  | { readonly kind: 'studio'; readonly view: StudioView };
+  | { readonly kind: 'studio'; readonly view: StudioView }
+  | { readonly kind: 'dataTab'; readonly tab: DataTab; readonly where: DataTabPlace };
 
 /** Every view of the web app, signed in as the author (the Canvas page through a student's launch). */
 export const WEB_VIEWS: readonly WebView[] = [
@@ -95,24 +115,36 @@ export const WEB_VIEWS: readonly WebView[] = [
   { kind: 'activity', tab: 'check' },
   { kind: 'canvas' },
   ...STUDIO_VIEWS.map((view) => ({ kind: 'studio', view }) as const),
+  ...DATA_TABS.flatMap((tab) =>
+    (['portal', 'canvas'] as const).map((where) => ({ kind: 'dataTab', tab, where }) as const),
+  ),
 ];
 
 /**
  * Whether a view is a page as its address loads it, with focus at the start of the document; the activity page's
- * other tabs are that page after a click, and `/mappe` with a word count is that page after a choice.
+ * other tabs (and the Canvas page's data tabs) are that page after a click, and `/mappe` with a word count is that
+ * page after a choice.
  * @param view - The view.
  * @returns True for a view the address alone opens.
  */
-export const loadsByAddress = (view: WebView): boolean =>
-  view.kind === 'activity' ? view.tab === 'play' : view.kind !== 'studio' || view.view !== 'mappePreview';
+export const loadsByAddress = (view: WebView): boolean => {
+  if (view.kind === 'dataTab') return false;
+  return view.kind === 'activity'
+    ? view.tab === 'play'
+    : view.kind !== 'studio' || view.view !== 'mappePreview';
+};
 
 /**
  * A view's name in test titles and reports.
  * @param view - The view.
- * @returns e.g. `/hjelp`, `/aktivitet/<id> (edit)`, `/app/play` or `/laeringsdesign/planlegg?emne=<course>`.
+ * @returns e.g. `/hjelp`, `/aktivitet/<id> (edit)`, `/app/play`, `/app/play (Innsikt)` or
+ *   `/laeringsdesign/planlegg?emne=<course>`.
  */
 export const viewName = (view: WebView): string => {
   if (view.kind === 'route') return view.path;
   if (view.kind === 'activity') return `/aktivitet/<id> (${view.tab})`;
+  if (view.kind === 'dataTab') {
+    return `${view.where === 'portal' ? '/aktivitet/<id>' : '/app/play'} (${DATA_TAB_NAMES[view.tab]})`;
+  }
   return view.kind === 'studio' ? STUDIO_VIEW_NAMES[view.view] : '/app/play';
 };

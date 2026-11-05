@@ -1,7 +1,7 @@
 /**
  * Tests for the grade-sync panel's retry: its request, the outcome in the status region, the counts read again, focus
- * on the heading once the button is gone and on the button while it stays, one retry at a time across placements, and
- * a refusal as an alert (also twice).
+ * on the heading once the button is gone and on the button while it stays, one retry at a time across placements, each
+ * button named by its placement, and a refusal as an alert (also twice).
  *
  * Spec: LTI-012, UD-003, UD-006
  */
@@ -12,7 +12,7 @@ import { GradeSyncPanel } from '../../../src/features/gradeSync/GradeSyncPanel';
 import { errorBody, fakeFetch } from '../../support/fakeFetch';
 import { AFTER, BEFORE, ID, NAT, PATH, status, SYK, syk } from './gradeSyncAnswers';
 
-const RETRY = 'Send feila poeng på nytt';
+const RETRY = 'Send feila poeng på nytt (SYK110 i HVL Canvas)';
 
 /**
  * Holds every POST until `release` is called, so a test can act while a retry is on its way.
@@ -104,8 +104,12 @@ describe('[LTI-012] retrying on the grade-sync panel', () => {
     ];
     // Act
     fireEvent.click(within(sections[0] as HTMLElement).getByRole('button', { name: RETRY }));
-    const sending = within(sections[0] as HTMLElement).getByRole('button', { name: 'Sender …' });
-    const other = within(sections[1] as HTMLElement).getByRole('button', { name: RETRY });
+    const sending = within(sections[0] as HTMLElement).getByRole('button', {
+      name: 'Sender … (SYK110 i HVL Canvas)',
+    });
+    const other = within(sections[1] as HTMLElement).getByRole('button', {
+      name: 'Send feila poeng på nytt (NAT200 i HVL Canvas)',
+    });
     fireEvent.click(sending);
     fireEvent.click(other);
     // Assert: both are marked, and only the first press went out
@@ -114,6 +118,22 @@ describe('[LTI-012] retrying on the grade-sync panel', () => {
     release();
     await waitFor(() => expect(other.getAttribute('aria-disabled')).toBeNull());
     expect(requests.filter((r) => r.method === 'POST').map((r) => r.body)).toEqual([{ placementId: SYK }]);
+  });
+
+  it('[UD-006] two links in one course have retry buttons named by their own heading, told apart out of context', async () => {
+    // Arrange: the activity is linked twice in SYK110, and both links have failed scores
+    const second = { ...BEFORE, placementId: NAT };
+    fakeFetch({ [`GET ${PATH}`]: status(BEFORE, second) });
+    // Act
+    render(<GradeSyncPanel contentId={ID} />);
+    await screen.findByRole('heading', { name: 'SYK110 i HVL Canvas (lenkje 1)' });
+    // Assert: the visible label starts each name, and the names differ
+    const names = screen.getAllByRole('button').map((button) => button.textContent);
+    expect(names).toEqual([
+      'Send feila poeng på nytt (SYK110 i HVL Canvas (lenkje 1))',
+      'Send feila poeng på nytt (SYK110 i HVL Canvas (lenkje 2))',
+    ]);
+    expect(screen.getByRole('button', { name: names[1] ?? '' })).toBeTruthy();
   });
 
   it('[UD-003] a refused retry is an alert with ✗ in the server’s words, and a second refusal is a new alert', async () => {

@@ -1,7 +1,8 @@
 /**
  * Tests for «Ta opp i samlinga»: the toggle by each question, the shortlist with the question's aggregates and the
  * teacher's feedback, each change announced, taking a question off with focus on the list's heading, printing the
- * list alone and showing it in large type for projecting; and the list's entries as written from a view.
+ * list alone and showing it in large type for projecting; one question counted as one in English; and the list's
+ * entries as written from a view.
  *
  * Spec: INS-003, INS-006, UD-006
  */
@@ -11,6 +12,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { InsightPanel } from '../../../src/features/insight/InsightPanel';
 import { printShortlist, PRINT_MARK } from '../../../src/features/insight/printShortlist';
 import { ACTIVITY_ITEM, shortlistEntry } from '../../../src/features/insight/shortlistEntries';
+import { LocaleProvider } from '../../../src/i18n/LocaleContext';
+import type { Locale } from '../../../src/i18n/translate';
 import { fakeFetch } from '../../support/fakeFetch';
 import {
   CONTEXTS,
@@ -32,17 +35,25 @@ const QUESTION = 'Kva gjer mitokondriane?';
  */
 const named = (label: string) => `${label} (${QUESTION})`;
 
-const openPanel = async () => {
+const openPanel = async (locale: Locale = 'nn') => {
   fakeFetch({
     [`GET ${PORTAL_PATH}`]: { status: 200, body: REPORT },
     [`GET ${CONTEXTS_PATH}`]: { status: 200, body: { contexts: CONTEXTS } },
     [`GET ${FINDINGS_PATH}`]: { status: 200, body: FINDINGS },
   });
-  render(<InsightPanel contentId={ID} title="Celler og vev" />);
-  await screen.findByRole('heading', { name: 'Deltaking' });
+  render(
+    <LocaleProvider locale={locale}>
+      <InsightPanel contentId={ID} title="Celler og vev" />
+    </LocaleProvider>,
+  );
+  await screen.findByRole('region', { name: QUESTION });
 };
 
-const shortlist = () => screen.getByRole('region', { name: /^Ta opp i samlinga \(/ });
+const shortlistIn = (locale: Locale) =>
+  screen.getByRole('region', {
+    name: locale === 'en' ? /^Bring to the session \(/ : /^Ta opp i samlinga \(/,
+  });
+const shortlist = () => shortlistIn('nn');
 const region = () => screen.getAllByRole('status').find((status) => status.classList.contains('sr-only'));
 
 describe('[INS-003] Ta opp i samlinga', () => {
@@ -60,7 +71,7 @@ describe('[INS-003] Ta opp i samlinga', () => {
     expect(items.map((item) => [...item.querySelectorAll('p')].map((p) => plain(p.textContent)))).toEqual([
       [
         QUESTION,
-        'Tal frå Portalen (spelt utanom Canvas), siste 7 dagar (frå 28. okt. 2026), versjon 3.',
+        'Tal frå portalen (spelt utanom Canvas), siste 7 dagar (frå 28. okt. 2026), versjon 3.',
         '40 % riktig på første forsøk og 65 % på siste (20 studentar svarte).',
         'Vanlegaste feilsvar av dei som kan visast: «Lagrar arvestoff», valt av 9 studentar.',
         'Tilbakemeldinga di: «Arvestoffet ligg i cellekjernen.»',
@@ -96,6 +107,25 @@ describe('[INS-003] Ta opp i samlinga', () => {
     // WHY: a second announcement ends with a no-break space, so the region speaks again (useAnnouncement).
     expect(plain(region()?.textContent).trimEnd()).toBe(
       `«${QUESTION}» er teke ut av lista til samlinga (0 spørsmål).`,
+    );
+  });
+
+  it('[UD-006] in English, one question on the list is «1 question» in its heading and announcements', async () => {
+    // Arrange
+    await openPanel('en');
+    const table = screen.getByRole('table', { name: 'The questions, hardest first' });
+    const [first, second] = within(table).getAllByRole('button');
+    const heading = () => within(shortlistIn('en')).getByRole('heading', { level: 3 }).textContent;
+    // Act and assert: one, two, and back to one
+    fireEvent.click(first as HTMLElement);
+    expect(heading()).toBe('Bring to the session (1 question)');
+    expect(region()?.textContent).toBe(`“${QUESTION}” is added to the list for the session (1 question).`);
+    fireEvent.click(second as HTMLElement);
+    expect(heading()).toBe('Bring to the session (2 questions)');
+    fireEvent.click(first as HTMLElement);
+    expect(heading()).toBe('Bring to the session (1 question)');
+    expect(region()?.textContent).toBe(
+      `“${QUESTION}” is removed from the list for the session (1 question).`,
     );
   });
 

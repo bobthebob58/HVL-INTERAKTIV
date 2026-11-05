@@ -2,12 +2,14 @@
  * Integration tests for the grade worker's edges against the mock Canvas (LTI-012, D-104): a job whose learner's
  * `sub` is gone or unreadable, or whose placement lost its line item, fails without a send; an unexpected error while
  * sending is a bounded retry whose log names no learner; a worker that died mid-send leaves its jobs to a later run
- * once its claim ends; a run that outlived its claim does not settle a job that another run has claimed since; and a
- * score's timestamp is the time of sending, never earlier than the run's moment.
+ * once its claim ends; a run that outlived its claim does not settle a job that another run has claimed since; a
+ * score's timestamp is the time of sending, never earlier than the run's moment; and a retry's delay counts from the
+ * moment Canvas answered, not from the run's start.
  *
  * Spec: LTI-012, DATA-002
  */
 import { afterAll, beforeAll, expect, it } from 'vitest';
+import type { AgsSendOutcome } from '../../src/grades/agsSendOutcome.js';
 import { claimDueGradeJobs } from '../../src/grades/gradeJobClaims.js';
 import { GRADE_SYNC_CLAIM_LEASE_MS, runGradeSync } from '../../src/grades/gradeSyncRun.js';
 import { capturedLogger } from '../support/capturedLogger.js';
@@ -159,5 +161,31 @@ describeWithServices('[LTI-012] grade worker edges', () => {
       new Date(at(1).getTime() + 4_000).toISOString(),
     ]);
     expect(acceptedTo(ahead.placement).map((score) => score.timestamp)).toEqual([at(1).toISOString()]);
+  });
+
+  it('[LTI-012] counts a retry’s delay from Canvas’s answer, not the run’s start', async () => {
+    // Arrange: a degraded Canvas answers 5 minutes after the run's moment (minute 1)
+    const waited = (await queued()).placement;
+    const timedOut = (await queued()).placement;
+    let wall = 0;
+    const slowCanvas = (outcome: AgsSendOutcome) => ({
+      postScore: () => {
+        wall = at(6).getTime();
+        return Promise.resolve(outcome);
+      },
+    });
+    const run = (placement: BenchPlacement, outcome: AgsSendOutcome) => {
+      wall = at(1).getTime();
+      const deps = { ...bench.runDeps, sender: slowCanvas(outcome), wallClock: () => wall };
+      return runGradeSync({ ...deps, placementIds: [placement.id] }, at(1));
+    };
+    const next = async (placement: BenchPlacement) => (await bench.jobs(placement))[0]?.nextAttemptAt;
+    // Act: a 503 with Retry-After: 2 minutes, and a network failure (1 minute's backoff); a run 15 s after the answer
+    await run(waited, { kind: 'retry', reason: 'http-503', retryAfterMs: 120_000 });
+    await run(timedOut, { kind: 'retry', reason: 'network' });
+    const due = [await next(waited), await next(timedOut)];
+    const early = await bench.run(6.25, waited, timedOut);
+    // Assert: neither is sent again inside the time Canvas asked for, or its backoff, counted from the answer
+    expect([...due, early.claimed]).toEqual([at(8), at(7), 0]);
   });
 });

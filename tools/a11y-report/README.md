@@ -65,6 +65,7 @@ protocol, the register or the results folder changes, or after a full run, as wi
 ## Changing the evidence map
 
 Which test speaks to which criterion is a judgement, so it is code that is reviewed. A check names the IDs its tests'
-titles open with (`suiteCheck` for `apps/server/a11y/`, `testCheck` for everything that runs in `npm test`), what it
-checks and, for the suite, the views; `contains` and `path` narrow it. A `note` states a fact about scope, never a
-verdict: no verdict is derived from the automated results (protocol §1).
+titles open with (`suiteCheck` for `apps/server/a11y/`, `testCheck` for every other test, linked under the command
+that runs it: `npm test`, or `npm run test:e2e` for `apps/server/e2e/`), what it checks and, for the suite, the
+views; `contains` and `path` narrow it. A `note` states a fact about scope, never a verdict: no verdict is derived
+from the automated results (protocol §1).

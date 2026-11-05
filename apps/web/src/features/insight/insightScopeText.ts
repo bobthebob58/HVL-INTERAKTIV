@@ -8,6 +8,7 @@
  * Spec: INS-007, PROD-013, INS-003
  * Invariants:
  *   - Built from the answer's own scope, never from the form, so the words describe the numbers shown.
+ *   - The context is written as it reads mid-sentence («Viser portalen (spelt utanom Canvas), …»).
  *   - PRIVACY: the scope names a context, a period and a version only; nothing about a learner.
  * Collaborators: ./insightContextLabels.ts, ./insightPeriods.ts, ../../i18n/formatDate.ts, ./InsightReportView.tsx,
  *   ./InsightPanel.tsx, ./shortlistEntries.ts.
@@ -16,7 +17,7 @@
 import type { InsightScope } from '@hvl-interaktiv/api-contract';
 import { formatDate } from '../../i18n/formatDate';
 import { t, type Locale } from '../../i18n/translate';
-import { contextName } from './insightContextLabels';
+import { contextNameInText } from './insightContextLabels';
 import { periodName } from './insightPeriods';
 import type { InsightReport } from './insightReportShape';
 
@@ -32,10 +33,12 @@ export interface ScopeWords {
  * The parts of a view's scope in words.
  * @param scope - The view's scope.
  * @param locale - The page locale.
- * @returns For example `{ context: 'SYK110 i Canvas', period: 'siste 7 dagar', start: '28. okt. 2026', version: 3 }`.
+ * @returns For example `{ context: 'SYK110 i Canvas', period: 'siste 7 dagar', start: '28. okt. 2026', version: 3 }`;
+ *   the portal is `portalen (spelt utanom Canvas)`.
  */
 export const scopeWords = (scope: InsightScope, locale: Locale): ScopeWords => ({
-  context: contextName(scope.context, locale),
+  // WHY: the words go into running sentences, so the portal is «portalen», not the selector's «Portalen».
+  context: contextNameInText(scope.context, locale),
   period: periodName(scope.period, locale).toLowerCase(),
   start: formatDate(scope.periodStart, locale),
   version: scope.contentVersion,

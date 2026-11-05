@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
-  acceptedAnswers,
+  acceptedAnswerParts,
   cellText,
   formatValue,
   shownValue,
@@ -49,9 +49,22 @@ describe('[INS-006] insight values as text', () => {
     expect(videoTime(null, 'en')).toBe('The end');
   });
 
-  it('[INS-008] joins a gap’s accepted answers with the locale’s «or»', () => {
-    expect(acceptedAnswers(['mitokondrie', 'mitokondria'], 'nn')).toBe('«mitokondrie» eller «mitokondria»');
-    expect(acceptedAnswers(['a', 'b'], 'en')).toBe('«a» or «b»');
-    expect(acceptedAnswers(['celle'], 'nb')).toBe('«celle»');
+  it('[INS-008] joins a gap’s accepted answers with the locale’s «or», marking which parts are answers', () => {
+    // Arrange
+    const joined = (answers: string[], locale: 'nn' | 'nb' | 'en') =>
+      acceptedAnswerParts(answers, locale)
+        .map((part) => part.text)
+        .join('');
+    // Act
+    const parts = acceptedAnswerParts(['a', 'b'], 'en');
+    // Assert
+    expect(joined(['mitokondrie', 'mitokondria'], 'nn')).toBe('«mitokondrie» eller «mitokondria»');
+    expect(joined(['a', 'b'], 'en')).toBe('«a» or «b»');
+    expect(joined(['celle'], 'nb')).toBe('«celle»');
+    expect(parts).toEqual([
+      { text: '«a»', answer: true },
+      { text: ' or ', answer: false },
+      { text: '«b»', answer: true },
+    ]);
   });
 });

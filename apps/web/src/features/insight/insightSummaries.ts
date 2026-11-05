@@ -13,6 +13,7 @@
  *     shown.
  *   - Items arrive hardest first (the server's order), so the hardest shown item is the first with a shown share.
  *   - PRIVACY: a wrong answer named here is one the server listed, so at least k learners gave it (INS-003).
+ *   - A question without text, or no longer in the activity, is named by its place («Spørsmål 3 (utan tekst)»).
  * Collaborators: ./insightFormat.ts, ./insightReportShape.ts, the sections in this folder, ./shortlistEntries.ts.
  * Tests: apps/web/test/features/insight/insightSummaries.test.ts
  */
@@ -26,13 +27,17 @@ import type {
 } from './insightReportShape';
 
 /**
- * The text of a question, or what to say when the parameters no longer hold it.
- * @param text - The question text, or null.
+ * The name of a question: its text, or, when it has none or is gone, its place, so that no row header, button or
+ * sentence is left empty and no two such questions share a name (WCAG 1.3.1, 2.4.6).
+ * @param text - The question text; '' when the parameters hold none, null when the question is no longer there.
+ * @param number - The question's place in the view's items (1 = hardest), as in the table's «Nr.» column.
  * @param locale - The page locale.
- * @returns The text.
+ * @returns The name.
  */
-export const questionLabel = (text: string | null, locale: Locale): string =>
-  text ?? t('insight.items.gone', locale);
+export function questionLabel(text: string | null, number: number, locale: Locale): string {
+  if (text === null) return t('insight.items.gone', locale, { number });
+  return text === '' ? t('insight.items.untitled', locale, { number }) : text;
+}
 
 /**
  * INS-002: the hardest item with a shown first-attempt share.
@@ -47,7 +52,7 @@ export function itemsSummary(items: readonly ItemDifficultyInsight[], k: number,
   if (!item) return t('insight.items.summaryNone', locale);
   return t('insight.items.summary', locale, {
     number: index + 1,
-    question: questionLabel(item.questionText, locale),
+    question: questionLabel(item.questionText, index + 1, locale),
     first: cellText(item.firstCorrect, 'percent', k, locale),
     latest: cellText(item.latestCorrect, 'percent', k, locale),
   });

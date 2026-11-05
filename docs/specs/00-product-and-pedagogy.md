@@ -86,6 +86,11 @@ Each step names the requirements it exercises.
    one hint, that question 3 has no feedback for option C (`PROD-003`, `UD-020`, `PED-020`). Lars fixes both.
 6. The activity is published and returned to Canvas as a graded resource link (`LTI-005`, `LTI-012`).
 
+- **Amended (D-101, 2026-11-05, S6 step 8):** `SPEC-DEVIATION`: the picker of step 2 offers no *Create new* and no
+  content bank; both pass to HVL's bachelor students (`docs/handoff/canvas-studio.md`). J1 is tested in two halves:
+  steps 2–5 in the portal (`patternToPublish.e2e`, `publishWithReason.e2e`) and steps 1 and 6 in Canvas with an
+  activity made in the portal (`journeyPlaceInCanvas.e2e`).
+
 **J2 — Study asynchronously on a phone and resume (Amina, Jonas).**
 1. Amina opens the activity from Canvas on a phone. It loads in under 3 s (`NFR-001`) and reflows
    to 320 px width (`UD-008`).
@@ -108,6 +113,10 @@ Each step names the requirements it exercises.
 1. Kari edits pattern guidance text in the studio's content files and opens a pull request; no code changes are needed (`PED-011`).
 2. Ola installs a new library version in staging, verifies it, then promotes it. Non-admins cannot
    install or update libraries, even through an uploaded `.h5p` file (`H5P-006`, `SEC-003`).
+
+- **Amended (D-101, 2026-11-05, S6 step 8):** step 1 is an end-to-end test (`journeyGovernance.e2e`). Step 2 has no
+  page: who may install is tested over HTTP (`packageImport.int`, `ajax.int`), and installing in staging and
+  promoting is the procedure *A new content-type version* in `docs/ops/runbook.md` §2, which no test runs.
 
 ---
 
@@ -138,6 +147,9 @@ and then a pattern. The H5P editor opens pre-filled with a pedagogically sound s
   edits it, apart from placeholders that are deliberately flagged as needing input. Choosing *blank
   activity* is still possible.
 - **Verify:** Integration test that creates each pattern; e2e for J1.
+- **Amended (D-101, 2026-11-05, S6 step 8):** `SPEC-DEVIATION`: "e2e for J1" is J1's portal half
+  (`patternToPublish.e2e`, `publishWithReason.e2e`); creating from a pattern in Canvas's Deep Linking picker passes to
+  HVL's bachelor students (`docs/handoff/canvas-studio.md`).
 
 #### PROD-002 · MUST · S2 · Exactly ten authorable content types
 Authors can create only the ten content types in [01 §3](01-h5p-core128.md#3-the-ten-content-types).

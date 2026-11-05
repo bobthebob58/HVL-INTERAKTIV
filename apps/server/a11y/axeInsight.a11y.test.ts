@@ -1,25 +1,38 @@
 /**
  * The Innsikt tab (S6) under axe, the keyboard and print: the portal's tab of an activity with a question on the
- * «Ta opp i samlinga» list, and the same tab on a teacher's Canvas page, in the light theme and with forced colours
- * emulated; then a keyboard-only pass (Tab to «Ta opp i samlinga», Space adds the question and it is announced, the
- * projection dialog opens with Enter and Escape returns focus); then the print stylesheet, which prints the list
- * alone. No serious or critical violation. The insight view is answered by routing (./support/insightViews.ts).
+ * «Ta opp i samlinga» list, with its «< 5» cells and the note that the numbers run up to yesterday; the same tab
+ * for a period shortened to start on 1 August, with its second note; and the tab on a teacher's Canvas page; each in
+ * the light theme and with forced colours emulated. Then a keyboard-only pass (Tab to «Ta opp i samlinga», Space
+ * adds the question and it is announced, the projection dialog opens with Enter and Escape returns focus); then the
+ * print stylesheet, which prints the list alone, scanned by axe as printed. No serious or critical violation. The
+ * insight view is answered by routing (./support/insightViews.ts, ./support/insightFixture.ts).
  *
- * Spec: UD-030, UD-006, INS-008, INS-003
+ * Spec: UD-030, UD-006, INS-008, INS-003, INS-006, PROD-010
  */
+import type { Page } from 'playwright-core';
 import { describe, expect, it } from 'vitest';
 import { webText } from '../test/support/webAppTexts.js';
 import { describeA11y } from './support/a11ySuite.js';
 import { scanPage } from './support/axeScan.js';
 import { COLOUR_MODES } from './support/catalogue.js';
 import { focusIs, tabTo } from './support/focusWalk.js';
+import { FIRST_QUESTION as QUESTION, SHORTENED_PERIOD } from './support/insightFixture.js';
 import { openCanvasInsight, openPortalInsight } from './support/insightViews.js';
 import { expectOnlyRecorded } from './support/upstreamFindings.js';
 
-const QUESTION = 'Kva gjer mitokondriane?';
 const ADD = `${webText('insight.shortlist.add')} (${QUESTION})`;
 const PANEL = '[role=tabpanel]:not([hidden])';
 const PROJECT = '.insight-shortlist > div > button.button-secondary';
+/** The hidden reason of each «< 5» value shown (apps/web `insight.suppressedSr`). */
+const suppressedCount = (page: Page) =>
+  page.locator(`${PANEL} .sr-only`, { hasText: webText('insight.suppressedSr') }).count();
+/** The start of each period note (apps/web `insight.period.*`), up to its first placeholder. */
+const NOTE_START = {
+  throughYesterday: webText('insight.period.throughYesterday', { last: '§' }).split('§')[0] ?? '',
+  shortened: webText('insight.period.shortened', { start: '§' }).split('§')[0] ?? '',
+};
+const noteCount = (page: Page, note: keyof typeof NOTE_START) =>
+  page.locator(`${PANEL} p`, { hasText: NOTE_START[note] }).count();
 
 describeA11y('[UD-030] axe on the Innsikt tab', (env) => {
   describe.each(COLOUR_MODES)('%s', (mode, forcedColors) => {
@@ -38,6 +51,23 @@ describeA11y('[UD-030] axe on the Innsikt tab', (env) => {
       expect(await page.getByRole('region', { name: webText('notice.formativeUse.title') }).count()).toBe(1);
       expect(await page.getByRole('region', { name: webText('insight.privacy.heading') }).count()).toBe(1);
       expect(await page.locator('.insight-shortlist li').count()).toBe(1);
+      // Assert: the hidden values say why, and the period note says the numbers run up to yesterday (INS-006, D-106)
+      expect(await suppressedCount(page)).toBeGreaterThanOrEqual(5);
+      expect([await noteCount(page, 'throughYesterday'), await noteCount(page, 'shortened')]).toEqual([1, 0]);
+      expectOnlyRecorded(report, []);
+      await context.close();
+    });
+
+    it('[UD-030][PROD-010] the portal’s Innsikt tab for a period shortened to 1 August has no serious or critical violation', async () => {
+      // Arrange
+      const { app, browser } = env();
+      const context = await browser.newContext({ forcedColors, storageState: app.authorStorage });
+      const contentId = app.ids.get('H5P.QuestionSet') ?? '';
+      const page = await openPortalInsight(app, context, contentId, SHORTENED_PERIOD);
+      // Act
+      const report = await scanPage(page, `${mode}: /aktivitet/[id] Innsikt, shortened period`);
+      // Assert: both period notes, after the scope line they qualify
+      expect([await noteCount(page, 'throughYesterday'), await noteCount(page, 'shortened')]).toEqual([1, 1]);
       expectOnlyRecorded(report, []);
       await context.close();
     });
@@ -84,7 +114,7 @@ describeA11y('[UD-030] axe on the Innsikt tab', (env) => {
     await context.close();
   });
 
-  it('[INS-003] print: while the list is printed, only the list and its heading show, without buttons', async () => {
+  it('[INS-003][UD-030] print: while the list is printed, only the list and its heading show, without buttons or violations', async () => {
     // Arrange
     const { app, browser } = env();
     const context = await browser.newContext({ storageState: app.authorStorage });
@@ -106,6 +136,7 @@ describeA11y('[UD-030] axe on the Innsikt tab', (env) => {
         participation: visible(document.querySelector('dl')),
       };
     });
+    const report = await scanPage(page, 'print: the «Ta opp i samlinga» list');
     // Assert
     expect(shown).toEqual({
       list: true,
@@ -116,6 +147,7 @@ describeA11y('[UD-030] axe on the Innsikt tab', (env) => {
       header: false,
       participation: false,
     });
+    expectOnlyRecorded(report, []);
     await context.close();
   });
 });

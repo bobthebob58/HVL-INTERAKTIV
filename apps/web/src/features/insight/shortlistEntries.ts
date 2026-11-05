@@ -8,7 +8,7 @@
  *      only say what the tab showed: aggregates and the teacher's own texts, no personal data (INS-006). As the list
  *      keeps entries from several views, each names its own (context, period, version), so a printout never presents
  *      numbers from two courses or periods as one.
- * Spec: INS-003, INS-002, INS-006
+ * Spec: INS-003, INS-002, INS-006, UD-010
  * Invariants:
  *   - PRIVACY: built only from the already suppressed report; a hidden value stays «< k» or is left out.
  *   - An item is keyed by its `subContentId`, or by `ACTIVITY_ITEM` for the activity itself (a single question).
@@ -30,8 +30,10 @@ export const ACTIVITY_ITEM = ':activity';
 export interface ShortlistEntry {
   /** The item's key (`subContentId` or `ACTIVITY_ITEM`). */
   readonly key: string;
-  /** The question's text. */
+  /** The question's text, or its name by its place when it has none (./insightSummaries.ts `questionLabel`). */
   readonly question: string;
+  /** True when `question` is the activity's own text, which carries the activity's language (UD-010). */
+  readonly authored: boolean;
   /** The view the numbers come from, e.g. «Tal frå SYK110 i Canvas, siste 7 dagar (frå 28. okt. 2026), versjon 3.» */
   readonly view: string;
   /** Shown aggregates and the teacher's feedback, one sentence each. */
@@ -59,7 +61,8 @@ export function shortlistEntry(
   locale: Locale,
 ): ShortlistEntry | undefined {
   const { k } = report.scope;
-  const item = report.items.find((candidate) => itemKey(candidate.item) === key);
+  const index = report.items.findIndex((candidate) => itemKey(candidate.item) === key);
+  const item = report.items[index];
   const misconception = report.misconceptions.find((candidate) => itemKey(candidate.item) === key);
   if (!item && !misconception) return undefined;
   const lines: string[] = [];
@@ -80,9 +83,11 @@ export function shortlistEntry(
   if (misconception?.kind === 'gaps') {
     for (const gap of misconception.gaps) lines.push(gapSummary(gap, locale));
   }
+  const text = misconception?.questionText ?? item?.questionText ?? null;
   return {
     key,
-    question: misconception?.questionText ?? questionLabel(item?.questionText ?? null, locale),
+    question: questionLabel(text, index + 1, locale),
+    authored: Boolean(text),
     view: t('insight.shortlist.lineView', locale, { ...scopeWords(report.scope, locale) }),
     lines,
   };

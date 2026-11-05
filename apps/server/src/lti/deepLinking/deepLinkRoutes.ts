@@ -7,6 +7,8 @@
  *      key (`createDeepLinkingMessage`); this module decides what may be signed (D-061).
  * Spec: LTI-005, PROD-005, LTI-003, LTI-004, PROD-012, LTI-013
  * Invariants:
+ *   - SPEC-DEVIATION: D-101 — the picker offers no content bank and no «Create new» from a pattern
+ *     (./deepLinkActivities.ts).
  *   - Both routes need the ltik of a Deep Linking launch by an author; any other ltik is 403
  *     `hvl:deep-link-not-allowed`. The page takes it from the query (D-058), the API only as a Bearer token.
  *   - Only own or co-authored published activities are signed (404 for anything else, 409 for a draft).

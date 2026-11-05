@@ -1,21 +1,30 @@
 /**
  * Tests for where the Innsikt tab appears: on the activity page for the owner and co-authors only (not an admin
- * through the role, D-106), with the way to the check tab for those who may publish; and in Canvas for authors next
- * to Rediger, not for learners.
+ * through the role, D-106), with the way to the check tab for those who may publish (focus follows it) and the
+ * activity's language for its texts; and in Canvas for authors next to Rediger, not for learners.
  *
- * Spec: PROD-010, INS-007, LTI-006
+ * Spec: PROD-010, INS-007, LTI-006, UD-006, UD-010
  */
 // @vitest-environment jsdom
 import type { ContentDetail } from '@hvl-interaktiv/api-contract';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { ActivityView } from '../../../src/features/activity/ActivityView';
 import { activityTabsFor } from '../../../src/features/activity/tabs/activityTabs';
 import type { ActivityTabProps } from '../../../src/features/activity/tabs/activityTab';
 import { INSIGHT_TAB_ID, InsightTab } from '../../../src/features/activity/tabs/InsightTab';
 import { resetTakenLtikForTests } from '../../../src/features/lti/ltikFromAddress';
 import { LtiPlayView } from '../../../src/features/lti/LtiPlayView';
 import { fakeFetch } from '../../support/fakeFetch';
-import { FINDINGS_PATH, ID } from './insightAnswers';
+import {
+  CANVAS_PATH,
+  CONTEXTS,
+  CONTEXTS_PATH,
+  FINDINGS_PATH,
+  ID,
+  PORTAL_PATH,
+  REPORT,
+} from './insightAnswers';
 import { FINDINGS } from './insightOtherAnswers';
 
 const DETAIL: ContentDetail = {
@@ -74,6 +83,45 @@ describe('[PROD-010] the Innsikt tab’s place', () => {
     expect(screen.queryByRole('button', { name: 'Opne Sjekk og publiser' })).toBeNull();
   });
 
+  it('[UD-006] «Opne Sjekk og publiser» moves focus to the check tab’s heading, not to the page', async () => {
+    // Arrange: the real activity page, whose tabs hide the Innsikt panel that holds the pressed button
+    fakeFetch({
+      'GET /auth/session': { status: 200, body: { roles: ['author'], locale: 'nn', csrfToken: 'c' } },
+      'GET /api/me': {
+        status: 200,
+        body: { kind: 'portal', locale: 'nn', roles: ['author'], dismissedNotices: [] },
+      },
+      [`GET /api/content/${ID}`]: { status: 200, body: DETAIL },
+      [`GET ${PORTAL_PATH}`]: { status: 200, body: REPORT },
+      [`GET ${CONTEXTS_PATH}`]: { status: 200, body: { contexts: CONTEXTS } },
+      [`GET ${FINDINGS_PATH}`]: { status: 200, body: FINDINGS },
+    });
+    render(<ActivityView contentId={ID} />);
+    fireEvent.click(await screen.findByRole('tab', { name: 'Innsikt' }));
+    const button = await screen.findByRole('button', { name: 'Opne Sjekk og publiser' });
+    button.focus();
+    // Act
+    fireEvent.click(button);
+    // Assert
+    const heading = await screen.findByRole('heading', { level: 2, name: 'Resultat av sjekken' });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+    expect(screen.getByRole('tab', { name: 'Sjekk og publiser' }).getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('[UD-010] the tab gives the panel the activity’s language, for the texts quoted from it', async () => {
+    // Arrange
+    fakeFetch({
+      [`GET ${PORTAL_PATH}`]: { status: 200, body: REPORT },
+      [`GET ${CONTEXTS_PATH}`]: { status: 200, body: { contexts: CONTEXTS } },
+      [`GET ${FINDINGS_PATH}`]: { status: 200, body: FINDINGS },
+    });
+    // Act
+    render(<InsightTab {...props({ ...DETAIL, language: 'en' })} />);
+    // Assert
+    const question = await screen.findByRole('heading', { name: 'Kva gjer mitokondriane?' });
+    expect(question.getAttribute('lang')).toBe('en');
+  });
+
   it('[LTI-006] Canvas gives authors Innsikt next to Rediger, and learners no tabs', () => {
     // Arrange
     fakeFetch({
@@ -93,5 +141,25 @@ describe('[PROD-010] the Innsikt tab’s place', () => {
     window.history.replaceState(null, '', '/app/play?ltik=abc');
     render(<LtiPlayView launch={{ ...launch, mayEdit: false }} />);
     expect(screen.queryByRole('tab', { name: 'Innsikt' })).toBeNull();
+  });
+
+  it('[UD-010] in Canvas the Innsikt tab marks the activity’s texts with the launch’s language', async () => {
+    // Arrange
+    fakeFetch({
+      'GET /api/me': {
+        status: 200,
+        body: { kind: 'lti', locale: 'nn', roles: ['author'], dismissedNotices: [] },
+      },
+      [`GET ${CANVAS_PATH}`]: { status: 200, body: REPORT },
+      [`GET ${FINDINGS_PATH}`]: { status: 200, body: FINDINGS },
+    });
+    const launch = { contentId: ID, title: 'Cells', mayEdit: true, locale: 'nn' as const, language: 'en' };
+    window.history.replaceState(null, '', '/app/play?ltik=abc');
+    render(<LtiPlayView launch={launch} />);
+    // Act
+    fireEvent.click(screen.getByRole('tab', { name: 'Innsikt' }));
+    // Assert
+    const question = await screen.findByRole('heading', { name: 'Kva gjer mitokondriane?' });
+    expect(question.getAttribute('lang')).toBe('en');
   });
 });

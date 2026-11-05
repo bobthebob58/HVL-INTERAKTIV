@@ -6,12 +6,13 @@
  * Why: INS-003 shows the distribution across options with the teacher's feedback for each wrong option next to it, so
  *      the seminar can start from the commonest misconception. INS-008 gives the chart a visible table and a summary;
  *      UD-003 and CLAUDE.md §1 never let right or wrong rest on colour: «✓ Riktig» and «✗ Feil» are written out.
- * Spec: INS-003, INS-008, INS-006, UD-003
+ * Spec: INS-003, INS-008, INS-006, UD-003, UD-010
  * Invariants:
  *   - A suppressed count (fewer than k learners, or hidden so a total cannot reveal it) has no bar and shows «< k».
  *   - Bars are a share of the learners who answered, or of the largest shown count when that total is hidden.
  *   - «Ingen av alternativa» (first answers that name no current option) has a row only when it is not 0.
  *   - The icons are `aria-hidden`; the words carry the meaning.
+ *   - The option and feedback texts carry the activity's language (UD-010); «Inga tilbakemelding» does not.
  * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts,
  *   ./MisconceptionSection.tsx.
  * Tests: apps/web/test/features/insight/InsightMisconceptions.test.tsx
@@ -20,6 +21,7 @@
 
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
+import { useAuthoredLang } from './authoredLanguage';
 import { BarChart, SOLID, type ChartRow } from './BarChart';
 import { CellValue } from './CellValue';
 import { cellText, shownValue, type AnyCell, KIND } from './insightFormat';
@@ -43,17 +45,20 @@ export function barBase(total: AnyCell, cells: readonly AnyCell[]): number {
 
 /**
  * One choice question's distribution.
- * @param props - The question and k.
+ * @param props - The question, its name for the table's caption (its text, or its place when it has none), and k.
  * @returns The figure.
  */
 export function ChoiceQuestion({
   question,
+  name,
   k,
 }: {
   readonly question: ChoiceMisconception;
+  readonly name: string;
   readonly k: number;
 }) {
   const locale = useLocale();
+  const lang = useAuthoredLang();
   const showNoAnswer = shownValue(question.noAnswer) !== 0;
   const rowsOf = [
     ...question.options.map((option) => ({
@@ -87,7 +92,7 @@ export function ChoiceQuestion({
     <figure className="m-0 mb-4">
       <figcaption className="mb-2 font-bold">{choiceSummary(question, locale)}</figcaption>
       <BarChart rows={rows} />
-      <ScrollTable caption={t('insight.choice.caption', locale, { question: question.questionText })}>
+      <ScrollTable caption={t('insight.choice.caption', locale, { question: name })}>
         <thead>
           <tr>
             <th scope="col" className={HEAD_CELL}>
@@ -107,7 +112,7 @@ export function ChoiceQuestion({
         <tbody>
           {question.options.map((option) => (
             <tr key={option.index}>
-              <th scope="row" className={ROW_HEAD_CELL}>
+              <th scope="row" className={ROW_HEAD_CELL} lang={lang}>
                 {option.text}
               </th>
               <td className={DATA_CELL}>
@@ -122,7 +127,11 @@ export function ChoiceQuestion({
                 <CellValue cell={option.learners} kind={KIND.count} k={k} />
               </td>
               <td className={DATA_CELL}>
-                {option.correct ? null : (option.feedback ?? t('insight.choice.noFeedback', locale))}
+                {option.correct ? null : option.feedback ? (
+                  <span lang={lang}>{option.feedback}</span>
+                ) : (
+                  t('insight.choice.noFeedback', locale)
+                )}
               </td>
             </tr>
           ))}

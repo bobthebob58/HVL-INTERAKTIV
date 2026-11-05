@@ -16,6 +16,7 @@
  *     fields as `name = value`; it lists no placement the key lacks.
  *   - §12's table numbers its residuals R1…Rn without a gap, each row with six filled cells.
  *   - Every `R<n>` cited in DPIA-INPUT.md or DATA-INVENTORY.md is in that table.
+ *   - Every range `R1–R<n>` in §13, the questions for the DPO, ends at the table's last residual.
  *   - Problems name the section, the field or the number, never a person's data (the documents hold none).
  * Collaborators: docs/privacy/DPIA-INPUT.md, docs/reference/canvas-lti13-developer-key.json,
  *   docs/privacy/DATA-INVENTORY.md, CI and the gate (`npm run privacy:dpia-check`), docs/EVALUATOR-GUIDE.md §5.
@@ -112,7 +113,7 @@ export function keyProblems(section, key) {
 }
 
 /**
- * Checks the residual table and every residual cited.
+ * Checks the residual table, every residual cited and the range §13 asks the DPO about.
  * @param {string} dpia - The DPIA input.
  * @param {string} inventory - The data inventory.
  * @returns {string[]} The problems.
@@ -133,6 +134,10 @@ export function residualProblems(dpia, inventory) {
   ]) {
     const cited = new Set(text.match(/\bR\d+\b/g) ?? []);
     for (const id of cited) if (!known.has(id)) problems.push(`${name} cites ${id}, which §12 does not list`);
+  }
+  const last = `R${rows.length}`;
+  for (const [, end] of (sectionOf(dpia, 13) ?? '').matchAll(/\bR1[–-](R\d+)\b/g)) {
+    if (end !== last) problems.push(`§13: the DPO is asked about R1–${end}, but §12 runs to ${last}`);
   }
   if (rows.length === 0) problems.push('§12: the residual table is missing');
   return problems;

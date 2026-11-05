@@ -7,13 +7,14 @@
  *      non-text contrast (the bar and its outlined track against the surface, UD-003). The chart is decorative for
  *      assistive technology: its figure's text summary and the visible data table beside it carry every value, so it
  *      is `aria-hidden` and nothing is read twice.
- * Spec: INS-008, INS-006, UD-003, UD-012
+ * Spec: INS-008, INS-006, UD-003, UD-012, UD-002
  * Invariants:
  *   - A11Y: `aria-hidden`; every value it draws is in the figure's table too (the sections in this folder).
  *   - A suppressed value (INS-006) or one that is not available has no bar, only its text («< 5»).
  *   - Colours only from the tokens through Tailwind classes; no style attribute (D-072). Bars are SVG rectangles
  *     whose width is an attribute; under forced colours they are drawn in the system's text colour.
  *   - A second series is told apart by its stripes and the legend, never by a second colour.
+ *   - A row's label wraps within its column and is never truncated (UD-002, WCAG 1.4.12).
  * Collaborators: ./ItemDifficultySection.tsx, ./ChoiceQuestion.tsx, ./GapQuestion.tsx,
  *   ./VideoEngagementSection.tsx.
  * Tests: apps/web/test/features/insight/InsightCharts.test.tsx
@@ -136,7 +137,9 @@ export function BarChart({
       <ul className="m-0 list-none p-0">
         {rows.map((row) => (
           <li key={row.key} className="mb-2 grid grid-cols-[minmax(4rem,10rem)_1fr] items-center gap-2">
-            <span className="truncate">{row.label}</span>
+            {/* A11Y: the label wraps in its column, never cut off with an ellipsis: wider text spacing (WCAG
+                1.4.12) or zoom must not hide words of it (the body's overflow-wrap breaks a word too long). */}
+            <span className="min-w-0">{row.label}</span>
             <span className="flex flex-col gap-1">
               {row.bars.map((bar) => (
                 <span key={bar.pattern} className="flex items-center gap-2">

@@ -13,7 +13,8 @@
  *   - After a save in the editor the player reloads, so the author sees the change.
  *   - While the editor's save choice is open, the page's own controls are inert (PROD-013, D-093); Canvas offers no
  *     copy, so no copy is opened here (D-098).
- *   - The title carries the activity's own language when it differs from the page's (WCAG 3.1.2, UD-010).
+ *   - The title carries the activity's own language when it differs from the page's (WCAG 3.1.2, UD-010); so do the
+ *     activity's texts on the Innsikt tab.
  *   - Before the player, the **Spel** tab shows the estimated time and the purpose from the launch (PED-032), which
  *     Express read after the View check (D-087); the purpose carries the activity's language.
  * Collaborators: ../../lti/launchHeader.ts (the launch facts), ./LtiChrome.tsx, ../../components/Tabs.tsx,
@@ -126,7 +127,14 @@ export function LtiPlayView({ launch }: { readonly launch: AppLaunch }) {
     tabs.push({
       id: INSIGHT_TAB,
       label: t('insight.tab', locale),
-      panel: <InsightPanel contentId={launch.contentId} title={launch.title} fixedContext />,
+      panel: (
+        <InsightPanel
+          contentId={launch.contentId}
+          title={launch.title}
+          language={launch.language}
+          fixedContext
+        />
+      ),
     });
     // LTI-012: the scores sent to this course's gradebook, for authors (D-104); the server limits them to the launch's
     // course (D-106). WHY: the launch tells only `mayEdit`, so a course copy's teacher who may not edit gets no tab yet.

@@ -74,4 +74,16 @@ describe('[DATA-005] the DPIA input matches its sources', () => {
       ]),
     );
   });
+
+  it('[DATA-005] a residual added to §12 but left out of §13’s question to the DPO is caught', () => {
+    // Arrange: one row after the last, as step 6 added R38 and R39 while §13 still asked about R1–R37
+    const docs = real();
+    const last = Math.max(...[...docs.dpia.matchAll(/^\| R(\d+) \|/gm)].map((m) => Number(m[1])));
+    const lastRow = docs.dpia.split('\n').find((line) => line.startsWith(`| R${last} |`));
+    docs.dpia = docs.dpia.replace(lastRow, `${lastRow}\n| R${last + 1} | A new residual | m | r | o | x |`);
+    // Act
+    const problems = dpiaProblems(docs);
+    // Assert
+    expect(problems).toContain(`§13: the DPO is asked about R1–R${last}, but §12 runs to R${last + 1}`);
+  });
 });

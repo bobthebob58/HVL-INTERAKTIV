@@ -6,8 +6,9 @@ The zod request and response schemas of the `/api` routes, shared by the server 
 them) and the web app (which types its requests with them), the registry of every `/api` route, and the OpenAPI 3.1
 document built from both with zod 4's `z.toJSONSchema` (`DOC-012`, D-077). Since S5 the registry is split by area,
 a route may answer a file (`mediaType`) and take query parameters (D-099), and the S5 error codes live here too. S6
-adds the xAPI batch the player's bridge posts, the grade-sync status and retry, and the parts every insight answer
-shares (D-104, D-106, D-115).
+adds the xAPI batch the player's bridge posts, the grade-sync status and retry, and the insight routes: one view, the
+contexts it can be shown for, the same view as CSV, and the validator's findings for insight readers (D-104, D-106,
+D-115).
 
 ## How to run
 
@@ -44,8 +45,11 @@ The server serves the document at `GET /api/docs` when `NODE_ENV` is not `produc
 | `src/xapiResponseCaps.ts` | Which answers are stored, each gap cut to 100 characters and an answer over 1 000 dropped (`DATA-012`, `INS-003`, D-115) |
 | `src/gradeSync.ts` | `GET …/grade-sync` and `POST …/grade-sync/retry`: job counts per placement, not *k*-suppressed (`LTI-012`, D-104) |
 | `src/insight.ts` | What every insight answer shares: the fixed periods, the context and version, and a cell that is shown or `{ suppressed: true }` with no value (`INS-006`, D-106) |
+| `src/insightReport.ts` | `GET …/insight`: one view's participation, item difficulty, misconceptions and video engagement, every number a cell from `insight.ts`, "not available" as `null` (`INS-001`…`INS-003`, `INS-005`, `INS-006`, D-115); mirrors the server's `insightReport.ts` |
+| `src/insightContextList.ts` | `GET …/insight/contexts`: the contexts the person may view, key and label only, no count (`INS-007`, D-106) |
+| `src/insightFindings.ts` | `GET …/insight/findings`: the validator's findings for every insight reader, an acknowledgement's reason only for editors (`INS-010`, `UD-022`) |
 | `src/routes/routeResponses.ts` | The answers every area shares (401, 400, 404, 403) and the `:contentId` parameter |
-| `src/routes/<area>Routes.ts` | One route registry per area: `core` (before S5), `studio`, `pattern`, `learningDesign`, `collaboration`, `mappe`, `gradeBridge` (S6; joins `API_ROUTES` when step 3 mounts its routes) |
+| `src/routes/<area>Routes.ts` | One route registry per area: `core` (before S5), `studio`, `pattern`, `learningDesign`, `collaboration`, `mappe`, and from S6 `insight` (the view, its contexts, the CSV with `CSV_MEDIA_TYPE`, the findings) and `gradeBridge` (the xAPI batch, the grade-sync status and retry; last in `API_ROUTES`) |
 | `src/routes/<area>SchemaNames.ts` | The component names of the schemas each area's routes use |
 | `src/routes/collaborationResponses.ts` | The refusals and the co-author path parameter the collaboration routes share |
 | `src/apiRoutes.ts` | `API_ROUTES`: the area registries concatenated in document order |
@@ -61,12 +65,13 @@ The server serves the document at `GET /api/docs` when `NODE_ENV` is not `produc
 2. Name every schema a route uses in `src/routes/<area>SchemaNames.ts` (request bodies under `request`, answers under
    `response`); a name is unique across all areas.
 3. Add the route to `src/routes/<area>Routes.ts` with its `params`, `query`, `body` and every answer by status, reusing
-   `src/routes/routeResponses.ts`. A file answer sets `mediaType` (`MARKDOWN_MEDIA_TYPE`, `PDF_MEDIA_TYPE`) and no
-   schema.
+   `src/routes/routeResponses.ts`. A file answer sets `mediaType` (`MARKDOWN_MEDIA_TYPE`, `PDF_MEDIA_TYPE`,
+   `CSV_MEDIA_TYPE`) and no schema.
 4. Mount it in the server's `/api` router; `apps/server/test/http/api/apiDocs.int.test.ts` fails until the mounted
    routes and the registry agree. That test calls every route signed out with a sample value for each path and query
-   parameter (`contentId`, `noticeId`, `userId`, `patternId`, `locale`, `courseCode`, `q`, `format`); a route with
-   another parameter name needs a sample there, and a public route must answer 200 to the samples.
+   parameter (`contentId`, `noticeId`, `userId`, `patternId`, `locale`, `courseCode`, `q`, `format`, and from S6
+   `period`, `context`, `version`); a route with another parameter name needs a sample there, and a public route must
+   answer 200 to the samples.
 
 ## Key flows
 
@@ -105,4 +110,5 @@ None. The server decides whether to serve `/api/docs` from `NODE_ENV` (see `apps
 
 `DOC-012` (schemas and document), and the shapes of `PROD-003`, `UD-022`, `PROD-011`, `PROD-006`, `DATA-002`,
 `PED-001`, `PED-002`, `PED-010`, `PED-030`, `PED-031`, `PED-032`, `PROD-001`, `PROD-007`, `MAPPE-001`, and from S6
-`LTI-011`, `DATA-012`, `LTI-012` and `INS-006` (with the shared parts of `INS-001`–`INS-007`).
+`LTI-011`, `DATA-012`, `LTI-012`, and the insight answers of `INS-001`…`INS-003`, `INS-005`, `INS-006`, `INS-007`,
+`INS-009` and `INS-010`.

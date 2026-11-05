@@ -1,11 +1,14 @@
 /**
  * deepLinkActivities — what the Deep Linking picker offers an author, and the check of what they chose.
  *
- * Why: LTI-005 lets an author pick existing activities to place in Canvas; in S3 these are their own and
- *      co-authored activities (D-061). Drafts are listed so the author sees them, but cannot be returned to Canvas
- *      (LTI-005 acceptance, PROD-004).
+ * Why: LTI-005 lets an author pick existing activities to place in Canvas; these are their own and co-authored
+ *      activities (D-061). Drafts are listed so the author sees them, but cannot be returned to Canvas (LTI-005
+ *      acceptance, PROD-004).
  * Spec: LTI-005, PROD-005, PROD-004, LTI-012
  * Invariants:
+ *   - SPEC-DEVIATION: D-101 (amendment of 2026-11-05, S6 step 8) — LTI-005 is built only in part: no content bank in
+ *     the list and no «Create new» from a pattern; both pass to HVL's bachelor students
+ *     (docs/handoff/canvas-studio.md).
  *   - Only activities the author owns or co-authors are listed or accepted; anything else is "not available" (404),
  *     whether it exists or not.
  *   - A chosen draft is refused with 409 `hvl:deep-link-draft`, before any JWT is signed.

@@ -14,6 +14,7 @@
  *   - 403 and 404 are "unavailable", 400 "invalid" (a version or context the activity lacks), anything else "failed".
  *   - If the contexts cannot be loaded, the portal alone is offered; the server still checks every view.
  *   - `latest` is the newest view that arrived; it is never cleared by a refusal, only replaced by a newer view.
+ *   - `refusals` grows with every refused, invalid or failed answer, also when it repeats the one before.
  * Collaborators: ./insightApi.ts, ./insightPeriods.ts, ./insightContextLabels.ts, ./InsightPanel.tsx,
  *   ../../api/ApiAuthContext.tsx.
  * Tests: apps/web/test/features/insight/InsightPanel.test.tsx, apps/web/test/features/insight/InsightQuery.test.tsx,
@@ -39,6 +40,8 @@ export interface InsightView {
   readonly state: InsightViewState;
   /** True while a newer view than the one shown is loading. */
   readonly pending: boolean;
+  /** Counts the refused, invalid and failed answers, so each one can mount a new alert. */
+  readonly refusals: number;
   /** The newest view that arrived, also while a later request is refused or failed; undefined before the first. */
   readonly latest: InsightReport | undefined;
   /** The contexts to choose from (portal only); undefined in Canvas and while they load. */
@@ -67,6 +70,7 @@ export function useInsightView(
   );
   const [state, setState] = useState<InsightViewState>('loading');
   const [pending, setPending] = useState(false);
+  const [refusals, setRefusals] = useState(0);
   const [latest, setLatest] = useState<InsightReport>();
   const [contexts, setContexts] = useState<readonly InsightContext[]>();
   const loads = useRef(0);
@@ -95,6 +99,8 @@ export function useInsightView(
       if (load !== loads.current) return;
       setPending(false);
       if (!result.ok) {
+        // A11Y: the same refusal twice leaves the state unchanged; the count makes it a new alert (WCAG 4.1.3).
+        setRefusals((count) => count + 1);
         if (result.status === 403 || result.status === 404) setState('unavailable');
         else setState(result.status === 400 ? 'invalid' : 'failed');
         return;
@@ -111,5 +117,5 @@ export function useInsightView(
     setQuery(next);
   }, []);
 
-  return { query, state, pending, latest, contexts, apply };
+  return { query, state, pending, refusals, latest, contexts, apply };
 }

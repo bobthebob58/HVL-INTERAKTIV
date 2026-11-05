@@ -11,7 +11,10 @@
  *     every other key is a course. Only types come from the contract, so zod stays out of the browser bundle.
  *   - Options keep the server's order (the portal first); a label shared by several courses gets «(nr. n)» in that
  *     order; a course without a label is «Canvas-emne utan emnekode», numbered the same way.
- * Collaborators: @hvl-interaktiv/api-contract (`InsightContext`), ./InsightQueryForm.tsx, ./InsightPanel.tsx.
+ *   - Inside a sentence the portal is «portalen (spelt utanom Canvas)», in lower case (`contextNameInText`); the
+ *     capitalised name is the selector's label only.
+ * Collaborators: @hvl-interaktiv/api-contract (`InsightContext`), ./InsightQueryForm.tsx, ./InsightPanel.tsx,
+ *   ./insightScopeText.ts.
  * Tests: apps/web/test/features/insight/insightLabels.test.ts
  */
 import type { InsightContext } from '@hvl-interaktiv/api-contract';
@@ -36,6 +39,19 @@ export function contextName(context: InsightContext, locale: Locale): string {
   if (context.key === PORTAL_CONTEXT) return t('insight.query.contextPortal', locale);
   if (context.label === null) return t('insight.query.contextUnlabelled', locale);
   return t('insight.query.contextCourse', locale, { label: context.label });
+}
+
+/**
+ * The name of one context as it reads inside a sentence, such as the scope line «Viser portalen (spelt utanom
+ * Canvas), …»: the portal in lower case; a course as `contextName` has it (it starts with its course code or Canvas).
+ * @param context - The context.
+ * @param locale - The page locale.
+ * @returns «portalen (spelt utanom Canvas)», «SYK110 i Canvas» or «Canvas-emne utan emnekode».
+ */
+export function contextNameInText(context: InsightContext, locale: Locale): string {
+  return context.key === PORTAL_CONTEXT
+    ? t('insight.query.contextPortalInText', locale)
+    : contextName(context, locale);
 }
 
 /**

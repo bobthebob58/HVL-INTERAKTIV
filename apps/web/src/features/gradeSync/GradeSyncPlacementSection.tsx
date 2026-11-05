@@ -10,6 +10,9 @@
  *     button it replaced is gone, so focus never falls to the page (WCAG 2.4.3).
  *   - The button shows only while there are failed scores. While any retry in the panel runs, every retry button is
  *     `aria-disabled`, keeps focus and ignores presses (one request at a time); only this placement's says «Sender …».
+ *   - A11Y: the button's name ends with the placement's heading in brackets, visually hidden, so two placements' retry
+ *     buttons can be told apart out of context, such as in a screen reader's list of buttons (WCAG 2.4.6, 4.1.2); the
+ *     visible label starts the name (WCAG 2.5.3), as ../insight/ShortlistButton.tsx does.
  *   - Feedback is words with ✓ or ✗ (UD-003): a problem is an alert, mounted anew for each refusal so a repeated one
  *     is read again; an outcome is plain text, because the panel's status region announces it.
  * Collaborators: ./GradeSyncPanel.tsx, ./GradeSyncCounts.tsx, ./gradeSyncTexts.ts, ./gradeSyncIcons.ts.
@@ -92,6 +95,8 @@ export function GradeSyncPlacementSection({
           }}
         >
           {busy ? t('gradeSync.retrying', locale) : t('gradeSync.retry', locale)}
+          {/* WHY: brackets, not a colon: a browser puts a space before the visually hidden part. */}
+          <span className="sr-only"> ({heading})</span>
         </button>
       ) : null}
       {feedback?.kind === 'done' ? (

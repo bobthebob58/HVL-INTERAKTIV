@@ -93,12 +93,17 @@ export function videoTime(seconds: number | null, locale: Locale): string {
 }
 
 /**
- * Joins the answers a gap accepts with the locale's "or".
+ * Joins the answers a gap accepts with the locale's "or", in parts, so each answer can carry the activity's language.
  * @param answers - The accepted answers.
  * @param locale - The page locale.
- * @returns For example «mitokondrie» eller «mitokondria».
+ * @returns For example «mitokondrie», « eller », «mitokondria»; `answer` is true for the quoted answers.
  */
-export function acceptedAnswers(answers: readonly string[], locale: Locale): string {
+export function acceptedAnswerParts(
+  answers: readonly string[],
+  locale: Locale,
+): { readonly text: string; readonly answer: boolean }[] {
   const quoted = answers.map((answer) => `«${answer}»`);
-  return new Intl.ListFormat([...INTL_LOCALE[locale]], { type: 'disjunction' }).format(quoted);
+  return new Intl.ListFormat([...INTL_LOCALE[locale]], { type: 'disjunction' })
+    .formatToParts(quoted)
+    .map((part) => ({ text: part.value, answer: part.type === 'element' }));
 }

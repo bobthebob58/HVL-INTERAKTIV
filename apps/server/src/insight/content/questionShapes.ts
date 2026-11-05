@@ -15,6 +15,10 @@
  *     `tipsAndFeedback.chosenFeedback` (null when empty).
  *   - A gap task is H5P.Blanks (case-sensitive unless `behaviour.caseSensitive` is false, the library's default)
  *     or H5P.DragText (dropped words are the author's own, so compared as written).
+ *   - H5P.SingleChoiceSet and H5P.ImageHotspotQuestion keep their text below the top level; it is read from there,
+ *     so such an item is not left without a name (WCAG 1.3.1, 2.4.6). A set is one item for all its questions, so
+ *     its text is every question's, joined with « / », not the first one's alone (that would name the whole set's
+ *     numbers after one question).
  * Collaborators: ./gapSolutions.ts, ./questionCatalogue.ts, ../../learningDesign/safeEditing/subContentNodes.ts.
  * Tests: apps/server/test/insight/questionCatalogue.test.ts
  */
@@ -63,6 +67,17 @@ const TEXT_FIELDS: Readonly<Record<string, string>> = {
   'H5P.Summary': 'intro',
 };
 const FALLBACK_FIELDS = ['question', 'taskDescription', 'text', 'intro'];
+// WHY: these libraries keep their question below the top level (SingleChoiceSet 1.11, ImageHotspotQuestion 1.8).
+const NESTED_TEXT: Readonly<Record<string, (params: Record<string, unknown>) => unknown>> = {
+  // WHY: joined as HTML before the text is made plain, so an entity in a question is decoded once, not twice.
+  'H5P.SingleChoiceSet': (params) =>
+    listOf(params.choices)
+      .map((choice) => objectOf(choice).question)
+      .filter((question) => plainTextOfValue(question) !== '')
+      .join(' / '),
+  'H5P.ImageHotspotQuestion': (params) =>
+    objectOf(objectOf(params.imageHotspotQuestion).hotspotSettings).taskDescription,
+};
 
 /** A gap task's own text with each gap shown as «___», for a task whose description is empty. */
 function gapText(machineName: string, params: Record<string, unknown>): unknown {
@@ -83,6 +98,8 @@ function gapText(machineName: string, params: Record<string, unknown>): unknown 
  * @spec INS-002
  */
 export function questionText(machineName: string, params: Record<string, unknown>): string {
+  const nested = NESTED_TEXT[machineName];
+  if (nested) return insightText(nested(params));
   const own = TEXT_FIELDS[machineName];
   const fields = own ? [own] : FALLBACK_FIELDS;
   const text = fields.map((field) => insightText(params[field])).find((found) => found !== '') ?? '';

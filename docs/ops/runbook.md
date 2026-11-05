@@ -48,6 +48,23 @@ The image and its compose file are in `deploy/` ([docker.md](docker.md)). Withou
 `npm ci`, `npm run h5p:fetch-core`, `npm run build`, then `npm start` (the server runs its TypeScript through `tsx`,
 D-110).
 
+**A new content-type version** (spec 00 J5 step 2; D-101's amendment of 2026-11-05, S6 step 8) goes to staging
+first and reaches production in the same image. Nobody installs libraries by hand on a running server or from the
+Hub (D-041):
+
+1. A developer re-pins the library in `tools/h5p-libraries/libraries.manifest.json`
+   (`node tools/h5p-libraries/fetchLibraries.mjs --resolve`, the diff reviewed) in a pull request. CI then runs the
+   tests, `npm run content:check` (the patterns' library versions) and the accessibility suite on the player and
+   editor of all ten types.
+2. From the merged commit, build the bundle and the image ([docker.md](docker.md), *Build the image*), and note the
+   image's digest.
+3. **Staging:** run steps 2–4 above with that image. The seed step installs only new or patched libraries, writes one
+   library audit row for each (`H5P-011`) and logs the counts (`seed libraries finished`). Verify: `GET /healthz`
+   answers 200; an author creates an activity of the changed type, saves it in the editor and plays it; an existing
+   activity of that type still plays.
+4. **Production:** run steps 2–4 above with the same image by its digest, so with the same hash-checked bundle.
+   Nothing is fetched or built for production.
+
 **Stop** with SIGTERM (`docker stop`, a Kubernetes rollout): the server stops its jobs, stops accepting connections,
 closes the PDF browser and its clients, and exits 0 (or 1 if a service failed to close). Allow 30 seconds. The jobs
 (the grade worker, the cleanups, the yearly purge) each run on one node per interval through a lease, so nodes can be

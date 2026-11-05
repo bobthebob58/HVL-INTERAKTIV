@@ -3,11 +3,12 @@
  * Canvas, in the light theme and with forced colours emulated; fresh, and again once its first task is answered
  * (./support/views.ts `startAndAnswer`: past the intro screen, on CoursePresentation's question slide, in
  * InteractiveVideo's question, with a DragText word dropped, the HVL feedback states shown) or, for ImageHotspots
- * and BranchingScenario, opened. Only the recorded H5P upstream problems may remain, and each of them must
- * still occur. Every scan must reach inside the player's frame (./support/axeFrames.ts); a control scan whose axe
- * cannot be injected into frames fails.
+ * and BranchingScenario, opened; and in the same way a MultiChoice and a QuestionSet made in Nynorsk with HVL's
+ * language overlay (./support/nynorskActivities.ts, D-111), whose texts for assistive technology are the overlay's.
+ * Only the recorded H5P upstream problems may remain, and each of them must still occur. Every scan must reach
+ * inside the player's frame (./support/axeFrames.ts); a control scan whose axe cannot be injected into frames fails.
  *
- * Spec: UD-030, UD-011, UD-012, UD-003
+ * Spec: UD-030, UD-011, UD-012, UD-003, H5P-008
  */
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -16,6 +17,7 @@ import { describe, expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
 import { mergeReports, scanPage, WCAG_TAGS, type AxeReport } from './support/axeScan.js';
 import { COLOUR_MODES, CONTENT_TYPES } from './support/catalogue.js';
+import { NYNORSK_TYPES, nynorskActivities, OVERLAY_CHECK_NAME } from './support/nynorskActivities.js';
 import { playerFrame } from './support/pages.js';
 import { expectOnlyRecorded, recordedFor } from './support/upstreamFindings.js';
 import { openView, startAndAnswer, waitForStillness } from './support/views.js';
@@ -48,6 +50,35 @@ describeA11y('[UD-030] axe inside the H5P player of each content type', (env) =>
         // Assert
         expectOnlyRecorded(
           mergeReports(`${mode}, ${type} in the Canvas page`, reports),
+          recordedFor('player', type, { forced: forcedColors === 'active' }),
+        );
+        await context.close();
+      },
+    );
+
+    it.each(NYNORSK_TYPES)(
+      '[UD-030][H5P-008] %s made in Nynorsk with HVL’s overlay has only recorded upstream problems, fresh and answered',
+      async (type) => {
+        // Arrange
+        const { app, browser } = env();
+        const contentId = (await nynorskActivities(app))[type];
+        const context = await browser.newContext({ forcedColors });
+        const page = await openView(app, context, { kind: 'canvas' }, { contentId });
+        const player = await playerFrame(page);
+        await waitForStillness(player);
+        // Act
+        const reports: AxeReport[] = [await scanPage(page, `${mode}, ${type} made in Nynorsk, fresh`)];
+        const checkName = await player
+          .locator('.h5p-question-check-answer')
+          .first()
+          .getAttribute('aria-label');
+        await startAndAnswer(player, type);
+        await waitForStillness(player);
+        reports.push(await scanPage(page, `${mode}, ${type} made in Nynorsk, answered`));
+        // Assert: the scans saw the overlay's Nynorsk, where the library's nn.json is English
+        expect(checkName).toBe(OVERLAY_CHECK_NAME);
+        expectOnlyRecorded(
+          mergeReports(`${mode}, ${type} made in Nynorsk in the Canvas page`, reports),
           recordedFor('player', type, { forced: forcedColors === 'active' }),
         );
         await context.close();

@@ -18,6 +18,8 @@
  *     time, and counted as `changed` (./gradeJobClaims.ts); a job another run claimed since is left to that run.
  *   - An unexpected error while sending one group is counted against that group as a retry (`internal`), so it is
  *     still limited by the 8 attempts and 24 hours; the other groups go on.
+ *   - Each group is settled at the moment its answer came, never earlier than the run's moment: the backoff, a
+ *     `Retry-After` and the 24 hours count from there, since a slow Canvas leaves the run's moment minutes behind.
  *   - PRIVACY: the run reports and logs counts and reason codes, never a learner key, `sub`, score or URL (DATA-009).
  * Collaborators: ./gradeJobClaims.ts, ./gradeJobSend.ts, ./gradeJobReconcile.ts, ./gradeRetrySchedule.ts,
  *   ./AgsScoreClient.ts, ./GradeSyncWorker.ts (runs it on a leased timer).
@@ -40,6 +42,11 @@ import { settlementFor } from './gradeRetrySchedule.js';
 /** What a run needs. */
 export interface GradeSyncRunDeps extends GradeJobSendDeps {
   readonly logger: Logger;
+  /**
+   * The wall clock in milliseconds, for each score's `timestamp` (./gradeJobSend.ts) and each group's settlement
+   * moment, from which its retry's delay counts; defaults to `Date.now`.
+   */
+  readonly wallClock?: () => number;
   /** A number in [0, 1) for the backoff's jitter; tests pass a fixed one. Defaults to `Math.random`. */
   readonly random?: () => number;
   /** At most this many jobs (learners) per run; default 50. */
@@ -113,7 +120,8 @@ async function sendSafely(
 /**
  * Runs the grade worker once.
  * @param deps - Database, encryption, score sender, logger and the run's settings.
- * @param now - The run's moment: what is reconciled and due, and the next attempt times.
+ * @param now - The run's moment: what is reconciled and due; each group's settlement counts from its answer, never
+ *   earlier than this.
  * @returns What the run did, by count.
  * @spec LTI-012
  */
@@ -148,11 +156,15 @@ export async function runGradeSync(deps: GradeSyncRunDeps, now: Date): Promise<G
         },
         'grade not sent',
       );
+    // WHY: the answer's moment, which a long run leaves behind `now`; the backoff and `Retry-After` count from it
+    // (D-104), never earlier than the run's moment (a test's moment may lie ahead of the wall clock).
+    const settledAt = new Date(Math.max(now.getTime(), (deps.wallClock ?? Date.now)()));
     for (const job of group) {
-      const settlement = settlementFor(job, outcome, now, random());
-      if (await settleGradeJob(deps.db, job, settlement, now)) counts[SETTLED_COUNT[settlement.kind]] += 1;
-      else {
-        await requeueChangedGradeJob(deps.db, job, settlement, now);
+      const settlement = settlementFor(job, outcome, settledAt, random());
+      if (await settleGradeJob(deps.db, job, settlement, settledAt)) {
+        counts[SETTLED_COUNT[settlement.kind]] += 1;
+      } else {
+        await requeueChangedGradeJob(deps.db, job, settlement, settledAt);
         changed += 1;
       }
     }

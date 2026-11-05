@@ -2691,6 +2691,30 @@ loading of one spec per session are kept.
     (114f513): both pass `endCardTableRowSummary`, which the semantics do not have.
   - **Links:** the root README, PROGRESS and the Evaluator Guide link the hand-off index, the tester guide, the
     security policy and the upstream index; the index lists every workstream's hand-off item.
+- **Amendment (2026-11-05, S6 step 8: the journey tests and the Canvas half of the studio):** it records what the
+  Consequences above left to an amendment. The step-8 tests cited D-101 for both before it existed, and spec 02 §8
+  still said these parts "come in S6" (found in the docs-trace review). The tests named are in `apps/server/`.
+  - **J1 is split** (`SPEC-DEVIATION` from `LTI-005`'s "E2e in J1" and `PROD-001`'s "e2e for J1"). The picker lists
+    the author's own and co-authored activities only: its content bank (`LTI-005` (a)) and «Create new» from a
+    pattern (`LTI-005` (b), J1 step 2) pass to the students with `docs/handoff/canvas-studio.md` parts 1 and 2, as
+    the `LTI-007` duplicate in `/app/play` and a copied course's **Innsikt** tab do with its part 3. J1 is proved in
+    two halves. The portal half, steps 2–5 as the portal has them (a pattern's skeleton with placeholders, the check,
+    publishing despite an error with a reason): `e2e/patternToPublish.e2e.test.ts` and
+    `e2e/publishWithReason.e2e.test.ts`. The Canvas half, steps 1 and 6 (the picker from *Add item → External tool*
+    as an assignment, a graded resource link with a formative line item, a learner's score in the gradebook):
+    `e2e/journeyPlaceInCanvas.e2e.test.ts`. The picker's code carries `SPEC-DEVIATION: D-101`
+    (`src/lti/deepLinking/deepLinkActivities.ts` and `deepLinkRoutes.ts`), and spec 00 §3 J1, `LTI-005`'s Verify
+    line and spec 02 §8's `LTI-005` and `LTI-007` rows say what passes on. The deviation ends when `canvas-studio.md`'s
+    parts are built and one J1 test runs from the picker's «Create new» to the gradebook.
+  - **J5's coverage.** Step 1 (ALU edits a pattern's guidance in the content files alone, `PED-011`) is
+    `e2e/journeyGovernance.e2e.test.ts`. Step 2 has no page of its own: libraries arrive by the seed step from the
+    hash-checked bundle (D-041, D-110) or by an admin's `.h5p` import. That only `admin` installs or updates
+    libraries, also through an uploaded `.h5p`, and that nobody installs from the Hub, is proved over HTTP by
+    `test/http/packageImport.int.test.ts` and `test/http/ajax.int.test.ts` (`H5P-006`, `SEC-003`, `H5P-011`), not in
+    a browser. Installing a new version in staging, verifying it and promoting it to production is the procedure *A
+    new content-type version* in `docs/ops/runbook.md` §2: the re-pinned manifest in a pull request, one image with
+    its bundle, the seed step and checks in staging, then the same image in production. No test runs it; HVL
+    operations does.
 
 ### D-102 · `SPEC-DEVIATION` LTI-010: the xAPI bridge is plain JavaScript in the player document, for learners only
 - **Context:** `LTI-010` puts the bridge in `packages/hvl-h5p-theme/src/xapiBridge.ts`: it subscribes to
@@ -3170,6 +3194,32 @@ loading of one spec per session are kept.
   sees today's plays in the mappe tomorrow (PROGRESS Q24 applies to both). The yearly purge's snapshots cover ended
   years only and are unchanged. *Verified by* `storedResultsBeforeToday.int.test.ts` (a learner who played today is in
   no group until the next day).
+- **Amendment (2026-11-05, the S6 security review: another site cannot write the audit trail):** *Found*
+  (SEC-S6-01): the view and the CSV download are GETs that write `insight.view` and `insight.export` (**Audit**
+  above, `DATA-007`), D-057 asks for the CSRF token on unsafe methods only, and the `SameSite=Lax` session cookie goes
+  with another site's top-level navigation. A page on any site could send a signed-in teacher to `…/insight/export`:
+  the server wrote audit events under the teacher's name that the teacher never asked for (which spec 00 §8's measure
+  reads), saved the aggregated CSV among their downloads, and used up their 60 insight requests a minute. That site
+  never reads the answer. The same day's re-check found a second way in that a rule against other sites misses: an
+  author can set an H5P image path to `https://<app>/api/content/<id>/insight/export` (`rightsOfUse.ts` and Lumi
+  accept an http(s) path, h5p.js `getPath` plays an absolute path as it is, the player's CSP has `img-src 'self'`).
+  A teacher who opens that activity in the portal loads it as an image of our own origin, which full Chromium sends
+  as `Sec-Fetch-Site: same-origin`, `Sec-Fetch-Mode: no-cors`, `Sec-Fetch-Dest: image` with the session cookie, and
+  the server wrote `insight.export` under that teacher's name. *Decided:* every insight route answers 403
+  `error.forbidden` (already in the contract) to anything but what our pages send, a script's `fetch` from our own
+  origin: `Sec-Fetch-Site` absent or `same-origin`, `Sec-Fetch-Mode` absent, `cors` or `same-origin`, and
+  `Sec-Fetch-Dest` absent or `empty`. That refuses a top-level navigation from any site (a typed URL too), a request
+  from another origin of any site (`cross-site`, or `same-site`, which takes in the files origin, D-045), and an
+  image, video, frame or prefetch that a page of our own origin loads. The check comes after the sign-in check and
+  before View, the rate limit and any audit write. Our pages' fetches (`apiRequest`, `apiFileRequest`; also in the
+  Canvas frame, whose fetches go to its own origin) and clients that send no fetch metadata (Node's `fetch` sends only
+  `Sec-Fetch-Mode: cors`) are served as before. D-057 is unchanged: no CSRF token on these GETs, which the web
+  client's `apiHeaders` sends on unsafe methods only. *Residual:* a browser that sends no fetch metadata (Safari
+  before 16.4) is not covered; only a token on these GETs would close that, a change to D-057 left open. A script
+  running on our own origin can still fetch these routes, as it can every route. *Verified by*
+  `insightForeignRequest.test.ts` (no audit event and no rate-limit take for a navigation, another origin's request or
+  our own page's image, video, frame or prefetch, with the headers full Chromium sends; our pages' fetch still
+  audited).
 
 ### D-107 · `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year
 - **Context:** `DATA-003` runs the purge "on a configured date (default 15 August)" for the academic year that has

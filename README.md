@@ -10,19 +10,23 @@ it in Canvas and, before the next seminar, sees which misconceptions to address.
 activities that explain *why* an answer is wrong, work with screen readers and on phones, and can
 be resumed where they left off.
 
-> **Status (2026-11-05): Sessions 1–5 passed their gates; Session 6, the last planned one, is built through its step 7
-> and its gate has not run yet.** The server (`apps/server`) runs the H5P engine with the ten content types, Feide
-> login, Canvas LTI 1.3 launches and Deep Linking, and the pre-publish validator; the web app (`apps/web`) has the
-> activity pages, the publish flow and the Canvas page, with the HVL design tokens and H5P theme, and (S5) the
-> læringsdesign studio: the guide, the patterns, the planner, sharing with co-authors and the content bank, and the
-> pedagogisk mappe export. Session 6 added the xAPI → Canvas grade bridge, teacher insight as an **Innsikt** tab with
-> groups of fewer than five learners hidden, the privacy jobs (the yearly purge, data-subject requests), deployment
-> and operations (Docker images, a separate origin for user files, virus scanning, backups, the runbook), the
-> conformance report, HVL's Nynorsk and Bokmål texts for H5P's own buttons, problem reporting for the pilot, and the
-> drafts of the reports owed upstream. What needs HVL's own Canvas, Feide or servers, and what Session 6 does not
-> reach, passes to HVL's bachelor students in programming (spring 2027) through the
-> [hand-off index](docs/handoff/README.md) (D-101). Build progress, what is open and every gate's output are in
-> [PROGRESS.md](PROGRESS.md); the [Evaluator Guide](docs/EVALUATOR-GUIDE.md) says how to check it.
+> **Status (2026-11-05): Sessions 1–5 passed their gates; Session 6, the last planned one, is built, integrated and
+> documented, and its review and gate have not run yet.** The server (`apps/server`) runs the H5P engine with the
+> ten content types, Feide login, Canvas LTI 1.3 launches and Deep Linking, and the pre-publish validator; the web
+> app (`apps/web`) has the activity pages, the publish flow and the Canvas page, with the HVL design tokens and H5P
+> theme, and (S5) the læringsdesign studio: the guide, the patterns, the planner, sharing with co-authors and the
+> content bank, and the pedagogisk mappe export. Session 6 added the xAPI → Canvas grade bridge, teacher insight as
+> an **Innsikt** tab with groups of fewer than five learners hidden, the privacy jobs (the yearly purge,
+> data-subject requests), deployment and operations (Docker images, a separate origin for user files, virus
+> scanning, backups, the runbook), the conformance report, HVL's Nynorsk and Bokmål texts for H5P's own buttons,
+> problem reporting for the pilot, the drafts of the reports owed upstream, and end-to-end tests of the five user
+> journeys and accessibility tests of every new view. Canvas and Feide are tested against mocks only, and HVL must
+> still verify what needs its own Canvas, Feide, servers or people: the 200-learner load test, the restore drill,
+> the manual assistive-technology run and the data protection officer's review. The **[hand-off
+> index](docs/handoff/README.md)** lists that, and what Session 6 does not reach, for HVL's bachelor students in
+> programming (spring 2027), who take the project on (D-101). Build progress, what is open and every gate's output
+> are in [PROGRESS.md](PROGRESS.md); the [Evaluator Guide](docs/EVALUATOR-GUIDE.md) says how to check it, and its
+> limitations say what is not verified yet.
 
 ---
 

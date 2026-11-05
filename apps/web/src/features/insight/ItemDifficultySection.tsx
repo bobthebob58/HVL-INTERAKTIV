@@ -6,12 +6,13 @@
  * Why: INS-002 sorts items hardest first and shows the question text so the teacher need not open the editor; INS-008
  *      gives the chart a visible data table and a one-sentence summary, and D-106 draws it in one hue with each value
  *      written by its bar (the latest attempt striped). INS-003's shortlist button sits in each row.
- * Spec: INS-002, INS-008, INS-006, INS-003, UD-003
+ * Spec: INS-002, INS-008, INS-006, INS-003, UD-003, UD-010
  * Invariants:
  *   - The server's order is kept (hardest first; hidden or unknown shares last); the number in the chart and the
  *     table is the place in that order.
  *   - A suppressed share has no bar and shows «< k»; a share that cannot be judged shows «Ikkje tilgjengeleg».
- *   - A11Y: a figure whose caption is the summary; the chart is `aria-hidden`, the table carries every value.
+ *   - A11Y: a figure whose caption is the summary; the chart is `aria-hidden`, the table carries every value. A
+ *     question's own text carries the activity's language (UD-010); the name of one without text does not.
  * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./ShortlistButton.tsx,
  *   ./InsightReportView.tsx.
  * Tests: apps/web/test/features/insight/InsightCharts.test.tsx
@@ -21,6 +22,7 @@
 import { useId } from 'react';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
+import { useAuthoredLang } from './authoredLanguage';
 import { BarChart, SOLID, STRIPED, type ChartRow } from './BarChart';
 import { CellValue } from './CellValue';
 import { cellText, shownValue, KIND } from './insightFormat';
@@ -43,6 +45,7 @@ export function ItemDifficultySection({
   readonly k: number;
 }) {
   const locale = useLocale();
+  const authoredLang = useAuthoredLang();
   const headingId = useId();
   const rows: ChartRow[] = items.map((item, index) => ({
     key: itemKey(item.item),
@@ -102,11 +105,12 @@ export function ItemDifficultySection({
             </thead>
             <tbody>
               {items.map((item, index) => {
-                const question = questionLabel(item.questionText, locale);
+                const question = questionLabel(item.questionText, index + 1, locale);
+                const lang = item.questionText ? authoredLang : undefined;
                 return (
                   <tr key={itemKey(item.item)}>
                     <td className={DATA_CELL}>{index + 1}</td>
-                    <th scope="row" className={ROW_HEAD_CELL}>
+                    <th scope="row" className={ROW_HEAD_CELL} lang={lang}>
                       {question}
                     </th>
                     <td className={DATA_CELL}>
@@ -119,7 +123,7 @@ export function ItemDifficultySection({
                       <CellValue cell={item.latestCorrect} kind={KIND.percent} k={k} />
                     </td>
                     <td className={DATA_CELL}>
-                      <ShortlistButton itemKey={itemKey(item.item)} question={question} />
+                      <ShortlistButton itemKey={itemKey(item.item)} question={question} lang={lang} />
                     </td>
                   </tr>
                 );

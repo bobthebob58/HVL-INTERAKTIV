@@ -3,8 +3,9 @@
  * the words the report uses.
  *
  * Why: UD-040 asks, per success criterion, how it is tested and in which views. The suite's own checks are judged by
- *      the last full run; every other test (unit, component, browser) runs in `npm test` and is linked. One builder
- *      per kind keeps the map's ~100 entries uniform and short.
+ *      the last full run; every other test (unit, component, browser, end-to-end) is linked under the command that
+ *      runs it (`npm test`, or `npm run test:e2e` for apps/server/e2e/). One builder per kind keeps the map's ~100
+ *      entries uniform and short.
  * Spec: UD-040
  * Invariants:
  *   - A suite check names a file in apps/server/a11y/ and the IDs its test titles open with; its result comes from
@@ -36,7 +37,7 @@ export const suiteCheck = (file, match, how, views, contains) => ({
 });
 
 /**
- * A check by other tests (unit, component, browser) that run in `npm test`.
+ * A check by other tests (unit, component, browser, end-to-end), linked under the command that runs each file.
  * @param {string[]} match - IDs their titles open with; all must be there.
  * @param {string} how - What they check.
  * @param {{path?: string, contains?: string | string[]}} [narrow] - Only files whose path, and titles whose text,
@@ -47,8 +48,8 @@ export const testCheck = (match, how, narrow = {}) => ({ match, how, ...narrow }
 
 /** The web app's views as the suites open them (apps/server/a11y/support/catalogue.ts). */
 export const WEB_VIEWS =
-  'the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger» and «Sjekk og publiser» ' +
-  'tabs, the Canvas page `/app/play` and the studio’s seeded pages';
+  'the web app’s pages signed out and as the author, an activity’s «Spel», «Rediger», «Sjekk og publiser», ' +
+  '«Poeng til Canvas» and «Innsikt» tabs, the Canvas page `/app/play` and its tabs, the studio’s seeded pages';
 
 /** The player of the ten content types. */
 export const PLAYERS =

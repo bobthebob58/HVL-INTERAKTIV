@@ -47,3 +47,4 @@ Output lines look like `✗ apps/server/src/x.ts:12 [DOC-002 export-docs] export
 | `checkCommitMessage.mjs` | Commit-message rule for the `commit-msg` hook |
 | `test/tempRepo.mjs` | Builds the small example trees the tests lint |
 | `test/ciWorkflow.test.mjs` | Checks that CI runs every gate of `NFR-004`, and that its `--done-through` is the last session `PROGRESS.md` marks ✅ (`DOC-004`) |
+| `test/journeyDeviations.test.mjs` | Checks that the journeys S6 tests in part (J1's split, J5's promotion) are decided in D-101 and cited by their tests, the picker's code, spec 02's code map and the runbook (`DOC-010`), and that the Evaluator Guide's `npm run test:e2e` row names every end-to-end test file (`DOC-004`) |
