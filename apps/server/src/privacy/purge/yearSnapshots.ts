@@ -118,7 +118,7 @@ export function yearSnapshotRows(
 }
 
 /** The snapshot table, read or written inside a transaction or not. */
-type SnapshotTable = Pick<Database, 'insightSnapshot'>;
+export type SnapshotTable = Pick<Database, 'insightSnapshot'>;
 
 /**
  * Tells whether the purge has already written a stored year's snapshots.

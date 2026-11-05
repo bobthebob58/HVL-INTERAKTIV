@@ -21,7 +21,7 @@ import type { Database } from '../../infra/prismaClient.js';
 import { platformContextKey } from '../../xapi/platformContextKey.js';
 
 /** The placements' fields this module reads. */
-interface PlacementContext {
+export interface PlacementContext {
   readonly platformId: string;
   readonly contextId: string;
   readonly contextLabel: string | null;

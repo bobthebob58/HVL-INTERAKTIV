@@ -41,7 +41,7 @@ export interface PurgeAuditDetails {
 }
 
 /** The audit table. */
-type AuditTable = Pick<Database, 'auditEvent'>;
+export type AuditTable = Pick<Database, 'auditEvent'>;
 
 /** Only a real run that completed marks a year as purged. */
 const COMPLETED_REAL_RUN = [

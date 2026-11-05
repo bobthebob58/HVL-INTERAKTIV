@@ -50,7 +50,10 @@ export interface InsightServiceDeps {
   readonly db: Database;
   readonly content: InsightContentSource;
   /** The NRPS learner counts (LTI-008); without it, every completion rate is "of those who started". */
-  readonly learnerCounts?: { read(contextKey: string): Promise<NrpsLearnerCount | undefined> };
+  readonly learnerCounts?: {
+    /** The latest NRPS learner count of a stored context key, or `undefined` when none is stored. */
+    read(contextKey: string): Promise<NrpsLearnerCount | undefined>;
+  };
   /** *k* (`minimumGroupSize(env.MIN_GROUP_SIZE)`). */
   readonly groupSize: MinimumGroupSize;
   /** The current moment; the system clock outside tests. */

@@ -45,7 +45,7 @@ export interface YearActivity {
 }
 
 /** The statement tables this module reads. */
-type StatementReader = Pick<Database, 'xapiStatement'>;
+export type StatementReader = Pick<Database, 'xapiStatement'>;
 
 /**
  * The activities that have stored statements in the years before the current one.

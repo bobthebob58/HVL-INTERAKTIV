@@ -23,7 +23,9 @@ export type HeldSignal = (typeof HELD_SIGNALS)[number];
 
 /** Where signals arrive: `process` in production. */
 export interface SignalSource {
+  /** Adds a listener for a signal (`process.on`). */
   on(signal: HeldSignal, listener: () => void): unknown;
+  /** Removes the listener again (`process.off`). */
   off(signal: HeldSignal, listener: () => void): unknown;
 }
 

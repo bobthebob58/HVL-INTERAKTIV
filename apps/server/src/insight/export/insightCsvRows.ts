@@ -38,7 +38,8 @@ export interface InsightCsvRow {
   readonly value: string;
 }
 
-type Cell = InsightCountCell | InsightRateCell | InsightMedianCell | null;
+/** One cell of the report: a count, a rate or a median, or `null` when the report has no value. */
+export type Cell = InsightCountCell | InsightRateCell | InsightMedianCell | null;
 
 /**
  * Writes a cell.

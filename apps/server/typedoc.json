@@ -25,6 +25,7 @@
     "LtiPlatformUpdateManyMutationInput",
     "LtiPlatformWhereInput",
     "UserKind",
-    "XapiStatement"
+    "XapiStatement",
+    "XapiStatementWhereInput"
   ]
 }

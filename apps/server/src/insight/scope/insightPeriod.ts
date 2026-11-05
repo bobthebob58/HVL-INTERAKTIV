@@ -40,7 +40,7 @@ export interface InsightPeriodRange {
 }
 
 /** A calendar date in Oslo. */
-interface OsloDate {
+export interface OsloDate {
   readonly year: number;
   /** 1–12. */
   readonly month: number;
