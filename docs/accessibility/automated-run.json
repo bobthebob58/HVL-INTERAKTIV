@@ -2,8 +2,8 @@
   "format": 2,
   "command": "npm run test:a11y",
   "date": "2026-11-05",
-  "commit": "5b438a8cdd59f2b4a59fdfabf98bf1e398de59b0",
-  "worktree": "with uncommitted changes",
+  "commit": "f5fa12bf67fd21ef62b0846cf46636a057df7e8a",
+  "worktree": "clean",
   "axeCore": "4.13.0",
   "totals": {
     "files": 18,
@@ -795,7 +795,7 @@
       {"rule":"aria-allowed-attr","impact":"critical","elements":36,"scans":4},
       {"rule":"aria-prohibited-attr","impact":"serious","elements":12,"scans":4},
       {"rule":"aria-valid-attr-value","impact":"critical","elements":6,"scans":6},
-      {"rule":"color-contrast","impact":"serious","elements":789,"scans":120},
+      {"rule":"color-contrast","impact":"serious","elements":791,"scans":120},
       {"rule":"form-field-multiple-labels","impact":"moderate","elements":2,"scans":2},
       {"rule":"video-caption","impact":"critical","elements":4,"scans":4}
     ]
