@@ -24,6 +24,7 @@ const FACTS: XapiBatchFacts = {
   contextId: null,
   learnerKey: 'lk',
   academicYear: 2026,
+  testUser: false,
   mainCategory: undefined,
 };
 

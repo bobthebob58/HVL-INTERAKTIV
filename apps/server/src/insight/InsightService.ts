@@ -108,6 +108,7 @@ export class InsightService {
         storedContextId,
         start: scope.start,
         end: scope.end,
+        academicYear: scope.academicYear,
       }),
       storedContextId === null ? undefined : this.deps.learnerCounts?.read(storedContextId),
     ]);

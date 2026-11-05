@@ -539,6 +539,10 @@
     "invalidQuery": "The version or course you chose does not exist for this activity. Choose again and press “Show insight”.",
     "updated": "The insight is updated: {{scope}}",
     "scope": "Showing {{context}}, {{period}} (from {{start}}), version {{version}}.",
+    "period": {
+      "throughYesterday": "Figures up to and including yesterday ({{last}}). What students do today is included tomorrow.",
+      "shortened": "The period is shortened and starts on {{start}}: students get new anonymous keys every academic year from 1 August, and figures from both before and after could have counted the same student twice."
+    },
     "notAvailable": "Not available",
     "suppressedSr": "hidden to protect privacy",
     "noLearningData": "{{type}} sends no learning data, so there is no insight to show for this activity.",
@@ -556,7 +560,7 @@
       "period14d": "Last 14 days",
       "period30d": "Last 30 days",
       "periodSemester": "Since the semester started",
-      "periodHint": "Each period starts at midnight. You cannot choose your own dates, because two selections together could single out one student.",
+      "periodHint": "Each period starts and ends at midnight, so the figures run up to and including yesterday. You cannot choose your own dates, because two selections together could single out one student.",
       "version": "Version of the activity",
       "versionCurrent": "Version {{version}} (current)",
       "versionOlder": "Version {{version}}",
@@ -583,7 +587,7 @@
     },
     "items": {
       "heading": "Questions, hardest first",
-      "intro": "The share of students who answered correctly the first time and the latest time, for each question.",
+      "intro": "The share of students who answered correctly the first time and the latest time, for each question. Questions whose share cannot be shown come last.",
       "none": "No questions have answers in this period.",
       "caption": "The questions, hardest first",
       "colNumber": "No.",
@@ -594,7 +598,7 @@
       "colShortlist": "For the session",
       "gone": "The question is no longer in the activity",
       "short": "Q {{number}}",
-      "summary": "The hardest is question {{number}}, “{{question}}”: {{first}} correct on the first attempt and {{latest}} on the latest.",
+      "summary": "Of the questions whose share correct can be shown, the hardest is question {{number}}, “{{question}}”: {{first}} correct on the first attempt and {{latest}} on the latest.",
       "summaryNone": "No question has answers from enough students to show the share correct.",
       "legendFirst": "First attempt",
       "legendLatest": "Latest attempt (striped)"
@@ -616,7 +620,7 @@
       "wrong": "Incorrect",
       "noFeedback": "No feedback",
       "noAnswer": "None of the options",
-      "summary": "Most common wrong answer: “{{option}}”, chosen by {{count}} students.",
+      "summary": "Most common wrong answer of those that can be shown: “{{option}}”, chosen by {{count}} students.",
       "summaryNoWrong": "No student chose a wrong answer.",
       "summaryNone": "No wrong answer was chosen by enough students to be shown."
     },
@@ -629,7 +633,7 @@
       "correct": "Correct answers",
       "otherWrong": "Other wrong answers",
       "empty": "Left empty",
-      "summary": "Gap {{number}}: the most common wrong answer is “{{answer}}” ({{count}} students).",
+      "summary": "Gap {{number}}: the most common wrong answer of those that can be shown is “{{answer}}” ({{count}} students).",
       "summaryNone": "Gap {{number}}: no wrong answer was given by enough students to be shown."
     },
     "video": {
@@ -642,7 +646,7 @@
       "colShare": "Share of those who started",
       "end": "The end",
       "untitled": "Untitled task",
-      "summary": "The smallest share answered “{{task}}” ({{time}}): {{share}}.",
+      "summary": "Of the tasks whose share can be shown, the smallest share answered “{{task}}” ({{time}}): {{share}}.",
       "summaryNone": "No task has answers from enough students to show the share."
     },
     "shortlist": {

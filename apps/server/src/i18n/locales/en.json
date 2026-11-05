@@ -280,7 +280,7 @@
         "currentVersion": "Current version",
         "period": "Period",
         "periodStart": "From",
-        "periodEnd": "To",
+        "periodEnd": "Up to (not included)",
         "context": "Course",
         "minimumGroupSize": "Smallest group (k)"
       },

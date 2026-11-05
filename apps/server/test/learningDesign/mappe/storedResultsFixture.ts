@@ -18,6 +18,7 @@
  */
 import { randomUUID } from 'node:crypto';
 import type { Database } from '../../../src/infra/prismaClient.js';
+import { academicYearOf } from '../../../src/privacy/academicYear.js';
 
 /** A course of the fixture as `XapiStatement.contextId` stores it (D-103), or null for the portal. */
 type Course = string | null;
@@ -33,6 +34,10 @@ interface Row {
   readonly version?: number;
   /** When it was stored; autumn 2026 when omitted. */
   readonly at?: Date;
+  /** Canvas's Student View test student (D-102's amendment of 2026-11-04); a real learner when omitted. */
+  readonly testUser?: boolean;
+  /** The year of the learner's key; the academic year of the stored time when omitted (D-107, D-057). */
+  readonly academicYear?: number;
 }
 
 /** The learner keys of the fixture, each unique to the run and recognisable in an export. */
@@ -135,7 +140,8 @@ export async function storeRows(
       scaled: row.score === undefined ? null : row.score / 10,
       attemptId: `${randomUUID()}:1`,
       timestamp: new Date((row.at?.getTime() ?? autumn) + i * 60_000),
-      academicYear: 2026,
+      academicYear: row.academicYear ?? academicYearOf(row.at ?? new Date(autumn)),
+      testUser: row.testUser ?? false,
     })),
   });
 }

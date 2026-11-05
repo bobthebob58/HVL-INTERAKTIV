@@ -36,7 +36,19 @@ function launchContext(order: string[]): LaunchContext {
     services: { assignmentAndGrades: {} },
   };
   const redirect = () => void order.push('redirect');
-  return { idToken, rawIdToken: {}, redirect } as unknown as LaunchContext;
+  // WHY: the counter reads the roster only from a URL on the platform's own origins or CANVAS_ORIGINS (D-106).
+  const rawIdToken = {
+    'https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice': {
+      context_memberships_url: 'https://canvas.example/api/lti/courses/1/names_and_roles',
+    },
+  };
+  const platform = {
+    url: 'https://canvas.example',
+    clientId: 'client-1',
+    authenticationEndpoint: 'https://canvas.example/api/lti/authorize_redirect',
+    accessTokenEndpoint: 'https://canvas.example/login/oauth2/token',
+  };
+  return { idToken, rawIdToken, platform, redirect } as unknown as LaunchContext;
 }
 
 /** The handler with stand-in collaborators, recording the order of what happens. */

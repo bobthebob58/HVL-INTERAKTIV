@@ -18,6 +18,7 @@ const factsFor = (ubername: string, overrides: Partial<XapiBatchFacts> = {}): Xa
   contextId: null,
   learnerKey: 'learner-key-of-a-test-learner-000000000000',
   academicYear: 2026,
+  testUser: false,
   mainCategory: mainLibraryCategory(ubername),
   ...overrides,
 });
@@ -104,7 +105,7 @@ describe('[DATA-012] the xAPI mapper on probe P1’s statements', () => {
         'id',
       ]
         .concat(['learnerKey', 'response', 'scaled', 'scoreMax', 'scoreRaw', 'subContentId', 'success'])
-        .concat(['timestamp', 'verb'])
+        .concat(['testUser', 'timestamp', 'verb'])
         .sort(),
     );
     expect(answered).toMatchObject({

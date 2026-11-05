@@ -3,7 +3,7 @@
  *
  * Why: a missing or malformed setting should stop the server at boot with a message that names the
  *      variable, rather than fail later inside a request. Every variable is documented in .env.example.
- * Spec: DOC-008, MAPPE-003, MAPPE-004, LTI-013, LTI-008
+ * Spec: DOC-008, MAPPE-003, MAPPE-004, LTI-013, LTI-008, DATA-003
  * Invariants:
  *   - Every variable read anywhere in the server is declared here, one per line as `NAME: z…`
  *     (doc-lint compares this list with .env.example).
@@ -13,14 +13,17 @@
  *     time, and its sandbox is on unless development turns it off (D-096).
  *   - `AGS_LABEL_MODE` is `suffix` unless HVL and ALU answer Q8 otherwise (D-105); the NRPS learner count reads at
  *     most `NRPS_MAX_PAGES` pages of 50 learners (LTI-008).
+ *   - `PURGE_RUN_DATE` is a day from 31 August to 31 December (`MM-DD`, default `08-31`); any other value stops the
+ *     start (DATA-003, D-107).
  * Collaborators: apps/server/.env.example, ./envParsers.ts, ./productionChecks.ts,
- *   ../privacy/pseudonymSecrets.ts, ../h5p/H5pConfigFactory.ts.
+ *   ../privacy/pseudonymSecrets.ts, ../privacy/purge/purgeCalendar.ts, ../h5p/H5pConfigFactory.ts.
  * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/studioEnv.test.ts,
- *   apps/server/test/config/canvasExtrasEnv.test.ts
+ *   apps/server/test/config/canvasExtrasEnv.test.ts, apps/server/test/config/purgeEnv.test.ts
  */
 import { isAbsolute } from 'node:path';
 import { z } from 'zod';
 import { AGS_LABEL_MODES } from '../lti/deepLinking/formativeLabel.js';
+import { parsePurgeRunDate } from '../privacy/purge/purgeCalendar.js';
 import { parsePseudonymSecrets } from '../privacy/pseudonymSecrets.js';
 import {
   FEIDE_GROUP_PATTERN,
@@ -91,6 +94,7 @@ export const envSchema = z.object({
   DATA_ENCRYPTION_KEYS: z.string().transform(toKeyring),
   URL_SIGNING_KEYS: z.string().transform(toKeyring),
   MIN_GROUP_SIZE: z.coerce.number().int().min(3, 'must be an integer of at least 3 (INS-006)').default(5),
+  PURGE_RUN_DATE: z.string().default('08-31').transform(parsedWith(parsePurgeRunDate)),
   PDF_BROWSER_EXECUTABLE: z.string().refine(isAbsolute, 'must be an absolute path').optional(),
   PDF_MAX_CONCURRENCY: z.coerce.number().int().min(1).max(8).default(2),
   PDF_ALLOW_NO_SANDBOX: z
@@ -133,7 +137,7 @@ const withoutEmpty = (source: NodeJS.ProcessEnv) =>
 export function loadEnv(source: NodeJS.ProcessEnv = process.env, now: Date = new Date()): Env {
   const result = envSchema.safeParse(withoutEmpty(source));
   if (!result.success) throw new InvalidEnvironmentError(problemsOf(result.error));
-  const problems = result.data.NODE_ENV === 'production' ? productionProblems(result.data, now) : [];
+  const problems = result.data.NODE_ENV === 'production' ? productionProblems(result.data, now, source) : [];
   if (problems.length > 0) throw new InvalidEnvironmentError(problems);
   return result.data;
 }

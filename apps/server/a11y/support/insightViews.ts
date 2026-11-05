@@ -47,7 +47,7 @@ export function insightView(contentId: string, context: { key: string; label: st
       context,
       period: '7d',
       periodStart: '2026-10-27T23:00:00.000Z',
-      periodEnd: '2026-11-03T12:00:00.000Z',
+      periodEnd: '2026-11-03T23:00:00.000Z',
       k: 5,
     },
     activity: { mainLibrary: 'H5P.QuestionSet', sendsLearningData: true, sendsRootResult: true },

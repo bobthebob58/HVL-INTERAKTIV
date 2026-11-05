@@ -1,9 +1,10 @@
 /**
  * Smoke tests for the entry point: `src/server/main.ts` started as its own process against the mock platform
  * answers `/healthz` and `/lti/keys` and stops cleanly on SIGTERM; a broken configuration or a taken port stops it with exit code 1
- * and names the variable without printing any secret.
+ * and names the variable without printing any secret; in production, a clear-text database, Redis or S3 connection
+ * stops it the same way (D-109).
  *
- * Spec: NFR-002, LTI-001
+ * Spec: NFR-002, LTI-001, DATA-004
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -16,6 +17,7 @@ import { createS3Client } from '../../src/infra/s3Client.js';
 import { reencryptPlatformKeys } from '../../src/lti/platforms/reencryptPlatformKeys.js';
 import { DataEncryption } from '../../src/security/keys/DataEncryption.js';
 import { parseKeyring } from '../../src/security/keys/keyring.js';
+import { productionEnv } from '../support/authEnv.js';
 import { describeWithServices, serviceEnv, uniqueName } from '../support/services.js';
 import { removeTestBucket } from '../support/storageFixtures.js';
 import { syntheticLibraryDir } from '../support/syntheticLibraries.js';
@@ -131,6 +133,9 @@ describeWithServices('[NFR-002] the server entry point', () => {
     expect(keys.length).toBeGreaterThan(0);
     expect(run.output).toContain('HVL Interaktiv server stopped');
     expect(run.code).toBe(0);
+    // Assert: a start names where the data lives, by host and region only (DATA-004, D-109's amendment)
+    expect(run.output).toMatch(/"databaseHost":"[^"]+".*"msg":"deployment locations"/);
+    expect(run.output).not.toContain(new URL(String(process.env.DATABASE_URL)).password);
   }, 90_000);
 
   it('[NFR-002] a port that is already taken stops the start at listening with exit code 1', async () => {
@@ -167,5 +172,24 @@ describeWithServices('[NFR-002] the server entry point', () => {
     expect(main.output()).toContain('CANVAS_ORIGINS');
     expect(main.output()).not.toContain(String(env.FEIDE_CLIENT_SECRET));
     expect(main.output()).not.toContain(String(env.DATA_ENCRYPTION_KEYS));
+  }, 30_000);
+
+  it('[DATA-004] in production, clear-text connections and the SDK’s own S3 endpoint stop the start, by name only', async () => {
+    // Arrange: a production configuration whose only faults are the connections (D-109 and its amendments)
+    const env = productionEnv({
+      DATABASE_URL: 'postgresql://hvli_app:db-password-1@db.hvl.no:5432/hvli',
+      REDIS_URL: 'redis://:redis-password-1@redis.hvl.no:6379',
+      S3_ENDPOINT: 'http://s3.hvl.no',
+      AWS_ENDPOINT_URL_S3: 'http://127.0.0.1:9',
+    });
+    // Act
+    const main = startMain({ PATH: process.env.PATH, ...env });
+    const code = await main.exit;
+    // Assert
+    expect(code).toBe(1);
+    for (const name of ['DATABASE_URL', 'REDIS_URL', 'S3_ENDPOINT', 'AWS_ENDPOINT_URL_S3']) {
+      expect(main.output()).toContain(name);
+    }
+    expect(main.output()).not.toMatch(/password-1|postgresql:|redis:\/\/|listening/);
   }, 30_000);
 });

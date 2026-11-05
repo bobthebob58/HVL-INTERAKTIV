@@ -18,6 +18,7 @@ const factsFor = (ubername: string): XapiBatchFacts => ({
   contextId: null,
   learnerKey: 'learner-key-of-a-test-learner-000000000000',
   academicYear: 2026,
+  testUser: false,
   mainCategory: mainLibraryCategory(ubername),
 });
 

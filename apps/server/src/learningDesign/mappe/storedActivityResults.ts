@@ -19,11 +19,23 @@
  *     learners of each semester in that span (one grouped query each) and the root results in stored order.
  *   - No period: every statement stored until the yearly purge counts (D-107); every stored statement counts towards
  *     "started", as in insight (D-115).
+ *   - PRIVACY: only rows stored before the latest midnight in Oslo at the moment of the call are read, as insight's
+ *     views end there (D-106's amendment of 2026-11-05), so two exports on one day are the same and an export minus
+ *     insight's `semester` view never gives today's learners.
+ *   - PRIVACY: rows of Canvas's test student (`testUser`) are never read, so no group, *k* count or summary holds one
+ *     (D-102's amendment of 2026-11-04); every query here filters by `NOT_TEST_USER`.
+ *   - PRIVACY: a semester's learners are read from the rows of its own academic year (`academicYear`, the year of the
+ *     key) only, so the portal's 12-hour tail of last year's keys on 1 August (D-057) never makes one learner two in
+ *     an autumn group (D-106's amendment of 2026-11-04); a result counts only for a learner present in its group.
  * Collaborators: ../../server/studioServices.ts (builds it), ./MappeRenderer.ts (the caller), ./learnerSummaries.ts,
- *   ./resultSemesters.ts, ../../infra/prismaClient.ts.
- * Tests: apps/server/test/learningDesign/mappe/storedActivityResults.int.test.ts
+ *   ./resultSemesters.ts, ../../privacy/academicYear.ts, ../../insight/scope/insightPeriod.ts (`osloMidnight`),
+ *   ../../infra/prismaClient.ts.
+ * Tests: apps/server/test/learningDesign/mappe/storedActivityResults.int.test.ts,
+ *   apps/server/test/learningDesign/mappe/storedResultsBeforeToday.int.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
+import { osloDateOf, osloMidnight } from '../../insight/scope/insightPeriod.js';
+import { academicYearOf } from '../../privacy/academicYear.js';
 import type { MinimumGroupSize } from '../../privacy/minimumGroupSize.js';
 import type { ActivityResultsSource, LearnerAttemptSummary } from './activityResults.js';
 import { learnerSummaries, type LearnerPresence } from './learnerSummaries.js';
@@ -31,16 +43,27 @@ import { semesterWindows, type SemesterWindow } from './resultSemesters.js';
 
 /** The verbs of a stored root result (`isStoredRootResult` in ../../xapi/xapiRootTests.ts), for the query. */
 const ROOT_RESULT_VERBS = ['answered', 'completed'];
+/** PRIVACY: Canvas's test students are in no group of the mappe (D-102's amendment of 2026-11-04). */
+const NOT_TEST_USER = { testUser: false } as const;
 
-/** The learners of each place in one semester, one row per learner and place. */
+/**
+ * The learners of each place in one semester, before `until`, under its own year's keys, one row per learner and place.
+ */
 async function presencesIn(
   db: Database,
   contentIds: string[],
   window: SemesterWindow,
+  until: Date,
 ): Promise<LearnerPresence[]> {
   const rows = await db.xapiStatement.groupBy({
     by: ['contentId', 'contextId', 'contentVersion', 'learnerKey'],
-    where: { contentId: { in: contentIds }, timestamp: { gte: window.start, lt: window.end } },
+    where: {
+      contentId: { in: contentIds },
+      timestamp: { gte: window.start, lt: window.end < until ? window.end : until },
+      // PRIVACY: one key per learner in a semester: its own year's keys, as insight's views read them (D-106).
+      academicYear: academicYearOf(window.start),
+      ...NOT_TEST_USER,
+    },
   });
   return rows.map((row) => ({
     contentId: row.contentId,
@@ -55,8 +78,12 @@ async function presencesIn(
 export class StoredActivityResults implements ActivityResultsSource {
   /**
    * @param db - The database; only read.
+   * @param now - The clock; the reads end at the latest midnight in Oslo before it. Tests pass a fixed one.
    */
-  constructor(private readonly db: Database) {}
+  constructor(
+    private readonly db: Database,
+    private readonly now: () => Date = () => new Date(),
+  ) {}
 
   /**
    * The learners' summaries per activity, one per learner and group, from the groups of at least *k* learners.
@@ -71,8 +98,11 @@ export class StoredActivityResults implements ActivityResultsSource {
   ): Promise<ReadonlyMap<string, readonly LearnerAttemptSummary[]>> {
     const ids = [...contentIds];
     if (ids.length === 0) return new Map();
+    // PRIVACY: nothing of today, as insight's views (D-106's amendment of 2026-11-05): no same-day differencing.
+    const until = osloMidnight(osloDateOf(this.now()));
+    const before = { lt: until };
     const span = await this.db.xapiStatement.aggregate({
-      where: { contentId: { in: ids } },
+      where: { contentId: { in: ids }, timestamp: before, ...NOT_TEST_USER },
       _min: { timestamp: true },
       _max: { timestamp: true },
     });
@@ -80,9 +110,15 @@ export class StoredActivityResults implements ActivityResultsSource {
     const { timestamp: last } = span._max;
     if (!first || !last) return new Map();
     const [presences, results] = await Promise.all([
-      Promise.all(semesterWindows(first, last).map((window) => presencesIn(this.db, ids, window))),
+      Promise.all(semesterWindows(first, last).map((window) => presencesIn(this.db, ids, window, until))),
       this.db.xapiStatement.findMany({
-        where: { contentId: { in: ids }, subContentId: null, verb: { in: ROOT_RESULT_VERBS } },
+        where: {
+          contentId: { in: ids },
+          timestamp: before,
+          subContentId: null,
+          verb: { in: ROOT_RESULT_VERBS },
+          ...NOT_TEST_USER,
+        },
         select: {
           contentId: true,
           contextId: true,

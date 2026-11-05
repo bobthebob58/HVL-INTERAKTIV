@@ -8,7 +8,8 @@
  * Spec: LTI-012, LTI-008
  * Invariants:
  *   - The enqueuer is always given, with the bed's own encryption keys and logger, as in main.ts.
- *   - The counter reads at most 100 pages, `NRPS_MAX_PAGES`'s default.
+ *   - The counter reads at most 100 pages, `NRPS_MAX_PAGES`'s default, and only roster URLs on `CANVAS_ORIGINS` or
+ *     the platform's own origins, as in main.ts.
  * Collaborators: ./appTestbed.ts, ../../src/server/main.ts, ../../src/grades/GradeJobEnqueuer.ts,
  *   ../../src/lti/nrps/nrpsServices.ts.
  * Tests: apps/server/test/lti/nrps/launchNrpsCount.int.test.ts, apps/server/e2e/xapiToCanvas.e2e.test.ts
@@ -44,5 +45,10 @@ export function gradeBridgeInputs(
   const encryption = new DataEncryption(env.DATA_ENCRYPTION_KEYS);
   const { onStored } = new GradeJobEnqueuer({ db, encryption, logger });
   if (!nrps) return { onXapiStored: onStored };
-  return { onXapiStored: onStored, nrps: createNrpsServices({ db, redis, logger, maxPages: 100 }).counter };
+  // SECURITY: the roster URL's rules as main.ts passes them (D-106 amendment).
+  const urlRules = { origins: env.CANVAS_ORIGINS, requireHttps: env.NODE_ENV === 'production' };
+  return {
+    onXapiStored: onStored,
+    nrps: createNrpsServices({ db, redis, logger, maxPages: 100, urlRules }).counter,
+  };
 }

@@ -103,8 +103,12 @@ describe('[INS-008] the Innsikt tab’s charts', () => {
       ['3', 'Spørsmålet finst ikkje lenger i aktiviteten', HIDDEN_TEXT, HIDDEN_TEXT, HIDDEN_TEXT],
     ]);
     expect(within(table).getAllByRole('rowheader')[0]?.textContent).toBe('Kva gjer mitokondriane?');
+    // WHY: the order is by shown shares only, so the text says where a hidden one goes (D-106's amendment).
+    expect(screen.getByRole('figure').querySelector('figcaption')?.textContent).toContain(
+      'Spørsmål der delen ikkje kan visast, står til slutt.',
+    );
     expect(plain(screen.getByRole('figure').querySelector('strong')?.textContent)).toBe(
-      'Vanskelegast er spørsmål 1, «Kva gjer mitokondriane?»: 40 % riktig på første forsøk og 65 % på siste.',
+      'Av spørsmåla der delen riktige kan visast, er spørsmål 1 vanskelegast, «Kva gjer mitokondriane?»: 40 % riktig på første forsøk og 65 % på siste.',
     );
   });
 
@@ -119,7 +123,7 @@ describe('[INS-008] the Innsikt tab’s charts', () => {
       ['Slutten', 'Oppgåve utan tittel', HIDDEN_TEXT, HIDDEN_TEXT],
     ]);
     expect(plain(screen.getByRole('figure').querySelector('strong')?.textContent)).toBe(
-      'Minst del svarte på «Skriv namnet.» (5:10): 40 %.',
+      'Av oppgåvene der delen kan visast, svarte minst del på «Skriv namnet.» (5:10): 40 %.',
     );
     const bars = [...document.querySelectorAll('[aria-hidden="true"] li')].map((row) =>
       [...row.querySelectorAll('svg rect:not([class*="stroke"])')].map((bar) => bar.getAttribute('width')),

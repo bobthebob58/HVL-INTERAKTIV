@@ -78,7 +78,10 @@ export const insightScopeSchema = z.strictObject({
   period: insightPeriodSchema,
   /** Midnight Oslo time at the period's start (D-106). */
   periodStart: z.iso.datetime(),
-  /** When the view was computed. */
+  /**
+   * The latest midnight in Oslo at or before the view was computed, not included: the view holds the data up to and
+   * including the day before (D-106's amendment of 2026-11-04).
+   */
   periodEnd: z.iso.datetime(),
   /** The minimum group size used; a suppressed cell is shown as «< k». */
   k: z.int().min(INSIGHT_MIN_K),

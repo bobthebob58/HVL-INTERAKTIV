@@ -8,7 +8,9 @@
  *      and an empty period or one with fewer than k learners says so too, rather than a page of zeros and «< k».
  * Spec: PROD-010, INS-001, INS-002, INS-003, INS-005, INS-006, INS-009, PROD-013
  * Invariants:
- *   - The scope line names the context, the period with its start and the content version the numbers are for.
+ *   - The scope line names the context, the period with its start and the content version the numbers are for;
+ *     under it, the period note says the numbers run up to and including yesterday, and when the period was
+ *     shortened to start on 1 August (D-106's amendment of 2026-11-04).
  *   - Sections appear only when the type sends learning data and at least one learner is shown; video engagement
  *     only for an InteractiveVideo.
  *   - The CSV is of the view on screen: the query is taken from its scope, not from the form.
@@ -24,7 +26,7 @@ import { contentTypeName } from '../../i18n/contentTypeName';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
 import { InsightCsvDownload } from './InsightCsvDownload';
-import { PrivacyInsightNote } from './InsightNotes';
+import { PeriodInsightNote, PrivacyInsightNote } from './InsightNotes';
 import type { InsightReport } from './insightReportShape';
 import { scopeSentence } from './insightScopeText';
 import { ItemDifficultySection } from './ItemDifficultySection';
@@ -92,6 +94,7 @@ export function InsightReportView({
   return (
     <>
       <p className="font-bold">{scopeSentence(report, locale)}</p>
+      <PeriodInsightNote scope={report.scope} />
       <PrivacyInsightNote k={k} />
       {body}
     </>

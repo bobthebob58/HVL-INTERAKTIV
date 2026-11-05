@@ -10,9 +10,10 @@
  *   - Nothing here owns a client: the server closes Redis and the database.
  * Collaborators: ./NrpsLearnerCounter.ts, ./NrpsLearnerCountStore.ts, ./nrpsTokenCache.ts, ../ltiRoutes.ts (passes
  *   the counter to ../launch/onResourceLink.ts), the insight denominators (S6 step 4, `counts.read`).
- * Tests: apps/server/test/lti/nrps/NrpsLearnerCounter.int.test.ts
+ * Tests: apps/server/test/lti/nrps/NrpsLearnerCounter.int.test.ts, apps/server/test/lti/nrps/NrpsLearnerCounter.test.ts
  */
 import type { Logger } from 'pino';
+import type { LineItemUrlRules } from '../../grades/lineItemUrlPolicy.js';
 import type { Database } from '../../infra/prismaClient.js';
 import type { Redis } from '../../infra/redisClient.js';
 import { NrpsLearnerCounter } from './NrpsLearnerCounter.js';
@@ -26,6 +27,11 @@ export interface NrpsServiceDeps {
   readonly logger: Pick<Logger, 'info' | 'warn'>;
   /** `NRPS_MAX_PAGES`. */
   readonly maxPages: number;
+  /**
+   * The roster URL's rules, as the grade worker's line items get them: `{ origins: CANVAS_ORIGINS, requireHttps:
+   * NODE_ENV === 'production' }`; without them only the platform's own origins are allowed (D-106's amendment).
+   */
+  readonly urlRules?: LineItemUrlRules;
 }
 
 /** The two sides of the NRPS learner count. */
@@ -38,10 +44,11 @@ export interface NrpsServices {
 
 /**
  * Builds the NRPS learner count.
- * @param deps - The database (ltijs's token cache), Redis (the counts), a logger and `NRPS_MAX_PAGES`.
+ * @param deps - The database (ltijs's token cache), Redis (the counts), a logger, `NRPS_MAX_PAGES` and the roster
+ *   URL's rules.
  * @returns The counter and the reader.
  * @example
- * const nrps = createNrpsServices({ db, redis, logger, maxPages: env.NRPS_MAX_PAGES });
+ * const nrps = createNrpsServices({ db, redis, logger, maxPages: env.NRPS_MAX_PAGES, urlRules: lineItemRules });
  * onResourceLink({ ...deps, nrps: nrps.counter });
  * @spec LTI-008
  */
@@ -52,6 +59,7 @@ export function createNrpsServices(deps: NrpsServiceDeps): NrpsServices {
     logger: deps.logger,
     maxPages: deps.maxPages,
     forgetToken: forgetNrpsToken(deps.db),
+    ...(deps.urlRules ? { urlRules: deps.urlRules } : {}),
   });
   return { counter, counts: { read: (contextKey) => store.read(contextKey) } };
 }

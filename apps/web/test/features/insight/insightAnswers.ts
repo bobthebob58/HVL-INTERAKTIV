@@ -51,7 +51,7 @@ export const scope = (overrides: Partial<InsightScope> = {}): InsightScope => ({
   context: { key: 'portal', label: null },
   period: '7d',
   periodStart: '2026-10-27T23:00:00.000Z',
-  periodEnd: '2026-11-03T12:00:00.000Z',
+  periodEnd: '2026-11-03T23:00:00.000Z',
   k: 5,
   ...overrides,
 });

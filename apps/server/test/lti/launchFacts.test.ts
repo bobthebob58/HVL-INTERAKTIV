@@ -1,7 +1,8 @@
 /**
- * Tests for reading launch facts from ltijs's ID token, including the contextId trap and the custom field check.
+ * Tests for reading launch facts from ltijs's ID token, including the contextId trap, the custom field check and
+ * Canvas's test student.
  *
- * Spec: LTI-001, LTI-006
+ * Spec: LTI-001, LTI-006, LTI-004
  */
 import type { IdToken } from 'ltijs';
 import { describe, expect, it } from 'vitest';
@@ -42,7 +43,19 @@ describe('[LTI-006] launch facts', () => {
       contentId: CONTENT,
       lineItemUrl: 'https://canvas.example/li/1',
       roles: ['http://purl.imsglobal.org/vocab/lis/v2/membership#Learner'],
+      testUser: false,
     });
+  });
+
+  it('[LTI-004] says testUser for Canvas’s Student View test student, so its statements are flagged (D-102)', () => {
+    // Arrange
+    const roles = [
+      'http://purl.imsglobal.org/vocab/lti/system/person#TestUser',
+      'http://purl.imsglobal.org/vocab/lis/v2/membership#Learner',
+    ];
+    const studentView = { ...token(), user: { id: 'sub-2', roles } } as IdToken;
+    // Act and assert
+    expect(launchFactsOf(studentView)).toMatchObject({ testUser: true, roles });
   });
 
   it('[LTI-001] takes the course from launch.context.id, never the token record ID', () => {

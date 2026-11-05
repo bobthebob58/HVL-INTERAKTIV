@@ -140,7 +140,8 @@ export function insightCsvText(report: InsightReport, locale: Locale): string {
  * The file name of a view's CSV.
  * @param scope - The view's scope.
  * @param locale - The language of the fixed word.
- * @returns e.g. `innsikt-7d-2026-11-04.csv`: the word, the period and the date the view was computed, in Oslo.
+ * @returns e.g. `innsikt-7d-2026-11-04.csv`: the word, the period and the date the view was computed, in Oslo, which
+ *   is its period's end and not included in it.
  * @spec INS-009
  */
 export function insightCsvFilename(scope: InsightScope, locale: Locale): string {

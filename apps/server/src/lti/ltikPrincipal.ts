@@ -9,6 +9,7 @@
  *   - Any failure (bad, expired or foreign ltik; inactive platform; revoked deployment; account gone) is the same
  *     401 `hvl:ltik-invalid`, so nothing about the cause leaks.
  *   - Roles come from the launch's LTI roles only and never include admin (LTI-004); the principal is sealed.
+ *   - Canvas's test student (`TestUser`) is a learner whose launch facts say `testUser` (D-102's amendment).
  *   - A resumed request writes nothing; only the launch itself may create the account.
  * Collaborators: ./launchFacts.ts, ./LtiRoleMapper.ts, ./ltiLocale.ts, ./launch/ltiAccount.ts,
  *   ./platforms/LtiDeploymentGuard.ts, ../auth/requestPrincipal.ts, ./launch/onResourceLink.ts.
@@ -68,6 +69,8 @@ export function principalOfLaunch(
       ...(facts.resourceLinkId ? { resourceLinkId: facts.resourceLinkId } : {}),
       ...(facts.contentId ? { contentId: facts.contentId } : {}),
       ...(facts.lineItemUrl ? { lineItemUrl: facts.lineItemUrl } : {}),
+      // PRIVACY: Canvas's test student is a learner whose statements never reach insight (D-102's amendment).
+      ...(facts.testUser ? { testUser: true as const } : {}),
     },
   });
 }

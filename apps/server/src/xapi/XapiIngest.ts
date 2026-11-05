@@ -14,8 +14,10 @@
  *     non-learner's batch: never under null, which means a portal play, and never a 500 the bridge would resend.
  *   - The stored IDs are read before the replay history, so a racing request's rows that this batch skips as
  *     duplicates are always in the history too (D-115's "answered since its previous result").
- *   - PRIVACY: the learner comes from the principal, never the body: `learnerKey`, its academic year (D-107) and the
- *     platform-scoped context of the launch (D-103, null in the portal). Logs hold counts only (DATA-009).
+ *   - PRIVACY: the learner comes from the principal, never the body: `learnerKey`, its academic year (D-107), the
+ *     platform-scoped context of the launch (D-103, null in the portal) and whether the launch is Canvas's test
+ *     student (`testUser`, stored flagged so passback works but insight never reads it, D-102's amendment of
+ *     2026-11-04). Logs hold counts only (DATA-009).
  *   - PRIVACY: an LTI request's `sub` passes through to the listener only (D-104), never into a row or a log.
  *   - The listener gets only the rows this request inserted, in timestamp order, after the insert committed; its
  *     failure is logged by kind only and does not fail the batch, whose statements are stored (a resend would be
@@ -24,7 +26,7 @@
  *   ./platformContextKey.ts, ../auth/Principal.ts, ./xapiRoutes.ts, ../server/createApp.ts (wires the listener).
  * Tests: apps/server/test/xapi/xapiIngest.int.test.ts, apps/server/test/xapi/xapiLimits.int.test.ts,
  *   apps/server/test/xapi/xapiRouteAuth.int.test.ts, apps/server/test/xapi/xapiLaunchScope.int.test.ts,
- *   apps/server/test/xapi/xapiReplay.int.test.ts
+ *   apps/server/test/xapi/xapiReplay.int.test.ts, apps/server/test/xapi/xapiTestUser.int.test.ts
  */
 import type { XapiBatchEnvelope } from '@hvl-interaktiv/api-contract';
 import type { Logger } from 'pino';
@@ -120,6 +122,7 @@ export class XapiIngest {
       contextId,
       learnerKey: principal.learnerKey,
       academicYear: learnerKeyYearOf(principal, receivedAt),
+      testUser: principal.lti?.testUser === true,
       mainCategory: target.mainCategory,
     };
     const items = parseXapiItems(batch.statements);

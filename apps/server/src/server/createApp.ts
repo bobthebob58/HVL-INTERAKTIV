@@ -7,15 +7,15 @@
  *      decides which checks a request meets. The app is built from connected clients so tests and `main.ts` run the
  *      same code. The studio's services are built in ./studioServices.ts.
  * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, PROD-003, DOC-012, NFR-002, PED-001, LTI-011,
- *   LTI-012, LTI-008, LTI-013, INS-007
+ *   LTI-012, LTI-008, LTI-013, INS-007, NFR-006
  * Invariants:
- *   - Order: trust proxy → base headers → `/healthz` → page assets → the Hjelp marker and the chrome redirect (with
- *     the web app) → portal session → LTI (ltijs first) → Feide routes → start page (only without the web app) →
- *     `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page. With the web app,
- *     launches land on `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
+ *   - Order: trust proxy → request log → base headers → `/healthz` → page assets → the Hjelp marker and the chrome
+ *     redirect (with the web app) → portal session → LTI (ltijs first) → Feide routes → start page (only without the
+ *     web app) → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page. With
+ *     the web app, launches land on `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
  *     session with CSRF); signed file URLs are checked before it, inside the H5P router (D-058).
- *   - `X-Powered-By` is off; every response gets `nosniff` and `no-referrer`, and HSTS when the base URL is https.
+ *   - `X-Powered-By` is off; every response gets `X-Request-Id`, `nosniff`, `no-referrer`, and HSTS over https.
  *   - The findings API, the publish API and the save gate of `/h5p` share one validator and one Redis write lock
  *     (D-074); the gate reads what the editor will store; `/api/docs` is mounted only when NODE_ENV is not
  *     production (D-077).
@@ -31,7 +31,7 @@
  *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/apiRouter.ts,
  *   ../content/PublishedSaveGate.ts, ../content/ContentWriteLock.ts, ../content/savedForm.ts, ../web/webRoutes.ts,
  *   ../web/chromeRedirect.ts, ../http/pages/helpLink.ts, ./healthRoutes.ts, ./studioServices.ts, ./main.ts,
- *   ./gradeBridgeApi.ts, ../insight/http/insightApi.ts.
+ *   ./gradeBridgeApi.ts, ../insight/http/insightApi.ts, ../http/requestLog.ts (NFR-006).
  * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
 import express, { type ErrorRequestHandler, type Express } from 'express';
@@ -57,6 +57,7 @@ import { pageAssetRoutes } from '../http/pages/pageAssetRoutes.js';
 import { portalHomeRoutes, portalNotFound } from '../http/pages/portalHomeRoutes.js';
 import { sendPortalError } from '../http/pages/portalPages.js';
 import type { ContentRouteDeps } from '../http/routes/contentRoutes.js';
+import { requestLog } from '../http/requestLog.js';
 import { baseSecurityHeaders } from '../http/securityHeaders.js';
 import type { Database } from '../infra/prismaClient.js';
 import type { StudioContent } from '../learningDesign/content/loadStudioContent.js';
@@ -159,7 +160,7 @@ export function createApp(inputs: AppInputs): App {
   app.disable('x-powered-by');
   // SECURITY: `req.ip` (audit hash, rate limits) trusts only as many proxies as are really in front (TRUST_PROXY).
   app.set('trust proxy', env.TRUST_PROXY);
-  app.use(baseSecurityHeaders({ https: base.startsWith('https:') }));
+  app.use(requestLog(logger), baseSecurityHeaders({ https: base.startsWith('https:') }));
   app.use(healthRoutes({ database: () => db.$queryRaw`SELECT 1`, redis: () => redis.ping() }));
   app.use(pageAssetRoutes());
   // WHY: with the web app, an H5P page opened on its own goes to the chrome page that frames it (D-067), and /hjelp

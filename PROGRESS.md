@@ -522,9 +522,9 @@ under the step that does it):
     materialized CTE that runs once: with the old query the test failed again in one of two runs after `ANALYZE` of
     the empty table, and with the new one it passed all five. No decision changes (D-104's "claims due jobs
     (`FOR UPDATE SKIP LOCKED`)" still holds).
-  - Still open for step 3, so the step stays unticked: the step's commit (with step 4's work, both in the working tree
-    since 2026-11-04) and the owner's Q20 call (D-115). Not step 3's: `H5PUserData.academicYear` for
-    portal sessions that cross 1 August (step 5, D-107 amendment); CLAUDE.md §2 names `xapiBridge.js` alone (the
+  - Still open for step 3, so the step stays unticked: the owner's Q20 call (D-115). The step's commit is done
+    (abb60a5; the review's hardening came with step 4's commit, 9fb0c02). Not step 3's: `H5PUserData.academicYear` for portal sessions that cross 1 August
+    is done in step 5 (D-107's amendment, `learnerStateYear.ts`); CLAUDE.md §2 names `xapiBridge.js` alone (the
     bridge is three scripts, D-102 amendment; the owner's file).
   - [x] xAPI bridge, ingestion, minimal storage (`LTI-010`, `LTI-011`, `DATA-012`): plain JavaScript in the top player
         document, learners only (D-102); contexts as `<platformId>:<contextId>` (D-103)
@@ -552,9 +552,9 @@ under the step that does it):
         owner or co-author sees exact grade-sync counts for a colleague's course (D-106 residual for the DPO).
         **(4, info)** a grade job is lost when its write fails after the statements are stored (already answered
         202); an outbox, or jobs re-derived from stored root results, if passback must be exact
-  - [ ] The step's commit, with `Refs:` `LTI-010`, `LTI-011`, `DATA-012`, `LTI-012`, `LTI-013`, `LTI-008`,
-        `H5P-009`
-- [ ] 4. B — Insight (`INS-001`…`INS-010`, `PROD-010`, the `LTI-006` **Innsikt** tab, `PROD-013` by version,
+  - [x] The step's commit, with `Refs:` `LTI-010`, `LTI-011`, `DATA-012`, `LTI-012`, `LTI-013`, `LTI-008`,
+        `H5P-009` (abb60a5)
+- [x] 4. B — Insight (`INS-001`…`INS-010`, `PROD-010`, the `LTI-006` **Innsikt** tab, `PROD-013` by version,
       `MAPPE-003` real source): the suppression core with property tests → a 30-learner insight fixture with
       hand-calculated values (moved from step 2) → aggregators `INS-001`, `INS-002`,
       `INS-003` (`INS-004`, `INS-005` if time) → access and audit → insight API → the web **Innsikt** tabs (charts,
@@ -587,7 +587,7 @@ under the step that does it):
         sound: access (404 before 403), audit before the answer, the rate limit, CSV formula guards, sort order, no
         differencing path across versions, contexts, the CSV or the mappe, and the grade hardening
   - [x] Checks, with `docs/TRACEABILITY.md` and the spec site regenerated (session log, «2026-11-04 · S6 step 4»)
-  - [ ] Decisions on the privacy review's findings (each changes a decision first, CLAUDE.md §1): **(high)** every
+  - [x] Decisions on the privacy review's findings (each changes a decision first, CLAUDE.md §1): **(high)** every
         period ends at the request (`insightPeriod.ts`, `end: now`), so two views minutes apart show the cells one
         known learner moved; remedy: end periods at the last Oslo midnight, or publish a new snapshot only after *k*
         new learners (D-106; DPIA R3 and R8 understate it). **(medium)** Canvas Student View makes fake learners (the
@@ -597,29 +597,85 @@ under the step that does it):
         key change, so one learner can count twice; remedy: no period before 1 August, or a DPIA residual (D-106,
         D-107). Lower residuals for the DPIA input: unsuppressed differences in `INS-001` and `INS-005`, the minimum
         a multi-gap or multi-answer share sets, chart summaries that say "most common" among shown cells only, and
-        the NRPS URL's origin, which is not checked
-  - [ ] Docs for the review's gap fix: D-106's amendment of 2026-11-04 still puts a gap's listed wrong answers in its
+        the NRPS URL's origin, which is not checked. **Decided and built 2026-11-04/05** (D-106's and D-102's
+        amendments, before the code): every period ends at the latest Oslo midnight (a view holds the data up to and
+        including yesterday; freshness is Q24) and never crosses 1 August, and the query reads only the view's
+        `academicYear`; Canvas's test student is stored flagged (`XapiStatement.testUser`) and left out of insight, the
+        mappe and every *k*, while its score still reaches Canvas; the chart summaries say «av dei som kan visast»; the
+        roster URL passes D-104's origin rule, and main.ts passes `CANVAS_ORIGINS` to it; the mappe's semester groups
+        read each semester's own academic year. Residuals R3, R6, R8 corrected and R10–R14 added in the DPIA input
+  - [x] Docs for the review's gap fix: D-106's amendment of 2026-11-04 still puts a gap's listed wrong answers in its
         additive group (spec 05's `INS-006` note may name the gap rule too); `additiveGroupExhaustive.test.ts`'s new
-        test joins D-106's *Verified by*
-  - [ ] The commit (with step 3's), `Refs:` `INS-001`…`INS-003`, `INS-005`…`INS-010`, `PROD-010`, `PROD-013`,
-        `LTI-006`, `MAPPE-003`
-  - Still open for step 4, so the step stays unticked: the three items above (the commit, the review's decisions and
-    the gap rule's docs, which only the integrator or the hardening workstream may write in `docs/DECISIONS.md`).
+        test joins D-106's *Verified by*. Done in D-106's amendment (the gap rule as built; spec 05's `INS-006` note)
+  - [x] The commit (with step 3's), `Refs:` `INS-001`…`INS-003`, `INS-005`…`INS-010`, `PROD-010`, `PROD-013`,
+        `LTI-006`, `MAPPE-003` (9fb0c02); the review's decisions and their code come with step 5's commit
 - [ ] 5. C — Privacy operations (`DATA-003`, `DATA-004`, `DATA-005`, `DATA-007`, `DATA-008`, `DATA-010`, `NFR-006`):
       purge with a dry run → the data-subject CLI → the database roles script → production checks → the request log
       → DPIA input → DATA-INVENTORY rows (with the Redis keys) → the research export, design only (Q6)
-  - [ ] Purge, audit, data-subject requests, DPIA input (`DATA-003`…`DATA-008`, `DATA-010`); log redaction review
+  - **Built 2026-11-04/05** by four workstreams (the purge, the data-subject CLI, the roles with the production
+    checks and the request log, the privacy documents), each reviewed by one or two skeptics with mutation checks,
+    then integrated (2026-11-05). Each decision's amendment came before its code: D-107 (the purge, and the login
+    that races it), D-108 (the CLI, signals held until the audit, export only to a file or pipe), D-109 (the roles,
+    the views-down step, the TLS and EEA checks, the AWS SDK's own endpoints, the request log). Runbooks in
+    `docs/ops/`: [yearly-purge.md](docs/ops/yearly-purge.md), [data-subject-requests.md](docs/ops/data-subject-requests.md)
+    and [database-roles.md](docs/ops/database-roles.md).
+  - [x] Purge, audit, data-subject requests, DPIA input (`DATA-003`…`DATA-008`, `DATA-010`); log redaction review
         (`NFR-006`). The data-subject tool must delete learner state through the storage directly: Lumi 10.0.4's
         `deleteAllContentUserDataByUser` checks permission for one user and deletes the acting user's data
         (`ContentUserDataManager.js:39-43`). Designs: D-107 (purge on 31 August by a stored academic year), D-108
-        (a server CLI for HVL operations), D-109 (database roles, production TLS checks, the request log)
-  - [ ] Research export (owner's idea, 2026-10-26; to consider when insight is built): analysis and research scripts
+        (a server CLI for HVL operations), D-109 (database roles, production TLS checks, the request log). Built:
+        `src/privacy/purge/` (leased job and `npm run privacy:purge`), `src/privacy/dsr/` (`npm run privacy:dsr`,
+        learner state through our storage), `prisma/roles/` with `npm run db:roles`, `src/config/connectionEncryption.ts`
+        and `storageResidency.ts`, `src/http/requestLog.ts`; DPIA input complete with residuals R1–R37
+        (`docs/privacy/DPIA-INPUT.md`, checked against the developer key by `npm run privacy:dpia-check`); the
+        inventory's Redis keys, audit details and analytics view
+  - [x] Research export (owner's idea, 2026-10-26; to consider when insight is built): analysis and research scripts
         run beside the system, in Python or R (pandas, Jupyter notebooks), which ALU and Pedagogisk akademi
         researchers use, while everything inside the product stays TypeScript. They never touch the live database:
         the system produces an anonymised export (pseudonyms only, groups under *k* = 5 suppressed, only the fields a
         question needs), built and tested in TypeScript under the privacy rules, with a documented format and an
         example notebook. Research use of student data needs its own legal basis and the DPO's approval (Q6) and
-        belongs in the DPIA input (`DATA-005`). In S6: the design only (plan step 5)
+        belongs in the DPIA input (`DATA-005`). In S6: the design only (plan step 5). Done as a design:
+        `docs/privacy/research-export.md` (tiers A–C); nothing is built until the DPO and the owner decide (Q25)
+  - [x] Integration (2026-11-05): main.ts passes `CANVAS_ORIGINS` to the NRPS roster check (and the test beds do)
+        and logs `deployment locations` at start; `PURGE_RUN_DATE` in `env.ts` and `.env.example`; the S3 client
+        ignores the AWS SDK's own endpoint settings (D-109's amendment); `AccountResolver` closes the purge race
+        (D-107's amendment); `privacy:purge` and `db:roles` scripts; the CSV's period end «Til (ikkje med)»;
+        `privacy:dpia-check` (`DATA-005`'s document check, D-113). Proven together: the insight e2e with a play of
+        today left out and Canvas's test student not counted; the test student's score sent to the mock Canvas by
+        the worker; the operations CLIs through their npm scripts on a database they deploy
+        (`operationsClis.int.test.ts`: roles, migrate step, export, the purge's dry and real run as `hvli_app`,
+        erasure, the audit); production refusing a clear-text database, Redis or S3 URL at start-up. The **Innsikt**
+        tab passes `axeInsight.a11y.test.ts`; screenshots in `nn` at 1280 and 390 px retaken and sent to the owner
+  - [x] Privacy and security review of step 5 (2026-11-05, after the integration). Two fixes, each decision's
+        amendment first, each with regression tests that fail without it: **(medium)** the mappe read every row up to
+        the export, so the mappe less insight's semester view, or two exports on one day, gave today's learners; it now
+        reads only rows stored before the latest Oslo midnight, as insight does (D-106's amendment,
+        `storedActivityResults.ts`, `storedResultsBeforeToday.int.test.ts`). **(medium–low)** a bucket variable
+        holding an access point or Outposts ARN sent files to the ARN's own region, past the EEA check; production
+        now takes plain bucket names only and names the variable, never the value (D-109's amendment,
+        `bucketNameProblems` in `storageResidency.ts`, nine `[DATA-004]` tests). Found holding: the period rule, the
+        test student left out of every count of learners, the purge's year boundaries and re-runs, the data-subject
+        CLI's keys, deletes and output, the database roles' grants, the TLS and EEA checks, and the request log
+        (route patterns only, also for 404s and bad JSON)
+  - [x] `docs/TRACEABILITY.md` and the spec site regenerated; every check, test set, the e2e set and the insight and
+        grade-sync accessibility files pass (session log, «2026-11-05 · S6 step 5»)
+  - [ ] The commit, `Refs:` `DATA-003`, `DATA-004`, `DATA-005`, `DATA-007`, `DATA-008`, `DATA-010`, `NFR-006`,
+        `INS-006`, `INS-008`, `LTI-008`, `DATA-012`, `MAPPE-003`
+  - Still open, not blocking the step: the mappe does not read the purge snapshots (a D-095/D-107 amendment for the
+    mappe's owner); no job deletes audit rows after 2 years (Q26); the deployment checklist (step 6); the dormant
+    admin branch of `UserDataAccessAuditor` that would audit a learner key (the H5P permissions owner); the web
+    privacy notice's texts after the DPO's review (DPIA R32). From the step-5 review, three low findings, each in
+    another owner's file: the LTI error handler logs `req.path` and serve-static's `err.path`, so a client can put
+    text of its choice in a log line (`ltiErrorPages.ts`; log the route pattern or a page label instead);
+    `db:roles` runs a migration URL without TLS unrefused (refuse a weak `sslmode` unless the host is local);
+    `purgeCli.ts` prints a raw error message (print `prismaErrorLine(error)`, as the data-subject CLI does). The
+    review's two fixes are not yet in the documents: DPIA R3 and R8 (the mappe ends at midnight too), R24 and the
+    `DATA-004` deployment checklist in `docs/ops/` (plain bucket names), the server README's mappe row, the
+    Evaluator Guide's `DATA-004` row, and D-106's amendment, whose *Verified by* names
+    `storedActivityResults.int.test.ts` for tests that are in `storedResultsBeforeToday.int.test.ts`. A residual
+    for the DPO: the grade-sync counts are live (no midnight cut), not *k*-suppressed and include the test student
+    (DPIA R1, R13; Q22)
 - [ ] 6. D — Operations and security (`NFR-007`, `SEC-004`, `SEC-006`, `NFR-002`, `NFR-001`, `UD-040`, the
       `MAPPE-004` image), designed in D-110: the Dockerfile and compose profile with a smoke test (or written only if
       dockerd will not run here; then CI runs it) → the files origin → ClamAV → runbook, backup and restore scripts
@@ -699,7 +755,7 @@ under the step that does it):
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous and equals the Feide ID; only then set `"feideLinking": true` for that platform in `LTI_PLATFORMS` (AUTH-005, D-063) | TeCopp | S3 |
 | Q16 | ~~The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).**~~ Resolved 2026-10-30 (D-101): GitHub CI runs on `main` and on pull requests. `main` is protected by a ruleset that requires a pull request and CI's «Session gate» check; that check passed on pull request #8 (run 41066236672, on `72e5516`), which was then merged (`47e235e`); Dependabot opens one grouped monthly pull request per ecosystem (S5 start). The push run on the merge (run 41075981429) was red: its end-to-end step failed in `appPlayEditor.e2e`, which pressed «Lagre» before the editor could save, a real slow-device fault. It is fixed in S6 step 0; GitHub's confirmation comes with that step's push | — | — |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
-| Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`) | HVL DPO | S6, pilot |
+| Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`). **Input complete 2026-11-05:** `docs/privacy/DPIA-INPUT.md` (purposes, operations, data flows with a diagram, the Canvas key's `privacy_level` and custom fields, recipients, retention, rights, security measures, residuals R1–R37, and the DPO's questions in its §13) | HVL DPO | S6, pilot |
 | Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns. Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
 | Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`, set for learners only, so an author's preview never offers it; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
 | Q19 | Every ending of the `uv-case` pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give `uv-case` no Canvas score? | ALU | The pilot |
@@ -707,6 +763,13 @@ under the step that does it):
 | Q21 | Confirm that container builds here may use the bridge network's direct egress, outside the agent proxy, for apt, npm and Prisma's engines only, and never for GitHub repository content (D-110, probe P3); S6 proceeds on that rule | Repository owner | — |
 | Q22 | For the DPIA (`DATA-005`, D-106 residual): the grade-sync status counts (sent, pending, failed, orphaned; since D-104's amendment of 2026-11-04 one per learner and placement) are not *k*-suppressed (spec 05 §3). In `/app/play` a Canvas author sees only the launch's course; on the activity page the activity's owner and co-authors see the counts of every course it is placed in, also a colleague's course that placed it from the bank or copied it, where they are not teachers and Canvas's gradebook would not show them anything. A count there can be about one learner. Keep (the counts carry no learner, score or name), suppress below *k* for courses the viewer does not teach, or show a portal owner only the courses they launched as a teacher (`docs/privacy/DPIA-INPUT.md`) | HVL DPO, owner | The pilot |
 | Q23 | A statement names no Canvas link (`DATA-012`), so since D-104's amendment of 2026-11-04 a learner's score in a graded link counts their plays of the same activity in the same course through any other link too, an ungraded practice link included, whose newer results also reopen the graded job. Keep it, or store the resource link with each statement (a `DATA-012` change) so that each link counts its own plays? | Owner | The pilot |
+| Q24 | Insight's freshness (D-106's amendment of 2026-11-04, the step-4 privacy review): every period now ends at the latest midnight in Oslo, so the **Innsikt** tab shows the data up to and including yesterday («Tal til og med i går») and two views on the same day are always the same; a teacher who wants to see what students did before a seminar the same morning sees it the next day. Views on two consecutive days still differ by one day's learners. Keep the daily view (the default), or show a new view only once *k* or more new learners have played since the last one, which closes the day-by-day difference too but can leave a small course without new numbers for days? | Owner, ALU | The pilot |
+| Q25 | Research export (the owner's idea of 2026-10-26, S6 step 5): researchers at ALU and Pedagogisk akademi would get *k*-suppressed packages (tiers A and B), or re-keyed event rows for one approved question (tier C), built and tested in TypeScript and analysed in Python or R (`docs/privacy/research-export.md`, design only). Research is a purpose of its own: the DPO decides the legal basis and whether tiers A and B are anonymous, and each export order needs the DPO's approval. Until then nothing is built, and giving a researcher the `hvli_analytics` role counts as research use too. Then the owner decides whether to build it (a decision and a requirement first) | HVL DPO, owner, ALU / Pedagogisk akademi | Any research use of learning data |
+| Q26 | Audit records are kept 2 years (`DATA-007`), but nothing deletes them yet, and the app's database role may not (D-109's amendment of 2026-11-04). Decide how: a deletion job with its own role and grant (an amendment to D-109), or an operations step in a runbook (DPIA input R27) | Owner, HVL IT | Two years after the pilot starts |
+| Q27 | Staff who leave HVL keep their account, display name, activities and co-authorships; nothing deletes a staff account, and staff members' own data-subject requests are handled by hand (D-108). Decide a routine, for example from HVL's leaver list, and who handles the activities they own (DPIA input R22, R28) | HVL DPO, HVL IT | The pilot |
+| Q28 | A learner may object to the processing (GDPR Art. 21, since the basis is Art. 6(1)(e)), but there is no way to stop capturing one person's statements while they use activities. Accept a manual routine (an erasure after the objection, repeated as needed), or ask for an opt-out feature (its own decision; it would store who objected) (DPIA input R34) | HVL DPO, owner | The pilot |
+| Q29 | Who may log in to the portal? The recommended Feide registration leaves «Restrict login to selected organizations» off (`docs/reference/feide-values.md`), so anyone with Feide, also from schools (pupils, possibly children), can log in as a learner and play activities shared with «anyone with Feide» (spec 02's role table, D-059), and their play is stored and counted. Restrict Feide's «Restrict login to selected organizations» to HVL (and named partners), or keep it open with the DPO's basis for those users and a line in `/personvern` (DPIA input R37) | Owner, HVL IT, HVL DPO | The pilot |
+| Q30 | Students as insight readers: insight and the grade-sync counts go to anyone with the author role in a context, so a Canvas TA, who at HVL can be a student assistant, sees a course's *k*-suppressed aggregates, and a student author (D-059) sees them for every course their activity is placed in. Accept with HVL's confidentiality terms for student assistants, or show insight only to staff by Feide affiliation and to Canvas instructors but not TAs (an `INS-007` change; DPIA input R36) | HVL DPO, owner | The pilot |
 
 ## Risk register
 
@@ -1113,6 +1176,67 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npx vitest run <the other 16 server test folders>            Test Files 285 passed, 2 failed (287) · Tests 6088 passed, 2 failed
                                                                    (webPages, webChrome: Canvas tabs without «Innsikt»; fixed)
   $ npx vitest run test/grades test/web (after the fixes)        Test Files 29 passed (29) · Tests 241 passed (241)
+  $ npm run test:e2e                                             Test Files 15 passed (15) · Tests 24 passed (24)
+  $ npx vitest run … a11y/axeInsight.a11y.test.ts axeGradeSync   Test Files 2 passed (2) · Tests 11 passed (11)
+  ```
+- **2026-11-05 · S6 step 5 (integration)** — Five workstreams (the step-4 privacy review's fixes, the yearly purge,
+  the data-subject CLI, the roles with the production checks and the request log, the privacy documents), each
+  verified by one or two skeptics with mutation checks, then integrated. Wiring: main.ts passes `CANVAS_ORIGINS` to
+  the NRPS roster check (so does `gradeBridgeInputs`) and logs `deployment locations` (hosts and region only);
+  `PURGE_RUN_DATE` in `env.ts` (a bad day stops the start, `purgeEnv.test.ts`) and `.env.example`, which also states
+  the production TLS and EEA rules; the S3 client ignores the AWS SDK's own endpoint settings (D-109's amendment,
+  `s3Client.test.ts`, which fails without it); `AccountResolver` makes an account staff only while its identity still
+  exists, so a login that races the purge starts over (D-107's amendment, `accountPurgeRace.int.test.ts`); the
+  `privacy:purge` and `db:roles` scripts, with the runbooks using them; the CSV's period end «Til (ikkje med)»; the
+  contract's `periodEnd` TSDoc; D-108's citation of student authors (D-059, not D-089); `privacy:dpia-check`, the
+  `[DATA-005]` document check of D-113. Proven together: the insight e2e with a seventh learner's play of today and
+  Canvas's test student left out; the test student's score sent by the worker to the mock Canvas; the operations CLIs
+  through their npm scripts on a database they deploy themselves (`operationsClis.int.test.ts`); production refusing a
+  clear-text database, Redis or S3 URL and the SDK's endpoint variable at start-up, by name only. Docs: the server
+  and web READMEs, `docs/ops/README.md`, the GLOSSARY, the Evaluator Guide (commands, §4.4, how each S6 privacy
+  requirement is verified), DPIA R11, R19 and R23. Screenshots of the **Innsikt** tab in `nn` at 1280 and 390 px
+  retaken and sent to the owner. Not regenerated, by the run's instruction: `docs/TRACEABILITY.md` and the spec site
+  (so `spec:trace --check` and `specSite.test.mjs` report them out of date). Not committed. Check output:
+
+  ```
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run privacy:inventory-check · privacy:dpia-check         22 models, 182 fields · 13 sections, key and residuals agree
+  $ CI=true npx vitest run test/config test/infra test/auth test/xapi test/privacy test/insight test/lti
+      test/server test/db test/http test/grades test/learningDesign/mappe test/jobs (no browser files)
+                                                                 Test Files 240 passed (240) · Tests 1994 passed (1994)
+  $ CI=true npx vitest run tools packages/api-contract            Test Files 55 passed, 1 failed: specSite (site not regenerated)
+  $ CI=true npx vitest run (apps/web)                             Test Files 94 passed (94) · Tests 592 passed (592)
+  $ CI=true npm run test:e2e                                      Test Files 15 passed (15) · Tests 24 passed (24)
+  $ npm run build (apps/web) · a11y/axeInsight.a11y.test.ts       built · Test Files 1 passed · Tests 6 passed (6)
+  ```
+- **2026-11-05 · S6 step 5** — A privacy and security review of the integrated step 5, then the finish run. The review
+  fixed two leaks, each with its decision's amendment first and tests that fail without the fix: the mappe now ends
+  at the latest Oslo midnight, as insight does, so it can no longer be differenced against insight's semester view or
+  against itself on the same day (D-106, `storedResultsBeforeToday.int.test.ts`); production refuses a bucket
+  variable that is not a plain bucket name, since the AWS SDK sends an access point or Outposts ARN to the ARN's own
+  region, past the EEA check (D-109, nine `[DATA-004]` tests). It left three low findings and the documents for its
+  two fixes to their owners (section S6, step 5). The finish run regenerated `docs/TRACEABILITY.md` and the spec site
+  and ran every check; nothing needed fixing. PROGRESS: step 3's commit is abb60a5 (not 9fb0c02). No view changed
+  since the integration's screenshots, so none were retaken. Not committed. Check output (every step exit 0; tests
+  with `CI=true`, so nothing skips; the spec site was built again after this entry, and its `--check`,
+  `specSite.test.mjs`, `doc:lint` and `format:check` passed again):
+
+  ```
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements · ✓ docs/site/index.html is up to date
+  $ npm run spec:trace -- --check --done-through=S5              ✓ 126 requirements, traceability up to date.
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 482 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+  $ npm run tokens:check · build                                 ✓ 3 files up to date · exit 0
+  $ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                                 Test Files 167 passed (167) · Tests 1397 passed (1397)
+  $ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 170 passed (170) · Tests 19783 passed (19783)
+    (apps/server)
+  $ npx vitest run <the other 17 server test folders>            Test Files 320 passed (320) · Tests 6360 passed (6360)
   $ npm run test:e2e                                             Test Files 15 passed (15) · Tests 24 passed (24)
   $ npx vitest run … a11y/axeInsight.a11y.test.ts axeGradeSync   Test Files 2 passed (2) · Tests 11 passed (11)
   ```

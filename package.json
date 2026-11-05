@@ -31,6 +31,7 @@
     "check:licences": "node tools/dependency-check/checkLicences.mjs",
     "check:audit": "node tools/dependency-check/checkAudit.mjs",
     "privacy:inventory-check": "node tools/privacy/checkInventory.mjs",
+    "privacy:dpia-check": "node tools/privacy/checkDpiaInput.mjs",
     "spec:trace": "node tools/spec-trace/specTrace.mjs",
     "spec:site": "node tools/spec-site/buildSpecSite.mjs",
     "h5p:fetch-core": "bash tools/h5p-core/fetchCoreClients.sh",

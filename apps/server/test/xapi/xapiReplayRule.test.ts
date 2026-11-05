@@ -40,6 +40,7 @@ const facts = (library: string, overrides: Partial<XapiBatchFacts> = {}): XapiBa
   contextId: null,
   learnerKey: 'replay-test-learner',
   academicYear: 2026,
+  testUser: false,
   mainCategory: `http://h5p.org/libraries/${library.replace(' ', '-')}`,
   ...overrides,
 });

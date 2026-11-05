@@ -12,6 +12,8 @@
  *   - The context is `portal` (stored as null) or a key `../../xapi/platformContextKey.ts` can parse; anything else
  *     is refused (`contextInvalid`). Whether the person may see that context is INS-007's check, made before this.
  *   - The scope carries *k*, so the answer says what «< k» means.
+ *   - The period ends at the latest midnight in Oslo and lies within one academic year (./insightPeriod.ts), and the
+ *     query reads only that year's rows (`academicYear`), so a learner has one key in a view (D-106's amendment).
  * Collaborators: ./insightPeriod.ts, ../../xapi/platformContextKey.ts, @hvl-interaktiv/api-contract (`insight.ts`),
  *   ../InsightService.ts, ../data/insightStatements.ts.
  * Tests: apps/server/test/insight/insightScope.test.ts
@@ -62,8 +64,10 @@ export interface ResolvedInsightScope {
   readonly storedContextId: string | null;
   /** From midnight Oslo time (inclusive). */
   readonly start: Date;
-  /** Up to the moment the view is computed (exclusive). */
+  /** Up to the latest midnight in Oslo (exclusive): the view holds no data of today (D-106). */
   readonly end: Date;
+  /** `XapiStatement.academicYear` of the view: the year of its last day, so one key per learner (D-106, D-107). */
+  readonly academicYear: number;
 }
 
 /**
@@ -103,7 +107,7 @@ export function resolveInsightScope(
   }
   const storedContextId = storedContextOf(request.context);
   const period = request.period ?? DEFAULT_INSIGHT_PERIOD;
-  const { start, end } = insightPeriodRange(period, facts.now);
+  const { start, end, academicYear } = insightPeriodRange(period, facts.now);
   const context: InsightContext = {
     key: request.context,
     label: storedContextId === null ? null : facts.contextLabel,
@@ -122,5 +126,6 @@ export function resolveInsightScope(
     storedContextId,
     start,
     end,
+    academicYear,
   };
 }

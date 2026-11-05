@@ -23,7 +23,7 @@ const row = (id: string, userId: string, subjectKeyId: string) => ({
 function fakeDb(rows: ReturnType<typeof row>[], update: () => Promise<unknown>) {
   const db = {
     identity: { findMany: vi.fn(async () => rows), update: vi.fn(update) },
-    user: { update: vi.fn(async () => ({})), create: vi.fn() },
+    user: { update: vi.fn(async () => ({})), updateMany: vi.fn(async () => ({ count: 1 })), create: vi.fn() },
   };
   return { db, resolver: new AccountResolver({ db: db as unknown as Database, hasher }) };
 }

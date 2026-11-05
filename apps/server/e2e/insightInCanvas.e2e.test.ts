@@ -4,16 +4,21 @@
  * xAPI bridge and four through the real ingestion route with their launch's Bearer ltik; two learners of course B
  * do the same through the route. The teacher's **Innsikt** tab in `/app/play` then shows course A's participation
  * and the question's share right, and course B's values as «< 5» (fewer than k = 5); a learner gets no tab and a
- * 403; another teacher of course B sees course B only and is refused course A. The whole server with the built web
- * app and the real content types (../test/support/realWebApp.ts).
+ * 403; another teacher of course B sees course B only and is refused course A. The plays are moved to yesterday
+ * before the views, which hold the data up to and including yesterday (D-106's amendment of 2026-11-04): a seventh
+ * learner who plays today, after the move, is not in today's view, and neither is Canvas's Student View test student
+ * (D-102's amendment), whose plays moved with the others. The whole server with the built web app and the real
+ * content types (../test/support/realWebApp.ts).
  *
- * Spec: INS-001, INS-002, INS-006, INS-007, PROD-010, LTI-006, DATA-007
+ * Spec: INS-001, INS-002, INS-006, INS-007, PROD-010, LTI-006, DATA-007, DATA-012
  */
 import { randomUUID } from 'node:crypto';
 import type { Browser } from 'playwright-core';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { CANVAS_USERS, type LaunchSpec } from '../../../tools/mock-platform/mockPlatform.mjs';
+import { LTI_TEST_USER_ROLE } from '../src/lti/LtiRoleMapper.js';
 import { recordFlow } from '../test/support/flowRecorder.js';
+import { moveStatementsToYesterday } from '../test/support/statementsToYesterday.js';
 import { newCanvasLearner, playThroughIngestion } from '../test/support/insightLearners.js';
 import { lostRowsFact } from '../test/support/lostTestRows.js';
 import { openRealWebApp, type RealWebApp } from '../test/support/realWebApp.js';
@@ -80,6 +85,18 @@ describeWithRealWebApp(
           const launch = launchIn(courseB, newCanvasLearner());
           statuses.push(await playThroughIngestion(app, launch, 'H5P.MultiChoice', () => answer));
         }
+        // Act: Canvas's test student (Student View) answers wrong in course A; its rows are stored, flagged
+        flow.step = 'test student';
+        const testStudent = { sub: randomUUID(), roles: [...CANVAS_USERS.student.roles, LTI_TEST_USER_ROLE] };
+        statuses.push(
+          await playThroughIngestion(app, launchIn(courseA, testStudent), 'H5P.MultiChoice', () => WRONG),
+        );
+        // WHY: a view holds the data up to and including yesterday (D-106's amendment), so today's plays move back.
+        await moveStatementsToYesterday(app.tb.db, contentId);
+        // Act: a seventh learner of course A answers wrong today, after the move: tomorrow's view, not today's
+        flow.step = 'today';
+        const today = launchIn(courseA, newCanvasLearner());
+        statuses.push(await playThroughIngestion(app, today, 'H5P.MultiChoice', () => WRONG));
         // Act: the teacher opens Innsikt in course A's /app/play
         flow.step = 'teacher A';
         await page.goto(app.tb.mock.canvas.coursePageUrl(launchIn(courseA, CANVAS_USERS.teacher)));
@@ -121,16 +138,21 @@ describeWithRealWebApp(
       const audits = await app.tb.db.auditEvent.findMany({
         where: { action: 'insight.view', targetId: contentId },
       });
-      // Assert: every answer was stored through the bridge or the route
+      // Assert: every answer was stored through the bridge or the route, the test student's flagged
       expect(seen.statuses.every((status) => status === 202)).toBe(true);
-      expect(await stored()).toBe(8);
-      // Assert: course A shows six learners and the question, 4 of 6 right on the first try
+      expect(await stored()).toBe(10);
+      expect(
+        await app.tb.db.xapiStatement.count({ where: { contentId, verb: 'answered', testUser: true } }),
+      ).toBe(1);
+      // Assert: course A shows six learners and the question, 4 of 6 right on the first try: neither the test
+      // student nor today's learner is counted
       expect(seen.a.started).toBe('6');
       expect(seen.a.completed).toBe('6');
       expect(seen.a.rows).toBe(1);
       expect(seen.a.item).toContain('Kva kjenneteiknar undervegsvurdering (formativ vurdering)?');
       expect(seen.a.item.replace(/\s/g, ' ')).toContain('67 %');
       expect(seen.a.panel).toContain('INNSIKT101');
+      expect(seen.a.panel).toContain('Tal til og med i går');
       expect(seen.a.panel).not.toContain(CANVAS_USERS.student.sub);
       // Assert: course B has two learners, so its values are «< 5» and nothing of course A shows
       expect(seen.b.started).toContain('< 5');

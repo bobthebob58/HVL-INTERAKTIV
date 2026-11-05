@@ -29,6 +29,11 @@ model XapiStatement {
   /// which is the key's year for an LTI request (it derives its key) but not always for a portal session, which keeps
   /// its key up to 12 hours past 1 August (D-057): the writer of a portal play's row sets the key's year itself.
   academicYear   Int      @default(dbgenerated("(EXTRACT(year FROM ((now() AT TIME ZONE 'Europe/Oslo'::text) - '7 mons'::interval)))::integer"))
+  /// True for a statement of Canvas's Student View test student (the LTI `TestUser` role; D-102's amendment of
+  /// 2026-11-04): stored, so a teacher can test the score passback, but never read by insight or the mappe, so a test
+  /// student is in no aggregate and no k count. Set from the launch, never from the statement (a field outside
+  /// DATA-012's list, like `academicYear`).
+  testUser       Boolean  @default(false)
 
   content H5PContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
 

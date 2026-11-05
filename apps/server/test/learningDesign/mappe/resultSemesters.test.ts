@@ -17,7 +17,7 @@ const moment = fc.date({
 });
 
 describe('[MAPPE-003] the semesters of the mappe’s groups', () => {
-  it('[MAPPE-003] a semester starts where insight’s semester view starts, at midnight Oslo time', () => {
+  it('[MAPPE-003] a semester starts where insight’s semester view of it starts, at midnight Oslo time', () => {
     // Act and assert
     expect(semesterStartOf(new Date('2026-07-31T21:59:59.999Z')).toISOString()).toBe(
       '2025-12-31T23:00:00.000Z',
@@ -33,7 +33,9 @@ describe('[MAPPE-003] the semesters of the mappe’s groups', () => {
     );
     fc.assert(
       fc.property(moment, (at) => {
-        expect(semesterStartOf(at)).toEqual(insightPeriodRange('semester', at).start);
+        // WHY: insight's semester view is the semester of its last day, the day before it ends (D-106's amendment).
+        const view = insightPeriodRange('semester', at);
+        expect(semesterStartOf(new Date(view.end.getTime() - 1))).toEqual(view.start);
       }),
     );
   });

@@ -26,6 +26,14 @@ The default view is **Før samlinga** ("before the session"): results since a ch
   values, the last 7 (the default), 14 or 30 days or since the semester started, each starting at midnight Oslo time,
   not from any date, so that two overlapping views cannot isolate one learner. The semester starts on 1 January or
   1 August until HVL gives its semester dates.
+- **Amended (D-106, 2026-11-04, the step-4 privacy review):** `SPEC-DEVIATION` D-106: every period **ends at the latest
+  midnight in Oslo**, so a view holds the data up to and including yesterday («Tal til og med i går») and two views of
+  the same period on the same day are the same whatever is stored in between; the semester view on 1 January or
+  1 August is the semester that has just ended. **No period crosses 1 August**, when the pseudonym secret changes
+  (`DATA-002`): a 7-, 14- or 30-day view whose days would reach back before 1 August starts on 1 August instead, and
+  the tab says so; each view reads only rows of its own academic year's key (`academicYear`, D-107). Canvas's Student
+  View test student is in no view (D-102's amendment of 2026-11-04, `DATA-012`). What remains (views on consecutive
+  days, nested periods) is in the DPIA input's residuals R3 and R8 (`DATA-005`).
 
 #### INS-001 · MUST · S6 · Participation overview
 Shows: learners who **started**, learners who **completed**, completion rate (denominator from NRPS
@@ -172,11 +180,22 @@ aggregate snapshots that already satisfy *k*-suppression are kept, for the *peda
   suppressed with the configured *k* (D-106); only they outlive the purge, and the values the mappe reads from them
   follow D-095's rules. The dry run (counts per table, nothing deleted) and the audit event of every run are as
   written. A leased job runs the purge on one node, and a CLI runs the same code by hand.
+- **Amended (D-107, 2026-11-04, the purge built):** `PURGE_RUN_DATE` names a day from 31 August to 31 December (a day
+  in spring would keep a year's rows for most of another year); the job checks hourly and runs once the date is
+  reached and no completed run for the ended year is audited. A run deletes every stored year before the current
+  academic year, so a year a missed run left behind goes too. A snapshot holds the mappe's figures for the year
+  (`MAPPE-002`) under the mappe's group rules. The runbook is `docs/ops/yearly-purge.md`.
 
 #### DATA-004 · MUST · S6 · EEA residency and encryption
 PostgreSQL, Redis and S3-compatible storage are hosted in Norway or the EEA. All traffic uses TLS
 1.2 or later. Storage is encrypted at rest. Backups are encrypted and retained for 30 days.
 - **Verify:** Deployment checklist (`docs/ops/`).
+- **Amended (D-109, 2026-11-04 and 2026-11-05):** in production the server refuses to start with a `DATABASE_URL`
+  whose `sslmode` is not `require`, `verify-ca` or `verify-full`, a `redis://` `REDIS_URL`, an `http:` `S3_ENDPOINT`,
+  either of the AWS SDK's own endpoint variables (`AWS_ENDPOINT_URL_S3`, `AWS_ENDPOINT_URL`), or file storage outside
+  the EEA allow-list in `apps/server/src/config/storageResidency.ts`. These checks catch a wrong setting, not where a
+  server stands: the EEA location, encryption at rest and backups stay the deployment checklist's evidence (Q5), and
+  the start-up log names the database and Redis hosts and the storage region for it (`docs/ops/database-roles.md`).
 
 #### DATA-005 · MUST · S6 · DPIA input
 `docs/privacy/DPIA-INPUT.md` describes processing operations, data flows (with a diagram), risks
@@ -196,11 +215,24 @@ why, for how long, and who can see what. In particular, teachers see only groups
 exports, library installs and updates, permission changes, data-subject actions and purge runs. The
 audit log itself has no free-text personal data. It is kept for 2 years.
 - **Verify:** Integration tests assert events for each action.
+- **Amended (D-107, D-108, D-109, 2026-11-04):** a purge run writes `purge.run` with the academic year as its target;
+  a data-subject request writes `dataSubject.export` or `dataSubject.erase` with a random request ID as its target,
+  never an identifier, key or hash; both hold counts, years and fixed words only. The app's database role may add and
+  read audit rows but never change or delete them (D-109), so the deletion after 2 years, which is not built yet,
+  needs its own amendment and grant (DPIA input R27).
 
 #### DATA-008 · MUST · S6 · Data-subject requests
 An admin-only tool takes a Feide ID or an `(iss, sub)` pair. It derives the learner keys for the
 retained academic years, then exports (JSON) or deletes that learner's data. Every use is audited.
 - **Verify:** Integration test of export and erasure.
+- **Amended (D-108, 2026-10-30, and its amendments of 2026-11-04 and 2026-11-05):** the tool is a CLI on the server
+  host, with no web page or HTTP route, that HVL operations run on the instruction of HVL's data protection officer,
+  naming an HVL admin as the operator. The identifiers come on standard input, never in the arguments; the CLI derives
+  the `learnerKey` for every year in `PSEUDONYM_SECRETS` and the identity hash under every identity key; `erase` is a
+  dry run unless it is given `--confirm`; learner H5P state is deleted through our own storage, because Lumi 10.0.4's
+  `deleteAllContentUserDataByUser` deletes the acting user's state. The audit target is a random request ID. The export
+  also lists the person's portal login events (`AuthAuditEvent`), which the erasure keeps for their 2 years; a staff
+  member's own data and Canvas's own data are outside the tool (Q6). Runbook: `docs/ops/data-subject-requests.md`.
 
 #### DATA-009 · MUST · S1 · Logs contain no personal data
 The logger (pino) redacts `authorization`, `cookie`, `ltik`, `id_token`, `email`, `name`, `sub`,
@@ -211,6 +243,12 @@ The logger (pino) redacts `authorization`, `cookie`, `ltik`, `id_token`, `email`
 Separate database roles are used for the app, for migrations and for read-only analytics. Production
 data is never copied to development; test data is synthetic.
 - **Verify:** Ops checklist; migration role used only in CI/CD.
+- **Amended (D-109, 2026-11-04 and 2026-11-05):** the roles are `hvli_migrator` (owns the schema; used only in the
+  deployment's migrate step, which runs `views-down`, `prisma migrate deploy` and `grants`), `hvli_app` (rows only; on
+  the audit tables add and read only) and `hvli_analytics`, narrowed from "read-only analytics": it reads no table,
+  only views in schema `analytics` of aggregates already suppressed below *k* (today `analytics.insight_snapshot`),
+  and its sessions start read-only. Scripts in `apps/server/prisma/roles/`, runbook `docs/ops/database-roles.md`, and
+  HVL's checklist in the DPIA input §11 (`DATA-005`).
 
 #### DATA-011 · MUST · S4 · No third-party tracking or CDNs
 Student-facing pages load no third-party scripts, fonts, analytics or embeds other than ones the
@@ -246,6 +284,11 @@ else is dropped, including actor names, mailboxes and extensions.
   characters is not stored, since a shortened list would shift its gaps; a numeric response is stored as text.
   `durationMs` is parsed from `result.duration` (null when absent, unreadable or over 24 hours), and no insight reads
   it, because H5P's durations mean different things by type.
+- **Amended (D-102, 2026-11-04, the step-4 privacy review):** `SPEC-DEVIATION`: `XapiStatement` also stores
+  `testUser`, true for a statement of Canvas's Student View test student (the LTI `TestUser` role), set from the
+  launch, never from the statement; database default false. Like `academicYear` it holds no statement data. Insight,
+  the mappe and the yearly purge's snapshots never read a flagged row, so *k* − 1 test students cannot make a group of
+  *k* around one real learner; the grade worker does read them, so a teacher can test the score passback.
 
 ---
 
@@ -257,6 +300,14 @@ else is dropped, including actor names, mailboxes and extensions.
 | % correct per question, distribution of answers (groups ≥ k) | Rare free-text answers given by fewer than *k* learners |
 | Their own feedback texts next to the results | Data from other courses' contexts |
 | Grade-sync status counts | Raw xAPI statements |
+
+- **Amended (D-104, D-106, 2026-11-04):** the grade-sync status counts are per course and not *k*-suppressed, with one
+  count per learner and placement since D-104's amendment, so a count can be about one learner. "Data from other
+  courses' contexts" means that no view mixes courses: in Canvas a teacher sees the launch's course only, while an
+  activity's owner and co-authors see insight and these counts for each course the activity is placed in, one course
+  at a time, also a colleague's course. Both are residuals for HVL's data protection officer (DPIA input R1, R2;
+  Q22). Canvas's Student View test student is in none of insight's learner numbers (`DATA-012` as amended, D-102); its
+  score is sent, so its grade job is in the grade-sync counts.
 
 ---
 
@@ -274,9 +325,9 @@ personal data; **P** marks pseudonymous fields.
 | `GradeSyncJob` | 02 | `ltiSub` (**PII**, encrypted, 30 days after success; amended, D-104: 30 days after the job stops, whatever its outcome); `academicYear`, as on `XapiStatement` (D-107) |
 | `LearningDesignMetadata`, `LearningOutcome` | 04 | none |
 | `ValidationAcknowledgement` | 03 | `userId` (author) |
-| `XapiStatement` | 05 | `learnerKey` (**P**), `response` (**P**); `contextId` as `<platformId>:<contextId>` (D-103); `academicYear`, the year of the secret behind `learnerKey`, by which the yearly purge deletes (`SPEC-DEVIATION` from `DATA-012`, D-107) |
+| `XapiStatement` | 05 | `learnerKey` (**P**), `response` (**P**); `contextId` as `<platformId>:<contextId>` (D-103); `academicYear`, the year of the secret behind `learnerKey`, by which the yearly purge deletes (`SPEC-DEVIATION` from `DATA-012`, D-107); `testUser`, true for Canvas's Student View test student, whose rows no aggregate reads (`SPEC-DEVIATION` from `DATA-012`, D-102, amended 2026-11-04) |
 | `InsightSnapshot` | 05 | aggregates only, already *k*-suppressed; `contextId` as `<platformId>:<contextId>` (D-103); `contentVersion` (D-107: the purge writes one snapshot per activity, context and content version) |
-| `AuditEvent` | 05 | `actorUserId` |
+| `AuditEvent` | 05 | `actorUserId`; for a data-subject request `targetId` is a random request ID, never an identifier (D-108, amended 2026-11-04) |
 
 ## 5. Pseudonymisation sequence (for evaluators)
 

@@ -65,7 +65,7 @@ describe('[INS-009] the insight CSV text', () => {
       ['Utval', 'Gjeldande versjon', '1'],
       ['Utval', 'Periode', '7d'],
       ['Utval', 'Frå', report.scope.periodStart],
-      ['Utval', 'Til', report.scope.periodEnd],
+      ['Utval', 'Til (ikkje med)', report.scope.periodEnd],
       ['Utval', 'Emne', 'portal'],
       ['Utval', 'Minste gruppe (k)', '5'],
     ]);

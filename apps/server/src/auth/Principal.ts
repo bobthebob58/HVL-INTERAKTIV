@@ -48,6 +48,11 @@ export interface LtiLaunchFacts {
   readonly lineItemUrl?: string;
   /** `LtiResourceLinkRequest` or `LtiDeepLinkingRequest`. */
   readonly messageType: string;
+  /**
+   * Set (true) only for Canvas's Student View test student (the LTI `TestUser` role): its statements are stored
+   * flagged and left out of insight, the mappe and every *k* count (D-102's amendment of 2026-11-04).
+   */
+  readonly testUser?: true;
 }
 
 /** What every API handler receives after authentication (spec 02 §2, amended by D-053). */

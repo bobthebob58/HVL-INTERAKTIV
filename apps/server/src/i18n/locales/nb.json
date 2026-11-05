@@ -280,7 +280,7 @@
         "currentVersion": "Gjeldende versjon",
         "period": "Periode",
         "periodStart": "Fra",
-        "periodEnd": "Til",
+        "periodEnd": "Til (ikke med)",
         "context": "Emne",
         "minimumGroupSize": "Minste gruppe (k)"
       },

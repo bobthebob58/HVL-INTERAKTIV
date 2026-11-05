@@ -45,7 +45,7 @@ describe('[INS-003] misconceptions', () => {
     for (const icon of table.querySelectorAll('td span[aria-hidden="true"]'))
       expect(icon.textContent).toMatch(/^[✓✗] $/);
     expect(plain(within(question).getByRole('figure').querySelector('figcaption')?.textContent)).toBe(
-      'Vanlegaste feilsvar: «Lagrar arvestoff», valt av 9 studentar.',
+      'Vanlegaste feilsvar av dei som kan visast: «Lagrar arvestoff», valt av 9 studentar.',
     );
     // INS-008: the learners the bars are a share of are said in words; a hidden count draws no bar
     expect(within(question).getByText(/^Studentar som svarte første gong:/).textContent).toBe(
@@ -85,7 +85,7 @@ describe('[INS-003] misconceptions', () => {
       ['Tom luke', HIDDEN_TEXT],
     ]);
     expect(plain(within(gap).getByRole('figure').querySelector('figcaption')?.textContent)).toBe(
-      'Luke 1: vanlegaste feilsvar er «ribosom» (6 studentar).',
+      'Luke 1: vanlegaste feilsvar av dei som kan visast, er «ribosom» (6 studentar).',
     );
   });
 

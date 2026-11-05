@@ -46,6 +46,11 @@ export interface HvlH5pActor {
   readonly role: H5pRole;
   /** Pseudonym that keys this person's H5P state (`DATA-002`), never a raw or internal ID. */
   readonly learnerKey: string;
+  /**
+   * The academic year of the pseudonym secret that made `learnerKey` (D-107), stored on the learner's H5P state rows
+   * so the yearly purge deletes them with the key's year; absent for an actor built without a principal (tests).
+   */
+  readonly learnerKeyYear?: number;
   /** LMS context of this launch (a Canvas course); empty outside Canvas. */
   readonly contextId: string;
   /** UI language of this person. */

@@ -2,7 +2,8 @@
  * Integration tests for the pedagogisk mappe's real results source on PostgreSQL (D-095): the hand-worked figures of
  * the stored-results fixture through the real query, a 4-learner activity suppressed, the groups below *k* left out,
  * a second version's figures not giving away the first's hidden completers, the export through the route with the
- * source the app builds, nothing written, and only the author's own and co-authored activities.
+ * source the app builds, nothing written, only the author's own and co-authored activities, no Canvas test student
+ * in any group (D-102's amendment of 2026-11-04), and one learner per key year in an autumn group (D-106's).
  *
  * Spec: MAPPE-003, MAPPE-002, INS-006
  */
@@ -145,5 +146,42 @@ describeWithServices('[MAPPE-003] the mappe’s results from the stored learning
     expect(none.size).toBe(0);
     expect(nothingAsked.size).toBe(0);
     expect(activityAggregates(k5, none.get(empty) ?? [])).toEqual({ recorded: true, suppressed: true });
+  });
+
+  it('[MAPPE-003] Canvas’s test students are in no group: four learners and two test students stay below k (D-102)', async () => {
+    // Arrange: two test students beside the four learners of a new activity, and one more in the large one's course A
+    const tested = await tb.content(author.principal.userId, { title: 'Med testelevar' });
+    const testStudent = (learner: string) =>
+      ({ learner, verb: 'completed', course: courses.a, score: 9, testUser: true }) as const;
+    await storeRows(tb.db, run, tested, [
+      ...smallActivityRows(courses.a),
+      testStudent('T1'),
+      testStudent('T2'),
+    ]);
+    await storeRows(tb.db, run, large, [testStudent('T3')]);
+    // Act
+    const summaries = await new StoredActivityResults(tb.db).learnerSummaries([tested, large], k5);
+    // Assert
+    expect([...summaries.keys()]).toEqual([large]);
+    expect(activityAggregates(k5, summaries.get(large))).toMatchObject({ participants: 17 });
+  });
+
+  it('[MAPPE-003] a learner under last year’s and this year’s key on 1 August is one learner in the autumn group (D-106)', async () => {
+    // Arrange: four portal learners on 2 August 2027 under the 2027 keys; one of them played at 05:00 on 1 August under
+    // the 2026 key a portal session keeps for up to 12 hours (D-057), which reads as a fifth key
+    const tail = await tb.content(author.principal.userId, { title: 'Over 1. august' });
+    const done = (learner: string, at: string, academicYear?: number) =>
+      ({ learner, verb: 'completed', course: null, score: 5, at: new Date(at), academicYear }) as const;
+    const learners = ['N1', 'N2', 'N3', 'N4'].map((learner) => done(learner, '2027-08-02T10:00:00.000Z'));
+    await storeRows(tb.db, run, tail, [...learners, done('N1-OLD', '2027-08-01T03:00:00.000Z', 2026)]);
+    // WHY: the reads end at the latest midnight in Oslo (D-106's amendment of 2026-11-05), so the clock is after them.
+    const results = new StoredActivityResults(tb.db, () => new Date('2027-08-04T10:00:00.000Z'));
+    // Act
+    const four = await results.learnerSummaries([tail], k5);
+    await storeRows(tb.db, run, tail, [done('N5', '2027-08-03T10:00:00.000Z')]);
+    const five = await results.learnerSummaries([tail], k5);
+    // Assert: the old key is no fifth learner; a real fifth one is counted
+    expect(four.has(tail)).toBe(false);
+    expect(activityAggregates(k5, five.get(tail))).toMatchObject({ participants: 5 });
   });
 });

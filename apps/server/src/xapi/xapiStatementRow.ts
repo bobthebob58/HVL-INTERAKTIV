@@ -8,9 +8,10 @@
  *      requirement and probe P1 found several kinds of statements that no rule should count.
  * Spec: DATA-012, LTI-011
  * Invariants:
- *   - PRIVACY: a row holds exactly DATA-012's fields and `academicYear` (D-107); no actor, name, mailbox, question
- *     text, choice, feedback or extension survives (DATA-012). `learnerKey` and `contextId` come from the request's
- *     principal, `contentVersion` from the server's check, never from a statement.
+ *   - PRIVACY: a row holds exactly DATA-012's fields, `academicYear` (D-107) and `testUser` (D-102); no actor, name,
+ *     mailbox, question text, choice, feedback or extension survives (DATA-012). `learnerKey`, `contextId` and
+ *     `testUser` come from the request's principal, `contentVersion` from the server's check, never from a
+ *     statement.
  *   - SPEC-DEVIATION: D-115 — stored: a root `attempted`; an `answered` of the root (a root result) or of a part with
  *     a `subContentId`; a root result `completed` (replays are dropped by ./xapiReplayRule.ts). Discarded:
  *     `interacted`, `progressed`, a part's `attempted` or `completed`, a part without a `subContentId`, a root
@@ -40,6 +41,8 @@ export interface XapiBatchFacts {
   readonly learnerKey: string;
   /** The academic year of the secret behind `learnerKey` (D-107). */
   readonly academicYear: number;
+  /** True for Canvas's Student View test student, from the launch (D-102's amendment of 2026-11-04). */
+  readonly testUser: boolean;
   /** The main library's category IRI (`mainLibraryCategory`); undefined when its version is unknown. */
   readonly mainCategory: string | undefined;
 }
@@ -113,5 +116,7 @@ export function xapiStatementRow(
     timestamp,
     // SPEC-DEVIATION: D-107 — a field outside DATA-012's list: the year of the key's secret, which the purge reads.
     academicYear: facts.academicYear,
+    // SPEC-DEVIATION: D-102 — a field outside DATA-012's list: Canvas's test student, left out of every aggregate.
+    testUser: facts.testUser,
   };
 }

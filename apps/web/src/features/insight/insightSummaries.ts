@@ -1,13 +1,16 @@
 /**
- * insightSummaries — the one-sentence text summary of each insight chart, e.g. «Vanskelegast er spørsmål 2, «…»: 38 %
- * riktig på første forsøk og 62 % på siste.»
+ * insightSummaries — the one-sentence text summary of each insight chart, e.g. «Av spørsmåla der delen riktige kan
+ * visast, er spørsmål 2 vanskelegast, «…»: 38 % riktig på første forsøk og 62 % på siste.»
  *
  * Why: INS-008 gives every chart a text summary ("Question 2: 38 % correct on first attempt; most common wrong answer:
  *      B"), so a teacher who does not read charts, or hears the page, gets the point first. The summaries name only
- *      values the server showed: a hidden value is never the hardest item or the most common answer (INS-006).
+ *      values the server showed: a hidden value is never named (INS-006). A hidden cell can still hold the hardest
+ *      item or the most common answer, so each sentence says it chose among the values that can be shown
+ *      («av dei som kan visast», D-106's amendment of 2026-11-04) and is never false.
  * Spec: INS-008, INS-002, INS-003, INS-005, INS-006
  * Invariants:
- *   - Built only from shown cells; when no value qualifies, the summary says that none can be shown.
+ *   - Built only from shown cells, and the text says so; when no value qualifies, the summary says that none can be
+ *     shown.
  *   - Items arrive hardest first (the server's order), so the hardest shown item is the first with a shown share.
  *   - PRIVACY: a wrong answer named here is one the server listed, so at least k learners gave it (INS-003).
  * Collaborators: ./insightFormat.ts, ./insightReportShape.ts, the sections in this folder, ./shortlistEntries.ts.

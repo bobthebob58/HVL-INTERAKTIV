@@ -2558,6 +2558,33 @@ loading of one spec per session are kept.
   CLAUDE.md §2 and spec 01's `H5P-009` and spec 02's `LTI-010` notes name `xapiBridge.js` alone, they mean these
   three (CLAUDE.md is the owner's to amend). The end-to-end test `e2e/xapiToCanvas.e2e.test.ts` runs the bridge in a
   real Canvas launch into `/app/play` and checks that a portal author's preview loads none of it.
+- **Amendment (2026-11-04, the step-4 privacy review: Canvas's Student View):** *Found:* the residual above is worse
+  than a single extra learner. Canvas's Student View launches a test student with the LTI `TestUser` role
+  (`http://purl.imsglobal.org/vocab/lti/system/person#TestUser`, which D-059 maps to `learner`), and each «Reset
+  Student» makes a new test student, so a new `sub` and a new `learnerKey` *(verify with TeCopp)*. A teacher who
+  plays *k* − 1 test students beside one real learner makes a group of *k* in which every value is that learner's,
+  so insight, the mappe and every *k* count would show what one learner did. *Decided:*
+  - **Carried, not refused:** the launch facts say `testUser` when the roles claim holds the `TestUser` role
+    (`lti/LtiRoleMapper.ts` `isLtiTestUser`, read in `lti/launchFacts.ts`), and the principal carries it as
+    `Principal.lti.testUser` (`lti/ltikPrincipal.ts`). Nothing else about the principal changes: it is a learner.
+  - **Stored, flagged:** a test student's statements are stored as before, with `XapiStatement.testUser = true` (a
+    column, default false; migration `s6_test_user_statements`), so the grade worker still sends its score and a
+    teacher can test the passback to Canvas's gradebook. The flag comes from the principal, never from the body.
+  - **Left out of every aggregate:** insight's statement reader (`insight/data/insightStatements.ts`) and the mappe's
+    results source (`learningDesign/mappe/storedActivityResults.ts`) read only rows with `testUser = false`, so a test
+    student is never in a view, a distribution, a «Starta» count, a mappe group or any other count compared with
+    *k*. The grade queue (`grades/`) reads one learner's own rows by `learnerKey` and is unchanged.
+  - *Not chosen:* storing nothing for a test student (the teacher could not test the passback, and the grade job
+    needs stored results, D-104); keeping test students out of the counts by their role at read time (the role is
+    not stored, and every reader would need it).
+  - *Consequences:* `testUser` is a field outside `DATA-012`'s list, a `SPEC-DEVIATION` like `academicYear` (D-107):
+    it holds no statement data, only that the launch was Canvas's test student; spec 05 gets a note on `DATA-012`.
+    The data inventory has its row. The purge and the data-subject CLI treat these rows like any other. Canvas's NRPS
+    count (`LTI-008`) is Canvas's: whether it lists the test student is not known *(verify with TeCopp)*; if it
+    does, the course count is one higher than the real learners, which only lowers a completion rate. Verified by
+    `LtiRoleMapper.test.ts`, `launchFacts.test.ts`, `xapiTestUser.int.test.ts` (mock Canvas launches with the
+    `TestUser` role through the real ingestion route: the flagged rows, the queued grade job, and the insight route,
+    where four learners and two test students stay «< 5») and `storedActivityResults.int.test.ts`.
 
 ### D-103 · Course contexts are stored with their platform: `<platformId>:<contextId>`
 - **Context:** `DATA-012` stores a `contextId?` per statement, `InsightSnapshot` has one, `LTI-008` caches a learner
@@ -2852,6 +2879,90 @@ loading of one spec per session are kept.
     fixed periods are nested (7 ⊂ 14 ⊂ 30 days ⊂ the semester), so two views of the same day can isolate the learners
     active only in their difference; and a "first answer" is the first within the chosen period, while answers H5P
     accepts as small spelling errors are listed as wrong in `INS-003`.
+- **Amendment (2026-11-04, the step-4 privacy review: when a period ends, 1 August, the gap rule as built, the
+  summaries, the roster URL):** *Found* in the privacy review of step 4: (a) every period ended at the request
+  (`end: now`), so two views of the same period a few minutes apart differed only by what was stored in between,
+  and a teacher who saw one learner play could read which cells that learner moved, below *k* (the residual above,
+  and DPIA R3 and R8, named only views on different days); (b) a 7-, 14- or 30-day view opened from 2 to 30
+  August spanned 1 August, when the pseudonym secret changes (`DATA-002`), so a learner who played on both sides
+  counted twice, under two keys, and a portal session keeps the old year's key up to 12 hours past 1 August
+  (D-057); (c) the chart summaries named "the hardest" question and "the most common" wrong answer among the shown
+  cells only, which a hidden cell can make false; (d) the gap rule the review built is not written here; (e) the
+  NRPS roster URL behind the course count was not checked as D-104 checks a line item's URL. *Decided:*
+  - **Every period ends at the latest midnight in Oslo**, the start of today: a view holds the data up to and
+    including yesterday, and the tab says so («Tal til og med i går»). Two views of the same period on the same day
+    are the same whatever is stored in between. The start is N days before that midnight (7 whole days for `7d`), or
+    for `semester` the start of the semester of the period's last day (yesterday), so on 1 January the view is the
+    autumn semester and on 1 August the spring semester, never an empty one. *The trade-off:* a teacher sees today's
+    plays tomorrow. The alternative, a new view only after *k* new learners, is open for the owner and ALU (PROGRESS
+    Q24). `SPEC-DEVIATION` (spec 05 §1, already one for the fixed start): the view never holds today.
+  - **No period crosses 1 August.** A view belongs to the academic year of its last day and starts no earlier than
+    1 August 00:00 Oslo of that year: a 7-, 14- or 30-day view whose days would reach back before it starts on 1
+    August instead (the 7-day view from 2 to 7 August, the 14-day view to 14 August, the 30-day view to 30 August),
+    and the tab says the period is shortened and why. On 1 August itself the period ends at that midnight and lies
+    wholly in the year that ended, so it is not shortened. The query also reads only rows whose `academicYear` (the
+    year of the key, D-107) is the view's year, so the portal's 12-hour tail of old keys cannot count a learner twice;
+    a portal play of 1 August under the old year's key is then in no view. The semester never crosses 1 August.
+    *Corrected 2026-11-04 (the workstream's skeptic):* this item first said that every 7-, 14- and 30-day view from 2
+    to 30 August starts on 1 August; only one whose days reach back before 1 August does.
+  - **The mappe's semester groups read one year's keys too** *(added 2026-11-04, the workstream's skeptic)*: the
+    mappe counts each course, version and semester as a group of its own and leaves out every group of fewer than
+    *k* (D-095's amendment of 2026-11-04), and its autumn semester starts on 1 August. Read by time alone, the
+    portal's 12-hour tail made one learner two in that group, under the old and the new key, so *k* − 1 learners could
+    make a group of *k* that insight's semester view of the same course shows as «< *k*». The mappe's results source
+    (`learningDesign/mappe/storedActivityResults.ts`) therefore reads, for each semester, only the rows whose
+    `academicYear` is that semester's academic year, as insight's views do; a result counts only for a learner present
+    in its group, so the old key's results of that tail are in no group either. The yearly purge's snapshots already
+    select by the stored year (D-107).
+  - **The gap rule as built**, in place of "a gap's right answers, listed wrong answers, other wrong answers and
+    empty gaps" in the amendment above: a listed wrong answer, which `INS-003`'s public rule says *k* or more
+    learners gave, is always shown and is never a complement; per gap, «right», «other wrong» and «empty» are one
+    additive group whose total is the question's learners less the listed answers' learners
+    (`insight/aggregate/gapMisconceptions.ts`, `insight/suppression/additiveGroupCells.ts`); a task with one gap stays
+    split into two parts, «right» (which `INS-002`'s share gives away) and the rest.
+  - **Summaries say "of those that can be shown"** (`INS-008`; «av dei som kan visast»): the hardest question, the
+    most common wrong option or gap answer and the least answered video task are named among the shown values, and
+    the sentence says so in `nn`, `nb` and `en`, so a hidden cell can never make it false. *Added 2026-11-04 (the
+    workstream's skeptic):* the questions' list is headed «vanskelegast først» but sorts by shown shares only, with a
+    question whose share cannot be shown last (so its place gives nothing away); its introduction now says so in each
+    language, so the order is never read as the hidden questions being the easiest.
+  - **The course count's roster URL** (the completion base, `LTI-008`): ltijs reads the course's learners with a
+    token from the launch's `context_memberships_url`, which nothing checked. D-104's line-item URL rule (its
+    amendment of 2026-11-04) applies to it too: the URL must parse, hold no user name or password, use https where
+    https is required, and have an origin in `CANVAS_ORIGINS` or one of the platform's own; otherwise no token is
+    asked for, the old count stays and the refusal is logged with the origin only (`lti/nrps/NrpsLearnerCounter.ts`,
+    `nrps.url-refused`). The server passes the same rules as to the grade worker (`createNrpsServices`' `urlRules`);
+    without them only the platform's own origins are allowed. *Added 2026-11-05 (integration):* `main.ts` and the
+    test beds' `gradeBridgeInputs` now pass `{ origins: CANVAS_ORIGINS, requireHttps: NODE_ENV === 'production' }`,
+    so a roster on the institution's Canvas domain is read when that origin is in `CANVAS_ORIGINS`; and the CSV's
+    period-end row is labelled «Til (ikkje med)» (nb «Til (ikke med)», en «Up to (not included)»), since that
+    midnight is not part of the view.
+  - *Verified by*, besides the tests above: `additiveGroupExhaustive.test.ts`'s `[INS-006]` test that no hidden gap
+    count can be worked out from a listed wrong answer; `insightScope.test.ts` (the end at midnight, every day of
+    August); `insightPeriodEnd.int.test.ts` (a statement stored today never changes today's view; one learner under
+    two years' keys counts once); `NrpsLearnerCounter.test.ts` (a roster URL on another origin is never read, and
+    `createNrpsServices` hands the rules to the counter); `storedActivityResults.int.test.ts` (one learner under two
+    years' keys is one learner in the mappe's autumn group); and the web's `InsightPeriodNote.test.tsx` and
+    `insightSummaries.test.ts`.
+  - *Residuals for the DPIA input and the DPO:* views of the same period on two consecutive days still differ by one
+    day's learners (R3, R8: now day by day, never within a day); the course's NRPS count can change within a day,
+    and with it the base of the completion rate; a learner active only on 1 August under the old key, through
+    the portal, is in no view and no mappe group; and stored rows of earlier days still change within a day when
+    operations erase a learner's data (D-108) or an activity is deleted, so a view taken before and after an erasure
+    differs by that learner's rows (rare, run by operations, and nothing in the tab says that or whom it erased).
+- **Amendment (2026-11-05, the step-5 privacy and security review: the mappe ends at midnight too):** *Found:* the
+  mappe's results source (`learningDesign/mappe/storedActivityResults.ts`) read every stored row up to the moment of
+  the export, while insight's views end at the latest midnight in Oslo (the amendment above). For an activity in one
+  course and one version, the mappe's current-semester group is insight's `semester` view plus today's plays, so the
+  mappe exported at 14:00 minus that view (or two exports on the same day) gives the participants, completion rate,
+  attempts and change of the learners who played today: with one such learner, what that learner did, below *k*. That
+  is the within-day differencing the amendment above closed for insight, and it breaks `learnerSummaries.ts`'s rule that
+  the mappe's totals cannot be differenced against insight's views. *Decided:* the mappe reads, like insight, only rows
+  stored before the latest midnight in Oslo at the moment of the export (presences and root results alike), so two
+  exports on one day are the same and an export never holds today's plays. *The trade-off:* as for insight, a teacher
+  sees today's plays in the mappe tomorrow (PROGRESS Q24 applies to both). The yearly purge's snapshots cover ended
+  years only and are unchanged. *Verified by* `storedActivityResults.int.test.ts` (a learner who played today is in no
+  group until the next day).
 
 ### D-107 · `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year
 - **Context:** `DATA-003` runs the purge "on a configured date (default 15 August)" for the academic year that has
@@ -2905,6 +3016,70 @@ loading of one spec per session are kept.
   carry it. *Still open, for step 5:* `H5PUserData` rows are written without it (`h5p/storage/learnerStateWrites.ts`
   takes the database default, the year of the write), which is wrong for a portal session made before 1 August and
   used up to 12 hours after; the purge step carries `learnerKeyYear` through `principalToH5pActor` into that write.
+- **Amendment (2026-11-04, step 5, the purge built):** how the job, the CLI and the H5P state write carry this out
+  (`apps/server/src/privacy/purge/`).
+  - *Date:* `PURGE_RUN_DATE` (`MM-DD`, default `08-31`) names a day from 31 August to 31 December; an earlier day, and
+    any day from January to July, is refused. A day in spring would keep a year's rows for most of another year,
+    which `DATA-003`'s retention does not allow. The leased job (lease `hvli:privacy:retention-purge`) checks every
+    hour and runs once the Oslo date has reached that day of the current academic year while the audit log holds no
+    completed real run for the year that ended, so a server that is down on the day purges at its first check after.
+    The CLI (`privacy/purge/purgeCli.ts`) refuses a real run before that day; its dry run runs on any day.
+    *Added 2026-11-05 (integration):* `config/env.ts` declares `PURGE_RUN_DATE`, so a value outside those days stops
+    the start-up by name (`test/config/purgeEnv.test.ts`); before, an unknown variable was dropped and the default
+    applied. Operations run the CLI as `npm run --silent privacy:purge -- --dry-run|--execute` from `apps/server`.
+  - *Which rows:* every row whose stored `academicYear` is before the current academic year, not only the year that
+    just ended, so a year that a missed run left behind goes too; a row of the current year is never selected. Then
+    the learner `Identity` rows created before the current academic year began (the moment the ended year ended), then
+    the learner `User` rows left without an `Identity` that were created before that moment and own no activity.
+    *Amends D-034's consequence:* a learner account created in the current year and left without an identity (its
+    platform removed, say) stays until the next purge, because the purge leaves everything of the current year alone;
+    such a row holds an ID, a kind and a time only. (`AccountResolver` writes a new user and its identity in one
+    nested create, one transaction, so no purge can find one without the other; the rule is about the year, not a
+    race.) *Corrected
+    2026-11-04 (step 5 review):* this sentence first gave such a race as the reason.
+  - *Order and batches:* the snapshots first, then `GradeSyncJob`, `XapiStatement`, `H5PUserData`, `Identity` and
+    `User`, each in transactions of at most 1 000 rows, so a large year neither locks a table for long nor is held in
+    memory. A run that fails part-way keeps its snapshots and what it deleted; the next run deletes the rest. A table
+    is done only when a page of its rows comes back empty or short: a batch that deletes fewer rows than it found
+    (another writer took them meanwhile: an activity deleted with its statements, a state reset, a data-subject
+    erasure, a second run) does not end it, since a run that ended early would be audited as completed and the job
+    would leave the rest for a year. The same page found twice with nothing deleted fails the run (audited, retried
+    at the next check) instead of looping. *Added 2026-11-04 (step 5 review):* the first version stopped a table at a
+    batch that deleted nothing. *Added 2026-11-04 (second step 5 review):* each batch's delete repeats the filter its
+    page was read with, so a row that stopped matching in between stays: a learner whom a login made staff after the
+    page was read and before its delete (`AccountResolver` changes the kind of the account it found) keeps their
+    identity, so their staff account is not left without one. The first version deleted a page's identities by their
+    IDs alone. *Added 2026-11-05 (integration):* the other side of that race is closed in `AccountResolver`. A login
+    that found an identity makes its account staff only while that identity still exists, in one statement (`UPDATE`
+    with an `EXISTS` on the identity); if the purge removed it in between, or before the key rotation's re-hash, the
+    login finds nothing and creates a new account, as for a first login. The old learner account, now without an
+    identity, is left to the next purge, so no staff account (with a display name) is ever left that no login reaches.
+    What remains is the window inside that one statement.
+  - *Snapshots:* one per ended year, activity, context and content version, for the period from 1 August of that year
+    to the next 1 August (midnight in Oslo), with the configured *k*. `aggregates` holds the mappe's figures
+    (`MAPPE-002`: participants, completion rate, median attempts, mean change) as `activityAggregates` computes them
+    from that year's rows (by their stored year) under the mappe's group rules (context, version and semester; groups
+    below *k* left out; D-095 and its amendment of 2026-11-04), with `source: "yearly-purge"`, the year and
+    `suppressed`; a hidden value is absent. They are written in one transaction under a PostgreSQL advisory lock, and
+    not again for a year that has them. Insight's per-question cells are not kept: they describe at most a semester,
+    which has ended. The mappe does not read the snapshots yet (open).
+  - *Dry run and log:* a dry run counts, per table, the rows a real run would delete and the snapshots it would
+    write, and changes nothing else. The job logs that plan, counts only, as the first line of every run.
+  - *Audit (`DATA-007`):* every run, dry or real, from the job or the CLI, writes `purge.run` with target
+    `AcademicYear` and the ended year, no actor (`actorUserId` null, as the schema has it for scheduled jobs; the CLI
+    has no login), and the details `trigger` (`job` or `cli`), `dryRun`, `outcome` (`completed` or `failed`), `years`
+    (the stored years the run covered) and `counts`. A run that fails writes its event with what it had done, then
+    fails.
+  - *Idempotent:* a second run finds nothing to delete and writes no snapshot, and is audited like any run; the job
+    starts none once a completed real run for the ended year is audited.
+  - *The secret:* when the job starts and after each completed real run, it logs a warning with the years (only the
+    years) of the secrets in `PSEUDONYM_SECRETS` up to the latest ended year with a completed real run in the audit
+    log (a run takes every stored year up to its own, so all those secrets are stale). The runbook
+    (`docs/ops/yearly-purge.md`) gives the steps, the configuration change and how to check it.
+  - *`H5PUserData`'s year:* `principalToH5pActor` puts `learnerKeyYearOf(principal, now)` on the H5P actor
+    (`learnerKeyYear`); the state route runs Lumi's write inside `withLearnerKeyYear`
+    (`h5p/storage/learnerStateYear.ts`), and `learnerStateWrites.ts` sets `academicYear` on insert and on update,
+    which for one key is always the key's year.
 
 ### D-108 · Data-subject requests: a server CLI that HVL operations run
 - **Context:** `DATA-008` asks for an admin-only tool that takes a Feide ID or an `(iss, sub)` pair, derives the
@@ -2934,6 +3109,67 @@ loading of one spec per session are kept.
   how HVL handles such a request by hand until that is decided (open; HVL's DPO, Q6). The Lumi bug goes into the
   upstream drafts (D-112). The integration test exports and deletes a learner with rows in two academic years and
   checks that another learner's rows remain.
+- **Amendment (2026-11-04, step 5, the CLI built):** how `apps/server/src/privacy/dsr/` carries this out; the runbook is
+  `docs/ops/data-subject-requests.md`.
+  - *Commands:* `export` and `erase`, each with `--operator <feide-id>`; `erase` is a dry run that counts unless it is
+    given `--confirm`. Run from `apps/server` as `npm run --silent privacy:dsr -- …`. Exit codes: 0 done, 1 refused or
+    failed, 2 usage or an unreadable data subject, 3 an erasure that found rows written while it ran.
+  - *The data subject on standard input:* one JSON object, `{"feideId": "…", "lti": [{"issuer": "…", "sub": "…"}]}`,
+    with at least one identifier; never in the arguments, which stay in the shell's history and show in the host's
+    process list. The Feide ID is normalised as at login (D-054); `iss` and `sub` are taken exactly. A fault is named
+    by its field, never by its value, and `JSON.parse`'s own message, which can quote the input, is never shown.
+  - *Keys:* for every year in `PSEUDONYM_SECRETS` and every identifier given, the `learnerKey` of `feide|<id>` and of
+    each `lti|<iss>|<sub>` (D-011, `DATA-002`), and their `Identity.subjectHash` under every `IDENTITY_HASH_KEYS` key
+    (D-055). A Feide ID finds no Canvas rows and a Canvas `sub` no portal rows, as they are different pseudonyms, so
+    the runbook asks for both (Canvas's `sub` is the user's `lti_id`). The CLI refuses to start without the secrets,
+    and names by year only the stored academic years that no configured secret covers (`unreachableYears`): no
+    identifier can find their rows, which the yearly purge should have removed (D-107).
+  - *Operator:* `--operator` must be in `ADMIN_FEIDE_IDS` and have a staff account through a Feide identity. Otherwise
+    the run is refused before any learner row is read, and the refusal is audited without an actor.
+  - *Export:* one JSON document on standard output, with a count summary on standard error: the request ID and moment,
+    the years searched, each `learnerKey` with its year and variant, then the stored fields of the `XapiStatement`,
+    `H5PUserData` and `GradeSyncJob` rows, each grade job's course as D-103's string. The encrypted `sub` is left out,
+    and `ltiSubStored` says whether one is held: its plaintext is the `sub` the request gave, and the ciphertext is of
+    no use to the person. It also lists the matched learner `Identity` and `User` rows and, beyond D-108's scope, the
+    learner accounts' `AuthAuditEvent` rows (D-064: portal logins and logouts), which are data about the person too.
+  - *Erasure:* in the purge's order (D-107's amendment of 2026-11-04): `GradeSyncJob`, `XapiStatement`, `H5PUserData`
+    (through `PrismaContentUserDataStorage.deleteAllContentUserDataByUser`, one key at a time, with D-036's state
+    view), the matched learner `Identity` rows, then the learner `User` rows left without an identity and owning no
+    content. Each table goes in its own statements, not in one transaction (the storage takes the server's client),
+    so a run that fails part-way is audited `failed` with what it deleted, and a second run deletes the rest. It then
+    counts again: rows a learner wrote meanwhile (a portal session lasts up to 12 hours, D-057; an LTI request stops
+    once its identity is gone) are printed as `remaining`, with exit code 3.
+  - *Not touched:* staff accounts (counted as `staffAccounts`; D-108 leaves a staff member's own data to HVL by hand);
+    the `AuthAuditEvent` rows, kept their 2 years for security (`DATA-007`): once the account is gone no identifier
+    finds them, though their `ipHash` stays linkable to an IP address (HVL's DPO to confirm, Q6); and records that
+    expire on their own: ltijs's ID tokens (24 hours, D-052), portal sessions (12 hours) and logs, which hold no
+    personal data (`DATA-009`).
+  - *Audit (`DATA-007`):* `dataSubject.export` or `dataSubject.erase`, target `DataSubjectRequest` with a random
+    request ID (printed for HVL's case record, which alone links it to the person), the operator's `User.id` as actor
+    (none for a refusal), and the details `dryRun`, `outcome` (`completed`, `failed` or `refused`), `years`,
+    `identifiers` (how many Feide IDs and Canvas subjects were given), `counts`, `unreachableYears` and, after an
+    erasure, `remaining`: numbers, years and fixed words, never an identifier, key or hash. The CLI writes no log
+    lines. A run stopped by its arguments, an unreadable data subject or the configuration reads and writes nothing,
+    so it is not audited.
+- **Amendment (2026-11-05, step 5 review):** gaps the review found, closed in `apps/server/src/privacy/dsr/` and the
+  runbook.
+  - *Interruption:* once the data subject is read, `SIGINT` (Ctrl-C), `SIGTERM` and `SIGHUP` are held until the run
+    has written its audit event; the first prints one note. By default each of them ended the process at once, so an
+    erasure stopped by Ctrl-C, a closed SSH session or a container stop deleted rows with no audit event, against
+    `DATA-008`'s "every use is audited". `SIGKILL`, Ctrl-\ (`SIGQUIT`) and a crash cannot be held: such a run stays
+    unaudited, a residual the runbook names.
+  - *Export only to a file or a pipe:* `export` refuses, with exit code 2 and before standard input is read, when
+    standard output is a terminal, so the person's record never lands in a terminal's scrollback or a recorded
+    session by mistake.
+  - *Failures:* a Prisma or driver error is printed by `logging/prismaErrorSummary.ts`'s value-free line (its name
+    and database code), any other error by its name and code, as before (`DATA-009`).
+  - *Staff accounts* (`staffAccounts`) are accounts of kind `staff`: a staff member's, but also a student author's
+    (D-059; the citation read D-089 until the integration of 2026-11-05) and that of someone Canvas launched as an
+    author (`LTI-004`). The runbook tells operations to handle such
+    an account by hand, as for a staff member, whoever the person is.
+  - *npm's debug log:* npm writes the command line, and so the operator's own Feide ID (never the data subject's,
+    which is on standard input), to `~/.npm/_logs` even with `--silent`. The runbook's commands add `--logs-max=0`,
+    which writes none (`DATA-009`).
 
 ### D-109 · Database roles, encrypted-connection checks in production, and a request log without personal data
 - **Context:** `DATA-010` asks for separate database roles for the app, for migrations and for read-only analytics,
@@ -2966,6 +3202,114 @@ loading of one spec per session are kept.
 - **Consequences:** `docs/ops/` (the deployment checklist and the runbook) describes the roles, the second URL, the
   TLS settings and the 30-day log retention (`DATA-009`); `.env.example` documents the migration URL. The checklist
   recommends `verify-full`, since `require` encrypts without checking the server's certificate.
+- **Amendment (2026-11-04, step 5, the roles, checks and request log built):** what was built; the points marked
+  *narrowed* or *changes* alter the decision above. The runbook is `docs/ops/database-roles.md`.
+  - *Roles, as two scripts:* `apps/server/prisma/roles/01-roles.sql`, run once per database by HVL's database
+    administrator (a superuser, or the database owner with `CREATEROLE`), creates the three roles if they are missing
+    and resets their attributes (`LOGIN`, never superuser, `CREATEDB`, `CREATEROLE`, replication or `BYPASSRLS`),
+    takes every privilege on the database and on schema `public` from `PUBLIC`, gives the three roles `CONNECT`, gives
+    `hvli_migrator` `CREATE` on the database and makes it the owner of `public`. `02-grants.sql`, run as
+    `hvli_migrator` after every `prisma migrate deploy` (it refuses any other user, because `ALTER DEFAULT PRIVILEGES`
+    binds to the user that runs it), grants the app its rows and builds the analytics views. Both are idempotent and
+    hold no password: the administrator sets them with psql's `\password` (sent hashed) or uses certificates. A small
+    runner, `apps/server/src/infra/databaseRolesCli.ts roles|grants`, runs one script in one transaction with the
+    `DATABASE_URL` of that run (the administrator's, or the migration URL, as `prisma migrate deploy` reads it), and
+    never prints the URL.
+  - *The app (narrowed):* `SELECT`, `INSERT`, `UPDATE` and `DELETE` on every table in `public`, also on the tables
+    later migrations add (default privileges), and sequences; nothing on Prisma's `_prisma_migrations`; and on the
+    three audit tables (`AuditEvent`, `AuthAuditEvent`, `LibraryAuditEvent`) `SELECT` and `INSERT` only, so a flaw in
+    the app cannot rewrite or erase the audit trail (`DATA-007`). Never `TRUNCATE`, `REFERENCES`, `TRIGGER`, `CREATE`
+    or `TEMPORARY`. No server code updates or deletes audit rows today (a test scans for it); the two-year deletion of
+    audit rows, when it is built, needs its own amendment and grant.
+  - *Analytics (narrowed):* instead of "read-only, without the encrypted and token columns", `hvli_analytics` reads
+    aggregate views only, and no table at all: it has no `USAGE` on `public`, `USAGE` on schema `analytics`, and
+    `SELECT` on `analytics.insight_snapshot`, a view (owned by the migrator) of the `InsightSnapshot` rows, which are
+    stored only after *k*-suppression (D-106, D-107), with the activity's content type and snake_case column names for
+    R and Python. Its sessions start read-only (`default_transaction_read_only`). A new view is a new amendment and
+    may show only aggregates already suppressed with *k*; `02-grants.sql` re-creates the views after each migration,
+    and a migration that changes a column a view reads drops that view first.
+  - *Storage location (changes "residency cannot be read from a setting"):* in production the server also refuses
+    storage outside an EEA allow-list in `apps/server/src/config/storageResidency.ts`. Without `S3_ENDPOINT` (AWS
+    itself), `S3_REGION` must be an AWS region in the EEA: `eu-north-1` (Stockholm), `eu-west-1` (Ireland),
+    `eu-west-3` (Paris), `eu-central-1` (Frankfurt), `eu-south-1` (Milan) or `eu-south-2` (Spain), not `eu-west-2`
+    (London) or `eu-central-2` (Zurich), which are outside the EEA *(verify)*. With `S3_ENDPOINT`, its host must be
+    the S3 endpoint of one of those regions (`s3.<region>.amazonaws.com`, also `s3.dualstack.…`) or lie under an
+    approved domain: `hvl.no` or `sikt.no` *(verify, Q5)*. The lists are code, not an environment variable, because
+    whoever sets `S3_ENDPOINT` would set the list as well; a reviewed change with an amendment here adds an entry. The
+    check catches a wrong setting (a region outside the EEA, a test endpoint left in place); it proves nothing about
+    where a server stands, which stays the checklist's evidence (Q5). Database and Redis hosts are usually internal
+    names or addresses, so they are not judged by name: `deploymentLocations(env)` gives the database and Redis
+    hosts, the S3 region and the S3 endpoint's host (never a user, password or path) for the start-up log line.
+  - *TLS, made exact:* `DATABASE_URL`'s `sslmode` may also be `verify-ca` (it encrypts and checks the certificate
+    authority, more than `require`). Only `sslmode` counts, the parameter libpq tools read too; node-postgres's own
+    `ssl=true` is not accepted. node-postgres 8.23 treats `require` and `verify-ca` as `verify-full` (and warns at
+    start) unless the URL says `uselibpqcompat=true`; the checklist recommends `verify-full`. Messages name the
+    variable, and the region or host for storage, never a URL.
+  - *Request log, made exact:* `apps/server/src/http/requestLog.ts`, mounted first in `createApp` (after the proxy
+    setting), so every response carries `X-Request-Id`, health checks included. An inbound `X-Request-Id` is kept only
+    when it is a UUID or 32 hexadecimal digits (nginx's `$request_id`), lower-cased; anything else is replaced by a
+    random UUID, so a client cannot write text of its choice (a name, a token) into the log. The ID is also in
+    `res.locals.requestId` for error logs. `route` is the pattern of the last route Express matched, after the paths
+    its routers are mounted at (`/api` and `/content/:contentId` give `/api/content/:contentId`), taken when the route
+    matches; a response no route served (a static file, the 404 page, the web app) names its router's mount path with
+    `/*`, or `*` at the top. Mount paths are static (a test scans the sources for a mount with parameters), so `route`
+    holds no ID. One `info` line, `msg: "request"`, when the response closes: `requestId`, `method`, `route`, `status`,
+    `durationMs` (to 0.1 ms) and `aborted: true` when the client left first; no URL, query, header, cookie, body, user
+    ID, IP address or learner value.
+  - *Verified by:* `apps/server/test/db/databaseRoles.int.test.ts` (connects as each role to a throwaway database and
+    proves the statements each may and may not run), `auditAppendOnly.test.ts`, `apps/server/test/config/`
+    `connectionEncryption.test.ts` and `storageResidency.test.ts`, `apps/server/test/http/requestLog.test.ts` and
+    `requestLog.int.test.ts` (an LTI launch, a play and an xAPI batch through the whole app; no line holds the ltik,
+    the learner's `learnerKey` or a path with the activity's ID).
+- **Amendment (2026-11-05, step 5 review of the roles, checks and request log):** five gaps found and closed; the
+  points marked *changes* alter the amendment above.
+  - *The AWS SDK's own endpoint variables (changes the storage check):* without an endpoint in its configuration, the
+    AWS SDK for JavaScript (3.1155.0) sends S3 requests to `AWS_ENDPOINT_URL_S3`, else `AWS_ENDPOINT_URL`, else an
+    `endpoint_url` in the shared AWS config file. Verified: with `S3_ENDPOINT` unset, `S3_REGION=eu-north-1` and
+    `AWS_ENDPOINT_URL_S3=http://…`, the client sent to that http host, past both the TLS and the EEA checks. Production
+    therefore refuses either variable when it is set (any value), naming the variable only: `S3_ENDPOINT` is the one
+    setting for another store. `productionProblems` gets the raw environment for this (`loadEnv` passes its source).
+    The shared config file is not in the environment: `apps/server/src/infra/s3Client.ts` should make the SDK ignore
+    configured endpoints (an integrator item); until then the deployment checklist says no AWS config file is mounted.
+    *Added 2026-11-05 (integration):* done. The client is built with the SDK's `ignoreConfiguredEndpointUrls: true`,
+    so `AWS_ENDPOINT_URL_S3`, `AWS_ENDPOINT_URL` and a config file's `endpoint_url` are never read, in any mode, and
+    `S3_ENDPOINT` still names the store (`apps/server/test/infra/s3Client.test.ts`, which fails without it). The
+    production refusal of the two variables stays, so a mistaken setting is named at start-up rather than silently
+    ignored. `main.ts` now writes the start-up line (`deployment locations`: the database and Redis hosts, the S3
+    region and endpoint host).
+  - *The migration URL's TLS (changes the runbook):* Prisma 7.10.1's CLI (`migrate deploy`, `db execute`) does not
+    honour `sslmode=verify-full`: it connected to a server whose certificate names another host. It checks the
+    certificate and its host only with `sslaccept=strict`. node-postgres, which the `grants` runner uses, reads
+    `sslmode=require` as `verify-full`. The migration URL is therefore `…?sslmode=require&sslaccept=strict` (plus
+    `sslrootcert=<CA file>` when the CA is not in the system store): both tools then refuse a wrong certificate
+    (verified against the local PostgreSQL with `127.0.0.1` for a `localhost` certificate). The server's
+    `DATABASE_URL` keeps `verify-full`; its client is node-postgres.
+  - *Start-up facts:* node-postgres connects to a `host` query parameter rather than the URL's host
+    (pg-connection-string), so `deploymentLocations` names that host when the URL has one.
+  - *The role test:* it sets the three cluster-wide roles' passwords to a published test value, so it refuses a
+    database server other than this machine (`localhost`, a `127.x` address, `::1` or a socket), where it would reset
+    real roles' passwords.
+  - *Views down before each migration (changes "a migration that changes a column a view reads drops that view
+    first"):* once `02-grants.sql` has built `analytics.insight_snapshot`, PostgreSQL refuses a migration that retypes
+    or drops a column the view reads (verified: `InsightSnapshot.k` or `H5PContent.mainLibrary` to another type gives
+    SQLSTATE `0A000`, dropping `InsightSnapshot.contextId` gives `2BP01`). The development database and CI have no
+    views, so such a migration would fail first in a production deployment, and `InsightSnapshot` is a table the
+    yearly purge (D-107) has just begun to write. A third script, `apps/server/prisma/roles/00-views-down.sql`, run as
+    `hvli_migrator` (it refuses any other user) by the runner's `views-down` step right before `prisma migrate
+    deploy`, drops every view in schema `analytics` and nothing else: no table, schema or grant. The grants step then
+    builds the views again. The views hold no data; analysts miss them only during the deployment. The migrate step is
+    `views-down`, `prisma migrate deploy`, `grants`.
+- **Amendment (2026-11-05, the step-5 privacy and security review: bucket names):** *Found:* the storage check judges
+  `S3_REGION` and `S3_ENDPOINT` only, but the AWS SDK for JavaScript (3.1155.0) also routes by the bucket. Verified:
+  with `S3_ENDPOINT` unset, `S3_REGION=eu-north-1` and `S3_CONTENT_BUCKET` set to an S3 access point ARN of
+  `us-east-1`, the client sent to `<name>-<account>.s3-accesspoint.us-east-1.amazonaws.com`, and an Outposts ARN of
+  `us-west-2` to `…s3-outposts.us-west-2.amazonaws.com`, without `AWS_S3_USE_ARN_REGION` and past the EEA check;
+  `ignoreConfiguredEndpointUrls` does not change it. *Decided (changes the storage check):* in production
+  `S3_CONTENT_BUCKET` and `S3_TEMPORARY_BUCKET` must each be a plain bucket name by S3's naming rules (3 to 63
+  lower-case letters, digits, dots and hyphens, beginning and ending with a letter or digit), so an ARN, which holds
+  `:` and `/`, is refused; the message names the variable only, never the value (an ARN holds an account ID)
+  (`apps/server/src/config/storageResidency.ts`, `bucketNameProblems`; `test/config/storageResidency.test.ts`).
+  An access point alias (`…-s3alias`) is a plain name and goes through the client's own region.
 
 ### D-110 · Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV
 - **Context:** `NFR-007` asks for Docker images and compose files for local and staging use; `NFR-002` for daily

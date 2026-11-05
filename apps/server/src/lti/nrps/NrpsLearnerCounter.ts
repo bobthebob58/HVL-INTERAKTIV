@@ -10,6 +10,9 @@
  * Invariants:
  *   - Runs only for a launch with the NRPS claim (`namesAndRoles.isAvailable()`) and a course; the course is D-103's
  *     `<platformId>:<contextId>` from the launch's context claim, never ltijs's `LaunchContext.contextId`.
+ *   - SECURITY: runs only when the claim's `context_memberships_url` passes D-104's line-item URL rule
+ *     (./nrpsServiceUrl.ts, D-106's amendment of 2026-11-04); a refused URL claims no hour, asks for no token, keeps
+ *     the old count and is logged with its origin and reason only (`nrps.url-refused`).
  *   - The roster is read as ./nrpsRosterRead.ts reads it: the full Learner role URI, pages of 50 up to
  *     `NRPS_MAX_PAGES`, one new token after a 401, 60 s in all. A course with more pages keeps its old count, and
  *     its fresh mark keeps the hour, so it is not re-read at once.
@@ -19,23 +22,27 @@
  *   - PRIVACY: members, their IDs and roles stay in memory only while counted; nothing about a member is stored or
  *     logged (LTI-008, DATA-002).
  * Collaborators: ../launch/onResourceLink.ts (starts it), ./NrpsLearnerCountStore.ts, ./nrpsRosterRead.ts,
- *   ./activeLearners.ts, ./nrpsServices.ts (builds it), ../../xapi/platformContextKey.ts, ../../jobs/jobClock.ts.
+ *   ./nrpsServiceUrl.ts, ./activeLearners.ts, ./nrpsServices.ts (builds it), ../../xapi/platformContextKey.ts,
+ *   ../../jobs/jobClock.ts.
  * Tests: apps/server/test/lti/nrps/NrpsLearnerCounter.test.ts, apps/server/test/lti/nrps/NrpsLearnerCounter.int.test.ts,
  *   apps/server/test/lti/nrps/NrpsLearnerCounterFaults.int.test.ts, apps/server/test/lti/launch/onResourceLinkNrps.test.ts
  */
 import type { Logger } from 'pino';
+import type { LineItemUrlRules } from '../../grades/lineItemUrlPolicy.js';
 import { systemClock, type JobClock } from '../../jobs/jobClock.js';
 import { platformContextKey } from '../../xapi/platformContextKey.js';
 import type { LaunchFacts } from '../launchFacts.js';
 import { activeLearnerCount } from './activeLearners.js';
 import type { NrpsLearnerCountStore } from './NrpsLearnerCountStore.js';
 import { httpStatusOf, readLearnerRoster, type NrpsLaunch } from './nrpsRosterRead.js';
+import { nrpsUrlRefusal, type NrpsServiceLaunch } from './nrpsServiceUrl.js';
 import type { ForgetNrpsToken } from './nrpsTokenCache.js';
 
-export type { NrpsLaunch } from './nrpsRosterRead.js';
+/** What the counter reads of a launch: the roster read's parts and the service URL's (ltijs's `LaunchContext`). */
+export type NrpsCountedLaunch = NrpsLaunch & NrpsServiceLaunch;
 
 /** What one refresh did. */
-export type NrpsRefreshOutcome = 'unavailable' | 'fresh' | 'counted' | 'too-large' | 'failed';
+export type NrpsRefreshOutcome = 'unavailable' | 'refused' | 'fresh' | 'counted' | 'too-large' | 'failed';
 
 /** The course a launch came from: its platform and its context claim (../launchFacts.ts). */
 export type NrpsCourse = Pick<LaunchFacts, 'platformId' | 'contextId'>;
@@ -48,6 +55,8 @@ export interface NrpsCounterDeps {
   readonly maxPages: number;
   /** Drops ltijs's cached NRPS token after a 401 (./nrpsTokenCache.ts). */
   readonly forgetToken: ForgetNrpsToken;
+  /** `CANVAS_ORIGINS` and the https rule for the roster's URL; without them only the platform's own origins. */
+  readonly urlRules?: LineItemUrlRules;
   readonly clock?: JobClock;
   readonly timeoutMs?: number;
 }
@@ -65,7 +74,7 @@ export class NrpsLearnerCounter {
    * @param course - The launch's platform and course (../launchFacts.ts).
    * @spec LTI-008
    */
-  refreshInBackground(launch: NrpsLaunch, course: NrpsCourse): void {
+  refreshInBackground(launch: NrpsCountedLaunch, course: NrpsCourse): void {
     // WHY: `refresh` catches everything itself; the extra catch only keeps a future change from an unhandled rejection.
     this.refresh(launch, course).catch(() => undefined);
   }
@@ -77,11 +86,17 @@ export class NrpsLearnerCounter {
    * @returns What happened; never throws.
    * @spec LTI-008
    */
-  async refresh(launch: NrpsLaunch, course: NrpsCourse): Promise<NrpsRefreshOutcome> {
+  async refresh(launch: NrpsCountedLaunch, course: NrpsCourse): Promise<NrpsRefreshOutcome> {
     const { store, logger } = this.deps;
     const contextKey = contextKeyOf(launch, course);
     if (contextKey === undefined) return 'unavailable';
     const platformId = course.platformId;
+    const refusal = nrpsUrlRefusal(launch, this.deps.urlRules);
+    if (refusal) {
+      // SECURITY: no token is asked for and nothing is sent to a host the rules do not allow (D-106's amendment).
+      logger.warn({ event: 'nrps.url-refused', platformId, ...refusal }, 'NRPS roster URL refused');
+      return 'refused';
+    }
     try {
       if (!(await store.claimRefresh(contextKey))) return 'fresh';
       const roster = await readLearnerRoster(launch, {

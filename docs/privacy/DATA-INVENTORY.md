@@ -4,19 +4,21 @@
 > `npm run privacy:inventory-check` fails in CI when the schema and this file disagree, and when a
 > learner table gains a column that looks like a direct identifier (`DATA-002`).
 > HVL is the data controller. The legal basis must be confirmed by HVL's data protection officer in
-> the DPIA (`DATA-005`); until then it is the assumption stated in spec 05 §2.
+> the DPIA (`DATA-005`); until then it is the assumption stated in spec 05 §2. The DPIA input
+> ([DPIA-INPUT.md](DPIA-INPUT.md)) takes its data categories, retention periods and locations from this file.
 
 ## How to read the tables
 
 | Column | Meaning |
 |---|---|
 | Purpose | Why the field is stored. A field with no purpose is not stored. |
-| Category | **None**: not personal data. **Staff PII**: personal data about staff (authors, admins). **Learner PII**: a direct identifier of a learner. **Pseudonymous**: learner data that can be linked to a person only with that academic year's secret (`DATA-002`); it becomes unlinkable when the yearly purge destroys the secret. **Pseudonymous (stable key)**: a keyed HMAC whose key does not rotate yearly, so the value stays linkable as long as that key exists. The key is `IDENTITY_HASH_KEYS` (D-055): a new key is added second, then put first once every server holds it, matching rows are re-hashed at the next login, and the old key is removed at least 13 months later (a leaked key follows the same steps; whoever holds it can test guessed Feide IDs and IP addresses against a copy of the database for as long as rows hashed with it remain, also after the key is removed: audit IP hashes up to 2 years, identities never re-hashed by a later login). **Secret**: a credential, not personal data. |
+| Category | **None**: not personal data. **Staff PII**: personal data about staff (authors, admins). **Learner PII**: a direct identifier of a learner. **Pseudonymous**: learner data that can be linked to a person only with that academic year's secret (`DATA-002`); it becomes unlinkable once HVL operations destroy that year's secret after the yearly purge (D-107; a manual step, DPIA input R15). **Pseudonymous (stable key)**: a keyed HMAC whose key does not rotate yearly, so the value stays linkable as long as that key exists. The key is `IDENTITY_HASH_KEYS` (D-055): a new key is added second, then put first once every server holds it, matching rows are re-hashed at the next login, and the old key is removed at least 13 months later (a leaked key follows the same steps; whoever holds it can test guessed Feide IDs and IP addresses against a copy of the database for as long as rows hashed with it remain, also after the key is removed: audit IP hashes up to 2 years, identities never re-hashed by a later login). **Secret**: a credential, not personal data. |
 | Legal basis | **6(1)(e)**: GDPR Art. 6(1)(e), a task in the public interest (higher education). **n/a**: not personal data. |
-| Retention | **Yearly purge**: deleted 30 days after the academic year ends, and that year's pseudonym secret is destroyed (`DATA-003`). **Account**: until the staff account is deleted. **2 years**: audit records (`DATA-007`). Other periods are stated in the row. |
-| Location | **PG**: PostgreSQL hosted in Norway or the EEA, encrypted at rest (`DATA-004`). Media bytes are in S3-compatible storage in the same region. |
+| Retention | **Yearly purge**: deleted by the yearly purge, by default on 31 August (at least 30 days after the academic year ends on 31 July), by the academic year stored on the row; HVL operations then destroy that year's pseudonym secret (`DATA-003`, D-107, `docs/ops/yearly-purge.md`). **Account**: until the staff account is deleted; nothing deletes a staff account automatically today, so this is done by hand (DPIA input R28). **2 years**: audit records (`DATA-007`); no job deletes them yet, so until one is built they are kept longer (DPIA input R27). Other periods are stated in the row. |
+| Location | **PG**: PostgreSQL hosted in Norway or the EEA, encrypted at rest (`DATA-004`; the host is HVL's choice, Q5). Media bytes are in S3-compatible storage in the same region. **Redis**: Redis in the same hosting. In production the server refuses unencrypted database, Redis and S3 connections and storage outside an EEA allow-list (D-109); where a server stands stays a deployment-checklist item. |
 
-Logs are not stored in the database. They contain no personal data (`DATA-009`) and are kept for 30 days.
+Logs are not stored in the database. They contain no personal data (`DATA-009`) and are kept for 30 days; the
+request log's fields are listed at the end of this file.
 
 ## User
 
@@ -326,6 +328,7 @@ One learning event, reduced to the DATA-012 fields (D-115: only what insight and
 | `attemptId` | Groups events of one attempt: `<viewId>:<n>`, a random page-load ID and a counter made by the bridge (D-115) | None | n/a | Yearly purge | PG |
 | `timestamp` | When the server received the statement (plus its place in the batch in milliseconds, never the browser's clock, D-115); insight periods and time on task; orders a learner's results for the `latest` policy and bounds the grade worker's reconciling pass (D-104 amendment of 2026-11-04) | None | n/a | Yearly purge | PG |
 | `academicYear` | The academic year of the pseudonym secret that made `learnerKey`; the yearly purge deletes by it (`DATA-003`). A field outside `DATA-012`'s list (`SPEC-DEVIATION`, D-107). Database default: the year of the write in Oslo time; migration `s6_grade_bridge_insight` set existing rows from `timestamp`. A portal session keeps its key up to 12 hours past 1 August (D-057), so the writer of a portal play's row sets the key's year itself. PRIVACY: a year, not about the learner | None | n/a | Yearly purge | PG |
+| `testUser` | True for a statement of Canvas's Student View test student (the LTI `TestUser` role), set from the launch, never from the statement (D-102's amendment of 2026-11-04). Stored so that a teacher can test the score passback (the grade worker reads the learner's own rows by `learnerKey`); insight, the mappe and the purge's snapshots never read a flagged row, so a test student is in none of their aggregates and no *k* count (its grade job is still in the grade-sync status counts, which are not *k*-suppressed). A field outside `DATA-012`'s list (`SPEC-DEVIATION`, D-102); database default false (migration `s6_test_user_statements`). PRIVACY: says only that the launch was Canvas's test student, a teacher's own test | None | n/a | Yearly purge | PG |
 
 ## InsightSnapshot
 
@@ -337,10 +340,10 @@ Aggregates already suppressed below *k* learners; no row identifies anyone.
 | `contentId` | The activity | None | n/a | With the activity (survives the purge) | PG |
 | `contextId` | Canvas course as `<LtiPlatform.id>:<context ID>` (D-103), null for the portal; a database CHECK refuses any other shape | None | n/a | With the activity (survives the purge) | PG |
 | `contentVersion` | The content version the aggregates describe (`PROD-013`); the purge writes one snapshot per activity, context and version (D-107) | None | n/a | With the activity (survives the purge) | PG |
-| `periodStart` | Period covered | None | n/a | With the activity (survives the purge) | PG |
-| `periodEnd` | Period covered | None | n/a | With the activity (survives the purge) | PG |
+| `periodStart` | Period covered; for a yearly-purge snapshot, 1 August of the ended year at midnight in Oslo (D-107) | None | n/a | With the activity (survives the purge) | PG |
+| `periodEnd` | Period covered; for a yearly-purge snapshot, the next 1 August at midnight in Oslo (D-107) | None | n/a | With the activity (survives the purge) | PG |
 | `k` | Suppression threshold used | None | n/a | With the activity (survives the purge) | PG |
-| `aggregates` | Counts, rates and medians | None | n/a | With the activity (survives the purge) | PG |
+| `aggregates` | Counts, rates and medians, already suppressed below *k*. A snapshot the yearly purge writes (`source: "yearly-purge"`, D-107) holds the mappe's figures for the year (`MAPPE-002`: participants, completion rate, median attempts, mean change) under the mappe's group rules (D-095 and its amendment), with the academic year and whether it is `suppressed`; a hidden value is absent, and no learner key, answer or count of a group below *k* is stored. A suppressed snapshot still shows that between 1 and *k* − 1 learners played the activity in that course and version that year (DPIA input R18) | None | n/a | With the activity (survives the purge) | PG |
 | `createdAt` | Audit | None | n/a | With the activity (survives the purge) | PG |
 
 ## AuditEvent
@@ -351,18 +354,33 @@ Who did what to which object (DATA-007).
 |---|---|---|---|---|---|
 | `id` | Internal key | None | n/a | 2 years | PG |
 | `at` | When | None | n/a | 2 years | PG |
-| `actorUserId` | Who (empty for scheduled jobs) | Staff PII (by reference) | 6(1)(e) | 2 years | PG |
-| `action` | Action code, e.g. `insight.view` | None | n/a | 2 years | PG |
-| `targetType` | Kind of object | None | n/a | 2 years | PG |
-| `targetId` | Which object | None; Pseudonymous when the target is a learner (data-subject actions, `DATA-008`) | 6(1)(e) | 2 years | PG |
-| `details` | Structured details, never free text with personal data; `insight.view` and `insight.export` hold only the view (`beforeSession`), the period, the context (D-103's key or `portal`) and the content version, never a count, answer or learner (D-106); in `content.coauthor.add` and `content.coauthor.remove` it holds the co-author's `User.id` (D-090), so a search for a person's audit events reads it as well as `actorUserId` | None; Staff PII (by reference) in `content.coauthor.*` | 6(1)(e) | 2 years | PG |
+| `actorUserId` | Who: the staff member who acted; for a data-subject request the HVL admin account of the operator who ran it (D-108); empty for scheduled jobs, the purge CLI and a refused data-subject request | Staff PII (by reference) | 6(1)(e) | 2 years | PG |
+| `action` | Action code, e.g. `insight.view`, `purge.run` (D-107), `dataSubject.export` or `dataSubject.erase` (D-108) | None | n/a | 2 years | PG |
+| `targetType` | Kind of object: `H5PContent`, `LtiPlacement` (a grade-sync retry), `AcademicYear`, `DataSubjectRequest`, or `learner` in the dormant event named below | None | n/a | 2 years | PG |
+| `targetId` | Which object: an activity (`content.*`, `insight.*`); a placement (`content.gradeSync.retry`); an academic year (`purge.run`, D-107); or, for a data-subject request, a random request ID that only HVL's case record links to the person, never a Feide ID, `sub`, learner key or hash (D-108). The H5P permission system's audit of an admin's access to another learner's H5P state (`h5p.userData.dataSubjectAccess`, `H5P-006`) would name a `learnerKey`, but nothing gives an admin such a request (the data-subject CLI deletes through the storage without that check), so no such event is written today | None; Pseudonymous only in the dormant `h5p.userData.dataSubjectAccess` event | 6(1)(e) | 2 years | PG |
+| `details` | Structured details, never free text with personal data; `insight.view` and `insight.export` hold only the view (`beforeSession`), the period, the context (D-103's key or `portal`) and the content version, never a count, answer or learner (D-106); in `content.coauthor.add` and `content.coauthor.remove` it holds the co-author's `User.id` (D-090), so a search for a person's audit events reads it as well as `actorUserId`; `purge.run` holds the trigger, dry run, outcome, years and row counts (D-107); `dataSubject.*` holds the dry run, outcome, years, how many identifiers were given, counts, unreachable years and what remained after an erasure: numbers, years and fixed words, never an identifier, key or hash (D-108) | None; Staff PII (by reference) in `content.coauthor.*` | 6(1)(e) | 2 years | PG |
+
+## Database views (schema `analytics`)
+
+Views of rows that are already in this inventory, for the read-only analytics role `hvli_analytics` (`DATA-010`,
+D-109 and its amendments). They store nothing, so the inventory check does not read this section.
+`apps/server/prisma/roles/02-grants.sql` builds them after every migration; the role reads these views and no table.
+A new view needs an amendment to D-109 and may show only aggregates already suppressed below *k*.
+
+| Field | Purpose | Category | Legal basis | Retention | Location |
+|---|---|---|---|---|---|
+| `analytics.insight_snapshot.id`, `content_id`, `context_id`, `content_version`, `period_start`, `period_end`, `k`, `aggregates`, `created_at` | `InsightSnapshot`'s fields in snake_case, for analysts' tools in R and Python | None (aggregates already suppressed below *k*) | n/a | As the `InsightSnapshot` row | PG (view) |
+| `analytics.insight_snapshot.content_type` | The activity's content type (`H5PContent.mainLibrary`), so content types can be compared | None | n/a | As the `H5PContent` row | PG (view) |
 
 ## Redis keys
 
 Everything the server writes to Redis: portal sessions, login transactions, caches, locks and job leases. Not
 database models, so the inventory check does not read this section. Redis is hosted with PostgreSQL
 (`DATA-004`); session and login keys are a SHA-256 of the cookie value, so a Redis dump does not reveal a usable
-cookie (D-057). Learner state is never in Redis: it lives in PostgreSQL (`H5PUserData`).
+cookie (D-057): a portal session is the value of `hvli:sess:<base64url SHA-256 of the session ID>` and a login
+transaction that of `hvli:login:<base64url SHA-256 of the transaction ID>`; the rows below name their fields. Learner
+state is never in Redis: it lives in PostgreSQL (`H5PUserData`). Checked 2026-11-05 against every Redis call in
+`apps/server/src` (each key prefix is a constant next to its call) and ltijs 7.0.7's cache keys.
 
 | Field | Purpose | Category | Legal basis | Retention | Location |
 |---|---|---|---|---|---|
@@ -393,3 +411,21 @@ cookie (D-057). Learner state is never in Redis: it lives in PostgreSQL (`H5PUse
 | counter `hvli:insight-requests:<userId>` | How many insight views, contexts, CSV downloads and findings the person asked for in the current minute, for the limit of 60 (`INS-007`); a number, never the activity, context or period | Staff PII (by reference) | 6(1)(e) | 60 seconds | Redis |
 | lease `hvli:grades:sync` | A random node ID: one server sends queued grades per interval (D-104) | None | n/a | About 15 seconds | Redis |
 | lease `hvli:grades:subject-cleanup` | A random node ID: one server clears expired encrypted Canvas `sub`s per interval (`DATA-002`, D-104) | None | n/a | About 1 hour | Redis |
+| lease `hvli:privacy:retention-purge` | A random node ID: one server checks the yearly purge per hour (`DATA-003`, D-107) | None | n/a | About 1 hour | Redis |
+
+## Logs and the request ID
+
+Not stored by the server: it writes JSON lines to standard output, and HVL's log collection keeps them for 30 days
+(`DATA-009`; where they are kept is HVL's choice, Q5). The logger redacts by key (`DATA-009`); other log lines hold
+fixed event names, IDs of activities, platforms or jobs, counts, HTTP statuses and error names or codes, never a user
+ID (checked 2026-11-05 by a search of the server's log calls). Not database models, so
+the inventory check does not read this section.
+
+| Field | Purpose | Category | Legal basis | Retention | Location |
+|---|---|---|---|---|---|
+| request log `requestId` | Ties a response to its error lines (`NFR-006`, D-109): a well-formed inbound `X-Request-Id` (a UUID or 32 hexadecimal digits, as nginx's `$request_id`), otherwise a random UUID; anything else is replaced, so a client cannot write a name or token into the log. Also sent back in the `X-Request-Id` response header | None | n/a | 30 days | Log store |
+| request log `method`, `status`, `durationMs`, `aborted` | Observability: what kind of request, its outcome, its time to 0.1 ms, and whether the client left first | None | n/a | 30 days | Log store |
+| request log `route` | The route pattern Express matched (e.g. `/api/content/:contentId`), or its router's mount path with `/*`; never the path or query, which can carry an ltik, a signed file grant or IDs (D-109) | None | n/a | 30 days | Log store |
+
+The reverse proxy in front of the server keeps its own access log, outside this application. It must not log the
+query string, because some routes accept `?ltik=` (`docs/ops/`, DPIA input R26).

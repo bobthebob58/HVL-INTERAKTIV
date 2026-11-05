@@ -1,11 +1,11 @@
 /**
  * Tests for mapping LTI 1.3 roles: the LTI-004 table read as D-059 says, including forged admin-like role sets that
- * must never produce admin, and Canvas's Student View test user.
+ * must never produce admin, and Canvas's Student View test user, which maps to learner and is flagged (D-102).
  *
  * Spec: LTI-004
  */
 import { describe, expect, it } from 'vitest';
-import { LTI_TEST_USER_ROLE, mapLtiRoles } from '../../src/lti/LtiRoleMapper.js';
+import { isLtiTestUser, LTI_TEST_USER_ROLE, mapLtiRoles } from '../../src/lti/LtiRoleMapper.js';
 
 const LIS = 'http://purl.imsglobal.org/vocab/lis/v2/';
 const INSTRUCTOR = `${LIS}membership#Instructor`;
@@ -56,6 +56,17 @@ describe('[LTI-004] LTI role table', () => {
     ['every author role', [LTI_TEST_USER_ROLE, INSTRUCTOR, TA, DESIGNER, INSTITUTION_ADMIN]],
   ])('[LTI-004] the TestUser role with %s → learner', (_case, roles) => {
     expect(mapLtiRoles(roles)).toEqual(['learner']);
+  });
+
+  it.each([
+    ['the TestUser role with Learner', true, [LTI_TEST_USER_ROLE, LEARNER]],
+    ['the TestUser role alone', true, [LTI_TEST_USER_ROLE]],
+    ['a real learner', false, [INSTITUTION_STUDENT, LEARNER]],
+    ['a look-alike https TestUser URI', false, [LTI_TEST_USER_ROLE.replace('http:', 'https:'), LEARNER]],
+    ['a malformed claim', false, 'TestUser'],
+    ['no claim', false, undefined],
+  ])('[LTI-004] %s: Canvas’s test student is %s (D-102 amendment)', (_case, expected, roles) => {
+    expect(isLtiTestUser(roles)).toBe(expected);
   });
 
   it.each([

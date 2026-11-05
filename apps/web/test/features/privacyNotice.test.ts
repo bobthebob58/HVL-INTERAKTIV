@@ -191,7 +191,8 @@ describe('[DATA-006] the privacy notice says what the data inventory holds true'
   });
 
   it('[DATA-009] says the service logs hold no personal data and last 30 days, as the inventory does', () => {
-    expect(INVENTORY).toContain('They contain no personal data (`DATA-009`) and are kept for 30 days.');
+    // WHY: the inventory's sentence goes on after "30 days" since S6 step 5, to point to the request log's fields.
+    expect(INVENTORY).toMatch(/They contain no personal data \(`DATA-009`\) and are kept for 30 days[.;]/);
     expect(t('privacy.howLong3', 'nn')).toContain('30 dagar');
     expect(t('privacy.howLong3', 'en')).toContain('30 days');
   });

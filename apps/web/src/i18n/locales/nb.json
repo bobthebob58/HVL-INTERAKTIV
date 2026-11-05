@@ -539,6 +539,10 @@
     "invalidQuery": "Versjonen eller emnet du valgte, finnes ikke for aktiviteten. Velg på nytt og trykk «Vis innsikt».",
     "updated": "Innsikten er oppdatert: {{scope}}",
     "scope": "Viser {{context}}, {{period}} (fra {{start}}), versjon {{version}}.",
+    "period": {
+      "throughYesterday": "Tall til og med i går ({{last}}). Det studentene gjør i dag, kommer med i morgen.",
+      "shortened": "Perioden er forkortet og starter {{start}}: hvert studieår får studentene nye anonyme nøkler fra 1. august, og tall fra både før og etter kunne ha telt samme student to ganger."
+    },
     "notAvailable": "Ikke tilgjengelig",
     "suppressedSr": "skjult av hensyn til personvernet",
     "noLearningData": "{{type}} sender ingen læringsdata, så det finnes ingen innsikt å vise for denne aktiviteten.",
@@ -556,7 +560,7 @@
       "period14d": "Siste 14 dager",
       "period30d": "Siste 30 dager",
       "periodSemester": "Siden semesterstart",
-      "periodHint": "Hver periode starter ved midnatt. Du kan ikke velge egne datoer, for da kunne to utvalg til sammen peke ut én student.",
+      "periodHint": "Hver periode starter og slutter ved midnatt, så tallene er til og med i går. Du kan ikke velge egne datoer, for da kunne to utvalg til sammen peke ut én student.",
       "version": "Versjon av aktiviteten",
       "versionCurrent": "Versjon {{version}} (gjeldende)",
       "versionOlder": "Versjon {{version}}",
@@ -583,7 +587,7 @@
     },
     "items": {
       "heading": "Spørsmål, vanskeligst først",
-      "intro": "Hvor stor del av studentene som svarte riktig første gang og siste gang, for hvert spørsmål.",
+      "intro": "Hvor stor del av studentene som svarte riktig første gang og siste gang, for hvert spørsmål. Spørsmål der andelen ikke kan vises, står til slutt.",
       "none": "Ingen spørsmål har svar i denne perioden.",
       "caption": "Spørsmålene, vanskeligst først",
       "colNumber": "Nr.",
@@ -594,7 +598,7 @@
       "colShortlist": "Til samlingen",
       "gone": "Spørsmålet finnes ikke lenger i aktiviteten",
       "short": "Spm. {{number}}",
-      "summary": "Vanskeligst er spørsmål {{number}}, «{{question}}»: {{first}} riktig på første forsøk og {{latest}} på siste.",
+      "summary": "Av spørsmålene der andelen riktige kan vises, er spørsmål {{number}} vanskeligst, «{{question}}»: {{first}} riktig på første forsøk og {{latest}} på siste.",
       "summaryNone": "Ingen spørsmål har svar fra nok studenter til at andelen riktige kan vises.",
       "legendFirst": "Første forsøk",
       "legendLatest": "Siste forsøk (stripete)"
@@ -616,7 +620,7 @@
       "wrong": "Feil",
       "noFeedback": "Ingen tilbakemelding",
       "noAnswer": "Ingen av alternativene",
-      "summary": "Vanligste feilsvar: «{{option}}», valgt av {{count}} studenter.",
+      "summary": "Vanligste feilsvar av dem som kan vises: «{{option}}», valgt av {{count}} studenter.",
       "summaryNoWrong": "Ingen studenter valgte et feil svar.",
       "summaryNone": "Ingen feil svar er valgt av nok studenter til at de kan vises."
     },
@@ -629,7 +633,7 @@
       "correct": "Riktige svar",
       "otherWrong": "Andre feil svar",
       "empty": "Tom luke",
-      "summary": "Luke {{number}}: vanligste feilsvar er «{{answer}}» ({{count}} studenter).",
+      "summary": "Luke {{number}}: vanligste feilsvar av dem som kan vises, er «{{answer}}» ({{count}} studenter).",
       "summaryNone": "Luke {{number}}: ingen feil svar er gitt av nok studenter til at de kan vises."
     },
     "video": {
@@ -642,7 +646,7 @@
       "colShare": "Andel av dem som startet",
       "end": "Slutten",
       "untitled": "Oppgave uten tittel",
-      "summary": "Minst andel svarte på «{{task}}» ({{time}}): {{share}}.",
+      "summary": "Av oppgavene der andelen kan vises, svarte minst andel på «{{task}}» ({{time}}): {{share}}.",
       "summaryNone": "Ingen oppgave har svar fra nok studenter til at andelen kan vises."
     },
     "shortlist": {

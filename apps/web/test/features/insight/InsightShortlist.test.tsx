@@ -62,7 +62,7 @@ describe('[INS-003] Ta opp i samlinga', () => {
         QUESTION,
         'Tal frå Portalen (spelt utanom Canvas), siste 7 dagar (frå 28. okt. 2026), versjon 3.',
         '40 % riktig på første forsøk og 65 % på siste (20 studentar svarte).',
-        'Vanlegaste feilsvar: «Lagrar arvestoff», valt av 9 studentar.',
+        'Vanlegaste feilsvar av dei som kan visast: «Lagrar arvestoff», valt av 9 studentar.',
         'Tilbakemeldinga di: «Arvestoffet ligg i cellekjernen.»',
       ],
     ]);

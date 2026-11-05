@@ -11,13 +11,16 @@
  *   - PRIVACY: `learnerKey` is read only to tell learners apart and is replaced by a number in order of first
  *     appearance; the page load (the view part of `attemptId`, a random UUID per load, D-115) likewise. Neither
  *     leaves this module.
- *   - The query filters by `contentId`, `contentVersion`, `contextId` (null for the portal's plays, D-103) and
- *     `start <= timestamp < end`, and orders by `timestamp`, then `id`, so "first" and "latest" are well defined
- *     (the stored timestamp is a strict order within a batch, D-115).
- *   - Only learners' statements are ever stored (D-102), so no role filter is needed.
+ *   - The query filters by `contentId`, `contentVersion`, `contextId` (null for the portal's plays, D-103),
+ *     `start <= timestamp < end` and the view's `academicYear` (one key per learner, D-106's amendment of
+ *     2026-11-04), and orders by `timestamp`, then `id`, so "first" and "latest" are well defined (the stored
+ *     timestamp is a strict order within a batch, D-115).
+ *   - Only learners' statements are ever stored (D-102), so no role filter is needed; PRIVACY: rows of Canvas's test
+ *     student (`testUser`, D-102's amendment of 2026-11-04) are never read, so no view or *k* count holds one.
  * Collaborators: ../../infra/prismaClient.ts, ../scope/insightScope.ts, ../InsightService.ts,
  *   ../aggregate/*.
- * Tests: apps/server/test/insight/insightStatements.test.ts, apps/server/test/insight/insightService.int.test.ts
+ * Tests: apps/server/test/insight/insightStatements.test.ts, apps/server/test/insight/insightService.int.test.ts,
+ *   apps/server/test/insight/insightPeriodEnd.int.test.ts, apps/server/test/xapi/xapiTestUser.int.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
 
@@ -61,6 +64,8 @@ export interface InsightStatementFilter {
   readonly storedContextId: string | null;
   readonly start: Date;
   readonly end: Date;
+  /** The view's academic year (`XapiStatement.academicYear`, the year of the key). */
+  readonly academicYear: number;
 }
 
 /** Numbers things in order of first appearance. */
@@ -104,7 +109,7 @@ export function toInsightStatements(rows: readonly StoredInsightRow[]): InsightS
 /**
  * Reads the statements of one scope.
  * @param db - The database.
- * @param filter - The activity, version, context and period.
+ * @param filter - The activity, version, context, period and academic year.
  * @returns The statements in time order.
  * @spec INS-001
  */
@@ -118,6 +123,9 @@ export async function readInsightStatements(
       contentVersion: filter.contentVersion,
       contextId: filter.storedContextId,
       timestamp: { gte: filter.start, lt: filter.end },
+      academicYear: filter.academicYear,
+      // PRIVACY: Canvas's test students are left out of every aggregate and k count (D-102's amendment).
+      testUser: false,
     },
     select: {
       learnerKey: true,

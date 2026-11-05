@@ -4,7 +4,7 @@
  * Why: the same person must reach the same account at every login without the server storing their Feide ID or
  *      LTI `sub` (DATA-002). `Identity.subjectHash` is an HMAC under the identity key ring; after a key rotation a
  *      lookup must still find rows made with an older key and re-hash them with the current one (D-055).
- * Spec: DATA-002, AUTH-001, AUTH-004, LTI-001
+ * Spec: DATA-002, AUTH-001, AUTH-004, LTI-001, DATA-003
  * Invariants:
  *   - Only the hash and its key ID are stored, never the source text.
  *   - Learner rows never get a name or e-mail (the database refuses it, DATA-002); a profile (the display name) is
@@ -15,12 +15,15 @@
  *   - PRIVACY: `User.coAuthorSearchableAt` is written only for a Feide login that states it (D-090): set when the
  *     login makes the person findable as a co-author, cleared when it does not. An LTI launch never changes it.
  *   - Two first logins at the same moment create one account: the loser of the unique-key race re-reads it.
+ *   - A found account becomes staff only while the identity found still exists, in one statement; when the yearly
+ *     purge (D-107) removed it after the read, the login creates a new account as a first login does.
  *   - When one person has rows under several keys (mixed key rings during a rotation), the row under the current
  *     key wins, else the oldest; a re-hash that collides keeps the login working instead of failing it.
  * Collaborators: ./subjectSources.ts, ./identityLookup.ts (which row wins), ../../security/keys/IdentityHasher.ts, ../feide/completeFeideLogin.ts,
  *   ../../lti/launch/ltiAccount.ts.
  * Tests: apps/server/test/auth/identity/AccountResolver.int.test.ts,
- *   apps/server/test/auth/identity/AccountResolver.test.ts, apps/server/test/auth/feide/coAuthorSearchable.int.test.ts
+ *   apps/server/test/auth/identity/AccountResolver.test.ts, apps/server/test/auth/feide/coAuthorSearchable.int.test.ts,
+ *   apps/server/test/auth/identity/accountPurgeRace.int.test.ts
  */
 import type { Database } from '../../infra/prismaClient.js';
 import type { IdentityHasher } from '../../security/keys/IdentityHasher.js';
@@ -55,8 +58,11 @@ export interface ResolvedAccount {
   readonly created: boolean;
 }
 
-const isUniqueViolation = (error: unknown): boolean =>
-  typeof error === 'object' && error !== null && (error as { code?: unknown }).code === 'P2002';
+const prismaCode = (error: unknown): unknown =>
+  typeof error === 'object' && error !== null ? (error as { code?: unknown }).code : undefined;
+const isUniqueViolation = (error: unknown): boolean => prismaCode(error) === 'P2002';
+// WHY: P2025 is Prisma's "record to update not found": the yearly purge removed the identity just read (D-107).
+const isGone = (error: unknown): boolean => prismaCode(error) === 'P2025';
 
 /** Finds or creates accounts by identity hash. */
 export class AccountResolver {
@@ -106,16 +112,20 @@ export class AccountResolver {
           data: { subjectHash: current.hash, subjectKeyId: current.keyId },
         });
       } catch (error) {
+        if (isGone(error)) return undefined;
         // WHY: a row under the current key appeared meanwhile; the login still uses the row found.
         if (!isUniqueViolation(error)) throw error;
       }
     }
     const kind = identity.user.kind === 'staff' || request.kind === 'staff' ? 'staff' : 'learner';
     if (kind === 'staff') {
-      await db.user.update({
-        where: { id: identity.userId },
+      // PRIVACY: only while the identity still exists (D-107 amendment): a purge between the read and this write
+      // would otherwise leave a staff account, with a display name, that no login reaches. The login then starts over.
+      const { count } = await db.user.updateMany({
+        where: { id: identity.userId, identities: { some: { id: identity.id } } },
         data: { kind, ...this.profileOf(request), ...this.searchableOf(request) },
       });
+      if (count === 0) return undefined;
     }
     return { userId: identity.userId, kind, created: false };
   }
