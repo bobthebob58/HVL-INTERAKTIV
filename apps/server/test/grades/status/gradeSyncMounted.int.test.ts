@@ -76,6 +76,9 @@ describeWithServices('[LTI-012] the grade-sync routes in the app', () => {
 
   it('[AUTH-003] the owner’s portal session reads the placements, and a retry needs the CSRF token', async () => {
     // Arrange
+    // WHY: a run of one ID (`-t '\[AUTH-003\]'`) skips the test above; the teacher's launch records the same placement
+    // again (one resource link), so this test does not depend on the order the tests run in.
+    await launch(CANVAS_USERS.teacher);
     const placement = await tb.db.ltiPlacement.findFirstOrThrow({ where: { contentId } });
     // Act
     const status = await request(tb.app).get(path()).set('Cookie', cookie);
