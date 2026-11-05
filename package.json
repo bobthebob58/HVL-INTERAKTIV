@@ -22,6 +22,7 @@
     "test": "vitest run",
     "test:e2e": "vitest run --root apps/server --config vitest.e2e.config.ts",
     "test:a11y": "vitest run --root apps/server --config vitest.a11y.config.ts",
+    "test:live": "vitest run --root apps/server --config live/vitest.live.config.ts",
     "a11y:report": "node tools/a11y-report/a11yReport.mjs",
     "tokens:build": "node packages/design-tokens/scripts/buildTokens.mjs",
     "tokens:check": "node packages/design-tokens/scripts/buildTokens.mjs --check",

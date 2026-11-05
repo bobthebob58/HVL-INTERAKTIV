@@ -4,20 +4,21 @@
  * Why: Lumi's defaults are unsafe or wrong for HVL (allow-everything permissions, Core 1.27 assets, a 64-char
  *      Hub `local_id`, English-only strings, no upload sanitisers). One factory sets them all, so no code path
  *      can build an editor that misses one (H5P-002, H5P-006, H5P-008, SEC-001/002).
- * Spec: H5P-002, H5P-006, H5P-007, H5P-008, SEC-001, SEC-002, SEC-008, SEC-006
+ * Spec: H5P-002, H5P-006, H5P-007, H5P-008, H5P-010, SEC-001, SEC-002, SEC-008, SEC-006
  * Invariants:
  *   - `options.permissionSystem` and the editor policy hold the same HvlPermissionSystem instance, and the policy's
  *     activity facts are the ones that permission system reads (the paste-source guard, D-092).
  *   - Every URL comes from the HvlUrlGenerator passed in (tokens on H5P's AJAX URLs, H5P-007, D-058).
- *   - The library storage is the language-fallback wrapper; DragQuestion is removed from every semantics.
+ *   - The library storage is HVL's language overlay over the language-fallback wrapper (D-111 over D-046);
+ *     DragQuestion is removed from every semantics, and the video fields get `H5P-010`'s English guidance.
  *   - F1: `local_id` is at most 15 characters; F3: Core 1.28 styles and scripts are added (./h5pAssets.ts).
  *   - The file sanitisers run on every uploaded file (editor uploads and package import).
  *   - The malware scanners, when configured, scan every uploaded file before it is stored, on the same two paths
  *     (../security/malware/, SEC-006, D-110 amendment of 2026-11-05).
  *   - `render` returns Lumi's model, never Lumi's HTML (its template is unsafe, D-040).
  * Collaborators: ./HvlH5PEditor.ts, ./HvlUrlGenerator.ts, ./h5pAssets.ts, ./H5pConfigFactory.ts,
- *   ./h5pStorage.ts, ./semantics/removeDragQuestion.ts, ./storage/LanguageFallbackLibraryStorage.ts,
- *   ./createH5pRuntime.ts.
+ *   ./h5pStorage.ts, ./semantics/videoGuidance.ts, ./storage/LanguageFallbackLibraryStorage.ts,
+ *   ./storage/LanguageOverlayLibraryStorage.ts, ./createH5pRuntime.ts.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts
  */
 import type {
@@ -36,9 +37,11 @@ import type { HvlUrlGenerator } from './HvlUrlGenerator.js';
 import type { PersonLimit } from '../learningDesign/collaboration/PersonRateLimit.js';
 import type { LearnerStateStore } from '../learningDesign/safeEditing/LearnerStateGate.js';
 import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
+import { EMPTY_LANGUAGE_OVERLAY, type LanguageOverlay } from './languageOverlay/languageOverlay.js';
 import type { ContentAccessRepository } from './permissions/ContentAccessRepository.js';
-import { removeDragQuestion } from './semantics/removeDragQuestion.js';
+import { editorSemanticsHook } from './semantics/videoGuidance.js';
 import { withLanguageFallback } from './storage/LanguageFallbackLibraryStorage.js';
+import { withLanguageOverlay } from './storage/LanguageOverlayLibraryStorage.js';
 
 /** The storages the editor works on (./h5pStorage.ts); the library storage is the plain one, the factory adds the
  *  language fallback. */
@@ -62,22 +65,25 @@ export interface EditorFactoryInputs {
   readonly malwareScanners?: readonly IFileMalwareScanner[];
   /** Builds every URL of the editor page; shared with the player (H5P-007). */
   readonly urlGenerator: HvlUrlGenerator;
+  /** HVL's texts for the libraries' nn and nb language files and the video guidance (D-111); none by default. */
+  readonly languageOverlay?: LanguageOverlay;
 }
 
 /**
  * Builds the editor.
  * @param inputs - Config, storages, permission system, audit sink, activity facts, learner-state rows, copy limit,
- *   translation, sanitisers, malware scanners and URL generator.
+ *   translation, sanitisers, malware scanners, URL generator and language overlay.
  * @returns The editor; check it with `assertPermissionSystem` before use.
  */
 export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
   const { config, storages, permissionSystem } = inputs;
   const urls = inputs.urlGenerator;
+  const overlay = inputs.languageOverlay ?? EMPTY_LANGUAGE_OVERLAY;
   const editor = new HvlH5PEditor(
     [
       storages.keyValueStorage,
       config,
-      withLanguageFallback(storages.libraryStorage),
+      withLanguageOverlay(withLanguageFallback(storages.libraryStorage), overlay),
       storages.contentStorage,
       storages.temporaryStorage,
       inputs.translate,
@@ -88,7 +94,10 @@ export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
         lockProvider: storages.lockProvider,
         fileSanitizers: [...inputs.fileSanitizers],
         malwareScanners: [...(inputs.malwareScanners ?? [])],
-        customization: { alterLibrarySemantics: removeDragQuestion, global: editorGlobalAssets(urls) },
+        customization: {
+          alterLibrarySemantics: editorSemanticsHook(overlay.videoGuidance),
+          global: editorGlobalAssets(urls),
+        },
         // WHY: F1, the new Hub refuses a local_id over 15 characters; read lazily, the UUID may arrive later.
         getLocalIdOverride: () => localIdFor(config.uuid),
         enableHubLocalization: true,

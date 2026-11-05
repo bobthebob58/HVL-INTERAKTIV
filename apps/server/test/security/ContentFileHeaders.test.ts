@@ -44,8 +44,10 @@ describe('[SEC-004] ContentFileHeaders', () => {
       expect(headers['Content-Security-Policy'], name).toBe(USER_FILE_CSP);
       expect(headers['Content-Type'], name).toBe(contentTypeFor(name));
     }
-    // Assert: the policy text itself.
-    expect(USER_FILE_CSP).toBe("sandbox; default-src 'none'; style-src 'unsafe-inline'");
+    // Assert: the policy text itself, which also forbids framing (D-110, S6 step 7).
+    expect(USER_FILE_CSP).toBe(
+      "sandbox; default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'",
+    );
   });
 
   it('[SEC-004] SVG and documents are attachments; images, audio, video and captions are inline', () => {

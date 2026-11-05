@@ -95,6 +95,10 @@ services:
     environment:
       CLAMAV_NO_FRESHCLAMD: 'true'
       CLAMAV_NO_MILTERD: 'true'
+      # SECURITY: a file clamd cannot scan in full (over a limit, or encrypted) is a finding, never "OK", as HVL's
+      # clamd must be set up too; the image writes CLAMD_CONF_* into clamd.conf (D-110, step 7).
+      CLAMD_CONF_AlertExceedsMax: 'yes'
+      CLAMD_CONF_AlertEncrypted: 'yes'
     healthcheck:
       test: ['CMD-SHELL', 'clamdcheck.sh']
       interval: 5s

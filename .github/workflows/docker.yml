@@ -26,7 +26,11 @@ jobs:
     # system packages) about 15 min, the stack and its checks about 2 min; 60 min leaves a 2x margin.
     timeout-minutes: 60
     steps:
+      # SECURITY: no later step pushes or fetches with the job's token, and the library builds run third-party
+      # build scripts, so checkout leaves no token on disk for them (D-110's amendment of 2026-11-05, step 7).
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc

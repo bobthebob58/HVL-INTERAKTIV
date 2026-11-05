@@ -14,6 +14,7 @@ import { modelRenderer } from '../../src/h5p/H5pPlayerFactory.js';
 import { asAccountUser } from '../../src/h5p/HvlH5pUser.js';
 import { SERVER_ROOT } from '../../src/h5p/h5pServerInit.js';
 import { LanguageFallbackLibraryStorage } from '../../src/h5p/storage/LanguageFallbackLibraryStorage.js';
+import { LanguageOverlayLibraryStorage } from '../../src/h5p/storage/LanguageOverlayLibraryStorage.js';
 import { engineTestbed, removeEngineTestbeds } from '../support/engineTestbed.js';
 import { testActor } from '../support/testActors.js';
 
@@ -68,11 +69,16 @@ describe('H5P engine factories', () => {
     expect(registration.local_id).toBe(localIdFor(config.uuid));
   });
 
-  it('[H5P-008] editor and player read library languages through the nn → nb → en fallback', async () => {
+  it('[H5P-008] editor and player read library languages through the overlay over the nn → nb → en fallback', async () => {
     const { editor, player } = await engineTestbed();
-    expect(editor.libraryManager.libraryStorage).toBeInstanceOf(LanguageFallbackLibraryStorage);
+    // WHY: HVL's language overlay (D-111) wraps D-046's fallback, which wraps the library storage.
+    const innerOf = (storage: unknown) => (storage as { inner: unknown }).inner;
+    const editorStorage = editor.libraryManager.libraryStorage;
     const playerStorage = (player as unknown as { libraryStorage: unknown }).libraryStorage;
-    expect(playerStorage).toBeInstanceOf(LanguageFallbackLibraryStorage);
+    for (const storage of [editorStorage, playerStorage]) {
+      expect(storage).toBeInstanceOf(LanguageOverlayLibraryStorage);
+      expect(innerOf(storage)).toBeInstanceOf(LanguageFallbackLibraryStorage);
+    }
   });
 
   it('[H5P-002] the editor built by the factory never offers H5P.DragQuestion', async () => {

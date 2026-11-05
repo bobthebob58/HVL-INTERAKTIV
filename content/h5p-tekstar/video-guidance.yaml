@@ -1,0 +1,31 @@
+# content/h5p-tekstar/video-guidance.yaml: the guidance shown under the video field when an author adds a video
+# (H5P-010, D-111). The English text replaces the library's description; the Nynorsk and Bokmål texts go into the
+# libraries' nn.json and nb.json through the same overlay as library-texts.*.yaml.
+#
+# DRAFT, for HVL and ALU to confirm (open question Q17): the wording, and whether to name HVL's Panopto address.
+# Source: spec 01 H5P-010 (Panopto first, captions as .vtt, direct .mp4 uploads only up to 50 MB, SEC-005) and D-070
+#   (YouTube is not offered, so a YouTube link does not play).
+# How to edit: content/h5p-tekstar/README.md. Keep the three texts saying the same thing. `fields` lists the video
+#   fields by library version and field path; run `npm run content:check` after a change.
+status: draft
+description:
+  nn: >-
+    Bruk helst ein video frå Panopto, videotenesta til HVL: lim inn lenka til videoen her. Panopto sender videoen i
+    ein storleik som passar nettet til kvar student, og tar med tekstinga. Last opp ei videofil berre når videoen
+    ikkje kan liggje i Panopto: ei .mp4-fil på høgst 50 MB, med teksting i ei WebVTT-fil (.vtt). Lenker til YouTube
+    kan ikkje spelast av her.
+  nb: >-
+    Bruk helst en video fra Panopto, HVLs videotjeneste: lim inn lenken til videoen her. Panopto sender videoen i en
+    størrelse som passer nettet til hver student, og tar med tekstingen. Last opp en videofil bare når videoen ikke
+    kan ligge i Panopto: en .mp4-fil på høyst 50 MB, med teksting i en WebVTT-fil (.vtt). Lenker til YouTube kan ikke
+    spilles av her.
+  en: >-
+    Preferably use a video from Panopto, HVL's video service: paste the video's link here. Panopto streams the video
+    in a size that suits each student's connection and keeps its captions. Upload a video file only when the video
+    cannot be in Panopto: an .mp4 file of at most 50 MB, with captions in a WebVTT file (.vtt). YouTube links do not
+    play here.
+fields:
+  - library: H5P.InteractiveVideo 1.28
+    field: interactiveVideo.video.files
+  - library: H5P.Video 1.6
+    field: sources

@@ -2544,6 +2544,153 @@ loading of one spec per session are kept.
   in the picker, which `LTI-005`'s "E2e in J1" needs), the J1 test is split and the gap gets its own `SPEC-DEVIATION`
   amendment once it is certain, not before. What J5's end-to-end test covers (its staging-to-production promotion is
   an operations procedure, not a page) is decided at the integration step, also by amendment.
+- **Amendment (2026-11-05, S6 step 7: problem reporting for the pilot):** the owner decided on 2026-10-24 that the
+  pilot's testers report problems through GitHub issue forms, with a short tester guide in Nynorsk (PROGRESS, S4 and
+  S6 step 7). This records how.
+  - **Two forms and nothing else:** `.github/ISSUE_TEMPLATE/feil.yml` (a fault) and `uu-barriere.yml` (an
+    accessibility barrier) ask for the steps, what was expected and what happened, the device, the browser, the
+    assistive technology and the zoom, the page or tab and the activity type (the ten authorable types by the web
+    app's Nynorsk names), a screenshot and the severity. The fault form also asks for the exact error text, the time
+    and, for HVL IT, the server's log lines as a code block; the barrier form asks for the manual protocol's set-up
+    and result file when the barrier was found in a protocol run. `config.yml` turns blank issues off, so no issue
+    skips the forms, and links the guide (`docs/testing/rapportere-problem.md`) and the security policy.
+  - **No personal data in an issue:** each form opens with the rule and requires a ticked confirmation: no names of
+    students or colleagues, no e-mail addresses, Feide IDs, national identity or student numbers, no students'
+    answers, and screenshots cropped or covered (Canvas shows the user's name and picture). The server's log lines
+    may be pasted, because they hold no personal data by design (`DATA-009`); Canvas's and the browser's logs may
+    not. A log line that does show personal data is itself a privacy fault and is reported privately. An issue is
+    a path from the pilot to development, so this is `DATA-010`'s "production data is never copied to development"
+    applied to issues; a fault is reproduced with synthetic test data only.
+  - **Security goes privately:** `SECURITY.md` names HVL's contact (a placeholder the owner fills) and GitHub's
+    private vulnerability reporting (which the owner turns on). A vulnerability, or a privacy fault that someone could
+    misuse, never goes into an issue or a pull request.
+  - **Severity and labels:** three levels, and the reporter picks the highest that fits: 1 *Kritisk* (someone cannot
+    use it at all, or it concerns privacy or security), 2 *UU-barriere*, 3 *Kosmetisk*; a barrier that stops
+    someone completely is level 1. The labels are listed in `.github/labels.yml`: two types, the three severities,
+    four statuses and `H5P oppstraums`. A form adds its type label and `treng vurdering`; the person who triages sets
+    the severity label that matches the reporter's choice, because a form cannot set a label from a choice. The
+    owner creates the labels with `gh label create` (`docs/testing/labels-and-triage.md`); the agent creates nothing
+    on GitHub.
+  - **How a problem is fixed:** it is reproduced in the test set-up, a test that fails is written first, the cause is
+    fixed, the area's tests and the gate pass, and the change goes on a branch with a pull request that HVL reviews
+    and merges. A problem seen only in HVL's Canvas or Feide needs the error text and the server's log lines; one seen
+    only on a device or with a screen reader needs a precise description and a re-test by HVL (`treng HVL-test`).
+    H5P's own barriers are repaired at run time or registered (D-080) and reported upstream (D-112). Manual results
+    stay dated in `docs/accessibility/results/` (D-079), linked from the issue and back.
+  - **Language:** the guide and the forms are in Nynorsk only: GitHub's forms have no language switch, they are not
+    product UI (the three locales of `DOC-009` cover the product), and the pilot's testers read Nynorsk. The
+    maintainers' label and triage document is in English, as developer documents are.
+  - **Alternatives considered:** (a) a feedback form in the product: it would store free text that can hold personal
+    data, would need its own privacy review, and would come too late for the pilot; (b) e-mail to a shared inbox: no
+    labels, no link from a problem to the test and the pull request that fix it, and nothing the bachelor students
+    can pick up; (c) a GitHub Actions workflow that sets the severity label from the choice: it needs write access to
+    issues and would run on text from anyone, for a step a person does in seconds.
+  - **Consequences:** `tools/issue-forms/` checks the forms, the chooser and the label list on every test run. The
+    hand-off index links the guide. Before the pilot the owner creates the labels, fills in HVL's security contact
+    and turns on private vulnerability reporting. If the repository moves, the absolute links in the forms and in
+    `config.yml` move with it.
+- **Amendment (2026-11-05, S6 step 7: the students' hand-off index, the live-contract seam and the Canvas
+  acceptance checklist):** decided before the documents and the seam were written.
+  - **The index:** `docs/handoff/README.md` is in English, the language of the developer documents and of the
+    students' project (`DOC-009`), with a short summary in Nynorsk at the top. Five parts: what is done, by session and
+    requirement, with where to read it (the README module maps, this file, `docs/TRACEABILITY.md`, the spec site,
+    PROGRESS's gate output); what needs HVL (the open questions, hosting, the DPO, the manual accessibility run, the
+    200-learner load test, the restore drill and the owner's own tasks); what passes to the students; suggested review
+    targets for their code-review project, the riskiest modules first, each with why; and how to set up (the
+    Codespaces container, a local machine, CI). It links the runbook, the deployment checklist, the privacy documents
+    and PROGRESS instead of repeating them, and names no person.
+  - **One design note per item that passes on**, beside the index: `canvas-studio.md` (D-098's three items),
+    `dynamic-registration.md` (`LTI-009`), `branching-paths.md` (`INS-004`, deferred by D-115),
+    `insight-freshness.md` (Q24), `research-export.md` (the students' part of `docs/privacy/research-export.md`,
+    Q25), `simplification-check.md` (plan step 10's check, for whatever S6 does not reach), `lumi-path.md`
+    (D-112's three choices before 2027-01-31) and `live-contract-seam.md`. A note states what is known, the options
+    and a recommended default, the tests it would need and what must be decided first. It decides nothing: each choice
+    gets its own decision or amendment here before code (CLAUDE.md §1).
+  - **The live-contract seam (`apps/server/live/`):** D-101 above describes it as running "the mock-platform tests
+    against HVL's test Canvas". As written that cannot work: those tests drive the mock's own controls (fault
+    injection, `setMembers`, `deleteLineItem`) and launch made-up users, which a real Canvas has no equivalent for.
+    The seam instead states each fact the mocks assume as a check that can run against either platform: the
+    client-credentials token (the assertion's audience, the token answer, a refused audience, a scope the developer
+    key lacks); AGS (the line item a Deep Linking return created, with its label in the configured `AGS_LABEL_MODE`,
+    a line item read, 404 for a missing line item, 401 without the `score` scope and with a bad token, the answer for
+    a user outside the course and, only with a named test student, a score sent by our own `AgsScoreClient`); NRPS
+    (the media type, the full role URI against the short name `Learner`, paging links, no names or e-mail addresses
+    under `privacy_level` `anonymous`, 401 for a token without the NRPS scope); and Feide's discovery document and
+    key set. The checks call the server's own modules where one exists (`signClientAssertion`, `AgsAccessTokens`,
+    `AgsScoreClient`, `scoresUrlOf`, `outcomeOfStatus`, `LEARNER_ROLE_URI`, `activeLearnerCount`,
+    `buildDeepLinkItems`), so a difference shows in the code that runs in production, and each failure message names
+    the mock module that assumed otherwise.
+  - **When it runs:** only when asked. The `LIVE_CANVAS_*` variables select ALU's test Canvas, with
+    `LIVE_DATABASE_URL` and `LIVE_DATA_ENCRYPTION_KEYS` of the test server whose `/lti/keys` the developer key
+    names, from which the tool key is read as the grade worker reads it, read-only. `LIVE_FEIDE_ISSUER` selects real
+    Feide's public discovery. `LIVE_TARGET=mock` runs the same checks against the mock Canvas and the mock Feide on
+    the local services, so a check is known to work before it meets Canvas, and refuses to start when a Canvas target
+    is also set. With none of them every check is skipped; a partly set Canvas target fails at once, naming the
+    missing variables, rather than skipping. The tests use `describe.runIf`, as `realClamd.test.ts` does, so
+    spec-trace counts their `[ID]` titles; they lie outside the root Vitest projects, so the gate's per-ID runs do not
+    select them, and they are evidence about Canvas only through a dated run recorded with the checklist.
+  - **Safety:** the Canvas checks read only the platform row (and its key) from the test server's database, post a
+    score only when `LIVE_CANVAS_STUDENT_SUB` names a test student, and never print a token, an assertion, a key or a
+    member's ID (`DATA-009`). They are for a test course with test accounts only, never a course with real students.
+  - **The Canvas acceptance checklist** (`docs/handoff/canvas-acceptance.md`) holds the steps against ALU's test
+    instance that a test cannot automate: the developer key and deployment (Q4), launches in a browser that blocks
+    third-party cookies, the Deep Linking round trip from each placement (Q13), the assignment name and points Canvas
+    shows (Q8), a score in the gradebook, a deleted assignment, a course copy (`LTI-007`), Student View (D-102's
+    test user), `feide_login` (Q4) and a real Feide login (Q3), and the seam's run. Each step names the mock
+    assumption it confirms and what changes when Canvas differs: a decision or amendment first, then the mock and its
+    tests, then the code. Results are recorded dated, without personal data.
+  - **Alternatives considered:** (a) a Playwright flow that signs in to Canvas to automate the Deep Linking round
+    trip: it needs a test account's password in the environment and breaks with each change to Canvas's pages; the
+    checklist does it by hand and the seam checks its result through AGS. (b) A developer key for the seam alone:
+    Canvas ties a line item to the tool that created it *(verify)*, so a second key could not read or score the
+    tool's line items. (c) Running the seam against the mock in every CI run: worth doing, but it needs a script and
+    a CI step outside the hand-off's files (below).
+  - **Consequences:** for the integrator: a root script `test:live` (`vitest run --root apps/server --config
+    live/vitest.live.config.ts`), `apps/server`'s `typecheck` script adding `live/tsconfig.json`, a CI step with
+    `LIVE_TARGET=mock` if wanted, and links to the index from the root README's documentation map, the Evaluator
+    Guide's limitations and PROGRESS's step 7.
+- **Amendment (2026-11-05, S6 step 7: problem reporting, after review):** a review of the reporting files changed
+  three things before the pilot. (1) *Health data:* why someone uses assistive technology is health information
+  (GDPR art. 9), and an issue ties it to the reporter's GitHub account in public. The forms ask which assistive
+  technology was used and say that the reason is not needed; the guide adds health to what is never written and
+  offers the contact person, who opens the issue without the tester's account; triage removes such text like other
+  personal data. (2) *Level 2, UU-barriere,* is any barrier that hinders someone or withholds information while they
+  can still go on, also without assistive technology (low vision, no sound, a video without captions); level 1 stays
+  "cannot use it at all". (3) *What an edit cannot undo:* an uploaded screenshot stays reachable at its URL after it
+  is removed from the text *(verify)*, and notification e-mails cannot be recalled, so the guide asks testers to edit
+  at once and tell their contact person, and triage asks GitHub Support to delete the file; real data about someone
+  still goes to the DPO the same day.
+- **Amendment (2026-11-05, S6 step 7: the live-contract seam and the hand-off index, after review):** a review of
+  the seam and the index changed four things before hand-off. (1) *What a failing check prints:* Vitest prints what
+  an assertion was given, so the NRPS checks printed members' `user_id`s and, in the very case they exist to catch, a
+  member's name and e-mail address. They now compare counts and booleans only; the seam's safety rule above holds
+  for failures too. (2) *Where a token goes:* a line item's `id` and a `Link: next` URL come from Canvas's answers,
+  and the seam sent the bearer token to them unchecked; a URL that is not on `LIVE_CANVAS_API_ORIGIN` is now refused
+  before anything is sent (`onApiOrigin`, tested in `canvasRequests.test.ts`), as the server checks a launch's
+  service URLs (D-104). (3) `LIVE_AGS_LABEL_MODE` set alone counts as a Canvas target set in part and fails loudly,
+  like `LIVE_CANVAS_STUDENT_SUB`. (4) *The index and the checklist as built:* `/app/play` shows **Innsikt** and
+  **Poeng til Canvas** only to a launch that may edit (D-106's amendment), so a copied course's teacher who may not
+  edit sees **Spel** only; the checklist expects that, and `canvas-studio.md` lists `LTI-007`'s insight tab with the
+  duplicate. The index says which parts of `LTI-005` and `LTI-007` are built, since TRACEABILITY marks a requirement
+  *tested* once one test names it.
+- **Amendment (2026-11-05, S6 step 7: the integration):** decided before the integrator's changes; it applies what
+  the five step-7 workstreams (the language overlay, problem reporting, the upstream drafts, the hand-off index with
+  the live-contract seam, and the hardening after step 6's review) left for integration.
+  - **The seam runs from the root and in CI against the mocks.** A root script `test:live` runs
+    `apps/server/live/vitest.live.config.ts`; `apps/server`'s `typecheck` also checks `live/tsconfig.json`; and CI runs
+    `npm run test:live` with `LIVE_TARGET=mock` after the end-to-end step (about 10 s), so a change to a mock or to the
+    server code the seam calls cannot break the checks unnoticed before the students point them at Canvas. Without the
+    variable, or with a Canvas target, nothing in CI changes: CI never holds a Canvas or Feide secret.
+  - **One read of `content/h5p-tekstar/`.** `main.ts` passes the start-up's loaded H5P texts to `createH5pRuntime`
+    (D-111), so the overlay the engine uses is the one the start checked, and a test's content folder reaches the
+    engine (`startupLanguageOverlay.test.ts`). `createH5pRuntime` still loads the folder itself when no overlay is
+    given (the seed command, the test beds).
+  - **InteractiveVideo's scored end-screen summary** (D-111's review amendment) becomes the third entry of D-080's
+    English-text register (`UPSTREAM_ENGLISH_TEXTS`), with a draft in `docs/upstream/h5p-accessibility/` (D-112);
+    the conformance report shows it under 3.1.2. Checked on 2026-11-05 at the pinned commit and on the default branch
+    (114f513): both pass `endCardTableRowSummary`, which the semantics do not have.
+  - **Links:** the root README, PROGRESS and the Evaluator Guide link the hand-off index, the tester guide, the
+    security policy and the upstream index; the index lists every workstream's hand-off item.
 
 ### D-102 · `SPEC-DEVIATION` LTI-010: the xAPI bridge is plain JavaScript in the player document, for learners only
 - **Context:** `LTI-010` puts the bridge in `packages/hvl-h5p-theme/src/xapiBridge.ts`: it subscribes to
@@ -3881,6 +4028,68 @@ loading of one spec per session are kept.
     by hand; and the step `npm run a11y:report -- --check`, which D-079's amendment of 2026-11-05 makes part of the
     gate. Its cache comment names the build recipe (`buildEnv`, the image amendment's follow-ups).
   - **Key rotation:** the old `DATA_ENCRYPTION_KEYS` key now stays at least 31 days (D-056's amendment of today).
+- **Amendment (2026-11-05, S6 step 7: hardening after step 6's security review):** decided before the changes; it
+  settles the findings the review left open (PROGRESS, step 6, «Still open»).
+  - **clamd's alerts are required (`SEC-006`).** clamd answers `OK` for a file it did not scan in full unless it is
+    told otherwise. Measured with the ClamAV 1.4.6 image above, its signatures and nothing else changed: with the
+    image's defaults every one of these was `OK`: a ZIP and a PDF that need a password to open, an office file of
+    10 050 entries (over `MaxFiles`, 10 000; 75 s of clamd's time), one of ZIPs nested 20 deep (over `MaxRecursion`,
+    17), one that unpacks to 450 MiB (over `MaxScanSize`, 400 MiB) and, with `MaxScanTime` set to 5 s, one of 9 000
+    entries cut off after 5 s. With `AlertExceedsMax yes` and `AlertEncrypted yes` they were answered
+    `Heuristics.Encrypted.Zip`, `Heuristics.Encrypted.PDF` and `Heuristics.Limits.Exceeded.MaxFiles`, `.MaxRecursion`,
+    `.MaxScanSize` and `.MaxScanTime` (so `AlertExceedsMax` covers more limits than `clamd.conf`'s comment names), also
+    with `HeuristicAlerts no`; the EICAR file, a clean text, a plain PDF, a PDF with only an owner password (it opens
+    without one) and 60 MiB of random bytes were answered as before. Both settings become required wherever HVL runs
+    clamd for this service (`AlertEncryptedArchive yes` with `AlertEncryptedDoc yes` may stand for
+    `AlertEncrypted yes`), and `MaxScanTime` should be no higher than `CLAMAV_TIMEOUT_MS`, so that a scan the server has
+    given up on also ends in clamd. The server cannot ask clamd for its settings, so this is a deployment checklist
+    item ([runbook](ops/runbook.md) §9, [clamav.md](ops/clamav.md)). The stacks that start a clamd set both through the
+    official image's `CLAMD_CONF_<option>` variables, which its entrypoint writes into `clamd.conf` (read in its
+    `/init`; measured above): `deploy/compose.app.yml`'s `clamav` (the Docker smoke) and `ci.yml`'s `clamav` service.
+  - **Accepted:** such files are refused as malware. The author sees `upload.file.malwareFound` (a password-protected
+    PDF or an office file too large or too deeply nested to check), and the log line's `signatures` names the
+    heuristic, so support can tell the cases apart. This includes a very long, ordinary PDF: `MaxFiles` also counts a
+    PDF's streams, so a plain 4 MB PDF of 12 000 pages (one content stream each) was refused as
+    `Heuristics.Limits.Exceeded.MaxFiles`, while 5 000 pages and the ordinary PDFs tried passed (measured by the
+    step's review). Not chosen: mapping `Heuristics.*` names to a message of their own; the scanner wrapper treats
+    every finding alike, and a heuristic name is clamd's to choose.
+  - **Not closed by these settings:** while measuring, further files were found that clamd answers `OK` without
+    unpacking them in full, with both settings on. As security findings they go to the owner outside the repository
+    (D-112's rule for security reports), with a proposed check of our own in the upload path.
+  - **The root `docker-compose.yml` publishes on the loopback only.** It published PostgreSQL (with a fixed password),
+    Redis (with none) and the S3 emulator on every interface, and runbook §8 runs those services on a production-like
+    node for the full load test. Each port is now `127.0.0.1:<port>:<port>`. The development and test settings name
+    `localhost` (`.env.example`, `ci.yml`, `.devcontainer/createS3Buckets.mjs`), and in the dev container
+    docker-in-docker's daemon runs inside the container, so its loopback is the container's own. Node's clients try
+    `127.0.0.1` when `localhost` also resolves to `::1` (Node 24's `autoSelectFamily`). Measured with a copy of the
+    file on other ports: `pg`, `ioredis`, the S3 client and `.devcontainer/createS3Buckets.mjs` connect through
+    `localhost`, a lookup that answers `::1` first ends on `127.0.0.1`, and the host's other address is refused.
+    Every user and process on the host can still connect, so runbook §8 warns against running the file on a node that
+    holds real data or serves users, and the deployment checklist (§9) says so. Not chosen: a variable for the bind
+    address, which invites `0.0.0.0`; a developer who needs the services from another machine uses an SSH tunnel.
+  - **A name the storage refuses is "not found" on the cookie route.** `/h5p/content/:id/*file` passed a NUL byte in
+    the file name to PostgreSQL, which refused the query, so a signed-in person could cause a 500 and an error-level
+    log line at will. `PrismaContentStorage`'s `requireFile` and `fileExists` now treat a name that
+    `assertSafeObjectName` refuses as missing, before the database (`storableFileName.ts`, a predicate that
+    `signedFileRoutes.ts`' own copy of the check can share later): no stored file can have such a name, because the
+    store refuses it when it writes. Tests: `[SEC-004]` in `contentFiles.int.test.ts` (500 before the fix),
+    `[H5P-004]` in `contentStorage.int.test.ts` and `storableFileName.test.ts`. Narrowing or retiring the cookie
+    route itself stays open.
+  - **`frame-ancestors 'none'` in the user-file policy.** `USER_FILE_CSP` becomes
+    `sandbox; default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'`, so no page, ours or another
+    site's, can frame a user file (`frame-ancestors` does not fall back to `default-src`). Nothing frames one: the
+    player shows images with `<img>`, video and audio with `<video>` and `<audio>`, captions with `<track>`, and
+    documents are downloads; the editor's image editor draws an `<img>` into a canvas; the web app frames only the
+    player and editor pages. Of the 120 libraries D-078 fetches, only `H5P.IFrameEmbed` frames a content file (Column
+    offers it); it is in none of the ten seed packages, so the editor does not offer it, and the HTML it would frame
+    is refused by the allowlist (`SEC-002`). Should an administrator install it, its frames of content files are
+    refused, as intended. A stricter superset of D-045's policy, so not a deviation from `SEC-004`.
+  - **Smaller items:** `persist-credentials: false` on the checkout steps of `ci.yml` and `docker.yml`, since no
+    later step pushes or fetches with the job's token (`git diff` reads only the work tree); runbook §6 keeps the
+    local backup folder on an encrypted volume and restores from the authenticated off-server copy; `clamav.md` says
+    that `clamscan` 2.4.0 sends no server name (SNI), so the TLS proxy must present the certificate for
+    `CLAMAV_HOST` without one (D-112's amendment of today measured it). `upload.file.scanUnavailable` stays 400: a
+    503 changes the shared error mapping (`h5pErrorResponse.ts`), which is not the upload route's.
 
 ### D-111 · An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it
 - **Context:** S5's probe P1 found that many `nn` and `nb` defaults of the real libraries are English (MultiChoice,
@@ -3914,6 +4123,80 @@ loading of one spec per session are kept.
   background image"); D-086's missing-media check reports the empty slot to the author before publishing (an error
   that can be acknowledged, so it warns rather than blocks). Tests that pin English on purpose (probe P1's
   `ENGLISH_IN_NYNORSK`) change where the overlay reaches them.
+- **Amendment (2026-11-05, S6 step 7: the overlay as built):**
+  - **Files (`content/h5p-tekstar/`, with a README for ALU):** `library-texts.nn.yaml` and `library-texts.nb.yaml`,
+    one per language because Nynorsk and Bokmål may have different reviewers; English needs none, since the
+    libraries' own texts are English. Each names library versions (`H5P.Name major.minor`) and, per version,
+    `defaults` and `labels` by semantics path, and `libraryStrings` by key; every entry gives `en`, the library's
+    English text it translates, and the text in its own language (`nn` or `nb`). A path is the semantics field names
+    joined by `.`, with `[]` after a list's name for its item (the list item field's own name is left out), so it is
+    the path probe P1 reports. `video-guidance.yaml` holds `H5P-010`'s guidance once, in `nn`, `nb` and `en`, and
+    the video fields it goes under. Every file has `status: draft` until HVL's language advisers and ALU review it
+    (Q2, Q17). The texts are plain: `<` and `>` are refused, because the editor writes labels, descriptions and
+    library strings into its page as HTML.
+  - **Scope, widened:** besides the learner-facing defaults, an entry may give a field's `label`, so that a
+    field the overlay translates is not labelled in English in the editor, and `libraryStrings`, the editor's own
+    texts. The first are H5P.DragNBar 1.5's (the toolbar of CoursePresentation's and InteractiveVideo's editors),
+    English in both `nn.json` and `nb.json`; its «Paste» was D-080's example of a name we could only copy. The
+    drafts cover MultiChoice, QuestionSet, InteractiveBook and BranchingScenario first (probe P1), then
+    InteractiveVideo, ImageHotspots and CoursePresentation and the question types the containers offer most
+    (TrueFalse, MarkTheWords, SingleChoiceSet, Summary, Essay). A text that is already the Norwegian word («Pause»,
+    «Video») or holds no words (`@score / @maxscore`) gets no entry. Labels are given for the first four types; the
+    remaining English labels are for ALU to add.
+  - **Mechanism:** `LanguageOverlayLibraryStorage` wraps D-046's storage in the editor and the player. For
+    `language/nn.json` and `language/nb.json` of a listed version it parses the file Lumi would otherwise serve
+    (for `nn`, nb.json when nn.json is missing, D-046; the English file when the library has neither), sets each
+    entry on that copy, and keeps every other key, `libraryStrings` included. It resolves a path against the library's own
+    `semantics.json`, because a language file's fields are positional, filling a missing position with `{}` (which
+    H5P's deep merge ignores) and never with `null`. An entry whose path no longer resolves, or whose `en` is no
+    longer the library's English text (`semantics.json` for defaults and labels, `language/en.json` or `.en.json`
+    for library strings), is skipped, and a file where no entry applies is served as the library ships it. Every
+    other read is passed through, so packages, exports and installs see the library as it is. The player reads no language file in Lumi 10.0.4; it is wrapped too, so that a later Lumi
+    that does still gets the overlay.
+  - **`H5P-010`:** the editor's `alterLibrarySemantics` is D-006's DragQuestion filter followed by the English
+    guidance, set as the `description` of the listed fields (`H5P.InteractiveVideo 1.28`
+    `interactiveVideo.video.files` and `H5P.Video 1.6` `sources`); the overlay sets the `nn` and `nb` guidance on the
+    same fields. Neither library has an English language file that would hide the English guidance; `content:check`
+    refuses a listed version that has one.
+  - **Checks:** the server's start-up and `content:check` load the three files with D-082's loader (strict schema,
+    every problem with file, line and key; the folder may be absent, as the mappe's may). `content:check`, which has
+    the installed libraries, also refuses a version that is not installed, a path or a library string the library
+    does not have, a default on a field that has none, a field that is not a video field under the guidance, and an
+    `en` that is not the library's English text, so that a library update that changes a text is reported, not
+    silently skipped.
+  - **Loading:** `createH5pRuntime` takes the loaded texts; without them it loads `content/h5p-tekstar/` itself, so
+    every engine the server, the seed command or a test builds has the overlay. The overlay never changes stored
+    content: an activity keeps the texts it was saved with.
+  - **Tests:** the wrapper and the path resolver (unit), `content:check` refusing a broken file and a stale or
+    unknown entry, the editor's AJAX library data in `nb` with Norwegian defaults, labels and library strings and
+    in `en` unchanged, the guidance in all three languages, and in the real player and editor
+    (`languageOverlay.browser.int.test.ts`): a MultiChoice and a QuestionSet created in `nn` as the editor creates
+    them, whose buttons a screen reader names in Nynorsk and whose QuestionSet says «Neste», «Resultat» and «Poeng»,
+    and the editor in `nb` showing the overlay's labels (`[H5P-008]`, `[H5P-010]`). MultiChoice's visible «Sjekk»
+    was already Nynorsk; its «Send inn» is stored but shown only where a platform marks an activity as submitted
+    for scoring (H5P.Question's `isScoringEnabled` or `isReportingEnabled` in the content's data, which our player
+    does not set). Probe P1's `ENGLISH_IN_NYNORSK` keeps only «Pause», and the editor repair test's copied
+    DragNBar markup now reads «Lim inn».
+- **Amendment (2026-11-05, S6 step 7 review):**
+  - **No `"` in HVL's texts.** Libraries also put these texts into double-quoted HTML attributes (DragNBar 1.5
+    builds `title="' + H5PEditor.t('H5P.DragNBar', 'moreElements') + '"`; CoursePresentation 1.28 builds
+    `aria-label="'+this.cp.l10n.…+'"`), and the editor stores a default as it is, where it escapes what an author
+    types (`h5peditor.js` sets defaults, `h5peditor-text.js` escapes input). So the `nn` and `nb` texts and the three
+    guidance texts may not hold a straight double quote either (`SECURITY:`); «» is the Norwegian quotation mark the
+    files already use. `en` may hold one, because H5P's own English labels do and `en` is only compared, never shown.
+  - **Wording kept consistent with H5P's own Norwegian** in the same editor and player: MultiChoice's labels for
+    assistive technology say «Beskriving» and «assisterande teknologi» (nb «Beskrivelse», «assisterende teknologi»),
+    as Blanks and DragText say, not «Skildring» and «hjelpemiddel»; BranchingScenario's fullscreen name is
+    «Fullskjerm» and CoursePresentation's slide menu heading «Sider», as their own texts and the `nb` files say
+    elsewhere.
+    InteractiveVideo 1.28's end-screen summary without a score gets an entry, because its `nn.json` has «and» in it
+    and its `nb.json` lacks «og». Its summary *with* a score cannot be translated: the library passes
+    `l10n.endCardTableRowSummary`, a key its semantics do not have, so its English default is always shown
+    (`UPSTREAM:` H5P.InteractiveVideo, for D-112's owner and the UD-040 register).
+  - **Test added:** every entry of the real files applies on the pinned libraries and every other value of the file
+    H5P ships reaches the editor unchanged (`overlayKeepsShippedTexts.test.ts`).
+  - **Correction:** H5P.DragNBar 1.5's `nb.json` already has 3 of its 13 strings in Bokmål («Transformer»,
+    «Rediger», «Fjern»); the `nb` entries for them repeat H5P's words, so all 13 stay together for review.
 
 ### D-112 · Upstream reports drafted for the owner to file; Lumi stays at 10.0.4
 - **Context:** D-081 left two items for S6: ask Lumi's maintainers for a release with their unreleased file-security
@@ -3945,6 +4228,50 @@ loading of one spec per session are kept.
 - **Amendment (2026-10-30, probe P1):** the drafts also hold an H5P report for QuestionSet 1.21, whose `resetTask`
   resets every `.h5p-progress-dot` in the document, so its «Prøv igjen» fails on a page with several sets
   (D-115, Q20).
+- **Amendment (2026-11-05, S6 step 7: the drafts as written):** decided before the drafts.
+  - **Where:** `docs/upstream/`, one file per report (the H5P accessibility reports one per library, in
+    `docs/upstream/h5p-accessibility/`), and a README that lists every draft with its recipient, its channel and
+    whether it is ready or needs the owner's check, and says where each filed link goes back. The drafts are in
+    English, name our tests by file and title without links, and carry no personal data.
+  - **Security reports stay out of the repository.** The repository is public on GitHub (checked 2026-11-05), so a
+    private report committed here would be published before its vendor reads it. Two drafts are security reports:
+    to H5P Group, about H5P.AudioRecorder 1.0 and H5PEditor.AudioRecorder 1.0 writing the build machine's
+    environment into their JavaScript (D-110's amendment of 2026-11-05); and to Lumi, at the address in Lumi's
+    `SECURITY.md` (`security@lumi.education`, read at `master` 493cd3e), about findings already recorded in D-039,
+    D-040 and D-110's ClamAV amendment. Their full text is handed to the owner outside the repository; the README
+    names them by recipient and subject only. The owner sends them, to a security contact the owner has confirmed,
+    never as a public issue first; a public issue or a copy in `docs/upstream/` follows only once the vendor has
+    published a fix or agreed. What D-039, D-040 and D-110 already say publicly stays as it is.
+  - **Checked against upstream (2026-11-05, read-only shallow clones, nothing filed):** npm's newest
+    `@lumieducation/h5p-server` is still 10.0.4. Lumi's `master` (493cd3e, 2026-10-13) still deletes the acting
+    user's state in `deleteAllContentUserDataByUser` and keeps only `semantics` when `alterLibraryLanguageFile` is
+    set, and still accepts `NotScanned`; it fixes F1–F3 of spec 01 §1, decides SVG sanitising by the uploaded
+    file's own name, without regard to case, and depends on `probe-image-size` instead of `image-size`, so a
+    release would also end D-030's audit exceptions. H5P.AudioRecorder's default branch (7c66fab, 1.0.54) and
+    H5PEditor.AudioRecorder's (b2f6ec7) still pass the whole `process.env` to `DefinePlugin`; QuestionSet's
+    (a961bac, 1.21.14) still resets every progress dot in the document. Of the 27 webpack configurations among the
+    121 library checkouts of D-078's cache, only those two pass the whole environment. `clamscan` 2.4.0 is still
+    npm's newest; it opens TLS to clamd without a server name (SNI), which Node 24's `tls.connect` then does not
+    send (measured), and writes socket errors to stderr without its debug mode.
+  - **Reproduced without secrets (2026-11-05):** each AudioRecorder library, built at its pinned commit under
+    `env -i` with one made-up variable, carried that variable's value twice in its built file; with
+    `'process.env': JSON.stringify({ NODE_ENV: mode })` in its webpack configuration instead, neither the value nor
+    any other build-machine value was left, and no bare `process.env` remained (the suggested fix; not played in a
+    browser). Against the installed Lumi 10.0.4: an identity `alterLibraryLanguageFile` drops `libraryStrings`;
+    `deleteAllContentUserDataByUser('learner-1', operator)` asks the storage to delete the operator's state; the
+    ClamAV scanner reports a scan without a verdict (`isInfected: null`) as `Clean`.
+  - **Scope, widened:** besides the drafts the Decision names, the README lists drafts for `clamscan` (SNI, stderr)
+    and ltijs 7.0.7 (its launch page's unguarded `localStorage.removeItem`, D-050), a Lumi issue collecting small
+    API and typing gaps that `UPSTREAM:` tags work around, and a Core 1.28 and new-Hub backport that is filed only if
+    Lumi declines a release. `UPSTREAM:` tags that record how pinned upstream code works (D-080's V2D-5 amendment,
+    (b)) get no report. Texts H5P lacks in `nn` and `nb` go, once HVL's language advisers have reviewed D-111's
+    drafts, into pull requests to the libraries' language files, as H5P's contribution guide asks (`h5p/.github`,
+    read at e979edf), not into issues. H5P's issues use its organisation's Bug Report form (title `[Bug]: `), which
+    the H5P drafts follow; neither that guide nor the two AudioRecorder repositories name a security contact.
+  - **After filing:** the owner, or whoever edits the code next, puts each link where the README says: a register
+    entry's `UPSTREAM:` comment (as its second link, which `npm run a11y:report` shows in `UD-040`'s report), the
+    `UPSTREAM:` tag of a repair in `a11yRepairs.js` or `a11yEditorRepairs.js` in place of "no issue filed yet"
+    (D-080's DOC-13 amendment), and the `UPSTREAM:` tags of the Lumi workarounds.
 
 ### D-113 · The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard
 - **Context:** S5's gate took about 5 hours here, in parts of under 2 hours (the limit of a background command), and

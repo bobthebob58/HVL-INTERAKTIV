@@ -14,7 +14,7 @@ const SCRIPT = repairScript('a11yEditorRepairs.js');
 
 /** The editor's score-range table (its first heading carries H5P's required marker), editor-mode switch, vertical
  * tabs and their forms, hotspot position picker, hub list and DragNBar 1.5's paste button (whose tooltip DragNBar
- * 1.5 leaves in English in nn and nb). */
+ * 1.5 ships in English in nn and nb, and HVL's language overlay gives as «Lim inn», D-111). */
 const EDITOR = `<table class="h5p-editor-table-list h5p-editor-range-list"><thead><tr><th class="h5peditor-required">Poengområde</th><th class="h5peditor-dash"></th><th></th><th>Tilbakemelding</th></tr></thead><tbody>
   <tr><td><div class="h5peditor-input-text">51 %</div><input id="field-from-1" style="display: none"></td><td class="h5peditor-dash">–</td><td><label for="field-to-2"></label><input id="field-to-2"></td><td></td></tr></tbody></table>
 <ul class="h5peditor-widget-select" title="Redigeringsmodus"><li class="h5peditor-widget-option h5peditor-widget-active" role="button" tabindex="1" id="w0">Standard</li><li class="h5peditor-widget-option" role="button" tabindex="1" id="w1">Tekstleg</li></ul>
@@ -25,7 +25,7 @@ const EDITOR = `<table class="h5p-editor-table-list h5p-editor-range-list"><thea
 <div class="image-coordinate-selector"><div class="image-coordinate-hotspot"></div><img src="diagram.png" id="picker"></div>
 <div class="h5p-hub-content-type-section"><div class="h5p-hub-result-header">Alle innhaldstypar</div><div class="h5p-hub-content-type-list"><ol id="hub"><li id="h5p-blanks" class="h5p-hub-media" tabindex="0" role="button"><button type="button" tabindex="0">Detaljar</button></li></ol></div></div>
 <ul class="h5p-dragnbar-ul"><li class="h5p-dragnbar-li"><a href="#" class="h5p-dragnbar-a h5p-dragnbar-text-button" aria-label="Tekst"></a><span class="h5p-dragnbar-tooltip">Tekst</span></li>
-  <li class="h5p-dragnbar-li paste-button disabled"><a href="#" class="h5p-dragnbar-a h5p-dragnbar-paste-button" id="paste"></a><span class="h5p-dragnbar-tooltip">Paste</span></li></ul>`;
+  <li class="h5p-dragnbar-li paste-button disabled"><a href="#" class="h5p-dragnbar-a h5p-dragnbar-paste-button" id="paste"></a><span class="h5p-dragnbar-tooltip">Lim inn</span></li></ul>`;
 
 const openDocument = (body: string) => openRepairDocument(SCRIPT, body);
 
@@ -91,7 +91,7 @@ describe('the H5P editor markup repair script', () => {
 
   it("[UD-030] gives DragNBar's paste button its tooltip's text and keeps the other buttons' names", () => {
     const { attr } = openDocument(EDITOR);
-    expect(attr('#paste', 'aria-label')).toBe('Paste');
+    expect(attr('#paste', 'aria-label')).toBe('Lim inn');
     expect(attr('.h5p-dragnbar-text-button', 'aria-label')).toBe('Tekst');
   });
 

@@ -88,6 +88,20 @@ describeWithServices('H5P content files', () => {
     }
   });
 
+  it('[SEC-004] a file name no stored file can have is 404 on the cookie route, never a server error', async () => {
+    // Arrange: a NUL byte, a control character and a backslash, each in an otherwise stored image's path
+    const names = [`${image}%00.svg`, image.replace('/', '/%01'), image.replace('/', '%5C')];
+    // Act
+    const answers = await Promise.all(names.map((name) => get(author, name)));
+    // Assert: Lumi's not-found answer, the same as for any missing file
+    for (const [i, res] of answers.entries()) {
+      expect(res.status, names[i]).toBe(404);
+      expect(JSON.parse((res.body as Buffer).toString('utf8')), names[i]).toMatchObject({
+        errorCode: 'content-file-missing',
+      });
+    }
+  });
+
   it('[H5P-004] a missing file is 404, and a traversal path never leaves the activity', async () => {
     expect((await get(author, 'images/missing.png')).status).toBe(404);
     const res = await requestAs(tb.app, author, 'get', `/h5p/content/${contentId}/..%2F..%2Fetc%2Fpasswd`);

@@ -3,7 +3,8 @@
  * changes it fails the probe and is looked at again.
  *
  * Why: the pattern work (W2) builds on these facts: which version of each type the editor offers, what the editor
- *      still adds when it saves a server-created activity, and which defaults stay English in Nynorsk (D-084).
+ *      still adds when it saves a server-created activity, and which defaults stay English in Nynorsk (D-084); the
+ *      last shrank to «Pause» when HVL's language overlay came (D-111).
  * Spec: PED-010, PROD-001, H5P-008
  * Invariants: paths are collapsed (`[]` for list indices) and sorted, as ./skeletonCreationDiff.ts makes them.
  * Collaborators: ./skeletonCreation.browser.int.test.ts.
@@ -84,41 +85,17 @@ export const EDITOR_METADATA_FIELDS: ReadonlySet<string> = new Set([
   'extraTitle',
 ]);
 
-const MC = 'interactiveVideo.assets.interactions[].action.params.UI.';
-const BOOK_MC = `${QUESTION}UI.`;
-
-/** Learner-facing defaults whose Nynorsk value is the library's English text (H5P-008). */
+/**
+ * Learner-facing defaults whose Nynorsk value is the library's English text (H5P-008). Since HVL's language overlay
+ * (D-111, `content/h5p-tekstar/`) only «Pause» is left, which is also the Nynorsk word; the overlay translated the
+ * rest that probe P1 found (MultiChoice's submit button and its three descriptions for assistive technology,
+ * InteractiveVideo's end-card «Question», BranchingScenario's buttons, QuestionSet's navigation and results texts,
+ * InteractiveBook's navigation and ImageHotspots' two labels).
+ */
 export const ENGLISH_IN_NYNORSK: Readonly<Record<string, readonly string[]>> = {
-  'fa-video': [
-    `${MC}a11yCheck`,
-    `${MC}a11yRetry`,
-    `${MC}a11yShowSolution`,
-    `${MC}submitAnswerButton`,
-    'l10n.endcardQuestion',
-    // WHY: "Pause" is also the Nynorsk word; listed because it is the same text.
-    'l10n.pause',
-  ],
-  'uv-case': [
-    'branchingScenario.content[].proceedButtonText',
-    'branchingScenario.l10n.disableProceedButtonText',
-    'branchingScenario.l10n.fullscreenAria',
-    'branchingScenario.l10n.replayButtonText',
-  ],
-  'uv-module': [
-    `${CHECK}endGame.amountCorrect`,
-    `${CHECK}endGame.message`,
-    `${CHECK}endGame.scoreHeader`,
-    `${BOOK_MC}a11yCheck`,
-    `${BOOK_MC}a11yRetry`,
-    `${BOOK_MC}a11yShowSolution`,
-    `${BOOK_MC}submitAnswerButton`,
-    `${CHECK}texts.next`,
-    `${CHECK}texts.noQuestionAdded`,
-    `${CHECK}texts.previous`,
-    `${CHECK}texts.questionSetInstruction`,
-    'next',
-    'page',
-    'previous',
-  ],
-  'fa-hotspots': ['containsAudioVideoLabel', 'untitledHotspotLabel'],
+  // WHY: "Pause" is also the Nynorsk word; listed because it is the same text, so the overlay has no entry for it.
+  'fa-video': ['l10n.pause'],
+  'uv-case': [],
+  'uv-module': [],
+  'fa-hotspots': [],
 };

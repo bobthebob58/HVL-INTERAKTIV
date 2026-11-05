@@ -149,6 +149,9 @@ whose results HVL records (D-079); `UD-031`'s own check, a dated result file for
 | `npx vitest run tools/ops` *(from S6)* | The backup round trip on the local services: back up, wipe, restore and compare every table's count and an object's SHA-256; a tampered backup, a non-empty target and a backup that differs are refused or reported (`NFR-002`, [ops/runbook.md](ops/runbook.md) §6) |
 | `npm run load:smoke` *(from S6)* | k6 2.3.0 (by digest, in Docker) against the whole app on one node with the mock Canvas and the ten real types: 20 learners for 30 s, each a real launch, the player page with its assets, xAPI batches and state saves; exit 0 only when every threshold holds (`NFR-001`, D-114; `npm run load:full` is HVL's 200-learner run, [ops/runbook.md](ops/runbook.md) §8) |
 | `npm run a11y:report -- --check` *(from S6)* | The conformance report `docs/accessibility/WCAG-CONFORMANCE-REPORT.md` matches its sources (the 56 WCAG 2.2 A/AA criteria, axe-core's rules, the committed run summary, the protocol and the upstream register), with HVL's manual blocks kept byte for byte (`UD-040`, D-079's amendments) |
+| `npx vitest run -t "H5P-008\|H5P-010"` *(from S6)* | HVL's language overlay (D-111): the path resolver and merge keep every key H5P ships, `libraryStrings` included, for every real entry on the pinned libraries; a stale `en` is skipped; `content:check` refuses markup, a straight `"`, an unknown field or string and a changed English text; the start-up hands its texts to the engine; a real `nn` player names QuestionSet's and MultiChoice's controls in Nynorsk and a real `nb` editor shows the overlay's labels, while English is unchanged; the Panopto guidance in nn, nb and en (`H5P-010`). The browser tests need Chromium and the real types |
+| `npm run test:live` *(from S6)* | The live-contract seam (`apps/server/live/`, D-101): with nothing set, only its configuration and guard tests run (the checks are skipped); with `LIVE_TARGET=mock` (as in CI) every check passes against the mock Canvas and mock Feide; with the `LIVE_CANVAS_*` and `LIVE_FEIDE_ISSUER` variables it checks ALU's test Canvas and real Feide, which only HVL or the students can run ([handoff/canvas-acceptance.md](handoff/canvas-acceptance.md)) |
+| `npx vitest run tools/issue-forms` *(from S6)* | The pilot's GitHub issue forms, chooser and label list are valid for GitHub and in step with each other and with the tester guide: the privacy confirmation required, blank issues off, the ten types by their Nynorsk names, the protocol's set-ups, one repository in every link (`NFR-004`, `DATA-010`, D-101's amendments) |
 | `NODE_USE_ENV_PROXY=1 npm run hub:check` *(from S2)* | Spike step 3: Hub registration status, the 15-character `local_id`, versions of the ten types |
 
 ---
@@ -277,7 +280,9 @@ start-up refusals (D-113); they stay *not verified* until HVL acts, and the gate
 1. **Scores are computed in the browser.** H5P scoring cannot be made tamper-proof. HVL Interaktiv
    is for formative use only (`LTI-013`, `PROD-011`).
 2. **Upstream accessibility.** Some barriers are inside H5P content types and can only be fixed
-   upstream. The conformance report (`UD-040`) lists them with issue links.
+   upstream. The conformance report (`UD-040`) lists them with links to the upstream code. No issue is filed yet:
+   the reports are drafted in [upstream/README.md](upstream/README.md) for the owner to file (D-112), and each
+   link goes into the register once filed.
 3. **The H5P Hub is still unreachable; real content types come from GitHub** (D-078, D-047). The ten content types
    and their dependencies are cloned at pinned commits and verified file by file; all ten install through the seed
    path, play, open in the editor and save under Core 1.28 and Lumi 10.0.4 (R-01 settled). Hub registration and
@@ -294,7 +299,10 @@ start-up refusals (D-113); they stay *not verified* until HVL acts, and the gate
    `feide_login` under privacy level `anonymous` (Q4) and the `hvl_placement` field in the developer key
    (Q13). Canvas–Feide account linking stays off for a platform until `"feideLinking": true` is set in
    `LTI_PLATFORMS` after that test launch (D-063). Every HVL value is an environment variable, so the real services need configuration rather than
-   code, unless they behave differently from the documented values the mocks follow.
+   code, unless they behave differently from the documented values the mocks follow. From S6 the facts the mocks
+   assume are checks that can run against ALU's test Canvas and real Feide (`npm run test:live`), with a checklist
+   for what a test cannot do; both pass to HVL's bachelor students
+   ([handoff/live-contract-seam.md](handoff/live-contract-seam.md), [handoff/canvas-acceptance.md](handoff/canvas-acceptance.md)).
 6. **Strict package versions.** An author's `.h5p` import is refused when any library differs from the
    installed one in its patch version (`SEC-003`, Q9), which will refuse many packages exported elsewhere.
 7. **Some pages stay server-rendered** (D-067). The web app (`apps/web`) serves the start page, the activity pages,
@@ -384,8 +392,10 @@ start-up refusals (D-113); they stay *not verified* until HVL acts, and the gate
     so `ActivityResultsSource` answers "no results yet" and the portfolio says so in one sentence per activity. The
     minimum group size (`MIN_GROUP_SIZE`, *k* = 5 by default, never below 3) and its two-sided suppression are built
     and tested against a fixture source; S6 adds the real source.
-20. **The Canvas side of the studio waits for S6** (D-098). The content bank and "new from a pattern" in the Deep
-    Linking picker and the `LTI-007` duplicate in `/app/play` are S6 items. In Canvas the editor's save choice offers
+20. **The Canvas side of the studio passes to the students** (D-098, D-101). S6 did not reach the content bank and
+    "new from a pattern" in the Deep Linking picker or the `LTI-007` duplicate in `/app/play`; they pass to HVL's
+    bachelor students with a design note ([handoff/canvas-studio.md](handoff/canvas-studio.md)), and the
+    [hand-off index](handoff/README.md) lists everything else that does. In Canvas the editor's save choice offers
     only resetting the students' progress or cancelling, with a pointer to the portal for saving a new version.
 21. **Known limits of collaboration and copies, accepted for now** (D-091, D-092, D-093). The content bank shows
     the 200 newest listings without paging, and a listing only while its owner is findable HVL staff (an eligible
@@ -395,3 +405,11 @@ start-up refusals (D-113); they stay *not verified* until HVL acts, and the gate
     fact, and gets the server's explanation (`hvl:sharing-not-allowed`) when searching (D-092). When HVL
     installs a newer minor version of a content type, the first save of each older activity counts as structural,
     because H5P's editor upgrades it, so authors whose students have saved progress are asked to reset or copy.
+22. **Some of H5P's own texts are still English in Nynorsk and Bokmål** (D-111). HVL's language overlay translates
+    the learner-facing buttons and messages of the ten types and their common sub-content, the editor labels of
+    MultiChoice, QuestionSet, InteractiveBook and BranchingScenario, and DragNBar's toolbar; its texts are drafts
+    until HVL's language advisers and ALU review them (Q2, Q17), and an activity keeps the texts it was saved with.
+    Most other editor labels, the `H5PEditor.*` libraries' strings and less common sub-content stay English. Three
+    texts no language file reaches are listed in the upstream register (`UPSTREAM_ENGLISH_TEXTS`): H5P.Video's
+    "Video source is missing.", ImageHotspots' "Missing required background image" and InteractiveVideo's
+    end-screen summary of a scored question, which screen readers read in English.

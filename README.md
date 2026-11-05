@@ -10,17 +10,19 @@ it in Canvas and, before the next seminar, sees which misconceptions to address.
 activities that explain *why* an answer is wrong, work with screen readers and on phones, and can
 be resumed where they left off.
 
-> **Status (2026-10-30): Sessions 1–5 passed their gates; Session 6, the last planned one, is in progress.**
-> The server (`apps/server`) runs the H5P engine with the ten content types, Feide login, Canvas LTI 1.3 launches
-> and Deep Linking, and the pre-publish validator; the web app (`apps/web`) has the activity pages, the publish flow
-> and the Canvas page, with the HVL design tokens and H5P theme, and (S5) the læringsdesign studio: the guide, the
-> patterns, the planner, sharing with co-authors and the content bank, and the pedagogisk mappe export. Session 6
-> builds what is not there yet: the xAPI → Canvas grade bridge, teacher insight as an **Innsikt** tab with groups of
-> fewer than five learners hidden, the privacy jobs (the yearly purge, data-subject requests), deployment and
-> operations (Docker images, a separate origin for user files, virus scanning, the runbook) and the conformance
-> report. What it does not reach, and what needs HVL's own Canvas, Feide or servers, passes to HVL's bachelor
-> students in programming (spring 2027) with a hand-off index (D-101). Build progress, what is open and every gate's
-> output are in [PROGRESS.md](PROGRESS.md); the [Evaluator Guide](docs/EVALUATOR-GUIDE.md) says how to check it.
+> **Status (2026-11-05): Sessions 1–5 passed their gates; Session 6, the last planned one, is built through its step 7
+> and its gate has not run yet.** The server (`apps/server`) runs the H5P engine with the ten content types, Feide
+> login, Canvas LTI 1.3 launches and Deep Linking, and the pre-publish validator; the web app (`apps/web`) has the
+> activity pages, the publish flow and the Canvas page, with the HVL design tokens and H5P theme, and (S5) the
+> læringsdesign studio: the guide, the patterns, the planner, sharing with co-authors and the content bank, and the
+> pedagogisk mappe export. Session 6 added the xAPI → Canvas grade bridge, teacher insight as an **Innsikt** tab with
+> groups of fewer than five learners hidden, the privacy jobs (the yearly purge, data-subject requests), deployment
+> and operations (Docker images, a separate origin for user files, virus scanning, backups, the runbook), the
+> conformance report, HVL's Nynorsk and Bokmål texts for H5P's own buttons, problem reporting for the pilot, and the
+> drafts of the reports owed upstream. What needs HVL's own Canvas, Feide or servers, and what Session 6 does not
+> reach, passes to HVL's bachelor students in programming (spring 2027) through the
+> [hand-off index](docs/handoff/README.md) (D-101). Build progress, what is open and every gate's output are in
+> [PROGRESS.md](PROGRESS.md); the [Evaluator Guide](docs/EVALUATOR-GUIDE.md) says how to check it.
 
 ---
 
@@ -53,6 +55,11 @@ be resumed where they left off.
 | See why things were decided, including corrections to the original plan | [docs/DECISIONS.md](docs/DECISIONS.md) |
 | Look up a Norwegian term | [docs/GLOSSARY.md](docs/GLOSSARY.md) |
 | Supply HVL reference material | [docs/reference/README.md](docs/reference/README.md) |
+| **Take over the project** (HVL's bachelor students, spring 2027): what is done, what needs HVL, what passes to you | [docs/handoff/README.md](docs/handoff/README.md) |
+| Run it in production: image, deployment checklist, backups, ClamAV, the yearly purge | [docs/ops/README.md](docs/ops/README.md) |
+| Report a problem found in the pilot (testers, in Nynorsk) | [docs/testing/rapportere-problem.md](docs/testing/rapportere-problem.md); maintainers: [docs/testing/labels-and-triage.md](docs/testing/labels-and-triage.md) |
+| Report a security problem (privately, never as an issue) | [SECURITY.md](SECURITY.md) |
+| See what we owe upstream (Lumi, H5P): drafts for the owner to file | [docs/upstream/README.md](docs/upstream/README.md) |
 | Build it with Claude Code | [CLAUDE.md](CLAUDE.md) and [PROGRESS.md](PROGRESS.md) |
 
 ## How the specification is organised

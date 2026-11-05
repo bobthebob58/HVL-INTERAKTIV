@@ -301,6 +301,21 @@ whole page is open question Q6.
 **How:** as in §8, a developer changes the three files together; a row of the data inventory changes with it when
 the facts change.
 
+## 9a. Added in Session 6: HVL's texts for the H5P content types (`content/h5p-tekstar/`)
+
+Added on 2026-11-05 (S6 step 7, D-111). The content types' own Nynorsk and Bokmål texts are partly English
+(«Submit», «Next», «Retry the task …»), so HVL keeps its own texts, which the server lays over theirs. They are
+drafts (`status: draft`) for **HVL's language advisers** and ALU (Q2, Q17); how to change one is in
+[content/h5p-tekstar/README.md](../../content/h5p-tekstar/README.md).
+
+| File | What to read | Questions |
+|---|---|---|
+| `library-texts.nn.yaml` (91 texts) and `library-texts.nb.yaml` (93) | Each entry shows the English text (`en`) and the draft (`nn` or `nb`): learners' buttons and messages of MultiChoice, QuestionSet, InteractiveBook and BranchingScenario first, then InteractiveVideo, ImageHotspots, CoursePresentation and common question types; editor labels for the first four; the editor toolbar of CoursePresentation and InteractiveVideo («Lim inn», «Rediger» …) | Is the wording right, and the same as H5P's own Norwegian elsewhere on the page (the drafts follow it: «Beskriving … for assisterande teknologi», «Fullskjerm», «Sider»)? Points the S6 review left open: ImageHotspots' «Punkt utan tittel» (H5P's own nb says «Hotspot»); MultiChoice nb «Poenglinjen som tekst, for skjermlesere» against SingleChoiceSet's «Tekstalternativ til resultatlinja»; InteractiveVideo's «Spørsmål» against QuestionSet's «Oppgåve». Are the editor labels that stay English worth translating? |
+| `video-guidance.yaml` | One text in nn, nb and en under the video field (Panopto first, captions, at most 50 MB; `H5P-010`) | Is the wording right, and should it name HVL's Panopto address? |
+
+Texts must stay plain: no `<`, `>` or straight `"` (use «»); `npm run content:check` says which line breaks a rule.
+Once reviewed, the texts can also go to H5P's own language files, so every H5P user gets them (D-112).
+
 ## 10. Checklist and outcome
 
 Fill in one row per item as the review goes. Outcome: *Approved*, *Approved with changes*, *Not approved* (say what
@@ -322,10 +337,13 @@ is needed) or *Not reviewed*.
 | 12 | Content bank consent text, ALU (§8) | | | | | |
 | 13 | Content bank consent text, HVL's lawyers (§8) | | | | | |
 | 14 | Privacy sentences about colleagues (§9) | | | | | |
+| 15 | H5P texts, nn (§9a), with HVL's language advisers | | | | | |
+| 16 | H5P texts, nb (§9a), with HVL's language advisers | | | | | |
+| 17 | Video guidance, nn, nb and en, and the Panopto address (§9a) | | | | | |
 
 When the review is complete:
 1. Merge the pull requests listed above.
 2. Set `status: confirmed-by-alu` in `content/laeringsdesign/phases.yaml`, and `verify: false` on each checked
-   reference and limit.
+   reference and limit; set `status: reviewed` in each reviewed file of `content/h5p-tekstar/`.
 3. Write the outcome, with the date and a link to this file, in PROGRESS.md: in the row of Q17 under *Open questions*
    and at «Pilot evaluators from ALU and Pedagogisk akademi review the studio content» in the S5 checklist.

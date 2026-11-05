@@ -720,7 +720,19 @@ under the step that does it):
         their decisions; no high or medium defect in the code. One low fix with a regression test that fails without
         it: a NUL byte in a granted file path reached PostgreSQL and gave 500 with an error-level log line on demand;
         `signedFileRoutes.ts` now answers 404 before storage for any name `assertSafeObjectName` refuses
-        (`[SEC-004]` in `filesOrigin.int.test.ts`). Its other findings are under «Still open» below
+        (`[SEC-004]` in `filesOrigin.int.test.ts`). Its other findings: fixed in step 7 (the next item), or under
+        «Still open» below
+  - [x] The review's other findings, fixed in step 7 (the hardening workstream, D-110's amendment of 2026-11-05, each
+        with its test or document; verified again in the step-7 finish run, session log «2026-11-05 · S6 step 7»):
+        clamd's `AlertExceedsMax` and `AlertEncrypted` are required in [clamav.md](docs/ops/clamav.md) and runbook §9
+        and set in `deploy/compose.app.yml`'s and `ci.yml`'s clamd; the root `docker-compose.yml` publishes on
+        127.0.0.1 only, with runbook §8's warning; a name the storage refuses (a NUL byte) is 404 on the cookie route,
+        not 500 (`storableFileName.ts`, `[SEC-004]` in `contentFiles.int.test.ts`); `frame-ancestors 'none'` in the
+        user-file policy (`ContentFileHeaders.test.ts`, `signedFiles.int.test.ts`); `persist-credentials: false` in
+        `ci.yml` and `docker.yml`; runbook §6's encrypted backup volume; the clamscan SNI note in `clamav.md`.
+        `upload.file.scanUnavailable` stays 400 by that amendment (a 503 would change the shared error mapping). The
+        upstream reports for Lumi's scanner, clamscan and AudioRecorder are drafted (step 7, D-112; the two security
+        reports are held outside the repository)
   - [x] `docs/TRACEABILITY.md` and the spec site regenerated; every check, every test set, the e2e set, the
         accessibility files for the player, editor, insight and grade sync, and the Docker smoke on the final working
         tree pass (session log, «2026-11-05 · S6 step 6»)
@@ -729,40 +741,60 @@ under the step that does it):
         `DATA-003`, `H5P-003`
   - Still open: `docker.yml`'s first run on GitHub (Chromium from Playwright's CDN and its SHA-256, AppArmor, the
     `/proc` check on the runner); HVL's runtime, DNS and clamd (Q5); the 200-learner load test and the restore drill
-    on HVL's hardware; the manual accessibility run and the 56 verdicts (`UD-031`); upstream reports for Lumi's
-    scanner, clamscan and AudioRecorder (step 7, D-112); the SHA-256 list of the content types kept in the repository
-    (D-110, waits for reproducible builds); `upload.file.scanUnavailable` answers 400, not 503 (the HTTP-errors
-    owner); the cookie-authenticated `/h5p/content/…` fallback route on the app origin (a D-110 amendment to narrow
-    or retire it; until then a NUL byte in its path gives a signed-in user a 500, which `PrismaContentStorage`'s
-    `requireFile` and `fileExists` should answer as not found). From the step-6 security review: clamd passes files
-    it did not scan in full (over ClamAV's size, recursion or file-count limits, or encrypted) unless
-    `AlertExceedsMax` and `AlertEncrypted` are set, so a D-110 amendment should make both required in `clamav.md`
-    and runbook §9 (medium–low); the root `docker-compose.yml` publishes PostgreSQL, Redis and moto on every
-    interface, and runbook §8 runs it on a production-like node, so bind them to 127.0.0.1 and warn in §8 (medium
-    on a networked host; a shared file); optional: refuse a request whose `Host` and `X-Forwarded-Host` disagree
-    about the files host; `frame-ancestors 'none'` for user files; runbook §6 to keep local backups on an encrypted
-    volume and restore from the authenticated off-server copy; `persist-credentials: false` in `ci.yml` and
-    `docker.yml`; `clamav.md`'s TLS note on clamscan 2.4.0 sending no SNI (D-112)
+    on HVL's hardware; the manual accessibility run and the 56 verdicts (`UD-031`); the SHA-256 list of the content
+    types kept in the repository (D-110, waits for reproducible builds); narrowing or retiring the
+    cookie-authenticated `/h5p/content/…` fallback route on the app origin (a D-110 amendment; passed to the students
+    through the [hand-off index](docs/handoff/README.md)); optional: refuse a request whose `Host` and
+    `X-Forwarded-Host` disagree about the files host; the further files clamd passes without unpacking them in full
+    even with both alerts on, which went to the owner outside the repository with a proposed check of our own in the
+    upload path (D-110's hardening amendment, D-112's rule for security reports; the owner confirms it arrived, since
+    no written copy was kept with the private drafts)
 - [ ] 7. E — Carry-overs: the language overlay and `H5P-010`'s texts (drafts for ALU) → problem reporting (the
       Nynorsk tester guide, GitHub issue forms) → upstream drafts → the **students' hand-off index**
       (`docs/handoff/README.md`: what is done, what needs HVL, the live-contract seam `apps/server/live/` and the
       Canvas acceptance checklist)
-  - [ ] Library texts that are English in `nn` and `nb` (S5 probe P1: MultiChoice, QuestionSet, InteractiveBook and
+  - **Built 2026-11-05** by five workstreams (the language overlay, problem reporting, the upstream drafts, the
+    hand-off index with the live-contract seam, and the hardening after step 6's security review), each reviewed by
+    a skeptic with mutation checks, then integrated (2026-11-05). Each decision's amendment came before its work:
+    D-111 (the overlay as built; its review), D-101 (problem reporting and its review; the hand-off index, the seam
+    and the checklist, and their review; the integration), D-112 (the drafts as written), D-110 (hardening after
+    step 6's review). The students' index: [docs/handoff/README.md](docs/handoff/README.md)
+  - [x] Library texts that are English in `nn` and `nb` (S5 probe P1: MultiChoice, QuestionSet, InteractiveBook and
         BranchingScenario buttons and messages; patterns set their own texts, D-084): an HVL language overlay, so
         activities made in the editor are Norwegian too. Decided in D-111: not through Lumi's
         `alterLibraryLanguageFile` hook, which in 10.0.4 drops the editor libraries' `libraryStrings`, but through a
-        library-storage wrapper after D-046's, with the texts in `content/` for ALU
-  - [ ] Panopto guidance (`H5P-010`), through the same overlay for `nn` and `nb` (D-111)
-  - [ ] The Canvas side of the studio (D-098): the content bank and "new from a pattern" in the Deep Linking picker,
-        and the `LTI-007` duplicate in `/app/play`; passes to the students when S6 does not reach it (D-101)
-  - [ ] LTI Dynamic Registration (`LTI-009`, COULD): the design only; the build passes to the students (D-101)
-  - [ ] Lumi's server half (D-081): ask Lumi's maintainers for a release with their unreleased file-security work, or
+        library-storage wrapper after D-046's, with the texts in `content/` for ALU. **Built:**
+        `LanguageOverlayLibraryStorage` over D-046's wrapper in the editor and the player; 91 texts in `nn` and 93 in
+        `nb` in [content/h5p-tekstar/](content/h5p-tekstar/README.md) (drafts, `status: draft`), with labels and
+        H5P.DragNBar's editor strings («Lim inn»); `content:check` checks them against the installed libraries (a
+        changed English text is reported, an unknown field or string refused, no `<`, `>` or straight `"`); the
+        start-up hands its texts to the engine (`main.ts`). Tests `[H5P-008]`: unit, integration, every real entry on
+        the pinned libraries (`overlayKeepsShippedTexts.test.ts`), a real `nn` player (QuestionSet's «Neste»,
+        «Resultat», «Poeng»; MultiChoice's Nynorsk button names) and `nb` editor, English unchanged; probe P1's
+        `ENGLISH_IN_NYNORSK` keeps only «Pause»
+  - [x] Panopto guidance (`H5P-010`), through the same overlay for `nn` and `nb` (D-111). **Built:** English through
+        `alterLibrarySemantics` after D-006's DragQuestion filter (`semantics/videoGuidance.ts`), `nn` and `nb`
+        through the overlay (`video-guidance.yaml`, a draft); `content:check` refuses guidance on a field that is not
+        a video field (`[H5P-010]` tests)
+  - [x] The Canvas side of the studio (D-098): the content bank and "new from a pattern" in the Deep Linking picker,
+        and the `LTI-007` duplicate in `/app/play`; passes to the students when S6 does not reach it (D-101).
+        **Not reached; passed on** with a design note, [docs/handoff/canvas-studio.md](docs/handoff/canvas-studio.md)
+  - [x] LTI Dynamic Registration (`LTI-009`, COULD): the design only; the build passes to the students (D-101).
+        **Design note:** [docs/handoff/dynamic-registration.md](docs/handoff/dynamic-registration.md)
+  - [x] Lumi's server half (D-081): ask Lumi's maintainers for a release with their unreleased file-security work, or
         review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
         10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
         upstream to Lumi and H5P. Decided in D-112: Lumi stays at 10.0.4 in S6; the release request, the Lumi issues
         and the H5P barrier reports are drafted in `docs/upstream/` for the owner to file; before 2027-01-31 HVL or
-        the students choose how the `image-size` exceptions end
-  - [ ] Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in `docs/` and
+        the students choose how the `image-size` exceptions end. **Drafted:** [docs/upstream/](docs/upstream/README.md)
+        holds the Lumi release request, two Lumi bugs (`deleteAllContentUserDataByUser`, `alterLibraryLanguageFile`),
+        a conditional Core 1.28 and new-Hub backport, eight small Lumi gaps, 15 H5P reports (14 accessibility
+        reports, one per library, including InteractiveVideo's untranslatable end-screen summary added at the
+        integration, and QuestionSet's retry, Q20), and drafts for clamscan and ltijs; the two security reports
+        (H5P.AudioRecorder's build environment; three Lumi findings) are held outside the public repository for the
+        owner to send privately (D-112's amendment). Nothing is filed; [lumi-path.md](docs/handoff/lumi-path.md) has
+        the three choices before 2027-01-31
+  - [x] Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in `docs/` and
         GitHub issue templates in `.github/ISSUE_TEMPLATE/` (a fault; an accessibility barrier) asking for the steps,
         what was expected and what happened, device, browser, assistive technology and zoom, the activity type or
         page, a screenshot, and the severity (cannot use, or privacy or security; accessibility barrier; cosmetic),
@@ -772,8 +804,45 @@ under the step that does it):
         reviews and merges. A problem seen only in HVL's Canvas or Feide needs the error and the server's log lines;
         one seen only on a device or with a screen reader needs a precise description and an HVL re-test; H5P's own
         barriers are repaired at run time or registered and reported (D-080). Manual results stay dated in
-        `docs/accessibility/results/`
-  - [ ] The students' hand-off index `docs/handoff/README.md` (D-101)
+        `docs/accessibility/results/`. **Built:** [docs/testing/rapportere-problem.md](docs/testing/rapportere-problem.md)
+        (Nynorsk, for testers), `.github/ISSUE_TEMPLATE/feil.yml` and `uu-barriere.yml` with `config.yml` (blank
+        issues off), `.github/labels.yml`, [docs/testing/labels-and-triage.md](docs/testing/labels-and-triage.md)
+        (maintainers), [SECURITY.md](SECURITY.md); a required no-personal-data confirmation in each form, and the
+        reason for using assistive technology never asked for (health data); checks in `tools/issue-forms` (13 tests)
+  - [x] The students' hand-off index `docs/handoff/README.md` (D-101). **Built:** the index with a Nynorsk summary,
+        eight design notes, the Canvas acceptance checklist and the live-contract seam `apps/server/live/`
+        (`npm run test:live`; skipped unless asked, 36 passing against the mocks, and run so in CI)
+  - [x] Integration (2026-11-05): `main.ts` hands the start-up's H5P texts to the engine
+        (`startupLanguageOverlay.test.ts`); `test:live` and the seam's type check; CI runs the seam against the
+        mocks; InteractiveVideo's scored end-screen summary in the English-text register, its upstream draft and the
+        conformance report; the hand-off index, root README, Evaluator Guide (commands, limitations 2, 5, 20, 22),
+        GLOSSARY, spec 01 (module map, `H5P-008` and `H5P-010` built), the server README and the ALU review packet
+        (§9a) updated (session log, «2026-11-05 · S6 step 7 (integration)»)
+  - [x] `docs/TRACEABILITY.md` and the spec site regenerated (new `[H5P-008]`, `[H5P-010]` and `tools/issue-forms`
+        tests, new source files, the DECISIONS amendments); every check, every test set (the server's in full, the
+        overlay's real `nn` player and `nb` editor tests included), the e2e set, the seam (skipped, and against the
+        mocks), the accessibility files for the player, editor, insight, grade sync and the register, the real-clamd
+        tests against a clamd with both alerts on, and the Docker smoke on the final working tree pass (session log,
+        «2026-11-05 · S6 step 7»)
+  - [ ] The commit, `Refs:` `H5P-008`, `H5P-010`, `SEC-004`, `SEC-006`, `NFR-004`, `NFR-003`, `DATA-010`,
+        `DATA-009`, `UD-031`, `UD-040`, `PROD-002`, `LTI-012`, `LTI-008`
+  - Passes to the students through the [hand-off index](docs/handoff/README.md) §3, each item with its design note:
+    the seam's first run against ALU's test Canvas and real Feide with the Canvas acceptance checklist
+    ([canvas-acceptance.md](docs/handoff/canvas-acceptance.md)); the Canvas side of the studio; `LTI-009`;
+    `INS-004`; insight's freshness (Q24); the research export (Q25, after the DPO); the simplification check if S6
+    does not reach it; the Lumi path before 2027-01-31; triage and fixes of the pilot's issues; the overlay's
+    remaining English in `nn` and `nb` (editor labels, `H5PEditor.*` strings, less common sub-content) and keeping
+    its entries current; the upstream links once the owner has filed the drafts; and, among the smaller items,
+    narrowing or retiring the cookie-authenticated `/h5p/content/…` route (D-110)
+  - Still open, not blocking the step: the owner's tasks before the pilot (create the labels with the `gh` loop in
+    `labels-and-triage.md`; HVL's security contact in `SECURITY.md`; private vulnerability reporting; the pilot's
+    contact person for testers; the two GitHub claims marked *(verify)* in `labels-and-triage.md`; filing the
+    drafts in `docs/upstream/` and sending the two security reports privately); the language advisers' and ALU's
+    review of `content/h5p-tekstar/` (Q2, Q17; ALU review packet §9a); the CI step that runs the seam against the
+    mocks has not yet run on GitHub; a library with neither `nn.json` nor `nb.json` gets no `nn` in the editor's
+    language list even with overlay entries (none today); H5P.Question shows «Send inn» only when the content's data
+    sets `isScoringEnabled` or `isReportingEnabled`, which Core 1.28 never sets from `reportingIsEnabled`, so learners
+    see «Sjekk» (for D-115's owner, information only)
 - [ ] 8. Integration: the accessibility suite for every new view; e2e journeys (J1 split if the Canvas studio is not
       reached, xAPI → AGS, insight, purge and data-subject requests); screenshots in `nn` at 1280 and 390 px sent to
       the owner as the views appear (CLAUDE.md §4)
@@ -799,7 +868,7 @@ under the step that does it):
 | # | Question | Owner | Blocks |
 |---|---|---|---|
 | Q1 | ~~Confirm the licence GPL-3.0-or-later (D-015)~~ Resolved 2026-10-16: `LICENSE` added | — | — |
-| Q2 | Confirm or replace the derived reference inputs 1–6, and supply the originals (logo files, ALU model document, mappe guidance) (`docs/reference/README.md`) | HVL / ALU / TeCopp | S2–S5 as listed |
+| Q2 | Confirm or replace the derived reference inputs 1–6, and supply the originals (logo files, ALU model document, mappe guidance) (`docs/reference/README.md`). From S6 also HVL's language advisers' review of the Nynorsk and Bokmål texts for the H5P content types and the Panopto guidance in `content/h5p-tekstar/` (D-111; ALU review packet §9a) | HVL / ALU / TeCopp | S2–S5 as listed |
 | Q7 | Allow `hub-api.h5p.org` (and ideally `www.hvl.no`, `auth.dataporten.no`, `docs.feide.no`, `*.instructure.com`) in the environment's network settings, or run `tools/seed/fetch-seed-packages.sh` elsewhere | Repository owner | S2 |
 | Q8 | Decide whether "(formativ)" may appear in Canvas assignment names (`LTI-013`) | HVL / ALU | S6 |
 | Q9 | `SEC-003` refuses a package whose library has a different patch version. Most `.h5p` files exported elsewhere differ in patch version. May an *older* patch be accepted for a content-only import? S2 follows the spec strictly | HVL / ALU | Pilot |
@@ -813,7 +882,7 @@ under the step that does it):
 | Q16 | ~~The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).**~~ Resolved 2026-10-30 (D-101): GitHub CI runs on `main` and on pull requests. `main` is protected by a ruleset that requires a pull request and CI's «Session gate» check; that check passed on pull request #8 (run 41066236672, on `72e5516`), which was then merged (`47e235e`); Dependabot opens one grouped monthly pull request per ecosystem (S5 start). The push run on the merge (run 41075981429) was red: its end-to-end step failed in `appPlayEditor.e2e`, which pressed «Lagre» before the editor could save, a real slow-device fault. It is fixed in S6 step 0; GitHub's confirmation comes with that step's push | — | — |
 | Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`). The container runtime must allow Playwright's seccomp profile and `CAP_SYS_CHROOT` for the PDF export's sandbox (OpenShift's `restricted-v2` allows neither), a DNS name and certificate for the files host (`files.<host>`, or a separate registrable domain), and a clamd with daily signatures (D-110's step-6 amendments) | HVL IT | S6 |
 | Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`). **Input complete 2026-11-05:** `docs/privacy/DPIA-INPUT.md` (purposes, operations, data flows with a diagram, the Canvas key's `privacy_level` and custom fields, recipients, retention, rights, security measures, residuals R1–R37, and the DPO's questions in its §13) | HVL DPO | S6, pilot |
-| Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns. Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
+| Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns; from S6 also the H5P texts and the video guidance in `content/h5p-tekstar/` (§9a, D-111). Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
 | Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`, set for learners only, so an author's preview never offers it; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
 | Q19 | Every ending of the `uv-case` pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give `uv-case` no Canvas score? | ALU | The pilot |
 | Q20 | In `uv-module`, a chapter check's «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question's own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision. **Default applied (2026-10-30, S6 step 3):** the three chapter checks in `uv-module`'s skeleton store `endGame.showRetryButton: false`, and each question keeps its own «Prøv igjen» until its check is finished; pending ALU's review of the patterns (Q17). **Found 2026-11-04:** the book's own «Prøv igjen» fails the same way (its reset throws in the first chapter check), so a finished chapter check cannot be retried at all; D-115 then turns the book's retry off too, once the regression test pins it, which `PED-H07` and `PROD-009` must allow (D-115's 2026-11-04 amendment). **Pinned 2026-11-04:** `uvModuleBookRetry.browser.int.test.ts` (an upstream pin) finishes the first chapter check and presses the book's «Prøv igjen» on its summary page: one `TypeError` (reading `classList`, from QuestionSet's reset), the book stays on its summary page, and the check keeps its results (D-115's amendment of the same day). **Open for the owner:** turn the book's retry off in the pattern (`behaviour.enableRetry: false`, a `PROD-009` `SPEC-DEVIATION`), or keep it on with the fault for the pilot; until then it stays on | ALU, owner | The pilot |
@@ -840,7 +909,7 @@ under the step that does it):
 | R-05 | A session runs out of usage quota mid-milestone | Medium | Low | One milestone per session; commit early; update this file before stopping |
 | R-06 | Upstream H5P accessibility barriers | High | Medium | Theme fixes where possible; report upstream; document in `UD-040` |
 | R-08 | `image-size` (via h5p-server) has two unfixed DoS advisories; accepted until 2027-01-31 (D-030) | Low | Medium | Only reachable through authenticated uploads; `SEC-002` sniffing in S2; `check:audit` fails at expiry |
-| R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081 |
+| R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (`docs/upstream/lumi-release-request.md`, D-112); the choice before 2027-01-31 is in `docs/handoff/lumi-path.md` |
 
 ## Session log
 
@@ -1388,4 +1457,96 @@ Append one entry per session: date, session, what was done, gate output, and any
       ✓ sandbox in /proc: 2 renderers, NSpid [3,3], filters [2,2] · ✓ start-up probe: pdfSandbox true, reason ok
       Chromium 141.0.7390.37 · disk 17 GB → 10 GB → 17 GB · no image, container, volume, builder or cache left
       ✓ docker smoke passed in 154 s
+  ```
+- **2026-11-05 · S6 step 7 (integration)** — Five workstreams (the language overlay, problem reporting for the pilot,
+  the upstream drafts, the students' hand-off index with the live-contract seam, and the hardening after step 6's
+  security review), each verified by a skeptic with mutation checks, then integrated. A D-101 amendment («the
+  integration») came first. The integration: `main.ts` hands the start-up's H5P texts to the engine, so
+  `content/h5p-tekstar/` is read once and a test's content folder reaches it (`startupLanguageOverlay.test.ts`, which
+  fails without the change); a root `test:live` script, the seam's type check in `npm run typecheck`, and a CI step
+  that runs the seam against the mocks (`LIVE_TARGET=mock`); the theme's stale «Paste» comment and the upstream
+  README's stale `UPSTREAM:` remark corrected; InteractiveVideo 1.28's scored end-screen summary, which no language
+  file reaches (checked at the pinned commit and on the default branch, 114f513), added to the English-text register
+  with an upstream draft, and the conformance report regenerated from its sources (only that entry changed); the
+  manual protocol §9 now says what goes into the register and what into a D-080 amendment. Documents: the hand-off
+  index (every workstream's hand-off item, every link checked), the root README (status, documentation map), the
+  server README (module rows, the `H5P-008` and `H5P-010` trace rows, the mermaid storage chain), spec 01 (module
+  map; `H5P-008` and `H5P-010` built), the Evaluator Guide (three commands; limitations 2, 5, 20 and the new 22), the
+  GLOSSARY (language overlay, live-contract seam, hand-off index, upstream draft, *sak* and *etikett*), the ALU review
+  packet (§9a, the H5P texts) and this checklist (step 6's «Still open» after the hardening; step 7 ticked). The
+  step-7 screenshots (nn, 1280 and 390 px, eight files) are the overlay workstream's, sent to the owner; the
+  integration changed no view. `docs/TRACEABILITY.md` and the spec site are not regenerated in this step, so their two
+  checks report «out of date» and nothing else. Not committed. Check output (every step exit 0 unless noted; tests
+  with `CI=true`):
+
+  ```
+  $ npm run build · typecheck (now with live/tsconfig.json) · lint · lint:css · format:check   exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check (and with CI=true)                     ✓ … H5P texts: 91 in nn, 93 in nb, video guidance on 2 fields (draft)
+  $ npm run tokens:check · check --workspace packages/hvl-h5p-theme · a11y:report -- --check   ✓ · ✓ · exit 0
+  $ node tools/spec-trace/specTrace.mjs --check --done-through=S6   only: TRACEABILITY.md is out of date
+  $ node tools/spec-site/buildSpecSite.mjs --check               only: docs/site/index.html is out of date
+  $ npm run test:live · LIVE_TARGET=mock npm run test:live       17 passed, 19 skipped · 36 passed (6 files)
+  $ npx vitest run tools/a11y-report tools/issue-forms tools/doc-lint tools/spec-trace tools/spec-site
+                                                                 143 passed, 1 failed: [DOC-004] the committed page is up to
+                                                                   date (the spec site, not regenerated in this step)
+  $ npx vitest run --project hvl-h5p-theme                       Test Files 13 passed · Tests 202 passed
+  $ npx vitest run (apps/server) test/server test/h5p/languageOverlay test/h5p/semantics H5pFactories
+      storableFileName contentStorage.int LanguageFallbackLibraryStorage test/learningDesign/content
+      skeletonCreation.browser.int (probe P1) http/contentFiles.int http/signedFiles.int ContentFileHeaders
+                                                                 Test Files 49 passed · Tests 440 passed (the overlay's real
+                                                                   nn player and nb editor tests included)
+  $ npm run test:e2e                                             Test Files 16 passed (16) · Tests 27 passed (27)
+  $ npm run test:a11y -- a11y/axeContentTypes a11y/axeEditor a11y/upstreamRegister
+                                                                 Test Files 3 passed · Tests 48 passed (the three English
+                                                                   texts, InteractiveVideo's included, still written)
+  ```
+- **2026-11-05 · S6 step 7** — The finish run of step 7 on the integrated working tree. `docs/TRACEABILITY.md` and
+  the spec site regenerated (the new `[H5P-008]`, `[H5P-010]` and `tools/issue-forms` tests, the new source files and
+  the DECISIONS amendments), then every check and test set run once more with `CI=true`: the full server set (both
+  halves), the e2e set, the seam (skipped, and against the mocks), the accessibility files for the player, editor,
+  insight, grade sync and the English-text register; beyond the brief, the real-clamd tests against a local clamd
+  1.4 with `AlertExceedsMax` and `AlertEncrypted` on (the one file the server set skips without a clamd host), and the
+  Docker smoke, because the image copies `content/` and `src/` and step 7 changed `main.ts` and added
+  `content/h5p-tekstar/`. Nothing needed fixing. This checklist: step 6's review findings that the hardening fixed are
+  now a ticked item of their own (moved out of «Still open», which now names the cookie route as passed to the
+  students), and step 7 has its verified item, a list of what passes to the students through the hand-off index §3,
+  and the CI seam step's first GitHub run under «Still open». No view changed, so no screenshots (step 7's eight are
+  the overlay workstream's). Not committed. Check output (every step exit 0; tests with `CI=true`; the spec site was
+  built again after this entry and its `--check` passed):
+
+  ```
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements · ✓ docs/site/index.html is up to date
+  $ npm run spec:trace -- --check --done-through=S5 (and S6)     ✓ 126 requirements, traceability up to date.
+  $ npm run build · typecheck · lint · lint:css · format:check   exit 0 (typecheck includes live/tsconfig.json)
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check (and with CI=true)                     ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set,
+                                                                   H5P texts: 91 in nn, 93 in nb, video guidance on 2 fields (draft)
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 488 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+  $ npm run tokens:check · deploy:check · a11y:report -- --check ✓ 3 files up to date · ✓ deploy files as D-110 sets them · exit 0
+  $ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                                 Test Files 188 passed (188) · Tests 1537 passed (1537)
+  $ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 179 passed (179) · Tests 19860 passed (19860)
+    (apps/server)                                                  (the overlay's real nn player and nb editor tests included)
+  $ npx vitest run <the other 20 server test folders>            Test Files 337 passed, 1 skipped (realClamd: no clamd host)
+                                                                   · Tests 6473 passed, 2 skipped
+  $ CLAMAV_TEST_HOST=127.0.0.1 … npx vitest run test/security/malware/realClamd.test.ts
+      (clamav/clamav:1.4 by digest, AlertExceedsMax and AlertEncrypted yes)   Test Files 1 passed · Tests 2 passed
+  $ npm run test:e2e                                             Test Files 16 passed (16) · Tests 27 passed (27)
+  $ npm run test:live · LIVE_TARGET=mock npm run test:live       17 passed, 19 skipped · Test Files 6 passed · Tests 36 passed
+  $ npx vitest run … a11y/axeContentTypes axeEditor axeInsight axeGradeSync firstParty upstreamRegister
+                                                                 Test Files 6 passed (6) · Tests 107 passed (107)
+                                                                   (one policy refusal: BranchingScenario's documentation frame)
+  $ HVLI_DOCKER_SANDBOX=1 HVLI_APP_PORT=18094 bash deploy/smoke/dockerSmoke.sh   (the final working tree)
+      ✓ deploy files · ✓ bundle (10 packages, SHA256SUMS match) · image 2777 MB · ✓ proxy CA in no file of the image
+      ✓ /healthz {"status":"ok"} · ✓ 7 of 7 migrations · ✓ 77 libraries, 77 seed audit rows
+      ✓ pages: /hjelp (nn), a script and /h5p/core/js/h5p.js from the image
+      ✓ upload: the stack's clamd refused EICAR (Eicar-Test-Signature) and passed a clean PNG;
+        files.localhost:18094 serves it (200, CSP sandbox, nosniff, no cookie); the app origin answers 404
+      ✓ PDF with the sandbox: 25 179 bytes, æ ø å, LiberationSans-Bold and LiberationSerif embedded, Tagged, A4
+      ✓ sandbox in /proc: 2 renderers, NSpid [3,3], filters [2,2] · ✓ start-up probe: pdfSandbox true, reason ok
+      Chromium 141.0.7390.37 · disk 16 GB → 8 GB → 16 GB · no image, container, volume, builder or cache left
+      ✓ docker smoke passed in 163 s
   ```

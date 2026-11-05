@@ -1,0 +1,320 @@
+# content/h5p-tekstar/library-texts.nb.yaml: HVL's Bokmål texts for the H5P content types, laid over the libraries'
+# own nb.json (H5P-008, D-111). New activities get these texts; activities already saved keep theirs.
+#
+# DRAFT, not reviewed by HVL's language advisers or ALU (open questions Q2 and Q17).
+# Source: the English text of each library (`en`, as `npm run content:check` reads it from the installed library) and
+#   the Bokmål wording the libraries already use elsewhere (Sjekk, Vis svar, Prøv igjen, Send inn).
+# How to edit: content/h5p-tekstar/README.md. Each entry gives `en`, the library's English text, and `nb`, HVL's text.
+#   Change only `nb`; `en` must stay the library's own text. Run `npm run content:check`.
+status: draft
+libraries:
+  H5P.MultiChoice 1.16:
+    defaults:
+      UI.submitAnswerButton:
+        en: 'Submit'
+        nb: 'Send inn'
+      UI.scoreBarLabel:
+        en: 'You got :num out of :total points'
+        nb: 'Du fikk :num av :total poeng'
+      UI.readFeedback:
+        en: 'Read feedback'
+        nb: 'Les tilbakemelding'
+      UI.correctAnswer:
+        en: 'Correct answer'
+        nb: 'Riktig svar'
+      UI.a11yCheck:
+        en: 'Check the answers. The responses will be marked as correct, incorrect, or unanswered.'
+        nb: 'Sjekk svarene. Svarene blir merket som riktige, feil eller ubesvarte.'
+      UI.a11yShowSolution:
+        en: 'Show the solution. The task will be marked with its correct solution.'
+        nb: 'Vis svar. Oppgaven blir merket med riktige svar.'
+      UI.a11yRetry:
+        en: 'Retry the task. Reset all responses and start the task over again.'
+        nb: 'Prøv igjen. Alle svar blir nullstilt, og oppgaven starter på nytt.'
+      confirmCheck.header:
+        en: 'Finish ?'
+        nb: 'Ferdig?'
+    labels:
+      UI.submitAnswerButton:
+        en: 'Submit answer button label'
+        nb: 'Navn på «Send inn»-knappen'
+      UI.scoreBarLabel:
+        en: 'Textual representation of the score bar for those using a readspeaker'
+        nb: 'Poenglinjen som tekst, for skjermlesere'
+      UI.readFeedback:
+        en: 'Read Feedback (not displayed)'
+        nb: 'Les tilbakemelding (vises ikke)'
+      UI.correctAnswer:
+        en: 'Correct Answer (not displayed)'
+        nb: 'Riktig svar (vises ikke)'
+      UI.a11yCheck:
+        en: 'Assistive technology description for "Check" button'
+        nb: 'Beskrivelse av «Sjekk»-knappen for assisterende teknologi'
+      UI.a11yShowSolution:
+        en: 'Assistive technology description for "Show Solution" button'
+        nb: 'Beskrivelse av «Vis svar»-knappen for assisterende teknologi'
+      UI.a11yRetry:
+        en: 'Assistive technology description for "Retry" button'
+        nb: 'Beskrivelse av «Prøv igjen»-knappen for assisterende teknologi'
+  H5P.QuestionSet 1.21:
+    defaults:
+      texts.previous:
+        en: 'Previous'
+        nb: 'Forrige'
+      texts.next:
+        en: 'Next'
+        nb: 'Neste'
+      texts.questionSetInstruction:
+        en: 'Choose question to display'
+        nb: 'Velg oppgaven du vil se'
+      texts.noQuestionAdded:
+        en: 'No question has been added'
+        nb: 'Ingen oppgave er lagt til'
+    labels:
+      texts.previous:
+        en: 'Back button label'
+        nb: 'Navn på «Forrige»-knappen'
+      texts.next:
+        en: 'Next button label'
+        nb: 'Navn på «Neste»-knappen'
+      texts.questionSetInstruction:
+        en: 'Instruction for navigating question set with screenreader'
+        nb: 'Veiledning for skjermleser om hvordan man går mellom oppgavene'
+      texts.noQuestionAdded:
+        en: 'Message displayed when no question has been added'
+        nb: 'Melding når ingen oppgave er lagt til'
+  H5P.BranchingScenario 1.10:
+    defaults:
+      branchingScenario.content[].proceedButtonText:
+        en: 'Proceed'
+        nb: 'Gå videre'
+      branchingScenario.l10n.disableProceedButtonText:
+        en: 'Require to complete the current module'
+        nb: 'Fullfør denne delen først'
+      branchingScenario.l10n.replayButtonText:
+        en: 'Replay the video'
+        nb: 'Spill av videoen på nytt'
+      branchingScenario.l10n.fullscreenAria:
+        en: 'Fullscreen'
+        nb: 'Fullskjerm'
+    labels:
+      branchingScenario.content[].proceedButtonText:
+        en: 'Text for the proceed button (max length: 50 characters)'
+        nb: 'Tekst på knappen som går videre (høyst 50 tegn)'
+      branchingScenario.l10n.disableProceedButtonText:
+        en: 'Text for the disabled button on the library screens'
+        nb: 'Tekst på knappen når den ikke kan brukes ennå'
+      branchingScenario.l10n.replayButtonText:
+        en: 'Text for the button used to replay a video'
+        nb: 'Tekst på knappen som spiller av en video på nytt'
+      branchingScenario.l10n.fullscreenAria:
+        en: 'Aria label for fullscreen button'
+        nb: 'Navn på fullskjermknappen for skjermlesere'
+  H5P.InteractiveVideo 1.28:
+    defaults:
+      l10n.endcardQuestion:
+        en: 'Question'
+        nb: 'Spørsmål'
+      l10n.endCardTableRowSummaryWithoutScore:
+        en: 'You have answered the @question that appeared after @minutes minutes and @seconds seconds.'
+        nb: 'Du har svart på spørsmål @question, som kom etter @minutes minutter og @seconds sekunder.'
+  H5P.ImageHotspots 1.11:
+    defaults:
+      untitledHotspotLabel:
+        en: 'Untitled Hotspot'
+        nb: 'Punkt uten tittel'
+      containsAudioVideoLabel:
+        en: 'Contains Audio/Video'
+        nb: 'Inneholder lyd eller video'
+  H5P.CoursePresentation 1.28:
+    defaults:
+      l10n.resultHeader:
+        en: 'Results'
+        nb: 'Resultater'
+      l10n.amountCorrect:
+        en: '@value / @max correct'
+        nb: '@value / @max riktige'
+      l10n.amountCorrectAria:
+        en: '@value out of @max correct'
+        nb: '@value av @max riktige'
+      l10n.confirmDialogConfirmLabel:
+        en: 'Confirm'
+        nb: 'Bekreft'
+      l10n.confirmDialogCancelLabel:
+        en: 'Cancel'
+        nb: 'Avbryt'
+  H5P.TrueFalse 1.8:
+    defaults:
+      l10n.submitAnswer:
+        en: 'Submit'
+        nb: 'Send inn'
+      l10n.scoreBarLabel:
+        en: 'You got :num out of :total points'
+        nb: 'Du fikk :num av :total poeng'
+      l10n.a11yCheck:
+        en: 'Check the answers. The responses will be marked as correct, incorrect, or unanswered.'
+        nb: 'Sjekk svarene. Svarene blir merket som riktige, feil eller ubesvarte.'
+      l10n.a11yShowSolution:
+        en: 'Show the solution. The task will be marked with its correct solution.'
+        nb: 'Vis svar. Oppgaven blir merket med riktige svar.'
+      l10n.a11yRetry:
+        en: 'Retry the task. Reset all responses and start the task over again.'
+        nb: 'Prøv igjen. Alle svar blir nullstilt, og oppgaven starter på nytt.'
+  H5P.MarkTheWords 1.11:
+    defaults:
+      submitAnswerButton:
+        en: 'Submit'
+        nb: 'Send inn'
+      tryAgainButton:
+        en: 'Retry'
+        nb: 'Prøv igjen'
+      scoreBarLabel:
+        en: 'You got :num out of :total points'
+        nb: 'Du fikk :num av :total poeng'
+      a11yFullTextLabel:
+        en: 'Full readable text'
+        nb: 'Hele teksten'
+      a11yClickableTextLabel:
+        en: 'Full text where words can be marked'
+        nb: 'Hele teksten, der ord kan merkes'
+      a11ySolutionModeHeader:
+        en: 'Solution mode'
+        nb: 'Løsningsmodus'
+      a11yCheckingHeader:
+        en: 'Checking mode'
+        nb: 'Sjekkmodus'
+      a11yCheck:
+        en: 'Check the answers. The responses will be marked as correct, incorrect, or unanswered.'
+        nb: 'Sjekk svarene. Svarene blir merket som riktige, feil eller ubesvarte.'
+      a11yShowSolution:
+        en: 'Show the solution. The task will be marked with its correct solution.'
+        nb: 'Vis svar. Oppgaven blir merket med riktige svar.'
+      a11yRetry:
+        en: 'Retry the task. Reset all responses and start the task over again.'
+        nb: 'Prøv igjen. Alle svar blir nullstilt, og oppgaven starter på nytt.'
+  H5P.SingleChoiceSet 1.11:
+    defaults:
+      l10n.nextButton:
+        en: 'Next'
+        nb: 'Neste'
+      l10n.showResultsButtonLabel:
+        en: 'Show results'
+        nb: 'Vis resultatet'
+      l10n.a11yRetry:
+        en: 'Retry the task. Reset all responses and start the task over again.'
+        nb: 'Prøv igjen. Alle svar blir nullstilt, og oppgaven starter på nytt.'
+      l10n.resultHeader:
+        en: 'Your result:'
+        nb: 'Resultatet ditt:'
+      l10n.totalScore:
+        en: ':score of :maxScore correct'
+        nb: ':score av :maxScore riktige'
+      l10n.resultTableHeader:
+        en: 'Question'
+        nb: 'Spørsmål'
+      l10n.resultScoreTableHeader:
+        en: 'Score'
+        nb: 'Poeng'
+  H5P.Summary 1.10:
+    defaults:
+      labelIncorrect:
+        en: 'Incorrect! Please try again.'
+        nb: 'Feil. Prøv igjen.'
+      alternativeIncorrectLabel:
+        en: 'Incorrect'
+        nb: 'Feil'
+      scoreBarLabel:
+        en: 'You got :num out of :total points'
+        nb: 'Du fikk :num av :total poeng'
+      progressText:
+        en: 'Progress :num of :total'
+        nb: 'Fremdrift :num av :total'
+  H5P.Essay 1.5:
+    defaults:
+      checkAnswer:
+        en: 'Check'
+        nb: 'Sjekk'
+      submitAnswer:
+        en: 'Submit'
+        nb: 'Send inn'
+      tryAgain:
+        en: 'Retry'
+        nb: 'Prøv igjen'
+      showSolution:
+        en: 'Show solution'
+        nb: 'Vis løsningsforslag'
+      feedbackHeader:
+        en: 'Feedback'
+        nb: 'Tilbakemelding'
+      solutionTitle:
+        en: 'Sample solution'
+        nb: 'Løsningsforslag'
+      remainingChars:
+        en: 'Remaining characters: @chars'
+        nb: 'Tegn igjen: @chars'
+      notEnoughChars:
+        en: 'You must enter at least @chars characters!'
+        nb: 'Du må skrive minst @chars tegn.'
+      messageSave:
+        en: 'saved'
+        nb: 'lagret'
+      ariaYourResult:
+        en: 'You got @score out of @total points'
+        nb: 'Du fikk @score av @total poeng'
+      ariaNavigatedToSolution:
+        en: 'Navigated to newly included sample solution after textarea.'
+        nb: 'Gikk til løsningsforslaget, som nå står under tekstfeltet.'
+      ariaCheck:
+        en: 'Check the answers.'
+        nb: 'Sjekk svaret.'
+      ariaShowSolution:
+        en: 'Show the solution. You will be provided with a sample solution.'
+        nb: 'Vis løsningsforslaget. Du får se et eksempel på et svar.'
+      ariaRetry:
+        en: 'Retry the task. You can improve your previous answer if the author allowed that.'
+        nb: 'Prøv igjen. Du kan forbedre svaret ditt hvis forfatteren har tillatt det.'
+  H5P.DragNBar 1.5:
+    libraryStrings:
+      transformLabel:
+        en: 'Transform'
+        nb: 'Transformer'
+      editLabel:
+        en: 'Edit'
+        nb: 'Rediger'
+      removeLabel:
+        en: 'Remove'
+        nb: 'Fjern'
+      bringToFrontLabel:
+        en: 'Bring to Front'
+        nb: 'Flytt fremst'
+      sendToBackLabel:
+        en: 'Send to Back'
+        nb: 'Flytt bakerst'
+      unableToPaste:
+        en: >-
+          Cannot paste this object. Unfortunately, the object you are trying to paste is not supported by this content
+          type or version.
+        nb: >-
+          Kan ikke lime inn dette objektet. Innholdstypen eller versjonen støtter dessverre ikke objektet du prøver å
+          lime inn.
+      sizeLabel:
+        en: 'Size'
+        nb: 'Størrelse'
+      positionLabel:
+        en: 'Position'
+        nb: 'Plassering'
+      heightLabel:
+        en: 'Height'
+        nb: 'Høyde'
+      widthLabel:
+        en: 'Width'
+        nb: 'Bredde'
+      copyLabel:
+        en: 'Copy'
+        nb: 'Kopier'
+      paste:
+        en: 'Paste'
+        nb: 'Lim inn'
+      moreElements:
+        en: 'More elements'
+        nb: 'Flere elementer'

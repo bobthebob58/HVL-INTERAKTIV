@@ -98,7 +98,7 @@ describeWithServices('signed content-file URLs', () => {
     expect(res.headers['content-type']).toBe('image/png');
     expect(res.headers['x-content-type-options']).toBe('nosniff');
     expect(res.headers['content-security-policy']).toBe(
-      "sandbox; default-src 'none'; style-src 'unsafe-inline'",
+      "sandbox; default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'",
     );
     expect(res.headers['content-disposition'] ?? 'inline').toMatch(/^inline/);
     expect(res.headers['set-cookie']).toBeUndefined();

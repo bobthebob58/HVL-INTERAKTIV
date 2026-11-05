@@ -7,12 +7,13 @@
  * Invariants:
  *   - Only the user's ID is stored as owner; H5P's user object (name, e-mail) is never persisted.
  *   - The database row is the source of truth for which files exist; S3 holds only their bytes.
- *   - IDs that are not UUIDs are treated as "not found" instead of reaching the database.
+ *   - IDs that are not UUIDs, and file names no stored file can have (./storableFileName.ts), are "not found"
+ *     without reaching the database.
  *   - Every row `addContent` creates is reported to ./contentCreations.ts, so a failed duplicate can remove it.
  *   - The first update of an activity whose editor save resets learner state (./learnerStateResetWrite.ts) writes
  *     the parameters, raises `version` and deletes every state row of the activity in one transaction (D-093).
- * Collaborators: ./S3ContentFileStore.ts, ./contentUsage.ts, ./contentCreations.ts, ./learnerStateResetWrite.ts,
- *   ../../infra/prismaClient.ts, H5PEditor (S2).
+ * Collaborators: ./S3ContentFileStore.ts, ./storableFileName.ts, ./contentUsage.ts, ./contentCreations.ts,
+ *   ./learnerStateResetWrite.ts, ../../infra/prismaClient.ts, H5PEditor (S2).
  * Tests: apps/server/test/h5p/contentStorage.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/safeEditingFailures.int.test.ts
  */
@@ -32,6 +33,7 @@ import { noteContentCreated } from './contentCreations.js';
 import { countLibraryUsage } from './contentUsage.js';
 import { claimLearnerStateReset } from './learnerStateResetWrite.js';
 import type { S3ContentFileStore } from './S3ContentFileStore.js';
+import { isStorableFileName } from './storableFileName.js';
 import { assertStorableText } from './storableText.js';
 import { isContentUuid } from '../contentIds.js';
 
@@ -117,7 +119,7 @@ export class PrismaContentStorage implements IContentStorage {
 
   /** True when the activity has a file with this name. */
   async fileExists(contentId: ContentId, filename: string): Promise<boolean> {
-    if (!isContentUuid(contentId)) return false;
+    if (!isContentUuid(contentId) || !isStorableFileName(filename)) return false;
     return (await this.db.h5PContentFile.count({ where: { contentId, filename } })) > 0;
   }
 
@@ -183,10 +185,12 @@ export class PrismaContentStorage implements IContentStorage {
     return row;
   }
 
+  // SECURITY: a name no stored file can have never reaches PostgreSQL, which refuses a NUL byte (a 500, D-110).
   private async requireFile(contentId: ContentId, filename: string) {
-    const row = isContentUuid(contentId)
-      ? await this.db.h5PContentFile.findUnique({ where: { contentId_filename: { contentId, filename } } })
-      : null;
+    const row =
+      isContentUuid(contentId) && isStorableFileName(filename)
+        ? await this.db.h5PContentFile.findUnique({ where: { contentId_filename: { contentId, filename } } })
+        : null;
     if (!row) throw new H5pError('content-file-missing', { file: filename, contentId }, 404);
     return row;
   }

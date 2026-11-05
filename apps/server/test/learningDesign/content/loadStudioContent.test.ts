@@ -28,7 +28,7 @@ describe('[PED-001] loadStudioContent', () => {
     // Act
     const content = loadStudioContent();
     // Assert
-    expect(Object.keys(content)).toEqual(['phases', 'references', 'guide', 'patterns', 'mappe']);
+    expect(Object.keys(content)).toEqual(['phases', 'references', 'guide', 'patterns', 'mappe', 'h5pTexts']);
     expect(Object.isFrozen(content)).toBe(true);
     expect(Object.isFrozen(content.phases.phases[0]?.label)).toBe(true);
     expect(Object.isFrozen(content.references.references)).toBe(true);

@@ -6,7 +6,7 @@
  *      built one way. Building it here keeps every safety option in one reviewed place, runs the H5P-001 start
  *      check and the permission guard before anything is served, and never lets the server call the Hub on its
  *      own (empty content-type cache stored as `[]`, D-041).
- * Spec: H5P-001, H5P-004, H5P-006, H5P-007, SEC-001, SEC-002, PROD-013, SEC-006
+ * Spec: H5P-001, H5P-004, H5P-006, H5P-007, H5P-008, SEC-001, SEC-002, PROD-013, SEC-006
  * Invariants:
  *   - The same HvlPermissionSystem instance is used by editor, player and routes; the guard checks it. The editor's
  *     paste-source guard reads the same activity facts as that permission system.
@@ -21,9 +21,12 @@
  *   - The editor resets learner state only on a structural save, and the player's state URLs carry the activity's
  *     version, both on PostgreSQL (D-093, ../learningDesign/safeEditing/).
  *   - The editor carries the per-person copy limit in Redis, which the duplicator counts (D-092 amendment).
+ *   - Editor and player get HVL's language overlay: the one given, or else `content/h5p-tekstar/` loaded here, so
+ *     every engine (the server's, the seed command's, a test bed's) has it (D-111).
  * Collaborators: ./h5pServerInit.ts, ./h5pStorage.ts, ./H5pEditorFactory.ts, ./H5pPlayerFactory.ts,
  *   ./HvlUrlGenerator.ts, ./contentFileGrants.ts, ./permissionSystemGuard.ts, ./HvlPermissionSystem.ts,
- *   ../security/FileTypeSniffer.ts, ../security/SvgSanitizer.ts, ../http/createH5pRouter.ts, ../config/filesOrigin.ts.
+ *   ../security/FileTypeSniffer.ts, ../security/SvgSanitizer.ts, ../http/createH5pRouter.ts, ../config/filesOrigin.ts,
+ *   ../learningDesign/content/h5pTextsContent.ts (the overlay).
  * Tests: apps/server/test/http/router.int.test.ts, apps/server/test/http/signedFiles.int.test.ts,
  *   apps/server/test/http/filesOrigin.int.test.ts
  */
@@ -37,6 +40,7 @@ import type { Database } from '../infra/prismaClient.js';
 import type { Redis } from '../infra/redisClient.js';
 import { PrismaContentVersionReader } from '../learningDesign/safeEditing/contentVersionOnPages.js';
 import { CopyRateLimit } from '../learningDesign/collaboration/CopyRateLimit.js';
+import { loadLanguageOverlay } from '../learningDesign/content/h5pTextsContent.js';
 import { PrismaLearnerStateStore } from '../learningDesign/safeEditing/PrismaLearnerStateStore.js';
 import { FileTypeSniffer } from '../security/FileTypeSniffer.js';
 import { createMalwareScanners } from '../security/malware/createMalwareScanners.js';
@@ -51,6 +55,7 @@ import { HvlUrlGenerator } from './HvlUrlGenerator.js';
 import { createHvlTranslationCallback } from './HvlTranslationCallback.js';
 import { TemporaryFileCleanupJob } from './jobs/TemporaryFileCleanupJob.js';
 import { PrismaLibraryAuditSink } from './libraries/LibraryAuditSink.js';
+import type { LanguageOverlay } from './languageOverlay/languageOverlay.js';
 import { keepContentTypeCacheOffline } from './offlineContentTypeCache.js';
 import { assertPermissionSystem } from './permissionSystemGuard.js';
 import { PrismaContentAccessRepository } from './permissions/ContentAccessRepository.js';
@@ -72,6 +77,8 @@ export interface H5pRuntimeInputs {
    * that serves the player's file route on its one test server passes `''`, for relative URLs.
    */
   readonly filesOrigin?: string;
+  /** HVL's texts for the libraries (D-111), as the start-up loaded them; loaded from `content/` when absent. */
+  readonly languageOverlay?: LanguageOverlay;
 }
 
 /** The assembled engine: everything the routes need, plus the config and the cleanup job. */
@@ -85,7 +92,8 @@ export interface H5pRuntime extends H5pRouteDeps {
  * @param inputs - Config, logger and connected clients.
  * @returns The runtime, ready to pass to `createH5pRouter`.
  * @throws CoreVersionMismatchError when the core files do not match (H5P-001);
- *   PermissionSystemMismatchError when any component would use another permission system.
+ *   PermissionSystemMismatchError when any component would use another permission system;
+ *   StudioContentError when no overlay is given and `content/h5p-tekstar/` has a problem.
  */
 export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRuntime> {
   const { env, logger, db, redis } = inputs;
@@ -112,6 +120,7 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
   const fileGrants = new ContentFileGrants(env.URL_SIGNING_KEYS);
   const filesOrigin = inputs.filesOrigin ?? filesOriginOf(env);
   const urlGenerator = new HvlUrlGenerator(config, fileGrants, filesOrigin);
+  const languageOverlay = inputs.languageOverlay ?? loadLanguageOverlay();
   const editor = createHvlEditor({
     config,
     storages,
@@ -125,6 +134,7 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     fileSanitizers,
     malwareScanners,
     urlGenerator,
+    languageOverlay,
   });
   const player = createHvlPlayer({
     ...storages,
@@ -133,6 +143,7 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     translate,
     urlGenerator,
     contentVersions: new PrismaContentVersionReader(db),
+    languageOverlay,
   });
   assertPermissionSystem({ editor, player }, permissions);
   const cleanupJob = new TemporaryFileCleanupJob({

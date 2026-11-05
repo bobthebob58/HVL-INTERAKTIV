@@ -81,7 +81,11 @@ describe('[UD-040] the sources of the conformance report', () => {
     expect(register.findings[0].source).toMatch(
       /^https:\/\/github\.com\/h5p\/h5p-editor-branching-scenario\//,
     );
-    expect(register.englishTexts.map((t) => t.library)).toEqual(['H5P.Video 1.6', 'H5P.ImageHotspots 1.11']);
+    expect(register.englishTexts.map((t) => t.library)).toEqual([
+      'H5P.Video 1.6',
+      'H5P.ImageHotspots 1.11',
+      'H5P.InteractiveVideo 1.28',
+    ]);
     expect(issueText(register.findings[0])).toBe('not filed yet (D-112)');
     const [filed] = upstreamLinks(
       '  // UPSTREAM: https://github.com/h5p/x/tree/abc (1.0). Issue: https://github.com/h5p/x/issues/12.',

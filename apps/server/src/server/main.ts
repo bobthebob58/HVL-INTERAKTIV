@@ -10,7 +10,7 @@
  *   - Invalid configuration stops the start with the list of problems and exit code 1; secrets are never printed.
  *     That includes the validator's hint thresholds (content/laeringsdesign/hint-thresholds.yaml), read before any
  *     connection is made (D-073), and the studio content in `content/` (D-082), read next: a bad file stops the start
- *     with every problem named, by file, line and key.
+ *     with every problem named, by file, line and key. The H5P engine gets that content's H5P texts (D-111).
  *   - The server listens only after the platform sync and the platform-key re-encryption (D-056) have finished; then
  *     it logs whether the PDF export works with its sandbox, and `stop` waits for that probe (D-110 amendments).
  *   - The xAPI ingestion hands a learner's stored rows to the grade enqueuer (LTI-012), and each resource-link launch
@@ -31,7 +31,8 @@
  *   ../lti/nrps/nrpsServices.ts, ../config/env.ts, ../config/storageResidency.ts, ../config/validationContext.ts,
  *   ../validation/validateContent.ts, ../learningDesign/content/loadStudioContent.ts, ../web/nextWebApp.ts,
  *   ../web/webRoutes.ts (`webUpgrades`), ../learningDesign/mappe/pdf/pdfAvailability.ts.
- * Tests: apps/server/test/server/main.smoke.test.ts, apps/server/test/server/startupContent.test.ts
+ * Tests: apps/server/test/server/main.smoke.test.ts, apps/server/test/server/startupContent.test.ts,
+ *   apps/server/test/server/startupLanguageOverlay.test.ts
  */
 import type { Server } from 'node:http';
 import { pathToFileURL } from 'node:url';
@@ -89,7 +90,9 @@ export async function startServer(env: Env, options: StartOptions = {}): Promise
   logger.info(deploymentLocations(env), 'deployment locations');
   const db = createPrismaClient(env.DATABASE_URL);
   const redis = await connectRedis(env.REDIS_URL, logger);
-  const h5p = await createH5pRuntime({ env, logger, db, redis, s3: createS3Client(env) });
+  // WHY: the engine gets the H5P texts checked above, so `content/` is read once, also a test's folder (D-111).
+  const languageOverlay = studioContent.h5pTexts.overlay;
+  const h5p = await createH5pRuntime({ env, logger, db, redis, s3: createS3Client(env), languageOverlay });
   const web = env.WEB_APP === 'off' ? undefined : await loadWebApp(env.WEB_APP);
   const encryption = new DataEncryption(env.DATA_ENCRYPTION_KEYS);
   // WHY: a learner's stored gradable results become grade jobs, which the grade worker below sends (LTI-012, D-104).
@@ -105,19 +108,8 @@ export async function startServer(env: Env, options: StartOptions = {}): Promise
     maxPages: env.NRPS_MAX_PAGES,
     urlRules: lineItemRules,
   });
-  const built = {
-    env,
-    logger,
-    db,
-    redis,
-    h5p,
-    validator,
-    studioContent,
-    onXapiStored,
-    nrps: nrps.counter,
-    ...(web ? { web } : {}),
-  };
-  const { app, lti, studio } = createApp(built);
+  const built = { env, logger, db, redis, h5p, validator, studioContent, onXapiStored, nrps: nrps.counter };
+  const { app, lti, studio } = createApp(web ? { ...built, web } : built);
   const synced = await syncLtiPlatforms(env.LTI_PLATFORMS, { platforms: lti.provider.platformManager, db });
   logger.info(synced, 'LTI platforms synchronised');
   const rewritten = await reencryptPlatformKeys(db, encryption);

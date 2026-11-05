@@ -27,7 +27,7 @@ Hosting is open: HVL on its own servers or Sikt, both in the EEA (Q5, `DATA-004`
 | A secret store and a CI/CD secret for every variable marked `Secret: yes` | Never in the image, the compose file or a log | `DATA-009` |
 | Backup storage outside the server, encrypted, in the EEA, kept 30 days | Daily copy of the backup folder | `NFR-002` |
 | A log store and monitoring of `/healthz` | 99.5 % monthly availability during the semester is about 3.6 hours of downtime | `NFR-002`, `NFR-006` |
-| ClamAV (`clamd`), optional but recommended | `StreamMaxLength` at least 50 MB; signature updates are HVL's ([clamav.md](clamav.md)) | `SEC-006` |
+| ClamAV (`clamd`), optional but recommended | `AlertExceedsMax yes` and `AlertEncrypted yes`; `StreamMaxLength` at least 50 MB; signature updates are HVL's ([clamav.md](clamav.md)) | `SEC-006` |
 | PostgreSQL 16's client tools (`pg_dump`, `pg_restore`, `psql`) on the host that runs backups | The same major version as the server | `NFR-002` |
 
 ## 2. Start and stop
@@ -108,6 +108,9 @@ content bucket under its SHA-256, `MANIFEST.json` (each table's row count, each 
 `SHA256SUMS` over every file. Not in it: the temporary bucket (editor uploads not yet saved) and the H5P library
 folder, which the seed step installs again from the bundle; a library an administrator installed by hand needs that
 volume copied too. A backup holds pseudonymised learner rows: its folder is for its owner only (0700, files 0600).
+Keep the local backup folder (`--out`) on an encrypted volume as well, and restore from the off-server copy, whose
+tool (e.g. restic) authenticates it: `SHA256SUMS` shows that no file changed by accident, but someone who can write
+the folder can change a file and its sum together.
 
 **Daily backup** (HVL schedules it, e.g. a systemd timer or a Kubernetes CronJob at 02:17), with the migration
 role's `DATABASE_URL` (the app role cannot read `_prisma_migrations`) or a backup role with `pg_read_all_data`, and
@@ -186,6 +189,12 @@ launches from Canvas, loads the player page with every script and stylesheet, se
 of an answered activity, and starts again. It needs Docker, the services of `docker compose up -d` and the real
 content types (`npm run h5p:fetch-libraries`).
 
+**Warning:** the root `docker-compose.yml` is for development and tests. Its PostgreSQL has a fixed password and its
+Redis none; it publishes them and the S3 emulator on 127.0.0.1 only (D-110's amendment of 2026-11-05, step 7), but
+every user and process on the node can still reach them. Never run it on a node that holds real data or serves
+users, never change its ports to another interface, and run the full load test on a production-like node of its
+own; afterwards remove the services and their data with `docker compose down -v`.
+
 ```sh
 npm run load:smoke                      # 20 learners for 30 s (about the request rate of 60 learners)
 npm run load:full -- --out /srv/load    # 200 learners: 60 s up, 10 min, 30 s down (HVL, on a production-like node)
@@ -249,11 +258,15 @@ Tick every line before the first learner, and again after a change of hosting:
       separate registrable domain if HVL prefers, Q5); the proxy sends both host names to the same server and passes
       `Host` on, and behind `TRUST_PROXY` it sets `X-Forwarded-Host` itself rather than forwarding the client's;
       people open the app at exactly `PUBLIC_BASE_URL`, the one origin the files origin allows (CORS).
-- [ ] ClamAV: `CLAMAV_HOST` is set, `CLAMAV_TLS=true` unless clamd is on the loopback, no `CLAMSCAN_*` or
-      `CLAMDSCAN_*` variable is set, clamd's `StreamMaxLength` is at least 50 MB, signatures update daily, and the
-      content bucket is scanned once if files were stored before scanning was on ([clamav.md](clamav.md)).
+- [ ] ClamAV: `CLAMAV_HOST` is set, `CLAMAV_TLS=true` unless clamd is on the loopback (its TLS proxy presents the
+      certificate for `CLAMAV_HOST` without SNI), no `CLAMSCAN_*` or `CLAMDSCAN_*` variable is set; clamd has
+      `AlertExceedsMax yes` and `AlertEncrypted yes` (required: without them clamd answers "clean" for files it did
+      not scan in full; `clamconf -n` shows both), `StreamMaxLength` at least 50 MB and `MaxScanTime` no higher than
+      `CLAMAV_TIMEOUT_MS`; a password-protected PDF upload is refused; signatures update daily; and the content
+      bucket is scanned once if files were stored before scanning was on ([clamav.md](clamav.md)).
 - [ ] The app container runs as uid 10001 with Playwright's seccomp profile ([docker.md](docker.md)); never
       `PDF_ALLOW_NO_SANDBOX`.
 - [ ] The daily backup runs, its copy reaches the off-server storage, and a restore drill has passed (section 6).
 - [ ] `/healthz` is monitored, the logs reach the log store, and the alerts of section 7 are set.
-- [ ] The full load test has passed on a node like production (section 8).
+- [ ] The full load test has passed on a node like production (section 8), and its services were removed afterwards.
+- [ ] The root `docker-compose.yml` runs on no production node (section 8).

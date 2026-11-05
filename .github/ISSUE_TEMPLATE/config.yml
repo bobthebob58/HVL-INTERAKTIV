@@ -1,0 +1,12 @@
+# The "New issue" chooser for the pilot (D-101's amendment of 2026-11-05, problem reporting).
+# PRIVACY: blank issues are off, so every issue passes a form's required check for personal data (DATA-010).
+# SECURITY: the first link sends security problems to the private route in SECURITY.md, never to an issue.
+# Checked by the tests in tools/issue-forms/.
+blank_issues_enabled: false
+contact_links:
+  - name: Tryggleiksproblem
+    url: https://github.com/bobthebob58/HVL-INTERAKTIV/security/policy
+    about: Ikkje meld eit tryggleiksproblem i ei sak som andre kan lese. Her står det korleis du melder frå privat.
+  - name: Rettleiing for testarar
+    url: https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/testing/rapportere-problem.md
+    about: Les dette før du melder frå. Rettleiinga seier kva du skal skrive, og kva du ikkje skal skrive.

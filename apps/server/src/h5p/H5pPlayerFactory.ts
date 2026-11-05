@@ -13,14 +13,15 @@
  *   - `render` always loads the activity as the acting user, so Lumi's View check runs before the grant is
  *     signed: `ignoreUserPermissions`, `parametersOverride` and `metadataOverride` are refused (D-058).
  *   - Built by createH5pRuntime with the editor's inputs: one permission system, one state storage, and the
- *     same library storage, each engine behind its own language-fallback wrapper.
+ *     same library storage, each engine behind its own language-fallback wrapper and language overlay (D-046, D-111;
+ *     Lumi 10.0.4's player reads no language file, so the overlay is there for a later Lumi that does).
  *   - With `contentVersions` (createH5pRuntime always passes it), every rendered model's learner-state URL carries
  *     the activity's version, so a page opened before a structural save cannot write its old state (D-093).
  *   - The player's global scripts end with the xAPI bridge's (./h5pAssets.ts) for every model; the page removes them,
  *     and adds the bridge's configuration, per viewer (./render/xapiBridgeConfig.ts, D-102), so the one shared player
  *     and the models it renders never depend on who views them.
  * Collaborators: ./h5pAssets.ts, ./HvlUrlGenerator.ts, ./render/playerPage.ts, ./render/xapiBridgeConfig.ts,
- *   ./storage/LanguageFallbackLibraryStorage.ts, ./createH5pRuntime.ts,
+ *   ./storage/LanguageFallbackLibraryStorage.ts, ./storage/LanguageOverlayLibraryStorage.ts, ./createH5pRuntime.ts,
  *   ../learningDesign/safeEditing/contentVersionOnPages.ts.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts,
  *   apps/server/test/h5p/HvlUrlGenerator.test.ts
@@ -43,7 +44,9 @@ import {
 import { playerGlobalAssets } from './h5pAssets.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import type { HvlUrlGenerator } from './HvlUrlGenerator.js';
+import { EMPTY_LANGUAGE_OVERLAY, type LanguageOverlay } from './languageOverlay/languageOverlay.js';
 import { withLanguageFallback } from './storage/LanguageFallbackLibraryStorage.js';
+import { withLanguageOverlay } from './storage/LanguageOverlayLibraryStorage.js';
 
 /** Everything the player is built from. */
 export interface PlayerFactoryInputs {
@@ -59,6 +62,8 @@ export interface PlayerFactoryInputs {
   readonly urlGenerator: HvlUrlGenerator;
   /** Reads an activity's version for its learner-state URL (D-093); absent in engine-only tests. */
   readonly contentVersions?: ContentVersionReader;
+  /** HVL's texts for the libraries' nn and nb language files (D-111); none by default. */
+  readonly languageOverlay?: LanguageOverlay;
 }
 
 /** The renderer that hands Lumi's model to our template instead of Lumi's HTML. */
@@ -92,7 +97,10 @@ function refuseUncheckedRenders(player: H5PPlayer): void {
 export function createHvlPlayer(inputs: PlayerFactoryInputs): H5PPlayer {
   const urls = inputs.urlGenerator;
   const player = new H5PPlayer(
-    withLanguageFallback(inputs.libraryStorage),
+    withLanguageOverlay(
+      withLanguageFallback(inputs.libraryStorage),
+      inputs.languageOverlay ?? EMPTY_LANGUAGE_OVERLAY,
+    ),
     inputs.contentStorage,
     inputs.config,
     undefined,

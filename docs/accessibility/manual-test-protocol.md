@@ -214,9 +214,15 @@ with the keyboard and at 400 % zoom.
 
 ## 9. After the run
 
-1. Save the result file in [results/](results/README.md) and link any new issue.
-2. File each new H5P barrier upstream (the repository is in `tools/h5p-libraries/libraries.manifest.json`) and
-   add it to the register if the automated suite does not already show it.
+1. Save the result file in [results/](results/README.md) and link any new issue. A new barrier is opened with the
+   barrier form on GitHub, without personal data
+   ([../testing/rapportere-problem.md](../testing/rapportere-problem.md); triage in
+   [../testing/labels-and-triage.md](../testing/labels-and-triage.md)).
+2. Draft each new H5P barrier's upstream report in [docs/upstream/](../upstream/README.md) for the owner to file
+   (D-112; the repository is in `tools/h5p-libraries/libraries.manifest.json`), and record it as D-080 says: in the
+   register (`apps/server/a11y/support/upstreamRegister.ts`) only if axe reports it, because an entry axe never
+   reports fails the suite; a barrier axe cannot see goes into a D-080 amendment with an `upstream pin:` test, and
+   an English text no language file reaches into the register's `UPSTREAM_ENGLISH_TEXTS`.
 3. Update `PROGRESS.md` with the date of the latest complete run per set-up.
 4. Write the verdicts into the conformance report [WCAG-CONFORMANCE-REPORT.md](WCAG-CONFORMANCE-REPORT.md)
    (`UD-040`): only between its `manual:start` and `manual:end` markers, one `**Verdict:**` line per criterion and,
