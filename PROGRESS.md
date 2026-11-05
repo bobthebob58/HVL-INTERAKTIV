@@ -977,6 +977,7 @@ under the step that does it):
 | Q28 | A learner may object to the processing (GDPR Art. 21, since the basis is Art. 6(1)(e)), but there is no way to stop capturing one person's statements while they use activities. Accept a manual routine (an erasure after the objection, repeated as needed), or ask for an opt-out feature (its own decision; it would store who objected) (DPIA input R34) | HVL DPO, owner | The pilot |
 | Q29 | Who may log in to the portal? The recommended Feide registration leaves «Restrict login to selected organizations» off (`docs/reference/feide-values.md`), so anyone with Feide, also from schools (pupils, possibly children), can log in as a learner and play activities shared with «anyone with Feide» (spec 02's role table, D-059), and their play is stored and counted. Restrict Feide's «Restrict login to selected organizations» to HVL (and named partners), or keep it open with the DPO's basis for those users and a line in `/personvern` (DPIA input R37) | Owner, HVL IT, HVL DPO | The pilot |
 | Q30 | Students as insight readers: insight and the grade-sync counts go to anyone with the author role in a context, so a Canvas TA, who at HVL can be a student assistant, sees a course's *k*-suppressed aggregates, and a student author (D-059) sees them for every course their activity is placed in. Accept with HVL's confidentiality terms for student assistants, or show insight only to staff by Feide affiliation and to Canvas instructors but not TAs (an `INS-007` change; DPIA input R36) | HVL DPO, owner | The pilot |
+| Q31 | Name a system owner (*systemeigar*) and a maintainer (*forvaltar*) at HVL for HVL Interaktiv. Neither is named anywhere, and the IT assurance pack asks for them (D-116; `docs/assurance/README.md`, «Who is accountable»; ROS-19 in `docs/assurance/ros-analyse.md`): the system owner, and who owns the test install and its tester list, before stage 1; the maintainer, who rebuilds and redeploys the image with fixes and runs the key rotations, the yearly purge and the backups (`docs/ops/runbook.md` §2, §4–§7), before stage 2 at the latest. Until then the repository owner makes the product decisions; the bachelor students' project (D-101) does not replace either role | Owner, HVL IT / ALU | Stage 1 of the IT assurance pack (`docs/assurance/test-environment.md`) |
 
 ## Risk register
 
@@ -1672,3 +1673,15 @@ Append one entry per session: date, session, what was done, gate output, and any
       and «Poeng til Canvas» (h: Poeng til karakterboka i Canvas) on the activity page · mock Canvas: the picker as
       the teacher, then the resource link: /app/play tabs Spel, Rediger, Innsikt, Poeng til Canvas · 0 page errors
   ```
+- **2026-11-05 · IT assurance pack** — At the owner's request, a pack for HVL IT (operations and security), who will
+  want assurances from people before they host the service even for testing (D-116): `docs/assurance/` with a start
+  page and a Nynorsk *samandrag* (`README.md`), the architecture with trust boundaries, network flows, data stores and
+  secrets by name (`architecture.md`), a STRIDE threat model (`threat-model.md`), a draft ROS-analyse
+  (`ros-analyse.md`), what has and has not been reviewed and where people should start (`human-review.md`), and the
+  stage-1 request for an isolated test install with made-up data only (`test-environment.md`); and a CycloneDX SBOM,
+  `docs/assurance/sbom.cdx.json`, written by the new `npm run sbom` (`tools/sbom/`, 22 tests titled `[SEC-007]`). The
+  pack asks in three stages (0: own machines or Codespaces with the mocks; 1: an isolated test server; 2: a pilot
+  after the DPO, a human security review, the ROS-analyse and an operations agreement) and adds Q31 (a named system
+  owner and maintainer at HVL). Every document is a **draft for HVL IT to correct**, written by the AI that wrote the
+  code and fact-checked by further AI passes; no person has reviewed it. No app code, spec or test outside
+  `tools/sbom` changed, and the S6 checklist and gate are untouched. Not committed.

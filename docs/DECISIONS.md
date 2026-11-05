@@ -126,6 +126,7 @@ with the commands given.
 | D-113 | The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard | Accepted (2026-10-30) |
 | D-114 | New development dependencies in S6 | Accepted (2026-10-30) |
 | D-115 | xAPI capture, statement identity, attempts and gradable results (probe P1) | Accepted (2026-10-30), ALU and the owner to answer Q18–Q20 |
+| D-116 | An IT assurance pack for HVL IT and an SBOM generator, outside the specs; a request in three stages | Accepted (2026-11-05), drafts for HVL IT to correct, a system owner and maintainer to name (Q31) |
 
 ---
 
@@ -4729,3 +4730,49 @@ loading of one spec per session are kept.
   pattern's retry switches, fails the pin. Not decided here: whether the pattern turns the book's retry off
   (`behaviour.enableRetry: false`), and so departs from `PROD-009` with a `SPEC-DEVIATION`; that stays the owner's
   call (Q20), and until then the book's retry stays on, as the S5 tests require.
+
+### D-116 · An IT assurance pack for HVL IT and an SBOM generator, outside the specs; a request in three stages
+- **Context:** On 2026-11-05 the owner asked for an "IT assurance pack" for HVL IT, whose operations and security
+  staff will want assurances from people before they host HVL Interaktiv, even for testing. No spec asks for one: the
+  specs describe the product, and `docs/ops/` (D-109, D-110) says how to run it, not whether IT should. The code, its
+  tests and every review of them were written by the same AI (213 of the repository's 214 commits; the other is the
+  merge of pull request #8), and no person has reviewed the code. The repository does not know HVL's infrastructure,
+  routines or people, and no document names who at HVL owns or maintains the system. `npm sbom` sees only npm
+  packages; H5P core, the editor and the content types come from GitHub at pinned commits (D-022, D-027, D-078), and
+  the server image rests on base images pinned by digest (D-110).
+- **Decision:**
+  - **The pack:** `docs/assurance/`, outside the specs' scope, in plain English for HVL IT, with Norwegian domain
+    terms kept as in the glossary: `README.md` (start here, with a Nynorsk *samandrag*), `architecture.md`,
+    `threat-model.md` (STRIDE), `ros-analyse.md`, `human-review.md` and `test-environment.md`. Each document is a
+    draft for IT to correct; says that AI wrote and fact-checked it and that no person has reviewed it; cites its
+    evidence (a path, a decision, a requirement ID or a test); marks HVL facts *(IT to fill in)* and its own
+    suggestions *(proposal)*; and names variables only, never a secret value.
+  - **The SBOM:** `npm run sbom` (`tools/sbom/`) writes `docs/assurance/sbom.cdx.json` in CycloneDX 1.5: the npm
+    packages of a production install, H5P core and the editor, the ten content types by commit, and the container
+    images by digest. `--check` says whether the committed file is current. The output is deterministic (no time
+    stamp, a serial number derived from the content), and the tool reads files and the installed tree only. Its
+    tests are titled `[SEC-007]` (dependency hygiene), which does not itself ask for an SBOM; `npm test` runs them in
+    CI, and CI does not run `--check` yet. What the SBOM leaves out is listed in its README.
+  - **No change to the app:** nothing in `apps/`, `packages/`, `deploy/`, `content/` or `docs/specs/` changes.
+    Where the pack finds a gap, it proposes a measure; a change to the code needs its own decision first
+    (CLAUDE.md §1, "Deviation").
+  - **A request in three stages**, in the same words in every document of the pack. **Stage 0:** students and
+    reviewers run the app on their own machines or in Codespaces, against the mock Feide and mock Canvas (D-049),
+    with made-up users; IT is not needed. **Stage 1:** an isolated test server with made-up data only, Feide test
+    users, HVL's test Canvas, named testers and an end date. **Stage 2:** a pilot with real students in one or two
+    courses, only after the DPO's approval (Q6), a human security review, the ROS-analyse in HVL's form and an
+    operations agreement. PROGRESS.md's «Blocks» column keeps naming sessions or "the pilot"; the pilot is stage 2.
+  - **Who is accountable** is open: Q31 asks HVL to name a system owner (*systemeigar*) and a maintainer
+    (*forvaltar*) for HVL Interaktiv, the system owner and a contact for the test install before stage 1, the
+    maintainer before stage 2 at the latest. Until then the repository owner makes the product decisions, as before.
+- **Alternatives considered:** (a) Widening `docs/ops/`: it says how to run the service for readers who already have
+  IT's go-ahead, not whether to give it. (b) The SBOM from `npm sbom --omit dev` alone: on 2026-11-05 it kept 239 of
+  the 477 production packages (`playwright-core`, `tsx`, `react` and `prisma` among the missing) and lists no H5P code
+  or images. (c) The risk analysis in HVL's own template: the template is HVL's and unknown here, so the draft scores
+  on a 5 × 5 scale with `ROS-nn` IDs that IT keeps when it moves the risks over. (d) Waiting for a human review
+  before writing to IT: IT's questions come first, and the pack says where a human review should start.
+- **Consequences:** The pack describes the repository at `92ca2c5` on 2026-11-05; its figures (commits, test
+  counts, the commits after `main`) age as the S6 gate and later work land, and are refreshed with the gate output.
+  The SBOM is regenerated after a change to the lockfile, the H5P pins or the images (`tools/sbom/README.md`).
+  Neither the pack nor the SBOM is a review, and neither changes what the code does. Q31 joins PROGRESS.md's open
+  questions.

@@ -32,6 +32,7 @@
     "check:pins": "node tools/dependency-check/checkPins.mjs",
     "check:licences": "node tools/dependency-check/checkLicences.mjs",
     "check:audit": "node tools/dependency-check/checkAudit.mjs",
+    "sbom": "node tools/sbom/buildSbom.mjs",
     "privacy:inventory-check": "node tools/privacy/checkInventory.mjs",
     "privacy:dpia-check": "node tools/privacy/checkDpiaInput.mjs",
     "spec:trace": "node tools/spec-trace/specTrace.mjs",

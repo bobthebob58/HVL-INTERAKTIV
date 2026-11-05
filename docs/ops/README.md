@@ -18,3 +18,7 @@ The deployment checklist is the last section of [runbook.md](runbook.md) (D-110'
 with the TLS and EEA settings of database-roles.md, it also covers the reverse proxy's access log without the query
 string, its `X-Request-Id`, plain bucket names and no mounted AWS config file (D-109's amendments), the files
 origin's host name and certificate (`SEC-004`), and clamd (`SEC-006`; D-110's amendments).
+
+Whether HVL IT should host the service at all, even for testing, is the subject of the IT assurance pack,
+[docs/assurance/](../assurance/README.md) (D-116), which asks for it in stages. Its stage-1 request,
+[test-environment.md](../assurance/test-environment.md), points back to these documents for the install steps.

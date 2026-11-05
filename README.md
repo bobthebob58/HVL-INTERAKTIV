@@ -60,6 +60,7 @@ be resumed where they left off.
 | Look up a Norwegian term | [docs/GLOSSARY.md](docs/GLOSSARY.md) |
 | Supply HVL reference material | [docs/reference/README.md](docs/reference/README.md) |
 | **Take over the project** (HVL's bachelor students, spring 2027): what is done, what needs HVL, what passes to you | [docs/handoff/README.md](docs/handoff/README.md) |
+| **Decide whether to host it** (HVL IT): the staged request, architecture, threat model, a draft ROS-analyse, what has had no human review, and the SBOM; drafts for IT to correct | [docs/assurance/README.md](docs/assurance/README.md) |
 | Run it in production: image, deployment checklist, backups, ClamAV, the yearly purge | [docs/ops/README.md](docs/ops/README.md) |
 | Report a problem found in the pilot (testers, in Nynorsk) | [docs/testing/rapportere-problem.md](docs/testing/rapportere-problem.md); maintainers: [docs/testing/labels-and-triage.md](docs/testing/labels-and-triage.md) |
 | Report a security problem (privately, never as an issue) | [SECURITY.md](SECURITY.md) |

@@ -516,6 +516,8 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <td>D-114</td><td>New development dependencies in S6</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
 <td>D-115</td><td>xAPI capture, statement identity, attempts and gradable results (probe P1)</td><td>Accepted (2026-10-30), ALU and the owner to answer Q18–Q20</td></tr>
+<tr>
+<td>D-116</td><td>An IT assurance pack for HVL IT and an SBOM generator, outside the specs; a request in three stages</td><td>Accepted (2026-11-05), drafts for HVL IT to correct, a system owner and maintainer to name (Q31)</td></tr>
 </tbody></table></div>
 
 <h3 id="overview--references" tabindex="-1">Reference inputs from HVL</h3>
@@ -6494,6 +6496,8 @@ with the commands given.</p>
 <td>D-114</td><td>New development dependencies in S6</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
 <td>D-115</td><td>xAPI capture, statement identity, attempts and gradable results (probe P1)</td><td>Accepted (2026-10-30), ALU and the owner to answer Q18–Q20</td></tr>
+<tr>
+<td>D-116</td><td>An IT assurance pack for HVL IT and an SBOM generator, outside the specs; a request in three stages</td><td>Accepted (2026-11-05), drafts for HVL IT to correct, a system owner and maintainer to name (Q31)</td></tr>
 </tbody></table></div>
 <hr>
 <h3 id="decisions--d-001--nodejs-24-lts-instead-of-22" tabindex="-1">D-001 · Node.js 24 LTS instead of 22</h3>
@@ -11419,6 +11423,55 @@ pattern&#39;s retry switches, fails the pin. Not decided here: whether the patte
 call (Q20), and until then the book&#39;s retry stays on, as the S5 tests require.</p>
 </li>
 </ul>
+<h3 id="decisions--d-116--an-it-assurance-pack-for-hvl-it-and-an-sbom-generator-outside-the-specs-a-request-in-three-stages" tabindex="-1">D-116 · An IT assurance pack for HVL IT and an SBOM generator, outside the specs; a request in three stages</h3>
+<ul>
+<li><strong>Context:</strong> On 2026-11-05 the owner asked for an &quot;IT assurance pack&quot; for HVL IT, whose operations and security
+staff will want assurances from people before they host HVL Interaktiv, even for testing. No spec asks for one: the
+specs describe the product, and <code>docs/ops/</code> (D-109, D-110) says how to run it, not whether IT should. The code, its
+tests and every review of them were written by the same AI (213 of the repository&#39;s 214 commits; the other is the
+merge of pull request #8), and no person has reviewed the code. The repository does not know HVL&#39;s infrastructure,
+routines or people, and no document names who at HVL owns or maintains the system. <code>npm sbom</code> sees only npm
+packages; H5P core, the editor and the content types come from GitHub at pinned commits (D-022, D-027, D-078), and
+the server image rests on base images pinned by digest (D-110).</li>
+<li><strong>Decision:</strong><ul>
+<li><strong>The pack:</strong> <code>docs/assurance/</code>, outside the specs&#39; scope, in plain English for HVL IT, with Norwegian domain
+terms kept as in the glossary: <code>README.md</code> (start here, with a Nynorsk <em>samandrag</em>), <code>architecture.md</code>,
+<code>threat-model.md</code> (STRIDE), <code>ros-analyse.md</code>, <code>human-review.md</code> and <code>test-environment.md</code>. Each document is a
+draft for IT to correct; says that AI wrote and fact-checked it and that no person has reviewed it; cites its
+evidence (a path, a decision, a requirement ID or a test); marks HVL facts <em>(IT to fill in)</em> and its own
+suggestions <em>(proposal)</em>; and names variables only, never a secret value.</li>
+<li><strong>The SBOM:</strong> <code>npm run sbom</code> (<code>tools/sbom/</code>) writes <code>docs/assurance/sbom.cdx.json</code> in CycloneDX 1.5: the npm
+packages of a production install, H5P core and the editor, the ten content types by commit, and the container
+images by digest. <code>--check</code> says whether the committed file is current. The output is deterministic (no time
+stamp, a serial number derived from the content), and the tool reads files and the installed tree only. Its
+tests are titled <code>[SEC-007]</code> (dependency hygiene), which does not itself ask for an SBOM; <code>npm test</code> runs them in
+CI, and CI does not run <code>--check</code> yet. What the SBOM leaves out is listed in its README.</li>
+<li><strong>No change to the app:</strong> nothing in <code>apps/</code>, <code>packages/</code>, <code>deploy/</code>, <code>content/</code> or <code>docs/specs/</code> changes.
+Where the pack finds a gap, it proposes a measure; a change to the code needs its own decision first
+(CLAUDE.md §1, &quot;Deviation&quot;).</li>
+<li><strong>A request in three stages</strong>, in the same words in every document of the pack. <strong>Stage 0:</strong> students and
+reviewers run the app on their own machines or in Codespaces, against the mock Feide and mock Canvas (D-049),
+with made-up users; IT is not needed. <strong>Stage 1:</strong> an isolated test server with made-up data only, Feide test
+users, HVL&#39;s test Canvas, named testers and an end date. <strong>Stage 2:</strong> a pilot with real students in one or two
+courses, only after the DPO&#39;s approval (Q6), a human security review, the ROS-analyse in HVL&#39;s form and an
+operations agreement. PROGRESS.md&#39;s «Blocks» column keeps naming sessions or &quot;the pilot&quot;; the pilot is stage 2.</li>
+<li><strong>Who is accountable</strong> is open: Q31 asks HVL to name a system owner (<em>systemeigar</em>) and a maintainer
+(<em>forvaltar</em>) for HVL Interaktiv, the system owner and a contact for the test install before stage 1, the
+maintainer before stage 2 at the latest. Until then the repository owner makes the product decisions, as before.</li>
+</ul>
+</li>
+<li><strong>Alternatives considered:</strong> (a) Widening <code>docs/ops/</code>: it says how to run the service for readers who already have
+IT&#39;s go-ahead, not whether to give it. (b) The SBOM from <code>npm sbom --omit dev</code> alone: on 2026-11-05 it kept 239 of
+the 477 production packages (<code>playwright-core</code>, <code>tsx</code>, <code>react</code> and <code>prisma</code> among the missing) and lists no H5P code
+or images. (c) The risk analysis in HVL&#39;s own template: the template is HVL&#39;s and unknown here, so the draft scores
+on a 5 × 5 scale with <code>ROS-nn</code> IDs that IT keeps when it moves the risks over. (d) Waiting for a human review
+before writing to IT: IT&#39;s questions come first, and the pack says where a human review should start.</li>
+<li><strong>Consequences:</strong> The pack describes the repository at <code>92ca2c5</code> on 2026-11-05; its figures (commits, test
+counts, the commits after <code>main</code>) age as the S6 gate and later work land, and are refreshed with the gate output.
+The SBOM is regenerated after a change to the lockfile, the H5P pins or the images (<code>tools/sbom/README.md</code>).
+Neither the pack nor the SBOM is a review, and neither changes what the code does. Q31 joins PROGRESS.md&#39;s open
+questions.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -12532,6 +12585,8 @@ in all; session log, «2026-11-05 · S6 steps 8–10»)</li>
 <td>Q29</td><td>Who may log in to the portal? The recommended Feide registration leaves «Restrict login to selected organizations» off (<code>docs/reference/feide-values.md</code>), so anyone with Feide, also from schools (pupils, possibly children), can log in as a learner and play activities shared with «anyone with Feide» (spec 02&#39;s role table, D-059), and their play is stored and counted. Restrict Feide&#39;s «Restrict login to selected organizations» to HVL (and named partners), or keep it open with the DPO&#39;s basis for those users and a line in <code>/personvern</code> (DPIA input R37)</td><td>Owner, HVL IT, HVL DPO</td><td>The pilot</td></tr>
 <tr>
 <td>Q30</td><td>Students as insight readers: insight and the grade-sync counts go to anyone with the author role in a context, so a Canvas TA, who at HVL can be a student assistant, sees a course&#39;s <em>k</em>-suppressed aggregates, and a student author (D-059) sees them for every course their activity is placed in. Accept with HVL&#39;s confidentiality terms for student assistants, or show insight only to staff by Feide affiliation and to Canvas instructors but not TAs (an <a class="req-ref" href="#r-INS-007"><code>INS-007</code></a> change; DPIA input R36)</td><td>HVL DPO, owner</td><td>The pilot</td></tr>
+<tr>
+<td>Q31</td><td>Name a system owner (<em>systemeigar</em>) and a maintainer (<em>forvaltar</em>) at HVL for HVL Interaktiv. Neither is named anywhere, and the IT assurance pack asks for them (D-116; <code>docs/assurance/README.md</code>, «Who is accountable»; ROS-19 in <code>docs/assurance/ros-analyse.md</code>): the system owner, and who owns the test install and its tester list, before stage 1; the maintainer, who rebuilds and redeploys the image with fixes and runs the key rotations, the yearly purge and the backups (<code>docs/ops/runbook.md</code> §2, §4–§7), before stage 2 at the latest. Until then the repository owner makes the product decisions; the bachelor students&#39; project (D-101) does not replace either role</td><td>Owner, HVL IT / ALU</td><td>Stage 1 of the IT assurance pack (<code>docs/assurance/test-environment.md</code>)</td></tr>
 </tbody></table></div>
 <h3 id="progress--risk-register" tabindex="-1">Risk register</h3>
 <div class="table-wrap" role="region" aria-label="Table 4, Risk register" tabindex="0"><table><thead><tr>
@@ -13200,6 +13255,19 @@ $ gate6-start.sh (the gate's running-server step, tried once)
     and «Poeng til Canvas» (h: Poeng til karakterboka i Canvas) on the activity page · mock Canvas: the picker as
     the teacher, then the resource link: /app/play tabs Spel, Rediger, Innsikt, Poeng til Canvas · 0 page errors</code></pre>
 </li>
+<li><p><strong>2026-11-05 · IT assurance pack</strong> — At the owner&#39;s request, a pack for HVL IT (operations and security), who will
+want assurances from people before they host the service even for testing (D-116): <code>docs/assurance/</code> with a start
+page and a Nynorsk <em>samandrag</em> (<code>README.md</code>), the architecture with trust boundaries, network flows, data stores and
+secrets by name (<code>architecture.md</code>), a STRIDE threat model (<code>threat-model.md</code>), a draft ROS-analyse
+(<code>ros-analyse.md</code>), what has and has not been reviewed and where people should start (<code>human-review.md</code>), and the
+stage-1 request for an isolated test install with made-up data only (<code>test-environment.md</code>); and a CycloneDX SBOM,
+<code>docs/assurance/sbom.cdx.json</code>, written by the new <code>npm run sbom</code> (<code>tools/sbom/</code>, 22 tests titled <code>[SEC-007]</code>). The
+pack asks in three stages (0: own machines or Codespaces with the mocks; 1: an isolated test server; 2: a pilot
+after the DPO, a human security review, the ROS-analyse and an operations agreement) and adds Q31 (a named system
+owner and maintainer at HVL). Every document is a <strong>draft for HVL IT to correct</strong>, written by the AI that wrote the
+code and fact-checked by further AI passes; no person has reviewed it. No app code, spec or test outside
+<code>tools/sbom</code> changed, and the S6 checklist and gate are untouched. Not committed.</p>
+</li>
 </ul>
 
 </section>
@@ -13357,6 +13425,8 @@ uses the key in <code>monospace</code> (<a class="req-ref" href="#r-DOC-009"><co
 <td><em>Tilgjengelegheitserklæring</em> (nb: <em>tilgjengelighetserklæring</em>)</td><td>—</td><td>Accessibility statement.</td></tr>
 <tr>
 <td><strong>Feide</strong></td><td>—</td><td>The national login federation for Norwegian education, operated by <strong>Sikt</strong>.</td></tr>
+<tr>
+<td><strong>ROS-analyse</strong>, <em>risiko- og sårbarheitsanalyse</em> (nb: <em>sårbarhetsanalyse</em>)</td><td>—</td><td>Risk and vulnerability analysis: the risks of a system scored by likelihood and consequence, with measures and an owner for each. HVL IT does its own in HVL&#39;s template; <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/assurance/ros-analyse.md" rel="noopener" class="ext">assurance/ros-analyse.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> is a draft for IT to correct, with <code>ROS-nn</code> IDs (D-116).</td></tr>
 <tr>
 <td><em>Nynorsk</em> (<code>nn</code>) / <em>Bokmål</em> (<code>nb</code>)</td><td><code>nn</code>, <code>nb</code></td><td>The two written standards of Norwegian. HVL uses Nynorsk as its main administrative language.</td></tr>
 </tbody></table></div>
@@ -13533,6 +13603,8 @@ the meaning. Spec 04 and D-082…D-100 hold the rules; ALU edits the texts behin
 <td><strong>Conformance report</strong></td><td><code>docs/accessibility/WCAG-CONFORMANCE-REPORT.md</code> (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>): one section per WCAG 2.2 A/AA criterion with the automated evidence (axe rules, our checks, the last full run) generated by <code>npm run a11y:report</code>, and HVL&#39;s manual verdicts kept between <code>manual:start</code> and <code>manual:end</code> markers. It is the source for the <em>tilgjengelegheitserklæring</em> on uustatus.no (D-079&#39;s amendments).</td></tr>
 <tr>
 <td><strong>DPIA</strong></td><td>Data Protection Impact Assessment (GDPR Art. 35).</td></tr>
+<tr>
+<td><strong>SBOM</strong></td><td>Software bill of materials: a machine-readable list of the components a system is built from, with versions, pins and licences, for scanners and advisories. Ours is <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/assurance/sbom.cdx.json" rel="noopener" class="ext">assurance/sbom.cdx.json<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> in CycloneDX 1.5, written by <code>npm run sbom</code> (<code>tools/sbom/</code>): the npm packages of a production install, H5P core, the editor and the ten content types by commit, and the container images by digest; its README lists what it leaves out (D-116).</td></tr>
 <tr>
 <td><strong>Pseudonym / HMAC</strong></td><td>A keyed hash that replaces a real identifier. It cannot be reversed without the secret key.</td></tr>
 <tr>

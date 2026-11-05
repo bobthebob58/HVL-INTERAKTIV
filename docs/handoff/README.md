@@ -28,10 +28,10 @@ document answer "why is it like this?":
 | Question | Where |
 |---|---|
 | What must the system do? | `docs/specs/00`–`05`, each requirement with an ID such as `LTI-012`, a priority and the session that builds it |
-| Why was it built this way? | [docs/DECISIONS.md](../DECISIONS.md), D-001…D-115, each with context, decision, alternatives, consequences and dated amendments |
+| Why was it built this way? | [docs/DECISIONS.md](../DECISIONS.md), D-001…D-116, each with context, decision, alternatives, consequences and dated amendments |
 | Which code and which tests belong to a requirement? | [docs/TRACEABILITY.md](../TRACEABILITY.md) (generated), and the spec site `docs/site/index.html` (open it in a browser) |
 | How is a package laid out? | The module map in each README: [apps/server](../../apps/server/README.md), [apps/web](../../apps/web/README.md), `packages/*/README.md`, `tools/*/README.md`, [content/README.md](../../content/README.md) |
-| What is the state, and what did each gate prove? | [PROGRESS.md](../../PROGRESS.md): the checklist, the open questions Q1–Q30, the risk register and every gate's output |
+| What is the state, and what did each gate prove? | [PROGRESS.md](../../PROGRESS.md): the checklist, the open questions Q1–Q31, the risk register and every gate's output |
 
 Every source file starts with a module header (What, Why, Spec, Invariants, Collaborators, Tests), every export has
 TSDoc, and non-obvious lines carry a tag: `SECURITY:`, `PRIVACY:`, `A11Y:`, `PEDAGOGY:`, `UPSTREAM:`, `WHY:` or
@@ -65,7 +65,9 @@ picker parts above.
 
 These need a person or a system at HVL. They are not student tasks, but several block parts of the pilot, and your
 review should not report them as defects. The full text of each question is in PROGRESS.md, «Open questions and
-blockers».
+blockers». What HVL IT is asked for before it hosts anything, in three stages, is in the IT assurance pack,
+[docs/assurance/](../assurance/README.md) (D-116): the architecture, a STRIDE threat model, a draft ROS-analyse, what
+has had no human review and where a review should start, and the SBOM, all drafts by the AI for IT to correct.
 
 | Who | What | Questions and requirements |
 |---|---|---|
@@ -133,7 +135,7 @@ D-080).
 | **GitHub Codespaces** (easiest) | [.devcontainer/README.md](../../.devcontainer/README.md): create a codespace with 4 cores, wait 20–30 minutes for `setup.sh`, then `bash .devcontainer/start.sh` | Open it in VS Code on your own computer, not the browser editor: the mock Feide and mock Canvas need `localhost` ports |
 | **Your own machine** | Node.js 24, Docker; then the commands under «How to run» in [apps/server/README.md](../../apps/server/README.md) (services, H5P core, Prisma, Chromium, content types) | The ten real content types come from GitHub at pinned commits (`npm run h5p:fetch-libraries`, about 2 GB) |
 | **CI** | `.github/workflows/ci.yml` (the session gate on every pull request and on `main`, including the live-contract seam against the mocks, `LIVE_TARGET=mock npm run test:live`) and `docker.yml` (the image and the app stack's smoke test) | `main` is protected: a pull request and a green «Session gate» are required |
-| **A test server for ALU's Canvas** | The image in `deploy/` ([docs/ops/docker.md](../ops/docker.md)) or `npm start` on an https host; `LTI_PLATFORMS`, `CANVAS_ORIGINS` and the developer key as in [docs/reference/canvas-platform-values.md](../reference/canvas-platform-values.md) §1 | Never with real student data: test accounts in a test course only (`DATA-010`) |
+| **A test server for ALU's Canvas** | The image in `deploy/` ([docs/ops/docker.md](../ops/docker.md)) or `npm start` on an https host; `LTI_PLATFORMS`, `CANVAS_ORIGINS` and the developer key as in [docs/reference/canvas-platform-values.md](../reference/canvas-platform-values.md) §1 | Never with real student data: test accounts in a test course only (`DATA-010`). A server on HVL's infrastructure is stage 1 of HVL IT's request ([docs/assurance/test-environment.md](../assurance/test-environment.md)) |
 
 The commands you will use most are in [CLAUDE.md](../../CLAUDE.md) §3. Problems found during the pilot come in through
 GitHub's issue forms ([docs/testing/rapportere-problem.md](../testing/rapportere-problem.md),
