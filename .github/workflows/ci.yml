@@ -171,7 +171,7 @@ jobs:
       - name: API documentation builds without warnings (TypeDoc, DOC-002)
         run: npm run docs:api
       - name: Traceability (every MUST of a finished session has a running test)
-        run: npm run spec:trace -- --check --done-through=S5
+        run: npm run spec:trace -- --check --done-through=S6
       - name: Spec website is up to date
         run: npm run spec:site -- --check
       - name: Conformance report matches its sources (UD-040, D-079)
