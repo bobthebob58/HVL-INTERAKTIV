@@ -120,7 +120,7 @@ with the commands given.
 | D-107 | `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year | Accepted (2026-10-30) |
 | D-108 | Data-subject requests: a server CLI that HVL operations run | Accepted (2026-10-30) |
 | D-109 | Database roles, encrypted-connection checks in production, and a request log without personal data | Accepted (2026-10-30) |
-| D-110 | Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV | Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05), HVL's runtime and DNS open (Q5), build egress to the owner (Q21) |
+| D-110 | Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV | Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05 and 2026-11-06), HVL's runtime and DNS open (Q5), build egress to the owner (Q21) |
 | D-111 | An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it | Accepted (2026-10-30), texts to HVL's language advisers and ALU (Q2, Q17) |
 | D-112 | Upstream reports drafted for the owner to file; Lumi stays at 10.0.4 | Accepted (2026-10-30) |
 | D-113 | The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard | Accepted (2026-10-30) |
@@ -4141,6 +4141,26 @@ loading of one spec per session are kept.
     that `clamscan` 2.4.0 sends no server name (SNI), so the TLS proxy must present the certificate for
     `CLAMAV_HOST` without one (D-112's amendment of today measured it). `upload.file.scanUnavailable` stays 400: a
     503 changes the shared error mapping (`h5pErrorResponse.ts`), which is not the upload route's.
+- **Amendment (2026-11-06, the old AudioRecorder builds closed out):** checked by AI agents with counts only, never
+  values. No build made before `buildEnv` 3 was ever committed, pushed in an image, uploaded as a CI artefact or
+  sent. The last two old packages, in the agent's scratch folder, were deleted, and the bundle's own check found
+  secret-named variables in none of the 260 AudioRecorder files and packages left on the machine, apart from two
+  deliberate canary reproductions. In the old builds, the variables named like GitHub, AWS and gcloud credentials
+  held the cloud session's proxy placeholders, not credentials. Only codespaces created from
+  `ccr-07f63266-6cere5` between 2026-10-30 17:02 and 2026-11-05 08:39 UTC could have built with the old recipe and
+  their own real environment; the owner deleted those codespaces and had no Codespaces secrets. Two corrections to
+  the residual above:
+  - **Re-seeding does not replace an old build.** Lumi installs a library that is already there only when its patch
+    version is higher (`LibraryManager.js`, `installFromDirectory`), so a library storage seeded before the fix
+    needs its `H5P.AudioRecorder-1.0` folder, or the whole library volume, deleted before it is seeded again. Library
+    files are served with `Cache-Control: public` for a year (`staticRoutes.ts`), so a server that held an old build
+    may still be served from caches after that.
+  - **Two ways in skip the bundle's secret scan.** `npm run seed:libraries` checks hashes only, and with no folder it
+    seeds H5P Group's own Hub packages from `docs/reference/h5p-core-1.28-seed-packages/` (`seedCli.ts`); an admin's
+    package import (`HvlH5PEditor.uploadPackage`) can install or patch libraries. Either could bring in H5P's own
+    AudioRecorder build, which we have not been able to check. The scan also misses some forms (a proxy URL with a
+    password, lower-case names, unquoted values). Until the scan covers both ways in, production libraries come
+    only from a bundle built in CI, and admins import no package that carries libraries.
 
 ### D-111 · An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it
 - **Context:** S5's probe P1 found that many `nn` and `nb` defaults of the real libraries are English (MultiChoice,

@@ -505,7 +505,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>D-109</td><td>Database roles, encrypted-connection checks in production, and a request log without personal data</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
-<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
+<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05 and 2026-11-06), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
 <tr>
 <td>D-111</td><td>An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</td><td>Accepted (2026-10-30), texts to HVL&#39;s language advisers and ALU (Q2, Q17)</td></tr>
 <tr>
@@ -6485,7 +6485,7 @@ with the commands given.</p>
 <tr>
 <td>D-109</td><td>Database roles, encrypted-connection checks in production, and a request log without personal data</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
-<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
+<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05 and 2026-11-06), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
 <tr>
 <td>D-111</td><td>An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</td><td>Accepted (2026-10-30), texts to HVL&#39;s language advisers and ALU (Q2, Q17)</td></tr>
 <tr>
@@ -10769,6 +10769,28 @@ that <code>clamscan</code> 2.4.0 sends no server name (SNI), so the TLS proxy mu
 503 changes the shared error mapping (<code>h5pErrorResponse.ts</code>), which is not the upload route&#39;s.</li>
 </ul>
 </li>
+<li><strong>Amendment (2026-11-06, the old AudioRecorder builds closed out):</strong> checked by AI agents with counts only, never
+values. No build made before <code>buildEnv</code> 3 was ever committed, pushed in an image, uploaded as a CI artefact or
+sent. The last two old packages, in the agent&#39;s scratch folder, were deleted, and the bundle&#39;s own check found
+secret-named variables in none of the 260 AudioRecorder files and packages left on the machine, apart from two
+deliberate canary reproductions. In the old builds, the variables named like GitHub, AWS and gcloud credentials
+held the cloud session&#39;s proxy placeholders, not credentials. Only codespaces created from
+<code>ccr-07f63266-6cere5</code> between 2026-10-30 17:02 and 2026-11-05 08:39 UTC could have built with the old recipe and
+their own real environment; the owner deleted those codespaces and had no Codespaces secrets. Two corrections to
+the residual above:<ul>
+<li><strong>Re-seeding does not replace an old build.</strong> Lumi installs a library that is already there only when its patch
+version is higher (<code>LibraryManager.js</code>, <code>installFromDirectory</code>), so a library storage seeded before the fix
+needs its <code>H5P.AudioRecorder-1.0</code> folder, or the whole library volume, deleted before it is seeded again. Library
+files are served with <code>Cache-Control: public</code> for a year (<code>staticRoutes.ts</code>), so a server that held an old build
+may still be served from caches after that.</li>
+<li><strong>Two ways in skip the bundle&#39;s secret scan.</strong> <code>npm run seed:libraries</code> checks hashes only, and with no folder it
+seeds H5P Group&#39;s own Hub packages from <code>docs/reference/h5p-core-1.28-seed-packages/</code> (<code>seedCli.ts</code>); an admin&#39;s
+package import (<code>HvlH5PEditor.uploadPackage</code>) can install or patch libraries. Either could bring in H5P&#39;s own
+AudioRecorder build, which we have not been able to check. The scan also misses some forms (a proxy URL with a
+password, lower-case names, unquoted values). Until the scan covers both ways in, production libraries come
+only from a bundle built in CI, and admins import no package that carries libraries.</li>
+</ul>
+</li>
 </ul>
 <h3 id="decisions--d-111--an-hvl-language-overlay-in-a-library-storage-wrapper-h5p-010s-guidance-through-it" tabindex="-1">D-111 · An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</h3>
 <ul>
@@ -12277,8 +12299,11 @@ whether the export works (<code>pdfAvailability.ts</code>)</li>
 <li><span class="task">✓ Done:</span> SECURITY (found while building the bundle): <code>H5P.AudioRecorder</code> 1.0&#39;s build baked the build machine&#39;s whole
 environment, tokens included, into JavaScript served to learners. <code>tools/h5p-libraries</code> now builds every
 library with a minimal environment (<code>buildEnv</code> 3), the bundle refuses secret-named variables, and the leaky
-builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Tokens that were in the old builds
-should be rotated (owner)</li>
+builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Closed on 2026-11-06 (D-110&#39;s
+amendment of that day): no old build was ever committed, pushed in an image, uploaded as a CI artefact or
+sent; the last two old copies were deleted, and no other was found on the machine; the old builds&#39; GitHub, AWS
+and gcloud variables held the cloud session&#39;s proxy placeholders, not credentials; the owner deleted the
+codespaces that could have built with the old recipe and had no Codespaces secrets</li>
 <li><span class="task">✓ Done:</span> Integration (2026-11-05): <code>main.ts</code> runs the PDF probe after listening and waits for it on stop; <code>tsx</code> moved
 to <code>apps/server</code>&#39;s dependencies; scripts <code>deploy:check</code>, <code>docker:smoke</code>, <code>pdf:check</code>; the app stack has its
 own clamd, and the smoke proves an upload scanned (EICAR refused) and served from the files origin; CI runs
@@ -13396,6 +13421,19 @@ documents of the pack were refreshed to <code>8d4eaf0</code> and this CI result 
 review state, the image size on GitHub&#39;s runner), and D-116&#39;s amendment of 2026-11-06 records the change. All of it
 was written and fact-checked by AI agents against the repository and GitHub&#39;s read-only API; no person has
 reviewed it. No app code, spec, test or CI file changed after <code>8d4eaf0</code>.</p>
+</li>
+<li><p><strong>2026-11-06 · After the merge: the upstream reports and the old AudioRecorder builds</strong> — The owner merged pull
+request #18 (<code>38b1743</code>), and CI (run 42205391766) and <code>docker.yml</code> (run 42205391749) passed on <code>main</code>. At the
+owner&#39;s question &quot;what if Lumi and H5P do not answer?&quot;, a workflow of ten AI agents (two code checks, three web
+researchers, and a skeptic or fact-checker for each) checked that HVL Interaktiv&#39;s own workarounds cover the four
+findings of the Lumi report and the AudioRecorder build leak without any upstream fix (they do, on every path
+checked), and the routes when a vendor is silent. The private drafts, held outside the repository, were
+corrected and given a dated plan: a second private channel, a coordinator (BSI for Lumi, eduCSC at Sikt for H5P),
+CVE IDs, and a limited advisory after 90 days, which needs a D-112 amendment first. The old AudioRecorder builds
+were closed out (S6 step 6; D-110&#39;s amendment of 2026-11-06). Found and left for the owner to decide: two ways
+in, <code>seed:libraries</code> and an admin&#39;s package import, skip the bundle&#39;s secret scan; re-seeding keeps an installed
+library of the same patch version; the scan misses some forms; no code checks clamd&#39;s <code>AlertExceedsMax</code>.
+Documentation only; no code changed.</p>
 </li>
 </ul>
 

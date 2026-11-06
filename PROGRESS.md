@@ -708,8 +708,11 @@ under the step that does it):
   - [x] SECURITY (found while building the bundle): `H5P.AudioRecorder` 1.0's build baked the build machine's whole
         environment, tokens included, into JavaScript served to learners. `tools/h5p-libraries` now builds every
         library with a minimal environment (`buildEnv` 3), the bundle refuses secret-named variables, and the leaky
-        builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Tokens that were in the old builds
-        should be rotated (owner)
+        builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Closed on 2026-11-06 (D-110's
+        amendment of that day): no old build was ever committed, pushed in an image, uploaded as a CI artefact or
+        sent; the last two old copies were deleted, and no other was found on the machine; the old builds' GitHub, AWS
+        and gcloud variables held the cloud session's proxy placeholders, not credentials; the owner deleted the
+        codespaces that could have built with the old recipe and had no Codespaces secrets
   - [x] Integration (2026-11-05): `main.ts` runs the PDF probe after listening and waits for it on stop; `tsx` moved
         to `apps/server`'s dependencies; scripts `deploy:check`, `docker:smoke`, `pdf:check`; the app stack has its
         own clamd, and the smoke proves an upload scanned (EICAR refused) and served from the files origin; CI runs
@@ -1801,3 +1804,15 @@ Append one entry per session: date, session, what was done, gate output, and any
   review state, the image size on GitHub's runner), and D-116's amendment of 2026-11-06 records the change. All of it
   was written and fact-checked by AI agents against the repository and GitHub's read-only API; no person has
   reviewed it. No app code, spec, test or CI file changed after `8d4eaf0`.
+- **2026-11-06 · After the merge: the upstream reports and the old AudioRecorder builds** — The owner merged pull
+  request #18 (`38b1743`), and CI (run 42205391766) and `docker.yml` (run 42205391749) passed on `main`. At the
+  owner's question "what if Lumi and H5P do not answer?", a workflow of ten AI agents (two code checks, three web
+  researchers, and a skeptic or fact-checker for each) checked that HVL Interaktiv's own workarounds cover the four
+  findings of the Lumi report and the AudioRecorder build leak without any upstream fix (they do, on every path
+  checked), and the routes when a vendor is silent. The private drafts, held outside the repository, were
+  corrected and given a dated plan: a second private channel, a coordinator (BSI for Lumi, eduCSC at Sikt for H5P),
+  CVE IDs, and a limited advisory after 90 days, which needs a D-112 amendment first. The old AudioRecorder builds
+  were closed out (S6 step 6; D-110's amendment of 2026-11-06). Found and left for the owner to decide: two ways
+  in, `seed:libraries` and an admin's package import, skip the bundle's secret scan; re-seeding keeps an installed
+  library of the same patch version; the scan misses some forms; no code checks clamd's `AlertExceedsMax`.
+  Documentation only; no code changed.
