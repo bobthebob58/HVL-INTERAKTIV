@@ -1,5 +1,9 @@
 # Local services for development and integration tests (D-023). Start with `docker compose up -d`.
 # The values match apps/server/.env.example. These containers are for development only: no TLS, fixed passwords.
+# SECURITY: every port is published on the loopback only (127.0.0.1), because PostgreSQL has a fixed password
+# and Redis none (D-110's amendment of 2026-11-05, step 7). Never publish them on another interface (use an SSH
+# tunnel from another machine), and run this file only on a development machine or a throwaway test node, since
+# any local user can still connect (docs/ops/runbook.md §8).
 #
 # S3: the moto server emulates the S3 API in one container without arguments, so the same image also works
 # as a GitHub Actions service container (D-023). Data is kept in memory and lost on restart.
@@ -12,7 +16,7 @@ services:
       POSTGRES_USER: hvli
       POSTGRES_PASSWORD: hvli-dev
       POSTGRES_DB: hvli
-    ports: ['5432:5432']
+    ports: ['127.0.0.1:5432:5432']
     volumes: ['postgres-data:/var/lib/postgresql/data']
     healthcheck:
       test: ['CMD', 'pg_isready', '-U', 'hvli']
@@ -21,7 +25,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports: ['6379:6379']
+    ports: ['127.0.0.1:6379:6379']
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
@@ -29,7 +33,7 @@ services:
 
   s3:
     image: motoserver/moto:5.1.16
-    ports: ['5000:5000']
+    ports: ['127.0.0.1:5000:5000']
 
 volumes:
   postgres-data:

@@ -20,13 +20,14 @@
  *     button with a real pointer click (Playwright refuses a control something lies over); it fails when
  *     that state does not appear, so a suite never checks a fresh activity twice and calls it answered. It does not
  *     wait for transitions to end (`waitForStillness` does), so the reduced-motion check sees what still moves.
- * Collaborators: ./pages.ts, ./catalogue.ts, ./studioViews.ts (the studio's seeded views),
- *   ../../test/support/realWebApp.ts.
+ * Collaborators: ./pages.ts, ./catalogue.ts, ./studioViews.ts (the studio's seeded views), ./dataTabViews.ts (the
+ *   tabs that show learning data), ../../test/support/realWebApp.ts.
  * Tests: apps/server/a11y/axeContentTypes.a11y.test.ts and the other suites in apps/server/a11y/.
  */
 import type { BrowserContext, Frame, Page } from 'playwright-core';
 import type { RealWebApp, UiLocale } from '../../test/support/realWebApp.js';
 import type { ContentType, WebView } from './catalogue.js';
+import { openDataTab } from './dataTabViews.js';
 import { editorFrame, openActivityTab, openLaunch, openWebPage } from './pages.js';
 import { openStudioView } from './studioViews.js';
 
@@ -63,6 +64,7 @@ export async function openView(
     return openLaunch(context, app, contentId, options.locale ? { locale: options.locale } : {});
   }
   if (view.kind === 'studio') return openStudioView(app, context, view.view, options.signedIn ?? true);
+  if (view.kind === 'dataTab') return openDataTab(app, context, view);
   const page = await openWebPage(context, app.base, view.path);
   if (view.path === '/aktivitet/ny' && options.signedIn) await editorFrame(page);
   return page;

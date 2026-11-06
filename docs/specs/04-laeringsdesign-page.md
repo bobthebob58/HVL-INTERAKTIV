@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Status** | Approved for build (v1.0, 2026-10-16) |
-| **Load in sessions** | S5 (all). S4 loads §5 only, because the hint rules plug into the validator engine. |
+| **Load in sessions** | S5 (all). S4 loads §5 only, because the hint rules plug into the validator engine. S6 loads `MAPPE-003` and `MAPPE-004` (the mappe's real results and the PDF in the image; D-101). |
 | **Owns requirement IDs** | `PED-*`, `MAPPE-*` |
 | **Code location** | `apps/web/src/app/(portal)/laeringsdesign/`, `apps/web/src/app/(portal)/mappe/`, `apps/web/src/features/` (studio views), `apps/server/src/learningDesign/` (content loader, patterns, metadata, planner, collaboration, mappe), `apps/server/src/validation/rules/*Hint.ts`, `content/laeringsdesign/`, `content/mappe/` (amended in S5, D-084, D-089) |
 
@@ -245,6 +245,10 @@ Aggregates apply the same minimum group size as insight (`INS-006`, default *k* 
 identifiers, free-text answers or individual scores ever appear. The export is generated on demand
 and **not stored** on the server.
 - **Verify:** A test with a 4-learner fixture asserts suppression.
+- **Amended (D-095, 2026-11-04, S6 step 4):** the results come from the stored learning data, read on demand and
+  written nowhere. Because the mappe adds up what insight shows one course, version and period at a time, only groups
+  of at least *k* learners per course (or the portal), content version and semester count, and a completion rate or
+  median is hidden when it would let a count insight hides be worked out.
 
 #### MAPPE-004 · SHOULD · S5 · Accessible PDF
 The PDF is rendered from the same semantic HTML template with headless Chromium and **tagged-PDF**

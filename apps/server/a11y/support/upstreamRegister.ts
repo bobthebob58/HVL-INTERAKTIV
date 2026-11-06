@@ -121,4 +121,14 @@ export const UPSTREAM_ENGLISH_TEXTS: readonly UpstreamEnglishText[] = [
       'the text is written into the markup in English and has no field in the semantics or language files; ' +
       'V-PLACEHOLDER reports the missing image as an error, so such an activity is not published by mistake',
   },
+  // UPSTREAM: https://github.com/h5p/h5p-interactive-video/blob/bcfa06d2b057cddc583fb922a75038981084be62/src/scripts/interactive-video.js (1.28.37). No issue filed yet (SPEC-DEVIATION: D-080 amendment DOC-13); the entry goes when a pinned InteractiveVideo passes its scored summary to the end screen.
+  {
+    library: 'H5P.InteractiveVideo 1.28',
+    text: 'You got @score out of @total points for the @question that appeared after @minutes minutes and @seconds seconds.',
+    shownWhen: "a screen reader reads the accessible name of a scored interaction's row on the end screen",
+    why:
+      'the library passes `l10n.endCardTableRowSummary`, a key its semantics do not have (the field is ' +
+      '`endCardTableRowSummaryWithScore`), so the end screen keeps its English default; no language file or ' +
+      'author text reaches it, and the overlay translates only the summary without a score (D-111)',
+  },
 ];

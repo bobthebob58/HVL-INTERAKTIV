@@ -26,6 +26,7 @@ const SCRIPTS = [
   'editorFields.js',
   'editorSaveRequests.js',
   'editorSaveChoice.js',
+  'editorStart.js',
   'editorPage.js',
 ];
 

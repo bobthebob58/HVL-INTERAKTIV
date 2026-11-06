@@ -159,6 +159,7 @@ describeWithServices('[PROD-003] publish flow guards', () => {
       publishContent: { updatedAt: new Date().toISOString(), acknowledgements: [] },
       unpublishContent: { updatedAt: new Date().toISOString() },
       changeSharing: { visibility: 'private' },
+      retryGradeSync: { placementId: randomUUID() },
     };
     const routes = API_ROUTES.filter((route) => route.path.includes(':contentId'));
     const paths = buildOpenApiDocument().paths as Record<string, Record<string, { responses: object }>>;

@@ -11,6 +11,7 @@
  *   - `asUserId` in the query is refused with 400 (reading another learner's state is not a player feature).
  *   - Answers have H5P's shape: `{ success: true, data }`, with `data: false` when nothing is stored.
  *   - `data=0` deletes the state (H5P's reset), handled by the storage (D-038).
+ *   - A write stores the year of the actor's key (`learnerKeyYear`) as the row's `academicYear` (D-107).
  *   - A write that names `contentVersion` (every player page's state URL does, D-093) is made only while the
  *     activity has that version; a write from a page opened before a structural save is dropped and answered
  *     `{ success: false, message: 'hvl:learner-state-stale' }` with status 200, which h5p.js hands to an error
@@ -21,12 +22,14 @@
  *     `{ success: false, message: 'hvl:editor-ui-state-not-kept' }`, so H5P keeps the flag the browser holds, and
  *     every other flag with `data: false`, which H5P reads as not set (D-069 amendment).
  * Collaborators: ../../h5p/storage/PrismaContentUserDataStorage.ts, ../../h5p/storage/stateWriteVersion.ts,
+ *   ../../h5p/storage/learnerStateYear.ts,
  *   ../../learningDesign/safeEditing/contentVersionOnPages.ts, Lumi's ContentUserDataManager, ../requestBodies.ts.
  * Tests: apps/server/test/http/userData.int.test.ts, apps/server/test/h5p/branchingTour.browser.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/staleStateWrites.int.test.ts
  */
 import { Router, type Request } from 'express';
 import { asStateUser } from '../../h5p/HvlH5pUser.js';
+import { withLearnerKeyYear } from '../../h5p/storage/learnerStateYear.js';
 import { withStateWriteVersion } from '../../h5p/storage/stateWriteVersion.js';
 import {
   CONTENT_VERSION_PARAM,
@@ -109,16 +112,19 @@ export function userDataRoutes(deps: H5pRouteDeps): Router {
     if (typeof body.data !== 'string') throw new HttpError(400, 'error.badRequest');
     const data = body.data;
     const version = contentVersionOf(req.query[CONTENT_VERSION_PARAM]);
+    // PRIVACY: the row stores the year of the learner's key, so the yearly purge takes it with that year (D-107).
     const write = () =>
-      manager.createOrUpdateContentUserData(
-        contentId,
-        dataType,
-        subContentId,
-        data,
-        flag(body.invalidate),
-        flag(body.preload),
-        asStateUser(actor),
-        actor.contextId,
+      withLearnerKeyYear(actor.learnerKeyYear, () =>
+        manager.createOrUpdateContentUserData(
+          contentId,
+          dataType,
+          subContentId,
+          data,
+          flag(body.invalidate),
+          flag(body.preload),
+          asStateUser(actor),
+          actor.contextId,
+        ),
       );
     let stale = false;
     if (version === undefined) await write();

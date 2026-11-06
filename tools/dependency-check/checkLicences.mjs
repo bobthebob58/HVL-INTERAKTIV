@@ -11,11 +11,19 @@
  *   - SPDX `OR` passes if any branch is allowed; `AND` passes only if every part is allowed; AND binds
  *     tighter than OR and parentheses group, as in the SPDX specification. Malformed expressions fail.
  *   - A package without usable metadata fails unless REVIEWED lists it with the licence a person read.
- * Collaborators: npm (query), CI (`npm run check:licences`).
- * Tests: tools/dependency-check/test/checkLicences.test.mjs
+ *   - The checked set must contain every workspace the root `workspaces` names and every runtime dependency the
+ *     root and workspace manifests declare (productionSetGuard.mjs); otherwise npm did not see the workspaces and
+ *     the check fails.
+ * Collaborators: npm (query), productionSetGuard.mjs, CI (`npm run check:licences`).
+ * Tests: tools/dependency-check/test/checkLicences.test.mjs, tools/dependency-check/test/productionSetGuard.test.mjs
  */
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import {
+  expectedProductionPackages,
+  incompleteSetProblems,
+  readWorkspaceManifests,
+} from './productionSetGuard.mjs';
 
 /** SPDX identifiers that may be combined with GPL-3.0-or-later (FSF compatibility list). */
 export const ALLOWED = new Set([
@@ -168,8 +176,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     maxBuffer: 64 * 1024 * 1024,
   });
   const packages = productionPackages(JSON.parse(out));
-  const problems = checkLicences(packages);
+  const expected = expectedProductionPackages(readWorkspaceManifests(cwd));
+  const named = packages.filter((p) => typeof p.name === 'string');
+  const problems = [...incompleteSetProblems(expected, packages), ...checkLicences(named)];
   for (const p of problems) console.error(`✗ ${p}`);
   if (problems.length > 0) process.exit(1);
-  console.log(`✓ check:licences: ${packages.length} production packages, all GPL-3.0-compatible.`);
+  console.log(
+    `✓ check:licences: ${packages.length} production packages (all ${expected.size} workspaces and declared ` +
+      'runtime dependencies among them), all GPL-3.0-compatible.',
+  );
 }

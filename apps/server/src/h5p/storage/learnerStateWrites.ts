@@ -7,19 +7,24 @@
  *      ../../learningDesign/safeEditing/PrismaLearnerStateStore.ts; both update that row first) either waits for the
  *      write and then deletes its row, or makes the write wait and see the new version. A check outside the
  *      transaction could pass just before a reset and write just after it.
- * Spec: PROD-013, H5P-005, DATA-002
+ * Spec: PROD-013, H5P-005, DATA-002, DATA-003
  * Invariants:
  *   - The state is validated before anything touches the database (a string, storable text), as before.
  *   - `data=0` deletes exactly the key's row; any other state upserts it (D-038).
  *   - A version-checked write writes nothing when the activity's version differs, and marks the expectation stale.
+ *   - An upsert inside `withLearnerKeyYear` stores that year as `academicYear`, on insert and on update (one key has
+ *     one year), so the yearly purge deletes the row with its key's year (D-107); outside it the database default
+ *     stays.
  * Collaborators: ./PrismaContentUserDataStorage.ts, ./stateWriteVersion.ts, ./learnerStateRows.ts,
- *   ./storableText.ts, ../../infra/prismaClient.ts.
+ *   ./learnerStateYear.ts, ./storableText.ts, ../../infra/prismaClient.ts.
  * Tests: apps/server/test/h5p/PrismaContentUserDataStorage.int.test.ts,
- *   apps/server/test/learningDesign/safeEditing/staleStateWrites.int.test.ts
+ *   apps/server/test/learningDesign/safeEditing/staleStateWrites.int.test.ts,
+ *   apps/server/test/privacy/purge/learnerStateYear.int.test.ts
  */
 import type { IContentUserData } from '@lumieducation/h5p-server';
 import type { Database } from '../../infra/prismaClient.js';
 import { isDeleteSignal, type StateKey } from './learnerStateRows.js';
+import { learnerKeyYearOfWrite } from './learnerStateYear.js';
 import type { StateWriteExpectation } from './stateWriteVersion.js';
 import { assertStorableText } from './storableText.js';
 
@@ -38,7 +43,14 @@ export function stateWrite(key: StateKey, userData: IContentUserData): StateWrit
   // WHY: h5p.js always posts a JSON string; storing it as one JSON string value needs no migration (D-038).
   if (typeof userData.userState !== 'string') throw new TypeError('content user state must be a string');
   assertStorableText(userData.userState);
-  const values = { data: userData.userState, preload: userData.preload, invalidate: userData.invalidate };
+  const academicYear = learnerKeyYearOfWrite();
+  const values = {
+    data: userData.userState,
+    preload: userData.preload,
+    invalidate: userData.invalidate,
+    // PRIVACY: the year of the learner's key, not of the write, so the yearly purge takes the row with its key (DATA-003).
+    ...(academicYear === undefined ? {} : { academicYear }),
+  };
   return (client) =>
     client.h5PUserData.upsert({
       where: { contentId_subContentId_dataType_learnerKey_contextId: key },

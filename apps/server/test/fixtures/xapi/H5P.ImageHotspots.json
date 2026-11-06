@@ -1,0 +1,7 @@
+{
+  "library": "H5P.ImageHotspots 1.11",
+  "contentId": "{{contentId}}",
+  "recordedBy": "apps/server/test/h5p/support/xapiTypeRun.ts (probe P1)",
+  "actions": ["load: opens the activity", "hotspots: opens and closes each of the three hotspots"],
+  "statements": []
+}

@@ -1,29 +1,36 @@
 /**
- * createApp — builds the Express app: health check, portal session, LTI, Feide login, the `/api` routes (me,
- * content, publishing, sharing, the studio, docs), the H5P routes and the fallback pages, in the order the security
- * rules need.
+ * createApp — builds the Express app: health check, portal session, LTI, Feide login, the `/api` routes (me, content,
+ * publishing, sharing, the studio, docs), the H5P routes and the fallback pages, in the order the security rules need.
  *
  * Why: spec 02 joins two entry points (Canvas via LTI, the portal via Feide) into one principal; the mount order
  *      decides which checks a request meets. The app is built from connected clients so tests and `main.ts` run the
  *      same code. The studio's services are built in ./studioServices.ts.
- * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, PROD-003, DOC-012, NFR-002, PED-001
+ * Spec: AUTH-001, AUTH-003, LTI-001, LTI-003, H5P-007, PROD-006, PROD-003, DOC-012, NFR-002, PED-001, LTI-011,
+ *   LTI-012, LTI-008, LTI-013, INS-007, NFR-006, SEC-004
  * Invariants:
- *   - Order: trust proxy → base headers → `/healthz` → page assets → the Hjelp marker and the chrome redirect (with
- *     the web app) → portal session → LTI (ltijs first) → Feide routes → start page (only without the web app) →
- *     `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page. With the web app,
- *     launches land on `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
+ *   - Order: trust proxy → request log → base headers → `/healthz` → page assets → the Hjelp marker and the chrome
+ *     redirect (with the web app) → portal session → LTI (ltijs first) → Feide routes → start page (only without the
+ *     web app) → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page. With
+ *     the web app, launches land on `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
+ *   - Right after the base headers, the files host (`FILES_BASE_URL`) gets its own router and nothing else (SEC-004).
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
- *     session with CSRF); signed file URLs are checked before it, inside the H5P router (D-058).
- *   - `X-Powered-By` is off; every response gets `nosniff` and `no-referrer`, and HSTS when the base URL is https.
+ *     session with CSRF); the editor's file grants are checked before it, inside the H5P router (D-058).
+ *   - `X-Powered-By` is off; every response gets `X-Request-Id`, `nosniff`, `no-referrer`, and HSTS over https.
  *   - The findings API, the publish API and the save gate of `/h5p` share one validator and one Redis write lock
- *     (D-074); the gate reads what the editor will store; `/api/docs` is mounted only when NODE_ENV is not
- *     production (D-077).
+ *     (D-074); the gate reads what the editor will store; `/api/docs` is mounted only when NODE_ENV is not production (D-077).
  *   - The studio's services are built once, from the same activity facts, identity hasher and publish flow as the
  *     S4 routes, and are returned so main.ts can close them at shutdown.
+ *   - The xAPI ingestion (`POST /api/h5p/xapi`) shares the activity facts; its listener of stored rows is the input
+ *     `onXapiStored`, where the grade enqueuer is wired (LTI-012). The input `nrps` counts a course's learners after
+ *     each launch (LTI-008), and Deep Linking labels line items as `AGS_LABEL_MODE` says (LTI-013, D-105).
+ *   - SECURITY: a launch's line item URL is stored only on https in production and on an origin of `CANVAS_ORIGINS`
+ *     or the platform's own (D-104 amendment of 2026-11-04).
+ *   - Insight reads the H5P content store, the NRPS learner counts and *k* (`MIN_GROUP_SIZE`, INS-006).
  * Collaborators: ../lti/ltiRoutes.ts, ./feideLoginWiring.ts, ../auth/requestPrincipal.ts,
  *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/apiRouter.ts,
  *   ../content/PublishedSaveGate.ts, ../content/ContentWriteLock.ts, ../content/savedForm.ts, ../web/webRoutes.ts,
- *   ../web/chromeRedirect.ts, ../http/pages/helpLink.ts, ./healthRoutes.ts, ./studioServices.ts, ./main.ts.
+ *   ../web/chromeRedirect.ts, ../http/pages/helpLink.ts, ./healthRoutes.ts, ./studioServices.ts, ./main.ts,
+ *   ./gradeBridgeApi.ts, ../insight/http/insightApi.ts, ../http/requestLog.ts (NFR-006), ../http/filesOriginRouter.ts.
  * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
 import express, { type ErrorRequestHandler, type Express } from 'express';
@@ -40,19 +47,21 @@ import { editorSavedForm } from '../content/savedForm.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import { PrismaContentAccessRepository } from '../h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../http/api/apiRouter.js';
-import { createH5pRouter } from '../http/createH5pRouter.js';
+import { createFilesHostRouter, createH5pRouter } from '../http/createH5pRouter.js';
 import { h5pAuthenticate } from '../http/h5pAuthenticate.js';
 import { h5pErrorHandler } from '../http/h5pErrorHandler.js';
 import { HttpError } from '../http/HttpError.js';
+import { insightApi } from '../insight/http/insightApi.js';
 import { pageAssetRoutes } from '../http/pages/pageAssetRoutes.js';
 import { portalHomeRoutes, portalNotFound } from '../http/pages/portalHomeRoutes.js';
 import { sendPortalError } from '../http/pages/portalPages.js';
 import type { ContentRouteDeps } from '../http/routes/contentRoutes.js';
+import { requestLog } from '../http/requestLog.js';
 import { baseSecurityHeaders } from '../http/securityHeaders.js';
 import type { Database } from '../infra/prismaClient.js';
 import type { StudioContent } from '../learningDesign/content/loadStudioContent.js';
 import type { Redis } from '../infra/redisClient.js';
-import { createLtiRoutes, type LtiRoutes } from '../lti/ltiRoutes.js';
+import { createLtiRoutes, type LtiRouteDeps, type LtiRoutes } from '../lti/ltiRoutes.js';
 import { DataEncryption } from '../security/keys/DataEncryption.js';
 import { IdentityHasher } from '../security/keys/IdentityHasher.js';
 import type { ContentValidator } from '../validation/types.js';
@@ -60,7 +69,9 @@ import type { WebApp } from '../web/nextWebApp.js';
 import { chromeRedirect } from '../web/chromeRedirect.js';
 import { offerHelpLink } from '../http/pages/helpLink.js';
 import { webRoutes } from '../web/webRoutes.js';
+import type { XapiStoredListener } from '../xapi/XapiIngest.js';
 import { portalFeideLoginRoutes } from './feideLoginWiring.js';
+import { gradeBridgeApi } from './gradeBridgeApi.js';
 import { healthRoutes } from './healthRoutes.js';
 import { createStudioServices, type StudioServices } from './studioServices.js';
 
@@ -78,6 +89,10 @@ export interface AppInputs {
   readonly validator?: ContentValidator;
   /** The studio content, loaded and checked once at start-up (D-082, ../learningDesign/content/). */
   readonly studioContent: StudioContent;
+  /** Called with a learner's new xAPI rows after they are stored; the grade enqueuer (LTI-012, D-104). */
+  readonly onXapiStored?: XapiStoredListener;
+  /** Counts a launched course's learners after the redirect (LTI-008, ../lti/nrps/nrpsServices.ts); else none. */
+  readonly nrps?: LtiRouteDeps['nrps'];
 }
 
 /** The app and the parts `main.ts` needs at start-up. */
@@ -115,10 +130,13 @@ export function createApp(inputs: AppInputs): App {
     editorView: inputs.h5p,
     chromePages: Boolean(inputs.web),
     canvasOrigins: env.CANVAS_ORIGINS,
+    requireHttps: env.NODE_ENV === 'production',
     tokenMaxAgeSeconds: env.LTI_TOKEN_MAX_AGE_SECONDS,
     publicBaseUrl: base,
     platforms: env.LTI_PLATFORMS,
     allowedFeideOrgs: env.ALLOWED_FEIDE_ORGS,
+    labelMode: env.AGS_LABEL_MODE,
+    nrps: inputs.nrps,
   });
   const authenticate = requestPrincipal(lti.resolveLtik);
   // WHY: the validator is built from configuration loaded at start-up (D-073) and passed in by main.ts; without one,
@@ -133,12 +151,16 @@ export function createApp(inputs: AppInputs): App {
   // WHY: the content routes inside the H5P router run the same publish gate on saves of published activities.
   const saveGate = new PublishedSaveGate(publishing, editorSavedForm(inputs.h5p.editor.libraryManager));
   const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, saveGate, duplicator: studio.duplicator };
+  const gradeBridge = gradeBridgeApi({ access, db, redis, logger, onXapiStored: inputs.onXapiStored });
+  const content = inputs.h5p.editor.contentStorage;
+  const insight = insightApi({ db, redis, content, minGroupSize: env.MIN_GROUP_SIZE });
 
   const app = express();
   app.disable('x-powered-by');
   // SECURITY: `req.ip` (audit hash, rate limits) trusts only as many proxies as are really in front (TRUST_PROXY).
   app.set('trust proxy', env.TRUST_PROXY);
-  app.use(baseSecurityHeaders({ https: base.startsWith('https:') }));
+  app.use(requestLog(logger), baseSecurityHeaders({ https: base.startsWith('https:') }));
+  app.use(createFilesHostRouter(inputs.h5p, env));
   app.use(healthRoutes({ database: () => db.$queryRaw`SELECT 1`, redis: () => redis.ping() }));
   app.use(pageAssetRoutes());
   // WHY: with the web app, an H5P page opened on its own goes to the chrome page that frames it (D-067), and /hjelp
@@ -152,7 +174,14 @@ export function createApp(inputs: AppInputs): App {
   app.use(
     '/api',
     authenticate,
-    apiRouter({ publishing, access, studio, serveDocs: env.NODE_ENV !== 'production' }),
+    apiRouter({
+      publishing,
+      access,
+      studio,
+      ...gradeBridge,
+      insight,
+      serveDocs: env.NODE_ENV !== 'production',
+    }),
     (_req, _res, next) => next(new HttpError(404, 'error.notFound')),
   );
   app.use('/api', h5pErrorHandler(logger));

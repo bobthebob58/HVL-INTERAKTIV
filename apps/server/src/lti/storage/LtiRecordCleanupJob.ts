@@ -8,7 +8,8 @@
  * Invariants:
  *   - Deletes `LtiIdToken` rows whose `expiresAt` has passed, `LtiNonce` rows created more than 10 minutes ago
  *     and `LtiAccessToken` rows whose `expiresAt` has passed; nothing else.
- *   - Uses the same lifetimes as the storage (./ltiRecordLifetimes.ts) and an injectable clock.
+ *   - Uses the same lifetimes as the storage (./ltiRecordLifetimes.ts) and the tick's moment from the job's
+ *     injectable clock (../../jobs/LeasedIntervalJob.ts), or the one `runOnce(now)` names.
  *   - A row outlives its lifetime by at most one interval (10 minutes); the storage never returns it in that time.
  *   - Logs only the number of rows deleted.
  * Collaborators: ../../jobs/LeasedIntervalJob.ts, ./PrismaLtiDatabaseManager.ts (writes the rows),
@@ -75,15 +76,15 @@ export class LtiRecordCleanupJob extends LeasedIntervalJob {
    * @param options - Database, Redis client, logger, and an optional interval and clock.
    */
   constructor(options: LtiRecordCleanupOptions) {
-    const now = options.now ?? (() => new Date());
     super({
       name: 'lti-record-cleanup',
       label: 'LTI record cleanup',
       leaseKey: LTI_CLEANUP_LEASE_KEY,
       intervalMs: options.intervalMs ?? LTI_CLEANUP_INTERVAL_MS,
       redis: options.redis,
-      run: async () => ({ ...(await deleteExpiredLtiRecords(options.db, now())) }),
+      run: async (now) => ({ ...(await deleteExpiredLtiRecords(options.db, now)) }),
       logger: options.logger,
+      ...(options.now ? { clock: options.now } : {}),
     });
   }
 }

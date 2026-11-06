@@ -25,7 +25,13 @@ import { describeWithServices, serviceEnv } from '../../support/services.js';
 const encryption = new DataEncryption(parseKeyring(`k1=${Buffer.alloc(32, 3).toString('base64')}`));
 const ID_TOKEN = 'header.payload.signature';
 const LOGIN = { userId: 'user-1', roles: ['author'] as const, hvlMember: true, studentAuthor: false };
-const LOGIN_DATA = { ...LOGIN, locale: 'nb' as const, learnerKey: 'lk-1', idToken: ID_TOKEN };
+const LOGIN_DATA = {
+  ...LOGIN,
+  locale: 'nb' as const,
+  learnerKey: 'lk-1',
+  learnerKeyYear: 2026,
+  idToken: ID_TOKEN,
+};
 
 /** A tiny portal: who am I, login and logout. */
 function portalApp(store: SessionStore): Express {

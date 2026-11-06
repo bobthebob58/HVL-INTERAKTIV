@@ -1,10 +1,10 @@
 /**
  * First-party requests only: every request of every web view (signed out and as the author), of the Canvas page
  * with the player of each of the ten content types (fresh, then started and answered) and of each type's editor
- * goes to the tool's own origin. What the Content Security Policy refused (it never reached the network) is printed, so a new outside
- * source is noticed.
+ * goes to the tool's own origins: the app's, and the files origin the player's uploaded files come from (D-110). What
+ * the Content Security Policy refused (it never reached the network) is printed, so a new outside source is noticed.
  *
- * Spec: DATA-011, UD-030
+ * Spec: DATA-011, UD-030, SEC-004
  */
 import { expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
@@ -30,7 +30,7 @@ describeA11y('[DATA-011] no third-party requests in the browser', (env) => {
     // Assert
     printRefused(path, log);
     expect(log.urls.length).toBeGreaterThan(0);
-    expect(thirdPartyRequests(log, app.base)).toEqual([]);
+    expect(thirdPartyRequests(log, app)).toEqual([]);
     await context.close();
   });
 
@@ -45,7 +45,7 @@ describeA11y('[DATA-011] no third-party requests in the browser', (env) => {
       await openView(app, context, view, { signedIn: true });
       // Assert
       printRefused(name, log);
-      expect(thirdPartyRequests(log, app.base)).toEqual([]);
+      expect(thirdPartyRequests(log, app)).toEqual([]);
       await context.close();
     },
   );
@@ -64,7 +64,7 @@ describeA11y('[DATA-011] no third-party requests in the browser', (env) => {
       // Assert
       printRefused(`${type} player`, log);
       expect(log.urls.some((url) => url.includes('/h5p/libraries/'))).toBe(true);
-      expect(thirdPartyRequests(log, app.base)).toEqual([]);
+      expect(thirdPartyRequests(log, app)).toEqual([]);
       await context.close();
     },
   );
@@ -78,7 +78,7 @@ describeA11y('[DATA-011] no third-party requests in the browser', (env) => {
     await openView(app, context, { kind: 'activity', tab: 'edit' }, { contentId: app.ids.get(type) ?? '' });
     // Assert
     printRefused(`${type} editor`, log);
-    expect(thirdPartyRequests(log, app.base)).toEqual([]);
+    expect(thirdPartyRequests(log, app)).toEqual([]);
     await context.close();
   });
 });

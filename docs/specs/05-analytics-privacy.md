@@ -5,7 +5,7 @@
 | **Status** | Approved for build (v1.0, 2026-10-16) |
 | **Load in sessions** | S1: §2 (`DATA-001`, `DATA-002`, `DATA-009`), §4, §5 · S4: `DATA-006`, `DATA-011` · S6: all |
 | **Owns requirement IDs** | `INS-*`, `DATA-*` |
-| **Code location** | `apps/server/src/insight/`, `apps/server/src/privacy/`, `apps/server/src/web/`, `apps/server/src/http/h5pPageCsp.ts`, `apps/web/src/app/innsikt/` |
+| **Code location** | `apps/server/src/insight/`, `apps/server/src/privacy/`, `apps/server/src/web/`, `apps/server/src/http/h5pPageCsp.ts`, `apps/web/src/features/` (the **Innsikt** tab on the activity page `/aktivitet/[id]` and in the Canvas view `/app/play`; there is no `/innsikt` page) (amended in S6, D-101, D-106) |
 
 Insight exists for one purpose: to help a teacher decide what to do in the next synchronous
 session (Just-in-Time Teaching). It is **not** for surveilling or ranking individual students.
@@ -18,12 +18,39 @@ Every design choice below follows from that purpose.
 The default view is **Før samlinga** ("before the session"): results since a chosen date (default
 7 days ago), for one activity, in one Canvas context (or all portal users for that activity).
 
+- **Amended (D-101, D-103, D-106, 2026-10-30):** insight is an **Innsikt** tab, on the activity page and in the
+  Canvas view `/app/play`, never a page of its own, and it shows one activity, one content version (the current one by
+  default, `PROD-013`) and one context at a time: a Canvas context the activity is placed in, or the portal's plays.
+  There is no view across contexts. A Canvas context is stored and compared as `<platformId>:<contextId>` (D-103), so
+  courses from two of HVL's Canvas instances never merge. `SPEC-DEVIATION` D-106: the period is chosen from fixed
+  values, the last 7 (the default), 14 or 30 days or since the semester started, each starting at midnight Oslo time,
+  not from any date, so that two overlapping views cannot isolate one learner. The semester starts on 1 January or
+  1 August until HVL gives its semester dates.
+- **Amended (D-106, 2026-11-04, the step-4 privacy review):** `SPEC-DEVIATION` D-106: every period **ends at the latest
+  midnight in Oslo**, so a view holds the data up to and including yesterday («Tal til og med i går») and two views of
+  the same period on the same day are the same whatever is stored in between; the semester view on 1 January or
+  1 August is the semester that has just ended. **No period crosses 1 August**, when the pseudonym secret changes
+  (`DATA-002`): a 7-, 14- or 30-day view whose days would reach back before 1 August starts on 1 August instead, and
+  the tab says so; each view reads only rows of its own academic year's key (`academicYear`, D-107). Canvas's Student
+  View test student is in no view (D-102's amendment of 2026-11-04, `DATA-012`). What remains (views on consecutive
+  days, nested periods) is in the DPIA input's residuals R3 and R8 (`DATA-005`).
+
 #### INS-001 · MUST · S6 · Participation overview
 Shows: learners who **started**, learners who **completed**, completion rate (denominator from NRPS
 when available, `LTI-008`, otherwise "of those who started"), median time on task, and median
 number of attempts.
 - **Acceptance:** Numbers match a hand-calculated fixture of 30 synthetic learners.
 - **Verify:** Unit tests of the aggregation queries.
+- **Amended (D-115, 2026-10-30, probe P1):** what each number reads, since H5P marks no attempts. A learner has
+  **started** with any stored statement for the activity (InteractiveBook without a cover counts at load, Column from
+  its first answer; no statement is made up). **Completed** is a stored root result (`LTI-012` as amended), and
+  **attempts** are the stored root results. **Time on task** comes from the stored timestamps of each page load, from
+  its first to its last stored statement, never from `durationMs`. Where a type cannot send a root result, completed,
+  the completion rate and attempts are shown as not available, never as 0; ImageHotspots sends no statement at all,
+  and its tab says that it sends no learning data. Residuals, named in the DPIA input and the students' checklist:
+  attempts count each Column re-check and each CoursePresentation summary slide reached after new answers; a learner
+  who opens a Column and never checks is not counted as started; and reading before the first stored statement and
+  time after the last are not counted.
 
 #### INS-002 · MUST · S6 · Item difficulty
 For each question (sub-content) the view shows: % correct on the first attempt, % correct on the
@@ -39,22 +66,44 @@ is displayed only if at least *k* distinct learners gave it (`INS-006`), so a ra
 answer is never shown. A **"Ta opp i samlinga"** ("bring to seminar") button adds the item to a
 shortlist that can be printed or projected.
 - **Verify:** Unit tests, including the *k* rule for free text.
+- **Amended (D-106, 2026-11-04):** `SPEC-DEVIATION` for older content versions only: the distributions are shown for
+  the current version, whose options and gaps the stored parameters describe; for an older version the tab says so.
+  A single-answer question's right options and wrong options (with «no answer») are suppressed as two groups, since
+  `INS-002`'s share gives the right options' total.
 
 #### INS-004 · SHOULD · S6 · Branching paths
 For BranchingScenario, the view shows the distribution of choices at each decision node and how
 many learners used a retry path.
 - **Verify:** Unit tests.
+- **Amended (D-115, 2026-10-30, probe P1):** not built in S6. BranchingScenario's choices are in no statement H5P
+  dispatches (its choice `interacted` carries no response), only in its `getXAPIData()` and saved state, and the last
+  choice before an end screen sends nothing at all. Building it needs statements that the bridge makes itself, a
+  `SPEC-DEVIATION` from `LTI-010` and `LTI-011` that needs its own decision, after a probe shows that retried choices
+  are kept. It passes to HVL's bachelor students through the hand-off index (D-101).
 
 #### INS-005 · COULD · S6 · Video engagement
 For InteractiveVideo, it shows the share of learners who answered each embedded interaction. This
 serves as a proxy for how far they watched. The spike in Session 6 decides whether H5P's
 `progressed` statements are reliable enough for a drop-off curve.
+- **Amended (D-115, 2026-10-30, probe P1):** the spike's answer: InteractiveVideo sends no `progressed` statement at
+  all, so there is no drop-off curve, and the bridge sends no `progressed` from any type (`LTI-010` as amended). The
+  measure is the share of learners who answered each interaction, read from the stored `answered` statements by
+  `subContentId`, with `INS-006`'s suppression.
 
 #### INS-006 · MUST · S6 · Minimum group size and no individual view
 Any cell, bar or list item that represents fewer than **k = 5** distinct learners is shown as
 "< 5" and its value is suppressed. *k* is configurable, with a minimum of 3. If suppression of one
 cell would let a hidden value be worked out from the totals, the next-smallest cell is suppressed
 too. The insight API has **no endpoint** that returns per-learner rows.
+- **Amended (D-106, 2026-10-30):** applied as written: a value about fewer than *k* learners is shown as «< *k*» and
+  the API answer carries no value for it. The mappe's two-sided rule (D-095, a rate of 0 % or 100 % hidden) is not
+  added for insight. The grade-sync status counts are exempt (§3), and the property tests cover the insight endpoints
+  and the CSV.
+- **Amended (D-106, 2026-11-04):** `SPEC-DEVIATION`: a count of 0 is shown, since it is about no learner; it is hidden
+  only as a complement or in a hidden group. "The next-smallest cell" becomes the rule that leaves no hidden value to
+  work out: in a group with a shown total, when one cell is hidden (or several, all 1 or all *k* − 1), every shown 0 is
+  hidden, or, without a 0, the smallest shown count and each next one less than *k* above it. When the learners who
+  started are hidden, every question cell is. An exhaustive test checks every group of two to five cells for *k* = 3–6.
 - **Acceptance:** Property-based test: for random datasets, no API response contains a group smaller than *k*.
 - **Verify:** `fast-check` property test `[INS-006] …`.
 
@@ -63,6 +112,11 @@ Owners and co-authors of an activity can see its insight. In LTI mode, authors o
 see results for *that context only*. Admins can see it only through an audited support action. Each
 view writes an audit event (`DATA-007`).
 - **Verify:** Permission tests.
+- **Amended (D-106, 2026-10-30):** for a context: the activity's owner and co-authors, and an LTI author whose launch
+  comes from that context, whether or not they own the activity (after a course copy, `LTI-007`). In `/app/play` the
+  context is the launch's and cannot be changed. The audited support action for admins is not built in S6, so admins
+  see no insight. A view writes `insight.view` and a CSV download `insight.export`, with details limited to the view,
+  the period, the context and the content version: no learner key, count or answer.
 
 #### INS-008 · MUST · S6 · Accessible charts
 Each chart has a visible data table alternative and a text summary (e.g. "Question 2: 38 % correct
@@ -99,6 +153,8 @@ year, and destroyed when that year's data is purged. Learner rows store **no** n
 addresses, Feide IDs, national ID numbers or raw LTI `sub` values. The one exception is the encrypted
 `ltiSub` in `GradeSyncJob`, which AGS needs; it is deleted 30 days after a successful sync.
 - **Verify:** Unit tests for key derivation; schema test asserting no PII columns on learner tables.
+- **Amended (D-104, 2026-10-30):** the encrypted `ltiSub` is deleted 30 days after the job stops, whether it
+  succeeded, failed or was orphaned, so a job that never succeeds keeps it no longer.
 
 #### DATA-003 · MUST · S6 · Annual retention purge
 A scheduled job runs on a configured date (default 15 August), for the academic year that has
@@ -108,11 +164,38 @@ than the academic-year boundary plus 30 days, then learner `User` rows that have
 aggregate snapshots that already satisfy *k*-suppression are kept, for the *pedagogisk mappe*.
 - **Acceptance:** A dry-run mode reports counts without deleting. Each run writes an audit event with the counts.
 - **Verify:** Integration test with time travel.
+- **Amended (D-107, 2026-10-30):** `SPEC-DEVIATION` in three points. (1) The default date: the job runs by default
+  on **31 August**, Oslo time, for the academic year that ended on 31 July, because the boundary plus 30 days ends on
+  30 August; the date is configurable, but not to a day before 31 August, so the 30 days always pass first. (2) Which
+  rows go: `XapiStatement`, `H5PUserData` and `GradeSyncJob` store an `academicYear`, set, when a row is written, to
+  the year of the secret that made its `learnerKey` (`DATA-012` as amended, §4), and the purge deletes the ended
+  year's rows by that stored year, in batched transactions, then the learner `Identity` rows created before that year
+  ended, then learner `User` rows left without an `Identity` (D-034); not every row "older than the academic-year
+  boundary plus 30 days", which, read on the run date, would also take the new year's first 30 days. The 30 days after
+  the boundary are kept as the time before the purge may run. (3) Who destroys the secret: not the job. The secrets
+  are an environment value (`PSEUDONYM_SECRETS`) that the server cannot destroy, so HVL operations remove the year's
+  secret in a runbook step after the real run, and `DATA-002`'s rule holds through that step; at start-up the server
+  names, by year only, any secret still configured for a purged year, so a forgotten step shows. Before anything is
+  deleted, the year's `InsightSnapshot` rows are written per activity, context (D-103) and content version, already
+  suppressed with the configured *k* (D-106); only they outlive the purge, and the values the mappe reads from them
+  follow D-095's rules. The dry run (counts per table, nothing deleted) and the audit event of every run are as
+  written. A leased job runs the purge on one node, and a CLI runs the same code by hand.
+- **Amended (D-107, 2026-11-04, the purge built):** `PURGE_RUN_DATE` names a day from 31 August to 31 December (a day
+  in spring would keep a year's rows for most of another year); the job checks hourly and runs once the date is
+  reached and no completed run for the ended year is audited. A run deletes every stored year before the current
+  academic year, so a year a missed run left behind goes too. A snapshot holds the mappe's figures for the year
+  (`MAPPE-002`) under the mappe's group rules. The runbook is `docs/ops/yearly-purge.md`.
 
 #### DATA-004 · MUST · S6 · EEA residency and encryption
 PostgreSQL, Redis and S3-compatible storage are hosted in Norway or the EEA. All traffic uses TLS
 1.2 or later. Storage is encrypted at rest. Backups are encrypted and retained for 30 days.
 - **Verify:** Deployment checklist (`docs/ops/`).
+- **Amended (D-109, 2026-11-04 and 2026-11-05):** in production the server refuses to start with a `DATABASE_URL`
+  whose `sslmode` is not `require`, `verify-ca` or `verify-full`, a `redis://` `REDIS_URL`, an `http:` `S3_ENDPOINT`,
+  either of the AWS SDK's own endpoint variables (`AWS_ENDPOINT_URL_S3`, `AWS_ENDPOINT_URL`), or file storage outside
+  the EEA allow-list in `apps/server/src/config/storageResidency.ts`. These checks catch a wrong setting, not where a
+  server stands: the EEA location, encryption at rest and backups stay the deployment checklist's evidence (Q5), and
+  the start-up log names the database and Redis hosts and the storage region for it (`docs/ops/database-roles.md`).
 
 #### DATA-005 · MUST · S6 · DPIA input
 `docs/privacy/DPIA-INPUT.md` describes processing operations, data flows (with a diagram), risks
@@ -132,11 +215,24 @@ why, for how long, and who can see what. In particular, teachers see only groups
 exports, library installs and updates, permission changes, data-subject actions and purge runs. The
 audit log itself has no free-text personal data. It is kept for 2 years.
 - **Verify:** Integration tests assert events for each action.
+- **Amended (D-107, D-108, D-109, 2026-11-04):** a purge run writes `purge.run` with the academic year as its target;
+  a data-subject request writes `dataSubject.export` or `dataSubject.erase` with a random request ID as its target,
+  never an identifier, key or hash; both hold counts, years and fixed words only. The app's database role may add and
+  read audit rows but never change or delete them (D-109), so the deletion after 2 years, which is not built yet,
+  needs its own amendment and grant (DPIA input R27).
 
 #### DATA-008 · MUST · S6 · Data-subject requests
 An admin-only tool takes a Feide ID or an `(iss, sub)` pair. It derives the learner keys for the
 retained academic years, then exports (JSON) or deletes that learner's data. Every use is audited.
 - **Verify:** Integration test of export and erasure.
+- **Amended (D-108, 2026-10-30, and its amendments of 2026-11-04 and 2026-11-05):** the tool is a CLI on the server
+  host, with no web page or HTTP route, that HVL operations run on the instruction of HVL's data protection officer,
+  naming an HVL admin as the operator. The identifiers come on standard input, never in the arguments; the CLI derives
+  the `learnerKey` for every year in `PSEUDONYM_SECRETS` and the identity hash under every identity key; `erase` is a
+  dry run unless it is given `--confirm`; learner H5P state is deleted through our own storage, because Lumi 10.0.4's
+  `deleteAllContentUserDataByUser` deletes the acting user's state. The audit target is a random request ID. The export
+  also lists the person's portal login events (`AuthAuditEvent`), which the erasure keeps for their 2 years; a staff
+  member's own data and Canvas's own data are outside the tool (Q6). Runbook: `docs/ops/data-subject-requests.md`.
 
 #### DATA-009 · MUST · S1 · Logs contain no personal data
 The logger (pino) redacts `authorization`, `cookie`, `ltik`, `id_token`, `email`, `name`, `sub`,
@@ -147,6 +243,12 @@ The logger (pino) redacts `authorization`, `cookie`, `ltik`, `id_token`, `email`
 Separate database roles are used for the app, for migrations and for read-only analytics. Production
 data is never copied to development; test data is synthetic.
 - **Verify:** Ops checklist; migration role used only in CI/CD.
+- **Amended (D-109, 2026-11-04 and 2026-11-05):** the roles are `hvli_migrator` (owns the schema; used only in the
+  deployment's migrate step, which runs `views-down`, `prisma migrate deploy` and `grants`), `hvli_app` (rows only; on
+  the audit tables add and read only) and `hvli_analytics`, narrowed from "read-only analytics": it reads no table,
+  only views in schema `analytics` of aggregates already suppressed below *k* (today `analytics.insight_snapshot`),
+  and its sessions start read-only. Scripts in `apps/server/prisma/roles/`, runbook `docs/ops/database-roles.md`, and
+  HVL's checklist in the DPIA input §11 (`DATA-005`).
 
 #### DATA-011 · MUST · S4 · No third-party tracking or CDNs
 Student-facing pages load no third-party scripts, fonts, analytics or embeds other than ones the
@@ -160,6 +262,33 @@ For each statement, store only: `contentId`, `subContentId?`, `contentVersion`, 
 `response?` (choice indices or short gap text), `durationMs?`, `attemptId`, `timestamp`. Everything
 else is dropped, including actor names, mailboxes and extensions.
 - **Verify:** Unit test of the mapper.
+- **Amended (D-102, D-103, 2026-10-30):** `contextId` holds the platform-scoped `<platformId>:<contextId>` (null for a
+  portal play; one module builds and parses it), `attemptId` is made by the xAPI bridge, since H5P sends none, and
+  `timestamp` is when the server received the batch. Only learner principals' statements are stored.
+- **Amended (D-107, 2026-10-30):** `SPEC-DEVIATION`: `XapiStatement` also stores `academicYear`, a field outside the
+  list above, set when the row is written. It holds no statement data, only the academic year of the secret behind
+  the row's `learnerKey`, which the key cannot reveal and a timestamp can misstate (a portal session made before
+  1 August can keep its `learnerKey` for up to 12 hours after it, D-057); the annual purge (`DATA-003` as amended)
+  deletes by it. `H5PUserData` and `GradeSyncJob` store it too (§4).
+- **Amended (D-115, 2026-10-30, probe P1):** the field list is unchanged; what fills it is made exact. Which
+  statements become rows is `LTI-011` as amended: a root `attempted`, a root `answered` or `completed` only as a root
+  result (`LTI-012` as amended; a root `completed` only when it is not a replay), and a sub-content `answered` with a
+  `subContentId`. Every stored root `answered` and `completed` is therefore a root result, which `INS-001` counts
+  without a category field. A row's ID is the bridge's `statementId`, inserted once, so a batch sent twice stores
+  nothing twice; a content hash is never an identity, because identical statements are normal. `timestamp` is the
+  receive time plus the item's place in its batch in milliseconds, so the batch's order survives; the browser's clock
+  is never read.
+  `attemptId` is `<viewId>:<n>` (`LTI-010` as amended). `subContentId` comes from the `h5p-subContentId` extension,
+  else from `object.id`. `response` is kept only for the interaction types `choice` and `fill-in`: each gap (between
+  `[,]`) is cut to 100 characters, enough to group the answers *k* learners share, and a response still over 1 000
+  characters is not stored, since a shortened list would shift its gaps; a numeric response is stored as text.
+  `durationMs` is parsed from `result.duration` (null when absent, unreadable or over 24 hours), and no insight reads
+  it, because H5P's durations mean different things by type.
+- **Amended (D-102, 2026-11-04, the step-4 privacy review):** `SPEC-DEVIATION`: `XapiStatement` also stores
+  `testUser`, true for a statement of Canvas's Student View test student (the LTI `TestUser` role), set from the
+  launch, never from the statement; database default false. Like `academicYear` it holds no statement data. Insight,
+  the mappe and the yearly purge's snapshots never read a flagged row, so *k* − 1 test students cannot make a group of
+  *k* around one real learner; the grade worker does read them, so a teacher can test the score passback.
 
 ---
 
@@ -172,6 +301,14 @@ else is dropped, including actor names, mailboxes and extensions.
 | Their own feedback texts next to the results | Data from other courses' contexts |
 | Grade-sync status counts | Raw xAPI statements |
 
+- **Amended (D-104, D-106, 2026-11-04):** the grade-sync status counts are per course and not *k*-suppressed, with one
+  count per learner and placement since D-104's amendment, so a count can be about one learner. "Data from other
+  courses' contexts" means that no view mixes courses: in Canvas a teacher sees the launch's course only, while an
+  activity's owner and co-authors see insight and these counts for each course the activity is placed in, one course
+  at a time, also a colleague's course. Both are residuals for HVL's data protection officer (DPIA input R1, R2;
+  Q22). Canvas's Student View test student is in none of insight's learner numbers (`DATA-012` as amended, D-102); its
+  score is sent, so its grade job is in the grade-sync counts.
+
 ---
 
 ## 4. Consolidated logical data model
@@ -183,14 +320,14 @@ personal data; **P** marks pseudonymous fields.
 |---|---|---|
 | `User`, `Identity` | 02 | `displayName` for staff only (**PII**; `email` is kept null since S5, D-090; from S5 the name is shown to HVL colleagues in co-author search, bank listings and copy attribution, D-090–D-092); `coAuthorSearchableAt` (staff, D-090); `subjectHash` (**P**) |
 | `H5PContent`, `H5PContentFile`, `ContentCollaborator`, `LibraryAuditEvent` | 01 | `ownerUserId`; `sourceAuthorUserId` on copies (S5, D-092) |
-| `H5PUserData` | 01 | `learnerKey` (**P**), `data` (**P**) |
+| `H5PUserData` | 01 | `learnerKey` (**P**), `data` (**P**); `academicYear`, as on `XapiStatement` (D-107) |
 | `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken`, `LtiPlacement` | 02 | ID tokens (**PII**, 24 h) |
-| `GradeSyncJob` | 02 | `ltiSub` (**PII**, encrypted, 30 days after success) |
+| `GradeSyncJob` | 02 | `ltiSub` (**PII**, encrypted, 30 days after success; amended, D-104: 30 days after the job stops, whatever its outcome); `academicYear`, as on `XapiStatement` (D-107) |
 | `LearningDesignMetadata`, `LearningOutcome` | 04 | none |
 | `ValidationAcknowledgement` | 03 | `userId` (author) |
-| `XapiStatement` | 05 | `learnerKey` (**P**), `response` (**P**) |
-| `InsightSnapshot` | 05 | aggregates only, already *k*-suppressed |
-| `AuditEvent` | 05 | `actorUserId` |
+| `XapiStatement` | 05 | `learnerKey` (**P**), `response` (**P**); `contextId` as `<platformId>:<contextId>` (D-103); `academicYear`, the year of the secret behind `learnerKey`, by which the yearly purge deletes (`SPEC-DEVIATION` from `DATA-012`, D-107); `testUser`, true for Canvas's Student View test student, whose rows no aggregate reads (`SPEC-DEVIATION` from `DATA-012`, D-102, amended 2026-11-04) |
+| `InsightSnapshot` | 05 | aggregates only, already *k*-suppressed; `contextId` as `<platformId>:<contextId>` (D-103); `contentVersion` (D-107: the purge writes one snapshot per activity, context and content version) |
+| `AuditEvent` | 05 | `actorUserId`; for a data-subject request `targetId` is a random request ID, never an identifier (D-108, amended 2026-11-04) |
 
 ## 5. Pseudonymisation sequence (for evaluators)
 
@@ -203,5 +340,6 @@ learnerKey = HMAC_SHA256(secret[yyyy], "lti|" + iss + "|" + sub)
    ├─► H5PUserData.learnerKey     (resume state)
    ├─► XapiStatement.learnerKey   (insight aggregates, k ≥ 5)
    └─► GradeSyncJob.ltiSub (encrypted) only while a Canvas grade is pending
-At the yearly purge: rows deleted, secret[yyyy] destroyed → any remaining aggregate can no longer be linked to anyone.
+At the yearly purge: rows deleted; after the real run, operations destroy secret[yyyy] (runbook, D-107)
+   → any remaining aggregate can no longer be linked to anyone.
 ```

@@ -3,8 +3,9 @@
  * value about fewer than *k* learners out of every export.
  *
  * Why: MAPPE-003 applies INS-006's minimum group size to the pedagogisk mappe's aggregates (D-095): a teacher must
- *      never learn something about one learner from a count, a rate or a median. S6's insight views use this same
- *      module, so the rule is written once.
+ *      never learn something about one learner from a count, a rate or a median. S6's insight views take *k* from
+ *      this module; their own cell rules (a 0 shown, complements in additive groups, no two-sided rate rule) are in
+ *      ../insight/suppression/ (D-106's amendment of 2026-11-04).
  * Spec: MAPPE-003, INS-006
  * Invariants:
  *   - PRIVACY: *k* is an integer of at least 3 (`MIN_GROUP_SIZE`, default 5); anything else throws, so a bad value can
@@ -14,7 +15,7 @@
  *     than *k*, so the hidden count cannot be worked out from the total and the other (complementary suppression).
  *     A rate of 0 % or 100 % is therefore always suppressed: it would say what every learner did.
  * Collaborators: ../config/env.ts (`MIN_GROUP_SIZE`), ../learningDesign/mappe/activityResults.ts (the mappe),
- *   S6's insight views.
+ *   ../insight/suppression/insightCells.ts and ../insight/suppression/additiveGroupCells.ts (insight's rules).
  * Tests: apps/server/test/privacy/minimumGroupSize.test.ts
  */
 

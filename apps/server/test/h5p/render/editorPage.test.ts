@@ -87,6 +87,12 @@ describe('[SEC-008] editor page template', () => {
     expect(Object.keys(portal.saveChoice)).not.toContain('canvasPointer');
   });
 
+  it('[H5P-007] hands the script the status text for while «Lagre» waits for H5P’s editor, in the page language', () => {
+    const config = configOf<{ messages: { loading: string } }>(renderEditorPage(input(), 'nb'));
+    expect(config.messages.loading).toBe(t('page.loading', {}, 'nb'));
+    expect(config.messages.loading).toBe('Åpner aktiviteten …');
+  });
+
   it('[PROD-003] hands the script the blocked-save count message in the page language, with the count left open', () => {
     const config = configOf<{ messages: { blockedErrors: string } }>(renderEditorPage(input(), 'nb'));
     expect(config.messages.blockedErrors).toBe('Feil som må rettes eller begrunnes: {{count}}.');
@@ -125,6 +131,7 @@ describe('[SEC-008] editor page template', () => {
       '/h5p/boot/editorFields.js',
       '/h5p/boot/editorSaveRequests.js',
       '/h5p/boot/editorSaveChoice.js',
+      '/h5p/boot/editorStart.js',
       '/h5p/boot/editorPage.js',
     ];
     const positions = order.map((needle) => html.indexOf(needle));

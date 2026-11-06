@@ -1,7 +1,7 @@
 /**
  * Tests for the mapping from a principal to the H5P actor.
  *
- * Spec: H5P-006, H5P-007, LTI-007, PROD-007
+ * Spec: H5P-006, H5P-007, LTI-007, PROD-007, DATA-003
  */
 import { describe, expect, it } from 'vitest';
 import type { Principal } from '../../src/auth/Principal.js';
@@ -32,13 +32,17 @@ const LTI: Principal = {
   },
 };
 
+/** 1 October 2026: academic year 2026. */
+const AUTUMN = new Date('2026-10-01T10:00:00Z');
+
 describe('[H5P-006] principal to H5P actor', () => {
   it('[H5P-006] a portal admin is an admin actor without a course, with the CSRF token for H5P URLs', () => {
     // Act and assert
-    expect(principalToH5pActor(PORTAL, { name: 'csrf', value: 't' })).toEqual({
+    expect(principalToH5pActor(PORTAL, { name: 'csrf', value: 't' }, AUTUMN)).toEqual({
       accountId: 'u1',
       role: 'admin',
       learnerKey: 'lk1',
+      learnerKeyYear: 2026,
       contextId: '',
       locale: 'nb',
       hvlMember: true,
@@ -69,5 +73,15 @@ describe('[H5P-006] principal to H5P actor', () => {
   it('[H5P-007] puts no token into URLs when the request has none', () => {
     expect(principalToH5pActor(PORTAL)).not.toHaveProperty('urlToken');
     expect(principalToH5pActor(PORTAL, { name: 'csrf', value: '' })).not.toHaveProperty('urlToken');
+  });
+
+  it('[DATA-003] carries the year of the key, not of the request, to the learner’s state rows (D-107)', () => {
+    // Arrange: a portal session made on 31 July keeps its 2025 key until 12 hours after 1 August (D-057).
+    const firstOfAugust = new Date('2026-08-01T06:00:00Z');
+    // Act and assert
+    expect(principalToH5pActor({ ...PORTAL, learnerKeyYear: 2025 }, undefined, firstOfAugust)).toMatchObject({
+      learnerKeyYear: 2025,
+    });
+    expect(principalToH5pActor(PORTAL, undefined, firstOfAugust).learnerKeyYear).toBe(2026);
   });
 });

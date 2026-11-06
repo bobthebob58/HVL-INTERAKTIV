@@ -7,7 +7,9 @@
  * Invariants:
  *   - `permissions` is the same HvlPermissionSystem instance the editor and player use.
  *   - `fileSanitizers` are the same sanitisers the editor runs; routes run them first only to give a specific reason.
- *   - `fileGrants` is the instance whose grants the player's HvlUrlGenerator puts into file URLs (D-058).
+ *   - `fileGrants` is the instance whose grants the player's HvlUrlGenerator puts into file URLs (D-058); the files
+ *     origin accepts only those. `editorFileGrants` signs and checks the editor's file URLs on the app origin, with
+ *     another purpose key, so neither opens a file on the other origin (D-110 amendment of 2026-11-05).
  * Collaborators: ./createH5pRouter.ts, ./routes/*, ../h5p/createH5pRuntime.ts.
  * Tests: apps/server/test/http/router.int.test.ts
  */
@@ -35,8 +37,10 @@ export interface H5pRouteDeps {
   readonly permissions: IPermissionSystem<HvlH5pUser>;
   /** Sanitisers for uploaded files (file-type sniffer, SVG sanitiser). */
   readonly fileSanitizers: readonly IFileSanitizer[];
-  /** Verifies the grants in content-file URLs (`/h5p/files/<grant>/…`). */
+  /** Verifies the grants in the player's content-file URLs (`<files origin>/h5p/files/<grant>/…`). */
   readonly fileGrants: ContentFileGrants;
+  /** Issues and verifies the grants in the editor's content-file URLs (`/h5p/editor-files/<grant>/…`). */
+  readonly editorFileGrants: ContentFileGrants;
   /** Issues and verifies the grants in editor upload URLs (`/h5p/uploads/<grant>/<owner>/…`, D-069). */
   readonly uploadGrants: ContentFileGrants;
   /** Absolute folder of the H5P core client files. */

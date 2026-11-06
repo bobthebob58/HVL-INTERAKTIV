@@ -64,7 +64,9 @@ const PINS: readonly Pin[] = [
     key: 'privacy.login3',
     row: ['GradeSyncJob', '`ltiSubEncrypted`'],
     category: /^Learner PII \(encrypted\)$/,
-    retention: /^Set to null 30 days after success$/,
+    // WHY: D-104 clears it 30 days after the job stopped, whether it succeeded, failed or was orphaned.
+    retention:
+      /^Set to null 30 days after `terminalAt`, whether the job succeeded, failed or was orphaned \(D-104\)$/,
     says: {
       nn: ['Canvas-ID-en', 'kryptert', '30 dagar'],
       nb: ['Canvas-ID-en', 'kryptert', '30 dager'],
@@ -189,7 +191,8 @@ describe('[DATA-006] the privacy notice says what the data inventory holds true'
   });
 
   it('[DATA-009] says the service logs hold no personal data and last 30 days, as the inventory does', () => {
-    expect(INVENTORY).toContain('They contain no personal data (`DATA-009`) and are kept for 30 days.');
+    // WHY: the inventory's sentence goes on after "30 days" since S6 step 5, to point to the request log's fields.
+    expect(INVENTORY).toMatch(/They contain no personal data \(`DATA-009`\) and are kept for 30 days[.;]/);
     expect(t('privacy.howLong3', 'nn')).toContain('30 dagar');
     expect(t('privacy.howLong3', 'en')).toContain('30 days');
   });

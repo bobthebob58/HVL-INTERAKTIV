@@ -5,7 +5,7 @@
  * Why: AUTH-001 to AUTH-004 meet here. The ID token is validated (state, nonce, PKCE, issuer, audience, expiry,
  *      signature); the Feide ID is the subject (D-054); roles come from the Groups API (AUTH-002) and are fixed for
  *      the session (D-057); only staff keep a name and e-mail (AUTH-004); learners are pseudonyms (DATA-002).
- * Spec: AUTH-001, AUTH-002, AUTH-003, AUTH-004, DATA-002
+ * Spec: AUTH-001, AUTH-002, AUTH-003, AUTH-004, DATA-002, DATA-012
  * Invariants:
  *   - A login without a Feide ID is refused (403 page, D-054); a Groups API failure fails closed (503).
  *   - Neither the Feide ID, the `sub`, the access token nor any national ID number is stored in plaintext; the ID
@@ -14,6 +14,7 @@
  *   - Every outcome is audited with a fixed code (D-064).
  *   - PRIVACY: each login records whether colleagues may find the person as a co-author (`coAuthorSearchableAt`,
  *     D-090): the login time for an eligible staff author, else null; only this path writes it.
+ *   - The learnerKey and its academic year come from the same moment (D-107).
  * Collaborators: ./FeideClient.ts, ./feideGroups.ts, ./FeideRoleMapper.ts, ./feideClaims.ts,
  *   ../identity/AccountResolver.ts, ../identity/subjectSources.ts, ../audit/AuthAuditRecorder.ts,
  *   ./feideLoginRoutes.ts, ../../learningDesign/collaboration/staffEligibility.ts.
@@ -22,6 +23,7 @@
 import type { HttpError } from '../../http/HttpError.js';
 import { coAuthorSearchableAtFor } from '../../learningDesign/collaboration/staffEligibility.js';
 import { authError, isAuthError } from '../../http/authErrors.js';
+import { academicYearOf } from '../../privacy/academicYear.js';
 import { deriveLearnerKey } from '../../privacy/deriveLearnerKey.js';
 import type { PseudonymSecrets } from '../../privacy/pseudonymSecrets.js';
 import type { AuthAuditRecorder } from '../audit/AuthAuditRecorder.js';
@@ -104,6 +106,9 @@ export async function completeFeideLogin(
     // WHY: Feide sends no UI language; Nynorsk is the default until the portal lets people choose (PROD-012).
     locale: 'nn',
     learnerKey: deriveLearnerKey(learnerSourceOf(subject), deps.secrets, now),
+    // PRIVACY: the year of the secret that made the key, from the same moment; the session keeps the key for up to
+    // 12 hours, past 1 August too, and the yearly purge deletes the rows it writes by this year (DATA-003, D-107).
+    learnerKeyYear: academicYearOf(now),
     idToken: tokens.idToken,
   };
 }

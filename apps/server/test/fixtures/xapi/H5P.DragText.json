@@ -1,0 +1,353 @@
+{
+  "library": "H5P.DragText 1.10",
+  "contentId": "{{contentId}}",
+  "recordedBy": "apps/server/test/h5p/support/xapiTypeRun.ts (probe P1)",
+  "actions": [
+    "load: opens the activity",
+    "answer: drops three of the four words right, with the keyboard",
+    "check: presses «Sjekk»",
+    "reload: waits for the autosave and reloads the page, which restores the dropped words"
+  ],
+  "statements": [
+    {
+      "view": 1,
+      "step": "load",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Omgrep i læringsdesign"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.DragText-1.10",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "answer",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Omgrep i læringsdesign"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.DragText-1.10",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "answer",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Omgrep i læringsdesign"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.DragText-1.10",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "answer",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Omgrep i læringsdesign"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.DragText-1.10",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Omgrep i læringsdesign"
+            },
+            "interactionType": "fill-in",
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "description": {
+              "en-US": "<p>Dra orda inn i dei rette lukene i teksten om samlingsbasert undervisning. Bruk tipsa dersom du står fast.</p><br/>Læringsdesign handlar om å planleggje __________ som hjelper studentane mot læringsutbyttet i emnet.<br/>I samlingsbasert undervisning deler vi arbeidet i tre fasar: før, under og etter __________.<br/>Ein quiz før samlinga er eit døme på __________, fordi studentane får vite kva dei må arbeide meir med.<br/>Når opptak er teksta og dokument kan lesast med skjermlesar, følgjer undervisninga prinsippa for __________."
+            },
+            "correctResponsesPattern": [
+              "læringsaktivitetar[,]samlinga[,]undervegsvurdering[,]universell utforming"
+            ]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.DragText-1.10",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "response": "læringsaktivitetar[,]samlinga[,]undervegsvurdering[,]",
+          "score": {
+            "min": 0,
+            "raw": 3,
+            "max": 4,
+            "scaled": 0.75
+          },
+          "duration": "PT1.11S",
+          "completion": true
+        }
+      }
+    },
+    {
+      "view": 2,
+      "step": "reload",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Omgrep i læringsdesign"
+            }
+          }
+        }
+      }
+    },
+    {
+      "view": 2,
+      "step": "reload",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Omgrep i læringsdesign"
+            }
+          }
+        }
+      }
+    },
+    {
+      "view": 2,
+      "step": "reload",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Omgrep i læringsdesign"
+            }
+          }
+        }
+      }
+    },
+    {
+      "view": 2,
+      "step": "reload",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Omgrep i læringsdesign"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.DragText-1.10",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

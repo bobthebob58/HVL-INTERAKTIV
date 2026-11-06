@@ -11,12 +11,14 @@
  *     content problem, and never anything but content (DATA-009: content files hold no personal data).
  *   - The only argument is `--root=<content folder>`, resolved from the folder the command was started in.
  * Collaborators: ./contentCheckCli.ts (the command), ./loadStudioContent.ts, ./StudioContentError.ts,
- *   ./contentProblem.ts; the summary parts of ./guideContent.ts, ./patternContent.ts and ./mappeContent.ts.
+ *   ./contentProblem.ts; the summary parts of ./guideContent.ts, ./patternContent.ts, ./mappeContent.ts and
+ *   ./h5pTextsContent.ts.
  * Tests: apps/server/test/learningDesign/content/runContentCheck.test.ts
  */
 import { resolve } from 'node:path';
 import { contentDisplayPath, formatContentProblem } from './contentProblem.js';
 import { describeGuideContent } from './guideContent.js';
+import { describeH5pTextsContent } from './h5pTextsContent.js';
 import { loadStudioContent, STUDIO_CONTENT_ROOT, type StudioContent } from './loadStudioContent.js';
 import { describeMappeContent } from './mappeContent.js';
 import { describePatternContent } from './patternContent.js';
@@ -72,6 +74,7 @@ export function describeStudioContent(content: StudioContent): string {
     describeGuideContent(content.guide),
     describePatternContent(content.patterns),
     describeMappeContent(content.mappe),
+    describeH5pTextsContent(content.h5pTexts),
   ]
     .filter((part) => part !== undefined)
     .join(', ');

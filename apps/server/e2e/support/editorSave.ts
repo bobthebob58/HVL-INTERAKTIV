@@ -1,15 +1,18 @@
 /**
- * editorSave — presses «Lagre» on the portal's editor page (the **Rediger** tab) until its save request has been
- * answered, and hands back that answer.
+ * editorSave — presses «Lagre» on the editor page (the **Rediger** tab, in the portal or in Canvas) until its save
+ * request has been answered, and hands back that answer.
  *
  * Why: H5P resizes its editor iframe while the form fills in, which moves «Lagre»; a click that lands while it moves
- *      sends nothing (../../test/learningDesign/safeEditing/saveChoiceBench.ts). A flow needs the save's answer (200,
- *      or the 409 that opens the save choice, PROD-013), so it repeats a click that sent nothing, never one that did.
+ *      sends nothing (../../test/learningDesign/safeEditing/saveChoiceBench.ts). When it lands in H5P's own iframe,
+ *      Playwright reports it as done, since its hit-target check listens only in the button's document (CI run
+ *      41075981429). A flow needs the save's answer (200, or the 409 that opens the save choice, PROD-013), so it
+ *      repeats a click that sent nothing, never one that did.
  * Spec: NFR-004, PROD-013
  * Invariants:
  *   - Only `PUT /h5p/content/<id>` of this activity counts; at most five clicks.
  * Collaborators: ./portalFrames.ts (the editor frame), apps/server/src/h5p/render/client/editorPage.js (the button).
- * Tests: apps/server/e2e/patternToPublish.e2e.test.ts, apps/server/e2e/safeEditReset.e2e.test.ts
+ * Tests: apps/server/e2e/patternToPublish.e2e.test.ts, apps/server/e2e/safeEditReset.e2e.test.ts,
+ *   apps/server/e2e/appPlayEditor.e2e.test.ts, apps/server/e2e/ltiEditor.e2e.test.ts
  */
 import type { Frame, Page, Response } from 'playwright-core';
 

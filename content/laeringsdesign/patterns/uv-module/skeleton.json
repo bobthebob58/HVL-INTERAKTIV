@@ -185,7 +185,7 @@
                   "endGame": {
                     "showResultPage": true,
                     "showSolutionButton": true,
-                    "showRetryButton": true,
+                    "showRetryButton": false,
                     "message": "{{setResults}}",
                     "amountCorrect": "{{setAmountCorrect}}",
                     "scoreHeader": "{{setScoreHeader}}"
@@ -389,7 +389,7 @@
                   "endGame": {
                     "showResultPage": true,
                     "showSolutionButton": true,
-                    "showRetryButton": true,
+                    "showRetryButton": false,
                     "message": "{{setResults}}",
                     "amountCorrect": "{{setAmountCorrect}}",
                     "scoreHeader": "{{setScoreHeader}}"
@@ -593,7 +593,7 @@
                   "endGame": {
                     "showResultPage": true,
                     "showSolutionButton": true,
-                    "showRetryButton": true,
+                    "showRetryButton": false,
                     "message": "{{setResults}}",
                     "amountCorrect": "{{setAmountCorrect}}",
                     "scoreHeader": "{{setScoreHeader}}"

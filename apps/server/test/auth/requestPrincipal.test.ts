@@ -9,7 +9,7 @@ import type { LaunchContext } from 'ltijs';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { sealPrincipal } from '../../src/auth/Principal.js';
-import { principalOf } from '../../src/auth/principalLocals.js';
+import { ltiSubjectOf, principalOf } from '../../src/auth/principalLocals.js';
 import { requestPrincipal, urlTokenOf } from '../../src/auth/requestPrincipal.js';
 import type { PortalSession } from '../../src/auth/session/portalSessionRecord.js';
 import { HttpError } from '../../src/http/HttpError.js';
@@ -30,7 +30,8 @@ const ltiPrincipal = sealPrincipal({
 });
 const resolveLtik = async (ltik: string): Promise<ResolvedLtik> => {
   if (ltik !== LTIK) throw authError('hvl:ltik-invalid');
-  return { principal: ltiPrincipal, context: {} as LaunchContext, facts: {} as ResolvedLtik['facts'] };
+  const facts = { subject: 'canvas-sub-1' } as ResolvedLtik['facts'];
+  return { principal: ltiPrincipal, context: {} as LaunchContext, facts };
 };
 const session: PortalSession = {
   userId: '0192f0c4-0000-7000-8000-000000000002',
@@ -39,6 +40,7 @@ const session: PortalSession = {
   studentAuthor: false,
   locale: 'nb',
   learnerKey: 'lk-portal',
+  learnerKeyYear: 2025,
   csrfToken: 'csrf-token-of-the-session',
   createdAt: new Date(),
   lastSeenAt: new Date(),
@@ -57,6 +59,15 @@ function appWith(signedIn: boolean) {
   };
   return express()
     .use(fakeSession, requestPrincipal(resolveLtik))
+    .get('/year', (_req, res) => {
+      res.json({ learnerKeyYear: principalOf(res)?.learnerKeyYear ?? null });
+    })
+    .get('/sub', (_req, res) => {
+      res.json({
+        sub: ltiSubjectOf(res) ?? null,
+        inPrincipal: JSON.stringify(principalOf(res)).includes('sub-1'),
+      });
+    })
     .all('/{*path}', (_req, res) => {
       res.json({ mode: principalOf(res)?.mode ?? null, token: urlTokenOf(res)?.name ?? null });
     })
@@ -137,6 +148,20 @@ describe('requestPrincipal', () => {
     it('[AUTH-003] the CSRF token in a header is accepted on an unsafe method', async () => {
       const res = await request(appWith(true)).patch('/api/x').set('x-csrf-token', session.csrfToken);
       expect(res.body.mode).toBe('portal');
+    });
+
+    it('[DATA-012] a portal principal carries the academic year its session stored with the learnerKey (D-107)', async () => {
+      const portal = await request(appWith(true)).get('/year');
+      const lti = await request(appWith(false)).get('/year').set('Authorization', `Bearer ${LTIK}`);
+      expect(portal.body).toEqual({ learnerKeyYear: 2025 });
+      expect(lti.body).toEqual({ learnerKeyYear: null });
+    });
+
+    it('[LTI-012] keeps an LTI request’s sub beside the principal, never in it, and a portal request has none', async () => {
+      const lti = await request(appWith(false)).get('/sub').set('Authorization', `Bearer ${LTIK}`);
+      const portal = await request(appWith(true)).get('/sub');
+      expect(lti.body).toEqual({ sub: 'canvas-sub-1', inPrincipal: false });
+      expect(portal.body).toEqual({ sub: null, inPrincipal: false });
     });
 
     it('[AUTH-003] without a session or an ltik the request has no principal', async () => {

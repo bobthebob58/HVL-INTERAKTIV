@@ -15,18 +15,15 @@
  *   - A nonce is accepted once, and only a response whose signature verified uses it up, so a forged copy cannot
  *     make the genuine response look replayed; `data` must equal the `data` of a request this platform issued.
  *   - Resource links must point to the tool's origin (Canvas domain-matches returned links).
- * Collaborators: ./mockCanvas.mjs (finds the request by `data`), ./ltiVocabulary.mjs, ./httpRouter.mjs, jose.
+ * Collaborators: ./mockCanvas.mjs (finds the request by `data`), ./toolSignature.mjs, ./ltiVocabulary.mjs,
+ *   ./httpRouter.mjs, jose.
  * Tests: tools/mock-platform/test/deepLinkReturn.test.mjs
  */
-import { compactVerify, createRemoteJWKSet, decodeJwt, decodeProtectedHeader } from 'jose';
+import { decodeJwt, decodeProtectedHeader } from 'jose';
 import { LTI_CLAIM, acceptedItemTypes } from './ltiVocabulary.mjs';
 import { escapeHtml, htmlDocument, readForm, sendHtml } from './httpRouter.mjs';
+import { toolKeySet, toolSignatureProblem } from './toolSignature.mjs';
 
-const SIGNATURE_PROBLEM = {
-  ERR_JWKS_NO_MATCHING_KEY: 'unknown-kid',
-  ERR_JWS_SIGNATURE_VERIFICATION_FAILED: 'bad-signature',
-  ERR_JOSE_ALG_NOT_ALLOWED: 'wrong-alg',
-};
 const CLOCK_SKEW_SECONDS = 60;
 
 /**
@@ -37,11 +34,7 @@ const CLOCK_SKEW_SECONDS = 60;
  *   response (see `DeepLinkResponseRecord` in ./mockPlatform.d.mts).
  */
 export function createDeepLinkVerifier(platform, findRequest) {
-  // WHY: a test may restart the tool with new keys; jose's cache would hide them for its 30-second cooldown.
-  const jwks = createRemoteJWKSet(new URL(`${platform.toolUrl}/lti/keys`), {
-    cacheMaxAge: 0,
-    cooldownDuration: 0,
-  });
+  const jwks = toolKeySet(platform.toolUrl);
   const toolOrigin = new URL(platform.toolUrl).origin;
   const nonces = new Set();
   const responses = [];
@@ -87,16 +80,7 @@ export function createDeepLinkVerifier(platform, findRequest) {
 
   /** Pushes the signature problem, if any; true when the signature verified against the tool's JWKS. */
   async function checkSignature(jwt, header, problems) {
-    let problem;
-    if (header.alg !== 'RS256') problem = 'wrong-alg';
-    else if (typeof header.kid !== 'string' || header.kid === '') problem = 'unknown-kid';
-    else {
-      try {
-        await compactVerify(jwt, jwks, { algorithms: ['RS256'] });
-      } catch (error) {
-        problem = SIGNATURE_PROBLEM[error?.code] ?? 'jwks-unavailable';
-      }
-    }
+    const problem = await toolSignatureProblem(jwt, header, jwks);
     if (problem !== undefined) problems.push(problem);
     return problem === undefined;
   }

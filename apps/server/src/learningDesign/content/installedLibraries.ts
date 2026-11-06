@@ -8,13 +8,14 @@
  *      library files directly instead of asking Lumi's asynchronous library manager.
  * Spec: PED-010, PED-011
  * Invariants:
- *   - Reads only `library.json` and `semantics.json` of folders directly under `folder`; never runs library code.
+ *   - Reads only `library.json`, `semantics.json` and language files of folders directly under `folder`; never runs
+ *     library code.
  *   - Semantics are filtered as the server's `alterLibrarySemantics` hook filters them (no H5P.DragQuestion option),
  *     so a skeleton is checked against the options the editor and the sub-content policy really allow.
  *   - A missing folder is not an error here: the result says so, and whether the check must fail without it (CI).
  *   - Semantics are read once per library and cached; an unreadable or malformed file reads as "not installed".
  * Collaborators: ./studioContentContext.ts (the optional input), ./contentCheckCli.ts (builds it),
- *   ./skeletonLibraryChecks.ts (uses it), ../../h5p/semantics/removeDragQuestion.ts.
+ *   ./skeletonLibraryChecks.ts and ./h5pTextsLibraryChecks.ts (use it), ../../h5p/semantics/removeDragQuestion.ts.
  * Tests: apps/server/test/learningDesign/content/patternLibraryChecks.test.ts
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -46,6 +47,14 @@ export interface InstalledLibraryCatalogue {
    * @returns The fields, or undefined when that version is not installed.
    */
   semanticsOf(library: string): readonly ISemanticsEntry[] | undefined;
+  /**
+   * One language file of an installed library, as H5P ships it (for the H5P texts check, D-111); absent in test
+   * doubles that need none.
+   * @param library - `H5P.Name major.minor`.
+   * @param code - The file's language code, e.g. `en`, `nb` or `.en` (H5P's template).
+   * @returns The parsed file, or undefined when that version or file is missing or malformed.
+   */
+  languageFileOf?(library: string, code: string): unknown;
 }
 
 /** The installed libraries for the content check, or the fact that they are missing. */
@@ -90,6 +99,10 @@ function catalogueOf(folder: string): InstalledLibraryCatalogue {
   const semantics = new Map<string, readonly ISemanticsEntry[] | undefined>();
   return {
     versionsOf: (machineName) => versions.get(machineName) ?? [],
+    languageFileOf: (library, code) => {
+      const where = folders.get(library);
+      return where ? readJson(join(where, 'language', `${code}.json`)) : undefined;
+    },
     semanticsOf: (library) => {
       if (!semantics.has(library)) {
         const where = folders.get(library);

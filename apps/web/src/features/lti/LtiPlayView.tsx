@@ -1,23 +1,26 @@
 /**
  * LtiPlayView — the Canvas page's content: the activity's title and the tabs **Spel** and, for those who may edit,
- * **Rediger** with the formative-use notice.
+ * **Rediger** with the formative-use notice, **Innsikt** (this course's aggregated results) and **Poeng til Canvas**
+ * (the scores sent to this course's gradebook).
  *
  * Why: LTI-006 gives learners the player and authors the player plus **Rediger** (D-062, D-067). The ltik arrives in
  *      the address bar once (D-069): the page reads it, keeps it in memory only, removes it from the address bar at
  *      once, and passes it to the framed H5P pages in their query and to the API as `Authorization: Bearer`.
- * Spec: LTI-006, LTI-003, PROD-011, UD-010, PROD-013, PED-032
+ * Spec: LTI-006, LTI-003, PROD-011, UD-010, PROD-013, PED-032, LTI-012, PROD-010
  * Invariants:
  *   - The ltik is never written to storage, a cookie or a log; it is read from the address bar exactly once.
  *   - Without an ltik the page says to open the activity again from Canvas.
  *   - After a save in the editor the player reloads, so the author sees the change.
  *   - While the editor's save choice is open, the page's own controls are inert (PROD-013, D-093); Canvas offers no
  *     copy, so no copy is opened here (D-098).
- *   - The title carries the activity's own language when it differs from the page's (WCAG 3.1.2, UD-010).
+ *   - The title carries the activity's own language when it differs from the page's (WCAG 3.1.2, UD-010); so do the
+ *     activity's texts on the Innsikt tab.
  *   - Before the player, the **Spel** tab shows the estimated time and the purpose from the launch (PED-032), which
  *     Express read after the View check (D-087); the purpose carries the activity's language.
  * Collaborators: ../../lti/launchHeader.ts (the launch facts), ./LtiChrome.tsx, ../../components/Tabs.tsx,
  *   ../../messaging/useEditorSaveChoice.ts, ../../components/LearnerInfo.tsx,
- *   ../../components/H5pFrame.tsx, ../../components/Notice.tsx, ../../api/ApiAuthContext.tsx.
+ *   ../../components/H5pFrame.tsx, ../../components/Notice.tsx, ../../api/ApiAuthContext.tsx,
+ *   ../gradeSync/GradeSyncPanel.tsx, ../insight/InsightPanel.tsx.
  * Tests: apps/web/test/features/LtiPlayView.test.tsx, apps/web/test/features/learnerInfoViews.test.tsx
  */
 'use client';
@@ -36,6 +39,8 @@ import { t } from '../../i18n/translate';
 import type { AppLaunch } from '../../lti/launchHeader';
 import { useEditorSaved } from '../../messaging/useEditorSaved';
 import { useEditorSaveChoice } from '../../messaging/useEditorSaveChoice';
+import { GradeSyncPanel } from '../gradeSync/GradeSyncPanel';
+import { InsightPanel } from '../insight/InsightPanel';
 import { takeLtik } from './ltikFromAddress';
 
 const noSubscription = () => () => undefined;
@@ -43,6 +48,8 @@ const noSubscription = () => () => undefined;
 /** The tabs' identifiers. */
 const PLAY_TAB = 'play';
 const EDIT_TAB = 'edit';
+const GRADE_SYNC_TAB = 'grade-sync';
+const INSIGHT_TAB = 'insight';
 
 /**
  * The message for a page opened without a launch.
@@ -114,6 +121,27 @@ export function LtiPlayView({ launch }: { readonly launch: AppLaunch }) {
           />
         </>
       ),
+    });
+    // LTI-006: «Innsikt før samlinga» for this course alone: the launch fixes the context (D-106), and the server limits
+    // the view to it. WHY: the launch tells only `mayEdit`, as for «Poeng til Canvas» below.
+    tabs.push({
+      id: INSIGHT_TAB,
+      label: t('insight.tab', locale),
+      panel: (
+        <InsightPanel
+          contentId={launch.contentId}
+          title={launch.title}
+          language={launch.language}
+          fixedContext
+        />
+      ),
+    });
+    // LTI-012: the scores sent to this course's gradebook, for authors (D-104); the server limits them to the launch's
+    // course (D-106). WHY: the launch tells only `mayEdit`, so a course copy's teacher who may not edit gets no tab yet.
+    tabs.push({
+      id: GRADE_SYNC_TAB,
+      label: t('gradeSync.tab', locale),
+      panel: <GradeSyncPanel contentId={launch.contentId} />,
     });
   }
   return (

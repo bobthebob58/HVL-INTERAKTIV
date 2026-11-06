@@ -10,9 +10,14 @@
  * Invariants:
  *   - Call only after the Edit check on `contentId` (a new activity has none); the grants are issued here.
  *   - `user` is always `{ name: '', mail: '', id: '' }`.
+ *   - Saved files use an editor grant (purpose `editor-file-url`) on the app origin, at `/h5p/editor-files/…`; the
+ *     player's grants and the files origin are never used here.
  *   - The upload grant is bound to the account that owns the uploads (the account view's `id`).
- * Collaborators: ./editorPage.ts, ../contentFileGrants.ts, ../HvlUrlGenerator.ts, ../../http/routes/editorRoutes.ts,
- *   ../../lti/play/ltiEditRoutes.ts, ../../http/routes/signedUploadRoutes.ts (serves `filesPath`).
+ * SPEC-DEVIATION: D-110 — the editor's files stay on the app origin instead of SEC-004's separate origin: H5P's image
+ *   editor draws a saved image into a canvas without `crossorigin`, which a cross-origin image would taint.
+ * Collaborators: ./editorPage.ts, ../contentFileGrants.ts, ../../http/editorView.ts, ../../http/routes/editorRoutes.ts,
+ *   ../../lti/play/ltiEditRoutes.ts, ../../http/routes/signedFileRoutes.ts (serves `contentUrl`),
+ *   ../../http/routes/signedUploadRoutes.ts (serves `filesPath`).
  * Tests: apps/server/test/h5p/render/editorIntegration.test.ts
  */
 import type { IIntegration } from '@lumieducation/h5p-server';
@@ -22,14 +27,17 @@ import { ANONYMOUS_H5P_USER } from './playerPage.js';
 /** The path under the H5P base URL where upload grants are served (../../http/routes/signedUploadRoutes.ts). */
 export const SIGNED_UPLOADS_PATH = '/uploads';
 
+/** The path under the H5P base URL where the editor's grants open saved files (../../http/createH5pRouter.ts). */
+export const EDITOR_FILES_PATH = '/editor-files';
+
 /** What the grants are issued for. */
 export interface EditorGrantInputs {
   /** The activity being edited; undefined for a new one. */
   readonly contentId: string | undefined;
   /** The account that owns the uploads (`asAccountUser(actor).id`). */
   readonly ownerId: string;
-  /** The base of the activity's file URLs, with a fresh content grant (`urlGenerator.contentFilesUrl`). */
-  readonly contentUrl: (contentId: string) => string;
+  /** Signs the saved files' URLs (purpose `editor-file-url`). */
+  readonly contentGrants: ContentFileGrants;
   /** Signs upload URLs (purpose `temporary-file-url`). */
   readonly uploadGrants: ContentFileGrants;
   /** The H5P base URL, e.g. `/h5p`. */
@@ -46,10 +54,12 @@ export interface EditorGrantInputs {
 export function editorIntegration(integration: IIntegration, inputs: EditorGrantInputs): IIntegration {
   const grant = inputs.uploadGrants.issueGrant(inputs.ownerId, inputs.now);
   const filesPath = `${inputs.baseUrl}${SIGNED_UPLOADS_PATH}/${grant}/${encodeURIComponent(inputs.ownerId)}`;
-  const contents =
-    inputs.contentId === undefined
-      ? {}
-      : { [`cid-${inputs.contentId}`]: { contentUrl: inputs.contentUrl(inputs.contentId) } };
+  const id = inputs.contentId;
+  const contentUrl = (saved: string) => {
+    const fileGrant = inputs.contentGrants.issueGrant(saved, inputs.now);
+    return `${inputs.baseUrl}${EDITOR_FILES_PATH}/${fileGrant}/${encodeURIComponent(saved)}`;
+  };
+  const contents = id === undefined ? {} : { [`cid-${id}`]: { contentUrl: contentUrl(id) } };
   return {
     ...integration,
     user: { ...ANONYMOUS_H5P_USER },

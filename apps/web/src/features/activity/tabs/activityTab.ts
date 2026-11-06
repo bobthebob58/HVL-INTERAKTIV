@@ -7,8 +7,8 @@
  *      needs to know what a tab shows.
  * Spec: UD-006, LTI-006, PROD-003
  * Invariants:
- *   - Which tabs show is decided by `shows` from the server's `mayEdit` and `mayPublish`; the server checks every
- *     request again, so a tab is never the only guard.
+ *   - Which tabs show is decided by `shows` from the server's `mayEdit`, `mayPublish` and `role`; the server checks
+ *     every request again, so a tab is never the only guard.
  *   - A tab's `id` is stable: it names the tab in the markup (../../../components/Tabs.tsx) and in the address
  *     (`?fane=<id>`, ../../../config/paths.ts `activityPath`).
  * Collaborators: ./activityTabs.ts, ../ActivityView.tsx, ./PlayTab.tsx, ./EditTab.tsx, ./CheckTab.tsx.
@@ -53,7 +53,7 @@ export interface ActivityTab {
   readonly id: string;
   /** The tab's label. */
   readonly labelKey: MessageKey;
-  /** Whether this person gets the tab, from the server's answer (`mayEdit`, `mayPublish`). */
+  /** Whether this person gets the tab, from the server's answer (`mayEdit`, `mayPublish`, `role`). */
   readonly shows: (detail: ContentDetail) => boolean;
   /** The panel, mounted the first time its tab is selected and then kept (hidden) while another is shown. */
   readonly Panel: ComponentType<ActivityTabProps>;

@@ -1,0 +1,37 @@
+/*
+ * insightPrint — the print stylesheet of the «Ta opp i samlinga» list: while the document carries the print mark,
+ * a printout holds the list and its print heading only, in large text, without the page around it or its buttons.
+ *
+ * Why: INS-003's shortlist "can be printed or projected"; the teacher prints the questions to discuss, not the tab.
+ *      The mark (`data-insight-print`, ./printShortlist.ts) is set only while the list is printed, so printing the
+ *      page any other way is unchanged.
+ * Spec: INS-003, UD-002
+ * Invariants:
+ *   - Only rules under `@media print` and the mark; nothing changes on screen.
+ *   - Everything that neither holds the list nor is inside it is left out (`:has`), so no other part of the tab, and
+ *     no personal data, is printed. Buttons are left out too.
+ *   - No colour literal (UD-001): ink on surface from the tokens; left-aligned text, line height 1.5 (UD-002).
+ * Collaborators: ./printShortlist.ts, ./InsightShortlist.tsx (the `.insight-shortlist` root and its print heading).
+ * Tests: apps/web/test/features/insight/InsightShortlist.test.tsx
+ */
+@media print {
+  /* WHY: !important beats the display of every utility class on the page, which is what must not print. */
+  html[data-insight-print] body *:not(:has(.insight-shortlist), .insight-shortlist, .insight-shortlist *) {
+    display: none !important;
+  }
+
+  html[data-insight-print] .insight-shortlist button {
+    display: none !important; /* WHY: beats the button classes' own display; a printout has nothing to press. */
+  }
+
+  html[data-insight-print] body {
+    background: var(--hvl-surface);
+  }
+
+  html[data-insight-print] .insight-shortlist {
+    color: var(--hvl-ink);
+    font-size: 1.25rem;
+    line-height: var(--hvl-line-height-body);
+    text-align: left;
+  }
+}

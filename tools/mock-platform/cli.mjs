@@ -4,9 +4,10 @@
  *
  * Why: developers and reviewers try the Feide login and the Canvas launch in a browser without HVL's Feide client
  *      or TeCopp's Canvas (D-049). The printed lines can be pasted into apps/server/.env.
- * Spec: LTI-001, AUTH-001
+ * Spec: LTI-001, LTI-008, LTI-012, AUTH-001
  * Invariants:
- *   - Prints `NAME=value` lines (LTI_PLATFORMS single-quoted), then the Canvas home page and the Feide users.
+ *   - Prints `NAME=value` lines (LTI_PLATFORMS single-quoted), then the Canvas home page, the Canvas service
+ *     controls under `/__mock/` (faults, line-item deletion, token revocation, recorded scores) and the Feide users.
  *   - SIGINT and SIGTERM close both servers and exit with code 0; bad arguments exit with code 2 and the usage.
  *   - Prints no secret beyond the mock's own fixed client secret, which the mock does not check.
  * Collaborators: ./mockPlatform.mjs, ./mockCanvas.mjs (`toolBaseUrl` checks the tool URL).
@@ -73,7 +74,15 @@ async function main() {
   const platform = await startMockPlatform(options);
   console.log('# HVL Interaktiv mock platform (D-049): add these lines to apps/server/.env');
   for (const line of envLines(platform.env)) console.log(line);
-  console.log(`# Mock Canvas home page with demo launches: ${platform.canvas.origin}/`);
+  const { origin } = platform.canvas;
+  console.log(`# Mock Canvas home page with demo launches: ${origin}/`);
+  console.log(
+    `# Mock Canvas services (AGS, NRPS): line items, scores and token requests at ${origin}/__mock/services`,
+  );
+  console.log(`#   next score posts fail: POST ${origin}/__mock/faults?target=scores&status=503&count=2`);
+  console.log('#   (targets token, scores, lineItems, memberships; also retryAfter, delayMs, error)');
+  console.log(`#   delete a line item: POST ${origin}/__mock/line-items/delete?url=<line item URL>`);
+  console.log(`#   forget every access token: POST ${origin}/__mock/tokens/revoke`);
   console.log(`# Mock Feide users: ${[...platform.feide.users.keys()].join(', ')}`);
   console.log(`#   choose the next one with ${platform.feide.issuer}/__mock/next-login?user=<key>`);
   console.log('# Press Ctrl+C to stop.');

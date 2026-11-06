@@ -1,0 +1,236 @@
+{
+  "library": "H5P.InteractiveVideo 1.28",
+  "contentId": "{{contentId}}",
+  "recordedBy": "apps/server/test/h5p/support/xapiTypeRun.ts (probe P1)",
+  "actions": [
+    "load: opens the activity",
+    "question: plays the video until the MultiChoice button shows at 3 s and opens it",
+    "check: picks the right option and presses «Sjekk»"
+  ],
+  "statements": [
+    {
+      "view": 1,
+      "step": "load",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Undervegsvurdering på seks sekund"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.InteractiveVideo-1.28",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "question",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=3b9e6f12-7c4a-4d81-a2e5-0f6d8c1b9a51",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "3b9e6f12-7c4a-4d81-a2e5-0f6d8c1b9a51"
+            },
+            "name": {
+              "en-US": "Spørsmål om undervegsvurdering"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": "PT3S"
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=3b9e6f12-7c4a-4d81-a2e5-0f6d8c1b9a51",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "3b9e6f12-7c4a-4d81-a2e5-0f6d8c1b9a51"
+            },
+            "name": {
+              "en-US": "Spørsmål om undervegsvurdering"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": "PT3S"
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=3b9e6f12-7c4a-4d81-a2e5-0f6d8c1b9a51",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "3b9e6f12-7c4a-4d81-a2e5-0f6d8c1b9a51"
+            },
+            "name": {
+              "en-US": "Spørsmål om undervegsvurdering"
+            },
+            "description": {
+              "en-US": "<p>Videoen seier at undervegsvurdering er tilbakemelding medan læringa held på. Kvifor er det nyttig at tilbakemeldinga kjem undervegs?</p>"
+            },
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "interactionType": "choice",
+            "correctResponsesPattern": ["0"],
+            "choices": [
+              {
+                "id": "0",
+                "description": {
+                  "en-US": "Studenten har framleis tid til å bruke tilbakemeldinga og justere arbeidet sitt før eksamen."
+                }
+              },
+              {
+                "id": "1",
+                "description": {
+                  "en-US": "Tilbakemeldinga avgjer kva karakter studenten får i emnet."
+                }
+              },
+              {
+                "id": "2",
+                "description": {
+                  "en-US": "Læraren får dokumentert at studenten var til stades på samlinga."
+                }
+              }
+            ]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": "PT3S"
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 1,
+            "raw": 1,
+            "scaled": 1
+          },
+          "completion": true,
+          "success": true,
+          "duration": "PT0.35S",
+          "response": "0"
+        }
+      }
+    }
+  ]
+}

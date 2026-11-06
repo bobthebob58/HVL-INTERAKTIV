@@ -5,18 +5,21 @@
  * Why: the app mounts one router for Canvas (spec 02 LTI-001…007). The ltik resolver built here is also what the
  *      H5P and API routes use to authenticate LTI requests (../auth/requestPrincipal.ts), so the same platform,
  *      deployment and account checks run everywhere (D-050, D-051).
- * Spec: LTI-001, LTI-003, LTI-005, LTI-006, AUTH-005, PROD-012, UD-010, PED-032
+ * Spec: LTI-001, LTI-003, LTI-005, LTI-006, AUTH-005, PROD-012, UD-010, PED-032, LTI-008, LTI-013
  * Invariants:
  *   - ltijs's routes come first, so its login and launch see the request before anything else of ours.
  *   - Errors from any of these routes end in `ltiErrorPages` (a page, or JSON for API calls), never in ltijs's JSON.
  *   - Only the launch handlers may create LTI accounts; the resolver never writes.
  *   - Identities are linked only for platforms with `feideLinking: true` and Feide IDs of `ALLOWED_FEIDE_ORGS`.
  *   - A launch handler's refusal is shown in the launch's language (`inLaunchLocale`, PROD-012).
+ *   - A resource-link launch refreshes its course's NRPS learner count after the redirect when `nrps` is given
+ *     (LTI-008); Deep Linking labels graded items by `labelMode` (LTI-013, D-105).
+ *   - SECURITY: a launch's line item URL is recorded only on an allowed origin (`canvasOrigins` or the platform's
+ *     own), and only on https with `requireHttps` (D-104 amendment of 2026-11-04).
  * Collaborators: ./LtiProviderFactory.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts,
  *   ./play/ltiPlayRoutes.ts, ./play/ltiEditRoutes.ts, ./play/appLaunchRoutes.ts, ./deepLinking/deepLinkRoutes.ts,
- *   ./http/ltiErrorPages.ts, ./ltikPrincipal.ts, ../validation/activityLanguage.ts (the activity's language for
- *   the Canvas page's title, UD-010), ../learningDesign/metadata/learnerInfoFields.ts (minutes and purpose, PED-032),
- *   ../server/createApp.ts.
+ *   ./http/ltiErrorPages.ts, ./ltikPrincipal.ts, ./nrps/nrpsServices.ts, ../validation/activityLanguage.ts (the
+ *   page title's language, UD-010), ../learningDesign/metadata/learnerInfoFields.ts (PED-032), ../server/createApp.ts.
  * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/deepLinking/deepLinking.int.test.ts,
  *   apps/server/test/lti/ltiPageLocale.int.test.ts
  */
@@ -38,11 +41,12 @@ import type { DataEncryption } from '../security/keys/DataEncryption.js';
 import type { IdentityHasher } from '../security/keys/IdentityHasher.js';
 import { activityLanguage } from '../validation/activityLanguage.js';
 import { deepLinkRoutes } from './deepLinking/deepLinkRoutes.js';
+import type { AgsLabelMode } from './deepLinking/formativeLabel.js';
 import { ltiErrorPages, withLaunchLocale } from './http/ltiErrorPages.js';
 import { LtiAccounts } from './launch/ltiAccount.js';
 import { platformLinksFeide } from './linkingPlatforms.js';
 import { onDeepLinking } from './launch/onDeepLinking.js';
-import { onResourceLink } from './launch/onResourceLink.js';
+import { onResourceLink, type ResourceLinkDeps } from './launch/onResourceLink.js';
 import { localeFromLaunch } from './ltiLocale.js';
 import { resolveLtik, type ResolvedLtik } from './ltikPrincipal.js';
 import { createLtiProvider } from './LtiProviderFactory.js';
@@ -74,6 +78,8 @@ export interface LtiRouteDeps {
   readonly chromePages?: boolean;
   /** `CANVAS_ORIGINS`. */
   readonly canvasOrigins: readonly string[];
+  /** Production: a line item URL must be https (D-104); any web scheme when left out. */
+  readonly requireHttps?: boolean;
   /** `LTI_TOKEN_MAX_AGE_SECONDS`. */
   readonly tokenMaxAgeSeconds: number;
   /** `PUBLIC_BASE_URL`. */
@@ -82,6 +88,10 @@ export interface LtiRouteDeps {
   readonly platforms: readonly LtiPlatformConfig[];
   /** `ALLOWED_FEIDE_ORGS`, the realms a linked Feide ID may have. */
   readonly allowedFeideOrgs: readonly string[];
+  /** `AGS_LABEL_MODE` (D-105); `suffix` when left out. */
+  readonly labelMode?: AgsLabelMode;
+  /** Refreshes a launched course's NRPS learner count (LTI-008); without it no count is kept. */
+  readonly nrps?: ResourceLinkDeps['nrps'];
 }
 
 /** The LTI router and what the rest of the app shares with it. */
@@ -117,19 +127,16 @@ const inLaunchLocale =
  * @returns The router, the ltik resolver, the provider and the deployment guard.
  */
 export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
-  const { db, canvasOrigins } = deps;
-  const {
-    provider,
-    router: ltijsRouter,
-    deployments,
-  } = createLtiProvider({
+  const { db, canvasOrigins, requireHttps, logger } = deps;
+  const ltijs = createLtiProvider({
     db,
     redis: deps.redis,
     encryption: deps.encryption,
-    logger: deps.logger,
+    logger,
     canvasOrigins,
     tokenMaxAgeSeconds: deps.tokenMaxAgeSeconds,
   });
+  const { provider, deployments } = ltijs;
   const accounts = new LtiAccounts({
     accounts: new AccountResolver({ db, hasher: deps.hasher }),
     secrets: deps.secrets,
@@ -139,9 +146,10 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
       onResourceLink({
         accounts,
         access: deps.access,
-        placements: new LtiPlacementRecorder(db),
+        placements: new LtiPlacementRecorder(db, { origins: canvasOrigins, requireHttps, logger }),
         audit: deps.audit,
         ...(deps.chromePages ? { landingPath: APP_PLAY_PATH } : {}),
+        nrps: deps.nrps,
       }),
     ),
   );
@@ -162,7 +170,7 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
   const resolve = (ltik: string): Promise<ResolvedLtik> =>
     resolveLtik({ provider, deployments, accounts }, ltik);
   const router = Router();
-  router.use(ltijsRouter);
+  router.use(ltijs.router);
   const { contentStorage } = deps.editorView.editor.contentManager;
   router.use(
     ltiPlayRoutes({
@@ -185,7 +193,8 @@ export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
   router.use(
     ltiEditRoutes({ editor: deps.editorView, pageCsp: deps.pageCsp, resolveLtik: resolve, canvasOrigins }),
   );
-  router.use(deepLinkRoutes({ db, resolveLtik: resolve, canvasOrigins, publicBaseUrl: deps.publicBaseUrl }));
+  const { publicBaseUrl, labelMode } = deps;
+  router.use(deepLinkRoutes({ db, resolveLtik: resolve, canvasOrigins, publicBaseUrl, labelMode }));
   router.use(ltiErrorPages({ canvasOrigins, logger: deps.logger, audit: deps.audit }));
   return { router, resolveLtik: resolve, provider, deployments };
 }

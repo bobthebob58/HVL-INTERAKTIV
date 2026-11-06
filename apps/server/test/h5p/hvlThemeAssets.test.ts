@@ -1,9 +1,10 @@
 /**
  * Tests that HVL's H5P theme reaches every document H5P renders in: the player page, `H5PIntegration.core` (which
  * H5P Core copies into the iframes it writes) and the editor's iframe assets, in the right order and versioned:
- * its stylesheets and its scripts (answer prefixes, markup repairs, reduced motion).
+ * its stylesheets and its scripts (answer prefixes, markup repairs, reduced motion). The xAPI bridge's scripts come
+ * last in the player's list only, never in the theme's or the editor's (D-102, D-115).
  *
- * Spec: UD-003, UD-009, UD-011
+ * Spec: UD-003, UD-009, UD-011, LTI-010
  */
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -12,8 +13,11 @@ import { afterAll, describe, expect, it } from 'vitest';
 import {
   editorGlobalAssets,
   HVL_THEME_FILES,
+  isXapiBridgeUrl,
   playerGlobalAssets,
+  SERVED_THEME_FILES,
   themeUrls,
+  XAPI_BRIDGE_FILES,
 } from '../../src/h5p/h5pAssets.js';
 import { asAccountUser } from '../../src/h5p/HvlH5pUser.js';
 import { engineTestbed, removeEngineTestbeds } from '../support/engineTestbed.js';
@@ -35,6 +39,8 @@ const STYLE_ORDER = [
 /** The answer prefixes (UD-003), the content and editor markup repairs (D-080) and the jQuery half of reduced
  * motion (UD-009). */
 const SCRIPT_ORDER = ['feedbackPrefixes.js', 'a11yRepairs.js', 'a11yEditorRepairs.js', 'reducedMotion.js'];
+/** The xAPI bridge: its rules, its batch rules and the bridge, after every theme script, in the player only. */
+const BRIDGE_ORDER = ['xapiStatements.js', 'xapiBatching.js', 'xapiBridge.js'];
 
 describe('the HVL theme files', () => {
   it('[UD-011] resolves every theme file from its package and versions it by content', () => {
@@ -59,7 +65,22 @@ describe('the HVL theme files', () => {
     expect(daylight).toBeGreaterThanOrEqual(0);
     expect(tokens).toBeGreaterThan(daylight);
     expect(names(assets.styles)).toEqual(STYLE_ORDER);
-    expect(names(assets.scripts)).toEqual(SCRIPT_ORDER);
+    expect(names(assets.scripts)).toEqual([...SCRIPT_ORDER, ...BRIDGE_ORDER]);
+  });
+
+  it('[LTI-010] keeps the bridge out of the theme and the editor, and serves it beside the theme', () => {
+    // Arrange
+    const editor = editorGlobalAssets(urls);
+    // Act
+    const bridge = playerGlobalAssets(urls).scripts.filter(isXapiBridgeUrl);
+    // Assert
+    expect(XAPI_BRIDGE_FILES.map((f) => f.name)).toEqual(BRIDGE_ORDER);
+    expect(HVL_THEME_FILES.some((f) => BRIDGE_ORDER.includes(f.name))).toBe(false);
+    expect(editor.scripts.filter(isXapiBridgeUrl)).toEqual([]);
+    expect(names(bridge)).toEqual(BRIDGE_ORDER);
+    expect(SERVED_THEME_FILES.map((f) => f.name)).toEqual([...STYLE_ORDER, ...SCRIPT_ORDER, ...BRIDGE_ORDER]);
+    expect(isXapiBridgeUrl('/h5p/theme/reducedMotion.js?version=1')).toBe(false);
+    expect(isXapiBridgeUrl('/h5p/theme/xapiBridge.js?version=1')).toBe(true);
   });
 
   it('[UD-011] the editor adds the theme after its missing core files', () => {
@@ -80,7 +101,7 @@ describe('the engines built by the factories', () => {
     const styles = (player as unknown as { listCoreStyles(): string[] }).listCoreStyles();
     const scripts = (player as unknown as { listCoreScripts(): string[] }).listCoreScripts();
     expect(names(styles)).toEqual(STYLE_ORDER);
-    expect(names(scripts)).toEqual(SCRIPT_ORDER);
+    expect(names(scripts)).toEqual([...SCRIPT_ORDER, ...BRIDGE_ORDER]);
   });
 
   it("[UD-011] give the editor's iframe the theme through H5PIntegration.editor.assets", async () => {

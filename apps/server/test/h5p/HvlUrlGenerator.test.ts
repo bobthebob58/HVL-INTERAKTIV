@@ -1,7 +1,7 @@
 /**
  * Tests for HvlUrlGenerator: the request's token, URL-encoded, on H5P's AJAX, user-data and set-finished URLs
- * only; signed content-file URLs without a token; every other URL identical to Lumi's; and the factories
- * building editor and player with it (D-058).
+ * only; signed content-file URLs on the files origin without a token (D-110); every other URL identical to Lumi's;
+ * and the factories building editor and player with it (D-058).
  *
  * Spec: H5P-007, SEC-004
  */
@@ -22,7 +22,8 @@ const CONTENT = '0192f0c4-1111-7000-8000-000000000001';
 const LTIK = 'eyJhbGciOiJSUzI1NiJ9.a+b/c=d&e#f :contentId%';
 const config = new H5PConfig(undefined);
 const grants = new ContentFileGrants(parseKeyring(`k1=${randomKey(1)}`));
-const urls = new HvlUrlGenerator(config, grants, () => NOW);
+const FILES = 'https://files.interaktiv.hvl.no';
+const urls = new HvlUrlGenerator(config, grants, FILES, () => NOW);
 const lumi = new UrlGenerator(config);
 const learner = (urlToken?: UrlToken) => asStateUser(testActor('learner', urlToken ? { urlToken } : {}));
 const tokenOf = (url: string, name: string) => new URL(url, 'https://tool.example').searchParams.get(name);
@@ -69,11 +70,11 @@ describe('[H5P-007] HvlUrlGenerator', () => {
     }
   });
 
-  it('[H5P-007] gives content files a signed URL with a valid grant, and no token', () => {
+  it('[SEC-004] gives content files a signed URL on the files origin with a valid grant, and no token', () => {
     // Act
     const url = urls.contentFilesUrl(CONTENT);
     // Assert
-    const match = /^\/h5p\/files\/([^/]+)\/([^/]+)$/.exec(url);
+    const match = /^https:\/\/files\.interaktiv\.hvl\.no\/h5p\/files\/([^/]+)\/([^/]+)$/.exec(url);
     expect(match?.[2]).toBe(CONTENT);
     expect(grants.verifyGrant(match?.[1] ?? '', CONTENT, NOW).valid).toBe(true);
     expect(url).not.toMatch(/ltik|csrf|\?/);

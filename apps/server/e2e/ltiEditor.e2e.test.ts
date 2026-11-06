@@ -2,7 +2,8 @@
  * End-to-end test of the H5P editor inside the Canvas iframe with third-party cookies blocked (LTI-006
  * **Rediger**): the owner launches their activity, opens `/lti/edit` in the tool frame, and saves with the ltik as
  * a Bearer token; no tool cookie, no ltik left in the address bar, no failed request. Full Chromium, the whole
- * server and the mock Canvas.
+ * server and the mock Canvas. It saves once «Lagre» is enabled (src/h5p/render/client/editorStart.js) and repeats a
+ * click that sent nothing (./support/editorSave.ts), as ./appPlayEditor.e2e.test.ts does.
  *
  * Spec: LTI-006, LTI-003, H5P-007
  */
@@ -14,6 +15,7 @@ import { launchFromCanvas } from '../test/support/ltiLaunchDriver.js';
 import { describeWithServices } from '../test/support/services.js';
 import { recordFlow, redactTokens } from '../test/support/flowRecorder.js';
 import { launchCookieTestChromium } from '../test/support/thirdPartyCookies.js';
+import { pressEditorSave } from './support/editorSave.js';
 
 /** The ltik H5P's AJAX URL carries on the tool's player page (the address bar no longer has it). */
 async function ltikOf(frame: Frame): Promise<string> {
@@ -79,17 +81,14 @@ describeWithServices('[LTI-006] the H5P editor in the Canvas iframe with third-p
       });
       page.on('pageerror', (e) => problems.push(e.message));
       await frame.goto(`${tb.toolUrl}/lti/edit?ltik=${encodeURIComponent(ltik)}`);
+      // WHY: «Lagre» is enabled only once H5P's editor can save: the page's own signal, not H5P's markup.
       await frame
-        .frameLocator('iframe.h5p-editor-iframe')
-        .locator('.h5peditor-form')
-        .first()
+        .locator('#hvl-editor-save:enabled')
         .waitFor({ timeout: 30_000 })
         .catch((error: unknown) => {
           throw new Error(`editor did not start: ${problems.join(' | ')}`, { cause: error });
         });
-      const saved = page.waitForResponse((r) => r.url() === `${tb.toolUrl}/h5p/content/${contentId}`);
-      await frame.click('#hvl-editor-save');
-      const response = await saved;
+      const response = await pressEditorSave(page, frame, contentId);
       // Assert
       expect(response.status()).toBe(200);
       expect(response.request().headers().authorization).toMatch(/^Bearer \S+$/);

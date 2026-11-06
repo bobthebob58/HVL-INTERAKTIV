@@ -13,8 +13,10 @@
  *      core files and before the libraries' own styles.
  *      The files are added through Lumi's `customization.global` options instead of patching Lumi. The two markup
  *      repair scripts (D-080) and the reduced-motion script (UD-009) need the same documents as the prefix script,
- *      so they are loaded the same way.
- * Spec: H5P-001, UD-003, UD-009, UD-011, UD-030
+ *      so they are loaded the same way. The xAPI bridge (LTI-010) is different: it runs only in the player document
+ *      and only for learners (D-102), so its scripts are the player's last ones, never the editor's, and the player
+ *      page removes them for anyone else (./render/xapiBridgeConfig.ts).
+ * Spec: H5P-001, UD-003, UD-009, UD-011, UD-030, LTI-010, H5P-009
  * Invariants:
  *   - With these additions, the player and the editor load every style and script that Core 1.28's own
  *     H5PCore lists (`h5p.classes.php`), checked by a test against the fetched core.
@@ -23,11 +25,14 @@
  *     there (../http/routes/staticRoutes.ts). The tokens come before the Daylight mapping, which comes before the
  *     theme, the feedback styles, the indicator styles (drop zones, task dots) and the prefixes; the prefix, repair
  *     and reduced-motion scripts come after every core script.
+ *   - The bridge's files (`XAPI_BRIDGE_FILES`) are never in `HVL_THEME_FILES`, which also feeds the editor; they come
+ *     last in the player's scripts, after the theme's, and are served under the same `/theme/` path (D-115).
  *   - The files are resolved through the packages' `exports` at start-up; a missing file stops the server.
  * Collaborators: ./H5pEditorFactory.ts, ./H5pPlayerFactory.ts, Lumi's playerAssetList.json and editorAssetList.json,
  *   ../http/routes/staticRoutes.ts, packages/design-tokens, packages/hvl-h5p-theme.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/hvlThemeAssets.test.ts,
- *   apps/server/test/h5p/hvlTheme.browser.int.test.ts, apps/server/test/h5p/a11yRepairs.browser.int.test.ts
+ *   apps/server/test/h5p/hvlTheme.browser.int.test.ts, apps/server/test/h5p/a11yRepairs.browser.int.test.ts,
+ *   apps/server/test/h5p/xapiBridge.browser.int.test.ts
  */
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -81,14 +86,32 @@ const THEME_SOURCES: readonly (readonly [string, string])[] = [
   ['reducedMotion.js', '@hvl-interaktiv/hvl-h5p-theme/reducedMotion.js'],
 ];
 
+/** Served name → package export of the xAPI bridge's scripts, in load order: its rules, then the bridge (D-115). */
+const XAPI_BRIDGE_SOURCES: readonly (readonly [string, string])[] = [
+  ['xapiStatements.js', '@hvl-interaktiv/hvl-h5p-theme/xapiStatements.js'],
+  ['xapiBatching.js', '@hvl-interaktiv/hvl-h5p-theme/xapiBatching.js'],
+  ['xapiBridge.js', '@hvl-interaktiv/hvl-h5p-theme/xapiBridge.js'],
+];
+
 const resolvePackageFile = createRequire(import.meta.url).resolve;
 
-/** HVL's theme files, in load order, with their content versions (read once at start-up). */
-export const HVL_THEME_FILES: readonly ThemeFile[] = THEME_SOURCES.map(([name, specifier]) => {
+const themeFile = ([name, specifier]: readonly [string, string]): ThemeFile => {
   const path = resolvePackageFile(specifier);
   const version = createHash('sha256').update(readFileSync(path)).digest('hex').slice(0, 12);
   return Object.freeze({ name, path, version });
-});
+};
+
+/** HVL's theme files, in load order, with their content versions (read once at start-up). */
+export const HVL_THEME_FILES: readonly ThemeFile[] = THEME_SOURCES.map(themeFile);
+
+/**
+ * The xAPI bridge's scripts (LTI-010), in load order: player only, never in `HVL_THEME_FILES` (which the editor also
+ * gets), and left out of the page for anyone but a learner (D-102, D-115).
+ */
+export const XAPI_BRIDGE_FILES: readonly ThemeFile[] = XAPI_BRIDGE_SOURCES.map(themeFile);
+
+/** Every file served under `THEME_PATH`: the theme and the bridge. */
+export const SERVED_THEME_FILES: readonly ThemeFile[] = [...HVL_THEME_FILES, ...XAPI_BRIDGE_FILES];
 
 /** The `customization.global` option of Lumi's player and editor. */
 export interface GlobalAssets {
@@ -106,19 +129,32 @@ export type AssetUrls = Pick<IUrlGenerator, 'coreFile' | 'baseUrl'>;
  * @returns Absolute paths with the content version, in load order.
  */
 export function themeUrls(urls: Pick<IUrlGenerator, 'baseUrl'>, kind: '.css' | '.js'): string[] {
-  return HVL_THEME_FILES.filter((file) => file.name.endsWith(kind)).map(
-    (file) => `${urls.baseUrl()}${THEME_PATH}/${file.name}?version=${file.version}`,
-  );
+  return HVL_THEME_FILES.filter((file) => file.name.endsWith(kind)).map((file) => fileUrl(urls, file));
+}
+
+const fileUrl = (urls: Pick<IUrlGenerator, 'baseUrl'>, file: ThemeFile): string =>
+  `${urls.baseUrl()}${THEME_PATH}/${file.name}?version=${file.version}`;
+
+/**
+ * Tells whether a script URL is one of the xAPI bridge's, so the player page can leave it out (D-102).
+ * @param url - A URL from the player's script lists, e.g. `/h5p/theme/xapiBridge.js?version=…`.
+ * @returns True when its path ends in `/theme/<name>` of a file in `XAPI_BRIDGE_FILES`.
+ * @spec LTI-010
+ */
+export function isXapiBridgeUrl(url: string): boolean {
+  const path = url.split(/[?#]/)[0] ?? '';
+  return XAPI_BRIDGE_FILES.some((file) => path.endsWith(`${THEME_PATH}/${file.name}`));
 }
 
 /**
- * The extra core files and the HVL theme for the player.
+ * The extra core files, the HVL theme and, last, the xAPI bridge for the player.
  * @param urls - Lumi's URL generator for the same config as the player.
  * @returns Absolute URLs to pass as `customization.global`.
  */
 export function playerGlobalAssets(urls: AssetUrls): GlobalAssets {
   return {
-    scripts: themeUrls(urls, '.js'),
+    // WHY: last, so the bridge registers after Core's x-api scripts and before the libraries' root `attempted` (D-115).
+    scripts: [...themeUrls(urls, '.js'), ...XAPI_BRIDGE_FILES.map((file) => fileUrl(urls, file))],
     styles: [...PLAYER_MISSING_CORE_STYLES.map((file) => urls.coreFile(file)), ...themeUrls(urls, '.css')],
   };
 }

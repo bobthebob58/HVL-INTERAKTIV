@@ -3,12 +3,15 @@
  * has no JavaScript twin.
  *
  * Why: apps/server tests are strict TypeScript; ./mockPlatform.d.mts re-exports these shapes for them (D-049).
- * Spec: LTI-001, LTI-003, LTI-005
- * Invariants: the shapes match what ./mockCanvas.mjs returns and accepts.
- * Collaborators: ./mockPlatform.d.mts, ./mockCanvas.mjs, ./canvasIdTokens.mjs, ./deepLinkReturn.mjs.
+ * Spec: LTI-001, LTI-003, LTI-005, LTI-008, LTI-012
+ * Invariants: the shapes match what ./mockCanvas.mjs returns and accepts; the service controls' shapes live in
+ *   ./canvasServiceTypes.d.mts.
+ * Collaborators: ./mockPlatform.d.mts, ./mockCanvas.mjs, ./canvasIdTokens.mjs, ./deepLinkReturn.mjs,
+ *   ./canvasServiceTypes.d.mts.
  * Tests: tools/mock-platform/test/mockCanvas.test.mjs (behaviour); `npx tsc -p apps/server --noEmit` (callers).
  */
 import type { JWK } from 'jose';
+import type { MockCanvasAgs, MockCanvasNrps, MockCanvasTokens } from './canvasServiceTypes.mjs';
 
 /** A Canvas user as a launch sends it; `name`/`email` only above privacy level `anonymous`. */
 export interface CanvasUser {
@@ -131,12 +134,20 @@ export interface MockCanvas {
   deploymentId: string;
   toolUrl: string;
   authEndpoint: string;
-  /** Listed for `LTI_PLATFORMS`, not served (AGS arrives in S6). */
+  /** The client-credentials token endpoint of the AGS and NRPS services. */
   tokenEndpoint: string;
   jwksUrl: string;
   publicJwk: JWK & { kid: string };
   platformConfig: MockCanvasPlatformConfig;
   deepLinkResponses: DeepLinkResponseRecord[];
+  /** The token endpoint: its requests, token revocation and faults. */
+  tokens: MockCanvasTokens;
+  /** AGS: line items, recorded scores and faults. */
+  ags: MockCanvasAgs;
+  /** NRPS: course rosters and faults. */
+  nrps: MockCanvasNrps;
+  /** Drops every queued fault of every service. */
+  clearFaults(): void;
   /** Creates a single-use login (expires after 5 minutes) and returns its login-initiation parameters. */
   loginInitiation(spec?: LaunchSpec): LoginInitiationParams;
   /** Checks an authentication request (object, form fields or the full URL) like Canvas does. */

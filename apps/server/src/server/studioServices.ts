@@ -20,8 +20,8 @@
  *   ../learningDesign/http/studioRouteDeps.ts, ../learningDesign/content/loadStudioContent.ts,
  *   ../learningDesign/collaboration/ContentDuplicator.ts, ../learningDesign/patterns/PatternCreator.ts,
  *   ../learningDesign/metadata/LearningDesignStore.ts, ../learningDesign/collaboration/PeopleDirectory.ts,
- *   ../learningDesign/mappe/MappeRenderer.ts, ../learningDesign/mappe/pdf/PdfRenderer.ts,
- *   ../privacy/minimumGroupSize.ts.
+ *   ../learningDesign/mappe/MappeRenderer.ts, ../learningDesign/mappe/storedActivityResults.ts,
+ *   ../learningDesign/mappe/pdf/PdfRenderer.ts, ../privacy/minimumGroupSize.ts.
  * Tests: apps/server/test/server/studioServices.test.ts
  */
 import type { Logger } from 'pino';
@@ -35,9 +35,9 @@ import { ContentDuplicator } from '../learningDesign/collaboration/ContentDuplic
 import { PeopleDirectory } from '../learningDesign/collaboration/PeopleDirectory.js';
 import type { StudioContent } from '../learningDesign/content/loadStudioContent.js';
 import { LearningDesignStore } from '../learningDesign/metadata/LearningDesignStore.js';
-import { NO_RESULTS_YET } from '../learningDesign/mappe/activityResults.js';
 import { MappeRenderer } from '../learningDesign/mappe/MappeRenderer.js';
 import { PdfRenderer } from '../learningDesign/mappe/pdf/PdfRenderer.js';
+import { StoredActivityResults } from '../learningDesign/mappe/storedActivityResults.js';
 import { PatternCreator } from '../learningDesign/patterns/PatternCreator.js';
 import { minimumGroupSize } from '../privacy/minimumGroupSize.js';
 import type { IdentityHasher } from '../security/keys/IdentityHasher.js';
@@ -103,7 +103,7 @@ const isClosable = (service: unknown): service is ClosableStudioService =>
  * @returns The services, frozen; build them once per app.
  * @example
  * const studio = createStudioServices({ ...appInputs, access, hasher, publishing });
- * app.use('/api', authenticate, apiRouter({ publishing, access, studio, serveDocs }));
+ * app.use('/api', authenticate, apiRouter({ publishing, access, studio, ...gradeBridge, serveDocs }));
  * @spec PED-001
  */
 export function createStudioServices(inputs: StudioServiceInputs): StudioServices {
@@ -124,12 +124,12 @@ export function createStudioServices(inputs: StudioServiceInputs): StudioService
     }),
     // PRIVACY: an exact Feide-ID search hashes the query with the login's own key ring (D-090, D-055).
     peopleDirectory: new PeopleDirectory({ db, hasher: inputs.hasher, redis: inputs.redis }),
-    // PRIVACY: S5 records no learner results, so the mappe says "no results yet" (D-095); S6 passes the real source.
+    // PRIVACY: the mappe reads the stored learning data, from groups of at least k learners only (D-095).
     mappeRenderer: new MappeRenderer({
       db,
       content: inputs.studioContent,
       validator: inputs.publishing.validator,
-      results: NO_RESULTS_YET,
+      results: new StoredActivityResults(db),
       groupSize: minimumGroupSize(inputs.env.MIN_GROUP_SIZE),
       publicBaseUrl: inputs.env.PUBLIC_BASE_URL,
     }),

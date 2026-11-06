@@ -9,6 +9,7 @@
  *   - An existing activity is rendered only when the permission system allows Edit for the account view;
  *     otherwise the result is `undefined` and nothing was issued.
  *   - The page carries the actor's own token only (ltik or CSRF), never anyone else's.
+ *   - The page's file URLs carry editor grants on the app origin, never the player's (D-110 amendment of 2026-11-05).
  * Collaborators: ../h5p/render/editorIntegration.ts, ../h5p/render/editorAssets.ts, ../h5p/render/editorPage.ts, ./routes/editorRoutes.ts,
  *   ../lti/play/ltiEditRoutes.ts.
  * Tests: apps/server/test/http/editorRoutes.int.test.ts, apps/server/test/h5p/editorPage.browser.int.test.ts
@@ -21,11 +22,14 @@ import { renderEditorPage } from '../h5p/render/editorPage.js';
 import type { H5pRouteDeps } from './h5pRouteDeps.js';
 
 /** What the editor view needs from the H5P runtime. */
-export type EditorViewDeps = Pick<H5pRouteDeps, 'editor' | 'permissions' | 'uploadGrants'>;
+export type EditorViewDeps = Pick<
+  H5pRouteDeps,
+  'editor' | 'permissions' | 'uploadGrants' | 'editorFileGrants'
+>;
 
 /**
  * Renders the editor page when the actor may edit.
- * @param deps - Editor, permission system and upload grants.
+ * @param deps - Editor, permission system, and the grants of the editor's files and uploads.
  * @param actor - The authenticated person.
  * @param contentId - The activity; undefined for a new one.
  * @param firstScripts - Same-origin static scripts that run before H5P's.
@@ -46,12 +50,7 @@ export async function editorView(
   const integration = editorIntegration(model.integration, {
     contentId,
     ownerId: user.id,
-    contentUrl: (id) => {
-      const url = model.urlGenerator.contentFilesUrl(id);
-      // WHY: HvlUrlGenerator always returns one; Lumi's interface allows undefined for its own default.
-      if (!url) throw new Error('the URL generator gave no content file URL');
-      return url;
-    },
+    contentGrants: deps.editorFileGrants,
     uploadGrants: deps.uploadGrants,
     baseUrl: deps.editor.config.baseUrl,
     now: new Date(),

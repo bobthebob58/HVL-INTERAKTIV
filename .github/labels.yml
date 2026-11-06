@@ -1,0 +1,44 @@
+# Labels for the pilot's problem reports (D-101's amendment of 2026-11-05, problem reporting).
+# WHY: GitHub adds a form's labels only when they already exist in the repository, so this list is their source.
+# The owner creates them with `gh label create` (docs/testing/labels-and-triage.md); tools/issue-forms checks that
+# every label a form uses is here, and that each severity choice has its label. Colours are from
+# packages/design-tokens; the name carries the meaning, never the colour alone. Names are Nynorsk, as in the forms.
+# Colours are quoted: YAML would read 004357 as a number.
+
+# Type: added by the form the reporter chose.
+- name: 'type: feil'
+  color: 'EB6851'
+  description: Noko verkar ikkje slik det skal.
+- name: 'type: universell utforming'
+  color: '008AAF'
+  description: Noko er vanskeleg å bruke, sjå, høyre eller forstå, til dømes med skjermlesar eller tastatur.
+
+# Severity: set at triage to match the reporter's choice; a form cannot set it from the choice.
+- name: 'alvor 1: kritisk'
+  color: '6D2439'
+  description: Nokon kan ikkje bruke det, eller det gjeld personvern eller tryggleik. Blir retta først.
+- name: 'alvor 2: UU-barriere'
+  color: '004357'
+  description: Nokon blir hindra eller går glipp av informasjon, men kan halde fram.
+- name: 'alvor 3: kosmetisk'
+  color: 'C9D5DA'
+  description: Det ser feil ut, men alle kan bruke det.
+
+# Status: where the problem is on its way to a fix.
+- name: treng vurdering
+  color: 'F4F6F7'
+  description: Ny sak. Ingen har sett på ho enno.
+- name: treng meir informasjon
+  color: 'CFF4FC'
+  description: Vi ventar på svar frå den som melde saka.
+- name: stadfesta
+  color: 'D1E7DD'
+  description: Vi har fått fram problemet i testoppsettet. Ein test som feilar, kjem først.
+- name: treng HVL-test
+  color: '00AFBA'
+  description: Berre HVL kan sjå eller teste dette (eigen Canvas, Feide, eining eller skjermlesar).
+
+# Where the cause is.
+- name: H5P oppstraums
+  color: '4A5560'
+  description: Årsaka er i koden til H5P. Vi reparerer eller registrerer, og melder frå til H5P (D-080).

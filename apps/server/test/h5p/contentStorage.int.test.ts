@@ -83,6 +83,31 @@ describeWithServices('[H5P-004] content storage on PostgreSQL and S3', () => {
     expect(await content.fileExists(id, 'images/a.txt')).toBe(false);
   });
 
+  it('[H5P-004] a name the store refuses is a missing file, never a database error', async () => {
+    // Arrange: an activity with one stored file
+    const id = await content.addContent(metadata('H5P.Blanks', []), {}, author);
+    await content.addFile(id, 'images/a.txt', streamOf('a'));
+    // Act and assert: a NUL byte (which PostgreSQL refuses in text), a control character, a backslash and a dot
+    // segment are not found, by every lookup that reads one file
+    for (const name of [
+      'images/a.txt\0.svg',
+      'images/a\u0001.txt',
+      'images\\a.txt',
+      'images/../images/a.txt',
+    ]) {
+      expect(await content.fileExists(id, name), name).toBe(false);
+      await expect(content.getFileStats(id, name, author), name).rejects.toMatchObject({
+        httpStatusCode: 404,
+      });
+      await expect(content.getFileStream(id, name, author), name).rejects.toMatchObject({
+        httpStatusCode: 404,
+      });
+      await expect(content.deleteFile(id, name), name).rejects.toMatchObject({ httpStatusCode: 404 });
+    }
+    // Assert: the stored file is untouched
+    expect(await content.listFiles(id, author)).toEqual(['images/a.txt']);
+  });
+
   it('[SEC-005] refuses files above the size limit and unsafe file names', async () => {
     const id = await content.addContent(metadata('H5P.Blanks', []), {}, author);
     await expect(content.addFile(id, 'big.bin', streamOf(Buffer.alloc(1025)))).rejects.toBeInstanceOf(

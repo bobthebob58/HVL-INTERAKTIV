@@ -1,13 +1,14 @@
 /**
- * Integration tests for the theme route of the H5P router: HVL's H5P theme files are public, served by exact name
- * with the right type and nosniff, long-cached only for their current version, and nothing else is reachable there.
+ * Integration tests for the theme route of the H5P router: HVL's H5P theme files and the xAPI bridge's scripts are
+ * public, served by exact name with the right type and nosniff, long-cached only for their current version, and nothing
+ * else is reachable there.
  *
- * Spec: UD-011, SEC-004
+ * Spec: UD-011, SEC-004, LTI-010
  */
 import { readFileSync } from 'node:fs';
 import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
-import { HVL_THEME_FILES } from '../../src/h5p/h5pAssets.js';
+import { HVL_THEME_FILES, XAPI_BRIDGE_FILES } from '../../src/h5p/h5pAssets.js';
 import { openHttpTestbed, type HttpTestbed } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
 
@@ -24,6 +25,18 @@ describeWithServices('the H5P theme route', () => {
       const res = await request(tb.app).get(`/h5p/theme/${name}?version=${file.version}`);
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toMatch(name.endsWith('.js') ? /^text\/javascript/ : /^text\/css/);
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
+      expect(res.headers['cache-control']).toBe('public, max-age=31536000, immutable');
+      expect(res.text).toBe(readFileSync(file.path, 'utf8'));
+    },
+  );
+
+  it.each(XAPI_BRIDGE_FILES.map((file) => [file.name, file] as const))(
+    '[LTI-010] serves the bridge script %s like the theme: public, typed, nosniff, versioned, with no token in it',
+    async (name, file) => {
+      const res = await request(tb.app).get(`/h5p/theme/${name}?version=${file.version}`);
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toMatch(/^text\/javascript/);
       expect(res.headers['x-content-type-options']).toBe('nosniff');
       expect(res.headers['cache-control']).toBe('public, max-age=31536000, immutable');
       expect(res.text).toBe(readFileSync(file.path, 'utf8'));

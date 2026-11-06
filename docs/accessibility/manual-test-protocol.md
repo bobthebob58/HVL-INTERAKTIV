@@ -115,7 +115,8 @@ result screen.
 
 ### J3 — Prepare the seminar from evidence (teacher; `INS-001`…`INS-006`) — from Session 6
 
-The insight pages do not exist yet. When they arrive, run:
+Insight is not built yet. It comes as an **Innsikt** tab, on the activity page `/aktivitet/[id]` and in the Canvas
+view `/app/play`, one context at a time, never as a page of its own (D-101, D-106). When it arrives, run:
 
 | Step | Action | Expected result |
 |---|---|---|
@@ -213,7 +214,18 @@ with the keyboard and at 400 % zoom.
 
 ## 9. After the run
 
-1. Save the result file in [results/](results/README.md) and link any new issue.
-2. File each new H5P barrier upstream (the repository is in `tools/h5p-libraries/libraries.manifest.json`) and
-   add it to the register if the automated suite does not already show it.
+1. Save the result file in [results/](results/README.md) and link any new issue. A new barrier is opened with the
+   barrier form on GitHub, without personal data
+   ([../testing/rapportere-problem.md](../testing/rapportere-problem.md); triage in
+   [../testing/labels-and-triage.md](../testing/labels-and-triage.md)).
+2. Draft each new H5P barrier's upstream report in [docs/upstream/](../upstream/README.md) for the owner to file
+   (D-112; the repository is in `tools/h5p-libraries/libraries.manifest.json`), and record it as D-080 says: in the
+   register (`apps/server/a11y/support/upstreamRegister.ts`) only if axe reports it, because an entry axe never
+   reports fails the suite; a barrier axe cannot see goes into a D-080 amendment with an `upstream pin:` test, and
+   an English text no language file reaches into the register's `UPSTREAM_ENGLISH_TEXTS`.
 3. Update `PROGRESS.md` with the date of the latest complete run per set-up.
+4. Write the verdicts into the conformance report [WCAG-CONFORMANCE-REPORT.md](WCAG-CONFORMANCE-REPORT.md)
+   (`UD-040`): only between its `manual:start` and `manual:end` markers, one `**Verdict:**` line per criterion and,
+   for any verdict other than *Not yet determined*, a line `**Evaluated by HVL:** YYYY-MM-DD …` naming the result
+   files. Then run `npm run a11y:report` (it keeps those blocks byte for byte and stops on a malformed one) and
+   `npm run a11y:report -- --check` (D-079's amendments).

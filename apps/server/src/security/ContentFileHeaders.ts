@@ -6,7 +6,8 @@
  *      opened directly must not run script on any origin. SEC-004 and D-045 set these rules.
  * Spec: SEC-004
  * Invariants:
- *   - Every file gets `X-Content-Type-Options: nosniff` and the sandbox CSP, whatever its type.
+ *   - Every file gets `X-Content-Type-Options: nosniff` and the sandbox CSP, whatever its type; the CSP also
+ *     forbids framing the file (`frame-ancestors 'none'`, D-110's amendment of 2026-11-05, S6 step 7).
  *   - Only raster images, audio, video and captions are `inline`; everything else (SVG, documents, JSON, text,
  *     unknown) is an `attachment`, with an RFC 6266 `filename*` parameter.
  *   - Text types carry `charset=utf-8`; an unknown extension is `application/octet-stream`.
@@ -66,8 +67,13 @@ const INLINE_EXTENSIONS: ReadonlySet<string> = new Set([
   'webvtt',
 ]);
 
-/** The sandbox CSP for user files: no script, no plugins, no requests; inline styles only (SEC-004). */
-export const USER_FILE_CSP = "sandbox; default-src 'none'; style-src 'unsafe-inline'";
+/**
+ * The sandbox CSP for user files: no script, no plugins, no requests, inline styles only, and no page may frame the
+ * file (SEC-004, D-045).
+ * SECURITY: `frame-ancestors` does not fall back to `default-src`, so it is named. Nothing frames a user file: the
+ * player shows them with `<img>`, `<video>`, `<audio>` and `<track>`, and documents are downloads (D-110).
+ */
+export const USER_FILE_CSP = "sandbox; default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'";
 
 /**
  * The Content-Type for a content file, decided by its extension only.

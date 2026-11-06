@@ -2,12 +2,14 @@
 
 This folder holds what learning designers at ALU (*Avdeling for utvikling av læring og undervisning*) change by hand:
 settings, and the phases, references, patterns, guide texts and portfolio templates of the læringsdesign studio
-(spec 04). There is no code here. Every subfolder has its own guide.
+(spec 04), and HVL's Norwegian texts for the H5P content types (D-111). There is no code here. Every subfolder has
+its own guide.
 
 | Folder | What it holds | Guide |
 |---|---|---|
 | `laeringsdesign/` | The limits of the pedagogical hints the validator gives authors before publishing (`hint-thresholds.yaml`); the names and texts of the three phases (`phases.yaml`); the references the guide and the patterns cite (`references.yaml`); the patterns, one folder each (`patterns/<id>/`); the guide in three languages (`guide.{nn,nb,en}.md`) | [laeringsdesign/README.md](laeringsdesign/README.md) |
 | `mappe/` | The template and the criteria of the *pedagogisk mappe* export (`template.{nn,nb,en}.md`, `criteria.{nn,nb,en}.yaml`; all six are there, and the loader refuses a set with some of them missing) | [mappe/README.md](mappe/README.md) |
+| `h5p-tekstar/` | HVL's Nynorsk and Bokmål texts for the H5P content types (`library-texts.nn.yaml`, `library-texts.nb.yaml`), laid over the content types' own texts, and the video guidance (`video-guidance.yaml`) | [h5p-tekstar/README.md](h5p-tekstar/README.md) |
 
 Everything the studio shows from here is a draft written from public sources until ALU confirms it (open question
 Q17). The review packet [`docs/reference/alu-review-s5.md`](../docs/reference/alu-review-s5.md) lists what to review,
@@ -24,6 +26,7 @@ the open questions, and where to record the outcome.
 | edit the mappe template | [mappe/README.md](mappe/README.md), «Edit the template, step by step» |
 | edit the criteria, or add a criteria set for a new call | [mappe/README.md](mappe/README.md), «Edit the criteria, step by step» |
 | change a hint's limit | [laeringsdesign/README.md](laeringsdesign/README.md), section `hint-thresholds.yaml` |
+| change or add an H5P content type's Norwegian text, or the video guidance | [h5p-tekstar/README.md](h5p-tekstar/README.md), «Change a text, step by step», «Add a text, step by step» |
 
 Texts that belong to the pages themselves (buttons, headings, the content bank's consent text, the privacy page) are
 not here: they are in the web app's language files, which a developer changes.

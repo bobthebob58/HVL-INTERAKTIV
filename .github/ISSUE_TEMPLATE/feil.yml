@@ -1,0 +1,164 @@
+# Issue form for a fault found in the pilot (D-101's amendment of 2026-11-05, problem reporting).
+# Text is Nynorsk at B1 level, for testers; the guide is docs/testing/rapportere-problem.md.
+# PRIVACY: the required check comes first, and no field asks for a name or contact detail (DATA-010).
+# Checked by the tests in tools/issue-forms/.
+name: Feil
+description: Noko verkar ikkje slik det skal i HVL Interaktiv.
+title: 'Feil: '
+labels: ['type: feil', 'treng vurdering']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Takk for at du melder frå! Er du usikker, les [rettleiinga for testarar](https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/testing/rapportere-problem.md).
+
+        **Ikkje skriv personopplysningar.** Andre kan lese denne saka. Skriv ikkje namn på studentar eller kollegaer, e-postadresser, Feide-ID-ar, fødselsnummer eller studentnummer. Lim ikkje inn svar som studentar har skrive. Dekk over namn og bilete på skjermbileta.
+
+        **Er det eit tryggleiksproblem?** Då skal du ikkje skrive det her. Meld frå privat, slik [tryggleiksrettleiinga](https://github.com/bobthebob58/HVL-INTERAKTIV/security/policy) seier.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Personopplysningar
+      options:
+        - label: Saka mi har ingen namn, e-postadresser, Feide-ID-ar, fødselsnummer, studentnummer eller svar frå studentar, og skjermbileta mine viser ingen.
+          required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Kva gjorde du?
+      description: Skriv eitt steg på kvar linje. Start der du opna sida.
+      placeholder: |
+        1. Eg opna aktiviteten frå modulen i Canvas.
+        2. Eg valde svaret B.
+        3. Eg trykte på «Sjekk».
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Kva venta du skulle skje?
+      placeholder: Eg venta at det sto om svaret var rett eller feil.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Kva skjedde i staden?
+      placeholder: Sida vart kvit, og ingenting meir skjedde.
+    validations:
+      required: true
+  - type: textarea
+    id: error-text
+    attributes:
+      label: Feilmelding
+      description: Skriv av eller lim inn feilmeldinga nøyaktig, også ein feilkode. Skriv «ingen» om det ikkje kom noka feilmelding.
+      render: text
+  - type: input
+    id: time
+    attributes:
+      label: Når skjedde det?
+      description: Dato og klokkeslett, så nøyaktig du kan. HVL IT treng det for å finne logglinjene.
+      placeholder: 20.11.2026 kl. 14.05
+  - type: dropdown
+    id: place
+    attributes:
+      label: Kvar var du?
+      description: Vel sida eller fana der problemet var. Portalen er HVL Interaktiv utanfor Canvas, når du loggar inn med Feide.
+      options:
+        - Startsida i portalen
+        - Innlogging med Feide
+        - Ny aktivitet
+        - 'Aktivitetssida: Spel'
+        - 'Aktivitetssida: Rediger'
+        - 'Aktivitetssida: Læringsdesign'
+        - 'Aktivitetssida: Deling'
+        - 'Aktivitetssida: Sjekk og publiser'
+        - 'Aktivitetssida: Innsikt'
+        - 'Aktivitetssida: Poeng til Canvas'
+        - 'Læringsdesign: mønster og rettleiing'
+        - 'Læringsdesign: planleggar'
+        - Innhaldsbank
+        - Pedagogisk mappe
+        - Hjelp eller Personvern
+        - 'Canvas: Vel aktivitet (når du legg til i ein modul)'
+        - 'Canvas: Spel'
+        - 'Canvas: Rediger'
+        - 'Canvas: Innsikt'
+        - 'Canvas: Poeng til Canvas'
+        - Anna, eller veit ikkje
+    validations:
+      required: true
+  - type: dropdown
+    id: activity-type
+    attributes:
+      label: Kva for aktivitetstype?
+      description: Typen står på startsida i portalen. Vel «Veit ikkje» om du ikkje ser han.
+      options:
+        - Gjeld ikkje ein aktivitet
+        - Kurspresentasjon
+        - Interaktiv video
+        - Spørsmålssett
+        - Interaktiv bok
+        - Kolonne
+        - Dra orda
+        - Fleirval
+        - Fyll inn orda
+        - Bilete med klikkpunkt
+        - Forgreina scenario
+        - Veit ikkje
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Skjermbilete
+      description: Dra eller lim inn eitt eller fleire bilete. Dekk over namn, e-post og profilbilete først. Canvas kan vise namnet og biletet ditt.
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Kor alvorleg er det?
+      description: Vel det øvste nivået som passar. Rettleiinga for testarar har døme.
+      options:
+        - '1 – Kritisk: nokon kan ikkje bruke det, eller det gjeld personvern eller tryggleik'
+        - '2 – UU-barriere: nokon blir hindra eller går glipp av informasjon, men kan halde fram'
+        - '3 – Kosmetisk: det ser feil ut, men alle kan bruke det'
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Eining
+      description: Kva slags datamaskin, nettbrett eller telefon, og kva for operativsystem.
+      placeholder: PC med Windows 11
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Nettlesar og versjon
+      description: Du finn versjonen under «Om» i menyen til nettlesaren.
+      placeholder: Firefox 144
+    validations:
+      required: true
+  - type: input
+    id: assistive-technology
+    attributes:
+      label: Hjelpemiddel og versjon
+      description: Til dømes skjermlesar, berre tastatur, forstørring eller talestyring. Skriv «ingen» om du ikkje brukte noko. Du treng ikkje skrive kvifor du brukar det.
+      placeholder: ingen
+    validations:
+      required: true
+  - type: input
+    id: zoom
+    attributes:
+      label: Zoom og tekststorleik
+      description: Skriv «100 %» om du ikkje har endra noko.
+      placeholder: 100 %
+    validations:
+      required: true
+  - type: textarea
+    id: log-lines
+    attributes:
+      label: Logglinjer frå tenaren (for HVL IT)
+      description: Berre for dei som driftar tenaren. Lim inn linjene frå loggen til HVL Interaktiv rundt tidspunktet over. Dei er laga slik at dei ikkje har personopplysningar. Ikkje lim inn loggar frå Canvas, frå Feide eller frå nettlesaren.
+      render: text

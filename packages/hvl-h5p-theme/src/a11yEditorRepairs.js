@@ -106,7 +106,7 @@
 
   // UPSTREAM: https://github.com/h5p/h5p-drag-n-bar/blob/b475daaf1d5de8d967145072388fb4727a7d8e6a/scripts/drag-n-bar.js (no issue filed yet; SPEC-DEVIATION: D-080 amendment DOC-13 (h) says when this repair goes)
   // DragNBar names its element buttons with aria-label, except the paste button, whose name is only its tooltip
-  // ("Paste": DragNBar 1.5 has no nn or nb text for it).
+  // (H5P ships it in English only; HVL's language overlay gives «Lim inn» in nn and nb, D-111).
   function toolbarButton(link) {
     var tooltip = link.parentElement.querySelector(':scope > .h5p-dragnbar-tooltip');
     if (!textOf(link) && textOf(tooltip)) set(link, 'aria-label', textOf(tooltip));

@@ -96,7 +96,8 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
     },
     translate: createHvlTranslationCallback(),
     fileSanitizers: [],
-    urlGenerator: new HvlUrlGenerator(config, new ContentFileGrants(parseKeyring(`t1=${randomKey(9)}`))),
+    // WHY: no HTTP here; relative file URLs, as a test server that serves the player's files itself would use.
+    urlGenerator: new HvlUrlGenerator(config, new ContentFileGrants(parseKeyring(`t1=${randomKey(9)}`)), ''),
   });
   const user = (role: H5pRole): HvlH5pUser => asAccountUser(testActor(role));
   return { editor, permissions, audited, control, learnerStates, libraryDir, user };

@@ -5,9 +5,10 @@
  *      secret and run the web app's development server. In production each of these breaks a guarantee: a
  *      published secret lets anyone recompute a learnerKey or forge a signed URL (DATA-002, D-058), a missing
  *      current-year secret fails every learner request, an http issuer or platform lets a network attacker forge
- *      logins (AUTH-001, LTI-001), the development server relaxes the web pages' policy (D-070), and Chromium
- *      without its sandbox would run a portfolio render with the server's own rights (D-096).
- * Spec: DATA-002, DOC-008, AUTH-001, LTI-001, LTI-002, DATA-011, MAPPE-004
+ *      logins (AUTH-001, LTI-001), the development server relaxes the web pages' policy (D-070), Chromium
+ *      without its sandbox would run a portfolio render with the server's own rights (D-096), and a clear-text
+ *      connection or storage outside the EEA breaks DATA-004 (D-109).
+ * Spec: DATA-002, DOC-008, AUTH-001, LTI-001, LTI-002, DATA-011, MAPPE-004, DATA-004
  * Invariants:
  *   - Production needs a pseudonym secret for the current academic year (1 August boundary, Oslo time).
  *   - Production rejects secrets and ring keys that decode to text (printable ASCII plus tab, CR and LF), as
@@ -21,13 +22,21 @@
  *   - Production refuses `WEB_APP=dev`: Next.js's development server compiles on demand, shows stack traces and
  *     gets `'unsafe-eval'` and inline styles in its policy (../web/webPageCsp.ts). `prod` and `off` pass.
  *   - Production refuses `PDF_ALLOW_NO_SANDBOX=true`: the PDF export keeps Chromium's sandbox (D-096 amendment).
- *   - Messages name the variable, the year or the key ID, never a secret.
- * Collaborators: ./env.ts (calls it after parsing), ../privacy/academicYear.ts, ../security/keys/keyring.ts.
- * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/productionChecks.test.ts
+ *   - Production requires encrypted database, Redis and S3 connections (./connectionEncryption.ts) and file storage
+ *     on the EEA list (./storageResidency.ts) (D-109 amendment of 2026-11-04), and refuses the AWS SDK's own endpoint
+ *     variables, read from the raw environment, which would bypass both, and a bucket variable that is an ARN rather
+ *     than a plain bucket name (D-109 amendments of 2026-11-05).
+ *   - Messages name the variable, the year, the key ID, or a storage region or host, never a secret or a URL.
+ * Collaborators: ./env.ts (calls it after parsing), ../privacy/academicYear.ts, ../security/keys/keyring.ts,
+ *   ./connectionEncryption.ts, ./storageResidency.ts.
+ * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/productionChecks.test.ts,
+ *   apps/server/test/config/connectionEncryption.test.ts, apps/server/test/config/storageResidency.test.ts
  */
 import { academicYearOf } from '../privacy/academicYear.js';
 import type { Keyring } from '../security/keys/keyring.js';
+import { connectionEncryptionProblems } from './connectionEncryption.js';
 import type { Env } from './env.js';
+import { bucketNameProblems, sdkEndpointProblems, storageResidencyProblems } from './storageResidency.js';
 
 // WHY: `echo … | base64` adds a newline, and a secret copied from a file may hold tabs or CR; all are text.
 const isTextByte = (byte: number): boolean =>
@@ -52,6 +61,12 @@ export type ProductionCheckedEnv = Pick<
   | 'LTI_PLATFORMS'
   | 'WEB_APP'
   | 'PDF_ALLOW_NO_SANDBOX'
+  | 'DATABASE_URL'
+  | 'REDIS_URL'
+  | 'S3_ENDPOINT'
+  | 'S3_REGION'
+  | 'S3_CONTENT_BUCKET'
+  | 'S3_TEMPORARY_BUCKET'
 >;
 
 const RINGS = ['IDENTITY_HASH_KEYS', 'DATA_ENCRYPTION_KEYS', 'URL_SIGNING_KEYS'] as const;
@@ -139,14 +154,23 @@ const pdfProblems = (env: ProductionCheckedEnv): string[] =>
  * Lists production-only configuration problems.
  * @param env - Parsed configuration.
  * @param now - The current time.
+ * @param source - The raw environment, for variables the parsed configuration drops (the AWS SDK's own ones).
  * @returns One message per problem, in the `VARIABLE: reason` form of InvalidEnvironmentError.
  */
-export function productionProblems(env: ProductionCheckedEnv, now: Date): string[] {
+export function productionProblems(
+  env: ProductionCheckedEnv,
+  now: Date,
+  source: NodeJS.ProcessEnv = {},
+): string[] {
   return [
     ...pseudonymProblems(env, now),
     ...ringProblems(env),
     ...httpsProblems(env),
     ...webAppProblems(env),
     ...pdfProblems(env),
+    ...connectionEncryptionProblems(env),
+    ...storageResidencyProblems(env),
+    ...bucketNameProblems(env),
+    ...sdkEndpointProblems(source),
   ];
 }

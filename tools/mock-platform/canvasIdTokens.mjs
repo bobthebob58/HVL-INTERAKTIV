@@ -5,10 +5,12 @@
  * Why: the tool's launch checks (LTI-001), role mapping (LTI-004), placement handling (LTI-005, LTI-006, D-061),
  *      account linking (AUTH-005) and claim allowlist (D-052) must meet the claims Canvas really sends, including
  *      its placement claim and custom-variable substitution (docs/reference/canvas-platform-values.md).
- * Spec: LTI-001, LTI-004, LTI-005, LTI-006, AUTH-005
+ * Spec: LTI-001, LTI-004, LTI-005, LTI-006, LTI-008, LTI-012, AUTH-005
  * Invariants:
  *   - Claims follow LTI 1.3, Deep Linking 2.0 and Canvas: `iss` is the platform origin, `aud`/`azp` the client ID,
  *     the ID token lives one hour, and Canvas's placement claim is sent only when the spec names a placement.
+ *   - The AGS claim lists the developer key's AGS scopes and comes only with at least one; the NRPS claim only with
+ *     the NRPS scope, as in Canvas. Their URLs are the ones ./canvasServices.mjs serves.
  *   - `name` and `email` appear only when the spec's user has them (Canvas privacy levels above `anonymous`).
  *   - A custom value `$Canvas.user.loginId` becomes the user's `loginId`, or stays the literal when the user has
  *     none, as Canvas does when a substitution's guard fails.
@@ -77,7 +79,8 @@ export const deepLinkingSettings = (platform, launch) => ({
 
 /**
  * The ID-token claims of a launch.
- * @param {{origin: string, clientId: string}} platform - The mock Canvas.
+ * @param {{origin: string, clientId: string, scopes: readonly string[]}} platform - The mock Canvas and the scopes
+ *   its developer key grants.
  * @param {object} launch - A normalised spec (`normaliseLaunch`).
  * @param {string} nonce - The nonce of the tool's authentication request.
  * @returns {Record<string, unknown>} The claims, issued now and valid for one hour.
@@ -113,21 +116,24 @@ export function buildIdTokenClaims(platform, launch, nonce) {
       product_family_code: 'canvas',
     },
     [LTI_CLAIM.launchPresentation]: { document_target: 'iframe', locale: launch.locale },
-    [LTI_CLAIM.agsEndpoint]: {
-      scope: [
-        'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly',
-        'https://purl.imsglobal.org/spec/lti-ags/scope/score',
-      ],
+  };
+  // WHY: Canvas sends each service claim only when the developer key has a scope for it (canvas-platform-values.md §4).
+  const agsScopes = platform.scopes.filter((scope) => scope.includes('/lti-ags/'));
+  if (agsScopes.length > 0) {
+    claims[LTI_CLAIM.agsEndpoint] = {
+      scope: agsScopes,
       lineitems: lineItems,
       ...(launch.lineItem && {
         lineitem: /^https?:/.test(launch.lineItem) ? launch.lineItem : `${lineItems}/${launch.lineItem}`,
       }),
-    },
-    [LTI_CLAIM.namesRoleService]: {
+    };
+  }
+  if (platform.scopes.some((scope) => scope.includes('/lti-nrps/'))) {
+    claims[LTI_CLAIM.namesRoleService] = {
       context_memberships_url: `${origin}/api/lti/courses/${course}/names_and_roles`,
       service_versions: ['2.0'],
-    },
-  };
+    };
+  }
   if (launch.user.name) claims.name = launch.user.name;
   if (launch.user.email) claims.email = launch.user.email;
   if (Object.keys(launch.custom).length > 0)

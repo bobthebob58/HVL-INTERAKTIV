@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Status** | Approved for build (v1.0, 2026-10-16) |
-| **Load in sessions** | S3: §1–§4, §7, §8 · S6: §5–§8 (NRPS, grade bridge, data, S3 code map) |
+| **Load in sessions** | S3: §1–§4, §7, §8 · S6: §4–§8 (launches and Deep Linking, NRPS, grade bridge, data, S3 code map; widened by D-101) |
 | **Owns requirement IDs** | `AUTH-*`, `LTI-*` |
 | **Code location** | `apps/server/src/auth/`, `apps/server/src/lti/`, `apps/server/src/web/`, `apps/server/src/grades/`, `apps/web/src/api/`, `apps/web/src/features/lti/` |
 
@@ -17,7 +17,7 @@
 | ltijs 7 engine requirement | `node >= 24` | The runtime is **Node.js 24 LTS**, not 22. (D-001) |
 | ltijs 7 storage | Pluggable `DatabaseManager` interface with 14 methods. Ships only MongoDB implementations. Redis cache via `RedisCacheManager`. | We write `PrismaLtiDatabaseManager` for PostgreSQL rather than add MongoDB. `ltijs-postgresql` and `ltijs-sequelize` target v5 and have not been updated since 2022. (D-005) |
 | ltijs 7 launch tokens | Each launch yields a signed **ltik** (24 h lifetime). `LaunchContext.redirect()` appends it to the URL. `Provider.getLaunchContext(ltik)` resumes the launch. No session cookie is needed. | This solves the third-party-cookie problem in Canvas iframes by design. |
-| ltijs 7 services on `LaunchContext` | `deepLinking.createDeepLinkingForm(items, options)`, `grading.submitScore(lineItemId, score)`, Names & Roles, Dynamic Registration | These are the APIs used below. |
+| ltijs 7 services on `LaunchContext` | `deepLinking.createDeepLinkingForm(items, options)`, `grading.submitScore(lineItemId, score)`, Names & Roles, Dynamic Registration | These are the APIs used below. *Amended:* Deep Linking signs with `createDeepLinkingMessage` and our own form (D-061). `SPEC-DEVIATION` D-104 (2026-10-30): `grading.submitScore` is not used, because it works only from a live ltik; the grade worker has its own AGS client (`LTI-012`). Names & Roles still runs through ltijs during a launch. |
 | `openid-client` | **6.x** (ESM-only, functional API: `discovery()`, `buildAuthorizationUrl()`, `authorizationCodeGrant()`) | Older `Issuer`/`Client` class examples do not apply. |
 | Canvas platform values (checked 2026-10-21) | `iss` `https://canvas.instructure.com`; OIDC auth `https://sso.canvaslms.com/api/lti/authorize_redirect`; JWKS `https://sso.canvaslms.com/api/lti/security/jwks`; token `https://sso.canvaslms.com/login/oauth2/token` (or `https://<institution-domain>/login/oauth2/token`); `privacy_level` values `anonymous`, `name_only`, `email_only`, `public` | Recorded with Canvas doc and source citations in [`docs/reference/canvas-platform-values.md`](../reference/canvas-platform-values.md); paste-ready key in [`canvas-lti13-developer-key.json`](../reference/canvas-lti13-developer-key.json). |
 | Feide OIDC provider (checked 2026-10-16) | Issuer `https://auth.dataporten.no`; endpoints `/oauth/authorization`, `/oauth/token`, `/openid/userinfo`, `/openid/jwks`, `/openid/endsession`; PKCE `S256`; ID tokens `RS256`; Groups API `https://groups-api.dataporten.no/groups` | Recorded with evidence in [`docs/reference/feide-oidc-config.example.json`](../reference/feide-oidc-config.example.json) and [`feide-values.md`](../reference/feide-values.md). Assembled from Feide's documentation and public code; HVL's own client values still come from the Customer Portal. |
@@ -44,9 +44,10 @@ recorded with evidence in `docs/reference/` ([reference README](../reference/REA
 
 *In S3 (D-048, D-058):* `apps/web` does not exist yet, so `apps/server` itself renders the start page `/`, the
 player `/lti/play` and the Deep Linking picker `/lti/deeplink`; ltijs redirects to those pages with `?ltik=…`
-instead of `/app/…`. `apps/web` takes over `/` and `/app/*` in S4. Until the files origin arrives in S6 (D-045),
-the player loads content files from `/h5p/files/<grant>/…` on the main origin, authorised by a signed grant
-rather than a cookie or an ltik.
+instead of `/app/…`. `apps/web` takes over `/` and `/app/*` in S4. From S6 the player loads content files from the
+files origin (`files.<host>/h5p/files/<grant>/…`, or `FILES_BASE_URL`), authorised by a signed grant rather than a
+cookie or an ltik; the main origin answers that path with 404, and the editor's files stay there under grants of
+their own (D-045, D-110's amendment of 2026-11-05, `SPEC-DEVIATION: D-110`).
 
 *From S4 (D-067, D-068, D-069):* when the web app runs (`WEB_APP` is not `off`), ltijs sends resource-link launches
 to `/app/play`, which Next.js renders after Express has resolved the ltik and removed it from what Next.js sees. The
@@ -213,6 +214,10 @@ Multiple selection is offered only when the platform sends `accept_multiple: tru
 for `assignment_selection`). Returned resource links always point to `https://interaktiv.hvl.no`.
 - **Acceptance:** The auto-submitted form posts a signed JWT to `deep_link_return_url`. Draft activities cannot be returned.
 - **Verify:** Integration test decodes and validates the returned JWT. E2e in J1.
+- **Amended (D-101, 2026-11-05, S6 step 8):** `SPEC-DEVIATION`: (a) lists own and co-authored activities only, and
+  (b) is not built; the content bank and *Create new* pass to HVL's bachelor students
+  (`docs/handoff/canvas-studio.md`). "E2e in J1" is J1 split in two: its Canvas half is
+  `e2e/journeyPlaceInCanvas.e2e.test.ts`, which places an activity made in the portal.
 
 #### LTI-006 · MUST · S3 · Resource-link launch
 `onResourceLink` reads `contentId` from the custom claim. It records or updates an `LtiPlacement`
@@ -238,10 +243,17 @@ stored**, never member names or e-mail addresses. This needs the developer-key s
 `https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly`; with `privacy_level`
 `anonymous`, NRPS members carry no name, e-mail or picture in any case.
 - **Verify:** Integration test with a mock NRPS endpoint.
+- **Amended (D-103, D-104, 2026-10-30):** the count is fetched with ltijs's `context.namesAndRoles` during a launch,
+  while the launch context lives, and cached under the platform-scoped context `<platformId>:<contextId>` (D-103), so
+  courses with the same ID in two of HVL's Canvas instances never share a count. NRPS paging and role filtering on
+  HVL's Canvas are on the students' Canvas acceptance checklist *(verify)* (D-101).
 
 #### LTI-009 · COULD · S6 · LTI Dynamic Registration
 Support Canvas's LTI Dynamic Registration through ltijs 7, so TeCopp can install the tool from one
 URL. The JSON developer key in `docs/reference/canvas-lti13-developer-key.json` remains the fallback.
+- **Amended (D-101, 2026-10-30):** S6 writes the design only. Trying it needs a Canvas administrator, and a dynamic
+  registration must not be undone by the start-up sync of `LTI_PLATFORMS` (D-051). The build passes to HVL's bachelor
+  students through the hand-off index (`docs/handoff/README.md`).
 
 ---
 
@@ -253,6 +265,31 @@ The injected client script (`packages/hvl-h5p-theme/src/xapiBridge.ts`, `H5P-009
 2 s and flushed on `pagehide`, with the ltik or CSRF token. Failed posts are retried from an
 in-memory queue. They never block or slow down the activity.
 - **Verify:** Unit test of the batching queue; Playwright test that statements arrive.
+- **Amended (D-102, 2026-10-30):** `SPEC-DEVIATION`: the bridge is plain JavaScript,
+  `packages/hvl-h5p-theme/src/xapiBridge.js`, like the theme's other client scripts (there is no browser build for
+  TypeScript). It runs once in the top player document (`h5p/render/playerPage.ts`: `/h5p/play/:contentId` in the
+  portal, `/lti/play` in Canvas), not inside H5P's iframes (`H5P-009` as amended), and queues each statement once,
+  also one that H5P Core relays from its own iframe. The player page loads it only for a learner principal, so
+  previews and teachers' plays are never sent. It makes a random `attemptId` for the root activity when the page
+  loads and a new one after the root's scored `completed` or `answered` statement (probe P1 checks the real attempt
+  boundaries). Credentials: in Canvas the ltik as `Authorization: Bearer` from the page's memory, in the portal the
+  session cookie with the `X-CSRF-Token` header; never an ltik in the query. On `pagehide` it flushes with `fetch`
+  and `keepalive: true` (not `sendBeacon`, which cannot carry those headers); nothing goes to browser storage. It adds
+  no ✓/✗ text (`UD-003` as amended).
+- **Amended (D-115, 2026-10-30, probe P1):** `SPEC-DEVIATION` from "It POSTs each statement": the bridge sends only
+  what the server stores (`LTI-011` as amended): the page load's first root `attempted`, every `answered` and a root
+  `completed`; never `interacted`, `progressed`, or a sub-content `attempted` or `completed`. Each statement is cut
+  down to the fields the server reads, with no `actor`, question text, choices or feedback, and answers capped as
+  `DATA-012` (as amended) stores them. Each carries a `statementId` (`crypto.randomUUID()`, one per dispatched event)
+  and an `attemptId` `<viewId>:<n>`: `viewId` is made once per page load, and `n` starts at 1 and goes up by one right
+  after a root result with `score.max` above 0, so a retry, which H5P does not announce, is a new attempt at its next
+  result. A batch names its content and the version the page was rendered with, and holds at most 50 items and
+  60 000 bytes of JSON, one request in flight; after a network error, a 5xx or a 429 it goes back to the head of the
+  queue, after any other 4xx it is dropped. On `pagehide` everything not yet acknowledged, the request in flight
+  included, goes in one `keepalive` request within the same limits, oldest first. The bridge is the last script in
+  the player's global assets, never the editor's. It registers only in a document that is not one of Core's iframes,
+  and at event time does nothing in a document that H5P marks as one (`H5P.isFramed` with `H5P.externalEmbed ===
+  false`), so each statement is queued once, by the parent document's bridge, also if H5P's iframe embedding is used.
 
 #### LTI-011 · MUST · S6 · Validate and store statements
 `/api/h5p/xapi` validates statements with a zod schema. It accepts only verbs it uses
@@ -261,6 +298,38 @@ to content the principal may view, and that `0 ≤ score.raw ≤ score.max` and 
 rate-limits each learner and activity to 120 statements per minute. Then it stores the minimal
 fields defined in `DATA-012` and drops the rest of the statement (including `actor.name` and `actor.mbox`).
 - **Verify:** Unit tests for the schema; integration test for rate limiting.
+- **Amended (D-102, D-103, 2026-10-30):** statements are stored only from a learner principal; anyone else's request
+  stores nothing. In Canvas the content must also be the launched activity. The stored `contextId` is the
+  platform-scoped `<platformId>:<contextId>` (D-103, null for a portal play), and the stored `timestamp` is when the
+  server received the batch, not what the browser claims.
+- **Amended (D-115, 2026-10-30, probe P1):** `SPEC-DEVIATION` from "Then it stores the minimal fields": all five verbs
+  are still accepted, but not every accepted statement is stored. Stored: a root `attempted`; a root `answered` that
+  is a root result (`LTI-012` as amended), and a sub-content `answered` with a `subContentId`; a root `completed`
+  that is a root result and not a replay. Accepted and not stored: `interacted`, `progressed`, a sub-content
+  `attempted` or `completed`, a sub-content statement without a `subContentId`, a root `answered` or `completed`
+  whose category does not name the activity's main library (`DATA-012` stores no category, and insight and the grade
+  queue read every stored root `answered` and `completed` as a root result), and a replay: a root `completed` after
+  no stored `answered` since its page load's previous root result (or since the load), whose raw score and maximum
+  equal the learner's latest stored root result for the same content, context and version (CoursePresentation
+  re-sends its result on resume; BranchingScenario is exempt). A statement is root when `object.id` is the content ID
+  with no `?subContentId=`, it has no `h5p-subContentId` extension and no `contextActivities.parent` (`LTI-012` as
+  amended). Each item is checked on its own: an invalid one, including one about another activity or whose `scaled`
+  differs from `raw / max` by more than 0.0001, is discarded and counted in the log without its content, so it never
+  blocks its batch. Besides a request without a valid session and CSRF token or ltik (401) and the rate limit (429),
+  a whole batch is refused only when it is about an activity the principal may not view (403; in Canvas, any but the
+  launched one), is over 64 KiB (413), or is no batch envelope, holds no item or over 50, or names a version above
+  the activity's current one (400; a page keeps the version it was rendered with). The schema ignores `actor` (the
+  learner comes only from the principal), and accepts a bare UUID as `object.id`, a missing `context`, a numeric
+  `response` (stored as text) and a score without `scaled` when its maximum is 0. The item's `statementId` becomes
+  the row's ID and is inserted once, so a batch sent twice (the `pagehide` flush, a request retried after a lost
+  answer) stores nothing twice; the stored `timestamp` is the receive time plus the item's place in the batch in
+  milliseconds, which keeps the batch's order. A 429 carries `Retry-After`, and nothing from that batch is stored. The
+  answer is 202, with no detail per item. Not deviated: the five verbs, the score checks, the View check and the rate
+  limit.
+- **Amended (D-103, 2026-11-04, step 3 integration):** a learner's batch from a Canvas launch whose context claim
+  cannot form `<platformId>:<contextId>` (empty, over 255 characters, or with a line break) is answered 202 and stores
+  nothing; the log counts it as `noCourse`. Such a play is neither a portal play (null) nor stored under a made-up
+  course.
 
 #### LTI-012 · MUST · S6 · Publish scores to the Canvas gradebook (AGS)
 When a statement concerns the **root** content (no `subContentId`), has the verb `completed` or
@@ -284,6 +353,51 @@ a new client-credentials token itself, or is marked failed for the author to ret
 - **Acceptance:** Learning never waits for grade sync. Authors see a per-activity sync status
   (counts of sent / pending / failed) and can retry failed jobs.
 - **Verify:** Integration tests with a mock AGS endpoint (success, 5xx retry, 404 orphaned, idempotency).
+- **Amended (D-104, 2026-10-30):** `SPEC-DEVIATION` from the sentence "A worker calls
+  `context.grading.submitScore(…)`" only: that method works only from a live ltik, which a background worker does not
+  hold and must not store. `AgsScoreClient` (`apps/server/src/grades/`) requests the client-credentials token itself,
+  from the first attempt, with a JWT assertion signed by the tool key ltijs stores for the platform, and posts the
+  same score body to the line item's `/scores` URL. A job is written only for a learner in a Canvas launch, a root
+  statement with `completed` or `answered` and a score, and a placement with a `lineItemUrl`; jobs stay idempotent per
+  `(placement, learnerKey, attemptId)`, so a later scored statement of the same attempt updates its job. The worker
+  (one node at a time, about every 15 s) coalesces due jobs per `(placement, learnerKey)`, applies the placement's attempt policy to that learner's attempt scores, sends one
+  current score and settles the coalesced jobs together. Outcomes: 2xx succeeds; a 404 confirmed with a
+  `lineitem.readonly` read marks the job `orphaned`, not retried; a 429, 5xx or network error is retried with
+  exponential backoff and jitter, at most 8 attempts, the last within 24 h of the first, then `failed`; a 401 fetches
+  a new token once; any other 4xx fails at once. The encrypted `sub` is removed 30 days after the job stops, whatever
+  its outcome. Authors see sent, pending, failed and orphaned counts per placement on the activity page and in
+  `/app/play` and retry failed jobs there. Not deviated: the score body, the policies, the retry limit, idempotency,
+  `orphaned` and the developer key's scopes.
+- **Amended (D-115, 2026-10-30, probe P1):** `SPEC-DEVIATION` from the root as "no `subContentId`": no single test
+  finds the root (that one takes DragText's context-less `interacted` inside a QuestionSet, and every child of content
+  saved without `subContentId`s; H5P's own, no `contextActivities.parent`, takes InteractiveBook's chapter
+  `completed`). A statement is **root** when `object.id` is the content ID with no `?subContentId=`, it has no
+  `h5p-subContentId` extension and no `contextActivities.parent`. A grade job is written only for a **gradable root
+  result**: a root `answered` or `completed` whose `category[0].id` names the activity's main library
+  (`http://h5p.org/libraries/<machineName>-<major>.<minor>`), with `score.max` above 0, and not a replay (`LTI-011` as
+  amended). `scoreGiven` is `scaled × 100`, never `success`. An attempt holds at most one result (`LTI-010` as
+  amended), so each job is one attempt; `latest`, and `mastery` below its threshold, send the score of the job whose
+  result was stored last, by `GradeSyncJob.resultAt` (that result's stored `timestamp`), then by the attempt number `n`
+  of `<viewId>:<n>`, then by the attempt ID as text (D-115's step-3 amendment). Which result each type sends is
+  D-115's table: MultiChoice, Blanks and DragText an `answered` at every «Sjekk»; QuestionSet, Column,
+  CoursePresentation and BranchingScenario a root `completed`; InteractiveBook at «Send inn rapport», which the player
+  page offers a learner by setting H5P's `reportingIsEnabled` (Q18), and only a learner, never an author's preview;
+  InteractiveVideo only with a submit screen its author added; BranchingScenario nothing gradable when its scoring is
+  `no-score`; ImageHotspots no statement at all. An activity that sends no score never gets a job, and the Deep
+  Linking picker says so for `assignment_selection`. Not deviated: the two verbs, `result.score`, the policies and
+  their table.
+- **Amended (D-104, two amendments of 2026-11-04, the step-3 security review):** jobs are one per
+  `(placement, learnerKey)` (`idempotencyKey` `<placementId>:<learnerKey>`), so one learner can never flood the queue;
+  idempotency per `(placement, learnerKey, attemptId)` holds a fortiori. Each new gradable result updates the job, and
+  a stopped job is reopened with a new window of 8 attempts in 24 h. The score is computed when it is sent, by the
+  placement's policy over the learner's stored gradable results of that activity in that course, in D-115's result
+  order. Claiming is fair (one place per learner a run); a job that takes in a result while its score is in flight is
+  due again at the next run; each run first reopens a stopped job whose learner stored a newer result 15 to 1 minutes
+  earlier (the reconcile pass). The line item URL must parse, use https in production, hold no credentials and have an
+  origin in `CANVAS_ORIGINS` or among the platform's own (issuer, authorisation and token endpoints); it is checked
+  when a launch records the placement (refused: stored as none, the link is ungraded) and again by the worker before
+  any request (refused: the job fails as `line-item-url`). Not deviated: the score body, the policies, the retry limit,
+  `orphaned` and the scopes.
 
 #### LTI-013 · MUST · S6 · Score integrity is honest
 H5P computes scores in the browser, so a determined student can forge them. The system therefore
@@ -295,6 +409,13 @@ overwrites the teacher's own name. Whether "(formativ)" belongs in the assignmen
 content item's description instead (with Canvas's `preserveExistingAssignmentName` extension), is a
 decision for HVL and ALU *(verify)*.
 - **Verify:** Review item in the evaluator guide; unit test for the label suffix.
+- **Amended (D-105, 2026-10-30):** `AGS_LABEL_MODE` chooses: `suffix` (the default, as written above: the label is
+  «Tittel (formativ)», the title cut when needed so the suffix is never lost) or `preserve` (the label is the title,
+  the content item carries Canvas's `preserveExistingAssignmentName`, and its description says the score is
+  formative). The suffix is «(formativ)» in every language. Q8 stays open; HVL and ALU's answer changes the setting,
+  not the code, and a change affects new placements only. The insight views, the `INS-009` CSV and the grade-sync
+  status also say that the scores are formative, computed in the browser and not exam evidence. The unit test checks
+  the label in both modes.
 
 ---
 
@@ -307,9 +428,9 @@ decision for HVL and ALU *(verify)*.
 | `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken` | as required by ltijs `DatabaseManager`; `LtiPlatform.privateKeyEncrypted` and `LtiAccessToken.tokenEncrypted` are encrypted with `DATA_ENCRYPTION_KEYS` (D-056) | `LtiIdToken.claims` holds an allowlist of launch claims, including `sub` but no name, e-mail, `lis` or `feide_login` (D-052). Kept for 24 h only; nonces 10 min. |
 | `LtiDeployment` | `platformId`, `deploymentId`; replaced from `LTI_PLATFORMS` at start-up (D-051) | No |
 | `LtiPlacement` | `platformId`, `contextId`, `resourceLinkId`, `contentId`, `lineItemUrl?`, `attemptPolicy`, `masteryThreshold?` | No |
-| `GradeSyncJob` | `placementId`, `learnerKey`, `ltiSub (encrypted)`, `scoreGiven`, `status`, `attempts`, `lastError`, `idempotencyKey` | `ltiSub` is needed for AGS; encrypted, deleted 30 days after success |
+| `GradeSyncJob` | `placementId`, `learnerKey`, `ltiSub (encrypted)`, `scoreGiven`, `status` (with `orphaned`), `attempts`, `lastError`, `idempotencyKey`; from S6 also `attemptId`, `nextAttemptAt`, `terminalAt` (D-104), `resultAt` (when the job's result was stored; orders the attempts for `latest`, D-115) and `academicYear` (D-107) | `ltiSub` is needed for AGS; encrypted, deleted 30 days after success (amended, D-104: 30 days after `terminalAt`, whether the job succeeded, failed or was orphaned) |
 | `AuthAuditEvent` | `at`, `actorUserId?`, `event`, `reason?` (a fixed code), `ipHash?`, `ipKeyId?` (the `IDENTITY_HASH_KEYS` key that made `ipHash`) (D-055, D-064) | Minimal |
-| Portal session (Redis, not a table) | `userId`, `roles`, `hvlMember`, `studentAuthor`, `locale`, `learnerKey`, `csrfToken`, `idTokenEncrypted`, `createdAt`, `lastSeenAt`, under a SHA-256 of the session ID (D-057) | The Feide ID token, encrypted (D-021, D-056). Gone at logout, 2 h idle or 12 h. |
+| Portal session (Redis, not a table) | `userId`, `roles`, `hvlMember`, `studentAuthor`, `locale`, `learnerKey`, `learnerKeyYear` (from S6: the academic year of the secret behind `learnerKey`, D-107), `csrfToken`, `idTokenEncrypted`, `createdAt`, `lastSeenAt`, under a SHA-256 of the session ID (D-057) | The Feide ID token, encrypted (D-021, D-056). Gone at logout, 2 h idle or 12 h. |
 | Login transaction (Redis, not a table) | `state`, `nonce`, `codeVerifier`, `returnTo`, `createdAt`, under a SHA-256 of the transaction ID (D-057) | No. Single use, at most 10 min. |
 
 ---
@@ -344,9 +465,9 @@ page → the error page. `server/main.ts` (`npm start`) syncs `LTI_PLATFORMS`, r
 | `LTI-002` | `lti/storage/PrismaLtiDatabaseManager.ts` (all 14 methods; `consumeNonce` is one conditional `DELETE`; deployment check in `saveIdToken`); `lti/storage/ltiIdTokenClaims.ts` (claim allowlist, D-052); `lti/storage/ltiRecordLifetimes.ts`; `lti/storage/ltiPlatformRows.ts` and `lti/storage/ltiAccessTokenRows.ts` (encrypted private keys and access tokens, D-056); `lti/storage/LtiRecordCleanupJob.ts` (every 10 min on one node, through `jobs/LeasedIntervalJob.ts`); `lti/platforms/reencryptPlatformKeys.ts`; `security/keys/DataEncryption.ts`; `security/keys/keyring.ts` | `test/lti/storage/PrismaLtiDatabaseManager.int.test.ts` (runs the shared contract suite `test/lti/storage/ltiDatabaseContract.ts`; of 50 concurrent `consumeNonce` calls exactly one succeeds); `test/lti/storage/ltiSecretsAtRest.int.test.ts`; `test/lti/storage/ltiIdTokenClaims.test.ts`; `test/lti/storage/ltiStorageRows.test.ts`; `test/lti/storage/LtiRecordCleanupJob.test.ts`; `test/lti/storage/LtiRecordCleanupJob.int.test.ts`; `test/lti/storage/ltijsResumedLaunch.int.test.ts`; `test/lti/platforms/reencryptPlatformKeys.int.test.ts`; `test/jobs/LeasedIntervalJob.test.ts`; `test/security/keys/DataEncryption.test.ts`; `test/security/keys/keyring.test.ts` | The secret-store key is the `DATA_ENCRYPTION_KEYS` key ring (D-056). |
 | `LTI-003` | Step 1: `lti/launch/onResourceLink.ts` and `lti/launch/onDeepLinking.ts` call `context.redirect` to `/lti/play` or `/lti/deeplink`. Step 2: `lti/pages/client/ltikLanding.js` (`history.replaceState`); the ltik stays in a script closure or the `H5PIntegration` URLs. Step 3: `auth/requestPrincipal.ts` (Bearer; a query ltik only on `/h5p/ajax`, `/h5p/contentUserData/…`, `/lti/play` and `/lti/deeplink`, D-058) and `h5p/HvlUrlGenerator.ts`. Step 4: `lti/ltikPrincipal.ts` (also checks `platform.active` and the deployment; any failure is 401 `hvl:ltik-invalid`) and `lti/http/ltiErrorPages.ts`. Steps 5 and 6: `lti/http/ltiPageHeaders.ts`, `http/securityHeaders.ts`, `logging/redactText.ts`, `logging/redactPersonalData.ts`. Also `lti/play/ltiPlayRoutes.ts` and the storage guards `lti/pages/client/ltijsStorageGuard.js` and `lti/pages/client/h5pStorageGuard.js` (D-050) | `e2e/ltiIframe.e2e.test.ts` (the acceptance test: launch → play → answer → reopen in a cross-site iframe, in full Chromium with third-party cookies blocked after a canary check, once with partitioned frame storage as in stock Chrome and once with frame storage blocked, through LTI Platform Storage); `test/browser/thirdPartyCookies.browser.test.ts`; `test/lti/ltikPrincipal.int.test.ts`; `test/lti/ltiLaunch.int.test.ts`; `test/lti/http/ltiPageHeaders.test.ts`; `test/lti/pages/ltikLanding.test.ts`; `test/auth/requestPrincipal.test.ts`; `test/http/h5pAuthenticate.int.test.ts`; `test/http/securityHeaders.test.ts`; `test/logging/authRedaction.test.ts`; `test/lti/deepLinking/deepLinking.int.test.ts` | `SPEC-DEVIATION` D-048: server-rendered pages instead of Next.js `/app/…` until S4. Where frame storage is blocked and the platform sends no `lti_storage_target`, ltijs cannot recover its state and the launch ends on our "launch failed" page; Canvas sends it (D-050). |
 | `LTI-004` | `lti/LtiRoleMapper.ts` (an allowlist that yields only `learner` or `author`; `TestUser` gives `learner`, D-059); `auth/Principal.ts` (`sealPrincipal` refuses an LTI `admin`); `lti/ltikPrincipal.ts`; `lti/launch/ltiAccount.ts`; `lti/launch/onDeepLinking.ts` (a learner's Deep Linking launch is refused with 403) | `test/lti/LtiRoleMapper.test.ts` (the table and forged `Administrator` sets); `test/auth/Principal.test.ts`; `test/lti/ltikPrincipal.int.test.ts`; `test/lti/launch/ltiAccount.int.test.ts`; `test/lti/deepLinking/deepLinking.int.test.ts` | D-059: unknown roles give `learner`. |
-| `LTI-005` | `lti/launch/onDeepLinking.ts` (redirect to `/lti/deeplink`); `lti/deepLinking/deepLinkRoutes.ts` (`GET /lti/deeplink`, `POST /lti/deeplink/response` with the ltik as Bearer only); `lti/deepLinking/deepLinkActivities.ts` (own and co-authored activities; drafts listed, refused with 409); `lti/deepLinking/deepLinkItems.ts` (items; `lineItem` only for `assignment_selection`; several items only when `accept_multiple` is `true`; http(s) return URL only); `lti/pages/deepLinkPickerPage.ts`; `lti/pages/client/deepLinkPicker.js` | `test/lti/deepLinking/deepLinking.int.test.ts` (the mock Canvas verifies the returned JWT); `test/lti/deepLinking/deepLinkItems.test.ts`; `test/lti/deepLinking/deepLinkActivities.int.test.ts`; `test/lti/pages/deepLinkPickerPage.test.ts`; `e2e/deepLinking.e2e.test.ts`; also `test/lti/storage/ltijsResumedLaunch.int.test.ts` (titled `LTI-002`: a resumed launch signs a Deep Linking response from the stored settings) | `SPEC-DEVIATION` D-048: `/lti/deeplink`, not `/app/deeplink`. D-061 as amended by D-098: the content bank and "new from a pattern" come in S6; ltijs's `createDeepLinkingMessage` with our own form replaces `createDeepLinkingForm`; the placement comes from Canvas's `https://www.instructure.com/placement` claim *(verify)*, else the custom field `hvl_placement` (Q13). |
+| `LTI-005` | `lti/launch/onDeepLinking.ts` (redirect to `/lti/deeplink`); `lti/deepLinking/deepLinkRoutes.ts` (`GET /lti/deeplink`, `POST /lti/deeplink/response` with the ltik as Bearer only); `lti/deepLinking/deepLinkActivities.ts` (own and co-authored activities; drafts listed, refused with 409); `lti/deepLinking/deepLinkItems.ts` (items; `lineItem` only for `assignment_selection`; several items only when `accept_multiple` is `true`; http(s) return URL only); `lti/pages/deepLinkPickerPage.ts`; `lti/pages/client/deepLinkPicker.js` | `test/lti/deepLinking/deepLinking.int.test.ts` (the mock Canvas verifies the returned JWT); `test/lti/deepLinking/deepLinkItems.test.ts`; `test/lti/deepLinking/deepLinkActivities.int.test.ts`; `test/lti/pages/deepLinkPickerPage.test.ts`; `e2e/deepLinking.e2e.test.ts`; also `test/lti/storage/ltijsResumedLaunch.int.test.ts` (titled `LTI-002`: a resumed launch signs a Deep Linking response from the stored settings) | `SPEC-DEVIATION` D-048: `/lti/deeplink`, not `/app/deeplink`. `SPEC-DEVIATION` D-101 (amending D-061 and D-098): the picker lists own and co-authored activities only; the content bank and "new from a pattern" pass to HVL's bachelor students (`docs/handoff/canvas-studio.md`); ltijs's `createDeepLinkingMessage` with our own form replaces `createDeepLinkingForm`; the placement comes from Canvas's `https://www.instructure.com/placement` claim *(verify)*, else the custom field `hvl_placement` (Q13). |
 | `LTI-006` | `lti/launch/onResourceLink.ts` (reads `custom.contentId`, runs the View check, records the placement, redirects to `/lti/play`); `lti/launchFacts.ts`; `lti/placements/LtiPlacementRecorder.ts`; `lti/play/ltiPlayRoutes.ts`; `lti/http/ltiErrorPages.ts` | `test/lti/ltiLaunch.int.test.ts` (the placement is recorded; an unknown or draft activity, or none, gets one 404 page); `test/lti/placements/LtiPlacementRecorder.int.test.ts`; `test/lti/launchFacts.test.ts` | `SPEC-DEVIATION` D-062: both roles get the player in S3; **Rediger** comes with the editor page (S4) and **Innsikt** with insight (S6). The owner may preview their own draft (`PROD-004`). |
-| `LTI-007` | `lti/placements/LtiPlacementRecorder.ts` (one placement per platform, course and resource link); `auth/principalToH5pActor.ts` (learner state per course); `h5p/permissions/contentRules.ts` (D-060: an author may View a published activity their own launch opened; Edit stays with owner and co-authors); `lti/launch/onResourceLink.ts`; `lti/play/ltiPlayRoutes.ts` | `test/lti/ltiPlay.int.test.ts` (two courses, one activity: separate placements and learner state; the copied course's teacher plays but cannot edit); `test/lti/placements/LtiPlacementRecorder.int.test.ts`; `test/h5p/permissions/contentMatrix.test.ts`; `test/auth/principalToH5pActor.test.ts` | D-062 as amended by D-098: **duplicate** in Canvas comes in S6 (the portal has it from S5, `PROD-007`); insight in S6. |
+| `LTI-007` | `lti/placements/LtiPlacementRecorder.ts` (one placement per platform, course and resource link); `auth/principalToH5pActor.ts` (learner state per course); `h5p/permissions/contentRules.ts` (D-060: an author may View a published activity their own launch opened; Edit stays with owner and co-authors); `lti/launch/onResourceLink.ts`; `lti/play/ltiPlayRoutes.ts` | `test/lti/ltiPlay.int.test.ts` (two courses, one activity: separate placements and learner state; the copied course's teacher plays but cannot edit); `test/lti/placements/LtiPlacementRecorder.int.test.ts`; `test/h5p/permissions/contentMatrix.test.ts`; `test/auth/principalToH5pActor.test.ts` | `SPEC-DEVIATION` D-101 (amending D-062 and D-098): the **duplicate** in Canvas and a copied course's **Innsikt** tab pass to HVL's bachelor students (`docs/handoff/canvas-studio.md`); the insight API already admits that course's teacher for their own course; the portal has the duplicate from S5 (`PROD-007`). |
 
 **Test support.** `test/support/appTestbed.ts` runs the whole app (`createApp`) on a real port with the mock Canvas
 and mock Feide from `tools/mock-platform` (D-049) pointed at it. `test/support/ltiLaunchDriver.ts` plays the

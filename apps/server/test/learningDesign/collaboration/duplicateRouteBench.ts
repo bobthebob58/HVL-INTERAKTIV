@@ -23,6 +23,8 @@ import { setPrincipal } from '../../../src/auth/principalLocals.js';
 import type { HvlH5pActor } from '../../../src/h5p/HvlH5pUser.js';
 import { PrismaContentAccessRepository } from '../../../src/h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../../../src/http/api/apiRouter.js';
+import { gradeBridgeApi } from '../../../src/server/gradeBridgeApi.js';
+import { insightApi } from '../../../src/insight/http/insightApi.js';
 import { h5pErrorHandler } from '../../../src/http/h5pErrorHandler.js';
 import { HttpError } from '../../../src/http/HttpError.js';
 import type { Redis } from '../../../src/infra/redisClient.js';
@@ -89,8 +91,12 @@ export async function openDuplicateRouteBench(): Promise<DuplicateRouteBench> {
     if (principal) setPrincipal(res, principal);
     next();
   });
-  api.use('/api', apiRouter({ publishing, access, studio, serveDocs: false }), (_req, _res, next) =>
-    next(new HttpError(404, 'error.notFound')),
+  const gradeBridge = gradeBridgeApi({ access, db, redis, logger });
+  const insight = insightApi({ db, redis, content: runtime.editor.contentStorage, minGroupSize: 5 });
+  api.use(
+    '/api',
+    apiRouter({ publishing, access, studio, ...gradeBridge, insight, serveDocs: false }),
+    (_req, _res, next) => next(new HttpError(404, 'error.notFound')),
   );
   api.use('/api', h5pErrorHandler(logger));
   const closeBench = bench.close;

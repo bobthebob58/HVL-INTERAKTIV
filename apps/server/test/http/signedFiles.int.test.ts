@@ -1,7 +1,8 @@
 /**
  * Integration tests for signed content-file URLs over HTTP: the player points H5P at `/h5p/files/<grant>/…`,
  * the files are served there without any credential but a valid grant, with the D-045 headers, and every bad
- * grant is refused with 403 before storage is read; player AJAX URLs carry the request's token, encoded (D-058).
+ * grant is refused with 403 before storage is read; player AJAX URLs carry the request's token, encoded (D-058), and
+ * a learner's page holds it unencoded only in the xAPI bridge's JSON configuration (D-102).
  *
  * Spec: H5P-007, SEC-004, H5P-004
  */
@@ -16,6 +17,7 @@ import { randomKey } from '../support/authEnv.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { describeWithServices } from '../support/services.js';
 import { FILE_FIELD, MINIMAL_PDF, PNG_1X1, rawBody, uploadEditorFile } from '../support/uploadFixtures.js';
+import { bridgeOnPage } from '../h5p/support/xapiBridgePage.js';
 import { integrationFromPage } from '../support/playerIntegration.js';
 import { requestAs } from '../support/requestAs.js';
 
@@ -96,7 +98,7 @@ describeWithServices('signed content-file URLs', () => {
     expect(res.headers['content-type']).toBe('image/png');
     expect(res.headers['x-content-type-options']).toBe('nosniff');
     expect(res.headers['content-security-policy']).toBe(
-      "sandbox; default-src 'none'; style-src 'unsafe-inline'",
+      "sandbox; default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'",
     );
     expect(res.headers['content-disposition'] ?? 'inline').toMatch(/^inline/);
     expect(res.headers['set-cookie']).toBeUndefined();
@@ -176,7 +178,9 @@ describeWithServices('signed content-file URLs', () => {
     expect(integration.ajax.setFinished).toBe(`/h5p/finishedData?ltik=${encoded}`);
     expect(integration.contents[`cid-${contentId}`]?.contentUrl).not.toContain('ltik');
     expect(html.split(encoded)).toHaveLength(4);
-    expect(html).not.toContain(ltik);
+    // WHY: the xAPI bridge's inert JSON block is the one place with the raw ltik, for its Bearer header (D-102).
+    expect(bridgeOnPage(html).config?.token).toEqual({ name: 'ltik', value: ltik });
+    expect(html.split(ltik)).toHaveLength(2);
   });
 
   it('[H5P-007] a grant is issued only after the View check: none for a draft the person may not view', async () => {

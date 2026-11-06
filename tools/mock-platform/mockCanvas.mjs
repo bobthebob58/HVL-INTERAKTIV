@@ -1,11 +1,13 @@
 /**
  * mockCanvas — a mock Canvas LTI 1.3 platform: its JWKS, the OIDC authentication endpoint with `form_post`, login
- * initiations for Node-driven tests, browser pages, and verification of Deep Linking responses.
+ * initiations for Node-driven tests, browser pages, verification of Deep Linking responses, and the LTI Advantage
+ * services (token endpoint, AGS, NRPS) with fault injection.
  *
  * Why: oauth2-mock-server cannot act as an LTI platform (no `form_post`, no LTI claims) and Canvas is not reachable
  *      from the build environment (D-049). LTI-001, LTI-003 and LTI-005 need a platform that behaves like Canvas
- *      both when a test drives the tool with supertest and when a real browser does.
- * Spec: LTI-001, LTI-003, LTI-005
+ *      both when a test drives the tool with supertest and when a real browser does; the grade bridge (LTI-012,
+ *      D-104) and the NRPS count (LTI-008) need its services after the launch.
+ * Spec: LTI-001, LTI-003, LTI-005, LTI-008, LTI-012
  * Invariants:
  *   - It listens on 127.0.0.1 and its origin and issuer are `http://127.0.0.1:<port>`: another site than a tool on
  *     `http://localhost:<port>`, so the tool's frame is third-party, as in Canvas.
@@ -13,15 +15,19 @@
  *     published and exists only for negative tests.
  *   - The only accepted redirect URI is `<toolUrl>/lti/launch`; logins are single-use and expire
  *     (./canvasAuthorize.mjs).
- *   - `platformConfig` lists a token endpoint that is not served: AGS arrives in S6.
+ *   - The token endpoint `platformConfig` lists, the AGS and NRPS URLs of the launch claims and the `/__mock/`
+ *     controls are served by ./canvasServices.mjs; the developer key grants `scopes` (default: HVL's three).
+ *   - Every launch's user joins the course roster, and a launch that names a line item by ID gets that line item.
  * Collaborators: ./canvasAuthorize.mjs, ./canvasIdTokens.mjs, ./canvasPages.mjs, ./deepLinkReturn.mjs,
- *   ./httpRouter.mjs, ./mockPlatform.mjs, jose.
- * Tests: tools/mock-platform/test/mockCanvas.test.mjs, tools/mock-platform/test/canvasAuthorize.test.mjs
+ *   ./canvasServices.mjs, ./httpRouter.mjs, ./mockPlatform.mjs, jose.
+ * Tests: tools/mock-platform/test/mockCanvas.test.mjs, tools/mock-platform/test/canvasAuthorize.test.mjs, and the
+ *   service tests named in ./canvasServices.mjs
  */
 import { calculateJwkThumbprint, exportJWK, generateKeyPair } from 'jose';
 import { authParams, checkAuthRequest, createPendingLogins } from './canvasAuthorize.mjs';
 import { buildIdTokenClaims, normaliseLaunch, signJwt } from './canvasIdTokens.mjs';
 import { autoPostPage, createCanvasPages, refusalPage } from './canvasPages.mjs';
+import { createCanvasServices, developerKeyScopes } from './canvasServices.mjs';
 import { createDeepLinkVerifier, registerDeepLinkReturn } from './deepLinkReturn.mjs';
 import { createRouter, readForm, sendHtml, sendJson, startServer } from './httpRouter.mjs';
 import { STORAGE_TARGET } from './platformStorageFrame.mjs';
@@ -50,7 +56,9 @@ export function toolBaseUrl(toolUrl) {
 /**
  * Starts a mock Canvas.
  * @param {{toolUrl: string, port?: number, host?: string, clientId?: string, deploymentId?: string,
- *   launchTtlSeconds?: number}} options - Where the tool runs; port 0 (default) picks a free port.
+ *   launchTtlSeconds?: number, scopes?: string[]}} options - Where the tool runs; port 0 (default) picks a free
+ *   port; `scopes` are the developer key's (default `MOCK_CANVAS_SCOPES` of ./canvasServices.mjs).
+ * @throws {TypeError} For a tool URL that is not http(s), or scopes that are not AGS or NRPS scopes.
  * @returns {Promise<object>} The running mock; see `MockCanvas` in ./mockPlatform.d.mts.
  */
 export async function startMockCanvas(options) {
@@ -62,24 +70,27 @@ export async function startMockCanvas(options) {
     deploymentId = MOCK_CANVAS_DEFAULTS.deploymentId,
     launchTtlSeconds = MOCK_CANVAS_DEFAULTS.launchTtlSeconds,
   } = options;
+  const scopes = developerKeyScopes(options.scopes);
   const [platformKey, foreignKey] = await Promise.all([generateKeyPair('RS256'), generateKeyPair('RS256')]);
   const publicJwk = { ...(await exportJWK(platformKey.publicKey)), alg: 'RS256', use: 'sig' };
   publicJwk.kid = await calculateJwkThumbprint(publicJwk);
   const router = createRouter();
   const http = await startServer(router.listener, { port, host });
   const origin = `http://${host}:${http.port}`;
-  const platform = { origin, issuer: origin, clientId, deploymentId, toolUrl };
+  const platform = { origin, issuer: origin, clientId, deploymentId, toolUrl, scopes };
+  const tokenEndpoint = `${origin}/login/oauth2/token`;
+  const services = createCanvasServices(router, { ...platform, tokenEndpoint });
   const logins = createPendingLogins(launchTtlSeconds);
   const deepLinkRequests = new Map();
   const normalise = (spec) => {
     const launch = normaliseLaunch(spec, platform);
     if (launch.deepLinkData !== undefined) deepLinkRequests.set(launch.deepLinkData, launch);
+    services.onLaunchSpec(launch);
     return launch;
   };
   const verifier = createDeepLinkVerifier(platform, (data) => deepLinkRequests.get(data));
   const sign = (claims, key, kid) => signJwt(claims, key.privateKey, kid);
   const authEndpoint = `${origin}/api/lti/authorize_redirect`;
-  const tokenEndpoint = `${origin}/login/oauth2/token`;
   const jwksUrl = `${origin}/api/lti/security/jwks`;
   const canvas = {
     ...platform,
@@ -99,6 +110,10 @@ export async function startMockCanvas(options) {
       feideLinking: true,
     },
     deepLinkResponses: verifier.responses,
+    tokens: services.tokens,
+    ags: services.ags,
+    nrps: services.nrps,
+    clearFaults: services.clearFaults,
     loginInitiation(spec) {
       const launch = normalise(spec);
       const { hint, loginHint } = logins.add(launch);
@@ -118,6 +133,7 @@ export async function startMockCanvas(options) {
       if (refused) return refused;
       const taken = logins.take(params);
       if (!taken.launch) return taken;
+      services.onLaunch(taken.launch);
       const idToken = await sign(
         buildIdTokenClaims(platform, taken.launch, params.nonce),
         platformKey,

@@ -118,7 +118,7 @@ describeWithServices('creating activities from pattern skeletons (probe P1)', ()
       expect(found).toEqual(created.map(() => []));
     });
 
-    it("[H5P-008] some learner-facing Nynorsk defaults are the libraries' English text", async () => {
+    it("[H5P-008] with HVL's language overlay only «Pause» of the learner-facing Nynorsk defaults is the libraries' English text", async () => {
       // Act
       const english = await Promise.all(
         created.map(async ({ skeleton: s, params }) => {

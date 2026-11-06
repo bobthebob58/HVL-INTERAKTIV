@@ -1,0 +1,36 @@
+# deploy/Dockerfile.dockerignore — what the image build (deploy/Dockerfile, context: the repository root) never sees.
+#
+# Why:   a smaller context builds faster, and local files must never reach an image: `.env` files with development
+#        values, fetched or generated folders (the image gets H5P core, editor and the content types only through
+#        the checked build contexts, D-110), test trees and documentation.
+# Spec:  NFR-007
+# Tests: tools/deploy-check/test/deployFiles.test.mjs (that `.env` files and the fetched folders stay out).
+# SECURITY: `.env` and `.env.*` anywhere, and `.git`, are excluded first and never re-included.
+
+**/.env
+**/.env.*
+.git
+.github
+.husky
+.devcontainer
+**/node_modules
+**/.next
+**/*.tsbuildinfo
+**/coverage
+apps/server/var
+apps/server/h5p
+apps/server/src/generated
+apps/web/next-env.d.ts
+apps/server/test
+apps/server/e2e
+apps/server/a11y
+apps/web/test
+packages/*/test
+deploy
+docs
+!docs/reference/h5p-core-1.28-seed-packages/*.files.sha256
+tools
+!tools/h5p-core/verifyClientFiles.mjs
+!tools/h5p-libraries/resolveManifest.mjs
+!tools/h5p-bundle/contentTypeBundle.mjs
+!tools/h5p-bundle/bundleCli.mjs

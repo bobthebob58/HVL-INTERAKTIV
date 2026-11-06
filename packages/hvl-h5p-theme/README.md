@@ -24,7 +24,9 @@ The server serves the files under `/h5p/theme/<name>?version=<content hash>` and
 `customization.global` (`apps/server/src/h5p/h5pAssets.ts`), in this order, after Core's own styles:
 `tokens.css`, `h5p-daylight.css` (both from `@hvl-interaktiv/design-tokens`), `hvl-h5p-theme.css`,
 `hvl-h5p-targets.css`, `hvl-h5p-feedback.css`, `hvl-h5p-indicators.css`, `hvl-feedback-prefixes.css`, and the scripts
-`feedbackPrefixes.js`, `a11yRepairs.js`, `a11yEditorRepairs.js` and `reducedMotion.js`.
+`feedbackPrefixes.js`, `a11yRepairs.js`, `a11yEditorRepairs.js` and `reducedMotion.js`. A learner's player page
+(never the editor, never an author's preview) then gets the xAPI bridge's three scripts last: `xapiStatements.js`,
+`xapiBatching.js` and `xapiBridge.js` (`XAPI_BRIDGE_FILES`, D-102, D-115).
 
 ## Folder structure
 
@@ -39,11 +41,14 @@ The server serves the files under `/h5p/theme/<name>?version=<content hash>` and
 | `src/reducedMotion.js` | Browser script: turns H5P's jQuery animations off (`H5P.jQuery.fx.off`) while the reader asks for reduced motion |
 | `src/a11yRepairs.js` | Browser script: names, roles and levels the content types' own markup (what a learner sees) lacks (D-080; documented in its header) |
 | `src/a11yEditorRepairs.js` | Browser script: names, roles and labels H5P's editor, its widgets and the hub's list lack, and `inert` on the parts BranchingScenario's tour fades (D-080; documented in its header) |
+| `src/xapiStatements.js` | Player-only browser script: D-115's root and gradable-result tests and the cut of a statement to what the server stores (`window.hvliXapiStatements`) |
+| `src/xapiBatching.js` | Player-only browser script: batch sizes (50 items, 60 000 bytes), fitting, the answer's outcome by status, back-off (`window.hvliXapiBatching`) |
+| `src/xapiBridge.js` | Player-only browser script, last on the page: registers on H5P's dispatcher in the player document (not in Core's iframe), reads the inert `#hvl-xapi-bridge` configuration, sends batches every 2 s with the Bearer ltik or the CSRF token, flushes on `pagehide` with `keepalive`; no storage, cookies or console (LTI-003, ESLint) |
 | `src/locales/{nn,nb,en}.json` | `feedback.correctPrefix` and `feedback.incorrectPrefix` (`✓ Riktig:` / `✗ Feil:`, `✓ Correct:` / `✗ Incorrect:`) |
 | `scripts/buildFeedbackPrefixes.mjs` | Generates `dist/hvl-feedback-prefixes.css` from the locales and targets; `--check` for drift |
 | `scripts/feedbackTargetList.mjs` | Reads and checks `src/feedbackTargets.json` for the generator |
 | `dist/hvl-feedback-prefixes.css` | Generated: `:lang()` prefix texts, the target lists for the script, the `::before` and `::after` prefixes |
-| `test/` | Generator, theme structure and script (jsdom) tests; `test/support/` opens the jsdom documents (`prefixDocument.ts` for the prefixes, `repairDocument.ts` for both repair scripts) |
+| `test/` | Generator, theme structure and script (jsdom) tests; `test/support/` opens the jsdom documents (`prefixDocument.ts` for the prefixes, `repairDocument.ts` for both repair scripts, `bridgeDocument.ts` for the xAPI bridge with P1's fixtures) |
 | `.gitignore` | Re-includes `dist/` (the root ignores every `dist/`) |
 
 ## Key flows
@@ -109,11 +114,17 @@ library, add an entry to `src/feedbackTargets.json` (choose an element whose `::
 - `UD-011` — the theme on top of Daylight in every H5P document; every `!important` names the H5P selector it beats.
 - `UD-003` — icon and text prefix for answer states in MultiChoice, Blanks, DragText, QuestionSet (its questions and
   explanations) and the question types the containers offer (TrueFalse, MarkTheWords, SingleChoiceSet, Summary,
-  MultiMediaChoice, ImageHotspotQuestion); the prefix is in the accessibility tree. The spec names the xAPI bridge for the hidden text node;
-  that bridge arrives in S6, so `src/feedbackPrefixes.js` does it now.
+  MultiMediaChoice, ImageHotspotQuestion); the prefix is in the accessibility tree. The visually hidden text node
+  comes from `src/feedbackPrefixes.js` (D-072 amendment (a)). The spec first named the xAPI bridge for it; `UD-003`
+  as amended by D-102 rules that out, so that no prefix is announced twice.
 - `UD-002`, `UD-004`, `UD-005`, `UD-009`, `UD-012` — inside H5P, with the values of `@hvl-interaktiv/design-tokens`;
   `UD-009` also for jQuery's animations (`src/reducedMotion.js`).
 - `UD-001` — non-text contrast of what Daylight draws below 3 : 1 (DragText's empty drop zones, CoursePresentation's
   answered-task dots, `src/hvl-h5p-indicators.css`); the pairs are declared in `@hvl-interaktiv/design-tokens`'
   `tokens.json`. Under forced colours an answered dot stays filled (`UD-012`).
 - `UD-010` — the prefix language follows `lang`.
+- `LTI-010`, `H5P-009` — the xAPI bridge in the learner's player document (D-102, D-115): only the first root
+  `attempted`, every `answered` and a root `completed`, cut down, each once, with a `statementId` and an `attemptId`;
+  tested in jsdom (`test/xapi*.test.ts`) and in the real player
+  (`apps/server/test/h5p/xapiBridge.browser.int.test.ts`, `apps/server/e2e/xapiToCanvas.e2e.test.ts`). The flow from
+  the bridge to Canvas is drawn in the [server README](../../apps/server/README.md#key-flows).

@@ -15,7 +15,7 @@ what is done, what is verified, and what is blocked.
 | S4 | Design tokens, HVL H5P theme, WCAG 2.2 verification, pre-publish validator | 03; 04 §5; 05 `DATA-006`, `DATA-011` | ✅ Gate passed (2026-10-24); HVL's token and logo confirmation (Q2), the DPO's review of the privacy text (Q6) and the first manual AT run open |
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
-| S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §5–7; 05; 00 §6 | ⬜ Not started |
+| S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -395,62 +395,558 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
    in the order they arrive.
 8. **Notes from the gate:** `check:licences` passed while a stray `node_modules/node_modules` link hid the
    workspaces from npm and it counted 1 production package instead of 482 (the link was removed before the gate;
-   a guard that fails on an implausibly small production set is S6 work). The per-ID runs for `NFR-003` and
+   a guard that fails when a workspace or a declared runtime dependency is missing from the production set was
+   added at the start of S6). The per-ID runs for `NFR-003` and
    `UD-031` select no tests in the root Vitest project: their tests are in the accessibility suite, which the gate
    runs as `npm run test:a11y`.
+   **Licence half closed in S6 (2026-10-30, D-113):** before it checks licences, `check:licences` now fails when the
+   production set it checked lacks a workspace that the root `workspaces` names or a runtime dependency that the
+   root or a workspace manifest declares, naming each one and the likely cause; the manifests are the expectation,
+   not a minimum count (`tools/dependency-check/productionSetGuard.mjs`). The per-ID half: from S6
+   the gate runs such IDs as `npm run test:a11y -- -t "\[<ID>\]"` (D-113).
 
-## S6 — Grade bridge, insight, privacy, deployment ⬜
+## S6 — Grade bridge, insight, privacy, deployment ✅ (gate passed 2026-11-06; started 2026-10-30; open items below)
 
-- [ ] xAPI bridge, ingestion, minimal storage (`LTI-010`, `LTI-011`, `DATA-012`)
-- [ ] AGS queue and worker, sync status, honest labelling (`LTI-012`, `LTI-013`); NRPS counts (`LTI-008`)
-- [ ] Insight views with *k*-suppression (`INS-001`…`INS-010`, `PROD-010`); spaced-retrieval suggestion (`PROD-014`, COULD)
-- [ ] Purge, audit, data-subject requests, DPIA input (`DATA-003`…`DATA-008`, `DATA-010`); log redaction review (`NFR-006`).
-      The data-subject tool must delete learner state through the storage directly: Lumi 10.0.4's
-      `deleteAllContentUserDataByUser` checks permission for one user and deletes the acting user's data
-      (`ContentUserDataManager.js:39-43`)
-- [ ] Separate files origin for user files with signed URLs (`SEC-004`, D-045; URLs from S3's `HvlUrlGenerator`)
-- [ ] Panopto guidance (`H5P-010`); ClamAV scanning (`SEC-006`); LTI Dynamic Registration (`LTI-009`, COULD)
-- [ ] Docker images, load test, runbook (`NFR-001`, `NFR-002`, `NFR-007`); conformance report (`UD-040`)
-- [ ] Library texts that are English in `nn` and `nb` (S5 probe P1: MultiChoice, QuestionSet, InteractiveBook and
-      BranchingScenario buttons and messages; patterns set their own texts, D-084): consider an HVL language overlay
-      through Lumi's `alterLibraryLanguageFile` hook, so activities made in the editor are Norwegian too (its own
-      decision)
-- [ ] The Canvas side of the studio (D-098): the content bank and "new from a pattern" in the Deep Linking picker,
-      and the `LTI-007` duplicate in `/app/play`
-- [ ] Results in the portfolio: the real `ActivityResultsSource` with *k*-suppression (D-095); Chromium and fonts
-      with æ, ø and å in the production image for the PDF (D-096)
-- [ ] Lumi's server half (D-081): ask Lumi's maintainers for a release with their unreleased file-security work, or
-      review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
-      10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
-      upstream to Lumi and H5P
-- [ ] Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in `docs/` and
-      GitHub issue templates in `.github/ISSUE_TEMPLATE/` (a fault; an accessibility barrier) asking for the steps,
-      what was expected and what happened, device, browser, assistive technology and zoom, the activity type or
-      page, a screenshot, and the severity (cannot use, or privacy or security; accessibility barrier; cosmetic),
-      with matching labels. Rule: no personal data in an issue (no student names, e-mails or Feide IDs; log lines are
-      safe by design, `DATA-009`). The guide describes how a problem is fixed: reproduced in the test set-up, a test
-      that fails first, the cause fixed, the area's tests and the gate, a branch and pull request that HVL reviews
-      and merges. A problem seen only in HVL's Canvas or Feide needs the error and the server's log lines; one seen
-      only on a device or with a screen reader needs a precise description and an HVL re-test; H5P's own barriers
-      are repaired at run time or registered and reported (D-080). Manual results stay dated in
-      `docs/accessibility/results/`
-- [ ] Research export (owner's idea, 2026-10-26; to consider when insight is built): analysis and research scripts
-      run beside the system, in Python or R (pandas, Jupyter notebooks), which ALU and Pedagogisk akademi researchers
-      use, while everything inside the product stays TypeScript. They never touch the live database: the system
-      produces an anonymised export (pseudonyms only, groups under *k* = 5 suppressed, only the fields a question
-      needs), built and tested in TypeScript under the privacy rules, with a documented format and an example
-      notebook. Research use of student data needs its own legal basis and the DPO's approval (Q6) and belongs in
-      the DPIA input (`DATA-005`)
-- [ ] Light simplification check before the pilot (owner decisions 2026-10-24 and 2026-10-25), as in S4+ (two
-      independent skeptics per proposal, no behaviour change, every test kept, the full gate after), with one more
-      lens: does the code read as if a careful human wrote it? Signs of machine-written code to look for: comments
-      that restate the code, checks repeated where one layer already guarantees them, generic or overlong names,
-      boilerplate copied across files, abstractions with one user, and idioms that differ from file to file because
-      different agents wrote them. The reviewers must tell "unfamiliar but correct" from "needlessly odd": code that
-      is unusual because it is right (a security check, an H5P workaround, a timing guard) stays, and gets a short
-      WHY comment a human maintainer can follow, rather than being made ordinary and wrong. An HVL developer reads a
-      sample afterwards and has the last word
-- [ ] Gate: as in the Evaluator Guide §5, S6
+S6 is the last planned session: the xAPI → Canvas grade bridge, teacher insight with *k*-suppression, the privacy
+jobs, deployment and operations, and the carry-overs from S4 and S5. It is too large for the days before 1 November,
+when the project proposal for HVL's bachelor students in programming (spring 2027) goes to HVL; their project is to
+review this AI-written code with their own tools and to finish the Canvas integration against ALU's test instance.
+Plan approved 2026-10-30; decisions D-101…D-114.
+
+**Decided while planning S6 (owner, 2026-10-30; recorded as D-101, D-106 and D-113):**
+1. **Learning data first:** the grade bridge, then insight, then the privacy operations; then operations and
+   security, then the carry-overs. Before 1 November the realistic target is steps 0–4 with parts of step 5 (D-101).
+2. **Insight in tabs only:** an **Innsikt** tab on the activity page `/aktivitet/[id]` and in the Canvas view
+   `/app/play`, one context at a time; no `/innsikt` page. CLAUDE.md §2, spec 05's code location and the Evaluator
+   Guide §4.1 are amended (D-101, D-106).
+3. **Running the session:** the hourly restart task is on until S6's gate passes (D-101).
+4. **The gate keeps its full form** (every S1–S6 per-ID run), run in parts of under 2 hours as tracked background
+   tasks (D-113).
+5. **What passes to the students:** what needs HVL's real Canvas, Feide or servers, and whatever S6 does not reach,
+   as designs, seams and checklists, indexed in `docs/handoff/README.md` (D-101).
+
+**Found while mapping S6 (six agents, 2026-10-30):** `main` was red after PR #8's merge (CI run 41075981429:
+`appPlayEditor.e2e`'s click on «Lagre» landed in H5P's editor iframe while H5P was still growing it, so no save was
+sent; reproducing it also found a real fault: «Lagre» was enabled before H5P's editor could save); the xAPI
+bridge does not exist yet, while `XapiStatement`, `GradeSyncJob` and `LtiPlacement.lineItemUrl`/`attemptPolicy` do;
+ltijs's `context.grading.submitScore` needs a live ltik, so it cannot run in a background worker (D-104); Lumi's
+`alterLibraryLanguageFile` drops the editor libraries' `libraryStrings` (D-111); a files origin would trip the
+`DATA-011` third-party tests unless they know it (D-110); the Docker images have no source for the real content
+types (Q10, D-110); and the S6 spec-load row was narrower than this checklist (D-101).
+
+Steps (one conventional commit per step, `Refs:` with requirement IDs, pushed as we go; each earlier S6 item is kept
+under the step that does it):
+- [x] 0. Start (housekeeping)
+  - [x] Decisions D-101…D-114 recorded in `docs/DECISIONS.md`
+  - [x] PROGRESS: S6 🟨, the spec-load row widened (D-101), these steps, the owner decisions above, Q16 closed and S5
+        open item 8's licence half closed
+  - [x] CLAUDE.md §2 (the xAPI bridge in the top player document, D-102; no `/innsikt`, D-101, D-106) and §5 (the
+        grade worker's own AGS client, D-104; the Deep Linking call corrected to D-061's); spec amendments: 01 `H5P-008`, `H5P-009`, `H5P-010` (D-102, D-111);
+        02 §1, `LTI-008`, `LTI-009`, `LTI-010`, `LTI-011`, `LTI-012`, `LTI-013`, §7 (D-101…D-105); 03 `UD-003`
+        (D-102); 05 code location, §1, `INS-006`, `INS-007`, `DATA-002`, `DATA-003`, `DATA-012`, §4 (D-101…D-104,
+        D-106, D-107); the S6 load rows of specs 01–04 (D-101); the Evaluator Guide §4.1 and §5 (D-101, D-113)
+  - [x] CI `--done-through=S5`, with `ciWorkflow.test.mjs` (D-113)
+  - [x] Licence guard: `check:licences` fails when a workspace or a declared runtime dependency is missing from the
+        production set (`productionSetGuard.mjs`; D-113, S5 open item 8)
+  - [x] The hourly restart task is on until S6's gate passes (D-101)
+  - [x] The red `main` fixed: «Lagre» stays disabled until H5P's editor can save (`editorStart.js`), and the e2e
+        tests wait for it and repeat a click that sent nothing, since H5P can still grow its iframe under the button
+        after that (CI run 41075981429, D-113)
+- [x] 1. Probes, kept as tests: P1 xAPI on the ten real types (verbs, root vs sub-content, scores, response format,
+      size, iframe duplicates, attempt boundaries; D-102); P2 the mock AGS token round trip (D-104); P3 Docker
+      (dockerd, image pull, Chromium in an image; D-110)
+  - [x] P1: `xapiQuestionTypes.browser.int.test.ts` and `xapiContainerTypes.browser.int.test.ts` play the ten real
+        types as a learner in full Chromium and pin P1's findings per type; ten curated statement fixtures in
+        `apps/server/test/fixtures/xapi/` for step 3 (`readXapiFixture`)
+  - [x] P2: `agsClientCredentialsProbe.int.test.ts`: D-104's client credentials, signed with the stored tool key,
+        get a token from the mock Canvas, post a score it records and confirm a deleted line item; no ltik
+  - [x] P3: recorded in D-110's amendment (and D-114's, k6); the Docker build and compose smoke test are step 6's
+  - Probe findings (2026-10-30; kept by the tests above). **P1** played the ten real types
+    (332 statements), and a second run replayed seven of them and the `uv-module` pattern (188): every statement
+    arrives once, in the player document, with no ID, no timestamp and an anonymous actor; `interacted` and
+    `progressed` are 38–76 % of them and serve no `INS` requirement; H5P marks no attempts and re-sends some results
+    on resume; no single root test works; InteractiveBook, InteractiveVideo and ImageHotspots send no root score as
+    configured today, `uv-case` gives 10 of 10 on every path, and `uv-module`'s chapter «Prøv igjen» fails upstream.
+    Step 3's rules, with defaults for Q18–Q20, are [D-115](docs/DECISIONS.md#d-115--xapi-capture-statement-identity-attempts-and-gradable-results-probe-p1).
+    **P3**: Docker, compose and Chromium's sandbox work here, behind a registry mirror and a `dockerd` started by
+    hand: an Ubuntu 24.04 image with Node 24 copied in, full Chromium as a non-root user under Playwright's seccomp
+    profile, a separate compose file for the smoke, no GitHub content fetched in a build (Q21), and k6 for the load
+    test, in
+    [D-110's amendment](docs/DECISIONS.md#d-110--deployment-and-operations-design-runtime-image-compose-content-types-files-origin-clamav)
+    (and D-114's).
+- [x] 2. Shared infrastructure: migration `s6_grade_bridge_insight` (`orphaned`, `nextAttemptAt`, `attemptId`,
+      `terminalAt`, `academicYear`); api-contract schemas (xAPI batch, grade sync, insight); mock Canvas token, AGS
+      and NRPS endpoints with fault injection; an injectable clock and `runOnce` seams. The 30-learner insight
+      fixture with hand-calculated values moved to step 4, with the aggregators it checks
+  - [x] Migration `s6_grade_bridge_insight`: also `resultAt` (D-115), `InsightSnapshot.contentVersion` (D-107) and
+        the platform-scoped context checks (D-103), proved by `s6Schema.int.test.ts`; DATA-INVENTORY rows
+  - [x] api-contract schemas: the xAPI batch with D-115's response caps, grade sync, insight cells, and the grade
+        bridge's routes (described now; they join `API_ROUTES` when step 3 mounts them)
+  - [x] Mock Canvas: token endpoint, AGS line items and scores, NRPS memberships, fault injection, ltijs interop
+  - [x] Injectable clock (`jobClock.ts`) and `runOnce(now)` in `LeasedIntervalJob`
+- [ ] 3. A — Grade bridge (`LTI-010`, `LTI-011`, `DATA-012`, `LTI-012`, `LTI-013`, `LTI-008`, `H5P-009`): the
+      `DATA-012` mapper → `POST /api/h5p/xapi` (auth, View and launch checks, zod, rate limit, 202) → `xapiBridge.js`
+      and its wiring → attempt policy → enqueuer → AGS client → worker → status and retry API and UI (portal tab and
+      `/app/play`) → label mode → NRPS counter → the `ltiSub` 30-day cleanup
+  - **Paused 2026-10-30, work in progress (owner's decision, near the weekly usage limit); resumed 2026-11-04** with a
+    verify-and-finish run of six workstreams (ingest, bridge, grades, status UI, Canvas extras, and the integration),
+    each built part reviewed by a skeptic who mutated its code to prove the tests catch it. Fixed in review: a racing
+    request could make a real result a "replay" (stored IDs are now read before the replay history); a Canvas launch
+    without a course made every batch fail with 500 (now 202, nothing stored, D-103 amendment); the bridge's
+    same-origin check let `'/\t/host'` through (now path segments only); and the gaps the mutations showed.
+  - **Integration (2026-11-04):** the ingestion hands stored rows to the grade enqueuer and the NRPS counter runs
+    after each launch (main.ts; `createApp`'s `onXapiStored` and `nrps`; test beds as main.ts, the NRPS counter on
+    request); `AGS_LABEL_MODE` reaches the Deep Linking routes; the grade worker and the `sub` cleanup run with the
+    cleanup jobs; the three grade-bridge routes joined `API_ROUTES`; an LTI principal carries the year of its key
+    (D-107 amendment); ESLint's `LTI-003` storage ban covers the bridge's scripts; the privacy notice says the Canvas
+    ID goes 30 days after the sending stops, as the inventory says (D-104); the S5 pattern tests and `PED-H07` treat
+    a QuestionSet whose questions keep their own «Prøv igjen» as retry on (D-115 amendment; the book's own retry in
+    `uv-module` stays the owner's call, Q20). New end-to-end test `e2e/xapiToCanvas.e2e.test.ts`: a Canvas student's
+    right answer in `/app/play` → bridge (Bearer ltik) → stored under the learnerKey → one job → the worker's
+    `runOnce(now)` → 100 of 100 for the student's `sub` in the mock Canvas → the teacher's «Poeng til Canvas» shows
+    1 sent; a portal author's preview loads no bridge and stores nothing. READMEs (server, web, theme) and the data
+    inventory's Redis keys updated.
+  - **Security and privacy review (2026-11-04):** no leak of personal data or tokens and no way to read or change
+    another person's data was found (forged and replayed batches, prototype keys, size and depth limits, the rate
+    limit, grade tampering, the formative labels, the AGS client, the status API's scope, NRPS, logs, the player
+    page). Fixed: `AgsAccessTokens` now cancels the unread body of a refused token answer, as `AgsScoreClient` does
+    (`[LTI-012]` regression test). Four findings need a decision before any code changes (listed below).
+  - **Finish (2026-11-04):** a new advisory, GHSA-mrwp-f3q8-3g9p (`follow-redirects` ≤ 1.16.1, via `axios` in
+    h5p-server; published after the S5 gate), failed `check:audit`; the lock file now takes the patch release 1.16.2
+    (no override, no exception). Every check then passed (session log, «2026-11-04 · S6 step 3»).
+  - **Found in step 4's checks (2026-11-04):** the worker's claim (`gradeJobClaims.ts`) could take every due job
+    whatever its limit. As `WHERE "id" IN (… LIMIT n FOR UPDATE SKIP LOCKED)`, PostgreSQL may rescan the subquery
+    once per row of a nested-loop semi join (its plan while the table looks empty), and each rescan skips the rows
+    the statement has just updated. `gradeSyncFlood.int.test.ts` caught it in the full server run (3 claimed with a
+    limit of 1; a prepared generic plan on a copy of the table updated 3 rows for `LIMIT 1`). The claim is now a
+    materialized CTE that runs once: with the old query the test failed again in one of two runs after `ANALYZE` of
+    the empty table, and with the new one it passed all five. No decision changes (D-104's "claims due jobs
+    (`FOR UPDATE SKIP LOCKED`)" still holds).
+  - Still open for step 3, so the step stays unticked: the owner's Q20 call (D-115). The step's commit is done
+    (abb60a5; the review's hardening came with step 4's commit, 9fb0c02). Not step 3's: `H5PUserData.academicYear` for portal sessions that cross 1 August
+    is done in step 5 (D-107's amendment, `learnerStateYear.ts`); CLAUDE.md §2 names `xapiBridge.js` alone (the
+    bridge is three scripts, D-102 amendment; the owner's file).
+  - [x] xAPI bridge, ingestion, minimal storage (`LTI-010`, `LTI-011`, `DATA-012`): plain JavaScript in the top player
+        document, learners only (D-102); contexts as `<platformId>:<contextId>` (D-103)
+  - [x] AGS queue and worker, sync status, honest labelling (`LTI-012`, `LTI-013`); NRPS counts (`LTI-008`): our own
+        AGS client in a durable worker (D-104), `AGS_LABEL_MODE` `suffix` or `preserve` with Q8 open (D-105)
+  - [x] Status and retry API and the «Poeng til Canvas» panel in the portal tab and `/app/play`, always with the
+        formative notice (D-106); the `ltiSub` 30-day cleanup runs with the cleanup jobs (D-104)
+  - [x] Wiring in `main.ts` and `createApp`, and the end-to-end tests `e2e/xapiToCanvas.e2e.test.ts` and
+        `e2e/xapiPortal.e2e.test.ts` in full Chromium (D-065)
+  - [x] The grade-sync panel in the accessibility suite (axe, light and forced colours); screenshots in `nn` at 1280
+        and 390 px
+  - [x] Review: a skeptic with mutation checks per workstream, then the security and privacy review above
+  - [x] `uv-module`: the regression test that pins the book's failing «Prøv igjen»
+        (`uvModuleBookRetry.browser.int.test.ts`, an upstream pin; D-115's 2026-11-04 amendments); the owner's Q20 call
+        on turning the book's retry off (a `PROD-009` `SPEC-DEVIATION` or not) stays open
+  - [x] Decisions on the review's findings (each changes D-104, D-106 or D-115 first, CLAUDE.md §1), taken
+        2026-11-04: findings 1 and 4 by D-104's queue amendment (one job per placement and learner, the score from the
+        stored results at send time, fair claims, a reconcile pass), finding 2 by D-104's line-item URL amendment
+        (wired in `main.ts` and `ltiRoutes.ts` with `CANVAS_ORIGINS` and https in production), finding 3 recorded for
+        the DPO (`docs/privacy/DPIA-INPUT.md` R1, Q22); D-115's two amendments of the same day. The findings were: **(1, medium)**
+        one learner can delay everyone's grades: 120 made-up scored results a minute per activity (`LTI-011`'s
+        limit) each become a new job, while the worker sends about 200 a minute; remedies to weigh: cap new jobs per
+        placement and learner, settle a group's pending jobs after a send, or claim fairly per group. **(2, low)** the
+        worker never checks the launch's line-item URL (https, an origin in `CANVAS_ORIGINS`). **(3, low)** a portal
+        owner or co-author sees exact grade-sync counts for a colleague's course (D-106 residual for the DPO).
+        **(4, info)** a grade job is lost when its write fails after the statements are stored (already answered
+        202); an outbox, or jobs re-derived from stored root results, if passback must be exact
+  - [x] The step's commit, with `Refs:` `LTI-010`, `LTI-011`, `DATA-012`, `LTI-012`, `LTI-013`, `LTI-008`,
+        `H5P-009` (abb60a5)
+- [x] 4. B — Insight (`INS-001`…`INS-010`, `PROD-010`, the `LTI-006` **Innsikt** tab, `PROD-013` by version,
+      `MAPPE-003` real source): the suppression core with property tests → a 30-learner insight fixture with
+      hand-calculated values (moved from step 2) → aggregators `INS-001`, `INS-002`,
+      `INS-003` (`INS-004`, `INS-005` if time) → access and audit → insight API → the web **Innsikt** tabs (charts,
+      suppressed cells, shortlist, CSV, findings) → the mappe's real results source; `PROD-014` (COULD) if time
+  - **Built 2026-11-04** by four workstreams, each reviewed by a skeptic with mutation checks (insight core, insight
+    API, the web **Innsikt** tabs, the mappe's results), then integrated: `createApp` passes the insight services
+    (content store, NRPS counts, `MIN_GROUP_SIZE`) to `/api`, and the test beds do the same; `fast-check` 4.10.2 is
+    pinned as D-114 says. The core's review found that "the next-smallest cell" let hidden counts be worked out, and
+    that `INS-002`'s share gave away `INS-003` cells; the stronger rule is D-106's amendment of 2026-11-04 (a 0 shown,
+    `SPEC-DEVIATION`; complements; parts; `INS-003` for the current version only, `SPEC-DEVIATION`), with residuals
+    R6–R9 in the DPIA input. The mappe counts only groups of at least *k* per course, version and semester (D-095's
+    amendment). New end-to-end test `e2e/insightInCanvas.e2e.test.ts`: six learners of one course (two through the
+    real bridge, four through the ingestion route) on the teacher's **Innsikt** tab in `/app/play`, two of another
+    course as «< 5», a learner refused, another course's teacher kept to their own course. Not built: `INS-004`
+    (deferred by D-115) and `PROD-014` (COULD).
+  - [x] Insight views with *k*-suppression (`INS-001`…`INS-003`, `INS-005`…`INS-010`, `PROD-010`): as tabs, per
+        context, fixed periods, `INS-006` as D-106 and its amendment of 2026-11-04 apply it; the spaced-retrieval
+        suggestion (`PROD-014`, COULD) is not built
+  - [x] Results in the portfolio: the real `ActivityResultsSource` with *k*-suppression (D-095 and its amendment)
+  - [x] Integration: the insight services in `createApp` and the test beds; `e2e/insightInCanvas.e2e.test.ts` in full
+        Chromium (D-065); the **Innsikt** tab in the accessibility suite (`axeInsight.a11y.test.ts`, on routed data so
+        every kind of section shows; the real API path is the e2e test's); the Canvas tab lists in
+        `appPlayEditor.e2e`, `webPages` and `webChrome` include **Innsikt**; screenshots in `nn` at 1280 and 390 px
+        sent to the owner
+  - [x] Review: a skeptic with mutation checks per workstream, then a privacy and security review of step 4 and step
+        3's hardening (2026-11-04). Fixed: a listed wrong gap answer, which `INS-003`'s public rule says has at least
+        *k* learners, could be hidden as a complement and then pin the other hidden counts (*k* = 5, 17 learners:
+        right = 1, other = 1). Listed answers are now always shown; per gap, right, «other wrong» and «empty» form one
+        additive group (`gapMisconceptions.ts`; a new `[INS-006]` exhaustive test that fails on the old code). Found
+        sound: access (404 before 403), audit before the answer, the rate limit, CSV formula guards, sort order, no
+        differencing path across versions, contexts, the CSV or the mappe, and the grade hardening
+  - [x] Checks, with `docs/TRACEABILITY.md` and the spec site regenerated (session log, «2026-11-04 · S6 step 4»)
+  - [x] Decisions on the privacy review's findings (each changes a decision first, CLAUDE.md §1): **(high)** every
+        period ends at the request (`insightPeriod.ts`, `end: now`), so two views minutes apart show the cells one
+        known learner moved; remedy: end periods at the last Oslo midnight, or publish a new snapshot only after *k*
+        new learners (D-106; DPIA R3 and R8 understate it). **(medium)** Canvas Student View makes fake learners (the
+        test user maps to learner, and each «Reset Student» is a new `learnerKey`), so *k* − 1 of them expose a real
+        learner's answers; remedy: a test-user flag in the launch facts, left out of storage or of insight, the mappe
+        and the counts (D-102). **(low–medium)** 7-, 14- and 30-day views opened from 1 to 30 August span the yearly
+        key change, so one learner can count twice; remedy: no period before 1 August, or a DPIA residual (D-106,
+        D-107). Lower residuals for the DPIA input: unsuppressed differences in `INS-001` and `INS-005`, the minimum
+        a multi-gap or multi-answer share sets, chart summaries that say "most common" among shown cells only, and
+        the NRPS URL's origin, which is not checked. **Decided and built 2026-11-04/05** (D-106's and D-102's
+        amendments, before the code): every period ends at the latest Oslo midnight (a view holds the data up to and
+        including yesterday; freshness is Q24) and never crosses 1 August, and the query reads only the view's
+        `academicYear`; Canvas's test student is stored flagged (`XapiStatement.testUser`) and left out of insight, the
+        mappe and every *k*, while its score still reaches Canvas; the chart summaries say «av dei som kan visast»; the
+        roster URL passes D-104's origin rule, and main.ts passes `CANVAS_ORIGINS` to it; the mappe's semester groups
+        read each semester's own academic year. Residuals R3, R6, R8 corrected and R10–R14 added in the DPIA input
+  - [x] Docs for the review's gap fix: D-106's amendment of 2026-11-04 still puts a gap's listed wrong answers in its
+        additive group (spec 05's `INS-006` note may name the gap rule too); `additiveGroupExhaustive.test.ts`'s new
+        test joins D-106's *Verified by*. Done in D-106's amendment (the gap rule as built; spec 05's `INS-006` note)
+  - [x] The commit (with step 3's), `Refs:` `INS-001`…`INS-003`, `INS-005`…`INS-010`, `PROD-010`, `PROD-013`,
+        `LTI-006`, `MAPPE-003` (9fb0c02); the review's decisions and their code come with step 5's commit
+- [x] 5. C — Privacy operations (`DATA-003`, `DATA-004`, `DATA-005`, `DATA-007`, `DATA-008`, `DATA-010`, `NFR-006`):
+      purge with a dry run → the data-subject CLI → the database roles script → production checks → the request log
+      → DPIA input → DATA-INVENTORY rows (with the Redis keys) → the research export, design only (Q6)
+  - **Built 2026-11-04/05** by four workstreams (the purge, the data-subject CLI, the roles with the production
+    checks and the request log, the privacy documents), each reviewed by one or two skeptics with mutation checks,
+    then integrated (2026-11-05). Each decision's amendment came before its code: D-107 (the purge, and the login
+    that races it), D-108 (the CLI, signals held until the audit, export only to a file or pipe), D-109 (the roles,
+    the views-down step, the TLS and EEA checks, the AWS SDK's own endpoints, the request log). Runbooks in
+    `docs/ops/`: [yearly-purge.md](docs/ops/yearly-purge.md), [data-subject-requests.md](docs/ops/data-subject-requests.md)
+    and [database-roles.md](docs/ops/database-roles.md).
+  - [x] Purge, audit, data-subject requests, DPIA input (`DATA-003`…`DATA-008`, `DATA-010`); log redaction review
+        (`NFR-006`). The data-subject tool must delete learner state through the storage directly: Lumi 10.0.4's
+        `deleteAllContentUserDataByUser` checks permission for one user and deletes the acting user's data
+        (`ContentUserDataManager.js:39-43`). Designs: D-107 (purge on 31 August by a stored academic year), D-108
+        (a server CLI for HVL operations), D-109 (database roles, production TLS checks, the request log). Built:
+        `src/privacy/purge/` (leased job and `npm run privacy:purge`), `src/privacy/dsr/` (`npm run privacy:dsr`,
+        learner state through our storage), `prisma/roles/` with `npm run db:roles`, `src/config/connectionEncryption.ts`
+        and `storageResidency.ts`, `src/http/requestLog.ts`; DPIA input complete with residuals R1–R37
+        (`docs/privacy/DPIA-INPUT.md`, checked against the developer key by `npm run privacy:dpia-check`); the
+        inventory's Redis keys, audit details and analytics view
+  - [x] Research export (owner's idea, 2026-10-26; to consider when insight is built): analysis and research scripts
+        run beside the system, in Python or R (pandas, Jupyter notebooks), which ALU and Pedagogisk akademi
+        researchers use, while everything inside the product stays TypeScript. They never touch the live database:
+        the system produces an anonymised export (pseudonyms only, groups under *k* = 5 suppressed, only the fields a
+        question needs), built and tested in TypeScript under the privacy rules, with a documented format and an
+        example notebook. Research use of student data needs its own legal basis and the DPO's approval (Q6) and
+        belongs in the DPIA input (`DATA-005`). In S6: the design only (plan step 5). Done as a design:
+        `docs/privacy/research-export.md` (tiers A–C); nothing is built until the DPO and the owner decide (Q25)
+  - [x] Integration (2026-11-05): main.ts passes `CANVAS_ORIGINS` to the NRPS roster check (and the test beds do)
+        and logs `deployment locations` at start; `PURGE_RUN_DATE` in `env.ts` and `.env.example`; the S3 client
+        ignores the AWS SDK's own endpoint settings (D-109's amendment); `AccountResolver` closes the purge race
+        (D-107's amendment); `privacy:purge` and `db:roles` scripts; the CSV's period end «Til (ikkje med)»;
+        `privacy:dpia-check` (`DATA-005`'s document check, D-113). Proven together: the insight e2e with a play of
+        today left out and Canvas's test student not counted; the test student's score sent to the mock Canvas by
+        the worker; the operations CLIs through their npm scripts on a database they deploy
+        (`operationsClis.int.test.ts`: roles, migrate step, export, the purge's dry and real run as `hvli_app`,
+        erasure, the audit); production refusing a clear-text database, Redis or S3 URL at start-up. The **Innsikt**
+        tab passes `axeInsight.a11y.test.ts`; screenshots in `nn` at 1280 and 390 px retaken and sent to the owner
+  - [x] Privacy and security review of step 5 (2026-11-05, after the integration). Two fixes, each decision's
+        amendment first, each with regression tests that fail without it: **(medium)** the mappe read every row up to
+        the export, so the mappe less insight's semester view, or two exports on one day, gave today's learners; it now
+        reads only rows stored before the latest Oslo midnight, as insight does (D-106's amendment,
+        `storedActivityResults.ts`, `storedResultsBeforeToday.int.test.ts`). **(medium–low)** a bucket variable
+        holding an access point or Outposts ARN sent files to the ARN's own region, past the EEA check; production
+        now takes plain bucket names only and names the variable, never the value (D-109's amendment,
+        `bucketNameProblems` in `storageResidency.ts`, nine `[DATA-004]` tests). Found holding: the period rule, the
+        test student left out of every count of learners, the purge's year boundaries and re-runs, the data-subject
+        CLI's keys, deletes and output, the database roles' grants, the TLS and EEA checks, and the request log
+        (route patterns only, also for 404s and bad JSON)
+  - [x] `docs/TRACEABILITY.md` and the spec site regenerated; every check, test set, the e2e set and the insight and
+        grade-sync accessibility files pass (session log, «2026-11-05 · S6 step 5»)
+  - [x] The step-5 review's follow-ups, done in step 6 (the follow-ups workstream, 2026-11-05, each with a test):
+        the LTI error handler logs a route label, never `req.path` or serve-static's `err.path` (`ltiErrorLog.ts`);
+        `db:roles` refuses a migration URL to another host without an encrypting `sslmode`; `purgeCli.ts` prints
+        `purgeFailureLine`, not a raw error message; the documents for the review's two fixes (DPIA R3, R8 and R24,
+        the `DATA-004` items of the deployment checklist in `docs/ops/runbook.md` §9, the server README's mappe row,
+        the Evaluator Guide's `DATA-004` row, and D-106's *Verified by* naming `storedResultsBeforeToday.int.test.ts`).
+        Verified again in the step-6 finish run (session log, «2026-11-05 · S6 step 6»)
+  - [x] The commit, `Refs:` `DATA-003`, `DATA-004`, `DATA-005`, `DATA-007`, `DATA-008`, `DATA-010`, `NFR-006`,
+        `INS-006`, `INS-008`, `LTI-008`, `DATA-012`, `MAPPE-003` (5064a49)
+  - Still open, not blocking the step: the mappe does not read the purge snapshots (a D-095/D-107 amendment for the
+    mappe's owner); no job deletes audit rows after 2 years (Q26); the dormant admin branch of
+    `UserDataAccessAuditor` that would audit a learner key (the H5P permissions owner); the web privacy notice's
+    texts after the DPO's review (DPIA R32). A residual for the DPO: the grade-sync counts are live (no midnight cut),
+    not *k*-suppressed and include the test student (DPIA R1, R13; Q22). The step-5 review's three low findings and
+    its document gaps were closed in step 6 (the follow-ups workstream: `ltiErrorLog.ts`, the `db:roles` TLS rule,
+    `purgeFailureLine`, DPIA R3, R8 and R24, the `DATA-004` checklist, the README and Evaluator Guide rows, D-106's
+    file name), and the deployment checklist is section 9 of `docs/ops/runbook.md`
+- [ ] 6. D — Operations and security (`NFR-007`, `SEC-004`, `SEC-006`, `NFR-002`, `NFR-001`, `UD-040`, the
+      `MAPPE-004` image), designed in D-110: the Dockerfile and compose profile with a smoke test (or written only if
+      dockerd will not run here; then CI runs it) → the files origin → ClamAV → runbook, backup and restore scripts
+      with a round-trip test → the load harness with a reduced-scale smoke (tool chosen by amendment to D-114) →
+      `npm run a11y:report` for the conformance report → the PDF availability probe
+  - **Built 2026-11-05** by six workstreams (the image and app stack, the files origin, ClamAV, backups with the
+    runbook and the load harness, the conformance report, and the step-5 follow-ups with the library-build fix),
+    each verified by a skeptic with mutation checks, then integrated (2026-11-05). Each decision's amendment came
+    before its code: D-110 (the files origin; the image, the app stack and its smoke; ClamAV; backups and the runbook;
+    the integration), D-114 (the load harness), D-079 (the conformance report and its review), D-045 (pointer),
+    D-056 (the old data key stays 31 days). Runbooks: [docker.md](docs/ops/docker.md), [clamav.md](docs/ops/clamav.md),
+    [runbook.md](docs/ops/runbook.md) with the deployment checklist (§9)
+  - [x] Separate files origin for user files with signed URLs (`SEC-004`, D-045; URLs from S3's `HvlUrlGenerator`):
+        the player's files on `files.<host>` (or `FILES_BASE_URL`), served only there by `filesOriginRouter.ts` with
+        the sandbox policy and CORS for the app; the editor's files stay on the app origin under grants of their own
+        (`SPEC-DEVIATION: D-110`). The `DATA-011` tests count the files origin as first-party
+  - [x] ClamAV scanning (`SEC-006`): Lumi's scanner 10.0.4 wrapped to fail closed on both upload paths, its client
+        built from our checked settings only; required in production unless explicitly turned off; real-clamd tests in
+        CI against a clamav service (D-110)
+  - [x] Docker images, load test, runbook (`NFR-001`, `NFR-002`, `NFR-007`); conformance report (`UD-040`):
+        `deploy/` (Ubuntu 24.04 and Node 24 by digest, uid 10001, the app stack with its own clamd, the smoke test
+        here and in `.github/workflows/docker.yml`); `tools/ops` (backup and restore with a round-trip test);
+        `tools/load` (k6 2.3.0, `npm run load:smoke`; the 200-learner run is HVL's); `npm run a11y:report` writes
+        `docs/accessibility/WCAG-CONFORMANCE-REPORT.md` (56 criteria, every verdict *Not yet determined* until HVL
+        tests); `tsx` is a runtime dependency of `apps/server`
+  - [x] Chromium and fonts with æ, ø and å in the production image for the PDF (D-096): full Chromium 141 with
+        Playwright's seccomp profile and `CAP_SYS_CHROOT`, the sandbox seen in `/proc`; the server logs at start
+        whether the export works (`pdfAvailability.ts`)
+  - [x] SECURITY (found while building the bundle): `H5P.AudioRecorder` 1.0's build baked the build machine's whole
+        environment, tokens included, into JavaScript served to learners. `tools/h5p-libraries` now builds every
+        library with a minimal environment (`buildEnv` 3), the bundle refuses secret-named variables, and the leaky
+        builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Tokens that were in the old builds
+        should be rotated (owner)
+  - [x] Integration (2026-11-05): `main.ts` runs the PDF probe after listening and waits for it on stop; `tsx` moved
+        to `apps/server`'s dependencies; scripts `deploy:check`, `docker:smoke`, `pdf:check`; the app stack has its
+        own clamd, and the smoke proves an upload scanned (EICAR refused) and served from the files origin; CI runs
+        the real-clamd tests and `a11y:report -- --check`; `.env.example`'s production rules and key rotation; the
+        documents (session log, «2026-11-05 · S6 step 6 (integration)»)
+  - [x] Security review of step 6 (2026-11-05, after the integration): files origin, grants, SVG and other uploads
+        (CVE-2025-7062), the scanner, the image, the app stack, backups and the load harness attacked or read against
+        their decisions; no high or medium defect in the code. One low fix with a regression test that fails without
+        it: a NUL byte in a granted file path reached PostgreSQL and gave 500 with an error-level log line on demand;
+        `signedFileRoutes.ts` now answers 404 before storage for any name `assertSafeObjectName` refuses
+        (`[SEC-004]` in `filesOrigin.int.test.ts`). Its other findings: fixed in step 7 (the next item), or under
+        «Still open» below
+  - [x] The review's other findings, fixed in step 7 (the hardening workstream, D-110's amendment of 2026-11-05, each
+        with its test or document; verified again in the step-7 finish run, session log «2026-11-05 · S6 step 7»):
+        clamd's `AlertExceedsMax` and `AlertEncrypted` are required in [clamav.md](docs/ops/clamav.md) and runbook §9
+        and set in `deploy/compose.app.yml`'s and `ci.yml`'s clamd; the root `docker-compose.yml` publishes on
+        127.0.0.1 only, with runbook §8's warning; a name the storage refuses (a NUL byte) is 404 on the cookie route,
+        not 500 (`storableFileName.ts`, `[SEC-004]` in `contentFiles.int.test.ts`); `frame-ancestors 'none'` in the
+        user-file policy (`ContentFileHeaders.test.ts`, `signedFiles.int.test.ts`); `persist-credentials: false` in
+        `ci.yml` and `docker.yml`; runbook §6's encrypted backup volume; the clamscan SNI note in `clamav.md`.
+        `upload.file.scanUnavailable` stays 400 by that amendment (a 503 would change the shared error mapping). The
+        upstream reports for Lumi's scanner, clamscan and AudioRecorder are drafted (step 7, D-112; the two security
+        reports are held outside the repository)
+  - [x] `docs/TRACEABILITY.md` and the spec site regenerated; every check, every test set, the e2e set, the
+        accessibility files for the player, editor, insight and grade sync, and the Docker smoke on the final working
+        tree pass (session log, «2026-11-05 · S6 step 6»)
+  - [x] The commit, `Refs:` `NFR-001`, `NFR-002`, `NFR-007`, `SEC-004`, `SEC-006`, `UD-040`, `MAPPE-004`, `NFR-006`,
+        `DATA-004`, `DATA-003`, `H5P-003` (f361f16)
+  - [x] The conformance report's run summary regenerated from the gate's full accessibility run (step 11, part B;
+        7189e97)
+  - Still open: `docker.yml`'s first run on GitHub (Chromium from Playwright's CDN and its SHA-256, AppArmor, the
+    `/proc` check on the runner); HVL's runtime, DNS and clamd (Q5); the 200-learner load test and the restore drill
+    on HVL's hardware; the manual accessibility run and the 56 verdicts (`UD-031`); the SHA-256 list of the content
+    types kept in the repository (D-110, waits for reproducible builds); narrowing or retiring the
+    cookie-authenticated `/h5p/content/…` fallback route on the app origin (a D-110 amendment; passed to the students
+    through the [hand-off index](docs/handoff/README.md)); optional: refuse a request whose `Host` and
+    `X-Forwarded-Host` disagree about the files host; the further files clamd passes without unpacking them in full
+    even with both alerts on, which went to the owner outside the repository with a proposed check of our own in the
+    upload path (D-110's hardening amendment, D-112's rule for security reports; the owner confirms it arrived, since
+    no written copy was kept with the private drafts)
+- [x] 7. E — Carry-overs: the language overlay and `H5P-010`'s texts (drafts for ALU) → problem reporting (the
+      Nynorsk tester guide, GitHub issue forms) → upstream drafts → the **students' hand-off index**
+      (`docs/handoff/README.md`: what is done, what needs HVL, the live-contract seam `apps/server/live/` and the
+      Canvas acceptance checklist)
+  - **Built 2026-11-05** by five workstreams (the language overlay, problem reporting, the upstream drafts, the
+    hand-off index with the live-contract seam, and the hardening after step 6's security review), each reviewed by
+    a skeptic with mutation checks, then integrated (2026-11-05). Each decision's amendment came before its work:
+    D-111 (the overlay as built; its review), D-101 (problem reporting and its review; the hand-off index, the seam
+    and the checklist, and their review; the integration), D-112 (the drafts as written), D-110 (hardening after
+    step 6's review). The students' index: [docs/handoff/README.md](docs/handoff/README.md)
+  - [x] Library texts that are English in `nn` and `nb` (S5 probe P1: MultiChoice, QuestionSet, InteractiveBook and
+        BranchingScenario buttons and messages; patterns set their own texts, D-084): an HVL language overlay, so
+        activities made in the editor are Norwegian too. Decided in D-111: not through Lumi's
+        `alterLibraryLanguageFile` hook, which in 10.0.4 drops the editor libraries' `libraryStrings`, but through a
+        library-storage wrapper after D-046's, with the texts in `content/` for ALU. **Built:**
+        `LanguageOverlayLibraryStorage` over D-046's wrapper in the editor and the player; 91 texts in `nn` and 93 in
+        `nb` in [content/h5p-tekstar/](content/h5p-tekstar/README.md) (drafts, `status: draft`), with labels and
+        H5P.DragNBar's editor strings («Lim inn»); `content:check` checks them against the installed libraries (a
+        changed English text is reported, an unknown field or string refused, no `<`, `>` or straight `"`); the
+        start-up hands its texts to the engine (`main.ts`). Tests `[H5P-008]`: unit, integration, every real entry on
+        the pinned libraries (`overlayKeepsShippedTexts.test.ts`), a real `nn` player (QuestionSet's «Neste»,
+        «Resultat», «Poeng»; MultiChoice's Nynorsk button names) and `nb` editor, English unchanged; probe P1's
+        `ENGLISH_IN_NYNORSK` keeps only «Pause»
+  - [x] Panopto guidance (`H5P-010`), through the same overlay for `nn` and `nb` (D-111). **Built:** English through
+        `alterLibrarySemantics` after D-006's DragQuestion filter (`semantics/videoGuidance.ts`), `nn` and `nb`
+        through the overlay (`video-guidance.yaml`, a draft); `content:check` refuses guidance on a field that is not
+        a video field (`[H5P-010]` tests)
+  - [x] The Canvas side of the studio (D-098): the content bank and "new from a pattern" in the Deep Linking picker,
+        and the `LTI-007` duplicate in `/app/play`; passes to the students when S6 does not reach it (D-101).
+        **Not reached; passed on** with a design note, [docs/handoff/canvas-studio.md](docs/handoff/canvas-studio.md)
+  - [x] LTI Dynamic Registration (`LTI-009`, COULD): the design only; the build passes to the students (D-101).
+        **Design note:** [docs/handoff/dynamic-registration.md](docs/handoff/dynamic-registration.md)
+  - [x] Lumi's server half (D-081): ask Lumi's maintainers for a release with their unreleased file-security work, or
+        review and pin a Lumi commit built from source as D-022 pins the editor (its own decision: CLAUDE.md names
+        10.0.4; the full gate), then remove the adapters it makes unnecessary; report our fixes and the D-080 barriers
+        upstream to Lumi and H5P. Decided in D-112: Lumi stays at 10.0.4 in S6; the release request, the Lumi issues
+        and the H5P barrier reports are drafted in `docs/upstream/` for the owner to file; before 2027-01-31 HVL or
+        the students choose how the `image-size` exceptions end. **Drafted:** [docs/upstream/](docs/upstream/README.md)
+        holds the Lumi release request, two Lumi bugs (`deleteAllContentUserDataByUser`, `alterLibraryLanguageFile`),
+        a conditional Core 1.28 and new-Hub backport, eight small Lumi gaps, 15 H5P reports (14 accessibility
+        reports, one per library, including InteractiveVideo's untranslatable end-screen summary added at the
+        integration, and QuestionSet's retry, Q20), and drafts for clamscan and ltijs; the two security reports
+        (H5P.AudioRecorder's build environment; three Lumi findings) are held outside the public repository for the
+        owner to send privately (D-112's amendment). Nothing is filed; [lumi-path.md](docs/handoff/lumi-path.md) has
+        the three choices before 2027-01-31
+  - [x] Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in `docs/` and
+        GitHub issue templates in `.github/ISSUE_TEMPLATE/` (a fault; an accessibility barrier) asking for the steps,
+        what was expected and what happened, device, browser, assistive technology and zoom, the activity type or
+        page, a screenshot, and the severity (cannot use, or privacy or security; accessibility barrier; cosmetic),
+        with matching labels. Rule: no personal data in an issue (no student names, e-mails or Feide IDs; log lines
+        are safe by design, `DATA-009`). The guide describes how a problem is fixed: reproduced in the test set-up, a
+        test that fails first, the cause fixed, the area's tests and the gate, a branch and pull request that HVL
+        reviews and merges. A problem seen only in HVL's Canvas or Feide needs the error and the server's log lines;
+        one seen only on a device or with a screen reader needs a precise description and an HVL re-test; H5P's own
+        barriers are repaired at run time or registered and reported (D-080). Manual results stay dated in
+        `docs/accessibility/results/`. **Built:** [docs/testing/rapportere-problem.md](docs/testing/rapportere-problem.md)
+        (Nynorsk, for testers), `.github/ISSUE_TEMPLATE/feil.yml` and `uu-barriere.yml` with `config.yml` (blank
+        issues off), `.github/labels.yml`, [docs/testing/labels-and-triage.md](docs/testing/labels-and-triage.md)
+        (maintainers), [SECURITY.md](SECURITY.md); a required no-personal-data confirmation in each form, and the
+        reason for using assistive technology never asked for (health data); checks in `tools/issue-forms` (13 tests)
+  - [x] The students' hand-off index `docs/handoff/README.md` (D-101). **Built:** the index with a Nynorsk summary,
+        eight design notes, the Canvas acceptance checklist and the live-contract seam `apps/server/live/`
+        (`npm run test:live`; skipped unless asked, 36 passing against the mocks, and run so in CI)
+  - [x] Integration (2026-11-05): `main.ts` hands the start-up's H5P texts to the engine
+        (`startupLanguageOverlay.test.ts`); `test:live` and the seam's type check; CI runs the seam against the
+        mocks; InteractiveVideo's scored end-screen summary in the English-text register, its upstream draft and the
+        conformance report; the hand-off index, root README, Evaluator Guide (commands, limitations 2, 5, 20, 22),
+        GLOSSARY, spec 01 (module map, `H5P-008` and `H5P-010` built), the server README and the ALU review packet
+        (§9a) updated (session log, «2026-11-05 · S6 step 7 (integration)»)
+  - [x] `docs/TRACEABILITY.md` and the spec site regenerated (new `[H5P-008]`, `[H5P-010]` and `tools/issue-forms`
+        tests, new source files, the DECISIONS amendments); every check, every test set (the server's in full, the
+        overlay's real `nn` player and `nb` editor tests included), the e2e set, the seam (skipped, and against the
+        mocks), the accessibility files for the player, editor, insight, grade sync and the register, the real-clamd
+        tests against a clamd with both alerts on, and the Docker smoke on the final working tree pass (session log,
+        «2026-11-05 · S6 step 7»)
+  - [x] The commit, `Refs:` `H5P-008`, `H5P-010`, `SEC-004`, `SEC-006`, `NFR-004`, `NFR-003`, `DATA-010`,
+        `DATA-009`, `UD-031`, `UD-040`, `PROD-002`, `LTI-012`, `LTI-008` (5b438a8)
+  - Passes to the students through the [hand-off index](docs/handoff/README.md) §3, each item with its design note:
+    the seam's first run against ALU's test Canvas and real Feide with the Canvas acceptance checklist
+    ([canvas-acceptance.md](docs/handoff/canvas-acceptance.md)); the Canvas side of the studio; `LTI-009`;
+    `INS-004`; insight's freshness (Q24); the research export (Q25, after the DPO); the simplification check if S6
+    does not reach it; the Lumi path before 2027-01-31; triage and fixes of the pilot's issues; the overlay's
+    remaining English in `nn` and `nb` (editor labels, `H5PEditor.*` strings, less common sub-content) and keeping
+    its entries current; the upstream links once the owner has filed the drafts; and, among the smaller items,
+    narrowing or retiring the cookie-authenticated `/h5p/content/…` route (D-110)
+  - Still open, not blocking the step: the owner's tasks before the pilot (create the labels with the `gh` loop in
+    `labels-and-triage.md`; HVL's security contact in `SECURITY.md`; private vulnerability reporting; the pilot's
+    contact person for testers; the two GitHub claims marked *(verify)* in `labels-and-triage.md`; filing the
+    drafts in `docs/upstream/` and sending the two security reports privately); the language advisers' and ALU's
+    review of `content/h5p-tekstar/` (Q2, Q17; ALU review packet §9a); the CI step that runs the seam against the
+    mocks has not yet run on GitHub; a library with neither `nn.json` nor `nb.json` gets no `nn` in the editor's
+    language list even with overlay entries (none today); H5P.Question shows «Send inn» only when the content's data
+    sets `isScoringEnabled` or `isReportingEnabled`, which Core 1.28 never sets from `reportingIsEnabled`, so learners
+    see «Sjekk» (for D-115's owner, information only)
+- [x] 8. Integration: the accessibility suite for every new view; e2e journeys (J1 split if the Canvas studio is not
+      reached, xAPI → AGS, insight, purge and data-subject requests); screenshots in `nn` at 1280 and 390 px sent to
+      the owner as the views appear (CLAUDE.md §4)
+  - [x] **The accessibility suite covers every S6 view** (`UD-030`, `UD-031`, `UD-040`, `INS-008`). «Poeng til
+        Canvas» and «Innsikt», on the portal and on `/app/play`, are catalogue views (`a11y/support/dataTabViews.ts`),
+        so every suite that walks the views covers them: reflow at 320 × 640 and 640 × 320, reduced motion, the focus
+        walk, target size, text spacing and 200 % zoom, page language and first-party requests. Innsikt's scans assert
+        the «< 5» cells with their hidden reason and both period notes, and its printed shortlist is scanned. J3 runs
+        by keyboard alone (`keyboardJourneys`). The Deep Linking picker's no-score note is scanned in both colour modes
+        and tied to its input by `aria-describedby`. A MultiChoice and a QuestionSet made in Nynorsk with the language
+        overlay are scanned in the player and the editor. One violation was found and fixed: with the 1.4.12
+        text-spacing styles, the chart's row label «Ingen av alternativa» was cut off (`truncate` in `BarChart.tsx`,
+        `UD-002`); labels now wrap. Full suite before: 18 files, 509 tests. After: 18 files, 558 tests, 0 failed,
+        173 axe scans, and the only blocking findings are the 26 upstream ones recorded under D-080. That run is
+        recorded in `docs/accessibility/automated-run.json` and the report regenerated from it (a run on 5b438a8 with
+        uncommitted changes, as the report says; the gate's run replaces it in step 11). Screenshots of Innsikt in
+        `nn` at 1280 and 390 px went to the owner; none are committed
+  - [x] **The journeys of spec 00 §3, end to end** in full Chromium with third-party cookies blocked (D-065). Six new
+        files: `journeyPlaceInCanvas` (J1's Canvas half: `assignment_selection` with `custom.feide_login`, a graded
+        link labelled formative, a student's 100/100 in the gradebook, the teacher's four tabs), `journeyPhoneResume`
+        (J2 on a 320 px phone: «Feil:» with the teacher's explanation, then resuming the next evening in a new
+        browser), `journeySeminarInsight` (J3 in the portal: a class of 13, «< 5», the shortlist on the big screen),
+        `journeyPortfolio` (J4: tagging, then the Markdown export with k-suppressed counts), `journeyGovernance` (J5
+        step 1: ALU's content edit through `content:check`) and `learnerDataRights` (the data-subject export and
+        erase, and the purge, through their CLIs on a fresh database). J1's «Create new» from a pattern in Canvas
+        passes to the students (D-101's amendment of 2026-11-05, `SPEC-DEVIATION` in the test); J5 step 2 is covered
+        by the HTTP tests and the runbook's new procedure «A new content-type version». `npm run test:e2e`: 22 files,
+        33 tests, passed three times (before: 16 files, 27 tests)
+  - Still open, not blocking the step: J1's Interactive Video skeleton in the editor, a pasted Panopto link and the
+    V-VID-CAPTIONS error in Sjekk og publiser are in no e2e test (browser integration and unit tests only);
+    `NFR-001`'s "under 3 s" is not timed in e2e and there is no Lighthouse CI (the load smoke only); J3's printout is
+    covered by a component test only; QuestionSet's tab panels point `aria-labelledby` at progress dots it does not
+    render (axe "needs review", upstream; for the manual protocol or the register, D-080, D-112); the web app has no
+    favicon (a 404 in the browser console)
+- [x] 9. Docs: READMEs, GLOSSARY, the Evaluator Guide (S6 row, limitations), PROGRESS
+  - [x] The Evaluator Guide's S6 gate row, in S5's manner (D-113): every S1–S5 command and per-ID run; S6's filters
+        and each S6 ID alone; `NFR-003` and `UD-031` in the accessibility suite; the live seam, real clamd and the load
+        smoke; `--done-through=S6`; the Docker smoke and docker.yml; the recorded accessibility run and the DPIA check;
+        the document checks as *verified by document review, not by HVL until HVL acts*; the running server. Its §3
+        `test:e2e` and `test:a11y` rows name every e2e file and the S6 views. Limitations 7, 9 and 19 are corrected,
+        and 23 (what cannot be verified here) and 24 (gaps in insight and grade passback) are new. Also updated: the
+        root README's status; the server, web and api-contract READMEs' module maps (every S6 source file named);
+        12 GLOSSARY rows for S6 UI terms; and, in the finish run, the web README's stale «the Canvas side of the
+        studio is S6» line, its S6 status, the e2e config's header and the conformance report's view descriptions
+        (the two S6 tabs, J3 by keyboard)
+  - Still open: the server README's purpose and status sections stop at S4 (its module map is current); D-113 names
+    Q2–Q8, Q13, Q15, Q17 and Q18–Q21 while the S6 row also lists Q22–Q30 and per-ID runs for `SEC-004` and
+    `H5P-008` (an amendment if the owner wants D-113 to match exactly)
+- [x] 10. Review and verification: an independent review with a skeptic per finding, two verification passes
+  - [x] Five independent reviewers, one lens each (correctness, security, privacy, accessibility and UI, docs
+        against code), read `git diff 47e235e`; a skeptic tried to refute each finding; one fixer per lens wrote a
+        regression test that fails without its fix; then an adversarial re-check per lens re-ran each test with the
+        fix reverted, restored the file byte for byte, and fixed what was still wrong; this finish run's checks are
+        the last pass. **20 findings: 18 confirmed, 2 refuted, 18 fixed.** Per lens (found / confirmed / refuted /
+        fixed): correctness 1/1/0/1, security 1/1/0/1, privacy 2/1/1/1, accessibility and UI 7/7/0/7, docs 9/8/1/8.
+        - Correctness, `GRADES-RETRY-STALE-NOW`: a retry's delay and the 24-hour limit counted from the worker tick's
+          start, not from Canvas's answer; now from the answer, as D-104 already says (`gradeSyncRun.ts`)
+        - Security, `SEC-S6-01`: the insight GETs that write `insight.view` and `insight.export` to the audit could
+          be forged by a cross-site navigation; the re-check found a second path (an author's absolute image URL to
+          our own origin, fetched as a same-origin subresource) and the rule became a fetch-metadata allow-list
+          (D-106's amendment, `insightRoutes.ts`)
+        - Privacy, `PRIV-2`: DPIA O4 said staff are never captured, but an employee enrolled as a Canvas student is a
+          learner; new residual R40 for the DPO, and the re-check corrected two wording errors in it. `PRIV-1`
+          refuted (a FreeTextQuestion answer never reaches `response`)
+        - Accessibility and UI, `A11Y-S6-1`…`7`: focus after «Opne Sjekk og publiser»; questions without top-level
+          text named by their place, and SingleChoiceSet's and ImageHotspotQuestion's text read where the library
+          keeps it; `lang` on the activity's own texts; a repeated refusal announced again; «portalen» in running
+          text; the English singular of the shortlist count; each retry button named by its placement
+        - Docs, `DOC-S6-01`…`06`, `08`, `09`: D-101's amendment for J1's split and J5's coverage; spec 02 §8 and the
+          picker's `SPEC-DEVIATION`; R1–R40 everywhere, with a check in `privacy:dpia-check`; the Evaluator Guide's
+          e2e and accessibility rows; the conformance report links e2e files under `npm run test:e2e`; J3's «62 %»
+          claim; PROGRESS's commit ticks; limitation 19. `DOC-S6-07` refuted
+  - Still open, not blocking the step: a browser that sends no fetch metadata (Safari before 16.4) is still served
+    by the insight GETs (only a CSRF token on them would close it, which changes D-057); authors can put an absolute
+    URL to our own origin in an H5P media path, so refusing such paths at save time deserves its own look (other
+    GETs with side effects); R40's option «only ungraded activities in staff courses» is partial, and `/personvern`
+    waits for the DPO (R32, R40); sentences the Innsikt tab builds around an authored text (chart summaries,
+    captions, shortlist lines, announcements) carry no `lang` on the quoted part; `axeInsight.a11y` and
+    `journeySeminarInsight.e2e` build their one-question texts from `insight.shortlist.added` and `count`, not the
+    new `addedOne` and `countOne` (the same in `nn` today); H5P.SingleChoiceSet's `answered` statements carry no
+    `subContentId`, so its items may get no data (for the insight owner); the grade regression test pins
+    `nextAttemptAt`, not `terminalAt`; the runbook's «A new content-type version» has not run on a real staging host;
+    J3 in spec 00 says «62 %» while the tab writes the count (a D-106 amendment if HVL wants the share)
+  - [ ] Light simplification check before the pilot (owner decisions 2026-10-24 and 2026-10-25), as in S4+ (two
+        independent skeptics per proposal, no behaviour change, every test kept, the full gate after), with one more
+        lens: does the code read as if a careful human wrote it? Signs of machine-written code to look for: comments
+        that restate the code, checks repeated where one layer already guarantees them, generic or overlong names,
+        boilerplate copied across files, abstractions with one user, and idioms that differ from file to file because
+        different agents wrote them. The reviewers must tell "unfamiliar but correct" from "needlessly odd": code that
+        is unusual because it is right (a security check, an H5P workaround, a timing guard) stays, and gets a short
+        WHY comment a human maintainer can follow, rather than being made ordinary and wrong. An HVL developer reads a
+        sample afterwards and has the last word. If time allows; otherwise carried to the pilot list. **Not run in
+        steps 8–10**, so carried to the pilot list: the hand-off index §3 already names it
+- [x] 11. Gate (the full form, in parts of under 2 hours; D-113), its output in the session log, push, the restart
+      task off. A pull request only when the owner asks
+  - [x] Gate: as in the Evaluator Guide §5, S6, in ten parts (A–J), 144 steps; three failed on their first run and
+        were fixed (f5fa12b, 92ca2c5, 5a5b8c3), then part A ran again in full on the final commit 5a5b8c3 (session
+        log, «2026-11-06 · S6 gate»)
+  - [x] The hourly restart task switched off (2026-11-06)
+  - [x] GitHub CI on the S6 commits, `docker.yml` included: in pull request #18, on `8d4eaf0`, the Session gate passed
+        (run 42170423046, 2026-11-06 06:45:23 UTC) and `docker.yml` passed (run 42170423045)
+  - CI's traceability step raised to S6 (3eeea8d), and the CLI test helper fixed for CI's missing `apps/server/.env`
+    (8d4eaf0, after CI run 42166052880 failed on it); session log «2026-11-06 · PR #18 and the assurance pack's method»
 
 ---
 
@@ -459,7 +955,7 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
 | # | Question | Owner | Blocks |
 |---|---|---|---|
 | Q1 | ~~Confirm the licence GPL-3.0-or-later (D-015)~~ Resolved 2026-10-16: `LICENSE` added | — | — |
-| Q2 | Confirm or replace the derived reference inputs 1–6, and supply the originals (logo files, ALU model document, mappe guidance) (`docs/reference/README.md`) | HVL / ALU / TeCopp | S2–S5 as listed |
+| Q2 | Confirm or replace the derived reference inputs 1–6, and supply the originals (logo files, ALU model document, mappe guidance) (`docs/reference/README.md`). From S6 also HVL's language advisers' review of the Nynorsk and Bokmål texts for the H5P content types and the Panopto guidance in `content/h5p-tekstar/` (D-111; ALU review packet §9a) | HVL / ALU / TeCopp | S2–S5 as listed |
 | Q7 | Allow `hub-api.h5p.org` (and ideally `www.hvl.no`, `auth.dataporten.no`, `docs.feide.no`, `*.instructure.com`) in the environment's network settings, or run `tools/seed/fetch-seed-packages.sh` elsewhere | Repository owner | S2 |
 | Q8 | Decide whether "(formativ)" may appear in Canvas assignment names (`LTI-013`) | HVL / ALU | S6 |
 | Q9 | `SEC-003` refuses a package whose library has a different patch version. Most `.h5p` files exported elsewhere differ in patch version. May an *older* patch be accepted for a content-only import? S2 follows the spec strictly | HVL / ALU | Pilot |
@@ -470,10 +966,24 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
 | Q15 | Learner LTI launches are not written to the authentication audit (D-064) | HVL DPO | S6 |
 | Q3 | Feide Customer Portal registration and redirect URIs | HVL IT | S3 |
 | Q4 | Paste `docs/reference/canvas-lti13-developer-key.json` into HVL's test Canvas; report client ID, deployment ID, which instance TeCopp uses (test/beta/production), and whether `feide_login` arrives under `privacy_level` anonymous and equals the Feide ID; only then set `"feideLinking": true` for that platform in `LTI_PLATFORMS` (AUTH-005, D-063) | TeCopp | S3 |
-| Q16 | The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).** | Repository owner | Confidence in every gate; the pilot |
-| Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`) | HVL IT | S6 |
-| Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`) | HVL DPO | S6, pilot |
-| Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns. Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
+| Q16 | ~~The repository has no `main` branch, and CI (`.github/workflows/ci.yml`) runs only on pushes to `main` and on pull requests, so GitHub has never run the gate: every session's gate ran locally only. Create `main` from `ccr-07f63266-6cere5` or open a pull request, and decide what to do with the open Dependabot update branches (pins stay exact). **Required before the pilot (owner, 2026-10-24).**~~ Resolved 2026-10-30 (D-101): GitHub CI runs on `main` and on pull requests. `main` is protected by a ruleset that requires a pull request and CI's «Session gate» check; that check passed on pull request #8 (run 41066236672, on `72e5516`), which was then merged (`47e235e`); Dependabot opens one grouped monthly pull request per ecosystem (S5 start). The push run on the merge (run 41075981429) was red: its end-to-end step failed in `appPlayEditor.e2e`, which pressed «Lagre» before the editor could save, a real slow-device fault. It is fixed in S6 step 0; GitHub's confirmation comes with that step's push | — | — |
+| Q5 | Hosting: HVL on-premises or Sikt, both in the EEA (`DATA-004`). The container runtime must allow Playwright's seccomp profile and `CAP_SYS_CHROOT` for the PDF export's sandbox (OpenShift's `restricted-v2` allows neither), a DNS name and certificate for the files host (`files.<host>`, or a separate registrable domain), and a clamd with daily signatures (D-110's step-6 amendments) | HVL IT | S6 |
+| Q6 | Data protection officer confirms the legal basis and reviews DPIA input (`DATA-005`). **Input complete 2026-11-05:** `docs/privacy/DPIA-INPUT.md` (purposes, operations, data flows with a diagram, the Canvas key's `privacy_level` and custom fields, recipients, retention, rights, security measures, residuals R1–R40, and the DPO's questions in its §13) | HVL DPO | S6, pilot |
+| Q17 | Review the studio's drafts: phase labels and texts, the guide and its references, the nine patterns, the mappe template, criteria and limits, and the content bank's consent text (with HVL's lawyers); pilot teachers try the patterns; from S6 also the H5P texts and the video guidance in `content/h5p-tekstar/` (§9a, D-111). Packet: `docs/reference/alu-review-s5.md` (D-100). **Required before the pilot.** | ALU, Pedagogisk akademi, HVL legal | The pilot |
+| Q18 | Should InteractiveBook and InteractiveVideo send a score to Canvas? H5P sends none unless asked. Default until answered (D-115): InteractiveBook does, through H5P's own «Send inn rapport» on the summary page (`reportingIsEnabled`, set for learners only, so an author's preview never offers it; the library then says «Svara dine er sende inn til vurdering», which the language overlay can reword, D-111); an InteractiveVideo only when its author adds a submit screen, so the `fa-video` pattern sends none | ALU / owner | The pilot |
+| Q19 | Every ending of the `uv-case` pattern scores 10 of 10, as the pattern intends, so Canvas gets 100 for any completed case. Keep that as a completion mark (the default, D-115), score the choices (a pattern change ALU reviews), or give `uv-case` no Canvas score? | ALU | The pilot |
+| Q20 | In `uv-module`, a chapter check's «Prøv igjen» fails (QuestionSet 1.21, upstream, when a page holds several sets). Default (D-115): the pattern hides that button and keeps each question's own «Prøv igjen». Is retrying a whole chapter check needed? Then a run-time repair of QuestionSet needs its own decision. **Default applied (2026-10-30, S6 step 3):** the three chapter checks in `uv-module`'s skeleton store `endGame.showRetryButton: false`, and each question keeps its own «Prøv igjen» until its check is finished; pending ALU's review of the patterns (Q17). **Found 2026-11-04:** the book's own «Prøv igjen» fails the same way (its reset throws in the first chapter check), so a finished chapter check cannot be retried at all; D-115 then turns the book's retry off too, once the regression test pins it, which `PED-H07` and `PROD-009` must allow (D-115's 2026-11-04 amendment). **Pinned 2026-11-04:** `uvModuleBookRetry.browser.int.test.ts` (an upstream pin) finishes the first chapter check and presses the book's «Prøv igjen» on its summary page: one `TypeError` (reading `classList`, from QuestionSet's reset), the book stays on its summary page, and the check keeps its results (D-115's amendment of the same day). **Open for the owner:** turn the book's retry off in the pattern (`behaviour.enableRetry: false`, a `PROD-009` `SPEC-DEVIATION`), or keep it on with the fault for the pilot; until then it stays on | ALU, owner | The pilot |
+| Q21 | Confirm that container builds here may use the bridge network's direct egress, outside the agent proxy, for apt, npm and Prisma's engines only, and never for GitHub repository content (D-110, probe P3); S6 proceeds on that rule | Repository owner | — |
+| Q22 | For the DPIA (`DATA-005`, D-106 residual): the grade-sync status counts (sent, pending, failed, orphaned; since D-104's amendment of 2026-11-04 one per learner and placement) are not *k*-suppressed (spec 05 §3). In `/app/play` a Canvas author sees only the launch's course; on the activity page the activity's owner and co-authors see the counts of every course it is placed in, also a colleague's course that placed it from the bank or copied it, where they are not teachers and Canvas's gradebook would not show them anything. A count there can be about one learner. Keep (the counts carry no learner, score or name), suppress below *k* for courses the viewer does not teach, or show a portal owner only the courses they launched as a teacher (`docs/privacy/DPIA-INPUT.md`) | HVL DPO, owner | The pilot |
+| Q23 | A statement names no Canvas link (`DATA-012`), so since D-104's amendment of 2026-11-04 a learner's score in a graded link counts their plays of the same activity in the same course through any other link too, an ungraded practice link included, whose newer results also reopen the graded job. Keep it, or store the resource link with each statement (a `DATA-012` change) so that each link counts its own plays? | Owner | The pilot |
+| Q24 | Insight's freshness (D-106's amendment of 2026-11-04, the step-4 privacy review): every period now ends at the latest midnight in Oslo, so the **Innsikt** tab shows the data up to and including yesterday («Tal til og med i går») and two views on the same day are always the same; a teacher who wants to see what students did before a seminar the same morning sees it the next day. Views on two consecutive days still differ by one day's learners. Keep the daily view (the default), or show a new view only once *k* or more new learners have played since the last one, which closes the day-by-day difference too but can leave a small course without new numbers for days? | Owner, ALU | The pilot |
+| Q25 | Research export (the owner's idea of 2026-10-26, S6 step 5): researchers at ALU and Pedagogisk akademi would get *k*-suppressed packages (tiers A and B), or re-keyed event rows for one approved question (tier C), built and tested in TypeScript and analysed in Python or R (`docs/privacy/research-export.md`, design only). Research is a purpose of its own: the DPO decides the legal basis and whether tiers A and B are anonymous, and each export order needs the DPO's approval. Until then nothing is built, and giving a researcher the `hvli_analytics` role counts as research use too. Then the owner decides whether to build it (a decision and a requirement first) | HVL DPO, owner, ALU / Pedagogisk akademi | Any research use of learning data |
+| Q26 | Audit records are kept 2 years (`DATA-007`), but nothing deletes them yet, and the app's database role may not (D-109's amendment of 2026-11-04). Decide how: a deletion job with its own role and grant (an amendment to D-109), or an operations step in a runbook (DPIA input R27) | Owner, HVL IT | Two years after the pilot starts |
+| Q27 | Staff who leave HVL keep their account, display name, activities and co-authorships; nothing deletes a staff account, and staff members' own data-subject requests are handled by hand (D-108). Decide a routine, for example from HVL's leaver list, and who handles the activities they own (DPIA input R22, R28) | HVL DPO, HVL IT | The pilot |
+| Q28 | A learner may object to the processing (GDPR Art. 21, since the basis is Art. 6(1)(e)), but there is no way to stop capturing one person's statements while they use activities. Accept a manual routine (an erasure after the objection, repeated as needed), or ask for an opt-out feature (its own decision; it would store who objected) (DPIA input R34) | HVL DPO, owner | The pilot |
+| Q29 | Who may log in to the portal? The recommended Feide registration leaves «Restrict login to selected organizations» off (`docs/reference/feide-values.md`), so anyone with Feide, also from schools (pupils, possibly children), can log in as a learner and play activities shared with «anyone with Feide» (spec 02's role table, D-059), and their play is stored and counted. Restrict Feide's «Restrict login to selected organizations» to HVL (and named partners), or keep it open with the DPO's basis for those users and a line in `/personvern` (DPIA input R37) | Owner, HVL IT, HVL DPO | The pilot |
+| Q30 | Students as insight readers: insight and the grade-sync counts go to anyone with the author role in a context, so a Canvas TA, who at HVL can be a student assistant, sees a course's *k*-suppressed aggregates, and a student author (D-059) sees them for every course their activity is placed in. Accept with HVL's confidentiality terms for student assistants, or show insight only to staff by Feide affiliation and to Canvas instructors but not TAs (an `INS-007` change; DPIA input R36) | HVL DPO, owner | The pilot |
+| Q31 | Name a system owner (*systemeigar*) and a maintainer (*forvaltar*) at HVL for HVL Interaktiv. Neither is named anywhere, and the IT assurance pack asks for them (D-116; `docs/assurance/README.md`, «Who is accountable»; ROS-19 in `docs/assurance/ros-analyse.md`): the system owner, and who owns the test install and its tester list, before stage 1; the maintainer, who rebuilds and redeploys the image with fixes and runs the key rotations, the yearly purge and the backups (`docs/ops/runbook.md` §2, §4–§7), before stage 2 at the latest. Until then the repository owner makes the product decisions; the bachelor students' project (D-101) does not replace either role | Owner, HVL IT / ALU | Stage 1 of the IT assurance pack (`docs/assurance/test-environment.md`) |
 
 ## Risk register
 
@@ -487,7 +997,7 @@ Steps (plan: probes first, then shared contracts, then parallel workstreams):
 | R-05 | A session runs out of usage quota mid-milestone | Medium | Low | One milestone per session; commit early; update this file before stopping |
 | R-06 | Upstream H5P accessibility barriers | High | Medium | Theme fixes where possible; report upstream; document in `UD-040` |
 | R-08 | `image-size` (via h5p-server) has two unfixed DoS advisories; accepted until 2027-01-31 (D-030) | Low | Medium | Only reachable through authenticated uploads; `SEC-002` sniffing in S2; `check:audit` fails at expiry |
-| R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081 |
+| R-09 | Lumi's npm releases lag its repository: none since 10.0.4 (2025-03-08), while `master` carries file-security work we would want (D-081) | High | Medium | Our own file security (D-003) and adapters in our code; S6 asks for a release or pins a reviewed commit (D-081); the revisit triggers in D-081. The release request is drafted for the owner to file (`docs/upstream/lumi-release-request.md`, D-112); the choice before 2027-01-31 is in `docs/handoff/lumi-path.md` |
 
 ## Session log
 
@@ -810,3 +1320,484 @@ Append one entry per session: date, session, what was done, gate output, and any
   ```
 
   Open at the end of S5: the items listed in section S5 (Q17 first). The hourly restart task is switched off.
+- **2026-10-30 · S6 start** — The owner approved the S6 plan with five decisions (section S6): learning data first,
+  insight as tabs only (no `/innsikt` page), the hourly restart task on until S6's gate passes, the full gate run in
+  parts of under 2 hours, and what S6 does not reach passing to HVL's bachelor students through a hand-off index. Mapping S6 (six agents) found `main` red after PR #8's merge (run 41075981429, the editor
+  save race), no xAPI bridge yet, ltijs's `submitScore` tied to a live ltik, Lumi's `alterLibraryLanguageFile`
+  dropping the editor's texts, and a spec-load row narrower than the checklist. Recorded D-101…D-114; fixed `main`
+  («Lagre» waits until H5P's editor can save); raised CI to `--done-through=S5`; added the licence check's
+  production-set guard (S5 open item 8); amended CLAUDE.md §2 and §5, specs 01 (`H5P-008`…`H5P-010`), 02 (§1, §5–§7),
+  03 (`UD-003`) and 05 (code location, §1, `INS-006`, `INS-007`, `DATA-002`, `DATA-003`, `DATA-012`, §4), the S6
+  load rows of specs 01–04 and the Evaluator Guide (§4.1, §5); closed Q16. The hourly restart task is on until S6's
+  gate passes.
+- **2026-11-04 · S6 step 3** — Resumed after the paused work in progress (4bf4634): six workstreams verified and
+  finished the grade bridge (ingest, bridge, grades, status UI, Canvas extras, integration), each reviewed by a skeptic
+  with mutation checks, then a security and privacy review (one fix; four findings for decisions, listed under step 3).
+  `follow-redirects` 1.16.1 → 1.16.2 in the lock file for the new advisory GHSA-mrwp-f3q8-3g9p. Not yet committed;
+  step 3 stays open for the `uv-module` book-retry test (Q20) and the review's decisions. Check output (every step
+  exit 0; tests with `CI=true`, so nothing skips):
+
+  ```
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 482 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check                              ✓ 22 models, 181 fields
+  $ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set
+  $ npm run build · tokens:check · theme check · docs:api        exit 0 · ✓ 3 files · ✓ feedback prefixes · html generated
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements, traceability up to date · ✓ up to date
+  $ npm run spec:trace -- --check --done-through=S5              ✓ 126 requirements, traceability up to date.
+  $ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                                 Test Files 151 passed (151) · Tests 1305 passed (1305)
+  $ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 164 passed (164) · Tests 19727 passed (19727)
+    (apps/server)
+  $ npx vitest run <the other 15 server test folders>            Test Files 263 passed (263) · Tests 5911 passed (5911)
+  $ npm run test:e2e                                             Test Files 14 passed (14) · Tests 23 passed (23)
+  $ npx vitest run … a11y/axeGradeSync.a11y.test.ts              Test Files 1 passed (1) · Tests 5 passed (5)
+  ```
+- **2026-11-04 · S6 step 4** — Five workstreams (step 3's hardening, the insight core, the insight API, the web
+  **Innsikt** tabs, the mappe's results), each verified by a skeptic with mutation checks, then integrated:
+  `createApp` passes the insight services to `/api` (the test beds too); the grade worker and the placement recorder
+  get D-104's line item rules (`CANVAS_ORIGINS`, https in production); the `GradeSyncJob` schema comments, the
+  grade-sync contract header and spec 02 `LTI-012` follow D-104's amendments; `fast-check` 4.10.2 is pinned (D-114;
+  two date generators now say `noInvalidDate`); D-095's and D-106's amendments and the `SPEC-DEVIATION` marks for a
+  shown 0 and `INS-003` on older versions; DPIA input R6–R9; Q23; the web says when answer distributions are for the
+  current version only. New end-to-end test `e2e/insightInCanvas.e2e.test.ts`; `appPlayEditor.e2e.test.ts` now
+  expects **Innsikt** among an author's Canvas tabs. Screenshots in `nn` at 1280 and 390 px with nine real learners
+  (portal, `/app/play`, and a course below *k*) sent to the owner. A privacy and security review of step 4 and step
+  3's hardening then fixed one leak (a listed wrong gap answer, hidden as a complement, pinned the other hidden
+  counts; listed answers are now always shown, with a new exhaustive `[INS-006]` test) and left three design
+  findings for decisions (section S6, step 4). The finish run regenerated `docs/TRACEABILITY.md` and the spec site and
+  fixed what the full server run found: the grade worker's claim took every due job under a nested-loop plan (now a
+  materialized CTE; section S6, step 3), and `webPages` and `webChrome` still listed the Canvas tabs without
+  **Innsikt**. Not committed. Check output (every step exit 0 after the fixes; tests with `CI=true`, so nothing
+  skips):
+
+  ```
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 482 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · tokens:check               ✓ 22 models, 181 fields · ✓ 3 files up to date
+  $ npm run build                                                exit 0
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements, traceability up to date · ✓ up to date
+  $ npm run spec:trace -- --check --done-through=S5              ✓ 126 requirements, traceability up to date.
+  $ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                                 Test Files 165 passed (165) · Tests 1380 passed (1380)
+  $ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 168 passed, 1 failed (169) · Tests 19766 passed, 1 failed
+    (apps/server)                                                  (gradeSyncFlood: 3 jobs claimed with a limit of 1; fixed)
+  $ npx vitest run <the other 16 server test folders>            Test Files 285 passed, 2 failed (287) · Tests 6088 passed, 2 failed
+                                                                   (webPages, webChrome: Canvas tabs without «Innsikt»; fixed)
+  $ npx vitest run test/grades test/web (after the fixes)        Test Files 29 passed (29) · Tests 241 passed (241)
+  $ npm run test:e2e                                             Test Files 15 passed (15) · Tests 24 passed (24)
+  $ npx vitest run … a11y/axeInsight.a11y.test.ts axeGradeSync   Test Files 2 passed (2) · Tests 11 passed (11)
+  ```
+- **2026-11-05 · S6 step 5 (integration)** — Five workstreams (the step-4 privacy review's fixes, the yearly purge,
+  the data-subject CLI, the roles with the production checks and the request log, the privacy documents), each
+  verified by one or two skeptics with mutation checks, then integrated. Wiring: main.ts passes `CANVAS_ORIGINS` to
+  the NRPS roster check (so does `gradeBridgeInputs`) and logs `deployment locations` (hosts and region only);
+  `PURGE_RUN_DATE` in `env.ts` (a bad day stops the start, `purgeEnv.test.ts`) and `.env.example`, which also states
+  the production TLS and EEA rules; the S3 client ignores the AWS SDK's own endpoint settings (D-109's amendment,
+  `s3Client.test.ts`, which fails without it); `AccountResolver` makes an account staff only while its identity still
+  exists, so a login that races the purge starts over (D-107's amendment, `accountPurgeRace.int.test.ts`); the
+  `privacy:purge` and `db:roles` scripts, with the runbooks using them; the CSV's period end «Til (ikkje med)»; the
+  contract's `periodEnd` TSDoc; D-108's citation of student authors (D-059, not D-089); `privacy:dpia-check`, the
+  `[DATA-005]` document check of D-113. Proven together: the insight e2e with a seventh learner's play of today and
+  Canvas's test student left out; the test student's score sent by the worker to the mock Canvas; the operations CLIs
+  through their npm scripts on a database they deploy themselves (`operationsClis.int.test.ts`); production refusing a
+  clear-text database, Redis or S3 URL and the SDK's endpoint variable at start-up, by name only. Docs: the server
+  and web READMEs, `docs/ops/README.md`, the GLOSSARY, the Evaluator Guide (commands, §4.4, how each S6 privacy
+  requirement is verified), DPIA R11, R19 and R23. Screenshots of the **Innsikt** tab in `nn` at 1280 and 390 px
+  retaken and sent to the owner. Not regenerated, by the run's instruction: `docs/TRACEABILITY.md` and the spec site
+  (so `spec:trace --check` and `specSite.test.mjs` report them out of date). Not committed. Check output:
+
+  ```
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run privacy:inventory-check · privacy:dpia-check         22 models, 182 fields · 13 sections, key and residuals agree
+  $ CI=true npx vitest run test/config test/infra test/auth test/xapi test/privacy test/insight test/lti
+      test/server test/db test/http test/grades test/learningDesign/mappe test/jobs (no browser files)
+                                                                 Test Files 240 passed (240) · Tests 1994 passed (1994)
+  $ CI=true npx vitest run tools packages/api-contract            Test Files 55 passed, 1 failed: specSite (site not regenerated)
+  $ CI=true npx vitest run (apps/web)                             Test Files 94 passed (94) · Tests 592 passed (592)
+  $ CI=true npm run test:e2e                                      Test Files 15 passed (15) · Tests 24 passed (24)
+  $ npm run build (apps/web) · a11y/axeInsight.a11y.test.ts       built · Test Files 1 passed · Tests 6 passed (6)
+  ```
+- **2026-11-05 · S6 step 5** — A privacy and security review of the integrated step 5, then the finish run. The review
+  fixed two leaks, each with its decision's amendment first and tests that fail without the fix: the mappe now ends
+  at the latest Oslo midnight, as insight does, so it can no longer be differenced against insight's semester view or
+  against itself on the same day (D-106, `storedResultsBeforeToday.int.test.ts`); production refuses a bucket
+  variable that is not a plain bucket name, since the AWS SDK sends an access point or Outposts ARN to the ARN's own
+  region, past the EEA check (D-109, nine `[DATA-004]` tests). It left three low findings and the documents for its
+  two fixes to their owners (section S6, step 5). The finish run regenerated `docs/TRACEABILITY.md` and the spec site
+  and ran every check; nothing needed fixing. PROGRESS: step 3's commit is abb60a5 (not 9fb0c02). No view changed
+  since the integration's screenshots, so none were retaken. Not committed. Check output (every step exit 0; tests
+  with `CI=true`, so nothing skips; the spec site was built again after this entry, and its `--check`,
+  `specSite.test.mjs`, `doc:lint` and `format:check` passed again):
+
+  ```
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements · ✓ docs/site/index.html is up to date
+  $ npm run spec:trace -- --check --done-through=S5              ✓ 126 requirements, traceability up to date.
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 482 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+  $ npm run tokens:check · build                                 ✓ 3 files up to date · exit 0
+  $ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                                 Test Files 167 passed (167) · Tests 1397 passed (1397)
+  $ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 170 passed (170) · Tests 19783 passed (19783)
+    (apps/server)
+  $ npx vitest run <the other 17 server test folders>            Test Files 320 passed (320) · Tests 6360 passed (6360)
+  $ npm run test:e2e                                             Test Files 15 passed (15) · Tests 24 passed (24)
+  $ npx vitest run … a11y/axeInsight.a11y.test.ts axeGradeSync   Test Files 2 passed (2) · Tests 11 passed (11)
+  ```
+- **2026-11-05 · S6 step 6 (integration)** — Six workstreams (the image and app stack, the files origin, ClamAV,
+  backups with the runbook and the load harness, the conformance report, the step-5 follow-ups with the library-build
+  fix), each verified by a skeptic with mutation checks, then integrated. Decisions first: D-110's integration
+  amendment and D-056's (the old data key stays at least 31 days, for the grade jobs' `sub`). Wiring: `main.ts` runs
+  the PDF probe after listening and `stop` waits for it (`main.smoke.test.ts` checks the line); `tsx` moved from the
+  root's development dependencies to `apps/server`'s (the image's copy is now a guard); scripts `deploy:check`,
+  `docker:smoke`, `pdf:check`; the app stack has its own clamd (`clamav/clamav:1.4` by digest) and `CLAMAV_HOST` on
+  every service from the image; the smoke test proves an upload in the image (`deploy/smoke/uploadProof.mjs`); CI
+  runs the real-clamd tests against a clamav service and `a11y:report -- --check`; Dependabot proposes the image's
+  digests; Lumi's own `upload-malware-found` gets the scanner's message (a safety net); `.env.example`'s production
+  rules and key rotation; the unknown test ID in `reportGuards.test.mjs` built at run time so `spec:trace` does not
+  read it. Leaked build environments (the old AudioRecorder builds, with this session's tokens) deleted from 20 test
+  temp folders and the scratchpad; the 26 build-cache records (2.8 GB) a skeptic's test left on the default builder
+  removed by ID. Docs: `docs/ops/README.md`, `docker.md`, `clamav.md`, the runbook's checklist, the server README (module map, diagram,
+  trace rows), the Evaluator Guide (commands, the six S6 rows, limitations 10, 13 and 17), the GLOSSARY, DPIA F13,
+  F14, §9 and R38–R39, the inventory's log rows, specs 01 (code map, `SEC-004` and `SEC-006` amendments) and 02 (§2),
+  the protocol's §9 and the results README. No view changed, so no screenshots. Not regenerated, by the run's
+  instruction: `docs/TRACEABILITY.md` and the spec site (so `spec:trace --check` and `specSite.test.mjs` report them
+  out of date). Not committed. Check output:
+
+  ```
+  $ HVLI_DOCKER_SANDBOX=1 HVLI_APP_PORT=18093 bash deploy/smoke/dockerSmoke.sh   (the working tree, all six workstreams)
+      ✓ deploy files · ✓ bundle (10 packages) · image 2777 MB · ✓ proxy CA in no file of the image
+      ✓ /healthz {"status":"ok"} · ✓ 7 of 7 migrations · ✓ 77 libraries, 77 seed audit rows
+      ✓ pages: /hjelp (nn), a script and /h5p/core/js/h5p.js from the image
+      ✓ upload: the stack's clamd refused EICAR (Eicar-Test-Signature) and passed a clean PNG;
+        files.localhost:18093 serves it (200, CSP sandbox, nosniff, no cookie); the app origin answers 404
+      ✓ PDF with the sandbox: 25 179 bytes, æ ø å, LiberationSans-Bold and LiberationSerif embedded, Tagged, A4
+      ✓ sandbox in /proc: 2 renderers, NSpid [3,3], filters [2,2] · ✓ start-up probe: pdfSandbox true, reason ok
+      Chromium 141.0.7390.37 (dd794b4e…144a) · disk 17 GB → 9.3 GB → 17 GB · ✓ docker smoke passed in 155 s
+  $ npm run test:e2e                                             Test Files 16 passed (16) · Tests 27 passed (27)
+  $ vitest a11y: axeContentTypes, axeEditor, firstParty          Test Files 3 passed (3) · Tests 91 passed (91)
+  $ CI=true npx vitest run tools/ops                             Test Files 4 passed (4) · Tests 34 passed (34)
+  $ npm run load:smoke                                           exit 0 · player ready p95 1267 ms · API p95 26 ms ·
+                                                                   0.00 % failed · 60 visits · 6180 requests
+  $ CLAMAV_TEST_HOST=127.0.0.1 … realClamd.test.ts (clamd 1.4.6) Tests 2 passed (2)
+  $ CI=true npx vitest run test/config test/security test/http test/server test/logging test/lti test/db
+      test/privacy test/learningDesign/mappe test/infra (apps/server)
+                                                                 Test Files 193 passed, 1 skipped (realClamd) · Tests 1494 passed
+  $ CI=true npx vitest run --project tools                       Test Files 60 passed, 1 failed: specSite (site not regenerated)
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 488 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+  $ npm run a11y:report -- --check · content:check               exit 0 · ✓
+  $ node tools/spec-trace/specTrace.mjs --check --done-through=S6   only: TRACEABILITY.md is out of date
+  ```
+- **2026-11-05 · S6 step 6** — A security review of the integrated step 6, then the finish run. The review attacked
+  the files origin (traversal, host variants, methods, cookies), the grants, the SVG and upload paths, the scanner,
+  the image, the app stack, backups and the load harness, and found no high or medium defect in the code. One low fix,
+  with a regression test that fails without it: a NUL byte in a granted file path reached PostgreSQL and answered 500
+  with an error-level log line; `signedFileRoutes.ts` now answers 404 before storage for any name the storage refuses
+  (`[SEC-004]` in `filesOrigin.int.test.ts`). Its other findings (clamd's `AlertExceedsMax` and `AlertEncrypted`,
+  the root compose file's published ports, the cookie route's NUL 500 and smaller hardening) are under step 6's
+  «Still open». The finish run regenerated `docs/TRACEABILITY.md` and the spec site, reworded the step-6 integration
+  entry so it no longer names an unknown requirement ID (`spec:trace --check` refused it), and ran every check and
+  test set, and the Docker smoke again, because the image copies the source tree and the review's fix came after the
+  integration's smoke. Nothing else needed fixing. No view changed, so no screenshots. Not committed. Check output
+  (every step exit 0; tests with `CI=true`; the spec site was built again after this entry and its `--check` passed):
+
+  ```
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements · ✓ docs/site/index.html is up to date
+  $ npm run spec:trace -- --check --done-through=S5              ✓ 126 requirements, traceability up to date.
+  $ npm run typecheck · lint · lint:css · format:check           exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check                                        ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 488 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+  $ npm run tokens:check · deploy:check · a11y:report -- --check ✓ 3 files up to date · ✓ deploy files as D-110 sets them · exit 0
+  $ npm run build                                                exit 0
+  $ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                                 Test Files 186 passed (186) · Tests 1524 passed (1524)
+  $ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 171 passed (171) · Tests 19789 passed (19789)
+    (apps/server)
+  $ npx vitest run <the other 18 server test folders>            Test Files 334 passed, 1 skipped (realClamd: no clamd host)
+                                                                   · Tests 6449 passed, 2 skipped
+  $ npm run test:e2e                                             Test Files 16 passed (16) · Tests 27 passed (27)
+  $ npx vitest run … a11y/axeContentTypes axeEditor axeInsight axeGradeSync firstParty
+                                                                 Test Files 5 passed (5) · Tests 102 passed (102)
+                                                                   (one policy refusal: BranchingScenario's documentation frame)
+  $ HVLI_DOCKER_SANDBOX=1 HVLI_APP_PORT=18094 bash deploy/smoke/dockerSmoke.sh   (the final working tree)
+      ✓ deploy files · ✓ bundle (10 packages) · ✓ core and editor match their hash lists · image 2777 MB
+      ✓ proxy CA in no file of the image · ✓ /healthz {"status":"ok"} · ✓ 7 of 7 migrations
+      ✓ 77 libraries, 77 seed audit rows · ✓ pages: /hjelp (nn), a script and /h5p/core/js/h5p.js from the image
+      ✓ upload: the stack's clamd refused EICAR (Eicar-Test-Signature) and passed a clean PNG;
+        files.localhost:18094 serves it (200, CSP sandbox, nosniff, no cookie); the app origin answers 404
+      ✓ PDF with the sandbox: 25 179 bytes, æ ø å, LiberationSans-Bold and LiberationSerif embedded, Tagged, A4
+      ✓ sandbox in /proc: 2 renderers, NSpid [3,3], filters [2,2] · ✓ start-up probe: pdfSandbox true, reason ok
+      Chromium 141.0.7390.37 · disk 17 GB → 10 GB → 17 GB · no image, container, volume, builder or cache left
+      ✓ docker smoke passed in 154 s
+  ```
+- **2026-11-05 · S6 step 7 (integration)** — Five workstreams (the language overlay, problem reporting for the pilot,
+  the upstream drafts, the students' hand-off index with the live-contract seam, and the hardening after step 6's
+  security review), each verified by a skeptic with mutation checks, then integrated. A D-101 amendment («the
+  integration») came first. The integration: `main.ts` hands the start-up's H5P texts to the engine, so
+  `content/h5p-tekstar/` is read once and a test's content folder reaches it (`startupLanguageOverlay.test.ts`, which
+  fails without the change); a root `test:live` script, the seam's type check in `npm run typecheck`, and a CI step
+  that runs the seam against the mocks (`LIVE_TARGET=mock`); the theme's stale «Paste» comment and the upstream
+  README's stale `UPSTREAM:` remark corrected; InteractiveVideo 1.28's scored end-screen summary, which no language
+  file reaches (checked at the pinned commit and on the default branch, 114f513), added to the English-text register
+  with an upstream draft, and the conformance report regenerated from its sources (only that entry changed); the
+  manual protocol §9 now says what goes into the register and what into a D-080 amendment. Documents: the hand-off
+  index (every workstream's hand-off item, every link checked), the root README (status, documentation map), the
+  server README (module rows, the `H5P-008` and `H5P-010` trace rows, the mermaid storage chain), spec 01 (module
+  map; `H5P-008` and `H5P-010` built), the Evaluator Guide (three commands; limitations 2, 5, 20 and the new 22), the
+  GLOSSARY (language overlay, live-contract seam, hand-off index, upstream draft, *sak* and *etikett*), the ALU review
+  packet (§9a, the H5P texts) and this checklist (step 6's «Still open» after the hardening; step 7 ticked). The
+  step-7 screenshots (nn, 1280 and 390 px, eight files) are the overlay workstream's, sent to the owner; the
+  integration changed no view. `docs/TRACEABILITY.md` and the spec site are not regenerated in this step, so their two
+  checks report «out of date» and nothing else. Not committed. Check output (every step exit 0 unless noted; tests
+  with `CI=true`):
+
+  ```
+  $ npm run build · typecheck (now with live/tsconfig.json) · lint · lint:css · format:check   exit 0
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check (and with CI=true)                     ✓ … H5P texts: 91 in nn, 93 in nb, video guidance on 2 fields (draft)
+  $ npm run tokens:check · check --workspace packages/hvl-h5p-theme · a11y:report -- --check   ✓ · ✓ · exit 0
+  $ node tools/spec-trace/specTrace.mjs --check --done-through=S6   only: TRACEABILITY.md is out of date
+  $ node tools/spec-site/buildSpecSite.mjs --check               only: docs/site/index.html is out of date
+  $ npm run test:live · LIVE_TARGET=mock npm run test:live       17 passed, 19 skipped · 36 passed (6 files)
+  $ npx vitest run tools/a11y-report tools/issue-forms tools/doc-lint tools/spec-trace tools/spec-site
+                                                                 143 passed, 1 failed: [DOC-004] the committed page is up to
+                                                                   date (the spec site, not regenerated in this step)
+  $ npx vitest run --project hvl-h5p-theme                       Test Files 13 passed · Tests 202 passed
+  $ npx vitest run (apps/server) test/server test/h5p/languageOverlay test/h5p/semantics H5pFactories
+      storableFileName contentStorage.int LanguageFallbackLibraryStorage test/learningDesign/content
+      skeletonCreation.browser.int (probe P1) http/contentFiles.int http/signedFiles.int ContentFileHeaders
+                                                                 Test Files 49 passed · Tests 440 passed (the overlay's real
+                                                                   nn player and nb editor tests included)
+  $ npm run test:e2e                                             Test Files 16 passed (16) · Tests 27 passed (27)
+  $ npm run test:a11y -- a11y/axeContentTypes a11y/axeEditor a11y/upstreamRegister
+                                                                 Test Files 3 passed · Tests 48 passed (the three English
+                                                                   texts, InteractiveVideo's included, still written)
+  ```
+- **2026-11-05 · S6 step 7** — The finish run of step 7 on the integrated working tree. `docs/TRACEABILITY.md` and
+  the spec site regenerated (the new `[H5P-008]`, `[H5P-010]` and `tools/issue-forms` tests, the new source files and
+  the DECISIONS amendments), then every check and test set run once more with `CI=true`: the full server set (both
+  halves), the e2e set, the seam (skipped, and against the mocks), the accessibility files for the player, editor,
+  insight, grade sync and the English-text register; beyond the brief, the real-clamd tests against a local clamd
+  1.4 with `AlertExceedsMax` and `AlertEncrypted` on (the one file the server set skips without a clamd host), and the
+  Docker smoke, because the image copies `content/` and `src/` and step 7 changed `main.ts` and added
+  `content/h5p-tekstar/`. Nothing needed fixing. This checklist: step 6's review findings that the hardening fixed are
+  now a ticked item of their own (moved out of «Still open», which now names the cookie route as passed to the
+  students), and step 7 has its verified item, a list of what passes to the students through the hand-off index §3,
+  and the CI seam step's first GitHub run under «Still open». No view changed, so no screenshots (step 7's eight are
+  the overlay workstream's). Not committed. Check output (every step exit 0; tests with `CI=true`; the spec site was
+  built again after this entry and its `--check` passed):
+
+  ```
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements · ✓ docs/site/index.html is up to date
+  $ npm run spec:trace -- --check --done-through=S5 (and S6)     ✓ 126 requirements, traceability up to date.
+  $ npm run build · typecheck · lint · lint:css · format:check   exit 0 (typecheck includes live/tsconfig.json)
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check (and with CI=true)                     ✓ 3 phases (proposed), 16 references, guide in nn/nb/en (5 sections,
+                                                                   25 citations), 9 patterns, mappe template and 1 criteria set,
+                                                                   H5P texts: 91 in nn, 93 in nb, video guidance on 2 fields (draft)
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 488 packages · ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+  $ npm run tokens:check · deploy:check · a11y:report -- --check ✓ 3 files up to date · ✓ deploy files as D-110 sets them · exit 0
+  $ npx vitest run --project tools|api-contract|hvl-h5p-theme|design-tokens|web
+                                                                 Test Files 188 passed (188) · Tests 1537 passed (1537)
+  $ npx vitest run test/xapi test/grades test/lti test/h5p       Test Files 179 passed (179) · Tests 19860 passed (19860)
+    (apps/server)                                                  (the overlay's real nn player and nb editor tests included)
+  $ npx vitest run <the other 20 server test folders>            Test Files 337 passed, 1 skipped (realClamd: no clamd host)
+                                                                   · Tests 6473 passed, 2 skipped
+  $ CLAMAV_TEST_HOST=127.0.0.1 … npx vitest run test/security/malware/realClamd.test.ts
+      (clamav/clamav:1.4 by digest, AlertExceedsMax and AlertEncrypted yes)   Test Files 1 passed · Tests 2 passed
+  $ npm run test:e2e                                             Test Files 16 passed (16) · Tests 27 passed (27)
+  $ npm run test:live · LIVE_TARGET=mock npm run test:live       17 passed, 19 skipped · Test Files 6 passed · Tests 36 passed
+  $ npx vitest run … a11y/axeContentTypes axeEditor axeInsight axeGradeSync firstParty upstreamRegister
+                                                                 Test Files 6 passed (6) · Tests 107 passed (107)
+                                                                   (one policy refusal: BranchingScenario's documentation frame)
+  $ HVLI_DOCKER_SANDBOX=1 HVLI_APP_PORT=18094 bash deploy/smoke/dockerSmoke.sh   (the final working tree)
+      ✓ deploy files · ✓ bundle (10 packages, SHA256SUMS match) · image 2777 MB · ✓ proxy CA in no file of the image
+      ✓ /healthz {"status":"ok"} · ✓ 7 of 7 migrations · ✓ 77 libraries, 77 seed audit rows
+      ✓ pages: /hjelp (nn), a script and /h5p/core/js/h5p.js from the image
+      ✓ upload: the stack's clamd refused EICAR (Eicar-Test-Signature) and passed a clean PNG;
+        files.localhost:18094 serves it (200, CSP sandbox, nosniff, no cookie); the app origin answers 404
+      ✓ PDF with the sandbox: 25 179 bytes, æ ø å, LiberationSans-Bold and LiberationSerif embedded, Tagged, A4
+      ✓ sandbox in /proc: 2 renderers, NSpid [3,3], filters [2,2] · ✓ start-up probe: pdfSandbox true, reason ok
+      Chromium 141.0.7390.37 · disk 16 GB → 8 GB → 16 GB · no image, container, volume, builder or cache left
+      ✓ docker smoke passed in 163 s
+  ```
+- **2026-11-05 · S6 steps 8–10** — Integration, docs, and an independent review with fixes, then this finish run
+  (resumed after the usage limit). Step 8: the accessibility suite now covers every S6 view (18 files, 558 tests,
+  one text-spacing fault in the Innsikt chart fixed, the run recorded in the conformance report), and six new e2e
+  files cover the journeys of spec 00 §3 with J1's «new from a pattern» in Canvas passed to the students (22 files,
+  33 tests, three passing runs). Step 9: the Evaluator Guide's S6 gate row and limitations, the READMEs and the
+  GLOSSARY. Step 10: five lenses, a skeptic per finding, a fixer and an adversarial re-check per lens: 20 findings,
+  18 confirmed, 2 refuted, 18 fixed (section S6, step 10). The finish run regenerated `docs/TRACEABILITY.md` and the
+  spec site, corrected four stale texts (the web README's Canvas-studio line and S6 status, the e2e config's header,
+  the conformance report's view descriptions) and wrote the S6 gate as ten runnable parts for step 11
+  (`gate-s6.sh`, kept in the scratchpad, `PART=A…J`; each part under 2 hours, estimated from this session's runs:
+  A 38 min checks, builds and the root run; B 50 min e2e, the recorded accessibility run, real clamd, load and
+  Docker smokes, the running server; C 60 and D 82 min the filters; E 88 min S3's IDs; F 75 and G 69 min S4's;
+  H 85 min S5's; I 89 and J 94 min PROD-013 and S6's; about 12 hours in all, 144 steps). The gate has not run. Not
+  committed. Check output (every step exit 0):
+
+  ```
+  $ node tools/spec-trace/specTrace.mjs · spec-site (+ --check)  ✓ 126 requirements · ✓ docs/site/index.html is up to date
+  $ npm run spec:trace -- --check --done-through=S6             ✓ 126 requirements, traceability up to date.
+  $ npm run typecheck · lint · lint:css · format:check          exit 0 · All matched files use Prettier code style!
+  $ npm run doc:lint · check:filesize                           ✓ 11 checks passed · ✓ file-size passed
+  $ npm run content:check                                       ✓ 3 phases (proposed), 16 references, guide in nn/nb/en, 9 patterns,
+                                                                  mappe template and 1 criteria set
+  $ npm run check:pins · check:licences · check:audit           ✓ 6 manifests · ✓ 488 packages (all 37 workspaces) · ✓ 2 advisories,
+                                                                  all reviewed
+  $ npm run privacy:inventory-check · privacy:dpia-check        ✓ 22 models, 182 fields · 13 sections, key and residuals agree
+  $ npm run tokens:check · deploy:check · a11y:report -- --check
+                                                                ✓ 3 files up to date · ✓ deploy files as D-110 sets them · exit 0
+  $ npm run build                                               exit 0 (no tracked file changed by the build)
+  $ npx vitest run --project tools|api-contract|design-tokens|hvl-h5p-theme|web
+                                                                Test Files 190 passed (190) · Tests 1565 passed (1565)
+  $ npx vitest run --project server test/insight test/grades test/privacy test/lti/deepLinking test/xapi
+                                                                Test Files 88 passed (88) · Tests 708 passed (708)
+  $ npx vitest run tools/a11y-report                            Test Files 5 passed (5) · Tests 45 passed (45)
+  $ npx vitest run -t "\[INS-009\]"   (timing a per-ID run)     Test Files 8 passed | 701 skipped (709) · Tests 23 passed |
+                                                                  27888 skipped (27911) · 284 s
+  $ gate6-start.sh (the gate's running-server step, tried once)
+      /healthz, /lti/keys, /, /hjelp, /personvern, /api/docs: 200 · the S5 studio walk and both mappe downloads
+      (Markdown 42 404 bytes, PDF 489 586 bytes) · an activity from ea-diagnose: «Innsikt» (h: Innsikt før samlinga)
+      and «Poeng til Canvas» (h: Poeng til karakterboka i Canvas) on the activity page · mock Canvas: the picker as
+      the teacher, then the resource link: /app/play tabs Spel, Rediger, Innsikt, Poeng til Canvas · 0 page errors
+  ```
+- **2026-11-05 · IT assurance pack** — At the owner's request, a pack for HVL IT (operations and security), who will
+  want assurances from people before they host the service even for testing (D-116): `docs/assurance/` with a start
+  page and a Nynorsk *samandrag* (`README.md`), the architecture with trust boundaries, network flows, data stores and
+  secrets by name (`architecture.md`), a STRIDE threat model (`threat-model.md`), a draft ROS-analyse
+  (`ros-analyse.md`), what has and has not been reviewed and where people should start (`human-review.md`), and the
+  stage-1 request for an isolated test install with made-up data only (`test-environment.md`); and a CycloneDX SBOM,
+  `docs/assurance/sbom.cdx.json`, written by the new `npm run sbom` (`tools/sbom/`, 22 tests titled `[SEC-007]`). The
+  pack asks in three stages (0: own machines or Codespaces with the mocks; 1: an isolated test server; 2: a pilot
+  after the DPO, a human security review, the ROS-analyse and an operations agreement) and adds Q31 (a named system
+  owner and maintainer at HVL). Every document is a **draft for HVL IT to correct**, written by the AI that wrote the
+  code and fact-checked by further AI passes; no person has reviewed it. No app code, spec or test outside
+  `tools/sbom` changed, and the S6 checklist and gate are untouched (e87c1a9).
+- **2026-11-06 · S6 gate** — The full S6 gate (D-113, Evaluator Guide §5) in ten parts, each a tracked background
+  task of under 2 hours, 144 steps in about 11 hours of running time, on this container (not GitHub CI), from
+  2026-11-05 16:28 to 2026-11-06 04:17 UTC. Three steps failed on their first run and each was fixed, pushed and run
+  again: `docs:api` (10 TypeDoc warnings on S6 types; f5fa12b), the `AUTH-00` filter (a grade-sync test that read a
+  placement made by the test before it; 92ca2c5) and the `DATA-007` run of one ID (two scenario files whose audit test
+  read runs that the ID's run skipped; 5a5b8c3). Part B's accessibility run is recorded in the conformance report
+  (7189e97). The IT assurance pack (e87c1a9) was committed between parts E and F; it changes no app code. The
+  container restarted twice (before part E and during part I's second step); the services were started again and
+  part I re-ran from that step. Part A then ran again in full on the final commit, so every check and the whole root
+  run stand on 5a5b8c3 (working tree clean). Gate output (every step exit 0 in its latest run):
+
+  ```
+  $ npm run typecheck · lint · format:check · lint:css           exit 0                                   (A, 5a5b8c3)
+  $ npm run doc:lint · check:filesize                            ✓ 11 checks passed · ✓ file-size passed
+  $ npm run check:pins · check:licences · check:audit            ✓ 6 manifests · ✓ 488 packages (all 37 workspaces) ·
+                                                                   ✓ 2 advisories, all reviewed
+  $ npm run privacy:inventory-check · privacy:dpia-check         ✓ 22 models, 182 fields · exit 0
+  $ npm run h5p:fetch-core · h5p:fetch-libraries                 ✓ hashes match · ✓ 120 libraries and 10 packages
+  $ npm run build · tokens:check (+ theme check) · content:check exit 0 · ✓ 3 files up to date · ✓ 3 phases, 16 references,
+                                                                   guide in nn/nb/en, 9 patterns, mappe template, 1 criteria set
+  $ npm run spec:trace -- --check --done-through=S1 … S6         ✓ 126 requirements, traceability up to date (all six)
+  $ npm run spec:site -- --check · docs:api · boot-check         ✓ up to date · html generated · exit 0
+  $ npm run deploy:check                                         ✓ pins, user, ports, hardening and the seccomp profile
+  $ npx vitest run                                               Test Files 711 passed | 1 skipped (712) ·
+                                                                   Tests 27931 passed | 2 skipped (27933)
+                                                                   (the skipped file is the real-clamd test, run below)
+  $ npm run test:live · LIVE_TARGET=mock npm run test:live       17 passed, 19 skipped (no LIVE_*) · 36 passed (36)
+  $ npm run test:e2e                                             Test Files 22 passed (22) · Tests 33 passed (33)  (B, f5fa12b)
+  $ npm run test:a11y (recorded) · a11y:report --from-run, --check
+                                                                 Test Files 18 passed (18) · Tests 558 passed (558) · exit 0
+  $ npm run test:a11y -t "\[NFR-003\]" · "\[UD-031\]"           1 · 3 tests passed
+  $ real clamd 1.4 (AlertExceedsMax, AlertEncrypted)             Test Files 6 passed (6) · Tests 30 passed (30)
+  $ npm run load:smoke                                           thresholds passed: 0.00 % failed of 6180 requests (60 visits),
+                                                                   player ready p95 1259 ms, API p95 30 ms
+  $ npm run docker:smoke (HVLI_DOCKER_SANDBOX=1)                 image 2777 MB, no proxy CA in it; 7 of 7 migrations; 77 library
+                                                                   folders seeded; /healthz ok; clamd refused EICAR; the PDF in
+                                                                   the app container with Chromium's sandbox (seen in /proc)
+  $ npm run mock:platform & WEB_APP=dev npm start                /healthz, /lti/keys, /, /hjelp, /personvern, /api/docs: 200;
+                                                                   studio walk; mappe downloads .md (42 734 bytes) and .pdf
+                                                                   (490 447 bytes); «Innsikt» and «Poeng til Canvas» on the
+                                                                   activity page; mock Canvas picker (141 activities) and
+                                                                   /app/play tabs Spel, Rediger, Innsikt, Poeng til Canvas;
+                                                                   0 page errors
+  $ npx vitest run -t <filter>, files/tests passed               AUTH-00 60/433 · LTI-00 111/547 · H5P-002|PROD-002 20/45 ·
+                                                                   SEC-003|H5P-011|H5P-006 31/18721 · SEC-001 8/111 ·
+                                                                   PROD-004|PROD-005|PROD-006|H5P-007 39/129 · UD-0 152/1125 ·
+                                                                   PED-020 16/131 · PROD-003|UD-022 29/159 ·
+                                                                   PROD-011|DATA-006|DATA-011 32/144 · PED-0 86/603 ·
+                                                                   PROD-001|PROD-009 25/105 · PROD-007|PROD-013 83/3919 ·
+                                                                   MAPPE- 37/296 · LTI-01 66/506 · INS-0 45/310 · DATA-0 125/625 ·
+                                                                   NFR-00 29/136 · H5P-008|H5P-010 16/150            (C, D)
+  $ npx vitest run -t "\[<ID>\]", tests passed                  S3: AUTH-001 77 · AUTH-002 81 · AUTH-003 229 · AUTH-004 17 ·
+                                                                   AUTH-005 48 · LTI-001 101 · LTI-002 61 · LTI-003 117 ·
+                                                                   LTI-004 47 · LTI-005 95 · LTI-006 90 · LTI-007 16 · PROD-004 18 ·
+                                                                   PROD-005 8 · PROD-006 23 · H5P-007 80                (E)
+                                                                 S4: PROD-003 156 · PROD-011 27 · NFR-003 1 · H5P-009 26 ·
+                                                                   UD-001 126 · UD-002 7 · UD-003 72 · UD-004 5 · UD-005 3 ·
+                                                                   UD-006 164 · UD-007 13 · UD-008 14 · UD-009 8 · UD-010 37 ·
+                                                                   UD-011 62 · UD-012 7 · UD-013 134 · UD-020 274 · UD-021 218 ·
+                                                                   UD-022 20 · UD-030 23 · UD-031 1 · PED-020 120 · DATA-006 63 ·
+                                                                   DATA-011 58 · DOC-012 63                          (F, G)
+                                                                 S5: PED-001 88 · PED-002 132 · PED-003 34 · PED-010 72 ·
+                                                                   PED-011 12 · PED-030 105 · PED-031 32 · PED-032 21 ·
+                                                                   PROD-001 86 · PROD-007 3706 · PROD-009 20 · MAPPE-001 68 ·
+                                                                   MAPPE-002 145 · MAPPE-003 40 · MAPPE-004 51        (H)
+                                                                 S6: PROD-013 216 · LTI-008 64 · LTI-010 127 · LTI-011 54 ·
+                                                                   LTI-012 308 · LTI-013 19 · INS-001 34 · INS-002 24 ·
+                                                                   INS-003 39 · INS-005 12 · INS-006 131 · INS-007 69 ·
+                                                                   INS-008 21 · INS-009 23 · INS-010 10 · PROD-010 18 ·
+                                                                   DATA-003 81 · DATA-004 85 · DATA-005 10 · DATA-007 27 ·
+                                                                   DATA-008 67 · DATA-010 30 · DATA-012 89 · NFR-001 18 ·
+                                                                   NFR-002 27 · NFR-006 30 · NFR-007 21 · H5P-010 10 ·
+                                                                   SEC-006 39 · UD-040 45 · SEC-004 44 · H5P-008 145  (I, J)
+                                                                 Not built, so no run: INS-004 (D-115), LTI-009 (a design
+                                                                   note, D-101), PROD-014 (COULD)
+  ```
+
+  Open at the end of S6 (listed in section S6, the hand-off index and the IT assurance pack): the S6 commits have not
+  run in GitHub CI, which runs only on `main` and on pull requests, and `docker.yml` has never run on GitHub (a pull
+  request when the owner asks); the open questions above, Q31 new (a named system owner and maintainer at HVL); real
+  Canvas and Feide (the live seam and `docs/handoff/canvas-acceptance.md`); the 200-learner load test and the restore
+  drill on HVL's hardware; the manual assistive-technology run and the 56 verdicts (`UD-031`, `UD-040`); the DPO's
+  review of the DPIA input; the light simplification check (carried to the pilot list); the upstream reports for the
+  owner to file, the two security reports privately. The hourly restart task is switched off.
+- **2026-11-06 · PR #18 and the assurance pack's method** — Pull request #18 (`ccr-07f63266-6cere5` → `main`) took
+  the S6 commits to GitHub CI. Two faults showed; each was reproduced before its fix, and the same test then passed.
+  (1) Before CI reached its tests, a local run of `tools/doc-lint/test/ciWorkflow.test.mjs` failed (`[5]` instead of
+  `[6]`): after `cbfd859` marked S6 done, CI still checked traceability through S5. 3eeea8d raised the step to
+  `--done-through=S6`, and its push cancelled CI run 75 (42165369085) and the first `docker.yml` run (42165369079).
+  (2) CI run 76 (42166052880, job 127722909215, on `3eeea8d`) failed 1 of 27,933 tests in «Tests (unit and
+  integration)»: GitHub's fresh runner has no `apps/server/.env`, so Node's `--env-file-if-exists` printed ".env not
+  found. Continuing without it." twice before the purge CLI's one failure line
+  (`apps/server/test/privacy/purge/purgeCliFailure.test.ts`, line 70). The local gate could not see it, because a
+  developer `.env` exists here. Reproduced by moving `.env` aside (settings in the environment, no file), fixed in the
+  test helper (`apps/server/test/support/serverCli.ts` drops that exact Node notice; the test's assertions unchanged),
+  and passed with and without `.env` (8d4eaf0). On `8d4eaf0` the Session gate passed in CI run 77 (42170423046, job
+  127736690226), 05:46:51–06:45:23 UTC, every step: 712 test files, 27,932 tests passed and 1 skipped of 27,933 (CI
+  ran the 2 real-clamd tests and skipped the 1 test that runs only as root); e2e 22 files, 33 tests; the live seam
+  against the mocks 36 tests; accessibility 18 files, 558 tests; `docs:api`, `spec:trace --done-through=S6` (126
+  requirements), the spec site, the conformance report check and the boot check. `docker.yml` passed on GitHub for
+  the first time in run 42166052745 (on `3eeea8d`) and again in run 42170423045 (on `8d4eaf0`, 05:46:51–05:51:07
+  UTC). Pull request #18 has no review (GitHub's API, 2026-11-06) and is not merged. Then, at the owner's request of
+  2026-11-06, the IT assurance pack gained `docs/assurance/how-it-was-built.md`: the plan, build, test, verify cycle;
+  fixes as experiments (reproduce, fix, the same test passing; mutation and revert-run-restore checks); adversarial AI
+  review with skeptics and fact-checkers; the session gates; and the local gate and GitHub CI compared, with their
+  shared limit, that the same AI wrote the tests both run, and what people still need to review and test. The other
+  documents of the pack were refreshed to `8d4eaf0` and this CI result (commit counts, the commits after `main`, the
+  review state, the image size on GitHub's runner), and D-116's amendment of 2026-11-06 records the change. All of it
+  was written and fact-checked by AI agents against the repository and GitHub's read-only API; no person has
+  reviewed it. No app code, spec, test or CI file changed after `8d4eaf0`.

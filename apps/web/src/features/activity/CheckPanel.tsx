@@ -53,6 +53,8 @@ export interface CheckPanelProps {
 type Findings = FindingsResponse | 'loading' | 'failed';
 /** Which dialog is open: a first publish, new reasons for a published activity, or none (`null`). */
 type DialogMode = 'publish' | 'renew' | null;
+/** The heading's id; «Opne Sjekk og publiser» on Innsikt moves focus to it, not to `body` (UD-006, WCAG 2.4.3). */
+export const CHECK_HEADING_ID = 'sjekk-og-publiser';
 
 /**
  * The check-and-publish panel.
@@ -140,7 +142,9 @@ export function CheckPanel({
 
   return (
     <div>
-      <h2>{t('findings.heading', locale)}</h2>
+      <h2 id={CHECK_HEADING_ID} tabIndex={-1}>
+        {t('findings.heading', locale)}
+      </h2>
       <p role="status">{status}</p>
       {problem ? <p role="alert">{problem}</p> : null}
       {findings === 'loading' ? <p>{t('activity.checking', locale)}</p> : null}

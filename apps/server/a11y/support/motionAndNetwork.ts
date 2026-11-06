@@ -8,7 +8,7 @@
  *      browser knows. Motion must be recorded while it happens: H5P's feedback moves for 100–800 ms and starts
  *      after a click or a delay, so a look at `document.getAnimations()` after loading and after answering saw
  *      nothing in 9 of the 10 types even with every reduction removed.
- * Spec: UD-009, DATA-011
+ * Spec: UD-009, DATA-011, SEC-004
  * Invariants:
  *   - The motion recorder runs in every frame before the frame's own scripts (`addInitScript`), logs each
  *     animation or transition when it starts (`transitionrun`, `animationstart`) and samples
@@ -19,6 +19,8 @@
  *   - The request log holds every request of every page and frame of the context, also failed ones; `data:`,
  *     `blob:` and `about:` addresses are not requests to anyone.
  *   - A request the Content Security Policy refuses never reaches the network and is logged as refused.
+ *   - First-party means the tool's origin or its files origin, where the player's uploaded files come from: both are
+ *     ours (D-012, D-110 amendment of 2026-11-05); every other origin is a third party.
  * Collaborators: the suites that use it (see Tests).
  * Tests: apps/server/a11y/reflowAndMotion.a11y.test.ts (with a control that must record motion),
  *   apps/server/a11y/firstParty.a11y.test.ts
@@ -114,11 +116,21 @@ export function recordRequests(context: BrowserContext): RequestLog {
   return log;
 }
 
+/** The tool's two origins: the app's and the files origin's. */
+export interface ToolOrigins {
+  /** The app's origin, e.g. `http://localhost:<port>`. */
+  readonly base: string;
+  /** The files origin, e.g. `http://files.localhost:<port>` (SEC-004). */
+  readonly filesBase: string;
+}
+
 /**
- * The requests that went to another origin than the tool's.
+ * The requests that went to neither of the tool's origins.
  * @param log - A context's log.
- * @param base - The tool's origin.
+ * @param tool - The app's origin and the files origin, both first-party.
  * @returns The third-party URLs.
  */
-export const thirdPartyRequests = (log: RequestLog, base: string): string[] =>
-  log.urls.filter((url) => new URL(url).origin !== new URL(base).origin);
+export const thirdPartyRequests = (log: RequestLog, tool: ToolOrigins): string[] => {
+  const ours = new Set([new URL(tool.base).origin, new URL(tool.filesBase).origin]);
+  return log.urls.filter((url) => !ours.has(new URL(url).origin));
+};

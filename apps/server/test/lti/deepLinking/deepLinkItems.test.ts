@@ -2,7 +2,7 @@
  * Tests for the Deep Linking content items: the LTI-005 item shape, a lineItem only for `assignment_selection`,
  * the platform's accept settings, placement detection (D-061) and the return-URL check.
  *
- * Spec: LTI-005, PROD-005
+ * Spec: LTI-005, PROD-005, LTI-013
  */
 import type { ContentItem } from 'ltijs';
 import { describe, expect, it } from 'vitest';
@@ -38,6 +38,7 @@ const refusal = (run: () => unknown): string | undefined => {
 
 describe('[LTI-005] Deep Linking content items', () => {
   it('[LTI-005] builds an ltiResourceLink with title, launch URL, contentId, iframe hint and a lineItem for assignment_selection', () => {
+    // WHY: the line item's label carries LTI-013's suffix by default (D-105; ./formativeLabel.test.ts has both modes).
     // Act
     const items = build('assignment_selection');
     // Assert
@@ -50,7 +51,7 @@ describe('[LTI-005] Deep Linking content items', () => {
         iframe: { width: DEEP_LINK_IFRAME_SIZE.width, height: DEEP_LINK_IFRAME_SIZE.height },
         lineItem: {
           scoreMaximum: 100,
-          label: ACTIVITY.title,
+          label: `${ACTIVITY.title} (formativ)`,
           resourceId: ACTIVITY.id,
           tag: 'hvl-interaktiv',
         },

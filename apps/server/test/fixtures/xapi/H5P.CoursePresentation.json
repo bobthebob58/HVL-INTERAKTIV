@@ -1,0 +1,535 @@
+{
+  "library": "H5P.CoursePresentation 1.28",
+  "contentId": "{{contentId}}",
+  "recordedBy": "apps/server/test/h5p/support/xapiTypeRun.ts (probe P1)",
+  "actions": [
+    "load: opens the activity",
+    "slide2: goes to the slide with the MultiChoice",
+    "check: picks the right option and presses «Sjekk»",
+    "summary: goes on to the summary slide",
+    "reload: waits for the autosave and reloads the page, which resumes on the summary slide"
+  ],
+  "statements": [
+    {
+      "view": 1,
+      "step": "load",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign for samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.CoursePresentation-1.28",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "slide2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://id.tincanapi.com/extension/ending-point": 2
+            },
+            "name": {
+              "en-US": "Læringsdesign for samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.CoursePresentation-1.28",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "slide2",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d22",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d22"
+            },
+            "name": {
+              "en-US": "Kva gjer læraren med quizresultata?"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 2
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/interacted",
+          "display": {
+            "en-US": "interacted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d22",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d22"
+            },
+            "name": {
+              "en-US": "Kva gjer læraren med quizresultata?"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 2
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "check",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/answered",
+          "display": {
+            "en-US": "answered"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}?subContentId=8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d22",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://h5p.org/x-api/h5p-subContentId": "8d2b4f6a-1c3e-4a5b-9d7f-2e4c6a8b0d22"
+            },
+            "name": {
+              "en-US": "Kva gjer læraren med quizresultata?"
+            },
+            "description": {
+              "en-US": "<p>Studentane tek ein kort quiz før samlinga. Kva bør læraren gjere med resultata?</p>"
+            },
+            "type": "http://adlnet.gov/expapi/activities/cmi.interaction",
+            "interactionType": "choice",
+            "correctResponsesPattern": ["0"],
+            "choices": [
+              {
+                "id": "0",
+                "description": {
+                  "en-US": "Bruke dei til å planleggje kva samlinga skal leggje vekt på."
+                }
+              },
+              {
+                "id": "1",
+                "description": {
+                  "en-US": "Rekne dei med i sluttkarakteren i emnet."
+                }
+              },
+              {
+                "id": "2",
+                "description": {
+                  "en-US": "Vente med å sjå på dei til eksamen nærmar seg."
+                }
+              }
+            ]
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "parent": [
+              {
+                "id": "{{contentId}}",
+                "objectType": "Activity"
+              }
+            ],
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.MultiChoice-1.16",
+                "objectType": "Activity"
+              }
+            ]
+          },
+          "extensions": {
+            "http://id.tincanapi.com/extension/ending-point": 2
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 1,
+            "raw": 1,
+            "scaled": 1
+          },
+          "completion": true,
+          "success": true,
+          "duration": "PT0.16S",
+          "response": "0"
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "summary",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://id.tincanapi.com/extension/ending-point": 3
+            },
+            "name": {
+              "en-US": "Læringsdesign for samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.CoursePresentation-1.28",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "summary",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://id.tincanapi.com/extension/ending-point": 4
+            },
+            "name": {
+              "en-US": "Læringsdesign for samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.CoursePresentation-1.28",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 1,
+      "step": "summary",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/completed",
+          "display": {
+            "en-US": "completed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign for samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.CoursePresentation-1.28",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 1,
+            "raw": 1,
+            "scaled": 1
+          },
+          "completion": true,
+          "duration": "PT1.77S"
+        }
+      }
+    },
+    {
+      "view": 2,
+      "step": "reload",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/attempted",
+          "display": {
+            "en-US": "attempted"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign for samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.CoursePresentation-1.28",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 2,
+      "step": "reload",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/progressed",
+          "display": {
+            "en-US": "progressed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}",
+              "http://id.tincanapi.com/extension/ending-point": 4
+            },
+            "name": {
+              "en-US": "Læringsdesign for samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.CoursePresentation-1.28",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "view": 2,
+      "step": "reload",
+      "statement": {
+        "actor": {
+          "name": "",
+          "mbox": "mailto:",
+          "objectType": "Agent"
+        },
+        "verb": {
+          "id": "http://adlnet.gov/expapi/verbs/completed",
+          "display": {
+            "en-US": "completed"
+          }
+        },
+        "object": {
+          "id": "{{contentId}}",
+          "objectType": "Activity",
+          "definition": {
+            "extensions": {
+              "http://h5p.org/x-api/h5p-local-content-id": "{{contentId}}"
+            },
+            "name": {
+              "en-US": "Læringsdesign for samlingsbasert undervisning"
+            }
+          }
+        },
+        "context": {
+          "contextActivities": {
+            "category": [
+              {
+                "id": "http://h5p.org/libraries/H5P.CoursePresentation-1.28",
+                "objectType": "Activity"
+              }
+            ]
+          }
+        },
+        "result": {
+          "score": {
+            "min": 0,
+            "max": 1,
+            "raw": 1,
+            "scaled": 1
+          },
+          "completion": true,
+          "duration": "PT0.01S"
+        }
+      }
+    }
+  ]
+}

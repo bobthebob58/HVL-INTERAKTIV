@@ -46,7 +46,9 @@
       "notAllowed": "Filtypen «.{{extension}}» er ikkje tillaten.",
       "typeMismatch": "Innhaldet i fila passar ikkje til filtypen «.{{extension}}».",
       "svgRejected": "SVG-fila kan ikkje brukast fordi ho inneheld definisjonar som kan vere skadelege.",
-      "tooLarge": "Fila er større enn {{maxMb}} MB."
+      "tooLarge": "Fila er større enn {{maxMb}} MB.",
+      "malwareFound": "Viruskontrollen fann skadeleg innhald i fila, så ho vart ikkje lagra.",
+      "scanUnavailable": "Fila kunne ikkje kontrollerast for virus akkurat no, så ho vart ikkje lagra. Prøv igjen om litt."
     }
   },
   "h5p": {
@@ -240,5 +242,79 @@
       "noteRecorded": "Resultata er formative og anonymiserte samandrag for grupper med minst {{k}} studentar. Dei er ikkje dokumentasjon av eksamensresultat."
     },
     "pdfTitle": "Pedagogisk mappe"
+  },
+  "deepLinkGrading": {
+    "formativeDescription": "Poenga frå HVL Interaktiv er formative: dei blir rekna ut i nettlesaren og er ikkje eksamensgrunnlag.",
+    "noScore": {
+      "noStatements": "Ingen poeng til karakterboka: bilete med klikkpunkt sender ingen resultat, så kolonna for denne oppgåva i Canvas blir ståande tom.",
+      "noSubmitScreen": "Ingen poeng til karakterboka: videoen har inga innsendingsside, så kolonna for denne oppgåva i Canvas blir ståande tom. Legg til ei innsendingsside i videoen om du vil ha poeng.",
+      "noScoring": "Ingen poeng til karakterboka: scenarioet er sett opp utan poeng («No scoring» under «Scoring options»), så kolonna for denne oppgåva i Canvas blir ståande tom. Vel eit anna alternativ der om du vil ha poeng."
+    }
+  },
+  "insight": {
+    "csv": {
+      "filename": "innsikt",
+      "column": {
+        "section": "Del",
+        "item": "Spørsmål-ID",
+        "part": "Nr. eller sekund",
+        "label": "Tekst",
+        "measure": "Mål",
+        "value": "Verdi"
+      },
+      "section": {
+        "note": "Merknad",
+        "scope": "Utval",
+        "participation": "Deltaking",
+        "items": "Spørsmål",
+        "choices": "Svarfordeling",
+        "gaps": "Luker",
+        "video": "Video"
+      },
+      "note": {
+        "formative": "Undervegsvurdering",
+        "suppressed": "Skjulte verdiar",
+        "suppressedText": "«< {{k}}» betyr at talet byggjer på færre enn {{k}} studentar, eller at det kunne avsløre eit slikt tal, og difor er skjult. Ei tom celle betyr at talet ikkje finst for dette utvalet: aktivitetstypen sender det ikkje, eller Canvas har ikkje gitt noko tal på studentar i emnet."
+      },
+      "scope": {
+        "activity": "Aktivitet (ID)",
+        "contentVersion": "Versjon",
+        "currentVersion": "Gjeldande versjon",
+        "period": "Periode",
+        "periodStart": "Frå",
+        "periodEnd": "Til (ikkje med)",
+        "context": "Emne",
+        "minimumGroupSize": "Minste gruppe (k)"
+      },
+      "period": {
+        "7d": "Siste 7 dagar",
+        "14d": "Siste 14 dagar",
+        "30d": "Siste 30 dagar",
+        "semester": "Sidan semesterstart"
+      },
+      "portal": "Portalen (spelt utanom Canvas)",
+      "measure": {
+        "started": "Starta",
+        "completed": "Fullført",
+        "completionRate": "Fullføringsgrad (del)",
+        "completionRateOfCourse": "Fullføringsgrad (del av studentane i emnet)",
+        "completionRateOfStarted": "Fullføringsgrad (del av dei som starta)",
+        "courseLearners": "Studentar i emnet (Canvas)",
+        "medianMinutesOnTask": "Median tid på aktiviteten (minutt)",
+        "medianAttempts": "Median tal på forsøk",
+        "learners": "Studentar som svarte",
+        "firstCorrect": "Riktig på første forsøk (del)",
+        "latestCorrect": "Riktig på siste forsøk (del)",
+        "rightOption": "Riktig alternativ (studentar, første svar)",
+        "wrongOption": "Feil alternativ (studentar, første svar)",
+        "noAnswer": "Ingen av alternativa (studentar, første svar)",
+        "gapCorrect": "Riktige svar i luka (studentar, første svar)",
+        "wrongAnswer": "Feil svar i luka (studentar, første svar)",
+        "otherWrong": "Andre feil svar (studentar, første svar)",
+        "empty": "Tom luke (studentar, første svar)",
+        "answered": "Studentar som svarte",
+        "share": "Del av dei som starta"
+      }
+    }
   }
 }

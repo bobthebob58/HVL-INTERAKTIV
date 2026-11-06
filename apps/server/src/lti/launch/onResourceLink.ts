@@ -5,7 +5,7 @@
  *      player. An unknown, draft or invisible activity gives the friendly "not available" page (PROD-004, D-066);
  *      the activity's owner may preview a draft. The same View rule as everywhere else decides, including D-060
  *      (an instructor of a copied course may view the published activity their launch opened).
- * Spec: LTI-006, LTI-007, LTI-001, PROD-004, PED-030
+ * Spec: LTI-006, LTI-007, LTI-001, PROD-004, PED-030, LTI-008
  * Invariants:
  *   - The account is created or found here (the only LTI path that may write it); the `sub` is never stored.
  *   - Nothing is recorded for an activity the launch may not view; the answer is the one 404 page.
@@ -13,9 +13,12 @@
  *     appends the ltik (LTI-003 step 1).
  *   - Author launches are audited; learner launches are not (D-064).
  *   - The placement gets the launch's course label, which the recorder keeps only when it is a course code (D-087).
+ *   - After the redirect, and only then, the course's NRPS learner count is refreshed in the background when the
+ *     app passes a counter (LTI-008); the launch never waits for it or fails because of it.
  * Collaborators: ../launchFacts.ts, ../ltikPrincipal.ts, ./ltiAccount.ts, ../placements/LtiPlacementRecorder.ts,
- *   ../../auth/principalToH5pActor.ts, ../../h5p/permissions/contentRules.ts, ../ltiRoutes.ts.
- * Tests: apps/server/test/lti/ltiLaunch.int.test.ts
+ *   ../../auth/principalToH5pActor.ts, ../../h5p/permissions/contentRules.ts, ../nrps/NrpsLearnerCounter.ts,
+ *   ../ltiRoutes.ts.
+ * Tests: apps/server/test/lti/ltiLaunch.int.test.ts, apps/server/test/lti/launch/onResourceLinkNrps.test.ts
  */
 import { ContentPermission } from '@lumieducation/h5p-server';
 import type { OnLaunchHandler } from 'ltijs';
@@ -29,6 +32,7 @@ import { authError } from '../../http/authErrors.js';
 import { launchFactsOf } from '../launchFacts.js';
 import { principalOfLaunch } from '../ltikPrincipal.js';
 import { mapLtiRoles } from '../LtiRoleMapper.js';
+import type { NrpsLearnerCounter } from '../nrps/NrpsLearnerCounter.js';
 import type { LtiPlacementRecorder } from '../placements/LtiPlacementRecorder.js';
 import type { LtiAccounts } from './ltiAccount.js';
 
@@ -43,6 +47,8 @@ export interface ResourceLinkDeps {
   readonly audit: Pick<AuthAuditRecorder, 'record'>;
   /** Where the launch lands: the web app's chrome page `/app/play` when it runs (D-067), else `/lti/play`. */
   readonly landingPath?: string;
+  /** Refreshes the course's NRPS learner count after the redirect (LTI-008); without it no count is kept. */
+  readonly nrps?: Pick<NrpsLearnerCounter, 'refreshInBackground'>;
 }
 
 /**
@@ -81,5 +87,7 @@ export function onResourceLink(deps: ResourceLinkDeps): OnLaunchHandler {
       });
     }
     context.redirect(response, deps.landingPath ?? LTI_PLAY_PATH);
+    // WHY: after the redirect is sent, so the learner never waits for Canvas's roster (LTI-008).
+    deps.nrps?.refreshInBackground(context, facts);
   };
 }

@@ -5,7 +5,7 @@
  * Why: the area registries (./routes/), the merged lists (./apiRoutes.ts, ./apiSchemaNames.ts) and the document
  *      builder (./openApi.ts) all need these types; keeping them apart from the registry tables keeps each file to
  *      one job. D-099 adds answers that are files (`mediaType`) and query parameters.
- * Spec: DOC-012, MAPPE-001
+ * Spec: DOC-012, MAPPE-001, INS-009
  * Invariants:
  *   - `auth` uses the four modes DOC-012 names (portal, LTI, either, admin) plus `none` for public routes.
  *   - An answer has either a JSON `schema` or a file `mediaType`, never both (D-099).
@@ -30,8 +30,10 @@ export type ApiMethod = 'get' | 'put' | 'post' | 'patch' | 'delete';
 export const MARKDOWN_MEDIA_TYPE = 'text/markdown; charset=utf-8';
 /** The media type of a PDF file answer (MAPPE-004). */
 export const PDF_MEDIA_TYPE = 'application/pdf';
+/** The media type of a CSV file answer: UTF-8 text, comma-separated (RFC 4180; INS-009). */
+export const CSV_MEDIA_TYPE = 'text/csv; charset=utf-8';
 /** Every media type a file answer may have (D-099); the server sends exactly this `Content-Type`. */
-export const API_FILE_MEDIA_TYPES = [MARKDOWN_MEDIA_TYPE, PDF_MEDIA_TYPE] as const;
+export const API_FILE_MEDIA_TYPES = [MARKDOWN_MEDIA_TYPE, PDF_MEDIA_TYPE, CSV_MEDIA_TYPE] as const;
 /** A media type of a file answer. */
 export type ApiFileMediaType = (typeof API_FILE_MEDIA_TYPES)[number];
 

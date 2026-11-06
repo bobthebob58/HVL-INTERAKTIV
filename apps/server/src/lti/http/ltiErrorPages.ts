@@ -5,11 +5,13 @@
  * Why: LTI-001 rejects launches with a wrong signature, audience, nonce or deployment and LTI-003 answers an
  *      invalid ltik with "please reopen from Canvas"; the person in the Canvas iframe must read a sentence in their
  *      language, while the log keeps only a fixed code (D-050, D-066). Failed launches are audited (D-064).
- * Spec: LTI-001, LTI-003, LTI-006, PROD-004, PROD-012, UD-013
+ * Spec: LTI-001, LTI-003, LTI-006, PROD-004, PROD-012, UD-013, NFR-006, DATA-009
  * Invariants:
  *   - Each failure class maps to one status and one message; our other 4xx errors keep their status and message;
  *     unknown errors are 500 "something went wrong".
- *   - Nothing from the error (message, claims, token) reaches the page; the log gets the code and redacted error.
+ *   - Nothing from the error (message, claims, token) reaches the page. The log line names the route pattern, the
+ *     status and a fixed code, never the request path; a client's 4xx error by its status only; only an unexpected
+ *     error goes in as the (redacted) error (./ltiErrorLog.ts, NFR-006, DATA-009).
  *   - Pages carry the LTI headers (no-store, no-referrer, frame-ancestors = Canvas origins). The error pages of
  *     `/lti/play` and `/lti/edit`, which our own `/app/play` chrome frames, also allow `'self'`, like their pages;
  *     launch, login and Deep Linking errors stay Canvas-only (LTI-003, D-067).
@@ -17,9 +19,9 @@
  *     whose header already has it (../../http/pages/helpLink.ts, UD-013, UD-007).
  *   - Pages and JSON are in the launch's language once a route has resolved the ltik (`setLtiPageLocale`) or a
  *     launch handler has tagged its error (`withLaunchLocale`), else in Nynorsk (PROD-012).
- * Collaborators: ./ltiPageHeaders.ts, ../../http/authErrors.ts, ../../http/pages/messagePage.ts,
+ * Collaborators: ./ltiPageHeaders.ts, ./ltiErrorLog.ts, ../../http/authErrors.ts, ../../http/pages/messagePage.ts,
  *   ../../http/pages/helpLink.ts, ../../auth/audit/AuthAuditRecorder.ts.
- * Tests: apps/server/test/lti/http/ltiErrorPages.test.ts
+ * Tests: apps/server/test/lti/http/ltiErrorPages.test.ts, apps/server/test/lti/http/ltiErrorLog.test.ts
  */
 import type { NextFunction, Request, Response } from 'express';
 import type { Logger } from 'pino';
@@ -29,6 +31,7 @@ import { HttpError } from '../../http/HttpError.js';
 import { helpLinkFor } from '../../http/pages/helpLink.js';
 import { messagePage } from '../../http/pages/messagePage.js';
 import { DEFAULT_LOCALE, type Locale, type MessageKey } from '../../i18n/translate.js';
+import { ltiErrorLogFields } from './ltiErrorLog.js';
 import { ltiPageAncestors, ltiPageCsp, setLtiPageHeaders } from './ltiPageHeaders.js';
 
 const LTI_LOCALE = 'hvliLtiLocale';
@@ -118,10 +121,10 @@ const BY_AUTH_CODE: Record<string, LtiFailure> = {
   'hvl:deep-link-choice-invalid': failure(400, 'page.error.title', 'error.deepLinkChoiceInvalid'),
 };
 
-/** The 4xx status a body parser or another middleware set on its error, if any. */
+/** The 4xx status a body parser, serve-static or other middleware set on its error (not ours, not an ltijs code). */
 const clientStatusOf = (error: unknown): number | undefined => {
-  const status =
-    typeof error === 'object' && error !== null ? (error as { status?: unknown }).status : undefined;
+  if (!(error instanceof Error) || error instanceof HttpError || error.message in BY_LTIJS_CODE) return;
+  const { status } = error as { status?: unknown };
   return typeof status === 'number' && status >= 400 && status < 500 ? status : undefined;
 };
 
@@ -142,9 +145,7 @@ export function classifyLtiError(error: unknown): LtiFailure | undefined {
   if (!(error instanceof Error)) return undefined;
   const clientStatus = clientStatusOf(error);
   // WHY: a malformed JSON body on an LTI API call is the request's fault, like in the H5P routes.
-  if (clientStatus !== undefined && !(error.message in BY_LTIJS_CODE)) {
-    return failure(clientStatus, 'page.error.title', 'error.badRequest');
-  }
+  if (clientStatus !== undefined) return failure(clientStatus, 'page.error.title', 'error.badRequest');
   return (
     BY_LTIJS_CODE[error.message] ?? (JWT_ERRORS.has(error.name) ? LAUNCH_FAILED('token-invalid') : undefined)
   );
@@ -165,10 +166,10 @@ export function ltiErrorPages(deps: {
     const locale = (res.locals[LTI_LOCALE] as Locale | undefined) ?? launchLocaleOf(error) ?? DEFAULT_LOCALE;
     const known = classifyLtiError(error);
     const answer = known ?? failure(500, 'page.error.title', 'error.generic');
-    deps.logger[known ? 'warn' : 'error'](
-      { err: error, path: req.path, status: answer.status },
-      'LTI request refused',
-    );
+    const kind = !known ? 'unexpected' : clientStatusOf(error) !== undefined ? 'client' : 'known';
+    // PRIVACY: the route pattern and a fixed code, never the path or a client error's text (NFR-006, DATA-009).
+    const fields = ltiErrorLogFields(error, kind, req, res, answer.status);
+    deps.logger[known ? 'warn' : 'error'](fields, 'LTI request refused');
     if (req.path === '/lti/launch' && answer.reason) {
       await deps.audit.record({ event: 'launch.lti.failed', reason: answer.reason, ip: req.ip });
     }

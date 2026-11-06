@@ -9,11 +9,15 @@
  *   - `contextId` is the Canvas course (`launch.context.id`), never ltijs's `LaunchContext.contextId`.
  *   - `contentId` is set only when `custom.contentId` is a UUID; anything else counts as missing.
  *   - The `sub` is returned for hashing in memory only; callers never store or log it.
- * Collaborators: ./ltikPrincipal.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts, ../h5p/contentIds.ts.
+ *   - `testUser` is true only for the LTI `TestUser` role (Canvas's Student View), so its statements are flagged
+ *     and left out of insight and the mappe (D-102's amendment of 2026-11-04).
+ * Collaborators: ./ltikPrincipal.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts, ./LtiRoleMapper.ts,
+ *   ../h5p/contentIds.ts.
  * Tests: apps/server/test/lti/launchFacts.test.ts
  */
 import type { IdToken } from 'ltijs';
 import { isContentUuid } from '../h5p/contentIds.js';
+import { isLtiTestUser } from './LtiRoleMapper.js';
 
 /** The launch facts our code uses. */
 export interface LaunchFacts {
@@ -37,6 +41,8 @@ export interface LaunchFacts {
   readonly lineItemUrl?: string;
   /** The raw LTI role claims. */
   readonly roles: readonly string[];
+  /** Canvas's Student View test student (the LTI `TestUser` role); its statements are flagged (D-102). */
+  readonly testUser: boolean;
 }
 
 const text = (value: unknown): string | undefined =>
@@ -60,6 +66,7 @@ export function launchFactsOf(idToken: IdToken): LaunchFacts {
     messageType: idToken.launch.type,
     contextId: text(idToken.launch.context?.id) ?? '',
     roles: [...idToken.user.roles],
+    testUser: isLtiTestUser(idToken.user.roles),
     ...(resourceLinkId ? { resourceLinkId } : {}),
     ...(isContentUuid(contentId) ? { contentId: contentId.toLowerCase() } : {}),
     ...(lineItemUrl ? { lineItemUrl } : {}),

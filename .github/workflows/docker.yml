@@ -1,0 +1,67 @@
+# Docker: builds the server image and runs the app stack's smoke test (deploy/smoke/dockerSmoke.sh) on every pull
+# request and every push to main. Requirements: NFR-007 (images and a compose smoke test), MAPPE-004 (the mappe PDF
+# printed in the image with Chromium's sandbox), H5P-003 (the content types from the checked bundle). Design: D-110 and
+# its amendments of 2026-10-30 and 2026-11-05. A workflow of its own, so ci.yml's session gate stays as it is.
+# On GitHub's runners Chromium comes from Playwright's download host and images from Docker Hub; the smoke script's
+# sandbox extras (HVLI_DOCKER_SANDBOX) are never set here.
+name: Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    name: Image build and app stack smoke test
+    runs-on: ubuntu-24.04
+    # WHY: a cold library fetch about 5 min, npm ci and the image build (npm ci, the web build, Chromium and its
+    # system packages) about 15 min, the stack and its checks about 2 min; 60 min leaves a 2x margin.
+    timeout-minutes: 60
+    steps:
+      # SECURITY: no later step pushes or fetches with the job's token, and the library builds run third-party
+      # build scripts, so checkout leaves no token on disk for them (D-110's amendment of 2026-11-05, step 7).
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies (exact lockfile, for the fetch, bundle and check tools)
+        run: npm ci
+      - name: Fetch and verify H5P core 1.28.0 and the pinned editor (H5P-001, D-022, D-027)
+        run: npm run h5p:fetch-core
+      # WHY: a cache of its own, from before tools/h5p-libraries built every library with a minimal environment
+      # (`buildEnv` 3); the scrubbed run below stays as a second guard.
+      - name: Cache the H5P library checkouts built with a scrubbed environment
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/hvl-interaktiv/h5p-libraries-scrubbed
+          key: h5p-libraries-scrubbed-${{ runner.os }}-${{ hashFiles('tools/h5p-libraries/libraries.manifest.json', 'tools/h5p-libraries/*.mjs') }}
+          restore-keys: h5p-libraries-scrubbed-${{ runner.os }}-
+      # SECURITY: H5P.AudioRecorder 1.0's webpack build bakes process.env into its JavaScript (D-110 amendment of
+      # 2026-11-05), so the libraries are built with PATH, HOME and the cache folder only; the bundle refuses any
+      # package that still carries a secret-named variable.
+      - name: Fetch and build the ten content types at pinned commits with a scrubbed environment (D-078)
+        run: >-
+          env -i PATH="$PATH" HOME="$HOME" H5P_LIBRARIES_CACHE="$HOME/.cache/hvl-interaktiv/h5p-libraries-scrubbed"
+          node tools/h5p-libraries/fetchLibraries.mjs
+      - name: Install poppler-utils for the PDF checks (pdftotext, pdffonts, pdfinfo)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
+      # WHY: Ubuntu 24.04's AppArmor restricts the unprivileged user namespaces Chromium's sandbox needs, also inside
+      # a container; lifted on this throwaway runner only, as in ci.yml (D-096, D-110).
+      - name: Allow Chromium's sandbox on the runner (MAPPE-004, D-096)
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+      - name: Build the image and run the app stack smoke test (NFR-007, MAPPE-004, H5P-003)
+        run: bash deploy/smoke/dockerSmoke.sh

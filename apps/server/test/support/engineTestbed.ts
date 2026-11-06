@@ -66,7 +66,9 @@ export async function engineTestbed(
   const permissions = new RulePermissions();
   const translate = createHvlTranslationCallback();
   const audit = { record: async () => undefined };
-  const urlGenerator = new HvlUrlGenerator(config, new ContentFileGrants(parseKeyring(`t1=${randomKey(9)}`)));
+  // WHY: no HTTP here; relative file URLs, as a test server that serves the player's files itself would use.
+  const grants = new ContentFileGrants(parseKeyring(`t1=${randomKey(9)}`));
+  const urlGenerator = new HvlUrlGenerator(config, grants, '');
   const editor = createHvlEditor({
     config,
     storages,

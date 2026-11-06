@@ -8,7 +8,10 @@
  * Spec: H5P-003, UD-011
  * Invariants:
  *   - Every checkout must be exactly its pinned commit (./gitSource.mjs); nothing unpinned is ever built.
- *   - Builds run `npm ci --ignore-scripts`, so no dependency's install script runs, then the library's `build`.
+ *   - Builds run `npm ci --ignore-scripts`, so no dependency's install script runs, then the library's `build`, each
+ *     with a minimal environment (./libraryBuild.mjs): SECURITY: the build sees `PATH`, an empty `HOME` and
+ *     `NODE_ENV=production` only, and no global `npmrc`, because a build can bake its environment into the JavaScript
+ *     learners get (D-110's amendment of 2026-11-05).
  *   - Checkouts and builds live outside the repository (`H5P_LIBRARIES_CACHE`, default
  *     `~/.cache/hvl-interaktiv/h5p-libraries`), so a library's build never picks up this repository's TypeScript,
  *     PostCSS or browserslist configuration.
@@ -16,11 +19,15 @@
  *     `packages/` with a `SHA256SUMS` the seed command checks (`npm run seed:libraries -- <dir>`).
  *   - A finished checkout is reused only if its recorded commit and build state match the manifest, its `HEAD`
  *     is still that commit and no tracked file differs from it (`verifiedHead`); otherwise the command fails and
- *     names the folder. Its untracked files (dependencies, build output) are copied as cached, not rebuilt.
+ *     names the folder. Its untracked files (dependencies, build output) are copied as cached, not rebuilt, unless
+ *     its stamp names another build recipe (`BUILD_ENV_VERSION`): then they are removed (`git clean -ffdx`) and the
+ *     library is built again from the proven commit, without a new checkout.
  *   - A build must leave the library's tracked files as committed; one that does not fails the fresh fetch.
  * Usage: fetchLibraries.mjs [--resolve] [--dest <dir>] [--only <H5P.Name>] (`--only` packs one example).
- * Collaborators: ./resolveManifest.mjs, ./gitSource.mjs, ./libraryFiles.mjs, ./packContentTypes.mjs.
- * Tests: tools/h5p-libraries/test/manifest.test.mjs; CI runs the command before the browser and a11y suites.
+ * Collaborators: ./resolveManifest.mjs, ./gitSource.mjs, ./libraryBuild.mjs, ./libraryFiles.mjs,
+ *   ./packContentTypes.mjs.
+ * Tests: tools/h5p-libraries/test/manifest.test.mjs, tools/h5p-libraries/test/libraryBuild.test.mjs; CI runs the
+ *   command before the browser and a11y suites.
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -29,6 +36,7 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkout, listVersionTags, verifiedHead } from './gitSource.mjs';
+import { BUILD_ENV_VERSION, buildLibrary } from './libraryBuild.mjs';
 import { copyLibraryFiles } from './libraryFiles.mjs';
 import { packContentType } from './packContentTypes.mjs';
 import { CONTENT_TYPE_ROOTS, resolveManifest } from './resolveManifest.mjs';
@@ -70,17 +78,23 @@ function fetchOne(entry, dest) {
   const dir = join(CACHE, 'checkouts', folderOf(entry));
   const stampFile = join(dir, STAMP);
   const stamp = existsSync(stampFile) ? JSON.parse(readFileSync(stampFile, 'utf8')) : undefined;
-  if (stamp?.commit !== entry.commit || stamp?.built !== entry.build) {
+  const checkedOut = stamp?.commit === entry.commit && stamp?.built === entry.build;
+  // SECURITY: a build made with another recipe may hold its machine's environment (D-110, 2026-11-05).
+  const builtCurrent = !entry.build || stamp?.buildEnv === BUILD_ENV_VERSION;
+  if (!checkedOut) {
     checkout(entry.repository, entry.ref === 'HEAD' ? entry.commit : entry.ref, dir, entry.commit);
+  } else if (!builtCurrent) {
+    verifiedHead(dir, entry.commit);
+    execFileSync('git', ['clean', '-ffdxq'], { cwd: dir, stdio: ['ignore', 'ignore', 'inherit'] });
+  }
+  if (!checkedOut || !builtCurrent) {
     if (entry.build) {
-      const npm = (args) => execFileSync('npm', args, { cwd: dir, stdio: ['ignore', 'ignore', 'inherit'] });
-      // SECURITY: `--ignore-scripts` keeps third-party install scripts from running on the build machine.
-      npm(['ci', '--ignore-scripts', '--no-audit', '--no-fund']);
-      npm(['run', 'build']);
+      buildLibrary(dir, { home: join(CACHE, 'build-home') });
       // WHY: a reuse fails on any changed tracked file, so a build that rewrites one must fail here, by its cause.
       verifiedHead(dir, entry.commit);
     }
-    writeFileSync(stampFile, JSON.stringify({ commit: entry.commit, built: entry.build }));
+    const buildEnv = entry.build ? { buildEnv: BUILD_ENV_VERSION } : {};
+    writeFileSync(stampFile, JSON.stringify({ commit: entry.commit, built: entry.build, ...buildEnv }));
   } else {
     verifiedHead(dir, entry.commit);
   }

@@ -6,17 +6,21 @@
  *      published activity, lists the errors to fix with "Gå til feltet" (D-074), since the Check tab sees only the
  *      stored version; a structural save while others have saved progress is refused with 409
  *      `hvl:learner-state-reset-needed` and answered by the author's choice (PROD-013, D-093); and "Gå til feltet"
- *      (PROD-003) posts `hvli:go-to-field` with a path for this page.
+ *      (PROD-003) posts `hvli:go-to-field` with a path for this page. «Lagre» waits for H5P's editor
+ *      (./editorStart.js): a click before it could save used to leave the button disabled for good.
  * Spec: H5P-002, H5P-007, UD-006, UD-013, PROD-003, PROD-013
  * Invariants: settings come only from `#hvl-editor-config`; `hvli:content-saved` and `hvli:content-copied` go to, and
  *   `hvli:go-to-field` is taken from, the parent on our own origin only; server text is written as text, never as
- *   markup; the save choice replaces the failure text of its 409; while a chosen reset or copy runs «Lagre» holds
- *   focus with `aria-disabled` (a click is ignored), and after it «Lagre» is enabled and focused before the outcome
- *   is announced; «Avbryt» saves nothing; Canvas never sends a copy request (D-098).
- * Collaborators: ../editorPage.ts, ./editorFields.js and ./editorFieldReveal.js (a finding's path),
- *   ./editorSaveRequests.js (the requests) and ./editorSaveChoice.js (the dialog), all loaded first;
- *   ../../../http/routes/contentRoutes.ts, apps/web/src/messaging/frameMessages.ts.
+ *   markup; «Lagre» is disabled while H5P's editor cannot save, and meanwhile the status says the activity is
+ *   opening (not while a new activity waits for its content type); the save choice replaces the failure text of its
+ *   409; while a chosen reset or copy runs «Lagre» holds focus with `aria-disabled` (a click is ignored), and after it
+ *   «Lagre» is enabled and focused before the outcome is announced; «Avbryt» saves nothing; Canvas never sends a copy
+ *   request (D-098).
+ * Collaborators: ../editorPage.ts, ./editorStart.js (H5P's editor and when it can save), ./editorFields.js and
+ *   ./editorFieldReveal.js (a finding's path), ./editorSaveRequests.js (the requests) and ./editorSaveChoice.js (the
+ *   dialog), all loaded first; ../../../http/routes/contentRoutes.ts, apps/web/src/messaging/frameMessages.ts.
  * Tests: apps/server/test/h5p/editorPage.browser.int.test.ts, apps/server/test/h5p/render/editorPageScript.test.ts,
+ *   apps/server/test/h5p/editorReadiness.browser.int.test.ts,
  *   apps/server/test/h5p/editorGoToField.browser.int.test.ts, apps/server/test/h5p/editorBlockedSave.browser.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/saveChoiceRoundTrip.browser.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/saveChoiceCanvas.browser.int.test.ts
@@ -25,58 +29,37 @@
 /* global hvliGoToField -- from ./editorFields.js, loaded before this file */
 /* global hvliRequestHeaders, hvliSaveContent -- from ./editorSaveRequests.js, loaded before this file */
 /* global hvliAnswerResetNeeded -- from ./editorSaveChoice.js, loaded before this file */
+/* global hvliConfigureEditor, hvliStartEditor -- from ./editorStart.js, loaded before this file */
 
 (function startEditor() {
   var block = document.getElementById('hvl-editor-config');
   if (!block || !window.H5PEditor || !window.H5PIntegration) return;
   var config = JSON.parse(block.textContent || '{}');
   var ns = window.H5PEditor;
-  var settings = window.H5PIntegration.editor;
   var saveButton = document.getElementById('hvl-editor-save');
   var status = document.getElementById('hvl-editor-status');
   var findingList = document.getElementById('hvl-editor-findings');
   var contentId = config.contentId;
   var editor;
   var held = false;
-
-  ns.$ = window.H5P.jQuery;
-  ns.basePath = settings.libraryUrl;
-  ns.fileIcon = settings.fileIcon;
-  ns.ajaxPath = settings.ajaxPath;
-  ns.filesPath = settings.filesPath;
-  ns.apiVersion = settings.apiVersion;
-  ns.contentLanguage = settings.language;
-  ns.copyrightSemantics = settings.copyrightSemantics;
-  ns.metadataSemantics = settings.metadataSemantics;
-  ns.assets = settings.assets;
-  ns.baseUrl = '';
-  ns.enableContentHub = false;
-  if (contentId) ns.contentId = contentId;
-  // WHY: H5P's h5peditor-init.js defines this next to its form-based `init`, which Lumi does not load; the editor
-  // iframe copies it from this window. Same behaviour as H5P's own.
-  ns.getAjaxUrl = function (action, parameters) {
-    var url = settings.ajaxPath + action;
-    var separator = url.indexOf('?') === -1 ? '?' : '&';
-    Object.keys(parameters || {}).forEach(function (name) {
-      url += separator + name + '=' + parameters[name];
-      separator = '&';
-    });
-    return url;
-  };
+  var ready = false;
+  hvliConfigureEditor(ns, window.H5PIntegration.editor, contentId);
 
   function announce(text) {
     status.textContent = text;
   }
+  // A11Y: WCAG 4.1.2, 4.1.3: «Lagre» is enabled only while H5P's editor can save (./editorStart.js), so no click is
+  // silently lost; while a content type opens the status says so, and that text goes once it has opened.
+  function setReady(canSave) {
+    ready = canSave;
+    saveButton.disabled = !canSave;
+    if (!canSave) announce(config.messages.loading);
+    else if (status.textContent === config.messages.loading) announce('');
+  }
   function start(library, params) {
-    editor = new ns.Editor(library, params, document.querySelector('.h5p-editor'));
-    // WHY: where frame storage is blocked, the iframe's H5P scripts need the page's stand-in (h5pStorageGuard.js).
-    // They are fetched, so they run after this line.
-    var frame = document.querySelector('iframe.h5p-editor-iframe');
-    // A11Y: WCAG 4.1.2: H5P names its iframe after the activity's title, which a new activity does not have yet.
-    if (frame && !frame.getAttribute('title')) frame.setAttribute('title', config.messages.editorFrameTitle);
-    if (typeof window.hvliGuardFrameStorage === 'function' && frame)
-      window.hvliGuardFrameStorage(frame.contentWindow);
-    saveButton.disabled = false;
+    var container = document.querySelector('.h5p-editor');
+    var frameTitle = config.messages.editorFrameTitle;
+    editor = hvliStartEditor(ns, { library, params, container, frameTitle, onReadiness: setReady });
   }
 
   function element(tag, text, attributes) {
@@ -129,11 +112,11 @@
     showErrors(errors || []);
   }
   function save() {
-    if (held) return;
+    if (held || !ready) return;
     saveButton.disabled = true;
     showErrors([]);
     announce(config.messages.saving);
-    var done = () => void (saveButton.disabled = false);
+    var done = () => void (saveButton.disabled = !ready);
     editor.getContent(
       function (content) {
         hvliSaveContent(content, contentId, config)
@@ -185,6 +168,7 @@
   });
   saveButton.addEventListener('click', save);
   if (!contentId) return start(undefined, undefined);
+  announce(config.messages.loading);
   var paramsInit = { headers: hvliRequestHeaders(config.token, false), credentials: 'same-origin' };
   fetch('/h5p/params/' + encodeURIComponent(contentId), paramsInit)
     .then(function (response) {

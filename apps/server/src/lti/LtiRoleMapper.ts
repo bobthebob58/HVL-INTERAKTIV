@@ -11,8 +11,11 @@
  *     sub-role, context `ContentDeveloper` (full URIs, or the short context-role names LTI 1.3 allows), and
  *     `institution/person#Administrator` (D-059).
  *   - `learner` for `Learner`, `Mentor`, any other or unknown role, and a malformed claim.
- *   - The LTI `TestUser` role (Canvas's Student View) yields `learner` whatever else the claim holds (D-059).
- * Collaborators: ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts, ./ltikPrincipal.ts, ../auth/Principal.ts.
+ *   - The LTI `TestUser` role (Canvas's Student View) yields `learner` whatever else the claim holds (D-059), and
+ *     `isLtiTestUser` says so, so the launch can flag its statements and keep them out of insight (D-102's amendment
+ *     of 2026-11-04).
+ * Collaborators: ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts, ./ltikPrincipal.ts, ./launchFacts.ts,
+ *   ../auth/Principal.ts.
  * Tests: apps/server/test/lti/LtiRoleMapper.test.ts
  */
 const LIS = 'http://purl.imsglobal.org/vocab/lis/v2/';
@@ -37,6 +40,19 @@ export const LTI_AUTHOR_ROLES: ReadonlySet<string> = new Set([
 const LEARNER: LtiRoles = Object.freeze(['learner'] as const);
 const AUTHOR: LtiRoles = Object.freeze(['author'] as const);
 
+/** The role URIs of a roles claim; anything that is not a list of strings counts as no roles. */
+const roleList = (roleClaims: unknown): string[] =>
+  Array.isArray(roleClaims) ? roleClaims.filter((role): role is string => typeof role === 'string') : [];
+
+/**
+ * Tells whether a launch is Canvas's Student View test student (the LTI `TestUser` role).
+ * @param roleClaims - The roles claim's value.
+ * @returns True when the claim holds the `TestUser` role.
+ * @spec LTI-004
+ */
+export const isLtiTestUser = (roleClaims: unknown): boolean =>
+  roleList(roleClaims).includes(LTI_TEST_USER_ROLE);
+
 /**
  * Maps the `https://purl.imsglobal.org/spec/lti/claim/roles` claim to a role (spec 02 `LTI-004`).
  * @param roleClaims - The claim's value: a list of role URIs. Anything else counts as no roles.
@@ -44,9 +60,7 @@ const AUTHOR: LtiRoles = Object.freeze(['author'] as const);
  * @spec LTI-004
  */
 export function mapLtiRoles(roleClaims: unknown): LtiRoles {
-  const roles = Array.isArray(roleClaims)
-    ? roleClaims.filter((role): role is string => typeof role === 'string')
-    : [];
+  const roles = roleList(roleClaims);
   // SECURITY: a test user acts as a student; whatever teacher roles come with it must not let it author (D-059).
   if (roles.includes(LTI_TEST_USER_ROLE)) return LEARNER;
   // SECURITY: an allowlist of exact values, so a forged or unfamiliar role (system administrator, `Admin`, a

@@ -1,8 +1,8 @@
 /**
- * Tests for the mock platform CLI: it starts both mocks on the given ports, prints the tool environment, and stops
- * cleanly on SIGINT and SIGTERM.
+ * Tests for the mock platform CLI: it starts both mocks on the given ports, prints the tool environment and the Canvas
+ * service controls, and stops cleanly on SIGINT and SIGTERM.
  *
- * Spec: LTI-001, AUTH-001
+ * Spec: LTI-001, LTI-012, AUTH-001
  */
 import { describe, expect, it } from 'vitest';
 import { spawn, spawnSync } from 'node:child_process';
@@ -50,6 +50,7 @@ describe('[LTI-001] mock platform CLI', () => {
       const printed = await cli.ready;
       const jwks = await fetch(`http://127.0.0.1:${canvasPort}/api/lti/security/jwks`);
       const discovery = await fetch(`http://localhost:${feidePort}/.well-known/openid-configuration`);
+      const services = await fetch(`http://127.0.0.1:${canvasPort}/__mock/services`);
       cli.child.kill(signal);
       const { code, out } = await cli.exited;
       // Assert
@@ -57,7 +58,11 @@ describe('[LTI-001] mock platform CLI', () => {
       expect(printed).toContain(`CANVAS_ORIGINS=http://127.0.0.1:${canvasPort}\n`);
       expect(printed).toMatch(/^LTI_PLATFORMS='\[\{"name":"Mock Canvas".*\}\]'$/m);
       expect(printed).toContain(`home page with demo launches: http://127.0.0.1:${canvasPort}/`);
-      expect([jwks.status, discovery.status]).toEqual([200, 200]);
+      expect(printed).toContain(
+        `scores and token requests at http://127.0.0.1:${canvasPort}/__mock/services`,
+      );
+      expect(printed).toContain(`POST http://127.0.0.1:${canvasPort}/__mock/faults?target=scores&status=503`);
+      expect([jwks.status, discovery.status, services.status]).toEqual([200, 200, 200]);
       expect([code, out]).toEqual([0, expect.stringContaining(`Mock platform stopped (${signal}).`)]);
     },
     20_000,

@@ -1,15 +1,18 @@
 /**
  * axe on the pages Express renders itself (D-067), in the light theme and with forced colours emulated: the friendly
  * pages for a missing or invalid ltik, an unavailable activity in Canvas, an unknown activity in the player and
- * editor frames and the signed-out page, and the Deep Linking picker with its formative notice. No serious or
- * critical violation.
+ * editor frames and the signed-out page, and the Deep Linking picker with its formative notice, and again with an
+ * activity that can never send Canvas a score, whose note is read with its input (D-115). No serious or critical
+ * violation.
  *
- * Spec: UD-030, UD-012, UD-013, LTI-005
+ * Spec: UD-030, UD-012, UD-013, LTI-005, LTI-012
  */
 import { describe, expect, it } from 'vitest';
+import { t } from '../src/i18n/translate.js';
 import { describeA11y } from './support/a11ySuite.js';
 import { scanPage } from './support/axeScan.js';
 import { COLOUR_MODES } from './support/catalogue.js';
+import { addNoScoreActivity } from './support/noScoreActivity.js';
 import { openFramed, openServerAnswer, openWebPage } from './support/pages.js';
 import { expectOnlyRecorded } from './support/upstreamFindings.js';
 
@@ -86,6 +89,33 @@ describeA11y('[UD-030] axe on the server-rendered pages', (env) => {
       expect(await page.locator('input[name=contentId]').count()).toBe(2);
       expectOnlyRecorded(report, []);
       await context.close();
+    });
+
+    it('[UD-030][LTI-012] the Deep Linking picker with an activity that sends no score has no serious or critical violation', async () => {
+      // Arrange: the teacher also owns an ImageHotspots, which never sends Canvas a score (D-115)
+      const { app, browser } = env();
+      const ltik = await app.deepLink();
+      const noScore = await addNoScoreActivity(app, ltik);
+      const context = await browser.newContext({ forcedColors });
+      try {
+        const page = await openWebPage(
+          context,
+          app.base,
+          `/lti/deeplink?ltik=${encodeURIComponent(ltik)}`,
+          false,
+        );
+        // Act
+        const report = await scanPage(page, `${mode}, the Deep Linking picker with a no-score note`);
+        // Assert: the note is in words, after the label, and read with the input (D-115)
+        const input = page.locator(`input[name=contentId][value="${noScore.id}"]`);
+        const note = page.locator(`[id="${(await input.getAttribute('aria-describedby')) ?? ''}"]`);
+        expect(await note.textContent()).toBe(t('deepLinkGrading.noScore.noStatements', {}, 'nn'));
+        expect(await input.isDisabled()).toBe(false);
+        expectOnlyRecorded(report, []);
+      } finally {
+        await context.close();
+        await noScore.remove();
+      }
     });
   });
 });

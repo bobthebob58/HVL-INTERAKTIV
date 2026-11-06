@@ -17,12 +17,15 @@ describe('[DATA-009] credentials and e-mail addresses in free text', () => {
     expect(text).toContain('state=[Redacted]&iss=I1');
   });
 
-  it('[DATA-009] masks content-file and upload grants in paths', () => {
+  it('[DATA-009] masks player-file, editor-file and upload grants in paths', () => {
     const text = redactText(
-      'GET /h5p/files/k1.1.SIGA/c1/images/a.png and GET /h5p/uploads/k1.2.SIGB/u1/images/b.png',
+      'GET /h5p/files/k1.1.SIGA/c1/images/a.png and GET /h5p/uploads/k1.2.SIGB/u1/images/b.png ' +
+        'and GET /h5p/editor-files/k1.3.SIGC/c1/images/c.png',
     );
-    expect(text).not.toMatch(/SIGA|SIGB/);
+    expect(text).not.toMatch(/SIGA|SIGB|SIGC/);
     expect(text).toContain('/h5p/uploads/[Redacted]/u1/images/b.png');
+    // SECURITY: the editor's grants on the app origin are 12-hour bearer credentials too (D-110 amendment of 2026-11-05).
+    expect(text).toContain('/h5p/editor-files/[Redacted]/c1/images/c.png');
   });
 
   it('[DATA-009] masks authorization credentials in any case, with or without a colon', () => {
