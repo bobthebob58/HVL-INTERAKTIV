@@ -17,13 +17,13 @@
  *     Lumi's save, whose first parameter write also resets the state and raises the version of a structural edit
  *     in one transaction (D-093 amendment 2026-10-29) → delete dropped files as the author.
  *     Both save methods take the author's `SaveChoice`; a text-only save keeps every state row.
- *   - Package import: path only (never a buffer), `inspectZip`, manifest, main library one of the ten, for
- *     non-admins every library already installed in the same version, Lumi's import, audit for admins.
+ *   - Package import: path only (never a buffer), `inspectZip`, manifest, main library one of the ten; non-admins:
+ *     every library installed in the same version; admins: the build-secret scan (400), the audit; then Lumi's import.
  *   - Hub install and Content Hub download are refused for everyone.
  * Collaborators: ./HvlTop10ContentTypeFilter.ts, ./editorSaveSteps.ts, ./permissionCheckedExporter.ts,
  *   ./libraries/*, ../security/zipEntryGuard.ts; built only by ./H5pEditorFactory.ts.
- * Tests: apps/server/test/h5p/HvlH5PEditor.test.ts, apps/server/test/h5p/HvlH5PEditor.upload.test.ts,
- *   apps/server/test/h5p/HvlH5PEditor.library.test.ts, apps/server/test/h5p/pasteSourceGuard.int.test.ts,
+ * Tests: apps/server/test/h5p/HvlH5PEditor*.test.ts, apps/server/test/h5p/pasteSourceGuard.int.test.ts,
+ *   apps/server/test/h5p/libraries/librarySecretImport.int.test.ts (the build-secret scan of an admin's import),
  *   apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts
  */
 import {
@@ -48,6 +48,7 @@ import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
 import { disconnectFromHub } from './offlineContentTypeCache.js';
 import { assertPackageLibrariesInstalled } from './libraries/packageLibraryCheck.js';
 import { readPackageManifest } from './libraries/packageManifest.js';
+import { assertNoLibrarySecrets } from './libraries/packageSecretScan.js';
 import { sha256File } from './libraries/sha256Sums.js';
 import { usePermissionCheckedExporter } from './permissionCheckedExporter.js';
 import type { ContentAccessRepository } from './permissions/ContentAccessRepository.js';
@@ -172,6 +173,7 @@ export class HvlH5PEditor extends H5PEditor {
       await assertPackageLibrariesInstalled(manifest.libraries, this.libraryManager);
       return super.uploadPackage(dataOrPath, user);
     }
+    await assertNoLibrarySecrets(dataOrPath); // SECURITY: before any audit row or install (D-110, 2026-11-06)
     const change = {
       source: 'upload',
       actorUserId: actor.actor.accountId,

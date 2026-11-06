@@ -1,7 +1,8 @@
 # CI: the Session gate from docs/EVALUATOR-GUIDE.md §5, on every push to main and every pull request.
 # Requirements: NFR-004 (typecheck, lint, tests, traceability), SEC-007 (pins, audit), NFR-005 (licences),
 # DATA-001 (data inventory), H5P-001 (verified H5P client files and the boot check), D-023 (services), SEC-006
-# (the fail-closed scanner against a real clamd), UD-040 (the conformance report matches its sources).
+# (the fail-closed scanner and its settings probe against a strict and a lax clamd), UD-040 (the conformance report
+# matches its sources).
 # CI never contacts the H5P Hub (D-041). The ten real content types are fetched from GitHub at pinned commits and
 # verified (D-078); unit tests use synthetic packages, the real-type browser tests the fetched ones.
 name: CI
@@ -59,6 +60,14 @@ jobs:
           CLAMD_CONF_AlertExceedsMax: 'yes'
           CLAMD_CONF_AlertEncrypted: 'yes'
         ports: ['3310:3310']
+      # WHY: the same clamd without the two alert settings, as a misconfigured HVL clamd would be, so the real-clamd
+      # tests show that the scanner's settings probe detects it and refuses uploads (D-110 amendment of 2026-11-06).
+      clamav-lax:
+        image: clamav/clamav:1.4@sha256:8ad6197396974726c35d017e50aaaaf4b91745726a04faec8480c203edd98052
+        env:
+          CLAMAV_NO_FRESHCLAMD: 'true'
+          CLAMAV_NO_MILTERD: 'true'
+        ports: ['3311:3310']
     env:
       CI: 'true'
       DATABASE_URL: postgresql://hvli:hvli-dev@localhost:5432/hvli
@@ -74,9 +83,10 @@ jobs:
       # Mock Feide and mock Canvas from tools/mock-platform; tests start them in-process (D-049).
       FEIDE_CLIENT_ID: hvli-ci-client
       FEIDE_CLIENT_SECRET: ci-only-feide-client-secret
-      # The clamav service above, for apps/server/test/security/malware/realClamd.test.ts only (SEC-006).
+      # The clamav services above, for the real-clamd tests in apps/server/test/security/malware/ only (SEC-006).
       CLAMAV_TEST_HOST: 127.0.0.1
       CLAMAV_TEST_PORT: '3310'
+      CLAMAV_TEST_LAX_PORT: '3311'
     steps:
       # WHY: GitHub retires Node 20 for actions; these majors run on Node 24.
       # SECURITY: no later step pushes or fetches with the job's token, and the library builds run third-party

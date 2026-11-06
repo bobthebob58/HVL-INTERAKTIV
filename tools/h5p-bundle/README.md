@@ -14,8 +14,8 @@ The builder refuses:
 |---|---|
 | A package that is missing, changed since its hash was listed, or not listed | The bundle must be exactly what was fetched and checked |
 | A listed name that is not one of the ten types (for example `H5P.DragQuestion.h5p`) | CLAUDE.md §1: exactly ten authorable types |
-| A package with a text file (scripts, JSON, HTML, CSS, Markdown, SVG, source maps and other text) that holds an upper-case variable whose name says secret (`TOKEN`, `SECRET`, `PASSWORD`, `API_KEY`, `ACCESS_KEY`, `PRIVATE_KEY`, `CREDENTIAL`, a name ending in `_KEY`, `_KEYS` or `_AUTH` such as this server's `URL_SIGNING_KEYS`), or a `…_URL` whose value carries a password, with a value in double or single quotes | **SECURITY:** a library build that bakes its build machine's environment into JavaScript ships it to every learner and into every image. `H5P.AudioRecorder` 1.0 does this (`DefinePlugin` of `process.env`); the message names the package, the file and the variable, never the value |
-| A text file over 32 MB | It is refused rather than left unscanned |
+| A package with a text file (scripts, JSON, HTML, CSS, Markdown, SVG, source maps and other text) that holds a build machine's secrets, by the rules every way in shares (`apps/server/src/h5p/libraries/libraryBuildSecrets.ts`): a variable whose name says secret (upper-case anywhere, such as `GH_TOKEN`, `PGPASSWORD`, `URL_SIGNING_KEYS`, `SENTRY_DSN`, `GH_PAT`; other names by their last word, such as `GhToken` or `npm_config__authtoken`) with a string, template or number; a URL with a password under any name (`https_proxy`); a value shaped like a known credential; or, in a dumped environment, any variable the minimal build environment does not set (D-110 amendment of 2026-11-06) | **SECURITY:** a library build that bakes its build machine's environment into JavaScript ships it to every learner and into every image. `H5P.AudioRecorder` 1.0 does this (`DefinePlugin` of `process.env`); the message names the package, the file and the variable, never the value. The seed command and an administrator's import run the same rules on library folders |
+| A text file over 32 MB, or one whose search for a dumped environment uses up its work budget (`(too complex to scan)`) | It is refused rather than left unscanned |
 | A bundle folder that is not empty | A bundle never mixes with an older one |
 
 The SHA-256 list that D-110 keeps **in the repository** waits until the packages are reproducible across machines,
@@ -32,8 +32,11 @@ node tools/h5p-bundle/bundleCli.mjs verify <bundle dir>        # what the image 
 npx vitest run tools/h5p-bundle                                # the tests
 ```
 
-Then install from it like any seed folder: `npm run seed:libraries -- <bundle dir>`. The image build takes the
-folder as the build context `h5pbundle` (see [docs/ops/docker.md](../../docs/ops/docker.md)).
+Then install from it like any seed folder: `npm run seed:libraries -- <bundle dir>`, which scans the libraries again
+and then the whole library folder (`npm run libraries:check` does only the latter). The image build takes the
+folder as the build context `h5pbundle` (see [docs/ops/docker.md](../../docs/ops/docker.md)); its `inputs` stage needs
+the rules file `apps/server/src/h5p/libraries/libraryBuildSecrets.ts` next to this tool, which Node 24 loads by
+stripping its types.
 
 If the build is refused for a secret, the packages were built before `tools/h5p-libraries` gave each library build
 a minimal environment (`buildEnv` 3, D-110's image amendment): run `npm run h5p:fetch-libraries` again, which
@@ -46,5 +49,6 @@ rebuilds older builds in place, re-seed, never ship the refused packages, and ro
 | `contentTypeBundle.mjs` | The checks (hashes, the ten types, baked-in secrets) and the copy |
 | `bundleCli.mjs` | The command: `build` and `verify` |
 | `test/contentTypeBundle.test.mjs` | `[NFR-007]` tests of the hashes and the ten types, with small synthetic packages |
-| `test/bundleSecretGuard.test.mjs` | `[NFR-007]` tests of the secret guard |
+| `test/bundleSecretGuard.test.mjs` | `[NFR-007]` tests of the secret guard, `content/` included, and of `bundleCli` run under plain Node |
+| `test/imageInputsStage.test.mjs` | `[NFR-007]` the image's `inputs` stage copies every script it runs and every file they import, the shared rules file too |
 | `test/bundleFixtures.mjs` | The synthetic packages and fetch folders both test files use |

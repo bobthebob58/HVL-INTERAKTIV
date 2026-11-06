@@ -2,7 +2,7 @@
  * Tests that CI runs every maintainability and dependency gate the specs require, with time for them, and that its
  * traceability check covers every session PROGRESS.md marks done.
  *
- * Spec: NFR-004, SEC-007, NFR-005, PED-001, DOC-004
+ * Spec: NFR-004, SEC-007, NFR-005, PED-001, DOC-004, SEC-006
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -103,6 +103,33 @@ describe('[NFR-004] CI runs the maintainability gates', () => {
     for (const service of ['postgres:16-alpine', 'redis:7-alpine', 'motoserver/moto'])
       expect(ci).toContain(service);
     expect(ci).toMatch(/CI: 'true'/);
+  });
+});
+
+describe('[SEC-006] CI runs the real-clamd tests against a strict and a lax clamd', () => {
+  /** The lines of one service of the gate job, up to the next service or the job's `env`. */
+  const service = (name) => ci.split(`\n      ${name}:\n`)[1]?.split(/\n {6}[\w-]+:\n|\n {4}env:\n/)[0] ?? '';
+  const imageOf = (block) => /image: (clamav\/clamav:[\w.]+@sha256:[0-9a-f]{64})\n/.exec(block)?.[1];
+
+  it('[SEC-006] runs both clamd services from one pinned image, the alerts only on the strict one', () => {
+    // Arrange
+    const [strict, lax] = [service('clamav'), service('clamav-lax')];
+    // Assert: the lax clamd is the strict one without the two settings, on its own port
+    expect(imageOf(strict)).toBeDefined();
+    expect(imageOf(lax)).toBe(imageOf(strict));
+    expect(strict).toMatch(/CLAMD_CONF_AlertExceedsMax: 'yes'\n[\s\S]*CLAMD_CONF_AlertEncrypted: 'yes'\n/);
+    expect(lax).not.toMatch(/CLAMD_CONF_Alert/);
+    expect(strict).toContain("ports: ['3310:3310']");
+    expect(lax).toContain("ports: ['3311:3310']");
+  });
+
+  it('[SEC-006] names both clamd daemons to the tests, so the real-clamd tests never skip in CI', () => {
+    for (const line of [
+      'CLAMAV_TEST_HOST: 127.0.0.1',
+      "CLAMAV_TEST_PORT: '3310'",
+      "CLAMAV_TEST_LAX_PORT: '3311'",
+    ])
+      expect(ci).toMatch(new RegExp(`\n {6}${line}\n`));
   });
 });
 

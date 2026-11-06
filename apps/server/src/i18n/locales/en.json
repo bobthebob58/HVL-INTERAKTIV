@@ -40,7 +40,8 @@
     "package": {
       "notH5p": "The file is not an H5P package (.h5p).",
       "librariesNotInstalled": "The package needs content types that are not installed: {{libraries}}. Ask an administrator to install them.",
-      "libraryVersionMismatch": "The package contains a different version of {{libraries}} than the one installed. Ask an administrator to review the package."
+      "libraryVersionMismatch": "The package contains a different version of {{libraries}} than the one installed. Ask an administrator to review the package.",
+      "librarySecrets": "The package contains content types with secrets from the machine they were built on, such as access keys: {{libraries}}. Nothing was installed. Use content types from a package that was built and checked for HVL Interaktiv."
     },
     "file": {
       "notAllowed": "The file type “.{{extension}}” is not allowed.",

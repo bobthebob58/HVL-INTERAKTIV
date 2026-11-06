@@ -41,6 +41,8 @@
     "h5p:fetch-libraries": "node tools/h5p-libraries/fetchLibraries.mjs",
     "db:migrate": "npm run db:migrate --workspace apps/server",
     "seed:libraries": "npm run seed:libraries --workspace apps/server --",
+    "libraries:check": "npm run libraries:check --workspace apps/server --",
+    "clamd:check": "npm run clamd:check --workspace apps/server",
     "hub:check": "npm run hub:check --workspace apps/server",
     "docs:api": "npm run docs:api --workspace apps/server",
     "content:check": "npm run content:check --workspace apps/server --",

@@ -2,22 +2,27 @@
  * fakeClamd — a TCP server on 127.0.0.1 that speaks clamd's `INSTREAM` protocol, for the malware-scan tests.
  *
  * Why: SEC-006's tests must show what happens when clamd finds EICAR, finds nothing, never answers, answers what no
- *      clamd would (no verdict, or a finding named like a file), reports an error or is gone, in every test run and
- *      without a real ClamAV. It reads what
+ *      clamd would (no verdict, or a finding named like a file), reports an error, is gone, or is set up without
+ *      `AlertEncrypted` and `AlertExceedsMax`, in every test run and without a real ClamAV. It reads what
  *      clamscan 2.4 sends (`zINSTREAM\0`, then chunks of a 4-byte big-endian length and the data, ended by a
  *      zero-length chunk) and answers as ClamAV 1.4.6 does (`stream: OK\0`, `stream: Eicar-Test-Signature FOUND\0`).
  * Spec: SEC-006
  * Invariants:
+ *   - With `alerts` on (the default) it answers the streams a strict clamd cannot scan in full with that clamd's
+ *     heuristic (./fakeClamdHeuristics.ts), as the settings probe needs; with `alerts` off it answers them "OK", as a
+ *     clamd without those settings does.
  *   - Listens on 127.0.0.1 on a port the system picks. `close()` destroys every open connection and stops listening;
  *     `dropConnections()` destroys the open ones and keeps listening.
  *   - In `silent` mode it reads the whole stream and never answers or closes (a hung clamd); the server is
  *     half-open, so the client's own end does not close it either.
  *   - `streams` holds the bytes of every completed `INSTREAM`, in order; `connections` counts every connection.
- * Collaborators: node:net; clamscan's `scanStream` (via ../../src/security/malware/clamdClient.ts).
- * Tests: used by apps/server/test/security/malware/FailClosedMalwareScanner.test.ts and
+ * Collaborators: node:net, ./fakeClamdHeuristics.ts; clamscan's `scanStream` (via
+ *   ../../src/security/malware/clamdClient.ts).
+ * Tests: used by apps/server/test/security/malware/ (the scanner, its settings probe and the check CLI) and
  *   apps/server/test/http/malwareScan.int.test.ts.
  */
 import { createServer, type Server, type Socket } from 'node:net';
+import { strictHeuristic } from './fakeClamdHeuristics.js';
 
 /** The EICAR test file: harmless, and reported by every virus scanner (here as `Eicar-Test-Signature`). */
 export const EICAR = 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
@@ -35,6 +40,8 @@ export interface FakeClamd {
   mode: FakeClamdMode;
   /** Wait this long before answering in `answer` mode (for the parallel-scan test). */
   answerDelayMs: number;
+  /** Whether it reports what it cannot scan in full (`AlertEncrypted`, `AlertExceedsMax`); true at first. */
+  alerts: boolean;
   /** The bytes of every completed `INSTREAM`, in order. */
   readonly streams: Buffer[];
   /** How many connections were made in all. */
@@ -47,8 +54,11 @@ export interface FakeClamd {
   close(): Promise<void>;
 }
 
-const answerFor = (data: Buffer): string =>
-  data.includes(EICAR) ? 'stream: Eicar-Test-Signature FOUND' : 'stream: OK';
+const answerFor = (data: Buffer, alerts: boolean): string => {
+  if (data.includes(EICAR)) return 'stream: Eicar-Test-Signature FOUND';
+  const heuristic = alerts ? strictHeuristic(data) : undefined;
+  return heuristic ? `stream: ${heuristic} FOUND` : 'stream: OK';
+};
 
 /**
  * Starts a fake clamd.
@@ -59,8 +69,8 @@ export async function startFakeClamd(mode: FakeClamdMode = 'answer'): Promise<Fa
   const open = new Set<Socket>();
   const streams: Buffer[] = [];
   const counts = { all: 0, peak: 0 };
-  // WHY: `mode` and `answerDelayMs` change between tests; the handlers read them when a stream completes.
-  const settings = { mode, answerDelayMs: 0 };
+  // WHY: `mode`, `answerDelayMs` and `alerts` change between tests; the handlers read them when a stream completes.
+  const settings = { mode, answerDelayMs: 0, alerts: true };
 
   const reply = (socket: Socket, data: Buffer, end: string): void => {
     const send = (text: string): void => void socket.end(`${text}${end}`);
@@ -68,7 +78,7 @@ export async function startFakeClamd(mode: FakeClamdMode = 'answer'): Promise<Fa
     if (settings.mode === 'garbage') return send('HELLO');
     if (settings.mode === 'size-limit') return send('INSTREAM size limit exceeded. ERROR');
     if (settings.mode === 'odd-finding') return send(`stream: ${ODD_FINDING} FOUND`);
-    setTimeout(() => send(answerFor(data)), settings.answerDelayMs);
+    setTimeout(() => send(answerFor(data, settings.alerts)), settings.answerDelayMs);
   };
 
   const serve = (socket: Socket): void => {
@@ -126,6 +136,12 @@ export async function startFakeClamd(mode: FakeClamdMode = 'answer'): Promise<Fa
     },
     set answerDelayMs(next: number) {
       settings.answerDelayMs = next;
+    },
+    get alerts() {
+      return settings.alerts;
+    },
+    set alerts(next: boolean) {
+      settings.alerts = next;
     },
     streams,
     get connections() {

@@ -55,7 +55,7 @@
 - Traceability: `npm run spec:trace -- --check --done-through=S1` · Docs: `npm run doc:lint`
 - Dependencies: `npm run check:pins && npm run check:licences && npm run check:audit` · Privacy: `npm run privacy:inventory-check`
 - H5P client files: `npm run h5p:fetch-core` · Real content types from GitHub (D-078): `npm run h5p:fetch-libraries` · H5P boot check: `npm run boot-check --workspace apps/server`
-- Studio and mappe content (`content/`): `npm run content:check` (from S5) · Seed content types (offline): `npm run seed:libraries` · API docs: `npm run docs:api` · Hub probe (spike, on demand): `NODE_USE_ENV_PROXY=1 npm run hub:check`
+- Studio and mappe content (`content/`): `npm run content:check` (from S5) · Seed content types (offline): `npm run seed:libraries` · Library folder build-secret check: `npm run libraries:check` · clamd settings check: `npm run clamd:check` · API docs: `npm run docs:api` · Hub probe (spike, on demand): `NODE_USE_ENV_PROXY=1 npm run hub:check`
 - Spec website: `node tools/spec-site/buildSpecSite.mjs` (regenerate after any doc change; `--check` in CI)
 - Local services: `docker compose up -d`
 
