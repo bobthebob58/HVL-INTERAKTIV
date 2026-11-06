@@ -11682,6 +11682,22 @@ fixed in the test helper (<code>8d4eaf0</code>); the Session gate then passed on
 counts, the commits after <code>main</code> and the review state (no review on pull request #18) are as read on 2026-11-06.
 This amendment changes no app code, test, spec or CI file. A green CI run is not a review, so the pack&#39;s caveats
 stand, and <code>README.md</code> lists the new document.</li>
+<li><strong>Amendment (2026-11-06, the owner&#39;s request; after pull requests #18 and #21 were merged):</strong> the pack is refreshed to
+commit <code>43c6673</code>, <code>main</code> after both merges, without changing its documents or its rules. Pull request #18 was merged
+as <code>38b1743</code>, after CI and <code>docker.yml</code> had passed on its last head <code>eb79b30</code> (runs 42183630447 and 42183630572), and
+both passed on <code>main</code> (runs 42205391766 and 42205391749). Pull request #21 (<code>9bfa1b2</code>, with <code>9ad481e</code>) passed CI and
+<code>docker.yml</code> (runs 42253214678 and 42253214575) and was merged as <code>43c6673</code>; on <code>main</code>, <code>docker.yml</code> passed (run
+42266303382) and CI (run 42266303529) passed, every step (17:57–18:44 UTC). The pack now names pull request #21&#39;s
+controls where IT looks for them: the clamd settings probe and <code>npm run clamd:check</code>, and the build-secret scan on
+every way a library gets in with <code>npm run libraries:check</code> (README&#39;s status table, <code>architecture.md</code>,
+<code>test-environment.md</code>, <code>human-review.md</code> A2 and C4). Its counts are as read at <code>43c6673</code>: 224 commits, 221 by Claude
+and three merges by the owner&#39;s account; 147 dated amendments with this one; 209 review findings confirmed and fixed
+where counts were recorded, the 22 of pull request #21 (13 on the scan, 9 on the probe) taken from that pull request&#39;s
+description on GitHub. The review plan&#39;s estimate grows to about 37.5–41.5 person-days, because area A2 grew with the
+probe and C4 gained the scan. Line references into files that pull request #21 changed are corrected. Pull requests
+#8, #18 and #21, the three with the app&#39;s code (the other 18 are Dependabot&#39;s), have no review (GitHub&#39;s API,
+2026-11-06), and pull request #21&#39;s changes have passed GitHub CI, the full local test run and the Docker smoke, not
+the whole local gate. This amendment changes no app code, test, spec or CI file, and the pack&#39;s caveats stand.</li>
 </ul>
 
 </section>
@@ -13631,6 +13647,18 @@ a lax clamd service. Tests: the h5p, tools and malware suites, the upload integr
 and the real-clamd tests against both clamd containers; the full Docker smoke (<code>deploy/smoke</code>, image build, the
 seed step with the new checks, an upload scanned by the stack&#39;s clamd) passed on the final tree. Documentation: runbook §2 and §9, <code>clamav.md</code>, <code>docker.md</code>, READMEs, the Evaluator Guide, the glossary,
 the data inventory and the assurance pack&#39;s threat model and risk analysis.</p>
+</li>
+<li><p><strong>2026-11-06 · The IT assurance pack after the merges</strong> — At the owner&#39;s request, the pack (<code>docs/assurance/</code>) is
+refreshed to <code>43c6673</code>, <code>main</code> after pull requests #18 and #21 (D-116&#39;s amendment of 2026-11-06, after the merges):
+the merged facts and the runs on <code>main</code> replace &quot;not merged&quot;; pull request #21 is added where the pack lists evidence,
+with its 22 confirmed and fixed review findings (13 on the scan, 9 on the probe), which pull request #21&#39;s description
+on GitHub records; <code>npm run clamd:check</code>, <code>npm run libraries:check</code> and the build-secret scan are named in
+<code>architecture.md</code>, <code>test-environment.md</code> and <code>human-review.md</code>; the review estimates become about 37.5–41.5
+person-days; and line references into files that pull request #21 changed are corrected. Read through GitHub&#39;s API at
+18:44 UTC: CI run 42266303529 on <code>main</code> (<code>43c6673</code>) had passed, every step (17:57–18:44 UTC), and <code>docker.yml</code> run
+42266303382 had passed; the CI job logs&#39; download host was refused by this container&#39;s proxy, so CI test counts were
+not read. Written and fact-checked by AI against the repository and GitHub&#39;s read-only API; no person has reviewed it.
+Documentation only; no app code, test, spec or CI file changed.</p>
 </li>
 </ul>
 

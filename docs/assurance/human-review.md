@@ -4,7 +4,7 @@
 |---|---|
 | **For** | HVL IT (security and operations), the DPO, and anyone HVL asks to review the code, including HVL's bachelor students |
 | **Status** | **Draft for HVL IT to correct.** The plan, the checklists, the time estimates and the definitions of "reviewed" in §4–§6 are proposals |
-| **Written** | 2026-11-05 by the same AI assistant (Claude) that wrote the code, from the repository at commit `92ca2c5`. Updated 2026-11-06 at commit `8d4eaf0` with the commit counts, pull request #18 and its GitHub CI runs (§2.1, §2.3, §2.4, §3). No file under `apps/server/src`, `apps/web`, `packages/`, `deploy/` or `content/` changed between those commits (`git diff --stat 92ca2c5 8d4eaf0`) |
+| **Written** | 2026-11-05 by the same AI assistant (Claude) that wrote the code, from the repository at commit `92ca2c5`. Updated 2026-11-06 at commit `8d4eaf0` with the commit counts, pull request #18 and its GitHub CI runs (§2.1, §2.3, §2.4, §3). No file under `apps/server/src`, `apps/web`, `packages/`, `deploy/` or `content/` changed between those commits (`git diff --stat 92ca2c5 8d4eaf0`). Updated again on 2026-11-06 at commit `43c6673`, after pull requests #18 and #21 were merged: §2.1, §2.3, §3, the line counts in §4 (only area A2's changed materially) and the new controls in A2 and C4 |
 | **Reviewed by** | Nobody yet. A second AI pass checked the facts and evidence against the repository on 2026-11-05; that is not a human review |
 | **Overview** | [README.md](README.md); the risks this review lowers are ROS-01 and ROS-02 in the [ROS-analyse](ros-analyse.md) |
 
@@ -24,16 +24,16 @@
 
 ### 2.1 Who did what
 
-- **The code, the tests and the documents:** 218 of the repository's 219 commits are by `Claude
-  <noreply@anthropic.com>`. The other is GitHub's merge of pull request #8 by the owner's account
-  (`git log --format='%an'` at `8d4eaf0`, 2026-11-06).
+- **The code, the tests and the documents:** 221 of the repository's 224 commits are by `Claude
+  <noreply@anthropic.com>`. The other three are GitHub's merges of pull requests #8, #18 and #21 by the owner's account
+  (`git log --format='%an'` at `43c6673`, 2026-11-06).
 - **The owner** approved the plans of S2–S6 (`PROGRESS.md`; none is recorded for S1), made the product decisions (for
   example the licence, D-015, and one Node.js system, D-081), asked for the simplification pass (S4+), protected `main`
   with a ruleset that requires a pull request and the «Session gate» check, and merged pull request #8 after that
   check passed (`PROGRESS.md`, Q16). The pull request has **no review** on GitHub (0 reviews, read through GitHub's
-  API on 2026-11-05). Pull request #18, which carries S6, has no review either (0 reviews, read through GitHub's API
-  on 2026-11-06); it is open, not merged, and holds the 19 commits after `main`
-  (`git rev-list --count origin/main..HEAD` at `8d4eaf0`).
+  API on 2026-11-05). Pull request #18, which carries S6, and pull request #21, the security follow-ups, have no
+  review either (0 reviews each, read through GitHub's API on 2026-11-06); the owner merged both on 2026-11-06 after
+  the check passed, and every commit is now on `main` (`git rev-list --count origin/main..HEAD` is 0 at `43c6673`).
 - **The owner also tried the app** in a Codespace (commit `0943a73`: "The owner's first try ran in the browser
   editor") and received screenshots of the views as they were built (CLAUDE.md §4; `PROGRESS.md`, S4–S6). That is
   using the app, not reviewing its code.
@@ -70,18 +70,22 @@ review):
 | S6 step 8 | A run of the accessibility suite over every S6 view | 1 violation found and fixed (a chart label cut off under text spacing) | «S6», step 8 |
 | S6 step 10 | Five lenses read `git diff 47e235e`; a skeptic per finding, a fixer, an adversarial re-check | 20 found, 18 confirmed, 2 refuted, 18 fixed. The check "does the code read as if a careful human wrote it?" was **not run** | «S6», step 10 |
 | S6 gate | The full gate in ten parts (D-113), 144 steps; passed on 2026-11-06 | Three fixes: TypeDoc warnings (`f5fa12b`) and three tests that depended on test order (`92ca2c5`, `5a5b8c3`) | «S6», step 11; session log «2026-11-06 · S6 gate»; `git log` |
-| After the gate (2026-11-06) | Not a review: the local test that pins `ci.yml` to the last finished session (`tools/doc-lint/test/ciWorkflow.test.mjs`) | 1 fault: after `cbfd859` marked S6 done, the test failed (`[5]` instead of `[6]`), because CI still checked traceability through S5. `3eeea8d` raised the CI step to S6 and the same test passed. CI's run on `cbfd859` (42165369085) was cancelled by that push before its test step, so CI never reported it | `git show 3eeea8d`; `.github/workflows/ci.yml`, lines 17–19 and 174 |
-| GitHub CI, pull request #18, first finished run (2026-11-06) | Not a review: GitHub runs the committed workflow on a fresh runner. CI run 42166052880 (job 127722909215) on `3eeea8d` | Failed 1 of 27,933 tests (`apps/server/test/privacy/purge/purgeCliFailure.test.ts`, line 70, expects one line of standard error). GitHub's runner has no `apps/server/.env`, so Node's `--env-file-if-exists` printed ".env not found. Continuing without it." twice before the purge CLI's failure line. The local gate could not see it, because a developer `.env` exists there | GitHub run 42166052880; `apps/server/package.json`, line 21 |
+| After the gate (2026-11-06) | Not a review: the local test that pins `ci.yml` to the last finished session (`tools/doc-lint/test/ciWorkflow.test.mjs`) | 1 fault: after `cbfd859` marked S6 done, the test failed (`[5]` instead of `[6]`), because CI still checked traceability through S5. `3eeea8d` raised the CI step to S6 and the same test passed. CI's run on `cbfd859` (42165369085) was cancelled by that push before its test step, so CI never reported it | `git show 3eeea8d`; `.github/workflows/ci.yml`, lines 18–20 and 184 |
+| GitHub CI, pull request #18, first finished run (2026-11-06) | Not a review: GitHub runs the committed workflow on a fresh runner. CI run 42166052880 (job 127722909215) on `3eeea8d` | Failed 1 of 27,933 tests (`apps/server/test/privacy/purge/purgeCliFailure.test.ts`, line 70, expects one line of standard error). GitHub's runner has no `apps/server/.env`, so Node's `--env-file-if-exists` printed ".env not found. Continuing without it." twice before the purge CLI's failure line. The local gate could not see it, because a developer `.env` exists there | GitHub run 42166052880; `apps/server/package.json`, line 23 |
 | The fix, and CI again | `8d4eaf0`: reproduced by moving `.env` aside; the test helper drops that exact Node notice; the test's assertions are unchanged; the test passes with and without `.env`. Then CI run 42170423046 (job 127736690226) on `8d4eaf0` | **Passed**, every step, 05:46:51–06:45:23 UTC: 712 test files, 27,932 tests passed and 1 skipped of 27,933 (CI ran the 2 real-clamd tests and skipped the 1 test that runs only as root); e2e 22 files, 33 tests; the live seam against the mocks 36 tests; accessibility 18 files, 558 tests; traceability through S6 (126 requirements). This is GitHub's record that the committed tests pass there, not a review | `git show 8d4eaf0`; `apps/server/test/support/serverCli.ts`, line 30; GitHub run 42170423046 |
 | `docker.yml` on GitHub, pull request #18 | Not a review: the image build and app-stack smoke test on GitHub's runner. The first run (42165369079, on `cbfd859`) was cancelled by the next push | First pass on GitHub in run 42166052745 on `3eeea8d` (05:03–05:12 UTC); passed again in run 42170423045 on `8d4eaf0`. Both logs: image 1994 MB, 7 of 7 migrations, 77 library folders seeded, clamd refused EICAR, the PDF printed with Chromium's sandbox (seen in `/proc`), Chromium 141.0.7390.37 as uid 10001 | GitHub runs 42166052745 (job 127722905949) and 42170423045 (job 127736690022) |
+| The merge of pull request #18 (2026-11-06) | Not a review: CI and `docker.yml` on the pull request's last head, `eb79b30` (documents only), then on `main` after the owner's merge, `38b1743` | Passed: CI run 42183630447 and Docker run 42183630572 on `eb79b30`; on `main`, CI run 42205391766 (job 127850607830, 10:47–11:48 UTC) and Docker run 42205391749 | GitHub runs; `git log` |
+| Pull request #21, security follow-ups (2026-11-06) | Two workstreams by AI agents, the build-secret scan on every way a library gets in and the clamd settings probe, decided first in D-110's amendments of 2026-11-06; each reviewed by two adversarial reviewers (bypass and correctness; the tests by mutation and revert-run-restore), then fixed. Commit `9ad481e` also closed out the old AudioRecorder builds (threat model T-81) | 13 findings confirmed and fixed on the scan, 9 on the probe. Locally: 725 test files, 28,007 tests with the services and a strict and a lax real clamd, and the full Docker smoke; the accessibility suite was not run locally. On GitHub, CI run 42253214678 (every step of the job «Session gate») and Docker run 42253214575 passed on `9bfa1b2`; on `main` after the merge (`43c6673`), Docker run 42266303382 passed and CI run 42266303529 passed, every step (17:57–18:44 UTC). No review on GitHub | Session log «2026-11-06 · The build-secret scan on every way in, and a clamd settings probe»; pull request #21's description; GitHub runs |
 
-**A pattern IT should know about.** Since S3, every gate or full test run has found something the AI reviews missed:
-33 TypeDoc warnings and 2 order-dependent tests at the S3 gate, 2 undocumented API names at the S4 gate, 3 faults under
-full CPU load at the S5 gate, the grade worker claiming 3 jobs with a limit of 1 in the full server run of S6 step 4's
-checks (recorded under step 3), and three fixes in the S6 gate (`PROGRESS.md`, session log and S6 steps). GitHub CI's
-first finished run on S6 then found one fault that the local gate could not see: a test that relied on the developer's
-`.env` file (run 42166052880; fixed in `8d4eaf0`, after which run 42170423046 passed). Machines checking machines
-catch a lot; a person reading the riskiest parts is the cheapest way to catch what this method does not.
+**A pattern IT should know about.** Since S3, every session gate has found something the AI reviews missed, and so have
+some other full test runs: 33 TypeDoc warnings and 2 order-dependent tests at the S3 gate, 2 undocumented API names at
+the S4 gate, 3 faults under full CPU load at the S5 gate, the grade worker claiming 3 jobs with a limit of 1 in the full
+server run of S6 step 4's checks (recorded under step 3), and three fixes in the S6 gate (`PROGRESS.md`, session log and
+S6 steps). GitHub CI's first finished run on S6 then found one fault that the local gate could not see: a test that
+relied on the developer's `.env` file (run 42166052880; fixed in `8d4eaf0`, after which run 42170423046 passed). The
+later full CI runs found nothing new: 42183630447 on `eb79b30`, 42253214678 on `9bfa1b2` (pull request #21), and
+42205391766 and 42266303529 on `main` passed every step. Machines checking machines catch a lot; a person reading the
+riskiest parts is the cheapest way to catch what this method does not.
 
 ### 2.4 Two kinds of automated check
 
@@ -98,7 +102,7 @@ that depended on test order (`92ca2c5`, `5a5b8c3`), and CI's fresh runner found 
 - **GitHub CI:** GitHub runs the committed workflow on a fresh runner for every pull request and push to `main`, each
   command once as one full suite in its default order, and keeps the result and logs under a run ID that anyone with
   access can check; `main` accepts only a pull request with a green «Session gate» check (`.github/workflows/ci.yml`,
-  lines 9–12; `PROGRESS.md`, Q16).
+  lines 10–13; `PROGRESS.md`, Q16).
 - **Shared limit:** both run tests the same AI wrote, against mock Canvas and Feide it also wrote, in Chromium only. A
   green result means the code does what those tests expect, not that they expect the right thing. Neither is a human
   review (§6).
@@ -109,8 +113,8 @@ that depended on test order (`92ca2c5`, `5a5b8c3`), and CI's fresh runner found 
 |---|---|---|
 | The code: `apps/`, `packages/`, `tools/` | No review by a person is recorded. The planned "an HVL developer reads a sample" has not happened | `PROGRESS.md`, S6 step 10; §2.1 |
 | The tests | Written and mutation-checked by the same AI. "Tested" in `docs/TRACEABILITY.md` only means that a test title carries the requirement ID | `docs/TRACEABILITY.md`, lines 6–7; [hand-off](../handoff/README.md) §4 |
-| The deployment files and CI | `deploy/` and `.github/workflows/` were read only by AI reviewers (among them step 6's security review and step 10's review of everything since `47e235e`). `docker.yml` has now run on GitHub and passed (§2.3), which shows that the image builds and its smoke test passes there, not that a person has read the files | `PROGRESS.md`, S6 steps 6 and 10; GitHub runs 42166052745 and 42170423045 |
-| Pull request #18 (S6, the 19 commits after `main`) | No review on GitHub. CI has run on its head (CI tests the head merged into `main`, not each commit on its own): run 42166052880 on `3eeea8d` failed one test, and run 42170423046 on `8d4eaf0` passed (finished 06:45:23 UTC; §2.3). A green run is not a review (§6) | GitHub's API, 2026-11-06 (0 reviews); `git rev-list --count origin/main..HEAD`; `.github/workflows/ci.yml`, lines 9–12 |
+| The deployment files and CI | `deploy/` and `.github/workflows/` were read only by AI reviewers (among them step 6's security review, step 10's review of everything since `47e235e` and pull request #21's reviewers, who added CI's second, lax clamd). `docker.yml` has now run on GitHub and passed, also on `main` (§2.3), which shows that the image builds and its smoke test passes there, not that a person has read the files | `PROGRESS.md`, S6 steps 6 and 10; GitHub runs 42166052745, 42170423045, 42205391749 and 42253214575 |
+| Pull requests #18 (S6) and #21 (security follow-ups) | No review on GitHub; the owner merged both on 2026-11-06. CI ran on each head (CI tests the head merged into `main`, not each commit on its own): on #18, run 42166052880 on `3eeea8d` failed one test, and runs 42170423046 on `8d4eaf0` and 42183630447 on `eb79b30` passed; on #21, run 42253214678 on `9bfa1b2` passed; on `main`, runs 42205391766 after #18's merge and 42266303529 after #21's passed (§2.3). A green run is not a review (§6) | GitHub's API, 2026-11-06 (0 reviews on each); `git log`; `.github/workflows/ci.yml`, lines 10–13 |
 | The threat model, the ROS-analyse and this pack | Drafts by the AI | [threat-model.md](threat-model.md), [ros-analyse.md](ros-analyse.md) |
 | The DPIA input (residuals R1–R40) | Not reviewed by the DPO | Q6; `docs/privacy/DPIA-INPUT.md` |
 | Accessibility for real users | No manual run recorded; all 56 verdicts are *Not yet determined* | `docs/accessibility/results/README.md`; [conformance report](../accessibility/WCAG-CONFORMANCE-REPORT.md) |
@@ -127,8 +131,11 @@ each, the areas are in order of risk. The paths are under `apps/server/src/` unl
 **Time estimates are the AI author's estimates, not measurements.** They assume one experienced reviewer, about
 200 lines of careful reading an hour, as much time again to run the tests and try attacks, and a 7.5-hour working
 day, so about 100 lines per review hour, rounded to half days. The line counts are `wc -l` of each area's listed
-source files at `92ca2c5`, without tests (counted again on 2026-11-05 by a second AI pass). They still hold at
-`8d4eaf0`: none of those files changed in between (`git diff --stat 92ca2c5 8d4eaf0`).
+source files at `92ca2c5`, without tests (counted again on 2026-11-05 by a second AI pass). Counted again at
+`43c6673`: only A2's line count changed materially, by pull request #21's clamd settings probe in `security/malware/`
+(2,275 lines, now 2,816); C1's files changed by about 15 lines (CI's lax clamd, CI's traceability step raised to S6
+and two lines in the Dockerfile), which leaves its rounded count as it was; and C4 gained the build-secret scan
+(`git diff --stat 92ca2c5 43c6673`).
 
 **Before starting** (about half a day):
 
@@ -169,7 +176,7 @@ deployment ID nor the platform's active flag, so our code does (D-050, D-051), a
 **Tests that claim it:** `test/lti/ltiLaunch.int.test.ts`, `test/lti/ltikPrincipal.int.test.ts`,
 `test/lti/LtiRoleMapper.test.ts`, `test/lti/storage/LtiDeploymentGuard.int.test.ts`, `e2e/ltiIframe.e2e.test.ts`.
 
-#### A2. Uploads and the files origin (about 2,300 lines; estimate 3 days)
+#### A2. Uploads and the files origin (about 2,800 lines; estimate 4 days)
 
 **Paths:** `security/` (`SvgSanitizer.ts`, `svg/`, `FileTypeSniffer.ts`, `sniff/`, `zipEntryGuard.ts`,
 `ContentFileHeaders.ts`, `malware/`), `http/multipartUpload.ts`, `http/filesOriginRouter.ts`,
@@ -191,14 +198,17 @@ deployment ID nor the platform's active flag, so our code does (D-050, D-051), a
       captions is an attachment (`security/ContentFileHeaders.ts`).
 - [ ] A grant is an HMAC compared in constant time (`h5p/contentFileGrants.ts:112`), issued only after a View or Edit
       check, and opens no other activity's files.
-- [ ] The scanner refuses the upload when clamd gives no verdict, fails or times out (`SEC-006`).
+- [ ] The scanner refuses the upload when clamd gives no verdict, fails or times out (`SEC-006`), and refuses every
+      upload while its settings probe has not proven `AlertEncrypted` and `AlertExceedsMax`
+      (`security/malware/ClamdSettingsProbe.ts`; `npm run clamd:check`; D-110's amendment of 2026-11-06).
 - [ ] Judge the open items: the editor's files on the app origin (`SPEC-DEVIATION: D-110`) and the cookie-authenticated
       routes in `http/routes/fileRoutes.ts` (D-110; `PROGRESS.md`, S6 step 6, «Still open»).
 - [ ] Try it: polyglots, SVGs with script in every encoding, HTML named as an image, paths with NUL bytes.
 
 **Tests that claim it:** `test/security/` (among them `SvgSanitizer.bypass.test.ts` and
 `FileTypeSniffer.bypass.test.ts`), `test/http/filesOrigin.int.test.ts`, `signedFiles.int.test.ts`,
-`contentFiles.int.test.ts`, `editorUpload.int.test.ts`, `packageImport.int.test.ts`, `malwareScan.int.test.ts`.
+`contentFiles.int.test.ts`, `editorUpload.int.test.ts`, `packageImport.int.test.ts`, `malwareScan.int.test.ts`,
+`test/security/malware/` (among them `FailClosedMalwareScanner.settings.test.ts` and `realClamdSettings.test.ts`).
 
 #### A3. The grade worker (about 2,500 lines; estimate 3.5 days)
 
@@ -285,7 +295,7 @@ gradebook. Its claim bug was found only by a full test run (`PROGRESS.md`, S6 st
 **Tests that claim it:** `test/http/h5pPageCsp.test.ts`, `h5pPageCsp.browser.int.test.ts`,
 `test/web/webPageCsp.test.ts`, `test/http/securityHeaders.test.ts`, `a11y/firstParty.a11y.test.ts`.
 
-**Security in all:** about 11,300 lines in seven areas; **about 15.5 person-days** (estimate).
+**Security in all:** about 11,800 lines in seven areas; **about 16.5 person-days** (estimate).
 
 ### 4.2 B. Privacy review
 
@@ -351,9 +361,9 @@ input (Q6), which is not code review.
 | **C1. The image and the deployment files** (about 1,500 lines, plus the vendored seccomp profile, which is checked by its hash rather than read) | `deploy/Dockerfile`, `deploy/Dockerfile.dockerignore`, `deploy/compose.app.yml`, `deploy/seccomp/`, `deploy/smoke/`, `tools/deploy-check/`, `.github/workflows/`, `.github/dependabot.yml` | Base images by digest, and whether the unpinned parts (Ubuntu packages, Chromium's check) are acceptable; uid 10001, read-only root, every capability dropped but `SYS_CHROOT`, the vendored seccomp profile (its hash in `deploy/seccomp/README.md`); no secret in any layer; workflows with read-only permissions; whether your runtime allows the profile (Q5) | 2 days |
 | **C2. Configuration and start-up checks** (about 1,600 lines) | `config/`, `server/main.ts`, `server/healthRoutes.ts`, `apps/server/.env.example` | Every production refusal in [runbook](../ops/runbook.md) §2–§3 is in the code and has a test; the EEA allow-list fits HVL's providers (Q5); every variable marked as a secret in `.env.example` goes to IT's secret store; the outbound hosts in [architecture.md](architecture.md) match what the code contacts | 2 days |
 | **C3. The runbook, exercised** (in stage 1) | [docs/ops/](../ops/README.md), `tools/ops/` | First deployment (runbook §2) by someone other than the author; a backup and a restore drill (§6); one rotation of each key ring (§4); an incident drill (§7); the deployment checklist (§9) ticked or marked not applicable | 2–3 days |
-| **C4. The supply chain** | [sbom.cdx.json](sbom.cdx.json), `package-lock.json`, `tools/dependency-check/`, `tools/h5p-core/`, `tools/h5p-libraries/`, `tools/h5p-bundle/` | Run IT's own scanners over the SBOM and the image; accept or reject the audit exceptions that expire 2027-01-31 (D-030) and the Lumi path (D-112); check how H5P code is fetched and verified; note what the SBOM does not cover | 1 day |
+| **C4. The supply chain** (plus about 450 lines of the build-secret scan) | [sbom.cdx.json](sbom.cdx.json), `package-lock.json`, `tools/dependency-check/`, `tools/h5p-core/`, `tools/h5p-libraries/`, `tools/h5p-bundle/`, `apps/server/src/h5p/libraries/{libraryBuildSecrets,packageSecretScan,installedLibraryScan,librarySecretFindings,libraryStorageCheckCli}.ts` | Run IT's own scanners over the SBOM and the image; accept or reject the audit exceptions that expire 2027-01-31 (D-030) and the Lumi path (D-112); check how H5P code is fetched and verified; check the build-secret scan on every way a library gets in, and run `npm run libraries:check` on the library volume (D-110's amendment of 2026-11-06; runbook §2); note what the SBOM does not cover | 1.5 days |
 
-**Operations in all:** **about 7–8 person-days** (estimate).
+**Operations in all:** **about 7.5–8.5 person-days** (estimate).
 
 ### 4.4 D. The manual accessibility test
 
@@ -375,11 +385,11 @@ protocol adds from Session 6.
 
 | Part | Estimate | Suggested reviewer *(IT to fill in)* |
 |---|---|---|
-| A. Security | about 15.5 person-days | Someone experienced in web application security and OpenID Connect or LTI: HVL IT security, or an external party |
+| A. Security | about 16.5 person-days | Someone experienced in web application security and OpenID Connect or LTI: HVL IT security, or an external party |
 | B. Privacy | about 7.5 person-days | A developer working with the DPO |
-| C. Operations | about 7–8 person-days | HVL IT operations, ideally the future maintainer |
+| C. Operations | about 7.5–8.5 person-days | HVL IT operations, ideally the future maintainer |
 | D. Accessibility | 6–9 person-days | ALU or an external tester, as the protocol says |
-| **All** | **about 36–40 person-days** | |
+| **All** | **about 37.5–41.5 person-days** | |
 
 HVL's bachelor students in programming are asked to review this code in spring 2027 (D-101;
 [hand-off](../handoff/README.md)). Their work is welcome evidence, especially with mutation testing and their own
