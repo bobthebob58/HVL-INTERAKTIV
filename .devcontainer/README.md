@@ -52,12 +52,23 @@ other by these ports.
 - **In your browser:** after «Logg inn med Feide» on `http://localhost:3000/`, the page shows «Aktivitetane dine»
   and «Logg ut». On `http://127.0.0.1:4100/`, a launch opens the tool inside the mock Canvas course page.
 
-## What you can try, and what is not built yet
+## What you can try, and its limits here
 
-Built (Sessions 1–5): activities with the ten content types, «Sjekk og publiser», the læringsdesign studio (guide,
-patterns, planner), sharing and the content bank, the pedagogisk mappe, and the Canvas side through the mock Canvas
-(launches, Deep Linking, resume). Not yet (Session 6): teacher insight, grades to Canvas, and the Docker images for a
-real server. See [PROGRESS.md](../PROGRESS.md).
+All six build sessions are done ([PROGRESS.md](../PROGRESS.md)). You can try activities with the ten content types,
+«Sjekk og publiser», the læringsdesign studio (guide, patterns, planner), sharing and the content bank, the
+pedagogisk mappe, and the Canvas side through the mock Canvas (launches, Deep Linking, resume). Session 6 added
+teacher insight (the «Innsikt» tab), grades to Canvas (the «Poeng til Canvas» tab) and Docker images for a real
+server. Three of these show little in a codespace:
+
+- **«Innsikt»** hides every group of fewer than five learners (`INS-006`). The demo has fewer than five: one
+  student in the mock Canvas, and a handful of mock Feide users. So the tab shows that there are too few learners,
+  rather than numbers.
+- **«Poeng til Canvas»**: the mock Canvas's demo launches carry no grade column (line item), so no scores are sent
+  and the tab has nothing to show.
+- **The Docker images** are for a server. The codespace runs the app directly instead.
+
+The automated tests show insight and grades working, with many learners and a graded placement: the insight journey
+and the end-to-end test from an H5P answer to a score in the mock Canvas, which GitHub CI runs on every pull request.
 
 The PDF download of the pedagogisk mappe needs Chromium's sandbox, which `services.sh` allows where the codespace's
 kernel lets it. If it says «PDF-fila kan ikkje lagast akkurat no», the Markdown download still works.
