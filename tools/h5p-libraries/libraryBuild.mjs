@@ -18,7 +18,10 @@
  *   - The install (`npm ci --ignore-scripts`, so no dependency's script runs) gets `PATH`, the caller's `HOME` (npm's
  *     cache and configuration) and, where set, the proxy and CA variables in `INSTALL_PASSTHROUGH`; nothing else.
  *   - `BUILD_ENV_VERSION` names this recipe; a cached build stamped with another (or none) is built again.
- * Collaborators: ./fetchLibraries.mjs (the caller and the cache stamp).
+ *   - SECURITY: the build-secret scan allows in a dumped environment exactly the keys this build produces
+ *     (`BUILD_ENVIRONMENT_KEYS`, D-110 amendment of 2026-11-06); a variable added to the build must be added there.
+ * Collaborators: ./fetchLibraries.mjs (the caller and the cache stamp),
+ *   apps/server/src/h5p/libraries/libraryBuildSecrets.ts (the allowlist).
  * Tests: tools/h5p-libraries/test/libraryBuild.test.mjs
  */
 import { execFileSync } from 'node:child_process';

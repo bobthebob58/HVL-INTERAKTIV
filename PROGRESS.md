@@ -708,8 +708,11 @@ under the step that does it):
   - [x] SECURITY (found while building the bundle): `H5P.AudioRecorder` 1.0's build baked the build machine's whole
         environment, tokens included, into JavaScript served to learners. `tools/h5p-libraries` now builds every
         library with a minimal environment (`buildEnv` 3), the bundle refuses secret-named variables, and the leaky
-        builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Tokens that were in the old builds
-        should be rotated (owner)
+        builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Closed on 2026-11-06 (D-110's
+        amendment of that day): no old build was ever committed, pushed in an image, uploaded as a CI artefact or
+        sent; the last two old copies were deleted, and no other was found on the machine; the old builds' GitHub, AWS
+        and gcloud variables held the cloud session's proxy placeholders, not credentials; the owner deleted the
+        codespaces that could have built with the old recipe and had no Codespaces secrets
   - [x] Integration (2026-11-05): `main.ts` runs the PDF probe after listening and waits for it on stop; `tsx` moved
         to `apps/server`'s dependencies; scripts `deploy:check`, `docker:smoke`, `pdf:check`; the app stack has its
         own clamd, and the smoke proves an upload scanned (EICAR refused) and served from the files origin; CI runs
@@ -1801,3 +1804,37 @@ Append one entry per session: date, session, what was done, gate output, and any
   review state, the image size on GitHub's runner), and D-116's amendment of 2026-11-06 records the change. All of it
   was written and fact-checked by AI agents against the repository and GitHub's read-only API; no person has
   reviewed it. No app code, spec, test or CI file changed after `8d4eaf0`.
+- **2026-11-06 · After the merge: the upstream reports and the old AudioRecorder builds** — The owner merged pull
+  request #18 (`38b1743`), and CI (run 42205391766) and `docker.yml` (run 42205391749) passed on `main`. At the
+  owner's question "what if Lumi and H5P do not answer?", a workflow of ten AI agents (two code checks, three web
+  researchers, and a skeptic or fact-checker for each) checked that HVL Interaktiv's own workarounds cover the four
+  findings of the Lumi report and the AudioRecorder build leak without any upstream fix (they do, on every path
+  checked), and the routes when a vendor is silent. The private drafts, held outside the repository, were
+  corrected and given a dated plan: a second private channel, a coordinator (BSI for Lumi, eduCSC at Sikt for H5P),
+  CVE IDs, and a limited advisory after 90 days, which needs a D-112 amendment first. The old AudioRecorder builds
+  were closed out (S6 step 6; D-110's amendment of 2026-11-06). Found and left for the owner to decide: two ways
+  in, `seed:libraries` and an admin's package import, skip the bundle's secret scan; re-seeding keeps an installed
+  library of the same patch version; the scan misses some forms; no code checks clamd's `AlertExceedsMax`.
+  Documentation only; no code changed.
+- **2026-11-06 · The build-secret scan on every way in, and a clamd settings probe** — The owner asked for the gaps
+  above to be fixed and a pull request opened. A workflow of eight AI agents built two workstreams in parallel, each
+  reviewed by two adversarial reviewers (bypass and correctness; tests by mutation and revert-run-restore) and then
+  fixed (D-110's two follow-up amendments of 2026-11-06, decided before the code). **The build-secret scan:** one
+  rules file (`apps/server/src/h5p/libraries/libraryBuildSecrets.ts`, no imports, loaded by the bundle tool with
+  Node 24's type stripping and by the server) now runs on the bundle, `seed:libraries` (every package before the
+  first install, then the installed folder), an administrator's package import (400,
+  `upload.package.librarySecrets` in nn, nb and en) and `npm run libraries:check`; it widens the old guard
+  (lower- and mixed-case names, npm auth forms, URLs with a password under any name, credential shapes, escaped
+  JSON) and allows in an environment dump only the 28 keys our minimal build produces. Review found and fixed a
+  regression against the old guard (secret words inside upper-case names), a parser that swallowed the next name,
+  a quadratic dump search, and the image's `inputs` stage missing the rules file (a test now reads that stage). The
+  ten real packages and this machine's 77 library folders pass. **The clamd settings probe:** before the first scan,
+  then at most once a minute and after a scan without a verdict, the server sends three streams built in code with
+  a fresh nonce (a ZIP and a PDF that need a password, ZIPs nested 64 deep) and refuses every upload unless clamd
+  answers each with its heuristic; `npm run clamd:check` runs it at deployment. Measured against a strict and a lax
+  ClamAV 1.4.6: the lax one answers "OK" to all three; a fixed probe could be defeated by clamd's clean-file cache
+  (hence the nonce); `MaxRecursion` must stay at most 65; an archive-only alert setting is caught by the PDF. CI gains
+  a lax clamd service. Tests: the h5p, tools and malware suites, the upload integration tests against the services,
+  and the real-clamd tests against both clamd containers; the full Docker smoke (`deploy/smoke`, image build, the
+  seed step with the new checks, an upload scanned by the stack's clamd) passed on the final tree. Documentation: runbook §2 and §9, `clamav.md`, `docker.md`, READMEs, the Evaluator Guide, the glossary,
+  the data inventory and the assurance pack's threat model and risk analysis.

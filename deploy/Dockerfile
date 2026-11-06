@@ -86,6 +86,8 @@ FROM deps AS inputs
 COPY tools/h5p-core/verifyClientFiles.mjs tools/h5p-core/
 COPY tools/h5p-libraries/resolveManifest.mjs tools/h5p-libraries/
 COPY tools/h5p-bundle/contentTypeBundle.mjs tools/h5p-bundle/bundleCli.mjs tools/h5p-bundle/
+# WHY: the bundle's secret guard and the server share one rules file, which Node 24 loads with type stripping.
+COPY apps/server/src/h5p/libraries/libraryBuildSecrets.ts apps/server/src/h5p/libraries/
 COPY docs/reference/h5p-core-1.28-seed-packages/*.files.sha256 docs/reference/h5p-core-1.28-seed-packages/
 COPY --from=h5pcore core /inputs/h5p/core
 COPY --from=h5pcore editor /inputs/h5p/editor

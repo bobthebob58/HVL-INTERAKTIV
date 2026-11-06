@@ -14,17 +14,25 @@
  *     its own for DragQuestion; their libraries' dependencies stay inside the packages.
  *   - A package that is missing, changed or not listed, or a listed name that is not one of the ten, fails the check;
  *     the bundle is written only when there is no problem.
- *   - SECURITY: a package with a text file holding a variable whose name says secret, with a value, is refused; the
- *     problem names the package, the file and the variable, never the value.
+ *   - SECURITY: a package with a text file that holds a build machine's secrets is refused, by the rules every way in
+ *     shares (`libraryBuildSecrets.ts`, D-110 amendment of 2026-11-06); the problem names the package, the file and
+ *     the variable or the kind of value, never the value. Unlike the server, the bundle scans `content/` too.
+ *   - WHY: that rules file is TypeScript without imports, which Node 24 loads by stripping its types, so this tool
+ *     needs no build step; the image's `inputs` stage copies it next to this file.
  * Collaborators: ./bundleCli.mjs, ../h5p-core/verifyClientFiles.mjs (`readHashList`),
- *   ../h5p-libraries/resolveManifest.mjs (`CONTENT_TYPE_ROOTS`), yauzl, deploy/Dockerfile (stage `inputs`),
- *   deploy/smoke/dockerSmoke.sh.
- * Tests: tools/h5p-bundle/test/contentTypeBundle.test.mjs
+ *   ../h5p-libraries/resolveManifest.mjs (`CONTENT_TYPE_ROOTS`), apps/server/src/h5p/libraries/libraryBuildSecrets.ts,
+ *   yauzl, deploy/Dockerfile (stage `inputs`), deploy/smoke/dockerSmoke.sh.
+ * Tests: tools/h5p-bundle/test/contentTypeBundle.test.mjs, tools/h5p-bundle/test/bundleSecretGuard.test.mjs
  */
 import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import yauzl from 'yauzl';
+import {
+  MAX_SCANNED_FILE_BYTES,
+  SCANNED_TEXT_FILE,
+  buildSecretsIn,
+} from '../../apps/server/src/h5p/libraries/libraryBuildSecrets.ts';
 import { readHashList } from '../h5p-core/verifyClientFiles.mjs';
 import { CONTENT_TYPE_ROOTS } from '../h5p-libraries/resolveManifest.mjs';
 
@@ -33,18 +41,6 @@ export const BUNDLE_PACKAGES = CONTENT_TYPE_ROOTS.map((root) => `${root.machineN
 
 /** The hash list's file name, in the fetch's folder and in the bundle (the seeder reads the same name). */
 export const SUMS_FILE = 'SHA256SUMS';
-
-// SECURITY: an environment variable baked into a script, as webpack's DefinePlugin writes `process.env`: an
-// upper-case name that says secret, then a non-empty string value (`GH_TOKEN:"…"`, `"GH_TOKEN":"…"` or with single
-// quotes). `_KEY`, `_KEYS` and `_AUTH` cover this server's own key lists (`URL_SIGNING_KEYS`, `DATA_ENCRYPTION_KEYS`).
-const SECRET_VARIABLE =
-  /["']?\b((?=[A-Z])[A-Z0-9_]*(?:TOKEN|SECRET|PASSWORD|PASSWD|API_?KEY|ACCESS_KEY|PRIVATE_KEY|CREDENTIAL|_KEYS?\b|_AUTH\b)[A-Z0-9_]*)["']?\s*:\s*(?:"[^"]+"|'[^']+')/g;
-// SECURITY: a `…_URL` variable whose value carries a password (`DATABASE_URL:"postgresql://user:password@host"`).
-const URL_WITH_PASSWORD =
-  /["']?\b([A-Z][A-Z0-9_]*_URL)["']?\s*:\s*["'][a-z][a-z0-9+.-]*:\/\/[^"'/@\s]*:[^"'/@\s]+@/g;
-const TEXT_ENTRY = /\.(?:js|mjs|cjs|json|html?|css|txt|md|svg|xml|map|vtt|csv|ya?ml)$/i;
-/** Text entries larger than this are not scanned but refused, so a scan never reads an unbounded file. */
-const MAX_SCANNED_ENTRY_BYTES = 32 * 1024 * 1024;
 
 /**
  * The SHA-256 of a file.
@@ -75,16 +71,6 @@ export function checkPackageFolder(dir) {
   return { problems, sums };
 }
 
-/**
- * The secret-named variables a text file holds, by name.
- * @param {string} text - The file's contents.
- * @returns {string[]} The variable names, sorted and without repeats.
- */
-export function secretVariablesIn(text) {
-  const matches = [...text.matchAll(SECRET_VARIABLE), ...text.matchAll(URL_WITH_PASSWORD)];
-  return [...new Set(matches.map((match) => match[1]))].sort();
-}
-
 const readEntry = (zip, entry) =>
   new Promise((resolve, reject) => {
     zip.openReadStream(entry, (error, stream) => {
@@ -97,7 +83,7 @@ const readEntry = (zip, entry) =>
   });
 
 /**
- * Finds the text files of a package that hold a secret-named variable with a value.
+ * Finds the text files of a package that hold a build machine's secrets.
  * @param {string} packageFile - The `.h5p` file.
  * @returns {Promise<string[]>} One line per finding: the file in the package and the variable names.
  */
@@ -109,13 +95,13 @@ export function secretsInPackage(packageFile) {
       zip.on('error', reject);
       zip.on('end', () => resolve(findings));
       zip.on('entry', (entry) => {
-        if (!TEXT_ENTRY.test(entry.fileName)) return zip.readEntry();
-        if (entry.uncompressedSize > MAX_SCANNED_ENTRY_BYTES) {
+        if (!SCANNED_TEXT_FILE.test(entry.fileName)) return zip.readEntry();
+        if (entry.uncompressedSize > MAX_SCANNED_FILE_BYTES) {
           findings.push(`${entry.fileName} is too large to scan (over 32 MB), so it is refused`);
           return zip.readEntry();
         }
         readEntry(zip, entry).then((text) => {
-          const names = secretVariablesIn(text);
+          const names = buildSecretsIn(text);
           if (names.length > 0)
             findings.push(
               `${entry.fileName} holds ${names.join(', ')} (a build machine's environment; rebuild without it)`,

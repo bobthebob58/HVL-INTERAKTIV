@@ -41,6 +41,10 @@ Hosting is open: HVL on its own servers or Sikt, both in the EEA (Q5, `DATA-004`
    scripts are the server's own, not the root's): `npm run --silent db:roles -- views-down`,
    `npx prisma migrate deploy`, `npm run --silent db:roles -- grants`.
 3. Install the content types from the hash-checked bundle (the compose file's `seed` step; [docker.md](docker.md)).
+   Before it installs anything, the seed step scans the library files of every package for a build machine's
+   secrets, and afterwards it scans the whole library folder; a finding stops it with exit 1 and names the package,
+   the library folder, the file and the variables, never a value (D-110's amendment of 2026-11-06). A library folder
+   it names is handled as in *A library storage seeded before the build fix* below.
 4. Start the app. Its first log line, `deployment locations`, names the database and Redis hosts and the S3 region and
    endpoint host: check them against the checklist (section 9). `GET /healthz` must answer 200.
 
@@ -64,6 +68,30 @@ Hub (D-041):
    activity of that type still plays.
 4. **Production:** run steps 2–4 above with the same image by its digest, so with the same hash-checked bundle.
    Nothing is fetched or built for production.
+
+**Libraries come only from a bundle built in CI** (D-110's amendments of 2026-11-06). The bundle tool, the seed step
+and an administrator's package import all scan library files for a build machine's secrets: a variable that names a
+token, password or key, a URL with a password, a value shaped like a known credential, or, in a dumped build
+environment, any variable the minimal build environment does not set. The scan is a guard, not a licence: an
+administrator imports a package that carries libraries only to install a library that has been reviewed, and an
+import the scan refuses (`upload.package.librarySecrets`, 400) has installed nothing.
+
+**A library storage seeded before the build fix** (the library builds' minimal environment, `buildEnv` 3, of
+5 November 2026), or from packages of unknown origin, may still hold an `H5P.AudioRecorder-1.0` build with its build
+machine's environment, and re-seeding does not replace it, because Lumi keeps an installed library of the same patch
+version:
+
+1. Check the storage: `npm run libraries:check` (from the repository root, or
+   `node --import tsx src/h5p/libraries/libraryStorageCheckCli.ts` in the app image with the library volume mounted),
+   which scans `H5P_LIBRARY_DIR` or the folder given after `--`. A relative folder is read from `apps/server`, as
+   for `seed:libraries` (`npm run libraries:check -- var/h5p/libraries`); give an absolute path for any other
+   folder. It needs no database and prints only library folders, files and variable names; exit 0 means clean.
+2. If it names a library folder, stop the app, delete that folder from the library volume (usually
+   `H5P.AudioRecorder-1.0`), or delete the whole library volume (`docker volume rm <project>_h5p-libraries` for the
+   compose stack), and run the seed step again from the bundle built in CI. The seed step checks the folder again
+   and fails until it is clean.
+3. Library files are served with `Cache-Control: public` for a year, so purge the reverse proxy's or CDN's cache for
+   `/h5p/libraries/H5P.AudioRecorder-1.0/` too, and rotate any credential whose variable name the check printed.
 
 **Stop** with SIGTERM (`docker stop`, a Kubernetes rollout): the server stops its jobs, stops accepting connections,
 closes the PDF browser and its clients, and exits 0 (or 1 if a service failed to close). Allow 30 seconds. The jobs
@@ -279,8 +307,13 @@ Tick every line before the first learner, and again after a change of hosting:
       certificate for `CLAMAV_HOST` without SNI), no `CLAMSCAN_*` or `CLAMDSCAN_*` variable is set; clamd has
       `AlertExceedsMax yes` and `AlertEncrypted yes` (required: without them clamd answers "clean" for files it did
       not scan in full; `clamconf -n` shows both), `StreamMaxLength` at least 50 MB and `MaxScanTime` no higher than
-      `CLAMAV_TIMEOUT_MS`; a password-protected PDF upload is refused; signatures update daily; and the content
+      `CLAMAV_TIMEOUT_MS`, `MaxRecursion` at its default; the clamd settings check (`npm run clamd:check`, or
+      `clamdCheckCli.ts` in the image, [clamav.md](clamav.md)) ends with `"proven":true`, and the server log has no
+      `error` line with reason `clamd-settings`; a password-protected PDF upload is refused; signatures update daily; and the content
       bucket is scanned once if files were stored before scanning was on ([clamav.md](clamav.md)).
+- [ ] The content types come from a bundle built in CI, and `npm run libraries:check` passes on the library
+      volume (a storage seeded before the build fix needs its `H5P.AudioRecorder-1.0` folder deleted first,
+      section 2).
 - [ ] The app container runs as uid 10001 with Playwright's seccomp profile ([docker.md](docker.md)); never
       `PDF_ALLOW_NO_SANDBOX`.
 - [ ] The daily backup runs, its copy reaches the off-server storage, and a restore drill has passed (section 6).

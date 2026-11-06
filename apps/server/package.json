@@ -14,6 +14,8 @@
     "db:migrate": "prisma migrate deploy",
     "boot-check": "tsx --env-file-if-exists=.env src/h5p/bootCheck.ts",
     "seed:libraries": "tsx --env-file-if-exists=.env src/h5p/libraries/seedCli.ts",
+    "libraries:check": "tsx --env-file-if-exists=.env src/h5p/libraries/libraryStorageCheckCli.ts",
+    "clamd:check": "tsx --env-file-if-exists=.env src/security/malware/clamdCheckCli.ts",
     "hub:check": "tsx --env-file-if-exists=.env src/h5p/hubCheckCli.ts",
     "docs:api": "typedoc",
     "content:check": "tsx src/learningDesign/content/contentCheckCli.ts",

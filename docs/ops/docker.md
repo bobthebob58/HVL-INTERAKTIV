@@ -17,7 +17,7 @@ One multi-stage `deploy/Dockerfile`, built from the repository root. Only its la
 | Production dependencies, `tsx` among them | `npm ci` from the lockfile, then `npm prune --omit=dev`; `tsx` is a dependency of `apps/server` (D-110 integration amendment), `prisma` stays as `@prisma/client`'s optional peer | The build fails if `tsx`, `prisma` or `playwright-core` is missing |
 | The server's TypeScript, the Prisma client, the built web app, the tokens and the theme | The repository | The build (`prisma generate`, `npm run build`) |
 | H5P core 1.28.0 and the pinned editor | Build context `h5pcore` (`apps/server/h5p`, from `npm run h5p:fetch-core`) | Every file against the committed hash lists, in stage `inputs` |
-| The ten content types | Build context `h5pbundle` (from `tools/h5p-bundle`) | Their `SHA256SUMS`, the ten names and the secret guard, in stage `inputs`; the seeder checks the hashes again |
+| The ten content types | Build context `h5pbundle` (from `tools/h5p-bundle`) | Their `SHA256SUMS`, the ten names and the build-secret scan, in stage `inputs` (its rules file, `apps/server/src/h5p/libraries/libraryBuildSecrets.ts`, is copied there too); the seeder checks the hashes and scans each package again, then scans the library volume |
 | Full Chromium 141 (`chromium-1194`) | Playwright 1.56.1's download host, or build context `pwbrowsers` where that host is refused | `chrome --version` and its SHA-256, printed by the smoke test |
 | Chromium's system libraries, `fonts-dejavu-core`, `tini` | Ubuntu's archive (`install-deps chromium`) | The PDF check (æ, ø and å embedded) |
 
@@ -74,7 +74,10 @@ On a host without GitHub, copy the bundle folder from a machine with GitHub and 
 `node tools/h5p-bundle/bundleCli.mjs verify <folder>`. **If the bundle is refused for a secret**, the library build
 wrote its machine's environment into a package (D-110 amendment of 2026-11-05): rebuild that library with a
 minimal environment, as `.github/workflows/docker.yml` does (`env -i PATH="$PATH" HOME="$HOME" …`), and never ship
-the refused packages.
+the refused packages. The same rules run when the `seed` step installs the bundle and when it then checks the library
+volume: a volume seeded before the build fix fails that step until its `H5P.AudioRecorder-1.0` folder, or the whole
+volume, is deleted ([runbook](runbook.md) §2; `npm run libraries:check` runs the volume check alone; D-110's
+amendments of 2026-11-06).
 
 ## The app stack (local)
 

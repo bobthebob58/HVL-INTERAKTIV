@@ -120,7 +120,7 @@ with the commands given.
 | D-107 | `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year | Accepted (2026-10-30) |
 | D-108 | Data-subject requests: a server CLI that HVL operations run | Accepted (2026-10-30) |
 | D-109 | Database roles, encrypted-connection checks in production, and a request log without personal data | Accepted (2026-10-30) |
-| D-110 | Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV | Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05), HVL's runtime and DNS open (Q5), build egress to the owner (Q21) |
+| D-110 | Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV | Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05 and 2026-11-06), HVL's runtime and DNS open (Q5), build egress to the owner (Q21) |
 | D-111 | An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it | Accepted (2026-10-30), texts to HVL's language advisers and ALU (Q2, Q17) |
 | D-112 | Upstream reports drafted for the owner to file; Lumi stays at 10.0.4 | Accepted (2026-10-30) |
 | D-113 | The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard | Accepted (2026-10-30) |
@@ -4141,6 +4141,185 @@ loading of one spec per session are kept.
     that `clamscan` 2.4.0 sends no server name (SNI), so the TLS proxy must present the certificate for
     `CLAMAV_HOST` without one (D-112's amendment of today measured it). `upload.file.scanUnavailable` stays 400: a
     503 changes the shared error mapping (`h5pErrorResponse.ts`), which is not the upload route's.
+- **Amendment (2026-11-06, the old AudioRecorder builds closed out):** checked by AI agents with counts only, never
+  values. No build made before `buildEnv` 3 was ever committed, pushed in an image, uploaded as a CI artefact or
+  sent. The last two old packages, in the agent's scratch folder, were deleted, and the bundle's own check found
+  secret-named variables in none of the 260 AudioRecorder files and packages left on the machine, apart from two
+  deliberate canary reproductions. In the old builds, the variables named like GitHub, AWS and gcloud credentials
+  held the cloud session's proxy placeholders, not credentials. Only codespaces created from
+  `ccr-07f63266-6cere5` between 2026-10-30 17:02 and 2026-11-05 08:39 UTC could have built with the old recipe and
+  their own real environment; the owner deleted those codespaces and had no Codespaces secrets. Two corrections to
+  the residual above:
+  - **Re-seeding does not replace an old build.** Lumi installs a library that is already there only when its patch
+    version is higher (`LibraryManager.js`, `installFromDirectory`), so a library storage seeded before the fix
+    needs its `H5P.AudioRecorder-1.0` folder, or the whole library volume, deleted before it is seeded again. Library
+    files are served with `Cache-Control: public` for a year (`staticRoutes.ts`), so a server that held an old build
+    may still be served from caches after that.
+  - **Two ways in skip the bundle's secret scan.** `npm run seed:libraries` checks hashes only, and with no folder it
+    seeds H5P Group's own Hub packages from `docs/reference/h5p-core-1.28-seed-packages/` (`seedCli.ts`); an admin's
+    package import (`HvlH5PEditor.uploadPackage`) can install or patch libraries. Either could bring in H5P's own
+    AudioRecorder build, which we have not been able to check. The scan also misses some forms (a proxy URL with a
+    password, lower-case names, unquoted values). Until the scan covers both ways in, production libraries come
+    only from a bundle built in CI, and admins import no package that carries libraries.
+
+- **Amendment (2026-11-06, follow-up: the build-secret scan on every way in, decided before the code):** it closes
+  the two ways in and the blind spots that the amendment above names. Probed with names and counts only, never values.
+  - **One set of rules, in the server, loaded by the bundle tool too.** The rules live in
+    `apps/server/src/h5p/libraries/libraryBuildSecrets.ts`: pure functions over a file's text, with no import at all
+    and only erasable TypeScript, so `tools/h5p-bundle/contentTypeBundle.mjs` imports the file by its relative path
+    and Node 24 strips its types itself (Node 24.22.1 here prints no warning), while the server and its tests load it
+    through `tsx` and Vitest. Each host keeps its own file reader: the bundle tool its yauzl loop over every text
+    entry; the server `packageSecretScan.ts` (zip entries of library folders, through `zipEntryGuard`'s reader) and
+    `installedLibraryScan.ts` (the files of an installed library folder). The image build's `inputs` stage then needs
+    the one file next to the tool: `COPY apps/server/src/h5p/libraries/libraryBuildSecrets.ts
+    apps/server/src/h5p/libraries/` (`Dockerfile.dockerignore` already lets `apps/server/src` through; the `deps`
+    stage's `apps/server/package.json` makes it a module). Not chosen: a workspace package (a `package.json` in the
+    `deps` stage, the lockfile, an exports map and two Dockerfile stages for about 180 lines); the rules in
+    `tools/h5p-bundle` imported by the server (the runtime image and its `.dockerignore` leave `tools/` out, so the
+    seed step in the image would break, and production code would depend on a tool folder); two copies with a parity
+    test (they drift, and the test only finds it afterwards). A test keeps the file free of imports and runs
+    `bundleCli.mjs` under plain Node, so a change that only Vitest or `tsx` could load fails in CI, not in the image
+    build; another (`tools/h5p-bundle/test/imageInputsStage.test.mjs`) reads the `inputs` stage and fails until it
+    copies every script its `RUN` line starts and every file they import by a relative path, this rules file too.
+  - **What the rules find (`SECURITY:`; a finding names a variable or the kind of value, never the value):**
+    (1) a secret-like name with a literal value. Upper-case names (environment style) match a secret word anywhere in
+    the name, also joined to another word, as the old guard matched (`TOKEN`, `SECRET`, `PASSWORD`, `PASSWD`,
+    `PASSPHRASE`, `CREDENTIAL`, `APIKEY`, `PRIVATEKEY`, `ACCESSKEY`: `PGPASSWORD`, `GITHUBTOKEN`, `CLIENTSECRET`),
+    the whole words `JWT`, `BEARER` and `WEBHOOK`, and `KEY` or `KEYS` after `API`, `ACCESS`, `PRIVATE`, `SECRET`,
+    `SIGNING`, `ENCRYPTION`, `MASTER` or `CLIENT`; and at the end after a prefix (`_AUTH`, `_PASS`, `_PAT`,
+    `_COOKIE`, `_DSN`, and a weak `_KEY` or `_KEYS`), with a string, a template literal without `${…}` or a number;
+    a weak ending only with a string, so `ENTER_KEY:13` stays a key code, and a bare `COOKIE` stays jQuery UI's date
+    format. Lower-case and mixed-case names (`GhToken`, `gh_token`, `npm_config__authtoken`,
+    `"npm_config_//registry.npmjs.org/:_authToken"`) match by their last word only, need a word before it, and only with a string or template: a single word such as `token` or
+    `password:"Passord"` is ordinary code or an interface text. The value after a name is looked at, never consumed:
+    a text that ends in `word:` (`"Score:"`, `"env:"`) right before an object would otherwise be read as a name whose
+    value runs to the next quote and swallow the name after it. (2) A value that is a URL with a password
+    (`https_proxy:"http://user:pw@proxy:3128"`; after the first `:` the password may hold more, as RFC 3986 allows,
+    but never `/`, so a port is not one) under any name, or by its kind where it has none. (3) A value shaped
+    like a well-known credential, under any name or none: GitHub, GitLab, npm, Slack and AWS access-key tokens,
+    Google API keys, JSON Web Tokens and PEM private keys. (4) In an environment dump, every key that our minimal
+    build environment (`buildEnv` 3) does not produce. Each rule also runs on the text with its escaped quotes undone,
+    so JSON inside a string is scanned.
+  - **The environment-dump allowlist.** A dump is a flat object literal whose values are all literals and which has a
+    key starting with `npm_`, or both `PATH` and `HOME`. Allowed in it are exactly the 28 keys that `buildEnv` 3's
+    build produces with npm 11 (Node 24.22.1), counted in `apps/server/var/h5p-real/packages` and
+    `apps/server/var/h5p/libraries`: `COLOR`, `EDITOR`, `HOME`, `INIT_CWD`, `NODE`, `NODE_ENV`, `PATH`, `PWD`,
+    `npm_command`, `npm_execpath`, `npm_lifecycle_event`, `npm_lifecycle_script`, `npm_node_execpath`,
+    `npm_package_json`, `npm_package_name`, `npm_package_version` and twelve `npm_config_*` keys (`allow_scripts`,
+    `cache`, `global_prefix`, `globalconfig`, `init_module`, `local_prefix`, `node_gyp`, `noproxy`, `npm_version`,
+    `prefix`, `user_agent`, `userconfig`). Named exactly rather than as `npm_config_*`, since npm exports every
+    setting under that prefix, a proxy with its password and a registry token too. Allowed keys still go through
+    rules (2) and (3). `SECURITY:` the search for dumps is bounded: each `{` is parsed once, at most the 64 before a
+    marker (`npm_*:`, `PATH:`, `HOME:`) are tried, and a pair parsed or a `{` tried costs one unit of a budget of a
+    quarter of the text's length (plus 4096); a text that uses it up is a finding, `(too complex to scan)`, never
+    skipped. The real packages use at most 0.3 % of it, and crafted texts of 1 MB take under 0.4 s (before, an
+    object that never closed took time that grew with the square of its length: 72 KB took 5 s). The fixture test above that left `npm_package_name:"x"` alone keeps that key allowed, but its
+    `token` and `password` keys are now findings, because they sit in a dump.
+  - **Where it runs.** The bundle tool (`build`, `verify`) scans every text entry of a package, as before. The
+    server scans the library folders of a package (every folder but `content/`) and leaves `content/` alone: content
+    is the author's data and is never installed as code, and a programming course may well show `API_KEY: "…"`.
+    `npm run seed:libraries` scans every package after the hash and archive checks and before the first install, so
+    a finding installs nothing; the error names the package, the library folder, the file and the variables, and the
+    command exits 1. After seeding it scans the installed library folder (`H5P_LIBRARY_DIR`) and fails, naming each
+    library folder to delete, since Lumi keeps an installed library of the same patch version;
+    `npm run libraries:check [-- <folder>]` runs that scan alone, without the database or Redis (a relative folder is
+    read from `apps/server`, as `seed:libraries` reads its folder, wherever the command is typed). An administrator's
+    package import (`HvlH5PEditor.uploadPackage`, only on the path that may install) scans before the audit rows and
+    Lumi's install, and refuses with 400 and `upload.package.librarySecrets` (nn, nb, en), naming the library
+    folders; the error carries its own message key, so `h5pErrorResponse.ts` maps it without a change. An author's
+    import is not scanned: Lumi never installs an author's libraries, and `SEC-003` already refuses any that differ
+    from the installed ones.
+  - **Consequences.** The ten real packages and this machine's seeded library folder pass; the scan of the ten
+    packages (22 MB zipped) takes a few seconds, and of the largest (CoursePresentation, 12.5 MB of text) about
+    1.5 s, which an import of it adds. An npm that exports a new key, or an H5P Group package whose build dumped
+    its environment, is refused with that key's name, and a text the dump search cannot finish within its budget as
+    `(too complex to scan)`: fail closed, and the allowlist grows only after someone has
+    checked the key carries nothing secret. A storage seeded before `buildEnv` 3 fails the seed step (the image's and
+    `.devcontainer/setup.sh`'s too) until its `H5P.AudioRecorder-1.0` folder, or the whole library volume, is
+    deleted (runbook §2). The scan is a guard, not a licence: production libraries still come only from a bundle
+    built in CI, and an administrator imports a package with libraries only to install a reviewed library.
+- **Amendment (2026-11-06, follow-up: a clamd settings probe, decided before the code):** the review of today found
+  that `AlertExceedsMax` and `AlertEncrypted`, required since step 7, are only a checklist item: a clamd without
+  them answers "OK" after a partial scan, and the wrapper stores the file as clean. Measured today with the ClamAV
+  1.4.6 image above, a strict clamd (both settings, as in `ci.yml`) and a lax one (neither, as a misconfigured HVL
+  clamd would be): a ZIP with a password is `Heuristics.Encrypted.Zip` from the strict clamd and "OK" from the lax
+  one; nested ZIPs are `Heuristics.Limits.Exceeded.MaxRecursion` and "OK"; a plain stream is "OK" from both. The
+  server now proves the settings itself (`SEC-006`).
+  - **What is sent.** Three streams, built in code (`clamdProbeStreams.ts`, `clamdProbeZip.ts`; no binary fixture):
+    a ZIP whose one entry needs a password (ZIP's traditional encryption, as `zip -P` writes it; `unzip` opens it
+    with the password, measured) for `AlertEncryptedArchive`; a one-page PDF with the standard security handler and
+    keys the empty password does not open for `AlertEncryptedDoc`; and ZIPs nested 64 deep for `AlertExceedsMax`.
+    A setting is proven only when its stream is answered `FOUND` with exactly its heuristic
+    (`Heuristics.Encrypted.Zip`, `Heuristics.Encrypted.PDF`, `Heuristics.Limits.Exceeded.MaxRecursion`); "OK",
+    another name or no verdict proves nothing. The PDF is a third stream because `AlertEncryptedArchive yes`
+    alone (half of the pair `clamav.md` accepts in place of `AlertEncrypted yes`) passes the ZIP and answers "OK"
+    for the PDF (measured, with `AlertEncryptedDoc no`). `AlertExceedsMax` is one switch for every limit (step 7
+    measured `MaxFiles`, `MaxScanSize`, `MaxScanTime` and `MaxRecursion`), so `MaxRecursion`, the cheapest to reach
+    (7.5 KB), proves it.
+  - **A fresh nonce in every stream.** clamd remembers the hash of every file it scanned clean and does not unpack
+    it again. Measured: with fixed bytes, an author who uploads ZIPs nested 10, 17, 30, 46, 47, 60 and 63 deep in
+    turn, each holding the one before and each answered "OK", makes the strict clamd answer "OK" for the 64-deep
+    probe; uploads would then be refused (closed, not open) until clamd's cache was cleared. So 16 random bytes,
+    drawn for each probe run, go inside every stream: clamd has never seen any layer. The bytes are otherwise fixed,
+    and the test pins each stream's SHA-256 for a nonce of zeros.
+    The same cache also spoiled our first measurements of where the limit lies; with fresh streams, ZIPs nested 15
+    deep are "OK" and 16 deep are reported at clamd's default `MaxRecursion 17`; with `MaxRecursion 31`, 29 and 30.
+    The 64-deep probe therefore proves `AlertExceedsMax` while `MaxRecursion` is at most 65 (measured with 65 and
+    66); `clamav.md` asks HVL to keep the default.
+  - **When it runs.** Before the first scan of a server process, not at its start: `seed:libraries` and the other
+    commands build the same H5P runtime, and the scanner contacts nobody at start (a clamd that is down then refuses
+    uploads instead of stopping the server). Then again before a scan when the last result is 60 s old, and at once
+    after a file's scan ended without a verdict (time-out, lost or refused connection, TLS, an error answer), since
+    clamd may have restarted with other settings; a configuration change needs a clamd restart. A refusal before the
+    file was sent does not make the probe forget: the probe's streams start first and have the same limit, so a scan
+    that waits for a probe gets the probe's own reason. Concurrent scans wait for one probe; its three streams go
+    through the same clamscan client (`scanStream`, which `isInfected` calls for a file over TCP, so the same
+    connection, TLS and verdict parsing), each takes one of the four turns and has the `CLAMAV_TIMEOUT_MS` limit,
+    and an upload's own time limit includes the wait. Not chosen: probing
+    with every file (three more scans per file; a package import scans hundreds at once), only at start (the
+    settings change with a restart), or a timer (it would scan while nobody uploads, and keep the process alive).
+  - **Result and caching.** Proven, or not proven (a verdict that was not the heuristic): either is kept for 60 s,
+    so a lax clamd costs three small scans a minute while uploads come, and a corrected clamd is used within a
+    minute without restarting the server. The 60 s are measured on a monotonic clock (`performance.now()`), so a
+    wall clock set back (an NTP step, a resumed VM) cannot keep a proof longer. No verdict for a probe stream is not
+    kept: that upload is refused with the probe's reason (`unreachable`, `timeout`, `tls`, ...), as today, and the
+    next upload probes again.
+  - **Fail closed, and what operators see.** While not proven, every upload is refused with
+    `upload.file.scanUnavailable` (400), the message for a scan without a verdict; no new locale key. Each refusal
+    logs the usual `warn` line with `reason: "clamd-settings"`, a new reason code. When the result changes to "not
+    proven" (or the unproven settings change), one `error` line:
+    `{"reason":"clamd-settings","unproven":[{"setting":"AlertExceedsMax","answer":"OK"}]}` with the message
+    `uploads are refused: clamd answers OK for files it cannot scan in full; set AlertEncrypted yes and
+    AlertExceedsMax yes in clamd.conf and keep MaxRecursion at its default (docs/ops/clamav.md)`. When it changes to
+    proven, one `info` line, `{"clamdSettings":"proven"}`. `answer` is "OK", a name shaped like a signature, or
+    "other"; no file name, path or text from clamd is logged. A probe's `FOUND` never reaches `malware-found`: the
+    probe reads the verdict itself and never goes through Lumi's scanner. clamd itself, however, logs each probe
+    stream as a finding (three `FOUND` lines from the server's address within a second or two) and runs any
+    `VirusEvent` for each (measured); `clamav.md` tells operators how to recognise them and to alert on the server's
+    `malware-found` lines instead.
+  - **Deploy time.** `deploy:check` reads files only, so it does not fit; the Docker smoke already fails when its
+    clamd lacks the settings (the EICAR upload is then refused as `scanUnavailable`, not `malwareFound`). New:
+    `src/security/malware/clamdCheckCli.ts`, which reads only `CLAMAV_*` and `LOG_LEVEL`, runs the same probe once,
+    prints one JSON line (`clamdCheck`, `proven`, `reason`) and exits 0 only when proven. Its log lines and that
+    summary go through one synchronous stdout destination, so the summary is always last (pino's default destination
+    writes asynchronously, and its `flush()` does not wait for a write in flight: under load the summary came
+    first). HVL runs it at deployment and after changing clamd (runbook §9). It needs a package script
+    (`clamd:check`) and the runbook line, which the integrator adds.
+  - **Tests.** The fake clamd (`test/support/fakeClamd.ts` with `fakeClamdHeuristics.ts`) answers the probe
+    streams as clamd does, from their structure (an encrypted ZIP entry, a PDF with `/Encrypt`, ZIPs nested past
+    15), strict by default and lax on request. The real-clamd tests
+    run the probe against `CLAMAV_TEST_HOST`/`CLAMAV_TEST_PORT` (strict, proven) and, when `CLAMAV_TEST_LAX_PORT`
+    names a clamd without the alerts on the same host, show that it is detected and the upload refused. `ci.yml`
+    gains a second ClamAV service, the same image digest without the two settings, on port 3311, and
+    `ciWorkflow.test.mjs` checks both services and the three `CLAMAV_TEST_*` variables, so CI cannot skip these
+    tests silently. Further tests pin what review found unguarded: each probe run sends new bytes, a probe in flight
+    is not joined after `forget`, the minute is monotonic, probe streams wait for one of the four turns, an upload's
+    limit includes the probe, a probe answer without a verdict is `no-verdict` (not kept), and a file's own scan
+    failure is the reason logged.
+  - **Not proven by the probe** (stays on HVL's checklist, `clamav.md`): `StreamMaxLength`, `MaxFileSize` and
+    `MaxScanSize` of at least 50M, `MaxScanTime`, `MaxFiles`, fresh signatures; that every clamd behind one
+    `CLAMAV_HOST` (a load balancer) is set up alike, since each probe stream reaches whichever answers; and a clamd
+    reconfigured and restarted between two probes is trusted for up to 60 s unless an upload failed meanwhile.
 
 ### D-111 · An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it
 - **Context:** S5's probe P1 found that many `nn` and `nb` defaults of the real libraries are English (MultiChoice,

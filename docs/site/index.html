@@ -505,7 +505,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>D-109</td><td>Database roles, encrypted-connection checks in production, and a request log without personal data</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
-<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
+<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05 and 2026-11-06), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
 <tr>
 <td>D-111</td><td>An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</td><td>Accepted (2026-10-30), texts to HVL&#39;s language advisers and ALU (Q2, Q17)</td></tr>
 <tr>
@@ -6063,7 +6063,7 @@ the gate output lists them so (limitation 23).</p>
 <tr>
 <td><a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a> Files origin</td><td><code>-t &quot;\[SEC-004\]&quot;</code>: headers, files-origin-only serving, expiry, other activities refused, CORS, the editor&#39;s own grants (<code>test/http/filesOrigin.int.test.ts</code>, <code>editorFiles.int.test.ts</code>), the page policies, and <code>e2e/filesOrigin.e2e.test.ts</code> in full Chromium (images and captions from the files origin, no cookie or ltik sent, a scripted SVG never runs); the image&#39;s smoke serves an uploaded file from <code>files.localhost</code></td><td>HVL&#39;s DNS name and certificate for the files host (Q5, deployment checklist)</td></tr>
 <tr>
-<td><a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a> Malware scanning</td><td><code>-t &quot;\[SEC-006\]&quot;</code>: fail-closed on both upload paths against a fake clamd, the start-up rules; the real-clamd tests with <code>CLAMAV_TEST_HOST</code> (CI&#39;s clamav service); the image&#39;s smoke against the stack&#39;s clamd</td><td>HVL runs clamd with daily signatures and TLS (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/clamav.md" rel="noopener" class="ext">ops/clamav.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</td></tr>
+<td><a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a> Malware scanning</td><td><code>-t &quot;\[SEC-006\]&quot;</code>: fail-closed on both upload paths against a fake clamd, the start-up rules, the clamd settings probe (strict and lax fakes); the real-clamd tests with <code>CLAMAV_TEST_HOST</code>, and against a clamd without the alert settings with <code>CLAMAV_TEST_LAX_PORT</code> (CI&#39;s <code>clamav</code> and <code>clamav-lax</code> services); <code>npm run clamd:check</code>; the image&#39;s smoke against the stack&#39;s clamd</td><td>HVL runs clamd with daily signatures and TLS (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/clamav.md" rel="noopener" class="ext">ops/clamav.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>)</td></tr>
 <tr>
 <td><a class="req-ref" href="#r-UD-040"><code>UD-040</code></a> Conformance report</td><td><code>npm run a11y:report -- --check</code> and <code>-t &quot;\[UD-040\]&quot;</code> (<code>tools/a11y-report/test/</code>): every criterion present, manual blocks kept, no verdict without a dated HVL evaluation, a failed or partial run never recorded as passed</td><td>HVL/ALU run the manual protocol, set the 56 verdicts (each with a dated <code>**Evaluated by HVL:**</code> line, or the generator stops) and write the uustatus.no notes (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>)</td></tr>
 </tbody></table></div>
@@ -6485,7 +6485,7 @@ with the commands given.</p>
 <tr>
 <td>D-109</td><td>Database roles, encrypted-connection checks in production, and a request log without personal data</td><td>Accepted (2026-10-30)</td></tr>
 <tr>
-<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
+<td>D-110</td><td>Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</td><td>Accepted (2026-10-30), built in S6 step 6 (amendments of 2026-11-05 and 2026-11-06), HVL&#39;s runtime and DNS open (Q5), build egress to the owner (Q21)</td></tr>
 <tr>
 <td>D-111</td><td>An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</td><td>Accepted (2026-10-30), texts to HVL&#39;s language advisers and ALU (Q2, Q17)</td></tr>
 <tr>
@@ -10177,9 +10177,10 @@ An access point alias (<code>…-s3alias</code>) is a plain name and goes throug
 </ul>
 <h3 id="decisions--d-110--deployment-and-operations-design-runtime-image-compose-content-types-files-origin-clamav" tabindex="-1">D-110 · Deployment and operations design: runtime, image, compose, content types, files origin, ClamAV</h3>
 <ul>
-<li><strong>Context:</strong> <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a> asks for Docker images and compose files for local and staging use; <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a> for daily
+<li><p><strong>Context:</strong> <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a> asks for Docker images and compose files for local and staging use; <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a> for daily
 backups and a tested restore; <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a> for a separate files origin in production (D-012, D-045); <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a> for
-ClamAV when <code>CLAMAV_HOST</code> is set; D-096 for Chromium with æ, ø and å in the image. Found while mapping:<ul>
+ClamAV when <code>CLAMAV_HOST</code> is set; D-096 for Chromium with æ, ø and å in the image. Found while mapping:</p>
+<ul>
 <li><code>npm start</code> runs the server&#39;s TypeScript through <code>tsx</code>, a development dependency of the repository root, so the
 server cannot start from a production install (Evaluator Guide limitation 13). A bundle or a <code>tsc</code> emit would
 break at least nine <code>import.meta.url</code> anchors (<code>SERVER_ROOT</code> and <code>WEB_APP_DIR</code> among them).</li>
@@ -10197,7 +10198,8 @@ environment variables, which override the options passed to it. clamd&#39;s defa
 <li>Whether Docker runs in this environment is known only after probe P3.</li>
 </ul>
 </li>
-<li><strong>Decision:</strong> a design that steps 1 and 6 build; what they find changes it by amendment.<ul>
+<li><p><strong>Decision:</strong> a design that steps 1 and 6 build; what they find changes it by amendment.</p>
+<ul>
 <li><strong>Runtime:</strong> <code>tsx</code> (4.23.15, already pinned) becomes an exact-pinned runtime dependency of <code>apps/server</code>, and
 <code>npm start</code> keeps running the sources. A build step waits for a reason worth reworking the anchors.</li>
 <li><strong>Image:</strong> one multi-stage <code>Dockerfile</code>. The build stage installs everything, generates Prisma, builds the tokens,
@@ -10232,24 +10234,27 @@ pinned at 10.0.4, the version that matches Lumi 10.0.4&#39;s scanner interface (
 the restore drill each semester are HVL&#39;s.</li>
 </ul>
 </li>
-<li><strong>Alternatives considered:</strong> (a) A compiled server (a bundle or <code>tsc</code> output): every path anchor reworked, to save
+<li><p><strong>Alternatives considered:</strong> (a) A compiled server (a bundle or <code>tsc</code> output): every path anchor reworked, to save
 the in-memory compile at start-up. (b) Debian&#39;s Chromium package: the distribution&#39;s security updates, but its
 DevTools protocol can drift from playwright-core 1.56.1. (c) Our own clamd client instead of Lumi&#39;s scanner: no new
 dependency and explicit failure handling, but a <code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>, which names the package; a wrapper
 gives the same handling. (d) The editor&#39;s files on the files origin at once: that needs a grant model for the
-editor&#39;s cookie-authenticated requests, while the player is where learners meet uploaded files.</li>
-<li><strong>Consequences:</strong> Limitation 13 closes when this is built. The runtime dependency changes (<code>tsx</code> moved,
+editor&#39;s cookie-authenticated requests, while the player is where learners meet uploaded files.</p>
+</li>
+<li><p><strong>Consequences:</strong> Limitation 13 closes when this is built. The runtime dependency changes (<code>tsx</code> moved,
 <code>@lumieducation/h5p-clamav-scanner</code> 10.0.4 with <code>clamscan</code> and <code>ts-deepmerge</code>) pass <code>check:pins</code>, <code>check:licences</code>
 and <code>check:audit</code>.
 Until the editor&#39;s file route moves, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>&#39;s &quot;in production, content files are served from a separate origin&quot;
 holds for the player only: a <code>SPEC-DEVIATION</code> for the editor route (marked <code>SPEC-DEVIATION: D-110</code>), mitigated
 because every file keeps <code>nosniff</code>, the sandbox CSP and <code>attachment</code> for all but media (D-045). If Docker does not
 run here, the image and compose files are written here and GitHub CI runs them (D-113). HVL decides the runtime (a
-Docker host, Kubernetes or OpenShift), the sandbox settings, DNS and certificates (Q5).</li>
-<li><strong>Amendment (2026-10-30, probe P3):</strong> Docker works here (Docker 29.8.2 with BuildKit and compose 5.6.0: builds with
+Docker host, Kubernetes or OpenShift), the sandbox settings, DNS and certificates (Q5).</p>
+</li>
+<li><p><strong>Amendment (2026-10-30, probe P3):</strong> Docker works here (Docker 29.8.2 with BuildKit and compose 5.6.0: builds with
 network steps, compose with health checks, and Chromium&#39;s sandbox as a non-root user), and a second agent re-ran
 every decisive step. So one <code>Dockerfile</code> and one smoke script run both here and in GitHub CI, and the fallback
-above (&quot;written here, and GitHub CI runs them&quot;) is not needed. What changes:<ul>
+above (&quot;written here, and GitHub CI runs them&quot;) is not needed. What changes:</p>
+<ul>
 <li><strong>Base:</strong> the builder and runtime stages start from
 <code>ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852</code>, with Node 24 copied from
 <code>node:24-bookworm-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c</code>
@@ -10332,8 +10337,9 @@ the pinned 1.56.1), and its floating ranges already broke 2.0.30 (&quot;Cannot f
 version tested; the image rather than the release binary, so one pinned digest serves here and in CI.</li>
 </ul>
 </li>
-<li><strong>Amendment (2026-11-05, step 6: the files origin, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>):</strong> decided before the code; it settles what
-<strong>Files origin</strong> above leaves open.<ul>
+<li><p><strong>Amendment (2026-11-05, step 6: the files origin, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>):</strong> decided before the code; it settles what
+<strong>Files origin</strong> above leaves open.</p>
+<ul>
 <li><strong>Setting:</strong> <code>FILES_BASE_URL</code>, an origin. Unset, it is <code>files.&lt;host&gt;</code> of <code>PUBLIC_BASE_URL</code> with the same scheme
 and port, so development gets <code>http://files.localhost:3000</code> (Chromium and Firefox resolve every <code>*.localhost</code>
 name to the loopback, RFC 6761 §6.3; Node does not, so server tests name the files host in the <code>Host</code> header). A
@@ -10379,8 +10385,9 @@ themselves; the app test bed, the e2e set and the accessibility suite run the re
 also keep <code>SameSite</code> cookies set with a <code>Domain</code> away from file requests (see <strong>Files origin</strong> above).</li>
 </ul>
 </li>
-<li><strong>Amendment (2026-11-05, step 6: the image, the app stack and its smoke test, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>):</strong> decided
-before the code, after the P3 amendment; what the smoke test measures is added at the end of this block.<ul>
+<li><p><strong>Amendment (2026-11-05, step 6: the image, the app stack and its smoke test, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>):</strong> decided
+before the code, after the P3 amendment; what the smoke test measures is added at the end of this block.</p>
+<ul>
 <li><strong>Files:</strong> <code>deploy/Dockerfile</code> (with <code>deploy/Dockerfile.dockerignore</code>), <code>deploy/compose.app.yml</code>,
 <code>deploy/seccomp/</code>, <code>deploy/smoke/</code> (the smoke script), <code>tools/h5p-bundle/</code> (the content-type bundle) and
 <code>.github/workflows/docker.yml</code>, apart from <code>ci.yml</code>. The runbook is <code>docs/ops/docker.md</code>.</li>
@@ -10516,10 +10523,11 @@ stack turned off Prisma&#39;s usage report (<code>CHECKPOINT_DISABLE</code>); th
 </li>
 </ul>
 </li>
-<li><strong>Amendment (2026-11-05, step 6: ClamAV, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>):</strong> decided before the code; it settles what <strong>ClamAV</strong> above
+<li><p><strong>Amendment (2026-11-05, step 6: ClamAV, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>):</strong> decided before the code; it settles what <strong>ClamAV</strong> above
 leaves open. Read in <code>@lumieducation/h5p-clamav-scanner</code> 10.0.4 and <code>clamscan</code> 2.4.0, and measured against
 <code>clamav/clamav:1.4@sha256:8ad6197396974726c35d017e50aaaaf4b91745726a04faec8480c203edd98052</code> (ClamAV 1.4.6 with
-signatures 28171 in the image), pulled through the mirror in 7 s:<ul>
+signatures 28171 in the image), pulled through the mirror in 7 s:</p>
+<ul>
 <li><em>Found:</em> Lumi&#39;s <code>ClamAVScanner.create</code> merges <code>CLAMSCAN_*</code> and <code>CLAMDSCAN_*</code> over the options passed to it and
 asks clamd for its version before it returns. Its <code>scan</code> reports every answer that is not &quot;infected&quot; as
 <code>Clean</code>, while <code>clamscan</code> gives no verdict (<code>isInfected: null</code>) for a reply it cannot read: an empty file
@@ -10581,8 +10589,9 @@ person and a file, which must still be refused while the name stays out of the l
 while no scanner was configured are never scanned later, and that <code>DEBUG=h5p:*</code> makes Lumi log file paths.</li>
 </ul>
 </li>
-<li><strong>Amendment (2026-11-05, step 6: backups, restore and the runbook, <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>):</strong> decided before the code; it
-settles what <strong>Backups and runbook</strong> above leaves open. What the round-trip test measures is added at the end.<ul>
+<li><p><strong>Amendment (2026-11-05, step 6: backups, restore and the runbook, <a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>):</strong> decided before the code; it
+settles what <strong>Backups and runbook</strong> above leaves open. What the round-trip test measures is added at the end.</p>
+<ul>
 <li><strong>Files:</strong> <code>tools/ops/</code> (the CLI <code>backupCli.mjs</code> and its modules, with tests), the runbook
 <code>docs/ops/runbook.md</code> (lower case, as the other runbooks in <code>docs/ops/</code>; it replaces the planned <code>RUNBOOK.md</code>),
 and the deployment checklist as a section of that runbook rather than a file of its own, so the start, the
@@ -10666,8 +10675,9 @@ between the dump and the bucket copy is not in that backup, and the restore repo
 <code>contentFilesMissing</code> (runbook section 6, step 3).</li>
 </ul>
 </li>
-<li><strong>Amendment (2026-11-05, step 6 integration):</strong> decided before the integration&#39;s code; it settles what the five
-step-6 amendments above left to the integrator.<ul>
+<li><p><strong>Amendment (2026-11-05, step 6 integration):</strong> decided before the integration&#39;s code; it settles what the five
+step-6 amendments above left to the integrator.</p>
+<ul>
 <li><strong>Runtime (ends the image amendment&#39;s narrowing):</strong> <code>tsx</code> 4.23.15 moves from the repository root&#39;s development
 dependencies to <code>apps/server</code>&#39;s dependencies, as <strong>Runtime</strong> decides, so <code>npm ci --omit=dev</code> keeps it (Evaluator
 Guide limitation 13). The image&#39;s copy of <code>tsx</code>&#39;s closure becomes a no-op and stays as a guard; the build still
@@ -10705,8 +10715,9 @@ gate. Its cache comment names the build recipe (<code>buildEnv</code>, the image
 <li><strong>Key rotation:</strong> the old <code>DATA_ENCRYPTION_KEYS</code> key now stays at least 31 days (D-056&#39;s amendment of today).</li>
 </ul>
 </li>
-<li><strong>Amendment (2026-11-05, S6 step 7: hardening after step 6&#39;s security review):</strong> decided before the changes; it
-settles the findings the review left open (PROGRESS, step 6, «Still open»).<ul>
+<li><p><strong>Amendment (2026-11-05, S6 step 7: hardening after step 6&#39;s security review):</strong> decided before the changes; it
+settles the findings the review left open (PROGRESS, step 6, «Still open»).</p>
+<ul>
 <li><strong>clamd&#39;s alerts are required (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>).</strong> clamd answers <code>OK</code> for a file it did not scan in full unless it is
 told otherwise. Measured with the ClamAV 1.4.6 image above, its signatures and nothing else changed: with the
 image&#39;s defaults every one of these was <code>OK</code>: a ZIP and a PDF that need a password to open, an office file of
@@ -10767,6 +10778,191 @@ local backup folder on an encrypted volume and restores from the authenticated o
 that <code>clamscan</code> 2.4.0 sends no server name (SNI), so the TLS proxy must present the certificate for
 <code>CLAMAV_HOST</code> without one (D-112&#39;s amendment of today measured it). <code>upload.file.scanUnavailable</code> stays 400: a
 503 changes the shared error mapping (<code>h5pErrorResponse.ts</code>), which is not the upload route&#39;s.</li>
+</ul>
+</li>
+<li><p><strong>Amendment (2026-11-06, the old AudioRecorder builds closed out):</strong> checked by AI agents with counts only, never
+values. No build made before <code>buildEnv</code> 3 was ever committed, pushed in an image, uploaded as a CI artefact or
+sent. The last two old packages, in the agent&#39;s scratch folder, were deleted, and the bundle&#39;s own check found
+secret-named variables in none of the 260 AudioRecorder files and packages left on the machine, apart from two
+deliberate canary reproductions. In the old builds, the variables named like GitHub, AWS and gcloud credentials
+held the cloud session&#39;s proxy placeholders, not credentials. Only codespaces created from
+<code>ccr-07f63266-6cere5</code> between 2026-10-30 17:02 and 2026-11-05 08:39 UTC could have built with the old recipe and
+their own real environment; the owner deleted those codespaces and had no Codespaces secrets. Two corrections to
+the residual above:</p>
+<ul>
+<li><strong>Re-seeding does not replace an old build.</strong> Lumi installs a library that is already there only when its patch
+version is higher (<code>LibraryManager.js</code>, <code>installFromDirectory</code>), so a library storage seeded before the fix
+needs its <code>H5P.AudioRecorder-1.0</code> folder, or the whole library volume, deleted before it is seeded again. Library
+files are served with <code>Cache-Control: public</code> for a year (<code>staticRoutes.ts</code>), so a server that held an old build
+may still be served from caches after that.</li>
+<li><strong>Two ways in skip the bundle&#39;s secret scan.</strong> <code>npm run seed:libraries</code> checks hashes only, and with no folder it
+seeds H5P Group&#39;s own Hub packages from <code>docs/reference/h5p-core-1.28-seed-packages/</code> (<code>seedCli.ts</code>); an admin&#39;s
+package import (<code>HvlH5PEditor.uploadPackage</code>) can install or patch libraries. Either could bring in H5P&#39;s own
+AudioRecorder build, which we have not been able to check. The scan also misses some forms (a proxy URL with a
+password, lower-case names, unquoted values). Until the scan covers both ways in, production libraries come
+only from a bundle built in CI, and admins import no package that carries libraries.</li>
+</ul>
+</li>
+<li><p><strong>Amendment (2026-11-06, follow-up: the build-secret scan on every way in, decided before the code):</strong> it closes
+the two ways in and the blind spots that the amendment above names. Probed with names and counts only, never values.</p>
+<ul>
+<li><strong>One set of rules, in the server, loaded by the bundle tool too.</strong> The rules live in
+<code>apps/server/src/h5p/libraries/libraryBuildSecrets.ts</code>: pure functions over a file&#39;s text, with no import at all
+and only erasable TypeScript, so <code>tools/h5p-bundle/contentTypeBundle.mjs</code> imports the file by its relative path
+and Node 24 strips its types itself (Node 24.22.1 here prints no warning), while the server and its tests load it
+through <code>tsx</code> and Vitest. Each host keeps its own file reader: the bundle tool its yauzl loop over every text
+entry; the server <code>packageSecretScan.ts</code> (zip entries of library folders, through <code>zipEntryGuard</code>&#39;s reader) and
+<code>installedLibraryScan.ts</code> (the files of an installed library folder). The image build&#39;s <code>inputs</code> stage then needs
+the one file next to the tool: <code>COPY apps/server/src/h5p/libraries/libraryBuildSecrets.ts apps/server/src/h5p/libraries/</code> (<code>Dockerfile.dockerignore</code> already lets <code>apps/server/src</code> through; the <code>deps</code>
+stage&#39;s <code>apps/server/package.json</code> makes it a module). Not chosen: a workspace package (a <code>package.json</code> in the
+<code>deps</code> stage, the lockfile, an exports map and two Dockerfile stages for about 180 lines); the rules in
+<code>tools/h5p-bundle</code> imported by the server (the runtime image and its <code>.dockerignore</code> leave <code>tools/</code> out, so the
+seed step in the image would break, and production code would depend on a tool folder); two copies with a parity
+test (they drift, and the test only finds it afterwards). A test keeps the file free of imports and runs
+<code>bundleCli.mjs</code> under plain Node, so a change that only Vitest or <code>tsx</code> could load fails in CI, not in the image
+build; another (<code>tools/h5p-bundle/test/imageInputsStage.test.mjs</code>) reads the <code>inputs</code> stage and fails until it
+copies every script its <code>RUN</code> line starts and every file they import by a relative path, this rules file too.</li>
+<li><strong>What the rules find (<code>SECURITY:</code>; a finding names a variable or the kind of value, never the value):</strong>
+(1) a secret-like name with a literal value. Upper-case names (environment style) match a secret word anywhere in
+the name, also joined to another word, as the old guard matched (<code>TOKEN</code>, <code>SECRET</code>, <code>PASSWORD</code>, <code>PASSWD</code>,
+<code>PASSPHRASE</code>, <code>CREDENTIAL</code>, <code>APIKEY</code>, <code>PRIVATEKEY</code>, <code>ACCESSKEY</code>: <code>PGPASSWORD</code>, <code>GITHUBTOKEN</code>, <code>CLIENTSECRET</code>),
+the whole words <code>JWT</code>, <code>BEARER</code> and <code>WEBHOOK</code>, and <code>KEY</code> or <code>KEYS</code> after <code>API</code>, <code>ACCESS</code>, <code>PRIVATE</code>, <code>SECRET</code>,
+<code>SIGNING</code>, <code>ENCRYPTION</code>, <code>MASTER</code> or <code>CLIENT</code>; and at the end after a prefix (<code>_AUTH</code>, <code>_PASS</code>, <code>_PAT</code>,
+<code>_COOKIE</code>, <code>_DSN</code>, and a weak <code>_KEY</code> or <code>_KEYS</code>), with a string, a template literal without <code>${…}</code> or a number;
+a weak ending only with a string, so <code>ENTER_KEY:13</code> stays a key code, and a bare <code>COOKIE</code> stays jQuery UI&#39;s date
+format. Lower-case and mixed-case names (<code>GhToken</code>, <code>gh_token</code>, <code>npm_config__authtoken</code>,
+<code>&quot;npm_config_//registry.npmjs.org/:_authToken&quot;</code>) match by their last word only, need a word before it, and only with a string or template: a single word such as <code>token</code> or
+<code>password:&quot;Passord&quot;</code> is ordinary code or an interface text. The value after a name is looked at, never consumed:
+a text that ends in <code>word:</code> (<code>&quot;Score:&quot;</code>, <code>&quot;env:&quot;</code>) right before an object would otherwise be read as a name whose
+value runs to the next quote and swallow the name after it. (2) A value that is a URL with a password
+(<code>https_proxy:&quot;http://user:pw@proxy:3128&quot;</code>; after the first <code>:</code> the password may hold more, as RFC 3986 allows,
+but never <code>/</code>, so a port is not one) under any name, or by its kind where it has none. (3) A value shaped
+like a well-known credential, under any name or none: GitHub, GitLab, npm, Slack and AWS access-key tokens,
+Google API keys, JSON Web Tokens and PEM private keys. (4) In an environment dump, every key that our minimal
+build environment (<code>buildEnv</code> 3) does not produce. Each rule also runs on the text with its escaped quotes undone,
+so JSON inside a string is scanned.</li>
+<li><strong>The environment-dump allowlist.</strong> A dump is a flat object literal whose values are all literals and which has a
+key starting with <code>npm_</code>, or both <code>PATH</code> and <code>HOME</code>. Allowed in it are exactly the 28 keys that <code>buildEnv</code> 3&#39;s
+build produces with npm 11 (Node 24.22.1), counted in <code>apps/server/var/h5p-real/packages</code> and
+<code>apps/server/var/h5p/libraries</code>: <code>COLOR</code>, <code>EDITOR</code>, <code>HOME</code>, <code>INIT_CWD</code>, <code>NODE</code>, <code>NODE_ENV</code>, <code>PATH</code>, <code>PWD</code>,
+<code>npm_command</code>, <code>npm_execpath</code>, <code>npm_lifecycle_event</code>, <code>npm_lifecycle_script</code>, <code>npm_node_execpath</code>,
+<code>npm_package_json</code>, <code>npm_package_name</code>, <code>npm_package_version</code> and twelve <code>npm_config_*</code> keys (<code>allow_scripts</code>,
+<code>cache</code>, <code>global_prefix</code>, <code>globalconfig</code>, <code>init_module</code>, <code>local_prefix</code>, <code>node_gyp</code>, <code>noproxy</code>, <code>npm_version</code>,
+<code>prefix</code>, <code>user_agent</code>, <code>userconfig</code>). Named exactly rather than as <code>npm_config_*</code>, since npm exports every
+setting under that prefix, a proxy with its password and a registry token too. Allowed keys still go through
+rules (2) and (3). <code>SECURITY:</code> the search for dumps is bounded: each <code>{</code> is parsed once, at most the 64 before a
+marker (<code>npm_*:</code>, <code>PATH:</code>, <code>HOME:</code>) are tried, and a pair parsed or a <code>{</code> tried costs one unit of a budget of a
+quarter of the text&#39;s length (plus 4096); a text that uses it up is a finding, <code>(too complex to scan)</code>, never
+skipped. The real packages use at most 0.3 % of it, and crafted texts of 1 MB take under 0.4 s (before, an
+object that never closed took time that grew with the square of its length: 72 KB took 5 s). The fixture test above that left <code>npm_package_name:&quot;x&quot;</code> alone keeps that key allowed, but its
+<code>token</code> and <code>password</code> keys are now findings, because they sit in a dump.</li>
+<li><strong>Where it runs.</strong> The bundle tool (<code>build</code>, <code>verify</code>) scans every text entry of a package, as before. The
+server scans the library folders of a package (every folder but <code>content/</code>) and leaves <code>content/</code> alone: content
+is the author&#39;s data and is never installed as code, and a programming course may well show <code>API_KEY: &quot;…&quot;</code>.
+<code>npm run seed:libraries</code> scans every package after the hash and archive checks and before the first install, so
+a finding installs nothing; the error names the package, the library folder, the file and the variables, and the
+command exits 1. After seeding it scans the installed library folder (<code>H5P_LIBRARY_DIR</code>) and fails, naming each
+library folder to delete, since Lumi keeps an installed library of the same patch version;
+<code>npm run libraries:check [-- &lt;folder&gt;]</code> runs that scan alone, without the database or Redis (a relative folder is
+read from <code>apps/server</code>, as <code>seed:libraries</code> reads its folder, wherever the command is typed). An administrator&#39;s
+package import (<code>HvlH5PEditor.uploadPackage</code>, only on the path that may install) scans before the audit rows and
+Lumi&#39;s install, and refuses with 400 and <code>upload.package.librarySecrets</code> (nn, nb, en), naming the library
+folders; the error carries its own message key, so <code>h5pErrorResponse.ts</code> maps it without a change. An author&#39;s
+import is not scanned: Lumi never installs an author&#39;s libraries, and <a class="req-ref" href="#r-SEC-003"><code>SEC-003</code></a> already refuses any that differ
+from the installed ones.</li>
+<li><strong>Consequences.</strong> The ten real packages and this machine&#39;s seeded library folder pass; the scan of the ten
+packages (22 MB zipped) takes a few seconds, and of the largest (CoursePresentation, 12.5 MB of text) about
+1.5 s, which an import of it adds. An npm that exports a new key, or an H5P Group package whose build dumped
+its environment, is refused with that key&#39;s name, and a text the dump search cannot finish within its budget as
+<code>(too complex to scan)</code>: fail closed, and the allowlist grows only after someone has
+checked the key carries nothing secret. A storage seeded before <code>buildEnv</code> 3 fails the seed step (the image&#39;s and
+<code>.devcontainer/setup.sh</code>&#39;s too) until its <code>H5P.AudioRecorder-1.0</code> folder, or the whole library volume, is
+deleted (runbook §2). The scan is a guard, not a licence: production libraries still come only from a bundle
+built in CI, and an administrator imports a package with libraries only to install a reviewed library.</li>
+</ul>
+</li>
+<li><p><strong>Amendment (2026-11-06, follow-up: a clamd settings probe, decided before the code):</strong> the review of today found
+that <code>AlertExceedsMax</code> and <code>AlertEncrypted</code>, required since step 7, are only a checklist item: a clamd without
+them answers &quot;OK&quot; after a partial scan, and the wrapper stores the file as clean. Measured today with the ClamAV
+1.4.6 image above, a strict clamd (both settings, as in <code>ci.yml</code>) and a lax one (neither, as a misconfigured HVL
+clamd would be): a ZIP with a password is <code>Heuristics.Encrypted.Zip</code> from the strict clamd and &quot;OK&quot; from the lax
+one; nested ZIPs are <code>Heuristics.Limits.Exceeded.MaxRecursion</code> and &quot;OK&quot;; a plain stream is &quot;OK&quot; from both. The
+server now proves the settings itself (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>).</p>
+<ul>
+<li><strong>What is sent.</strong> Three streams, built in code (<code>clamdProbeStreams.ts</code>, <code>clamdProbeZip.ts</code>; no binary fixture):
+a ZIP whose one entry needs a password (ZIP&#39;s traditional encryption, as <code>zip -P</code> writes it; <code>unzip</code> opens it
+with the password, measured) for <code>AlertEncryptedArchive</code>; a one-page PDF with the standard security handler and
+keys the empty password does not open for <code>AlertEncryptedDoc</code>; and ZIPs nested 64 deep for <code>AlertExceedsMax</code>.
+A setting is proven only when its stream is answered <code>FOUND</code> with exactly its heuristic
+(<code>Heuristics.Encrypted.Zip</code>, <code>Heuristics.Encrypted.PDF</code>, <code>Heuristics.Limits.Exceeded.MaxRecursion</code>); &quot;OK&quot;,
+another name or no verdict proves nothing. The PDF is a third stream because <code>AlertEncryptedArchive yes</code>
+alone (half of the pair <code>clamav.md</code> accepts in place of <code>AlertEncrypted yes</code>) passes the ZIP and answers &quot;OK&quot;
+for the PDF (measured, with <code>AlertEncryptedDoc no</code>). <code>AlertExceedsMax</code> is one switch for every limit (step 7
+measured <code>MaxFiles</code>, <code>MaxScanSize</code>, <code>MaxScanTime</code> and <code>MaxRecursion</code>), so <code>MaxRecursion</code>, the cheapest to reach
+(7.5 KB), proves it.</li>
+<li><strong>A fresh nonce in every stream.</strong> clamd remembers the hash of every file it scanned clean and does not unpack
+it again. Measured: with fixed bytes, an author who uploads ZIPs nested 10, 17, 30, 46, 47, 60 and 63 deep in
+turn, each holding the one before and each answered &quot;OK&quot;, makes the strict clamd answer &quot;OK&quot; for the 64-deep
+probe; uploads would then be refused (closed, not open) until clamd&#39;s cache was cleared. So 16 random bytes,
+drawn for each probe run, go inside every stream: clamd has never seen any layer. The bytes are otherwise fixed,
+and the test pins each stream&#39;s SHA-256 for a nonce of zeros.
+The same cache also spoiled our first measurements of where the limit lies; with fresh streams, ZIPs nested 15
+deep are &quot;OK&quot; and 16 deep are reported at clamd&#39;s default <code>MaxRecursion 17</code>; with <code>MaxRecursion 31</code>, 29 and 30.
+The 64-deep probe therefore proves <code>AlertExceedsMax</code> while <code>MaxRecursion</code> is at most 65 (measured with 65 and
+66); <code>clamav.md</code> asks HVL to keep the default.</li>
+<li><strong>When it runs.</strong> Before the first scan of a server process, not at its start: <code>seed:libraries</code> and the other
+commands build the same H5P runtime, and the scanner contacts nobody at start (a clamd that is down then refuses
+uploads instead of stopping the server). Then again before a scan when the last result is 60 s old, and at once
+after a file&#39;s scan ended without a verdict (time-out, lost or refused connection, TLS, an error answer), since
+clamd may have restarted with other settings; a configuration change needs a clamd restart. A refusal before the
+file was sent does not make the probe forget: the probe&#39;s streams start first and have the same limit, so a scan
+that waits for a probe gets the probe&#39;s own reason. Concurrent scans wait for one probe; its three streams go
+through the same clamscan client (<code>scanStream</code>, which <code>isInfected</code> calls for a file over TCP, so the same
+connection, TLS and verdict parsing), each takes one of the four turns and has the <code>CLAMAV_TIMEOUT_MS</code> limit,
+and an upload&#39;s own time limit includes the wait. Not chosen: probing
+with every file (three more scans per file; a package import scans hundreds at once), only at start (the
+settings change with a restart), or a timer (it would scan while nobody uploads, and keep the process alive).</li>
+<li><strong>Result and caching.</strong> Proven, or not proven (a verdict that was not the heuristic): either is kept for 60 s,
+so a lax clamd costs three small scans a minute while uploads come, and a corrected clamd is used within a
+minute without restarting the server. The 60 s are measured on a monotonic clock (<code>performance.now()</code>), so a
+wall clock set back (an NTP step, a resumed VM) cannot keep a proof longer. No verdict for a probe stream is not
+kept: that upload is refused with the probe&#39;s reason (<code>unreachable</code>, <code>timeout</code>, <code>tls</code>, ...), as today, and the
+next upload probes again.</li>
+<li><strong>Fail closed, and what operators see.</strong> While not proven, every upload is refused with
+<code>upload.file.scanUnavailable</code> (400), the message for a scan without a verdict; no new locale key. Each refusal
+logs the usual <code>warn</code> line with <code>reason: &quot;clamd-settings&quot;</code>, a new reason code. When the result changes to &quot;not
+proven&quot; (or the unproven settings change), one <code>error</code> line:
+<code>{&quot;reason&quot;:&quot;clamd-settings&quot;,&quot;unproven&quot;:[{&quot;setting&quot;:&quot;AlertExceedsMax&quot;,&quot;answer&quot;:&quot;OK&quot;}]}</code> with the message
+<code>uploads are refused: clamd answers OK for files it cannot scan in full; set AlertEncrypted yes and AlertExceedsMax yes in clamd.conf and keep MaxRecursion at its default (docs/ops/clamav.md)</code>. When it changes to
+proven, one <code>info</code> line, <code>{&quot;clamdSettings&quot;:&quot;proven&quot;}</code>. <code>answer</code> is &quot;OK&quot;, a name shaped like a signature, or
+&quot;other&quot;; no file name, path or text from clamd is logged. A probe&#39;s <code>FOUND</code> never reaches <code>malware-found</code>: the
+probe reads the verdict itself and never goes through Lumi&#39;s scanner. clamd itself, however, logs each probe
+stream as a finding (three <code>FOUND</code> lines from the server&#39;s address within a second or two) and runs any
+<code>VirusEvent</code> for each (measured); <code>clamav.md</code> tells operators how to recognise them and to alert on the server&#39;s
+<code>malware-found</code> lines instead.</li>
+<li><strong>Deploy time.</strong> <code>deploy:check</code> reads files only, so it does not fit; the Docker smoke already fails when its
+clamd lacks the settings (the EICAR upload is then refused as <code>scanUnavailable</code>, not <code>malwareFound</code>). New:
+<code>src/security/malware/clamdCheckCli.ts</code>, which reads only <code>CLAMAV_*</code> and <code>LOG_LEVEL</code>, runs the same probe once,
+prints one JSON line (<code>clamdCheck</code>, <code>proven</code>, <code>reason</code>) and exits 0 only when proven. Its log lines and that
+summary go through one synchronous stdout destination, so the summary is always last (pino&#39;s default destination
+writes asynchronously, and its <code>flush()</code> does not wait for a write in flight: under load the summary came
+first). HVL runs it at deployment and after changing clamd (runbook §9). It needs a package script
+(<code>clamd:check</code>) and the runbook line, which the integrator adds.</li>
+<li><strong>Tests.</strong> The fake clamd (<code>test/support/fakeClamd.ts</code> with <code>fakeClamdHeuristics.ts</code>) answers the probe
+streams as clamd does, from their structure (an encrypted ZIP entry, a PDF with <code>/Encrypt</code>, ZIPs nested past
+15), strict by default and lax on request. The real-clamd tests
+run the probe against <code>CLAMAV_TEST_HOST</code>/<code>CLAMAV_TEST_PORT</code> (strict, proven) and, when <code>CLAMAV_TEST_LAX_PORT</code>
+names a clamd without the alerts on the same host, show that it is detected and the upload refused. <code>ci.yml</code>
+gains a second ClamAV service, the same image digest without the two settings, on port 3311, and
+<code>ciWorkflow.test.mjs</code> checks both services and the three <code>CLAMAV_TEST_*</code> variables, so CI cannot skip these
+tests silently. Further tests pin what review found unguarded: each probe run sends new bytes, a probe in flight
+is not joined after <code>forget</code>, the minute is monotonic, probe streams wait for one of the four turns, an upload&#39;s
+limit includes the probe, a probe answer without a verdict is <code>no-verdict</code> (not kept), and a file&#39;s own scan
+failure is the reason logged.</li>
+<li><strong>Not proven by the probe</strong> (stays on HVL&#39;s checklist, <code>clamav.md</code>): <code>StreamMaxLength</code>, <code>MaxFileSize</code> and
+<code>MaxScanSize</code> of at least 50M, <code>MaxScanTime</code>, <code>MaxFiles</code>, fresh signatures; that every clamd behind one
+<code>CLAMAV_HOST</code> (a load balancer) is set up alike, since each probe stream reaches whichever answers; and a clamd
+reconfigured and restarted between two probes is trusted for up to 60 s unless an upload failed meanwhile.</li>
 </ul>
 </li>
 </ul>
@@ -12277,8 +12473,11 @@ whether the export works (<code>pdfAvailability.ts</code>)</li>
 <li><span class="task">✓ Done:</span> SECURITY (found while building the bundle): <code>H5P.AudioRecorder</code> 1.0&#39;s build baked the build machine&#39;s whole
 environment, tokens included, into JavaScript served to learners. <code>tools/h5p-libraries</code> now builds every
 library with a minimal environment (<code>buildEnv</code> 3), the bundle refuses secret-named variables, and the leaky
-builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Tokens that were in the old builds
-should be rotated (owner)</li>
+builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Closed on 2026-11-06 (D-110&#39;s
+amendment of that day): no old build was ever committed, pushed in an image, uploaded as a CI artefact or
+sent; the last two old copies were deleted, and no other was found on the machine; the old builds&#39; GitHub, AWS
+and gcloud variables held the cloud session&#39;s proxy placeholders, not credentials; the owner deleted the
+codespaces that could have built with the old recipe and had no Codespaces secrets</li>
 <li><span class="task">✓ Done:</span> Integration (2026-11-05): <code>main.ts</code> runs the PDF probe after listening and waits for it on stop; <code>tsx</code> moved
 to <code>apps/server</code>&#39;s dependencies; scripts <code>deploy:check</code>, <code>docker:smoke</code>, <code>pdf:check</code>; the app stack has its
 own clamd, and the smoke proves an upload scanned (EICAR refused) and served from the files origin; CI runs
@@ -13397,6 +13596,42 @@ review state, the image size on GitHub&#39;s runner), and D-116&#39;s amendment 
 was written and fact-checked by AI agents against the repository and GitHub&#39;s read-only API; no person has
 reviewed it. No app code, spec, test or CI file changed after <code>8d4eaf0</code>.</p>
 </li>
+<li><p><strong>2026-11-06 · After the merge: the upstream reports and the old AudioRecorder builds</strong> — The owner merged pull
+request #18 (<code>38b1743</code>), and CI (run 42205391766) and <code>docker.yml</code> (run 42205391749) passed on <code>main</code>. At the
+owner&#39;s question &quot;what if Lumi and H5P do not answer?&quot;, a workflow of ten AI agents (two code checks, three web
+researchers, and a skeptic or fact-checker for each) checked that HVL Interaktiv&#39;s own workarounds cover the four
+findings of the Lumi report and the AudioRecorder build leak without any upstream fix (they do, on every path
+checked), and the routes when a vendor is silent. The private drafts, held outside the repository, were
+corrected and given a dated plan: a second private channel, a coordinator (BSI for Lumi, eduCSC at Sikt for H5P),
+CVE IDs, and a limited advisory after 90 days, which needs a D-112 amendment first. The old AudioRecorder builds
+were closed out (S6 step 6; D-110&#39;s amendment of 2026-11-06). Found and left for the owner to decide: two ways
+in, <code>seed:libraries</code> and an admin&#39;s package import, skip the bundle&#39;s secret scan; re-seeding keeps an installed
+library of the same patch version; the scan misses some forms; no code checks clamd&#39;s <code>AlertExceedsMax</code>.
+Documentation only; no code changed.</p>
+</li>
+<li><p><strong>2026-11-06 · The build-secret scan on every way in, and a clamd settings probe</strong> — The owner asked for the gaps
+above to be fixed and a pull request opened. A workflow of eight AI agents built two workstreams in parallel, each
+reviewed by two adversarial reviewers (bypass and correctness; tests by mutation and revert-run-restore) and then
+fixed (D-110&#39;s two follow-up amendments of 2026-11-06, decided before the code). <strong>The build-secret scan:</strong> one
+rules file (<code>apps/server/src/h5p/libraries/libraryBuildSecrets.ts</code>, no imports, loaded by the bundle tool with
+Node 24&#39;s type stripping and by the server) now runs on the bundle, <code>seed:libraries</code> (every package before the
+first install, then the installed folder), an administrator&#39;s package import (400,
+<code>upload.package.librarySecrets</code> in nn, nb and en) and <code>npm run libraries:check</code>; it widens the old guard
+(lower- and mixed-case names, npm auth forms, URLs with a password under any name, credential shapes, escaped
+JSON) and allows in an environment dump only the 28 keys our minimal build produces. Review found and fixed a
+regression against the old guard (secret words inside upper-case names), a parser that swallowed the next name,
+a quadratic dump search, and the image&#39;s <code>inputs</code> stage missing the rules file (a test now reads that stage). The
+ten real packages and this machine&#39;s 77 library folders pass. <strong>The clamd settings probe:</strong> before the first scan,
+then at most once a minute and after a scan without a verdict, the server sends three streams built in code with
+a fresh nonce (a ZIP and a PDF that need a password, ZIPs nested 64 deep) and refuses every upload unless clamd
+answers each with its heuristic; <code>npm run clamd:check</code> runs it at deployment. Measured against a strict and a lax
+ClamAV 1.4.6: the lax one answers &quot;OK&quot; to all three; a fixed probe could be defeated by clamd&#39;s clean-file cache
+(hence the nonce); <code>MaxRecursion</code> must stay at most 65; an archive-only alert setting is caught by the PDF. CI gains
+a lax clamd service. Tests: the h5p, tools and malware suites, the upload integration tests against the services,
+and the real-clamd tests against both clamd containers; the full Docker smoke (<code>deploy/smoke</code>, image build, the
+seed step with the new checks, an upload scanned by the stack&#39;s clamd) passed on the final tree. Documentation: runbook §2 and §9, <code>clamav.md</code>, <code>docker.md</code>, READMEs, the Evaluator Guide, the glossary,
+the data inventory and the assurance pack&#39;s threat model and risk analysis.</p>
+</li>
 </ul>
 
 </section>
@@ -13714,6 +13949,10 @@ the meaning. Spec 04 and D-082…D-100 hold the rules; ALU edits the texts behin
 <td><strong>Files origin</strong></td><td>The separate origin the player&#39;s user files are served from (<a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>): <code>files.&lt;host&gt;</code> of <code>PUBLIC_BASE_URL</code>, or <code>FILES_BASE_URL</code>. It answers only signed file requests, with <code>CSP: sandbox</code> and <code>nosniff</code>, reads and sets no cookie, and allows the app origin by CORS without credentials; the app origin answers the same paths with 404 (D-045, D-110&#39;s amendment).</td></tr>
 <tr>
 <td><strong>ClamAV / clamd</strong></td><td>The open-source virus scanner and its daemon, which HVL runs. When <code>CLAMAV_HOST</code> is set, every uploaded file is streamed to clamd before it is stored, and refused unless clamd answers &quot;clean&quot; (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>, fail closed). The <strong>EICAR test file</strong> is a harmless text every scanner reports, used to check that refusals work (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/clamav.md" rel="noopener" class="ext">ops/clamav.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>).</td></tr>
+<tr>
+<td><strong>clamd settings probe</strong></td><td>Three small streams (a ZIP and a PDF that need a password, and ZIPs nested 64 deep, each with a fresh random nonce) the server sends to clamd before it scans uploads, at most once a minute, to prove <code>AlertEncrypted</code> and <code>AlertExceedsMax</code> are on; while clamd answers &quot;OK&quot; to any of them, every upload is refused (<a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>, D-110&#39;s amendment of 2026-11-06; <code>npm run clamd:check</code>).</td></tr>
+<tr>
+<td><strong>Build-secret scan</strong></td><td>The rules in <code>apps/server/src/h5p/libraries/libraryBuildSecrets.ts</code> that refuse an H5P library file holding a build machine&#39;s secrets: secret-like names with a value, URLs with a password, well-known credential shapes, and any key of a dumped build environment beyond the 28 our minimal build produces. They run on the content-type bundle, <code>seed:libraries</code>, an administrator&#39;s package import and the installed library folder (<code>npm run libraries:check</code>); a finding names variables, never values (D-110&#39;s amendments of 2026-11-06).</td></tr>
 <tr>
 <td><strong>Key ring</strong></td><td>An environment value <code>id=base64,id=base64,…</code> whose first key is current; older keys still verify or decrypt, so keys rotate without downtime when the new key is first added in second place and moved first only once every server holds it (the three steps are in D-056; D-055 and D-058 apply them to the other two rings). HKDF derives one key per purpose from each key. <code>IDENTITY_HASH_KEYS</code>: identity and audit-IP hashes (D-055). <code>DATA_ENCRYPTION_KEYS</code>: AES-256-GCM for LTI private keys, LTI access tokens and the session&#39;s Feide ID token (D-056). <code>URL_SIGNING_KEYS</code>: signed file grants (D-058) and editor upload grants, each under its own HKDF purpose (D-069). <code>PSEUDONYM_SECRETS</code> is keyed by academic year instead (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>).</td></tr>
 <tr>
