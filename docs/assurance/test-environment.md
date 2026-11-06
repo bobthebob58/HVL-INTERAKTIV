@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **For** | HVL IT (operations and security), with HVL's Feide administrator and TeCopp |
-| **Status** | **Draft request for HVL IT to correct.** Written 2026-11-05 by the AI assistant (Claude) that wrote the code; updated 2026-11-06 at commit `8d4eaf0` with the image size measured on GitHub and the GitHub CI runs of pull request #18 (§2, §3); reviewed by nobody yet |
+| **Status** | **Draft request for HVL IT to correct.** Written 2026-11-05 by the AI assistant (Claude) that wrote the code; updated 2026-11-06 at commit `8d4eaf0` with the image size measured on GitHub and the GitHub CI runs of pull request #18 (§2, §3), and again the same day at commit `43c6673`, after pull requests #18 and #21 were merged (the clamd settings check and the library check in §2, §3 and §5); reviewed by nobody yet |
 | **Asks for** | One isolated test install with **made-up data only**, Feide test users, HVL's test Canvas, named testers and an end date |
 | **Overview** | [README.md](README.md) (the stages, the status, the caveat); install steps in [docs/ops/](../ops/README.md) |
 
@@ -30,13 +30,13 @@ infrastructure and the first contact with the real Feide and a real Canvas, with
 |---|---|---|
 | **Host** | One VM or container host that runs the server image (Docker, Kubernetes or OpenShift). The app container runs as uid 10001, read-only, with every capability dropped except `SYS_CHROOT`, under Playwright's seccomp profile (`deploy/seccomp/`) | [docker.md](../ops/docker.md), «What the image holds»; `deploy/compose.app.yml:52-59,143` |
 | **If the runtime refuses that profile** | OpenShift's `restricted-v2` allows neither the profile nor `SYS_CHROOT`. Then the PDF export of the pedagogisk mappe answers 503 and the Markdown export still works; record it as a Q5 finding *(proposal: acceptable in stage 1)*. Never `--no-sandbox` or `SYS_ADMIN` | docker.md:43-58; Evaluator Guide §6, item 17; D-096 |
-| **Sizing** | **To be agreed.** Measured so far: the image was 2,777 MB when built in the development sandbox and 1,994 MB when built on GitHub's runner (the repository does not record why they differ), and the smoke test (build, builder cache and app stack) needs about 8 GB free disk at its peak; a 20-learner load smoke passed on one 4-CPU machine with every service on it; the development clamd (ClamAV 1.4) took about 1 GB memory; `/tmp` is a 512 MB tmpfs; at most `PDF_MAX_CONCURRENCY` (default 2) Chromium pages render at once. The dev container, which builds and runs everything, asks for 4 CPUs, 16 GB memory and 32 GB disk; that is not a server sizing. The 200-learner test (`npm run load:full`) decides production sizing | docker.md:135-137; `PROGRESS.md:1479` (sandbox); GitHub's `docker.yml` runs 42166052745 and 42170423045 (each logs "1994 MB"); [runbook](../ops/runbook.md) §1, §8; `docs/ops/clamav.md:134`; `deploy/compose.app.yml:58-59`; `apps/server/.env.example:248`; `.devcontainer/devcontainer.json:12` |
+| **Sizing** | **To be agreed.** Measured so far: the image was 2,777 MB when built in the development sandbox and 1,994 MB when built on GitHub's runner (the repository does not record why they differ), and the smoke test (build, builder cache and app stack) needs about 8 GB free disk at its peak; a 20-learner load smoke passed on one 4-CPU machine with every service on it; the development clamd (ClamAV 1.4) took about 1 GB memory; `/tmp` is a 512 MB tmpfs; at most `PDF_MAX_CONCURRENCY` (default 2) Chromium pages render at once. The dev container, which builds and runs everything, asks for 4 CPUs, 16 GB memory and 32 GB disk; that is not a server sizing. The 200-learner test (`npm run load:full`) decides production sizing | docker.md:138-140; `PROGRESS.md:1482` (sandbox); GitHub's `docker.yml` runs 42166052745 and 42170423045 (each logs "1994 MB"); [runbook](../ops/runbook.md) §1, §8; `docs/ops/clamav.md:203`; `deploy/compose.app.yml:58-59`; `apps/server/.env.example:248`; `.devcontainer/devcontainer.json:12` |
 | **Two DNS names and TLS certificates** | The app (`PUBLIC_BASE_URL`) and the files host (`FILES_BASE_URL`, default `files.<host>`), which must be a different host. A separate registrable domain isolates more *(IT to choose, Q5)* | `apps/server/src/config/filesOrigin.ts:1-20`; runbook §1, §9; D-110; `SEC-004` |
 | **Reverse proxy** | TLS for both names; an access log **without the query string** (a few routes accept `?ltik=`); a request ID in `X-Request-Id`; `X-Forwarded-Host` set by the proxy itself; `Host` passed on; scripts and styles compressed; `TRUST_PROXY` set to the number of proxies | runbook §9; `NFR-006` |
 | **PostgreSQL 16** | In the EEA, with TLS that checks the server (`sslmode=verify-full`); the three roles `hvli_migrator`, `hvli_app` and `hvli_analytics` created by HVL's database administrator | [database-roles.md](../ops/database-roles.md); `DATA-004`, `DATA-010`; D-109 |
 | **Redis 7** | In the EEA, over TLS (`rediss://`), with `maxmemory-policy noeviction` | `apps/server/.env.example:32-37`; runbook §1 |
 | **S3-compatible storage** | In the EEA, over https; two plain-named buckets, content and temporary, the temporary one with a 1-day lifecycle rule; no public access. With `NODE_ENV=production` the server accepts a custom endpoint only under `hvl.no` or `sikt.no`, or AWS in an EEA region; both lists are marked *(verify)*, and another domain needs a reviewed code change and an amendment to D-109 | runbook §1, §9; `apps/server/src/config/storageResidency.ts:9-15,31-41`; Q5 |
-| **clamd** | Daily signature updates; `AlertExceedsMax yes` and `AlertEncrypted yes` (required); `StreamMaxLength` at least 50 MB; `MaxScanTime` no higher than `CLAMAV_TIMEOUT_MS`; a TLS proxy without SNI unless clamd is on the loopback. Without a clamd the server starts only with `CLAMAV_ALLOW_UNSCANNED_UPLOADS=true` (uploads then go unscanned); *(proposal)* use a clamd, since stage 1 should prove that path | [clamav.md](../ops/clamav.md); runbook §9; `apps/server/.env.example:256-284`; `SEC-006` |
+| **clamd** | Daily signature updates; `AlertExceedsMax yes` and `AlertEncrypted yes` (required: the server proves both with three small probe streams and refuses every upload until it can, and `npm run clamd:check` must end with `"proven":true` at deployment); `MaxRecursion` at its default; `StreamMaxLength` at least 50 MB; `MaxScanTime` no higher than `CLAMAV_TIMEOUT_MS`; a TLS proxy without SNI unless clamd is on the loopback. Without a clamd the server starts only with `CLAMAV_ALLOW_UNSCANNED_UPLOADS=true` (uploads then go unscanned); *(proposal)* use a clamd, since stage 1 should prove that path | [clamav.md](../ops/clamav.md), «The settings probe»; runbook §9; `apps/server/.env.example:256-284`; `SEC-006`; D-110's amendment of 2026-11-06 |
 | **Outbound from the server** | Feide: `auth.dataporten.no` (discovery, token endpoint, signing keys) and `groups-api.dataporten.no`. HVL's test Canvas: `sso.test.canvaslms.com` or `sso.beta.canvaslms.com` for its keys, and the institution's test or beta domain for the token endpoint, grades and roster; which instance it is is Q4. Plus the database, Redis, S3 and clamd. **Nothing else at runtime:** no H5P Hub, no GitHub, no npm | `apps/server/src/config/env.ts:87,90`; [canvas-platform-values.md](../reference/canvas-platform-values.md) §1, §2, §10; D-041; docker.md, «Build the image» |
 | **Inbound** | Testers' browsers reach both host names. Canvas reads the tool's public keys at `<PUBLIC_BASE_URL>/lti/keys` to check Deep Linking responses and grade-token requests, so any network restriction must leave that path reachable from Instructure's Canvas *(IT to confirm Instructure's source addresses)* | `docs/reference/canvas-lti13-developer-key.json:6`; canvas-platform-values.md:52 |
 | **Secret store** | For every variable marked `Secret: yes` in `apps/server/.env.example`; never in the image or a file | runbook §1, §4; docker.md:27 |
@@ -74,9 +74,12 @@ infrastructure and the first contact with the real Feide and a real Canvas, with
   (PROGRESS.md, session log «2026-11-06 · S6 gate»). Pull request #18 then took S6 to GitHub CI: after one failed run
   and its fix (`8d4eaf0`; [human-review.md](human-review.md) §2.3), the Session gate passed on `8d4eaf0` (run
   42170423046, finished 2026-11-06 06:45:23 UTC); `docker.yml` passed on `3eeea8d` and `8d4eaf0` (runs 42166052745
-  and 42170423045). So `8d4eaf0` has passed GitHub CI, and the local gate passed on `5a5b8c3`; `8d4eaf0`
-  differs from `5a5b8c3` only in one line of `ci.yml`, one test helper and documents
-  (`git diff --stat 5a5b8c3 8d4eaf0`). The pull request is not merged yet, so `main` does not hold S6.
+  and 42170423045). `8d4eaf0` differs from `5a5b8c3` only in one line of `ci.yml`, one test helper and documents
+  (`git diff --stat 5a5b8c3 8d4eaf0`). The owner merged pull request #18 into `main` (`38b1743`), where CI and
+  `docker.yml` passed (runs 42205391766 and 42205391749), and then pull request #21 (`43c6673`), whose security
+  follow-ups passed GitHub CI and `docker.yml` on `9bfa1b2` (runs 42253214678 and 42253214575) and, locally, the
+  full test run and the Docker smoke, but not the whole local gate; no commit with those controls has passed the
+  whole S6 gate yet, so run it again on the commit chosen (Evaluator Guide §5).
   The owner also names the testers, and the Feide IDs for `ADMIN_FEIDE_IDS`, if any tester must install libraries.
 
 **The variables to set**, by name (`apps/server/.env.example` documents each; runbook §3 groups them). Secrets are
@@ -94,7 +97,7 @@ marked *; each key is new and random (`openssl rand -base64 32`), used on this i
 | Never set | `PDF_ALLOW_NO_SANDBOX`, `AWS_ENDPOINT_URL_S3`, `AWS_ENDPOINT_URL`, `CLAMSCAN_*`, `CLAMDSCAN_*`. Runbook §3 also says never `CLAMAV_ALLOW_UNSCANNED_UPLOADS` in production; *(proposal)* for stage 1 only if IT has no clamd and accepts unscanned uploads | runbook §3; `apps/server/.env.example:280-284` |
 
 The rest (`LOG_LEVEL`, `MIN_GROUP_SIZE`, `PURGE_RUN_DATE`, the `H5P_*` settings, the media origins, and
-`PDF_BROWSER_EXECUTABLE`, whose empty default uses the image's own Chromium; `deploy/Dockerfile:109`) keep their
+`PDF_BROWSER_EXECUTABLE`, whose empty default uses the image's own Chromium; `deploy/Dockerfile:111`) keep their
 defaults.
 
 ## 4. The rules
@@ -129,15 +132,17 @@ Follow the operations documents; nothing here replaces them.
 
 1. **Image:** [docker.md](../ops/docker.md): what the image holds, how it is built, the run flags (seccomp profile,
    `SYS_CHROOT`, read-only root, tmpfs) and the paragraph on staging. Do not use `deploy/compose.app.yml` (a local
-   stack in development mode) or the root `docker-compose.yml` (fixed passwords) on this host (docker.md:88-89;
+   stack in development mode) or the root `docker-compose.yml` (fixed passwords) on this host (docker.md:91-92;
    runbook §8, §9).
 2. **Database:** [database-roles.md](../ops/database-roles.md): the roles, the two connection URLs and the migrate step.
 3. **First deployment:** [runbook](../ops/runbook.md) §2: configuration and secrets; migrate (`views-down`,
-   `prisma migrate deploy`, `grants`); seed the ten content types from the bundle; start. The server refuses to start
-   on a wrong setting and lists the problems by variable name.
+   `prisma migrate deploy`, `grants`); seed the ten content types from the bundle (the seed step stops on a build
+   machine's secret in any library, naming the library folder, file and variable, never the value); start. The server
+   refuses to start on a wrong setting and lists the problems by variable name.
 4. **Checks after start:** the first log line `deployment locations` names the expected hosts and region;
    `GET /healthz` answers 200; the `PDF export availability` line gives its reason code (docker.md:46-58); the
-   clamd checks in [clamav.md](../ops/clamav.md), «Checking that it works», pass.
+   clamd checks in [clamav.md](../ops/clamav.md), «Checking that it works», pass, `npm run clamd:check` ends with
+   `"proven":true`, and `npm run libraries:check` passes on the library volume (runbook §2, §9).
 5. **Checklist:** tick the lines of runbook §9 that apply to a test install; backups and the full load test may wait
    for stage 2.
 

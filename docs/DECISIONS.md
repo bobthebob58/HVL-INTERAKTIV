@@ -4970,3 +4970,19 @@ loading of one spec per session are kept.
   counts, the commits after `main` and the review state (no review on pull request #18) are as read on 2026-11-06.
   This amendment changes no app code, test, spec or CI file. A green CI run is not a review, so the pack's caveats
   stand, and `README.md` lists the new document.
+- **Amendment (2026-11-06, the owner's request; after pull requests #18 and #21 were merged):** the pack is refreshed to
+  commit `43c6673`, `main` after both merges, without changing its documents or its rules. Pull request #18 was merged
+  as `38b1743`, after CI and `docker.yml` had passed on its last head `eb79b30` (runs 42183630447 and 42183630572), and
+  both passed on `main` (runs 42205391766 and 42205391749). Pull request #21 (`9bfa1b2`, with `9ad481e`) passed CI and
+  `docker.yml` (runs 42253214678 and 42253214575) and was merged as `43c6673`; on `main`, `docker.yml` passed (run
+  42266303382) and CI (run 42266303529) passed, every step (17:57–18:44 UTC). The pack now names pull request #21's
+  controls where IT looks for them: the clamd settings probe and `npm run clamd:check`, and the build-secret scan on
+  every way a library gets in with `npm run libraries:check` (README's status table, `architecture.md`,
+  `test-environment.md`, `human-review.md` A2 and C4). Its counts are as read at `43c6673`: 224 commits, 221 by Claude
+  and three merges by the owner's account; 147 dated amendments with this one; 209 review findings confirmed and fixed
+  where counts were recorded, the 22 of pull request #21 (13 on the scan, 9 on the probe) taken from that pull request's
+  description on GitHub. The review plan's estimate grows to about 37.5–41.5 person-days, because area A2 grew with the
+  probe and C4 gained the scan. Line references into files that pull request #21 changed are corrected. Pull requests
+  #8, #18 and #21, the three with the app's code (the other 18 are Dependabot's), have no review (GitHub's API,
+  2026-11-06), and pull request #21's changes have passed GitHub CI, the full local test run and the Docker smoke, not
+  the whole local gate. This amendment changes no app code, test, spec or CI file, and the pack's caveats stand.

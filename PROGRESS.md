@@ -1838,3 +1838,14 @@ Append one entry per session: date, session, what was done, gate output, and any
   and the real-clamd tests against both clamd containers; the full Docker smoke (`deploy/smoke`, image build, the
   seed step with the new checks, an upload scanned by the stack's clamd) passed on the final tree. Documentation: runbook §2 and §9, `clamav.md`, `docker.md`, READMEs, the Evaluator Guide, the glossary,
   the data inventory and the assurance pack's threat model and risk analysis.
+- **2026-11-06 · The IT assurance pack after the merges** — At the owner's request, the pack (`docs/assurance/`) is
+  refreshed to `43c6673`, `main` after pull requests #18 and #21 (D-116's amendment of 2026-11-06, after the merges):
+  the merged facts and the runs on `main` replace "not merged"; pull request #21 is added where the pack lists evidence,
+  with its 22 confirmed and fixed review findings (13 on the scan, 9 on the probe), which pull request #21's description
+  on GitHub records; `npm run clamd:check`, `npm run libraries:check` and the build-secret scan are named in
+  `architecture.md`, `test-environment.md` and `human-review.md`; the review estimates become about 37.5–41.5
+  person-days; and line references into files that pull request #21 changed are corrected. Read through GitHub's API at
+  18:44 UTC: CI run 42266303529 on `main` (`43c6673`) had passed, every step (17:57–18:44 UTC), and `docker.yml` run
+  42266303382 had passed; the CI job logs' download host was refused by this container's proxy, so CI test counts were
+  not read. Written and fact-checked by AI against the repository and GitHub's read-only API; no person has reviewed it.
+  Documentation only; no app code, test, spec or CI file changed.

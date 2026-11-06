@@ -4,7 +4,7 @@
 |---|---|
 | **For** | HVL IT: operations and security staff who decide whether HVL Interaktiv may be hosted, first for testing only |
 | **Status** | **Draft for HVL IT to correct.** Lines marked *(IT to fill in)* are HVL facts the repository cannot know |
-| **Written** | 2026-11-05, at the repository owner's request, by the same AI assistant (Claude) that wrote the code; updated 2026-11-06. Figures are from commit `8d4eaf0` and GitHub's API, read 2026-11-06 |
+| **Written** | 2026-11-05, at the repository owner's request, by the same AI assistant (Claude) that wrote the code; updated three times on 2026-11-06, last after pull requests #18 and #21 were merged. Figures are from commit `43c6673` (`main` after pull request #21) and GitHub's API, read 2026-11-06, last at 18:44 UTC |
 | **Reviewed by** | Nobody yet. No person has reviewed this pack, the code or its tests |
 
 ## Samandrag (nynorsk)
@@ -14,13 +14,14 @@
 HVL Interaktiv er eit verktøy der lærarar ved HVL lagar korte, interaktive H5P-aktivitetar og legg dei inn i Canvas. Ein
 KI-assistent (Claude) har skrive all koden og alle testane, og har sjølv gjort kodegjennomgangane. Arbeidet følgde ein
 fast syklus med plan, bygging, testing og kontroll: regelen var at ein feil først skulle visast med ein test som feila,
-før han vart retta, og andre KI-agentar prøvde å avkrefte funna. Ingen person har gått gjennom koden enno. Denne pakken
-er til HVL IT, som skal vurdere om tenesta kan setjast opp, først berre til testing. Vi ber om tre steg: Steg 0 er
-studentar som prøver verktøyet på eigne maskinar eller i Codespaces, mot ein etterlikna Feide og ein etterlikna Canvas,
-og det treng ingenting frå IT. Steg 1 er ein isolert testserver med berre oppdikta data, testbrukarar i Feide og
-testinstansen av Canvas, i ei avgrensa tid. Steg 2 er ein pilot med ekte studentar i eitt eller to emne, men først når
-personvernombodet har godkjent, ein person har gjort ein tryggleiksgjennomgang, og ROS-analysen og ein driftsavtale er
-på plass. Dokumenta her er utkast som IT skal rette.
+før han vart retta, og andre KI-agentar prøvde å avkrefte funna. Alt arbeidet ligg no i hovudgreina («main») på
+GitHub, og dei automatiske testane på GitHub gjekk gjennom før det vart slått saman. Ingen person har gått gjennom koden
+enno. Denne pakken er til HVL IT, som skal vurdere om tenesta kan setjast opp, først berre til testing. Vi ber om tre
+steg: Steg 0 er studentar som prøver verktøyet på eigne maskinar eller i Codespaces, mot ein etterlikna Feide og ein
+etterlikna Canvas, og det treng ingenting frå IT. Steg 1 er ein isolert testserver med berre oppdikta data, testbrukarar
+i Feide og testinstansen av Canvas, i ei avgrensa tid. Steg 2 er ein pilot med ekte studentar i eitt eller to emne, men
+først når personvernombodet har godkjent, ein person har gjort ein tryggleiksgjennomgang, og ROS-analysen og ein
+driftsavtale er på plass. Dokumenta her er utkast som IT skal rette.
 
 ## What HVL Interaktiv is
 
@@ -32,8 +33,10 @@ Learners are stored as keyed pseudonyms, with no names or e-mail addresses; the 
 kept encrypted in a grade job until 30 days after the job stops (`DATA-002` and its D-104 amendment). Teachers see
 aggregates with groups under five hidden (`INS-006`). It is open source (GPL-3.0-or-later, D-015) and still in
 development: the last build session, S6, passed its gate on the development machine on 2026-11-06 (PROGRESS.md, session
-log «2026-11-06 · S6 gate») and passed GitHub CI in pull request #18, which is not merged yet (the last row of the
-status table).
+log «2026-11-06 · S6 gate») and passed GitHub CI in pull request #18, which the owner merged into `main` the same day;
+CI and the image workflow then passed on `main` (the last row of the status table). Pull request #21, merged later that
+day, added two security controls: the server proves clamd's alert settings before it scans uploads, and one scan for a
+build machine's secrets now runs on every way an H5P library gets in (D-110's amendments of 2026-11-06).
 
 ## What we ask of IT, in stages
 
@@ -75,31 +78,34 @@ is [how-it-was-built.md](how-it-was-built.md) §7; the plan, in order of risk an
 |---|---|---|---|
 | The ten H5P content types: author and play | Yes (S2, S4) | Unit, integration and Chromium tests, including the ten real types from pinned GitHub commits (`apps/server/test/h5p/realTypes.browser.int.test.ts`; D-078) | AI only |
 | Feide login and portal sessions | Yes (S3) | Tests against a mock Feide (`tools/mock-platform`, D-049); never against real Feide | AI only |
-| Canvas LTI 1.3: launch, Deep Linking, grades (AGS), roster (NRPS) | Yes (S3, S6), except the picker's content bank and "new from a pattern", the duplicate in `/app/play`, and Dynamic Registration (`LTI-009`, not built) ([hand-off §1, §3](../handoff/README.md)) | Tests against a mock Canvas; the live-contract seam (36 tests) has run against the mocks only (PROGRESS.md, S6 step 7), also in GitHub CI run 42170423046 | AI only |
-| Upload security against CVE-2025-7062 (unpatched upstream) | Yes (S2, S6); the editor's files are still on the app origin (`SPEC-DEVIATION: D-110`, `apps/server/src/http/createH5pRouter.ts:58`) | Unit tests with bypass payloads (`SvgSanitizer.bypass.test.ts`), integration tests, a local clamd 1.4.6, the Docker smoke test (D-003, D-110) | AI only |
+| Canvas LTI 1.3: launch, Deep Linking, grades (AGS), roster (NRPS) | Yes (S3, S6), except the picker's content bank and "new from a pattern", the duplicate in `/app/play`, and Dynamic Registration (`LTI-009`, not built) ([hand-off §1, §3](../handoff/README.md)) | Tests against a mock Canvas; the live-contract seam (36 tests) has run against the mocks only (PROGRESS.md, S6 step 7), also in GitHub CI run 42170423046 and the later passing runs 42183630447, 42253214678 (pull request #21), 42205391766 and 42266303529 (on `main`) | AI only |
+| Upload security against CVE-2025-7062 (unpatched upstream) | Yes (S2, S6); the editor's files are still on the app origin (`SPEC-DEVIATION: D-110`, `apps/server/src/http/createH5pRouter.ts:58`). Since pull request #21 the server refuses uploads until clamd proves `AlertEncrypted` and `AlertExceedsMax` (`npm run clamd:check` at deployment) | Unit tests with bypass payloads (`SvgSanitizer.bypass.test.ts`), integration tests, a strict and a lax local clamd 1.4.6 (also in CI), the Docker smoke test (D-003, D-110) | AI only |
+| Build secrets in H5P library code (threat model T-81) | Yes (S6; pull request #21): one scan on the bundle, `seed:libraries`, an admin's package import and, with `npm run libraries:check`, the installed library folder | Unit and integration tests (`apps/server/test/h5p/libraries/`, `tools/h5p-bundle/test/`); the ten real packages and the development machine's 77 library folders pass (PROGRESS.md, session log of 2026-11-06) | AI only; the scan is a heuristic (D-110's amendment of 2026-11-06) |
 | Teacher insight with *k*-suppression | Yes (S6) | Property-based tests (`insightSuppression.property.test.ts`) and a hand-calculated 30-learner fixture (`thirtyLearners.test.ts`) | AI only |
 | Privacy operations: pseudonyms, yearly purge, data-subject requests, database roles, production start-up checks, log redaction | Yes (S1, S6) | Integration tests on local PostgreSQL and Redis ([docs/ops/](../ops/README.md)) | AI only; the DPO has not reviewed the DPIA input (Q6) |
-| Accessibility, WCAG 2.2 AA | Yes (S4–S6) | axe and Playwright, Chromium only: 558 tests passed on 2026-11-05 (`docs/accessibility/automated-run.json`), and again in GitHub CI run 42170423046 on 2026-11-06 | AI only; no manual results, so all 56 criteria are *Not yet determined* ([conformance report](../accessibility/WCAG-CONFORMANCE-REPORT.md)) |
-| Docker image and app stack | Yes (S6) | Smoke test in the development sandbox ([docs/ops/docker.md](../ops/docker.md)) and, in pull request #18, on GitHub's runner: `.github/workflows/docker.yml` passed in runs 42166052745 (on `3eeea8d`) and 42170423045 (on `8d4eaf0`) | AI only; GitHub keeps the run logs |
+| Accessibility, WCAG 2.2 AA | Yes (S4–S6) | axe and Playwright, Chromium only: 558 tests passed on 2026-11-05 (`docs/accessibility/automated-run.json`), and again in GitHub CI run 42170423046 on 2026-11-06 and the later passing runs 42183630447, 42253214678 (pull request #21), 42205391766 and 42266303529 (on `main`) | AI only; no manual results, so all 56 criteria are *Not yet determined* ([conformance report](../accessibility/WCAG-CONFORMANCE-REPORT.md)) |
+| Docker image and app stack | Yes (S6) | Smoke test in the development sandbox ([docs/ops/docker.md](../ops/docker.md)) and on GitHub's runner: `.github/workflows/docker.yml` passed in pull request #18 (runs 42166052745 on `3eeea8d` and 42170423045 on `8d4eaf0`), on `main` after its merge (run 42205391749, on `38b1743`), in pull request #21 (run 42253214575, on `9bfa1b2`) and on `main` after that merge (run 42266303382, on `43c6673`) | AI only; GitHub keeps the run logs |
 | Load | Harness built (D-114) | 20-learner smoke on one 4-CPU machine passed; the 200-learner test has not run (runbook §8) | AI only |
 | Backups and restore | Yes (S6) | Round trip on local services (`tools/ops/test/backupRoundTrip.test.mjs`); no restore drill on HVL hardware | AI only |
 | Requirements overall | 123 of 126 have a test that names them; 3 are planned | "Tested" only means a test title carries the ID; it is not proof (docs/TRACEABILITY.md, lines 6–7) | AI only |
-| Continuous integration | S1–S5 passed on GitHub in pull request #8 (run 41066236672); S6 is in pull request #18 | The CI run on `main` after the merge failed in one end-to-end test (run 41075981429; PROGRESS.md, Q16); its fix, the Codespaces dev container and S6 are the 19 commits after `main` (`git rev-list --count origin/main..HEAD`), in pull request #18, since CI runs only on `main` and on pull requests (`.github/workflows/ci.yml`, lines 9–12). That pull request's first finished run (42166052880, on `3eeea8d`) failed 1 of 27,933 tests: GitHub's fresh runner has no developer `apps/server/.env`, which the local gate could not see; reproduced locally and fixed in `8d4eaf0`. The Session gate then passed on `8d4eaf0` (run 42170423046, every step, finished 06:45:23 UTC on 2026-11-06): 27,932 tests passed and 1 skipped of 27,933, the end-to-end flows, the live seam against the mocks and the accessibility suite included. The local S6 gate passed on `5a5b8c3` on 2026-11-06. The pull request is not merged, so `main` does not hold S6 yet | AI only; GitHub keeps the run logs |
+| Continuous integration | S1–S5 passed on GitHub in pull request #8 (run 41066236672), S6 in pull request #18 and the security follow-ups in pull request #21; all three are merged into `main` | The CI run on `main` after #8's merge failed in one end-to-end test (run 41075981429; PROGRESS.md, Q16); its fix, the Codespaces dev container and S6 went to `main` in pull request #18, since CI runs only on `main` and on pull requests (`.github/workflows/ci.yml`, lines 10–13). That pull request's first finished run (42166052880, on `3eeea8d`) failed 1 of 27,933 tests: GitHub's fresh runner has no developer `apps/server/.env`, which the local gate could not see; reproduced locally and fixed in `8d4eaf0`. The Session gate then passed on `8d4eaf0` (run 42170423046, every step, finished 06:45:23 UTC on 2026-11-06): 27,932 tests passed and 1 skipped of 27,933, the end-to-end flows, the live seam against the mocks and the accessibility suite included; and again on the last head, `eb79b30`, which changed documents only (run 42183630447). The owner merged #18 as `38b1743` on 2026-11-06, and on `main` CI (run 42205391766) and the image workflow (run 42205391749) passed. Pull request #21 (`9bfa1b2`) passed CI (run 42253214678, every step of the job «Session gate») and the image workflow (run 42253214575) and was merged as `43c6673`; on `main` the image workflow passed (run 42266303382) and CI (run 42266303529) passed, every step (17:57–18:44 UTC). The local S6 gate passed on `5a5b8c3` on 2026-11-06; pull request #21 was checked locally with the full test run (725 files, 28,007 tests) and the Docker smoke, not the whole gate | AI only; GitHub keeps the run logs |
 
 ## The honest caveat
 
-- **AI-written.** 218 of the repository's 219 commits are by Claude; the other is the merge of pull request #8, made on
-  GitHub from the repository owner's account (`git log --format='%an'` at `8d4eaf0`, 2026-11-06). The owner made the
+- **AI-written.** 221 of the repository's 224 commits are by Claude; the other three are the merges of pull requests #8,
+  #18 and #21, made on GitHub from the repository owner's account (`git log --format='%an'` at `43c6673`, 2026-11-06).
+  The owner made the
   product decisions, approved the plans of S2–S6 (PROGRESS.md), tried the app in a Codespace (commit `0943a73`) and
   looked at screenshots (PROGRESS.md, S4). That is using the app, not reviewing its code.
 - **Tests and reviews by the same author.** The AI wrote the code, the tests and every review round, and checked its own
   tests by changing the code on purpose (mutation checks). Where PROGRESS.md and `docs/privacy/DPIA-INPUT.md` §10 say
   "independent review", they mean separate AI agent passes, not people.
 - **No human review yet.** No code review by a person is recorded. Pull request #8 was merged with no review on GitHub
-  (0 reviews, read through GitHub's API on 2026-11-05), pull request #18 has none (read 2026-11-06), and the planned "an
-  HVL developer reads a sample" has not happened (PROGRESS.md, S6 step 10).
+  (0 reviews, read through GitHub's API on 2026-11-05), pull requests #18 and #21 were merged with none either (read
+  2026-11-06), and the planned "an HVL developer reads a sample" has not happened (PROGRESS.md, S6 step 10).
 - **What the method did show.** The record also shows the checks working: reviews with recorded counts confirmed and
-  fixed 187 findings (PROGRESS.md: S1 16, S4 120, S5 33, S6 step 10 18); faults found by full runs were reproduced, and
+  fixed 209 findings (PROGRESS.md: S1 16, S4 120, S5 33, S6 step 10 18; pull request #21's description on GitHub: 13
+  on the build-secret scan and 9 on the clamd settings probe); faults found by full runs were reproduced, and
   the same test passed after the fix (for example the grade claim, and the `.env` case in `8d4eaf0`); mutation checks
   exposed weak tests, and the tests added since fail on those mutations (D-110's amendments of 2026-11-05). They were
   targeted, not systematic: no mutation-testing tool is installed ([how-it-was-built.md](how-it-was-built.md) §3).
