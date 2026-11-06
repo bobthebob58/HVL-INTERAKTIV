@@ -64,7 +64,9 @@ describeWithServices(
       expect([appDdl, view]).toEqual(['42501', 'ok']);
     });
 
-    it('[DATA-008] privacy:dsr export prints Kari’s rows of both years on standard output, and no identifier given', async () => {
+    // WHY: the CLI runs below are one scenario in order and also carry [DATA-007], so that a run of that ID alone
+    // (`-t '\[DATA-007\]'`) makes the runs whose audit events the last test reads.
+    it('[DATA-008][DATA-007] privacy:dsr export prints Kari’s rows of both years on standard output, and no identifier given', async () => {
       // Act
       const run = await dsr(['export'], kariSubject());
       const document = JSON.parse(run.stdout) as {
@@ -85,7 +87,7 @@ describeWithServices(
       expect(run.stderr).not.toContain(seed.kari.keys.current);
     }, 60_000);
 
-    it('[DATA-003] privacy:purge counts in a dry run, then deletes the ended year only, as hvli_app', async () => {
+    it('[DATA-003][DATA-007] privacy:purge counts in a dry run, then deletes the ended year only, as hvli_app', async () => {
       // Act
       const dry = await runServerCli('privacy:purge', ['--dry-run'], seed.env);
       const before = await rowsOf([seed.kari.keys.ended, seed.ola.keys.ended]);
@@ -124,7 +126,7 @@ describeWithServices(
       expect(secret).toEqual({ removePseudonymSecretsOfYears: [seed.ended] });
     }, 120_000);
 
-    it('[DATA-008] privacy:dsr erase counts first, then with --confirm deletes Kari’s rows and account; Ola’s stay', async () => {
+    it('[DATA-008][DATA-007] privacy:dsr erase counts first, then with --confirm deletes Kari’s rows and account; Ola’s stay', async () => {
       // Act
       const dry = await dsr(['erase'], kariSubject());
       const kariBefore = await rowsOf([seed.kari.keys.current]);

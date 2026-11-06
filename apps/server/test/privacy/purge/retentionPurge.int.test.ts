@@ -46,7 +46,9 @@ describeWithServices('[DATA-003] the yearly purge on PostgreSQL', () => {
     };
   };
 
-  it('[DATA-003] a dry run reports the counts per table and changes nothing', async () => {
+  // WHY: these tests are one scenario in order. The runs below also carry [DATA-007], so that a run of that ID alone
+  // (`-t '\[DATA-007\]'`) makes the four runs whose audit events the last test reads.
+  it('[DATA-003][DATA-007] a dry run reports the counts per table and changes nothing', async () => {
     // Act
     const result = await run(true);
     // Assert
@@ -55,7 +57,7 @@ describeWithServices('[DATA-003] the yearly purge on PostgreSQL', () => {
     expect(await fx.db.user.count({ where: { id: { in: Object.values(fx.accounts) } } })).toBe(6);
   });
 
-  it('[DATA-003] a real run writes the year’s k-suppressed snapshots, then deletes 2010’s rows by their stored year', async () => {
+  it('[DATA-003][DATA-007] a real run writes the year’s k-suppressed snapshots, then deletes 2010’s rows by their stored year', async () => {
     // Act
     const result = await run(false);
     // Assert: the statement stored on 1 August 2011 with 2010's key went with 2010 (D-107); the test student's went
@@ -104,7 +106,7 @@ describeWithServices('[DATA-003] the yearly purge on PostgreSQL', () => {
     expect(await fx.db.user.count({ where: orphans })).toBe(0);
   });
 
-  it('[DATA-003] is idempotent: a second run deletes nothing and writes no snapshot', async () => {
+  it('[DATA-003][DATA-007] is idempotent: a second run deletes nothing and writes no snapshot', async () => {
     // Act
     const dry = await run(true);
     const real = await run(false);
