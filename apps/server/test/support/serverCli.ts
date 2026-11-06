@@ -10,6 +10,8 @@
  *   - The child gets exactly the environment given (plus `PATH`), so a variable the test does not set comes from
  *     apps/server/.env only where the script itself loads it (`--env-file-if-exists`), as on a server.
  *   - Standard input is written whole and closed; standard output and error are kept apart, as UTF-8 text.
+ *   - Node's own notice that apps/server/.env is missing is left out of standard error, so a run reads the same with
+ *     or without a developer's .env (CI and a server have none).
  *   - A run that outlasts `timeoutMs` is killed and reported with the code `null`.
  * Collaborators: apps/server/package.json (`db:roles`, `privacy:purge`, `privacy:dsr`), ./freshDeployment.ts.
  * Tests: apps/server/test/privacy/operationsClis.int.test.ts
@@ -22,6 +24,10 @@ export const SERVER_DIR = fileURLToPath(new URL('../../', import.meta.url));
 
 /** The scripts the runbooks name. */
 export type ServerCliScript = 'db:roles' | 'privacy:purge' | 'privacy:dsr';
+
+// WHY: `--env-file-if-exists` makes Node print this line when the file is missing (twice under tsx). It is Node's,
+// not the CLI's, and a test that requires the CLI's standard error to be one line failed in CI on it alone.
+const NODE_ENV_FILE_NOTICE = '.env not found. Continuing without it.';
 
 /** What one run printed and how it ended. */
 export interface ServerCliRun {
@@ -64,7 +70,11 @@ export function runServerCli(
       resolve({
         code,
         stdout: Buffer.concat(out).toString('utf8'),
-        stderr: Buffer.concat(err).toString('utf8'),
+        stderr: Buffer.concat(err)
+          .toString('utf8')
+          .split('\n')
+          .filter((line) => line.trimEnd() !== NODE_ENV_FILE_NOTICE)
+          .join('\n'),
       });
     });
     child.stdin.end(stdin);
