@@ -4,7 +4,7 @@
 |---|---|
 | **For** | HVL IT (security and operations), the DPO, and anyone HVL asks to review the code, including HVL's bachelor students |
 | **Status** | **Draft for HVL IT to correct.** The plan, the checklists, the time estimates and the definitions of "reviewed" in §4–§6 are proposals |
-| **Written** | 2026-11-05 by the same AI assistant (Claude) that wrote the code, from the repository at commit `92ca2c5` |
+| **Written** | 2026-11-05 by the same AI assistant (Claude) that wrote the code, from the repository at commit `92ca2c5`. Updated 2026-11-06 at commit `8d4eaf0` with the commit counts, pull request #18 and its GitHub CI runs (§2.1, §2.3, §2.4, §3). No file under `apps/server/src`, `apps/web`, `packages/`, `deploy/` or `content/` changed between those commits (`git diff --stat 92ca2c5 8d4eaf0`) |
 | **Reviewed by** | Nobody yet. A second AI pass checked the facts and evidence against the repository on 2026-11-05; that is not a human review |
 | **Overview** | [README.md](README.md); the risks this review lowers are ROS-01 and ROS-02 in the [ROS-analyse](ros-analyse.md) |
 
@@ -24,14 +24,16 @@
 
 ### 2.1 Who did what
 
-- **The code, the tests and the documents:** 213 of the repository's 214 commits are by `Claude
+- **The code, the tests and the documents:** 218 of the repository's 219 commits are by `Claude
   <noreply@anthropic.com>`. The other is GitHub's merge of pull request #8 by the owner's account
-  (`git log --format='%an'`, 2026-11-05).
+  (`git log --format='%an'` at `8d4eaf0`, 2026-11-06).
 - **The owner** approved the plans of S2–S6 (`PROGRESS.md`; none is recorded for S1), made the product decisions (for
   example the licence, D-015, and one Node.js system, D-081), asked for the simplification pass (S4+), protected `main`
-  with a ruleset that requires a pull request and the «Session gate» check, and merged pull request #8 after that check
-  passed (`PROGRESS.md`, Q16). The pull request has **no review** on GitHub (0 reviews, read through GitHub's API on
-  2026-11-05).
+  with a ruleset that requires a pull request and the «Session gate» check, and merged pull request #8 after that
+  check passed (`PROGRESS.md`, Q16). The pull request has **no review** on GitHub (0 reviews, read through GitHub's
+  API on 2026-11-05). Pull request #18, which carries S6, has no review either (0 reviews, read through GitHub's API
+  on 2026-11-06); it is open, not merged, and holds the 19 commits after `main`
+  (`git rev-list --count origin/main..HEAD` at `8d4eaf0`).
 - **The owner also tried the app** in a Codespace (commit `0943a73`: "The owner's first try ran in the browser
   editor") and received screenshots of the views as they were built (CLAUDE.md §4; `PROGRESS.md`, S4–S6). That is
   using the app, not reviewing its code.
@@ -68,22 +70,47 @@ review):
 | S6 step 8 | A run of the accessibility suite over every S6 view | 1 violation found and fixed (a chart label cut off under text spacing) | «S6», step 8 |
 | S6 step 10 | Five lenses read `git diff 47e235e`; a skeptic per finding, a fixer, an adversarial re-check | 20 found, 18 confirmed, 2 refuted, 18 fixed. The check "does the code read as if a careful human wrote it?" was **not run** | «S6», step 10 |
 | S6 gate | The full gate in ten parts (D-113), 144 steps; passed on 2026-11-06 | Three fixes: TypeDoc warnings (`f5fa12b`) and three tests that depended on test order (`92ca2c5`, `5a5b8c3`) | «S6», step 11; session log «2026-11-06 · S6 gate»; `git log` |
+| After the gate (2026-11-06) | Not a review: the local test that pins `ci.yml` to the last finished session (`tools/doc-lint/test/ciWorkflow.test.mjs`) | 1 fault: after `cbfd859` marked S6 done, the test failed (`[5]` instead of `[6]`), because CI still checked traceability through S5. `3eeea8d` raised the CI step to S6 and the same test passed. CI's run on `cbfd859` (42165369085) was cancelled by that push before its test step, so CI never reported it | `git show 3eeea8d`; `.github/workflows/ci.yml`, lines 17–19 and 174 |
+| GitHub CI, pull request #18, first finished run (2026-11-06) | Not a review: GitHub runs the committed workflow on a fresh runner. CI run 42166052880 (job 127722909215) on `3eeea8d` | Failed 1 of 27,933 tests (`apps/server/test/privacy/purge/purgeCliFailure.test.ts`, line 70, expects one line of standard error). GitHub's runner has no `apps/server/.env`, so Node's `--env-file-if-exists` printed ".env not found. Continuing without it." twice before the purge CLI's failure line. The local gate could not see it, because a developer `.env` exists there | GitHub run 42166052880; `apps/server/package.json`, line 21 |
+| The fix, and CI again | `8d4eaf0`: reproduced by moving `.env` aside; the test helper drops that exact Node notice; the test's assertions are unchanged; the test passes with and without `.env`. Then CI run 42170423046 (job 127736690226) on `8d4eaf0` | **Passed**, every step, 05:46:51–06:45:23 UTC: 712 test files, 27,932 tests passed and 1 skipped of 27,933 (CI ran the 2 real-clamd tests and skipped the 1 test that runs only as root); e2e 22 files, 33 tests; the live seam against the mocks 36 tests; accessibility 18 files, 558 tests; traceability through S6 (126 requirements). This is GitHub's record that the committed tests pass there, not a review | `git show 8d4eaf0`; `apps/server/test/support/serverCli.ts`, line 30; GitHub run 42170423046 |
+| `docker.yml` on GitHub, pull request #18 | Not a review: the image build and app-stack smoke test on GitHub's runner. The first run (42165369079, on `cbfd859`) was cancelled by the next push | First pass on GitHub in run 42166052745 on `3eeea8d` (05:03–05:12 UTC); passed again in run 42170423045 on `8d4eaf0`. Both logs: image 1994 MB, 7 of 7 migrations, 77 library folders seeded, clamd refused EICAR, the PDF printed with Chromium's sandbox (seen in `/proc`), Chromium 141.0.7390.37 as uid 10001 | GitHub runs 42166052745 (job 127722905949) and 42170423045 (job 127736690022) |
 
 **A pattern IT should know about.** Since S3, every gate or full test run has found something the AI reviews missed:
 33 TypeDoc warnings and 2 order-dependent tests at the S3 gate, 2 undocumented API names at the S4 gate, 3 faults under
 full CPU load at the S5 gate, the grade worker claiming 3 jobs with a limit of 1 in the full server run of S6 step 4's
-checks (recorded under step 3), and three fixes in the S6 gate (`PROGRESS.md`, session log and S6 steps). Machines
-checking machines catch a lot; a person reading the riskiest parts is the cheapest way to catch what this method does
-not.
+checks (recorded under step 3), and three fixes in the S6 gate (`PROGRESS.md`, session log and S6 steps). GitHub CI's
+first finished run on S6 then found one fault that the local gate could not see: a test that relied on the developer's
+`.env` file (run 42166052880; fixed in `8d4eaf0`, after which run 42170423046 passed). Machines checking machines
+catch a lot; a person reading the riskiest parts is the cheapest way to catch what this method does not.
+
+### 2.4 Two kinds of automated check
+
+The local session gate and GitHub CI run the same committed tests, but in different places, in different ways and
+with different witnesses, and each has caught faults the other could not: the gate's per-requirement runs found tests
+that depended on test order (`92ca2c5`, `5a5b8c3`), and CI's fresh runner found the test that relied on a developer
+`.env` (`8d4eaf0`). How they differ in full, and what the method behind both cannot catch:
+[how-it-was-built.md](how-it-was-built.md) §5. In short:
+
+- **Local gate:** the AI runs it on its development container at the end of each session; for S6, 144 steps in ten
+  parts over about 11 hours, among them 19 filtered and 89 per-requirement runs, the load smoke, the Docker smoke and
+  the running-server walk, which CI does not do. The same AI pasted the output into `PROGRESS.md`; nobody else saw the
+  runs (`PROGRESS.md`, session log «2026-11-06 · S6 gate»).
+- **GitHub CI:** GitHub runs the committed workflow on a fresh runner for every pull request and push to `main`, each
+  command once as one full suite in its default order, and keeps the result and logs under a run ID that anyone with
+  access can check; `main` accepts only a pull request with a green «Session gate» check (`.github/workflows/ci.yml`,
+  lines 9–12; `PROGRESS.md`, Q16).
+- **Shared limit:** both run tests the same AI wrote, against mock Canvas and Feide it also wrote, in Chromium only. A
+  green result means the code does what those tests expect, not that they expect the right thing. Neither is a human
+  review (§6).
 
 ## 3. What has had no human review
 
-| Item | State on 2026-11-05 | Evidence |
+| Item | State on 2026-11-06 | Evidence |
 |---|---|---|
 | The code: `apps/`, `packages/`, `tools/` | No review by a person is recorded. The planned "an HVL developer reads a sample" has not happened | `PROGRESS.md`, S6 step 10; §2.1 |
 | The tests | Written and mutation-checked by the same AI. "Tested" in `docs/TRACEABILITY.md` only means that a test title carries the requirement ID | `docs/TRACEABILITY.md`, lines 6–7; [hand-off](../handoff/README.md) §4 |
-| The deployment files and CI | `deploy/` and `.github/workflows/` were read only by AI reviewers (among them step 6's security review and step 10's review of everything since `47e235e`); `docker.yml` has never run on GitHub | `PROGRESS.md`, S6 steps 6 and 10 |
-| GitHub CI for S6 | None of the 14 commits after `main` has run in GitHub CI, which runs only on `main` and on pull requests | `git rev-list origin/main..HEAD`; `.github/workflows/ci.yml`, lines 9–12 |
+| The deployment files and CI | `deploy/` and `.github/workflows/` were read only by AI reviewers (among them step 6's security review and step 10's review of everything since `47e235e`). `docker.yml` has now run on GitHub and passed (§2.3), which shows that the image builds and its smoke test passes there, not that a person has read the files | `PROGRESS.md`, S6 steps 6 and 10; GitHub runs 42166052745 and 42170423045 |
+| Pull request #18 (S6, the 19 commits after `main`) | No review on GitHub. CI has run on its head (CI tests the head merged into `main`, not each commit on its own): run 42166052880 on `3eeea8d` failed one test, and run 42170423046 on `8d4eaf0` passed (finished 06:45:23 UTC; §2.3). A green run is not a review (§6) | GitHub's API, 2026-11-06 (0 reviews); `git rev-list --count origin/main..HEAD`; `.github/workflows/ci.yml`, lines 9–12 |
 | The threat model, the ROS-analyse and this pack | Drafts by the AI | [threat-model.md](threat-model.md), [ros-analyse.md](ros-analyse.md) |
 | The DPIA input (residuals R1–R40) | Not reviewed by the DPO | Q6; `docs/privacy/DPIA-INPUT.md` |
 | Accessibility for real users | No manual run recorded; all 56 verdicts are *Not yet determined* | `docs/accessibility/results/README.md`; [conformance report](../accessibility/WCAG-CONFORMANCE-REPORT.md) |
@@ -100,7 +127,8 @@ each, the areas are in order of risk. The paths are under `apps/server/src/` unl
 **Time estimates are the AI author's estimates, not measurements.** They assume one experienced reviewer, about
 200 lines of careful reading an hour, as much time again to run the tests and try attacks, and a 7.5-hour working
 day, so about 100 lines per review hour, rounded to half days. The line counts are `wc -l` of each area's listed
-source files at `92ca2c5`, without tests (counted again on 2026-11-05 by a second AI pass).
+source files at `92ca2c5`, without tests (counted again on 2026-11-05 by a second AI pass). They still hold at
+`8d4eaf0`: none of those files changed in between (`git diff --stat 92ca2c5 8d4eaf0`).
 
 **Before starting** (about half a day):
 
@@ -331,10 +359,10 @@ input (Q6), which is not code review.
 
 Run the [manual test protocol](../accessibility/manual-test-protocol.md) on the stage-1 server, launched from HVL's test
 Canvas with Feide test users, never with real student data (protocol §2). The runs due are listed in
-[results/README.md](../accessibility/results/README.md): the full run (J1.1–J1.9, J2 for the ten types, the §7 checks)
-with set-ups AT-1 (NVDA), AT-2 (JAWS), AT-3 (VoiceOver on iOS), KB (keyboard only) and Z400 (400 % zoom); the studio
-(J1.10–J1.13, J4.1–J4.4); the portfolio PDF with PAC and NVDA (J4.5–J4.10); and J3, insight, which the protocol adds
-from Session 6.
+[results/README.md](../accessibility/results/README.md): the full run (J1.1–J1.9, J2 for the ten types, the §7
+checks) with set-ups AT-1 (NVDA), AT-2 (JAWS), AT-3 (VoiceOver on iOS), KB (keyboard only) and Z400 (400 % zoom); the
+studio (J1.10–J1.13, J4.1–J4.4); the portfolio PDF with PAC and NVDA (J4.5–J4.10); and J3, insight, which the
+protocol adds from Session 6.
 
 - [ ] Testers who use the assistive technology daily, or an external tester HVL engages (protocol §2).
 - [ ] One dated result file per set-up and run, named as `results/README.md` says, with role and initials only.
@@ -367,12 +395,13 @@ limit on login and launch in the app (ROS-07); the residuals R1–R40 in `docs/p
 
 - **Security findings: privately**, as [SECURITY.md](../../SECURITY.md) says, never in a public issue, comment or pull
   request. **Neither of its routes works yet:** GitHub's private vulnerability reporting must be turned on by the
-  owner, and HVL's e-mail address is a placeholder (`SECURITY.md`, lines 12–14 and 42–44). Until then, agree a private
-  channel with the repository owner *(IT to fill in)*.
+  owner, and HVL's e-mail address is a placeholder (`SECURITY.md`, lines 12–14 and 42–44). Until then, agree a
+  private channel with the repository owner *(IT to fill in)*.
 - **Faults:** a GitHub issue with the «Feil» form (`.github/ISSUE_TEMPLATE/feil.yml`). **Accessibility barriers:** the
-  form «Barriere for universell utforming» (`uu-barriere.yml`; its issues are titled «UU-barriere: …»). Blank issues are
-  off, and each form has a required check that it holds no personal data (`config.yml`). The forms are in Nynorsk and
-  written for pilot testers; for a code finding, name the file, the line and the commit in the steps field. Guides:
+  form «Barriere for universell utforming» (`uu-barriere.yml`; its issues are titled «UU-barriere: …»). Blank
+  issues are off, and each form has a required check that it holds no personal data (`config.yml`). The forms are in
+  Nynorsk and written for pilot testers; for a code finding, name the file, the line and the commit in the steps
+  field. Guides:
   [rapportere-problem.md](../testing/rapportere-problem.md) (testers) and
   [labels-and-triage.md](../testing/labels-and-triage.md) (maintainers). The labels are defined in `.github/labels.yml`
   but not yet created on GitHub; the owner does that (labels-and-triage.md).

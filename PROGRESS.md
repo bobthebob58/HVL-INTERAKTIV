@@ -943,7 +943,10 @@ under the step that does it):
         were fixed (f5fa12b, 92ca2c5, 5a5b8c3), then part A ran again in full on the final commit 5a5b8c3 (session
         log, «2026-11-06 · S6 gate»)
   - [x] The hourly restart task switched off (2026-11-06)
-  - [ ] GitHub CI on the S6 commits (a pull request to `main`, when the owner asks), `docker.yml` included
+  - [x] GitHub CI on the S6 commits, `docker.yml` included: in pull request #18, on `8d4eaf0`, the Session gate passed
+        (run 42170423046, 2026-11-06 06:45:23 UTC) and `docker.yml` passed (run 42170423045)
+  - CI's traceability step raised to S6 (3eeea8d), and the CLI test helper fixed for CI's missing `apps/server/.env`
+    (8d4eaf0, after CI run 42166052880 failed on it); session log «2026-11-06 · PR #18 and the assurance pack's method»
 
 ---
 
@@ -1772,3 +1775,29 @@ Append one entry per session: date, session, what was done, gate output, and any
   drill on HVL's hardware; the manual assistive-technology run and the 56 verdicts (`UD-031`, `UD-040`); the DPO's
   review of the DPIA input; the light simplification check (carried to the pilot list); the upstream reports for the
   owner to file, the two security reports privately. The hourly restart task is switched off.
+- **2026-11-06 · PR #18 and the assurance pack's method** — Pull request #18 (`ccr-07f63266-6cere5` → `main`) took
+  the S6 commits to GitHub CI. Two faults showed; each was reproduced before its fix, and the same test then passed.
+  (1) Before CI reached its tests, a local run of `tools/doc-lint/test/ciWorkflow.test.mjs` failed (`[5]` instead of
+  `[6]`): after `cbfd859` marked S6 done, CI still checked traceability through S5. 3eeea8d raised the step to
+  `--done-through=S6`, and its push cancelled CI run 75 (42165369085) and the first `docker.yml` run (42165369079).
+  (2) CI run 76 (42166052880, job 127722909215, on `3eeea8d`) failed 1 of 27,933 tests in «Tests (unit and
+  integration)»: GitHub's fresh runner has no `apps/server/.env`, so Node's `--env-file-if-exists` printed ".env not
+  found. Continuing without it." twice before the purge CLI's one failure line
+  (`apps/server/test/privacy/purge/purgeCliFailure.test.ts`, line 70). The local gate could not see it, because a
+  developer `.env` exists here. Reproduced by moving `.env` aside (settings in the environment, no file), fixed in the
+  test helper (`apps/server/test/support/serverCli.ts` drops that exact Node notice; the test's assertions unchanged),
+  and passed with and without `.env` (8d4eaf0). On `8d4eaf0` the Session gate passed in CI run 77 (42170423046, job
+  127736690226), 05:46:51–06:45:23 UTC, every step: 712 test files, 27,932 tests passed and 1 skipped of 27,933 (CI
+  ran the 2 real-clamd tests and skipped the 1 test that runs only as root); e2e 22 files, 33 tests; the live seam
+  against the mocks 36 tests; accessibility 18 files, 558 tests; `docs:api`, `spec:trace --done-through=S6` (126
+  requirements), the spec site, the conformance report check and the boot check. `docker.yml` passed on GitHub for
+  the first time in run 42166052745 (on `3eeea8d`) and again in run 42170423045 (on `8d4eaf0`, 05:46:51–05:51:07
+  UTC). Pull request #18 has no review (GitHub's API, 2026-11-06) and is not merged. Then, at the owner's request of
+  2026-11-06, the IT assurance pack gained `docs/assurance/how-it-was-built.md`: the plan, build, test, verify cycle;
+  fixes as experiments (reproduce, fix, the same test passing; mutation and revert-run-restore checks); adversarial AI
+  review with skeptics and fact-checkers; the session gates; and the local gate and GitHub CI compared, with their
+  shared limit, that the same AI wrote the tests both run, and what people still need to review and test. The other
+  documents of the pack were refreshed to `8d4eaf0` and this CI result (commit counts, the commits after `main`, the
+  review state, the image size on GitHub's runner), and D-116's amendment of 2026-11-06 records the change. All of it
+  was written and fact-checked by AI agents against the repository and GitHub's read-only API; no person has
+  reviewed it. No app code, spec, test or CI file changed after `8d4eaf0`.

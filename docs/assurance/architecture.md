@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Status** | **Draft for HVL IT to correct.** Not approved by anyone. |
-| **Written by** | An AI agent (Claude), 2026-11-05, by reading the repository at commit `92ca2c5` and running read-only commands. |
+| **Written by** | An AI agent (Claude), 2026-11-05, by reading the repository at commit `92ca2c5` and running read-only commands. Updated 2026-11-06 at commit `8d4eaf0`, only for `docker.yml`'s runs on GitHub, the image size and the `PROGRESS.md` line references (§3, §8, §11); no file under `apps/server/src`, `apps/web`, `packages/`, `deploy/` or `content/` changed between those commits (`git diff --stat 92ca2c5 8d4eaf0`). |
 | **Reviewed by** | No person yet. The code, its tests and its earlier reviews were all written by the same AI. No person has reviewed the code or this document ([human-review.md](human-review.md)). A second AI agent checked this document's claims against the repository on 2026-11-05 and corrected some; that is not a human review. |
 | **For** | HVL IT operations and security staff who decide whether and how to host HVL Interaktiv. |
 | **Part of** | The IT assurance pack: start at [README.md](README.md). See also [threat-model.md](threat-model.md), [ros-analyse.md](ros-analyse.md), [test-environment.md](test-environment.md) and the SBOM [sbom.cdx.json](sbom.cdx.json). |
@@ -106,7 +106,7 @@ file does not list»).
 | openid-client | 6.8.8 | Feide OIDC client | `apps/server/package.json`; `src/auth/feide/FeideClient.ts` |
 | Prisma, pg | `@prisma/client`, `@prisma/adapter-pg`, `prisma` 7.10.1; `pg` 8.23.1 | Database access and migrations | `apps/server/package.json`; `package-lock.json` |
 | Other server packages | `redis` 4.7.1, `@aws-sdk/client-s3` 3.1155.0, `clamscan` 2.4.0, `pino` 10.4.0, `zod` 4.6.7, `jsdom` 26.1.0, `dompurify` 3.4.17 | Redis, S3, clamd client, logs, validation, SVG sanitising | `apps/server/package.json` |
-| playwright-core and Chromium | `playwright-core` 1.56.1; full Chromium build `chromium-1194` (141.0.7390.37), never the headless shell | Renders the mappe PDF (`MAPPE-004`) | `deploy/Dockerfile:66-71,110`; `PROGRESS.md:1480`; D-096 |
+| playwright-core and Chromium | `playwright-core` 1.56.1; full Chromium build `chromium-1194` (141.0.7390.37), never the headless shell | Renders the mappe PDF (`MAPPE-004`) | `deploy/Dockerfile:66-71,110`; `PROGRESS.md:1486`; D-096 |
 | tini, fonts, Chromium's system libraries | From Ubuntu's archive at build time, **versions not pinned** | PID 1; æ, ø and å in the PDF | `deploy/Dockerfile:101-106,131` |
 | Seccomp profile | Playwright v1.56.1's profile, byte for byte, SHA-256 `cc3e61cabda6…` | Lets Chromium keep its sandbox as non-root | `deploy/seccomp/README.md`; `tools/deploy-check/deployRules.mjs` |
 | Browser-side scripts | H5P core and content-type JavaScript, and our theme scripts including the xAPI bridge | Run in users' browsers, served from the app origin | `packages/hvl-h5p-theme/`; D-102; `src/http/h5pPageCsp.ts:83` |
@@ -258,20 +258,28 @@ repository checks that it does **(IT to fill in)**.
 | Static checks | `tools/deploy-check` refuses privileged or unconfined services, host namespaces, unpinned images and any added capability but the app's one | `tools/deploy-check/deployRules.mjs:1-17` |
 | Start-up signal | The server logs `PDF export availability` with a reason code; without a working sandbox the PDF export answers 503 and the Markdown export still works | `src/learningDesign/mappe/pdf/pdfAvailability.ts:128-129`; `docs/ops/docker.md:43-58` |
 
-**What IT must check** (Q5, `PROGRESS.md:964`):
+**What IT must check** (Q5, `PROGRESS.md:970`):
 
 - **Does HVL's runtime allow a custom seccomp profile and `CAP_SYS_CHROOT`?** OpenShift's `restricted-v2` allows
   neither. If not, the PDF export needs a renderer container of its own (`docs/ops/docker.md:43-46`) **(IT to fill
   in)**.
 - **The image is not byte-reproducible.** Ubuntu packages (Chromium's libraries, fonts, `tini`) are not version-pinned,
   and Chromium's version and SHA-256 are printed by the smoke test, not compared with a pinned value
-  (`deploy/Dockerfile:101-106`; `deploy/smoke/smokeChecks.sh:133-136`).
+  (`deploy/Dockerfile:101-106`; `deploy/smoke/smokeChecks.sh:133-136`). Two builds show the effect: the same Chromium
+  version (141.0.7390.37) printed SHA-256 `dd794b4e…144a` in the development sandbox (`PROGRESS.md:1486`) and
+  `85918a99…1a95` on GitHub's runner (logs of jobs 127722905949 and 127736690022).
 - **No image is published or signed.** No workflow pushes, signs or attests an image (searched `.github/` and
   `deploy/`). GitHub Actions are pinned by major tag, not by commit SHA (`.github/workflows/ci.yml:84-87`). The image
-  workflow `.github/workflows/docker.yml` has **never run on GitHub**; the smoke test has run only in the development
-  sandbox (`PROGRESS.md:743,1471-1480`).
-- **Size.** The image is about 2.8 GB (2 777 MB measured); a build needs about 8 GB free disk at its peak
-  (`PROGRESS.md:1473`; `docs/ops/docker.md:135-137`). clamd needs about 1 GB of memory (`docs/ops/clamav.md:134`).
+  workflow `.github/workflows/docker.yml` first ran on GitHub in pull request #18 on 2026-11-06: run 42165369079 was
+  cancelled by the next push, and runs 42166052745 (on `3eeea8d`) and 42170423045 (on `8d4eaf0`) passed. They ran the
+  smoke checks that had run only in the development sandbox before (`PROGRESS.md:743,1474-1483`), without the
+  sandbox's proxy extras (the logs say `sandbox extras: off`): among them EICAR refused by clamd, the files origin's
+  headers, and the PDF printed with Chromium's sandbox seen in `/proc`. The workflow is not on `main` yet, and it
+  builds an image only to test it.
+- **Size.** The image was 2 777 MB when built in the development sandbox (`PROGRESS.md:1479`) and 1 994 MB when built
+  on GitHub's runner (both `docker.yml` runs above); the repository does not record why they differ. A build needs
+  about 8 GB free disk at its peak (`docs/ops/docker.md:135-137`; the sandbox run's disk line, `PROGRESS.md:1486`).
+  clamd needs about 1 GB of memory (`docs/ops/clamav.md:134`).
 - **Never run the root `docker-compose.yml` on a server**: its PostgreSQL has a fixed development password and its
   Redis has none (`docs/ops/runbook.md:209-213`).
 
@@ -355,7 +363,7 @@ HVL facts this document needs **(IT to fill in)**:
 - clamd with daily signatures, `AlertExceedsMax yes` and `AlertEncrypted yes`, and its TLS proxy.
 - The reverse proxy, the secret store, the log store, monitoring and the backup target.
 - Where the image is built and stored, and whether it should be signed.
-- The Feide registration (Q3) and the test Canvas developer key and deployment IDs (Q4, Q13) (`PROGRESS.md:958-962`).
+- The Feide registration (Q3) and the test Canvas developer key and deployment IDs (Q4, Q13) (`PROGRESS.md:964-968`).
 - Who at HVL is the system owner, who owns the test install, and who maintains the service (Q31; D-116).
 
 Known technical gaps from the repository, for the [threat model](threat-model.md) and the

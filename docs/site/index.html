@@ -11471,6 +11471,21 @@ counts, the commits after <code>main</code>) age as the S6 gate and later work l
 The SBOM is regenerated after a change to the lockfile, the H5P pins or the images (<code>tools/sbom/README.md</code>).
 Neither the pack nor the SBOM is a review, and neither changes what the code does. Q31 joins PROGRESS.md&#39;s open
 questions.</li>
+<li><strong>Amendment (2026-11-06, the owner&#39;s request; pull request #18):</strong> the pack gains <code>how-it-was-built.md</code>, at the
+owner&#39;s request of 2026-11-06: the method used throughout (the plan, build, test, verify cycle of CLAUDE.md §4;
+fixes as experiments, a fault reproduced before its fix and the same test shown passing after it; mutation and
+revert-run-restore checks of the tests; adversarial AI review with skeptics and fact-checkers; the session gates),
+how the local gate and GitHub CI differ (where they run, what runs, who vouches) and their shared limit, that the
+same AI wrote the tests both run, with the evidence and what people must still review and test. It follows this
+decision&#39;s rules for the pack: a draft for IT to correct, written and fact-checked by AI, each claim with its
+evidence, and no fact about HVL that the repository cannot know. The snapshot is refreshed to commit <code>8d4eaf0</code> and
+pull request #18&#39;s CI result: the first finished CI run on S6 (run 42166052880, on <code>3eeea8d</code>) failed one test that
+relied on a developer <code>apps/server/.env</code>, which GitHub&#39;s runner does not have; it was reproduced without <code>.env</code> and
+fixed in the test helper (<code>8d4eaf0</code>); the Session gate then passed on <code>8d4eaf0</code> (run 42170423046, finished
+06:45:23 UTC), and <code>docker.yml</code> passed on GitHub for the first time (runs 42166052745 and 42170423045). Commit
+counts, the commits after <code>main</code> and the review state (no review on pull request #18) are as read on 2026-11-06.
+This amendment changes no app code, test, spec or CI file. A green CI run is not a review, so the pack&#39;s caveats
+stand, and <code>README.md</code> lists the new document.</li>
 </ul>
 
 </section>
@@ -12522,7 +12537,10 @@ task off. A pull request only when the owner asks</li>
 were fixed (f5fa12b, 92ca2c5, 5a5b8c3), then part A ran again in full on the final commit 5a5b8c3 (session
 log, «2026-11-06 · S6 gate»)</li>
 <li><span class="task">✓ Done:</span> The hourly restart task switched off (2026-11-06)</li>
-<li><span class="task">○ To do:</span> GitHub CI on the S6 commits (a pull request to <code>main</code>, when the owner asks), <code>docker.yml</code> included</li>
+<li><span class="task">✓ Done:</span> GitHub CI on the S6 commits, <code>docker.yml</code> included: in pull request #18, on <code>8d4eaf0</code>, the Session gate passed
+(run 42170423046, 2026-11-06 06:45:23 UTC) and <code>docker.yml</code> passed (run 42170423045)</li>
+<li>CI&#39;s traceability step raised to S6 (3eeea8d), and the CLI test helper fixed for CI&#39;s missing <code>apps/server/.env</code>
+(8d4eaf0, after CI run 42166052880 failed on it); session log «2026-11-06 · PR #18 and the assurance pack&#39;s method»</li>
 </ul>
 </li>
 </ul>
@@ -13351,6 +13369,33 @@ Canvas and Feide (the live seam and <code>docs/handoff/canvas-acceptance.md</cod
 drill on HVL&#39;s hardware; the manual assistive-technology run and the 56 verdicts (<a class="req-ref" href="#r-UD-031"><code>UD-031</code></a>, <a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); the DPO&#39;s
 review of the DPIA input; the light simplification check (carried to the pilot list); the upstream reports for the
 owner to file, the two security reports privately. The hourly restart task is switched off.</p>
+</li>
+<li><p><strong>2026-11-06 · PR #18 and the assurance pack&#39;s method</strong> — Pull request #18 (<code>ccr-07f63266-6cere5</code> → <code>main</code>) took
+the S6 commits to GitHub CI. Two faults showed; each was reproduced before its fix, and the same test then passed.
+(1) Before CI reached its tests, a local run of <code>tools/doc-lint/test/ciWorkflow.test.mjs</code> failed (<code>[5]</code> instead of
+<code>[6]</code>): after <code>cbfd859</code> marked S6 done, CI still checked traceability through S5. 3eeea8d raised the step to
+<code>--done-through=S6</code>, and its push cancelled CI run 75 (42165369085) and the first <code>docker.yml</code> run (42165369079).
+(2) CI run 76 (42166052880, job 127722909215, on <code>3eeea8d</code>) failed 1 of 27,933 tests in «Tests (unit and
+integration)»: GitHub&#39;s fresh runner has no <code>apps/server/.env</code>, so Node&#39;s <code>--env-file-if-exists</code> printed &quot;.env not
+found. Continuing without it.&quot; twice before the purge CLI&#39;s one failure line
+(<code>apps/server/test/privacy/purge/purgeCliFailure.test.ts</code>, line 70). The local gate could not see it, because a
+developer <code>.env</code> exists here. Reproduced by moving <code>.env</code> aside (settings in the environment, no file), fixed in the
+test helper (<code>apps/server/test/support/serverCli.ts</code> drops that exact Node notice; the test&#39;s assertions unchanged),
+and passed with and without <code>.env</code> (8d4eaf0). On <code>8d4eaf0</code> the Session gate passed in CI run 77 (42170423046, job
+127736690226), 05:46:51–06:45:23 UTC, every step: 712 test files, 27,932 tests passed and 1 skipped of 27,933 (CI
+ran the 2 real-clamd tests and skipped the 1 test that runs only as root); e2e 22 files, 33 tests; the live seam
+against the mocks 36 tests; accessibility 18 files, 558 tests; <code>docs:api</code>, <code>spec:trace --done-through=S6</code> (126
+requirements), the spec site, the conformance report check and the boot check. <code>docker.yml</code> passed on GitHub for
+the first time in run 42166052745 (on <code>3eeea8d</code>) and again in run 42170423045 (on <code>8d4eaf0</code>, 05:46:51–05:51:07
+UTC). Pull request #18 has no review (GitHub&#39;s API, 2026-11-06) and is not merged. Then, at the owner&#39;s request of
+2026-11-06, the IT assurance pack gained <code>docs/assurance/how-it-was-built.md</code>: the plan, build, test, verify cycle;
+fixes as experiments (reproduce, fix, the same test passing; mutation and revert-run-restore checks); adversarial AI
+review with skeptics and fact-checkers; the session gates; and the local gate and GitHub CI compared, with their
+shared limit, that the same AI wrote the tests both run, and what people still need to review and test. The other
+documents of the pack were refreshed to <code>8d4eaf0</code> and this CI result (commit counts, the commits after <code>main</code>, the
+review state, the image size on GitHub&#39;s runner), and D-116&#39;s amendment of 2026-11-06 records the change. All of it
+was written and fact-checked by AI agents against the repository and GitHub&#39;s read-only API; no person has
+reviewed it. No app code, spec, test or CI file changed after <code>8d4eaf0</code>.</p>
 </li>
 </ul>
 

@@ -4776,3 +4776,18 @@ loading of one spec per session are kept.
   The SBOM is regenerated after a change to the lockfile, the H5P pins or the images (`tools/sbom/README.md`).
   Neither the pack nor the SBOM is a review, and neither changes what the code does. Q31 joins PROGRESS.md's open
   questions.
+- **Amendment (2026-11-06, the owner's request; pull request #18):** the pack gains `how-it-was-built.md`, at the
+  owner's request of 2026-11-06: the method used throughout (the plan, build, test, verify cycle of CLAUDE.md §4;
+  fixes as experiments, a fault reproduced before its fix and the same test shown passing after it; mutation and
+  revert-run-restore checks of the tests; adversarial AI review with skeptics and fact-checkers; the session gates),
+  how the local gate and GitHub CI differ (where they run, what runs, who vouches) and their shared limit, that the
+  same AI wrote the tests both run, with the evidence and what people must still review and test. It follows this
+  decision's rules for the pack: a draft for IT to correct, written and fact-checked by AI, each claim with its
+  evidence, and no fact about HVL that the repository cannot know. The snapshot is refreshed to commit `8d4eaf0` and
+  pull request #18's CI result: the first finished CI run on S6 (run 42166052880, on `3eeea8d`) failed one test that
+  relied on a developer `apps/server/.env`, which GitHub's runner does not have; it was reproduced without `.env` and
+  fixed in the test helper (`8d4eaf0`); the Session gate then passed on `8d4eaf0` (run 42170423046, finished
+  06:45:23 UTC), and `docker.yml` passed on GitHub for the first time (runs 42166052745 and 42170423045). Commit
+  counts, the commits after `main` and the review state (no review on pull request #18) are as read on 2026-11-06.
+  This amendment changes no app code, test, spec or CI file. A green CI run is not a review, so the pack's caveats
+  stand, and `README.md` lists the new document.
