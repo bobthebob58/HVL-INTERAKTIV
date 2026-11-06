@@ -30,7 +30,8 @@ D-110).
 Learners are stored as keyed pseudonyms, with no names or e-mail addresses; the one exception is a learner's Canvas
 ID, kept encrypted in a grade job until 30 days after the job stops (`DATA-002` and its D-104 amendment). Teachers see
 aggregates with groups under five hidden (`INS-006`). It is open source (GPL-3.0-or-later, D-015) and still in
-development: the last build session, S6, has not passed its gate yet (PROGRESS.md, S6 step 11).
+development: the last build session, S6, passed its gate on the development machine on 2026-11-06 (PROGRESS.md,
+session log «2026-11-06 · S6 gate»), but its commits have not run in GitHub CI yet.
 
 ## What we ask of IT, in stages
 
@@ -58,7 +59,7 @@ stages are recorded in D-116; PROGRESS.md's «Blocks» column names a session or
 | Load | Harness built (D-114) | 20-learner smoke on one 4-CPU machine passed; the 200-learner test has not run (runbook §8) | AI only |
 | Backups and restore | Yes (S6) | Round trip on local services (`tools/ops/test/backupRoundTrip.test.mjs`); no restore drill on HVL hardware | AI only |
 | Requirements overall | 123 of 126 have a test that names them; 3 are planned | "Tested" only means a test title carries the ID; it is not proof (docs/TRACEABILITY.md, lines 6–7) | AI only |
-| Continuous integration | S1–S5 passed on GitHub in pull request #8 (run 41066236672) | The CI run on `main` after the merge failed in one end-to-end test (run 41075981429; PROGRESS.md, Q16); the fix is one of the 14 commits after `main` (the Codespaces dev container and S6), which have not run in GitHub CI, because CI runs only on `main` and on pull requests (`.github/workflows/ci.yml`, lines 9–12); S6's gate is running locally | AI only |
+| Continuous integration | S1–S5 passed on GitHub in pull request #8 (run 41066236672) | The CI run on `main` after the merge failed in one end-to-end test (run 41075981429; PROGRESS.md, Q16); the fix is one of the 14 commits after `main` (the Codespaces dev container and S6), which have not run in GitHub CI, because CI runs only on `main` and on pull requests (`.github/workflows/ci.yml`, lines 9–12); S6's gate passed locally on 2026-11-06 | AI only |
 
 ## The honest caveat
 

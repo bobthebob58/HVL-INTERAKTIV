@@ -70,7 +70,8 @@ infrastructure and the first contact with the real Feide and a real Canvas, with
 - **The repository owner, or the maintainer once named (Q31).** Build the image and the content-type bundle from one
   commit on a machine that can reach GitHub, and hand IT the image by its digest (docker.md, «Build the image»;
   runbook §2). No workflow publishes or signs an image yet (`.github/workflows/docker.yml:29`). *(Proposal)* the
-  commit is one that has passed the S6 gate and GitHub CI; neither has happened for S6 yet (PROGRESS.md, S6 step 11).
+  commit is one that has passed the S6 gate and GitHub CI; the S6 gate passed locally on 2026-11-06, GitHub CI has not
+  run on S6 yet (PROGRESS.md, session log «2026-11-06 · S6 gate»).
   The owner also names the testers, and the Feide IDs for `ADMIN_FEIDE_IDS`, if any tester must install libraries.
 
 **The variables to set**, by name (`apps/server/.env.example` documents each; runbook §3 groups them). Secrets are

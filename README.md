@@ -10,8 +10,8 @@ it in Canvas and, before the next seminar, sees which misconceptions to address.
 activities that explain *why* an answer is wrong, work with screen readers and on phones, and can
 be resumed where they left off.
 
-> **Status (2026-11-05): Sessions 1–5 passed their gates; Session 6, the last planned one, is built, integrated and
-> documented, and its review and gate have not run yet.** The server (`apps/server`) runs the H5P engine with the
+> **Status (2026-11-06): Sessions 1–6 passed their gates (Session 6, the last planned one, on 2026-11-06); Session
+> 6's commits still have to run in GitHub CI.** The server (`apps/server`) runs the H5P engine with the
 > ten content types, Feide login, Canvas LTI 1.3 launches and Deep Linking, and the pre-publish validator; the web
 > app (`apps/web`) has the activity pages, the publish flow and the Canvas page, with the HVL design tokens and H5P
 > theme, and (S5) the læringsdesign studio: the guide, the patterns, the planner, sharing with co-authors and the

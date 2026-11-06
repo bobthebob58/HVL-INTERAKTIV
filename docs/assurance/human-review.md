@@ -67,12 +67,12 @@ review):
 | S6 step 7 | Five workstreams with mutating skeptics | No counts recorded | «S6», step 7 |
 | S6 step 8 | A run of the accessibility suite over every S6 view | 1 violation found and fixed (a chart label cut off under text spacing) | «S6», step 8 |
 | S6 step 10 | Five lenses read `git diff 47e235e`; a skeptic per finding, a fixer, an adversarial re-check | 20 found, 18 confirmed, 2 refuted, 18 fixed. The check "does the code read as if a careful human wrote it?" was **not run** | «S6», step 10 |
-| S6 gate | The full gate in ten parts (D-113), still running | Not finished (step 11 is unticked). So far it has led to two fixes: TypeDoc warnings (`f5fa12b`) and a test that depended on test order (`92ca2c5`) | «S6», step 11; `git log` |
+| S6 gate | The full gate in ten parts (D-113), 144 steps; passed on 2026-11-06 | Three fixes: TypeDoc warnings (`f5fa12b`) and three tests that depended on test order (`92ca2c5`, `5a5b8c3`) | «S6», step 11; session log «2026-11-06 · S6 gate»; `git log` |
 
 **A pattern IT should know about.** Since S3, every gate or full test run has found something the AI reviews missed:
 33 TypeDoc warnings and 2 order-dependent tests at the S3 gate, 2 undocumented API names at the S4 gate, 3 faults under
 full CPU load at the S5 gate, the grade worker claiming 3 jobs with a limit of 1 in the full server run of S6 step 4's
-checks (recorded under step 3), and two fixes in the S6 gate so far (`PROGRESS.md`, session log and S6 steps). Machines
+checks (recorded under step 3), and three fixes in the S6 gate (`PROGRESS.md`, session log and S6 steps). Machines
 checking machines catch a lot; a person reading the riskiest parts is the cheapest way to catch what this method does
 not.
 
