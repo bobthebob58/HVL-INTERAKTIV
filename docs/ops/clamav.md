@@ -119,8 +119,8 @@ through the same connection settings (host, port, TLS, time limit) as the upload
 | ZIPs nested 64 deep | `AlertExceedsMax` | `Heuristics.Limits.Exceeded.MaxRecursion FOUND` |
 
 A clamd without the setting answers "OK" to its stream (measured with ClamAV 1.4.6). Each stream holds 16 random
-bytes drawn for each probe, so clamd has never seen it before: clamd skips a file whose hash it once scanned clean,
-and with fixed streams an author could make a correct clamd answer "OK" by uploading their inner parts first. The
+bytes drawn for each probe, so clamd has never seen it before: clamd answers a file it once scanned clean from its
+cache, so a probe made of fixed bytes could be answered without being scanned. The
 streams hold no personal data, and their findings are never reported as malware.
 
 - **When.** Before the first upload a server process scans (not at start: the commands that build the same runtime,

@@ -705,8 +705,8 @@ under the step that does it):
   - [x] Chromium and fonts with æ, ø and å in the production image for the PDF (D-096): full Chromium 141 with
         Playwright's seccomp profile and `CAP_SYS_CHROOT`, the sandbox seen in `/proc`; the server logs at start
         whether the export works (`pdfAvailability.ts`)
-  - [x] SECURITY (found while building the bundle): `H5P.AudioRecorder` 1.0's build baked the build machine's whole
-        environment, tokens included, into JavaScript served to learners. `tools/h5p-libraries` now builds every
+  - [x] SECURITY (found while building the bundle): the build of two third-party H5P libraries put values from the
+        build machine's environment into JavaScript served to learners. `tools/h5p-libraries` now builds every
         library with a minimal environment (`buildEnv` 3), the bundle refuses secret-named variables, and the leaky
         builds were rebuilt, re-seeded and removed from this machine (DPIA R39). Closed on 2026-11-06 (D-110's
         amendment of that day): no old build was ever committed, pushed in an image, uploaded as a CI artefact or
@@ -734,7 +734,7 @@ under the step that does it):
         user-file policy (`ContentFileHeaders.test.ts`, `signedFiles.int.test.ts`); `persist-credentials: false` in
         `ci.yml` and `docker.yml`; runbook §6's encrypted backup volume; the clamscan SNI note in `clamav.md`.
         `upload.file.scanUnavailable` stays 400 by that amendment (a 503 would change the shared error mapping). The
-        upstream reports for Lumi's scanner, clamscan and AudioRecorder are drafted (step 7, D-112; the two security
+        upstream reports that follow from this step are drafted (step 7, D-112; the two security
         reports are held outside the repository)
   - [x] `docs/TRACEABILITY.md` and the spec site regenerated; every check, every test set, the e2e set, the
         accessibility files for the player, editor, insight and grade sync, and the Docker smoke on the final working
@@ -749,8 +749,8 @@ under the step that does it):
     types kept in the repository (D-110, waits for reproducible builds); narrowing or retiring the
     cookie-authenticated `/h5p/content/…` fallback route on the app origin (a D-110 amendment; passed to the students
     through the [hand-off index](docs/handoff/README.md)); optional: refuse a request whose `Host` and
-    `X-Forwarded-Host` disagree about the files host; the further files clamd passes without unpacking them in full
-    even with both alerts on, which went to the owner outside the repository with a proposed check of our own in the
+    `X-Forwarded-Host` disagree about the files host; a security finding about what clamd's two settings do not
+    cover, which went to the owner outside the repository with a proposed check of our own in the
     upload path (D-110's hardening amendment, D-112's rule for security reports; the owner confirms it arrived, since
     no written copy was kept with the private drafts)
 - [x] 7. E — Carry-overs: the language overlay and `H5P-010`'s texts (drafts for ALU) → problem reporting (the
@@ -795,7 +795,7 @@ under the step that does it):
         a conditional Core 1.28 and new-Hub backport, eight small Lumi gaps, 15 H5P reports (14 accessibility
         reports, one per library, including InteractiveVideo's untranslatable end-screen summary added at the
         integration, and QuestionSet's retry, Q20), and drafts for clamscan and ltijs; the two security reports
-        (H5P.AudioRecorder's build environment; three Lumi findings) are held outside the public repository for the
+        (one to H5P Group, one to Lumi) are held outside the public repository for the
         owner to send privately (D-112's amendment). Nothing is filed; [lumi-path.md](docs/handoff/lumi-path.md) has
         the three choices before 2027-01-31
   - [x] Problem reporting for the pilot (owner decision 2026-10-24): a short tester guide in Nynorsk in `docs/` and
@@ -1468,7 +1468,7 @@ Append one entry per session: date, session, what was done, gate output, and any
   runs the real-clamd tests against a clamav service and `a11y:report -- --check`; Dependabot proposes the image's
   digests; Lumi's own `upload-malware-found` gets the scanner's message (a safety net); `.env.example`'s production
   rules and key rotation; the unknown test ID in `reportGuards.test.mjs` built at run time so `spec:trace` does not
-  read it. Leaked build environments (the old AudioRecorder builds, with this session's tokens) deleted from 20 test
+  read it. Old library builds that carried build-machine values (this session's among them) deleted from 20 test
   temp folders and the scratchpad; the 26 build-cache records (2.8 GB) a skeptic's test left on the default builder
   removed by ID. Docs: `docs/ops/README.md`, `docker.md`, `clamav.md`, the runbook's checklist, the server README (module map, diagram,
   trace rows), the Evaluator Guide (commands, the six S6 rows, limitations 10, 13 and 17), the GLOSSARY, DPIA F13,
@@ -1804,14 +1804,14 @@ Append one entry per session: date, session, what was done, gate output, and any
   review state, the image size on GitHub's runner), and D-116's amendment of 2026-11-06 records the change. All of it
   was written and fact-checked by AI agents against the repository and GitHub's read-only API; no person has
   reviewed it. No app code, spec, test or CI file changed after `8d4eaf0`.
-- **2026-11-06 · After the merge: the upstream reports and the old AudioRecorder builds** — The owner merged pull
+- **2026-11-06 · After the merge: the upstream reports and the old library builds** — The owner merged pull
   request #18 (`38b1743`), and CI (run 42205391766) and `docker.yml` (run 42205391749) passed on `main`. At the
   owner's question "what if Lumi and H5P do not answer?", a workflow of ten AI agents (two code checks, three web
-  researchers, and a skeptic or fact-checker for each) checked that HVL Interaktiv's own workarounds cover the four
-  findings of the Lumi report and the AudioRecorder build leak without any upstream fix (they do, on every path
+  researchers, and a skeptic or fact-checker for each) checked that HVL Interaktiv's own workarounds cover the
+  findings of the two security reports without any upstream fix (they do, on every path
   checked), and the routes when a vendor is silent. The private drafts, held outside the repository, were
-  corrected and given a dated plan: a second private channel, a coordinator (BSI for Lumi, eduCSC at Sikt for H5P),
-  CVE IDs, and a limited advisory after 90 days, which needs a D-112 amendment first. The old AudioRecorder builds
+  corrected and given a dated plan for a vendor that does not answer (a second private channel, then a coordinator),
+  which is kept with the drafts and needs a D-112 amendment before anything is published. The old library builds
   were closed out (S6 step 6; D-110's amendment of 2026-11-06). Found and left for the owner to decide: two ways
   in, `seed:libraries` and an admin's package import, skip the bundle's secret scan; re-seeding keeps an installed
   library of the same patch version; the scan misses some forms; no code checks clamd's `AlertExceedsMax`.
@@ -1849,3 +1849,24 @@ Append one entry per session: date, session, what was done, gate output, and any
   42266303382 had passed; the CI job logs' download host was refused by this container's proxy, so CI test counts were
   not read. Written and fact-checked by AI against the repository and GitHub's read-only API; no person has reviewed it.
   Documentation only; no app code, test, spec or CI file changed.
+- **2026-11-13 · Third-party security detail moved out of the public documents** — At the owner's request, after a
+  review of the public documents found that the substance of the two privately held security reports (one to H5P
+  Group, one to Lumi) could be rebuilt from the decision log and from documents that repeated it. D-112's amendment of
+  2026-11-13 sets the rule: for a weakness in someone else's software with no released fix, a public document names
+  the component, the class of weakness and our own control, and nothing that helps to find, trigger, reproduce or
+  fix it. Reworded to that rule: D-039, D-040, D-044, D-110 and D-112; `docs/upstream/` (README, release request);
+  `docs/handoff/lumi-path.md`; the runbook, `clamav.md` and `docker.md`; DPIA input R39; the assurance pack
+  (threat model, risk analysis, architecture, how-it-was-built, human-review); two tool READMEs; and this file. The
+  assurance pack's line references into the decision log are corrected and the specification site is regenerated.
+  The removed text is the owner's private record. Not changed: code, comments, tests and CI files; Git history keeps
+  the earlier text, so the two reports go to the vendors without waiting. Written and checked by AI; no person has
+  reviewed it. Documentation only.
+- **2026-11-13 · mongoose updated for four new advisories** — `npm run check:audit` began to fail on every branch,
+  `main` included, when four advisories for mongoose 9.0.0–9.11.3 were published, two of them high
+  (GHSA-8332-j7wj-wjw4, GHSA-gg4r-jv3p-qx3c). mongoose comes with ltijs 7.0.7 (`^9.11.0`), which loads it but never
+  connects (D-050); our code does not import it. With the owner's approval the lockfile is updated inside ltijs's
+  range (`npm update mongoose`): mongoose 9.11.3 to 9.12.1, mongodb 7.7.0 to 7.8.0, bson 7.3.3 to 7.3.4, mquery
+  6.0.0 to 6.0.1, sift 17.1.3 to 17.1.4 and @mongodb-js/saslprep 1.6.1 to 1.6.3. No manifest changed, and
+  `docs/assurance/sbom.cdx.json` is regenerated. Checked locally: `check:audit`, `check:pins`, `check:licences`,
+  `npm run sbom -- --check`, the `tools/sbom` and `tools/dependency-check` tests (51), and the LTI test folder
+  against the local services (58 files, 393 tests). No app code or test changed.

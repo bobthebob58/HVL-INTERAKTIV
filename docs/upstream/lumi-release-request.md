@@ -40,10 +40,9 @@ Would you consider publishing a release from `master`?
 
 Read at commit 493cd3e:
 
-1. **File security.** The buffer sanitizer and malware-scanner interface (#4600). The SVG sanitizer now decides by
-   the uploaded file's own name, without regard to case, so a temporary upload file without a `.svg` extension is
-   sanitised too. By the commit log (read 2026-10-24), SVG uploads with an XML prolog are accepted (a commit of
-   2026-10-04), and packages with unsatisfied library dependencies are refused (#4625).
+1. **File security.** The buffer sanitizer and malware-scanner interface (#4600), and the later changes to how SVG
+   uploads are handled. By the commit log (read 2026-10-24), SVG uploads with an XML prolog are accepted (a commit
+   of 2026-10-04), and packages with unsatisfied library dependencies are refused (#4625).
 2. **H5P Core 1.28 and the new Hub.** The player and editor asset lists include Core 1.28's theme styles
    (`h5p-fonts.css`, `h5p-theme.css`, `h5p-theme-variables.css`; commit 28e35fd); `local_id` is at most 15
    characters, as the new Hub requires (commit fcc7063); and the site registration accepts the Hub's 2xx answers
@@ -58,7 +57,7 @@ Read at commit 493cd3e:
 |---|---|
 | A short `local_id` passed through `getLocalIdOverride`, and a site UUID set before the editor starts, so 10.0.4 never sends its registration | fcc7063 and the registration change in item 2 |
 | Injecting Core 1.28's three theme stylesheets into the player and the editor | 28e35fd |
-| Copying the SVG text to a temporary file named `upload.svg`, so that 10.0.4's sanitizer does not skip it (our stricter pipeline around it stays) | The sanitizer taking the uploaded file's name (item 1) |
+| A workaround in how we hand SVG uploads to 10.0.4's sanitizer (our stricter pipeline around it stays) | The SVG changes on `master` (item 1) |
 | Two audit exceptions for `image-size` | `probe-image-size` (item 3) |
 
 Each workaround is in our code with a comment that names the 10.0.4 source it works around. Two have a test that

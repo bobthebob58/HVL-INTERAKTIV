@@ -55,8 +55,8 @@ flowchart LR
 - **Builds:** `npm ci --ignore-scripts` (no third-party install scripts) and the library's own `build` script. The
   checkouts live outside the repository (`H5P_LIBRARIES_CACHE`, default `~/.cache/hvl-interaktiv/h5p-libraries`)
   so a library build never picks up this repository's TypeScript or PostCSS configuration.
-- **SECURITY: a minimal environment** (`libraryBuild.mjs`, D-110's amendment of 2026-11-05). `H5P.AudioRecorder` 1.0
-  and `H5PEditor.AudioRecorder` 1.0 bake their build's whole `process.env` into the JavaScript learners get, so the
+- **SECURITY: a minimal environment** (`libraryBuild.mjs`, D-110's amendment of 2026-11-05). A library's own build
+  can carry values from the build machine's environment into the JavaScript learners get (D-112), so the
   build step sees only `PATH` (Node's folder and the system folders), `HOME` (an empty folder in the cache, made anew
   for each build) and `NODE_ENV=production`, plus npm's own script variables; `npm_config_globalconfig` names a file
   in that `HOME` that never exists, because npm exports every setting of the Node install's global `npmrc` (a proxy

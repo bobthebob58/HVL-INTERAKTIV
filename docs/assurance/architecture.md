@@ -94,7 +94,7 @@ file does not list»).
 | Component | Version or pin | What it does here | Evidence |
 |---|---|---|---|
 | Base image | `ubuntu:24.04` by digest `sha256:fe81560990fa…` | Every image stage | `deploy/Dockerfile:22`; D-110 (P3 amendment) |
-| Node.js | 24; the image copies it from `node:24-bookworm-slim` by digest `sha256:c86ecead9e55…` (v24.22.2) | Runtime; engines `>=24.0.0 <25` | `deploy/Dockerfile:20,23-27`; `package.json` `engines`; `docs/DECISIONS.md:3641-3645` |
+| Node.js | 24; the image copies it from `node:24-bookworm-slim` by digest `sha256:c86ecead9e55…` (v24.22.2) | Runtime; engines `>=24.0.0 <25` | `deploy/Dockerfile:20,23-27`; `package.json` `engines`; `docs/DECISIONS.md:3626-3630` |
 | tsx | 4.23.15 | Runs the server's TypeScript directly; there is no compile step | `deploy/Dockerfile:134`; `apps/server/package.json` |
 | Express | 5.3.0 | HTTP routing; `X-Powered-By` off | `apps/server/package.json`; `src/server/createApp.ts:159` |
 | Next.js, React | `next` 16.4.2, `react`/`react-dom` 19.3.1 | Web app, in the server process (`WEB_APP=prod`); image optimiser off | `apps/web/package.json`; `apps/web/next.config.mjs:23-24`; D-068 |
@@ -183,7 +183,7 @@ the stage-1 server.
 **Egress when building, not on the server.** The image build fetches only from `archive.ubuntu.com`,
 `security.ubuntu.com`, `registry.npmjs.org` and `binaries.prisma.sh`, and in CI Playwright's download host for
 Chromium. It never fetches GitHub content: H5P core, editor and the content-type bundle come in as hash-checked build
-contexts (`docs/DECISIONS.md:3658-3666`; `deploy/Dockerfile:84-101`). The fetch tools that prepare those contexts need
+contexts (`docs/DECISIONS.md:3643-3651`; `deploy/Dockerfile:84-101`). The fetch tools that prepare those contexts need
 `github.com`, and the 23 library builds' `npm ci` needs `registry.npmjs.org` (`tools/h5p-libraries/README.md`;
 `docs/ops/docker.md:66-67`). Where HVL builds the image and which registry
 the server pulls it from: **(IT to fill in)**.
@@ -315,8 +315,8 @@ H5P content types are JavaScript that runs in every learner's browser, so how th
    `deploy/Dockerfile:95-100`; D-027).
 2. **Content types.** `npm run h5p:fetch-libraries` fetches each of 120 libraries at the commit pinned in
    `tools/h5p-libraries/libraries.manifest.json` and proves the commit. 23 of them are built with webpack, using
-   `npm ci --ignore-scripts` and the library's own lockfile, in a minimal environment (because `H5P.AudioRecorder`
-   1.0 bakes its build's environment into learner JavaScript, DPIA input R39). Only allowed file extensions are copied.
+   `npm ci --ignore-scripts` and the library's own lockfile, in a minimal environment (because a library's build
+   can carry build-machine values into learner JavaScript, DPIA input R39). Only allowed file extensions are copied.
    Three libraries have no matching release tag and are pinned to a commit the AI reviewed (no person has):
    `H5P.Column` 1.22.0, `H5PEditor.InteractiveVideo` 1.26.3, `H5PEditor.Shape` 1.0.0
    (`tools/h5p-libraries/README.md:47-49`; D-078; D-110).

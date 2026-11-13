@@ -11,10 +11,10 @@
 ## The situation
 
 Lumi's newest npm release is 10.0.4 (2025-03-08). Its repository's `master` has moved on: it fixes the three Core 1.28
-adapters of spec 01 §1 (F1–F3), decides SVG sanitising by the uploaded file's own name, and depends on
+adapters of spec 01 §1 (F1–F3), changes how SVG uploads are handled, and depends on
 `probe-image-size` instead of `image-size`, so a release from it would also end the audit exceptions. It still has the
 bugs our adapters work around (`deleteAllContentUserDataByUser` deleting the acting user's state, `alterLibraryLanguageFile`
-dropping `libraryStrings`, the ClamAV scanner accepting a scan without a verdict). CLAUDE.md names 10.0.4 as an
+dropping `libraryStrings`) and the findings of the private report (D-112). CLAUDE.md names 10.0.4 as an
 invariant, and `check:pins` accepts registry versions only.
 
 ## The three choices (D-112)

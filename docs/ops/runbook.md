@@ -77,7 +77,7 @@ administrator imports a package that carries libraries only to install a library
 import the scan refuses (`upload.package.librarySecrets`, 400) has installed nothing.
 
 **A library storage seeded before the build fix** (the library builds' minimal environment, `buildEnv` 3, of
-5 November 2026), or from packages of unknown origin, may still hold an `H5P.AudioRecorder-1.0` build with its build
+5 November 2026), or from packages of unknown origin, may still hold a library build that carries values from its build
 machine's environment, and re-seeding does not replace it, because Lumi keeps an installed library of the same patch
 version:
 
@@ -86,12 +86,12 @@ version:
    which scans `H5P_LIBRARY_DIR` or the folder given after `--`. A relative folder is read from `apps/server`, as
    for `seed:libraries` (`npm run libraries:check -- var/h5p/libraries`); give an absolute path for any other
    folder. It needs no database and prints only library folders, files and variable names; exit 0 means clean.
-2. If it names a library folder, stop the app, delete that folder from the library volume (usually
-   `H5P.AudioRecorder-1.0`), or delete the whole library volume (`docker volume rm <project>_h5p-libraries` for the
+2. If it names a library folder, stop the app, delete that folder from the library volume,
+   or delete the whole library volume (`docker volume rm <project>_h5p-libraries` for the
    compose stack), and run the seed step again from the bundle built in CI. The seed step checks the folder again
    and fails until it is clean.
-3. Library files are served with `Cache-Control: public` for a year, so purge the reverse proxy's or CDN's cache for
-   `/h5p/libraries/H5P.AudioRecorder-1.0/` too, and rotate any credential whose variable name the check printed.
+3. Library files may be cached publicly for a long time, so purge the reverse proxy's or CDN's cache for that
+   library's files too, and rotate any credential whose variable name the check printed.
 
 **Stop** with SIGTERM (`docker stop`, a Kubernetes rollout): the server stops its jobs, stops accepting connections,
 closes the PDF browser and its clients, and exits 0 (or 1 if a service failed to close). Allow 30 seconds. The jobs
@@ -312,7 +312,7 @@ Tick every line before the first learner, and again after a change of hosting:
       `error` line with reason `clamd-settings`; a password-protected PDF upload is refused; signatures update daily; and the content
       bucket is scanned once if files were stored before scanning was on ([clamav.md](clamav.md)).
 - [ ] The content types come from a bundle built in CI, and `npm run libraries:check` passes on the library
-      volume (a storage seeded before the build fix needs its `H5P.AudioRecorder-1.0` folder deleted first,
+      volume (a storage seeded before the build fix needs the library folder the check names deleted first,
       section 2).
 - [ ] The app container runs as uid 10001 with Playwright's seccomp profile ([docker.md](docker.md)); never
       `PDF_ALLOW_NO_SANDBOX`.
