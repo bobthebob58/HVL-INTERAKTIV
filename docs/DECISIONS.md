@@ -501,37 +501,24 @@ loading of one spec per session are kept.
 - **Consequences:** `PROD-013` (S5) adds the author's confirmation before invalidating.
 
 ### D-039 · Our own sub-content policy on save (list items, DragQuestion, titles)
-- **Context:** Lumi's `ContentScanner` passes a list's array, not its parent object, to the
-  `SemanticsEnforcer` for list items (`ContentScanner.js:119`). Text fields that are list items (for example
-  H5P.Blanks `questions`) are therefore never sanitised (a CVE-2025-47828 regression), and a disallowed library
-  that is a list item (for example a DragQuestion in a QuestionSet) is neither removed nor checked. Metadata
-  titles are not sanitised either.
-- **Decision:** On save, our `SubContentPolicy` walks the params with the (altered) semantics, refuses with 403
-  any sub-library that the field does not offer and `H5P.DragQuestion` anywhere, sanitises list-item text with
-  Lumi's own text rules, and sanitises the titles in main and sub-content metadata. A test pins the upstream
-  behaviour so we notice when Lumi fixes it. Two gaps found in the S2 review are closed the same way: Lumi
-  adds every `library: "H5P.Name 1.2"` value it finds, under any key, to the content's dependencies, so the
-  policy refuses any such value the semantics walk did not reach (`semantics/libraryReferences.ts`); and H5P's
-  "Rights of use" dialog shows metadata without escaping, so every metadata string is reduced to plain text,
-  `source` is kept only as an http(s) URL, and a field that becomes empty is dropped. The verification pass
-  after that review showed the dialog reads more than the semantics reach: h5p.js `findCopyrights` walks the
-  whole tree, renders every `metadata` and file `copyright` object, and writes an image's `path` and the
-  sub-content's `alt` into `<img src="…" alt="…">`. So `semantics/rightsOfUse.ts` cleans these anywhere in
-  the parameters: metadata and copyright objects become plain text (sanitize-html with no tags, pinned as a
-  direct dependency at the version Lumi uses; Lumi's own default for a field without tags still allows links
-  and tables); a `path` with quotes, angle brackets, control characters or a scheme other than http(s) is
-  refused with 400; and a straight double quote in `alt` becomes `”`, because Lumi's sanitiser runs after ours
-  and turns `&quot;` back into `"`. A second verification pass found three more ways out, now closed: WHATWG
-  keeps a quote in a URL's host raw, so a `source` whose serialised form still holds `"`, `'`, `<`, `>` or a
-  backtick is removed; the walk now continues inside metadata and copyright objects, as h5p.js does; and h5p.js
-  joins arrays into the HTML, so an array `path` is refused, an array `alt` is emptied, and metadata nested
-  deeper than the limit is dropped instead of kept as it was. A third, focused check (a sink audit of h5p.js and
-  Chromium fuzzing with more than 60 variants) found no further way to run script, but five inputs that Lumi or
-  PostgreSQL turned into a 500. They are now refused as the request's fault (400): text with U+0000 or a lone
-  surrogate (`storage/storableText.ts`, also for learner state), nesting deeper than 256 levels before Lumi's
-  recursive walks see it (`semantics/nestingDepth.ts`, also for an imported content.json), and values whose
-  JSON type Lumi's scanners cannot read (`paramsWalker.ts`: text, list, group, library, file, image, video and
-  audio fields); a sub-content `library` object without a usable `toString` is refused with 403 like any other.
+- **Context:** Lumi's sanitising on save does not reach every part of an activity's parameters, a library the field
+  does not offer can pass in some positions, and H5P core's own dialogs show some stored values without escaping. The
+  exact places are in the private record and in the report to the maintainers (D-112's amendment of 2026-11-13); they
+  return to this entry once the maintainers have published a fix or agreed.
+- **Decision:** On save, our `SubContentPolicy` walks the params with the (altered) semantics, refuses with 403 any
+  sub-library that the field does not offer and `H5P.DragQuestion` anywhere, sanitises text wherever the walk finds it
+  with Lumi's own text rules, and sanitises the titles in main and sub-content metadata. Tests pin the upstream
+  behaviour so we notice when it changes. The S2 review and three verification passes after it (the last with a sink
+  audit of h5p.js and Chromium fuzzing with more than 60 variants) widened this: the policy refuses any library
+  reference the semantics walk did not reach (`semantics/libraryReferences.ts`); `semantics/rightsOfUse.ts` reduces
+  metadata and copyright objects anywhere in the parameters to plain text (sanitize-html with no tags, pinned as a
+  direct dependency at the version Lumi uses), keeps `source` only as a plain http(s) URL, drops a field that becomes
+  empty, and refuses or cleans media paths and alternative texts that are not plain values (400). Inputs that Lumi or
+  PostgreSQL turned into a 500 are refused as the request's fault (400): text with U+0000 or a lone surrogate
+  (`storage/storableText.ts`, also for learner state), nesting deeper than 256 levels before Lumi's recursive walks
+  see it (`semantics/nestingDepth.ts`, also for an imported content.json), and values whose JSON type the field does
+  not allow (`paramsWalker.ts`: text, list, group, library, file, image, video and audio fields); a sub-content
+  `library` object without a usable `toString` is refused with 403 like any other.
 - **Consequences:** The walker (`semantics/paramsWalker.ts`) is reused by the S4 validator. Cleaning data for a
   renderer that does not escape is a list of known sinks, not a guarantee: the real ten types render their own
   copyright data (`getCopyrights`), so their sinks must be reviewed when the Hub packages arrive (Q7), and the
@@ -539,9 +526,8 @@ loading of one spec per session are kept.
   whatever their source.
 
 ### D-040 · Our own page templates with script-safe JSON
-- **Context:** Lumi's default templates write `JSON.stringify(integration)` into a `<script>` element
-  (`renderers/player.js:16`). `JSON.stringify` does not escape `</script>`, so a title or an unknown parameter
-  key containing it would run script for every learner. `H5PIntegration.user` also carries the user's ID.
+- **Context:** Lumi's default page templates are not safe for every stored value (the detail is in the private record,
+  D-112's amendment of 2026-11-13), and `H5PIntegration.user` in them carries the user's ID.
 - **Decision:** We render the player page ourselves and escape `<`, `>`, `&`, U+2028 and U+2029 in the embedded
   JSON. `H5PIntegration.user` is blank (no pseudonym or account ID in the page). The editor returns only its
   model until S4 adds its page with the same escaping; Lumi's templates are never used.
@@ -595,8 +581,8 @@ loading of one spec per session are kept.
   Lumi's profile is SVG only (no filter elements), so filter primitives such as `feGaussianBlur` are lost too,
   and DOMPurify removes ids that name document properties (`title`, `blur`, …), which breaks `url(#…)`
   references to them; a test pins all three losses. Our pass writes its result with XMLSerializer, and the final
-  check parses it again as XML, as a browser does, and fails closed. Lumi alone let 15 of the 41 attack payloads
-  in `SvgSanitizer.bypass.test.ts` through (13 once our pre-check had run); the added layers stop all of them.
+  check parses it again as XML, as a browser does, and fails closed. Lumi's sanitiser alone does not stop every
+  payload in our bypass test set; the layers together stop all of them.
 
 ### D-045 · Headers for user files; the separate files origin moves to S3/S6
 - **Context:** `SEC-004` asks for `nosniff`, a sandbox CSP for SVG and documents, and `attachment` for
@@ -3580,11 +3566,10 @@ loading of one spec per session are kept.
     `apps/server/var/` is not committed, the seed folder holds only hashes (Q10), the Hub is out of reach (Q7), and
     HVL's hosts may have no GitHub access.
   - Chromium refuses its sandbox as root (D-096), and playwright-core 1.56.1 is made for one Chromium build.
-  - `@lumieducation/h5p-clamav-scanner` 10.0.4 (GPL-3.0-or-later; it brings `clamscan` 2.4.x, MIT, and
-    `ts-deepmerge` 7, ISC) answers `NotScanned` when ClamAV fails, and Lumi refuses an upload only on `MalwareFound`
-    (`ContentStorer.js`, `H5PEditor.js`), so it fails open. It also reads `CLAMSCAN_*` and `CLAMDSCAN_*`
-    environment variables, which override the options passed to it. clamd's default stream limit (25 MB) is below
-    `SEC-005`'s 50 MB.
+  - `@lumieducation/h5p-clamav-scanner` 10.0.4 (GPL-3.0-or-later; it brings `clamscan` 2.4.x, MIT, and `ts-deepmerge`
+    7, ISC) does not by itself refuse every upload that was not scanned (the detail is in the private record, D-112's
+    amendment of 2026-11-13), so we wrap it. It also reads `CLAMSCAN_*` and `CLAMDSCAN_*` environment variables, which
+    override the options passed to it. clamd's default stream limit (25 MB) is below `SEC-005`'s 50 MB.
   - A files origin would fail the `DATA-011` tests, which count every other origin as third-party
     (`apps/server/a11y/support/motionAndNetwork.ts`).
   - Whether Docker runs in this environment is known only after probe P3.
@@ -3793,11 +3778,9 @@ loading of one spec per session are kept.
     `SHA256SUMS` the build stage `inputs` checks again and the seeder a third time. **SECURITY:** it also refuses a
     package that carries an environment variable whose name says secret (`TOKEN`, `SECRET`, `PASSWORD`, `API_KEY`,
     `ACCESS_KEY`, `PRIVATE_KEY`, `CREDENTIAL`) with a value, and names the package, the file and the variable, never
-    the value. Found while building it: `H5P.AudioRecorder` 1.0 and `H5PEditor.AudioRecorder` 1.0 (in the
-    CoursePresentation and BranchingScenario packages) build with webpack's
-    `DefinePlugin({ 'process.env': JSON.stringify(process.env) })`, so `npm run h5p:fetch-libraries` writes the build
-    machine's whole environment into JavaScript the player sends to every learner; here that included a session
-    token. The fix belongs to D-078's tools (build those libraries with a minimal environment) and upstream (D-112).
+    the value. Found while building it: the build of two H5P libraries wrote values from the build machine's
+    environment into JavaScript the player sends to learners (reported upstream privately; D-112 and its amendment
+    of 2026-11-13). The fix here belongs to D-078's tools (build every library with a minimal environment).
     Until the packages are reproducible across machines, which this also prevents, the SHA-256 list **kept in the
     repository** waits: the bundle carries the list its builder wrote after these checks, and the GitHub workflow
     fetches the libraries with a scrubbed environment (`env -i` with `PATH` and `HOME`) and a cache key of its own.
@@ -3851,9 +3834,9 @@ loading of one spec per session are kept.
       `dd794b4e31017bc184f872bb65f1d8e5a2986a896f09d559b903bd0eaf83144a` (CI's CDN copy to be compared). Free disk
       went from 16 GB to 8.2 GB at the peak and back to 16 GB; no container, volume, image tag or build cache of the
       run was left, and `moby/buildkit:v0.33.1` stays pulled for the next run.
-    - *The bundle here* was built from packages repacked in the scratchpad after the two AudioRecorder libraries were
-      rebuilt with `env -i PATH HOME`; the repository's `apps/server/var/h5p-real` packages are refused by the guard
-      (CoursePresentation and BranchingScenario), as they should be.
+    - *The bundle here* was built from packages repacked in the scratchpad after the two affected libraries were
+      rebuilt with `env -i PATH HOME`; the older packages in `apps/server/var/h5p-real` that carry them are refused
+      by the guard, as they should be.
     - *Fixed in D-078's tools (2026-11-05, the step-5 follow-ups):* `tools/h5p-libraries/libraryBuild.mjs` runs each
       library's `npm run build` with `PATH` (Node's own folder and the system folders), `HOME` (an empty folder of its
       own, made anew for each build) and `NODE_ENV=production` only, plus what npm itself sets for a script (`npm_*`,
@@ -3861,8 +3844,8 @@ loading of one spec per session are kept.
       variables it needs (`HTTPS_PROXY`, `NO_PROXY`, `NODE_EXTRA_CA_CERTS`, npm's `registry`, `cafile`, proxy and
       `userconfig` settings), which never reach the build; the stamp's `buildEnv` version makes every cached build
       rebuild in place (`git clean -ffdx` after `verifiedHead`, no new checkout), and `[H5P-003]` tests prove that a
-      build sees no other variable. *Verified here:* the two rebuilt AudioRecorder files now carry 28 variables, all
-      npm's own and `PATH`, `HOME` and `NODE_ENV` (the old ones carried 111, tokens among them); the other 21 builds
+      build sees no other variable. *Verified here:* the two rebuilt files now carry only npm's own variables and
+      `PATH`, `HOME` and `NODE_ENV`; the other 21 builds
       came out byte for byte the same; the bundle guard accepted the new packages and refused the old ones; the local
       library storage was re-seeded from the new ones. *Residual for HVL:* every `.h5p` package, library folder or
       library storage built or seeded before this fix, on any machine or from a CI cache, carries that machine's
@@ -3871,14 +3854,14 @@ loading of one spec per session are kept.
       npm exports every setting that is not its default as `npm_config_<name>`, also those read from the Node
       install's global `npmrc` (`<prefix>/etc/npmrc`), which an administrator may have given a proxy with its password
       (`https-proxy=http://user:password@…`). A probe here with a planted global `npmrc` found its value in the
-      build's environment, so AudioRecorder would have baked it in. The build therefore also gets
+      build's environment, so the affected libraries would have carried it. The build therefore also gets
       `npm_config_globalconfig`, naming a file in its own empty `HOME` that never exists, so no global `npmrc` is read;
       the user `npmrc` was already out of reach. The recipe becomes `buildEnv` 3, and an `[H5P-003]` test runs a build
       under a Node whose global `npmrc` holds a planted proxy password. npm's built-in `npmrc` inside its own install
       folder is still read; it is part of npm, not of the machine's settings. *Verified here:* without the setting
       that test fails on the planted password; a full fetch rebuilt the 23 builds in place in 137 s, and only the two
-      AudioRecorder files changed (still 28 variables, `npm_config_globalconfig` now inside the build's `HOME`), with
-      them the CoursePresentation and BranchingScenario packages; the bundle guard accepted these, and the local
+      affected files changed (`npm_config_globalconfig` now inside the build's `HOME`), with
+      them the two packages that carry them; the bundle guard accepted these, and the local
       library storage was re-seeded from them.
     - *Skeptic review (2026-11-05), recorded with its fixes, before the final smoke runs:* three of the smoke test's
       proofs were weaker than this block says, and two static guards failed open. (1) The CA check read
@@ -3902,15 +3885,11 @@ loading of one spec per session are kept.
   `clamav/clamav:1.4@sha256:8ad6197396974726c35d017e50aaaaf4b91745726a04faec8480c203edd98052` (ClamAV 1.4.6 with
   signatures 28171 in the image), pulled through the mirror in 7 s:
   - *Found:* Lumi's `ClamAVScanner.create` merges `CLAMSCAN_*` and `CLAMDSCAN_*` over the options passed to it and
-    asks clamd for its version before it returns. Its `scan` reports every answer that is not "infected" as
-    `Clean`, while `clamscan` gives no verdict (`isInfected: null`) for a reply it cannot read: an empty file
-    (`clamscan` then never sends `INSTREAM`; measured), clamd's `COMMAND READ TIMED OUT`, a service that is not
-    clamd, or a connection closed after `clamscan`'s idle time-out with no reply. Wrapping only `NotScanned` would
-    pass all of these as clean. `clamscan`'s time-out is an idle time-out per socket, so a clamd that reads and never
-    answers can hold an upload indefinitely, and by default it falls back to a local `clamdscan` or `clamscan` binary.
+    asks clamd for its version before it returns. Neither Lumi's scanner nor `clamscan` turns every scan without a
+    verdict into a refusal; the cases are in the private record (D-112's amendment of 2026-11-13). `clamscan`'s
+    time-out is an idle time-out per socket, and by default it falls back to a local `clamdscan` or `clamscan` binary.
     ClamAV 1.4.6's `StreamMaxLength` is 100 MiB by default (measured; the 25 MB above is an older default); 30 MB and
-    60 MB streams were scanned, and a 110 MB stream was answered `INSTREAM size limit exceeded. ERROR`, which Lumi
-    reports as `NotScanned`. EICAR comes back as `Eicar-Test-Signature`.
+    60 MB streams were scanned, and clamd refused a 110 MB stream. EICAR comes back as `Eicar-Test-Signature`.
   - *Adapter* (`apps/server/src/security/malware/`): we build `clamscan`'s client ourselves from our checked settings
     only (TCP or TLS to `CLAMAV_HOST`:`CLAMAV_PORT`, no local binary and no fallback to one, no connection test at
     start, never remove, quarantine or log files), and hand it to Lumi's `ClamAVScanner` through its constructor,
@@ -4104,9 +4083,9 @@ loading of one spec per session are kept.
     `Heuristics.Limits.Exceeded.MaxFiles`, while 5 000 pages and the ordinary PDFs tried passed (measured by the
     step's review). Not chosen: mapping `Heuristics.*` names to a message of their own; the scanner wrapper treats
     every finding alike, and a heuristic name is clamd's to choose.
-  - **Not closed by these settings:** while measuring, further files were found that clamd answers `OK` without
-    unpacking them in full, with both settings on. As security findings they go to the owner outside the repository
-    (D-112's rule for security reports), with a proposed check of our own in the upload path.
+  - **Not closed by these settings:** the two settings do not make clamd see everything. What the measuring found
+    beyond them is a security finding and went to the owner outside the repository (D-112's rule for security
+    reports), with a proposed check of our own in the upload path.
   - **The root `docker-compose.yml` publishes on the loopback only.** It published PostgreSQL (with a fixed password),
     Redis (with none) and the S3 emulator on every interface, and runbook §8 runs those services on a production-like
     node for the full load test. Each port is now `127.0.0.1:<port>:<port>`. The development and test settings name
@@ -4141,10 +4120,10 @@ loading of one spec per session are kept.
     that `clamscan` 2.4.0 sends no server name (SNI), so the TLS proxy must present the certificate for
     `CLAMAV_HOST` without one (D-112's amendment of today measured it). `upload.file.scanUnavailable` stays 400: a
     503 changes the shared error mapping (`h5pErrorResponse.ts`), which is not the upload route's.
-- **Amendment (2026-11-06, the old AudioRecorder builds closed out):** checked by AI agents with counts only, never
+- **Amendment (2026-11-06, the old library builds closed out):** checked by AI agents with counts only, never
   values. No build made before `buildEnv` 3 was ever committed, pushed in an image, uploaded as a CI artefact or
   sent. The last two old packages, in the agent's scratch folder, were deleted, and the bundle's own check found
-  secret-named variables in none of the 260 AudioRecorder files and packages left on the machine, apart from two
+  secret-named variables in none of the 260 affected files and packages left on the machine, apart from two
   deliberate canary reproductions. In the old builds, the variables named like GitHub, AWS and gcloud credentials
   held the cloud session's proxy placeholders, not credentials. Only codespaces created from
   `ccr-07f63266-6cere5` between 2026-10-30 17:02 and 2026-11-05 08:39 UTC could have built with the old recipe and
@@ -4152,13 +4131,13 @@ loading of one spec per session are kept.
   the residual above:
   - **Re-seeding does not replace an old build.** Lumi installs a library that is already there only when its patch
     version is higher (`LibraryManager.js`, `installFromDirectory`), so a library storage seeded before the fix
-    needs its `H5P.AudioRecorder-1.0` folder, or the whole library volume, deleted before it is seeded again. Library
-    files are served with `Cache-Control: public` for a year (`staticRoutes.ts`), so a server that held an old build
-    may still be served from caches after that.
+    needs the affected library folder (`npm run libraries:check` names it), or the whole library volume, deleted
+    before it is seeded again. Library files may be cached publicly for a long time (`staticRoutes.ts`), so caches in
+    front of a server that held an old build are purged too.
   - **Two ways in skip the bundle's secret scan.** `npm run seed:libraries` checks hashes only, and with no folder it
     seeds H5P Group's own Hub packages from `docs/reference/h5p-core-1.28-seed-packages/` (`seedCli.ts`); an admin's
-    package import (`HvlH5PEditor.uploadPackage`) can install or patch libraries. Either could bring in H5P's own
-    AudioRecorder build, which we have not been able to check. The scan also misses some forms (a proxy URL with a
+    package import (`HvlH5PEditor.uploadPackage`) can install or patch libraries. Either could bring in a build
+    made elsewhere, which we have not been able to check. The scan also misses some forms (a proxy URL with a
     password, lower-case names, unquoted values). Until the scan covers both ways in, production libraries come
     only from a bundle built in CI, and admins import no package that carries libraries.
 
@@ -4235,7 +4214,7 @@ loading of one spec per session are kept.
     its environment, is refused with that key's name, and a text the dump search cannot finish within its budget as
     `(too complex to scan)`: fail closed, and the allowlist grows only after someone has
     checked the key carries nothing secret. A storage seeded before `buildEnv` 3 fails the seed step (the image's and
-    `.devcontainer/setup.sh`'s too) until its `H5P.AudioRecorder-1.0` folder, or the whole library volume, is
+    `.devcontainer/setup.sh`'s too) until the library folder the check names, or the whole library volume, is
     deleted (runbook §2). The scan is a guard, not a licence: production libraries still come only from a bundle
     built in CI, and an administrator imports a package with libraries only to install a reviewed library.
 - **Amendment (2026-11-06, follow-up: a clamd settings probe, decided before the code):** the review of today found
@@ -4256,12 +4235,10 @@ loading of one spec per session are kept.
     for the PDF (measured, with `AlertEncryptedDoc no`). `AlertExceedsMax` is one switch for every limit (step 7
     measured `MaxFiles`, `MaxScanSize`, `MaxScanTime` and `MaxRecursion`), so `MaxRecursion`, the cheapest to reach
     (7.5 KB), proves it.
-  - **A fresh nonce in every stream.** clamd remembers the hash of every file it scanned clean and does not unpack
-    it again. Measured: with fixed bytes, an author who uploads ZIPs nested 10, 17, 30, 46, 47, 60 and 63 deep in
-    turn, each holding the one before and each answered "OK", makes the strict clamd answer "OK" for the 64-deep
-    probe; uploads would then be refused (closed, not open) until clamd's cache was cleared. So 16 random bytes,
-    drawn for each probe run, go inside every stream: clamd has never seen any layer. The bytes are otherwise fixed,
-    and the test pins each stream's SHA-256 for a nonce of zeros.
+  - **A fresh nonce in every stream.** clamd answers a file it has already scanned clean from its cache, so a probe
+    made of fixed bytes could be answered without being scanned (measured; the sequence is in the private record,
+    D-112's amendment of 2026-11-13). So 16 random bytes, drawn for each probe run, go inside every stream: clamd has
+    never seen any layer. The bytes are otherwise fixed, and the test pins each stream's SHA-256 for a nonce of zeros.
     The same cache also spoiled our first measurements of where the limit lies; with fresh streams, ZIPs nested 15
     deep are "OK" and 16 deep are reported at clamd's default `MaxRecursion 17`; with `MaxRecursion 31`, 29 and 30.
     The 64-deep probe therefore proves `AlertExceedsMax` while `MaxRecursion` is at most 65 (measured with 65 and
@@ -4443,7 +4420,8 @@ loading of one spec per session are kept.
   - **Drafts the owner files:** `docs/upstream/` holds texts ready to file: a release request to Lumi naming the
     unreleased changes we need and the `image-size` advisories; Lumi issues for `deleteAllContentUserDataByUser`
     deleting the acting user's data (D-108), `alterLibraryLanguageFile` dropping `libraryStrings` (D-111), the ClamAV
-    scanner's `NotScanned` being accepted (D-110), and Core 1.28 with the new Hub (the adapters of spec 01 §1); and
+    scanner's handling of a scan that failed (D-110; since the amendment of 2026-11-05 part of the private report),
+    and Core 1.28 with the new Hub (the adapters of spec 01 §1); and
     H5P reports for the barriers in D-080's register (`upstreamRegister.ts`). The owner files them from an account of
     their choice; the agent files nothing. Each filed issue's link goes back into the register and into `UD-040`'s
     report.
@@ -4464,32 +4442,27 @@ loading of one spec per session are kept.
     whether it is ready or needs the owner's check, and says where each filed link goes back. The drafts are in
     English, name our tests by file and title without links, and carry no personal data.
   - **Security reports stay out of the repository.** The repository is public on GitHub (checked 2026-11-05), so a
-    private report committed here would be published before its vendor reads it. Two drafts are security reports:
-    to H5P Group, about H5P.AudioRecorder 1.0 and H5PEditor.AudioRecorder 1.0 writing the build machine's
-    environment into their JavaScript (D-110's amendment of 2026-11-05); and to Lumi, at the address in Lumi's
-    `SECURITY.md` (`security@lumi.education`, read at `master` 493cd3e), about findings already recorded in D-039,
-    D-040 and D-110's ClamAV amendment. Their full text is handed to the owner outside the repository; the README
-    names them by recipient and subject only. The owner sends them, to a security contact the owner has confirmed,
-    never as a public issue first; a public issue or a copy in `docs/upstream/` follows only once the vendor has
-    published a fix or agreed. What D-039, D-040 and D-110 already say publicly stays as it is.
+    private report committed here would be published before its vendor reads it. Two drafts are security reports: to
+    H5P Group, about a fault in the build of two H5P libraries (D-110's amendment of 2026-11-05); and to Lumi, at the
+    address in Lumi's `SECURITY.md` (`security@lumi.education`, read at `master` 493cd3e), about three findings in
+    10.0.4. Their full text is handed to the owner outside the repository; the README names them by recipient and
+    subject only. The owner sends them, to a security contact the owner has confirmed, never as a public issue first;
+    a public issue or a copy in `docs/upstream/` follows only once the vendor has published a fix or agreed. (A last
+    sentence here let earlier entries keep their public detail; the amendment of 2026-11-13 withdrew it.)
   - **Checked against upstream (2026-11-05, read-only shallow clones, nothing filed):** npm's newest
-    `@lumieducation/h5p-server` is still 10.0.4. Lumi's `master` (493cd3e, 2026-10-13) still deletes the acting
-    user's state in `deleteAllContentUserDataByUser` and keeps only `semantics` when `alterLibraryLanguageFile` is
-    set, and still accepts `NotScanned`; it fixes F1–F3 of spec 01 §1, decides SVG sanitising by the uploaded
-    file's own name, without regard to case, and depends on `probe-image-size` instead of `image-size`, so a
-    release would also end D-030's audit exceptions. H5P.AudioRecorder's default branch (7c66fab, 1.0.54) and
-    H5PEditor.AudioRecorder's (b2f6ec7) still pass the whole `process.env` to `DefinePlugin`; QuestionSet's
-    (a961bac, 1.21.14) still resets every progress dot in the document. Of the 27 webpack configurations among the
-    121 library checkouts of D-078's cache, only those two pass the whole environment. `clamscan` 2.4.0 is still
-    npm's newest; it opens TLS to clamd without a server name (SNI), which Node 24's `tls.connect` then does not
-    send (measured), and writes socket errors to stderr without its debug mode.
-  - **Reproduced without secrets (2026-11-05):** each AudioRecorder library, built at its pinned commit under
-    `env -i` with one made-up variable, carried that variable's value twice in its built file; with
-    `'process.env': JSON.stringify({ NODE_ENV: mode })` in its webpack configuration instead, neither the value nor
-    any other build-machine value was left, and no bare `process.env` remained (the suggested fix; not played in a
-    browser). Against the installed Lumi 10.0.4: an identity `alterLibraryLanguageFile` drops `libraryStrings`;
-    `deleteAllContentUserDataByUser('learner-1', operator)` asks the storage to delete the operator's state; the
-    ClamAV scanner reports a scan without a verdict (`isInfected: null`) as `Clean`.
+    `@lumieducation/h5p-server` is still 10.0.4. Lumi's `master` (493cd3e, 2026-10-13) still deletes the acting user's
+    state in `deleteAllContentUserDataByUser` and keeps only `semantics` when `alterLibraryLanguageFile` is set; it
+    fixes F1–F3 of spec 01 §1, changes how SVG uploads are handled, and depends on `probe-image-size` instead of
+    `image-size`, so a release would also end D-030's audit exceptions. The findings of the two security reports were
+    unchanged upstream on that date (the private record names the commits). QuestionSet's default branch (a961bac,
+    1.21.14) still resets every progress dot in the document. `clamscan` 2.4.0 is still npm's newest; it opens TLS to
+    clamd without a server name (SNI), which Node 24's `tls.connect` then does not send (measured), and writes socket
+    errors to stderr without its debug mode.
+  - **Reproduced without secrets (2026-11-05):** the build fault of the H5P report was reproduced with one made-up
+    variable and no real secret, and a change to the libraries' build configuration removed it (the suggested fix; not
+    played in a browser; the steps are in the private record). Against the installed Lumi 10.0.4: an identity
+    `alterLibraryLanguageFile` drops `libraryStrings`; `deleteAllContentUserDataByUser('learner-1', operator)` asks
+    the storage to delete the operator's state; the scanner finding of the Lumi report was reproduced as well.
   - **Scope, widened:** besides the drafts the Decision names, the README lists drafts for `clamscan` (SNI, stderr)
     and ltijs 7.0.7 (its launch page's unguarded `localStorage.removeItem`, D-050), a Lumi issue collecting small
     API and typing gaps that `UPSTREAM:` tags work around, and a Core 1.28 and new-Hub backport that is filed only if
@@ -4497,11 +4470,31 @@ loading of one spec per session are kept.
     (b)) get no report. Texts H5P lacks in `nn` and `nb` go, once HVL's language advisers have reviewed D-111's
     drafts, into pull requests to the libraries' language files, as H5P's contribution guide asks (`h5p/.github`,
     read at e979edf), not into issues. H5P's issues use its organisation's Bug Report form (title `[Bug]: `), which
-    the H5P drafts follow; neither that guide nor the two AudioRecorder repositories name a security contact.
+    the H5P drafts follow; neither that guide nor the two libraries' repositories name a security contact.
   - **After filing:** the owner, or whoever edits the code next, puts each link where the README says: a register
     entry's `UPSTREAM:` comment (as its second link, which `npm run a11y:report` shows in `UD-040`'s report), the
     `UPSTREAM:` tag of a repair in `a11yRepairs.js` or `a11yEditorRepairs.js` in place of "no issue filed yet"
     (D-080's DOC-13 amendment), and the `UPSTREAM:` tags of the Lumi workarounds.
+- **Amendment (2026-11-13, third-party security detail leaves the public text):** decided by the owner, before the
+  edit.
+  - **Why:** a review of the public documents found that the substance of the two private security reports could be
+    rebuilt from this log and from documents that repeat it: where in the upstream code a weakness is, what triggers
+    it, how to reproduce it and how to fix it. The amendment of 2026-11-05 had let the earlier public text stand. That
+    sentence is withdrawn.
+  - **Rule:** for a weakness in someone else's software that has no released fix, a public document names the
+    component and its version, the class of weakness, and what our own control does. It does not say where in the
+    upstream code the weakness is, which input triggers it, how to reproduce it or how to fix it. That detail is the
+    private record, which the owner holds outside the repository with the report drafts.
+  - **Done:** D-039, D-040, D-044, D-110 and this entry are reworded, and with them the passages that repeated the
+    detail in `docs/upstream/` (the README and the release request), `docs/handoff/lumi-path.md`, `docs/ops/` (the
+    runbook, `clamav.md`, `docker.md`), `docs/privacy/DPIA-INPUT.md` (R39), the assurance pack (`docs/assurance/`),
+    two tool READMEs and `PROGRESS.md`. The assurance pack's line references into this file are corrected.
+  - **Not done:** the code, its comments and its tests are unchanged by this amendment; whether any of them is
+    reworded is decided together with later security work. Git history keeps the earlier text. The edit therefore
+    lowers the exposure and does not end it: what ends it is a fix from each vendor, so the two reports are sent
+    without waiting for anything else.
+  - **Return:** once a vendor has published a fix or agreed, the detail of that finding may return to these entries,
+    with the vendor's reference.
 
 ### D-113 · The S6 gate in full, run in parts; CI raised to S5; per-ID runs that select tests; a licence guard
 - **Context:** S5's gate took about 5 hours here, in parts of under 2 hours (the limit of a background command), and

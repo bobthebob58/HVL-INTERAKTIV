@@ -19,14 +19,15 @@ Rules for every draft:
 This repository is public, so a security report written here would be published before its vendor reads it. Two
 drafts are security reports and are kept **outside the repository** (D-112's amendment of 2026-11-05). The session
 that wrote them (2026-11-05) hands them to the owner outside the repository; if the owner does not have them, they
-are redrafted from D-039, D-040, D-110 and D-112 rather than copied into this folder. The owner sends them
+are redrafted from the private record the owner holds (D-112's amendment of 2026-11-13), not copied into this
+folder. The owner sends them
 privately, to a security contact the owner has confirmed, never as a public issue first. A public issue, or a copy
 here, follows only once the vendor has published a fix or agreed.
 
 | Draft (held privately) | Recipient | Status |
 |---|---|---|
-| Security report on H5P.AudioRecorder 1.0 and H5PEditor.AudioRecorder 1.0 (their build writes the build machine's environment into their JavaScript; D-110) | H5P Group. No security contact is published in the two repositories or in H5P's contribution guide; the draft lists where to look | Needs the owner's check: the contact; whether H5P's own published packages hold H5P's build environment (the draft says how to check without reading any value) |
-| Security report on three findings in Lumi 10.0.4 (D-039, D-040, D-110's ClamAV amendment) | Lumi, at the address in Lumi's `SECURITY.md` | Needs the owner's check: the address is still current; whether the ClamAV finding goes there or into a public issue |
+| Security report on a fault in the build of two H5P libraries (D-110, D-112) | H5P Group. No security contact is published in the two repositories or in H5P's contribution guide; the draft lists where to look | Needs the owner's check: the contact, and one question the draft names |
+| Security report on three findings in Lumi 10.0.4 (D-112) | Lumi, at the address in Lumi's `SECURITY.md` | Needs the owner's check: the address is still current; whether one of the three goes there or into a public issue |
 
 ## The drafts
 

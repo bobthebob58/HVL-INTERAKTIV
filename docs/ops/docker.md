@@ -75,7 +75,7 @@ On a host without GitHub, copy the bundle folder from a machine with GitHub and 
 wrote its machine's environment into a package (D-110 amendment of 2026-11-05): rebuild that library with a
 minimal environment, as `.github/workflows/docker.yml` does (`env -i PATH="$PATH" HOME="$HOME" …`), and never ship
 the refused packages. The same rules run when the `seed` step installs the bundle and when it then checks the library
-volume: a volume seeded before the build fix fails that step until its `H5P.AudioRecorder-1.0` folder, or the whole
+volume: a volume seeded before the build fix fails that step until the library folder the check names, or the whole
 volume, is deleted ([runbook](runbook.md) §2; `npm run libraries:check` runs the volume check alone; D-110's
 amendments of 2026-11-06).
 
