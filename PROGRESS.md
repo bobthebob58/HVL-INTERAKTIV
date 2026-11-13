@@ -1861,3 +1861,12 @@ Append one entry per session: date, session, what was done, gate output, and any
   The removed text is the owner's private record. Not changed: code, comments, tests and CI files; Git history keeps
   the earlier text, so the two reports go to the vendors without waiting. Written and checked by AI; no person has
   reviewed it. Documentation only.
+- **2026-11-13 · mongoose updated for four new advisories** — `npm run check:audit` began to fail on every branch,
+  `main` included, when four advisories for mongoose 9.0.0–9.11.3 were published, two of them high
+  (GHSA-8332-j7wj-wjw4, GHSA-gg4r-jv3p-qx3c). mongoose comes with ltijs 7.0.7 (`^9.11.0`), which loads it but never
+  connects (D-050); our code does not import it. With the owner's approval the lockfile is updated inside ltijs's
+  range (`npm update mongoose`): mongoose 9.11.3 to 9.12.1, mongodb 7.7.0 to 7.8.0, bson 7.3.3 to 7.3.4, mquery
+  6.0.0 to 6.0.1, sift 17.1.3 to 17.1.4 and @mongodb-js/saslprep 1.6.1 to 1.6.3. No manifest changed, and
+  `docs/assurance/sbom.cdx.json` is regenerated. Checked locally: `check:audit`, `check:pins`, `check:licences`,
+  `npm run sbom -- --check`, the `tools/sbom` and `tools/dependency-check` tests (51), and the LTI test folder
+  against the local services (58 files, 393 tests). No app code or test changed.

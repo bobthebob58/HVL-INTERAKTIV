@@ -2,7 +2,7 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:6274eb23-79d7-519e-bf33-ccb56ec5350b",
+  "serialNumber": "urn:uuid:ee9dc8d6-85ae-5a2b-bcb3-46230cfb3868",
   "version": 1,
   "metadata": {
     "lifecycles": [
@@ -1615,19 +1615,19 @@
       ]
     },
     {
-      "bom-ref": "@mongodb-js/saslprep@1.6.1",
+      "bom-ref": "@mongodb-js/saslprep@1.6.3",
       "type": "library",
       "name": "@mongodb-js/saslprep",
-      "version": "1.6.1",
+      "version": "1.6.3",
       "scope": "required",
       "author": "Dmitry Tsvettsikh <me@reklatsmasters.com>",
       "description": "SASLprep: Stringprep Profile for User Names and Passwords, rfc4013",
-      "purl": "pkg:npm/%40mongodb-js/saslprep@1.6.1",
+      "purl": "pkg:npm/%40mongodb-js/saslprep@1.6.3",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/@mongodb-js/saslprep/-/saslprep-1.6.1.tgz"
+          "url": "https://registry.npmjs.org/@mongodb-js/saslprep/-/saslprep-1.6.3.tgz"
         },
         {
           "type": "vcs",
@@ -1645,7 +1645,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "0f8090b64f48c2308b02f09fd71bc7128777f7ad2af17314cdf99d454f6a8d43651e77ac1ae4cebc970e4da3e6f64a19d5c694280d9a4dbb336620247264a09a"
+          "content": "687185bd3f7973cd82a10ee16faa97a73f0771ce4f25bdd9b50f8fd3540305bc9075acb49a372b24f78d24e1c28167b4a465f4cca98a3fed665a2fc8fc1097f5"
         }
       ],
       "licenses": [
@@ -5056,19 +5056,19 @@
       ]
     },
     {
-      "bom-ref": "bson@7.3.3",
+      "bom-ref": "bson@7.3.4",
       "type": "library",
       "name": "bson",
-      "version": "7.3.3",
+      "version": "7.3.4",
       "scope": "required",
       "author": "The MongoDB NodeJS Team",
       "description": "A bson parser for node.js and the browser",
-      "purl": "pkg:npm/bson@7.3.3",
+      "purl": "pkg:npm/bson@7.3.4",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/bson/-/bson-7.3.3.tgz"
+          "url": "https://registry.npmjs.org/bson/-/bson-7.3.4.tgz"
         },
         {
           "type": "issue-tracker",
@@ -5078,7 +5078,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "a33dcbc04dea184853092ca1cd044b637063d4d2ceb2314c7fab5c998e49f0cfb747b115726a017d21d6be350adf25c22c352c1a922e0776902f89c3675115fe"
+          "content": "79bdf78f61daeb183282327c6e1237b18688f5c2c06d26a8a592d1250e7faf1937d97c814a855571b787233546271d52c90a72ca8125928119810ae0f91555a0"
         }
       ],
       "licenses": [
@@ -11362,19 +11362,19 @@
       ]
     },
     {
-      "bom-ref": "mongodb@7.7.0",
+      "bom-ref": "mongodb@7.8.0",
       "type": "library",
       "name": "mongodb",
-      "version": "7.7.0",
+      "version": "7.8.0",
       "scope": "required",
       "author": "The MongoDB NodeJS Team",
       "description": "The official MongoDB driver for Node.js",
-      "purl": "pkg:npm/mongodb@7.7.0",
+      "purl": "pkg:npm/mongodb@7.8.0",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/mongodb/-/mongodb-7.7.0.tgz"
+          "url": "https://registry.npmjs.org/mongodb/-/mongodb-7.8.0.tgz"
         },
         {
           "type": "vcs",
@@ -11392,7 +11392,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "5c6d715c4ab2a2e015f0609bdcfb916ae8e87de5caa402403ef5d859980797a0f3e101d22759d12e5d3e1a9a9a2d3c0abc2d11144f6daee3aeaf7e113456359f"
+          "content": "a7634a6a06d0e35f9d680086fd94af853cde028f83a04c9613d0a6a5ffd2c8fde94c2e37f97d26c0a13fe383e92ad0b1a79c0ec675f3fadda95c46514a4b7d62"
         }
       ],
       "licenses": [
@@ -11404,19 +11404,19 @@
       ]
     },
     {
-      "bom-ref": "mongoose@9.11.3",
+      "bom-ref": "mongoose@9.12.1",
       "type": "library",
       "name": "mongoose",
-      "version": "9.11.3",
+      "version": "9.12.1",
       "scope": "required",
       "author": "Guillermo Rauch <guillermo@learnboost.com>",
       "description": "Mongoose MongoDB ODM",
-      "purl": "pkg:npm/mongoose@9.11.3",
+      "purl": "pkg:npm/mongoose@9.12.1",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/mongoose/-/mongoose-9.11.3.tgz"
+          "url": "https://registry.npmjs.org/mongoose/-/mongoose-9.12.1.tgz"
         },
         {
           "type": "vcs",
@@ -11434,7 +11434,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "53a1da0cbd00ef7f081e562259fe661385791ba0cf4667123e1f980d299af002821d2f876ee8303786fa11c0d29e8a121e7adddbb2b7e5b29deb7f63dddd3bf4"
+          "content": "c0fc3534abab4c34a14fe92bfc926f85dc0f288264c4526fe4611bbfef906a137cb273d1f45a7f04583a9d06db0b2507041f037b1c30942416e927c10fdf500a"
         }
       ],
       "licenses": [
@@ -11476,19 +11476,19 @@
       ]
     },
     {
-      "bom-ref": "mquery@6.0.0",
+      "bom-ref": "mquery@6.0.1",
       "type": "library",
       "name": "mquery",
-      "version": "6.0.0",
+      "version": "6.0.1",
       "scope": "required",
       "author": "Aaron Heckmann <aaron.heckmann+github@gmail.com>",
       "description": "Expressive query building for MongoDB",
-      "purl": "pkg:npm/mquery@6.0.0",
+      "purl": "pkg:npm/mquery@6.0.1",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/mquery/-/mquery-6.0.0.tgz"
+          "url": "https://registry.npmjs.org/mquery/-/mquery-6.0.1.tgz"
         },
         {
           "type": "vcs",
@@ -11506,7 +11506,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "6f629036c9a0b64b1c7de0e091831c5869fdbd923d6285e1f34d950c4c04eaa739d33c41150d0ea3c44e91ac1b3c0b17098d7f675ca9d0c6a0aac652b4f5898f"
+          "content": "fcd8a39aadc97291f00ccfb90b0069e72125e9f51aea32ec2213eca10cb09465d4fd9aca22f4a90737da1a75bd04ba9c9defc2a14c1dd5c87b311aa9b438054c"
         }
       ],
       "licenses": [
@@ -15530,25 +15530,25 @@
       ]
     },
     {
-      "bom-ref": "sift@17.1.3",
+      "bom-ref": "sift@17.1.4",
       "type": "library",
       "name": "sift",
-      "version": "17.1.3",
+      "version": "17.1.4",
       "scope": "required",
       "author": "Craig Condon",
       "description": "MongoDB query filtering in JavaScript",
-      "purl": "pkg:npm/sift@17.1.3",
+      "purl": "pkg:npm/sift@17.1.4",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/sift/-/sift-17.1.3.tgz"
+          "url": "https://registry.npmjs.org/sift/-/sift-17.1.4.tgz"
         }
       ],
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "46d963ebafdbd0809e173613b8dbd7fc41758a045b6e7192bc4c93efd31ca196bf0de1a13320b9a5628e12c64a9e992ab527a8bdde452ff6e31d60b708822f09"
+          "content": "fce215be3f53b35985c136335b4f5838330f7883a70e88a030ebca488378e0e99a0b286e087ff4e543c5e395d6ec0c74b279b30f30b3765498aafaac9fcfac22"
         }
       ],
       "licenses": [
@@ -18214,7 +18214,7 @@
       ]
     },
     {
-      "ref": "@mongodb-js/saslprep@1.6.1",
+      "ref": "@mongodb-js/saslprep@1.6.3",
       "dependsOn": [
         "sparse-bitfield@3.0.3"
       ]
@@ -18831,7 +18831,7 @@
       "dependsOn": []
     },
     {
-      "ref": "bson@7.3.3",
+      "ref": "bson@7.3.4",
       "dependsOn": []
     },
     {
@@ -19811,7 +19811,7 @@
         "helmet@8.3.0",
         "ioredis@5.11.1",
         "jsonwebtoken@9.0.3",
-        "mongoose@9.11.3",
+        "mongoose@9.12.1",
         "parse-link-header@2.0.0",
         "sprightly@2.0.1",
         "zod@4.6.7"
@@ -19876,23 +19876,23 @@
       ]
     },
     {
-      "ref": "mongodb@7.7.0",
+      "ref": "mongodb@7.8.0",
       "dependsOn": [
-        "@mongodb-js/saslprep@1.6.1",
-        "bson@7.3.3",
+        "@mongodb-js/saslprep@1.6.3",
+        "bson@7.3.4",
         "mongodb-connection-string-url@7.0.2"
       ]
     },
     {
-      "ref": "mongoose@9.11.3",
+      "ref": "mongoose@9.12.1",
       "dependsOn": [
         "@standard-schema/spec@1.1.0",
         "kareem@3.4.1",
-        "mongodb@7.7.0",
+        "mongodb@7.8.0",
         "mpath@0.9.0",
-        "mquery@6.0.0",
+        "mquery@6.0.1",
         "ms@2.1.3",
-        "sift@17.1.3"
+        "sift@17.1.4"
       ]
     },
     {
@@ -19900,7 +19900,7 @@
       "dependsOn": []
     },
     {
-      "ref": "mquery@6.0.0",
+      "ref": "mquery@6.0.1",
       "dependsOn": []
     },
     {
@@ -20538,7 +20538,7 @@
       ]
     },
     {
-      "ref": "sift@17.1.3",
+      "ref": "sift@17.1.4",
       "dependsOn": []
     },
     {

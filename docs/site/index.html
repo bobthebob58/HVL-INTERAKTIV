@@ -13668,6 +13668,16 @@ The removed text is the owner&#39;s private record. Not changed: code, comments,
 the earlier text, so the two reports go to the vendors without waiting. Written and checked by AI; no person has
 reviewed it. Documentation only.</p>
 </li>
+<li><p><strong>2026-11-13 · mongoose updated for four new advisories</strong> — <code>npm run check:audit</code> began to fail on every branch,
+<code>main</code> included, when four advisories for mongoose 9.0.0–9.11.3 were published, two of them high
+(GHSA-8332-j7wj-wjw4, GHSA-gg4r-jv3p-qx3c). mongoose comes with ltijs 7.0.7 (<code>^9.11.0</code>), which loads it but never
+connects (D-050); our code does not import it. With the owner&#39;s approval the lockfile is updated inside ltijs&#39;s
+range (<code>npm update mongoose</code>): mongoose 9.11.3 to 9.12.1, mongodb 7.7.0 to 7.8.0, bson 7.3.3 to 7.3.4, mquery
+6.0.0 to 6.0.1, sift 17.1.3 to 17.1.4 and @mongodb-js/saslprep 1.6.1 to 1.6.3. No manifest changed, and
+<code>docs/assurance/sbom.cdx.json</code> is regenerated. Checked locally: <code>check:audit</code>, <code>check:pins</code>, <code>check:licences</code>,
+<code>npm run sbom -- --check</code>, the <code>tools/sbom</code> and <code>tools/dependency-check</code> tests (51), and the LTI test folder
+against the local services (58 files, 393 tests). No app code or test changed.</p>
+</li>
 </ul>
 
 </section>
