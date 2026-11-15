@@ -13745,6 +13745,8 @@ repository&#39;s GPL licence (D-015).</li>
 The seed script refuses packages that do not match it.</li>
 <li>When an original arrives, put it here, record it in the provenance table, and re-run the check
 named in the derived file (for colours: <code>python3 -I docs/reference/tools/contrast.py</code>).</li>
+<li><code>norsk-ordbank-nynorsk/</code> holds third-party language data under CC BY 4.0, not under the repository&#39;s GPL
+licence. Its <code>README.md</code> (source, licence, changes, checksum) must stay with the file.</li>
 </ul>
 <h3 id="reference--provenance" tabindex="-1">Provenance</h3>
 <div class="table-wrap" role="region" aria-label="Table 2, Provenance" tabindex="0"><table><thead><tr>
@@ -13761,6 +13763,8 @@ named in the derived file (for colours: <code>python3 -I docs/reference/tools/co
 <td><code>canvas-lti13-developer-key.json</code>, <code>canvas-platform-values.md</code></td><td>Instructure&#39;s canvas-lms repository at commit <code>1c9f0bb</code> (docs and source), ltijs 7.0.7, vendor guides</td><td>2026-10-21</td><td>Key claims (privacy levels, token <code>aud</code> rule, endpoints) re-checked against the Canvas docs; separate independent review pending</td></tr>
 <tr>
 <td><code>h5p-core-1.28-seed-packages/README.md</code>, <code>h5p-php-library-1.28.0.files.sha256</code>, <code>tools/seed/fetch-seed-packages.sh</code></td><td>H5P&#39;s git repositories (tags and commits), Lumi h5p-server 10.0.4 and <code>master</code>, the H5P WordPress plugin, h5p.org and Moodle forum posts</td><td>2026-10-21</td><td>Script checked with <code>bash -n</code> and <code>--dry-run</code>; not run against the Hub</td></tr>
+<tr>
+<td><code>norsk-ordbank-nynorsk/20260915_norsk_ordbank_nno.tsv.gz</code>, <code>norsk-ordbank-nynorsk/README.md</code>, <code>norsk-ordbank-nynorsk/SHA256SUMS</code></td><td><em>Norsk ordbank – nynorsk 2012</em>, version of 2026-09-15, distributed by Språkbanken under CC BY 4.0; supplied by the project owner as downloaded</td><td>2026-11-15</td><td>Checked against the distributor&#39;s documentation: seven columns on every line, 627 666 full forms, 122 941 lemma IDs; SHA-256 of the original and of the compressed file recorded; decompression gives the original bytes</td></tr>
 </tbody></table></div>
 
 </section>
