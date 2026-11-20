@@ -34,6 +34,9 @@ import { purifySvg } from './svg/svgPurify.js';
 export const SVG_MAX_MB = 5;
 const SVG_MAX_BYTES = SVG_MAX_MB * 1024 * 1024;
 
+/** How the name of the folder for Lumi's temporary copy starts (../http/staleUploadFolders.ts looks for it). */
+export const SVG_COPY_FOLDER_PREFIX = 'hvl-svg-';
+
 /**
  * Runs Lumi's sanitiser on a temporary copy that ends in ".svg", so it cannot skip the text.
  * @param text - SVG text after the pre-check.
@@ -42,7 +45,7 @@ const SVG_MAX_BYTES = SVG_MAX_MB * 1024 * 1024;
 async function lumiSanitize(text: string): Promise<string> {
   // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-svg-sanitizer/src/SvgSanitizer.ts skips paths not ending in ".svg".
   // Remove the copy when Lumi sanitises by content; test/security/upstream/lumiSvgSanitizer.test.ts then fails.
-  const dir = await mkdtemp(join(tmpdir(), 'hvl-svg-'));
+  const dir = await mkdtemp(join(tmpdir(), SVG_COPY_FOLDER_PREFIX));
   try {
     const copy = join(dir, 'upload.svg');
     await writeFile(copy, text, 'utf8');

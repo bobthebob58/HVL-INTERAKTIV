@@ -13,6 +13,9 @@
  *     called in a `finally` block by the route.
  *   - Over `maxFileSize` bytes: 413 `error.tooLarge`; malformed or non-multipart requests: 400.
  *   - No failure leaves a rejected promise unhandled (a truncated body would otherwise end the process).
+ *   - When the request fails part-way (a broken connection), the file being written is stopped first, so the
+ *     function answers and the folder is removed at once, with no file left open (D-118).
+ *   - Folder names start with `UPLOAD_FOLDER_PREFIX`, which ./staleUploadFolders.ts looks for at start-up.
  * Collaborators: ./routes/ajaxRoutes.ts, ../security/ContentFileHeaders.ts (MIME type by extension).
  * Tests: apps/server/test/http/multipartUpload.test.ts
  */
@@ -20,6 +23,7 @@ import { createWriteStream } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { extname, join } from 'node:path';
+import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { Busboy } from '@fastify/busboy';
 import type { Request } from 'express';
@@ -58,6 +62,9 @@ export interface MultipartOptions {
 
 const MB = 1024 * 1024;
 
+/** How every upload folder's name starts (in the system's temporary folder). */
+export const UPLOAD_FOLDER_PREFIX = 'hvli-upload-';
+
 const safeExtension = (name: string): string => {
   const ext = extname(name).toLowerCase();
   return /^\.[a-z0-9]{1,10}$/.test(ext) ? ext : '.bin';
@@ -73,11 +80,12 @@ const safeExtension = (name: string): string => {
 export async function readMultipart(req: Request, options: MultipartOptions): Promise<MultipartBody> {
   const contentType = req.headers['content-type'] ?? '';
   if (!/^multipart\/form-data/i.test(contentType)) throw new HttpError(400, 'error.badRequest');
-  const dir = await mkdtemp(join(tmpdir(), 'hvli-upload-'));
+  const dir = await mkdtemp(join(tmpdir(), UPLOAD_FOLDER_PREFIX));
   const cleanup = () => rm(dir, { recursive: true, force: true });
   const fields: Record<string, string> = {};
   let file: UploadedFile | undefined;
   const writes: Promise<void>[] = [];
+  const sources: Readable[] = [];
   try {
     const busboy = Busboy({
       headers: { ...req.headers, 'content-type': contentType },
@@ -91,6 +99,7 @@ export async function readMultipart(req: Request, options: MultipartOptions): Pr
       const ext = safeExtension(filename);
       const path = join(dir, `upload${ext}`);
       let tooLarge = false;
+      sources.push(stream);
       stream.on('limit', () => {
         tooLarge = true;
       });
@@ -112,6 +121,9 @@ export async function readMultipart(req: Request, options: MultipartOptions): Pr
     await pipeline(req, busboy);
     await Promise.all(writes);
   } catch (error) {
+    // WHY: when the request breaks, the parser's file stream neither ends nor fails, and the write would wait
+    // for it for ever. Destroying it settles the write, which closes the file, before the folder is removed.
+    for (const source of sources) source.destroy();
     await Promise.allSettled(writes);
     await cleanup();
     if (error instanceof HttpError) throw error;
