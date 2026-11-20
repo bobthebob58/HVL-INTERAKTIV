@@ -12,10 +12,12 @@
  *   - CSS may contain no backslash escape, `@import`, external `url()`, resource-fetching function,
  *     legacy binding or script URL; `neutraliseCss` either returns CSS that passes `findCssViolation` or undefined.
  *   - Every rule is a pure function of names and values; no I/O and no DOM access.
- * Collaborators: ./svgPurify.ts, ./svgFinalCheck.ts.
+ *   - `url()` functions are found by ./cssUrlScan.ts, in one pass over the text (D-118).
+ * Collaborators: ./svgPurify.ts, ./svgFinalCheck.ts, ./cssUrlScan.ts.
  * Tests: apps/server/test/security/svgFinalCheck.test.ts, apps/server/test/security/SvgSanitizer.test.ts,
  *   apps/server/test/security/SvgSanitizer.bypass.test.ts
  */
+import { replaceCssUrls, scanCssUrls } from './cssUrlScan.js';
 
 /** The SVG namespace; every element of a stored SVG is in it. */
 export const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -61,8 +63,6 @@ const MAGIC: Readonly<Record<string, (bytes: Buffer) => boolean>> = {
 // removed before matching.
 const SCRIPT_SCHEME = /(?:java|vb|live)script:|data:(?:text\/html|application\/xhtml|image\/svg)/i;
 const CSS_COMMENT = /\/\*[\s\S]*?(?:\*\/|$)/g;
-const URL_START = /url\s*\(/gi;
-const URL_FUNCTION = /url\s*\(\s*(?:"([^"]*)"|'([^']*)'|([^"'()\s]*))\s*\)/gi;
 const FETCHING_FUNCTION = /(?:image-set|image|cross-fade|element|src|attr|expression|paint)\s*\(/i;
 const LEGACY_BINDING = /-moz-binding|behavior\s*:/i;
 
@@ -124,9 +124,9 @@ export function findCssViolation(css: string): string | undefined {
   if (/@import/i.test(text)) return 'import';
   if (FETCHING_FUNCTION.test(text) || LEGACY_BINDING.test(text)) return 'fetching function';
   if (hasScriptScheme(text)) return 'script url';
-  const urls = [...text.matchAll(URL_START)].length;
-  const local = [...text.matchAll(URL_FUNCTION)].filter((m) => FRAGMENT.test(m[1] ?? m[2] ?? m[3] ?? ''));
-  return urls === local.length ? undefined : 'external url';
+  // SECURITY: every `url(` must be a well-formed function that points into this document.
+  const isLocal = scanCssUrls(text).every((url) => url.value !== undefined && FRAGMENT.test(url.value));
+  return isLocal ? undefined : 'external url';
 }
 
 /**
@@ -136,11 +136,8 @@ export function findCssViolation(css: string): string | undefined {
  *   still has a forbidden construct and must be dropped as a whole.
  */
 export function neutraliseCss(css: string): string | undefined {
-  const text = withoutComments(css)
-    .replace(/@import[^;]*;?/gi, ' ')
-    .replace(URL_FUNCTION, (match, ...groups: (string | undefined)[]) =>
-      FRAGMENT.test(groups[0] ?? groups[1] ?? groups[2] ?? '') ? match : 'none',
-    );
+  const withoutImports = withoutComments(css).replace(/@import[^;]*;?/gi, ' ');
+  const text = replaceCssUrls(withoutImports, (value) => (FRAGMENT.test(value) ? undefined : 'none'));
   return findCssViolation(text) === undefined ? text : undefined;
 }
 
