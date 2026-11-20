@@ -14019,6 +14019,34 @@ $ npx vitest run --project server                    26433 passed, 31 skipped; 2
     five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
     unrelated to the change; DATA-010, MAPPE-004, NFR-002)</code></pre>
 </li>
+<li><p><strong>2026-11-20 · Security repairs, step 5 (D-121)</strong> — Limits on stored xAPI statements and on what insight lists
+from them. Four repairs, one commit each; every new test fails on the code before and passes after:</p>
+<ul>
+<li>A part&#39;s answer is stored only under a UUID (LTI-011, DATA-012): <code>xapi/xapiStatementRow.ts</code> discards a part&#39;s
+<code>answered</code> whose sub-content ID is not a UUID, the shape of H5P&#39;s sub-content IDs, and counts it as <code>invalid</code>
+in the batch&#39;s log line. Test: <code>xapiStatementRow.test.ts</code>.</li>
+<li>A limit per day beside the one per minute (LTI-011): <code>xapi/XapiRateLimit.ts</code> counts 3 000 statements per
+learner and activity in 24 hours in a second Redis window, raised only by batches the minute&#39;s limit allowed;
+past it the batch is refused whole with 429 and <code>Retry-After</code>. Test: <code>xapiDayLimit.int.test.ts</code>.</li>
+<li>The replay rule reads a window (DATA-012): <code>XapiStatementStore.replayHistory</code> reads the learner&#39;s latest 500
+rows for the activity in one indexed query and takes the rule&#39;s facts from them; the rule is unchanged. Test:
+<code>xapiReplayWindow.int.test.ts</code>.</li>
+<li>Insight lists a question outside the current content only for <em>k</em> learners (INS-002, INS-006):
+<code>insight/aggregate/itemDifficulty.ts</code> lists such a question only when at least <em>k</em> learners answered it, most
+learners first and at most 50, in the view and in the CSV. Test: <code>unlistedItems.test.ts</code>.</li>
+<li>D-121 added; one Redis counter in <code>docs/privacy/DATA-INVENTORY.md</code>; <code>TRACEABILITY.md</code> and the spec site
+regenerated. No spec change. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 25, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run doc:lint                                   11 checks passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins                                 6 manifests, every version pinned exactly
+$ npx vitest run --project server                    26440 passed, 31 skipped; 2 failed in 5 files, the same
+    five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+    unrelated to the change; DATA-010, MAPPE-004, NFR-002)</code></pre>
+</li>
 </ul>
 
 </section>
