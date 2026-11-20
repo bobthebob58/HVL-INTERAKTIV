@@ -5131,3 +5131,36 @@ loading of one spec per session are kept.
   number under an account ID (and an activity ID for saves), listed in `docs/privacy/DATA-INVENTORY.md`. Every
   state write now runs in a transaction with one extra indexed count. The limits are not applied to states stored
   before this step; the preload bounds what such rows can cost.
+
+### D-121 · Security repairs, step 5: limits on stored xAPI statements and on what insight lists from them
+- **Context:** LTI-011 stores the player's statements with DATA-012's minimal fields, 120 a minute per learner and
+  activity (D-115), and insight (INS-001 to INS-006) is built from the stored rows. Three things had no bound: the
+  `subContentId` of a part's answer was any text of up to 64 characters from the learner's browser, and INS-002
+  listed every `subContentId` it found; nothing limited how many statements a learner may add over time; and the
+  replay rule (D-115) read back every stored row of the batch's page loads. No spec change.
+- **Decision — a part's answer is stored only under a UUID (LTI-011, DATA-012).** H5P's sub-content IDs are UUIDs.
+  `classifyXapiItem` discards a part's `answered` whose sub-content ID has any other shape, counted as `invalid` in
+  the batch's log line like an item that fails the contract. The contract's item schema is unchanged.
+- **Decision — a limit per day beside the one per minute (LTI-011).** 3 000 statements per learner and activity in
+  24 hours (`XAPI_STATEMENTS_PER_DAY` in `xapi/XapiRateLimit.ts`), a second fixed window in Redis that only
+  batches the minute's limit allowed are counted in. Past it the batch is refused whole with 429 and
+  `Retry-After`, as past the minute's limit. A learner at work sends about 22 statements a minute at most (probe
+  P1), so a long working day stays far below it.
+- **Decision — the replay rule reads a window (DATA-012).** `XapiStatementStore.replayHistory` reads the learner's
+  latest 500 rows for the activity, newest first, in one query the `[learnerKey, contentId, timestamp]` index ends
+  after the window, and takes the rule's facts from them. The rule (`xapiReplayRule.ts`) is unchanged and gets
+  the same facts as before for any learner with fewer than 500 rows since their latest result. Beyond the window
+  a page load reads as having no stored answer and a result as not stored, which can at most store a repeated
+  result once more or drop one after 500 other statements; neither is reachable by normal use. Not chosen: a query
+  per page load (it must look through all the learner's rows when a page load has no result), or a new index on
+  `attemptId` (a migration for a case the window already bounds).
+- **Decision — insight lists a question outside the current content only for k learners (INS-002, INS-006).** A
+  `subContentId` that is not in the activity's current parameters (a question of an older version) is listed only
+  when at least *k* learners answered it, most learners first, and at most 50 of them (`MAX_UNLISTED_ITEMS` in
+  `insight/aggregate/itemDifficulty.ts`). So one learner's statements can neither add a row to a teacher's view
+  nor put an ID of their own choosing in it. Questions of the current content are listed as before, with their
+  counts suppressed below *k*.
+- **Consequences:** Nothing changes for an ordinary learner or teacher. One new Redis counter
+  (`hvli:xapi-day:<userId>:<contentId>`, a number, 24 hours), listed in `docs/privacy/DATA-INVENTORY.md`. A view of
+  an older version no longer lists a question that fewer than *k* learners answered; its cells were suppressed
+  already.
