@@ -11,7 +11,8 @@
  *     else is 400 `error.badRequest`, so no free date reaches the core (`SPEC-DEVIATION: D-106`).
  *   - The context is decided by ./insightAccess.ts before the core runs; the core's own checks stay as a second line.
  *   - A scope the core refuses is answered as the contract says: an activity it cannot find is 404
- *     `hvl:activity-unavailable` (D-066), a version or context it cannot cover 400 `error.badRequest`.
+ *     `hvl:activity-unavailable` (D-066), a version or context it cannot cover 400 `error.badRequest`, and a scope
+ *     with more stored statements than one view covers 422 `insight.viewTooLarge` (D-122).
  * Collaborators: ./insightAccess.ts, ../InsightService.ts, ../scope/insightScope.ts, ../../http/api/apiBodies.ts,
  *   ./insightRoutes.ts.
  * Tests: apps/server/test/insight/http/insightRoutes.int.test.ts
@@ -36,7 +37,7 @@ export type InsightViews = Pick<InsightService, 'forActivity' | 'contexts'>;
  * @param insight - The insight core.
  * @returns The report, already suppressed (INS-006).
  * @throws HttpError 400 `error.badRequest` (query, version or context), 403 `error.forbidden` (in Canvas, another
- *   context) or 404 `hvl:activity-unavailable`.
+ *   context), 404 `hvl:activity-unavailable` or 422 `insight.viewTooLarge`.
  * @spec INS-001
  */
 export async function insightViewOf(
@@ -57,6 +58,8 @@ export async function insightViewOf(
     if (!(error instanceof InsightScopeError)) throw error;
     // WHY: the activity was found by the access check; it can only vanish in between (deleted meanwhile).
     if (error.reason === 'activityUnavailable') throw authError('hvl:activity-unavailable');
+    // WHY: its own status, so the tab can tell the teacher to choose a shorter period (D-122).
+    if (error.reason === 'viewTooLarge') throw new HttpError(422, 'insight.viewTooLarge');
     throw new HttpError(400, 'error.badRequest');
   }
 }

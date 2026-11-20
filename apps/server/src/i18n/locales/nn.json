@@ -255,6 +255,7 @@
     }
   },
   "insight": {
+    "viewTooLarge": "Denne perioden har for mange svar til at innsikta kan visast samla. Vel ein kortare periode.",
     "csv": {
       "filename": "innsikt",
       "column": {

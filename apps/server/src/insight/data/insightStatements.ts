@@ -1,28 +1,21 @@
 /**
- * insightStatements — reads the stored xAPI rows of one insight scope and hands the aggregators what they count:
- * which learner and page load (as small numbers), which part of the activity, the verb, the score, the answer and
- * the time.
+ * insightStatements — what the aggregators count from one stored xAPI row: which learner and page load (as small
+ * numbers), which part of the activity, the verb, the score, the answer and the time; and how a stored row becomes
+ * that.
  *
  * Why: every INS number is an aggregate of `XapiStatement` rows of one activity, version, context and period (D-106,
  *      D-115). Replacing the learner key by a number as the rows are read means no aggregator, test double or log
- *      line downstream ever holds a pseudonym (DATA-002), and only the columns insight reads leave the database.
+ *      line downstream ever holds a pseudonym (DATA-002).
  * Spec: INS-001, INS-002, INS-003, INS-005, DATA-012
  * Invariants:
  *   - PRIVACY: `learnerKey` is read only to tell learners apart and is replaced by a number in order of first
  *     appearance; the page load (the view part of `attemptId`, a random UUID per load, D-115) likewise. Neither
  *     leaves this module.
- *   - The query filters by `contentId`, `contentVersion`, `contextId` (null for the portal's plays, D-103),
- *     `start <= timestamp < end` and the view's `academicYear` (one key per learner, D-106's amendment of
- *     2026-11-04), and orders by `timestamp`, then `id`, so "first" and "latest" are well defined (the stored
- *     timestamp is a strict order within a batch, D-115).
- *   - Only learners' statements are ever stored (D-102), so no role filter is needed; PRIVACY: rows of Canvas's test
- *     student (`testUser`, D-102's amendment of 2026-11-04) are never read, so no view or *k* count holds one.
- * Collaborators: ../../infra/prismaClient.ts, ../scope/insightScope.ts, ../InsightService.ts,
- *   ../aggregate/*.
- * Tests: apps/server/test/insight/insightStatements.test.ts, apps/server/test/insight/insightService.int.test.ts,
- *   apps/server/test/insight/insightPeriodEnd.int.test.ts, apps/server/test/xapi/xapiTestUser.int.test.ts
+ *   - One converter numbers across all the rows it is given, in however many calls, so rows that arrive in pages
+ *     get the same numbers as rows that arrive at once.
+ * Collaborators: ./readInsightStatements.ts (the query), ../aggregate/*.
+ * Tests: apps/server/test/insight/insightStatements.test.ts, apps/server/test/insight/http/insightReadLimit.int.test.ts
  */
-import type { Database } from '../../infra/prismaClient.js';
 
 /** One stored statement as the aggregators see it: no learner key, no attempt ID, no context. */
 export interface InsightStatement {
@@ -56,18 +49,6 @@ export interface StoredInsightRow {
   readonly timestamp: Date;
 }
 
-/** The stored values of one scope (../scope/insightScope.ts). */
-export interface InsightStatementFilter {
-  readonly contentId: string;
-  readonly contentVersion: number;
-  /** `<platformId>:<contextId>`, or null for the portal's plays. */
-  readonly storedContextId: string | null;
-  readonly start: Date;
-  readonly end: Date;
-  /** The view's academic year (`XapiStatement.academicYear`, the year of the key). */
-  readonly academicYear: number;
-}
-
 /** Numbers things in order of first appearance. */
 function numbering(): (key: string) => number {
   const numbers = new Map<string, number>();
@@ -80,65 +61,38 @@ function numbering(): (key: string) => number {
 }
 
 /**
+ * A converter of stored rows that numbers learners and page loads across every call, for rows that arrive in pages.
+ * @returns The converter: one statement per row, in the same order.
+ * @spec INS-001
+ */
+export function insightStatementConverter(): (rows: readonly StoredInsightRow[]) => InsightStatement[] {
+  const learnerNumber = numbering();
+  const viewNumber = numbering();
+  return (rows) =>
+    rows.map((row) => {
+      // WHY: `<viewId>:<n>` (D-115); the view part is everything before the last colon.
+      const viewId = row.attemptId.slice(0, Math.max(0, row.attemptId.lastIndexOf(':')));
+      return {
+        // PRIVACY: the learner key and the view ID stop here; aggregates are built from these numbers (DATA-002).
+        learner: learnerNumber(row.learnerKey),
+        view: viewNumber(`${row.learnerKey}\u0000${viewId}`),
+        item: row.subContentId,
+        verb: row.verb,
+        scoreRaw: row.scoreRaw,
+        scoreMax: row.scoreMax,
+        success: row.success,
+        response: row.response,
+        at: row.timestamp.getTime(),
+      };
+    });
+}
+
+/**
  * Turns stored rows, in time order, into the aggregators' statements.
  * @param rows - The scope's rows, ordered by timestamp, then ID.
  * @returns One statement per row, in the same order, with learners and page loads numbered.
  * @spec INS-001
  */
 export function toInsightStatements(rows: readonly StoredInsightRow[]): InsightStatement[] {
-  const learnerNumber = numbering();
-  const viewNumber = numbering();
-  return rows.map((row) => {
-    // WHY: `<viewId>:<n>` (D-115); the view part is everything before the last colon.
-    const viewId = row.attemptId.slice(0, Math.max(0, row.attemptId.lastIndexOf(':')));
-    return {
-      // PRIVACY: the learner key and the view ID stop here; aggregates are built from these numbers (DATA-002).
-      learner: learnerNumber(row.learnerKey),
-      view: viewNumber(`${row.learnerKey}\u0000${viewId}`),
-      item: row.subContentId,
-      verb: row.verb,
-      scoreRaw: row.scoreRaw,
-      scoreMax: row.scoreMax,
-      success: row.success,
-      response: row.response,
-      at: row.timestamp.getTime(),
-    };
-  });
-}
-
-/**
- * Reads the statements of one scope.
- * @param db - The database.
- * @param filter - The activity, version, context, period and academic year.
- * @returns The statements in time order.
- * @spec INS-001
- */
-export async function readInsightStatements(
-  db: Database,
-  filter: InsightStatementFilter,
-): Promise<InsightStatement[]> {
-  const rows = await db.xapiStatement.findMany({
-    where: {
-      contentId: filter.contentId,
-      contentVersion: filter.contentVersion,
-      contextId: filter.storedContextId,
-      timestamp: { gte: filter.start, lt: filter.end },
-      academicYear: filter.academicYear,
-      // PRIVACY: Canvas's test students are left out of every aggregate and k count (D-102's amendment).
-      testUser: false,
-    },
-    select: {
-      learnerKey: true,
-      attemptId: true,
-      subContentId: true,
-      verb: true,
-      scoreRaw: true,
-      scoreMax: true,
-      success: true,
-      response: true,
-      timestamp: true,
-    },
-    orderBy: [{ timestamp: 'asc' }, { id: 'asc' }],
-  });
-  return toInsightStatements(rows);
+  return insightStatementConverter()(rows);
 }

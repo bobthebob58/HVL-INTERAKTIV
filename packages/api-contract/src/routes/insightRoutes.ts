@@ -12,6 +12,7 @@
  *   - Every route is `auth: 'either'` (a portal session or an ltik; GET needs no CSRF token, but a browser request
  *     that is not the app's own fetch is 403, D-106) and documents 401, 403, 404 and 429. No route takes a learner or
  *     returns a per-learner row (INS-006).
+ *   - The view and its CSV document 422: a period with more stored statements than one view covers (D-122).
  *   - The answers to 403 and 404 follow D-066: an activity the person may not view is 404 like an unknown one.
  * Collaborators: ./routeResponses.ts, ./collaborationResponses.ts (`rateLimited`), ./insightSchemaNames.ts,
  *   ../insight.ts, ../insightReport.ts, ../insightContextList.ts, ../insightFindings.ts, ../apiRoutes.ts,
@@ -40,6 +41,12 @@ const badQuery = failure(
     'the context is not one the activity has (PROD-013, D-103).',
 );
 
+/** 422 of the routes that build a view. */
+const viewTooLarge = failure(
+  '`insight.viewTooLarge`: the period holds more stored statements than one view covers (200 000); a shorter ' +
+    'period can be asked for (D-122).',
+);
+
 /** 429 of every insight route. */
 const tooMany = rateLimited('over 60 insight requests in a minute from this person');
 
@@ -63,6 +70,7 @@ export const INSIGHT_ROUTES = [
       401: unauthenticated,
       403: insightRefused,
       404: unavailable,
+      422: viewTooLarge,
       429: tooMany,
     },
   },
@@ -100,6 +108,7 @@ export const INSIGHT_ROUTES = [
       401: unauthenticated,
       403: insightRefused,
       404: unavailable,
+      422: viewTooLarge,
       429: tooMany,
     },
   },

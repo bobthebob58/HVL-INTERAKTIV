@@ -255,6 +255,7 @@
     }
   },
   "insight": {
+    "viewTooLarge": "This period holds too many answers to show the insight in one view. Choose a shorter period.",
     "csv": {
       "filename": "insight",
       "column": {
