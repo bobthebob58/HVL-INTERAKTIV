@@ -2047,3 +2047,38 @@ Append one entry per session: date, session, what was done, gate output, and any
       five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
       unrelated to the change; DATA-010, MAPPE-004, NFR-002)
   ```
+
+- **2026-11-20 · Security repairs, step 6 (D-122)** — One insight view reads at most 200 000 stored statements,
+  and the Innsikt tab says so when a period holds more. Two repairs, one commit each, and one test commit; every
+  new test fails on the code before and passes after:
+  - The read (INS-001, INS-009): `insight/data/readInsightStatements.ts` (new; the query moved out of
+    `insightStatements.ts`) first asks the database whether the scope holds more than the limit, without a row
+    leaving it, and refuses such a scope (`viewTooLarge`); below it the rows are read 10 000 at a time and made
+    into the aggregators' statements as they arrive. `insight/http/insightView.ts` answers the refusal 422
+    `insight.viewTooLarge` for the view and the CSV; the contract documents it. Tests:
+    `insight/http/insightReadLimit.int.test.ts`, `api-contract/test/insightRoutes.test.ts`.
+  - The tab (INS-001, UD-013, UD-030): `useInsightView.ts` has a state for the 422 answer and `InsightPanel.tsx`
+    shows `insight.tooLarge` as an alert, keeping the period, version and course choices, also on the first view.
+    Tests: `InsightTooLarge.test.tsx`, and one more scan in `a11y/axeInsight.a11y.test.ts`. Screenshots in `nn` at
+    1280 px and 390 px were sent to the owner.
+  - Measured here: a view of exactly 200 000 statements takes about 1 second and about 100 MB of heap; refusing a
+    scope of 2 000 000 statements takes about 50 ms.
+  - D-122 added; `TRACEABILITY.md` and the spec site regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npm run build                                      exit 0 (second run; the first stopped at a notice from the
+      Next.js CLI)
+  $ npx vitest run --project web                       616 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run … a11y/axeInsight, keyboardJourneys 15 passed
+  $ npx vitest run … e2e/insightInCanvas, journeySeminarInsight   2 passed
+  $ npx vitest run --project server                    26443 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```
