@@ -12,8 +12,9 @@
  *   - The session cookie has no `Max-Age`/`Expires`; the login cookie has `Max-Age=600`; clearing uses `Max-Age=0`
  *     with the same attributes.
  *   - Only opaque IDs (43 base64url characters) are written, so a value can never inject attributes.
- *   - The parser never URL-decodes. A name is returned only when it occurs exactly once with a well-formed value;
- *     a duplicated name is dropped entirely. Malformed pairs are ignored.
+ *   - The parser never URL-decodes, and trims only SP and HTAB around a pair (not other Unicode spaces), so a name
+ *     is matched byte for byte (AUD-212). A name is returned only when it occurs exactly once with a well-formed
+ *     value; a duplicated name is dropped entirely. Malformed pairs are ignored.
  * Collaborators: ./portalSessionMiddleware.ts, ./opaqueIds.ts, ../feide/loginTransactions.ts,
  *   ../feide/feideLoginRoutes.ts.
  * Tests: apps/server/test/auth/session/sessionCookies.test.ts
@@ -76,6 +77,11 @@ export const expiredLoginCookie = (): string => `${LOGIN_COOKIE}=; Max-Age=0; ${
 const COOKIE_NAME = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
 const COOKIE_VALUE = /^[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]*$/;
 
+// SECURITY: trim only SP and HTAB, the whitespace RFC 6265 allows around a pair. String.trim also removes other
+// Unicode spaces (e.g. U+00A0), which would let a name like "<U+00A0>__Host-hvli_sid" set from a neighbour host
+// be read as the session cookie, since the stray byte would be stripped before the name check (AUD-212, D-117).
+const trimSpHtab = (pair: string): string => pair.replace(/^[ \t]+/, '').replace(/[ \t]+$/, '');
+
 /**
  * Parses a Cookie request header strictly.
  * @param header - `req.headers.cookie`.
@@ -87,7 +93,7 @@ export function parseCookieHeader(
   const text = typeof header === 'string' ? header : (header ?? []).join('; ');
   const seen = new Map<string, string | null>();
   for (const pair of text.split(';')) {
-    const trimmed = pair.trim();
+    const trimmed = trimSpHtab(pair);
     const equals = trimmed.indexOf('=');
     // WHY: a pair without a name (`value` or `=value`) cannot be attributed to any cookie, so it is skipped.
     if (equals <= 0) continue;

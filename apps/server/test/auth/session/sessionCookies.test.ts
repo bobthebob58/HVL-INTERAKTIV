@@ -98,6 +98,25 @@ describe('[AUTH-003] Cookie header parser', () => {
     expect(readCookie({ headers: { cookie: `__host-hvli_sid=${ID}` } }, SESSION_COOKIE)).toBeUndefined();
   });
 
+  it('[AUTH-003] trims only SP and HTAB, so a name with a leading non-breaking space is a different cookie', () => {
+    // Arrange: a neighbour host sets a cookie whose name begins with U+00A0 (a non-breaking space), alone and
+    // beside the genuine session cookie. String.trim would strip the byte and read the pair as the session
+    // cookie, planting the attacker's session or forcing a logout (AUD-212); byte-exact matching must not.
+    const planted = `\u00A0${SESSION_COOKIE}=${ID}`;
+    const otherSpaces = ['\u00A0', '\u2028', '\u2029', '\u3000', '\uFEFF'];
+    // Act
+    const plantedCookies = parseCookieHeader(planted);
+    const beside = parseCookieHeader(`${planted}; ${SESSION_COOKIE}=${ID}`);
+    const ordinary = parseCookieHeader(`\t ${SESSION_COOKIE}=${ID} \t`);
+    // Assert
+    expect(plantedCookies.has(SESSION_COOKIE)).toBe(false);
+    expect(readCookie({ headers: { cookie: planted } }, SESSION_COOKIE)).toBeUndefined();
+    expect(beside.get(SESSION_COOKIE)).toBe(ID); // the real cookie is read, not dropped as a duplicate
+    for (const space of otherSpaces)
+      expect(parseCookieHeader(`${space}a=1`).has('a'), JSON.stringify(space)).toBe(false);
+    expect(ordinary.get(SESSION_COOKIE)).toBe(ID); // a real SP or HTAB around a pair is still trimmed (RFC 6265)
+  });
+
   it('[AUTH-003] handles a missing, empty or split header', () => {
     expect(parseCookieHeader(undefined).size).toBe(0);
     expect(parseCookieHeader('').size).toBe(0);
