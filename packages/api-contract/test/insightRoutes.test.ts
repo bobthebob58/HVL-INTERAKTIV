@@ -1,7 +1,7 @@
 /**
  * Tests the insight route registry: the view, contexts, CSV export and findings routes build an OpenAPI document whose
- * references resolve, work from the portal and from Canvas, document their refusals, take no learner, and are part of
- * `API_ROUTES` once each.
+ * references resolve, work from the portal and from Canvas, document their refusals (422 for a view over the limit of
+ * D-122 among them), take no learner, and are part of `API_ROUTES` once each.
  *
  * Spec: DOC-012, INS-001, INS-006, INS-007, INS-009, INS-010
  */
@@ -44,7 +44,24 @@ describe('[DOC-012] insight routes', () => {
       expect(Object.keys(op.responses)).toEqual(expect.arrayContaining(['200', '401', '403', '404', '429']));
       expect(JSON.stringify(op.responses['429'])).toContain('Retry-After');
     }
-    expect(Object.keys(operation(BASE).responses).sort()).toEqual(['200', '400', '401', '403', '404', '429']);
+    expect(Object.keys(operation(BASE).responses).sort()).toEqual([
+      '200',
+      '400',
+      '401',
+      '403',
+      '404',
+      '422',
+      '429',
+    ]);
+  });
+
+  it('[INS-001] the view and the export document 422 for a period with more statements than one view covers', () => {
+    // Act
+    const documents = (suffix: string) => JSON.stringify(operation(BASE + suffix).responses['422'] ?? null);
+    // Assert: the two routes that build a view, and only they
+    expect(documents('')).toContain('insight.viewTooLarge');
+    expect(documents('/export')).toContain('insight.viewTooLarge');
+    expect([documents('/contexts'), documents('/findings')]).toEqual(['null', 'null']);
   });
 
   it('[INS-007] the view and the export take only the period, the context and the version, each optional', () => {
