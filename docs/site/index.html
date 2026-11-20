@@ -11731,6 +11731,49 @@ write); the data inventory names <code>content.delete</code> beside the co-autho
 the wording of this entry, of <code>PROGRESS.md</code> and of the cookie parser&#39;s comments was brought in line with the
 publishing rule above.</li>
 </ul>
+<h3 id="decisions--d-118--security-repairs-step-2-how-uploaded-packages-and-files-are-read" tabindex="-1">D-118 · Security repairs, step 2: how uploaded packages and files are read</h3>
+<ul>
+<li><strong>Context:</strong> The second step of the repairs D-117 describes. It concerns the paths that take a file from an
+author: the package import, the multipart reader and the SVG style rules. No spec changes: SEC-001, SEC-003 and
+SEC-005 already require what follows.</li>
+<li><strong>Decision — one reader for a package (SEC-005, SEC-003).</strong> A package is read only through
+<code>security/zipEntryGuard.ts</code> (yauzl, with its size validation): by the archive check, by the manifest reader, by
+the library secret scan, and now also when Lumi unpacks it. <code>h5p/libraries/checkedPackageReading.ts</code> replaces the
+two Lumi 10.0.4 functions that open a package themselves (<code>PackageImporter.extractPackage</code>, which is static, and
+<code>PackageValidator.prototype.validateFileSizes</code>); Lumi goes on working on the unpacked folder. What is unpacked is
+what was checked: the same entries under the same names (a backslash in an entry name is a folder separator, as
+the archive check reads it), an entry must unpack to exactly the size it declares, the total limit is counted
+while writing, and the file is closed afterwards whatever happens. An entry that cannot be read, or whose name
+is at once a file and a folder of the package, is 400 <code>upload.archive.unreadable</code>; a failure of the disk or of
+the temporary area stays a server error. Lumi&#39;s choice of entries is kept (<code>content/</code>, the library folders, <code>h5p.json</code>; no
+file whose name starts with <code>.</code> or <code>_</code>), and an ordinary package unpacks to the same files as with Lumi&#39;s own
+function (tested). <code>test/h5p/upstream/lumiPackageReading.test.ts</code> pins the two places where Lumi opens a package,
+so a Lumi upgrade that adds a third fails there. Not chosen: a patch of Lumi&#39;s files in <code>node_modules</code> (not
+reproducible), or a second check of the unpacked folder (it keeps two readers and checks late).</li>
+<li><strong>Decision — every reader lets go of the package (SEC-005).</strong> An entry is read only through <code>readEntryBytes</code> or
+<code>openEntryStream</code>; a stream that fails is destroyed, so closing the package always frees the file. A refused or
+failed import therefore leaves no open file and no upload folder (<code>test/http/packageImportOpenFiles.int.test.ts</code>).</li>
+<li><strong>Decision — a package&#39;s file references follow the storage&#39;s name rule (SEC-005).</strong> Lumi stores a file that the
+package carries under the spelling of its reference in content.json. Such a reference must be a name
+<code>assertSafeObjectName</code> accepts (no empty or <code>.</code> segment, no control character); otherwise the import answers 400
+<code>upload.archive.unsafePath</code> before anything is unpacked. A reference to a file the package does not carry, a web
+address and an empty reference are judged as before: nothing is stored for them. Not chosen: a <code>sanitizeFilename</code>
+on the storages, which would rename authors&#39; files silently and change the names D-092&#39;s guards compare. Both S3
+stores also close the data they were handed when they refuse a name (<code>keyForUpload</code>).</li>
+<li><strong>Decision — a broken upload is cleaned up at once (SEC-005).</strong> When a multipart request fails part-way,
+<code>readMultipart</code> stops the file being written before it waits for the write, then removes the folder and answers.
+At start the server removes its own folders in the temporary area (<code>hvli-upload-*</code>, <code>hvl-svg-*</code>) that are more
+than an hour old, which a run that was stopped in the middle of a request left behind
+(<code>http/staleUploadFolders.ts</code>); no other folder is touched, and a failure there never stops the start.</li>
+<li><strong>Decision — <code>url()</code> in SVG style text is found by a one-pass scanner (SEC-001).</strong> <code>security/svg/cssUrlScan.ts</code>
+replaces the single pattern in <code>svgRules.ts</code>. It reports exactly the functions the pattern reported (tested on
+every text of up to five grammar pieces), so which style texts are kept, rewritten or refused does not change;
+the time of <code>findCssViolation</code> and <code>neutraliseCss</code> now grows in step with the length of the text.</li>
+<li><strong>Consequences:</strong> Nothing changes for an ordinary package or picture. A package with a damaged or mis-declared
+entry is answered with the &quot;unreadable archive&quot; message, and one whose content.json names a carried file with a
+<code>./</code>, an empty segment or a control character with the &quot;unsafe path&quot; message. <code>lumiInternals.ts</code> now also loads
+Lumi&#39;s <code>PackageImporter</code> and <code>PackageValidator</code>; a Lumi upgrade that moves them fails at start.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -13757,6 +13800,43 @@ $ npm run doc:lint                                   11 checks passed
 $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
 $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
 $ npx vitest run --project server                    26386 passed, 31 skipped; 2 failed in 5 files, the same
+    five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+    unrelated to the change; DATA-010, MAPPE-004, NFR-002)</code></pre>
+</li>
+<li><p><strong>2026-11-20 · Security repairs, step 2 (D-118)</strong> — How uploaded packages and files are read. Five repairs, one
+commit each (and one small follow-up), each with a test that fails on the code before it and passes after (the
+time test of the style scan was checked against the earlier code on smaller inputs):</p>
+<ul>
+<li>One reader for a package (SEC-005, SEC-003): <code>h5p/libraries/checkedPackageReading.ts</code> replaces the two Lumi
+functions that open an .h5p file, so a package is unpacked by the reader of the archive check
+(<code>security/zipEntryGuard.ts</code>): the checked entries under the checked names, each at its declared size, the
+total limit counted while writing, the file always closed. An entry that cannot be read, and a name that is at
+once a file and a folder, are answered 400 <code>upload.archive.unreadable</code>; a disk failure stays a server error.
+Installed for every editor in <code>H5pEditorFactory.ts</code>.
+Tests: <code>checkedPackageReading.test.ts</code>, <code>upstream/lumiPackageReading.test.ts</code> (pins where Lumi opens a
+package), <code>packageImportOpenFiles.int.test.ts</code>.</li>
+<li>Readers let go of the package (SEC-005): <code>readEntryBytes</code> and <code>openEntryStream</code> in <code>zipEntryGuard.ts</code> are the
+only ways an entry is read; the manifest reader and the library secret scan use them. A refused or failed
+import leaves no open file and no upload folder (test helpers <code>support/openFiles.ts</code>, <code>support/damagedPackage.ts</code>).</li>
+<li>File references follow the storage&#39;s name rule (SEC-005): <code>contentFileReferences.ts</code> refuses a reference to a
+carried file that <code>assertSafeObjectName</code> would refuse, before anything is unpacked; both S3 stores close the
+data they were handed when they refuse a name (<code>keyForUpload</code>). Tests in <code>packageManifest.test.ts</code>,
+<code>s3Objects.test.ts</code>.</li>
+<li>A broken upload is cleaned up at once (SEC-005): <code>multipartUpload.ts</code> stops the file being written before it
+waits; <code>http/staleUploadFolders.ts</code> removes the server&#39;s own old upload folders at start (<code>main.ts</code>). Tests in
+<code>multipartUpload.test.ts</code>, <code>staleUploadFolders.test.ts</code>.</li>
+<li><code>url()</code> in SVG style text is found in one pass (SEC-001): <code>security/svg/cssUrlScan.ts</code> replaces the pattern in
+<code>svgRules.ts</code>, with the same answers (compared on 177 156 short texts) and time in step with the text&#39;s
+length. Tests: <code>cssUrlScan.test.ts</code>, <code>svgFinalCheck.test.ts</code>.</li>
+<li>D-118 added; <code>TRACEABILITY.md</code> and the spec site regenerated. No spec change. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 22, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run doc:lint                                   11 checks passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins                                 6 manifests, every version pinned exactly
+$ npx vitest run --project server                    26411 passed, 31 skipped; 2 failed in 5 files, the same
     five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
     unrelated to the change; DATA-010, MAPPE-004, NFR-002)</code></pre>
 </li>

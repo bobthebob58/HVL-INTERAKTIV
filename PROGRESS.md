@@ -1916,3 +1916,40 @@ Append one entry per session: date, session, what was done, gate output, and any
       five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
       unrelated to the change; DATA-010, MAPPE-004, NFR-002)
   ```
+- **2026-11-20 · Security repairs, step 2 (D-118)** — How uploaded packages and files are read. Five repairs, one
+  commit each (and one small follow-up), each with a test that fails on the code before it and passes after (the
+  time test of the style scan was checked against the earlier code on smaller inputs):
+  - One reader for a package (SEC-005, SEC-003): `h5p/libraries/checkedPackageReading.ts` replaces the two Lumi
+    functions that open an .h5p file, so a package is unpacked by the reader of the archive check
+    (`security/zipEntryGuard.ts`): the checked entries under the checked names, each at its declared size, the
+    total limit counted while writing, the file always closed. An entry that cannot be read, and a name that is at
+    once a file and a folder, are answered 400 `upload.archive.unreadable`; a disk failure stays a server error.
+    Installed for every editor in `H5pEditorFactory.ts`.
+    Tests: `checkedPackageReading.test.ts`, `upstream/lumiPackageReading.test.ts` (pins where Lumi opens a
+    package), `packageImportOpenFiles.int.test.ts`.
+  - Readers let go of the package (SEC-005): `readEntryBytes` and `openEntryStream` in `zipEntryGuard.ts` are the
+    only ways an entry is read; the manifest reader and the library secret scan use them. A refused or failed
+    import leaves no open file and no upload folder (test helpers `support/openFiles.ts`, `support/damagedPackage.ts`).
+  - File references follow the storage's name rule (SEC-005): `contentFileReferences.ts` refuses a reference to a
+    carried file that `assertSafeObjectName` would refuse, before anything is unpacked; both S3 stores close the
+    data they were handed when they refuse a name (`keyForUpload`). Tests in `packageManifest.test.ts`,
+    `s3Objects.test.ts`.
+  - A broken upload is cleaned up at once (SEC-005): `multipartUpload.ts` stops the file being written before it
+    waits; `http/staleUploadFolders.ts` removes the server's own old upload folders at start (`main.ts`). Tests in
+    `multipartUpload.test.ts`, `staleUploadFolders.test.ts`.
+  - `url()` in SVG style text is found in one pass (SEC-001): `security/svg/cssUrlScan.ts` replaces the pattern in
+    `svgRules.ts`, with the same answers (compared on 177 156 short texts) and time in step with the text's
+    length. Tests: `cssUrlScan.test.ts`, `svgFinalCheck.test.ts`.
+  - D-118 added; `TRACEABILITY.md` and the spec site regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project server                    26411 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```

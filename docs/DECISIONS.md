@@ -5013,3 +5013,45 @@ loading of one spec per session are kept.
   write); the data inventory names `content.delete` beside the co-author events as holding a staff `User.id`; and
   the wording of this entry, of `PROGRESS.md` and of the cookie parser's comments was brought in line with the
   publishing rule above.
+
+### D-118 · Security repairs, step 2: how uploaded packages and files are read
+- **Context:** The second step of the repairs D-117 describes. It concerns the paths that take a file from an
+  author: the package import, the multipart reader and the SVG style rules. No spec changes: SEC-001, SEC-003 and
+  SEC-005 already require what follows.
+- **Decision — one reader for a package (SEC-005, SEC-003).** A package is read only through
+  `security/zipEntryGuard.ts` (yauzl, with its size validation): by the archive check, by the manifest reader, by
+  the library secret scan, and now also when Lumi unpacks it. `h5p/libraries/checkedPackageReading.ts` replaces the
+  two Lumi 10.0.4 functions that open a package themselves (`PackageImporter.extractPackage`, which is static, and
+  `PackageValidator.prototype.validateFileSizes`); Lumi goes on working on the unpacked folder. What is unpacked is
+  what was checked: the same entries under the same names (a backslash in an entry name is a folder separator, as
+  the archive check reads it), an entry must unpack to exactly the size it declares, the total limit is counted
+  while writing, and the file is closed afterwards whatever happens. An entry that cannot be read, or whose name
+  is at once a file and a folder of the package, is 400 `upload.archive.unreadable`; a failure of the disk or of
+  the temporary area stays a server error. Lumi's choice of entries is kept (`content/`, the library folders, `h5p.json`; no
+  file whose name starts with `.` or `_`), and an ordinary package unpacks to the same files as with Lumi's own
+  function (tested). `test/h5p/upstream/lumiPackageReading.test.ts` pins the two places where Lumi opens a package,
+  so a Lumi upgrade that adds a third fails there. Not chosen: a patch of Lumi's files in `node_modules` (not
+  reproducible), or a second check of the unpacked folder (it keeps two readers and checks late).
+- **Decision — every reader lets go of the package (SEC-005).** An entry is read only through `readEntryBytes` or
+  `openEntryStream`; a stream that fails is destroyed, so closing the package always frees the file. A refused or
+  failed import therefore leaves no open file and no upload folder (`test/http/packageImportOpenFiles.int.test.ts`).
+- **Decision — a package's file references follow the storage's name rule (SEC-005).** Lumi stores a file that the
+  package carries under the spelling of its reference in content.json. Such a reference must be a name
+  `assertSafeObjectName` accepts (no empty or `.` segment, no control character); otherwise the import answers 400
+  `upload.archive.unsafePath` before anything is unpacked. A reference to a file the package does not carry, a web
+  address and an empty reference are judged as before: nothing is stored for them. Not chosen: a `sanitizeFilename`
+  on the storages, which would rename authors' files silently and change the names D-092's guards compare. Both S3
+  stores also close the data they were handed when they refuse a name (`keyForUpload`).
+- **Decision — a broken upload is cleaned up at once (SEC-005).** When a multipart request fails part-way,
+  `readMultipart` stops the file being written before it waits for the write, then removes the folder and answers.
+  At start the server removes its own folders in the temporary area (`hvli-upload-*`, `hvl-svg-*`) that are more
+  than an hour old, which a run that was stopped in the middle of a request left behind
+  (`http/staleUploadFolders.ts`); no other folder is touched, and a failure there never stops the start.
+- **Decision — `url()` in SVG style text is found by a one-pass scanner (SEC-001).** `security/svg/cssUrlScan.ts`
+  replaces the single pattern in `svgRules.ts`. It reports exactly the functions the pattern reported (tested on
+  every text of up to five grammar pieces), so which style texts are kept, rewritten or refused does not change;
+  the time of `findCssViolation` and `neutraliseCss` now grows in step with the length of the text.
+- **Consequences:** Nothing changes for an ordinary package or picture. A package with a damaged or mis-declared
+  entry is answered with the "unreadable archive" message, and one whose content.json names a carried file with a
+  `./`, an empty segment or a control character with the "unsafe path" message. `lumiInternals.ts` now also loads
+  Lumi's `PackageImporter` and `PackageValidator`; a Lumi upgrade that moves them fails at start.
