@@ -1879,8 +1879,8 @@ Append one entry per session: date, session, what was done, gate output, and any
     `test/content/deleteRace.int.test.ts`, `test/support/pausePoints.ts`; tests added to `contentStorage.int.test.ts`.
   - Cookie-name matching (AUTH-003): `parseCookieHeader` trims only SP and HTAB, so a name with a stray leading
     Unicode space is not read as the session cookie; tests in `sessionCookies.test.ts`.
-  - D-117 added; the audit's `content.delete` action recorded in `docs/privacy/DATA-INVENTORY.md`; `TRACEABILITY.md`
-    and the spec site regenerated. Gate output:
+  - D-117 added; the audit log's `content.delete` action recorded in `docs/privacy/DATA-INVENTORY.md`;
+    `TRACEABILITY.md` and the spec site regenerated. Gate output:
 
   ```
   $ npm run typecheck                                  exit 0
@@ -1892,6 +1892,27 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (CREATEROLE), the seccomp PDF sandbox, or a free port — environment limits of this audit
       container, unrelated to the change (DATA-010, MAPPE-004, NFR-002); they pass in CI's provisioned environment
   ```
+- **2026-11-20 · Security repairs, re-check of step 1 (D-117 amendment)** — Step 1's two commits were read again
+  line by line and their tests re-run (`deleteRace.int.test.ts`, `saveRace.int.test.ts`,
+  `contentStorage.int.test.ts`, `sessionCookies.test.ts`: 31 tests pass). The ownership and delete change stands as
+  it is. Changed:
+  - Cookie parser (AUTH-003): the trim of SP and HTAB around a pair is one pass over the pair (two index walks, no
+    regular expression), so reading a Cookie header takes time in step with its length. New test `[AUTH-003] reads a
+    pair in linear time, however long its run of spaces`; it fails on the earlier code and passes now. Which
+    cookies are read and written is unchanged.
+  - Wording: the cookie parser's comments, D-117 and the step-1 entry above now state the rule and its requirement
+    ID only, as D-117 prescribes; D-117's sentence on which callers pass an ID is corrected (Lumi's second write of
+    one save also passes the ID of the row that save has just written); `docs/privacy/DATA-INVENTORY.md` names
+    `content.delete` beside the co-author events as holding a staff `User.id`. Spec site regenerated;
+    `TRACEABILITY.md` is unchanged. Gate output:
 
-  Not in this step (left for later steps and the owner's checklist): AUD-223 (reproduces only in the full upload
-  path, so it is repaired with AUD-202), and every finding that needs a product or deployment decision.
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npx vitest run --project server                    26386 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```

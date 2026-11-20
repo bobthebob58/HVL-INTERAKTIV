@@ -4994,15 +4994,22 @@ loading of one spec per session are kept.
   - **A saved activity never changes owner, and a save cannot resurrect a deleted one.** `PrismaContentStorage.addContent`
     sets `ownerUserId` only on the path that creates a row (no ID given). With an ID it updates the existing row
     through `contentUpdate.ts` and answers 404 `content-not-found` when there is none, instead of re-creating it
-    under the saver (H5P-006). Every caller that creates passes no ID; only the editor's save of an existing
-    activity passes one.
+    under the saver (H5P-006). Every caller that creates passes no ID. An ID comes with the editor's save of an
+    existing activity, and with the second write Lumi makes inside one save when it has moved files
+    (`ContentStorer.addOrUpdateContent`): that write names the row the same save has just written, for a new
+    activity and for a copy alike, so the row exists in every case.
   - **A delete runs under the activity's write lock and is audited.** `ContentDeleter` (built with the save gate in
     `contentRouteGuards.ts`) holds the same `ContentWriteLock` as save and publish (D-074), so a delete and a save of
     one activity no longer interleave, and writes one `content.delete` audit event (actor, owner's `User.id`, the
     status it had; no title, DATA-007). The new audit action is added to the data inventory.
   - **Cookie names are matched byte for byte.** `parseCookieHeader` trims only SP and HTAB around a pair, not every
-    Unicode space, so a name with a leading U+00A0 set from a neighbouring host is no longer read as the session
-    cookie (AUTH-003). The written cookies are unchanged.
+    Unicode space, so a name that differs from a cookie's name by another space character is a different name and
+    is ignored (AUTH-003). The trim is one pass over the pair, so parsing takes time in step with the header's
+    length. The written cookies are unchanged.
 - **No spec change.** These restore behaviour the specs already require (H5P-006's permission matrix, AUTH-003's
-  cookie rules); they are repairs, not new features. Findings that need a product or configuration decision, or that
-  reproduce only in the full upload path or the deployed setup, are left for later steps and the owner's checklist.
+  cookie rules); they are repairs, not new features. Later steps are logged in `PROGRESS.md` when they are made.
+- **Amendment (2026-11-20, the re-check of the first step):** the cookie trim is one pass over the pair, and a test
+  holds its time to the header's length; the sentence on which callers pass an ID is corrected (Lumi's second
+  write); the data inventory names `content.delete` beside the co-author events as holding a staff `User.id`; and
+  the wording of this entry, of `PROGRESS.md` and of the cookie parser's comments was brought in line with the
+  publishing rule above.

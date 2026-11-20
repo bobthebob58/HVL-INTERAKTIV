@@ -11709,20 +11709,27 @@ One commit per repair; a new behaviour gets a test that fails before the change 
 <li><strong>A saved activity never changes owner, and a save cannot resurrect a deleted one.</strong> <code>PrismaContentStorage.addContent</code>
 sets <code>ownerUserId</code> only on the path that creates a row (no ID given). With an ID it updates the existing row
 through <code>contentUpdate.ts</code> and answers 404 <code>content-not-found</code> when there is none, instead of re-creating it
-under the saver (H5P-006). Every caller that creates passes no ID; only the editor&#39;s save of an existing
-activity passes one.</li>
+under the saver (H5P-006). Every caller that creates passes no ID. An ID comes with the editor&#39;s save of an
+existing activity, and with the second write Lumi makes inside one save when it has moved files
+(<code>ContentStorer.addOrUpdateContent</code>): that write names the row the same save has just written, for a new
+activity and for a copy alike, so the row exists in every case.</li>
 <li><strong>A delete runs under the activity&#39;s write lock and is audited.</strong> <code>ContentDeleter</code> (built with the save gate in
 <code>contentRouteGuards.ts</code>) holds the same <code>ContentWriteLock</code> as save and publish (D-074), so a delete and a save of
 one activity no longer interleave, and writes one <code>content.delete</code> audit event (actor, owner&#39;s <code>User.id</code>, the
 status it had; no title, DATA-007). The new audit action is added to the data inventory.</li>
 <li><strong>Cookie names are matched byte for byte.</strong> <code>parseCookieHeader</code> trims only SP and HTAB around a pair, not every
-Unicode space, so a name with a leading U+00A0 set from a neighbouring host is no longer read as the session
-cookie (AUTH-003). The written cookies are unchanged.</li>
+Unicode space, so a name that differs from a cookie&#39;s name by another space character is a different name and
+is ignored (AUTH-003). The trim is one pass over the pair, so parsing takes time in step with the header&#39;s
+length. The written cookies are unchanged.</li>
 </ul>
 </li>
 <li><strong>No spec change.</strong> These restore behaviour the specs already require (H5P-006&#39;s permission matrix, AUTH-003&#39;s
-cookie rules); they are repairs, not new features. Findings that need a product or configuration decision, or that
-reproduce only in the full upload path or the deployed setup, are left for later steps and the owner&#39;s checklist.</li>
+cookie rules); they are repairs, not new features. Later steps are logged in <code>PROGRESS.md</code> when they are made.</li>
+<li><strong>Amendment (2026-11-20, the re-check of the first step):</strong> the cookie trim is one pass over the pair, and a test
+holds its time to the header&#39;s length; the sentence on which callers pass an ID is corrected (Lumi&#39;s second
+write); the data inventory names <code>content.delete</code> beside the co-author events as holding a staff <code>User.id</code>; and
+the wording of this entry, of <code>PROGRESS.md</code> and of the cookie parser&#39;s comments was brought in line with the
+publishing rule above.</li>
 </ul>
 
 </section>
@@ -13718,8 +13725,8 @@ event. New files <code>h5p/storage/contentUpdate.ts</code>, <code>content/Conten
 <code>test/content/deleteRace.int.test.ts</code>, <code>test/support/pausePoints.ts</code>; tests added to <code>contentStorage.int.test.ts</code>.</li>
 <li>Cookie-name matching (AUTH-003): <code>parseCookieHeader</code> trims only SP and HTAB, so a name with a stray leading
 Unicode space is not read as the session cookie; tests in <code>sessionCookies.test.ts</code>.</li>
-<li>D-117 added; the audit&#39;s <code>content.delete</code> action recorded in <code>docs/privacy/DATA-INVENTORY.md</code>; <code>TRACEABILITY.md</code>
-and the spec site regenerated. Gate output:</li>
+<li>D-117 added; the audit log&#39;s <code>content.delete</code> action recorded in <code>docs/privacy/DATA-INVENTORY.md</code>;
+<code>TRACEABILITY.md</code> and the spec site regenerated. Gate output:</li>
 </ul>
 <pre class="code" tabindex="0" role="region" aria-label="Code 20, Session log"><code>$ npm run typecheck                                  exit 0
 $ npm run lint &amp;&amp; npm run format:check               exit 0
@@ -13729,8 +13736,29 @@ $ npm run spec:trace -- --check --done-through=S6    exit 0 (after regenerating 
 $ npx vitest run --project server                    26385 passed, 31 skipped; 2 failed in 5 files that need a
     privileged database (CREATEROLE), the seccomp PDF sandbox, or a free port — environment limits of this audit
     container, unrelated to the change (DATA-010, MAPPE-004, NFR-002); they pass in CI's provisioned environment</code></pre>
-<p>Not in this step (left for later steps and the owner&#39;s checklist): AUD-223 (reproduces only in the full upload
-path, so it is repaired with AUD-202), and every finding that needs a product or deployment decision.</p>
+</li>
+<li><p><strong>2026-11-20 · Security repairs, re-check of step 1 (D-117 amendment)</strong> — Step 1&#39;s two commits were read again
+line by line and their tests re-run (<code>deleteRace.int.test.ts</code>, <code>saveRace.int.test.ts</code>,
+<code>contentStorage.int.test.ts</code>, <code>sessionCookies.test.ts</code>: 31 tests pass). The ownership and delete change stands as
+it is. Changed:</p>
+<ul>
+<li>Cookie parser (AUTH-003): the trim of SP and HTAB around a pair is one pass over the pair (two index walks, no
+regular expression), so reading a Cookie header takes time in step with its length. New test <code>[AUTH-003] reads a pair in linear time, however long its run of spaces</code>; it fails on the earlier code and passes now. Which
+cookies are read and written is unchanged.</li>
+<li>Wording: the cookie parser&#39;s comments, D-117 and the step-1 entry above now state the rule and its requirement
+ID only, as D-117 prescribes; D-117&#39;s sentence on which callers pass an ID is corrected (Lumi&#39;s second write of
+one save also passes the ID of the row that save has just written); <code>docs/privacy/DATA-INVENTORY.md</code> names
+<code>content.delete</code> beside the co-author events as holding a staff <code>User.id</code>. Spec site regenerated;
+<code>TRACEABILITY.md</code> is unchanged. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 21, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run doc:lint                                   11 checks passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npx vitest run --project server                    26386 passed, 31 skipped; 2 failed in 5 files, the same
+    five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+    unrelated to the change; DATA-010, MAPPE-004, NFR-002)</code></pre>
 </li>
 </ul>
 
