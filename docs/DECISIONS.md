@@ -5164,3 +5164,28 @@ loading of one spec per session are kept.
   (`hvli:xapi-day:<userId>:<contentId>`, a number, 24 hours), listed in `docs/privacy/DATA-INVENTORY.md`. A view of
   an older version no longer lists a question that fewer than *k* learners answered; its cells were suppressed
   already.
+
+### D-122 · Security repairs, step 6: one insight view reads at most 200 000 stored statements
+- **Context:** INS-001 to INS-005 are counted in the server from the stored rows of one activity, version, context
+  and period (D-106), and INS-009's CSV is the same view. The read was one query for every row of the scope,
+  whatever their number. No spec change.
+- **Decision — a view covers at most 200 000 stored statements (INS-001, INS-009).**
+  `insight/data/readInsightStatements.ts` first asks the database whether the scope holds more than
+  `INSIGHT_READ_LIMITS.maxStatements` rows, in time order on the `[contentId, contextId, timestamp]` index and
+  without a row leaving the database. A scope that does is refused (`InsightScopeError`, `viewTooLarge`). The
+  number: a course of 1 000 students who each do a 50-question activity three times stores about 150 000.
+- **Decision — below the limit the rows are read in pages.** 10 000 rows at a time, each page starting after the
+  last row of the one before by the order's own columns (`timestamp`, then `id`), and made into the aggregators'
+  statements as they arrive, so the server never holds more than one page of stored rows. The numbering of
+  learners and page loads continues across pages, so the view is the same as from one read.
+- **Decision — the API answers 422 `insight.viewTooLarge`, and the tab says what to do.** A status of its own, so
+  the web app can tell this refusal from a query the activity cannot answer (400). The Innsikt tab shows «Denne
+  perioden har for mange svar til at innsikta kan visast samla. Vel ein kortare periode …» as an alert and keeps
+  the period, version and course choices, also when the first view is the one refused. The view and the CSV export
+  share the answer. A refused view is not audited, like the other refusals: nothing was shown.
+- **Measured (2026-11-20, the development container):** a view of exactly 200 000 statements of 1 000 learners
+  took about 1 second and about 100 MB of heap above the idle server, and completes with Node's old-space limit
+  at 128 MB; refusing a scope of 2 000 000 statements took about 50 ms and no measurable memory.
+- **Consequences:** Nothing changes for a view within the limit. A period over it shows no view until a shorter
+  one is chosen. The contract documents 422 for `getInsight` and `exportInsightCsv`. New texts in nn, nb and en:
+  `insight.viewTooLarge` (server) and `insight.tooLarge` (web).
