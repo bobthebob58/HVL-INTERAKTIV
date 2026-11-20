@@ -107,6 +107,16 @@ describe('[SEC-005] unpacking a package with the reader that checked it', () => 
     if (canListOpenFiles) expect(openFilesUnder('.h5p')).toEqual([]);
   });
 
+  it('[SEC-005] a name that is a file and a folder in one package stops the unpacking as unreadable', async () => {
+    const clash = { 'content/x/y.txt': 'in the folder', 'content/x': 'the file' };
+    const reversed = { 'content/z': 'the file', 'content/z/y.txt': 'in the folder' };
+    for (const files of [clash, reversed]) {
+      const unpacking = extractCheckedPackage(await buildH5pPackage({ main: MC, files }), target(), ALL);
+      await expect(unpacking).rejects.toMatchObject({ messageKey: 'upload.archive.unreadable' });
+    }
+    if (canListOpenFiles) expect(openFilesUnder('.h5p')).toEqual([]);
+  });
+
   it('[SEC-005] never writes more bytes in all than the total limit', async () => {
     // Arrange
     const files = { 'content/a.txt': 'a'.repeat(600), 'content/b.txt': 'b'.repeat(600) };

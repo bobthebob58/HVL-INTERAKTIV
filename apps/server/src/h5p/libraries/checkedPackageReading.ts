@@ -14,7 +14,8 @@
  *     no directory entries and no file whose base name starts with `.` or `_`.
  *   - Nothing is written outside the target folder, and never more bytes in all than `DEFAULT_ZIP_LIMITS` allows.
  *   - The package file is closed, and a half-written file's streams destroyed, when unpacking ends or fails.
- *   - An entry that cannot be read is 400 `upload.archive.unreadable`.
+ *   - An entry that cannot be read, or whose name is at once a file and a folder of the package, is 400
+ *     `upload.archive.unreadable`; a failure of the disk or the temporary area stays a server error.
  *   - `useCheckedPackageReading` replaces `PackageImporter.extractPackage` and
  *     `PackageValidator.prototype.validateFileSizes`, the only places where Lumi opens a package
  *     (test/h5p/upstream/lumiPackageReading.test.ts fails when an upgrade adds another).
@@ -59,6 +60,17 @@ function isWanted(name: string, parts: PackageParts): boolean {
   return name === 'h5p.json' && parts.includeMetadata === true;
 }
 
+const NAME_CLASHES: ReadonlySet<string> = new Set(['EISDIR', 'ENOTDIR', 'EEXIST']);
+
+/** What a failure while writing one entry is answered with. */
+function asAnswer(error: unknown): unknown {
+  if (error instanceof ZipRejectedError) return error;
+  const { code, syscall } = error as NodeJS.ErrnoException;
+  // WHY: a full or failing temporary area is the server's fault, not the package's; it stays a server error.
+  if (typeof syscall === 'string' && !NAME_CLASHES.has(code ?? '')) return error;
+  return new ZipRejectedError('upload.archive.unreadable');
+}
+
 /**
  * Unpacks the wanted parts of a package into a folder, with the reader of the archive check.
  * @param packagePath - The .h5p file.
@@ -93,13 +105,13 @@ export async function extractCheckedPackage(
           done(new ZipRejectedError('upload.archive.totalTooLarge', { maxMb: maxTotal / MB }));
         },
       });
-      await mkdir(dirname(target), { recursive: true });
-      // WHY: pipeline destroys every stream when one fails, which also releases the reader's hold on the file.
-      await pipeline(await openEntryStream(zip, entry), meter, createWriteStream(target)).catch(
-        (error: unknown) => {
-          throw error instanceof ZipRejectedError ? error : new ZipRejectedError('upload.archive.unreadable');
-        },
-      );
+      try {
+        await mkdir(dirname(target), { recursive: true });
+        // WHY: pipeline destroys every stream when one fails, which also releases the reader's hold on the file.
+        await pipeline(await openEntryStream(zip, entry), meter, createWriteStream(target));
+      } catch (error) {
+        throw asAnswer(error);
+      }
     }
   } finally {
     zip.close();
