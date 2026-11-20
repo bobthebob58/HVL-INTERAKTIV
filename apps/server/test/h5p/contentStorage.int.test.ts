@@ -3,6 +3,7 @@
  *
  * Spec: H5P-004, SEC-005
  */
+import { setTimeout as delay } from 'node:timers/promises';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import type { IContentMetadata, IUser } from '@lumieducation/h5p-server';
 import type { S3Client } from '@aws-sdk/client-s3';
@@ -70,6 +71,39 @@ describeWithServices('[H5P-004] content storage on PostgreSQL and S3', () => {
     expect(await content.getParameters(id)).toEqual({ question: 'Kvifor?' });
     expect(await content.listContent(author)).toContain(id);
     expect(await content.contentExists('not-a-uuid')).toBe(false);
+  });
+
+  it('[H5P-006] an update keeps the owner, whoever saves, and moves `updatedAt`', async () => {
+    // Arrange
+    const id = await content.addContent(metadata('H5P.Blanks', []), { text: 'a' }, author);
+    const before = await db.h5PContent.findUniqueOrThrow({ where: { id } });
+    const other = await db.user.create({ data: { kind: 'staff' } });
+    await delay(5);
+    // Act
+    await content.addContent(metadata('H5P.Blanks', []), { text: 'b' }, { ...author, id: other.id }, id);
+    // Assert
+    const after = await db.h5PContent.findUniqueOrThrow({ where: { id } });
+    expect(after).toMatchObject({ ownerUserId: author.id, params: { text: 'b' }, version: before.version });
+    expect(after.updatedAt.getTime()).toBeGreaterThan(before.updatedAt.getTime());
+    await db.user.delete({ where: { id: other.id } });
+  });
+
+  it('[H5P-006] a save to the ID of a deleted activity is "not found" and creates nothing', async () => {
+    // Arrange
+    const id = await content.addContent(metadata('H5P.Blanks', []), { text: 'a' }, author);
+    await content.deleteContent(id);
+    const other = await db.user.create({ data: { kind: 'staff' } });
+    // Act
+    const saving = content.addContent(
+      metadata('H5P.Blanks', []),
+      { text: 'b' },
+      { ...author, id: other.id },
+      id,
+    );
+    // Assert
+    await expect(saving).rejects.toMatchObject({ httpStatusCode: 404 });
+    expect(await db.h5PContent.count({ where: { id } })).toBe(0);
+    await db.user.delete({ where: { id: other.id } });
   });
 
   it('[H5P-004] keeps files in S3, with a range read and a file list in the database', async () => {

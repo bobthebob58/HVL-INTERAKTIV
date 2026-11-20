@@ -11694,6 +11694,36 @@ probe and C4 gained the scan. Line references into files that pull request #21 c
 2026-11-06), and pull request #21&#39;s changes have passed GitHub CI, the full local test run and the Docker smoke, not
 the whole local gate. This amendment changes no app code, test, spec or CI file, and the pack&#39;s caveats stand.</li>
 </ul>
+<h3 id="decisions--d-117--repairing-the-security-audits-findings-in-small-steps-and-the-behaviour-changes-of-the-first-step" tabindex="-1">D-117 · Repairing the security audit&#39;s findings in small steps, and the behaviour changes of the first step</h3>
+<ul>
+<li><strong>Context:</strong> The three-sitting security audit (sitting 1 read the code, sitting 2 attacked a running local copy)
+produced a private register of findings. Sitting 3 repairs them, highest value first, each as a small change with
+a test that proves the rule now holds. The repository is public, so the fixes themselves become public; the tool
+is pre-pilot, with no real students, and the bugs are already in the public code, so closing them in the open is a
+net improvement. The findings&#39; own exploit detail stays in the owner&#39;s private papers, never in the repository.</li>
+<li><strong>Decision — how repairs are published:</strong> public text (commit messages, test titles, comments, this log,
+<code>PROGRESS.md</code>) states the rule the code now enforces and the requirement ID, never how to find, trigger or exploit
+what was wrong, and never a finding that is not yet fixed. The private register maps each commit to its finding.
+One commit per repair; a new behaviour gets a test that fails before the change and passes after it.</li>
+<li><strong>Decision — the first step&#39;s behaviour changes:</strong><ul>
+<li><strong>A saved activity never changes owner, and a save cannot resurrect a deleted one.</strong> <code>PrismaContentStorage.addContent</code>
+sets <code>ownerUserId</code> only on the path that creates a row (no ID given). With an ID it updates the existing row
+through <code>contentUpdate.ts</code> and answers 404 <code>content-not-found</code> when there is none, instead of re-creating it
+under the saver (H5P-006). Every caller that creates passes no ID; only the editor&#39;s save of an existing
+activity passes one.</li>
+<li><strong>A delete runs under the activity&#39;s write lock and is audited.</strong> <code>ContentDeleter</code> (built with the save gate in
+<code>contentRouteGuards.ts</code>) holds the same <code>ContentWriteLock</code> as save and publish (D-074), so a delete and a save of
+one activity no longer interleave, and writes one <code>content.delete</code> audit event (actor, owner&#39;s <code>User.id</code>, the
+status it had; no title, DATA-007). The new audit action is added to the data inventory.</li>
+<li><strong>Cookie names are matched byte for byte.</strong> <code>parseCookieHeader</code> trims only SP and HTAB around a pair, not every
+Unicode space, so a name with a leading U+00A0 set from a neighbouring host is no longer read as the session
+cookie (AUTH-003). The written cookies are unchanged.</li>
+</ul>
+</li>
+<li><strong>No spec change.</strong> These restore behaviour the specs already require (H5P-006&#39;s permission matrix, AUTH-003&#39;s
+cookie rules); they are repairs, not new features. Findings that need a product or configuration decision, or that
+reproduce only in the full upload path or the deployed setup, are left for later steps and the owner&#39;s checklist.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -13677,6 +13707,30 @@ range (<code>npm update mongoose</code>): mongoose 9.11.3 to 9.12.1, mongodb 7.7
 <code>docs/assurance/sbom.cdx.json</code> is regenerated. Checked locally: <code>check:audit</code>, <code>check:pins</code>, <code>check:licences</code>,
 <code>npm run sbom -- --check</code>, the <code>tools/sbom</code> and <code>tools/dependency-check</code> tests (51), and the LTI test folder
 against the local services (58 files, 393 tests). No app code or test changed.</p>
+</li>
+<li><p><strong>2026-11-20 · Security repairs, step 1 (D-117)</strong> — First small step of the audit repairs, two fixes, each with a
+regression test that fails before the change and passes after:</p>
+<ul>
+<li>Ownership and delete ordering (H5P-006, PROD-007, DATA-007): <code>PrismaContentStorage.addContent</code> is update-only
+when given an ID (404 when the row is gone, never a new row under the saver); a new <code>ContentDeleter</code>
+(<code>contentRouteGuards.ts</code>) runs the delete under the activity&#39;s write lock and writes a <code>content.delete</code> audit
+event. New files <code>h5p/storage/contentUpdate.ts</code>, <code>content/ContentDeleter.ts</code>, <code>content/contentRouteGuards.ts</code>,
+<code>test/content/deleteRace.int.test.ts</code>, <code>test/support/pausePoints.ts</code>; tests added to <code>contentStorage.int.test.ts</code>.</li>
+<li>Cookie-name matching (AUTH-003): <code>parseCookieHeader</code> trims only SP and HTAB, so a name with a stray leading
+Unicode space is not read as the session cookie; tests in <code>sessionCookies.test.ts</code>.</li>
+<li>D-117 added; the audit&#39;s <code>content.delete</code> action recorded in <code>docs/privacy/DATA-INVENTORY.md</code>; <code>TRACEABILITY.md</code>
+and the spec site regenerated. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 20, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run doc:lint                                   11 checks passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (after regenerating TRACEABILITY.md)
+$ npx vitest run --project server                    26385 passed, 31 skipped; 2 failed in 5 files that need a
+    privileged database (CREATEROLE), the seccomp PDF sandbox, or a free port — environment limits of this audit
+    container, unrelated to the change (DATA-010, MAPPE-004, NFR-002); they pass in CI's provisioned environment</code></pre>
+<p>Not in this step (left for later steps and the owner&#39;s checklist): AUD-223 (reproduces only in the full upload
+path, so it is repaired with AUD-202), and every finding that needs a product or deployment decision.</p>
 </li>
 </ul>
 

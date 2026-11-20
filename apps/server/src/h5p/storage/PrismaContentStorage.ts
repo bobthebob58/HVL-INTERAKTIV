@@ -10,10 +10,12 @@
  *   - IDs that are not UUIDs, and file names no stored file can have (./storableFileName.ts), are "not found"
  *     without reaching the database.
  *   - Every row `addContent` creates is reported to ./contentCreations.ts, so a failed duplicate can remove it.
+ *   - `addContent` creates a row, and sets its owner, only when it is called without an ID. With an ID it updates
+ *     the existing row through ./contentUpdate.ts and answers "not found" when there is none (H5P-006, D-117).
  *   - The first update of an activity whose editor save resets learner state (./learnerStateResetWrite.ts) writes
  *     the parameters, raises `version` and deletes every state row of the activity in one transaction (D-093).
  * Collaborators: ./S3ContentFileStore.ts, ./storableFileName.ts, ./contentUsage.ts, ./contentCreations.ts,
- *   ./learnerStateResetWrite.ts, ../../infra/prismaClient.ts, H5PEditor (S2).
+ *   ./contentUpdate.ts, ../../infra/prismaClient.ts, H5PEditor (S2).
  * Tests: apps/server/test/h5p/contentStorage.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/safeEditingFailures.int.test.ts
  */
@@ -30,8 +32,8 @@ import {
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { Database } from '../../infra/prismaClient.js';
 import { noteContentCreated } from './contentCreations.js';
+import { updateStoredContent } from './contentUpdate.js';
 import { countLibraryUsage } from './contentUsage.js';
-import { claimLearnerStateReset } from './learnerStateResetWrite.js';
 import type { S3ContentFileStore } from './S3ContentFileStore.js';
 import { isStorableFileName } from './storableFileName.js';
 import { assertStorableText } from './storableText.js';
@@ -72,18 +74,9 @@ export class PrismaContentStorage implements IContentStorage {
       noteContentCreated(created.id);
       return created.id;
     }
-    if (!isContentUuid(contentId))
+    // SECURITY: with an ID this only updates. An ID with no row is "not found", never a new row (D-117).
+    if (!isContentUuid(contentId) || !(await updateStoredContent(this.db, contentId, data)))
       throw new H5pError('storage-file-implementations:content-not-found', { contentId }, 404);
-    const reset = claimLearnerStateReset(contentId);
-    const write = this.db.h5PContent.upsert({
-      where: { id: contentId },
-      // WHY: the version raise is part of the row update, so its lock comes first, as a state write expects (D-093).
-      update: reset ? { ...data, version: { increment: 1 } } : data,
-      create: { id: contentId, ...data, ownerUserId: user.id },
-    });
-    // WHY: a structural save's reset commits with its parameters or not at all (D-093 amendment, S5 review).
-    if (reset) await this.db.$transaction([write, this.db.h5PUserData.deleteMany({ where: { contentId } })]);
-    else await write;
     return contentId;
   }
 

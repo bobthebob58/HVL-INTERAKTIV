@@ -17,7 +17,8 @@
  *     session with CSRF); the editor's file grants are checked before it, inside the H5P router (D-058).
  *   - `X-Powered-By` is off; every response gets `X-Request-Id`, `nosniff`, `no-referrer`, and HSTS over https.
  *   - The findings API, the publish API and the save gate of `/h5p` share one validator and one Redis write lock
- *     (D-074); the gate reads what the editor will store; `/api/docs` is mounted only when NODE_ENV is not production (D-077).
+ *     (D-074), and the delete of `/h5p` holds that lock too (D-117); the gate reads what the editor will store;
+ *     `/api/docs` is mounted only when NODE_ENV is not production (D-077).
  *   - The studio's services are built once, from the same activity facts, identity hasher and publish flow as the
  *     S4 routes, and are returned so main.ts can close them at shutdown.
  *   - The xAPI ingestion (`POST /api/h5p/xapi`) shares the activity facts; its listener of stored rows is the input
@@ -28,7 +29,7 @@
  *   - Insight reads the H5P content store, the NRPS learner counts and *k* (`MIN_GROUP_SIZE`, INS-006).
  * Collaborators: ../lti/ltiRoutes.ts, ./feideLoginWiring.ts, ../auth/requestPrincipal.ts,
  *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/apiRouter.ts,
- *   ../content/PublishedSaveGate.ts, ../content/ContentWriteLock.ts, ../content/savedForm.ts, ../web/webRoutes.ts,
+ *   ../content/contentRouteGuards.ts, ../content/ContentWriteLock.ts, ../web/webRoutes.ts,
  *   ../web/chromeRedirect.ts, ../http/pages/helpLink.ts, ./healthRoutes.ts, ./studioServices.ts, ./main.ts,
  *   ./gradeBridgeApi.ts, ../insight/http/insightApi.ts, ../http/requestLog.ts (NFR-006), ../http/filesOriginRouter.ts.
  * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
@@ -40,10 +41,9 @@ import { requestPrincipal } from '../auth/requestPrincipal.js';
 import { portalSessionMiddleware } from '../auth/session/portalSessionMiddleware.js';
 import { SessionStore } from '../auth/session/SessionStore.js';
 import type { Env } from '../config/env.js';
+import { contentRouteGuards } from '../content/contentRouteGuards.js';
 import { RedisContentWriteLock } from '../content/ContentWriteLock.js';
-import { PublishedSaveGate } from '../content/PublishedSaveGate.js';
 import type { PublishingDeps } from '../content/publishingDeps.js';
-import { editorSavedForm } from '../content/savedForm.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import { PrismaContentAccessRepository } from '../h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../http/api/apiRouter.js';
@@ -148,9 +148,9 @@ export function createApp(inputs: AppInputs): App {
     writeLock: new RedisContentWriteLock(redis),
   };
   const studio = createStudioServices({ ...inputs, access, hasher, publishing });
-  // WHY: the content routes inside the H5P router run the same publish gate on saves of published activities.
-  const saveGate = new PublishedSaveGate(publishing, editorSavedForm(inputs.h5p.editor.libraryManager));
-  const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, saveGate, duplicator: studio.duplicator };
+  // WHY: the content routes inside the H5P router run the same publish gate and hold the same lock (D-074, D-117).
+  const guards = contentRouteGuards(publishing, inputs.h5p.editor);
+  const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, ...guards, duplicator: studio.duplicator };
   const gradeBridge = gradeBridgeApi({ access, db, redis, logger, onXapiStored: inputs.onXapiStored });
   const content = inputs.h5p.editor.contentStorage;
   const insight = insightApi({ db, redis, content, minGroupSize: env.MIN_GROUP_SIZE });

@@ -38,16 +38,20 @@
  *     duplicate route sends it, the editor's 4xx, 500 `hvl:duplicate-failed`).
  *   - The export is always a download (`attachment`, `nosniff`) named after the content ID, never a title, and
  *     the response ends only when Lumi's zip stream has been written completely.
+ *   - With a deleter (createApp always passes one), a delete by someone who may delete runs under the activity's
+ *     write lock and leaves an audit event; a save to an activity that is gone is 404 and creates nothing (D-117).
  * Collaborators: ../../h5p/HvlH5PEditor.ts, ../requestBodies.ts, Lumi's H5PAjaxEndpoint,
- *   ../../content/PublishedSaveGate.ts, ../../learningDesign/collaboration/ContentDuplicator.ts,
+ *   ../../content/PublishedSaveGate.ts, ../../content/ContentDeleter.ts,
+ *   ../../learningDesign/collaboration/ContentDuplicator.ts,
  *   ../../learningDesign/collaboration/CopyRateLimit.ts, ../../learningDesign/http/studioPrincipal.ts.
  * Tests: apps/server/test/http/contentSave.int.test.ts, apps/server/test/content/publishedSave.int.test.ts,
  *   apps/server/test/content/saveRace.int.test.ts, apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts,
- *   apps/server/test/learningDesign/safeEditing/saveAsCopy.int.test.ts
+ *   apps/server/test/learningDesign/safeEditing/saveAsCopy.int.test.ts, apps/server/test/content/deleteRace.int.test.ts
  */
 import { ContentPermission, type ContentParameters, type IContentMetadata } from '@lumieducation/h5p-server';
 import { finished } from 'node:stream/promises';
 import { Router, type RequestHandler } from 'express';
+import type { ContentDeletion } from '../../content/ContentDeleter.js';
 import type { ContentSaveGate } from '../../content/PublishedSaveGate.js';
 import { asAccountUser } from '../../h5p/HvlH5pUser.js';
 import type { ContentDuplicator } from '../../learningDesign/collaboration/ContentDuplicator.js';
@@ -96,6 +100,8 @@ export interface ContentRouteDeps extends H5pRouteDeps {
   readonly saveGate?: ContentSaveGate;
   /** Saves «Lagre som ny versjon» as a copy (createApp passes the studio's duplicator); absent, no copy route. */
   readonly duplicator?: Pick<ContentDuplicator, 'saveAsCopy'>;
+  /** Deletes under the write lock, with an audit event (D-117); absent in H5P-only tests. */
+  readonly deleter?: ContentDeletion;
 }
 
 /**
@@ -164,7 +170,15 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
   }
 
   router.delete('/content/:contentId', authorsOnly, async (req, res) => {
-    await deps.editor.deleteContent(pathParam(req, 'contentId'), asAccountUser(requireActor(res)));
+    const actor = requireActor(res);
+    const user = asAccountUser(actor);
+    const id = pathParam(req, 'contentId');
+    const remove = () => deps.editor.deleteContent(id, user);
+    // WHY: as for a save, only someone who may delete holds the lock; anyone else meets the editor's 403 or 404.
+    const locked =
+      deps.deleter !== undefined &&
+      (await deps.permissions.checkForContent(user, ContentPermission.Delete, id));
+    await (deps.deleter && locked ? deps.deleter.delete(id, actor.accountId, remove) : remove());
     res.status(204).end();
   });
 

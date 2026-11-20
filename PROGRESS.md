@@ -1870,3 +1870,28 @@ Append one entry per session: date, session, what was done, gate output, and any
   `docs/assurance/sbom.cdx.json` is regenerated. Checked locally: `check:audit`, `check:pins`, `check:licences`,
   `npm run sbom -- --check`, the `tools/sbom` and `tools/dependency-check` tests (51), and the LTI test folder
   against the local services (58 files, 393 tests). No app code or test changed.
+- **2026-11-20 · Security repairs, step 1 (D-117)** — First small step of the audit repairs, two fixes, each with a
+  regression test that fails before the change and passes after:
+  - Ownership and delete ordering (H5P-006, PROD-007, DATA-007): `PrismaContentStorage.addContent` is update-only
+    when given an ID (404 when the row is gone, never a new row under the saver); a new `ContentDeleter`
+    (`contentRouteGuards.ts`) runs the delete under the activity's write lock and writes a `content.delete` audit
+    event. New files `h5p/storage/contentUpdate.ts`, `content/ContentDeleter.ts`, `content/contentRouteGuards.ts`,
+    `test/content/deleteRace.int.test.ts`, `test/support/pausePoints.ts`; tests added to `contentStorage.int.test.ts`.
+  - Cookie-name matching (AUTH-003): `parseCookieHeader` trims only SP and HTAB, so a name with a stray leading
+    Unicode space is not read as the session cookie; tests in `sessionCookies.test.ts`.
+  - D-117 added; the audit's `content.delete` action recorded in `docs/privacy/DATA-INVENTORY.md`; `TRACEABILITY.md`
+    and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (after regenerating TRACEABILITY.md)
+  $ npx vitest run --project server                    26385 passed, 31 skipped; 2 failed in 5 files that need a
+      privileged database (CREATEROLE), the seccomp PDF sandbox, or a free port — environment limits of this audit
+      container, unrelated to the change (DATA-010, MAPPE-004, NFR-002); they pass in CI's provisioned environment
+  ```
+
+  Not in this step (left for later steps and the owner's checklist): AUD-223 (reproduces only in the full upload
+  path, so it is repaired with AUD-202), and every finding that needs a product or deployment decision.

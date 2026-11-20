@@ -4979,3 +4979,30 @@ loading of one spec per session are kept.
   #8, #18 and #21, the three with the app's code (the other 18 are Dependabot's), have no review (GitHub's API,
   2026-11-06), and pull request #21's changes have passed GitHub CI, the full local test run and the Docker smoke, not
   the whole local gate. This amendment changes no app code, test, spec or CI file, and the pack's caveats stand.
+
+### D-117 · Repairing the security audit's findings in small steps, and the behaviour changes of the first step
+- **Context:** The three-sitting security audit (sitting 1 read the code, sitting 2 attacked a running local copy)
+  produced a private register of findings. Sitting 3 repairs them, highest value first, each as a small change with
+  a test that proves the rule now holds. The repository is public, so the fixes themselves become public; the tool
+  is pre-pilot, with no real students, and the bugs are already in the public code, so closing them in the open is a
+  net improvement. The findings' own exploit detail stays in the owner's private papers, never in the repository.
+- **Decision — how repairs are published:** public text (commit messages, test titles, comments, this log,
+  `PROGRESS.md`) states the rule the code now enforces and the requirement ID, never how to find, trigger or exploit
+  what was wrong, and never a finding that is not yet fixed. The private register maps each commit to its finding.
+  One commit per repair; a new behaviour gets a test that fails before the change and passes after it.
+- **Decision — the first step's behaviour changes:**
+  - **A saved activity never changes owner, and a save cannot resurrect a deleted one.** `PrismaContentStorage.addContent`
+    sets `ownerUserId` only on the path that creates a row (no ID given). With an ID it updates the existing row
+    through `contentUpdate.ts` and answers 404 `content-not-found` when there is none, instead of re-creating it
+    under the saver (H5P-006). Every caller that creates passes no ID; only the editor's save of an existing
+    activity passes one.
+  - **A delete runs under the activity's write lock and is audited.** `ContentDeleter` (built with the save gate in
+    `contentRouteGuards.ts`) holds the same `ContentWriteLock` as save and publish (D-074), so a delete and a save of
+    one activity no longer interleave, and writes one `content.delete` audit event (actor, owner's `User.id`, the
+    status it had; no title, DATA-007). The new audit action is added to the data inventory.
+  - **Cookie names are matched byte for byte.** `parseCookieHeader` trims only SP and HTAB around a pair, not every
+    Unicode space, so a name with a leading U+00A0 set from a neighbouring host is no longer read as the session
+    cookie (AUTH-003). The written cookies are unchanged.
+- **No spec change.** These restore behaviour the specs already require (H5P-006's permission matrix, AUTH-003's
+  cookie rules); they are repairs, not new features. Findings that need a product or configuration decision, or that
+  reproduce only in the full upload path or the deployed setup, are left for later steps and the owner's checklist.
