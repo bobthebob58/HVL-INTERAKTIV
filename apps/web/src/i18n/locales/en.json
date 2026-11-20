@@ -537,6 +537,7 @@
     "intro": "Aggregated results from the activity, to prepare the next session. You see numbers for groups of students only, never who answered what.",
     "unavailable": "You do not have access to the insight for this activity.",
     "invalidQuery": "The version or course you chose does not exist for this activity. Choose again and press “Show insight”.",
+    "tooLarge": "This period holds too many answers to show the insight in one view. Choose a shorter period and press “Show insight”. If that does not help, contact an administrator.",
     "updated": "The insight is updated: {{scope}}",
     "scope": "Showing {{context}}, {{period}} (from {{start}}), version {{version}}.",
     "period": {

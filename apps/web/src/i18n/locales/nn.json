@@ -537,6 +537,7 @@
     "intro": "Samla resultat frå aktiviteten, til å førebu neste samling. Du ser berre tal for grupper av studentar, aldri kven som har svart kva.",
     "unavailable": "Du har ikkje tilgang til innsikta for denne aktiviteten.",
     "invalidQuery": "Versjonen eller emnet du valde, finst ikkje for aktiviteten. Vel på nytt og trykk «Vis innsikt».",
+    "tooLarge": "Denne perioden har for mange svar til at innsikta kan visast samla. Vel ein kortare periode og trykk «Vis innsikt». Hjelper ikkje det, ta kontakt med ein administrator.",
     "updated": "Innsikta er oppdatert: {{scope}}",
     "scope": "Viser {{context}}, {{period}} (frå {{start}}), versjon {{version}}.",
     "period": {

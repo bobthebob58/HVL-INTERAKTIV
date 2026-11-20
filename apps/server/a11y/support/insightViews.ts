@@ -14,7 +14,8 @@
  *   - Only `/api/content/<id>/insight`, `…/insight/contexts` and `…/insight/export` are answered; every other request
  *     reaches the real server.
  *   - Every view request gets the same answer, whatever period, context or version it asks for; a test that needs
- *     to know what was asked reads the request.
+ *     to know what was asked reads the request. The one exception is a period a test names as holding more answers
+ *     than one view covers: a view request for it is answered 422 `insight.viewTooLarge`, as the server does (D-122).
  * Collaborators: ./insightFixture.ts, ./pages.ts, ../../test/support/realWebApp.ts,
  *   ../../test/support/webAppTexts.ts, ../axeInsight.a11y.test.ts, ./dataTabViews.ts.
  * Tests: apps/server/a11y/axeInsight.a11y.test.ts, apps/server/a11y/keyboardJourneys.a11y.test.ts
@@ -36,20 +37,27 @@ const COURSE = { key: '0192f0c4-0000-7000-8000-0000000000a1:a11y-SYK110', label:
  * @param contentId - The activity.
  * @param viewContext - The context the view covers: the portal, or the launch's course.
  * @param period - The view's period: by default the last 7 days (./insightFixture.ts).
+ * @param tooLargePeriod - A period (`semester`, say) whose view is answered 422; none by default.
  */
 export async function routeInsight(
   context: BrowserContext,
   contentId: string,
   viewContext: { key: string; label: string | null },
   period: InsightViewPeriod = LAST_SEVEN_DAYS,
+  tooLargePeriod?: string,
 ): Promise<void> {
   await context.route(INSIGHT_ROUTE, (route) => {
-    const path = new URL(route.request().url()).pathname;
+    const url = new URL(route.request().url());
+    const path = url.pathname;
     if (path.endsWith('/contexts')) {
       return route.fulfill({ json: { contexts: [{ key: 'portal', label: null }, COURSE] } });
     }
     if (path.endsWith('/export')) {
       return route.fulfill({ contentType: 'text/csv', body: 'del;verdi\n' });
+    }
+    if (tooLargePeriod !== undefined && url.searchParams.get('period') === tooLargePeriod) {
+      const body = { success: false, errorCode: 'insight.viewTooLarge', httpStatusCode: 422, message: '' };
+      return route.fulfill({ status: 422, json: body });
     }
     return route.fulfill({ json: insightView(contentId, viewContext, period) });
   });
@@ -72,6 +80,7 @@ export async function showInsightTab(page: Page): Promise<void> {
  * @param context - A browser context with the author's session.
  * @param contentId - One of the author's activities.
  * @param period - The view's period: by default the last 7 days (./insightFixture.ts).
+ * @param tooLargePeriod - A period whose view is answered 422 when the test asks for it; none by default.
  * @returns The page with the tab shown.
  */
 export async function openPortalInsight(
@@ -79,8 +88,9 @@ export async function openPortalInsight(
   context: BrowserContext,
   contentId: string,
   period: InsightViewPeriod = LAST_SEVEN_DAYS,
+  tooLargePeriod?: string,
 ): Promise<Page> {
-  await routeInsight(context, contentId, { key: 'portal', label: null }, period);
+  await routeInsight(context, contentId, { key: 'portal', label: null }, period, tooLargePeriod);
   const page = await openActivityTab(context, app.base, contentId, 'play');
   await showInsightTab(page);
   return page;
