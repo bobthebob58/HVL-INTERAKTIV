@@ -7,11 +7,12 @@
 import { describe, it, expect, afterAll, vi } from 'vitest';
 import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { FileSanitizerResult } from '@lumieducation/h5p-server';
 import { SvgSanitizer } from '../../src/security/SvgSanitizer.js';
 import { LumiSvgSanitizer } from '../../src/h5p/lumiInternals.js';
 import { RejectedUploadError } from '../../src/security/RejectedUploadError.js';
+import { cleanSvgText } from '../../src/security/svg/svgPipeline.js';
 import { svgElementNames, svgProblems } from '../support/svgInertness.js';
 
 const fixtures = join(import.meta.dirname, '../fixtures/svg');
@@ -120,12 +121,12 @@ describe('[SEC-001] SvgSanitizer', () => {
     }
   });
 
-  it("[SEC-001] runs Lumi's sanitiser on a lower-case .svg copy, also for an upper-case upload (D-044)", async () => {
+  it("[SEC-001] the steps run Lumi's sanitiser on a lower-case .svg copy in the folder they are given (D-044)", async () => {
     const lumi = vi.spyOn(LumiSvgSanitizer.prototype, 'sanitize');
     try {
-      await sanitizer.sanitize(place('FIGUR.SVG', '<svg xmlns="http://www.w3.org/2000/svg"/>'));
-      expect(lumi).toHaveBeenCalledTimes(1);
-      expect(lumi.mock.calls[0]?.[0]).toMatch(/hvl-svg-[^/]+\/upload\.svg$/);
+      const folder = dirname(place('FIGUR.SVG', ''));
+      await cleanSvgText('<svg xmlns="http://www.w3.org/2000/svg"/>', folder);
+      expect(lumi.mock.calls.map(([path]) => path)).toEqual([join(folder, 'upload.svg')]);
       expect(await lumi.mock.results[0]?.value).toBe(FileSanitizerResult.Sanitized);
     } finally {
       lumi.mockRestore();

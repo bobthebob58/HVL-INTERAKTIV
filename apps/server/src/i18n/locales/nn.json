@@ -47,6 +47,8 @@
       "notAllowed": "Filtypen «.{{extension}}» er ikkje tillaten.",
       "typeMismatch": "Innhaldet i fila passar ikkje til filtypen «.{{extension}}».",
       "svgRejected": "SVG-fila kan ikkje brukast fordi ho inneheld definisjonar som kan vere skadelege.",
+      "svgTooComplex": "SVG-fila er for kompleks til at ho kan kontrollerast, så ho vart ikkje lagra. Gjer teikninga enklare, eller lagre ho som PNG.",
+      "svgCheckBusy": "SVG-fila kunne ikkje kontrollerast akkurat no, så ho vart ikkje lagra. Prøv igjen om litt.",
       "tooLarge": "Fila er større enn {{maxMb}} MB.",
       "malwareFound": "Viruskontrollen fann skadeleg innhald i fila, så ho vart ikkje lagra.",
       "scanUnavailable": "Fila kunne ikkje kontrollerast for virus akkurat no, så ho vart ikkje lagra. Prøv igjen om litt."

@@ -14,7 +14,7 @@ import {
   removeStaleUploadFolders,
   STALE_AFTER_MS,
 } from '../../src/http/staleUploadFolders.js';
-import { SVG_COPY_FOLDER_PREFIX } from '../../src/security/SvgSanitizer.js';
+import { SVG_COPY_FOLDER_PREFIX } from '../../src/security/svg/SvgCleaner.js';
 
 describe('[SEC-005] stale upload folders', () => {
   let dir: string;

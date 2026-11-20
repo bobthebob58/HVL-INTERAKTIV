@@ -21,7 +21,8 @@
  *   - The first log line names where the data lives (database and Redis hosts, the S3 region and endpoint host), for
  *     the deployment checklist; never a user, password, path or query (DATA-004, D-109 amendment).
  *   - A port that cannot be opened stops the start with exit code 1 instead of a process that serves nothing.
- *   - Upload folders an earlier run left in the temporary area are removed at start (../http/staleUploadFolders.ts).
+ *   - Upload folders an earlier run left in the temporary area are removed at start (../http/staleUploadFolders.ts),
+ *     and the SVG cleaning worker is started (../security/SvgSanitizer.ts, D-119).
  *   - SIGTERM and SIGINT stop the jobs, stop accepting connections, close the studio's services (the PDF export's
  *     browser, D-096), then the clients, even when a service fails to close; exit code 0, or 1 after such a failure.
  *   - The web app is loaded only when `WEB_APP` is not `off`; only its development server takes WebSocket upgrades,
@@ -58,6 +59,7 @@ import { LtiRecordCleanupJob } from '../lti/storage/LtiRecordCleanupJob.js';
 import { createLogger } from '../logging/logger.js';
 import { RetentionPurgeJob } from '../privacy/purge/RetentionPurgeJob.js';
 import { DataEncryption } from '../security/keys/DataEncryption.js';
+import { warmUpSvgCleaning } from '../security/SvgSanitizer.js';
 import { createContentValidator } from '../validation/validateContent.js';
 import { loadWebApp } from '../web/nextWebApp.js';
 import { webUpgrades } from '../web/webRoutes.js';
@@ -92,6 +94,8 @@ export async function startServer(env: Env, options: StartOptions = {}): Promise
   logger.info(deploymentLocations(env), 'deployment locations');
   // WHY: a run that was stopped mid-upload could not remove its folders in the temporary area (SEC-005, D-118).
   logger.info({ removed: await removeStaleUploadFolders() }, 'stale upload folders removed');
+  // WHY: the first SVG upload must not wait for the cleaning worker, and a worker that cannot start shows here.
+  warmUpSvgCleaning((err) => logger.warn({ err }, 'the SVG cleaning worker did not start (D-119)'));
   const db = createPrismaClient(env.DATABASE_URL);
   const redis = await connectRedis(env.REDIS_URL, logger);
   // WHY: the engine gets the H5P texts checked above, so `content/` is read once, also a test's folder (D-111).

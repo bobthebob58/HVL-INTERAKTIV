@@ -26,6 +26,11 @@ The server runs as `hvli` (uid and gid 10001) under `tini`, as `node --import ts
 volume there) and `apps/web/.next/cache`. The image's defaults are `NODE_ENV=production`, `WEB_APP=prod` and
 `PORT=3000`; everything else comes from the environment (`apps/server/.env.example`). No secret is in the image.
 
+**SVG uploads are cleaned in a worker thread of the server process (D-119).** It starts with the server; a log line
+`the SVG cleaning worker did not start` means SVG uploads will be refused until the cause is fixed. It adds about
+90 MB to the process while idle and up to 512 MB while it cleans one file, so count that when the container gets a
+memory limit. It needs no extra process, capability or volume, and writes only below `/tmp`.
+
 **Chromium's sandbox needs Playwright's seccomp profile and `CAP_SYS_CHROOT`.** The PDF export keeps Chromium's
 sandbox (D-096), and `PDF_ALLOW_NO_SANDBOX` is refused in production. Under Docker's default seccomp profile
 Chromium stops with "No usable sandbox!", so run the container with `deploy/seccomp/playwright-v1.56.1.seccomp`.

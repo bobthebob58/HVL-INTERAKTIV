@@ -583,6 +583,8 @@ loading of one spec per session are kept.
   references to them; a test pins all three losses. Our pass writes its result with XMLSerializer, and the final
   check parses it again as XML, as a browser does, and fails closed. Lumi's sanitiser alone does not stop every
   payload in our bypass test set; the layers together stop all of them.
+- **Amendment (2026-11-20, D-119):** the four steps are unchanged, but they now run in a worker thread with a time,
+  a memory and a waiting limit, never on the server's main thread.
 
 ### D-045 · Headers for user files; the separate files origin moves to S3/S6
 - **Context:** `SEC-004` asks for `nosniff`, a sandbox CSP for SVG and documents, and `attachment` for
@@ -5055,3 +5057,36 @@ loading of one spec per session are kept.
   entry is answered with the "unreadable archive" message, and one whose content.json names a carried file with a
   `./`, an empty segment or a control character with the "unsafe path" message. `lumiInternals.ts` now also loads
   Lumi's `PackageImporter` and `PackageValidator`; a Lumi upgrade that moves them fails at start.
+
+### D-119 · Security repairs, step 3: the SVG cleaning runs in a worker thread, within limits
+- **Context:** Making an uploaded SVG safe (D-044) parses the author's text into a document twice with the HTML
+  parser and once as XML. How long that takes, and how much memory it needs, depend on the text and not only on its
+  size, which D-044 limits to 5 MB. The server answers every request on one main thread, so the cleaning must not
+  run there, and it must end. SEC-001 is unchanged; this is how its sanitiser is run.
+- **Decision:** The steps (`security/svg/svgPipeline.ts`, the same four in the same order) run in one worker thread
+  (`svgCleaningWorker.ts`), started with the server and kept ready. `security/svg/SvgCleaner.ts` hands it one file
+  at a time and holds it to three limits (`SVG_CLEANING_LIMITS`):
+  - **Time: 5 seconds for one file** (the owner's choice, 2026-11-20). Past it the worker is stopped, the file is
+    refused with the new message `upload.file.svgTooComplex`, and the next file gets a new worker.
+  - **Memory: 512 MB of heap for the worker**, enforced by Node (`resourceLimits`). Past it the same happens.
+  - **Waiting: 20 seconds for a turn.** A file that waits longer is refused with the new message
+    `upload.file.svgCheckBusy` ("try again in a moment", like `upload.file.scanUnavailable`) and is never cleaned,
+    so requests cannot pile up behind a slow file. A worker that is not ready within 30 seconds is treated the same.
+  The folder of Lumi's temporary copy is made and removed by the main thread, after the worker has answered or has
+  stopped, so a stopped worker leaves nothing in the temporary area. The worker loads the TypeScript sources with
+  the server's own loader (tsx, named by its file), and is `unref`ed once it runs, so it never keeps a stopping
+  server alive. A worker that cannot start is logged at start (`the SVG cleaning worker did not start`); SVG
+  uploads are then refused or fail, never stored unchecked.
+- **Why limits on time and memory, and not on the file's shape:** a count of elements or of nesting depth, taken
+  from the text, does not bound the work, because the HTML parser decides what document a text becomes. Time and
+  memory bound it whatever the text holds, and the main thread is free meanwhile.
+- **Why a worker thread and not a separate program:** a thread can be stopped at once and its memory is limited by
+  the runtime; it ends with the server by itself, needs no extra capability in the hardened container, and no
+  second copy of the configuration. A separate program would add start-up, signals and orphans to look after.
+- **Consequences:** An ordinary SVG is cleaned exactly as before (tested: the worker's output equals the steps'
+  output in the calling thread, and every existing SVG test runs through the worker). A drawing that takes longer
+  than 5 seconds to clean is refused with a message that says what to do (simplify it, or save it as PNG); where
+  that point lies depends on the server's speed. One file is cleaned at a time, so many large SVGs sent at once
+  wait for each other, at most 20 seconds each. The server process uses about 90 MB more while the worker is idle
+  and up to 512 MB more while it cleans one file (`docs/ops/docker.md`). The folder prefix `hvl-svg-` now belongs
+  to `SvgCleaner.ts`; D-118's start-up sweep looks for it there.
