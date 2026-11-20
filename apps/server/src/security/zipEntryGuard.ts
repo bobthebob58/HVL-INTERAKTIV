@@ -13,10 +13,13 @@
  *   - So every name is in the one form Lumi writes it to disk (`path.join`), and later checks that match a
  *     name exactly (h5p.json, content/content.json, library.json) see the file Lumi will read.
  *   - Declared sizes are trustworthy for extraction because yauzl verifies them while unpacking.
+ *   - `readEntryBytes` ends or destroys the entry's stream before it settles, so `close()` always frees the file
+ *     (the reader keeps the file open while any entry stream is unfinished; D-118).
  * Collaborators: yauzl, ../i18n/translate.ts (message keys), ../h5p/H5pConfigFactory.ts (limits); the
  *   package import (../h5p/HvlH5PEditor.ts) calls it first; ../h5p/libraries/packageManifest.ts reuses the reader.
- * Tests: apps/server/test/security/zipEntryGuard.test.ts
+ * Tests: apps/server/test/security/zipEntryGuard.test.ts, apps/server/test/http/packageImportOpenFiles.int.test.ts
  */
+import type { Readable } from 'node:stream';
 import yauzl from 'yauzl';
 import type { MessageKey } from '../i18n/translate.js';
 import { MAX_FILE_SIZE, MAX_TOTAL_SIZE } from '../h5p/H5pConfigFactory.js';
@@ -148,6 +151,26 @@ export async function* readEntries(zip: yauzl.ZipFile): AsyncGenerator<yauzl.Ent
     if (next === null) return;
     yield next;
   }
+}
+
+/**
+ * Reads one entry into memory and lets go of it.
+ * @param zip - From `openZip`.
+ * @param entry - The entry; the caller has checked that its declared size may be held in memory.
+ * @returns The entry's bytes.
+ * @throws Error when the entry cannot be read. Its stream is destroyed first, so `zip.close()` frees the file.
+ */
+export function readEntryBytes(zip: yauzl.ZipFile, entry: yauzl.Entry): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    zip.openReadStream(entry, (error, stream?: Readable) => {
+      if (error || !stream) return reject(error ?? new Error('the entry has no data'));
+      const chunks: Buffer[] = [];
+      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+      // WHY: an entry stream that failed is not finished; only destroying it releases the reader's hold on the file.
+      stream.on('error', (cause: Error) => (stream.destroy(), reject(cause)));
+      stream.on('end', () => (stream.destroy(), resolve(Buffer.concat(chunks))));
+    });
+  });
 }
 
 // WHY: yauzl itself rejects some unsafe names ("invalid relative path", "absolute path"); report them as ours.

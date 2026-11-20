@@ -11,14 +11,14 @@
  *   - Only library folders are read (every top-level folder but `content/`): content is the author's data, never
  *     installed as code, and may quote anything (a programming course may show `API_KEY: "…"`).
  *   - SECURITY: the findings and the error name the library folder, the file and the variables, never a value.
+ *   - The package file is closed when the scan returns or throws, also when an entry could not be read.
  * Collaborators: ./librarySecretFindings.ts, ./libraryBuildSecrets.ts, ../../security/zipEntryGuard.ts (the reader),
  *   ./seedLibraries.ts, ../HvlH5PEditor.ts.
  * Tests: apps/server/test/h5p/libraries/librarySecretScans.test.ts, apps/server/test/h5p/libraries/seedSecretScan.int.test.ts,
  *   apps/server/test/h5p/libraries/librarySecretImport.int.test.ts
  */
-import type { Readable } from 'node:stream';
 import type yauzl from 'yauzl';
-import { openZip, readEntries, ZipRejectedError } from '../../security/zipEntryGuard.js';
+import { openZip, readEntries, readEntryBytes, ZipRejectedError } from '../../security/zipEntryGuard.js';
 import {
   LibrarySecretsFoundError,
   scanLibraryFile,
@@ -26,15 +26,10 @@ import {
 } from './librarySecretFindings.js';
 
 const readText = (zip: yauzl.ZipFile, entry: yauzl.Entry): Promise<string> =>
-  new Promise((resolve, reject) => {
-    zip.openReadStream(entry, (error, stream?: Readable) => {
-      if (error || !stream) return reject(new ZipRejectedError('upload.archive.unreadable'));
-      const chunks: Buffer[] = [];
-      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-      stream.on('error', () => reject(new ZipRejectedError('upload.archive.unreadable')));
-      stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    });
-  });
+  readEntryBytes(zip, entry).then(
+    (bytes) => bytes.toString('utf8'),
+    () => Promise.reject(new ZipRejectedError('upload.archive.unreadable')),
+  );
 
 /**
  * The library files of a package that hold a build machine's secrets.

@@ -12,14 +12,15 @@
  *   - A package without a readable `h5p.json` naming a main library is refused as "not an H5P package".
  *   - A file reference in content.json that leaves `content/` is refused (./contentFileReferences.ts), and so is
  *     content.json nested deeper than Lumi's recursive scanners can walk (../semantics/nestingDepth.ts).
+ *   - The package file is closed when the function returns or throws, also when an entry could not be read.
  * Collaborators: ../../security/zipEntryGuard.ts (zip reader), ./contentFileReferences.ts,
  *   ./packageLibraryCheck.ts, ../HvlH5PEditor.ts, ./LibraryInstaller.ts.
- * Tests: apps/server/test/h5p/libraries/packageManifest.test.ts
+ * Tests: apps/server/test/h5p/libraries/packageManifest.test.ts,
+ *   apps/server/test/http/packageImportOpenFiles.int.test.ts
  */
-import type { Readable } from 'node:stream';
 import type yauzl from 'yauzl';
 import type { ILibraryName } from '@lumieducation/h5p-server';
-import { openZip, readEntries, ZipRejectedError } from '../../security/zipEntryGuard.js';
+import { openZip, readEntries, readEntryBytes, ZipRejectedError } from '../../security/zipEntryGuard.js';
 import { MAX_FILE_SIZE } from '../H5pConfigFactory.js';
 import { assertNestingDepth } from '../semantics/nestingDepth.js';
 import { assertContentFilesInside, contentFilePaths } from './contentFileReferences.js';
@@ -47,15 +48,10 @@ const notH5p = (): ZipRejectedError => new ZipRejectedError('upload.package.notH
 
 function readText(zip: yauzl.ZipFile, entry: yauzl.Entry, maxBytes = MAX_MANIFEST_BYTES): Promise<string> {
   if (entry.uncompressedSize > maxBytes) return Promise.reject(notH5p());
-  return new Promise((resolve, reject) => {
-    zip.openReadStream(entry, (error, stream?: Readable) => {
-      if (error || !stream) return reject(notH5p());
-      const chunks: Buffer[] = [];
-      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-      stream.on('error', () => reject(notH5p()));
-      stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    });
-  });
+  return readEntryBytes(zip, entry).then(
+    (bytes) => bytes.toString('utf8'),
+    () => Promise.reject(notH5p()),
+  );
 }
 
 const parse = (text: string): Record<string, unknown> => {
