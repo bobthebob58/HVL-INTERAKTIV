@@ -8,23 +8,29 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { LEARNER_STATE_LIMITS, STATE_SAVES_PER_MINUTE } from '../../src/h5p/storage/learnerStateLimits.js';
+import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { requestAs } from '../support/requestAs.js';
-import { describeWithServices } from '../support/services.js';
+import { describeWithServices, serviceEnv } from '../support/services.js';
 
 const KB = 1024;
 
 describeWithServices('[H5P-005] limits on a learner’s saved state', () => {
   let tb: HttpTestbed;
+  let redis: Redis;
   let published: string;
   let other: string;
   beforeAll(async () => {
     tb = await openHttpTestbed();
+    redis = await connectRedis(serviceEnv().REDIS_URL);
     const author = await tb.actor('author');
     published = await tb.activity(author, { published: true });
     other = await tb.activity(author, { published: true });
   }, 60_000);
-  afterAll(() => tb.close());
+  afterAll(async () => {
+    await redis.quit();
+    await tb.close();
+  });
 
   const url = (contentId: string, dataType = 'state', part = '0') =>
     `/h5p/contentUserData/${contentId}/${dataType}/${part}`;
@@ -108,6 +114,10 @@ describeWithServices('[H5P-005] limits on a learner’s saved state', () => {
     expect(Number(past.headers['retry-after'])).toBeGreaterThan(0);
     expect(past.body).toMatchObject({ errorCode: 'hvl:rate-limited' });
     expect([elsewhere.status, someoneElse.status]).toEqual([200, 200]);
+    // Assert: IDs that name no activity share one counter per person, so they cannot make any number of counters
+    const keysBefore = (await redis.keys('hvli:state-saves:*')).length;
+    for (const made of ['not-an-activity', 'another-one', 'a-third']) await save(neighbour, '{}', '0', made);
+    expect((await redis.keys('hvli:state-saves:*')).length).toBe(keysBefore + 1);
     expect((await stored(learner))[0]?.data).toBe(`{"n":${STATE_SAVES_PER_MINUTE - 1}}`);
   });
 

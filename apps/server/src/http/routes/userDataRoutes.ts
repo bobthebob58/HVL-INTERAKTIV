@@ -34,6 +34,7 @@
  *   apps/server/test/learningDesign/safeEditing/staleStateWrites.int.test.ts
  */
 import { Router, type Request, type RequestHandler } from 'express';
+import { isContentUuid } from '../../h5p/contentIds.js';
 import { asStateUser } from '../../h5p/HvlH5pUser.js';
 import { isStateDataType, isStateSubContentId } from '../../h5p/storage/learnerStateLimits.js';
 import { withLearnerKeyYear } from '../../h5p/storage/learnerStateYear.js';
@@ -116,7 +117,9 @@ export function userDataRoutes(deps: H5pRouteDeps): Router {
   // WHY: before the body parser, so a save past the limit costs the server neither the read nor the parse.
   const countSave: RequestHandler = async (req, res, next) => {
     const [contentId] = stateNames(req);
-    const saver = `${requireActor(res).accountId}:${contentId.toLowerCase()}`;
+    // WHY: an ID that names no activity stores nothing; such requests share one counter instead of making their own.
+    const counted = isContentUuid(contentId) ? contentId.toLowerCase() : 'no-activity';
+    const saver = `${requireActor(res).accountId}:${counted}`;
     refuseWhenLimited(await deps.limits?.stateSaves.take(saver), res);
     next();
   };
