@@ -1953,3 +1953,35 @@ Append one entry per session: date, session, what was done, gate output, and any
       five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
       unrelated to the change; DATA-010, MAPPE-004, NFR-002)
   ```
+- **2026-11-20 · Security repairs, step 3 (D-119)** — The SVG cleaning runs in a worker thread, within limits
+  (SEC-001). One commit:
+  - New in `security/svg/`: `svgPipeline.ts` (D-044's four steps, unchanged), `svgCleaningWorker.ts` (the worker's
+    entry), `svgCleaningThread.ts` (starts it with the server's TypeScript loader and a heap limit) and
+    `SvgCleaner.ts` (one file at a time; 5 seconds and 512 MB for one file, then `upload.file.svgTooComplex`;
+    20 seconds of waiting, then `upload.file.svgCheckBusy`; the folder of the temporary copy is made and removed by
+    the main thread). `SvgSanitizer.ts` hands every SVG to it, and `main.ts` starts the worker when the server
+    starts. The two messages are in nn, nb and en.
+  - Tests: `SvgCleaner.test.ts` (the rules, with a scripted worker) and `SvgCleaner.worker.test.ts` (the real
+    thread: the time limit, the memory limit, the main thread goes on meanwhile, the output equals the steps' in
+    the calling thread, and the worker starts in a process started as the server is and lets it end). The existing
+    SVG, upload and import tests run unchanged, now through the worker; one test in `SvgSanitizer.test.ts` checks
+    the steps directly, because it watches Lumi's sanitiser. A temporary test of the time limit was also run on
+    the code before the change, where it fails.
+  - Checked by hand as well, outside the gate: in the server image built on 2026-11-19, run with the hardening of
+    `deploy/compose.app.yml` (read-only, uid 10001, no capabilities, the seccomp profile) and this source mounted,
+    an ordinary file is cleaned, a slow one is refused after 5 seconds, the next file is cleaned, nothing is left
+    in `/tmp`, and the process ends by itself. The full Docker smoke was not run for this step.
+  - D-119 added and D-044 amended; `docs/ops/docker.md` names the worker's memory; `TRACEABILITY.md` and the spec
+    site regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project server                    26422 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```
