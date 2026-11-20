@@ -16,7 +16,8 @@
  *   - `readEntryBytes` ends or destroys the entry's stream before it settles, so `close()` always frees the file
  *     (the reader keeps the file open while any entry stream is unfinished; D-118).
  * Collaborators: yauzl, ../i18n/translate.ts (message keys), ../h5p/H5pConfigFactory.ts (limits); the
- *   package import (../h5p/HvlH5PEditor.ts) calls it first; ../h5p/libraries/packageManifest.ts reuses the reader.
+ *   package import (../h5p/HvlH5PEditor.ts) calls it first; ../h5p/libraries/packageManifest.ts and
+ *   ../h5p/libraries/checkedPackageReading.ts (Lumi's unpacking) reuse the reader.
  * Tests: apps/server/test/security/zipEntryGuard.test.ts, apps/server/test/http/packageImportOpenFiles.int.test.ts
  */
 import type { Readable } from 'node:stream';
@@ -151,6 +152,21 @@ export async function* readEntries(zip: yauzl.ZipFile): AsyncGenerator<yauzl.Ent
     if (next === null) return;
     yield next;
   }
+}
+
+/**
+ * Opens one entry for reading.
+ * @param zip - From `openZip`.
+ * @param entry - The entry.
+ * @returns The entry's data; the caller must read it to its end or destroy it, or `zip.close()` cannot free the file.
+ * @throws ZipRejectedError `upload.archive.unreadable` when the entry cannot be opened.
+ */
+export function openEntryStream(zip: yauzl.ZipFile, entry: yauzl.Entry): Promise<Readable> {
+  return new Promise((resolve, reject) => {
+    zip.openReadStream(entry, (error, stream?: Readable) =>
+      error || !stream ? reject(new ZipRejectedError('upload.archive.unreadable')) : resolve(stream),
+    );
+  });
 }
 
 /**

@@ -4,7 +4,7 @@
  * Why: Lumi's defaults are unsafe or wrong for HVL (allow-everything permissions, Core 1.27 assets, a 64-char
  *      Hub `local_id`, English-only strings, no upload sanitisers). One factory sets them all, so no code path
  *      can build an editor that misses one (H5P-002, H5P-006, H5P-008, SEC-001/002).
- * Spec: H5P-002, H5P-006, H5P-007, H5P-008, H5P-010, SEC-001, SEC-002, SEC-008, SEC-006
+ * Spec: H5P-002, H5P-006, H5P-007, H5P-008, H5P-010, SEC-001, SEC-002, SEC-005, SEC-008, SEC-006
  * Invariants:
  *   - `options.permissionSystem` and the editor policy hold the same HvlPermissionSystem instance, and the policy's
  *     activity facts are the ones that permission system reads (the paste-source guard, D-092).
@@ -16,9 +16,10 @@
  *   - The malware scanners, when configured, scan every uploaded file before it is stored, on the same two paths
  *     (../security/malware/, SEC-006, D-110 amendment of 2026-11-05).
  *   - `render` returns Lumi's model, never Lumi's HTML (its template is unsafe, D-040).
+ *   - Every package importer unpacks with the reader of the archive check (./libraries/checkedPackageReading.ts).
  * Collaborators: ./HvlH5PEditor.ts, ./HvlUrlGenerator.ts, ./h5pAssets.ts, ./H5pConfigFactory.ts,
  *   ./h5pStorage.ts, ./semantics/videoGuidance.ts, ./storage/LanguageFallbackLibraryStorage.ts,
- *   ./storage/LanguageOverlayLibraryStorage.ts, ./createH5pRuntime.ts.
+ *   ./storage/LanguageOverlayLibraryStorage.ts, ./createH5pRuntime.ts, ./libraries/checkedPackageReading.ts.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts
  */
 import type {
@@ -36,6 +37,7 @@ import type { HvlH5pUser } from './HvlH5pUser.js';
 import type { HvlUrlGenerator } from './HvlUrlGenerator.js';
 import type { PersonLimit } from '../learningDesign/collaboration/PersonRateLimit.js';
 import type { LearnerStateStore } from '../learningDesign/safeEditing/LearnerStateGate.js';
+import { useCheckedPackageReading } from './libraries/checkedPackageReading.js';
 import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
 import { EMPTY_LANGUAGE_OVERLAY, type LanguageOverlay } from './languageOverlay/languageOverlay.js';
 import type { ContentAccessRepository } from './permissions/ContentAccessRepository.js';
@@ -77,6 +79,8 @@ export interface EditorFactoryInputs {
  */
 export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
   const { config, storages, permissionSystem } = inputs;
+  // SECURITY: every importer of this process unpacks with the reader of the archive check (SEC-005, D-118).
+  useCheckedPackageReading();
   const urls = inputs.urlGenerator;
   const overlay = inputs.languageOverlay ?? EMPTY_LANGUAGE_OVERLAY;
   const editor = new HvlH5PEditor(

@@ -1,14 +1,15 @@
 /**
- * Integration tests for what a package import leaves behind when it is refused or fails: no open file and no
- * upload folder, however often it is repeated (D-118).
+ * Integration tests for how a package import reads the package and what it leaves behind: one zip reader only,
+ * and after a refusal or a failure no open file and no upload folder, however often it is repeated (D-118).
  *
  * Spec: SEC-005
  */
 import { randomBytes } from 'node:crypto';
 import { readdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { afterAll, beforeAll, expect, it } from 'vitest';
-import { damageEntry } from '../support/damagedPackage.js';
+import { afterAll, beforeAll, expect, it, vi } from 'vitest';
+import { damageEntry, declareSize } from '../support/damagedPackage.js';
 import { buildH5pPackage, removeBuiltPackages } from '../support/h5pPackageBuilder.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
 import { canListOpenFiles, openFilesUnder } from '../support/openFiles.js';
@@ -22,6 +23,10 @@ const PARAMS = { question: 'Importert?', answers: ['Ja'] };
 const bulky = (bytes: number): string => randomBytes(bytes).toString('base64');
 const UPLOAD = 'hvli-upload-';
 const uploadFolders = () => readdirSync(tmpdir()).filter((name) => name.startsWith(UPLOAD)).length;
+/** Lumi's own zip reader, as its CommonJS modules load it. */
+const lumiZipReader = createRequire(createRequire(import.meta.url).resolve('@lumieducation/h5p-server'))(
+  'yauzl-promise',
+) as { open: (...args: unknown[]) => unknown };
 
 describeWithServices('[SEC-005] what a refused package import leaves behind', () => {
   let tb: HttpTestbed;
@@ -39,6 +44,36 @@ describeWithServices('[SEC-005] what a refused package import leaves behind', ()
 
   const importAs = (who: TestActor, path: string) =>
     requestAs(tb.app, who, 'post', '/h5p/ajax?action=library-upload').attach('h5p', path);
+
+  it('[SEC-005] an import reads the package with the reader of the archive check only', async () => {
+    // Arrange
+    const opened = vi.spyOn(lumiZipReader, 'open');
+    const path = await buildH5pPackage({ main: MULTI_CHOICE, params: PARAMS });
+    // Act: an author's import (content only) and an administrator's (content and library folders)
+    const asAuthor = await importAs(author, path);
+    const asAdmin = await importAs(admin, path);
+    // Assert
+    expect([asAuthor.status, asAdmin.status]).toEqual([200, 200]);
+    expect(JSON.stringify(asAuthor.body)).toContain('Importert?');
+    expect(opened).not.toHaveBeenCalled();
+    opened.mockRestore();
+  });
+
+  it.runIf(canListOpenFiles)(
+    '[SEC-005] a package with an entry that declares another size than it has is refused and leaves no open file',
+    async () => {
+      // Arrange
+      const files = { 'content/images/large.bin': bulky(512 * 1024) };
+      const path = await buildH5pPackage({ main: MULTI_CHOICE, params: PARAMS, files });
+      declareSize(path, 'content/images/large.bin', 1000);
+      // Act
+      const res = await importAs(author, path);
+      // Assert
+      expect(res.status).toBe(400);
+      expect(res.body).toMatchObject({ errorCode: 'upload.archive.unreadable' });
+      expect(openFilesUnder(UPLOAD)).toEqual([]);
+    },
+  );
 
   it.runIf(canListOpenFiles)(
     '[SEC-005] a package whose content.json cannot be read is refused and leaves no open file',
