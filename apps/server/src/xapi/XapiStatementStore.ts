@@ -8,15 +8,20 @@
  * Spec: DATA-012, LTI-011
  * Invariants:
  *   - Every read is bounded by one learner and one activity (the `[learnerKey, contentId, timestamp]` index).
+ *   - The replay history is one read of the learner's latest `REPLAY_WINDOW_ROWS` rows for the activity, newest
+ *     first, so it costs the same however much the learner has stored there (D-121). The rule's facts are taken
+ *     from those rows: they are the stored ones for any learner with fewer rows than the window since their latest
+ *     result; beyond it a page load reads as having no stored answer, and a result as not stored.
  *   - The insert is one `INSERT … ON CONFLICT DO NOTHING RETURNING`: a statement ID stored before (or by a request
  *     racing this one) is skipped, and the rows returned are exactly those this call inserted.
  *   - PRIVACY: nothing here logs; reads select only the fields the rule needs.
  * Collaborators: ./XapiIngest.ts, ./xapiReplayRule.ts, ../infra/prismaClient.ts.
- * Tests: apps/server/test/xapi/xapiIngest.int.test.ts, apps/server/test/xapi/xapiReplay.int.test.ts
+ * Tests: apps/server/test/xapi/xapiIngest.int.test.ts, apps/server/test/xapi/xapiReplay.int.test.ts,
+ *   apps/server/test/xapi/xapiReplayWindow.int.test.ts
  */
 import type { XapiStatement } from '../generated/prisma/client.js';
 import type { Database } from '../infra/prismaClient.js';
-import type { ReplayHistory } from './xapiReplayRule.js';
+import { viewIdOf, type ReplayHistory } from './xapiReplayRule.js';
 
 /** One learner's statements about one activity in one context and version. */
 export interface XapiLearnerScope {
@@ -27,6 +32,8 @@ export interface XapiLearnerScope {
 }
 
 const RESULT_VERBS = ['answered', 'completed'];
+/** How many of a learner's latest rows for an activity the replay rule looks at (D-121). */
+export const REPLAY_WINDOW_ROWS = 500;
 const REPLAY_FIELDS = {
   attemptId: true,
   verb: true,
@@ -58,7 +65,7 @@ export class XapiStatementStore {
 
   /**
    * What the replay rule needs: the stored answers and root results of the batch's page loads, and the learner's
-   * latest root result for the activity, context and version.
+   * latest root result for the activity, context and version, both from the learner's latest rows for the activity.
    * @param scope - The learner, activity, context and version.
    * @param viewIds - The page loads (`viewId`s) the batch names.
    * @returns The history, oldest row first.
@@ -66,34 +73,32 @@ export class XapiStatementStore {
    */
   async replayHistory(scope: XapiLearnerScope, viewIds: readonly string[]): Promise<ReplayHistory> {
     const { learnerKey, contentId, contextId, contentVersion } = scope;
-    const [latestResult, viewRows] = await Promise.all([
-      this.db.xapiStatement.findFirst({
-        where: {
-          learnerKey,
-          contentId,
-          contextId,
-          contentVersion,
-          subContentId: null,
-          verb: { in: RESULT_VERBS },
-        },
-        orderBy: { timestamp: 'desc' },
-        select: { scoreRaw: true, scoreMax: true },
-      }),
-      viewIds.length === 0
-        ? Promise.resolve([])
-        : this.db.xapiStatement.findMany({
-            where: {
-              learnerKey,
-              contentId,
-              verb: { in: RESULT_VERBS },
-              // WHY: a `viewId` is a lower-case UUID (the contract's pattern), so it holds no LIKE wildcard.
-              OR: viewIds.map((viewId) => ({ attemptId: { startsWith: `${viewId}:` } })),
-            },
-            orderBy: { timestamp: 'asc' },
-            select: REPLAY_FIELDS,
-          }),
-    ]);
-    return { viewRows, ...(latestResult ? { latestResult } : {}) };
+    // WHY: no filter by page load or verb in the query: the index ends this read after the window, while a filter
+    // would make the database look through every row the learner has for the activity to find enough matches.
+    const recent = await this.db.xapiStatement.findMany({
+      where: { learnerKey, contentId },
+      orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
+      take: REPLAY_WINDOW_ROWS,
+      select: { ...REPLAY_FIELDS, contextId: true, contentVersion: true },
+    });
+    const results = recent.filter((row) => RESULT_VERBS.includes(row.verb));
+    const views = new Set(viewIds);
+    const latestResult = results.find(
+      (row) =>
+        row.subContentId === null && row.contextId === contextId && row.contentVersion === contentVersion,
+    );
+    const viewRows = results
+      .filter((row) => views.has(viewIdOf(row.attemptId)))
+      .reverse()
+      .map(({ attemptId, verb, subContentId, scoreRaw, scoreMax }) => ({
+        attemptId,
+        verb,
+        subContentId,
+        scoreRaw,
+        scoreMax,
+      }));
+    if (!latestResult) return { viewRows };
+    return { viewRows, latestResult: { scoreRaw: latestResult.scoreRaw, scoreMax: latestResult.scoreMax } };
   }
 
   /**
