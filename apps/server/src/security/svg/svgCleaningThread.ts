@@ -7,7 +7,8 @@
  * Spec: SEC-001
  * Invariants:
  *   - The worker's heap is limited by Node's `resourceLimits`; past it the runtime stops the worker with
- *     `ERR_WORKER_OUT_OF_MEMORY` and the main thread goes on.
+ *     `ERR_WORKER_OUT_OF_MEMORY` and the main thread goes on. Under a process-wide heap flag that limit is not in
+ *     force, so the worker also tells its heap use when asked (./svgCleaningLimits.ts watches it).
  *   - The TypeScript loader (tsx, a runtime dependency) is named by its file, so neither the working directory nor
  *     the flags of the process that starts the worker matter.
  *   - The worker is `unref`ed as soon as it runs: an idle worker never keeps a stopping server alive.
@@ -30,6 +31,8 @@ export interface CleaningWorker {
   on(event: 'exit', listener: (code: number) => void): unknown;
   /** Stops the worker at once, whatever it is doing. */
   terminate(): Promise<unknown>;
+  /** The bytes of heap the worker uses now; answered also while it is busy. */
+  heapUsedBytes(): Promise<number>;
 }
 
 /** Starts a worker whose heap may grow to `memoryMb` megabytes. */
@@ -51,5 +54,7 @@ export const startCleaningWorker: StartCleaningWorker = (memoryMb) => {
   });
   // WHY: `unref` only holds once the worker is running; called earlier, Node undoes it when the worker comes up.
   worker.once('online', () => worker.unref());
-  return worker;
+  // WHY: `resourceLimits` is not in force under a process-wide heap flag; the cleaner watches this too.
+  const heapUsedBytes = (): Promise<number> => worker.getHeapStatistics().then((heap) => heap.used_heap_size);
+  return Object.assign(worker, { heapUsedBytes });
 };

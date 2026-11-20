@@ -11811,6 +11811,13 @@ that point lies depends on the server&#39;s speed. One file is cleaned at a time
 wait for each other, at most 20 seconds each. The server process uses about 90 MB more while the worker is idle
 and up to 512 MB more while it cleans one file (<code>docs/ops/docker.md</code>). The folder prefix <code>hvl-svg-</code> now belongs
 to <code>SvgCleaner.ts</code>; D-118&#39;s start-up sweep looks for it there.</li>
+<li><strong>Amendment (2026-11-20): the memory limit is held twice.</strong> Node&#39;s limit for a worker thread is not in force
+when the process is started with a heap flag (<code>--max-old-space-size</code>, on the command line or through
+<code>NODE_OPTIONS</code>): V8 then gives every thread the process&#39;s limit. Operations often set that flag, so the limit
+must not depend on its absence. While a file is being cleaned, the main thread asks the worker for its heap use
+every 50 ms (<code>worker.getHeapStatistics()</code>, answered within milliseconds also while the worker is busy) and stops
+it past the limit (<code>security/svg/svgCleaningLimits.ts</code>, which now also holds the numbers and the folder prefix
+<code>hvl-svg-</code>). A test starts a process with the flag and checks that a file past a small limit is refused.</li>
 </ul>
 <h3 id="decisions--d-120--security-repairs-step-4-limits-on-a-learners-saved-state-and-on-what-an-author-sends" tabindex="-1">D-120 · Security repairs, step 4: limits on a learner&#39;s saved state and on what an author sends</h3>
 <ul>

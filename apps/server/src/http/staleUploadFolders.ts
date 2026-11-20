@@ -18,7 +18,7 @@
 import { readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SVG_COPY_FOLDER_PREFIX } from '../security/svg/SvgCleaner.js';
+import { SVG_COPY_FOLDER_PREFIX } from '../security/svg/svgCleaningLimits.js';
 import { UPLOAD_FOLDER_PREFIX } from './multipartUpload.js';
 
 /** The name prefixes of the folders this server makes in the temporary folder. */

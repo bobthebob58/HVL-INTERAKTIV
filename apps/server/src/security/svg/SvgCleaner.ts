@@ -11,7 +11,9 @@
  *   - One file at a time, in the order asked. A file that waits longer than `waitMs` for its turn is refused with
  *     `upload.file.svgCheckBusy` and is never cleaned.
  *   - A file whose cleaning takes longer than `timeMs`, or more memory than `memoryMb`, is refused with
- *     `upload.file.svgTooComplex`. The worker is stopped first, and the next file gets a new one.
+ *     `upload.file.svgTooComplex`. The worker is stopped first, and the next file gets a new one. The memory limit
+ *     is held twice: by the runtime, and by a watch from the main thread that needs no runtime setting
+ *     (./svgCleaningLimits.ts).
  *   - The time limit counts the cleaning only. A worker that is not ready within `startMs` is stopped, and the file
  *     is refused with `upload.file.svgCheckBusy`.
  *   - The folder for Lumi's temporary copy is made here and removed here, after the worker has answered or has
@@ -19,39 +21,24 @@
  *   - A refusal the steps raise (`upload.file.svgRejected`) reaches the caller unchanged; any other failure is an
  *     Error (a server error), never a silent success.
  *   - The worker loads the sources with the server's TypeScript loader and never keeps the process alive.
- * Collaborators: ./svgCleaningWorker.ts, ./svgPipeline.ts (the messages), ../SvgSanitizer.ts (the one cleaner of
- *   the server), ../../http/staleUploadFolders.ts (the folder prefix).
+ * Collaborators: ./svgCleaningWorker.ts, ./svgPipeline.ts (the messages), ./svgCleaningLimits.ts (the numbers and
+ *   the memory watch), ../SvgSanitizer.ts (the one cleaner of the server).
  * Tests: apps/server/test/security/SvgCleaner.test.ts, apps/server/test/security/SvgCleaner.worker.test.ts
  */
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { RejectedUploadError, type RejectedUploadKey } from '../RejectedUploadError.js';
+import {
+  SVG_CLEANING_LIMITS,
+  SVG_COPY_FOLDER_PREFIX,
+  watchWorkerHeap,
+  type SvgCleaningLimits,
+} from './svgCleaningLimits.js';
 import { startCleaningWorker, type CleaningWorker, type StartCleaningWorker } from './svgCleaningThread.js';
 import type { SvgCleaningAnswer, SvgCleaningRequest, SvgWorkerReady } from './svgPipeline.js';
 
-/** How the name of the folder for Lumi's temporary copy starts (../../http/staleUploadFolders.ts looks for it). */
-export const SVG_COPY_FOLDER_PREFIX = 'hvl-svg-';
-
-/** The limits of the cleaning. */
-export interface SvgCleaningLimits {
-  /** Longest cleaning of one file, in milliseconds. */
-  readonly timeMs: number;
-  /** Largest heap of the worker, in megabytes. */
-  readonly memoryMb: number;
-  /** Longest wait for a turn, in milliseconds. */
-  readonly waitMs: number;
-  /** Longest start of a worker, in milliseconds. */
-  readonly startMs: number;
-}
-
-/** D-119: five seconds and 512 MB for one file, twenty seconds of waiting, thirty for a worker to start. */
-export const SVG_CLEANING_LIMITS: SvgCleaningLimits = {
-  timeMs: 5_000,
-  memoryMb: 512,
-  waitMs: 20_000,
-  startMs: 30_000,
-};
+export { SVG_CLEANING_LIMITS, SVG_COPY_FOLDER_PREFIX, type SvgCleaningLimits } from './svgCleaningLimits.js';
 
 interface Waiting {
   readonly raw: string;
@@ -137,8 +124,11 @@ export class SvgCleaner {
 
   private async cleanOne(raw: string): Promise<string> {
     const copyDir = await mkdtemp(join(tmpdir(), SVG_COPY_FOLDER_PREFIX));
+    let unwatch = (): void => undefined;
     try {
       const worker = this.worker ?? (await this.start());
+      const pastMemory = (): void => void this.retire(worker, refusal('upload.file.svgTooComplex'));
+      unwatch = watchWorkerHeap(worker, this.limits.memoryMb, pastMemory);
       const answering = this.expect<SvgCleaningAnswer>(
         worker,
         this.limits.timeMs,
@@ -150,6 +140,7 @@ export class SvgCleaner {
       if ('refused' in answer) throw new RejectedUploadError(answer.refused.key, answer.refused.params);
       throw new Error(`the SVG cleaning failed: ${answer.failed}`);
     } finally {
+      unwatch();
       await rm(copyDir, { recursive: true, force: true });
     }
   }

@@ -29,7 +29,8 @@ volume there) and `apps/web/.next/cache`. The image's defaults are `NODE_ENV=pro
 **SVG uploads are cleaned in a worker thread of the server process (D-119).** It starts with the server; a log line
 `the SVG cleaning worker did not start` means SVG uploads will be refused until the cause is fixed. It adds about
 90 MB to the process while idle and up to 512 MB while it cleans one file, so count that when the container gets a
-memory limit. It needs no extra process, capability or volume, and writes only below `/tmp`.
+memory limit. The server holds that limit itself, also when Node is started with `--max-old-space-size`. It needs
+no extra process, capability or volume, and writes only below `/tmp`.
 
 **Chromium's sandbox needs Playwright's seccomp profile and `CAP_SYS_CHROOT`.** The PDF export keeps Chromium's
 sandbox (D-096), and `PDF_ALLOW_NO_SANDBOX` is refused in production. Under Docker's default seccomp profile

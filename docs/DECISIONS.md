@@ -5090,6 +5090,13 @@ loading of one spec per session are kept.
   wait for each other, at most 20 seconds each. The server process uses about 90 MB more while the worker is idle
   and up to 512 MB more while it cleans one file (`docs/ops/docker.md`). The folder prefix `hvl-svg-` now belongs
   to `SvgCleaner.ts`; D-118's start-up sweep looks for it there.
+- **Amendment (2026-11-20): the memory limit is held twice.** Node's limit for a worker thread is not in force
+  when the process is started with a heap flag (`--max-old-space-size`, on the command line or through
+  `NODE_OPTIONS`): V8 then gives every thread the process's limit. Operations often set that flag, so the limit
+  must not depend on its absence. While a file is being cleaned, the main thread asks the worker for its heap use
+  every 50 ms (`worker.getHeapStatistics()`, answered within milliseconds also while the worker is busy) and stops
+  it past the limit (`security/svg/svgCleaningLimits.ts`, which now also holds the numbers and the folder prefix
+  `hvl-svg-`). A test starts a process with the flag and checks that a file past a small limit is refused.
 
 ### D-120 · Security repairs, step 4: limits on a learner's saved state and on what an author sends
 - **Context:** H5P-005 keeps a learner's answers so that a reload resumes them, and SEC-005 limits the size of one

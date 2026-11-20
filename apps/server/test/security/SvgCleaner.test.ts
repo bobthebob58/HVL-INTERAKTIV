@@ -1,6 +1,7 @@
 /**
  * Tests for the cleaner's own rules, with a scripted worker: one file at a time and in order, the waiting limit,
- * the time limit, the memory limit, a worker that does not start, and that the copy folder is always removed.
+ * the time limit, the memory limit (the runtime's and the main thread's own watch), a worker that does not start,
+ * and that the copy folder is always removed.
  *
  * Spec: SEC-001
  */
@@ -20,12 +21,17 @@ const SAFE = '<svg xmlns="http://www.w3.org/2000/svg"/>';
 class ScriptedWorker extends EventEmitter implements CleaningWorker {
   readonly requests: SvgCleaningRequest[] = [];
   stopped = false;
+  /** What the worker says its heap use is, in bytes. */
+  heap = 0;
   constructor(ready = true) {
     super();
     if (ready) setImmediate(() => this.emit('message', { ready: true }));
   }
   postMessage(request: SvgCleaningRequest): void {
     this.requests.push(request);
+  }
+  heapUsedBytes(): Promise<number> {
+    return Promise.resolve(this.heap);
   }
   terminate(): Promise<number> {
     this.stopped = true;
@@ -39,9 +45,9 @@ class ScriptedWorker extends EventEmitter implements CleaningWorker {
 }
 
 /** A cleaner whose workers are scripted; `workers` lists every worker it started. */
-function scripted(ready = true) {
+function scripted(ready = true, limits = LIMITS) {
   const workers: ScriptedWorker[] = [];
-  const cleaner = new SvgCleaner(LIMITS, () => {
+  const cleaner = new SvgCleaner(limits, () => {
     const worker = new ScriptedWorker(ready);
     workers.push(worker);
     return worker;
@@ -134,6 +140,21 @@ describe('[SEC-001] the SVG cleaner’s limits', () => {
     expect(refused).toBe('upload.file.svgTooComplex');
     expect(await third).toBe(SAFE);
     expect(workers.map((worker) => worker.stopped)).toEqual([true, true, false]);
+  });
+
+  it('[SEC-001] a worker whose heap is past the limit when the main thread asks is stopped and the file refused', async () => {
+    // Arrange: a time limit far away, so only the memory watch can refuse
+    const { cleaner, workers } = scripted(true, { ...LIMITS, timeMs: 30_000 });
+    const started = performance.now();
+    // Act
+    const cleaning = cleaner.clean('<svg>growing</svg>');
+    await sent(() => workers[0], 1);
+    (workers[0] as ScriptedWorker).heap = (LIMITS.memoryMb + 1) * 1024 * 1024;
+    const refused = await keyOf(cleaning);
+    // Assert
+    expect(refused).toBe('upload.file.svgTooComplex');
+    expect(performance.now() - started).toBeLessThan(2000);
+    expect(workers[0]?.stopped).toBe(true);
   });
 
   it('[SEC-001] a worker that does not start in time is stopped and the file refused as busy', async () => {

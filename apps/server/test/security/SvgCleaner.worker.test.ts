@@ -27,19 +27,26 @@ const NS = 'xmlns="http://www.w3.org/2000/svg"';
 const ORDINARY = `<svg ${NS} onload="x()"><script>x()</script><rect width="1" height="1"/></svg>`;
 /** Nesting this deep takes the steps far longer than any limit used here. */
 const SLOW = `<svg ${NS}>${'<g>'.repeat(16_000)}${'</g>'.repeat(16_000)}</svg>`;
-/** This many elements need far more memory than the small limit used here. */
-const LARGE = `<svg ${NS}>${'<g/>'.repeat(150_000)}</svg>`;
+/** This many elements need several times the memory of the small limit used here, so the limit decides. */
+const LARGE = `<svg ${NS}>${'<g/>'.repeat(600_000)}</svg>`;
 
 const SERVER_DIR = fileURLToPath(new URL('../../', import.meta.url));
 const SANITIZER = new URL('../../src/security/SvgSanitizer.ts', import.meta.url).href;
+const CLEANER = new URL('../../src/security/svg/SvgCleaner.ts', import.meta.url).href;
 const LOADER = pathToFileURL(createRequire(import.meta.url).resolve('tsx')).href;
-/** Cleans one file with the server's own cleaner in a new Node process, and returns what it printed. */
-const cleanedInNewProcess = async (loader: string, cwd: string): Promise<string> => {
-  const script = `const { sanitizeSvgText } = await import(${JSON.stringify(SANITIZER)});
-    process.stdout.write(await sanitizeSvgText(${JSON.stringify(ORDINARY)}));`;
-  const args = ['--import', loader, '--input-type=module', '-e', script];
+/** Runs a script in a new Node process started with the TypeScript loader, and returns what it printed. */
+const inNewProcess = async (script: string, loader = 'tsx', cwd = SERVER_DIR, flags: string[] = []) => {
+  const args = [...flags, '--import', loader, '--input-type=module', '-e', script];
   return (await promisify(execFile)(process.execPath, args, { cwd, timeout: 60_000 })).stdout;
 };
+/** Cleans one file with the server's own cleaner in a new Node process, and returns what it printed. */
+const cleanedInNewProcess = (loader: string, cwd: string): Promise<string> =>
+  inNewProcess(
+    `const { sanitizeSvgText } = await import(${JSON.stringify(SANITIZER)});
+    process.stdout.write(await sanitizeSvgText(${JSON.stringify(ORDINARY)}));`,
+    loader,
+    cwd,
+  );
 
 const keyOf = async (cleaning: Promise<string>): Promise<string> => {
   const error = await cleaning.then(
@@ -100,6 +107,23 @@ describe('[SEC-001] the SVG cleaner with its worker thread', () => {
     expect(refused).toBe('upload.file.svgTooComplex');
     expect(next).toContain('<rect');
     expect(copyFolders()).toEqual([]);
+  });
+
+  it('[SEC-001] the memory limit holds in a process started with a heap flag, which switches the runtime’s own limit off', async () => {
+    // Arrange: a process with `--max-old-space-size`, a 64 MB limit for the worker and a time limit far away
+    const script = `const { SvgCleaner } = await import(${JSON.stringify(CLEANER)});
+      const cleaner = new SvgCleaner({ timeMs: 50000, memoryMb: 64, waitMs: 50000, startMs: 50000 });
+      const large = '<svg ${NS}>' + '<g/>'.repeat(600000) + '</svg>';
+      const outcome = await cleaner.clean(large).then(() => 'cleaned', (error) => error.messageKey ?? 'error');
+      process.stdout.write(outcome + ' ' + Math.round(process.memoryUsage().rss / 1048576));
+      await cleaner.close();`;
+    // Act
+    const [outcome, rssMb] = (
+      await inNewProcess(script, 'tsx', SERVER_DIR, ['--max-old-space-size=4096'])
+    ).split(' ');
+    // Assert
+    expect(outcome).toBe('upload.file.svgTooComplex');
+    expect(Number(rssMb)).toBeLessThan(1024);
   });
 
   it('[SEC-001] an ordinary file comes out as the steps give it, and an unsafe one is refused as before', async () => {
