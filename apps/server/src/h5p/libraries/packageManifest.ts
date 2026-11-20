@@ -10,7 +10,8 @@
  *   - Only `h5p.json` and `<folder>/library.json` (each at most `MAX_MANIFEST_BYTES`) and `content/content.json`
  *     (at most the upload limit) are read.
  *   - A package without a readable `h5p.json` naming a main library is refused as "not an H5P package".
- *   - A file reference in content.json that leaves `content/` is refused (./contentFileReferences.ts), and so is
+ *   - A file reference in content.json that leaves `content/`, or that names a carried file in a spelling the
+ *     storage would refuse, is refused (./contentFileReferences.ts), and so is
  *     content.json nested deeper than Lumi's recursive scanners can walk (../semantics/nestingDepth.ts).
  *   - The package file is closed when the function returns or throws, also when an entry could not be read.
  * Collaborators: ../../security/zipEntryGuard.ts (zip reader), ./contentFileReferences.ts,
@@ -82,14 +83,17 @@ export async function readPackageManifest(path: string): Promise<PackageManifest
   const zip = await openZip(path);
   let h5pJson: Record<string, unknown> | undefined;
   const libraries: PackageLibrary[] = [];
+  const carried = new Set<string>();
+  let references: string[] = [];
   try {
     for await (const entry of readEntries(zip)) {
       const name = entry.fileName.replace(/\\/g, '/');
+      carried.add(name);
       if (name === 'h5p.json') h5pJson = parse(await readText(zip, entry));
       else if (name === 'content/content.json') {
         const content = parse(await readText(zip, entry, MAX_FILE_SIZE));
         assertNestingDepth(content);
-        assertContentFilesInside(contentFilePaths(content));
+        references = contentFilePaths(content);
       } else if (/^[^/]+\/library\.json$/.test(name)) {
         const library = toLibrary(parse(await readText(zip, entry)));
         if (library) libraries.push(library);
@@ -98,6 +102,8 @@ export async function readPackageManifest(path: string): Promise<PackageManifest
   } finally {
     zip.close();
   }
+  // WHY: after the loop, so the check knows every file the package carries, wherever content.json sits in it.
+  assertContentFilesInside(references, (entryName) => carried.has(entryName));
   if (!h5pJson || typeof h5pJson.mainLibrary !== 'string') throw notH5p();
   const mainLibrary = h5pJson.mainLibrary;
   const dependencies = Array.isArray(h5pJson.preloadedDependencies) ? h5pJson.preloadedDependencies : [];

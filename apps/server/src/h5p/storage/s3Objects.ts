@@ -50,6 +50,23 @@ export function assertSafeObjectName(name: string): string {
 }
 
 /**
+ * Builds the key of an upload and, when the name is refused, closes the data that would have been stored.
+ * @param body - The data the caller was handed to store, often an open file.
+ * @param build - Builds the key with `assertSafeObjectName`.
+ * @returns The key.
+ * @throws UnsafeObjectNameError from `build`, after `body` was destroyed.
+ */
+export function keyForUpload(body: Readable, build: () => string): string {
+  try {
+    return build();
+  } catch (error) {
+    // WHY: the caller gave the stream away; nobody else closes it when the upload never starts (SEC-005, D-118).
+    body.destroy();
+    throw error;
+  }
+}
+
+/**
  * Builds an HTTP Range header value for an inclusive byte range.
  * @param start - First byte, if a range was requested.
  * @param end - Last byte (inclusive), if given.

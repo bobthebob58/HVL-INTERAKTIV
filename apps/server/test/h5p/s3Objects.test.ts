@@ -1,18 +1,23 @@
 /**
- * Unit tests for the S3 helper functions: safe object names, byte ranges and size-limited uploads.
+ * Unit tests for the S3 helper functions: safe object names, byte ranges, size-limited uploads, and that a
+ * store closes the data it was handed when it refuses the name.
  *
  * Spec: SEC-005, H5P-004
  */
 import { describe, it, expect } from 'vitest';
 import { Readable } from 'node:stream';
 import type { S3Client } from '@aws-sdk/client-s3';
+import type { IUser } from '@lumieducation/h5p-server';
+import { S3ContentFileStore } from '../../src/h5p/storage/S3ContentFileStore.js';
 import {
   assertSafeObjectName,
   FileTooLargeError,
   isNotFound,
+  keyForUpload,
   limitedUpload,
   rangeHeader,
 } from '../../src/h5p/storage/s3Objects.js';
+import { S3TemporaryFileStorage } from '../../src/h5p/storage/S3TemporaryFileStorage.js';
 
 /** A body of `megabytes` MB in 64 KB chunks, produced lazily; above 4 parts × 5 MB it is still streaming when S3 fails. */
 const lazyBody = (megabytes: number): Readable =>
@@ -32,6 +37,25 @@ describe('[SEC-005] object names', () => {
     for (const name of ['../x.png', 'a/../../x', '/etc/passwd', 'a//b', './a', 'a\\b', 'a\nb', '']) {
       expect(() => assertSafeObjectName(name), JSON.stringify(name)).toThrow('unsafe file name');
     }
+  });
+});
+
+describe('[SEC-005] data handed over for a refused name', () => {
+  it('[SEC-005] a refused name closes the data, in the temporary store and in the content store', async () => {
+    // Arrange: stores that would fail on any S3 call, and two open bodies
+    const noS3 = {} as S3Client;
+    const temporary = new S3TemporaryFileStorage(noS3, 'bucket', 1024);
+    const content = new S3ContentFileStore(noS3, 'bucket', 1024);
+    const [first, second, kept] = [lazyBody(1), lazyBody(1), lazyBody(1)];
+    // Act
+    const saving = temporary.saveFile('./a.png', first, { id: 'u1' } as IUser, new Date());
+    const putting = content.put('c1', 'a//b.png', second);
+    const key = keyForUpload(kept, () => 'content/c1/a.png');
+    // Assert
+    await expect(saving).rejects.toThrow('unsafe file name');
+    await expect(putting).rejects.toThrow('unsafe file name');
+    expect([first.destroyed, second.destroyed]).toEqual([true, true]);
+    expect([key, kept.destroyed]).toEqual(['content/c1/a.png', false]);
   });
 });
 

@@ -18,7 +18,7 @@ import {
   ListObjectsV2Command,
   type S3Client,
 } from '@aws-sdk/client-s3';
-import { assertSafeObjectName, limitedUpload, rangeHeader } from './s3Objects.js';
+import { assertSafeObjectName, keyForUpload, limitedUpload, rangeHeader } from './s3Objects.js';
 
 /** File storage for activity content in one bucket. */
 export class S3ContentFileStore {
@@ -55,7 +55,7 @@ export class S3ContentFileStore {
     filename: string,
     data: Readable,
   ): Promise<{ key: string; size: number; sha256: string }> {
-    const key = this.key(contentId, filename);
+    const key = keyForUpload(data, () => this.key(contentId, filename));
     const { size, sha256 } = await limitedUpload(
       this.s3,
       { Bucket: this.bucket, Key: key },

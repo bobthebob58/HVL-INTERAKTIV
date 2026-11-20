@@ -78,6 +78,24 @@ describe('[SEC-003] package manifest', () => {
     ).resolves.toBeDefined();
   });
 
+  it('[SEC-005] refuses a reference to a carried file whose spelling the storage would refuse', async () => {
+    // Arrange
+    const files = { 'content/images/a.svg': '<svg xmlns="http://www.w3.org/2000/svg"/>' };
+    const withPath = (path: string) =>
+      buildH5pPackage({ main: MC, params: { media: { path, mime: 'image/svg+xml' } }, files });
+    // Act and assert: the file is in the package, the spelling is not one the storage accepts
+    for (const path of ['./images/a.svg', 'images//a.svg', 'images/./a.svg#tmp', '#tmp']) {
+      await expect(readPackageManifest(await withPath(path)), path).rejects.toMatchObject({
+        messageKey: 'upload.archive.unsafePath',
+        params: { entry: path },
+      });
+    }
+    // Act and assert: nothing is stored for a file the package lacks, a link or an empty reference
+    for (const path of ['./images/missing.svg', 'Https://example.org/v.mp4', '', 'images/a.svg']) {
+      await expect(readPackageManifest(await withPath(path)), path).resolves.toBeDefined();
+    }
+  });
+
   it('[SEC-003] refuses a zip without h5p.json as not an H5P package', async () => {
     await expect(
       readPackageManifest(await buildH5pPackage({ main: MC, omitH5pJson: true })),

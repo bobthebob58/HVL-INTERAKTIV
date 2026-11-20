@@ -74,4 +74,25 @@ describeWithServices('[SEC-005] what a refused package import leaves behind', ()
       expect(await tb.db.libraryAuditEvent.count({ where: { actorUserId: admin.actor.accountId } })).toBe(0);
     },
   );
+
+  it.runIf(canListOpenFiles)(
+    '[SEC-005] a file reference the storage would refuse is refused before the package is unpacked, however often',
+    async () => {
+      // Arrange: the file is in the package, but its reference has a segment the storage does not accept.
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1"/></svg>';
+      const params = { ...PARAMS, media: { path: './images/drawing.svg', mime: 'image/svg+xml' } };
+      const files = { 'content/images/drawing.svg': svg };
+      const path = await buildH5pPackage({ main: MULTI_CHOICE, params, files });
+      // Act
+      const answers = [];
+      for (let attempt = 0; attempt < 5; attempt += 1) answers.push(await importAs(author, path));
+      // Assert
+      for (const res of answers) {
+        expect(res.status).toBe(400);
+        expect(res.body).toMatchObject({ errorCode: 'upload.archive.unsafePath' });
+      }
+      expect(openFilesUnder('drawing.svg')).toEqual([]);
+      expect(openFilesUnder(UPLOAD)).toEqual([]);
+    },
+  );
 });
