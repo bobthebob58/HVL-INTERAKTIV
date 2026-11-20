@@ -11,6 +11,11 @@
  *   - `asUserId` in the query is refused with 400 (reading another learner's state is not a player feature).
  *   - Answers have H5P's shape: `{ success: true, data }`, with `data: false` when nothing is stored.
  *   - `data=0` deletes the state (H5P's reset), handled by the storage (D-038).
+ *   - The data type must be `state` and the sub-content ID `0` or a UUID, the only names the player sends; anything
+ *     else is 400 before the storage is asked, for reads and writes alike (D-120).
+ *   - A learner's saves for one activity are counted per minute before the body is read; past the limit the answer
+ *     is 429 `hvl:rate-limited` with `Retry-After`. A state past the storage limits is 413 and stores nothing
+ *     (../../h5p/storage/learnerStateLimits.ts). The player's autosave ignores both answers.
  *   - A write stores the year of the actor's key (`learnerKeyYear`) as the row's `academicYear` (D-107).
  *   - A write that names `contentVersion` (every player page's state URL does, D-093) is made only while the
  *     activity has that version; a write from a page opened before a structural save is dropped and answered
@@ -22,13 +27,15 @@
  *     `{ success: false, message: 'hvl:editor-ui-state-not-kept' }`, so H5P keeps the flag the browser holds, and
  *     every other flag with `data: false`, which H5P reads as not set (D-069 amendment).
  * Collaborators: ../../h5p/storage/PrismaContentUserDataStorage.ts, ../../h5p/storage/stateWriteVersion.ts,
- *   ../../h5p/storage/learnerStateYear.ts,
+ *   ../../h5p/storage/learnerStateYear.ts, ../../h5p/storage/learnerStateLimits.ts, ../h5pRouteLimits.ts,
  *   ../../learningDesign/safeEditing/contentVersionOnPages.ts, Lumi's ContentUserDataManager, ../requestBodies.ts.
- * Tests: apps/server/test/http/userData.int.test.ts, apps/server/test/h5p/branchingTour.browser.int.test.ts,
+ * Tests: apps/server/test/http/userData.int.test.ts, apps/server/test/http/userDataLimits.int.test.ts,
+ *   apps/server/test/h5p/branchingTour.browser.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/staleStateWrites.int.test.ts
  */
-import { Router, type Request } from 'express';
+import { Router, type Request, type RequestHandler } from 'express';
 import { asStateUser } from '../../h5p/HvlH5pUser.js';
+import { isStateDataType, isStateSubContentId } from '../../h5p/storage/learnerStateLimits.js';
 import { withLearnerKeyYear } from '../../h5p/storage/learnerStateYear.js';
 import { withStateWriteVersion } from '../../h5p/storage/stateWriteVersion.js';
 import {
@@ -38,6 +45,7 @@ import {
 import { HttpError } from '../HttpError.js';
 import { requireActor } from '../h5pLocals.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
+import { refuseWhenLimited } from '../h5pRouteLimits.js';
 import { formBody } from '../requestBodies.js';
 import { pathParam } from '../routeParams.js';
 
@@ -48,6 +56,15 @@ const BS_TOUR_FLAG = /^h5p-editor-branching-scenario-[a-z-]*tour-v1-seen$/;
 
 const refuseOtherLearner = (req: Request): void => {
   if (req.query.asUserId !== undefined) throw new HttpError(400, 'h5p.userData.asUserNotSupported');
+};
+
+/** The request's activity, data type and sub-content ID; 400 for a name the player never sends (D-120). */
+const stateNames = (req: Request): [string, string, string] => {
+  const names = STATE_PARAMS.map((name) => pathParam(req, name)) as [string, string, string];
+  // SECURITY: before the storage is asked, so no other name reaches a query, a row or the database's own errors.
+  if (!isStateDataType(names[1]) || !isStateSubContentId(names[2]))
+    throw new HttpError(400, 'error.badRequest');
+  return names;
 };
 
 /** The answer's message for a write from a page opened before a structural save (D-093); never shown. */
@@ -85,11 +102,7 @@ export function userDataRoutes(deps: H5pRouteDeps): Router {
   router.get(path, async (req, res) => {
     refuseOtherLearner(req);
     const actor = requireActor(res);
-    const [contentId, dataType, subContentId] = STATE_PARAMS.map((name) => pathParam(req, name)) as [
-      string,
-      string,
-      string,
-    ];
+    const [contentId, dataType, subContentId] = stateNames(req);
     const stored = await manager.getContentUserData(
       contentId,
       dataType,
@@ -100,14 +113,18 @@ export function userDataRoutes(deps: H5pRouteDeps): Router {
     res.json({ success: true, data: stored?.userState ?? false });
   });
 
-  router.post(path, ...formBody('2mb'), async (req, res) => {
+  // WHY: before the body parser, so a save past the limit costs the server neither the read nor the parse.
+  const countSave: RequestHandler = async (req, res, next) => {
+    const [contentId] = stateNames(req);
+    const saver = `${requireActor(res).accountId}:${contentId.toLowerCase()}`;
+    refuseWhenLimited(await deps.limits?.stateSaves.take(saver), res);
+    next();
+  };
+
+  router.post(path, countSave, ...formBody('2mb'), async (req, res) => {
     refuseOtherLearner(req);
     const actor = requireActor(res);
-    const [contentId, dataType, subContentId] = STATE_PARAMS.map((name) => pathParam(req, name)) as [
-      string,
-      string,
-      string,
-    ];
+    const [contentId, dataType, subContentId] = stateNames(req);
     const body = req.body as Record<string, unknown>;
     if (typeof body.data !== 'string') throw new HttpError(400, 'error.badRequest');
     const data = body.data;

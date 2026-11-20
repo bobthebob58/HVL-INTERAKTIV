@@ -5090,3 +5090,37 @@ loading of one spec per session are kept.
   wait for each other, at most 20 seconds each. The server process uses about 90 MB more while the worker is idle
   and up to 512 MB more while it cleans one file (`docs/ops/docker.md`). The folder prefix `hvl-svg-` now belongs
   to `SvgCleaner.ts`; D-118's start-up sweep looks for it there.
+
+### D-120 · Security repairs, step 4: limits on a learner's saved state and on what an author sends
+- **Context:** H5P-005 keeps a learner's answers so that a reload resumes them, and SEC-005 limits the size of one
+  upload. Neither said how much state one learner may keep, how often it may be saved, or how many files one person
+  may send. For the ten content types a real activity keeps exactly one state per learner, activity and course:
+  h5p.js saves data type `state` for sub-content `0` (H5P core 1.28, `H5P.setUserData(contentId, 'state', …)`),
+  every five seconds while the activity is open; none of the ten libraries saves any other. No spec change.
+- **Decision — the names of a state (H5P-005).** The state route accepts data type `state` only and a sub-content
+  ID that is `0` or a UUID; any other name is 400, for reads and writes, before the storage is asked.
+- **Decision — how much one learner may keep (H5P-005).** Per learner, activity and course: at most 20 states,
+  each at most 512 KB, together at most 1 MB (`h5p/storage/learnerStateLimits.ts`), counted as the stored JSON
+  text. A state past a limit is 413 and stores nothing. A write counts and stores in one transaction that first
+  takes a lock for that learner, activity and course (`pg_advisory_xact_lock`), so writes at the same moment
+  cannot pass the limits together; it holds the activity's row in share mode as before (D-093). Replacing a stored
+  state counts only the difference, and deleting one (`data=0`) is never refused.
+- **Decision — how often (H5P-005).** 60 saves a minute per learner and activity, counted in Redis before the body
+  is read; past it 429 `hvl:rate-limited` with `Retry-After`. h5p.js ignores a refused autosave, so a learner at a
+  limit keeps what was saved before and sees nothing.
+- **Decision — what a page load reads (H5P-005).** The player's preload reads only states marked `preload` (all
+  that Lumi's one caller keeps), at most 20 rows, the main state first, and passes on at most 1 MB in all,
+  whatever the table holds.
+- **Decision — what one author may send (SEC-005, SEC-001).** 120 editor file uploads and 20 package imports per
+  author in ten minutes, counted before the body is read; past a limit 429 `hvl:rate-limited` with `Retry-After`
+  (`http/h5pRouteLimits.ts`). And an author whose SVG files were refused as too complex (D-119) three times in ten
+  minutes gets the same answer for further SVG files until the ten minutes end: the cleaning worker takes one file
+  at a time, and this keeps one person from holding it. Other files and other authors are not affected.
+- **Why these numbers:** each is far above what the player and an author at work send (one state of a few
+  kilobytes, twelve saves a minute per open tab, a handful of files), and low enough that one person's worst case
+  is small: 1 MB per activity and course, and a bounded number of requests that reach the disk, the scanner or the
+  cleaning worker. They are constants, changed by a new decision, not settings.
+- **Consequences:** Nothing changes for an ordinary learner or author. The counters are four new Redis keys with a
+  number under an account ID (and an activity ID for saves), listed in `docs/privacy/DATA-INVENTORY.md`. Every
+  state write now runs in a transaction with one extra indexed count. The limits are not applied to states stored
+  before this step; the preload bounds what such rows can cost.

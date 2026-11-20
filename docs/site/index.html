@@ -11812,6 +11812,41 @@ wait for each other, at most 20 seconds each. The server process uses about 90 M
 and up to 512 MB more while it cleans one file (<code>docs/ops/docker.md</code>). The folder prefix <code>hvl-svg-</code> now belongs
 to <code>SvgCleaner.ts</code>; D-118&#39;s start-up sweep looks for it there.</li>
 </ul>
+<h3 id="decisions--d-120--security-repairs-step-4-limits-on-a-learners-saved-state-and-on-what-an-author-sends" tabindex="-1">D-120 · Security repairs, step 4: limits on a learner&#39;s saved state and on what an author sends</h3>
+<ul>
+<li><strong>Context:</strong> H5P-005 keeps a learner&#39;s answers so that a reload resumes them, and SEC-005 limits the size of one
+upload. Neither said how much state one learner may keep, how often it may be saved, or how many files one person
+may send. For the ten content types a real activity keeps exactly one state per learner, activity and course:
+h5p.js saves data type <code>state</code> for sub-content <code>0</code> (H5P core 1.28, <code>H5P.setUserData(contentId, &#39;state&#39;, …)</code>),
+every five seconds while the activity is open; none of the ten libraries saves any other. No spec change.</li>
+<li><strong>Decision — the names of a state (H5P-005).</strong> The state route accepts data type <code>state</code> only and a sub-content
+ID that is <code>0</code> or a UUID; any other name is 400, for reads and writes, before the storage is asked.</li>
+<li><strong>Decision — how much one learner may keep (H5P-005).</strong> Per learner, activity and course: at most 20 states,
+each at most 512 KB, together at most 1 MB (<code>h5p/storage/learnerStateLimits.ts</code>), counted as the stored JSON
+text. A state past a limit is 413 and stores nothing. A write counts and stores in one transaction that first
+takes a lock for that learner, activity and course (<code>pg_advisory_xact_lock</code>), so writes at the same moment
+cannot pass the limits together; it holds the activity&#39;s row in share mode as before (D-093). Replacing a stored
+state counts only the difference, and deleting one (<code>data=0</code>) is never refused.</li>
+<li><strong>Decision — how often (H5P-005).</strong> 60 saves a minute per learner and activity, counted in Redis before the body
+is read; past it 429 <code>hvl:rate-limited</code> with <code>Retry-After</code>. h5p.js ignores a refused autosave, so a learner at a
+limit keeps what was saved before and sees nothing.</li>
+<li><strong>Decision — what a page load reads (H5P-005).</strong> The player&#39;s preload reads only states marked <code>preload</code> (all
+that Lumi&#39;s one caller keeps), at most 20 rows, the main state first, and passes on at most 1 MB in all,
+whatever the table holds.</li>
+<li><strong>Decision — what one author may send (SEC-005, SEC-001).</strong> 120 editor file uploads and 20 package imports per
+author in ten minutes, counted before the body is read; past a limit 429 <code>hvl:rate-limited</code> with <code>Retry-After</code>
+(<code>http/h5pRouteLimits.ts</code>). And an author whose SVG files were refused as too complex (D-119) three times in ten
+minutes gets the same answer for further SVG files until the ten minutes end: the cleaning worker takes one file
+at a time, and this keeps one person from holding it. Other files and other authors are not affected.</li>
+<li><strong>Why these numbers:</strong> each is far above what the player and an author at work send (one state of a few
+kilobytes, twelve saves a minute per open tab, a handful of files), and low enough that one person&#39;s worst case
+is small: 1 MB per activity and course, and a bounded number of requests that reach the disk, the scanner or the
+cleaning worker. They are constants, changed by a new decision, not settings.</li>
+<li><strong>Consequences:</strong> Nothing changes for an ordinary learner or author. The counters are four new Redis keys with a
+number under an account ID (and an activity ID for saves), listed in <code>docs/privacy/DATA-INVENTORY.md</code>. Every
+state write now runs in a transaction with one extra indexed count. The limits are not applied to states stored
+before this step; the preload bounds what such rows can cost.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">

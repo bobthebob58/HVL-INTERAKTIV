@@ -36,6 +36,7 @@ import type { Logger } from 'pino';
 import type { Env } from '../config/env.js';
 import { filesOriginOf } from '../config/filesOrigin.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
+import { createH5pRouteLimits } from '../http/h5pRouteLimits.js';
 import type { Database } from '../infra/prismaClient.js';
 import type { Redis } from '../infra/redisClient.js';
 import { PrismaContentVersionReader } from '../learningDesign/safeEditing/contentVersionOnPages.js';
@@ -161,6 +162,7 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     fileGrants,
     editorFileGrants: new ContentFileGrants(env.URL_SIGNING_KEYS, 'editor-file-url'),
     uploadGrants: new ContentFileGrants(env.URL_SIGNING_KEYS, 'temporary-file-url'),
+    limits: createH5pRouteLimits(redis),
     corePath: paths.coreDir,
     editorPath: paths.editorDir,
     pageCsp: {

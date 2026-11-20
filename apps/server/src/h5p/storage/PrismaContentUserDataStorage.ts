@@ -10,16 +10,20 @@
  *     passes; an ID that is not shaped like a pseudonym is refused on save and finds nothing (DATA-002).
  *   - Reads and deletes never run without a learnerKey or content ID, so they never match everyone's rows.
  *   - The state string is stored as a JSON string value; H5P's `data=0` deletes the row instead (D-038).
- *   - Lists for the player hold exactly one context and put the main state ('0') first (D-038).
+ *   - Lists for the player hold exactly one context and put the main state ('0') first (D-038); they hold only
+ *     states marked `preload` (all that Lumi's only caller, the player integration, keeps), and never more rows or
+ *     bytes than one learner may store there (./learnerStateLimits.ts, D-120).
+ *   - A save is refused past the learner's limits for the activity and course (./learnerStateWrites.ts, D-120).
  *   - Finished data is off: nothing is stored or returned (D-037, ./FinishedDataSwitchedOff.ts).
  *   - Content IDs that are not UUIDs are "not found" and never reach the database.
  *   - A write the state route runs inside `withStateWriteVersion` is made only while the activity has the version
  *     the learner's page was rendered with, checked in the write's own transaction (D-093, ./learnerStateWrites.ts).
- * Collaborators: ./learnerStateRows.ts, ./learnerStateWrites.ts, ./stateWriteVersion.ts,
+ * Collaborators: ./learnerStateRows.ts, ./learnerStateWrites.ts, ./learnerStateLimits.ts, ./stateWriteVersion.ts,
  *   ./FinishedDataSwitchedOff.ts, ../../infra/prismaClient.ts, ../h5pStorage.ts, Lumi's ContentUserDataManager
  *   (calls it after the permission check), ../HvlH5pUser.ts (the state view).
  * Tests: apps/server/test/h5p/PrismaContentUserDataStorage.int.test.ts,
  *   apps/server/test/h5p/PrismaContentUserDataStorage.cleanup.int.test.ts,
+ *   apps/server/test/h5p/learnerStatePreload.int.test.ts, apps/server/test/http/userDataLimits.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/staleStateWrites.int.test.ts
  */
 import type { ContentId, IContentUserData, IContentUserDataStorage, IUser } from '@lumieducation/h5p-server';
@@ -28,13 +32,15 @@ import { FinishedDataSwitchedOff } from './FinishedDataSwitchedOff.js';
 import {
   NO_CONTEXT,
   isContentUuid,
+  isDeleteSignal,
   isLearnerKey,
   mainStateFirst,
   stateKey,
   stateKeyOf,
   toUserData,
 } from './learnerStateRows.js';
-import { stateWrite, writeIfVersion } from './learnerStateWrites.js';
+import { LEARNER_STATE_LIMITS, storedStateBytes } from './learnerStateLimits.js';
+import { stateWrite, writeWithinLimits } from './learnerStateWrites.js';
 import { stateWriteExpectation } from './stateWriteVersion.js';
 
 // UPSTREAM: a miss is null, as in https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/implementation/fs/FileContentUserDataStorage.ts
@@ -63,8 +69,12 @@ export class PrismaContentUserDataStorage extends FinishedDataSwitchedOff implem
     const key = stateKeyOf(userData, userData.contentId);
     if (!isContentUuid(key.contentId)) return;
     const write = stateWrite(key, userData);
+    // WHY: `stateWrite` has checked that anything but the delete signal is a string.
+    const bytes = isDeleteSignal(userData.userState)
+      ? undefined
+      : storedStateBytes(userData.userState as string);
     const expectation = stateWriteExpectation();
-    await (expectation ? writeIfVersion(this.db, key.contentId, expectation, write) : write(this.db));
+    await writeWithinLimits(this.db, { key, write, expectation, ...(bytes === undefined ? {} : { bytes }) });
   }
 
   /**
@@ -92,7 +102,8 @@ export class PrismaContentUserDataStorage extends FinishedDataSwitchedOff implem
   }
 
   /**
-   * Lists one learner's states for an activity in exactly one context (the player's preload).
+   * Lists the states the player preloads: one learner's states for an activity in exactly one context that are
+   * marked `preload`, at most `LEARNER_STATE_LIMITS.rows` of them and `totalBytes` in all (D-120).
    * @param contentId - The activity.
    * @param userId - The learnerKey.
    * @param contextId - LMS context; undefined means "no context", not "any context".
@@ -104,10 +115,18 @@ export class PrismaContentUserDataStorage extends FinishedDataSwitchedOff implem
     contextId?: string,
   ): Promise<IContentUserData[]> {
     if (!isContentUuid(contentId) || !isLearnerKey(userId)) return [];
+    // WHY: `0` sorts before every UUID, so the main state is in the first rows the limit lets through.
     const rows = await this.db.h5PUserData.findMany({
-      where: { contentId, learnerKey: userId, contextId: contextId ?? NO_CONTEXT },
+      where: { contentId, learnerKey: userId, contextId: contextId ?? NO_CONTEXT, preload: true },
+      orderBy: [{ subContentId: 'asc' }, { dataType: 'asc' }],
+      take: LEARNER_STATE_LIMITS.rows,
     });
-    return rows.sort(mainStateFirst).map(toUserData);
+    let bytes = 0;
+    const within = rows.sort(mainStateFirst).map(toUserData);
+    // SECURITY: one page load never carries more state than a learner may store (D-120), whatever the table holds.
+    return within.filter(
+      (state) => (bytes += storedStateBytes(String(state.userState))) <= LEARNER_STATE_LIMITS.totalBytes,
+    );
   }
 
   /**
