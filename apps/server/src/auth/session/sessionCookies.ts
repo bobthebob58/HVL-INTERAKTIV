@@ -13,8 +13,9 @@
  *     with the same attributes.
  *   - Only opaque IDs (43 base64url characters) are written, so a value can never inject attributes.
  *   - The parser never URL-decodes, and trims only SP and HTAB around a pair (not other Unicode spaces), so a name
- *     is matched byte for byte (AUD-212). A name is returned only when it occurs exactly once with a well-formed
- *     value; a duplicated name is dropped entirely. Malformed pairs are ignored.
+ *     is matched byte for byte (AUTH-003, D-117). A name is returned only when it occurs exactly once with a
+ *     well-formed value; a duplicated name is dropped entirely. Malformed pairs are ignored.
+ *   - Parsing takes time in step with the header's length: the trim is one pass over each pair.
  * Collaborators: ./portalSessionMiddleware.ts, ./opaqueIds.ts, ../feide/loginTransactions.ts,
  *   ../feide/feideLoginRoutes.ts.
  * Tests: apps/server/test/auth/session/sessionCookies.test.ts
@@ -78,9 +79,17 @@ const COOKIE_NAME = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
 const COOKIE_VALUE = /^[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]*$/;
 
 // SECURITY: trim only SP and HTAB, the whitespace RFC 6265 allows around a pair. String.trim also removes other
-// Unicode spaces (e.g. U+00A0), which would let a name like "<U+00A0>__Host-hvli_sid" set from a neighbour host
-// be read as the session cookie, since the stray byte would be stripped before the name check (AUD-212, D-117).
-const trimSpHtab = (pair: string): string => pair.replace(/^[ \t]+/, '').replace(/[ \t]+$/, '');
+// Unicode spaces (e.g. U+00A0); a name that differs from a cookie's name by such a character is a different name
+// and must fail the name check below (AUTH-003, D-117).
+// WHY: two index walks, not a regular expression, so the work stays linear in the pair's length.
+const isSpHtab = (code: number): boolean => code === 0x20 || code === 0x09;
+function trimSpHtab(pair: string): string {
+  let start = 0;
+  let end = pair.length;
+  while (start < end && isSpHtab(pair.charCodeAt(start))) start += 1;
+  while (end > start && isSpHtab(pair.charCodeAt(end - 1))) end -= 1;
+  return pair.slice(start, end);
+}
 
 /**
  * Parses a Cookie request header strictly.
