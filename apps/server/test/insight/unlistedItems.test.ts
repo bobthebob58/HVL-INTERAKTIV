@@ -1,12 +1,13 @@
 /**
- * Unit tests of which questions outside the activity's current content an insight view lists (D-121): none that
- * fewer than k learners answered, whatever their IDs are, and never more than the limit.
+ * Unit tests of which questions outside the activity's current content an insight view and its CSV list (D-121):
+ * none that fewer than k learners answered, whatever their IDs are, and never more than the limit.
  *
  * Spec: INS-002, INS-006
  */
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { MAX_UNLISTED_ITEMS } from '../../src/insight/aggregate/itemDifficulty.js';
+import { insightCsvText } from '../../src/insight/http/insightCsvText.js';
 import { Q1, Q2, Q3, QUESTION_SET } from './fixtures/insightActivities.js';
 import { learnerKey, questionSetRows, type FixtureRow } from './fixtures/thirtyLearners.js';
 import { reportOf, shown } from './support/insightFixtureReport.js';
@@ -38,8 +39,10 @@ describe('[INS-002] questions outside the current content', () => {
     const report = reportOf(QUESTION_SET, rows);
     // Assert
     expect(report.items.map(({ item }) => item).sort()).toEqual([Q1, Q2, Q3].sort());
-    expect(JSON.stringify(report)).not.toContain('hello teacher');
-    expect(JSON.stringify(report)).not.toContain(shared);
+    for (const text of [JSON.stringify(report), insightCsvText(report, 'nn')]) {
+      expect(text).not.toContain('hello teacher');
+      expect(text).not.toContain(shared);
+    }
   });
 
   it('[INS-002] a question of an older version is listed, without a text, once k learners answered it', () => {
