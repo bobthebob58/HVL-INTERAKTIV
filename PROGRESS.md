@@ -1985,3 +1985,36 @@ Append one entry per session: date, session, what was done, gate output, and any
       five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
       unrelated to the change; DATA-010, MAPPE-004, NFR-002)
   ```
+- **2026-11-20 · Security repairs, step 4 (D-120)** — Limits on a learner's saved state and on what an author
+  sends. Two repairs, one commit each, one small follow-up and one fix to step 3; every new test fails on the code before
+  and passes after:
+  - Saved state (H5P-005): `userDataRoutes.ts` accepts only data type `state` and sub-content `0` or a UUID (400
+    otherwise) and counts saves per learner and activity, 60 a minute (429 with `Retry-After`), before the body is
+    read. `h5p/storage/learnerStateLimits.ts` holds the limits (20 states, 512 KB each, 1 MB together per learner,
+    activity and course); `learnerStateWrites.ts` counts and stores in one transaction under a lock for that
+    learner, activity and course, and refuses past a limit (413). The player's preload
+    (`PrismaContentUserDataStorage.ts`) reads only states marked for it, at most 20 rows and 1 MB. Tests:
+    `userDataLimits.int.test.ts`, `learnerStatePreload.int.test.ts`.
+  - Uploads and imports (SEC-005, SEC-001): `ajaxRoutes.ts` counts an author's file uploads (120 in ten minutes) and
+    package imports (20 in ten minutes) before the body is read, and makes further SVG files wait after three were
+    refused as too complex in ten minutes; `http/h5pRouteLimits.ts` builds the counters on Redis, wired in
+    `createH5pRuntime.ts`. Test: `uploadLimits.int.test.ts`.
+  - Step 3's memory limit, held twice (SEC-001, D-119 amended): Node's limit for a worker thread is not in force in
+    a process started with `--max-old-space-size`, so the main thread now also watches the worker's heap while a
+    file is cleaned and stops it past the limit (`security/svg/svgCleaningLimits.ts`). Found when the memory test
+    of step 3 ran in an environment with that flag; the test's input is now several times its limit, and a new
+    test starts a process with the flag.
+  - D-120 added; four Redis counters in `docs/privacy/DATA-INVENTORY.md`; `TRACEABILITY.md` and the spec site
+    regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project server                    26433 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```
