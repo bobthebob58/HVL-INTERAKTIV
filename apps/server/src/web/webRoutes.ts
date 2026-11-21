@@ -8,8 +8,10 @@
  * Invariants:
  *   - Only GET and HEAD reach Next.js; other methods fall through to the HTML 404 (no server actions, D-068).
  *   - The response's `Content-Security-Policy` and the request's copy carry the same nonce.
- *   - Portal pages are framed only by our own origin (with `X-Frame-Options: SAMEORIGIN`). A page with a launch is
- *     framed by our origin and `CANVAS_ORIGINS`, never sends `X-Frame-Options`, and is `no-store` (LTI-003).
+ *   - Portal pages are framed by nothing: `frame-ancestors 'none'` and `X-Frame-Options: DENY` (D-125). The web app
+ *     frames the H5P player and editor, never the other way round, so no page of ours, the player included, can
+ *     show a portal page inside itself. A page with a launch is framed by our origin and `CANVAS_ORIGINS`, never
+ *     sends `X-Frame-Options`, and is `no-store` (LTI-003).
  *   - The locale is the launch's, else an allowlisted `lang` query (`nn`, `nb`, `en`; the web app's help and privacy
  *     links carry the page's locale, because they open in a new tab without the launch), else the portal session's,
  *     else Nynorsk. Any other `lang` value is ignored.
@@ -17,7 +19,8 @@
  *     credentials and the ltik like every request (D-068); any other upgrade is closed.
  * Collaborators: ./nextWebApp.ts, ./webPageCsp.ts, ./webRequestContract.ts, ./appLaunch.ts, ../server/createApp.ts,
  *   ../server/main.ts (mounts `webUpgrades`).
- * Tests: apps/server/test/web/webRoutes.int.test.ts, apps/server/test/web/webApp.browser.int.test.ts
+ * Tests: apps/server/test/web/webRoutes.int.test.ts, apps/server/test/web/webApp.browser.int.test.ts,
+ *   apps/server/test/web/portalPageFraming.browser.int.test.ts
  */
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
@@ -63,7 +66,9 @@ export function webRoutes(
   return (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
     const launch = appLaunchOf(res);
-    const frameAncestors = launch ? ["'self'", ...(options.canvasOrigins ?? [])] : ["'self'"];
+    // SECURITY: the H5P player is a page of our own origin that shows authors' content; a portal page it could
+    // frame would put the page's controls under an activity (D-125).
+    const frameAncestors = launch ? ["'self'", ...(options.canvasOrigins ?? [])] : [];
     const csp = webPageCsp({
       nonce: createNonce(),
       dev: web.dev,
@@ -79,7 +84,7 @@ export function webRoutes(
       res.removeHeader('X-Frame-Options');
       res.setHeader('Cache-Control', 'no-store');
     } else {
-      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      res.setHeader('X-Frame-Options', 'DENY');
     }
     prepareWebRequest(req, { csp, locale });
     if (launch) req.headers[LAUNCH_HEADER] = launchHeaderValue(launch);

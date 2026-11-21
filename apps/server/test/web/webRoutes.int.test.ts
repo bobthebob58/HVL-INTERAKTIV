@@ -57,7 +57,16 @@ describe('[DATA-011] hand-over to the web app', () => {
     expect(seen[0]?.headers.cookie).toBeUndefined();
     expect(seen[0]?.headers.authorization).toBeUndefined();
     expect(seen[0]?.url).toBe('/hjelp');
-    expect(res.headers['x-frame-options']).toBe('SAMEORIGIN');
+  });
+
+  it('[DATA-011] a portal page may be framed by nothing, not even by a page of our own origin', async () => {
+    // Arrange
+    const { app } = appWith('nn');
+    // Act
+    const res = await request(app).get('/aktivitet/c1?fane=check');
+    // Assert
+    expect(res.headers['content-security-policy']).toMatch(/frame-ancestors 'none'$/);
+    expect(res.headers['x-frame-options']).toBe('DENY');
   });
 
   it('[PROD-012] without a session the locale is Nynorsk, whatever the client sends', async () => {

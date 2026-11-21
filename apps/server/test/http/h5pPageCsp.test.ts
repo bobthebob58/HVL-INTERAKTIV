@@ -75,6 +75,19 @@ describe('[DATA-011] H5P page policy', () => {
     }
   });
 
+  it('[DATA-011] a player page frames only configured media origins, never our own origin; the editor page may', () => {
+    // Arrange
+    const none = { scriptHashes: [], externalMediaOrigins: [] as string[] };
+    const panopto = { scriptHashes: [], externalMediaOrigins: ['https://hvl.cloud.panopto.eu'] };
+    const frames = (settings: typeof none, player: boolean) =>
+      directives(h5pPageCsp(settings, ["'self'"], { playerFiles: player })).get('frame-src');
+    // Act and assert
+    expect(frames(none, true)).toEqual(["'none'"]);
+    expect(frames(panopto, true)).toEqual(['https://hvl.cloud.panopto.eu']);
+    expect(frames(none, false)).toEqual(["'self'"]);
+    expect(frames(panopto, false)).toEqual(["'self'", 'https://hvl.cloud.panopto.eu']);
+  });
+
   it('[LTI-003] frame-ancestors is what the caller gives, or none at all', () => {
     const settings = { scriptHashes: [], externalMediaOrigins: [] };
     expect(

@@ -17,6 +17,9 @@
  *   - `font-src` allows `data:`: H5P.DragNBar (CoursePresentation, InteractiveVideo) inlines its icon font as a
  *     data: WOFF; a data: font reaches no other origin.
  *   - `frame-ancestors` is given by the caller: `'self'` for the portal, plus `CANVAS_ORIGINS` for LTI pages.
+ *   - `frame-src`: a player page frames only the configured media origins, never our own origin, so content it
+ *     shows cannot put a page of ours inside itself (D-125); the editor page may frame our own origin. The frames
+ *     H5P builds itself start from an empty page, which no `frame-src` refuses.
  *   - The files origin appears only in `img-src` and `media-src`, and only on a player page (`playerFiles`); the
  *     editor page, whose files stay on the app origin, never names it.
  *   - `base-uri 'self'`: jQuery's HTML parser adds a `<base>` with the page's own URL to its scratch document,
@@ -76,6 +79,8 @@ export function h5pPageCsp(
   // SECURITY: H5P.Video plays a Panopto source only through Panopto's embed API, which it inserts as a <script src>
   // without integrity; that file is allowed only when HVL lists a Panopto site, never for other media origins.
   const panopto = settings.externalMediaOrigins.some(isPanoptoOrigin) ? [PANOPTO_EMBED_API_URL] : [];
+  // SECURITY: a player shows authors' content; it may not frame our own pages (D-125).
+  const frames = [...(page.playerFiles ? [] : ["'self'"]), ...settings.externalMediaOrigins];
   return [
     "default-src 'none'",
     // SPEC-DEVIATION: D-070 — no <script src> on the H5P pages carries a nonce or SRI (H5P-009), neither the tags H5P
@@ -88,7 +93,7 @@ export function h5pPageCsp(
     "font-src 'self' data:",
     "connect-src 'self'",
     // WHY: an author's files are never framed; only outside media players are (D-070).
-    sources("frame-src 'self'", settings.externalMediaOrigins),
+    `frame-src ${frames.length > 0 ? frames.join(' ') : "'none'"}`,
     "base-uri 'self'",
     "object-src 'none'",
     "form-action 'self'",
