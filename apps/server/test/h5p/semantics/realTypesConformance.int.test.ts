@@ -13,6 +13,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { HVL_TOP10_CONTENT_TYPES } from '../../../src/h5p/HvlTop10ContentTypeFilter.js';
 import { PrismaContentAccessRepository } from '../../../src/h5p/permissions/ContentAccessRepository.js';
+import { CONTENT_LIMITS, contentLimitPassed } from '../../../src/h5p/semantics/contentBudget.js';
 import { SubContentPolicy } from '../../../src/h5p/semantics/SubContentPolicy.js';
 import { ContentDuplicator } from '../../../src/learningDesign/collaboration/ContentDuplicator.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../../support/httpTestbed.js';
@@ -81,6 +82,9 @@ describeWithServices('[SEC-008] the save rule with the real content types', () =
             true,
           );
         } else expect(gone).toEqual([]);
+        // Assert: and it is inside every limit for one activity (D-126), with room to spare
+        expect(contentLimitPassed(example?.params)).toBeUndefined();
+        expect(JSON.stringify(example?.params).length).toBeLessThan(CONTENT_LIMITS.characters / 100);
       },
     );
 
