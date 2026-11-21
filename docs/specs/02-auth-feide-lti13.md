@@ -97,6 +97,10 @@ group configured for the client. In the Customer Portal, authorise only the attr
   `iss`, `aud`, `nonce` or an expired `exp` are rejected. The client secret is read from an
   environment variable or secret store and is never logged.
 - **Verify:** Integration tests with `oauth2-mock-server` (or equivalent); test names `[AUTH-001] …`.
+- **Amended (D-131, 2026-11-21):** only a page the person opened starts a login: a request that is no navigation
+  is refused, and a page another site opened without a click, or a frame, gets a sign-in page whose button
+  starts it. A callback is taken only as a page navigation and uses the pending login up only when its `state`
+  is that login's; any other callback is refused and leaves the login in place.
 
 #### AUTH-002 · MUST · S3 · Map Feide affiliation to roles
 After login, call `GET https://groups-api.dataporten.no/groups/me/groups` with the user's Feide access
@@ -126,6 +130,10 @@ Logout clears the session and redirects the browser to Feide's `end_session_endp
 Customer Portal) and `id_token_hint`. Feide requires both, so the raw ID token is kept in the
 server-side session only, encrypted at rest and deleted at logout or expiry (D-021).
 - **Verify:** Integration tests (expiry, CSRF rejection, logout).
+- **Amended (D-131, 2026-11-21):** answers of `/api`, `/auth/session` and the signed-in H5P routes are `no-store`,
+  `Cross-Origin-Resource-Policy: same-origin` and framed by our own origin only; portal pages send
+  `Cross-Origin-Opener-Policy: same-origin` (LTI pages do not). A page whose request is refused for its CSRF
+  token asks `/auth/session` once for the current one and repeats the request.
 
 #### AUTH-004 · MUST · S3 · Data minimisation at login
 Request only the scopes listed in `AUTH-001`. **Never** request `userid-nin` or read the claim

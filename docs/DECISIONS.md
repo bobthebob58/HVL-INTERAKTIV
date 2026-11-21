@@ -5512,3 +5512,48 @@ loading of one spec per session are kept.
   asks for a new launch. `LTIK_QUERY_PATHS` holds only H5P's two URL shapes; the landing pages read their own
   address. Browser tests that hold an ltik arrive through `test/support/openLanding.ts`. No stored data
   changes.
+
+### D-131 · Security repairs, step 15: the portal's login, its answers and the save gate are closed to other sites' requests and to a second spelling of an ID
+- **Context:** Four small things on the portal side. Starting a Feide login replaces the session a browser has,
+  and with Feide's single sign-on it needs no step from the person: a request to `/auth/feide/login` that another
+  site made in the background changed the session token under the person's open pages, and a callback with
+  made-up values used up the pending login, because the login transaction was taken out of Redis before its
+  `state` was compared. Answers about the signed-in person carried no rule against being embedded by another
+  site, portal pages kept the window handle of whoever opened them, and some H5P answers behind authentication
+  had no cache rule. The publish gate on saves (D-074) took its write lock under the ID as the request wrote it,
+  and stepped aside when its lookup found no activity.
+- **Decision — only a page the person opened starts a login (AUTH-001, AUTH-003).** `auth/feide/loginNavigation.ts`
+  reads the browser's fetch metadata. A request that is no navigation (an image, a script, a background fetch)
+  is refused. A whole page that began on our own origin, in the address bar or a bookmark, or with a click by
+  the person (a link in an e-mail, in Canvas, on another site) starts the login as before. Any other navigation,
+  a page another site opened without a click or a frame, gets the sign-in page (`page.signIn.*`, nn, nb, en),
+  whose button starts the login as a click on our own page, in the whole window. A browser that sends no fetch
+  metadata is treated as before.
+- **Decision — a callback uses up only its own login (AUTH-001).** `/auth/feide/callback` is taken only as a
+  page navigation. It looks at the pending login first (`LoginTransactions.peek`) and consumes it, and clears
+  its cookie, only when the callback's `state` is that login's; any other callback is refused and leaves the
+  login in place for Feide's own answer. Consuming stays single-use (GETDEL).
+- **Decision — a page asks once for the current CSRF token (AUTH-003).** When a portal request is refused with
+  `hvl:csrf-invalid`, the web app's API client asks `GET /auth/session` once, repeats the request with the
+  session's current token and remembers it (`apps/web/src/api/csrfRetry.ts`). The session cookie decides who
+  that is; the token only proves the request came from our page, so a page of the same browser may fetch it.
+  A session is still replaced at every login (D-057): a login never keeps a session ID that existed before it.
+- **Decision — answers about the signed-in person are same-origin only (AUTH-003, H5P-007).**
+  `ownAnswerHeaders` (`http/securityHeaders.ts`) on `/api`, `/auth/session` and every H5P route behind
+  authentication: `Cache-Control: no-store`, `Cross-Origin-Resource-Policy: same-origin` and the portal framing
+  rule. Portal pages send `Cross-Origin-Opener-Policy: same-origin`. LTI pages do not: Canvas frames them, and
+  ltijs's Platform Storage messages go to the window that opened or holds the tool (D-050). H5P's static files
+  and the signed file addresses come before authentication and keep their own rules.
+- **Decision — one spelling of an activity ID (PROD-003, H5P-006).** The content routes read the ID in lower
+  case (`contentIdParam`), `PublishedSaveGate` lower-cases it for its lock and its lookup, and it refuses with
+  404 when it finds no activity. PostgreSQL finds a UUID in any case, so the check itself ran; what a second
+  spelling got past was the lock a publish of the same activity holds.
+- **Recorded, not changed — cookies from other `hvl.no` sites.** The session and login cookies have the `__Host-`
+  prefix, so no other host can set or replace them. Another site under `hvl.no` can still set cookies for the
+  whole domain until a visitor's requests are larger than the proxy or the server accepts; the person is then
+  refused until they clear their cookies. This follows from the address, not from the code: it is in the threat
+  model (T-43) and the risk analysis (ROS-07) with the two remedies that are HVL's to choose, a page at the
+  proxy that says to clear cookies, or a registrable domain of its own (with Q5).
+- **Consequences:** One new server page (the sign-in page), scanned with axe. A redirect to our login that
+  another site makes without a click (an interstitial, a link checker) shows that page and costs one click. A
+  request refused for its CSRF token costs two extra requests once. No stored data changes.

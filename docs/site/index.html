@@ -600,7 +600,10 @@ HVL&#39;s bachelor students (<code>docs/handoff/canvas-studio.md</code>).</li>
   reason (e.g. &quot;captions are being produced in panopto&quot;). acknowledgements are stored, appear in
   insight and in the portfolio export, and are raised again on the next publish after 14 days.
   *warnings* and *hints* never block.
-- **verify:** unit tests for state transitions; e2e for j1 step 5.">
+- **verify:** unit tests for state transitions; e2e for j1 step 5.
+- **amended (d-131, 2026-11-21):** the gate on saves of a published activity (d-074) knows the activity by its
+  id in one spelling, so a save always waits on the lock a publish holds, and it refuses when it finds no
+  activity.">
 <summary><span class="req-id">PROD-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Check-and-publish quality gate</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Activities have the states <code>draft</code> and <code>published</code>. <em>Publish</em> runs the universal design validator
 (<a class="req-ref" href="#r-UD-020"><code>UD-020</code></a>) and the pedagogical hints (<a class="req-ref" href="#r-PED-020"><code>PED-020</code></a>). Findings are listed in plain language with a
@@ -611,6 +614,9 @@ reason (e.g. &quot;captions are being produced in Panopto&quot;). Acknowledgemen
 insight and in the portfolio export, and are raised again on the next publish after 14 days.
 <em>Warnings</em> and <em>hints</em> never block.</li>
 <li><strong>Verify:</strong> Unit tests for state transitions; e2e for J1 step 5.</li>
+<li><strong>Amended (D-131, 2026-11-21):</strong> the gate on saves of a published activity (D-074) knows the activity by its
+ID in one spelling, so a save always waits on the lock a publish holds, and it refuses when it finds no
+activity.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PROD-003">00 Product and pedagogy, PROD-003</a> · Product</p></div>
 </details>
@@ -1284,7 +1290,11 @@ group configured for the client. in the customer portal, authorise only the attr
 - **acceptance:** the full flow works against a mock oidc provider in tests. id tokens with a wrong
   `iss`, `aud`, `nonce` or an expired `exp` are rejected. the client secret is read from an
   environment variable or secret store and is never logged.
-- **verify:** integration tests with `oauth2-mock-server` (or equivalent); test names `[auth-001] …`.">
+- **verify:** integration tests with `oauth2-mock-server` (or equivalent); test names `[auth-001] …`.
+- **amended (d-131, 2026-11-21):** only a page the person opened starts a login: a request that is no navigation
+  is refused, and a page another site opened without a click, or a frame, gets a sign-in page whose button
+  starts it. a callback is taken only as a page navigation and uses the pending login up only when its `state`
+  is that login's; any other callback is refused and leaves the login in place.">
 <summary><span class="req-id">AUTH-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Feide OpenID Connect login (Authorization Code + PKCE)</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The server is a confidential OIDC relying party, registered in the Feide Customer Portal
 (kunde.feide.no) under HVL (realm <code>hvl.no</code> <em>(verify realm)</em>). It uses <code>openid-client</code> 6 with discovery
@@ -1299,6 +1309,10 @@ group configured for the client. In the Customer Portal, authorise only the attr
 <code>iss</code>, <code>aud</code>, <code>nonce</code> or an expired <code>exp</code> are rejected. The client secret is read from an
 environment variable or secret store and is never logged.</li>
 <li><strong>Verify:</strong> Integration tests with <code>oauth2-mock-server</code> (or equivalent); test names <code>[AUTH-001] …</code>.</li>
+<li><strong>Amended (D-131, 2026-11-21):</strong> only a page the person opened starts a login: a request that is no navigation
+is refused, and a page another site opened without a click, or a frame, gets a sign-in page whose button
+starts it. A callback is taken only as a page navigation and uses the pending login up only when its <code>state</code>
+is that login&#39;s; any other callback is refused and leaves the login in place.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-AUTH-001">02 Feide, LTI and grades, AUTH-001</a> · Feide login</p></div>
 </details>
@@ -1352,7 +1366,11 @@ logout clears the session and redirects the browser to feide's `end_session_endp
 (`https://auth.dataporten.no/openid/endsession`) with `post_logout_redirect_uri` (registered in the
 customer portal) and `id_token_hint`. feide requires both, so the raw id token is kept in the
 server-side session only, encrypted at rest and deleted at logout or expiry (d-021).
-- **verify:** integration tests (expiry, csrf rejection, logout).">
+- **verify:** integration tests (expiry, csrf rejection, logout).
+- **amended (d-131, 2026-11-21):** answers of `/api`, `/auth/session` and the signed-in h5p routes are `no-store`,
+  `cross-origin-resource-policy: same-origin` and framed by our own origin only; portal pages send
+  `cross-origin-opener-policy: same-origin` (lti pages do not). a page whose request is refused for its csrf
+  token asks `/auth/session` once for the current one and repeats the request.">
 <summary><span class="req-id">AUTH-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Portal session</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The server keeps the session in Redis and gives the browser an opaque ID in a cookie
 (<code>__Host-hvli_sid</code>; <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code>, <code>Path=/</code>). The session expires after
@@ -1363,6 +1381,10 @@ Customer Portal) and <code>id_token_hint</code>. Feide requires both, so the raw
 server-side session only, encrypted at rest and deleted at logout or expiry (D-021).</p>
 <ul>
 <li><strong>Verify:</strong> Integration tests (expiry, CSRF rejection, logout).</li>
+<li><strong>Amended (D-131, 2026-11-21):</strong> answers of <code>/api</code>, <code>/auth/session</code> and the signed-in H5P routes are <code>no-store</code>,
+<code>Cross-Origin-Resource-Policy: same-origin</code> and framed by our own origin only; portal pages send
+<code>Cross-Origin-Opener-Policy: same-origin</code> (LTI pages do not). A page whose request is refused for its CSRF
+token asks <code>/auth/session</code> once for the current one and repeats the request.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-AUTH-003">02 Feide, LTI and grades, AUTH-003</a> · Feide login</p></div>
 </details>
@@ -3596,6 +3618,9 @@ reason (e.g. &quot;captions are being produced in Panopto&quot;). Acknowledgemen
 insight and in the portfolio export, and are raised again on the next publish after 14 days.
 <em>Warnings</em> and <em>hints</em> never block.</li>
 <li><strong>Verify:</strong> Unit tests for state transitions; e2e for J1 step 5.</li>
+<li><strong>Amended (D-131, 2026-11-21):</strong> the gate on saves of a published activity (D-074) knows the activity by its
+ID in one spelling, so a save always waits on the lock a publish holds, and it refuses when it finds no
+activity.</li>
 </ul>
 <h4 id="r-PROD-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-PROD-004">PROD-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Learners only see published activities</span></h4>
 <ul>
@@ -4274,6 +4299,10 @@ group configured for the client. In the Customer Portal, authorise only the attr
 <code>iss</code>, <code>aud</code>, <code>nonce</code> or an expired <code>exp</code> are rejected. The client secret is read from an
 environment variable or secret store and is never logged.</li>
 <li><strong>Verify:</strong> Integration tests with <code>oauth2-mock-server</code> (or equivalent); test names <code>[AUTH-001] …</code>.</li>
+<li><strong>Amended (D-131, 2026-11-21):</strong> only a page the person opened starts a login: a request that is no navigation
+is refused, and a page another site opened without a click, or a frame, gets a sign-in page whose button
+starts it. A callback is taken only as a page navigation and uses the pending login up only when its <code>state</code>
+is that login&#39;s; any other callback is refused and leaves the login in place.</li>
 </ul>
 <h4 id="r-AUTH-002" class="req-heading" tabindex="-1"><a class="req-id" href="#r-AUTH-002">AUTH-002</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Map Feide affiliation to roles</span></h4>
 <p>After login, call <code>GET https://groups-api.dataporten.no/groups/me/groups</code> with the user&#39;s Feide access
@@ -4309,6 +4338,10 @@ Customer Portal) and <code>id_token_hint</code>. Feide requires both, so the raw
 server-side session only, encrypted at rest and deleted at logout or expiry (D-021).</p>
 <ul>
 <li><strong>Verify:</strong> Integration tests (expiry, CSRF rejection, logout).</li>
+<li><strong>Amended (D-131, 2026-11-21):</strong> answers of <code>/api</code>, <code>/auth/session</code> and the signed-in H5P routes are <code>no-store</code>,
+<code>Cross-Origin-Resource-Policy: same-origin</code> and framed by our own origin only; portal pages send
+<code>Cross-Origin-Opener-Policy: same-origin</code> (LTI pages do not). A page whose request is refused for its CSRF
+token asks <code>/auth/session</code> once for the current one and repeats the request.</li>
 </ul>
 <h4 id="r-AUTH-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-AUTH-004">AUTH-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Data minimisation at login</span></h4>
 <p>Request only the scopes listed in <a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>. <strong>Never</strong> request <code>userid-nin</code> or read the claim
@@ -12367,6 +12400,52 @@ fetch metadata (Safari before 16.4), the <strong>Rediger</strong> tab first open
 asks for a new launch. <code>LTIK_QUERY_PATHS</code> holds only H5P&#39;s two URL shapes; the landing pages read their own
 address. Browser tests that hold an ltik arrive through <code>test/support/openLanding.ts</code>. No stored data
 changes.</li>
+</ul>
+<h3 id="decisions--d-131--security-repairs-step-15-the-portals-login-its-answers-and-the-save-gate-are-closed-to-other-sites-requests-and-to-a-second-spelling-of-an-id" tabindex="-1">D-131 · Security repairs, step 15: the portal&#39;s login, its answers and the save gate are closed to other sites&#39; requests and to a second spelling of an ID</h3>
+<ul>
+<li><strong>Context:</strong> Four small things on the portal side. Starting a Feide login replaces the session a browser has,
+and with Feide&#39;s single sign-on it needs no step from the person: a request to <code>/auth/feide/login</code> that another
+site made in the background changed the session token under the person&#39;s open pages, and a callback with
+made-up values used up the pending login, because the login transaction was taken out of Redis before its
+<code>state</code> was compared. Answers about the signed-in person carried no rule against being embedded by another
+site, portal pages kept the window handle of whoever opened them, and some H5P answers behind authentication
+had no cache rule. The publish gate on saves (D-074) took its write lock under the ID as the request wrote it,
+and stepped aside when its lookup found no activity.</li>
+<li><strong>Decision — only a page the person opened starts a login (AUTH-001, AUTH-003).</strong> <code>auth/feide/loginNavigation.ts</code>
+reads the browser&#39;s fetch metadata. A request that is no navigation (an image, a script, a background fetch)
+is refused. A whole page that began on our own origin, in the address bar or a bookmark, or with a click by
+the person (a link in an e-mail, in Canvas, on another site) starts the login as before. Any other navigation,
+a page another site opened without a click or a frame, gets the sign-in page (<code>page.signIn.*</code>, nn, nb, en),
+whose button starts the login as a click on our own page, in the whole window. A browser that sends no fetch
+metadata is treated as before.</li>
+<li><strong>Decision — a callback uses up only its own login (AUTH-001).</strong> <code>/auth/feide/callback</code> is taken only as a
+page navigation. It looks at the pending login first (<code>LoginTransactions.peek</code>) and consumes it, and clears
+its cookie, only when the callback&#39;s <code>state</code> is that login&#39;s; any other callback is refused and leaves the
+login in place for Feide&#39;s own answer. Consuming stays single-use (GETDEL).</li>
+<li><strong>Decision — a page asks once for the current CSRF token (AUTH-003).</strong> When a portal request is refused with
+<code>hvl:csrf-invalid</code>, the web app&#39;s API client asks <code>GET /auth/session</code> once, repeats the request with the
+session&#39;s current token and remembers it (<code>apps/web/src/api/csrfRetry.ts</code>). The session cookie decides who
+that is; the token only proves the request came from our page, so a page of the same browser may fetch it.
+A session is still replaced at every login (D-057): a login never keeps a session ID that existed before it.</li>
+<li><strong>Decision — answers about the signed-in person are same-origin only (AUTH-003, H5P-007).</strong>
+<code>ownAnswerHeaders</code> (<code>http/securityHeaders.ts</code>) on <code>/api</code>, <code>/auth/session</code> and every H5P route behind
+authentication: <code>Cache-Control: no-store</code>, <code>Cross-Origin-Resource-Policy: same-origin</code> and the portal framing
+rule. Portal pages send <code>Cross-Origin-Opener-Policy: same-origin</code>. LTI pages do not: Canvas frames them, and
+ltijs&#39;s Platform Storage messages go to the window that opened or holds the tool (D-050). H5P&#39;s static files
+and the signed file addresses come before authentication and keep their own rules.</li>
+<li><strong>Decision — one spelling of an activity ID (PROD-003, H5P-006).</strong> The content routes read the ID in lower
+case (<code>contentIdParam</code>), <code>PublishedSaveGate</code> lower-cases it for its lock and its lookup, and it refuses with
+404 when it finds no activity. PostgreSQL finds a UUID in any case, so the check itself ran; what a second
+spelling got past was the lock a publish of the same activity holds.</li>
+<li><strong>Recorded, not changed — cookies from other <code>hvl.no</code> sites.</strong> The session and login cookies have the <code>__Host-</code>
+prefix, so no other host can set or replace them. Another site under <code>hvl.no</code> can still set cookies for the
+whole domain until a visitor&#39;s requests are larger than the proxy or the server accepts; the person is then
+refused until they clear their cookies. This follows from the address, not from the code: it is in the threat
+model (T-43) and the risk analysis (ROS-07) with the two remedies that are HVL&#39;s to choose, a page at the
+proxy that says to clear cookies, or a registrable domain of its own (with Q5).</li>
+<li><strong>Consequences:</strong> One new server page (the sign-in page), scanned with axe. A redirect to our login that
+another site makes without a click (an interstitial, a link checker) shows that page and costs one click. A
+request refused for its CSRF token costs two extra requests once. No stored data changes.</li>
 </ul>
 
 </section>

@@ -165,6 +165,9 @@ Activities have the states `draft` and `published`. *Publish* runs the universal
   insight and in the portfolio export, and are raised again on the next publish after 14 days.
   *Warnings* and *hints* never block.
 - **Verify:** Unit tests for state transitions; e2e for J1 step 5.
+- **Amended (D-131, 2026-11-21):** the gate on saves of a published activity (D-074) knows the activity by its
+  ID in one spelling, so a save always waits on the lock a publish holds, and it refuses when it finds no
+  activity.
 
 #### PROD-004 · MUST · S3 · Learners only see published activities
 - **Acceptance:** A learner request for a `draft` returns a friendly "not yet available" page
