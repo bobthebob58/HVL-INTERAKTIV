@@ -5265,3 +5265,38 @@ loading of one spec per session are kept.
 - **Consequences:** A text with a quote is no longer cut off when an activity is opened for editing. A row that
   cannot be read as its semantics describe, which the editor's save never stores, fails to play or to open with
   400. No new stored data.
+
+### D-125 · Security repairs, step 9: a web-app page is framed by nothing, the player frames only outside media, and three controls ask first
+- **Context:** Since D-070 a page of our own origin could frame any other page of ours: web-app pages were sent
+  with `frame-ancestors 'self'` and `X-Frame-Options: SAMEORIGIN`, and H5P pages with `frame-src 'self'`. The H5P
+  player is a page of our own origin, and what it shows is content that authors made. On the activity page three
+  controls acted on a single press: «Gjer om til utkast», «Fjern» for a co-author and «Ta ut av innhaldsbanken».
+  A page of ours shown inside an activity would put those controls under whatever the activity draws over them.
+  D-123 and D-124 keep content from carrying a frame of its own; this step does not rest on that.
+- **Decision — a web-app page is framed by nothing (DATA-011, LTI-003).** `web/webRoutes.ts` sends every web-app
+  page without a Canvas launch with `frame-ancestors 'none'` and `X-Frame-Options: DENY`. Nothing of ours shows
+  such a page in a frame: the web app frames the H5P player and editor, never the other way round. A page with a
+  launch (`/app/*`) keeps its rule: our own origin and `CANVAS_ORIGINS`, and no `X-Frame-Options`. The H5P pages
+  and the server's own message pages keep `frame-ancestors 'self'`, because the web app shows them in its frames;
+  they hold no control that changes an activity's status, authors or listing.
+- **Decision — the player frames only outside media (DATA-011).** `http/h5pPageCsp.ts`: a player page's
+  `frame-src` lists `EXTERNAL_MEDIA_ORIGINS` only, and is `'none'` when there are none. The editor page keeps
+  `'self'`. The frames H5P builds itself start from an empty page it writes into, which `frame-src` does not
+  refuse. This replaces D-070's `frame-src 'self' <EXTERNAL_MEDIA_ORIGINS>` for the player page.
+- **Decision — three controls ask before they act (PROD-007, UD-006).** `components/ConfirmDialog.tsx`, built on
+  the existing `Dialog` (focus moves in, Escape closes, focus returns to the control): a question as the heading,
+  one sentence on what follows, the action and «Avbryt». It is used by «Gjer om til utkast»
+  (`features/activity/CheckPanel.tsx`), by «Fjern» and «Fjern meg» in the co-author list
+  (`features/sharing/CoAuthorSection.tsx`) and by «Ta ut av innhaldsbanken»
+  (`features/sharing/BankUnlistButton.tsx`). The first press sends no request; «Avbryt», «Lukk» and Escape send
+  none either. Publishing and listing already asked (their dialogs carry the check's result and the conditions).
+- **Why both.** The framing rules are enforced by the browser, header by header. The question is ours, and holds
+  whatever a browser does with a header and whatever a later change does to one. Either alone would do; an
+  activity going back to draft in the middle of a course is worth two.
+- **Verified:** the ten real content types play with the tighter `frame-src`, interactive video and course
+  presentation included. In a browser, a web-app page put in a frame by a page with the player's policy is refused
+  by `frame-src`, and by a page with the editor's policy by `frame-ancestors 'none'`; opened directly it loads.
+  Each question passes the axe scan, and the «Fjern meg» journey is answered by keyboard alone.
+- **Consequences:** A web-app page can no longer be embedded in any page, ours or another site's. An activity
+  cannot embed another page of this service in a frame; embedding goes through the content types' own
+  sub-content. The three actions take one more press. No new stored data.

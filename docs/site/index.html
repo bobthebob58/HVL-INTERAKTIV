@@ -11995,6 +11995,42 @@ cannot be read as its semantics describe, which the editor&#39;s save never stor
 </ol>
 </li>
 </ul>
+<h3 id="decisions--d-125--security-repairs-step-9-a-web-app-page-is-framed-by-nothing-the-player-frames-only-outside-media-and-three-controls-ask-first" tabindex="-1">D-125 · Security repairs, step 9: a web-app page is framed by nothing, the player frames only outside media, and three controls ask first</h3>
+<ul>
+<li><strong>Context:</strong> Since D-070 a page of our own origin could frame any other page of ours: web-app pages were sent
+with <code>frame-ancestors &#39;self&#39;</code> and <code>X-Frame-Options: SAMEORIGIN</code>, and H5P pages with <code>frame-src &#39;self&#39;</code>. The H5P
+player is a page of our own origin, and what it shows is content that authors made. On the activity page three
+controls acted on a single press: «Gjer om til utkast», «Fjern» for a co-author and «Ta ut av innhaldsbanken».
+A page of ours shown inside an activity would put those controls under whatever the activity draws over them.
+D-123 and D-124 keep content from carrying a frame of its own; this step does not rest on that.</li>
+<li><strong>Decision — a web-app page is framed by nothing (DATA-011, LTI-003).</strong> <code>web/webRoutes.ts</code> sends every web-app
+page without a Canvas launch with <code>frame-ancestors &#39;none&#39;</code> and <code>X-Frame-Options: DENY</code>. Nothing of ours shows
+such a page in a frame: the web app frames the H5P player and editor, never the other way round. A page with a
+launch (<code>/app/*</code>) keeps its rule: our own origin and <code>CANVAS_ORIGINS</code>, and no <code>X-Frame-Options</code>. The H5P pages
+and the server&#39;s own message pages keep <code>frame-ancestors &#39;self&#39;</code>, because the web app shows them in its frames;
+they hold no control that changes an activity&#39;s status, authors or listing.</li>
+<li><strong>Decision — the player frames only outside media (DATA-011).</strong> <code>http/h5pPageCsp.ts</code>: a player page&#39;s
+<code>frame-src</code> lists <code>EXTERNAL_MEDIA_ORIGINS</code> only, and is <code>&#39;none&#39;</code> when there are none. The editor page keeps
+<code>&#39;self&#39;</code>. The frames H5P builds itself start from an empty page it writes into, which <code>frame-src</code> does not
+refuse. This replaces D-070&#39;s <code>frame-src &#39;self&#39; &lt;EXTERNAL_MEDIA_ORIGINS&gt;</code> for the player page.</li>
+<li><strong>Decision — three controls ask before they act (PROD-007, UD-006).</strong> <code>components/ConfirmDialog.tsx</code>, built on
+the existing <code>Dialog</code> (focus moves in, Escape closes, focus returns to the control): a question as the heading,
+one sentence on what follows, the action and «Avbryt». It is used by «Gjer om til utkast»
+(<code>features/activity/CheckPanel.tsx</code>), by «Fjern» and «Fjern meg» in the co-author list
+(<code>features/sharing/CoAuthorSection.tsx</code>) and by «Ta ut av innhaldsbanken»
+(<code>features/sharing/BankUnlistButton.tsx</code>). The first press sends no request; «Avbryt», «Lukk» and Escape send
+none either. Publishing and listing already asked (their dialogs carry the check&#39;s result and the conditions).</li>
+<li><strong>Why both.</strong> The framing rules are enforced by the browser, header by header. The question is ours, and holds
+whatever a browser does with a header and whatever a later change does to one. Either alone would do; an
+activity going back to draft in the middle of a course is worth two.</li>
+<li><strong>Verified:</strong> the ten real content types play with the tighter <code>frame-src</code>, interactive video and course
+presentation included. In a browser, a web-app page put in a frame by a page with the player&#39;s policy is refused
+by <code>frame-src</code>, and by a page with the editor&#39;s policy by <code>frame-ancestors &#39;none&#39;</code>; opened directly it loads.
+Each question passes the axe scan, and the «Fjern meg» journey is answered by keyboard alone.</li>
+<li><strong>Consequences:</strong> A web-app page can no longer be embedded in any page, ours or another site&#39;s. An activity
+cannot embed another page of this service in a frame; embedding goes through the content types&#39; own
+sub-content. The three actions take one more press. No new stored data.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">

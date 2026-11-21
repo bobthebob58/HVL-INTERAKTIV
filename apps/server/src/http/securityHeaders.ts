@@ -8,7 +8,9 @@
  * Invariants:
  *   - Every response: `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
  *     `X-Permitted-Cross-Domain-Policies: none`; `Strict-Transport-Security` when the public URL is https.
- *   - Portal pages: `frame-ancestors 'self'` and `X-Frame-Options: SAMEORIGIN`; LTI pages never get X-Frame-Options.
+ *   - Portal pages the server renders (the H5P pages, the message pages): `frame-ancestors 'self'` and
+ *     `X-Frame-Options: SAMEORIGIN`, since the web app shows them in its frames. The web app's own pages are
+ *     framed by nothing (../web/webRoutes.ts, D-125). LTI pages never get X-Frame-Options.
  * Collaborators: ../server/createApp.ts, ../lti/http/ltiPageHeaders.ts.
  * Tests: apps/server/test/http/securityHeaders.test.ts
  */
