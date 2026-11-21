@@ -14225,6 +14225,42 @@ $ npx vitest run --project server                    26477 passed, 31 skipped; 4
     container; DATA-010, MAPPE-004, NFR-002), and two tests that expected values under keys no field defines to
     be kept (`http/contentInput`, `http/player.browser`), updated to the rule and passing (11 tests)</code></pre>
 </li>
+<li><p><strong>2026-11-21 · Security repairs, step 8 (D-124)</strong> — The player and the editor are handed fitted content,
+whatever the stored row or an uploaded package holds. Two repairs, one commit each; every new test fails on the
+code before and passes after:</p>
+<ul>
+<li>The player (SEC-008, H5P-004): <code>h5p/semantics/playedParams.ts</code> (new) wraps the player&#39;s <code>render</code>, so every
+page carries its activity&#39;s parameters after D-123&#39;s fitting; the row is not rewritten, and what could be
+stored still plays. Tests: <code>playedParams.test.ts</code>, <code>playedParams.int.test.ts</code> (real types).</li>
+<li>The editor (SEC-008, SEC-005, H5P-006, PROD-012): <code>h5p/semantics/editorFormParams.ts</code> and
+<code>h5p/editorFormReads.ts</code> (new) clean what the editor&#39;s form is handed when an activity is opened and when a
+package is uploaded: fitted, text as on save, and a quote in plain text and title data in the form the editor
+writes into <code>value=&quot;…&quot;</code>. <code>h5p/libraries/packageContentCheck.ts</code> (new) refuses a package whose content cannot
+be read with 400 before the importer reads it. Tests: <code>editorFormParams.test.ts</code>,
+<code>editorFormParams.int.test.ts</code>, <code>editorQuotedText.browser.int.test.ts</code> (a label with a double quote, cut off
+at the quote before, is shown whole).</li>
+<li>Two pattern test files (<code>placeholderMarker.browser</code>, <code>skeletonCreation.browser</code>) asserted what is stored
+through the editor&#39;s <code>getContent</code>, which now answers with the editor&#39;s form; they read the row through
+<code>test/support/storedContent.ts</code> (new).</li>
+<li>BranchingScenario&#39;s editor was checked in a browser with and without the <code>contentId</code> D-123 removes: the same
+five nodes, no error, and it saves.</li>
+<li>D-124 added; <code>TRACEABILITY.md</code> and the spec site regenerated. No spec change. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 28, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run doc:lint                                   11 checks passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins                                 6 manifests, every version pinned exactly
+$ npx vitest run --project web                       616 passed
+$ npx vitest run --project api-contract              97 passed
+$ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    26496 passed, 31 skipped; 5 failed in 7 files: the same
+    five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+    container; DATA-010, MAPPE-004, NFR-002), and three tests in two pattern files that read stored content
+    through the editor's `getContent`, updated to read the row itself and passing (23 tests in the two files)</code></pre>
+</li>
 </ul>
 
 </section>

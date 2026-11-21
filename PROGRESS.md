@@ -2120,3 +2120,40 @@ Append one entry per session: date, session, what was done, gate output, and any
       container; DATA-010, MAPPE-004, NFR-002), and two tests that expected values under keys no field defines to
       be kept (`http/contentInput`, `http/player.browser`), updated to the rule and passing (11 tests)
   ```
+
+- **2026-11-21 · Security repairs, step 8 (D-124)** — The player and the editor are handed fitted content,
+  whatever the stored row or an uploaded package holds. Two repairs, one commit each; every new test fails on the
+  code before and passes after:
+  - The player (SEC-008, H5P-004): `h5p/semantics/playedParams.ts` (new) wraps the player's `render`, so every
+    page carries its activity's parameters after D-123's fitting; the row is not rewritten, and what could be
+    stored still plays. Tests: `playedParams.test.ts`, `playedParams.int.test.ts` (real types).
+  - The editor (SEC-008, SEC-005, H5P-006, PROD-012): `h5p/semantics/editorFormParams.ts` and
+    `h5p/editorFormReads.ts` (new) clean what the editor's form is handed when an activity is opened and when a
+    package is uploaded: fitted, text as on save, and a quote in plain text and title data in the form the editor
+    writes into `value="…"`. `h5p/libraries/packageContentCheck.ts` (new) refuses a package whose content cannot
+    be read with 400 before the importer reads it. Tests: `editorFormParams.test.ts`,
+    `editorFormParams.int.test.ts`, `editorQuotedText.browser.int.test.ts` (a label with a double quote, cut off
+    at the quote before, is shown whole).
+  - Two pattern test files (`placeholderMarker.browser`, `skeletonCreation.browser`) asserted what is stored
+    through the editor's `getContent`, which now answers with the editor's form; they read the row through
+    `test/support/storedContent.ts` (new).
+  - BranchingScenario's editor was checked in a browser with and without the `contentId` D-123 removes: the same
+    five nodes, no error, and it saves.
+  - D-124 added; `TRACEABILITY.md` and the spec site regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project web                       616 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26496 passed, 31 skipped; 5 failed in 7 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002), and three tests in two pattern files that read stored content
+      through the editor's `getContent`, updated to read the row itself and passing (23 tests in the two files)
+  ```
