@@ -6,7 +6,8 @@
  *      if it ever runs, so a browser test can prove that none does after a save.
  * Spec: SEC-008
  * Invariants: every flag name starts with `__hvl`; the payloads are saved through the normal save route, so
- *   the server's cleaning is what the test checks.
+ *   the server's cleaning is what the test checks. Since D-123 a save removes every key the semantics do not
+ *   define, so of COPYRIGHT_PARAMS only `question` and `media` (fields of the test library) are stored.
  * Tests: shared by apps/server/test/http/player.browser.int.test.ts.
  */
 
@@ -30,7 +31,10 @@ const image = (path: string, alt: unknown, title: string) => ({
   metadata: { license: 'CC BY', title },
 });
 
-/** Copyright data under keys no semantics field defines; h5p.js `findCopyrights` still renders all of it. */
+/**
+ * Copyright data in a field the test library defines (`media`) and under keys no field defines (the rest), which
+ * h5p.js `findCopyrights` would render all the same if they were stored.
+ */
 export const COPYRIGHT_PARAMS = {
   question: 'Kva?',
   media: {
@@ -87,5 +91,5 @@ export const COPYRIGHT_FLAGS = [
   '__hvlDeep',
 ];
 
-/** Images in COPYRIGHT_PARAMS with a safe path, each shown as a thumbnail in the dialog. */
-export const COPYRIGHT_THUMBNAILS = 3;
+/** The keys of COPYRIGHT_PARAMS that the test library's semantics define: all a save stores (D-123). */
+export const COPYRIGHT_STORED_KEYS = ['media', 'question'];
