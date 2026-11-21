@@ -13,7 +13,8 @@
  *     `expires_in`, whether or not the cleanup job has deleted them yet (./ltiRecordLifetimes.ts).
  *   - `consumeNonce` is one conditional DELETE, so of any number of concurrent calls exactly one succeeds.
  *   - Private keys and access tokens are stored only encrypted (./ltiPlatformRows.ts, ./ltiAccessTokenRows.ts).
- *   - A malformed ID or nonce is "not found", never a query error or an unfiltered query.
+ *   - A malformed ID, issuer, client ID or nonce is "not found", never a query error or an unfiltered query;
+ *     claims that cannot be stored are refused before the deployment check (../ltiInputText.ts).
  *   - `listen` and `close` do nothing: the server owns the Prisma client's lifecycle.
  * Collaborators: ltijs `Provider` (ProviderOptions.databaseManager), ../platforms/LtiDeploymentGuard.ts,
  *   ./ltiIdTokenClaims.ts, ./LtiRecordCleanupJob.ts (deletes what expired), ../../infra/prismaClient.ts.
@@ -29,9 +30,10 @@ import type { Database } from '../../infra/prismaClient.js';
 import type { DataEncryption } from '../../security/keys/DataEncryption.js';
 import type { LtiDeploymentGuard } from '../platforms/LtiDeploymentGuard.js';
 import { accessTokenColumns, accessTokenFromRow } from './ltiAccessTokenRows.js';
+import { assertStorableClaims, isLookupText } from '../ltiInputText.js';
 import { minimiseIdTokenClaims } from './ltiIdTokenClaims.js';
 import { isPlatformId, platformCreateData, platformFromRow, platformUpdateData } from './ltiPlatformRows.js';
-import { platformWhere } from './ltiPlatformRows.js';
+import { canMatchPlatform, platformWhere } from './ltiPlatformRows.js';
 import { ID_TOKEN_LIFETIME_MS, NONCE_LIFETIME_MS } from './ltiRecordLifetimes.js';
 
 const DEPLOYMENT_ID_CLAIM = 'https://purl.imsglobal.org/spec/lti/claim/deployment_id';
@@ -73,6 +75,8 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
 
   /** The registered platforms matching `filter`, oldest first, with decrypted private keys. */
   async getPlatforms(filter?: PlatformFilter): Promise<PlatformRecord[]> {
+    // SECURITY: at login and launch the filter is the sender's text; what no row could hold matches nothing.
+    if (!canMatchPlatform(filter)) return [];
     const rows = await this.db.ltiPlatform.findMany({
       where: platformWhere(filter),
       orderBy: { createdAt: 'asc' },
@@ -89,7 +93,7 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
 
   /** One platform by issuer and client ID, or undefined. */
   async getPlatformByUrlAndClientId(url: string, clientId: string): Promise<PlatformRecord | undefined> {
-    if (!isNonEmptyString(url) || !isNonEmptyString(clientId)) return undefined;
+    if (!isLookupText(url) || !isLookupText(clientId)) return undefined;
     const row = await this.db.ltiPlatform.findUnique({ where: { url_clientId: { url, clientId } } });
     return row === null ? undefined : platformFromRow(row, this.encryption);
   }
@@ -155,10 +159,12 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
 
   /** Stores a launch's allowlisted claims for 24 hours after the deployment check; returns the record ID. */
   async saveIdToken(token: IdTokenClaims): Promise<string> {
-    // SECURITY: no record, and so no ltik, for a deployment that LTI_PLATFORMS does not list (LTI-001, D-051).
-    await this.deps.deployments.assertAllowed(token.platform_id, token[DEPLOYMENT_ID_CLAIM] as string);
     // PRIVACY: names, e-mail, lis and unknown custom fields never reach the table (DATA-002, D-052).
     const claims = minimiseIdTokenClaims(token);
+    // SECURITY: a claim the database cannot hold is the platform's fault (400), never a failed write (500).
+    assertStorableClaims(claims);
+    // SECURITY: no record, and so no ltik, for a deployment that LTI_PLATFORMS does not list (LTI-001, D-051).
+    await this.deps.deployments.assertAllowed(token.platform_id, token[DEPLOYMENT_ID_CLAIM] as string);
     const createdAt = this.now();
     const id = randomUUID();
     await this.db.ltiIdToken.create({
@@ -181,7 +187,7 @@ export class PrismaLtiDatabaseManager implements DatabaseManager {
   /** Uses up a fresh nonce; true exactly once per nonce (LTI-002). */
   async consumeNonce(nonce: string): Promise<boolean> {
     // SECURITY: without this guard an undefined nonce would drop the filter and match every recent nonce.
-    if (!isNonEmptyString(nonce)) return false;
+    if (!isLookupText(nonce)) return false;
     const freshSince = new Date(this.now().getTime() - NONCE_LIFETIME_MS);
     // SECURITY: one conditional DELETE is atomic, so a replayed ID token can never use a nonce twice (LTI-002).
     const { count } = await this.db.ltiNonce.deleteMany({ where: { nonce, createdAt: { gt: freshSince } } });

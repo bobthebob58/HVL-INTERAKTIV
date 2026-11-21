@@ -25,6 +25,7 @@ import type {
 } from 'ltijs';
 import type { LtiPlatform, Prisma } from '../../generated/prisma/client.js';
 import type { DataEncryption } from '../../security/keys/DataEncryption.js';
+import { isLookupText } from '../ltiInputText.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const METHODS: ReadonlySet<string> = new Set(Object.values(IdTokenValidationMethod));
@@ -135,6 +136,16 @@ export function platformUpdateData(
     Object.assign(data, validationColumns(fields.idTokenValidation));
   if (fields.keys !== undefined) Object.assign(data, keyColumns(fields.keys, encryption));
   return data;
+}
+
+/**
+ * Tells whether a filter of `getPlatforms` could match a stored platform.
+ * @param filter - ltijs's filter; at login and at launch its URL and client ID are the sender's text.
+ * @returns False when a given URL or client ID is not an identifier a platform sends, so the filter matches nothing.
+ */
+export function canMatchPlatform(filter: PlatformFilter = {}): boolean {
+  const given = [filter.url, ...[filter.clientId].flat()].filter((value) => value !== undefined);
+  return given.every(isLookupText);
 }
 
 /**

@@ -13,7 +13,11 @@ import {
   platformCreateData,
   platformFromRow,
 } from '../../../src/lti/storage/ltiPlatformRows.js';
-import { platformUpdateData, platformWhere } from '../../../src/lti/storage/ltiPlatformRows.js';
+import {
+  canMatchPlatform,
+  platformUpdateData,
+  platformWhere,
+} from '../../../src/lti/storage/ltiPlatformRows.js';
 import { DataEncryption, DecryptionError } from '../../../src/security/keys/DataEncryption.js';
 import { parseKeyring } from '../../../src/security/keys/keyring.js';
 
@@ -110,6 +114,22 @@ describe('[LTI-002] platform rows', () => {
       clientId: 'c',
     });
     expect(platformWhere({ clientId: ['a', 'b'] })).toEqual({ clientId: { in: ['a', 'b'] } });
+  });
+
+  it('[LTI-001] a filter whose URL or client ID is no identifier a platform sends matches nothing', () => {
+    // Arrange
+    const filters = [
+      undefined,
+      { url: 'https://canvas.instructure.com', clientId: ['1', '2'] },
+      { url: 'https://canvas.instructure.com\u0000' },
+      { url: 'https://canvas.instructure.com', clientId: ['1', '2\u0000'] },
+      { clientId: '' },
+      { url: 42 as unknown as string },
+    ];
+    // Act
+    const usable = filters.map((filter) => canMatchPlatform(filter));
+    // Assert
+    expect(usable).toEqual([true, true, false, false, false, false]);
   });
 
   it('[LTI-002] only a canonical UUID can be a platform ID', () => {

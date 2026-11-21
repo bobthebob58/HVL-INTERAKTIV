@@ -13,11 +13,15 @@
  *     allows its inline scripts by hash, and our storage guard runs before them.
  *   - A handler error goes to `next(error)`, where the LTI error pages answer; ltijs's own JSON errors never reach
  *     a user.
- * Collaborators: ./ltiPageHeaders.ts, ../LtiProviderFactory.ts, ../pages/client/ltijsStorageGuard.js.
+ *   - A query or form field with a control character is refused (400) before ltijs reads any field, so none is
+ *     used for a lookup or stored (../ltiInputText.ts).
+ * Collaborators: ./ltiPageHeaders.ts, ../ltiInputText.ts, ../LtiProviderFactory.ts,
+ *   ../pages/client/ltijsStorageGuard.js.
  * Tests: apps/server/test/lti/http/ExpressRouterHttpHandler.test.ts
  */
 import express, { type NextFunction, type Request, type Response, type Router } from 'express';
 import type { HttpHandler, HttpMethod, HttpRequestParameters, HttpResponse, RouteHandler } from 'ltijs';
+import { assertLaunchFields } from '../ltiInputText.js';
 import { ltijsPageCsp, setLtiPageHeaders } from './ltiPageHeaders.js';
 
 /** Path of the script that keeps ltijs's pages working when the browser blocks frame storage. */
@@ -97,6 +101,7 @@ export class ExpressRouterHttpHandler implements HttpHandler {
         headers: headersOf(req),
       };
       try {
+        assertLaunchFields(request.query, request.body);
         await handler(request, toLtijsResponse(res, this.canvasOrigins));
       } catch (error) {
         next(error);

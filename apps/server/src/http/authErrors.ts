@@ -24,6 +24,7 @@ export const AUTH_ERRORS = {
   'hvl:session-expired': [401, 'error.sessionExpired'],
   'hvl:ltik-invalid': [401, 'error.ltikInvalid'],
   'hvl:login-failed': [400, 'error.loginFailed'],
+  'hvl:launch-malformed': [400, 'error.launchFailed'],
   'hvl:deep-link-choice-invalid': [400, 'error.deepLinkChoiceInvalid'],
   'hvl:acknowledgement-invalid': [400, 'error.acknowledgementInvalid'],
   'hvl:no-feide-id': [403, 'error.noFeideId'],

@@ -77,6 +77,25 @@ describe('[LTI-001] ltijs on our router', () => {
     expect(res.headers).toMatchObject({ 'referrer-policy': 'no-referrer', 'cache-control': 'no-store' });
   });
 
+  it('[LTI-001] a field with a control character never reaches ltijs: the error handler answers', async () => {
+    // Arrange
+    let reached = 0;
+    const app = appWith('/lti/login', [HttpMethod.Get, HttpMethod.Post], async (_req, res) => {
+      reached += 1;
+      res.json({ ok: true });
+    });
+    // Act
+    const inForm = await request(app)
+      .post('/lti/login')
+      .type('form')
+      .send({ iss: 'https://c.example\u0000' });
+    const inQuery = await request(app).get('/lti/login').query({ login_hint: 'hint\n' });
+    const plain = await request(app).get('/lti/login').query({ login_hint: 'hint' });
+    // Assert
+    expect([inForm.status, inQuery.status, plain.status]).toEqual([418, 418, 200]);
+    expect(reached).toBe(1);
+  });
+
   it('[LTI-001] hands a handler error to the next error handler, and only registers the given methods', async () => {
     // Arrange
     const app = appWith('/lti/keys', [HttpMethod.Get], async () => {

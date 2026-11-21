@@ -115,6 +115,7 @@ const BY_AUTH_CODE: Record<string, LtiFailure> = {
     'deployment-not-allowed',
   ),
   'hvl:ltik-invalid': REOPEN,
+  'hvl:launch-malformed': LAUNCH_FAILED('launch-invalid'),
   'hvl:activity-unavailable': failure(404, 'page.notAvailable.title', 'page.notAvailable.body'),
   'hvl:deep-link-not-allowed': failure(403, 'page.error.title', 'error.deepLinkNotAllowed'),
   'hvl:deep-link-draft': failure(409, 'page.error.title', 'error.deepLinkDraft'),
