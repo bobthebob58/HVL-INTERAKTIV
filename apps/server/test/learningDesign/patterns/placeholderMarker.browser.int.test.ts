@@ -23,6 +23,7 @@ import { closeLoopbackServers, listenOnLoopback } from '../../support/loopbackSe
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../../support/httpTestbed.js';
 import { describeWithRealPackages, REAL_PACKAGES_DIR } from '../../support/realPackages.js';
 import { describeWithServices } from '../../support/services.js';
+import { storedContent } from '../../support/storedContent.js';
 import {
   MARKER_FORMS,
   markedActivities,
@@ -51,7 +52,7 @@ describeWithServices('the guidance marker through the editor and Lumi (probe P6)
     let user: IUser;
     let base: string;
     let activities: ProbeActivity[];
-    const read = (id: string) => tb.runtime.editor.getContent(id, user);
+    const read = (id: string) => storedContent(tb.runtime.editor, id, user); // WHY: the row itself (D-124)
     beforeAll(async () => {
       tb = await openHttpTestbed([], { seedFrom: REAL_PACKAGES_DIR });
       author = await tb.actor('author');
@@ -148,8 +149,7 @@ describeWithServices('the guidance marker through the editor and Lumi (probe P6)
         }
         // Assert
         const expected = activities.map(({ how, activity: a }) => {
-          const loaded = how === 'saved' ? storedOf(a) : found.asWritten(a);
-          const sent = found.sentOnUnchangedSave(a, loaded);
+          const sent = found.sentOnUnchangedSave(a, storedOf(a)); // WHY: the editor gets every row cleaned (D-124)
           const report = [
             found.CKEDITOR_FIELDS[a.type],
             200,
