@@ -2230,3 +2230,49 @@ Append one entry per session: date, session, what was done, gate output, and any
       five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
       container; DATA-010, MAPPE-004, NFR-002)
   ```
+- **2026-11-21 · Security repairs, step 11 (D-127)** — The validator reads only content within the limits for
+  one activity, in time that follows its size, and a slow pattern is a lint error. Four repairs, one commit each;
+  every new test fails on the code before and passes after, except the tables of unchanged verdicts, which hold
+  on both:
+  - The guard (UD-020, SEC-005, PROD-003): `content/boundedValidator.ts` (new), built into the publish flow's
+    dependencies (`content/publishingDeps.ts`): content past a limit of D-126 gets the one error finding `V-SIZE`
+    and is not read; the findings list, publishing and the mappe share it. `CONTENT_LIMITS.pathCharacters`: the
+    paths of all values together are at most 50 000 000 characters. Tests: `boundedValidator.test.ts`,
+    `boundedValidator.int.test.ts`, `contentBudget.test.ts`.
+  - Two rules (UD-021, PED-020): V-LINK-TEXT trims a link text by stepping in from each end; PED-H10 tallies a
+    book's chapters in one pass. Tests: `linkTextRule.test.ts`, `chapterInteractionHint.test.ts`.
+  - One parse per text (UD-020): a reader kept for one validation run (`richText.ts`, `rule.ts` `ruleScope`); the
+    walk and every rule read through it. Tests: `richTextReader.test.ts` (every fixture, no text parsed twice).
+  - The lint rule (NFR-004, NFR-002): `eslint-plugin-regexp` 3.3.3 (development only) with its two rules for
+    patterns that cost more than the text they read, as errors for `apps/server/src`, `apps/web/src` and
+    `packages/*/src`; the five places it found are rewritten and give what they gave. Tests:
+    `lint/slowPatterns.test.ts` and the tests of the five.
+  - Also: the API documentation builds without warnings again (`npm run docs:api`: two listener signatures
+    described, one Prisma type listed), and the accessibility conformance report is regenerated from its sources
+    (`npm run a11y:report`). Both are CI steps; the gate below now runs them.
+  - D-127 added; UD-020 in spec 03 and SEC-005 in spec 01 have an "Amended" line; `TRACEABILITY.md` and the spec
+    site regenerated. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       624 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     529 passed
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26679 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
