@@ -24,6 +24,7 @@ import express, { type Express } from 'express';
 import type { Logger } from 'pino';
 import type { Principal, Role } from '../../src/auth/Principal.js';
 import { setPrincipal } from '../../src/auth/principalLocals.js';
+import { withinContentLimits } from '../../src/content/boundedValidator.js';
 import { PrismaContentAccessRepository } from '../../src/h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../../src/http/api/apiRouter.js';
 import { gradeBridgeApi } from '../../src/server/gradeBridgeApi.js';
@@ -96,7 +97,8 @@ export function openApiTestbed(options: { studioContent?: StudioContent; logger?
   // WHY: read on every request, so a test can replace the validator or move the clock between requests.
   const publishing = {
     db,
-    validator: ((input) => tb.validator(input)) satisfies ContentValidator,
+    // WHY: behind the limits for one activity, as the server wires it (content/publishingDeps.ts, D-127).
+    validator: withinContentLimits((input) => tb.validator(input)),
     clock: () => new Date(Date.now() + tb.clockOffsetMs),
   };
   const access = new PrismaContentAccessRepository(db);

@@ -103,6 +103,21 @@ describe('[SEC-005] the limits on what one activity may hold', () => {
     expect(results).toEqual([undefined, 'whole']);
   });
 
+  it('[SEC-005] the paths of all values together may be as long as the limit and no longer', () => {
+    // Arrange: a list under one long key; an item's path is the key, its index and their separators
+    const key = 'k'.repeat(250);
+    const pathOfItem = (index: number) => key.length + 1 + String(index).length + 2;
+    let items = 0;
+    for (let sum = key.length + 1; sum + pathOfItem(items) <= CONTENT_LIMITS.pathCharacters; items += 1)
+      sum += pathOfItem(items);
+    const list = (length: number) => ({ [key]: Array.from({ length }, () => 0) });
+    // Act
+    const results = [contentLimitPassed(list(items)), contentLimitPassed(list(items + 1))];
+    // Assert
+    expect(items).toBeLessThan(values - 2);
+    expect(results).toEqual([undefined, 'whole']);
+  });
+
   it('[PROD-012] a refusal is a 400 that names the kind of limit and nothing from the content', () => {
     // Arrange
     const params = { secret: 'hemmeleg', text: 'a'.repeat(textLength + 1) };

@@ -8,15 +8,18 @@
  * Spec: PROD-003, UD-020
  * Invariants:
  *   - `validator` is the same function for the findings API, the publish API and the save gate, so all three agree.
+ *     In the server it is wrapped so that it reads only content within the limits for one activity
+ *     (./boundedValidator.ts, D-127); without a validator nothing is found, so publishing works and never blocks.
  *   - `writeLock` is the same lock for the publish API and the save gate. createApp passes the Redis lock; without
  *     one, both use the process-wide lock, which serialises only within one process (tests).
  * Collaborators: ./ContentPublisher.ts, ./PublishedSaveGate.ts, ./storedContent.ts, ./ContentWriteLock.ts,
- *   ../server/createApp.ts.
+ *   ./boundedValidator.ts, ../server/createApp.ts.
  * Tests: apps/server/test/http/api/publishRoutes.int.test.ts, apps/server/test/content/publishedSave.int.test.ts,
- *   apps/server/test/content/saveRace.int.test.ts
+ *   apps/server/test/content/saveRace.int.test.ts, apps/server/test/content/boundedValidator.int.test.ts
  */
 import type { Database } from '../infra/prismaClient.js';
 import type { ContentValidator } from '../validation/types.js';
+import { withinContentLimits } from './boundedValidator.js';
 import type { ContentWriteLock } from './ContentWriteLock.js';
 
 /** The current moment; `() => new Date()` outside tests. */
@@ -31,3 +34,23 @@ export interface PublishingDeps {
   /** One save or publish of an activity at a time (D-074); the process-wide lock when absent. */
   readonly writeLock?: ContentWriteLock;
 }
+
+/**
+ * The publish flow's dependencies as the server runs them.
+ * @param db - The database.
+ * @param validator - The pre-publish validator built at start-up; without one, a validator that finds nothing.
+ * @param writeLock - The activities' write lock (the Redis lock in the server).
+ * @returns The dependencies, with the current time as the clock and the validator behind the limits for one activity.
+ * @spec UD-020
+ */
+export const serverPublishingDeps = (
+  db: Database,
+  validator: ContentValidator | undefined,
+  writeLock: ContentWriteLock,
+): PublishingDeps => ({
+  db,
+  // SECURITY: content past the limits is answered with one finding and never read (D-127).
+  validator: withinContentLimits(validator ?? (() => [])),
+  clock: () => new Date(),
+  writeLock,
+});

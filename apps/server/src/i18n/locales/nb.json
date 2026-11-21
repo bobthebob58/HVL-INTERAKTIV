@@ -64,7 +64,8 @@
     "contentTooLarge": {
       "whole": "Aktiviteten er for stor til å lagres. Del innholdet på flere aktiviteter.",
       "text": "En tekst i aktiviteten er for lang til å lagres. Del teksten i flere deler.",
-      "markup": "En tekst i aktiviteten har for mange lag med formatering inni hverandre. Lim teksten inn på nytt uten formatering."
+      "markup": "En tekst i aktiviteten har for mange lag med formatering inni hverandre. Lim teksten inn på nytt uten formatering.",
+      "check": "Aktiviteten er for stor til å bli sjekket. Del innholdet på flere aktiviteter."
     },
     "hubInstallDisabled": "Innholdstyper installeres av en administrator, ikke fra H5P-huben.",
     "librariesInstalled": "Installerte innholdstyper: {{count}}.",

@@ -11,8 +11,10 @@
  * Invariants:
  *   - One iterative pass; it stops at the first limit passed, so a refusal costs no more than the limits allow.
  *   - `CONTENT_LIMITS`: characters of all strings and keys together, values (every object, list and leaf), the
- *     length of one string, the tags one string has open at once (./markupDepth.ts), the length of a key, and
- *     the length of a string under a key named `library` (Lumi reads every such string with a pattern of its own).
+ *     length of one string, the tags one string has open at once (./markupDepth.ts), the length of a key, the
+ *     length of a string under a key named `library` (Lumi reads every such string with a pattern of its own),
+ *     and the paths of all values together: the validator builds a path for what it reads, so their sum bounds
+ *     the memory of one check (D-127). A path is counted as its keys and indices with their separators.
  *   - Past a limit: 400 `hvl:content-too-large`, naming the kind of limit (`whole`, `text` or `markup`) and never
  *     a value from the content.
  *   - The input is never changed.
@@ -39,6 +41,8 @@ export const CONTENT_LIMITS = Object.freeze({
   keyLength: 256,
   /** Characters of a string under a key named `library` (a real one is `H5P.Name 1.2`). */
   libraryNameLength: 255,
+  /** Characters of the paths of all values together (`a.b[3].c` is the path of one value). */
+  pathCharacters: 50_000_000,
 });
 
 /** The kind of limit a refusal names: the content as a whole, one text's length, or one text's markup. */
@@ -59,9 +63,15 @@ function textLimit(text: string): ContentLimitKind | undefined {
 export function contentLimitPassed(content: unknown): ContentLimitKind | undefined {
   let characters = 0;
   let values = 1;
+  let paths = 0;
   const pending: unknown[] = [content];
+  /** The length of the path of each pending value, in step with `pending`. */
+  const pathLengths: number[] = [0];
   while (pending.length > 0) {
     const node = pending.pop();
+    const pathLength = pathLengths.pop() ?? 0;
+    paths += pathLength;
+    if (paths > CONTENT_LIMITS.pathCharacters) return 'whole';
     if (typeof node === 'string') {
       characters += node.length;
       const passed = textLimit(node);
@@ -79,8 +89,12 @@ export function contentLimitPassed(content: unknown): ContentLimitKind | undefin
         if (key === 'library' && typeof child === 'string' && child.length > CONTENT_LIMITS.libraryNameLength)
           return 'whole';
         pending.push(child);
+        pathLengths.push(pathLength + key.length + 1);
       }
-      if (!keys) for (const child of node as unknown[]) pending.push(child);
+      (keys ? [] : (node as unknown[])).forEach((child, index) => {
+        pending.push(child);
+        pathLengths.push(pathLength + String(index).length + 2);
+      });
     }
     if (characters > CONTENT_LIMITS.characters) return 'whole';
   }

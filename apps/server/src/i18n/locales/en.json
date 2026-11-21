@@ -64,7 +64,8 @@
     "contentTooLarge": {
       "whole": "The activity is too large to save. Split the content into several activities.",
       "text": "A text in the activity is too long to save. Split the text into several parts.",
-      "markup": "A text in the activity has too many levels of formatting inside each other. Paste the text again without formatting."
+      "markup": "A text in the activity has too many levels of formatting inside each other. Paste the text again without formatting.",
+      "check": "The activity is too large to be checked. Split the content into several activities."
     },
     "hubInstallDisabled": "Content types are installed by an administrator, not from the H5P Hub.",
     "librariesInstalled": "Content types installed: {{count}}.",

@@ -43,7 +43,7 @@ import { SessionStore } from '../auth/session/SessionStore.js';
 import type { Env } from '../config/env.js';
 import { contentRouteGuards } from '../content/contentRouteGuards.js';
 import { RedisContentWriteLock } from '../content/ContentWriteLock.js';
-import type { PublishingDeps } from '../content/publishingDeps.js';
+import { serverPublishingDeps } from '../content/publishingDeps.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import { PrismaContentAccessRepository } from '../h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../http/api/apiRouter.js';
@@ -139,14 +139,9 @@ export function createApp(inputs: AppInputs): App {
     nrps: inputs.nrps,
   });
   const authenticate = requestPrincipal(lti.resolveLtik);
-  // WHY: the validator is built from configuration loaded at start-up (D-073) and passed in by main.ts; without one,
-  // the publish flow runs with a validator that finds nothing, so publishing works and never blocks.
-  const publishing: PublishingDeps = {
-    db,
-    validator: inputs.validator ?? (() => []),
-    clock: () => new Date(),
-    writeLock: new RedisContentWriteLock(redis),
-  };
+  // WHY: the validator is built from configuration loaded at start-up (D-073) and passed in by main.ts; it is
+  // given only content within the limits for one activity to read (../content/publishingDeps.ts, D-127).
+  const publishing = serverPublishingDeps(db, inputs.validator, new RedisContentWriteLock(redis));
   const studio = createStudioServices({ ...inputs, access, hasher, publishing });
   // WHY: the content routes inside the H5P router run the same publish gate and hold the same lock (D-074, D-117).
   const guards = contentRouteGuards(publishing, inputs.h5p.editor);
