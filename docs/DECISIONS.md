@@ -5189,3 +5189,47 @@ loading of one spec per session are kept.
 - **Consequences:** Nothing changes for a view within the limit. A period over it shows no view until a shorter
   one is chosen. The contract documents 422 for `getInsight` and `exportInsightCsv`. New texts in nn, nb and en:
   `insight.viewTooLarge` (server) and `insight.tooLarge` (web).
+
+### D-123 · Security repairs, step 7: a save stores only what the semantics describe; three more types refused as sub-content; production runs with the web app
+- **Context:** SEC-008 has content parameters cleaned by their semantics on save, H5P-002 (c) keeps
+  `H5P.DragQuestion` out of sub-content, and LTI-006 shows the player inside the web app's page (`/app/play`).
+  Lumi's `SemanticsEnforcer` cleans text fields and checks sub-content; its own source lists removing the keys the
+  semantics do not name, and checking the other values, as not yet done. H5P's PHP validator
+  (`H5PContentValidator`) does both before content is shown. The owner decided two questions on 2026-11-21 (the
+  fourth and fifth decisions below).
+- **Decision — on every save the parameters are fitted to their semantics, as H5P's validator does (SEC-008).**
+  `h5p/semantics/semanticsConformance.ts` runs at the end of `SubContentPolicy.enforce`, so for a new activity, an
+  edit, a copy and a pattern alike. It removes every key a field list does not name: in a library's parameters
+  and in a group; a sub-content entry keeps `library`, `params`, `subContentId`, `metadata` and its field's
+  `extraAttributes`; a file value keeps H5P's keys for its kind (`fileValueConformance.ts`). A `subContentId` is
+  kept only when it is a UUID. A number is a finite number within `min` and `max` (a numeric string becomes a
+  number), a boolean a boolean, a select one of its options, a file's `mime` a plain `type/subtype` and its sizes
+  numbers. What does not fit is removed, not refused: content from other H5P systems and from older library
+  versions carries harmless leftovers, and H5P's own validator removes them too. How many keys and values a save
+  lost is logged, never what they held.
+- **Decision — a single-field group has one stored form (SEC-008).** H5P's editor stores such a group as the
+  field's value, and its player reads it so. Lumi's `ContentScanner` also reads an object with a key named like
+  the group as the group itself. `paramsWalker.ts` now reads every single-field group as its field, so a list
+  there must be a real array, and refuses a value Lumi would read the other way (400 `hvl:invalid-params`).
+- **Decision — refusals first, fitting last.** The refusals of D-039 (a library a field does not offer, a
+  `library` value under a key no field names, an unsafe file path wherever it sits, nesting that is too deep) are
+  unchanged and run before anything is removed, so a refused save is left as it came.
+- **Decision — three more types are not accepted as sub-content (H5P-002; the owner, 2026-11-21).** The
+  containers among the ten offer nine installed types beside the ten. Six stay, because the project already
+  adapts and checks them (the feedback prefixes, the validator's rules): `H5P.TrueFalse`, `H5P.SingleChoiceSet`,
+  `H5P.MarkTheWords`, `H5P.Summary`, `H5P.MultiMediaChoice` and `H5P.Dialogcards`. `H5P.AudioRecorder` (records
+  the learner's voice), `H5P.TwitterUserFeed` (loads a third party's content) and `H5P.Questionnaire` (a survey
+  with free-text answers) join `H5P.DragQuestion` in `EXCLUDED_SUB_CONTENT`: no library field offers them in the
+  editor, and a save that carries one is refused with 403 `hvl:sub-content-not-allowed`. The libraries stay
+  installed. Spec 01 §3 says so.
+- **Decision — production runs with the web app (LTI-006; the owner, 2026-11-21).** `productionChecks.ts`
+  refuses `WEB_APP=off` under `NODE_ENV=production`, named or left at its default, as it refuses `dev`. `off` and
+  `dev` stay for tests and development. The image and `deploy/compose.app.yml` set `prod` already.
+- **Verified:** the example activity of each of the ten types and every pattern skeleton (nn, nb and en) pass the
+  fitting with nothing removed or changed, with one exception. BranchingScenario's editor writes a `contentId`
+  into each content node, which its semantics do not name; the player numbers the nodes itself when it starts,
+  so the key goes like any other.
+- **Consequences:** An activity that holds one of the three refused types as a piece still plays, and must have
+  the piece taken out before it can be saved again. A production deployment with `WEB_APP=off` no longer starts,
+  and says why. Text PostgreSQL cannot store (PROD-012) no longer refuses a save when it sits in or under a key
+  no field names: it goes with the key. No new stored data.

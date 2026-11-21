@@ -3821,7 +3821,8 @@ for keyboard, switch and screen-reader users (D-006). Sub-libraries such as <cod
 <code>H5P.SingleChoiceSet</code>, <code>H5P.DialogCards</code>, <code>H5P.Accordion</code>, <code>H5P.AdvancedText</code>, <code>H5P.Image</code> and
 <code>H5P.Video</code> stay installed as <strong>dependencies</strong> and may be used <em>inside</em> containers. They are not
 offered as top-level choices. <em>DragQuestion is not offered as a sub-content choice either</em>: this
-is enforced with <code>alterLibrarySemantics</code> on container libraries (see <a class="req-ref" href="#r-H5P-002"><code>H5P-002</code></a>).</p>
+is enforced with <code>alterLibrarySemantics</code> on container libraries (see <a class="req-ref" href="#r-H5P-002"><code>H5P-002</code></a>). The same holds for
+<code>H5P.AudioRecorder</code>, <code>H5P.TwitterUserFeed</code> and <code>H5P.Questionnaire</code> (D-123).</p>
 <p>Nynorsk display names are drafts and must be checked against H5P&#39;s own <code>nn</code> language files and by
 HVL&#39;s language advisers.</p>
 <hr>
@@ -11913,6 +11914,51 @@ at 128 MB; refusing a scope of 2 000 000 statements took about 50 ms and no meas
 <li><strong>Consequences:</strong> Nothing changes for a view within the limit. A period over it shows no view until a shorter
 one is chosen. The contract documents 422 for <code>getInsight</code> and <code>exportInsightCsv</code>. New texts in nn, nb and en:
 <code>insight.viewTooLarge</code> (server) and <code>insight.tooLarge</code> (web).</li>
+</ul>
+<h3 id="decisions--d-123--security-repairs-step-7-a-save-stores-only-what-the-semantics-describe-three-more-types-refused-as-sub-content-production-runs-with-the-web-app" tabindex="-1">D-123 · Security repairs, step 7: a save stores only what the semantics describe; three more types refused as sub-content; production runs with the web app</h3>
+<ul>
+<li><strong>Context:</strong> SEC-008 has content parameters cleaned by their semantics on save, H5P-002 (c) keeps
+<code>H5P.DragQuestion</code> out of sub-content, and LTI-006 shows the player inside the web app&#39;s page (<code>/app/play</code>).
+Lumi&#39;s <code>SemanticsEnforcer</code> cleans text fields and checks sub-content; its own source lists removing the keys the
+semantics do not name, and checking the other values, as not yet done. H5P&#39;s PHP validator
+(<code>H5PContentValidator</code>) does both before content is shown. The owner decided two questions on 2026-11-21 (the
+fourth and fifth decisions below).</li>
+<li><strong>Decision — on every save the parameters are fitted to their semantics, as H5P&#39;s validator does (SEC-008).</strong>
+<code>h5p/semantics/semanticsConformance.ts</code> runs at the end of <code>SubContentPolicy.enforce</code>, so for a new activity, an
+edit, a copy and a pattern alike. It removes every key a field list does not name: in a library&#39;s parameters
+and in a group; a sub-content entry keeps <code>library</code>, <code>params</code>, <code>subContentId</code>, <code>metadata</code> and its field&#39;s
+<code>extraAttributes</code>; a file value keeps H5P&#39;s keys for its kind (<code>fileValueConformance.ts</code>). A <code>subContentId</code> is
+kept only when it is a UUID. A number is a finite number within <code>min</code> and <code>max</code> (a numeric string becomes a
+number), a boolean a boolean, a select one of its options, a file&#39;s <code>mime</code> a plain <code>type/subtype</code> and its sizes
+numbers. What does not fit is removed, not refused: content from other H5P systems and from older library
+versions carries harmless leftovers, and H5P&#39;s own validator removes them too. How many keys and values a save
+lost is logged, never what they held.</li>
+<li><strong>Decision — a single-field group has one stored form (SEC-008).</strong> H5P&#39;s editor stores such a group as the
+field&#39;s value, and its player reads it so. Lumi&#39;s <code>ContentScanner</code> also reads an object with a key named like
+the group as the group itself. <code>paramsWalker.ts</code> now reads every single-field group as its field, so a list
+there must be a real array, and refuses a value Lumi would read the other way (400 <code>hvl:invalid-params</code>).</li>
+<li><strong>Decision — refusals first, fitting last.</strong> The refusals of D-039 (a library a field does not offer, a
+<code>library</code> value under a key no field names, an unsafe file path wherever it sits, nesting that is too deep) are
+unchanged and run before anything is removed, so a refused save is left as it came.</li>
+<li><strong>Decision — three more types are not accepted as sub-content (H5P-002; the owner, 2026-11-21).</strong> The
+containers among the ten offer nine installed types beside the ten. Six stay, because the project already
+adapts and checks them (the feedback prefixes, the validator&#39;s rules): <code>H5P.TrueFalse</code>, <code>H5P.SingleChoiceSet</code>,
+<code>H5P.MarkTheWords</code>, <code>H5P.Summary</code>, <code>H5P.MultiMediaChoice</code> and <code>H5P.Dialogcards</code>. <code>H5P.AudioRecorder</code> (records
+the learner&#39;s voice), <code>H5P.TwitterUserFeed</code> (loads a third party&#39;s content) and <code>H5P.Questionnaire</code> (a survey
+with free-text answers) join <code>H5P.DragQuestion</code> in <code>EXCLUDED_SUB_CONTENT</code>: no library field offers them in the
+editor, and a save that carries one is refused with 403 <code>hvl:sub-content-not-allowed</code>. The libraries stay
+installed. Spec 01 §3 says so.</li>
+<li><strong>Decision — production runs with the web app (LTI-006; the owner, 2026-11-21).</strong> <code>productionChecks.ts</code>
+refuses <code>WEB_APP=off</code> under <code>NODE_ENV=production</code>, named or left at its default, as it refuses <code>dev</code>. <code>off</code> and
+<code>dev</code> stay for tests and development. The image and <code>deploy/compose.app.yml</code> set <code>prod</code> already.</li>
+<li><strong>Verified:</strong> the example activity of each of the ten types and every pattern skeleton (nn, nb and en) pass the
+fitting with nothing removed or changed, with one exception. BranchingScenario&#39;s editor writes a <code>contentId</code>
+into each content node, which its semantics do not name; the player numbers the nodes itself when it starts,
+so the key goes like any other.</li>
+<li><strong>Consequences:</strong> An activity that holds one of the three refused types as a piece still plays, and must have
+the piece taken out before it can be saved again. A production deployment with <code>WEB_APP=off</code> no longer starts,
+and says why. Text PostgreSQL cannot store (PROD-012) no longer refuses a save when it sits in or under a key
+no field names: it goes with the key. No new stored data.</li>
 </ul>
 
 </section>
