@@ -17,6 +17,7 @@ import { CANVAS_USERS } from '../../../../../tools/mock-platform/mockPlatform.mj
 import { openAppTestbed, type AppTestbed } from '../../support/appTestbed.js';
 import { describeWithBrowser } from '../../support/browser.js';
 import { launchFromCanvas } from '../../support/ltiLaunchDriver.js';
+import { addToolFrame } from '../../support/openLanding.js';
 import { describeWithRealPackages } from '../../support/realPackages.js';
 import { describeWithServices } from '../../support/services.js';
 import {
@@ -58,20 +59,15 @@ const walk = async (page: Page, tool: Frame, key: string, times: number): Promis
 
 /** Frames the editor page between two links and before a text field of `page`, and loads the probe in it. */
 const frameEditor = async (page: Page, src: string): Promise<{ tool: Frame; editor: Frame }> => {
-  await page.evaluate((url) => {
+  await addToolFrame(page, src, 'width: 900px; height: 500px');
+  await page.evaluate(() => {
     const link = (id: string) =>
       Object.assign(document.createElement('a'), { id, href: `#${id}`, textContent: id });
-    const frame = Object.assign(document.createElement('iframe'), {
-      id: 'tool_content',
-      name: 'tool_content',
-    });
-    Object.assign(frame, { src: url, title: 'HVL Interaktiv' });
-    frame.style.cssText = 'width: 900px; height: 500px';
     const field = Object.assign(document.createElement('input'), { id: 'outer-field' });
     field.setAttribute('aria-label', 'outer-field');
     document.body.prepend(link('outer-before'));
-    document.body.append(frame, link('outer-after'), field);
-  }, src);
+    document.body.append(link('outer-after'), field);
+  });
   const editorForm = page.frameLocator('#tool_content').frameLocator('iframe.h5p-editor-iframe');
   await editorForm.locator('.h5peditor-form').first().waitFor({ timeout: 30_000 });
   const tool = page.frame({ name: 'tool_content' });

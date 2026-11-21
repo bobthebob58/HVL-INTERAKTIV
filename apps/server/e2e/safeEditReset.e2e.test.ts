@@ -14,6 +14,7 @@ import { saveChoiceMessages } from '../src/learningDesign/safeEditing/saveChoice
 import { addOption } from '../test/learningDesign/safeEditing/saveChoiceBench.js';
 import { recordFlow } from '../test/support/flowRecorder.js';
 import { lostRowsFact } from '../test/support/lostTestRows.js';
+import { openLanding } from '../test/support/openLanding.js';
 import { openRealWebApp, type RealWebApp } from '../test/support/realWebApp.js';
 import { describeWithRealWebApp } from '../test/support/realWebAppPrerequisites.js';
 import { pressEditorSave } from './support/editorSave.js';
@@ -94,7 +95,7 @@ describeWithRealWebApp(
         const page = await student.newPage();
         page.on('pageerror', (error) => studentErrors.push(error.message));
         const ltik = await app.launch(contentId);
-        await page.goto(`${app.base}/app/play?ltik=${encodeURIComponent(ltik)}`);
+        await openLanding(page, `${app.base}/app/play?ltik=${encodeURIComponent(ltik)}`);
         return { page, player: await frameAt(page, '/lti/play') };
       };
       const seen = await flow.run(async () => {

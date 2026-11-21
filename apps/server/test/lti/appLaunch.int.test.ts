@@ -78,7 +78,7 @@ function appWith(who: Principal, facts: Partial<ContentFacts> | undefined, langu
 describe('[LTI-006] the launch check of /app/play', () => {
   it('[LTI-006] the owner’s launch reaches the web app with the activity, title, Edit right and launch locale', async () => {
     const { app } = appWith(principal(['author']), {});
-    const res = await request(app).get('/app/play?ltik=good');
+    const res = await request(app).get('/app/play?ltik=good').set('Sec-Fetch-Site', 'same-origin');
     expect(res.body).toEqual({
       reachedWeb: true,
       launch: { contentId: ACTIVITY, title: 'Brøkar', mayEdit: true, locale: 'nb' },
@@ -90,8 +90,12 @@ describe('[LTI-006] the launch check of /app/play', () => {
     const stated = appWith(principal(['learner']), {}, 'nn');
     const unstated = appWith(principal(['learner']), {});
     // Act
-    const withLanguage = await request(stated.app).get('/app/play?ltik=good');
-    const without = await request(unstated.app).get('/app/play?ltik=good');
+    const withLanguage = await request(stated.app)
+      .get('/app/play?ltik=good')
+      .set('Sec-Fetch-Site', 'same-origin');
+    const without = await request(unstated.app)
+      .get('/app/play?ltik=good')
+      .set('Sec-Fetch-Site', 'same-origin');
     // Assert
     expect(withLanguage.body.launch).toEqual({
       contentId: ACTIVITY,
@@ -107,7 +111,10 @@ describe('[LTI-006] the launch check of /app/play', () => {
     for (const who of [principal(['learner']), principal(['author'])]) {
       const owner = who.roles.includes('author') ? '0192f0c4-0000-7000-8000-000000000999' : OWNER;
       const { app } = appWith(who, { ownerUserId: owner });
-      expect((await request(app).get('/app/play?ltik=good')).body.launch.mayEdit).toBe(false);
+      expect(
+        (await request(app).get('/app/play?ltik=good').set('Sec-Fetch-Site', 'same-origin')).body.launch
+          .mayEdit,
+      ).toBe(false);
     }
   });
 
@@ -119,7 +126,9 @@ describe('[LTI-006] the launch check of /app/play', () => {
       appWith(principal(['author'], ''), {}),
     ];
     // Act
-    const answers = await Promise.all(cases.map(({ app }) => request(app).get('/app/play?ltik=good')));
+    const answers = await Promise.all(
+      cases.map(({ app }) => request(app).get('/app/play?ltik=good').set('Sec-Fetch-Site', 'same-origin')),
+    );
     // Assert
     expect(answers.map((r) => [r.status, r.body.refused])).toEqual([
       [404, 'hvl:activity-unavailable'],

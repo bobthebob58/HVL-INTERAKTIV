@@ -104,9 +104,10 @@ describeWithServices('[LTI-006] launches into the web app’s chrome page', () =
     const inOurChrome = { 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Site': 'same-origin' };
     const newTab = `<a href="/hjelp?lang=nn" target="_blank" rel="noopener noreferrer">${t('page.help.link', {}, 'nn')}`;
     // Act
-    const pickerPage = await request(tb.app)
-      .get(`/lti/deeplink?ltik=${encodeURIComponent(picker.ltik ?? '')}`)
-      .set(inCanvas);
+    // WHY: a landing with fetch metadata is same-origin (D-130); this is a browser that sends none, just launched.
+    const pickerPage = await request(tb.app).get(
+      `/lti/deeplink?ltik=${encodeURIComponent(picker.ltik ?? '')}`,
+    );
     const reopenInCanvas = await request(tb.app).get('/app/play?ltik=not-a-token').set(inCanvas);
     const reopenInChrome = await request(tb.app).get('/lti/play?ltik=not-a-token').set(inOurChrome);
     // Assert

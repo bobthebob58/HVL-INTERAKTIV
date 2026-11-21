@@ -21,6 +21,7 @@
  *   apps/server/e2e/safeEditReset.e2e.test.ts (`addOption`)
  */
 import type { Browser, Frame, Page } from 'playwright-core';
+import { arriveInFrame, frameFirstAddress } from '../../support/openLanding.js';
 import type { BrowserStorage } from '../../support/runFeideAuthor.js';
 
 /** A request the editor page sent to `/h5p/content…`, with what the server answered. */
@@ -86,20 +87,26 @@ export async function openFramedEditor(browser: Browser, host: FrameHost): Promi
   const requests: SentRequest[] = [];
   recordRequests(page, requests);
   await page.goto(host.url);
-  await page.evaluate((src) => {
-    const recorded: unknown[] = [];
-    Object.assign(window, { hvliRecorded: recorded });
-    const frame = Object.assign(document.createElement('iframe'), {
-      id: 'tool_content',
-      name: 'tool_content',
-    });
-    Object.assign(frame, { src, title: 'HVL Interaktiv' });
-    frame.style.cssText = 'width: 900px; height: 600px';
-    window.addEventListener('message', (event) => {
-      if (event.source === frame.contentWindow) recorded.push(event.data);
-    });
-    document.body.append(frame);
-  }, host.editorUrl);
+  // WHY: a page of another origin cannot hand the frame an address with an ltik (D-130): as after a launch, a
+  //      page of the tool's own origin opens it (../../support/openLanding.ts).
+  await page.evaluate(
+    (src) => {
+      const recorded: unknown[] = [];
+      Object.assign(window, { hvliRecorded: recorded });
+      const frame = Object.assign(document.createElement('iframe'), {
+        id: 'tool_content',
+        name: 'tool_content',
+      });
+      Object.assign(frame, { src, title: 'HVL Interaktiv' });
+      frame.style.cssText = 'width: 900px; height: 600px';
+      window.addEventListener('message', (event) => {
+        if (event.source === frame.contentWindow) recorded.push(event.data);
+      });
+      document.body.append(frame);
+    },
+    frameFirstAddress(host.url, host.editorUrl),
+  );
+  await arriveInFrame(page, 'tool_content', host.editorUrl);
   const formLocator = page.frameLocator('#tool_content').frameLocator('iframe.h5p-editor-iframe');
   await formLocator.locator('.field-name-answer').first().waitFor({ timeout: 60_000 });
   const toolFrame = page.frame({ name: 'tool_content' });

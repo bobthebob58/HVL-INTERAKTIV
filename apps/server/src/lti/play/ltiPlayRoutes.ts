@@ -32,6 +32,7 @@ import { PLAYER_DISPLAY_OPTIONS } from '../../http/routes/playerRoutes.js';
 import { setLtiPageLocale } from '../http/ltiErrorPages.js';
 import { h5pPageCsp } from '../../http/h5pPageCsp.js';
 import { setLtiPageHeaders } from '../http/ltiPageHeaders.js';
+import { landingLtik } from '../landingLtik.js';
 import type { ResolvedLtik } from '../ltikPrincipal.js';
 
 /** Where the LTI page scripts are served. */
@@ -69,9 +70,8 @@ export function ltiPlayRoutes(deps: LtiPlayDeps): Router {
   const router = Router();
   router.use(LTI_STATIC_PATH, express.static(CLIENT_DIR, { index: false, fallthrough: false, maxAge: 0 }));
   router.get('/lti/play', async (req, res) => {
-    const ltik = typeof req.query.ltik === 'string' ? req.query.ltik : '';
-    if (ltik === '') throw authError('hvl:ltik-invalid');
-    const { principal } = await deps.resolveLtik(ltik);
+    // SECURITY: an address with the ltik counts only from our own pages, or just after the launch (D-130).
+    const { ltik, principal } = await landingLtik(req, deps.resolveLtik);
     setLtiPageLocale(res, principal.locale);
     const contentId = principal.lti?.contentId;
     if (!contentId) throw authError('hvl:activity-unavailable');
