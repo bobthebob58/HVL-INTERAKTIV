@@ -18,7 +18,7 @@ import { isLearnerTask, READING_TEXT_LIBRARIES } from '../contentKinds.js';
 import { isWithin, pathOf } from '../contentPath.js';
 import { thresholdOf } from '../hintThresholds.js';
 import { asArray, asString, fieldAt } from '../paramReaders.js';
-import { countWords, plainTextOf } from '../richText.js';
+import { countWords } from '../richText.js';
 import type { RuleHit, ValidationRule } from '../rule.js';
 
 /** What one chapter holds: whether a learner task, and the words of its reading texts. */
@@ -67,7 +67,7 @@ export const chapterInteractionHint: ValidationRule = {
         if (!tally) continue;
         if (isLearnerTask(node.machineName)) tally.task = true;
         else if (node.machineName !== undefined && READING_TEXT_LIBRARIES.has(node.machineName))
-          tally.words += countWords(plainTextOf(asString(fieldAt(node.params, 'text')) ?? ''));
+          tally.words += countWords(scope.read(asString(fieldAt(node.params, 'text')) ?? '').text);
       }
       tallies.forEach(({ task, words: count }, index) => {
         if (task || count <= max) return;

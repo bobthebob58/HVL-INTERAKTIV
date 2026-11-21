@@ -28,7 +28,7 @@ export const placeholderRule: ValidationRule = {
   messages: ['V-PLACEHOLDER.guidance', 'V-PLACEHOLDER.videoMissing', 'V-PLACEHOLDER.backgroundImageMissing'],
   check(scope) {
     const [activity] = scope.nodes;
-    const guidance = guidanceFields(activity?.params, scope.metadata.title).map(
+    const guidance = guidanceFields(activity?.params, scope.metadata.title, scope.read).map(
       ({ path, text }): RuleHit => ({
         path,
         message: 'V-PLACEHOLDER.guidance',

@@ -15,13 +15,13 @@
 import { REFLECTION_LIBRARIES } from '../contentKinds.js';
 import { pathOf } from '../contentPath.js';
 import { asArray, asString, fieldAt } from '../paramReaders.js';
-import { plainTextOf } from '../richText.js';
+import type { RichTextReader } from '../richText.js';
 import { nodesOf, type RuleHit, type ValidationRule } from '../rule.js';
 import { timelineOf } from '../videoTimeline.js';
 
-const hasSummaryStatements = (params: unknown): boolean =>
+const hasSummaryStatements = (params: unknown, read: RichTextReader): boolean =>
   asArray(fieldAt(params, 'interactiveVideo', 'summary', 'task', 'params', 'summaries')).some((group) =>
-    asArray(fieldAt(group, 'summary')).some((statement) => plainTextOf(asString(statement) ?? '') !== ''),
+    asArray(fieldAt(group, 'summary')).some((statement) => read(asString(statement) ?? '').text !== ''),
   );
 
 const endsWithReflection = (params: unknown): boolean => {
@@ -37,7 +37,7 @@ export const videoSummaryHint: ValidationRule = {
   messages: ['PED-H03.noSummary'],
   check(scope) {
     return nodesOf(scope, 'H5P.InteractiveVideo')
-      .filter((node) => !hasSummaryStatements(node.params) && !endsWithReflection(node.params))
+      .filter((node) => !hasSummaryStatements(node.params, scope.read) && !endsWithReflection(node.params))
       .map((node): RuleHit => ({
         path: pathOf(node.path, 'interactiveVideo', 'summary', 'task'),
         message: 'PED-H03.noSummary',

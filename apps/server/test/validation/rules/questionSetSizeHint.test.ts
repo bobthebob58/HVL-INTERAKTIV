@@ -6,6 +6,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { walkContent } from '../../../src/validation/contentWalker.js';
+import { parseRichText } from '../../../src/validation/richText.js';
 import { questionSetSizeHint } from '../../../src/validation/rules/questionSetSizeHint.js';
 import { fixturesOf, hitsOf, TEST_CONTEXT } from '../support/ruleFixtures.js';
 
@@ -20,7 +21,7 @@ describe('PED-H04', () => {
     const context = { ...TEST_CONTEXT, thresholds: { ...TEST_CONTEXT.thresholds, maxQuestionsPerSet: 20 } };
     const nodes = walkContent(fixture?.mainLibrary ?? '', fixture?.params);
     // Act
-    const hits = questionSetSizeHint.check({ nodes, metadata: {}, context });
+    const hits = questionSetSizeHint.check({ nodes, metadata: {}, context, read: parseRichText });
     // Assert
     expect(hits).toEqual([]);
   });

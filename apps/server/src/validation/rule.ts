@@ -9,11 +9,14 @@
  *   - A rule's `check` is pure: it reads the scope and returns hits, nothing else.
  *   - Every hit's `message` is one of the rule's `messages`.
  *   - `PED-H*` rules have severity `warning` or `hint`, never `error` (spec 04 §5).
+ *   - A scope carries one text reader for the run: the walk and every rule read through it, so each distinct
+ *     text is parsed once (D-127).
  * Collaborators: ./ruleSet.ts, ./validateContent.ts, ./validationMessages.ts, ./contentWalker.ts.
  * Tests: apps/server/test/validation/validateContent.test.ts
  */
-import type { ContentNode } from './contentWalker.js';
-import type { FindingSeverity, ValidationContext, ValidationMetadata } from './types.js';
+import { walkContent, type ContentNode } from './contentWalker.js';
+import { richTextReader, type RichTextReader } from './richText.js';
+import type { FindingSeverity, ValidationContext, ValidationInput, ValidationMetadata } from './types.js';
 import type { MessageValues, ValidationMessageKey } from './validationMessages.js';
 
 /** What a rule sees. */
@@ -22,6 +25,8 @@ export interface RuleScope {
   readonly nodes: readonly ContentNode[];
   readonly metadata: ValidationMetadata;
   readonly context: ValidationContext;
+  /** Reads a text of the activity; the walk has parsed its strings already, and no text is parsed twice. */
+  readonly read: RichTextReader;
 }
 
 /** One problem a rule found, before it is localised. */
@@ -58,3 +63,20 @@ export interface ValidationRule {
  */
 export const nodesOf = (scope: RuleScope, ...machineNames: readonly string[]): readonly ContentNode[] =>
   scope.nodes.filter((node) => node.machineName !== undefined && machineNames.includes(node.machineName));
+
+/**
+ * Builds what the rules see of one activity.
+ * @param input - The activity: main library, parameters and metadata.
+ * @param context - Hint thresholds and captioned media origins.
+ * @param read - The run's text reader; a new one unless a test passes its own.
+ * @returns The scope, with the walked nodes.
+ * @spec UD-020
+ */
+export function ruleScope(
+  input: Pick<ValidationInput, 'mainLibrary' | 'params' | 'metadata'>,
+  context: ValidationContext,
+  read: RichTextReader = richTextReader(),
+): RuleScope {
+  const nodes = walkContent(input.mainLibrary, input.params, read);
+  return { nodes, metadata: input.metadata, context, read };
+}

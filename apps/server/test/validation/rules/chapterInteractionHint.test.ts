@@ -7,6 +7,8 @@
 import { describe, expect, it } from 'vitest';
 import { chapterInteractionHint } from '../../../src/validation/rules/chapterInteractionHint.js';
 import { walkContent } from '../../../src/validation/contentWalker.js';
+import { parseRichText } from '../../../src/validation/richText.js';
+import { ruleScope } from '../../../src/validation/rule.js';
 import { fixturesOf, hitsOf, TEST_CONTEXT } from '../support/ruleFixtures.js';
 
 describe('PED-H10', () => {
@@ -21,11 +23,12 @@ describe('PED-H10', () => {
   const chapter = (...content: object[]) => ({ library: 'H5P.Column 1.18', params: { content } });
   const hitsFor = (chapters: object[]) =>
     chapterInteractionHint
-      .check({
-        nodes: walkContent('H5P.InteractiveBook 1.15', { chapters }),
-        metadata: {},
-        context: TEST_CONTEXT,
-      })
+      .check(
+        ruleScope(
+          { mainLibrary: 'H5P.InteractiveBook 1.15', params: { chapters }, metadata: {} },
+          TEST_CONTEXT,
+        ),
+      )
       .map((hit) => [hit.path, hit.values?.count]);
 
   it('[PED-020][PED-H10] each chapter is judged by its own words and tasks, whatever its neighbours hold', () => {
@@ -57,7 +60,12 @@ describe('PED-H10', () => {
     const nodes = walkContent('H5P.InteractiveBook 1.15', { chapters });
     // Act
     const started = performance.now();
-    const hits = chapterInteractionHint.check({ nodes, metadata: {}, context: TEST_CONTEXT });
+    const hits = chapterInteractionHint.check({
+      nodes,
+      metadata: {},
+      context: TEST_CONTEXT,
+      read: parseRichText,
+    });
     const elapsed = performance.now() - started;
     // Assert
     expect(hits.map((hit) => hit.path)).toEqual(['chapters[4000]']);

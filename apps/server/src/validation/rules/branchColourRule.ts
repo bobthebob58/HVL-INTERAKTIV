@@ -14,7 +14,6 @@
 import { isColourOnlyChoice } from '../colourWords.js';
 import { pathOf } from '../contentPath.js';
 import { asArray, asString, fieldAt } from '../paramReaders.js';
-import { plainTextOf } from '../richText.js';
 import { nodesOf, type RuleHit, type ValidationRule } from '../rule.js';
 
 /** V-BRANCH-COLOUR: choices need text, not only a colour. */
@@ -28,7 +27,7 @@ export const branchColourRule: ValidationRule = {
     for (const node of nodesOf(scope, 'H5P.BranchingQuestion')) {
       const alternatives = asArray(fieldAt(node.params, 'branchingQuestion', 'alternatives'));
       alternatives.forEach((alternative, index) => {
-        if (!isColourOnlyChoice(plainTextOf(asString(fieldAt(alternative, 'text')) ?? ''))) return;
+        if (!isColourOnlyChoice(scope.read(asString(fieldAt(alternative, 'text')) ?? '').text)) return;
         const path = pathOf(node.path, 'branchingQuestion', 'alternatives', index, 'text');
         hits.push({ path, message: 'V-BRANCH-COLOUR.colourOnly' });
       });

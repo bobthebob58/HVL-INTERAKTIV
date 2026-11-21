@@ -13,7 +13,6 @@
  * Tests: apps/server/test/validation/rules/imageAltLengthRule.test.ts
  */
 import { altSourcesOf } from '../imageAltSources.js';
-import { plainTextOf } from '../richText.js';
 import type { RuleHit, ValidationRule } from '../rule.js';
 
 /** The longest alt text that does not get a warning (UD-021). */
@@ -28,7 +27,7 @@ export const imageAltLengthRule: ValidationRule = {
   check(scope) {
     const hits: RuleHit[] = [];
     for (const source of scope.nodes.flatMap(altSourcesOf)) {
-      const length = [...plainTextOf(source.alt ?? '')].length;
+      const length = [...scope.read(source.alt ?? '').text].length;
       if (!source.decorative && length > MAX_ALT_LENGTH) {
         hits.push({
           path: source.path,

@@ -16,7 +16,6 @@
  */
 import { pathOf } from '../contentPath.js';
 import { asString, fieldAt } from '../paramReaders.js';
-import { plainTextOf } from '../richText.js';
 import { nodesOf, type RuleHit, type ValidationRule } from '../rule.js';
 
 const VAGUE: ReadonlySet<string> = new Set([
@@ -84,7 +83,7 @@ export const linkTextRule: ValidationRule = {
       .flatMap((node) => node.strings)
       .map((field) => field.rich.links.map((link) => hitFor(field.path, link.text)).find((hit) => hit));
     const linkTitles = nodesOf(scope, 'H5P.Link').map((node) =>
-      hitFor(pathOf(node.path, 'title'), plainTextOf(asString(fieldAt(node.params, 'title')) ?? '')),
+      hitFor(pathOf(node.path, 'title'), scope.read(asString(fieldAt(node.params, 'title')) ?? '').text),
     );
     return [...inText, ...linkTitles].filter((hit): hit is RuleHit => hit !== undefined);
   },

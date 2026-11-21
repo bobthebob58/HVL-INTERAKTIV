@@ -12,7 +12,7 @@
  * Collaborators: ./richText.ts, ./rules/wrongOptionFeedbackHint.ts, ./rules/overallFeedbackHint.ts.
  * Tests: apps/server/test/validation/rules/overallFeedbackHint.test.ts
  */
-import { plainTextOf } from './richText.js';
+import { parseRichText, type RichTextReader } from './richText.js';
 
 const VERDICT_WORDS: ReadonlySet<string> = new Set(
   [
@@ -31,20 +31,22 @@ const VERDICT_WORDS: ReadonlySet<string> = new Set(
 /**
  * Tells whether text is empty once HTML and whitespace are removed.
  * @param value - Feedback (HTML or plain text); a missing value is blank.
+ * @param read - The validation run's text reader.
  * @returns True when nothing would be shown.
  */
-export const isBlankText = (value: string | undefined): boolean =>
-  value === undefined || plainTextOf(value) === '';
+export const isBlankText = (value: string | undefined, read: RichTextReader = parseRichText): boolean =>
+  value === undefined || read(value).text === '';
 
 /**
  * Tells whether feedback is only a verdict, with no explanation.
  * @param value - Feedback (HTML or plain text).
+ * @param read - The validation run's text reader.
  * @returns True for e.g. `<p>Feil!</p>` or "Correct, well done!"; false for blank text and for any explanation.
  */
-export function isBareVerdict(value: string | undefined): boolean {
+export function isBareVerdict(value: string | undefined, read: RichTextReader = parseRichText): boolean {
   if (value === undefined) return false;
-  const words = plainTextOf(value)
-    .toLowerCase()
+  const words = read(value)
+    .text.toLowerCase()
     .split(/[^\p{L}\p{N}@']+/u)
     .filter((word) => word !== '');
   return words.length > 0 && words.every((word) => word.startsWith('@') || VERDICT_WORDS.has(word));

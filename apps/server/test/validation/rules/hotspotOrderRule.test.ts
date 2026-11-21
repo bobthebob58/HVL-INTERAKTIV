@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import { walkContent } from '../../../src/validation/contentWalker.js';
 import { isShownHotspot, playerOrder } from '../../../src/validation/imageHotspotsPlayer.js';
+import { parseRichText } from '../../../src/validation/richText.js';
 import { hotspotOrderRule } from '../../../src/validation/rules/hotspotOrderRule.js';
 import { messageTemplate } from '../../../src/validation/validationMessages.js';
 import { TEST_CONTEXT, fixturesOf, hitsOf } from '../support/ruleFixtures.js';
@@ -77,6 +78,7 @@ describe('V-HOTSPOT-ORDER', () => {
         nodes: icons(first, second),
         metadata: {},
         context: TEST_CONTEXT,
+        read: parseRichText,
       });
       // Assert
       expect(hits.map((hit) => hit.message)).toEqual(messages);
