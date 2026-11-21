@@ -18,8 +18,8 @@ import { ContentDuplicator } from '../../../src/learningDesign/collaboration/Con
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../../support/httpTestbed.js';
 import { describeWithRealPackages, REAL_PACKAGES_DIR } from '../../support/realPackages.js';
 import { describeWithServices } from '../../support/services.js';
+import { UNDECLARED_KEY, withUndeclaredKeys } from '../../support/undeclaredKeys.js';
 
-const MARKUP = '<img src=x onerror=alert(1)>';
 type Params = Record<string, unknown>;
 /** Every key of the parameters with its place, e.g. `$.questions.0.params.question`. */
 const keyPaths = (node: unknown, path = '$'): string[] =>
@@ -29,20 +29,6 @@ const keyPaths = (node: unknown, path = '$'): string[] =>
         `${path}.${key}`,
         ...keyPaths(value, `${path}.${key}`),
       ]);
-/** The parameters with one more key, which no semantics name, in every object. */
-const withUndeclaredKeys = (params: Params): Params => {
-  const copy = structuredClone(params);
-  const mark = (node: unknown): void => {
-    if (Array.isArray(node)) node.forEach(mark);
-    else if (typeof node === 'object' && node !== null) {
-      Object.values(node).forEach(mark);
-      Object.assign(node, { hvlUndeclared: MARKUP });
-    }
-  };
-  mark(copy);
-  return copy;
-};
-
 describeWithServices('[SEC-008] the save rule with the real content types', () => {
   describeWithRealPackages('[SEC-008] real content types', () => {
     let tb: HttpTestbed;
@@ -121,7 +107,7 @@ describeWithServices('[SEC-008] the save rule with the real content types', () =
         expect([edited.status, created.status]).toEqual([200, 201]);
         for (const contentId of [id, created.body.contentId as string, copied.contentId]) {
           const after = JSON.stringify(await stored(contentId));
-          expect(after).not.toContain('hvlUndeclared');
+          expect(after).not.toContain(UNDECLARED_KEY);
           expect(after).not.toContain('onerror');
         }
       },
