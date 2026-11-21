@@ -28,6 +28,7 @@ import { EDITOR_FILES_PATH } from '../h5p/render/editorIntegration.js';
 import { h5pErrorHandler } from './h5pErrorHandler.js';
 import { filesOriginRouter, routeFilesHost } from './filesOriginRouter.js';
 import { HttpError } from './HttpError.js';
+import { ownAnswerHeaders } from './securityHeaders.js';
 import type { Authenticate } from './h5pLocals.js';
 import type { H5pRouteDeps } from './h5pRouteDeps.js';
 import { ajaxRoutes } from './routes/ajaxRoutes.js';
@@ -60,6 +61,8 @@ export function createH5pRouter(deps: H5pRouteDeps, authenticate: Authenticate):
   router.use(signedFileRoutes({ editor: deps.editor, grants: deps.editorFileGrants }, EDITOR_FILES_PATH));
   router.use(signedUploadRoutes(deps));
   router.use(authenticate);
+  // SECURITY: everything below answers a signed-in person: never cached, never embedded by another site (D-131).
+  router.use(ownAnswerHeaders);
   router.use(ajaxRoutes(deps));
   router.use(fileRoutes(deps));
   router.use(userDataRoutes(deps));

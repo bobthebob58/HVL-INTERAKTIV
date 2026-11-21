@@ -31,6 +31,7 @@ import { appLaunchOf, LAUNCH_HEADER, launchHeaderValue } from './appLaunch.js';
 import type { WebApp } from './nextWebApp.js';
 import { createNonce, webPageCsp } from './webPageCsp.js';
 import { prepareWebRequest, stripForWebApp } from './webRequestContract.js';
+import { OPENER_POLICY } from '../http/securityHeaders.js';
 
 /** The query parameter that names the page language of a link (`/personvern?lang=en`; same name in apps/web). */
 export const LANG_QUERY = 'lang';
@@ -85,6 +86,8 @@ export function webRoutes(
       res.setHeader('Cache-Control', 'no-store');
     } else {
       res.setHeader('X-Frame-Options', 'DENY');
+      // SECURITY: a portal page gives no window of another site a handle on it; a Canvas page must (D-131).
+      res.setHeader(OPENER_POLICY, 'same-origin');
     }
     prepareWebRequest(req, { csp, locale });
     if (launch) req.headers[LAUNCH_HEADER] = launchHeaderValue(launch);

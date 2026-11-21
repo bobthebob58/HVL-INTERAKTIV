@@ -19,6 +19,7 @@ import express, { Router, type Request, type Response } from 'express';
 import type { Logger } from 'pino';
 import { authError } from '../../http/authErrors.js';
 import { sendPortalError, sendPortalPage } from '../../http/pages/portalPages.js';
+import { ownAnswerHeaders } from '../../http/securityHeaders.js';
 import type { AuthAuditRecorder } from '../audit/AuthAuditRecorder.js';
 import { safeReturnTo } from '../returnTo.js';
 import { assertCsrf } from '../session/csrfToken.js';
@@ -112,9 +113,8 @@ export function feideLoginRoutes(deps: FeideRouteDeps): Router {
     }),
   );
 
-  router.get('/auth/session', (_req, res) => {
+  router.get('/auth/session', ownAnswerHeaders, (_req, res) => {
     const active = portalSessionOf(res);
-    res.setHeader('Cache-Control', 'no-store');
     if (!active) {
       res.status(401).json({ success: false, errorCode: 'hvl:unauthenticated', httpStatusCode: 401 });
       return;
