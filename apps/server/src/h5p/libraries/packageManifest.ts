@@ -23,6 +23,7 @@ import type yauzl from 'yauzl';
 import type { ILibraryName } from '@lumieducation/h5p-server';
 import { openZip, readEntries, readEntryBytes, ZipRejectedError } from '../../security/zipEntryGuard.js';
 import { MAX_FILE_SIZE } from '../H5pConfigFactory.js';
+import { assertContentBudget } from '../semantics/contentBudget.js';
 import { assertNestingDepth } from '../semantics/nestingDepth.js';
 import { assertContentFilesInside, contentFilePaths } from './contentFileReferences.js';
 
@@ -96,6 +97,7 @@ export async function readPackageManifest(path: string): Promise<PackageManifest
       else if (name === 'content/content.json') {
         content = parse(await readText(zip, entry, MAX_FILE_SIZE));
         assertNestingDepth(content);
+        assertContentBudget(content);
         references = contentFilePaths(content);
       } else if (/^[^/]+\/library\.json$/.test(name)) {
         const library = toLibrary(parse(await readText(zip, entry)));

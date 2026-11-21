@@ -61,6 +61,11 @@
     "unsafeFilePath": "Ein filsti i aktiviteten inneheld teikn som ikkje er tillatne (anførselsteikn, < eller >).",
     "unsafeFileName": "Ein filsti i aktiviteten er ugyldig: han kan ikkje byrje med «/» eller innehalde «..», «\\», tomme ledd eller kontrollteikn.",
     "pasteSourceNotAllowed": "Aktiviteten brukar filer frå ein annan aktivitet som du ikkje kan lage kopi av. Last opp filene på nytt i staden.",
+    "contentTooLarge": {
+      "whole": "Aktiviteten er for stor til å lagrast. Del innhaldet på fleire aktivitetar.",
+      "text": "Ein tekst i aktiviteten er for lang til å lagrast. Del teksten i fleire delar.",
+      "markup": "Ein tekst i aktiviteten har for mange lag med formatering inni kvarandre. Lim teksten inn på nytt utan formatering."
+    },
     "hubInstallDisabled": "Innhaldstypar blir installerte av ein administrator, ikkje frå H5P-huben.",
     "librariesInstalled": "Installerte innhaldstypar: {{count}}.",
     "librariesUpdated": "Oppdaterte innhaldstypar: {{count}}.",

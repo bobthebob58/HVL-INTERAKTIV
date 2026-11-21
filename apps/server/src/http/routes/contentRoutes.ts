@@ -12,7 +12,8 @@
  *   - Only `author` and `admin` reach save, delete and parameters; export is decided by the permission system.
  *   - A save body is `{ library: string, params: { params: object, metadata: object },
  *     confirmLearnerStateReset?: boolean }`, else 400; a new activity (POST) has no learner state, so there the
- *     flag changes nothing.
+ *     flag changes nothing. Parameters or metadata past the limits for one activity are 400
+ *     `hvl:content-too-large` before anything reads them (./contentSaveBodies.ts, D-126).
  *   - With a save gate (createApp always passes one), a save of an existing activity by someone who may edit runs
  *     through it: under the activity's write lock, a published activity meets the publish gate on what the editor
  *     will store; an error without an acknowledgement younger than 14 days is 409 `hvl:published-save-blocked` with
@@ -40,7 +41,7 @@
  *     the response ends only when Lumi's zip stream has been written completely.
  *   - With a deleter (createApp always passes one), a delete by someone who may delete runs under the activity's
  *     write lock and leaves an audit event; a save to an activity that is gone is 404 and creates nothing (D-117).
- * Collaborators: ../../h5p/HvlH5PEditor.ts, ../requestBodies.ts, Lumi's H5PAjaxEndpoint,
+ * Collaborators: ../../h5p/HvlH5PEditor.ts, ../requestBodies.ts, ./contentSaveBodies.ts, Lumi's H5PAjaxEndpoint,
  *   ../../content/PublishedSaveGate.ts, ../../content/ContentDeleter.ts,
  *   ../../learningDesign/collaboration/ContentDuplicator.ts,
  *   ../../learningDesign/collaboration/CopyRateLimit.ts, ../../learningDesign/http/studioPrincipal.ts.
@@ -48,7 +49,7 @@
  *   apps/server/test/content/saveRace.int.test.ts, apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/saveAsCopy.int.test.ts, apps/server/test/content/deleteRace.int.test.ts
  */
-import { ContentPermission, type ContentParameters, type IContentMetadata } from '@lumieducation/h5p-server';
+import { ContentPermission } from '@lumieducation/h5p-server';
 import { finished } from 'node:stream/promises';
 import { Router, type RequestHandler } from 'express';
 import type { ContentDeletion } from '../../content/ContentDeleter.js';
@@ -57,42 +58,13 @@ import { asAccountUser } from '../../h5p/HvlH5pUser.js';
 import type { ContentDuplicator } from '../../learningDesign/collaboration/ContentDuplicator.js';
 import { retryAfterOf } from '../../learningDesign/collaboration/CopyRateLimit.js';
 import { requirePortalAuthor } from '../../learningDesign/http/studioPrincipal.js';
-import type { SaveChoice } from '../../learningDesign/safeEditing/LearnerStateGate.js';
 import { inWordsOfSaver } from '../../learningDesign/safeEditing/resetNeededWording.js';
 import { HttpError } from '../HttpError.js';
 import { requireActor, requireRole } from '../h5pLocals.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
 import { jsonBody } from '../requestBodies.js';
 import { pathParam } from '../routeParams.js';
-
-interface EditedContent {
-  readonly params: ContentParameters;
-  readonly metadata: IContentMetadata;
-}
-
-interface SaveRequest extends EditedContent {
-  readonly library: string;
-  readonly choice: SaveChoice;
-}
-
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-/** `{ params, metadata }` as H5P's editor gives them, else 400. */
-const editedContent = (value: unknown): EditedContent => {
-  if (!isObject(value) || !isObject(value.params) || !isObject(value.metadata)) {
-    throw new HttpError(400, 'error.badRequest');
-  }
-  return { params: value.params, metadata: value.metadata as unknown as IContentMetadata };
-};
-
-const saveRequest = (body: unknown): SaveRequest => {
-  if (!isObject(body) || typeof body.library !== 'string') throw new HttpError(400, 'error.badRequest');
-  const confirm = body.confirmLearnerStateReset;
-  if (confirm !== undefined && typeof confirm !== 'boolean') throw new HttpError(400, 'error.badRequest');
-  const choice = { confirmLearnerStateReset: confirm === true };
-  return { library: body.library, ...editedContent(body.params), choice };
-};
+import { editedContent, saveRequest } from './contentSaveBodies.js';
 
 /** The H5P routes' dependencies, with the publish gate for saves (D-074). */
 export interface ContentRouteDeps extends H5pRouteDeps {

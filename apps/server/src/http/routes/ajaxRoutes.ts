@@ -14,10 +14,12 @@
  *     429 `hvl:rate-limited` with `Retry-After` (../h5pRouteLimits.ts, D-120). An author whose SVG files were
  *     refused as too complex as often as the budget allows gets the same answer for further SVG files, so one
  *     person cannot hold the SVG cleaning worker (D-119).
- * Collaborators: ../multipartUpload.ts, ../requestBodies.ts, ../h5pLocals.ts, ../h5pRouteLimits.ts, Lumi's
- *   H5PAjaxEndpoint.
+ *   - Pasted content (`action=filter`) past the limits for one activity is 400 before Lumi reads it
+ *     (./contentSaveBodies.ts, D-126).
+ * Collaborators: ../multipartUpload.ts, ../requestBodies.ts, ../h5pLocals.ts, ../h5pRouteLimits.ts,
+ *   ./contentSaveBodies.ts, Lumi's H5PAjaxEndpoint.
  * Tests: apps/server/test/http/ajax.int.test.ts, apps/server/test/http/editorUpload.int.test.ts,
- *   apps/server/test/http/uploadLimits.int.test.ts
+ *   apps/server/test/http/uploadLimits.int.test.ts, apps/server/test/http/contentBudget.int.test.ts
  */
 import { Router, type Request, type RequestHandler, type Response } from 'express';
 import { MAX_FILE_SIZE } from '../../h5p/H5pConfigFactory.js';
@@ -30,6 +32,7 @@ import type { H5pRouteDeps } from '../h5pRouteDeps.js';
 import { refuseWhenLimited } from '../h5pRouteLimits.js';
 import { readMultipart } from '../multipartUpload.js';
 import { formBody } from '../requestBodies.js';
+import { assertPasteWithinLimits } from './contentSaveBodies.js';
 
 const editorLanguage = (req: Request, res: Response): Locale => {
   const asked = typeof req.query.language === 'string' ? req.query.language : '';
@@ -109,6 +112,8 @@ export function ajaxRoutes(deps: H5pRouteDeps): Router {
     const user = asAccountUser(requireActor(res));
     const language = editorLanguage(req, res);
     if (!isUpload(req)) {
+      // SECURITY: Lumi cleans pasted content as it comes; it is held to the limits for one activity first (D-126).
+      if (action === 'filter') assertPasteWithinLimits(req.body);
       res.json(
         await deps.ajax.postAjax(
           action,

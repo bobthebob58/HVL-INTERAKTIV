@@ -17,14 +17,16 @@
  *   - Once every refusal has had its say, the parameters are fitted to their semantics, last of all: keys no
  *     field list names are removed, and numbers, booleans, selects and file values get their field's type
  *     (./semanticsConformance.ts, D-123). So what is stored holds nothing the semantics do not describe.
- *   - Content nested deeper than ./nestingDepth.ts allows is refused (400) before anything else runs.
+ *   - Content nested deeper than ./nestingDepth.ts allows, or past a limit of ./contentBudget.ts, is refused (400)
+ *     before anything else runs.
  *   - The parameters and metadata are changed in place; nothing else is. A refused save changes neither.
- * Collaborators: ./paramsWalker.ts, ./nestingDepth.ts, ./libraryReferences.ts, ./lumiTextSanitizer.ts, ./rightsOfUse.ts,
+ * Collaborators: ./paramsWalker.ts, ./nestingDepth.ts, ./contentBudget.ts, ./libraryReferences.ts, ./lumiTextSanitizer.ts, ./rightsOfUse.ts,
  *   ./removeDragQuestion.ts, ./semanticsConformance.ts, ../HvlH5PEditor.ts.
  * Tests: apps/server/test/h5p/semantics/SubContentPolicy.test.ts, apps/server/test/h5p/semantics/rightsOfUse.test.ts,
  *   apps/server/test/h5p/semantics/semanticsConformance.test.ts
  */
 import { H5pError, type ILibraryName, type LibraryManager } from '@lumieducation/h5p-server';
+import { assertContentBudget } from './contentBudget.js';
 import { LumiTextSanitizer } from './lumiTextSanitizer.js';
 import { findLibraryReferences } from './libraryReferences.js';
 import { assertNestingDepth } from './nestingDepth.js';
@@ -54,7 +56,8 @@ export class SubContentPolicy {
    * @param mainLibrary - The content's main library.
    * @returns How many keys and values were removed or changed to fit the semantics.
    * @throws H5pError `hvl:sub-content-not-allowed` (403) for a library a field does not offer or that is excluded,
-   *   or `hvl:unsafe-file-path` (400) for a file path that could leave an HTML attribute.
+   *   `hvl:unsafe-file-path` (400) for a file path that could leave an HTML attribute, or
+   *   `hvl:content-too-deep` and `hvl:content-too-large` (400) for content past the limits.
    */
   async enforce(
     params: Record<string, unknown>,
@@ -64,6 +67,9 @@ export class SubContentPolicy {
     // WHY: Lumi's own walks after ours are recursive; refusing deep content first avoids a stack overflow (500).
     assertNestingDepth(params);
     assertNestingDepth(metadata);
+    // SECURITY: every step below, and Lumi after them, reads content of a known largest size and shape (D-126).
+    assertContentBudget(params);
+    assertContentBudget(metadata);
     this.text.sanitizeMetadata(metadata);
     const reached = new WeakSet<object>();
     const conformance = semanticsConformance();

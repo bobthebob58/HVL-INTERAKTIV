@@ -61,6 +61,11 @@
     "unsafeFilePath": "A file path in the activity contains characters that are not allowed (quotes, < or >).",
     "unsafeFileName": "A file path in the activity is not valid: it cannot start with “/” or contain “..”, “\\”, empty parts or control characters.",
     "pasteSourceNotAllowed": "The activity uses files from another activity that you cannot copy. Upload the files again instead.",
+    "contentTooLarge": {
+      "whole": "The activity is too large to save. Split the content into several activities.",
+      "text": "A text in the activity is too long to save. Split the text into several parts.",
+      "markup": "A text in the activity has too many levels of formatting inside each other. Paste the text again without formatting."
+    },
     "hubInstallDisabled": "Content types are installed by an administrator, not from the H5P Hub.",
     "librariesInstalled": "Content types installed: {{count}}.",
     "librariesUpdated": "Content types updated: {{count}}.",

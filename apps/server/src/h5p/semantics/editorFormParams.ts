@@ -26,6 +26,7 @@
  */
 import type { ILibraryName, LibraryManager } from '@lumieducation/h5p-server';
 import { LumiTextSanitizer } from './lumiTextSanitizer.js';
+import { assertContentBudget } from './contentBudget.js';
 import { assertNestingDepth } from './nestingDepth.js';
 import { walkParams, type ParamsVisit } from './paramsWalker.js';
 import { sanitizeRightsOfUse } from './rightsOfUse.js';
@@ -83,15 +84,18 @@ export class EditorFormParams {
    * @param params - Content parameters (content.json).
    * @param metadata - Content metadata (h5p.json).
    * @param mainLibrary - The content's main library.
-   * @throws H5pError 400 `hvl:invalid-params`, `hvl:content-too-deep` or `hvl:unsafe-file-path`.
+   * @throws H5pError 400 `hvl:invalid-params`, `hvl:content-too-deep`, `hvl:content-too-large` or
+   *   `hvl:unsafe-file-path`.
    * @spec SEC-008
    */
   async clean(params: unknown, metadata: unknown, mainLibrary: ILibraryName): Promise<void> {
     assertNestingDepth(metadata);
+    assertContentBudget(metadata);
     this.text.sanitizeMetadata(metadata);
     if (isObject(metadata)) quoteStrings(metadata);
     if (!isObject(params)) return;
     assertNestingDepth(params);
+    assertContentBudget(params);
     const conformance = semanticsConformance();
     await walkParams(
       params,

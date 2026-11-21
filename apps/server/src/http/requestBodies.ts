@@ -6,7 +6,8 @@
  *      (qs) is not used, so no nested objects or prototype keys can be built from a form.
  * Spec: H5P-004, SEC-005
  * Invariants:
- *   - Form bodies: at most 20 MB and 1000 fields; learner state: at most 2 MB; JSON saves: at most 20 MB.
+ *   - Form bodies: at most 20 MB and 1000 fields; learner state: at most 2 MB; JSON saves: at most 6 MB, which
+ *     holds the most one activity's parameters may be (../h5p/semantics/contentBudget.ts, D-126) with room to spare.
  *   - A key ending in `[]` becomes the key without it, always holding an array.
  *   - `req.body` is always an object after these parsers (Express 5 leaves it undefined otherwise).
  * Collaborators: ./routes/ajaxRoutes.ts, ./routes/userDataRoutes.ts, ./routes/contentRoutes.ts.
@@ -36,9 +37,9 @@ export const formBody = (limit: string): RequestHandler[] => [
   normaliseArrays,
 ];
 
-/** Parses a JSON body of at most 20 MB (content saves). */
+/** Parses a JSON body of at most 6 MB (content saves). */
 export const jsonBody: RequestHandler[] = [
-  express.json({ limit: '20mb' }),
+  express.json({ limit: '6mb' }),
   (req: Request, _res: Response, next: NextFunction) => {
     req.body ??= {};
     next();

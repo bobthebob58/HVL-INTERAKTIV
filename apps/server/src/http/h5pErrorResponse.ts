@@ -5,7 +5,7 @@
  *      never reveal internal messages, stack traces or file paths. Lumi's own Express error handler returned
  *      raw error messages (D-035); here every known error maps to a locale key and everything else becomes
  *      "something went wrong" with status 500.
- * Spec: PROD-012, H5P-002, SEC-003, H5P-006, PROD-003, SEC-006
+ * Spec: PROD-012, H5P-002, SEC-003, H5P-006, PROD-003, SEC-006, SEC-005
  * Invariants:
  *   - The body is H5P's AJAX error shape `{ success: false, errorCode, httpStatusCode, message }`; a blocked publish
  *     or save (PublishBlockedError, 409) adds the server's own `findings` (PROD-003).
@@ -50,6 +50,7 @@ const BY_ERROR_ID: Record<string, MessageKey> = {
   'hvl:unsafe-file-path': 'h5p.unsafeFilePath',
   'hvl:unsafe-file-name': 'h5p.unsafeFileName',
   'hvl:paste-source-not-allowed': 'h5p.pasteSourceNotAllowed',
+  'hvl:content-too-large': 'h5p.contentTooLarge.whole',
   'hvl:hub-install-disabled': 'h5p.hubInstallDisabled',
   'hvl:package-libraries-not-installed': 'upload.package.librariesNotInstalled',
   'hvl:package-library-version-mismatch': 'upload.package.libraryVersionMismatch',
@@ -58,6 +59,12 @@ const BY_ERROR_ID: Record<string, MessageKey> = {
   'unable-to-unzip': 'upload.archive.unreadable',
   // SECURITY: a safety net; our fail-closed scanner refuses a finding with its own error first (SEC-006, D-110).
   'upload-malware-found': 'upload.file.malwareFound',
+};
+
+/** The message of `hvl:content-too-large` when it names one text (../h5p/semantics/contentBudget.ts, D-126). */
+const TOO_LARGE_BY_LIMIT: Record<string, MessageKey> = {
+  text: 'h5p.contentTooLarge.text',
+  markup: 'h5p.contentTooLarge.markup',
 };
 
 const BY_STATUS: Record<number, MessageKey> = {
@@ -95,8 +102,11 @@ function describe(error: unknown): Described {
   // Lumi's H5pError: errorId, replacements, httpStatusCode.
   if (typeof e.errorId === 'string' && typeof e.httpStatusCode === 'number') {
     const status = e.httpStatusCode;
-    const key = BY_ERROR_ID[e.errorId] ?? BY_STATUS[status];
-    if (key) return { status, code: e.errorId, key, params: stringParams(e.replacements) };
+    const params = stringParams(e.replacements);
+    const byLimit =
+      e.errorId === 'hvl:content-too-large' ? TOO_LARGE_BY_LIMIT[String(params.limit)] : undefined;
+    const key = byLimit ?? BY_ERROR_ID[e.errorId] ?? BY_STATUS[status];
+    if (key) return { status, code: e.errorId, key, params };
   }
   // UPSTREAM: Lumi throws a plain Error when its schema refuses the metadata; see https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/H5PEditor.ts (saveOrUpdateContentReturnMetaData).
   // Remove when a Lumi release throws an H5pError with a 4xx status for it.
