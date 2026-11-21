@@ -19,6 +19,13 @@ export const GROUPS_TIMEOUT_MS = 5000;
 /** Largest Groups API answer accepted, in bytes (a user has tens of groups, not thousands). */
 export const MAX_GROUPS_BYTES = 1_000_000;
 
+/** A base URL without the slashes at its end, stepping back from the end once. */
+function withoutTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === '/') end -= 1;
+  return url.slice(0, end);
+}
+
 /**
  * Fetches the user's groups.
  * @param groupsApiUrl - `FEIDE_GROUPS_API_URL`.
@@ -34,7 +41,7 @@ export async function fetchFeideGroups(
 ): Promise<unknown[]> {
   try {
     // WHY: the base URL may carry a path (e.g. a proxy prefix), so the endpoint is appended, not resolved.
-    const response = await fetchImpl(`${groupsApiUrl.replace(/\/+$/, '')}/groups/me/groups`, {
+    const response = await fetchImpl(`${withoutTrailingSlashes(groupsApiUrl)}/groups/me/groups`, {
       headers: { authorization: `Bearer ${accessToken}`, accept: 'application/json' },
       signal: AbortSignal.timeout(GROUPS_TIMEOUT_MS),
       redirect: 'error',

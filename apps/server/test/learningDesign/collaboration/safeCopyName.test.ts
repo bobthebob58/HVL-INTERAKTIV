@@ -17,8 +17,24 @@ describe('[PROD-007] safe names for a duplicate’s own file copies', () => {
     ['mappe med rom/fil', 'mappe-med-rom/fil-ID'],
     ['.skjult', 'skjult-ID'],
     ['dokument.tar gz', 'dokument-ID.targz'],
+    ['--..navn..--.png', 'navn-ID.png'],
+    ['a.-.-.b', 'a-ID.b'],
+    ['x/..hidden../y', 'x/hidden/y-ID'],
+    ['-.-', 'file-ID'],
   ])('[PROD-007] %s becomes %s', (name, expected) => {
     expect(safeCopyName(name, 'ID')).toBe(expected);
+  });
+
+  it('[PROD-007] a long run of dots inside a folder name is read in time that follows its length', () => {
+    // Arrange: 50 000 dots between two letters of the folder
+    const dots = '.'.repeat(50_000);
+    // Act
+    const started = performance.now();
+    const safe = safeCopyName(`a${dots}b/fil.png`, 'ID');
+    const elapsed = performance.now() - started;
+    // Assert
+    expect(safe).toBe(`a${dots}b/fil-ID.png`);
+    expect(elapsed).toBeLessThan(250);
   });
 
   it.each(['videos/klipp av hav æ.webm', 'a/../b c.png', './x y.png', '😀/🎥 film.webm', 'ÆØÅ/æøå.txt'])(

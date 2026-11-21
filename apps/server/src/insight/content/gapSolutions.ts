@@ -79,11 +79,10 @@ export function dragTextGaps(params: Record<string, unknown>): GapSolution[] {
     .filter((part) => part.length >= 2 && part.startsWith('*') && part.endsWith('*'))
     .map((part) => {
       // WHY: as H5P.DragText 1.10 `lex`: the tip (`:…`) and the feedback (`\+…`, `\-…`) are not part of the answer.
-      const solution = part
-        .slice(1, -1)
-        .replace(/:[^*]*$/, '')
-        .replaceAll(/\\[+-][^*:]*/g, '')
-        .trimEnd();
+      // WHY: a part holds no `*` between its two, so the tip is everything from the first `:`.
+      const inner = part.slice(1, -1);
+      const tip = inner.indexOf(':');
+      const solution = (tip === -1 ? inner : inner.slice(0, tip)).replaceAll(/\\[+-][^*:]*/g, '').trimEnd();
       return acceptedAnswers([solution]);
     });
 }
