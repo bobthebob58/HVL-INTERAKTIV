@@ -9,6 +9,9 @@
  *      "every save"): a text-only edit keeps the learners' state and the version they saved it under.
  * Spec: PROD-003, UD-022, PROD-013
  * Invariants:
+ *   - An activity the gate cannot find is refused (404), never saved unchecked. The lock and the lookup use the
+ *     ID in its stored, lower-case form, whatever the request wrote (the route does the same,
+ *     ../http/routeParams.ts `contentIdParam`), so a save and a publish of one activity always meet at one lock.
  *   - Drafts pass without validation. A published activity is validated as the editor will store it (./savedForm.ts),
  *     never as the request says; a refused save writes nothing.
  *   - The status read, the gate and the editor's write (with its version raise) run inside the activity's
@@ -26,10 +29,12 @@
  * Collaborators: ./savedForm.ts, ./ContentWriteLock.ts, ./storedContent.ts, ./acknowledgementCoverage.ts,
  *   ./PublishBlockedError.ts, ../http/routes/contentRoutes.ts, ../server/createApp.ts.
  * Tests: apps/server/test/content/publishedSave.int.test.ts, apps/server/test/content/saveRace.int.test.ts,
+ *   apps/server/test/content/publishedSaveIdentity.int.test.ts,
  *   apps/server/test/content/publishedSaveRealTypes.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts
  */
 import { isContentUuid } from '../h5p/contentIds.js';
+import { authError } from '../http/authErrors.js';
 import type { Locale } from '../i18n/translate.js';
 import type { ValidationMetadata } from '../validation/types.js';
 import { hasUncoveredError, withAcknowledgements } from './acknowledgementCoverage.js';
@@ -72,9 +77,11 @@ export class PublishedSaveGate implements ContentSaveGate {
   /** Runs the save under the activity's write lock; IDs that are no UUID go straight to the editor (not found). */
   async save(contentId: string, submitted: SubmittedSave, write: () => Promise<string>): Promise<string> {
     if (!isContentUuid(contentId)) return write();
+    // SECURITY: one spelling of the ID, so this save waits on the same lock as a publish of the activity (D-131).
+    const id = contentId.toLowerCase();
     const lock = this.deps.writeLock ?? IN_PROCESS_WRITE_LOCK;
-    return lock.hold(contentId, async () => {
-      await this.check(contentId, submitted);
+    return lock.hold(id, async () => {
+      await this.check(id, submitted);
       return write();
     });
   }
@@ -86,7 +93,10 @@ export class PublishedSaveGate implements ContentSaveGate {
       where: { id: contentId },
       select: { id: true, status: true },
     });
-    if (row?.status !== 'published') return;
+    // SECURITY: the caller found this activity a moment ago (its Edit check); a lookup that finds none is no
+    // reason to save unchecked, so the save stops here (D-131).
+    if (!row) throw authError('hvl:activity-unavailable');
+    if (row.status !== 'published') return;
     const saved = await this.savedForm(submitted);
     // WHY: the editor refuses this save before it writes anything, with its own answer.
     if (!saved) return;

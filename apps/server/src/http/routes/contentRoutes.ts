@@ -66,7 +66,7 @@ import { requireActor, requireRole } from '../h5pLocals.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
 import { refuseWhenLimited } from '../h5pRouteLimits.js';
 import { jsonBody } from '../requestBodies.js';
-import { pathParam } from '../routeParams.js';
+import { contentIdParam } from '../routeParams.js';
 import { editedContent, saveRequest } from './contentSaveBodies.js';
 
 /** The H5P routes' dependencies, with the publish gate for saves (D-074). */
@@ -91,7 +91,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
 
   router.get('/params/:contentId', authorsOnly, async (req, res) => {
     const user = asAccountUser(requireActor(res));
-    res.json(await deps.ajax.getContentParameters(pathParam(req, 'contentId'), user));
+    res.json(await deps.ajax.getContentParameters(contentIdParam(req), user));
   });
 
   // SECURITY: counted before the body is read, so a request past the limit costs no parsing or saving (D-128).
@@ -110,7 +110,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
     const actor = requireActor(res);
     const user = asAccountUser(actor);
     const { library, params, metadata, choice } = saveRequest(req.body);
-    const id = pathParam(req, 'contentId');
+    const id = contentIdParam(req);
     // WHY: Canvas has no «Lagre som ny versjon» (D-098), so its 409 does not offer one.
     const write = () =>
       deps.editor
@@ -137,7 +137,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
       const { params, metadata } = editedContent(req.body);
       const library: unknown = (req.body as Record<string, unknown>).library;
       if (library !== undefined && typeof library !== 'string') throw new HttpError(400, 'error.badRequest');
-      const id = pathParam(req, 'contentId');
+      const id = contentIdParam(req);
       const copying = duplicator.saveAsCopy(id, params, metadata, requireActor(res), library);
       const { contentId } = await copying.catch((error: unknown) => {
         // WHY: past the per-person copy limit the editor page, like any client, learns when to try again (D-092).
@@ -152,7 +152,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
   router.delete('/content/:contentId', authorsOnly, async (req, res) => {
     const actor = requireActor(res);
     const user = asAccountUser(actor);
-    const id = pathParam(req, 'contentId');
+    const id = contentIdParam(req);
     const remove = () => deps.editor.deleteContent(id, user);
     // WHY: as for a save, only someone who may delete holds the lock; anyone else meets the editor's 403 or 404.
     const locked =
@@ -164,7 +164,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
 
   router.get('/download/:contentId', async (req, res) => {
     const user = asAccountUser(requireActor(res));
-    const contentId = pathParam(req, 'contentId');
+    const contentId = contentIdParam(req);
     // WHY: the ID is a UUID (checked by the permission system); a title could carry header-breaking characters.
     res.set({
       'Content-Type': 'application/zip',
