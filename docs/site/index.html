@@ -14398,6 +14398,42 @@ $ npx vitest run --project server                    26504 passed, 31 skipped; 2
     five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
     container; DATA-010, MAPPE-004, NFR-002)</code></pre>
 </li>
+<li><p><strong>2026-11-21 · Security repairs, step 10 (D-126)</strong> — One activity&#39;s parameters have a size limit, checked
+before anything reads them, and three steps of a save read long input in time that follows its length. Three
+repairs, one commit each; every new test fails on the code before and passes after, except the bound tests that
+hold on both:</p>
+<ul>
+<li>The limits (SEC-005, PROD-012): <code>h5p/semantics/contentBudget.ts</code> and <code>markupDepth.ts</code> (new). Parameters and
+metadata: 4 000 000 characters and 200 000 values in all, one text 200 000 characters with at most 100 tags
+open at once (counted by htmlparser2 itself, fed in pieces), a key 256 characters, a library name 255. Past a
+limit: 400 <code>hvl:content-too-large</code> with a message in nn, nb and en. Checked first on a save, a copy and a paste
+(<code>http/routes/contentSaveBodies.ts</code>, new), on every save in <code>SubContentPolicy</code>, on import
+(<code>packageManifest.ts</code>) and on opening (<code>editorFormParams.ts</code>). A save request is at most 6 MB. Tests:
+<code>markupDepth.test.ts</code>, <code>contentBudget.test.ts</code>, <code>http/contentBudget.int.test.ts</code> (eight doors and bounds).</li>
+<li>Lists (SEC-008): the fitting step cuts a list to its field&#39;s <code>max</code>, and writes a long list back item by item.
+Tests: <code>semanticsConformanceLists.test.ts</code>, and an Interactive Book with 51 chapters stored with 50
+(<code>realTypesConformance.int.test.ts</code>).</li>
+<li>Three steps (PROD-013, H5P-002): the test for a library and its version, the comparison of two text lists,
+and the trim of a drag word. A stored version past the limits counts as a structural change. Tests:
+<code>libraryReferences.test.ts</code>, <code>structuralChange.test.ts</code>, <code>answerMarkup.test.ts</code>, <code>LearnerStateGate.test.ts</code>.</li>
+<li>D-126 added; SEC-005 in spec 01 has an &quot;Amended&quot; line; <code>TRACEABILITY.md</code> and the spec site regenerated.
+Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 30, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run doc:lint                                   11 checks passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins                                 6 manifests, every version pinned exactly
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npx vitest run --project web                       624 passed
+$ npx vitest run --project api-contract              97 passed
+$ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    26556 passed, 31 skipped; 2 failed in 5 files: the same
+    five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+    container; DATA-010, MAPPE-004, NFR-002)</code></pre>
+</li>
 </ul>
 
 </section>

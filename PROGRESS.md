@@ -2194,3 +2194,39 @@ Append one entry per session: date, session, what was done, gate output, and any
       five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
       container; DATA-010, MAPPE-004, NFR-002)
   ```
+- **2026-11-21 · Security repairs, step 10 (D-126)** — One activity's parameters have a size limit, checked
+  before anything reads them, and three steps of a save read long input in time that follows its length. Three
+  repairs, one commit each; every new test fails on the code before and passes after, except the bound tests that
+  hold on both:
+  - The limits (SEC-005, PROD-012): `h5p/semantics/contentBudget.ts` and `markupDepth.ts` (new). Parameters and
+    metadata: 4 000 000 characters and 200 000 values in all, one text 200 000 characters with at most 100 tags
+    open at once (counted by htmlparser2 itself, fed in pieces), a key 256 characters, a library name 255. Past a
+    limit: 400 `hvl:content-too-large` with a message in nn, nb and en. Checked first on a save, a copy and a paste
+    (`http/routes/contentSaveBodies.ts`, new), on every save in `SubContentPolicy`, on import
+    (`packageManifest.ts`) and on opening (`editorFormParams.ts`). A save request is at most 6 MB. Tests:
+    `markupDepth.test.ts`, `contentBudget.test.ts`, `http/contentBudget.int.test.ts` (eight doors and bounds).
+  - Lists (SEC-008): the fitting step cuts a list to its field's `max`, and writes a long list back item by item.
+    Tests: `semanticsConformanceLists.test.ts`, and an Interactive Book with 51 chapters stored with 50
+    (`realTypesConformance.int.test.ts`).
+  - Three steps (PROD-013, H5P-002): the test for a library and its version, the comparison of two text lists,
+    and the trim of a drag word. A stored version past the limits counts as a structural change. Tests:
+    `libraryReferences.test.ts`, `structuralChange.test.ts`, `answerMarkup.test.ts`, `LearnerStateGate.test.ts`.
+  - D-126 added; SEC-005 in spec 01 has an "Amended" line; `TRACEABILITY.md` and the spec site regenerated.
+    Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npx vitest run --project web                       624 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26556 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
