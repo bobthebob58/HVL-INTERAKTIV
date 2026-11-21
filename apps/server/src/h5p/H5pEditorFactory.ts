@@ -17,7 +17,8 @@
  *     (../security/malware/, SEC-006, D-110 amendment of 2026-11-05).
  *   - `render` returns Lumi's model, never Lumi's HTML (its template is unsafe, D-040).
  *   - Every package importer unpacks with the reader of the archive check (./libraries/checkedPackageReading.ts).
- * Collaborators: ./HvlH5PEditor.ts, ./HvlUrlGenerator.ts, ./h5pAssets.ts, ./H5pConfigFactory.ts,
+ * Collaborators: ./HvlH5PEditor.ts, ./HvlUrlGenerator.ts, ./h5pAssets.ts, ./H5pConfigFactory.ts, ./editorFormReads.ts
+ *   (cleans what the editor's form is handed on opening and on import, D-124),
  *   ./h5pStorage.ts, ./semantics/videoGuidance.ts, ./storage/LanguageFallbackLibraryStorage.ts,
  *   ./storage/LanguageOverlayLibraryStorage.ts, ./createH5pRuntime.ts, ./libraries/checkedPackageReading.ts.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts
@@ -38,6 +39,7 @@ import type { HvlUrlGenerator } from './HvlUrlGenerator.js';
 import type { PersonLimit } from '../learningDesign/collaboration/PersonRateLimit.js';
 import type { LearnerStateStore } from '../learningDesign/safeEditing/LearnerStateGate.js';
 import { useCheckedPackageReading } from './libraries/checkedPackageReading.js';
+import { useEditorFormParams } from './editorFormReads.js';
 import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
 import { EMPTY_LANGUAGE_OVERLAY, type LanguageOverlay } from './languageOverlay/languageOverlay.js';
 import type { ContentAccessRepository } from './permissions/ContentAccessRepository.js';
@@ -122,5 +124,7 @@ export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
   );
   // SECURITY: Lumi's editor template puts the integration JSON in a <script> unescaped (D-040); S4 brings ours.
   editor.setRenderer((model) => model);
+  // SECURITY: what the editor's form is handed, on opening and on import, is cleaned first (D-124).
+  useEditorFormParams(editor);
   return editor;
 }

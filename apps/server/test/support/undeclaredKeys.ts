@@ -9,8 +9,9 @@
  *   added inside `metadata` and `copyright` objects: every save since D-039 makes their strings plain text, so no
  *   stored row holds markup there.
  * Tests: shared by apps/server/test/h5p/semantics/realTypesConformance.int.test.ts,
- *   apps/server/test/h5p/semantics/playedParams.int.test.ts and
- *   apps/server/test/h5p/semantics/playedParams.test.ts.
+ *   apps/server/test/h5p/semantics/playedParams.int.test.ts, apps/server/test/h5p/semantics/playedParams.test.ts,
+ *   apps/server/test/h5p/semantics/editorFormParams.test.ts and
+ *   apps/server/test/h5p/semantics/editorFormParams.int.test.ts.
  */
 
 /** Markup that would load nothing and run nothing by itself; tests look for `onerror` in what comes back. */

@@ -18,7 +18,8 @@
  *     in one transaction (D-093 amendment 2026-10-29) → delete dropped files as the author.
  *     Both save methods take the author's `SaveChoice`; a text-only save keeps every state row.
  *   - Package import: path only (never a buffer), `inspectZip`, manifest, main library one of the ten; non-admins:
- *     every library installed in the same version; admins: the build-secret scan (400), the audit; then Lumi's import.
+ *     every library installed in the same version and content its semantics can read (400, D-124); admins: the
+ *     build-secret scan (400), the audit; then Lumi's import.
  *   - Hub install and Content Hub download are refused for everyone.
  * Collaborators: ./HvlTop10ContentTypeFilter.ts, ./editorSaveSteps.ts, ./permissionCheckedExporter.ts,
  *   ./libraries/*, ../security/zipEntryGuard.ts; built only by ./H5pEditorFactory.ts.
@@ -45,6 +46,7 @@ import type { HvlH5pUser } from './HvlH5pUser.js';
 import { auditBeforeInstall } from './libraries/auditBeforeInstall.js';
 import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
 import { disconnectFromHub } from './offlineContentTypeCache.js';
+import { assertReadableContent } from './libraries/packageContentCheck.js';
 import { assertPackageLibrariesInstalled } from './libraries/packageLibraryCheck.js';
 import { readPackageManifest } from './libraries/packageManifest.js';
 import { assertNoLibrarySecrets } from './libraries/packageSecretScan.js';
@@ -166,6 +168,7 @@ export class HvlH5PEditor extends H5PEditor {
     );
     if (!mayInstall) {
       await assertPackageLibrariesInstalled(manifest.libraries, this.libraryManager);
+      await assertReadableContent(manifest, this.libraryManager);
       return super.uploadPackage(dataOrPath, user);
     }
     await assertNoLibrarySecrets(dataOrPath); // SECURITY: before any audit row or install (D-110, 2026-11-06)

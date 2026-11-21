@@ -43,6 +43,8 @@ export interface PackageManifest {
   readonly mainLibraryVersion?: ILibraryName;
   /** Library folders the package carries (code an install would add or replace). */
   readonly libraries: readonly PackageLibrary[];
+  /** The parsed content/content.json, when the package has one. */
+  readonly content?: Record<string, unknown>;
 }
 
 const notH5p = (): ZipRejectedError => new ZipRejectedError('upload.package.notH5p');
@@ -75,7 +77,7 @@ function toLibrary(json: Record<string, unknown>): PackageLibrary | undefined {
 /**
  * Reads h5p.json and the top-level library.json files of a package.
  * @param path - Path of the .h5p file.
- * @returns The main library and the libraries the package carries.
+ * @returns The main library, the libraries the package carries and its parsed content.json.
  * @throws ZipRejectedError `upload.package.notH5p` when h5p.json is missing or unreadable;
  *   `upload.archive.unsafePath` when content.json points at a file outside `content/`.
  */
@@ -85,13 +87,14 @@ export async function readPackageManifest(path: string): Promise<PackageManifest
   const libraries: PackageLibrary[] = [];
   const carried = new Set<string>();
   let references: string[] = [];
+  let content: Record<string, unknown> | undefined;
   try {
     for await (const entry of readEntries(zip)) {
       const name = entry.fileName.replace(/\\/g, '/');
       carried.add(name);
       if (name === 'h5p.json') h5pJson = parse(await readText(zip, entry));
       else if (name === 'content/content.json') {
-        const content = parse(await readText(zip, entry, MAX_FILE_SIZE));
+        content = parse(await readText(zip, entry, MAX_FILE_SIZE));
         assertNestingDepth(content);
         references = contentFilePaths(content);
       } else if (/^[^/]+\/library\.json$/.test(name)) {
@@ -110,5 +113,10 @@ export async function readPackageManifest(path: string): Promise<PackageManifest
   const main = dependencies
     .map((d) => toLibrary(d as Record<string, unknown>))
     .find((d) => d?.machineName === mainLibrary);
-  return { mainLibrary, ...(main ? { mainLibraryVersion: main } : {}), libraries };
+  return {
+    mainLibrary,
+    ...(main ? { mainLibraryVersion: main } : {}),
+    libraries,
+    ...(content ? { content } : {}),
+  };
 }
