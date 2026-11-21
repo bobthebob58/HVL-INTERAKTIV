@@ -10,7 +10,8 @@
  * Errors: 401 `hvl:unauthenticated` (signed out, or a Canvas ltik), `hvl:session-expired`, `hvl:ltik-invalid`,
  *   `hvl:csrf-invalid`; 403 `error.forbidden` (a portal learner) and `hvl:edit-not-allowed` (may view, not edit);
  *   404 `hvl:activity-unavailable` (unknown or not viewable, D-066); 400 `error.badRequest` (a body over D-087's
- *   limits, or a query without a valid course code); 409 `hvl:learning-design-conflict` (a stale `updatedAt`).
+ *   limits, or a query without a valid course code); 409 `hvl:learning-design-conflict` (a stale `updatedAt`);
+ *   429 `hvl:rate-limited` with `Retry-After` (the planner, past its limit per person, D-128).
  * Invariants:
  *   - Who asks is checked first, then the Edit decision, and only then the body, so a refused caller learns nothing
  *     from a 400.
@@ -32,6 +33,7 @@ import { courseCodeQuerySchema, learningDesignUpdateSchema } from '@hvl-interakt
 import { Router, type Request, type Response } from 'express';
 import { editableContent } from '../../content/contentAccess.js';
 import { apiJson, parseBody } from '../../http/api/apiBodies.js';
+import { refuseWhenLimited } from '../../http/h5pRouteLimits.js';
 import { pathParam } from '../../http/routeParams.js';
 import { requirePortalAuthor } from './studioPrincipal.js';
 import type { StudioRouteDeps } from './studioRouteDeps.js';
@@ -86,6 +88,7 @@ export function learningDesignRoutes(deps: StudioRouteDeps): Router {
 
   router.get('/learning-design/planner', async (req, res) => {
     const principal = requirePortalAuthor(res);
+    refuseWhenLimited(await deps.studio.limits.planner.take(principal.userId), res);
     res.json(await store().planner(principal.userId, courseCodeOf(req)));
   });
   return router;

@@ -1,12 +1,13 @@
 /**
  * h5pRouteLimits — the per-person limits of the H5P routes: how often a learner's state may be saved for one
- * activity, how many files and packages an author may send, and how many SVG files of an author may be refused
- * as too complex before further ones must wait.
+ * activity, how many files and packages an author may send, how many activities an author may create, and how
+ * many SVG files of an author may be refused as too complex before further ones must wait.
  *
  * Why: every one of these requests costs the server work and storage that the person chooses the amount of. A
  *      real activity saves twelve times a minute, and an author sends a handful of files; the limits are far above
  *      that and bound what one person can ask for (D-120). The SVG rule keeps one person from holding the SVG
- *      cleaning worker, which cleans one file at a time (D-119), busy for everyone else.
+ *      cleaning worker, which cleans one file at a time (D-119), busy for everyone else. New activities are
+ *      counted too, with the ones made from a pattern (D-128).
  * Spec: H5P-005, SEC-005, SEC-001
  * Invariants:
  *   - Counters live in Redis, so the limits hold across server nodes; a counter is a number under a key that names
@@ -16,7 +17,8 @@
  * Collaborators: ../learningDesign/collaboration/PersonRateLimit.ts (the fixed-window counter),
  *   ./routes/userDataRoutes.ts, ./routes/ajaxRoutes.ts, ../h5p/createH5pRuntime.ts (builds them),
  *   ../h5p/storage/learnerStateLimits.ts (the save limit's number).
- * Tests: apps/server/test/http/userDataLimits.int.test.ts, apps/server/test/http/uploadLimits.int.test.ts
+ * Tests: apps/server/test/http/userDataLimits.int.test.ts, apps/server/test/http/uploadLimits.int.test.ts,
+ *   apps/server/test/http/creationLimit.int.test.ts
  */
 import type { Response } from 'express';
 import { STATE_SAVES_PER_MINUTE } from '../h5p/storage/learnerStateLimits.js';
@@ -35,6 +37,8 @@ export const UPLOADS_PER_TEN_MINUTES = 120;
 export const IMPORTS_PER_TEN_MINUTES = 20;
 /** SVG files of one author that may be refused as too complex in ten minutes before further SVGs wait. */
 export const SLOW_SVGS_PER_TEN_MINUTES = 3;
+/** Activities one author may create in ten minutes: new ones in the editor and ones from a pattern together. */
+export const CREATIONS_PER_TEN_MINUTES = 60;
 
 /** A count of events that is checked before an action and raised only when the event happens. */
 export interface PersonBudget {
@@ -59,6 +63,8 @@ export interface H5pRouteLimits {
   readonly uploads: PersonLimit;
   /** Package imports of one author. */
   readonly imports: PersonLimit;
+  /** New activities of one author (D-128). */
+  readonly creations: PersonLimit;
   /** SVG uploads of one author that the cleaning refused as too complex (D-119). */
   readonly slowSvgs: PersonBudget;
 }
@@ -85,9 +91,23 @@ class RedisPersonBudget implements PersonBudget {
 }
 
 /**
+ * The limit on new activities of one author, shared by the editor's save of a new activity and the creation from
+ * a pattern: both count under one key.
+ * @param redis - The server's Redis client (not owned: the server closes it).
+ * @returns The limit with D-128's number.
+ * @spec PROD-007
+ */
+export const creationLimit = (redis: Redis): PersonLimit =>
+  new PersonRateLimit(redis, {
+    keyPrefix: 'hvli:creations:',
+    limit: CREATIONS_PER_TEN_MINUTES,
+    windowSeconds: TEN_MINUTES,
+  });
+
+/**
  * Builds the limits on the server's Redis.
  * @param redis - The server's Redis client (not owned: the server closes it).
- * @returns The four limits with D-120's numbers.
+ * @returns The limits with D-120's and D-128's numbers.
  */
 export function createH5pRouteLimits(redis: Redis): H5pRouteLimits {
   const window = (keyPrefix: string, limit: number, windowSeconds: number) =>
@@ -96,6 +116,7 @@ export function createH5pRouteLimits(redis: Redis): H5pRouteLimits {
     stateSaves: window('hvli:state-saves:', STATE_SAVES_PER_MINUTE, 60),
     uploads: window('hvli:uploads:', UPLOADS_PER_TEN_MINUTES, TEN_MINUTES),
     imports: window('hvli:imports:', IMPORTS_PER_TEN_MINUTES, TEN_MINUTES),
+    creations: creationLimit(redis),
     slowSvgs: new RedisPersonBudget(redis, {
       keyPrefix: 'hvli:svg-too-complex:',
       limit: SLOW_SVGS_PER_TEN_MINUTES,

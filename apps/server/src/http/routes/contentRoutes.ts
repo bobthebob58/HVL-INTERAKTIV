@@ -14,6 +14,8 @@
  *     confirmLearnerStateReset?: boolean }`, else 400; a new activity (POST) has no learner state, so there the
  *     flag changes nothing. Parameters or metadata past the limits for one activity are 400
  *     `hvl:content-too-large` before anything reads them (./contentSaveBodies.ts, D-126).
+ *   - New activities are counted per person before the body is read; past the limit the answer is 429
+ *     `hvl:rate-limited` with `Retry-After` and nothing is stored (../h5pRouteLimits.ts, D-128).
  *   - With a save gate (createApp always passes one), a save of an existing activity by someone who may edit runs
  *     through it: under the activity's write lock, a published activity meets the publish gate on what the editor
  *     will store; an error without an acknowledgement younger than 14 days is 409 `hvl:published-save-blocked` with
@@ -62,6 +64,7 @@ import { inWordsOfSaver } from '../../learningDesign/safeEditing/resetNeededWord
 import { HttpError } from '../HttpError.js';
 import { requireActor, requireRole } from '../h5pLocals.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
+import { refuseWhenLimited } from '../h5pRouteLimits.js';
 import { jsonBody } from '../requestBodies.js';
 import { pathParam } from '../routeParams.js';
 import { editedContent, saveRequest } from './contentSaveBodies.js';
@@ -91,7 +94,12 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
     res.json(await deps.ajax.getContentParameters(pathParam(req, 'contentId'), user));
   });
 
-  router.post('/content', authorsOnly, ...jsonBody, async (req, res) => {
+  // SECURITY: counted before the body is read, so a request past the limit costs no parsing or saving (D-128).
+  const countCreation: RequestHandler = async (_req, res, next) => {
+    refuseWhenLimited(await deps.limits?.creations.take(requireActor(res).accountId), res);
+    next();
+  };
+  router.post('/content', authorsOnly, countCreation, ...jsonBody, async (req, res) => {
     const user = asAccountUser(requireActor(res));
     const { library, params, metadata } = saveRequest(req.body);
     const contentId = await deps.editor.saveOrUpdateContent(undefined, params, metadata, library, user);
