@@ -233,6 +233,7 @@
     "findings": {
       "none": "The universal design check found no errors or warnings.",
       "summary": "The universal design check: errors: {{errors}} ({{acknowledged}} explained), warnings: {{warnings}}.",
+      "listed": "The first {{listed}} are listed.",
       "error": "Error",
       "warning": "Warning",
       "hint": "Hint",

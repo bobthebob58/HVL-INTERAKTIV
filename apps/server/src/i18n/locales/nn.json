@@ -233,6 +233,7 @@
     "findings": {
       "none": "Sjekken for universell utforming fann ingen feil eller åtvaringar.",
       "summary": "Sjekken for universell utforming: feil: {{errors}} (grunngjevne: {{acknowledged}}), åtvaringar: {{warnings}}.",
+      "listed": "Dei {{listed}} første er lista opp.",
       "error": "Feil",
       "warning": "Åtvaring",
       "hint": "Tips",

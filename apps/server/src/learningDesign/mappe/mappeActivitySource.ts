@@ -28,8 +28,11 @@ import { activityLanguage } from '../../validation/activityLanguage.js';
 import { authoredBy } from '../metadata/authorScope.js';
 import { contractOutcome, type StoredCategory } from '../metadata/learningDesignRecord.js';
 
-/** One selected activity as the export reads it. */
-export interface MappeSourceActivity extends StoredContentRow {
+/**
+ * One selected activity as the export reads it: everything but its parameters, which are read one activity at a
+ * time (`mappeActivityParams`).
+ */
+export interface MappeSourceActivity extends Omit<StoredContentRow, 'params'> {
   readonly title: string;
   readonly createdAt: Date;
   readonly publishedAt: Date | null;
@@ -108,7 +111,6 @@ export async function mappeSourceActivities(
       id: true,
       title: true,
       mainLibrary: true,
-      params: true,
       metadata: true,
       status: true,
       createdAt: true,
@@ -141,7 +143,6 @@ export async function mappeSourceActivities(
       id: row.id,
       title: row.title,
       mainLibrary: row.mainLibrary,
-      params: row.params,
       metadata: row.metadata,
       status: row.status,
       createdAt: row.createdAt,
@@ -158,6 +159,21 @@ export async function mappeSourceActivities(
       acknowledgements: row.acknowledgements,
     };
   });
+}
+
+/**
+ * The parameters of one selected activity, for its universal design check.
+ * @param db - The database.
+ * @param contentId - An activity `mappeSourceActivities` answered with.
+ * @returns The stored parameters (content.json).
+ * @throws HttpError 404 `hvl:activity-unavailable` when the activity has gone since it was listed.
+ * @spec MAPPE-002
+ */
+export async function mappeActivityParams(db: Database, contentId: string): Promise<unknown> {
+  // WHY: of one activity at a time, so a portfolio of fifty never holds fifty activities' content at once (D-128).
+  const row = await db.h5PContent.findUnique({ where: { id: contentId }, select: { params: true } });
+  if (!row) throw authError('hvl:activity-unavailable');
+  return row.params;
 }
 
 /**
