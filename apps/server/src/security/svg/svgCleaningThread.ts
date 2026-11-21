@@ -25,9 +25,11 @@ import type { SvgCleaningRequest } from './svgPipeline.js';
 export interface CleaningWorker {
   /** Sends one file to clean. */
   postMessage(request: SvgCleaningRequest): void;
-  /** Listens for the worker's messages, its failure and its end. */
+  /** Listens for the worker's messages. */
   on(event: 'message', listener: (message: unknown) => void): unknown;
+  /** Listens for the worker's failure. */
   on(event: 'error', listener: (error: Error) => void): unknown;
+  /** Listens for the worker's end. */
   on(event: 'exit', listener: (code: number) => void): unknown;
   /** Stops the worker at once, whatever it is doing. */
   terminate(): Promise<unknown>;
