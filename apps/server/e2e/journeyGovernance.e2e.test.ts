@@ -102,6 +102,8 @@ describeWithRealWebApp('[PED-011] ALU changes a pattern’s guidance in the cont
       flow.step = 'pattern page';
       await page.goto(`${tb.toolUrl}/laeringsdesign/monster/${PATTERN}`);
       await page.getByRole('heading', { level: 1 }).waitFor({ timeout: 30_000 });
+      // WHY: the page asks who is signed in after it has drawn its heading; the refusals are counted below.
+      await page.waitForLoadState('networkidle');
       return (await page.locator('main').textContent()) ?? '';
     });
     // Assert: the edit alone passes the check, and the page shows it
