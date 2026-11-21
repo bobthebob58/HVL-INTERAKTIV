@@ -24,6 +24,7 @@ import {
   learningDesignUpdateSchema,
 } from '../learningDesign.js';
 import { plannerSchema } from '../planner.js';
+import { rateLimited } from './collaborationResponses.js';
 import { badRequest, contentParams, failure, unauthenticated, unavailable } from './routeResponses.js';
 
 /** 403 of the routes about one activity's metadata. */
@@ -117,13 +118,15 @@ export const LEARNING_DESIGN_ROUTES = [
     auth: 'portal',
     summary:
       'The alignment planner for one course code: the author’s own and co-authored activities (drafts included) as ' +
-      'outcomes × phases, with the gaps and the untagged activities (PED-031, D-088).',
+      'outcomes × phases, with the gaps and the untagged activities (PED-031, D-088). At most the 300 most ' +
+      'recently changed activities of the course; `moreActivities` says when there are more (D-128).',
     query: courseCodeQuerySchema,
     responses: {
       200: { description: 'The planner.', schema: plannerSchema },
       400: badCourseCode,
       401: unauthenticated,
       403: authorsOnly,
+      429: rateLimited('more than 120 planner requests in ten minutes'),
     },
   },
 ] as const satisfies readonly ApiRoute[];

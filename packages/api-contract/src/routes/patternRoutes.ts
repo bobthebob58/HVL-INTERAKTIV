@@ -20,6 +20,7 @@ import {
   patternActivityResponseSchema,
   patternParamsSchema,
 } from '../patterns.js';
+import { rateLimited } from './collaborationResponses.js';
 import { failure, unauthenticated } from './routeResponses.js';
 
 /** The routes of this area, in the order of the OpenAPI document. */
@@ -46,6 +47,7 @@ export const PATTERN_ROUTES = [
       ),
       404: failure('`error.notFound`: there is no pattern with this ID.'),
       409: failure('`hvl:pattern-unavailable`: a content type the pattern needs is not installed (D-085).'),
+      429: rateLimited('more than 60 new activities in ten minutes, the editor’s new activities included'),
     },
   },
 ] as const satisfies readonly ApiRoute[];

@@ -23,6 +23,7 @@ import {
   mappePreviewSchema,
   mappeRequestSchema,
 } from '../mappe.js';
+import { rateLimited } from './collaborationResponses.js';
 import { failure, unauthenticated } from './routeResponses.js';
 
 /** 403 of every mappe route. */
@@ -43,6 +44,9 @@ const badMappeRequest = failure(
 const activityUnavailable = failure(
   '`hvl:activity-unavailable`: an activity is unknown, or is not one the author owns or co-authors (D-066).',
 );
+
+/** 429 of the preview and the export, which count together (D-128). */
+const tooManyMappeRequests = rateLimited('more than 120 previews and exports together in ten minutes');
 
 /** The routes of this area, in the order of the OpenAPI document. */
 export const MAPPE_ROUTES = [
@@ -91,6 +95,7 @@ export const MAPPE_ROUTES = [
       403: authorsOnly,
       404: activityUnavailable,
       409: notReady,
+      429: tooManyMappeRequests,
     },
   },
   {
@@ -110,6 +115,7 @@ export const MAPPE_ROUTES = [
       403: authorsOnly,
       404: activityUnavailable,
       409: notReady,
+      429: tooManyMappeRequests,
       503: failure(
         '`hvl:pdf-busy` (every PDF slot in use, or the person already makes one; with `Retry-After`) or ' +
           '`hvl:pdf-unavailable` (no browser, or over the time limit); the Markdown export still works (D-096).',
