@@ -5233,3 +5233,35 @@ loading of one spec per session are kept.
   the piece taken out before it can be saved again. A production deployment with `WEB_APP=off` no longer starts,
   and says why. Text PostgreSQL cannot store (PROD-012) no longer refuses a save when it sits in or under a key
   no field names: it goes with the key. No new stored data.
+
+### D-124 · Security repairs, step 8: the player and the editor are handed fitted content, whatever the stored row or the package holds
+- **Context:** D-123 fits the parameters to their semantics on every save. Content also reaches a browser without
+  passing a save: the player reads the stored row, the editor reads it when an activity is opened, and an uploaded
+  package's content.json goes to the editor before anything is saved. H5P's own server software fits content each
+  time it is shown or edited, and hands the editor text in the form of PHP's `htmlspecialchars` (a double quote as
+  `&quot;`); H5P's editor writes a text field's value straight into `value="…"` on that assumption. Lumi stores a
+  plain `"` in text and hands rows over as they are.
+- **Decision — fit when read; stored rows are not rewritten (SEC-008, H5P-004).** `h5p/semantics/playedParams.ts`
+  wraps the player's `render`: every model's `jsonContent` goes through D-123's fitting. Nothing else is judged
+  again: text was cleaned when the row was saved, and no sub-content is refused, so what could be stored still
+  plays. Rewriting the rows once was not chosen: it needs an operator's step at each deployment, and a row
+  written later by other means would escape it. Fitting when read needs neither, costs one walk over cached
+  semantics, and the row is fitted for good at its next save.
+- **Decision — the editor's form is handed cleaned content (SEC-008, SEC-005, H5P-006).**
+  `h5p/semantics/editorFormParams.ts`, put on the editor's `getContent` and `uploadPackage` by
+  `h5p/editorFormReads.ts`: the parameters are fitted, every text field is cleaned by the save's rules, what the
+  "Rights of use" dialog renders is cleaned and an unsafe file path refused. In every text field that is not rich
+  text, and in title data (`metadata`, `copyright`), `"` is written `&quot;` and `'` `&#039;`, as the editor's own
+  `htmlspecialchars` writes them. A save reads both forms alike, so what is stored does not change. No
+  sub-content is refused here: an activity or a package with a type the save refuses still opens, and the author
+  can take the piece out.
+- **Decision — an import whose content cannot be read is a 400 (PROD-012).** `h5p/libraries/packageContentCheck.ts`
+  walks the content of a non-admin's package by its semantics before Lumi's importer does. Content whose values
+  do not have the JSON types Lumi's scanners assume is refused with `hvl:invalid-params`, where Lumi's walk ended
+  with a TypeError.
+- **Verified:** BranchingScenario's editor opens and saves its example with and without the `contentId` D-123
+  removes (the same five nodes, no error). A label with a double quote, cut off at the quote before, is shown
+  whole in the editor, and so is the title.
+- **Consequences:** A text with a quote is no longer cut off when an activity is opened for editing. A row that
+  cannot be read as its semantics describe, which the editor's save never stores, fails to play or to open with
+  400. No new stored data.

@@ -11960,6 +11960,41 @@ the piece taken out before it can be saved again. A production deployment with <
 and says why. Text PostgreSQL cannot store (PROD-012) no longer refuses a save when it sits in or under a key
 no field names: it goes with the key. No new stored data.</li>
 </ul>
+<h3 id="decisions--d-124--security-repairs-step-8-the-player-and-the-editor-are-handed-fitted-content-whatever-the-stored-row-or-the-package-holds" tabindex="-1">D-124 · Security repairs, step 8: the player and the editor are handed fitted content, whatever the stored row or the package holds</h3>
+<ul>
+<li><strong>Context:</strong> D-123 fits the parameters to their semantics on every save. Content also reaches a browser without
+passing a save: the player reads the stored row, the editor reads it when an activity is opened, and an uploaded
+package&#39;s content.json goes to the editor before anything is saved. H5P&#39;s own server software fits content each
+time it is shown or edited, and hands the editor text in the form of PHP&#39;s <code>htmlspecialchars</code> (a double quote as
+<code>&amp;quot;</code>); H5P&#39;s editor writes a text field&#39;s value straight into <code>value=&quot;…&quot;</code> on that assumption. Lumi stores a
+plain <code>&quot;</code> in text and hands rows over as they are.</li>
+<li><strong>Decision — fit when read; stored rows are not rewritten (SEC-008, H5P-004).</strong> <code>h5p/semantics/playedParams.ts</code>
+wraps the player&#39;s <code>render</code>: every model&#39;s <code>jsonContent</code> goes through D-123&#39;s fitting. Nothing else is judged
+again: text was cleaned when the row was saved, and no sub-content is refused, so what could be stored still
+plays. Rewriting the rows once was not chosen: it needs an operator&#39;s step at each deployment, and a row
+written later by other means would escape it. Fitting when read needs neither, costs one walk over cached
+semantics, and the row is fitted for good at its next save.</li>
+<li><strong>Decision — the editor&#39;s form is handed cleaned content (SEC-008, SEC-005, H5P-006).</strong>
+<code>h5p/semantics/editorFormParams.ts</code>, put on the editor&#39;s <code>getContent</code> and <code>uploadPackage</code> by
+<code>h5p/editorFormReads.ts</code>: the parameters are fitted, every text field is cleaned by the save&#39;s rules, what the
+&quot;Rights of use&quot; dialog renders is cleaned and an unsafe file path refused. In every text field that is not rich
+text, and in title data (<code>metadata</code>, <code>copyright</code>), <code>&quot;</code> is written <code>&amp;quot;</code> and <code>&#39;</code> <code>&amp;#039;</code>, as the editor&#39;s own
+<code>htmlspecialchars</code> writes them. A save reads both forms alike, so what is stored does not change. No
+sub-content is refused here: an activity or a package with a type the save refuses still opens, and the author
+can take the piece out.</li>
+<li><strong>Decision — an import whose content cannot be read is a 400 (PROD-012).</strong> <code>h5p/libraries/packageContentCheck.ts</code>
+walks the content of a non-admin&#39;s package by its semantics before Lumi&#39;s importer does. Content whose values
+do not have the JSON types Lumi&#39;s scanners assume is refused with <code>hvl:invalid-params</code>, where Lumi&#39;s walk ended
+with a TypeError.</li>
+<li><strong>Verified:</strong> BranchingScenario&#39;s editor opens and saves its example with and without the <code>contentId</code> D-123
+removes (the same five nodes, no error). A label with a double quote, cut off at the quote before, is shown
+whole in the editor, and so is the title.</li>
+<li><strong>Consequences:</strong> A text with a quote is no longer cut off when an activity is opened for editing. A row that
+cannot be read as its semantics describe, which the editor&#39;s save never stores, fails to play or to open with<ol start="400">
+<li>No new stored data.</li>
+</ol>
+</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
