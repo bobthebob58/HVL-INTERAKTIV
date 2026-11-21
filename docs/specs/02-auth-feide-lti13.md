@@ -196,6 +196,11 @@ Platform private keys are encrypted at rest with a key from the secret store.
    not an ancestor and is not listed. `X-Frame-Options` is not sent.
 - **Acceptance:** A Playwright test with third-party cookies blocked completes launch → play → resume inside a cross-origin iframe.
 - **Verify:** Integration and e2e tests; header assertions.
+- **Amended (D-130, 2026-11-21):** a request with an ltik (step 3) is answered only when its launch's pages ask for
+  it (`lti/ltikScope.ts`): the launched activity for a resource-link launch, no activity for a Deep Linking launch,
+  «who am I» and a notice for both; anything else is 403 `hvl:not-from-canvas`. An address with an ltik (step 1) is
+  accepted only from a same-origin navigation, or, from a browser that sends no fetch metadata, within ten minutes
+  of the launch (`lti/landingLtik.ts`); otherwise the page of step 4 answers.
 
 #### LTI-004 · MUST · S3 · Map LTI roles safely
 | LTI role claim contains | Role |
@@ -206,6 +211,8 @@ Platform private keys are encrypted at rest with a key from the secret store.
 
 **An LTI launch never grants `admin`.** H5P library administration requires a Feide login and the admin allow-list (`AUTH-002`).
 - **Verify:** Table-driven unit test, including a forged `Administrator` claim.
+- **Amended (D-130, 2026-11-21):** an LTI launch also gives no reach beyond itself: its ltik lists, creates, deletes,
+  downloads, copies, publishes and shares nothing, and reaches no activity but the launched one (`LTI-003`).
 
 #### LTI-005 · MUST · S3 · Deep Linking 2.0 picker
 `onDeepLinking` redirects to `/app/deeplink`. There the author can (a) choose existing activities
@@ -230,6 +237,8 @@ for `assignment_selection`). Returned resource links always point to `https://in
 get the player plus **Rediger** (edit, if owner or co-author) and **Innsikt** (insight) tabs.
 - **Acceptance:** An unknown or draft `contentId` gives a friendly error page, not a stack trace or a redirect loop.
 - **Verify:** Integration tests.
+- **Amended (D-130, 2026-11-21):** the tabs act on the launched activity only: **Rediger** reads and saves that
+  activity, **Innsikt** and the score status show it for the launch's course (`LTI-003`).
 
 #### LTI-007 · SHOULD · S3 · Works after Canvas course copy
 When a Canvas course is copied, its resource links keep `custom.contentId`. Instructors of the new

@@ -180,6 +180,8 @@ Visibility is one of: *only me / co-authors*, *everyone at HVL*, or *anyone with
 - **Acceptance:** Visibility is enforced by the permission system (`H5P-006`). Changing visibility
   takes effect immediately.
 - **Verify:** Integration tests per visibility level.
+- **Amended (D-130, 2026-11-21):** visibility is changed in the portal, with the Feide session; a request with an
+  ltik cannot change it (`LTI-003`).
 
 #### PROD-007 · SHOULD · S5 · Co-authoring and an institutional content bank
 Authors can add co-authors (HVL staff found by name or Feide ID) and can publish an activity to the

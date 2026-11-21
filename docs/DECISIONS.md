@@ -5471,3 +5471,44 @@ loading of one spec per session are kept.
   for the turn of the academic year. A person who uses two registrations is two learners in the counts. The
   operator of a data-subject request needs the client ID from `LTI_PLATFORMS`
   (`docs/ops/data-subject-requests.md`). One data-only migration; no new stored field.
+
+### D-130 · Security repairs, step 14: an ltik reaches only what its launch's pages ask for; an address with an ltik counts only from our own pages
+- **Context:** The ltik stands in for a cookie in the Canvas frame (LTI-003, D-058): a signed token that names
+  the stored launch and lives for 24 hours. Every request with a valid ltik acted as the launch's account without
+  further limit, so the token of a teacher's launch could list, create, delete and download that teacher's
+  activities and change their sharing, none of which a Canvas page does. And the four pages a launch lands on
+  (`/app/play`, `/lti/play`, `/lti/edit`, `/lti/deeplink`) took an address with an ltik wherever the browser came
+  from, for the token's whole life: someone who followed a link carrying another person's ltik worked inside
+  that person's launch.
+- **Decision — a list per kind of launch, default deny (LTI-003, LTI-004, LTI-006, PROD-007).**
+  `lti/ltikScope.ts` lists the methods and paths the Canvas pages ask for. `auth/requestPrincipal.ts` asks it
+  for every request that carries an ltik, as a Bearer token or in one of H5P's URLs, and answers anything else
+  with 403 `hvl:not-from-canvas` («this cannot be done from Canvas; open HVL Interaktiv in the portal»; nn, nb,
+  en). A resource-link launch reaches the launched activity's saved state and xAPI answers and, for its author,
+  the Canvas editor (H5P's AJAX, the stored parameters, the save, and the findings that block a save), insight
+  and the score status of the launch's course; an ID in the path must be the launch's own activity. A Deep
+  Linking launch reaches no activity route: its picker and its answer are LTI routes that check the launch
+  themselves (D-061). Every launch may ask `GET /api/me` and acknowledge a notice. Routes the API contract marks
+  `auth: 'none'` (D-089) answer as they do without a token. The list was drawn from what the pages were recorded
+  to ask in the integration tests and the browser journeys. Each route's own role and permission checks still
+  run; the list only narrows what reaches them.
+- **What an ltik no longer reaches.** The list of activities; creating, deleting, downloading and copying an
+  activity; publishing and unpublishing; sharing, which had no control on a Canvas page (PROD-006); the
+  portal's own player and editor pages; and every activity but the launched one. These need the portal's Feide
+  session. A route added later is closed to ltiks until it is listed.
+- **Decision — the lifetime stays 24 hours.** ltijs fixes it, and a working day in Canvas (an author who edits,
+  a learner who returns to a long activity in the same tab) needs no second launch. What a held token is worth
+  is now bounded by the list.
+- **Decision — an address with an ltik counts only from our own pages (LTI-003).** `lti/landingLtik.ts`, used by
+  the four landing routes: when the browser sends `Sec-Fetch-Site` and it is not `same-origin`, the address is
+  refused before the ltik is looked at; when the browser sends no fetch metadata, the address is accepted only
+  within ten minutes of the ltik's issue. The answer is the «open it again from Canvas» page
+  (`hvl:ltik-invalid`), as for any ltik that is not valid. This refuses no launch: ltijs 7 processes a launch
+  only on its own second POST, which it requires to be same-origin (D-050), so the redirect to the landing page
+  is a same-origin navigation, and the frames inside `/app/play` are ours. Measured in Chromium through the mock
+  Canvas: every landing arrives with `Sec-Fetch-Site: same-origin` and `Sec-Fetch-Dest: iframe`.
+- **Consequences:** A copied or bookmarked address with an ltik no longer opens. In a browser that sends no
+  fetch metadata (Safari before 16.4), the **Rediger** tab first opened more than ten minutes after the launch
+  asks for a new launch. `LTIK_QUERY_PATHS` holds only H5P's two URL shapes; the landing pages read their own
+  address. Browser tests that hold an ltik arrive through `test/support/openLanding.ts`. No stored data
+  changes.

@@ -334,7 +334,9 @@ the gate output lists them so (limitation 23).
 9. **Tokens travel in some URLs, so proxies must not log query strings** (D-057, D-058). A launch reaches
    `/app/play`, `/lti/play`, `/lti/edit` and `/lti/deeplink` with the ltik in the query (a first-party script then removes it from the
    address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF token as a query value,
-   because H5P builds those URLs itself. Our logs redact these values (`DATA-009`), but a reverse proxy, load
+   because H5P builds those URLs itself. An ltik reaches only what its launch's pages ask for (the launched
+   activity, or the picker), and a landing address with one is taken only from our own pages (D-130).
+   Our logs redact these values (`DATA-009`), but a reverse proxy, load
    balancer or CDN in front of the server must not log query strings and must not cache responses that set
    cookies. The deployment checklist carries this rule ([ops/runbook.md](ops/runbook.md) §9); whether HVL's proxy
    keeps it is checked only when HVL deploys.

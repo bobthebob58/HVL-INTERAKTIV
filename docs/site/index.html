@@ -634,7 +634,9 @@ insight and in the portfolio export, and are raised again on the next publish af
 visibility is one of: *only me / co-authors*, *everyone at hvl*, or *anyone with a feide login*.
 - **acceptance:** visibility is enforced by the permission system (`h5p-006`). changing visibility
   takes effect immediately.
-- **verify:** integration tests per visibility level.">
+- **verify:** integration tests per visibility level.
+- **amended (d-130, 2026-11-21):** visibility is changed in the portal, with the feide session; a request with an
+  ltik cannot change it (`lti-003`).">
 <summary><span class="req-id">PROD-006</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Share outside Canvas with Feide</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>An author can share an activity link that works outside Canvas. Viewers log in with Feide.
 Visibility is one of: <em>only me / co-authors</em>, <em>everyone at HVL</em>, or <em>anyone with a Feide login</em>.</p>
@@ -642,6 +644,8 @@ Visibility is one of: <em>only me / co-authors</em>, <em>everyone at HVL</em>, o
 <li><strong>Acceptance:</strong> Visibility is enforced by the permission system (<a class="req-ref" href="#r-H5P-006"><code>H5P-006</code></a>). Changing visibility
 takes effect immediately.</li>
 <li><strong>Verify:</strong> Integration tests per visibility level.</li>
+<li><strong>Amended (D-130, 2026-11-21):</strong> visibility is changed in the portal, with the Feide session; a request with an
+ltik cannot change it (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PROD-006">00 Product and pedagogy, PROD-006</a> · Product</p></div>
 </details>
@@ -1482,7 +1486,12 @@ Platform private keys are encrypted at rest with a key from the secret store.</p
    `canvas_origins`, e.g. `https://hvl.instructure.com`, plus tecopp's test instance and any vanity domain). `sso.canvaslms.com` is
    not an ancestor and is not listed. `x-frame-options` is not sent.
 - **acceptance:** a playwright test with third-party cookies blocked completes launch → play → resume inside a cross-origin iframe.
-- **verify:** integration and e2e tests; header assertions.">
+- **verify:** integration and e2e tests; header assertions.
+- **amended (d-130, 2026-11-21):** a request with an ltik (step 3) is answered only when its launch's pages ask for
+  it (`lti/ltikscope.ts`): the launched activity for a resource-link launch, no activity for a deep linking launch,
+  «who am i» and a notice for both; anything else is 403 `hvl:not-from-canvas`. an address with an ltik (step 1) is
+  accepted only from a same-origin navigation, or, from a browser that sends no fetch metadata, within ten minutes
+  of the launch (`lti/landingltik.ts`); otherwise the page of step 4 answers.">
 <summary><span class="req-id">LTI-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Cookie-less ltik transport</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><ol>
 <li><code>onResourceLink</code> and <code>onDeepLinking</code> call <code>context.redirect(res, &#39;/app/…&#39;)</code>, which appends <code>?ltik=…</code>.</li>
@@ -1498,6 +1507,11 @@ not an ancestor and is not listed. <code>X-Frame-Options</code> is not sent.</li
 <ul>
 <li><strong>Acceptance:</strong> A Playwright test with third-party cookies blocked completes launch → play → resume inside a cross-origin iframe.</li>
 <li><strong>Verify:</strong> Integration and e2e tests; header assertions.</li>
+<li><strong>Amended (D-130, 2026-11-21):</strong> a request with an ltik (step 3) is answered only when its launch&#39;s pages ask for
+it (<code>lti/ltikScope.ts</code>): the launched activity for a resource-link launch, no activity for a Deep Linking launch,
+«who am I» and a notice for both; anything else is 403 <code>hvl:not-from-canvas</code>. An address with an ltik (step 1) is
+accepted only from a same-origin navigation, or, from a browser that sends no fetch metadata, within ten minutes
+of the launch (<code>lti/landingLtik.ts</code>); otherwise the page of step 4 answers.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-003">02 Feide, LTI and grades, LTI-003</a> · Canvas LTI and grades</p></div>
 </details>
@@ -1508,7 +1522,9 @@ not an ancestor and is not listed. <code>X-Frame-Options</code> is not sent.</li
 | `institution/person#administrator` or any other role | `author` at most |
 
 **an lti launch never grants `admin`.** h5p library administration requires a feide login and the admin allow-list (`auth-002`).
-- **verify:** table-driven unit test, including a forged `administrator` claim.">
+- **verify:** table-driven unit test, including a forged `administrator` claim.
+- **amended (d-130, 2026-11-21):** an lti launch also gives no reach beyond itself: its ltik lists, creates, deletes,
+  downloads, copies, publishes and shares nothing, and reaches no activity but the launched one (`lti-003`).">
 <summary><span class="req-id">LTI-004</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Map LTI roles safely</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><div class="table-wrap" role="region" aria-label="Table 1, LTI-004 Map LTI roles safely" tabindex="0"><table><thead><tr>
 <th scope="col">LTI role claim contains</th><th scope="col">Role</th></tr>
@@ -1522,6 +1538,8 @@ not an ancestor and is not listed. <code>X-Frame-Options</code> is not sent.</li
 <p><strong>An LTI launch never grants <code>admin</code>.</strong> H5P library administration requires a Feide login and the admin allow-list (<a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a>).</p>
 <ul>
 <li><strong>Verify:</strong> Table-driven unit test, including a forged <code>Administrator</code> claim.</li>
+<li><strong>Amended (D-130, 2026-11-21):</strong> an LTI launch also gives no reach beyond itself: its ltik lists, creates, deletes,
+downloads, copies, publishes and shares nothing, and reaches no activity but the launched one (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-004">02 Feide, LTI and grades, LTI-004</a> · Canvas LTI and grades</p></div>
 </details>
@@ -1563,7 +1581,9 @@ for <code>assignment_selection</code>). Returned resource links always point to 
 `(platformid, contextid, resourcelinkid, contentid, lineitemurl)`. learners get the player. authors
 get the player plus **rediger** (edit, if owner or co-author) and **innsikt** (insight) tabs.
 - **acceptance:** an unknown or draft `contentid` gives a friendly error page, not a stack trace or a redirect loop.
-- **verify:** integration tests.">
+- **verify:** integration tests.
+- **amended (d-130, 2026-11-21):** the tabs act on the launched activity only: **rediger** reads and saves that
+  activity, **innsikt** and the score status show it for the launch's course (`lti-003`).">
 <summary><span class="req-id">LTI-006</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Resource-link launch</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>onResourceLink</code> reads <code>contentId</code> from the custom claim. It records or updates an <code>LtiPlacement</code>
 <code>(platformId, contextId, resourceLinkId, contentId, lineItemUrl)</code>. Learners get the player. Authors
@@ -1571,6 +1591,8 @@ get the player plus <strong>Rediger</strong> (edit, if owner or co-author) and <
 <ul>
 <li><strong>Acceptance:</strong> An unknown or draft <code>contentId</code> gives a friendly error page, not a stack trace or a redirect loop.</li>
 <li><strong>Verify:</strong> Integration tests.</li>
+<li><strong>Amended (D-130, 2026-11-21):</strong> the tabs act on the launched activity only: <strong>Rediger</strong> reads and saves that
+activity, <strong>Innsikt</strong> and the score status show it for the launch&#39;s course (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-006">02 Feide, LTI and grades, LTI-006</a> · Canvas LTI and grades</p></div>
 </details>
@@ -3590,6 +3612,8 @@ Visibility is one of: <em>only me / co-authors</em>, <em>everyone at HVL</em>, o
 <li><strong>Acceptance:</strong> Visibility is enforced by the permission system (<a class="req-ref" href="#r-H5P-006"><code>H5P-006</code></a>). Changing visibility
 takes effect immediately.</li>
 <li><strong>Verify:</strong> Integration tests per visibility level.</li>
+<li><strong>Amended (D-130, 2026-11-21):</strong> visibility is changed in the portal, with the Feide session; a request with an
+ltik cannot change it (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
 </ul>
 <h4 id="r-PROD-007" class="req-heading" tabindex="-1"><a class="req-id" href="#r-PROD-007">PROD-007</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Co-authoring and an institutional content bank</span></h4>
 <p>Authors can add co-authors (HVL staff found by name or Feide ID) and can publish an activity to the
@@ -4360,6 +4384,11 @@ not an ancestor and is not listed. <code>X-Frame-Options</code> is not sent.</li
 <ul>
 <li><strong>Acceptance:</strong> A Playwright test with third-party cookies blocked completes launch → play → resume inside a cross-origin iframe.</li>
 <li><strong>Verify:</strong> Integration and e2e tests; header assertions.</li>
+<li><strong>Amended (D-130, 2026-11-21):</strong> a request with an ltik (step 3) is answered only when its launch&#39;s pages ask for
+it (<code>lti/ltikScope.ts</code>): the launched activity for a resource-link launch, no activity for a Deep Linking launch,
+«who am I» and a notice for both; anything else is 403 <code>hvl:not-from-canvas</code>. An address with an ltik (step 1) is
+accepted only from a same-origin navigation, or, from a browser that sends no fetch metadata, within ten minutes
+of the launch (<code>lti/landingLtik.ts</code>); otherwise the page of step 4 answers.</li>
 </ul>
 <h4 id="r-LTI-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-004">LTI-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Map LTI roles safely</span></h4>
 <div class="table-wrap" role="region" aria-label="Table 4, 4. Requirements — Canvas LTI 1.3 core and Deep Linking" tabindex="0"><table><thead><tr>
@@ -4374,6 +4403,8 @@ not an ancestor and is not listed. <code>X-Frame-Options</code> is not sent.</li
 <p><strong>An LTI launch never grants <code>admin</code>.</strong> H5P library administration requires a Feide login and the admin allow-list (<a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a>).</p>
 <ul>
 <li><strong>Verify:</strong> Table-driven unit test, including a forged <code>Administrator</code> claim.</li>
+<li><strong>Amended (D-130, 2026-11-21):</strong> an LTI launch also gives no reach beyond itself: its ltik lists, creates, deletes,
+downloads, copies, publishes and shares nothing, and reaches no activity but the launched one (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
 </ul>
 <h4 id="r-LTI-005" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-005">LTI-005</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Deep Linking 2.0 picker</span></h4>
 <p><code>onDeepLinking</code> redirects to <code>/app/deeplink</code>. There the author can (a) choose existing activities
@@ -4399,6 +4430,8 @@ get the player plus <strong>Rediger</strong> (edit, if owner or co-author) and <
 <ul>
 <li><strong>Acceptance:</strong> An unknown or draft <code>contentId</code> gives a friendly error page, not a stack trace or a redirect loop.</li>
 <li><strong>Verify:</strong> Integration tests.</li>
+<li><strong>Amended (D-130, 2026-11-21):</strong> the tabs act on the launched activity only: <strong>Rediger</strong> reads and saves that
+activity, <strong>Innsikt</strong> and the score status show it for the launch&#39;s course (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
 </ul>
 <h4 id="r-LTI-007" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-007">LTI-007</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Works after Canvas course copy</span></h4>
 <p>When a Canvas course is copied, its resource links keep <code>custom.contentId</code>. Instructors of the new
@@ -6204,7 +6237,9 @@ checks (<a class="req-ref" href="#r-SEC-001"><code>SEC-001</code></a>, <a class=
 <li><strong>Tokens travel in some URLs, so proxies must not log query strings</strong> (D-057, D-058). A launch reaches
 <code>/app/play</code>, <code>/lti/play</code>, <code>/lti/edit</code> and <code>/lti/deeplink</code> with the ltik in the query (a first-party script then removes it from the
 address bar), and the H5P AJAX and learner-state URLs carry the ltik or the CSRF token as a query value,
-because H5P builds those URLs itself. Our logs redact these values (<a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>), but a reverse proxy, load
+because H5P builds those URLs itself. An ltik reaches only what its launch&#39;s pages ask for (the launched
+activity, or the picker), and a landing address with one is taken only from our own pages (D-130).
+Our logs redact these values (<a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>), but a reverse proxy, load
 balancer or CDN in front of the server must not log query strings and must not cache responses that set
 cookies. The deployment checklist carries this rule (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §9); whether HVL&#39;s proxy
 keeps it is checked only when HVL deploys.</li>
@@ -12291,6 +12326,48 @@ for the turn of the academic year. A person who uses two registrations is two le
 operator of a data-subject request needs the client ID from <code>LTI_PLATFORMS</code>
 (<code>docs/ops/data-subject-requests.md</code>). One data-only migration; no new stored field.</li>
 </ul>
+<h3 id="decisions--d-130--security-repairs-step-14-an-ltik-reaches-only-what-its-launchs-pages-ask-for-an-address-with-an-ltik-counts-only-from-our-own-pages" tabindex="-1">D-130 · Security repairs, step 14: an ltik reaches only what its launch&#39;s pages ask for; an address with an ltik counts only from our own pages</h3>
+<ul>
+<li><strong>Context:</strong> The ltik stands in for a cookie in the Canvas frame (LTI-003, D-058): a signed token that names
+the stored launch and lives for 24 hours. Every request with a valid ltik acted as the launch&#39;s account without
+further limit, so the token of a teacher&#39;s launch could list, create, delete and download that teacher&#39;s
+activities and change their sharing, none of which a Canvas page does. And the four pages a launch lands on
+(<code>/app/play</code>, <code>/lti/play</code>, <code>/lti/edit</code>, <code>/lti/deeplink</code>) took an address with an ltik wherever the browser came
+from, for the token&#39;s whole life: someone who followed a link carrying another person&#39;s ltik worked inside
+that person&#39;s launch.</li>
+<li><strong>Decision — a list per kind of launch, default deny (LTI-003, LTI-004, LTI-006, PROD-007).</strong>
+<code>lti/ltikScope.ts</code> lists the methods and paths the Canvas pages ask for. <code>auth/requestPrincipal.ts</code> asks it
+for every request that carries an ltik, as a Bearer token or in one of H5P&#39;s URLs, and answers anything else
+with 403 <code>hvl:not-from-canvas</code> («this cannot be done from Canvas; open HVL Interaktiv in the portal»; nn, nb,
+en). A resource-link launch reaches the launched activity&#39;s saved state and xAPI answers and, for its author,
+the Canvas editor (H5P&#39;s AJAX, the stored parameters, the save, and the findings that block a save), insight
+and the score status of the launch&#39;s course; an ID in the path must be the launch&#39;s own activity. A Deep
+Linking launch reaches no activity route: its picker and its answer are LTI routes that check the launch
+themselves (D-061). Every launch may ask <code>GET /api/me</code> and acknowledge a notice. Routes the API contract marks
+<code>auth: &#39;none&#39;</code> (D-089) answer as they do without a token. The list was drawn from what the pages were recorded
+to ask in the integration tests and the browser journeys. Each route&#39;s own role and permission checks still
+run; the list only narrows what reaches them.</li>
+<li><strong>What an ltik no longer reaches.</strong> The list of activities; creating, deleting, downloading and copying an
+activity; publishing and unpublishing; sharing, which had no control on a Canvas page (PROD-006); the
+portal&#39;s own player and editor pages; and every activity but the launched one. These need the portal&#39;s Feide
+session. A route added later is closed to ltiks until it is listed.</li>
+<li><strong>Decision — the lifetime stays 24 hours.</strong> ltijs fixes it, and a working day in Canvas (an author who edits,
+a learner who returns to a long activity in the same tab) needs no second launch. What a held token is worth
+is now bounded by the list.</li>
+<li><strong>Decision — an address with an ltik counts only from our own pages (LTI-003).</strong> <code>lti/landingLtik.ts</code>, used by
+the four landing routes: when the browser sends <code>Sec-Fetch-Site</code> and it is not <code>same-origin</code>, the address is
+refused before the ltik is looked at; when the browser sends no fetch metadata, the address is accepted only
+within ten minutes of the ltik&#39;s issue. The answer is the «open it again from Canvas» page
+(<code>hvl:ltik-invalid</code>), as for any ltik that is not valid. This refuses no launch: ltijs 7 processes a launch
+only on its own second POST, which it requires to be same-origin (D-050), so the redirect to the landing page
+is a same-origin navigation, and the frames inside <code>/app/play</code> are ours. Measured in Chromium through the mock
+Canvas: every landing arrives with <code>Sec-Fetch-Site: same-origin</code> and <code>Sec-Fetch-Dest: iframe</code>.</li>
+<li><strong>Consequences:</strong> A copied or bookmarked address with an ltik no longer opens. In a browser that sends no
+fetch metadata (Safari before 16.4), the <strong>Rediger</strong> tab first opened more than ten minutes after the launch
+asks for a new launch. <code>LTIK_QUERY_PATHS</code> holds only H5P&#39;s two URL shapes; the landing pages read their own
+address. Browser tests that hold an ltik arrive through <code>test/support/openLanding.ts</code>. No stored data
+changes.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -15063,7 +15140,7 @@ the meaning. Spec 04 and D-082…D-100 hold the rules; ALU edits the texts behin
 <tr>
 <td><strong>NRPS</strong></td><td>Names and Role Provisioning Services: the tool can read course membership. We read counts only.</td></tr>
 <tr>
-<td><strong>ltik</strong></td><td>ltijs launch token: an RS256-signed JWT that holds only the ID of the stored launch record (<code>tid</code>) and is valid for 24 hours. It replaces cookies inside the Canvas iframe. It travels as <code>Authorization: Bearer</code>; only <code>/app/play</code>, <code>/lti/play</code>, <code>/lti/edit</code>, <code>/lti/deeplink</code>, <code>/h5p/ajax</code> and <code>/h5p/contentUserData/…</code> accept it in the query (D-058, D-069). It lives in page memory only, never in browser storage or logs, and the landing script removes it from the address bar (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</td></tr>
+<td><strong>ltik</strong></td><td>ltijs launch token: an RS256-signed JWT that holds only the ID of the stored launch record (<code>tid</code>) and is valid for 24 hours. It replaces cookies inside the Canvas iframe. It travels as <code>Authorization: Bearer</code>; only <code>/app/play</code>, <code>/lti/play</code>, <code>/lti/edit</code>, <code>/lti/deeplink</code>, <code>/h5p/ajax</code> and <code>/h5p/contentUserData/…</code> accept it in the query (D-058, D-069), the four pages only from a same-origin navigation or just after the launch (D-130). It lives in page memory only, never in browser storage or logs, and the landing script removes it from the address bar (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>). A request with an ltik reaches only what its launch&#39;s pages ask for: the launched activity, or the Deep Linking picker (D-130).</td></tr>
 <tr>
 <td><strong>Recovery token (ltijs)</strong></td><td>A value ltijs 7 makes at the OIDC login step: an HMAC-signed state ID that expires after 10 minutes. The browser keeps it in the tool frame&#39;s <code>localStorage</code> or, where that storage is blocked, in LTI Platform Storage, and posts it back with the launch, so ltijs can match the launch to its login without a cookie. It grants nothing on its own; the ltik is never stored this way (D-050).</td></tr>
 <tr>
