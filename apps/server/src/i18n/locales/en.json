@@ -94,6 +94,10 @@
     "error": {
       "title": "Something went wrong"
     },
+    "signIn": {
+      "title": "Sign in",
+      "body": "You need to sign in with Feide to continue."
+    },
     "loggedOut": {
       "title": "You are logged out",
       "body": "You are now logged out of HVL Interaktiv."

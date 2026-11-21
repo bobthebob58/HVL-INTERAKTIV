@@ -7,11 +7,15 @@
  * Spec: AUTH-001, AUTH-003, AUTH-004
  * Invariants:
  *   - The return path is reduced to a local path at both ends of the login (./../returnTo.ts).
- *   - The login cookie is cleared at every callback, used or not; a callback without its transaction is refused.
+ *   - Only a page the person opened starts a login (./loginNavigation.ts): a background request is refused, and a
+ *     page another site opened without a click gets the sign-in page with its button.
+ *   - A callback uses the pending login up, and clears its cookie, only when it is a page navigation whose `state`
+ *     is that login's; any other callback is refused and leaves the login in place. A callback without its
+ *     transaction is refused.
  *   - The callback URL handed to openid-client is built on `PUBLIC_BASE_URL`, never on request headers.
  *   - Logout is a POST checked against the session's CSRF token; `/auth/session` gives the token to page scripts.
  *   - Errors are friendly pages (./../../http/pages/portalPages.ts), never JSON or stack traces.
- * Collaborators: ./FeideClient.ts, ./loginTransactions.ts, ./completeFeideLogin.ts, ../session/,
+ * Collaborators: ./FeideClient.ts, ./loginTransactions.ts, ./loginNavigation.ts, ./completeFeideLogin.ts, ../session/,
  *   ../audit/AuthAuditRecorder.ts.
  * Tests: apps/server/test/auth/feide/feideLogin.int.test.ts, apps/server/test/auth/feide/feideLogout.int.test.ts
  */
@@ -34,6 +38,7 @@ import {
 import type { SessionStore } from '../session/SessionStore.js';
 import { completeFeideLogin, type FeideLoginDeps } from './completeFeideLogin.js';
 import type { FeideClient } from './FeideClient.js';
+import { isPageNavigation, loginStartOf } from './loginNavigation.js';
 import type { LoginTransactions } from './loginTransactions.js';
 
 /** What the routes need. */
@@ -67,7 +72,21 @@ export function feideLoginRoutes(deps: FeideRouteDeps): Router {
   router.get(
     '/auth/feide/login',
     handle(async (req, res) => {
-      const tx = await deps.transactions.begin({ returnTo: safeReturnTo(queryText(req, 'returnTo')) });
+      const returnTo = safeReturnTo(queryText(req, 'returnTo'));
+      // SECURITY: a login replaces the browser's session, so only a page the person opened starts one (D-131).
+      const start = loginStartOf(req.headers);
+      if (start === 'refuse') throw authError('hvl:login-failed');
+      if (start === 'ask') {
+        const href = `/auth/feide/login?returnTo=${encodeURIComponent(returnTo)}`;
+        const action = { href, labelKey: 'page.login', top: true } as const;
+        return sendPortalPage(res, 200, {
+          locale: 'nn',
+          titleKey: 'page.signIn.title',
+          bodyKey: 'page.signIn.body',
+          action,
+        });
+      }
+      const tx = await deps.transactions.begin({ returnTo });
       let url: URL;
       try {
         url = await deps.feide.authorizationUrl(tx);
@@ -85,13 +104,20 @@ export function feideLoginRoutes(deps: FeideRouteDeps): Router {
     '/auth/feide/callback',
     handle(async (req, res) => {
       const txId = readCookie(req, LOGIN_COOKIE);
+      const refuse = async () => {
+        await deps.audit.record({ event: 'login.feide.failed', reason: 'state-invalid', ip: req.ip });
+        return authError('hvl:login-failed');
+      };
+      // SECURITY: an answer that is no page, or that is not this browser's pending login's, is refused and leaves
+      // that login in place: another site cannot use it up before Feide's own answer arrives (D-131).
+      const pending = txId === undefined ? undefined : await deps.transactions.peek(txId);
+      if (!isPageNavigation(req.headers) || (pending && queryText(req, 'state') !== pending.state)) {
+        throw await refuse();
+      }
       setCookie(res, expiredLoginCookie());
       const tx = txId === undefined ? undefined : await deps.transactions.consume(txId);
-      if (!tx) {
-        // SECURITY: a callback this browser did not start (login CSRF) or one replayed after use.
-        await deps.audit.record({ event: 'login.feide.failed', reason: 'state-invalid', ip: req.ip });
-        throw authError('hvl:login-failed');
-      }
+      // SECURITY: a callback this browser did not start (login CSRF) or one replayed after use.
+      if (!tx) throw await refuse();
       const callbackUrl = new URL(req.originalUrl, deps.publicBaseUrl);
       const session = await completeFeideLogin({ ...deps.login, feide: deps.feide }, callbackUrl, tx, req.ip);
       await startPortalSession(deps.sessions, res, session);

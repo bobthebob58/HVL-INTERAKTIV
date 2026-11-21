@@ -40,6 +40,28 @@ describeA11y('[UD-030] axe on the server-rendered pages', (env) => {
       await context.close();
     });
 
+    it('[UD-030] the sign-in page a login opened from another site gets has no serious or critical violation', async () => {
+      // Arrange: the login address as another site's page opens it, without a click by the person (D-131)
+      const { app, browser } = env();
+      const context = await browser.newContext({ forcedColors });
+      const answer = await context.request.get(`${app.base}/auth/feide/login?returnTo=%2Fhjelp`, {
+        headers: {
+          'Sec-Fetch-Site': 'cross-site',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Dest': 'document',
+        },
+        maxRedirects: 0,
+      });
+      // Act
+      const page = await openServerAnswer(context, app.base, await answer.text());
+      const report = await scanPage(page, `${mode}, the sign-in page`);
+      // Assert
+      expect(answer.status()).toBe(200);
+      expect(await page.getByRole('link', { name: 'Logg inn med Feide' }).count()).toBe(1);
+      expectOnlyRecorded(report, []);
+      await context.close();
+    });
+
     it('[UD-030] the "not available" answer to a launch of a draft has no serious or critical violation', async () => {
       // Arrange
       const { app, browser } = env();

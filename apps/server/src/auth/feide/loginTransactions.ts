@@ -89,6 +89,16 @@ export class LoginTransactions {
   }
 
   /**
+   * Reads a login transaction and leaves it in place, so a callback can be judged before it uses the login up.
+   * @param txId - The transaction ID from the login cookie (untrusted).
+   * @returns The transaction, or undefined when it is unknown, already used, older than 10 minutes or malformed.
+   */
+  async peek(txId: string): Promise<LoginTransaction | undefined> {
+    if (!isOpaqueId(txId)) return undefined;
+    return this.usable(await this.redis.get(loginTransactionRedisKey(txId)));
+  }
+
+  /**
    * Takes a login transaction out of Redis; a second call for the same ID finds nothing.
    * @param txId - The transaction ID from the login cookie (untrusted).
    * @returns The transaction, or undefined when it is unknown, already used, older than 10 minutes or malformed.
@@ -96,7 +106,10 @@ export class LoginTransactions {
   async consume(txId: string): Promise<LoginTransaction | undefined> {
     if (!isOpaqueId(txId)) return undefined;
     // SECURITY: GETDEL makes the transaction single-use even when two callbacks arrive at the same moment.
-    const raw = await this.redis.getDel(loginTransactionRedisKey(txId));
+    return this.usable(await this.redis.getDel(loginTransactionRedisKey(txId)));
+  }
+
+  private usable(raw: string | null): LoginTransaction | undefined {
     if (raw === null) return undefined;
     const record = parse(raw);
     // WHY: the injected clock decides expiry as well as the Redis TTL, so nodes and tests agree on the 10 minutes.

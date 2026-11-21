@@ -94,6 +94,10 @@
     "error": {
       "title": "Noe gikk galt"
     },
+    "signIn": {
+      "title": "Logg inn",
+      "body": "Du må logge inn med Feide for å fortsette."
+    },
     "loggedOut": {
       "title": "Du er logget ut",
       "body": "Du er nå logget ut av HVL Interaktiv."
