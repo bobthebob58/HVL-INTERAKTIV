@@ -5392,3 +5392,36 @@ loading of one spec per session are kept.
   199 000 punctuation marks is judged in 9 ms.
 - **Consequences:** A stored activity past the limits shows one finding on «Sjekk og publiser» where it showed
   the validator's own. A new development dependency. No new stored data.
+
+### D-128 · Security repairs, step 12: limits per person on new activities, the planner and the mappe; the planner and the mappe do their work in bounded portions
+- **Context:** Three things a signed-in author asks for cost the server work the author chooses the amount of. A
+  new activity is a save. The planner (PED-031) read every activity of a course and built its grid by going
+  through all of them once for each cell. A mappe (MAPPE-001) read up to fifty selected activities with their
+  parameters in one query, checked them one after the other without a pause, and listed every finding. None of
+  the three was counted per person.
+- **Decision — three limits per person (PROD-007, PED-031, MAPPE-001).** Fixed ten-minute windows in Redis, with
+  the counter of D-090 and D-120 (`PersonRateLimit`): 60 new activities (the editor's save of a new activity and
+  the creation from a pattern count under one key; copies keep D-092's limit of their own), 120 planner
+  requests, and 120 mappe previews and exports together. Past a limit the answer is 429 `hvl:rate-limited` with
+  `Retry-After`, before the request is read. `http/h5pRouteLimits.ts` holds the first,
+  `learningDesign/http/studioRouteLimits.ts` the other two.
+- **Why these numbers.** An author at work creates a handful of activities in an hour, opens the planner now and
+  then, and gets a mappe preview each time the choice of activities rests (the page waits 400 ms after a change),
+  which is 30 to 50 in a busy session. The limits are several times that.
+- **Decision — a planner holds at most 300 activities (PED-031).** `metadata/plannerSource.ts` reads the 300 most
+  recently changed activities of the course and one more, which tells whether there are more; the answer's
+  `moreActivities` says so, and the page then says how many it shows. A course has a few dozen activities.
+  `metadata/plannerGrid.ts` files each activity under its outcomes and its phase in one pass: the same rows,
+  cells, order and gaps as before.
+- **Decision — a mappe reads and checks one activity at a time (MAPPE-001, MAPPE-002).**
+  `mappe/mappeActivitySource.ts` lists the selected activities without their parameters; `MappeRenderer` then
+  reads each activity's parameters, checks them and lets them go before it reads the next one's. The server holds
+  one activity's parameters at a time, and each read is a pause in which it answers other requests.
+- **Decision — a mappe lists the first 50 findings of an activity (MAPPE-002).** The universal design status
+  still counts all errors and warnings; when an activity has more than 50 findings the status line ends with a
+  sentence that says the first 50 are listed (nn, nb, en). The templates in `content/mappe/` are unchanged.
+- **Verified:** a grid of 3 000 activities with twenty outcomes each took 18 s to build and takes under 2 s; the
+  planner's existing table tests give the same result. The mappe's existing exports are unchanged.
+- **Consequences:** An author who passes a limit waits up to ten minutes. A course with more than 300 activities
+  of one author shows the 300 most recently changed in the planner. A new field in the planner's answer. Three
+  new counters in Redis, each a number under an account ID (`docs/privacy/DATA-INVENTORY.md`).

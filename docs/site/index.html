@@ -2434,7 +2434,9 @@ prompted (but not required) on publish.</p>
 tagged activities. it highlights gaps, such as an outcome with no *etterarbeid* activity or a phase
 with no activities. it offers *create from pattern* inside any empty cell.
 - **acceptance:** the grid is an accessible html table with row and column headers, not only a visual canvas.
-- **verify:** component test; axe.">
+- **verify:** component test; axe.
+- **amended (d-128, 2026-11-21):** a planner holds the 300 most recently changed activities of the course and says
+  when the course has more. one person may ask for the planner 120 times in ten minutes.">
 <summary><span class="req-id">PED-031</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Constructive alignment planner</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>For one course, the planner shows a grid of <strong>learning outcomes × phases</strong> filled with the author&#39;s
 tagged activities. It highlights gaps, such as an outcome with no <em>etterarbeid</em> activity or a phase
@@ -2442,6 +2444,8 @@ with no activities. It offers <em>Create from pattern</em> inside any empty cell
 <ul>
 <li><strong>Acceptance:</strong> The grid is an accessible HTML table with row and column headers, not only a visual canvas.</li>
 <li><strong>Verify:</strong> Component test; axe.</li>
+<li><strong>Amended (D-128, 2026-11-21):</strong> a planner holds the 300 most recently changed activities of the course and says
+when the course has more. One person may ask for the planner 120 times in ten minutes.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-031">04 Læringsdesign studio, PED-031</a> · Læringsdesign</p></div>
 </details>
@@ -2458,12 +2462,16 @@ taken from the metadata. This helps them plan their study and self-regulate.</p>
 </details>
 <details class="req" id="x-MAPPE-001" data-area="MAPPE" data-priority="SHOULD" data-session="S5" data-status="tested" data-text="mappe-001 select and export on `/mappe`, an author selects activities, filtered by course, phase or date. the author exports
 **markdown** (for editing) and **pdf** (for submission).
-- **verify:** integration test produces both files from fixtures.">
+- **verify:** integration test produces both files from fixtures.
+- **amended (d-128, 2026-11-21):** one person may ask for a preview or an export 120 times together in ten minutes.
+  the selected activities are read and checked one at a time.">
 <summary><span class="req-id">MAPPE-001</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Select and export</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>On <code>/mappe</code>, an author selects activities, filtered by course, phase or date. The author exports
 <strong>Markdown</strong> (for editing) and <strong>PDF</strong> (for submission).</p>
 <ul>
 <li><strong>Verify:</strong> Integration test produces both files from fixtures.</li>
+<li><strong>Amended (D-128, 2026-11-21):</strong> one person may ask for a preview or an export 120 times together in ten minutes.
+The selected activities are read and checked one at a time.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-001">04 Læringsdesign studio, MAPPE-001</a> · Pedagogisk mappe</p></div>
 </details>
@@ -2494,7 +2502,9 @@ confirms them. a promotion mode (*opprykk*, rules in force from 13 june 2025) us
 its del 1 headings wait for alu.
 - **acceptance:** switching the criteria set changes every criterion text and the reader's guide with no
   code change. the word count excludes the references and the reader's guide.
-- **verify:** integration test with two fixture criteria sets.">
+- **verify:** integration test with two fixture criteria sets.
+- **amended (d-128, 2026-11-21):** the universal design status counts all findings of an activity and lists the
+  first 50; when there are more, the status line says that the first 50 are listed.">
 <summary><span class="req-id">MAPPE-002</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Dossier structure</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Headings come from <code>content/mappe/template.{nn,nb,en}.md</code> and criterion texts from
 <code>content/mappe/criteria.{nn,nb,en}.yaml</code>, keyed by criteria set (default <code>hvl-merittering-2025</code>).
@@ -2526,6 +2536,8 @@ its Del 1 headings wait for ALU.</p>
 <li><strong>Acceptance:</strong> Switching the criteria set changes every criterion text and the reader&#39;s guide with no
 code change. The word count excludes the references and the reader&#39;s guide.</li>
 <li><strong>Verify:</strong> Integration test with two fixture criteria sets.</li>
+<li><strong>Amended (D-128, 2026-11-21):</strong> the universal design status counts all findings of an activity and lists the
+first 50; when there are more, the status line says that the first 50 are listed.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-002">04 Læringsdesign studio, MAPPE-002</a> · Pedagogisk mappe</p></div>
 </details>
@@ -5136,6 +5148,8 @@ with no activities. It offers <em>Create from pattern</em> inside any empty cell
 <ul>
 <li><strong>Acceptance:</strong> The grid is an accessible HTML table with row and column headers, not only a visual canvas.</li>
 <li><strong>Verify:</strong> Component test; axe.</li>
+<li><strong>Amended (D-128, 2026-11-21):</strong> a planner holds the 300 most recently changed activities of the course and says
+when the course has more. One person may ask for the planner 120 times in ten minutes.</li>
 </ul>
 <h4 id="r-PED-032" class="req-heading" tabindex="-1"><a class="req-id" href="#r-PED-032">PED-032</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Students see time estimate and purpose</span></h4>
 <p>Before an activity starts, learners see the estimated time and a one-line &quot;why this matters&quot; text
@@ -5156,6 +5170,8 @@ already done. The evidence behind this section is in
 <strong>Markdown</strong> (for editing) and <strong>PDF</strong> (for submission).</p>
 <ul>
 <li><strong>Verify:</strong> Integration test produces both files from fixtures.</li>
+<li><strong>Amended (D-128, 2026-11-21):</strong> one person may ask for a preview or an export 120 times together in ten minutes.
+The selected activities are read and checked one at a time.</li>
 </ul>
 <h4 id="r-MAPPE-002" class="req-heading" tabindex="-1"><a class="req-id" href="#r-MAPPE-002">MAPPE-002</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Dossier structure</span></h4>
 <p>Headings come from <code>content/mappe/template.{nn,nb,en}.md</code> and criterion texts from
@@ -5188,6 +5204,8 @@ its Del 1 headings wait for ALU.</p>
 <li><strong>Acceptance:</strong> Switching the criteria set changes every criterion text and the reader&#39;s guide with no
 code change. The word count excludes the references and the reader&#39;s guide.</li>
 <li><strong>Verify:</strong> Integration test with two fixture criteria sets.</li>
+<li><strong>Amended (D-128, 2026-11-21):</strong> the universal design status counts all findings of an activity and lists the
+first 50; when there are more, the status line says that the first 50 are listed.</li>
 </ul>
 <h4 id="r-MAPPE-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-MAPPE-003">MAPPE-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Privacy in the export</span></h4>
 <p>Aggregates apply the same minimum group size as insight (<a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>, default <em>k</em> = 5). No learner
@@ -12161,6 +12179,40 @@ inputs and gave the same. A book with 2 000 chapters of ten texts went from 2.7 
 199 000 punctuation marks is judged in 9 ms.</li>
 <li><strong>Consequences:</strong> A stored activity past the limits shows one finding on «Sjekk og publiser» where it showed
 the validator&#39;s own. A new development dependency. No new stored data.</li>
+</ul>
+<h3 id="decisions--d-128--security-repairs-step-12-limits-per-person-on-new-activities-the-planner-and-the-mappe-the-planner-and-the-mappe-do-their-work-in-bounded-portions" tabindex="-1">D-128 · Security repairs, step 12: limits per person on new activities, the planner and the mappe; the planner and the mappe do their work in bounded portions</h3>
+<ul>
+<li><strong>Context:</strong> Three things a signed-in author asks for cost the server work the author chooses the amount of. A
+new activity is a save. The planner (PED-031) read every activity of a course and built its grid by going
+through all of them once for each cell. A mappe (MAPPE-001) read up to fifty selected activities with their
+parameters in one query, checked them one after the other without a pause, and listed every finding. None of
+the three was counted per person.</li>
+<li><strong>Decision — three limits per person (PROD-007, PED-031, MAPPE-001).</strong> Fixed ten-minute windows in Redis, with
+the counter of D-090 and D-120 (<code>PersonRateLimit</code>): 60 new activities (the editor&#39;s save of a new activity and
+the creation from a pattern count under one key; copies keep D-092&#39;s limit of their own), 120 planner
+requests, and 120 mappe previews and exports together. Past a limit the answer is 429 <code>hvl:rate-limited</code> with
+<code>Retry-After</code>, before the request is read. <code>http/h5pRouteLimits.ts</code> holds the first,
+<code>learningDesign/http/studioRouteLimits.ts</code> the other two.</li>
+<li><strong>Why these numbers.</strong> An author at work creates a handful of activities in an hour, opens the planner now and
+then, and gets a mappe preview each time the choice of activities rests (the page waits 400 ms after a change),
+which is 30 to 50 in a busy session. The limits are several times that.</li>
+<li><strong>Decision — a planner holds at most 300 activities (PED-031).</strong> <code>metadata/plannerSource.ts</code> reads the 300 most
+recently changed activities of the course and one more, which tells whether there are more; the answer&#39;s
+<code>moreActivities</code> says so, and the page then says how many it shows. A course has a few dozen activities.
+<code>metadata/plannerGrid.ts</code> files each activity under its outcomes and its phase in one pass: the same rows,
+cells, order and gaps as before.</li>
+<li><strong>Decision — a mappe reads and checks one activity at a time (MAPPE-001, MAPPE-002).</strong>
+<code>mappe/mappeActivitySource.ts</code> lists the selected activities without their parameters; <code>MappeRenderer</code> then
+reads each activity&#39;s parameters, checks them and lets them go before it reads the next one&#39;s. The server holds
+one activity&#39;s parameters at a time, and each read is a pause in which it answers other requests.</li>
+<li><strong>Decision — a mappe lists the first 50 findings of an activity (MAPPE-002).</strong> The universal design status
+still counts all errors and warnings; when an activity has more than 50 findings the status line ends with a
+sentence that says the first 50 are listed (nn, nb, en). The templates in <code>content/mappe/</code> are unchanged.</li>
+<li><strong>Verified:</strong> a grid of 3 000 activities with twenty outcomes each took 18 s to build and takes under 2 s; the
+planner&#39;s existing table tests give the same result. The mappe&#39;s existing exports are unchanged.</li>
+<li><strong>Consequences:</strong> An author who passes a limit waits up to ten minutes. A course with more than 300 activities
+of one author shows the 300 most recently changed in the planner. A new field in the planner&#39;s answer. Three
+new counters in Redis, each a number under an account ID (<code>docs/privacy/DATA-INVENTORY.md</code>).</li>
 </ul>
 
 </section>
