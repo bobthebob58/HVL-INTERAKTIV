@@ -171,6 +171,11 @@ and `sso.{beta,test}.canvaslms.com`; which one TeCopp's test Canvas is *(verify 
   launch is rejected if the signature, `aud`, nonce or deployment ID is wrong, or if the nonce is
   replayed.
 - **Verify:** Integration tests `[LTI-001] …`.
+- **Amended (D-129, 2026-11-21):** a person from Canvas is known per platform registration: the account and the
+  learner pseudonym are derived from issuer, client ID and `sub` (`DATA-002`), so the same `sub` from two
+  registrations that send one issuer is two people. Neither issuer nor client ID may contain `|`. A login or
+  launch field with a control character, or a claim the database cannot hold, is refused with 400 and the
+  «could not be opened from Canvas» page, never answered as a server fault.
 
 #### LTI-002 · MUST · S3 · PostgreSQL storage for ltijs
 `PrismaLtiDatabaseManager` implements all 14 methods of ltijs's `DatabaseManager`.
@@ -424,7 +429,7 @@ decision for HVL and ALU *(verify)*.
 | Entity | Key fields | Personal data? |
 |---|---|---|
 | `User` | `id`, `kind (staff/learner)`, `displayName?`, `email?` (kept null since S5, D-090), `createdAt` | Staff only |
-| `Identity` | `userId`, `provider (feide/lti)`, `subjectHash` (HMAC of `feide\|<Feide ID>` or `lti\|<iss>\|<sub>`, D-054), `subjectKeyId` (the `IDENTITY_HASH_KEYS` key that made the hash, D-055), `platformId?` | Pseudonymous |
+| `Identity` | `userId`, `provider (feide/lti)`, `subjectHash` (HMAC of `feide\|<Feide ID>` or `lti\|<iss>\|<client-id>\|<sub>`, D-054, D-129), `subjectKeyId` (the `IDENTITY_HASH_KEYS` key that made the hash, D-055), `platformId?` | Pseudonymous |
 | `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken` | as required by ltijs `DatabaseManager`; `LtiPlatform.privateKeyEncrypted` and `LtiAccessToken.tokenEncrypted` are encrypted with `DATA_ENCRYPTION_KEYS` (D-056) | `LtiIdToken.claims` holds an allowlist of launch claims, including `sub` but no name, e-mail, `lis` or `feide_login` (D-052). Kept for 24 h only; nonces 10 min. |
 | `LtiDeployment` | `platformId`, `deploymentId`; replaced from `LTI_PLATFORMS` at start-up (D-051) | No |
 | `LtiPlacement` | `platformId`, `contextId`, `resourceLinkId`, `contentId`, `lineItemUrl?`, `attemptPolicy`, `masteryThreshold?` | No |

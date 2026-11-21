@@ -68,7 +68,7 @@ fails CI when the schema and the inventory disagree, or when a learner table gai
 identifier (`DATA-001`, `DATA-002`).
 
 **Learners** are stored only under pseudonyms (`DATA-002`, D-011): `learnerKey`, an HMAC-SHA256 of `feide|<Feide ID>`
-or `lti|<issuer>|<sub>` with that academic year's secret, and `Identity.subjectHash`, an HMAC with a stable identity key
+or `lti|<issuer>|<client ID>|<sub>` (D-129) with that academic year's secret, and `Identity.subjectHash`, an HMAC with a stable identity key
 that is rotated by rule (D-055). Under those pseudonyms the service stores: saved progress; learning events reduced
 to `DATA-012`'s fields (activity, question, content version, course, verb, scores, success, completion, chosen options
 or gap text cut to 100 characters per gap, duration, attempt, time, academic year, whether it was Canvas's test

@@ -55,9 +55,10 @@ Before the identifiers are read (while you paste them), Ctrl-C stops the tool as
 
 1. **The request comes through HVL's DPO**, who has verified who the person is. Ask the DPO for:
    - the person's **Feide ID** (for example `name@hvl.no`), if they used HVL Interaktiv through the portal; and
-   - their **Canvas identity**, if they used it through Canvas: the platform's **issuer** (the `url` of that
-     platform in `LTI_PLATFORMS`, for example `https://canvas.instructure.com`) and the person's **`sub`**, which is
-     their Canvas `lti_id` ([canvas-platform-values.md](../reference/canvas-platform-values.md) §6, the `sub` row).
+   - their **Canvas identity**, if they used it through Canvas: the platform's **issuer** and **client ID** (the
+     `issuer` and `clientId` of that platform in `LTI_PLATFORMS`, for example `https://canvas.instructure.com` and
+     the developer key's ID; you read these from the server's configuration, not from the DPO) and the person's
+     **`sub`**, which is their Canvas `lti_id` ([canvas-platform-values.md](../reference/canvas-platform-values.md) §6, the `sub` row).
      How a Canvas administrator at HVL reads a user's `lti_id` *(verify with HVL's Canvas team)*.
 
    A Feide ID finds **no** Canvas rows, and a Canvas identity finds no portal rows: they are different pseudonyms
@@ -77,11 +78,15 @@ shell's history and show in the host's process list. Run the command, paste the 
 Enter, then Ctrl-D:
 
 ```json
-{"feideId": "name@hvl.no", "lti": [{"issuer": "https://canvas.instructure.com", "sub": "<the person's lti_id>"}]}
+{"feideId": "name@hvl.no", "lti": [{"issuer": "https://canvas.instructure.com", "clientId": "<the developer key's ID>", "sub": "<the person's lti_id>"}]}
 ```
 
 - `feideId` and `lti` are each optional, but one must be given; `lti` may list up to 20 Canvas identities.
-- The Feide ID is normalised as at login (spaces trimmed, lower case); the issuer and `sub` are used exactly.
+- The Feide ID is normalised as at login (spaces trimmed, lower case); the issuer, client ID and `sub` are used
+  exactly.
+- A Canvas identity needs all three of `issuer`, `clientId` and `sub`: a person is known per platform registration
+  (D-129), so the same `sub` under another client ID is someone else. If the person used HVL Interaktiv through
+  more than one registration (for example a developer key that was later replaced), list one identity for each.
 - Do not use a heredoc (`<<EOF`) or `echo … |`: the shell's history keeps them. Do not store the object in a file on
   the server. Afterwards, clear the terminal's scrollback.
 - A mistake is named by its field (for example `lti[1].sub must be 1–255 characters without spaces at either end`),

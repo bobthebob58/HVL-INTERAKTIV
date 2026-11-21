@@ -1425,7 +1425,12 @@ and `sso.{beta,test}.canvaslms.com`; which one tecopp's test canvas is *(verify 
 - **acceptance:** a full launch against a mock platform (signed with a test key) succeeds. the
   launch is rejected if the signature, `aud`, nonce or deployment id is wrong, or if the nonce is
   replayed.
-- **verify:** integration tests `[lti-001] …`.">
+- **verify:** integration tests `[lti-001] …`.
+- **amended (d-129, 2026-11-21):** a person from canvas is known per platform registration: the account and the
+  learner pseudonym are derived from issuer, client id and `sub` (`data-002`), so the same `sub` from two
+  registrations that send one issuer is two people. neither issuer nor client id may contain `|`. a login or
+  launch field with a control character, or a claim the database cannot hold, is refused with 400 and the
+  «could not be opened from canvas» page, never answered as a server fault.">
 <summary><span class="req-id">LTI-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">LTI 1.3 tool with ltijs 7</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>apps/server/src/lti/LtiProviderFactory.ts</code> builds the ltijs <code>Provider</code> with the routes
 <code>/lti/login</code>, <code>/lti/launch</code>, <code>/lti/keys</code>, our <code>PrismaLtiDatabaseManager</code> and <code>RedisCacheManager</code>.
@@ -1444,6 +1449,11 @@ and <code>sso.{beta,test}.canvaslms.com</code>; which one TeCopp&#39;s test Canv
 launch is rejected if the signature, <code>aud</code>, nonce or deployment ID is wrong, or if the nonce is
 replayed.</li>
 <li><strong>Verify:</strong> Integration tests <code>[LTI-001] …</code>.</li>
+<li><strong>Amended (D-129, 2026-11-21):</strong> a person from Canvas is known per platform registration: the account and the
+learner pseudonym are derived from issuer, client ID and <code>sub</code> (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>), so the same <code>sub</code> from two
+registrations that send one issuer is two people. Neither issuer nor client ID may contain <code>|</code>. A login or
+launch field with a control character, or a claim the database cannot hold, is refused with 400 and the
+«could not be opened from Canvas» page, never answered as a server fault.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-001">02 Feide, LTI and grades, LTI-001</a> · Canvas LTI and grades</p></div>
 </details>
@@ -2795,7 +2805,10 @@ addresses, feide ids, national id numbers or raw lti `sub` values. the one excep
 `ltisub` in `gradesyncjob`, which ags needs; it is deleted 30 days after a successful sync.
 - **verify:** unit tests for key derivation; schema test asserting no pii columns on learner tables.
 - **amended (d-104, 2026-10-30):** the encrypted `ltisub` is deleted 30 days after the job stops, whether it
-  succeeded, failed or was orphaned, so a job that never succeeds keeps it no longer.">
+  succeeded, failed or was orphaned, so a job that never succeeds keeps it no longer.
+- **amended (d-129, 2026-11-21):** the lti `source` is `lti|&lt;iss&gt;|&lt;client-id&gt;|&lt;sub&gt;`: it names the platform
+  registration (issuer and client id), because several platforms can send one issuer and a `sub` is unique
+  within one platform only. the text above shows the earlier form.">
 <summary><span class="req-id">DATA-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Pseudonymous learners</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>learnerKey = HMAC-SHA256(PSEUDONYM_SECRET[academicYear], source)</code>, where <code>source</code> is
 <code>feide|&lt;feide-id&gt;</code> or <code>lti|&lt;iss&gt;|&lt;sub&gt;</code>. The secret is held in the secret store, rotated per academic
@@ -2806,6 +2819,9 @@ addresses, Feide IDs, national ID numbers or raw LTI <code>sub</code> values. Th
 <li><strong>Verify:</strong> Unit tests for key derivation; schema test asserting no PII columns on learner tables.</li>
 <li><strong>Amended (D-104, 2026-10-30):</strong> the encrypted <code>ltiSub</code> is deleted 30 days after the job stops, whether it
 succeeded, failed or was orphaned, so a job that never succeeds keeps it no longer.</li>
+<li><strong>Amended (D-129, 2026-11-21):</strong> the LTI <code>source</code> is <code>lti|&lt;iss&gt;|&lt;client-id&gt;|&lt;sub&gt;</code>: it names the platform
+registration (issuer and client ID), because several platforms can send one issuer and a <code>sub</code> is unique
+within one platform only. The text above shows the earlier form.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-002">05 Insight and privacy, DATA-002</a> · Data protection</p></div>
 </details>
@@ -2954,7 +2970,9 @@ retained academic years, then exports (json) or deletes that learner's data. eve
   dry run unless it is given `--confirm`; learner h5p state is deleted through our own storage, because lumi 10.0.4's
   `deleteallcontentuserdatabyuser` deletes the acting user's state. the audit target is a random request id. the export
   also lists the person's portal login events (`authauditevent`), which the erasure keeps for their 2 years; a staff
-  member's own data and canvas's own data are outside the tool (q6). runbook: `docs/ops/data-subject-requests.md`.">
+  member's own data and canvas's own data are outside the tool (q6). runbook: `docs/ops/data-subject-requests.md`.
+- **amended (d-129, 2026-11-21):** a canvas identity is given as issuer, client id and `sub`, since the
+  pseudonyms are derived per platform registration (`data-002`); one without the client id is refused.">
 <summary><span class="req-id">DATA-008</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Data-subject requests</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>An admin-only tool takes a Feide ID or an <code>(iss, sub)</code> pair. It derives the learner keys for the
 retained academic years, then exports (JSON) or deletes that learner&#39;s data. Every use is audited.</p>
@@ -2968,6 +2986,8 @@ dry run unless it is given <code>--confirm</code>; learner H5P state is deleted 
 <code>deleteAllContentUserDataByUser</code> deletes the acting user&#39;s state. The audit target is a random request ID. The export
 also lists the person&#39;s portal login events (<code>AuthAuditEvent</code>), which the erasure keeps for their 2 years; a staff
 member&#39;s own data and Canvas&#39;s own data are outside the tool (Q6). Runbook: <code>docs/ops/data-subject-requests.md</code>.</li>
+<li><strong>Amended (D-129, 2026-11-21):</strong> a Canvas identity is given as issuer, client ID and <code>sub</code>, since the
+pseudonyms are derived per platform registration (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>); one without the client ID is refused.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-008">05 Insight and privacy, DATA-008</a> · Data protection</p></div>
 </details>
@@ -4311,6 +4331,11 @@ and <code>sso.{beta,test}.canvaslms.com</code>; which one TeCopp&#39;s test Canv
 launch is rejected if the signature, <code>aud</code>, nonce or deployment ID is wrong, or if the nonce is
 replayed.</li>
 <li><strong>Verify:</strong> Integration tests <code>[LTI-001] …</code>.</li>
+<li><strong>Amended (D-129, 2026-11-21):</strong> a person from Canvas is known per platform registration: the account and the
+learner pseudonym are derived from issuer, client ID and <code>sub</code> (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>), so the same <code>sub</code> from two
+registrations that send one issuer is two people. Neither issuer nor client ID may contain <code>|</code>. A login or
+launch field with a control character, or a claim the database cannot hold, is refused with 400 and the
+«could not be opened from Canvas» page, never answered as a server fault.</li>
 </ul>
 <h4 id="r-LTI-002" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-002">LTI-002</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">PostgreSQL storage for ltijs</span></h4>
 <p><code>PrismaLtiDatabaseManager</code> implements all 14 methods of ltijs&#39;s <code>DatabaseManager</code>.
@@ -4576,7 +4601,7 @@ the label in both modes.</li>
 </thead><tbody><tr>
 <td><code>User</code></td><td><code>id</code>, <code>kind (staff/learner)</code>, <code>displayName?</code>, <code>email?</code> (kept null since S5, D-090), <code>createdAt</code></td><td>Staff only</td></tr>
 <tr>
-<td><code>Identity</code></td><td><code>userId</code>, <code>provider (feide/lti)</code>, <code>subjectHash</code> (HMAC of <code>feide|&lt;Feide ID&gt;</code> or <code>lti|&lt;iss&gt;|&lt;sub&gt;</code>, D-054), <code>subjectKeyId</code> (the <code>IDENTITY_HASH_KEYS</code> key that made the hash, D-055), <code>platformId?</code></td><td>Pseudonymous</td></tr>
+<td><code>Identity</code></td><td><code>userId</code>, <code>provider (feide/lti)</code>, <code>subjectHash</code> (HMAC of <code>feide|&lt;Feide ID&gt;</code> or <code>lti|&lt;iss&gt;|&lt;client-id&gt;|&lt;sub&gt;</code>, D-054, D-129), <code>subjectKeyId</code> (the <code>IDENTITY_HASH_KEYS</code> key that made the hash, D-055), <code>platformId?</code></td><td>Pseudonymous</td></tr>
 <tr>
 <td><code>LtiPlatform</code>, <code>LtiIdToken</code>, <code>LtiNonce</code>, <code>LtiAccessToken</code></td><td>as required by ltijs <code>DatabaseManager</code>; <code>LtiPlatform.privateKeyEncrypted</code> and <code>LtiAccessToken.tokenEncrypted</code> are encrypted with <code>DATA_ENCRYPTION_KEYS</code> (D-056)</td><td><code>LtiIdToken.claims</code> holds an allowlist of launch claims, including <code>sub</code> but no name, e-mail, <code>lis</code> or <code>feide_login</code> (D-052). Kept for 24 h only; nonces 10 min.</td></tr>
 <tr>
@@ -5385,6 +5410,9 @@ addresses, Feide IDs, national ID numbers or raw LTI <code>sub</code> values. Th
 <li><strong>Verify:</strong> Unit tests for key derivation; schema test asserting no PII columns on learner tables.</li>
 <li><strong>Amended (D-104, 2026-10-30):</strong> the encrypted <code>ltiSub</code> is deleted 30 days after the job stops, whether it
 succeeded, failed or was orphaned, so a job that never succeeds keeps it no longer.</li>
+<li><strong>Amended (D-129, 2026-11-21):</strong> the LTI <code>source</code> is <code>lti|&lt;iss&gt;|&lt;client-id&gt;|&lt;sub&gt;</code>: it names the platform
+registration (issuer and client ID), because several platforms can send one issuer and a <code>sub</code> is unique
+within one platform only. The text above shows the earlier form.</li>
 </ul>
 <h4 id="r-DATA-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DATA-003">DATA-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span></h4>
 <p>A scheduled job runs on a configured date (default 15 August), for the academic year that has
@@ -5469,6 +5497,8 @@ dry run unless it is given <code>--confirm</code>; learner H5P state is deleted 
 <code>deleteAllContentUserDataByUser</code> deletes the acting user&#39;s state. The audit target is a random request ID. The export
 also lists the person&#39;s portal login events (<code>AuthAuditEvent</code>), which the erasure keeps for their 2 years; a staff
 member&#39;s own data and Canvas&#39;s own data are outside the tool (Q6). Runbook: <code>docs/ops/data-subject-requests.md</code>.</li>
+<li><strong>Amended (D-129, 2026-11-21):</strong> a Canvas identity is given as issuer, client ID and <code>sub</code>, since the
+pseudonyms are derived per platform registration (<a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a>); one without the client ID is refused.</li>
 </ul>
 <h4 id="r-DATA-009" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DATA-009">DATA-009</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Logs contain no personal data</span></h4>
 <p>The logger (pino) redacts <code>authorization</code>, <code>cookie</code>, <code>ltik</code>, <code>id_token</code>, <code>email</code>, <code>name</code>, <code>sub</code>,
@@ -5581,9 +5611,9 @@ personal data; <strong>P</strong> marks pseudonymous fields.</p>
 </tbody></table></div>
 <h3 id="spec-05--5-pseudonymisation-sequence-for-evaluators" tabindex="-1">5. Pseudonymisation sequence (for evaluators)</h3>
 <pre class="code" tabindex="0" role="region" aria-label="Code 1, 5. Pseudonymisation sequence (for evaluators)"><code>Feide login / LTI launch
-   │  raw id (feide id or iss+sub) — exists only in memory during the request
+   │  raw id (feide id, or iss + client id + sub) — exists only in memory during the request
    ▼
-learnerKey = HMAC_SHA256(secret[yyyy], &quot;lti|&quot; + iss + &quot;|&quot; + sub)
+learnerKey = HMAC_SHA256(secret[yyyy], &quot;lti|&quot; + iss + &quot;|&quot; + clientId + &quot;|&quot; + sub)   (D-129)
    │
    ├─► H5PUserData.learnerKey     (resume state)
    ├─► XapiStatement.learnerKey   (insight aggregates, k ≥ 5)
@@ -12213,6 +12243,53 @@ planner&#39;s existing table tests give the same result. The mappe&#39;s existin
 <li><strong>Consequences:</strong> An author who passes a limit waits up to ten minutes. A course with more than 300 activities
 of one author shows the 300 most recently changed in the planner. A new field in the planner&#39;s answer. Three
 new counters in Redis, each a number under an account ID (<code>docs/privacy/DATA-INVENTORY.md</code>).</li>
+</ul>
+<h3 id="decisions--d-129--security-repairs-step-13-a-canvas-user-is-known-per-platform-registration-launch-input-no-platform-sends-is-refused-with-400" tabindex="-1">D-129 · Security repairs, step 13: a Canvas user is known per platform registration; launch input no platform sends is refused with 400</h3>
+<ul>
+<li><strong>Context:</strong> A person who arrives from Canvas was known by the launch&#39;s issuer and <code>sub</code>: the account by a keyed
+hash of <code>lti|&lt;iss&gt;|&lt;sub&gt;</code> (D-055), the learner pseudonym by the yearly HMAC of the same text (D-011, DATA-002).
+A platform, though, is registered by issuer <strong>and</strong> client ID (LTI-001), because every Canvas that Instructure
+hosts sends the same issuer (<code>docs/reference/canvas-platform-values.md</code>), and a <code>sub</code> is unique within one
+platform only. With two registrations of one issuer, the same <code>sub</code> from either would have been one account and
+one pseudonym. D-103 keeps courses apart per platform; the identity did not. Which Canvases HVL Interaktiv will
+be connected to is not decided (owner, 2026-11-21), so the rule must hold for any number of registrations.
+Separately, a login field or a launch claim holding a character PostgreSQL cannot store failed inside the
+database driver and was answered with 500 and an error line, although the sender was at fault (PROD-012).</li>
+<li><strong>Decision — the identity text names the registration (DATA-002, LTI-001).</strong> It is
+<code>lti|&lt;iss&gt;|&lt;client-id&gt;|&lt;sub&gt;</code>. The client ID is the registered platform&#39;s: ltijs writes it on the stored
+launch after it validated the token against that registration, and <code>lti/launchFacts.ts</code> reads it from there,
+never from a claim. The identity hash and the learnerKey are both derived from this one text
+(<code>privacy/deriveLearnerKey.ts</code>, <code>auth/identity/subjectSources.ts</code>): at the launch, for a request that resumes a
+launch, in account linking (AUTH-005) and in the data-subject tool. Neither issuer nor client ID may contain
+<code>|</code> or a control character; <code>LTI_PLATFORMS</code> refuses one that does, so the text reads one way whatever the <code>sub</code>
+holds.</li>
+<li><strong>Why issuer and client ID, and not the platform row&#39;s ID.</strong> They are what <code>LTI_PLATFORMS</code> says, so the
+data-subject tool derives a person&#39;s keys from what an operator knows, without a database row. They name the
+registration exactly as the row does, since the pair is unique.</li>
+<li><strong>Decision — the data-subject tool takes the client ID (DATA-008; amends D-108&#39;s input form).</strong> A Canvas
+identity on standard input is <code>{&quot;issuer&quot;: &quot;…&quot;, &quot;clientId&quot;: &quot;…&quot;, &quot;sub&quot;: &quot;…&quot;}</code>. One without <code>clientId</code> is refused
+by field name; the tool never guesses a registration.</li>
+<li><strong>Decision — nothing is converted.</strong> HVL Interaktiv has not been used by real people through Canvas (owner,
+2026-11-21); only test data exists. A hash of the earlier text can never match a launch again, and left on a
+Feide account it would count as another person&#39;s identity from the same platform when that teacher is linked
+anew (D-063). The migration <code>20261121190000_lti_identity_per_registration</code> therefore removes the <code>Identity</code>
+rows of provider <code>lti</code>; accounts and Feide identities stay. A person who used a test Canvas gets a new account
+at the next launch, a teacher&#39;s Canvas identity joins their Feide account again at the next Deep Linking
+launch, and an ltik from before the change answers «open again from Canvas». Learner rows under the earlier
+pseudonyms go with the yearly purge (DATA-003).</li>
+<li><strong>Decision — launch input no platform sends is the sender&#39;s error (LTI-001, PROD-012, NFR-006).</strong>
+<code>lti/ltiInputText.ts</code>: a query or form field of the login and launch routes with a control character is
+refused before ltijs reads any field; of the claims that are stored, the <code>sub</code> may hold no control character,
+and every string and key must be text the database can hold (no U+0000, no unpaired surrogate; a description
+on several lines is fine). The check runs before the deployment check and the write. The answer is 400
+<code>hvl:launch-malformed</code> with the existing «could not be opened from Canvas» page, logged as a warning with the
+fixed code and, on the launch route, audited as a failed launch (<code>launch-invalid</code>). An issuer, client ID or
+nonce that no row could hold is &quot;not found&quot; in <code>PrismaLtiDatabaseManager</code>, never a query.</li>
+<li><strong>Consequences:</strong> Changing a Canvas developer key (a new client ID) gives its users new accounts and new
+pseudonyms, as a new platform already gave their courses new IDs (D-103): keep the key, or plan the change
+for the turn of the academic year. A person who uses two registrations is two learners in the counts. The
+operator of a data-subject request needs the client ID from <code>LTI_PLATFORMS</code>
+(<code>docs/ops/data-subject-requests.md</code>). One data-only migration; no new stored field.</li>
 </ul>
 
 </section>

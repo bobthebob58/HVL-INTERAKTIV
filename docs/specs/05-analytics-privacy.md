@@ -155,6 +155,9 @@ addresses, Feide IDs, national ID numbers or raw LTI `sub` values. The one excep
 - **Verify:** Unit tests for key derivation; schema test asserting no PII columns on learner tables.
 - **Amended (D-104, 2026-10-30):** the encrypted `ltiSub` is deleted 30 days after the job stops, whether it
   succeeded, failed or was orphaned, so a job that never succeeds keeps it no longer.
+- **Amended (D-129, 2026-11-21):** the LTI `source` is `lti|<iss>|<client-id>|<sub>`: it names the platform
+  registration (issuer and client ID), because several platforms can send one issuer and a `sub` is unique
+  within one platform only. The text above shows the earlier form.
 
 #### DATA-003 · MUST · S6 · Annual retention purge
 A scheduled job runs on a configured date (default 15 August), for the academic year that has
@@ -233,6 +236,8 @@ retained academic years, then exports (JSON) or deletes that learner's data. Eve
   `deleteAllContentUserDataByUser` deletes the acting user's state. The audit target is a random request ID. The export
   also lists the person's portal login events (`AuthAuditEvent`), which the erasure keeps for their 2 years; a staff
   member's own data and Canvas's own data are outside the tool (Q6). Runbook: `docs/ops/data-subject-requests.md`.
+- **Amended (D-129, 2026-11-21):** a Canvas identity is given as issuer, client ID and `sub`, since the
+  pseudonyms are derived per platform registration (`DATA-002`); one without the client ID is refused.
 
 #### DATA-009 · MUST · S1 · Logs contain no personal data
 The logger (pino) redacts `authorization`, `cookie`, `ltik`, `id_token`, `email`, `name`, `sub`,
@@ -333,9 +338,9 @@ personal data; **P** marks pseudonymous fields.
 
 ```
 Feide login / LTI launch
-   │  raw id (feide id or iss+sub) — exists only in memory during the request
+   │  raw id (feide id, or iss + client id + sub) — exists only in memory during the request
    ▼
-learnerKey = HMAC_SHA256(secret[yyyy], "lti|" + iss + "|" + sub)
+learnerKey = HMAC_SHA256(secret[yyyy], "lti|" + iss + "|" + clientId + "|" + sub)   (D-129)
    │
    ├─► H5PUserData.learnerKey     (resume state)
    ├─► XapiStatement.learnerKey   (insight aggregates, k ≥ 5)

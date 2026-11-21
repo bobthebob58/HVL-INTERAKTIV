@@ -5425,3 +5425,49 @@ loading of one spec per session are kept.
 - **Consequences:** An author who passes a limit waits up to ten minutes. A course with more than 300 activities
   of one author shows the 300 most recently changed in the planner. A new field in the planner's answer. Three
   new counters in Redis, each a number under an account ID (`docs/privacy/DATA-INVENTORY.md`).
+
+### D-129 · Security repairs, step 13: a Canvas user is known per platform registration; launch input no platform sends is refused with 400
+- **Context:** A person who arrives from Canvas was known by the launch's issuer and `sub`: the account by a keyed
+  hash of `lti|<iss>|<sub>` (D-055), the learner pseudonym by the yearly HMAC of the same text (D-011, DATA-002).
+  A platform, though, is registered by issuer **and** client ID (LTI-001), because every Canvas that Instructure
+  hosts sends the same issuer (`docs/reference/canvas-platform-values.md`), and a `sub` is unique within one
+  platform only. With two registrations of one issuer, the same `sub` from either would have been one account and
+  one pseudonym. D-103 keeps courses apart per platform; the identity did not. Which Canvases HVL Interaktiv will
+  be connected to is not decided (owner, 2026-11-21), so the rule must hold for any number of registrations.
+  Separately, a login field or a launch claim holding a character PostgreSQL cannot store failed inside the
+  database driver and was answered with 500 and an error line, although the sender was at fault (PROD-012).
+- **Decision — the identity text names the registration (DATA-002, LTI-001).** It is
+  `lti|<iss>|<client-id>|<sub>`. The client ID is the registered platform's: ltijs writes it on the stored
+  launch after it validated the token against that registration, and `lti/launchFacts.ts` reads it from there,
+  never from a claim. The identity hash and the learnerKey are both derived from this one text
+  (`privacy/deriveLearnerKey.ts`, `auth/identity/subjectSources.ts`): at the launch, for a request that resumes a
+  launch, in account linking (AUTH-005) and in the data-subject tool. Neither issuer nor client ID may contain
+  `|` or a control character; `LTI_PLATFORMS` refuses one that does, so the text reads one way whatever the `sub`
+  holds.
+- **Why issuer and client ID, and not the platform row's ID.** They are what `LTI_PLATFORMS` says, so the
+  data-subject tool derives a person's keys from what an operator knows, without a database row. They name the
+  registration exactly as the row does, since the pair is unique.
+- **Decision — the data-subject tool takes the client ID (DATA-008; amends D-108's input form).** A Canvas
+  identity on standard input is `{"issuer": "…", "clientId": "…", "sub": "…"}`. One without `clientId` is refused
+  by field name; the tool never guesses a registration.
+- **Decision — nothing is converted.** HVL Interaktiv has not been used by real people through Canvas (owner,
+  2026-11-21); only test data exists. A hash of the earlier text can never match a launch again, and left on a
+  Feide account it would count as another person's identity from the same platform when that teacher is linked
+  anew (D-063). The migration `20261121190000_lti_identity_per_registration` therefore removes the `Identity`
+  rows of provider `lti`; accounts and Feide identities stay. A person who used a test Canvas gets a new account
+  at the next launch, a teacher's Canvas identity joins their Feide account again at the next Deep Linking
+  launch, and an ltik from before the change answers «open again from Canvas». Learner rows under the earlier
+  pseudonyms go with the yearly purge (DATA-003).
+- **Decision — launch input no platform sends is the sender's error (LTI-001, PROD-012, NFR-006).**
+  `lti/ltiInputText.ts`: a query or form field of the login and launch routes with a control character is
+  refused before ltijs reads any field; of the claims that are stored, the `sub` may hold no control character,
+  and every string and key must be text the database can hold (no U+0000, no unpaired surrogate; a description
+  on several lines is fine). The check runs before the deployment check and the write. The answer is 400
+  `hvl:launch-malformed` with the existing «could not be opened from Canvas» page, logged as a warning with the
+  fixed code and, on the launch route, audited as a failed launch (`launch-invalid`). An issuer, client ID or
+  nonce that no row could hold is "not found" in `PrismaLtiDatabaseManager`, never a query.
+- **Consequences:** Changing a Canvas developer key (a new client ID) gives its users new accounts and new
+  pseudonyms, as a new platform already gave their courses new IDs (D-103): keep the key, or plan the change
+  for the turn of the academic year. A person who uses two registrations is two learners in the counts. The
+  operator of a data-subject request needs the client ID from `LTI_PLATFORMS`
+  (`docs/ops/data-subject-requests.md`). One data-only migration; no new stored field.

@@ -42,7 +42,7 @@ One login method of a user. The subject is stored only as an HMAC.
 | `id` | Internal key | None | n/a | Account; learner rows: yearly purge | PG |
 | `userId` | Links the login to the user | Staff PII (by reference); learner rows: Pseudonymous (stable key, by reference; D-034) | 6(1)(e) | Account; learner rows: yearly purge | PG |
 | `provider` | Feide or LTI | None | n/a | Account; learner rows: yearly purge | PG |
-| `subjectHash` | Recognises the same person at the next login without storing the Feide ID or LTI `sub` | Pseudonymous (stable key) | 6(1)(e) | Account; learner rows: yearly purge | PG |
+| `subjectHash` | Recognises the same person at the next login without storing the Feide ID or LTI `sub`; for Canvas it is made from issuer, client ID and `sub`, so it belongs to one platform registration (D-129) | Pseudonymous (stable key) | 6(1)(e) | Account; learner rows: yearly purge | PG |
 | `subjectKeyId` | Which identity key made `subjectHash`, so a rotated key can be found and the row re-hashed (D-055) | None | n/a | Account; learner rows: yearly purge | PG |
 | `platformId` | Which LMS an LTI identity comes from | None | n/a | Account; learner rows: yearly purge | PG |
 | `createdAt` | Purge boundary | None | n/a | Account; learner rows: yearly purge | PG |
