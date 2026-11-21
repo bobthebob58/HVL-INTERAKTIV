@@ -11,13 +11,17 @@
  *     and never an excluded type; a `library` value outside any library field (under a key the semantics do not
  *     define) is refused too. Otherwise 403 `hvl:sub-content-not-allowed` names the library.
  *   - Text that is a list item is sanitised with Lumi's rules. The content's metadata, and everything the
- *     "Rights of use" dialog renders anywhere in the parameters (metadata, copyright, file paths, alt texts),
- *     are cleaned by ./rightsOfUse.ts; an unsafe file path is refused with 400 `hvl:unsafe-file-path`.
+ *     "Rights of use" dialog renders in the parameters (metadata, copyright, file paths, alt texts), are cleaned
+ *     by ./rightsOfUse.ts; an unsafe file path is refused with 400 `hvl:unsafe-file-path`.
+ *   - Once every refusal has had its say, the parameters are fitted to their semantics, last of all: keys no
+ *     field list names are removed, and numbers, booleans, selects and file values get their field's type
+ *     (./semanticsConformance.ts, D-123). So what is stored holds nothing the semantics do not describe.
  *   - Content nested deeper than ./nestingDepth.ts allows is refused (400) before anything else runs.
- *   - The parameters and metadata are changed in place; nothing else is.
+ *   - The parameters and metadata are changed in place; nothing else is. A refused save changes neither.
  * Collaborators: ./paramsWalker.ts, ./nestingDepth.ts, ./libraryReferences.ts, ./lumiTextSanitizer.ts, ./rightsOfUse.ts,
- *   ./removeDragQuestion.ts, ../HvlH5PEditor.ts.
- * Tests: apps/server/test/h5p/semantics/SubContentPolicy.test.ts, apps/server/test/h5p/semantics/rightsOfUse.test.ts
+ *   ./removeDragQuestion.ts, ./semanticsConformance.ts, ../HvlH5PEditor.ts.
+ * Tests: apps/server/test/h5p/semantics/SubContentPolicy.test.ts, apps/server/test/h5p/semantics/rightsOfUse.test.ts,
+ *   apps/server/test/h5p/semantics/semanticsConformance.test.ts
  */
 import { H5pError, type ILibraryName, type LibraryManager } from '@lumieducation/h5p-server';
 import { LumiTextSanitizer } from './lumiTextSanitizer.js';
@@ -26,6 +30,7 @@ import { assertNestingDepth } from './nestingDepth.js';
 import { walkParams, type ParamsVisit } from './paramsWalker.js';
 import { sanitizeRightsOfUse } from './rightsOfUse.js';
 import { EXCLUDED_SUB_CONTENT, optionMachineName } from './removeDragQuestion.js';
+import { semanticsConformance } from './semanticsConformance.js';
 
 const notAllowed = (library: string): H5pError =>
   new H5pError('hvl:sub-content-not-allowed', { library }, 403);
@@ -46,6 +51,7 @@ export class SubContentPolicy {
    * @param params - Content parameters (content.json), changed in place.
    * @param metadata - Content metadata (h5p.json), changed in place.
    * @param mainLibrary - The content's main library.
+   * @returns How many keys and values were removed or changed to fit the semantics.
    * @throws H5pError `hvl:sub-content-not-allowed` (403) for a library a field does not offer or that is excluded,
    *   or `hvl:unsafe-file-path` (400) for a file path that could leave an HTML attribute.
    */
@@ -53,24 +59,32 @@ export class SubContentPolicy {
     params: Record<string, unknown>,
     metadata: unknown,
     mainLibrary: ILibraryName,
-  ): Promise<void> {
+  ): Promise<number> {
     // WHY: Lumi's own walks after ours are recursive; refusing deep content first avoids a stack overflow (500).
     assertNestingDepth(params);
     assertNestingDepth(metadata);
     this.text.sanitizeMetadata(metadata);
     const reached = new WeakSet<object>();
+    const conformance = semanticsConformance();
     await walkParams(
       params,
       mainLibrary,
       (lib) => this.libraryManager.getSemantics(lib),
-      (visit) => this.visit(visit, reached),
+      (visit) => {
+        this.visit(visit, reached);
+        return conformance.visit(visit);
+      },
+      conformance.onFields,
     );
     // SECURITY: Lumi loads every `library` value it finds, also under keys no field defines (D-039).
     for (const { owner, library } of findLibraryReferences(params)) {
       if (!reached.has(owner)) throw notAllowed(optionMachineName(library) ?? library);
     }
     // SECURITY: H5P Core's "Rights of use" dialog also renders values under keys no field defines (D-039).
+    // WHY: before the fitting, so an unsafe file path is refused wherever it sits, as before D-123.
     sanitizeRightsOfUse(params, this.text);
+    // SECURITY: the player and the editor read keys and value shapes no field describes; they go now (D-123).
+    return conformance.apply();
   }
 
   private visit({ semantics, value, container, key }: ParamsVisit, reached: WeakSet<object>): void {

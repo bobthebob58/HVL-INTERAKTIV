@@ -8,7 +8,8 @@
  * Spec: H5P-002, H5P-006, SEC-008, PROD-007, PROD-013
  * Invariants:
  *   - Before Lumi's write, in this order: permission and main library (./saveAdmission.ts) → the files the stored
- *     version references → sub-content policy (D-039) → paste-source guard (D-092) → learner-state check (D-093).
+ *     version references → sub-content policy, which ends by fitting the parameters to their semantics (D-039,
+ *     D-123) → paste-source guard (D-092) → learner-state check (D-093).
  *     Any refusal is thrown here, so a refused save changes neither the parameters, nor the files, nor the state.
  *   - Lumi's write runs through `write`: a structural edit's learner-state reset (state rows deleted, version
  *     raised) commits in the same transaction as Lumi's first parameter write (./storage/learnerStateResetWrite.ts),
@@ -50,6 +51,8 @@ export interface SaveStepPolicy {
   readonly contentFacts: ContentAccessRepository;
   /** The learner-state rows a structural save checks and resets (D-093). */
   readonly learnerStates: LearnerStateStore;
+  /** Told how many keys and values a save lost or had changed to fit its semantics (D-123), when any. */
+  readonly onParamsFitted?: (changed: number) => void;
 }
 
 /** One save, as the editor passes it to Lumi. */
@@ -106,7 +109,8 @@ export class EditorSaveSteps {
     const deps = { permissionSystem: this.policy.permissionSystem, libraryManager: this.libraryManager };
     const main = await admitSave(deps, contentId, save.mainLibraryUbername, user);
     const filesBefore = contentId === undefined ? [] : await this.files.storedFiles(contentId, main, user);
-    await this.subContent.enforce(parameters as Record<string, unknown>, save.metadata, main);
+    const fitted = await this.subContent.enforce(parameters as Record<string, unknown>, save.metadata, main);
+    if (fitted > 0) this.policy.onParamsFitted?.(fitted);
     await this.pasteSources.enforce(parameters, main, user);
     const learnerState = await this.learnerState.admit(
       contentId,

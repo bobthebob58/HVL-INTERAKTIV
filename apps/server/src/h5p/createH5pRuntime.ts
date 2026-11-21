@@ -131,6 +131,8 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     learnerStates: new PrismaLearnerStateStore(db),
     // WHY: the duplicator reaches it through this editor; the studio services take only the editor (D-092).
     copyLimit: new CopyRateLimit(redis),
+    // PRIVACY: a count only; what a save lost to fit its semantics is never logged (D-123).
+    onParamsFitted: (changed) => logger.info({ changed }, 'content parameters fitted to their semantics'),
     translate,
     fileSanitizers,
     malwareScanners,

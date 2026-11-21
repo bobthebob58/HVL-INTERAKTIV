@@ -33,14 +33,13 @@ import {
   type ContentId,
   type ContentParameters,
   type IContentMetadata,
-  type IPermissionSystem,
   type IUser,
 } from '@lumieducation/h5p-server';
 import type { IHubInfo } from '@lumieducation/h5p-server/build/src/types.js';
 import type { PersonLimit } from '../learningDesign/collaboration/PersonRateLimit.js';
-import type { LearnerStateStore, SaveChoice } from '../learningDesign/safeEditing/LearnerStateGate.js';
+import type { SaveChoice } from '../learningDesign/safeEditing/LearnerStateGate.js';
 import { inspectZip } from '../security/zipEntryGuard.js';
-import { EditorSaveSteps } from './editorSaveSteps.js';
+import { EditorSaveSteps, type SaveStepPolicy } from './editorSaveSteps.js';
 import { filterContentTypeCache, isAuthorableType } from './HvlTop10ContentTypeFilter.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import { auditBeforeInstall } from './libraries/auditBeforeInstall.js';
@@ -51,18 +50,14 @@ import { readPackageManifest } from './libraries/packageManifest.js';
 import { assertNoLibrarySecrets } from './libraries/packageSecretScan.js';
 import { sha256File } from './libraries/sha256Sums.js';
 import { usePermissionCheckedExporter } from './permissionCheckedExporter.js';
-import type { ContentAccessRepository } from './permissions/ContentAccessRepository.js';
 
-/** What HvlH5PEditor needs beyond Lumi's constructor arguments. */
-export interface HvlEditorPolicy {
-  /** The permission system also passed to Lumi in `options.permissionSystem`. */
-  readonly permissionSystem: IPermissionSystem<HvlH5pUser>;
+/**
+ * What HvlH5PEditor needs beyond Lumi's constructor arguments: what the save steps read (the permission system also
+ * passed to Lumi in `options.permissionSystem`, the activity facts, the learner-state rows), and the two below.
+ */
+export interface HvlEditorPolicy extends SaveStepPolicy {
   /** Where library installs by admins are recorded. */
   readonly audit: LibraryAuditSink;
-  /** The activity facts the permission system reads; the paste-source guard decides duplicates on them (D-092). */
-  readonly contentFacts: ContentAccessRepository;
-  /** The learner-state rows a structural save checks and resets (D-093). */
-  readonly learnerStates: LearnerStateStore;
   /** The per-person limit on copies saved through this editor (D-092 amendment 2026-10-29). */
   readonly copyLimit: PersonLimit;
 }

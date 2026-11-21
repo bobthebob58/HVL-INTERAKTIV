@@ -7,10 +7,15 @@
  *      validator walks parameters the same way.
  * Spec: SEC-008, H5P-002
  * Invariants:
- *   - Follows H5P's parameter layout as Lumi reads it: a group with a single field holds that field's value
- *     directly (ContentScanner.js, "special case"), lists are arrays, and `library` values are
- *     `{ library: "H5P.Name 1.2", params, metadata, subContentId }` whose params use that library's semantics.
- *   - `container[key]` is the visited value at the moment of the visit.
+ *   - Follows H5P's parameter layout: a group with a single field holds that field's value directly, lists are
+ *     arrays, and `library` values are `{ library: "H5P.Name 1.2", params, metadata, subContentId }` whose params
+ *     use that library's semantics.
+ *   - A single-field group has that one form only, as H5P's editor writes it and its player reads it (D-123). Lumi's
+ *     ContentScanner reads a second form (an object with a key named like the group as the group itself); a value
+ *     it would read that way is refused with 400 `hvl:invalid-params`, so every reader sees the same structure.
+ *   - `container[key]` is the visited value at the moment of the visit. `onFields`, when given, is called with
+ *     every object whose keys a list of fields defines (the parameters of a library, a group with several fields)
+ *     before its fields are visited.
  *   - Nesting deeper than `MAX_LIBRARY_DEPTH` libraries is refused instead of walked (no stack exhaustion).
  *   - A value whose JSON type Lumi's ContentScanner and SemanticsEnforcer cannot read is refused with 400
  *     `hvl:invalid-params` (they would throw a TypeError, a 500): text must be a string, number or null; a list
@@ -46,6 +51,9 @@ export type SemanticsLookup = (library: ILibraryName) => Promise<ISemanticsEntry
 
 /** Called for every value; return `'skip'` to leave the value's children unvisited. */
 export type ParamsVisitor = (visit: ParamsVisit) => void | 'skip' | Promise<void | 'skip'>;
+
+/** Called with every object whose keys `fields` define: a library's parameters, a group with several fields. */
+export type FieldsVisitor = (fields: readonly ISemanticsEntry[], object: Record<string, unknown>) => void;
 
 type Container = Record<string, unknown> | unknown[];
 
@@ -84,10 +92,12 @@ class Walk {
   constructor(
     private readonly getSemantics: SemanticsLookup,
     private readonly visit: ParamsVisitor,
+    private readonly onFields?: FieldsVisitor,
   ) {}
 
   async fields(semantics: ISemanticsEntry[], params: unknown, path: string, depth: number): Promise<void> {
     if (!isObject(params)) return;
+    this.onFields?.(semantics, params);
     for (const entry of semantics) {
       await this.entry(entry, params, entry.name, `${path}.${entry.name}`, depth);
     }
@@ -105,14 +115,18 @@ class Walk {
     // WHY: Lumi's scanners assume these types and throw a TypeError (a 500) on anything else.
     if (!fitsField(semantics, value)) throw new H5pError('hvl:invalid-params', { path }, 400);
     const fields = semantics.fields ?? [];
-    // WHY: H5P stores a group with one field as that field's value, not as an object (see Lumi's ContentScanner).
+    // WHY: H5P stores a group with one field as that field's value, not as an object.
     const single = fields.length === 1 ? fields[0] : undefined;
-    if (semantics.type === 'group' && single && !(isObject(value) && value[semantics.name])) {
+    if (semantics.type === 'group' && single) {
+      // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/ContentScanner.ts reads an object with a truthy key named like the group as the group itself.
+      // SECURITY: the player never does, so such a value would be cleaned as one structure and shown as another.
+      if (isObject(value) && value[semantics.name]) throw new H5pError('hvl:invalid-params', { path }, 400);
       await this.entry({ ...single, name: semantics.name }, container, key, path, depth);
       return;
     }
     if ((await this.visit({ semantics, value, container, key, path })) === 'skip') return;
     if (semantics.type === 'group' && isObject(value)) {
+      this.onFields?.(fields, value);
       for (const field of fields) await this.entry(field, value, field.name, `${path}.${field.name}`, depth);
     } else if (semantics.type === 'list' && Array.isArray(value) && semantics.field) {
       for (let index = 0; index < value.length; index += 1) {
@@ -141,13 +155,15 @@ class Walk {
  * @param mainLibrary - The content's main library.
  * @param getSemantics - Semantics lookup.
  * @param visit - Called once per value, parents before children.
+ * @param onFields - Called with every object whose keys a list of fields defines; optional.
  */
 export async function walkParams(
   params: Record<string, unknown>,
   mainLibrary: ILibraryName,
   getSemantics: SemanticsLookup,
   visit: ParamsVisitor,
+  onFields?: FieldsVisitor,
 ): Promise<void> {
-  const walk = new Walk(getSemantics, visit);
+  const walk = new Walk(getSemantics, visit, onFields);
   await walk.fields(await getSemantics(mainLibrary), params, '$', 0);
 }

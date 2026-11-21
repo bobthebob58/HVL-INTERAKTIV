@@ -61,6 +61,8 @@ export interface EditorFactoryInputs {
   readonly learnerStates: LearnerStateStore;
   /** The per-person copy limit the duplicator counts (D-092 amendment 2026-10-29). */
   readonly copyLimit: PersonLimit;
+  /** Told how many keys and values a save lost or had changed to fit its semantics (D-123); nobody by default. */
+  readonly onParamsFitted?: (changed: number) => void;
   readonly translate: ITranslationFunction;
   readonly fileSanitizers: readonly IFileSanitizer[];
   /** Malware scanners for uploads (none by default; ../security/malware/createMalwareScanners.ts). */
@@ -115,6 +117,7 @@ export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
       contentFacts: inputs.contentFacts,
       learnerStates: inputs.learnerStates,
       copyLimit: inputs.copyLimit,
+      onParamsFitted: inputs.onParamsFitted,
     },
   );
   // SECURITY: Lumi's editor template puts the integration JSON in a <script> unescaped (D-040); S4 brings ours.

@@ -47,7 +47,7 @@ const question = (library: string, answers: string[] = ['ok'], title = 'Q') => (
   library,
   params: { answers },
   metadata: { title },
-  subContentId: 'a1b2',
+  subContentId: '5f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b',
 });
 
 describe('[H5P-002] sub-content rules on save', () => {
@@ -71,7 +71,7 @@ describe('[H5P-002] sub-content rules on save', () => {
     }
     await expect(
       new SubContentPolicy(manager()).enforce({ questions: [question('H5P.MultiChoice 1.16')] }, {}, MAIN),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(0);
   });
 
   it('[H5P-002] refuses a library hidden under a key no field defines, which Lumi would still load', async () => {
@@ -91,10 +91,12 @@ describe('[H5P-002] sub-content rules on save', () => {
         httpStatusCode: 403,
       });
     }
-    // Act and assert: a plain value under a "library" key is accepted.
-    // WHY: Lumi only collects "Name x.y" values, so a plain text field called "library" is not a dependency.
+    // Act and assert: a plain value under a "library" key is no reason to refuse the save.
+    // WHY: Lumi only collects "Name x.y" values, so a plain text called "library" is not a dependency; the key
+    // no field defines is removed like any other (D-123).
     const label = { questions: [question('H5P.MultiChoice 1.16')], note: { library: 'school library' } };
-    await expect(new SubContentPolicy(manager()).enforce(label, {}, MAIN)).resolves.toBeUndefined();
+    await expect(new SubContentPolicy(manager()).enforce(label, {}, MAIN)).resolves.toBe(1);
+    expect(label).not.toHaveProperty('note');
   });
 });
 
@@ -150,10 +152,10 @@ describe('[SEC-008] text that Lumi does not sanitise', () => {
     expect(metadata).not.toHaveProperty('licenseExtras');
   });
 
-  it('[SEC-008] on save, rights-of-use values under unknown keys are cleaned and an unsafe file path is refused', async () => {
+  it('[SEC-008] on save, rights-of-use values under unknown keys are removed and an unsafe file path is refused', async () => {
     const params = { introduction: 'ok', extra: { metadata: { license: 'CC BY', title: `T${XSS}` } } };
     await new SubContentPolicy(manager()).enforce(params, {}, MAIN);
-    expect(params.extra.metadata.title).toBe('TSvar');
+    expect(params).toEqual({ introduction: 'ok' });
     const unsafe = { introduction: 'ok', extra: { path: 'a.png" onerror="x' } };
     await expect(new SubContentPolicy(manager()).enforce(unsafe, {}, MAIN)).rejects.toMatchObject({
       errorId: 'hvl:unsafe-file-path',
