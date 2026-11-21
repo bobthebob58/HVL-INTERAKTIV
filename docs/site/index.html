@@ -14297,6 +14297,43 @@ $ npx vitest run --project server                    26496 passed, 31 skipped; 5
     container; DATA-010, MAPPE-004, NFR-002), and three tests in two pattern files that read stored content
     through the editor's `getContent`, updated to read the row itself and passing (23 tests in the two files)</code></pre>
 </li>
+<li><p><strong>2026-11-21 · Security repairs, step 9 (D-125)</strong> — A web-app page is framed by nothing, a player page frames
+only outside media, and three controls ask before they act. Two repairs, one commit each; every new test fails
+on the code before and passes after:</p>
+<ul>
+<li>Framing (DATA-011, LTI-003): <code>web/webRoutes.ts</code> sends a web-app page without a Canvas launch with
+<code>frame-ancestors &#39;none&#39;</code> and <code>X-Frame-Options: DENY</code>; a page with a launch keeps our origin and
+<code>CANVAS_ORIGINS</code>. <code>http/h5pPageCsp.ts</code>: a player page&#39;s <code>frame-src</code> lists <code>EXTERNAL_MEDIA_ORIGINS</code> only
+(<code>&#39;none&#39;</code> without any); the editor page keeps <code>&#39;self&#39;</code>. Tests: <code>webRoutes.int.test.ts</code>, <code>h5pPageCsp.test.ts</code>,
+<code>portalPageFraming.browser.int.test.ts</code> (new: a browser refuses a web-app page in a frame of a page with the
+player&#39;s policy and of one with the editor&#39;s, and opens it directly).</li>
+<li>The question (PROD-007, UD-006): <code>components/ConfirmDialog.tsx</code> (new, on the existing <code>Dialog</code>) asks before
+«Gjer om til utkast» (<code>CheckPanel.tsx</code>, with <code>useUnpublish.ts</code>), «Fjern» and «Fjern meg»
+(<code>CoAuthorSection.tsx</code>) and «Ta ut av innhaldsbanken» (<code>BankUnlistButton.tsx</code>, new). The first press sends
+nothing; «Avbryt» and Escape send nothing and return focus to the control. Texts in nn, nb and en. Tests:
+<code>AskBeforeActing.test.tsx</code> (new, 8 tests), the six test files that press these controls now answer the
+question (<code>test/support/confirmQuestion.ts</code>), and the «Fjern meg» keyboard journey answers it by keyboard
+with an axe scan of the open question (<code>keyboardStudioJourneys.a11y.test.ts</code>).</li>
+<li>Screenshots of the three questions in nn at 1280 px and 390 px were sent to the owner (none committed).</li>
+<li>D-125 added; <code>TRACEABILITY.md</code> and the spec site regenerated. No spec change. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 29, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run doc:lint                                   11 checks passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins                                 6 manifests, every version pinned exactly
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run build                                      exit 0
+$ npx vitest run --project web                       624 passed
+$ npx vitest run --project api-contract              97 passed
+$ npm run test:a11y                                  559 passed (18 files)
+$ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    26504 passed, 31 skipped; 2 failed in 5 files: the same
+    five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+    container; DATA-010, MAPPE-004, NFR-002)</code></pre>
+</li>
 </ul>
 
 </section>

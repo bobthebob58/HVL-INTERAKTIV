@@ -2157,3 +2157,40 @@ Append one entry per session: date, session, what was done, gate output, and any
       container; DATA-010, MAPPE-004, NFR-002), and three tests in two pattern files that read stored content
       through the editor's `getContent`, updated to read the row itself and passing (23 tests in the two files)
   ```
+- **2026-11-21 · Security repairs, step 9 (D-125)** — A web-app page is framed by nothing, a player page frames
+  only outside media, and three controls ask before they act. Two repairs, one commit each; every new test fails
+  on the code before and passes after:
+  - Framing (DATA-011, LTI-003): `web/webRoutes.ts` sends a web-app page without a Canvas launch with
+    `frame-ancestors 'none'` and `X-Frame-Options: DENY`; a page with a launch keeps our origin and
+    `CANVAS_ORIGINS`. `http/h5pPageCsp.ts`: a player page's `frame-src` lists `EXTERNAL_MEDIA_ORIGINS` only
+    (`'none'` without any); the editor page keeps `'self'`. Tests: `webRoutes.int.test.ts`, `h5pPageCsp.test.ts`,
+    `portalPageFraming.browser.int.test.ts` (new: a browser refuses a web-app page in a frame of a page with the
+    player's policy and of one with the editor's, and opens it directly).
+  - The question (PROD-007, UD-006): `components/ConfirmDialog.tsx` (new, on the existing `Dialog`) asks before
+    «Gjer om til utkast» (`CheckPanel.tsx`, with `useUnpublish.ts`), «Fjern» and «Fjern meg»
+    (`CoAuthorSection.tsx`) and «Ta ut av innhaldsbanken» (`BankUnlistButton.tsx`, new). The first press sends
+    nothing; «Avbryt» and Escape send nothing and return focus to the control. Texts in nn, nb and en. Tests:
+    `AskBeforeActing.test.tsx` (new, 8 tests), the six test files that press these controls now answer the
+    question (`test/support/confirmQuestion.ts`), and the «Fjern meg» keyboard journey answers it by keyboard
+    with an axe scan of the open question (`keyboardStudioJourneys.a11y.test.ts`).
+  - Screenshots of the three questions in nn at 1280 px and 390 px were sent to the owner (none committed).
+  - D-125 added; `TRACEABILITY.md` and the spec site regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run build                                      exit 0
+  $ npx vitest run --project web                       624 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npm run test:a11y                                  559 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26504 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
