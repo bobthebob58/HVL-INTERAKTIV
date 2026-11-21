@@ -5348,3 +5348,47 @@ loading of one spec per session are kept.
 - **Consequences:** Content brought in from elsewhere with one text over 200 000 characters, or with more than
   100 tags left open in one text, is refused with a message; the H5P editor produces neither. A list past its
   `max` loses the items after it when saved. No new stored data.
+
+### D-127 · Security repairs, step 11: the validator reads only content within the limits, in time that follows its size; a slow pattern is a lint error
+- **Context:** D-126 keeps content past the limits from being stored. The validator (UD-020) reads the stored row
+  for the findings list, on publishing and for every activity in the mappe, and the submitted form when a
+  published activity is saved. A row can be written by other means than a save. Inside the limits, two rules took
+  time that grew with the square of what they read: V-LINK-TEXT trimmed a link text with a pattern that tried
+  every start in a run of punctuation, and PED-H10 went through all nodes once for each chapter of an Interactive
+  Book. Several rules parsed texts that the walk had parsed already, and the validator builds a path for
+  everything it reads.
+- **Decision — a guard where the validator is wired (UD-020, SEC-005, PROD-003).** `content/boundedValidator.ts`
+  wraps the validator in the publish flow's dependencies (`content/publishingDeps.ts`, which `createApp` builds
+  them with): parameters or metadata past a limit of D-126 are answered with exactly one finding, `V-SIZE`, an
+  error at the path of the activity as a whole, with a message in nn, nb and en, and the validator is not called.
+  The findings list, publishing and the save of a published activity share the guard, and the mappe lists the
+  finding, so it never shows an unchecked activity as one without findings. The guard lives outside
+  `src/validation`, which imports nothing but itself (D-073); no rule file produces `V-SIZE`.
+- **Decision — one more limit (amends D-126).** `CONTENT_LIMITS.pathCharacters`: the paths of all values of one
+  activity together are at most 50 000 000 characters, a path counted as its keys and indices with their
+  separators. It bounds the memory the paths of one check can take. The example activity of each of the ten types
+  has at most 14 000.
+- **Decision — two rules read in time that follows the size of what they read (UD-021, PED-020).**
+  `rules/linkTextRule.ts` finds the punctuation around a link text by stepping over its characters once from each
+  end. `rules/chapterInteractionHint.ts` tallies every chapter of a book in one pass over the nodes after it,
+  which come in pre-order. The verdicts are the same.
+- **Decision — one validation run parses each distinct text once (UD-020).** `richText.ts` has a reader that keeps
+  what it has parsed; `rule.ts` builds a scope with one reader per run (`ruleScope`), the walk reads through it,
+  and every rule and helper reads through its scope. Nothing is kept between runs, so the validator stays pure.
+- **Decision — a slow pattern is a lint error (NFR-004, NFR-002).** `eslint-plugin-regexp` 3.3.3, a development
+  dependency (four packages, MIT), with `regexp/no-super-linear-move` and `regexp/no-super-linear-backtracking` as
+  errors for `apps/server/src`, `apps/web/src` and `packages/*/src`. It found five places, each rewritten to give
+  what it gave before: the slashes at the end of the Groups API URL, the hyphens and dots at the ends of a copied
+  file name, the tip of a drag word in insight, the backslashes in front of quotes in the build-secret scan
+  (`(?<!\\)` lets a match begin only where a run begins) and the end of a JSON error message. No exception was
+  needed.
+- **Why the validator runs in the server's own process still.** With the limits and these changes, the guard and
+  the validator together take at most about a third of a second on content inside the limits: nineteen texts of
+  200 000 characters 0.13 s, 20 000 small texts with a finding each 0.33 s, a book of 50 chapters with 400 texts
+  each 0.34 s. A worker would add a queue and a second wiring of the validator for that much work.
+- **Verified:** every rule fixture gives the findings it gave (the rule tests), and no fixture has a text parsed
+  twice. The five rewritten functions and the link-text rule were compared with the earlier code on lists of
+  inputs and gave the same. A book with 2 000 chapters of ten texts went from 2.7 s to 0.2 s, and a link text of
+  199 000 punctuation marks is judged in 9 ms.
+- **Consequences:** A stored activity past the limits shows one finding on «Sjekk og publiser» where it showed
+  the validator's own. A new development dependency. No new stored data.

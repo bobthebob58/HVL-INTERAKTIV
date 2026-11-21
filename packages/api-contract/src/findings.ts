@@ -26,7 +26,10 @@ export const findingSchema = z.strictObject({
   /** e.g. `V-IMG-ALT` or `PED-H05`. */
   ruleId: z.string().min(1),
   severity: findingSeveritySchema,
-  /** The requirement the rule implements: `UD-021`, `PED-020`, or `PROD-001` for V-PLACEHOLDER (D-086). */
+  /**
+   * The requirement the rule implements: `UD-021`, `PED-020`, `PROD-001` for V-PLACEHOLDER (D-086), or `SEC-005`
+   * for V-SIZE, the one finding of an activity too large to be checked (D-127).
+   */
   requirement: z.string(),
   /**
    * A JSON path into the activity's parameters for "Go to field"; empty for the activity as a whole, and
