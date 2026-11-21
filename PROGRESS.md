@@ -2372,3 +2372,50 @@ Append one entry per session: date, session, what was done, gate output, and any
       five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
       container; DATA-010, MAPPE-004, NFR-002)
   ```
+
+- **2026-11-21 · Security repairs, step 14 (D-130)** — A request with an ltik reaches only what its launch's pages
+  ask for, and a landing address with an ltik counts only from our own pages. Two repairs, one commit each;
+  every new test fails on the code before and passes after:
+  - What an ltik reaches (LTI-003, LTI-004, LTI-006, PROD-007, PROD-006): `lti/ltikScope.ts` (new) lists the
+    methods and paths per kind of launch, default deny; `auth/requestPrincipal.ts` asks it for every request
+    with an ltik and answers anything else with 403 `hvl:not-from-canvas` (nn, nb, en). A resource-link launch
+    reaches the launched activity (state, xAPI, the Canvas editor's read and save, insight, score status); a
+    Deep Linking launch no activity; listing, creating, deleting, downloading, copying, publishing and sharing
+    need the portal session. The list was drawn from what the pages were recorded to ask. Tests:
+    `lti/ltikScope.test.ts` (also pins which contract routes an ltik reaches), `lti/ltikScope.int.test.ts`,
+    `auth/requestPrincipal.test.ts`; eleven existing files follow the new answer.
+  - The landing address (LTI-003): `lti/landingLtik.ts` (new), used by `/app/play`, `/lti/play`, `/lti/edit` and
+    `/lti/deeplink`: refused when `Sec-Fetch-Site` is present and not `same-origin`; without fetch metadata
+    accepted only within ten minutes of the launch. Measured in Chromium: a launch's landing is `same-origin`.
+    Tests: `lti/landingLtik.test.ts`, `lti/landingLtik.int.test.ts`; browser tests that hold an ltik arrive
+    through `test/support/openLanding.ts`.
+  - D-130 added; LTI-003, LTI-004 and LTI-006 in spec 02 and PROD-006 in spec 00 have an "Amended" line; the
+    threat model (T-13, new T-17, risk 8), the glossary and the evaluator guide follow; `TRACEABILITY.md` and
+    the spec site regenerated. No page of the web app changed its look. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       625 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     529 passed
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  561 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26805 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
