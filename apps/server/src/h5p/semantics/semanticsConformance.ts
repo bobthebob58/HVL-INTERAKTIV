@@ -14,6 +14,8 @@
  *   - A number is a finite number within the field's `min` and `max` (a numeric string becomes a number); a boolean
  *     a boolean; a select one of its option values (each of them, when it takes several); a file value as
  *     ./fileValueConformance.ts says; video and audio a list of such values.
+ *   - A list holds at most its field's `max` items; what comes after them is cut, as H5P's own server software
+ *     cuts it (the editor never adds more than `max`).
  *   - What does not fit is removed, never refused: the key from its object, the item from its list. Text is not
  *     judged here (./lumiTextSanitizer.ts), nor structure the walker refuses (./paramsWalker.ts).
  *   - Nothing changes before `apply`: the fixes are collected during the walk, so a refusal the walk or the checks
@@ -65,6 +67,12 @@ function fittedLeaf(semantics: ISemanticsEntry, value: unknown): unknown {
   return (value as unknown[]).every(fits) ? value : (value as unknown[]).filter(fits);
 }
 
+/** The items of a list that its field's `max` lets it keep: all of them when it names none. */
+function withinMax(semantics: ISemanticsEntry, list: unknown[]): unknown[] {
+  const max = finiteNumber(semantics.max);
+  return max === undefined || max < 0 || list.length <= max ? list : list.slice(0, Math.floor(max));
+}
+
 /** The semantics-conformance of one save: what the walker calls, and the fixes it leads to. */
 export interface SemanticsConformance {
   /** For `walkParams`: notes the fixes of each value. */
@@ -110,13 +118,18 @@ export function semanticsConformance(): SemanticsConformance {
         fixes.push({ remove: 'subContentId', from: value });
       }
       if ('metadata' in value && !isObject(value.metadata)) fixes.push({ remove: 'metadata', from: value });
-    } else if (type === 'list' && Array.isArray(value) && LEAF_TYPES.has(semantics.field?.type ?? '')) {
-      const field = semantics.field as ISemanticsEntry;
-      const kept = (value as unknown[])
-        .map((item) => fittedLeaf(field, item))
-        .filter((item) => item !== UNFIT);
-      lists.push({ list: value, kept });
-      return 'skip';
+    } else if (type === 'list' && Array.isArray(value)) {
+      const items = withinMax(semantics, value as unknown[]);
+      const field = semantics.field as ISemanticsEntry | undefined;
+      if (field && LEAF_TYPES.has(field.type)) {
+        lists.push({
+          list: value,
+          kept: items.map((item) => fittedLeaf(field, item)).filter((i) => i !== UNFIT),
+        });
+        return 'skip';
+      }
+      // WHY: the walk still reads the items past `max`, so a refusal inside them has its say before the cut.
+      if (items !== value) lists.push({ list: value, kept: items });
     } else if (LEAF_TYPES.has(type) && !Array.isArray(container)) {
       const fitted = fittedLeaf(semantics, value);
       if (fitted === UNFIT) fixes.push({ remove: String(key), from: container });
@@ -136,7 +149,9 @@ export function semanticsConformance(): SemanticsConformance {
       }
       for (const { list, kept } of lists) {
         changed += list.length === kept.length && list.every((item, at) => item === kept[at]) ? 0 : 1;
-        list.splice(0, list.length, ...kept);
+        // WHY: item by item; a spread of a long list into `splice` passes more arguments than a call may take.
+        kept.forEach((item, at) => (list[at] = item));
+        list.length = kept.length;
       }
       return changed;
     },

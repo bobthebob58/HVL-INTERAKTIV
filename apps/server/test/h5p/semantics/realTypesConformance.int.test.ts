@@ -1,8 +1,8 @@
 /**
  * Integration tests of the save rule of D-123 with the real content types (D-078): the example activity of each of
  * the ten types is content the rule leaves alone (but for one key BranchingScenario's editor writes and its player
- * sets itself), and a save that carries keys its semantics do not name stores none of them, as a new activity, as
- * an edit and as a copy.
+ * sets itself), a save that carries keys its semantics do not name stores none of them, as a new activity, as
+ * an edit and as a copy, and a list longer than its semantics allow is stored with the most they allow (D-126).
  *
  * Spec: SEC-008, H5P-002
  */
@@ -112,5 +112,22 @@ describeWithServices('[SEC-008] the save rule with the real content types', () =
         }
       },
     );
+
+    it('[SEC-008] an Interactive Book with more chapters than its semantics allow is stored with the most they allow', async () => {
+      // Arrange: the example's first chapter 51 times; H5P.InteractiveBook's `chapters` has `max: 50`
+      const example = examples.get('H5P.InteractiveBook');
+      const params = structuredClone(example?.params ?? {}) as { chapters: unknown[] };
+      params.chapters = Array.from({ length: 51 }, () => structuredClone(params.chapters[0]));
+      const body = { library: example?.library, params: { params, metadata } };
+      // Act
+      const created = await request(app)
+        .post('/h5p/content')
+        .set(...author.header)
+        .send(body);
+      // Assert
+      expect(created.status).toBe(201);
+      const after = (await stored(created.body.contentId as string)) as { chapters: unknown[] };
+      expect(after.chapters).toHaveLength(50);
+    });
   });
 });
