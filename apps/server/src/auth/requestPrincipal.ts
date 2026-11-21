@@ -3,19 +3,21 @@
  * the portal session (Feide), and puts the `Principal` on the response.
  *
  * Why: both entry points end in one principal (spec 02 §2). LTI requests carry the ltik as `Authorization: Bearer`;
- *      only the paths in `LTIK_QUERY_PATHS` may carry it in the query (D-058, D-069), because H5P and the first page
- *      load cannot set headers.
+ *      only the paths in `LTIK_QUERY_PATHS` may carry it in the query (D-058, D-069), because H5P builds those
+ *      URLs itself. The pages a launch lands on take it from the query themselves and never pass through here.
  *      Portal requests carry the session cookie, so every state-changing request needs the CSRF token (D-057).
  * Spec: LTI-003, AUTH-003, H5P-007
  * Invariants:
  *   - An ltik in the query anywhere else is refused (401), so tokens do not spread into other URLs and logs.
  *   - A request with both a Bearer ltik and a query ltik must carry the same token.
  *   - An ltik wins over a session cookie: inside Canvas, a portal cookie never changes who the request acts as.
+ *   - A request with an ltik is one its launch's own pages make (../lti/ltikScope.ts), or it is refused with 403
+ *     `hvl:not-from-canvas`: listing, creating, deleting, downloading and sharing need the portal session (D-130).
  *   - Portal requests pass the CSRF check where `csrfRequired` says so (unsafe methods, any H5P AJAX/user data).
  *   - No principal is set when nobody is signed in; routes that need one answer 401 (`requirePrincipal`).
  *   - A portal principal carries its session's `learnerKeyYear` (D-107); an LTI request's `sub` is kept beside its
  *     principal (`ltiSubjectOf`), never in it.
- * Collaborators: ../lti/ltikPrincipal.ts, ./session/portalSessionMiddleware.ts, ./session/csrfToken.ts,
+ * Collaborators: ../lti/ltikPrincipal.ts, ../lti/ltikScope.ts, ./session/portalSessionMiddleware.ts, ./session/csrfToken.ts,
  *   ./principalLocals.ts, ../http/h5pAuthenticate.ts, ../server/createApp.ts.
  * Tests: apps/server/test/auth/requestPrincipal.test.ts
  */
@@ -23,6 +25,7 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import type { UrlToken } from '../h5p/HvlH5pUser.js';
 import { authError } from '../http/authErrors.js';
 import type { ResolvedLtik } from '../lti/ltikPrincipal.js';
+import { ltikScopeAllows } from '../lti/ltikScope.js';
 import { sealPrincipal } from './Principal.js';
 import { setLtiSubject, setPrincipal } from './principalLocals.js';
 import { assertCsrfWhenRequired } from './session/csrfToken.js';
@@ -32,9 +35,6 @@ import { portalSessionOf } from './session/portalSessionMiddleware.js';
 export const LTIK_QUERY_PATHS: readonly RegExp[] = Object.freeze([
   /^\/h5p\/ajax\/?$/,
   /^\/h5p\/contentUserData\/[^/]+\/[^/]+\/[^/]+\/?$/,
-  /^\/lti\/play\/?$/,
-  /^\/lti\/edit\/?$/,
-  /^\/lti\/deeplink\/?$/,
 ]);
 
 const URL_TOKEN = 'hvliUrlToken';
@@ -80,6 +80,8 @@ export function requestPrincipal(resolveLtik: (ltik: string) => Promise<Resolved
     const ltik = bearer ?? queryLtik;
     if (ltik !== undefined) {
       const { principal, facts } = await resolveLtik(ltik);
+      // SECURITY: a bearer token that lives for a day opens only what its launch's pages ask for (D-130).
+      if (!ltikScopeAllows(principal.lti, req.method, pathOf(req))) throw authError('hvl:not-from-canvas');
       setPrincipal(res, principal);
       // PRIVACY: the `sub` stays beside the principal, for this request only; AGS needs it (D-104).
       if (typeof facts.subject === 'string') setLtiSubject(res, facts.subject);

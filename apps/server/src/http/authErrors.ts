@@ -31,6 +31,7 @@ export const AUTH_ERRORS = {
   'hvl:deployment-not-allowed': [403, 'error.deploymentNotAllowed'],
   'hvl:deep-link-not-allowed': [403, 'error.deepLinkNotAllowed'],
   'hvl:file-grant-invalid': [403, 'error.fileGrantInvalid'],
+  'hvl:not-from-canvas': [403, 'error.notFromCanvas'],
   'hvl:sharing-not-allowed': [403, 'error.sharingNotAllowed'],
   'hvl:edit-not-allowed': [403, 'error.editNotAllowed'],
   'hvl:activity-unavailable': [404, 'error.activityUnavailable'],

@@ -10,6 +10,7 @@
     "sessionExpired": "Økten din har utløpt. Logg inn på nytt.",
     "ltikInvalid": "Tilgangen din har utløpt. Åpne aktiviteten på nytt fra Canvas.",
     "launchFailed": "Aktiviteten kunne ikke åpnes fra Canvas. Prøv å åpne den på nytt.",
+    "notFromCanvas": "Dette kan du ikke gjøre fra Canvas. Åpne HVL Interaktiv i portalen for å gjøre det.",
     "platformNotRegistered": "Denne læringsplattformen er ikke registrert i HVL Interaktiv.",
     "deploymentNotAllowed": "Denne Canvas-installasjonen har ikke tilgang til HVL Interaktiv.",
     "activityUnavailable": "Aktiviteten er ikke tilgjengelig.",

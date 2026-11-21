@@ -53,7 +53,7 @@ describeWithServices('[MAPPE-001] the pedagogisk mappe export through the whole 
     // Assert
     expect(ltik).toBeTruthy();
     expect([noCsrf.status, noCsrf.body.errorCode]).toEqual([401, 'hvl:csrf-invalid']);
-    expect([canvas.status, canvas.body.errorCode]).toEqual([401, 'hvl:unauthenticated']);
+    expect([canvas.status, canvas.body.errorCode]).toEqual([403, 'hvl:not-from-canvas']);
     expect(exported.status).toBe(200);
     expect(exported.text).toContain(`### ${TITLE}`);
   });

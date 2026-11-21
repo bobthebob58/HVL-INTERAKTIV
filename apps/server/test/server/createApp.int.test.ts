@@ -99,7 +99,7 @@ describeWithServices('The assembled app', () => {
       expect((await tb.db.h5PContent.findUnique({ where: { id } }))?.visibility).toBe('feide');
     });
 
-    it('[PROD-006] in Canvas the owner shares with the ltik as a Bearer token', async () => {
+    it('[PROD-006] in Canvas the owner cannot change sharing with the ltik: that is done in the portal', async () => {
       // Arrange: the teacher's first launch makes their account; they own an activity
       const first = await launchFromCanvas(tb.app, tb.mock.canvas, {
         messageType: 'LtiDeepLinkingRequest',
@@ -108,9 +108,11 @@ describeWithServices('The assembled app', () => {
       const { principal } = await tb.lti.resolveLtik(first.ltik ?? '');
       const id = await tb.activity(principal.userId, { published: true });
       // Act
+      const before = await tb.db.h5PContent.findUniqueOrThrow({ where: { id } });
       const res = await share(id).set('Authorization', `Bearer ${first.ltik ?? ''}`);
       // Assert
-      expect(res.status).toBe(200);
+      expect([res.status, res.body.errorCode]).toEqual([403, 'hvl:not-from-canvas']);
+      expect(await tb.db.h5PContent.findUniqueOrThrow({ where: { id } })).toEqual(before);
     });
 
     it('[PROD-006] without any credential the API answers 401, and an unknown API path 404 as JSON', async () => {

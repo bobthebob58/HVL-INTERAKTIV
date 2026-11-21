@@ -92,7 +92,7 @@ describeWithServices('[DOC-012] studio routes through the app', () => {
     expect([withToken.status, withToken.body]).toEqual([200, { mode: 'portal' }]);
   });
 
-  it('[LTI-003] a portal-only route refuses a valid Canvas instructor launch, and admits the portal author', async () => {
+  it('[LTI-003] a route on no list of an ltik refuses a valid Canvas instructor launch; the portal author is admitted', async () => {
     // Arrange: a Deep Linking launch as the teacher gives a valid ltik for an LTI author
     const { ltik } = await launchFromCanvas(tb.app, tb.mock.canvas, {
       messageType: 'LtiDeepLinkingRequest',
@@ -104,10 +104,12 @@ describeWithServices('[DOC-012] studio routes through the app', () => {
     const portalOnlyWithLtik = await request(tb.app).get(PORTAL_ONLY).set('Authorization', bearer);
     const portalOnlyWithSession = await request(tb.app).get(PORTAL_ONLY).set('Cookie', cookie);
     // Assert
-    expect([publicWithLtik.status, publicWithLtik.body]).toEqual([200, { signedIn: 'lti' }]);
+    // WHY: these test routes are in no contract, so they are on no ltik's list (D-130); the contract's public
+    //      routes answer an ltik like anyone else (../../learningDesign/http/studioContentRoutes.int.test.ts).
+    expect([publicWithLtik.status, publicWithLtik.body.errorCode]).toEqual([403, 'hvl:not-from-canvas']);
     expect([portalOnlyWithLtik.status, portalOnlyWithLtik.body.errorCode]).toEqual([
-      401,
-      'hvl:unauthenticated',
+      403,
+      'hvl:not-from-canvas',
     ]);
     expect([portalOnlyWithSession.status, portalOnlyWithSession.body]).toEqual([200, { mode: 'portal' }]);
   });

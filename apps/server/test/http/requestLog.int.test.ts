@@ -43,7 +43,7 @@ describeWithServices('[NFR-006] the request log in the whole app', () => {
     const bearer = `Bearer ${ltik}`;
     responses.push(
       launch.res,
-      await request(tb.app).get(`/h5p/play/${contentId}`).set('Authorization', bearer),
+      await request(tb.app).get(`/h5p/contentUserData/${contentId}/state/0`).set('Authorization', bearer),
       await request(tb.app)
         .post('/api/h5p/xapi')
         .set('Authorization', bearer)
@@ -76,7 +76,7 @@ describeWithServices('[NFR-006] the request log in the whole app', () => {
     const logged = responses.map((res) => byId.get(res.headers['x-request-id']));
     expect(logged.map((line) => [line?.method, line?.route, line?.status])).toEqual([
       ['POST', '/lti/launch', responses[0]?.status],
-      ['GET', '/h5p/play/:contentId', responses[1]?.status],
+      ['GET', '/h5p/contentUserData/:contentId/:dataType/:subContentId', responses[1]?.status],
       ['POST', '/api/h5p/xapi', 202],
       ['GET', '/api/*', 401],
       ['GET', '/h5p/*', 401],
@@ -93,7 +93,12 @@ describeWithServices('[NFR-006] the request log in the whole app', () => {
     // Assert
     expect(new Set(stored.map((row) => row.learnerKey))).toEqual(new Set([learnerKey]));
     expect(ltik.length).toBeGreaterThan(20);
-    for (const secret of [ltik, learnerKey, `/h5p/play/${contentId}`, `/api/content/${contentId}`]) {
+    const paths = [
+      `/h5p/contentUserData/${contentId}`,
+      `/h5p/play/${contentId}`,
+      `/api/content/${contentId}`,
+    ];
+    for (const secret of [ltik, learnerKey, ...paths]) {
       expect(text).not.toContain(secret);
     }
     expect(JSON.stringify(lines)).not.toContain(contentId);

@@ -10,6 +10,7 @@
     "sessionExpired": "Your session has expired. Please log in again.",
     "ltikInvalid": "Your access has expired. Open the activity again from Canvas.",
     "launchFailed": "The activity could not be opened from Canvas. Try opening it again.",
+    "notFromCanvas": "This cannot be done from Canvas. Open HVL Interaktiv in the portal to do it.",
     "platformNotRegistered": "This learning platform is not registered with HVL Interaktiv.",
     "deploymentNotAllowed": "This Canvas installation is not allowed to use HVL Interaktiv.",
     "activityUnavailable": "The activity is not available.",

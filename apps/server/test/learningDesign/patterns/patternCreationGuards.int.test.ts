@@ -105,7 +105,7 @@ describeWithServices('what creating from a pattern refuses and creates', () => {
       // Assert
       expect([signedOut.status, signedOut.body.errorCode]).toEqual([401, 'hvl:unauthenticated']);
       expect([noCsrf.status, noCsrf.body.errorCode]).toEqual([401, 'hvl:csrf-invalid']);
-      expect([canvas.status, canvas.body.errorCode]).toEqual([401, 'hvl:unauthenticated']);
+      expect([canvas.status, canvas.body.errorCode]).toEqual([403, 'hvl:not-from-canvas']);
       expect([learner.status, learner.body.errorCode]).toEqual([403, 'error.forbidden']);
     });
 

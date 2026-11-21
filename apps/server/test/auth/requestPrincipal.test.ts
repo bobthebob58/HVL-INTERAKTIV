@@ -26,7 +26,13 @@ const ltiPrincipal = sealPrincipal({
   hvlMember: false,
   feideAuthenticated: false,
   studentAuthor: false,
-  lti: { platformId: 'p', deploymentId: 'd', contextId: 'c', messageType: 'LtiResourceLinkRequest' },
+  lti: {
+    platformId: 'p',
+    deploymentId: 'd',
+    contextId: 'c',
+    messageType: 'LtiResourceLinkRequest',
+    contentId: 'c1',
+  },
 });
 const resolveLtik = async (ltik: string): Promise<ResolvedLtik> => {
   if (ltik !== LTIK) throw authError('hvl:ltik-invalid');
@@ -59,11 +65,9 @@ function appWith(signedIn: boolean) {
   };
   return express()
     .use(fakeSession, requestPrincipal(resolveLtik))
-    .get('/year', (_req, res) => {
-      res.json({ learnerKeyYear: principalOf(res)?.learnerKeyYear ?? null });
-    })
-    .get('/sub', (_req, res) => {
+    .get('/api/me', (_req, res) => {
       res.json({
+        learnerKeyYear: principalOf(res)?.learnerKeyYear ?? null,
         sub: ltiSubjectOf(res) ?? null,
         inPrincipal: JSON.stringify(principalOf(res)).includes('sub-1'),
       });
@@ -76,12 +80,34 @@ function appWith(signedIn: boolean) {
 
 describe('requestPrincipal', () => {
   describe('the ltik', () => {
-    it('[LTI-003] a Bearer ltik makes the request an LTI request, on any path', async () => {
-      const res = await request(appWith(false)).get('/api/anything').set('Authorization', `Bearer ${LTIK}`);
+    it('[LTI-003] a Bearer ltik makes the request an LTI request, on a path its launch’s pages ask for', async () => {
+      const res = await request(appWith(false)).get('/h5p/params/c1').set('Authorization', `Bearer ${LTIK}`);
       expect(res.body).toEqual({ mode: 'lti', token: 'ltik' });
     });
 
-    it.each(['/h5p/ajax', '/h5p/contentUserData/c1/state/0', '/lti/play', '/lti/deeplink'])(
+    it.each([
+      ['a Bearer ltik on a path outside its launch’s list', '/api/anything', true],
+      ['a Bearer ltik on another activity', '/h5p/params/c2', true],
+      ['a query ltik on another activity’s state', '/h5p/contentUserData/c2/state/0', false],
+    ])('[LTI-003] %s is refused with 403 `hvl:not-from-canvas`', async (_case, path, bearer) => {
+      // Arrange
+      const asked = bearer
+        ? request(appWith(false)).get(path).set('Authorization', `Bearer ${LTIK}`)
+        : request(appWith(false)).get(`${path}?ltik=${LTIK}`);
+      // Act
+      const res = await asked;
+      // Assert
+      expect([res.status, res.body.code]).toEqual([403, 'hvl:not-from-canvas']);
+    });
+
+    it('[AUTH-003] a portal session is not held to the ltik’s list', async () => {
+      // Act
+      const res = await request(appWith(true)).get('/api/anything');
+      // Assert
+      expect(res.body).toEqual({ mode: 'portal', token: 'csrf' });
+    });
+
+    it.each(['/h5p/ajax', '/h5p/contentUserData/c1/state/0'])(
       '[H5P-007] an ltik in the query is accepted on %s (D-058)',
       async (path) => {
         const res = await request(appWith(false)).get(`${path}?ltik=${LTIK}`);
@@ -94,6 +120,8 @@ describe('requestPrincipal', () => {
       '/api/content/c1/sharing',
       '/h5p/ajax/extra',
       '/lti/deeplink/response',
+      '/lti/play',
+      '/lti/deeplink',
       '/h5p/%61jax/x',
     ])('[LTI-003] an ltik in the query is refused on %s', async (path) => {
       const res = await request(appWith(false)).get(`${path}?ltik=${LTIK}`);
@@ -119,7 +147,7 @@ describe('requestPrincipal', () => {
     });
 
     it('[LTI-003] inside Canvas the ltik wins over a portal session cookie', async () => {
-      const res = await request(appWith(true)).post('/api/x').set('Authorization', `Bearer ${LTIK}`);
+      const res = await request(appWith(true)).post('/h5p/ajax').set('Authorization', `Bearer ${LTIK}`);
       expect(res.body).toEqual({ mode: 'lti', token: 'ltik' });
     });
   });
@@ -151,17 +179,17 @@ describe('requestPrincipal', () => {
     });
 
     it('[DATA-012] a portal principal carries the academic year its session stored with the learnerKey (D-107)', async () => {
-      const portal = await request(appWith(true)).get('/year');
-      const lti = await request(appWith(false)).get('/year').set('Authorization', `Bearer ${LTIK}`);
-      expect(portal.body).toEqual({ learnerKeyYear: 2025 });
-      expect(lti.body).toEqual({ learnerKeyYear: null });
+      const portal = await request(appWith(true)).get('/api/me');
+      const lti = await request(appWith(false)).get('/api/me').set('Authorization', `Bearer ${LTIK}`);
+      expect(portal.body).toMatchObject({ learnerKeyYear: 2025 });
+      expect(lti.body).toMatchObject({ learnerKeyYear: null });
     });
 
     it('[LTI-012] keeps an LTI request’s sub beside the principal, never in it, and a portal request has none', async () => {
-      const lti = await request(appWith(false)).get('/sub').set('Authorization', `Bearer ${LTIK}`);
-      const portal = await request(appWith(true)).get('/sub');
-      expect(lti.body).toEqual({ sub: 'canvas-sub-1', inPrincipal: false });
-      expect(portal.body).toEqual({ sub: null, inPrincipal: false });
+      const lti = await request(appWith(false)).get('/api/me').set('Authorization', `Bearer ${LTIK}`);
+      const portal = await request(appWith(true)).get('/api/me');
+      expect(lti.body).toMatchObject({ sub: 'canvas-sub-1', inPrincipal: false });
+      expect(portal.body).toMatchObject({ sub: null, inPrincipal: false });
     });
 
     it('[AUTH-003] without a session or an ltik the request has no principal', async () => {
