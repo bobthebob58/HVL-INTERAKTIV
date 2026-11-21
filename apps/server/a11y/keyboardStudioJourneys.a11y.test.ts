@@ -13,11 +13,13 @@ import { MAPPE_MAX_ACTIVITIES, type StudioOverview } from '@hvl-interaktiv/api-c
 import type { Page } from 'playwright-core';
 import { expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
+import { scanPage } from './support/axeScan.js';
 import { inspectFocus } from './support/focusInspect.js';
 import { focusIs, tabTo } from './support/focusWalk.js';
 import { openWebPage } from './support/pages.js';
 import { coAuthoredActivity } from './support/staffActivities.js';
 import { openStudioView } from './support/studioViews.js';
+import { expectOnlyRecorded } from './support/upstreamFindings.js';
 import { webText } from '../test/support/webAppTexts.js';
 
 /** The text of the element that has focus, or `<body>` when focus is on none (not the whole page's text). */
@@ -129,10 +131,16 @@ describeA11y('[UD-006] keyboard-only journeys in the studio', (env) => {
     await page
       .getByRole('button', { name: webText('sharing.removeSelf'), exact: true })
       .waitFor({ timeout: 15_000 });
-    // Act
+    // Act: Enter on the button opens the question (D-125); Tab reaches its action, and Enter answers
     await tabToText(page, webText('sharing.removeSelf'));
     await page.keyboard.press('Enter');
-    // Assert: the message the button leaves behind has focus, and the change is announced
+    const question = page.getByRole('dialog', { name: webText('sharing.removeSelfQuestion') });
+    await question.waitFor();
+    const scan = await scanPage(page, 'the question before «Fjern meg»');
+    await tabToText(page, webText('sharing.removeSelf'));
+    await page.keyboard.press('Enter');
+    // Assert: the question had no violation; the message the button leaves behind has focus, and the change is announced
+    expectOnlyRecorded(scan, []);
     const message = `${webText('sharing.removedSelf')} ${webText('sharing.backHome')}`;
     await expect.poll(() => focusedText(page)).toBe(message);
     const announced = page.getByRole('status').filter({ hasText: webText('sharing.removedSelf') });
