@@ -2082,3 +2082,41 @@ Append one entry per session: date, session, what was done, gate output, and any
       five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
       unrelated to the change; DATA-010, MAPPE-004, NFR-002)
   ```
+
+- **2026-11-21 · Security repairs, step 7 (D-123)** — What a saved activity may contain, and two decisions of the
+  owner. Three repairs, one commit each; every new test fails on the code before and passes after:
+  - A save stores only what the semantics describe (SEC-008, H5P-002): `h5p/semantics/semanticsConformance.ts`
+    and `fileValueConformance.ts` (new) fit the parameters to their semantics at the end of
+    `SubContentPolicy.enforce`, as H5P's own validator does: keys no field list names are removed at every level,
+    and numbers, booleans, selects and file values get their field's type. `paramsWalker.ts` reads a single-field
+    group in its one stored form. The refusals run first and are unchanged. Tests:
+    `semanticsConformance.test.ts`, `semanticsConformance.property.test.ts`, `fileValueConformance.test.ts`,
+    `realTypesConformance.int.test.ts` (the ten real types: new, edited and copied saves),
+    `realPatternConformance.test.ts` (every pattern skeleton passes unchanged).
+  - Three more types are not accepted as sub-content (H5P-002): `H5P.AudioRecorder`, `H5P.TwitterUserFeed` and
+    `H5P.Questionnaire` join `H5P.DragQuestion` in `removeDragQuestion.ts`; six other sub-content types stay.
+    Test: `excludedSubContent.test.ts`.
+  - Production runs with the web app (LTI-006): `config/productionChecks.ts` refuses `WEB_APP=off` under
+    `NODE_ENV=production`. Test: `productionChecks.test.ts`.
+  - Two existing tests updated to the rule: unstorable text under a key no field defines goes with the key
+    (`http/contentInput.int.test.ts`), and the "Rights of use" dialog shows only what a field defines
+    (`http/player.browser.int.test.ts`).
+  - D-123 added, with the owner's two decisions of 2026-11-21; spec 01 §3 names the three types;
+    `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project web                       616 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npm run test:e2e                                   31 passed, 1 skipped; 2 files failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests) and journeyGovernance (passed when run again alone)
+  $ npx vitest run --project server                    26477 passed, 31 skipped; 4 failed in 7 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002), and two tests that expected values under keys no field defines to
+      be kept (`http/contentInput`, `http/player.browser`), updated to the rule and passing (11 tests)
+  ```

@@ -14153,6 +14153,43 @@ $ npx vitest run --project server                    26443 passed, 31 skipped; 2
     five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
     unrelated to the change; DATA-010, MAPPE-004, NFR-002)</code></pre>
 </li>
+<li><p><strong>2026-11-21 · Security repairs, step 7 (D-123)</strong> — What a saved activity may contain, and two decisions of the
+owner. Three repairs, one commit each; every new test fails on the code before and passes after:</p>
+<ul>
+<li>A save stores only what the semantics describe (SEC-008, H5P-002): <code>h5p/semantics/semanticsConformance.ts</code>
+and <code>fileValueConformance.ts</code> (new) fit the parameters to their semantics at the end of
+<code>SubContentPolicy.enforce</code>, as H5P&#39;s own validator does: keys no field list names are removed at every level,
+and numbers, booleans, selects and file values get their field&#39;s type. <code>paramsWalker.ts</code> reads a single-field
+group in its one stored form. The refusals run first and are unchanged. Tests:
+<code>semanticsConformance.test.ts</code>, <code>semanticsConformance.property.test.ts</code>, <code>fileValueConformance.test.ts</code>,
+<code>realTypesConformance.int.test.ts</code> (the ten real types: new, edited and copied saves),
+<code>realPatternConformance.test.ts</code> (every pattern skeleton passes unchanged).</li>
+<li>Three more types are not accepted as sub-content (H5P-002): <code>H5P.AudioRecorder</code>, <code>H5P.TwitterUserFeed</code> and
+<code>H5P.Questionnaire</code> join <code>H5P.DragQuestion</code> in <code>removeDragQuestion.ts</code>; six other sub-content types stay.
+Test: <code>excludedSubContent.test.ts</code>.</li>
+<li>Production runs with the web app (LTI-006): <code>config/productionChecks.ts</code> refuses <code>WEB_APP=off</code> under
+<code>NODE_ENV=production</code>. Test: <code>productionChecks.test.ts</code>.</li>
+<li>Two existing tests updated to the rule: unstorable text under a key no field defines goes with the key
+(<code>http/contentInput.int.test.ts</code>), and the &quot;Rights of use&quot; dialog shows only what a field defines
+(<code>http/player.browser.int.test.ts</code>).</li>
+<li>D-123 added, with the owner&#39;s two decisions of 2026-11-21; spec 01 §3 names the three types;
+<code>TRACEABILITY.md</code> and the spec site regenerated. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 27, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run doc:lint                                   11 checks passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins                                 6 manifests, every version pinned exactly
+$ npx vitest run --project web                       616 passed
+$ npx vitest run --project api-contract              97 passed
+$ npm run test:e2e                                   31 passed, 1 skipped; 2 files failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests) and journeyGovernance (passed when run again alone)
+$ npx vitest run --project server                    26477 passed, 31 skipped; 4 failed in 7 files: the same
+    five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+    container; DATA-010, MAPPE-004, NFR-002), and two tests that expected values under keys no field defines to
+    be kept (`http/contentInput`, `http/player.browser`), updated to the rule and passing (11 tests)</code></pre>
+</li>
 </ul>
 
 </section>
