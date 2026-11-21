@@ -1,5 +1,6 @@
 /**
- * Tests for learner pseudonyms: derivation, the academic-year boundary and missing secrets.
+ * Tests for learner pseudonyms: derivation, the academic-year boundary, missing secrets, and that a Canvas user's
+ * pseudonym belongs to one platform registration (D-129).
  *
  * Spec: DATA-002
  */
@@ -19,7 +20,12 @@ const SECRETS = parsePseudonymSecrets(
   `2025=${key2025.toString('base64')},2026=${key2026.toString('base64')}`,
 );
 const AUTUMN_2026 = new Date('2026-10-21T12:00:00Z');
-const LTI = { kind: 'lti', issuer: 'https://canvas.instructure.com', subject: 'a6d5c443-1f51-4783' } as const;
+const LTI = {
+  kind: 'lti',
+  issuer: 'https://canvas.instructure.com',
+  clientId: '10000000000001',
+  subject: 'a6d5c443-1f51-4783',
+} as const;
 
 describe('[DATA-002] academic year boundary', () => {
   it('[DATA-002] starts the academic year on 1 August, Oslo time', () => {
@@ -33,7 +39,7 @@ describe('[DATA-002] academic year boundary', () => {
 describe('[DATA-002] learner key derivation', () => {
   it('[DATA-002] is HMAC-SHA256 of the documented source string with the year secret', () => {
     const expected = createHmac('sha256', key2026)
-      .update('lti|https://canvas.instructure.com|a6d5c443-1f51-4783')
+      .update('lti|https://canvas.instructure.com|10000000000001|a6d5c443-1f51-4783')
       .digest('base64url');
     expect(deriveLearnerKey(LTI, SECRETS, AUTUMN_2026)).toBe(expected);
     expect(expected).toMatch(/^[A-Za-z0-9_-]{43}$/);
@@ -47,6 +53,27 @@ describe('[DATA-002] learner key derivation', () => {
     expect(deriveLearnerKey({ kind: 'feide', feideId: 'kari@hvl.no' }, SECRETS, AUTUMN_2026)).not.toBe(a);
   });
 
+  it('[DATA-002] the same sub under two registrations of one issuer gives two keys', () => {
+    // Arrange: every hosted Canvas sends this issuer; the client ID tells the registrations apart
+    const other = { ...LTI, clientId: '10000000000002' };
+    // Act
+    const keys = [deriveLearnerKey(LTI, SECRETS, AUTUMN_2026), deriveLearnerKey(other, SECRETS, AUTUMN_2026)];
+    // Assert
+    expect(keys[0]).not.toBe(keys[1]);
+    expect(pseudonymSource(other)).toBe(
+      'lti|https://canvas.instructure.com|10000000000002|a6d5c443-1f51-4783',
+    );
+  });
+
+  it("[DATA-002] no sub of one registration gives the text of another registration's user", () => {
+    // Arrange: a sub written to look like another registration's client ID and sub
+    const crafted = { ...LTI, clientId: '1', subject: '10000000000001|a6d5c443-1f51-4783' };
+    // Act
+    const sources = [pseudonymSource(crafted), pseudonymSource(LTI)];
+    // Assert
+    expect(sources[0]).not.toBe(sources[1]);
+  });
+
   it('[DATA-002] never contains the raw identity', () => {
     const key = deriveLearnerKey({ kind: 'feide', feideId: 'kari@hvl.no' }, SECRETS, AUTUMN_2026);
     expect(key).not.toContain('kari');
@@ -54,10 +81,11 @@ describe('[DATA-002] learner key derivation', () => {
   });
 
   it('[DATA-002] refuses ambiguous or empty sources', () => {
-    expect(() => pseudonymSource({ kind: 'lti', issuer: 'https://a|b', subject: 'c' })).toThrow(
-      'must not contain',
-    );
-    expect(() => pseudonymSource({ kind: 'lti', issuer: '', subject: 'c' })).toThrow('required');
+    expect(() => pseudonymSource({ ...LTI, issuer: 'https://a|b' })).toThrow('must not contain');
+    expect(() => pseudonymSource({ ...LTI, clientId: '1|2' })).toThrow('must not contain');
+    expect(() => pseudonymSource({ ...LTI, issuer: '' })).toThrow('required');
+    expect(() => pseudonymSource({ ...LTI, clientId: '' })).toThrow('required');
+    expect(() => pseudonymSource({ ...LTI, subject: '' })).toThrow('required');
     expect(() => pseudonymSource({ kind: 'feide', feideId: '' })).toThrow('empty');
   });
 

@@ -28,6 +28,7 @@ const rowOf = (id: string): string => DPIA.split('\n').find((line) => line.start
 /** A resource-link launch in a staff course (for example ALU's university pedagogy) with the given roles. */
 const launchWith = (roles: readonly string[]): LaunchFacts => ({
   issuer: 'https://canvas.example',
+  clientId: 'client-1',
   subject: 'opaque-canvas-sub',
   platformId: 'platform-1',
   deploymentId: 'deployment-1',

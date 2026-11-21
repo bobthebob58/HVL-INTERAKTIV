@@ -48,14 +48,10 @@ export function onDeepLinking(deps: DeepLinkingDeps): OnLaunchHandler {
     const roles = mapLtiRoles(facts.roles);
     // SECURITY: placing content in a course is an author action (LTI-004); learners never reach the picker.
     if (!canAuthor({ roles })) throw authError('hvl:deep-link-not-allowed');
-    const identity = { issuer: facts.issuer, subject: facts.subject, platformId: facts.platformId };
+    const { issuer, clientId, subject, platformId } = facts;
+    const identity = { issuer, clientId, subject, platformId };
     // WHY: linking first lets a first launch put its LTI identity straight on the teacher's Feide account (D-063).
-    const linked = await deps.link?.({
-      ...identity,
-      clientId: context.platform.clientId,
-      claims: context.rawIdToken,
-      roles,
-    });
+    const linked = await deps.link?.({ ...identity, claims: context.rawIdToken, roles });
     let account;
     try {
       account = await deps.accounts.atLaunch({ ...identity, roles });

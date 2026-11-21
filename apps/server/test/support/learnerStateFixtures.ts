@@ -35,7 +35,7 @@ export const SUB_B = 'f0e1d2c3-b4a5-4968-8776-5e4d3c2b1a09';
  * @returns The 43-character pseudonym.
  */
 export const learnerKeyOf = (subject: string): string =>
-  deriveLearnerKey({ kind: 'lti', issuer: ISSUER, subject }, SECRETS, AT);
+  deriveLearnerKey({ kind: 'lti', issuer: ISSUER, clientId: '10000000000001', subject }, SECRETS, AT);
 
 /**
  * A learnerKey for a fresh, random learner.

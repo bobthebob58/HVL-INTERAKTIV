@@ -81,7 +81,8 @@ export function accountLinker(
     if (!deps.linksFeide(request.issuer, request.clientId)) return undefined;
     const feideId = feideLoginFromLaunch(request.claims, request.roles);
     if (!feideId || !deps.allowedOrgs.includes(feideId.slice(feideId.lastIndexOf('@') + 1))) return undefined;
-    const ltiSource = identitySource({ kind: 'lti', issuer: request.issuer, subject: request.subject });
+    const { issuer, clientId, subject } = request;
+    const ltiSource = identitySource({ kind: 'lti', issuer, clientId, subject });
     const [{ identity: lti }, { identity: feide }] = await Promise.all([
       findIdentity(db, hasher, 'lti', ltiSource),
       findIdentity(db, hasher, 'feide', identitySource({ kind: 'feide', feideId })),

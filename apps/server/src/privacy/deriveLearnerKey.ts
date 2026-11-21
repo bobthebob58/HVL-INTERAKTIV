@@ -7,7 +7,9 @@
  * Spec: DATA-002
  * Invariants:
  *   - `learnerKey = HMAC-SHA256(secret[academicYear], source)`, base64url without padding (43 chars).
- *   - `source` is `feide|<feide-id>` or `lti|<iss>|<sub>`; the raw ID never leaves this function.
+ *   - `source` is `feide|<feide-id>` or `lti|<iss>|<client-id>|<sub>`; the raw ID never leaves this function.
+ *   - An LTI source names the platform registration (issuer and client ID), not the issuer alone: every hosted
+ *     Canvas shares one issuer, so two registrations with one issuer are two namespaces of `sub` (D-129).
  *   - No secret for the year → `MissingPseudonymSecretError`; there is no fallback secret.
  * Collaborators: ./academicYear.ts, ./pseudonymSecrets.ts; callers in auth (S3) and LTI launch (S3).
  * Tests: apps/server/test/privacy/deriveLearnerKey.test.ts
@@ -18,7 +20,7 @@ import type { PseudonymSecrets } from './pseudonymSecrets.js';
 
 /** The raw identity of a learner, as known only during one request. */
 export type LearnerSource =
-  { kind: 'feide'; feideId: string } | { kind: 'lti'; issuer: string; subject: string };
+  { kind: 'feide'; feideId: string } | { kind: 'lti'; issuer: string; clientId: string; subject: string };
 
 /** Thrown when no pseudonym secret is configured for the academic year in question. */
 export class MissingPseudonymSecretError extends Error {
@@ -37,18 +39,23 @@ export class MissingPseudonymSecretError extends Error {
 /**
  * Builds the HMAC input for a learner.
  * @param source - Feide or LTI identity.
- * @returns `feide|<id>` or `lti|<iss>|<sub>`.
- * @throws Error when a part is empty, or when the LTI issuer contains `|` (it would make inputs ambiguous).
+ * @returns `feide|<id>` or `lti|<iss>|<client-id>|<sub>`.
+ * @throws Error when a part is empty, or when the LTI issuer or client ID contains `|` (it would make inputs
+ *   ambiguous).
  */
 export function pseudonymSource(source: LearnerSource): string {
   if (source.kind === 'feide') {
     if (source.feideId === '') throw new Error('Feide ID is empty');
     return `feide|${source.feideId}`;
   }
-  if (source.issuer === '' || source.subject === '') throw new Error('LTI issuer and subject are required');
-  // WHY: `iss` is a URL and cannot contain "|", so `lti|iss|sub` splits unambiguously even if sub has "|".
-  if (source.issuer.includes('|')) throw new Error('LTI issuer must not contain "|"');
-  return `lti|${source.issuer}|${source.subject}`;
+  if (source.issuer === '' || source.clientId === '' || source.subject === '')
+    throw new Error('LTI issuer, client ID and subject are required');
+  // WHY: neither part before the `sub` may hold "|", so the text splits one way only, even if the sub has "|".
+  if (source.issuer.includes('|') || source.clientId.includes('|'))
+    throw new Error('LTI issuer and client ID must not contain "|"');
+  // SECURITY: the registration is part of the text, so a second platform that sends the same `iss` can never
+  // name a user of the first (D-129).
+  return `lti|${source.issuer}|${source.clientId}|${source.subject}`;
 }
 
 /**

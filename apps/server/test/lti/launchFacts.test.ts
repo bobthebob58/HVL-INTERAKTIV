@@ -34,6 +34,7 @@ describe('[LTI-006] launch facts', () => {
     // Act and assert
     expect(launchFactsOf(token({}, 'https://canvas.example/li/1'))).toEqual({
       issuer: 'https://canvas.example',
+      clientId: 'c',
       subject: 'sub-1',
       platformId: 'platform-1',
       deploymentId: '1:abc',

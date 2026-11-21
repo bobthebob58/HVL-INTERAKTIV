@@ -70,7 +70,13 @@ describeWithServices('[DATA-008] the data-subject CLI', () => {
   const kariInput = () =>
     JSON.stringify({
       feideId: `  ${fx.kari.feideId?.toUpperCase() ?? ''} `,
-      lti: [{ issuer: fx.kari.lti[0]?.issuer, sub: fx.kari.lti[0]?.subject }],
+      lti: [
+        {
+          issuer: fx.kari.lti[0]?.issuer,
+          clientId: fx.kari.lti[0]?.clientId,
+          sub: fx.kari.lti[0]?.subject,
+        },
+      ],
     });
   const identifiers = () => [fx.kari.feideId ?? '', fx.kari.lti[0]?.subject ?? ''];
 

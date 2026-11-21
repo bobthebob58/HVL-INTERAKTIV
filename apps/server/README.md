@@ -391,7 +391,7 @@ sequenceDiagram
     LJ->>DB: saveIdToken(claims)
     DB->>DB: deployment in LtiDeployment, else 403 page and no record (so no ltik), then store the claim allowlist for 24 h
     LJ->>RL: launch context + ltik (RS256, 24 h, names the record)
-    RL->>RL: account by keyed hash of iss + sub, learnerKey, roles (never admin), audit launch.lti.author for authors
+    RL->>RL: account by keyed hash of iss + client ID + sub, learnerKey, roles (never admin), audit launch.lti.author for authors
     RL->>RL: View check on custom.contentId (unknown, draft or invisible → the one 404 page), record LtiPlacement
     RL-->>B: 302 /app/play?ltik=… when the web app runs, else 302 /lti/play?ltik=… (context.redirect)
     Note over B,P: With the web app, the LTI router resolves the ltik of /app/play (View check, launch facts in x-hvli-launch). The Next.js page takes the ltik from the address bar, keeps it in memory and frames /lti/play?ltik=… on the same origin
@@ -421,7 +421,7 @@ sequenceDiagram
     DL->>LK: custom.feide_login from the in-memory claims (authors only, "$…" ignored, never stored)
     LK->>LK: D-063, only for a platform with feideLinking true and a Feide ID in ALLOWED_FEIDE_ORGS. The LTI identity joins the existing Feide account of a non-learner (audit link.feide-lti), or moves there only when its account owns and co-authors nothing. A learner's Feide account, a Feide account that already holds another person's identity from this platform, or a Canvas account that owns content is refused (link.conflict) and nothing changes. No Feide account, no link
     LK-->>DL: the outcome (linking records nothing itself)
-    DL->>DL: account for iss + sub, audit launch.lti.author, then the outcome: a refusal on the claimant's own account, a link on the account the launch now uses (the Feide account), and without an actor if the launch fails after linking
+    DL->>DL: account for iss + client ID + sub, audit launch.lti.author, then the outcome: a refusal on the claimant's own account, a link on the account the launch now uses (the Feide account), and without an actor if the launch fails after linking
     DL-->>B: 302 /lti/deeplink?ltik=…
     B->>PK: GET /lti/deeplink?ltik=…
     PK->>PK: resolveLtik, then: a Deep Linking ltik of an author, deep_link_return_url absolute http(s) (else 403)
@@ -494,7 +494,7 @@ sequenceDiagram
     participant Year as academicYearOf
     participant Secrets as PSEUDONYM_SECRETS
     participant DB as PostgreSQL
-    Launch->>Derive: {kind: 'lti', issuer, subject}, secrets, now
+    Launch->>Derive: {kind: 'lti', issuer, clientId, subject}, secrets, now
     Derive->>Year: now
     Year-->>Derive: 2026 (from 1 August, Oslo time)
     Derive->>Secrets: get(2026)
@@ -502,7 +502,7 @@ sequenceDiagram
         Secrets-->>Derive: undefined → MissingPseudonymSecretError
     else
         Secrets-->>Derive: 32+ random bytes
-        Derive->>Derive: HMAC-SHA256(secret, "lti|iss|sub") → base64url
+        Derive->>Derive: HMAC-SHA256(secret, "lti|iss|client-id|sub") → base64url
         Derive-->>Launch: learnerKey (43 characters)
         Launch->>DB: H5PUserData / XapiStatement keyed by learnerKey only
     end

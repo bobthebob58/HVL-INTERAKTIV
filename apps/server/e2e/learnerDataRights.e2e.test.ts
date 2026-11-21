@@ -100,7 +100,8 @@ describeWithRealWebApp(
       const seeded = await seedEndedYear(db, contentId, contextId, now);
       const operator = await seedOperator(db);
       const env = operationsEnv(deployed.urls.hvli_app, operator);
-      const subject = JSON.stringify({ lti: [{ issuer: app.tb.mock.canvas.issuer, sub: student.sub }] });
+      const { issuer, clientId } = app.tb.mock.canvas;
+      const subject = JSON.stringify({ lti: [{ issuer, clientId, sub: student.sub }] });
       const dsr = (args: string[]) =>
         runServerCli('privacy:dsr', [...args, '--operator', operator], env, subject);
 

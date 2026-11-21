@@ -33,7 +33,7 @@ import { findIdentity } from './identityLookup.js';
 export interface AccountRequest {
   /** Feide login or LTI launch. */
   readonly provider: 'feide' | 'lti';
-  /** The identity source text (`feide|<id>` or `lti|<iss>|<sub>`); hashed, never stored. */
+  /** The identity source text (`feide|<id>` or `lti|<iss>|<client-id>|<sub>`); hashed, never stored. */
   readonly source: string;
   /** For LTI identities, the `LtiPlatform.id`. */
   readonly platformId?: string;

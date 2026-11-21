@@ -97,6 +97,7 @@ export async function resolveLtik(deps: LtikResolverDeps, ltik: string): Promise
     throw authError('hvl:ltik-invalid');
   const account = await deps.accounts.forRequest({
     issuer: facts.issuer,
+    clientId: facts.clientId,
     subject: facts.subject,
     platformId: facts.platformId,
     roles: mapLtiRoles(facts.roles),

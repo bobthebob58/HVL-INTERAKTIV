@@ -85,7 +85,7 @@ export function linkingFixture(db: Database, hasher: IdentityHasher) {
     async ltiAccount(subject: string, by = hasher): Promise<string | undefined> {
       const hashes = by.candidates(
         'identity-subject',
-        identitySource({ kind: 'lti', issuer: ISSUER, subject }),
+        identitySource({ kind: 'lti', issuer: ISSUER, clientId: 'guard', subject }),
       );
       const row = await db.identity.findFirst({
         where: { provider: 'lti', subjectHash: { in: hashes.map((c) => c.hash) } },

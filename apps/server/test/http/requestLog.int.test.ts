@@ -35,7 +35,7 @@ describeWithServices('[NFR-006] the request log in the whole app', () => {
     });
     ltik = launch.ltik ?? '';
     learnerKey = deriveLearnerKey(
-      { kind: 'lti', issuer: tb.mock.canvas.issuer, subject: sub },
+      { kind: 'lti', issuer: tb.mock.canvas.issuer, clientId: tb.mock.canvas.clientId, subject: sub },
       tb.env.PSEUDONYM_SECRETS,
     );
     const statements =

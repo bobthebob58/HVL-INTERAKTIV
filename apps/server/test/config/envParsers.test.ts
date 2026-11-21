@@ -154,6 +154,25 @@ describe('[LTI-001] LTI_PLATFORMS', () => {
     }
   });
 
+  it('[LTI-001] refuses a bar or a control character in an issuer or a client ID, where a Canvas identity starts', () => {
+    // Arrange
+    const withBar = [
+      { ...PLATFORM, clientId: '10000000000001|x' },
+      { ...PLATFORM, issuer: 'https://canvas.instructure.com/a|b' },
+      { ...PLATFORM, clientId: '10000000000001\t' },
+    ];
+    // Act
+    const problems = withBar.map(
+      (platform) => envProblems({ ...VALID_ENV, LTI_PLATFORMS: JSON.stringify([platform]) })[0],
+    );
+    // Assert
+    expect(problems).toEqual([
+      'LTI_PLATFORMS.0.clientId: must not contain "|" or a control character',
+      'LTI_PLATFORMS.0.issuer: must not contain "|" or a control character',
+      'LTI_PLATFORMS.0.clientId: must not contain "|" or a control character',
+    ]);
+  });
+
   it('[LTI-001] allows one issuer with several client IDs (every hosted Canvas shares one issuer)', () => {
     const two = [PLATFORM, { ...PLATFORM, clientId: '10000000000002' }];
     expect(loadEnv({ ...VALID_ENV, LTI_PLATFORMS: JSON.stringify(two) }).LTI_PLATFORMS).toHaveLength(2);

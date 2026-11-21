@@ -24,7 +24,8 @@ const secrets = new Map([
 ]);
 const ring = parseKeyring(`b=${randomBytes(32).toString('base64')},a=${randomBytes(32).toString('base64')}`);
 const hasher = new IdentityHasher(ring);
-const subject = { feideId: 'kari@hvl.no', lti: [{ issuer: ISS, subject: 's-1' }] };
+const KEY = '10000000000001';
+const subject = { feideId: 'kari@hvl.no', lti: [{ issuer: ISS, clientId: KEY, subject: 's-1' }] };
 
 describe('[DATA-008] deriveSubjectKeys', () => {
   it('[DATA-008] derives one key per configured year and identifier, the key a login or launch in that year made', () => {
@@ -35,7 +36,7 @@ describe('[DATA-008] deriveSubjectKeys', () => {
       new Date('2025-07-31T22:00:00Z'),
     );
     const launch2026 = deriveLearnerKey(
-      { kind: 'lti', issuer: ISS, subject: 's-1' },
+      { kind: 'lti', issuer: ISS, clientId: KEY, subject: 's-1' },
       secrets,
       new Date('2027-05-02T08:00:00Z'),
     );
@@ -58,7 +59,7 @@ describe('[DATA-008] deriveSubjectKeys', () => {
   it('[DATA-008] hashes each identifier under every identity key, so an identity from before a rotation is found', () => {
     // Arrange
     const older = new IdentityHasher(parseKeyring(`a=${ring.keys[1]?.secret.toString('base64') ?? ''}`));
-    const source = identitySource({ kind: 'lti', issuer: ISS, subject: 's-1' });
+    const source = identitySource({ kind: 'lti', issuer: ISS, clientId: KEY, subject: 's-1' });
     // Act
     const keys = deriveSubjectKeys(subject, secrets, hasher);
     // Assert

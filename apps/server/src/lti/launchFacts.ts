@@ -9,6 +9,8 @@
  *   - `contextId` is the Canvas course (`launch.context.id`), never ltijs's `LaunchContext.contextId`.
  *   - `contentId` is set only when `custom.contentId` is a UUID; anything else counts as missing.
  *   - The `sub` is returned for hashing in memory only; callers never store or log it.
+ *   - `clientId` is the registered platform's client ID, which ltijs writes on the stored token after it validated
+ *     the launch; with `issuer` it names the registration a `sub` belongs to (D-129).
  *   - `testUser` is true only for the LTI `TestUser` role (Canvas's Student View), so its statements are flagged
  *     and left out of insight and the mappe (D-102's amendment of 2026-11-04).
  * Collaborators: ./ltikPrincipal.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts, ./LtiRoleMapper.ts,
@@ -23,6 +25,8 @@ import { isLtiTestUser } from './LtiRoleMapper.js';
 export interface LaunchFacts {
   /** The platform's issuer (`iss`). */
   readonly issuer: string;
+  /** The client ID of the registration the launch was validated against (ltijs sets it, never the token). */
+  readonly clientId: string;
   /** The user's `sub` (in memory only). */
   readonly subject: string;
   /** `LtiPlatform.id`. */
@@ -60,6 +64,7 @@ export function launchFactsOf(idToken: IdToken): LaunchFacts {
   const lineItemUrl = text(idToken.services.assignmentAndGrades.lineItemId);
   return {
     issuer: idToken.platform.url,
+    clientId: idToken.platform.clientId,
     subject: idToken.user.id,
     platformId: idToken.platform.id,
     deploymentId: idToken.platform.deploymentId,

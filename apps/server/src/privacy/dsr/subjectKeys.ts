@@ -98,7 +98,7 @@ export function deriveSubjectKeys(
     ...subject.lti.map((one, index) => ({
       variant: 'lti' as const,
       ltiIndex: index + 1,
-      id: { kind: 'lti' as const, issuer: one.issuer, subject: one.subject },
+      id: { kind: 'lti' as const, issuer: one.issuer, clientId: one.clientId, subject: one.subject },
     })),
   ];
   const pseudonyms = years.flatMap((academicYear) =>

@@ -41,7 +41,7 @@ export interface LtiLinkedAccount extends LinkedAccount {
 
 /** What exists for the two identities of one author. */
 export interface LinkSituation {
-  /** The account of the LTI identity (`lti|<iss>|<sub>`), or undefined when that identity does not exist yet. */
+  /** The account of the LTI identity (`lti|<iss>|<client-id>|<sub>`), or undefined when that identity does not exist yet. */
   readonly lti: LtiLinkedAccount | undefined;
   /** The account of the Feide identity for the `feide_login` Feide ID, or undefined when there is none. */
   readonly feide: LinkedAccount | undefined;
