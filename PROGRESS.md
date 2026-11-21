@@ -2276,3 +2276,48 @@ Append one entry per session: date, session, what was done, gate output, and any
       five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
       container; DATA-010, MAPPE-004, NFR-002)
   ```
+- **2026-11-21 · Security repairs, step 12 (D-128)** — New activities, the planner and the mappe have a limit per
+  person, and the planner and the mappe do their work in bounded portions. Three repairs, one commit each; every
+  new test fails on the code before and passes after:
+  - Limits (PROD-007, PED-031, MAPPE-001): per person per ten minutes, 60 new activities (the editor's and the
+    patterns' together), 120 planner requests, 120 mappe previews and exports together; past a limit 429
+    `hvl:rate-limited` with `Retry-After`. `http/h5pRouteLimits.ts`, `learningDesign/http/studioRouteLimits.ts`
+    (new); the counters are in `docs/privacy/DATA-INVENTORY.md` and the 429s in the contract's route lists. Tests:
+    `http/creationLimit.int.test.ts`, `learningDesign/http/studioRouteLimits.int.test.ts`.
+  - Planner (PED-031): `plannerGrid.ts` builds the grid in one pass; `plannerSource.ts` reads the 300 most
+    recently changed activities of the course, and the answer's new `moreActivities` says when there are more; the
+    page then says how many it shows (nn, nb, en). Tests: `plannerGrid.test.ts`, `plannerRoutes.int.test.ts`,
+    `PlannerView.test.tsx`, and an axe scan of the planner with its note (`axeStudioViews.a11y.test.ts`).
+  - Mappe (MAPPE-001, MAPPE-002): the selected activities are listed without their parameters, and each
+    activity's parameters are read, checked and let go before the next one's; the universal design status lists
+    the first 50 findings of an activity and says so when there are more. Tests: `mappeOneAtATime.test.ts`,
+    `mappeView.test.ts`.
+  - Screenshots of the planner with its note in nn at 1280 px and 390 px were sent to the owner (none committed).
+  - D-128 added; PED-031, MAPPE-001 and MAPPE-002 in spec 04 have an "Amended" line; `content/mappe/README.md`
+    names the 50; `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       625 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     529 passed
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ npm run test:a11y                                  561 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26691 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```

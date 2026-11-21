@@ -14599,6 +14599,51 @@ $ npx vitest run --project server                    26679 passed, 31 skipped; 2
     five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
     container; DATA-010, MAPPE-004, NFR-002)</code></pre>
 </li>
+<li><p><strong>2026-11-21 · Security repairs, step 12 (D-128)</strong> — New activities, the planner and the mappe have a limit per
+person, and the planner and the mappe do their work in bounded portions. Three repairs, one commit each; every
+new test fails on the code before and passes after:</p>
+<ul>
+<li>Limits (PROD-007, PED-031, MAPPE-001): per person per ten minutes, 60 new activities (the editor&#39;s and the
+patterns&#39; together), 120 planner requests, 120 mappe previews and exports together; past a limit 429
+<code>hvl:rate-limited</code> with <code>Retry-After</code>. <code>http/h5pRouteLimits.ts</code>, <code>learningDesign/http/studioRouteLimits.ts</code>
+(new); the counters are in <code>docs/privacy/DATA-INVENTORY.md</code> and the 429s in the contract&#39;s route lists. Tests:
+<code>http/creationLimit.int.test.ts</code>, <code>learningDesign/http/studioRouteLimits.int.test.ts</code>.</li>
+<li>Planner (PED-031): <code>plannerGrid.ts</code> builds the grid in one pass; <code>plannerSource.ts</code> reads the 300 most
+recently changed activities of the course, and the answer&#39;s new <code>moreActivities</code> says when there are more; the
+page then says how many it shows (nn, nb, en). Tests: <code>plannerGrid.test.ts</code>, <code>plannerRoutes.int.test.ts</code>,
+<code>PlannerView.test.tsx</code>, and an axe scan of the planner with its note (<code>axeStudioViews.a11y.test.ts</code>).</li>
+<li>Mappe (MAPPE-001, MAPPE-002): the selected activities are listed without their parameters, and each
+activity&#39;s parameters are read, checked and let go before the next one&#39;s; the universal design status lists
+the first 50 findings of an activity and says so when there are more. Tests: <code>mappeOneAtATime.test.ts</code>,
+<code>mappeView.test.ts</code>.</li>
+<li>Screenshots of the planner with its note in nn at 1280 px and 390 px were sent to the owner (none committed).</li>
+<li>D-128 added; PED-031, MAPPE-001 and MAPPE-002 in spec 04 have an &quot;Amended&quot; line; <code>content/mappe/README.md</code>
+names the 50; <code>TRACEABILITY.md</code> and the spec site regenerated. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 32, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       625 passed
+$ npx vitest run --project api-contract              97 passed
+$ npx vitest run --project tools                     529 passed
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             202 passed
+$ npm run test:a11y                                  561 passed (18 files)
+$ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    26691 passed, 31 skipped; 2 failed in 5 files: the same
+    five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+    container; DATA-010, MAPPE-004, NFR-002)</code></pre>
+</li>
 </ul>
 
 </section>
