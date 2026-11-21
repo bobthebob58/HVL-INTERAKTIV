@@ -14721,6 +14721,56 @@ $ npx vitest run --project server                    26691 passed, 31 skipped; 2
     five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
     container; DATA-010, MAPPE-004, NFR-002)</code></pre>
 </li>
+<li><p><strong>2026-11-21 · Security repairs, step 13 (D-129)</strong> — A person from Canvas is known per platform registration,
+and launch input no platform sends is refused with 400. Two repairs, one commit each; every new test fails on
+the code before and passes after:</p>
+<ul>
+<li>Identity (DATA-002, LTI-001, DATA-008, AUTH-005): the text the account hash and the learner pseudonym are
+derived from is <code>lti|&lt;iss&gt;|&lt;client-id&gt;|&lt;sub&gt;</code>, with the client ID of the registration the launch was
+validated against, in the launch, in a resumed request, in account linking and in the data-subject tool,
+whose input for a Canvas identity is now <code>{&quot;issuer&quot;, &quot;clientId&quot;, &quot;sub&quot;}</code>. <code>LTI_PLATFORMS</code> refuses an issuer or
+a client ID with <code>|</code> or a control character. Only test data existed (owner, 2026-11-21), so nothing is
+converted: the migration <code>20261121190000_lti_identity_per_registration</code> removes the Canvas identity rows made
+from the earlier text. Tests: <code>privacy/deriveLearnerKey.test.ts</code>, <code>auth/identity/subjectSources.test.ts</code>,
+<code>lti/launch/ltiAccount.int.test.ts</code> (two registrations of one issuer), <code>lti/launch/ltiIdentityTexts.test.ts</code>
+(the launch, linking and the tool derive one text), <code>lti/launch/onDeepLinking.test.ts</code>,
+<code>privacy/dsr/dataSubject.test.ts</code>, <code>config/envParsers.test.ts</code>.</li>
+<li>Launch input (LTI-001, PROD-012, NFR-006): <code>lti/ltiInputText.ts</code> (new). A query or form field of the login
+and launch routes with a control character, a <code>sub</code> with one, or a stored claim the database cannot hold is
+400 <code>hvl:launch-malformed</code> with the «could not be opened from Canvas» page and a warning in the log, where
+it was a 500 and an error line; an issuer, client ID or nonce that no row could hold is &quot;not found&quot;. A
+description on several lines still launches. Tests: <code>lti/ltiInputText.test.ts</code>,
+<code>lti/ltiMalformedInput.int.test.ts</code>, <code>lti/http/ExpressRouterHttpHandler.test.ts</code>,
+<code>lti/storage/ltiStorageRows.test.ts</code>.</li>
+<li>D-129 added; LTI-001 in spec 02 and DATA-002 and DATA-008 in spec 05 have an &quot;Amended&quot; line; the data
+inventory, the DPIA input and <code>docs/ops/data-subject-requests.md</code> name the client ID; <code>TRACEABILITY.md</code> and
+the spec site regenerated. No page of the web app changed. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 33, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       625 passed
+$ npx vitest run --project api-contract              97 passed
+$ npx vitest run --project tools                     529 passed
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             202 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests). The first of two full runs also failed one
+    assertion of journeyGovernance (PED-011: which requests a visitor's page makes), which passed alone
+    and in the second run
+$ npx vitest run --project server                    26741 passed, 31 skipped; 2 failed in 5 files: the same
+    five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+    container; DATA-010, MAPPE-004, NFR-002)</code></pre>
+</li>
 </ul>
 
 </section>
