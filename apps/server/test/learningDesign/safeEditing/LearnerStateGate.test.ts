@@ -1,12 +1,13 @@
 /**
- * Unit tests for the editor's learner-state step: which saves keep state, which ask first, which reset it, and
- * whose state counts as someone else's.
+ * Unit tests for the editor's learner-state step: which saves keep state, which ask first, which reset it,
+ * whose state counts as someone else's, and that a stored version past the limits (D-126) is not compared.
  *
  * Spec: PROD-013
  */
 import type { IUser } from '@lumieducation/h5p-server';
 import { describe, expect, it } from 'vitest';
 import { asAccountUser } from '../../../src/h5p/HvlH5pUser.js';
+import { CONTENT_LIMITS } from '../../../src/h5p/semantics/contentBudget.js';
 import { claimLearnerStateReset } from '../../../src/h5p/storage/learnerStateResetWrite.js';
 import {
   LearnerStateGate,
@@ -21,12 +22,12 @@ const METADATA = {
 };
 
 /** A gate on a stored MultiChoice whose other learners have state when `othersHaveState`. */
-function gateWith(othersHaveState: boolean) {
+function gateWith(othersHaveState: boolean, stored: object = STORED) {
   const asked: (string | undefined)[] = [];
   const resets: string[] = [];
   const gate = new LearnerStateGate(
     {
-      getContentParameters: async () => STORED,
+      getContentParameters: async () => stored,
       getContentMetadata: async () => METADATA as never,
     } as never,
     {
@@ -86,6 +87,19 @@ describe('[PROD-013] LearnerStateGate', () => {
       results: ['claimed', 'unclaimed'],
       resets: [[], ['c1']],
     });
+  });
+
+  it('[PROD-013] a stored version past the limits for one activity is not compared: the save counts as structural', async () => {
+    // Arrange: the same answers, and a text no save can have stored (D-126)
+    const oversized = { ...STORED, question: 'a'.repeat(CONTENT_LIMITS.textLength + 1) };
+    const asking = gateWith(true, oversized);
+    const alone = gateWith(false, oversized);
+    // Act
+    const refused = await asking.save(STORED, author).catch((error: unknown) => error);
+    await alone.save(STORED, author);
+    // Assert
+    expect(refused).toMatchObject({ status: 409, errorCode: 'hvl:learner-state-reset-needed' });
+    expect([asking.resets, alone.resets]).toEqual([[], ['c1']]);
   });
 
   it('[PROD-013] counts every row as someone else’s when the saver is not a user it can read a learnerKey from', async () => {

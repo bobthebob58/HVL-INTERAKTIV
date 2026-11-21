@@ -8,9 +8,13 @@
  * Spec: H5P-002, SEC-008
  * Invariants:
  *   - Matches exactly what Lumi matches: a key `library` whose value is a string matching `/.+ \d+\.\d+/`.
+ *   - That is tested with a pattern that reads each character a fixed number of times: Lumi's own, starting with
+ *     `.+`, tries every start for every space (D-126). ./contentBudget.ts keeps such a string to 255 characters
+ *     before Lumi's copy of the pattern reads it.
  *   - Iterative, so deeply nested parameters cannot overflow the stack.
  * Collaborators: ./SubContentPolicy.ts.
- * Tests: apps/server/test/h5p/semantics/SubContentPolicy.test.ts
+ * Tests: apps/server/test/h5p/semantics/libraryReferences.test.ts,
+ *   apps/server/test/h5p/semantics/SubContentPolicy.test.ts
  */
 
 /** One `library` value and the object that holds it. */
@@ -23,7 +27,17 @@ export interface LibraryReference {
 
 // UPSTREAM: the same pattern as https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/H5PEditor.ts (findLibrariesInParameters).
 // Keep it in step with Lumi; remove the check (D-039) when Lumi collects only libraries the semantics reach.
-const LUMI_LIBRARY_VALUE = /.+ \d+\.\d+/;
+// WHY: `.+ \d+\.\d+` matches somewhere exactly when a space follows a character that ends no line and is followed
+// by digits, a dot and a digit, which this pattern says without the leading `.+`.
+const LUMI_LIBRARY_VALUE = /[^\n\r\u2028\u2029] \d+\.\d/;
+
+/**
+ * Tells whether Lumi would take a `library` value for a library and its version.
+ * @param value - A string under a key named `library`.
+ * @returns True when Lumi's pattern `/.+ \d+\.\d+/` matches the value.
+ * @spec H5P-002
+ */
+export const namesLibraryVersion = (value: string): boolean => LUMI_LIBRARY_VALUE.test(value);
 
 /**
  * Lists every library reference Lumi would collect from the parameters.
@@ -38,7 +52,7 @@ export function findLibraryReferences(params: unknown): LibraryReference[] {
     if (typeof node !== 'object' || node === null) continue;
     for (const [key, value] of Object.entries(node)) {
       if (key === 'library' && typeof value === 'string') {
-        if (LUMI_LIBRARY_VALUE.test(value)) found.push({ owner: node, library: value });
+        if (namesLibraryVersion(value)) found.push({ owner: node, library: value });
       } else {
         pending.push(value);
       }

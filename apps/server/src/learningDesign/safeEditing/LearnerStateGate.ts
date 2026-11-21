@@ -21,8 +21,11 @@
  *     Lumi's save never leaves the new structure with the old state. A storage without that hook gets
  *     ./PrismaLearnerStateStore.ts's own transaction right after the write. Deleting all, not only the saver's,
  *     also removes rows that another learner's old page wrote between `admit` and the save.
- *   - The stored side is read with the saver's rights through Lumi's ContentManager, as the editor reads it.
+ *   - The stored side is read with the saver's rights through Lumi's ContentManager, as the editor reads it. A
+ *     stored version past the limits for one activity (../../h5p/semantics/contentBudget.ts, D-126) is not
+ *     compared: the save counts as structural.
  * Collaborators: ./structureSignature.ts, ./structuralChange.ts, ./PrismaLearnerStateStore.ts,
+ *   ../../h5p/semantics/contentBudget.ts,
  *   ../../h5p/storage/learnerStateResetWrite.ts, ../../h5p/HvlH5PEditor.ts (calls it),
  *   ../../content/storedContent.ts (`mainLibraryUbername`),
  *   ../../http/learningDesignErrors.ts.
@@ -33,6 +36,7 @@
 import type { H5PEditor, IUser } from '@lumieducation/h5p-server';
 import { mainLibraryUbername } from '../../content/storedContent.js';
 import { asStateUser, isHvlH5pUser } from '../../h5p/HvlH5pUser.js';
+import { contentLimitPassed } from '../../h5p/semantics/contentBudget.js';
 import { withLearnerStateReset } from '../../h5p/storage/learnerStateResetWrite.js';
 import { learningDesignError } from '../../http/learningDesignErrors.js';
 import { structuralDifference } from './structuralChange.js';
@@ -116,8 +120,12 @@ export class LearnerStateGate {
     // case would find no row and refuse the save with 403.
     const stored = await this.content.getContentParameters(contentId, user);
     const metadata = await this.content.getContentMetadata(contentId, user);
-    const before = structureSignature(stored, mainLibraryUbername(metadata.mainLibrary, metadata));
-    if (structuralDifference(before, structureSignature(params, mainLibrary)) === null) return KEEP_STATE;
+    // WHY: a stored version past the limits for one activity (a row no save wrote, D-126) is not read further:
+    // the save counts as structural, which asks before anyone's progress is reset.
+    const comparable = contentLimitPassed(stored) === undefined;
+    const before = () => structureSignature(stored, mainLibraryUbername(metadata.mainLibrary, metadata));
+    if (comparable && structuralDifference(before(), structureSignature(params, mainLibrary)) === null)
+      return KEEP_STATE;
     const confirmed = choice.confirmLearnerStateReset === true;
     // PRIVACY: only whether someone else has progress is read and answered, never who or how many (D-093).
     if (!confirmed && (await this.store.hasOtherLearnersState(contentId, ownLearnerKey(user)))) {

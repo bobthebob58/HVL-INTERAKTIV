@@ -41,4 +41,25 @@ describe('[PROD-013] dragTextWords', () => {
     ]);
     expect(dragTextWords(undefined)).toEqual([]);
   });
+
+  it('[PROD-013] a word loses the white space at its end, of every kind, and keeps the rest', () => {
+    // Arrange: a space, a tab and a no-break space after the first word; spaces inside and after the second
+    const text = '*ord \t\u00a0* og *to  ord  *';
+    // Act
+    const words = dragTextWords(text);
+    // Assert
+    expect(words).toEqual(['ord', 'to ord']);
+  });
+
+  it('[PROD-013] a long run of spaces inside a word is read in time that follows its length', () => {
+    // Arrange: 30 000 spaces before the last letter of one drop zone
+    const text = `Tekst *a${' '.repeat(30_000)}b* slutt.`;
+    // Act
+    const started = performance.now();
+    const words = dragTextWords(text);
+    const elapsed = performance.now() - started;
+    // Assert
+    expect(words).toEqual(['a b']);
+    expect(elapsed).toBeLessThan(250);
+  });
 });

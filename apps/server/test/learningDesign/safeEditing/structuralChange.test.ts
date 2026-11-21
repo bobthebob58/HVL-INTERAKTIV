@@ -35,6 +35,22 @@ describe('[PROD-013] isListStructural', () => {
   });
 });
 
+describe('[PROD-013] isListStructural on long lists', () => {
+  it('[PROD-013] two long lists, reworded throughout or with two texts swapped, are compared in time that follows their length', () => {
+    // Arrange: 20 000 texts each
+    const before = Array.from({ length: 20_000 }, (_, at) => `Alternativ ${String(at)}`);
+    const reworded = before.map((text) => `${text}, betre sagt`);
+    const swapped = [...reworded.slice(0, -2), before[1] ?? '', before[0] ?? ''];
+    // Act
+    const started = performance.now();
+    const results = [isListStructural(before, reworded), isListStructural(before, swapped)];
+    const elapsed = performance.now() - started;
+    // Assert
+    expect(results).toEqual([false, true]);
+    expect(elapsed).toBeLessThan(250);
+  });
+});
+
 describe('[PROD-013] structuralDifference', () => {
   it('[PROD-013] is null for a text-only edit: question, feedback and an option reworded in place', () => {
     const after = choice('Ja, heilt sikkert', 'Nei');

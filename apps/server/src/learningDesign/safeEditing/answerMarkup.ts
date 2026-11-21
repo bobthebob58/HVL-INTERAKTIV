@@ -75,7 +75,8 @@ function dragTextWord(part: string): string {
   text = withoutMatches(text, DRAG_TIP, part);
   text = withoutMatches(text, DRAG_CORRECT, part);
   text = withoutMatches(text, DRAG_INCORRECT, part);
-  return plainTextOfValue(text.replace(/\s+$/, ''));
+  // WHY: `trimEnd` removes what H5P.DragText's `/\s+$/` removes, in time that follows the text's length.
+  return plainTextOfValue(text.trimEnd());
 }
 
 /**

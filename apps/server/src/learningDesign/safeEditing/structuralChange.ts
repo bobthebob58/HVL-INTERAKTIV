@@ -41,7 +41,9 @@ export interface StructuralDifference {
  */
 export function isListStructural(before: readonly string[], after: readonly string[]): boolean {
   if (before.length !== after.length) return true;
-  return after.some((text, index) => text !== before[index] && before.includes(text));
+  // WHY: a set, so two long lists are compared in time that follows their length, not its square.
+  const old = new Set(before);
+  return after.some((text, index) => text !== before[index] && old.has(text));
 }
 
 const sameNode = (a: SignatureNode, b: SignatureNode): boolean =>
