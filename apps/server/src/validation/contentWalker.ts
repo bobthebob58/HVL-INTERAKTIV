@@ -16,7 +16,7 @@
  * Tests: apps/server/test/validation/contentWalker.test.ts
  */
 import { machineNameOf, mainMachineNameOf } from './contentKinds.js';
-import { isWithin, pathOf } from './contentPath.js';
+import { pathOf } from './contentPath.js';
 import { asObject, asString, type ParamObject } from './paramReaders.js';
 import { parseRichText, type RichText } from './richText.js';
 
@@ -116,14 +116,4 @@ export function walkContent(mainLibrary: string, params: unknown): readonly Cont
   const state: WalkState = { nodes: [], seen: new WeakSet() };
   visitNode(mainLibrary, mainMachineNameOf(mainLibrary), params, '', state, 0);
   return state.nodes;
-}
-
-/**
- * The nodes at or below a path, e.g. everything inside one InteractiveBook chapter.
- * @param nodes - All nodes from `walkContent`.
- * @param paramsPath - The `path` of the enclosing node.
- * @returns The enclosing node and its descendants, in walk order.
- */
-export function nodesWithin(nodes: readonly ContentNode[], paramsPath: string): readonly ContentNode[] {
-  return nodes.filter((node) => isWithin(node.path, paramsPath));
 }

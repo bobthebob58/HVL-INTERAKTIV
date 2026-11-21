@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { isOlderThan, machineNameOf, mainMachineNameOf } from '../../src/validation/contentKinds.js';
 import { comparePaths, isWithin, pathOf } from '../../src/validation/contentPath.js';
-import { nodesWithin, walkContent } from '../../src/validation/contentWalker.js';
+import { walkContent } from '../../src/validation/contentWalker.js';
 
 const sub = (library: string, params: unknown) => ({
   library,
@@ -79,14 +79,6 @@ describe('[UD-020] contentWalker', () => {
     const strings = walkContent('H5P.X 1.0', { cyclic, deep }).flatMap((n) => n.strings);
     // Assert
     expect(strings.map((s) => s.path)).toEqual(['cyclic.text']);
-  });
-
-  it('[UD-020] lists the nodes inside a path, e.g. one InteractiveBook chapter', () => {
-    const nodes = walkContent('H5P.Column 1.18', nested);
-    expect(nodesWithin(nodes, 'content[1].content.params').map((n) => n.machineName)).toEqual([
-      'H5P.QuestionSet',
-      'H5P.TrueFalse',
-    ]);
   });
 });
 

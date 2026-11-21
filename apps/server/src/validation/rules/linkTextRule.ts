@@ -9,6 +9,8 @@
  *   - Links in every authored rich-text field are checked, and `H5P.Link` sub-content, whose title is the link
  *     text (an empty title shows the bare URL).
  *   - Texts are compared in lower case, without surrounding punctuation; one finding per field.
+ *   - The punctuation around a text is found by stepping over its characters once from each end, so a long
+ *     text is judged in time that follows its length (D-127).
  * Collaborators: ../richText.ts (links), ../contentWalker.ts (authored strings).
  * Tests: apps/server/test/validation/rules/linkTextRule.test.ts
  */
@@ -35,16 +37,32 @@ const VAGUE: ReadonlySet<string> = new Set([
 ]);
 const BARE_URL = /^(?:https?:\/\/|www\.)\S+$/i;
 
+const LETTER_OR_DIGIT = /^[\p{L}\p{N}]$/u;
+const isLetterOrDigit = (character: string | undefined): boolean =>
+  character !== undefined && LETTER_OR_DIGIT.test(character);
+
+/**
+ * A text without the punctuation around it.
+ * @param text - A link text in lower case.
+ * @returns The text from its first letter or digit to its last letter, digit or `/`; '' when it has none.
+ */
+function withoutSurroundingPunctuation(text: string): string {
+  const characters = [...text];
+  let start = 0;
+  while (start < characters.length && !isLetterOrDigit(characters[start])) start += 1;
+  let end = characters.length;
+  // WHY: a `/` at the end stays, so «hvl.no/» is not taken for the word before it.
+  while (end > start && characters[end - 1] !== '/' && !isLetterOrDigit(characters[end - 1])) end -= 1;
+  return characters.slice(start, end).join('');
+}
+
 /**
  * Judges one link text.
  * @param text - The link text (plain).
  * @returns `vague` or `bareUrl` for a poor link text, `undefined` for a good one.
  */
 export function linkTextProblem(text: string): 'vague' | 'bareUrl' | undefined {
-  const normalised = text
-    .trim()
-    .toLowerCase()
-    .replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}/]+$/gu, '');
+  const normalised = withoutSurroundingPunctuation(text.trim().toLowerCase());
   if (BARE_URL.test(text.trim()) || normalised === '') return 'bareUrl';
   return VAGUE.has(normalised) ? 'vague' : undefined;
 }
