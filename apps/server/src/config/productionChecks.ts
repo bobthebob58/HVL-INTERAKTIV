@@ -20,7 +20,9 @@
  *   - Production requires https for the public base URL, Feide, the Groups API, Canvas origins and every
  *     configured LTI platform URL.
  *   - Production refuses `WEB_APP=dev`: Next.js's development server compiles on demand, shows stack traces and
- *     gets `'unsafe-eval'` and inline styles in its policy (../web/webPageCsp.ts). `prod` and `off` pass.
+ *     gets `'unsafe-eval'` and inline styles in its policy (../web/webPageCsp.ts). It refuses `WEB_APP=off` too:
+ *     without the web app a Canvas launch lands on the player's own page, with no page of ours around the player
+ *     (D-123, the owner's decision of 2026-11-21). Only `prod` passes; `off` and `dev` are for tests and development.
  *   - Production refuses `PDF_ALLOW_NO_SANDBOX=true`: the PDF export keeps Chromium's sandbox (D-096 amendment).
  *   - Production requires encrypted database, Redis and S3 connections (./connectionEncryption.ts) and file storage
  *     on the EEA list (./storageResidency.ts) (D-109 amendment of 2026-11-04), and refuses the AWS SDK's own endpoint
@@ -133,12 +135,15 @@ const httpsProblems = (env: ProductionCheckedEnv): string[] => {
 };
 
 // SECURITY: `.env.example` ships `WEB_APP=dev`; a production .env copied from it must not start the dev server.
-const webAppProblems = (env: ProductionCheckedEnv): string[] =>
-  env.WEB_APP === 'dev'
-    ? [
-        'WEB_APP: dev runs the Next.js development server; use prod (after npm run build) or off in production',
-      ]
-    : [];
+// SECURITY: `off` is the default; production must name `prod`, so the player is always inside the web app's page.
+const WEB_APP_PROBLEMS: Readonly<Record<string, string>> = {
+  dev: 'WEB_APP: dev runs the Next.js development server; use prod (after npm run build) in production',
+  off: 'WEB_APP: off serves the player without the web app around it; use prod (after npm run build) in production',
+};
+const webAppProblems = (env: ProductionCheckedEnv): string[] => {
+  const problem = WEB_APP_PROBLEMS[env.WEB_APP];
+  return problem === undefined ? [] : [problem];
+};
 
 // SECURITY: Chromium renders text authors wrote; its sandbox confines an exploit in the renderer, so production never
 // turns it off. Development containers run as root, where Chromium refuses its sandbox (D-096 amendment).

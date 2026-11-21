@@ -41,6 +41,7 @@ export const VALID_ENV: Readonly<Record<string, string>> = {
 export const productionEnv = (overrides: Record<string, string> = {}): Record<string, string> => ({
   ...VALID_ENV,
   NODE_ENV: 'production',
+  WEB_APP: 'prod',
   PSEUDONYM_SECRETS: `2026=${randomKey(1)}`,
   IDENTITY_HASH_KEYS: `p1=${randomKey(2)}`,
   DATA_ENCRYPTION_KEYS: `p1=${randomKey(3)}`,
