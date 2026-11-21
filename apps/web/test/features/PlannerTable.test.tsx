@@ -56,6 +56,7 @@ const PLANNER: Planner = {
       missing: ['phase'],
     },
   ],
+  moreActivities: false,
 };
 const phaseLabel = (phase: PhaseKey) => OVERVIEW.phases.find((p) => p.key === phase)?.label.nn ?? phase;
 

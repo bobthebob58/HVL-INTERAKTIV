@@ -160,7 +160,7 @@ export class LearningDesignStore {
    * @spec PED-031
    */
   async planner(userId: string, courseCode: CourseCode): Promise<Planner> {
-    const activities = await plannerActivities(this.deps.db, userId, courseCode);
-    return buildPlanner(courseCode, this.deps.phases, activities);
+    const { activities, more } = await plannerActivities(this.deps.db, userId, courseCode);
+    return buildPlanner(courseCode, this.deps.phases, activities, more);
   }
 }

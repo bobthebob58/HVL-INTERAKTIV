@@ -354,6 +354,7 @@
     "courseShow": "Show the plan",
     "courseNone": "None of your activities has a course code yet. Enter the course code on the Learning design tab of an activity.",
     "chooseCourse": "Choose a course to see its plan.",
+    "moreActivities": "The planner shows the {{max}} most recently changed activities of the course. The course has more.",
     "caption": "Learning outcomes and phases in {{course}}",
     "outcomeColumn": "Learning outcome",
     "scrollHint": "The table scrolls sideways on narrow screens.",

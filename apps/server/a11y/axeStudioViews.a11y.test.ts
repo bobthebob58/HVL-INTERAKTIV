@@ -1,7 +1,7 @@
 /**
  * axe on the læringsdesign studio (S5) in the states the seed gives it, in the light theme and with forced colours
  * emulated: a pattern page signed out (its sign-in prompt) and signed in (its create form), the planner of a course
- * with gaps, the content bank with entries, `/mappe` with every activity chosen and its word count, an activity's
+ * with gaps and of one with more activities than a planner shows, the content bank with entries, `/mappe` with every activity chosen and its word count, an activity's
  * **Læringsdesign** tab (outcomes, purpose, time) and **Deling** tab (a co-author, the bank listing), and a copy's page
  * with its attribution sign. The plain studio routes (the guide with the real guide text, the planner's chooser, the
  * bank and `/mappe`, signed out and in) are scanned by axeWebRoutes.a11y.test.ts through ./support/catalogue.ts. The
@@ -12,11 +12,12 @@
  * Spec: UD-030, PED-002, PED-010, PED-030, PED-031, PROD-001, PROD-007, MAPPE-001
  */
 import { AxeBuilder } from '@axe-core/playwright';
-import type { Guide } from '@hvl-interaktiv/api-contract';
+import { PLANNER_MAX_ACTIVITIES, type Guide } from '@hvl-interaktiv/api-contract';
 import { describe, expect, it } from 'vitest';
 import { describeA11y } from './support/a11ySuite.js';
 import { scanPage, type AxeReport } from './support/axeScan.js';
 import { COLOUR_MODES, STUDIO_VIEW_NAMES, type StudioView } from './support/catalogue.js';
+import { busyCourse } from './support/busyCourse.js';
 import { openWebPage } from './support/pages.js';
 import { waitUntilLoaded } from './support/loadingState.js';
 import { openStudioView } from './support/studioViews.js';
@@ -71,6 +72,20 @@ describeA11y('[UD-030] axe on the læringsdesign studio', (env) => {
 
     it('[UD-030][PED-031] signed in: the planner of a course with gaps has no serious or critical violation', async () => {
       expectOnlyRecorded(await scan('planner'), []);
+    });
+
+    it('[UD-030][PED-031] signed in: the planner of a course with more activities than it shows has no serious or critical violation', async () => {
+      // Arrange
+      const { app, browser } = env();
+      const context = await browser.newContext({ forcedColors, storageState: app.authorStorage });
+      const course = await busyCourse(app);
+      // Act
+      const page = await openWebPage(context, app.base, `/laeringsdesign/planlegg?emne=${course}`);
+      await page.getByText(webText('planner.moreActivities', { max: PLANNER_MAX_ACTIVITIES })).waitFor();
+      const report = await scanPage(page, `${mode}, signed in: the planner with its note`);
+      await context.close();
+      // Assert
+      expectOnlyRecorded(report, []);
     });
 
     it('[UD-030][PROD-007] signed in: the content bank with entries has no serious or critical violation', async () => {

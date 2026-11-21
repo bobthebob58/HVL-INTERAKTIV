@@ -6,10 +6,11 @@
  * Spec: PED-031, PED-001
  */
 // @vitest-environment jsdom
-import type { Planner } from '@hvl-interaktiv/api-contract';
+import { PLANNER_MAX_ACTIVITIES, type Planner } from '@hvl-interaktiv/api-contract';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PlannerView } from '../../src/features/planner/PlannerView';
+import { PLANNER_SHOWN_LIMIT } from '../../src/features/planner/PlannerWorkspace';
 import { fakeFetch, type FakeRoutes } from '../support/fakeFetch';
 import { OVERVIEW } from './learningDesignFixtures';
 
@@ -29,6 +30,7 @@ const PLANNER: Planner = {
   ],
   gaps: [],
   untagged: [],
+  moreActivities: false,
 };
 const routes = (inUse: string[]): FakeRoutes => ({
   'GET /auth/session': SESSION,
@@ -74,6 +76,29 @@ describe('[PED-031] the planner page', () => {
       '/api/learning-design/planner?courseCode=SYK110',
     );
     expect(screen.getByText('Planen har ingen hol.')).toBeTruthy();
+  });
+
+  it('[PED-031] a course with more activities than a plan holds says how many the plan shows; another course does not', async () => {
+    // Arrange
+    window.history.replaceState(null, '', '/laeringsdesign/planlegg?emne=syk110');
+    const note = 'Planleggaren viser dei 300 sist endra aktivitetane i emnet. Emnet har fleire.';
+    const more = { ...routes(['SYK110']) };
+    more['GET /api/learning-design/planner?courseCode=SYK110'] = {
+      status: 200,
+      body: { ...PLANNER, moreActivities: true },
+    };
+    // Act
+    fakeFetch(more);
+    const first = render(<PlannerView navigate={() => undefined} />);
+    await screen.findByRole('table');
+    const shownWithMore = screen.queryByText(note) !== null;
+    first.unmount();
+    fakeFetch(routes(['SYK110']));
+    render(<PlannerView navigate={() => undefined} />);
+    await screen.findByRole('table');
+    // Assert
+    expect([shownWithMore, screen.queryByText(note) !== null]).toEqual([true, false]);
+    expect(PLANNER_SHOWN_LIMIT).toBe(PLANNER_MAX_ACTIVITIES);
   });
 
   it('[PED-031] an author without course codes is told where to add one', async () => {

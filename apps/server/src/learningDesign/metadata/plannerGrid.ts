@@ -14,6 +14,7 @@
  *   - Gaps: each row without an `etterarbeid` activity (in row order), then each phase without any activity (in
  *     column order).
  *   - Activities are ordered by title (Norwegian order), then ID; drafts are included and keep their status.
+ *   - Built in one pass over the activities, so its cost follows the number of activities and outcomes.
  * Collaborators: ./LearningDesignStore.ts, ./plannerSource.ts, ./outcomeIdentity.ts, @hvl-interaktiv/api-contract.
  * Tests: apps/server/test/learningDesign/metadata/plannerGrid.test.ts
  */
@@ -60,6 +61,7 @@ const untaggedEntry = (activity: PlannerSourceActivity): PlannerUntagged[] => {
  * @param courseCode - The normalised course code.
  * @param phases - Every phase key once, in content order (`content.phases`).
  * @param activities - The author's own and co-authored activities with that course code, in any order.
+ * @param moreActivities - True when the course has more activities than `activities` holds (./plannerSource.ts).
  * @returns The planner answer.
  * @spec PED-031
  */
@@ -67,19 +69,26 @@ export function buildPlanner(
   courseCode: string,
   phases: readonly PhaseKey[],
   activities: readonly PlannerSourceActivity[],
+  moreActivities = false,
 ): Planner {
   const sorted = [...activities].sort(byTitle);
-  const keysOf = new Map(sorted.map((activity) => [activity, new Set(activity.outcomes.map(outcomeKey))]));
+  // WHY: one pass files each activity under its outcomes and its phase, in title order; a pass per cell cost
+  // rows times phases times activities (D-128).
+  const cellsOf = new Map<string, Map<PhaseKey, PlannerActivity[]>>();
+  for (const activity of sorted) {
+    if (!activity.phase) continue;
+    for (const key of new Set(activity.outcomes.map(outcomeKey))) {
+      const byPhase = cellsOf.get(key) ?? new Map<PhaseKey, PlannerActivity[]>();
+      const cell = byPhase.get(activity.phase) ?? [];
+      cell.push(reference(activity));
+      cellsOf.set(key, byPhase.set(activity.phase, cell));
+    }
+  }
   const rows = distinctOutcomes(sorted.flatMap((activity) => activity.outcomes)).map((outcome) => {
-    const key = outcomeKey(outcome);
-    const cells = phases.map((phase) => ({
-      phase,
-      activities: sorted
-        .filter((activity) => activity.phase === phase && keysOf.get(activity)?.has(key))
-        .map(reference),
-    }));
-    return { outcome, cells };
+    const byPhase = cellsOf.get(outcomeKey(outcome));
+    return { outcome, cells: phases.map((phase) => ({ phase, activities: byPhase?.get(phase) ?? [] })) };
   });
+  const usedPhases = new Set(sorted.map((activity) => activity.phase));
   const gaps: PlannerGap[] = [
     ...rows
       .filter(
@@ -87,8 +96,9 @@ export function buildPlanner(
       )
       .map((row) => ({ kind: 'no-etterarbeid' as const, outcome: row.outcome })),
     ...phases
-      .filter((phase) => !sorted.some((activity) => activity.phase === phase))
+      .filter((phase) => !usedPhases.has(phase))
       .map((phase) => ({ kind: 'empty-phase' as const, phase })),
   ];
-  return { courseCode, phases: [...phases], rows, gaps, untagged: sorted.flatMap(untaggedEntry) };
+  const untagged = sorted.flatMap(untaggedEntry);
+  return { courseCode, phases: [...phases], rows, gaps, untagged, moreActivities };
 }

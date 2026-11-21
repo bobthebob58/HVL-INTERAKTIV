@@ -4,7 +4,7 @@
  *
  * Spec: PED-031, AUTH-003
  */
-import { plannerSchema, type LearningOutcome } from '@hvl-interaktiv/api-contract';
+import { PLANNER_MAX_ACTIVITIES, plannerSchema, type LearningOutcome } from '@hvl-interaktiv/api-contract';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { openApiTestbed, type TestPrincipal } from '../../support/apiTestbed.js';
@@ -131,6 +131,40 @@ describeWithServices('[PED-031] the alignment planner route', () => {
     expect(res.status).toBe(200);
     expect(plannerSchema.parse(res.body)).toMatchObject({ courseCode: 'SYK110', rows: [], untagged: [] });
   });
+
+  it('[PED-031] a planner holds the 300 most recently changed activities of the course and says when there are more', async () => {
+    // Arrange: 301 activities of one course for a new author, the first made being the least recently changed
+    const busy = await tb.principal('author');
+    const made: string[] = [];
+    for (let n = 0; n <= PLANNER_MAX_ACTIVITIES; n += 1) {
+      const id = await tb.content(busy.principal.userId, { title: `Aktivitet ${String(n)}` });
+      await storeMetadata(tb.db, id, { courseCode: 'FYS300', phase: 'forarbeid', outcomes: [K1] });
+      made.push(id);
+    }
+    const shown = async () => {
+      const res = await requestAs(tb.app, busy, 'get', '/api/learning-design/planner?courseCode=FYS300');
+      const planner = plannerSchema.parse(res.body);
+      const ids = planner.rows.flatMap((row) =>
+        row.cells.flatMap((cell) => cell.activities.map((a) => a.contentId)),
+      );
+      return { ids: new Set(ids), more: planner.moreActivities };
+    };
+    // Act
+    const over = await shown();
+    await tb.db.h5PContent.delete({ where: { id: made.at(-1) ?? '' } });
+    const exactly = await shown();
+    // Assert
+    expect([over.ids.size, over.more, over.ids.has(made[0] ?? '')]).toEqual([
+      PLANNER_MAX_ACTIVITIES,
+      true,
+      false,
+    ]);
+    expect([exactly.ids.size, exactly.more, exactly.ids.has(made[0] ?? '')]).toEqual([
+      PLANNER_MAX_ACTIVITIES,
+      false,
+      true,
+    ]);
+  }, 120_000);
 
   it('[PED-031] a missing or invalid course code is a 400', async () => {
     // Act

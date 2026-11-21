@@ -354,6 +354,7 @@
     "courseShow": "Vis planen",
     "courseNone": "Ingen av aktivitetene dine har emnekode ennå. Skriv emnekoden på fanen Læringsdesign i en aktivitet.",
     "chooseCourse": "Velg et emne for å se planen.",
+    "moreActivities": "Planleggeren viser de {{max}} sist endrede aktivitetene i emnet. Emnet har flere.",
     "caption": "Læringsutbytte og faser i {{course}}",
     "outcomeColumn": "Læringsutbytte",
     "scrollHint": "Tabellen kan rulles sidelengs på smale skjermer.",

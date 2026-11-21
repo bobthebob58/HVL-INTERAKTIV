@@ -99,6 +99,7 @@ describe('[PED-031] the alignment planner', () => {
         { kind: 'empty-phase', phase: 'underveis' },
       ],
       untagged: [{ ...activity, missing: ['outcomes'] }],
+      moreActivities: false,
     };
     // Act and assert
     expect(plannerSchema.safeParse(planner).success).toBe(true);
