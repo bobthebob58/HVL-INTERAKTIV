@@ -5300,3 +5300,51 @@ loading of one spec per session are kept.
 - **Consequences:** A web-app page can no longer be embedded in any page, ours or another site's. An activity
   cannot embed another page of this service in a frame; embedding goes through the content types' own
   sub-content. The three actions take one more press. No new stored data.
+
+### D-126 · Security repairs, step 10: one activity's parameters have a size limit, checked before anything reads them
+- **Context:** SEC-005 limits files and packages. The parameters of an activity (content.json) and its metadata
+  were bounded only by the size of the request, 20 MB. Every step of a save reads them, and each was written for
+  content an author makes in the editor: the example activity of each of the ten types is 2 to 15 kB with at
+  most 350 values, and a very large real activity is around 1 MB. Some steps take time that grows with the
+  square of what they read. htmlparser2 12.0.0, which sanitize-html (Lumi's cleaning and ours) and our own text
+  reading parse with, keeps the open tags in a list it adds to at the front, so a text whose tags are never
+  closed costs the square of its length. Lumi's pattern for a library and its version, `/.+ \d+\.\d+/`, tries
+  every start for every space. Our comparison of two text lists compared each item with every item, and the
+  trim of a drag word's trailing white space used `/\s+$/`.
+- **Decision — the limits (SEC-005, PROD-012).** `h5p/semantics/contentBudget.ts`, for the parameters and for
+  the metadata of one activity: 4 000 000 characters in all strings and keys together; 200 000 values (objects,
+  lists and leaves); one string 200 000 characters, with at most 100 tags open at once; a key 256 characters; a
+  string under a key named `library` 255 characters. One iterative pass that stops at the first limit passed.
+  Past a limit the answer is 400 `hvl:content-too-large`, with a message in nn, nb and en that says whether the
+  activity as a whole, one text's length or one text's formatting is the reason, and nothing from the content.
+- **Decision — open tags are counted by the parser itself.** `h5p/semantics/markupDepth.ts` feeds the text to
+  htmlparser2 in pieces of 2 048 characters, counts the tags it opens and closes, and feeds no further piece
+  once the limit is passed. The count is therefore the parser's own (a `<p>` it closes by itself and a `<br>`
+  count as it treats them), in this version and in a later one, and counting costs time that follows the
+  text's length.
+- **Decision — checked first, at every door.** `http/routes/contentSaveBodies.ts` reads the body of a save, of
+  «Lagre som ny versjon» and of the editor's paste check (`action=filter`, where Lumi cleans what it is sent),
+  and checks the limits before the publish gate's validator, the sub-content policy or Lumi read anything.
+  `SubContentPolicy.enforce` checks them on every save, the server's own included. `packageManifest.ts` checks
+  the content.json of an imported package, `editorFormParams.ts` what the editor's form is handed. A save
+  request is at most 6 MB, where it was 20 MB.
+- **Decision — a list holds at most its field's `max` (SEC-008).** The fitting of D-123 cuts a longer list to
+  `max`, as H5P's own server software does (`validateList`); the editor never adds more. H5P.InteractiveBook's
+  `chapters` (50) and H5P.Blanks' `questions` (31) are such lists. A long list is written back item by item: a
+  list of 150 000 numbers ended the save with a RangeError before.
+- **Decision — three steps read long input in time that follows its length (PROD-013, H5P-002).**
+  `libraryReferences.ts` tests for a library and its version with `/[^\n\r  ] \d+\.\d/`, which
+  matches exactly when Lumi's pattern does; Lumi's own copy only ever reads 255 characters. `structuralChange.ts`
+  compares two text lists through a set. `answerMarkup.ts` trims with `trimEnd()`. A stored version past the
+  limits is not compared by `LearnerStateGate`: the save counts as structural, so the author is asked before
+  saved progress is reset.
+- **Why these numbers.** Four times the largest activity we expect, and small enough to measure. The largest
+  content inside the limits (nineteen texts of 200 000 characters, each with 100 tags open throughout) is
+  measured by the limit pass in 0.17 s, cleaned by sanitize-html in 0.5 s and saved through the route in about
+  1.4 s (1.1 s without the check). One text of 200 000 characters whose tags are never closed took 0.37 s to
+  parse; the limit pass refuses it in 2 ms.
+- **Verified:** the example activity of each of the ten types is inside every limit, at less than a hundredth
+  of the largest size; the new pattern agrees with Lumi's on a table of values and on 300 000 random strings.
+- **Consequences:** Content brought in from elsewhere with one text over 200 000 characters, or with more than
+  100 tags left open in one text, is refused with a message; the H5P editor produces neither. A list past its
+  `max` loses the items after it when saved. No new stored data.
