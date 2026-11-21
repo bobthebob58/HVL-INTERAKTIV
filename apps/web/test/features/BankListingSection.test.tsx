@@ -12,6 +12,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { BankListingSection, SHOWN_CONSENT_VERSION } from '../../src/features/sharing/BankListingSection';
 import { fakeFetch } from '../support/fakeFetch';
 import { DETAIL, ID } from './learningDesignFixtures';
+import { confirmQuestion } from '../support/confirmQuestion';
 
 const PATH = `/api/content/${ID}/bank`;
 const SHARED: ContentDetail = { ...DETAIL, status: 'published', visibility: 'organisation' };
@@ -90,6 +91,7 @@ describe('[PROD-007] the activity in the content bank', () => {
     const announce = show();
     // Act
     fireEvent.click(await screen.findByRole('button', { name: 'Ta ut av innhaldsbanken' }));
+    confirmQuestion('Ta ut av innhaldsbanken');
     // Assert
     await screen.findByText('Aktiviteten er ikkje i innhaldsbanken.');
     expect(requests.at(-1)?.method).toBe('DELETE');
@@ -114,6 +116,7 @@ describe('[PROD-007] the activity in the content bank', () => {
       unlist.focus();
       // Act
       fireEvent.click(unlist);
+      confirmQuestion('Ta ut av innhaldsbanken');
       // Assert
       const state = await screen.findByText('Aktiviteten er ikkje i innhaldsbanken.');
       await waitFor(() => expect(document.activeElement).toBe(state));
