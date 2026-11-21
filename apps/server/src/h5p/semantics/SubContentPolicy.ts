@@ -3,7 +3,8 @@
  *
  * Why: authors build activities from sub-content inside containers (QuestionSet, Column, InteractiveBook…).
  *      Lumi silently drops a sub-library a field does not offer, but only outside lists, and never sanitises
- *      text that is a list item. HVL also never allows H5P.DragQuestion (D-006). This policy refuses such content
+ *      text that is a list item. HVL also never allows H5P.DragQuestion (D-006), nor three more types as
+ *      sub-content (D-123, ./removeDragQuestion.ts). This policy refuses such content
  *      with a clear message and sanitises what Lumi misses, before Lumi's own enforcer runs.
  * Spec: H5P-002, SEC-008
  * Invariants:
