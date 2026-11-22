@@ -127,6 +127,9 @@ on first attempt; most common wrong answer: B"). Charts use patterns or labels a
 #### INS-009 · SHOULD · S6 · Export aggregated CSV
 Insight can be exported as CSV, with the same suppression (`INS-006`) applied.
 - **Verify:** Unit test.
+- **Amended (D-136, 2026-11-22):** the file follows the person's language (`;` and a decimal comma in nn and nb,
+  `,` and a point in en); every field is quoted and guarded against spreadsheet formulas wherever a cell could
+  start in it; a question that is not in the activity's current content is written without an ID.
 
 #### INS-010 · SHOULD · S6 · Validator status in insight
 Insight shows the activity's current validator findings and acknowledgements (`UD-022`), so

@@ -5714,3 +5714,34 @@ loading of one spec per session are kept.
 - **Consequences:** No page looks or behaves differently. `docs/assurance/sbom.cdx.json` is regenerated. The
   advisory check (`npm run check:audit`) is not changed by this step: it reads only high and critical
   advisories, and none of these was one.
+
+### D-136 · Security repairs, step 20: the insight CSV follows its language, quotes and guards every field, and carries no ID a learner chose
+- **Context:** INS-009 exports a view of insight as a CSV file, which a teacher opens in a spreadsheet program
+  (D-106). The file was comma-separated in every language, quoted a field only when it held a comma, a quote or
+  a line break, and guarded a field against being read as a formula only at its first character. A Norwegian
+  spreadsheet program splits columns at `;` and reads `1.5` as a date, so the file was left to the program's
+  guessing: a label with a `;` in it (a question text, a learner's wrong answer in a gap) could be cut in two,
+  and the piece after the cut began a cell of its own, where a leading `=`, `+`, `-` or `@` starts a formula.
+  Shares and medians came out as text or as dates. And a question that is no longer in the activity (D-121) was
+  written with the `subContentId` of the learners' statements: an ID that *k* learners who agree can choose.
+- **Decision — the file follows its language (INS-009, PROD-012).** In nn and nb the separator is `;` and the
+  decimal mark a comma; in en `,` and a point (`insight/http/insightCsvFields.ts`, `CSV_DIALECTS`). A `sep=` first
+  line was not chosen: only Excel reads it, other programs show it as a row, and Excel is reported to stop
+  honouring the byte-order mark after it, which would break æ, ø and å. The rows stay language-neutral
+  (`insight/export/insightCsvRows.ts`); the decimal mark is set when the text is written.
+- **Decision — every field is quoted, and no piece of a field can start a formula (INS-009).** `csvField` quotes
+  every field, also an empty one and a number. `guardFormulas` puts a `'` before a formula character wherever a
+  cell could start: at the start of the field and after every `;`, `,`, tab and line break, with only white
+  space or quotes in between; a field that starts with a tab or a carriage return gets a leading `'` as before.
+  It is one pass over the text. So a program that splits at another character than the writer's still finds no
+  cell that begins with a formula.
+- **Decision — a question outside the current content has no ID (INS-009, INS-006).** Its rows have an empty
+  `item` and the name «Spørsmål *n* (ikkje i aktiviteten no)» (nn, nb, en), *n* being its place in the view's
+  list. A question of the activity keeps its ID, which comes from the author's content. The JSON view is
+  unchanged: the tab never showed the ID.
+- **Verified:** unit tests of the fields and of the file in the three languages; a property test over generated
+  texts (split at any of the five characters, no piece of a written field starts with a formula character; the
+  guard only adds apostrophes); the routes' tests read the files with their own separator.
+- **Consequences:** A file in nn or nb opens in a Norwegian spreadsheet with its columns and numbers right. Its
+  form differs from before (separator, quotes, decimal comma); nothing else reads these files. The contract
+  describes the form per language.

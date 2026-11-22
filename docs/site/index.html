@@ -2853,11 +2853,17 @@ on first attempt; most common wrong answer: B&quot;). Charts use patterns or lab
 <p class="req-source">Defined in <a href="#r-INS-008">05 Insight and privacy, INS-008</a> · Teacher insight</p></div>
 </details>
 <details class="req" id="x-INS-009" data-area="INS" data-priority="SHOULD" data-session="S6" data-status="tested" data-text="ins-009 export aggregated csv insight can be exported as csv, with the same suppression (`ins-006`) applied.
-- **verify:** unit test.">
+- **verify:** unit test.
+- **amended (d-136, 2026-11-22):** the file follows the person's language (`;` and a decimal comma in nn and nb,
+  `,` and a point in en); every field is quoted and guarded against spreadsheet formulas wherever a cell could
+  start in it; a question that is not in the activity's current content is written without an id.">
 <summary><span class="req-id">INS-009</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Export aggregated CSV</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Insight can be exported as CSV, with the same suppression (<a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>) applied.</p>
 <ul>
 <li><strong>Verify:</strong> Unit test.</li>
+<li><strong>Amended (D-136, 2026-11-22):</strong> the file follows the person&#39;s language (<code>;</code> and a decimal comma in nn and nb,
+<code>,</code> and a point in en); every field is quoted and guarded against spreadsheet formulas wherever a cell could
+start in it; a question that is not in the activity&#39;s current content is written without an ID.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-INS-009">05 Insight and privacy, INS-009</a> · Teacher insight</p></div>
 </details>
@@ -5518,6 +5524,9 @@ on first attempt; most common wrong answer: B&quot;). Charts use patterns or lab
 <p>Insight can be exported as CSV, with the same suppression (<a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>) applied.</p>
 <ul>
 <li><strong>Verify:</strong> Unit test.</li>
+<li><strong>Amended (D-136, 2026-11-22):</strong> the file follows the person&#39;s language (<code>;</code> and a decimal comma in nn and nb,
+<code>,</code> and a point in en); every field is quoted and guarded against spreadsheet formulas wherever a cell could
+start in it; a question that is not in the activity&#39;s current content is written without an ID.</li>
 </ul>
 <h4 id="r-INS-010" class="req-heading" tabindex="-1"><a class="req-id" href="#r-INS-010">INS-010</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Validator status in insight</span></h4>
 <p>Insight shows the activity&#39;s current validator findings and acknowledgements (<a class="req-ref" href="#r-UD-022"><code>UD-022</code></a>), so
@@ -12680,6 +12689,38 @@ image is built with the new version.</li>
 <li><strong>Consequences:</strong> No page looks or behaves differently. <code>docs/assurance/sbom.cdx.json</code> is regenerated. The
 advisory check (<code>npm run check:audit</code>) is not changed by this step: it reads only high and critical
 advisories, and none of these was one.</li>
+</ul>
+<h3 id="decisions--d-136--security-repairs-step-20-the-insight-csv-follows-its-language-quotes-and-guards-every-field-and-carries-no-id-a-learner-chose" tabindex="-1">D-136 · Security repairs, step 20: the insight CSV follows its language, quotes and guards every field, and carries no ID a learner chose</h3>
+<ul>
+<li><strong>Context:</strong> INS-009 exports a view of insight as a CSV file, which a teacher opens in a spreadsheet program
+(D-106). The file was comma-separated in every language, quoted a field only when it held a comma, a quote or
+a line break, and guarded a field against being read as a formula only at its first character. A Norwegian
+spreadsheet program splits columns at <code>;</code> and reads <code>1.5</code> as a date, so the file was left to the program&#39;s
+guessing: a label with a <code>;</code> in it (a question text, a learner&#39;s wrong answer in a gap) could be cut in two,
+and the piece after the cut began a cell of its own, where a leading <code>=</code>, <code>+</code>, <code>-</code> or <code>@</code> starts a formula.
+Shares and medians came out as text or as dates. And a question that is no longer in the activity (D-121) was
+written with the <code>subContentId</code> of the learners&#39; statements: an ID that <em>k</em> learners who agree can choose.</li>
+<li><strong>Decision — the file follows its language (INS-009, PROD-012).</strong> In nn and nb the separator is <code>;</code> and the
+decimal mark a comma; in en <code>,</code> and a point (<code>insight/http/insightCsvFields.ts</code>, <code>CSV_DIALECTS</code>). A <code>sep=</code> first
+line was not chosen: only Excel reads it, other programs show it as a row, and Excel is reported to stop
+honouring the byte-order mark after it, which would break æ, ø and å. The rows stay language-neutral
+(<code>insight/export/insightCsvRows.ts</code>); the decimal mark is set when the text is written.</li>
+<li><strong>Decision — every field is quoted, and no piece of a field can start a formula (INS-009).</strong> <code>csvField</code> quotes
+every field, also an empty one and a number. <code>guardFormulas</code> puts a <code>&#39;</code> before a formula character wherever a
+cell could start: at the start of the field and after every <code>;</code>, <code>,</code>, tab and line break, with only white
+space or quotes in between; a field that starts with a tab or a carriage return gets a leading <code>&#39;</code> as before.
+It is one pass over the text. So a program that splits at another character than the writer&#39;s still finds no
+cell that begins with a formula.</li>
+<li><strong>Decision — a question outside the current content has no ID (INS-009, INS-006).</strong> Its rows have an empty
+<code>item</code> and the name «Spørsmål <em>n</em> (ikkje i aktiviteten no)» (nn, nb, en), <em>n</em> being its place in the view&#39;s
+list. A question of the activity keeps its ID, which comes from the author&#39;s content. The JSON view is
+unchanged: the tab never showed the ID.</li>
+<li><strong>Verified:</strong> unit tests of the fields and of the file in the three languages; a property test over generated
+texts (split at any of the five characters, no piece of a written field starts with a formula character; the
+guard only adds apostrophes); the routes&#39; tests read the files with their own separator.</li>
+<li><strong>Consequences:</strong> A file in nn or nb opens in a Norwegian spreadsheet with its columns and numbers right. Its
+form differs from before (separator, quotes, decimal comma); nothing else reads these files. The contract
+describes the form per language.</li>
 </ul>
 
 </section>
