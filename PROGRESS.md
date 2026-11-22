@@ -2501,3 +2501,60 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npm run a11y:report -- --check                     exit 0
   $ npx vitest run --project tools                     536 passed (70 files)
   ```
+
+- **2026-11-22 · Security repairs, step 17 (D-133)** — The server starts strictly and fails loudly. Three
+  repairs, one commit each; every new test fails on the code before and passes after:
+  - Start-up rules (DOC-008, DATA-002, AUTH-001, LTI-001, DATA-009): `NODE_ENV` has no default, so a missing or
+    empty mode stops the start; off a local address (`localhost`, `.localhost`, 127.0.0.0/8, `[::1]`) the key
+    rules and the https rules hold in every mode (`config/publicAddressRules.ts`, new; the rules themselves
+    moved to `config/keyStrengthRules.ts` and `config/httpsRules.ts`); production refuses `DEBUG` and
+    `NODE_DEBUG` (`config/debugOutput.ts`, new). Tests: `config/env.test.ts`,
+    `config/publicAddressRules.test.ts`, `config/debugOutput.test.ts`.
+  - Faults (NFR-006, DATA-009, NFR-002): the app's chain ends in `http/lastResortError.ts` (new), which logs a
+    fault after an answer has begun and closes the connection; `server/processFaults.ts` (new) turns an
+    uncaught exception and an unhandled rejection into one `fatal` line and exit code 1;
+    `server/serverProcess.ts` (new, the former `main()`) writes any failed start that is not a configuration
+    problem as one `fatal` line and ends the process. The first start line names the mode, and a warning
+    follows outside production. Tests: `http/lastResortError.test.ts`, `server/processFaults.test.ts` (also in
+    a real process), `server/serverProcess.test.ts`, `server/main.smoke.test.ts`. The smoke test's «port
+    already taken» case, which hung in this container because connected clients kept the process alive, now
+    passes: the process ends itself.
+  - Headers (SEC-004, LTI-003, AUTH-003, DATA-011): every response starts with
+    `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, which each page replaces; answers
+    about the signed-in person keep `frame-ancestors 'self'` with `default-src 'none'`; the server's own start
+    page has `form-action 'self'` plus Feide's origin; `HSTS_INCLUDE_SUBDOMAINS` (new, off by default) adds
+    `includeSubDomains`. Tests: `http/securityHeaders.test.ts`, `http/pages/portalPages.test.ts`; the stand-in
+    frame pages of `test/web/webTestServer.ts` now say who may frame them, as the real pages do.
+  - D-133 added; NFR-006 (spec 00), DATA-009 and DATA-002 (spec 05), AUTH-001 and LTI-003 (spec 02) and SEC-004
+    (spec 01) have an "Amended" line; the threat model (A2, T-06, T-42, T-130), the runbook's start, monitoring
+    and checklist sections, `docs/ops/clamav.md`, the architecture pack and `.env.example` follow;
+    `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks different, so no screenshots.
+    The suites below ran on the three repair commits; a later commit only gave one type its own TSDoc
+    (`ProblemOutput`), after which typecheck, the API docs and that file's tests ran again. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     536 passed (70 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26867 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004). The free-port case of earlier steps passes now.
+  ```

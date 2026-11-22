@@ -15191,6 +15191,62 @@ $ npm run docs:api                                   exit 0
 $ npm run a11y:report -- --check                     exit 0
 $ npx vitest run --project tools                     536 passed (70 files)</code></pre>
 </li>
+<li><p><strong>2026-11-22 · Security repairs, step 17 (D-133)</strong> — The server starts strictly and fails loudly. Three
+repairs, one commit each; every new test fails on the code before and passes after:</p>
+<ul>
+<li>Start-up rules (DOC-008, DATA-002, AUTH-001, LTI-001, DATA-009): <code>NODE_ENV</code> has no default, so a missing or
+empty mode stops the start; off a local address (<code>localhost</code>, <code>.localhost</code>, 127.0.0.0/8, <code>[::1]</code>) the key
+rules and the https rules hold in every mode (<code>config/publicAddressRules.ts</code>, new; the rules themselves
+moved to <code>config/keyStrengthRules.ts</code> and <code>config/httpsRules.ts</code>); production refuses <code>DEBUG</code> and
+<code>NODE_DEBUG</code> (<code>config/debugOutput.ts</code>, new). Tests: <code>config/env.test.ts</code>,
+<code>config/publicAddressRules.test.ts</code>, <code>config/debugOutput.test.ts</code>.</li>
+<li>Faults (NFR-006, DATA-009, NFR-002): the app&#39;s chain ends in <code>http/lastResortError.ts</code> (new), which logs a
+fault after an answer has begun and closes the connection; <code>server/processFaults.ts</code> (new) turns an
+uncaught exception and an unhandled rejection into one <code>fatal</code> line and exit code 1;
+<code>server/serverProcess.ts</code> (new, the former <code>main()</code>) writes any failed start that is not a configuration
+problem as one <code>fatal</code> line and ends the process. The first start line names the mode, and a warning
+follows outside production. Tests: <code>http/lastResortError.test.ts</code>, <code>server/processFaults.test.ts</code> (also in
+a real process), <code>server/serverProcess.test.ts</code>, <code>server/main.smoke.test.ts</code>. The smoke test&#39;s «port
+already taken» case, which hung in this container because connected clients kept the process alive, now
+passes: the process ends itself.</li>
+<li>Headers (SEC-004, LTI-003, AUTH-003, DATA-011): every response starts with
+<code>Content-Security-Policy: default-src &#39;none&#39;; frame-ancestors &#39;none&#39;</code>, which each page replaces; answers
+about the signed-in person keep <code>frame-ancestors &#39;self&#39;</code> with <code>default-src &#39;none&#39;</code>; the server&#39;s own start
+page has <code>form-action &#39;self&#39;</code> plus Feide&#39;s origin; <code>HSTS_INCLUDE_SUBDOMAINS</code> (new, off by default) adds
+<code>includeSubDomains</code>. Tests: <code>http/securityHeaders.test.ts</code>, <code>http/pages/portalPages.test.ts</code>; the stand-in
+frame pages of <code>test/web/webTestServer.ts</code> now say who may frame them, as the real pages do.</li>
+<li>D-133 added; NFR-006 (spec 00), DATA-009 and DATA-002 (spec 05), AUTH-001 and LTI-003 (spec 02) and SEC-004
+(spec 01) have an &quot;Amended&quot; line; the threat model (A2, T-06, T-42, T-130), the runbook&#39;s start, monitoring
+and checklist sections, <code>docs/ops/clamav.md</code>, the architecture pack and <code>.env.example</code> follow;
+<code>TRACEABILITY.md</code> and the spec site regenerated. No page of the web app looks different, so no screenshots.
+The suites below ran on the three repair commits; a later commit only gave one type its own TSDoc
+(<code>ProblemOutput</code>), after which typecheck, the API docs and that file&#39;s tests ran again. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 37, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       630 passed
+$ npx vitest run --project api-contract              97 passed
+$ npx vitest run --project tools                     536 passed (70 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             202 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files)
+$ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    26867 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004). The free-port case of earlier steps passes now.</code></pre>
+</li>
 </ul>
 
 </section>
