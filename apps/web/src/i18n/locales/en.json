@@ -161,6 +161,7 @@
     "learners3": "We store the answers you have given so far in an activity, so you can continue where you left off.",
     "learners4": "We store short events from the activities, for example that you answered a question, how many points you got and how long you took.",
     "learners5": "To recognise you when you log in again, we store a check value computed from your Feide ID or Canvas ID with a secret key. For this we do not store the ID itself.",
+    "learners6": "If you log in with Feide from another institution than HVL, we do not store events from the activities, and you are not part of the aggregated numbers teachers see. We still store the answers you have given so far in an activity, so you can continue where you left off.",
     "loginHeading": "When you log in or come from Canvas",
     "login1": "When you log in with Feide, we keep Feide’s login token, encrypted, while you are logged in: until you log out, after 2 hours without use and at the latest after 12 hours. The token contains your name, your e-mail address and your Feide ID, and we use it only to log you out of Feide.",
     "login2": "When you open an activity from Canvas, we receive your Canvas ID, but not your name or e-mail address. The launch data is deleted after 24 hours.",

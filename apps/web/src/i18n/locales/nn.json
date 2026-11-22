@@ -161,6 +161,7 @@
     "learners3": "Vi lagrar svara du har gitt så langt i ein aktivitet, slik at du kan halde fram der du slapp.",
     "learners4": "Vi lagrar korte hendingar frå aktivitetane, til dømes at du svarte på eit spørsmål, kor mange poeng du fekk og kor lang tid du brukte.",
     "learners5": "For å kjenne deg att når du loggar inn på nytt, lagrar vi ein kontrollverdi som er rekna ut frå Feide-ID-en eller Canvas-ID-en din med ein hemmeleg nøkkel. Til dette lagrar vi ikkje sjølve ID-en.",
+    "learners6": "Loggar du inn med Feide frå ein annan institusjon enn HVL, lagrar vi ikkje hendingar frå aktivitetane, og du er ikkje med i dei samla tala lærarane ser. Svara du har gitt så langt i ein aktivitet, lagrar vi framleis, slik at du kan halde fram der du slapp.",
     "loginHeading": "Når du loggar inn eller kjem frå Canvas",
     "login1": "Når du loggar inn med Feide, tek vi vare på innloggingsbeviset frå Feide, kryptert, så lenge du er innlogga: til du loggar ut, etter 2 timar utan bruk og seinast etter 12 timar. Beviset inneheld namnet ditt, e-postadressa di og Feide-ID-en din, og vi bruker det berre til å logge deg ut av Feide.",
     "login2": "Når du opnar ein aktivitet frå Canvas, får vi Canvas-ID-en din, men ikkje namnet eller e-postadressa di. Opplysningane frå oppstarten blir sletta etter 24 timar.",
