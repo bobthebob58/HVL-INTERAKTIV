@@ -111,7 +111,13 @@ export const INSIGHT_ROUTES = [
     params: contentParams,
     query: insightQuerySchema,
     responses: {
-      200: { description: 'The CSV file, UTF-8 with a byte-order mark.', mediaType: CSV_MEDIA_TYPE },
+      200: {
+        description:
+          'The CSV file, UTF-8 with a byte-order mark, in the form of the person’s language: `;` between fields ' +
+          'and a decimal comma in nn and nb, `,` and a decimal point in en. Every field is quoted and guarded ' +
+          'against spreadsheet formulas; a question outside the activity’s current content has no ID (D-136).',
+        mediaType: CSV_MEDIA_TYPE,
+      },
       400: badQuery,
       401: unauthenticated,
       403: insightRefused,

@@ -7,8 +7,9 @@
  *      comparison.
  * Spec: INS-009
  * Invariants:
- *   - Records end with CRLF; a quoted field may hold commas, doubled quotes and line breaks. The final CRLF ends the
- *     last record and does not start an empty one.
+ *   - Records end with CRLF; a quoted field may hold separators, doubled quotes and line breaks. The final CRLF
+ *     ends the last record and does not start an empty one.
+ *   - The separator is the caller's: `;` for a file in nn or nb, `,` for one in en (D-136).
  * Tests: used by ../insightCsvText.test.ts, ../insightRoutes.int.test.ts and
  *   ../insightSuppressionApi.property.test.ts.
  */
@@ -16,10 +17,11 @@
 /**
  * Reads CSV text (without its byte-order mark) into records.
  * @param text - The file's text.
+ * @param separator - The character between fields; `;` unless given (the Norwegian files).
  * @returns One array of fields per record.
  * @throws Error when a quoted field is not closed.
  */
-export function parseCsv(text: string): string[][] {
+export function parseCsv(text: string, separator: ',' | ';' = ';'): string[][] {
   const records: string[][] = [];
   let record: string[] = [];
   let field = '';
@@ -33,7 +35,7 @@ export function parseCsv(text: string): string[][] {
       } else if (char === '"') quoted = false;
       else field += char;
     } else if (char === '"') quoted = true;
-    else if (char === ',') {
+    else if (char === separator) {
       record.push(field);
       field = '';
     } else if (char === '\r' && text[i + 1] === '\n') {

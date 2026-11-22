@@ -310,6 +310,7 @@
         "semester": "Since the semester started"
       },
       "portal": "The portal (played outside Canvas)",
+      "unlistedQuestion": "Question {{number}} (not in the activity now)",
       "measure": {
         "started": "Started",
         "completed": "Completed",

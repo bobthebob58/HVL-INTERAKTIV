@@ -310,6 +310,7 @@
         "semester": "Sidan semesterstart"
       },
       "portal": "Portalen (spelt utanom Canvas)",
+      "unlistedQuestion": "Spørsmål {{number}} (ikkje i aktiviteten no)",
       "measure": {
         "started": "Starta",
         "completed": "Fullført",

@@ -310,6 +310,7 @@
         "semester": "Siden semesterstart"
       },
       "portal": "Portalen (spilt utenom Canvas)",
+      "unlistedQuestion": "Spørsmål {{number}} (ikke i aktiviteten nå)",
       "measure": {
         "started": "Startet",
         "completed": "Fullført",

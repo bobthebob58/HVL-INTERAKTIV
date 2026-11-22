@@ -109,7 +109,10 @@ describe('[INS-006] suppression at the API boundary', () => {
         expect(insightInvariantViolations(received)).toEqual([]);
         const values = parseCsv(csv.text.slice(1)).slice(11);
         const expected = insightCsvRows(received);
-        expect(values.map((record) => record[5])).toEqual(expected.map((row) => row.value));
+        // WHY: the stub's person reads nynorsk, whose file has a decimal comma (D-136).
+        expect(values.map((record) => record[5]?.replace(',', '.'))).toEqual(
+          expected.map((row) => row.value),
+        );
         expect(values.filter((record) => record[5] === `< ${k}`)).toHaveLength(
           cellsIn(received).filter((cell) => cell.suppressed).length,
         );

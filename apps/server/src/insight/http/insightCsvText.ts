@@ -8,18 +8,21 @@
  *      sense when it is opened alone, so the period, context, version and k are written into it.
  * Spec: INS-009, INS-006, PROD-011, PROD-012
  * Invariants:
- *   - RFC 4180: comma-separated, CRLF line ends, a field with a comma, quote or line break quoted and its quotes
- *     doubled; UTF-8 with a byte-order mark, so spreadsheet programs read æ, ø and å.
- *   - SECURITY: a field that a spreadsheet could run as a formula (it starts, after any white space, with `=`, `+`,
- *     `-` or `@`, or starts with a tab or carriage return) gets a leading `'` (OWASP's CSV injection advice); labels
- *     hold authors' and learners' text, so every field is guarded.
+ *   - The file follows its language (./insightCsvFields.ts, D-136): `;` between fields and a decimal comma in nn
+ *     and nb, `,` and a decimal point in en; CRLF line ends; UTF-8 with a byte-order mark, so spreadsheet programs
+ *     read æ, ø and å.
+ *   - SECURITY: every field is quoted and guarded against formulas wherever a cell could start in it; labels hold
+ *     authors' and learners' text, so no field is left out (./insightCsvFields.ts).
+ *   - A question that is not in the activity's current content is written without its ID, which came with the
+ *     learners' answers, and with a neutral name; a question of the activity keeps the ID the author's content
+ *     gives it (D-136).
  *   - PRIVACY: a suppressed value is `< k` and nothing else (INS-006). The file name holds only a fixed word, the
  *     period and the date: no title, course or person, and only ASCII letters, digits, `-` and `.`.
  *   - Every word comes from the locale files (`insight.csv.*`, and `notice.formativeUse.body`, PROD-011's notice).
  *   - The completion rate's measure names its base (INS-001: the course's NRPS count, or "of those who started"), as
  *     the tab does, so the file is not read against the wrong denominator when it is opened alone.
- * Collaborators: ../export/insightCsvRows.ts, ../insightReport.ts, ../../i18n/translate.ts,
- *   ../../learningDesign/mappe/mappeFormat.ts (`isoDateInOslo`), ./insightRoutes.ts.
+ * Collaborators: ../export/insightCsvRows.ts, ./insightCsvFields.ts, ../insightReport.ts,
+ *   ../../i18n/translate.ts, ../../learningDesign/mappe/mappeFormat.ts (`isoDateInOslo`), ./insightRoutes.ts.
  * Tests: apps/server/test/insight/http/insightCsvText.test.ts,
  *   apps/server/test/insight/http/insightSuppressionApi.property.test.ts
  */
@@ -28,6 +31,7 @@ import { t, type Locale, type MessageKey } from '../../i18n/translate.js';
 import { isoDateInOslo } from '../../learningDesign/mappe/mappeFormat.js';
 import { insightCsvRows, type InsightCsvSection } from '../export/insightCsvRows.js';
 import type { InsightReport } from '../insightReport.js';
+import { CSV_DIALECTS, csvField, csvNumber } from './insightCsvFields.js';
 
 /** The byte-order mark that starts the file. */
 export const CSV_BOM = '﻿';
@@ -43,21 +47,6 @@ type Line = readonly [
   measure: string,
   value: string,
 ];
-
-// SECURITY: what a spreadsheet may read as the start of a formula (OWASP, "CSV Injection").
-const FORMULA_START = /^\s*[=+\-@]|^[\t\r]/;
-const NEEDS_QUOTES = /[",\r\n]/;
-
-/**
- * One CSV field, guarded against formula injection and quoted when needed.
- * @param text - The field's text.
- * @returns The field as it is written between commas.
- * @spec INS-009
- */
-export function csvField(text: string): string {
-  const guarded = FORMULA_START.test(text) ? `'${text}` : text;
-  return NEEDS_QUOTES.test(guarded) ? `"${guarded.replaceAll('"', '""')}"` : guarded;
-}
 
 /** INS-001: the completion rate's words name its base, as the tab's do: the course's NRPS count or who started. */
 const RATE_OF_BASE = { course: 'completionRateOfCourse', started: 'completionRateOfStarted' } as const;
@@ -110,7 +99,8 @@ function leadingLines(scope: InsightScope, locale: Locale): Line[] {
 /**
  * The CSV text of one view.
  * @param report - The view, already suppressed.
- * @param locale - The language of the header, the sections, the measures and the note.
+ * @param locale - The language of the header, the sections, the measures and the note, and of the file's
+ *   separator and decimal mark.
  * @returns The file's text: byte-order mark, header, note, scope and value rows, each line ended by CRLF.
  * @example
  * res.send(insightCsvText(report, principal.locale));
@@ -121,19 +111,24 @@ export function insightCsvText(report: InsightReport, locale: Locale): string {
     t(`insight.csv.column.${name}`, {}, locale);
   const header = (['section', 'item', 'part', 'label', 'measure', 'value'] as const).map(column);
   const base = report.participation.completionBase;
+  const dialect = CSV_DIALECTS[locale];
   const values: Line[] = insightCsvRows(report).map((row) => [
     row.section,
     row.item,
     row.part,
-    row.label,
+    // PRIVACY: a question outside the current content has no text of the author's; its name is ours (D-136).
+    row.unlisted === undefined
+      ? row.label
+      : t('insight.csv.unlistedQuestion', { number: row.unlisted }, locale),
     measureText(rowMeasure(row.measure, base), locale),
-    row.value,
+    csvNumber(row.value, dialect),
   ]);
   const lines = [...leadingLines(report.scope, locale), ...values].map(([section, ...rest]) => [
     t(`insight.csv.section.${section}`, {}, locale),
     ...rest,
   ]);
-  return CSV_BOM + [header, ...lines].map((line) => line.map(csvField).join(',')).join(CSV_EOL) + CSV_EOL;
+  const written = [header, ...lines].map((line) => line.map(csvField).join(dialect.separator));
+  return CSV_BOM + written.join(CSV_EOL) + CSV_EOL;
 }
 
 /**
