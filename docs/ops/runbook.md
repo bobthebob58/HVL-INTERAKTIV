@@ -181,7 +181,10 @@ the EEA) and keep 30 days there too.
 3. Restore with `DATABASE_URL` set to the new database as `hvli_migrator` and `S3_CONTENT_BUCKET` to the new bucket:
    `npm run --silent ops:restore -- --from <backup folder>`. It refuses a database or a bucket that is not empty, and
    a backup whose files changed. It prints `{"restored":…,"tables":…,"rows":…,"objects":…,"tablesDiffering":0,
-   "objectsDiffering":0,"contentFilesMissing":0,"ok":true}` and exits 0 only when every count and hash matches.
+   "differingTables":[],"objectsDiffering":0,"contentFilesMissing":0,"ok":true}` and exits 0 only when every count
+   and hash matches. `differingTables` names the tables whose row counts differ from the backup's; a backup made
+   before 2026-11-22 can name a table whose texts hold a Unicode line separator although nothing is lost (D-132):
+   compare that table's count with the source, and take a new backup.
    `contentFilesMissing` above 0 with nothing else differing means a content file was deleted between the dump and
    the bucket copy (the backup takes the database first): that file is not in this backup; note it in the log.
 4. From `apps/server`, `npm run --silent db:roles -- grants` as `hvli_migrator` (the restore made it the owner of

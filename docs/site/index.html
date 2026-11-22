@@ -758,12 +758,16 @@ profile with 200 concurrent learners on one application node. API p95 is ≤ 300
 </details>
 <details class="req" id="x-NFR-002" data-area="NFR" data-priority="MUST" data-session="S6" data-status="tested" data-text="nfr-002 availability and recoverability 99.5 % monthly availability during the semester. database backups run daily with 30-day retention.
 a documented restore is tested once per semester.
-- **verify:** operations runbook in `docs/ops/`; restore drill log.">
+- **verify:** operations runbook in `docs/ops/`; restore drill log.
+- **amended (d-132, 2026-11-22):** the backup's own checks hold for any text: rows are counted at the dump's real
+  row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.">
 <summary><span class="req-id">NFR-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Availability and recoverability</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>99.5 % monthly availability during the semester. Database backups run daily with 30-day retention.
 A documented restore is tested once per semester.</p>
 <ul>
 <li><strong>Verify:</strong> Operations runbook in <code>docs/ops/</code>; restore drill log.</li>
+<li><strong>Amended (D-132, 2026-11-22):</strong> the backup&#39;s own checks hold for any text: rows are counted at the dump&#39;s real
+row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-NFR-002">00 Product and pedagogy, NFR-002</a> · Non-functional</p></div>
 </details>
@@ -3700,6 +3704,8 @@ profile with 200 concurrent learners on one application node. API p95 is ≤ 300
 A documented restore is tested once per semester.</p>
 <ul>
 <li><strong>Verify:</strong> Operations runbook in <code>docs/ops/</code>; restore drill log.</li>
+<li><strong>Amended (D-132, 2026-11-22):</strong> the backup&#39;s own checks hold for any text: rows are counted at the dump&#39;s real
+row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.</li>
 </ul>
 <h4 id="r-NFR-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-NFR-003">NFR-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Mobile and assistive technology</span></h4>
 <p>Works on the last two versions of Chrome, Edge, Firefox and Safari, on iOS Safari and on Android
@@ -12446,6 +12452,35 @@ proxy that says to clear cookies, or a registrable domain of its own (with Q5).<
 <li><strong>Consequences:</strong> One new server page (the sign-in page), scanned with axe. A redirect to our login that
 another site makes without a click (an interstitial, a link checker) shows that page and costs one click. A
 request refused for its CSRF token costs two extra requests once. No stored data changes.</li>
+</ul>
+<h3 id="decisions--d-132--security-repairs-step-16-a-backup-counts-rows-at-real-row-ends-and-reads-file-keys-exactly" tabindex="-1">D-132 · Security repairs, step 16: a backup counts rows at real row ends and reads file keys exactly</h3>
+<ul>
+<li><strong>Context:</strong> The backup tool checks its own work (D-110&#39;s backup amendment): it records each table&#39;s row count
+from the dump, and a restore compares the counts and looks for content files without an object. The counts
+were taken by counting lines of <code>pg_restore</code>&#39;s output with <code>node:readline</code>, which ends a line at the newline
+but also at U+2028 and U+2029. A database value may hold those characters (an author or a learner pastes them
+from a word processor), and COPY&#39;s text format writes them as they are. Such a row was counted twice: the
+backup recorded a count the restore could never meet, so every restore of that backup reported a difference
+where there was none. The content-file check read the keys through <code>psql</code>&#39;s text output, split at line ends
+and at <code>|</code>, so a key holding either was read as something else and reported as missing.</li>
+<li><strong>Decision — rows end at the newline byte only (NFR-002).</strong> <code>newlineSplitter</code> in <code>tools/ops/toolProcess.mjs</code>
+cuts the output at the byte 0x0A and nowhere else, and decodes each line as UTF-8 after joining its chunks.
+COPY&#39;s text format writes a newline inside a value as backslash and <code>n</code>, so a newline byte is always the end of
+a row; no other character is.</li>
+<li><strong>Decision — the restore names the tables that differ (NFR-002, DATA-009).</strong> Its summary has <code>differingTables</code>
+beside <code>tablesDiffering</code>. A table&#39;s name says nothing about a person, and an operator needs to know where to
+look.</li>
+<li><strong>Decision — keys are read as hex (NFR-002).</strong> <code>missingContentFiles</code> asks for
+<code>encode(convert_to(&quot;s3Key&quot;, &#39;UTF8&#39;), &#39;hex&#39;)</code> and decodes it, so no character of a file name can be taken for the
+end of a field or a row. The other values this tool reads through <code>psql</code> are table names it has checked
+against <code>TABLE_NAME</code>, counts and version numbers.</li>
+<li><strong>Verified:</strong> a round trip of rows whose texts and JSON hold U+2028, U+2029 and U+0085, and of content files
+whose keys hold a bar and those characters: the recorded counts are the real ones and the restore reports
+nothing differing or missing. A key with a line break is checked against the database alone, because the
+storage emulator accepts no line break in a key.</li>
+<li><strong>Consequences:</strong> A backup made before this change keeps the counts it recorded: where a text held one of the
+characters, its restore still reports that table as differing, and now names it; the next backup is right.
+The restore&#39;s summary has one more field.</li>
 </ul>
 
 </section>

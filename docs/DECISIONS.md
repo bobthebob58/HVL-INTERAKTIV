@@ -5557,3 +5557,31 @@ loading of one spec per session are kept.
 - **Consequences:** One new server page (the sign-in page), scanned with axe. A redirect to our login that
   another site makes without a click (an interstitial, a link checker) shows that page and costs one click. A
   request refused for its CSRF token costs two extra requests once. No stored data changes.
+
+### D-132 · Security repairs, step 16: a backup counts rows at real row ends and reads file keys exactly
+- **Context:** The backup tool checks its own work (D-110's backup amendment): it records each table's row count
+  from the dump, and a restore compares the counts and looks for content files without an object. The counts
+  were taken by counting lines of `pg_restore`'s output with `node:readline`, which ends a line at the newline
+  but also at U+2028 and U+2029. A database value may hold those characters (an author or a learner pastes them
+  from a word processor), and COPY's text format writes them as they are. Such a row was counted twice: the
+  backup recorded a count the restore could never meet, so every restore of that backup reported a difference
+  where there was none. The content-file check read the keys through `psql`'s text output, split at line ends
+  and at `|`, so a key holding either was read as something else and reported as missing.
+- **Decision — rows end at the newline byte only (NFR-002).** `newlineSplitter` in `tools/ops/toolProcess.mjs`
+  cuts the output at the byte 0x0A and nowhere else, and decodes each line as UTF-8 after joining its chunks.
+  COPY's text format writes a newline inside a value as backslash and `n`, so a newline byte is always the end of
+  a row; no other character is.
+- **Decision — the restore names the tables that differ (NFR-002, DATA-009).** Its summary has `differingTables`
+  beside `tablesDiffering`. A table's name says nothing about a person, and an operator needs to know where to
+  look.
+- **Decision — keys are read as hex (NFR-002).** `missingContentFiles` asks for
+  `encode(convert_to("s3Key", 'UTF8'), 'hex')` and decodes it, so no character of a file name can be taken for the
+  end of a field or a row. The other values this tool reads through `psql` are table names it has checked
+  against `TABLE_NAME`, counts and version numbers.
+- **Verified:** a round trip of rows whose texts and JSON hold U+2028, U+2029 and U+0085, and of content files
+  whose keys hold a bar and those characters: the recorded counts are the real ones and the restore reports
+  nothing differing or missing. A key with a line break is checked against the database alone, because the
+  storage emulator accepts no line break in a key.
+- **Consequences:** A backup made before this change keeps the counts it recorded: where a text held one of the
+  characters, its restore still reports that table as differing, and now names it; the next backup is right.
+  The restore's summary has one more field.

@@ -242,6 +242,8 @@ profile with 200 concurrent learners on one application node. API p95 is ≤ 300
 99.5 % monthly availability during the semester. Database backups run daily with 30-day retention.
 A documented restore is tested once per semester.
 - **Verify:** Operations runbook in `docs/ops/`; restore drill log.
+- **Amended (D-132, 2026-11-22):** the backup's own checks hold for any text: rows are counted at the dump's real
+  row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.
 
 #### NFR-003 · MUST · S4 · Mobile and assistive technology
 Works on the last two versions of Chrome, Edge, Firefox and Safari, on iOS Safari and on Android
