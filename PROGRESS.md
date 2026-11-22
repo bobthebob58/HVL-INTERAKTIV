@@ -2558,3 +2558,59 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004). The free-port case of earlier steps passes now.
   ```
+
+- **2026-11-22 · Security repairs, step 18 (D-134)** — Limits for the deployment: the sum of what the earlier
+  steps limited one by one, and what happens when the server stops. Four repairs, one commit each; every new test
+  fails on the code before and passes after:
+  - Memory line (NFR-002, NFR-006, NFR-007): `server/memoryBudget.ts` (new) writes one start line,
+    `memory limits`, with the container's limit, the heap limit and what the server may use beside its heap, and
+    warns when production has no limit or the limit is below the need. Tests: `server/memoryBudget.test.ts`,
+    `server/main.smoke.test.ts`.
+  - The app stack (NFR-007, NFR-002): `deploy/compose.app.yml` gives the app `restart: unless-stopped` and a
+    memory limit of 5 GiB with no swap beyond it; `tools/deploy-check/resourceRules.mjs` (new) holds the file to
+    it. Tests: `tools/deploy-check/test/resourceRules.test.mjs`. The smoke test (`deploy/smoke/`) now reads the
+    server's memory line inside the container, stops the server process once and waits until the app answers
+    again; it ran here and passed (194 s: limit 5 120 MiB, need 3 904 MiB, no warning; restart count 1).
+  - Insight (INS-001, INS-009): a view is read and counted inside a gate (`infra/BoundedGate.ts`,
+    `insight/InsightViewGate.ts`, new): two at once, twenty waiting, and past that 503 `insight.busy` with
+    `Retry-After`, in nn, nb and en; the contract documents it for the view and the CSV. Tests:
+    `infra/boundedGate.test.ts`, `insight/http/insightBusy.int.test.ts`, the contract's `insightRoutes.test.ts`.
+  - Saved state (H5P-005): the save route takes a turn before its body is read
+    (`http/routes/stateSaveGate.ts`, new): eight at once, two hundred waiting, and past that 429
+    `hvl:rate-limited` with `Retry-After`. Tests: `http/stateSaveGate.test.ts`. Measured before the change: a
+    saved state at the size limit is kept nowhere after its request, but needs several megabytes while its form
+    body is read, and 150 of them at the same moment ran a process with a 256 MB heap limit out of memory; with
+    the gate all 150 were stored.
+  - D-134 added, with the measured figures; NFR-002 and NFR-007 in spec 00 have an "Amended" line;
+    `docs/ops/docker.md` has the memory budget, the runbook asks for a limit and a restart rule where the
+    container runs and names the new alerts; the threat model (T-114) and the risk analysis (ROS-07) follow;
+    `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks different, so no screenshots.
+    Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26881 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 194 s
+  ```
