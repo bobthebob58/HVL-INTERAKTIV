@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # dockerSmoke.sh — builds the server image, starts the app stack (deploy/compose.app.yml), checks health, the
 # migration, a seeded content type, a page served from the image, an upload scanned by the stack's clamd and served
-# from the files origin, and the mappe PDF with Chromium's sandbox on (seen in /proc too), then removes all it made.
+# from the files origin, the mappe PDF with Chromium's sandbox on (seen in /proc too), and that the app comes back
+# after its server process stops, then removes all it made.
 #
 # Why:   NFR-007's Verify is a compose smoke test, and MAPPE-004's PDF must print in the image with æ, ø and å
 #        (D-096). One script runs here and in GitHub CI (D-110 and its amendments of 2026-10-30 and 2026-11-05).
@@ -90,3 +91,5 @@ check_sandbox_processes
 check_startup_probe
 check_chromium
 disk "at the peak"
+check_memory_budget
+check_restart
