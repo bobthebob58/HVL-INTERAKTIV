@@ -128,6 +128,7 @@ describeWithServices('the restore checks its own result (NFR-002)', () => {
     expect(restored.code, restored.stderr).toBe(1);
     expect(JSON.parse(restored.stdout)).toMatchObject({
       tablesDiffering: 1,
+      differingTables: ['public."User"'],
       objectsDiffering: 1,
       contentFilesMissing: 1,
       ok: false,
