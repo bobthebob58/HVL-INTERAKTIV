@@ -97,7 +97,7 @@ file does not list»).
 | Node.js | 24; the image copies it from `node:24-bookworm-slim` by digest `sha256:c86ecead9e55…` (v24.22.2) | Runtime; engines `>=24.0.0 <25` | `deploy/Dockerfile:20,23-27`; `package.json` `engines`; `docs/DECISIONS.md:3626-3630` |
 | tsx | 4.23.15 | Runs the server's TypeScript directly; there is no compile step | `deploy/Dockerfile:134`; `apps/server/package.json` |
 | Express | 5.3.0 | HTTP routing; `X-Powered-By` off | `apps/server/package.json`; `src/server/createApp.ts:157` |
-| Next.js, React | `next` 16.4.2, `react`/`react-dom` 19.3.1 | Web app, in the server process (`WEB_APP=prod`); image optimiser off | `apps/web/package.json`; `apps/web/next.config.mjs:23-24`; D-068 |
+| Next.js, React | `next` 16.4.6, `react`/`react-dom` 19.3.1 | Web app, in the server process (`WEB_APP=prod`); image optimiser off | `apps/web/package.json`; `apps/web/next.config.mjs:23-24`; D-068, D-135 |
 | Lumi H5P engine | `@lumieducation/h5p-server` 10.0.4, plus `h5p-clamav-scanner`, `h5p-svg-sanitizer`, `h5p-redis-lock` 10.0.4. **CVE-2025-7062 is unpatched in 10.0.4** | H5P player, editor and storage | `apps/server/package.json`; CLAUDE.md §1; D-003; D-112 |
 | H5P core (client files) | Tag `1.28.0`, commit `2aeb0b83fa60…`, every file hash-checked | Player JavaScript and CSS | `tools/h5p-core/fetchCoreClients.sh:23-26`; D-027 |
 | H5P editor (client files) | Commit `ab2daa18bd61…` (there is no 1.28 release), every file hash-checked | Editor JavaScript and CSS | `tools/h5p-core/fetchCoreClients.sh:28-30`; D-022 |

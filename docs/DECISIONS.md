@@ -954,6 +954,7 @@ loading of one spec per session are kept.
   removal of `cookie`, `authorization`, `x-hvli-*` and the `ltik` query before Next.js sees them; any other upgrade
   is closed. Production refuses `WEB_APP=dev`, so the development server and its relaxed policy (D-070) never run
   there.
+- **Amendment (2026-11-22, D-135):** the pin is 16.4.6; the rest of the probe result stands.
 
 ### D-069 · Query-ltik paths and file grants for the S4 views and the editor
 - **Context:** D-058 accepts an ltik in a query string on four paths. S4 adds the LTI chrome pages and the editor in
@@ -5685,3 +5686,31 @@ loading of one spec per session are kept.
 - **Consequences:** No requirement changes its meaning; NFR-002 and NFR-007 have an "Amended" line. Whatever runs
   the container in production needs its own memory limit and restart rule; the stack file is the example. On a
   very busy moment a view of insight waits a few seconds, or is asked for again. One more line in the start log.
+
+### D-135 · Security repairs, step 19: Next.js is pinned at 16.4.6
+- **Context:** D-068 pinned `next` at 16.4.2, the first release past the three advisories its probe found.
+  On 2026-11-22 `npm audit` listed seven further advisories, all moderate, for 16.0.0 to 16.4.4:
+  GHSA-7qx7-33qx-rqx2 (the image optimiser), GHSA-f3mh-rxg3-f5g2 (Edge runtime routes), GHSA-pc58-hwjq-p385
+  (applications that forward fetched responses), and GHSA-mfr8-8qww-v76h, GHSA-rhh4-g77r-r9qj,
+  GHSA-vc7v-qv4w-wrv8 and GHSA-vvgp-ww4w-46vf (`use cache` and Cache Components). The web app uses none of
+  these: the image optimiser is off (D-068), it has no Edge runtime route, no route handler and no server-side
+  `fetch`, and no `use cache`. The framework itself stopped the first run of every build to say that its
+  version is affected. SEC-007 asks for a review only of high and critical advisories, so nothing forced this
+  update; the owner decided on 2026-11-22 to make it now, because a patch release exists and costs little.
+- **Decision — the pin is 16.4.6 (SEC-007).** `next` is 16.4.6, pinned exactly, in `apps/web` and `apps/server`
+  (one copy shared by the server and the app, as D-068 set), and `@next/eslint-plugin-next` is 16.4.6 with it.
+  The lock file changed in Next.js's own packages only: `next`, `@next/env`, its compiler binaries and the lint
+  plugin.
+- **Re-checked — what leans on the framework's inner workings.** `apps/web/src/features/lti/ltikFromAddress.ts`
+  works with the router's own history marker (D-080's amendment): the router files it depends on
+  (`client/components/app-router.js` and `app-router-instance.js` of the installed package) are byte for byte
+  the same in 16.4.2 and 16.4.6, its `[LTI-003]` test passes, and its `UPSTREAM:` pointer names the new tag. The
+  in-process mount (D-068) is covered by the web integration tests, the browser journeys and the image's smoke
+  test.
+- **Verified:** `npm audit` lists no advisory for `next`; the first run of `npm run build` passes; screenshots
+  of five public pages in nn at 1280 px and 390 px are pixel for pixel the same before and after (two runs of
+  the same build are identical too, so the comparison means something); the full gate and the smoke test, whose
+  image is built with the new version.
+- **Consequences:** No page looks or behaves differently. `docs/assurance/sbom.cdx.json` is regenerated. The
+  advisory check (`npm run check:audit`) is not changed by this step: it reads only high and critical
+  advisories, and none of these was one.
