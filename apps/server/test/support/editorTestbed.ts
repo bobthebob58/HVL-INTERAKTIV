@@ -71,6 +71,7 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
     resets,
     hasOtherLearnersState: async () => learnerStates.othersHaveState,
     resetLearnerState: async (contentId: string) => void resets.push(contentId),
+    raiseVersion: async () => undefined,
   };
   const editor = createHvlEditor({
     config,

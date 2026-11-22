@@ -25,7 +25,7 @@
  *   - Then the editor's learner-state check (D-093): a structural edit while anyone but the saver has saved
  *     progress is 409 `hvl:learner-state-reset-needed` (no counts) and nothing is saved, unless the body says
  *     `confirmLearnerStateReset: true`; a structural save that goes through deletes the activity's learner state
- *     and raises `H5PContent.version`; a text-only save keeps both. The 409 has H5P's error shape
+ *     and raises `H5PContent.version`; a changed answer key raises it too, with the state kept (D-137). The 409 is
  *     `{ success: false, errorCode, httpStatusCode: 409, message }`; from Canvas (an ltik) its message offers reset
  *     or cancel only (../../learningDesign/safeEditing/resetNeededWording.ts). The editor page's save choice
  *     (`editorSaveChoice.js`, its texts from ../../learningDesign/safeEditing/saveChoiceMessages.ts) answers it by

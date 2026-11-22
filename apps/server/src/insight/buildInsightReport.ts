@@ -13,10 +13,13 @@
  *   - PRIVACY: when the learners who started number 1 to k − 1, every item and misconception cell is suppressed, a 0
  *     too, as participation and video engagement already do: "nobody answered Q2" would describe each of them.
  *   - SPEC-DEVIATION: D-106 — misconceptions are listed for every choice and gap question of the current parameters,
- *     in document order, and only for the current content version: a version is raised only by a structural save
- *     (D-093), which may move options or change gaps, and older parameters are not kept, so an older version's
- *     option indices and gap answers cannot be matched to texts (PROD-013). Video engagement only for an
- *     InteractiveVideo (INS-005).
+ *     in document order, and only for the current content version: a version is raised by a structural save
+ *     (D-093), which may move options or change gaps, and by a changed answer key (D-137); older parameters are
+ *     not kept, so an older version's option indices, gap answers and right answers cannot be matched to texts
+ *     (PROD-013). Video engagement only for an InteractiveVideo (INS-005).
+ *   - PRIVACY: the answers of one version were judged against one answer key (./content/answerKeys.ts, D-137), so
+ *     INS-002's stored verdicts and INS-003's marks agree; the two-group suppression of
+ *     ./aggregate/choiceDistribution.ts and ./aggregate/gapMisconceptions.ts relies on that (INS-006).
  *   - ImageHotspots sends no learning data: its report says so, with started 0 and no questions (D-115).
  * Collaborators: ./content/questionCatalogue.ts, ./content/activityCapabilities.ts, ./aggregate/*,
  *   ./InsightService.ts.

@@ -106,7 +106,7 @@ export class XapiIngest {
   ): Promise<XapiIngestOutcome> {
     const receivedAt = this.deps.clock();
     const target = await xapiTarget(this.deps, principal, batch.contentId);
-    // WHY: a page opened before a structural save keeps its version; a later one does not exist yet (D-093, D-115).
+    // WHY: a page opened before a save that raised the version keeps its own; a later one does not exist yet (D-115).
     if (batch.contentVersion > target.currentVersion) throw new HttpError(400, 'error.badRequest');
     const count = batch.statements.length;
     const decision = await this.deps.rateLimit.take(principal.userId, target.contentId, count);

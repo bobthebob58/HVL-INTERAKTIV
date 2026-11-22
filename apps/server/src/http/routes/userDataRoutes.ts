@@ -20,7 +20,7 @@
  *     their body is read, and past a full line the answer is 429 too (./stateSaveGate.ts, D-134).
  *   - A write stores the year of the actor's key (`learnerKeyYear`) as the row's `academicYear` (D-107).
  *   - A write that names `contentVersion` (every player page's state URL does, D-093) is made only while the
- *     activity has that version; a write from a page opened before a structural save is dropped and answered
+ *     activity has that version; a write from a page opened before a save that raised it is dropped and answered
  *     `{ success: false, message: 'hvl:learner-state-stale' }` with status 200, which h5p.js hands to an error
  *     callback the players' autosave does not set: nothing is retried or shown. A malformed version is 400.
  *   - Activity `0` is the editor's own UI state (whether a field's description is open, whether a guided tour was
@@ -72,7 +72,7 @@ const stateNames = (req: Request): [string, string, string] => {
   return names;
 };
 
-/** The answer's message for a write from a page opened before a structural save (D-093); never shown. */
+/** The answer's message for a write from a page opened before a save that raised the version; never shown. */
 const STALE_STATE = 'hvl:learner-state-stale';
 
 /** H5P sends flags as the strings "1" and "0". */

@@ -15,8 +15,8 @@
  *   - Save order (./editorSaveSteps.ts): permission and main library → stored files → sub-content policy →
  *     paste-source guard → learner-state check (409 for an unconfirmed structural edit while others have state) →
  *     Lumi's save, whose first parameter write also resets the state and raises the version of a structural edit
- *     in one transaction (D-093 amendment 2026-10-29) → delete dropped files as the author.
- *     Both save methods take the author's `SaveChoice`; a text-only save keeps every state row.
+ *     in one transaction (D-093 amendment 2026-10-29) → delete dropped files as the author. Both save methods take
+ *     the author's `SaveChoice`; any other save keeps every state row, and a changed answer key raises the version.
  *   - Package import: path only (never a buffer), `inspectZip`, manifest, main library one of the ten; non-admins:
  *     every library installed in the same version and content its semantics can read (400, D-124); admins: the
  *     build-secret scan (400), the audit; then Lumi's import.

@@ -12,6 +12,9 @@
  *   - The version is read before Lumi renders: if a structural save lands in between, the page carries the older
  *     version and its writes are dropped (the learner loses only that visit's progress) instead of a newer version
  *     with the older parameters, whose writes would be kept and break the next resume.
+ *   - A save that changes an answer key raises the version too and keeps the state (D-137): a page rendered before
+ *     it names the version of the key it shows, so its statements are stored under that version, and its state
+ *     writes are dropped until the activity is opened again.
  *   - The version is added only to a model Lumi rendered, so only after Lumi's View check; a refused render
  *     reveals nothing.
  *   - `contentVersion` is a positive integer of at most nine digits; anything else is 400 `error.badRequest`.

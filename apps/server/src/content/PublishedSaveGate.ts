@@ -5,8 +5,8 @@
  * Why: D-074 says saving a published activity runs the same gate as publishing: learners see the saved version at
  *      once, so a save that adds an error nobody has explained is refused, while warnings and hints never block
  *      (PROD-003). `H5PContent.version`, which xAPI statements record so insight compares like with like
- *      (DATA-012), is raised by the editor's write itself, and only for a structural edit (D-093 amends D-074's
- *      "every save"): a text-only edit keeps the learners' state and the version they saved it under.
+ *      (DATA-012), is raised by the editor's write itself, and only for a structural edit or a changed answer key
+ *      (D-093 amends D-074's "every save"; D-137): a text-only edit keeps the learners' state and the version.
  * Spec: PROD-003, UD-022, PROD-013
  * Invariants:
  *   - An activity the gate cannot find is refused (404), never saved unchecked. The lock and the lookup use the

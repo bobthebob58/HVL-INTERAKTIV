@@ -13,7 +13,8 @@
  *     Any refusal is thrown here, so a refused save changes neither the parameters, nor the files, nor the state.
  *   - Lumi's write runs through `write`: a structural edit's learner-state reset (state rows deleted, version
  *     raised) commits in the same transaction as Lumi's first parameter write (./storage/learnerStateResetWrite.ts),
- *     so no later failure leaves the new structure with the old state.
+ *     so no later failure leaves the new structure with the old state. A save that changes an answer key keeps
+ *     the state, and its version raise commits with that write too (./storage/contentVersionRaiseWrite.ts, D-137).
  *   - After Lumi's write, the dropped files are deleted as the author (./contentFileCleanup.ts); a new activity has
  *     none.
  * Collaborators: ./HvlH5PEditor.ts, ./saveAdmission.ts, ./contentFileCleanup.ts, ./semantics/SubContentPolicy.ts,
@@ -123,7 +124,8 @@ export class EditorSaveSteps {
   }
 
   /**
-   * Runs Lumi's write; a structural save's learner-state reset commits with its first parameter write (D-093).
+   * Runs Lumi's write; a structural save's learner-state reset, or an answer-key save's version raise, commits
+   * with its first parameter write (D-093, D-137).
    * @param checked - From `beforeWrite`.
    * @param lumiSave - Lumi's save of the parameters and files.
    * @returns What `lumiSave` returned.
