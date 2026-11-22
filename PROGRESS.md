@@ -2699,3 +2699,48 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
   ```
+
+- **2026-11-22 · Security repairs, step 21 (D-137)** — A save that changes an answer key starts a new content
+  version, so insight never shows answers that were judged against one key under another key's marks. Two code
+  commits:
+  - The save step (PROD-013, INS-003, INS-006): a save of an existing activity with the same structure and
+    another answer key raises `H5PContent.version` in the statement that writes the new parameters and keeps
+    every learner's saved state; the author is asked nothing (`learningDesign/safeEditing/LearnerStateGate.ts`,
+    `h5p/storage/contentVersionRaiseWrite.ts`, new, `h5p/storage/contentUpdate.ts`). The key is read with
+    insight's own readers (`insight/content/answerKeys.ts`, new): a choice question's `correct` marks, and per gap
+    of a Blanks or DragText task the accepted answers and whether case counts; texts, tips, feedback and the
+    order of a gap's alternatives are no part of it. Tests: `insight/answerKeys.test.ts`,
+    `h5p/contentVersionRaiseWrite.test.ts`, `learningDesign/safeEditing/LearnerStateGate.test.ts`, and through the
+    save route on the real MultiChoice and Blanks, with insight after the save,
+    `learningDesign/safeEditing/answerKeyVersions.int.test.ts`.
+  - The Innsikt tab (INS-003): the note for an older version says that the options or the answer key may have
+    changed (nn, nb, en). Screenshots in nn at 1280 px and 390 px were sent to the owner; none is committed.
+  - D-137 added; PROD-013 in spec 00 and INS-003 in spec 05 have an "Amended" line; the threat model (T-100) and
+    R3 in `docs/privacy/DPIA-INPUT.md` follow; `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26909 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
