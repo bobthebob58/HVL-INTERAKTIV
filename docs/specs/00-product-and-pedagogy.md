@@ -244,6 +244,9 @@ A documented restore is tested once per semester.
 - **Verify:** Operations runbook in `docs/ops/`; restore drill log.
 - **Amended (D-132, 2026-11-22):** the backup's own checks hold for any text: rows are counted at the dump's real
   row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.
+- **Amended (D-134, 2026-11-22):** the app container has a restart rule, so a server that ended its process comes
+  back; the server writes its memory limits at start and warns when they do not fit; and at most two insight
+  views and eight saved states are handled at the same time in one process, the others waiting their turn.
 
 #### NFR-003 · MUST · S4 · Mobile and assistive technology
 Works on the last two versions of Chrome, Edge, Firefox and Safari, on iOS Safari and on Android
@@ -273,6 +276,9 @@ e-mail addresses, Feide IDs, LTI `sub` values, ltik tokens, or answer contents. 
 Docker images and `docker-compose.yml` for local and staging environments. Only EEA-hosted
 PostgreSQL, Redis and S3-compatible storage. No runtime calls to third-party CDNs (see `DATA-011`).
 - **Verify:** `docker compose up` smoke test in CI.
+- **Amended (D-134, 2026-11-22):** the app stack gives the app a memory limit (5 GiB, no swap beyond it; at least
+  4 GiB) and a restart rule, and its one-off steps none; `tools/deploy-check` holds the file to it, and the smoke
+  test stops the server process once and waits for it to answer again.
 
 ---
 

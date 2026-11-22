@@ -760,7 +760,10 @@ profile with 200 concurrent learners on one application node. API p95 is ≤ 300
 a documented restore is tested once per semester.
 - **verify:** operations runbook in `docs/ops/`; restore drill log.
 - **amended (d-132, 2026-11-22):** the backup's own checks hold for any text: rows are counted at the dump's real
-  row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.">
+  row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.
+- **amended (d-134, 2026-11-22):** the app container has a restart rule, so a server that ended its process comes
+  back; the server writes its memory limits at start and warns when they do not fit; and at most two insight
+  views and eight saved states are handled at the same time in one process, the others waiting their turn.">
 <summary><span class="req-id">NFR-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Availability and recoverability</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>99.5 % monthly availability during the semester. Database backups run daily with 30-day retention.
 A documented restore is tested once per semester.</p>
@@ -768,6 +771,9 @@ A documented restore is tested once per semester.</p>
 <li><strong>Verify:</strong> Operations runbook in <code>docs/ops/</code>; restore drill log.</li>
 <li><strong>Amended (D-132, 2026-11-22):</strong> the backup&#39;s own checks hold for any text: rows are counted at the dump&#39;s real
 row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.</li>
+<li><strong>Amended (D-134, 2026-11-22):</strong> the app container has a restart rule, so a server that ended its process comes
+back; the server writes its memory limits at start and warns when they do not fit; and at most two insight
+views and eight saved states are handled at the same time in one process, the others waiting their turn.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-NFR-002">00 Product and pedagogy, NFR-002</a> · Non-functional</p></div>
 </details>
@@ -823,12 +829,18 @@ it is not <code>production</code>.</li>
 </details>
 <details class="req" id="x-NFR-007" data-area="NFR" data-priority="MUST" data-session="S6" data-status="tested" data-text="nfr-007 deployable on hvl or sikt infrastructure docker images and `docker-compose.yml` for local and staging environments. only eea-hosted
 postgresql, redis and s3-compatible storage. no runtime calls to third-party cdns (see `data-011`).
-- **verify:** `docker compose up` smoke test in ci.">
+- **verify:** `docker compose up` smoke test in ci.
+- **amended (d-134, 2026-11-22):** the app stack gives the app a memory limit (5 gib, no swap beyond it; at least
+  4 gib) and a restart rule, and its one-off steps none; `tools/deploy-check` holds the file to it, and the smoke
+  test stops the server process once and waits for it to answer again.">
 <summary><span class="req-id">NFR-007</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Deployable on HVL or Sikt infrastructure</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Docker images and <code>docker-compose.yml</code> for local and staging environments. Only EEA-hosted
 PostgreSQL, Redis and S3-compatible storage. No runtime calls to third-party CDNs (see <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>).</p>
 <ul>
 <li><strong>Verify:</strong> <code>docker compose up</code> smoke test in CI.</li>
+<li><strong>Amended (D-134, 2026-11-22):</strong> the app stack gives the app a memory limit (5 GiB, no swap beyond it; at least
+4 GiB) and a restart rule, and its one-off steps none; <code>tools/deploy-check</code> holds the file to it, and the smoke
+test stops the server process once and waits for it to answer again.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-NFR-007">00 Product and pedagogy, NFR-007</a> · Non-functional</p></div>
 </details>
@@ -3739,6 +3751,9 @@ A documented restore is tested once per semester.</p>
 <li><strong>Verify:</strong> Operations runbook in <code>docs/ops/</code>; restore drill log.</li>
 <li><strong>Amended (D-132, 2026-11-22):</strong> the backup&#39;s own checks hold for any text: rows are counted at the dump&#39;s real
 row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.</li>
+<li><strong>Amended (D-134, 2026-11-22):</strong> the app container has a restart rule, so a server that ended its process comes
+back; the server writes its memory limits at start and warns when they do not fit; and at most two insight
+views and eight saved states are handled at the same time in one process, the others waiting their turn.</li>
 </ul>
 <h4 id="r-NFR-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-NFR-003">NFR-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Mobile and assistive technology</span></h4>
 <p>Works on the last two versions of Chrome, Edge, Firefox and Safari, on iOS Safari and on Android
@@ -3771,6 +3786,9 @@ it is not <code>production</code>.</li>
 PostgreSQL, Redis and S3-compatible storage. No runtime calls to third-party CDNs (see <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>).</p>
 <ul>
 <li><strong>Verify:</strong> <code>docker compose up</code> smoke test in CI.</li>
+<li><strong>Amended (D-134, 2026-11-22):</strong> the app stack gives the app a memory limit (5 GiB, no swap beyond it; at least
+4 GiB) and a restart rule, and its one-off steps none; <code>tools/deploy-check</code> holds the file to it, and the smoke
+test stops the server process once and waits for it to answer again.</li>
 </ul>
 <hr>
 <h3 id="spec-00--7-scope-boundaries" tabindex="-1">7. Scope boundaries</h3>
@@ -12584,6 +12602,54 @@ suites, which open every kind of page under the new default policy.</li>
 other machines reach needs https and random keys. A production start with a debug switch is refused. A start
 that fails after a client connected now ends its process, where it could stay alive before. Test servers that
 stand in for a framed page must say who may frame it, as the real pages do.</li>
+</ul>
+<h3 id="decisions--d-134--security-repairs-step-18-the-app-container-comes-back-and-has-a-memory-limit-the-server-says-whether-its-memory-fits-and-work-that-holds-memory-waits-its-turn" tabindex="-1">D-134 · Security repairs, step 18: the app container comes back and has a memory limit, the server says whether its memory fits, and work that holds memory waits its turn</h3>
+<ul>
+<li><strong>Context:</strong> Steps 2 to 13 gave each single thing the server does a ceiling: one upload, one SVG (D-119), one
+learner&#39;s saved state (D-120), one insight view (D-122), one check of an activity (D-126, D-127). Their sum
+and the deployment around them were left for this step. The app stack had no restart rule, so a server that
+ended its process after a fault (D-133) stayed down, and no memory limit, so one runaway process could take
+the machine. Nothing said how much memory the server may use, and nothing bounded how many insight views or
+saved states were handled at the same moment.</li>
+<li><strong>Measured (2026-11-22, the development container, Node 24.22.2 in the image):</strong> the heap limit Node chooses
+follows the container&#39;s limit: 560 MiB at 1 GiB, 1 120 at 2, 1 728 at 3, 2 240 at 4 GiB and above, 4 288 with
+no limit on a 16 GiB machine. A process past its container&#39;s limit is stopped by the kernel with exit code 137
+and no output; past its own heap limit Node first writes «JavaScript heap out of memory». Chromium printing one
+sample mappe: 246 MB in 10 processes. The idle server: about 500 MB resident in all. A saved state at the size
+limit is a form body of about 0.9 MB; after 100 such saves and a collection the heap is back at its baseline,
+so nothing is kept after a request. While a body is read, Express&#39;s form parser makes about 6 MB of
+short-lived text from it, and the storage path about 4 MB of buffers. 150 such saves at the same moment ran a
+process with a 256 MB heap limit out of memory; through the gate below all 150 were stored, with the heap at
+most at 179 MB.</li>
+<li><strong>Decision — the app comes back and has a ceiling (NFR-007, NFR-002).</strong> In <code>deploy/compose.app.yml</code> the app has
+<code>restart: unless-stopped</code>, <code>mem_limit: 5g</code> and <code>memswap_limit: 5g</code>; the steps that run once (buckets, migrate,
+seed) have no restart rule. The budget, in MiB: the heap limit Node chooses (2 240), the SVG worker (512), the
+server outside its heap (256), Chromium for two exports (256 + 128) and a full <code>/tmp</code> kept in memory (512):
+3 904. 4 GiB is the least that fits while Node chooses its heap; below that the heap needs
+<code>--max-old-space-size</code> (docs/ops/docker.md). <code>tools/deploy-check/resourceRules.mjs</code> holds the stack file to it,
+and the smoke test stops the server process inside the app container and waits until it answers again.</li>
+<li><strong>Decision — the server says what it has (NFR-002, NFR-006).</strong> <code>server/memoryBudget.ts</code> writes one start line,
+<code>memory limits</code>, with the container&#39;s limit, the heap limit and what the server may use beside its heap, and a
+<code>warn</code> line when production has no limit or when the limit is below the need. It warns and does not refuse:
+the figures for Chromium and for the server outside its heap are measured estimates, and an estimate must not
+keep a working installation from starting.</li>
+<li><strong>Decision — two insight views at once (INS-001, INS-009).</strong> <code>InsightService.forActivity</code> reads and counts a
+view inside a gate (<code>infra/BoundedGate.ts</code>, <code>insight/InsightViewGate.ts</code>): two at once, twenty waiting in the
+order they came. Past that the view and the CSV answer 503 <code>insight.busy</code> with <code>Retry-After: 5</code>; nothing was
+read, and nothing is audited. The web app shows its ordinary «could not load» message for it. The scope is
+resolved before the gate, so a refused scope takes no place.</li>
+<li><strong>Decision — eight saved states at once (H5P-005).</strong> The save route takes a turn in a gate before its body is
+read (<code>http/routes/stateSaveGate.ts</code>): eight at once, two hundred waiting, and past that 429
+<code>hvl:rate-limited</code> with <code>Retry-After: 1</code>, the answer of the per-minute limit, which the player&#39;s autosave
+ignores. The place is given back when the response closes, however the request ends.</li>
+<li><strong>Verified:</strong> unit and integration tests for the rules, the budget, the gates and both answers; the entry
+point&#39;s start log holds the <code>memory limits</code> line. The smoke test ran in the development container (194 s):
+inside the app container the server wrote <code>containerLimitMb</code> 5 120, <code>heapLimitMb</code> 2 240, <code>besideHeapMb</code> 1 664
+and <code>neededMb</code> 3 904 with no warning, and the app answered again after its server process was stopped (restart
+count 1). A container stopped by hand stayed stopped.</li>
+<li><strong>Consequences:</strong> No requirement changes its meaning; NFR-002 and NFR-007 have an &quot;Amended&quot; line. Whatever runs
+the container in production needs its own memory limit and restart rule; the stack file is the example. On a
+very busy moment a view of insight waits a few seconds, or is asked for again. One more line in the start log.</li>
 </ul>
 
 </section>

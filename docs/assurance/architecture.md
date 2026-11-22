@@ -35,7 +35,7 @@ sends every upload to a ClamAV daemon (clamd) when one is configured (production
 explicitly turned off) and refuses uploads until clamd has proven its alert settings, and prints the pedagogisk mappe as PDF with a sandboxed Chromium inside the same container.
 TLS is terminated by a reverse proxy in front of it (`src/config/env.ts:77`, `deploy/Dockerfile:111,131-134`,
 `src/server/createApp.ts:156-194`, `src/config/malwareScanConfig.ts:11-12`,
-`src/security/malware/ClamdSettingsProbe.ts`, `docs/ops/runbook.md:14-31`).
+`src/security/malware/ClamdSettingsProbe.ts`, `docs/ops/runbook.md:14-32`).
 
 ## 2. Component diagram
 
@@ -111,11 +111,11 @@ file does not list»).
 | tini, fonts, Chromium's system libraries | From Ubuntu's archive at build time, **versions not pinned** | PID 1; æ, ø and å in the PDF | `deploy/Dockerfile:103-108,133` |
 | Seccomp profile | Playwright v1.56.1's profile, byte for byte, SHA-256 `cc3e61cabda6…` | Lets Chromium keep its sandbox as non-root | `deploy/seccomp/README.md`; `tools/deploy-check/deployRules.mjs` |
 | Browser-side scripts | H5P core and content-type JavaScript, and our theme scripts including the xAPI bridge | Run in users' browsers, served from the app origin | `packages/hvl-h5p-theme/`; D-102; `src/http/h5pPageCsp.ts:83` |
-| PostgreSQL | 16. Local stack pins `postgres:16-alpine` by digest; root compose and CI use the tag only. **HVL's server: (IT to fill in)** | Relational data | `deploy/compose.app.yml:65`; `docker-compose.yml:14`; `.github/workflows/ci.yml:35` |
-| Redis | 7. Local stack by digest; root compose and CI by tag. Must run with `maxmemory-policy noeviction`. **HVL's server: (IT to fill in)** | Sessions, caches, locks, leases, rate limits | `deploy/compose.app.yml:77`; `docker-compose.yml:27`; `.github/workflows/ci.yml:44`; `apps/server/.env.example:36-39` |
-| Object storage | Any S3-compatible store in the EEA. Local and CI use the moto emulator 5.1.16. **Which store: (IT to fill in)** | Content files and temporary uploads | `src/config/storageResidency.ts:30-40`; `deploy/compose.app.yml:84`; D-023 |
-| ClamAV (clamd) | Local stack and CI: `clamav/clamav:1.4` by digest (ClamAV 1.4.6); CI runs it twice, once without the alert settings, to show that uploads are then refused. **HVL's clamd: (IT to fill in)** | Scans every upload before it is stored (`SEC-006`), once its alert settings are proven | `deploy/compose.app.yml:91-106`; `.github/workflows/ci.yml:54,66`; `docs/ops/clamav.md` |
-| Reverse proxy | **(IT to fill in)** | TLS, compression, request ID, access log | `docs/ops/runbook.md:26,306-309` |
+| PostgreSQL | 16. Local stack pins `postgres:16-alpine` by digest; root compose and CI use the tag only. **HVL's server: (IT to fill in)** | Relational data | `deploy/compose.app.yml:69`; `docker-compose.yml:14`; `.github/workflows/ci.yml:35` |
+| Redis | 7. Local stack by digest; root compose and CI by tag. Must run with `maxmemory-policy noeviction`. **HVL's server: (IT to fill in)** | Sessions, caches, locks, leases, rate limits | `deploy/compose.app.yml:81`; `docker-compose.yml:27`; `.github/workflows/ci.yml:44`; `apps/server/.env.example:36-39` |
+| Object storage | Any S3-compatible store in the EEA. Local and CI use the moto emulator 5.1.16. **Which store: (IT to fill in)** | Content files and temporary uploads | `src/config/storageResidency.ts:30-40`; `deploy/compose.app.yml:88`; D-023 |
+| ClamAV (clamd) | Local stack and CI: `clamav/clamav:1.4` by digest (ClamAV 1.4.6); CI runs it twice, once without the alert settings, to show that uploads are then refused. **HVL's clamd: (IT to fill in)** | Scans every upload before it is stored (`SEC-006`), once its alert settings are proven | `deploy/compose.app.yml:95-110`; `.github/workflows/ci.yml:54,66`; `docs/ops/clamav.md` |
+| Reverse proxy | **(IT to fill in)** | TLS, compression, request ID, access log | `docs/ops/runbook.md:26,311-314` |
 
 ## 4. Trust boundaries
 
@@ -125,9 +125,9 @@ file does not list»).
 | TB2 | **Canvas frame (cross-site)** | Canvas shows the tool in an iframe of another site; the browser posts the launch to `/lti/login` and `/lti/launch` | ltijs checks the launch token's signature against Canvas's JWKS, its audience and its nonce (used once). We check the deployment ID and the platform's active flag, which ltijs does not. The portal cookie is `SameSite=Lax`, so it is not sent in the frame: the ltik is kept in page memory and sent as a bearer token; a query ltik is accepted only on the five paths in `LTIK_QUERY_PATHS` and on `/app/play`, where the LTI router checks it before the web app sees it. LTI pages may be framed only by `CANVAS_ORIGINS`; `/lti/play` and `/lti/edit` may also be framed by the app's own `/app/play` page. An LTI launch never grants `admin` | `src/lti/LtiProviderFactory.ts:29-33`; `src/lti/platforms/LtiDeploymentGuard.ts`; `src/auth/requestPrincipal.ts:31-38`; `src/lti/play/appLaunchRoutes.ts:1-10`; `src/lti/http/ltiPageHeaders.ts:1-17`; `src/lti/LtiRoleMapper.ts:9`; D-050, D-051, D-058; `apps/server/e2e/ltiIframe.e2e.test.ts` (a launch with third-party cookies blocked) |
 | TB3 | **Feide** | The browser is redirected to Feide to log in; the server exchanges the code and reads the user's groups | Authorization Code with PKCE `S256`, `state` and `nonce`; the ID token's `iss`, `aud`, `nonce`, `exp` and signature (Feide's JWKS) are checked; the client secret is sent by POST and never logged. Login fails if the Groups API fails | `src/auth/feide/FeideClient.ts:1-16,70-84,102-106`; `src/auth/feide/feideGroups.ts:37`; `AUTH-001`; D-054 |
 | TB4 | **App host and files host** | Uploaded files that authors put into activities | One process, told apart by `Host`. A files-host request meets a files-only router before any session, LTI, API or web code; that router reads no cookie, ltik or `Authorization` header and sets no cookie. It serves a file only for `GET`/`HEAD` with a signed grant, answers CORS preflights (`OPTIONS`) on that path, and answers 404 to everything else; every answer gets `CSP: sandbox; default-src 'none'; …` and `nosniff`. **Limits:** `files.<host>` is the same *site* as the app (a separate registrable domain would isolate more, HVL's choice, Q5); the **editor's** files are still served from the app origin (`SPEC-DEVIATION: D-110`) | `src/http/filesOriginRouter.ts:1-25`; `src/config/filesOrigin.ts:1-20`; `src/security/ContentFileHeaders.ts:76`; `src/h5p/createH5pRuntime.ts:15-16`; `src/http/routes/fileRoutes.ts:11`; `SEC-004`; D-012, D-045, D-110 |
-| TB5 | **Reverse proxy to app** | All inbound traffic, in plain HTTP behind the proxy | The app trusts `X-Forwarded-*` only from `TRUST_PROXY` proxies (0–5, usually 1). The proxy must terminate TLS for both names, set `X-Forwarded-Host` itself, pass `Host` on, and **leave the query string out of its access log**, because a few routes accept `?ltik=` | `src/server/createApp.ts:158-159`; `apps/server/.env.example:112-116`; `docs/ops/runbook.md:306-315`; DPIA input R26 |
+| TB5 | **Reverse proxy to app** | All inbound traffic, in plain HTTP behind the proxy | The app trusts `X-Forwarded-*` only from `TRUST_PROXY` proxies (0–5, usually 1). The proxy must terminate TLS for both names, set `X-Forwarded-Host` itself, pass `Host` on, and **leave the query string out of its access log**, because a few routes accept `?ltik=` | `src/server/createApp.ts:158-159`; `apps/server/.env.example:112-116`; `docs/ops/runbook.md:311-320`; DPIA input R26 |
 | TB6 | **App to internal services** | SQL, Redis commands, S3 objects, uploads to clamd | In production the server refuses to start unless PostgreSQL uses `sslmode` `require`/`verify-ca`/`verify-full`, Redis uses `rediss://`, S3 uses https in an EEA region or on an allowed domain, and clamd is reached over TLS (unless on the loopback). The database has three roles; the app's role cannot change the schema or rewrite audit rows | `src/config/connectionEncryption.ts:8-11,49-58`; `src/config/storageResidency.ts:1-40`; `src/config/malwareScanConfig.ts:1-17`; `docs/ops/database-roles.md`; `DATA-004`, `DATA-010`; D-109 |
-| TB7 | **App to Canvas services (outbound)** | Client-credentials token requests, scores (AGS), roster reads (NRPS) | AGS tokens are requested with a JWT signed by the tool's own key. Our AGS client never follows a redirect; NRPS roster reads go through ltijs's own HTTP client, whose redirect handling this document has not checked. A line item or roster URL must be on an origin in `CANVAS_ORIGINS` or the platform's own, over https in production, checked when the launch records it and again before each send | `src/grades/AgsAccessTokens.ts:1-20,148-149`; `src/grades/AgsScoreClient.ts:18,128-131`; `src/grades/lineItemUrlPolicy.ts:1-15`; `src/server/main.ts:113-122`; D-104 |
+| TB7 | **App to Canvas services (outbound)** | Client-credentials token requests, scores (AGS), roster reads (NRPS) | AGS tokens are requested with a JWT signed by the tool's own key. Our AGS client never follows a redirect; NRPS roster reads go through ltijs's own HTTP client, whose redirect handling this document has not checked. A line item or roster URL must be on an origin in `CANVAS_ORIGINS` or the platform's own, over https in production, checked when the launch records it and again before each send | `src/grades/AgsAccessTokens.ts:1-20,148-149`; `src/grades/AgsScoreClient.ts:18,128-131`; `src/grades/lineItemUrlPolicy.ts:1-15`; `src/server/main.ts:118-127`; D-104 |
 | TB8 | **App to Chromium (inside the container)** | HTML of the mappe for printing | Each export runs in a fresh context with JavaScript off, `offline: true`, and every request aborted. Chromium keeps its own sandbox through the seccomp profile and `CAP_SYS_CHROOT` | `src/learningDesign/mappe/pdf/PdfRenderer.ts:106,119-120`; `docs/ops/docker.md:29-35`; D-096 |
 | TB9 | **Third-party H5P code to learners' browsers** | Content-type JavaScript from H5P's GitHub repositories, served from the app origin | Libraries change only through the seed step (from the pinned, hash-checked bundle) or an `admin`'s package import, which the code allows (D-041); both first scan the library files for a build machine's secrets, as the bundle tool does (D-110's amendment of 2026-11-06); only `admin` may install or update libraries; any other author's package may carry only libraries already installed in the same version; the Hub is never used at runtime; every library change writes an audit row | Section 10; `src/h5p/libraries/packageLibraryCheck.ts`; `src/h5p/libraries/libraryBuildSecrets.ts`; `src/h5p/HvlH5PEditor.ts:73,192-193`; D-004, D-041; `SEC-003`, `H5P-011` |
 
@@ -143,7 +143,7 @@ and scanner start checks apply. Ports for HVL's services are **(IT to fill in)**
 | N2 | In | Users' browsers | Proxy, then app: files host (`FILES_BASE_URL`) | HTTPS 443, same app port | The player's uploaded files, with a signed grant | Yes | `src/http/filesOriginRouter.ts`; `apps/server/.env.example:100-106` |
 | N3 | In | Browser in the Canvas frame, sent by Canvas | `/lti/login`, `/lti/launch` | HTTPS 443 (form posts) | LTI 1.3 login and launch | Yes (HVL's test Canvas) | `src/lti/LtiProviderFactory.ts:29-33`; `docs/reference/canvas-lti13-developer-key.json:4-5` |
 | N4 | In | Canvas servers | `/lti/keys` | HTTPS 443 | Canvas reads the tool's public keys (the developer key's `public_jwk_url`) | Yes | `docs/reference/canvas-lti13-developer-key.json:6`; `src/lti/LtiProviderFactory.ts:32` |
-| N5 | In | HVL monitoring | `GET /healthz` | HTTP or HTTPS | Health check: 200 or 503 with the failing service; no login | Yes | `src/server/healthRoutes.ts:1-17`; `docs/ops/runbook.md:204-206` |
+| N5 | In | HVL monitoring | `GET /healthz` | HTTP or HTTPS | Health check: 200 or 503 with the failing service; no login | Yes | `src/server/healthRoutes.ts:1-17`; `docs/ops/runbook.md:205-207` |
 | N6 | Out | App | PostgreSQL | TCP, port in `DATABASE_URL` (5432 locally); TLS required in production | All relational data | Yes | `src/config/connectionEncryption.ts:8-11`; `apps/server/.env.example:29-34` |
 | N7 | Out | App | Redis | TCP, port in `REDIS_URL` (6379 locally); `rediss://` required in production | Sessions, caches, locks, leases | Yes | `src/config/connectionEncryption.ts:54-55`; `apps/server/.env.example:36-41` |
 | N8 | Out | App | S3-compatible store (`S3_ENDPOINT`, or AWS S3 in `S3_REGION`) | HTTPS 443; EEA allow-list; the SDK's own endpoint variables refused | Content files and temporary uploads | Yes | `src/config/storageResidency.ts:1-47`; `apps/server/.env.example:43-70` |
@@ -153,7 +153,7 @@ and scanner start checks apply. Ports for HVL's services are **(IT to fill in)**
 | N12 | Browser | Users' browsers | Feide | HTTPS 443 | Login and logout pages (the app allows Feide as a form target) | Yes | `src/server/createApp.ts:172`; `src/auth/feide/feideLoginRoutes.ts` |
 | N13 | Out | App (ltijs) | Canvas platform JWKS (`LTI_PLATFORMS[].jwksUrl`) | HTTPS 443 | Check launch-token signatures; cached 5 minutes in Redis | Yes | `src/lti/platforms/syncLtiPlatforms.ts:38`; `docs/reference/canvas-platform-values.md:30`; `docs/privacy/DATA-INVENTORY.md` (Redis keys) |
 | N14 | Out | App | Canvas token endpoint (`LTI_PLATFORMS[].tokenEndpoint`) | HTTPS 443 | Client-credentials tokens for AGS (our client, which follows no redirect) and NRPS (ltijs's client) | Yes, to test grades and insight counts | `src/grades/AgsAccessTokens.ts:1-20`; `docs/reference/canvas-platform-values.md:31` |
-| N15 | Out | App (grade worker, every 15 s) | Canvas AGS line items on the institution's Canvas domain | HTTPS 443 | Send formative scores; retried for 24 h | Yes, if graded placements are tested | `src/grades/AgsScoreClient.ts`; `src/grades/GradeSyncWorker.ts:28`; `docs/ops/runbook.md:227-228` |
+| N15 | Out | App (grade worker, every 15 s) | Canvas AGS line items on the institution's Canvas domain | HTTPS 443 | Send formative scores; retried for 24 h | Yes, if graded placements are tested | `src/grades/AgsScoreClient.ts`; `src/grades/GradeSyncWorker.ts:28`; `docs/ops/runbook.md:232-233` |
 | N16 | Out | App | Canvas NRPS roster URL from the launch | HTTPS 443 | Count a course's active learners (pages of 50, 60 s limit); only the count is stored | Yes | `src/lti/nrps/nrpsRosterRead.ts:1-30`; `apps/server/.env.example:177-181` |
 | N17 | Browser | Author's browser | Canvas's Deep Linking return URL | HTTPS 443 (form post) | Hand the chosen activity back to Canvas | Yes | D-061 |
 | N18 | Browser | Learners' browsers | HVL's Panopto site and `developers.panopto.com` (one file) | HTTPS 443 | Outside video, **only** when a Panopto site is in `EXTERNAL_MEDIA_ORIGINS`. YouTube must never be listed (owner decision, D-070); the code does not refuse it, so this is a configuration rule | No (off by default) | `src/http/h5pPageCsp.ts:40-45`; `apps/server/.env.example:132-139`; D-070 |
@@ -195,21 +195,21 @@ database schema (`DATA-001`).
 
 | Store | What it holds | Personal data? | Retention | In the backup? | Evidence |
 |---|---|---|---|---|---|
-| **PostgreSQL 16** | Activities and their settings; staff accounts (display name, keyed hash of the Feide ID); learner data under the pseudonym `learnerKey` (xAPI statements, saved progress, grade jobs); LTI records; audit tables; *k*-suppressed insight snapshots | **Yes.** Staff personal data; pseudonymous learner data; launch ID-token claims (an allowlist that **includes the raw Canvas `sub` in clear**) for 24 h; beyond 24 h the raw `sub` is kept only **encrypted**, in grade jobs; LTI tool private keys encrypted | Learner rows: yearly purge, default 31 August. Encrypted `sub`: 30 days after the job stops. LTI ID tokens 24 h, nonces 10 min. Audit: 2 years required, **deletion not built** (DPIA input R27). Staff accounts: until deleted by hand (DPIA input R28) | Yes: `pg_dump`, daily, kept 30 days | `docs/privacy/DATA-INVENTORY.md`; `src/grades/GradeSubjectCleanupJob.ts:25-27`; `docs/ops/runbook.md:151-176`; D-052, D-107 |
+| **PostgreSQL 16** | Activities and their settings; staff accounts (display name, keyed hash of the Feide ID); learner data under the pseudonym `learnerKey` (xAPI statements, saved progress, grade jobs); LTI records; audit tables; *k*-suppressed insight snapshots | **Yes.** Staff personal data; pseudonymous learner data; launch ID-token claims (an allowlist that **includes the raw Canvas `sub` in clear**) for 24 h; beyond 24 h the raw `sub` is kept only **encrypted**, in grade jobs; LTI tool private keys encrypted | Learner rows: yearly purge, default 31 August. Encrypted `sub`: 30 days after the job stops. LTI ID tokens 24 h, nonces 10 min. Audit: 2 years required, **deletion not built** (DPIA input R27). Staff accounts: until deleted by hand (DPIA input R28) | Yes: `pg_dump`, daily, kept 30 days | `docs/privacy/DATA-INVENTORY.md`; `src/grades/GradeSubjectCleanupJob.ts:25-27`; `docs/ops/runbook.md:152-177`; D-052, D-107 |
 | **Redis 7** | Portal sessions, login transactions, public-key caches, locks, job leases, rate-limit counters, courses' learner counts | **Yes, by reference:** user IDs and `learnerKey` in sessions; the session's Feide ID token only encrypted. Session keys are a SHA-256 of the cookie value | Sessions: logout, 2 h idle or 12 h total. Counters 1–10 min. Learner counts 30 days | **No.** Losing it logs everyone out | `docs/privacy/DATA-INVENTORY.md:375-414`; `src/auth/session/SessionStore.ts:35-45`; `docs/ops/runbook.md:23` |
-| **S3 content bucket** (`S3_CONTENT_BUCKET`) | The media files of activities: images, video, audio, documents | **Can be:** an upload can hold personal data (a photo, a document); the app does not classify it | With the activity | Yes: every object, under its SHA-256 | `docs/privacy/DATA-INVENTORY.md:99-111`; DPIA input R38; `docs/ops/runbook.md:153-157` |
-| **S3 temporary bucket** (`S3_TEMPORARY_BUCKET`) | Editor uploads not yet saved | Can be, as above | A 1-day lifecycle rule that **HVL sets** | No | `apps/server/.env.example:68-70`; `docs/ops/runbook.md:24,155` |
-| **H5P library volume** (`H5P_LIBRARY_DIR`) | Installed H5P libraries (code), shared by all nodes | No | Until replaced | No: the seed step installs them again from the bundle | `apps/server/.env.example:80-82`; `deploy/compose.app.yml:128-136,145`; `docs/ops/runbook.md:155-157` |
-| **Container `/tmp`** (tmpfs, 512 MB in the local stack) | One upload at a time per request, in a fresh folder, while it is sanitised and scanned | Can be | Removed when the request ends | No | `src/http/multipartUpload.ts:12,76`; `deploy/compose.app.yml:58-60` |
+| **S3 content bucket** (`S3_CONTENT_BUCKET`) | The media files of activities: images, video, audio, documents | **Can be:** an upload can hold personal data (a photo, a document); the app does not classify it | With the activity | Yes: every object, under its SHA-256 | `docs/privacy/DATA-INVENTORY.md:99-111`; DPIA input R38; `docs/ops/runbook.md:154-158` |
+| **S3 temporary bucket** (`S3_TEMPORARY_BUCKET`) | Editor uploads not yet saved | Can be, as above | A 1-day lifecycle rule that **HVL sets** | No | `apps/server/.env.example:68-70`; `docs/ops/runbook.md:24,156` |
+| **H5P library volume** (`H5P_LIBRARY_DIR`) | Installed H5P libraries (code), shared by all nodes | No | Until replaced | No: the seed step installs them again from the bundle | `apps/server/.env.example:80-82`; `deploy/compose.app.yml:132-140,157`; `docs/ops/runbook.md:156-158` |
+| **Container `/tmp`** (tmpfs, 512 MB in the local stack) | One upload at a time per request, in a fresh folder, while it is sanitised and scanned | Can be | Removed when the request ends | No | `src/http/multipartUpload.ts:12,76`; `deploy/compose.app.yml:62-64` |
 | **Logs** (stdout to HVL's log store) | One request line per request (route pattern, status, time, request ID) and event lines | Not by design: redaction by key name, no paths, queries, user IDs or IP addresses. Names typed into free text cannot be detected | 30 days, in HVL's log store **(IT to fill in)** | HVL's choice | `src/logging/logger.ts:1-17`; `src/http/requestLog.ts:1-27`; `docs/privacy/DATA-INVENTORY.md:416-437`; `DATA-009` |
-| **Backups** (`npm run ops:backup`) | The database dump, every content object, `MANIFEST.json` and `SHA256SUMS` | **Yes:** everything in PostgreSQL and the content bucket | 30 days; an encrypted copy off the server, in the EEA **(IT to fill in: tool and place)** | — | `docs/ops/runbook.md:151-176`; `tools/ops/README.md`; `NFR-002` |
+| **Backups** (`npm run ops:backup`) | The database dump, every content object, `MANIFEST.json` and `SHA256SUMS` | **Yes:** everything in PostgreSQL and the content bucket | 30 days; an encrypted copy off the server, in the EEA **(IT to fill in: tool and place)** | — | `docs/ops/runbook.md:152-177`; `tools/ops/README.md`; `NFR-002` |
 | **Outside the app** | The proxy's access log; clamd's log; Canvas's gradebook (scores the app sends) | Can be | **(IT to fill in)** | — | DPIA input R26, R38; `src/grades/AgsScoreClient.ts` |
 
 The backup tools are **not in the image** (`tools/` is excluded by `deploy/Dockerfile.dockerignore`); they run from a
-repository checkout with Node 24 and PostgreSQL 16's client tools (`docs/ops/runbook.md:31`; `tools/ops/README.md`).
+repository checkout with Node 24 and PostgreSQL 16's client tools (`docs/ops/runbook.md:32`; `tools/ops/README.md`).
 The repository does not set up encryption at rest for the database, Redis or S3: the deployment checklist asks for
 the provider's facts on it, and the runbook asks for encrypted backup copies (`docs/ops/database-roles.md:121-123`;
-`docs/ops/runbook.md:28,158`). Whether and how HVL encrypts these stores: **(IT to fill in)**.
+`docs/ops/runbook.md:28,159`). Whether and how HVL encrypts these stores: **(IT to fill in)**.
 
 ## 7. Secrets and keys
 
@@ -217,26 +217,26 @@ Names only; no value appears in this pack. Each variable marked `Secret: yes` in
 in a secret store, never in the image, a compose file or a log (`docs/ops/runbook.md:27`). In production, and in any other mode off a local address (D-133), the server
 refuses a key that decodes to readable text, has fewer than 16 distinct byte values, or is used in two places; the
 runbook asks that every key be made with `openssl rand -base64 32` (`src/config/keyStrengthRules.ts:11-16`;
-`docs/ops/runbook.md:123-124`).
+`docs/ops/runbook.md:124-125`).
 The image holds no secret (`docs/ops/docker.md:27`; `deploy/Dockerfile.dockerignore` excludes `.env` files and `.git`).
 
 | Name | Purpose | Where kept | Rotation | Evidence |
 |---|---|---|---|---|
-| `DATABASE_URL` (holds the `hvli_app` password) | The server's database role | Secret store **(IT to fill in)** | `ALTER ROLE … PASSWORD`, update the store, restart | `apps/server/.env.example:29-34`; `docs/ops/runbook.md:133` |
+| `DATABASE_URL` (holds the `hvli_app` password) | The server's database role | Secret store **(IT to fill in)** | `ALTER ROLE … PASSWORD`, update the store, restart | `apps/server/.env.example:29-34`; `docs/ops/runbook.md:134` |
 | Migration URL (`hvli_migrator`) | Migrations and grants, in the migrate step only | CI/CD secret | As above | `apps/server/.env.example:31-32`; `docs/ops/database-roles.md:17` |
 | `hvli_analytics` password | The read-only analytics role | **To define** | As above | `docs/ops/database-roles.md:19,41` |
-| `REDIS_URL` (holds a password, if any) | Redis | Secret store | Change at Redis and in the store together, restart | `apps/server/.env.example:36-41`; `docs/ops/runbook.md:135` |
-| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | The server's storage user | Secret store | New key, restart, revoke the old one | `apps/server/.env.example:51-57`; `docs/ops/runbook.md:134` |
-| `FEIDE_CLIENT_SECRET` | Feide client authentication (`FEIDE_CLIENT_ID` is not secret) | Secret store | New secret in Feide's customer portal, restart, revoke the old one | `apps/server/.env.example:187-193`; `docs/ops/runbook.md:132` |
-| `PSEUDONYM_SECRETS` | HMAC key for learner pseudonyms, one per academic year | Secret store | Never changed during its year; add next year's before 1 August; **destroy** the ended year's after its purge (a manual step, DPIA input R15) | `apps/server/.env.example:88-93`; `docs/ops/runbook.md:131`; D-107 |
+| `REDIS_URL` (holds a password, if any) | Redis | Secret store | Change at Redis and in the store together, restart | `apps/server/.env.example:36-41`; `docs/ops/runbook.md:136` |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | The server's storage user | Secret store | New key, restart, revoke the old one | `apps/server/.env.example:51-57`; `docs/ops/runbook.md:135` |
+| `FEIDE_CLIENT_SECRET` | Feide client authentication (`FEIDE_CLIENT_ID` is not secret) | Secret store | New secret in Feide's customer portal, restart, revoke the old one | `apps/server/.env.example:187-193`; `docs/ops/runbook.md:133` |
+| `PSEUDONYM_SECRETS` | HMAC key for learner pseudonyms, one per academic year | Secret store | Never changed during its year; add next year's before 1 August; **destroy** the ended year's after its purge (a manual step, DPIA input R15) | `apps/server/.env.example:88-93`; `docs/ops/runbook.md:132`; D-107 |
 | `IDENTITY_HASH_KEYS` | Keyed hashes of identities and login IP addresses | Secret store | Three steps; remove the old key at least 13 months after step 2 | `apps/server/.env.example:214-222`; D-055 |
 | `DATA_ENCRYPTION_KEYS` | AES-256-GCM at rest: LTI tool private keys, LTI access tokens, the session's Feide ID token, grade jobs' Canvas `sub` | Secret store | Three steps; remove the old key at least 31 days after step 2 | `apps/server/.env.example:224-232`; D-056 |
 | `URL_SIGNING_KEYS` | Signed file and upload URLs (valid 12–13 h) | Secret store | Three steps; remove the old key at least 13 h 5 min after step 2 | `apps/server/.env.example:234-240`; D-058 |
-| LTI tool key pair, one per Canvas platform | Signs Deep Linking responses and AGS client assertions | Made by the server; stored **encrypted in PostgreSQL**; re-encrypted at start-up | Replacing the pair is **not automated: to define**. A suspected leak is an incident | `docs/ops/runbook.md:137-138`; `src/server/main.ts:127-129` |
+| LTI tool key pair, one per Canvas platform | Signs Deep Linking responses and AGS client assertions | Made by the server; stored **encrypted in PostgreSQL**; re-encrypted at start-up | Replacing the pair is **not automated: to define**. A suspected leak is an incident | `docs/ops/runbook.md:138-139`; `src/server/main.ts:132-134` |
 | TLS certificates for the app and files hosts | HTTPS | Reverse proxy **(IT to fill in)** | **(IT to fill in)** | `docs/ops/runbook.md:25` |
 | clamd TLS proxy certificate; a private CA through `NODE_EXTRA_CA_CERTS` | TLS to clamd | **(IT to fill in)** | **(IT to fill in)** | `docs/ops/clamav.md:65-68` |
-| Backup encryption key (for example restic's) | The off-server backup copy | **(IT to fill in)** | **(IT to fill in)** | `docs/ops/runbook.md:158-160,175` |
-| Local only: `HVLI_DB_PASSWORD`, `HVLI_S3_ACCESS_KEY_ID`, `HVLI_S3_SECRET_ACCESS_KEY` | The local stack; never production | The environment; the smoke test makes random throwaway values | — | `deploy/compose.app.yml:12-13,30-43` |
+| Backup encryption key (for example restic's) | The off-server backup copy | **(IT to fill in)** | **(IT to fill in)** | `docs/ops/runbook.md:159-161,176` |
+| Local only: `HVLI_DB_PASSWORD`, `HVLI_S3_ACCESS_KEY_ID`, `HVLI_S3_SECRET_ACCESS_KEY` | The local stack; never production | The environment; the smoke test makes random throwaway values | — | `deploy/compose.app.yml:13-14,34-47` |
 | Build only: BuildKit secret `proxy_ca` | The development sandbox's proxy CA; never enters a layer; not used in CI | — | — | `deploy/Dockerfile:13-14,42-44` |
 
 ## 8. Container hardening
@@ -250,12 +250,12 @@ repository checks that it does **(IT to fill in)**.
 |---|---|---|
 | Non-root user | Runs as uid and gid 10001 (`hvli`), shell `nologin` | `deploy/Dockerfile:109-110,129` |
 | Read-only code | The code is owned by root; the app owns only the library volume and `.next/cache` | `deploy/Dockerfile:126-128` |
-| Read-only root file system | `read_only: true`, with tmpfs for `/tmp` (512 MB), `/home/hvli` (64 MB) and `.next/cache` (64 MB) | `deploy/compose.app.yml:50-61,146-149` |
-| No privilege gain | `no-new-privileges:true` | `deploy/compose.app.yml:55-56` |
-| Capabilities | All dropped; `SYS_CHROOT` added back for the app only, because Chromium's sandbox needs it | `deploy/compose.app.yml:54,140-143`; `docs/ops/docker.md:29-35` |
-| Seccomp | Playwright v1.56.1's profile, which allows `clone`, `setns` and `unshare` for Chromium's user namespaces. Never `seccomp=unconfined`, `SYS_ADMIN`, root or `--no-sandbox`; production refuses `PDF_ALLOW_NO_SANDBOX=true` | `deploy/compose.app.yml:57`; `deploy/seccomp/README.md`; `src/config/productionChecks.ts:23` |
+| Read-only root file system | `read_only: true`, with tmpfs for `/tmp` (512 MB), `/home/hvli` (64 MB) and `.next/cache` (64 MB) | `deploy/compose.app.yml:54-65,158-161` |
+| No privilege gain | `no-new-privileges:true` | `deploy/compose.app.yml:59-60` |
+| Capabilities | All dropped; `SYS_CHROOT` added back for the app only, because Chromium's sandbox needs it | `deploy/compose.app.yml:58,144-147`; `docs/ops/docker.md:29-35` |
+| Seccomp | Playwright v1.56.1's profile, which allows `clone`, `setns` and `unshare` for Chromium's user namespaces. Never `seccomp=unconfined`, `SYS_ADMIN`, root or `--no-sandbox`; production refuses `PDF_ALLOW_NO_SANDBOX=true` | `deploy/compose.app.yml:61`; `deploy/seccomp/README.md`; `src/config/productionChecks.ts:23` |
 | PID 1 | `tini` reaps Chromium's child processes; `node` receives `SIGTERM` | `deploy/Dockerfile:132-134` |
-| Published ports (local stack) | Only the app, and only on `127.0.0.1` | `deploy/compose.app.yml:11,144` |
+| Published ports (local stack) | Only the app, and only on `127.0.0.1` | `deploy/compose.app.yml:12,156` |
 | Static checks | `tools/deploy-check` refuses privileged or unconfined services, host namespaces, unpinned images and any added capability but the app's one | `tools/deploy-check/deployRules.mjs:1-17` |
 | Start-up signal | The server logs `PDF export availability` with a reason code; without a working sandbox the PDF export answers 503 and the Markdown export still works | `src/learningDesign/mappe/pdf/pdfAvailability.ts:128-129`; `docs/ops/docker.md:43-58` |
 
@@ -266,7 +266,7 @@ repository checks that it does **(IT to fill in)**.
   in)**.
 - **The image is not byte-reproducible.** Ubuntu packages (Chromium's libraries, fonts, `tini`) are not version-pinned,
   and Chromium's version and SHA-256 are printed by the smoke test, not compared with a pinned value
-  (`deploy/Dockerfile:103-108`; `deploy/smoke/smokeChecks.sh:133-136`). Two builds show the effect: the same Chromium
+  (`deploy/Dockerfile:103-108`; `deploy/smoke/smokeChecks.sh:134-137`). Two builds show the effect: the same Chromium
   version (141.0.7390.37) printed SHA-256 `dd794b4e…144a` in the development sandbox (`PROGRESS.md:1489`) and
   `85918a99…1a95` on GitHub's runner (logs of jobs 127722905949 and 127736690022).
 - **No image is published or signed.** No workflow pushes, signs or attests an image (searched `.github/` and
@@ -283,7 +283,7 @@ repository checks that it does **(IT to fill in)**.
   about 8 GB free disk at its peak (`docs/ops/docker.md:138-140`; the sandbox run's disk line, `PROGRESS.md:1489`).
   clamd needs about 1 GB of memory (`docs/ops/clamav.md:203`).
 - **Never run the root `docker-compose.yml` on a server**: its PostgreSQL has a fixed development password and its
-  Redis has none (`docs/ops/runbook.md:241-245`).
+  Redis has none (`docs/ops/runbook.md:246-250`).
 
 ## 9. Logging and monitoring
 
@@ -294,19 +294,22 @@ repository checks that it does **(IT to fill in)**.
   (`src/http/requestLog.ts:1-27`; `NFR-006`).
 - **First log line.** `deployment locations` names the mode (`NODE_ENV`), the database and Redis hosts and the S3
   region and host, to check against the deployment checklist; a `warn` line follows when the mode is not
-  `production` (`src/server/main.ts:94-98`; `DATA-004`, D-133).
+  `production` (`src/server/main.ts:97-101`; `DATA-004`, D-133).
+- **Memory line.** `memory limits` gives the container's limit, the heap limit and what the server may use beside
+  its heap, in MiB; a `warn` line follows when production has no limit or the limit is below the need
+  (`src/server/memoryBudget.ts`; `src/server/main.ts:102-103`; D-134).
 - **Health.** `GET /healthz` answers 200, or 503 with `failing: ["database"]` or `["redis"]`, each checked within 2 s.
   **It does not check S3 or clamd** (`src/server/healthRoutes.ts:1-17`; `src/server/createApp.ts:163`).
 - **Alerts the runbook names.** Every `error` line; `retention purge` lines that are not `done`; the start-up warning
-  about pseudonym secrets of purged years; API p95 against 300 ms; the 5xx rate (`docs/ops/runbook.md:211-219`).
+  about pseudonym secrets of purged years; API p95 against 300 ms; the 5xx rate (`docs/ops/runbook.md:212-224`).
 - **Outside the app.** The proxy's access log must leave out the query string (R26). Production does not start
   with `DEBUG` or `NODE_DEBUG` set, and a fault nothing handled is one `fatal` line of the logger
   (`src/config/debugOutput.ts`; `src/server/processFaults.ts`; D-133). Log store, retention (30 days asked) and
   monitoring tool: **(IT to fill in)**.
 - **Load.** Measured only as a smoke test with 20 learners on one 4-CPU machine with every service on it (page-ready
   p95 1 506 ms, API p95 22 ms, 0 % failures). The 200-learner test that sizes a node has **not been run**; it is HVL's
-  to run on a production-like node (`docs/ops/runbook.md:247-282`; `NFR-001`). The app sends about 1.5 MiB per
-  empty-cache visit uncompressed, so the proxy must compress (`docs/ops/runbook.md:280-282`).
+  to run on a production-like node (`docs/ops/runbook.md:252-287`; `NFR-001`). The app sends about 1.5 MiB per
+  empty-cache visit uncompressed, so the proxy must compress (`docs/ops/runbook.md:285-287`).
 
 ## 10. H5P content-type supply chain (short)
 
@@ -336,7 +339,7 @@ H5P content types are JavaScript that runs in every learner's browser, so how th
    and that a new version goes through a manifest change whose diff a person reviews, CI, staging and then
    production with the same image digest. Hub installs are refused in code, but an `admin`'s package import can
    still install libraries (with an audit row, after the same scan), so "not by hand" is a procedure, not a technical
-   block (`deploy/compose.app.yml:128-136`; `docs/ops/runbook.md:57-72`; `H5P-003`, `H5P-011`; D-041).
+   block (`deploy/compose.app.yml:132-140`; `docs/ops/runbook.md:58-73`; `H5P-003`, `H5P-011`; D-041).
 
 The ten roots (CLAUDE.md §1; `tools/h5p-libraries/resolveManifest.mjs:29-41`):
 

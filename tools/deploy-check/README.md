@@ -12,6 +12,9 @@ broken rule fails in a second rather than after a slow image build:
 | `deploy/Dockerfile.dockerignore` | `.env` files, `.git`, `node_modules` and the fetched folders (`apps/server/var`, `apps/server/h5p`) stay out of the build context |
 | `deploy/compose.app.yml` | Every image by digest; only the app published, on `127.0.0.1`; no secret written in the file (plural names such as `PSEUDONYM_SECRETS` too, and no password in any `…_URL`, map or list form); no service privileged, `unconfined` or sharing a host namespace, and none adding a capability but the app's `SYS_CHROOT`; the app and its steps run as 10001, read-only, without capabilities or new privileges, under the seccomp profile |
 
+The app stack's limits are checked too (D-134, `NFR-002`): the app has a restart rule, a memory limit of at least
+4 GiB and no swap beyond it, and the steps that run once have no restart rule.
+
 ## How to run
 
 ```bash
@@ -26,5 +29,7 @@ The smoke script (`deploy/smoke/dockerSmoke.sh`) runs the command before it buil
 | File | Responsibility |
 |---|---|
 | `deployRules.mjs` | The rules, as pure functions over file contents |
+| `resourceRules.mjs` | The app stack's restart rule and memory limit |
 | `checkDeployFiles.mjs` | The command over the repository's files |
 | `test/deployFiles.test.mjs` | The real files pass; broken copies are caught |
+| `test/resourceRules.test.mjs` | The real stack file passes; a copy without a limit or a restart rule is caught |

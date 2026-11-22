@@ -27,6 +27,7 @@ Hosting is open: HVL on its own servers or Sikt, both in the EEA (Q5, `DATA-004`
 | A secret store and a CI/CD secret for every variable marked `Secret: yes` | Never in the image, the compose file or a log | `DATA-009` |
 | Backup storage outside the server, encrypted, in the EEA, kept 30 days | Daily copy of the backup folder | `NFR-002` |
 | A log store and monitoring of `/healthz` | 99.5 % monthly availability during the semester is about 3.6 hours of downtime | `NFR-002`, `NFR-006` |
+| A memory limit and a restart rule for the app container | At least 4 GiB while Node chooses its own heap (5 GiB in the app stack), with no swap beyond it; restart after the process ends ([docker.md](docker.md), «memory limit») | `NFR-002`, `NFR-007`, D-134 |
 | ClamAV (`clamd`), optional but recommended | `AlertExceedsMax yes` and `AlertEncrypted yes`; `StreamMaxLength` at least 50 MB; signature updates are HVL's ([clamav.md](clamav.md)) | `SEC-006` |
 | PostgreSQL 16's client tools (`pg_dump`, `pg_restore`, `psql`) on the host that runs backups | The same major version as the server | `NFR-002` |
 
@@ -216,6 +217,10 @@ on `retention purge` lines that are not `done`, and on the start-up warning `pse
 years are still configured`. A `fatal` line means the process has ended with exit code 1 (a fault nothing handled,
 or a start that failed); the fault itself is in that line, cleaned like every other, and nothing is printed
 outside the log (D-133). In production the start-up warning `not in production mode` must never appear.
+The start line `memory limits` gives the container's limit and what the server may use, in MiB; alert on the two
+warnings that can follow it (`the container has no memory limit`, `the memory limit is below what the server may
+use`). A container that restarts by itself has ended its process: look for the `fatal` line before the restart, or,
+when there is none, for the kernel's out-of-memory record on the host (D-134).
 
 **Incident steps:**
 
@@ -332,6 +337,8 @@ Tick every line before the first learner, and again after a change of hosting:
       section 2).
 - [ ] The app container runs as uid 10001 with Playwright's seccomp profile ([docker.md](docker.md)); never
       `PDF_ALLOW_NO_SANDBOX`.
+- [ ] The app container has a memory limit of at least 4 GiB (or a smaller heap with it, [docker.md](docker.md))
+      and is restarted when its process ends; the start line `memory limits` is followed by no warning.
 - [ ] The daily backup runs, its copy reaches the off-server storage, and a restore drill has passed (section 6).
 - [ ] `/healthz` is monitored, the logs reach the log store, and the alerts of section 7 are set.
 - [ ] The full load test has passed on a node like production (section 8), and its services were removed afterwards.

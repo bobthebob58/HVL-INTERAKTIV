@@ -5638,3 +5638,50 @@ loading of one spec per session are kept.
   other machines reach needs https and random keys. A production start with a debug switch is refused. A start
   that fails after a client connected now ends its process, where it could stay alive before. Test servers that
   stand in for a framed page must say who may frame it, as the real pages do.
+
+### D-134 · Security repairs, step 18: the app container comes back and has a memory limit, the server says whether its memory fits, and work that holds memory waits its turn
+- **Context:** Steps 2 to 13 gave each single thing the server does a ceiling: one upload, one SVG (D-119), one
+  learner's saved state (D-120), one insight view (D-122), one check of an activity (D-126, D-127). Their sum
+  and the deployment around them were left for this step. The app stack had no restart rule, so a server that
+  ended its process after a fault (D-133) stayed down, and no memory limit, so one runaway process could take
+  the machine. Nothing said how much memory the server may use, and nothing bounded how many insight views or
+  saved states were handled at the same moment.
+- **Measured (2026-11-22, the development container, Node 24.22.2 in the image):** the heap limit Node chooses
+  follows the container's limit: 560 MiB at 1 GiB, 1 120 at 2, 1 728 at 3, 2 240 at 4 GiB and above, 4 288 with
+  no limit on a 16 GiB machine. A process past its container's limit is stopped by the kernel with exit code 137
+  and no output; past its own heap limit Node first writes «JavaScript heap out of memory». Chromium printing one
+  sample mappe: 246 MB in 10 processes. The idle server: about 500 MB resident in all. A saved state at the size
+  limit is a form body of about 0.9 MB; after 100 such saves and a collection the heap is back at its baseline,
+  so nothing is kept after a request. While a body is read, Express's form parser makes about 6 MB of
+  short-lived text from it, and the storage path about 4 MB of buffers. 150 such saves at the same moment ran a
+  process with a 256 MB heap limit out of memory; through the gate below all 150 were stored, with the heap at
+  most at 179 MB.
+- **Decision — the app comes back and has a ceiling (NFR-007, NFR-002).** In `deploy/compose.app.yml` the app has
+  `restart: unless-stopped`, `mem_limit: 5g` and `memswap_limit: 5g`; the steps that run once (buckets, migrate,
+  seed) have no restart rule. The budget, in MiB: the heap limit Node chooses (2 240), the SVG worker (512), the
+  server outside its heap (256), Chromium for two exports (256 + 128) and a full `/tmp` kept in memory (512):
+  3 904. 4 GiB is the least that fits while Node chooses its heap; below that the heap needs
+  `--max-old-space-size` (docs/ops/docker.md). `tools/deploy-check/resourceRules.mjs` holds the stack file to it,
+  and the smoke test stops the server process inside the app container and waits until it answers again.
+- **Decision — the server says what it has (NFR-002, NFR-006).** `server/memoryBudget.ts` writes one start line,
+  `memory limits`, with the container's limit, the heap limit and what the server may use beside its heap, and a
+  `warn` line when production has no limit or when the limit is below the need. It warns and does not refuse:
+  the figures for Chromium and for the server outside its heap are measured estimates, and an estimate must not
+  keep a working installation from starting.
+- **Decision — two insight views at once (INS-001, INS-009).** `InsightService.forActivity` reads and counts a
+  view inside a gate (`infra/BoundedGate.ts`, `insight/InsightViewGate.ts`): two at once, twenty waiting in the
+  order they came. Past that the view and the CSV answer 503 `insight.busy` with `Retry-After: 5`; nothing was
+  read, and nothing is audited. The web app shows its ordinary «could not load» message for it. The scope is
+  resolved before the gate, so a refused scope takes no place.
+- **Decision — eight saved states at once (H5P-005).** The save route takes a turn in a gate before its body is
+  read (`http/routes/stateSaveGate.ts`): eight at once, two hundred waiting, and past that 429
+  `hvl:rate-limited` with `Retry-After: 1`, the answer of the per-minute limit, which the player's autosave
+  ignores. The place is given back when the response closes, however the request ends.
+- **Verified:** unit and integration tests for the rules, the budget, the gates and both answers; the entry
+  point's start log holds the `memory limits` line. The smoke test ran in the development container (194 s):
+  inside the app container the server wrote `containerLimitMb` 5 120, `heapLimitMb` 2 240, `besideHeapMb` 1 664
+  and `neededMb` 3 904 with no warning, and the app answered again after its server process was stopped (restart
+  count 1). A container stopped by hand stayed stopped.
+- **Consequences:** No requirement changes its meaning; NFR-002 and NFR-007 have an "Amended" line. Whatever runs
+  the container in production needs its own memory limit and restart rule; the stack file is the example. On a
+  very busy moment a view of insight waits a few seconds, or is asked for again. One more line in the start log.
