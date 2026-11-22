@@ -8,6 +8,8 @@
  * Spec: DATA-012, LTI-011
  * Invariants:
  *   - Every read is bounded by one learner and one activity (the `[learnerKey, contentId, timestamp]` index).
+ *   - `hasRowsIn` reads one ID at most: whether the learner is already in a version's group, which decides
+ *     whether a batch naming an older version is stored (D-138).
  *   - The replay history is one read of the learner's latest `REPLAY_WINDOW_ROWS` rows for the activity, newest
  *     first, so it costs the same however much the learner has stored there (D-121). The rule's facts are taken
  *     from those rows: they are the stored ones for any learner with fewer rows than the window since their latest
@@ -99,6 +101,21 @@ export class XapiStatementStore {
       }));
     if (!latestResult) return { viewRows };
     return { viewRows, latestResult: { scoreRaw: latestResult.scoreRaw, scoreMax: latestResult.scoreMax } };
+  }
+
+  /**
+   * Whether the learner has a stored statement about the activity in this context and version.
+   * @param scope - The learner, activity, context and version.
+   * @returns True when at least one row exists.
+   * @spec INS-006
+   */
+  async hasRowsIn(scope: XapiLearnerScope): Promise<boolean> {
+    const { learnerKey, contentId, contextId, contentVersion } = scope;
+    const row = await this.db.xapiStatement.findFirst({
+      where: { learnerKey, contentId, contextId, contentVersion },
+      select: { id: true },
+    });
+    return row !== null;
   }
 
   /**

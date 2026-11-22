@@ -71,6 +71,8 @@ export function principalOfLaunch(
       ...(facts.lineItemUrl ? { lineItemUrl: facts.lineItemUrl } : {}),
       // PRIVACY: Canvas's test student is a learner whose statements never reach insight (D-102's amendment).
       ...(facts.testUser ? { testUser: true as const } : {}),
+      // PRIVACY: only a launch with the Learner role is recorded and counted towards k (D-138).
+      ...(facts.learnerRole ? { learnerRole: true as const } : {}),
     },
   });
 }

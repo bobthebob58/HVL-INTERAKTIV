@@ -14,6 +14,9 @@
  *   - The LTI `TestUser` role (Canvas's Student View) yields `learner` whatever else the claim holds (D-059), and
  *     `isLtiTestUser` says so, so the launch can flag its statements and keep them out of insight (D-102's amendment
  *     of 2026-11-04).
+ *   - `isLtiLearner` is true only for the context role `Learner` (its full URI or the short name): the launches
+ *     whose plays are recorded as learning data (../xapi/learningDataScope.ts, D-138). A `Mentor` (Canvas's
+ *     observer), an unknown role and a missing claim are learners to the permission system but not this.
  * Collaborators: ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts, ./ltikPrincipal.ts, ./launchFacts.ts,
  *   ../auth/Principal.ts.
  * Tests: apps/server/test/lti/LtiRoleMapper.test.ts
@@ -37,6 +40,9 @@ export const LTI_AUTHOR_ROLES: ReadonlySet<string> = new Set([
   'ContentDeveloper',
 ]);
 
+/** The context role of a student enrolled in the course, by its URI and by the short name LTI 1.3 allows. */
+const LTI_LEARNER_ROLES: ReadonlySet<string> = new Set([`${LIS}membership#Learner`, 'Learner']);
+
 const LEARNER: LtiRoles = Object.freeze(['learner'] as const);
 const AUTHOR: LtiRoles = Object.freeze(['author'] as const);
 
@@ -52,6 +58,16 @@ const roleList = (roleClaims: unknown): string[] =>
  */
 export const isLtiTestUser = (roleClaims: unknown): boolean =>
   roleList(roleClaims).includes(LTI_TEST_USER_ROLE);
+
+/**
+ * Tells whether a launch holds the context role `Learner`: a student enrolled in the course.
+ * @param roleClaims - The roles claim's value.
+ * @returns True when the claim holds the role; false for a `Mentor`, any other or unknown role and a malformed claim.
+ * @spec LTI-004
+ */
+export const isLtiLearner = (roleClaims: unknown): boolean =>
+  // SECURITY: exact values, as for the author roles, so a look-alike URI or an institution role is not a student.
+  roleList(roleClaims).some((role) => LTI_LEARNER_ROLES.has(role));
 
 /**
  * Maps the `https://purl.imsglobal.org/spec/lti/claim/roles` claim to a role (spec 02 `LTI-004`).

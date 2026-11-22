@@ -1,8 +1,8 @@
 /**
  * Content test for what the DPIA input says about HVL employees who are learners in a Canvas course: only the
- * launch's LTI roles decide whether a play is captured (D-102), and of the institution roles only Administrator counts
- * (D-059), so an employee whom a course enrols as a student is a learner there, and DPIA-INPUT.md's O4 and its residual
- * R40 must say so to the DPO. A change on either side fails
+ * launch's LTI roles decide whether a play is captured (D-102, and since D-138 only with the context role Learner),
+ * and of the institution roles only Administrator counts (D-059), so an employee whom a course enrols as a student
+ * is a learner there, and DPIA-INPUT.md's O4 and its residual R40 must say so to the DPO. A change on either side fails
  * until both agree again, as apps/web/test/features/privacyNoticeColleagues.test.ts does for the privacy notice.
  *
  * Spec: DATA-005, LTI-004
@@ -14,6 +14,8 @@ import { describe, expect, it } from 'vitest';
 import { highestRole } from '../../src/auth/Principal.js';
 import type { LaunchFacts } from '../../src/lti/launchFacts.js';
 import { principalOfLaunch } from '../../src/lti/ltikPrincipal.js';
+import { isLtiLearner } from '../../src/lti/LtiRoleMapper.js';
+import { recordsLearningData } from '../../src/xapi/learningDataScope.js';
 
 const DPIA = readFileSync(
   fileURLToPath(new URL('../../../../docs/privacy/DPIA-INPUT.md', import.meta.url)),
@@ -37,6 +39,7 @@ const launchWith = (roles: readonly string[]): LaunchFacts => ({
   resourceLinkId: 'link-1',
   roles,
   testUser: false,
+  learnerRole: isLtiLearner(roles),
 });
 
 describe('[DATA-005] the DPIA input says that employees enrolled as students are captured', () => {
@@ -53,8 +56,9 @@ describe('[DATA-005] the DPIA input says that employees enrolled as students are
       const account = { userId: 'account-of-a-lecturer', learnerKey: 'key', learnerKeyYear: 2026 };
       // Act
       const principal = principalOfLaunch(context, launchWith([LEARNER, institutionRole]), account);
-      // Assert: XapiIngest stores a batch exactly when the highest role is `learner`.
+      // Assert: XapiIngest stores a batch exactly for a learner whose play is recorded (the Learner role, D-138).
       expect(highestRole(principal.roles)).toBe('learner');
+      expect(recordsLearningData(principal)).toBe(true);
     },
   );
 
@@ -70,6 +74,7 @@ describe('[DATA-005] the DPIA input says that employees enrolled as students are
     );
     // Assert: the one institution role the mapping reads; XapiIngest stores nothing for an author.
     expect(highestRole(principal.roles)).toBe('author');
+    expect(recordsLearningData(principal)).toBe(false);
   });
 
   it('[DATA-005] O4 does not say staff are never captured, and R40 names employees as learners for the DPO', () => {

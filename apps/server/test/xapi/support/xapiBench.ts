@@ -163,6 +163,7 @@ export async function openXapiBench(): Promise<XapiBench> {
       },
       replayHistory: (scope, viewIds) => store.replayHistory(scope, viewIds),
       insert: (rows) => store.insert(rows),
+      hasRowsIn: (scope) => store.hasRowsIn(scope),
     },
     rateLimit: new XapiRateLimit(redis),
     clock: () => bench.now ?? new Date(),

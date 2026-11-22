@@ -53,6 +53,11 @@ export interface LtiLaunchFacts {
    * flagged and left out of insight, the mappe and every *k* count (D-102's amendment of 2026-11-04).
    */
   readonly testUser?: true;
+  /**
+   * Set (true) only when the launch holds the context role `Learner`. A learner without it (Canvas's observer, an
+   * unknown role, no roles) plays, but nothing they answer is stored (../xapi/learningDataScope.ts, D-138).
+   */
+  readonly learnerRole?: true;
 }
 
 /** What every API handler receives after authentication (spec 02 §2, amended by D-053). */

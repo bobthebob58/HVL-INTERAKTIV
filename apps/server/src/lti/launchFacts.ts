@@ -19,7 +19,7 @@
  */
 import type { IdToken } from 'ltijs';
 import { isContentUuid } from '../h5p/contentIds.js';
-import { isLtiTestUser } from './LtiRoleMapper.js';
+import { isLtiLearner, isLtiTestUser } from './LtiRoleMapper.js';
 
 /** The launch facts our code uses. */
 export interface LaunchFacts {
@@ -47,6 +47,8 @@ export interface LaunchFacts {
   readonly roles: readonly string[];
   /** Canvas's Student View test student (the LTI `TestUser` role); its statements are flagged (D-102). */
   readonly testUser: boolean;
+  /** The launch holds the context role `Learner`: only such a launch's play is recorded (D-138). */
+  readonly learnerRole: boolean;
 }
 
 const text = (value: unknown): string | undefined =>
@@ -72,6 +74,7 @@ export function launchFactsOf(idToken: IdToken): LaunchFacts {
     contextId: text(idToken.launch.context?.id) ?? '',
     roles: [...idToken.user.roles],
     testUser: isLtiTestUser(idToken.user.roles),
+    learnerRole: isLtiLearner(idToken.user.roles),
     ...(resourceLinkId ? { resourceLinkId } : {}),
     ...(isContentUuid(contentId) ? { contentId: contentId.toLowerCase() } : {}),
     ...(lineItemUrl ? { lineItemUrl } : {}),

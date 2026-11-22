@@ -45,7 +45,21 @@ describe('[LTI-006] launch facts', () => {
       lineItemUrl: 'https://canvas.example/li/1',
       roles: ['http://purl.imsglobal.org/vocab/lis/v2/membership#Learner'],
       testUser: false,
+      learnerRole: true,
     });
+  });
+
+  it('[LTI-004] says learnerRole only for the context role Learner, so only a student’s play is recorded (D-138)', () => {
+    // Arrange: Canvas's observer, and a launch without roles
+    const mentor = 'http://purl.imsglobal.org/vocab/lis/v2/membership#Mentor';
+    const observer = { ...token(), user: { id: 'sub-3', roles: [mentor] } } as IdToken;
+    const noRoles = { ...token(), user: { id: 'sub-4', roles: [] } } as IdToken;
+    // Act and assert
+    expect([launchFactsOf(token()), launchFactsOf(observer), launchFactsOf(noRoles)]).toMatchObject([
+      { learnerRole: true },
+      { learnerRole: false },
+      { learnerRole: false },
+    ]);
   });
 
   it('[LTI-004] says testUser for Canvas’s Student View test student, so its statements are flagged (D-102)', () => {

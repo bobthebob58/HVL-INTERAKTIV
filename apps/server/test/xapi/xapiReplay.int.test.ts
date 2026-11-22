@@ -112,18 +112,33 @@ describeWithServices('[DATA-012] replays across requests', () => {
         contextId: course,
         contentId,
         messageType: 'LtiResourceLinkRequest',
+        learnerRole: true,
       },
     });
     const courseA = (await bench.principal('learner', inCourse('A'))).header;
     const courseB = (await bench.principal('learner', inCourse('B'))).header;
+    // WHY: an older version takes statements only from a learner already in it (D-138): the learner opened the
+    // activity in course A while version 1 was current.
+    await bench.db.xapiStatement.create({
+      data: {
+        contentId,
+        contentVersion: 1,
+        contextId: '0192f0c4-7777-7000-8000-0000000000aa:A',
+        learnerKey,
+        verb: 'attempted',
+        attemptId: `${randomUUID()}:1`,
+        timestamp: new Date(Date.now() - 60_000),
+      },
+    });
     // Act
     await post(courseA, contentId, [finish(contentId, 6)], 2);
     await post(courseB, contentId, [finish(contentId, 6)], 2);
     await post(courseA, contentId, [finish(contentId, 6)], 1);
     await post(courseA, contentId, [finish(contentId, 6)], 2);
-    // Assert
+    // Assert: the page load in version 1, then one result per course and version
     const rows = await bench.rowsOf(contentId);
     expect(rows.map((row) => `${row.contextId?.split(':')[1] ?? ''} v${row.contentVersion}`)).toEqual([
+      'A v1',
       'A v2',
       'B v2',
       'A v1',
