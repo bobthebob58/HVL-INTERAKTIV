@@ -38,7 +38,7 @@ export function withoutLtik(href: string): string {
 
 /**
  * Hands the clean address to Next.js's router: `replaceState` with the current state minus Next.js's marker.
- * UPSTREAM: https://github.com/vercel/next.js/blob/v16.4.2/packages/next/src/client/components/app-router.tsx
+ * UPSTREAM: https://github.com/vercel/next.js/blob/v16.4.6/packages/next/src/client/components/app-router.tsx
  * Next.js 16 sets its `canonicalUrl` from `location` before this page's script runs, and `HistoryUpdater` writes that
  * URL back with every router state change. Its patched `replaceState` dispatches a `restore` with the given URL (no
  * request) when the state has no `__NA`, which replaces the `canonicalUrl` that still held the ltik. No issue filed
