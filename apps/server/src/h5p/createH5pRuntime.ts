@@ -133,6 +133,8 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     copyLimit: new CopyRateLimit(redis),
     // PRIVACY: a count only; what a save lost to fit its semantics is never logged (D-123).
     onParamsFitted: (changed) => logger.info({ changed }, 'content parameters fitted to their semantics'),
+    // PRIVACY: the kind of failure only; the save itself is stored and answered as stored (D-139).
+    onCleanupFailed: (kind) => logger.warn({ kind }, 'files a save dropped could not be removed'),
     translate,
     fileSanitizers,
     malwareScanners,

@@ -5,7 +5,8 @@
  *      out of PostgreSQL and available to every node. PrismaContentStorage keeps the file list in the database.
  * Spec: H5P-004, SEC-005
  * Invariants:
- *   - Key: `content/<contentId>/<file name>`; names are checked by `assertSafeObjectName`.
+ *   - Key: `content/<contentId>/<file name>`; names are checked by `assertSafeObjectName`. The ID is written in
+ *     lower case, the form the database stores, so every spelling of one ID names the same files (D-131, D-139).
  *   - Writes stop at `maxFileSize` bytes and report size and SHA-256 of what was stored.
  * Collaborators: ./s3Objects.ts, ./PrismaContentStorage.ts.
  * Tests: apps/server/test/h5p/contentStorage.int.test.ts, apps/server/test/h5p/S3ContentFileStore.test.ts
@@ -19,6 +20,9 @@ import {
   type S3Client,
 } from '@aws-sdk/client-s3';
 import { assertSafeObjectName, keyForUpload, limitedUpload, rangeHeader } from './s3Objects.js';
+
+/** The key prefix of one activity's files, under its ID in lower case. */
+const prefixOf = (contentId: string): string => `content/${assertSafeObjectName(contentId).toLowerCase()}/`;
 
 /** File storage for activity content in one bucket. */
 export class S3ContentFileStore {
@@ -40,7 +44,7 @@ export class S3ContentFileStore {
    * @returns `content/<contentId>/<filename>`.
    */
   key(contentId: string, filename: string): string {
-    return `content/${assertSafeObjectName(contentId)}/${assertSafeObjectName(filename)}`;
+    return `${prefixOf(contentId)}${assertSafeObjectName(filename)}`;
   }
 
   /**
@@ -94,7 +98,7 @@ export class S3ContentFileStore {
    * @throws Error when S3 reports that any file could not be deleted.
    */
   async deleteAll(contentId: string): Promise<void> {
-    const Prefix = `content/${assertSafeObjectName(contentId)}/`;
+    const Prefix = prefixOf(contentId);
     let ContinuationToken: string | undefined;
     do {
       const page = await this.s3.send(

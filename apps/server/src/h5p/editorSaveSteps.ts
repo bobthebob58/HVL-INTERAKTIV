@@ -9,16 +9,18 @@
  * Invariants:
  *   - Before Lumi's write, in this order: permission and main library (./saveAdmission.ts) → the files the stored
  *     version references → sub-content policy, which ends by fitting the parameters to their semantics (D-039,
- *     D-123) → paste-source guard (D-092) → learner-state check (D-093).
+ *     D-123) → paste-source guard (D-092) → the limit for one activity's files (D-139) → learner-state check
+ *     (D-093).
  *     Any refusal is thrown here, so a refused save changes neither the parameters, nor the files, nor the state.
  *   - Lumi's write runs through `write`: a structural edit's learner-state reset (state rows deleted, version
  *     raised) commits in the same transaction as Lumi's first parameter write (./storage/learnerStateResetWrite.ts),
  *     so no later failure leaves the new structure with the old state. A save that changes an answer key keeps
  *     the state, and its version raise commits with that write too (./storage/contentVersionRaiseWrite.ts, D-137).
  *   - After Lumi's write, the dropped files are deleted as the author (./contentFileCleanup.ts); a new activity has
- *     none.
+ *     none. The save is stored by then: a clean-up that fails is reported to `onCleanupFailed` and never turns the
+ *     stored save into an error answer (D-139).
  * Collaborators: ./HvlH5PEditor.ts, ./saveAdmission.ts, ./contentFileCleanup.ts, ./semantics/SubContentPolicy.ts,
- *   ./pasteSourceGuard.ts, ../learningDesign/safeEditing/LearnerStateGate.ts.
+ *   ./pasteSourceGuard.ts, ./activityFileBudget.ts, ../learningDesign/safeEditing/LearnerStateGate.ts.
  * Tests: apps/server/test/h5p/HvlH5PEditor.test.ts, apps/server/test/h5p/pasteSourceGuard.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/safeEditingFailures.int.test.ts
@@ -38,6 +40,7 @@ import {
   type LearnerStateStore,
   type SaveChoice,
 } from '../learningDesign/safeEditing/LearnerStateGate.js';
+import { ActivityFileBudget, type ActivityFileLimits } from './activityFileBudget.js';
 import { ContentFileCleanup } from './contentFileCleanup.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import { PasteSourceGuard } from './pasteSourceGuard.js';
@@ -54,7 +57,14 @@ export interface SaveStepPolicy {
   readonly learnerStates: LearnerStateStore;
   /** Told how many keys and values a save lost or had changed to fit its semantics (D-123), when any. */
   readonly onParamsFitted?: (changed: number) => void;
+  /** Told the kind of failure when the clean-up after a stored save fails; the save's answer stays (D-139). */
+  readonly onCleanupFailed?: (kind: string) => void;
+  /** The limit for one activity's files; D-139's when left out. */
+  readonly fileLimits?: ActivityFileLimits;
 }
+
+/** The editor's managers the steps use. */
+export type SaveStepManagers = Pick<H5PEditor, 'libraryManager' | 'contentManager' | 'temporaryFileManager'>;
 
 /** One save, as the editor passes it to Lumi. */
 export interface EditorSave {
@@ -81,21 +91,25 @@ export class EditorSaveSteps {
   private readonly pasteSources: PasteSourceGuard;
   private readonly learnerState: LearnerStateGate;
   private readonly files: ContentFileCleanup;
+  private readonly fileBudget: ActivityFileBudget;
+  private readonly libraryManager: LibraryManager;
 
   /**
-   * @param libraryManager - The editor's library manager.
-   * @param contentManager - The editor's content manager (stored parameters, permission-checked file deletes).
+   * @param editor - The editor's library manager, content manager (stored parameters, permission-checked file
+   *   reads and deletes) and temporary-file manager (the sizes of uploads).
    * @param policy - Permission system, activity facts and learner-state rows.
    */
   constructor(
-    private readonly libraryManager: LibraryManager,
-    contentManager: H5PEditor['contentManager'],
+    editor: SaveStepManagers,
     private readonly policy: SaveStepPolicy,
   ) {
+    const { libraryManager, contentManager } = editor;
+    this.libraryManager = libraryManager;
     this.subContent = new SubContentPolicy(libraryManager);
     this.pasteSources = new PasteSourceGuard(libraryManager, policy.contentFacts);
     this.learnerState = new LearnerStateGate(contentManager, policy.learnerStates);
     this.files = new ContentFileCleanup(libraryManager, contentManager);
+    this.fileBudget = ActivityFileBudget.onScanner(libraryManager, editor, policy.fileLimits);
   }
 
   /**
@@ -103,7 +117,7 @@ export class EditorSaveSteps {
    * @param save - The save.
    * @returns What `write` and `afterWrite` need.
    * @throws The first refusal: H5pError 403/404 (permission, library, sub-content, paste source), 400 (paths,
-   *   nesting, text), HttpError 409 `hvl:learner-state-reset-needed`.
+   *   nesting, text), 413 (the activity's files), HttpError 409 `hvl:learner-state-reset-needed`.
    */
   async beforeWrite(save: EditorSave): Promise<CheckedSave> {
     const { contentId, parameters, user } = save;
@@ -113,6 +127,7 @@ export class EditorSaveSteps {
     const fitted = await this.subContent.enforce(parameters as Record<string, unknown>, save.metadata, main);
     if (fitted > 0) this.policy.onParamsFitted?.(fitted);
     await this.pasteSources.enforce(parameters, main, user);
+    await this.fileBudget.enforce(contentId, parameters, main, user);
     const learnerState = await this.learnerState.admit(
       contentId,
       parameters,
@@ -142,7 +157,12 @@ export class EditorSaveSteps {
    */
   async afterWrite(save: EditorSave, savedId: string, checked: CheckedSave): Promise<void> {
     if (save.contentId === undefined) return;
-    const after = await this.files.referencedFiles(save.parameters, checked.main);
-    await this.files.deleteDropped(savedId, [...checked.filesBefore], after, save.user);
+    try {
+      const after = await this.files.referencedFiles(save.parameters, checked.main);
+      await this.files.deleteDropped(savedId, [...checked.filesBefore], after, save.user);
+    } catch (error) {
+      // WHY: the save is stored; a file that could not be tidied away must not make its answer an error (D-139).
+      this.policy.onCleanupFailed?.(error instanceof Error ? error.name : 'unknown');
+    }
   }
 }

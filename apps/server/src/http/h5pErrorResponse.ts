@@ -53,6 +53,7 @@ const BY_ERROR_ID: Record<string, MessageKey> = {
   'hvl:unsafe-file-name': 'h5p.unsafeFileName',
   'hvl:paste-source-not-allowed': 'h5p.pasteSourceNotAllowed',
   'hvl:content-too-large': 'h5p.contentTooLarge.whole',
+  'hvl:activity-files-over-limit': 'h5p.activityFilesOverLimit',
   'hvl:hub-install-disabled': 'h5p.hubInstallDisabled',
   'hvl:package-libraries-not-installed': 'upload.package.librariesNotInstalled',
   'hvl:package-library-version-mismatch': 'upload.package.libraryVersionMismatch',

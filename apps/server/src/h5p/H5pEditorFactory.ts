@@ -32,6 +32,7 @@ import type {
 } from '@lumieducation/h5p-server';
 import { editorGlobalAssets } from './h5pAssets.js';
 import { localIdFor } from './H5pConfigFactory.js';
+import type { ActivityFileLimits } from './activityFileBudget.js';
 import type { H5pStorage } from './h5pStorage.js';
 import { HvlH5PEditor } from './HvlH5PEditor.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
@@ -65,6 +66,10 @@ export interface EditorFactoryInputs {
   readonly copyLimit: PersonLimit;
   /** Told how many keys and values a save lost or had changed to fit its semantics (D-123); nobody by default. */
   readonly onParamsFitted?: (changed: number) => void;
+  /** Told the kind of failure when the clean-up after a stored save fails (D-139); nobody by default. */
+  readonly onCleanupFailed?: (kind: string) => void;
+  /** The limit for one activity's files; D-139's when left out (tests pass small ones). */
+  readonly fileLimits?: ActivityFileLimits;
   readonly translate: ITranslationFunction;
   readonly fileSanitizers: readonly IFileSanitizer[];
   /** Malware scanners for uploads (none by default; ../security/malware/createMalwareScanners.ts). */
@@ -120,6 +125,8 @@ export function createHvlEditor(inputs: EditorFactoryInputs): HvlH5PEditor {
       learnerStates: inputs.learnerStates,
       copyLimit: inputs.copyLimit,
       onParamsFitted: inputs.onParamsFitted,
+      onCleanupFailed: inputs.onCleanupFailed,
+      ...(inputs.fileLimits ? { fileLimits: inputs.fileLimits } : {}),
     },
   );
   // SECURITY: Lumi's editor template puts the integration JSON in a <script> unescaped (D-040); S4 brings ours.

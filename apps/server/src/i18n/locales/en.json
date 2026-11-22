@@ -68,6 +68,7 @@
       "markup": "A text in the activity has too many levels of formatting inside each other. Paste the text again without formatting.",
       "check": "The activity is too large to be checked. Split the content into several activities."
     },
+    "activityFilesOverLimit": "The activity has too many or too large files to save. An activity can hold up to {{maxFiles}} files and {{maxMb}} MB in all. Put large videos in Panopto and link to them, or split the content into several activities.",
     "hubInstallDisabled": "Content types are installed by an administrator, not from the H5P Hub.",
     "librariesInstalled": "Content types installed: {{count}}.",
     "librariesUpdated": "Content types updated: {{count}}.",

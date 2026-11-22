@@ -68,6 +68,7 @@
       "markup": "Ein tekst i aktiviteten har for mange lag med formatering inni kvarandre. Lim teksten inn på nytt utan formatering.",
       "check": "Aktiviteten er for stor til å bli sjekka. Del innhaldet på fleire aktivitetar."
     },
+    "activityFilesOverLimit": "Aktiviteten har for mange eller for store filer til å lagrast. Ein aktivitet kan ha opptil {{maxFiles}} filer og {{maxMb}} MB til saman. Legg store videoar i Panopto og lenk til dei, eller del innhaldet på fleire aktivitetar.",
     "hubInstallDisabled": "Innhaldstypar blir installerte av ein administrator, ikkje frå H5P-huben.",
     "librariesInstalled": "Installerte innhaldstypar: {{count}}.",
     "librariesUpdated": "Oppdaterte innhaldstypar: {{count}}.",

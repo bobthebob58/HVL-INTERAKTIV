@@ -88,7 +88,7 @@ export class HvlH5PEditor extends H5PEditor {
     this.policy = policy;
     this.copyLimit = policy.copyLimit;
     disconnectFromHub(this);
-    this.saveSteps = new EditorSaveSteps(this.libraryManager, this.contentManager, policy);
+    this.saveSteps = new EditorSaveSteps(this, policy);
     usePermissionCheckedExporter(this, policy.permissionSystem);
   }
 
