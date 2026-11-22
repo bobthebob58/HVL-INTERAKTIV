@@ -2614,3 +2614,45 @@ Append one entry per session: date, session, what was done, gate output, and any
       MAPPE-004)
   $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 194 s
   ```
+
+- **2026-11-22 · Security repairs, step 19 (D-135)** — Next.js is pinned at 16.4.6 (the owner's decision of
+  2026-11-22 to make the update now). One change, in one commit:
+  - Pins (SEC-007): `next` 16.4.2 → 16.4.6 in `apps/web` and `apps/server`, `@next/eslint-plugin-next` with it,
+    all exact; the lock file changed in Next.js's own packages only. `npm audit` listed seven moderate advisories
+    for `next` before and lists none after. The first run of `npm run build` passes, where the framework's own
+    notice about its version stopped it before.
+  - Re-checked (LTI-003): the router files `apps/web/src/features/lti/ltikFromAddress.ts` depends on are byte for
+    byte the same in both versions; its `UPSTREAM:` pointer names the new tag.
+  - No new test: the step adds no behaviour. Screenshots of five public pages in nn at 1280 px and 390 px are
+    pixel for pixel the same before and after, so none was sent.
+  - D-135 added, with a pointer under D-068; the architecture pack names the new version;
+    `docs/assurance/sbom.cdx.json` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run build                                      exit 0 (first run)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run sbom -- --check                            current (477 npm packages)
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26881 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 283 s (image built with 16.4.6)
+  ```
