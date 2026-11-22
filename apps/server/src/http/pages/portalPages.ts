@@ -29,10 +29,10 @@ import { messagePage, type MessagePageInput } from './messagePage.js';
 /**
  * The policy of a server-rendered portal page: our own scripts, styles, images and requests only (DATA-011, D-048),
  * no inline script or style, framed only by our own origin.
- * @param options - `formAction: false` leaves `form-action` out, for a form whose redirect leaves our origin.
+ * @param options - `formActionOrigins`: outside origins a form's redirect may reach (Feide's, for logout).
  * @returns The header value.
  */
-export function portalPageCsp(options: { readonly formAction?: boolean } = {}): string {
+export function portalPageCsp(options: { readonly formActionOrigins?: readonly string[] } = {}): string {
   return [
     "default-src 'none'",
     "script-src 'self'",
@@ -42,7 +42,7 @@ export function portalPageCsp(options: { readonly formAction?: boolean } = {}): 
     "connect-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    ...(options.formAction === false ? [] : ["form-action 'self'"]),
+    ["form-action 'self'", ...(options.formActionOrigins ?? [])].join(' '),
     "frame-ancestors 'self'",
   ].join('; ');
 }

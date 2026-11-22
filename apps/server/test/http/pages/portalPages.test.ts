@@ -16,6 +16,7 @@ import { h5pPageCsp } from '../../../src/http/h5pPageCsp.js';
 import { createLogger } from '../../../src/logging/logger.js';
 
 const logger = createLogger({ level: 'silent' });
+const FEIDE_ORIGIN = 'https://auth.dataporten.no';
 const directives = (csp: string | undefined) =>
   new Map(
     (csp ?? '').split('; ').map((d) => [d.split(' ')[0] ?? '', d.split(' ').slice(1).join(' ')] as const),
@@ -40,7 +41,7 @@ function portalApp(options: { webApp: boolean }) {
   app.get('/boom', () => {
     throw new HttpError(503, 'error.generic');
   });
-  app.use(portalHomeRoutes());
+  app.use(portalHomeRoutes({ formActionOrigins: [FEIDE_ORIGIN] }));
   app.use(portalNotFound());
   app.use(((error, _req, res, _next) =>
     sendPortalError(res, error, logger)) satisfies express.ErrorRequestHandler);
@@ -72,10 +73,13 @@ describe('[DATA-011] portal page policy', () => {
     expect(csp.get('frame-ancestors')).toBe("'self'");
   });
 
-  it('[DATA-011] the start page has the same sources, without form-action for the logout redirect to Feide', async () => {
+  it('[DATA-011] the start page has the same sources, and its forms post only to us and on to Feide', async () => {
     const res = await request(portalApp({ webApp: false })).get('/');
-    expect(res.headers['content-security-policy']).toBe(portalPageCsp({ formAction: false }));
-    expect(directives(res.headers['content-security-policy']).has('form-action')).toBe(false);
+    expect(res.headers['content-security-policy']).toBe(portalPageCsp({ formActionOrigins: [FEIDE_ORIGIN] }));
+    // WHY: the logout form posts to /auth/logout, whose redirect goes on to Feide's end-session endpoint.
+    expect(directives(res.headers['content-security-policy']).get('form-action')).toBe(
+      `'self' ${FEIDE_ORIGIN}`,
+    );
     expect(directives(res.headers['content-security-policy']).get('script-src')).toBe("'self'");
     expect(directives(res.headers['content-security-policy']).get('connect-src')).toBe("'self'");
   });

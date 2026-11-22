@@ -80,6 +80,10 @@ export const envSchema = z.object({
     .optional(),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
+  HSTS_INCLUDE_SUBDOMAINS: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
   CANVAS_ORIGINS: z.string().transform(toOriginList).default([]),
   EXTERNAL_MEDIA_ORIGINS: z.string().transform(toOriginList).default([]),
   CAPTIONED_MEDIA_ORIGINS: z.string().transform(toOriginList).default([]),

@@ -9,8 +9,9 @@
  * Invariants:
  *   - Logout is a POST form carrying the session's CSRF token as the `csrf` field (D-057); there is no GET logout.
  *   - Pages are `no-store` and framed only by our own origin. The start page loads our own files only, like the
- *     message pages (`portalPageCsp`), except that its logout form may post on: `/auth/logout` answers 303 to
- *     Feide's end-session endpoint, and browsers apply `form-action` to that redirect too (D-070 amendment).
+ *     message pages (`portalPageCsp`), and its forms may post to our own origin and to Feide's: `/auth/logout`
+ *     answers 303 to Feide's end-session endpoint, and browsers apply `form-action` to that redirect too (D-070
+ *     amendment, D-133).
  *   - The 404 page says nothing about why a path is unknown.
  * Collaborators: ./htmlPage.ts, ./portalPages.ts, ../../auth/session/portalSessionMiddleware.ts,
  *   ../../auth/feide/feideLoginRoutes.ts, ../../server/createApp.ts.
@@ -24,11 +25,18 @@ import { setPortalFrameHeaders } from '../securityHeaders.js';
 import { htmlPage, markup } from './htmlPage.js';
 import { portalPageCsp, sendPortalPage } from './portalPages.js';
 
+/** What the start page depends on. */
+export interface PortalHomeOptions {
+  /** Outside origins the logout form's redirect may reach: Feide's origin. */
+  readonly formActionOrigins?: readonly string[];
+}
+
 /**
  * Builds the start page route.
+ * @param options - Feide's origin, for the logout form's redirect.
  * @returns A router for `GET /`.
  */
-export function portalHomeRoutes(): Router {
+export function portalHomeRoutes(options: PortalHomeOptions = {}): Router {
   const router = Router();
   router.get('/', (_req, res) => {
     const active = portalSessionOf(res);
@@ -43,8 +51,8 @@ export function portalHomeRoutes(): Router {
       : markup`<p>${t('page.home.signedOut', {}, locale)}</p>
 <p><a href="/auth/feide/login">${t('page.login', {}, locale)}</a></p>`;
     setPortalFrameHeaders(res);
-    // WHY: this router does not know FEIDE_ISSUER, so `form-action` is left out; the page's only form is ours.
-    res.setHeader('Content-Security-Policy', portalPageCsp({ formAction: false }));
+    // SECURITY: the logout form posts to us and is redirected on to Feide; no other target is allowed (D-133).
+    res.setHeader('Content-Security-Policy', portalPageCsp(options));
     res.setHeader('Cache-Control', 'no-store');
     res
       .type('html')

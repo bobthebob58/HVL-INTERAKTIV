@@ -16,7 +16,8 @@
  *   - Right after the base headers, the files host (`FILES_BASE_URL`) gets its own router and nothing else (SEC-004).
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
  *     session with CSRF); the editor's file grants are checked before it, inside the H5P router (D-058).
- *   - `X-Powered-By` is off; every response gets `X-Request-Id`, `nosniff`, `no-referrer`, and HSTS over https.
+ *   - `X-Powered-By` is off; every response gets `X-Request-Id`, `nosniff`, `no-referrer`, the default policy
+ *     that pages replace (../http/securityHeaders.ts, D-133), and HSTS over https.
  *   - The findings API, the publish API and the save gate of `/h5p` share one validator and one Redis write lock
  *     (D-074), and the delete of `/h5p` holds that lock too (D-117); the gate reads what the editor will store;
  *     `/api/docs` is mounted only when NODE_ENV is not production (D-077).
@@ -156,7 +157,8 @@ export function createApp(inputs: AppInputs): App {
   app.disable('x-powered-by');
   // SECURITY: `req.ip` (audit hash, rate limits) trusts only as many proxies as are really in front (TRUST_PROXY).
   app.set('trust proxy', env.TRUST_PROXY);
-  app.use(requestLog(logger), baseSecurityHeaders({ https: base.startsWith('https:') }));
+  const hsts = { https: base.startsWith('https:'), includeSubDomains: env.HSTS_INCLUDE_SUBDOMAINS };
+  app.use(requestLog(logger), baseSecurityHeaders(hsts));
   app.use(createFilesHostRouter(inputs.h5p, env));
   app.use(healthRoutes({ database: () => db.$queryRaw`SELECT 1`, redis: () => redis.ping() }));
   app.use(pageAssetRoutes());
@@ -166,8 +168,10 @@ export function createApp(inputs: AppInputs): App {
   app.use(portalSessionMiddleware(sessions));
   app.use(lti.router);
   app.use(portalFeideLoginRoutes({ ...inputs, sessions, audit, hasher }));
+  // WHY: the logout form's redirect goes on to Feide, and browsers apply `form-action` to it (D-070, D-133).
+  const formActionOrigins = [new URL(env.FEIDE_ISSUER).origin];
   // WHY: with the web app, `/` is its start page (D-067); the server-rendered one serves WEB_APP=off.
-  if (!inputs.web) app.use(portalHomeRoutes());
+  if (!inputs.web) app.use(portalHomeRoutes({ formActionOrigins }));
   app.use(
     '/api',
     authenticate,
@@ -184,10 +188,7 @@ export function createApp(inputs: AppInputs): App {
   app.use('/api', h5pErrorHandler(logger));
   app.use('/h5p', authenticate, createH5pRouter(h5pRoutes, h5pAuthenticate()));
   app.use('/h5p', h5pErrorHandler(logger));
-  if (inputs.web) {
-    const formActionOrigins = [new URL(env.FEIDE_ISSUER).origin];
-    app.use(webRoutes(inputs.web, { canvasOrigins: env.CANVAS_ORIGINS, formActionOrigins }));
-  }
+  if (inputs.web) app.use(webRoutes(inputs.web, { canvasOrigins: env.CANVAS_ORIGINS, formActionOrigins }));
   app.use(portalNotFound());
   app.use(lastResortErrorHandler(logger));
   return { app, lti, studio };
