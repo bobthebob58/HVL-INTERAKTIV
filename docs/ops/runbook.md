@@ -34,9 +34,11 @@ Hosting is open: HVL on its own servers or Sikt, both in the EEA (Q5, `DATA-004`
 
 **First deployment** (and every upgrade), in this order:
 
-1. Set the configuration and the secrets (section 3 and 4). Production (`NODE_ENV=production`) refuses to start on
-   the example keys, a clear-text database, Redis or S3 connection, a non-EEA region or a bucket ARN, and prints
-   the list of problems by variable name.
+1. Set the configuration and the secrets (section 3 and 4). The mode has no default: without `NODE_ENV` the server
+   does not start. Production (`NODE_ENV=production`) refuses to start on the example keys, a clear-text database,
+   Redis or S3 connection, a non-EEA region or a bucket ARN, or with `DEBUG` or `NODE_DEBUG` set, and prints the
+   list of problems by variable name. In any other mode the key and https rules still hold when `PUBLIC_BASE_URL`
+   is not a local address (D-133).
 2. Migrate with the migration role, as [database-roles.md](database-roles.md) describes, from `apps/server` (these
    scripts are the server's own, not the root's): `npm run --silent db:roles -- views-down`,
    `npx prisma migrate deploy`, `npm run --silent db:roles -- grants`.
@@ -211,7 +213,9 @@ pattern, e.g. `/api/content/:contentId`, never the path or the query), `status`,
 when the client left. The `X-Request-Id` of the proxy (a UUID or 32 hexadecimal digits) is kept, so the two logs can
 be matched. Watch the API's p95 (`NFR-001`: ≤ 300 ms) and the rate of 5xx answers. Alert also on every `error` line,
 on `retention purge` lines that are not `done`, and on the start-up warning `pseudonym secrets of purged academic
-years are still configured`.
+years are still configured`. A `fatal` line means the process has ended with exit code 1 (a fault nothing handled,
+or a start that failed); the fault itself is in that line, cleaned like every other, and nothing is printed
+outside the log (D-133). In production the start-up warning `not in production mode` must never appear.
 
 **Incident steps:**
 
@@ -284,7 +288,13 @@ its scripts are about 1.5 MiB per empty-cache visit, sent uncompressed by the ap
 
 Tick every line before the first learner, and again after a change of hosting:
 
-- [ ] `NODE_ENV=production`, and the server starts without a refusal.
+- [ ] `NODE_ENV=production`, and the server starts without a refusal: the first log line (`deployment locations`)
+      says `"mode":"production"`, no `not in production mode` warning follows, and from outside
+      `GET /api/docs` answers 404 (it exists only outside production).
+- [ ] `DEBUG` and `NODE_DEBUG` are unset (production refuses to start with either: their output goes around the
+      logger).
+- [ ] `HSTS_INCLUDE_SUBDOMAINS` stays `false` until IT has confirmed that every name under the server's host name
+      is served over https only; then set it to `true` (browsers keep the rule for a year).
 - [ ] Every key and secret is new and random (section 4), stored only in the secret store, and `PSEUDONYM_SECRETS`
       holds the current academic year (and next year's before 1 August).
 - [ ] `DATABASE_URL` is the `hvli_app` role with `sslmode=verify-full`; the migration URL is used only by the migrate

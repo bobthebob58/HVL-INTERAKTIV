@@ -5585,3 +5585,56 @@ loading of one spec per session are kept.
 - **Consequences:** A backup made before this change keeps the counts it recorded: where a text held one of the
   characters, its restore still reports that table as differing, and now names it; the next backup is right.
   The restore's summary has one more field.
+
+### D-133 · Security repairs, step 17: the server states its mode, a reachable address keeps the key and https rules, every fault ends through the logger, and every answer has a policy
+- **Context:** Three things at the server's edges rested on habit instead of a check. (1) The production start-up
+  checks (D-055, D-109 and others) ran only when `NODE_ENV` was `production`, and a missing `NODE_ENV` silently
+  meant `development`: an installation that lost the variable ran on a real address with every check off, the
+  published example keys included, and said nothing. (2) Three kinds of fault went around the logger, which is
+  the only place that removes personal data and secrets (DATA-009): a fault after an answer had begun went to
+  Express's own final handler, a fault nothing caught and a failed start went to Node's own printing, and the
+  debug switches `DEBUG` and `NODE_DEBUG` make libraries and Node print addresses and headers on their own. A
+  start that failed after a client had connected could also leave a process that served nothing. (3) An answer
+  that is not a page (a status, an error, a static file) carried no `Content-Security-Policy`, so nothing limited
+  it if a browser showed it as a page.
+- **Decision — the mode is stated (DOC-008).** `NODE_ENV` has no default: a missing or empty value stops the
+  start with `NODE_ENV: must be development, test or production`. The same holds for the commands that read the
+  whole configuration (`seed:libraries`, `privacy:purge`, `privacy:dsr`). `.env.example`, the image
+  (`production`) and the local compose stack (`development`) already state it.
+- **Decision — the address decides too (DATA-002, AUTH-001, LTI-001).** When `PUBLIC_BASE_URL` is not a local
+  address (`localhost`, a name under `.localhost`, 127.0.0.0/8, `[::1]`), the key rules (no readable text, at
+  least 16 distinct bytes, no key in two places; `config/keyStrengthRules.ts`) and the https rules (the public
+  URL, Feide, the Groups API, Canvas origins, LTI platform URLs and a set `FILES_BASE_URL`;
+  `config/httpsRules.ts`) hold in every mode (`config/publicAddressRules.ts`). A private network address counts
+  as reachable: other machines open it. The other production checks stay with the mode, because a test
+  installation may rightly lack next year's secret or a TLS database.
+- **Decision — the log says which mode runs (NFR-006).** The first start line (`deployment locations`) carries
+  `mode`, and a `warn` line follows when it is not `production`. The deployment checklist reads the line and asks
+  for one outside check: `GET /api/docs` answers 404 in production.
+- **Decision — faults end through the logger (NFR-006, DATA-009).** The app's chain ends in
+  `http/lastResortError.ts`: before an answer has begun it sends the error page as before; after, it writes one
+  `error` line (method and route pattern) and closes the connection, and never passes the fault on.
+  `server/processFaults.ts` turns an uncaught exception and an unhandled rejection into one `fatal` line and exit
+  code 1. `server/serverProcess.ts` (the former `main()`) lists a configuration problem by name on standard error
+  as before, and writes any other failed start as one `fatal` line before it ends the process with exit code 1; a
+  part that does not stop at shutdown is an `error` line. The logger writes to standard output synchronously, so
+  the line is out before the process ends.
+- **Decision — production refuses the debug switches (DATA-009).** With `DEBUG` or `NODE_DEBUG` set, production
+  does not start and names the variable (`config/debugOutput.ts`). Development may use both.
+- **Decision — a default policy for every answer (SEC-004, LTI-003).** `baseSecurityHeaders` sets
+  `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` on every response; every page (the web
+  app, the player, the editor, the LTI pages, the message pages) and every user file replaces it with its own.
+  Answers about the signed-in person keep `frame-ancestors 'self'` and gain `default-src 'none'`. The server's
+  own start page (`WEB_APP=off`) gets `form-action 'self'` and Feide's origin, as the web app's pages have.
+- **Decision — `includeSubDomains` is a switch (LTI-003).** `HSTS_INCLUDE_SUBDOMAINS=true` adds
+  `includeSubDomains` to `Strict-Transport-Security`. It is off by default: a browser then refuses plain http for
+  every name under the server's host for a year, so HVL IT turns it on once it has confirmed that every such name
+  is https only (deployment checklist).
+- **Verified:** unit and integration tests for each rule, the entry point started as its own process (the mode in
+  the first line; a taken port ends the process with one `fatal` line and no stack around it), a real process that
+  fails outside any handler (one cleaned line on standard output, nothing on standard error), and the browser
+  suites, which open every kind of page under the new default policy.
+- **Consequences:** A `.env` without `NODE_ENV` stops the start. A development or test installation on an address
+  other machines reach needs https and random keys. A production start with a debug switch is refused. A start
+  that fails after a client connected now ends its process, where it could stay alive before. Test servers that
+  stand in for a framed page must say who may frame it, as the real pages do.

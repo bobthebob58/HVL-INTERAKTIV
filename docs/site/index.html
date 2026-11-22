@@ -804,12 +804,20 @@ is GPL-3.0-or-later. Dependencies must be GPL-3.0-compatible (for example MIT, B
 </details>
 <details class="req" id="x-NFR-006" data-area="NFR" data-priority="MUST" data-session="S6" data-status="tested" data-text="nfr-006 observability without personal data logs are structured json with request id, route, status and latency. they must never contain names,
 e-mail addresses, feide ids, lti `sub` values, ltik tokens, or answer contents. see `data-009`.
-- **verify:** a unit test runs the log redaction function against a fixture of sensitive fields.">
+- **verify:** a unit test runs the log redaction function against a fixture of sensitive fields.
+- **amended (d-133, 2026-11-22):** a fault after an answer has begun, a fault nothing caught and a failed start are
+  each one `error` or `fatal` line of the same logger and end the answer or the process; nothing is printed around
+  the logger. the first start line names the mode (`node_env`, which has no default), and a warning follows when
+  it is not `production`.">
 <summary><span class="req-id">NFR-006</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Observability without personal data</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Logs are structured JSON with request ID, route, status and latency. They must never contain names,
 e-mail addresses, Feide IDs, LTI <code>sub</code> values, ltik tokens, or answer contents. See <a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>.</p>
 <ul>
 <li><strong>Verify:</strong> A unit test runs the log redaction function against a fixture of sensitive fields.</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> a fault after an answer has begun, a fault nothing caught and a failed start are
+each one <code>error</code> or <code>fatal</code> line of the same logger and end the answer or the process; nothing is printed around
+the logger. The first start line names the mode (<code>NODE_ENV</code>, which has no default), and a warning follows when
+it is not <code>production</code>.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-NFR-006">00 Product and pedagogy, NFR-006</a> · Non-functional</p></div>
 </details>
@@ -1198,7 +1206,9 @@ origin, cookies or ltik.
   `files_base_url`, https in production), with cors for the app origin and h5p's `crossorigin`, and the main origin
   answers their path with 404. the editor's saved files, fresh uploads and h5p's cookie routes stay on the main
   origin with the headers above (`spec-deviation: d-110`: h5p's image editor draws into a canvas without
-  `crossorigin`). verified by the files-origin integration and e2e tests and the image's smoke test.">
+  `crossorigin`). verified by the files-origin integration and e2e tests and the image's smoke test.
+- **amended (d-133, 2026-11-22):** an answer of the main origin that sets no policy of its own (a status, an error,
+  a static file) carries `content-security-policy: default-src 'none'; frame-ancestors 'none'`.">
 <summary><span class="req-id">SEC-004</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Serve user content defensively</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Content files are served with <code>X-Content-Type-Options: nosniff</code>. SVG and document files are served
 with <code>Content-Security-Policy: sandbox; default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;</code>. Non-media
@@ -1212,6 +1222,8 @@ origin, cookies or ltik.</p>
 answers their path with 404. The editor&#39;s saved files, fresh uploads and H5P&#39;s cookie routes stay on the main
 origin with the headers above (<code>SPEC-DEVIATION: D-110</code>: H5P&#39;s image editor draws into a canvas without
 <code>crossorigin</code>). Verified by the files-origin integration and e2e tests and the image&#39;s smoke test.</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> an answer of the main origin that sets no policy of its own (a status, an error,
+a static file) carries <code>Content-Security-Policy: default-src &#39;none&#39;; frame-ancestors &#39;none&#39;</code>.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-004">01 H5P engine and security, SEC-004</a> · Upload security</p></div>
 </details>
@@ -1298,7 +1310,10 @@ group configured for the client. in the customer portal, authorise only the attr
 - **amended (d-131, 2026-11-21):** only a page the person opened starts a login: a request that is no navigation
   is refused, and a page another site opened without a click, or a frame, gets a sign-in page whose button
   starts it. a callback is taken only as a page navigation and uses the pending login up only when its `state`
-  is that login's; any other callback is refused and leaves the login in place.">
+  is that login's; any other callback is refused and leaves the login in place.
+- **amended (d-133, 2026-11-22):** https for the public url, feide, the groups api, the canvas origins and the lti
+  platform urls is required in production and, in any other mode, whenever `public_base_url` is not a local address
+  (`localhost`, a `.localhost` name, 127.0.0.0/8 or `[::1]`).">
 <summary><span class="req-id">AUTH-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Feide OpenID Connect login (Authorization Code + PKCE)</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The server is a confidential OIDC relying party, registered in the Feide Customer Portal
 (kunde.feide.no) under HVL (realm <code>hvl.no</code> <em>(verify realm)</em>). It uses <code>openid-client</code> 6 with discovery
@@ -1317,6 +1332,9 @@ environment variable or secret store and is never logged.</li>
 is refused, and a page another site opened without a click, or a frame, gets a sign-in page whose button
 starts it. A callback is taken only as a page navigation and uses the pending login up only when its <code>state</code>
 is that login&#39;s; any other callback is refused and leaves the login in place.</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> https for the public URL, Feide, the Groups API, the Canvas origins and the LTI
+platform URLs is required in production and, in any other mode, whenever <code>PUBLIC_BASE_URL</code> is not a local address
+(<code>localhost</code>, a <code>.localhost</code> name, 127.0.0.0/8 or <code>[::1]</code>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-AUTH-001">02 Feide, LTI and grades, AUTH-001</a> · Feide login</p></div>
 </details>
@@ -1517,7 +1535,10 @@ Platform private keys are encrypted at rest with a key from the secret store.</p
   it (`lti/ltikscope.ts`): the launched activity for a resource-link launch, no activity for a deep linking launch,
   «who am i» and a notice for both; anything else is 403 `hvl:not-from-canvas`. an address with an ltik (step 1) is
   accepted only from a same-origin navigation, or, from a browser that sends no fetch metadata, within ten minutes
-  of the launch (`lti/landingltik.ts`); otherwise the page of step 4 answers.">
+  of the launch (`lti/landingltik.ts`); otherwise the page of step 4 answers.
+- **amended (d-133, 2026-11-22):** every response starts with `content-security-policy: default-src 'none';
+  frame-ancestors 'none'`, which each page replaces with its own policy (step 6 for the lti pages).
+  `strict-transport-security` gains `includesubdomains` only with `hsts_include_subdomains=true`.">
 <summary><span class="req-id">LTI-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Cookie-less ltik transport</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><ol>
 <li><code>onResourceLink</code> and <code>onDeepLinking</code> call <code>context.redirect(res, &#39;/app/…&#39;)</code>, which appends <code>?ltik=…</code>.</li>
@@ -1538,6 +1559,8 @@ it (<code>lti/ltikScope.ts</code>): the launched activity for a resource-link la
 «who am I» and a notice for both; anything else is 403 <code>hvl:not-from-canvas</code>. An address with an ltik (step 1) is
 accepted only from a same-origin navigation, or, from a browser that sends no fetch metadata, within ten minutes
 of the launch (<code>lti/landingLtik.ts</code>); otherwise the page of step 4 answers.</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> every response starts with <code>Content-Security-Policy: default-src &#39;none&#39;; frame-ancestors &#39;none&#39;</code>, which each page replaces with its own policy (step 6 for the LTI pages).
+<code>Strict-Transport-Security</code> gains <code>includeSubDomains</code> only with <code>HSTS_INCLUDE_SUBDOMAINS=true</code>.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-003">02 Feide, LTI and grades, LTI-003</a> · Canvas LTI and grades</p></div>
 </details>
@@ -2856,7 +2879,10 @@ addresses, feide ids, national id numbers or raw lti `sub` values. the one excep
   succeeded, failed or was orphaned, so a job that never succeeds keeps it no longer.
 - **amended (d-129, 2026-11-21):** the lti `source` is `lti|&lt;iss&gt;|&lt;client-id&gt;|&lt;sub&gt;`: it names the platform
   registration (issuer and client id), because several platforms can send one issuer and a `sub` is unique
-  within one platform only. the text above shows the earlier form.">
+  within one platform only. the text above shows the earlier form.
+- **amended (d-133, 2026-11-22):** a secret must not be readable text, must have at least 16 distinct bytes and is
+  never used in two places; the server checks this in production and, in any other mode, whenever
+  `public_base_url` is not a local address.">
 <summary><span class="req-id">DATA-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Pseudonymous learners</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>learnerKey = HMAC-SHA256(PSEUDONYM_SECRET[academicYear], source)</code>, where <code>source</code> is
 <code>feide|&lt;feide-id&gt;</code> or <code>lti|&lt;iss&gt;|&lt;sub&gt;</code>. The secret is held in the secret store, rotated per academic
@@ -2870,6 +2896,9 @@ succeeded, failed or was orphaned, so a job that never succeeds keeps it no long
 <li><strong>Amended (D-129, 2026-11-21):</strong> the LTI <code>source</code> is <code>lti|&lt;iss&gt;|&lt;client-id&gt;|&lt;sub&gt;</code>: it names the platform
 registration (issuer and client ID), because several platforms can send one issuer and a <code>sub</code> is unique
 within one platform only. The text above shows the earlier form.</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> a secret must not be readable text, must have at least 16 distinct bytes and is
+never used in two places; the server checks this in production and, in any other mode, whenever
+<code>PUBLIC_BASE_URL</code> is not a local address.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-002">05 Insight and privacy, DATA-002</a> · Data protection</p></div>
 </details>
@@ -3041,12 +3070,16 @@ pseudonyms are derived per platform registration (<a class="req-ref" href="#r-DA
 </details>
 <details class="req" id="x-DATA-009" data-area="DATA" data-priority="MUST" data-session="S1" data-status="tested" data-text="data-009 logs contain no personal data the logger (pino) redacts `authorization`, `cookie`, `ltik`, `id_token`, `email`, `name`, `sub`,
 `feide*`, and any key named `response` (answer content). application logs are kept for 30 days.
-- **verify:** unit test of redaction paths (`nfr-006`).">
+- **verify:** unit test of redaction paths (`nfr-006`).
+- **amended (d-133, 2026-11-22):** production does not start with `debug` or `node_debug` set, because their output
+  goes around the logger; faults outside a request go through the logger too (`nfr-006`).">
 <summary><span class="req-id">DATA-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Logs contain no personal data</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The logger (pino) redacts <code>authorization</code>, <code>cookie</code>, <code>ltik</code>, <code>id_token</code>, <code>email</code>, <code>name</code>, <code>sub</code>,
 <code>feide*</code>, and any key named <code>response</code> (answer content). Application logs are kept for 30 days.</p>
 <ul>
 <li><strong>Verify:</strong> Unit test of redaction paths (<a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a>).</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> production does not start with <code>DEBUG</code> or <code>NODE_DEBUG</code> set, because their output
+goes around the logger; faults outside a request go through the logger too (<a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-009">05 Insight and privacy, DATA-009</a> · Data protection</p></div>
 </details>
@@ -3728,6 +3761,10 @@ is GPL-3.0-or-later. Dependencies must be GPL-3.0-compatible (for example MIT, B
 e-mail addresses, Feide IDs, LTI <code>sub</code> values, ltik tokens, or answer contents. See <a class="req-ref" href="#r-DATA-009"><code>DATA-009</code></a>.</p>
 <ul>
 <li><strong>Verify:</strong> A unit test runs the log redaction function against a fixture of sensitive fields.</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> a fault after an answer has begun, a fault nothing caught and a failed start are
+each one <code>error</code> or <code>fatal</code> line of the same logger and end the answer or the process; nothing is printed around
+the logger. The first start line names the mode (<code>NODE_ENV</code>, which has no default), and a warning follows when
+it is not <code>production</code>.</li>
 </ul>
 <h4 id="r-NFR-007" class="req-heading" tabindex="-1"><a class="req-id" href="#r-NFR-007">NFR-007</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Deployable on HVL or Sikt infrastructure</span></h4>
 <p>Docker images and <code>docker-compose.yml</code> for local and staging environments. Only EEA-hosted
@@ -4149,6 +4186,8 @@ origin, cookies or ltik.</p>
 answers their path with 404. The editor&#39;s saved files, fresh uploads and H5P&#39;s cookie routes stay on the main
 origin with the headers above (<code>SPEC-DEVIATION: D-110</code>: H5P&#39;s image editor draws into a canvas without
 <code>crossorigin</code>). Verified by the files-origin integration and e2e tests and the image&#39;s smoke test.</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> an answer of the main origin that sets no policy of its own (a status, an error,
+a static file) carries <code>Content-Security-Policy: default-src &#39;none&#39;; frame-ancestors &#39;none&#39;</code>.</li>
 </ul>
 <h4 id="r-SEC-005" class="req-heading" tabindex="-1"><a class="req-id" href="#r-SEC-005">SEC-005</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Size limits and archive safety</span></h4>
 <p><code>maxFileSize</code> is 50 MB and <code>maxTotalSize</code> is 200 MB per package. The server rejects zip entries with
@@ -4309,6 +4348,9 @@ environment variable or secret store and is never logged.</li>
 is refused, and a page another site opened without a click, or a frame, gets a sign-in page whose button
 starts it. A callback is taken only as a page navigation and uses the pending login up only when its <code>state</code>
 is that login&#39;s; any other callback is refused and leaves the login in place.</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> https for the public URL, Feide, the Groups API, the Canvas origins and the LTI
+platform URLs is required in production and, in any other mode, whenever <code>PUBLIC_BASE_URL</code> is not a local address
+(<code>localhost</code>, a <code>.localhost</code> name, 127.0.0.0/8 or <code>[::1]</code>).</li>
 </ul>
 <h4 id="r-AUTH-002" class="req-heading" tabindex="-1"><a class="req-id" href="#r-AUTH-002">AUTH-002</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Map Feide affiliation to roles</span></h4>
 <p>After login, call <code>GET https://groups-api.dataporten.no/groups/me/groups</code> with the user&#39;s Feide access
@@ -4428,6 +4470,8 @@ it (<code>lti/ltikScope.ts</code>): the launched activity for a resource-link la
 «who am I» and a notice for both; anything else is 403 <code>hvl:not-from-canvas</code>. An address with an ltik (step 1) is
 accepted only from a same-origin navigation, or, from a browser that sends no fetch metadata, within ten minutes
 of the launch (<code>lti/landingLtik.ts</code>); otherwise the page of step 4 answers.</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> every response starts with <code>Content-Security-Policy: default-src &#39;none&#39;; frame-ancestors &#39;none&#39;</code>, which each page replaces with its own policy (step 6 for the LTI pages).
+<code>Strict-Transport-Security</code> gains <code>includeSubDomains</code> only with <code>HSTS_INCLUDE_SUBDOMAINS=true</code>.</li>
 </ul>
 <h4 id="r-LTI-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-004">LTI-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Map LTI roles safely</span></h4>
 <div class="table-wrap" role="region" aria-label="Table 4, 4. Requirements — Canvas LTI 1.3 core and Deep Linking" tabindex="0"><table><thead><tr>
@@ -4709,7 +4753,7 @@ page → the error page. <code>server/main.ts</code> (<code>npm start</code>) sy
 <div class="table-wrap" role="region" aria-label="Table 7, 8. Code map (S3)" tabindex="0"><table><thead><tr>
 <th scope="col">ID</th><th scope="col">Implemented in</th><th scope="col">Proved by</th><th scope="col">S3 scope and open items</th></tr>
 </thead><tbody><tr>
-<td><a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a></td><td><code>auth/feide/FeideClient.ts</code> (discovery, <code>FEIDE_SCOPE</code>, PKCE <code>S256</code>, <code>client_secret_post</code>, ID-token signature check with <code>enableNonRepudiationChecks</code>, D-054); <code>auth/feide/loginTransactions.ts</code> (state, nonce and PKCE verifier bound to the browser by the <code>__Host-hvli_login</code> cookie, D-057); <code>auth/feide/feideLoginRoutes.ts</code>; <code>auth/feide/completeFeideLogin.ts</code>; <code>auth/identity/AccountResolver.ts</code>; <code>auth/audit/AuthAuditRecorder.ts</code>; <code>config/productionChecks.ts</code> (https issuer in production)</td><td><code>test/auth/feide/feideLogin.int.test.ts</code> (full login against the mock Feide; wrong <code>iss</code>, <code>aud</code> or <code>nonce</code>, expired <code>exp</code>, a key outside Feide&#39;s JWKS, a missing login cookie); <code>test/auth/feide/FeideClient.test.ts</code>; <code>test/auth/feide/loginTransactions.int.test.ts</code>; <code>test/auth/upstream/openidClientMock.test.ts</code>; <code>test/auth/identity/AccountResolver.int.test.ts</code>; <code>test/config/productionChecks.test.ts</code></td><td>Mock Feide in <code>tools/mock-platform</code> (D-049). HVL&#39;s client ID, secret and realm are still open (Q3).</td></tr>
+<td><a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a></td><td><code>auth/feide/FeideClient.ts</code> (discovery, <code>FEIDE_SCOPE</code>, PKCE <code>S256</code>, <code>client_secret_post</code>, ID-token signature check with <code>enableNonRepudiationChecks</code>, D-054); <code>auth/feide/loginTransactions.ts</code> (state, nonce and PKCE verifier bound to the browser by the <code>__Host-hvli_login</code> cookie, D-057); <code>auth/feide/feideLoginRoutes.ts</code>; <code>auth/feide/completeFeideLogin.ts</code>; <code>auth/identity/AccountResolver.ts</code>; <code>auth/audit/AuthAuditRecorder.ts</code>; <code>config/httpsRules.ts</code> (https issuer in production and, off a local address, in every mode)</td><td><code>test/auth/feide/feideLogin.int.test.ts</code> (full login against the mock Feide; wrong <code>iss</code>, <code>aud</code> or <code>nonce</code>, expired <code>exp</code>, a key outside Feide&#39;s JWKS, a missing login cookie); <code>test/auth/feide/FeideClient.test.ts</code>; <code>test/auth/feide/loginTransactions.int.test.ts</code>; <code>test/auth/upstream/openidClientMock.test.ts</code>; <code>test/auth/identity/AccountResolver.int.test.ts</code>; <code>test/config/productionChecks.test.ts</code></td><td>Mock Feide in <code>tools/mock-platform</code> (D-049). HVL&#39;s client ID, secret and realm are still open (Q3).</td></tr>
 <tr>
 <td><a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a></td><td><code>auth/feide/feideGroups.ts</code> (<code>GET &lt;FEIDE_GROUPS_API_URL&gt;/groups/me/groups</code>; any failure is a 503 page, D-054); <code>auth/feide/FeideRoleMapper.ts</code> (the role table as D-059 reads it); <code>auth/feide/feideClaims.ts</code> (the Feide ID); <code>config/envParsers.ts</code> (<code>ALLOWED_FEIDE_ORGS</code>, <code>ADMIN_FEIDE_IDS</code>, <code>AUTHOR_COURSE_GROUPS</code>); <code>auth/Principal.ts</code></td><td><code>test/auth/feide/FeideRoleMapper.test.ts</code> (every row, including <code>student</code> with <code>employee</code>); <code>test/auth/feide/FeideRoleMapper.validity.test.ts</code>; <code>test/auth/feide/feideGroups.test.ts</code>; <code>test/auth/feide/feideClaims.test.ts</code>; <code>test/auth/feide/feideLogin.int.test.ts</code>; <code>test/auth/Principal.test.ts</code>; <code>test/config/envParsers.test.ts</code></td><td>D-059: <code>admin</code> only for an HVL member; a course group matches exactly or as a prefix followed by <code>:</code>, and only while the membership is valid; student authors share <code>private</code> only (Q12). Realm <code>hvl.no</code> and HVL&#39;s FS groups still <em>(verify)</em>.</td></tr>
 <tr>
@@ -5485,6 +5529,9 @@ succeeded, failed or was orphaned, so a job that never succeeds keeps it no long
 <li><strong>Amended (D-129, 2026-11-21):</strong> the LTI <code>source</code> is <code>lti|&lt;iss&gt;|&lt;client-id&gt;|&lt;sub&gt;</code>: it names the platform
 registration (issuer and client ID), because several platforms can send one issuer and a <code>sub</code> is unique
 within one platform only. The text above shows the earlier form.</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> a secret must not be readable text, must have at least 16 distinct bytes and is
+never used in two places; the server checks this in production and, in any other mode, whenever
+<code>PUBLIC_BASE_URL</code> is not a local address.</li>
 </ul>
 <h4 id="r-DATA-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DATA-003">DATA-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span></h4>
 <p>A scheduled job runs on a configured date (default 15 August), for the academic year that has
@@ -5577,6 +5624,8 @@ pseudonyms are derived per platform registration (<a class="req-ref" href="#r-DA
 <code>feide*</code>, and any key named <code>response</code> (answer content). Application logs are kept for 30 days.</p>
 <ul>
 <li><strong>Verify:</strong> Unit test of redaction paths (<a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a>).</li>
+<li><strong>Amended (D-133, 2026-11-22):</strong> production does not start with <code>DEBUG</code> or <code>NODE_DEBUG</code> set, because their output
+goes around the logger; faults outside a request go through the logger too (<a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a>).</li>
 </ul>
 <h4 id="r-DATA-010" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DATA-010">DATA-010</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Least-privilege access to infrastructure</span></h4>
 <p>Separate database roles are used for the app, for migrations and for read-only analytics. Production
@@ -12481,6 +12530,60 @@ storage emulator accepts no line break in a key.</li>
 <li><strong>Consequences:</strong> A backup made before this change keeps the counts it recorded: where a text held one of the
 characters, its restore still reports that table as differing, and now names it; the next backup is right.
 The restore&#39;s summary has one more field.</li>
+</ul>
+<h3 id="decisions--d-133--security-repairs-step-17-the-server-states-its-mode-a-reachable-address-keeps-the-key-and-https-rules-every-fault-ends-through-the-logger-and-every-answer-has-a-policy" tabindex="-1">D-133 · Security repairs, step 17: the server states its mode, a reachable address keeps the key and https rules, every fault ends through the logger, and every answer has a policy</h3>
+<ul>
+<li><strong>Context:</strong> Three things at the server&#39;s edges rested on habit instead of a check. (1) The production start-up
+checks (D-055, D-109 and others) ran only when <code>NODE_ENV</code> was <code>production</code>, and a missing <code>NODE_ENV</code> silently
+meant <code>development</code>: an installation that lost the variable ran on a real address with every check off, the
+published example keys included, and said nothing. (2) Three kinds of fault went around the logger, which is
+the only place that removes personal data and secrets (DATA-009): a fault after an answer had begun went to
+Express&#39;s own final handler, a fault nothing caught and a failed start went to Node&#39;s own printing, and the
+debug switches <code>DEBUG</code> and <code>NODE_DEBUG</code> make libraries and Node print addresses and headers on their own. A
+start that failed after a client had connected could also leave a process that served nothing. (3) An answer
+that is not a page (a status, an error, a static file) carried no <code>Content-Security-Policy</code>, so nothing limited
+it if a browser showed it as a page.</li>
+<li><strong>Decision — the mode is stated (DOC-008).</strong> <code>NODE_ENV</code> has no default: a missing or empty value stops the
+start with <code>NODE_ENV: must be development, test or production</code>. The same holds for the commands that read the
+whole configuration (<code>seed:libraries</code>, <code>privacy:purge</code>, <code>privacy:dsr</code>). <code>.env.example</code>, the image
+(<code>production</code>) and the local compose stack (<code>development</code>) already state it.</li>
+<li><strong>Decision — the address decides too (DATA-002, AUTH-001, LTI-001).</strong> When <code>PUBLIC_BASE_URL</code> is not a local
+address (<code>localhost</code>, a name under <code>.localhost</code>, 127.0.0.0/8, <code>[::1]</code>), the key rules (no readable text, at
+least 16 distinct bytes, no key in two places; <code>config/keyStrengthRules.ts</code>) and the https rules (the public
+URL, Feide, the Groups API, Canvas origins, LTI platform URLs and a set <code>FILES_BASE_URL</code>;
+<code>config/httpsRules.ts</code>) hold in every mode (<code>config/publicAddressRules.ts</code>). A private network address counts
+as reachable: other machines open it. The other production checks stay with the mode, because a test
+installation may rightly lack next year&#39;s secret or a TLS database.</li>
+<li><strong>Decision — the log says which mode runs (NFR-006).</strong> The first start line (<code>deployment locations</code>) carries
+<code>mode</code>, and a <code>warn</code> line follows when it is not <code>production</code>. The deployment checklist reads the line and asks
+for one outside check: <code>GET /api/docs</code> answers 404 in production.</li>
+<li><strong>Decision — faults end through the logger (NFR-006, DATA-009).</strong> The app&#39;s chain ends in
+<code>http/lastResortError.ts</code>: before an answer has begun it sends the error page as before; after, it writes one
+<code>error</code> line (method and route pattern) and closes the connection, and never passes the fault on.
+<code>server/processFaults.ts</code> turns an uncaught exception and an unhandled rejection into one <code>fatal</code> line and exit
+code 1. <code>server/serverProcess.ts</code> (the former <code>main()</code>) lists a configuration problem by name on standard error
+as before, and writes any other failed start as one <code>fatal</code> line before it ends the process with exit code 1; a
+part that does not stop at shutdown is an <code>error</code> line. The logger writes to standard output synchronously, so
+the line is out before the process ends.</li>
+<li><strong>Decision — production refuses the debug switches (DATA-009).</strong> With <code>DEBUG</code> or <code>NODE_DEBUG</code> set, production
+does not start and names the variable (<code>config/debugOutput.ts</code>). Development may use both.</li>
+<li><strong>Decision — a default policy for every answer (SEC-004, LTI-003).</strong> <code>baseSecurityHeaders</code> sets
+<code>Content-Security-Policy: default-src &#39;none&#39;; frame-ancestors &#39;none&#39;</code> on every response; every page (the web
+app, the player, the editor, the LTI pages, the message pages) and every user file replaces it with its own.
+Answers about the signed-in person keep <code>frame-ancestors &#39;self&#39;</code> and gain <code>default-src &#39;none&#39;</code>. The server&#39;s
+own start page (<code>WEB_APP=off</code>) gets <code>form-action &#39;self&#39;</code> and Feide&#39;s origin, as the web app&#39;s pages have.</li>
+<li><strong>Decision — <code>includeSubDomains</code> is a switch (LTI-003).</strong> <code>HSTS_INCLUDE_SUBDOMAINS=true</code> adds
+<code>includeSubDomains</code> to <code>Strict-Transport-Security</code>. It is off by default: a browser then refuses plain http for
+every name under the server&#39;s host for a year, so HVL IT turns it on once it has confirmed that every such name
+is https only (deployment checklist).</li>
+<li><strong>Verified:</strong> unit and integration tests for each rule, the entry point started as its own process (the mode in
+the first line; a taken port ends the process with one <code>fatal</code> line and no stack around it), a real process that
+fails outside any handler (one cleaned line on standard output, nothing on standard error), and the browser
+suites, which open every kind of page under the new default policy.</li>
+<li><strong>Consequences:</strong> A <code>.env</code> without <code>NODE_ENV</code> stops the start. A development or test installation on an address
+other machines reach needs https and random keys. A production start with a debug switch is refused. A start
+that fails after a client connected now ends its process, where it could stay alive before. Test servers that
+stand in for a framed page must say who may frame it, as the real pages do.</li>
 </ul>
 
 </section>

@@ -158,6 +158,9 @@ addresses, Feide IDs, national ID numbers or raw LTI `sub` values. The one excep
 - **Amended (D-129, 2026-11-21):** the LTI `source` is `lti|<iss>|<client-id>|<sub>`: it names the platform
   registration (issuer and client ID), because several platforms can send one issuer and a `sub` is unique
   within one platform only. The text above shows the earlier form.
+- **Amended (D-133, 2026-11-22):** a secret must not be readable text, must have at least 16 distinct bytes and is
+  never used in two places; the server checks this in production and, in any other mode, whenever
+  `PUBLIC_BASE_URL` is not a local address.
 
 #### DATA-003 · MUST · S6 · Annual retention purge
 A scheduled job runs on a configured date (default 15 August), for the academic year that has
@@ -243,6 +246,8 @@ retained academic years, then exports (JSON) or deletes that learner's data. Eve
 The logger (pino) redacts `authorization`, `cookie`, `ltik`, `id_token`, `email`, `name`, `sub`,
 `feide*`, and any key named `response` (answer content). Application logs are kept for 30 days.
 - **Verify:** Unit test of redaction paths (`NFR-006`).
+- **Amended (D-133, 2026-11-22):** production does not start with `DEBUG` or `NODE_DEBUG` set, because their output
+  goes around the logger; faults outside a request go through the logger too (`NFR-006`).
 
 #### DATA-010 · MUST · S6 · Least-privilege access to infrastructure
 Separate database roles are used for the app, for migrations and for read-only analytics. Production

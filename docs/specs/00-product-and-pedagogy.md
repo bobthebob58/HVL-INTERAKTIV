@@ -264,6 +264,10 @@ is GPL-3.0-or-later. Dependencies must be GPL-3.0-compatible (for example MIT, B
 Logs are structured JSON with request ID, route, status and latency. They must never contain names,
 e-mail addresses, Feide IDs, LTI `sub` values, ltik tokens, or answer contents. See `DATA-009`.
 - **Verify:** A unit test runs the log redaction function against a fixture of sensitive fields.
+- **Amended (D-133, 2026-11-22):** a fault after an answer has begun, a fault nothing caught and a failed start are
+  each one `error` or `fatal` line of the same logger and end the answer or the process; nothing is printed around
+  the logger. The first start line names the mode (`NODE_ENV`, which has no default), and a warning follows when
+  it is not `production`.
 
 #### NFR-007 · MUST · S6 · Deployable on HVL or Sikt infrastructure
 Docker images and `docker-compose.yml` for local and staging environments. Only EEA-hosted

@@ -55,9 +55,11 @@ All in `apps/server/.env.example`; the server refuses to start on a wrong value 
   start-up rules, so run them with the server's environment; they build no scanner connection of their own.
 - **Never set `CLAMSCAN_*` or `CLAMDSCAN_*`.** Lumi's scanner would read them over the server's settings; the server
   does not use that path, and refuses to start while one is set, naming it.
-- **Keep `DEBUG` without `h5p:*` in production.** Lumi's own debug logger is silent unless `DEBUG=h5p:*` is set, and
-  then it writes the paths of scanned files, which for a package import hold the package's own file names
-  (`DATA-009`). The library `clamscan` writes socket errors (Node's error text, never a file name) to stderr on its own.
+- **`DEBUG` is refused in production.** Lumi's own debug logger is silent unless `DEBUG=h5p:*` is set, and then it
+  writes the paths of scanned files, which for a package import hold the package's own file names (`DATA-009`).
+  Production does not start with `DEBUG` or `NODE_DEBUG` set (D-133); in development, keep `h5p:*` out of `DEBUG`
+  when real files are used. The library `clamscan` writes socket errors (Node's error text, never a file name) to
+  stderr on its own.
 - **`CLAMAV_ALLOW_UNSCANNED_UPLOADS` never lets a file through when clamd fails.** It only allows a production start
   with no clamd at all, for example a pilot before HVL runs ClamAV; the start then logs a warning. Decide it with
   HVL's security officer and write the decision down.
