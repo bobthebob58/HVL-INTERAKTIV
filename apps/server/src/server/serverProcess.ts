@@ -25,6 +25,12 @@ import { createLogger } from '../logging/logger.js';
 import type { RunningServer } from './main.js';
 import { installProcessFaultHandlers, type FaultingProcess } from './processFaults.js';
 
+/** Where the configuration problems are listed: standard error. */
+export interface ProblemOutput {
+  /** Writes text, as `process.stderr.write` does. */
+  write(text: string): unknown;
+}
+
 /** The part of `process` a server process uses; tests pass a stand-in. */
 export interface HostProcess extends FaultingProcess {
   /** The raw environment. */
@@ -32,7 +38,7 @@ export interface HostProcess extends FaultingProcess {
   /** The code the process ends with when nothing calls `exit`. */
   exitCode?: typeof process.exitCode;
   /** Where the configuration problems are listed. */
-  readonly stderr: { write(text: string): unknown };
+  readonly stderr: ProblemOutput;
   /** Registers a one-time signal listener, as `process.once` does. */
   once(event: 'SIGTERM' | 'SIGINT', listener: () => void): unknown;
 }
