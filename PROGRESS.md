@@ -2656,3 +2656,46 @@ Append one entry per session: date, session, what was done, gate output, and any
       MAPPE-004)
   $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 283 s (image built with 16.4.6)
   ```
+
+- **2026-11-22 · Security repairs, step 20 (D-136)** — The insight CSV a teacher downloads follows its language,
+  quotes and guards every field, and carries no ID that learners chose. One code commit:
+  - The file's form (INS-009, PROD-012): in nn and nb `;` between the fields and a decimal comma, in en `,` and a
+    point, as the spreadsheet programs of each language read a file (`insight/http/insightCsvFields.ts`, new;
+    `insight/http/insightCsvText.ts`). Every field is quoted. A formula character (`=`, `+`, `-`, `@`) gets a
+    `'` wherever a cell could start: at the start of a field and after every `;`, `,`, tab and line break inside
+    it, so a program that splits at another character than the writer's finds no cell that begins a formula.
+    Tests: `insight/http/insightCsvFields.test.ts`, `insightCsvFields.property.test.ts` (generated texts),
+    `insightCsvText.test.ts`; the routes' tests read each file with its own separator.
+  - No learner-chosen ID (INS-009, INS-006): a question that is not in the activity's current content is written
+    with an empty `item` and a neutral name («Spørsmål 3 (ikkje i aktiviteten no)», in nn, nb and en); a question
+    of the activity keeps its ID (`insight/export/insightCsvRows.ts`). Test: `insight/unlistedItems.test.ts`.
+  - The contract describes the file's form per language. D-136 added; INS-009 in spec 05 has an "Amended" line;
+    the threat model has a row for it (T-104); `TRACEABILITY.md` and the spec site regenerated. No page of the
+    web app looks different, so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26888 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
