@@ -620,7 +620,7 @@
       "intro": "Hva studentene svarte første gang på flervalgs- og utfyllingsspørsmål, med tilbakemeldingen du har skrevet til hvert feil svar.",
       "learners": "Studenter som svarte første gang:",
       "none": "Ingen flervalgs- eller utfyllingsspørsmål har svar i denne perioden.",
-      "olderVersion": "Svarfordelingen vises bare for den gjeldende versjonen av aktiviteten, fordi svaralternativene kan ha endret seg siden. Velg den gjeldende versjonen for å se den."
+      "olderVersion": "Svarfordelingen vises bare for den gjeldende versjonen av aktiviteten, fordi svaralternativene eller fasiten kan ha endret seg siden. Velg den gjeldende versjonen for å se den."
     },
     "choice": {
       "caption": "Svarene på «{{question}}»",
