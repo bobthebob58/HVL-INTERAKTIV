@@ -2744,3 +2744,53 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
   ```
+
+- **2026-11-22 · Security repairs, step 22 (D-138)** — Who can be one of the *k* learners behind a number in
+  insight is narrowed where statements arrive (the owner's decisions of 2026-11-22). Two code commits:
+  - Whose play is recorded (LTI-011, DATA-012, INS-006, LTI-004): one rule (`xapi/learningDataScope.ts`, new) for
+    the ingestion (`xapi/XapiIngest.ts`) and, through the actor, the player page's xAPI bridge
+    (`h5p/render/xapiBridgeConfig.ts`): in the portal a learner who is an HVL member, in Canvas a launch with the
+    context role `Learner` (`lti/LtiRoleMapper.ts` `isLtiLearner`, `lti/launchFacts.ts`), and Canvas's test
+    student, flagged as before. A learner from another Feide organisation, an observer and a launch without roles
+    play as before and store no statement; their saved state is kept. Tests: `xapi/learningDataScope.test.ts`,
+    `xapi/xapiRecordedLearners.int.test.ts`, `lti/LtiRoleMapper.test.ts`, `lti/launchFacts.test.ts`,
+    `auth/principalToH5pActor.test.ts`, `h5p/render/xapiBridgeConfig.test.ts`.
+  - A version that is no longer current takes no new learner (INS-006, PROD-013): a batch naming an older version
+    is stored only for a learner who already has a statement under that version in that context
+    (`xapi/XapiStatementStore.ts` `hasRowsIn`); any other is answered 202 and stores nothing, counted in the log.
+    Tests: `xapi/xapiRecordedLearners.int.test.ts`, `xapi/xapiIngest.int.test.ts`.
+  - The privacy notice (DATA-006) tells a person from another institution what is and is not stored (nn, nb, en;
+    `apps/web/test/features/privacyNoticeGuests.test.ts`). Screenshots in nn at 1280 px and 390 px were sent to
+    the owner; none is committed.
+  - D-138 added; LTI-004 and LTI-011 in spec 02 and INS-006 and DATA-012 in spec 05 have an "Amended" line; in
+    `docs/privacy/DPIA-INPUT.md` R37, R40 and R4 are updated and R41 (learners who cooperate with the reader of
+    insight) is new, held to the code by `privacy/dpiaRecordedLearners.test.ts`; the threat model follows;
+    `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       635 passed (99 files)
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26931 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004); the three content tests added with the documents ran on their own and passed
+  ```

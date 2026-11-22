@@ -15718,6 +15718,55 @@ $ npx vitest run --project server                    26909 passed, 31 skipped; 1
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004)</code></pre>
 </li>
+<li><p><strong>2026-11-22 · Security repairs, step 22 (D-138)</strong> — Who can be one of the <em>k</em> learners behind a number in
+insight is narrowed where statements arrive (the owner&#39;s decisions of 2026-11-22). Two code commits:</p>
+<ul>
+<li>Whose play is recorded (LTI-011, DATA-012, INS-006, LTI-004): one rule (<code>xapi/learningDataScope.ts</code>, new) for
+the ingestion (<code>xapi/XapiIngest.ts</code>) and, through the actor, the player page&#39;s xAPI bridge
+(<code>h5p/render/xapiBridgeConfig.ts</code>): in the portal a learner who is an HVL member, in Canvas a launch with the
+context role <code>Learner</code> (<code>lti/LtiRoleMapper.ts</code> <code>isLtiLearner</code>, <code>lti/launchFacts.ts</code>), and Canvas&#39;s test
+student, flagged as before. A learner from another Feide organisation, an observer and a launch without roles
+play as before and store no statement; their saved state is kept. Tests: <code>xapi/learningDataScope.test.ts</code>,
+<code>xapi/xapiRecordedLearners.int.test.ts</code>, <code>lti/LtiRoleMapper.test.ts</code>, <code>lti/launchFacts.test.ts</code>,
+<code>auth/principalToH5pActor.test.ts</code>, <code>h5p/render/xapiBridgeConfig.test.ts</code>.</li>
+<li>A version that is no longer current takes no new learner (INS-006, PROD-013): a batch naming an older version
+is stored only for a learner who already has a statement under that version in that context
+(<code>xapi/XapiStatementStore.ts</code> <code>hasRowsIn</code>); any other is answered 202 and stores nothing, counted in the log.
+Tests: <code>xapi/xapiRecordedLearners.int.test.ts</code>, <code>xapi/xapiIngest.int.test.ts</code>.</li>
+<li>The privacy notice (DATA-006) tells a person from another institution what is and is not stored (nn, nb, en;
+<code>apps/web/test/features/privacyNoticeGuests.test.ts</code>). Screenshots in nn at 1280 px and 390 px were sent to
+the owner; none is committed.</li>
+<li>D-138 added; LTI-004 and LTI-011 in spec 02 and INS-006 and DATA-012 in spec 05 have an &quot;Amended&quot; line; in
+<code>docs/privacy/DPIA-INPUT.md</code> R37, R40 and R4 are updated and R41 (learners who cooperate with the reader of
+insight) is new, held to the code by <code>privacy/dpiaRecordedLearners.test.ts</code>; the threat model follows;
+<code>TRACEABILITY.md</code> and the spec site regenerated. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 42, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       635 passed (99 files)
+$ npx vitest run --project api-contract              98 passed
+$ npx vitest run --project tools                     541 passed (71 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             202 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files)
+$ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    26931 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004); the three content tests added with the documents ran on their own and passed</code></pre>
+</li>
 </ul>
 
 </section>
