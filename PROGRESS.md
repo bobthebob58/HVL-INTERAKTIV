@@ -2794,3 +2794,49 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004); the three content tests added with the documents ran on their own and passed
   ```
+
+- **2026-11-22 · Security repairs, step 23 (D-139)** — One activity's files have a limit, are kept under the
+  stored ID, and a clean-up cannot fail a stored save. One code commit:
+  - The limit (SEC-005, PROD-007): at most 200 MB and 1 000 files in one activity, what one imported package may
+    bring. A save is checked before Lumi writes (`h5p/activityFileBudget.ts`, new, called from
+    `h5p/editorSaveSteps.ts`): uploads, pasted files and kept files, each once; past the limit 413
+    `hvl:activity-files-over-limit` with a message in nn, nb and en, and nothing is written. A duplicate saves
+    through the editor and meets the same check. The storage holds the limit for every file it is given
+    (`h5p/storage/activityFileRoom.ts`, new, in `PrismaContentStorage.addFile`) and removes a file that took an
+    activity past its bytes. Tests: `h5p/activityFileBudget.test.ts`, `h5p/HvlH5PEditorFiles.test.ts`,
+    `h5p/activityFileLimits.int.test.ts`.
+  - Files under the stored ID (H5P-004): `h5p/storage/S3ContentFileStore.ts` writes the ID in lower case into
+    every key, a second guard beside D-131's at the routes. Test: `h5p/activityFileLimits.int.test.ts`.
+  - The clean-up after a stored save (H5P-006): a failure is logged by its kind and the save is answered as
+    stored. Test: `h5p/HvlH5PEditorFiles.test.ts`.
+  - D-139 added; SEC-005 in spec 01 and PROD-007 in spec 00 have an "Amended" line; the threat model (T-33)
+    follows; `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks different, so no
+    screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       635 passed (99 files)
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26949 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
