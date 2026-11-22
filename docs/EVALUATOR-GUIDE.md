@@ -223,7 +223,7 @@ For each area: what *good* looks like, where to look, and the red flags that sho
   with counts only (`DATA-008`, D-108). The app's database role can only append to the audit tables, and the
   analytics role reads *k*-suppressed views only (`DATA-010`, D-109). Production refuses clear-text connections and
   storage outside the EEA list (`DATA-004`). The request log names route patterns and a request ID only (`NFR-006`).
-- **Look at:** `docs/privacy/` (the inventory, the DPIA input with its residuals R1–R40, the research-export design),
+- **Look at:** `docs/privacy/` (the inventory, the DPIA input with its residuals R1–R41, the research-export design),
   `docs/ops/` (the runbooks), `apps/server/src/privacy/` (with `purge/` and `dsr/`), `apps/server/prisma/roles/`,
   `apps/server/src/config/connectionEncryption.ts` and `storageResidency.ts`, `apps/server/src/http/requestLog.ts`,
   `apps/server/src/insight/`, `apps/server/prisma/schema/`.

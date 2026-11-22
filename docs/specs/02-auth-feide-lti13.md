@@ -227,6 +227,9 @@ Platform private keys are encrypted at rest with a key from the secret store.
 - **Verify:** Table-driven unit test, including a forged `Administrator` claim.
 - **Amended (D-130, 2026-11-21):** an LTI launch also gives no reach beyond itself: its ltik lists, creates, deletes,
   downloads, copies, publishes and shares nothing, and reaches no activity but the launched one (`LTI-003`).
+- **Amended (D-138, 2026-11-22):** the table decides what a launch may do. Whose play is recorded is narrower: of
+  the learners, only a launch whose roles hold the context role `Learner` (and Canvas's test student, flagged); an
+  observer (`Mentor`), an unknown role and a launch without roles play without a statement being stored (`LTI-011`).
 
 #### LTI-005 · MUST · S3 · Deep Linking 2.0 picker
 `onDeepLinking` redirects to `/app/deeplink`. There the author can (a) choose existing activities
@@ -358,6 +361,11 @@ fields defined in `DATA-012` and drops the rest of the statement (including `act
   cannot form `<platformId>:<contextId>` (empty, over 255 characters, or with a line break) is answered 202 and stores
   nothing; the log counts it as `noCourse`. Such a play is neither a portal play (null) nor stored under a made-up
   course.
+- **Amended (D-138, 2026-11-22):** "a learner principal" is narrowed to the learners whose play is recorded: in the
+  portal an HVL member (a learner from another Feide organisation plays, and stores no statement), in Canvas a
+  launch with the context role `Learner` or the test student. And a batch that names a version older than the
+  current one is stored only for a learner who already has a statement under that version in that context; any other
+  is answered 202 and stores nothing, counted in the log as `closedVersion`.
 
 #### LTI-012 · MUST · S6 · Publish scores to the Canvas gradebook (AGS)
 When a statement concerns the **root** content (no `subContentId`), has the verb `completed` or

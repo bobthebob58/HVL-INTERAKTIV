@@ -1591,7 +1591,10 @@ of the launch (<code>lti/landingLtik.ts</code>); otherwise the page of step 4 an
 **an lti launch never grants `admin`.** h5p library administration requires a feide login and the admin allow-list (`auth-002`).
 - **verify:** table-driven unit test, including a forged `administrator` claim.
 - **amended (d-130, 2026-11-21):** an lti launch also gives no reach beyond itself: its ltik lists, creates, deletes,
-  downloads, copies, publishes and shares nothing, and reaches no activity but the launched one (`lti-003`).">
+  downloads, copies, publishes and shares nothing, and reaches no activity but the launched one (`lti-003`).
+- **amended (d-138, 2026-11-22):** the table decides what a launch may do. whose play is recorded is narrower: of
+  the learners, only a launch whose roles hold the context role `learner` (and canvas's test student, flagged); an
+  observer (`mentor`), an unknown role and a launch without roles play without a statement being stored (`lti-011`).">
 <summary><span class="req-id">LTI-004</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Map LTI roles safely</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><div class="table-wrap" role="region" aria-label="Table 1, LTI-004 Map LTI roles safely" tabindex="0"><table><thead><tr>
 <th scope="col">LTI role claim contains</th><th scope="col">Role</th></tr>
@@ -1607,6 +1610,9 @@ of the launch (<code>lti/landingLtik.ts</code>); otherwise the page of step 4 an
 <li><strong>Verify:</strong> Table-driven unit test, including a forged <code>Administrator</code> claim.</li>
 <li><strong>Amended (D-130, 2026-11-21):</strong> an LTI launch also gives no reach beyond itself: its ltik lists, creates, deletes,
 downloads, copies, publishes and shares nothing, and reaches no activity but the launched one (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
+<li><strong>Amended (D-138, 2026-11-22):</strong> the table decides what a launch may do. Whose play is recorded is narrower: of
+the learners, only a launch whose roles hold the context role <code>Learner</code> (and Canvas&#39;s test student, flagged); an
+observer (<code>Mentor</code>), an unknown role and a launch without roles play without a statement being stored (<a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-004">02 Feide, LTI and grades, LTI-004</a> · Canvas LTI and grades</p></div>
 </details>
@@ -1817,7 +1823,12 @@ fields defined in `data-012` and drops the rest of the statement (including `act
 - **amended (d-103, 2026-11-04, step 3 integration):** a learner's batch from a canvas launch whose context claim
   cannot form `&lt;platformid&gt;:&lt;contextid&gt;` (empty, over 255 characters, or with a line break) is answered 202 and stores
   nothing; the log counts it as `nocourse`. such a play is neither a portal play (null) nor stored under a made-up
-  course.">
+  course.
+- **amended (d-138, 2026-11-22):** &quot;a learner principal&quot; is narrowed to the learners whose play is recorded: in the
+  portal an hvl member (a learner from another feide organisation plays, and stores no statement), in canvas a
+  launch with the context role `learner` or the test student. and a batch that names a version older than the
+  current one is stored only for a learner who already has a statement under that version in that context; any other
+  is answered 202 and stores nothing, counted in the log as `closedversion`.">
 <summary><span class="req-id">LTI-011</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Validate and store statements</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>/api/h5p/xapi</code> validates statements with a zod schema. It accepts only verbs it uses
 (<code>answered</code>, <code>completed</code>, <code>attempted</code>, <code>interacted</code>, <code>progressed</code>). It checks that the object belongs
@@ -1858,6 +1869,11 @@ limit.</li>
 cannot form <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (empty, over 255 characters, or with a line break) is answered 202 and stores
 nothing; the log counts it as <code>noCourse</code>. Such a play is neither a portal play (null) nor stored under a made-up
 course.</li>
+<li><strong>Amended (D-138, 2026-11-22):</strong> &quot;a learner principal&quot; is narrowed to the learners whose play is recorded: in the
+portal an HVL member (a learner from another Feide organisation plays, and stores no statement), in Canvas a
+launch with the context role <code>Learner</code> or the test student. And a batch that names a version older than the
+current one is stored only for a learner who already has a statement under that version in that context; any other
+is answered 202 and stores nothing, counted in the log as <code>closedVersion</code>.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-011">02 Feide, LTI and grades, LTI-011</a> · Canvas LTI and grades</p></div>
 </details>
@@ -2807,7 +2823,11 @@ too. the insight api has **no endpoint** that returns per-learner rows.
   hidden, or, without a 0, the smallest shown count and each next one less than *k* above it. when the learners who
   started are hidden, every question cell is. an exhaustive test checks every group of two to five cells for *k* = 3–6.
 - **acceptance:** property-based test: for random datasets, no api response contains a group smaller than *k*.
-- **verify:** `fast-check` property test `[ins-006] …`.">
+- **verify:** `fast-check` property test `[ins-006] …`.
+- **amended (d-138, 2026-11-22):** who can be one of the *k* is narrowed where statements arrive (`lti-011`): only
+  hvl learners in the portal and launches with the `learner` role in canvas are recorded, and a version that is no
+  longer current takes no new learner. learners who cooperate with the reader of insight remain learners; the dpia
+  input records that (r41).">
 <summary><span class="req-id">INS-006</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Minimum group size and no individual view</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Any cell, bar or list item that represents fewer than <strong>k = 5</strong> distinct learners is shown as
 &quot;&lt; 5&quot; and its value is suppressed. <em>k</em> is configurable, with a minimum of 3. If suppression of one
@@ -2825,6 +2845,10 @@ hidden, or, without a 0, the smallest shown count and each next one less than <e
 started are hidden, every question cell is. An exhaustive test checks every group of two to five cells for <em>k</em> = 3–6.</li>
 <li><strong>Acceptance:</strong> Property-based test: for random datasets, no API response contains a group smaller than <em>k</em>.</li>
 <li><strong>Verify:</strong> <code>fast-check</code> property test <code>[INS-006] …</code>.</li>
+<li><strong>Amended (D-138, 2026-11-22):</strong> who can be one of the <em>k</em> is narrowed where statements arrive (<a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>): only
+HVL learners in the portal and launches with the <code>Learner</code> role in Canvas are recorded, and a version that is no
+longer current takes no new learner. Learners who cooperate with the reader of insight remain learners; the DPIA
+input records that (R41).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-INS-006">05 Insight and privacy, INS-006</a> · Teacher insight</p></div>
 </details>
@@ -3180,7 +3204,10 @@ else is dropped, including actor names, mailboxes and extensions.
   `testuser`, true for a statement of canvas's student view test student (the lti `testuser` role), set from the
   launch, never from the statement; database default false. like `academicyear` it holds no statement data. insight,
   the mappe and the yearly purge's snapshots never read a flagged row, so *k* − 1 test students cannot make a group of
-  *k* around one real learner; the grade worker does read them, so a teacher can test the score passback.">
+  *k* around one real learner; the grade worker does read them, so a teacher can test the score passback.
+- **amended (d-138, 2026-11-22):** &quot;only learner principals' statements&quot; means the learners `lti-011` records as
+  amended: an hvl member in the portal, the `learner` role in canvas. `contentversion` is the version the page was
+  rendered with, and an older one only for a learner who was already in it.">
 <summary><span class="req-id">DATA-012</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Minimal xAPI storage</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>For each statement, store only: <code>contentId</code>, <code>subContentId?</code>, <code>contentVersion</code>, <code>contextId?</code>,
 <code>learnerKey</code>, <code>verb</code>, <code>scoreRaw?</code>, <code>scoreMax?</code>, <code>scaled?</code>, <code>success?</code>, <code>completion?</code>,
@@ -3215,6 +3242,9 @@ it, because H5P&#39;s durations mean different things by type.</li>
 launch, never from the statement; database default false. Like <code>academicYear</code> it holds no statement data. Insight,
 the mappe and the yearly purge&#39;s snapshots never read a flagged row, so <em>k</em> − 1 test students cannot make a group of
 <em>k</em> around one real learner; the grade worker does read them, so a teacher can test the score passback.</li>
+<li><strong>Amended (D-138, 2026-11-22):</strong> &quot;only learner principals&#39; statements&quot; means the learners <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> records as
+amended: an HVL member in the portal, the <code>Learner</code> role in Canvas. <code>contentVersion</code> is the version the page was
+rendered with, and an older one only for a learner who was already in it.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-012">05 Insight and privacy, DATA-012</a> · Data protection</p></div>
 </details>
@@ -4527,6 +4557,9 @@ of the launch (<code>lti/landingLtik.ts</code>); otherwise the page of step 4 an
 <li><strong>Verify:</strong> Table-driven unit test, including a forged <code>Administrator</code> claim.</li>
 <li><strong>Amended (D-130, 2026-11-21):</strong> an LTI launch also gives no reach beyond itself: its ltik lists, creates, deletes,
 downloads, copies, publishes and shares nothing, and reaches no activity but the launched one (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code></a>).</li>
+<li><strong>Amended (D-138, 2026-11-22):</strong> the table decides what a launch may do. Whose play is recorded is narrower: of
+the learners, only a launch whose roles hold the context role <code>Learner</code> (and Canvas&#39;s test student, flagged); an
+observer (<code>Mentor</code>), an unknown role and a launch without roles play without a statement being stored (<a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>).</li>
 </ul>
 <h4 id="r-LTI-005" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-005">LTI-005</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Deep Linking 2.0 picker</span></h4>
 <p><code>onDeepLinking</code> redirects to <code>/app/deeplink</code>. There the author can (a) choose existing activities
@@ -4659,6 +4692,11 @@ limit.</li>
 cannot form <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (empty, over 255 characters, or with a line break) is answered 202 and stores
 nothing; the log counts it as <code>noCourse</code>. Such a play is neither a portal play (null) nor stored under a made-up
 course.</li>
+<li><strong>Amended (D-138, 2026-11-22):</strong> &quot;a learner principal&quot; is narrowed to the learners whose play is recorded: in the
+portal an HVL member (a learner from another Feide organisation plays, and stores no statement), in Canvas a
+launch with the context role <code>Learner</code> or the test student. And a batch that names a version older than the
+current one is stored only for a learner who already has a statement under that version in that context; any other
+is answered 202 and stores nothing, counted in the log as <code>closedVersion</code>.</li>
 </ul>
 <h4 id="r-LTI-012" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-012">LTI-012</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Publish scores to the Canvas gradebook (AGS)</span></h4>
 <p>When a statement concerns the <strong>root</strong> content (no <code>subContentId</code>), has the verb <code>completed</code> or
@@ -5518,6 +5556,10 @@ hidden, or, without a 0, the smallest shown count and each next one less than <e
 started are hidden, every question cell is. An exhaustive test checks every group of two to five cells for <em>k</em> = 3–6.</li>
 <li><strong>Acceptance:</strong> Property-based test: for random datasets, no API response contains a group smaller than <em>k</em>.</li>
 <li><strong>Verify:</strong> <code>fast-check</code> property test <code>[INS-006] …</code>.</li>
+<li><strong>Amended (D-138, 2026-11-22):</strong> who can be one of the <em>k</em> is narrowed where statements arrive (<a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a>): only
+HVL learners in the portal and launches with the <code>Learner</code> role in Canvas are recorded, and a version that is no
+longer current takes no new learner. Learners who cooperate with the reader of insight remain learners; the DPIA
+input records that (R41).</li>
 </ul>
 <h4 id="r-INS-007" class="req-heading" tabindex="-1"><a class="req-id" href="#r-INS-007">INS-007</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Who can see insight</span></h4>
 <p>Owners and co-authors of an activity can see its insight. In LTI mode, authors of the launch context
@@ -5725,6 +5767,9 @@ it, because H5P&#39;s durations mean different things by type.</li>
 launch, never from the statement; database default false. Like <code>academicYear</code> it holds no statement data. Insight,
 the mappe and the yearly purge&#39;s snapshots never read a flagged row, so <em>k</em> − 1 test students cannot make a group of
 <em>k</em> around one real learner; the grade worker does read them, so a teacher can test the score passback.</li>
+<li><strong>Amended (D-138, 2026-11-22):</strong> &quot;only learner principals&#39; statements&quot; means the learners <a class="req-ref" href="#r-LTI-011"><code>LTI-011</code></a> records as
+amended: an HVL member in the portal, the <code>Learner</code> role in Canvas. <code>contentVersion</code> is the version the page was
+rendered with, and an older one only for a learner who was already in it.</li>
 </ul>
 <hr>
 <h3 id="spec-05--3-what-teachers-can-and-cannot-see-summary-for-privacy-notices-and-evaluators" tabindex="-1">3. What teachers can and cannot see (summary for privacy notices and evaluators)</h3>
@@ -6243,7 +6288,7 @@ never counts (D-106&#39;s and D-102&#39;s amendments). Data-subject requests are
 with counts only (<a class="req-ref" href="#r-DATA-008"><code>DATA-008</code></a>, D-108). The app&#39;s database role can only append to the audit tables, and the
 analytics role reads <em>k</em>-suppressed views only (<a class="req-ref" href="#r-DATA-010"><code>DATA-010</code></a>, D-109). Production refuses clear-text connections and
 storage outside the EEA list (<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>). The request log names route patterns and a request ID only (<a class="req-ref" href="#r-NFR-006"><code>NFR-006</code></a>).</li>
-<li><strong>Look at:</strong> <code>docs/privacy/</code> (the inventory, the DPIA input with its residuals R1–R40, the research-export design),
+<li><strong>Look at:</strong> <code>docs/privacy/</code> (the inventory, the DPIA input with its residuals R1–R41, the research-export design),
 <code>docs/ops/</code> (the runbooks), <code>apps/server/src/privacy/</code> (with <code>purge/</code> and <code>dsr/</code>), <code>apps/server/prisma/roles/</code>,
 <code>apps/server/src/config/connectionEncryption.ts</code> and <code>storageResidency.ts</code>, <code>apps/server/src/http/requestLog.ts</code>,
 <code>apps/server/src/insight/</code>, <code>apps/server/prisma/schema/</code>.</li>
@@ -12782,6 +12827,52 @@ snapshots count each version as a group of its own, as after a structural save. 
 while an activity is being written. A save that starts a new version also decides where the old version&#39;s
 answers end, within a day; each version is suppressed on its own and no view adds versions up (R3 in
 <code>docs/privacy/DPIA-INPUT.md</code> says so). PROD-013 and INS-003 have an &quot;Amended&quot; line.</li>
+</ul>
+<h3 id="decisions--d-138--security-repairs-step-22-whose-play-is-recorded-and-a-version-that-is-no-longer-current-takes-no-new-learner" tabindex="-1">D-138 · Security repairs, step 22: whose play is recorded, and a version that is no longer current takes no new learner</h3>
+<ul>
+<li><strong>Context:</strong> INS-006 hides every number about fewer than <em>k</em> learners. That protects a learner only when the
+person who reads insight cannot fill a group with learners of their own choosing: beside <em>k</em> − 1 such learners,
+what the group shows is what the one other learner did. Three doors were wider than they need be. In the
+portal, anyone with a Feide login from any organisation who played an activity shared with «anyone with Feide»
+was a learner whose statements were stored and counted (D-059, D-102; R37); in practice these are the
+external assessors a mappe is sent to (<code>content/mappe/</code>), and their plays also blurred the teacher&#39;s numbers.
+In Canvas every launch that is not an author&#39;s was a learner (LTI-004): also Canvas&#39;s observer (<code>Mentor</code>), an
+unknown role and a launch without roles. And a batch names the version its page was rendered with, any version
+up to the current one being accepted (D-093, D-115), so a learner could be added to an older version&#39;s group
+long after it had been left behind; since D-137 a version ends more often.</li>
+<li><strong>Decision — whose play is recorded (LTI-011, DATA-012, INS-006; the owner, 2026-11-22).</strong> One rule,
+<code>xapi/learningDataScope.ts</code>, serves the ingestion and, through the actor, the player page, which carries the
+xAPI bridge only for a play the server would store (as D-102 does for authors). In the portal: a learner who
+is an HVL member (<code>hvlMember</code>: the realm is in <code>ALLOWED_FEIDE_ORGS</code> and Feide&#39;s Groups API confirms the
+organisation). In Canvas: a learner whose launch holds the context role <code>Learner</code> (<code>isLtiLearner</code>: the role&#39;s
+URI or its short name, exact values), and Canvas&#39;s test student, stored flagged as before (D-102&#39;s amendment
+of 2026-11-04). Anyone else opens and plays as before, and no statement of theirs is stored: they are in no
+insight view, no <em>k</em> count, no mappe result and no score sent to Canvas. The owner chose that a person from
+another organisation keeps their saved state («where was I?»): it is stored under their pseudonym as for
+everyone, purged with the year, and shown to no teacher. <code>/personvern</code> says so (nn, nb, en).</li>
+<li><strong>Decision — a version that is no longer current takes no new learner (INS-006, PROD-013).</strong> A batch that names
+a version older than the current one is stored only for a learner who already has a statement under that
+version in that context (<code>XapiStatementStore.hasRowsIn</code>); otherwise it is answered 202 like every batch and
+stores nothing, counted in the log. A page reports <code>attempted</code> when it opens, so a learner who had the
+activity open when its version changed can finish, and their result reaches Canvas; a learner who was not in
+the version when it was left behind cannot be added to it.</li>
+<li><strong>Decision — the share rule stays (INS-002, INS-006; the owner, 2026-11-22).</strong> Insight goes on showing a share
+over <em>k</em> or more learners, 0 % and 100 % included (D-106); the mappe&#39;s two-sided rule (D-095) is not added. R4
+in <code>docs/privacy/DPIA-INPUT.md</code> records the choice for the DPO.</li>
+<li><strong>Recorded as a residual:</strong> <em>k</em> counts pseudonyms. <em>k</em> − 1 learners who cooperate with the person who reads
+insight are learners like any other, and in Canvas a launch&#39;s roles are what Canvas sends: they are not
+compared with the course&#39;s roster (NRPS gives a count, LTI-008, and no list is kept). R41 says so, with the
+options.</li>
+<li><strong>Verified:</strong> unit tests of the rule, of <code>isLtiLearner</code> and the launch facts, of the actor and of the bridge&#39;s
+configuration; integration tests of the ingestion on PostgreSQL (a guest from another organisation, an
+observer, a launch without roles; an older version for a new learner, for a learner already in it, and across
+courses); content tests that hold R37, R40, R41 and the privacy notice to the code.</li>
+<li><strong>Consequences:</strong> External assessors&#39; plays no longer appear in insight or the mappe. A Canvas user who is not
+enrolled as a student plays without being recorded, and no score is sent for them. A page that was opened
+before a version change and had stored nothing yet must be opened again before its results count. The rule
+applies when statements arrive; no installation holds real learners&#39; statements yet, so nothing stored is read
+again. LTI-011, DATA-012, INS-006 and LTI-004 have an &quot;Amended&quot; line; R37, R40 and R4 are updated and R41 is
+new.</li>
 </ul>
 
 </section>

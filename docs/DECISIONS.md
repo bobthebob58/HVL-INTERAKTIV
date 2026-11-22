@@ -5787,3 +5787,48 @@ loading of one spec per session are kept.
   while an activity is being written. A save that starts a new version also decides where the old version's
   answers end, within a day; each version is suppressed on its own and no view adds versions up (R3 in
   `docs/privacy/DPIA-INPUT.md` says so). PROD-013 and INS-003 have an "Amended" line.
+
+### D-138 · Security repairs, step 22: whose play is recorded, and a version that is no longer current takes no new learner
+- **Context:** INS-006 hides every number about fewer than *k* learners. That protects a learner only when the
+  person who reads insight cannot fill a group with learners of their own choosing: beside *k* − 1 such learners,
+  what the group shows is what the one other learner did. Three doors were wider than they need be. In the
+  portal, anyone with a Feide login from any organisation who played an activity shared with «anyone with Feide»
+  was a learner whose statements were stored and counted (D-059, D-102; R37); in practice these are the
+  external assessors a mappe is sent to (`content/mappe/`), and their plays also blurred the teacher's numbers.
+  In Canvas every launch that is not an author's was a learner (LTI-004): also Canvas's observer (`Mentor`), an
+  unknown role and a launch without roles. And a batch names the version its page was rendered with, any version
+  up to the current one being accepted (D-093, D-115), so a learner could be added to an older version's group
+  long after it had been left behind; since D-137 a version ends more often.
+- **Decision — whose play is recorded (LTI-011, DATA-012, INS-006; the owner, 2026-11-22).** One rule,
+  `xapi/learningDataScope.ts`, serves the ingestion and, through the actor, the player page, which carries the
+  xAPI bridge only for a play the server would store (as D-102 does for authors). In the portal: a learner who
+  is an HVL member (`hvlMember`: the realm is in `ALLOWED_FEIDE_ORGS` and Feide's Groups API confirms the
+  organisation). In Canvas: a learner whose launch holds the context role `Learner` (`isLtiLearner`: the role's
+  URI or its short name, exact values), and Canvas's test student, stored flagged as before (D-102's amendment
+  of 2026-11-04). Anyone else opens and plays as before, and no statement of theirs is stored: they are in no
+  insight view, no *k* count, no mappe result and no score sent to Canvas. The owner chose that a person from
+  another organisation keeps their saved state («where was I?»): it is stored under their pseudonym as for
+  everyone, purged with the year, and shown to no teacher. `/personvern` says so (nn, nb, en).
+- **Decision — a version that is no longer current takes no new learner (INS-006, PROD-013).** A batch that names
+  a version older than the current one is stored only for a learner who already has a statement under that
+  version in that context (`XapiStatementStore.hasRowsIn`); otherwise it is answered 202 like every batch and
+  stores nothing, counted in the log. A page reports `attempted` when it opens, so a learner who had the
+  activity open when its version changed can finish, and their result reaches Canvas; a learner who was not in
+  the version when it was left behind cannot be added to it.
+- **Decision — the share rule stays (INS-002, INS-006; the owner, 2026-11-22).** Insight goes on showing a share
+  over *k* or more learners, 0 % and 100 % included (D-106); the mappe's two-sided rule (D-095) is not added. R4
+  in `docs/privacy/DPIA-INPUT.md` records the choice for the DPO.
+- **Recorded as a residual:** *k* counts pseudonyms. *k* − 1 learners who cooperate with the person who reads
+  insight are learners like any other, and in Canvas a launch's roles are what Canvas sends: they are not
+  compared with the course's roster (NRPS gives a count, LTI-008, and no list is kept). R41 says so, with the
+  options.
+- **Verified:** unit tests of the rule, of `isLtiLearner` and the launch facts, of the actor and of the bridge's
+  configuration; integration tests of the ingestion on PostgreSQL (a guest from another organisation, an
+  observer, a launch without roles; an older version for a new learner, for a learner already in it, and across
+  courses); content tests that hold R37, R40, R41 and the privacy notice to the code.
+- **Consequences:** External assessors' plays no longer appear in insight or the mappe. A Canvas user who is not
+  enrolled as a student plays without being recorded, and no score is sent for them. A page that was opened
+  before a version change and had stored nothing yet must be opened again before its results count. The rule
+  applies when statements arrive; no installation holds real learners' statements yet, so nothing stored is read
+  again. LTI-011, DATA-012, INS-006 and LTI-004 have an "Amended" line; R37, R40 and R4 are updated and R41 is
+  new.

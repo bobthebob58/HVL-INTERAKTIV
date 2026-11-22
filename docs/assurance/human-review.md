@@ -116,7 +116,7 @@ that depended on test order (`92ca2c5`, `5a5b8c3`), and CI's fresh runner found 
 | The deployment files and CI | `deploy/` and `.github/workflows/` were read only by AI reviewers (among them step 6's security review, step 10's review of everything since `47e235e` and pull request #21's reviewers, who added CI's second, lax clamd). `docker.yml` has now run on GitHub and passed, also on `main` (§2.3), which shows that the image builds and its smoke test passes there, not that a person has read the files | `PROGRESS.md`, S6 steps 6 and 10; GitHub runs 42166052745, 42170423045, 42205391749 and 42253214575 |
 | Pull requests #18 (S6) and #21 (security follow-ups) | No review on GitHub; the owner merged both on 2026-11-06. CI ran on each head (CI tests the head merged into `main`, not each commit on its own): on #18, run 42166052880 on `3eeea8d` failed one test, and runs 42170423046 on `8d4eaf0` and 42183630447 on `eb79b30` passed; on #21, run 42253214678 on `9bfa1b2` passed; on `main`, runs 42205391766 after #18's merge and 42266303529 after #21's passed (§2.3). A green run is not a review (§6) | GitHub's API, 2026-11-06 (0 reviews on each); `git log`; `.github/workflows/ci.yml`, lines 10–13 |
 | The threat model, the ROS-analyse and this pack | Drafts by the AI | [threat-model.md](threat-model.md), [ros-analyse.md](ros-analyse.md) |
-| The DPIA input (residuals R1–R40) | Not reviewed by the DPO | Q6; `docs/privacy/DPIA-INPUT.md` |
+| The DPIA input (residuals R1–R41) | Not reviewed by the DPO | Q6; `docs/privacy/DPIA-INPUT.md` |
 | Accessibility for real users | No manual run recorded; all 56 verdicts are *Not yet determined* | `docs/accessibility/results/README.md`; [conformance report](../accessibility/WCAG-CONFORMANCE-REPORT.md) |
 | The studio's texts (phases, guide, patterns, mappe template, the content bank's consent text) | Requested from ALU, not done | Q17; `docs/reference/alu-review-s5.md` |
 | Canvas and Feide | Tested against the mocks in `tools/mock-platform` only; the live-contract seam has never run against a real Canvas or Feide | `docs/EVALUATOR-GUIDE.md` §6, limitation 5; [live-contract-seam.md](../handoff/live-contract-seam.md) |
@@ -399,7 +399,7 @@ tools, but it is a one-term student project and does not replace IT's security r
 10.0.4 (D-003); the editor's files on the app origin and the cookie routes (D-110); insight GETs served to browsers
 that send no fetch metadata (`PROGRESS.md`, S6 step 10, «Still open»); scores computed in the browser (limitation 1 in
 `docs/EVALUATOR-GUIDE.md` §6); tokens in some URLs, so the proxy must not log query strings (limitation 9); no rate
-limit on login and launch in the app (ROS-07); the residuals R1–R40 in `docs/privacy/DPIA-INPUT.md` §12.
+limit on login and launch in the app (ROS-07); the residuals R1–R41 in `docs/privacy/DPIA-INPUT.md` §12.
 
 ## 5. How to report findings
 

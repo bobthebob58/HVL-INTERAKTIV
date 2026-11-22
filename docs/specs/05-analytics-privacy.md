@@ -109,6 +109,10 @@ too. The insight API has **no endpoint** that returns per-learner rows.
   started are hidden, every question cell is. An exhaustive test checks every group of two to five cells for *k* = 3–6.
 - **Acceptance:** Property-based test: for random datasets, no API response contains a group smaller than *k*.
 - **Verify:** `fast-check` property test `[INS-006] …`.
+- **Amended (D-138, 2026-11-22):** who can be one of the *k* is narrowed where statements arrive (`LTI-011`): only
+  HVL learners in the portal and launches with the `Learner` role in Canvas are recorded, and a version that is no
+  longer current takes no new learner. Learners who cooperate with the reader of insight remain learners; the DPIA
+  input records that (R41).
 
 #### INS-007 · MUST · S6 · Who can see insight
 Owners and co-authors of an activity can see its insight. In LTI mode, authors of the launch context
@@ -305,6 +309,9 @@ else is dropped, including actor names, mailboxes and extensions.
   launch, never from the statement; database default false. Like `academicYear` it holds no statement data. Insight,
   the mappe and the yearly purge's snapshots never read a flagged row, so *k* − 1 test students cannot make a group of
   *k* around one real learner; the grade worker does read them, so a teacher can test the score passback.
+- **Amended (D-138, 2026-11-22):** "only learner principals' statements" means the learners `LTI-011` records as
+  amended: an HVL member in the portal, the `Learner` role in Canvas. `contentVersion` is the version the page was
+  rendered with, and an older one only for a learner who was already in it.
 
 ---
 

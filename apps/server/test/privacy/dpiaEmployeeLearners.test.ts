@@ -90,6 +90,7 @@ describe('[DATA-005] the DPIA input says that employees enrolled as students are
     expect(residualCells).toHaveLength(6);
     expect(r40).toMatch(/Employees as learners/);
     expect(r40).toContain('`mapLtiRoles`');
+    expect(r40).toContain('only a launch with the `Learner` role is recorded');
     expect(r40).not.toMatch(/cannot tell/);
     expect(r40).toMatch(/ignores every institution role but Administrator/);
     expect(r40).toMatch(/mappe of the activity's owner and co-authors/);
