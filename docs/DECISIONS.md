@@ -5832,3 +5832,38 @@ loading of one spec per session are kept.
   applies when statements arrive; no installation holds real learners' statements yet, so nothing stored is read
   again. LTI-011, DATA-012, INS-006 and LTI-004 have an "Amended" line; R37, R40 and R4 are updated and R41 is
   new.
+
+### D-139 · Security repairs, step 23: one activity's files have a limit, are kept under the stored ID, and a clean-up cannot fail a stored save
+- **Context:** A package that is imported may unpack to 200 MB and hold files of 50 MB at most (SEC-005). A
+  person may send 120 uploads and start 20 copies in ten minutes (D-120, D-092). Nothing bounded what one
+  activity holds: a save copies the file behind every paste-source path it names (D-092), and a duplicate copies
+  every file of its source, so one request could write as many files of up to 50 MB as its paths name. The copy
+  limit counted requests, not what a request writes. Two smaller things lay in the same code: the storage keyed an
+  activity's files by the ID as a caller spelled it (the routes spell it one way since D-131, the storage itself
+  did not), and the clean-up of dropped files after Lumi's write could throw, which turned a save that was
+  already stored into an error answer.
+- **Decision — a limit for one activity's files (SEC-005, PROD-007).** At most 200 MB (`MAX_TOTAL_SIZE`: what one
+  imported package may bring, so every activity can still be exported and imported again) and 1 000 files (real
+  activities of the ten types hold tens). `h5p/activityFileBudget.ts` checks a save before Lumi writes: the
+  references Lumi's scanner reports, each once; an upload sized from temporary storage, a pasted file from its
+  source, a kept file from the activity; a web address is no file. Past the limit the save is refused with 413
+  `hvl:activity-files-over-limit` and a message that names both numbers (nn, nb, en), and nothing is written. A
+  duplicate saves through the editor (D-092), so it meets the same check. The storage holds the limit as well,
+  for every file it is given (`h5p/storage/activityFileRoom.ts`): room is checked before the bytes are stored,
+  and a file that takes the activity past its bytes is removed again, so neither an import nor the duplicator's
+  own copies go around it. One copy now writes at most 200 MB, so 20 copies in ten minutes are at most 4 GB,
+  where the upload limit already allows 6 GB in that time.
+- **Decision — files under the stored ID (H5P-004).** `S3ContentFileStore` writes the ID in lower case into every
+  key and prefix, and `PrismaContentStorage.addFile` uses the row's own ID, so every spelling of one ID names the
+  same files: a second guard beside D-131's at the routes.
+- **Decision — a clean-up cannot fail a stored save (H5P-006).** `EditorSaveSteps.afterWrite` reports a failed
+  clean-up by its kind (one `warn` line) and the save is answered as stored: the parameters are committed by
+  then, and an error answer would only tell the author that a stored save had failed.
+- **Verified:** unit tests of the budget (what counts, where each size is read, where it stops, the message in
+  three languages); editor tests with small limits (one file too many, the bytes of an upload, a clean-up that
+  fails); integration tests of the storage on PostgreSQL and S3 (the count, the bytes, the removed object, one
+  spelling of the ID).
+- **Consequences:** An author who saves an activity with more than 200 MB of files gets a message that points to
+  Panopto for large video, as the guidance already does. A file that a failed clean-up left stays in storage
+  until its activity is deleted. SEC-005 and PROD-007 have an "Amended" line; T-33 in the threat model names the
+  limit.

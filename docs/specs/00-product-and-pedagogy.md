@@ -192,6 +192,8 @@ HVL content bank so that colleagues can *duplicate and adapt* it.
 - **Acceptance:** A duplicate keeps a link to its source and the original author's attribution. It
   never copies learner data.
 - **Verify:** Integration tests.
+- **Amended (D-139, 2026-11-22):** a duplicate is held to the limit for one activity's files (`SEC-005`), so one
+  copy writes at most 200 MB.
 
 #### PROD-008 · MUST · S2 · Resume where you left off
 A learner who leaves an activity and returns on any device resumes with their previous answers and position. See `H5P-005`.

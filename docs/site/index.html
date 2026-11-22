@@ -659,7 +659,9 @@ ltik cannot change it (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code>
 hvl content bank so that colleagues can *duplicate and adapt* it.
 - **acceptance:** a duplicate keeps a link to its source and the original author's attribution. it
   never copies learner data.
-- **verify:** integration tests.">
+- **verify:** integration tests.
+- **amended (d-139, 2026-11-22):** a duplicate is held to the limit for one activity's files (`sec-005`), so one
+  copy writes at most 200 mb.">
 <summary><span class="req-id">PROD-007</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Co-authoring and an institutional content bank</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Authors can add co-authors (HVL staff found by name or Feide ID) and can publish an activity to the
 HVL content bank so that colleagues can <em>duplicate and adapt</em> it.</p>
@@ -667,6 +669,8 @@ HVL content bank so that colleagues can <em>duplicate and adapt</em> it.</p>
 <li><strong>Acceptance:</strong> A duplicate keeps a link to its source and the original author&#39;s attribution. It
 never copies learner data.</li>
 <li><strong>Verify:</strong> Integration tests.</li>
+<li><strong>Amended (D-139, 2026-11-22):</strong> a duplicate is held to the limit for one activity&#39;s files (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>), so one
+copy writes at most 200 MB.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PROD-007">00 Product and pedagogy, PROD-007</a> · Product</p></div>
 </details>
@@ -1254,7 +1258,10 @@ path traversal or absolute paths. package imports are processed in a temporary d
   key 256 characters, a library name 255. past a limit the answer is 400 `hvl:content-too-large`. a save request is
   at most 6 mb.
 - **amended (d-127, 2026-11-21):** the paths of all values of one activity together are at most 50 000 000
-  characters, and the pre-publish validator is given only content within these limits (ud-020).">
+  characters, and the pre-publish validator is given only content within these limits (ud-020).
+- **amended (d-139, 2026-11-22):** one activity holds at most 200 mb of files and 1 000 files, the total one
+  package may bring. a save or a copy past it is refused with 413 `hvl:activity-files-over-limit` before anything
+  is written, and the storage refuses a file its activity has no room for.">
 <summary><span class="req-id">SEC-005</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Size limits and archive safety</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>maxFileSize</code> is 50 MB and <code>maxTotalSize</code> is 200 MB per package. The server rejects zip entries with
 path traversal or absolute paths. Package imports are processed in a temporary directory with a quota.</p>
@@ -1267,6 +1274,9 @@ key 256 characters, a library name 255. Past a limit the answer is 400 <code>hvl
 at most 6 MB.</li>
 <li><strong>Amended (D-127, 2026-11-21):</strong> the paths of all values of one activity together are at most 50 000 000
 characters, and the pre-publish validator is given only content within these limits (UD-020).</li>
+<li><strong>Amended (D-139, 2026-11-22):</strong> one activity holds at most 200 MB of files and 1 000 files, the total one
+package may bring. A save or a copy past it is refused with 413 <code>hvl:activity-files-over-limit</code> before anything
+is written, and the storage refuses a file its activity has no room for.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-005">01 H5P engine and security, SEC-005</a> · Upload security</p></div>
 </details>
@@ -3744,6 +3754,8 @@ HVL content bank so that colleagues can <em>duplicate and adapt</em> it.</p>
 <li><strong>Acceptance:</strong> A duplicate keeps a link to its source and the original author&#39;s attribution. It
 never copies learner data.</li>
 <li><strong>Verify:</strong> Integration tests.</li>
+<li><strong>Amended (D-139, 2026-11-22):</strong> a duplicate is held to the limit for one activity&#39;s files (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>), so one
+copy writes at most 200 MB.</li>
 </ul>
 <h4 id="r-PROD-008" class="req-heading" tabindex="-1"><a class="req-id" href="#r-PROD-008">PROD-008</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Resume where you left off</span></h4>
 <p>A learner who leaves an activity and returns on any device resumes with their previous answers and position. See <a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a>.</p>
@@ -4270,6 +4282,9 @@ key 256 characters, a library name 255. Past a limit the answer is 400 <code>hvl
 at most 6 MB.</li>
 <li><strong>Amended (D-127, 2026-11-21):</strong> the paths of all values of one activity together are at most 50 000 000
 characters, and the pre-publish validator is given only content within these limits (UD-020).</li>
+<li><strong>Amended (D-139, 2026-11-22):</strong> one activity holds at most 200 MB of files and 1 000 files, the total one
+package may bring. A save or a copy past it is refused with 413 <code>hvl:activity-files-over-limit</code> before anything
+is written, and the storage refuses a file its activity has no room for.</li>
 </ul>
 <h4 id="r-SEC-006" class="req-heading" tabindex="-1"><a class="req-id" href="#r-SEC-006">SEC-006</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Malware scanning</span></h4>
 <p>When <code>CLAMAV_HOST</code> is configured, register <code>@lumieducation/h5p-clamav-scanner</code> in <code>malwareScanners</code>.</p>
@@ -12873,6 +12888,42 @@ before a version change and had stored nothing yet must be opened again before i
 applies when statements arrive; no installation holds real learners&#39; statements yet, so nothing stored is read
 again. LTI-011, DATA-012, INS-006 and LTI-004 have an &quot;Amended&quot; line; R37, R40 and R4 are updated and R41 is
 new.</li>
+</ul>
+<h3 id="decisions--d-139--security-repairs-step-23-one-activitys-files-have-a-limit-are-kept-under-the-stored-id-and-a-clean-up-cannot-fail-a-stored-save" tabindex="-1">D-139 · Security repairs, step 23: one activity&#39;s files have a limit, are kept under the stored ID, and a clean-up cannot fail a stored save</h3>
+<ul>
+<li><strong>Context:</strong> A package that is imported may unpack to 200 MB and hold files of 50 MB at most (SEC-005). A
+person may send 120 uploads and start 20 copies in ten minutes (D-120, D-092). Nothing bounded what one
+activity holds: a save copies the file behind every paste-source path it names (D-092), and a duplicate copies
+every file of its source, so one request could write as many files of up to 50 MB as its paths name. The copy
+limit counted requests, not what a request writes. Two smaller things lay in the same code: the storage keyed an
+activity&#39;s files by the ID as a caller spelled it (the routes spell it one way since D-131, the storage itself
+did not), and the clean-up of dropped files after Lumi&#39;s write could throw, which turned a save that was
+already stored into an error answer.</li>
+<li><strong>Decision — a limit for one activity&#39;s files (SEC-005, PROD-007).</strong> At most 200 MB (<code>MAX_TOTAL_SIZE</code>: what one
+imported package may bring, so every activity can still be exported and imported again) and 1 000 files (real
+activities of the ten types hold tens). <code>h5p/activityFileBudget.ts</code> checks a save before Lumi writes: the
+references Lumi&#39;s scanner reports, each once; an upload sized from temporary storage, a pasted file from its
+source, a kept file from the activity; a web address is no file. Past the limit the save is refused with 413
+<code>hvl:activity-files-over-limit</code> and a message that names both numbers (nn, nb, en), and nothing is written. A
+duplicate saves through the editor (D-092), so it meets the same check. The storage holds the limit as well,
+for every file it is given (<code>h5p/storage/activityFileRoom.ts</code>): room is checked before the bytes are stored,
+and a file that takes the activity past its bytes is removed again, so neither an import nor the duplicator&#39;s
+own copies go around it. One copy now writes at most 200 MB, so 20 copies in ten minutes are at most 4 GB,
+where the upload limit already allows 6 GB in that time.</li>
+<li><strong>Decision — files under the stored ID (H5P-004).</strong> <code>S3ContentFileStore</code> writes the ID in lower case into every
+key and prefix, and <code>PrismaContentStorage.addFile</code> uses the row&#39;s own ID, so every spelling of one ID names the
+same files: a second guard beside D-131&#39;s at the routes.</li>
+<li><strong>Decision — a clean-up cannot fail a stored save (H5P-006).</strong> <code>EditorSaveSteps.afterWrite</code> reports a failed
+clean-up by its kind (one <code>warn</code> line) and the save is answered as stored: the parameters are committed by
+then, and an error answer would only tell the author that a stored save had failed.</li>
+<li><strong>Verified:</strong> unit tests of the budget (what counts, where each size is read, where it stops, the message in
+three languages); editor tests with small limits (one file too many, the bytes of an upload, a clean-up that
+fails); integration tests of the storage on PostgreSQL and S3 (the count, the bytes, the removed object, one
+spelling of the ID).</li>
+<li><strong>Consequences:</strong> An author who saves an activity with more than 200 MB of files gets a message that points to
+Panopto for large video, as the guidance already does. A file that a failed clean-up left stays in storage
+until its activity is deleted. SEC-005 and PROD-007 have an &quot;Amended&quot; line; T-33 in the threat model names the
+limit.</li>
 </ul>
 
 </section>
