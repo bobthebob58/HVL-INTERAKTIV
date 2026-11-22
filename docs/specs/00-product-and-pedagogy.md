@@ -223,6 +223,9 @@ changes (adding, removing or reordering questions) reset saved progress. It offe
 - **Acceptance:** Existing learner state is invalidated only when the author confirms. Insight
   separates results by version.
 - **Verify:** Integration test.
+- **Amended (D-137, 2026-11-22):** a save that changes an answer key (which options are correct, what a gap
+  accepts, whether upper and lower case differ) and leaves the structure as it is keeps the learner state and
+  starts a new version, so insight separates results by the key they were judged against.
 
 #### PROD-014 · COULD · S6 · Spaced-retrieval suggestion
 After publishing an *Etterarbeid* activity, the author is shown suggested repetition dates (for

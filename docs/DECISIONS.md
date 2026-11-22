@@ -5745,3 +5745,45 @@ loading of one spec per session are kept.
 - **Consequences:** A file in nn or nb opens in a Norwegian spreadsheet with its columns and numbers right. Its
   form differs from before (separator, quotes, decimal comma); nothing else reads these files. The contract
   describes the form per language.
+
+### D-137 · Security repairs, step 21: a save that changes an answer key starts a new content version
+- **Context:** Insight shows one content version at a time (D-106), and a stored xAPI statement names the version
+  of the page it came from, so that insight compares like with like (DATA-012, PROD-013). D-093 raised the
+  version only with a structural save, since that is what a learner's saved state depends on. An author can also
+  change an answer key and leave the structure as it is: mark another MultiChoice option correct while the
+  single or multiple mode stays, change in place what a Blanks gap or a DragText drop zone accepts, or switch
+  Blanks' case sensitivity. The version then stayed. INS-003 marks options and gap answers right or wrong by the
+  stored parameters, so it showed first answers that were judged against the old key under the new key's marks,
+  while INS-002's share came from each answer's own stored verdict. The two lists disagreed, and the two-group
+  suppression of a single-answer question and of a one-gap task (D-106) rests on their agreeing.
+- **Decision — the answer key is part of the version (PROD-013, INS-003, INS-006).** A save of an existing
+  activity whose structure is the same and whose answer key differs raises `H5PContent.version` and keeps every
+  learner's saved state. The author is asked nothing, because nothing is lost. The key is read with insight's own
+  readers (`insight/content/answerKeys.ts` on `questionCatalogue` and `questionShape`), so what insight judges by
+  is what is compared: a choice question's `correct` marks in stored order; for each gap of a Blanks or DragText
+  task the set of accepted answers as insight compares them, and whether upper and lower case differ. Question
+  and option texts, tips and feedback are no part of it, nor is the order of a gap's alternatives. Questions are
+  matched by item ID, since PostgreSQL orders the keys of the stored parameters its own way. The other question
+  types need no rule here: they have no leaf rule in the structure signature, so any change of their parameters
+  is structural already (D-093).
+- **Decision — the raise commits with the parameters.** `LearnerStateGate.admit` returns a plan for it, and
+  Lumi's write runs inside a mark (`h5p/storage/contentVersionRaiseWrite.ts`) that `h5p/storage/contentUpdate.ts`
+  claims once, so the version is raised in the statement that writes the new parameters. A page reads its
+  version before its parameters (D-093), so no page carries the new version with the old key.
+- **Not chosen:** storing each version's question shapes (a new table and a migration, for a view that D-106
+  does not show for an older version anyway); hiding the distribution of a version whose key changed (a teacher
+  who corrects a key would lose INS-003 for the corrected activity until its structure changes).
+- **Verified:** unit tests of the keys (each question type, any depth, what is and is not a change) and of the
+  mark; the gate's unit tests; integration tests through the save route on the real MultiChoice and Blanks (the
+  version, the state rows, a state write from a page rendered before the change), and insight after such a save:
+  the current version counts none of the answers given before it, the previous version shows them without
+  distributions.
+- **Consequences:** After an author corrects an answer key, the Innsikt tab starts on a new version; the answers
+  given before are under the previous version, without distributions, as for every older version. The tab's
+  sentence for an older version names the answer key too (nn, nb, en). A page that was open when the key changed
+  keeps its version: its statements are stored under the previous version, and its state writes are dropped as
+  stale until the activity is opened again; the state stored before the change is kept. The mappe and the yearly
+  snapshots count each version as a group of its own, as after a structural save. The version rises more often
+  while an activity is being written. A save that starts a new version also decides where the old version's
+  answers end, within a day; each version is suppressed on its own and no view adds versions up (R3 in
+  `docs/privacy/DPIA-INPUT.md` says so). PROD-013 and INS-003 have an "Amended" line.

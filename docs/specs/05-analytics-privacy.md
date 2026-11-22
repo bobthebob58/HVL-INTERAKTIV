@@ -70,6 +70,9 @@ shortlist that can be printed or projected.
   the current version, whose options and gaps the stored parameters describe; for an older version the tab says so.
   A single-answer question's right options and wrong options (with «no answer») are suppressed as two groups, since
   `INS-002`'s share gives the right options' total.
+- **Amended (D-137, 2026-11-22):** the answers of one content version were judged against one answer key: a save
+  that changes a key starts a new version (`PROD-013`), so a distribution never shows answers under another key's
+  marks, and `INS-002`'s share and the distribution agree.
 
 #### INS-004 · SHOULD · S6 · Branching paths
 For BranchingScenario, the view shows the distribution of choices at each decision node and how

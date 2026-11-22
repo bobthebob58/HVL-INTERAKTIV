@@ -723,7 +723,10 @@ scored in the browser and are meant for formative work (<em>undervegsvurdering</
 changes (adding, removing or reordering questions) reset saved progress. it offers *save as new version*.
 - **acceptance:** existing learner state is invalidated only when the author confirms. insight
   separates results by version.
-- **verify:** integration test.">
+- **verify:** integration test.
+- **amended (d-137, 2026-11-22):** a save that changes an answer key (which options are correct, what a gap
+  accepts, whether upper and lower case differ) and leaves the structure as it is keeps the learner state and
+  starts a new version, so insight separates results by the key they were judged against.">
 <summary><span class="req-id">PROD-013</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Safe editing of a published activity</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>When an author edits an activity that already has learner state, the editor warns that structural
 changes (adding, removing or reordering questions) reset saved progress. It offers <em>Save as new version</em>.</p>
@@ -731,6 +734,9 @@ changes (adding, removing or reordering questions) reset saved progress. It offe
 <li><strong>Acceptance:</strong> Existing learner state is invalidated only when the author confirms. Insight
 separates results by version.</li>
 <li><strong>Verify:</strong> Integration test.</li>
+<li><strong>Amended (D-137, 2026-11-22):</strong> a save that changes an answer key (which options are correct, what a gap
+accepts, whether upper and lower case differ) and leaves the structure as it is keeps the learner state and
+starts a new version, so insight separates results by the key they were judged against.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PROD-013">00 Product and pedagogy, PROD-013</a> · Product</p></div>
 </details>
@@ -2724,7 +2730,10 @@ shortlist that can be printed or projected.
 - **amended (d-106, 2026-11-04):** `spec-deviation` for older content versions only: the distributions are shown for
   the current version, whose options and gaps the stored parameters describe; for an older version the tab says so.
   a single-answer question's right options and wrong options (with «no answer») are suppressed as two groups, since
-  `ins-002`'s share gives the right options' total.">
+  `ins-002`'s share gives the right options' total.
+- **amended (d-137, 2026-11-22):** the answers of one content version were judged against one answer key: a save
+  that changes a key starts a new version (`prod-013`), so a distribution never shows answers under another key's
+  marks, and `ins-002`'s share and the distribution agree.">
 <summary><span class="req-id">INS-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Misconceptions</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>For choice questions, it shows how answers are distributed across options, with the <strong>teacher&#39;s own
 feedback text</strong> for each wrong option next to it. For Blanks and DragText, it shows the most frequent
@@ -2738,6 +2747,9 @@ shortlist that can be printed or projected.</p>
 the current version, whose options and gaps the stored parameters describe; for an older version the tab says so.
 A single-answer question&#39;s right options and wrong options (with «no answer») are suppressed as two groups, since
 <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>&#39;s share gives the right options&#39; total.</li>
+<li><strong>Amended (D-137, 2026-11-22):</strong> the answers of one content version were judged against one answer key: a save
+that changes a key starts a new version (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>), so a distribution never shows answers under another key&#39;s
+marks, and <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>&#39;s share and the distribution agree.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-INS-003">05 Insight and privacy, INS-003</a> · Teacher insight</p></div>
 </details>
@@ -3735,6 +3747,9 @@ changes (adding, removing or reordering questions) reset saved progress. It offe
 <li><strong>Acceptance:</strong> Existing learner state is invalidated only when the author confirms. Insight
 separates results by version.</li>
 <li><strong>Verify:</strong> Integration test.</li>
+<li><strong>Amended (D-137, 2026-11-22):</strong> a save that changes an answer key (which options are correct, what a gap
+accepts, whether upper and lower case differ) and leaves the structure as it is keeps the learner state and
+starts a new version, so insight separates results by the key they were judged against.</li>
 </ul>
 <h4 id="r-PROD-014" class="req-heading" tabindex="-1"><a class="req-id" href="#r-PROD-014">PROD-014</a> <span class="badge pri pri-could" title="RFC 2119 COULD">Could</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Spaced-retrieval suggestion</span></h4>
 <p>After publishing an <em>Etterarbeid</em> activity, the author is shown suggested repetition dates (for
@@ -5461,6 +5476,9 @@ shortlist that can be printed or projected.</p>
 the current version, whose options and gaps the stored parameters describe; for an older version the tab says so.
 A single-answer question&#39;s right options and wrong options (with «no answer») are suppressed as two groups, since
 <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>&#39;s share gives the right options&#39; total.</li>
+<li><strong>Amended (D-137, 2026-11-22):</strong> the answers of one content version were judged against one answer key: a save
+that changes a key starts a new version (<a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>), so a distribution never shows answers under another key&#39;s
+marks, and <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>&#39;s share and the distribution agree.</li>
 </ul>
 <h4 id="r-INS-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-INS-004">INS-004</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Branching paths</span></h4>
 <p>For BranchingScenario, the view shows the distribution of choices at each decision node and how
@@ -12721,6 +12739,49 @@ guard only adds apostrophes); the routes&#39; tests read the files with their ow
 <li><strong>Consequences:</strong> A file in nn or nb opens in a Norwegian spreadsheet with its columns and numbers right. Its
 form differs from before (separator, quotes, decimal comma); nothing else reads these files. The contract
 describes the form per language.</li>
+</ul>
+<h3 id="decisions--d-137--security-repairs-step-21-a-save-that-changes-an-answer-key-starts-a-new-content-version" tabindex="-1">D-137 · Security repairs, step 21: a save that changes an answer key starts a new content version</h3>
+<ul>
+<li><strong>Context:</strong> Insight shows one content version at a time (D-106), and a stored xAPI statement names the version
+of the page it came from, so that insight compares like with like (DATA-012, PROD-013). D-093 raised the
+version only with a structural save, since that is what a learner&#39;s saved state depends on. An author can also
+change an answer key and leave the structure as it is: mark another MultiChoice option correct while the
+single or multiple mode stays, change in place what a Blanks gap or a DragText drop zone accepts, or switch
+Blanks&#39; case sensitivity. The version then stayed. INS-003 marks options and gap answers right or wrong by the
+stored parameters, so it showed first answers that were judged against the old key under the new key&#39;s marks,
+while INS-002&#39;s share came from each answer&#39;s own stored verdict. The two lists disagreed, and the two-group
+suppression of a single-answer question and of a one-gap task (D-106) rests on their agreeing.</li>
+<li><strong>Decision — the answer key is part of the version (PROD-013, INS-003, INS-006).</strong> A save of an existing
+activity whose structure is the same and whose answer key differs raises <code>H5PContent.version</code> and keeps every
+learner&#39;s saved state. The author is asked nothing, because nothing is lost. The key is read with insight&#39;s own
+readers (<code>insight/content/answerKeys.ts</code> on <code>questionCatalogue</code> and <code>questionShape</code>), so what insight judges by
+is what is compared: a choice question&#39;s <code>correct</code> marks in stored order; for each gap of a Blanks or DragText
+task the set of accepted answers as insight compares them, and whether upper and lower case differ. Question
+and option texts, tips and feedback are no part of it, nor is the order of a gap&#39;s alternatives. Questions are
+matched by item ID, since PostgreSQL orders the keys of the stored parameters its own way. The other question
+types need no rule here: they have no leaf rule in the structure signature, so any change of their parameters
+is structural already (D-093).</li>
+<li><strong>Decision — the raise commits with the parameters.</strong> <code>LearnerStateGate.admit</code> returns a plan for it, and
+Lumi&#39;s write runs inside a mark (<code>h5p/storage/contentVersionRaiseWrite.ts</code>) that <code>h5p/storage/contentUpdate.ts</code>
+claims once, so the version is raised in the statement that writes the new parameters. A page reads its
+version before its parameters (D-093), so no page carries the new version with the old key.</li>
+<li><strong>Not chosen:</strong> storing each version&#39;s question shapes (a new table and a migration, for a view that D-106
+does not show for an older version anyway); hiding the distribution of a version whose key changed (a teacher
+who corrects a key would lose INS-003 for the corrected activity until its structure changes).</li>
+<li><strong>Verified:</strong> unit tests of the keys (each question type, any depth, what is and is not a change) and of the
+mark; the gate&#39;s unit tests; integration tests through the save route on the real MultiChoice and Blanks (the
+version, the state rows, a state write from a page rendered before the change), and insight after such a save:
+the current version counts none of the answers given before it, the previous version shows them without
+distributions.</li>
+<li><strong>Consequences:</strong> After an author corrects an answer key, the Innsikt tab starts on a new version; the answers
+given before are under the previous version, without distributions, as for every older version. The tab&#39;s
+sentence for an older version names the answer key too (nn, nb, en). A page that was open when the key changed
+keeps its version: its statements are stored under the previous version, and its state writes are dropped as
+stale until the activity is opened again; the state stored before the change is kept. The mappe and the yearly
+snapshots count each version as a group of its own, as after a structural save. The version rises more often
+while an activity is being written. A save that starts a new version also decides where the old version&#39;s
+answers end, within a day; each version is suppressed on its own and no view adds versions up (R3 in
+<code>docs/privacy/DPIA-INPUT.md</code> says so). PROD-013 and INS-003 have an &quot;Amended&quot; line.</li>
 </ul>
 
 </section>
