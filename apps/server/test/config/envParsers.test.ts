@@ -55,8 +55,8 @@ describe('[DOC-008] Session 3 defaults', () => {
 
 describe('[LTI-003] public URL and frame origins', () => {
   it('[LTI-003] reduces PUBLIC_BASE_URL to its origin and refuses a path', () => {
-    expect(loadEnv({ ...VALID_ENV, PUBLIC_BASE_URL: 'https://interaktiv.hvl.no/' }).PUBLIC_BASE_URL).toBe(
-      'https://interaktiv.hvl.no',
+    expect(loadEnv({ ...VALID_ENV, PUBLIC_BASE_URL: 'http://Tool.localhost:3000/' }).PUBLIC_BASE_URL).toBe(
+      'http://tool.localhost:3000',
     );
     expect(envProblems({ ...VALID_ENV, PUBLIC_BASE_URL: 'https://hvl.no/interaktiv' })[0]).toMatch(
       /^PUBLIC_BASE_URL: must be an origin/,

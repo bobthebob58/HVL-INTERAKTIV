@@ -8,7 +8,9 @@
  *   - Every variable read anywhere in the server is declared here, one per line as `NAME: z…`
  *     (doc-lint compares this list with .env.example).
  *   - Error messages name variables, never their values (values can be secrets).
- *   - With NODE_ENV=production, the checks in ./productionChecks.ts also apply.
+ *   - `NODE_ENV` has no default: a missing or empty mode stops the start, so no installation runs without the
+ *     production checks by accident (D-133). With NODE_ENV=production, the checks in ./productionChecks.ts also
+ *     apply; in any other mode, those of ./publicAddressRules.ts when `PUBLIC_BASE_URL` is not a local address.
  *   - The portfolio's minimum group size is never below 3 (INS-006, D-095); the PDF export runs 1–8 renders at a
  *     time, and its sandbox is on unless development turns it off (D-096).
  *   - `AGS_LABEL_MODE` is `suffix` unless HVL and ALU answer Q8 otherwise (D-105); the NRPS learner count reads at
@@ -19,8 +21,9 @@
  *     every environment, and https in production (./filesOrigin.ts, SEC-004, D-110 amendment of 2026-11-05).
  *   - Uploads are scanned only with `CLAMAV_HOST`; production needs it, or `CLAMAV_ALLOW_UNSCANNED_UPLOADS=true`, and
  *     TLS off the loopback; `CLAMSCAN_*` and `CLAMDSCAN_*` are refused (./malwareScanConfig.ts, SEC-006, D-110).
- * Collaborators: apps/server/.env.example, ./envParsers.ts, ./productionChecks.ts, ./filesOrigin.ts,
- *   ../privacy/pseudonymSecrets.ts, ../privacy/purge/purgeCalendar.ts, ../h5p/H5pConfigFactory.ts.
+ * Collaborators: apps/server/.env.example, ./envParsers.ts, ./productionChecks.ts, ./publicAddressRules.ts,
+ *   ./filesOrigin.ts, ../privacy/pseudonymSecrets.ts, ../privacy/purge/purgeCalendar.ts,
+ *   ../h5p/H5pConfigFactory.ts.
  * Tests: apps/server/test/config/env.test.ts, apps/server/test/config/studioEnv.test.ts,
  *   apps/server/test/config/canvasExtrasEnv.test.ts, apps/server/test/config/purgeEnv.test.ts
  */
@@ -44,10 +47,11 @@ import {
 import { filesOriginProblems } from './filesOrigin.js';
 import { malwareScanProblems } from './malwareScanConfig.js';
 import { productionProblems } from './productionChecks.js';
+import { publicAddressProblems } from './publicAddressRules.js';
 
 /** The schema of every environment variable the server reads. */
 export const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  NODE_ENV: z.enum(['development', 'test', 'production'], 'must be development, test or production'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, 'must start with postgresql://'),
   REDIS_URL: z.string().regex(/^rediss?:\/\//, 'must start with redis:// or rediss://'),
@@ -162,7 +166,8 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env, now: Date = new
   const problems = [
     ...filesOriginProblems(result.data, production),
     ...malwareScanProblems(result.data, production, source),
-    ...(production ? productionProblems(result.data, now, source) : []),
+    // SECURITY: an address others can reach is held to the key and https rules whatever the mode says (D-133).
+    ...(production ? productionProblems(result.data, now, source) : publicAddressProblems(result.data)),
   ];
   if (problems.length > 0) throw new InvalidEnvironmentError(problems);
   return result.data;
