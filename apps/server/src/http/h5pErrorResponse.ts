@@ -12,8 +12,9 @@
  *   - `message` always comes from the locale files; `errorCode` is a stable machine code, never free text.
  *   - Errors with a numeric 4xx `status`/`statusCode` (body parsers, express.static, storage guards) keep it.
  *   - Unknown errors and server faults (5xx) are reported as `error.generic`, except the deliberate 503s in
- *     ./authErrors.ts (a dependency is down) and the deliberate 5xx codes of ./learningDesignErrors.ts (no PDF
- *     browser, a failed duplicate), which keep their status and message.
+ *     ./authErrors.ts (a dependency is down), the deliberate 5xx codes of ./learningDesignErrors.ts (no PDF
+ *     browser, a failed duplicate) and the insight gate's 503 (../insight/InsightViewGate.ts, D-134), which keep
+ *     their status and message.
  * Collaborators: ./h5pErrorHandler.ts, ./HttpError.ts, ./authErrors.ts, ./learningDesignErrors.ts,
  *   ../i18n/translate.ts, ../content/PublishBlockedError.ts.
  * Tests: apps/server/test/http/h5pErrorResponse.test.ts, apps/server/test/http/api/publishRoutes.int.test.ts,
@@ -23,6 +24,7 @@ import type { CoveredFinding } from '../content/acknowledgementCoverage.js';
 import { PublishBlockedError } from '../content/PublishBlockedError.js';
 import { MAX_FILE_SIZE } from '../h5p/H5pConfigFactory.js';
 import { t, type Locale, type MessageKey } from '../i18n/translate.js';
+import { INSIGHT_BUSY_CODE } from '../insight/InsightViewGate.js';
 import { SERVICE_UNAVAILABLE_CODES } from './authErrors.js';
 import { isDeliberateLearningDesignFault } from './learningDesignErrors.js';
 
@@ -146,6 +148,7 @@ export function toErrorResponse(error: unknown, locale: Locale): { status: numbe
   // with its own code and message, not as a fault.
   const deliberate =
     (described.status === 503 && SERVICE_UNAVAILABLE_CODES.has(described.code)) ||
+    (described.status === 503 && described.code === INSIGHT_BUSY_CODE) ||
     isDeliberateLearningDesignFault(described.code, described.status);
   const serverFault = !deliberate && (described.status < 400 || described.status >= 500);
   const { status, code, key, params } = serverFault

@@ -52,7 +52,19 @@ describe('[DOC-012] insight routes', () => {
       '404',
       '422',
       '429',
+      '503',
     ]);
+  });
+
+  it('[INS-001] the view and the export document 503 for too many views at once, to be asked again later', () => {
+    // Act
+    const documents = (suffix: string) => JSON.stringify(operation(BASE + suffix).responses['503'] ?? null);
+    // Assert: the two routes that build a view, and only they
+    for (const suffix of ['', '/export']) {
+      expect(documents(suffix)).toContain('insight.busy');
+      expect(documents(suffix)).toContain('Retry-After');
+    }
+    expect([documents('/contexts'), documents('/findings')]).toEqual(['null', 'null']);
   });
 
   it('[INS-001] the view and the export document 422 for a period with more statements than one view covers', () => {

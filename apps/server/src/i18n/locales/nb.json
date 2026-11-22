@@ -268,6 +268,7 @@
   },
   "insight": {
     "viewTooLarge": "Denne perioden har for mange svar til at innsikten kan vises samlet. Velg en kortere periode.",
+    "busy": "Det er mange som henter innsikt akkurat nå. Vent litt og prøv igjen.",
     "csv": {
       "filename": "innsikt",
       "column": {

@@ -12,7 +12,8 @@
  *   - Every route is `auth: 'either'` (a portal session or an ltik; GET needs no CSRF token, but a browser request
  *     that is not the app's own fetch is 403, D-106) and documents 401, 403, 404 and 429. No route takes a learner or
  *     returns a per-learner row (INS-006).
- *   - The view and its CSV document 422: a period with more stored statements than one view covers (D-122).
+ *   - The view and its CSV document 422: a period with more stored statements than one view covers (D-122), and
+ *     503: too many views being built at once, to be asked again after `Retry-After` (D-134).
  *   - The answers to 403 and 404 follow D-066: an activity the person may not view is 404 like an unknown one.
  * Collaborators: ./routeResponses.ts, ./collaborationResponses.ts (`rateLimited`), ./insightSchemaNames.ts,
  *   ../insight.ts, ../insightReport.ts, ../insightContextList.ts, ../insightFindings.ts, ../apiRoutes.ts,
@@ -47,6 +48,12 @@ const viewTooLarge = failure(
     'period can be asked for (D-122).',
 );
 
+/** 503 of the routes that build a view. */
+const viewBusy = failure(
+  '`insight.busy`: too many views are being built and waiting on this server; nothing was read, and the same ' +
+    'request can be sent again after `Retry-After` seconds (D-134).',
+);
+
 /** 429 of every insight route. */
 const tooMany = rateLimited('over 60 insight requests in a minute from this person');
 
@@ -72,6 +79,7 @@ export const INSIGHT_ROUTES = [
       404: unavailable,
       422: viewTooLarge,
       429: tooMany,
+      503: viewBusy,
     },
   },
   {
@@ -110,6 +118,7 @@ export const INSIGHT_ROUTES = [
       404: unavailable,
       422: viewTooLarge,
       429: tooMany,
+      503: viewBusy,
     },
   },
   {
