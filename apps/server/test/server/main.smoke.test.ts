@@ -4,7 +4,7 @@
  * and names the variable without printing any secret; in production, a clear-text database, Redis or S3 connection
  * stops it the same way (D-109). After listening it logs whether the PDF export works, and stops only after that.
  *
- * Spec: NFR-002, LTI-001, DATA-004, MAPPE-004
+ * Spec: NFR-002, LTI-001, DATA-004, MAPPE-004, NFR-006, DOC-008
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -129,8 +129,7 @@ describeWithServices('[NFR-002] the server entry point', () => {
     expect(run.output.indexOf('LTI platform keys on the current encryption key')).toBeLessThan(
       run.output.indexOf('HVL Interaktiv server listening'),
     );
-    expect(health).toBe(200);
-    expect(keys.length).toBeGreaterThan(0);
+    expect([health, keys.length > 0]).toEqual([200, true]);
     expect(run.output).toContain('HVL Interaktiv server stopped');
     expect(run.code).toBe(0);
     // Assert: one reason-coded line on the PDF export, written before the server stopped (MAPPE-004, D-110)
@@ -138,8 +137,9 @@ describeWithServices('[NFR-002] the server entry point', () => {
       /"pdfAvailable":\w+,"pdfSandbox":\w+,"reason":"[a-z-]+".*"msg":"PDF export availability"/,
     );
     expect(run.output.indexOf('PDF export availability')).toBeLessThan(run.output.indexOf('server stopped'));
-    // Assert: a start names where the data lives, by host and region only (DATA-004, D-109's amendment)
-    expect(run.output).toMatch(/"databaseHost":"[^"]+".*"msg":"deployment locations"/);
+    // Assert: a start names its mode and where the data lives, by host and region only (DATA-004, D-109, D-133)
+    expect(run.output).toMatch(/"mode":"test","databaseHost":"[^"]+".*"msg":"deployment locations"/);
+    expect(run.output).toMatch(/"level":"warn".*"mode":"test","msg":"not in production mode/);
     expect(run.output).not.toContain(new URL(String(process.env.DATABASE_URL)).password);
   }, 90_000);
 
@@ -154,27 +154,27 @@ describeWithServices('[NFR-002] the server entry point', () => {
         main.exit,
         new Promise((resolve) => setTimeout(() => resolve('hung'), 30_000)),
       ]);
-      // Assert: it got as far as listening, failed there, and never claimed to listen
+      // Assert: it got as far as listening and failed there, as one line of the logger with no stack around it
       expect(code).toBe(1);
       expect(main.output()).toContain('LTI platform keys on the current encryption key');
-      expect(main.output()).toContain('EADDRINUSE');
-      expect(main.output()).not.toContain('HVL Interaktiv server listening');
+      expect(main.output()).toMatch(/"level":"fatal".*EADDRINUSE.*"msg":"the server could not start"/);
+      expect(main.output()).not.toMatch(/^\s+at |HVL Interaktiv server listening/m);
     } finally {
       main.child.kill('SIGKILL');
       taken.close();
     }
   }, 60_000);
 
-  it('[NFR-002] a broken configuration stops the start with exit code 1 and prints no secret', async () => {
+  it('[NFR-002] a broken configuration or a missing mode stops the start with exit code 1 and prints no secret', async () => {
     // Arrange
-    const env: NodeJS.ProcessEnv = { ...serverEnv(), FEIDE_CLIENT_ID: '', CANVAS_ORIGINS: 'not a url' };
+    const broken = { NODE_ENV: '', FEIDE_CLIENT_ID: '', CANVAS_ORIGINS: 'not a url' };
+    const env: NodeJS.ProcessEnv = { ...serverEnv(), ...broken };
     // Act
     const main = startMain(env);
     const code = await main.exit;
     // Assert
     expect(code).toBe(1);
-    expect(main.output()).toContain('FEIDE_CLIENT_ID');
-    expect(main.output()).toContain('CANVAS_ORIGINS');
+    for (const name of Object.keys(broken)) expect(main.output()).toContain(name);
     expect(main.output()).not.toContain(String(env.FEIDE_CLIENT_SECRET));
     expect(main.output()).not.toContain(String(env.DATA_ENCRYPTION_KEYS));
   }, 30_000);

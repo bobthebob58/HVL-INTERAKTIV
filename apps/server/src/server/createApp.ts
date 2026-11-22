@@ -10,8 +10,9 @@
  * Invariants:
  *   - Order: trust proxy → request log → base headers → `/healthz` → page assets → the Hjelp marker and the chrome
  *     redirect (with the web app) → portal session → LTI (ltijs first) → Feide routes → start page (only without the
- *     web app) → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page. With
- *     the web app, launches land on `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
+ *     web app) → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → the last error handler,
+ *     which ends every fault itself (../http/lastResortError.ts, D-133). With the web app, launches land on
+ *     `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
  *   - Right after the base headers, the files host (`FILES_BASE_URL`) gets its own router and nothing else (SEC-004).
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
  *     session with CSRF); the editor's file grants are checked before it, inside the H5P router (D-058).
@@ -31,10 +32,11 @@
  *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/apiRouter.ts,
  *   ../content/contentRouteGuards.ts, ../content/ContentWriteLock.ts, ../web/webRoutes.ts,
  *   ../web/chromeRedirect.ts, ../http/pages/helpLink.ts, ./healthRoutes.ts, ./studioServices.ts, ./main.ts,
- *   ./gradeBridgeApi.ts, ../insight/http/insightApi.ts, ../http/requestLog.ts (NFR-006), ../http/filesOriginRouter.ts.
+ *   ./gradeBridgeApi.ts, ../insight/http/insightApi.ts, ../http/requestLog.ts (NFR-006), ../http/filesOriginRouter.ts,
+ *   ../http/lastResortError.ts.
  * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
-import express, { type ErrorRequestHandler, type Express } from 'express';
+import express, { type Express } from 'express';
 import type { Logger } from 'pino';
 import { AuthAuditRecorder } from '../auth/audit/AuthAuditRecorder.js';
 import { requestPrincipal } from '../auth/requestPrincipal.js';
@@ -52,9 +54,9 @@ import { h5pAuthenticate } from '../http/h5pAuthenticate.js';
 import { h5pErrorHandler } from '../http/h5pErrorHandler.js';
 import { HttpError } from '../http/HttpError.js';
 import { insightApi } from '../insight/http/insightApi.js';
+import { lastResortErrorHandler } from '../http/lastResortError.js';
 import { pageAssetRoutes } from '../http/pages/pageAssetRoutes.js';
 import { portalHomeRoutes, portalNotFound } from '../http/pages/portalHomeRoutes.js';
-import { sendPortalError } from '../http/pages/portalPages.js';
 import type { ContentRouteDeps } from '../http/routes/contentRoutes.js';
 import { requestLog } from '../http/requestLog.js';
 import { baseSecurityHeaders } from '../http/securityHeaders.js';
@@ -187,9 +189,6 @@ export function createApp(inputs: AppInputs): App {
     app.use(webRoutes(inputs.web, { canvasOrigins: env.CANVAS_ORIGINS, formActionOrigins }));
   }
   app.use(portalNotFound());
-  app.use(((error, _req, res, next) => {
-    if (res.headersSent) return next(error);
-    sendPortalError(res, error, logger);
-  }) satisfies ErrorRequestHandler);
+  app.use(lastResortErrorHandler(logger));
   return { app, lti, studio };
 }
