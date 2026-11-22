@@ -2471,3 +2471,33 @@ Append one entry per session: date, session, what was done, gate output, and any
       five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
       container; DATA-010, MAPPE-004, NFR-002)
   ```
+
+- **2026-11-22 · Security repairs, step 16 (D-132)** — The backup tool's own checks hold for any text. Two
+  repairs in `tools/ops/`, in one commit; every new test fails on the code before and passes after:
+  - Row counts (NFR-002): the dump's output is cut at the newline byte only (`newlineSplitter` in
+    `toolProcess.mjs`), where `node:readline` also ended a line at U+2028 and U+2029 and so counted a row with
+    such a character twice. The restore's summary names the tables whose counts differ (`differingTables`).
+  - Content-file keys (NFR-002): `missingContentFiles` reads the keys as hex, so a key with a bar or a line
+    break is compared as it is.
+  - Tests: `tools/ops/test/newlineSplitter.test.mjs`, `backupUnusualText.test.mjs` (a round trip of rows with
+    U+2028, U+2029 and U+0085 and of keys with a bar and those characters; a key with a line break against the
+    database alone, as the storage emulator accepts none), `backupRestoreChecks.test.mjs` (the named table).
+  - D-132 added; NFR-002 in spec 00 has an "Amended" line; the runbook's restore step and `tools/ops/README.md`
+    follow; `TRACEABILITY.md` and the spec site regenerated. Only `tools/ops/` and documents changed, so the
+    server, web, browser and accessibility suites were not run again (their last full run is step 15's). Gate
+    output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project tools                     536 passed (70 files)
+  ```

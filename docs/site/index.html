@@ -15059,6 +15059,35 @@ $ npx vitest run --project server                    26844 passed, 31 skipped; 2
     five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
     container; DATA-010, MAPPE-004, NFR-002)</code></pre>
 </li>
+<li><p><strong>2026-11-22 · Security repairs, step 16 (D-132)</strong> — The backup tool&#39;s own checks hold for any text. Two
+repairs in <code>tools/ops/</code>, in one commit; every new test fails on the code before and passes after:</p>
+<ul>
+<li>Row counts (NFR-002): the dump&#39;s output is cut at the newline byte only (<code>newlineSplitter</code> in
+<code>toolProcess.mjs</code>), where <code>node:readline</code> also ended a line at U+2028 and U+2029 and so counted a row with
+such a character twice. The restore&#39;s summary names the tables whose counts differ (<code>differingTables</code>).</li>
+<li>Content-file keys (NFR-002): <code>missingContentFiles</code> reads the keys as hex, so a key with a bar or a line
+break is compared as it is.</li>
+<li>Tests: <code>tools/ops/test/newlineSplitter.test.mjs</code>, <code>backupUnusualText.test.mjs</code> (a round trip of rows with
+U+2028, U+2029 and U+0085 and of keys with a bar and those characters; a key with a line break against the
+database alone, as the storage emulator accepts none), <code>backupRestoreChecks.test.mjs</code> (the named table).</li>
+<li>D-132 added; NFR-002 in spec 00 has an &quot;Amended&quot; line; the runbook&#39;s restore step and <code>tools/ops/README.md</code>
+follow; <code>TRACEABILITY.md</code> and the spec site regenerated. Only <code>tools/ops/</code> and documents changed, so the
+server, web, browser and accessibility suites were not run again (their last full run is step 15&#39;s). Gate
+output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 36, Session log"><code>$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project tools                     536 passed (70 files)</code></pre>
+</li>
 </ul>
 
 </section>
