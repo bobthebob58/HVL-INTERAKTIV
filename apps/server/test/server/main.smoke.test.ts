@@ -130,8 +130,7 @@ describeWithServices('[NFR-002] the server entry point', () => {
       run.output.indexOf('HVL Interaktiv server listening'),
     );
     expect([health, keys.length > 0]).toEqual([200, true]);
-    expect(run.output).toContain('HVL Interaktiv server stopped');
-    expect(run.code).toBe(0);
+    expect([run.output.includes('HVL Interaktiv server stopped'), run.code]).toEqual([true, 0]);
     // Assert: one reason-coded line on the PDF export, written before the server stopped (MAPPE-004, D-110)
     expect(run.output).toMatch(
       /"pdfAvailable":\w+,"pdfSandbox":\w+,"reason":"[a-z-]+".*"msg":"PDF export availability"/,
@@ -140,6 +139,7 @@ describeWithServices('[NFR-002] the server entry point', () => {
     // Assert: a start names its mode and where the data lives, by host and region only (DATA-004, D-109, D-133)
     expect(run.output).toMatch(/"mode":"test","databaseHost":"[^"]+".*"msg":"deployment locations"/);
     expect(run.output).toMatch(/"level":"warn".*"mode":"test","msg":"not in production mode/);
+    expect(run.output).toMatch(/"heapLimitMb":\d+,"besideHeapMb":\d+,"neededMb":\d+,"msg":"memory limits"/);
     expect(run.output).not.toContain(new URL(String(process.env.DATABASE_URL)).password);
   }, 90_000);
 
