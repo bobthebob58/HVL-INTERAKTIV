@@ -22,6 +22,7 @@
  */
 import type { Response } from 'express';
 import { STATE_SAVES_PER_MINUTE } from '../h5p/storage/learnerStateLimits.js';
+import type { GateLimits } from '../infra/BoundedGate.js';
 import type { Redis } from '../infra/redisClient.js';
 import {
   PersonRateLimit,
@@ -59,6 +60,8 @@ export interface PersonBudget {
 export interface H5pRouteLimits {
   /** Saves of one learner's state for one activity; the ID is `<account ID>:<activity ID>`. */
   readonly stateSaves: PersonLimit;
+  /** How many state saves one process handles at once and lets wait; D-134's limits when not given. */
+  readonly stateSaveGate?: GateLimits;
   /** Editor file uploads of one author. */
   readonly uploads: PersonLimit;
   /** Package imports of one author. */
