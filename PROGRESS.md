@@ -2419,3 +2419,55 @@ Append one entry per session: date, session, what was done, gate output, and any
       five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
       container; DATA-010, MAPPE-004, NFR-002)
   ```
+
+- **2026-11-22 · Security repairs, step 15 (D-131)** — The portal's login, its answers and the save gate are
+  closed to other sites' requests and to a second spelling of an ID. Four repairs, one commit each; every new
+  test fails on the code before and passes after:
+  - The save gate (PROD-003, H5P-006): the content routes read the activity ID in lower case
+    (`contentIdParam`), `PublishedSaveGate` uses that spelling for its lock and lookup and refuses with 404 when
+    it finds no activity. Tests: `content/publishedSaveIdentity.int.test.ts`.
+  - Headers (AUTH-003, H5P-007, LTI-003): `ownAnswerHeaders` puts `no-store`,
+    `Cross-Origin-Resource-Policy: same-origin` and the portal framing rule on `/api`, `/auth/session` and the
+    H5P routes behind authentication; portal pages send `Cross-Origin-Opener-Policy: same-origin`, LTI pages do
+    not. Tests: `http/securityHeaders.test.ts`, `http/ownAnswerHeaders.int.test.ts`, `web/webRoutes.int.test.ts`.
+  - Feide login (AUTH-001, AUTH-003): `auth/feide/loginNavigation.ts` (new) lets only a page the person opened
+    start a login; a page another site opened without a click, or a frame, gets a sign-in page with a button
+    (nn, nb, en; axe-scanned in `a11y/axeServerPages.a11y.test.ts`); the callback is taken only as a page
+    navigation and uses the pending login up only when its `state` is that login's (`LoginTransactions.peek`).
+    Tests: `auth/feide/loginNavigation.test.ts`, `auth/feide/feideLoginStart.int.test.ts`,
+    `auth/feide/loginTransactions.int.test.ts`. Screenshots of the sign-in page in nn at 1280 px and 390 px
+    were sent to the owner (none committed).
+  - Web app (AUTH-003): a portal request refused with `hvl:csrf-invalid` asks `/auth/session` once for the
+    current token and is sent again (`apps/web/src/api/csrfRetry.ts`, new). Tests: `api/csrfRetry.test.ts`.
+  - `e2e/journeyGovernance.e2e.test.ts` now waits for the page's requests before it counts the refused ones
+    (PED-011); it had read the list too early in two earlier runs.
+  - D-131 added; AUTH-001 and AUTH-003 in spec 02 and PROD-003 in spec 00 have an "Amended" line; the threat
+    model (T-20, new T-43), the risk analysis (ROS-07) and the runbook's checklist record what hosting under
+    `hvl.no` means for cookies; `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     529 passed
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26844 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
