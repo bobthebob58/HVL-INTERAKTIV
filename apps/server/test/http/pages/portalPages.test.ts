@@ -28,10 +28,7 @@ function portalApp(options: { webApp: boolean }) {
   if (options.webApp) app.use(offerHelpLink());
   app.get('/h5p/play/:id', (_req, res) => {
     // Like playerRoutes: the H5P policy is set first, then the activity turns out to be unavailable.
-    res.set(
-      'Content-Security-Policy',
-      h5pPageCsp({ scriptHashes: [], externalMediaOrigins: [] }, ["'self'"]),
-    );
+    res.set('Content-Security-Policy', h5pPageCsp({ externalMediaOrigins: [] }, ["'self'"]));
     sendPortalPage(res, 404, {
       locale: 'nn',
       titleKey: 'page.notAvailable.title',

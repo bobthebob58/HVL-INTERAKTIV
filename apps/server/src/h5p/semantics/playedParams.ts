@@ -12,21 +12,37 @@
  *   - Every `integration.contents[…].jsonContent` of a rendered model is its stored parameters after
  *     ./semanticsConformance.ts: no key a field list does not name, and numbers, booleans, selects and file values
  *     of their field's type. Parameters that need no fix keep their exact text.
- *   - Nothing else is judged here: text was cleaned when the row was saved, and no sub-content is refused, so an
- *     activity that was allowed to be stored still plays.
+ *   - A text field without a `tags` list is plain text, also in a row stored before a save made it so (D-140):
+ *     a value of such a field that holds a `<` is cleaned as on save. No other text is cleaned again.
+ *   - Nothing else is judged here: no sub-content is refused, so an activity that was allowed to be stored
+ *     still plays.
  *   - A row the walker cannot read as its semantics describe fails the render with 400 `hvl:invalid-params`
  *     (./paramsWalker.ts); the editor's save never stores such a row.
  *   - The stored row is not changed; the model handed on is a copy.
- * Collaborators: ./semanticsConformance.ts, ./paramsWalker.ts, ../H5pPlayerFactory.ts (installs it),
+ * Collaborators: ./semanticsConformance.ts, ./lumiTextSanitizer.ts, ./paramsWalker.ts, ../H5pPlayerFactory.ts (installs it),
  *   ../../http/routes/playerRoutes.ts (renders the model).
  * Tests: apps/server/test/h5p/semantics/playedParams.test.ts, apps/server/test/h5p/semantics/playedParams.int.test.ts
  */
 import { LibraryName, type H5PPlayer, type IPlayerModel } from '@lumieducation/h5p-server';
-import { walkParams, type SemanticsLookup } from './paramsWalker.js';
+import { isPlainTextField, plainText } from './lumiTextSanitizer.js';
+import { walkParams, type ParamsVisit, type SemanticsLookup } from './paramsWalker.js';
 import { semanticsConformance } from './semanticsConformance.js';
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Makes a plain-text field's value plain text, when it holds markup.
+ * @param visit - One value of the walk.
+ * @returns True when the value was changed.
+ */
+function madePlain({ semantics, value, container, key }: ParamsVisit): boolean {
+  // WHY: a cleaned plain text holds no `<` (it is written `&lt;`), so most values cost one search and no parse.
+  if (!isPlainTextField(semantics) || typeof value !== 'string' || !value.includes('<')) return false;
+  const plain = plainText(value);
+  (container as Record<string | number, unknown>)[key] = plain;
+  return plain !== value;
+}
 
 /**
  * The parameters of one activity, fitted to its semantics.
@@ -44,8 +60,13 @@ async function fittedJson(
   if (!isObject(params)) return jsonContent;
   const main = LibraryName.fromUberName(library, { useWhitespace: true });
   const conformance = semanticsConformance();
-  await walkParams(params, main, getSemantics, conformance.visit, conformance.onFields);
-  return conformance.apply() === 0 ? jsonContent : JSON.stringify(params);
+  let cleaned = 0;
+  const visit = (one: ParamsVisit): void | 'skip' => {
+    if (madePlain(one)) cleaned += 1;
+    return conformance.visit(one) as void | 'skip';
+  };
+  await walkParams(params, main, getSemantics, visit, conformance.onFields);
+  return conformance.apply() + cleaned === 0 ? jsonContent : JSON.stringify(params);
 }
 
 /**

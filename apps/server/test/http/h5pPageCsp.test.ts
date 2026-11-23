@@ -12,14 +12,20 @@ const directives = (csp: string) =>
   new Map(csp.split('; ').map((d) => [d.split(' ')[0] ?? '', d.split(' ').slice(1)] as const));
 
 describe('[DATA-011] H5P page policy', () => {
-  it('[DATA-011] allows our own scripts and the core hashes, never inline or eval, and nothing third-party', () => {
+  it('[DATA-011] allows our own script files only: no inline script, hash, nonce or eval, and nothing third-party', () => {
     // Act
-    const csp = directives(
-      h5pPageCsp({ scriptHashes: ["'sha256-abc'"], externalMediaOrigins: [] }, ["'self'"]),
-    );
-    // Assert
+    const policy = h5pPageCsp({ externalMediaOrigins: [] }, ["'self'"]);
+    const csp = directives(policy);
+    // Assert: `script-src` is our own origin and nothing else, so no inline script runs by a hash either (D-140)
     expect(csp.get('default-src')).toEqual(["'none'"]);
-    expect(csp.get('script-src')).toEqual(["'self'", "'sha256-abc'"]);
+    expect(csp.get('script-src')).toEqual(["'self'"]);
+    expect(policy).not.toMatch(/'sha(256|384|512)-|'nonce-|'unsafe-inline' *;? *script|'strict-dynamic'/);
+    for (const page of [{}, { playerFiles: true }]) {
+      const scripts = directives(h5pPageCsp({ externalMediaOrigins: [] }, ["'self'"], page)).get(
+        'script-src',
+      );
+      expect(scripts).toEqual(["'self'"]);
+    }
     expect(csp.get('img-src')).toEqual(["'self'", 'data:', 'blob:']);
     expect(csp.get('media-src')).toEqual(["'self'", 'blob:']);
     expect(csp.get('connect-src')).toEqual(["'self'"]);
@@ -33,7 +39,7 @@ describe('[DATA-011] H5P page policy', () => {
 
   it('[DATA-011] configured media origins are allowed for images, media and frames only', () => {
     const csp = directives(
-      h5pPageCsp({ scriptHashes: [], externalMediaOrigins: ['https://hvl.cloud.panopto.eu'] }, ["'self'"]),
+      h5pPageCsp({ externalMediaOrigins: ['https://hvl.cloud.panopto.eu'] }, ["'self'"]),
     );
     for (const name of ['img-src', 'media-src', 'frame-src'])
       expect(csp.get(name)).toContain('https://hvl.cloud.panopto.eu');
@@ -45,21 +51,18 @@ describe('[DATA-011] H5P page policy', () => {
   it('[DATA-011] a configured Panopto site adds Panopto’s embed API to script-src, and nothing else does', () => {
     // Arrange
     const scriptsWith = (origins: string[]) =>
-      directives(
-        h5pPageCsp({ scriptHashes: ["'sha256-abc'"], externalMediaOrigins: origins }, ["'self'"]),
-      ).get('script-src');
+      directives(h5pPageCsp({ externalMediaOrigins: origins }, ["'self'"])).get('script-src');
     // Act and assert
     expect(scriptsWith(['https://media.hvl.no', 'https://hvl.cloud.panopto.eu'])).toEqual([
       "'self'",
-      "'sha256-abc'",
       PANOPTO_EMBED_API_URL,
     ]);
     expect(scriptsWith(['https://hvl.hosted.panopto.com'])).toContain(PANOPTO_EMBED_API_URL);
     // SECURITY: the file H5P.Video 1.6 inserts, as a path source; never the whole developers.panopto.com origin.
     expect(PANOPTO_EMBED_API_URL).toBe('https://developers.panopto.com/scripts/v1.2.0/embedapi.min.js');
     expect(scriptsWith(['https://hvl.cloud.panopto.eu'])).not.toContain('https://developers.panopto.com');
-    expect(scriptsWith(['https://media.hvl.no'])).toEqual(["'self'", "'sha256-abc'"]);
-    expect(scriptsWith([])).toEqual(["'self'", "'sha256-abc'"]);
+    expect(scriptsWith(['https://media.hvl.no'])).toEqual(["'self'"]);
+    expect(scriptsWith([])).toEqual(["'self'"]);
   });
 
   it('[DATA-011] only subdomains of panopto.com and panopto.eu count as Panopto sites', () => {
@@ -77,8 +80,8 @@ describe('[DATA-011] H5P page policy', () => {
 
   it('[DATA-011] a player page frames only configured media origins, never our own origin; the editor page may', () => {
     // Arrange
-    const none = { scriptHashes: [], externalMediaOrigins: [] as string[] };
-    const panopto = { scriptHashes: [], externalMediaOrigins: ['https://hvl.cloud.panopto.eu'] };
+    const none = { externalMediaOrigins: [] as string[] };
+    const panopto = { externalMediaOrigins: ['https://hvl.cloud.panopto.eu'] };
     const frames = (settings: typeof none, player: boolean) =>
       directives(h5pPageCsp(settings, ["'self'"], { playerFiles: player })).get('frame-src');
     // Act and assert
@@ -89,7 +92,7 @@ describe('[DATA-011] H5P page policy', () => {
   });
 
   it('[LTI-003] frame-ancestors is what the caller gives, or none at all', () => {
-    const settings = { scriptHashes: [], externalMediaOrigins: [] };
+    const settings = { externalMediaOrigins: [] };
     expect(
       directives(h5pPageCsp(settings, ["'self'", 'https://hvl.instructure.com'])).get('frame-ancestors'),
     ).toEqual(["'self'", 'https://hvl.instructure.com']);

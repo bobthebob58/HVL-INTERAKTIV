@@ -16,17 +16,20 @@
  *     ./fileValueConformance.ts says; video and audio a list of such values.
  *   - A list holds at most its field's `max` items; what comes after them is cut, as H5P's own server software
  *     cuts it (the editor never adds more than `max`).
+ *   - The address of a link field holds no character that can end the HTML attribute it is written into
+ *     (./linkAddressConformance.ts, D-140); it is fitted in `apply`, so on a save it is the cleaned text that is read.
  *   - What does not fit is removed, never refused: the key from its object, the item from its list. Text is not
  *     judged here (./lumiTextSanitizer.ts), nor structure the walker refuses (./paramsWalker.ts).
  *   - Nothing changes before `apply`: the fixes are collected during the walk, so a refusal the walk or the checks
  *     after it raise leaves the parameters as they came.
- * Collaborators: ./paramsWalker.ts (calls `visit` and `onFields`), ./fileValueConformance.ts, ./SubContentPolicy.ts
- *   (runs it on every save).
+ * Collaborators: ./paramsWalker.ts (calls `visit` and `onFields`), ./fileValueConformance.ts,
+ *   ./linkAddressConformance.ts, ./SubContentPolicy.ts (runs it on every save).
  * Tests: apps/server/test/h5p/semantics/semanticsConformance.test.ts,
  *   apps/server/test/h5p/semantics/semanticsConformance.property.test.ts
  */
 import type { ISemanticsEntry } from '@lumieducation/h5p-server/build/src/types.js';
 import { fileValueFixes, finiteNumber, type ConformanceFix, type FileKind } from './fileValueConformance.js';
+import { fitLinkAddress, isLinkField } from './linkAddressConformance.js';
 import type { FieldsVisitor, ParamsVisit, ParamsVisitor } from './paramsWalker.js';
 
 // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/SemanticsEnforcer.ts lists these checks as not yet done ("Filter out params that are not valid per se").
@@ -94,6 +97,7 @@ export interface SemanticsConformance {
 export function semanticsConformance(): SemanticsConformance {
   const fixes: ConformanceFix[] = [];
   const lists: { readonly list: unknown[]; readonly kept: unknown[] }[] = [];
+  const links: Record<string, unknown>[] = [];
   const removeUndeclared = (object: Record<string, unknown>, declared: ReadonlySet<string>): void => {
     for (const [key, value] of Object.entries(object)) {
       if (declared.has(key) || (key === 'subContentId' && isSubContentId(value))) continue;
@@ -136,6 +140,8 @@ export function semanticsConformance(): SemanticsConformance {
       else if (fitted !== value) fixes.push({ set: String(key), on: container, to: fitted });
     } else if (type === 'file' || type === 'image' || type === 'video' || type === 'audio') {
       fitFiles(semantics, value, container, String(key));
+    } else if (isLinkField(semantics) && isObject(value)) {
+      links.push(value);
     }
   };
   return {
@@ -153,6 +159,8 @@ export function semanticsConformance(): SemanticsConformance {
         kept.forEach((item, at) => (list[at] = item));
         list.length = kept.length;
       }
+      // WHY: last, and on the value as it is now: on a save the walk has cleaned the address's text by then.
+      for (const link of links) changed += fitLinkAddress(link) ? 1 : 0;
       return changed;
     },
   };

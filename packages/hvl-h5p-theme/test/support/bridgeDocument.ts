@@ -44,6 +44,11 @@ export interface BridgeOptions {
   /** `H5P.isFramed` and `H5P.externalEmbed`, which the test may change later through `h5p`. */
   readonly isFramed?: boolean;
   readonly frameClass?: string;
+  /**
+   * Where the configuration sits: the page's own block (the default), the same script in the body, a script of
+   * another type in the head, or another element with the block's ID.
+   */
+  readonly block?: 'own' | 'scriptInBody' | 'otherType' | 'otherElement';
 }
 
 /** The learner's configuration in the portal. */
@@ -61,10 +66,24 @@ export const portalConfig = (): Record<string, unknown> => ({
  */
 export function openBridgeDocument(options: BridgeOptions = {}) {
   const config = options.config === undefined ? portalConfig() : options.config;
-  const block = config
-    ? `<script type="application/json" id="hvl-xapi-bridge">${JSON.stringify(config)}</script>`
-    : '';
-  const dom = new JSDOM(`<!doctype html><html><head>${block}</head><body></body></html>`, {
+  const json = config ? JSON.stringify(config) : '';
+  const script = (type: string) => `<script type="${type}" id="hvl-xapi-bridge">${json}</script>`;
+  const place = options.block ?? 'own';
+  const head = !config
+    ? ''
+    : place === 'own'
+      ? script('application/json')
+      : place === 'otherType'
+        ? script('text/plain')
+        : '';
+  const body = !config
+    ? ''
+    : place === 'scriptInBody'
+      ? script('application/json')
+      : place === 'otherElement'
+        ? `<div id="hvl-xapi-bridge">${json}</div>`
+        : '';
+  const dom = new JSDOM(`<!doctype html><html><head>${head}</head><body>${body}</body></html>`, {
     url: 'https://interaktiv.hvl.no/h5p/play/x',
     runScripts: 'outside-only',
     virtualConsole: new VirtualConsole(),

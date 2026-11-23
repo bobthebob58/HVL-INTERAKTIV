@@ -9,7 +9,8 @@
  *      (PROD-003) posts `hvli:go-to-field` with a path for this page. «Lagre» waits for H5P's editor
  *      (./editorStart.js): a click before it could save used to leave the button disabled for good.
  * Spec: H5P-002, H5P-007, UD-006, UD-013, PROD-003, PROD-013
- * Invariants: settings come only from `#hvl-editor-config`; `hvli:content-saved` and `hvli:content-copied` go to, and
+ * Invariants: settings come only from `#hvl-editor-config`, read only when it is the inert JSON script in the page's
+ *   head (D-140); `hvli:content-saved` and `hvli:content-copied` go to, and
  *   `hvli:go-to-field` is taken from, the parent on our own origin only; server text is written as text, never as
  *   markup; «Lagre» is disabled while H5P's editor cannot save, and meanwhile the status says the activity is
  *   opening (not while a new activity waits for its content type); the save choice replaces the failure text of its
@@ -33,7 +34,13 @@
 
 (function startEditor() {
   var block = document.getElementById('hvl-editor-config');
-  if (!block || !window.H5PEditor || !window.H5PIntegration) return;
+  // SECURITY: only the inert JSON element the page wrote in its head is the page's own block (D-140).
+  var own =
+    block &&
+    block.tagName === 'SCRIPT' &&
+    block.type === 'application/json' &&
+    block.parentNode === document.head;
+  if (!own || !window.H5PEditor || !window.H5PIntegration) return;
   var config = JSON.parse(block.textContent || '{}');
   var ns = window.H5PEditor;
   var saveButton = document.getElementById('hvl-editor-save');

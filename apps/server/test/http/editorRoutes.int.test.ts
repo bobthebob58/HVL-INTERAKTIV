@@ -44,7 +44,7 @@ describeWithServices('editor pages', () => {
       expect(res.status).toBe(200);
       expect(res.headers['cache-control']).toBe('no-store');
       expect(res.headers['x-frame-options']).toBe('SAMEORIGIN');
-      expect(res.headers['content-security-policy']).toMatch(/script-src 'self' 'sha256-[^;]+;/);
+      expect(res.headers['content-security-policy']).toMatch(/script-src 'self';/);
       expect(res.headers['content-security-policy']).not.toContain("'unsafe-inline' 'sha");
       expect(res.headers['content-security-policy']).toMatch(/frame-ancestors 'self'$/);
       expect(inlineScriptTags(res.text)).toEqual([]);

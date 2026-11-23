@@ -11,7 +11,8 @@
  *   - Every `library` value anywhere names a library its field offers (exact "H5P.Name x.y", as Lumi checks),
  *     and never an excluded type; a `library` value outside any library field (under a key the semantics do not
  *     define) is refused too. Otherwise 403 `hvl:sub-content-not-allowed` names the library.
- *   - Text that is a list item is sanitised with Lumi's rules. The content's metadata, and everything the
+ *   - Every text, a list item or not, is sanitised by its field's rule: Lumi's for a field with `tags`, plain
+ *     text for any other (./lumiTextSanitizer.ts, D-140). The content's metadata, and everything the
  *     "Rights of use" dialog renders in the parameters (metadata, copyright, file paths, alt texts), are cleaned
  *     by ./rightsOfUse.ts; an unsafe file path is refused with 400 `hvl:unsafe-file-path`.
  *   - Once every refusal has had its say, the parameters are fitted to their semantics, last of all: keys no
@@ -109,9 +110,10 @@ export class SubContentPolicy {
       if (EXCLUDED_SUB_CONTENT.has(machineName) || !offered.includes(entry.library))
         throw notAllowed(machineName);
       reached.add(entry);
-    } else if (semantics.type === 'text' && Array.isArray(container)) {
-      // SECURITY: Lumi's enforcer never reaches list items (D-039), so they are sanitised here.
-      container[key as number] = this.text.sanitizeText(semantics, value);
+    } else if (semantics.type === 'text' && (Array.isArray(container) || typeof value === 'string')) {
+      // SECURITY: Lumi's enforcer never reaches list items (D-039), and its rule for a field without `tags` keeps
+      // links and tables (D-140): every text is cleaned here, before Lumi reads it.
+      (container as Record<string | number, unknown>)[key] = this.text.sanitizeText(semantics, value);
     }
   }
 }

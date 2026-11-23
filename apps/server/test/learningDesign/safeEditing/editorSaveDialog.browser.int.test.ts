@@ -61,7 +61,7 @@ describeWithServices('[PROD-013] the save choice dialog in the editor page (prob
         const inline = await addInlineScript(probe.frame);
         // Assert: the probe file (loaded by openEditorWithProbe) ran under the same policy. WHY: page.evaluate is
         // DevTools evaluation, which no page policy governs (it ran above), so it cannot stand in for a page script.
-        expect(probe.csp).toMatch(/script-src 'self' 'sha256-[^']+'(;| )/);
+        expect(probe.csp).toMatch(/script-src 'self';/);
         expect(probe.csp).not.toMatch(/script-src[^;]*'unsafe-(inline|eval)'/);
         expect(inline).toEqual({ ran: false, refused: ['script-src-elem'] });
         expect(await probe.frame.evaluate(() => 'hvliProbeSaveChoice' in window)).toBe(true);

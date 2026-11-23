@@ -118,7 +118,8 @@ describeWithServices('real H5P content types', () => {
         });
         // Assert
         const csp = response?.headers()['content-security-policy'] ?? '';
-        expect(csp).toMatch(/script-src 'self' 'sha256-[^']+'(;|$)/);
+        // WHY: our own script files only; no inline script is allowed, by a hash or otherwise (D-140).
+        expect(csp).toMatch(/script-src 'self'(;|$)/);
         expect(ran).toBe(0);
         await page.close();
       }, 60_000);

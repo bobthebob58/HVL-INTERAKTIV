@@ -140,7 +140,7 @@ describeWithServices('[PROD-013] the save choice dialog in Canvas’s frame (pro
       await page.keyboard.press('Escape');
       await eventually(() => probeLog(tool).then((l) => l.log.at(-2))).toBe('cancel');
       // Assert: the same strict policy as the portal's editor page (D-070)
-      expect(await (await edit).headerValue('content-security-policy')).toMatch(/script-src 'self' 'sha256-/);
+      expect(await (await edit).headerValue('content-security-policy')).toMatch(/script-src 'self';/);
       expect(initial).toBe(CANCEL);
       expect(hits).toBe('outer-after');
       expect(nativeTab).toEqual(['outer-after']);

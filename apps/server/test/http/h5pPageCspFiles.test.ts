@@ -11,7 +11,6 @@ import { h5pPageCsp, type H5pPageCspSettings } from '../../src/http/h5pPageCsp.j
 const FILES = 'https://files.interaktiv.hvl.no';
 const PANOPTO = 'https://hvl.cloud.panopto.eu';
 const settings: H5pPageCspSettings = {
-  scriptHashes: ["'sha256-abc='"],
   externalMediaOrigins: [PANOPTO],
   filesOrigin: FILES,
 };
