@@ -89,7 +89,8 @@ describeWithServices('[PROD-003] the save gate on a real ImageHotspots activity'
       // Assert
       expect(res.status).toBe(200);
       expect((await stored(id)).params).toEqual(predicted?.params);
-      expect(predicted?.params).toMatchObject({ backgroundImageAltText: ' over <b>campus</b>' });
+      // WHY: the alternative text is a field without a `tags` list, so it is stored as plain text (D-140).
+      expect(predicted?.params).toMatchObject({ backgroundImageAltText: ' over campus' });
       expect(params.backgroundImageAltText).toBe('<style>Kart</style> over <b>campus</b>');
     }, 60_000);
   });
