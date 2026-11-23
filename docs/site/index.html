@@ -1093,7 +1093,10 @@ inside the h5p iframe.
   relays the statements of its own iframes to that document's `h5p.externaldispatcher`. it never runs in core's
   iframes, in the next.js page around them or in the editor. the theme part of this requirement is unchanged. for
   the bridge, the acceptance therefore looks at the player document: the bridge loads there for a learner, under the
-  page's script policy, and not for anyone else (d-102; `lti-010` checks that statements arrive).">
+  page's script policy, and not for anyone else (d-102; `lti-010` checks that statements arrive).
+- **amended (d-140, 2026-11-23):** the h5p pages allow no inline script: `script-src` no longer holds the hash of
+  core's constant inline script, which no page of ours runs. the pages' scripts read their json data block only
+  from the inert script element in the page's head.">
 <summary><span class="req-id">H5P-009</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Inject theme and client scripts into player and editor</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Use <code>customization.global.styles</code> and <code>customization.global.scripts</code>, or <code>alterLibraryFiles</code>, to add
 <code>packages/hvl-h5p-theme/dist/hvl-h5p-theme.css</code> (<a class="req-ref" href="#r-UD-011"><code>UD-011</code></a>) and the xAPI bridge script (<a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a>)
@@ -1118,6 +1121,9 @@ relays the statements of its own iframes to that document&#39;s <code>H5P.extern
 iframes, in the Next.js page around them or in the editor. The theme part of this requirement is unchanged. For
 the bridge, the acceptance therefore looks at the player document: the bridge loads there for a learner, under the
 page&#39;s script policy, and not for anyone else (D-102; <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> checks that statements arrive).</li>
+<li><strong>Amended (D-140, 2026-11-23):</strong> the H5P pages allow no inline script: <code>script-src</code> no longer holds the hash of
+Core&#39;s constant inline script, which no page of ours runs. The pages&#39; scripts read their JSON data block only
+from the inert script element in the page&#39;s head.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-H5P-009">01 H5P engine and security, H5P-009</a> · H5P engine</p></div>
 </details>
@@ -1314,12 +1320,20 @@ be recorded in <code>DECISIONS.md</code> with an expiry date. Renovate (or Depen
 </details>
 <details class="req" id="x-SEC-008" data-area="SEC" data-priority="MUST" data-session="S2" data-status="tested" data-text="sec-008 regression test for cve-2025-47828 a test saves content with `&lt;img src=x onerror=alert(1)&gt;` in a plain-text field. it asserts that the
 stored and rendered value is escaped.
-- **verify:** `[sec-008]` unit test.">
+- **verify:** `[sec-008]` unit test.
+- **amended (d-140, 2026-11-23):** a &quot;plain-text field&quot; is every text field whose semantics give no `tags` list.
+  such a field is stored, shown and handed to the editor without markup (tags removed, `&lt;`, `&gt;` and `&amp;` as
+  references); a field with a list keeps the tags of its list. a text past its field's `maxlength` is cut as plain
+  text and ends whole, and the address of a link field holds no character that can end an html attribute.">
 <summary><span class="req-id">SEC-008</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Regression test for CVE-2025-47828</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>A test saves content with <code>&lt;img src=x onerror=alert(1)&gt;</code> in a plain-text field. It asserts that the
 stored and rendered value is escaped.</p>
 <ul>
 <li><strong>Verify:</strong> <code>[SEC-008]</code> unit test.</li>
+<li><strong>Amended (D-140, 2026-11-23):</strong> a &quot;plain-text field&quot; is every text field whose semantics give no <code>tags</code> list.
+Such a field is stored, shown and handed to the editor without markup (tags removed, <code>&lt;</code>, <code>&gt;</code> and <code>&amp;</code> as
+references); a field with a list keeps the tags of its list. A text past its field&#39;s <code>maxLength</code> is cut as plain
+text and ends whole, and the address of a link field holds no character that can end an HTML attribute.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-008">01 H5P engine and security, SEC-008</a> · Upload security</p></div>
 </details>
@@ -3975,6 +3989,9 @@ record a decision. Do not patch <code>node_modules</code>. Use <code>patch-packa
   semantics/                   DragQuestion removal, params walker, sub-content policy H5P-002, SEC-008 (S2, D-039)
     libraryReferences.ts           every `library` value Lumi would load            H5P-002, SEC-008 (S2)
     rightsOfUse.ts                 what the &quot;Rights of use&quot; dialog renders, anywhere SEC-008 (S2, D-039)
+    lumiTextSanitizer.ts           one rule for a text value: tags by its field, else plain  SEC-008 (S2, D-140)
+    textLengthCut.ts               cuts a text to its field's length, whole          SEC-008 (D-140)
+    linkAddressConformance.ts      a link field's address cannot end its attribute   SEC-008 (D-140)
     nestingDepth.ts                refuses nesting Lumi's recursive walks cannot follow  PROD-012 (S2, D-039)
     videoGuidance.ts               the English Panopto guidance on the listed video fields  H5P-010 (S6, D-111)
   permissions/                 content facts and the rule tables for HvlPermissionSystem  H5P-006 (S2)
@@ -4200,6 +4217,9 @@ relays the statements of its own iframes to that document&#39;s <code>H5P.extern
 iframes, in the Next.js page around them or in the editor. The theme part of this requirement is unchanged. For
 the bridge, the acceptance therefore looks at the player document: the bridge loads there for a learner, under the
 page&#39;s script policy, and not for anyone else (D-102; <a class="req-ref" href="#r-LTI-010"><code>LTI-010</code></a> checks that statements arrive).</li>
+<li><strong>Amended (D-140, 2026-11-23):</strong> the H5P pages allow no inline script: <code>script-src</code> no longer holds the hash of
+Core&#39;s constant inline script, which no page of ours runs. The pages&#39; scripts read their JSON data block only
+from the inert script element in the page&#39;s head.</li>
 </ul>
 <h4 id="r-H5P-010" class="req-heading" tabindex="-1"><a class="req-id" href="#r-H5P-010">H5P-010</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Panopto-first video guidance</span></h4>
 <p>Use <code>alterLibrarySemantics</code> on <code>H5P.InteractiveVideo</code> and <code>H5P.Video</code> to replace the upload field&#39;s
@@ -4308,6 +4328,10 @@ be recorded in <code>DECISIONS.md</code> with an expiry date. Renovate (or Depen
 stored and rendered value is escaped.</p>
 <ul>
 <li><strong>Verify:</strong> <code>[SEC-008]</code> unit test.</li>
+<li><strong>Amended (D-140, 2026-11-23):</strong> a &quot;plain-text field&quot; is every text field whose semantics give no <code>tags</code> list.
+Such a field is stored, shown and handed to the editor without markup (tags removed, <code>&lt;</code>, <code>&gt;</code> and <code>&amp;</code> as
+references); a field with a list keeps the tags of its list. A text past its field&#39;s <code>maxLength</code> is cut as plain
+text and ends whole, and the address of a link field holds no character that can end an HTML attribute.</li>
 </ul>
 <hr>
 <h3 id="spec-01--6-logical-data-owned-by-this-module" tabindex="-1">6. Logical data owned by this module</h3>
@@ -6418,7 +6442,7 @@ tab now sets the visibility through it (<code>PATCH /api/content/:contentId/shar
 <code>/app/play</code> also have the <strong>Innsikt</strong> and <strong>Poeng til Canvas</strong> tabs, one context at a time (D-101, D-106).</li>
 <li><strong>The H5P pages allow inline styles, and Panopto&#39;s script once a Panopto site is configured</strong> (D-070). Since S4
 the player (<code>/h5p/play/:contentId</code>, <code>/lti/play</code>) and editor pages (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>)
-send <code>script-src &#39;self&#39;</code> plus the hash of H5P Core&#39;s one constant inline script, so a script inside an activity
+send <code>script-src &#39;self&#39;</code> and allow no inline script (D-140), so a script inside an activity
 cannot run and read the page&#39;s URL token (the ltik or the CSRF token). When <code>EXTERNAL_MEDIA_ORIGINS</code> lists a
 Panopto site, <code>script-src</code> also allows one third-party file,
 <code>https://developers.panopto.com/scripts/v1.2.0/embedapi.min.js</code>, which H5P.Video needs to play Panopto videos and
@@ -7848,6 +7872,9 @@ allows it. The Next.js pages are not affected: Next.js puts the nonce on each of
 (<code>apps/server/src/web/webPageCsp.ts</code>). This is the &quot;relaxed policy&quot; of D-068&#39;s 2026-10-24 amendment. Production
 refuses <code>WEB_APP=dev</code> (<code>apps/server/src/config/productionChecks.ts</code>), <code>WEB_APP=prod</code> sends the nonce policy above
 unchanged, and the H5P pages&#39; policy has no development variant.</li>
+<li><strong>Amendment (2026-11-23, D-140):</strong> the H5P pages&#39; <code>script-src</code> no longer holds the hash of Core&#39;s inline script.
+No page of ours lets Core build its own iframe, so nothing ran by it; the policy is <code>&#39;self&#39;</code>, plus Panopto&#39;s
+file when a Panopto site is configured.</li>
 </ul>
 <h3 id="decisions--d-071--cc-by-40-is-an-allowed-licence-caniuse-lite" tabindex="-1">D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)</h3>
 <ul>
@@ -11930,6 +11957,10 @@ pattern&#39;s retry switches, fails the pin. Not decided here: whether the patte
 (<code>behaviour.enableRetry: false</code>), and so departs from <a class="req-ref" href="#r-PROD-009"><code>PROD-009</code></a> with a <code>SPEC-DEVIATION</code>; that stays the owner&#39;s
 call (Q20), and until then the book&#39;s retry stays on, as the S5 tests require.</p>
 </li>
+<li><p><strong>Amendment (2026-11-23, D-140):</strong> the page policy no longer allows Core&#39;s inline script, so H5P&#39;s own iframe
+embedding is prevented by the policy as well as by our template. The bridge&#39;s handling of that mode stays, and
+its browser test adds the script&#39;s hash itself.</p>
+</li>
 </ul>
 <h3 id="decisions--d-116--an-it-assurance-pack-for-hvl-it-and-an-sbom-generator-outside-the-specs-a-request-in-three-stages" tabindex="-1">D-116 · An IT assurance pack for HVL IT and an SBOM generator, outside the specs; a request in three stages</h3>
 <ul>
@@ -12925,6 +12956,58 @@ Panopto for large video, as the guidance already does. A file that a failed clea
 until its activity is deleted. SEC-005 and PROD-007 have an &quot;Amended&quot; line; T-33 in the threat model names the
 limit.</li>
 </ul>
+<h3 id="decisions--d-140--security-repairs-step-24-a-text-field-without-a-tag-list-is-plain-text-a-link-address-cannot-leave-its-attribute-the-h5p-pages-allow-no-inline-script" tabindex="-1">D-140 · Security repairs, step 24: a text field without a tag list is plain text; a link address cannot leave its attribute; the H5P pages allow no inline script</h3>
+<ul>
+<li><strong>Context:</strong> H5P&#39;s content types write the text of their parameters into the page as HTML. H5P&#39;s own server
+software therefore knows two kinds of text field: one whose semantics give a <code>tags</code> list keeps those tags, every
+other is made plain text. Lumi&#39;s enforcer cleans a field without a list with sanitize-html&#39;s defaults, which
+keep links, tables, headings and more, and since D-039 only list items went through our own cleaner, so a button
+label or a heading could be stored with a link or a table in it. The page policy stops script (D-070), not
+markup. Lumi also cuts a text to its field&#39;s <code>maxLength</code> after cleaning it, at a fixed position, which can end
+the stored text inside a tag or a character reference. Three smaller things lay beside it: the address of H5P&#39;s
+link field (H5P.Link, Interactive Video&#39;s &quot;go to&quot; and its hotspot) is joined into <code>&lt;a href=&quot;…&quot;&gt;</code> as text, and a
+plain text keeps its quotation marks; the pages&#39; small scripts found their data block by its ID alone; and the
+page policy allowed one inline script by its hash that no page of ours runs.</li>
+<li><strong>Decision — a text field without a <code>tags</code> list is plain text (SEC-008).</strong> <code>h5p/semantics/lumiTextSanitizer.ts</code>
+is the one rule for a text value: Lumi&#39;s for a field with <code>tags</code>, no markup at all for any other (tags removed,
+<code>&lt;</code>, <code>&gt;</code> and <code>&amp;</code> as references). What the editor sends for such a field is unchanged: a typed <code>&lt;</code> arrives as
+<code>&amp;lt;</code> and stays text. <code>SubContentPolicy</code> cleans every text field on a save, not only list items, so the rule
+holds before Lumi reads the content, and Lumi&#39;s own pass then changes nothing. The editor&#39;s form goes through
+the same rule (D-124). The player page makes a value of such a field plain when it holds a <code>&lt;</code>
+(<code>h5p/semantics/playedParams.ts</code>), so a row stored earlier is handed over like one stored now; the row is not
+rewritten (as in D-124). Not chosen: writing a refused tag out as text, as H5P&#39;s own server software does; the
+editor never sends a raw tag for such a field, so what is removed was never typed into a form. None of the 120
+installed libraries has a field with the HTML widget and no <code>tags</code> list, and the example activities of the ten
+types hold 544 plain text fields, none of which the rule changes.</li>
+<li><strong>Decision — a text past its length is cut whole (SEC-008).</strong> <code>h5p/semantics/textLengthCut.ts</code> makes the cut
+before Lumi&#39;s: a text longer than <code>maxLength</code> is cut as plain text and ends in a whole character and a whole
+character reference. A cut cannot keep markup whole and within the length, so a text that is too long keeps its
+words and not its markup; H5P&#39;s editor never sends one, and no installed library gives a field with <code>tags</code> a
+<code>maxLength</code>. Lumi&#39;s rule runs last, on text it neither changes nor cuts, so its <code>regexp</code> check stays.</li>
+<li><strong>Decision — a link field&#39;s address holds no character that ends an attribute (SEC-008).</strong>
+<code>h5p/semantics/linkAddressConformance.ts</code>, called by D-123&#39;s fitting: in the <code>url</code> of a field with <code>widget: &#39;linkWidget&#39;</code>, <code>&quot;</code>, <code>&#39;</code>, <code>&lt;</code>, <code>&gt;</code>, a backtick and a space are percent-encoded and control characters removed, as
+a browser&#39;s URL parser treats them. The address is fitted on a save (after its text is cleaned), on the player
+page and in the editor&#39;s form.</li>
+<li><strong>Decision — a page script reads only the page&#39;s own data block (SEC-008, H5P-009).</strong> <code>h5pIntegration.js</code>,
+<code>editorPage.js</code> and the xAPI bridge read their JSON block only when the element with its ID is an inert <code>&lt;script type=&quot;application/json&quot;&gt;</code> directly in the document&#39;s head, where the page writes it.</li>
+<li><strong>Decision — no inline script on an H5P page (DATA-011, H5P-009).</strong> <code>script-src</code> on the player and editor pages
+is <code>&#39;self&#39;</code> (and Panopto&#39;s one file when configured, D-070): the hash of H5P Core&#39;s constant inline script is
+gone, and <code>h5p/render/coreInlineScripts.ts</code> with it. Core writes that script only into an iframe it builds for
+an <code>iframe.h5p-iframe</code> element; the player page is that document itself, and the editor&#39;s own iframe holds
+<code>&lt;script src&gt;</code> tags only. This amends D-070, and the sentence of D-115 that the production policy allows H5P&#39;s
+own iframe embedding: a page that embedded that way would have to allow the script again, and the bridge&#39;s
+browser test for that mode adds the hash itself.</li>
+<li><strong>Verified:</strong> unit tests of the rule for one value beside Lumi&#39;s enforcer (the plain rule, the tags rule, what
+the editor sends, every length from 1 to 90), of the three places content passes (save, player page, editor
+form) and of the link address; an integration test with the ten real types (no plain field of an example
+changes; a save through the routes; a row written to the database and played); unit tests of the three scripts&#39;
+block; the policy test; and the browser tests that play all ten types and open the editor, which report no
+refused script.</li>
+<li><strong>Consequences:</strong> A label, a heading or any other plain field shows the words of what was sent, never markup. A
+text sent past its field&#39;s length, which the editor does not allow, loses its formatting. A link address with a
+quote or a space is stored percent-encoded. SEC-008 and H5P-009 have an &quot;Amended&quot; line; T-03 in the threat model
+follows.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -13095,7 +13178,8 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
 ten Nynorsk example activities; all ten install through the seed path, import, save and play in Chromium;
 R-01 settled (D-047). Found and fixed: library folders refused icon fonts (SEC-002 list applied to them)</li>
 <li><span class="task">✓ Done:</span> H5P player pages under a strict script policy (D-070): JSON data block, <code>script-src &#39;self&#39;</code> plus the hash of
-Core&#39;s one iframe script; all ten real types play under it, and an injected inline script never runs
+Core&#39;s one iframe script (the hash was removed on 2026-11-23, D-140: no page runs that script); all ten
+real types play under it, and an injected inline script never runs
 (tested on the CoursePresentation page and its frames)</li>
 <li><span class="task">✓ Done:</span> Next.js inside Express (D-067, D-068): built and dev modes, nonce on every script, credentials and the ltik
 removed before Next.js, locale header, no server endpoints in <code>apps/web</code>. Found and fixed: <code>next</code> ≤ 16.4.0 has
@@ -15862,6 +15946,56 @@ $ npm run test:e2e                                   32 passed, 1 skipped; 1 fil
 $ npx vitest run --project server                    26949 passed, 31 skipped; 1 failed in 4 files: a
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004)</code></pre>
+</li>
+<li><p><strong>2026-11-23 · Security repairs, step 24 (D-140)</strong> — A text field without a tag list is plain text, a link
+address cannot leave its attribute, and the H5P pages allow no inline script. One code commit:</p>
+<ul>
+<li>Plain text (SEC-008): <code>h5p/semantics/lumiTextSanitizer.ts</code> is the one rule for a text value, Lumi&#39;s for a
+field with <code>tags</code> and no markup for any other. <code>SubContentPolicy</code> cleans every text field on a save, the
+player page makes such a value plain when it holds a <code>&lt;</code> (<code>playedParams.ts</code>), and the editor&#39;s form goes
+through the same rule. A text past its field&#39;s <code>maxLength</code> is cut as plain text and ends whole
+(<code>textLengthCut.ts</code>, new). Tests: <code>h5p/semantics/lumiTextSanitizer.test.ts</code>, <code>textLengthCut.test.ts</code>,
+<code>plainTextFields.test.ts</code>, <code>realTypesPlainText.int.test.ts</code> (the ten real types: 544 plain fields in their
+examples, none changed by the rule).</li>
+<li>Link address (SEC-008): <code>linkAddressConformance.ts</code> (new), called by <code>semanticsConformance.ts</code>, on a save,
+on the player page and in the editor&#39;s form. Test: <code>h5p/semantics/linkAddressConformance.test.ts</code>.</li>
+<li>The pages (H5P-009, DATA-011): <code>h5pIntegration.js</code>, <code>editorPage.js</code> and the xAPI bridge read their data
+block only from the JSON script in the page&#39;s head; <code>script-src</code> is <code>&#39;self&#39;</code> without the hash of Core&#39;s
+inline script, and <code>h5p/render/coreInlineScripts.ts</code> is removed. Tests: <code>h5p/render/dataBlockScripts.test.ts</code>,
+the theme&#39;s <code>xapiBridgeConfigBlock.test.ts</code>, <code>http/h5pPageCsp.test.ts</code>; the browser tests of the ten types
+on the player and editor pages report no refused script.</li>
+<li>One existing test expected the earlier stored form of a plain field
+(<code>content/publishedSaveRealTypes.int.test.ts</code>); it now expects plain text (a second commit).</li>
+<li>D-140 added, with amendment lines under D-070 and D-115; SEC-008 and H5P-009 in spec 01 have an &quot;Amended&quot;
+line; the threat model (T-03), the architecture description, the human-review list, the evaluator guide and
+the server README follow; <code>TRACEABILITY.md</code> and the spec site regenerated. No page of the web app looks
+different, so no screenshots. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 44, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       635 passed (99 files)
+$ npx vitest run --project api-contract              98 passed
+$ npx vitest run --project tools                     541 passed (71 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             206 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files)
+$ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    26988 passed, 31 skipped; 2 failed in 5 files: a
+    privileged database (three files) and the seccomp PDF sandbox, limits of this container (DATA-010,
+    MAPPE-004), and the expectation named above, corrected afterwards (its file re-run: 5 passed)</code></pre>
 </li>
 </ul>
 

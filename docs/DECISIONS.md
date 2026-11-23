@@ -1114,6 +1114,9 @@ loading of one spec per session are kept.
   (`apps/server/src/web/webPageCsp.ts`). This is the "relaxed policy" of D-068's 2026-10-24 amendment. Production
   refuses `WEB_APP=dev` (`apps/server/src/config/productionChecks.ts`), `WEB_APP=prod` sends the nonce policy above
   unchanged, and the H5P pages' policy has no development variant.
+- **Amendment (2026-11-23, D-140):** the H5P pages' `script-src` no longer holds the hash of Core's inline script.
+  No page of ours lets Core build its own iframe, so nothing ran by it; the policy is `'self'`, plus Panopto's
+  file when a Panopto site is configured.
 
 ### D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)
 - **Context:** `next` depends on `caniuse-lite`, a browser-support data set under CC-BY-4.0, which the licence check
@@ -4905,6 +4908,9 @@ loading of one spec per session are kept.
   pattern's retry switches, fails the pin. Not decided here: whether the pattern turns the book's retry off
   (`behaviour.enableRetry: false`), and so departs from `PROD-009` with a `SPEC-DEVIATION`; that stays the owner's
   call (Q20), and until then the book's retry stays on, as the S5 tests require.
+- **Amendment (2026-11-23, D-140):** the page policy no longer allows Core's inline script, so H5P's own iframe
+  embedding is prevented by the policy as well as by our template. The bridge's handling of that mode stays, and
+  its browser test adds the script's hash itself.
 
 ### D-116 · An IT assurance pack for HVL IT and an SBOM generator, outside the specs; a request in three stages
 - **Context:** On 2026-11-05 the owner asked for an "IT assurance pack" for HVL IT, whose operations and security
@@ -5867,3 +5873,56 @@ loading of one spec per session are kept.
   Panopto for large video, as the guidance already does. A file that a failed clean-up left stays in storage
   until its activity is deleted. SEC-005 and PROD-007 have an "Amended" line; T-33 in the threat model names the
   limit.
+
+### D-140 · Security repairs, step 24: a text field without a tag list is plain text; a link address cannot leave its attribute; the H5P pages allow no inline script
+- **Context:** H5P's content types write the text of their parameters into the page as HTML. H5P's own server
+  software therefore knows two kinds of text field: one whose semantics give a `tags` list keeps those tags, every
+  other is made plain text. Lumi's enforcer cleans a field without a list with sanitize-html's defaults, which
+  keep links, tables, headings and more, and since D-039 only list items went through our own cleaner, so a button
+  label or a heading could be stored with a link or a table in it. The page policy stops script (D-070), not
+  markup. Lumi also cuts a text to its field's `maxLength` after cleaning it, at a fixed position, which can end
+  the stored text inside a tag or a character reference. Three smaller things lay beside it: the address of H5P's
+  link field (H5P.Link, Interactive Video's "go to" and its hotspot) is joined into `<a href="…">` as text, and a
+  plain text keeps its quotation marks; the pages' small scripts found their data block by its ID alone; and the
+  page policy allowed one inline script by its hash that no page of ours runs.
+- **Decision — a text field without a `tags` list is plain text (SEC-008).** `h5p/semantics/lumiTextSanitizer.ts`
+  is the one rule for a text value: Lumi's for a field with `tags`, no markup at all for any other (tags removed,
+  `<`, `>` and `&` as references). What the editor sends for such a field is unchanged: a typed `<` arrives as
+  `&lt;` and stays text. `SubContentPolicy` cleans every text field on a save, not only list items, so the rule
+  holds before Lumi reads the content, and Lumi's own pass then changes nothing. The editor's form goes through
+  the same rule (D-124). The player page makes a value of such a field plain when it holds a `<`
+  (`h5p/semantics/playedParams.ts`), so a row stored earlier is handed over like one stored now; the row is not
+  rewritten (as in D-124). Not chosen: writing a refused tag out as text, as H5P's own server software does; the
+  editor never sends a raw tag for such a field, so what is removed was never typed into a form. None of the 120
+  installed libraries has a field with the HTML widget and no `tags` list, and the example activities of the ten
+  types hold 544 plain text fields, none of which the rule changes.
+- **Decision — a text past its length is cut whole (SEC-008).** `h5p/semantics/textLengthCut.ts` makes the cut
+  before Lumi's: a text longer than `maxLength` is cut as plain text and ends in a whole character and a whole
+  character reference. A cut cannot keep markup whole and within the length, so a text that is too long keeps its
+  words and not its markup; H5P's editor never sends one, and no installed library gives a field with `tags` a
+  `maxLength`. Lumi's rule runs last, on text it neither changes nor cuts, so its `regexp` check stays.
+- **Decision — a link field's address holds no character that ends an attribute (SEC-008).**
+  `h5p/semantics/linkAddressConformance.ts`, called by D-123's fitting: in the `url` of a field with `widget:
+  'linkWidget'`, `"`, `'`, `<`, `>`, a backtick and a space are percent-encoded and control characters removed, as
+  a browser's URL parser treats them. The address is fitted on a save (after its text is cleaned), on the player
+  page and in the editor's form.
+- **Decision — a page script reads only the page's own data block (SEC-008, H5P-009).** `h5pIntegration.js`,
+  `editorPage.js` and the xAPI bridge read their JSON block only when the element with its ID is an inert `<script
+  type="application/json">` directly in the document's head, where the page writes it.
+- **Decision — no inline script on an H5P page (DATA-011, H5P-009).** `script-src` on the player and editor pages
+  is `'self'` (and Panopto's one file when configured, D-070): the hash of H5P Core's constant inline script is
+  gone, and `h5p/render/coreInlineScripts.ts` with it. Core writes that script only into an iframe it builds for
+  an `iframe.h5p-iframe` element; the player page is that document itself, and the editor's own iframe holds
+  `<script src>` tags only. This amends D-070, and the sentence of D-115 that the production policy allows H5P's
+  own iframe embedding: a page that embedded that way would have to allow the script again, and the bridge's
+  browser test for that mode adds the hash itself.
+- **Verified:** unit tests of the rule for one value beside Lumi's enforcer (the plain rule, the tags rule, what
+  the editor sends, every length from 1 to 90), of the three places content passes (save, player page, editor
+  form) and of the link address; an integration test with the ten real types (no plain field of an example
+  changes; a save through the routes; a row written to the database and played); unit tests of the three scripts'
+  block; the policy test; and the browser tests that play all ten types and open the editor, which report no
+  refused script.
+- **Consequences:** A label, a heading or any other plain field shows the words of what was sent, never markup. A
+  text sent past its field's length, which the editor does not allow, loses its formatting. A link address with a
+  quote or a space is stored percent-encoded. SEC-008 and H5P-009 have an "Amended" line; T-03 in the threat model
+  follows.

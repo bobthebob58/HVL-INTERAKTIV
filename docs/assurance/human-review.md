@@ -284,10 +284,11 @@ gradebook. Its claim bug was found only by a full test run (`PROGRESS.md`, S6 st
 
 #### A7. Page script policies and headers (about 600 lines; estimate 1 day)
 
-**Paths:** `h5p/render/playerPage.ts`, `editorPage.ts`, `coreInlineScripts.ts`, `http/h5pPageCsp.ts`,
+**Paths:** `h5p/render/playerPage.ts`, `editorPage.ts`, `render/client/h5pIntegration.js`, `http/h5pPageCsp.ts`,
 `web/webPageCsp.ts`, `http/securityHeaders.ts`, `lti/http/ltiPageHeaders.ts`.
 
-- [ ] H5P pages allow `script-src 'self'` and one hash; never `'unsafe-inline'` or `'unsafe-eval'` for scripts (D-070).
+- [ ] H5P pages allow `script-src 'self'` and no inline script: no hash, nonce, `'unsafe-inline'` or `'unsafe-eval'`
+      (D-070, D-140); the pages' scripts read their data only from the JSON block in the page's head.
 - [ ] Panopto's script is allowed only when a Panopto site is configured (`EXTERNAL_MEDIA_ORIGINS`).
 - [ ] Next.js pages use a nonce per request, and production refuses `WEB_APP=dev`.
 - [ ] No page makes a third-party request (`DATA-011`).

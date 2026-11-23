@@ -160,7 +160,8 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
       ten Nynorsk example activities; all ten install through the seed path, import, save and play in Chromium;
       R-01 settled (D-047). Found and fixed: library folders refused icon fonts (SEC-002 list applied to them)
 - [x] H5P player pages under a strict script policy (D-070): JSON data block, `script-src 'self'` plus the hash of
-      Core's one iframe script; all ten real types play under it, and an injected inline script never runs
+      Core's one iframe script (the hash was removed on 2026-11-23, D-140: no page runs that script); all ten
+      real types play under it, and an injected inline script never runs
       (tested on the CoursePresentation page and its frames)
 - [x] Next.js inside Express (D-067, D-068): built and dev modes, nonce on every script, credentials and the ltik
       removed before Next.js, locale header, no server endpoints in `apps/web`. Found and fixed: `next` ≤ 16.4.0 has
@@ -2839,4 +2840,55 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npx vitest run --project server                    26949 passed, 31 skipped; 1 failed in 4 files: a
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
+  ```
+
+- **2026-11-23 · Security repairs, step 24 (D-140)** — A text field without a tag list is plain text, a link
+  address cannot leave its attribute, and the H5P pages allow no inline script. One code commit:
+  - Plain text (SEC-008): `h5p/semantics/lumiTextSanitizer.ts` is the one rule for a text value, Lumi's for a
+    field with `tags` and no markup for any other. `SubContentPolicy` cleans every text field on a save, the
+    player page makes such a value plain when it holds a `<` (`playedParams.ts`), and the editor's form goes
+    through the same rule. A text past its field's `maxLength` is cut as plain text and ends whole
+    (`textLengthCut.ts`, new). Tests: `h5p/semantics/lumiTextSanitizer.test.ts`, `textLengthCut.test.ts`,
+    `plainTextFields.test.ts`, `realTypesPlainText.int.test.ts` (the ten real types: 544 plain fields in their
+    examples, none changed by the rule).
+  - Link address (SEC-008): `linkAddressConformance.ts` (new), called by `semanticsConformance.ts`, on a save,
+    on the player page and in the editor's form. Test: `h5p/semantics/linkAddressConformance.test.ts`.
+  - The pages (H5P-009, DATA-011): `h5pIntegration.js`, `editorPage.js` and the xAPI bridge read their data
+    block only from the JSON script in the page's head; `script-src` is `'self'` without the hash of Core's
+    inline script, and `h5p/render/coreInlineScripts.ts` is removed. Tests: `h5p/render/dataBlockScripts.test.ts`,
+    the theme's `xapiBridgeConfigBlock.test.ts`, `http/h5pPageCsp.test.ts`; the browser tests of the ten types
+    on the player and editor pages report no refused script.
+  - One existing test expected the earlier stored form of a plain field
+    (`content/publishedSaveRealTypes.int.test.ts`); it now expects plain text (a second commit).
+  - D-140 added, with amendment lines under D-070 and D-115; SEC-008 and H5P-009 in spec 01 have an "Amended"
+    line; the threat model (T-03), the architecture description, the human-review list, the evaluator guide and
+    the server README follow; `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks
+    different, so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       635 passed (99 files)
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26988 passed, 31 skipped; 2 failed in 5 files: a
+      privileged database (three files) and the seccomp PDF sandbox, limits of this container (DATA-010,
+      MAPPE-004), and the expectation named above, corrected afterwards (its file re-run: 5 passed)
   ```

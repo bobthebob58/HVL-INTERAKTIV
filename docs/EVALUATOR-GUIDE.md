@@ -322,7 +322,7 @@ the gate output lists them so (limitation 23).
    `/app/play` also have the **Innsikt** and **Poeng til Canvas** tabs, one context at a time (D-101, D-106).
 8. **The H5P pages allow inline styles, and Panopto's script once a Panopto site is configured** (D-070). Since S4
    the player (`/h5p/play/:contentId`, `/lti/play`) and editor pages (`/h5p/edit/:id`, `/h5p/new`, `/lti/edit`)
-   send `script-src 'self'` plus the hash of H5P Core's one constant inline script, so a script inside an activity
+   send `script-src 'self'` and allow no inline script (D-140), so a script inside an activity
    cannot run and read the page's URL token (the ltik or the CSRF token). When `EXTERNAL_MEDIA_ORIGINS` lists a
    Panopto site, `script-src` also allows one third-party file,
    `https://developers.panopto.com/scripts/v1.2.0/embedapi.min.js`, which H5P.Video needs to play Panopto videos and
