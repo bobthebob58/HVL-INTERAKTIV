@@ -260,7 +260,7 @@ gradebook. Its claim bug was found only by a full test run (`PROGRESS.md`, S6 st
 - [ ] PKCE (`S256`), `state` and `nonce` are tied to the browser by a single-use login cookie, and the ID token's
       signature is checked against Feide's keys (`AUTH-001`, D-057).
 - [ ] `admin` only for a Feide ID in `ADMIN_FEIDE_IDS` whose realm is in `ALLOWED_FEIDE_ORGS`
-      (`auth/feide/FeideRoleMapper.ts:162-164`).
+      (`auth/feide/FeideRoleMapper.ts:164-166`).
 - [ ] The session cookie is `__Host-` with `Secure`, `HttpOnly` and `SameSite=Lax`; sessions end after 2 hours idle or
       12 hours in all (`AUTH-003`).
 - [ ] A CSRF token is required on every unsafe method and on H5P's AJAX routes, compared in constant time

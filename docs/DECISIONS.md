@@ -703,6 +703,11 @@ loading of one spec per session are kept.
   check against Feide's JWKS on top of openid-client's claim checks.
 - **Consequences:** Feide users without a Feide ID (guests, eduGAIN) cannot log in (owner to confirm, Q12).
 
+- **Amendment (2026-11-25, D-142):** «trimmed and lower-cased» is done in ASCII only: SP and HTAB are trimmed and
+  `A`–`Z` lower-cased, every other character stays as written, and then the pattern is checked
+  (`auth/identity/feideId.ts`). Every reader of a Feide ID uses that one rule, so an ID written with a look-alike
+  character (U+212A for `k`, a no-break space at an end) is another ID, never the plain one.
+
 ### D-055 · A stable identity key ring with HKDF purposes and a rotation rule
 - **Context:** `Identity.subjectHash` and `AuthAuditEvent.ipHash` need a keyed hash whose key does not rotate every
   year (the learnerKey's key does, D-011), and the rotation must be defined (PROGRESS S3).
@@ -762,6 +767,10 @@ loading of one spec per session are kept.
   the session's ID-token blob is sealed once at login, so a retired `DATA_ENCRYPTION_KEYS` key is kept at least
   12 hours. Reverse proxies must not cache responses that carry `Set-Cookie` and must not log query strings
   (`csrf`, `ltik`).
+
+- **Amendment (2026-11-25, D-142):** a logout clears the session cookie only for the session it ended; a request
+  without a live session changes no cookie. The order to delete a dead session cookie is added when an answer's
+  headers are written, and only to an answer marked `no-store` or `private` (`auth/session/staleCookieClearing.ts`).
 
 ### D-058 · H5P URL tokens and signed content-file URLs
 - **Context:** `H5P-007` asks that H5P's AJAX and user-data URLs carry the ltik (Canvas) or a CSRF token (portal).
@@ -1911,6 +1920,11 @@ loading of one spec per session are kept.
     It is never shown to anyone but the authors of activities placed in that course.
   - **The prompt:** the metadata prompt shows in the first-publish dialog only, not when an already published
     activity is published again with new reasons.
+
+- **Amendment (2026-11-25, D-142):** the purpose, the outcomes and the rationale are held to the contract's rule
+  for typed text (`packages/api-contract/src/textRules.ts`): besides control characters, U+2028, U+2029 and the
+  bidirectional controls are refused (400). The web form takes them out of pasted text before it checks and sends
+  it (`apps/web/src/config/typedText.ts`), as it already turned a pasted tab in the purpose into a space.
 
 ### D-088 · The alignment planner: one course, outcomes × phases, two gap rules
 - **Context:** `PED-031` asks for a grid of learning outcomes × phases for one course, with gaps highlighted and
@@ -6004,3 +6018,64 @@ loading of one spec per session are kept.
   More than 2 000 launches a minute from one address get the «try again» page. The load scripts and the test
   launch driver send `Sec-Fetch-Site: same-origin` on the last step, as a browser does. LTI-001, LTI-003, LTI-007
   and LTI-008 have an "Amended" line; T-13, T-18, T-60, T-63 and T-111 in the threat model follow.
+
+### D-142 · Security repairs, step 26: a logout and a cookie order follow the session; one Feide ID rule; typed text holds no hidden characters; the editor endpoint takes known actions only
+- **Context:** Five places where a request was read more loosely than its rule said. (1) `POST /auth/logout` asked
+  for the CSRF token only when the request carried a live session, and cleared the session cookie either way. A
+  form post from another site carries no `SameSite=Lax` cookie, so it met no check, and its answer still told the
+  browser to delete the cookie: any page could log a person out of the portal. (2) A request whose session cookie
+  named no live session had the cookie cleared on whatever answer it got, also on H5P's core and library files and
+  the web app's files under `/_next/static/`, which are `public` and kept by caches for a year; a shared cache that
+  kept such an answer would hand its `Set-Cookie` to other people. (3) A Feide ID was trimmed and lower-cased by
+  JavaScript's Unicode rules before it was checked: `trim` removes a no-break space or a byte-order mark, and
+  `toLowerCase` turns U+212A (the Kelvin sign) into `k`. A login ID in Canvas written with such a character named,
+  through `custom.feide_login` (AUTH-005), the Feide account of the plain ID. (4) The free-text fields of the API
+  took any character: U+0000, which PostgreSQL refuses (the request ended as a 500), the line and paragraph
+  separators U+2028 and U+2029 (a line break that the learner purpose's «one line» rule did not see), and the
+  bidirectional controls, which reorder what a reader sees. (5) Lumi's AJAX endpoint answers an unknown POST action
+  with status 500, so an author could raise that answer and its error-level log line at will.
+- **Decision — a logout ends what its cookie names (AUTH-003).** `endPortalSession` clears the session cookie only
+  when the request had a live session, which the route has by then held to the CSRF token. A request without one
+  gets the same redirect to `/`, `no-store`; it changes no cookie and writes no audit row.
+- **Decision — the order to delete a dead cookie never travels on an answer a cache may keep (AUTH-003).**
+  `auth/session/staleCookieClearing.ts`: the session middleware no longer sets the clearing cookie when it finds a
+  dead session ID. The order is added when the answer's headers are written (`writeHead`), and only when
+  `Cache-Control` says `no-store` or `private`. An answer that names no caching gets `no-store` and the order: it
+  answers one browser's cookie. An answer that names any other caching (`public`, `max-age`, `no-cache`) never
+  carries it; the next answer about the person does. An answer that sets the session cookie itself (a login) is
+  left as it is. Next.js writes its own headers, so the rule is tested on the built web app's real answers.
+- **Decision — one Feide ID rule, in ASCII only (AUTH-002, AUTH-005, DATA-008).** `auth/identity/feideId.ts`
+  (`normaliseFeideId`) with `auth/identity/asciiText.ts`: SP and HTAB are trimmed, `A`–`Z` are lower-cased, every
+  other character stays as written, and then `FEIDE_ID_PATTERN` is checked. Every reader uses it: the login's
+  claims, `custom.feide_login`, `ADMIN_FEIDE_IDS` and the other configured lists, the people search, the
+  data-subject tool, and the two guards that refuse a Feide subject that is not normalised; Feide group IDs are
+  compared in ASCII case too. Two IDs as written now give one Feide ID only when they differ in ASCII case or in
+  blanks at their ends. Not decided: whether a Feide ID may hold a letter outside ASCII at all. Feide's rule for
+  `eduPersonPrincipalName` could not be read from the build environment, so the rule does not depend on it: such a
+  letter is kept as written and never folded *(verify with HVL IT, Q32; a stricter pattern is a one-line change)*.
+- **Decision — typed text holds no control character, hidden line break or bidirectional control (PED-030,
+  PED-032, UD-022, PROD-007).** `packages/api-contract/src/textRules.ts`: a one-line text refuses Unicode `Cc`,
+  `Zl`, `Zp` and `Bidi_Control`; a free text is the same but keeps tab, CR and LF. It holds the learner purpose (one
+  line), the outcomes, the rationale, a reason for publishing with its rule ID and path, and the people search. A
+  request that breaks it is a 400, like any other body the contract refuses. Other format characters (a soft
+  hyphen, the joiner inside an emoji) are text and stay. The web forms clean pasted text before they check and
+  send it (`apps/web/src/config/typedText.ts`): a bidirectional control is dropped, a hidden line break becomes a
+  line break (a space on one line) and any other control character a space; a test keeps the web app's copy of the
+  classes equal to the contract's. A stored learner purpose that breaks the rule is not handed to learners
+  (`learnerInfoFields` reads it through the schema).
+- **Decision — the editor's AJAX endpoint takes known actions only (H5P-002).** `http/routes/ajaxRoutes.ts`: a
+  request names exactly one action that Lumi's `H5PAjaxEndpoint` knows for its method (three for GET, seven for
+  POST). A missing, repeated or unknown action is 400 `error.badRequest`, after the role check and before any body
+  is read.
+- **Verified:** unit tests of the cookie order with every way a route writes its headers, an integration test of
+  the session middleware on Redis, of the logout route and of the whole app's shared H5P files, and one against the
+  built web app; unit tests of the ASCII folding and of the Feide ID rule at every reader, and the people search on
+  the database; contract tests of the two text patterns and of every field that keeps them, route tests that each
+  field answers 400 and logs no fault, and web tests that the forms send cleaned text that the contract's schema
+  takes; route tests of every refused and every known AJAX action. The new tests fail on the code before this step.
+- **Consequences:** A browser with a dead session cookie keeps it until the next answer about the person. A Feide
+  ID with a capital letter outside ASCII is no longer folded (none is known at HVL). Text stored before this step is
+  not changed; a stored purpose that breaks the rule stays hidden from learners until it is saved again. No page
+  looks different and no message is new. AUTH-002, AUTH-003, AUTH-005, PED-030, PED-032, UD-022, PROD-007 and
+  H5P-002 have an "Amended" line; D-054, D-057 and D-087 an amendment; T-02, T-05, T-21 and the new T-25 in the
+  threat model follow.

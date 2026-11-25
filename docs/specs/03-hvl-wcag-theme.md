@@ -224,6 +224,9 @@ When an author publishes despite an *error* (`PROD-003`), a `ValidationAcknowled
 `(contentId, ruleId, path, reason, userId, at)` is stored. Acknowledgements are listed in insight and
 in the portfolio export.
 - **Verify:** Integration test.
+- **Amended (D-142, 2026-11-25):** a reason is typed text (no control character other than a tab or a line break,
+  no U+2028 or U+2029, no bidirectional control), and its rule ID and path are one line each; the dialog takes
+  these out of a pasted reason before it checks and sends it.
 
 ---
 

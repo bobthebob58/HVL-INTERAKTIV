@@ -661,16 +661,25 @@ hvl content bank so that colleagues can *duplicate and adapt* it.
   never copies learner data.
 - **verify:** integration tests.
 - **amended (d-139, 2026-11-22):** a duplicate is held to the limit for one activity's files (`sec-005`), so one
-  copy writes at most 200 mb.">
+  copy writes at most 200 mb.
+
+- **amended (d-142, 2026-11-25):** the search text is one line of typed text (no control character, hidden line
+  break or bidirectional control), and a feide id in it is read by the login's rule (`auth-002`).">
 <summary><span class="req-id">PROD-007</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Co-authoring and an institutional content bank</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Authors can add co-authors (HVL staff found by name or Feide ID) and can publish an activity to the
 HVL content bank so that colleagues can <em>duplicate and adapt</em> it.</p>
 <ul>
-<li><strong>Acceptance:</strong> A duplicate keeps a link to its source and the original author&#39;s attribution. It
-never copies learner data.</li>
-<li><strong>Verify:</strong> Integration tests.</li>
-<li><strong>Amended (D-139, 2026-11-22):</strong> a duplicate is held to the limit for one activity&#39;s files (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>), so one
-copy writes at most 200 MB.</li>
+<li><p><strong>Acceptance:</strong> A duplicate keeps a link to its source and the original author&#39;s attribution. It
+never copies learner data.</p>
+</li>
+<li><p><strong>Verify:</strong> Integration tests.</p>
+</li>
+<li><p><strong>Amended (D-139, 2026-11-22):</strong> a duplicate is held to the limit for one activity&#39;s files (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>), so one
+copy writes at most 200 MB.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> the search text is one line of typed text (no control character, hidden line
+break or bidirectional control), and a Feide ID in it is read by the login&#39;s rule (<a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a>).</p>
+</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PROD-007">00 Product and pedagogy, PROD-007</a> · Product</p></div>
 </details>
@@ -886,17 +895,25 @@ every container's sub-content selector (via `alterlibrarysemantics`).
   creatable. (b) saving content whose main library is not in the list returns http 403 with a
   translated error. (c) no container semantics offer `h5p.dragquestion`. (d) the whitelist is one
   constant, `hvl_top10_content_types`, with a comment linking here.
-- **verify:** unit tests for (a)–(c); test names start with `[h5p-002]`.">
+- **verify:** unit tests for (a)–(c); test names start with `[h5p-002]`.
+
+- **amended (d-142, 2026-11-25):** the editor's ajax endpoint takes a request that names exactly one action its
+  library knows for the method; a missing, repeated or unknown action is 400 before any body is read.">
 <summary><span class="req-id">H5P-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Ten-type authoring whitelist</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>HvlTop10ContentTypeFilter</code> makes only the ten machine names in §3 appear as creatable in the editor
 Hub list. Their dependencies remain installable. <code>H5P.DragQuestion</code> is removed from the options of
 every container&#39;s sub-content selector (via <code>alterLibrarySemantics</code>).</p>
 <ul>
-<li><strong>Acceptance:</strong> (a) The content-type-cache AJAX response contains exactly the ten machine names as
+<li><p><strong>Acceptance:</strong> (a) The content-type-cache AJAX response contains exactly the ten machine names as
 creatable. (b) Saving content whose main library is not in the list returns HTTP 403 with a
 translated error. (c) No container semantics offer <code>H5P.DragQuestion</code>. (d) The whitelist is one
-constant, <code>HVL_TOP10_CONTENT_TYPES</code>, with a comment linking here.</li>
-<li><strong>Verify:</strong> Unit tests for (a)–(c); test names start with <code>[H5P-002]</code>.</li>
+constant, <code>HVL_TOP10_CONTENT_TYPES</code>, with a comment linking here.</p>
+</li>
+<li><p><strong>Verify:</strong> Unit tests for (a)–(c); test names start with <code>[H5P-002]</code>.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> the editor&#39;s AJAX endpoint takes a request that names exactly one action its
+library knows for the method; a missing, repeated or unknown action is 400 before any body is read.</p>
+</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-H5P-002">01 H5P engine and security, H5P-002</a> · H5P engine</p></div>
 </details>
@@ -1396,7 +1413,11 @@ they require hvl's fs integration in feide *(verify)*.
 | organisation not in `allowed_feide_orgs` (default `hvl.no`) | `learner` on content shared with &quot;anyone with feide&quot;; otherwise denied |
 
 - **acceptance:** a table-driven test covers every row, including users with both `student` and `employee` (→ `author`).
-- **verify:** unit tests of `feiderolemapper`.">
+- **verify:** unit tests of `feiderolemapper`.
+
+- **amended (d-142, 2026-11-25):** the feide id is normalised by one rule at every reader: sp and htab trimmed,
+  `a`–`z` lower-cased, every other character as written, then the pattern. group ids and the configured lists fold
+  ascii case the same way. whether a feide id may hold letters outside ascii is still *(verify)* (q32).">
 <summary><span class="req-id">AUTH-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Map Feide affiliation to roles</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>After login, call <code>GET https://groups-api.dataporten.no/groups/me/groups</code> with the user&#39;s Feide access
 token (<code>Authorization: Bearer</code>). Find the organisation group (<code>type: &quot;fc:org&quot;</code>, <code>id: &quot;fc:org:&lt;realm&gt;&quot;</code>,
@@ -1418,8 +1439,14 @@ they require HVL&#39;s FS integration in Feide <em>(verify)</em>.</p>
 <td>Organisation not in <code>ALLOWED_FEIDE_ORGS</code> (default <code>hvl.no</code>)</td><td><code>learner</code> on content shared with &quot;anyone with Feide&quot;; otherwise denied</td></tr>
 </tbody></table></div>
 <ul>
-<li><strong>Acceptance:</strong> A table-driven test covers every row, including users with both <code>student</code> and <code>employee</code> (→ <code>author</code>).</li>
-<li><strong>Verify:</strong> Unit tests of <code>FeideRoleMapper</code>.</li>
+<li><p><strong>Acceptance:</strong> A table-driven test covers every row, including users with both <code>student</code> and <code>employee</code> (→ <code>author</code>).</p>
+</li>
+<li><p><strong>Verify:</strong> Unit tests of <code>FeideRoleMapper</code>.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> the Feide ID is normalised by one rule at every reader: SP and HTAB trimmed,
+<code>A</code>–<code>Z</code> lower-cased, every other character as written, then the pattern. Group IDs and the configured lists fold
+ASCII case the same way. Whether a Feide ID may hold letters outside ASCII is still <em>(verify)</em> (Q32).</p>
+</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-AUTH-002">02 Feide, LTI and grades, AUTH-002</a> · Feide login</p></div>
 </details>
@@ -1434,7 +1461,11 @@ server-side session only, encrypted at rest and deleted at logout or expiry (d-0
 - **amended (d-131, 2026-11-21):** answers of `/api`, `/auth/session` and the signed-in h5p routes are `no-store`,
   `cross-origin-resource-policy: same-origin` and framed by our own origin only; portal pages send
   `cross-origin-opener-policy: same-origin` (lti pages do not). a page whose request is refused for its csrf
-  token asks `/auth/session` once for the current one and repeats the request.">
+  token asks `/auth/session` once for the current one and repeats the request.
+
+- **amended (d-142, 2026-11-25):** a logout clears the session cookie only for the session it ended; a request
+  without a live session changes no cookie. a cookie that names no live session is cleared only by an answer
+  marked `no-store` or `private`, never by a file that caches may keep.">
 <summary><span class="req-id">AUTH-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Portal session</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The server keeps the session in Redis and gives the browser an opaque ID in a cookie
 (<code>__Host-hvli_sid</code>; <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code>, <code>Path=/</code>). The session expires after
@@ -1444,11 +1475,17 @@ Logout clears the session and redirects the browser to Feide&#39;s <code>end_ses
 Customer Portal) and <code>id_token_hint</code>. Feide requires both, so the raw ID token is kept in the
 server-side session only, encrypted at rest and deleted at logout or expiry (D-021).</p>
 <ul>
-<li><strong>Verify:</strong> Integration tests (expiry, CSRF rejection, logout).</li>
-<li><strong>Amended (D-131, 2026-11-21):</strong> answers of <code>/api</code>, <code>/auth/session</code> and the signed-in H5P routes are <code>no-store</code>,
+<li><p><strong>Verify:</strong> Integration tests (expiry, CSRF rejection, logout).</p>
+</li>
+<li><p><strong>Amended (D-131, 2026-11-21):</strong> answers of <code>/api</code>, <code>/auth/session</code> and the signed-in H5P routes are <code>no-store</code>,
 <code>Cross-Origin-Resource-Policy: same-origin</code> and framed by our own origin only; portal pages send
 <code>Cross-Origin-Opener-Policy: same-origin</code> (LTI pages do not). A page whose request is refused for its CSRF
-token asks <code>/auth/session</code> once for the current one and repeats the request.</li>
+token asks <code>/auth/session</code> once for the current one and repeats the request.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> a logout clears the session cookie only for the session it ended; a request
+without a live session changes no cookie. A cookie that names no live session is cleared only by an answer
+marked <code>no-store</code> or <code>private</code>, never by a file that caches may keep.</p>
+</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-AUTH-003">02 Feide, LTI and grades, AUTH-003</a> · Feide login</p></div>
 </details>
@@ -1486,7 +1523,11 @@ only when `lti-004` yields `author`, ignores unresolved values that start with `
 for learners. in lti 1.3 canvas releases custom-field substitutions whatever the `privacy_level`, so a
 test launch must confirm the value and that it equals the feide id *(verify with tecopp)*. if it does not,
 use a one-time &quot;link with feide&quot; pop-up instead. learner identities are **never** linked across modes.
-- **verify:** integration test of the linking flow.">
+- **verify:** integration test of the linking flow.
+
+- **amended (d-142, 2026-11-25):** `feide_login` is read by the login's own feide id rule (`auth-002`), so a login
+  id in canvas that only looks like a feide id (another character that unicode would fold or trim) names no
+  account.">
 <summary><span class="req-id">AUTH-005</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Link an author's Canvas identity to their Feide identity</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The aim is one personal library whether a teacher arrives through Canvas or the portal. To link
 them, read the custom claim <code>feide_login = $Canvas.user.loginId</code>, configured <strong>only on the Deep Linking
@@ -1496,7 +1537,12 @@ for learners. In LTI 1.3 Canvas releases custom-field substitutions whatever the
 test launch must confirm the value and that it equals the Feide ID <em>(verify with TeCopp)</em>. If it does not,
 use a one-time &quot;Link with Feide&quot; pop-up instead. Learner identities are <strong>never</strong> linked across modes.</p>
 <ul>
-<li><strong>Verify:</strong> Integration test of the linking flow.</li>
+<li><p><strong>Verify:</strong> Integration test of the linking flow.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> <code>feide_login</code> is read by the login&#39;s own Feide ID rule (<a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a>), so a login
+ID in Canvas that only looks like a Feide ID (another character that Unicode would fold or trim) names no
+account.</p>
+</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-AUTH-005">02 Feide, LTI and grades, AUTH-005</a> · Feide login</p></div>
 </details>
@@ -2411,13 +2457,19 @@ validation run parses each distinct text once.</li>
 <details class="req" id="x-UD-022" data-area="UD" data-priority="MUST" data-session="S4" data-status="tested" data-text="ud-022 acknowledgements are recorded when an author publishes despite an *error* (`prod-003`), a `validationacknowledgement`
 `(contentid, ruleid, path, reason, userid, at)` is stored. acknowledgements are listed in insight and
 in the portfolio export.
-- **verify:** integration test.">
+- **verify:** integration test.
+- **amended (d-142, 2026-11-25):** a reason is typed text (no control character other than a tab or a line break,
+  no u+2028 or u+2029, no bidirectional control), and its rule id and path are one line each; the dialog takes
+  these out of a pasted reason before it checks and sends it.">
 <summary><span class="req-id">UD-022</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Acknowledgements are recorded</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>When an author publishes despite an <em>error</em> (<a class="req-ref" href="#r-PROD-003"><code>PROD-003</code></a>), a <code>ValidationAcknowledgement</code>
 <code>(contentId, ruleId, path, reason, userId, at)</code> is stored. Acknowledgements are listed in insight and
 in the portfolio export.</p>
 <ul>
 <li><strong>Verify:</strong> Integration test.</li>
+<li><strong>Amended (D-142, 2026-11-25):</strong> a reason is typed text (no control character other than a tab or a line break,
+no U+2028 or U+2029, no bidirectional control), and its rule ID and path are one line each; the dialog takes
+these out of a pasted reason before it checks and sends it.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-UD-022">03 Universal design, UD-022</a> · Universal design</p></div>
 </details>
@@ -2573,7 +2625,11 @@ prompted (but not required) on publish.
 | `learnerpurpose` | text ≤ 200 characters | *amended (d-087, 2026-10-28):* the one-line &quot;why this matters&quot; of `ped-032`, shown to learners with the activity's language |
 | `patternid` | pattern key | *amended (d-087):* the pattern the activity was created from; kept on copies, never edited by hand |
 
-- **verify:** component and api tests.">
+- **verify:** component and api tests.
+
+- **amended (d-142, 2026-11-25):** the outcomes, the rationale and the purpose are typed text: no control
+  character (a tab and line breaks are text in the outcomes and the rationale), no u+2028 or u+2029 and no
+  bidirectional control. the api answers such a text with 400; the form takes these out of pasted text first.">
 <summary><span class="req-id">PED-030</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Tag each activity</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Authors can attach <code>LearningDesignMetadata</code> to an activity. It is optional while in draft and
 prompted (but not required) on publish.</p>
@@ -2595,7 +2651,12 @@ prompted (but not required) on publish.</p>
 <td><code>patternId</code></td><td>pattern key</td><td><em>Amended (D-087):</em> the pattern the activity was created from; kept on copies, never edited by hand</td></tr>
 </tbody></table></div>
 <ul>
-<li><strong>Verify:</strong> Component and API tests.</li>
+<li><p><strong>Verify:</strong> Component and API tests.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> the outcomes, the rationale and the purpose are typed text: no control
+character (a tab and line breaks are text in the outcomes and the rationale), no U+2028 or U+2029 and no
+bidirectional control. The API answers such a text with 400; the form takes these out of pasted text first.</p>
+</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-030">04 Læringsdesign studio, PED-030</a> · Læringsdesign</p></div>
 </details>
@@ -2620,12 +2681,16 @@ when the course has more. One person may ask for the planner 120 times in ten mi
 </details>
 <details class="req" id="x-PED-032" data-area="PED" data-priority="SHOULD" data-session="S5" data-status="tested" data-text="ped-032 students see time estimate and purpose before an activity starts, learners see the estimated time and a one-line &quot;why this matters&quot; text
 taken from the metadata. this helps them plan their study and self-regulate.
-- **verify:** component test.">
+- **verify:** component test.
+- **amended (d-142, 2026-11-25):** «one line» also means no u+2028 or u+2029, and the purpose holds no
+  bidirectional control; a stored purpose that breaks the rule is not shown to learners.">
 <summary><span class="req-id">PED-032</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Students see time estimate and purpose</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Before an activity starts, learners see the estimated time and a one-line &quot;why this matters&quot; text
 taken from the metadata. This helps them plan their study and self-regulate.</p>
 <ul>
 <li><strong>Verify:</strong> Component test.</li>
+<li><strong>Amended (D-142, 2026-11-25):</strong> «one line» also means no U+2028 or U+2029, and the purpose holds no
+bidirectional control; a stored purpose that breaks the rule is not shown to learners.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-PED-032">04 Læringsdesign studio, PED-032</a> · Læringsdesign</p></div>
 </details>
@@ -3795,11 +3860,17 @@ ltik cannot change it (<a class="req-ref" href="#r-LTI-003"><code>LTI-003</code>
 <p>Authors can add co-authors (HVL staff found by name or Feide ID) and can publish an activity to the
 HVL content bank so that colleagues can <em>duplicate and adapt</em> it.</p>
 <ul>
-<li><strong>Acceptance:</strong> A duplicate keeps a link to its source and the original author&#39;s attribution. It
-never copies learner data.</li>
-<li><strong>Verify:</strong> Integration tests.</li>
-<li><strong>Amended (D-139, 2026-11-22):</strong> a duplicate is held to the limit for one activity&#39;s files (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>), so one
-copy writes at most 200 MB.</li>
+<li><p><strong>Acceptance:</strong> A duplicate keeps a link to its source and the original author&#39;s attribution. It
+never copies learner data.</p>
+</li>
+<li><p><strong>Verify:</strong> Integration tests.</p>
+</li>
+<li><p><strong>Amended (D-139, 2026-11-22):</strong> a duplicate is held to the limit for one activity&#39;s files (<a class="req-ref" href="#r-SEC-005"><code>SEC-005</code></a>), so one
+copy writes at most 200 MB.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> the search text is one line of typed text (no control character, hidden line
+break or bidirectional control), and a Feide ID in it is read by the login&#39;s rule (<a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a>).</p>
+</li>
 </ul>
 <h4 id="r-PROD-008" class="req-heading" tabindex="-1"><a class="req-id" href="#r-PROD-008">PROD-008</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Resume where you left off</span></h4>
 <p>A learner who leaves an activity and returns on any device resumes with their previous answers and position. See <a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a>.</p>
@@ -4121,11 +4192,16 @@ string <code>api.h5p.org/v1/content-types</code> except the test that asserts it
 Hub list. Their dependencies remain installable. <code>H5P.DragQuestion</code> is removed from the options of
 every container&#39;s sub-content selector (via <code>alterLibrarySemantics</code>).</p>
 <ul>
-<li><strong>Acceptance:</strong> (a) The content-type-cache AJAX response contains exactly the ten machine names as
+<li><p><strong>Acceptance:</strong> (a) The content-type-cache AJAX response contains exactly the ten machine names as
 creatable. (b) Saving content whose main library is not in the list returns HTTP 403 with a
 translated error. (c) No container semantics offer <code>H5P.DragQuestion</code>. (d) The whitelist is one
-constant, <code>HVL_TOP10_CONTENT_TYPES</code>, with a comment linking here.</li>
-<li><strong>Verify:</strong> Unit tests for (a)–(c); test names start with <code>[H5P-002]</code>.</li>
+constant, <code>HVL_TOP10_CONTENT_TYPES</code>, with a comment linking here.</p>
+</li>
+<li><p><strong>Verify:</strong> Unit tests for (a)–(c); test names start with <code>[H5P-002]</code>.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> the editor&#39;s AJAX endpoint takes a request that names exactly one action its
+library knows for the method; a missing, repeated or unknown action is 400 before any body is read.</p>
+</li>
 </ul>
 <h4 id="r-H5P-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-H5P-003">H5P-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Deterministic offline seeding</span></h4>
 <p><code>npm run seed:libraries</code> installs the ten types and their dependencies from verified <code>.h5p</code> packages
@@ -4511,8 +4587,14 @@ they require HVL&#39;s FS integration in Feide <em>(verify)</em>.</p>
 <td>Organisation not in <code>ALLOWED_FEIDE_ORGS</code> (default <code>hvl.no</code>)</td><td><code>learner</code> on content shared with &quot;anyone with Feide&quot;; otherwise denied</td></tr>
 </tbody></table></div>
 <ul>
-<li><strong>Acceptance:</strong> A table-driven test covers every row, including users with both <code>student</code> and <code>employee</code> (→ <code>author</code>).</li>
-<li><strong>Verify:</strong> Unit tests of <code>FeideRoleMapper</code>.</li>
+<li><p><strong>Acceptance:</strong> A table-driven test covers every row, including users with both <code>student</code> and <code>employee</code> (→ <code>author</code>).</p>
+</li>
+<li><p><strong>Verify:</strong> Unit tests of <code>FeideRoleMapper</code>.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> the Feide ID is normalised by one rule at every reader: SP and HTAB trimmed,
+<code>A</code>–<code>Z</code> lower-cased, every other character as written, then the pattern. Group IDs and the configured lists fold
+ASCII case the same way. Whether a Feide ID may hold letters outside ASCII is still <em>(verify)</em> (Q32).</p>
+</li>
 </ul>
 <h4 id="r-AUTH-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-AUTH-003">AUTH-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Portal session</span></h4>
 <p>The server keeps the session in Redis and gives the browser an opaque ID in a cookie
@@ -4523,11 +4605,17 @@ Logout clears the session and redirects the browser to Feide&#39;s <code>end_ses
 Customer Portal) and <code>id_token_hint</code>. Feide requires both, so the raw ID token is kept in the
 server-side session only, encrypted at rest and deleted at logout or expiry (D-021).</p>
 <ul>
-<li><strong>Verify:</strong> Integration tests (expiry, CSRF rejection, logout).</li>
-<li><strong>Amended (D-131, 2026-11-21):</strong> answers of <code>/api</code>, <code>/auth/session</code> and the signed-in H5P routes are <code>no-store</code>,
+<li><p><strong>Verify:</strong> Integration tests (expiry, CSRF rejection, logout).</p>
+</li>
+<li><p><strong>Amended (D-131, 2026-11-21):</strong> answers of <code>/api</code>, <code>/auth/session</code> and the signed-in H5P routes are <code>no-store</code>,
 <code>Cross-Origin-Resource-Policy: same-origin</code> and framed by our own origin only; portal pages send
 <code>Cross-Origin-Opener-Policy: same-origin</code> (LTI pages do not). A page whose request is refused for its CSRF
-token asks <code>/auth/session</code> once for the current one and repeats the request.</li>
+token asks <code>/auth/session</code> once for the current one and repeats the request.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> a logout clears the session cookie only for the session it ended; a request
+without a live session changes no cookie. A cookie that names no live session is cleared only by an answer
+marked <code>no-store</code> or <code>private</code>, never by a file that caches may keep.</p>
+</li>
 </ul>
 <h4 id="r-AUTH-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-AUTH-004">AUTH-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Data minimisation at login</span></h4>
 <p>Request only the scopes listed in <a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a>. <strong>Never</strong> request <code>userid-nin</code> or read the claim
@@ -4552,7 +4640,12 @@ for learners. In LTI 1.3 Canvas releases custom-field substitutions whatever the
 test launch must confirm the value and that it equals the Feide ID <em>(verify with TeCopp)</em>. If it does not,
 use a one-time &quot;Link with Feide&quot; pop-up instead. Learner identities are <strong>never</strong> linked across modes.</p>
 <ul>
-<li><strong>Verify:</strong> Integration test of the linking flow.</li>
+<li><p><strong>Verify:</strong> Integration test of the linking flow.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> <code>feide_login</code> is read by the login&#39;s own Feide ID rule (<a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a>), so a login
+ID in Canvas that only looks like a Feide ID (another character that Unicode would fold or trim) names no
+account.</p>
+</li>
 </ul>
 <hr>
 <h3 id="spec-02--4-requirements--canvas-lti-13-core-and-deep-linking" tabindex="-1">4. Requirements — Canvas LTI 1.3 core and Deep Linking</h3>
@@ -4916,13 +5009,13 @@ page → the error page. <code>server/main.ts</code> (<code>npm start</code>) sy
 </thead><tbody><tr>
 <td><a class="req-ref" href="#r-AUTH-001"><code>AUTH-001</code></a></td><td><code>auth/feide/FeideClient.ts</code> (discovery, <code>FEIDE_SCOPE</code>, PKCE <code>S256</code>, <code>client_secret_post</code>, ID-token signature check with <code>enableNonRepudiationChecks</code>, D-054); <code>auth/feide/loginTransactions.ts</code> (state, nonce and PKCE verifier bound to the browser by the <code>__Host-hvli_login</code> cookie, D-057); <code>auth/feide/feideLoginRoutes.ts</code>; <code>auth/feide/completeFeideLogin.ts</code>; <code>auth/identity/AccountResolver.ts</code>; <code>auth/audit/AuthAuditRecorder.ts</code>; <code>config/httpsRules.ts</code> (https issuer in production and, off a local address, in every mode)</td><td><code>test/auth/feide/feideLogin.int.test.ts</code> (full login against the mock Feide; wrong <code>iss</code>, <code>aud</code> or <code>nonce</code>, expired <code>exp</code>, a key outside Feide&#39;s JWKS, a missing login cookie); <code>test/auth/feide/FeideClient.test.ts</code>; <code>test/auth/feide/loginTransactions.int.test.ts</code>; <code>test/auth/upstream/openidClientMock.test.ts</code>; <code>test/auth/identity/AccountResolver.int.test.ts</code>; <code>test/config/productionChecks.test.ts</code></td><td>Mock Feide in <code>tools/mock-platform</code> (D-049). HVL&#39;s client ID, secret and realm are still open (Q3).</td></tr>
 <tr>
-<td><a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a></td><td><code>auth/feide/feideGroups.ts</code> (<code>GET &lt;FEIDE_GROUPS_API_URL&gt;/groups/me/groups</code>; any failure is a 503 page, D-054); <code>auth/feide/FeideRoleMapper.ts</code> (the role table as D-059 reads it); <code>auth/feide/feideClaims.ts</code> (the Feide ID); <code>config/envParsers.ts</code> (<code>ALLOWED_FEIDE_ORGS</code>, <code>ADMIN_FEIDE_IDS</code>, <code>AUTHOR_COURSE_GROUPS</code>); <code>auth/Principal.ts</code></td><td><code>test/auth/feide/FeideRoleMapper.test.ts</code> (every row, including <code>student</code> with <code>employee</code>); <code>test/auth/feide/FeideRoleMapper.validity.test.ts</code>; <code>test/auth/feide/feideGroups.test.ts</code>; <code>test/auth/feide/feideClaims.test.ts</code>; <code>test/auth/feide/feideLogin.int.test.ts</code>; <code>test/auth/Principal.test.ts</code>; <code>test/config/envParsers.test.ts</code></td><td>D-059: <code>admin</code> only for an HVL member; a course group matches exactly or as a prefix followed by <code>:</code>, and only while the membership is valid; student authors share <code>private</code> only (Q12). Realm <code>hvl.no</code> and HVL&#39;s FS groups still <em>(verify)</em>.</td></tr>
+<td><a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a></td><td><code>auth/feide/feideGroups.ts</code> (<code>GET &lt;FEIDE_GROUPS_API_URL&gt;/groups/me/groups</code>; any failure is a 503 page, D-054); <code>auth/feide/FeideRoleMapper.ts</code> (the role table as D-059 reads it); <code>auth/feide/feideClaims.ts</code> (the Feide ID); <code>auth/identity/feideId.ts</code> and <code>auth/identity/asciiText.ts</code> (the one Feide ID rule, ASCII folding only, D-142); <code>config/envParsers.ts</code> (<code>ALLOWED_FEIDE_ORGS</code>, <code>ADMIN_FEIDE_IDS</code>, <code>AUTHOR_COURSE_GROUPS</code>); <code>auth/Principal.ts</code></td><td><code>test/auth/feide/FeideRoleMapper.test.ts</code> (every row, including <code>student</code> with <code>employee</code>); <code>test/auth/feide/FeideRoleMapper.validity.test.ts</code>; <code>test/auth/feide/feideGroups.test.ts</code>; <code>test/auth/feide/feideClaims.test.ts</code>; <code>test/auth/feide/feideLogin.int.test.ts</code>; <code>test/auth/Principal.test.ts</code>; <code>test/config/envParsers.test.ts</code>; <code>test/auth/identity/feideId.test.ts</code>; <code>test/auth/identity/asciiText.test.ts</code></td><td>D-059: <code>admin</code> only for an HVL member; a course group matches exactly or as a prefix followed by <code>:</code>, and only while the membership is valid; student authors share <code>private</code> only (Q12). Realm <code>hvl.no</code> and HVL&#39;s FS groups still <em>(verify)</em>.</td></tr>
 <tr>
-<td><a class="req-ref" href="#r-AUTH-003"><code>AUTH-003</code></a></td><td><code>auth/session/SessionStore.ts</code> (Redis, 2 h idle, 12 h absolute, a new ID at every login, the ID token sealed with <code>DATA_ENCRYPTION_KEYS</code>); <code>auth/session/portalSessionRecord.ts</code>; <code>auth/session/portalSessionMiddleware.ts</code>; <code>auth/session/sessionCookies.ts</code> (<code>__Host-hvli_sid</code>); <code>auth/session/csrfToken.ts</code>; <code>auth/session/opaqueIds.ts</code>; <code>auth/requestPrincipal.ts</code> (CSRF check on portal requests); <code>auth/returnTo.ts</code>; <code>auth/feide/feideLoginRoutes.ts</code> (<code>POST /auth/logout</code> to Feide&#39;s end-session endpoint with <code>id_token_hint</code> and <code>post_logout_redirect_uri</code> = <code>&lt;PUBLIC_BASE_URL&gt;/auth/logged-out</code>; <code>GET /auth/session</code> gives page scripts the CSRF token); <code>security/keys/DataEncryption.ts</code></td><td><code>test/auth/session/SessionStore.int.test.ts</code> (expiry with an injected clock); <code>test/auth/session/SessionStore.integrity.int.test.ts</code>; <code>test/auth/session/portalSessionMiddleware.int.test.ts</code>; <code>test/auth/session/sessionCookies.test.ts</code>; <code>test/auth/session/csrfToken.test.ts</code>; <code>test/auth/requestPrincipal.test.ts</code>; <code>test/auth/returnTo.test.ts</code>; <code>test/auth/feide/feideLogout.int.test.ts</code>; <code>test/http/h5pAuthenticate.int.test.ts</code>; <code>test/server/createApp.int.test.ts</code>; <code>test/logging/authRedaction.test.ts</code>; also exercised by <code>e2e/portalSharing.e2e.test.ts</code></td><td>D-057: own modules, no express-session or csurf; roles are computed at login only. Logout is a POST checked against the CSRF token.</td></tr>
+<td><a class="req-ref" href="#r-AUTH-003"><code>AUTH-003</code></a></td><td><code>auth/session/SessionStore.ts</code> (Redis, 2 h idle, 12 h absolute, a new ID at every login, the ID token sealed with <code>DATA_ENCRYPTION_KEYS</code>); <code>auth/session/portalSessionRecord.ts</code>; <code>auth/session/portalSessionMiddleware.ts</code>; <code>auth/session/staleCookieClearing.ts</code> (a dead cookie is cleared only by an answer no cache keeps, D-142); <code>auth/session/sessionCookies.ts</code> (<code>__Host-hvli_sid</code>); <code>auth/session/csrfToken.ts</code>; <code>auth/session/opaqueIds.ts</code>; <code>auth/requestPrincipal.ts</code> (CSRF check on portal requests); <code>auth/returnTo.ts</code>; <code>auth/feide/feideLoginRoutes.ts</code> (<code>POST /auth/logout</code> to Feide&#39;s end-session endpoint with <code>id_token_hint</code> and <code>post_logout_redirect_uri</code> = <code>&lt;PUBLIC_BASE_URL&gt;/auth/logged-out</code>; <code>GET /auth/session</code> gives page scripts the CSRF token); <code>security/keys/DataEncryption.ts</code></td><td><code>test/auth/session/SessionStore.int.test.ts</code> (expiry with an injected clock); <code>test/auth/session/SessionStore.integrity.int.test.ts</code>; <code>test/auth/session/portalSessionMiddleware.int.test.ts</code>; <code>test/auth/session/staleCookieClearing.test.ts</code>; <code>test/web/webAppStaleCookie.int.test.ts</code>; <code>test/auth/session/sessionCookies.test.ts</code>; <code>test/auth/session/csrfToken.test.ts</code>; <code>test/auth/requestPrincipal.test.ts</code>; <code>test/auth/returnTo.test.ts</code>; <code>test/auth/feide/feideLogout.int.test.ts</code>; <code>test/http/h5pAuthenticate.int.test.ts</code>; <code>test/server/createApp.int.test.ts</code>; <code>test/logging/authRedaction.test.ts</code>; also exercised by <code>e2e/portalSharing.e2e.test.ts</code></td><td>D-057: own modules, no express-session or csurf; roles are computed at login only. Logout is a POST checked against the CSRF token; without a live session it changes no cookie (D-142).</td></tr>
 <tr>
 <td><a class="req-ref" href="#r-AUTH-004"><code>AUTH-004</code></a></td><td><code>auth/feide/FeideClient.ts</code> (<code>FEIDE_SCOPE</code>); <code>auth/feide/feideClaims.ts</code> (reads only the two Feide ID claims; name and e-mail for authors and admins only; never the <code>nin</code> claim); <code>auth/identity/AccountResolver.ts</code> (a profile for staff only); <code>lti/launch/ltiAccount.ts</code> (LTI accounts carry no profile); the database <code>CHECK</code> on learner rows (first migration)</td><td><code>test/auth/feide/FeideClient.test.ts</code> (the exact scope string); <code>test/auth/feide/feideClaims.test.ts</code>; <code>test/auth/feide/feideLogin.int.test.ts</code> (a learner row has no name or e-mail; no <code>nin</code> value is stored in plaintext or logged; the session keeps Feide&#39;s ID token only encrypted, D-021); <code>test/auth/identity/AccountResolver.int.test.ts</code></td><td>Feide&#39;s <code>sub</code> is never stored; the Feide ID is the subject (D-054).</td></tr>
 <tr>
-<td><a class="req-ref" href="#r-AUTH-005"><code>AUTH-005</code></a></td><td><code>auth/identity/linkDecision.ts</code> (reads <code>custom.feide_login</code> only when <a class="req-ref" href="#r-LTI-004"><code>LTI-004</code></a> gives <code>author</code>, ignores values starting with <code>$</code>, picks the D-063 case); <code>auth/identity/accountLinking.ts</code> (applies it only for a platform with <code>&quot;feideLinking&quot;: true</code> in <code>LTI_PLATFORMS</code> and a Feide ID whose realm is in <code>ALLOWED_FEIDE_ORGS</code>, and only onto an existing Feide account that is not a learner&#39;s; the rival check and the write run in one transaction with the Feide account locked; the same person&#39;s simultaneous launch is no rival; returns the outcome, which <code>onDeepLinking</code> audits: <code>link.conflict</code> on the claimant&#39;s own account, <code>link.feide-lti</code> on the account the launch then uses, either without an actor if the launch fails after linking; D-063 as amended); <code>auth/identity/identityLookup.ts</code> (the same row login uses while key rings are mixed); <code>lti/linkingPlatforms.ts</code> and <code>config/envParsers.ts</code> (<code>feideLinking</code>, default false); <code>lti/launch/onDeepLinking.ts</code> (links from the in-memory claims before the account is resolved); <code>lti/storage/ltiIdTokenClaims.ts</code> (drops <code>feide_login</code> before storage, D-052)</td><td><code>test/auth/identity/linkDecision.test.ts</code>; <code>test/auth/identity/accountLinking.int.test.ts</code> (Feide first, Canvas first, move, conflict, a second Canvas user audited on their own account, unexpanded <code>$Canvas.user.loginId</code>, never stored); <code>test/auth/identity/accountLinkingGuards.int.test.ts</code> (<code>feideLinking</code> off, a realm outside <code>ALLOWED_FEIDE_ORGS</code>, no Feide account to join, a learner&#39;s Feide account, a second Canvas user naming the same Feide ID, another platform, mixed key rings); <code>test/auth/identity/accountLinkingRaces.int.test.ts</code> (two claimants at once, a double click)</td><td>Linking runs only at Deep Linking launches, and only from platforms with <code>feideLinking</code>, which is set once TeCopp has confirmed that <code>$Canvas.user.loginId</code> equals the Feide ID at HVL (Q4). A Feide identity is never created from the Canvas side. The &quot;Link with Feide&quot; pop-up fallback is not built.</td></tr>
+<td><a class="req-ref" href="#r-AUTH-005"><code>AUTH-005</code></a></td><td><code>auth/identity/linkDecision.ts</code> (reads <code>custom.feide_login</code> only when <a class="req-ref" href="#r-LTI-004"><code>LTI-004</code></a> gives <code>author</code>, by the login&#39;s Feide ID rule in <code>auth/identity/feideId.ts</code>, ignores values starting with <code>$</code>, picks the D-063 case); <code>auth/identity/accountLinking.ts</code> (applies it only for a platform with <code>&quot;feideLinking&quot;: true</code> in <code>LTI_PLATFORMS</code> and a Feide ID whose realm is in <code>ALLOWED_FEIDE_ORGS</code>, and only onto an existing Feide account that is not a learner&#39;s; the rival check and the write run in one transaction with the Feide account locked; the same person&#39;s simultaneous launch is no rival; returns the outcome, which <code>onDeepLinking</code> audits: <code>link.conflict</code> on the claimant&#39;s own account, <code>link.feide-lti</code> on the account the launch then uses, either without an actor if the launch fails after linking; D-063 as amended); <code>auth/identity/identityLookup.ts</code> (the same row login uses while key rings are mixed); <code>lti/linkingPlatforms.ts</code> and <code>config/envParsers.ts</code> (<code>feideLinking</code>, default false); <code>lti/launch/onDeepLinking.ts</code> (links from the in-memory claims before the account is resolved); <code>lti/storage/ltiIdTokenClaims.ts</code> (drops <code>feide_login</code> before storage, D-052)</td><td><code>test/auth/identity/linkDecision.test.ts</code>; <code>test/auth/identity/feideId.test.ts</code> (a look-alike login ID names no account); <code>test/auth/identity/accountLinking.int.test.ts</code> (Feide first, Canvas first, move, conflict, a second Canvas user audited on their own account, unexpanded <code>$Canvas.user.loginId</code>, never stored); <code>test/auth/identity/accountLinkingGuards.int.test.ts</code> (<code>feideLinking</code> off, a realm outside <code>ALLOWED_FEIDE_ORGS</code>, no Feide account to join, a learner&#39;s Feide account, a second Canvas user naming the same Feide ID, another platform, mixed key rings); <code>test/auth/identity/accountLinkingRaces.int.test.ts</code> (two claimants at once, a double click)</td><td>Linking runs only at Deep Linking launches, and only from platforms with <code>feideLinking</code>, which is set once TeCopp has confirmed that <code>$Canvas.user.loginId</code> equals the Feide ID at HVL (Q4). A Feide identity is never created from the Canvas side. The &quot;Link with Feide&quot; pop-up fallback is not built.</td></tr>
 <tr>
 <td><a class="req-ref" href="#r-LTI-001"><code>LTI-001</code></a></td><td><code>lti/LtiProviderFactory.ts</code> (<code>Provider</code>, routes <code>/lti/login</code>, <code>/lti/launch</code>, <code>/lti/keys</code>, <code>tokenMaxAge</code> = <code>LTI_TOKEN_MAX_AGE_SECONDS</code>); <code>lti/http/ExpressRouterHttpHandler.ts</code> (ltijs on our router, D-050); <code>lti/http/launchPostOrigin.ts</code>, <code>lti/http/launchRequestCeiling.ts</code> and <code>lti/http/LtiOutboundRequests.ts</code> (the last step from our own page, the request ceiling, what ltijs may ask a platform; D-141); <code>lti/ltiRoutes.ts</code>; <code>lti/platforms/syncLtiPlatforms.ts</code> (<code>LTI_PLATFORMS</code> → <code>LtiPlatform</code> and <code>LtiDeployment</code>, D-051); <code>lti/platforms/LtiDeploymentGuard.ts</code>; <code>lti/storage/LtiCacheManager.ts</code>; <code>lti/http/ltiErrorPages.ts</code>; <code>lti/launchFacts.ts</code>; <code>lti/ltijsLogger.ts</code>; <code>server/main.ts</code></td><td><code>test/lti/ltiLaunch.int.test.ts</code> (a full launch from the mock Canvas; a foreign signature, a wrong <code>aud</code>, an expired <code>exp</code>, another nonce, a replay and an unconfigured deployment are refused); <code>test/lti/storage/ltijsOnPrismaStorage.int.test.ts</code>; <code>test/lti/platforms/syncLtiPlatforms.int.test.ts</code>; <code>test/lti/storage/LtiDeploymentGuard.int.test.ts</code>; <code>test/lti/http/ExpressRouterHttpHandler.test.ts</code>; <code>test/lti/http/ltiErrorPages.test.ts</code>; <code>test/lti/upstream/ltijsProvider.test.ts</code>; <code>test/server/createApp.int.test.ts</code> (<code>/lti/keys</code>); <code>test/db/ltiDeployments.int.test.ts</code></td><td><code>SPEC-DEVIATION</code> D-050: our node-redis <code>LtiCacheManager</code> replaces ltijs&#39;s <code>RedisCacheManager</code>. <code>authorizationServer</code> stays unset. Client ID, deployment IDs and TeCopp&#39;s instance are still open (Q4).</td></tr>
 <tr>
@@ -5198,6 +5291,9 @@ validation run parses each distinct text once.</li>
 in the portfolio export.</p>
 <ul>
 <li><strong>Verify:</strong> Integration test.</li>
+<li><strong>Amended (D-142, 2026-11-25):</strong> a reason is typed text (no control character other than a tab or a line break,
+no U+2028 or U+2029, no bidirectional control), and its rule ID and path are one line each; the dialog takes
+these out of a pasted reason before it checks and sends it.</li>
 </ul>
 <hr>
 <h3 id="spec-03--5-requirements--verification" tabindex="-1">5. Requirements — verification</h3>
@@ -5441,7 +5537,12 @@ prompted (but not required) on publish.</p>
 <td><code>patternId</code></td><td>pattern key</td><td><em>Amended (D-087):</em> the pattern the activity was created from; kept on copies, never edited by hand</td></tr>
 </tbody></table></div>
 <ul>
-<li><strong>Verify:</strong> Component and API tests.</li>
+<li><p><strong>Verify:</strong> Component and API tests.</p>
+</li>
+<li><p><strong>Amended (D-142, 2026-11-25):</strong> the outcomes, the rationale and the purpose are typed text: no control
+character (a tab and line breaks are text in the outcomes and the rationale), no U+2028 or U+2029 and no
+bidirectional control. The API answers such a text with 400; the form takes these out of pasted text first.</p>
+</li>
 </ul>
 <h4 id="r-PED-031" class="req-heading" tabindex="-1"><a class="req-id" href="#r-PED-031">PED-031</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Constructive alignment planner</span></h4>
 <p>For one course, the planner shows a grid of <strong>learning outcomes × phases</strong> filled with the author&#39;s
@@ -5458,6 +5559,8 @@ when the course has more. One person may ask for the planner 120 times in ten mi
 taken from the metadata. This helps them plan their study and self-regulate.</p>
 <ul>
 <li><strong>Verify:</strong> Component test.</li>
+<li><strong>Amended (D-142, 2026-11-25):</strong> «one line» also means no U+2028 or U+2029, and the purpose holds no
+bidirectional control; a stored purpose that breaks the rule is not shown to learners.</li>
 </ul>
 <hr>
 <h3 id="spec-04--7-pedagogisk-mappe-export" tabindex="-1">7. Pedagogisk mappe export</h3>
@@ -7488,14 +7591,22 @@ content. <code>auth/principalToH5pActor.ts</code> is the one mapping to <code>Hv
 </ul>
 <h3 id="decisions--d-054--the-feide-subject-is-the-feide-id-groups-api-failures-fail-closed" tabindex="-1">D-054 · The Feide subject is the Feide ID; Groups API failures fail closed</h3>
 <ul>
-<li><strong>Context:</strong> <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a> derives the learnerKey from <code>feide|&lt;feide-id&gt;</code>, <a class="req-ref" href="#r-AUTH-005"><code>AUTH-005</code></a> compares Canvas&#39;s login ID with
-the Feide ID, and <code>ADMIN_FEIDE_IDS</code> lists Feide IDs. <a class="req-ref" href="#r-AUTH-004"><code>AUTH-004</code></a> allows <code>sub</code> or the Feide ID.</li>
-<li><strong>Decision:</strong> The Feide subject is the Feide ID (<code>eduPersonPrincipalName</code>, trimmed and lower-cased). It feeds
+<li><p><strong>Context:</strong> <a class="req-ref" href="#r-DATA-002"><code>DATA-002</code></a> derives the learnerKey from <code>feide|&lt;feide-id&gt;</code>, <a class="req-ref" href="#r-AUTH-005"><code>AUTH-005</code></a> compares Canvas&#39;s login ID with
+the Feide ID, and <code>ADMIN_FEIDE_IDS</code> lists Feide IDs. <a class="req-ref" href="#r-AUTH-004"><code>AUTH-004</code></a> allows <code>sub</code> or the Feide ID.</p>
+</li>
+<li><p><strong>Decision:</strong> The Feide subject is the Feide ID (<code>eduPersonPrincipalName</code>, trimmed and lower-cased). It feeds
 <code>Identity.subjectHash</code>, the learnerKey, <code>ADMIN_FEIDE_IDS</code> and account linking; <code>sub</code> is never stored. A login
 without a Feide ID is refused with a friendly page. The organisation comes from the Groups API (<code>fc:org:&lt;realm&gt;</code>);
 if that call fails, the login fails closed (503 page). <code>enableNonRepudiationChecks</code> adds an ID-token signature
-check against Feide&#39;s JWKS on top of openid-client&#39;s claim checks.</li>
-<li><strong>Consequences:</strong> Feide users without a Feide ID (guests, eduGAIN) cannot log in (owner to confirm, Q12).</li>
+check against Feide&#39;s JWKS on top of openid-client&#39;s claim checks.</p>
+</li>
+<li><p><strong>Consequences:</strong> Feide users without a Feide ID (guests, eduGAIN) cannot log in (owner to confirm, Q12).</p>
+</li>
+<li><p><strong>Amendment (2026-11-25, D-142):</strong> «trimmed and lower-cased» is done in ASCII only: SP and HTAB are trimmed and
+<code>A</code>–<code>Z</code> lower-cased, every other character stays as written, and then the pattern is checked
+(<code>auth/identity/feideId.ts</code>). Every reader of a Feide ID uses that one rule, so an ID written with a look-alike
+character (U+212A for <code>k</code>, a no-break space at an end) is another ID, never the plain one.</p>
+</li>
 </ul>
 <h3 id="decisions--d-055--a-stable-identity-key-ring-with-hkdf-purposes-and-a-rotation-rule" tabindex="-1">D-055 · A stable identity key ring with HKDF purposes and a rotation rule</h3>
 <ul>
@@ -7544,21 +7655,28 @@ backup amendment); <code>apps/server/.env.example</code> and <code>docs/ops/runb
 </ul>
 <h3 id="decisions--d-057--own-redis-portal-sessions-login-transactions-and-a-synchronizer-csrf-token" tabindex="-1">D-057 · Own Redis portal sessions, login transactions and a synchronizer CSRF token</h3>
 <ul>
-<li><strong>Context:</strong> <a class="req-ref" href="#r-AUTH-003"><code>AUTH-003</code></a> asks for a Redis session behind an opaque <code>__Host-hvli_sid</code> cookie (idle 2 h, absolute
+<li><p><strong>Context:</strong> <a class="req-ref" href="#r-AUTH-003"><code>AUTH-003</code></a> asks for a Redis session behind an opaque <code>__Host-hvli_sid</code> cookie (idle 2 h, absolute
 12 h) and CSRF protection; <a class="req-ref" href="#r-H5P-007"><code>H5P-007</code></a> requires 401 for an H5P request without a valid token. Generic middleware
-(express-session, csurf) does not give these exact semantics, and csurf is deprecated.</li>
-<li><strong>Decision:</strong> Small own modules. Sessions in Redis under a hash of the session ID; the cookie is <code>HttpOnly</code>,
+(express-session, csurf) does not give these exact semantics, and csurf is deprecated.</p>
+</li>
+<li><p><strong>Decision:</strong> Small own modules. Sessions in Redis under a hash of the session ID; the cookie is <code>HttpOnly</code>,
 <code>Secure</code>, <code>SameSite=Lax</code>, <code>Path=/</code>. A single-use login-transaction cookie (10 minutes) binds state, nonce and
 PKCE verifier to the browser, which prevents login CSRF. One synchronizer token per session, read from the
 <code>X-CSRF-Token</code> header, a <code>csrf</code> query value (H5P URLs) or a <code>csrf</code> form field; it is required on every unsafe
 method and on <code>/h5p/ajax</code> and <code>/h5p/contentUserData</code> for any method. A missing or wrong token is 401
-<code>hvl:csrf-invalid</code>. Roles are computed at login only.</li>
-<li><strong>Consequences:</strong> A role change in Feide takes effect at the next login. Details settled in the implementation:
+<code>hvl:csrf-invalid</code>. Roles are computed at login only.</p>
+</li>
+<li><p><strong>Consequences:</strong> A role change in Feide takes effect at the next login. Details settled in the implementation:
 the session cookie has no <code>Max-Age</code> (a browser-session cookie; the server enforces both limits); a cookie name
 sent twice is ignored entirely (defence against cookie tossing); logout is a POST, so the CSRF token protects it;
 the session&#39;s ID-token blob is sealed once at login, so a retired <code>DATA_ENCRYPTION_KEYS</code> key is kept at least
 12 hours. Reverse proxies must not cache responses that carry <code>Set-Cookie</code> and must not log query strings
-(<code>csrf</code>, <code>ltik</code>).</li>
+(<code>csrf</code>, <code>ltik</code>).</p>
+</li>
+<li><p><strong>Amendment (2026-11-25, D-142):</strong> a logout clears the session cookie only for the session it ended; a request
+without a live session changes no cookie. The order to delete a dead session cookie is added when an answer&#39;s
+headers are written, and only to an answer marked <code>no-store</code> or <code>private</code> (<code>auth/session/staleCookieClearing.ts</code>).</p>
+</li>
 </ul>
 <h3 id="decisions--d-058--h5p-url-tokens-and-signed-content-file-urls" tabindex="-1">D-058 · H5P URL tokens and signed content-file URLs</h3>
 <ul>
@@ -8725,10 +8843,12 @@ message instead of the activity, and nothing else flags it. The finding can be a
 </ul>
 <h3 id="decisions--d-087--learning-design-metadata-learner-purpose-pattern-course-code-and-access" tabindex="-1">D-087 · Learning-design metadata: learner purpose, pattern, course code and access</h3>
 <ul>
-<li><strong>Context:</strong> <a class="req-ref" href="#r-PED-030"><code>PED-030</code></a> lists the metadata fields. <a class="req-ref" href="#r-PED-032"><code>PED-032</code></a> shows students a one-line &quot;why this matters&quot; that the
+<li><p><strong>Context:</strong> <a class="req-ref" href="#r-PED-030"><code>PED-030</code></a> lists the metadata fields. <a class="req-ref" href="#r-PED-032"><code>PED-032</code></a> shows students a one-line &quot;why this matters&quot; that the
 model lacks. The planner and the portfolio need a course code that matches across activities, and outcomes that can
-be recognised again.</li>
-<li><strong>Decision:</strong><ul>
+be recognised again.</p>
+</li>
+<li><p><strong>Decision:</strong></p>
+<ul>
 <li><strong>New fields:</strong> <code>learnerPurpose</code> (plain text, at most 200 characters, shown to learners in the activity&#39;s
 language) and <code>patternId</code> (the pattern the activity came from).</li>
 <li><strong>Course code:</strong> normalised (Unicode NFC, trimmed, upper case, inner spaces removed) and checked against
@@ -8748,8 +8868,10 @@ rationale.</li>
 <li><strong>Publishing:</strong> the publish dialog shows a prompt to fill in the metadata that never blocks publishing.</li>
 </ul>
 </li>
-<li><strong>Consequences:</strong> Migration <code>s5_learning_design</code> and new rows in the data inventory.</li>
-<li><strong>Amendment (2026-10-28, S5 contracts):</strong><ul>
+<li><p><strong>Consequences:</strong> Migration <code>s5_learning_design</code> and new rows in the data inventory.</p>
+</li>
+<li><p><strong>Amendment (2026-10-28, S5 contracts):</strong></p>
+<ul>
 <li><strong>Course labels and privacy:</strong> Canvas sandbox courses often carry a teacher&#39;s name in their label. The server
 therefore stores <code>LtiPlacement.contextLabel</code> only when the label, after D-087&#39;s normalisation, is a course code
 that contains at least one digit (HVL course codes do; names rarely do), and stores null otherwise. It strips
@@ -8759,7 +8881,8 @@ a placement has no user.</li>
 <li><strong>The pattern:</strong> a full replace keeps the stored <code>patternId</code>; only creation and duplication write it.</li>
 </ul>
 </li>
-<li><strong>Amendment (2026-10-29, S5 W3):</strong><ul>
+<li><p><strong>Amendment (2026-10-29, S5 W3):</strong></p>
+<ul>
 <li><strong>The purpose:</strong> besides a line break, any control character (a pasted tab) is refused (400). The web app&#39;s strict
 <code>x-hvli-launch</code> parser refuses the whole header on one, so a single stored tab would have shown «no launch» to
 every learner of the activity in Canvas. The server also leaves out such a stored purpose, and a language tag
@@ -8771,6 +8894,11 @@ It is never shown to anyone but the authors of activities placed in that course.
 <li><strong>The prompt:</strong> the metadata prompt shows in the first-publish dialog only, not when an already published
 activity is published again with new reasons.</li>
 </ul>
+</li>
+<li><p><strong>Amendment (2026-11-25, D-142):</strong> the purpose, the outcomes and the rationale are held to the contract&#39;s rule
+for typed text (<code>packages/api-contract/src/textRules.ts</code>): besides control characters, U+2028, U+2029 and the
+bidirectional controls are refused (400). The web form takes them out of pasted text before it checks and sends
+it (<code>apps/web/src/config/typedText.ts</code>), as it already turned a pasted tab in the purpose into a space.</p>
 </li>
 </ul>
 <h3 id="decisions--d-088--the-alignment-planner-one-course-outcomes--phases-two-gap-rules" tabindex="-1">D-088 · The alignment planner: one course, outcomes × phases, two gap rules</h3>
@@ -13131,6 +13259,68 @@ More than 2 000 launches a minute from one address get the «try again» page. T
 launch driver send <code>Sec-Fetch-Site: same-origin</code> on the last step, as a browser does. LTI-001, LTI-003, LTI-007
 and LTI-008 have an &quot;Amended&quot; line; T-13, T-18, T-60, T-63 and T-111 in the threat model follow.</li>
 </ul>
+<h3 id="decisions--d-142--security-repairs-step-26-a-logout-and-a-cookie-order-follow-the-session-one-feide-id-rule-typed-text-holds-no-hidden-characters-the-editor-endpoint-takes-known-actions-only" tabindex="-1">D-142 · Security repairs, step 26: a logout and a cookie order follow the session; one Feide ID rule; typed text holds no hidden characters; the editor endpoint takes known actions only</h3>
+<ul>
+<li><strong>Context:</strong> Five places where a request was read more loosely than its rule said. (1) <code>POST /auth/logout</code> asked
+for the CSRF token only when the request carried a live session, and cleared the session cookie either way. A
+form post from another site carries no <code>SameSite=Lax</code> cookie, so it met no check, and its answer still told the
+browser to delete the cookie: any page could log a person out of the portal. (2) A request whose session cookie
+named no live session had the cookie cleared on whatever answer it got, also on H5P&#39;s core and library files and
+the web app&#39;s files under <code>/_next/static/</code>, which are <code>public</code> and kept by caches for a year; a shared cache that
+kept such an answer would hand its <code>Set-Cookie</code> to other people. (3) A Feide ID was trimmed and lower-cased by
+JavaScript&#39;s Unicode rules before it was checked: <code>trim</code> removes a no-break space or a byte-order mark, and
+<code>toLowerCase</code> turns U+212A (the Kelvin sign) into <code>k</code>. A login ID in Canvas written with such a character named,
+through <code>custom.feide_login</code> (AUTH-005), the Feide account of the plain ID. (4) The free-text fields of the API
+took any character: U+0000, which PostgreSQL refuses (the request ended as a 500), the line and paragraph
+separators U+2028 and U+2029 (a line break that the learner purpose&#39;s «one line» rule did not see), and the
+bidirectional controls, which reorder what a reader sees. (5) Lumi&#39;s AJAX endpoint answers an unknown POST action
+with status 500, so an author could raise that answer and its error-level log line at will.</li>
+<li><strong>Decision — a logout ends what its cookie names (AUTH-003).</strong> <code>endPortalSession</code> clears the session cookie only
+when the request had a live session, which the route has by then held to the CSRF token. A request without one
+gets the same redirect to <code>/</code>, <code>no-store</code>; it changes no cookie and writes no audit row.</li>
+<li><strong>Decision — the order to delete a dead cookie never travels on an answer a cache may keep (AUTH-003).</strong>
+<code>auth/session/staleCookieClearing.ts</code>: the session middleware no longer sets the clearing cookie when it finds a
+dead session ID. The order is added when the answer&#39;s headers are written (<code>writeHead</code>), and only when
+<code>Cache-Control</code> says <code>no-store</code> or <code>private</code>. An answer that names no caching gets <code>no-store</code> and the order: it
+answers one browser&#39;s cookie. An answer that names any other caching (<code>public</code>, <code>max-age</code>, <code>no-cache</code>) never
+carries it; the next answer about the person does. An answer that sets the session cookie itself (a login) is
+left as it is. Next.js writes its own headers, so the rule is tested on the built web app&#39;s real answers.</li>
+<li><strong>Decision — one Feide ID rule, in ASCII only (AUTH-002, AUTH-005, DATA-008).</strong> <code>auth/identity/feideId.ts</code>
+(<code>normaliseFeideId</code>) with <code>auth/identity/asciiText.ts</code>: SP and HTAB are trimmed, <code>A</code>–<code>Z</code> are lower-cased, every
+other character stays as written, and then <code>FEIDE_ID_PATTERN</code> is checked. Every reader uses it: the login&#39;s
+claims, <code>custom.feide_login</code>, <code>ADMIN_FEIDE_IDS</code> and the other configured lists, the people search, the
+data-subject tool, and the two guards that refuse a Feide subject that is not normalised; Feide group IDs are
+compared in ASCII case too. Two IDs as written now give one Feide ID only when they differ in ASCII case or in
+blanks at their ends. Not decided: whether a Feide ID may hold a letter outside ASCII at all. Feide&#39;s rule for
+<code>eduPersonPrincipalName</code> could not be read from the build environment, so the rule does not depend on it: such a
+letter is kept as written and never folded <em>(verify with HVL IT, Q32; a stricter pattern is a one-line change)</em>.</li>
+<li><strong>Decision — typed text holds no control character, hidden line break or bidirectional control (PED-030,
+PED-032, UD-022, PROD-007).</strong> <code>packages/api-contract/src/textRules.ts</code>: a one-line text refuses Unicode <code>Cc</code>,
+<code>Zl</code>, <code>Zp</code> and <code>Bidi_Control</code>; a free text is the same but keeps tab, CR and LF. It holds the learner purpose (one
+line), the outcomes, the rationale, a reason for publishing with its rule ID and path, and the people search. A
+request that breaks it is a 400, like any other body the contract refuses. Other format characters (a soft
+hyphen, the joiner inside an emoji) are text and stay. The web forms clean pasted text before they check and
+send it (<code>apps/web/src/config/typedText.ts</code>): a bidirectional control is dropped, a hidden line break becomes a
+line break (a space on one line) and any other control character a space; a test keeps the web app&#39;s copy of the
+classes equal to the contract&#39;s. A stored learner purpose that breaks the rule is not handed to learners
+(<code>learnerInfoFields</code> reads it through the schema).</li>
+<li><strong>Decision — the editor&#39;s AJAX endpoint takes known actions only (H5P-002).</strong> <code>http/routes/ajaxRoutes.ts</code>: a
+request names exactly one action that Lumi&#39;s <code>H5PAjaxEndpoint</code> knows for its method (three for GET, seven for
+POST). A missing, repeated or unknown action is 400 <code>error.badRequest</code>, after the role check and before any body
+is read.</li>
+<li><strong>Verified:</strong> unit tests of the cookie order with every way a route writes its headers, an integration test of
+the session middleware on Redis, of the logout route and of the whole app&#39;s shared H5P files, and one against the
+built web app; unit tests of the ASCII folding and of the Feide ID rule at every reader, and the people search on
+the database; contract tests of the two text patterns and of every field that keeps them, route tests that each
+field answers 400 and logs no fault, and web tests that the forms send cleaned text that the contract&#39;s schema
+takes; route tests of every refused and every known AJAX action. The new tests fail on the code before this step.</li>
+<li><strong>Consequences:</strong> A browser with a dead session cookie keeps it until the next answer about the person. A Feide
+ID with a capital letter outside ASCII is no longer folded (none is known at HVL). Text stored before this step is
+not changed; a stored purpose that breaks the rule stays hidden from learners until it is saved again. No page
+looks different and no message is new. AUTH-002, AUTH-003, AUTH-005, PED-030, PED-032, UD-022, PROD-007 and
+H5P-002 have an &quot;Amended&quot; line; D-054, D-057 and D-087 an amendment; T-02, T-05, T-21 and the new T-25 in the
+threat model follow.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -14256,6 +14446,8 @@ log, «2026-11-06 · S6 gate»)</li>
 <td>Q30</td><td>Students as insight readers: insight and the grade-sync counts go to anyone with the author role in a context, so a Canvas TA, who at HVL can be a student assistant, sees a course&#39;s <em>k</em>-suppressed aggregates, and a student author (D-059) sees them for every course their activity is placed in. Accept with HVL&#39;s confidentiality terms for student assistants, or show insight only to staff by Feide affiliation and to Canvas instructors but not TAs (an <a class="req-ref" href="#r-INS-007"><code>INS-007</code></a> change; DPIA input R36)</td><td>HVL DPO, owner</td><td>The pilot</td></tr>
 <tr>
 <td>Q31</td><td>Name a system owner (<em>systemeigar</em>) and a maintainer (<em>forvaltar</em>) at HVL for HVL Interaktiv. Neither is named anywhere, and the IT assurance pack asks for them (D-116; <code>docs/assurance/README.md</code>, «Who is accountable»; ROS-19 in <code>docs/assurance/ros-analyse.md</code>): the system owner, and who owns the test install and its tester list, before stage 1; the maintainer, who rebuilds and redeploys the image with fixes and runs the key rotations, the yearly purge and the backups (<code>docs/ops/runbook.md</code> §2, §4–§7), before stage 2 at the latest. Until then the repository owner makes the product decisions; the bachelor students&#39; project (D-101) does not replace either role</td><td>Owner, HVL IT / ALU</td><td>Stage 1 of the IT assurance pack (<code>docs/assurance/test-environment.md</code>)</td></tr>
+<tr>
+<td>Q32</td><td>May a Feide ID (<code>eduPersonPrincipalName</code>) hold letters outside a–z, digits and <code>.</code>, <code>-</code>, <code>_</code> before the <code>@</code>, for example æ, ø or å? The server keeps such a letter as written and folds only <code>A</code>–<code>Z</code> (D-142); if Feide never issues one, the Feide ID pattern can refuse it</td><td>HVL IT, Sikt</td><td>Nothing; a stricter Feide ID pattern</td></tr>
 </tbody></table></div>
 <h3 id="progress--risk-register" tabindex="-1">Risk register</h3>
 <div class="table-wrap" role="region" aria-label="Table 4, Risk register" tabindex="0"><table><thead><tr>
@@ -16175,6 +16367,64 @@ $ npx vitest run --project server                    27035 passed, 31 skipped; 1
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004)</code></pre>
 </li>
+<li><p><strong>2026-11-25 · Security repairs, step 26 (D-142)</strong> — A logout and a cookie order follow the session, a Feide
+ID is read by one rule, typed text holds no hidden characters, and the editor endpoint takes known actions only.
+One code commit:</p>
+<ul>
+<li>Logout (AUTH-003): <code>endPortalSession</code> clears the session cookie only for a live session it ended; a logout
+request without one gets the same redirect and changes nothing. Tests:
+<code>auth/session/portalSessionMiddleware.int.test.ts</code>, <code>auth/feide/feideLogout.int.test.ts</code>.</li>
+<li>A dead session cookie (AUTH-003): <code>auth/session/staleCookieClearing.ts</code> (new) adds the order to delete it when
+the answer&#39;s headers are written, and only to an answer marked <code>no-store</code> or <code>private</code>; an answer a cache may
+keep (H5P core and library files, the web app&#39;s files under <code>/_next/static/</code>) never carries it. Tests:
+<code>auth/session/staleCookieClearing.test.ts</code>, <code>http/ownAnswerHeaders.int.test.ts</code>,
+<code>web/webAppStaleCookie.int.test.ts</code> (the built web app&#39;s real answers).</li>
+<li>One Feide ID rule (AUTH-002, AUTH-005, DATA-008): <code>auth/identity/feideId.ts</code> and <code>auth/identity/asciiText.ts</code>
+(new): SP and HTAB trimmed, <code>A</code>–<code>Z</code> lower-cased, every other character as written, then the pattern. Used by
+the login&#39;s claims, <code>custom.feide_login</code>, the configured lists, the people search, the data-subject tool and
+the two guards; Feide group IDs are compared the same way. Tests: <code>auth/identity/asciiText.test.ts</code>,
+<code>auth/identity/feideId.test.ts</code>, <code>learningDesign/collaboration/peopleSearch.int.test.ts</code>.</li>
+<li>Typed text (PED-030, PED-032, UD-022, PROD-007): <code>packages/api-contract/src/textRules.ts</code> (new) refuses
+control characters, the line and paragraph separators and the bidirectional controls in the learner purpose,
+the outcomes, the rationale, a reason for publishing (with its rule ID and path) and the people search; such a
+request is a 400. The web forms clean pasted text first (<code>apps/web/src/config/typedText.ts</code>, new). Tests:
+<code>packages/api-contract/test/textRules.test.ts</code>, <code>learningDesign/metadata/typedTextFields.int.test.ts</code>,
+<code>apps/web/test/config/typedText.test.tsx</code>.</li>
+<li>Editor requests (H5P-002): <code>http/routes/ajaxRoutes.ts</code> answers a missing, repeated or unknown action with 400
+before any body is read. Test: <code>http/ajaxActions.int.test.ts</code>.</li>
+<li>D-142 added, with amendment lines under D-054, D-057 and D-087; AUTH-002, AUTH-003 and AUTH-005 in spec 02,
+PED-030 and PED-032 in spec 04, UD-022 in spec 03, PROD-007 in spec 00 and H5P-002 in spec 01 have an
+&quot;Amended&quot; line; the threat model (T-02, T-05, T-21, new T-25), the glossary, the human-review list, the
+test-environment notes and the server README follow; open question Q32 added (which characters a Feide ID
+may hold, for HVL IT); <code>TRACEABILITY.md</code> and the spec site regenerated. No page of the web app looks
+different, so no screenshots. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 46, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       642 passed (100 files)
+$ npx vitest run --project api-contract              122 passed (15 files)
+$ npx vitest run --project tools                     541 passed (71 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             206 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files)
+$ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    27104 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004)</code></pre>
+</li>
 </ul>
 
 </section>
@@ -16479,7 +16729,7 @@ the meaning. Spec 04 and D-082…D-100 hold the rules; ALU edits the texts behin
 <tr>
 <td><strong>OIDC / PKCE</strong></td><td>OpenID Connect login, and Proof Key for Code Exchange, which protects the authorisation-code flow.</td></tr>
 <tr>
-<td><strong>Feide ID</strong></td><td>A person&#39;s Feide identifier (<code>eduPersonPrincipalName</code>, e.g. <code>name@hvl.no</code>) in the claim <code>https://n.feide.no/claims/eduPersonPrincipalName</code> (scope <code>userid-feide</code>). It is the Feide subject in HVL Interaktiv: trimmed and lower-cased, then only hashed (<code>Identity.subjectHash</code>, the learnerKey) or compared (<code>ADMIN_FEIDE_IDS</code>, <code>feide_login</code>), never stored (D-054).</td></tr>
+<td><strong>Feide ID</strong></td><td>A person&#39;s Feide identifier (<code>eduPersonPrincipalName</code>, e.g. <code>name@hvl.no</code>) in the claim <code>https://n.feide.no/claims/eduPersonPrincipalName</code> (scope <code>userid-feide</code>). It is the Feide subject in HVL Interaktiv: blanks trimmed and <code>A</code>–<code>Z</code> lower-cased, every other character as written (D-142), then only hashed (<code>Identity.subjectHash</code>, the learnerKey) or compared (<code>ADMIN_FEIDE_IDS</code>, <code>feide_login</code>), never stored (D-054).</td></tr>
 <tr>
 <td><strong>Groups API (Feide)</strong></td><td>Feide&#39;s API for a user&#39;s groups: <code>GET https://groups-api.dataporten.no/groups/me/groups</code> with the user&#39;s access token. The organisation group <code>fc:org:&lt;realm&gt;</code> carries <code>membership.affiliation</code> (e.g. <code>employee</code>, <code>student</code>); FS course groups look like <code>fc:fs:fs:emne:&lt;realm&gt;:&lt;code&gt;:&lt;version&gt;</code>. Roles are computed from it at login; if the call fails, the login fails (<a class="req-ref" href="#r-AUTH-002"><code>AUTH-002</code></a>, D-054).</td></tr>
 <tr>

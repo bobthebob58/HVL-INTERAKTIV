@@ -195,6 +195,9 @@ HVL content bank so that colleagues can *duplicate and adapt* it.
 - **Amended (D-139, 2026-11-22):** a duplicate is held to the limit for one activity's files (`SEC-005`), so one
   copy writes at most 200 MB.
 
+- **Amended (D-142, 2026-11-25):** the search text is one line of typed text (no control character, hidden line
+  break or bidirectional control), and a Feide ID in it is read by the login's rule (`AUTH-002`).
+
 #### PROD-008 · MUST · S2 · Resume where you left off
 A learner who leaves an activity and returns on any device resumes with their previous answers and position. See `H5P-005`.
 

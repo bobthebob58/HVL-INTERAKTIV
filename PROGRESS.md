@@ -988,6 +988,7 @@ under the step that does it):
 | Q29 | Who may log in to the portal? The recommended Feide registration leaves «Restrict login to selected organizations» off (`docs/reference/feide-values.md`), so anyone with Feide, also from schools (pupils, possibly children), can log in as a learner and play activities shared with «anyone with Feide» (spec 02's role table, D-059), and their play is stored and counted. Restrict Feide's «Restrict login to selected organizations» to HVL (and named partners), or keep it open with the DPO's basis for those users and a line in `/personvern` (DPIA input R37) | Owner, HVL IT, HVL DPO | The pilot |
 | Q30 | Students as insight readers: insight and the grade-sync counts go to anyone with the author role in a context, so a Canvas TA, who at HVL can be a student assistant, sees a course's *k*-suppressed aggregates, and a student author (D-059) sees them for every course their activity is placed in. Accept with HVL's confidentiality terms for student assistants, or show insight only to staff by Feide affiliation and to Canvas instructors but not TAs (an `INS-007` change; DPIA input R36) | HVL DPO, owner | The pilot |
 | Q31 | Name a system owner (*systemeigar*) and a maintainer (*forvaltar*) at HVL for HVL Interaktiv. Neither is named anywhere, and the IT assurance pack asks for them (D-116; `docs/assurance/README.md`, «Who is accountable»; ROS-19 in `docs/assurance/ros-analyse.md`): the system owner, and who owns the test install and its tester list, before stage 1; the maintainer, who rebuilds and redeploys the image with fixes and runs the key rotations, the yearly purge and the backups (`docs/ops/runbook.md` §2, §4–§7), before stage 2 at the latest. Until then the repository owner makes the product decisions; the bachelor students' project (D-101) does not replace either role | Owner, HVL IT / ALU | Stage 1 of the IT assurance pack (`docs/assurance/test-environment.md`) |
+| Q32 | May a Feide ID (`eduPersonPrincipalName`) hold letters outside a–z, digits and `.`, `-`, `_` before the `@`, for example æ, ø or å? The server keeps such a letter as written and folds only `A`–`Z` (D-142); if Feide never issues one, the Feide ID pattern can refuse it | HVL IT, Sikt | Nothing; a stricter Feide ID pattern |
 
 ## Risk register
 
@@ -2945,6 +2946,65 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
       (needs the privileged database, like DATA-010's tests)
   $ npx vitest run --project server                    27035 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-25 · Security repairs, step 26 (D-142)** — A logout and a cookie order follow the session, a Feide
+  ID is read by one rule, typed text holds no hidden characters, and the editor endpoint takes known actions only.
+  One code commit:
+  - Logout (AUTH-003): `endPortalSession` clears the session cookie only for a live session it ended; a logout
+    request without one gets the same redirect and changes nothing. Tests:
+    `auth/session/portalSessionMiddleware.int.test.ts`, `auth/feide/feideLogout.int.test.ts`.
+  - A dead session cookie (AUTH-003): `auth/session/staleCookieClearing.ts` (new) adds the order to delete it when
+    the answer's headers are written, and only to an answer marked `no-store` or `private`; an answer a cache may
+    keep (H5P core and library files, the web app's files under `/_next/static/`) never carries it. Tests:
+    `auth/session/staleCookieClearing.test.ts`, `http/ownAnswerHeaders.int.test.ts`,
+    `web/webAppStaleCookie.int.test.ts` (the built web app's real answers).
+  - One Feide ID rule (AUTH-002, AUTH-005, DATA-008): `auth/identity/feideId.ts` and `auth/identity/asciiText.ts`
+    (new): SP and HTAB trimmed, `A`–`Z` lower-cased, every other character as written, then the pattern. Used by
+    the login's claims, `custom.feide_login`, the configured lists, the people search, the data-subject tool and
+    the two guards; Feide group IDs are compared the same way. Tests: `auth/identity/asciiText.test.ts`,
+    `auth/identity/feideId.test.ts`, `learningDesign/collaboration/peopleSearch.int.test.ts`.
+  - Typed text (PED-030, PED-032, UD-022, PROD-007): `packages/api-contract/src/textRules.ts` (new) refuses
+    control characters, the line and paragraph separators and the bidirectional controls in the learner purpose,
+    the outcomes, the rationale, a reason for publishing (with its rule ID and path) and the people search; such a
+    request is a 400. The web forms clean pasted text first (`apps/web/src/config/typedText.ts`, new). Tests:
+    `packages/api-contract/test/textRules.test.ts`, `learningDesign/metadata/typedTextFields.int.test.ts`,
+    `apps/web/test/config/typedText.test.tsx`.
+  - Editor requests (H5P-002): `http/routes/ajaxRoutes.ts` answers a missing, repeated or unknown action with 400
+    before any body is read. Test: `http/ajaxActions.int.test.ts`.
+  - D-142 added, with amendment lines under D-054, D-057 and D-087; AUTH-002, AUTH-003 and AUTH-005 in spec 02,
+    PED-030 and PED-032 in spec 04, UD-022 in spec 03, PROD-007 in spec 00 and H5P-002 in spec 01 have an
+    "Amended" line; the threat model (T-02, T-05, T-21, new T-25), the glossary, the human-review list, the
+    test-environment notes and the server README follow; open question Q32 added (which characters a Feide ID
+    may hold, for HVL IT); `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks
+    different, so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       642 passed (100 files)
+  $ npx vitest run --project api-contract              122 passed (15 files)
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27104 passed, 31 skipped; 1 failed in 4 files: a
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
   ```

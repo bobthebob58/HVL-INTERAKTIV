@@ -55,7 +55,7 @@ infrastructure and the first contact with the real Feide and a real Canvas, with
   - A user can author only if their realm is in `ALLOWED_FEIDE_ORGS`, the Groups API returns their organisation
     group, and that group gives them a staff affiliation (`employee`, `faculty` or `staff`) or the `student`
     affiliation together with a course group listed in `AUTHOR_COURSE_GROUPS`; anyone else is a learner
-    (`apps/server/src/auth/feide/FeideRoleMapper.ts:145-161`, D-059). If the test users have their own realm, add
+    (`apps/server/src/auth/feide/FeideRoleMapper.ts:147-163`, D-059). If the test users have their own realm, add
     it to `ALLOWED_FEIDE_ORGS` on the test install only, and confirm with Sikt that they carry affiliations.
   - «Restrict login to selected organizations» (Q29): *(proposal)* on for stage 1, limited to the test users'
     organisation (and HVL, if named HVL testers use their own accounts).

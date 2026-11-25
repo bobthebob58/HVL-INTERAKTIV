@@ -182,6 +182,10 @@ prompted (but not required) on publish.
 
 - **Verify:** Component and API tests.
 
+- **Amended (D-142, 2026-11-25):** the outcomes, the rationale and the purpose are typed text: no control
+  character (a tab and line breaks are text in the outcomes and the rationale), no U+2028 or U+2029 and no
+  bidirectional control. The API answers such a text with 400; the form takes these out of pasted text first.
+
 #### PED-031 · SHOULD · S5 · Constructive alignment planner
 For one course, the planner shows a grid of **learning outcomes × phases** filled with the author's
 tagged activities. It highlights gaps, such as an outcome with no *etterarbeid* activity or a phase
@@ -195,6 +199,8 @@ with no activities. It offers *Create from pattern* inside any empty cell.
 Before an activity starts, learners see the estimated time and a one-line "why this matters" text
 taken from the metadata. This helps them plan their study and self-regulate.
 - **Verify:** Component test.
+- **Amended (D-142, 2026-11-25):** «one line» also means no U+2028 or U+2029, and the purpose holds no
+  bidirectional control; a stored purpose that breaks the rule is not shown to learners.
 
 ---
 
