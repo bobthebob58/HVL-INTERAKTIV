@@ -314,7 +314,8 @@ Tick every line before the first learner, and again after a change of hosting:
 - [ ] The reverse proxy: TLS for both names; its access log leaves out the query string (a few routes accept
       `?ltik=`, which the server keeps out of its own log but cannot remove from the proxy's, `NFR-006`); it passes
       its request ID as `X-Request-Id` (a UUID or 32 hexadecimal digits); `TRUST_PROXY` is the number of proxies in
-      front (usually 1); it compresses scripts and stylesheets (gzip or brotli).
+      front (usually 1), and the LTI request ceiling counts by the client address it gives (D-141); it
+      compresses scripts and stylesheets (gzip or brotli).
 - [ ] The reverse proxy answers a request whose headers are too large with a page that tells the person to clear
       the site's cookies: cookies that other `hvl.no` sites set for the whole domain can cause it (threat model
       T-43).

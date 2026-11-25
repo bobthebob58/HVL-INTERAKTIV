@@ -2892,3 +2892,59 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox, limits of this container (DATA-010,
       MAPPE-004), and the expectation named above, corrected afterwards (its file re-run: 5 passed)
   ```
+
+- **2026-11-25 · Security repairs, step 25 (D-141)** — A launch is finished by the browser that began it,
+  requests before sign-in have a bound, and ltijs asks a platform only through our request handler. One code
+  commit:
+  - The last step of a launch (LTI-001, LTI-003): `lti/http/launchPostOrigin.ts` (new), called by
+    `ExpressRouterHttpHandler` before ltijs reads the request, takes the post that carries ltijs's recovery token
+    only with `Sec-Fetch-Site: same-origin` or, without that header, with an `Origin` that is exactly ours;
+    ltijs's launch page is sent with `Referrer-Policy: same-origin` so a browser names our origin there
+    (`ltiPageHeaders.ts`). Tests: `lti/http/launchPostOrigin.test.ts`, `lti/launchBrowserBinding.int.test.ts`,
+    `e2e/ltiLaunchOwnPage.e2e.test.ts` (a launch in full Chromium without fetch metadata).
+  - Error pages (LTI-003): every LTI error page loads the landing script, so an ltik leaves the address there too
+    (`http/pages/messagePage.ts`, `lti/http/ltiErrorPages.ts`, `lti/pages/ltiStaticScripts.ts`, new).
+  - Bounds before sign-in (LTI-001, DATA-007, NFR-006): `lti/http/launchRequestCeiling.ts` (new; 6 000 requests a
+    minute per address fingerprint on ltijs's routes), `LtiCacheManager` keeps a platform's key set for a minute
+    after a fetch, and `auth/audit/failureAuditBudget.ts` (new) bounds the audit rows of failed logins and
+    launches (10 a minute per address, 300 in all; the rest counted in one log line). Tests:
+    `lti/http/launchRequestCeiling.int.test.ts`, `auth/audit/failureAuditBudget.int.test.ts`,
+    `lti/unknownKeyFetch.int.test.ts`, `lti/storage/LtiCacheManager.int.test.ts`.
+  - What ltijs asks a platform (LTI-001, LTI-008): `lti/http/LtiOutboundRequests.ts` (new) replaces ltijs's
+    request handler: the platforms' own origins only, no redirect, 10 seconds, 4 MB. Test:
+    `lti/http/LtiOutboundRequests.test.ts`.
+  - The test launch driver and the load scripts send `Sec-Fetch-Site: same-origin` on the last step, as a
+    browser does. A second commit adds the TSDoc the API docs asked for in two of the new files.
+  - D-141 added, with amendment lines under D-051, D-065 and D-131; LTI-001, LTI-003, LTI-007 and LTI-008 in
+    spec 02 have an "Amended" line; the threat model (T-13, T-18, T-60, T-63, T-111), the architecture
+    description, the data inventory (three Redis keys), the human-review list, the runbook, the evaluator guide
+    and the server README follow; `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks
+    different, so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       635 passed (99 files)
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27035 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```

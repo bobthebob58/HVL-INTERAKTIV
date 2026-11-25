@@ -661,6 +661,10 @@ loading of one spec per session are kept.
   puts a page-memory stand-in in its place (nothing reaches disk; the ltik is never written to it). With storage
   blocked *and* no `lti_storage_target`, ltijs cannot recover its state and the launch ends on our "launch failed"
   page; Canvas sends `lti_storage_target`, so this affects only other platforms.
+- **Amendment (2026-11-25, D-141):** ltijs's `Sec-Fetch-Site` check on its second launch POST is no longer the
+  only one: our handler also requires our own `Origin` from a browser that sends no fetch metadata, and ltijs's
+  launch page is sent with `Referrer-Policy: same-origin`. ltijs's request handler is replaced by ours
+  (`lti/http/LtiOutboundRequests.ts`).
 
 ### D-051 · LTI platforms and deployments from `LTI_PLATFORMS`; deployment IDs checked by us
 - **Context:** `LTI-001` requires rejecting a launch with a wrong deployment ID. ltijs 7 checks only that the claim
@@ -852,6 +856,8 @@ loading of one spec per session are kept.
   launches; author launches and link outcomes carry the actor instead (a link outcome has none when its launch
   then fails, D-063).
 - **Consequences:** The owner confirms the learner rule (Q15).
+- **Amendment (2026-11-25, D-141):** failed logins and failed launches are recorded up to 10 rows a minute per
+  network address and 300 in all; what is past that is counted in the log.
 
 ### D-065 · End-to-end tests in Session 3
 - **Context:** The EVALUATOR-GUIDE says `npm run test:e2e` runs journeys J1–J5 from S3, but spec 00 places J1–J5 in
@@ -5519,6 +5525,9 @@ loading of one spec per session are kept.
   asks for a new launch. `LTIK_QUERY_PATHS` holds only H5P's two URL shapes; the landing pages read their own
   address. Browser tests that hold an ltik arrive through `test/support/openLanding.ts`. No stored data
   changes.
+- **Amendment (2026-11-25, D-141):** that ltijs requires its second POST to be same-origin held only for browsers
+  that send fetch metadata; since D-141 our handler requires it of every browser, by `Origin` where
+  `Sec-Fetch-Site` is missing.
 
 ### D-131 · Security repairs, step 15: the portal's login, its answers and the save gate are closed to other sites' requests and to a second spelling of an ID
 - **Context:** Four small things on the portal side. Starting a Feide login replaces the session a browser has,
@@ -5926,3 +5935,72 @@ loading of one spec per session are kept.
   text sent past its field's length, which the editor does not allow, loses its formatting. A link address with a
   quote or a space is stored percent-encoded. SEC-008 and H5P-009 have an "Amended" line; T-03 in the threat model
   follows.
+
+### D-141 · Security repairs, step 25: a launch is finished by the browser that began it; requests before sign-in have a bound; ltijs asks a platform only through our request handler
+- **Context:** ltijs 7 processes a launch on its own second POST: Canvas posts the ID token to `/lti/launch`,
+  ltijs's page there reads a recovery token from the browser that began the login and posts everything again. That
+  this second post comes from our own page is what ties a launch to its browser. ltijs checks it by
+  `Sec-Fetch-Site` alone and lets a request without the header through (D-050 and D-130 both rested on that
+  check). Browsers before Safari 16.4 and Firefox 90 send no such header: there, another site could post a launch
+  of its own, recovery token included, and the person landed inside it. Four smaller things lay around the launch.
+  An error page for an address with an ltik kept the token in the address bar. The login, launch and key-set
+  routes answer before any sign-in, and a request could make the server store a nonce, sign tokens and write an
+  audit row, with no ceiling; a token that named an unknown key ID made ltijs fetch the platform's key set again,
+  every time. ltijs's own request handler follows redirects and has neither a time nor a size limit, and a
+  roster's «next page» link comes from the answer itself. And which course may open an activity (LTI-007) was
+  nowhere stated as a rule.
+- **Decision — the last step of a launch comes from our own page (LTI-001, LTI-003).**
+  `lti/http/launchPostOrigin.ts`, called by `ExpressRouterHttpHandler` before ltijs reads the request: a post that
+  carries ltijs's recovery token is taken with `Sec-Fetch-Site: same-origin`, or, without that header, with an
+  `Origin` that is exactly ours (`PUBLIC_BASE_URL`). A missing `Origin`, `null` and any other origin are refused
+  as ltijs refuses a wrong recovery token (the «could not be opened from Canvas» page, audit reason
+  `state-invalid`). Canvas's own post, cross-site by nature, is not judged. For a browser to name our origin,
+  ltijs's launch page is sent with `Referrer-Policy: same-origin`: under `no-referrer` Chromium puts `Origin:
+  null` on that page's own post (measured). The page holds no ltik, and under either rule no referrer goes to
+  another origin, so LTI-003's rule for pages that receive an ltik is unchanged. Not built: a single-use state. A
+  nonce is used once (LTI-002), so a finished launch cannot be sent again, and the state carries no right of its
+  own.
+- **Decision — an LTI error page takes an ltik out of its address (LTI-003).** `http/pages/messagePage.ts` takes
+  static scripts, and `lti/http/ltiErrorPages.ts` gives every page the landing script (its path now in
+  `lti/pages/ltiStaticScripts.ts`), so the «open it again from Canvas» page for `/lti/play?ltik=…` leaves no token
+  in the address bar or the history. Where a browser holds an ltik: in the address of the landing request until
+  the page's first script runs, in the page's memory, and in H5P's own request URLs inside the frame (D-058);
+  never in a cookie or in storage.
+- **Decision — requests before sign-in have a bound (LTI-001, DATA-007, NFR-006).** (a)
+  `lti/http/launchRequestCeiling.ts`: 6 000 requests a minute from one network address to ltijs's three routes,
+  which is 2 000 launches; past it 429 `hvl:rate-limited` with `Retry-After`, before the body is read. The address
+  is counted under its keyed fingerprint (`auth-audit-ip`), for a minute. When Redis cannot be reached the request
+  goes ahead and a line says so: this is a backstop behind the reverse proxy's own limit (the question to HVL IT
+  stands), and it must not make a launch depend on Redis. `TRUST_PROXY` must be right, or every person shares one
+  count. (b) `LtiCacheManager` keeps a platform's key set for a minute after it was fetched, whatever asks for its
+  removal, so an unknown key ID costs at most one fetch a minute; a real change of keys is seen a minute later at
+  most. (c) `auth/audit/failureAuditBudget.ts`: failed logins and failed launches add at most 10 audit rows a
+  minute per address and 300 in all; what is past that is counted in one log line a minute, without an address.
+  With Redis unreachable the row is written.
+- **Decision — ltijs asks a platform only through our request handler (LTI-001, LTI-008).**
+  `lti/http/LtiOutboundRequests.ts` replaces ltijs's `FetchRequestHandler` (a `Provider` option): a URL is asked
+  only on the origins of the configured platforms (issuer, the two endpoints, the key-set URL) and
+  `CANVAS_ORIGINS`, over https in production, without credentials in it; no redirect is followed; a request ends
+  after 10 seconds and an answer after 4 MB. So a roster's «next page» link that names another host is refused
+  before any request is made (D-104 set this for the first roster URL and for scores), and a slow key-set answer
+  cannot hold a launch open.
+- **Recorded, not changed — which course may open an activity (LTI-006, LTI-007).** A published activity is opened
+  by any resource link of a registered platform and deployment that carries its ID in `custom.contentId`. Links
+  are made in the Deep Linking picker, which offers an author only their own and co-authored activities and signs
+  its answer; Canvas keeps the ID when a course is copied, which is what LTI-007 asks for. A course whose teacher
+  never owned the activity can therefore play it, see its own course's insight and duplicate it, and cannot edit
+  it (D-060). The ID is a UUID that cannot be guessed, but it is no secret: whoever holds a link can place it
+  again. An owner withdraws an activity from every course by unpublishing or deleting it. A rule that tied an
+  activity to the courses its owner chose would have to refuse copied courses.
+- **Verified:** unit tests of the last-step rule and of ltijs's routes on our router; an integration test through
+  the whole app with the mock Canvas, with a genuine ID token, state and recovery token and only the post's
+  headers changed; a browser test in full Chromium whose launch posts reach the server without fetch metadata
+  (taken with the browser's own `Origin`, refused with `null`); integration tests of the ceiling, the audit bound
+  and the key-set cache on Redis; a test that five launches naming an unpublished key cause no key-set fetch; unit
+  tests of the request handler against local servers (another origin, a redirect, a slow and an over-large answer,
+  a «next page» link that points elsewhere).
+- **Consequences:** A browser that sends neither `Sec-Fetch-Site` nor `Origin` on a form post can no longer finish
+  a launch; Canvas supports none. After Canvas replaces its signing keys a launch can fail for up to a minute.
+  More than 2 000 launches a minute from one address get the «try again» page. The load scripts and the test
+  launch driver send `Sec-Fetch-Site: same-origin` on the last step, as a browser does. LTI-001, LTI-003, LTI-007
+  and LTI-008 have an "Amended" line; T-13, T-18, T-60, T-63 and T-111 in the threat model follow.

@@ -1520,7 +1520,12 @@ and `sso.{beta,test}.canvaslms.com`; which one tecopp's test canvas is *(verify 
   learner pseudonym are derived from issuer, client id and `sub` (`data-002`), so the same `sub` from two
   registrations that send one issuer is two people. neither issuer nor client id may contain `|`. a login or
   launch field with a control character, or a claim the database cannot hold, is refused with 400 and the
-  «could not be opened from canvas» page, never answered as a server fault.">
+  «could not be opened from canvas» page, never answered as a server fault.
+- **amended (d-141, 2026-11-25):** the last step of a launch (ltijs's own second post) is taken only from our own
+  page: `sec-fetch-site: same-origin`, or an `origin` that is ours from a browser that sends no fetch metadata.
+  ltijs's three routes have a ceiling of 6 000 requests a minute per network address, a platform's key set is
+  fetched at most once a minute, and ltijs asks a platform only on the configured platforms' origins and
+  `canvas_origins`, without following a redirect, within 10 seconds and 4 mb.">
 <summary><span class="req-id">LTI-001</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">LTI 1.3 tool with ltijs 7</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>apps/server/src/lti/LtiProviderFactory.ts</code> builds the ltijs <code>Provider</code> with the routes
 <code>/lti/login</code>, <code>/lti/launch</code>, <code>/lti/keys</code>, our <code>PrismaLtiDatabaseManager</code> and <code>RedisCacheManager</code>.
@@ -1544,6 +1549,11 @@ learner pseudonym are derived from issuer, client ID and <code>sub</code> (<a cl
 registrations that send one issuer is two people. Neither issuer nor client ID may contain <code>|</code>. A login or
 launch field with a control character, or a claim the database cannot hold, is refused with 400 and the
 «could not be opened from Canvas» page, never answered as a server fault.</li>
+<li><strong>Amended (D-141, 2026-11-25):</strong> the last step of a launch (ltijs&#39;s own second post) is taken only from our own
+page: <code>Sec-Fetch-Site: same-origin</code>, or an <code>Origin</code> that is ours from a browser that sends no fetch metadata.
+ltijs&#39;s three routes have a ceiling of 6 000 requests a minute per network address, a platform&#39;s key set is
+fetched at most once a minute, and ltijs asks a platform only on the configured platforms&#39; origins and
+<code>CANVAS_ORIGINS</code>, without following a redirect, within 10 seconds and 4 MB.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-001">02 Feide, LTI and grades, LTI-001</a> · Canvas LTI and grades</p></div>
 </details>
@@ -1580,7 +1590,10 @@ Platform private keys are encrypted at rest with a key from the secret store.</p
   of the launch (`lti/landingltik.ts`); otherwise the page of step 4 answers.
 - **amended (d-133, 2026-11-22):** every response starts with `content-security-policy: default-src 'none';
   frame-ancestors 'none'`, which each page replaces with its own policy (step 6 for the lti pages).
-  `strict-transport-security` gains `includesubdomains` only with `hsts_include_subdomains=true`.">
+  `strict-transport-security` gains `includesubdomains` only with `hsts_include_subdomains=true`.
+- **amended (d-141, 2026-11-25):** step 5 holds for every page that receives an ltik. ltijs's launch page, which
+  receives none, is sent with `referrer-policy: same-origin`, so that its own post names our origin. the error
+  pages of the lti routes take an ltik out of their address as step 2 does.">
 <summary><span class="req-id">LTI-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Cookie-less ltik transport</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><ol>
 <li><code>onResourceLink</code> and <code>onDeepLinking</code> call <code>context.redirect(res, &#39;/app/…&#39;)</code>, which appends <code>?ltik=…</code>.</li>
@@ -1603,6 +1616,9 @@ accepted only from a same-origin navigation, or, from a browser that sends no fe
 of the launch (<code>lti/landingLtik.ts</code>); otherwise the page of step 4 answers.</li>
 <li><strong>Amended (D-133, 2026-11-22):</strong> every response starts with <code>Content-Security-Policy: default-src &#39;none&#39;; frame-ancestors &#39;none&#39;</code>, which each page replaces with its own policy (step 6 for the LTI pages).
 <code>Strict-Transport-Security</code> gains <code>includeSubDomains</code> only with <code>HSTS_INCLUDE_SUBDOMAINS=true</code>.</li>
+<li><strong>Amended (D-141, 2026-11-25):</strong> step 5 holds for every page that receives an ltik. ltijs&#39;s launch page, which
+receives none, is sent with <code>Referrer-Policy: same-origin</code>, so that its own post names our origin. The error
+pages of the LTI routes take an ltik out of their address as step 2 does.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-003">02 Feide, LTI and grades, LTI-003</a> · Canvas LTI and grades</p></div>
 </details>
@@ -1696,13 +1712,21 @@ activity, <strong>Innsikt</strong> and the score status show it for the launch&#
 <details class="req" id="x-LTI-007" data-area="LTI" data-priority="SHOULD" data-session="S3" data-status="tested" data-text="lti-007 works after canvas course copy when a canvas course is copied, its resource links keep `custom.contentid`. instructors of the new
 course can launch, play and view insight for their own context. they can **duplicate** the activity
 into their own library, but cannot edit the original unless they are co-authors.
-- **verify:** integration test with two contexts and a shared `contentid`.">
+- **verify:** integration test with two contexts and a shared `contentid`.
+- **amended (d-141, 2026-11-25):** stated as a rule: a published activity is opened by any resource link of a
+  registered platform and deployment that carries its id. the picker offers an author only their own and
+  co-authored activities; whoever holds a link can place it again, and the owner withdraws the activity by
+  unpublishing it.">
 <summary><span class="req-id">LTI-007</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Works after Canvas course copy</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>When a Canvas course is copied, its resource links keep <code>custom.contentId</code>. Instructors of the new
 course can launch, play and view insight for their own context. They can <strong>duplicate</strong> the activity
 into their own library, but cannot edit the original unless they are co-authors.</p>
 <ul>
 <li><strong>Verify:</strong> Integration test with two contexts and a shared <code>contentId</code>.</li>
+<li><strong>Amended (D-141, 2026-11-25):</strong> stated as a rule: a published activity is opened by any resource link of a
+registered platform and deployment that carries its ID. The picker offers an author only their own and
+co-authored activities; whoever holds a link can place it again, and the owner withdraws the activity by
+unpublishing it.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-007">02 Feide, LTI and grades, LTI-007</a> · Canvas LTI and grades</p></div>
 </details>
@@ -1715,7 +1739,10 @@ stored**, never member names or e-mail addresses. this needs the developer-key s
 - **amended (d-103, d-104, 2026-10-30):** the count is fetched with ltijs's `context.namesandroles` during a launch,
   while the launch context lives, and cached under the platform-scoped context `&lt;platformid&gt;:&lt;contextid&gt;` (d-103), so
   courses with the same id in two of hvl's canvas instances never share a count. nrps paging and role filtering on
-  hvl's canvas are on the students' canvas acceptance checklist *(verify)* (d-101).">
+  hvl's canvas are on the students' canvas acceptance checklist *(verify)* (d-101).
+- **amended (d-141, 2026-11-25):** every page of the roster is asked through `lti/http/ltioutboundrequests.ts`: a
+  «next page» link that names another origin than the platform's own or `canvas_origins` is not followed, nor is a
+  redirect.">
 <summary><span class="req-id">LTI-008</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Participation denominators via NRPS</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>If the launch includes the Names and Roles claim, fetch the number of active learners in the
 context. Cache it for 1 hour, and use it as the denominator in insight (<a class="req-ref" href="#r-INS-001"><code>INS-001</code></a>). <strong>Only counts are
@@ -1728,6 +1755,9 @@ stored</strong>, never member names or e-mail addresses. This needs the develope
 while the launch context lives, and cached under the platform-scoped context <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (D-103), so
 courses with the same ID in two of HVL&#39;s Canvas instances never share a count. NRPS paging and role filtering on
 HVL&#39;s Canvas are on the students&#39; Canvas acceptance checklist <em>(verify)</em> (D-101).</li>
+<li><strong>Amended (D-141, 2026-11-25):</strong> every page of the roster is asked through <code>lti/http/LtiOutboundRequests.ts</code>: a
+«next page» link that names another origin than the platform&#39;s own or <code>CANVAS_ORIGINS</code> is not followed, nor is a
+redirect.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-LTI-008">02 Feide, LTI and grades, LTI-008</a> · Canvas LTI and grades</p></div>
 </details>
@@ -4549,6 +4579,11 @@ learner pseudonym are derived from issuer, client ID and <code>sub</code> (<a cl
 registrations that send one issuer is two people. Neither issuer nor client ID may contain <code>|</code>. A login or
 launch field with a control character, or a claim the database cannot hold, is refused with 400 and the
 «could not be opened from Canvas» page, never answered as a server fault.</li>
+<li><strong>Amended (D-141, 2026-11-25):</strong> the last step of a launch (ltijs&#39;s own second post) is taken only from our own
+page: <code>Sec-Fetch-Site: same-origin</code>, or an <code>Origin</code> that is ours from a browser that sends no fetch metadata.
+ltijs&#39;s three routes have a ceiling of 6 000 requests a minute per network address, a platform&#39;s key set is
+fetched at most once a minute, and ltijs asks a platform only on the configured platforms&#39; origins and
+<code>CANVAS_ORIGINS</code>, without following a redirect, within 10 seconds and 4 MB.</li>
 </ul>
 <h4 id="r-LTI-002" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-002">LTI-002</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">PostgreSQL storage for ltijs</span></h4>
 <p><code>PrismaLtiDatabaseManager</code> implements all 14 methods of ltijs&#39;s <code>DatabaseManager</code>.
@@ -4580,6 +4615,9 @@ accepted only from a same-origin navigation, or, from a browser that sends no fe
 of the launch (<code>lti/landingLtik.ts</code>); otherwise the page of step 4 answers.</li>
 <li><strong>Amended (D-133, 2026-11-22):</strong> every response starts with <code>Content-Security-Policy: default-src &#39;none&#39;; frame-ancestors &#39;none&#39;</code>, which each page replaces with its own policy (step 6 for the LTI pages).
 <code>Strict-Transport-Security</code> gains <code>includeSubDomains</code> only with <code>HSTS_INCLUDE_SUBDOMAINS=true</code>.</li>
+<li><strong>Amended (D-141, 2026-11-25):</strong> step 5 holds for every page that receives an ltik. ltijs&#39;s launch page, which
+receives none, is sent with <code>Referrer-Policy: same-origin</code>, so that its own post names our origin. The error
+pages of the LTI routes take an ltik out of their address as step 2 does.</li>
 </ul>
 <h4 id="r-LTI-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-004">LTI-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 3">S3</span> <span class="req-title">Map LTI roles safely</span></h4>
 <div class="table-wrap" role="region" aria-label="Table 4, 4. Requirements — Canvas LTI 1.3 core and Deep Linking" tabindex="0"><table><thead><tr>
@@ -4633,6 +4671,10 @@ course can launch, play and view insight for their own context. They can <strong
 into their own library, but cannot edit the original unless they are co-authors.</p>
 <ul>
 <li><strong>Verify:</strong> Integration test with two contexts and a shared <code>contentId</code>.</li>
+<li><strong>Amended (D-141, 2026-11-25):</strong> stated as a rule: a published activity is opened by any resource link of a
+registered platform and deployment that carries its ID. The picker offers an author only their own and
+co-authored activities; whoever holds a link can place it again, and the owner withdraws the activity by
+unpublishing it.</li>
 </ul>
 <hr>
 <h3 id="spec-02--5-requirements--names-and-roles-dynamic-registration" tabindex="-1">5. Requirements — Names and Roles, Dynamic Registration</h3>
@@ -4648,6 +4690,9 @@ stored</strong>, never member names or e-mail addresses. This needs the develope
 while the launch context lives, and cached under the platform-scoped context <code>&lt;platformId&gt;:&lt;contextId&gt;</code> (D-103), so
 courses with the same ID in two of HVL&#39;s Canvas instances never share a count. NRPS paging and role filtering on
 HVL&#39;s Canvas are on the students&#39; Canvas acceptance checklist <em>(verify)</em> (D-101).</li>
+<li><strong>Amended (D-141, 2026-11-25):</strong> every page of the roster is asked through <code>lti/http/LtiOutboundRequests.ts</code>: a
+«next page» link that names another origin than the platform&#39;s own or <code>CANVAS_ORIGINS</code> is not followed, nor is a
+redirect.</li>
 </ul>
 <h4 id="r-LTI-009" class="req-heading" tabindex="-1"><a class="req-id" href="#r-LTI-009">LTI-009</a> <span class="badge pri pri-could" title="RFC 2119 COULD">Could</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">LTI Dynamic Registration</span></h4>
 <p>Support Canvas&#39;s LTI Dynamic Registration through ltijs 7, so TeCopp can install the tool from one
@@ -4879,7 +4924,7 @@ page → the error page. <code>server/main.ts</code> (<code>npm start</code>) sy
 <tr>
 <td><a class="req-ref" href="#r-AUTH-005"><code>AUTH-005</code></a></td><td><code>auth/identity/linkDecision.ts</code> (reads <code>custom.feide_login</code> only when <a class="req-ref" href="#r-LTI-004"><code>LTI-004</code></a> gives <code>author</code>, ignores values starting with <code>$</code>, picks the D-063 case); <code>auth/identity/accountLinking.ts</code> (applies it only for a platform with <code>&quot;feideLinking&quot;: true</code> in <code>LTI_PLATFORMS</code> and a Feide ID whose realm is in <code>ALLOWED_FEIDE_ORGS</code>, and only onto an existing Feide account that is not a learner&#39;s; the rival check and the write run in one transaction with the Feide account locked; the same person&#39;s simultaneous launch is no rival; returns the outcome, which <code>onDeepLinking</code> audits: <code>link.conflict</code> on the claimant&#39;s own account, <code>link.feide-lti</code> on the account the launch then uses, either without an actor if the launch fails after linking; D-063 as amended); <code>auth/identity/identityLookup.ts</code> (the same row login uses while key rings are mixed); <code>lti/linkingPlatforms.ts</code> and <code>config/envParsers.ts</code> (<code>feideLinking</code>, default false); <code>lti/launch/onDeepLinking.ts</code> (links from the in-memory claims before the account is resolved); <code>lti/storage/ltiIdTokenClaims.ts</code> (drops <code>feide_login</code> before storage, D-052)</td><td><code>test/auth/identity/linkDecision.test.ts</code>; <code>test/auth/identity/accountLinking.int.test.ts</code> (Feide first, Canvas first, move, conflict, a second Canvas user audited on their own account, unexpanded <code>$Canvas.user.loginId</code>, never stored); <code>test/auth/identity/accountLinkingGuards.int.test.ts</code> (<code>feideLinking</code> off, a realm outside <code>ALLOWED_FEIDE_ORGS</code>, no Feide account to join, a learner&#39;s Feide account, a second Canvas user naming the same Feide ID, another platform, mixed key rings); <code>test/auth/identity/accountLinkingRaces.int.test.ts</code> (two claimants at once, a double click)</td><td>Linking runs only at Deep Linking launches, and only from platforms with <code>feideLinking</code>, which is set once TeCopp has confirmed that <code>$Canvas.user.loginId</code> equals the Feide ID at HVL (Q4). A Feide identity is never created from the Canvas side. The &quot;Link with Feide&quot; pop-up fallback is not built.</td></tr>
 <tr>
-<td><a class="req-ref" href="#r-LTI-001"><code>LTI-001</code></a></td><td><code>lti/LtiProviderFactory.ts</code> (<code>Provider</code>, routes <code>/lti/login</code>, <code>/lti/launch</code>, <code>/lti/keys</code>, <code>tokenMaxAge</code> = <code>LTI_TOKEN_MAX_AGE_SECONDS</code>); <code>lti/http/ExpressRouterHttpHandler.ts</code> (ltijs on our router, D-050); <code>lti/ltiRoutes.ts</code>; <code>lti/platforms/syncLtiPlatforms.ts</code> (<code>LTI_PLATFORMS</code> → <code>LtiPlatform</code> and <code>LtiDeployment</code>, D-051); <code>lti/platforms/LtiDeploymentGuard.ts</code>; <code>lti/storage/LtiCacheManager.ts</code>; <code>lti/http/ltiErrorPages.ts</code>; <code>lti/launchFacts.ts</code>; <code>lti/ltijsLogger.ts</code>; <code>server/main.ts</code></td><td><code>test/lti/ltiLaunch.int.test.ts</code> (a full launch from the mock Canvas; a foreign signature, a wrong <code>aud</code>, an expired <code>exp</code>, another nonce, a replay and an unconfigured deployment are refused); <code>test/lti/storage/ltijsOnPrismaStorage.int.test.ts</code>; <code>test/lti/platforms/syncLtiPlatforms.int.test.ts</code>; <code>test/lti/storage/LtiDeploymentGuard.int.test.ts</code>; <code>test/lti/http/ExpressRouterHttpHandler.test.ts</code>; <code>test/lti/http/ltiErrorPages.test.ts</code>; <code>test/lti/upstream/ltijsProvider.test.ts</code>; <code>test/server/createApp.int.test.ts</code> (<code>/lti/keys</code>); <code>test/db/ltiDeployments.int.test.ts</code></td><td><code>SPEC-DEVIATION</code> D-050: our node-redis <code>LtiCacheManager</code> replaces ltijs&#39;s <code>RedisCacheManager</code>. <code>authorizationServer</code> stays unset. Client ID, deployment IDs and TeCopp&#39;s instance are still open (Q4).</td></tr>
+<td><a class="req-ref" href="#r-LTI-001"><code>LTI-001</code></a></td><td><code>lti/LtiProviderFactory.ts</code> (<code>Provider</code>, routes <code>/lti/login</code>, <code>/lti/launch</code>, <code>/lti/keys</code>, <code>tokenMaxAge</code> = <code>LTI_TOKEN_MAX_AGE_SECONDS</code>); <code>lti/http/ExpressRouterHttpHandler.ts</code> (ltijs on our router, D-050); <code>lti/http/launchPostOrigin.ts</code>, <code>lti/http/launchRequestCeiling.ts</code> and <code>lti/http/LtiOutboundRequests.ts</code> (the last step from our own page, the request ceiling, what ltijs may ask a platform; D-141); <code>lti/ltiRoutes.ts</code>; <code>lti/platforms/syncLtiPlatforms.ts</code> (<code>LTI_PLATFORMS</code> → <code>LtiPlatform</code> and <code>LtiDeployment</code>, D-051); <code>lti/platforms/LtiDeploymentGuard.ts</code>; <code>lti/storage/LtiCacheManager.ts</code>; <code>lti/http/ltiErrorPages.ts</code>; <code>lti/launchFacts.ts</code>; <code>lti/ltijsLogger.ts</code>; <code>server/main.ts</code></td><td><code>test/lti/ltiLaunch.int.test.ts</code> (a full launch from the mock Canvas; a foreign signature, a wrong <code>aud</code>, an expired <code>exp</code>, another nonce, a replay and an unconfigured deployment are refused); <code>test/lti/storage/ltijsOnPrismaStorage.int.test.ts</code>; <code>test/lti/platforms/syncLtiPlatforms.int.test.ts</code>; <code>test/lti/storage/LtiDeploymentGuard.int.test.ts</code>; <code>test/lti/http/ExpressRouterHttpHandler.test.ts</code>; <code>test/lti/http/ltiErrorPages.test.ts</code>; <code>test/lti/upstream/ltijsProvider.test.ts</code>; <code>test/server/createApp.int.test.ts</code> (<code>/lti/keys</code>); <code>test/db/ltiDeployments.int.test.ts</code></td><td><code>SPEC-DEVIATION</code> D-050: our node-redis <code>LtiCacheManager</code> replaces ltijs&#39;s <code>RedisCacheManager</code>. <code>authorizationServer</code> stays unset. Client ID, deployment IDs and TeCopp&#39;s instance are still open (Q4).</td></tr>
 <tr>
 <td><a class="req-ref" href="#r-LTI-002"><code>LTI-002</code></a></td><td><code>lti/storage/PrismaLtiDatabaseManager.ts</code> (all 14 methods; <code>consumeNonce</code> is one conditional <code>DELETE</code>; deployment check in <code>saveIdToken</code>); <code>lti/storage/ltiIdTokenClaims.ts</code> (claim allowlist, D-052); <code>lti/storage/ltiRecordLifetimes.ts</code>; <code>lti/storage/ltiPlatformRows.ts</code> and <code>lti/storage/ltiAccessTokenRows.ts</code> (encrypted private keys and access tokens, D-056); <code>lti/storage/LtiRecordCleanupJob.ts</code> (every 10 min on one node, through <code>jobs/LeasedIntervalJob.ts</code>); <code>lti/platforms/reencryptPlatformKeys.ts</code>; <code>security/keys/DataEncryption.ts</code>; <code>security/keys/keyring.ts</code></td><td><code>test/lti/storage/PrismaLtiDatabaseManager.int.test.ts</code> (runs the shared contract suite <code>test/lti/storage/ltiDatabaseContract.ts</code>; of 50 concurrent <code>consumeNonce</code> calls exactly one succeeds); <code>test/lti/storage/ltiSecretsAtRest.int.test.ts</code>; <code>test/lti/storage/ltiIdTokenClaims.test.ts</code>; <code>test/lti/storage/ltiStorageRows.test.ts</code>; <code>test/lti/storage/LtiRecordCleanupJob.test.ts</code>; <code>test/lti/storage/LtiRecordCleanupJob.int.test.ts</code>; <code>test/lti/storage/ltijsResumedLaunch.int.test.ts</code>; <code>test/lti/platforms/reencryptPlatformKeys.int.test.ts</code>; <code>test/jobs/LeasedIntervalJob.test.ts</code>; <code>test/security/keys/DataEncryption.test.ts</code>; <code>test/security/keys/keyring.test.ts</code></td><td>The secret-store key is the <code>DATA_ENCRYPTION_KEYS</code> key ring (D-056).</td></tr>
 <tr>
@@ -7406,6 +7451,10 @@ player therefore loads <code>src/lti/pages/client/h5pStorageGuard.js</code> befo
 puts a page-memory stand-in in its place (nothing reaches disk; the ltik is never written to it). With storage
 blocked <em>and</em> no <code>lti_storage_target</code>, ltijs cannot recover its state and the launch ends on our &quot;launch failed&quot;
 page; Canvas sends <code>lti_storage_target</code>, so this affects only other platforms.</li>
+<li><strong>Amendment (2026-11-25, D-141):</strong> ltijs&#39;s <code>Sec-Fetch-Site</code> check on its second launch POST is no longer the
+only one: our handler also requires our own <code>Origin</code> from a browser that sends no fetch metadata, and ltijs&#39;s
+launch page is sent with <code>Referrer-Policy: same-origin</code>. ltijs&#39;s request handler is replaced by ours
+(<code>lti/http/LtiOutboundRequests.ts</code>).</li>
 </ul>
 <h3 id="decisions--d-051--lti-platforms-and-deployments-from-lti_platforms-deployment-ids-checked-by-us" tabindex="-1">D-051 · LTI platforms and deployments from <code>LTI_PLATFORMS</code>; deployment IDs checked by us</h3>
 <ul>
@@ -7610,6 +7659,8 @@ recorded (volume and data minimisation). <code>ipHash</code> is recorded for log
 launches; author launches and link outcomes carry the actor instead (a link outcome has none when its launch
 then fails, D-063).</li>
 <li><strong>Consequences:</strong> The owner confirms the learner rule (Q15).</li>
+<li><strong>Amendment (2026-11-25, D-141):</strong> failed logins and failed launches are recorded up to 10 rows a minute per
+network address and 300 in all; what is past that is counted in the log.</li>
 </ul>
 <h3 id="decisions--d-065--end-to-end-tests-in-session-3" tabindex="-1">D-065 · End-to-end tests in Session 3</h3>
 <ul>
@@ -12592,6 +12643,9 @@ fetch metadata (Safari before 16.4), the <strong>Rediger</strong> tab first open
 asks for a new launch. <code>LTIK_QUERY_PATHS</code> holds only H5P&#39;s two URL shapes; the landing pages read their own
 address. Browser tests that hold an ltik arrive through <code>test/support/openLanding.ts</code>. No stored data
 changes.</li>
+<li><strong>Amendment (2026-11-25, D-141):</strong> that ltijs requires its second POST to be same-origin held only for browsers
+that send fetch metadata; since D-141 our handler requires it of every browser, by <code>Origin</code> where
+<code>Sec-Fetch-Site</code> is missing.</li>
 </ul>
 <h3 id="decisions--d-131--security-repairs-step-15-the-portals-login-its-answers-and-the-save-gate-are-closed-to-other-sites-requests-and-to-a-second-spelling-of-an-id" tabindex="-1">D-131 · Security repairs, step 15: the portal&#39;s login, its answers and the save gate are closed to other sites&#39; requests and to a second spelling of an ID</h3>
 <ul>
@@ -13007,6 +13061,75 @@ refused script.</li>
 text sent past its field&#39;s length, which the editor does not allow, loses its formatting. A link address with a
 quote or a space is stored percent-encoded. SEC-008 and H5P-009 have an &quot;Amended&quot; line; T-03 in the threat model
 follows.</li>
+</ul>
+<h3 id="decisions--d-141--security-repairs-step-25-a-launch-is-finished-by-the-browser-that-began-it-requests-before-sign-in-have-a-bound-ltijs-asks-a-platform-only-through-our-request-handler" tabindex="-1">D-141 · Security repairs, step 25: a launch is finished by the browser that began it; requests before sign-in have a bound; ltijs asks a platform only through our request handler</h3>
+<ul>
+<li><strong>Context:</strong> ltijs 7 processes a launch on its own second POST: Canvas posts the ID token to <code>/lti/launch</code>,
+ltijs&#39;s page there reads a recovery token from the browser that began the login and posts everything again. That
+this second post comes from our own page is what ties a launch to its browser. ltijs checks it by
+<code>Sec-Fetch-Site</code> alone and lets a request without the header through (D-050 and D-130 both rested on that
+check). Browsers before Safari 16.4 and Firefox 90 send no such header: there, another site could post a launch
+of its own, recovery token included, and the person landed inside it. Four smaller things lay around the launch.
+An error page for an address with an ltik kept the token in the address bar. The login, launch and key-set
+routes answer before any sign-in, and a request could make the server store a nonce, sign tokens and write an
+audit row, with no ceiling; a token that named an unknown key ID made ltijs fetch the platform&#39;s key set again,
+every time. ltijs&#39;s own request handler follows redirects and has neither a time nor a size limit, and a
+roster&#39;s «next page» link comes from the answer itself. And which course may open an activity (LTI-007) was
+nowhere stated as a rule.</li>
+<li><strong>Decision — the last step of a launch comes from our own page (LTI-001, LTI-003).</strong>
+<code>lti/http/launchPostOrigin.ts</code>, called by <code>ExpressRouterHttpHandler</code> before ltijs reads the request: a post that
+carries ltijs&#39;s recovery token is taken with <code>Sec-Fetch-Site: same-origin</code>, or, without that header, with an
+<code>Origin</code> that is exactly ours (<code>PUBLIC_BASE_URL</code>). A missing <code>Origin</code>, <code>null</code> and any other origin are refused
+as ltijs refuses a wrong recovery token (the «could not be opened from Canvas» page, audit reason
+<code>state-invalid</code>). Canvas&#39;s own post, cross-site by nature, is not judged. For a browser to name our origin,
+ltijs&#39;s launch page is sent with <code>Referrer-Policy: same-origin</code>: under <code>no-referrer</code> Chromium puts <code>Origin: null</code> on that page&#39;s own post (measured). The page holds no ltik, and under either rule no referrer goes to
+another origin, so LTI-003&#39;s rule for pages that receive an ltik is unchanged. Not built: a single-use state. A
+nonce is used once (LTI-002), so a finished launch cannot be sent again, and the state carries no right of its
+own.</li>
+<li><strong>Decision — an LTI error page takes an ltik out of its address (LTI-003).</strong> <code>http/pages/messagePage.ts</code> takes
+static scripts, and <code>lti/http/ltiErrorPages.ts</code> gives every page the landing script (its path now in
+<code>lti/pages/ltiStaticScripts.ts</code>), so the «open it again from Canvas» page for <code>/lti/play?ltik=…</code> leaves no token
+in the address bar or the history. Where a browser holds an ltik: in the address of the landing request until
+the page&#39;s first script runs, in the page&#39;s memory, and in H5P&#39;s own request URLs inside the frame (D-058);
+never in a cookie or in storage.</li>
+<li><strong>Decision — requests before sign-in have a bound (LTI-001, DATA-007, NFR-006).</strong> (a)
+<code>lti/http/launchRequestCeiling.ts</code>: 6 000 requests a minute from one network address to ltijs&#39;s three routes,
+which is 2 000 launches; past it 429 <code>hvl:rate-limited</code> with <code>Retry-After</code>, before the body is read. The address
+is counted under its keyed fingerprint (<code>auth-audit-ip</code>), for a minute. When Redis cannot be reached the request
+goes ahead and a line says so: this is a backstop behind the reverse proxy&#39;s own limit (the question to HVL IT
+stands), and it must not make a launch depend on Redis. <code>TRUST_PROXY</code> must be right, or every person shares one
+count. (b) <code>LtiCacheManager</code> keeps a platform&#39;s key set for a minute after it was fetched, whatever asks for its
+removal, so an unknown key ID costs at most one fetch a minute; a real change of keys is seen a minute later at
+most. (c) <code>auth/audit/failureAuditBudget.ts</code>: failed logins and failed launches add at most 10 audit rows a
+minute per address and 300 in all; what is past that is counted in one log line a minute, without an address.
+With Redis unreachable the row is written.</li>
+<li><strong>Decision — ltijs asks a platform only through our request handler (LTI-001, LTI-008).</strong>
+<code>lti/http/LtiOutboundRequests.ts</code> replaces ltijs&#39;s <code>FetchRequestHandler</code> (a <code>Provider</code> option): a URL is asked
+only on the origins of the configured platforms (issuer, the two endpoints, the key-set URL) and
+<code>CANVAS_ORIGINS</code>, over https in production, without credentials in it; no redirect is followed; a request ends
+after 10 seconds and an answer after 4 MB. So a roster&#39;s «next page» link that names another host is refused
+before any request is made (D-104 set this for the first roster URL and for scores), and a slow key-set answer
+cannot hold a launch open.</li>
+<li><strong>Recorded, not changed — which course may open an activity (LTI-006, LTI-007).</strong> A published activity is opened
+by any resource link of a registered platform and deployment that carries its ID in <code>custom.contentId</code>. Links
+are made in the Deep Linking picker, which offers an author only their own and co-authored activities and signs
+its answer; Canvas keeps the ID when a course is copied, which is what LTI-007 asks for. A course whose teacher
+never owned the activity can therefore play it, see its own course&#39;s insight and duplicate it, and cannot edit
+it (D-060). The ID is a UUID that cannot be guessed, but it is no secret: whoever holds a link can place it
+again. An owner withdraws an activity from every course by unpublishing or deleting it. A rule that tied an
+activity to the courses its owner chose would have to refuse copied courses.</li>
+<li><strong>Verified:</strong> unit tests of the last-step rule and of ltijs&#39;s routes on our router; an integration test through
+the whole app with the mock Canvas, with a genuine ID token, state and recovery token and only the post&#39;s
+headers changed; a browser test in full Chromium whose launch posts reach the server without fetch metadata
+(taken with the browser&#39;s own <code>Origin</code>, refused with <code>null</code>); integration tests of the ceiling, the audit bound
+and the key-set cache on Redis; a test that five launches naming an unpublished key cause no key-set fetch; unit
+tests of the request handler against local servers (another origin, a redirect, a slow and an over-large answer,
+a «next page» link that points elsewhere).</li>
+<li><strong>Consequences:</strong> A browser that sends neither <code>Sec-Fetch-Site</code> nor <code>Origin</code> on a form post can no longer finish
+a launch; Canvas supports none. After Canvas replaces its signing keys a launch can fail for up to a minute.
+More than 2 000 launches a minute from one address get the «try again» page. The load scripts and the test
+launch driver send <code>Sec-Fetch-Site: same-origin</code> on the last step, as a browser does. LTI-001, LTI-003, LTI-007
+and LTI-008 have an &quot;Amended&quot; line; T-13, T-18, T-60, T-63 and T-111 in the threat model follow.</li>
 </ul>
 
 </section>
@@ -15996,6 +16119,61 @@ $ npm run test:e2e                                   32 passed, 1 skipped; 1 fil
 $ npx vitest run --project server                    26988 passed, 31 skipped; 2 failed in 5 files: a
     privileged database (three files) and the seccomp PDF sandbox, limits of this container (DATA-010,
     MAPPE-004), and the expectation named above, corrected afterwards (its file re-run: 5 passed)</code></pre>
+</li>
+<li><p><strong>2026-11-25 · Security repairs, step 25 (D-141)</strong> — A launch is finished by the browser that began it,
+requests before sign-in have a bound, and ltijs asks a platform only through our request handler. One code
+commit:</p>
+<ul>
+<li>The last step of a launch (LTI-001, LTI-003): <code>lti/http/launchPostOrigin.ts</code> (new), called by
+<code>ExpressRouterHttpHandler</code> before ltijs reads the request, takes the post that carries ltijs&#39;s recovery token
+only with <code>Sec-Fetch-Site: same-origin</code> or, without that header, with an <code>Origin</code> that is exactly ours;
+ltijs&#39;s launch page is sent with <code>Referrer-Policy: same-origin</code> so a browser names our origin there
+(<code>ltiPageHeaders.ts</code>). Tests: <code>lti/http/launchPostOrigin.test.ts</code>, <code>lti/launchBrowserBinding.int.test.ts</code>,
+<code>e2e/ltiLaunchOwnPage.e2e.test.ts</code> (a launch in full Chromium without fetch metadata).</li>
+<li>Error pages (LTI-003): every LTI error page loads the landing script, so an ltik leaves the address there too
+(<code>http/pages/messagePage.ts</code>, <code>lti/http/ltiErrorPages.ts</code>, <code>lti/pages/ltiStaticScripts.ts</code>, new).</li>
+<li>Bounds before sign-in (LTI-001, DATA-007, NFR-006): <code>lti/http/launchRequestCeiling.ts</code> (new; 6 000 requests a
+minute per address fingerprint on ltijs&#39;s routes), <code>LtiCacheManager</code> keeps a platform&#39;s key set for a minute
+after a fetch, and <code>auth/audit/failureAuditBudget.ts</code> (new) bounds the audit rows of failed logins and
+launches (10 a minute per address, 300 in all; the rest counted in one log line). Tests:
+<code>lti/http/launchRequestCeiling.int.test.ts</code>, <code>auth/audit/failureAuditBudget.int.test.ts</code>,
+<code>lti/unknownKeyFetch.int.test.ts</code>, <code>lti/storage/LtiCacheManager.int.test.ts</code>.</li>
+<li>What ltijs asks a platform (LTI-001, LTI-008): <code>lti/http/LtiOutboundRequests.ts</code> (new) replaces ltijs&#39;s
+request handler: the platforms&#39; own origins only, no redirect, 10 seconds, 4 MB. Test:
+<code>lti/http/LtiOutboundRequests.test.ts</code>.</li>
+<li>The test launch driver and the load scripts send <code>Sec-Fetch-Site: same-origin</code> on the last step, as a
+browser does. A second commit adds the TSDoc the API docs asked for in two of the new files.</li>
+<li>D-141 added, with amendment lines under D-051, D-065 and D-131; LTI-001, LTI-003, LTI-007 and LTI-008 in
+spec 02 have an &quot;Amended&quot; line; the threat model (T-13, T-18, T-60, T-63, T-111), the architecture
+description, the data inventory (three Redis keys), the human-review list, the runbook, the evaluator guide
+and the server README follow; <code>TRACEABILITY.md</code> and the spec site regenerated. No page of the web app looks
+different, so no screenshots. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 45, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       635 passed (99 files)
+$ npx vitest run --project api-contract              98 passed
+$ npx vitest run --project tools                     541 passed (71 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             206 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files)
+$ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    27035 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004)</code></pre>
 </li>
 </ul>
 

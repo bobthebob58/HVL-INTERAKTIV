@@ -164,6 +164,10 @@ deployment ID nor the platform's active flag, so our code does (D-050, D-051), a
 - [ ] No combination of role claims gives `admin`; `Administrator` gives at most `author` and `TestUser` gives
       `learner` (`LTI-004`, D-059).
 - [ ] A nonce works exactly once, also for two requests at the same moment (`LTI-002`).
+- [ ] The last step of a launch is refused unless it comes from our own page, with and without fetch
+      metadata (`lti/http/launchPostOrigin.ts`, D-141).
+- [ ] ltijs asks only the configured platforms' origins and `CANVAS_ORIGINS`, follows no redirect and gives
+      up after 10 seconds (`lti/http/LtiOutboundRequests.ts`, D-141).
 - [ ] The ltik is taken from the query only on the paths in `LTIK_QUERY_PATHS` (`auth/requestPrincipal.ts:32-38`) and
       on `/app/play`; anywhere else a query ltik gets 401.
 - [ ] The ltik never reaches a log line, a `Referer` header, the browser's history or its storage (`LTI-003`).
