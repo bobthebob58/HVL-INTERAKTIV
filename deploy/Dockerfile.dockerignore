@@ -32,5 +32,6 @@ docs
 tools
 !tools/h5p-core/verifyClientFiles.mjs
 !tools/h5p-libraries/resolveManifest.mjs
+!tools/h5p-libraries/sourceRules.mjs
 !tools/h5p-bundle/contentTypeBundle.mjs
 !tools/h5p-bundle/bundleCli.mjs

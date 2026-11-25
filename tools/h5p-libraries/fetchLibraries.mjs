@@ -8,6 +8,7 @@
  * Spec: H5P-003, UD-011
  * Invariants:
  *   - Every checkout must be exactly its pinned commit (./gitSource.mjs); nothing unpinned is ever built.
+ *   - SECURITY: every line of the pin list is held to ./sourceRules.mjs before the first one is fetched (D-143).
  *   - Builds run `npm ci --ignore-scripts`, so no dependency's install script runs, then the library's `build`, each
  *     with a minimal environment (./libraryBuild.mjs): SECURITY: the build sees `PATH`, an empty `HOME` and
  *     `NODE_ENV=production` only, and no global `npmrc`, because a build can bake its environment into the JavaScript
@@ -24,8 +25,8 @@
  *     library is built again from the proven commit, without a new checkout.
  *   - A build must leave the library's tracked files as committed; one that does not fails the fresh fetch.
  * Usage: fetchLibraries.mjs [--resolve] [--dest <dir>] [--only <H5P.Name>] (`--only` packs one example).
- * Collaborators: ./resolveManifest.mjs, ./gitSource.mjs, ./libraryBuild.mjs, ./libraryFiles.mjs,
- *   ./packContentTypes.mjs.
+ * Collaborators: ./resolveManifest.mjs, ./gitSource.mjs, ./sourceRules.mjs, ./libraryBuild.mjs,
+ *   ./libraryFiles.mjs, ./packContentTypes.mjs.
  * Tests: tools/h5p-libraries/test/manifest.test.mjs, tools/h5p-libraries/test/libraryBuild.test.mjs; CI runs the
  *   command before the browser and a11y suites.
  */
@@ -40,6 +41,7 @@ import { BUILD_ENV_VERSION, buildLibrary } from './libraryBuild.mjs';
 import { copyLibraryFiles } from './libraryFiles.mjs';
 import { packContentType } from './packContentTypes.mjs';
 import { CONTENT_TYPE_ROOTS, resolveManifest } from './resolveManifest.mjs';
+import { checkedManifestEntry } from './sourceRules.mjs';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = resolve(HERE, '../..');
@@ -105,6 +107,7 @@ function fetchOne(entry, dest) {
 
 async function fetchAll(dest, only) {
   const manifest = JSON.parse(readFileSync(MANIFEST_FILE, 'utf8'));
+  manifest.libraries.forEach(checkedManifestEntry);
   for (const entry of manifest.libraries) {
     process.stdout.write(`… ${entry.machineName} ${entry.version}${entry.build ? ' (build)' : ''}\n`);
     fetchOne(entry, dest);

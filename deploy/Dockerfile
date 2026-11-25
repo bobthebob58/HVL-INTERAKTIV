@@ -84,7 +84,7 @@ FROM scratch AS h5pbundle
 # SECURITY: every input from outside the repository is checked against its hashes before it reaches the image.
 FROM deps AS inputs
 COPY tools/h5p-core/verifyClientFiles.mjs tools/h5p-core/
-COPY tools/h5p-libraries/resolveManifest.mjs tools/h5p-libraries/
+COPY tools/h5p-libraries/resolveManifest.mjs tools/h5p-libraries/sourceRules.mjs tools/h5p-libraries/
 COPY tools/h5p-bundle/contentTypeBundle.mjs tools/h5p-bundle/bundleCli.mjs tools/h5p-bundle/
 # WHY: the bundle's secret guard and the server share one rules file, which Node 24 loads with type stripping.
 COPY apps/server/src/h5p/libraries/libraryBuildSecrets.ts apps/server/src/h5p/libraries/

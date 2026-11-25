@@ -12,16 +12,19 @@
  *     files differs from that commit; untracked files (dependencies, build output) are outside its proof.
  *   - Tags are read with `ls-remote --refs`, so annotated tags show their own object, never a peeled commit; the
  *     commit is always taken from the checkout itself.
+ *   - SECURITY: a repository, a ref and a pinned commit are held to their forms (./sourceRules.mjs) before git
+ *     runs or the folder is touched, and git gets them after `--`, so none of them is read as an option (D-143).
  *   - Network calls are retried four times with growing pauses; an error that outlasts them is marked
  *     `transient`, so the resolver fails instead of quietly skipping a library (a manifest must not depend on a
  *     flaky connection).
- * Collaborators: ./resolveManifest.mjs, ./fetchLibraries.mjs.
+ * Collaborators: ./resolveManifest.mjs, ./fetchLibraries.mjs, ./sourceRules.mjs.
  * Tests: tools/h5p-libraries/test/resolveManifest.test.mjs (with a fake source),
  *   tools/h5p-libraries/test/gitSource.test.mjs; CI runs `npm run h5p:fetch-libraries`.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { checkedCommit, checkedRef, checkedRepository } from './sourceRules.mjs';
 
 const run = (args, cwd) =>
   execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -49,9 +52,10 @@ function runNetwork(args, cwd) {
  * Lists a repository's semantic-version tags.
  * @param {string} repository - The repository URL.
  * @returns {{ tag: string, version: number[] }[]} Tags that read `x.y.z` or `vx.y.z`.
+ * @throws {Error} When the repository does not have its form, or the tags cannot be read.
  */
 export function listVersionTags(repository) {
-  const out = runNetwork(['ls-remote', '--tags', '--refs', repository]);
+  const out = runNetwork(['ls-remote', '--tags', '--refs', '--', checkedRepository(repository)]);
   return out
     .split('\n')
     .filter(Boolean)
@@ -68,14 +72,17 @@ export function listVersionTags(repository) {
  * @param {string} dir - The folder to create.
  * @param {string} [expectedCommit] - When given, the checkout must be exactly this commit.
  * @returns {string} The commit hash of the checkout.
- * @throws {Error} When the ref cannot be fetched or resolves to another commit.
+ * @throws {Error} When the repository, the ref or the commit does not have its form (nothing is touched then), or
+ *   when the ref cannot be fetched or resolves to another commit.
  */
 export function checkout(repository, ref, dir, expectedCommit) {
+  const source = ['--', checkedRepository(repository), checkedRef(ref)];
+  if (expectedCommit !== undefined) checkedCommit(expectedCommit);
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   try {
     run(['init', '--quiet'], dir);
-    runNetwork(['fetch', '--quiet', '--depth', '1', repository, ref], dir);
+    runNetwork(['fetch', '--quiet', '--depth', '1', ...source], dir);
     run(['-c', 'advice.detachedHead=false', 'checkout', '--quiet', 'FETCH_HEAD'], dir);
     const commit = run(['rev-parse', 'HEAD'], dir);
     // SECURITY: a moved tag or a substituted repository must never reach the build (D-078, CLAUDE.md §1).

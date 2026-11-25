@@ -76,6 +76,7 @@ flowchart LR
 |---|---|
 | `fetchLibraries.mjs` | The command: resolve or fetch, build, copy, pack, write `SHA256SUMS` |
 | `resolveManifest.mjs` | The ten roots and the recursive, pinned dependency resolution |
+| `sourceRules.mjs` | The forms a repository address, a machine name, a version, a ref and a commit must have before they reach `git` or a folder name; applied to the registry, to fetched `library.json` files and to every line of the pin list |
 | `gitSource.mjs` | `git ls-remote` tags, depth-1 checkouts proven against a commit, and `verifiedHead` (commit and tracked files) for a reused checkout |
 | `libraryBuild.mjs` | A library's install and build with a minimal, explicit environment (`BUILD_ENV_VERSION` in the stamp) |
 | `libraryFiles.mjs` | Which checkout files belong in a library folder |

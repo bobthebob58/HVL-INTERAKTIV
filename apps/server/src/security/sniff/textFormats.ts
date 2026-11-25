@@ -11,14 +11,16 @@
  *   - Except for SVG, the first byte after an optional UTF-8 BOM and any whitespace or control bytes is not "<",
  *     and lies within the first 64 KB. This is stricter than the WHATWG table and also covers `<?xml`, `<svg`
  *     and comments.
- *   - json: valid UTF-8 that JSON.parse accepts. vtt/webvtt: optional BOM, then "WEBVTT" and a separator.
+ *   - json: valid UTF-8 that JSON.parse accepts, checked in portions without parsing it into memory
+ *     (./jsonFileCheck.ts, D-143). vtt/webvtt: optional BOM, then "WEBVTT" and a separator.
  *   - svg: after an optional prolog (XML declaration, processing instructions, comments, DOCTYPE) the root
  *     start tag is exactly `<svg`.
- * Collaborators: ../FileTypeSniffer.ts; ../SvgSanitizer.ts cleans SVG content afterwards.
+ * Collaborators: ../FileTypeSniffer.ts, ./jsonFileCheck.ts; ../SvgSanitizer.ts cleans SVG content afterwards.
  * Tests: apps/server/test/security/FileTypeSniffer.test.ts, apps/server/test/security/FileTypeSniffer.bypass.test.ts
  */
-import { open, readFile } from 'node:fs/promises';
+import { open } from 'node:fs/promises';
 import type { FileTypeResult } from 'file-type';
+import { isJsonFile } from './jsonFileCheck.js';
 
 const HEAD = 64 * 1024;
 const NUL_WINDOW = 8 * 1024;
@@ -92,17 +94,6 @@ function hasSvgRoot(head: Buffer): boolean {
   return /^<svg[\s/>]/.test(text.slice(i, i + 5));
 }
 
-/** True when a JSON file is valid UTF-8 and parses. */
-async function isJson(path: string): Promise<boolean> {
-  try {
-    const text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: false }).decode(await readFile(path));
-    JSON.parse(text);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 /** True when a caption file starts with an optional BOM, then "WEBVTT" and a space, tab, line break or the end. */
 function isWebVtt(head: Buffer): boolean {
   const from = startsWithBytes(head, [0xef, 0xbb, 0xbf]) ? 3 : 0;
@@ -142,7 +133,7 @@ export async function matchesTextFormat(
   // A head that is only whitespace hides the first real byte, so a full head of it is refused as well.
   const start = contentStart(head);
   if (head[start] === 0x3c || (start === head.length && head.length === HEAD)) return false;
-  if (extension === 'json') return isJson(path);
+  if (extension === 'json') return isJsonFile(path);
   if (extension === 'vtt' || extension === 'webvtt') return isWebVtt(head);
   return true;
 }

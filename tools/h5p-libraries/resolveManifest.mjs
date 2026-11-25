@@ -17,14 +17,17 @@
  *   - The newest `x.y.z` tag of the required major.minor wins; a library without such a tag falls back to the
  *     repository's default branch and is pinned to that commit, marked `untagged` for review.
  *   - A checkout whose `library.json` reports another major.minor than required is an error, not a guess.
+ *   - SECURITY: a machine name, a version and the registry's address are held to their forms (./sourceRules.mjs)
+ *     before any of them reaches a folder name or git; a required library that fails is an error (D-143).
  *   - `build` is true when a file the library preloads is missing from the repository (it must be built). A
  *     library that needs a build but has no `package-lock.json` cannot be built reproducibly and is refused.
- * Collaborators: ./gitSource.mjs (the real source), ./fetchLibraries.mjs, the H5P library registry
+ * Collaborators: ./gitSource.mjs (the real source), ./sourceRules.mjs, ./fetchLibraries.mjs, the H5P registry
  *   (github.com/h5p/h5p-registry `libraries.json`, machine name → repository).
  * Tests: tools/h5p-libraries/test/resolveManifest.test.mjs
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { checkedVersionPart, libraryFolder, registryRepository } from './sourceRules.mjs';
 
 /** The ten authorable types (CLAUDE.md §1) at the versions S4 starts from (D-078). */
 export const CONTENT_TYPE_ROOTS = [
@@ -147,7 +150,8 @@ export function resolveManifest({ roots, registry, source, workDir }) {
   }
 
   function resolveOne({ machineName, majorVersion, minorVersion, requiredBy, optional }, key) {
-    const repository = registry[machineName]?.repo?.url;
+    const folder = libraryFolder(machineName, majorVersion, minorVersion);
+    const repository = registryRepository(registry, machineName);
     if (!repository) throw new Error(`${key} (required by ${requiredBy}) is not in the H5P registry`);
     const newest = source
       .listVersionTags(repository)
@@ -155,7 +159,7 @@ export function resolveManifest({ roots, registry, source, workDir }) {
       .sort((a, b) => a.version[2] - b.version[2])
       .at(-1);
     const ref = newest ? `refs/tags/${newest.tag}` : 'HEAD';
-    const dir = join(workDir, `${machineName}-${majorVersion}.${minorVersion}`);
+    const dir = join(workDir, folder);
     const commit = source.checkout(repository, ref, dir);
     const library = readLibrary(dir);
     if (library.majorVersion !== majorVersion || library.minorVersion !== minorVersion) {
@@ -167,7 +171,7 @@ export function resolveManifest({ roots, registry, source, workDir }) {
     }
     done.set(key, {
       machineName,
-      version: `${library.majorVersion}.${library.minorVersion}.${library.patchVersion}`,
+      version: `${majorVersion}.${minorVersion}.${checkedVersionPart(library.patchVersion)}`,
       repository,
       ref,
       commit,

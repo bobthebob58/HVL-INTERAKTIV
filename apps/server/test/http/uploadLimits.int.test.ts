@@ -1,6 +1,6 @@
 /**
  * Integration tests for the per-person limits on what an author sends (D-120): file uploads, package imports, and
- * SVG files that the cleaning refused as too complex.
+ * SVG files that the cleaning refused as too complex; and for the size limit on an upload's text fields (D-143).
  *
  * Spec: SEC-005, SEC-001
  */
@@ -8,12 +8,14 @@ import { readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { setTimeout as delay } from 'node:timers/promises';
 import { FileSanitizerResult, type IFileSanitizer } from '@lumieducation/h5p-server';
+import request from 'supertest';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import {
   IMPORTS_PER_TEN_MINUTES,
   SLOW_SVGS_PER_TEN_MINUTES,
   UPLOADS_PER_TEN_MINUTES,
 } from '../../src/http/h5pRouteLimits.js';
+import { MAX_UPLOAD_FIELD_BYTES } from '../../src/http/multipartUpload.js';
 import { RejectedUploadError } from '../../src/security/RejectedUploadError.js';
 import { buildH5pPackage, removeBuiltPackages } from '../support/h5pPackageBuilder.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
@@ -59,6 +61,24 @@ describeWithServices('[SEC-005] per-person limits on uploads and imports', () =>
     expect(other.status).toBe(200);
     expect(await settledUploadFolders(folders)).toBe(folders);
   }, 120_000);
+
+  it('[SEC-005] an upload with a text field past the size limit is 400; the editor’s own upload is stored', async () => {
+    // Arrange
+    const author = await tb.actor('author');
+    const upload = (field: object) =>
+      request(tb.app)
+        .post('/h5p/ajax?action=files')
+        .set(...author.header)
+        .field('field', JSON.stringify(field))
+        .field('contentId', '0')
+        .attach('file', PNG_1X1, 'bilde.png');
+    // Act
+    const stored = await upload({ name: 'media', type: 'image' });
+    const refused = await upload({ name: 'media', type: 'image', label: 'x'.repeat(MAX_UPLOAD_FIELD_BYTES) });
+    // Assert
+    expect([stored.status, stored.body]).toMatchObject([200, { mime: 'image/png' }]);
+    expect([refused.status, refused.body]).toMatchObject([400, { errorCode: 'error.badRequest' }]);
+  });
 
   it('[SEC-005] package imports past an author’s limit are 429 with Retry-After; others go on', async () => {
     // Arrange

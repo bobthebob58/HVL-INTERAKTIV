@@ -19,8 +19,10 @@
  *   - A request names exactly one action that Lumi's endpoint knows for its method; any other is 400 before a
  *     body is read. Lumi answers an unknown POST action with status 500, which a signed-in author could raise,
  *     and have logged as a server fault, at will (D-142).
+ *   - An upload is handled inside `scanningFor(accountId, …)`, so the malware scan knows whose files it scans and
+ *     hands its turns out person by person (../../security/malware/scanOwner.ts, D-143).
  * Collaborators: ../multipartUpload.ts, ../requestBodies.ts, ../h5pLocals.ts, ../h5pRouteLimits.ts,
- *   ./contentSaveBodies.ts, Lumi's H5PAjaxEndpoint.
+ *   ./contentSaveBodies.ts, ../../security/malware/scanOwner.ts, Lumi's H5PAjaxEndpoint.
  * Tests: apps/server/test/http/ajax.int.test.ts, apps/server/test/http/editorUpload.int.test.ts,
  *   apps/server/test/http/uploadLimits.int.test.ts, apps/server/test/http/contentBudget.int.test.ts
  */
@@ -29,6 +31,7 @@ import { MAX_FILE_SIZE } from '../../h5p/H5pConfigFactory.js';
 import { asAccountUser } from '../../h5p/HvlH5pUser.js';
 import { isLocale, t, type Locale } from '../../i18n/translate.js';
 import { fileExtension } from '../../security/fileExtension.js';
+import { scanningFor } from '../../security/malware/scanOwner.js';
 import { HttpError } from '../HttpError.js';
 import { requireActor, requireRole } from '../h5pLocals.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
@@ -164,19 +167,23 @@ export function ajaxRoutes(deps: H5pRouteDeps): Router {
       if (!upload.file) throw new HttpError(400, 'error.badRequest');
       if (isFile) {
         await sanitizeFirst(deps, upload.file.tempFilePath, accountId, res);
-        res.json(await deps.ajax.postAjax('files', upload.fields as never, language, user, upload.file));
+        const { fields, file } = upload;
+        const stored = () => deps.ajax.postAjax('files', fields as never, language, user, file);
+        res.json(await scanningFor(accountId, stored));
       } else {
-        const result = await deps.ajax.postAjax(
-          'library-upload',
-          {} as never,
-          language,
-          user,
-          undefined,
-          undefined,
-          libraryMessages(language),
-          upload.file,
-        );
-        res.json(result);
+        const messages = libraryMessages(language);
+        const imported = () =>
+          deps.ajax.postAjax(
+            'library-upload',
+            {} as never,
+            language,
+            user,
+            undefined,
+            undefined,
+            messages,
+            upload.file,
+          );
+        res.json(await scanningFor(accountId, imported));
       }
     } finally {
       await upload.cleanup();

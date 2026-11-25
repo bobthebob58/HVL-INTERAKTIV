@@ -2,7 +2,8 @@
  * Integration tests of what the editor is handed (D-124). With the real content types: an activity opened for
  * editing arrives without the keys its semantics do not name, with a quote in plain text and in the title written
  * as the editor writes it, and saved back unchanged it is stored with its text as before. With an uploaded package:
- * the content in the answer is cleaned the same way, and a package whose content cannot be read is refused.
+ * the content in the answer is cleaned the same way, its title data and that of its pieces is plain text, and a
+ * package whose content cannot be read is refused.
  *
  * Spec: SEC-008, SEC-005, H5P-006
  */
@@ -13,7 +14,7 @@ import { openHttpTestbed, type HttpTestbed, type TestActor } from '../../support
 import { describeWithRealPackages, REAL_PACKAGES_DIR } from '../../support/realPackages.js';
 import { requestAs } from '../../support/requestAs.js';
 import { describeWithServices } from '../../support/services.js';
-import { MULTI_CHOICE } from '../../support/tenTypeLibraries.js';
+import { MULTI_CHOICE, QUESTION_SET } from '../../support/tenTypeLibraries.js';
 import { MARKUP, UNDECLARED_KEY, withUndeclaredKeys } from '../../support/undeclaredKeys.js';
 
 type Params = Record<string, unknown>;
@@ -92,6 +93,56 @@ describeWithServices('[SEC-008] what the editor is handed', () => {
         answers: ['&quot;Ja&quot;', ''],
       });
       expect(res.text).not.toContain('onerror');
+    });
+
+    it('[SEC-005] is answered with its title data, its pieces’ title data and its settings as plain text', async () => {
+      // Arrange: markup wherever a title, a licence note, an author or a setting may stand. WHY: Lumi's package
+      // check takes only a plain word as a role in h5p.json; a piece's title data is not checked by it.
+      const titleData = (role: string) => ({
+        title: `Celler${MARKUP}`,
+        license: 'CC BY',
+        licenseExtras: `Merknad${MARKUP}`,
+        authors: [{ name: `Kari${MARKUP}`, role }],
+        authorComments: `Sjå over${MARKUP}`,
+      });
+      const piece = {
+        library: 'H5P.MultiChoice 1.16',
+        subContentId: 'a1b2c3d4-0000-4000-8000-000000000001',
+        metadata: { ...titleData(`Author${MARKUP}`), contentType: 'Multiple Choice' },
+        params: { question: 'Kva?', answers: ['Ja'], media: { path: MARKUP, mime: MARKUP, width: MARKUP } },
+      };
+      const h5pJson = {
+        ...titleData('Author'),
+        language: 'nn',
+        mainLibrary: QUESTION_SET.machineName,
+        embedTypes: ['iframe'],
+        preloadedDependencies: [QUESTION_SET, MULTI_CHOICE].map((lib) => ({
+          machineName: lib.machineName,
+          majorVersion: 1,
+          minorVersion: lib.minorVersion ?? 0,
+        })),
+      };
+      // Act
+      const res = await upload(
+        await buildH5pPackage({
+          main: QUESTION_SET,
+          libraries: [MULTI_CHOICE],
+          params: { questions: [piece] },
+          files: { 'h5p.json': JSON.stringify(h5pJson) },
+        }),
+      );
+      // Assert
+      const cleaned = {
+        title: 'Celler',
+        licenseExtras: 'Merknad',
+        authors: [{ name: 'Kari', role: 'Author' }],
+      };
+      const data = (res.body as { data: { h5p: Params; content: { questions: { metadata: Params }[] } } })
+        .data;
+      expect(res.status).toBe(200);
+      expect(data.h5p).toMatchObject(cleaned);
+      expect(data.content.questions[0]?.metadata).toMatchObject(cleaned);
+      expect(res.text).not.toMatch(/<img|onerror=alert/);
     });
 
     it('[SEC-005] is refused when its content cannot be read as its semantics describe, and keeps no path to a file it lacks', async () => {
