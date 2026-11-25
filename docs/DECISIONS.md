@@ -565,6 +565,10 @@ loading of one spec per session are kept.
   extension, its MIME type comes from the extension, and the 50 MB limit is enforced while streaming (413).
 - **Consequences:** The folder is removed after every request, successful or not.
 
+- **Amendment (2026-11-25, D-143):** the text fields of an upload request are few and small: at most 4 fields of at
+  most 64 KB each, a field name of at most 100 characters, at most 8 parts in all. A request past one of these is
+  400 after its body was read, and no value is cut short and passed on (`http/multipartUpload.ts`).
+
 ### D-044 · SVG sanitising rules and order
 - **Context:** `SEC-001` asks to reject or strip DOCTYPE/ENTITY, scripts, event handlers, `foreignObject`,
   `javascript:`/`data:text/html` URLs and external references. Inkscape and Illustrator exports carry a public
@@ -1375,6 +1379,11 @@ loading of one spec per session are kept.
   that S2's narrowed `contentWhitelist` (SEC-002) also applied to library folders through Lumi's
   `libraryWhitelist`, so every real package, from GitHub or the Hub, was refused for its icon fonts:
   `libraryWhitelist` now adds `eot ttf woff woff2 otf` (library folders only; content files keep the SEC-002 list).
+
+- **Amendment (2026-11-25, D-143):** the tool holds a repository address, a machine name, a version, a ref and a
+  commit to fixed forms before any of them reaches git or a folder name (`tools/h5p-libraries/sourceRules.mjs`):
+  for the registry's addresses, for the names and versions in fetched `library.json` and `semantics.json` files,
+  and for every line of the pin list when it is read. A repository is `https://github.com/<owner>/<name>`.
 
 ### D-079 · What S4 verifies automatically and what HVL records by hand
 - **Context:** `NFR-003` names the last two versions of four browsers and three screen readers; `UD-031` asks for
@@ -4324,6 +4333,10 @@ loading of one spec per session are kept.
     `CLAMAV_HOST` (a load balancer) is set up alike, since each probe stream reaches whichever answers; and a clamd
     reconfigured and restarted between two probes is trusted for up to 60 s unless an upload failed meanwhile.
 
+- **Amendment (2026-11-25, D-143):** waiting scans get the free turns person by person: a free turn goes to the
+  author who has waited longest since their last turn (`security/malware/ScanTurns.ts`, `scanOwner.ts`). Four scans
+  at once and the time limit that includes the wait stay as they are.
+
 ### D-111 · An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it
 - **Context:** S5's probe P1 found that many `nn` and `nb` defaults of the real libraries are English (MultiChoice,
   QuestionSet, InteractiveBook and BranchingScenario buttons and messages). Patterns set their own texts (D-084), but
@@ -6079,3 +6092,69 @@ loading of one spec per session are kept.
   looks different and no message is new. AUTH-002, AUTH-003, AUTH-005, PED-030, PED-032, UD-022, PROD-007 and
   H5P-002 have an "Amended" line; D-054, D-057 and D-087 an amendment; T-02, T-05, T-21 and the new T-25 in the
   threat model follow.
+
+### D-143 · Security repairs, step 27: a `.json` file is checked in portions; an upload's text fields are few and small; library sources are held to their forms; scan turns go person by person
+- **Context:** Four places where the handling of something sent or fetched cost more, or trusted more, than its
+  rule needs. (1) SEC-002 accepts a `.json` content file only when it is valid UTF-8 and valid JSON. The check read
+  the whole file (up to 50 MB) and gave it to `JSON.parse`: the file, its text and the parsed value were in memory
+  together, many times the file's size, and no other request was served during the parse; an editor upload ran the
+  check twice (ours, for the reason, and Lumi's own). (2) An upload request could carry 20 text fields of 4 MB each,
+  all kept in memory, although H5P's editor sends two small ones (`field`, at most 434 bytes among the installed
+  content types, and `contentId`); a field past the size limit was cut short and passed on. (3)
+  `tools/h5p-libraries` with `--resolve` reads repository addresses from H5P's public registry, and library names
+  and versions from the `library.json` and `semantics.json` of repositories it has just fetched, and gave them to
+  `git` and to folder names as they were. An address that begins with `-` is an option to git, an address in
+  another form reaches another transport or a local path, and a name with `../` joins to a folder outside the work
+  folder, which a checkout removes first. A test checked the committed pin list afterwards; the code checked
+  nothing. (4) The malware scanner lets four scans talk to clamd at a time and counts the wait for a turn against a
+  scan's time limit (D-110). With one queue for everybody, one author's many files at the same moment could hold the
+  turns long enough for other authors' uploads to pass the limit and be refused.
+- **Decision — a `.json` file is checked in portions (SEC-002).** `security/sniff/jsonFileCheck.ts` reads the file
+  64 KB at a time, decodes it as UTF-8 (fatal, one leading byte-order mark removed) and follows its syntax with
+  `security/sniff/jsonSyntax.ts`, a state machine for RFC 8259 that builds nothing. The answer is exactly that of
+  `JSON.parse`; no size or depth rule is added. Memory is one portion and one bit for each open bracket, and the
+  reads are asynchronous, so other requests are served between the portions. The check still runs twice for an
+  editor upload; each run is now cheap.
+- **Decision — an upload request's text fields are few and small (SEC-005).** `http/multipartUpload.ts`: at most 4
+  text fields of at most 64 KB each (about 150 times the largest real one), a field name of at most 100 characters,
+  at most 8 parts in all. A request past one of these is 400 `error.badRequest` after its body was read, and its
+  folder is removed; a value is never cut short and passed on. A second file within the 8 parts is still discarded
+  unread.
+- **Decision — a library source is held to its form before git or a folder sees it (H5P-003).**
+  `tools/h5p-libraries/sourceRules.mjs`: a repository is `https://github.com/<owner>/<name>`; a machine name is
+  parts of letters, digits, `_` and `-` joined by single dots; a version part is a whole number, given as a number;
+  a ref is `HEAD`, a version tag's ref or a full commit; a commit is 40 hex characters. `resolveManifest.mjs` applies
+  them to the registry's address and to every name and version before a folder name is made or the source is asked;
+  `gitSource.mjs` applies them again before git runs or a folder is touched, and puts `--` before the address;
+  `fetchLibraries.mjs` holds every line of the committed pin list to them before it fetches the first. A required
+  library that fails stops the run; an offered one is listed as skipped with the reason, like any other that cannot
+  be resolved. All 120 lines of today's pin list pass. The image build copies the new file beside the resolver
+  (`deploy/Dockerfile`).
+- **Decision — waiting scans get the free turns person by person (SEC-006).** `security/malware/ScanTurns.ts`: a
+  free turn goes to the owner who has waited longest since their last turn, and to that owner's oldest waiting scan.
+  The upload route records the author for the length of the request (`security/malware/scanOwner.ts`, an
+  `AsyncLocalStorage`, as `h5p/storage/contentCreations.ts` uses one), and the scanner names that author when it
+  asks for a turn; the settings probe has a place of its own in the rotation. Four scans at a time and the time
+  limit that includes the wait stay as D-110 set them: an author whose own files fill the queue may still see the
+  later ones refused, the other authors no longer do. PRIVACY: the owner is an internal account ID held in memory
+  while a request runs; it is not logged or stored.
+- **Not changed — what an imported package shows in the editor (SEC-005, SEC-008).** D-124 already hands the editor
+  an uploaded package's content fitted and cleaned, with its title data and that of its pieces as plain text. A
+  test now states it for a title, a licence note, an author, a piece's author role and a file field's settings.
+- **Verified:** a property test compares the syntax check with `JSON.parse` on generated JSON, on generated JSON
+  with one character changed and on texts of JSON's own characters, however they are cut into pieces; file tests
+  with characters, escapes, numbers and words across two portions; a 30 MB file checked by a process whose heap
+  (64 MB) cannot hold it parsed. Unit tests of the upload reader at and past each limit, and of the editor's upload
+  route. Unit tests of each source rule, of the resolver with a registry address, a name and a version out of form
+  (no source asked, no folder made), of the git access (refused before git runs, the folder untouched) and of the
+  pin list. Unit tests of the rotation and of the owner's async context, and an integration test with a fake clamd
+  whose scans take a while: with forty files of one author waiting, another author's file is scanned among the
+  first and stored. The new tests fail on the code before this step (the test of the imported package passes on
+  both, as it should). The tool was run for real: tags read from GitHub with the `--` form, and a fetch from the
+  cached checkouts packed the same ten packages (the same SHA-256 list).
+- **Consequences:** No page looks different and no message is new in normal use. An upload with more than four text
+  fields or a field over 64 KB, which no H5P client sends, is refused. A registry entry that names a repository
+  outside GitHub cannot be resolved until the rule is widened on purpose. One person's scans delay another's only by
+  the scans that already run. No new stored data. SEC-002, SEC-005, SEC-006 and H5P-003 have an "Amended" line;
+  D-043, D-078 and D-110 an amendment; T-33, T-80 and T-112 in the threat model, ROS-07, the architecture
+  description, the ClamAV runbook and the server README follow.

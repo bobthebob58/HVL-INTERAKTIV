@@ -3008,3 +3008,63 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
   ```
+
+- **2026-11-25 · Security repairs, step 27 (D-143)** — An uploaded `.json` file is checked in portions, an upload
+  request carries few and small text fields, the library tool holds names and addresses to fixed forms, and
+  authors take turns in the malware-scan queue. One code commit:
+  - The `.json` check (SEC-002): `security/sniff/jsonSyntax.ts` and `security/sniff/jsonFileCheck.ts` (new) read
+    the file 64 KB at a time and answer exactly as decoding and parsing the whole file did, without building it in
+    memory; `security/sniff/textFormats.ts` uses them. Tests: `security/sniff/jsonSyntax.test.ts` (compared with
+    `JSON.parse` on generated texts), `security/sniff/jsonFileCheck.test.ts` (portion boundaries; a 30 MB file in
+    a process with a 64 MB heap).
+  - Upload text fields (SEC-005): `http/multipartUpload.ts` takes at most 4 text fields of at most 64 KB each, a
+    field name of at most 100 characters and 8 parts in all; a request past a limit is a 400 and leaves no folder,
+    and no value is cut short and passed on. Tests: `http/multipartUploadFields.test.ts`,
+    `http/uploadLimits.int.test.ts`.
+  - Library sources (H5P-003): `tools/h5p-libraries/sourceRules.mjs` (new) holds a repository to
+    `https://github.com/<owner>/<name>` and a machine name, a version, a ref and a commit to their forms before
+    git runs or a folder is named; git gets them after `--`. Used by `resolveManifest.mjs`, `gitSource.mjs` and
+    `fetchLibraries.mjs` (every line of the pin list); the image build copies the new file. Tests:
+    `tools/h5p-libraries/test/sourceRules.test.mjs`, `resolveManifest.test.mjs`, `gitSource.test.mjs`,
+    `manifest.test.mjs`, `tools/h5p-bundle/test/imageInputsStage.test.mjs`.
+  - Scan turns (SEC-006): `security/malware/ScanTurns.ts` hands the free turns to the waiting authors in rotation;
+    `security/malware/scanOwner.ts` (new) carries the author of an upload request, set in
+    `http/routes/ajaxRoutes.ts`. Four scans at once and the time limit stay as they are. Tests:
+    `security/malware/ScanTurns.test.ts`, `security/malware/scanOwner.test.ts`,
+    `http/malwareScanTurns.int.test.ts` (a fake clamd, two authors).
+  - An imported package in the editor (SEC-005, SEC-008): no change; a test states that its title data, its
+    pieces' title data and its file settings arrive as plain text (`h5p/semantics/editorFormParams.int.test.ts`).
+  - D-143 added, with amendment lines under D-043, D-078 and D-110; H5P-003, SEC-002, SEC-005 and SEC-006 in spec
+    01 have an "Amended" line; the threat model (T-33, T-80, T-112), ROS-07, the architecture description, the
+    ClamAV runbook, the tool's README and the server README follow; `TRACEABILITY.md` and the spec site
+    regenerated. The tool was run for real: the tags of a repository read from GitHub, and a fetch from the cached
+    checkouts packed the same ten packages (the same SHA-256 list). No page of the web app looks different, so no
+    screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       642 passed (100 files)
+  $ npx vitest run --project api-contract              122 passed (15 files)
+  $ npx vitest run --project tools                     549 passed (72 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27124 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```

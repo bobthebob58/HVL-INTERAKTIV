@@ -47,7 +47,7 @@ All in `apps/server/.env.example`; the server refuses to start on a wrong value 
 |---|---|---|
 | `CLAMAV_HOST` | empty (no scanner) | clamd's host name or IP address. **Required in production**, unless `CLAMAV_ALLOW_UNSCANNED_UPLOADS=true`. |
 | `CLAMAV_PORT` | `3310` | clamd's TCP port (`TCPSocket` in `clamd.conf`), or the TLS proxy's port. |
-| `CLAMAV_TIMEOUT_MS` | `30000` | The limit on one whole scan, including the wait for one of the four scans a server process sends at once. |
+| `CLAMAV_TIMEOUT_MS` | `30000` | The limit on one whole scan, including the wait for one of the four scans a server process sends at once. Waiting scans get the free turns author by author, so one author's many files do not use up another author's limit (D-143). |
 | `CLAMAV_TLS` | `false` | `true` connects over TLS. **Required in production** unless clamd runs on the loopback (`localhost`, `127.0.0.0/8`, `::1`). |
 | `CLAMAV_ALLOW_UNSCANNED_UPLOADS` | `false` | Production only: start without a scanner. Refused together with `CLAMAV_HOST`. |
 

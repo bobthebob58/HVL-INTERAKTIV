@@ -200,7 +200,7 @@ database schema (`DATA-001`).
 | **S3 content bucket** (`S3_CONTENT_BUCKET`) | The media files of activities: images, video, audio, documents | **Can be:** an upload can hold personal data (a photo, a document); the app does not classify it | With the activity | Yes: every object, under its SHA-256 | `docs/privacy/DATA-INVENTORY.md:99-111`; DPIA input R38; `docs/ops/runbook.md:154-158` |
 | **S3 temporary bucket** (`S3_TEMPORARY_BUCKET`) | Editor uploads not yet saved | Can be, as above | A 1-day lifecycle rule that **HVL sets** | No | `apps/server/.env.example:68-70`; `docs/ops/runbook.md:24,156` |
 | **H5P library volume** (`H5P_LIBRARY_DIR`) | Installed H5P libraries (code), shared by all nodes | No | Until replaced | No: the seed step installs them again from the bundle | `apps/server/.env.example:80-82`; `deploy/compose.app.yml:132-140,157`; `docs/ops/runbook.md:156-158` |
-| **Container `/tmp`** (tmpfs, 512 MB in the local stack) | One upload at a time per request, in a fresh folder, while it is sanitised and scanned | Can be | Removed when the request ends | No | `src/http/multipartUpload.ts:12,76`; `deploy/compose.app.yml:62-64` |
+| **Container `/tmp`** (tmpfs, 512 MB in the local stack) | One upload at a time per request, in a fresh folder, while it is sanitised and scanned | Can be | Removed when the request ends | No | `src/http/multipartUpload.ts:12,89`; `deploy/compose.app.yml:62-64` |
 | **Logs** (stdout to HVL's log store) | One request line per request (route pattern, status, time, request ID) and event lines | Not by design: redaction by key name, no paths, queries, user IDs or IP addresses. Names typed into free text cannot be detected | 30 days, in HVL's log store **(IT to fill in)** | HVL's choice | `src/logging/logger.ts:1-17`; `src/http/requestLog.ts:1-27`; `docs/privacy/DATA-INVENTORY.md:416-437`; `DATA-009` |
 | **Backups** (`npm run ops:backup`) | The database dump, every content object, `MANIFEST.json` and `SHA256SUMS` | **Yes:** everything in PostgreSQL and the content bucket | 30 days; an encrypted copy off the server, in the EEA **(IT to fill in: tool and place)** | — | `docs/ops/runbook.md:152-177`; `tools/ops/README.md`; `NFR-002` |
 | **Outside the app** | The proxy's access log; clamd's log; Canvas's gradebook (scores the app sends) | Can be | **(IT to fill in)** | — | DPIA input R26, R38; `src/grades/AgsScoreClient.ts` |
@@ -341,7 +341,7 @@ H5P content types are JavaScript that runs in every learner's browser, so how th
    still install libraries (with an audit row, after the same scan), so "not by hand" is a procedure, not a technical
    block (`deploy/compose.app.yml:132-140`; `docs/ops/runbook.md:58-73`; `H5P-003`, `H5P-011`; D-041).
 
-The ten roots (CLAUDE.md §1; `tools/h5p-libraries/resolveManifest.mjs:29-41`):
+The ten roots (CLAUDE.md §1; `tools/h5p-libraries/resolveManifest.mjs:32-44`):
 
 | Type | Version | Commit (first 12) | Type | Version | Commit (first 12) |
 |---|---|---|---|---|---|

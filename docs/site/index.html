@@ -922,7 +922,11 @@ in `docs/reference/h5p-core-1.28-seed-packages/` (see [reference readme](../refe
 it needs no network access. a `sha256sums` file lists the hash of each package. the script refuses
 to install a package whose hash does not match.
 - **acceptance:** running the script twice is idempotent. ci seeds from scratch in under 2 minutes.
-- **verify:** integration test against an empty storage.">
+- **verify:** integration test against an empty storage.
+- **amended (d-143, 2026-11-25):** the tool that pins and fetches the real content types (`tools/h5p-libraries`,
+  d-078) holds a repository address, a machine name, a version, a ref and a commit to fixed forms before any of
+  them reaches git or a folder name: the registry's addresses, the names in fetched `library.json` files, and every
+  line of the pin list. a repository is `https://github.com/&lt;owner&gt;/&lt;name&gt;`.">
 <summary><span class="req-id">H5P-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Deterministic offline seeding</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>npm run seed:libraries</code> installs the ten types and their dependencies from verified <code>.h5p</code> packages
 in <code>docs/reference/h5p-core-1.28-seed-packages/</code> (see <a href="#reference">reference README</a>).
@@ -931,6 +935,10 @@ to install a package whose hash does not match.</p>
 <ul>
 <li><strong>Acceptance:</strong> Running the script twice is idempotent. CI seeds from scratch in under 2 minutes.</li>
 <li><strong>Verify:</strong> Integration test against an empty storage.</li>
+<li><strong>Amended (D-143, 2026-11-25):</strong> the tool that pins and fetches the real content types (<code>tools/h5p-libraries</code>,
+D-078) holds a repository address, a machine name, a version, a ref and a commit to fixed forms before any of
+them reaches git or a folder name: the registry&#39;s addresses, the names in fetched <code>library.json</code> files, and every
+line of the pin list. A repository is <code>https://github.com/&lt;owner&gt;/&lt;name&gt;</code>.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-H5P-003">01 H5P engine and security, H5P-003</a> · H5P engine</p></div>
 </details>
@@ -1217,7 +1225,9 @@ foreignObject with HTML. Benign SVGs keep their appearance (snapshot of the rend
 `json png jpg jpeg gif webp svg webm mp4 mp3 m4a ogg wav vtt webvtt pdf txt csv docx xlsx pptx odt ods odp`.
 `xml`, `swf`, `md`, `textile`, `diff` and `patch` are removed. `filetypesniffer` rejects a file whose
 magic bytes contradict its extension, for example html in a `.png`.
-- **verify:** unit tests with polyglot fixtures.">
+- **verify:** unit tests with polyglot fixtures.
+- **amended (d-143, 2026-11-25):** a `.json` file is valid utf-8 that `json.parse` would accept; the server checks
+  that by reading the file in portions and following its syntax, without parsing the file into memory.">
 <summary><span class="req-id">SEC-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Narrow allowlist and content sniffing</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The content file allowlist (<code>contentWhitelist</code>) is narrowed to what the ten types need:
 <code>json png jpg jpeg gif webp svg webm mp4 mp3 m4a ogg wav vtt webvtt pdf txt csv docx xlsx pptx odt ods odp</code>.
@@ -1225,6 +1235,8 @@ magic bytes contradict its extension, for example html in a `.png`.
 magic bytes contradict its extension, for example HTML in a <code>.png</code>.</p>
 <ul>
 <li><strong>Verify:</strong> Unit tests with polyglot fixtures.</li>
+<li><strong>Amended (D-143, 2026-11-25):</strong> a <code>.json</code> file is valid UTF-8 that <code>JSON.parse</code> would accept; the server checks
+that by reading the file in portions and following its syntax, without parsing the file into memory.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-002">01 H5P engine and security, SEC-002</a> · Upload security</p></div>
 </details>
@@ -1284,7 +1296,9 @@ path traversal or absolute paths. package imports are processed in a temporary d
   characters, and the pre-publish validator is given only content within these limits (ud-020).
 - **amended (d-139, 2026-11-22):** one activity holds at most 200 mb of files and 1 000 files, the total one
   package may bring. a save or a copy past it is refused with 413 `hvl:activity-files-over-limit` before anything
-  is written, and the storage refuses a file its activity has no room for.">
+  is written, and the storage refuses a file its activity has no room for.
+- **amended (d-143, 2026-11-25):** an upload request carries at most 4 text fields of at most 64 kb each, in at
+  most 8 parts; a request past one of these is refused with 400, and no field is cut short and passed on.">
 <summary><span class="req-id">SEC-005</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Size limits and archive safety</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>maxFileSize</code> is 50 MB and <code>maxTotalSize</code> is 200 MB per package. The server rejects zip entries with
 path traversal or absolute paths. Package imports are processed in a temporary directory with a quota.</p>
@@ -1300,6 +1314,8 @@ characters, and the pre-publish validator is given only content within these lim
 <li><strong>Amended (D-139, 2026-11-22):</strong> one activity holds at most 200 MB of files and 1 000 files, the total one
 package may bring. A save or a copy past it is refused with 413 <code>hvl:activity-files-over-limit</code> before anything
 is written, and the storage refuses a file its activity has no room for.</li>
+<li><strong>Amended (D-143, 2026-11-25):</strong> an upload request carries at most 4 text fields of at most 64 KB each, in at
+most 8 parts; a request past one of these is refused with 400, and no field is cut short and passed on.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-005">01 H5P engine and security, SEC-005</a> · Upload security</p></div>
 </details>
@@ -1309,7 +1325,9 @@ is written, and the storage refuses a file its activity has no room for.</li>
   its settings only from our checked configuration; production requires `clamav_host` unless
   `clamav_allow_unscanned_uploads` is set, and tls off the loopback. verified by fake-clamd tests in every run, the
   real eicar tests when `clamav_test_host` names a clamd (ci runs one as a service), and the image's smoke test
-  against its stack's clamd.">
+  against its stack's clamd.
+- **amended (d-143, 2026-11-25):** at most four scans run at once per server process, and waiting scans get the
+  free turns author by author, so one author's many files do not push another author's upload past the time limit.">
 <summary><span class="req-id">SEC-006</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Malware scanning</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>When <code>CLAMAV_HOST</code> is configured, register <code>@lumieducation/h5p-clamav-scanner</code> in <code>malwareScanners</code>.</p>
 <ul>
@@ -1319,6 +1337,8 @@ its settings only from our checked configuration; production requires <code>CLAM
 <code>CLAMAV_ALLOW_UNSCANNED_UPLOADS</code> is set, and TLS off the loopback. Verified by fake-clamd tests in every run, the
 real EICAR tests when <code>CLAMAV_TEST_HOST</code> names a clamd (CI runs one as a service), and the image&#39;s smoke test
 against its stack&#39;s clamd.</li>
+<li><strong>Amended (D-143, 2026-11-25):</strong> at most four scans run at once per server process, and waiting scans get the
+free turns author by author, so one author&#39;s many files do not push another author&#39;s upload past the time limit.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-006">01 H5P engine and security, SEC-006</a> · Upload security</p></div>
 </details>
@@ -4211,6 +4231,10 @@ to install a package whose hash does not match.</p>
 <ul>
 <li><strong>Acceptance:</strong> Running the script twice is idempotent. CI seeds from scratch in under 2 minutes.</li>
 <li><strong>Verify:</strong> Integration test against an empty storage.</li>
+<li><strong>Amended (D-143, 2026-11-25):</strong> the tool that pins and fetches the real content types (<code>tools/h5p-libraries</code>,
+D-078) holds a repository address, a machine name, a version, a ref and a commit to fixed forms before any of
+them reaches git or a folder name: the registry&#39;s addresses, the names in fetched <code>library.json</code> files, and every
+line of the pin list. A repository is <code>https://github.com/&lt;owner&gt;/&lt;name&gt;</code>.</li>
 </ul>
 <h4 id="r-H5P-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-H5P-004">H5P-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Production storage adapters</span></h4>
 <div class="table-wrap" role="region" aria-label="Table 4, 4. Requirements — H5P engine" tabindex="0"><table><thead><tr>
@@ -4372,6 +4396,8 @@ foreignObject with HTML. Benign SVGs keep their appearance (snapshot of the rend
 magic bytes contradict its extension, for example HTML in a <code>.png</code>.</p>
 <ul>
 <li><strong>Verify:</strong> Unit tests with polyglot fixtures.</li>
+<li><strong>Amended (D-143, 2026-11-25):</strong> a <code>.json</code> file is valid UTF-8 that <code>JSON.parse</code> would accept; the server checks
+that by reading the file in portions and following its syntax, without parsing the file into memory.</li>
 </ul>
 <h4 id="r-SEC-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-SEC-003">SEC-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Uploaded packages never install code for non-admins</span></h4>
 <p>When an author imports a <code>.h5p</code> file, the server installs <strong>only the content</strong>. A library in the
@@ -4411,6 +4437,8 @@ characters, and the pre-publish validator is given only content within these lim
 <li><strong>Amended (D-139, 2026-11-22):</strong> one activity holds at most 200 MB of files and 1 000 files, the total one
 package may bring. A save or a copy past it is refused with 413 <code>hvl:activity-files-over-limit</code> before anything
 is written, and the storage refuses a file its activity has no room for.</li>
+<li><strong>Amended (D-143, 2026-11-25):</strong> an upload request carries at most 4 text fields of at most 64 KB each, in at
+most 8 parts; a request past one of these is refused with 400, and no field is cut short and passed on.</li>
 </ul>
 <h4 id="r-SEC-006" class="req-heading" tabindex="-1"><a class="req-id" href="#r-SEC-006">SEC-006</a> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Malware scanning</span></h4>
 <p>When <code>CLAMAV_HOST</code> is configured, register <code>@lumieducation/h5p-clamav-scanner</code> in <code>malwareScanners</code>.</p>
@@ -4421,6 +4449,8 @@ its settings only from our checked configuration; production requires <code>CLAM
 <code>CLAMAV_ALLOW_UNSCANNED_UPLOADS</code> is set, and TLS off the loopback. Verified by fake-clamd tests in every run, the
 real EICAR tests when <code>CLAMAV_TEST_HOST</code> names a clamd (CI runs one as a service), and the image&#39;s smoke test
 against its stack&#39;s clamd.</li>
+<li><strong>Amended (D-143, 2026-11-25):</strong> at most four scans run at once per server process, and waiting scans get the
+free turns author by author, so one author&#39;s many files do not push another author&#39;s upload past the time limit.</li>
 </ul>
 <h4 id="r-SEC-007" class="req-heading" tabindex="-1"><a class="req-id" href="#r-SEC-007">SEC-007</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Dependency hygiene</span></h4>
 <p>All runtime dependencies are pinned exactly (no <code>^</code>) and listed in <code>package-lock.json</code>. CI runs
@@ -7445,12 +7475,19 @@ the packages can be fetched (Q7), CI has no seed step; the integration tests see
 </ul>
 <h3 id="decisions--d-043--multipart-uploads-keep-their-extension-and-are-limited-while-streaming" tabindex="-1">D-043 · Multipart uploads keep their extension and are limited while streaming</h3>
 <ul>
-<li><strong>Context:</strong> Lumi requires a temporary file path when file sanitisers are registered, and its SVG sanitiser
+<li><p><strong>Context:</strong> Lumi requires a temporary file path when file sanitisers are registered, and its SVG sanitiser
 ignores any path that does not end in <code>.svg</code>; common upload middlewares write temporary files without an
-extension. Lumi also has no size limit on direct editor uploads, and it trusts the client&#39;s MIME type.</li>
-<li><strong>Decision:</strong> <code>@fastify/busboy</code> parses uploads into a fresh <code>mkdtemp</code> folder; each file keeps its lower-cased
-extension, its MIME type comes from the extension, and the 50 MB limit is enforced while streaming (413).</li>
-<li><strong>Consequences:</strong> The folder is removed after every request, successful or not.</li>
+extension. Lumi also has no size limit on direct editor uploads, and it trusts the client&#39;s MIME type.</p>
+</li>
+<li><p><strong>Decision:</strong> <code>@fastify/busboy</code> parses uploads into a fresh <code>mkdtemp</code> folder; each file keeps its lower-cased
+extension, its MIME type comes from the extension, and the 50 MB limit is enforced while streaming (413).</p>
+</li>
+<li><p><strong>Consequences:</strong> The folder is removed after every request, successful or not.</p>
+</li>
+<li><p><strong>Amendment (2026-11-25, D-143):</strong> the text fields of an upload request are few and small: at most 4 fields of at
+most 64 KB each, a field name of at most 100 characters, at most 8 parts in all. A request past one of these is
+400 after its body was read, and no value is cut short and passed on (<code>http/multipartUpload.ts</code>).</p>
+</li>
 </ul>
 <h3 id="decisions--d-044--svg-sanitising-rules-and-order" tabindex="-1">D-044 · SVG sanitising rules and order</h3>
 <ul>
@@ -8271,20 +8308,23 @@ The OpenAPI 3.1 document is built from them with zod 4&#39;s own <code>z.toJSONS
 </ul>
 <h3 id="decisions--d-078--real-h5p-libraries-from-github-at-pinned-commits" tabindex="-1">D-078 · Real H5P libraries from GitHub at pinned commits</h3>
 <ul>
-<li><strong>Context:</strong> hub-api.h5p.org and github.com&#39;s web pages are unreachable from the build environment (Q7), but <code>git</code>
+<li><p><strong>Context:</strong> hub-api.h5p.org and github.com&#39;s web pages are unreachable from the build environment (Q7), but <code>git</code>
 reaches public GitHub repositories. Without real content types, <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, <a class="req-ref" href="#r-UD-011"><code>UD-011</code></a> and <a class="req-ref" href="#r-UD-030"><code>UD-030</code></a> would be tested
-on stand-ins only, and R-01 (D-047) stays open.</li>
-<li><strong>Decision:</strong> <code>tools/h5p-libraries</code> (<code>npm run h5p:fetch-libraries</code>) clones each library&#39;s repository at a commit
+on stand-ins only, and R-01 (D-047) stays open.</p>
+</li>
+<li><p><strong>Decision:</strong> <code>tools/h5p-libraries</code> (<code>npm run h5p:fetch-libraries</code>) clones each library&#39;s repository at a commit
 pinned in a committed manifest (repository, tag, commit SHA), resolves <code>library.json</code> dependencies recursively,
 builds libraries whose built files are not committed (<code>npm ci --ignore-scripts</code> and their build script), and packs
 one <code>.h5p</code> per content type with our own example content into the gitignored <code>apps/server/var/h5p-real/</code>. The
 packages are installed through the admin package import, so the S2 package checks run on them. Library files are
-not committed (Q10 stays open); synthetic libraries remain for unit tests.</li>
-<li><strong>Consequences:</strong> Versions can differ from what the Hub serves; the Hub packages (D-042) replace them when Q7 is
+not committed (Q10 stays open); synthetic libraries remain for unit tests.</p>
+</li>
+<li><p><strong>Consequences:</strong> Versions can differ from what the Hub serves; the Hub packages (D-042) replace them when Q7 is
 resolved. A type that cannot be assembled stays synthetic and is listed in PROGRESS. <code>SPEC-DEVIATION</code>: <a class="req-ref" href="#r-H5P-003"><code>H5P-003</code></a>
 seeds from packages downloaded from the Hub; these are built from H5P&#39;s own repositories at pinned commits and
-serve development, tests and CI until the Hub is reachable.</li>
-<li><strong>Amendment (2026-10-23, probe 1):</strong> the H5P registry (<code>github.com/h5p/h5p-registry</code>, pinned) maps machine names to
+serve development, tests and CI until the Hub is reachable.</p>
+</li>
+<li><p><strong>Amendment (2026-10-23, probe 1):</strong> the H5P registry (<code>github.com/h5p/h5p-registry</code>, pinned) maps machine names to
 repositories. The resolver follows required dependencies and, as optional, the sub-content types each library&#39;s
 semantics offers (without them InteractiveBook could not save its own pages): 120 libraries, 23 of them built
 with webpack; 39 offered old versions are skipped and listed in the manifest (their dependencies are not in the
@@ -8293,7 +8333,13 @@ a reviewed commit (D-022 rule). Network errors are retried and never cause a ski
 build otherwise picks up this repository&#39;s TypeScript configuration. Installing the first real package showed
 that S2&#39;s narrowed <code>contentWhitelist</code> (SEC-002) also applied to library folders through Lumi&#39;s
 <code>libraryWhitelist</code>, so every real package, from GitHub or the Hub, was refused for its icon fonts:
-<code>libraryWhitelist</code> now adds <code>eot ttf woff woff2 otf</code> (library folders only; content files keep the SEC-002 list).</li>
+<code>libraryWhitelist</code> now adds <code>eot ttf woff woff2 otf</code> (library folders only; content files keep the SEC-002 list).</p>
+</li>
+<li><p><strong>Amendment (2026-11-25, D-143):</strong> the tool holds a repository address, a machine name, a version, a ref and a
+commit to fixed forms before any of them reaches git or a folder name (<code>tools/h5p-libraries/sourceRules.mjs</code>):
+for the registry&#39;s addresses, for the names and versions in fetched <code>library.json</code> and <code>semantics.json</code> files,
+and for every line of the pin list when it is read. A repository is <code>https://github.com/&lt;owner&gt;/&lt;name&gt;</code>.</p>
+</li>
 </ul>
 <h3 id="decisions--d-079--what-s4-verifies-automatically-and-what-hvl-records-by-hand" tabindex="-1">D-079 · What S4 verifies automatically and what HVL records by hand</h3>
 <ul>
@@ -11465,6 +11511,10 @@ failure is the reason logged.</li>
 reconfigured and restarted between two probes is trusted for up to 60 s unless an upload failed meanwhile.</li>
 </ul>
 </li>
+<li><p><strong>Amendment (2026-11-25, D-143):</strong> waiting scans get the free turns person by person: a free turn goes to the
+author who has waited longest since their last turn (<code>security/malware/ScanTurns.ts</code>, <code>scanOwner.ts</code>). Four scans
+at once and the time limit that includes the wait stay as they are.</p>
+</li>
 </ul>
 <h3 id="decisions--d-111--an-hvl-language-overlay-in-a-library-storage-wrapper-h5p-010s-guidance-through-it" tabindex="-1">D-111 · An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</h3>
 <ul>
@@ -13320,6 +13370,73 @@ not changed; a stored purpose that breaks the rule stays hidden from learners un
 looks different and no message is new. AUTH-002, AUTH-003, AUTH-005, PED-030, PED-032, UD-022, PROD-007 and
 H5P-002 have an &quot;Amended&quot; line; D-054, D-057 and D-087 an amendment; T-02, T-05, T-21 and the new T-25 in the
 threat model follow.</li>
+</ul>
+<h3 id="decisions--d-143--security-repairs-step-27-a-json-file-is-checked-in-portions-an-uploads-text-fields-are-few-and-small-library-sources-are-held-to-their-forms-scan-turns-go-person-by-person" tabindex="-1">D-143 · Security repairs, step 27: a <code>.json</code> file is checked in portions; an upload&#39;s text fields are few and small; library sources are held to their forms; scan turns go person by person</h3>
+<ul>
+<li><strong>Context:</strong> Four places where the handling of something sent or fetched cost more, or trusted more, than its
+rule needs. (1) SEC-002 accepts a <code>.json</code> content file only when it is valid UTF-8 and valid JSON. The check read
+the whole file (up to 50 MB) and gave it to <code>JSON.parse</code>: the file, its text and the parsed value were in memory
+together, many times the file&#39;s size, and no other request was served during the parse; an editor upload ran the
+check twice (ours, for the reason, and Lumi&#39;s own). (2) An upload request could carry 20 text fields of 4 MB each,
+all kept in memory, although H5P&#39;s editor sends two small ones (<code>field</code>, at most 434 bytes among the installed
+content types, and <code>contentId</code>); a field past the size limit was cut short and passed on. (3)
+<code>tools/h5p-libraries</code> with <code>--resolve</code> reads repository addresses from H5P&#39;s public registry, and library names
+and versions from the <code>library.json</code> and <code>semantics.json</code> of repositories it has just fetched, and gave them to
+<code>git</code> and to folder names as they were. An address that begins with <code>-</code> is an option to git, an address in
+another form reaches another transport or a local path, and a name with <code>../</code> joins to a folder outside the work
+folder, which a checkout removes first. A test checked the committed pin list afterwards; the code checked
+nothing. (4) The malware scanner lets four scans talk to clamd at a time and counts the wait for a turn against a
+scan&#39;s time limit (D-110). With one queue for everybody, one author&#39;s many files at the same moment could hold the
+turns long enough for other authors&#39; uploads to pass the limit and be refused.</li>
+<li><strong>Decision — a <code>.json</code> file is checked in portions (SEC-002).</strong> <code>security/sniff/jsonFileCheck.ts</code> reads the file
+64 KB at a time, decodes it as UTF-8 (fatal, one leading byte-order mark removed) and follows its syntax with
+<code>security/sniff/jsonSyntax.ts</code>, a state machine for RFC 8259 that builds nothing. The answer is exactly that of
+<code>JSON.parse</code>; no size or depth rule is added. Memory is one portion and one bit for each open bracket, and the
+reads are asynchronous, so other requests are served between the portions. The check still runs twice for an
+editor upload; each run is now cheap.</li>
+<li><strong>Decision — an upload request&#39;s text fields are few and small (SEC-005).</strong> <code>http/multipartUpload.ts</code>: at most 4
+text fields of at most 64 KB each (about 150 times the largest real one), a field name of at most 100 characters,
+at most 8 parts in all. A request past one of these is 400 <code>error.badRequest</code> after its body was read, and its
+folder is removed; a value is never cut short and passed on. A second file within the 8 parts is still discarded
+unread.</li>
+<li><strong>Decision — a library source is held to its form before git or a folder sees it (H5P-003).</strong>
+<code>tools/h5p-libraries/sourceRules.mjs</code>: a repository is <code>https://github.com/&lt;owner&gt;/&lt;name&gt;</code>; a machine name is
+parts of letters, digits, <code>_</code> and <code>-</code> joined by single dots; a version part is a whole number, given as a number;
+a ref is <code>HEAD</code>, a version tag&#39;s ref or a full commit; a commit is 40 hex characters. <code>resolveManifest.mjs</code> applies
+them to the registry&#39;s address and to every name and version before a folder name is made or the source is asked;
+<code>gitSource.mjs</code> applies them again before git runs or a folder is touched, and puts <code>--</code> before the address;
+<code>fetchLibraries.mjs</code> holds every line of the committed pin list to them before it fetches the first. A required
+library that fails stops the run; an offered one is listed as skipped with the reason, like any other that cannot
+be resolved. All 120 lines of today&#39;s pin list pass. The image build copies the new file beside the resolver
+(<code>deploy/Dockerfile</code>).</li>
+<li><strong>Decision — waiting scans get the free turns person by person (SEC-006).</strong> <code>security/malware/ScanTurns.ts</code>: a
+free turn goes to the owner who has waited longest since their last turn, and to that owner&#39;s oldest waiting scan.
+The upload route records the author for the length of the request (<code>security/malware/scanOwner.ts</code>, an
+<code>AsyncLocalStorage</code>, as <code>h5p/storage/contentCreations.ts</code> uses one), and the scanner names that author when it
+asks for a turn; the settings probe has a place of its own in the rotation. Four scans at a time and the time
+limit that includes the wait stay as D-110 set them: an author whose own files fill the queue may still see the
+later ones refused, the other authors no longer do. PRIVACY: the owner is an internal account ID held in memory
+while a request runs; it is not logged or stored.</li>
+<li><strong>Not changed — what an imported package shows in the editor (SEC-005, SEC-008).</strong> D-124 already hands the editor
+an uploaded package&#39;s content fitted and cleaned, with its title data and that of its pieces as plain text. A
+test now states it for a title, a licence note, an author, a piece&#39;s author role and a file field&#39;s settings.</li>
+<li><strong>Verified:</strong> a property test compares the syntax check with <code>JSON.parse</code> on generated JSON, on generated JSON
+with one character changed and on texts of JSON&#39;s own characters, however they are cut into pieces; file tests
+with characters, escapes, numbers and words across two portions; a 30 MB file checked by a process whose heap
+(64 MB) cannot hold it parsed. Unit tests of the upload reader at and past each limit, and of the editor&#39;s upload
+route. Unit tests of each source rule, of the resolver with a registry address, a name and a version out of form
+(no source asked, no folder made), of the git access (refused before git runs, the folder untouched) and of the
+pin list. Unit tests of the rotation and of the owner&#39;s async context, and an integration test with a fake clamd
+whose scans take a while: with forty files of one author waiting, another author&#39;s file is scanned among the
+first and stored. The new tests fail on the code before this step (the test of the imported package passes on
+both, as it should). The tool was run for real: tags read from GitHub with the <code>--</code> form, and a fetch from the
+cached checkouts packed the same ten packages (the same SHA-256 list).</li>
+<li><strong>Consequences:</strong> No page looks different and no message is new in normal use. An upload with more than four text
+fields or a field over 64 KB, which no H5P client sends, is refused. A registry entry that names a repository
+outside GitHub cannot be resolved until the rule is widened on purpose. One person&#39;s scans delay another&#39;s only by
+the scans that already run. No new stored data. SEC-002, SEC-005, SEC-006 and H5P-003 have an &quot;Amended&quot; line;
+D-043, D-078 and D-110 an amendment; T-33, T-80 and T-112 in the threat model, ROS-07, the architecture
+description, the ClamAV runbook and the server README follow.</li>
 </ul>
 
 </section>
@@ -16422,6 +16539,65 @@ $ npm run test:a11y                                  563 passed (18 files)
 $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
     (needs the privileged database, like DATA-010's tests)
 $ npx vitest run --project server                    27104 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004)</code></pre>
+</li>
+<li><p><strong>2026-11-25 · Security repairs, step 27 (D-143)</strong> — An uploaded <code>.json</code> file is checked in portions, an upload
+request carries few and small text fields, the library tool holds names and addresses to fixed forms, and
+authors take turns in the malware-scan queue. One code commit:</p>
+<ul>
+<li>The <code>.json</code> check (SEC-002): <code>security/sniff/jsonSyntax.ts</code> and <code>security/sniff/jsonFileCheck.ts</code> (new) read
+the file 64 KB at a time and answer exactly as decoding and parsing the whole file did, without building it in
+memory; <code>security/sniff/textFormats.ts</code> uses them. Tests: <code>security/sniff/jsonSyntax.test.ts</code> (compared with
+<code>JSON.parse</code> on generated texts), <code>security/sniff/jsonFileCheck.test.ts</code> (portion boundaries; a 30 MB file in
+a process with a 64 MB heap).</li>
+<li>Upload text fields (SEC-005): <code>http/multipartUpload.ts</code> takes at most 4 text fields of at most 64 KB each, a
+field name of at most 100 characters and 8 parts in all; a request past a limit is a 400 and leaves no folder,
+and no value is cut short and passed on. Tests: <code>http/multipartUploadFields.test.ts</code>,
+<code>http/uploadLimits.int.test.ts</code>.</li>
+<li>Library sources (H5P-003): <code>tools/h5p-libraries/sourceRules.mjs</code> (new) holds a repository to
+<code>https://github.com/&lt;owner&gt;/&lt;name&gt;</code> and a machine name, a version, a ref and a commit to their forms before
+git runs or a folder is named; git gets them after <code>--</code>. Used by <code>resolveManifest.mjs</code>, <code>gitSource.mjs</code> and
+<code>fetchLibraries.mjs</code> (every line of the pin list); the image build copies the new file. Tests:
+<code>tools/h5p-libraries/test/sourceRules.test.mjs</code>, <code>resolveManifest.test.mjs</code>, <code>gitSource.test.mjs</code>,
+<code>manifest.test.mjs</code>, <code>tools/h5p-bundle/test/imageInputsStage.test.mjs</code>.</li>
+<li>Scan turns (SEC-006): <code>security/malware/ScanTurns.ts</code> hands the free turns to the waiting authors in rotation;
+<code>security/malware/scanOwner.ts</code> (new) carries the author of an upload request, set in
+<code>http/routes/ajaxRoutes.ts</code>. Four scans at once and the time limit stay as they are. Tests:
+<code>security/malware/ScanTurns.test.ts</code>, <code>security/malware/scanOwner.test.ts</code>,
+<code>http/malwareScanTurns.int.test.ts</code> (a fake clamd, two authors).</li>
+<li>An imported package in the editor (SEC-005, SEC-008): no change; a test states that its title data, its
+pieces&#39; title data and its file settings arrive as plain text (<code>h5p/semantics/editorFormParams.int.test.ts</code>).</li>
+<li>D-143 added, with amendment lines under D-043, D-078 and D-110; H5P-003, SEC-002, SEC-005 and SEC-006 in spec
+01 have an &quot;Amended&quot; line; the threat model (T-33, T-80, T-112), ROS-07, the architecture description, the
+ClamAV runbook, the tool&#39;s README and the server README follow; <code>TRACEABILITY.md</code> and the spec site
+regenerated. The tool was run for real: the tags of a repository read from GitHub, and a fetch from the cached
+checkouts packed the same ten packages (the same SHA-256 list). No page of the web app looks different, so no
+screenshots. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 47, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       642 passed (100 files)
+$ npx vitest run --project api-contract              122 passed (15 files)
+$ npx vitest run --project tools                     549 passed (72 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             206 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files)
+$ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    27124 passed, 31 skipped; 1 failed in 4 files: a
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004)</code></pre>
 </li>
