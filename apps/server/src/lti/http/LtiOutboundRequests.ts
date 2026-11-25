@@ -76,18 +76,23 @@ export class LtiOutboundRequests implements RequestHandler {
    */
   constructor(private readonly rules: LtiOutboundRules) {}
 
+  /** ltijs's GET, within the rules. */
   get = <T = unknown>(url: string, options?: RequestOptions): Promise<RequestResponse<T>> =>
     this.request<T>('GET', url, undefined, options);
 
+  /** ltijs's POST, within the rules. */
   post = <T = unknown>(url: string, body?: unknown, options?: RequestOptions): Promise<RequestResponse<T>> =>
     this.request<T>('POST', url, body, options);
 
+  /** ltijs's PUT, within the rules. */
   put = <T = unknown>(url: string, body?: unknown, options?: RequestOptions): Promise<RequestResponse<T>> =>
     this.request<T>('PUT', url, body, options);
 
+  /** ltijs's DELETE, within the rules. */
   delete = <T = unknown>(url: string, options?: RequestOptions): Promise<RequestResponse<T>> =>
     this.request<T>('DELETE', url, undefined, options);
 
+  /** Sets a header that every later request carries (ltijs's interface). */
   setPermanentHeader = (name: string, value: string): void => {
     this.permanentHeaders[name] = value;
   };

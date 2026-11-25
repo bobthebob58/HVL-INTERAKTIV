@@ -27,7 +27,8 @@ import { LtijsError } from 'ltijs';
 /** The form field ltijs's launch page adds when it posts a launch the second time. */
 export const RECOVERED_STATE_FIELD = 'ltijs_recovered_state';
 
-type Headers = Readonly<Record<string, string | readonly string[] | undefined>>;
+/** Request headers as Express gives them: lower-case names. */
+export type LaunchRequestHeaders = Readonly<Record<string, string | readonly string[] | undefined>>;
 
 /**
  * Tells whether a post to the launch route is the last step of a launch.
@@ -45,7 +46,7 @@ export function isLastLaunchStep(body: Readonly<Record<string, unknown>>): boole
  * @param ownOrigin - Our own origin, e.g. `https://interaktiv.hvl.no`.
  * @returns True for `Sec-Fetch-Site: same-origin`, or, without that header, an `Origin` that is ours.
  */
-export function isFromOwnPage(headers: Headers, ownOrigin: string): boolean {
+export function isFromOwnPage(headers: LaunchRequestHeaders, ownOrigin: string): boolean {
   const site = headers['sec-fetch-site'];
   if (site !== undefined) return site === 'same-origin';
   // SECURITY: an exact match of one value; `null`, a list and a missing header are all "not ours".
@@ -62,7 +63,7 @@ export function isFromOwnPage(headers: Headers, ownOrigin: string): boolean {
  */
 export function assertLastStepFromOwnPage(
   body: Readonly<Record<string, unknown>>,
-  headers: Headers,
+  headers: LaunchRequestHeaders,
   ownOrigin: string,
 ): void {
   if (isLastLaunchStep(body) && !isFromOwnPage(headers, ownOrigin)) throw new LtijsError('INVALID_STATE');
