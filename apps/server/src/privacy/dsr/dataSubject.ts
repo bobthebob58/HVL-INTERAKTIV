@@ -16,11 +16,11 @@
  *   - PRIVACY: an error names the field (`feideId`, `lti[2].sub`), never a value; `JSON.parse`'s own message, which can
  *     quote the input, is replaced (DATA-009).
  *   - The result holds the identifiers in memory only; nothing here stores or prints them.
- * Collaborators: ../../config/envParsers.ts (FEIDE_ID_PATTERN), ../../auth/identity/subjectSources.ts (the same checks
- *   as login and launch), ./subjectKeys.ts, ./dsrCli.ts.
+ * Collaborators: ../../auth/identity/feideId.ts (the Feide ID rule), ../../auth/identity/subjectSources.ts (the same
+ *   checks as login and launch), ./subjectKeys.ts, ./dsrCli.ts.
  * Tests: apps/server/test/privacy/dsr/dataSubject.test.ts
  */
-import { FEIDE_ID_PATTERN } from '../../config/envParsers.js';
+import { normaliseFeideId } from '../../auth/identity/feideId.js';
 import { learnerSourceOf } from '../../auth/identity/subjectSources.js';
 
 /** One Canvas user: the platform registration (issuer and client ID) and the user's `sub` there (Canvas's `lti_id`). */
@@ -60,18 +60,6 @@ const MAX_SUB_LENGTH = 255;
 
 /** The fields of one Canvas identity. */
 const LTI_FIELDS: readonly string[] = ['issuer', 'clientId', 'sub'];
-
-/**
- * Normalises a Feide ID as the login does (trimmed, lower-cased, D-054).
- * @param raw - What the operator gave.
- * @returns The Feide ID, or undefined when it is not one.
- * @spec DATA-008
- */
-export function normaliseFeideId(raw: unknown): string | undefined {
-  if (typeof raw !== 'string') return undefined;
-  const feideId = raw.trim().toLowerCase();
-  return FEIDE_ID_PATTERN.test(feideId) ? feideId : undefined;
-}
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);

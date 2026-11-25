@@ -78,6 +78,25 @@ describeWithServices('[AUTH-003] logout and the portal session', () => {
     expect(await tb.sessions.get(sidOf(sessionCookie))).toBeDefined();
   });
 
+  it('[AUTH-003] a logout request without the session cookie logs nobody out: no cookie order, no audit row', async () => {
+    // Arrange: a signed-in browser; another site's form makes it post without the Lax cookie
+    const { sessionCookie = '' } = await loginWithFeide(tb, 'author');
+    const rows = () => tb.db.authAuditEvent.count({ where: { event: 'logout' } });
+    const before = await rows();
+    // Act
+    const res = await request(tb.app)
+      .post('/auth/logout')
+      .set('Sec-Fetch-Site', 'cross-site')
+      .type('form')
+      .send({});
+    // Assert
+    expect([res.status, res.headers.location]).toEqual([303, '/']);
+    expect(res.headers['set-cookie']).toBeUndefined();
+    expect(res.headers['cache-control']).toBe('no-store');
+    expect(await rows()).toBe(before);
+    expect(await tb.sessions.get(sidOf(sessionCookie))).toBeDefined();
+  });
+
   it('[AUTH-003] replaces the session at login, so an earlier session ID no longer works', async () => {
     // Arrange
     const first = await loginWithFeide(tb, 'author');

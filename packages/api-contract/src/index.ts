@@ -11,6 +11,7 @@
  *   - The route registries and their schema-name lists live in ./routes/, one pair per area (D-099); they are
  *     exported merged (`API_ROUTES`, `REQUEST_SCHEMAS`, `RESPONSE_SCHEMAS`), not one by one.
  * Collaborators: ./me.ts, ./content.ts, ./findings.ts, ./publishing.ts, ./sharing.ts, ./errors.ts, ./studio.ts,
+ *   ./textRules.ts,
  *   ./guideNodes.ts, ./patterns.ts, ./learnerInfo.ts, ./learningDesign.ts, ./planner.ts, ./collaboration.ts,
  *   ./sourceAttribution.ts, ./mappe.ts, ./learningDesignErrors.ts, ./xapi.ts, ./xapiResponseCaps.ts, ./gradeSync.ts,
  *   ./insight.ts, ./insightReport.ts, ./insightContextList.ts, ./insightFindings.ts, ./apiRoutes.ts,
@@ -41,5 +42,6 @@ export * from './publishing.js';
 export * from './sharing.js';
 export * from './sourceAttribution.js';
 export * from './studio.js';
+export * from './textRules.js';
 export * from './xapi.js';
 export * from './xapiResponseCaps.js';

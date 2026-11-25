@@ -8,10 +8,12 @@
  * Invariants:
  *   - A reason is trimmed and 1 to `REASON_MAX_LENGTH` characters long.
  *   - An acknowledgement names an error by `ruleId` and `path`, exactly as the findings gave them.
- * Collaborators: ./findings.ts, ./apiRoutes.ts, apps/server/src/http/api/publishRoutes.ts, apps/web.
+ * Collaborators: ./findings.ts, ./textRules.ts, ./apiRoutes.ts, apps/server/src/http/api/publishRoutes.ts,
+ *   apps/web.
  * Tests: packages/api-contract/test/schemas.test.ts
  */
 import { z } from 'zod';
+import { freeText, oneLineText } from './textRules.js';
 
 /** The longest reason an author may give (UD-022). */
 export const REASON_MAX_LENGTH = 500;
@@ -23,9 +25,10 @@ export const MAX_ACKNOWLEDGEMENTS = 500;
  * @spec UD-022
  */
 export const acknowledgementInputSchema = z.strictObject({
-  ruleId: z.string().min(1).max(100),
-  path: z.string().max(1000),
-  reason: z.string().trim().min(1).max(REASON_MAX_LENGTH),
+  // SECURITY: typed text only (./textRules.ts, D-142); a rule ID and a path are one line each.
+  ruleId: oneLineText(z.string().min(1).max(100)),
+  path: oneLineText(z.string().max(1000)),
+  reason: freeText(z.string().trim().min(1).max(REASON_MAX_LENGTH)),
 });
 /** One acknowledgement in a publish request. */
 export type AcknowledgementInput = z.infer<typeof acknowledgementInputSchema>;

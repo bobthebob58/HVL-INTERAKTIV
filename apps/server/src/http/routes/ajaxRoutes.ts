@@ -16,6 +16,9 @@
  *     person cannot hold the SVG cleaning worker (D-119).
  *   - Pasted content (`action=filter`) past the limits for one activity is 400 before Lumi reads it
  *     (./contentSaveBodies.ts, D-126).
+ *   - A request names exactly one action that Lumi's endpoint knows for its method; any other is 400 before a
+ *     body is read. Lumi answers an unknown POST action with status 500, which a signed-in author could raise,
+ *     and have logged as a server fault, at will (D-142).
  * Collaborators: ../multipartUpload.ts, ../requestBodies.ts, ../h5pLocals.ts, ../h5pRouteLimits.ts,
  *   ./contentSaveBodies.ts, Lumi's H5PAjaxEndpoint.
  * Tests: apps/server/test/http/ajax.int.test.ts, apps/server/test/http/editorUpload.int.test.ts,
@@ -40,6 +43,29 @@ const editorLanguage = (req: Request, res: Response): Locale => {
 };
 
 const queryString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+
+/** The actions Lumi's H5PAjaxEndpoint knows (`getAjax`, `postAjax`), by method. */
+const KNOWN_ACTIONS: Readonly<Record<string, ReadonlySet<string>>> = {
+  GET: new Set(['content-type-cache', 'content-hub-metadata-cache', 'libraries']),
+  POST: new Set([
+    'libraries',
+    'translations',
+    'files',
+    'filter',
+    'library-install',
+    'library-upload',
+    'get-content',
+  ]),
+};
+
+/** Refuses a request whose `action` is missing, given twice or unknown to Lumi, before its body is read. */
+const knownAction: RequestHandler = (req, _res, next) => {
+  const action = queryString(req.query.action);
+  // WHY: a request error, not the server fault Lumi's status 500 for an unknown POST action would be logged as.
+  if (action === undefined || !KNOWN_ACTIONS[req.method]?.has(action))
+    throw new HttpError(400, 'error.badRequest');
+  next();
+};
 
 /** File and package uploads are multipart and read by ../multipartUpload.ts, never by a form parser. */
 const isUpload = (req: Request): boolean =>
@@ -93,7 +119,7 @@ export function ajaxRoutes(deps: H5pRouteDeps): Router {
   const router = Router();
   const editorOnly = requireRole('author', 'admin');
 
-  router.get('/ajax', editorOnly, async (req, res) => {
+  router.get('/ajax', editorOnly, knownAction, async (req, res) => {
     const { action, machineName, majorVersion, minorVersion } = req.query;
     const user = asAccountUser(requireActor(res));
     const result = await deps.ajax.getAjax(
@@ -107,7 +133,7 @@ export function ajaxRoutes(deps: H5pRouteDeps): Router {
     res.json(result);
   });
 
-  router.post('/ajax', editorOnly, ...unlessUpload(formBody('20mb')), async (req, res) => {
+  router.post('/ajax', editorOnly, knownAction, ...unlessUpload(formBody('20mb')), async (req, res) => {
     const action = queryString(req.query.action) ?? '';
     const user = asAccountUser(requireActor(res));
     const language = editorLanguage(req, res);

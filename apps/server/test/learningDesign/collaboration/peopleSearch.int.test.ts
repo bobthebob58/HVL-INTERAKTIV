@@ -87,6 +87,15 @@ describeWithServices('[PROD-007] people search', () => {
     expect(other.body).toEqual({ people: [] });
   });
 
+  it('[PROD-007] a look-alike of a Feide ID finds nobody: the search reads an ID by the login’s rule', async () => {
+    // Act: the Kelvin sign for the k, which Unicode's lower-casing would turn into a plain k (D-142)
+    const kelvin = await search(asker, `\u212Aari.${TOKEN}@hvl.no`);
+    const plain = await search(asker, feideIdOf('Kari'));
+    // Assert
+    expect(kelvin.body).toEqual({ people: [] });
+    expect((plain.body as { people: unknown[] }).people).toHaveLength(1);
+  });
+
   it('[PROD-007] never answers the asker, and answers at most 10, ordered by name', async () => {
     // Arrange: twelve more findable colleagues
     for (let n = 10; n < 22; n += 1) await personNamed(tb, `Many ${TOKEN} ${n}`);

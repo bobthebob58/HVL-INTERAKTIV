@@ -1,6 +1,7 @@
 /**
  * Integration tests for the portal session middleware over real Redis: loading a session from its cookie,
- * clearing an expired one, replacing the session ID at login, and logout returning the ID token.
+ * clearing an expired one (never on an answer a cache may keep, D-142), replacing the session ID at login, and
+ * logout returning the ID token and changing no cookie without a session.
  *
  * Spec: AUTH-003
  */
@@ -45,6 +46,9 @@ function portalApp(store: SessionStore): Express {
   });
   app.post('/logout', async (_req, res) => {
     res.json({ idToken: (await endPortalSession(store, res)) ?? null });
+  });
+  app.get('/shared-file', (_req, res) => {
+    res.set('Cache-Control', 'public, max-age=31536000, immutable').type('js').send('same for everyone');
   });
   return app;
 }
@@ -146,10 +150,32 @@ describeWithServices('[AUTH-003] portal session middleware', () => {
     expect(after.body).toEqual({ userId: null, stale: true });
   });
 
-  it('[AUTH-003] logout without a live session still clears the cookie and returns no token', async () => {
+  it('[AUTH-003] logout with a dead cookie returns no token, and the dead cookie is cleared', async () => {
     const res = await request(app).post('/logout').set('Cookie', withSid(newOpaqueId()));
     expect(res.body).toEqual({ idToken: null });
     expect(res.headers['set-cookie']).toEqual([expiredSessionCookie()]);
+  });
+
+  it('[AUTH-003] logout without a session cookie ends nothing and changes no cookie', async () => {
+    // Act: what a logout form on another site makes a browser send (the Lax cookie stays behind)
+    const res = await request(app).post('/logout');
+    // Assert
+    expect(res.body).toEqual({ idToken: null });
+    expect(res.headers['set-cookie']).toBeUndefined();
+    expect(res.headers['cache-control']).toBe('no-store');
+  });
+
+  it('[AUTH-003] a dead cookie is not cleared by an answer a cache may keep, and is by the next one', async () => {
+    // Arrange
+    const dead = withSid(newOpaqueId());
+    // Act
+    const file = await request(app).get('/shared-file').set('Cookie', dead);
+    const page = await request(app).get('/me').set('Cookie', dead);
+    // Assert
+    expect(file.headers['set-cookie']).toBeUndefined();
+    expect(file.headers['cache-control']).toBe('public, max-age=31536000, immutable');
+    expect(page.headers['set-cookie']).toEqual([expiredSessionCookie()]);
+    expect(page.headers['cache-control']).toBe('no-store');
   });
 });
 

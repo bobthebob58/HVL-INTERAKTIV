@@ -13,13 +13,14 @@
  *   - A course code is normalised before it is checked (NFC, trimmed, upper case, no spaces, D-087).
  *   - `patternId` is read only: the `PUT` body has no such field, so a strict parse refuses it.
  *   - Outcome categories follow NKR with `generell-kompetanse` hyphenated (the database enum uses `_`).
- * Collaborators: ./learnerInfo.ts, ./studio.ts, ./planner.ts, ./collaboration.ts,
+ * Collaborators: ./learnerInfo.ts, ./studio.ts, ./textRules.ts, ./planner.ts, ./collaboration.ts,
  *   apps/server/src/learningDesign/http/learningDesignRoutes.ts, apps/web.
  * Tests: packages/api-contract/test/learningDesignSchemas.test.ts
  */
 import { z } from 'zod';
 import { estimatedStudentMinutesSchema, learnerPurposeSchema } from './learnerInfo.js';
 import { patternIdSchema, phaseKeySchema } from './studio.js';
+import { freeText } from './textRules.js';
 
 /** The most outcomes one activity may have (D-087). */
 export const MAX_OUTCOMES = 20;
@@ -40,7 +41,8 @@ export type OutcomeCategory = z.infer<typeof outcomeCategorySchema>;
  * @spec PED-030
  */
 export const learningOutcomeSchema = z.strictObject({
-  text: z.string().trim().min(1).max(OUTCOME_MAX_LENGTH),
+  // SECURITY: typed text only (./textRules.ts, D-142): U+0000 cannot be stored, and the text is shown to others.
+  text: freeText(z.string().trim().min(1).max(OUTCOME_MAX_LENGTH)),
   category: outcomeCategorySchema,
 });
 /** One learning outcome. */
@@ -61,8 +63,8 @@ export const courseCodeSchema = z
 /** A normalised course code. */
 export type CourseCode = z.infer<typeof courseCodeSchema>;
 
-/** A rationale: trimmed, 1 to 1 000 characters. */
-const rationaleSchema = z.string().trim().min(1).max(RATIONALE_MAX_LENGTH);
+/** A rationale: typed text (./textRules.ts), trimmed, 1 to 1 000 characters. */
+const rationaleSchema = freeText(z.string().trim().min(1).max(RATIONALE_MAX_LENGTH));
 
 const editableFields = {
   phase: phaseKeySchema.optional(),

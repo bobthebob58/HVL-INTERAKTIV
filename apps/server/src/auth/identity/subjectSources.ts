@@ -8,7 +8,7 @@
  *      `feide|<feide-id>` / `lti|<iss>|<client-id>|<sub>` (pseudonymSource, D-129).
  * Spec: DATA-002, AUTH-001, LTI-001
  * Invariants:
- *   - A Feide subject is the normalised Feide ID (trimmed, lower-cased, FEIDE_ID_PATTERN, D-054); anything else
+ *   - A Feide subject is the normalised Feide ID (./feideId.ts, D-054, D-142); anything else
  *     throws, so no caller can hash a raw claim by mistake. `sub` from Feide is never a source.
  *   - An LTI subject is the platform registration (`iss` and the client ID the launch was validated against) and
  *     the `sub`, exactly as the launch carried them (all case-sensitive); empty parts, or an issuer or client ID
@@ -18,7 +18,7 @@
  *   ../../security/keys/IdentityHasher.ts, ./AccountResolver.ts, ./accountLinking.ts.
  * Tests: apps/server/test/auth/identity/subjectSources.test.ts
  */
-import { FEIDE_ID_PATTERN } from '../../config/envParsers.js';
+import { isNormalisedFeideId } from './feideId.js';
 import { pseudonymSource, type LearnerSource } from '../../privacy/deriveLearnerKey.js';
 
 /** Who logged in: a Feide ID (portal) or an LTI platform registration and subject (Canvas). */
@@ -47,7 +47,7 @@ export function learnerSourceOf(subject: IdentitySubject): LearnerSource {
   if (source.kind === 'feide') {
     const { feideId } = source;
     // SECURITY: `Ola@HVL.no ` and `ola@hvl.no` must never hash differently, or one person gets two accounts (D-054).
-    if (feideId !== feideId.trim().toLowerCase() || !FEIDE_ID_PATTERN.test(feideId)) {
+    if (!isNormalisedFeideId(feideId)) {
       throw new Error('the Feide subject must be a normalised Feide ID');
     }
   }

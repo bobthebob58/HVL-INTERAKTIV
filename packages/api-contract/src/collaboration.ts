@@ -11,7 +11,7 @@
  *   - A search query is trimmed and 3 to 100 characters; at most 10 people come back (D-090).
  *   - An activity has at most 20 co-authors (D-090).
  *   - A bank entry never carries the rationale or the course code, which belong to the source's author (D-092).
- * Collaborators: ./learningDesign.ts, ./learnerInfo.ts, ./studio.ts, ./sourceAttribution.ts,
+ * Collaborators: ./learningDesign.ts, ./learnerInfo.ts, ./studio.ts, ./textRules.ts, ./sourceAttribution.ts,
  *   apps/server/src/learningDesign/http/collaborationRoutes.ts, apps/web.
  * Tests: packages/api-contract/test/collaborationSchemas.test.ts
  */
@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { estimatedStudentMinutesSchema, learnerPurposeSchema } from './learnerInfo.js';
 import { learningOutcomeSchema } from './learningDesign.js';
 import { phaseKeySchema } from './studio.js';
+import { oneLineText } from './textRules.js';
 
 /** The shortest people-search query (D-090). */
 export const PEOPLE_QUERY_MIN_LENGTH = 3;
@@ -41,12 +42,10 @@ export type Person = z.infer<typeof personSchema>;
 
 /** `GET /api/people?q=`: a name (or a Feide ID, looked up exactly); the server never logs it (D-090). */
 export const peopleQuerySchema = z.strictObject({
-  q: z
-    .string()
-    .trim()
-    .min(PEOPLE_QUERY_MIN_LENGTH)
-    .max(PEOPLE_QUERY_MAX_LENGTH)
-    .describe('A name, at least 3 characters, or a Feide ID; never logged.'),
+  // SECURITY: one line of typed text (./textRules.ts, D-142): the query goes into a database search.
+  q: oneLineText(z.string().trim().min(PEOPLE_QUERY_MIN_LENGTH).max(PEOPLE_QUERY_MAX_LENGTH)).describe(
+    'A name, at least 3 characters, or a Feide ID; never logged.',
+  ),
 });
 /** The query of a people search. */
 export type PeopleQuery = z.infer<typeof peopleQuerySchema>;

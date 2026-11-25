@@ -17,6 +17,7 @@
  * Tests: apps/server/test/config/envParsers.test.ts
  */
 import { z } from 'zod';
+import { asciiLowerCase } from '../auth/identity/asciiText.js';
 import { parseKeyring } from '../security/keys/keyring.js';
 
 /**
@@ -100,7 +101,8 @@ export const toMatchingList =
   (pattern: RegExp, what: string) =>
   (raw: string, ctx: Ctx): string[] =>
     splitList(raw).map((entry, index) => {
-      const value = entry.toLowerCase();
+      // SECURITY: ASCII case only, as the login folds a Feide ID (../auth/identity/feideId.ts, D-142).
+      const value = asciiLowerCase(entry);
       if (!pattern.test(value)) fail(ctx, `entry ${index + 1} is not ${what}`);
       return value;
     });

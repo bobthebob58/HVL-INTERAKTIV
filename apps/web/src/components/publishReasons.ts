@@ -7,12 +7,14 @@
  *      dialog stays one component within DOC-007's 200 lines while it gains the learning-design prompt (D-087).
  * Spec: PROD-003, UD-022, UD-013
  * Invariants:
- *   - A reason is trimmed and 1 to `REASON_MAX` (500) characters; the server checks it again.
+ *   - A reason is cleaned of what nobody types (../config/typedText.ts, D-142), trimmed and 1 to `REASON_MAX` (500)
+ *     characters; the server checks it again.
  *   - A reason is kept by rule and path, so it stays when the findings are fetched again (WCAG 3.3.7).
- * Collaborators: ./PublishDialog.tsx, ./ErrorSummary.tsx.
+ * Collaborators: ./PublishDialog.tsx, ./ErrorSummary.tsx, ../config/typedText.ts.
  * Tests: apps/web/test/components/PublishDialog.test.tsx
  */
 import type { FindingWithAcknowledgement } from '@hvl-interaktiv/api-contract';
+import { cleanFreeText } from '../config/typedText';
 import { t, type Locale, type MessageKey } from '../i18n/translate';
 import type { FieldError } from './ErrorSummary';
 
@@ -48,6 +50,17 @@ export const PUBLISH_DIALOG_TEXTS: Readonly<
 export const reasonKey = (finding: FindingWithAcknowledgement): string => `${finding.ruleId}|${finding.path}`;
 
 /**
+ * A typed reason as it is checked and sent.
+ * @param reasons - The typed reasons by `reasonKey`.
+ * @param finding - The error the reason is for.
+ * @returns The reason, cleaned and trimmed; empty when none was typed.
+ */
+export const reasonText = (
+  reasons: Readonly<Record<string, string>>,
+  finding: FindingWithAcknowledgement,
+): string => cleanFreeText(reasons[reasonKey(finding)] ?? '');
+
+/**
  * The problems with the typed reasons, one per error that needs a reason.
  * @param needed - The errors that still need a reason, in the dialog's order.
  * @param reasons - The typed reasons by `reasonKey`.
@@ -62,7 +75,7 @@ export function reasonProblems(
   locale: Locale,
 ): FieldError[] {
   return needed.flatMap((finding, index) => {
-    const reason = (reasons[reasonKey(finding)] ?? '').trim();
+    const reason = reasonText(reasons, finding);
     const values = { number: index + 1, count: reason.length, max: REASON_MAX };
     if (reason.length === 0)
       return [{ fieldId: fieldId(index), message: t('publish.reasonMissing', locale, values) }];
