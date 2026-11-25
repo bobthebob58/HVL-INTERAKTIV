@@ -1,11 +1,17 @@
 /**
- * Integration tests for ltijs's cache on our node-redis client: prefixed keys, the TTL ltijs passes, misses.
+ * Integration tests for ltijs's cache on our node-redis client: prefixed keys, the TTL ltijs passes, misses, and
+ * a platform's key set that stays for a minute after it was fetched, whatever asks for its removal (D-141).
  *
  * Spec: LTI-001, LTI-002
  */
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { connectRedis, type Redis } from '../../../src/infra/redisClient.js';
-import { LTI_CACHE_PREFIX, LtiCacheManager } from '../../../src/lti/storage/LtiCacheManager.js';
+import {
+  JWKS_KEEP_MS,
+  JWKS_KEY_PREFIX,
+  LTI_CACHE_PREFIX,
+  LtiCacheManager,
+} from '../../../src/lti/storage/LtiCacheManager.js';
 import { describeWithServices, serviceEnv, uniqueName } from '../../support/services.js';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -23,8 +29,12 @@ describeWithServices('[LTI-001] LtiCacheManager on Redis', () => {
     cache = new LtiCacheManager(redis);
   });
 
+  /** The tool's own key set, which ltijs removes whenever its keys change (`keyset:default` in ltijs). */
+  const toolKey = () => keys[keys.push(`keyset:${uniqueName('tool')}`) - 1]!;
+  const freshMark = (key: string) => `${LTI_CACHE_PREFIX}fresh:${key}`;
+
   afterAll(async () => {
-    if (keys.length > 0) await redis.del(keys.map((key) => LTI_CACHE_PREFIX + key));
+    if (keys.length > 0) await redis.del(keys.flatMap((key) => [LTI_CACHE_PREFIX + key, freshMark(key)]));
     await redis.quit();
   });
 
@@ -66,9 +76,37 @@ describeWithServices('[LTI-001] LtiCacheManager on Redis', () => {
     expect(await redis.exists(LTI_CACHE_PREFIX + key)).toBe(0);
   });
 
+  it('[LTI-001] a platform’s key set fetched just now stays when ltijs asks to remove it; later it goes', async () => {
+    // Arrange: a key set as ltijs caches it after a fetch
+    const key = uniqueKey();
+    await cache.set(key, JWKS, 5 * 60 * 1000);
+    // Act: ltijs removes the set when a token names a key ID it does not hold, to fetch again
+    await cache.delete(key);
+    await cache.delete(key);
+    const kept = await cache.get(key);
+    // WHY: the mark's time passing is its key expiring; the test removes the key instead of waiting a minute.
+    const markTtl = await redis.pTTL(freshMark(key));
+    await redis.del(freshMark(key));
+    await cache.delete(key);
+    // Assert
+    expect(kept).toEqual(JWKS);
+    expect(key.startsWith(JWKS_KEY_PREFIX)).toBe(true);
+    expect(markTtl).toBeGreaterThan(JWKS_KEEP_MS - 5000);
+    expect(markTtl).toBeLessThanOrEqual(JWKS_KEEP_MS);
+    expect(await cache.get(key)).toBeUndefined();
+  });
+
+  it('[LTI-001] the mark never outlives its key set', async () => {
+    // Arrange + Act: a key set cached for less than the keep time
+    const key = uniqueKey();
+    await cache.set(key, JWKS, 2000);
+    // Assert
+    expect(await redis.pTTL(freshMark(key))).toBeLessThanOrEqual(2000);
+  });
+
   it('[LTI-001] delete removes a value; a missing or non-JSON value is a miss', async () => {
-    // Arrange
-    const [stored, foreign] = [uniqueKey(), uniqueKey()];
+    // Arrange: the tool's own key set, which has no keep time
+    const [stored, foreign] = [toolKey(), uniqueKey()];
     await cache.set(stored, { keys: JWKS }, 60_000);
     await redis.set(LTI_CACHE_PREFIX + foreign, 'not json {', { PX: 60_000 });
     // Act

@@ -10,7 +10,10 @@
  *   - `frame-ancestors` lists only `CANVAS_ORIGINS`, or `'none'` when none are configured, for the launch, login
  *     and Deep Linking pages (LTI-003). Pages that our own `/app/play` chrome frames (`/lti/play`, `/lti/edit`, and
  *     their error pages, matched as Express routes them) add `'self'` (D-067, D-070).
- *   - Every response is `no-store` and `no-referrer`; `X-Frame-Options` is removed if anything set it.
+ *   - Every response is `no-store` and `no-referrer`; `X-Frame-Options` is removed if anything set it. One page
+ *     is `same-origin` instead: ltijs's launch page, which holds no ltik and posts the launch to us again. A
+ *     browser then names our origin in that post's `Origin`, where `no-referrer` makes it `null`
+ *     (./launchPostOrigin.ts, D-141); no referrer goes to another origin under either rule.
  *   - Inline scripts are allowed only by the SHA-256 of their exact text; JSON data blocks are not scripts.
  * Collaborators: ./ExpressRouterHttpHandler.ts, ./ltiErrorPages.ts, ../play/ltiPlayRoutes.ts,
  *   ../deepLinking/deepLinkRoutes.ts, ../../web/chromeRedirect.ts (the same pages, `isFramedByAppPlay`).
@@ -100,10 +103,15 @@ export function ltiPageCsp(ancestors: readonly string[], extra: readonly string[
  * Sets the LTI-003 headers on a response.
  * @param res - The Express response.
  * @param csp - The Content-Security-Policy value.
+ * @param referrer - `same-origin` for ltijs's launch page only (./launchPostOrigin.ts); else `no-referrer`.
  */
-export function setLtiPageHeaders(res: Response, csp: string): void {
+export function setLtiPageHeaders(
+  res: Response,
+  csp: string,
+  referrer: 'no-referrer' | 'same-origin' = 'no-referrer',
+): void {
   res.setHeader('Content-Security-Policy', csp);
-  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Referrer-Policy', referrer);
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   // SECURITY: X-Frame-Options cannot list several Canvas origins and would block the iframe (LTI-003).

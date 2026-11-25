@@ -40,6 +40,7 @@
 import express, { type Express } from 'express';
 import type { Logger } from 'pino';
 import { AuthAuditRecorder } from '../auth/audit/AuthAuditRecorder.js';
+import { failureAuditBudget } from '../auth/audit/failureAuditBudget.js';
 import { requestPrincipal } from '../auth/requestPrincipal.js';
 import { portalSessionMiddleware } from '../auth/session/portalSessionMiddleware.js';
 import { SessionStore } from '../auth/session/SessionStore.js';
@@ -115,7 +116,8 @@ export function createApp(inputs: AppInputs): App {
   const { env, logger, db, redis } = inputs;
   const hasher = new IdentityHasher(env.IDENTITY_HASH_KEYS);
   const encryption = new DataEncryption(env.DATA_ENCRYPTION_KEYS);
-  const audit = new AuthAuditRecorder({ db, hasher, logger });
+  // WHY: failed logins and launches can be caused by anyone; their audit rows have a bound (D-141).
+  const audit = new AuthAuditRecorder({ db, hasher, logger, failures: failureAuditBudget(redis) });
   const sessions = new SessionStore({ redis, encryption });
   const access = new PrismaContentAccessRepository(db);
   const base = env.PUBLIC_BASE_URL;

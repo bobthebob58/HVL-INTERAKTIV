@@ -35,12 +35,10 @@ import { setLtiPageHeaders } from '../http/ltiPageHeaders.js';
 import { landingLtik } from '../landingLtik.js';
 import type { ResolvedLtik } from '../ltikPrincipal.js';
 
-/** Where the LTI page scripts are served. */
-export const LTI_STATIC_PATH = '/static/lti';
-/** The player page's first script. */
-export const LTIK_LANDING_SCRIPT = `${LTI_STATIC_PATH}/ltikLanding.js`;
-/** Runs before H5P Core so it survives blocked frame storage (./../pages/client/h5pStorageGuard.js). */
-export const H5P_STORAGE_GUARD_SCRIPT = `${LTI_STATIC_PATH}/h5pStorageGuard.js`;
+import { H5P_STORAGE_GUARD_SCRIPT, LTI_STATIC_PATH, LTIK_LANDING_SCRIPT } from '../pages/ltiStaticScripts.js';
+
+// WHY: the paths live in a module without imports, so the error pages can name them too.
+export { H5P_STORAGE_GUARD_SCRIPT, LTI_STATIC_PATH, LTIK_LANDING_SCRIPT };
 
 const CLIENT_DIR = fileURLToPath(new URL('../pages/client/', import.meta.url));
 

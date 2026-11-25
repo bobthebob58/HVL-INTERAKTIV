@@ -13,9 +13,11 @@ import {
 } from '../../../src/lti/http/ExpressRouterHttpHandler.js';
 
 const CANVAS = ['https://hvl.instructure.com'];
+const OWN = 'https://interaktiv.hvl.no';
+const LAUNCH = { route: '/lti/launch', ownOrigin: OWN };
 
 const appWith = (path: string, methods: HttpMethod[], handler: RouteHandler) => {
-  const http = new ExpressRouterHttpHandler(CANVAS);
+  const http = new ExpressRouterHttpHandler(CANVAS, LAUNCH);
   http.registerRoute(path, methods, handler);
   const app = express();
   app.use(http.router);
@@ -107,7 +109,7 @@ describe('[LTI-001] ltijs on our router', () => {
   });
 
   it('[LTI-001] listen and close do nothing', async () => {
-    const http = new ExpressRouterHttpHandler([]);
+    const http = new ExpressRouterHttpHandler([], LAUNCH);
     await expect(http.listen()).resolves.toBeUndefined();
     await expect(http.close()).resolves.toBeUndefined();
   });

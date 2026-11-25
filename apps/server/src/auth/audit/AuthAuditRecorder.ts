@@ -10,12 +10,18 @@
  *   - The IP address is stored only as HMAC-SHA256 under the identity key ring's `auth-audit-ip` purpose, with the
  *     key's ID (D-055), and only for logins, failed logins, logouts and failed launches (callers pass `ip` there).
  *   - A failure to record never fails the login or launch it describes; it is logged without personal data.
- * Collaborators: ../../security/keys/IdentityHasher.ts, ../feide/completeFeideLogin.ts, ../../lti/launch/.
- * Tests: apps/server/test/auth/audit/AuthAuditRecorder.int.test.ts
+ *   - Failed logins and failed launches, which anyone can cause, add at most a few rows a minute per address and
+ *     a bounded number in all (./failureAuditBudget.ts, D-141); what is past that is counted in one log line a
+ *     minute, with no address in it.
+ * Collaborators: ../../security/keys/IdentityHasher.ts, ./failureAuditBudget.ts, ../feide/completeFeideLogin.ts,
+ *   ../../lti/launch/.
+ * Tests: apps/server/test/auth/audit/AuthAuditRecorder.int.test.ts,
+ *   apps/server/test/auth/audit/failureAuditBudget.int.test.ts
  */
 import type { Logger } from 'pino';
 import type { Database } from '../../infra/prismaClient.js';
 import type { IdentityHasher } from '../../security/keys/IdentityHasher.js';
+import { isFailureEvent, type FailureAuditBudget } from './failureAuditBudget.js';
 
 /** Audited authentication events (D-064). */
 export const AUTH_AUDIT_EVENTS = [
@@ -62,12 +68,26 @@ export interface AuthAuditInput {
   readonly ip?: string;
 }
 
+/** What the recorder is built from. */
+export interface AuthAuditRecorderDeps {
+  readonly db: Database;
+  readonly hasher: IdentityHasher;
+  readonly logger: Logger;
+  /** Bounds the rows failures add (./failureAuditBudget.ts); without it every failure is recorded (tests). */
+  readonly failures?: FailureAuditBudget;
+}
+
+const SKIPPED_REPORT_MS = 60_000;
+
 /** Records authentication events. */
 export class AuthAuditRecorder {
+  private skipped = 0;
+  private skippedSaidAt = 0;
+
   /**
-   * @param deps - The database, the identity hasher and the logger.
+   * @param deps - The database, the identity hasher, the logger and the budget for failures.
    */
-  constructor(private readonly deps: { db: Database; hasher: IdentityHasher; logger: Logger }) {}
+  constructor(private readonly deps: AuthAuditRecorderDeps) {}
 
   /**
    * Records one event; never throws.
@@ -76,6 +96,10 @@ export class AuthAuditRecorder {
   async record(input: AuthAuditInput): Promise<void> {
     // PRIVACY: only a keyed hash of the address is stored (DATA-002, D-055).
     const ip = input.ip ? this.deps.hasher.hash('auth-audit-ip', input.ip) : undefined;
+    if (isFailureEvent(input.event) && this.deps.failures && !(await this.deps.failures.take(ip?.hash))) {
+      this.countSkipped();
+      return;
+    }
     try {
       await this.deps.db.authAuditEvent.create({
         data: {
@@ -90,5 +114,15 @@ export class AuthAuditRecorder {
       // WHY: an audit write that fails must not lock people out; the failure itself is logged.
       this.deps.logger.error({ err: error, event: input.event }, 'auth audit event not recorded');
     }
+  }
+
+  /** Counts a failure whose row was not written, and says how many there were at most once a minute. */
+  private countSkipped(): void {
+    this.skipped += 1;
+    if (Date.now() - this.skippedSaidAt < SKIPPED_REPORT_MS) return;
+    // PRIVACY: a count only; neither the address nor its fingerprint is logged (DATA-009).
+    this.deps.logger.warn({ skipped: this.skipped }, 'auth audit: failures past the rows for a minute');
+    this.skipped = 0;
+    this.skippedSaidAt = Date.now();
   }
 }

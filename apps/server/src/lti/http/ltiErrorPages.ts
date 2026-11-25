@@ -17,6 +17,7 @@
  *     launch, login and Deep Linking errors stay Canvas-only (LTI-003, D-067).
  *   - Pages have the Hjelp header, opening a new tab, whenever the web app runs, except inside `/app/play`'s frame,
  *     whose header already has it (../../http/pages/helpLink.ts, UD-013, UD-007).
+ *   - A page loads the script that takes an ltik out of its address, as a landing page does (D-141).
  *   - Pages and JSON are in the launch's language once a route has resolved the ltik (`setLtiPageLocale`) or a
  *     launch handler has tagged its error (`withLaunchLocale`), else in Nynorsk (PROD-012).
  * Collaborators: ./ltiPageHeaders.ts, ./ltiErrorLog.ts, ../../http/authErrors.ts, ../../http/pages/messagePage.ts,
@@ -31,6 +32,7 @@ import { HttpError } from '../../http/HttpError.js';
 import { helpLinkFor } from '../../http/pages/helpLink.js';
 import { messagePage } from '../../http/pages/messagePage.js';
 import { DEFAULT_LOCALE, type Locale, type MessageKey } from '../../i18n/translate.js';
+import { LTIK_LANDING_SCRIPT } from '../pages/ltiStaticScripts.js';
 import { ltiErrorLogFields } from './ltiErrorLog.js';
 import { ltiPageAncestors, ltiPageCsp, setLtiPageHeaders } from './ltiPageHeaders.js';
 
@@ -183,16 +185,15 @@ export function ltiErrorPages(deps: {
       return;
     }
     // WHY: before the launch is verified the person's language is unknown; Nynorsk is the default (PROD-012).
-    res
-      .status(answer.status)
-      .type('html')
-      .send(
-        messagePage({
-          locale,
-          titleKey: answer.titleKey,
-          bodyKey: answer.bodyKey,
-          help: helpLinkFor(res, 'canvas'),
-        }),
-      );
+    const { titleKey, bodyKey } = answer;
+    // SECURITY: an error page for `/lti/play?ltik=…` must not keep the token in the address bar or the history.
+    const page = {
+      locale,
+      titleKey,
+      bodyKey,
+      help: helpLinkFor(res, 'canvas'),
+      scripts: [LTIK_LANDING_SCRIPT],
+    };
+    res.status(answer.status).type('html').send(messagePage(page));
   };
 }

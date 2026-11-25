@@ -12,6 +12,10 @@
  *     so nothing is ever stored without expiry.
  *   - Only what ltijs hands it is stored, as JSON: public keys, never a secret or personal data.
  *   - A missing or unreadable value is a miss (ltijs then fetches fresh keys).
+ *   - A platform's key set that was fetched less than `JWKS_KEEP_MS` ago is not removed: ltijs removes it, and
+ *     fetches again, whenever an ID token names a key ID the set does not hold, and anyone can send such a
+ *     token. So the platform is asked at most once in that time, whatever is sent (D-141). A real change of keys
+ *     is seen at the next fetch, a minute later at most.
  *   - `listen` and `close` do nothing: the server owns the Redis client's lifecycle.
  * Collaborators: ltijs `Provider` (ProviderOptions.cacheManager), ltijs `KeysetService`, `OidcService` and
  *   `PlatformManager` (which deletes the keyset entry when keys change), ../../infra/redisClient.ts.
@@ -23,6 +27,13 @@ import type { Redis } from '../../infra/redisClient.js';
 
 /** Prefix of every key this cache writes. */
 export const LTI_CACHE_PREFIX = 'hvli:lti:cache:';
+
+/** ltijs's key prefix for a platform's public key set (`OidcService.JWKS_CACHE_KEY_PREFIX`). */
+export const JWKS_KEY_PREFIX = 'oidc:jwks:';
+/** How long a fetched key set is kept before ltijs may drop it and fetch again. */
+export const JWKS_KEEP_MS = 60_000;
+
+const FRESH_MARK_PREFIX = `${LTI_CACHE_PREFIX}fresh:`;
 
 /**
  * ltijs's cache of public keysets in Redis.
@@ -59,10 +70,16 @@ export class LtiCacheManager implements CacheManager {
     const text = JSON.stringify(value);
     if (text === undefined) return;
     await this.redis.set(LTI_CACHE_PREFIX + key, text, { PX: Math.ceil(ttlMs) });
+    // WHY: the mark outlives no key set by more than its own time, and says "fetched just now" to `delete`.
+    if (key.startsWith(JWKS_KEY_PREFIX)) {
+      await this.redis.set(FRESH_MARK_PREFIX + key, '1', { PX: Math.min(JWKS_KEEP_MS, Math.ceil(ttlMs)) });
+    }
   }
 
-  /** Removes `key` from the cache. */
+  /** Removes `key` from the cache; a platform's key set fetched within `JWKS_KEEP_MS` stays. */
   async delete(key: string): Promise<void> {
+    // SECURITY: an unknown key ID in a token must not make the server ask the platform on every request (D-141).
+    if (key.startsWith(JWKS_KEY_PREFIX) && (await this.redis.get(FRESH_MARK_PREFIX + key)) !== null) return;
     await this.redis.del(LTI_CACHE_PREFIX + key);
   }
 }

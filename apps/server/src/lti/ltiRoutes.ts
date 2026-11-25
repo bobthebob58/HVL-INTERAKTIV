@@ -128,14 +128,8 @@ const inLaunchLocale =
  */
 export function createLtiRoutes(deps: LtiRouteDeps): LtiRoutes {
   const { db, canvasOrigins, requireHttps, logger } = deps;
-  const ltijs = createLtiProvider({
-    db,
-    redis: deps.redis,
-    encryption: deps.encryption,
-    logger,
-    canvasOrigins,
-    tokenMaxAgeSeconds: deps.tokenMaxAgeSeconds,
-  });
+  // WHY: the route deps hold everything the provider needs (the platforms, our base URL, the hasher).
+  const ltijs = createLtiProvider(deps);
   const { provider, deployments } = ltijs;
   const accounts = new LtiAccounts({
     accounts: new AccountResolver({ db, hasher: deps.hasher }),

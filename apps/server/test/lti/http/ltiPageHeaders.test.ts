@@ -10,6 +10,7 @@ import {
   ltiPageAncestors,
   ltiPageCsp,
   ltijsPageCsp,
+  setLtiPageHeaders,
 } from '../../../src/lti/http/ltiPageHeaders.js';
 
 const hash = (text: string) => `'sha256-${createHash('sha256').update(text).digest('base64')}'`;
@@ -68,5 +69,26 @@ describe('[LTI-003] LTI page headers', () => {
     const deepLink = ltiPageCsp(CANVAS, ['form-action https://hvl.instructure.com']);
     expect(deepLink).toContain('form-action https://hvl.instructure.com');
     expect(deepLink).not.toContain("form-action 'self'");
+  });
+
+  it('[LTI-003] every page is no-referrer and no-store; only a page that asks for it is same-origin', () => {
+    // Arrange: a response that records its headers
+    const headersOf = (referrer?: 'no-referrer' | 'same-origin') => {
+      const set = new Map<string, string>([['x-frame-options', 'DENY']]);
+      const res = {
+        setHeader: (name: string, value: string) => set.set(name.toLowerCase(), value),
+        removeHeader: (name: string) => set.delete(name.toLowerCase()),
+      };
+      setLtiPageHeaders(res as never, "default-src 'none'", ...(referrer ? [referrer] : []));
+      return Object.fromEntries(set);
+    };
+    // Act + Assert
+    expect(headersOf()).toEqual({
+      'content-security-policy': "default-src 'none'",
+      'referrer-policy': 'no-referrer',
+      'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff',
+    });
+    expect(headersOf('same-origin')['referrer-policy']).toBe('same-origin');
   });
 });

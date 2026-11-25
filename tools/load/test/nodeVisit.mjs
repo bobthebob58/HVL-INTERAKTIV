@@ -13,11 +13,11 @@
  * Tests: tools/load/test/loadBench.test.mjs
  */
 import { randomUUID } from 'node:crypto';
-import { autoPostForm, embeddedJson, pageAssets, playerContext } from '../k6/playerPages.js';
+import { OWN_PAGE_POST, autoPostForm, embeddedJson, pageAssets, playerContext } from '../k6/playerPages.js';
 import { answeredBatch, attemptedBatch, completedBatch, stateSaveForm } from '../k6/xapiBatches.js';
 
-const post = (url, fields) =>
-  fetch(url, { method: 'POST', body: new URLSearchParams(fields), redirect: 'manual' });
+const post = (url, fields, headers = {}) =>
+  fetch(url, { method: 'POST', body: new URLSearchParams(fields), redirect: 'manual', headers });
 
 /**
  * Launches one learner and opens the player page with its assets.
@@ -34,10 +34,12 @@ export async function launchInNode(frameUrl, toolUrl) {
   const launchForm = autoPostForm(await (await fetch(loginData.targetUrl)).text());
   let launched = await post(launchForm.action, launchForm.fields);
   if (launched.status === 200) {
-    launched = await post(launchForm.action, {
-      ...launchForm.fields,
-      ltijs_recovered_state: loginData.recoveryToken,
-    });
+    // WHY: the tool takes this second post only from its own page; a browser says so with this header.
+    launched = await post(
+      launchForm.action,
+      { ...launchForm.fields, ltijs_recovered_state: loginData.recoveryToken },
+      OWN_PAGE_POST,
+    );
   }
   const location = launched.headers.get('location') ?? '';
   const page = await fetch(`${toolUrl}${location}`, { redirect: 'manual' });
