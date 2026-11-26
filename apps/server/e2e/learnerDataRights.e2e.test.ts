@@ -177,7 +177,8 @@ describeWithRealWebApp(
         'dataSubject.erase',
         'dataSubject.erase',
         'purge.run',
-        ...(due ? ['purge.run'] : []),
+        // WHY: a real run writes its start and its end (D-144).
+        ...(due ? ['purge.run', 'purge.run'] : []),
       ]);
       for (const secret of [student.sub, learnerKey]) expect(JSON.stringify(audits)).not.toContain(secret);
     }, 300_000);

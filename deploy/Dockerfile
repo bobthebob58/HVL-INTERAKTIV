@@ -14,6 +14,8 @@
 #     is used, and none is baked in.
 #   - The runtime runs as uid 10001, owns only the H5P library folder and `.next/cache`, and never sets
 #     `PDF_ALLOW_NO_SANDBOX` (D-096): Chromium's sandbox needs the seccomp profile in deploy/seccomp/.
+#   - SECURITY: the runtime sets `TSX_DISABLE_CACHE=1`: the TypeScript loader keeps its translated code in memory
+#     and never reads it back from the writable /tmp, so the code that runs is the image's own (D-144).
 # Build: docs/ops/docker.md. The contexts `h5pcore` (apps/server/h5p) and `h5pbundle` (tools/h5p-bundle) are needed;
 #        `pwbrowsers` (a Playwright browser folder) only where Playwright's download host is out of reach.
 
@@ -109,6 +111,9 @@ RUN --mount=type=bind,from=playwright-core,target=/opt/playwright-core \
 RUN groupadd --gid 10001 hvli \
  && useradd --uid 10001 --gid 10001 --create-home --home-dir /home/hvli --shell /usr/sbin/nologin hvli
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright NODE_ENV=production WEB_APP=prod PORT=3000
+# SECURITY: tsx would otherwise write each translated source file to /tmp/tsx-<uid> and run it from there the next
+# time it is loaded, without checking it: the one place where the code is not on the read-only root (D-144).
+ENV TSX_DISABLE_CACHE=1
 COPY --from=pwbrowsers /chromium-1194 /ms-playwright/chromium-1194
 WORKDIR /app
 COPY --from=prod-deps /app /app

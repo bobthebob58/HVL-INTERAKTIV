@@ -1,6 +1,6 @@
 /**
- * Tests for the deployment files: the real Dockerfile, ignore file, app stack and seccomp profile pass the D-110 rules,
- * and broken copies of each are caught.
+ * Tests for the deployment files: the real Dockerfile, ignore file and app stack pass the D-110 rules, and broken
+ * copies of each are caught. The seccomp profile's own rules are tested in ./seccompRules.test.mjs.
  *
  * Spec: NFR-007, MAPPE-004
  */
@@ -8,43 +8,18 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import {
-  composeProblems,
-  dockerfileProblems,
-  dockerignoreProblems,
-  SECCOMP_FILE,
-  seccompProblems,
-} from '../deployRules.mjs';
+import { composeProblems, dockerfileProblems, dockerignoreProblems } from '../deployRules.mjs';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const read = (file) => readFileSync(join(ROOT, file), 'utf8');
 const DOCKERFILE = read('deploy/Dockerfile');
 const COMPOSE = read('deploy/compose.app.yml');
-const SECCOMP = readFileSync(join(ROOT, SECCOMP_FILE));
 
 describe('[NFR-007] the deployment files keep D-110 rules', () => {
-  it('[NFR-007] the real Dockerfile, ignore file, app stack and seccomp profile pass every rule', () => {
-    expect(seccompProblems(SECCOMP)).toEqual([]);
+  it('[NFR-007] the real Dockerfile, ignore file and app stack pass every rule', () => {
     expect(dockerfileProblems(DOCKERFILE)).toEqual([]);
     expect(dockerignoreProblems(read('deploy/Dockerfile.dockerignore'))).toEqual([]);
     expect(composeProblems(COMPOSE)).toEqual([]);
-  });
-
-  it('[MAPPE-004] the vendored seccomp profile is byte for byte the hashed one, denies by default and allows the namespaces Chromium needs', () => {
-    // Arrange: one changed byte, and a profile without unshare that allows by default.
-    const changed = Buffer.from(
-      SECCOMP.toString('utf8').replace('create user namespaces', 'create user Namespaces'),
-    );
-    const profile = JSON.parse(SECCOMP.toString('utf8'));
-    profile.syscalls[0].names = ['clone', 'setns'];
-    profile.defaultAction = 'SCMP_ACT_ALLOW';
-    // Act
-    const changedProblems = seccompProblems(changed);
-    const narrowed = seccompProblems(Buffer.from(JSON.stringify(profile)));
-    // Assert
-    expect(changedProblems[0]).toMatch(/SHA-256 [0-9a-f]{64}, expected cc3e61ca/);
-    expect(narrowed).toContain(`${SECCOMP_FILE}: unshare must be allowed for Chromium's sandbox`);
-    expect(narrowed).toContain(`${SECCOMP_FILE}: the default must deny`);
   });
 
   it('[NFR-007] a base image by tag, a GitHub fetch, the CA as a layer, a sandbox switch or a root runtime is refused', () => {
@@ -73,8 +48,26 @@ describe('[NFR-007] the deployment files keep D-110 rules', () => {
   it('[NFR-007] the proxy CA as the optional BuildKit secret is accepted; continued lines are one instruction', () => {
     const text =
       'FROM scratch AS a\nRUN --mount=type=secret,id=proxy_ca,required=false \\\n' +
-      '    export NODE_EXTRA_CA_CERTS=/run/secrets/proxy_ca\nFROM a AS runtime\nUSER 10001:10001\n';
+      '    export NODE_EXTRA_CA_CERTS=/run/secrets/proxy_ca\nFROM a AS runtime\n' +
+      'ENV TSX_DISABLE_CACHE=1\nUSER 10001:10001\n';
     expect(dockerfileProblems(text)).toEqual([]);
+  });
+
+  it('[NFR-007] an image or a service that lets the loader keep its code in a writable folder is refused', () => {
+    // Arrange: the setting gone from the runtime stage, set only in an earlier stage, and undone in the stack
+    const gone = DOCKERFILE.replace('ENV TSX_DISABLE_CACHE=1\n', '');
+    const earlier = gone.replace('ENV HUSKY=0\n', 'ENV HUSKY=0 TSX_DISABLE_CACHE=1\n');
+    const undone = COMPOSE.replace('  WEB_APP: prod\n', "  WEB_APP: prod\n  TSX_DISABLE_CACHE: ''\n");
+    // Act
+    const problems = [gone, earlier].map((text) => dockerfileProblems(text));
+    // Assert
+    const problem =
+      'Dockerfile: the runtime stage must set TSX_DISABLE_CACHE=1 (no code from a writable folder)';
+    expect(gone).not.toBe(DOCKERFILE);
+    expect(problems).toEqual([[problem], [problem]]);
+    expect(composeProblems(undone)).toContain(
+      'compose: app: TSX_DISABLE_CACHE stays 1, as the image sets it',
+    );
   });
 
   it('[NFR-007] the ignore file must keep .env files, .git and the fetched folders out of the context', () => {
@@ -95,7 +88,7 @@ describe('[NFR-007] the deployment files keep D-110 rules', () => {
       .replace("'127.0.0.1:${HVLI_APP_PORT:-18080}:3000'", "'18080:3000'")
       .replace('URL_SIGNING_KEYS: ${URL_SIGNING_KEYS:?}', 'URL_SIGNING_KEYS: dev1=c2VjcmV0')
       .replace('  read_only: true\n', '  read_only: false\n')
-      .replace('    - seccomp=./seccomp/playwright-v1.56.1.seccomp\n', '')
+      .replace('    - seccomp=./seccomp/chromium-sandbox.seccomp\n', '')
       .replace('cap_add: [SYS_CHROOT]', 'cap_add: [SYS_CHROOT, SYS_ADMIN]');
     // Act
     const problems = composeProblems(broken);
@@ -105,7 +98,9 @@ describe('[NFR-007] the deployment files keep D-110 rules', () => {
     expect(problems).toContain('compose: app: only the app may be published, and only on 127.0.0.1');
     expect(problems).toContain('compose: app: URL_SIGNING_KEYS must come from the environment');
     expect(problems).toContain('compose: app: the root file system must be read-only');
-    expect(problems).toContain("compose: seed: needs Playwright's seccomp profile for Chromium's sandbox");
+    expect(problems).toContain(
+      "compose: seed: needs the seccomp profile for Chromium's sandbox (seccomp=./seccomp/chromium-sandbox.seccomp)",
+    );
     expect(problems).toContain(
       "compose: app: may add back only SYS_CHROOT, and only for the app (Chromium's sandbox)",
     );

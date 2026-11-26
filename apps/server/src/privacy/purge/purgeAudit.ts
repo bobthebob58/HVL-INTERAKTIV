@@ -11,7 +11,8 @@
  *   - PRIVACY: the target is the ended academic year (`AcademicYear`); `details` hold only `trigger`, `dryRun`,
  *     `outcome`, `years` and `counts`: numbers and fixed words, never a learner key, ID or free text (DATA-007).
  *   - No actor: `actorUserId` is null for the job and for the CLI (the schema's rule for scheduled jobs).
- *   - A year counts as purged only through an event of a real run whose outcome is `completed`.
+ *   - A year counts as purged only through an event of a real run whose outcome is `completed`; a `started` event
+ *     alone says that a real run began and what it was about to delete, never that it finished (D-144).
  * Collaborators: ./retentionPurge.ts (writes), ./RetentionPurgeJob.ts (reads), ../../infra/prismaClient.ts.
  * Tests: apps/server/test/privacy/purge/retentionPurge.int.test.ts,
  *   apps/server/test/privacy/purge/retentionPurgeJob.int.test.ts
@@ -26,8 +27,8 @@ export const PURGE_TARGET_TYPE = 'AcademicYear';
 /** Who started a run: the leased job or the operations CLI. */
 export type PurgeTrigger = 'job' | 'cli';
 
-/** How a run ended. */
-export type PurgeOutcome = 'completed' | 'failed';
+/** How far a run got: `started` is a real run's event before its first change; the others are a run's end. */
+export type PurgeOutcome = 'started' | 'completed' | 'failed';
 
 /** The details of a `purge.run` event. */
 export interface PurgeAuditDetails {
@@ -36,7 +37,7 @@ export interface PurgeAuditDetails {
   readonly outcome: PurgeOutcome;
   /** The stored academic years whose rows the run covered, oldest first. */
   readonly years: readonly number[];
-  /** Rows deleted (or, in a dry run, that would be) per table, and snapshots written. */
+  /** Rows deleted (in a dry run or a `started` event: that would be) per table, and snapshots written. */
   readonly counts: Readonly<Record<string, number>>;
 }
 
@@ -53,7 +54,7 @@ const COMPLETED_REAL_RUN = [
  * Writes the audit event of one run.
  * @param db - The database.
  * @param endedYear - The academic year that ended last when the run started.
- * @param details - The trigger, the kind of run, its outcome, the years and the counts.
+ * @param details - The trigger, the kind of run, how far it got, the years and the counts.
  * @returns When the event is stored.
  * @spec DATA-007
  */

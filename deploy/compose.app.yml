@@ -5,16 +5,18 @@
 #        own, not a profile in ../docker-compose.yml, whose test services publish 5432, 6379 and 5000 and start with
 #        any profile (D-110, probe P3; SPEC-DEVIATION: D-110, the file name only).
 # Spec:  NFR-007, MAPPE-004, H5P-003, SEC-006, SEC-004, NFR-002
-# Tests: tools/deploy-check/test/deployFiles.test.mjs (digests, ports, hardening, no secrets in the file) and
-#        tools/deploy-check/test/resourceRules.test.mjs (restart rule, memory limit); deploy/smoke/dockerSmoke.sh
-#        starts it and checks it.
+# Tests: tools/deploy-check/test/deployFiles.test.mjs (digests, ports, hardening, no secrets in the file),
+#        tools/deploy-check/test/resourceRules.test.mjs (restart rule, memory limit, health check) and
+#        tools/deploy-check/test/seccompRules.test.mjs (the profile); deploy/smoke/dockerSmoke.sh starts it and
+#        checks it.
 # Invariants:
 #   - Every image is pinned by digest; only the app is published, and only on 127.0.0.1.
 #   - SECURITY: keys, passwords and secrets come from the environment (`${NAME:?}`), never from this file; the smoke
 #     script makes random throwaway ones.
-#   - The app and its one-off steps run as uid 10001 with a read-only root file system, no new privileges and
-#     Playwright's seccomp profile, and with every capability dropped but SYS_CHROOT for the app, so Chromium keeps
-#     its sandbox (D-096); never PDF_ALLOW_NO_SANDBOX.
+#   - The app and its one-off steps run as uid 10001 with a read-only root file system, no new privileges and the
+#     seccomp profile in ./seccomp (Docker's default plus the one rule Chromium's sandbox needs, D-144), and with
+#     every capability dropped but SYS_CHROOT for the app, so Chromium keeps its sandbox (D-096); never
+#     PDF_ALLOW_NO_SANDBOX.
 #   - Local only: NODE_ENV=development, because the production checks rightly refuse plain-HTTP database, Redis,
 #     S3 and public URLs. Staging runs the same image with NODE_ENV=production, TLS endpoints and D-109's two
 #     database URLs (docs/ops/docker.md).
@@ -24,6 +26,8 @@
 #   - The app comes back after it stops (`restart: unless-stopped`) and has a memory limit with no swap beyond it;
 #     the steps that run once (buckets, migrate, seed) have no restart rule (NFR-002, D-134; the budget is in
 #     docs/ops/docker.md).
+#   - A server that stands still is unhealthy within half a minute: a health check try has 3 seconds, tries come
+#     every 5 seconds, and the third failed one in a row counts (NFR-002, D-144).
 # Usage: HVLI_IMAGE=<tag> docker compose -f deploy/compose.app.yml --env-file <file> up -d --wait app
 
 name: hvli-app
@@ -58,7 +62,7 @@ x-hardened: &hardened
   cap_drop: [ALL]
   security_opt:
     - no-new-privileges:true
-    - seccomp=./seccomp/playwright-v1.56.1.seccomp
+    - seccomp=./seccomp/chromium-sandbox.seccomp
   tmpfs:
     - /tmp:size=512m,mode=1777
     - /home/hvli:size=64m,uid=10001,gid=10001,mode=0700
@@ -159,15 +163,20 @@ services:
       - /tmp:size=512m,mode=1777
       - /home/hvli:size=64m,uid=10001,gid=10001,mode=0700
       - /app/apps/web/.next/cache:size=64m,uid=10001,gid=10001
+    # WHY: a server that no longer answers must lose its "healthy" mark soon, because whatever routes requests to
+    # it goes by that mark. The request gives up after 2.5 seconds and Docker ends a try after 3; three failed
+    # tries in a row, 5 seconds apart, make the app unhealthy after about 25 seconds. Failed tries during the start
+    # period do not count (D-144). Docker alone does not restart an unhealthy container (docs/ops/docker.md).
     healthcheck:
       test:
         - CMD
         - node
         - -e
-        - "fetch('http://127.0.0.1:3000/healthz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
-      interval: 3s
-      retries: 40
-      start_period: 10s
+        - "fetch('http://127.0.0.1:3000/healthz', { signal: AbortSignal.timeout(2500) }).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 120s
     depends_on:
       seed: { condition: service_completed_successfully }
       clamav: { condition: service_healthy }

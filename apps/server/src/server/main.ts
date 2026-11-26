@@ -21,7 +21,8 @@
  *   - The first log line names the mode (`NODE_ENV`) and where the data lives (database and Redis hosts, the S3
  *     region and endpoint host), for the deployment checklist; never a user, password, path or query (DATA-004,
  *     D-109 amendment). A warning follows when the mode is not `production` (D-133). The next line gives the
- *     memory limits, with a warning when they do not fit (./memoryBudget.ts, D-134).
+ *     memory limits, with a warning when they do not fit (./memoryBudget.ts, D-134). A standstill of the server of
+ *     a second or more is written as a warning (./eventLoopWatch.ts, D-144), from the jobs' start to their stop.
  *   - A port that cannot be opened fails the start instead of leaving a process that serves nothing.
  *   - Upload folders an earlier run left in the temporary area are removed at start (../http/staleUploadFolders.ts),
  *     and the SVG cleaning worker is started (../security/SvgSanitizer.ts, D-119).
@@ -35,7 +36,7 @@
  *   ../lti/nrps/nrpsServices.ts, ../config/env.ts, ../config/storageResidency.ts, ../config/validationContext.ts,
  *   ../validation/validateContent.ts, ../learningDesign/content/loadStudioContent.ts, ../web/nextWebApp.ts,
  *   ../web/webRoutes.ts (`webUpgrades`), ../learningDesign/mappe/pdf/pdfAvailability.ts, ./serverProcess.ts,
- *   ./memoryBudget.ts.
+ *   ./memoryBudget.ts, ./eventLoopWatch.ts.
  * Tests: apps/server/test/server/main.smoke.test.ts, apps/server/test/server/startupContent.test.ts,
  *   apps/server/test/server/startupLanguageOverlay.test.ts
  */
@@ -66,6 +67,7 @@ import { createContentValidator } from '../validation/validateContent.js';
 import { loadWebApp } from '../web/nextWebApp.js';
 import { webUpgrades } from '../web/webRoutes.js';
 import { createApp } from './createApp.js';
+import { EventLoopWatch } from './eventLoopWatch.js';
 import { logMemoryBudget, memoryBudgetOf, readMemoryFacts } from './memoryBudget.js';
 import { runServerProcess } from './serverProcess.js';
 import { closeStudioServices } from './studioServices.js';
@@ -145,6 +147,8 @@ export async function startServer(env: Env, options: StartOptions = {}): Promise
     }),
     new GradeSubjectCleanupJob({ db, redis, logger }),
     new RetentionPurgeJob({ db, redis, logger, env }),
+    // WHY: a server that stood still for a second or more says so in its log (NFR-002, D-144).
+    new EventLoopWatch(logger),
   ];
   for (const job of jobs) job.start();
   // WHY: Express 5 passes a listen failure (port taken, no permission) to this callback; it must fail the start.

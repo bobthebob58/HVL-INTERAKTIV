@@ -1,14 +1,14 @@
 /**
- * Tests for the app stack's limits: the real stack file gives the app a restart rule and a memory limit, and a
- * copy without one, with too little memory, with swap beyond the limit, or with a one-off step that restarts is
- * refused.
+ * Tests for the app stack's limits: the real stack file gives the app a restart rule, a memory limit and a short
+ * health check, and a copy without one, with too little memory, with swap beyond the limit, with a health check
+ * that keeps a standing server "healthy" for long, or with a one-off step that restarts is refused.
  *
  * Spec: NFR-007, NFR-002
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { memoryMb, MIN_APP_MEMORY_MB, resourceProblems } from '../resourceRules.mjs';
+import { durationSeconds, memoryMb, MIN_APP_MEMORY_MB, resourceProblems } from '../resourceRules.mjs';
 
 const COMPOSE = readFileSync(
   fileURLToPath(new URL('../../../deploy/compose.app.yml', import.meta.url)),
@@ -21,7 +21,7 @@ const without = (text, replacement = '') => {
 };
 
 describe('[NFR-007] the app stack keeps its limits', () => {
-  it('[NFR-007] the real stack file passes: the app restarts and has a memory limit without extra swap', () => {
+  it('[NFR-007] the real stack file passes: the app restarts, has a memory limit without extra swap and a short health check', () => {
     expect(resourceProblems(COMPOSE)).toEqual([]);
   });
 
@@ -56,6 +56,42 @@ describe('[NFR-007] the app stack keeps its limits', () => {
       'compose: app: memswap_limit must equal mem_limit, so the limit is not passed by swapping';
     expect(swap).toEqual([swapProblem]);
     expect(noSwapRule).toEqual([swapProblem]);
+  });
+
+  it('[NFR-002] a health check that would keep a standing server healthy for long is refused', () => {
+    // Arrange: the stack's values before D-144 (no time limit, forty retries), and each value alone
+    const slow = without(
+      '      interval: 5s\n      timeout: 3s\n      retries: 3\n',
+      '      interval: 3s\n      retries: 40\n',
+    );
+    // Act
+    const problems = {
+      slow: resourceProblems(slow),
+      timeout: resourceProblems(without('      timeout: 3s\n', '      timeout: 30s\n')),
+      interval: resourceProblems(
+        without('      interval: 5s\n      timeout', '      interval: 1m\n      timeout'),
+      ),
+      start: resourceProblems(without('      retries: 3\n      start_period: 120s\n', '      retries: 3\n')),
+      none: resourceProblems(
+        without('      test:\n        - CMD\n', '      disable: true\n      test:\n        - CMD\n'),
+      ),
+    };
+    // Assert
+    expect(problems).toEqual({
+      slow: [
+        'compose: app: a health check try must end within 5 s (timeout)',
+        'compose: app: at most 5 failed health checks in a row (retries)',
+      ],
+      timeout: ['compose: app: a health check try must end within 5 s (timeout)'],
+      interval: ['compose: app: health checks must come at least every 10 s (interval)'],
+      start: ['compose: app: needs a start period, so a starting server is not counted as failing'],
+      none: ['compose: app: needs a health check'],
+    });
+  });
+
+  it('[NFR-002] durations are read as compose writes them', () => {
+    expect(['3s', '1m30s', '500ms', '2h', 7].map(durationSeconds)).toEqual([3, 90, 0.5, 7200, 7]);
+    expect([undefined, 'soon', '3'].map(durationSeconds)).toEqual([undefined, undefined, undefined]);
   });
 
   it('[NFR-007] a step that runs once must not restart', () => {
