@@ -255,6 +255,9 @@ A documented restore is tested once per semester.
 - **Amended (D-134, 2026-11-22):** the app container has a restart rule, so a server that ended its process comes
   back; the server writes its memory limits at start and warns when they do not fit; and at most two insight
   views and eight saved states are handled at the same time in one process, the others waiting their turn.
+- **Amended (D-144, 2026-11-26):** a server that stands still is marked unhealthy within half a minute (a health
+  check try has 3 seconds, tries come every 5 seconds, and the third failed one counts), and when it runs again it
+  writes how long it stood still; while Redis cannot be reached, a request that needs it fails at once.
 
 #### NFR-003 · MUST · S4 · Mobile and assistive technology
 Works on the last two versions of Chrome, Edge, Firefox and Safari, on iOS Safari and on Android
@@ -287,6 +290,11 @@ PostgreSQL, Redis and S3-compatible storage. No runtime calls to third-party CDN
 - **Amended (D-134, 2026-11-22):** the app stack gives the app a memory limit (5 GiB, no swap beyond it; at least
   4 GiB) and a restart rule, and its one-off steps none; `tools/deploy-check` holds the file to it, and the smoke
   test stops the server process once and waits for it to answer again.
+- **Amended (D-144, 2026-11-26):** the image runs its TypeScript without the loader's cache
+  (`TSX_DISABLE_CACHE=1`), so no code is read from a writable folder; the app's containers run under Docker's
+  current default seccomp profile plus the one rule Chromium's sandbox needs
+  (`deploy/seccomp/chromium-sandbox.seccomp`); and the app's health check is short. `tools/deploy-check` holds the
+  files to all three, and the smoke test checks them on the running stack.
 
 ---
 

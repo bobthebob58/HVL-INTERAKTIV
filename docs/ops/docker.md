@@ -59,16 +59,31 @@ The app stack has `restart: unless-stopped`: a server that ended its own process
 memory limit there too (`resources.limits.memory`). The steps that run once (`buckets`, `migrate`, `seed`) must
 have no restart rule.
 
-**Chromium's sandbox needs Playwright's seccomp profile and `CAP_SYS_CHROOT`.** The PDF export keeps Chromium's
-sandbox (D-096), and `PDF_ALLOW_NO_SANDBOX` is refused in production. Under Docker's default seccomp profile
-Chromium stops with "No usable sandbox!", so run the container with `deploy/seccomp/playwright-v1.56.1.seccomp`.
+**A server that stands still must lose its "healthy" mark soon (D-144).** The app stack's health check asks
+`/healthz` every 5 seconds, gives a try 3 seconds, and marks the app unhealthy at the third failed try in a row,
+about 25 seconds after the server stopped answering; failed tries in the first 120 seconds after a start do not
+count. Docker itself only sets the mark: it does not restart an unhealthy container. Whatever routes requests (a
+load balancer, Kubernetes or OpenShift with a readiness and a liveness probe on `/healthz`) should use the same
+short limits and decide whether a server that stands still is taken out of rotation or restarted; the server does
+not restart itself. When it runs again it writes `the server stood still: its event loop did not run` with
+`standstillMs` (runbook §7).
+
+**No code is run from a writable folder (D-144).** The image sets `TSX_DISABLE_CACHE=1`, so the TypeScript loader
+keeps its translated code in memory and writes nothing to `/tmp`. Do not unset it in a deployment: with the cache
+on, the loader reads translated code back from `/tmp/tsx-<uid>` without checking it.
+
+**Chromium's sandbox needs the seccomp profile in `deploy/seccomp/` and `CAP_SYS_CHROOT`.** The PDF export keeps
+Chromium's sandbox (D-096), and `PDF_ALLOW_NO_SANDBOX` is refused in production. Under Docker's default seccomp
+profile Chromium stops with "No usable sandbox!", so run the container with
+`deploy/seccomp/chromium-sandbox.seccomp`: Docker's default with one rule added, which allows `clone`, `setns` and
+`unshare` so Chromium can create its user namespaces (`deploy/seccomp/README.md`).
 After it creates its namespaces the sandbox chroots into `/proc/self/fdinfo`, which needs `SYS_CHROOT` in the
 container's capability bounding set: with every capability dropped the launch fails with
 `Check failed: sys_chroot("/proc/self/fdinfo/") == 0` (found by the smoke test, 2026-11-05). So drop all capabilities
 and add back that one, for the app only:
 
 ```sh
-docker run --security-opt seccomp=deploy/seccomp/playwright-v1.56.1.seccomp --security-opt no-new-privileges:true \
+docker run --security-opt seccomp=deploy/seccomp/chromium-sandbox.seccomp --security-opt no-new-privileges:true \
   --cap-drop ALL --cap-add SYS_CHROOT --read-only --tmpfs /tmp --tmpfs /home/hvli:uid=10001,gid=10001 --tmpfs /app/apps/web/.next/cache:uid=10001,gid=10001 \
   -v hvli-libraries:/app/apps/server/var/h5p/libraries --env-file <your env file> -p 127.0.0.1:3000:3000 <image>
 ```
@@ -159,8 +174,10 @@ shows every font embedded, `pdfinfo` says `Tagged: yes` and A4); reads the sandb
 (`deploy/smoke/sandboxProof.mjs`: every renderer in a PID namespace of its own and under Chromium's own seccomp filter,
 which `--no-sandbox` would remove); requires the server's own start-up line `PDF export availability` with `pdfSandbox: true` and `reason: "ok"`; prints
 Chromium's version and SHA-256; requires the server's line `memory limits` with the stack's limit and no warning
-after it; stops the server process inside the app container and waits until `/healthz` answers again (the restart
-rule, D-134); then runs
+after it; finds no folder of translated code in the app's `/tmp`; stops the server process in place (SIGSTOP),
+waits until Docker marks the app unhealthy (at most 45 seconds), lets it run on and waits for "healthy" and for the
+server's standstill line (D-144); stops the server process inside the app container and waits until `/healthz`
+answers again (the restart rule, D-134); then runs
 `docker compose down -v`, removes its image and removes its builder, which removes exactly its own build cache (the
 pulled `clamav/clamav` and `moby/buildkit` images stay for the next run).
 `HVLI_KEEP=1` keeps all of it for inspection.

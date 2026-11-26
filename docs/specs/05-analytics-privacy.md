@@ -201,6 +201,9 @@ aggregate snapshots that already satisfy *k*-suppression are kept, for the *peda
   reached and no completed run for the ended year is audited. A run deletes every stored year before the current
   academic year, so a year a missed run left behind goes too. A snapshot holds the mappe's figures for the year
   (`MAPPE-002`) under the mappe's group rules. The runbook is `docs/ops/yearly-purge.md`.
+- **Amended (D-144, 2026-11-26):** a real run writes an audit event when it starts, with the counts it is about to
+  delete, before its first change, and another when it ends; a run that is cut short therefore leaves a record,
+  and only a completed run marks the year as purged.
 
 #### DATA-004 · MUST · S6 · EEA residency and encryption
 PostgreSQL, Redis and S3-compatible storage are hosted in Norway or the EEA. All traffic uses TLS
@@ -236,6 +239,8 @@ audit log itself has no free-text personal data. It is kept for 2 years.
   never an identifier, key or hash; both hold counts, years and fixed words only. The app's database role may add and
   read audit rows but never change or delete them (D-109), so the deletion after 2 years, which is not built yet,
   needs its own amendment and grant (DPIA input R27).
+- **Amended (D-144, 2026-11-26):** `purge.run`'s `outcome` is `started` (a real run, before its first change, with
+  the planned counts), `completed` or `failed`.
 
 #### DATA-008 · MUST · S6 · Data-subject requests
 An admin-only tool takes a Feide ID or an `(iss, sub)` pair. It derives the learner keys for the

@@ -266,3 +266,6 @@ and **not stored** on the server.
 The PDF is rendered from the same semantic HTML template with headless Chromium and **tagged-PDF**
 output enabled. It has document language, a title, a heading outline and real text, never images of text.
 - **Verify:** The test checks the PDF has a structure tree and outline (e.g. with `pdfjs-dist`); a manual check with PAC or a screen reader is recorded in the accessibility results.
+- **Amended (D-144, 2026-11-26):** in the image Chromium keeps its sandbox under
+  `deploy/seccomp/chromium-sandbox.seccomp`: Docker's default seccomp profile with one rule added (`clone`,
+  `setns`, `unshare`), in place of the older profile Playwright publishes.

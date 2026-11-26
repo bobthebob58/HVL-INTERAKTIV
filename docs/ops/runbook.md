@@ -18,7 +18,7 @@ Hosting is open: HVL on its own servers or Sikt, both in the EEA (Q5, `DATA-004`
 | What | Requirement | Why |
 |---|---|---|
 | One or more application nodes running the image (Docker, Kubernetes or OpenShift) | The full load test on a node like production decides the size (section 8); the smoke here ran on 4 CPUs with every service on the same machine | `NFR-001`, `NFR-007` |
-| A custom seccomp profile for the app container (Playwright's v1.56.1 profile, in `deploy/seccomp/`) | If the runtime cannot take one, the PDF export needs a renderer container of its own, never `--no-sandbox` | D-096, D-110 |
+| A custom seccomp profile for the app container (`deploy/seccomp/chromium-sandbox.seccomp`: Docker's default plus one rule) | If the runtime cannot take one, the PDF export needs a renderer container of its own, never `--no-sandbox` | D-096, D-110 |
 | PostgreSQL 16 in the EEA, with TLS that checks the server (`sslmode=verify-full`) | Three roles from [database-roles.md](database-roles.md); its own backups if managed | `DATA-004`, `DATA-010` |
 | Redis 7 in the EEA over TLS (`rediss://`) | Sessions, rate limits, locks, caches and the courses' learner counts; not backed up: losing it logs everyone out, and the counts come back with the next launches | `DATA-004` |
 | S3-compatible storage in the EEA over https | Two buckets with plain names: content, and temporary with a 1-day lifecycle rule; no public access | `DATA-004`, D-109 |
@@ -206,8 +206,11 @@ the EEA) and keep 30 days there too.
 ## 7. Monitoring and incidents
 
 **Health:** `GET /healthz` answers 200 `{"status":"ok"}`, or 503 `{"status":"unavailable","failing":["database"]}`
-(or `redis`) when one does not answer in 2 seconds; it is never cached and needs no login. Poll it every 10–30 s and
-take a node out of rotation on 503.
+(or `redis`) when one does not answer in 2 seconds; it is never cached and needs no login. Poll it every 5–10 s
+with a time limit of a few seconds, and take a node out of rotation on 503 or when it does not answer: a server
+that stands still answers nothing (D-144; the app stack's own check is in [docker.md](docker.md)). While Redis
+cannot be reached, requests that need it fail at once with a 500 and `redis connection error` lines repeat until it
+is back; nothing is kept to be sent later.
 
 **Request log** (`NFR-006`): one JSON line per request, `msg: "request"`, with `requestId`, `method`, `route` (the
 pattern, e.g. `/api/content/:contentId`, never the path or the query), `status`, `durationMs`, and `aborted: true`
@@ -220,7 +223,10 @@ outside the log (D-133). In production the start-up warning `not in production m
 The start line `memory limits` gives the container's limit and what the server may use, in MiB; alert on the two
 warnings that can follow it (`the container has no memory limit`, `the memory limit is below what the server may
 use`). A container that restarts by itself has ended its process: look for the `fatal` line before the restart, or,
-when there is none, for the kernel's out-of-memory record on the host (D-134).
+when there is none, for the kernel's out-of-memory record on the host (D-134). The warning `the server stood
+still: its event loop did not run` gives the longest standstill of the last 10 seconds in `standstillMs`: one long
+piece of work held every request for that time. The request log of the same moment (the request with the long
+`durationMs`) names the route; alert on the line when it repeats (D-144).
 
 **Incident steps:**
 
@@ -336,7 +342,7 @@ Tick every line before the first learner, and again after a change of hosting:
 - [ ] The content types come from a bundle built in CI, and `npm run libraries:check` passes on the library
       volume (a storage seeded before the build fix needs the library folder the check names deleted first,
       section 2).
-- [ ] The app container runs as uid 10001 with Playwright's seccomp profile ([docker.md](docker.md)); never
+- [ ] The app container runs as uid 10001 with the seccomp profile in `deploy/seccomp/` ([docker.md](docker.md)); never
       `PDF_ALLOW_NO_SANDBOX`.
 - [ ] The app container has a memory limit of at least 4 GiB (or a smaller heap with it, [docker.md](docker.md))
       and is restarted when its process ends; the start line `memory limits` is followed by no warning.

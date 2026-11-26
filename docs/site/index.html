@@ -782,7 +782,10 @@ a documented restore is tested once per semester.
   row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.
 - **amended (d-134, 2026-11-22):** the app container has a restart rule, so a server that ended its process comes
   back; the server writes its memory limits at start and warns when they do not fit; and at most two insight
-  views and eight saved states are handled at the same time in one process, the others waiting their turn.">
+  views and eight saved states are handled at the same time in one process, the others waiting their turn.
+- **amended (d-144, 2026-11-26):** a server that stands still is marked unhealthy within half a minute (a health
+  check try has 3 seconds, tries come every 5 seconds, and the third failed one counts), and when it runs again it
+  writes how long it stood still; while redis cannot be reached, a request that needs it fails at once.">
 <summary><span class="req-id">NFR-002</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Availability and recoverability</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>99.5 % monthly availability during the semester. Database backups run daily with 30-day retention.
 A documented restore is tested once per semester.</p>
@@ -793,6 +796,9 @@ row ends only, content-file keys are compared exactly, and a restore names the t
 <li><strong>Amended (D-134, 2026-11-22):</strong> the app container has a restart rule, so a server that ended its process comes
 back; the server writes its memory limits at start and warns when they do not fit; and at most two insight
 views and eight saved states are handled at the same time in one process, the others waiting their turn.</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> a server that stands still is marked unhealthy within half a minute (a health
+check try has 3 seconds, tries come every 5 seconds, and the third failed one counts), and when it runs again it
+writes how long it stood still; while Redis cannot be reached, a request that needs it fails at once.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-NFR-002">00 Product and pedagogy, NFR-002</a> · Non-functional</p></div>
 </details>
@@ -851,7 +857,12 @@ postgresql, redis and s3-compatible storage. no runtime calls to third-party cdn
 - **verify:** `docker compose up` smoke test in ci.
 - **amended (d-134, 2026-11-22):** the app stack gives the app a memory limit (5 gib, no swap beyond it; at least
   4 gib) and a restart rule, and its one-off steps none; `tools/deploy-check` holds the file to it, and the smoke
-  test stops the server process once and waits for it to answer again.">
+  test stops the server process once and waits for it to answer again.
+- **amended (d-144, 2026-11-26):** the image runs its typescript without the loader's cache
+  (`tsx_disable_cache=1`), so no code is read from a writable folder; the app's containers run under docker's
+  current default seccomp profile plus the one rule chromium's sandbox needs
+  (`deploy/seccomp/chromium-sandbox.seccomp`); and the app's health check is short. `tools/deploy-check` holds the
+  files to all three, and the smoke test checks them on the running stack.">
 <summary><span class="req-id">NFR-007</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Deployable on HVL or Sikt infrastructure</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Docker images and <code>docker-compose.yml</code> for local and staging environments. Only EEA-hosted
 PostgreSQL, Redis and S3-compatible storage. No runtime calls to third-party CDNs (see <a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a>).</p>
@@ -860,6 +871,11 @@ PostgreSQL, Redis and S3-compatible storage. No runtime calls to third-party CDN
 <li><strong>Amended (D-134, 2026-11-22):</strong> the app stack gives the app a memory limit (5 GiB, no swap beyond it; at least
 4 GiB) and a restart rule, and its one-off steps none; <code>tools/deploy-check</code> holds the file to it, and the smoke
 test stops the server process once and waits for it to answer again.</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> the image runs its TypeScript without the loader&#39;s cache
+(<code>TSX_DISABLE_CACHE=1</code>), so no code is read from a writable folder; the app&#39;s containers run under Docker&#39;s
+current default seccomp profile plus the one rule Chromium&#39;s sandbox needs
+(<code>deploy/seccomp/chromium-sandbox.seccomp</code>); and the app&#39;s health check is short. <code>tools/deploy-check</code> holds the
+files to all three, and the smoke test checks them on the running stack.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-NFR-007">00 Product and pedagogy, NFR-007</a> · Non-functional</p></div>
 </details>
@@ -956,7 +972,9 @@ lock ensures only one node runs it.
 - **acceptance:** two server instances share the content-type cache and locks. the temporary file
   cleanup runs once per interval cluster-wide.
 - **verify:** integration tests against postgresql, redis and an s3-compatible store (d-023). the
-  user-data adapter is built and tested with `h5p-005` in s2 (d-028).">
+  user-data adapter is built and tested with `h5p-005` in s2 (d-028).
+- **amended (d-144, 2026-11-26):** while redis cannot be reached, the shared client refuses a command, a
+  transaction or a script at once and keeps none to send later; it reconnects by itself.">
 <summary><span class="req-id">H5P-004</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Production storage adapters</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><div class="table-wrap" role="region" aria-label="Table 1, H5P-004 Production storage adapters" tabindex="0"><table><thead><tr>
 <th scope="col">Interface</th><th scope="col">Implementation</th><th scope="col">Backing store</th></tr>
@@ -980,6 +998,8 @@ lock ensures only one node runs it.</p>
 cleanup runs once per interval cluster-wide.</li>
 <li><strong>Verify:</strong> Integration tests against PostgreSQL, Redis and an S3-compatible store (D-023). The
 user-data adapter is built and tested with <a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a> in S2 (D-028).</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> while Redis cannot be reached, the shared client refuses a command, a
+transaction or a script at once and keeps none to send later; it reconnects by itself.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-H5P-004">01 H5P engine and security, H5P-004</a> · H5P engine</p></div>
 </details>
@@ -2818,12 +2838,18 @@ median is hidden when it would let a count insight hides be worked out.</li>
 </details>
 <details class="req" id="x-MAPPE-004" data-area="MAPPE" data-priority="SHOULD" data-session="S5" data-status="tested" data-text="mappe-004 accessible pdf the pdf is rendered from the same semantic html template with headless chromium and **tagged-pdf**
 output enabled. it has document language, a title, a heading outline and real text, never images of text.
-- **verify:** the test checks the pdf has a structure tree and outline (e.g. with `pdfjs-dist`); a manual check with pac or a screen reader is recorded in the accessibility results.">
+- **verify:** the test checks the pdf has a structure tree and outline (e.g. with `pdfjs-dist`); a manual check with pac or a screen reader is recorded in the accessibility results.
+- **amended (d-144, 2026-11-26):** in the image chromium keeps its sandbox under
+  `deploy/seccomp/chromium-sandbox.seccomp`: docker's default seccomp profile with one rule added (`clone`,
+  `setns`, `unshare`), in place of the older profile playwright publishes.">
 <summary><span class="req-id">MAPPE-004</span> <span class="badge pri pri-should" title="RFC 2119 SHOULD">Should</span> <span class="badge sess" title="Delivered in build session 5">S5</span> <span class="req-title">Accessible PDF</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>The PDF is rendered from the same semantic HTML template with headless Chromium and <strong>tagged-PDF</strong>
 output enabled. It has document language, a title, a heading outline and real text, never images of text.</p>
 <ul>
 <li><strong>Verify:</strong> The test checks the PDF has a structure tree and outline (e.g. with <code>pdfjs-dist</code>); a manual check with PAC or a screen reader is recorded in the accessibility results.</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> in the image Chromium keeps its sandbox under
+<code>deploy/seccomp/chromium-sandbox.seccomp</code>: Docker&#39;s default seccomp profile with one rule added (<code>clone</code>,
+<code>setns</code>, <code>unshare</code>), in place of the older profile Playwright publishes.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-MAPPE-004">04 Læringsdesign studio, MAPPE-004</a> · Pedagogisk mappe</p></div>
 </details>
@@ -3122,7 +3148,10 @@ aggregate snapshots that already satisfy *k*-suppression are kept, for the *peda
   in spring would keep a year's rows for most of another year); the job checks hourly and runs once the date is
   reached and no completed run for the ended year is audited. a run deletes every stored year before the current
   academic year, so a year a missed run left behind goes too. a snapshot holds the mappe's figures for the year
-  (`mappe-002`) under the mappe's group rules. the runbook is `docs/ops/yearly-purge.md`.">
+  (`mappe-002`) under the mappe's group rules. the runbook is `docs/ops/yearly-purge.md`.
+- **amended (d-144, 2026-11-26):** a real run writes an audit event when it starts, with the counts it is about to
+  delete, before its first change, and another when it ends; a run that is cut short therefore leaves a record,
+  and only a completed run marks the year as purged.">
 <summary><span class="req-id">DATA-003</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Annual retention purge</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>A scheduled job runs on a configured date (default 15 August), for the academic year that has
 ended. It deletes <code>XapiStatement</code>, <code>H5PUserData</code>, <code>GradeSyncJob</code> and learner <code>Identity</code> rows older
@@ -3153,6 +3182,9 @@ in spring would keep a year&#39;s rows for most of another year); the job checks
 reached and no completed run for the ended year is audited. A run deletes every stored year before the current
 academic year, so a year a missed run left behind goes too. A snapshot holds the mappe&#39;s figures for the year
 (<a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a>) under the mappe&#39;s group rules. The runbook is <code>docs/ops/yearly-purge.md</code>.</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> a real run writes an audit event when it starts, with the counts it is about to
+delete, before its first change, and another when it ends; a run that is cut short therefore leaves a record,
+and only a completed run marks the year as purged.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-003">05 Insight and privacy, DATA-003</a> · Data protection</p></div>
 </details>
@@ -3215,7 +3247,9 @@ audit log itself has no free-text personal data. it is kept for 2 years.
   a data-subject request writes `datasubject.export` or `datasubject.erase` with a random request id as its target,
   never an identifier, key or hash; both hold counts, years and fixed words only. the app's database role may add and
   read audit rows but never change or delete them (d-109), so the deletion after 2 years, which is not built yet,
-  needs its own amendment and grant (dpia input r27).">
+  needs its own amendment and grant (dpia input r27).
+- **amended (d-144, 2026-11-26):** `purge.run`'s `outcome` is `started` (a real run, before its first change, with
+  the planned counts), `completed` or `failed`.">
 <summary><span class="req-id">DATA-007</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Audit log</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p><code>AuditEvent(at, actorUserId, action, targetType, targetId, details jsonb)</code> records: insight views,
 exports, library installs and updates, permission changes, data-subject actions and purge runs. The
@@ -3227,6 +3261,8 @@ a data-subject request writes <code>dataSubject.export</code> or <code>dataSubje
 never an identifier, key or hash; both hold counts, years and fixed words only. The app&#39;s database role may add and
 read audit rows but never change or delete them (D-109), so the deletion after 2 years, which is not built yet,
 needs its own amendment and grant (DPIA input R27).</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> <code>purge.run</code>&#39;s <code>outcome</code> is <code>started</code> (a real run, before its first change, with
+the planned counts), <code>completed</code> or <code>failed</code>.</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-DATA-007">05 Insight and privacy, DATA-007</a> · Data protection</p></div>
 </details>
@@ -3952,6 +3988,9 @@ row ends only, content-file keys are compared exactly, and a restore names the t
 <li><strong>Amended (D-134, 2026-11-22):</strong> the app container has a restart rule, so a server that ended its process comes
 back; the server writes its memory limits at start and warns when they do not fit; and at most two insight
 views and eight saved states are handled at the same time in one process, the others waiting their turn.</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> a server that stands still is marked unhealthy within half a minute (a health
+check try has 3 seconds, tries come every 5 seconds, and the third failed one counts), and when it runs again it
+writes how long it stood still; while Redis cannot be reached, a request that needs it fails at once.</li>
 </ul>
 <h4 id="r-NFR-003" class="req-heading" tabindex="-1"><a class="req-id" href="#r-NFR-003">NFR-003</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 4">S4</span> <span class="req-title">Mobile and assistive technology</span></h4>
 <p>Works on the last two versions of Chrome, Edge, Firefox and Safari, on iOS Safari and on Android
@@ -3987,6 +4026,11 @@ PostgreSQL, Redis and S3-compatible storage. No runtime calls to third-party CDN
 <li><strong>Amended (D-134, 2026-11-22):</strong> the app stack gives the app a memory limit (5 GiB, no swap beyond it; at least
 4 GiB) and a restart rule, and its one-off steps none; <code>tools/deploy-check</code> holds the file to it, and the smoke
 test stops the server process once and waits for it to answer again.</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> the image runs its TypeScript without the loader&#39;s cache
+(<code>TSX_DISABLE_CACHE=1</code>), so no code is read from a writable folder; the app&#39;s containers run under Docker&#39;s
+current default seccomp profile plus the one rule Chromium&#39;s sandbox needs
+(<code>deploy/seccomp/chromium-sandbox.seccomp</code>); and the app&#39;s health check is short. <code>tools/deploy-check</code> holds the
+files to all three, and the smoke test checks them on the running stack.</li>
 </ul>
 <hr>
 <h3 id="spec-00--7-scope-boundaries" tabindex="-1">7. Scope boundaries</h3>
@@ -4259,6 +4303,8 @@ lock ensures only one node runs it.</p>
 cleanup runs once per interval cluster-wide.</li>
 <li><strong>Verify:</strong> Integration tests against PostgreSQL, Redis and an S3-compatible store (D-023). The
 user-data adapter is built and tested with <a class="req-ref" href="#r-H5P-005"><code>H5P-005</code></a> in S2 (D-028).</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> while Redis cannot be reached, the shared client refuses a command, a
+transaction or a script at once and keeps none to send later; it reconnects by itself.</li>
 </ul>
 <h4 id="r-H5P-005" class="req-heading" tabindex="-1"><a class="req-id" href="#r-H5P-005">H5P-005</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Learner state persistence (resume)</span></h4>
 <p><code>PrismaContentUserDataStorage</code> stores H5P user data keyed by
@@ -5658,6 +5704,9 @@ median is hidden when it would let a count insight hides be worked out.</li>
 output enabled. It has document language, a title, a heading outline and real text, never images of text.</p>
 <ul>
 <li><strong>Verify:</strong> The test checks the PDF has a structure tree and outline (e.g. with <code>pdfjs-dist</code>); a manual check with PAC or a screen reader is recorded in the accessibility results.</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> in the image Chromium keeps its sandbox under
+<code>deploy/seccomp/chromium-sandbox.seccomp</code>: Docker&#39;s default seccomp profile with one rule added (<code>clone</code>,
+<code>setns</code>, <code>unshare</code>), in place of the older profile Playwright publishes.</li>
 </ul>
 
 </section>
@@ -5867,6 +5916,9 @@ in spring would keep a year&#39;s rows for most of another year); the job checks
 reached and no completed run for the ended year is audited. A run deletes every stored year before the current
 academic year, so a year a missed run left behind goes too. A snapshot holds the mappe&#39;s figures for the year
 (<a class="req-ref" href="#r-MAPPE-002"><code>MAPPE-002</code></a>) under the mappe&#39;s group rules. The runbook is <code>docs/ops/yearly-purge.md</code>.</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> a real run writes an audit event when it starts, with the counts it is about to
+delete, before its first change, and another when it ends; a run that is cut short therefore leaves a record,
+and only a completed run marks the year as purged.</li>
 </ul>
 <h4 id="r-DATA-004" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DATA-004">DATA-004</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">EEA residency and encryption</span></h4>
 <p>PostgreSQL, Redis and S3-compatible storage are hosted in Norway or the EEA. All traffic uses TLS
@@ -5906,6 +5958,8 @@ a data-subject request writes <code>dataSubject.export</code> or <code>dataSubje
 never an identifier, key or hash; both hold counts, years and fixed words only. The app&#39;s database role may add and
 read audit rows but never change or delete them (D-109), so the deletion after 2 years, which is not built yet,
 needs its own amendment and grant (DPIA input R27).</li>
+<li><strong>Amended (D-144, 2026-11-26):</strong> <code>purge.run</code>&#39;s <code>outcome</code> is <code>started</code> (a real run, before its first change, with
+the planned counts), <code>completed</code> or <code>failed</code>.</li>
 </ul>
 <h4 id="r-DATA-008" class="req-heading" tabindex="-1"><a class="req-id" href="#r-DATA-008">DATA-008</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Data-subject requests</span></h4>
 <p>An admin-only tool takes a Feide ID or an <code>(iss, sub)</code> pair. It derives the learner keys for the
@@ -6427,7 +6481,7 @@ whose results HVL records (D-079); <a class="req-ref" href="#r-UD-031"><code>UD-
 <tr>
 <td><code>npx vitest run apps/server/test/privacy/operationsClis.int.test.ts</code> <em>(from S6)</em></td><td>The operations CLIs together, each through its npm script, on a database only they set up: <code>db:roles</code> (roles and the migrate step), a data-subject export, the purge&#39;s dry run and real run as <code>hvli_app</code>, then an erasure; every run audited with counts only (<a class="req-ref" href="#r-DATA-010"><code>DATA-010</code></a>, <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>, <a class="req-ref" href="#r-DATA-008"><code>DATA-008</code></a>, <a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>)</td></tr>
 <tr>
-<td><code>npm run deploy:check &amp;&amp; npm run docker:smoke</code> <em>(from S6)</em></td><td>The deploy files keep D-110&#39;s rules (images by digest, uid 10001, no GitHub fetch, the CA only as a secret, Playwright&#39;s seccomp profile, only <code>SYS_CHROOT</code> added back); then the image builds and the app stack (<code>deploy/compose.app.yml</code>, with its own clamd) starts: <code>/healthz</code>, every migration, the seeded types, pages from the image, an upload scanned by clamd (EICAR refused) and served from the files origin with the sandbox policy, the mappe PDF tagged A4 with æ, ø and å embedded and Chromium&#39;s sandbox seen in <code>/proc</code>, and the server&#39;s own start-up probe line (<a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>; <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/docker.md" rel="noopener" class="ext">ops/docker.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>). Needs Docker, about 8 GB free and 2.5 minutes; GitHub runs it in <code>.github/workflows/docker.yml</code></td></tr>
+<td><code>npm run deploy:check &amp;&amp; npm run docker:smoke</code> <em>(from S6)</em></td><td>The deploy files keep D-110&#39;s rules (images by digest, uid 10001, no GitHub fetch, the CA only as a secret, the seccomp profile, the loader&#39;s cache off, a short health check, only <code>SYS_CHROOT</code> added back); then the image builds and the app stack (<code>deploy/compose.app.yml</code>, with its own clamd) starts: <code>/healthz</code>, every migration, the seeded types, pages from the image, an upload scanned by clamd (EICAR refused) and served from the files origin with the sandbox policy, the mappe PDF tagged A4 with æ, ø and å embedded and Chromium&#39;s sandbox seen in <code>/proc</code>, and the server&#39;s own start-up probe line (<a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a>; <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/docker.md" rel="noopener" class="ext">ops/docker.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a>). Needs Docker, about 8 GB free and 2.5 minutes; GitHub runs it in <code>.github/workflows/docker.yml</code></td></tr>
 <tr>
 <td><code>npx vitest run tools/ops</code> <em>(from S6)</em></td><td>The backup round trip on the local services: back up, wipe, restore and compare every table&#39;s count and an object&#39;s SHA-256; a tampered backup, a non-empty target and a backup that differs are refused or reported (<a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>, <a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §6)</td></tr>
 <tr>
@@ -6741,7 +6795,7 @@ one node. <code>npm run load:full</code>, on a node like production, is HVL&#39;
 services; the daily backup with its encrypted copy off the server, and the restore drill each semester with
 its log, are HVL&#39;s (runbook §6).</li>
 <li><strong>Hosting</strong> (<a class="req-ref" href="#r-DATA-004"><code>DATA-004</code></a>, <a class="req-ref" href="#r-NFR-007"><code>NFR-007</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>). Storage in the EEA, a container runtime that allows
-Playwright&#39;s seccomp profile and <code>CAP_SYS_CHROOT</code>, the files host&#39;s DNS name and certificate, and a clamd with
+the seccomp profile in <code>deploy/seccomp/</code> and <code>CAP_SYS_CHROOT</code>, the files host&#39;s DNS name and certificate, and a clamd with
 daily signatures (Q5) are ticked on the deployment checklist (runbook §9) when HVL deploys. The image and its
 smoke test run here; <code>.github/workflows/docker.yml</code> has not yet run on GitHub (Chromium from Playwright&#39;s CDN
 and its SHA-256, AppArmor, the <code>/proc</code> check on the runner).</li>
@@ -10368,14 +10422,16 @@ audited).</li>
 </ul>
 <h3 id="decisions--d-107--spec-deviation-data-003-the-yearly-purge-runs-on-31-august-and-deletes-by-a-stored-academic-year" tabindex="-1">D-107 · <code>SPEC-DEVIATION</code> DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year</h3>
 <ul>
-<li><strong>Context:</strong> <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> runs the purge &quot;on a configured date (default 15 August)&quot; for the academic year that has
+<li><p><strong>Context:</strong> <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> runs the purge &quot;on a configured date (default 15 August)&quot; for the academic year that has
 ended, deleting rows &quot;older than the academic-year boundary plus 30 days&quot;, keeping only <em>k</em>-suppressed snapshots
 for the mappe, and destroying that year&#39;s pseudonym secret. The academic year ends on 31 July
 (<code>privacy/academicYear.ts</code>, D-011), so the 30 days end on 30 August, and on 15 August nothing is old enough yet. The
 tables keep timestamps, not years, while a learner&#39;s rows belong to the year whose secret made their <code>learnerKey</code>
 (<code>privacy/deriveLearnerKey.ts</code>); a cut by timestamp can split them. The secrets are an environment value
-(<code>PSEUDONYM_SECRETS</code>), which the server cannot destroy.</li>
-<li><strong>Decision:</strong><ul>
+(<code>PSEUDONYM_SECRETS</code>), which the server cannot destroy.</p>
+</li>
+<li><p><strong>Decision:</strong></p>
+<ul>
 <li><strong>When:</strong> by default on 31 August, Oslo time, for the academic year that ended on 31 July; the date is
 configurable, but not to a day before 31 August, so the 30 days always pass first. A leased job runs it on one
 node, and a CLI runs the same code by hand.</li>
@@ -10394,9 +10450,10 @@ HVL removes it from the secret store and from <code>PSEUDONYM_SECRETS</code>. At
 secret still configured for a year the purge has completed, so a forgotten step shows.</li>
 </ul>
 </li>
-<li><strong>Alternatives considered:</strong> (a) 15 August with a timestamp cut: it deletes nothing on that day, or splits a
-learner&#39;s year. (b) The server destroying secrets itself: it would need write access to HVL&#39;s secret store.</li>
-<li><strong>Consequences:</strong> <code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> in three points: the default date (31 August instead of
+<li><p><strong>Alternatives considered:</strong> (a) 15 August with a timestamp cut: it deletes nothing on that day, or splits a
+learner&#39;s year. (b) The server destroying secrets itself: it would need write access to HVL&#39;s secret store.</p>
+</li>
+<li><p><strong>Consequences:</strong> <code>SPEC-DEVIATION</code> from <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> in three points: the default date (31 August instead of
 15 August), which rows go, and who destroys the pseudonym secret. The purge takes the ended year&#39;s rows by their
 stored year, and learner <code>Identity</code> rows created before 1 August, not every row &quot;older than the academic-year
 boundary plus 30 days&quot;, which, read on the run date, would also take the new year&#39;s first 30 days. The 30 days
@@ -10411,17 +10468,20 @@ partly for this reason; there the context string can carry the platform, while n
 Spec 05 gets amendment notes on <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a> and <a class="req-ref" href="#r-DATA-012"><code>DATA-012</code></a>. Migration <code>s6_grade_bridge_insight</code> adds the column, and a
 <code>contentVersion</code> to <code>InsightSnapshot</code>, which has none today. A learner who comes back after the purge gets new
 rows, as the new year&#39;s key already makes them a new pseudonym. The integration test travels through a year in
-time (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>&#39;s Verify) and checks D-034&#39;s rule.</li>
-<li><strong>Amendment (2026-11-04, step 3 integration):</strong> where the year comes from. A portal session stores
+time (<a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>&#39;s Verify) and checks D-034&#39;s rule.</p>
+</li>
+<li><p><strong>Amendment (2026-11-04, step 3 integration):</strong> where the year comes from. A portal session stores
 <code>learnerKeyYear</code>, computed at login from the same moment as its key (a session field; the data inventory&#39;s Redis
 section lists it); an LTI request&#39;s key and its year come from one moment in <code>LtiAccounts</code> (<code>lti/launch/ ltiAccount.ts</code>), and <code>principalOfLaunch</code> puts the year on the principal, so no request at the turn of the year pairs
 a key with the other year. <code>learnerKeyYearOf(principal, receivedAt)</code> falls back to the request&#39;s year only for a
 principal built without one. <code>XapiStatement</code> rows (<code>XapiIngest</code>) and <code>GradeSyncJob</code> rows (from those statements)
 carry it. <em>Still open, for step 5:</em> <code>H5PUserData</code> rows are written without it (<code>h5p/storage/learnerStateWrites.ts</code>
 takes the database default, the year of the write), which is wrong for a portal session made before 1 August and
-used up to 12 hours after; the purge step carries <code>learnerKeyYear</code> through <code>principalToH5pActor</code> into that write.</li>
-<li><strong>Amendment (2026-11-04, step 5, the purge built):</strong> how the job, the CLI and the H5P state write carry this out
-(<code>apps/server/src/privacy/purge/</code>).<ul>
+used up to 12 hours after; the purge step carries <code>learnerKeyYear</code> through <code>principalToH5pActor</code> into that write.</p>
+</li>
+<li><p><strong>Amendment (2026-11-04, step 5, the purge built):</strong> how the job, the CLI and the H5P state write carry this out
+(<code>apps/server/src/privacy/purge/</code>).</p>
+<ul>
 <li><em>Date:</em> <code>PURGE_RUN_DATE</code> (<code>MM-DD</code>, default <code>08-31</code>) names a day from 31 August to 31 December; an earlier day, and
 any day from January to July, is refused. A day in spring would keep a year&#39;s rows for most of another year,
 which <a class="req-ref" href="#r-DATA-003"><code>DATA-003</code></a>&#39;s retention does not allow. The leased job (lease <code>hvli:privacy:retention-purge</code>) checks every
@@ -10485,6 +10545,10 @@ log (a run takes every stored year up to its own, so all those secrets are stale
 (<code>h5p/storage/learnerStateYear.ts</code>), and <code>learnerStateWrites.ts</code> sets <code>academicYear</code> on insert and on update,
 which for one key is always the key&#39;s year.</li>
 </ul>
+</li>
+<li><p><strong>Amendment (2026-11-26, D-144):</strong> a real run writes a <code>purge.run</code> event with <code>outcome: &quot;started&quot;</code> and the plan&#39;s
+counts before its first change, and its end (<code>completed</code> or <code>failed</code>) as before. A run that is cut short leaves
+its start on record; only a <code>completed</code> real run marks a year as purged.</p>
 </li>
 </ul>
 <h3 id="decisions--d-108--data-subject-requests-a-server-cli-that-hvl-operations-run" tabindex="-1">D-108 · Data-subject requests: a server CLI that HVL operations run</h3>
@@ -11514,6 +11578,12 @@ reconfigured and restarted between two probes is trusted for up to 60 s unless a
 <li><p><strong>Amendment (2026-11-25, D-143):</strong> waiting scans get the free turns person by person: a free turn goes to the
 author who has waited longest since their last turn (<code>security/malware/ScanTurns.ts</code>, <code>scanOwner.ts</code>). Four scans
 at once and the time limit that includes the wait stay as they are.</p>
+</li>
+<li><p><strong>Amendment (2026-11-26, D-144):</strong> three settings of the image and the stack. The runtime stage sets
+<code>TSX_DISABLE_CACHE=1</code>, so tsx keeps no translated code in <code>/tmp</code>. The seccomp profile is
+<code>deploy/seccomp/chromium-sandbox.seccomp</code>: Docker&#39;s default profile (Engine 29.9.2) with one rule added for
+Chromium&#39;s user namespaces, in place of Playwright&#39;s file, which is an older Docker default. The app&#39;s health
+check has a time limit of 3 seconds, an interval of 5 seconds, 3 retries and a start period of 120 seconds.</p>
 </li>
 </ul>
 <h3 id="decisions--d-111--an-hvl-language-overlay-in-a-library-storage-wrapper-h5p-010s-guidance-through-it" tabindex="-1">D-111 · An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</h3>
@@ -12956,13 +13026,14 @@ stand in for a framed page must say who may frame it, as the real pages do.</li>
 </ul>
 <h3 id="decisions--d-134--security-repairs-step-18-the-app-container-comes-back-and-has-a-memory-limit-the-server-says-whether-its-memory-fits-and-work-that-holds-memory-waits-its-turn" tabindex="-1">D-134 · Security repairs, step 18: the app container comes back and has a memory limit, the server says whether its memory fits, and work that holds memory waits its turn</h3>
 <ul>
-<li><strong>Context:</strong> Steps 2 to 13 gave each single thing the server does a ceiling: one upload, one SVG (D-119), one
+<li><p><strong>Context:</strong> Steps 2 to 13 gave each single thing the server does a ceiling: one upload, one SVG (D-119), one
 learner&#39;s saved state (D-120), one insight view (D-122), one check of an activity (D-126, D-127). Their sum
 and the deployment around them were left for this step. The app stack had no restart rule, so a server that
 ended its process after a fault (D-133) stayed down, and no memory limit, so one runaway process could take
 the machine. Nothing said how much memory the server may use, and nothing bounded how many insight views or
-saved states were handled at the same moment.</li>
-<li><strong>Measured (2026-11-22, the development container, Node 24.22.2 in the image):</strong> the heap limit Node chooses
+saved states were handled at the same moment.</p>
+</li>
+<li><p><strong>Measured (2026-11-22, the development container, Node 24.22.2 in the image):</strong> the heap limit Node chooses
 follows the container&#39;s limit: 560 MiB at 1 GiB, 1 120 at 2, 1 728 at 3, 2 240 at 4 GiB and above, 4 288 with
 no limit on a 16 GiB machine. A process past its container&#39;s limit is stopped by the kernel with exit code 137
 and no output; past its own heap limit Node first writes «JavaScript heap out of memory». Chromium printing one
@@ -12971,36 +13042,47 @@ limit is a form body of about 0.9 MB; after 100 such saves and a collection the 
 so nothing is kept after a request. While a body is read, Express&#39;s form parser makes about 6 MB of
 short-lived text from it, and the storage path about 4 MB of buffers. 150 such saves at the same moment ran a
 process with a 256 MB heap limit out of memory; through the gate below all 150 were stored, with the heap at
-most at 179 MB.</li>
-<li><strong>Decision — the app comes back and has a ceiling (NFR-007, NFR-002).</strong> In <code>deploy/compose.app.yml</code> the app has
+most at 179 MB.</p>
+</li>
+<li><p><strong>Decision — the app comes back and has a ceiling (NFR-007, NFR-002).</strong> In <code>deploy/compose.app.yml</code> the app has
 <code>restart: unless-stopped</code>, <code>mem_limit: 5g</code> and <code>memswap_limit: 5g</code>; the steps that run once (buckets, migrate,
 seed) have no restart rule. The budget, in MiB: the heap limit Node chooses (2 240), the SVG worker (512), the
 server outside its heap (256), Chromium for two exports (256 + 128) and a full <code>/tmp</code> kept in memory (512):
 3 904. 4 GiB is the least that fits while Node chooses its heap; below that the heap needs
 <code>--max-old-space-size</code> (docs/ops/docker.md). <code>tools/deploy-check/resourceRules.mjs</code> holds the stack file to it,
-and the smoke test stops the server process inside the app container and waits until it answers again.</li>
-<li><strong>Decision — the server says what it has (NFR-002, NFR-006).</strong> <code>server/memoryBudget.ts</code> writes one start line,
+and the smoke test stops the server process inside the app container and waits until it answers again.</p>
+</li>
+<li><p><strong>Decision — the server says what it has (NFR-002, NFR-006).</strong> <code>server/memoryBudget.ts</code> writes one start line,
 <code>memory limits</code>, with the container&#39;s limit, the heap limit and what the server may use beside its heap, and a
 <code>warn</code> line when production has no limit or when the limit is below the need. It warns and does not refuse:
 the figures for Chromium and for the server outside its heap are measured estimates, and an estimate must not
-keep a working installation from starting.</li>
-<li><strong>Decision — two insight views at once (INS-001, INS-009).</strong> <code>InsightService.forActivity</code> reads and counts a
+keep a working installation from starting.</p>
+</li>
+<li><p><strong>Decision — two insight views at once (INS-001, INS-009).</strong> <code>InsightService.forActivity</code> reads and counts a
 view inside a gate (<code>infra/BoundedGate.ts</code>, <code>insight/InsightViewGate.ts</code>): two at once, twenty waiting in the
 order they came. Past that the view and the CSV answer 503 <code>insight.busy</code> with <code>Retry-After: 5</code>; nothing was
 read, and nothing is audited. The web app shows its ordinary «could not load» message for it. The scope is
-resolved before the gate, so a refused scope takes no place.</li>
-<li><strong>Decision — eight saved states at once (H5P-005).</strong> The save route takes a turn in a gate before its body is
+resolved before the gate, so a refused scope takes no place.</p>
+</li>
+<li><p><strong>Decision — eight saved states at once (H5P-005).</strong> The save route takes a turn in a gate before its body is
 read (<code>http/routes/stateSaveGate.ts</code>): eight at once, two hundred waiting, and past that 429
 <code>hvl:rate-limited</code> with <code>Retry-After: 1</code>, the answer of the per-minute limit, which the player&#39;s autosave
-ignores. The place is given back when the response closes, however the request ends.</li>
-<li><strong>Verified:</strong> unit and integration tests for the rules, the budget, the gates and both answers; the entry
+ignores. The place is given back when the response closes, however the request ends.</p>
+</li>
+<li><p><strong>Verified:</strong> unit and integration tests for the rules, the budget, the gates and both answers; the entry
 point&#39;s start log holds the <code>memory limits</code> line. The smoke test ran in the development container (194 s):
 inside the app container the server wrote <code>containerLimitMb</code> 5 120, <code>heapLimitMb</code> 2 240, <code>besideHeapMb</code> 1 664
 and <code>neededMb</code> 3 904 with no warning, and the app answered again after its server process was stopped (restart
-count 1). A container stopped by hand stayed stopped.</li>
-<li><strong>Consequences:</strong> No requirement changes its meaning; NFR-002 and NFR-007 have an &quot;Amended&quot; line. Whatever runs
+count 1). A container stopped by hand stayed stopped.</p>
+</li>
+<li><p><strong>Consequences:</strong> No requirement changes its meaning; NFR-002 and NFR-007 have an &quot;Amended&quot; line. Whatever runs
 the container in production needs its own memory limit and restart rule; the stack file is the example. On a
-very busy moment a view of insight waits a few seconds, or is asked for again. One more line in the start log.</li>
+very busy moment a view of insight waits a few seconds, or is asked for again. One more line in the start log.</p>
+</li>
+<li><p><strong>Amendment (2026-11-26, D-144):</strong> the stack&#39;s health check is held short by the same rules file
+(<code>tools/deploy-check/resourceRules.mjs</code>), and the server writes a warning when it stood still for a second or
+more (<code>server/eventLoopWatch.ts</code>). The server does not restart itself when it stands still.</p>
+</li>
 </ul>
 <h3 id="decisions--d-135--security-repairs-step-19-nextjs-is-pinned-at-1646" tabindex="-1">D-135 · Security repairs, step 19: Next.js is pinned at 16.4.6</h3>
 <ul>
@@ -13437,6 +13519,87 @@ outside GitHub cannot be resolved until the rule is widened on purpose. One pers
 the scans that already run. No new stored data. SEC-002, SEC-005, SEC-006 and H5P-003 have an &quot;Amended&quot; line;
 D-043, D-078 and D-110 an amendment; T-33, T-80 and T-112 in the threat model, ROS-07, the architecture
 description, the ClamAV runbook and the server README follow.</li>
+</ul>
+<h3 id="decisions--d-144--security-repairs-step-28-a-server-that-stands-still-is-unhealthy-within-half-a-minute-and-says-so-redis-commands-fail-at-once-while-redis-is-unreachable-the-image-runs-no-code-from-a-writable-folder-the-seccomp-profile-is-dockers-default-plus-one-rule-a-real-purge-run-records-its-start" tabindex="-1">D-144 · Security repairs, step 28: a server that stands still is unhealthy within half a minute and says so; Redis commands fail at once while Redis is unreachable; the image runs no code from a writable folder; the seccomp profile is Docker&#39;s default plus one rule; a real purge run records its start</h3>
+<ul>
+<li><strong>Context:</strong> Five places where the running service said too little, waited too long or kept an old default. (1)
+The app stack&#39;s health check gave each try Docker&#39;s default 30 seconds and allowed 40 failed tries, so a server
+whose process no longer answered kept its &quot;healthy&quot; mark for about twenty minutes, and whatever routes requests
+by that mark went on sending them; nothing in the log said that the server had stood still. (2) The Redis
+client&#39;s default keeps every command sent while the connection is down in a list without a limit and sends it
+when the connection is back. Requests that need Redis (sessions, limits, locks) then waited instead of failing,
+although <code>xapi/XapiRateLimit.ts</code> and the threat model say such a request fails, and a count meant for one minute
+was added whenever Redis came back. (3) The image runs the server&#39;s TypeScript through tsx, which writes each
+translated file to <code>/tmp/tsx-&lt;uid&gt;</code> and reads it back at the next load without checking it. The root file system
+is read-only, but <code>/tmp</code> is not: whatever can write a file there as the app&#39;s user decides what code the next
+worker thread, CLI run or start of the process loads. (4) The seccomp profile of the app&#39;s containers was
+Playwright&#39;s, byte for byte: a copy of an older Docker default with <code>clone</code>, <code>setns</code> and <code>unshare</code> opened for
+Chromium&#39;s sandbox. Docker&#39;s default has since stopped allowing the <code>io_uring</code> calls and <code>socket</code> for every
+address family; Playwright has not updated its file (v1.65.1&#39;s is the same bytes as v1.56.1&#39;s). (5) A real purge
+run wrote its audit event when it ended, <code>completed</code> or <code>failed</code>. A run cut short by a deployment, a crash or
+Ctrl-C reached neither, so its deletions were in no record, and the next run&#39;s event counted only what was left.</li>
+<li><strong>Decision — the health check is short, and a standstill is written (NFR-002).</strong> <code>deploy/compose.app.yml</code>: a try
+has 3 seconds (the request itself gives up after 2.5), tries come every 5 seconds, the third failed one in a row
+makes the app unhealthy (about 25 seconds), and a start period of 120 seconds keeps a starting server from being
+counted as failing. <code>tools/deploy-check/resourceRules.mjs</code> refuses a stack whose check has a time limit over 5 s,
+an interval over 10 s, more than 5 retries or no start period. <code>server/eventLoopWatch.ts</code> measures the event
+loop&#39;s delay (Node&#39;s <code>monitorEventLoopDelay</code>) and, every 10 seconds, writes one warning with the longest
+standstill when it reached a second: two numbers, nothing of a request or a person. The line is written after the
+standstill; a server that never runs again is the health check&#39;s to report. The server does not end or restart
+itself when it stands still: Docker alone does not restart an unhealthy container, and what acts on the mark (an
+orchestrator, a load balancer that stops routing) is the platform&#39;s choice (<code>docs/ops/docker.md</code>).</li>
+<li><strong>Decision — a Redis command fails at once while Redis is unreachable (H5P-004, LTI-011).</strong>
+<code>infra/redisClient.ts</code> creates the client with <code>disableOfflineQueue</code>: a command sent while the connection is down
+rejects with the client&#39;s <code>ClientOfflineError</code>, and nothing is kept to be sent later; the client reconnects by
+itself, at most half a second between tries. UPSTREAM: node-redis 4.7.1 applies the option to single commands and
+scripts but not to <code>multi().exec()</code>; the rate limits count in transactions, so the same rule is put on the
+client&#39;s <code>multiExecutor</code> here. A request that needs Redis then fails like any server fault instead of waiting,
+<code>/healthz</code> answers 503 at once, and the background jobs, which already log a failed lease and try again at their
+next tick, do the same.</li>
+<li><strong>Decision — the image switches the loader&#39;s cache off (NFR-007).</strong> <code>deploy/Dockerfile</code> sets
+<code>TSX_DISABLE_CACHE=1</code> in the runtime stage: tsx keeps translated code in memory and neither writes nor reads
+<code>/tmp/tsx-&lt;uid&gt;</code>. <code>tools/deploy-check/deployRules.mjs</code> requires the setting in the runtime stage and refuses a
+service of the stack that changes it. Cost, measured on the development machine: loading the server&#39;s code takes
+about 4 s without the cache and about 2 s with a filled one, but a container starts with an empty <code>/tmp</code>, and the
+first load that has to fill the cache took about 14 s; the SVG worker starts in about 1.1 s instead of 0.9 s (its
+limit is 30 s).</li>
+<li><strong>Decision — the seccomp profile is Docker&#39;s default plus one rule (MAPPE-004, NFR-007).</strong>
+<code>deploy/seccomp/chromium-sandbox.seccomp</code> is the default profile of Docker Engine 29.9.2
+(<code>https://github.com/moby/moby</code>, tag <code>docker-v29.9.2</code>, file <code>vendor/github.com/moby/profiles/seccomp/default.json</code>,
+SHA-256 <code>785b2429…9334</code>), fetched with git, with one rule inserted first: <code>clone</code>, <code>setns</code> and <code>unshare</code> allowed
+without a condition, which Chromium needs to create the user namespaces of its sandbox (D-096). Against the
+profile before: the <code>io_uring</code> calls are no longer allowed, <code>socket</code> only for the address families Docker&#39;s
+default allows, and <code>clone3</code> answers &quot;not implemented&quot;, so the C library falls back to <code>clone</code>.
+<code>tools/deploy-check/seccompRules.mjs</code> holds the file to its hash and proves that, with the one rule taken out, it
+is Docker&#39;s file byte for byte. Playwright&#39;s file is removed, and the stack, the rules and the operations notes
+name the new one.</li>
+<li><strong>Decision — a real purge run records its start (DATA-007, DATA-003).</strong> <code>privacy/purge/retentionPurge.ts</code> writes
+a <code>purge.run</code> event with <code>outcome: &quot;started&quot;</code> and the plan&#39;s counts before the run&#39;s first change, then
+<code>completed</code> or <code>failed</code> as before. A run that is cut short leaves its <code>started</code> event; the next run&#39;s <code>started</code>
+event shows what was left, so the difference is what the cut run did. Only a <code>completed</code> real run marks a year as
+purged (<code>purgeAudit.ts</code>). If the start cannot be audited, the run changes nothing.</li>
+<li><strong>Verified:</strong> unit tests of the health-check rule on the real stack file and on copies with a long time limit, a
+long interval, many retries, no start period or no check, and of the standstill watch (one line for a standstill
+of a second, none below it, none after <code>stop</code>). An integration test with a relay in front of the real Redis that
+cuts and restores the connection: a command, a transaction (the xAPI limit), a script and a PING are refused
+within a second, no refused command is sent later, and the client works again when the connection is back.
+Tests that start a TypeScript program and its worker thread with the pinned tsx: with the setting the temporary
+area stays empty, without it the loader&#39;s folder appears. Unit tests of the profile rules on the real file and on
+copies with a changed byte, a second or moved rule, an open default, a missing namespace call, <code>io_uring</code> or an
+unconditional <code>socket</code>. Integration tests of a purge run whose process ends at its first statement delete: the
+<code>started</code> event with the full plan is in the log before the first change and is all the cut run leaves, the year
+does not count as purged, and the next run completes with the rest. The new tests fail on the code before this
+step. The Docker smoke test ran on the final tree: the image builds, the mappe PDF prints with Chromium&#39;s sandbox
+on under the new profile (seen in <code>/proc</code> too), no tsx folder is in the app&#39;s <code>/tmp</code>, and a server process
+stopped in place (SIGSTOP) made the app unhealthy after 18 s; it was healthy again 5 s after it ran on, and its log named a standstill of 18 707 ms (the smoke passed in 686 s, most of it the image build).</li>
+<li><strong>Consequences:</strong> No page looks different. During a Redis outage a user gets an error at once instead of a
+request that hangs, and the node reports itself unavailable. The profile&#39;s file has a new name: a deployment that
+copied the old path must use the new one, and a runtime with its own policy needs the three namespace calls
+allowed, as before. One more audit row for each real purge run, and one possible warning line in the log. NFR-002,
+NFR-007, H5P-004, MAPPE-004, DATA-003 and DATA-007 have an &quot;Amended&quot; line; D-107, D-110 and D-134 an amendment;
+T-54, T-70, T-103, T-110 and T-114 in the threat model, ROS-20, the architecture description, the Docker and
+yearly-purge operations notes, the runbook and the READMEs of <code>deploy/</code>, <code>deploy/seccomp/</code> and
+<code>tools/deploy-check/</code> follow.</li>
 </ul>
 
 </section>
@@ -16598,6 +16761,75 @@ $ npm run test:a11y                                  563 passed (18 files)
 $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
     (needs the privileged database, like DATA-010's tests)
 $ npx vitest run --project server                    27124 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004)</code></pre>
+</li>
+<li><p><strong>2026-11-26 · Security repairs, step 28 (D-144)</strong> — A server that stands still is marked unhealthy within half a
+minute and says so afterwards, a Redis command fails at once while Redis cannot be reached, the image runs no
+code from a writable folder, the seccomp profile is Docker&#39;s default plus one rule, and a real purge run records
+its start. One code commit:</p>
+<ul>
+<li>Health check and standstill (NFR-002): <code>deploy/compose.app.yml</code> gives a try 3 seconds, tries come every 5
+seconds, the third failed one counts, and failed tries in the first 120 seconds do not;
+<code>tools/deploy-check/resourceRules.mjs</code> holds the check short. <code>server/eventLoopWatch.ts</code> (new) writes one
+warning with two numbers when the event loop stood still for a second or more; <code>server/main.ts</code> starts and
+stops it with the jobs. Tests: <code>tools/deploy-check/test/resourceRules.test.mjs</code>,
+<code>server/eventLoopWatch.test.ts</code>.</li>
+<li>Redis (H5P-004, LTI-011): <code>infra/redisClient.ts</code> creates the client without its offline queue and puts the same
+rule on transactions, which node-redis 4.7.1 leaves out; a command, a transaction or a script sent while the
+connection is down rejects at once and none is sent later. Test: <code>infra/redisOutage.int.test.ts</code> (a relay in
+front of the real Redis that is cut and restored).</li>
+<li>Loader cache (NFR-007): <code>deploy/Dockerfile</code> sets <code>TSX_DISABLE_CACHE=1</code> in the runtime stage;
+<code>tools/deploy-check/deployRules.mjs</code> requires it and refuses a service that changes it. Tests:
+<code>tools/deploy-check/test/deployFiles.test.mjs</code>, <code>server/loaderCache.test.ts</code> (the pinned tsx writes nothing to
+the temporary area with the setting, and its folder without it).</li>
+<li>Seccomp profile (MAPPE-004, NFR-007): <code>deploy/seccomp/chromium-sandbox.seccomp</code> (new) is the default profile of
+Docker Engine 29.9.2 with one rule added (<code>clone</code>, <code>setns</code>, <code>unshare</code>); Playwright&#39;s file is removed.
+<code>tools/deploy-check/seccompRules.mjs</code> (new) holds its hash and proves that without the rule it is Docker&#39;s
+file byte for byte. Test: <code>tools/deploy-check/test/seccompRules.test.mjs</code>.</li>
+<li>Purge audit (DATA-007, DATA-003): <code>privacy/purge/retentionPurge.ts</code> writes <code>purge.run</code> with
+<code>outcome: &quot;started&quot;</code> and the plan&#39;s counts before a real run&#39;s first change. Tests:
+<code>privacy/purge/retentionPurgeCutShort.int.test.ts</code> (new), <code>retentionPurge.int.test.ts</code>,
+<code>retentionPurgeJobRetry.int.test.ts</code>; the two tests that list every audit row of a deployed database
+(<code>privacy/operationsClis.int.test.ts</code>, <code>e2e/learnerDataRights.e2e.test.ts</code>) expect the extra row and cannot
+run in this container (privileged database).</li>
+<li>The Docker smoke test has two new checks (<code>deploy/smoke/smokeRuntimeChecks.sh</code>): no folder of translated code
+in the app&#39;s <code>/tmp</code>, and a server process stopped in place is marked unhealthy and logs the standstill when it
+runs on.</li>
+<li>D-144 added, with amendment lines under D-107, D-110 and D-134; NFR-002 and NFR-007 in spec 00, H5P-004 in spec
+01, MAPPE-004 in spec 04, DATA-003 and DATA-007 in spec 05 have an &quot;Amended&quot; line; the threat model (T-54, T-70,
+T-103, T-110, T-114), ROS-20, the architecture description (also its line references into the stack file, the
+Dockerfile and <code>main.ts</code>), the test-environment notes, the evaluator guide, the hand-off README, the Docker and
+yearly-purge operations notes, the runbook, the data inventory and the READMEs of <code>deploy/</code>, <code>deploy/seccomp/</code>,
+<code>tools/deploy-check/</code> and the server follow; <code>TRACEABILITY.md</code> and the spec site regenerated. No page of the
+web app looks different, so no screenshots. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 48, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 686 s (PDF with the sandbox on under the
+    new profile; no tsx folder in /tmp; a stopped server process unhealthy after 18 s, healthy 5 s after it
+    ran on, standstill line 18 707 ms; restart count 1)
+$ npx vitest run --project web                       642 passed (100 files)
+$ npx vitest run --project api-contract              122 passed (15 files)
+$ npx vitest run --project tools                     555 passed (73 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             206 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files)
+$ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    27134 passed, 31 skipped; 1 failed in 4 files: a
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004)</code></pre>
 </li>

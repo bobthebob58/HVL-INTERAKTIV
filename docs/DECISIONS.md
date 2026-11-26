@@ -3360,6 +3360,10 @@ loading of one spec per session are kept.
     (`h5p/storage/learnerStateYear.ts`), and `learnerStateWrites.ts` sets `academicYear` on insert and on update,
     which for one key is always the key's year.
 
+- **Amendment (2026-11-26, D-144):** a real run writes a `purge.run` event with `outcome: "started"` and the plan's
+  counts before its first change, and its end (`completed` or `failed`) as before. A run that is cut short leaves
+  its start on record; only a `completed` real run marks a year as purged.
+
 ### D-108 · Data-subject requests: a server CLI that HVL operations run
 - **Context:** `DATA-008` asks for an admin-only tool that takes a Feide ID or an `(iss, sub)` pair, derives the
   learner keys for the retained academic years, and exports (JSON) or deletes that learner's data, with every use
@@ -4336,6 +4340,12 @@ loading of one spec per session are kept.
 - **Amendment (2026-11-25, D-143):** waiting scans get the free turns person by person: a free turn goes to the
   author who has waited longest since their last turn (`security/malware/ScanTurns.ts`, `scanOwner.ts`). Four scans
   at once and the time limit that includes the wait stay as they are.
+
+- **Amendment (2026-11-26, D-144):** three settings of the image and the stack. The runtime stage sets
+  `TSX_DISABLE_CACHE=1`, so tsx keeps no translated code in `/tmp`. The seccomp profile is
+  `deploy/seccomp/chromium-sandbox.seccomp`: Docker's default profile (Engine 29.9.2) with one rule added for
+  Chromium's user namespaces, in place of Playwright's file, which is an older Docker default. The app's health
+  check has a time limit of 3 seconds, an interval of 5 seconds, 3 retries and a start period of 120 seconds.
 
 ### D-111 · An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it
 - **Context:** S5's probe P1 found that many `nn` and `nb` defaults of the real libraries are English (MultiChoice,
@@ -5729,6 +5739,10 @@ loading of one spec per session are kept.
   the container in production needs its own memory limit and restart rule; the stack file is the example. On a
   very busy moment a view of insight waits a few seconds, or is asked for again. One more line in the start log.
 
+- **Amendment (2026-11-26, D-144):** the stack's health check is held short by the same rules file
+  (`tools/deploy-check/resourceRules.mjs`), and the server writes a warning when it stood still for a second or
+  more (`server/eventLoopWatch.ts`). The server does not restart itself when it stands still.
+
 ### D-135 · Security repairs, step 19: Next.js is pinned at 16.4.6
 - **Context:** D-068 pinned `next` at 16.4.2, the first release past the three advisories its probe found.
   On 2026-11-22 `npm audit` listed seven further advisories, all moderate, for 16.0.0 to 16.4.4:
@@ -6158,3 +6172,83 @@ loading of one spec per session are kept.
   the scans that already run. No new stored data. SEC-002, SEC-005, SEC-006 and H5P-003 have an "Amended" line;
   D-043, D-078 and D-110 an amendment; T-33, T-80 and T-112 in the threat model, ROS-07, the architecture
   description, the ClamAV runbook and the server README follow.
+
+### D-144 · Security repairs, step 28: a server that stands still is unhealthy within half a minute and says so; Redis commands fail at once while Redis is unreachable; the image runs no code from a writable folder; the seccomp profile is Docker's default plus one rule; a real purge run records its start
+- **Context:** Five places where the running service said too little, waited too long or kept an old default. (1)
+  The app stack's health check gave each try Docker's default 30 seconds and allowed 40 failed tries, so a server
+  whose process no longer answered kept its "healthy" mark for about twenty minutes, and whatever routes requests
+  by that mark went on sending them; nothing in the log said that the server had stood still. (2) The Redis
+  client's default keeps every command sent while the connection is down in a list without a limit and sends it
+  when the connection is back. Requests that need Redis (sessions, limits, locks) then waited instead of failing,
+  although `xapi/XapiRateLimit.ts` and the threat model say such a request fails, and a count meant for one minute
+  was added whenever Redis came back. (3) The image runs the server's TypeScript through tsx, which writes each
+  translated file to `/tmp/tsx-<uid>` and reads it back at the next load without checking it. The root file system
+  is read-only, but `/tmp` is not: whatever can write a file there as the app's user decides what code the next
+  worker thread, CLI run or start of the process loads. (4) The seccomp profile of the app's containers was
+  Playwright's, byte for byte: a copy of an older Docker default with `clone`, `setns` and `unshare` opened for
+  Chromium's sandbox. Docker's default has since stopped allowing the `io_uring` calls and `socket` for every
+  address family; Playwright has not updated its file (v1.65.1's is the same bytes as v1.56.1's). (5) A real purge
+  run wrote its audit event when it ended, `completed` or `failed`. A run cut short by a deployment, a crash or
+  Ctrl-C reached neither, so its deletions were in no record, and the next run's event counted only what was left.
+- **Decision — the health check is short, and a standstill is written (NFR-002).** `deploy/compose.app.yml`: a try
+  has 3 seconds (the request itself gives up after 2.5), tries come every 5 seconds, the third failed one in a row
+  makes the app unhealthy (about 25 seconds), and a start period of 120 seconds keeps a starting server from being
+  counted as failing. `tools/deploy-check/resourceRules.mjs` refuses a stack whose check has a time limit over 5 s,
+  an interval over 10 s, more than 5 retries or no start period. `server/eventLoopWatch.ts` measures the event
+  loop's delay (Node's `monitorEventLoopDelay`) and, every 10 seconds, writes one warning with the longest
+  standstill when it reached a second: two numbers, nothing of a request or a person. The line is written after the
+  standstill; a server that never runs again is the health check's to report. The server does not end or restart
+  itself when it stands still: Docker alone does not restart an unhealthy container, and what acts on the mark (an
+  orchestrator, a load balancer that stops routing) is the platform's choice (`docs/ops/docker.md`).
+- **Decision — a Redis command fails at once while Redis is unreachable (H5P-004, LTI-011).**
+  `infra/redisClient.ts` creates the client with `disableOfflineQueue`: a command sent while the connection is down
+  rejects with the client's `ClientOfflineError`, and nothing is kept to be sent later; the client reconnects by
+  itself, at most half a second between tries. UPSTREAM: node-redis 4.7.1 applies the option to single commands and
+  scripts but not to `multi().exec()`; the rate limits count in transactions, so the same rule is put on the
+  client's `multiExecutor` here. A request that needs Redis then fails like any server fault instead of waiting,
+  `/healthz` answers 503 at once, and the background jobs, which already log a failed lease and try again at their
+  next tick, do the same.
+- **Decision — the image switches the loader's cache off (NFR-007).** `deploy/Dockerfile` sets
+  `TSX_DISABLE_CACHE=1` in the runtime stage: tsx keeps translated code in memory and neither writes nor reads
+  `/tmp/tsx-<uid>`. `tools/deploy-check/deployRules.mjs` requires the setting in the runtime stage and refuses a
+  service of the stack that changes it. Cost, measured on the development machine: loading the server's code takes
+  about 4 s without the cache and about 2 s with a filled one, but a container starts with an empty `/tmp`, and the
+  first load that has to fill the cache took about 14 s; the SVG worker starts in about 1.1 s instead of 0.9 s (its
+  limit is 30 s).
+- **Decision — the seccomp profile is Docker's default plus one rule (MAPPE-004, NFR-007).**
+  `deploy/seccomp/chromium-sandbox.seccomp` is the default profile of Docker Engine 29.9.2
+  (`https://github.com/moby/moby`, tag `docker-v29.9.2`, file `vendor/github.com/moby/profiles/seccomp/default.json`,
+  SHA-256 `785b2429…9334`), fetched with git, with one rule inserted first: `clone`, `setns` and `unshare` allowed
+  without a condition, which Chromium needs to create the user namespaces of its sandbox (D-096). Against the
+  profile before: the `io_uring` calls are no longer allowed, `socket` only for the address families Docker's
+  default allows, and `clone3` answers "not implemented", so the C library falls back to `clone`.
+  `tools/deploy-check/seccompRules.mjs` holds the file to its hash and proves that, with the one rule taken out, it
+  is Docker's file byte for byte. Playwright's file is removed, and the stack, the rules and the operations notes
+  name the new one.
+- **Decision — a real purge run records its start (DATA-007, DATA-003).** `privacy/purge/retentionPurge.ts` writes
+  a `purge.run` event with `outcome: "started"` and the plan's counts before the run's first change, then
+  `completed` or `failed` as before. A run that is cut short leaves its `started` event; the next run's `started`
+  event shows what was left, so the difference is what the cut run did. Only a `completed` real run marks a year as
+  purged (`purgeAudit.ts`). If the start cannot be audited, the run changes nothing.
+- **Verified:** unit tests of the health-check rule on the real stack file and on copies with a long time limit, a
+  long interval, many retries, no start period or no check, and of the standstill watch (one line for a standstill
+  of a second, none below it, none after `stop`). An integration test with a relay in front of the real Redis that
+  cuts and restores the connection: a command, a transaction (the xAPI limit), a script and a PING are refused
+  within a second, no refused command is sent later, and the client works again when the connection is back.
+  Tests that start a TypeScript program and its worker thread with the pinned tsx: with the setting the temporary
+  area stays empty, without it the loader's folder appears. Unit tests of the profile rules on the real file and on
+  copies with a changed byte, a second or moved rule, an open default, a missing namespace call, `io_uring` or an
+  unconditional `socket`. Integration tests of a purge run whose process ends at its first statement delete: the
+  `started` event with the full plan is in the log before the first change and is all the cut run leaves, the year
+  does not count as purged, and the next run completes with the rest. The new tests fail on the code before this
+  step. The Docker smoke test ran on the final tree: the image builds, the mappe PDF prints with Chromium's sandbox
+  on under the new profile (seen in `/proc` too), no tsx folder is in the app's `/tmp`, and a server process
+  stopped in place (SIGSTOP) made the app unhealthy after 18 s; it was healthy again 5 s after it ran on, and its log named a standstill of 18 707 ms (the smoke passed in 686 s, most of it the image build).
+- **Consequences:** No page looks different. During a Redis outage a user gets an error at once instead of a
+  request that hangs, and the node reports itself unavailable. The profile's file has a new name: a deployment that
+  copied the old path must use the new one, and a runtime with its own policy needs the three namespace calls
+  allowed, as before. One more audit row for each real purge run, and one possible warning line in the log. NFR-002,
+  NFR-007, H5P-004, MAPPE-004, DATA-003 and DATA-007 have an "Amended" line; D-107, D-110 and D-134 an amendment;
+  T-54, T-70, T-103, T-110 and T-114 in the threat model, ROS-20, the architecture description, the Docker and
+  yearly-purge operations notes, the runbook and the READMEs of `deploy/`, `deploy/seccomp/` and
+  `tools/deploy-check/` follow.

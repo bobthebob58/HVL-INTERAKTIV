@@ -13,14 +13,15 @@ Every server checks once an hour, on one node at a time (Redis lease `hvli:priva
 purge is due. It is due from midnight in Oslo on the run date, by default **31 August**, until the academic year
 ends. On the first check after that moment, the job:
 
-1. logs its plan as its first line, `retention purge plan`, with `dryRun: true` and the counts it will delete;
+1. logs its plan as its first line, `retention purge plan`, with `dryRun: true` and the counts it will delete, and
+   writes an audit event `purge.run` with `outcome: "started"` and the same counts, before it changes anything;
 2. writes the ended year's *k*-suppressed `InsightSnapshot` rows (one per activity, Canvas course or the portal, and
    content version; these are all that remain of the year);
 3. deletes the `GradeSyncJob`, `XapiStatement` and `H5PUserData` rows of every academic year before the current one
    (by the year stored on each row), then the learner `Identity` rows created before 1 August, then the learner
    `User` rows left without an identity, in transactions of at most 1 000 rows;
-4. writes an audit event `purge.run` (no actor) with the counts, and logs `retention purge check done` with `due: 1`
-   and the same counts;
+4. writes a second audit event `purge.run` (no actor), `outcome: "completed"` with the counts of what it did, and
+   logs `retention purge check done` with `due: 1` and the same counts;
 5. logs a warning that names the **year** of every pseudonym secret still configured for a purged year.
 
 It runs once per year: later checks find the completed run in the audit log. If the server was down on the day, the
@@ -61,7 +62,8 @@ SELECT count(*) FROM "H5PUserData" WHERE "academicYear" < 2026;
 SELECT count(*) FROM "GradeSyncJob" WHERE "academicYear" < 2026;
 ```
 
-The newest real run for the ended year must have `outcome = completed`.
+The newest real run for the ended year must have `outcome = completed`. Each real run shows as two rows: `started`
+(what it was about to delete) and its end.
 
 ### 3. If a run failed
 
@@ -78,6 +80,11 @@ both finish: the snapshots are written once, and each run deletes what the other
 with `the yearly purge made no progress on a table` is audited as failed and retried like any other; if it keeps
 failing that way, a lock or trigger in the database is stopping the delete, and the database administrator should
 look before the next try.
+
+**A run that was cut short** (a deployment, a crash or Ctrl-C in the middle) shows as a `started` row with no
+`completed` or `failed` row after it. Nothing is lost by it: the job, or the CLI, runs again and deletes the rest.
+What the cut run had already deleted is its `started` counts minus the `started` counts of the run after it
+(D-144).
 
 ### 4. After the completed run: destroy the year's pseudonym secret
 

@@ -3068,3 +3068,73 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
   ```
+
+- **2026-11-26 · Security repairs, step 28 (D-144)** — A server that stands still is marked unhealthy within half a
+  minute and says so afterwards, a Redis command fails at once while Redis cannot be reached, the image runs no
+  code from a writable folder, the seccomp profile is Docker's default plus one rule, and a real purge run records
+  its start. One code commit:
+  - Health check and standstill (NFR-002): `deploy/compose.app.yml` gives a try 3 seconds, tries come every 5
+    seconds, the third failed one counts, and failed tries in the first 120 seconds do not;
+    `tools/deploy-check/resourceRules.mjs` holds the check short. `server/eventLoopWatch.ts` (new) writes one
+    warning with two numbers when the event loop stood still for a second or more; `server/main.ts` starts and
+    stops it with the jobs. Tests: `tools/deploy-check/test/resourceRules.test.mjs`,
+    `server/eventLoopWatch.test.ts`.
+  - Redis (H5P-004, LTI-011): `infra/redisClient.ts` creates the client without its offline queue and puts the same
+    rule on transactions, which node-redis 4.7.1 leaves out; a command, a transaction or a script sent while the
+    connection is down rejects at once and none is sent later. Test: `infra/redisOutage.int.test.ts` (a relay in
+    front of the real Redis that is cut and restored).
+  - Loader cache (NFR-007): `deploy/Dockerfile` sets `TSX_DISABLE_CACHE=1` in the runtime stage;
+    `tools/deploy-check/deployRules.mjs` requires it and refuses a service that changes it. Tests:
+    `tools/deploy-check/test/deployFiles.test.mjs`, `server/loaderCache.test.ts` (the pinned tsx writes nothing to
+    the temporary area with the setting, and its folder without it).
+  - Seccomp profile (MAPPE-004, NFR-007): `deploy/seccomp/chromium-sandbox.seccomp` (new) is the default profile of
+    Docker Engine 29.9.2 with one rule added (`clone`, `setns`, `unshare`); Playwright's file is removed.
+    `tools/deploy-check/seccompRules.mjs` (new) holds its hash and proves that without the rule it is Docker's
+    file byte for byte. Test: `tools/deploy-check/test/seccompRules.test.mjs`.
+  - Purge audit (DATA-007, DATA-003): `privacy/purge/retentionPurge.ts` writes `purge.run` with
+    `outcome: "started"` and the plan's counts before a real run's first change. Tests:
+    `privacy/purge/retentionPurgeCutShort.int.test.ts` (new), `retentionPurge.int.test.ts`,
+    `retentionPurgeJobRetry.int.test.ts`; the two tests that list every audit row of a deployed database
+    (`privacy/operationsClis.int.test.ts`, `e2e/learnerDataRights.e2e.test.ts`) expect the extra row and cannot
+    run in this container (privileged database).
+  - The Docker smoke test has two new checks (`deploy/smoke/smokeRuntimeChecks.sh`): no folder of translated code
+    in the app's `/tmp`, and a server process stopped in place is marked unhealthy and logs the standstill when it
+    runs on.
+  - D-144 added, with amendment lines under D-107, D-110 and D-134; NFR-002 and NFR-007 in spec 00, H5P-004 in spec
+    01, MAPPE-004 in spec 04, DATA-003 and DATA-007 in spec 05 have an "Amended" line; the threat model (T-54, T-70,
+    T-103, T-110, T-114), ROS-20, the architecture description (also its line references into the stack file, the
+    Dockerfile and `main.ts`), the test-environment notes, the evaluator guide, the hand-off README, the Docker and
+    yearly-purge operations notes, the runbook, the data inventory and the READMEs of `deploy/`, `deploy/seccomp/`,
+    `tools/deploy-check/` and the server follow; `TRACEABILITY.md` and the spec site regenerated. No page of the
+    web app looks different, so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 686 s (PDF with the sandbox on under the
+      new profile; no tsx folder in /tmp; a stopped server process unhealthy after 18 s, healthy 5 s after it
+      ran on, standstill line 18 707 ms; restart count 1)
+  $ npx vitest run --project web                       642 passed (100 files)
+  $ npx vitest run --project api-contract              122 passed (15 files)
+  $ npx vitest run --project tools                     555 passed (73 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27134 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
