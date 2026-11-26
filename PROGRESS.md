@@ -16,7 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
-| SR | Security repairs after the S6 gate: 30 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-26; D-117…D-146; session log, steps 1–30); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
+| SR | Security repairs after the S6 gate: 31 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-26; D-117…D-147; session log, steps 1–31); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -3263,4 +3263,73 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npx vitest run --project server                    27136 passed, 31 skipped; 1 failed in 4 files: a
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
+  ```
+
+
+- **2026-11-26 · Security repairs, step 31 (D-147)** — A check of the newest versions of Lumi's H5P server,
+  htmlparser2, sanitize-html, H5P core and the pinned content types, and the one update it called for. One code
+  commit:
+  - sanitize-html 2.18.1 → 2.18.2 (SEC-008, SEC-007): an exact pin in `apps/server/package.json`, one entry of the
+    lock file, and `docs/assurance/sbom.cdx.json`. 2.18.2 reads text after a CDATA marker as a browser reads it.
+    Test: `lumiTextSanitizer.test.ts` (one new test; it fails on 2.18.1 and passes on 2.18.2).
+  - Nothing else changes: Lumi 10.0.4, htmlparser2 12.0.0 and H5P core 1.28.0 are the newest releases; 13 of the
+    100 pinned H5P libraries have a newer tag and stay as pinned (D-078).
+  - D-147 added, with an amendment line under D-140 that corrects one sentence of its context; the status overview
+    counts 31 steps. No page of the web app looks different, so no screenshots. No Docker smoke test: how the image
+    is built does not change. Pull request #25 (steps 1 to 30) was merged on 2026-11-26 after GitHub's two jobs
+    had passed, the first run of the workflows as D-145 changed them. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run check:lockfile                             954 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 477 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       644 passed (100 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     586 passed (78 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27137 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-26 · A meeting brief for an HVL developer and TeCopp (documents only)** — At the owner's request, a
+  short way into the hand-over documents before a first meeting about a test Canvas and a test server:
+  `docs/handoff/meeting-brief.md`. It says what the tool is, where it stands today, what the developer and TeCopp
+  are each asked for, what a test server needs, what the meeting should decide and what is not asked now. It asks
+  for nothing new: every statement links to the document it comes from.
+  - Pointers to it: the root README's documentation map and its status paragraph (now 2026-11-26), and the «For»
+    row of the hand-off index.
+  - One line reference in the threat model (T-113, to the hand-off index) pointed two rows too high and is
+    corrected.
+  - The brief says how to read the server suite's count: `vitest list` gives about 3,000 written test cases
+    (3,061) in 625 files, and three tables that try every combination (`userDataMatrix.test.ts`,
+    `contentMatrix.test.ts`, `duplicateRules.test.ts`) hold 21,990 of the tests a run counts.
+  - No code changes, so no decision entry and no screenshots. The spec site is regenerated. Checks (the documents'
+    own; the whole gate runs in GitHub CI on the pull request):
+
+  ```
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npx vitest run --project tools                     586 passed (78 files)
   ```

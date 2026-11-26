@@ -2,7 +2,7 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:c09f8e44-b244-5cf9-95c4-97680b5ff0dc",
+  "serialNumber": "urn:uuid:1d5a13a9-7281-5537-a20d-4bbfbbce43ee",
   "version": 1,
   "metadata": {
     "lifecycles": [
@@ -15019,19 +15019,19 @@
       ]
     },
     {
-      "bom-ref": "sanitize-html@2.18.1",
+      "bom-ref": "sanitize-html@2.18.2",
       "type": "library",
       "name": "sanitize-html",
-      "version": "2.18.1",
+      "version": "2.18.2",
       "scope": "required",
       "author": "Apostrophe Technologies, Inc.",
       "description": "Clean up user-submitted HTML, preserving allowlisted elements and allowlisted attributes on a per-element basis",
-      "purl": "pkg:npm/sanitize-html@2.18.1",
+      "purl": "pkg:npm/sanitize-html@2.18.2",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/sanitize-html/-/sanitize-html-2.18.1.tgz"
+          "url": "https://registry.npmjs.org/sanitize-html/-/sanitize-html-2.18.2.tgz"
         },
         {
           "type": "vcs",
@@ -15045,7 +15045,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "d97e650bc7d895af18693f20ef7363f8770b5976a7e5d2f20962e056f68e99fc3b248efc211b3236d203cad4c7767ee10506c89026a1ed96e67798da6f37838a"
+          "content": "2d341534705e281e6a21a7bdc76276170ebc3919c44befbcbf361a1bb0c54fc3f819508915e1df7c79d15337f932bc5fc7ee06c1e22f311aa404f1c7a1d69536"
         }
       ],
       "licenses": [
@@ -18125,7 +18125,7 @@
         "playwright-core@1.56.1",
         "prisma@7.10.1",
         "redis@4.7.1",
-        "sanitize-html@2.18.1",
+        "sanitize-html@2.18.2",
         "tsx@4.23.15",
         "yaml@2.9.1",
         "yauzl@3.4.0",
@@ -18197,7 +18197,7 @@
         "mime-types@2.1.35",
         "node-machine-id@1.1.12",
         "promisepipe@3.0.0",
-        "sanitize-html@2.18.1",
+        "sanitize-html@2.18.2",
         "stream-buffers@3.0.3",
         "tmp-promise@3.0.3",
         "upath@2.0.1",
@@ -20428,7 +20428,7 @@
       "dependsOn": []
     },
     {
-      "ref": "sanitize-html@2.18.1",
+      "ref": "sanitize-html@2.18.2",
       "dependsOn": [
         "escape-string-regexp@4.0.0",
         "htmlparser2@12.0.0",

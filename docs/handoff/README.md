@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **For** | HVL's bachelor students in programming, spring 2027, and whoever at HVL supervises them |
+| **For** | HVL's bachelor students in programming, spring 2027, and whoever at HVL supervises them. An HVL developer or TeCopp before a first meeting about a test Canvas and a test server: start with the short [meeting brief](meeting-brief.md) |
 | **Written** | 2026-11-05, in Session 6, step 7 of the build (D-101 and its amendment of 2026-11-05) |
 | **Your project** | Review this AI-written code with your own tools (explainer documents, quizzes, micro-worlds), and finish the Canvas integration against ALU's Canvas test instance |
 | **Keep up to date** | [PROGRESS.md](../../PROGRESS.md) is the build's single source of truth; this index points into it and is not updated with every change |

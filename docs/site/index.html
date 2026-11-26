@@ -281,7 +281,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 30 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-26; D-117…D-146; session log, steps 1–30); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 31 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-26; D-117…D-147; session log, steps 1–31); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 
 <p class="more"><a href="#progress">Open the build tracker</a> · <a href="#evaluator-guide--5-session-gates">See each session's pass/fail gate</a></p>
@@ -13348,7 +13348,7 @@ limit.</li>
 </ul>
 <h3 id="decisions--d-140--security-repairs-step-24-a-text-field-without-a-tag-list-is-plain-text-a-link-address-cannot-leave-its-attribute-the-h5p-pages-allow-no-inline-script" tabindex="-1">D-140 · Security repairs, step 24: a text field without a tag list is plain text; a link address cannot leave its attribute; the H5P pages allow no inline script</h3>
 <ul>
-<li><strong>Context:</strong> H5P&#39;s content types write the text of their parameters into the page as HTML. H5P&#39;s own server
+<li><p><strong>Context:</strong> H5P&#39;s content types write the text of their parameters into the page as HTML. H5P&#39;s own server
 software therefore knows two kinds of text field: one whose semantics give a <code>tags</code> list keeps those tags, every
 other is made plain text. Lumi&#39;s enforcer cleans a field without a list with sanitize-html&#39;s defaults, which
 keep links, tables, headings and more, and since D-039 only list items went through our own cleaner, so a button
@@ -13357,8 +13357,9 @@ markup. Lumi also cuts a text to its field&#39;s <code>maxLength</code> after cl
 the stored text inside a tag or a character reference. Three smaller things lay beside it: the address of H5P&#39;s
 link field (H5P.Link, Interactive Video&#39;s &quot;go to&quot; and its hotspot) is joined into <code>&lt;a href=&quot;…&quot;&gt;</code> as text, and a
 plain text keeps its quotation marks; the pages&#39; small scripts found their data block by its ID alone; and the
-page policy allowed one inline script by its hash that no page of ours runs.</li>
-<li><strong>Decision — a text field without a <code>tags</code> list is plain text (SEC-008).</strong> <code>h5p/semantics/lumiTextSanitizer.ts</code>
+page policy allowed one inline script by its hash that no page of ours runs.</p>
+</li>
+<li><p><strong>Decision — a text field without a <code>tags</code> list is plain text (SEC-008).</strong> <code>h5p/semantics/lumiTextSanitizer.ts</code>
 is the one rule for a text value: Lumi&#39;s for a field with <code>tags</code>, no markup at all for any other (tags removed,
 <code>&lt;</code>, <code>&gt;</code> and <code>&amp;</code> as references). What the editor sends for such a field is unchanged: a typed <code>&lt;</code> arrives as
 <code>&amp;lt;</code> and stays text. <code>SubContentPolicy</code> cleans every text field on a save, not only list items, so the rule
@@ -13368,35 +13369,47 @@ the same rule (D-124). The player page makes a value of such a field plain when 
 rewritten (as in D-124). Not chosen: writing a refused tag out as text, as H5P&#39;s own server software does; the
 editor never sends a raw tag for such a field, so what is removed was never typed into a form. None of the 120
 installed libraries has a field with the HTML widget and no <code>tags</code> list, and the example activities of the ten
-types hold 544 plain text fields, none of which the rule changes.</li>
-<li><strong>Decision — a text past its length is cut whole (SEC-008).</strong> <code>h5p/semantics/textLengthCut.ts</code> makes the cut
+types hold 544 plain text fields, none of which the rule changes.</p>
+</li>
+<li><p><strong>Decision — a text past its length is cut whole (SEC-008).</strong> <code>h5p/semantics/textLengthCut.ts</code> makes the cut
 before Lumi&#39;s: a text longer than <code>maxLength</code> is cut as plain text and ends in a whole character and a whole
 character reference. A cut cannot keep markup whole and within the length, so a text that is too long keeps its
 words and not its markup; H5P&#39;s editor never sends one, and no installed library gives a field with <code>tags</code> a
-<code>maxLength</code>. Lumi&#39;s rule runs last, on text it neither changes nor cuts, so its <code>regexp</code> check stays.</li>
-<li><strong>Decision — a link field&#39;s address holds no character that ends an attribute (SEC-008).</strong>
+<code>maxLength</code>. Lumi&#39;s rule runs last, on text it neither changes nor cuts, so its <code>regexp</code> check stays.</p>
+</li>
+<li><p><strong>Decision — a link field&#39;s address holds no character that ends an attribute (SEC-008).</strong>
 <code>h5p/semantics/linkAddressConformance.ts</code>, called by D-123&#39;s fitting: in the <code>url</code> of a field with <code>widget: &#39;linkWidget&#39;</code>, <code>&quot;</code>, <code>&#39;</code>, <code>&lt;</code>, <code>&gt;</code>, a backtick and a space are percent-encoded and control characters removed, as
 a browser&#39;s URL parser treats them. The address is fitted on a save (after its text is cleaned), on the player
-page and in the editor&#39;s form.</li>
-<li><strong>Decision — a page script reads only the page&#39;s own data block (SEC-008, H5P-009).</strong> <code>h5pIntegration.js</code>,
-<code>editorPage.js</code> and the xAPI bridge read their JSON block only when the element with its ID is an inert <code>&lt;script type=&quot;application/json&quot;&gt;</code> directly in the document&#39;s head, where the page writes it.</li>
-<li><strong>Decision — no inline script on an H5P page (DATA-011, H5P-009).</strong> <code>script-src</code> on the player and editor pages
+page and in the editor&#39;s form.</p>
+</li>
+<li><p><strong>Decision — a page script reads only the page&#39;s own data block (SEC-008, H5P-009).</strong> <code>h5pIntegration.js</code>,
+<code>editorPage.js</code> and the xAPI bridge read their JSON block only when the element with its ID is an inert <code>&lt;script type=&quot;application/json&quot;&gt;</code> directly in the document&#39;s head, where the page writes it.</p>
+</li>
+<li><p><strong>Decision — no inline script on an H5P page (DATA-011, H5P-009).</strong> <code>script-src</code> on the player and editor pages
 is <code>&#39;self&#39;</code> (and Panopto&#39;s one file when configured, D-070): the hash of H5P Core&#39;s constant inline script is
 gone, and <code>h5p/render/coreInlineScripts.ts</code> with it. Core writes that script only into an iframe it builds for
 an <code>iframe.h5p-iframe</code> element; the player page is that document itself, and the editor&#39;s own iframe holds
 <code>&lt;script src&gt;</code> tags only. This amends D-070, and the sentence of D-115 that the production policy allows H5P&#39;s
 own iframe embedding: a page that embedded that way would have to allow the script again, and the bridge&#39;s
-browser test for that mode adds the hash itself.</li>
-<li><strong>Verified:</strong> unit tests of the rule for one value beside Lumi&#39;s enforcer (the plain rule, the tags rule, what
+browser test for that mode adds the hash itself.</p>
+</li>
+<li><p><strong>Verified:</strong> unit tests of the rule for one value beside Lumi&#39;s enforcer (the plain rule, the tags rule, what
 the editor sends, every length from 1 to 90), of the three places content passes (save, player page, editor
 form) and of the link address; an integration test with the ten real types (no plain field of an example
 changes; a save through the routes; a row written to the database and played); unit tests of the three scripts&#39;
 block; the policy test; and the browser tests that play all ten types and open the editor, which report no
-refused script.</li>
-<li><strong>Consequences:</strong> A label, a heading or any other plain field shows the words of what was sent, never markup. A
+refused script.</p>
+</li>
+<li><p><strong>Consequences:</strong> A label, a heading or any other plain field shows the words of what was sent, never markup. A
 text sent past its field&#39;s length, which the editor does not allow, loses its formatting. A link address with a
 quote or a space is stored percent-encoded. SEC-008 and H5P-009 have an &quot;Amended&quot; line; T-03 in the threat model
-follows.</li>
+follows.</p>
+</li>
+<li><p><strong>Amendment (2026-11-26, D-147):</strong> a correction of the context above. <code>H5P.Link</code> joins its address into
+<code>&lt;a href=&quot;…&quot;&gt;</code> as text, and Interactive Video&#39;s hotspot shows a web address through <code>H5P.Link</code>. Interactive
+Video&#39;s &quot;go to&quot; sets its address as an attribute and does not join it. The rule for a link field&#39;s address is
+unchanged and holds for all three.</p>
+</li>
 </ul>
 <h3 id="decisions--d-141--security-repairs-step-25-a-launch-is-finished-by-the-browser-that-began-it-requests-before-sign-in-have-a-bound-ltijs-asks-a-platform-only-through-our-request-handler" tabindex="-1">D-141 · Security repairs, step 25: a launch is finished by the browser that began it; requests before sign-in have a bound; ltijs asks a platform only through our request handler</h3>
 <ul>
@@ -13821,6 +13834,44 @@ documents&#39; line references. A client that reads insight must send the header
 closed) and D-067 (which frames get no header); <a class="req-ref" href="#r-INS-007"><code>INS-007</code></a> has an &quot;Amended&quot; line. With this step the security
 repairs of steps 1 to 30 (D-117 to D-146) are done; what stays open is in the open questions of <code>PROGRESS.md</code>.</li>
 </ul>
+<h3 id="decisions--d-147--security-repairs-step-31-sanitize-html-2182-after-a-check-of-the-newest-versions-of-the-software-the-content-handling-stands-on" tabindex="-1">D-147 · Security repairs, step 31: sanitize-html 2.18.2, after a check of the newest versions of the software the content handling stands on</h3>
+<ul>
+<li><strong>Context:</strong> On 2026-11-26 the versions in use were compared with the newest ones: npm&#39;s registry for the
+packages, and the projects&#39; repositories at their tags and main branches for the code. Found: (1)
+<code>@lumieducation/h5p-server</code> 10.0.4 is the newest release (2025-03-08). (2) htmlparser2 12.0.0 is the newest
+release (2026-03-20); its main branch already keeps the open tags with <code>push</code> and <code>pop</code> and a count per name,
+which removes the cost that D-126 bounds, but that is not released. (3) sanitize-html 2.18.2 (2026-11-11) is
+newer than the 2.18.1 in use, and it changes how text after a CDATA marker is read. In HTML a browser ends
+<code>&lt;![CDATA[</code> at the first <code>&gt;</code>; 2.18.1 read on to <code>]]&gt;</code> and handed nothing of what lay between to its rules, so
+the cleaner and a browser could disagree about what is markup. 2.18.2 reads it as a browser does. It also
+tightens two cases about <code>style</code> content and animated attributes inside SVG or MathML, which no tag list of the
+71 installed libraries allows (their lists hold <code>a</code>, <code>br</code>, <code>code</code>, <code>del</code>, <code>em</code>, <code>h1</code> to <code>h6</code>, <code>hr</code>, <code>ol</code>, <code>p</code>,
+<code>pre</code>, <code>strong</code>, <code>sub</code>, <code>sup</code>, <code>table</code>, <code>u</code> and <code>ul</code>). <code>npm audit</code> listed no advisory for 2.18.1 on that day, so
+<code>check:audit</code> and the daily run (D-145) did not show it. (4) H5P core 1.28.0 is the newest tag; the main branch
+prepares 1.29. (5) Of the 100 pinned H5P libraries, 13 have a newer tag in their repository, three of them main
+libraries of the ten types: Interactive Video 1.28.38 (when an interaction counts as a task), Question Set
+1.21.14 (the version number only) and Branching Scenario 1.11.2 (a new minor version, not read).</li>
+<li><strong>Decision — sanitize-html 2.18.2 (SEC-008, SEC-007).</strong> <code>apps/server/package.json</code> pins it exactly; Lumi&#39;s range
+(<code>^2.10.0</code>) resolves to the same copy, so Lumi&#39;s cleaning and ours change together; one entry of the lock file
+changes, and the SBOM follows. The other bounds stay as they are: the size of a text and its open tags (D-126),
+plain text for a field without a tag list (D-140), and the page policy (D-070).</li>
+<li><strong>Decision — nothing else changes.</strong> htmlparser2 stays at 12.0.0 until a release carries the change; D-126&#39;s
+limit of 100 open tags covers the time until then. The H5P libraries stay as pinned (D-078): a newer tag is not
+a release on the Hub, neither of the two that were read is a security change, and an update of content types
+needs its own accessibility and upstream-pin runs. <code>ts-deepmerge</code> 7.0.3 (moderate, GHSA-87mf-gv2c-c62c), a
+dependency of Lumi&#39;s ClamAV scanner, merges our own scanner settings and nothing a user sends; its fix is a major
+version outside Lumi&#39;s range, and it is left.</li>
+<li><strong>Residual:</strong> a release that closes a weakness without a published advisory is seen only when someone looks, or
+when Dependabot next runs (monthly, the owner&#39;s choice; D-145). Lumi&#39;s repository could not be read from the
+development sandbox, so changes there that are not yet released are unknown.</li>
+<li><strong>Verified:</strong> <code>lumiTextSanitizer.test.ts</code> has a test of a text with a CDATA marker, for a field with a tag list
+and for a plain field: every word is kept, the allowed tag stays a tag, any other goes. With 2.18.1 it failed
+(the text between the markers was gone); with 2.18.2 it passes. The 842 tests of the text rules, the patterns and
+the validator pass, and so does the gate (step 31 in <code>PROGRESS.md</code>).</li>
+<li><strong>Consequences:</strong> <code>apps/server/package.json</code>, <code>package-lock.json</code>, <code>docs/assurance/sbom.cdx.json</code>,
+<code>apps/server/test/h5p/semantics/lumiTextSanitizer.test.ts</code>. Amends D-140 (one sentence of its context, below
+it). The status overview counts 31 steps.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -13848,7 +13899,7 @@ what is done, what is verified, and what is blocked.</p>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
 <tr>
-<td>SR</td><td>Security repairs after the S6 gate: 30 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-26; D-117…D-146; session log, steps 1–30); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
+<td>SR</td><td>Security repairs after the S6 gate: 31 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-26; D-117…D-147; session log, steps 1–31); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 <p>Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked</p>
 <hr>
@@ -17179,6 +17230,72 @@ $ npm run test:e2e                                   36 passed, 1 skipped; 1 fil
 $ npx vitest run --project server                    27136 passed, 31 skipped; 1 failed in 4 files: a
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004)</code></pre>
+</li>
+<li><p><strong>2026-11-26 · Security repairs, step 31 (D-147)</strong> — A check of the newest versions of Lumi&#39;s H5P server,
+htmlparser2, sanitize-html, H5P core and the pinned content types, and the one update it called for. One code
+commit:</p>
+<ul>
+<li>sanitize-html 2.18.1 → 2.18.2 (SEC-008, SEC-007): an exact pin in <code>apps/server/package.json</code>, one entry of the
+lock file, and <code>docs/assurance/sbom.cdx.json</code>. 2.18.2 reads text after a CDATA marker as a browser reads it.
+Test: <code>lumiTextSanitizer.test.ts</code> (one new test; it fails on 2.18.1 and passes on 2.18.2).</li>
+<li>Nothing else changes: Lumi 10.0.4, htmlparser2 12.0.0 and H5P core 1.28.0 are the newest releases; 13 of the
+100 pinned H5P libraries have a newer tag and stay as pinned (D-078).</li>
+<li>D-147 added, with an amendment line under D-140 that corrects one sentence of its context; the status overview
+counts 31 steps. No page of the web app looks different, so no screenshots. No Docker smoke test: how the image
+is built does not change. Pull request #25 (steps 1 to 30) was merged on 2026-11-26 after GitHub&#39;s two jobs
+had passed, the first run of the workflows as D-145 changed them. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 51, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run check:lockfile                             954 packages from the registry with sha512; 4 install scripts reviewed
+$ npm run check:workflows                            3 workflows: actions by commit, images by digest
+$ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+$ npm run sbom -- --check                            current: 477 npm packages, 12 H5P components, 3 images
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       644 passed (100 files)
+$ npx vitest run --project api-contract              123 passed (15 files)
+$ npx vitest run --project tools                     586 passed (78 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             206 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files)
+$ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    27137 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004)</code></pre>
+</li>
+<li><p><strong>2026-11-26 · A meeting brief for an HVL developer and TeCopp (documents only)</strong> — At the owner&#39;s request, a
+short way into the hand-over documents before a first meeting about a test Canvas and a test server:
+<code>docs/handoff/meeting-brief.md</code>. It says what the tool is, where it stands today, what the developer and TeCopp
+are each asked for, what a test server needs, what the meeting should decide and what is not asked now. It asks
+for nothing new: every statement links to the document it comes from.</p>
+<ul>
+<li>Pointers to it: the root README&#39;s documentation map and its status paragraph (now 2026-11-26), and the «For»
+row of the hand-off index.</li>
+<li>One line reference in the threat model (T-113, to the hand-off index) pointed two rows too high and is
+corrected.</li>
+<li>The brief says how to read the server suite&#39;s count: <code>vitest list</code> gives about 3,000 written test cases
+(3,061) in 625 files, and three tables that try every combination (<code>userDataMatrix.test.ts</code>,
+<code>contentMatrix.test.ts</code>, <code>duplicateRules.test.ts</code>) hold 21,990 of the tests a run counts.</li>
+<li>No code changes, so no decision entry and no screenshots. The spec site is regenerated. Checks (the documents&#39;
+own; the whole gate runs in GitHub CI on the pull request):</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 52, Session log"><code>$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npx vitest run --project tools                     586 passed (78 files)</code></pre>
 </li>
 </ul>
 
