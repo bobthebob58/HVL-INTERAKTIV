@@ -1,12 +1,14 @@
 /**
  * Tests for the pedagogisk mappe's view (D-094 probe P5 amendment): every key is present on every list item and no
  * value is empty (unknown fields get localised placeholders); dates and numbers are text in the portfolio's language;
- * the validator's result carries the reasons given; a renamed phase label reaches the portfolio with no code change.
+ * the validator's result carries the reasons given, with at most 50 findings listed per activity (D-128); a renamed
+ * phase label reaches the portfolio with no code change.
  *
  * Spec: MAPPE-002, PED-001
  */
 import { describe, expect, it } from 'vitest';
 import { MAPPE_TEMPLATE_SCOPE } from '../../../src/learningDesign/mappe/mappeVariables.js';
+import { MAPPE_LISTED_FINDINGS } from '../../../src/learningDesign/mappe/mappeActivityView.js';
 import { mappeFormat } from '../../../src/learningDesign/mappe/mappeFormat.js';
 import { mappeView } from '../../../src/learningDesign/mappe/mappeView.js';
 import { studioContentWithMappe } from '../../support/mappeFixture.js';
@@ -106,6 +108,40 @@ describe('[MAPPE-002] the view of a portfolio', () => {
         uu_grunngjeving: 'treng inga grunngjeving',
       },
     ]);
+  });
+
+  it('[MAPPE-002] lists the first 50 findings of an activity and says so, with all of them in the counts', () => {
+    // Arrange: ten errors first, as the validator orders them, then warnings
+    const findings = (count: number) =>
+      Array.from({ length: count }, (_, n) => ({
+        severity: n < 10 ? ('error' as const) : ('warning' as const),
+        message: `Merknad ${String(n + 1)}`,
+      }));
+    const [atLimit, pastLimit] = [findings(MAPPE_LISTED_FINDINGS), findings(MAPPE_LISTED_FINDINGS + 10)];
+    // Act
+    const views = [atLimit, pastLimit].map(
+      (list) =>
+        viewOf(benchInputs({ activities: [{ activity: sourceActivity(), findings: list }] })).aktivitetar[0],
+    );
+    // Assert
+    expect(views.map((activity) => activity?.uu_status)).toEqual([
+      'Sjekken for universell utforming: feil: 10 (grunngjevne: 0), åtvaringar: 40.',
+      'Sjekken for universell utforming: feil: 10 (grunngjevne: 0), åtvaringar: 50. Dei 50 første er lista opp.',
+    ]);
+    expect(views.map((activity) => activity?.uu_merknader.length)).toEqual([50, 50]);
+    expect(views[1]?.uu_merknader.at(-1)?.melding).toBe('Merknad 50');
+  });
+
+  it('[MAPPE-002] the sentence about the listed findings is in the portfolio’s language', () => {
+    // Arrange
+    const findings = Array.from({ length: MAPPE_LISTED_FINDINGS + 1 }, () => ({
+      severity: 'warning' as const,
+      message: 'A link text does not say where the link goes.',
+    }));
+    // Act
+    const view = viewOf(benchInputs({ activities: [{ activity: sourceActivity(), findings }] }), 'en');
+    // Assert
+    expect(view.aktivitetar[0]?.uu_status.endsWith(' The first 50 are listed.')).toBe(true);
   });
 });
 

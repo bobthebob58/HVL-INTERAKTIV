@@ -22,15 +22,17 @@ import { randomInt } from 'node:crypto';
 const LUMI_ID_ALPHABET = '1234567890abcdefghjiklmnoprstuvwxyABCDEFGHJIKLMNOPRSTUVWYXZ';
 const NORWEGIAN: Readonly<Record<string, string>> = { æ: 'ae', ø: 'o', å: 'a', Æ: 'Ae', Ø: 'O', Å: 'A' };
 const COMBINING_MARKS = /\p{M}/gu;
+const EDGE: ReadonlySet<string | undefined> = new Set(['-', '.']);
 
 const safeSegment = (segment: string): string => {
   const latin = [...segment.normalize('NFC')].map((c) => NORWEGIAN[c] ?? c).join('');
   const ascii = latin.normalize('NFD').replace(COMBINING_MARKS, '');
-  const cleaned = ascii
-    .replace(/[^\w.-]+/g, '-')
-    .replace(/-{2,}/g, '-')
-    .replace(/^[-.]+|[-.]+$/g, '');
-  return cleaned === '' ? 'file' : cleaned;
+  const joined = ascii.replace(/[^\w.-]+/g, '-').replace(/-{2,}/g, '-');
+  // WHY: the hyphens and dots at both ends go; stepping in from each end reads every character once.
+  let [start, end] = [0, joined.length];
+  while (start < end && EDGE.has(joined[start])) start += 1;
+  while (end > start && EDGE.has(joined[end - 1])) end -= 1;
+  return start === end ? 'file' : joined.slice(start, end);
 };
 
 /**

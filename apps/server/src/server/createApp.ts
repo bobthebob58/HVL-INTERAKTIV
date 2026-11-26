@@ -10,14 +10,17 @@
  * Invariants:
  *   - Order: trust proxy → request log → base headers → `/healthz` → page assets → the Hjelp marker and the chrome
  *     redirect (with the web app) → portal session → LTI (ltijs first) → Feide routes → start page (only without the
- *     web app) → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → last-resort error page. With
- *     the web app, launches land on `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
+ *     web app) → `/api` → `/h5p` → the web app (GET and HEAD, when loaded) → HTML 404 → the last error handler,
+ *     which ends every fault itself (../http/lastResortError.ts, D-133). With the web app, launches land on
+ *     `/app/play` and H5P pages opened on their own go to their chrome page (D-067).
  *   - Right after the base headers, the files host (`FILES_BASE_URL`) gets its own router and nothing else (SEC-004).
  *   - `/api` and `/h5p` authenticate with `requestPrincipal` (ltik as Bearer or an allowed query, else the portal
  *     session with CSRF); the editor's file grants are checked before it, inside the H5P router (D-058).
- *   - `X-Powered-By` is off; every response gets `X-Request-Id`, `nosniff`, `no-referrer`, and HSTS over https.
+ *   - `X-Powered-By` is off; every response gets `X-Request-Id`, `nosniff`, `no-referrer`, the default policy
+ *     that pages replace (../http/securityHeaders.ts, D-133), and HSTS over https.
  *   - The findings API, the publish API and the save gate of `/h5p` share one validator and one Redis write lock
- *     (D-074); the gate reads what the editor will store; `/api/docs` is mounted only when NODE_ENV is not production (D-077).
+ *     (D-074), and the delete of `/h5p` holds that lock too (D-117); the gate reads what the editor will store;
+ *     `/api/docs` is mounted only when NODE_ENV is not production (D-077).
  *   - The studio's services are built once, from the same activity facts, identity hasher and publish flow as the
  *     S4 routes, and are returned so main.ts can close them at shutdown.
  *   - The xAPI ingestion (`POST /api/h5p/xapi`) shares the activity facts; its listener of stored rows is the input
@@ -28,22 +31,23 @@
  *   - Insight reads the H5P content store, the NRPS learner counts and *k* (`MIN_GROUP_SIZE`, INS-006).
  * Collaborators: ../lti/ltiRoutes.ts, ./feideLoginWiring.ts, ../auth/requestPrincipal.ts,
  *   ../http/createH5pRouter.ts, ../http/h5pAuthenticate.ts, ../http/api/apiRouter.ts,
- *   ../content/PublishedSaveGate.ts, ../content/ContentWriteLock.ts, ../content/savedForm.ts, ../web/webRoutes.ts,
+ *   ../content/contentRouteGuards.ts, ../content/ContentWriteLock.ts, ../web/webRoutes.ts,
  *   ../web/chromeRedirect.ts, ../http/pages/helpLink.ts, ./healthRoutes.ts, ./studioServices.ts, ./main.ts,
- *   ./gradeBridgeApi.ts, ../insight/http/insightApi.ts, ../http/requestLog.ts (NFR-006), ../http/filesOriginRouter.ts.
+ *   ./gradeBridgeApi.ts, ../insight/http/insightApi.ts, ../http/requestLog.ts (NFR-006), ../http/filesOriginRouter.ts,
+ *   ../http/lastResortError.ts.
  * Tests: apps/server/test/server/createApp.int.test.ts, apps/server/test/http/api/apiDocs.int.test.ts
  */
-import express, { type ErrorRequestHandler, type Express } from 'express';
+import express, { type Express } from 'express';
 import type { Logger } from 'pino';
 import { AuthAuditRecorder } from '../auth/audit/AuthAuditRecorder.js';
+import { failureAuditBudget } from '../auth/audit/failureAuditBudget.js';
 import { requestPrincipal } from '../auth/requestPrincipal.js';
 import { portalSessionMiddleware } from '../auth/session/portalSessionMiddleware.js';
 import { SessionStore } from '../auth/session/SessionStore.js';
 import type { Env } from '../config/env.js';
+import { contentRouteGuards } from '../content/contentRouteGuards.js';
 import { RedisContentWriteLock } from '../content/ContentWriteLock.js';
-import { PublishedSaveGate } from '../content/PublishedSaveGate.js';
-import type { PublishingDeps } from '../content/publishingDeps.js';
-import { editorSavedForm } from '../content/savedForm.js';
+import { serverPublishingDeps } from '../content/publishingDeps.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
 import { PrismaContentAccessRepository } from '../h5p/permissions/ContentAccessRepository.js';
 import { apiRouter } from '../http/api/apiRouter.js';
@@ -52,9 +56,9 @@ import { h5pAuthenticate } from '../http/h5pAuthenticate.js';
 import { h5pErrorHandler } from '../http/h5pErrorHandler.js';
 import { HttpError } from '../http/HttpError.js';
 import { insightApi } from '../insight/http/insightApi.js';
+import { lastResortErrorHandler } from '../http/lastResortError.js';
 import { pageAssetRoutes } from '../http/pages/pageAssetRoutes.js';
 import { portalHomeRoutes, portalNotFound } from '../http/pages/portalHomeRoutes.js';
-import { sendPortalError } from '../http/pages/portalPages.js';
 import type { ContentRouteDeps } from '../http/routes/contentRoutes.js';
 import { requestLog } from '../http/requestLog.js';
 import { baseSecurityHeaders } from '../http/securityHeaders.js';
@@ -112,7 +116,8 @@ export function createApp(inputs: AppInputs): App {
   const { env, logger, db, redis } = inputs;
   const hasher = new IdentityHasher(env.IDENTITY_HASH_KEYS);
   const encryption = new DataEncryption(env.DATA_ENCRYPTION_KEYS);
-  const audit = new AuthAuditRecorder({ db, hasher, logger });
+  // WHY: failed logins and launches can be caused by anyone; their audit rows have a bound (D-141).
+  const audit = new AuthAuditRecorder({ db, hasher, logger, failures: failureAuditBudget(redis) });
   const sessions = new SessionStore({ redis, encryption });
   const access = new PrismaContentAccessRepository(db);
   const base = env.PUBLIC_BASE_URL;
@@ -139,18 +144,13 @@ export function createApp(inputs: AppInputs): App {
     nrps: inputs.nrps,
   });
   const authenticate = requestPrincipal(lti.resolveLtik);
-  // WHY: the validator is built from configuration loaded at start-up (D-073) and passed in by main.ts; without one,
-  // the publish flow runs with a validator that finds nothing, so publishing works and never blocks.
-  const publishing: PublishingDeps = {
-    db,
-    validator: inputs.validator ?? (() => []),
-    clock: () => new Date(),
-    writeLock: new RedisContentWriteLock(redis),
-  };
+  // WHY: the validator is built from configuration loaded at start-up (D-073) and passed in by main.ts; it is
+  // given only content within the limits for one activity to read (../content/publishingDeps.ts, D-127).
+  const publishing = serverPublishingDeps(db, inputs.validator, new RedisContentWriteLock(redis));
   const studio = createStudioServices({ ...inputs, access, hasher, publishing });
-  // WHY: the content routes inside the H5P router run the same publish gate on saves of published activities.
-  const saveGate = new PublishedSaveGate(publishing, editorSavedForm(inputs.h5p.editor.libraryManager));
-  const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, saveGate, duplicator: studio.duplicator };
+  // WHY: the content routes inside the H5P router run the same publish gate and hold the same lock (D-074, D-117).
+  const guards = contentRouteGuards(publishing, inputs.h5p.editor);
+  const h5pRoutes: ContentRouteDeps = { ...inputs.h5p, ...guards, duplicator: studio.duplicator };
   const gradeBridge = gradeBridgeApi({ access, db, redis, logger, onXapiStored: inputs.onXapiStored });
   const content = inputs.h5p.editor.contentStorage;
   const insight = insightApi({ db, redis, content, minGroupSize: env.MIN_GROUP_SIZE });
@@ -159,7 +159,8 @@ export function createApp(inputs: AppInputs): App {
   app.disable('x-powered-by');
   // SECURITY: `req.ip` (audit hash, rate limits) trusts only as many proxies as are really in front (TRUST_PROXY).
   app.set('trust proxy', env.TRUST_PROXY);
-  app.use(requestLog(logger), baseSecurityHeaders({ https: base.startsWith('https:') }));
+  const hsts = { https: base.startsWith('https:'), includeSubDomains: env.HSTS_INCLUDE_SUBDOMAINS };
+  app.use(requestLog(logger), baseSecurityHeaders(hsts));
   app.use(createFilesHostRouter(inputs.h5p, env));
   app.use(healthRoutes({ database: () => db.$queryRaw`SELECT 1`, redis: () => redis.ping() }));
   app.use(pageAssetRoutes());
@@ -169,8 +170,10 @@ export function createApp(inputs: AppInputs): App {
   app.use(portalSessionMiddleware(sessions));
   app.use(lti.router);
   app.use(portalFeideLoginRoutes({ ...inputs, sessions, audit, hasher }));
+  // WHY: the logout form's redirect goes on to Feide, and browsers apply `form-action` to it (D-070, D-133).
+  const formActionOrigins = [new URL(env.FEIDE_ISSUER).origin];
   // WHY: with the web app, `/` is its start page (D-067); the server-rendered one serves WEB_APP=off.
-  if (!inputs.web) app.use(portalHomeRoutes());
+  if (!inputs.web) app.use(portalHomeRoutes({ formActionOrigins }));
   app.use(
     '/api',
     authenticate,
@@ -187,14 +190,8 @@ export function createApp(inputs: AppInputs): App {
   app.use('/api', h5pErrorHandler(logger));
   app.use('/h5p', authenticate, createH5pRouter(h5pRoutes, h5pAuthenticate()));
   app.use('/h5p', h5pErrorHandler(logger));
-  if (inputs.web) {
-    const formActionOrigins = [new URL(env.FEIDE_ISSUER).origin];
-    app.use(webRoutes(inputs.web, { canvasOrigins: env.CANVAS_ORIGINS, formActionOrigins }));
-  }
+  if (inputs.web) app.use(webRoutes(inputs.web, { canvasOrigins: env.CANVAS_ORIGINS, formActionOrigins }));
   app.use(portalNotFound());
-  app.use(((error, _req, res, next) => {
-    if (res.headersSent) return next(error);
-    sendPortalError(res, error, logger);
-  }) satisfies ErrorRequestHandler);
+  app.use(lastResortErrorHandler(logger));
   return { app, lti, studio };
 }

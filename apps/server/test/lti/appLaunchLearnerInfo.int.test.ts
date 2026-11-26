@@ -78,7 +78,7 @@ describe('[PED-032] the learner info in the Canvas launch', () => {
       learnerPurpose: 'Du øver før samlinga.',
     });
     // Act
-    const res = await request(app).get('/app/play?ltik=good');
+    const res = await request(app).get('/app/play?ltik=good').set('Sec-Fetch-Site', 'same-origin');
     // Assert
     expect(res.body.launch).toEqual({
       contentId: ACTIVITY,
@@ -95,7 +95,8 @@ describe('[PED-032] the learner info in the Canvas launch', () => {
     // Arrange
     const { app } = appWith(['learner'], 'published', {});
     // Act
-    const { launch } = (await request(app).get('/app/play?ltik=good')).body;
+    const { launch } = (await request(app).get('/app/play?ltik=good').set('Sec-Fetch-Site', 'same-origin'))
+      .body;
     // Assert
     expect(Object.keys(launch).sort()).toEqual(['contentId', 'locale', 'mayEdit', 'title']);
     const value = launchHeaderValue({ ...launch, learnerPurpose: 'Kvifor? Fordi æ, ø og å' });
@@ -108,10 +109,14 @@ describe('[PED-032] the learner info in the Canvas launch', () => {
     const tooLong = `${longest}x`;
     // Act
     const kept = (
-      await request(appWith(['learner'], 'published', {}, longest).app).get('/app/play?ltik=good')
+      await request(appWith(['learner'], 'published', {}, longest).app)
+        .get('/app/play?ltik=good')
+        .set('Sec-Fetch-Site', 'same-origin')
     ).body.launch;
     const dropped = (
-      await request(appWith(['learner'], 'published', {}, tooLong).app).get('/app/play?ltik=good')
+      await request(appWith(['learner'], 'published', {}, tooLong).app)
+        .get('/app/play?ltik=good')
+        .set('Sec-Fetch-Site', 'same-origin')
     ).body.launch;
     // Assert
     expect([longest.length, LAUNCH_LANGUAGE_MAX_LENGTH]).toEqual([35, 35]);
@@ -124,7 +129,7 @@ describe('[PED-032] the learner info in the Canvas launch', () => {
     // Arrange
     const { app, reads } = appWith(['learner'], 'draft', { estimatedStudentMinutes: 15 });
     // Act
-    const res = await request(app).get('/app/play?ltik=good');
+    const res = await request(app).get('/app/play?ltik=good').set('Sec-Fetch-Site', 'same-origin');
     // Assert
     expect(res.status).toBe(404);
     expect(reads).toEqual([]);

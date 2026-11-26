@@ -71,6 +71,8 @@ export function principalOfLaunch(
       ...(facts.lineItemUrl ? { lineItemUrl: facts.lineItemUrl } : {}),
       // PRIVACY: Canvas's test student is a learner whose statements never reach insight (D-102's amendment).
       ...(facts.testUser ? { testUser: true as const } : {}),
+      // PRIVACY: only a launch with the Learner role is recorded and counted towards k (D-138).
+      ...(facts.learnerRole ? { learnerRole: true as const } : {}),
     },
   });
 }
@@ -97,6 +99,7 @@ export async function resolveLtik(deps: LtikResolverDeps, ltik: string): Promise
     throw authError('hvl:ltik-invalid');
   const account = await deps.accounts.forRequest({
     issuer: facts.issuer,
+    clientId: facts.clientId,
     subject: facts.subject,
     platformId: facts.platformId,
     roles: mapLtiRoles(facts.roles),

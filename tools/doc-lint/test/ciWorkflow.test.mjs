@@ -1,8 +1,9 @@
 /**
- * Tests that CI runs every maintainability and dependency gate the specs require, with time for them, and that its
- * traceability check covers every session PROGRESS.md marks done.
+ * Tests that CI runs every maintainability gate the specs require, with time for them, and that its traceability
+ * check covers every session PROGRESS.md marks done. The dependency gates are tested in
+ * ./ciDependencyGates.test.mjs.
  *
- * Spec: NFR-004, SEC-007, NFR-005, PED-001, DOC-004, SEC-006
+ * Spec: NFR-004, NFR-005, PED-001, DOC-004, SEC-006
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -95,7 +96,7 @@ describe('[NFR-004] CI runs the maintainability gates', () => {
     // WHY: the job runs the a11y suite and builds ten content types; 30 minutes cut it off (final review F3, DOC-10).
     expect(Number(/^\s+timeout-minutes: (\d+)$/m.exec(ci)?.[1])).toBeGreaterThanOrEqual(60);
     expect(ci).toMatch(
-      /uses: actions\/cache@v\d+\n\s+with:\n\s+path: ~\/\.cache\/hvl-interaktiv\/h5p-libraries\n/,
+      /uses: actions\/cache@[0-9a-f]{40} # v\d+\.\d+\.\d+\n\s+with:\n\s+path: ~\/\.cache\/hvl-interaktiv\/h5p-libraries\n/,
     );
   });
 
@@ -166,24 +167,6 @@ describe('[DOC-004] CI requires tests for every finished session', () => {
     expect(lastDoneSession(progress)).toBe(1);
     expect(lastDoneSession('| Session | Status |\n|---|---|\n| S0 | ⬜ Not started |\n')).toBeUndefined();
     expect(lastDoneSession('no table here')).toBeUndefined();
-  });
-});
-
-describe('[SEC-007] dependency hygiene in CI', () => {
-  it('[SEC-007] installs from the lockfile and checks pins and the audit', () => {
-    expect(runs('npm ci')).toBe(true);
-    expect(runs('npm run check:pins')).toBe(true);
-    expect(runs('npm run check:audit')).toBe(true);
-  });
-
-  it('[SEC-007] Dependabot opens one grouped monthly pull request per ecosystem and never a major version', () => {
-    const dependabot = readFileSync(`${root}.github/dependabot.yml`, 'utf8');
-    for (const ecosystem of ['npm', 'github-actions', 'docker']) {
-      const block = dependabot.split(`package-ecosystem: ${ecosystem}`)[1].split('package-ecosystem:')[0];
-      expect(block).toMatch(/interval: monthly/);
-      expect(block).toMatch(/update-types: \[minor, patch\]/);
-      expect(block).toMatch(/update-types: \['version-update:semver-major'\]/);
-    }
   });
 });
 

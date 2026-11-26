@@ -37,7 +37,7 @@ export function preferred<T extends { subjectKeyId: string }>(
  * @param db - The database.
  * @param hasher - The identity hasher (`IDENTITY_HASH_KEYS`).
  * @param provider - Feide or LTI.
- * @param source - `feide|<feide-id>` or `lti|<iss>|<sub>` (./subjectSources.ts); hashed, never stored.
+ * @param source - `feide|<feide-id>` or `lti|<iss>|<client-id>|<sub>` (./subjectSources.ts); hashed, never stored.
  * @returns The chosen row with its user, and the current key's hash for a re-hash.
  */
 export async function findIdentity(

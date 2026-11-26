@@ -34,6 +34,7 @@ import type { Redis } from '../infra/redisClient.js';
 import { ContentDuplicator } from '../learningDesign/collaboration/ContentDuplicator.js';
 import { PeopleDirectory } from '../learningDesign/collaboration/PeopleDirectory.js';
 import type { StudioContent } from '../learningDesign/content/loadStudioContent.js';
+import { createStudioRouteLimits, type StudioRouteLimits } from '../learningDesign/http/studioRouteLimits.js';
 import { LearningDesignStore } from '../learningDesign/metadata/LearningDesignStore.js';
 import { MappeRenderer } from '../learningDesign/mappe/MappeRenderer.js';
 import { PdfRenderer } from '../learningDesign/mappe/pdf/PdfRenderer.js';
@@ -84,6 +85,8 @@ export interface StudioServices {
   readonly mappeRenderer: MappeRenderer;
   /** Prints the mappe's HTML as a tagged PDF in a shared, lazily started Chromium (D-096). */
   readonly pdfRenderer: PdfRenderer;
+  /** How often one person may create from a pattern, open the planner and make a mappe (D-128). */
+  readonly limits: StudioRouteLimits;
 }
 
 /** A studio service that holds a resource, such as a browser, which must be released at shutdown. */
@@ -135,6 +138,7 @@ export function createStudioServices(inputs: StudioServiceInputs): StudioService
     }),
     // WHY: the browser starts on the first PDF export, not here (building contacts nothing, D-096).
     pdfRenderer: new PdfRenderer({ env: inputs.env, logger: inputs.logger }),
+    limits: createStudioRouteLimits(inputs.redis),
   });
 }
 

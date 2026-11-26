@@ -14,6 +14,8 @@
  *     someone (the pressed button is gone), and after «Fjern meg» to a lasting message with a link to the person's
  *     activities, never to `body`. Each change is announced politely (WCAG 2.4.3, 4.1.3).
  *   - Every name is shown as given; a missing one says so in words.
+ *   - A remove button asks first (../../components/ConfirmDialog.tsx, D-125); nothing is sent before the person
+ *     confirms, and the question names who is removed.
  * Collaborators: ../../api/collaborationApi.ts, ../../components/useFocusAfterChange.ts, ./PeopleSearch.tsx,
  *   ./SharingFeedback.tsx, ./SharingPanel.tsx, ../../config/paths.ts.
  * Tests: apps/web/test/features/CoAuthorSection.test.tsx, apps/web/test/features/PeopleSearch.test.tsx,
@@ -26,6 +28,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useApiAuth } from '../../api/ApiAuthContext';
 import { addCoAuthor, getCoAuthors, removeCoAuthor } from '../../api/collaborationApi';
 import type { ApiResult } from '../../api/apiRequest';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useFocusAfterChange } from '../../components/useFocusAfterChange';
 import { HOME_PATH } from '../../config/paths';
 import { useLocale } from '../../i18n/LocaleContext';
@@ -54,6 +57,8 @@ export function CoAuthorSection({ contentId, announce }: CoAuthorSectionProps) {
   const leftMessage = useRef<HTMLParagraphElement>(null);
   const [list, setList] = useState<CoAuthorList | 'loading' | 'failed' | 'left'>('loading');
   const [problem, setProblem] = useState<string>();
+  /** The co-author the open question is about. */
+  const [asked, setAsked] = useState<CoAuthor>();
   // A11Y: WCAG 2.4.3: each focus waits for the commit that renders it with the answer, so the lasting message after
   // «Fjern meg» is on screen; neither a 0 ms timer (Chromium) nor an earlier commit's late effect may run it.
   const focusAfter = useFocusAfterChange();
@@ -132,6 +137,7 @@ export function CoAuthorSection({ contentId, announce }: CoAuthorSectionProps) {
     );
   }
   const onList = new Set([list.owner.userId, ...list.coAuthors.map((c) => c.userId)]);
+  const askedName = { name: asked ? shownName(asked, locale) : '' };
   return (
     <section aria-labelledby={headingId} className="mb-6">
       {title}
@@ -142,7 +148,7 @@ export function CoAuthorSection({ contentId, announce }: CoAuthorSectionProps) {
           <li key={coAuthor.userId} className="mt-2">
             <span className="mr-2">{shownName(coAuthor, locale)}</span>
             {list.mayManage || coAuthor.isSelf ? (
-              <button type="button" className="button-secondary" onClick={() => remove(coAuthor)}>
+              <button type="button" className="button-secondary" onClick={() => setAsked(coAuthor)}>
                 {coAuthor.isSelf
                   ? t('sharing.removeSelf', locale)
                   : t('sharing.remove', locale, { name: shownName(coAuthor, locale) })}
@@ -154,6 +160,22 @@ export function CoAuthorSection({ contentId, announce }: CoAuthorSectionProps) {
       {list.coAuthors.length === 0 ? <p>{t('sharing.noCoAuthors', locale)}</p> : null}
       {problem ? <SharingProblem text={problem} /> : null}
       {list.mayManage ? <PeopleSearch ref={searchField} exclude={onList} onAdd={add} /> : null}
+      <ConfirmDialog
+        open={asked !== undefined}
+        question={t(
+          asked?.isSelf ? 'sharing.removeSelfQuestion' : 'sharing.removeQuestion',
+          locale,
+          askedName,
+        )}
+        consequence={t(
+          asked?.isSelf ? 'sharing.removeSelfConsequence' : 'sharing.removeConsequence',
+          locale,
+          askedName,
+        )}
+        confirmLabel={t(asked?.isSelf ? 'sharing.removeSelf' : 'sharing.remove', locale, askedName)}
+        onConfirm={() => (setAsked(undefined), asked && remove(asked))}
+        onCancel={() => setAsked(undefined)}
+      />
     </section>
   );
 }

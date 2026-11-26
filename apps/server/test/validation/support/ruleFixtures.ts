@@ -16,8 +16,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { comparePaths } from '../../../src/validation/contentPath.js';
-import { walkContent } from '../../../src/validation/contentWalker.js';
-import type { ValidationRule } from '../../../src/validation/rule.js';
+import { ruleScope, type ValidationRule } from '../../../src/validation/rule.js';
 import type {
   ValidationContext,
   ValidationInput,
@@ -111,9 +110,8 @@ export const contextOf = (fixture: RuleFixture): ValidationContext => ({
  * @returns The rule's hits as path and message key, in comparison order.
  */
 export function hitsOf(rule: ValidationRule, fixture: RuleFixture): ExpectedHit[] {
-  const scope = { nodes: walkContent(fixture.mainLibrary, fixture.params), metadata: fixture.metadata };
   return rule
-    .check({ ...scope, context: contextOf(fixture) })
+    .check(ruleScope(fixture, contextOf(fixture)))
     .map((hit) => ({ path: hit.path, message: hit.message }))
     .sort(byPathThenMessage);
 }

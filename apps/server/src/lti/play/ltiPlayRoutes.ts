@@ -32,14 +32,13 @@ import { PLAYER_DISPLAY_OPTIONS } from '../../http/routes/playerRoutes.js';
 import { setLtiPageLocale } from '../http/ltiErrorPages.js';
 import { h5pPageCsp } from '../../http/h5pPageCsp.js';
 import { setLtiPageHeaders } from '../http/ltiPageHeaders.js';
+import { landingLtik } from '../landingLtik.js';
 import type { ResolvedLtik } from '../ltikPrincipal.js';
 
-/** Where the LTI page scripts are served. */
-export const LTI_STATIC_PATH = '/static/lti';
-/** The player page's first script. */
-export const LTIK_LANDING_SCRIPT = `${LTI_STATIC_PATH}/ltikLanding.js`;
-/** Runs before H5P Core so it survives blocked frame storage (./../pages/client/h5pStorageGuard.js). */
-export const H5P_STORAGE_GUARD_SCRIPT = `${LTI_STATIC_PATH}/h5pStorageGuard.js`;
+import { H5P_STORAGE_GUARD_SCRIPT, LTI_STATIC_PATH, LTIK_LANDING_SCRIPT } from '../pages/ltiStaticScripts.js';
+
+// WHY: the paths live in a module without imports, so the error pages can name them too.
+export { H5P_STORAGE_GUARD_SCRIPT, LTI_STATIC_PATH, LTIK_LANDING_SCRIPT };
 
 const CLIENT_DIR = fileURLToPath(new URL('../pages/client/', import.meta.url));
 
@@ -69,9 +68,8 @@ export function ltiPlayRoutes(deps: LtiPlayDeps): Router {
   const router = Router();
   router.use(LTI_STATIC_PATH, express.static(CLIENT_DIR, { index: false, fallthrough: false, maxAge: 0 }));
   router.get('/lti/play', async (req, res) => {
-    const ltik = typeof req.query.ltik === 'string' ? req.query.ltik : '';
-    if (ltik === '') throw authError('hvl:ltik-invalid');
-    const { principal } = await deps.resolveLtik(ltik);
+    // SECURITY: an address with the ltik counts only from our own pages, or just after the launch (D-130).
+    const { ltik, principal } = await landingLtik(req, deps.resolveLtik);
     setLtiPageLocale(res, principal.locale);
     const contentId = principal.lti?.contentId;
     if (!contentId) throw authError('hvl:activity-unavailable');

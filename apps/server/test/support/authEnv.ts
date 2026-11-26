@@ -21,6 +21,8 @@ const textKey = (label: string): string =>
 
 /** The smallest environment `loadEnv` accepts in development. */
 export const VALID_ENV: Readonly<Record<string, string>> = {
+  // WHY: the mode has no default (D-133); `PUBLIC_BASE_URL` keeps its local default, so example keys pass.
+  NODE_ENV: 'development',
   DATABASE_URL: 'postgresql://u:p@localhost:5432/db',
   REDIS_URL: 'redis://localhost:6379',
   S3_ACCESS_KEY_ID: 'key',
@@ -41,6 +43,7 @@ export const VALID_ENV: Readonly<Record<string, string>> = {
 export const productionEnv = (overrides: Record<string, string> = {}): Record<string, string> => ({
   ...VALID_ENV,
   NODE_ENV: 'production',
+  WEB_APP: 'prod',
   PSEUDONYM_SECRETS: `2026=${randomKey(1)}`,
   IDENTITY_HASH_KEYS: `p1=${randomKey(2)}`,
   DATA_ENCRYPTION_KEYS: `p1=${randomKey(3)}`,

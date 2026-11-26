@@ -15,11 +15,12 @@
 import { pathOf } from '../contentPath.js';
 import { isBareVerdict, isBlankText } from '../feedbackText.js';
 import { asArray, asString, fieldAt } from '../paramReaders.js';
+import type { RichTextReader } from '../richText.js';
 import { nodesOf, type RuleHit, type ValidationRule } from '../rule.js';
 
-const explains = (feedback: unknown): boolean => {
+const explains = (feedback: unknown, read: RichTextReader): boolean => {
   const text = asString(feedback);
-  return !isBlankText(text) && !isBareVerdict(text);
+  return !isBlankText(text, read) && !isBareVerdict(text, read);
 };
 
 /** PED-H05: explain why a wrong option is wrong. */
@@ -33,13 +34,13 @@ export const wrongOptionFeedbackHint: ValidationRule = {
     for (const node of nodesOf(scope, 'H5P.MultiChoice')) {
       asArray(fieldAt(node.params, 'answers')).forEach((answer, index) => {
         if (fieldAt(answer, 'correct') === true) return;
-        if (explains(fieldAt(answer, 'tipsAndFeedback', 'chosenFeedback'))) return;
+        if (explains(fieldAt(answer, 'tipsAndFeedback', 'chosenFeedback'), scope.read)) return;
         const path = pathOf(node.path, 'answers', index, 'tipsAndFeedback', 'chosenFeedback');
         hits.push({ path, message: 'PED-H05.noExplanation' });
       });
     }
     for (const node of nodesOf(scope, 'H5P.TrueFalse')) {
-      if (explains(fieldAt(node.params, 'behaviour', 'feedbackOnWrong'))) continue;
+      if (explains(fieldAt(node.params, 'behaviour', 'feedbackOnWrong'), scope.read)) continue;
       hits.push({
         path: pathOf(node.path, 'behaviour', 'feedbackOnWrong'),
         message: 'PED-H05.noExplanation',

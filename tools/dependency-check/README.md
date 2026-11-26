@@ -8,7 +8,9 @@ Keeps dependencies reviewable and lawful to ship (`SEC-007`, `NFR-005`, decision
 |---|---|
 | `checkPins.mjs` | any `package.json` in the workspace uses a range (`^`, `~`, `*`, `>=`, a tag or a URL) instead of an exact version |
 | `checkLicences.mjs` | a production dependency's licence is not on the GPL-3.0-compatible allow-list, or is unknown; or the production set it checked lacks a workspace or a declared runtime dependency (`productionSetGuard.mjs`) |
-| `checkAudit.mjs` | `npm audit --omit=dev` reports a high or critical advisory without a valid exception |
+| `checkAudit.mjs` | `npm audit --omit=dev` reports a high or critical advisory without a valid exception, or an exception is incomplete, undated, dated too far ahead or written for another package (`auditExceptionRules.mjs`) |
+| `checkLockfile.mjs` | a package of `package-lock.json` does not come from the npm registry's own address for its name and version, or has no SHA-512 checksum; a package with an install script is not in `allowScripts` of the root `package.json` at its exact version, or the list holds a stale entry; `.npmrc` does not set `strict-allow-scripts=true` (`installScriptRules.mjs`) |
+| `checkWorkflows.mjs` | a workflow in `.github/workflows/` names an action by tag or branch instead of a commit with its version as a comment, a service image without a digest (or with another digest than `deploy/compose.app.yml`), gives its token a `write` permission, states no permissions, or checks out without `persist-credentials: false` |
 
 ## How to run
 
@@ -16,8 +18,14 @@ Keeps dependencies reviewable and lawful to ship (`SEC-007`, `NFR-005`, decision
 npm run check:pins
 npm run check:licences
 npm run check:audit
+npm run check:lockfile                    # Node alone: CI runs it before `npm ci`
+npm run check:workflows
 npx vitest run tools/dependency-check     # the tests
 ```
+
+CI runs all five on every pull request and push to `main` (`.github/workflows/ci.yml`). Once a day
+`.github/workflows/audit.yml` runs `check:lockfile` and `check:audit` on the default branch without installing
+anything, so an advisory published between two pushes fails a run on the day it is published (D-145).
 
 ## Accepting an advisory
 
@@ -30,10 +38,36 @@ risk is acceptable, mitigation, expiry), then add one entry per advisory to `aud
 ```
 
 An exception is valid up to and including its `expires` date; the check fails from the next day, and also
-when an exception is no longer needed. If `npm audit` cannot run (for example, the registry is unreachable),
+when an exception is no longer needed. Every entry needs all five fields. `expires` must be a real calendar date
+(`YYYY-MM-DD`) at most 120 days ahead, so each exception is read again within four months; a missing or misspelt
+date fails instead of counting as "not yet expired". An exception covers its advisory only for the `package` it
+names: an advisory that npm reports for two packages needs an entry for each, and two entries for the same advisory
+and package are refused (D-145). If `npm audit` cannot run (for example, the registry is unreachable),
 the check fails with exit code 2 instead of reporting zero advisories.
 A transitive advisory with a compatible fixed release is fixed with an exact `overrides` entry in the
 root `package.json` instead (for example `underscore` 1.13.8, see D-030).
+
+## The lock file and install scripts
+
+`npm ci` installs what `package-lock.json` names, from the address it names, and trusts the checksum it names.
+`check:lockfile` therefore holds every package to `https://registry.npmjs.org/<name>/-/<name>-<version>.tgz` and a
+`sha512-` value. A package installed under another name (an alias) or bundled inside another package fails until a
+person has reviewed it and the check has learned the case.
+
+A dependency's install script runs on the build machine before any of our code. The root `package.json` lists the
+reviewed ones in `allowScripts` as `name@version`: `true` lets the script run, `false` skips it (`fsevents`, a
+macOS-only package that ships its built file). `.npmrc` sets `strict-allow-scripts=true`, so npm stops an install
+that meets a script outside the list instead of running it with a notice; `deploy/Dockerfile` copies `.npmrc`, so
+the image's install follows the same rule. After an upgrade of a listed package, read what its script does in the
+new version and change the entry in the same commit (`npm approve-scripts <name>` writes it); `check:lockfile`
+fails until the list and the lock file agree, both ways.
+
+## Workflows
+
+An action is written as `owner/repo@<commit> # v1.2.3`. To find the commit of a release:
+`git ls-remote https://github.com/<owner>/<repo>.git refs/tags/v1.2.3` (for an annotated tag, the line ending in
+`^{}`). Dependabot proposes new commits for the actions. A service image's digest is changed by hand, in the same
+commit as the image in `deploy/compose.app.yml`.
 
 ## Unknown licences
 

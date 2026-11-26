@@ -4,10 +4,11 @@
  * for a period shortened to start on 1 August, with its second note; and the tab on a teacher's Canvas page; each in
  * the light theme and with forced colours emulated. Then a keyboard-only pass (Tab to «Ta opp i samlinga», Space
  * adds the question and it is announced, the projection dialog opens with Enter and Escape returns focus); then the
- * print stylesheet, which prints the list alone, scanned by axe as printed. No serious or critical violation. The
- * insight view is answered by routing (./support/insightViews.ts, ./support/insightFixture.ts).
+ * print stylesheet, which prints the list alone, scanned by axe as printed; then the tab when the period asked for
+ * holds more answers than one view covers (D-122). No serious or critical violation. The insight view is answered
+ * by routing (./support/insightViews.ts, ./support/insightFixture.ts).
  *
- * Spec: UD-030, UD-006, INS-008, INS-003, INS-006, PROD-010
+ * Spec: UD-030, UD-006, INS-008, INS-003, INS-006, INS-001, PROD-010
  */
 import type { Page } from 'playwright-core';
 import { describe, expect, it } from 'vitest';
@@ -16,7 +17,7 @@ import { describeA11y } from './support/a11ySuite.js';
 import { scanPage } from './support/axeScan.js';
 import { COLOUR_MODES } from './support/catalogue.js';
 import { focusIs, tabTo } from './support/focusWalk.js';
-import { FIRST_QUESTION as QUESTION, SHORTENED_PERIOD } from './support/insightFixture.js';
+import { FIRST_QUESTION as QUESTION, LAST_SEVEN_DAYS, SHORTENED_PERIOD } from './support/insightFixture.js';
 import { openCanvasInsight, openPortalInsight } from './support/insightViews.js';
 import { expectOnlyRecorded } from './support/upstreamFindings.js';
 
@@ -147,6 +148,27 @@ describeA11y('[UD-030] axe on the Innsikt tab', (env) => {
       header: false,
       participation: false,
     });
+    expectOnlyRecorded(report, []);
+    await context.close();
+  });
+
+  it('[UD-030][INS-001] the tab for a period with more answers than one view covers says so, keeps the choices and has no serious or critical violation', async () => {
+    // Arrange: the semester's view is answered 422
+    const { app, browser } = env();
+    const context = await browser.newContext({ storageState: app.authorStorage });
+    const contentId = app.ids.get('H5P.QuestionSet') ?? '';
+    const page = await openPortalInsight(app, context, contentId, LAST_SEVEN_DAYS, 'semester');
+    const period = page.getByRole('combobox', { name: webText('insight.query.period') });
+    // Act
+    await period.selectOption('semester');
+    await page.getByRole('button', { name: webText('insight.query.submit') }).click();
+    const alert = page.locator(`${PANEL} [role=alert]`);
+    await alert.waitFor();
+    const report = await scanPage(page, 'light: /aktivitet/[id] Innsikt, a period over the limit');
+    // Assert
+    expect(await alert.textContent()).toBe(webText('insight.tooLarge'));
+    expect(await period.count()).toBe(1);
+    expect(await page.locator(`${PANEL} figure`).count()).toBe(0);
     expectOnlyRecorded(report, []);
     await context.close();
   });

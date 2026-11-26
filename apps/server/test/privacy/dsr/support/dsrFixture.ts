@@ -72,8 +72,12 @@ export async function openDsrFixture(): Promise<DsrFixture> {
   const older = new IdentityHasher(parseKeyring(`old=${ring.keys[1]?.secret.toString('base64') ?? ''}`));
   const operatorFeideId = `dsr-admin-${run}@hvl.no`;
   const issuer = `https://${uniqueName('dsr')}.example`;
-  const kari: DataSubject = { feideId: `kari-${run}@hvl.no`, lti: [{ issuer, subject: `kari-sub-${run}` }] };
-  const ola: DataSubject = { lti: [{ issuer, subject: `ola-sub-${run}` }] };
+  const clientId = 'dsr-key';
+  const kari: DataSubject = {
+    feideId: `kari-${run}@hvl.no`,
+    lti: [{ issuer, clientId, subject: `kari-sub-${run}` }],
+  };
+  const ola: DataSubject = { lti: [{ issuer, clientId, subject: `ola-sub-${run}` }] };
   const requestIds: string[] = [];
 
   const operator = await db.user.create({ data: { kind: 'staff', displayName: 'DSR Admin' } });
@@ -118,10 +122,10 @@ export async function openDsrFixture(): Promise<DsrFixture> {
     return user.id;
   };
   const ltiSource = (s: DataSubject) =>
-    identitySource({ kind: 'lti', issuer, subject: s.lti[0]?.subject ?? '' });
+    identitySource({ kind: 'lti', issuer, clientId, subject: s.lti[0]?.subject ?? '' });
   const kariCanvas = await learner('lti', ltiSource(kari), older);
   // WHY: an identity the request does not name keeps its account; only accounts left without one go (D-034).
-  await identity(kariCanvas, 'lti', `lti|https://other-canvas.example|kari-${run}`, hasher);
+  await identity(kariCanvas, 'lti', `lti|https://other-canvas.example|other-key|kari-${run}`, hasher);
   const kariFeide = await learner(
     'feide',
     identitySource({ kind: 'feide', feideId: kari.feideId ?? '' }),

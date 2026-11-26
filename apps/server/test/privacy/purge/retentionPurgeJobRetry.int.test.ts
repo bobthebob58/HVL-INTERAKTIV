@@ -58,7 +58,9 @@ describeWithServices('[DATA-003] the yearly purge job after a failed run', () =>
       orderBy: [{ at: 'asc' }, { id: 'asc' }],
     });
     expect(events.map((event) => event.details)).toMatchObject([
+      { trigger: 'job', dryRun: false, outcome: 'started' },
       { trigger: 'job', dryRun: false, outcome: 'failed' },
+      { trigger: 'job', dryRun: false, outcome: 'started' },
       { trigger: 'job', dryRun: false, outcome: 'completed' },
     ]);
   });

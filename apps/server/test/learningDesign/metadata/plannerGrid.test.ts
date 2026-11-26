@@ -105,7 +105,35 @@ describe('[PED-031] the planner grid', () => {
       rows: [],
       gaps: PHASES.map((phase) => ({ kind: 'empty-phase', phase })),
       untagged: [],
+      moreActivities: false,
     });
+  });
+
+  it('[PED-031] says that the course has more activities when its source says so', () => {
+    // Act
+    const planners = [buildPlanner('SYK110', PHASES, [], true), buildPlanner('SYK110', PHASES, [])];
+    // Assert
+    expect(planners.map((planner) => planner.moreActivities)).toEqual([true, false]);
+  });
+
+  it('[PED-031] a course with many activities and outcomes is built in time that follows their number', () => {
+    // Arrange: 3 000 activities with twenty outcomes each, no two alike
+    const outcomes = (n: number): LearningOutcome[] =>
+      Array.from({ length: 20 }, (_, at) => ({
+        text: `Utbytte ${String(n)}-${String(at)}`,
+        category: 'kunnskap',
+      }));
+    const activities = Array.from({ length: 3000 }, (_, n) =>
+      activity(`Aktivitet ${String(n)}`, PHASES[n % 3], outcomes(n)),
+    );
+    // Act
+    const started = performance.now();
+    const planner = buildPlanner('SYK110', PHASES, activities);
+    const elapsed = performance.now() - started;
+    // Assert: every activity stands once in each of its twenty rows, in the column of its phase
+    expect(planner.rows).toHaveLength(60_000);
+    expect(planner.rows.every((row) => row.cells.flatMap((cell) => cell.activities).length === 1)).toBe(true);
+    expect(elapsed).toBeLessThan(2000);
   });
 
   it('[PED-031] a cell names each activity with its status and language, and nothing else', () => {

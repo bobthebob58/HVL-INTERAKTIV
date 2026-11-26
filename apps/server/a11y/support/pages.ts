@@ -17,6 +17,7 @@
 import type { BrowserContext, Frame, Page } from 'playwright-core';
 import type { RealWebApp, UiLocale } from '../../test/support/realWebApp.js';
 import { waitUntilLoaded } from './loadingState.js';
+import { openLanding } from '../../test/support/openLanding.js';
 
 /** The activity page's tabs by their Nynorsk names (apps/web `activity.tab*`). */
 export const ACTIVITY_TABS = { play: 'Spel', edit: 'Rediger', check: 'Sjekk og publiser' } as const;
@@ -44,7 +45,9 @@ export async function openWebPage(
   nextPage = true,
 ): Promise<Page> {
   const page = await context.newPage();
-  await page.goto(`${base}${path}`);
+  // WHY: an address with an ltik is taken only from a page of our own origin, as after a launch (D-130).
+  if (path.includes('ltik=')) await openLanding(page, `${base}${path}`);
+  else await page.goto(`${base}${path}`);
   if (nextPage) await page.waitForFunction(() => 'next' in window, undefined, { timeout: 15_000 });
   await page.waitForLoadState('networkidle');
   if (nextPage) await waitUntilLoaded(page);

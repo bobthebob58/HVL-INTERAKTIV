@@ -14,6 +14,7 @@ import jsdoc from 'eslint-plugin-jsdoc';
 import i18next from 'eslint-plugin-i18next';
 import reactHooks from 'eslint-plugin-react-hooks';
 import nextPlugin from '@next/eslint-plugin-next';
+import regexp from 'eslint-plugin-regexp';
 import globals from 'globals';
 
 /** H5P-006, D-035, D-036: imports the server never uses. */
@@ -206,6 +207,16 @@ export default tseslint.config(
         { object: 'window', property: 'sessionStorage', message: 'LTI-003: keep the ltik in memory only.' },
         { object: 'document', property: 'cookie', message: 'LTI-003: keep the ltik in memory only.' },
       ],
+    },
+  },
+  {
+    // NFR-002, D-127: a pattern whose cost grows faster than the text it reads is an error in the code that runs
+    // in the service and in the browser, where the text is what people send.
+    files: ['apps/server/src/**/*.{ts,js}', 'apps/web/src/**/*.{ts,tsx}', 'packages/*/src/**/*.{ts,tsx,js}'],
+    plugins: { regexp },
+    rules: {
+      'regexp/no-super-linear-backtracking': 'error',
+      'regexp/no-super-linear-move': 'error',
     },
   },
   {

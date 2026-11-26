@@ -22,6 +22,7 @@
  *     innhaldsbanken» after listing and to the state sentence after unlisting; focus the person has moved elsewhere,
  *     e.g. to save the visibility, stays there (WCAG 2.4.3).
  * Collaborators: ../../api/collaborationApi.ts, ../../components/useFocusAfterChange.ts, ./BankConditions.tsx,
+ *   ./BankUnlistButton.tsx (asks before it unlists, D-125),
  *   ./SharingFeedback.tsx, ./SharingPanel.tsx.
  * Tests: apps/web/test/features/BankListingSection.test.tsx, apps/web/test/features/BankListingOrder.test.tsx,
  *   apps/web/test/features/sharingFocusRace.test.tsx
@@ -38,6 +39,7 @@ import { formatDate } from '../../i18n/formatDate';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t } from '../../i18n/translate';
 import { BankConditions } from './BankConditions';
+import { BankUnlistButton } from './BankUnlistButton';
 import { SharingProblem } from './SharingFeedback';
 
 /** The version of the consent text shown: the contract's `BANK_CONSENT_VERSION` (a test keeps the two equal). */
@@ -147,20 +149,16 @@ export function BankListingSection({ detail, announce }: BankListingSectionProps
       {!owner ? <p>{t('sharing.bankOwnerOnly', locale)}</p> : null}
       {!listed && !listing.eligible ? <BankConditions detail={detail} /> : null}
       {owner && listed ? (
-        <button
-          ref={unlistButton}
-          type="button"
-          className="button-secondary"
-          onClick={() =>
+        <BankUnlistButton
+          buttonRef={unlistButton}
+          onConfirm={() =>
             void change(
               () => unlistFromBank(detail.id, auth),
               t('sharing.bankUnlistedNow', locale),
               focusIfLost(stateText),
             )
           }
-        >
-          {t('sharing.bankUnlist', locale)}
-        </button>
+        />
       ) : null}
       {owner && !listed && listing.eligible ? (
         <div className="mt-2 border-l-4 border-hvl-primary-dark bg-hvl-surface-alt p-3">

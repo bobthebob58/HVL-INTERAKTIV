@@ -13,6 +13,8 @@
  *   - Without the six content files: 409 `hvl:mappe-not-ready`; an unknown set: 400 `hvl:criteria-set-unknown`;
  *     more than `MAPPE_MAX_ACTIVITIES`: 400 `hvl:mappe-too-many`. Over a limit is never a refusal (D-094).
  *   - Building it contacts nothing; reading starts with a request.
+ *   - The selected activities are listed without their parameters; each activity's parameters are then read,
+ *     checked and let go before the next one's are read (D-128).
  * Collaborators: ../../server/studioServices.ts (builds it), ../http/mappeRoutes.ts, ./mappeActivitySource.ts,
  *   ./mappeFindings.ts, ./activityResults.ts, ./storedActivityResults.ts (the results source), ./mappeView.ts,
  *   ./mappeBlocks.ts, ./mappeRender.ts, ../content/mappeContent.ts.
@@ -33,7 +35,13 @@ import type { ContentValidator } from '../../validation/types.js';
 import type { StudioContent } from '../content/loadStudioContent.js';
 import type { MappeCriteriaSet, MappePortfolioContent } from '../content/mappeContent.js';
 import { activityAggregates, type ActivityResultsSource } from './activityResults.js';
-import { mappeActivityItems, mappeAuthorName, mappeSourceActivities } from './mappeActivitySource.js';
+import {
+  mappeActivityItems,
+  mappeActivityParams,
+  mappeAuthorName,
+  mappeSourceActivities,
+} from './mappeActivitySource.js';
+import type { MappeActivityInputs } from './mappeActivityView.js';
 import { readersGuideBlock, referencesBlock } from './mappeBlocks.js';
 import { mappeFindings } from './mappeFindings.js';
 import { mappeFormat } from './mappeFormat.js';
@@ -128,17 +136,25 @@ export class MappeRenderer {
     const { locale } = request;
     const format = mappeFormat(locale);
     const phases = content.phases.phases.map((phase) => ({ key: phase.key, label: phase.label[locale] }));
-    const entries = activities.map((activity) => ({
-      activity,
-      findings: mappeFindings(validator, activity, activity.acknowledgements, locale),
-      aggregates: activityAggregates(
-        groupSize,
-        learners === undefined ? undefined : (learners.get(activity.id) ?? []),
-      ),
-      ...(activity.phase ? { phaseLabel: phases.find((phase) => phase.key === activity.phase)?.label } : {}),
-      link: new URL(`/aktivitet/${activity.id}`, publicBaseUrl).href,
-      k: groupSize.k,
-    }));
+    const entries: MappeActivityInputs[] = [];
+    // WHY: one activity's parameters at a time: read, checked and let go. Each read is also a pause in which
+    // the server answers other requests, where fifty checks in a row held it (D-128).
+    for (const activity of activities) {
+      const params = await mappeActivityParams(db, activity.id);
+      entries.push({
+        activity,
+        findings: mappeFindings(validator, { ...activity, params }, activity.acknowledgements, locale),
+        aggregates: activityAggregates(
+          groupSize,
+          learners === undefined ? undefined : (learners.get(activity.id) ?? []),
+        ),
+        ...(activity.phase
+          ? { phaseLabel: phases.find((phase) => phase.key === activity.phase)?.label }
+          : {}),
+        link: new URL(`/aktivitet/${activity.id}`, publicBaseUrl).href,
+        k: groupSize.k,
+      });
+    }
     const blocks = {
       lesarrettleiing: readersGuideBlock(set, locale),
       referansar: referencesBlock(

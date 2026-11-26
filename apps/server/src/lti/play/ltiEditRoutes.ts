@@ -23,6 +23,7 @@ import { h5pPageCsp } from '../../http/h5pPageCsp.js';
 import type { H5pRouteDeps } from '../../http/h5pRouteDeps.js';
 import { setLtiPageLocale } from '../http/ltiErrorPages.js';
 import { setLtiPageHeaders } from '../http/ltiPageHeaders.js';
+import { landingLtik } from '../landingLtik.js';
 import type { ResolvedLtik } from '../ltikPrincipal.js';
 import { H5P_STORAGE_GUARD_SCRIPT, LTIK_LANDING_SCRIPT } from './ltiPlayRoutes.js';
 
@@ -45,9 +46,8 @@ export interface LtiEditDeps {
 export function ltiEditRoutes(deps: LtiEditDeps): Router {
   const router = Router();
   router.get('/lti/edit', async (req, res) => {
-    const ltik = typeof req.query.ltik === 'string' ? req.query.ltik : '';
-    if (ltik === '') throw authError('hvl:ltik-invalid');
-    const { principal } = await deps.resolveLtik(ltik);
+    // SECURITY: an address with the ltik counts only from our own pages, or just after the launch (D-130).
+    const { ltik, principal } = await landingLtik(req, deps.resolveLtik);
     setLtiPageLocale(res, principal.locale);
     const contentId = principal.lti?.contentId;
     if (!contentId) throw authError('hvl:activity-unavailable');

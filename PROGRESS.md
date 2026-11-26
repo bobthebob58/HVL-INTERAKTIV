@@ -16,6 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
+| SR | Security repairs after the S6 gate: 30 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-26; D-117…D-146; session log, steps 1–30); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -160,7 +161,8 @@ Plan approved 2026-10-23 (owner: automatic restart, no YouTube, all of S4 in one
       ten Nynorsk example activities; all ten install through the seed path, import, save and play in Chromium;
       R-01 settled (D-047). Found and fixed: library folders refused icon fonts (SEC-002 list applied to them)
 - [x] H5P player pages under a strict script policy (D-070): JSON data block, `script-src 'self'` plus the hash of
-      Core's one iframe script; all ten real types play under it, and an injected inline script never runs
+      Core's one iframe script (the hash was removed on 2026-11-23, D-140: no page runs that script); all ten
+      real types play under it, and an injected inline script never runs
       (tested on the CoursePresentation page and its frames)
 - [x] Next.js inside Express (D-067, D-068): built and dev modes, nonce on every script, credentials and the ltik
       removed before Next.js, locale header, no server endpoints in `apps/web`. Found and fixed: `next` ≤ 16.4.0 has
@@ -920,7 +922,8 @@ under the step that does it):
           e2e and accessibility rows; the conformance report links e2e files under `npm run test:e2e`; J3's «62 %»
           claim; PROGRESS's commit ticks; limitation 19. `DOC-S6-07` refuted
   - Still open, not blocking the step: a browser that sends no fetch metadata (Safari before 16.4) is still served
-    by the insight GETs (only a CSRF token on them would close it, which changes D-057); authors can put an absolute
+    by the insight GETs (only a CSRF token on them would close it, which changes D-057) *(closed 2026-11-26 by the
+    own-page header, D-146)*; authors can put an absolute
     URL to our own origin in an H5P media path, so refusing such paths at save time deserves its own look (other
     GETs with side effects); R40's option «only ungraded activities in staff courses» is partial, and `/personvern`
     waits for the DPO (R32, R40); sentences the Innsikt tab builds around an authored text (chart summaries,
@@ -987,6 +990,9 @@ under the step that does it):
 | Q29 | Who may log in to the portal? The recommended Feide registration leaves «Restrict login to selected organizations» off (`docs/reference/feide-values.md`), so anyone with Feide, also from schools (pupils, possibly children), can log in as a learner and play activities shared with «anyone with Feide» (spec 02's role table, D-059), and their play is stored and counted. Restrict Feide's «Restrict login to selected organizations» to HVL (and named partners), or keep it open with the DPO's basis for those users and a line in `/personvern` (DPIA input R37) | Owner, HVL IT, HVL DPO | The pilot |
 | Q30 | Students as insight readers: insight and the grade-sync counts go to anyone with the author role in a context, so a Canvas TA, who at HVL can be a student assistant, sees a course's *k*-suppressed aggregates, and a student author (D-059) sees them for every course their activity is placed in. Accept with HVL's confidentiality terms for student assistants, or show insight only to staff by Feide affiliation and to Canvas instructors but not TAs (an `INS-007` change; DPIA input R36) | HVL DPO, owner | The pilot |
 | Q31 | Name a system owner (*systemeigar*) and a maintainer (*forvaltar*) at HVL for HVL Interaktiv. Neither is named anywhere, and the IT assurance pack asks for them (D-116; `docs/assurance/README.md`, «Who is accountable»; ROS-19 in `docs/assurance/ros-analyse.md`): the system owner, and who owns the test install and its tester list, before stage 1; the maintainer, who rebuilds and redeploys the image with fixes and runs the key rotations, the yearly purge and the backups (`docs/ops/runbook.md` §2, §4–§7), before stage 2 at the latest. Until then the repository owner makes the product decisions; the bachelor students' project (D-101) does not replace either role | Owner, HVL IT / ALU | Stage 1 of the IT assurance pack (`docs/assurance/test-environment.md`) |
+| Q32 | May a Feide ID (`eduPersonPrincipalName`) hold letters outside a–z, digits and `.`, `-`, `_` before the `@`, for example æ, ø or å? The server keeps such a letter as written and folds only `A`–`Z` (D-142); if Feide never issues one, the Feide ID pattern can refuse it | HVL IT, Sikt | Nothing; a stricter Feide ID pattern |
+| Q33 | Where is the production image built, and is it signed there? No workflow publishes, signs or attests an image: `docker.yml` builds it only to test it. Decide the place (HVL's own pipeline or registry), whether the image is signed and carries a statement of the commit it was built from, and who checks both at deployment (threat model T-92, ROS-21; D-145) | HVL IT | Nothing in the code; the production deployment |
+| Q34 | A secret scan of the repository. The repository is public, so GitHub's secret scanning and push protection are settings the owner can switch on (Settings → Code security); CI runs no scanner of its own (D-145). Switch them on, or name the scan HVL IT uses once the code lives with HVL | Owner, HVL IT | Nothing |
 
 ## Risk register
 
@@ -1870,3 +1876,1391 @@ Append one entry per session: date, session, what was done, gate output, and any
   `docs/assurance/sbom.cdx.json` is regenerated. Checked locally: `check:audit`, `check:pins`, `check:licences`,
   `npm run sbom -- --check`, the `tools/sbom` and `tools/dependency-check` tests (51), and the LTI test folder
   against the local services (58 files, 393 tests). No app code or test changed.
+- **2026-11-20 · Security repairs, step 1 (D-117)** — First small step of the audit repairs, two fixes, each with a
+  regression test that fails before the change and passes after:
+  - Ownership and delete ordering (H5P-006, PROD-007, DATA-007): `PrismaContentStorage.addContent` is update-only
+    when given an ID (404 when the row is gone, never a new row under the saver); a new `ContentDeleter`
+    (`contentRouteGuards.ts`) runs the delete under the activity's write lock and writes a `content.delete` audit
+    event. New files `h5p/storage/contentUpdate.ts`, `content/ContentDeleter.ts`, `content/contentRouteGuards.ts`,
+    `test/content/deleteRace.int.test.ts`, `test/support/pausePoints.ts`; tests added to `contentStorage.int.test.ts`.
+  - Cookie-name matching (AUTH-003): `parseCookieHeader` trims only SP and HTAB, so a name with a stray leading
+    Unicode space is not read as the session cookie; tests in `sessionCookies.test.ts`.
+  - D-117 added; the audit log's `content.delete` action recorded in `docs/privacy/DATA-INVENTORY.md`;
+    `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (after regenerating TRACEABILITY.md)
+  $ npx vitest run --project server                    26385 passed, 31 skipped; 2 failed in 5 files that need a
+      privileged database (CREATEROLE), the seccomp PDF sandbox, or a free port — environment limits of this audit
+      container, unrelated to the change (DATA-010, MAPPE-004, NFR-002); they pass in CI's provisioned environment
+  ```
+- **2026-11-20 · Security repairs, re-check of step 1 (D-117 amendment)** — Step 1's two commits were read again
+  line by line and their tests re-run (`deleteRace.int.test.ts`, `saveRace.int.test.ts`,
+  `contentStorage.int.test.ts`, `sessionCookies.test.ts`: 31 tests pass). The ownership and delete change stands as
+  it is. Changed:
+  - Cookie parser (AUTH-003): the trim of SP and HTAB around a pair is one pass over the pair (two index walks, no
+    regular expression), so reading a Cookie header takes time in step with its length. New test `[AUTH-003] reads a
+    pair in linear time, however long its run of spaces`; it fails on the earlier code and passes now. Which
+    cookies are read and written is unchanged.
+  - Wording: the cookie parser's comments, D-117 and the step-1 entry above now state the rule and its requirement
+    ID only, as D-117 prescribes; D-117's sentence on which callers pass an ID is corrected (Lumi's second write of
+    one save also passes the ID of the row that save has just written); `docs/privacy/DATA-INVENTORY.md` names
+    `content.delete` beside the co-author events as holding a staff `User.id`. Spec site regenerated;
+    `TRACEABILITY.md` is unchanged. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npx vitest run --project server                    26386 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```
+- **2026-11-20 · Security repairs, step 2 (D-118)** — How uploaded packages and files are read. Five repairs, one
+  commit each (and one small follow-up), each with a test that fails on the code before it and passes after (the
+  time test of the style scan was checked against the earlier code on smaller inputs):
+  - One reader for a package (SEC-005, SEC-003): `h5p/libraries/checkedPackageReading.ts` replaces the two Lumi
+    functions that open an .h5p file, so a package is unpacked by the reader of the archive check
+    (`security/zipEntryGuard.ts`): the checked entries under the checked names, each at its declared size, the
+    total limit counted while writing, the file always closed. An entry that cannot be read, and a name that is at
+    once a file and a folder, are answered 400 `upload.archive.unreadable`; a disk failure stays a server error.
+    Installed for every editor in `H5pEditorFactory.ts`.
+    Tests: `checkedPackageReading.test.ts`, `upstream/lumiPackageReading.test.ts` (pins where Lumi opens a
+    package), `packageImportOpenFiles.int.test.ts`.
+  - Readers let go of the package (SEC-005): `readEntryBytes` and `openEntryStream` in `zipEntryGuard.ts` are the
+    only ways an entry is read; the manifest reader and the library secret scan use them. A refused or failed
+    import leaves no open file and no upload folder (test helpers `support/openFiles.ts`, `support/damagedPackage.ts`).
+  - File references follow the storage's name rule (SEC-005): `contentFileReferences.ts` refuses a reference to a
+    carried file that `assertSafeObjectName` would refuse, before anything is unpacked; both S3 stores close the
+    data they were handed when they refuse a name (`keyForUpload`). Tests in `packageManifest.test.ts`,
+    `s3Objects.test.ts`.
+  - A broken upload is cleaned up at once (SEC-005): `multipartUpload.ts` stops the file being written before it
+    waits; `http/staleUploadFolders.ts` removes the server's own old upload folders at start (`main.ts`). Tests in
+    `multipartUpload.test.ts`, `staleUploadFolders.test.ts`.
+  - `url()` in SVG style text is found in one pass (SEC-001): `security/svg/cssUrlScan.ts` replaces the pattern in
+    `svgRules.ts`, with the same answers (compared on 177 156 short texts) and time in step with the text's
+    length. Tests: `cssUrlScan.test.ts`, `svgFinalCheck.test.ts`.
+  - D-118 added; `TRACEABILITY.md` and the spec site regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project server                    26411 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```
+- **2026-11-20 · Security repairs, step 3 (D-119)** — The SVG cleaning runs in a worker thread, within limits
+  (SEC-001). One commit:
+  - New in `security/svg/`: `svgPipeline.ts` (D-044's four steps, unchanged), `svgCleaningWorker.ts` (the worker's
+    entry), `svgCleaningThread.ts` (starts it with the server's TypeScript loader and a heap limit) and
+    `SvgCleaner.ts` (one file at a time; 5 seconds and 512 MB for one file, then `upload.file.svgTooComplex`;
+    20 seconds of waiting, then `upload.file.svgCheckBusy`; the folder of the temporary copy is made and removed by
+    the main thread). `SvgSanitizer.ts` hands every SVG to it, and `main.ts` starts the worker when the server
+    starts. The two messages are in nn, nb and en.
+  - Tests: `SvgCleaner.test.ts` (the rules, with a scripted worker) and `SvgCleaner.worker.test.ts` (the real
+    thread: the time limit, the memory limit, the main thread goes on meanwhile, the output equals the steps' in
+    the calling thread, and the worker starts in a process started as the server is and lets it end). The existing
+    SVG, upload and import tests run unchanged, now through the worker; one test in `SvgSanitizer.test.ts` checks
+    the steps directly, because it watches Lumi's sanitiser. A temporary test of the time limit was also run on
+    the code before the change, where it fails.
+  - Checked by hand as well, outside the gate: in the server image built on 2026-11-19, run with the hardening of
+    `deploy/compose.app.yml` (read-only, uid 10001, no capabilities, the seccomp profile) and this source mounted,
+    an ordinary file is cleaned, a slow one is refused after 5 seconds, the next file is cleaned, nothing is left
+    in `/tmp`, and the process ends by itself. The full Docker smoke was not run for this step.
+  - D-119 added and D-044 amended; `docs/ops/docker.md` names the worker's memory; `TRACEABILITY.md` and the spec
+    site regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project server                    26422 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```
+- **2026-11-20 · Security repairs, step 4 (D-120)** — Limits on a learner's saved state and on what an author
+  sends. Two repairs, one commit each, one small follow-up and one fix to step 3; every new test fails on the code before
+  and passes after:
+  - Saved state (H5P-005): `userDataRoutes.ts` accepts only data type `state` and sub-content `0` or a UUID (400
+    otherwise) and counts saves per learner and activity, 60 a minute (429 with `Retry-After`), before the body is
+    read. `h5p/storage/learnerStateLimits.ts` holds the limits (20 states, 512 KB each, 1 MB together per learner,
+    activity and course); `learnerStateWrites.ts` counts and stores in one transaction under a lock for that
+    learner, activity and course, and refuses past a limit (413). The player's preload
+    (`PrismaContentUserDataStorage.ts`) reads only states marked for it, at most 20 rows and 1 MB. Tests:
+    `userDataLimits.int.test.ts`, `learnerStatePreload.int.test.ts`.
+  - Uploads and imports (SEC-005, SEC-001): `ajaxRoutes.ts` counts an author's file uploads (120 in ten minutes) and
+    package imports (20 in ten minutes) before the body is read, and makes further SVG files wait after three were
+    refused as too complex in ten minutes; `http/h5pRouteLimits.ts` builds the counters on Redis, wired in
+    `createH5pRuntime.ts`. Test: `uploadLimits.int.test.ts`.
+  - Step 3's memory limit, held twice (SEC-001, D-119 amended): Node's limit for a worker thread is not in force in
+    a process started with `--max-old-space-size`, so the main thread now also watches the worker's heap while a
+    file is cleaned and stops it past the limit (`security/svg/svgCleaningLimits.ts`). Found when the memory test
+    of step 3 ran in an environment with that flag; the test's input is now several times its limit, and a new
+    test starts a process with the flag.
+  - D-120 added; four Redis counters in `docs/privacy/DATA-INVENTORY.md`; `TRACEABILITY.md` and the spec site
+    regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project server                    26433 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```
+
+- **2026-11-20 · Security repairs, step 5 (D-121)** — Limits on stored xAPI statements and on what insight lists
+  from them. Four repairs, one commit each; every new test fails on the code before and passes after:
+  - A part's answer is stored only under a UUID (LTI-011, DATA-012): `xapi/xapiStatementRow.ts` discards a part's
+    `answered` whose sub-content ID is not a UUID, the shape of H5P's sub-content IDs, and counts it as `invalid`
+    in the batch's log line. Test: `xapiStatementRow.test.ts`.
+  - A limit per day beside the one per minute (LTI-011): `xapi/XapiRateLimit.ts` counts 3 000 statements per
+    learner and activity in 24 hours in a second Redis window, raised only by batches the minute's limit allowed;
+    past it the batch is refused whole with 429 and `Retry-After`. Test: `xapiDayLimit.int.test.ts`.
+  - The replay rule reads a window (DATA-012): `XapiStatementStore.replayHistory` reads the learner's latest 500
+    rows for the activity in one indexed query and takes the rule's facts from them; the rule is unchanged. Test:
+    `xapiReplayWindow.int.test.ts`.
+  - Insight lists a question outside the current content only for *k* learners (INS-002, INS-006):
+    `insight/aggregate/itemDifficulty.ts` lists such a question only when at least *k* learners answered it, most
+    learners first and at most 50, in the view and in the CSV. Test: `unlistedItems.test.ts`.
+  - D-121 added; one Redis counter in `docs/privacy/DATA-INVENTORY.md`; `TRACEABILITY.md` and the spec site
+    regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project server                    26440 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```
+
+- **2026-11-20 · Security repairs, step 6 (D-122)** — One insight view reads at most 200 000 stored statements,
+  and the Innsikt tab says so when a period holds more. Two repairs, one commit each, and one test commit; every
+  new test fails on the code before and passes after:
+  - The read (INS-001, INS-009): `insight/data/readInsightStatements.ts` (new; the query moved out of
+    `insightStatements.ts`) first asks the database whether the scope holds more than the limit, without a row
+    leaving it, and refuses such a scope (`viewTooLarge`); below it the rows are read 10 000 at a time and made
+    into the aggregators' statements as they arrive. `insight/http/insightView.ts` answers the refusal 422
+    `insight.viewTooLarge` for the view and the CSV; the contract documents it. Tests:
+    `insight/http/insightReadLimit.int.test.ts`, `api-contract/test/insightRoutes.test.ts`.
+  - The tab (INS-001, UD-013, UD-030): `useInsightView.ts` has a state for the 422 answer and `InsightPanel.tsx`
+    shows `insight.tooLarge` as an alert, keeping the period, version and course choices, also on the first view.
+    Tests: `InsightTooLarge.test.tsx`, and one more scan in `a11y/axeInsight.a11y.test.ts`. Screenshots in `nn` at
+    1280 px and 390 px were sent to the owner.
+  - Measured here: a view of exactly 200 000 statements takes about 1 second and about 100 MB of heap; refusing a
+    scope of 2 000 000 statements takes about 50 ms.
+  - D-122 added; `TRACEABILITY.md` and the spec site regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npm run build                                      exit 0 (second run; the first stopped at a notice from the
+      Next.js CLI)
+  $ npx vitest run --project web                       616 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run … a11y/axeInsight, keyboardJourneys 15 passed
+  $ npx vitest run … e2e/insightInCanvas, journeySeminarInsight   2 passed
+  $ npx vitest run --project server                    26443 passed, 31 skipped; 2 failed in 5 files, the same
+      five as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this container,
+      unrelated to the change; DATA-010, MAPPE-004, NFR-002)
+  ```
+
+- **2026-11-21 · Security repairs, step 7 (D-123)** — What a saved activity may contain, and two decisions of the
+  owner. Three repairs, one commit each; every new test fails on the code before and passes after:
+  - A save stores only what the semantics describe (SEC-008, H5P-002): `h5p/semantics/semanticsConformance.ts`
+    and `fileValueConformance.ts` (new) fit the parameters to their semantics at the end of
+    `SubContentPolicy.enforce`, as H5P's own validator does: keys no field list names are removed at every level,
+    and numbers, booleans, selects and file values get their field's type. `paramsWalker.ts` reads a single-field
+    group in its one stored form. The refusals run first and are unchanged. Tests:
+    `semanticsConformance.test.ts`, `semanticsConformance.property.test.ts`, `fileValueConformance.test.ts`,
+    `realTypesConformance.int.test.ts` (the ten real types: new, edited and copied saves),
+    `realPatternConformance.test.ts` (every pattern skeleton passes unchanged).
+  - Three more types are not accepted as sub-content (H5P-002): `H5P.AudioRecorder`, `H5P.TwitterUserFeed` and
+    `H5P.Questionnaire` join `H5P.DragQuestion` in `removeDragQuestion.ts`; six other sub-content types stay.
+    Test: `excludedSubContent.test.ts`.
+  - Production runs with the web app (LTI-006): `config/productionChecks.ts` refuses `WEB_APP=off` under
+    `NODE_ENV=production`. Test: `productionChecks.test.ts`.
+  - Two existing tests updated to the rule: unstorable text under a key no field defines goes with the key
+    (`http/contentInput.int.test.ts`), and the "Rights of use" dialog shows only what a field defines
+    (`http/player.browser.int.test.ts`).
+  - D-123 added, with the owner's two decisions of 2026-11-21; spec 01 §3 names the three types;
+    `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project web                       616 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npm run test:e2e                                   31 passed, 1 skipped; 2 files failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests) and journeyGovernance (passed when run again alone)
+  $ npx vitest run --project server                    26477 passed, 31 skipped; 4 failed in 7 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002), and two tests that expected values under keys no field defines to
+      be kept (`http/contentInput`, `http/player.browser`), updated to the rule and passing (11 tests)
+  ```
+
+- **2026-11-21 · Security repairs, step 8 (D-124)** — The player and the editor are handed fitted content,
+  whatever the stored row or an uploaded package holds. Two repairs, one commit each; every new test fails on the
+  code before and passes after:
+  - The player (SEC-008, H5P-004): `h5p/semantics/playedParams.ts` (new) wraps the player's `render`, so every
+    page carries its activity's parameters after D-123's fitting; the row is not rewritten, and what could be
+    stored still plays. Tests: `playedParams.test.ts`, `playedParams.int.test.ts` (real types).
+  - The editor (SEC-008, SEC-005, H5P-006, PROD-012): `h5p/semantics/editorFormParams.ts` and
+    `h5p/editorFormReads.ts` (new) clean what the editor's form is handed when an activity is opened and when a
+    package is uploaded: fitted, text as on save, and a quote in plain text and title data in the form the editor
+    writes into `value="…"`. `h5p/libraries/packageContentCheck.ts` (new) refuses a package whose content cannot
+    be read with 400 before the importer reads it. Tests: `editorFormParams.test.ts`,
+    `editorFormParams.int.test.ts`, `editorQuotedText.browser.int.test.ts` (a label with a double quote, cut off
+    at the quote before, is shown whole).
+  - Two pattern test files (`placeholderMarker.browser`, `skeletonCreation.browser`) asserted what is stored
+    through the editor's `getContent`, which now answers with the editor's form; they read the row through
+    `test/support/storedContent.ts` (new).
+  - BranchingScenario's editor was checked in a browser with and without the `contentId` D-123 removes: the same
+    five nodes, no error, and it saves.
+  - D-124 added; `TRACEABILITY.md` and the spec site regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ npx vitest run --project web                       616 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26496 passed, 31 skipped; 5 failed in 7 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002), and three tests in two pattern files that read stored content
+      through the editor's `getContent`, updated to read the row itself and passing (23 tests in the two files)
+  ```
+- **2026-11-21 · Security repairs, step 9 (D-125)** — A web-app page is framed by nothing, a player page frames
+  only outside media, and three controls ask before they act. Two repairs, one commit each; every new test fails
+  on the code before and passes after:
+  - Framing (DATA-011, LTI-003): `web/webRoutes.ts` sends a web-app page without a Canvas launch with
+    `frame-ancestors 'none'` and `X-Frame-Options: DENY`; a page with a launch keeps our origin and
+    `CANVAS_ORIGINS`. `http/h5pPageCsp.ts`: a player page's `frame-src` lists `EXTERNAL_MEDIA_ORIGINS` only
+    (`'none'` without any); the editor page keeps `'self'`. Tests: `webRoutes.int.test.ts`, `h5pPageCsp.test.ts`,
+    `portalPageFraming.browser.int.test.ts` (new: a browser refuses a web-app page in a frame of a page with the
+    player's policy and of one with the editor's, and opens it directly).
+  - The question (PROD-007, UD-006): `components/ConfirmDialog.tsx` (new, on the existing `Dialog`) asks before
+    «Gjer om til utkast» (`CheckPanel.tsx`, with `useUnpublish.ts`), «Fjern» and «Fjern meg»
+    (`CoAuthorSection.tsx`) and «Ta ut av innhaldsbanken» (`BankUnlistButton.tsx`, new). The first press sends
+    nothing; «Avbryt» and Escape send nothing and return focus to the control. Texts in nn, nb and en. Tests:
+    `AskBeforeActing.test.tsx` (new, 8 tests), the six test files that press these controls now answer the
+    question (`test/support/confirmQuestion.ts`), and the «Fjern meg» keyboard journey answers it by keyboard
+    with an axe scan of the open question (`keyboardStudioJourneys.a11y.test.ts`).
+  - Screenshots of the three questions in nn at 1280 px and 390 px were sent to the owner (none committed).
+  - D-125 added; `TRACEABILITY.md` and the spec site regenerated. No spec change. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run build                                      exit 0
+  $ npx vitest run --project web                       624 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npm run test:a11y                                  559 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26504 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
+- **2026-11-21 · Security repairs, step 10 (D-126)** — One activity's parameters have a size limit, checked
+  before anything reads them, and three steps of a save read long input in time that follows its length. Three
+  repairs, one commit each; every new test fails on the code before and passes after, except the bound tests that
+  hold on both:
+  - The limits (SEC-005, PROD-012): `h5p/semantics/contentBudget.ts` and `markupDepth.ts` (new). Parameters and
+    metadata: 4 000 000 characters and 200 000 values in all, one text 200 000 characters with at most 100 tags
+    open at once (counted by htmlparser2 itself, fed in pieces), a key 256 characters, a library name 255. Past a
+    limit: 400 `hvl:content-too-large` with a message in nn, nb and en. Checked first on a save, a copy and a paste
+    (`http/routes/contentSaveBodies.ts`, new), on every save in `SubContentPolicy`, on import
+    (`packageManifest.ts`) and on opening (`editorFormParams.ts`). A save request is at most 6 MB. Tests:
+    `markupDepth.test.ts`, `contentBudget.test.ts`, `http/contentBudget.int.test.ts` (eight doors and bounds).
+  - Lists (SEC-008): the fitting step cuts a list to its field's `max`, and writes a long list back item by item.
+    Tests: `semanticsConformanceLists.test.ts`, and an Interactive Book with 51 chapters stored with 50
+    (`realTypesConformance.int.test.ts`).
+  - Three steps (PROD-013, H5P-002): the test for a library and its version, the comparison of two text lists,
+    and the trim of a drag word. A stored version past the limits counts as a structural change. Tests:
+    `libraryReferences.test.ts`, `structuralChange.test.ts`, `answerMarkup.test.ts`, `LearnerStateGate.test.ts`.
+  - D-126 added; SEC-005 in spec 01 has an "Amended" line; `TRACEABILITY.md` and the spec site regenerated.
+    Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint                                   11 checks passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins                                 6 manifests, every version pinned exactly
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npx vitest run --project web                       624 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26556 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
+- **2026-11-21 · Security repairs, step 11 (D-127)** — The validator reads only content within the limits for
+  one activity, in time that follows its size, and a slow pattern is a lint error. Four repairs, one commit each;
+  every new test fails on the code before and passes after, except the tables of unchanged verdicts, which hold
+  on both:
+  - The guard (UD-020, SEC-005, PROD-003): `content/boundedValidator.ts` (new), built into the publish flow's
+    dependencies (`content/publishingDeps.ts`): content past a limit of D-126 gets the one error finding `V-SIZE`
+    and is not read; the findings list, publishing and the mappe share it. `CONTENT_LIMITS.pathCharacters`: the
+    paths of all values together are at most 50 000 000 characters. Tests: `boundedValidator.test.ts`,
+    `boundedValidator.int.test.ts`, `contentBudget.test.ts`.
+  - Two rules (UD-021, PED-020): V-LINK-TEXT trims a link text by stepping in from each end; PED-H10 tallies a
+    book's chapters in one pass. Tests: `linkTextRule.test.ts`, `chapterInteractionHint.test.ts`.
+  - One parse per text (UD-020): a reader kept for one validation run (`richText.ts`, `rule.ts` `ruleScope`); the
+    walk and every rule read through it. Tests: `richTextReader.test.ts` (every fixture, no text parsed twice).
+  - The lint rule (NFR-004, NFR-002): `eslint-plugin-regexp` 3.3.3 (development only) with its two rules for
+    patterns that cost more than the text they read, as errors for `apps/server/src`, `apps/web/src` and
+    `packages/*/src`; the five places it found are rewritten and give what they gave. Tests:
+    `lint/slowPatterns.test.ts` and the tests of the five.
+  - Also: the API documentation builds without warnings again (`npm run docs:api`: two listener signatures
+    described, one Prisma type listed), and the accessibility conformance report is regenerated from its sources
+    (`npm run a11y:report`). Both are CI steps; the gate below now runs them.
+  - D-127 added; UD-020 in spec 03 and SEC-005 in spec 01 have an "Amended" line; `TRACEABILITY.md` and the spec
+    site regenerated. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       624 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     529 passed
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26679 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
+- **2026-11-21 · Security repairs, step 12 (D-128)** — New activities, the planner and the mappe have a limit per
+  person, and the planner and the mappe do their work in bounded portions. Three repairs, one commit each; every
+  new test fails on the code before and passes after:
+  - Limits (PROD-007, PED-031, MAPPE-001): per person per ten minutes, 60 new activities (the editor's and the
+    patterns' together), 120 planner requests, 120 mappe previews and exports together; past a limit 429
+    `hvl:rate-limited` with `Retry-After`. `http/h5pRouteLimits.ts`, `learningDesign/http/studioRouteLimits.ts`
+    (new); the counters are in `docs/privacy/DATA-INVENTORY.md` and the 429s in the contract's route lists. Tests:
+    `http/creationLimit.int.test.ts`, `learningDesign/http/studioRouteLimits.int.test.ts`.
+  - Planner (PED-031): `plannerGrid.ts` builds the grid in one pass; `plannerSource.ts` reads the 300 most
+    recently changed activities of the course, and the answer's new `moreActivities` says when there are more; the
+    page then says how many it shows (nn, nb, en). Tests: `plannerGrid.test.ts`, `plannerRoutes.int.test.ts`,
+    `PlannerView.test.tsx`, and an axe scan of the planner with its note (`axeStudioViews.a11y.test.ts`).
+  - Mappe (MAPPE-001, MAPPE-002): the selected activities are listed without their parameters, and each
+    activity's parameters are read, checked and let go before the next one's; the universal design status lists
+    the first 50 findings of an activity and says so when there are more. Tests: `mappeOneAtATime.test.ts`,
+    `mappeView.test.ts`.
+  - Screenshots of the planner with its note in nn at 1280 px and 390 px were sent to the owner (none committed).
+  - D-128 added; PED-031, MAPPE-001 and MAPPE-002 in spec 04 have an "Amended" line; `content/mappe/README.md`
+    names the 50; `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       625 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     529 passed
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ npm run test:a11y                                  561 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26691 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
+
+- **2026-11-21 · Security repairs, step 13 (D-129)** — A person from Canvas is known per platform registration,
+  and launch input no platform sends is refused with 400. Two repairs, one commit each; every new test fails on
+  the code before and passes after:
+  - Identity (DATA-002, LTI-001, DATA-008, AUTH-005): the text the account hash and the learner pseudonym are
+    derived from is `lti|<iss>|<client-id>|<sub>`, with the client ID of the registration the launch was
+    validated against, in the launch, in a resumed request, in account linking and in the data-subject tool,
+    whose input for a Canvas identity is now `{"issuer", "clientId", "sub"}`. `LTI_PLATFORMS` refuses an issuer or
+    a client ID with `|` or a control character. Only test data existed (owner, 2026-11-21), so nothing is
+    converted: the migration `20261121190000_lti_identity_per_registration` removes the Canvas identity rows made
+    from the earlier text. Tests: `privacy/deriveLearnerKey.test.ts`, `auth/identity/subjectSources.test.ts`,
+    `lti/launch/ltiAccount.int.test.ts` (two registrations of one issuer), `lti/launch/ltiIdentityTexts.test.ts`
+    (the launch, linking and the tool derive one text), `lti/launch/onDeepLinking.test.ts`,
+    `privacy/dsr/dataSubject.test.ts`, `config/envParsers.test.ts`.
+  - Launch input (LTI-001, PROD-012, NFR-006): `lti/ltiInputText.ts` (new). A query or form field of the login
+    and launch routes with a control character, a `sub` with one, or a stored claim the database cannot hold is
+    400 `hvl:launch-malformed` with the «could not be opened from Canvas» page and a warning in the log, where
+    it was a 500 and an error line; an issuer, client ID or nonce that no row could hold is "not found". A
+    description on several lines still launches. Tests: `lti/ltiInputText.test.ts`,
+    `lti/ltiMalformedInput.int.test.ts`, `lti/http/ExpressRouterHttpHandler.test.ts`,
+    `lti/storage/ltiStorageRows.test.ts`.
+  - D-129 added; LTI-001 in spec 02 and DATA-002 and DATA-008 in spec 05 have an "Amended" line; the data
+    inventory, the DPIA input and `docs/ops/data-subject-requests.md` name the client ID; `TRACEABILITY.md` and
+    the spec site regenerated. No page of the web app changed. Gate output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       625 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     529 passed
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests). The first of two full runs also failed one
+      assertion of journeyGovernance (PED-011: which requests a visitor's page makes), which passed alone
+      and in the second run
+  $ npx vitest run --project server                    26741 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
+
+- **2026-11-21 · Security repairs, step 14 (D-130)** — A request with an ltik reaches only what its launch's pages
+  ask for, and a landing address with an ltik counts only from our own pages. Two repairs, one commit each;
+  every new test fails on the code before and passes after:
+  - What an ltik reaches (LTI-003, LTI-004, LTI-006, PROD-007, PROD-006): `lti/ltikScope.ts` (new) lists the
+    methods and paths per kind of launch, default deny; `auth/requestPrincipal.ts` asks it for every request
+    with an ltik and answers anything else with 403 `hvl:not-from-canvas` (nn, nb, en). A resource-link launch
+    reaches the launched activity (state, xAPI, the Canvas editor's read and save, insight, score status); a
+    Deep Linking launch no activity; listing, creating, deleting, downloading, copying, publishing and sharing
+    need the portal session. The list was drawn from what the pages were recorded to ask. Tests:
+    `lti/ltikScope.test.ts` (also pins which contract routes an ltik reaches), `lti/ltikScope.int.test.ts`,
+    `auth/requestPrincipal.test.ts`; eleven existing files follow the new answer.
+  - The landing address (LTI-003): `lti/landingLtik.ts` (new), used by `/app/play`, `/lti/play`, `/lti/edit` and
+    `/lti/deeplink`: refused when `Sec-Fetch-Site` is present and not `same-origin`; without fetch metadata
+    accepted only within ten minutes of the launch. Measured in Chromium: a launch's landing is `same-origin`.
+    Tests: `lti/landingLtik.test.ts`, `lti/landingLtik.int.test.ts`; browser tests that hold an ltik arrive
+    through `test/support/openLanding.ts`.
+  - D-130 added; LTI-003, LTI-004 and LTI-006 in spec 02 and PROD-006 in spec 00 have an "Amended" line; the
+    threat model (T-13, new T-17, risk 8), the glossary and the evaluator guide follow; `TRACEABILITY.md` and
+    the spec site regenerated. No page of the web app changed its look. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       625 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     529 passed
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  561 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26805 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
+
+- **2026-11-22 · Security repairs, step 15 (D-131)** — The portal's login, its answers and the save gate are
+  closed to other sites' requests and to a second spelling of an ID. Four repairs, one commit each; every new
+  test fails on the code before and passes after:
+  - The save gate (PROD-003, H5P-006): the content routes read the activity ID in lower case
+    (`contentIdParam`), `PublishedSaveGate` uses that spelling for its lock and lookup and refuses with 404 when
+    it finds no activity. Tests: `content/publishedSaveIdentity.int.test.ts`.
+  - Headers (AUTH-003, H5P-007, LTI-003): `ownAnswerHeaders` puts `no-store`,
+    `Cross-Origin-Resource-Policy: same-origin` and the portal framing rule on `/api`, `/auth/session` and the
+    H5P routes behind authentication; portal pages send `Cross-Origin-Opener-Policy: same-origin`, LTI pages do
+    not. Tests: `http/securityHeaders.test.ts`, `http/ownAnswerHeaders.int.test.ts`, `web/webRoutes.int.test.ts`.
+  - Feide login (AUTH-001, AUTH-003): `auth/feide/loginNavigation.ts` (new) lets only a page the person opened
+    start a login; a page another site opened without a click, or a frame, gets a sign-in page with a button
+    (nn, nb, en; axe-scanned in `a11y/axeServerPages.a11y.test.ts`); the callback is taken only as a page
+    navigation and uses the pending login up only when its `state` is that login's (`LoginTransactions.peek`).
+    Tests: `auth/feide/loginNavigation.test.ts`, `auth/feide/feideLoginStart.int.test.ts`,
+    `auth/feide/loginTransactions.int.test.ts`. Screenshots of the sign-in page in nn at 1280 px and 390 px
+    were sent to the owner (none committed).
+  - Web app (AUTH-003): a portal request refused with `hvl:csrf-invalid` asks `/auth/session` once for the
+    current token and is sent again (`apps/web/src/api/csrfRetry.ts`, new). Tests: `api/csrfRetry.test.ts`.
+  - `e2e/journeyGovernance.e2e.test.ts` now waits for the page's requests before it counts the refused ones
+    (PED-011); it had read the list too early in two earlier runs.
+  - D-131 added; AUTH-001 and AUTH-003 in spec 02 and PROD-003 in spec 00 have an "Amended" line; the threat
+    model (T-20, new T-43), the risk analysis (ROS-07) and the runbook's checklist record what hosting under
+    `hvl.no` means for cookies; `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     529 passed
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26844 passed, 31 skipped; 2 failed in 5 files: the same
+      five files as in step 1 (a privileged database, the seccomp PDF sandbox, a free port: limits of this
+      container; DATA-010, MAPPE-004, NFR-002)
+  ```
+
+- **2026-11-22 · Security repairs, step 16 (D-132)** — The backup tool's own checks hold for any text. Two
+  repairs in `tools/ops/`, in one commit; every new test fails on the code before and passes after:
+  - Row counts (NFR-002): the dump's output is cut at the newline byte only (`newlineSplitter` in
+    `toolProcess.mjs`), where `node:readline` also ended a line at U+2028 and U+2029 and so counted a row with
+    such a character twice. The restore's summary names the tables whose counts differ (`differingTables`).
+  - Content-file keys (NFR-002): `missingContentFiles` reads the keys as hex, so a key with a bar or a line
+    break is compared as it is.
+  - Tests: `tools/ops/test/newlineSplitter.test.mjs`, `backupUnusualText.test.mjs` (a round trip of rows with
+    U+2028, U+2029 and U+0085 and of keys with a bar and those characters; a key with a line break against the
+    database alone, as the storage emulator accepts none), `backupRestoreChecks.test.mjs` (the named table).
+  - D-132 added; NFR-002 in spec 00 has an "Amended" line; the runbook's restore step and `tools/ops/README.md`
+    follow; `TRACEABILITY.md` and the spec site regenerated. Only `tools/ops/` and documents changed, so the
+    server, web, browser and accessibility suites were not run again (their last full run is step 15's). Gate
+    output:
+
+  ```
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project tools                     536 passed (70 files)
+  ```
+
+- **2026-11-22 · Security repairs, step 17 (D-133)** — The server starts strictly and fails loudly. Three
+  repairs, one commit each; every new test fails on the code before and passes after:
+  - Start-up rules (DOC-008, DATA-002, AUTH-001, LTI-001, DATA-009): `NODE_ENV` has no default, so a missing or
+    empty mode stops the start; off a local address (`localhost`, `.localhost`, 127.0.0.0/8, `[::1]`) the key
+    rules and the https rules hold in every mode (`config/publicAddressRules.ts`, new; the rules themselves
+    moved to `config/keyStrengthRules.ts` and `config/httpsRules.ts`); production refuses `DEBUG` and
+    `NODE_DEBUG` (`config/debugOutput.ts`, new). Tests: `config/env.test.ts`,
+    `config/publicAddressRules.test.ts`, `config/debugOutput.test.ts`.
+  - Faults (NFR-006, DATA-009, NFR-002): the app's chain ends in `http/lastResortError.ts` (new), which logs a
+    fault after an answer has begun and closes the connection; `server/processFaults.ts` (new) turns an
+    uncaught exception and an unhandled rejection into one `fatal` line and exit code 1;
+    `server/serverProcess.ts` (new, the former `main()`) writes any failed start that is not a configuration
+    problem as one `fatal` line and ends the process. The first start line names the mode, and a warning
+    follows outside production. Tests: `http/lastResortError.test.ts`, `server/processFaults.test.ts` (also in
+    a real process), `server/serverProcess.test.ts`, `server/main.smoke.test.ts`. The smoke test's «port
+    already taken» case, which hung in this container because connected clients kept the process alive, now
+    passes: the process ends itself.
+  - Headers (SEC-004, LTI-003, AUTH-003, DATA-011): every response starts with
+    `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, which each page replaces; answers
+    about the signed-in person keep `frame-ancestors 'self'` with `default-src 'none'`; the server's own start
+    page has `form-action 'self'` plus Feide's origin; `HSTS_INCLUDE_SUBDOMAINS` (new, off by default) adds
+    `includeSubDomains`. Tests: `http/securityHeaders.test.ts`, `http/pages/portalPages.test.ts`; the stand-in
+    frame pages of `test/web/webTestServer.ts` now say who may frame them, as the real pages do.
+  - D-133 added; NFR-006 (spec 00), DATA-009 and DATA-002 (spec 05), AUTH-001 and LTI-003 (spec 02) and SEC-004
+    (spec 01) have an "Amended" line; the threat model (A2, T-06, T-42, T-130), the runbook's start, monitoring
+    and checklist sections, `docs/ops/clamav.md`, the architecture pack and `.env.example` follow;
+    `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks different, so no screenshots.
+    The suites below ran on the three repair commits; a later commit only gave one type its own TSDoc
+    (`ProblemOutput`), after which typecheck, the API docs and that file's tests ran again. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              97 passed
+  $ npx vitest run --project tools                     536 passed (70 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26867 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004). The free-port case of earlier steps passes now.
+  ```
+
+- **2026-11-22 · Security repairs, step 18 (D-134)** — Limits for the deployment: the sum of what the earlier
+  steps limited one by one, and what happens when the server stops. Four repairs, one commit each; every new test
+  fails on the code before and passes after:
+  - Memory line (NFR-002, NFR-006, NFR-007): `server/memoryBudget.ts` (new) writes one start line,
+    `memory limits`, with the container's limit, the heap limit and what the server may use beside its heap, and
+    warns when production has no limit or the limit is below the need. Tests: `server/memoryBudget.test.ts`,
+    `server/main.smoke.test.ts`.
+  - The app stack (NFR-007, NFR-002): `deploy/compose.app.yml` gives the app `restart: unless-stopped` and a
+    memory limit of 5 GiB with no swap beyond it; `tools/deploy-check/resourceRules.mjs` (new) holds the file to
+    it. Tests: `tools/deploy-check/test/resourceRules.test.mjs`. The smoke test (`deploy/smoke/`) now reads the
+    server's memory line inside the container, stops the server process once and waits until the app answers
+    again; it ran here and passed (194 s: limit 5 120 MiB, need 3 904 MiB, no warning; restart count 1).
+  - Insight (INS-001, INS-009): a view is read and counted inside a gate (`infra/BoundedGate.ts`,
+    `insight/InsightViewGate.ts`, new): two at once, twenty waiting, and past that 503 `insight.busy` with
+    `Retry-After`, in nn, nb and en; the contract documents it for the view and the CSV. Tests:
+    `infra/boundedGate.test.ts`, `insight/http/insightBusy.int.test.ts`, the contract's `insightRoutes.test.ts`.
+  - Saved state (H5P-005): the save route takes a turn before its body is read
+    (`http/routes/stateSaveGate.ts`, new): eight at once, two hundred waiting, and past that 429
+    `hvl:rate-limited` with `Retry-After`. Tests: `http/stateSaveGate.test.ts`. Measured before the change: a
+    saved state at the size limit is kept nowhere after its request, but needs several megabytes while its form
+    body is read, and 150 of them at the same moment ran a process with a 256 MB heap limit out of memory; with
+    the gate all 150 were stored.
+  - D-134 added, with the measured figures; NFR-002 and NFR-007 in spec 00 have an "Amended" line;
+    `docs/ops/docker.md` has the memory budget, the runbook asks for a limit and a restart rule where the
+    container runs and names the new alerts; the threat model (T-114) and the risk analysis (ROS-07) follow;
+    `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks different, so no screenshots.
+    Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26881 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 194 s
+  ```
+
+- **2026-11-22 · Security repairs, step 19 (D-135)** — Next.js is pinned at 16.4.6 (the owner's decision of
+  2026-11-22 to make the update now). One change, in one commit:
+  - Pins (SEC-007): `next` 16.4.2 → 16.4.6 in `apps/web` and `apps/server`, `@next/eslint-plugin-next` with it,
+    all exact; the lock file changed in Next.js's own packages only. `npm audit` listed seven moderate advisories
+    for `next` before and lists none after. The first run of `npm run build` passes, where the framework's own
+    notice about its version stopped it before.
+  - Re-checked (LTI-003): the router files `apps/web/src/features/lti/ltikFromAddress.ts` depends on are byte for
+    byte the same in both versions; its `UPSTREAM:` pointer names the new tag.
+  - No new test: the step adds no behaviour. Screenshots of five public pages in nn at 1280 px and 390 px are
+    pixel for pixel the same before and after, so none was sent.
+  - D-135 added, with a pointer under D-068; the architecture pack names the new version;
+    `docs/assurance/sbom.cdx.json` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run build                                      exit 0 (first run)
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run sbom -- --check                            current (477 npm packages)
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26881 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 283 s (image built with 16.4.6)
+  ```
+
+- **2026-11-22 · Security repairs, step 20 (D-136)** — The insight CSV a teacher downloads follows its language,
+  quotes and guards every field, and carries no ID that learners chose. One code commit:
+  - The file's form (INS-009, PROD-012): in nn and nb `;` between the fields and a decimal comma, in en `,` and a
+    point, as the spreadsheet programs of each language read a file (`insight/http/insightCsvFields.ts`, new;
+    `insight/http/insightCsvText.ts`). Every field is quoted. A formula character (`=`, `+`, `-`, `@`) gets a
+    `'` wherever a cell could start: at the start of a field and after every `;`, `,`, tab and line break inside
+    it, so a program that splits at another character than the writer's finds no cell that begins a formula.
+    Tests: `insight/http/insightCsvFields.test.ts`, `insightCsvFields.property.test.ts` (generated texts),
+    `insightCsvText.test.ts`; the routes' tests read each file with its own separator.
+  - No learner-chosen ID (INS-009, INS-006): a question that is not in the activity's current content is written
+    with an empty `item` and a neutral name («Spørsmål 3 (ikkje i aktiviteten no)», in nn, nb and en); a question
+    of the activity keeps its ID (`insight/export/insightCsvRows.ts`). Test: `insight/unlistedItems.test.ts`.
+  - The contract describes the file's form per language. D-136 added; INS-009 in spec 05 has an "Amended" line;
+    the threat model has a row for it (T-104); `TRACEABILITY.md` and the spec site regenerated. No page of the
+    web app looks different, so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26888 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-22 · Security repairs, step 21 (D-137)** — A save that changes an answer key starts a new content
+  version, so insight never shows answers that were judged against one key under another key's marks. Two code
+  commits:
+  - The save step (PROD-013, INS-003, INS-006): a save of an existing activity with the same structure and
+    another answer key raises `H5PContent.version` in the statement that writes the new parameters and keeps
+    every learner's saved state; the author is asked nothing (`learningDesign/safeEditing/LearnerStateGate.ts`,
+    `h5p/storage/contentVersionRaiseWrite.ts`, new, `h5p/storage/contentUpdate.ts`). The key is read with
+    insight's own readers (`insight/content/answerKeys.ts`, new): a choice question's `correct` marks, and per gap
+    of a Blanks or DragText task the accepted answers and whether case counts; texts, tips, feedback and the
+    order of a gap's alternatives are no part of it. Tests: `insight/answerKeys.test.ts`,
+    `h5p/contentVersionRaiseWrite.test.ts`, `learningDesign/safeEditing/LearnerStateGate.test.ts`, and through the
+    save route on the real MultiChoice and Blanks, with insight after the save,
+    `learningDesign/safeEditing/answerKeyVersions.int.test.ts`.
+  - The Innsikt tab (INS-003): the note for an older version says that the options or the answer key may have
+    changed (nn, nb, en). Screenshots in nn at 1280 px and 390 px were sent to the owner; none is committed.
+  - D-137 added; PROD-013 in spec 00 and INS-003 in spec 05 have an "Amended" line; the threat model (T-100) and
+    R3 in `docs/privacy/DPIA-INPUT.md` follow; `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       630 passed
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26909 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-22 · Security repairs, step 22 (D-138)** — Who can be one of the *k* learners behind a number in
+  insight is narrowed where statements arrive (the owner's decisions of 2026-11-22). Two code commits:
+  - Whose play is recorded (LTI-011, DATA-012, INS-006, LTI-004): one rule (`xapi/learningDataScope.ts`, new) for
+    the ingestion (`xapi/XapiIngest.ts`) and, through the actor, the player page's xAPI bridge
+    (`h5p/render/xapiBridgeConfig.ts`): in the portal a learner who is an HVL member, in Canvas a launch with the
+    context role `Learner` (`lti/LtiRoleMapper.ts` `isLtiLearner`, `lti/launchFacts.ts`), and Canvas's test
+    student, flagged as before. A learner from another Feide organisation, an observer and a launch without roles
+    play as before and store no statement; their saved state is kept. Tests: `xapi/learningDataScope.test.ts`,
+    `xapi/xapiRecordedLearners.int.test.ts`, `lti/LtiRoleMapper.test.ts`, `lti/launchFacts.test.ts`,
+    `auth/principalToH5pActor.test.ts`, `h5p/render/xapiBridgeConfig.test.ts`.
+  - A version that is no longer current takes no new learner (INS-006, PROD-013): a batch naming an older version
+    is stored only for a learner who already has a statement under that version in that context
+    (`xapi/XapiStatementStore.ts` `hasRowsIn`); any other is answered 202 and stores nothing, counted in the log.
+    Tests: `xapi/xapiRecordedLearners.int.test.ts`, `xapi/xapiIngest.int.test.ts`.
+  - The privacy notice (DATA-006) tells a person from another institution what is and is not stored (nn, nb, en;
+    `apps/web/test/features/privacyNoticeGuests.test.ts`). Screenshots in nn at 1280 px and 390 px were sent to
+    the owner; none is committed.
+  - D-138 added; LTI-004 and LTI-011 in spec 02 and INS-006 and DATA-012 in spec 05 have an "Amended" line; in
+    `docs/privacy/DPIA-INPUT.md` R37, R40 and R4 are updated and R41 (learners who cooperate with the reader of
+    insight) is new, held to the code by `privacy/dpiaRecordedLearners.test.ts`; the threat model follows;
+    `TRACEABILITY.md` and the spec site regenerated. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       635 passed (99 files)
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26931 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004); the three content tests added with the documents ran on their own and passed
+  ```
+
+- **2026-11-22 · Security repairs, step 23 (D-139)** — One activity's files have a limit, are kept under the
+  stored ID, and a clean-up cannot fail a stored save. One code commit:
+  - The limit (SEC-005, PROD-007): at most 200 MB and 1 000 files in one activity, what one imported package may
+    bring. A save is checked before Lumi writes (`h5p/activityFileBudget.ts`, new, called from
+    `h5p/editorSaveSteps.ts`): uploads, pasted files and kept files, each once; past the limit 413
+    `hvl:activity-files-over-limit` with a message in nn, nb and en, and nothing is written. A duplicate saves
+    through the editor and meets the same check. The storage holds the limit for every file it is given
+    (`h5p/storage/activityFileRoom.ts`, new, in `PrismaContentStorage.addFile`) and removes a file that took an
+    activity past its bytes. Tests: `h5p/activityFileBudget.test.ts`, `h5p/HvlH5PEditorFiles.test.ts`,
+    `h5p/activityFileLimits.int.test.ts`.
+  - Files under the stored ID (H5P-004): `h5p/storage/S3ContentFileStore.ts` writes the ID in lower case into
+    every key, a second guard beside D-131's at the routes. Test: `h5p/activityFileLimits.int.test.ts`.
+  - The clean-up after a stored save (H5P-006): a failure is logged by its kind and the save is answered as
+    stored. Test: `h5p/HvlH5PEditorFiles.test.ts`.
+  - D-139 added; SEC-005 in spec 01 and PROD-007 in spec 00 have an "Amended" line; the threat model (T-33)
+    follows; `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks different, so no
+    screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       635 passed (99 files)
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             202 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26949 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-23 · Security repairs, step 24 (D-140)** — A text field without a tag list is plain text, a link
+  address cannot leave its attribute, and the H5P pages allow no inline script. One code commit:
+  - Plain text (SEC-008): `h5p/semantics/lumiTextSanitizer.ts` is the one rule for a text value, Lumi's for a
+    field with `tags` and no markup for any other. `SubContentPolicy` cleans every text field on a save, the
+    player page makes such a value plain when it holds a `<` (`playedParams.ts`), and the editor's form goes
+    through the same rule. A text past its field's `maxLength` is cut as plain text and ends whole
+    (`textLengthCut.ts`, new). Tests: `h5p/semantics/lumiTextSanitizer.test.ts`, `textLengthCut.test.ts`,
+    `plainTextFields.test.ts`, `realTypesPlainText.int.test.ts` (the ten real types: 544 plain fields in their
+    examples, none changed by the rule).
+  - Link address (SEC-008): `linkAddressConformance.ts` (new), called by `semanticsConformance.ts`, on a save,
+    on the player page and in the editor's form. Test: `h5p/semantics/linkAddressConformance.test.ts`.
+  - The pages (H5P-009, DATA-011): `h5pIntegration.js`, `editorPage.js` and the xAPI bridge read their data
+    block only from the JSON script in the page's head; `script-src` is `'self'` without the hash of Core's
+    inline script, and `h5p/render/coreInlineScripts.ts` is removed. Tests: `h5p/render/dataBlockScripts.test.ts`,
+    the theme's `xapiBridgeConfigBlock.test.ts`, `http/h5pPageCsp.test.ts`; the browser tests of the ten types
+    on the player and editor pages report no refused script.
+  - One existing test expected the earlier stored form of a plain field
+    (`content/publishedSaveRealTypes.int.test.ts`); it now expects plain text (a second commit).
+  - D-140 added, with amendment lines under D-070 and D-115; SEC-008 and H5P-009 in spec 01 have an "Amended"
+    line; the threat model (T-03), the architecture description, the human-review list, the evaluator guide and
+    the server README follow; `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks
+    different, so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       635 passed (99 files)
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   32 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    26988 passed, 31 skipped; 2 failed in 5 files: a
+      privileged database (three files) and the seccomp PDF sandbox, limits of this container (DATA-010,
+      MAPPE-004), and the expectation named above, corrected afterwards (its file re-run: 5 passed)
+  ```
+
+- **2026-11-25 · Security repairs, step 25 (D-141)** — A launch is finished by the browser that began it,
+  requests before sign-in have a bound, and ltijs asks a platform only through our request handler. One code
+  commit:
+  - The last step of a launch (LTI-001, LTI-003): `lti/http/launchPostOrigin.ts` (new), called by
+    `ExpressRouterHttpHandler` before ltijs reads the request, takes the post that carries ltijs's recovery token
+    only with `Sec-Fetch-Site: same-origin` or, without that header, with an `Origin` that is exactly ours;
+    ltijs's launch page is sent with `Referrer-Policy: same-origin` so a browser names our origin there
+    (`ltiPageHeaders.ts`). Tests: `lti/http/launchPostOrigin.test.ts`, `lti/launchBrowserBinding.int.test.ts`,
+    `e2e/ltiLaunchOwnPage.e2e.test.ts` (a launch in full Chromium without fetch metadata).
+  - Error pages (LTI-003): every LTI error page loads the landing script, so an ltik leaves the address there too
+    (`http/pages/messagePage.ts`, `lti/http/ltiErrorPages.ts`, `lti/pages/ltiStaticScripts.ts`, new).
+  - Bounds before sign-in (LTI-001, DATA-007, NFR-006): `lti/http/launchRequestCeiling.ts` (new; 6 000 requests a
+    minute per address fingerprint on ltijs's routes), `LtiCacheManager` keeps a platform's key set for a minute
+    after a fetch, and `auth/audit/failureAuditBudget.ts` (new) bounds the audit rows of failed logins and
+    launches (10 a minute per address, 300 in all; the rest counted in one log line). Tests:
+    `lti/http/launchRequestCeiling.int.test.ts`, `auth/audit/failureAuditBudget.int.test.ts`,
+    `lti/unknownKeyFetch.int.test.ts`, `lti/storage/LtiCacheManager.int.test.ts`.
+  - What ltijs asks a platform (LTI-001, LTI-008): `lti/http/LtiOutboundRequests.ts` (new) replaces ltijs's
+    request handler: the platforms' own origins only, no redirect, 10 seconds, 4 MB. Test:
+    `lti/http/LtiOutboundRequests.test.ts`.
+  - The test launch driver and the load scripts send `Sec-Fetch-Site: same-origin` on the last step, as a
+    browser does. A second commit adds the TSDoc the API docs asked for in two of the new files.
+  - D-141 added, with amendment lines under D-051, D-065 and D-131; LTI-001, LTI-003, LTI-007 and LTI-008 in
+    spec 02 have an "Amended" line; the threat model (T-13, T-18, T-60, T-63, T-111), the architecture
+    description, the data inventory (three Redis keys), the human-review list, the runbook, the evaluator guide
+    and the server README follow; `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks
+    different, so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       635 passed (99 files)
+  $ npx vitest run --project api-contract              98 passed
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27035 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-25 · Security repairs, step 26 (D-142)** — A logout and a cookie order follow the session, a Feide
+  ID is read by one rule, typed text holds no hidden characters, and the editor endpoint takes known actions only.
+  One code commit:
+  - Logout (AUTH-003): `endPortalSession` clears the session cookie only for a live session it ended; a logout
+    request without one gets the same redirect and changes nothing. Tests:
+    `auth/session/portalSessionMiddleware.int.test.ts`, `auth/feide/feideLogout.int.test.ts`.
+  - A dead session cookie (AUTH-003): `auth/session/staleCookieClearing.ts` (new) adds the order to delete it when
+    the answer's headers are written, and only to an answer marked `no-store` or `private`; an answer a cache may
+    keep (H5P core and library files, the web app's files under `/_next/static/`) never carries it. Tests:
+    `auth/session/staleCookieClearing.test.ts`, `http/ownAnswerHeaders.int.test.ts`,
+    `web/webAppStaleCookie.int.test.ts` (the built web app's real answers).
+  - One Feide ID rule (AUTH-002, AUTH-005, DATA-008): `auth/identity/feideId.ts` and `auth/identity/asciiText.ts`
+    (new): SP and HTAB trimmed, `A`–`Z` lower-cased, every other character as written, then the pattern. Used by
+    the login's claims, `custom.feide_login`, the configured lists, the people search, the data-subject tool and
+    the two guards; Feide group IDs are compared the same way. Tests: `auth/identity/asciiText.test.ts`,
+    `auth/identity/feideId.test.ts`, `learningDesign/collaboration/peopleSearch.int.test.ts`.
+  - Typed text (PED-030, PED-032, UD-022, PROD-007): `packages/api-contract/src/textRules.ts` (new) refuses
+    control characters, the line and paragraph separators and the bidirectional controls in the learner purpose,
+    the outcomes, the rationale, a reason for publishing (with its rule ID and path) and the people search; such a
+    request is a 400. The web forms clean pasted text first (`apps/web/src/config/typedText.ts`, new). Tests:
+    `packages/api-contract/test/textRules.test.ts`, `learningDesign/metadata/typedTextFields.int.test.ts`,
+    `apps/web/test/config/typedText.test.tsx`.
+  - Editor requests (H5P-002): `http/routes/ajaxRoutes.ts` answers a missing, repeated or unknown action with 400
+    before any body is read. Test: `http/ajaxActions.int.test.ts`.
+  - D-142 added, with amendment lines under D-054, D-057 and D-087; AUTH-002, AUTH-003 and AUTH-005 in spec 02,
+    PED-030 and PED-032 in spec 04, UD-022 in spec 03, PROD-007 in spec 00 and H5P-002 in spec 01 have an
+    "Amended" line; the threat model (T-02, T-05, T-21, new T-25), the glossary, the human-review list, the
+    test-environment notes and the server README follow; open question Q32 added (which characters a Feide ID
+    may hold, for HVL IT); `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks
+    different, so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       642 passed (100 files)
+  $ npx vitest run --project api-contract              122 passed (15 files)
+  $ npx vitest run --project tools                     541 passed (71 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27104 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-25 · Security repairs, step 27 (D-143)** — An uploaded `.json` file is checked in portions, an upload
+  request carries few and small text fields, the library tool holds names and addresses to fixed forms, and
+  authors take turns in the malware-scan queue. One code commit:
+  - The `.json` check (SEC-002): `security/sniff/jsonSyntax.ts` and `security/sniff/jsonFileCheck.ts` (new) read
+    the file 64 KB at a time and answer exactly as decoding and parsing the whole file did, without building it in
+    memory; `security/sniff/textFormats.ts` uses them. Tests: `security/sniff/jsonSyntax.test.ts` (compared with
+    `JSON.parse` on generated texts), `security/sniff/jsonFileCheck.test.ts` (portion boundaries; a 30 MB file in
+    a process with a 64 MB heap).
+  - Upload text fields (SEC-005): `http/multipartUpload.ts` takes at most 4 text fields of at most 64 KB each, a
+    field name of at most 100 characters and 8 parts in all; a request past a limit is a 400 and leaves no folder,
+    and no value is cut short and passed on. Tests: `http/multipartUploadFields.test.ts`,
+    `http/uploadLimits.int.test.ts`.
+  - Library sources (H5P-003): `tools/h5p-libraries/sourceRules.mjs` (new) holds a repository to
+    `https://github.com/<owner>/<name>` and a machine name, a version, a ref and a commit to their forms before
+    git runs or a folder is named; git gets them after `--`. Used by `resolveManifest.mjs`, `gitSource.mjs` and
+    `fetchLibraries.mjs` (every line of the pin list); the image build copies the new file. Tests:
+    `tools/h5p-libraries/test/sourceRules.test.mjs`, `resolveManifest.test.mjs`, `gitSource.test.mjs`,
+    `manifest.test.mjs`, `tools/h5p-bundle/test/imageInputsStage.test.mjs`.
+  - Scan turns (SEC-006): `security/malware/ScanTurns.ts` hands the free turns to the waiting authors in rotation;
+    `security/malware/scanOwner.ts` (new) carries the author of an upload request, set in
+    `http/routes/ajaxRoutes.ts`. Four scans at once and the time limit stay as they are. Tests:
+    `security/malware/ScanTurns.test.ts`, `security/malware/scanOwner.test.ts`,
+    `http/malwareScanTurns.int.test.ts` (a fake clamd, two authors).
+  - An imported package in the editor (SEC-005, SEC-008): no change; a test states that its title data, its
+    pieces' title data and its file settings arrive as plain text (`h5p/semantics/editorFormParams.int.test.ts`).
+  - D-143 added, with amendment lines under D-043, D-078 and D-110; H5P-003, SEC-002, SEC-005 and SEC-006 in spec
+    01 have an "Amended" line; the threat model (T-33, T-80, T-112), ROS-07, the architecture description, the
+    ClamAV runbook, the tool's README and the server README follow; `TRACEABILITY.md` and the spec site
+    regenerated. The tool was run for real: the tags of a repository read from GitHub, and a fetch from the cached
+    checkouts packed the same ten packages (the same SHA-256 list). No page of the web app looks different, so no
+    screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       642 passed (100 files)
+  $ npx vitest run --project api-contract              122 passed (15 files)
+  $ npx vitest run --project tools                     549 passed (72 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27124 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-26 · Security repairs, step 28 (D-144)** — A server that stands still is marked unhealthy within half a
+  minute and says so afterwards, a Redis command fails at once while Redis cannot be reached, the image runs no
+  code from a writable folder, the seccomp profile is Docker's default plus one rule, and a real purge run records
+  its start. One code commit:
+  - Health check and standstill (NFR-002): `deploy/compose.app.yml` gives a try 3 seconds, tries come every 5
+    seconds, the third failed one counts, and failed tries in the first 120 seconds do not;
+    `tools/deploy-check/resourceRules.mjs` holds the check short. `server/eventLoopWatch.ts` (new) writes one
+    warning with two numbers when the event loop stood still for a second or more; `server/main.ts` starts and
+    stops it with the jobs. Tests: `tools/deploy-check/test/resourceRules.test.mjs`,
+    `server/eventLoopWatch.test.ts`.
+  - Redis (H5P-004, LTI-011): `infra/redisClient.ts` creates the client without its offline queue and puts the same
+    rule on transactions, which node-redis 4.7.1 leaves out; a command, a transaction or a script sent while the
+    connection is down rejects at once and none is sent later. Test: `infra/redisOutage.int.test.ts` (a relay in
+    front of the real Redis that is cut and restored).
+  - Loader cache (NFR-007): `deploy/Dockerfile` sets `TSX_DISABLE_CACHE=1` in the runtime stage;
+    `tools/deploy-check/deployRules.mjs` requires it and refuses a service that changes it. Tests:
+    `tools/deploy-check/test/deployFiles.test.mjs`, `server/loaderCache.test.ts` (the pinned tsx writes nothing to
+    the temporary area with the setting, and its folder without it).
+  - Seccomp profile (MAPPE-004, NFR-007): `deploy/seccomp/chromium-sandbox.seccomp` (new) is the default profile of
+    Docker Engine 29.9.2 with one rule added (`clone`, `setns`, `unshare`); Playwright's file is removed.
+    `tools/deploy-check/seccompRules.mjs` (new) holds its hash and proves that without the rule it is Docker's
+    file byte for byte. Test: `tools/deploy-check/test/seccompRules.test.mjs`.
+  - Purge audit (DATA-007, DATA-003): `privacy/purge/retentionPurge.ts` writes `purge.run` with
+    `outcome: "started"` and the plan's counts before a real run's first change. Tests:
+    `privacy/purge/retentionPurgeCutShort.int.test.ts` (new), `retentionPurge.int.test.ts`,
+    `retentionPurgeJobRetry.int.test.ts`; the two tests that list every audit row of a deployed database
+    (`privacy/operationsClis.int.test.ts`, `e2e/learnerDataRights.e2e.test.ts`) expect the extra row and cannot
+    run in this container (privileged database).
+  - The Docker smoke test has two new checks (`deploy/smoke/smokeRuntimeChecks.sh`): no folder of translated code
+    in the app's `/tmp`, and a server process stopped in place is marked unhealthy and logs the standstill when it
+    runs on.
+  - D-144 added, with amendment lines under D-107, D-110 and D-134; NFR-002 and NFR-007 in spec 00, H5P-004 in spec
+    01, MAPPE-004 in spec 04, DATA-003 and DATA-007 in spec 05 have an "Amended" line; the threat model (T-54, T-70,
+    T-103, T-110, T-114), ROS-20, the architecture description (also its line references into the stack file, the
+    Dockerfile and `main.ts`), the test-environment notes, the evaluator guide, the hand-off README, the Docker and
+    yearly-purge operations notes, the runbook, the data inventory and the READMEs of `deploy/`, `deploy/seccomp/`,
+    `tools/deploy-check/` and the server follow; `TRACEABILITY.md` and the spec site regenerated. No page of the
+    web app looks different, so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 686 s (PDF with the sandbox on under the
+      new profile; no tsx folder in /tmp; a stopped server process unhealthy after 18 s, healthy 5 s after it
+      ran on, standstill line 18 707 ms; restart count 1)
+  $ npx vitest run --project web                       642 passed (100 files)
+  $ npx vitest run --project api-contract              122 passed (15 files)
+  $ npx vitest run --project tools                     555 passed (73 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27134 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-26 · Security repairs, step 29 (D-145)** — The advisory check passes again, an audit exception is dated
+  and bound to its package, the lock file is held to one source and one checksum, an install script outside the
+  reviewed list stops the install, the workflows name commits and digests, and the advisories are checked every
+  day. One code commit:
+  - The advisory (SEC-007): the root `overrides` pins `effect` at 3.22.4 (Prisma's CLI named 3.20.0); the lock file
+    and `docs/assurance/sbom.cdx.json` follow. `prisma validate`, `generate` and `migrate deploy` ran with it.
+  - Exceptions (SEC-007): `tools/dependency-check/auditExceptionRules.mjs` (new) asks every field, a real calendar
+    date at most 120 days ahead and one entry per advisory and package; `checkAudit.mjs` matches by ID and package.
+    Tests: `test/auditExceptionRules.test.mjs`, `test/checkAudit.test.mjs`.
+  - Lock file (SEC-007): `checkLockfile.mjs` (new, `npm run check:lockfile`) holds each package to the npm
+    registry's address for its name and version and to SHA-512; `installScriptRules.mjs` (new) holds the install
+    scripts to `allowScripts`, both ways, and `.npmrc` (new) to `strict-allow-scripts=true`; `fsevents` is listed
+    as skipped. `deploy/Dockerfile` copies `.npmrc`, and `tools/deploy-check/deployRules.mjs` requires it. Tests:
+    `test/checkLockfile.test.mjs`, `test/installScriptRules.test.mjs`, `tools/deploy-check/test/deployFiles.test.mjs`.
+    A real `npm ci` in a copy passed with the list and ended with `ESTRICTALLOWSCRIPTS` with one entry removed.
+  - Workflows (SEC-007): `ci.yml` and `docker.yml` name their actions by commit with the version as a comment, run
+    the lock-file check before `npm ci`, and the gate's `postgres`, `redis` and `moto` services carry the app
+    stack's digests; `audit.yml` (new) runs the lock-file check and the audit check once a day.
+    `checkWorkflows.mjs` (new, `npm run check:workflows`) holds the three files. Tests:
+    `test/checkWorkflows.test.mjs`, `tools/doc-lint/test/ciDependencyGates.test.mjs` (new; the dependency tests of
+    `ciWorkflow.test.mjs` moved there). The workflow files have not run on GitHub yet: they run for `main` and
+    for pull requests.
+  - D-145 added, with amendment lines under D-029, D-030 and D-110; `SEC-007` in spec 01 has an "Amended" line
+    (Dependabot monthly by the owner's choice, the daily run, the new rules); the threat model (T-90, T-92,
+    residual 7), ROS-21 and ROS-24, the architecture description (also its line references into the Dockerfile),
+    the evaluator guide, the hand-off README, the Docker operations notes, the tool's README and `CLAUDE.md` §3
+    follow; open questions Q33 (where the image is built and whether it is signed) and Q34 (a secret scan of the
+    repository) added; `TRACEABILITY.md` and the spec site regenerated. No page of the web app looks different,
+    so no screenshots. Gate output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run check:lockfile                             954 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 477 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 278 s (a fresh builder: the image's
+      npm ci with the strict setting; 8 of 8 migrations by the migrate step; PDF with the sandbox on; a stopped
+      server process unhealthy after 19 s; restart count 1)
+  $ npx vitest run --project web                       642 passed (100 files)
+  $ npx vitest run --project api-contract              122 passed (15 files)
+  $ npx vitest run --project tools                     586 passed (78 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27134 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-26 · Security repairs, step 30 (D-146)** — The last step: the insight routes answer only a request
+  with the own-page header, the Hjelp header shows on every page of Canvas's frame, the shortlist's texts say what
+  it holds, and the documents' line references are re-pointed. One code commit:
+  - Insight (DATA-007, INS-007): the web client adds `x-hvli-request: fetch` to every request
+    (`apps/web/src/api/apiRequest.ts`; the name and value in `packages/api-contract/src/openApi.ts`), and every
+    insight route refuses a request without it, for a session and for an ltik, before View, the limit and the
+    audit (`insightRoutes.ts`). It holds in a browser that sends no fetch metadata, which closes the residual of
+    D-106's amendment of 2026-11-05. Tests: `insightForeignRequest.test.ts` (one new test, which the old code
+    fails), `apiRequest.test.ts`, the contract's `insightRoutes.test.ts`; the tests that read a view send the
+    header (`test/support/ownPageFetch.ts`).
+  - Hjelp (UD-013): `http/pages/helpLink.ts` leaves the header out only for the pages our chrome frames, asked for
+    as a frame from our own origin; the Deep Linking picker and a launch's error page in Canvas's frame show it.
+    Tests: `e2e/pickerHelpLink.e2e.test.ts` (full Chromium; its first test fails on the old rule),
+    `ltiErrorPages.test.ts`, `portalPages.test.ts`, `chromeRedirect.test.ts`. Screenshots of the picker in nn at
+    1280 and 390 px were sent to the owner.
+  - Shortlist (INS-003, INS-006): the comments of the four shortlist files and DPIA input R30 say that a gap line
+    names a wrong answer learners typed, listed when *k* or more gave it, and that the list can be printed or
+    projected. `insightSummaries.test.ts` pins that a hidden answer never reaches the list (the rule held before).
+  - D-146 added, with amendment lines under D-067 and D-106; `INS-007` has an "Amended" line; threat model T-02
+    and the list of known open items in `human-review.md` follow; the line references of the assurance documents
+    are re-pointed (89 by following each document line through the repository's history, 15 read by hand), and each document's
+    "Written" row says so; the status overview has a row for the security repairs; the conformance report,
+    `TRACEABILITY.md` and the spec site regenerated. With this step the repairs of steps 1 to 30 are done. Gate
+    output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run check:lockfile                             954 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 477 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       644 passed (100 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     586 passed (78 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27136 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```

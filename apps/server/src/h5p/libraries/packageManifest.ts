@@ -10,17 +10,20 @@
  *   - Only `h5p.json` and `<folder>/library.json` (each at most `MAX_MANIFEST_BYTES`) and `content/content.json`
  *     (at most the upload limit) are read.
  *   - A package without a readable `h5p.json` naming a main library is refused as "not an H5P package".
- *   - A file reference in content.json that leaves `content/` is refused (./contentFileReferences.ts), and so is
+ *   - A file reference in content.json that leaves `content/`, or that names a carried file in a spelling the
+ *     storage would refuse, is refused (./contentFileReferences.ts), and so is
  *     content.json nested deeper than Lumi's recursive scanners can walk (../semantics/nestingDepth.ts).
+ *   - The package file is closed when the function returns or throws, also when an entry could not be read.
  * Collaborators: ../../security/zipEntryGuard.ts (zip reader), ./contentFileReferences.ts,
  *   ./packageLibraryCheck.ts, ../HvlH5PEditor.ts, ./LibraryInstaller.ts.
- * Tests: apps/server/test/h5p/libraries/packageManifest.test.ts
+ * Tests: apps/server/test/h5p/libraries/packageManifest.test.ts,
+ *   apps/server/test/http/packageImportOpenFiles.int.test.ts
  */
-import type { Readable } from 'node:stream';
 import type yauzl from 'yauzl';
 import type { ILibraryName } from '@lumieducation/h5p-server';
-import { openZip, readEntries, ZipRejectedError } from '../../security/zipEntryGuard.js';
+import { openZip, readEntries, readEntryBytes, ZipRejectedError } from '../../security/zipEntryGuard.js';
 import { MAX_FILE_SIZE } from '../H5pConfigFactory.js';
+import { assertContentBudget } from '../semantics/contentBudget.js';
 import { assertNestingDepth } from '../semantics/nestingDepth.js';
 import { assertContentFilesInside, contentFilePaths } from './contentFileReferences.js';
 
@@ -41,21 +44,18 @@ export interface PackageManifest {
   readonly mainLibraryVersion?: ILibraryName;
   /** Library folders the package carries (code an install would add or replace). */
   readonly libraries: readonly PackageLibrary[];
+  /** The parsed content/content.json, when the package has one. */
+  readonly content?: Record<string, unknown>;
 }
 
 const notH5p = (): ZipRejectedError => new ZipRejectedError('upload.package.notH5p');
 
 function readText(zip: yauzl.ZipFile, entry: yauzl.Entry, maxBytes = MAX_MANIFEST_BYTES): Promise<string> {
   if (entry.uncompressedSize > maxBytes) return Promise.reject(notH5p());
-  return new Promise((resolve, reject) => {
-    zip.openReadStream(entry, (error, stream?: Readable) => {
-      if (error || !stream) return reject(notH5p());
-      const chunks: Buffer[] = [];
-      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-      stream.on('error', () => reject(notH5p()));
-      stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    });
-  });
+  return readEntryBytes(zip, entry).then(
+    (bytes) => bytes.toString('utf8'),
+    () => Promise.reject(notH5p()),
+  );
 }
 
 const parse = (text: string): Record<string, unknown> => {
@@ -78,7 +78,7 @@ function toLibrary(json: Record<string, unknown>): PackageLibrary | undefined {
 /**
  * Reads h5p.json and the top-level library.json files of a package.
  * @param path - Path of the .h5p file.
- * @returns The main library and the libraries the package carries.
+ * @returns The main library, the libraries the package carries and its parsed content.json.
  * @throws ZipRejectedError `upload.package.notH5p` when h5p.json is missing or unreadable;
  *   `upload.archive.unsafePath` when content.json points at a file outside `content/`.
  */
@@ -86,14 +86,19 @@ export async function readPackageManifest(path: string): Promise<PackageManifest
   const zip = await openZip(path);
   let h5pJson: Record<string, unknown> | undefined;
   const libraries: PackageLibrary[] = [];
+  const carried = new Set<string>();
+  let references: string[] = [];
+  let content: Record<string, unknown> | undefined;
   try {
     for await (const entry of readEntries(zip)) {
       const name = entry.fileName.replace(/\\/g, '/');
+      carried.add(name);
       if (name === 'h5p.json') h5pJson = parse(await readText(zip, entry));
       else if (name === 'content/content.json') {
-        const content = parse(await readText(zip, entry, MAX_FILE_SIZE));
+        content = parse(await readText(zip, entry, MAX_FILE_SIZE));
         assertNestingDepth(content);
-        assertContentFilesInside(contentFilePaths(content));
+        assertContentBudget(content);
+        references = contentFilePaths(content);
       } else if (/^[^/]+\/library\.json$/.test(name)) {
         const library = toLibrary(parse(await readText(zip, entry)));
         if (library) libraries.push(library);
@@ -102,11 +107,18 @@ export async function readPackageManifest(path: string): Promise<PackageManifest
   } finally {
     zip.close();
   }
+  // WHY: after the loop, so the check knows every file the package carries, wherever content.json sits in it.
+  assertContentFilesInside(references, (entryName) => carried.has(entryName));
   if (!h5pJson || typeof h5pJson.mainLibrary !== 'string') throw notH5p();
   const mainLibrary = h5pJson.mainLibrary;
   const dependencies = Array.isArray(h5pJson.preloadedDependencies) ? h5pJson.preloadedDependencies : [];
   const main = dependencies
     .map((d) => toLibrary(d as Record<string, unknown>))
     .find((d) => d?.machineName === mainLibrary);
-  return { mainLibrary, ...(main ? { mainLibraryVersion: main } : {}), libraries };
+  return {
+    mainLibrary,
+    ...(main ? { mainLibraryVersion: main } : {}),
+    libraries,
+    ...(content ? { content } : {}),
+  };
 }

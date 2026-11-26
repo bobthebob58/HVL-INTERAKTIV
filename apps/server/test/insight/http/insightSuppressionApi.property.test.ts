@@ -14,6 +14,7 @@ import type { InsightReport } from '../../../src/insight/insightReport.js';
 import { minimumGroupSize } from '../../../src/privacy/minimumGroupSize.js';
 import { INTERACTIVE_VIDEO, IV1, IV2, IV3, Q1, Q2, QUESTION_SET } from '../fixtures/insightActivities.js';
 import type { FixtureRow } from '../fixtures/thirtyLearners.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import { reportOf } from '../support/insightFixtureReport.js';
 import { cellsIn, insightInvariantViolations } from '../support/reportInvariants.js';
 import { parseCsv } from './support/csvRecords.js';
@@ -102,14 +103,17 @@ describe('[INS-006] suppression at the API boundary', () => {
         const report = reportOf(activity, rows, { size: minimumGroupSize(k), courseLearners });
         const { app } = insightStubApp(report);
         // Act
-        const json = await request(app).get(`/api/content/${CONTENT}/insight`);
-        const csv = await request(app).get(`/api/content/${CONTENT}/insight/export`);
+        const json = await request(app).get(`/api/content/${CONTENT}/insight`).set(OWN_PAGE_FETCH);
+        const csv = await request(app).get(`/api/content/${CONTENT}/insight/export`).set(OWN_PAGE_FETCH);
         // Assert
         const received = insightReportSchema.parse(json.body) as InsightReport;
         expect(insightInvariantViolations(received)).toEqual([]);
         const values = parseCsv(csv.text.slice(1)).slice(11);
         const expected = insightCsvRows(received);
-        expect(values.map((record) => record[5])).toEqual(expected.map((row) => row.value));
+        // WHY: the stub's person reads nynorsk, whose file has a decimal comma (D-136).
+        expect(values.map((record) => record[5]?.replace(',', '.'))).toEqual(
+          expected.map((row) => row.value),
+        );
         expect(values.filter((record) => record[5] === `< ${k}`)).toHaveLength(
           cellsIn(received).filter((cell) => cell.suppressed).length,
         );

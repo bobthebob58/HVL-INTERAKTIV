@@ -1,30 +1,35 @@
 /**
- * deployRules — static checks of the deployment files: the vendored seccomp profile's hash, the Dockerfile's pins,
- * user and secret handling, and the app stack's digests, ports and hardening.
+ * deployRules — static checks of the deployment files: the Dockerfile's pins, user, secret handling and loader
+ * setting, and the app stack's digests, ports and hardening.
  *
  * Why: the image and the stack must keep D-110's rules (images by digest, no GitHub content in a build, the proxy CA
- *      only as a secret, a non-root user, Chromium's sandbox through Playwright's seccomp profile, nothing published
- *      but the app on 127.0.0.1, no secret in a file). These are cheap to check on every test run and before every
- *      smoke build, long before a slow build would show them (NFR-007, MAPPE-004).
- * Spec: NFR-007, MAPPE-004
+ *      only as a secret, a non-root user, Chromium's sandbox through the seccomp profile, nothing published but the
+ *      app on 127.0.0.1, no secret in a file). These are cheap to check on every test run and before every smoke
+ *      build, long before a slow build would show them (NFR-007, MAPPE-004).
+ * Spec: NFR-007, MAPPE-004, SEC-007
  * Invariants:
  *   - Pure checks of file contents: each function returns problems as text and an empty list when all is well.
  *   - SECURITY: a problem names a key or a line number, never a value that could be a secret.
  *   - SECURITY: no service may be privileged, unconfined, share a host namespace or add a capability; only the app
  *     adds back SYS_CHROOT (Chromium's sandbox, D-110 amendment of 2026-11-05).
- * Collaborators: ./checkDeployFiles.mjs, deploy/Dockerfile, deploy/Dockerfile.dockerignore, deploy/compose.app.yml,
- *   deploy/seccomp/, yaml.
+ *   - SECURITY: the image switches the TypeScript loader's cache off (`TSX_DISABLE_CACHE=1`), and no service of the
+ *     stack switches it back on: with it, translated code would be kept in the writable /tmp and run from there,
+ *     past the read-only root file system (D-144).
+ *   - SECURITY: the stage that runs `npm ci` copies `.npmrc` with the lock file, so the image's install refuses an
+ *     install script outside `allowScripts` as every other install does (SEC-007, D-145).
+ * Collaborators: ./checkDeployFiles.mjs, ./seccompRules.mjs (the profile itself), deploy/Dockerfile,
+ *   deploy/Dockerfile.dockerignore, deploy/compose.app.yml, yaml.
  * Tests: tools/deploy-check/test/deployFiles.test.mjs
  */
-import { createHash } from 'node:crypto';
 import { parse } from 'yaml';
+import { SECCOMP_FILE } from './seccompRules.mjs';
 
-/** The vendored profile: Playwright v1.56.1's `utils/docker/seccomp_profile.json`, byte for byte (D-110). */
-export const SECCOMP_FILE = 'deploy/seccomp/playwright-v1.56.1.seccomp';
-/** Its SHA-256, read when it was fetched with git (deploy/seccomp/README.md). */
-export const SECCOMP_SHA256 = 'cc3e61cabda6bbc1e53e54d27ba4d55a9d3be829b6dd1a596f4a7b31b1cc7849';
 /** The user the image and the stack run as. */
 export const APP_UID = '10001';
+/** The image's setting that keeps tsx's translated code in memory only. */
+export const LOADER_CACHE_OFF = 'TSX_DISABLE_CACHE=1';
+/** The stack's security option that names the profile, relative to the stack file. */
+const SECCOMP_OPTION = `seccomp=./${SECCOMP_FILE.replace(/^deploy\//, '')}`;
 
 const DIGEST = /@sha256:[0-9a-f]{64}$/;
 // WHY: plural names too: `PSEUDONYM_SECRETS` and `URL_SIGNING_KEYS` are this server's own key lists.
@@ -34,29 +39,6 @@ const URL_WITH_PASSWORD = /^[a-z][a-z0-9+.-]*:\/\/[^/@]*:[^/@]+@/i;
 // SECURITY: settings that undo the container's isolation, refused for every service.
 const UNCONFINED = /^(seccomp|apparmor)[=:]unconfined$|^label[=:]disable$/;
 const HOST_NAMESPACES = ['network_mode', 'pid', 'ipc', 'userns_mode', 'uts'];
-
-/**
- * Checks the seccomp profile against its pinned hash and its one purpose.
- * @param {Buffer} bytes - The profile file.
- * @returns {string[]} Problems.
- */
-export function seccompProblems(bytes) {
-  const problems = [];
-  const hash = createHash('sha256').update(bytes).digest('hex');
-  if (hash !== SECCOMP_SHA256) problems.push(`${SECCOMP_FILE}: SHA-256 ${hash}, expected ${SECCOMP_SHA256}`);
-  const profile = JSON.parse(bytes.toString('utf8'));
-  if (profile.defaultAction !== 'SCMP_ACT_ERRNO') problems.push(`${SECCOMP_FILE}: the default must deny`);
-  const allowed = new Set(
-    profile.syscalls
-      .filter(
-        (rule) => rule.action === 'SCMP_ACT_ALLOW' && (rule.args ?? []).length === 0 && !rule.includes?.caps,
-      )
-      .flatMap((rule) => rule.names),
-  );
-  for (const name of ['clone', 'setns', 'unshare'])
-    if (!allowed.has(name)) problems.push(`${SECCOMP_FILE}: ${name} must be allowed for Chromium's sandbox`);
-  return problems;
-}
 
 /**
  * Joins a Dockerfile's continued lines and drops its comments.
@@ -81,7 +63,8 @@ export function dockerInstructions(text) {
 }
 
 /**
- * Checks the Dockerfile: base images by digest, the runtime's user, no GitHub content, the CA only as a secret.
+ * Checks the Dockerfile: base images by digest, the runtime's user and loader setting, no GitHub content, the CA
+ * only as a secret.
  * @param {string} text - deploy/Dockerfile.
  * @returns {string[]} Problems.
  */
@@ -112,10 +95,19 @@ export function dockerfileProblems(text) {
     if (declared.some((pair) => SECRET_KEY.test(pair.split('=')[0])))
       problems.push(`Dockerfile:${line}: no secret may be an ARG or ENV`);
   }
+  // SECURITY: without .npmrc the image's npm ci would run an install script outside `allowScripts` (D-145).
+  const lockCopy = instructions.find((i) => /^COPY\s.*\bpackage-lock\.json\s/i.test(i.text));
+  if (instructions.some((i) => /\bnpm ci\b/.test(i.text)) && !/\s\.npmrc\s/.test(lockCopy?.text ?? ''))
+    problems.push('Dockerfile: the stage that installs must copy .npmrc with package-lock.json');
   const runtime = instructions.slice(instructions.findLastIndex((i) => /^FROM\s/i.test(i.text)));
   const finalUser = runtime.filter((i) => /^USER\s/i.test(i.text)).at(-1);
   if (finalUser?.text !== `USER ${APP_UID}:${APP_UID}`)
     problems.push(`Dockerfile: the runtime stage must end as USER ${APP_UID}:${APP_UID}`);
+  const runtimeEnv = runtime.filter((i) => /^ENV\s/i.test(i.text)).flatMap((i) => i.text.split(/\s+/));
+  if (!runtimeEnv.includes(LOADER_CACHE_OFF))
+    problems.push(
+      `Dockerfile: the runtime stage must set ${LOADER_CACHE_OFF} (no code from a writable folder)`,
+    );
   return problems;
 }
 
@@ -158,6 +150,8 @@ export function composeProblems(text) {
     for (const [key, value] of environmentOf(service)) {
       if (key === 'PDF_ALLOW_NO_SANDBOX')
         problems.push(`compose: ${name}: PDF_ALLOW_NO_SANDBOX is never set`);
+      if (key === 'TSX_DISABLE_CACHE' && String(value) !== '1')
+        problems.push(`compose: ${name}: TSX_DISABLE_CACHE stays 1, as the image sets it`);
       const literal = String(value).replace(/\$\{[^}]+\}/g, '');
       if (SECRET_KEY.test(key) && literal !== '')
         problems.push(`compose: ${name}: ${key} must come from the environment`);
@@ -184,8 +178,10 @@ export function composeProblems(text) {
         problems.push(`compose: ${name}: must drop every capability`);
       if (!options.includes('no-new-privileges:true'))
         problems.push(`compose: ${name}: needs no-new-privileges`);
-      if (!options.includes('seccomp=./seccomp/playwright-v1.56.1.seccomp'))
-        problems.push(`compose: ${name}: needs Playwright's seccomp profile for Chromium's sandbox`);
+      if (!options.includes(SECCOMP_OPTION))
+        problems.push(
+          `compose: ${name}: needs the seccomp profile for Chromium's sandbox (${SECCOMP_OPTION})`,
+        );
     }
   }
   return problems;

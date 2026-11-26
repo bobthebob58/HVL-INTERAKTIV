@@ -100,6 +100,20 @@ describe('[H5P-003] the build-secret rules', () => {
     expect(buildSecretsIn(object([...names, JSON.stringify(npmUrl)]))).toEqual([...names, npmUrl].sort());
   });
 
+  it('[H5P-003] JSON inside a string is found behind any number of backslashes, and a long run of them is read in time that follows its length', () => {
+    // Arrange: an environment serialised once and twice, and 50 000 backslashes that no quote follows
+    const once = `"{\\"GH_TOKEN\\":\\"${made('ghp_', 36)}\\"}"`;
+    const twice = `"{\\\\\\"GH_TOKEN\\\\\\":\\\\\\"${made('ghp_', 36)}\\\\\\"}"`;
+    const run = `${'\\'.repeat(50_000)}x ${once}`;
+    // Act
+    const started = performance.now();
+    const found = [once, twice, run].map((text) => buildSecretsIn(text));
+    const elapsed = performance.now() - started;
+    // Assert
+    for (const names of found) expect(names).toContain('GH_TOKEN');
+    expect(elapsed).toBeLessThan(500);
+  });
+
   it('[H5P-003] a text that ends in `word:` right before an object does not hide the name after it', () => {
     const cases: readonly [string, string][] = [
       ['console.log("env:",{API_TOKEN:"x1"});', 'API_TOKEN'],

@@ -9,11 +9,16 @@
  * Spec: LTI-010, H5P-009
  * Invariants:
  *   - The endpoint answers 202 with no body, as LTI-011's route does, and stores nothing but this list.
- *   - The iframe mode only changes the player page's content container into H5P's own `<iframe class="h5p-iframe">`
- *     (which the production policy allows, D-115); headers, scripts and the integration stay as the server sent them.
+ *   - The iframe mode changes the player page's content container into H5P's own `<iframe class="h5p-iframe">` and
+ *     adds to the page policy the hash of the one constant inline script H5P Core writes into that iframe. No page of
+ *     ours embeds this way, so the server's policy allows no inline script (D-140); a page that did would have to
+ *     allow that script. Scripts, the integration and every other header stay as the server sent them.
  * Collaborators: ../../support/realTypesPlayer.ts, ../../support/httpTestbed.ts, playwright-core.
  * Tests: ../xapiBridge.browser.int.test.ts
  */
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import express from 'express';
 import type { BrowserContext, Frame } from 'playwright-core';
 import { expect } from 'vitest';
@@ -93,19 +98,34 @@ export const describeItems = (items: readonly SentItem[], contentId: string): st
     return `${verb} ${where} ${item.attemptId.split(':')[1]}`;
   });
 
+/** The CSP source of the inline script H5P Core writes into an iframe it builds (`h5p.js` `getHeadTags`). */
+function coreIframeScriptHash(): string {
+  const source = readFileSync(resolve(import.meta.dirname, '../../../h5p/core/js/h5p.js'), 'utf8');
+  const script = /'<script>([^'<]*)<\/script>'/.exec(source)?.[1];
+  if (script === undefined) throw new Error('H5P Core h5p.js writes no inline script into its iframe');
+  return `'sha256-${createHash('sha256').update(script, 'utf8').digest('base64')}'`;
+}
+
 /**
  * Makes the context's player pages embed the activity in H5P's own iframe instead of our div (D-115's iframe mode).
  * @param context - A browser context whose pages open `/h5p/play/…` directly.
  */
 export async function useH5pIframeEmbedding(context: BrowserContext): Promise<void> {
+  const hash = coreIframeScriptHash();
   await context.route('**/h5p/play/*', async (route) => {
     const response = await route.fetch();
+    const policy = response.headers()['content-security-policy'] ?? '';
     const body = (await response.text()).replace(
       /<div class="h5p-content" data-content-id="([^"]+)"[^>]*><\/div>/,
       '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-$1" class="h5p-iframe" data-content-id="$1" ' +
         'src="about:blank" title="Aktivitet" style="width:100%;height:600px;border:0"></iframe></div>',
     );
-    await route.fulfill({ response, body });
+    // WHY: H5P's iframe starts with Core's one inline script; the server's policy allows none (D-140).
+    const headers = {
+      ...response.headers(),
+      'content-security-policy': policy.replace("script-src 'self'", `script-src 'self' ${hash}`),
+    };
+    await route.fulfill({ response, body, headers });
   });
 }
 

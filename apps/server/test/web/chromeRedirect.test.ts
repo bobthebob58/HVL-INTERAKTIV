@@ -3,10 +3,11 @@
  *
  * Spec: DATA-006, UD-013
  */
-import express from 'express';
+import express, { type Request } from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { chromeRedirect } from '../../src/web/chromeRedirect.js';
+import { isChromeFramedPath } from '../../src/http/pages/helpLink.js';
+import { chromePathOf, chromeRedirect } from '../../src/web/chromeRedirect.js';
 
 const app = express()
   .use(chromeRedirect())
@@ -59,5 +60,24 @@ describe('[DATA-006] H5P pages opened on their own go to their chrome page', () 
   it('[DATA-006] a POST is never redirected', async () => {
     const res = await request(app).post(`/h5p/edit/${ID}`).set(NAVIGATION);
     expect(res.status).toBe(200);
+  });
+
+  it('[UD-013] the pages sent on to a chrome page are the pages that show no header of their own inside it', () => {
+    // Arrange
+    const paths = [`/h5p/play/${ID}`, `/h5p/edit/${ID}/`, '/h5p/new', '/H5P/New/', '/lti/play', '/lti/edit/'];
+    const others = [
+      '/lti/deeplink',
+      '/lti/launch',
+      '/h5p/play',
+      '/h5p/play/a/b',
+      '/h5p/newer',
+      '/app/play',
+      '/',
+    ];
+    const hasChrome = (path: string) => chromePathOf({ path, query: {} } as Request) !== undefined;
+    // Act and assert: one list in two files (../../src/http/pages/helpLink.ts), held together here
+    expect(paths.map(isChromeFramedPath)).toEqual(paths.map(() => true));
+    expect(others.map(isChromeFramedPath)).toEqual(others.map(() => false));
+    expect([...paths, ...others].map(hasChrome)).toEqual([...paths, ...others].map(isChromeFramedPath));
   });
 });

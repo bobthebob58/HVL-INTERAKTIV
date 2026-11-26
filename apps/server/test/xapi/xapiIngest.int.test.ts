@@ -54,7 +54,7 @@ describeWithServices('[LTI-011] storing xAPI statements', () => {
       mode: 'lti',
       hvlMember: false,
       feideAuthenticated: false,
-      lti: { ...lti, messageType: 'LtiResourceLinkRequest' },
+      lti: { ...lti, messageType: 'LtiResourceLinkRequest', learnerRole: true },
     });
     const statements = fixturePlay('H5P.MultiChoice', contentId).views[0]?.statements ?? [];
     const before = bench.calls.length;
@@ -87,16 +87,18 @@ describeWithServices('[LTI-011] storing xAPI statements', () => {
   });
 
   it('[DATA-012] labels the statements with the version the page was rendered with, up to the current one', async () => {
-    // Arrange
-    const contentId = await bench.activity(MC, { version: 3 });
+    // Arrange: the page is opened while version 2 is current, and the activity gets a new version after that
+    const contentId = await bench.activity(MC, { version: 2 });
     const { header } = await bench.principal('learner');
     const [first, , second] = fixturePlay('H5P.MultiChoice', contentId).views[0]?.statements ?? [];
+    await post(header, batch(contentId, [first], 2));
+    await bench.db.h5PContent.update({ where: { id: contentId }, data: { version: 3 } });
     // Act
-    const older = await post(header, batch(contentId, [first], 2));
+    const older = await post(header, batch(contentId, [second], 2));
     const future = await post(header, batch(contentId, [second], 4));
     // Assert
     expect([older.status, future.status]).toEqual([202, 400]);
-    expect((await bench.rowsOf(contentId)).map((row) => row.contentVersion)).toEqual([2]);
+    expect((await bench.rowsOf(contentId)).map((row) => row.contentVersion)).toEqual([2, 2]);
   });
 
   it('[LTI-011] stores each statement once when a batch is resent, and tells the listener only once', async () => {

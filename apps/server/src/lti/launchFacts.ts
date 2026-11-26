@@ -9,6 +9,8 @@
  *   - `contextId` is the Canvas course (`launch.context.id`), never ltijs's `LaunchContext.contextId`.
  *   - `contentId` is set only when `custom.contentId` is a UUID; anything else counts as missing.
  *   - The `sub` is returned for hashing in memory only; callers never store or log it.
+ *   - `clientId` is the registered platform's client ID, which ltijs writes on the stored token after it validated
+ *     the launch; with `issuer` it names the registration a `sub` belongs to (D-129).
  *   - `testUser` is true only for the LTI `TestUser` role (Canvas's Student View), so its statements are flagged
  *     and left out of insight and the mappe (D-102's amendment of 2026-11-04).
  * Collaborators: ./ltikPrincipal.ts, ./launch/onResourceLink.ts, ./launch/onDeepLinking.ts, ./LtiRoleMapper.ts,
@@ -17,12 +19,14 @@
  */
 import type { IdToken } from 'ltijs';
 import { isContentUuid } from '../h5p/contentIds.js';
-import { isLtiTestUser } from './LtiRoleMapper.js';
+import { isLtiLearner, isLtiTestUser } from './LtiRoleMapper.js';
 
 /** The launch facts our code uses. */
 export interface LaunchFacts {
   /** The platform's issuer (`iss`). */
   readonly issuer: string;
+  /** The client ID of the registration the launch was validated against (ltijs sets it, never the token). */
+  readonly clientId: string;
   /** The user's `sub` (in memory only). */
   readonly subject: string;
   /** `LtiPlatform.id`. */
@@ -43,6 +47,8 @@ export interface LaunchFacts {
   readonly roles: readonly string[];
   /** Canvas's Student View test student (the LTI `TestUser` role); its statements are flagged (D-102). */
   readonly testUser: boolean;
+  /** The launch holds the context role `Learner`: only such a launch's play is recorded (D-138). */
+  readonly learnerRole: boolean;
 }
 
 const text = (value: unknown): string | undefined =>
@@ -60,6 +66,7 @@ export function launchFactsOf(idToken: IdToken): LaunchFacts {
   const lineItemUrl = text(idToken.services.assignmentAndGrades.lineItemId);
   return {
     issuer: idToken.platform.url,
+    clientId: idToken.platform.clientId,
     subject: idToken.user.id,
     platformId: idToken.platform.id,
     deploymentId: idToken.platform.deploymentId,
@@ -67,6 +74,7 @@ export function launchFactsOf(idToken: IdToken): LaunchFacts {
     contextId: text(idToken.launch.context?.id) ?? '',
     roles: [...idToken.user.roles],
     testUser: isLtiTestUser(idToken.user.roles),
+    learnerRole: isLtiLearner(idToken.user.roles),
     ...(resourceLinkId ? { resourceLinkId } : {}),
     ...(isContentUuid(contentId) ? { contentId: contentId.toLowerCase() } : {}),
     ...(lineItemUrl ? { lineItemUrl } : {}),

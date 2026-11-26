@@ -15,6 +15,7 @@ import { BankListingSection } from '../../src/features/sharing/BankListingSectio
 import { gate, holdAnswer } from '../support/commitOrder';
 import { errorBody, fakeFetch } from '../support/fakeFetch';
 import { DETAIL, ID } from './learningDesignFixtures';
+import { confirmQuestion } from '../support/confirmQuestion';
 
 const PATH = `/api/content/${ID}/bank`;
 const SHARED: ContentDetail = { ...DETAIL, status: 'published', visibility: 'organisation' };
@@ -157,7 +158,9 @@ describe('[PROD-007] the bank section when a re-read and a change overlap', () =
     const readsAfterFirst = await answered(first.open, 1);
     const readsAfterSecond = await answered(second.open, 2);
     const unlist = screen.getByRole('button', { name: 'Ta ut av innhaldsbanken' });
-    const readsAfterUnlist = await answered(() => fireEvent.click(unlist), 3);
+    // WHY: the press opens the question (D-125); answering it sends the request.
+    fireEvent.click(unlist);
+    const readsAfterUnlist = await answered(() => confirmQuestion('Ta ut av innhaldsbanken'), 3);
     // Assert
     expect([readsAfterFirst, readsAfterSecond, readsAfterUnlist]).toEqual([1, 2, 2]);
     expect(requests.map((request) => request.method)).toEqual(['GET', 'PUT', 'PUT', 'GET', 'DELETE']);

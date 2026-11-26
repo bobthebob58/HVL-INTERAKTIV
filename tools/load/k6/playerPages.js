@@ -20,6 +20,12 @@
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", '#x27': "'", apos: "'" };
 
 /**
+ * The header a browser sends with ltijs's own second launch post: the request comes from the tool's own page.
+ * The tool takes that post from nowhere else (apps/server/src/lti/http/launchPostOrigin.ts).
+ */
+export const OWN_PAGE_POST = Object.freeze({ 'Sec-Fetch-Site': 'same-origin' });
+
+/**
  * Decodes the entities `escapeHtml` writes into attribute values.
  * @param {string} text - An attribute value as written.
  * @returns {string} The value.

@@ -13,6 +13,7 @@ import { insightApi } from '../../../src/insight/http/insightApi.js';
 import { INSIGHT_REQUEST_KEY_PREFIX } from '../../../src/insight/http/InsightRateLimit.js';
 import { connectRedis, type Redis } from '../../../src/infra/redisClient.js';
 import { NRPS_COUNT_KEY_PREFIX, NrpsLearnerCountStore } from '../../../src/lti/nrps/NrpsLearnerCountStore.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import { describeWithServices, serviceEnv } from '../../support/services.js';
 import { canvasPrincipal, openInsightHttpBench, type InsightHttpBench } from './support/insightHttpBench.js';
 
@@ -49,9 +50,9 @@ describeWithServices('[INS-007] the insight services the app builds', () => {
       contentId: bench.contentId,
     });
     // Act
-    const res = await request(bench.appAs(teacher, { services })).get(
-      `/api/content/${bench.contentId}/insight`,
-    );
+    const res = await request(bench.appAs(teacher, { services }))
+      .get(`/api/content/${bench.contentId}/insight`)
+      .set(OWN_PAGE_FETCH);
     // Assert
     expect(res.status).toBe(200);
     expect(res.body.scope).toMatchObject({ k: 7, context: { key: bench.fx.courseA, label: 'PED101' } });

@@ -124,12 +124,15 @@ describeWithServices('[DATA-003] the yearly purge on PostgreSQL', () => {
     });
     // Assert
     expect(events.map((event) => [event.actorUserId, event.targetType, event.targetId])).toEqual(
-      Array(4).fill([null, 'AcademicYear', '2010']),
+      Array(6).fill([null, 'AcademicYear', '2010']),
     );
+    // WHY: a real run writes `started` with its plan before its first change, then its end (D-144).
     expect(events.map((event) => event.details)).toEqual([
       { trigger: 'job', dryRun: true, outcome: 'completed', years: [2010], counts: EXPECTED_COUNTS },
+      { trigger: 'job', dryRun: false, outcome: 'started', years: [2010], counts: EXPECTED_COUNTS },
       { trigger: 'job', dryRun: false, outcome: 'completed', years: [2010], counts: EXPECTED_COUNTS },
       { trigger: 'job', dryRun: true, outcome: 'completed', years: [], counts: NOTHING },
+      { trigger: 'job', dryRun: false, outcome: 'started', years: [], counts: NOTHING },
       { trigger: 'job', dryRun: false, outcome: 'completed', years: [], counts: NOTHING },
     ]);
   });

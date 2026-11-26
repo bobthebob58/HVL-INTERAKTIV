@@ -26,6 +26,7 @@ const launchOf = (contentId: string, course: string): Partial<Principal> => ({
     contextId: course,
     contentId,
     messageType: 'LtiResourceLinkRequest',
+    learnerRole: true,
   },
 });
 

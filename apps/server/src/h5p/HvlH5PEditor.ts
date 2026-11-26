@@ -15,10 +15,11 @@
  *   - Save order (./editorSaveSteps.ts): permission and main library → stored files → sub-content policy →
  *     paste-source guard → learner-state check (409 for an unconfirmed structural edit while others have state) →
  *     Lumi's save, whose first parameter write also resets the state and raises the version of a structural edit
- *     in one transaction (D-093 amendment 2026-10-29) → delete dropped files as the author.
- *     Both save methods take the author's `SaveChoice`; a text-only save keeps every state row.
+ *     in one transaction (D-093 amendment 2026-10-29) → delete dropped files as the author. Both save methods take
+ *     the author's `SaveChoice`; any other save keeps every state row, and a changed answer key raises the version.
  *   - Package import: path only (never a buffer), `inspectZip`, manifest, main library one of the ten; non-admins:
- *     every library installed in the same version; admins: the build-secret scan (400), the audit; then Lumi's import.
+ *     every library installed in the same version and content its semantics can read (400, D-124); admins: the
+ *     build-secret scan (400), the audit; then Lumi's import.
  *   - Hub install and Content Hub download are refused for everyone.
  * Collaborators: ./HvlTop10ContentTypeFilter.ts, ./editorSaveSteps.ts, ./permissionCheckedExporter.ts,
  *   ./libraries/*, ../security/zipEntryGuard.ts; built only by ./H5pEditorFactory.ts.
@@ -33,36 +34,32 @@ import {
   type ContentId,
   type ContentParameters,
   type IContentMetadata,
-  type IPermissionSystem,
   type IUser,
 } from '@lumieducation/h5p-server';
 import type { IHubInfo } from '@lumieducation/h5p-server/build/src/types.js';
 import type { PersonLimit } from '../learningDesign/collaboration/PersonRateLimit.js';
-import type { LearnerStateStore, SaveChoice } from '../learningDesign/safeEditing/LearnerStateGate.js';
+import type { SaveChoice } from '../learningDesign/safeEditing/LearnerStateGate.js';
 import { inspectZip } from '../security/zipEntryGuard.js';
-import { EditorSaveSteps } from './editorSaveSteps.js';
+import { EditorSaveSteps, type SaveStepPolicy } from './editorSaveSteps.js';
 import { filterContentTypeCache, isAuthorableType } from './HvlTop10ContentTypeFilter.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import { auditBeforeInstall } from './libraries/auditBeforeInstall.js';
 import type { LibraryAuditSink } from './libraries/LibraryAuditSink.js';
 import { disconnectFromHub } from './offlineContentTypeCache.js';
+import { assertReadableContent } from './libraries/packageContentCheck.js';
 import { assertPackageLibrariesInstalled } from './libraries/packageLibraryCheck.js';
 import { readPackageManifest } from './libraries/packageManifest.js';
 import { assertNoLibrarySecrets } from './libraries/packageSecretScan.js';
 import { sha256File } from './libraries/sha256Sums.js';
 import { usePermissionCheckedExporter } from './permissionCheckedExporter.js';
-import type { ContentAccessRepository } from './permissions/ContentAccessRepository.js';
 
-/** What HvlH5PEditor needs beyond Lumi's constructor arguments. */
-export interface HvlEditorPolicy {
-  /** The permission system also passed to Lumi in `options.permissionSystem`. */
-  readonly permissionSystem: IPermissionSystem<HvlH5pUser>;
+/**
+ * What HvlH5PEditor needs beyond Lumi's constructor arguments: what the save steps read (the permission system also
+ * passed to Lumi in `options.permissionSystem`, the activity facts, the learner-state rows), and the two below.
+ */
+export interface HvlEditorPolicy extends SaveStepPolicy {
   /** Where library installs by admins are recorded. */
   readonly audit: LibraryAuditSink;
-  /** The activity facts the permission system reads; the paste-source guard decides duplicates on them (D-092). */
-  readonly contentFacts: ContentAccessRepository;
-  /** The learner-state rows a structural save checks and resets (D-093). */
-  readonly learnerStates: LearnerStateStore;
   /** The per-person limit on copies saved through this editor (D-092 amendment 2026-10-29). */
   readonly copyLimit: PersonLimit;
 }
@@ -91,7 +88,7 @@ export class HvlH5PEditor extends H5PEditor {
     this.policy = policy;
     this.copyLimit = policy.copyLimit;
     disconnectFromHub(this);
-    this.saveSteps = new EditorSaveSteps(this.libraryManager, this.contentManager, policy);
+    this.saveSteps = new EditorSaveSteps(this, policy);
     usePermissionCheckedExporter(this, policy.permissionSystem);
   }
 
@@ -171,6 +168,7 @@ export class HvlH5PEditor extends H5PEditor {
     );
     if (!mayInstall) {
       await assertPackageLibrariesInstalled(manifest.libraries, this.libraryManager);
+      await assertReadableContent(manifest, this.libraryManager);
       return super.uploadPackage(dataOrPath, user);
     }
     await assertNoLibrarySecrets(dataOrPath); // SECURITY: before any audit row or install (D-110, 2026-11-06)

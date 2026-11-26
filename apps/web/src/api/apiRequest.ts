@@ -11,17 +11,25 @@
  * Invariants:
  *   - The ltik goes only into the Authorization header of same-origin requests, never into a URL here.
  *   - Requests are never cached (`no-store`), like every `/api` answer; a file answer is kept only in the result.
+ *   - SECURITY: every request carries the own-page header, which only a script of our own origin can add; the
+ *     insight routes, GETs that write the audit trail, refuse a request without it (DATA-007, D-146).
  *   - Never throws: a network failure, or a body that cannot be read, is `{ ok: false, status: 0 }`.
  *   - A refused file request answers JSON like any other route, so its error body is read the same way.
+ *   - A portal request refused with `hvl:csrf-invalid` is sent once more with the session's current token
+ *     (./csrfRetry.ts, D-131); an LTI request never is.
  * Collaborators: ./contentApi.ts, ./meApi.ts, ./portalSession.ts, ./ApiAuthContext.tsx, ./contentDisposition.ts,
+ *   ./csrfRetry.ts,
  *   packages/api-contract (`ErrorBody`, `CSRF_HEADER_NAME`, `ApiFileMediaType`).
  * Tests: apps/web/test/api/apiRequest.test.ts, apps/web/test/api/apiFileRequest.test.ts
  */
 import type { ErrorBody } from '@hvl-interaktiv/api-contract';
 import { filenameFromDisposition } from './contentDisposition';
+import { currentCsrfToken, fresherCsrfToken, isCsrfRefusal } from './csrfRetry';
 
 /** The header that carries the CSRF token; the same name as api-contract's `CSRF_HEADER_NAME` (a test checks it). */
 export const CSRF_HEADER = 'x-csrf-token';
+/** The own-page header and its value: api-contract's `OWN_PAGE_HEADER_NAME` and `…_VALUE` (a test checks both). */
+export const OWN_PAGE_HEADER = { name: 'x-hvli-request', value: 'fetch' } as const;
 
 /** How a request proves who sends it. */
 export type ApiAuth =
@@ -66,12 +74,14 @@ export function apiHeaders(
   json: boolean,
   accept = 'application/json',
 ): Record<string, string> {
-  const headers: Record<string, string> = { Accept: accept };
+  const headers: Record<string, string> = { Accept: accept, [OWN_PAGE_HEADER.name]: OWN_PAGE_HEADER.value };
   if (json) headers['Content-Type'] = 'application/json';
   // SECURITY: the ltik is a bearer credential for the launch (LTI-003); it travels only in this header.
   if (auth.kind === 'lti') headers.Authorization = `Bearer ${auth.ltik}`;
   // SECURITY: the synchronizer token defeats cross-site requests that carry the session cookie (AUTH-003).
-  if (auth.kind === 'portal' && method !== 'GET' && auth.csrfToken) headers[CSRF_HEADER] = auth.csrfToken;
+  if (auth.kind === 'portal' && method !== 'GET' && auth.csrfToken) {
+    headers[CSRF_HEADER] = currentCsrfToken(auth.csrfToken);
+  }
   return headers;
 }
 
@@ -81,7 +91,7 @@ export interface ApiRequestOptions {
   readonly body?: unknown;
 }
 
-const send = async (
+const sendOnce = async (
   path: string,
   auth: ApiAuth,
   options: ApiRequestOptions,
@@ -102,6 +112,21 @@ const send = async (
   } catch {
     return undefined;
   }
+};
+
+/** Sends a request and, when the portal session's token has changed under the page, once more with the new one. */
+const send = async (
+  path: string,
+  auth: ApiAuth,
+  options: ApiRequestOptions,
+  accept: string,
+): Promise<Response | undefined> => {
+  const response = await sendOnce(path, auth, options, accept);
+  if (!response || auth.kind !== 'portal' || !auth.csrfToken || !(await isCsrfRefusal(response)))
+    return response;
+  // WHY: the session was replaced while this page was open; its cookie still names a session of this browser.
+  const fresh = await fresherCsrfToken(auth.csrfToken);
+  return fresh ? sendOnce(path, auth, options, accept) : response;
 };
 
 const refusal = (status: number, body: unknown): ApiFailure =>

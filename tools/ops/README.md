@@ -36,8 +36,9 @@ and an S3 endpoint on another host `https`. The round-trip test runs against the
 | `postgresConnection.mjs` | `DATABASE_URL` to libpq's environment, and the TLS rule |
 | `postgresDump.mjs` | `pg_dump`, the row counts read from the dump, the empty-target check, `pg_restore` |
 | `bucketBackup.mjs` | The S3 settings and their checks, objects to and from the folder, reading every object back |
-| `toolProcess.mjs` | Runs one PostgreSQL tool with its own environment; a failure as one safe line |
+| `toolProcess.mjs` | Runs one PostgreSQL tool with its own environment; a failure as one safe line; its output cut into lines at the newline byte only (D-132) |
 | `test/backupRoundTrip.test.mjs` | Seed, back up, wipe, restore, compare; a changed dump and a non-empty target refused |
 | `test/backupRestoreChecks.test.mjs` | The restore's own checks fail when they should: a full bucket refused, a differing table, object and content file reported; a stopped run's partial folder removed |
+| `test/backupUnusualText.test.mjs`, `test/newlineSplitter.test.mjs` | Rows and file keys with Unicode line separators, a bar or a line break: counted and compared exactly (D-132) |
 | `test/backupBench.mjs` | The test's databases (with the real migrations), buckets and CLI runs |
 | `test/backupFolder.test.mjs`, `test/postgresConnection.test.mjs` | Names, retention, checksums; the connection and S3 rules |

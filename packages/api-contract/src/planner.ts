@@ -11,6 +11,8 @@
  *   - Rows are distinct outcomes (D-087), ordered by category (kunnskap, ferdigheiter, generell-kompetanse), then
  *     by text. An activity with several outcomes appears in several rows.
  *   - Only the author's own and co-authored activities appear; drafts are included and marked by `status`.
+ *   - A planner holds at most `PLANNER_MAX_ACTIVITIES` activities, the most recently changed of the course;
+ *     `moreActivities` says when the course has more (D-128).
  *   - The answer names no person.
  * Collaborators: ./learningDesign.ts, ./studio.ts, ./content.ts,
  *   apps/server/src/learningDesign/http/learningDesignRoutes.ts, apps/web (PlannerTable).
@@ -20,6 +22,9 @@ import { z } from 'zod';
 import { contentStatusSchema } from './content.js';
 import { courseCodeSchema, learningOutcomeSchema } from './learningDesign.js';
 import { PHASE_KEYS, phaseKeySchema } from './studio.js';
+
+/** The most activities one planner answer holds: the most recently changed of the course (D-128). */
+export const PLANNER_MAX_ACTIVITIES = 300;
 
 /** An activity in a planner cell or in the untagged list. */
 export const plannerActivitySchema = z.strictObject({
@@ -81,6 +86,8 @@ export const plannerSchema = z.strictObject({
   rows: z.array(plannerRowSchema),
   gaps: z.array(plannerGapSchema),
   untagged: z.array(plannerUntaggedSchema),
+  /** True when the course has more activities of the author than the answer holds (`PLANNER_MAX_ACTIVITIES`). */
+  moreActivities: z.boolean(),
 });
 /** The planner for one course. */
 export type Planner = z.infer<typeof plannerSchema>;

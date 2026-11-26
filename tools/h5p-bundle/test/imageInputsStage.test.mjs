@@ -64,7 +64,8 @@ describe('[NFR-007] the image build has every file its bundle check needs', () =
   });
 
   it('[NFR-007] the check follows the imports into apps/server and names a file the stage leaves out', () => {
-    // Arrange: the stage without the rules file and without the manifest resolver, then with every file.
+    // Arrange: the stage without the rules file and without the manifest resolver's line (the resolver and the
+    // source rules it imports), then with every file.
     const withRules = DOCKERFILE.includes(RULES_COPY)
       ? DOCKERFILE
       : DOCKERFILE.replace(/^(COPY tools\/h5p-bundle\/.*)$/m, `$1\n${RULES_COPY}`);
@@ -78,6 +79,7 @@ describe('[NFR-007] the image build has every file its bundle check needs', () =
     expect(filesNotCopied(withoutBoth)).toEqual([
       'apps/server/src/h5p/libraries/libraryBuildSecrets.ts',
       'tools/h5p-libraries/resolveManifest.mjs',
+      'tools/h5p-libraries/sourceRules.mjs',
     ]);
     expect(filesNotCopied(withRules)).toEqual([]);
     expect(existsSync(join(ROOT, dirname('apps/server/src/h5p/libraries/libraryBuildSecrets.ts')))).toBe(

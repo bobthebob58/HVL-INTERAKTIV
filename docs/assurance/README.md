@@ -4,7 +4,7 @@
 |---|---|
 | **For** | HVL IT: operations and security staff who decide whether HVL Interaktiv may be hosted, first for testing only |
 | **Status** | **Draft for HVL IT to correct.** Lines marked *(IT to fill in)* are HVL facts the repository cannot know |
-| **Written** | 2026-11-05, at the repository owner's request, by the same AI assistant (Claude) that wrote the code; updated three times on 2026-11-06, last after pull requests #18 and #21 were merged. Figures are from commit `43c6673` (`main` after pull request #21) and GitHub's API, read 2026-11-06, last at 18:44 UTC |
+| **Written** | 2026-11-05, at the repository owner's request, by the same AI assistant (Claude) that wrote the code; updated three times on 2026-11-06, last after pull requests #18 and #21 were merged. Figures are from commit `43c6673` (`main` after pull request #21) and GitHub's API, read 2026-11-06, last at 18:44 UTC. Line references were re-pointed on 2026-11-26 by following each through the repository's history (D-146) |
 | **Reviewed by** | Nobody yet. No person has reviewed this pack, the code or its tests |
 
 ## Samandrag (nynorsk)
@@ -79,7 +79,7 @@ is [how-it-was-built.md](how-it-was-built.md) §7; the plan, in order of risk an
 | The ten H5P content types: author and play | Yes (S2, S4) | Unit, integration and Chromium tests, including the ten real types from pinned GitHub commits (`apps/server/test/h5p/realTypes.browser.int.test.ts`; D-078) | AI only |
 | Feide login and portal sessions | Yes (S3) | Tests against a mock Feide (`tools/mock-platform`, D-049); never against real Feide | AI only |
 | Canvas LTI 1.3: launch, Deep Linking, grades (AGS), roster (NRPS) | Yes (S3, S6), except the picker's content bank and "new from a pattern", the duplicate in `/app/play`, and Dynamic Registration (`LTI-009`, not built) ([hand-off §1, §3](../handoff/README.md)) | Tests against a mock Canvas; the live-contract seam (36 tests) has run against the mocks only (PROGRESS.md, S6 step 7), also in GitHub CI run 42170423046 and the later passing runs 42183630447, 42253214678 (pull request #21), 42205391766 and 42266303529 (on `main`) | AI only |
-| Upload security against CVE-2025-7062 (unpatched upstream) | Yes (S2, S6); the editor's files are still on the app origin (`SPEC-DEVIATION: D-110`, `apps/server/src/http/createH5pRouter.ts:58`). Since pull request #21 the server refuses uploads until clamd proves `AlertEncrypted` and `AlertExceedsMax` (`npm run clamd:check` at deployment) | Unit tests with bypass payloads (`SvgSanitizer.bypass.test.ts`), integration tests, a strict and a lax local clamd 1.4.6 (also in CI), the Docker smoke test (D-003, D-110) | AI only |
+| Upload security against CVE-2025-7062 (unpatched upstream) | Yes (S2, S6); the editor's files are still on the app origin (`SPEC-DEVIATION: D-110`, `apps/server/src/http/createH5pRouter.ts:59`). Since pull request #21 the server refuses uploads until clamd proves `AlertEncrypted` and `AlertExceedsMax` (`npm run clamd:check` at deployment) | Unit tests with bypass payloads (`SvgSanitizer.bypass.test.ts`), integration tests, a strict and a lax local clamd 1.4.6 (also in CI), the Docker smoke test (D-003, D-110) | AI only |
 | Build secrets in H5P library code (threat model T-81) | Yes (S6; pull request #21): one scan on the bundle, `seed:libraries`, an admin's package import and, with `npm run libraries:check`, the installed library folder | Unit and integration tests (`apps/server/test/h5p/libraries/`, `tools/h5p-bundle/test/`); the ten real packages and the development machine's 77 library folders pass (PROGRESS.md, session log of 2026-11-06) | AI only; the scan is a heuristic (D-110's amendment of 2026-11-06) |
 | Teacher insight with *k*-suppression | Yes (S6) | Property-based tests (`insightSuppression.property.test.ts`) and a hand-calculated 30-learner fixture (`thirtyLearners.test.ts`) | AI only |
 | Privacy operations: pseudonyms, yearly purge, data-subject requests, database roles, production start-up checks, log redaction | Yes (S1, S6) | Integration tests on local PostgreSQL and Redis ([docs/ops/](../ops/README.md)) | AI only; the DPO has not reviewed the DPIA input (Q6) |
@@ -154,9 +154,9 @@ and the hand-off index says the tasks that need a person or system at HVL "are n
 | Why each choice was made (D-001…D-116, with dated amendments) | [docs/DECISIONS.md](../DECISIONS.md) |
 | Requirement → code → test (generated) | [docs/TRACEABILITY.md](../TRACEABILITY.md) |
 | How to check the code against the specs, and its known limitations | [docs/EVALUATOR-GUIDE.md](../EVALUATOR-GUIDE.md) (§2, §6) |
-| Personal data, legal basis, residual risks R1–R40, the DPO's questions | [docs/privacy/DPIA-INPUT.md](../privacy/DPIA-INPUT.md) |
+| Personal data, legal basis, residual risks R1–R41, the DPO's questions | [docs/privacy/DPIA-INPUT.md](../privacy/DPIA-INPUT.md) |
 | Every stored field, Redis key and log field | [docs/privacy/DATA-INVENTORY.md](../privacy/DATA-INVENTORY.md) |
 | Operations: what IT provides, secrets, backups, monitoring, the deployment checklist | [docs/ops/runbook.md](../ops/runbook.md) and [docs/ops/](../ops/README.md) |
 | Accessibility conformance (automated results; manual pending) | [docs/accessibility/WCAG-CONFORMANCE-REPORT.md](../accessibility/WCAG-CONFORMANCE-REPORT.md) |
 | What is done, what needs HVL, what passes to the students | [docs/handoff/README.md](../handoff/README.md) |
-| Build progress, open questions Q1–Q31 (there is no Q11), every gate's output | [PROGRESS.md](../../PROGRESS.md) |
+| Build progress, open questions Q1–Q34 (there is no Q11), every gate's output | [PROGRESS.md](../../PROGRESS.md) |

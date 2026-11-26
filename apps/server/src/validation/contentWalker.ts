@@ -16,9 +16,9 @@
  * Tests: apps/server/test/validation/contentWalker.test.ts
  */
 import { machineNameOf, mainMachineNameOf } from './contentKinds.js';
-import { isWithin, pathOf } from './contentPath.js';
+import { pathOf } from './contentPath.js';
 import { asObject, asString, type ParamObject } from './paramReaders.js';
-import { parseRichText, type RichText } from './richText.js';
+import { parseRichText, type RichText, type RichTextReader } from './richText.js';
 
 /** A string parameter of a node, with its parsed text. */
 export interface StringField {
@@ -57,6 +57,7 @@ const REFERENCE_KEYS: ReadonlySet<string> = new Set(['path', 'mime', 'copyright'
 interface WalkState {
   readonly nodes: ContentNode[];
   readonly seen: WeakSet<object>;
+  readonly read: RichTextReader;
 }
 
 /**
@@ -85,7 +86,7 @@ function visitNode(
 function scan(value: unknown, path: string, strings: StringField[], state: WalkState, depth: number): void {
   if (depth > MAX_DEPTH) return;
   if (typeof value === 'string') {
-    strings.push({ path, value, rich: parseRichText(value) });
+    strings.push({ path, value, rich: state.read(value) });
     return;
   }
   if (value === null || typeof value !== 'object' || state.seen.has(value)) return;
@@ -110,20 +111,15 @@ function scan(value: unknown, path: string, strings: StringField[], state: WalkS
  * Walks an activity's parameters.
  * @param mainLibrary - The activity's library, e.g. `H5P.Column 1.18` (a bare `H5P.Column` is accepted too).
  * @param params - The activity's parameters (content.json).
+ * @param read - Reads each string; a validation run passes its reader, so the rules parse nothing again.
  * @returns The activity first, then every sub-content in pre-order.
  */
-export function walkContent(mainLibrary: string, params: unknown): readonly ContentNode[] {
-  const state: WalkState = { nodes: [], seen: new WeakSet() };
+export function walkContent(
+  mainLibrary: string,
+  params: unknown,
+  read: RichTextReader = parseRichText,
+): readonly ContentNode[] {
+  const state: WalkState = { nodes: [], seen: new WeakSet(), read };
   visitNode(mainLibrary, mainMachineNameOf(mainLibrary), params, '', state, 0);
   return state.nodes;
-}
-
-/**
- * The nodes at or below a path, e.g. everything inside one InteractiveBook chapter.
- * @param nodes - All nodes from `walkContent`.
- * @param paramsPath - The `path` of the enclosing node.
- * @returns The enclosing node and its descendants, in walk order.
- */
-export function nodesWithin(nodes: readonly ContentNode[], paramsPath: string): readonly ContentNode[] {
-  return nodes.filter((node) => isWithin(node.path, paramsPath));
 }

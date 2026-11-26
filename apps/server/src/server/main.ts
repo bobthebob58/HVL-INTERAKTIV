@@ -4,13 +4,13 @@
  * and listens on `PORT`.
  *
  * Why: one entry point for `npm start`, the e2e tests and production. ltijs never listens itself (D-050), and the
- *      platforms in `LTI_PLATFORMS` are synchronised before the first launch can arrive (D-051).
+ *      platforms in `LTI_PLATFORMS` are synchronised before the first launch can arrive (D-051). Run as a program,
+ *      this file hands `startServer` to ./serverProcess.ts, which owns the exit codes, the signals and the faults.
  * Spec: NFR-002, LTI-001, LTI-002, H5P-001, PED-001, LTI-012, LTI-008, DATA-003, DATA-004, MAPPE-004
  * Invariants:
- *   - Invalid configuration stops the start with the list of problems and exit code 1; secrets are never printed.
- *     That includes the validator's hint thresholds (content/laeringsdesign/hint-thresholds.yaml), read before any
- *     connection is made (D-073), and the studio content in `content/` (D-082), read next: a bad file stops the start
- *     with every problem named, by file, line and key. The H5P engine gets that content's H5P texts (D-111).
+ *   - The validator's hint thresholds (content/laeringsdesign/hint-thresholds.yaml) are read before any connection
+ *     is made (D-073), and the studio content in `content/` (D-082) next: a bad file stops the start with every
+ *     problem named, by file, line and key (./serverProcess.ts). The H5P engine gets that content's H5P texts (D-111).
  *   - The server listens only after the platform sync and the platform-key re-encryption (D-056) have finished; then
  *     it logs whether the PDF export works with its sandbox, and `stop` waits for that probe (D-110 amendments).
  *   - The xAPI ingestion hands a learner's stored rows to the grade enqueuer (LTI-012), and each resource-link launch
@@ -18,11 +18,16 @@
  *     subjects (DATA-002) and the yearly purge (D-107) start with the cleanup jobs and stop with them; each runs on
  *     one node per interval. The worker sends only to line item URLs, and the NRPS count reads only roster URLs, on
  *     `CANVAS_ORIGINS` or the platform's own origins, https in production (D-104, D-106 amendments).
- *   - The first log line names where the data lives (database and Redis hosts, the S3 region and endpoint host), for
- *     the deployment checklist; never a user, password, path or query (DATA-004, D-109 amendment).
- *   - A port that cannot be opened stops the start with exit code 1 instead of a process that serves nothing.
- *   - SIGTERM and SIGINT stop the jobs, stop accepting connections, close the studio's services (the PDF export's
- *     browser, D-096), then the clients, even when a service fails to close; exit code 0, or 1 after such a failure.
+ *   - The first log line names the mode (`NODE_ENV`) and where the data lives (database and Redis hosts, the S3
+ *     region and endpoint host), for the deployment checklist; never a user, password, path or query (DATA-004,
+ *     D-109 amendment). A warning follows when the mode is not `production` (D-133). The next line gives the
+ *     memory limits, with a warning when they do not fit (./memoryBudget.ts, D-134). A standstill of the server of
+ *     a second or more is written as a warning (./eventLoopWatch.ts, D-144), from the jobs' start to their stop.
+ *   - A port that cannot be opened fails the start instead of leaving a process that serves nothing.
+ *   - Upload folders an earlier run left in the temporary area are removed at start (../http/staleUploadFolders.ts),
+ *     and the SVG cleaning worker is started (../security/SvgSanitizer.ts, D-119).
+ *   - `stop` stops the jobs, stops accepting connections, closes the studio's services (the PDF export's browser,
+ *     D-096), then the clients, even when a service fails to close.
  *   - The web app is loaded only when `WEB_APP` is not `off`; only its development server takes WebSocket upgrades,
  *     only under `/_next/`, and without cookies, tokens or the ltik, like every request it gets (D-068).
  * Collaborators: ./createApp.ts, ./studioServices.ts, ../h5p/createH5pRuntime.ts, ../lti/platforms/syncLtiPlatforms.ts,
@@ -30,25 +35,26 @@
  *   ../grades/GradeSyncWorker.ts, ../grades/GradeSubjectCleanupJob.ts, ../privacy/purge/RetentionPurgeJob.ts,
  *   ../lti/nrps/nrpsServices.ts, ../config/env.ts, ../config/storageResidency.ts, ../config/validationContext.ts,
  *   ../validation/validateContent.ts, ../learningDesign/content/loadStudioContent.ts, ../web/nextWebApp.ts,
- *   ../web/webRoutes.ts (`webUpgrades`), ../learningDesign/mappe/pdf/pdfAvailability.ts.
+ *   ../web/webRoutes.ts (`webUpgrades`), ../learningDesign/mappe/pdf/pdfAvailability.ts, ./serverProcess.ts,
+ *   ./memoryBudget.ts, ./eventLoopWatch.ts.
  * Tests: apps/server/test/server/main.smoke.test.ts, apps/server/test/server/startupContent.test.ts,
  *   apps/server/test/server/startupLanguageOverlay.test.ts
  */
 import type { Server } from 'node:http';
 import { pathToFileURL } from 'node:url';
-import { InvalidEnvironmentError, loadEnv, type Env } from '../config/env.js';
+import type { Env } from '../config/env.js';
 import { deploymentLocations } from '../config/storageResidency.js';
-import { InvalidValidationContextError, loadValidationContext } from '../config/validationContext.js';
+import { loadValidationContext } from '../config/validationContext.js';
 import { GradeJobEnqueuer } from '../grades/GradeJobEnqueuer.js';
 import { GradeSubjectCleanupJob } from '../grades/GradeSubjectCleanupJob.js';
 import { GradeSyncWorker } from '../grades/GradeSyncWorker.js';
 import { createH5pRuntime } from '../h5p/createH5pRuntime.js';
+import { removeStaleUploadFolders } from '../http/staleUploadFolders.js';
 import { createPrismaClient } from '../infra/prismaClient.js';
 import { connectRedis } from '../infra/redisClient.js';
 import { createS3Client } from '../infra/s3Client.js';
 import { loadStudioContent } from '../learningDesign/content/loadStudioContent.js';
 import { logPdfAvailability } from '../learningDesign/mappe/pdf/pdfAvailability.js';
-import { StudioContentError } from '../learningDesign/content/StudioContentError.js';
 import { reencryptPlatformKeys } from '../lti/platforms/reencryptPlatformKeys.js';
 import { syncLtiPlatforms } from '../lti/platforms/syncLtiPlatforms.js';
 import { createNrpsServices } from '../lti/nrps/nrpsServices.js';
@@ -56,10 +62,14 @@ import { LtiRecordCleanupJob } from '../lti/storage/LtiRecordCleanupJob.js';
 import { createLogger } from '../logging/logger.js';
 import { RetentionPurgeJob } from '../privacy/purge/RetentionPurgeJob.js';
 import { DataEncryption } from '../security/keys/DataEncryption.js';
+import { warmUpSvgCleaning } from '../security/SvgSanitizer.js';
 import { createContentValidator } from '../validation/validateContent.js';
 import { loadWebApp } from '../web/nextWebApp.js';
 import { webUpgrades } from '../web/webRoutes.js';
 import { createApp } from './createApp.js';
+import { EventLoopWatch } from './eventLoopWatch.js';
+import { logMemoryBudget, memoryBudgetOf, readMemoryFacts } from './memoryBudget.js';
+import { runServerProcess } from './serverProcess.js';
 import { closeStudioServices } from './studioServices.js';
 
 /** A started server and how to stop it. */
@@ -86,8 +96,17 @@ export async function startServer(env: Env, options: StartOptions = {}): Promise
   const validator = createContentValidator(loadValidationContext(env));
   const studioContent = loadStudioContent(options.studioContentRoot);
   const logger = createLogger({ level: env.LOG_LEVEL });
-  // PRIVACY: hosts and the storage region only, for the deployment checklist (DATA-004, D-109 amendment).
-  logger.info(deploymentLocations(env), 'deployment locations');
+  // PRIVACY: the mode, hosts and the storage region only, for the deployment checklist (DATA-004, D-109 amendment).
+  logger.info({ mode: env.NODE_ENV, ...deploymentLocations(env) }, 'deployment locations');
+  // SECURITY: outside production most start-up checks are off; an operator must see that in the log (D-133).
+  if (env.NODE_ENV !== 'production')
+    logger.warn({ mode: env.NODE_ENV }, 'not in production mode: the production start-up checks did not run');
+  // WHY: the container's limit against what the server may use; a warning follows when they do not fit (D-134).
+  logMemoryBudget(logger, memoryBudgetOf(readMemoryFacts(env)));
+  // WHY: a run that was stopped mid-upload could not remove its folders in the temporary area (SEC-005, D-118).
+  logger.info({ removed: await removeStaleUploadFolders() }, 'stale upload folders removed');
+  // WHY: the first SVG upload must not wait for the cleaning worker, and a worker that cannot start shows here.
+  warmUpSvgCleaning((err) => logger.warn({ err }, 'the SVG cleaning worker did not start (D-119)'));
   const db = createPrismaClient(env.DATABASE_URL);
   const redis = await connectRedis(env.REDIS_URL, logger);
   // WHY: the engine gets the H5P texts checked above, so `content/` is read once, also a test's folder (D-111).
@@ -128,6 +147,8 @@ export async function startServer(env: Env, options: StartOptions = {}): Promise
     }),
     new GradeSubjectCleanupJob({ db, redis, logger }),
     new RetentionPurgeJob({ db, redis, logger, env }),
+    // WHY: a server that stood still for a second or more says so in its log (NFR-002, D-144).
+    new EventLoopWatch(logger),
   ];
   for (const job of jobs) job.start();
   // WHY: Express 5 passes a listen failure (port taken, no permission) to this callback; it must fail the start.
@@ -154,39 +175,6 @@ export async function startServer(env: Env, options: StartOptions = {}): Promise
   };
 }
 
-async function main(): Promise<void> {
-  let running: RunningServer;
-  try {
-    running = await startServer(loadEnv());
-  } catch (error) {
-    // SECURITY: the problem list names variables and rules only, never their values.
-    // WHY: a bad thresholds or studio content file is configuration, reported like the environment: the problems
-    // (file, line and key), no stack trace. Content files hold no personal data (DATA-009).
-    if (
-      error instanceof InvalidEnvironmentError ||
-      error instanceof InvalidValidationContextError ||
-      error instanceof StudioContentError
-    ) {
-      process.stderr.write(`${error.message}\n`);
-      process.exitCode = 1;
-      return;
-    }
-    throw error;
-  }
-  let stopping = false;
-  const shutdown = (): void => {
-    if (stopping) return;
-    stopping = true;
-    // WHY: idle keep-alive connections would hold `server.close` open until they time out.
-    running.server.closeIdleConnections();
-    void running.stop().then(
-      () => (process.exitCode = 0),
-      () => (process.exitCode = 1),
-    );
-  };
-  process.once('SIGTERM', shutdown);
-  process.once('SIGINT', shutdown);
-}
-
 // WHY: tests import `startServer` without starting a second server.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
+  await runServerProcess(startServer);

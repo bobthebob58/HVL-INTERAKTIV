@@ -20,7 +20,7 @@
  */
 import http from 'k6/http';
 import { check } from 'k6';
-import { autoPostForm, embeddedJson, pageAssets } from './playerPages.js';
+import { OWN_PAGE_POST, autoPostForm, embeddedJson, pageAssets } from './playerPages.js';
 
 const tagged = (name, kind, extra = {}) => ({ tags: { name, kind }, redirects: 0, ...extra });
 
@@ -86,7 +86,9 @@ export function launchAndOpen(frameUrl, toolUrl) {
     // WHY: in Canvas's frame the tool's state cookie is third-party and blocked, so ltijs's page posts again.
     bytes += sizeOf(launched) + fetchAssets(toolUrl, launched.body, fetched).bytes;
     const recovered = { ...launchForm.fields, ltijs_recovered_state: loginData.recoveryToken ?? '' };
-    launched = http.post(launchForm.action, recovered, tagged('lti-launch-recovered', 'launch'));
+    // WHY: the tool takes this second post only from its own page; a browser says so with this header.
+    const ownPage = tagged('lti-launch-recovered', 'launch', { headers: OWN_PAGE_POST });
+    launched = http.post(launchForm.action, recovered, ownPage);
   }
   const location = launched.headers.Location ?? '';
   const ltik = /[?&]ltik=([^&]+)/.exec(location)?.[1];

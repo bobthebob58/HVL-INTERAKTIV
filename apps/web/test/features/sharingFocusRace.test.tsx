@@ -7,8 +7,10 @@
  * Why: the S5 gate failed once under CPU load: after «Fjern meg» the lasting message was shown, but focus stayed on
  *      `body`. React runs a commit's passive effects in a later Scheduler task (it yields to paint after a commit),
  *      and Testing Library's `findBy*` resolves on a 0 ms timer, which a busy machine may run before that task.
- *      These tests force the same orders on every run instead of waiting for a busy machine, and the first two
- *      check, at the moment the section has handled the answer, that the order was forced before they check focus.
+ *      These tests force the same orders on every run instead of waiting for a busy machine, and the listing test
+ *      checks, at the moment the section has handled the answer, that the order was forced before it checks focus.
+ *      «Fjern meg» asks first (D-125), which puts synchronous commits before its request; that test presses and
+ *      answers as early as it can.
  * Spec: UD-006, PROD-007
  * Collaborators: ../support/commitOrder.tsx (forces the orders), ../support/fakeFetch.ts.
  */
@@ -20,6 +22,7 @@ import { BankListingSection } from '../../src/features/sharing/BankListingSectio
 import { CoAuthorSection } from '../../src/features/sharing/CoAuthorSection';
 import { gate, holdAnswer, watchCommits } from '../support/commitOrder';
 import { fakeFetch } from '../support/fakeFetch';
+import { questionButton } from '../support/confirmQuestion';
 import { DETAIL, ID } from './learningDesignFixtures';
 
 const COAUTHORS = `/api/content/${ID}/coauthors`;
@@ -34,30 +37,26 @@ const LISTED_AT = '2026-10-20T10:00:00.000Z';
 const REREAD_LISTED_AT = '2026-10-21T10:00:00.000Z';
 
 describe('[UD-006] focus after a sharing change, whatever runs first', () => {
-  it('[UD-006] «Fjern meg» answered while the list’s effects still wait: focus waits for the lasting message and lands on it', async () => {
+  it('[UD-006] «Fjern meg», pressed and confirmed right after each render: focus waits for the lasting message and lands on it', async () => {
     // Arrange
     const watch = watchCommits();
-    let flushesAtHandled = -1;
     fakeFetch({
       [`GET ${COAUTHORS}`]: { status: 200, body: AS_CO_AUTHOR },
       [`DELETE ${COAUTHORS}/${KARI.userId}`]: { status: 200, body: { ...AS_CO_AUTHOR, coAuthors: [OLA] } },
     });
-    const announce = () => (flushesAtHandled = watch.flushes);
-    render(watch.wrap(<CoAuthorSection contentId={ID} announce={announce} />));
-    const flushesBefore = watch.flushes;
+    render(watch.wrap(<CoAuthorSection contentId={ID} announce={() => undefined} />));
     // Act
-    // WHY: pressed in a microtask right after the list has rendered; the fake DELETE answers through microtasks only,
-    // so it is handled before the Scheduler task that runs the list's passive effects.
+    // WHY: pressed in a microtask right after the list has rendered, and the question (D-125) answered in a microtask
+    // right after it has rendered; the fake DELETE answers through microtasks only. The question's own commits are
+    // synchronous, so the order the next test forces cannot arise here; this one keeps the press as early as it can be.
     watch.next = () => {
       const removeSelf = screen.getByRole('button', { name: 'Fjern meg' });
       removeSelf.focus();
+      watch.next = () => questionButton('Fjern meg').click();
       removeSelf.click();
     };
     // Assert
     const message = await screen.findByText(/Du er ikkje lenger medforfattar på aktiviteten\./);
-    // WHY: `announce` runs right after `setList`; a React that stopped calling `onPostCommit` fails here loudly.
-    expect(flushesBefore).toBeGreaterThan(0);
-    expect(flushesAtHandled).toBe(flushesBefore);
     await waitFor(() => expect(document.activeElement).toBe(message));
   });
 

@@ -20,31 +20,9 @@ import type { Database } from '../../src/infra/prismaClient.js';
 import { connectRedis, type Redis } from '../../src/infra/redisClient.js';
 import type { ValidationInput } from '../../src/validation/types.js';
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../support/httpTestbed.js';
+import { pausePoint, pausing } from '../support/pausePoints.js';
 import { altError } from '../support/publishFixtures.js';
 import { describeWithServices, serviceEnv } from '../support/services.js';
-
-/** A step that stops until the test lets it go on, and tells the test when it has stopped. */
-function pausePoint() {
-  let reached = (): void => undefined;
-  let release = (): void => undefined;
-  const hasReached = new Promise<void>((resolve) => (reached = resolve));
-  const released = new Promise<void>((resolve) => (release = resolve));
-  return { hasReached, release, wait: () => (reached(), released) };
-}
-
-/** Wraps an object so one of its methods first waits at a pause point. */
-function pausing<T extends object>(target: T, method: string, at: () => Promise<void>, member?: string): T {
-  return new Proxy(target, {
-    get(object, property) {
-      const value: unknown = Reflect.get(object, property);
-      if (member === undefined && property === method && typeof value === 'function') {
-        return async (...args: unknown[]) => (await at(), Reflect.apply(value, object, args) as unknown);
-      }
-      if (member !== undefined && property === member) return pausing(value as object, method, at);
-      return typeof value === 'function' ? value.bind(object) : value;
-    },
-  });
-}
 
 const missingAlt = (input: ValidationInput) =>
   JSON.stringify(input.params).includes('utan alt') ? [altError] : [];

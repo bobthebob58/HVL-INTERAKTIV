@@ -182,17 +182,25 @@ prompted (but not required) on publish.
 
 - **Verify:** Component and API tests.
 
+- **Amended (D-142, 2026-11-25):** the outcomes, the rationale and the purpose are typed text: no control
+  character (a tab and line breaks are text in the outcomes and the rationale), no U+2028 or U+2029 and no
+  bidirectional control. The API answers such a text with 400; the form takes these out of pasted text first.
+
 #### PED-031 · SHOULD · S5 · Constructive alignment planner
 For one course, the planner shows a grid of **learning outcomes × phases** filled with the author's
 tagged activities. It highlights gaps, such as an outcome with no *etterarbeid* activity or a phase
 with no activities. It offers *Create from pattern* inside any empty cell.
 - **Acceptance:** The grid is an accessible HTML table with row and column headers, not only a visual canvas.
 - **Verify:** Component test; axe.
+- **Amended (D-128, 2026-11-21):** a planner holds the 300 most recently changed activities of the course and says
+  when the course has more. One person may ask for the planner 120 times in ten minutes.
 
 #### PED-032 · SHOULD · S5 · Students see time estimate and purpose
 Before an activity starts, learners see the estimated time and a one-line "why this matters" text
 taken from the metadata. This helps them plan their study and self-regulate.
 - **Verify:** Component test.
+- **Amended (D-142, 2026-11-25):** «one line» also means no U+2028 or U+2029, and the purpose holds no
+  bidirectional control; a stored purpose that breaks the rule is not shown to learners.
 
 ---
 
@@ -209,6 +217,8 @@ already done. The evidence behind this section is in
 On `/mappe`, an author selects activities, filtered by course, phase or date. The author exports
 **Markdown** (for editing) and **PDF** (for submission).
 - **Verify:** Integration test produces both files from fixtures.
+- **Amended (D-128, 2026-11-21):** one person may ask for a preview or an export 120 times together in ten minutes.
+  The selected activities are read and checked one at a time.
 
 #### MAPPE-002 · SHOULD · S5 · Dossier structure
 Headings come from `content/mappe/template.{nn,nb,en}.md` and criterion texts from
@@ -239,6 +249,8 @@ its Del 1 headings wait for ALU.
 - **Acceptance:** Switching the criteria set changes every criterion text and the reader's guide with no
   code change. The word count excludes the references and the reader's guide.
 - **Verify:** Integration test with two fixture criteria sets.
+- **Amended (D-128, 2026-11-21):** the universal design status counts all findings of an activity and lists the
+  first 50; when there are more, the status line says that the first 50 are listed.
 
 #### MAPPE-003 · MUST · S5 · Privacy in the export
 Aggregates apply the same minimum group size as insight (`INS-006`, default *k* = 5). No learner
@@ -254,3 +266,6 @@ and **not stored** on the server.
 The PDF is rendered from the same semantic HTML template with headless Chromium and **tagged-PDF**
 output enabled. It has document language, a title, a heading outline and real text, never images of text.
 - **Verify:** The test checks the PDF has a structure tree and outline (e.g. with `pdfjs-dist`); a manual check with PAC or a screen reader is recorded in the accessibility results.
+- **Amended (D-144, 2026-11-26):** in the image Chromium keeps its sandbox under
+  `deploy/seccomp/chromium-sandbox.seccomp`: Docker's default seccomp profile with one rule added (`clone`,
+  `setns`, `unshare`), in place of the older profile Playwright publishes.

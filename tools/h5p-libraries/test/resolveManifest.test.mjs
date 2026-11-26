@@ -1,9 +1,10 @@
 /**
- * Tests for resolving and pinning the libraries of the content types, against a fake git source.
+ * Tests for resolving and pinning the libraries of the content types, against a fake git source, and that a name,
+ * a version or a registry address without its form reaches neither the source nor a folder (D-143).
  *
  * Spec: H5P-003, H5P-002
  */
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -33,16 +34,24 @@ const lib = (name, version, deps = [], extra = {}) => {
   };
 };
 
-/** A fake source: per repository, tags and the library.json each ref holds. */
+const GITHUB = 'https://github.com/h5p/';
+/** A fake source: per repository (its name on GitHub), tags and the library.json each ref holds. */
 function fakeSource(repos) {
   const checkedOut = [];
+  const asked = [];
+  const named = (address) => {
+    asked.push(address);
+    return address.replace(GITHUB, '');
+  };
   return {
     checkedOut,
-    listVersionTags: (repo) =>
-      Object.keys(repos[repo])
+    asked,
+    listVersionTags: (address) =>
+      Object.keys(repos[named(address)])
         .filter((ref) => ref !== 'HEAD')
         .map((tag) => ({ tag, version: tag.split('.').map(Number) })),
-    checkout: (repo, ref, dir) => {
+    checkout: (address, ref, dir) => {
+      const repo = named(address);
       const tag = ref.replace('refs/tags/', '');
       const library = repos[repo][tag];
       mkdirSync(dir, { recursive: true });
@@ -54,9 +63,9 @@ function fakeSource(repos) {
   };
 }
 const registry = {
-  'H5P.A': { repo: { url: 'a' } },
-  'H5P.B': { repo: { url: 'b' } },
-  'H5P.C': { repo: { url: 'c' } },
+  'H5P.A': { repo: { url: `${GITHUB}a` } },
+  'H5P.B': { repo: { url: `${GITHUB}b` } },
+  'H5P.C': { repo: { url: `${GITHUB}c` } },
 };
 const ROOTS = [{ machineName: 'H5P.A', majorVersion: 1, minorVersion: 2 }];
 /** Resolves the content type H5P.A 1.2 from `source` into a fresh work folder. */
@@ -140,5 +149,48 @@ describe('[H5P-003] resolving the pinned library set', () => {
     expect(() => resolveManifest({ roots: missing, registry, source: wrong, workDir: workDir() })).toThrow(
       /not in the H5P registry/,
     );
+  });
+
+  it('[H5P-003] a registry address that is not a GitHub https address never reaches the source', () => {
+    // Arrange
+    const addresses = [
+      '--upload-pack=x',
+      'file:///tmp/a',
+      '/tmp/a',
+      'http://github.com/h5p/a',
+      `${GITHUB}a/b`,
+    ];
+    const source = fakeSource({ a: { '1.2.0': lib('H5P.A', '1.2.0') } });
+    // Act and assert
+    for (const url of addresses) {
+      const odd = { ...registry, 'H5P.A': { repo: { url } } };
+      const resolve = () => resolveManifest({ roots: ROOTS, registry: odd, source, workDir: workDir() });
+      expect(resolve, url).toThrow(/^repository .* does not have the form a library source may have$/);
+    }
+    expect(source.asked).toEqual([]);
+  });
+
+  it('[H5P-003] a dependency whose name or version is not a plain one reaches no folder and no source', () => {
+    // Arrange: the folder beside the work folder that a name with `../` would be joined to
+    const work = workDir();
+    const outside = join(work, '..', `beside-${process.pid}-1.0`);
+    dirs.push(outside);
+    const odd = [
+      { machineName: `../beside-${process.pid}`, majorVersion: 1, minorVersion: 0 },
+      { machineName: 'H5P.B', majorVersion: '../x', minorVersion: 0 },
+      { machineName: 'H5P..B', majorVersion: 1, minorVersion: 0 },
+    ];
+    // Act and assert
+    for (const dependency of odd) {
+      const source = fakeSource({
+        a: { '1.2.0': { ...lib('H5P.A', '1.2.0'), preloadedDependencies: [dependency] } },
+        b: { HEAD: lib('H5P.B', '1.0.0') },
+      });
+      const named = { ...registry, [dependency.machineName]: { repo: { url: `${GITHUB}b` } } };
+      const resolve = () => resolveManifest({ roots: ROOTS, registry: named, source, workDir: work });
+      expect(resolve, JSON.stringify(dependency)).toThrow(/does not have the form a library source may have/);
+      expect(source.asked).toEqual([`${GITHUB}a`, `${GITHUB}a`]);
+    }
+    expect(existsSync(outside)).toBe(false);
   });
 });

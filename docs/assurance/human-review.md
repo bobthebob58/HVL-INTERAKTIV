@@ -4,7 +4,7 @@
 |---|---|
 | **For** | HVL IT (security and operations), the DPO, and anyone HVL asks to review the code, including HVL's bachelor students |
 | **Status** | **Draft for HVL IT to correct.** The plan, the checklists, the time estimates and the definitions of "reviewed" in §4–§6 are proposals |
-| **Written** | 2026-11-05 by the same AI assistant (Claude) that wrote the code, from the repository at commit `92ca2c5`. Updated 2026-11-06 at commit `8d4eaf0` with the commit counts, pull request #18 and its GitHub CI runs (§2.1, §2.3, §2.4, §3). No file under `apps/server/src`, `apps/web`, `packages/`, `deploy/` or `content/` changed between those commits (`git diff --stat 92ca2c5 8d4eaf0`). Updated again on 2026-11-06 at commit `43c6673`, after pull requests #18 and #21 were merged: §2.1, §2.3, §3, the line counts in §4 (only area A2's changed materially) and the new controls in A2 and C4 |
+| **Written** | 2026-11-05 by the same AI assistant (Claude) that wrote the code, from the repository at commit `92ca2c5`. Updated 2026-11-06 at commit `8d4eaf0` with the commit counts, pull request #18 and its GitHub CI runs (§2.1, §2.3, §2.4, §3). No file under `apps/server/src`, `apps/web`, `packages/`, `deploy/` or `content/` changed between those commits (`git diff --stat 92ca2c5 8d4eaf0`). Updated again on 2026-11-06 at commit `43c6673`, after pull requests #18 and #21 were merged: §2.1, §2.3, §3, the line counts in §4 (only area A2's changed materially) and the new controls in A2 and C4. Line references were re-pointed on 2026-11-26 by following each through the repository's history (D-146) |
 | **Reviewed by** | Nobody yet. A second AI pass checked the facts and evidence against the repository on 2026-11-05; that is not a human review |
 | **Overview** | [README.md](README.md); the risks this review lowers are ROS-01 and ROS-02 in the [ROS-analyse](ros-analyse.md) |
 
@@ -116,7 +116,7 @@ that depended on test order (`92ca2c5`, `5a5b8c3`), and CI's fresh runner found 
 | The deployment files and CI | `deploy/` and `.github/workflows/` were read only by AI reviewers (among them step 6's security review, step 10's review of everything since `47e235e` and pull request #21's reviewers, who added CI's second, lax clamd). `docker.yml` has now run on GitHub and passed, also on `main` (§2.3), which shows that the image builds and its smoke test passes there, not that a person has read the files | `PROGRESS.md`, S6 steps 6 and 10; GitHub runs 42166052745, 42170423045, 42205391749 and 42253214575 |
 | Pull requests #18 (S6) and #21 (security follow-ups) | No review on GitHub; the owner merged both on 2026-11-06. CI ran on each head (CI tests the head merged into `main`, not each commit on its own): on #18, run 42166052880 on `3eeea8d` failed one test, and runs 42170423046 on `8d4eaf0` and 42183630447 on `eb79b30` passed; on #21, run 42253214678 on `9bfa1b2` passed; on `main`, runs 42205391766 after #18's merge and 42266303529 after #21's passed (§2.3). A green run is not a review (§6) | GitHub's API, 2026-11-06 (0 reviews on each); `git log`; `.github/workflows/ci.yml`, lines 10–13 |
 | The threat model, the ROS-analyse and this pack | Drafts by the AI | [threat-model.md](threat-model.md), [ros-analyse.md](ros-analyse.md) |
-| The DPIA input (residuals R1–R40) | Not reviewed by the DPO | Q6; `docs/privacy/DPIA-INPUT.md` |
+| The DPIA input (residuals R1–R41) | Not reviewed by the DPO | Q6; `docs/privacy/DPIA-INPUT.md` |
 | Accessibility for real users | No manual run recorded; all 56 verdicts are *Not yet determined* | `docs/accessibility/results/README.md`; [conformance report](../accessibility/WCAG-CONFORMANCE-REPORT.md) |
 | The studio's texts (phases, guide, patterns, mappe template, the content bank's consent text) | Requested from ALU, not done | Q17; `docs/reference/alu-review-s5.md` |
 | Canvas and Feide | Tested against the mocks in `tools/mock-platform` only; the live-contract seam has never run against a real Canvas or Feide | `docs/EVALUATOR-GUIDE.md` §6, limitation 5; [live-contract-seam.md](../handoff/live-contract-seam.md) |
@@ -164,7 +164,11 @@ deployment ID nor the platform's active flag, so our code does (D-050, D-051), a
 - [ ] No combination of role claims gives `admin`; `Administrator` gives at most `author` and `TestUser` gives
       `learner` (`LTI-004`, D-059).
 - [ ] A nonce works exactly once, also for two requests at the same moment (`LTI-002`).
-- [ ] The ltik is taken from the query only on the paths in `LTIK_QUERY_PATHS` (`auth/requestPrincipal.ts:32-38`) and
+- [ ] The last step of a launch is refused unless it comes from our own page, with and without fetch
+      metadata (`lti/http/launchPostOrigin.ts`, D-141).
+- [ ] ltijs asks only the configured platforms' origins and `CANVAS_ORIGINS`, follows no redirect and gives
+      up after 10 seconds (`lti/http/LtiOutboundRequests.ts`, D-141).
+- [ ] The ltik is taken from the query only on the paths in `LTIK_QUERY_PATHS` (`auth/requestPrincipal.ts:35-38`) and
       on `/app/play`; anywhere else a query ltik gets 401.
 - [ ] The ltik never reaches a log line, a `Referer` header, the browser's history or its storage (`LTI-003`).
 - [ ] `Provider.listen()` is never called and ltijs's own HTTP handler and CORS are not mounted (D-050).
@@ -256,7 +260,7 @@ gradebook. Its claim bug was found only by a full test run (`PROGRESS.md`, S6 st
 - [ ] PKCE (`S256`), `state` and `nonce` are tied to the browser by a single-use login cookie, and the ID token's
       signature is checked against Feide's keys (`AUTH-001`, D-057).
 - [ ] `admin` only for a Feide ID in `ADMIN_FEIDE_IDS` whose realm is in `ALLOWED_FEIDE_ORGS`
-      (`auth/feide/FeideRoleMapper.ts:162-164`).
+      (`auth/feide/FeideRoleMapper.ts:164-166`).
 - [ ] The session cookie is `__Host-` with `Secure`, `HttpOnly` and `SameSite=Lax`; sessions end after 2 hours idle or
       12 hours in all (`AUTH-003`).
 - [ ] A CSRF token is required on every unsafe method and on H5P's AJAX routes, compared in constant time
@@ -284,10 +288,11 @@ gradebook. Its claim bug was found only by a full test run (`PROGRESS.md`, S6 st
 
 #### A7. Page script policies and headers (about 600 lines; estimate 1 day)
 
-**Paths:** `h5p/render/playerPage.ts`, `editorPage.ts`, `coreInlineScripts.ts`, `http/h5pPageCsp.ts`,
+**Paths:** `h5p/render/playerPage.ts`, `editorPage.ts`, `render/client/h5pIntegration.js`, `http/h5pPageCsp.ts`,
 `web/webPageCsp.ts`, `http/securityHeaders.ts`, `lti/http/ltiPageHeaders.ts`.
 
-- [ ] H5P pages allow `script-src 'self'` and one hash; never `'unsafe-inline'` or `'unsafe-eval'` for scripts (D-070).
+- [ ] H5P pages allow `script-src 'self'` and no inline script: no hash, nonce, `'unsafe-inline'` or `'unsafe-eval'`
+      (D-070, D-140); the pages' scripts read their data only from the JSON block in the page's head.
 - [ ] Panopto's script is allowed only when a Panopto site is configured (`EXTERNAL_MEDIA_ORIGINS`).
 - [ ] Next.js pages use a nonce per request, and production refuses `WEB_APP=dev`.
 - [ ] No page makes a third-party request (`DATA-011`).
@@ -396,10 +401,9 @@ HVL's bachelor students in programming are asked to review this code in spring 2
 tools, but it is a one-term student project and does not replace IT's security review or the DPO's review.
 
 **Known open items** that reviewers should judge rather than report as new (each is recorded): CVE-2025-7062 in Lumi
-10.0.4 (D-003); the editor's files on the app origin and the cookie routes (D-110); insight GETs served to browsers
-that send no fetch metadata (`PROGRESS.md`, S6 step 10, «Still open»); scores computed in the browser (limitation 1 in
-`docs/EVALUATOR-GUIDE.md` §6); tokens in some URLs, so the proxy must not log query strings (limitation 9); no rate
-limit on login and launch in the app (ROS-07); the residuals R1–R40 in `docs/privacy/DPIA-INPUT.md` §12.
+10.0.4 (D-003); the editor's files on the app origin and the cookie routes (D-110); scores computed in the browser
+(limitation 1 in `docs/EVALUATOR-GUIDE.md` §6); tokens in some URLs, so the proxy must not log query strings (limitation 9); no rate
+limit on login and launch in the app (ROS-07); the residuals R1–R41 in `docs/privacy/DPIA-INPUT.md` §12.
 
 ## 5. How to report findings
 

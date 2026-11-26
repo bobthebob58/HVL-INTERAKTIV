@@ -57,7 +57,18 @@ describe('[DATA-011] hand-over to the web app', () => {
     expect(seen[0]?.headers.cookie).toBeUndefined();
     expect(seen[0]?.headers.authorization).toBeUndefined();
     expect(seen[0]?.url).toBe('/hjelp');
-    expect(res.headers['x-frame-options']).toBe('SAMEORIGIN');
+  });
+
+  it('[DATA-011] a portal page may be framed by nothing, not even by a page of our own origin', async () => {
+    // Arrange
+    const { app } = appWith('nn');
+    // Act
+    const res = await request(app).get('/aktivitet/c1?fane=check');
+    // Assert
+    expect(res.headers['content-security-policy']).toMatch(/frame-ancestors 'none'$/);
+    expect(res.headers['x-frame-options']).toBe('DENY');
+    // SECURITY: a portal page gives a window of another site no handle on it (D-131).
+    expect(res.headers['cross-origin-opener-policy']).toBe('same-origin');
   });
 
   it('[PROD-012] without a session the locale is Nynorsk, whatever the client sends', async () => {
@@ -133,6 +144,8 @@ describe('[DATA-011] hand-over to the web app', () => {
     );
     expect(res.headers['x-frame-options']).toBeUndefined();
     expect(res.headers['cache-control']).toBe('no-store');
+    // SECURITY: Canvas and the launch's storage messages need the handle on a Canvas page (D-131).
+    expect(res.headers['cross-origin-opener-policy']).toBeUndefined();
   });
 
   it('[LTI-003] a page without a launch never carries a launch header, even a forged one', async () => {

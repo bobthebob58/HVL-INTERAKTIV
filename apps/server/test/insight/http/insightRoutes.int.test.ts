@@ -15,13 +15,16 @@ import type { PersonLimit } from '../../../src/learningDesign/collaboration/Pers
 import { describeWithServices } from '../../support/services.js';
 import { cellsIn } from '../support/reportInvariants.js';
 import { parseCsv } from './support/csvRecords.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import { openInsightHttpBench, portalPrincipal, type InsightHttpBench } from './support/insightHttpBench.js';
 
 describeWithServices('[INS-001] the insight view and its CSV through the API', () => {
   let bench: InsightHttpBench;
   let owner: Principal;
   const get = (path: string, principal: Principal | undefined = owner, options = {}) =>
-    request(bench.appAs(principal, options)).get(`/api/content/${bench.contentId}/insight${path}`);
+    request(bench.appAs(principal, options))
+      .get(`/api/content/${bench.contentId}/insight${path}`)
+      .set(OWN_PAGE_FETCH);
   const auditOf = () =>
     bench.db.auditEvent.findMany({
       where: { targetId: bench.contentId, action: { startsWith: 'insight.' } },
@@ -110,7 +113,7 @@ describeWithServices('[INS-001] the insight view and its CSV through the API', (
     expect(csv.headers['content-type']).toBe('text/csv; charset=utf-8');
     expect(csv.headers['content-disposition']).toBe('attachment; filename="innsikt-7d-2026-11-04.csv"');
     expect(csv.headers['cache-control']).toBe('no-store');
-    expect(text.startsWith('﻿Del,Spørsmål-ID,Nr. eller sekund,Tekst,Mål,Verdi\r\n')).toBe(true);
+    expect(text.startsWith('﻿"Del";"Spørsmål-ID";"Nr. eller sekund";"Tekst";"Mål";"Verdi"\r\n')).toBe(true);
     expect(text).toContain('ikkje for eksamen eller karakterar');
     const records = parseCsv(text.slice(1));
     expect(records.every((record) => record.length === 6)).toBe(true);
@@ -124,7 +127,9 @@ describeWithServices('[INS-001] the insight view and its CSV through the API', (
     const res = await get('/export', { ...owner, locale: 'en' });
     // Assert
     expect(res.headers['content-disposition']).toBe('attachment; filename="insight-7d-2026-11-04.csv"');
-    expect(res.text.split('\r\n')[0]).toBe('﻿Section,Question ID,No. or second,Text,Measure,Value');
+    expect(res.text.split('\r\n')[0]).toBe(
+      '﻿"Section","Question ID","No. or second","Text","Measure","Value"',
+    );
   });
 
   it('[INS-007] past the per-person limit every route is 429 with Retry-After; a refused person is never counted', async () => {
@@ -155,13 +160,13 @@ describeWithServices('[INS-001] the insight view and its CSV through the API', (
   it('[INS-007] an app that has not wired the insight services fails closed with 500 after the access check', async () => {
     // Act
     const unwired = await get('', owner, { services: null });
-    const nobody = await request(bench.appAs(undefined, { services: null })).get(
-      `/api/content/${bench.contentId}/insight`,
-    );
+    const nobody = await request(bench.appAs(undefined, { services: null }))
+      .get(`/api/content/${bench.contentId}/insight`)
+      .set(OWN_PAGE_FETCH);
     const colleague = await get('', portalPrincipal(bench.colleagueId), { services: null });
-    const malformed = await request(bench.appAs(owner, { services: null })).get(
-      '/api/content/not-a-uuid/insight',
-    );
+    const malformed = await request(bench.appAs(owner, { services: null }))
+      .get('/api/content/not-a-uuid/insight')
+      .set(OWN_PAGE_FETCH);
     // Assert
     expect([unwired.status, nobody.status, colleague.status, malformed.status]).toEqual([500, 401, 403, 404]);
     expect(unwired.body.errorCode).toBe('internal');

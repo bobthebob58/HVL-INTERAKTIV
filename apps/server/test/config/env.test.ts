@@ -14,7 +14,7 @@ const AUTUMN_2026 = new Date('2026-10-22T12:00:00Z');
 const VALID = { ...VALID_ENV, PSEUDONYM_SECRETS: `2026=${SECRET}` };
 
 describe('[DOC-008] configuration validation', () => {
-  it('[DOC-008] applies documented defaults to a minimal valid environment', () => {
+  it('[DOC-008] applies documented defaults to a minimal valid environment with its mode stated', () => {
     // Act
     const env = loadEnv(VALID);
     // Assert
@@ -28,6 +28,17 @@ describe('[DOC-008] configuration validation', () => {
     });
     expect(env.S3_ENDPOINT).toBeUndefined();
     expect(env.PSEUDONYM_SECRETS.get(2026)).toHaveLength(32);
+  });
+
+  it('[DOC-008] refuses to start when the mode is missing or empty, and names the allowed modes', () => {
+    // Arrange
+    const withoutMode: Record<string, string> = { ...VALID };
+    delete withoutMode.NODE_ENV;
+    // Act and assert: no silent "development", so the production checks are never skipped by accident
+    for (const env of [withoutMode, { ...VALID, NODE_ENV: '' }, { ...VALID, NODE_ENV: 'staging' }]) {
+      expect(envProblems(env)).toEqual(['NODE_ENV: must be development, test or production']);
+    }
+    expect(loadEnv({ ...VALID, NODE_ENV: 'test' }).NODE_ENV).toBe('test');
   });
 
   it('[DOC-008] treats empty values as unset', () => {

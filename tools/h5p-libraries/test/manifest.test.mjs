@@ -7,6 +7,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { CONTENT_TYPE_ROOTS } from '../resolveManifest.mjs';
+import { checkedManifestEntry, checkedRepository } from '../sourceRules.mjs';
 
 const manifest = JSON.parse(readFileSync(new URL('../libraries.manifest.json', import.meta.url), 'utf8'));
 const examplesDir = new URL('../examples/', import.meta.url);
@@ -18,7 +19,9 @@ const key = (l) => `${l.machineName} ${l.version.split('.').slice(0, 2).join('.'
 describe('[H5P-003] the library manifest', () => {
   it('[H5P-003] pins every library and the registry to a full commit, from a release tag unless marked untagged', () => {
     expect(manifest.registry.commit).toMatch(/^[0-9a-f]{40}$/);
+    expect(checkedRepository(manifest.registry.repository)).toBe('https://github.com/h5p/h5p-registry');
     for (const library of manifest.libraries) {
+      expect(checkedManifestEntry(library), key(library)).toBe(library);
       expect(library.commit, key(library)).toMatch(/^[0-9a-f]{40}$/);
       expect(library.repository, key(library)).toMatch(/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/);
       if (library.untagged) expect(library.ref, key(library)).toBe('HEAD');

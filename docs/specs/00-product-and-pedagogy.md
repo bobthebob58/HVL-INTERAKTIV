@@ -165,6 +165,9 @@ Activities have the states `draft` and `published`. *Publish* runs the universal
   insight and in the portfolio export, and are raised again on the next publish after 14 days.
   *Warnings* and *hints* never block.
 - **Verify:** Unit tests for state transitions; e2e for J1 step 5.
+- **Amended (D-131, 2026-11-21):** the gate on saves of a published activity (D-074) knows the activity by its
+  ID in one spelling, so a save always waits on the lock a publish holds, and it refuses when it finds no
+  activity.
 
 #### PROD-004 · MUST · S3 · Learners only see published activities
 - **Acceptance:** A learner request for a `draft` returns a friendly "not yet available" page
@@ -180,6 +183,8 @@ Visibility is one of: *only me / co-authors*, *everyone at HVL*, or *anyone with
 - **Acceptance:** Visibility is enforced by the permission system (`H5P-006`). Changing visibility
   takes effect immediately.
 - **Verify:** Integration tests per visibility level.
+- **Amended (D-130, 2026-11-21):** visibility is changed in the portal, with the Feide session; a request with an
+  ltik cannot change it (`LTI-003`).
 
 #### PROD-007 · SHOULD · S5 · Co-authoring and an institutional content bank
 Authors can add co-authors (HVL staff found by name or Feide ID) and can publish an activity to the
@@ -187,6 +192,11 @@ HVL content bank so that colleagues can *duplicate and adapt* it.
 - **Acceptance:** A duplicate keeps a link to its source and the original author's attribution. It
   never copies learner data.
 - **Verify:** Integration tests.
+- **Amended (D-139, 2026-11-22):** a duplicate is held to the limit for one activity's files (`SEC-005`), so one
+  copy writes at most 200 MB.
+
+- **Amended (D-142, 2026-11-25):** the search text is one line of typed text (no control character, hidden line
+  break or bidirectional control), and a Feide ID in it is read by the login's rule (`AUTH-002`).
 
 #### PROD-008 · MUST · S2 · Resume where you left off
 A learner who leaves an activity and returns on any device resumes with their previous answers and position. See `H5P-005`.
@@ -218,6 +228,9 @@ changes (adding, removing or reordering questions) reset saved progress. It offe
 - **Acceptance:** Existing learner state is invalidated only when the author confirms. Insight
   separates results by version.
 - **Verify:** Integration test.
+- **Amended (D-137, 2026-11-22):** a save that changes an answer key (which options are correct, what a gap
+  accepts, whether upper and lower case differ) and leaves the structure as it is keeps the learner state and
+  starts a new version, so insight separates results by the key they were judged against.
 
 #### PROD-014 · COULD · S6 · Spaced-retrieval suggestion
 After publishing an *Etterarbeid* activity, the author is shown suggested repetition dates (for
@@ -237,6 +250,14 @@ profile with 200 concurrent learners on one application node. API p95 is ≤ 300
 99.5 % monthly availability during the semester. Database backups run daily with 30-day retention.
 A documented restore is tested once per semester.
 - **Verify:** Operations runbook in `docs/ops/`; restore drill log.
+- **Amended (D-132, 2026-11-22):** the backup's own checks hold for any text: rows are counted at the dump's real
+  row ends only, content-file keys are compared exactly, and a restore names the tables whose counts differ.
+- **Amended (D-134, 2026-11-22):** the app container has a restart rule, so a server that ended its process comes
+  back; the server writes its memory limits at start and warns when they do not fit; and at most two insight
+  views and eight saved states are handled at the same time in one process, the others waiting their turn.
+- **Amended (D-144, 2026-11-26):** a server that stands still is marked unhealthy within half a minute (a health
+  check try has 3 seconds, tries come every 5 seconds, and the third failed one counts), and when it runs again it
+  writes how long it stood still; while Redis cannot be reached, a request that needs it fails at once.
 
 #### NFR-003 · MUST · S4 · Mobile and assistive technology
 Works on the last two versions of Chrome, Edge, Firefox and Safari, on iOS Safari and on Android
@@ -257,11 +278,23 @@ is GPL-3.0-or-later. Dependencies must be GPL-3.0-compatible (for example MIT, B
 Logs are structured JSON with request ID, route, status and latency. They must never contain names,
 e-mail addresses, Feide IDs, LTI `sub` values, ltik tokens, or answer contents. See `DATA-009`.
 - **Verify:** A unit test runs the log redaction function against a fixture of sensitive fields.
+- **Amended (D-133, 2026-11-22):** a fault after an answer has begun, a fault nothing caught and a failed start are
+  each one `error` or `fatal` line of the same logger and end the answer or the process; nothing is printed around
+  the logger. The first start line names the mode (`NODE_ENV`, which has no default), and a warning follows when
+  it is not `production`.
 
 #### NFR-007 · MUST · S6 · Deployable on HVL or Sikt infrastructure
 Docker images and `docker-compose.yml` for local and staging environments. Only EEA-hosted
 PostgreSQL, Redis and S3-compatible storage. No runtime calls to third-party CDNs (see `DATA-011`).
 - **Verify:** `docker compose up` smoke test in CI.
+- **Amended (D-134, 2026-11-22):** the app stack gives the app a memory limit (5 GiB, no swap beyond it; at least
+  4 GiB) and a restart rule, and its one-off steps none; `tools/deploy-check` holds the file to it, and the smoke
+  test stops the server process once and waits for it to answer again.
+- **Amended (D-144, 2026-11-26):** the image runs its TypeScript without the loader's cache
+  (`TSX_DISABLE_CACHE=1`), so no code is read from a writable folder; the app's containers run under Docker's
+  current default seccomp profile plus the one rule Chromium's sandbox needs
+  (`deploy/seccomp/chromium-sandbox.seccomp`); and the app's health check is short. `tools/deploy-check` holds the
+  files to all three, and the smoke test checks them on the running stack.
 
 ---
 

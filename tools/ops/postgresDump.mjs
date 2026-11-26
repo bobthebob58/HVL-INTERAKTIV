@@ -11,9 +11,12 @@
  *   - Table names come from the dump's `COPY` lines and must look like `schema."Table"` or `schema.table` before
  *     they are put into a query, so a changed dump cannot inject SQL through a name.
  *   - A restore goes only into a database with no table, view or sequence in `public` or `analytics`.
+ *   - Rows are counted at the dump's real row ends only (./toolProcess.mjs `newlineSplitter`), and content-file
+ *     keys are read as hex, so no character in a value or a file name changes a count (D-132).
  *   - The restore is one transaction (`--single-transaction --exit-on-error`): it lands whole or not at all.
  * Collaborators: ./toolProcess.mjs, ./postgresConnection.mjs, ./backupRun.mjs.
- * Tests: tools/ops/test/backupRoundTrip.test.mjs, tools/ops/test/postgresConnection.test.mjs
+ * Tests: tools/ops/test/backupRoundTrip.test.mjs, tools/ops/test/backupUnusualText.test.mjs,
+ *   tools/ops/test/postgresConnection.test.mjs
  */
 import { BackupConfigError, serverMajor, toolMajor } from './postgresConnection.mjs';
 import { runTool } from './toolProcess.mjs';
@@ -164,6 +167,10 @@ export async function countTables(env, tables) {
 export async function missingContentFiles(env, keys) {
   const [[exists] = ['']] = await psqlRows(env, `SELECT to_regclass('public."H5PContentFile"') IS NOT NULL`);
   if (exists !== 't') return 0;
-  const rows = await psqlRows(env, 'SELECT "s3Key" FROM public."H5PContentFile"');
-  return rows.filter(([key]) => !keys.has(key)).length;
+  // WHY: a key is a file name an author chose; as hex no character in it can be taken for a field or row end.
+  const rows = await psqlRows(
+    env,
+    `SELECT encode(convert_to("s3Key", 'UTF8'), 'hex') FROM public."H5PContentFile"`,
+  );
+  return rows.filter(([hex]) => !keys.has(Buffer.from(hex ?? '', 'hex').toString('utf8'))).length;
 }

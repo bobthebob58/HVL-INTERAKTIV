@@ -19,9 +19,8 @@
  *   findings and publish APIs (through `ContentValidator`), wired with ../config/validationContext.ts.
  * Tests: apps/server/test/validation/validateContent.test.ts, apps/server/test/validation/rules/
  */
-import { walkContent } from './contentWalker.js';
 import { orderFindings } from './findingOrder.js';
-import type { RuleScope } from './rule.js';
+import { ruleScope } from './rule.js';
 import { RULES } from './ruleSet.js';
 import type { ContentValidator, Finding, ValidationContext, ValidationInput } from './types.js';
 import { validationMessage } from './validationMessages.js';
@@ -36,11 +35,7 @@ import { validationMessage } from './validationMessages.js';
  * @spec UD-020
  */
 export function validateContent(input: ValidationInput, context: ValidationContext): Finding[] {
-  const scope: RuleScope = {
-    nodes: walkContent(input.mainLibrary, input.params),
-    metadata: input.metadata,
-    context,
-  };
+  const scope = ruleScope(input, context);
   const findings = RULES.flatMap((rule) =>
     rule.check(scope).map((hit): Finding => ({
       ruleId: rule.id,

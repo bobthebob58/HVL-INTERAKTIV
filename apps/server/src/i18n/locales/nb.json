@@ -10,6 +10,7 @@
     "sessionExpired": "Økten din har utløpt. Logg inn på nytt.",
     "ltikInvalid": "Tilgangen din har utløpt. Åpne aktiviteten på nytt fra Canvas.",
     "launchFailed": "Aktiviteten kunne ikke åpnes fra Canvas. Prøv å åpne den på nytt.",
+    "notFromCanvas": "Dette kan du ikke gjøre fra Canvas. Åpne HVL Interaktiv i portalen for å gjøre det.",
     "platformNotRegistered": "Denne læringsplattformen er ikke registrert i HVL Interaktiv.",
     "deploymentNotAllowed": "Denne Canvas-installasjonen har ikke tilgang til HVL Interaktiv.",
     "activityUnavailable": "Aktiviteten er ikke tilgjengelig.",
@@ -47,6 +48,8 @@
       "notAllowed": "Filtypen «.{{extension}}» er ikke tillatt.",
       "typeMismatch": "Innholdet i filen passer ikke til filtypen «.{{extension}}».",
       "svgRejected": "SVG-filen kan ikke brukes fordi den inneholder definisjoner som kan være skadelige.",
+      "svgTooComplex": "SVG-filen er for kompleks til at den kan kontrolleres, så den ble ikke lagret. Forenkle tegningen, eller lagre den som PNG.",
+      "svgCheckBusy": "SVG-filen kunne ikke kontrolleres akkurat nå, så den ble ikke lagret. Prøv igjen om litt.",
       "tooLarge": "Filen er større enn {{maxMb}} MB.",
       "malwareFound": "Viruskontrollen fant skadelig innhold i filen, så den ble ikke lagret.",
       "scanUnavailable": "Filen kunne ikke kontrolleres for virus akkurat nå, så den ble ikke lagret. Prøv igjen om litt."
@@ -59,6 +62,13 @@
     "unsafeFilePath": "En filsti i aktiviteten inneholder tegn som ikke er tillatt (anførselstegn, < eller >).",
     "unsafeFileName": "En filsti i aktiviteten er ugyldig: den kan ikke begynne med «/» eller inneholde «..», «\\», tomme ledd eller kontrolltegn.",
     "pasteSourceNotAllowed": "Aktiviteten bruker filer fra en annen aktivitet som du ikke kan lage kopi av. Last opp filene på nytt i stedet.",
+    "contentTooLarge": {
+      "whole": "Aktiviteten er for stor til å lagres. Del innholdet på flere aktiviteter.",
+      "text": "En tekst i aktiviteten er for lang til å lagres. Del teksten i flere deler.",
+      "markup": "En tekst i aktiviteten har for mange lag med formatering inni hverandre. Lim teksten inn på nytt uten formatering.",
+      "check": "Aktiviteten er for stor til å bli sjekket. Del innholdet på flere aktiviteter."
+    },
+    "activityFilesOverLimit": "Aktiviteten har for mange eller for store filer til å lagres. En aktivitet kan ha opptil {{maxFiles}} filer og {{maxMb}} MB til sammen. Legg store videoer i Panopto og lenk til dem, eller del innholdet på flere aktiviteter.",
     "hubInstallDisabled": "Innholdstyper installeres av en administrator, ikke fra H5P-huben.",
     "librariesInstalled": "Installerte innholdstyper: {{count}}.",
     "librariesUpdated": "Oppdaterte innholdstyper: {{count}}.",
@@ -84,6 +94,10 @@
     },
     "error": {
       "title": "Noe gikk galt"
+    },
+    "signIn": {
+      "title": "Logg inn",
+      "body": "Du må logge inn med Feide for å fortsette."
     },
     "loggedOut": {
       "title": "Du er logget ut",
@@ -225,6 +239,7 @@
     "findings": {
       "none": "Sjekken for universell utforming fant ingen feil eller advarsler.",
       "summary": "Sjekken for universell utforming: feil: {{errors}} (begrunnet: {{acknowledged}}), advarsler: {{warnings}}.",
+      "listed": "De {{listed}} første er listet opp.",
       "error": "Feil",
       "warning": "Advarsel",
       "hint": "Tips",
@@ -253,6 +268,8 @@
     }
   },
   "insight": {
+    "viewTooLarge": "Denne perioden har for mange svar til at innsikten kan vises samlet. Velg en kortere periode.",
+    "busy": "Det er mange som henter innsikt akkurat nå. Vent litt og prøv igjen.",
     "csv": {
       "filename": "innsikt",
       "column": {
@@ -294,6 +311,7 @@
         "semester": "Siden semesterstart"
       },
       "portal": "Portalen (spilt utenom Canvas)",
+      "unlistedQuestion": "Spørsmål {{number}} (ikke i aktiviteten nå)",
       "measure": {
         "started": "Startet",
         "completed": "Fullført",

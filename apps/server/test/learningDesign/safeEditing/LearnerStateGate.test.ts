@@ -1,12 +1,15 @@
 /**
- * Unit tests for the editor's learner-state step: which saves keep state, which ask first, which reset it, and
- * whose state counts as someone else's.
+ * Unit tests for the editor's learner-state step: which saves keep state, which ask first, which reset it,
+ * which start a new version without a reset (a changed answer key, D-137), whose state counts as someone else's,
+ * and that a stored version past the limits (D-126) is not compared.
  *
- * Spec: PROD-013
+ * Spec: PROD-013, INS-003
  */
 import type { IUser } from '@lumieducation/h5p-server';
 import { describe, expect, it } from 'vitest';
 import { asAccountUser } from '../../../src/h5p/HvlH5pUser.js';
+import { CONTENT_LIMITS } from '../../../src/h5p/semantics/contentBudget.js';
+import { claimContentVersionRaise } from '../../../src/h5p/storage/contentVersionRaiseWrite.js';
 import { claimLearnerStateReset } from '../../../src/h5p/storage/learnerStateResetWrite.js';
 import {
   LearnerStateGate,
@@ -21,12 +24,13 @@ const METADATA = {
 };
 
 /** A gate on a stored MultiChoice whose other learners have state when `othersHaveState`. */
-function gateWith(othersHaveState: boolean) {
+function gateWith(othersHaveState: boolean, stored: object = STORED) {
   const asked: (string | undefined)[] = [];
   const resets: string[] = [];
+  const raises: string[] = [];
   const gate = new LearnerStateGate(
     {
-      getContentParameters: async () => STORED,
+      getContentParameters: async () => stored,
       getContentMetadata: async () => METADATA as never,
     } as never,
     {
@@ -35,22 +39,60 @@ function gateWith(othersHaveState: boolean) {
         return othersHaveState;
       },
       resetLearnerState: async (id) => void resets.push(id),
+      raiseVersion: async (id) => void raises.push(id),
     },
   );
   const save = async (params: object, user: IUser, choice?: SaveChoice) =>
     gate.runSave(await gate.admit('c1', params, 'H5P.MultiChoice 1.16', user, choice), async () => 'saved');
-  return { gate, asked, resets, save };
+  return { gate, asked, resets, raises, save };
 }
 
 const author = asAccountUser(testActor('author', { learnerKey: 'k'.repeat(43) }));
 const twoOptions = { ...STORED, answers: [...STORED.answers, { text: 'Nei', correct: false }] };
+/** The same two options with the other one marked correct: the same structure, another answer key. */
+const otherKey = {
+  ...STORED,
+  answers: [
+    { text: 'Ja', correct: false },
+    { text: 'Nei', correct: true },
+  ],
+};
 
 describe('[PROD-013] LearnerStateGate', () => {
   it('[PROD-013] keeps all state for a new activity and for a text-only edit, without asking whose state there is', async () => {
-    const { gate, asked, resets, save } = gateWith(true);
+    const { gate, asked, resets, raises, save } = gateWith(true);
     expect(await gate.admit(undefined, twoOptions, 'H5P.MultiChoice 1.16', author)).toEqual({});
     await save({ ...STORED, question: '<p>Kva meiner du?</p>' }, author);
-    expect({ asked, resets }).toEqual({ asked: [], resets: [] });
+    expect({ asked, resets, raises }).toEqual({ asked: [], resets: [], raises: [] });
+  });
+
+  it('[PROD-013] a changed answer key keeps all state, asks nobody and starts a new version', async () => {
+    // Arrange: others have state, which a structural save would ask about
+    const { gate, asked, resets, raises, save } = gateWith(true, twoOptions);
+    // Act
+    const plan = await gate.admit('c1', otherKey, 'H5P.MultiChoice 1.16', author);
+    await save(otherKey, author);
+    // Assert
+    expect(plan).toEqual({ newVersionContentId: 'c1' });
+    expect({ asked, resets, raises }).toEqual({ asked: [], resets: [], raises: ['c1'] });
+  });
+
+  it('[PROD-013] leaves the version raise to a storage that claims it with its write, and raises after a write that did not', async () => {
+    // Arrange
+    const claimed = gateWith(true, twoOptions);
+    const unclaimed = gateWith(true, twoOptions);
+    const plan = await claimed.gate.admit('c1', otherKey, 'H5P.MultiChoice 1.16', author);
+    // Act
+    const results = [
+      await claimed.gate.runSave(plan, async () => claimContentVersionRaise('C1') && 'claimed'),
+      await unclaimed.gate.runSave(plan, async () => claimContentVersionRaise('other') || 'unclaimed'),
+    ];
+    // Assert
+    expect({ results, raises: [claimed.raises, unclaimed.raises] }).toEqual({
+      results: ['claimed', 'unclaimed'],
+      raises: [[], ['c1']],
+    });
+    expect([claimed.resets, unclaimed.resets]).toEqual([[], []]);
   });
 
   it('[PROD-013] refuses an unconfirmed structural edit with 409 while others have state, and resets nothing', async () => {
@@ -86,6 +128,19 @@ describe('[PROD-013] LearnerStateGate', () => {
       results: ['claimed', 'unclaimed'],
       resets: [[], ['c1']],
     });
+  });
+
+  it('[PROD-013] a stored version past the limits for one activity is not compared: the save counts as structural', async () => {
+    // Arrange: the same answers, and a text no save can have stored (D-126)
+    const oversized = { ...STORED, question: 'a'.repeat(CONTENT_LIMITS.textLength + 1) };
+    const asking = gateWith(true, oversized);
+    const alone = gateWith(false, oversized);
+    // Act
+    const refused = await asking.save(STORED, author).catch((error: unknown) => error);
+    await alone.save(STORED, author);
+    // Assert
+    expect(refused).toMatchObject({ status: 409, errorCode: 'hvl:learner-state-reset-needed' });
+    expect([asking.resets, alone.resets]).toEqual([[], ['c1']]);
   });
 
   it('[PROD-013] counts every row as someone else’s when the saver is not a user it can read a learnerKey from', async () => {

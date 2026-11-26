@@ -10,7 +10,8 @@
  *     as none, and the chooser asks for a course.
  *   - The table needs the phase labels; without the course codes, the overview or the planner the workspace says
  *     it could not load. The overview and the planner are fetched only for a chosen course.
- *   - Only the author's own and co-authored activities appear: the server decides (D-088).
+ *   - Only the author's own and co-authored activities appear: the server decides (D-088). When the course has
+ *     more activities than a planner holds, a note above the plan says how many it shows (D-128).
  * Collaborators: ./PlannerView.tsx, ./PlannerCourseChooser.tsx, ./PlannerTable.tsx, ./PlannerGaps.tsx,
  *   ./PlannerUntagged.tsx, ../../api/learningDesignApi.ts, ../../api/studioApi.ts (`getStudioOverview`).
  * Tests: apps/web/test/features/PlannerView.test.tsx
@@ -29,6 +30,9 @@ import { PlannerCourseChooser } from './PlannerCourseChooser';
 import { PlannerGaps } from './PlannerGaps';
 import { PlannerTable } from './PlannerTable';
 import { PlannerUntagged } from './PlannerUntagged';
+
+/** The most activities one plan holds; the contract's `PLANNER_MAX_ACTIVITIES` (a test keeps them equal). */
+export const PLANNER_SHOWN_LIMIT = 300;
 
 type Loaded<T> = T | 'loading' | 'failed';
 
@@ -95,6 +99,9 @@ export function PlannerWorkspace({ navigate }: { readonly navigate: (path: strin
   return (
     <>
       {chooser}
+      {planner.moreActivities ? (
+        <p>{t('planner.moreActivities', locale, { max: PLANNER_SHOWN_LIMIT })}</p>
+      ) : null}
       <PlannerGaps gaps={planner.gaps} phaseLabel={phaseLabel} />
       {planner.rows.length > 0 ? (
         <>

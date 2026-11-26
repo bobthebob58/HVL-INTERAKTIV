@@ -14,6 +14,8 @@
 #     is used, and none is baked in.
 #   - The runtime runs as uid 10001, owns only the H5P library folder and `.next/cache`, and never sets
 #     `PDF_ALLOW_NO_SANDBOX` (D-096): Chromium's sandbox needs the seccomp profile in deploy/seccomp/.
+#   - SECURITY: the runtime sets `TSX_DISABLE_CACHE=1`: the TypeScript loader keeps its translated code in memory
+#     and never reads it back from the writable /tmp, so the code that runs is the image's own (D-144).
 # Build: docs/ops/docker.md. The contexts `h5pcore` (apps/server/h5p) and `h5pbundle` (tools/h5p-bundle) are needed;
 #        `pwbrowsers` (a Playwright browser folder) only where Playwright's download host is out of reach.
 
@@ -30,10 +32,12 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
 ENV NEXT_TELEMETRY_DISABLED=1 CHECKPOINT_DISABLE=1
 
 # Every dependency from the lockfile, with install scripts: @prisma/engines fetches the OpenSSL 3 schema engine here.
+# SECURITY: .npmrc comes with the lockfile, so this npm ci also stops at an install script that the root
+# package.json does not name in `allowScripts` (strict-allow-scripts, D-145).
 FROM base AS deps
 WORKDIR /app
 ENV HUSKY=0
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json .npmrc ./
 COPY apps/server/package.json apps/server/
 COPY apps/web/package.json apps/web/
 COPY packages/api-contract/package.json packages/api-contract/
@@ -84,7 +88,7 @@ FROM scratch AS h5pbundle
 # SECURITY: every input from outside the repository is checked against its hashes before it reaches the image.
 FROM deps AS inputs
 COPY tools/h5p-core/verifyClientFiles.mjs tools/h5p-core/
-COPY tools/h5p-libraries/resolveManifest.mjs tools/h5p-libraries/
+COPY tools/h5p-libraries/resolveManifest.mjs tools/h5p-libraries/sourceRules.mjs tools/h5p-libraries/
 COPY tools/h5p-bundle/contentTypeBundle.mjs tools/h5p-bundle/bundleCli.mjs tools/h5p-bundle/
 # WHY: the bundle's secret guard and the server share one rules file, which Node 24 loads with type stripping.
 COPY apps/server/src/h5p/libraries/libraryBuildSecrets.ts apps/server/src/h5p/libraries/
@@ -109,6 +113,9 @@ RUN --mount=type=bind,from=playwright-core,target=/opt/playwright-core \
 RUN groupadd --gid 10001 hvli \
  && useradd --uid 10001 --gid 10001 --create-home --home-dir /home/hvli --shell /usr/sbin/nologin hvli
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright NODE_ENV=production WEB_APP=prod PORT=3000
+# SECURITY: tsx would otherwise write each translated source file to /tmp/tsx-<uid> and run it from there the next
+# time it is loaded, without checking it: the one place where the code is not on the read-only root (D-144).
+ENV TSX_DISABLE_CACHE=1
 COPY --from=pwbrowsers /chromium-1194 /ms-playwright/chromium-1194
 WORKDIR /app
 COPY --from=prod-deps /app /app

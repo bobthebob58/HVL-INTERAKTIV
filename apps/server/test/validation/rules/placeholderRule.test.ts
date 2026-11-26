@@ -6,15 +6,15 @@
  * Spec: PROD-001, UD-020
  */
 import { describe, expect, it } from 'vitest';
-import { walkContent } from '../../../src/validation/contentWalker.js';
 import { guidanceExcerpt, guidanceFields } from '../../../src/validation/guidanceMarkers.js';
+import { ruleScope } from '../../../src/validation/rule.js';
 import { placeholderRule } from '../../../src/validation/rules/placeholderRule.js';
 import { validateContent } from '../../../src/validation/validateContent.js';
 import { fixturesOf, hitsOf, TEST_CONTEXT } from '../support/ruleFixtures.js';
 
 const hitsFor = (mainLibrary: string, params: unknown, title = 'Quiz') =>
   placeholderRule
-    .check({ nodes: walkContent(mainLibrary, params), metadata: { title }, context: TEST_CONTEXT })
+    .check(ruleScope({ mainLibrary, params, metadata: { title } }, TEST_CONTEXT))
     .map((hit) => hit.path);
 
 describe('V-PLACEHOLDER', () => {

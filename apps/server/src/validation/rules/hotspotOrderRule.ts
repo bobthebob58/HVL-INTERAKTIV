@@ -26,7 +26,6 @@ import { isOlderThan } from '../contentKinds.js';
 import { pathOf } from '../contentPath.js';
 import { isShownHotspot, playerOrder, type HotspotPosition } from '../imageHotspotsPlayer.js';
 import { asArray, asNumber, asString, fieldAt } from '../paramReaders.js';
-import { plainTextOf } from '../richText.js';
 import { nodesOf, type RuleHit, type ValidationRule } from '../rule.js';
 
 // WHY: authors place hotspots by hand, so hotspots meant to be on one row differ by a few percent in height.
@@ -75,7 +74,7 @@ export const hotspotOrderRule: ValidationRule = {
         hits.push({ path: ordersPath, message: 'V-HOTSPOT-ORDER.partlyNumbered' });
       }
       hotspots.forEach((hotspot, index) => {
-        if (!visible[index] || plainTextOf(asString(fieldAt(hotspot, 'header')) ?? '') !== '') return;
+        if (!visible[index] || scope.read(asString(fieldAt(hotspot, 'header')) ?? '').text !== '') return;
         hits.push({
           path: pathOf(node.path, 'hotspots', index, 'header'),
           message: 'V-HOTSPOT-ORDER.noHeader',

@@ -25,7 +25,10 @@ export interface Finding {
   /** e.g. `V-IMG-ALT` or `PED-H05`. */
   readonly ruleId: string;
   readonly severity: FindingSeverity;
-  /** The spec ID the rule implements: `UD-021`, `PED-020` or `PROD-001` (V-PLACEHOLDER). */
+  /**
+   * The spec ID the rule implements: `UD-021`, `PED-020` or `PROD-001` (V-PLACEHOLDER); `SEC-005` for `V-SIZE`,
+   * which the guard in front of the validator gives (../content/boundedValidator.ts).
+   */
   readonly requirement: string;
   /** Where in the parameters (see the module header), for "Go to field". */
   readonly path: string;

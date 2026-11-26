@@ -7,8 +7,9 @@
  *      not need to open the editor.
  * Spec: INS-002, INS-006, PROD-013
  * Invariants:
- *   - The items are every question of the current parameters (./../content/questionCatalogue.ts), then any other
- *     question answered in the view (a question of an older version), with no text.
+ *   - The items are every question of the current parameters (./../content/questionCatalogue.ts), then the other
+ *     questions answered in the view (questions of an older version), with no text: only those that at least k
+ *     learners answered, most learners first, and at most `MAX_UNLISTED_ITEMS` (D-121).
  *   - PRIVACY: the learner count is suppressed from 1 to k − 1; each share is suppressed when its learners are
  *     (INS-006); D-095's two-sided rule is not applied, so 0 % and 100 % over k or more learners are shown (D-106).
  *   - A share is null when none of the question's answers can be judged (no `success`, no positive maximum).
@@ -16,14 +17,18 @@
  *     whose first share is suppressed or null follow in document order, so the order reveals no hidden value.
  * Collaborators: ./learnerAnswers.ts, ../content/questionCatalogue.ts, ../suppression/insightCells.ts,
  *   ../buildInsightReport.ts.
- * Tests: apps/server/test/insight/thirtyLearners.test.ts, apps/server/test/insight/videoLearners.test.ts
+ * Tests: apps/server/test/insight/thirtyLearners.test.ts, apps/server/test/insight/videoLearners.test.ts,
+ *   apps/server/test/insight/unlistedItems.test.ts
  */
 import type { InsightRateCell } from '@hvl-interaktiv/api-contract';
 import type { MinimumGroupSize } from '../../privacy/minimumGroupSize.js';
 import type { CatalogueQuestion } from '../content/questionCatalogue.js';
 import type { ItemDifficultyInsight } from '../insightReport.js';
-import { countCell, rateCell, shownValue } from '../suppression/insightCells.js';
+import { countCell, isShowableCount, rateCell, shownValue } from '../suppression/insightCells.js';
 import { isCorrectAnswer, type AnswersByItem, type LearnerItemAnswers } from './learnerAnswers.js';
+
+/** The most questions outside the activity's current content that one view lists (D-121). */
+export const MAX_UNLISTED_ITEMS = 50;
 
 /** The share correct of one kind of answer, or null when none can be judged. */
 function shareCorrect(
@@ -57,7 +62,14 @@ export function itemDifficultyInsights(
   answers: AnswersByItem,
 ): ItemDifficultyInsight[] {
   const known = new Set(questions.map(({ item }) => item));
-  const older = [...answers.keys()].filter((item) => !known.has(item));
+  // PRIVACY: an item that is not in the current content (an older version's question) is listed only when at
+  // least k learners answered it, most learners first and at most MAX_UNLISTED_ITEMS: one learner's statements
+  // can neither add a row to a teacher's view nor put an ID of their own choosing in it (INS-006, D-121).
+  const older = [...answers.entries()]
+    .filter(([item, learners]) => !known.has(item) && isShowableCount(size, learners.size))
+    .sort(([, a], [, b]) => b.size - a.size)
+    .slice(0, MAX_UNLISTED_ITEMS)
+    .map(([item]) => item);
   const rows = [
     ...questions.map(({ item, library, text }) => ({ item, library, questionText: text })),
     ...older.map((item) => ({ item, library: null, questionText: null })),

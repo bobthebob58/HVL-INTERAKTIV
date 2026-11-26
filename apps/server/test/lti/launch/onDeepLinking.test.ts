@@ -1,8 +1,9 @@
 /**
  * Unit tests for the Deep Linking launch handler with fakes: which account a linking outcome is audited on, that a
- * link already written is audited even when the launch then fails, and that a learner is refused before linking.
+ * link already written is audited even when the launch then fails, that a learner is refused before linking, and
+ * that linking and the account step are given the same platform registration (D-129).
  *
- * Spec: AUTH-005, LTI-005, LTI-004
+ * Spec: AUTH-005, LTI-005, LTI-004, LTI-001
  */
 import type { IdToken, LaunchContext } from 'ltijs';
 import { describe, expect, it, vi } from 'vitest';
@@ -69,6 +70,20 @@ describe('[AUTH-005] the Deep Linking launch handler', () => {
     // Assert
     await expect(launch).rejects.toThrow('db down');
     expect(audited).toEqual([joined]);
+  });
+
+  it('[LTI-001] linking and the account are both asked about the registration the launch was validated against', async () => {
+    // Arrange
+    const atLaunch = vi.fn(async () => ({ userId: 'u' }));
+    const { handler, link } = handlerWith(undefined, atLaunch);
+    const registration = { issuer: 'https://canvas.example', clientId: 'c', subject: 'sub-1' };
+    // Act
+    await run(handler, contextAs('Instructor').context);
+    // Assert
+    expect(link).toHaveBeenCalledWith(expect.objectContaining({ ...registration, platformId: 'platform-1' }));
+    expect(atLaunch).toHaveBeenCalledWith(
+      expect.objectContaining({ ...registration, platformId: 'platform-1' }),
+    );
   });
 
   it('[LTI-004][LTI-005] a learner is refused before anything is linked or audited', async () => {

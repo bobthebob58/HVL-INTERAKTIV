@@ -18,7 +18,8 @@
  *   ../../lti/LtiRoleMapper.ts, ../audit/AuthAuditRecorder.ts (`link.*` events), ../Principal.ts.
  * Tests: apps/server/test/auth/identity/linkDecision.test.ts
  */
-import { FEIDE_ID_PATTERN } from '../../config/envParsers.js';
+import { trimAsciiBlanks } from './asciiText.js';
+import { normaliseFeideId } from './feideId.js';
 import { canAuthor, type Role } from '../Principal.js';
 
 /** The LTI custom-parameter claim. */
@@ -41,7 +42,7 @@ export interface LtiLinkedAccount extends LinkedAccount {
 
 /** What exists for the two identities of one author. */
 export interface LinkSituation {
-  /** The account of the LTI identity (`lti|<iss>|<sub>`), or undefined when that identity does not exist yet. */
+  /** The account of the LTI identity (`lti|<iss>|<client-id>|<sub>`), or undefined when that identity does not exist yet. */
   readonly lti: LtiLinkedAccount | undefined;
   /** The account of the Feide identity for the `feide_login` Feide ID, or undefined when there is none. */
   readonly feide: LinkedAccount | undefined;
@@ -96,9 +97,9 @@ export function feideLoginFromLaunch(
   const custom = claims[LTI_CUSTOM_CLAIM];
   const raw = isObject(custom) ? custom.feide_login : undefined;
   if (typeof raw !== 'string') return undefined;
-  const value = raw.trim();
   // WHY: Canvas sends the variable name itself (`$Canvas.user.loginId`) when it cannot expand it; that is no ID.
-  if (value.startsWith('$')) return undefined;
-  const feideId = value.toLowerCase();
-  return FEIDE_ID_PATTERN.test(feideId) ? feideId : undefined;
+  if (trimAsciiBlanks(raw).startsWith('$')) return undefined;
+  // SECURITY: the login's own rule, so a look-alike login ID in Canvas never names another person's Feide ID
+  // (./feideId.ts, D-142).
+  return normaliseFeideId(raw);
 }

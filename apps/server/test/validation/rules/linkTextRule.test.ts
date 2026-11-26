@@ -24,7 +24,30 @@ describe('V-LINK-TEXT', () => {
     ['', 'bareUrl'],
     ['Emneplanen for MGL5', undefined],
     ['Les meir om universell utforming', undefined],
+    ['«Her»', 'vague'],
+    ['(les meir).', 'vague'],
+    ['→ lenke ←', 'vague'],
+    ['…', 'bareUrl'],
+    ['///', 'bareUrl'],
+    ['!/', 'bareUrl'],
+    ['her/', undefined],
+    ['— Emneplanen for MGL5 —', undefined],
+    ['2024', undefined],
+    ['https://www.hvl.no/studier/ og meir', undefined],
   ])('[UD-021][V-LINK-TEXT] judges «%s» as %s', (text, problem) => {
     expect(linkTextProblem(text)).toBe(problem);
+  });
+
+  it('[UD-021][V-LINK-TEXT] a long text of punctuation between two words is judged in time that follows its length', () => {
+    // Arrange: 50 000 characters that are neither letters nor digits, inside the text and after it
+    const inside = `Emneplan${'!'.repeat(50_000)}for MGL5`;
+    const after = `her${'.'.repeat(50_000)}`;
+    // Act
+    const started = performance.now();
+    const problems = [linkTextProblem(inside), linkTextProblem(after)];
+    const elapsed = performance.now() - started;
+    // Assert
+    expect(problems).toEqual([undefined, 'vague']);
+    expect(elapsed).toBeLessThan(250);
   });
 });

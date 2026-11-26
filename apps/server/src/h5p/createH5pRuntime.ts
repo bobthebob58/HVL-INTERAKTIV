@@ -36,6 +36,7 @@ import type { Logger } from 'pino';
 import type { Env } from '../config/env.js';
 import { filesOriginOf } from '../config/filesOrigin.js';
 import type { H5pRouteDeps } from '../http/h5pRouteDeps.js';
+import { createH5pRouteLimits } from '../http/h5pRouteLimits.js';
 import type { Database } from '../infra/prismaClient.js';
 import type { Redis } from '../infra/redisClient.js';
 import { PrismaContentVersionReader } from '../learningDesign/safeEditing/contentVersionOnPages.js';
@@ -61,7 +62,6 @@ import { assertPermissionSystem } from './permissionSystemGuard.js';
 import { PrismaContentAccessRepository } from './permissions/ContentAccessRepository.js';
 import { PrismaUserDataAccessAuditor } from './permissions/UserDataAccessAuditor.js';
 import { RedisKeyValueStorage } from './storage/RedisKeyValueStorage.js';
-import { coreInlineScriptHashes } from './render/coreInlineScripts.js';
 
 /** Connected clients and settings the engine is built from. */
 export interface H5pRuntimeInputs {
@@ -130,6 +130,10 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     learnerStates: new PrismaLearnerStateStore(db),
     // WHY: the duplicator reaches it through this editor; the studio services take only the editor (D-092).
     copyLimit: new CopyRateLimit(redis),
+    // PRIVACY: a count only; what a save lost to fit its semantics is never logged (D-123).
+    onParamsFitted: (changed) => logger.info({ changed }, 'content parameters fitted to their semantics'),
+    // PRIVACY: the kind of failure only; the save itself is stored and answered as stored (D-139).
+    onCleanupFailed: (kind) => logger.warn({ kind }, 'files a save dropped could not be removed'),
     translate,
     fileSanitizers,
     malwareScanners,
@@ -161,10 +165,10 @@ export async function createH5pRuntime(inputs: H5pRuntimeInputs): Promise<H5pRun
     fileGrants,
     editorFileGrants: new ContentFileGrants(env.URL_SIGNING_KEYS, 'editor-file-url'),
     uploadGrants: new ContentFileGrants(env.URL_SIGNING_KEYS, 'temporary-file-url'),
+    limits: createH5pRouteLimits(redis),
     corePath: paths.coreDir,
     editorPath: paths.editorDir,
     pageCsp: {
-      scriptHashes: coreInlineScriptHashes(paths.coreDir),
       externalMediaOrigins: env.EXTERNAL_MEDIA_ORIGINS,
       filesOrigin,
     },

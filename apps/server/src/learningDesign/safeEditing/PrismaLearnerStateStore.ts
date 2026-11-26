@@ -7,13 +7,15 @@
  *      for a storage without that hook. Either way the version raise and the deletion are one transaction whose
  *      first statement locks the activity's row: a state write from a learner's page holds that row in share mode
  *      while it checks its version (../../h5p/storage/PrismaContentUserDataStorage.ts), so a write either lands
- *      before the reset (and is deleted by it) or after it (and is dropped as stale).
+ *      before the reset (and is deleted by it) or after it (and is dropped as stale). `raiseVersion` is the same
+ *      fallback for a save that starts a new version and keeps the state (its answer key changed, D-137).
  * Spec: PROD-013, DATA-002
  * Invariants:
  *   - Reads only whether a row exists (`findFirst` of the ID), never a learnerKey, a count or a state.
  *   - "Someone else" is any row of the activity, in any context, whose learnerKey is not the saver's; without the
  *     saver's key every row counts.
- *   - The reset updates `H5PContent.version` first, then deletes every `H5PUserData` row of the activity.
+ *   - The reset updates `H5PContent.version` first, then deletes every `H5PUserData` row of the activity;
+ *     `raiseVersion` updates the version only.
  * Collaborators: ./LearnerStateGate.ts (the interface), ../../infra/prismaClient.ts, ../../h5p/createH5pRuntime.ts.
  * Tests: apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts
  */
@@ -43,5 +45,10 @@ export class PrismaLearnerStateStore implements LearnerStateStore {
       this.db.h5PContent.update({ where: { id: contentId }, data: { version: { increment: 1 } } }),
       this.db.h5PUserData.deleteMany({ where: { contentId } }),
     ]);
+  }
+
+  /** Raises the version and leaves every state row of the activity. */
+  async raiseVersion(contentId: string): Promise<void> {
+    await this.db.h5PContent.update({ where: { id: contentId }, data: { version: { increment: 1 } } });
   }
 }

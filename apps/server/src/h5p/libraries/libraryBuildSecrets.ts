@@ -189,7 +189,8 @@ export function buildSecretsIn(text: string): string[] {
   const kinds = new Set<string>();
   scanText(text, names, kinds);
   // SECURITY: `"{\"GH_TOKEN\":\"…\"}"`, an environment serialised into a string, is scanned with its quotes undone.
-  const unescaped = text.replace(/\\+(["'\x60])/g, '$1');
+  // WHY: `(?<!\\)` lets a match begin only where a run of backslashes begins, so each run is read once.
+  const unescaped = text.replace(/(?<!\\)\\+(["'\x60])/g, '$1');
   if (unescaped !== text) scanText(unescaped, names, kinds);
   return [...[...names].sort(), ...[...kinds].sort()];
 }

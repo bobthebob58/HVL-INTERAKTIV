@@ -18,7 +18,7 @@ Hosting is open: HVL on its own servers or Sikt, both in the EEA (Q5, `DATA-004`
 | What | Requirement | Why |
 |---|---|---|
 | One or more application nodes running the image (Docker, Kubernetes or OpenShift) | The full load test on a node like production decides the size (section 8); the smoke here ran on 4 CPUs with every service on the same machine | `NFR-001`, `NFR-007` |
-| A custom seccomp profile for the app container (Playwright's v1.56.1 profile, in `deploy/seccomp/`) | If the runtime cannot take one, the PDF export needs a renderer container of its own, never `--no-sandbox` | D-096, D-110 |
+| A custom seccomp profile for the app container (`deploy/seccomp/chromium-sandbox.seccomp`: Docker's default plus one rule) | If the runtime cannot take one, the PDF export needs a renderer container of its own, never `--no-sandbox` | D-096, D-110 |
 | PostgreSQL 16 in the EEA, with TLS that checks the server (`sslmode=verify-full`) | Three roles from [database-roles.md](database-roles.md); its own backups if managed | `DATA-004`, `DATA-010` |
 | Redis 7 in the EEA over TLS (`rediss://`) | Sessions, rate limits, locks, caches and the courses' learner counts; not backed up: losing it logs everyone out, and the counts come back with the next launches | `DATA-004` |
 | S3-compatible storage in the EEA over https | Two buckets with plain names: content, and temporary with a 1-day lifecycle rule; no public access | `DATA-004`, D-109 |
@@ -27,6 +27,7 @@ Hosting is open: HVL on its own servers or Sikt, both in the EEA (Q5, `DATA-004`
 | A secret store and a CI/CD secret for every variable marked `Secret: yes` | Never in the image, the compose file or a log | `DATA-009` |
 | Backup storage outside the server, encrypted, in the EEA, kept 30 days | Daily copy of the backup folder | `NFR-002` |
 | A log store and monitoring of `/healthz` | 99.5 % monthly availability during the semester is about 3.6 hours of downtime | `NFR-002`, `NFR-006` |
+| A memory limit and a restart rule for the app container | At least 4 GiB while Node chooses its own heap (5 GiB in the app stack), with no swap beyond it; restart after the process ends ([docker.md](docker.md), «memory limit») | `NFR-002`, `NFR-007`, D-134 |
 | ClamAV (`clamd`), optional but recommended | `AlertExceedsMax yes` and `AlertEncrypted yes`; `StreamMaxLength` at least 50 MB; signature updates are HVL's ([clamav.md](clamav.md)) | `SEC-006` |
 | PostgreSQL 16's client tools (`pg_dump`, `pg_restore`, `psql`) on the host that runs backups | The same major version as the server | `NFR-002` |
 
@@ -34,9 +35,11 @@ Hosting is open: HVL on its own servers or Sikt, both in the EEA (Q5, `DATA-004`
 
 **First deployment** (and every upgrade), in this order:
 
-1. Set the configuration and the secrets (section 3 and 4). Production (`NODE_ENV=production`) refuses to start on
-   the example keys, a clear-text database, Redis or S3 connection, a non-EEA region or a bucket ARN, and prints
-   the list of problems by variable name.
+1. Set the configuration and the secrets (section 3 and 4). The mode has no default: without `NODE_ENV` the server
+   does not start. Production (`NODE_ENV=production`) refuses to start on the example keys, a clear-text database,
+   Redis or S3 connection, a non-EEA region or a bucket ARN, or with `DEBUG` or `NODE_DEBUG` set, and prints the
+   list of problems by variable name. In any other mode the key and https rules still hold when `PUBLIC_BASE_URL`
+   is not a local address (D-133).
 2. Migrate with the migration role, as [database-roles.md](database-roles.md) describes, from `apps/server` (these
    scripts are the server's own, not the root's): `npm run --silent db:roles -- views-down`,
    `npx prisma migrate deploy`, `npm run --silent db:roles -- grants`.
@@ -181,7 +184,10 @@ the EEA) and keep 30 days there too.
 3. Restore with `DATABASE_URL` set to the new database as `hvli_migrator` and `S3_CONTENT_BUCKET` to the new bucket:
    `npm run --silent ops:restore -- --from <backup folder>`. It refuses a database or a bucket that is not empty, and
    a backup whose files changed. It prints `{"restored":…,"tables":…,"rows":…,"objects":…,"tablesDiffering":0,
-   "objectsDiffering":0,"contentFilesMissing":0,"ok":true}` and exits 0 only when every count and hash matches.
+   "differingTables":[],"objectsDiffering":0,"contentFilesMissing":0,"ok":true}` and exits 0 only when every count
+   and hash matches. `differingTables` names the tables whose row counts differ from the backup's; a backup made
+   before 2026-11-22 can name a table whose texts hold a Unicode line separator although nothing is lost (D-132):
+   compare that table's count with the source, and take a new backup.
    `contentFilesMissing` above 0 with nothing else differing means a content file was deleted between the dump and
    the bucket copy (the backup takes the database first): that file is not in this backup; note it in the log.
 4. From `apps/server`, `npm run --silent db:roles -- grants` as `hvli_migrator` (the restore made it the owner of
@@ -200,15 +206,27 @@ the EEA) and keep 30 days there too.
 ## 7. Monitoring and incidents
 
 **Health:** `GET /healthz` answers 200 `{"status":"ok"}`, or 503 `{"status":"unavailable","failing":["database"]}`
-(or `redis`) when one does not answer in 2 seconds; it is never cached and needs no login. Poll it every 10–30 s and
-take a node out of rotation on 503.
+(or `redis`) when one does not answer in 2 seconds; it is never cached and needs no login. Poll it every 5–10 s
+with a time limit of a few seconds, and take a node out of rotation on 503 or when it does not answer: a server
+that stands still answers nothing (D-144; the app stack's own check is in [docker.md](docker.md)). While Redis
+cannot be reached, requests that need it fail at once with a 500 and `redis connection error` lines repeat until it
+is back; nothing is kept to be sent later.
 
 **Request log** (`NFR-006`): one JSON line per request, `msg: "request"`, with `requestId`, `method`, `route` (the
 pattern, e.g. `/api/content/:contentId`, never the path or the query), `status`, `durationMs`, and `aborted: true`
 when the client left. The `X-Request-Id` of the proxy (a UUID or 32 hexadecimal digits) is kept, so the two logs can
 be matched. Watch the API's p95 (`NFR-001`: ≤ 300 ms) and the rate of 5xx answers. Alert also on every `error` line,
 on `retention purge` lines that are not `done`, and on the start-up warning `pseudonym secrets of purged academic
-years are still configured`.
+years are still configured`. A `fatal` line means the process has ended with exit code 1 (a fault nothing handled,
+or a start that failed); the fault itself is in that line, cleaned like every other, and nothing is printed
+outside the log (D-133). In production the start-up warning `not in production mode` must never appear.
+The start line `memory limits` gives the container's limit and what the server may use, in MiB; alert on the two
+warnings that can follow it (`the container has no memory limit`, `the memory limit is below what the server may
+use`). A container that restarts by itself has ended its process: look for the `fatal` line before the restart, or,
+when there is none, for the kernel's out-of-memory record on the host (D-134). The warning `the server stood
+still: its event loop did not run` gives the longest standstill of the last 10 seconds in `standstillMs`: one long
+piece of work held every request for that time. The request log of the same moment (the request with the long
+`durationMs`) names the route; alert on the line when it repeats (D-144).
 
 **Incident steps:**
 
@@ -281,7 +299,13 @@ its scripts are about 1.5 MiB per empty-cache visit, sent uncompressed by the ap
 
 Tick every line before the first learner, and again after a change of hosting:
 
-- [ ] `NODE_ENV=production`, and the server starts without a refusal.
+- [ ] `NODE_ENV=production`, and the server starts without a refusal: the first log line (`deployment locations`)
+      says `"mode":"production"`, no `not in production mode` warning follows, and from outside
+      `GET /api/docs` answers 404 (it exists only outside production).
+- [ ] `DEBUG` and `NODE_DEBUG` are unset (production refuses to start with either: their output goes around the
+      logger).
+- [ ] `HSTS_INCLUDE_SUBDOMAINS` stays `false` until IT has confirmed that every name under the server's host name
+      is served over https only; then set it to `true` (browsers keep the rule for a year).
 - [ ] Every key and secret is new and random (section 4), stored only in the secret store, and `PSEUDONYM_SECRETS`
       holds the current academic year (and next year's before 1 August).
 - [ ] `DATABASE_URL` is the `hvli_app` role with `sslmode=verify-full`; the migration URL is used only by the migrate
@@ -296,7 +320,11 @@ Tick every line before the first learner, and again after a change of hosting:
 - [ ] The reverse proxy: TLS for both names; its access log leaves out the query string (a few routes accept
       `?ltik=`, which the server keeps out of its own log but cannot remove from the proxy's, `NFR-006`); it passes
       its request ID as `X-Request-Id` (a UUID or 32 hexadecimal digits); `TRUST_PROXY` is the number of proxies in
-      front (usually 1); it compresses scripts and stylesheets (gzip or brotli).
+      front (usually 1), and the LTI request ceiling counts by the client address it gives (D-141); it
+      compresses scripts and stylesheets (gzip or brotli).
+- [ ] The reverse proxy answers a request whose headers are too large with a page that tells the person to clear
+      the site's cookies: cookies that other `hvl.no` sites set for the whole domain can cause it (threat model
+      T-43).
 - [ ] `CANVAS_ORIGINS` names HVL's Canvas hosts; `LTI_PLATFORMS` matches the Canvas developer key.
 - [ ] `ALLOWED_FEIDE_ORGS` and `ADMIN_FEIDE_IDS` are set; an LTI launch never makes an administrator.
 - [ ] The files origin (`SEC-004`): a DNS name and a TLS certificate for `files.<host>` (or `FILES_BASE_URL`, a
@@ -314,8 +342,10 @@ Tick every line before the first learner, and again after a change of hosting:
 - [ ] The content types come from a bundle built in CI, and `npm run libraries:check` passes on the library
       volume (a storage seeded before the build fix needs the library folder the check names deleted first,
       section 2).
-- [ ] The app container runs as uid 10001 with Playwright's seccomp profile ([docker.md](docker.md)); never
+- [ ] The app container runs as uid 10001 with the seccomp profile in `deploy/seccomp/` ([docker.md](docker.md)); never
       `PDF_ALLOW_NO_SANDBOX`.
+- [ ] The app container has a memory limit of at least 4 GiB (or a smaller heap with it, [docker.md](docker.md))
+      and is restarted when its process ends; the start line `memory limits` is followed by no warning.
 - [ ] The daily backup runs, its copy reaches the off-server storage, and a restore drill has passed (section 6).
 - [ ] `/healthz` is monitored, the logs reach the log store, and the alerts of section 7 are set.
 - [ ] The full load test has passed on a node like production (section 8), and its services were removed afterwards.

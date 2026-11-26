@@ -11,7 +11,7 @@
  *     `staff` account; otherwise refused, before any learner row is read.
  *   - Read only: no identity is created or re-hashed here.
  *   - PRIVACY: the operator's Feide ID is hashed for the lookup and never stored or printed (DATA-002).
- * Collaborators: ./dataSubject.ts (normaliseFeideId), ../../auth/identity/identityLookup.ts,
+ * Collaborators: ../../auth/identity/feideId.ts (normaliseFeideId), ../../auth/identity/identityLookup.ts,
  *   ../../auth/identity/subjectSources.ts, ../../security/keys/IdentityHasher.ts, ./dataSubjectRequest.ts.
  * Tests: apps/server/test/privacy/dsr/dataSubjectRequest.int.test.ts
  */
@@ -19,7 +19,7 @@ import { findIdentity } from '../../auth/identity/identityLookup.js';
 import { identitySource } from '../../auth/identity/subjectSources.js';
 import type { Database } from '../../infra/prismaClient.js';
 import type { IdentityHasher } from '../../security/keys/IdentityHasher.js';
-import { normaliseFeideId } from './dataSubject.js';
+import { normaliseFeideId } from '../../auth/identity/feideId.js';
 
 /** The operator check's outcome: the admin's account, or why the run is refused. */
 export type OperatorCheck =

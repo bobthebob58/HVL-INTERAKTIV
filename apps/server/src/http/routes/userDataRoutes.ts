@@ -11,9 +11,16 @@
  *   - `asUserId` in the query is refused with 400 (reading another learner's state is not a player feature).
  *   - Answers have H5P's shape: `{ success: true, data }`, with `data: false` when nothing is stored.
  *   - `data=0` deletes the state (H5P's reset), handled by the storage (D-038).
+ *   - The data type must be `state` and the sub-content ID `0` or a UUID, the only names the player sends; anything
+ *     else is 400 before the storage is asked, for reads and writes alike (D-120).
+ *   - A learner's saves for one activity are counted per minute before the body is read; past the limit the answer
+ *     is 429 `hvl:rate-limited` with `Retry-After`. A state past the storage limits is 413 and stores nothing
+ *     (../../h5p/storage/learnerStateLimits.ts). The player's autosave ignores both answers.
+ *   - Only a few saves are read and stored at the same time in one process; the others wait their turn before
+ *     their body is read, and past a full line the answer is 429 too (./stateSaveGate.ts, D-134).
  *   - A write stores the year of the actor's key (`learnerKeyYear`) as the row's `academicYear` (D-107).
  *   - A write that names `contentVersion` (every player page's state URL does, D-093) is made only while the
- *     activity has that version; a write from a page opened before a structural save is dropped and answered
+ *     activity has that version; a write from a page opened before a save that raised it is dropped and answered
  *     `{ success: false, message: 'hvl:learner-state-stale' }` with status 200, which h5p.js hands to an error
  *     callback the players' autosave does not set: nothing is retried or shown. A malformed version is 400.
  *   - Activity `0` is the editor's own UI state (whether a field's description is open, whether a guided tour was
@@ -22,13 +29,17 @@
  *     `{ success: false, message: 'hvl:editor-ui-state-not-kept' }`, so H5P keeps the flag the browser holds, and
  *     every other flag with `data: false`, which H5P reads as not set (D-069 amendment).
  * Collaborators: ../../h5p/storage/PrismaContentUserDataStorage.ts, ../../h5p/storage/stateWriteVersion.ts,
- *   ../../h5p/storage/learnerStateYear.ts,
- *   ../../learningDesign/safeEditing/contentVersionOnPages.ts, Lumi's ContentUserDataManager, ../requestBodies.ts.
- * Tests: apps/server/test/http/userData.int.test.ts, apps/server/test/h5p/branchingTour.browser.int.test.ts,
+ *   ../../h5p/storage/learnerStateYear.ts, ../../h5p/storage/learnerStateLimits.ts, ../h5pRouteLimits.ts,
+ *   ../../learningDesign/safeEditing/contentVersionOnPages.ts, Lumi's ContentUserDataManager, ../requestBodies.ts,
+ *   ./stateSaveGate.ts.
+ * Tests: apps/server/test/http/userData.int.test.ts, apps/server/test/http/userDataLimits.int.test.ts,
+ *   apps/server/test/h5p/branchingTour.browser.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/staleStateWrites.int.test.ts
  */
-import { Router, type Request } from 'express';
+import { Router, type Request, type RequestHandler } from 'express';
+import { isContentUuid } from '../../h5p/contentIds.js';
 import { asStateUser } from '../../h5p/HvlH5pUser.js';
+import { isStateDataType, isStateSubContentId } from '../../h5p/storage/learnerStateLimits.js';
 import { withLearnerKeyYear } from '../../h5p/storage/learnerStateYear.js';
 import { withStateWriteVersion } from '../../h5p/storage/stateWriteVersion.js';
 import {
@@ -38,8 +49,10 @@ import {
 import { HttpError } from '../HttpError.js';
 import { requireActor } from '../h5pLocals.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
+import { refuseWhenLimited } from '../h5pRouteLimits.js';
 import { formBody } from '../requestBodies.js';
 import { pathParam } from '../routeParams.js';
+import { stateSaveTurn } from './stateSaveGate.js';
 
 const STATE_PARAMS = ['contentId', 'dataType', 'subContentId'] as const;
 
@@ -50,7 +63,16 @@ const refuseOtherLearner = (req: Request): void => {
   if (req.query.asUserId !== undefined) throw new HttpError(400, 'h5p.userData.asUserNotSupported');
 };
 
-/** The answer's message for a write from a page opened before a structural save (D-093); never shown. */
+/** The request's activity, data type and sub-content ID; 400 for a name the player never sends (D-120). */
+const stateNames = (req: Request): [string, string, string] => {
+  const names = STATE_PARAMS.map((name) => pathParam(req, name)) as [string, string, string];
+  // SECURITY: before the storage is asked, so no other name reaches a query, a row or the database's own errors.
+  if (!isStateDataType(names[1]) || !isStateSubContentId(names[2]))
+    throw new HttpError(400, 'error.badRequest');
+  return names;
+};
+
+/** The answer's message for a write from a page opened before a save that raised the version; never shown. */
 const STALE_STATE = 'hvl:learner-state-stale';
 
 /** H5P sends flags as the strings "1" and "0". */
@@ -85,11 +107,7 @@ export function userDataRoutes(deps: H5pRouteDeps): Router {
   router.get(path, async (req, res) => {
     refuseOtherLearner(req);
     const actor = requireActor(res);
-    const [contentId, dataType, subContentId] = STATE_PARAMS.map((name) => pathParam(req, name)) as [
-      string,
-      string,
-      string,
-    ];
+    const [contentId, dataType, subContentId] = stateNames(req);
     const stored = await manager.getContentUserData(
       contentId,
       dataType,
@@ -100,37 +118,49 @@ export function userDataRoutes(deps: H5pRouteDeps): Router {
     res.json({ success: true, data: stored?.userState ?? false });
   });
 
-  router.post(path, ...formBody('2mb'), async (req, res) => {
-    refuseOtherLearner(req);
-    const actor = requireActor(res);
-    const [contentId, dataType, subContentId] = STATE_PARAMS.map((name) => pathParam(req, name)) as [
-      string,
-      string,
-      string,
-    ];
-    const body = req.body as Record<string, unknown>;
-    if (typeof body.data !== 'string') throw new HttpError(400, 'error.badRequest');
-    const data = body.data;
-    const version = contentVersionOf(req.query[CONTENT_VERSION_PARAM]);
-    // PRIVACY: the row stores the year of the learner's key, so the yearly purge takes it with that year (D-107).
-    const write = () =>
-      withLearnerKeyYear(actor.learnerKeyYear, () =>
-        manager.createOrUpdateContentUserData(
-          contentId,
-          dataType,
-          subContentId,
-          data,
-          flag(body.invalidate),
-          flag(body.preload),
-          asStateUser(actor),
-          actor.contextId,
-        ),
-      );
-    let stale = false;
-    if (version === undefined) await write();
-    else ({ stale } = await withStateWriteVersion(version, write));
-    // WHY: 200, not 409: a refused request would show as a console error on the learner's page (see the header).
-    res.json(stale ? { success: false, message: STALE_STATE } : { success: true });
-  });
+  // WHY: before the body parser, so a save past the limit costs the server neither the read nor the parse.
+  const countSave: RequestHandler = async (req, res, next) => {
+    const [contentId] = stateNames(req);
+    // WHY: an ID that names no activity stores nothing; such requests share one counter instead of making their own.
+    const counted = isContentUuid(contentId) ? contentId.toLowerCase() : 'no-activity';
+    const saver = `${requireActor(res).accountId}:${counted}`;
+    refuseWhenLimited(await deps.limits?.stateSaves.take(saver), res);
+    next();
+  };
+
+  router.post(
+    path,
+    countSave,
+    stateSaveTurn(deps.limits?.stateSaveGate),
+    ...formBody('2mb'),
+    async (req, res) => {
+      refuseOtherLearner(req);
+      const actor = requireActor(res);
+      const [contentId, dataType, subContentId] = stateNames(req);
+      const body = req.body as Record<string, unknown>;
+      if (typeof body.data !== 'string') throw new HttpError(400, 'error.badRequest');
+      const data = body.data;
+      const version = contentVersionOf(req.query[CONTENT_VERSION_PARAM]);
+      // PRIVACY: the row stores the year of the learner's key, so the yearly purge takes it with that year (D-107).
+      const write = () =>
+        withLearnerKeyYear(actor.learnerKeyYear, () =>
+          manager.createOrUpdateContentUserData(
+            contentId,
+            dataType,
+            subContentId,
+            data,
+            flag(body.invalidate),
+            flag(body.preload),
+            asStateUser(actor),
+            actor.contextId,
+          ),
+        );
+      let stale = false;
+      if (version === undefined) await write();
+      else ({ stale } = await withStateWriteVersion(version, write));
+      // WHY: 200, not 409: a refused request would show as a console error on the learner's page (see the header).
+      res.json(stale ? { success: false, message: STALE_STATE } : { success: true });
+    },
+  );
   return router;
 }

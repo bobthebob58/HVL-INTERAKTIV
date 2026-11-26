@@ -28,7 +28,7 @@ import { h5pErrorHandler } from '../../../src/http/h5pErrorHandler.js';
 import { createPrismaClient, type Database } from '../../../src/infra/prismaClient.js';
 import { connectRedis, type Redis } from '../../../src/infra/redisClient.js';
 import { XapiIngest, type XapiRequestFacts } from '../../../src/xapi/XapiIngest.js';
-import { XAPI_RATE_KEY_PREFIX, XapiRateLimit } from '../../../src/xapi/XapiRateLimit.js';
+import { XAPI_DAY_KEY_PREFIX, XAPI_RATE_KEY_PREFIX, XapiRateLimit } from '../../../src/xapi/XapiRateLimit.js';
 import { xapiRoutes } from '../../../src/xapi/xapiRoutes.js';
 import { XapiStatementStore } from '../../../src/xapi/XapiStatementStore.js';
 import { capturedLogger } from '../../support/capturedLogger.js';
@@ -141,9 +141,10 @@ export async function openXapiBench(): Promise<XapiBench> {
     close: async () => {
       await db.h5PContent.deleteMany({ where: { id: { in: contentIds } } });
       await db.user.deleteMany({ where: { id: { in: userIds } } });
-      const counters = await redis.keys(`${XAPI_RATE_KEY_PREFIX}*`);
+      const prefixes = [XAPI_RATE_KEY_PREFIX, XAPI_DAY_KEY_PREFIX];
+      const counters = (await Promise.all(prefixes.map((prefix) => redis.keys(`${prefix}*`)))).flat();
       const own = counters.filter((key) =>
-        userIds.some((id) => key.startsWith(`${XAPI_RATE_KEY_PREFIX}${id}:`)),
+        prefixes.some((prefix) => userIds.some((id) => key.startsWith(`${prefix}${id}:`))),
       );
       if (own.length > 0) await redis.del(own);
       await Promise.all([redis.quit(), db.$disconnect()]);
@@ -162,6 +163,7 @@ export async function openXapiBench(): Promise<XapiBench> {
       },
       replayHistory: (scope, viewIds) => store.replayHistory(scope, viewIds),
       insert: (rows) => store.insert(rows),
+      hasRowsIn: (scope) => store.hasRowsIn(scope),
     },
     rateLimit: new XapiRateLimit(redis),
     clock: () => bench.now ?? new Date(),

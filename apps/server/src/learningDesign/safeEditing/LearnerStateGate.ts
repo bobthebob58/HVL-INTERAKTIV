@@ -1,6 +1,7 @@
 /**
  * LearnerStateGate — the editor's learner-state step on every save of an existing activity: a text-only edit keeps
- * all saved progress; a structural edit asks first when other people have progress, and resets it once saved.
+ * all saved progress; a structural edit asks first when other people have progress, and resets it once saved; an
+ * edit of an answer key keeps the progress and starts a new version.
  *
  * Why: PROD-013 and D-093 (with its probe P3 amendment) replace D-038's "every save deletes the invalidated state".
  *      Resumed state is restored by position, so after a structural edit learners could see another question's
@@ -10,6 +11,10 @@
  * Spec: PROD-013
  * Invariants:
  *   - New activities (no ID) and text-only saves keep every state row and the version.
+ *   - A save with the same structure and another answer key (../../insight/content/answerKeys.ts) keeps every state
+ *     row, asks nothing, and raises `H5PContent.version` with the storage's first parameter write
+ *     (../../h5p/storage/contentVersionRaiseWrite.ts), so insight never shows answers judged against one key
+ *     under another (D-137). A storage without that hook gets the store's `raiseVersion` right after the write.
  *   - A structural save, when anyone but the saver has state of the activity (any course, any context), needs
  *     `confirmLearnerStateReset: true`; without it `admit` throws 409 `hvl:learner-state-reset-needed` before
  *     anything is written. The answer says nothing about who or how many (D-093).
@@ -21,20 +26,28 @@
  *     Lumi's save never leaves the new structure with the old state. A storage without that hook gets
  *     ./PrismaLearnerStateStore.ts's own transaction right after the write. Deleting all, not only the saver's,
  *     also removes rows that another learner's old page wrote between `admit` and the save.
- *   - The stored side is read with the saver's rights through Lumi's ContentManager, as the editor reads it.
+ *   - The stored side is read with the saver's rights through Lumi's ContentManager, as the editor reads it. A
+ *     stored version past the limits for one activity (../../h5p/semantics/contentBudget.ts, D-126) is not
+ *     compared: the save counts as structural.
  * Collaborators: ./structureSignature.ts, ./structuralChange.ts, ./PrismaLearnerStateStore.ts,
- *   ../../h5p/storage/learnerStateResetWrite.ts, ../../h5p/HvlH5PEditor.ts (calls it),
+ *   ../../h5p/semantics/contentBudget.ts, ../../insight/content/answerKeys.ts,
+ *   ../../h5p/storage/learnerStateResetWrite.ts, ../../h5p/storage/contentVersionRaiseWrite.ts,
+ *   ../../h5p/HvlH5PEditor.ts (calls it),
  *   ../../content/storedContent.ts (`mainLibraryUbername`),
  *   ../../http/learningDesignErrors.ts.
  * Tests: apps/server/test/learningDesign/safeEditing/LearnerStateGate.test.ts,
  *   apps/server/test/learningDesign/safeEditing/safeEditing.int.test.ts,
- *   apps/server/test/learningDesign/safeEditing/safeEditingFailures.int.test.ts
+ *   apps/server/test/learningDesign/safeEditing/safeEditingFailures.int.test.ts,
+ *   apps/server/test/learningDesign/safeEditing/answerKeyVersions.int.test.ts
  */
 import type { H5PEditor, IUser } from '@lumieducation/h5p-server';
 import { mainLibraryUbername } from '../../content/storedContent.js';
 import { asStateUser, isHvlH5pUser } from '../../h5p/HvlH5pUser.js';
+import { contentLimitPassed } from '../../h5p/semantics/contentBudget.js';
+import { withContentVersionRaise } from '../../h5p/storage/contentVersionRaiseWrite.js';
 import { withLearnerStateReset } from '../../h5p/storage/learnerStateResetWrite.js';
 import { learningDesignError } from '../../http/learningDesignErrors.js';
+import { answerKeys, answerKeysDiffer } from '../../insight/content/answerKeys.js';
 import { structuralDifference } from './structuralChange.js';
 import { structureSignature } from './structureSignature.js';
 
@@ -61,6 +74,12 @@ export interface LearnerStateStore {
    * @param contentId - The activity.
    */
   resetLearnerState(contentId: string): Promise<void>;
+  /**
+   * Raises an activity's version and keeps its state rows; used only when the content storage did not raise it
+   * with its write.
+   * @param contentId - The activity.
+   */
+  raiseVersion(contentId: string): Promise<void>;
 }
 
 /** What the gate reads of a stored activity: Lumi's ContentManager, with the saver's rights. */
@@ -73,6 +92,8 @@ export type StoredContentReader = Pick<
 export interface LearnerStatePlan {
   /** The activity whose state is reset after the write; absent when the save keeps all state. */
   readonly resetContentId?: string;
+  /** The activity whose version is raised with the write while its state is kept: its answer key changed. */
+  readonly newVersionContentId?: string;
 }
 
 const KEEP_STATE: LearnerStatePlan = Object.freeze({});
@@ -116,8 +137,17 @@ export class LearnerStateGate {
     // case would find no row and refuse the save with 403.
     const stored = await this.content.getContentParameters(contentId, user);
     const metadata = await this.content.getContentMetadata(contentId, user);
-    const before = structureSignature(stored, mainLibraryUbername(metadata.mainLibrary, metadata));
-    if (structuralDifference(before, structureSignature(params, mainLibrary)) === null) return KEEP_STATE;
+    // WHY: a stored version past the limits for one activity (a row no save wrote, D-126) is not read further:
+    // the save counts as structural, which asks before anyone's progress is reset.
+    const comparable = contentLimitPassed(stored) === undefined;
+    const storedMain = mainLibraryUbername(metadata.mainLibrary, metadata);
+    const before = () => structureSignature(stored, storedMain);
+    if (comparable && structuralDifference(before(), structureSignature(params, mainLibrary)) === null) {
+      // WHY: the saved progress still fits, but answers judged against the old key must not be counted under the
+      // new one, so the save starts a new version (D-137).
+      const newKey = answerKeysDiffer(answerKeys(storedMain, stored), answerKeys(mainLibrary, params));
+      return newKey ? { newVersionContentId: contentId } : KEEP_STATE;
+    }
     const confirmed = choice.confirmLearnerStateReset === true;
     // PRIVACY: only whether someone else has progress is read and answered, never who or how many (D-093).
     if (!confirmed && (await this.store.hasOtherLearnersState(contentId, ownLearnerKey(user)))) {
@@ -127,19 +157,24 @@ export class LearnerStateGate {
   }
 
   /**
-   * Runs Lumi's write under the plan: a structural save's reset commits in the same transaction as the storage's
-   * first parameter write (../../h5p/storage/learnerStateResetWrite.ts); a storage without that hook gets the reset
-   * right after the write.
+   * Runs Lumi's write under the plan: a structural save's reset, or an answer-key save's version raise, commits
+   * with the storage's first parameter write (../../h5p/storage/learnerStateResetWrite.ts,
+   * ../../h5p/storage/contentVersionRaiseWrite.ts); a storage without that hook gets it right after the write.
    * @param plan - From `admit`.
    * @param save - Lumi's write of the save.
-   * @returns What `save` returned, once the reset (if any) is committed.
+   * @returns What `save` returned, once the reset or the raise (if any) is committed.
    * @spec PROD-013
    */
   async runSave<T>(plan: LearnerStatePlan, save: () => Promise<T>): Promise<T> {
-    const contentId = plan.resetContentId;
-    if (contentId === undefined) return save();
-    const { result, claimed } = await withLearnerStateReset(contentId, save);
-    if (!claimed) await this.store.resetLearnerState(contentId);
+    const { resetContentId, newVersionContentId } = plan;
+    if (resetContentId !== undefined) {
+      const { result, claimed } = await withLearnerStateReset(resetContentId, save);
+      if (!claimed) await this.store.resetLearnerState(resetContentId);
+      return result;
+    }
+    if (newVersionContentId === undefined) return save();
+    const { result, claimed } = await withContentVersionRaise(newVersionContentId, save);
+    if (!claimed) await this.store.raiseVersion(newVersionContentId);
     return result;
   }
 }

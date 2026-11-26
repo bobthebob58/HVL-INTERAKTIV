@@ -11,13 +11,15 @@
  *     `MAX_STUDENT_MINUTES`, `LEARNER_PURPOSE_MAX_LENGTH`); the web app imports only types from the contract, so a
  *     test keeps the copies equal. A length is counted after trimming, as the server counts it.
  *   - An empty text or minutes field is left out of the body, never sent as `""`; the outcomes keep their order.
- *   - In the learner purpose a tab or other control character (not a line break, which is refused) becomes a space:
+ *   - Every text is cleaned of what nobody types before it is counted and sent (../../config/typedText.ts, D-142).
+ *     In the learner purpose a tab or other control character (not a line break, which is refused) becomes a space:
  *     learners see the purpose on the Canvas page, whose strict launch parser refuses one (PED-032, D-087).
  *   - Outcome identity is D-087's: the same category and the same text after NFC, trimming, collapsed whitespace
  *     and lower case (the server's apps/server/src/learningDesign/metadata/outcomeIdentity.ts).
  *   - Every outcome draft has a stable `key`, so React keeps its inputs and focus when another is removed.
  * Collaborators: ./LearningDesignFormView.tsx, ./OutcomeFields.tsx, ./UsedOutcomeChoices.tsx,
- *   ../../config/studioFilters.ts (`normaliseCourseCode`), ../../components/ErrorSummary.tsx.
+ *   ../../config/studioFilters.ts (`normaliseCourseCode`), ../../config/typedText.ts,
+ *   ../../components/ErrorSummary.tsx.
  * Tests: apps/web/test/features/learningDesignForm.test.ts
  */
 import type {
@@ -29,6 +31,7 @@ import type {
 } from '@hvl-interaktiv/api-contract';
 import type { FieldError } from '../../components/ErrorSummary';
 import { normaliseCourseCode } from '../../config/studioFilters';
+import { cleanFreeText, cleanOneLine } from '../../config/typedText';
 import { t, type Locale } from '../../i18n/translate';
 
 /** The most outcomes an activity may have (the contract's `MAX_OUTCOMES`). */
@@ -102,16 +105,13 @@ export const formFrom = (
 export const outcomeIdentity = (outcome: LearningOutcome): string =>
   `${outcome.category}|${outcome.text.normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase()}`;
 
-// WHY: control characters other than line breaks, e.g. a tab pasted from a document; line breaks get their own message.
-const CONTROL_EXCEPT_LINE_BREAKS = /[^\P{Cc}\r\n]+/gu;
-
 /**
- * The learner purpose as it is checked and sent: control characters other than line breaks become a space, then
- * the text is trimmed.
+ * The learner purpose as it is checked and sent: control characters other than line breaks (e.g. a tab pasted from
+ * a document) and hidden line breaks become a space, then the text is trimmed; line breaks get their own message.
  * @param value - As typed.
  * @returns The purpose to check and send.
  */
-export const purposeText = (value: string): string => value.replace(CONTROL_EXCEPT_LINE_BREAKS, ' ').trim();
+export const purposeText = cleanOneLine;
 
 /**
  * The minutes as a number, when the typed value is a whole number of 1–600.
@@ -136,13 +136,13 @@ export function formProblems(form: LearningDesignForm, ids: FormFieldIds, locale
   if (form.courseCode.trim() !== '' && !normaliseCourseCode(form.courseCode))
     add(ids.courseCode, t('learningDesign.courseCodeInvalid', locale));
   form.outcomes.forEach((outcome, index) => {
-    const count = outcome.text.trim().length;
+    const count = cleanFreeText(outcome.text).length;
     const values = { number: index + 1, count, max: OUTCOME_MAX };
     if (count === 0) add(ids.outcome(outcome.key), t('learningDesign.outcomeMissing', locale, values));
     else if (count > OUTCOME_MAX)
       add(ids.outcome(outcome.key), t('learningDesign.outcomeTooLong', locale, values));
   });
-  const rationale = form.rationale.trim().length;
+  const rationale = cleanFreeText(form.rationale).length;
   if (rationale > RATIONALE_MAX)
     add(
       ids.rationale,
@@ -166,12 +166,12 @@ export function formProblems(form: LearningDesignForm, ids: FormFieldIds, locale
 export function updateFrom(form: LearningDesignForm, updatedAt: string | null): LearningDesignUpdate {
   const courseCode = normaliseCourseCode(form.courseCode);
   const minutes = parsedMinutes(form.minutes);
-  const rationale = form.rationale.trim();
+  const rationale = cleanFreeText(form.rationale);
   const purpose = purposeText(form.purpose);
   return {
     ...(form.phase ? { phase: form.phase } : {}),
     ...(courseCode ? { courseCode } : {}),
-    outcomes: form.outcomes.map(({ text, category }) => ({ text: text.trim(), category })),
+    outcomes: form.outcomes.map(({ text, category }) => ({ text: cleanFreeText(text), category })),
     ...(rationale ? { rationale } : {}),
     ...(minutes !== undefined ? { estimatedStudentMinutes: minutes } : {}),
     ...(purpose ? { learnerPurpose: purpose } : {}),

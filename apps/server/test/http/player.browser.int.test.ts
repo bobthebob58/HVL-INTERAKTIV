@@ -13,7 +13,7 @@ import { describeWithServices } from '../support/services.js';
 import {
   COPYRIGHT_FLAGS,
   COPYRIGHT_PARAMS,
-  COPYRIGHT_THUMBNAILS,
+  COPYRIGHT_STORED_KEYS,
   RIGHTS_FLAGS,
   RIGHTS_PAYLOAD,
 } from '../support/rightsOfUsePayloads.js';
@@ -87,7 +87,7 @@ describeWithServices('H5P player in a browser', () => {
       await page.close();
     }, 30_000);
 
-    it('[SEC-008] copyright data, source links and alt texts under any key never run as script in that dialog', async () => {
+    it('[SEC-008] copyright data, source links and alt texts never run as script in that dialog, and what no field defines is not stored', async () => {
       const { page } = await openPlayer(copyrightId); // Arrange
       // Act: open the "Rights of use" dialog, hover every link, and give any injected handler time to fire
       await page.click('.h5p-copyrights button');
@@ -96,7 +96,7 @@ describeWithServices('H5P player in a browser', () => {
         links.forEach((a) => a.dispatchEvent(new MouseEvent('mouseover'))),
       );
       await page.waitForTimeout(300);
-      // Assert: no flag, event-handler attribute or script link in the dialog; the safe images still show
+      // Assert: no flag, event-handler attribute or script link in the dialog
       const result = await page.evaluate((flags) => {
         const inDialog = [...document.querySelectorAll('.h5p-popup-dialog *')];
         return {
@@ -106,7 +106,11 @@ describeWithServices('H5P player in a browser', () => {
           thumbnails: document.querySelectorAll('.h5p-popup-dialog img.h5p-thumbnail').length,
         };
       }, COPYRIGHT_FLAGS);
-      expect(result).toEqual({ fired: [], handlers: 0, scriptLinks: 0, thumbnails: COPYRIGHT_THUMBNAILS });
+      expect(result).toEqual({ fired: [], handlers: 0, scriptLinks: 0, thumbnails: 0 });
+      // Assert: the declared image kept its (cleaned) copyright; what sat under other keys was never stored (D-123)
+      const stored = await tb.db.h5PContent.findUniqueOrThrow({ where: { id: copyrightId } });
+      expect(Object.keys(stored.params as object).sort()).toEqual(COPYRIGHT_STORED_KEYS);
+      expect(await page.textContent('.h5p-popup-dialog')).toContain('CC BY');
       await page.close();
     }, 30_000);
 

@@ -50,6 +50,18 @@ const configBlock = (html: string): unknown => {
 };
 
 describe('[LTI-010] the bridge on the player page', () => {
+  it('[LTI-010] a learner whose play is not recorded gets no bridge: nothing leaves the page (D-138)', () => {
+    // Arrange: a guest from another Feide organisation, and an actor built without a principal
+    const guest = testActor('learner', { hvlMember: false, recordsLearning: false });
+    const { recordsLearning: _unset, ...withoutRule } = testActor('learner');
+    // Act and assert
+    expect([xapiBridgeConfig(model(), guest), xapiBridgeConfig(model(), withoutRule)]).toEqual([
+      undefined,
+      undefined,
+    ]);
+    expect(xapiBridgeConfig(model(), testActor('learner'))).toBeDefined();
+  });
+
   it('[LTI-010] a learner in Canvas gets the bridge, its configuration with the ltik, and reporting', () => {
     // Arrange
     const learner = testActor('learner', {

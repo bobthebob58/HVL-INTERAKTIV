@@ -30,6 +30,7 @@ import { HttpError } from '../../http/HttpError.js';
 import type { Database } from '../../infra/prismaClient.js';
 import { setLtiPageLocale } from '../http/ltiErrorPages.js';
 import { ltiPageCsp, setLtiPageHeaders } from '../http/ltiPageHeaders.js';
+import { landingLtik } from '../landingLtik.js';
 import { LTI_DEEP_LINK_PATH } from '../launch/onDeepLinking.js';
 import type { ResolvedLtik } from '../ltikPrincipal.js';
 import { DEEP_LINK_RESPONSE_PATH, deepLinkPickerPage } from '../pages/deepLinkPickerPage.js';
@@ -123,9 +124,8 @@ function contentIdsOf(body: unknown): string[] {
 export function deepLinkRoutes(deps: DeepLinkRouteDeps): Router {
   const router = Router();
   router.get(LTI_DEEP_LINK_PATH, async (req, res) => {
-    const ltik = typeof req.query.ltik === 'string' ? req.query.ltik : '';
-    if (ltik === '') throw authError('hvl:ltik-invalid');
-    const resolved = await deps.resolveLtik(ltik);
+    // SECURITY: an address with the ltik counts only from our own pages, or just after the launch (D-130).
+    const resolved = await landingLtik(req, deps.resolveLtik);
     setLtiPageLocale(res, resolved.principal.locale);
     const request = deepLinkRequestOf(resolved);
     const graded = request.placement === 'assignment_selection';

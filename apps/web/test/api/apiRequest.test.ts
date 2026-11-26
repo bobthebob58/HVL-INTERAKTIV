@@ -1,20 +1,33 @@
 /**
  * Tests for the web app's API requests: the portal sends the cookie and, on unsafe methods, the CSRF token; Canvas
- * pages send the ltik as a Bearer token and no cookie; answers and errors come back typed and nothing throws.
+ * pages send the ltik as a Bearer token and no cookie; every request carries the own-page header; answers and errors
+ * come back typed and nothing throws.
  *
- * Spec: AUTH-003, LTI-003, DOC-012
+ * Spec: AUTH-003, LTI-003, DOC-012, DATA-007
  */
-import { CSRF_HEADER_NAME } from '@hvl-interaktiv/api-contract';
+import { CSRF_HEADER_NAME, OWN_PAGE_HEADER_NAME, OWN_PAGE_HEADER_VALUE } from '@hvl-interaktiv/api-contract';
 import { describe, expect, it, vi } from 'vitest';
-import { apiHeaders, apiRequest, CSRF_HEADER } from '../../src/api/apiRequest';
+import { apiHeaders, apiRequest, CSRF_HEADER, OWN_PAGE_HEADER } from '../../src/api/apiRequest';
 import { getContent, listContent, publishContent, unpublishContent } from '../../src/api/contentApi';
 import { errorBody, fakeFetch } from '../support/fakeFetch';
 
 const ID = '7d3c1a8e-5b2f-4c1d-9e8f-0a1b2c3d4e5f';
+/** What every request carries: JSON asked for, and the own-page header. */
+const BASE = { Accept: 'application/json', [OWN_PAGE_HEADER_NAME]: OWN_PAGE_HEADER_VALUE };
 
 describe('[AUTH-003] credentials on API requests', () => {
   it('[AUTH-003] uses the contract’s CSRF header name', () => {
     expect(CSRF_HEADER).toBe(CSRF_HEADER_NAME);
+  });
+
+  it('[DATA-007] every request carries the contract’s own-page header, a GET and an LTI request too', () => {
+    expect(OWN_PAGE_HEADER).toEqual({ name: OWN_PAGE_HEADER_NAME, value: OWN_PAGE_HEADER_VALUE });
+    for (const method of ['GET', 'POST', 'DELETE'] as const) {
+      expect(apiHeaders({ kind: 'portal' }, method, false)).toMatchObject({ 'x-hvli-request': 'fetch' });
+      expect(apiHeaders({ kind: 'lti', ltik: 'l' }, method, true, '*/*')).toMatchObject({
+        'x-hvli-request': 'fetch',
+      });
+    }
   });
 
   it.each([
@@ -24,10 +37,7 @@ describe('[AUTH-003] credentials on API requests', () => {
     ['PATCH', { [CSRF_HEADER]: 'tok' }],
     ['DELETE', { [CSRF_HEADER]: 'tok' }],
   ] as const)('[AUTH-003] a portal %s carries the CSRF token only on unsafe methods', (method, extra) => {
-    expect(apiHeaders({ kind: 'portal', csrfToken: 'tok' }, method, false)).toEqual({
-      Accept: 'application/json',
-      ...extra,
-    });
+    expect(apiHeaders({ kind: 'portal', csrfToken: 'tok' }, method, false)).toEqual({ ...BASE, ...extra });
   });
 
   it('[LTI-003] an LTI request carries the ltik as Bearer, no CSRF token and no cookie', async () => {
@@ -37,7 +47,7 @@ describe('[AUTH-003] credentials on API requests', () => {
     const result = await listContent({ kind: 'lti', ltik: 'ltik-1' });
     // Assert
     expect(result).toEqual({ ok: true, status: 200, data: { items: [] } });
-    expect(requests[0]?.headers).toEqual({ Accept: 'application/json', Authorization: 'Bearer ltik-1' });
+    expect(requests[0]?.headers).toEqual({ ...BASE, Authorization: 'Bearer ltik-1' });
     expect(requests[0]?.credentials).toBe('omit');
   });
 });
@@ -79,7 +89,7 @@ describe('[DOC-012] typed API calls', () => {
     // Assert
     expect(result).toEqual({ ok: true, status: 204, data: undefined });
     expect(requests[0]).toMatchObject({ method: 'DELETE', body: undefined, credentials: 'same-origin' });
-    expect(requests[0]?.headers).toEqual({ Accept: 'application/json', [CSRF_HEADER]: 'tok' });
+    expect(requests[0]?.headers).toEqual({ ...BASE, [CSRF_HEADER]: 'tok' });
   });
 
   it('[DOC-012] returns the status and the server’s error body on a refusal', async () => {

@@ -12,7 +12,14 @@
  *   - The file is written as `upload.<ext>` in a new `mkdtemp` folder; `cleanup()` removes the folder and must be
  *     called in a `finally` block by the route.
  *   - Over `maxFileSize` bytes: 413 `error.tooLarge`; malformed or non-multipart requests: 400.
+ *   - Text fields are small and few (D-143): at most `MAX_UPLOAD_FIELDS` fields of at most
+ *     `MAX_UPLOAD_FIELD_BYTES` bytes each, with a name of at most `MAX_UPLOAD_FIELD_NAME` characters, in a request
+ *     of at most `MAX_UPLOAD_PARTS` parts. A request past one of these is 400 after its body was read; no field is
+ *     ever cut short and passed on.
  *   - No failure leaves a rejected promise unhandled (a truncated body would otherwise end the process).
+ *   - When the request fails part-way (a broken connection), the file being written is stopped first, so the
+ *     function answers and the folder is removed at once, with no file left open (D-118).
+ *   - Folder names start with `UPLOAD_FOLDER_PREFIX`, which ./staleUploadFolders.ts looks for at start-up.
  * Collaborators: ./routes/ajaxRoutes.ts, ../security/ContentFileHeaders.ts (MIME type by extension).
  * Tests: apps/server/test/http/multipartUpload.test.ts
  */
@@ -20,6 +27,7 @@ import { createWriteStream } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { extname, join } from 'node:path';
+import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { Busboy } from '@fastify/busboy';
 import type { Request } from 'express';
@@ -58,6 +66,18 @@ export interface MultipartOptions {
 
 const MB = 1024 * 1024;
 
+/** Text fields one upload request may carry; H5P's editor sends two (`field` and `contentId`). */
+export const MAX_UPLOAD_FIELDS = 4;
+/** The longest text field in bytes; the largest `field` of an installed content type is under 1 KB (D-143). */
+export const MAX_UPLOAD_FIELD_BYTES = 64 * 1024;
+/** The longest name of a text field, in characters. */
+export const MAX_UPLOAD_FIELD_NAME = 100;
+/** The most parts (fields and files together) one upload request may hold. */
+export const MAX_UPLOAD_PARTS = 8;
+
+/** How every upload folder's name starts (in the system's temporary folder). */
+export const UPLOAD_FOLDER_PREFIX = 'hvli-upload-';
+
 const safeExtension = (name: string): string => {
   const ext = extname(name).toLowerCase();
   return /^\.[a-z0-9]{1,10}$/.test(ext) ? ext : '.bin';
@@ -73,24 +93,37 @@ const safeExtension = (name: string): string => {
 export async function readMultipart(req: Request, options: MultipartOptions): Promise<MultipartBody> {
   const contentType = req.headers['content-type'] ?? '';
   if (!/^multipart\/form-data/i.test(contentType)) throw new HttpError(400, 'error.badRequest');
-  const dir = await mkdtemp(join(tmpdir(), 'hvli-upload-'));
+  const dir = await mkdtemp(join(tmpdir(), UPLOAD_FOLDER_PREFIX));
   const cleanup = () => rm(dir, { recursive: true, force: true });
   const fields: Record<string, string> = {};
   let file: UploadedFile | undefined;
+  let pastFieldLimits = false;
   const writes: Promise<void>[] = [];
+  const sources: Readable[] = [];
   try {
     const busboy = Busboy({
       headers: { ...req.headers, 'content-type': contentType },
-      limits: { files: 1, fileSize: options.maxFileSize, fields: 20, fieldSize: 4 * MB, parts: 25 },
+      limits: {
+        files: 1,
+        fileSize: options.maxFileSize,
+        fields: MAX_UPLOAD_FIELDS,
+        fieldSize: MAX_UPLOAD_FIELD_BYTES,
+        parts: MAX_UPLOAD_PARTS,
+      },
     });
-    busboy.on('field', (name, value) => {
-      fields[name] = value;
+    // SECURITY: fields are kept in memory, so they are few and small; a cut-off value is never passed on (D-143).
+    const refuse = () => void (pastFieldLimits = true);
+    busboy.on('fieldsLimit', refuse).on('partsLimit', refuse);
+    busboy.on('field', (name, value, _nameCut, valueCut) => {
+      if (valueCut || name.length > MAX_UPLOAD_FIELD_NAME) refuse();
+      else fields[name] = value;
     });
     busboy.on('file', (fieldname, stream, filename) => {
       if (fieldname !== options.fileField || file) return void stream.resume();
       const ext = safeExtension(filename);
       const path = join(dir, `upload${ext}`);
       let tooLarge = false;
+      sources.push(stream);
       stream.on('limit', () => {
         tooLarge = true;
       });
@@ -111,7 +144,11 @@ export async function readMultipart(req: Request, options: MultipartOptions): Pr
     });
     await pipeline(req, busboy);
     await Promise.all(writes);
+    if (pastFieldLimits) throw new HttpError(400, 'error.badRequest');
   } catch (error) {
+    // WHY: when the request breaks, the parser's file stream neither ends nor fails, and the write would wait
+    // for it for ever. Destroying it settles the write, which closes the file, before the folder is removed.
+    for (const source of sources) source.destroy();
     await Promise.allSettled(writes);
     await cleanup();
     if (error instanceof HttpError) throw error;

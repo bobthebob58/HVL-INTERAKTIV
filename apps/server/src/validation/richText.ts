@@ -10,7 +10,9 @@
  *   - Entities are decoded (`&amp;` → `&`); block elements separate words; whitespace is collapsed.
  *   - Plain text without tags is read the same way, so every string has one representation.
  *   - Only `<a>` elements with an `href` are links.
- * Collaborators: htmlparser2 (`Parser`), ./contentWalker.ts (parses every string once).
+ *   - `richTextReader` keeps what one validation run has parsed, so the walk and the rules parse a text once
+ *     between them (D-127); nothing is kept between runs.
+ * Collaborators: htmlparser2 (`Parser`), ./contentWalker.ts (reads every string), ./rule.ts (one reader per run).
  * Tests: apps/server/test/validation/richText.test.ts
  */
 import { Parser } from 'htmlparser2';
@@ -107,6 +109,25 @@ export function parseRichText(html: string): RichText {
   parser.write(html);
   parser.end();
   return { text: collapse(parts.join('')), headings, links, tables };
+}
+
+/** Reads an H5P text parameter into what the rules check. */
+export type RichTextReader = (html: string) => RichText;
+
+/**
+ * A reader that keeps what it has read, so one validation run parses each distinct text once.
+ * @param parse - The parser; `parseRichText` unless a test counts its calls.
+ * @returns A reader for one run (./rule.ts builds one per check).
+ */
+export function richTextReader(parse: RichTextReader = parseRichText): RichTextReader {
+  const read = new Map<string, RichText>();
+  return (html) => {
+    const known = read.get(html);
+    if (known) return known;
+    const rich = parse(html);
+    read.set(html, rich);
+    return rich;
+  };
 }
 
 /**

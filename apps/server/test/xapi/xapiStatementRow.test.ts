@@ -1,11 +1,12 @@
 /**
  * Unit tests of the DATA-012 mapper's caps and parsed fields: the answer kept per interaction type with D-115's caps,
- * the duration read from ISO 8601, and the platform-scoped context key (D-103).
+ * the duration read from ISO 8601, the platform-scoped context key (D-103), and that a part's answer is stored only
+ * under a UUID sub-content ID (D-121).
  *
- * Spec: DATA-012
+ * Spec: DATA-012, LTI-011
  */
 import { randomUUID } from 'node:crypto';
-import { xapiStatementItemSchema } from '@hvl-interaktiv/api-contract';
+import { H5P_SUBCONTENT_ID_EXTENSION, xapiStatementItemSchema } from '@hvl-interaktiv/api-contract';
 import { describe, expect, it } from 'vitest';
 import { sealPrincipal } from '../../src/auth/Principal.js';
 import {
@@ -14,7 +15,7 @@ import {
   principalContextKey,
 } from '../../src/xapi/platformContextKey.js';
 import { durationMsOf } from '../../src/xapi/xapiDuration.js';
-import { xapiStatementRow, type XapiBatchFacts } from '../../src/xapi/xapiStatementRow.js';
+import { classifyXapiItem, xapiStatementRow, type XapiBatchFacts } from '../../src/xapi/xapiStatementRow.js';
 
 const C = '0192f0c4-3333-7000-8000-00000000c0de';
 const PLATFORM = '0192f0c4-4444-7000-8000-0000000000aa';
@@ -41,6 +42,33 @@ const storedResponse = (response: string | number, interactionType?: string) =>
     FACTS,
     new Date(),
   ).response;
+
+/** How an `answered` about this object is classified; `extension` is the statement's sub-content ID extension. */
+const classified = (objectId: string, extension?: string) =>
+  classifyXapiItem(
+    xapiStatementItemSchema.parse({
+      statementId: randomUUID(),
+      attemptId: `${randomUUID()}:1`,
+      verb: { id: 'http://adlnet.gov/expapi/verbs/answered' },
+      object: {
+        id: objectId,
+        definition: extension ? { extensions: { [H5P_SUBCONTENT_ID_EXTENSION]: extension } } : {},
+      },
+    }),
+    FACTS,
+  );
+
+describe('[LTI-011] which answers of a part are stored (D-121)', () => {
+  it('[LTI-011] a part’s answer is stored only when its sub-content ID is a UUID, in the object ID or the extension', () => {
+    const part = randomUUID();
+    expect(classified(`${C}?subContentId=${part}`)).toEqual({ kind: 'store', rootResult: false });
+    expect(classified(C, part.toUpperCase())).toEqual({ kind: 'store', rootResult: false });
+    for (const text of ['hello teacher', 'q1', `${part}x`, part.slice(1)]) {
+      expect(classified(`${C}?subContentId=${text}`), text).toEqual({ kind: 'discard', reason: 'invalid' });
+      expect(classified(C, text), text).toEqual({ kind: 'discard', reason: 'invalid' });
+    }
+  });
+});
 
 describe('[DATA-012] the stored answer (D-115 caps)', () => {
   it('[DATA-012] keeps choice indices and gap text, and a BranchingScenario-style number as text', () => {

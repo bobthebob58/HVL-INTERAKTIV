@@ -146,7 +146,9 @@ export async function runRestore({ env, from }) {
   await uploadObjects(s3, settings.bucket, dir, objects);
   const expected = manifest.database.tables;
   const counted = await countTables(pg, Object.keys(expected));
-  const tablesDiffering = Object.keys(expected).filter((table) => counted[table] !== expected[table]).length;
+  // WHY: an operator needs to know where to look; a table's name says nothing about a person (DATA-009).
+  const differingTables = Object.keys(expected).filter((table) => counted[table] !== expected[table]);
+  const tablesDiffering = differingTables.length;
   const objectsDiffering = await differingObjects(s3, settings.bucket, objects);
   const contentFilesMissing = await missingContentFiles(pg, new Set(objects.map((o) => o.key)));
   return {
@@ -155,6 +157,7 @@ export async function runRestore({ env, from }) {
     rows: sum(Object.values(counted)),
     objects: objects.length,
     tablesDiffering,
+    differingTables,
     objectsDiffering,
     contentFilesMissing,
     ok: tablesDiffering === 0 && objectsDiffering === 0 && contentFilesMissing === 0,

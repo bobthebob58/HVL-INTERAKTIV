@@ -14,6 +14,7 @@ import { ApiAuthProvider } from '../../src/api/ApiAuthContext';
 import { CheckPanel } from '../../src/features/activity/CheckPanel';
 import { t } from '../../src/i18n/translate';
 import { fakeFetch } from '../support/fakeFetch';
+import { confirmQuestion } from '../support/confirmQuestion';
 
 const ID = '7d3c1a8e-5b2f-4c1d-9e8f-0a1b2c3d4e5f';
 const UPDATED = '2026-10-23T10:00:00.000Z';
@@ -139,8 +140,10 @@ describe('[PROD-003] status changes on the check-and-publish tab', () => {
       button.focus();
       // Act
       fireEvent.click(button);
+      // WHY: either way a dialog opens: the publish dialog, or the question before going back to draft (D-125).
       const submit = screen.queryByRole('button', { name: 'Publiser no' });
       if (submit) fireEvent.click(submit);
+      else confirmQuestion('Gjer om til utkast');
       // Assert
       expect(await screen.findByRole('button', { name: after })).toBe(button);
       await waitFor(() => expect(document.activeElement).toBe(button));
@@ -169,6 +172,7 @@ describe('[PROD-003] status changes on the check-and-publish tab', () => {
     const button = await screen.findByRole('button', { name: 'Gjer om til utkast' });
     // Act
     fireEvent.click(button);
+    confirmQuestion('Gjer om til utkast');
     await waitFor(() => expect(button.getAttribute('aria-disabled')).toBe('true'));
     fireEvent.click(button);
     answer(Response.json({ status: 'draft', updatedAt: UPDATED }));

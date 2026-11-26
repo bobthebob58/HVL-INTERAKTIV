@@ -11,7 +11,6 @@ import { h5pPageCsp, type H5pPageCspSettings } from '../../src/http/h5pPageCsp.j
 const FILES = 'https://files.interaktiv.hvl.no';
 const PANOPTO = 'https://hvl.cloud.panopto.eu';
 const settings: H5pPageCspSettings = {
-  scriptHashes: ["'sha256-abc='"],
   externalMediaOrigins: [PANOPTO],
   filesOrigin: FILES,
 };
@@ -37,9 +36,15 @@ describe('[SEC-004] the files origin in the H5P page policy', () => {
     const editor = h5pPageCsp(settings, ["'self'"]);
     const without = h5pPageCsp({ ...settings, filesOrigin: undefined }, ["'self'"], { playerFiles: true });
     const empty = h5pPageCsp({ ...settings, filesOrigin: '' }, ["'self'"], { playerFiles: true });
+    // WHY: the two pages differ in `frame-src` alone: only the editor may frame our own origin (D-125).
+    const exceptFrames = (policy: string) =>
+      policy
+        .split('; ')
+        .filter((directive) => !directive.startsWith('frame-src '))
+        .join('; ');
     // Assert
     expect(directivesNaming(editor, FILES)).toEqual([]);
-    expect(editor).toBe(without);
+    expect(exceptFrames(editor)).toBe(exceptFrames(without));
     expect(empty).toBe(without);
     expect(editor).toContain(`img-src 'self' data: blob: ${PANOPTO}`);
   });

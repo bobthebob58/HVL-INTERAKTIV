@@ -97,6 +97,13 @@ group configured for the client. In the Customer Portal, authorise only the attr
   `iss`, `aud`, `nonce` or an expired `exp` are rejected. The client secret is read from an
   environment variable or secret store and is never logged.
 - **Verify:** Integration tests with `oauth2-mock-server` (or equivalent); test names `[AUTH-001] …`.
+- **Amended (D-131, 2026-11-21):** only a page the person opened starts a login: a request that is no navigation
+  is refused, and a page another site opened without a click, or a frame, gets a sign-in page whose button
+  starts it. A callback is taken only as a page navigation and uses the pending login up only when its `state`
+  is that login's; any other callback is refused and leaves the login in place.
+- **Amended (D-133, 2026-11-22):** https for the public URL, Feide, the Groups API, the Canvas origins and the LTI
+  platform URLs is required in production and, in any other mode, whenever `PUBLIC_BASE_URL` is not a local address
+  (`localhost`, a `.localhost` name, 127.0.0.0/8 or `[::1]`).
 
 #### AUTH-002 · MUST · S3 · Map Feide affiliation to roles
 After login, call `GET https://groups-api.dataporten.no/groups/me/groups` with the user's Feide access
@@ -117,6 +124,10 @@ they require HVL's FS integration in Feide *(verify)*.
 - **Acceptance:** A table-driven test covers every row, including users with both `student` and `employee` (→ `author`).
 - **Verify:** Unit tests of `FeideRoleMapper`.
 
+- **Amended (D-142, 2026-11-25):** the Feide ID is normalised by one rule at every reader: SP and HTAB trimmed,
+  `A`–`Z` lower-cased, every other character as written, then the pattern. Group IDs and the configured lists fold
+  ASCII case the same way. Whether a Feide ID may hold letters outside ASCII is still *(verify)* (Q32).
+
 #### AUTH-003 · MUST · S3 · Portal session
 The server keeps the session in Redis and gives the browser an opaque ID in a cookie
 (`__Host-hvli_sid`; `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`). The session expires after
@@ -126,6 +137,14 @@ Logout clears the session and redirects the browser to Feide's `end_session_endp
 Customer Portal) and `id_token_hint`. Feide requires both, so the raw ID token is kept in the
 server-side session only, encrypted at rest and deleted at logout or expiry (D-021).
 - **Verify:** Integration tests (expiry, CSRF rejection, logout).
+- **Amended (D-131, 2026-11-21):** answers of `/api`, `/auth/session` and the signed-in H5P routes are `no-store`,
+  `Cross-Origin-Resource-Policy: same-origin` and framed by our own origin only; portal pages send
+  `Cross-Origin-Opener-Policy: same-origin` (LTI pages do not). A page whose request is refused for its CSRF
+  token asks `/auth/session` once for the current one and repeats the request.
+
+- **Amended (D-142, 2026-11-25):** a logout clears the session cookie only for the session it ended; a request
+  without a live session changes no cookie. A cookie that names no live session is cleared only by an answer
+  marked `no-store` or `private`, never by a file that caches may keep.
 
 #### AUTH-004 · MUST · S3 · Data minimisation at login
 Request only the scopes listed in `AUTH-001`. **Never** request `userid-nin` or read the claim
@@ -150,6 +169,10 @@ test launch must confirm the value and that it equals the Feide ID *(verify with
 use a one-time "Link with Feide" pop-up instead. Learner identities are **never** linked across modes.
 - **Verify:** Integration test of the linking flow.
 
+- **Amended (D-142, 2026-11-25):** `feide_login` is read by the login's own Feide ID rule (`AUTH-002`), so a login
+  ID in Canvas that only looks like a Feide ID (another character that Unicode would fold or trim) names no
+  account.
+
 ---
 
 ## 4. Requirements — Canvas LTI 1.3 core and Deep Linking
@@ -171,6 +194,16 @@ and `sso.{beta,test}.canvaslms.com`; which one TeCopp's test Canvas is *(verify 
   launch is rejected if the signature, `aud`, nonce or deployment ID is wrong, or if the nonce is
   replayed.
 - **Verify:** Integration tests `[LTI-001] …`.
+- **Amended (D-129, 2026-11-21):** a person from Canvas is known per platform registration: the account and the
+  learner pseudonym are derived from issuer, client ID and `sub` (`DATA-002`), so the same `sub` from two
+  registrations that send one issuer is two people. Neither issuer nor client ID may contain `|`. A login or
+  launch field with a control character, or a claim the database cannot hold, is refused with 400 and the
+  «could not be opened from Canvas» page, never answered as a server fault.
+- **Amended (D-141, 2026-11-25):** the last step of a launch (ltijs's own second post) is taken only from our own
+  page: `Sec-Fetch-Site: same-origin`, or an `Origin` that is ours from a browser that sends no fetch metadata.
+  ltijs's three routes have a ceiling of 6 000 requests a minute per network address, a platform's key set is
+  fetched at most once a minute, and ltijs asks a platform only on the configured platforms' origins and
+  `CANVAS_ORIGINS`, without following a redirect, within 10 seconds and 4 MB.
 
 #### LTI-002 · MUST · S3 · PostgreSQL storage for ltijs
 `PrismaLtiDatabaseManager` implements all 14 methods of ltijs's `DatabaseManager`.
@@ -191,6 +224,17 @@ Platform private keys are encrypted at rest with a key from the secret store.
    not an ancestor and is not listed. `X-Frame-Options` is not sent.
 - **Acceptance:** A Playwright test with third-party cookies blocked completes launch → play → resume inside a cross-origin iframe.
 - **Verify:** Integration and e2e tests; header assertions.
+- **Amended (D-130, 2026-11-21):** a request with an ltik (step 3) is answered only when its launch's pages ask for
+  it (`lti/ltikScope.ts`): the launched activity for a resource-link launch, no activity for a Deep Linking launch,
+  «who am I» and a notice for both; anything else is 403 `hvl:not-from-canvas`. An address with an ltik (step 1) is
+  accepted only from a same-origin navigation, or, from a browser that sends no fetch metadata, within ten minutes
+  of the launch (`lti/landingLtik.ts`); otherwise the page of step 4 answers.
+- **Amended (D-133, 2026-11-22):** every response starts with `Content-Security-Policy: default-src 'none';
+  frame-ancestors 'none'`, which each page replaces with its own policy (step 6 for the LTI pages).
+  `Strict-Transport-Security` gains `includeSubDomains` only with `HSTS_INCLUDE_SUBDOMAINS=true`.
+- **Amended (D-141, 2026-11-25):** step 5 holds for every page that receives an ltik. ltijs's launch page, which
+  receives none, is sent with `Referrer-Policy: same-origin`, so that its own post names our origin. The error
+  pages of the LTI routes take an ltik out of their address as step 2 does.
 
 #### LTI-004 · MUST · S3 · Map LTI roles safely
 | LTI role claim contains | Role |
@@ -201,6 +245,11 @@ Platform private keys are encrypted at rest with a key from the secret store.
 
 **An LTI launch never grants `admin`.** H5P library administration requires a Feide login and the admin allow-list (`AUTH-002`).
 - **Verify:** Table-driven unit test, including a forged `Administrator` claim.
+- **Amended (D-130, 2026-11-21):** an LTI launch also gives no reach beyond itself: its ltik lists, creates, deletes,
+  downloads, copies, publishes and shares nothing, and reaches no activity but the launched one (`LTI-003`).
+- **Amended (D-138, 2026-11-22):** the table decides what a launch may do. Whose play is recorded is narrower: of
+  the learners, only a launch whose roles hold the context role `Learner` (and Canvas's test student, flagged); an
+  observer (`Mentor`), an unknown role and a launch without roles play without a statement being stored (`LTI-011`).
 
 #### LTI-005 · MUST · S3 · Deep Linking 2.0 picker
 `onDeepLinking` redirects to `/app/deeplink`. There the author can (a) choose existing activities
@@ -225,12 +274,18 @@ for `assignment_selection`). Returned resource links always point to `https://in
 get the player plus **Rediger** (edit, if owner or co-author) and **Innsikt** (insight) tabs.
 - **Acceptance:** An unknown or draft `contentId` gives a friendly error page, not a stack trace or a redirect loop.
 - **Verify:** Integration tests.
+- **Amended (D-130, 2026-11-21):** the tabs act on the launched activity only: **Rediger** reads and saves that
+  activity, **Innsikt** and the score status show it for the launch's course (`LTI-003`).
 
 #### LTI-007 · SHOULD · S3 · Works after Canvas course copy
 When a Canvas course is copied, its resource links keep `custom.contentId`. Instructors of the new
 course can launch, play and view insight for their own context. They can **duplicate** the activity
 into their own library, but cannot edit the original unless they are co-authors.
 - **Verify:** Integration test with two contexts and a shared `contentId`.
+- **Amended (D-141, 2026-11-25):** stated as a rule: a published activity is opened by any resource link of a
+  registered platform and deployment that carries its ID. The picker offers an author only their own and
+  co-authored activities; whoever holds a link can place it again, and the owner withdraws the activity by
+  unpublishing it.
 
 ---
 
@@ -247,6 +302,9 @@ stored**, never member names or e-mail addresses. This needs the developer-key s
   while the launch context lives, and cached under the platform-scoped context `<platformId>:<contextId>` (D-103), so
   courses with the same ID in two of HVL's Canvas instances never share a count. NRPS paging and role filtering on
   HVL's Canvas are on the students' Canvas acceptance checklist *(verify)* (D-101).
+- **Amended (D-141, 2026-11-25):** every page of the roster is asked through `lti/http/LtiOutboundRequests.ts`: a
+  «next page» link that names another origin than the platform's own or `CANVAS_ORIGINS` is not followed, nor is a
+  redirect.
 
 #### LTI-009 · COULD · S6 · LTI Dynamic Registration
 Support Canvas's LTI Dynamic Registration through ltijs 7, so TeCopp can install the tool from one
@@ -330,6 +388,11 @@ fields defined in `DATA-012` and drops the rest of the statement (including `act
   cannot form `<platformId>:<contextId>` (empty, over 255 characters, or with a line break) is answered 202 and stores
   nothing; the log counts it as `noCourse`. Such a play is neither a portal play (null) nor stored under a made-up
   course.
+- **Amended (D-138, 2026-11-22):** "a learner principal" is narrowed to the learners whose play is recorded: in the
+  portal an HVL member (a learner from another Feide organisation plays, and stores no statement), in Canvas a
+  launch with the context role `Learner` or the test student. And a batch that names a version older than the
+  current one is stored only for a learner who already has a statement under that version in that context; any other
+  is answered 202 and stores nothing, counted in the log as `closedVersion`.
 
 #### LTI-012 · MUST · S6 · Publish scores to the Canvas gradebook (AGS)
 When a statement concerns the **root** content (no `subContentId`), has the verb `completed` or
@@ -424,7 +487,7 @@ decision for HVL and ALU *(verify)*.
 | Entity | Key fields | Personal data? |
 |---|---|---|
 | `User` | `id`, `kind (staff/learner)`, `displayName?`, `email?` (kept null since S5, D-090), `createdAt` | Staff only |
-| `Identity` | `userId`, `provider (feide/lti)`, `subjectHash` (HMAC of `feide\|<Feide ID>` or `lti\|<iss>\|<sub>`, D-054), `subjectKeyId` (the `IDENTITY_HASH_KEYS` key that made the hash, D-055), `platformId?` | Pseudonymous |
+| `Identity` | `userId`, `provider (feide/lti)`, `subjectHash` (HMAC of `feide\|<Feide ID>` or `lti\|<iss>\|<client-id>\|<sub>`, D-054, D-129), `subjectKeyId` (the `IDENTITY_HASH_KEYS` key that made the hash, D-055), `platformId?` | Pseudonymous |
 | `LtiPlatform`, `LtiIdToken`, `LtiNonce`, `LtiAccessToken` | as required by ltijs `DatabaseManager`; `LtiPlatform.privateKeyEncrypted` and `LtiAccessToken.tokenEncrypted` are encrypted with `DATA_ENCRYPTION_KEYS` (D-056) | `LtiIdToken.claims` holds an allowlist of launch claims, including `sub` but no name, e-mail, `lis` or `feide_login` (D-052). Kept for 24 h only; nonces 10 min. |
 | `LtiDeployment` | `platformId`, `deploymentId`; replaced from `LTI_PLATFORMS` at start-up (D-051) | No |
 | `LtiPlacement` | `platformId`, `contextId`, `resourceLinkId`, `contentId`, `lineItemUrl?`, `attemptPolicy`, `masteryThreshold?` | No |
@@ -456,12 +519,12 @@ page → the error page. `server/main.ts` (`npm start`) syncs `LTI_PLATFORMS`, r
 
 | ID | Implemented in | Proved by | S3 scope and open items |
 |---|---|---|---|
-| `AUTH-001` | `auth/feide/FeideClient.ts` (discovery, `FEIDE_SCOPE`, PKCE `S256`, `client_secret_post`, ID-token signature check with `enableNonRepudiationChecks`, D-054); `auth/feide/loginTransactions.ts` (state, nonce and PKCE verifier bound to the browser by the `__Host-hvli_login` cookie, D-057); `auth/feide/feideLoginRoutes.ts`; `auth/feide/completeFeideLogin.ts`; `auth/identity/AccountResolver.ts`; `auth/audit/AuthAuditRecorder.ts`; `config/productionChecks.ts` (https issuer in production) | `test/auth/feide/feideLogin.int.test.ts` (full login against the mock Feide; wrong `iss`, `aud` or `nonce`, expired `exp`, a key outside Feide's JWKS, a missing login cookie); `test/auth/feide/FeideClient.test.ts`; `test/auth/feide/loginTransactions.int.test.ts`; `test/auth/upstream/openidClientMock.test.ts`; `test/auth/identity/AccountResolver.int.test.ts`; `test/config/productionChecks.test.ts` | Mock Feide in `tools/mock-platform` (D-049). HVL's client ID, secret and realm are still open (Q3). |
-| `AUTH-002` | `auth/feide/feideGroups.ts` (`GET <FEIDE_GROUPS_API_URL>/groups/me/groups`; any failure is a 503 page, D-054); `auth/feide/FeideRoleMapper.ts` (the role table as D-059 reads it); `auth/feide/feideClaims.ts` (the Feide ID); `config/envParsers.ts` (`ALLOWED_FEIDE_ORGS`, `ADMIN_FEIDE_IDS`, `AUTHOR_COURSE_GROUPS`); `auth/Principal.ts` | `test/auth/feide/FeideRoleMapper.test.ts` (every row, including `student` with `employee`); `test/auth/feide/FeideRoleMapper.validity.test.ts`; `test/auth/feide/feideGroups.test.ts`; `test/auth/feide/feideClaims.test.ts`; `test/auth/feide/feideLogin.int.test.ts`; `test/auth/Principal.test.ts`; `test/config/envParsers.test.ts` | D-059: `admin` only for an HVL member; a course group matches exactly or as a prefix followed by `:`, and only while the membership is valid; student authors share `private` only (Q12). Realm `hvl.no` and HVL's FS groups still *(verify)*. |
-| `AUTH-003` | `auth/session/SessionStore.ts` (Redis, 2 h idle, 12 h absolute, a new ID at every login, the ID token sealed with `DATA_ENCRYPTION_KEYS`); `auth/session/portalSessionRecord.ts`; `auth/session/portalSessionMiddleware.ts`; `auth/session/sessionCookies.ts` (`__Host-hvli_sid`); `auth/session/csrfToken.ts`; `auth/session/opaqueIds.ts`; `auth/requestPrincipal.ts` (CSRF check on portal requests); `auth/returnTo.ts`; `auth/feide/feideLoginRoutes.ts` (`POST /auth/logout` to Feide's end-session endpoint with `id_token_hint` and `post_logout_redirect_uri` = `<PUBLIC_BASE_URL>/auth/logged-out`; `GET /auth/session` gives page scripts the CSRF token); `security/keys/DataEncryption.ts` | `test/auth/session/SessionStore.int.test.ts` (expiry with an injected clock); `test/auth/session/SessionStore.integrity.int.test.ts`; `test/auth/session/portalSessionMiddleware.int.test.ts`; `test/auth/session/sessionCookies.test.ts`; `test/auth/session/csrfToken.test.ts`; `test/auth/requestPrincipal.test.ts`; `test/auth/returnTo.test.ts`; `test/auth/feide/feideLogout.int.test.ts`; `test/http/h5pAuthenticate.int.test.ts`; `test/server/createApp.int.test.ts`; `test/logging/authRedaction.test.ts`; also exercised by `e2e/portalSharing.e2e.test.ts` | D-057: own modules, no express-session or csurf; roles are computed at login only. Logout is a POST checked against the CSRF token. |
+| `AUTH-001` | `auth/feide/FeideClient.ts` (discovery, `FEIDE_SCOPE`, PKCE `S256`, `client_secret_post`, ID-token signature check with `enableNonRepudiationChecks`, D-054); `auth/feide/loginTransactions.ts` (state, nonce and PKCE verifier bound to the browser by the `__Host-hvli_login` cookie, D-057); `auth/feide/feideLoginRoutes.ts`; `auth/feide/completeFeideLogin.ts`; `auth/identity/AccountResolver.ts`; `auth/audit/AuthAuditRecorder.ts`; `config/httpsRules.ts` (https issuer in production and, off a local address, in every mode) | `test/auth/feide/feideLogin.int.test.ts` (full login against the mock Feide; wrong `iss`, `aud` or `nonce`, expired `exp`, a key outside Feide's JWKS, a missing login cookie); `test/auth/feide/FeideClient.test.ts`; `test/auth/feide/loginTransactions.int.test.ts`; `test/auth/upstream/openidClientMock.test.ts`; `test/auth/identity/AccountResolver.int.test.ts`; `test/config/productionChecks.test.ts` | Mock Feide in `tools/mock-platform` (D-049). HVL's client ID, secret and realm are still open (Q3). |
+| `AUTH-002` | `auth/feide/feideGroups.ts` (`GET <FEIDE_GROUPS_API_URL>/groups/me/groups`; any failure is a 503 page, D-054); `auth/feide/FeideRoleMapper.ts` (the role table as D-059 reads it); `auth/feide/feideClaims.ts` (the Feide ID); `auth/identity/feideId.ts` and `auth/identity/asciiText.ts` (the one Feide ID rule, ASCII folding only, D-142); `config/envParsers.ts` (`ALLOWED_FEIDE_ORGS`, `ADMIN_FEIDE_IDS`, `AUTHOR_COURSE_GROUPS`); `auth/Principal.ts` | `test/auth/feide/FeideRoleMapper.test.ts` (every row, including `student` with `employee`); `test/auth/feide/FeideRoleMapper.validity.test.ts`; `test/auth/feide/feideGroups.test.ts`; `test/auth/feide/feideClaims.test.ts`; `test/auth/feide/feideLogin.int.test.ts`; `test/auth/Principal.test.ts`; `test/config/envParsers.test.ts`; `test/auth/identity/feideId.test.ts`; `test/auth/identity/asciiText.test.ts` | D-059: `admin` only for an HVL member; a course group matches exactly or as a prefix followed by `:`, and only while the membership is valid; student authors share `private` only (Q12). Realm `hvl.no` and HVL's FS groups still *(verify)*. |
+| `AUTH-003` | `auth/session/SessionStore.ts` (Redis, 2 h idle, 12 h absolute, a new ID at every login, the ID token sealed with `DATA_ENCRYPTION_KEYS`); `auth/session/portalSessionRecord.ts`; `auth/session/portalSessionMiddleware.ts`; `auth/session/staleCookieClearing.ts` (a dead cookie is cleared only by an answer no cache keeps, D-142); `auth/session/sessionCookies.ts` (`__Host-hvli_sid`); `auth/session/csrfToken.ts`; `auth/session/opaqueIds.ts`; `auth/requestPrincipal.ts` (CSRF check on portal requests); `auth/returnTo.ts`; `auth/feide/feideLoginRoutes.ts` (`POST /auth/logout` to Feide's end-session endpoint with `id_token_hint` and `post_logout_redirect_uri` = `<PUBLIC_BASE_URL>/auth/logged-out`; `GET /auth/session` gives page scripts the CSRF token); `security/keys/DataEncryption.ts` | `test/auth/session/SessionStore.int.test.ts` (expiry with an injected clock); `test/auth/session/SessionStore.integrity.int.test.ts`; `test/auth/session/portalSessionMiddleware.int.test.ts`; `test/auth/session/staleCookieClearing.test.ts`; `test/web/webAppStaleCookie.int.test.ts`; `test/auth/session/sessionCookies.test.ts`; `test/auth/session/csrfToken.test.ts`; `test/auth/requestPrincipal.test.ts`; `test/auth/returnTo.test.ts`; `test/auth/feide/feideLogout.int.test.ts`; `test/http/h5pAuthenticate.int.test.ts`; `test/server/createApp.int.test.ts`; `test/logging/authRedaction.test.ts`; also exercised by `e2e/portalSharing.e2e.test.ts` | D-057: own modules, no express-session or csurf; roles are computed at login only. Logout is a POST checked against the CSRF token; without a live session it changes no cookie (D-142). |
 | `AUTH-004` | `auth/feide/FeideClient.ts` (`FEIDE_SCOPE`); `auth/feide/feideClaims.ts` (reads only the two Feide ID claims; name and e-mail for authors and admins only; never the `nin` claim); `auth/identity/AccountResolver.ts` (a profile for staff only); `lti/launch/ltiAccount.ts` (LTI accounts carry no profile); the database `CHECK` on learner rows (first migration) | `test/auth/feide/FeideClient.test.ts` (the exact scope string); `test/auth/feide/feideClaims.test.ts`; `test/auth/feide/feideLogin.int.test.ts` (a learner row has no name or e-mail; no `nin` value is stored in plaintext or logged; the session keeps Feide's ID token only encrypted, D-021); `test/auth/identity/AccountResolver.int.test.ts` | Feide's `sub` is never stored; the Feide ID is the subject (D-054). |
-| `AUTH-005` | `auth/identity/linkDecision.ts` (reads `custom.feide_login` only when `LTI-004` gives `author`, ignores values starting with `$`, picks the D-063 case); `auth/identity/accountLinking.ts` (applies it only for a platform with `"feideLinking": true` in `LTI_PLATFORMS` and a Feide ID whose realm is in `ALLOWED_FEIDE_ORGS`, and only onto an existing Feide account that is not a learner's; the rival check and the write run in one transaction with the Feide account locked; the same person's simultaneous launch is no rival; returns the outcome, which `onDeepLinking` audits: `link.conflict` on the claimant's own account, `link.feide-lti` on the account the launch then uses, either without an actor if the launch fails after linking; D-063 as amended); `auth/identity/identityLookup.ts` (the same row login uses while key rings are mixed); `lti/linkingPlatforms.ts` and `config/envParsers.ts` (`feideLinking`, default false); `lti/launch/onDeepLinking.ts` (links from the in-memory claims before the account is resolved); `lti/storage/ltiIdTokenClaims.ts` (drops `feide_login` before storage, D-052) | `test/auth/identity/linkDecision.test.ts`; `test/auth/identity/accountLinking.int.test.ts` (Feide first, Canvas first, move, conflict, a second Canvas user audited on their own account, unexpanded `$Canvas.user.loginId`, never stored); `test/auth/identity/accountLinkingGuards.int.test.ts` (`feideLinking` off, a realm outside `ALLOWED_FEIDE_ORGS`, no Feide account to join, a learner's Feide account, a second Canvas user naming the same Feide ID, another platform, mixed key rings); `test/auth/identity/accountLinkingRaces.int.test.ts` (two claimants at once, a double click) | Linking runs only at Deep Linking launches, and only from platforms with `feideLinking`, which is set once TeCopp has confirmed that `$Canvas.user.loginId` equals the Feide ID at HVL (Q4). A Feide identity is never created from the Canvas side. The "Link with Feide" pop-up fallback is not built. |
-| `LTI-001` | `lti/LtiProviderFactory.ts` (`Provider`, routes `/lti/login`, `/lti/launch`, `/lti/keys`, `tokenMaxAge` = `LTI_TOKEN_MAX_AGE_SECONDS`); `lti/http/ExpressRouterHttpHandler.ts` (ltijs on our router, D-050); `lti/ltiRoutes.ts`; `lti/platforms/syncLtiPlatforms.ts` (`LTI_PLATFORMS` → `LtiPlatform` and `LtiDeployment`, D-051); `lti/platforms/LtiDeploymentGuard.ts`; `lti/storage/LtiCacheManager.ts`; `lti/http/ltiErrorPages.ts`; `lti/launchFacts.ts`; `lti/ltijsLogger.ts`; `server/main.ts` | `test/lti/ltiLaunch.int.test.ts` (a full launch from the mock Canvas; a foreign signature, a wrong `aud`, an expired `exp`, another nonce, a replay and an unconfigured deployment are refused); `test/lti/storage/ltijsOnPrismaStorage.int.test.ts`; `test/lti/platforms/syncLtiPlatforms.int.test.ts`; `test/lti/storage/LtiDeploymentGuard.int.test.ts`; `test/lti/http/ExpressRouterHttpHandler.test.ts`; `test/lti/http/ltiErrorPages.test.ts`; `test/lti/upstream/ltijsProvider.test.ts`; `test/server/createApp.int.test.ts` (`/lti/keys`); `test/db/ltiDeployments.int.test.ts` | `SPEC-DEVIATION` D-050: our node-redis `LtiCacheManager` replaces ltijs's `RedisCacheManager`. `authorizationServer` stays unset. Client ID, deployment IDs and TeCopp's instance are still open (Q4). |
+| `AUTH-005` | `auth/identity/linkDecision.ts` (reads `custom.feide_login` only when `LTI-004` gives `author`, by the login's Feide ID rule in `auth/identity/feideId.ts`, ignores values starting with `$`, picks the D-063 case); `auth/identity/accountLinking.ts` (applies it only for a platform with `"feideLinking": true` in `LTI_PLATFORMS` and a Feide ID whose realm is in `ALLOWED_FEIDE_ORGS`, and only onto an existing Feide account that is not a learner's; the rival check and the write run in one transaction with the Feide account locked; the same person's simultaneous launch is no rival; returns the outcome, which `onDeepLinking` audits: `link.conflict` on the claimant's own account, `link.feide-lti` on the account the launch then uses, either without an actor if the launch fails after linking; D-063 as amended); `auth/identity/identityLookup.ts` (the same row login uses while key rings are mixed); `lti/linkingPlatforms.ts` and `config/envParsers.ts` (`feideLinking`, default false); `lti/launch/onDeepLinking.ts` (links from the in-memory claims before the account is resolved); `lti/storage/ltiIdTokenClaims.ts` (drops `feide_login` before storage, D-052) | `test/auth/identity/linkDecision.test.ts`; `test/auth/identity/feideId.test.ts` (a look-alike login ID names no account); `test/auth/identity/accountLinking.int.test.ts` (Feide first, Canvas first, move, conflict, a second Canvas user audited on their own account, unexpanded `$Canvas.user.loginId`, never stored); `test/auth/identity/accountLinkingGuards.int.test.ts` (`feideLinking` off, a realm outside `ALLOWED_FEIDE_ORGS`, no Feide account to join, a learner's Feide account, a second Canvas user naming the same Feide ID, another platform, mixed key rings); `test/auth/identity/accountLinkingRaces.int.test.ts` (two claimants at once, a double click) | Linking runs only at Deep Linking launches, and only from platforms with `feideLinking`, which is set once TeCopp has confirmed that `$Canvas.user.loginId` equals the Feide ID at HVL (Q4). A Feide identity is never created from the Canvas side. The "Link with Feide" pop-up fallback is not built. |
+| `LTI-001` | `lti/LtiProviderFactory.ts` (`Provider`, routes `/lti/login`, `/lti/launch`, `/lti/keys`, `tokenMaxAge` = `LTI_TOKEN_MAX_AGE_SECONDS`); `lti/http/ExpressRouterHttpHandler.ts` (ltijs on our router, D-050); `lti/http/launchPostOrigin.ts`, `lti/http/launchRequestCeiling.ts` and `lti/http/LtiOutboundRequests.ts` (the last step from our own page, the request ceiling, what ltijs may ask a platform; D-141); `lti/ltiRoutes.ts`; `lti/platforms/syncLtiPlatforms.ts` (`LTI_PLATFORMS` → `LtiPlatform` and `LtiDeployment`, D-051); `lti/platforms/LtiDeploymentGuard.ts`; `lti/storage/LtiCacheManager.ts`; `lti/http/ltiErrorPages.ts`; `lti/launchFacts.ts`; `lti/ltijsLogger.ts`; `server/main.ts` | `test/lti/ltiLaunch.int.test.ts` (a full launch from the mock Canvas; a foreign signature, a wrong `aud`, an expired `exp`, another nonce, a replay and an unconfigured deployment are refused); `test/lti/storage/ltijsOnPrismaStorage.int.test.ts`; `test/lti/platforms/syncLtiPlatforms.int.test.ts`; `test/lti/storage/LtiDeploymentGuard.int.test.ts`; `test/lti/http/ExpressRouterHttpHandler.test.ts`; `test/lti/http/ltiErrorPages.test.ts`; `test/lti/upstream/ltijsProvider.test.ts`; `test/server/createApp.int.test.ts` (`/lti/keys`); `test/db/ltiDeployments.int.test.ts` | `SPEC-DEVIATION` D-050: our node-redis `LtiCacheManager` replaces ltijs's `RedisCacheManager`. `authorizationServer` stays unset. Client ID, deployment IDs and TeCopp's instance are still open (Q4). |
 | `LTI-002` | `lti/storage/PrismaLtiDatabaseManager.ts` (all 14 methods; `consumeNonce` is one conditional `DELETE`; deployment check in `saveIdToken`); `lti/storage/ltiIdTokenClaims.ts` (claim allowlist, D-052); `lti/storage/ltiRecordLifetimes.ts`; `lti/storage/ltiPlatformRows.ts` and `lti/storage/ltiAccessTokenRows.ts` (encrypted private keys and access tokens, D-056); `lti/storage/LtiRecordCleanupJob.ts` (every 10 min on one node, through `jobs/LeasedIntervalJob.ts`); `lti/platforms/reencryptPlatformKeys.ts`; `security/keys/DataEncryption.ts`; `security/keys/keyring.ts` | `test/lti/storage/PrismaLtiDatabaseManager.int.test.ts` (runs the shared contract suite `test/lti/storage/ltiDatabaseContract.ts`; of 50 concurrent `consumeNonce` calls exactly one succeeds); `test/lti/storage/ltiSecretsAtRest.int.test.ts`; `test/lti/storage/ltiIdTokenClaims.test.ts`; `test/lti/storage/ltiStorageRows.test.ts`; `test/lti/storage/LtiRecordCleanupJob.test.ts`; `test/lti/storage/LtiRecordCleanupJob.int.test.ts`; `test/lti/storage/ltijsResumedLaunch.int.test.ts`; `test/lti/platforms/reencryptPlatformKeys.int.test.ts`; `test/jobs/LeasedIntervalJob.test.ts`; `test/security/keys/DataEncryption.test.ts`; `test/security/keys/keyring.test.ts` | The secret-store key is the `DATA_ENCRYPTION_KEYS` key ring (D-056). |
 | `LTI-003` | Step 1: `lti/launch/onResourceLink.ts` and `lti/launch/onDeepLinking.ts` call `context.redirect` to `/lti/play` or `/lti/deeplink`. Step 2: `lti/pages/client/ltikLanding.js` (`history.replaceState`); the ltik stays in a script closure or the `H5PIntegration` URLs. Step 3: `auth/requestPrincipal.ts` (Bearer; a query ltik only on `/h5p/ajax`, `/h5p/contentUserData/…`, `/lti/play` and `/lti/deeplink`, D-058) and `h5p/HvlUrlGenerator.ts`. Step 4: `lti/ltikPrincipal.ts` (also checks `platform.active` and the deployment; any failure is 401 `hvl:ltik-invalid`) and `lti/http/ltiErrorPages.ts`. Steps 5 and 6: `lti/http/ltiPageHeaders.ts`, `http/securityHeaders.ts`, `logging/redactText.ts`, `logging/redactPersonalData.ts`. Also `lti/play/ltiPlayRoutes.ts` and the storage guards `lti/pages/client/ltijsStorageGuard.js` and `lti/pages/client/h5pStorageGuard.js` (D-050) | `e2e/ltiIframe.e2e.test.ts` (the acceptance test: launch → play → answer → reopen in a cross-site iframe, in full Chromium with third-party cookies blocked after a canary check, once with partitioned frame storage as in stock Chrome and once with frame storage blocked, through LTI Platform Storage); `test/browser/thirdPartyCookies.browser.test.ts`; `test/lti/ltikPrincipal.int.test.ts`; `test/lti/ltiLaunch.int.test.ts`; `test/lti/http/ltiPageHeaders.test.ts`; `test/lti/pages/ltikLanding.test.ts`; `test/auth/requestPrincipal.test.ts`; `test/http/h5pAuthenticate.int.test.ts`; `test/http/securityHeaders.test.ts`; `test/logging/authRedaction.test.ts`; `test/lti/deepLinking/deepLinking.int.test.ts` | `SPEC-DEVIATION` D-048: server-rendered pages instead of Next.js `/app/…` until S4. Where frame storage is blocked and the platform sends no `lti_storage_target`, ltijs cannot recover its state and the launch ends on our "launch failed" page; Canvas sends it (D-050). |
 | `LTI-004` | `lti/LtiRoleMapper.ts` (an allowlist that yields only `learner` or `author`; `TestUser` gives `learner`, D-059); `auth/Principal.ts` (`sealPrincipal` refuses an LTI `admin`); `lti/ltikPrincipal.ts`; `lti/launch/ltiAccount.ts`; `lti/launch/onDeepLinking.ts` (a learner's Deep Linking launch is refused with 403) | `test/lti/LtiRoleMapper.test.ts` (the table and forged `Administrator` sets); `test/auth/Principal.test.ts`; `test/lti/ltikPrincipal.int.test.ts`; `test/lti/launch/ltiAccount.int.test.ts`; `test/lti/deepLinking/deepLinking.int.test.ts` | D-059: unknown roles give `learner`. |

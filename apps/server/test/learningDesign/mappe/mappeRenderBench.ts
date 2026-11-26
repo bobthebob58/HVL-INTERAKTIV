@@ -40,7 +40,6 @@ export function sourceActivity(overrides: Partial<MappeSourceActivity> = {}): Ma
     id: '0192f0c4-0000-7000-8000-000000000001',
     title: 'Blåbærquiz',
     mainLibrary: 'H5P.MultiChoice',
-    params: {},
     metadata: {},
     status: 'published',
     createdAt: new Date('2026-09-01T10:00:00.000Z'),

@@ -5,42 +5,49 @@
  * Why: `Identity.subjectHash` (D-055) and the learnerKey (DATA-002) are keyed hashes of the same subject. If the
  *      two were built from differently normalised text, one person would get two accounts, or a learnerKey that
  *      does not match their account. Both therefore come from one checked subject, in the DATA-002 format
- *      `feide|<feide-id>` / `lti|<iss>|<sub>` (pseudonymSource).
+ *      `feide|<feide-id>` / `lti|<iss>|<client-id>|<sub>` (pseudonymSource, D-129).
  * Spec: DATA-002, AUTH-001, LTI-001
  * Invariants:
- *   - A Feide subject is the normalised Feide ID (trimmed, lower-cased, FEIDE_ID_PATTERN, D-054); anything else
+ *   - A Feide subject is the normalised Feide ID (./feideId.ts, D-054, D-142); anything else
  *     throws, so no caller can hash a raw claim by mistake. `sub` from Feide is never a source.
- *   - An LTI subject is `(iss, sub)` exactly as the launch carried them (both case-sensitive); empty parts or an
- *     issuer containing `|` throw (pseudonymSource).
+ *   - An LTI subject is the platform registration (`iss` and the client ID the launch was validated against) and
+ *     the `sub`, exactly as the launch carried them (all case-sensitive); empty parts, or an issuer or client ID
+ *     containing `|`, throw (pseudonymSource).
  *   - Errors never contain the subject.
  * Collaborators: ../../privacy/deriveLearnerKey.ts (pseudonymSource, deriveLearnerKey),
  *   ../../security/keys/IdentityHasher.ts, ./AccountResolver.ts, ./accountLinking.ts.
  * Tests: apps/server/test/auth/identity/subjectSources.test.ts
  */
-import { FEIDE_ID_PATTERN } from '../../config/envParsers.js';
+import { isNormalisedFeideId } from './feideId.js';
 import { pseudonymSource, type LearnerSource } from '../../privacy/deriveLearnerKey.js';
 
-/** Who logged in: a Feide ID (portal) or an LTI issuer and subject (Canvas). */
+/** Who logged in: a Feide ID (portal) or an LTI platform registration and subject (Canvas). */
 export type IdentitySubject =
   | { readonly kind: 'feide'; readonly feideId: string }
-  | { readonly kind: 'lti'; readonly issuer: string; readonly subject: string };
+  | {
+      readonly kind: 'lti';
+      readonly issuer: string;
+      /** The registration's client ID; with `issuer` it names one `LTI_PLATFORMS` entry. */
+      readonly clientId: string;
+      readonly subject: string;
+    };
 
 /**
  * The checked learner source for `deriveLearnerKey` (DATA-002).
- * @param subject - The Feide ID or the LTI issuer and subject.
+ * @param subject - The Feide ID or the LTI issuer, client ID and subject.
  * @returns A fresh LearnerSource with the same values.
- * @throws Error when the Feide ID is not normalised, or an LTI part is empty or the issuer contains `|`.
+ * @throws Error when the Feide ID is not normalised, or an LTI part is empty, or the issuer or client ID contains `|`.
  * @spec DATA-002
  */
 export function learnerSourceOf(subject: IdentitySubject): LearnerSource {
   const source: LearnerSource =
     subject.kind === 'feide'
       ? { kind: 'feide', feideId: subject.feideId }
-      : { kind: 'lti', issuer: subject.issuer, subject: subject.subject };
+      : { kind: 'lti', issuer: subject.issuer, clientId: subject.clientId, subject: subject.subject };
   if (source.kind === 'feide') {
     const { feideId } = source;
     // SECURITY: `Ola@HVL.no ` and `ola@hvl.no` must never hash differently, or one person gets two accounts (D-054).
-    if (feideId !== feideId.trim().toLowerCase() || !FEIDE_ID_PATTERN.test(feideId)) {
+    if (!isNormalisedFeideId(feideId)) {
       throw new Error('the Feide subject must be a normalised Feide ID');
     }
   }
@@ -50,8 +57,8 @@ export function learnerSourceOf(subject: IdentitySubject): LearnerSource {
 
 /**
  * The text hashed into `Identity.subjectHash` with the `identity-subject` key (D-055).
- * @param subject - The Feide ID or the LTI issuer and subject.
- * @returns `feide|<feide-id>` or `lti|<iss>|<sub>`, the same text the learnerKey is derived from.
+ * @param subject - The Feide ID or the LTI issuer, client ID and subject.
+ * @returns `feide|<feide-id>` or `lti|<iss>|<client-id>|<sub>`, the same text the learnerKey is derived from.
  * @throws Error when the subject is not valid (see `learnerSourceOf`).
  * @spec DATA-002
  */

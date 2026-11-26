@@ -5,7 +5,8 @@
  * Why: INS-003 puts a «Ta opp i samlinga» button by each question, in the item table and by each misconception, and
  *      one shortlist below them collects what was added, for printing or projecting. A context shares the list between
  *      the buttons and the list without passing it through every section. The list lives in the page's memory only,
- *      and holds words, not data about a learner.
+ *      and holds words about the group, never a row about one learner: aggregates, the teacher's texts and typed gap
+ *      answers that k or more learners gave (./shortlistEntries.ts).
  * Spec: INS-003, UD-006
  * Invariants:
  *   - Each question is on the list at most once, in the order it was added; a second press takes it off.

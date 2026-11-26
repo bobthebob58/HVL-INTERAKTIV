@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # dockerSmoke.sh — builds the server image, starts the app stack (deploy/compose.app.yml), checks health, the
 # migration, a seeded content type, a page served from the image, an upload scanned by the stack's clamd and served
-# from the files origin, and the mappe PDF with Chromium's sandbox on (seen in /proc too), then removes all it made.
+# from the files origin, the mappe PDF with Chromium's sandbox on (seen in /proc too), that no translated code is
+# kept in /tmp, that a server that stands still is marked unhealthy and says so afterwards, and that the app comes
+# back after its server process stops, then removes all it made.
 #
 # Why:   NFR-007's Verify is a compose smoke test, and MAPPE-004's PDF must print in the image with æ, ø and å
 #        (D-096). One script runs here and in GitHub CI (D-110 and its amendments of 2026-10-30 and 2026-11-05).
-# Spec:  NFR-007, MAPPE-004, H5P-003, SEC-006, SEC-004
+# Spec:  NFR-007, MAPPE-004, H5P-003, SEC-006, SEC-004, NFR-002
 # Tests: it is the test: .github/workflows/docker.yml runs it; tools/deploy-check checks the files it uses first.
 # Invariants:
 #   - Starts no Docker daemon: it stops with an instruction when `docker info` does not answer.
@@ -26,6 +28,8 @@ ROOT="$(cd "$HERE/../.." && pwd)"
 source "$HERE/smokeBuild.sh"
 # shellcheck source=deploy/smoke/smokeChecks.sh
 source "$HERE/smokeChecks.sh"
+# shellcheck source=deploy/smoke/smokeRuntimeChecks.sh
+source "$HERE/smokeRuntimeChecks.sh"
 
 RUN_ID="$(date +%Y%m%d%H%M%S)-$$"
 export HVLI_IMAGE="hvli-app:smoke-$RUN_ID"
@@ -90,3 +94,7 @@ check_sandbox_processes
 check_startup_probe
 check_chromium
 disk "at the peak"
+check_memory_budget
+check_code_cache
+check_standstill
+check_restart

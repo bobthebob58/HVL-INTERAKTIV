@@ -28,13 +28,17 @@ jobs:
     steps:
       # SECURITY: no later step pushes or fetches with the job's token, and the library builds run third-party
       # build scripts, so checkout leaves no token on disk for them (D-110's amendment of 2026-11-05, step 7).
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
+      # SECURITY: before anything is installed, the lock file is held to the npm registry, to sha512 checksums and
+      # to the reviewed list of install scripts; the check uses Node alone (SEC-007, D-145).
+      - name: The lock file names one source, one kind of checksum and the reviewed install scripts (SEC-007)
+        run: node tools/dependency-check/checkLockfile.mjs
       - name: Install dependencies (exact lockfile, for the fetch, bundle and check tools)
         run: npm ci
       - name: Fetch and verify H5P core 1.28.0 and the pinned editor (H5P-001, D-022, D-027)
@@ -42,7 +46,7 @@ jobs:
       # WHY: a cache of its own, from before tools/h5p-libraries built every library with a minimal environment
       # (`buildEnv` 3); the scrubbed run below stays as a second guard.
       - name: Cache the H5P library checkouts built with a scrubbed environment
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/hvl-interaktiv/h5p-libraries-scrubbed
           key: h5p-libraries-scrubbed-${{ runner.os }}-${{ hashFiles('tools/h5p-libraries/libraries.manifest.json', 'tools/h5p-libraries/*.mjs') }}

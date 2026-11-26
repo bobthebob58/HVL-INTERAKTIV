@@ -1,11 +1,12 @@
 # smokeChecks.sh — the smoke test's checks on the running stack: health, the migration, a seeded content type, a web
 # page and H5P core served from the image, an upload scanned by the stack's clamd and served from the files origin,
 # the mappe PDF printed in the app container with Chromium's sandbox, the kernel's view of that sandbox, the start-up
-# probe's line, and which Chromium the image carries. Sourced by ./dockerSmoke.sh, never run alone.
+# probe's line, which Chromium the image carries, the server's own memory line, and that the app has its memory
+# limit and comes back after its server process stops. Sourced by ./dockerSmoke.sh, never run alone.
 #
 # Why:   NFR-007's Verify is a compose smoke test, and MAPPE-004's PDF must print in the image with æ, ø and å embedded,
 #        tagged and A4, with the sandbox on (D-096; D-110 amendments of 2026-10-30 and 2026-11-05).
-# Spec:  NFR-007, MAPPE-004, H5P-003, SEC-006, SEC-004
+# Spec:  NFR-007, MAPPE-004, H5P-003, SEC-006, SEC-004, NFR-002
 # Tests: .github/workflows/docker.yml and a run here run it through ./dockerSmoke.sh.
 # PRIVACY: the checks read counts, folder names, the sample PDF and a 1×1 test image only; no log line holds a secret,
 #          a grant or a person.
@@ -134,4 +135,48 @@ check_chromium() {
   "${COMPOSE[@]}" exec -T app sh -c \
     'id; /ms-playwright/chromium-1194/chrome-linux/chrome --version; sha256sum /ms-playwright/chromium-1194/chrome-linux/chrome' |
     sed 's/^/  chromium: /'
+}
+
+# NFR-002, D-134: inside the container the server reads the stack's limit and finds that its budget fits.
+check_memory_budget() {
+  local logs line
+  logs=$("${COMPOSE[@]}" logs --no-color app 2>/dev/null)
+  line=$(grep -o '{.*"msg":"memory limits"}' <<<"$logs" | head -n 1 || true)
+  [[ "$line" == *'"containerLimitMb":5120,'* ]] ||
+    { echo "✗ the server's memory line: ${line:-no line}" >&2; return 1; }
+  if grep -q 'the memory limit is below what the server may use\|the container has no memory limit' <<<"$logs"; then
+    echo "✗ the server warns that its memory budget does not fit: $line" >&2
+    return 1
+  fi
+  echo "✓ memory budget: $(grep -o '"containerLimitMb".*"neededMb":[0-9]*' <<<"$line") MiB, no warning"
+}
+
+# NFR-002, D-134: the app has its memory limit, and a server that ends its process comes back by the stack's restart
+# rule. Run last: it stops the server once.
+check_restart() {
+  local id limit before after
+  id=$("${COMPOSE[@]}" ps -q app)
+  limit=$(docker inspect -f '{{.HostConfig.Memory}}' "$id")
+  [[ "$limit" -ge $((4096 * 1024 * 1024)) ]] ||
+    { echo "✗ the app's memory limit is $limit bytes, below 4 GiB" >&2; return 1; }
+  before=$(docker inspect -f '{{.RestartCount}}' "$id")
+  # WHY: the server process itself. PID 1 (tini) ignores a kill from inside, and `docker kill` counts as a stop by
+  # hand, which the restart rule rightly leaves alone.
+  "${COMPOSE[@]}" exec -T app node -e '
+    const fs = require("node:fs");
+    for (const pid of fs.readdirSync("/proc").filter((name) => /^[0-9]+$/.test(name) && Number(name) !== process.pid)) {
+      try {
+        if (fs.readFileSync(`/proc/${pid}/cmdline`, "utf8").includes("src/server/main.ts")) process.kill(Number(pid), "SIGKILL");
+      } catch {}
+    }' || true
+  for _ in $(seq 1 60); do
+    after=$(docker inspect -f '{{.RestartCount}}' "$id")
+    if [[ "$after" -gt "$before" ]] && curl -fsS --max-time 5 -o /dev/null "http://127.0.0.1:$APP_PORT/healthz"; then
+      echo "✓ restart: the app came back after its server process stopped (restart count $after; memory limit $((limit / 1024 / 1024)) MiB)"
+      return 0
+    fi
+    sleep 2
+  done
+  echo "✗ the app did not come back after its server process stopped (restart count $after)" >&2
+  return 1
 }

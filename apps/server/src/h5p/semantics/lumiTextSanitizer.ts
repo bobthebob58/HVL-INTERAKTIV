@@ -1,28 +1,37 @@
 /**
- * lumiTextSanitizer — applies Lumi's own text rules to values Lumi itself skips: list items and titles.
+ * lumiTextSanitizer — the one definition of "safe text" for content parameters and titles: Lumi's own rules for
+ * a field that allows markup, plain text for every other field and for metadata.
  *
  * Why: CVE-2025-47828 was fixed in Lumi by sanitising text fields on save, but its scanner never reaches text
  *      that is a list item (D-039), and content metadata is not sanitised at all. H5P Core's "Rights of use"
  *      dialog builds HTML from metadata without escaping (h5p.js `buildMetadataCopyrights`, `MediaCopyright`),
- *      with `source` inside `<a href="…">`. List items reuse Lumi's rules, so a text field has one definition
- *      of "safe text" (the tags its semantics allow). Metadata has no semantics: Lumi's default for a field
- *      without tags still allows links, tables and more, so metadata gets sanitize-html with no tags at all.
+ *      with `source` inside `<a href="…">`. Lumi's rule for a text field without a `tags` list is
+ *      sanitize-html's default, which keeps links, tables and more; H5P's own server software makes such a
+ *      field plain text, and content types write it into their pages on that assumption (D-140). Lumi also cuts
+ *      a text to `maxLength` after cleaning it, at a fixed position (./textLengthCut.ts).
  * Spec: SEC-008
  * Invariants:
- *   - A list item is sanitised exactly as Lumi sanitises a text field with the same semantics.
+ *   - A text field with a `tags` list is sanitised exactly as Lumi sanitises it (the tags its semantics allow).
+ *   - A text field without one is plain text: every tag is removed (script and style with their content), `<`,
+ *     `>` and `&` escaped. Text the editor sends for such a field (a typed `<` arrives as `&lt;`) is unchanged.
+ *   - A text longer than its field's `maxLength` is cut as plain text, so that it ends in no unfinished tag
+ *     or character reference (./textLengthCut.ts). Lumi's own rule runs last, on text it then neither changes
+ *     nor cuts, so its `regexp` check stays as it is.
  *   - Every string in a metadata object (main or sub-content, also inside `authors` and `changes`) is plain
- *     text: every tag is removed (script and style with their content), `<`, `>` and `&` escaped. Anything
- *     nested deeper than the depth limit is dropped, never kept as it was.
+ *     text. Anything nested deeper than the depth limit is dropped, never kept as it was.
  *   - A top-level field that was only markup is removed (Lumi's schema refuses empty strings).
  *   - `source` is kept only as an http(s) URL in its normalised form that contains no `"`, `'`, `<`, `>` or
  *     backtick, so it cannot leave the `href` attribute; anything else is removed.
- * Collaborators: ./SubContentPolicy.ts, ../lumiInternals.ts (Lumi's SemanticsEnforcer).
- * Tests: apps/server/test/h5p/semantics/SubContentPolicy.test.ts
+ * Collaborators: ./SubContentPolicy.ts, ./editorFormParams.ts, ./playedParams.ts, ./textLengthCut.ts,
+ *   ../lumiInternals.ts (Lumi's SemanticsEnforcer).
+ * Tests: apps/server/test/h5p/semantics/lumiTextSanitizer.test.ts,
+ *   apps/server/test/h5p/semantics/SubContentPolicy.test.ts
  */
 import type { LibraryManager } from '@lumieducation/h5p-server';
 import type { ISemanticsEntry } from '@lumieducation/h5p-server/build/src/types.js';
 import sanitizeHtml from 'sanitize-html';
 import { SemanticsEnforcer } from '../lumiInternals.js';
+import { cutToLength } from './textLengthCut.js';
 
 /** The private Lumi method we call (SemanticsEnforcer.enforceTextSemantics). */
 interface TextEnforcer {
@@ -46,6 +55,16 @@ const NO_MARKUP: sanitizeHtml.IOptions = { allowedTags: [], allowedAttributes: {
  */
 export function plainText(text: string): string {
   return sanitizeHtml(text, NO_MARKUP);
+}
+
+/**
+ * Tells whether a field holds plain text: a text field whose semantics give no `tags` list.
+ * @param semantics - The field's semantics.
+ * @returns True for a text field that allows no markup.
+ */
+export function isPlainTextField(semantics: ISemanticsEntry): boolean {
+  // WHY: the same test as Lumi's enforcer and H5P's own validator make, so all three agree on which rule applies.
+  return semantics.type === 'text' && !semantics.tags;
 }
 
 /**
@@ -81,14 +100,25 @@ export class LumiTextSanitizer {
   }
 
   /**
-   * Sanitises one text value as Lumi would sanitise a text field with these semantics.
-   * @param semantics - The text field's semantics (its `tags` decide which HTML is allowed).
+   * Sanitises one text value by its field's rule: Lumi's for a field with `tags`, plain text for any other.
+   * @param semantics - The text field's semantics (its `tags` decide which HTML is allowed, if any).
    * @param value - The value; anything but a string becomes an empty string.
-   * @returns The sanitised text.
+   * @returns The sanitised text, within the field's `maxLength` and whole.
+   * @spec SEC-008
    */
   sanitizeText(semantics: ISemanticsEntry, value: unknown): string {
+    // WHY: the cleaning alone first, so the cut is ours (./textLengthCut.ts); `maxLength` and `regexp` come last.
+    const { maxLength, regexp: _regexp, ...markupRule } = semantics;
+    // SECURITY: without `tags`, Lumi's rule would keep links and tables in a label or a heading (D-140).
+    const clean = (text: string): string =>
+      isPlainTextField(semantics) ? plainText(text) : this.byLumi(markupRule as ISemanticsEntry, text);
+    const fitted = cutToLength(clean(typeof value === 'string' ? value : ''), maxLength, plainText);
+    return this.byLumi(semantics, fitted);
+  }
+
+  private byLumi(semantics: ISemanticsEntry, text: string): string {
     const holder: Record<string, unknown> = {};
-    this.enforcer.enforceTextSemantics(semantics, typeof value === 'string' ? value : '', holder, '$');
+    this.enforcer.enforceTextSemantics(semantics, text, holder, '$');
     const result = holder[semantics.name];
     return typeof result === 'string' ? result : '';
   }

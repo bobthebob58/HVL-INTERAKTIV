@@ -13,16 +13,19 @@
  *   - The formative note is always shown (D-105); the privacy note with each view, with the view's k.
  *   - A11Y: one `h2`; every part is a section named by its `h3`. A new view is announced in the tab's own polite
  *     status region, also when the words repeat (WCAG 4.1.3); the previous view stays while the next loads. Each
- *     refused, invalid or failed answer mounts a new alert, so a repeat of the same one is announced too.
+ *     refused, invalid, too large or failed answer mounts a new alert, so a repeat of the same one is announced too.
  *   - Once a view has arrived, a refused, invalid or failed request keeps the choices (with that view's versions)
  *     and the shortlist with its entries, so the teacher can choose again or still print the list.
+ *   - A period with more answers than one view covers (D-122) says so and keeps the choices, also on the first
+ *     view, so the teacher can choose a shorter period.
  *   - Works with the page's credential (`useApiAuth`): the session in the portal, the Bearer ltik in Canvas.
  *   - A11Y: the texts quoted from the activity carry its language when it differs from the page's (WCAG 3.1.2).
  * Collaborators: ./useInsightView.ts, ./authoredLanguage.tsx, ./InsightQueryForm.tsx, ./InsightReportView.tsx,
  *   ./insightScopeText.ts, ./InsightShortlist.tsx, ./shortlistContext.tsx, ./InsightFindings.tsx, ./InsightNotes.tsx,
  *   ../activity/tabs/InsightTab.tsx, ../lti/LtiPlayView.tsx, ../../components/useAnnouncement.ts.
  * Tests: apps/web/test/features/insight/InsightPanel.test.tsx, apps/web/test/features/insight/InsightQuery.test.tsx,
- *   apps/web/test/features/insight/InsightViewState.test.tsx, apps/web/test/features/insight/InsightLanguage.test.tsx
+ *   apps/web/test/features/insight/InsightViewState.test.tsx, apps/web/test/features/insight/InsightLanguage.test.tsx,
+ *   apps/web/test/features/insight/InsightTooLarge.test.tsx
  */
 'use client';
 
@@ -89,6 +92,7 @@ export function InsightPanel({
   if (view.state === 'loading') body = <p role="status">{t('common.loading', locale)}</p>;
   else if (view.state === 'unavailable') body = refusalAlert('insight.unavailable');
   else if (view.state === 'invalid') body = refusalAlert('insight.invalidQuery');
+  else if (view.state === 'tooLarge') body = refusalAlert('insight.tooLarge');
   else if (view.state === 'failed') body = refusalAlert('common.loadFailed');
   else body = <InsightReportView report={view.state} contentId={contentId} fixedContext={fixedContext} />;
 

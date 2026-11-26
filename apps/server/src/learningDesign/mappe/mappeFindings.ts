@@ -10,6 +10,8 @@
  *   - The same validator and input as the findings and publish routes (../../content/storedContent.ts), so the
  *     portfolio never disagrees with the check an author sees; only the stored activity is validated.
  *   - Only UD-021 findings (universal design); the pedagogical hints (PED-020) and V-PLACEHOLDER are not this status.
+ *     An activity too large to be checked (`V-SIZE`, ../../content/boundedValidator.ts) is listed as such, so the
+ *     portfolio never shows an unchecked activity as one without findings.
  *   - Only errors carry a reason, matched by rule and path as ../../content/acknowledgementCoverage.ts does.
  *   - PRIVACY: who gave a reason is never read or shown; the reason is the authors' own text about their activity.
  * Collaborators: ./MappeRenderer.ts, ./mappeActivityView.ts, ../../content/storedContent.ts,
@@ -17,6 +19,7 @@
  * Tests: apps/server/test/learningDesign/mappe/mappeExport.int.test.ts
  */
 import type { StoredAcknowledgement } from '../../content/acknowledgementCoverage.js';
+import { SIZE_RULE_ID } from '../../content/boundedValidator.js';
 import { storedValidationInput, type StoredContentRow } from '../../content/storedContent.js';
 import type { Locale } from '../../i18n/translate.js';
 import type { ContentValidator, FindingSeverity } from '../../validation/types.js';
@@ -54,7 +57,7 @@ export function mappeFindings(
     if (!known || known.at < acknowledgement.at) newest.set(keyOf(acknowledgement), acknowledgement);
   }
   return validator(storedValidationInput(row, locale))
-    .filter((finding) => finding.requirement === 'UD-021')
+    .filter((finding) => finding.requirement === 'UD-021' || finding.ruleId === SIZE_RULE_ID)
     .map((finding) => {
       const acknowledgement = finding.severity === 'error' ? newest.get(keyOf(finding)) : undefined;
       return {

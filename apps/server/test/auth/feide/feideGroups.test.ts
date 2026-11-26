@@ -17,6 +17,19 @@ const answering = (body: string, status = 200) => {
 };
 
 describe('[AUTH-002] Feide Groups API', () => {
+  it('[AUTH-002] slashes at the end of the base URL, however many, are not doubled', async () => {
+    // Arrange
+    const { fetchImpl, calls } = answering('[]');
+    // Act
+    await fetchFeideGroups('https://groups-api.example///', 'tok', fetchImpl);
+    await fetchFeideGroups('https://groups-api.example', 'tok', fetchImpl);
+    // Assert
+    expect(calls.map((call) => call.url)).toEqual([
+      'https://groups-api.example/groups/me/groups',
+      'https://groups-api.example/groups/me/groups',
+    ]);
+  });
+
   it("[AUTH-002] asks for the user's groups with their token and returns the list", async () => {
     // Arrange
     const { fetchImpl, calls } = answering('[{"id":"fc:org:hvl.no"}]');

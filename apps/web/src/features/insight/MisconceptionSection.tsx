@@ -9,8 +9,8 @@
  * Invariants:
  *   - The server's order is kept; a question without first answers in the view is not in the list.
  *   - SPEC-DEVIATION: D-106 — for a content version older than the current one the server sends no distributions
- *     (its options may have changed, D-093), and the section says so instead of "no answers" (D-106's amendment of
- *     2026-11-04).
+ *     (its options or its answer key may have changed, D-093, D-137), and the section says so instead of "no
+ *     answers" (D-106's amendment of 2026-11-04).
  *   - A11Y: the section's `h3`, then an `h4` per question; the question's own button names it. The question's text
  *     carries the activity's language when it differs from the page's (UD-010, ./authoredLanguage.tsx). A question
  *     without text is named by its place in the item table («Spørsmål 2 (utan tekst)»), as the shortlist names it,

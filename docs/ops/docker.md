@@ -14,7 +14,7 @@ One multi-stage `deploy/Dockerfile`, built from the repository root. Only its la
 | Part | From | Checked by |
 |---|---|---|
 | Ubuntu 24.04 and Node 24 | `ubuntu:24.04` and `node:24-bookworm-slim`, both by digest | The digests in the Dockerfile (`tools/deploy-check`) |
-| Production dependencies, `tsx` among them | `npm ci` from the lockfile, then `npm prune --omit=dev`; `tsx` is a dependency of `apps/server` (D-110 integration amendment), `prisma` stays as `@prisma/client`'s optional peer | The build fails if `tsx`, `prisma` or `playwright-core` is missing |
+| Production dependencies, `tsx` among them | `npm ci` from the lockfile, with `.npmrc` (an install script outside `allowScripts` stops the build, D-145), then `npm prune --omit=dev`; `tsx` is a dependency of `apps/server` (D-110 integration amendment), `prisma` stays as `@prisma/client`'s optional peer | The build fails if `tsx`, `prisma` or `playwright-core` is missing |
 | The server's TypeScript, the Prisma client, the built web app, the tokens and the theme | The repository | The build (`prisma generate`, `npm run build`) |
 | H5P core 1.28.0 and the pinned editor | Build context `h5pcore` (`apps/server/h5p`, from `npm run h5p:fetch-core`) | Every file against the committed hash lists, in stage `inputs` |
 | The ten content types | Build context `h5pbundle` (from `tools/h5p-bundle`) | Their `SHA256SUMS`, the ten names and the build-secret scan, in stage `inputs` (its rules file, `apps/server/src/h5p/libraries/libraryBuildSecrets.ts`, is copied there too); the seeder checks the hashes and scans each package again, then scans the library volume |
@@ -26,16 +26,64 @@ The server runs as `hvli` (uid and gid 10001) under `tini`, as `node --import ts
 volume there) and `apps/web/.next/cache`. The image's defaults are `NODE_ENV=production`, `WEB_APP=prod` and
 `PORT=3000`; everything else comes from the environment (`apps/server/.env.example`). No secret is in the image.
 
-**Chromium's sandbox needs Playwright's seccomp profile and `CAP_SYS_CHROOT`.** The PDF export keeps Chromium's
-sandbox (D-096), and `PDF_ALLOW_NO_SANDBOX` is refused in production. Under Docker's default seccomp profile
-Chromium stops with "No usable sandbox!", so run the container with `deploy/seccomp/playwright-v1.56.1.seccomp`.
+**SVG uploads are cleaned in a worker thread of the server process (D-119).** It starts with the server; a log line
+`the SVG cleaning worker did not start` means SVG uploads will be refused until the cause is fixed. It adds about
+90 MB to the process while idle and up to 512 MB while it cleans one file; the memory budget below counts it.
+The server holds that limit itself, also when Node is started with `--max-old-space-size`. It needs
+no extra process, capability or volume, and writes only below `/tmp`.
+
+**The container needs a memory limit and a restart rule (D-134).** After a fault nothing handled, the server writes
+one `fatal` line and ends its process (D-133); a restart rule starts it again. A memory limit keeps one runaway
+process from taking the machine. It must be large enough: past its own heap limit Node says «JavaScript heap out of
+memory» before it stops, but a process past the container's limit is stopped by the kernel without a line in its
+log. What the server may use, in MiB:
+
+| Part | MiB | From |
+|---|---|---|
+| The heap limit Node chooses | 560 at 1 GiB, 1 120 at 2, 1 728 at 3, 2 240 at 4 GiB and above | Measured in the image (Node 24) |
+| The SVG cleaning worker | 512 | D-119 |
+| The server outside its heap (code, buffers, the idle worker) | 256 | About 500 MB resident in all when idle |
+| Chromium for the PDF export | 256, and 128 for each further export at once (`PDF_MAX_CONCURRENCY`, default 2) | 246 MB measured for one |
+| The temporary folder, when it is kept in memory (a tmpfs) | Its size: 512 in the app stack | Counts against the container |
+
+With the defaults that is 2 240 + 1 664 = 3 904 MiB, so **4 GiB is the least limit that fits while Node chooses its
+own heap, and the app stack sets 5 GiB** (`mem_limit` and `memswap_limit`, so no swap beyond it). A smaller
+container needs a smaller heap as well: start Node with `--max-old-space-size=<MiB>` so that the heap and 1 664 MiB
+fit. The server works the same sum out at start and writes it as the line `memory limits`
+(`containerLimitMb`, `heapLimitMb`, `besideHeapMb`, `neededMb`); a `warn` line follows when production has no
+limit at all, or when the limit is below the need. Inside the heap the largest pieces of work wait their turn: at
+most two insight views (about 100 MB each) and eight saved states are handled at the same time.
+
+The app stack has `restart: unless-stopped`: a server that ended its own process comes back, and a stop by hand
+(`docker compose stop`) stays a stop. Kubernetes and OpenShift restart a stopped container by default; set the
+memory limit there too (`resources.limits.memory`). The steps that run once (`buckets`, `migrate`, `seed`) must
+have no restart rule.
+
+**A server that stands still must lose its "healthy" mark soon (D-144).** The app stack's health check asks
+`/healthz` every 5 seconds, gives a try 3 seconds, and marks the app unhealthy at the third failed try in a row,
+about 25 seconds after the server stopped answering; failed tries in the first 120 seconds after a start do not
+count. Docker itself only sets the mark: it does not restart an unhealthy container. Whatever routes requests (a
+load balancer, Kubernetes or OpenShift with a readiness and a liveness probe on `/healthz`) should use the same
+short limits and decide whether a server that stands still is taken out of rotation or restarted; the server does
+not restart itself. When it runs again it writes `the server stood still: its event loop did not run` with
+`standstillMs` (runbook §7).
+
+**No code is run from a writable folder (D-144).** The image sets `TSX_DISABLE_CACHE=1`, so the TypeScript loader
+keeps its translated code in memory and writes nothing to `/tmp`. Do not unset it in a deployment: with the cache
+on, the loader reads translated code back from `/tmp/tsx-<uid>` without checking it.
+
+**Chromium's sandbox needs the seccomp profile in `deploy/seccomp/` and `CAP_SYS_CHROOT`.** The PDF export keeps
+Chromium's sandbox (D-096), and `PDF_ALLOW_NO_SANDBOX` is refused in production. Under Docker's default seccomp
+profile Chromium stops with "No usable sandbox!", so run the container with
+`deploy/seccomp/chromium-sandbox.seccomp`: Docker's default with one rule added, which allows `clone`, `setns` and
+`unshare` so Chromium can create its user namespaces (`deploy/seccomp/README.md`).
 After it creates its namespaces the sandbox chroots into `/proc/self/fdinfo`, which needs `SYS_CHROOT` in the
 container's capability bounding set: with every capability dropped the launch fails with
 `Check failed: sys_chroot("/proc/self/fdinfo/") == 0` (found by the smoke test, 2026-11-05). So drop all capabilities
 and add back that one, for the app only:
 
 ```sh
-docker run --security-opt seccomp=deploy/seccomp/playwright-v1.56.1.seccomp --security-opt no-new-privileges:true \
+docker run --security-opt seccomp=deploy/seccomp/chromium-sandbox.seccomp --security-opt no-new-privileges:true \
   --cap-drop ALL --cap-add SYS_CHROOT --read-only --tmpfs /tmp --tmpfs /home/hvli:uid=10001,gid=10001 --tmpfs /app/apps/web/.next/cache:uid=10001,gid=10001 \
   -v hvli-libraries:/app/apps/server/var/h5p/libraries --env-file <your env file> -p 127.0.0.1:3000:3000 <image>
 ```
@@ -85,7 +133,8 @@ amendments of 2026-11-06).
 1.4.6 (clamd, with the image's own signatures and `freshclam` off), all by digest and none published; the app listens on `127.0.0.1:${HVLI_APP_PORT:-18080}` only, as uid 10001 with a
 read-only root file system, no new privileges, the seccomp profile and no capability but `SYS_CHROOT`. One-off steps run in order:
 `buckets` (creates `hvli-content` and `hvli-temporary` in moto), `migrate` (`prisma migrate deploy`) and `seed` (the
-ten types from `/app/h5p-bundle` into the library volume); then `app` starts once clamd is healthy. Every service from
+ten types from `/app/h5p-bundle` into the library volume); then `app` starts once clamd is healthy, with a memory
+limit of 5 GiB and a restart rule (above). Every service from
 the image has `CLAMAV_HOST=clamav`, so every upload is scanned as in production (`SEC-006`), and the files origin is
 `files.localhost:<port>` (`SEC-004`; Chromium and Firefox resolve `*.localhost` themselves). Every key, password and secret comes
 from the environment (`${NAME:?}`); the file holds none. It is a local stack: `NODE_ENV=development`, because the
@@ -124,7 +173,11 @@ the HTTP route, because the stack has no Feide or LTI login); and that the mappe
 shows every font embedded, `pdfinfo` says `Tagged: yes` and A4); reads the sandbox from `/proc` while a page renders
 (`deploy/smoke/sandboxProof.mjs`: every renderer in a PID namespace of its own and under Chromium's own seccomp filter,
 which `--no-sandbox` would remove); requires the server's own start-up line `PDF export availability` with `pdfSandbox: true` and `reason: "ok"`; prints
-Chromium's version and SHA-256; then runs
+Chromium's version and SHA-256; requires the server's line `memory limits` with the stack's limit and no warning
+after it; finds no folder of translated code in the app's `/tmp`; stops the server process in place (SIGSTOP),
+waits until Docker marks the app unhealthy (at most 45 seconds), lets it run on and waits for "healthy" and for the
+server's standstill line (D-144); stops the server process inside the app container and waits until `/healthz`
+answers again (the restart rule, D-134); then runs
 `docker compose down -v`, removes its image and removes its builder, which removes exactly its own build cache (the
 pulled `clamav/clamav` and `moby/buildkit` images stay for the next run).
 `HVLI_KEEP=1` keeps all of it for inspection.
@@ -133,9 +186,11 @@ pulled `clamav/clamav` and `moby/buildkit` images stay for the next run).
 `cd / && setsid nohup dockerd --registry-mirror=https://mirror.gcr.io >dockerd.log 2>&1 < /dev/null &`. With
 `HVLI_DOCKER_SANDBOX=1` the smoke passes the agent proxy's CA as the BuildKit secret `proxy_ca`, gives its builder the
 mirror and that CA, and takes Chromium from `/opt/pw-browsers` (`HVLI_PROXY_CA`, `HVLI_PW_BROWSERS`); after the build
-it searches every file of the image for the CA's own certificates (`deploy/smoke/proxyCaLines.mjs`). Test anything
+it searches every file of the image for the CA's own certificates (`deploy/smoke/proxyCaLines.mjs`). Where
+`/opt/pw-browsers/chromium-1194` is a link, name the folder it points into with `HVLI_PW_BROWSERS`: a build cannot
+follow a link out of its context. Test anything
 else with Docker through a builder of your own too: a test build on the default builder leaves cache records that keep
 the image's layers on disk after the image is removed. The image is about
 2.8 GB (2 776 MB measured) and a run needs about 8 GB free at its peak (image, its builder's cache and the stack);
-the smoke prints the free space before, at the peak and after, and a passing run takes about 2.5 minutes here. Never run
+the smoke prints the free space before, at the peak and after, and a passing run takes about 3.5 minutes here. Never run
 `docker system prune` or `docker builder prune -af` there: they remove other sessions' images and cache.

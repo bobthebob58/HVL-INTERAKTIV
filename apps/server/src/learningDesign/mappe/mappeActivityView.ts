@@ -37,6 +37,9 @@ export interface MappeActivityInputs {
   readonly k: number;
 }
 
+/** The most findings of one activity a portfolio lists; its status line still counts them all (D-128). */
+export const MAPPE_LISTED_FINDINGS = 50;
+
 type Say = (key: MessageKey, params?: Record<string, string | number>) => string;
 
 /**
@@ -77,11 +80,14 @@ const findingView = (finding: MappeFinding, format: MappeFormat, say: Say): Mapp
 const findingsSummary = (findings: readonly MappeFinding[], format: MappeFormat, say: Say): string => {
   if (findings.length === 0) return say('mappe.findings.none');
   const errors = findings.filter((finding) => finding.severity === 'error');
-  return say('mappe.findings.summary', {
+  const summary = say('mappe.findings.summary', {
     errors: format.number(errors.length),
     acknowledged: format.number(errors.filter((finding) => finding.acknowledgement).length),
     warnings: format.number(findings.filter((finding) => finding.severity === 'warning').length),
   });
+  // WHY: the counts are of all findings; the sentence says how many of them the list below holds.
+  if (findings.length <= MAPPE_LISTED_FINDINGS) return summary;
+  return `${summary} ${say('mappe.findings.listed', { listed: format.number(MAPPE_LISTED_FINDINGS) })}`;
 };
 
 /** The result figures: each shown, hidden below *k*, or not recorded yet. */
@@ -138,6 +144,8 @@ export function mappeActivityView(inputs: MappeActivityInputs, format: MappeForm
     publisert: activity.publishedAt
       ? format.date(activity.publishedAt)
       : say('mappe.placeholder.notPublished'),
-    uu_merknader: inputs.findings.map((finding) => findingView(finding, format, say)),
+    uu_merknader: inputs.findings
+      .slice(0, MAPPE_LISTED_FINDINGS)
+      .map((finding) => findingView(finding, format, say)),
   };
 }

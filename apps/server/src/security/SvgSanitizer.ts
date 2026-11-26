@@ -9,62 +9,52 @@
  *   - Acts on every path whose lower-cased extension is "svg" (also ".SVG" and the dot-file ".svg"); every
  *     other path is Ignored and left untouched.
  *   - Files over 5 MB are refused before they are read (`upload.file.tooLarge`, maxMb 5).
- *   - Order (D-044): pre-check on the raw text → Lumi's sanitiser on a temporary copy named "*.svg" → our
- *     DOMPurify pass → final check. The file is overwritten only with text that passed the final check.
- *   - Anything that cannot be made safe is refused with `upload.file.svgRejected`; the file is then not changed.
+ *   - Order (D-044, ./svg/svgPipeline.ts): pre-check on the raw text → Lumi's sanitiser on a temporary copy
+ *     named "*.svg" → our DOMPurify pass → final check. The file is overwritten only with text that passed the
+ *     final check.
+ *   - The steps run in a worker thread, never on the main thread, within a time, a memory and a waiting limit
+ *     (./svg/SvgCleaner.ts, D-119): past the first two the file is refused with `upload.file.svgTooComplex`, past
+ *     the third with `upload.file.svgCheckBusy`.
+ *   - Anything that cannot be made safe is refused with `upload.file.svgRejected`; a refused file is not changed.
  *   - The temporary copy is always removed.
- * Collaborators: ./svg/svgPrecheck.ts, ../h5p/lumiInternals.ts (LumiSvgSanitizer), ./svg/svgPurify.ts,
- *   ./svg/svgFinalCheck.ts; registered in `fileSanitizers` for editor uploads and package imports, after
- *   ./FileTypeSniffer.ts.
+ *   - The server starts the worker at its own start (`warmUpSvgCleaning`), so the first upload does not wait for it.
+ * Collaborators: ./svg/SvgCleaner.ts (the worker and its limits), ./svg/svgPipeline.ts (the steps); registered in
+ *   `fileSanitizers` for editor uploads and package imports, after ./FileTypeSniffer.ts; ../server/main.ts.
  * Tests: apps/server/test/security/SvgSanitizer.test.ts, apps/server/test/security/SvgSanitizer.bypass.test.ts,
- *   apps/server/test/security/SvgSanitizer.render.test.ts
+ *   apps/server/test/security/SvgSanitizer.render.test.ts, apps/server/test/security/SvgCleaner.test.ts
  */
-import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import { FileSanitizerResult, type IFileSanitizer } from '@lumieducation/h5p-server';
-import { LumiSvgSanitizer } from '../h5p/lumiInternals.js';
 import { fileExtension } from './fileExtension.js';
 import { RejectedUploadError } from './RejectedUploadError.js';
-import { assertSafeSvg } from './svg/svgFinalCheck.js';
-import { precheckSvg } from './svg/svgPrecheck.js';
-import { purifySvg } from './svg/svgPurify.js';
+import { SvgCleaner } from './svg/SvgCleaner.js';
 
 /** Largest SVG accepted, in megabytes (D-044). */
 export const SVG_MAX_MB = 5;
 const SVG_MAX_BYTES = SVG_MAX_MB * 1024 * 1024;
 
+// WHY: one cleaner, so one worker thread, for the whole server; it starts with the first SVG (D-119).
+const cleaner = new SvgCleaner();
+
 /**
- * Runs Lumi's sanitiser on a temporary copy that ends in ".svg", so it cannot skip the text.
- * @param text - SVG text after the pre-check.
- * @returns Lumi's output.
+ * Sanitises SVG text through the whole D-044 pipeline, in the cleaner's worker thread.
+ * @param raw - The uploaded SVG, decoded as UTF-8.
+ * @returns Safe SVG text, starting with `<svg`.
+ * @throws RejectedUploadError `upload.file.svgRejected` when the file cannot be made safe,
+ *   `upload.file.svgTooComplex` when cleaning it takes too long or too much memory, `upload.file.svgCheckBusy`
+ *   when it waited too long for its turn.
  */
-async function lumiSanitize(text: string): Promise<string> {
-  // UPSTREAM: https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-svg-sanitizer/src/SvgSanitizer.ts skips paths not ending in ".svg".
-  // Remove the copy when Lumi sanitises by content; test/security/upstream/lumiSvgSanitizer.test.ts then fails.
-  const dir = await mkdtemp(join(tmpdir(), 'hvl-svg-'));
-  try {
-    const copy = join(dir, 'upload.svg');
-    await writeFile(copy, text, 'utf8');
-    const result = await new LumiSvgSanitizer().sanitize(copy);
-    if (result !== FileSanitizerResult.Sanitized) throw new RejectedUploadError('upload.file.svgRejected');
-    return await readFile(copy, 'utf8');
-  } finally {
-    await rm(dir, { recursive: true, force: true });
-  }
+export function sanitizeSvgText(raw: string): Promise<string> {
+  return cleaner.clean(raw);
 }
 
 /**
- * Sanitises SVG text through the whole D-044 pipeline.
- * @param raw - The uploaded SVG, decoded as UTF-8.
- * @returns Safe SVG text, starting with `<svg`.
- * @throws RejectedUploadError `upload.file.svgRejected` when the file cannot be made safe.
+ * Starts the cleaner's worker thread before the first upload needs it, by cleaning an empty drawing.
+ * @param onFailure - Told why, when the worker could not start or clean. The server goes on; SVG uploads are then
+ *   refused or fail, never stored unchecked.
  */
-export async function sanitizeSvgText(raw: string): Promise<string> {
-  const prechecked = precheckSvg(raw);
-  const purified = purifySvg(await lumiSanitize(prechecked));
-  assertSafeSvg(purified);
-  return purified;
+export function warmUpSvgCleaning(onFailure: (error: unknown) => void): void {
+  void cleaner.clean('<svg xmlns="http://www.w3.org/2000/svg"/>').catch(onFailure);
 }
 
 /** HVL's SVG sanitiser for Lumi's `fileSanitizers` (SEC-001). */
@@ -75,7 +65,8 @@ export class SvgSanitizer implements IFileSanitizer {
    * Sanitises the file in place when it is an SVG.
    * @param file - Path of the uploaded file.
    * @returns Sanitized for SVG files, Ignored for every other extension.
-   * @throws RejectedUploadError `upload.file.tooLarge` over 5 MB, `upload.file.svgRejected` when unsafe.
+   * @throws RejectedUploadError `upload.file.tooLarge` over 5 MB, `upload.file.svgRejected` when unsafe, and
+   *   what `sanitizeSvgText` throws past the cleaner's limits.
    */
   async sanitize(file: string): Promise<FileSanitizerResult> {
     if (fileExtension(file) !== 'svg') return FileSanitizerResult.Ignored;

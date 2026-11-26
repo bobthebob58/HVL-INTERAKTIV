@@ -42,6 +42,7 @@ import { contentSharingRoutes } from './contentSharingRoutes.js';
 import { meRoutes } from './meRoutes.js';
 import { publishRoutes } from './publishRoutes.js';
 import { studioRouter } from './studioRouter.js';
+import { ownAnswerHeaders } from '../securityHeaders.js';
 
 /** What the `/api` routes are built from. */
 export interface ApiRouterDeps {
@@ -69,10 +70,8 @@ export interface ApiRouterDeps {
 export function apiRouter(deps: ApiRouterDeps): Router {
   const { db, clock } = deps.publishing;
   const router = Router();
-  router.use((_req, res, next) => {
-    res.set('Cache-Control', 'no-store');
-    next();
-  });
+  // SECURITY: every `/api` answer is `no-store`, and no other site embeds or frames it (D-131).
+  router.use(ownAnswerHeaders);
   router.use(meRoutes({ db, clock }));
   router.use(contentListRoutes({ db, access: deps.access }));
   const publisher = new ContentPublisher(deps.publishing);

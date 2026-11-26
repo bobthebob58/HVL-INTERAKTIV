@@ -2,7 +2,7 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:ee9dc8d6-85ae-5a2b-bcb3-46230cfb3868",
+  "serialNumber": "urn:uuid:c09f8e44-b244-5cf9-95c4-97680b5ff0dc",
   "version": 1,
   "metadata": {
     "lifecycles": [
@@ -1657,19 +1657,19 @@
       ]
     },
     {
-      "bom-ref": "@next/env@16.4.2",
+      "bom-ref": "@next/env@16.4.6",
       "type": "library",
       "name": "@next/env",
-      "version": "16.4.2",
+      "version": "16.4.6",
       "scope": "required",
       "author": "Next.js Team <support@vercel.com>",
       "description": "Next.js dotenv file loading",
-      "purl": "pkg:npm/%40next/env@16.4.2",
+      "purl": "pkg:npm/%40next/env@16.4.6",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/@next/env/-/env-16.4.2.tgz"
+          "url": "https://registry.npmjs.org/@next/env/-/env-16.4.6.tgz"
         },
         {
           "type": "vcs",
@@ -1679,7 +1679,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "9d3513147ec6e7f27f7e6a648d52de80e92ac8a38fd0212c25c32cc8ee1409878dd6cbbe60c5bf31f69212b9c9b242fb5ccf940cae9a4efb25c6c442cb26bfb0"
+          "content": "4ae9c18c9eadfa806d79c4b77538dd56e32152880fe700ffbeb18be4456e418335892e0ee6294be751e4889dec3e33334478820a1bebe1d6da4896d1ec5de5c4"
         }
       ],
       "licenses": [
@@ -1691,17 +1691,17 @@
       ]
     },
     {
-      "bom-ref": "@next/swc-linux-x64-gnu@16.4.2",
+      "bom-ref": "@next/swc-linux-x64-gnu@16.4.6",
       "type": "library",
       "name": "@next/swc-linux-x64-gnu",
-      "version": "16.4.2",
+      "version": "16.4.6",
       "scope": "optional",
-      "purl": "pkg:npm/%40next/swc-linux-x64-gnu@16.4.2",
+      "purl": "pkg:npm/%40next/swc-linux-x64-gnu@16.4.6",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/@next/swc-linux-x64-gnu/-/swc-linux-x64-gnu-16.4.2.tgz"
+          "url": "https://registry.npmjs.org/@next/swc-linux-x64-gnu/-/swc-linux-x64-gnu-16.4.6.tgz"
         },
         {
           "type": "vcs",
@@ -1711,7 +1711,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "37d70350e086b64246e4f34a0c5654177c579ddac925ca4ba75db5b801a3206bcefd4da9f6d7dd34e33d86d8fbfb97fbda5d26f2b330fdcbd869c509050a2e76"
+          "content": "a0ea5b35af17396d6a08677d56fcc2e1f6e4911c4496ceff588eadcfe6070b4c5103b2a957553b0eb02708f8f35723a4fe46abcd611ea4239c4c80e6c0af05c1"
         }
       ],
       "licenses": [
@@ -7266,18 +7266,18 @@
       ]
     },
     {
-      "bom-ref": "effect@3.20.0",
+      "bom-ref": "effect@3.22.4",
       "type": "library",
       "name": "effect",
-      "version": "3.20.0",
+      "version": "3.22.4",
       "scope": "optional",
       "description": "The missing standard library for TypeScript, for writing production-grade software.",
-      "purl": "pkg:npm/effect@3.20.0",
+      "purl": "pkg:npm/effect@3.22.4",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/effect/-/effect-3.20.0.tgz"
+          "url": "https://registry.npmjs.org/effect/-/effect-3.22.4.tgz"
         },
         {
           "type": "vcs",
@@ -7291,7 +7291,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "a8c2df0c9b1cacd1bca7f6b0f88913f56edf823e74678c06e5b2c1cb44f1b31cfc8941e30c890e80edd25745997e741b346d952586f46feac32ccae1338f8aaf"
+          "content": "44db21bbb017571c4387a692e25a2d86127e428678c52ca46d635a69576f0cdef644cc95c210867402e4ca5d536c4c9d80099121d0f5793c89a81506c120460c"
         }
       ],
       "licenses": [
@@ -11716,18 +11716,18 @@
       ]
     },
     {
-      "bom-ref": "next@16.4.2",
+      "bom-ref": "next@16.4.6",
       "type": "library",
       "name": "next",
-      "version": "16.4.2",
+      "version": "16.4.6",
       "scope": "required",
       "description": "The React Framework",
-      "purl": "pkg:npm/next@16.4.2",
+      "purl": "pkg:npm/next@16.4.6",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/next/-/next-16.4.2.tgz"
+          "url": "https://registry.npmjs.org/next/-/next-16.4.6.tgz"
         },
         {
           "type": "website",
@@ -11737,7 +11737,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "afea012688df79f5233a25a40615e02d2fa28315ffec15b22b9f6e1e7c8eca994c48bb4167e40b3f7a24add6136eb7eb6eb98d4d558b04f6870d7f4a45a22ddf"
+          "content": "4192626216992c9328d8aa64406408c2f99defd595b0059e608539e786bc77bcc0ad2dec8bf211cb7941355febb58844ef4a0bc1d2d884f0172cfc7c1f0730b4"
         }
       ],
       "licenses": [
@@ -18119,7 +18119,7 @@
         "ltijs@7.0.7",
         "markdown-it@14.3.3",
         "mustache@4.2.0",
-        "next@16.4.2",
+        "next@16.4.6",
         "openid-client@6.8.8",
         "pino@10.4.0",
         "playwright-core@1.56.1",
@@ -18141,7 +18141,7 @@
         "@types/react-dom@19.3.0",
         "@types/react@19.3.0",
         "jsdom@26.1.0",
-        "next@16.4.2",
+        "next@16.4.6",
         "react-dom@19.3.1",
         "react@19.3.1"
       ]
@@ -18220,11 +18220,11 @@
       ]
     },
     {
-      "ref": "@next/env@16.4.2",
+      "ref": "@next/env@16.4.6",
       "dependsOn": []
     },
     {
-      "ref": "@next/swc-linux-x64-gnu@16.4.2",
+      "ref": "@next/swc-linux-x64-gnu@16.4.6",
       "dependsOn": []
     },
     {
@@ -18267,7 +18267,7 @@
       "dependsOn": [
         "c12@3.3.4",
         "deepmerge-ts@8.0.2",
-        "effect@3.20.0",
+        "effect@3.22.4",
         "empathic@2.0.0"
       ]
     },
@@ -19174,7 +19174,7 @@
       "dependsOn": []
     },
     {
-      "ref": "effect@3.20.0",
+      "ref": "effect@3.22.4",
       "dependsOn": [
         "@standard-schema/spec@1.1.0",
         "fast-check@3.23.2"
@@ -19941,10 +19941,10 @@
       ]
     },
     {
-      "ref": "next@16.4.2",
+      "ref": "next@16.4.6",
       "dependsOn": [
-        "@next/env@16.4.2",
-        "@next/swc-linux-x64-gnu@16.4.2",
+        "@next/env@16.4.6",
+        "@next/swc-linux-x64-gnu@16.4.6",
         "@swc/helpers@0.5.23",
         "baseline-browser-mapping@2.11.32",
         "caniuse-lite@1.0.30001819",

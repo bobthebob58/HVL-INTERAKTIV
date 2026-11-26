@@ -11,14 +11,15 @@
  * Invariants:
  *   - The first view is the last 7 days, the current version and, in the portal, the portal's plays.
  *   - Only the newest request may set the view: an answer to an older query is dropped.
- *   - 403 and 404 are "unavailable", 400 "invalid" (a version or context the activity lacks), anything else "failed".
+ *   - 403 and 404 are "unavailable", 400 "invalid" (a version or context the activity lacks), 422 "tooLarge" (the
+ *     period holds more answers than one view covers, D-122), anything else "failed".
  *   - If the contexts cannot be loaded, the portal alone is offered; the server still checks every view.
  *   - `latest` is the newest view that arrived; it is never cleared by a refusal, only replaced by a newer view.
- *   - `refusals` grows with every refused, invalid or failed answer, also when it repeats the one before.
+ *   - `refusals` grows with every refused, invalid, too large or failed answer, also when it repeats the one before.
  * Collaborators: ./insightApi.ts, ./insightPeriods.ts, ./insightContextLabels.ts, ./InsightPanel.tsx,
  *   ../../api/ApiAuthContext.tsx.
  * Tests: apps/web/test/features/insight/InsightPanel.test.tsx, apps/web/test/features/insight/InsightQuery.test.tsx,
- *   apps/web/test/features/insight/InsightViewState.test.tsx
+ *   apps/web/test/features/insight/InsightViewState.test.tsx, apps/web/test/features/insight/InsightTooLarge.test.tsx
  */
 'use client';
 
@@ -31,7 +32,7 @@ import { DEFAULT_PERIOD } from './insightPeriods';
 import type { InsightReport } from './insightReportShape';
 
 /** What the tab shows: a view, or why it shows none. */
-export type InsightViewState = InsightReport | 'loading' | 'unavailable' | 'invalid' | 'failed';
+export type InsightViewState = InsightReport | 'loading' | 'unavailable' | 'invalid' | 'tooLarge' | 'failed';
 
 /** The tab's view and how to change it. */
 export interface InsightView {
@@ -40,7 +41,7 @@ export interface InsightView {
   readonly state: InsightViewState;
   /** True while a newer view than the one shown is loading. */
   readonly pending: boolean;
-  /** Counts the refused, invalid and failed answers, so each one can mount a new alert. */
+  /** Counts the refused, invalid, too large and failed answers, so each one can mount a new alert. */
   readonly refusals: number;
   /** The newest view that arrived, also while a later request is refused or failed; undefined before the first. */
   readonly latest: InsightReport | undefined;
@@ -102,6 +103,7 @@ export function useInsightView(
         // A11Y: the same refusal twice leaves the state unchanged; the count makes it a new alert (WCAG 4.1.3).
         setRefusals((count) => count + 1);
         if (result.status === 403 || result.status === 404) setState('unavailable');
+        else if (result.status === 422) setState('tooLarge');
         else setState(result.status === 400 ? 'invalid' : 'failed');
         return;
       }

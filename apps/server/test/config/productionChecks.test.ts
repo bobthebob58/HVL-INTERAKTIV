@@ -95,13 +95,23 @@ describe('[LTI-002] production ring keys', () => {
 });
 
 describe('[DATA-011] production web app mode', () => {
-  it('[DATA-011] refuses the Next.js development server in production, and accepts prod, off and dev elsewhere', () => {
+  it('[DATA-011] refuses the Next.js development server in production, and accepts prod, and dev elsewhere', () => {
     expect(problemsAt(productionEnv({ WEB_APP: 'dev' }))).toEqual([
-      'WEB_APP: dev runs the Next.js development server; use prod (after npm run build) or off in production',
+      'WEB_APP: dev runs the Next.js development server; use prod (after npm run build) in production',
     ]);
     expect(problemsAt(productionEnv({ WEB_APP: 'prod' }))).toEqual([]);
-    expect(problemsAt(productionEnv({ WEB_APP: 'off' }))).toEqual([]);
     expect(problemsAt({ ...VALID_ENV, WEB_APP: 'dev' })).toEqual([]);
+  });
+
+  it('[LTI-006] refuses to run without the web app in production, also when WEB_APP is not set, and accepts off elsewhere', () => {
+    // Arrange: `off` named, and left out (the default)
+    const { WEB_APP: _unset, ...withoutWebApp } = productionEnv();
+    const refusal =
+      'WEB_APP: off serves the player without the web app around it; use prod (after npm run build) in production';
+    // Act and assert
+    expect(problemsAt(productionEnv({ WEB_APP: 'off' }))).toEqual([refusal]);
+    expect(problemsAt(withoutWebApp)).toEqual([refusal]);
+    expect(problemsAt({ ...VALID_ENV, WEB_APP: 'off' })).toEqual([]);
   });
 });
 

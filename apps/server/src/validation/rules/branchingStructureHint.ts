@@ -20,19 +20,24 @@ import { pathOf } from '../contentPath.js';
 import { isBlankText } from '../feedbackText.js';
 import { thresholdOf } from '../hintThresholds.js';
 import { asArray, asString, fieldAt } from '../paramReaders.js';
+import type { RichTextReader } from '../richText.js';
 import { nodesOf, type RuleHit, type RuleScope, type ValidationRule } from '../rule.js';
 
-const hasFeedback = (feedback: unknown): boolean =>
-  !isBlankText(asString(fieldAt(feedback, 'title'))) ||
-  !isBlankText(asString(fieldAt(feedback, 'subtitle'))) ||
+const hasFeedback = (feedback: unknown, read: RichTextReader): boolean =>
+  !isBlankText(asString(fieldAt(feedback, 'title')), read) ||
+  !isBlankText(asString(fieldAt(feedback, 'subtitle')), read) ||
   (asString(fieldAt(feedback, 'image', 'path')) ?? '') !== '';
 
 const QUESTION = ['type', 'params', 'branchingQuestion', 'alternatives'] as const;
 
-const choicesWithoutFeedback = (node: ContentNode, content: readonly unknown[]): RuleHit[] =>
+const choicesWithoutFeedback = (
+  node: ContentNode,
+  content: readonly unknown[],
+  read: RichTextReader,
+): RuleHit[] =>
   content.flatMap((item, i) =>
     asArray(fieldAt(item, ...QUESTION)).flatMap((alternative, j): RuleHit[] =>
-      hasFeedback(fieldAt(alternative, 'feedback'))
+      hasFeedback(fieldAt(alternative, 'feedback'), read)
         ? []
         : [
             {
@@ -47,7 +52,7 @@ function checkScenario(scope: RuleScope, node: ContentNode): RuleHit[] {
   const content = asArray(fieldAt(node.params, 'branchingScenario', 'content'));
   if (content.length === 0) return [];
   const graph = branchingGraphOf(content);
-  const hits = choicesWithoutFeedback(node, content);
+  const hits = choicesWithoutFeedback(node, content, scope.read);
   // PEDAGOGY: 2–4 decision points by default; cases of 3–4 decisions (Schön 1983, spec 04 §5).
   const [min, max] = [
     thresholdOf(scope.context, 'minDecisionPoints'),

@@ -1,17 +1,22 @@
 /**
  * Tests for reading one uploaded file from a multipart request: the lower-cased extension is kept, the MIME type
- * comes from the extension, limits are enforced while streaming, and the folder is always removed.
+ * comes from the extension, limits are enforced while streaming, and the folder is always removed, also when the
+ * connection breaks in the middle of the file.
  *
  * Spec: SEC-005, SEC-001, SEC-002
  */
+import { once } from 'node:events';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { connect, type AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { HttpError } from '../../src/http/HttpError.js';
 import { readMultipart, type UploadedFile } from '../../src/http/multipartUpload.js';
+import { canListOpenFiles, openFilesUnder } from '../support/openFiles.js';
 
 interface Seen {
   fields?: Record<string, string>;
@@ -25,18 +30,24 @@ interface Seen {
  * Runs `act` with `os.tmpdir()` pointing at a fresh folder (Vitest runs each file in its own process).
  * @returns The names left in that folder afterwards.
  */
-async function leftovers(act: () => Promise<unknown>): Promise<string[]> {
+async function leftovers(act: (dir: string) => Promise<unknown>): Promise<string[]> {
   const previous = process.env.TMPDIR;
   const dir = mkdtempSync(join(tmpdir(), 'multipart-probe-'));
   process.env.TMPDIR = dir;
   try {
-    await act();
+    await act(dir);
     return readdirSync(dir);
   } finally {
     if (previous === undefined) delete process.env.TMPDIR;
     else process.env.TMPDIR = previous;
     rmSync(dir, { recursive: true, force: true });
   }
+}
+
+/** Waits until `met` holds; gives up after `withinMs` (the caller's assertions then say what is missing). */
+async function until(met: () => boolean, withinMs: number): Promise<void> {
+  const deadline = Date.now() + withinMs;
+  while (!met() && Date.now() < deadline) await delay(10);
 }
 
 /** An app that reads one upload, records what it saw, and cleans up. */
@@ -139,6 +150,34 @@ describe('readMultipart', () => {
     expect(status).toBe(400);
     expect(broken.seen.error).toEqual({ status: 400, key: 'error.badRequest' });
     expect(left).toEqual([]);
+  });
+
+  it('[SEC-005] a connection that breaks in the middle of a file is answered for and cleaned up at once', async () => {
+    // Arrange: a listening app, and a request that announces more bytes than it will send
+    const { app, seen } = probeApp(1024 * 1024);
+    const server = app.listen(0);
+    await once(server, 'listening');
+    const { port } = server.address() as AddressInfo;
+    const head = `POST /u HTTP/1.1\r\nHost: localhost\r\nContent-Type: multipart/form-data; boundary=xyz\r\nContent-Length: 500000\r\n\r\n`;
+    const part = '--xyz\r\nContent-Disposition: form-data; name="file"; filename="a.png"\r\n\r\n';
+    const written = (dir: string) =>
+      readdirSync(dir).some((folder) => existsSync(join(dir, folder, 'upload.png')));
+    let sawFile = false;
+    // Act: break the connection once the file is being written
+    const left = await leftovers(async (dir) => {
+      const socket = connect(port, '127.0.0.1');
+      socket.write(head + part + 'x'.repeat(70_000));
+      await until(() => written(dir), 2000);
+      sawFile = written(dir);
+      socket.destroy();
+      await until(() => seen.error !== undefined, 1000);
+    });
+    server.close();
+    // Assert
+    expect(sawFile).toBe(true);
+    expect(seen.error).toEqual({ status: 400, key: 'error.badRequest' });
+    expect(left).toEqual([]);
+    if (canListOpenFiles) expect(openFilesUnder('multipart-probe-')).toEqual([]);
   });
 
   it('[SEC-005] a request with only fields has no file', async () => {

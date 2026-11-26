@@ -7,15 +7,16 @@
  *      searches, not one per key.
  * Spec: PROD-007, UD-006, UD-013
  * Invariants:
- *   - Nothing is sent before the trimmed query has 3 characters; a query is sent 300 ms after the last change, and
- *     only the latest answer is shown.
+ *   - Nothing is sent before the query, cleaned of what nobody types and trimmed (D-142), has 3 characters; a query
+ *     is sent 300 ms after the last change, and only the latest answer is shown.
  *   - A11Y: the field has a visible label and a hint (WCAG 3.3.2); the number of results is announced politely in a
  *     status region (WCAG 4.1.3), focus stays in the field while typing.
  *   - People already on the list (`exclude`) are not offered again.
  *   - A 429 is explained in words (wait a minute); any other refusal shows the server's message (e.g. a student
  *     author's `hvl:sharing-not-allowed`).
  *   - PRIVACY: the query lives only in the field and the request; it is never stored.
- * Collaborators: ../../api/collaborationApi.ts (`searchPeople`), ./CoAuthorSection.tsx, ./SharingFeedback.tsx.
+ * Collaborators: ../../api/collaborationApi.ts (`searchPeople`), ../../config/typedText.ts, ./CoAuthorSection.tsx,
+ *   ./SharingFeedback.tsx.
  * Tests: apps/web/test/features/PeopleSearch.test.tsx
  */
 'use client';
@@ -24,6 +25,7 @@ import type { Person } from '@hvl-interaktiv/api-contract';
 import { forwardRef, useEffect, useId, useRef, useState } from 'react';
 import { useApiAuth } from '../../api/ApiAuthContext';
 import { searchPeople } from '../../api/collaborationApi';
+import { cleanOneLine } from '../../config/typedText';
 import { useLocale } from '../../i18n/LocaleContext';
 import { t, type Locale } from '../../i18n/translate';
 import { SharingProblem } from './SharingFeedback';
@@ -69,7 +71,8 @@ export const PeopleSearch = forwardRef<HTMLInputElement, PeopleSearchProps>(func
   const latest = useRef(0);
 
   useEffect(() => {
-    const trimmed = query.trim();
+    // WHY: the server refuses a query with a character nobody types; a pasted one is cleaned first (D-142).
+    const trimmed = cleanOneLine(query);
     latest.current += 1;
     const asked = latest.current;
     if (trimmed.length < SEARCH_MIN_LENGTH) {

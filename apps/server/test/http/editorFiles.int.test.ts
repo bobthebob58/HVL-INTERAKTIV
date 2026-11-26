@@ -1,8 +1,8 @@
 /**
  * Integration tests of the editor's files on the app origin (`/h5p/editor-files/<grant>/…`), which stay there for now
  * (SPEC-DEVIATION: D-110): an editor grant opens its own activity's files with `SEC-004`'s headers and no session,
- * and nothing else; the player's grants open nothing on the app origin; the editor pages (Canvas and portal) point at
- * the app origin and their policy never names the files origin (D-110 amendment of 2026-11-05).
+ * and nothing else; the player's grants open nothing on the app origin; the Canvas editor page points at the app
+ * origin and its policy never names the files origin (D-110 amendment of 2026-11-05).
  *
  * Spec: SEC-004, H5P-007
  */
@@ -80,13 +80,14 @@ describeWithServices('[SEC-004] the editor’s files on the app origin', () => {
     const anonymous = await onAppOrigin(tb, path);
     const launched = await onAppOrigin(tb, path).set('Authorization', `Bearer ${ltik ?? ''}`);
     // Assert
+    // WHY: a file address is on no ltik's list (D-130): a request that carries one is refused before the path.
+    expect([anonymous.status, launched.status]).toEqual([404, 403]);
     for (const res of [anonymous, launched]) {
-      expect(res.status).toBe(404);
       expect(res.headers['content-type']).not.toMatch(/^image\//);
     }
   });
 
-  it('[SEC-004] the editor pages in Canvas and in the portal open saved files on the app origin, and their policy never names the files origin', async () => {
+  it('[SEC-004] the editor page in Canvas opens saved files on the app origin, and its policy never names the files origin', async () => {
     // Arrange: a Canvas teacher who owns an activity with stored files
     const launch = async (id: string) =>
       (
@@ -101,12 +102,12 @@ describeWithServices('[SEC-004] the editor’s files on the app origin', () => {
     const owned = await tb.activity(principal.userId, { published: true });
     await storeUserFiles(tb, owned);
     const ltik = await launch(owned);
-    // Act: the Canvas editor (/lti/edit) and the portal editor (/h5p/edit, here with the ltik as Bearer)
-    const pages = [
-      await request(tb.app).get(`/lti/edit?ltik=${encodeURIComponent(ltik)}`),
-      await request(tb.app).get(`/h5p/edit/${owned}`).set('Authorization', `Bearer ${ltik}`),
-    ];
+    // Act: the Canvas editor (/lti/edit); the portal's editor page is on no ltik's list (D-130), and
+    //      ./editorRoutes.int.test.ts covers its file addresses with a portal session
+    const pages = [await request(tb.app).get(`/lti/edit?ltik=${encodeURIComponent(ltik)}`)];
+    const portalPage = await request(tb.app).get(`/h5p/edit/${owned}`).set('Authorization', `Bearer ${ltik}`);
     // Assert
+    expect([portalPage.status, portalPage.body.errorCode]).toEqual([403, 'hvl:not-from-canvas']);
     for (const page of pages) {
       expect(page.status).toBe(200);
       expect(String(page.headers['content-security-policy'])).not.toContain(filesOriginOf(tb.env));

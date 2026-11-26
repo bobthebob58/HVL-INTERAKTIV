@@ -1,7 +1,8 @@
 /**
  * Tests for the one-sentence summaries of the Innsikt tab's charts: they name only shown values (never a hidden item
  * or answer), pick the hardest shown question, the commonest shown wrong option or gap answer and the smallest shown
- * video share, and say when nothing can be shown.
+ * video share, and say when nothing can be shown; a shortlist entry, which can be printed or projected, holds a typed
+ * gap answer only when its count is shown.
  *
  * Spec: INS-008, INS-006, INS-002, INS-003, INS-005
  */
@@ -18,6 +19,12 @@ import { shortlistEntry } from '../../../src/features/insight/shortlistEntries';
 import type { ChoiceMisconception } from '../../../src/features/insight/insightReportShape';
 import { HIDDEN, plain, REPORT, shown } from './insightAnswers';
 import { VIDEO_REPORT } from './insightOtherAnswers';
+
+/** One listed wrong answer of a gap. */
+const answer = (text: string, learners: typeof HIDDEN | ReturnType<typeof shown>) => ({
+  answer: text,
+  learners,
+});
 
 const choice = REPORT.misconceptions[0] as ChoiceMisconception;
 
@@ -91,6 +98,25 @@ describe('[INS-008] chart summaries', () => {
     expect(gapSummary({ ...gap, wrongAnswers: [{ answer: 'y', learners: shown(5) }] }, 'nb')).toBe(
       'Luke 2: vanligste feilsvar av dem som kan vises, er «y» (5 studenter).',
     );
+  });
+
+  it('[INS-003][INS-006] a shortlist entry carries a typed gap answer only when the view shows its count', () => {
+    // Arrange: one gap whose commonest answer is hidden and whose second is shown, one gap with hidden answers only
+    const gap = { correctAnswers: ['x'], correct: shown(9), otherWrong: HIDDEN, empty: shown(0) };
+    const gaps = [
+      { ...gap, index: 0, wrongAnswers: [answer('Kari Nordmann', HIDDEN), answer('fotosyntese', shown(6))] },
+      { ...gap, index: 1, wrongAnswers: [answer('Ola Nordmann', HIDDEN)] },
+    ];
+    const question = { kind: 'gaps' as const, item: 'q-gaps', questionText: 'Fyll inn', learners: shown(9) };
+    const misconceptions = [{ ...question, gaps }];
+    // Act
+    const entry = shortlistEntry({ ...REPORT, items: [], misconceptions }, 'q-gaps', 'nn');
+    // Assert: what the list, its printout and its projection hold
+    const words = (entry?.lines ?? []).map(plain).join(' ');
+    expect(entry?.lines).toHaveLength(2);
+    expect(words).toContain('«fotosyntese» (6 studentar)');
+    expect(words).not.toMatch(/Nordmann/);
+    expect(words).toContain('Luke 2: ingen feil svar er gitt av nok studentar til at dei kan visast.');
   });
 
   it('[INS-005] names the video task with the smallest shown share, or says none can be shown', () => {

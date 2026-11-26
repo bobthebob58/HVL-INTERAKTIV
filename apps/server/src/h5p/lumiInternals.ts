@@ -1,16 +1,18 @@
 /**
  * lumiInternals — the Lumi classes we use that are not exported from the package index.
  *
- * Why: h5p-server 10.0.4 does not export its SemanticsEnforcer (needed to sanitise list items, D-039), and
- *      Lumi's SVG sanitiser is CommonJS with `exports.default`. Loading them in one place keeps the deep paths
- *      visible and makes them load the same way under Node, tsx and Vitest.
- * Spec: SEC-001, SEC-008
+ * Why: h5p-server 10.0.4 does not export its SemanticsEnforcer (needed to sanitise list items, D-039), its
+ *      PackageImporter or its PackageValidator (whose package reading is replaced, D-118), and Lumi's SVG
+ *      sanitiser is CommonJS with `exports.default`. Loading them in one place keeps the deep paths visible and
+ *      makes them load the same way under Node, tsx and Vitest.
+ * Spec: SEC-001, SEC-008, SEC-005
  * Invariants:
  *   - Only this module loads Lumi's internal modules at run time; other files import types only from
  *     `build/src/types.js`, which compile away. A Lumi upgrade that moves these files fails here at startup.
- * Collaborators: ./semantics/lumiTextSanitizer.ts, ../security/SvgSanitizer.ts.
+ * Collaborators: ./semantics/lumiTextSanitizer.ts, ../security/SvgSanitizer.ts, ./libraries/checkedPackageReading.ts.
  * Tests: apps/server/test/h5p/upstream/semanticsEnforcerListGap.test.ts,
- *   apps/server/test/security/upstream/lumiSvgSanitizer.test.ts
+ *   apps/server/test/security/upstream/lumiSvgSanitizer.test.ts,
+ *   apps/server/test/h5p/upstream/lumiPackageReading.test.ts
  */
 import { createRequire } from 'node:module';
 
@@ -23,6 +25,20 @@ export const SemanticsEnforcer = (
   load(
     '@lumieducation/h5p-server/build/src/SemanticsEnforcer.js',
   ) as typeof import('@lumieducation/h5p-server/build/src/SemanticsEnforcer.js')
+).default;
+
+/** Lumi's package importer; its static `extractPackage` is the one place where it unpacks a package. */
+export const PackageImporter = (
+  load(
+    '@lumieducation/h5p-server/build/src/PackageImporter.js',
+  ) as typeof import('@lumieducation/h5p-server/build/src/PackageImporter.js')
+).default;
+
+/** Lumi's package validator; its `validateFileSizes` is the one place where it lists a package's entries. */
+export const PackageValidator = (
+  load(
+    '@lumieducation/h5p-server/build/src/PackageValidator.js',
+  ) as typeof import('@lumieducation/h5p-server/build/src/PackageValidator.js')
 ).default;
 
 /** Lumi's DOMPurify-based SVG sanitiser (only reads paths ending in ".svg"). */

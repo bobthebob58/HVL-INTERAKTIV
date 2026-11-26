@@ -12,8 +12,9 @@
  *   `hvl:csrf-invalid`; 403 `error.forbidden` (a portal learner); 400 `error.badRequest` (body or query),
  *   `hvl:mappe-too-many` (more than 50 activities) and `hvl:criteria-set-unknown`; 404 `hvl:activity-unavailable`
  *   (an activity that is not the author's own or co-authored, D-066); 409 `hvl:mappe-not-ready` (no mappe files in
- *   the content yet); 503 `hvl:pdf-busy` (with `Retry-After`) and `hvl:pdf-unavailable` (the Markdown export always
- *   works).
+ *   the content yet); 429 `hvl:rate-limited` with `Retry-After` (the preview and the export together, past their
+ *   limit per person, D-128); 503 `hvl:pdf-busy` (with `Retry-After`) and `hvl:pdf-unavailable` (the Markdown
+ *   export always works).
  * Invariants:
  *   - Who asks is checked first, then the size of the request, and only then its body, so a refused caller learns
  *     nothing from a 400.
@@ -36,6 +37,7 @@ import {
 } from '@hvl-interaktiv/api-contract';
 import { Router, type Request, type Response } from 'express';
 import { apiJson, parseBody } from '../../http/api/apiBodies.js';
+import { refuseWhenLimited } from '../../http/h5pRouteLimits.js';
 import { learningDesignError } from '../../http/learningDesignErrors.js';
 import type { RenderedMappe } from '../mappe/MappeRenderer.js';
 import { mappePreviewOf, sendMappeFile } from './mappeAnswers.js';
@@ -89,13 +91,20 @@ export function mappeRoutes(deps: StudioRouteDeps): Router {
     res.json(mappe().criteriaSets());
   });
 
-  router.post('/mappe/preview', apiJson(MAPPE_BODY_LIMIT), async (req, res) => {
+  /** Who asks, held to the mappe's limit per person: the preview and the export count together (D-128). */
+  const limitedAuthor = async (res: Response): Promise<PortalPrincipal> => {
     const principal = requirePortalAuthor(res);
+    refuseWhenLimited(await deps.studio.limits.mappe.take(principal.userId), res);
+    return principal;
+  };
+
+  router.post('/mappe/preview', apiJson(MAPPE_BODY_LIMIT), async (req, res) => {
+    const principal = await limitedAuthor(res);
     res.json(mappePreviewOf(await rendered(req, principal, deps.clock())));
   });
 
   router.post('/mappe/export', apiJson(MAPPE_BODY_LIMIT), async (req, res) => {
-    const principal = requirePortalAuthor(res);
+    const principal = await limitedAuthor(res);
     const { format } = parseBody(mappeExportQuerySchema, { ...req.query });
     const now = deps.clock();
     const portfolio = await rendered(req, principal, now);

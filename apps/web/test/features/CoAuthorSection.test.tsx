@@ -11,6 +11,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { describe, expect, it, vi } from 'vitest';
 import { CoAuthorSection } from '../../src/features/sharing/CoAuthorSection';
 import { errorBody, fakeFetch } from '../support/fakeFetch';
+import { confirmQuestion } from '../support/confirmQuestion';
 
 const ID = '7d3c1a8e-5b2f-4c1d-9e8f-0a1b2c3d4e5f';
 const PATH = `/api/content/${ID}/coauthors`;
@@ -57,6 +58,7 @@ describe('[PROD-007] the co-author list', () => {
     const announce = show();
     // Act
     fireEvent.click(await screen.findByRole('button', { name: 'Fjern Ola Kollega' }));
+    confirmQuestion('Fjern Ola Kollega');
     // Assert
     const heading = screen.getByRole('heading', { name: 'Medforfattarar' });
     await waitFor(() => expect(document.activeElement).toBe(heading));
@@ -80,6 +82,7 @@ describe('[PROD-007] the co-author list', () => {
     const list = within(await screen.findByRole('list'));
     const buttons = list.getAllByRole('button').map((button) => button.textContent);
     fireEvent.click(list.getByRole('button', { name: 'Fjern meg' }));
+    confirmQuestion('Fjern meg');
     // Assert
     expect(buttons).toEqual(['Fjern meg']);
     expect(screen.queryByRole('searchbox')).toBeNull();
@@ -109,6 +112,7 @@ describe('[PROD-007] the co-author list', () => {
       ms ? realTimeout(run, ms) : (queueMicrotask(run), 0)) as typeof window.setTimeout);
     // Act
     fireEvent.click(removeSelf);
+    confirmQuestion('Fjern meg');
     // Assert
     const message = await screen.findByText(/Du er ikkje lenger medforfattar på aktiviteten\./);
     await waitFor(() => expect(document.activeElement).toBe(message));
@@ -126,6 +130,7 @@ describe('[PROD-007] the co-author list', () => {
     show();
     // Act
     fireEvent.click(await screen.findByRole('button', { name: 'Fjern Ola Kollega' }));
+    confirmQuestion('Fjern Ola Kollega');
     // Assert
     expect((await screen.findByRole('alert')).textContent).toBe(
       '✗ Berre eigaren av aktiviteten kan gjere dette.',

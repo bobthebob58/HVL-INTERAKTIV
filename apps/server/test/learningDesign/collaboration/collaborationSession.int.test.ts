@@ -68,7 +68,7 @@ describeWithServices('[PROD-007] the collaboration routes through the whole app'
       answers.push(await request(tb.app)[method](path).set('Authorization', `Bearer ${ltik}`).send(body));
     // Assert
     expect(ltik).not.toBe('');
-    for (const res of answers) expect([res.status, res.body.errorCode]).toEqual([401, 'hvl:unauthenticated']);
+    for (const res of answers) expect([res.status, res.body.errorCode]).toEqual([403, 'hvl:not-from-canvas']);
     expect(await tb.db.h5PContent.count({ where: { sourceContentId: contentId } })).toBe(0);
   });
 

@@ -5,15 +5,16 @@
  *      never reveal internal messages, stack traces or file paths. Lumi's own Express error handler returned
  *      raw error messages (D-035); here every known error maps to a locale key and everything else becomes
  *      "something went wrong" with status 500.
- * Spec: PROD-012, H5P-002, SEC-003, H5P-006, PROD-003, SEC-006
+ * Spec: PROD-012, H5P-002, SEC-003, H5P-006, PROD-003, SEC-006, SEC-005
  * Invariants:
  *   - The body is H5P's AJAX error shape `{ success: false, errorCode, httpStatusCode, message }`; a blocked publish
  *     or save (PublishBlockedError, 409) adds the server's own `findings` (PROD-003).
  *   - `message` always comes from the locale files; `errorCode` is a stable machine code, never free text.
  *   - Errors with a numeric 4xx `status`/`statusCode` (body parsers, express.static, storage guards) keep it.
  *   - Unknown errors and server faults (5xx) are reported as `error.generic`, except the deliberate 503s in
- *     ./authErrors.ts (a dependency is down) and the deliberate 5xx codes of ./learningDesignErrors.ts (no PDF
- *     browser, a failed duplicate), which keep their status and message.
+ *     ./authErrors.ts (a dependency is down), the deliberate 5xx codes of ./learningDesignErrors.ts (no PDF
+ *     browser, a failed duplicate) and the insight gate's 503 (../insight/InsightViewGate.ts, D-134), which keep
+ *     their status and message.
  * Collaborators: ./h5pErrorHandler.ts, ./HttpError.ts, ./authErrors.ts, ./learningDesignErrors.ts,
  *   ../i18n/translate.ts, ../content/PublishBlockedError.ts.
  * Tests: apps/server/test/http/h5pErrorResponse.test.ts, apps/server/test/http/api/publishRoutes.int.test.ts,
@@ -23,6 +24,7 @@ import type { CoveredFinding } from '../content/acknowledgementCoverage.js';
 import { PublishBlockedError } from '../content/PublishBlockedError.js';
 import { MAX_FILE_SIZE } from '../h5p/H5pConfigFactory.js';
 import { t, type Locale, type MessageKey } from '../i18n/translate.js';
+import { INSIGHT_BUSY_CODE } from '../insight/InsightViewGate.js';
 import { SERVICE_UNAVAILABLE_CODES } from './authErrors.js';
 import { isDeliberateLearningDesignFault } from './learningDesignErrors.js';
 
@@ -50,6 +52,8 @@ const BY_ERROR_ID: Record<string, MessageKey> = {
   'hvl:unsafe-file-path': 'h5p.unsafeFilePath',
   'hvl:unsafe-file-name': 'h5p.unsafeFileName',
   'hvl:paste-source-not-allowed': 'h5p.pasteSourceNotAllowed',
+  'hvl:content-too-large': 'h5p.contentTooLarge.whole',
+  'hvl:activity-files-over-limit': 'h5p.activityFilesOverLimit',
   'hvl:hub-install-disabled': 'h5p.hubInstallDisabled',
   'hvl:package-libraries-not-installed': 'upload.package.librariesNotInstalled',
   'hvl:package-library-version-mismatch': 'upload.package.libraryVersionMismatch',
@@ -58,6 +62,12 @@ const BY_ERROR_ID: Record<string, MessageKey> = {
   'unable-to-unzip': 'upload.archive.unreadable',
   // SECURITY: a safety net; our fail-closed scanner refuses a finding with its own error first (SEC-006, D-110).
   'upload-malware-found': 'upload.file.malwareFound',
+};
+
+/** The message of `hvl:content-too-large` when it names one text (../h5p/semantics/contentBudget.ts, D-126). */
+const TOO_LARGE_BY_LIMIT: Record<string, MessageKey> = {
+  text: 'h5p.contentTooLarge.text',
+  markup: 'h5p.contentTooLarge.markup',
 };
 
 const BY_STATUS: Record<number, MessageKey> = {
@@ -95,8 +105,11 @@ function describe(error: unknown): Described {
   // Lumi's H5pError: errorId, replacements, httpStatusCode.
   if (typeof e.errorId === 'string' && typeof e.httpStatusCode === 'number') {
     const status = e.httpStatusCode;
-    const key = BY_ERROR_ID[e.errorId] ?? BY_STATUS[status];
-    if (key) return { status, code: e.errorId, key, params: stringParams(e.replacements) };
+    const params = stringParams(e.replacements);
+    const byLimit =
+      e.errorId === 'hvl:content-too-large' ? TOO_LARGE_BY_LIMIT[String(params.limit)] : undefined;
+    const key = byLimit ?? BY_ERROR_ID[e.errorId] ?? BY_STATUS[status];
+    if (key) return { status, code: e.errorId, key, params };
   }
   // UPSTREAM: Lumi throws a plain Error when its schema refuses the metadata; see https://github.com/Lumieducation/H5P-Nodejs-library/blob/v10.0.4/packages/h5p-server/src/H5PEditor.ts (saveOrUpdateContentReturnMetaData).
   // Remove when a Lumi release throws an H5pError with a 4xx status for it.
@@ -136,6 +149,7 @@ export function toErrorResponse(error: unknown, locale: Locale): { status: numbe
   // with its own code and message, not as a fault.
   const deliberate =
     (described.status === 503 && SERVICE_UNAVAILABLE_CODES.has(described.code)) ||
+    (described.status === 503 && described.code === INSIGHT_BUSY_CODE) ||
     isDeliberateLearningDesignFault(described.code, described.status);
   const serverFault = !deliberate && (described.status < 400 || described.status >= 500);
   const { status, code, key, params } = serverFault

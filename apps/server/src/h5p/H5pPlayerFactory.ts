@@ -15,12 +15,15 @@
  *   - Built by createH5pRuntime with the editor's inputs: one permission system, one state storage, and the
  *     same library storage, each engine behind its own language-fallback wrapper and language overlay (D-046, D-111;
  *     Lumi 10.0.4's player reads no language file, so the overlay is there for a later Lumi that does).
+ *   - Every rendered model carries its activity's parameters fitted to their semantics, whatever the stored row
+ *     holds (./semantics/playedParams.ts, D-124).
  *   - With `contentVersions` (createH5pRuntime always passes it), every rendered model's learner-state URL carries
  *     the activity's version, so a page opened before a structural save cannot write its old state (D-093).
  *   - The player's global scripts end with the xAPI bridge's (./h5pAssets.ts) for every model; the page removes them,
  *     and adds the bridge's configuration, per viewer (./render/xapiBridgeConfig.ts, D-102), so the one shared player
  *     and the models it renders never depend on who views them.
  * Collaborators: ./h5pAssets.ts, ./HvlUrlGenerator.ts, ./render/playerPage.ts, ./render/xapiBridgeConfig.ts,
+ *   ./semantics/playedParams.ts,
  *   ./storage/LanguageFallbackLibraryStorage.ts, ./storage/LanguageOverlayLibraryStorage.ts, ./createH5pRuntime.ts,
  *   ../learningDesign/safeEditing/contentVersionOnPages.ts.
  * Tests: apps/server/test/h5p/H5pFactories.test.ts, apps/server/test/h5p/permissionSystemGuard.test.ts,
@@ -28,6 +31,7 @@
  */
 import {
   H5PPlayer,
+  LibraryManager,
   type IContentStorage,
   type IContentUserDataStorage,
   type IH5PConfig,
@@ -45,6 +49,7 @@ import { playerGlobalAssets } from './h5pAssets.js';
 import type { HvlH5pUser } from './HvlH5pUser.js';
 import type { HvlUrlGenerator } from './HvlUrlGenerator.js';
 import { EMPTY_LANGUAGE_OVERLAY, type LanguageOverlay } from './languageOverlay/languageOverlay.js';
+import { fitPlayedContent } from './semantics/playedParams.js';
 import { withLanguageFallback } from './storage/LanguageFallbackLibraryStorage.js';
 import { withLanguageOverlay } from './storage/LanguageOverlayLibraryStorage.js';
 
@@ -116,6 +121,9 @@ export function createHvlPlayer(inputs: PlayerFactoryInputs): H5PPlayer {
   );
   player.setRenderer(modelRenderer);
   refuseUncheckedRenders(player);
+  // SECURITY: whatever a stored row holds, the page carries only what its semantics describe (D-124).
+  const semantics = new LibraryManager(inputs.libraryStorage);
+  fitPlayedContent(player, (library) => semantics.getSemantics(library));
   if (inputs.contentVersions) stampContentVersion(player, inputs.contentVersions);
   return player;
 }

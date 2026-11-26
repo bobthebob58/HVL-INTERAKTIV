@@ -10,9 +10,10 @@
  *      offer to submit anything (trap (e) of step 3).
  * Spec: LTI-010, H5P-009, LTI-003
  * Invariants:
- *   - A configuration exists only for an actor whose role is `learner` and a model that carries the activity's
- *     version in its learner-state URL (D-093); it names the endpoint, the activity's ID and version and the request's
- *     token, and nothing about the person (D-115).
+ *   - A configuration exists only for an actor whose role is `learner` and whose play is recorded
+ *     (`recordsLearning`: an HVL member in the portal, the Learner role in Canvas; D-138), and a model that carries
+ *     the activity's version in its learner-state URL (D-093); it names the endpoint, the activity's ID and version
+ *     and the request's token, and nothing about the person (D-115).
  *   - The token is the request's own (the ltik in Canvas, the CSRF token in the portal), which the page already holds
  *     in H5P's AJAX URLs (D-058); the bridge sends it only in a header (LTI-003, D-102).
  *   - Without a configuration the bridge's scripts are gone from the page's list and from `H5PIntegration.core.scripts`
@@ -74,7 +75,9 @@ export function renderedContentVersion(model: IPlayerModel): number | undefined 
 export function xapiBridgeConfig(model: IPlayerModel, actor: HvlH5pActor): XapiBridgeConfig | undefined {
   // PRIVACY: an author's or teacher's play never leaves the page as xAPI statements, so it is never stored as
   // learning data (DATA-012) nor reaches insight or a gradebook (D-102).
-  if (actor.role !== 'learner') return undefined;
+  // PRIVACY: nor does a play the server would not store: a guest from another Feide organisation, or a Canvas
+  // launch without the Learner role (../../xapi/learningDataScope.ts, D-138).
+  if (actor.role !== 'learner' || actor.recordsLearning !== true) return undefined;
   const contentVersion = renderedContentVersion(model);
   if (contentVersion === undefined) return undefined;
   return {

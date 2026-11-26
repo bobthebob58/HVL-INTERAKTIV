@@ -100,7 +100,8 @@ describeWithRealWebApp(
       const seeded = await seedEndedYear(db, contentId, contextId, now);
       const operator = await seedOperator(db);
       const env = operationsEnv(deployed.urls.hvli_app, operator);
-      const subject = JSON.stringify({ lti: [{ issuer: app.tb.mock.canvas.issuer, sub: student.sub }] });
+      const { issuer, clientId } = app.tb.mock.canvas;
+      const subject = JSON.stringify({ lti: [{ issuer, clientId, sub: student.sub }] });
       const dsr = (args: string[]) =>
         runServerCli('privacy:dsr', [...args, '--operator', operator], env, subject);
 
@@ -176,7 +177,8 @@ describeWithRealWebApp(
         'dataSubject.erase',
         'dataSubject.erase',
         'purge.run',
-        ...(due ? ['purge.run'] : []),
+        // WHY: a real run writes its start and its end (D-144).
+        ...(due ? ['purge.run', 'purge.run'] : []),
       ]);
       for (const secret of [student.sub, learnerKey]) expect(JSON.stringify(audits)).not.toContain(secret);
     }, 300_000);

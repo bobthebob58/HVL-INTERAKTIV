@@ -15,13 +15,13 @@ import { machineNameOf, READING_TEXT_LIBRARIES } from '../contentKinds.js';
 import { pathOf } from '../contentPath.js';
 import { thresholdOf } from '../hintThresholds.js';
 import { asArray, asString, fieldAt } from '../paramReaders.js';
-import { countWords, plainTextOf } from '../richText.js';
+import { countWords, type RichTextReader } from '../richText.js';
 import { nodesOf, type RuleHit, type ValidationRule } from '../rule.js';
 
-const wordsOfElement = (element: unknown): number => {
+const wordsOfElement = (element: unknown, read: RichTextReader): number => {
   const machineName = machineNameOf(asString(fieldAt(element, 'action', 'library')) ?? '');
   if (machineName === undefined || !READING_TEXT_LIBRARIES.has(machineName)) return 0;
-  return countWords(plainTextOf(asString(fieldAt(element, 'action', 'params', 'text')) ?? ''));
+  return countWords(read(asString(fieldAt(element, 'action', 'params', 'text')) ?? '').text);
 };
 
 /** PED-H09: one concept per slide. */
@@ -37,7 +37,7 @@ export const slideWordsHint: ValidationRule = {
     for (const node of nodesOf(scope, 'H5P.CoursePresentation')) {
       asArray(fieldAt(node.params, 'presentation', 'slides')).forEach((slide, index) => {
         const count = asArray(fieldAt(slide, 'elements')).reduce<number>(
-          (sum, e) => sum + wordsOfElement(e),
+          (sum, e) => sum + wordsOfElement(e, scope.read),
           0,
         );
         if (count <= max) return;

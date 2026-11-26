@@ -195,6 +195,10 @@ The walker visits nested sub-content recursively (any object with `library: "H5P
 `params`). Each rule is a separate file under `validation/rules/`, ≤ 100 lines, with its own test.
 Pedagogical hint rules (`PED-H*`) are specified in [04 §5](04-laeringsdesign-page.md#5-pedagogical-hint-rules)
 and plug into the same engine.
+- **Amended (D-127, 2026-11-21):** the validator is given only content within the limits for one activity (SEC-005,
+  D-126). Parameters or metadata past a limit are answered with one error finding, `V-SIZE` (requirement
+  `SEC-005`, the path of the activity as a whole), which no rule file produces, and nothing of them is read. One
+  validation run parses each distinct text once.
 
 #### UD-021 · MUST · S4 · Rule set (universal design)
 
@@ -220,6 +224,9 @@ When an author publishes despite an *error* (`PROD-003`), a `ValidationAcknowled
 `(contentId, ruleId, path, reason, userId, at)` is stored. Acknowledgements are listed in insight and
 in the portfolio export.
 - **Verify:** Integration test.
+- **Amended (D-142, 2026-11-25):** a reason is typed text (no control character other than a tab or a line break,
+  no U+2028 or U+2029, no bidirectional control), and its rule ID and path are one line each; the dialog takes
+  these out of a pasted reason before it checks and sends it.
 
 ---
 

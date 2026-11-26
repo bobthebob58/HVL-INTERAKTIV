@@ -48,7 +48,7 @@ describeWithServices('[PED-030] the learning-design PUT through the whole app', 
     // Assert
     expect(ltik).toBeTruthy();
     expect([noCsrf.status, noCsrf.body.errorCode]).toEqual([401, 'hvl:csrf-invalid']);
-    expect([canvas.status, canvas.body.errorCode]).toEqual([401, 'hvl:unauthenticated']);
+    expect([canvas.status, canvas.body.errorCode]).toEqual([403, 'hvl:not-from-canvas']);
     expect(afterRefusals).toBe(0);
     expect([saved.status, saved.body.phase]).toEqual([200, 'forarbeid']);
     expect(await stored()).toBe(1);

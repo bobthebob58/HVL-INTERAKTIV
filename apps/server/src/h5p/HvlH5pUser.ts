@@ -66,6 +66,11 @@ export interface HvlH5pActor {
   readonly studentAuthor: boolean;
   /** Activities this LTI launch opened; a learner may view these even when not otherwise visible. */
   readonly ltiLaunchContentIds: readonly string[];
+  /**
+   * True when this person's play is recorded as learning data (../xapi/learningDataScope.ts, D-138): their player
+   * page then carries the xAPI bridge. Absent, as for an actor built without a principal, counts as false.
+   */
+  readonly recordsLearning?: boolean;
   /** Present only in the data-subject-request tool. */
   readonly dataSubjectRequest?: DataSubjectRequest;
   /** The request's ltik or CSRF token for H5P's AJAX URLs; absent when the request carries none. */

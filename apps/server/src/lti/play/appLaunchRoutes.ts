@@ -28,6 +28,7 @@ import { asAccountUser, asStateUser } from '../../h5p/HvlH5pUser.js';
 import type { ContentAccessRepository } from '../../h5p/permissions/ContentAccessRepository.js';
 import { decideContent } from '../../h5p/permissions/contentRules.js';
 import { authError } from '../../http/authErrors.js';
+import { landingLtik } from '../landingLtik.js';
 import type { LearnerInfoFields } from '../../learningDesign/metadata/learnerInfoFields.js';
 import { LAUNCH_LANGUAGE_MAX_LENGTH, setAppLaunch } from '../../web/appLaunch.js';
 import { setLtiPageLocale } from '../http/ltiErrorPages.js';
@@ -57,9 +58,8 @@ export interface AppLaunchDeps {
 export function appLaunchRoutes(deps: AppLaunchDeps): Router {
   const router = Router();
   router.get(APP_PLAY_PATH, async (req, res, next) => {
-    const ltik = typeof req.query.ltik === 'string' ? req.query.ltik : '';
-    if (ltik === '') throw authError('hvl:ltik-invalid');
-    const { principal } = await deps.resolveLtik(ltik);
+    // SECURITY: an address with the ltik counts only from our own pages, or just after the launch (D-130).
+    const { ltik, principal } = await landingLtik(req, deps.resolveLtik);
     setLtiPageLocale(res, principal.locale);
     const contentId = principal.lti?.contentId;
     const facts = contentId ? await deps.access.factsFor(contentId) : undefined;

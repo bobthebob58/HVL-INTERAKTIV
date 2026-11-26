@@ -7,6 +7,8 @@
  *   - Every key exists in nn, nb and en (the locale files are checked for the same keys).
  *   - Each sentence about what is kept, and for how long, matches a row of docs/privacy/DATA-INVENTORY.md; the content
  *     test pins the pairs, so a change on either side fails until both agree.
+ *   - PRIVACY: `privacy.learners6` tells a person from another Feide organisation that their events are not stored
+ *     and that their saved progress is, as the server does (apps/server/src/xapi/learningDataScope.ts, D-138).
  * Collaborators: ../../components/TextSections.tsx, ../../app/(portal)/personvern/page.tsx.
  * Tests: apps/web/test/components/TextSections.test.tsx, apps/web/test/features/privacyNotice.test.ts,
  *   apps/web/test/features/privacyNoticeScope.test.ts
@@ -24,6 +26,7 @@ export const PRIVACY_SECTIONS: readonly TextSection[] = [
       'privacy.learners3',
       'privacy.learners4',
       'privacy.learners5',
+      'privacy.learners6',
     ],
   },
   {

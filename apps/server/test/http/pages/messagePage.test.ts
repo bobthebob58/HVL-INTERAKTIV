@@ -51,4 +51,17 @@ describe('[PROD-004] friendly message pages', () => {
       ).toThrow('local paths');
     }
   });
+
+  it('[LTI-003] loads the static scripts it is given, and none otherwise', () => {
+    // Arrange
+    const page = { locale: 'nn', titleKey: 'page.reopen.title', bodyKey: 'page.reopen.body' } as const;
+    // Act
+    const withScript = messagePage({ ...page, scripts: ['/static/lti/ltikLanding.js'] });
+    // Assert: a same-origin static file, deferred; never a script from elsewhere
+    expect(withScript).toContain('<script src="/static/lti/ltikLanding.js" defer></script>');
+    expect(messagePage(page)).not.toContain('<script');
+    expect(() => messagePage({ ...page, scripts: ['https://other.example/x.js'] })).toThrow(
+      /invalid script path/,
+    );
+  });
 });

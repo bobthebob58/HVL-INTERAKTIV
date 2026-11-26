@@ -7,7 +7,9 @@
  *      `copyright` object (`MediaCopyright`), and for an image its `path` in `<img src="…">` and the sub-content's
  *      `alt` in `alt="…"` (`H5P.Thumbnail`). Lumi keeps keys the semantics do not define untouched, so an author
  *      could put any of these anywhere (D-039). Lumi's own text sanitiser runs after ours and turns `&quot;` back
- *      into `"`, so a quote in `alt` cannot be escaped as an entity.
+ *      into `"`, so a quote in `alt` cannot be escaped as an entity. Since D-123 the save removes every key the
+ *      semantics do not define right after this has run (./semanticsConformance.ts), so what is cleaned here stays
+ *      only where a field defines it; this still runs on everything first, so an unsafe path is refused, not dropped.
  * Spec: SEC-008
  * Invariants:
  *   - Every `metadata` and `copyright` object anywhere is plain text, with `source` only as an http(s) URL

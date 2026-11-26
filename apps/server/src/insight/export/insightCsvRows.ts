@@ -11,9 +11,13 @@
  *     value. A wrong gap answer appears only as the report lists it (given by at least k learners).
  *   - `measure` is a stable key and `section` a fixed name, so the API workstream writes the header and these words in
  *     `nn`, `nb` or `en` through i18n; `label` holds the activity's own text (question, option, interaction, answer).
- *   - Numbers are written with a dot: counts as integers, shares from 0 to 1 with four decimals, medians as computed.
- *   - Serialising (quoting, and neutralising a label that starts with `=`, `+`, `-` or `@` against formula injection)
- *     is the API's; these rows are plain strings.
+ *   - Numbers are written with a dot: counts as integers, shares from 0 to 1 with four decimals, medians as computed;
+ *     the file's own decimal mark is the API's.
+ *   - PRIVACY: a question that is not in the activity's current content has no `item`: that ID came with the
+ *     learners' answers, so k learners who agree could choose it. Its row says which such question it is by
+ *     `unlisted`, its place in the view's list (D-136). A question of the activity keeps its own ID.
+ *   - Serialising (quoting, and guarding a field against formula injection) is the API's; these rows are plain
+ *     strings.
  * Collaborators: ../insightReport.ts, the insight API (apps/server/src/insight/http, the API workstream).
  * Tests: apps/server/test/insight/insightCsvRows.test.ts, apps/server/test/insight/insightSuppression.property.test.ts
  */
@@ -36,6 +40,8 @@ export interface InsightCsvRow {
   readonly measure: string;
   /** A number, `< k` when suppressed, or '' when not available. */
   readonly value: string;
+  /** For a question outside the activity's current content: its place in the view's list, from 1. */
+  readonly unlisted?: number;
 }
 
 /** One cell of the report: a count, a rate or a median, or `null` when the report has no value. */
@@ -120,7 +126,7 @@ export function insightCsvRows(report: InsightReport): InsightCsvRow[] {
       measure,
       value: csvValue(cell, k, decimals),
     })),
-    ...report.items.flatMap((entry) =>
+    ...report.items.flatMap((entry, index) =>
       (
         [
           ['learners', entry.learners],
@@ -129,11 +135,13 @@ export function insightCsvRows(report: InsightReport): InsightCsvRow[] {
         ] as [string, Cell, number?][]
       ).map(([measure, cell, decimals]) => ({
         section: 'items' as const,
-        item: entry.item ?? '',
+        // PRIVACY: `library` is null only for a question the current content does not have (itemDifficulty.ts).
+        item: entry.library === null ? '' : (entry.item ?? ''),
         part: '',
         label: entry.questionText ?? '',
         measure,
         value: csvValue(cell, k, decimals),
+        ...(entry.library === null ? { unlisted: index + 1 } : {}),
       })),
     ),
     ...report.misconceptions.flatMap((entry) => misconceptionRows(entry, k)),

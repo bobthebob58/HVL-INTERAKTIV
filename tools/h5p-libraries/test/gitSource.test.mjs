@@ -11,7 +11,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { verifiedHead } from '../gitSource.mjs';
+import { checkout, listVersionTags, verifiedHead } from '../gitSource.mjs';
 
 const dirs = [];
 afterAll(() => dirs.forEach((d) => rmSync(d, { recursive: true, force: true })));
@@ -71,5 +71,26 @@ describe('[H5P-003] a reused library checkout', () => {
     const empty = mkdtempSync(join(tmpdir(), 'h5p-git-'));
     dirs.push(empty);
     expect(() => verifiedHead(empty, 'a'.repeat(40))).toThrow('holds no checkout');
+  });
+});
+
+describe('[H5P-003] what git is asked for', () => {
+  it('[H5P-003] a repository, a ref or a commit without its form is refused before git runs or a folder is touched', () => {
+    // Arrange: a folder a checkout would empty first
+    const { dir, second } = repository();
+    const repo = 'https://github.com/h5p/h5p-column';
+    // Act
+    const refused = [
+      () => listVersionTags('--upload-pack=x'),
+      () => listVersionTags(dir),
+      () => checkout('--upload-pack=x', 'HEAD', dir),
+      () => checkout(`file://${dir}`, 'HEAD', dir),
+      () => checkout(repo, '--upload-pack=x', dir),
+      () => checkout(repo, 'refs/heads/master', dir),
+      () => checkout(repo, 'HEAD', dir, 'HEAD'),
+    ];
+    // Assert: each fails at once (no retry of a network call), and the folder is as it was
+    for (const act of refused) expect(act).toThrow(/does not have the form a library source may have/);
+    expect(verifiedHead(dir, second)).toBe(second);
   });
 });

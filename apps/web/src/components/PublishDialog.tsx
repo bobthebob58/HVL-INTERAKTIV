@@ -39,7 +39,13 @@ import { t } from '../i18n/translate';
 import { AcknowledgementField } from './AcknowledgementField';
 import { Dialog } from './Dialog';
 import { ERROR_ICON, ErrorSummary, type FieldError } from './ErrorSummary';
-import { PUBLISH_DIALOG_TEXTS, REASON_MAX, reasonKey as keyOf, reasonProblems } from './publishReasons';
+import {
+  PUBLISH_DIALOG_TEXTS,
+  REASON_MAX,
+  reasonKey as keyOf,
+  reasonProblems,
+  reasonText,
+} from './publishReasons';
 
 /** The longest reason (./publishReasons.ts), re-exported for the dialog's callers and tests. */
 export { REASON_MAX } from './publishReasons';
@@ -111,7 +117,7 @@ export function PublishDialog(props: PublishDialogProps) {
     const acknowledgements = needed.map((finding) => ({
       ruleId: finding.ruleId,
       path: finding.path,
-      reason: (reasons[keyOf(finding)] ?? '').trim(),
+      reason: reasonText(reasons, finding),
     }));
     const result = await publishContent(contentId, { updatedAt: findings.updatedAt, acknowledgements }, auth);
     setBusy(false);

@@ -8,12 +8,13 @@
  * Spec: PED-032, PED-030
  * Invariants:
  *   - PRIVACY and pedagogy: never the rationale, the course code or the outcomes, which are the author's (D-087).
- *   - A leaf module (imports only zod), so ./content.ts can use it without an import cycle.
+ *   - Imports only zod and the leaf ./textRules.ts, so ./content.ts can use it without an import cycle.
  * Collaborators: ./content.ts (activity summary), ./learningDesign.ts (metadata), ./collaboration.ts (bank),
  *   apps/server/src/web/appLaunch.ts, apps/web/src/lti/launchHeader.ts.
  * Tests: packages/api-contract/test/learningDesignSchemas.test.ts
  */
 import { z } from 'zod';
+import { oneLineText } from './textRules.js';
 
 /** The fewest minutes an activity may be estimated at (D-087). */
 export const MIN_STUDENT_MINUTES = 1;
@@ -34,17 +35,14 @@ export type EstimatedStudentMinutes = z.infer<typeof estimatedStudentMinutesSche
 // WHY: learners see the purpose as one line before the activity, so a line break is refused rather than shown. Any
 // other control character (a pasted tab) is refused too: the web app's strict launch-header parser refuses the whole
 // `x-hvli-launch` header on one, which would turn the Canvas page into "no launch" for every learner (D-087 amendment
-// 2026-10-29).
-/** The learner purpose: plain text on one line without control characters, trimmed, 1 to 200 characters. */
-export const learnerPurposeSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(LEARNER_PURPOSE_MAX_LENGTH)
-  .regex(/^\P{Cc}*$/u)
-  .describe(
-    'One line on why the activity matters, shown to learners in the activity’s language; plain text.',
-  );
+// 2026-10-29). U+2028 and U+2029 are line breaks too, and a bidirectional control reorders what learners read (D-142).
+/**
+ * The learner purpose: plain text on one line (./textRules.ts: no control character, hidden line break or
+ * bidirectional control), trimmed, 1 to 200 characters.
+ */
+export const learnerPurposeSchema = oneLineText(
+  z.string().trim().min(1).max(LEARNER_PURPOSE_MAX_LENGTH),
+).describe('One line on why the activity matters, shown to learners in the activity’s language; plain text.');
 /** A learner purpose. */
 export type LearnerPurpose = z.infer<typeof learnerPurposeSchema>;
 

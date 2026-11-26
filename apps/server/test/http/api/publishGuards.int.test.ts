@@ -20,6 +20,7 @@ import {
   contentApi,
   findingsOnly,
 } from '../../support/publishFixtures.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import { describeWithServices } from '../../support/services.js';
 
 describeWithServices('[PROD-003] publish flow guards', () => {
@@ -169,7 +170,11 @@ describeWithServices('[PROD-003] publish flow guards', () => {
         // WHY: only the activity ID is malformed; another path parameter (a co-author's user ID) is a valid UUID.
         const path = route.path.replace(':contentId', 'not-a-uuid').replace(/:\w+/g, randomUUID());
         const call = request(tb.app)[route.method](`/api${path}`);
-        return call.set(...author.header).send(bodies[route.operationId]);
+        // WHY: as our pages ask; the insight routes answer anything else 403 before they look at the ID (D-146).
+        return call
+          .set(OWN_PAGE_FETCH)
+          .set(...author.header)
+          .send(bodies[route.operationId]);
       }),
     );
     // Assert

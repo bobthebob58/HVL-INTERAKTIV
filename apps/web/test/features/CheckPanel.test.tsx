@@ -11,6 +11,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ApiAuthProvider } from '../../src/api/ApiAuthContext';
 import { CheckPanel } from '../../src/features/activity/CheckPanel';
 import { errorBody, fakeFetch } from '../support/fakeFetch';
+import { confirmQuestion } from '../support/confirmQuestion';
 
 const ID = '7d3c1a8e-5b2f-4c1d-9e8f-0a1b2c3d4e5f';
 const UPDATED = '2026-10-23T10:00:00.000Z';
@@ -84,6 +85,7 @@ describe('[PROD-003] the check-and-publish tab', () => {
     show();
     // Act
     fireEvent.click(await screen.findByRole('button', { name: 'Gjer om til utkast' }));
+    confirmQuestion('Gjer om til utkast');
     // Assert
     expect(await screen.findByText(/eit utkast igjen/)).toBeTruthy();
     expect(requests.find((request) => request.method === 'POST')?.body).toEqual({ updatedAt: UPDATED });
@@ -96,6 +98,7 @@ describe('[PROD-003] the check-and-publish tab', () => {
     });
     show();
     fireEvent.click(await screen.findByRole('button', { name: 'Gjer om til utkast' }));
+    confirmQuestion('Gjer om til utkast');
     expect((await screen.findByRole('alert')).textContent).toContain(
       'Aktiviteten vart endra medan du sjekka han.',
     );

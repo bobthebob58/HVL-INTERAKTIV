@@ -90,6 +90,21 @@ describeWithServices('[AUTH-001] Feide login transactions', () => {
     expect(await redis.exists(loginTransactionRedisKey(txId))).toBe(0);
   });
 
+  it('[AUTH-001] a look at a transaction leaves it in place; only consuming uses it up', async () => {
+    // Arrange
+    const { transactions, begin } = testbed();
+    const { txId, ...expected } = await begin('/h5p/play/1');
+    // Act
+    const looks = [await transactions.peek(txId), await transactions.peek(txId)];
+    const consumed = await transactions.consume(txId);
+    const after = await transactions.peek(txId);
+    // Assert
+    expect(looks).toEqual([expected, expected]);
+    expect(consumed).toEqual(expected);
+    expect(after).toBeUndefined();
+    expect(await transactions.peek('not-a-transaction-id')).toBeUndefined();
+  });
+
   it('[AUTH-001] lets exactly one of ten racing callbacks consume a transaction', async () => {
     const { transactions, begin } = testbed();
     const { txId } = await begin();

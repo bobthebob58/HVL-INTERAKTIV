@@ -1,7 +1,7 @@
 /**
  * Tests the insight route registry: the view, contexts, CSV export and findings routes build an OpenAPI document whose
- * references resolve, work from the portal and from Canvas, document their refusals, take no learner, and are part of
- * `API_ROUTES` once each.
+ * references resolve, work from the portal and from Canvas, document their refusals (422 for a view over the limit of
+ * D-122 and the own-page header of D-146 among them), take no learner, and are part of `API_ROUTES` once each.
  *
  * Spec: DOC-012, INS-001, INS-006, INS-007, INS-009, INS-010
  */
@@ -12,6 +12,8 @@ import {
   API_ROUTES,
   buildOpenApiDocument,
   CSV_MEDIA_TYPE,
+  OWN_PAGE_HEADER_NAME,
+  OWN_PAGE_HEADER_VALUE,
   RESPONSE_SCHEMAS,
   type ApiRoute,
 } from '../src/index.js';
@@ -44,7 +46,48 @@ describe('[DOC-012] insight routes', () => {
       expect(Object.keys(op.responses)).toEqual(expect.arrayContaining(['200', '401', '403', '404', '429']));
       expect(JSON.stringify(op.responses['429'])).toContain('Retry-After');
     }
-    expect(Object.keys(operation(BASE).responses).sort()).toEqual(['200', '400', '401', '403', '404', '429']);
+    expect(Object.keys(operation(BASE).responses).sort()).toEqual([
+      '200',
+      '400',
+      '401',
+      '403',
+      '404',
+      '422',
+      '429',
+      '503',
+    ]);
+  });
+
+  it('[INS-007] the 403 of every route, and the document, name the own-page header a request must carry', () => {
+    // Act
+    const refusals = ['', '/contexts', '/export', '/findings'].map((suffix) =>
+      JSON.stringify(operation(BASE + suffix).responses['403']),
+    );
+    // Assert
+    const header = `${OWN_PAGE_HEADER_NAME}: ${OWN_PAGE_HEADER_VALUE}`;
+    expect(header).toBe('x-hvli-request: fetch');
+    for (const refusal of refusals) expect(refusal).toContain(header);
+    expect(document.info.description).toContain(header);
+  });
+
+  it('[INS-001] the view and the export document 503 for too many views at once, to be asked again later', () => {
+    // Act
+    const documents = (suffix: string) => JSON.stringify(operation(BASE + suffix).responses['503'] ?? null);
+    // Assert: the two routes that build a view, and only they
+    for (const suffix of ['', '/export']) {
+      expect(documents(suffix)).toContain('insight.busy');
+      expect(documents(suffix)).toContain('Retry-After');
+    }
+    expect([documents('/contexts'), documents('/findings')]).toEqual(['null', 'null']);
+  });
+
+  it('[INS-001] the view and the export document 422 for a period with more statements than one view covers', () => {
+    // Act
+    const documents = (suffix: string) => JSON.stringify(operation(BASE + suffix).responses['422'] ?? null);
+    // Assert: the two routes that build a view, and only they
+    expect(documents('')).toContain('insight.viewTooLarge');
+    expect(documents('/export')).toContain('insight.viewTooLarge');
+    expect([documents('/contexts'), documents('/findings')]).toEqual(['null', 'null']);
   });
 
   it('[INS-007] the view and the export take only the period, the context and the version, each optional', () => {

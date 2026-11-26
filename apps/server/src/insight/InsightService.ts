@@ -11,12 +11,16 @@
  *     method that returns per-learner rows (INS-006). No learner key, count or answer is logged here.
  *   - Who may see which context is checked before this (INS-007, the API workstream); this resolves the scope it is
  *     given: an activity that does not exist is `activityUnavailable`, a version outside 1..current
- *     `versionUnavailable`, a malformed context `contextInvalid` (./scope/insightScope.ts).
+ *     `versionUnavailable`, a malformed context `contextInvalid` (./scope/insightScope.ts), and a scope that holds
+ *     more stored statements than one view covers `viewTooLarge` (./data/readInsightStatements.ts, D-122).
+ *   - A view is read and counted inside the process's gate (./InsightViewGate.ts, D-134): a few at once, a short
+ *     line, and `GateBusyError` past that. The scope is resolved first, so a refused scope takes no place.
  *   - The question texts come from the activity's current parameters through the content store
  *     (`IContentStorage.getParameters`, ../h5p/storage/PrismaContentStorage.ts); the course's NRPS count from
  *     ../lti/nrps/NrpsLearnerCountStore.ts, only for a Canvas context.
- * Collaborators: ./scope/insightScope.ts, ./scope/activityContexts.ts, ./data/insightStatements.ts,
- *   ./buildInsightReport.ts, ../h5p/storage/PrismaContentStorage.ts, ../lti/nrps/NrpsLearnerCountStore.ts, the
+ * Collaborators: ./scope/insightScope.ts, ./scope/activityContexts.ts, ./data/readInsightStatements.ts,
+ *   ./buildInsightReport.ts, ./InsightViewGate.ts, ../h5p/storage/PrismaContentStorage.ts,
+ *   ../lti/nrps/NrpsLearnerCountStore.ts, the
  *   insight API (apps/server/src/insight/http, the API workstream).
  * Tests: apps/server/test/insight/insightService.int.test.ts
  */
@@ -27,8 +31,9 @@ import type { NrpsLearnerCount } from '../lti/nrps/NrpsLearnerCountStore.js';
 import type { MinimumGroupSize } from '../privacy/minimumGroupSize.js';
 import { parsePlatformContextKey } from '../xapi/platformContextKey.js';
 import { buildInsightReport } from './buildInsightReport.js';
-import { readInsightStatements } from './data/insightStatements.js';
+import { readInsightStatements, type InsightReadLimits } from './data/readInsightStatements.js';
 import type { InsightReport } from './insightReport.js';
+import { InsightViewGate } from './InsightViewGate.js';
 import { listActivityContexts } from './scope/activityContexts.js';
 import {
   InsightScopeError,
@@ -58,14 +63,22 @@ export interface InsightServiceDeps {
   readonly groupSize: MinimumGroupSize;
   /** The current moment; the system clock outside tests. */
   readonly clock?: () => Date;
+  /** How many stored statements one view reads, and in what pages; D-122's limits outside tests. */
+  readonly readLimits?: InsightReadLimits;
+  /** How many views are built at once; a gate with D-134's limits outside tests. */
+  readonly gate?: InsightViewGate;
 }
 
 /** Builds insight views. */
 export class InsightService {
+  private readonly gate: InsightViewGate;
+
   /**
    * @param deps - Database, content store, NRPS counts, *k* and clock.
    */
-  constructor(private readonly deps: InsightServiceDeps) {}
+  constructor(private readonly deps: InsightServiceDeps) {
+    this.gate = deps.gate ?? new InsightViewGate();
+  }
 
   /**
    * The contexts an activity's insight can be shown for.
@@ -81,7 +94,8 @@ export class InsightService {
    * The full insight of one activity in one context, version and period, already suppressed.
    * @param request - The activity, context (`portal` or `<platformId>:<contextId>`), period and version.
    * @returns The report: participation, item difficulty, misconceptions and, for a video, engagement.
-   * @throws InsightScopeError `activityUnavailable`, `versionUnavailable` or `contextInvalid`.
+   * @throws InsightScopeError `activityUnavailable`, `versionUnavailable`, `contextInvalid` or `viewTooLarge`;
+   *   GateBusyError when too many views are being built and waiting.
    * @example
    * const report = await insight.forActivity({ contentId, context: 'portal', period: '7d' });
    * @spec INS-001
@@ -102,26 +116,30 @@ export class InsightService {
       size: groupSize,
       now,
     });
-    const [metadata, params, statements, courseLearners] = await Promise.all([
-      content.getMetadata(request.contentId),
-      content.getParameters(request.contentId),
-      readInsightStatements(db, {
-        contentId: request.contentId,
-        contentVersion: scope.view.contentVersion,
-        storedContextId,
-        start: scope.start,
-        end: scope.end,
-        academicYear: scope.academicYear,
-      }),
-      storedContextId === null ? undefined : this.deps.learnerCounts?.read(storedContextId),
-    ]);
-    return buildInsightReport({
-      scope: scope.view,
-      size: groupSize,
-      mainLibrary: metadata.mainLibrary,
-      params,
-      statements,
-      courseLearners: courseLearners?.count,
+    const filter = {
+      contentId: request.contentId,
+      contentVersion: scope.view.contentVersion,
+      storedContextId,
+      start: scope.start,
+      end: scope.end,
+      academicYear: scope.academicYear,
+    };
+    // WHY: the statements are held until the view is counted; the gate bounds how many views do that at once.
+    return this.gate.run(async () => {
+      const [metadata, params, statements, courseLearners] = await Promise.all([
+        content.getMetadata(request.contentId),
+        content.getParameters(request.contentId),
+        readInsightStatements(db, filter, this.deps.readLimits),
+        storedContextId === null ? undefined : this.deps.learnerCounts?.read(storedContextId),
+      ]);
+      return buildInsightReport({
+        scope: scope.view,
+        size: groupSize,
+        mainLibrary: metadata.mainLibrary,
+        params,
+        statements,
+        courseLearners: courseLearners?.count,
+      });
     });
   }
 

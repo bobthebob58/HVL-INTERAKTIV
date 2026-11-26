@@ -10,18 +10,35 @@
  *   - Only `author` and `admin` reach these routes (learners get 403).
  *   - The language is the actor's, or a supported `language` query value; never free text.
  *   - Every temporary upload folder is removed after the request, whatever happens.
- * Collaborators: ../multipartUpload.ts, ../requestBodies.ts, ../h5pLocals.ts, Lumi's H5PAjaxEndpoint.
- * Tests: apps/server/test/http/ajax.int.test.ts, apps/server/test/http/editorUpload.int.test.ts
+ *   - An author's file uploads and package imports are counted before the body is read; past a limit the answer is
+ *     429 `hvl:rate-limited` with `Retry-After` (../h5pRouteLimits.ts, D-120). An author whose SVG files were
+ *     refused as too complex as often as the budget allows gets the same answer for further SVG files, so one
+ *     person cannot hold the SVG cleaning worker (D-119).
+ *   - Pasted content (`action=filter`) past the limits for one activity is 400 before Lumi reads it
+ *     (./contentSaveBodies.ts, D-126).
+ *   - A request names exactly one action that Lumi's endpoint knows for its method; any other is 400 before a
+ *     body is read. Lumi answers an unknown POST action with status 500, which a signed-in author could raise,
+ *     and have logged as a server fault, at will (D-142).
+ *   - An upload is handled inside `scanningFor(accountId, …)`, so the malware scan knows whose files it scans and
+ *     hands its turns out person by person (../../security/malware/scanOwner.ts, D-143).
+ * Collaborators: ../multipartUpload.ts, ../requestBodies.ts, ../h5pLocals.ts, ../h5pRouteLimits.ts,
+ *   ./contentSaveBodies.ts, ../../security/malware/scanOwner.ts, Lumi's H5PAjaxEndpoint.
+ * Tests: apps/server/test/http/ajax.int.test.ts, apps/server/test/http/editorUpload.int.test.ts,
+ *   apps/server/test/http/uploadLimits.int.test.ts, apps/server/test/http/contentBudget.int.test.ts
  */
 import { Router, type Request, type RequestHandler, type Response } from 'express';
 import { MAX_FILE_SIZE } from '../../h5p/H5pConfigFactory.js';
 import { asAccountUser } from '../../h5p/HvlH5pUser.js';
 import { isLocale, t, type Locale } from '../../i18n/translate.js';
+import { fileExtension } from '../../security/fileExtension.js';
+import { scanningFor } from '../../security/malware/scanOwner.js';
 import { HttpError } from '../HttpError.js';
 import { requireActor, requireRole } from '../h5pLocals.js';
 import type { H5pRouteDeps } from '../h5pRouteDeps.js';
+import { refuseWhenLimited } from '../h5pRouteLimits.js';
 import { readMultipart } from '../multipartUpload.js';
 import { formBody } from '../requestBodies.js';
+import { assertPasteWithinLimits } from './contentSaveBodies.js';
 
 const editorLanguage = (req: Request, res: Response): Locale => {
   const asked = typeof req.query.language === 'string' ? req.query.language : '';
@@ -30,12 +47,61 @@ const editorLanguage = (req: Request, res: Response): Locale => {
 
 const queryString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
 
+/** The actions Lumi's H5PAjaxEndpoint knows (`getAjax`, `postAjax`), by method. */
+const KNOWN_ACTIONS: Readonly<Record<string, ReadonlySet<string>>> = {
+  GET: new Set(['content-type-cache', 'content-hub-metadata-cache', 'libraries']),
+  POST: new Set([
+    'libraries',
+    'translations',
+    'files',
+    'filter',
+    'library-install',
+    'library-upload',
+    'get-content',
+  ]),
+};
+
+/** Refuses a request whose `action` is missing, given twice or unknown to Lumi, before its body is read. */
+const knownAction: RequestHandler = (req, _res, next) => {
+  const action = queryString(req.query.action);
+  // WHY: a request error, not the server fault Lumi's status 500 for an unknown POST action would be logged as.
+  if (action === undefined || !KNOWN_ACTIONS[req.method]?.has(action))
+    throw new HttpError(400, 'error.badRequest');
+  next();
+};
+
 /** File and package uploads are multipart and read by ../multipartUpload.ts, never by a form parser. */
 const isUpload = (req: Request): boolean =>
   ['files', 'library-upload'].includes(queryString(req.query.action) ?? '');
 
 const unlessUpload = (handlers: RequestHandler[]): RequestHandler[] =>
   handlers.map((handler) => (req, res, next) => (isUpload(req) ? next() : handler(req, res, next)));
+
+/**
+ * Runs the sanitisers on an uploaded file before Lumi does, and counts an SVG that was refused as too complex.
+ * @param deps - The sanitisers and the limits.
+ * @param file - The uploaded file's path.
+ * @param accountId - The author.
+ * @param res - The response, for `Retry-After`.
+ * @throws HttpError 429 `hvl:rate-limited` for an SVG while the author's budget is spent; else what a sanitiser throws.
+ */
+async function sanitizeFirst(
+  deps: H5pRouteDeps,
+  file: string,
+  accountId: string,
+  res: Response,
+): Promise<void> {
+  const slowSvgs = fileExtension(file) === 'svg' ? deps.limits?.slowSvgs : undefined;
+  refuseWhenLimited(await slowSvgs?.check(accountId), res);
+  try {
+    // WHY: Lumi reports any sanitiser failure as "upload-validation-error"; running them first keeps our reason.
+    for (const sanitizer of deps.fileSanitizers) await sanitizer.sanitize(file);
+  } catch (error) {
+    const key = (error as { messageKey?: unknown } | null)?.messageKey;
+    if (key === 'upload.file.svgTooComplex') await slowSvgs?.spend(accountId);
+    throw error;
+  }
+}
 
 /** Messages for the libraries an admin's import installed or updated (Lumi asks for them by these IDs). */
 const libraryMessages =
@@ -56,7 +122,7 @@ export function ajaxRoutes(deps: H5pRouteDeps): Router {
   const router = Router();
   const editorOnly = requireRole('author', 'admin');
 
-  router.get('/ajax', editorOnly, async (req, res) => {
+  router.get('/ajax', editorOnly, knownAction, async (req, res) => {
     const { action, machineName, majorVersion, minorVersion } = req.query;
     const user = asAccountUser(requireActor(res));
     const result = await deps.ajax.getAjax(
@@ -70,11 +136,13 @@ export function ajaxRoutes(deps: H5pRouteDeps): Router {
     res.json(result);
   });
 
-  router.post('/ajax', editorOnly, ...unlessUpload(formBody('20mb')), async (req, res) => {
+  router.post('/ajax', editorOnly, knownAction, ...unlessUpload(formBody('20mb')), async (req, res) => {
     const action = queryString(req.query.action) ?? '';
     const user = asAccountUser(requireActor(res));
     const language = editorLanguage(req, res);
     if (!isUpload(req)) {
+      // SECURITY: Lumi cleans pasted content as it comes; it is held to the limits for one activity first (D-126).
+      if (action === 'filter') assertPasteWithinLimits(req.body);
       res.json(
         await deps.ajax.postAjax(
           action,
@@ -87,28 +155,35 @@ export function ajaxRoutes(deps: H5pRouteDeps): Router {
       );
       return;
     }
+    const isFile = action === 'files';
+    const { accountId } = requireActor(res);
+    // SECURITY: counted before the body is read, so a request past the limit costs no disk, scan or unpacking.
+    refuseWhenLimited(await (isFile ? deps.limits?.uploads : deps.limits?.imports)?.take(accountId), res);
     const upload = await readMultipart(req, {
-      fileField: action === 'files' ? 'file' : 'h5p',
+      fileField: isFile ? 'file' : 'h5p',
       maxFileSize: MAX_FILE_SIZE,
     });
     try {
       if (!upload.file) throw new HttpError(400, 'error.badRequest');
-      if (action === 'files') {
-        // WHY: Lumi reports any sanitiser failure as "upload-validation-error"; running them first keeps our reason.
-        for (const sanitizer of deps.fileSanitizers) await sanitizer.sanitize(upload.file.tempFilePath);
-        res.json(await deps.ajax.postAjax('files', upload.fields as never, language, user, upload.file));
+      if (isFile) {
+        await sanitizeFirst(deps, upload.file.tempFilePath, accountId, res);
+        const { fields, file } = upload;
+        const stored = () => deps.ajax.postAjax('files', fields as never, language, user, file);
+        res.json(await scanningFor(accountId, stored));
       } else {
-        const result = await deps.ajax.postAjax(
-          'library-upload',
-          {} as never,
-          language,
-          user,
-          undefined,
-          undefined,
-          libraryMessages(language),
-          upload.file,
-        );
-        res.json(result);
+        const messages = libraryMessages(language);
+        const imported = () =>
+          deps.ajax.postAjax(
+            'library-upload',
+            {} as never,
+            language,
+            user,
+            undefined,
+            undefined,
+            messages,
+            upload.file,
+          );
+        res.json(await scanningFor(accountId, imported));
       }
     } finally {
       await upload.cleanup();

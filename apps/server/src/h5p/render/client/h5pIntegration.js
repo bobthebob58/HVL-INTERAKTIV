@@ -7,15 +7,25 @@
  *      cannot close its element.
  * Spec: H5P-009, DATA-011, SEC-008
  * Invariants:
- *   - Reads only the element with id `h5p-integration`; a missing or malformed block leaves H5P without
- *     integration (the player shows nothing) rather than running anything.
+ *   - Reads only the page's own block: the element with id `h5p-integration` that is an inert JSON script
+ *     (`<script type="application/json">`) directly in the document's head, where the page writes it. Any other
+ *     element with that ID is not read (D-140). A missing or malformed block leaves H5P without integration (the
+ *     player shows nothing) rather than running anything.
  *   - Runs before every H5P script on the page.
- * Collaborators: ../playerPage.ts (writes the block and loads this file first), ../../../http/routes/staticRoutes.ts.
- * Tests: apps/server/test/h5p/render/playerPage.test.ts, apps/server/test/h5p/realTypes.browser.int.test.ts
+ * Collaborators: ../playerPage.ts and ../editorPage.ts (write the block and load this file first),
+ *   ../../../http/routes/staticRoutes.ts.
+ * Tests: apps/server/test/h5p/render/dataBlockScripts.test.ts, apps/server/test/h5p/render/playerPage.test.ts,
+ *   apps/server/test/h5p/realTypes.browser.int.test.ts
  */
 (function readH5pIntegration() {
   'use strict';
   var block = document.getElementById('h5p-integration');
-  if (!block) return;
+  // SECURITY: an ID can be given to any element; only the inert JSON element the page wrote in its head is ours.
+  var own =
+    block &&
+    block.tagName === 'SCRIPT' &&
+    block.type === 'application/json' &&
+    block.parentNode === document.head;
+  if (!own) return;
   window.H5PIntegration = JSON.parse(block.textContent || '{}');
 })();

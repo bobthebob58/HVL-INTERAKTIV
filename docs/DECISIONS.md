@@ -390,6 +390,11 @@ loading of one spec per session are kept.
 - **Consequences:** No extra dependencies. Packages with legacy licence metadata are listed by name and
   version after a person has read their licence file.
 
+- **Amendment (2026-11-26, D-145):** two more checks stand beside these: `checkLockfile.mjs` (where each package
+  of the lock file comes from, its checksum, and the install scripts against the reviewed list) and
+  `checkWorkflows.mjs` (the workflows' actions, images and token). The audit check also runs once a day on the
+  default branch, and it reads an exception's date as a date.
+
 ### D-030 · Accepted advisory: `image-size` parser loops (until 2027-01-31)
 - **Context:** `@lumieducation/h5p-server` 10.0.4 depends on `image-size@^1.0.2`. Advisories
   GHSA-5p2g-fcmc-qvqq (JXL and HEIF) and GHSA-w3rx-r6r6-pgpr (ICNS) affect every version up to 2.0.2; no
@@ -401,6 +406,10 @@ loading of one spec per session are kept.
   bytes are not on the allowlist (JXL, HEIF and ICNS are not) before H5P calls `image-size`.
 - **Consequences:** `audit-exceptions.json` lists both advisories with this decision and the expiry date.
   Review again at expiry, or earlier if h5p-server releases a version with `image-size` ≥ 2.0.3.
+
+- **Amendment (2026-11-26, D-145):** an exception needs every field, a real calendar date at most 120 days ahead,
+  and covers its advisory only for the package it names. The two entries here pass as they are; a renewal on
+  2027-01-31 can run to 2027-05-31 at most.
 
 ### D-031 · Session 1 items that finish in Session 2
 - **Context:** Some Session 1 work depends on things that only exist in Session 2, or on a network this
@@ -565,6 +574,10 @@ loading of one spec per session are kept.
   extension, its MIME type comes from the extension, and the 50 MB limit is enforced while streaming (413).
 - **Consequences:** The folder is removed after every request, successful or not.
 
+- **Amendment (2026-11-25, D-143):** the text fields of an upload request are few and small: at most 4 fields of at
+  most 64 KB each, a field name of at most 100 characters, at most 8 parts in all. A request past one of these is
+  400 after its body was read, and no value is cut short and passed on (`http/multipartUpload.ts`).
+
 ### D-044 · SVG sanitising rules and order
 - **Context:** `SEC-001` asks to reject or strip DOCTYPE/ENTITY, scripts, event handlers, `foreignObject`,
   `javascript:`/`data:text/html` URLs and external references. Inkscape and Illustrator exports carry a public
@@ -583,6 +596,8 @@ loading of one spec per session are kept.
   references to them; a test pins all three losses. Our pass writes its result with XMLSerializer, and the final
   check parses it again as XML, as a browser does, and fails closed. Lumi's sanitiser alone does not stop every
   payload in our bypass test set; the layers together stop all of them.
+- **Amendment (2026-11-20, D-119):** the four steps are unchanged, but they now run in a worker thread with a time,
+  a memory and a waiting limit, never on the server's main thread.
 
 ### D-045 · Headers for user files; the separate files origin moves to S3/S6
 - **Context:** `SEC-004` asks for `nosniff`, a sandbox CSP for SVG and documents, and `attachment` for
@@ -659,6 +674,10 @@ loading of one spec per session are kept.
   puts a page-memory stand-in in its place (nothing reaches disk; the ltik is never written to it). With storage
   blocked *and* no `lti_storage_target`, ltijs cannot recover its state and the launch ends on our "launch failed"
   page; Canvas sends `lti_storage_target`, so this affects only other platforms.
+- **Amendment (2026-11-25, D-141):** ltijs's `Sec-Fetch-Site` check on its second launch POST is no longer the
+  only one: our handler also requires our own `Origin` from a browser that sends no fetch metadata, and ltijs's
+  launch page is sent with `Referrer-Policy: same-origin`. ltijs's request handler is replaced by ours
+  (`lti/http/LtiOutboundRequests.ts`).
 
 ### D-051 · LTI platforms and deployments from `LTI_PLATFORMS`; deployment IDs checked by us
 - **Context:** `LTI-001` requires rejecting a launch with a wrong deployment ID. ltijs 7 checks only that the claim
@@ -696,6 +715,11 @@ loading of one spec per session are kept.
   if that call fails, the login fails closed (503 page). `enableNonRepudiationChecks` adds an ID-token signature
   check against Feide's JWKS on top of openid-client's claim checks.
 - **Consequences:** Feide users without a Feide ID (guests, eduGAIN) cannot log in (owner to confirm, Q12).
+
+- **Amendment (2026-11-25, D-142):** «trimmed and lower-cased» is done in ASCII only: SP and HTAB are trimmed and
+  `A`–`Z` lower-cased, every other character stays as written, and then the pattern is checked
+  (`auth/identity/feideId.ts`). Every reader of a Feide ID uses that one rule, so an ID written with a look-alike
+  character (U+212A for `k`, a no-break space at an end) is another ID, never the plain one.
 
 ### D-055 · A stable identity key ring with HKDF purposes and a rotation rule
 - **Context:** `Identity.subjectHash` and `AuthAuditEvent.ipHash` need a keyed hash whose key does not rotate every
@@ -756,6 +780,10 @@ loading of one spec per session are kept.
   the session's ID-token blob is sealed once at login, so a retired `DATA_ENCRYPTION_KEYS` key is kept at least
   12 hours. Reverse proxies must not cache responses that carry `Set-Cookie` and must not log query strings
   (`csrf`, `ltik`).
+
+- **Amendment (2026-11-25, D-142):** a logout clears the session cookie only for the session it ended; a request
+  without a live session changes no cookie. The order to delete a dead session cookie is added when an answer's
+  headers are written, and only to an answer marked `no-store` or `private` (`auth/session/staleCookieClearing.ts`).
 
 ### D-058 · H5P URL tokens and signed content-file URLs
 - **Context:** `H5P-007` asks that H5P's AJAX and user-data URLs carry the ltik (Canvas) or a CSRF token (portal).
@@ -850,6 +878,8 @@ loading of one spec per session are kept.
   launches; author launches and link outcomes carry the actor instead (a link outcome has none when its launch
   then fails, D-063).
 - **Consequences:** The owner confirms the learner rule (Q15).
+- **Amendment (2026-11-25, D-141):** failed logins and failed launches are recorded up to 10 rows a minute per
+  network address and 300 in all; what is past that is counted in the log.
 
 ### D-065 · End-to-end tests in Session 3
 - **Context:** The EVALUATOR-GUIDE says `npm run test:e2e` runs journeys J1–J5 from S3, but spec 00 places J1–J5 in
@@ -926,6 +956,11 @@ loading of one spec per session are kept.
   links to the choices (`UD-013`). The editor's outer page uses the server pages' stylesheet for its save button and
   status (`UD-002`).
 
+- **Amendment (2026-11-26, D-146):** "a frame our own origin asked for gets no second header" now holds only for
+  the pages our chrome frames (`/h5p/play/:id`, `/h5p/edit/:id`, `/h5p/new`, `/lti/play`, `/lti/edit`). Since D-130
+  a launch's last step reaches Canvas's frame from our own origin, so the picker and a launch's error page are not
+  told from our chrome by fetch metadata; they are the whole page of that frame and show the header.
+
 ### D-068 · Express is the front door and runs Next.js in the same process
 - **Context:** D-012 puts a reverse proxy in front of Express and Next.js in production. Development and tests need
   one origin too, and the session cookie (`__Host-`, D-057), ltijs's same-origin checks and `PUBLIC_BASE_URL` must not
@@ -952,6 +987,7 @@ loading of one spec per session are kept.
   removal of `cookie`, `authorization`, `x-hvli-*` and the `ltik` query before Next.js sees them; any other upgrade
   is closed. Production refuses `WEB_APP=dev`, so the development server and its relaxed policy (D-070) never run
   there.
+- **Amendment (2026-11-22, D-135):** the pin is 16.4.6; the rest of the probe result stands.
 
 ### D-069 · Query-ltik paths and file grants for the S4 views and the editor
 - **Context:** D-058 accepts an ltik in a query string on four paths. S4 adds the LTI chrome pages and the editor in
@@ -1111,6 +1147,9 @@ loading of one spec per session are kept.
   (`apps/server/src/web/webPageCsp.ts`). This is the "relaxed policy" of D-068's 2026-10-24 amendment. Production
   refuses `WEB_APP=dev` (`apps/server/src/config/productionChecks.ts`), `WEB_APP=prod` sends the nonce policy above
   unchanged, and the H5P pages' policy has no development variant.
+- **Amendment (2026-11-23, D-140):** the H5P pages' `script-src` no longer holds the hash of Core's inline script.
+  No page of ours lets Core build its own iframe, so nothing ran by it; the policy is `'self'`, plus Panopto's
+  file when a Panopto site is configured.
 
 ### D-071 · CC-BY-4.0 is an allowed licence (caniuse-lite)
 - **Context:** `next` depends on `caniuse-lite`, a browser-support data set under CC-BY-4.0, which the licence check
@@ -1354,6 +1393,11 @@ loading of one spec per session are kept.
   that S2's narrowed `contentWhitelist` (SEC-002) also applied to library folders through Lumi's
   `libraryWhitelist`, so every real package, from GitHub or the Hub, was refused for its icon fonts:
   `libraryWhitelist` now adds `eot ttf woff woff2 otf` (library folders only; content files keep the SEC-002 list).
+
+- **Amendment (2026-11-25, D-143):** the tool holds a repository address, a machine name, a version, a ref and a
+  commit to fixed forms before any of them reaches git or a folder name (`tools/h5p-libraries/sourceRules.mjs`):
+  for the registry's addresses, for the names and versions in fetched `library.json` and `semantics.json` files,
+  and for every line of the pin list when it is read. A repository is `https://github.com/<owner>/<name>`.
 
 ### D-079 · What S4 verifies automatically and what HVL records by hand
 - **Context:** `NFR-003` names the last two versions of four browsers and three screen readers; `UD-031` asks for
@@ -1899,6 +1943,11 @@ loading of one spec per session are kept.
     It is never shown to anyone but the authors of activities placed in that course.
   - **The prompt:** the metadata prompt shows in the first-publish dialog only, not when an already published
     activity is published again with new reasons.
+
+- **Amendment (2026-11-25, D-142):** the purpose, the outcomes and the rationale are held to the contract's rule
+  for typed text (`packages/api-contract/src/textRules.ts`): besides control characters, U+2028, U+2029 and the
+  bidirectional controls are refused (400). The web form takes them out of pasted text before it checks and sends
+  it (`apps/web/src/config/typedText.ts`), as it already turned a pasted tab in the purpose into a space.
 
 ### D-088 · The alignment planner: one course, outcomes × phases, two gap rules
 - **Context:** `PED-031` asks for a grid of learning outcomes × phases for one course, with gaps highlighted and
@@ -3208,6 +3257,10 @@ loading of one spec per session are kept.
   our own page's image, video, frame or prefetch, with the headers full Chromium sends; our pages' fetch still
   audited).
 
+- **Amendment (2026-11-26, D-146):** the residual of the amendment of 2026-11-05 is closed. Every insight route
+  also requires the header that our pages add to every request (`x-hvli-request: fetch`), which a navigation, an
+  image or another origin's request cannot carry, so a browser that sends no fetch metadata is covered too.
+
 ### D-107 · `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year
 - **Context:** `DATA-003` runs the purge "on a configured date (default 15 August)" for the academic year that has
   ended, deleting rows "older than the academic-year boundary plus 30 days", keeping only *k*-suppressed snapshots
@@ -3324,6 +3377,10 @@ loading of one spec per session are kept.
     (`learnerKeyYear`); the state route runs Lumi's write inside `withLearnerKeyYear`
     (`h5p/storage/learnerStateYear.ts`), and `learnerStateWrites.ts` sets `academicYear` on insert and on update,
     which for one key is always the key's year.
+
+- **Amendment (2026-11-26, D-144):** a real run writes a `purge.run` event with `outcome: "started"` and the plan's
+  counts before its first change, and its end (`completed` or `failed`) as before. A run that is cut short leaves
+  its start on record; only a `completed` real run marks a year as purged.
 
 ### D-108 · Data-subject requests: a server CLI that HVL operations run
 - **Context:** `DATA-008` asks for an admin-only tool that takes a Feide ID or an `(iss, sub)` pair, derives the
@@ -4298,6 +4355,21 @@ loading of one spec per session are kept.
     `CLAMAV_HOST` (a load balancer) is set up alike, since each probe stream reaches whichever answers; and a clamd
     reconfigured and restarted between two probes is trusted for up to 60 s unless an upload failed meanwhile.
 
+- **Amendment (2026-11-25, D-143):** waiting scans get the free turns person by person: a free turn goes to the
+  author who has waited longest since their last turn (`security/malware/ScanTurns.ts`, `scanOwner.ts`). Four scans
+  at once and the time limit that includes the wait stay as they are.
+
+- **Amendment (2026-11-26, D-144):** three settings of the image and the stack. The runtime stage sets
+  `TSX_DISABLE_CACHE=1`, so tsx keeps no translated code in `/tmp`. The seccomp profile is
+  `deploy/seccomp/chromium-sandbox.seccomp`: Docker's default profile (Engine 29.9.2) with one rule added for
+  Chromium's user namespaces, in place of Playwright's file, which is an older Docker default. The app's health
+  check has a time limit of 3 seconds, an interval of 5 seconds, 3 retries and a start period of 120 seconds.
+
+- **Amendment (2026-11-26, D-145):** the `deps` stage copies `.npmrc` with the lock file, so the image's `npm ci`
+  stops at an install script that `allowScripts` does not name (`strict-allow-scripts=true`);
+  `tools/deploy-check` requires the copy. The workflows name their actions by commit and the gate's service
+  images by the digests of `deploy/compose.app.yml`.
+
 ### D-111 · An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it
 - **Context:** S5's probe P1 found that many `nn` and `nb` defaults of the real libraries are English (MultiChoice,
   QuestionSet, InteractiveBook and BranchingScenario buttons and messages). Patterns set their own texts (D-084), but
@@ -4902,6 +4974,9 @@ loading of one spec per session are kept.
   pattern's retry switches, fails the pin. Not decided here: whether the pattern turns the book's retry off
   (`behaviour.enableRetry: false`), and so departs from `PROD-009` with a `SPEC-DEVIATION`; that stays the owner's
   call (Q20), and until then the book's retry stays on, as the S5 tests require.
+- **Amendment (2026-11-23, D-140):** the page policy no longer allows Core's inline script, so H5P's own iframe
+  embedding is prevented by the policy as well as by our template. The bridge's handling of that mode stays, and
+  its browser test adds the script's hash itself.
 
 ### D-116 · An IT assurance pack for HVL IT and an SBOM generator, outside the specs; a request in three stages
 - **Context:** On 2026-11-05 the owner asked for an "IT assurance pack" for HVL IT, whose operations and security
@@ -4979,3 +5054,1366 @@ loading of one spec per session are kept.
   #8, #18 and #21, the three with the app's code (the other 18 are Dependabot's), have no review (GitHub's API,
   2026-11-06), and pull request #21's changes have passed GitHub CI, the full local test run and the Docker smoke, not
   the whole local gate. This amendment changes no app code, test, spec or CI file, and the pack's caveats stand.
+
+### D-117 · Repairing the security audit's findings in small steps, and the behaviour changes of the first step
+- **Context:** The three-sitting security audit (sitting 1 read the code, sitting 2 attacked a running local copy)
+  produced a private register of findings. Sitting 3 repairs them, highest value first, each as a small change with
+  a test that proves the rule now holds. The repository is public, so the fixes themselves become public; the tool
+  is pre-pilot, with no real students, and the bugs are already in the public code, so closing them in the open is a
+  net improvement. The findings' own exploit detail stays in the owner's private papers, never in the repository.
+- **Decision — how repairs are published:** public text (commit messages, test titles, comments, this log,
+  `PROGRESS.md`) states the rule the code now enforces and the requirement ID, never how to find, trigger or exploit
+  what was wrong, and never a finding that is not yet fixed. The private register maps each commit to its finding.
+  One commit per repair; a new behaviour gets a test that fails before the change and passes after it.
+- **Decision — the first step's behaviour changes:**
+  - **A saved activity never changes owner, and a save cannot resurrect a deleted one.** `PrismaContentStorage.addContent`
+    sets `ownerUserId` only on the path that creates a row (no ID given). With an ID it updates the existing row
+    through `contentUpdate.ts` and answers 404 `content-not-found` when there is none, instead of re-creating it
+    under the saver (H5P-006). Every caller that creates passes no ID. An ID comes with the editor's save of an
+    existing activity, and with the second write Lumi makes inside one save when it has moved files
+    (`ContentStorer.addOrUpdateContent`): that write names the row the same save has just written, for a new
+    activity and for a copy alike, so the row exists in every case.
+  - **A delete runs under the activity's write lock and is audited.** `ContentDeleter` (built with the save gate in
+    `contentRouteGuards.ts`) holds the same `ContentWriteLock` as save and publish (D-074), so a delete and a save of
+    one activity no longer interleave, and writes one `content.delete` audit event (actor, owner's `User.id`, the
+    status it had; no title, DATA-007). The new audit action is added to the data inventory.
+  - **Cookie names are matched byte for byte.** `parseCookieHeader` trims only SP and HTAB around a pair, not every
+    Unicode space, so a name that differs from a cookie's name by another space character is a different name and
+    is ignored (AUTH-003). The trim is one pass over the pair, so parsing takes time in step with the header's
+    length. The written cookies are unchanged.
+- **No spec change.** These restore behaviour the specs already require (H5P-006's permission matrix, AUTH-003's
+  cookie rules); they are repairs, not new features. Later steps are logged in `PROGRESS.md` when they are made.
+- **Amendment (2026-11-20, the re-check of the first step):** the cookie trim is one pass over the pair, and a test
+  holds its time to the header's length; the sentence on which callers pass an ID is corrected (Lumi's second
+  write); the data inventory names `content.delete` beside the co-author events as holding a staff `User.id`; and
+  the wording of this entry, of `PROGRESS.md` and of the cookie parser's comments was brought in line with the
+  publishing rule above.
+
+### D-118 · Security repairs, step 2: how uploaded packages and files are read
+- **Context:** The second step of the repairs D-117 describes. It concerns the paths that take a file from an
+  author: the package import, the multipart reader and the SVG style rules. No spec changes: SEC-001, SEC-003 and
+  SEC-005 already require what follows.
+- **Decision — one reader for a package (SEC-005, SEC-003).** A package is read only through
+  `security/zipEntryGuard.ts` (yauzl, with its size validation): by the archive check, by the manifest reader, by
+  the library secret scan, and now also when Lumi unpacks it. `h5p/libraries/checkedPackageReading.ts` replaces the
+  two Lumi 10.0.4 functions that open a package themselves (`PackageImporter.extractPackage`, which is static, and
+  `PackageValidator.prototype.validateFileSizes`); Lumi goes on working on the unpacked folder. What is unpacked is
+  what was checked: the same entries under the same names (a backslash in an entry name is a folder separator, as
+  the archive check reads it), an entry must unpack to exactly the size it declares, the total limit is counted
+  while writing, and the file is closed afterwards whatever happens. An entry that cannot be read, or whose name
+  is at once a file and a folder of the package, is 400 `upload.archive.unreadable`; a failure of the disk or of
+  the temporary area stays a server error. Lumi's choice of entries is kept (`content/`, the library folders, `h5p.json`; no
+  file whose name starts with `.` or `_`), and an ordinary package unpacks to the same files as with Lumi's own
+  function (tested). `test/h5p/upstream/lumiPackageReading.test.ts` pins the two places where Lumi opens a package,
+  so a Lumi upgrade that adds a third fails there. Not chosen: a patch of Lumi's files in `node_modules` (not
+  reproducible), or a second check of the unpacked folder (it keeps two readers and checks late).
+- **Decision — every reader lets go of the package (SEC-005).** An entry is read only through `readEntryBytes` or
+  `openEntryStream`; a stream that fails is destroyed, so closing the package always frees the file. A refused or
+  failed import therefore leaves no open file and no upload folder (`test/http/packageImportOpenFiles.int.test.ts`).
+- **Decision — a package's file references follow the storage's name rule (SEC-005).** Lumi stores a file that the
+  package carries under the spelling of its reference in content.json. Such a reference must be a name
+  `assertSafeObjectName` accepts (no empty or `.` segment, no control character); otherwise the import answers 400
+  `upload.archive.unsafePath` before anything is unpacked. A reference to a file the package does not carry, a web
+  address and an empty reference are judged as before: nothing is stored for them. Not chosen: a `sanitizeFilename`
+  on the storages, which would rename authors' files silently and change the names D-092's guards compare. Both S3
+  stores also close the data they were handed when they refuse a name (`keyForUpload`).
+- **Decision — a broken upload is cleaned up at once (SEC-005).** When a multipart request fails part-way,
+  `readMultipart` stops the file being written before it waits for the write, then removes the folder and answers.
+  At start the server removes its own folders in the temporary area (`hvli-upload-*`, `hvl-svg-*`) that are more
+  than an hour old, which a run that was stopped in the middle of a request left behind
+  (`http/staleUploadFolders.ts`); no other folder is touched, and a failure there never stops the start.
+- **Decision — `url()` in SVG style text is found by a one-pass scanner (SEC-001).** `security/svg/cssUrlScan.ts`
+  replaces the single pattern in `svgRules.ts`. It reports exactly the functions the pattern reported (tested on
+  every text of up to five grammar pieces), so which style texts are kept, rewritten or refused does not change;
+  the time of `findCssViolation` and `neutraliseCss` now grows in step with the length of the text.
+- **Consequences:** Nothing changes for an ordinary package or picture. A package with a damaged or mis-declared
+  entry is answered with the "unreadable archive" message, and one whose content.json names a carried file with a
+  `./`, an empty segment or a control character with the "unsafe path" message. `lumiInternals.ts` now also loads
+  Lumi's `PackageImporter` and `PackageValidator`; a Lumi upgrade that moves them fails at start.
+
+### D-119 · Security repairs, step 3: the SVG cleaning runs in a worker thread, within limits
+- **Context:** Making an uploaded SVG safe (D-044) parses the author's text into a document twice with the HTML
+  parser and once as XML. How long that takes, and how much memory it needs, depend on the text and not only on its
+  size, which D-044 limits to 5 MB. The server answers every request on one main thread, so the cleaning must not
+  run there, and it must end. SEC-001 is unchanged; this is how its sanitiser is run.
+- **Decision:** The steps (`security/svg/svgPipeline.ts`, the same four in the same order) run in one worker thread
+  (`svgCleaningWorker.ts`), started with the server and kept ready. `security/svg/SvgCleaner.ts` hands it one file
+  at a time and holds it to three limits (`SVG_CLEANING_LIMITS`):
+  - **Time: 5 seconds for one file** (the owner's choice, 2026-11-20). Past it the worker is stopped, the file is
+    refused with the new message `upload.file.svgTooComplex`, and the next file gets a new worker.
+  - **Memory: 512 MB of heap for the worker**, enforced by Node (`resourceLimits`). Past it the same happens.
+  - **Waiting: 20 seconds for a turn.** A file that waits longer is refused with the new message
+    `upload.file.svgCheckBusy` ("try again in a moment", like `upload.file.scanUnavailable`) and is never cleaned,
+    so requests cannot pile up behind a slow file. A worker that is not ready within 30 seconds is treated the same.
+  The folder of Lumi's temporary copy is made and removed by the main thread, after the worker has answered or has
+  stopped, so a stopped worker leaves nothing in the temporary area. The worker loads the TypeScript sources with
+  the server's own loader (tsx, named by its file), and is `unref`ed once it runs, so it never keeps a stopping
+  server alive. A worker that cannot start is logged at start (`the SVG cleaning worker did not start`); SVG
+  uploads are then refused or fail, never stored unchecked.
+- **Why limits on time and memory, and not on the file's shape:** a count of elements or of nesting depth, taken
+  from the text, does not bound the work, because the HTML parser decides what document a text becomes. Time and
+  memory bound it whatever the text holds, and the main thread is free meanwhile.
+- **Why a worker thread and not a separate program:** a thread can be stopped at once and its memory is limited by
+  the runtime; it ends with the server by itself, needs no extra capability in the hardened container, and no
+  second copy of the configuration. A separate program would add start-up, signals and orphans to look after.
+- **Consequences:** An ordinary SVG is cleaned exactly as before (tested: the worker's output equals the steps'
+  output in the calling thread, and every existing SVG test runs through the worker). A drawing that takes longer
+  than 5 seconds to clean is refused with a message that says what to do (simplify it, or save it as PNG); where
+  that point lies depends on the server's speed. One file is cleaned at a time, so many large SVGs sent at once
+  wait for each other, at most 20 seconds each. The server process uses about 90 MB more while the worker is idle
+  and up to 512 MB more while it cleans one file (`docs/ops/docker.md`). The folder prefix `hvl-svg-` now belongs
+  to `SvgCleaner.ts`; D-118's start-up sweep looks for it there.
+- **Amendment (2026-11-20): the memory limit is held twice.** Node's limit for a worker thread is not in force
+  when the process is started with a heap flag (`--max-old-space-size`, on the command line or through
+  `NODE_OPTIONS`): V8 then gives every thread the process's limit. Operations often set that flag, so the limit
+  must not depend on its absence. While a file is being cleaned, the main thread asks the worker for its heap use
+  every 50 ms (`worker.getHeapStatistics()`, answered within milliseconds also while the worker is busy) and stops
+  it past the limit (`security/svg/svgCleaningLimits.ts`, which now also holds the numbers and the folder prefix
+  `hvl-svg-`). A test starts a process with the flag and checks that a file past a small limit is refused.
+
+### D-120 · Security repairs, step 4: limits on a learner's saved state and on what an author sends
+- **Context:** H5P-005 keeps a learner's answers so that a reload resumes them, and SEC-005 limits the size of one
+  upload. Neither said how much state one learner may keep, how often it may be saved, or how many files one person
+  may send. For the ten content types a real activity keeps exactly one state per learner, activity and course:
+  h5p.js saves data type `state` for sub-content `0` (H5P core 1.28, `H5P.setUserData(contentId, 'state', …)`),
+  every five seconds while the activity is open; none of the ten libraries saves any other. No spec change.
+- **Decision — the names of a state (H5P-005).** The state route accepts data type `state` only and a sub-content
+  ID that is `0` or a UUID; any other name is 400, for reads and writes, before the storage is asked.
+- **Decision — how much one learner may keep (H5P-005).** Per learner, activity and course: at most 20 states,
+  each at most 512 KB, together at most 1 MB (`h5p/storage/learnerStateLimits.ts`), counted as the stored JSON
+  text. A state past a limit is 413 and stores nothing. A write counts and stores in one transaction that first
+  takes a lock for that learner, activity and course (`pg_advisory_xact_lock`), so writes at the same moment
+  cannot pass the limits together; it holds the activity's row in share mode as before (D-093). Replacing a stored
+  state counts only the difference, and deleting one (`data=0`) is never refused.
+- **Decision — how often (H5P-005).** 60 saves a minute per learner and activity, counted in Redis before the body
+  is read; past it 429 `hvl:rate-limited` with `Retry-After`. h5p.js ignores a refused autosave, so a learner at a
+  limit keeps what was saved before and sees nothing.
+- **Decision — what a page load reads (H5P-005).** The player's preload reads only states marked `preload` (all
+  that Lumi's one caller keeps), at most 20 rows, the main state first, and passes on at most 1 MB in all,
+  whatever the table holds.
+- **Decision — what one author may send (SEC-005, SEC-001).** 120 editor file uploads and 20 package imports per
+  author in ten minutes, counted before the body is read; past a limit 429 `hvl:rate-limited` with `Retry-After`
+  (`http/h5pRouteLimits.ts`). And an author whose SVG files were refused as too complex (D-119) three times in ten
+  minutes gets the same answer for further SVG files until the ten minutes end: the cleaning worker takes one file
+  at a time, and this keeps one person from holding it. Other files and other authors are not affected.
+- **Why these numbers:** each is far above what the player and an author at work send (one state of a few
+  kilobytes, twelve saves a minute per open tab, a handful of files), and low enough that one person's worst case
+  is small: 1 MB per activity and course, and a bounded number of requests that reach the disk, the scanner or the
+  cleaning worker. They are constants, changed by a new decision, not settings.
+- **Consequences:** Nothing changes for an ordinary learner or author. The counters are four new Redis keys with a
+  number under an account ID (and an activity ID for saves), listed in `docs/privacy/DATA-INVENTORY.md`. Every
+  state write now runs in a transaction with one extra indexed count. The limits are not applied to states stored
+  before this step; the preload bounds what such rows can cost.
+
+### D-121 · Security repairs, step 5: limits on stored xAPI statements and on what insight lists from them
+- **Context:** LTI-011 stores the player's statements with DATA-012's minimal fields, 120 a minute per learner and
+  activity (D-115), and insight (INS-001 to INS-006) is built from the stored rows. Three things had no bound: the
+  `subContentId` of a part's answer was any text of up to 64 characters from the learner's browser, and INS-002
+  listed every `subContentId` it found; nothing limited how many statements a learner may add over time; and the
+  replay rule (D-115) read back every stored row of the batch's page loads. No spec change.
+- **Decision — a part's answer is stored only under a UUID (LTI-011, DATA-012).** H5P's sub-content IDs are UUIDs.
+  `classifyXapiItem` discards a part's `answered` whose sub-content ID has any other shape, counted as `invalid` in
+  the batch's log line like an item that fails the contract. The contract's item schema is unchanged.
+- **Decision — a limit per day beside the one per minute (LTI-011).** 3 000 statements per learner and activity in
+  24 hours (`XAPI_STATEMENTS_PER_DAY` in `xapi/XapiRateLimit.ts`), a second fixed window in Redis that only
+  batches the minute's limit allowed are counted in. Past it the batch is refused whole with 429 and
+  `Retry-After`, as past the minute's limit. A learner at work sends about 22 statements a minute at most (probe
+  P1), so a long working day stays far below it.
+- **Decision — the replay rule reads a window (DATA-012).** `XapiStatementStore.replayHistory` reads the learner's
+  latest 500 rows for the activity, newest first, in one query the `[learnerKey, contentId, timestamp]` index ends
+  after the window, and takes the rule's facts from them. The rule (`xapiReplayRule.ts`) is unchanged and gets
+  the same facts as before for any learner with fewer than 500 rows since their latest result. Beyond the window
+  a page load reads as having no stored answer and a result as not stored, which can at most store a repeated
+  result once more or drop one after 500 other statements; neither is reachable by normal use. Not chosen: a query
+  per page load (it must look through all the learner's rows when a page load has no result), or a new index on
+  `attemptId` (a migration for a case the window already bounds).
+- **Decision — insight lists a question outside the current content only for k learners (INS-002, INS-006).** A
+  `subContentId` that is not in the activity's current parameters (a question of an older version) is listed only
+  when at least *k* learners answered it, most learners first, and at most 50 of them (`MAX_UNLISTED_ITEMS` in
+  `insight/aggregate/itemDifficulty.ts`). So one learner's statements can neither add a row to a teacher's view
+  nor put an ID of their own choosing in it. Questions of the current content are listed as before, with their
+  counts suppressed below *k*.
+- **Consequences:** Nothing changes for an ordinary learner or teacher. One new Redis counter
+  (`hvli:xapi-day:<userId>:<contentId>`, a number, 24 hours), listed in `docs/privacy/DATA-INVENTORY.md`. A view of
+  an older version no longer lists a question that fewer than *k* learners answered; its cells were suppressed
+  already.
+
+### D-122 · Security repairs, step 6: one insight view reads at most 200 000 stored statements
+- **Context:** INS-001 to INS-005 are counted in the server from the stored rows of one activity, version, context
+  and period (D-106), and INS-009's CSV is the same view. The read was one query for every row of the scope,
+  whatever their number. No spec change.
+- **Decision — a view covers at most 200 000 stored statements (INS-001, INS-009).**
+  `insight/data/readInsightStatements.ts` first asks the database whether the scope holds more than
+  `INSIGHT_READ_LIMITS.maxStatements` rows, in time order on the `[contentId, contextId, timestamp]` index and
+  without a row leaving the database. A scope that does is refused (`InsightScopeError`, `viewTooLarge`). The
+  number: a course of 1 000 students who each do a 50-question activity three times stores about 150 000.
+- **Decision — below the limit the rows are read in pages.** 10 000 rows at a time, each page starting after the
+  last row of the one before by the order's own columns (`timestamp`, then `id`), and made into the aggregators'
+  statements as they arrive, so the server never holds more than one page of stored rows. The numbering of
+  learners and page loads continues across pages, so the view is the same as from one read.
+- **Decision — the API answers 422 `insight.viewTooLarge`, and the tab says what to do.** A status of its own, so
+  the web app can tell this refusal from a query the activity cannot answer (400). The Innsikt tab shows «Denne
+  perioden har for mange svar til at innsikta kan visast samla. Vel ein kortare periode …» as an alert and keeps
+  the period, version and course choices, also when the first view is the one refused. The view and the CSV export
+  share the answer. A refused view is not audited, like the other refusals: nothing was shown.
+- **Measured (2026-11-20, the development container):** a view of exactly 200 000 statements of 1 000 learners
+  took about 1 second and about 100 MB of heap above the idle server, and completes with Node's old-space limit
+  at 128 MB; refusing a scope of 2 000 000 statements took about 50 ms and no measurable memory.
+- **Consequences:** Nothing changes for a view within the limit. A period over it shows no view until a shorter
+  one is chosen. The contract documents 422 for `getInsight` and `exportInsightCsv`. New texts in nn, nb and en:
+  `insight.viewTooLarge` (server) and `insight.tooLarge` (web).
+
+### D-123 · Security repairs, step 7: a save stores only what the semantics describe; three more types refused as sub-content; production runs with the web app
+- **Context:** SEC-008 has content parameters cleaned by their semantics on save, H5P-002 (c) keeps
+  `H5P.DragQuestion` out of sub-content, and LTI-006 shows the player inside the web app's page (`/app/play`).
+  Lumi's `SemanticsEnforcer` cleans text fields and checks sub-content; its own source lists removing the keys the
+  semantics do not name, and checking the other values, as not yet done. H5P's PHP validator
+  (`H5PContentValidator`) does both before content is shown. The owner decided two questions on 2026-11-21 (the
+  fourth and fifth decisions below).
+- **Decision — on every save the parameters are fitted to their semantics, as H5P's validator does (SEC-008).**
+  `h5p/semantics/semanticsConformance.ts` runs at the end of `SubContentPolicy.enforce`, so for a new activity, an
+  edit, a copy and a pattern alike. It removes every key a field list does not name: in a library's parameters
+  and in a group; a sub-content entry keeps `library`, `params`, `subContentId`, `metadata` and its field's
+  `extraAttributes`; a file value keeps H5P's keys for its kind (`fileValueConformance.ts`). A `subContentId` is
+  kept only when it is a UUID. A number is a finite number within `min` and `max` (a numeric string becomes a
+  number), a boolean a boolean, a select one of its options, a file's `mime` a plain `type/subtype` and its sizes
+  numbers. What does not fit is removed, not refused: content from other H5P systems and from older library
+  versions carries harmless leftovers, and H5P's own validator removes them too. How many keys and values a save
+  lost is logged, never what they held.
+- **Decision — a single-field group has one stored form (SEC-008).** H5P's editor stores such a group as the
+  field's value, and its player reads it so. Lumi's `ContentScanner` also reads an object with a key named like
+  the group as the group itself. `paramsWalker.ts` now reads every single-field group as its field, so a list
+  there must be a real array, and refuses a value Lumi would read the other way (400 `hvl:invalid-params`).
+- **Decision — refusals first, fitting last.** The refusals of D-039 (a library a field does not offer, a
+  `library` value under a key no field names, an unsafe file path wherever it sits, nesting that is too deep) are
+  unchanged and run before anything is removed, so a refused save is left as it came.
+- **Decision — three more types are not accepted as sub-content (H5P-002; the owner, 2026-11-21).** The
+  containers among the ten offer nine installed types beside the ten. Six stay, because the project already
+  adapts and checks them (the feedback prefixes, the validator's rules): `H5P.TrueFalse`, `H5P.SingleChoiceSet`,
+  `H5P.MarkTheWords`, `H5P.Summary`, `H5P.MultiMediaChoice` and `H5P.Dialogcards`. `H5P.AudioRecorder` (records
+  the learner's voice), `H5P.TwitterUserFeed` (loads a third party's content) and `H5P.Questionnaire` (a survey
+  with free-text answers) join `H5P.DragQuestion` in `EXCLUDED_SUB_CONTENT`: no library field offers them in the
+  editor, and a save that carries one is refused with 403 `hvl:sub-content-not-allowed`. The libraries stay
+  installed. Spec 01 §3 says so.
+- **Decision — production runs with the web app (LTI-006; the owner, 2026-11-21).** `productionChecks.ts`
+  refuses `WEB_APP=off` under `NODE_ENV=production`, named or left at its default, as it refuses `dev`. `off` and
+  `dev` stay for tests and development. The image and `deploy/compose.app.yml` set `prod` already.
+- **Verified:** the example activity of each of the ten types and every pattern skeleton (nn, nb and en) pass the
+  fitting with nothing removed or changed, with one exception. BranchingScenario's editor writes a `contentId`
+  into each content node, which its semantics do not name; the player numbers the nodes itself when it starts,
+  so the key goes like any other.
+- **Consequences:** An activity that holds one of the three refused types as a piece still plays, and must have
+  the piece taken out before it can be saved again. A production deployment with `WEB_APP=off` no longer starts,
+  and says why. Text PostgreSQL cannot store (PROD-012) no longer refuses a save when it sits in or under a key
+  no field names: it goes with the key. No new stored data.
+
+### D-124 · Security repairs, step 8: the player and the editor are handed fitted content, whatever the stored row or the package holds
+- **Context:** D-123 fits the parameters to their semantics on every save. Content also reaches a browser without
+  passing a save: the player reads the stored row, the editor reads it when an activity is opened, and an uploaded
+  package's content.json goes to the editor before anything is saved. H5P's own server software fits content each
+  time it is shown or edited, and hands the editor text in the form of PHP's `htmlspecialchars` (a double quote as
+  `&quot;`); H5P's editor writes a text field's value straight into `value="…"` on that assumption. Lumi stores a
+  plain `"` in text and hands rows over as they are.
+- **Decision — fit when read; stored rows are not rewritten (SEC-008, H5P-004).** `h5p/semantics/playedParams.ts`
+  wraps the player's `render`: every model's `jsonContent` goes through D-123's fitting. Nothing else is judged
+  again: text was cleaned when the row was saved, and no sub-content is refused, so what could be stored still
+  plays. Rewriting the rows once was not chosen: it needs an operator's step at each deployment, and a row
+  written later by other means would escape it. Fitting when read needs neither, costs one walk over cached
+  semantics, and the row is fitted for good at its next save.
+- **Decision — the editor's form is handed cleaned content (SEC-008, SEC-005, H5P-006).**
+  `h5p/semantics/editorFormParams.ts`, put on the editor's `getContent` and `uploadPackage` by
+  `h5p/editorFormReads.ts`: the parameters are fitted, every text field is cleaned by the save's rules, what the
+  "Rights of use" dialog renders is cleaned and an unsafe file path refused. In every text field that is not rich
+  text, and in title data (`metadata`, `copyright`), `"` is written `&quot;` and `'` `&#039;`, as the editor's own
+  `htmlspecialchars` writes them. A save reads both forms alike, so what is stored does not change. No
+  sub-content is refused here: an activity or a package with a type the save refuses still opens, and the author
+  can take the piece out.
+- **Decision — an import whose content cannot be read is a 400 (PROD-012).** `h5p/libraries/packageContentCheck.ts`
+  walks the content of a non-admin's package by its semantics before Lumi's importer does. Content whose values
+  do not have the JSON types Lumi's scanners assume is refused with `hvl:invalid-params`, where Lumi's walk ended
+  with a TypeError.
+- **Verified:** BranchingScenario's editor opens and saves its example with and without the `contentId` D-123
+  removes (the same five nodes, no error). A label with a double quote, cut off at the quote before, is shown
+  whole in the editor, and so is the title.
+- **Consequences:** A text with a quote is no longer cut off when an activity is opened for editing. A row that
+  cannot be read as its semantics describe, which the editor's save never stores, fails to play or to open with
+  400. No new stored data.
+
+### D-125 · Security repairs, step 9: a web-app page is framed by nothing, the player frames only outside media, and three controls ask first
+- **Context:** Since D-070 a page of our own origin could frame any other page of ours: web-app pages were sent
+  with `frame-ancestors 'self'` and `X-Frame-Options: SAMEORIGIN`, and H5P pages with `frame-src 'self'`. The H5P
+  player is a page of our own origin, and what it shows is content that authors made. On the activity page three
+  controls acted on a single press: «Gjer om til utkast», «Fjern» for a co-author and «Ta ut av innhaldsbanken».
+  A page of ours shown inside an activity would put those controls under whatever the activity draws over them.
+  D-123 and D-124 keep content from carrying a frame of its own; this step does not rest on that.
+- **Decision — a web-app page is framed by nothing (DATA-011, LTI-003).** `web/webRoutes.ts` sends every web-app
+  page without a Canvas launch with `frame-ancestors 'none'` and `X-Frame-Options: DENY`. Nothing of ours shows
+  such a page in a frame: the web app frames the H5P player and editor, never the other way round. A page with a
+  launch (`/app/*`) keeps its rule: our own origin and `CANVAS_ORIGINS`, and no `X-Frame-Options`. The H5P pages
+  and the server's own message pages keep `frame-ancestors 'self'`, because the web app shows them in its frames;
+  they hold no control that changes an activity's status, authors or listing.
+- **Decision — the player frames only outside media (DATA-011).** `http/h5pPageCsp.ts`: a player page's
+  `frame-src` lists `EXTERNAL_MEDIA_ORIGINS` only, and is `'none'` when there are none. The editor page keeps
+  `'self'`. The frames H5P builds itself start from an empty page it writes into, which `frame-src` does not
+  refuse. This replaces D-070's `frame-src 'self' <EXTERNAL_MEDIA_ORIGINS>` for the player page.
+- **Decision — three controls ask before they act (PROD-007, UD-006).** `components/ConfirmDialog.tsx`, built on
+  the existing `Dialog` (focus moves in, Escape closes, focus returns to the control): a question as the heading,
+  one sentence on what follows, the action and «Avbryt». It is used by «Gjer om til utkast»
+  (`features/activity/CheckPanel.tsx`), by «Fjern» and «Fjern meg» in the co-author list
+  (`features/sharing/CoAuthorSection.tsx`) and by «Ta ut av innhaldsbanken»
+  (`features/sharing/BankUnlistButton.tsx`). The first press sends no request; «Avbryt», «Lukk» and Escape send
+  none either. Publishing and listing already asked (their dialogs carry the check's result and the conditions).
+- **Why both.** The framing rules are enforced by the browser, header by header. The question is ours, and holds
+  whatever a browser does with a header and whatever a later change does to one. Either alone would do; an
+  activity going back to draft in the middle of a course is worth two.
+- **Verified:** the ten real content types play with the tighter `frame-src`, interactive video and course
+  presentation included. In a browser, a web-app page put in a frame by a page with the player's policy is refused
+  by `frame-src`, and by a page with the editor's policy by `frame-ancestors 'none'`; opened directly it loads.
+  Each question passes the axe scan, and the «Fjern meg» journey is answered by keyboard alone.
+- **Consequences:** A web-app page can no longer be embedded in any page, ours or another site's. An activity
+  cannot embed another page of this service in a frame; embedding goes through the content types' own
+  sub-content. The three actions take one more press. No new stored data.
+
+### D-126 · Security repairs, step 10: one activity's parameters have a size limit, checked before anything reads them
+- **Context:** SEC-005 limits files and packages. The parameters of an activity (content.json) and its metadata
+  were bounded only by the size of the request, 20 MB. Every step of a save reads them, and each was written for
+  content an author makes in the editor: the example activity of each of the ten types is 2 to 15 kB with at
+  most 350 values, and a very large real activity is around 1 MB. Some steps take time that grows with the
+  square of what they read. htmlparser2 12.0.0, which sanitize-html (Lumi's cleaning and ours) and our own text
+  reading parse with, keeps the open tags in a list it adds to at the front, so a text whose tags are never
+  closed costs the square of its length. Lumi's pattern for a library and its version, `/.+ \d+\.\d+/`, tries
+  every start for every space. Our comparison of two text lists compared each item with every item, and the
+  trim of a drag word's trailing white space used `/\s+$/`.
+- **Decision — the limits (SEC-005, PROD-012).** `h5p/semantics/contentBudget.ts`, for the parameters and for
+  the metadata of one activity: 4 000 000 characters in all strings and keys together; 200 000 values (objects,
+  lists and leaves); one string 200 000 characters, with at most 100 tags open at once; a key 256 characters; a
+  string under a key named `library` 255 characters. One iterative pass that stops at the first limit passed.
+  Past a limit the answer is 400 `hvl:content-too-large`, with a message in nn, nb and en that says whether the
+  activity as a whole, one text's length or one text's formatting is the reason, and nothing from the content.
+- **Decision — open tags are counted by the parser itself.** `h5p/semantics/markupDepth.ts` feeds the text to
+  htmlparser2 in pieces of 2 048 characters, counts the tags it opens and closes, and feeds no further piece
+  once the limit is passed. The count is therefore the parser's own (a `<p>` it closes by itself and a `<br>`
+  count as it treats them), in this version and in a later one, and counting costs time that follows the
+  text's length.
+- **Decision — checked first, at every door.** `http/routes/contentSaveBodies.ts` reads the body of a save, of
+  «Lagre som ny versjon» and of the editor's paste check (`action=filter`, where Lumi cleans what it is sent),
+  and checks the limits before the publish gate's validator, the sub-content policy or Lumi read anything.
+  `SubContentPolicy.enforce` checks them on every save, the server's own included. `packageManifest.ts` checks
+  the content.json of an imported package, `editorFormParams.ts` what the editor's form is handed. A save
+  request is at most 6 MB, where it was 20 MB.
+- **Decision — a list holds at most its field's `max` (SEC-008).** The fitting of D-123 cuts a longer list to
+  `max`, as H5P's own server software does (`validateList`); the editor never adds more. H5P.InteractiveBook's
+  `chapters` (50) and H5P.Blanks' `questions` (31) are such lists. A long list is written back item by item: a
+  list of 150 000 numbers ended the save with a RangeError before.
+- **Decision — three steps read long input in time that follows its length (PROD-013, H5P-002).**
+  `libraryReferences.ts` tests for a library and its version with `/[^\n\r  ] \d+\.\d/`, which
+  matches exactly when Lumi's pattern does; Lumi's own copy only ever reads 255 characters. `structuralChange.ts`
+  compares two text lists through a set. `answerMarkup.ts` trims with `trimEnd()`. A stored version past the
+  limits is not compared by `LearnerStateGate`: the save counts as structural, so the author is asked before
+  saved progress is reset.
+- **Why these numbers.** Four times the largest activity we expect, and small enough to measure. The largest
+  content inside the limits (nineteen texts of 200 000 characters, each with 100 tags open throughout) is
+  measured by the limit pass in 0.17 s, cleaned by sanitize-html in 0.5 s and saved through the route in about
+  1.4 s (1.1 s without the check). One text of 200 000 characters whose tags are never closed took 0.37 s to
+  parse; the limit pass refuses it in 2 ms.
+- **Verified:** the example activity of each of the ten types is inside every limit, at less than a hundredth
+  of the largest size; the new pattern agrees with Lumi's on a table of values and on 300 000 random strings.
+- **Consequences:** Content brought in from elsewhere with one text over 200 000 characters, or with more than
+  100 tags left open in one text, is refused with a message; the H5P editor produces neither. A list past its
+  `max` loses the items after it when saved. No new stored data.
+
+### D-127 · Security repairs, step 11: the validator reads only content within the limits, in time that follows its size; a slow pattern is a lint error
+- **Context:** D-126 keeps content past the limits from being stored. The validator (UD-020) reads the stored row
+  for the findings list, on publishing and for every activity in the mappe, and the submitted form when a
+  published activity is saved. A row can be written by other means than a save. Inside the limits, two rules took
+  time that grew with the square of what they read: V-LINK-TEXT trimmed a link text with a pattern that tried
+  every start in a run of punctuation, and PED-H10 went through all nodes once for each chapter of an Interactive
+  Book. Several rules parsed texts that the walk had parsed already, and the validator builds a path for
+  everything it reads.
+- **Decision — a guard where the validator is wired (UD-020, SEC-005, PROD-003).** `content/boundedValidator.ts`
+  wraps the validator in the publish flow's dependencies (`content/publishingDeps.ts`, which `createApp` builds
+  them with): parameters or metadata past a limit of D-126 are answered with exactly one finding, `V-SIZE`, an
+  error at the path of the activity as a whole, with a message in nn, nb and en, and the validator is not called.
+  The findings list, publishing and the save of a published activity share the guard, and the mappe lists the
+  finding, so it never shows an unchecked activity as one without findings. The guard lives outside
+  `src/validation`, which imports nothing but itself (D-073); no rule file produces `V-SIZE`.
+- **Decision — one more limit (amends D-126).** `CONTENT_LIMITS.pathCharacters`: the paths of all values of one
+  activity together are at most 50 000 000 characters, a path counted as its keys and indices with their
+  separators. It bounds the memory the paths of one check can take. The example activity of each of the ten types
+  has at most 14 000.
+- **Decision — two rules read in time that follows the size of what they read (UD-021, PED-020).**
+  `rules/linkTextRule.ts` finds the punctuation around a link text by stepping over its characters once from each
+  end. `rules/chapterInteractionHint.ts` tallies every chapter of a book in one pass over the nodes after it,
+  which come in pre-order. The verdicts are the same.
+- **Decision — one validation run parses each distinct text once (UD-020).** `richText.ts` has a reader that keeps
+  what it has parsed; `rule.ts` builds a scope with one reader per run (`ruleScope`), the walk reads through it,
+  and every rule and helper reads through its scope. Nothing is kept between runs, so the validator stays pure.
+- **Decision — a slow pattern is a lint error (NFR-004, NFR-002).** `eslint-plugin-regexp` 3.3.3, a development
+  dependency (four packages, MIT), with `regexp/no-super-linear-move` and `regexp/no-super-linear-backtracking` as
+  errors for `apps/server/src`, `apps/web/src` and `packages/*/src`. It found five places, each rewritten to give
+  what it gave before: the slashes at the end of the Groups API URL, the hyphens and dots at the ends of a copied
+  file name, the tip of a drag word in insight, the backslashes in front of quotes in the build-secret scan
+  (`(?<!\\)` lets a match begin only where a run begins) and the end of a JSON error message. No exception was
+  needed.
+- **Why the validator runs in the server's own process still.** With the limits and these changes, the guard and
+  the validator together take at most about a third of a second on content inside the limits: nineteen texts of
+  200 000 characters 0.13 s, 20 000 small texts with a finding each 0.33 s, a book of 50 chapters with 400 texts
+  each 0.34 s. A worker would add a queue and a second wiring of the validator for that much work.
+- **Verified:** every rule fixture gives the findings it gave (the rule tests), and no fixture has a text parsed
+  twice. The five rewritten functions and the link-text rule were compared with the earlier code on lists of
+  inputs and gave the same. A book with 2 000 chapters of ten texts went from 2.7 s to 0.2 s, and a link text of
+  199 000 punctuation marks is judged in 9 ms.
+- **Consequences:** A stored activity past the limits shows one finding on «Sjekk og publiser» where it showed
+  the validator's own. A new development dependency. No new stored data.
+
+### D-128 · Security repairs, step 12: limits per person on new activities, the planner and the mappe; the planner and the mappe do their work in bounded portions
+- **Context:** Three things a signed-in author asks for cost the server work the author chooses the amount of. A
+  new activity is a save. The planner (PED-031) read every activity of a course and built its grid by going
+  through all of them once for each cell. A mappe (MAPPE-001) read up to fifty selected activities with their
+  parameters in one query, checked them one after the other without a pause, and listed every finding. None of
+  the three was counted per person.
+- **Decision — three limits per person (PROD-007, PED-031, MAPPE-001).** Fixed ten-minute windows in Redis, with
+  the counter of D-090 and D-120 (`PersonRateLimit`): 60 new activities (the editor's save of a new activity and
+  the creation from a pattern count under one key; copies keep D-092's limit of their own), 120 planner
+  requests, and 120 mappe previews and exports together. Past a limit the answer is 429 `hvl:rate-limited` with
+  `Retry-After`, before the request is read. `http/h5pRouteLimits.ts` holds the first,
+  `learningDesign/http/studioRouteLimits.ts` the other two.
+- **Why these numbers.** An author at work creates a handful of activities in an hour, opens the planner now and
+  then, and gets a mappe preview each time the choice of activities rests (the page waits 400 ms after a change),
+  which is 30 to 50 in a busy session. The limits are several times that.
+- **Decision — a planner holds at most 300 activities (PED-031).** `metadata/plannerSource.ts` reads the 300 most
+  recently changed activities of the course and one more, which tells whether there are more; the answer's
+  `moreActivities` says so, and the page then says how many it shows. A course has a few dozen activities.
+  `metadata/plannerGrid.ts` files each activity under its outcomes and its phase in one pass: the same rows,
+  cells, order and gaps as before.
+- **Decision — a mappe reads and checks one activity at a time (MAPPE-001, MAPPE-002).**
+  `mappe/mappeActivitySource.ts` lists the selected activities without their parameters; `MappeRenderer` then
+  reads each activity's parameters, checks them and lets them go before it reads the next one's. The server holds
+  one activity's parameters at a time, and each read is a pause in which it answers other requests.
+- **Decision — a mappe lists the first 50 findings of an activity (MAPPE-002).** The universal design status
+  still counts all errors and warnings; when an activity has more than 50 findings the status line ends with a
+  sentence that says the first 50 are listed (nn, nb, en). The templates in `content/mappe/` are unchanged.
+- **Verified:** a grid of 3 000 activities with twenty outcomes each took 18 s to build and takes under 2 s; the
+  planner's existing table tests give the same result. The mappe's existing exports are unchanged.
+- **Consequences:** An author who passes a limit waits up to ten minutes. A course with more than 300 activities
+  of one author shows the 300 most recently changed in the planner. A new field in the planner's answer. Three
+  new counters in Redis, each a number under an account ID (`docs/privacy/DATA-INVENTORY.md`).
+
+### D-129 · Security repairs, step 13: a Canvas user is known per platform registration; launch input no platform sends is refused with 400
+- **Context:** A person who arrives from Canvas was known by the launch's issuer and `sub`: the account by a keyed
+  hash of `lti|<iss>|<sub>` (D-055), the learner pseudonym by the yearly HMAC of the same text (D-011, DATA-002).
+  A platform, though, is registered by issuer **and** client ID (LTI-001), because every Canvas that Instructure
+  hosts sends the same issuer (`docs/reference/canvas-platform-values.md`), and a `sub` is unique within one
+  platform only. With two registrations of one issuer, the same `sub` from either would have been one account and
+  one pseudonym. D-103 keeps courses apart per platform; the identity did not. Which Canvases HVL Interaktiv will
+  be connected to is not decided (owner, 2026-11-21), so the rule must hold for any number of registrations.
+  Separately, a login field or a launch claim holding a character PostgreSQL cannot store failed inside the
+  database driver and was answered with 500 and an error line, although the sender was at fault (PROD-012).
+- **Decision — the identity text names the registration (DATA-002, LTI-001).** It is
+  `lti|<iss>|<client-id>|<sub>`. The client ID is the registered platform's: ltijs writes it on the stored
+  launch after it validated the token against that registration, and `lti/launchFacts.ts` reads it from there,
+  never from a claim. The identity hash and the learnerKey are both derived from this one text
+  (`privacy/deriveLearnerKey.ts`, `auth/identity/subjectSources.ts`): at the launch, for a request that resumes a
+  launch, in account linking (AUTH-005) and in the data-subject tool. Neither issuer nor client ID may contain
+  `|` or a control character; `LTI_PLATFORMS` refuses one that does, so the text reads one way whatever the `sub`
+  holds.
+- **Why issuer and client ID, and not the platform row's ID.** They are what `LTI_PLATFORMS` says, so the
+  data-subject tool derives a person's keys from what an operator knows, without a database row. They name the
+  registration exactly as the row does, since the pair is unique.
+- **Decision — the data-subject tool takes the client ID (DATA-008; amends D-108's input form).** A Canvas
+  identity on standard input is `{"issuer": "…", "clientId": "…", "sub": "…"}`. One without `clientId` is refused
+  by field name; the tool never guesses a registration.
+- **Decision — nothing is converted.** HVL Interaktiv has not been used by real people through Canvas (owner,
+  2026-11-21); only test data exists. A hash of the earlier text can never match a launch again, and left on a
+  Feide account it would count as another person's identity from the same platform when that teacher is linked
+  anew (D-063). The migration `20261121190000_lti_identity_per_registration` therefore removes the `Identity`
+  rows of provider `lti`; accounts and Feide identities stay. A person who used a test Canvas gets a new account
+  at the next launch, a teacher's Canvas identity joins their Feide account again at the next Deep Linking
+  launch, and an ltik from before the change answers «open again from Canvas». Learner rows under the earlier
+  pseudonyms go with the yearly purge (DATA-003).
+- **Decision — launch input no platform sends is the sender's error (LTI-001, PROD-012, NFR-006).**
+  `lti/ltiInputText.ts`: a query or form field of the login and launch routes with a control character is
+  refused before ltijs reads any field; of the claims that are stored, the `sub` may hold no control character,
+  and every string and key must be text the database can hold (no U+0000, no unpaired surrogate; a description
+  on several lines is fine). The check runs before the deployment check and the write. The answer is 400
+  `hvl:launch-malformed` with the existing «could not be opened from Canvas» page, logged as a warning with the
+  fixed code and, on the launch route, audited as a failed launch (`launch-invalid`). An issuer, client ID or
+  nonce that no row could hold is "not found" in `PrismaLtiDatabaseManager`, never a query.
+- **Consequences:** Changing a Canvas developer key (a new client ID) gives its users new accounts and new
+  pseudonyms, as a new platform already gave their courses new IDs (D-103): keep the key, or plan the change
+  for the turn of the academic year. A person who uses two registrations is two learners in the counts. The
+  operator of a data-subject request needs the client ID from `LTI_PLATFORMS`
+  (`docs/ops/data-subject-requests.md`). One data-only migration; no new stored field.
+
+### D-130 · Security repairs, step 14: an ltik reaches only what its launch's pages ask for; an address with an ltik counts only from our own pages
+- **Context:** The ltik stands in for a cookie in the Canvas frame (LTI-003, D-058): a signed token that names
+  the stored launch and lives for 24 hours. Every request with a valid ltik acted as the launch's account without
+  further limit, so the token of a teacher's launch could list, create, delete and download that teacher's
+  activities and change their sharing, none of which a Canvas page does. And the four pages a launch lands on
+  (`/app/play`, `/lti/play`, `/lti/edit`, `/lti/deeplink`) took an address with an ltik wherever the browser came
+  from, for the token's whole life: someone who followed a link carrying another person's ltik worked inside
+  that person's launch.
+- **Decision — a list per kind of launch, default deny (LTI-003, LTI-004, LTI-006, PROD-007).**
+  `lti/ltikScope.ts` lists the methods and paths the Canvas pages ask for. `auth/requestPrincipal.ts` asks it
+  for every request that carries an ltik, as a Bearer token or in one of H5P's URLs, and answers anything else
+  with 403 `hvl:not-from-canvas` («this cannot be done from Canvas; open HVL Interaktiv in the portal»; nn, nb,
+  en). A resource-link launch reaches the launched activity's saved state and xAPI answers and, for its author,
+  the Canvas editor (H5P's AJAX, the stored parameters, the save, and the findings that block a save), insight
+  and the score status of the launch's course; an ID in the path must be the launch's own activity. A Deep
+  Linking launch reaches no activity route: its picker and its answer are LTI routes that check the launch
+  themselves (D-061). Every launch may ask `GET /api/me` and acknowledge a notice. Routes the API contract marks
+  `auth: 'none'` (D-089) answer as they do without a token. The list was drawn from what the pages were recorded
+  to ask in the integration tests and the browser journeys. Each route's own role and permission checks still
+  run; the list only narrows what reaches them.
+- **What an ltik no longer reaches.** The list of activities; creating, deleting, downloading and copying an
+  activity; publishing and unpublishing; sharing, which had no control on a Canvas page (PROD-006); the
+  portal's own player and editor pages; and every activity but the launched one. These need the portal's Feide
+  session. A route added later is closed to ltiks until it is listed.
+- **Decision — the lifetime stays 24 hours.** ltijs fixes it, and a working day in Canvas (an author who edits,
+  a learner who returns to a long activity in the same tab) needs no second launch. What a held token is worth
+  is now bounded by the list.
+- **Decision — an address with an ltik counts only from our own pages (LTI-003).** `lti/landingLtik.ts`, used by
+  the four landing routes: when the browser sends `Sec-Fetch-Site` and it is not `same-origin`, the address is
+  refused before the ltik is looked at; when the browser sends no fetch metadata, the address is accepted only
+  within ten minutes of the ltik's issue. The answer is the «open it again from Canvas» page
+  (`hvl:ltik-invalid`), as for any ltik that is not valid. This refuses no launch: ltijs 7 processes a launch
+  only on its own second POST, which it requires to be same-origin (D-050), so the redirect to the landing page
+  is a same-origin navigation, and the frames inside `/app/play` are ours. Measured in Chromium through the mock
+  Canvas: every landing arrives with `Sec-Fetch-Site: same-origin` and `Sec-Fetch-Dest: iframe`.
+- **Consequences:** A copied or bookmarked address with an ltik no longer opens. In a browser that sends no
+  fetch metadata (Safari before 16.4), the **Rediger** tab first opened more than ten minutes after the launch
+  asks for a new launch. `LTIK_QUERY_PATHS` holds only H5P's two URL shapes; the landing pages read their own
+  address. Browser tests that hold an ltik arrive through `test/support/openLanding.ts`. No stored data
+  changes.
+- **Amendment (2026-11-25, D-141):** that ltijs requires its second POST to be same-origin held only for browsers
+  that send fetch metadata; since D-141 our handler requires it of every browser, by `Origin` where
+  `Sec-Fetch-Site` is missing.
+
+### D-131 · Security repairs, step 15: the portal's login, its answers and the save gate are closed to other sites' requests and to a second spelling of an ID
+- **Context:** Four small things on the portal side. Starting a Feide login replaces the session a browser has,
+  and with Feide's single sign-on it needs no step from the person: a request to `/auth/feide/login` that another
+  site made in the background changed the session token under the person's open pages, and a callback with
+  made-up values used up the pending login, because the login transaction was taken out of Redis before its
+  `state` was compared. Answers about the signed-in person carried no rule against being embedded by another
+  site, portal pages kept the window handle of whoever opened them, and some H5P answers behind authentication
+  had no cache rule. The publish gate on saves (D-074) took its write lock under the ID as the request wrote it,
+  and stepped aside when its lookup found no activity.
+- **Decision — only a page the person opened starts a login (AUTH-001, AUTH-003).** `auth/feide/loginNavigation.ts`
+  reads the browser's fetch metadata. A request that is no navigation (an image, a script, a background fetch)
+  is refused. A whole page that began on our own origin, in the address bar or a bookmark, or with a click by
+  the person (a link in an e-mail, in Canvas, on another site) starts the login as before. Any other navigation,
+  a page another site opened without a click or a frame, gets the sign-in page (`page.signIn.*`, nn, nb, en),
+  whose button starts the login as a click on our own page, in the whole window. A browser that sends no fetch
+  metadata is treated as before.
+- **Decision — a callback uses up only its own login (AUTH-001).** `/auth/feide/callback` is taken only as a
+  page navigation. It looks at the pending login first (`LoginTransactions.peek`) and consumes it, and clears
+  its cookie, only when the callback's `state` is that login's; any other callback is refused and leaves the
+  login in place for Feide's own answer. Consuming stays single-use (GETDEL).
+- **Decision — a page asks once for the current CSRF token (AUTH-003).** When a portal request is refused with
+  `hvl:csrf-invalid`, the web app's API client asks `GET /auth/session` once, repeats the request with the
+  session's current token and remembers it (`apps/web/src/api/csrfRetry.ts`). The session cookie decides who
+  that is; the token only proves the request came from our page, so a page of the same browser may fetch it.
+  A session is still replaced at every login (D-057): a login never keeps a session ID that existed before it.
+- **Decision — answers about the signed-in person are same-origin only (AUTH-003, H5P-007).**
+  `ownAnswerHeaders` (`http/securityHeaders.ts`) on `/api`, `/auth/session` and every H5P route behind
+  authentication: `Cache-Control: no-store`, `Cross-Origin-Resource-Policy: same-origin` and the portal framing
+  rule. Portal pages send `Cross-Origin-Opener-Policy: same-origin`. LTI pages do not: Canvas frames them, and
+  ltijs's Platform Storage messages go to the window that opened or holds the tool (D-050). H5P's static files
+  and the signed file addresses come before authentication and keep their own rules.
+- **Decision — one spelling of an activity ID (PROD-003, H5P-006).** The content routes read the ID in lower
+  case (`contentIdParam`), `PublishedSaveGate` lower-cases it for its lock and its lookup, and it refuses with
+  404 when it finds no activity. PostgreSQL finds a UUID in any case, so the check itself ran; what a second
+  spelling got past was the lock a publish of the same activity holds.
+- **Recorded, not changed — cookies from other `hvl.no` sites.** The session and login cookies have the `__Host-`
+  prefix, so no other host can set or replace them. Another site under `hvl.no` can still set cookies for the
+  whole domain until a visitor's requests are larger than the proxy or the server accepts; the person is then
+  refused until they clear their cookies. This follows from the address, not from the code: it is in the threat
+  model (T-43) and the risk analysis (ROS-07) with the two remedies that are HVL's to choose, a page at the
+  proxy that says to clear cookies, or a registrable domain of its own (with Q5).
+- **Consequences:** One new server page (the sign-in page), scanned with axe. A redirect to our login that
+  another site makes without a click (an interstitial, a link checker) shows that page and costs one click. A
+  request refused for its CSRF token costs two extra requests once. No stored data changes.
+
+### D-132 · Security repairs, step 16: a backup counts rows at real row ends and reads file keys exactly
+- **Context:** The backup tool checks its own work (D-110's backup amendment): it records each table's row count
+  from the dump, and a restore compares the counts and looks for content files without an object. The counts
+  were taken by counting lines of `pg_restore`'s output with `node:readline`, which ends a line at the newline
+  but also at U+2028 and U+2029. A database value may hold those characters (an author or a learner pastes them
+  from a word processor), and COPY's text format writes them as they are. Such a row was counted twice: the
+  backup recorded a count the restore could never meet, so every restore of that backup reported a difference
+  where there was none. The content-file check read the keys through `psql`'s text output, split at line ends
+  and at `|`, so a key holding either was read as something else and reported as missing.
+- **Decision — rows end at the newline byte only (NFR-002).** `newlineSplitter` in `tools/ops/toolProcess.mjs`
+  cuts the output at the byte 0x0A and nowhere else, and decodes each line as UTF-8 after joining its chunks.
+  COPY's text format writes a newline inside a value as backslash and `n`, so a newline byte is always the end of
+  a row; no other character is.
+- **Decision — the restore names the tables that differ (NFR-002, DATA-009).** Its summary has `differingTables`
+  beside `tablesDiffering`. A table's name says nothing about a person, and an operator needs to know where to
+  look.
+- **Decision — keys are read as hex (NFR-002).** `missingContentFiles` asks for
+  `encode(convert_to("s3Key", 'UTF8'), 'hex')` and decodes it, so no character of a file name can be taken for the
+  end of a field or a row. The other values this tool reads through `psql` are table names it has checked
+  against `TABLE_NAME`, counts and version numbers.
+- **Verified:** a round trip of rows whose texts and JSON hold U+2028, U+2029 and U+0085, and of content files
+  whose keys hold a bar and those characters: the recorded counts are the real ones and the restore reports
+  nothing differing or missing. A key with a line break is checked against the database alone, because the
+  storage emulator accepts no line break in a key.
+- **Consequences:** A backup made before this change keeps the counts it recorded: where a text held one of the
+  characters, its restore still reports that table as differing, and now names it; the next backup is right.
+  The restore's summary has one more field.
+
+### D-133 · Security repairs, step 17: the server states its mode, a reachable address keeps the key and https rules, every fault ends through the logger, and every answer has a policy
+- **Context:** Three things at the server's edges rested on habit instead of a check. (1) The production start-up
+  checks (D-055, D-109 and others) ran only when `NODE_ENV` was `production`, and a missing `NODE_ENV` silently
+  meant `development`: an installation that lost the variable ran on a real address with every check off, the
+  published example keys included, and said nothing. (2) Three kinds of fault went around the logger, which is
+  the only place that removes personal data and secrets (DATA-009): a fault after an answer had begun went to
+  Express's own final handler, a fault nothing caught and a failed start went to Node's own printing, and the
+  debug switches `DEBUG` and `NODE_DEBUG` make libraries and Node print addresses and headers on their own. A
+  start that failed after a client had connected could also leave a process that served nothing. (3) An answer
+  that is not a page (a status, an error, a static file) carried no `Content-Security-Policy`, so nothing limited
+  it if a browser showed it as a page.
+- **Decision — the mode is stated (DOC-008).** `NODE_ENV` has no default: a missing or empty value stops the
+  start with `NODE_ENV: must be development, test or production`. The same holds for the commands that read the
+  whole configuration (`seed:libraries`, `privacy:purge`, `privacy:dsr`). `.env.example`, the image
+  (`production`) and the local compose stack (`development`) already state it.
+- **Decision — the address decides too (DATA-002, AUTH-001, LTI-001).** When `PUBLIC_BASE_URL` is not a local
+  address (`localhost`, a name under `.localhost`, 127.0.0.0/8, `[::1]`), the key rules (no readable text, at
+  least 16 distinct bytes, no key in two places; `config/keyStrengthRules.ts`) and the https rules (the public
+  URL, Feide, the Groups API, Canvas origins, LTI platform URLs and a set `FILES_BASE_URL`;
+  `config/httpsRules.ts`) hold in every mode (`config/publicAddressRules.ts`). A private network address counts
+  as reachable: other machines open it. The other production checks stay with the mode, because a test
+  installation may rightly lack next year's secret or a TLS database.
+- **Decision — the log says which mode runs (NFR-006).** The first start line (`deployment locations`) carries
+  `mode`, and a `warn` line follows when it is not `production`. The deployment checklist reads the line and asks
+  for one outside check: `GET /api/docs` answers 404 in production.
+- **Decision — faults end through the logger (NFR-006, DATA-009).** The app's chain ends in
+  `http/lastResortError.ts`: before an answer has begun it sends the error page as before; after, it writes one
+  `error` line (method and route pattern) and closes the connection, and never passes the fault on.
+  `server/processFaults.ts` turns an uncaught exception and an unhandled rejection into one `fatal` line and exit
+  code 1. `server/serverProcess.ts` (the former `main()`) lists a configuration problem by name on standard error
+  as before, and writes any other failed start as one `fatal` line before it ends the process with exit code 1; a
+  part that does not stop at shutdown is an `error` line. The logger writes to standard output synchronously, so
+  the line is out before the process ends.
+- **Decision — production refuses the debug switches (DATA-009).** With `DEBUG` or `NODE_DEBUG` set, production
+  does not start and names the variable (`config/debugOutput.ts`). Development may use both.
+- **Decision — a default policy for every answer (SEC-004, LTI-003).** `baseSecurityHeaders` sets
+  `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` on every response; every page (the web
+  app, the player, the editor, the LTI pages, the message pages) and every user file replaces it with its own.
+  Answers about the signed-in person keep `frame-ancestors 'self'` and gain `default-src 'none'`. The server's
+  own start page (`WEB_APP=off`) gets `form-action 'self'` and Feide's origin, as the web app's pages have.
+- **Decision — `includeSubDomains` is a switch (LTI-003).** `HSTS_INCLUDE_SUBDOMAINS=true` adds
+  `includeSubDomains` to `Strict-Transport-Security`. It is off by default: a browser then refuses plain http for
+  every name under the server's host for a year, so HVL IT turns it on once it has confirmed that every such name
+  is https only (deployment checklist).
+- **Verified:** unit and integration tests for each rule, the entry point started as its own process (the mode in
+  the first line; a taken port ends the process with one `fatal` line and no stack around it), a real process that
+  fails outside any handler (one cleaned line on standard output, nothing on standard error), and the browser
+  suites, which open every kind of page under the new default policy.
+- **Consequences:** A `.env` without `NODE_ENV` stops the start. A development or test installation on an address
+  other machines reach needs https and random keys. A production start with a debug switch is refused. A start
+  that fails after a client connected now ends its process, where it could stay alive before. Test servers that
+  stand in for a framed page must say who may frame it, as the real pages do.
+
+### D-134 · Security repairs, step 18: the app container comes back and has a memory limit, the server says whether its memory fits, and work that holds memory waits its turn
+- **Context:** Steps 2 to 13 gave each single thing the server does a ceiling: one upload, one SVG (D-119), one
+  learner's saved state (D-120), one insight view (D-122), one check of an activity (D-126, D-127). Their sum
+  and the deployment around them were left for this step. The app stack had no restart rule, so a server that
+  ended its process after a fault (D-133) stayed down, and no memory limit, so one runaway process could take
+  the machine. Nothing said how much memory the server may use, and nothing bounded how many insight views or
+  saved states were handled at the same moment.
+- **Measured (2026-11-22, the development container, Node 24.22.2 in the image):** the heap limit Node chooses
+  follows the container's limit: 560 MiB at 1 GiB, 1 120 at 2, 1 728 at 3, 2 240 at 4 GiB and above, 4 288 with
+  no limit on a 16 GiB machine. A process past its container's limit is stopped by the kernel with exit code 137
+  and no output; past its own heap limit Node first writes «JavaScript heap out of memory». Chromium printing one
+  sample mappe: 246 MB in 10 processes. The idle server: about 500 MB resident in all. A saved state at the size
+  limit is a form body of about 0.9 MB; after 100 such saves and a collection the heap is back at its baseline,
+  so nothing is kept after a request. While a body is read, Express's form parser makes about 6 MB of
+  short-lived text from it, and the storage path about 4 MB of buffers. 150 such saves at the same moment ran a
+  process with a 256 MB heap limit out of memory; through the gate below all 150 were stored, with the heap at
+  most at 179 MB.
+- **Decision — the app comes back and has a ceiling (NFR-007, NFR-002).** In `deploy/compose.app.yml` the app has
+  `restart: unless-stopped`, `mem_limit: 5g` and `memswap_limit: 5g`; the steps that run once (buckets, migrate,
+  seed) have no restart rule. The budget, in MiB: the heap limit Node chooses (2 240), the SVG worker (512), the
+  server outside its heap (256), Chromium for two exports (256 + 128) and a full `/tmp` kept in memory (512):
+  3 904. 4 GiB is the least that fits while Node chooses its heap; below that the heap needs
+  `--max-old-space-size` (docs/ops/docker.md). `tools/deploy-check/resourceRules.mjs` holds the stack file to it,
+  and the smoke test stops the server process inside the app container and waits until it answers again.
+- **Decision — the server says what it has (NFR-002, NFR-006).** `server/memoryBudget.ts` writes one start line,
+  `memory limits`, with the container's limit, the heap limit and what the server may use beside its heap, and a
+  `warn` line when production has no limit or when the limit is below the need. It warns and does not refuse:
+  the figures for Chromium and for the server outside its heap are measured estimates, and an estimate must not
+  keep a working installation from starting.
+- **Decision — two insight views at once (INS-001, INS-009).** `InsightService.forActivity` reads and counts a
+  view inside a gate (`infra/BoundedGate.ts`, `insight/InsightViewGate.ts`): two at once, twenty waiting in the
+  order they came. Past that the view and the CSV answer 503 `insight.busy` with `Retry-After: 5`; nothing was
+  read, and nothing is audited. The web app shows its ordinary «could not load» message for it. The scope is
+  resolved before the gate, so a refused scope takes no place.
+- **Decision — eight saved states at once (H5P-005).** The save route takes a turn in a gate before its body is
+  read (`http/routes/stateSaveGate.ts`): eight at once, two hundred waiting, and past that 429
+  `hvl:rate-limited` with `Retry-After: 1`, the answer of the per-minute limit, which the player's autosave
+  ignores. The place is given back when the response closes, however the request ends.
+- **Verified:** unit and integration tests for the rules, the budget, the gates and both answers; the entry
+  point's start log holds the `memory limits` line. The smoke test ran in the development container (194 s):
+  inside the app container the server wrote `containerLimitMb` 5 120, `heapLimitMb` 2 240, `besideHeapMb` 1 664
+  and `neededMb` 3 904 with no warning, and the app answered again after its server process was stopped (restart
+  count 1). A container stopped by hand stayed stopped.
+- **Consequences:** No requirement changes its meaning; NFR-002 and NFR-007 have an "Amended" line. Whatever runs
+  the container in production needs its own memory limit and restart rule; the stack file is the example. On a
+  very busy moment a view of insight waits a few seconds, or is asked for again. One more line in the start log.
+
+- **Amendment (2026-11-26, D-144):** the stack's health check is held short by the same rules file
+  (`tools/deploy-check/resourceRules.mjs`), and the server writes a warning when it stood still for a second or
+  more (`server/eventLoopWatch.ts`). The server does not restart itself when it stands still.
+
+### D-135 · Security repairs, step 19: Next.js is pinned at 16.4.6
+- **Context:** D-068 pinned `next` at 16.4.2, the first release past the three advisories its probe found.
+  On 2026-11-22 `npm audit` listed seven further advisories, all moderate, for 16.0.0 to 16.4.4:
+  GHSA-7qx7-33qx-rqx2 (the image optimiser), GHSA-f3mh-rxg3-f5g2 (Edge runtime routes), GHSA-pc58-hwjq-p385
+  (applications that forward fetched responses), and GHSA-mfr8-8qww-v76h, GHSA-rhh4-g77r-r9qj,
+  GHSA-vc7v-qv4w-wrv8 and GHSA-vvgp-ww4w-46vf (`use cache` and Cache Components). The web app uses none of
+  these: the image optimiser is off (D-068), it has no Edge runtime route, no route handler and no server-side
+  `fetch`, and no `use cache`. The framework itself stopped the first run of every build to say that its
+  version is affected. SEC-007 asks for a review only of high and critical advisories, so nothing forced this
+  update; the owner decided on 2026-11-22 to make it now, because a patch release exists and costs little.
+- **Decision — the pin is 16.4.6 (SEC-007).** `next` is 16.4.6, pinned exactly, in `apps/web` and `apps/server`
+  (one copy shared by the server and the app, as D-068 set), and `@next/eslint-plugin-next` is 16.4.6 with it.
+  The lock file changed in Next.js's own packages only: `next`, `@next/env`, its compiler binaries and the lint
+  plugin.
+- **Re-checked — what leans on the framework's inner workings.** `apps/web/src/features/lti/ltikFromAddress.ts`
+  works with the router's own history marker (D-080's amendment): the router files it depends on
+  (`client/components/app-router.js` and `app-router-instance.js` of the installed package) are byte for byte
+  the same in 16.4.2 and 16.4.6, its `[LTI-003]` test passes, and its `UPSTREAM:` pointer names the new tag. The
+  in-process mount (D-068) is covered by the web integration tests, the browser journeys and the image's smoke
+  test.
+- **Verified:** `npm audit` lists no advisory for `next`; the first run of `npm run build` passes; screenshots
+  of five public pages in nn at 1280 px and 390 px are pixel for pixel the same before and after (two runs of
+  the same build are identical too, so the comparison means something); the full gate and the smoke test, whose
+  image is built with the new version.
+- **Consequences:** No page looks or behaves differently. `docs/assurance/sbom.cdx.json` is regenerated. The
+  advisory check (`npm run check:audit`) is not changed by this step: it reads only high and critical
+  advisories, and none of these was one.
+
+### D-136 · Security repairs, step 20: the insight CSV follows its language, quotes and guards every field, and carries no ID a learner chose
+- **Context:** INS-009 exports a view of insight as a CSV file, which a teacher opens in a spreadsheet program
+  (D-106). The file was comma-separated in every language, quoted a field only when it held a comma, a quote or
+  a line break, and guarded a field against being read as a formula only at its first character. A Norwegian
+  spreadsheet program splits columns at `;` and reads `1.5` as a date, so the file was left to the program's
+  guessing: a label with a `;` in it (a question text, a learner's wrong answer in a gap) could be cut in two,
+  and the piece after the cut began a cell of its own, where a leading `=`, `+`, `-` or `@` starts a formula.
+  Shares and medians came out as text or as dates. And a question that is no longer in the activity (D-121) was
+  written with the `subContentId` of the learners' statements: an ID that *k* learners who agree can choose.
+- **Decision — the file follows its language (INS-009, PROD-012).** In nn and nb the separator is `;` and the
+  decimal mark a comma; in en `,` and a point (`insight/http/insightCsvFields.ts`, `CSV_DIALECTS`). A `sep=` first
+  line was not chosen: only Excel reads it, other programs show it as a row, and Excel is reported to stop
+  honouring the byte-order mark after it, which would break æ, ø and å. The rows stay language-neutral
+  (`insight/export/insightCsvRows.ts`); the decimal mark is set when the text is written.
+- **Decision — every field is quoted, and no piece of a field can start a formula (INS-009).** `csvField` quotes
+  every field, also an empty one and a number. `guardFormulas` puts a `'` before a formula character wherever a
+  cell could start: at the start of the field and after every `;`, `,`, tab and line break, with only white
+  space or quotes in between; a field that starts with a tab or a carriage return gets a leading `'` as before.
+  It is one pass over the text. So a program that splits at another character than the writer's still finds no
+  cell that begins with a formula.
+- **Decision — a question outside the current content has no ID (INS-009, INS-006).** Its rows have an empty
+  `item` and the name «Spørsmål *n* (ikkje i aktiviteten no)» (nn, nb, en), *n* being its place in the view's
+  list. A question of the activity keeps its ID, which comes from the author's content. The JSON view is
+  unchanged: the tab never showed the ID.
+- **Verified:** unit tests of the fields and of the file in the three languages; a property test over generated
+  texts (split at any of the five characters, no piece of a written field starts with a formula character; the
+  guard only adds apostrophes); the routes' tests read the files with their own separator.
+- **Consequences:** A file in nn or nb opens in a Norwegian spreadsheet with its columns and numbers right. Its
+  form differs from before (separator, quotes, decimal comma); nothing else reads these files. The contract
+  describes the form per language.
+
+### D-137 · Security repairs, step 21: a save that changes an answer key starts a new content version
+- **Context:** Insight shows one content version at a time (D-106), and a stored xAPI statement names the version
+  of the page it came from, so that insight compares like with like (DATA-012, PROD-013). D-093 raised the
+  version only with a structural save, since that is what a learner's saved state depends on. An author can also
+  change an answer key and leave the structure as it is: mark another MultiChoice option correct while the
+  single or multiple mode stays, change in place what a Blanks gap or a DragText drop zone accepts, or switch
+  Blanks' case sensitivity. The version then stayed. INS-003 marks options and gap answers right or wrong by the
+  stored parameters, so it showed first answers that were judged against the old key under the new key's marks,
+  while INS-002's share came from each answer's own stored verdict. The two lists disagreed, and the two-group
+  suppression of a single-answer question and of a one-gap task (D-106) rests on their agreeing.
+- **Decision — the answer key is part of the version (PROD-013, INS-003, INS-006).** A save of an existing
+  activity whose structure is the same and whose answer key differs raises `H5PContent.version` and keeps every
+  learner's saved state. The author is asked nothing, because nothing is lost. The key is read with insight's own
+  readers (`insight/content/answerKeys.ts` on `questionCatalogue` and `questionShape`), so what insight judges by
+  is what is compared: a choice question's `correct` marks in stored order; for each gap of a Blanks or DragText
+  task the set of accepted answers as insight compares them, and whether upper and lower case differ. Question
+  and option texts, tips and feedback are no part of it, nor is the order of a gap's alternatives. Questions are
+  matched by item ID, since PostgreSQL orders the keys of the stored parameters its own way. The other question
+  types need no rule here: they have no leaf rule in the structure signature, so any change of their parameters
+  is structural already (D-093).
+- **Decision — the raise commits with the parameters.** `LearnerStateGate.admit` returns a plan for it, and
+  Lumi's write runs inside a mark (`h5p/storage/contentVersionRaiseWrite.ts`) that `h5p/storage/contentUpdate.ts`
+  claims once, so the version is raised in the statement that writes the new parameters. A page reads its
+  version before its parameters (D-093), so no page carries the new version with the old key.
+- **Not chosen:** storing each version's question shapes (a new table and a migration, for a view that D-106
+  does not show for an older version anyway); hiding the distribution of a version whose key changed (a teacher
+  who corrects a key would lose INS-003 for the corrected activity until its structure changes).
+- **Verified:** unit tests of the keys (each question type, any depth, what is and is not a change) and of the
+  mark; the gate's unit tests; integration tests through the save route on the real MultiChoice and Blanks (the
+  version, the state rows, a state write from a page rendered before the change), and insight after such a save:
+  the current version counts none of the answers given before it, the previous version shows them without
+  distributions.
+- **Consequences:** After an author corrects an answer key, the Innsikt tab starts on a new version; the answers
+  given before are under the previous version, without distributions, as for every older version. The tab's
+  sentence for an older version names the answer key too (nn, nb, en). A page that was open when the key changed
+  keeps its version: its statements are stored under the previous version, and its state writes are dropped as
+  stale until the activity is opened again; the state stored before the change is kept. The mappe and the yearly
+  snapshots count each version as a group of its own, as after a structural save. The version rises more often
+  while an activity is being written. A save that starts a new version also decides where the old version's
+  answers end, within a day; each version is suppressed on its own and no view adds versions up (R3 in
+  `docs/privacy/DPIA-INPUT.md` says so). PROD-013 and INS-003 have an "Amended" line.
+
+### D-138 · Security repairs, step 22: whose play is recorded, and a version that is no longer current takes no new learner
+- **Context:** INS-006 hides every number about fewer than *k* learners. That protects a learner only when the
+  person who reads insight cannot fill a group with learners of their own choosing: beside *k* − 1 such learners,
+  what the group shows is what the one other learner did. Three doors were wider than they need be. In the
+  portal, anyone with a Feide login from any organisation who played an activity shared with «anyone with Feide»
+  was a learner whose statements were stored and counted (D-059, D-102; R37); in practice these are the
+  external assessors a mappe is sent to (`content/mappe/`), and their plays also blurred the teacher's numbers.
+  In Canvas every launch that is not an author's was a learner (LTI-004): also Canvas's observer (`Mentor`), an
+  unknown role and a launch without roles. And a batch names the version its page was rendered with, any version
+  up to the current one being accepted (D-093, D-115), so a learner could be added to an older version's group
+  long after it had been left behind; since D-137 a version ends more often.
+- **Decision — whose play is recorded (LTI-011, DATA-012, INS-006; the owner, 2026-11-22).** One rule,
+  `xapi/learningDataScope.ts`, serves the ingestion and, through the actor, the player page, which carries the
+  xAPI bridge only for a play the server would store (as D-102 does for authors). In the portal: a learner who
+  is an HVL member (`hvlMember`: the realm is in `ALLOWED_FEIDE_ORGS` and Feide's Groups API confirms the
+  organisation). In Canvas: a learner whose launch holds the context role `Learner` (`isLtiLearner`: the role's
+  URI or its short name, exact values), and Canvas's test student, stored flagged as before (D-102's amendment
+  of 2026-11-04). Anyone else opens and plays as before, and no statement of theirs is stored: they are in no
+  insight view, no *k* count, no mappe result and no score sent to Canvas. The owner chose that a person from
+  another organisation keeps their saved state («where was I?»): it is stored under their pseudonym as for
+  everyone, purged with the year, and shown to no teacher. `/personvern` says so (nn, nb, en).
+- **Decision — a version that is no longer current takes no new learner (INS-006, PROD-013).** A batch that names
+  a version older than the current one is stored only for a learner who already has a statement under that
+  version in that context (`XapiStatementStore.hasRowsIn`); otherwise it is answered 202 like every batch and
+  stores nothing, counted in the log. A page reports `attempted` when it opens, so a learner who had the
+  activity open when its version changed can finish, and their result reaches Canvas; a learner who was not in
+  the version when it was left behind cannot be added to it.
+- **Decision — the share rule stays (INS-002, INS-006; the owner, 2026-11-22).** Insight goes on showing a share
+  over *k* or more learners, 0 % and 100 % included (D-106); the mappe's two-sided rule (D-095) is not added. R4
+  in `docs/privacy/DPIA-INPUT.md` records the choice for the DPO.
+- **Recorded as a residual:** *k* counts pseudonyms. *k* − 1 learners who cooperate with the person who reads
+  insight are learners like any other, and in Canvas a launch's roles are what Canvas sends: they are not
+  compared with the course's roster (NRPS gives a count, LTI-008, and no list is kept). R41 says so, with the
+  options.
+- **Verified:** unit tests of the rule, of `isLtiLearner` and the launch facts, of the actor and of the bridge's
+  configuration; integration tests of the ingestion on PostgreSQL (a guest from another organisation, an
+  observer, a launch without roles; an older version for a new learner, for a learner already in it, and across
+  courses); content tests that hold R37, R40, R41 and the privacy notice to the code.
+- **Consequences:** External assessors' plays no longer appear in insight or the mappe. A Canvas user who is not
+  enrolled as a student plays without being recorded, and no score is sent for them. A page that was opened
+  before a version change and had stored nothing yet must be opened again before its results count. The rule
+  applies when statements arrive; no installation holds real learners' statements yet, so nothing stored is read
+  again. LTI-011, DATA-012, INS-006 and LTI-004 have an "Amended" line; R37, R40 and R4 are updated and R41 is
+  new.
+
+### D-139 · Security repairs, step 23: one activity's files have a limit, are kept under the stored ID, and a clean-up cannot fail a stored save
+- **Context:** A package that is imported may unpack to 200 MB and hold files of 50 MB at most (SEC-005). A
+  person may send 120 uploads and start 20 copies in ten minutes (D-120, D-092). Nothing bounded what one
+  activity holds: a save copies the file behind every paste-source path it names (D-092), and a duplicate copies
+  every file of its source, so one request could write as many files of up to 50 MB as its paths name. The copy
+  limit counted requests, not what a request writes. Two smaller things lay in the same code: the storage keyed an
+  activity's files by the ID as a caller spelled it (the routes spell it one way since D-131, the storage itself
+  did not), and the clean-up of dropped files after Lumi's write could throw, which turned a save that was
+  already stored into an error answer.
+- **Decision — a limit for one activity's files (SEC-005, PROD-007).** At most 200 MB (`MAX_TOTAL_SIZE`: what one
+  imported package may bring, so every activity can still be exported and imported again) and 1 000 files (real
+  activities of the ten types hold tens). `h5p/activityFileBudget.ts` checks a save before Lumi writes: the
+  references Lumi's scanner reports, each once; an upload sized from temporary storage, a pasted file from its
+  source, a kept file from the activity; a web address is no file. Past the limit the save is refused with 413
+  `hvl:activity-files-over-limit` and a message that names both numbers (nn, nb, en), and nothing is written. A
+  duplicate saves through the editor (D-092), so it meets the same check. The storage holds the limit as well,
+  for every file it is given (`h5p/storage/activityFileRoom.ts`): room is checked before the bytes are stored,
+  and a file that takes the activity past its bytes is removed again, so neither an import nor the duplicator's
+  own copies go around it. One copy now writes at most 200 MB, so 20 copies in ten minutes are at most 4 GB,
+  where the upload limit already allows 6 GB in that time.
+- **Decision — files under the stored ID (H5P-004).** `S3ContentFileStore` writes the ID in lower case into every
+  key and prefix, and `PrismaContentStorage.addFile` uses the row's own ID, so every spelling of one ID names the
+  same files: a second guard beside D-131's at the routes.
+- **Decision — a clean-up cannot fail a stored save (H5P-006).** `EditorSaveSteps.afterWrite` reports a failed
+  clean-up by its kind (one `warn` line) and the save is answered as stored: the parameters are committed by
+  then, and an error answer would only tell the author that a stored save had failed.
+- **Verified:** unit tests of the budget (what counts, where each size is read, where it stops, the message in
+  three languages); editor tests with small limits (one file too many, the bytes of an upload, a clean-up that
+  fails); integration tests of the storage on PostgreSQL and S3 (the count, the bytes, the removed object, one
+  spelling of the ID).
+- **Consequences:** An author who saves an activity with more than 200 MB of files gets a message that points to
+  Panopto for large video, as the guidance already does. A file that a failed clean-up left stays in storage
+  until its activity is deleted. SEC-005 and PROD-007 have an "Amended" line; T-33 in the threat model names the
+  limit.
+
+### D-140 · Security repairs, step 24: a text field without a tag list is plain text; a link address cannot leave its attribute; the H5P pages allow no inline script
+- **Context:** H5P's content types write the text of their parameters into the page as HTML. H5P's own server
+  software therefore knows two kinds of text field: one whose semantics give a `tags` list keeps those tags, every
+  other is made plain text. Lumi's enforcer cleans a field without a list with sanitize-html's defaults, which
+  keep links, tables, headings and more, and since D-039 only list items went through our own cleaner, so a button
+  label or a heading could be stored with a link or a table in it. The page policy stops script (D-070), not
+  markup. Lumi also cuts a text to its field's `maxLength` after cleaning it, at a fixed position, which can end
+  the stored text inside a tag or a character reference. Three smaller things lay beside it: the address of H5P's
+  link field (H5P.Link, Interactive Video's "go to" and its hotspot) is joined into `<a href="…">` as text, and a
+  plain text keeps its quotation marks; the pages' small scripts found their data block by its ID alone; and the
+  page policy allowed one inline script by its hash that no page of ours runs.
+- **Decision — a text field without a `tags` list is plain text (SEC-008).** `h5p/semantics/lumiTextSanitizer.ts`
+  is the one rule for a text value: Lumi's for a field with `tags`, no markup at all for any other (tags removed,
+  `<`, `>` and `&` as references). What the editor sends for such a field is unchanged: a typed `<` arrives as
+  `&lt;` and stays text. `SubContentPolicy` cleans every text field on a save, not only list items, so the rule
+  holds before Lumi reads the content, and Lumi's own pass then changes nothing. The editor's form goes through
+  the same rule (D-124). The player page makes a value of such a field plain when it holds a `<`
+  (`h5p/semantics/playedParams.ts`), so a row stored earlier is handed over like one stored now; the row is not
+  rewritten (as in D-124). Not chosen: writing a refused tag out as text, as H5P's own server software does; the
+  editor never sends a raw tag for such a field, so what is removed was never typed into a form. None of the 120
+  installed libraries has a field with the HTML widget and no `tags` list, and the example activities of the ten
+  types hold 544 plain text fields, none of which the rule changes.
+- **Decision — a text past its length is cut whole (SEC-008).** `h5p/semantics/textLengthCut.ts` makes the cut
+  before Lumi's: a text longer than `maxLength` is cut as plain text and ends in a whole character and a whole
+  character reference. A cut cannot keep markup whole and within the length, so a text that is too long keeps its
+  words and not its markup; H5P's editor never sends one, and no installed library gives a field with `tags` a
+  `maxLength`. Lumi's rule runs last, on text it neither changes nor cuts, so its `regexp` check stays.
+- **Decision — a link field's address holds no character that ends an attribute (SEC-008).**
+  `h5p/semantics/linkAddressConformance.ts`, called by D-123's fitting: in the `url` of a field with `widget:
+  'linkWidget'`, `"`, `'`, `<`, `>`, a backtick and a space are percent-encoded and control characters removed, as
+  a browser's URL parser treats them. The address is fitted on a save (after its text is cleaned), on the player
+  page and in the editor's form.
+- **Decision — a page script reads only the page's own data block (SEC-008, H5P-009).** `h5pIntegration.js`,
+  `editorPage.js` and the xAPI bridge read their JSON block only when the element with its ID is an inert `<script
+  type="application/json">` directly in the document's head, where the page writes it.
+- **Decision — no inline script on an H5P page (DATA-011, H5P-009).** `script-src` on the player and editor pages
+  is `'self'` (and Panopto's one file when configured, D-070): the hash of H5P Core's constant inline script is
+  gone, and `h5p/render/coreInlineScripts.ts` with it. Core writes that script only into an iframe it builds for
+  an `iframe.h5p-iframe` element; the player page is that document itself, and the editor's own iframe holds
+  `<script src>` tags only. This amends D-070, and the sentence of D-115 that the production policy allows H5P's
+  own iframe embedding: a page that embedded that way would have to allow the script again, and the bridge's
+  browser test for that mode adds the hash itself.
+- **Verified:** unit tests of the rule for one value beside Lumi's enforcer (the plain rule, the tags rule, what
+  the editor sends, every length from 1 to 90), of the three places content passes (save, player page, editor
+  form) and of the link address; an integration test with the ten real types (no plain field of an example
+  changes; a save through the routes; a row written to the database and played); unit tests of the three scripts'
+  block; the policy test; and the browser tests that play all ten types and open the editor, which report no
+  refused script.
+- **Consequences:** A label, a heading or any other plain field shows the words of what was sent, never markup. A
+  text sent past its field's length, which the editor does not allow, loses its formatting. A link address with a
+  quote or a space is stored percent-encoded. SEC-008 and H5P-009 have an "Amended" line; T-03 in the threat model
+  follows.
+
+### D-141 · Security repairs, step 25: a launch is finished by the browser that began it; requests before sign-in have a bound; ltijs asks a platform only through our request handler
+- **Context:** ltijs 7 processes a launch on its own second POST: Canvas posts the ID token to `/lti/launch`,
+  ltijs's page there reads a recovery token from the browser that began the login and posts everything again. That
+  this second post comes from our own page is what ties a launch to its browser. ltijs checks it by
+  `Sec-Fetch-Site` alone and lets a request without the header through (D-050 and D-130 both rested on that
+  check). Browsers before Safari 16.4 and Firefox 90 send no such header: there, another site could post a launch
+  of its own, recovery token included, and the person landed inside it. Four smaller things lay around the launch.
+  An error page for an address with an ltik kept the token in the address bar. The login, launch and key-set
+  routes answer before any sign-in, and a request could make the server store a nonce, sign tokens and write an
+  audit row, with no ceiling; a token that named an unknown key ID made ltijs fetch the platform's key set again,
+  every time. ltijs's own request handler follows redirects and has neither a time nor a size limit, and a
+  roster's «next page» link comes from the answer itself. And which course may open an activity (LTI-007) was
+  nowhere stated as a rule.
+- **Decision — the last step of a launch comes from our own page (LTI-001, LTI-003).**
+  `lti/http/launchPostOrigin.ts`, called by `ExpressRouterHttpHandler` before ltijs reads the request: a post that
+  carries ltijs's recovery token is taken with `Sec-Fetch-Site: same-origin`, or, without that header, with an
+  `Origin` that is exactly ours (`PUBLIC_BASE_URL`). A missing `Origin`, `null` and any other origin are refused
+  as ltijs refuses a wrong recovery token (the «could not be opened from Canvas» page, audit reason
+  `state-invalid`). Canvas's own post, cross-site by nature, is not judged. For a browser to name our origin,
+  ltijs's launch page is sent with `Referrer-Policy: same-origin`: under `no-referrer` Chromium puts `Origin:
+  null` on that page's own post (measured). The page holds no ltik, and under either rule no referrer goes to
+  another origin, so LTI-003's rule for pages that receive an ltik is unchanged. Not built: a single-use state. A
+  nonce is used once (LTI-002), so a finished launch cannot be sent again, and the state carries no right of its
+  own.
+- **Decision — an LTI error page takes an ltik out of its address (LTI-003).** `http/pages/messagePage.ts` takes
+  static scripts, and `lti/http/ltiErrorPages.ts` gives every page the landing script (its path now in
+  `lti/pages/ltiStaticScripts.ts`), so the «open it again from Canvas» page for `/lti/play?ltik=…` leaves no token
+  in the address bar or the history. Where a browser holds an ltik: in the address of the landing request until
+  the page's first script runs, in the page's memory, and in H5P's own request URLs inside the frame (D-058);
+  never in a cookie or in storage.
+- **Decision — requests before sign-in have a bound (LTI-001, DATA-007, NFR-006).** (a)
+  `lti/http/launchRequestCeiling.ts`: 6 000 requests a minute from one network address to ltijs's three routes,
+  which is 2 000 launches; past it 429 `hvl:rate-limited` with `Retry-After`, before the body is read. The address
+  is counted under its keyed fingerprint (`auth-audit-ip`), for a minute. When Redis cannot be reached the request
+  goes ahead and a line says so: this is a backstop behind the reverse proxy's own limit (the question to HVL IT
+  stands), and it must not make a launch depend on Redis. `TRUST_PROXY` must be right, or every person shares one
+  count. (b) `LtiCacheManager` keeps a platform's key set for a minute after it was fetched, whatever asks for its
+  removal, so an unknown key ID costs at most one fetch a minute; a real change of keys is seen a minute later at
+  most. (c) `auth/audit/failureAuditBudget.ts`: failed logins and failed launches add at most 10 audit rows a
+  minute per address and 300 in all; what is past that is counted in one log line a minute, without an address.
+  With Redis unreachable the row is written.
+- **Decision — ltijs asks a platform only through our request handler (LTI-001, LTI-008).**
+  `lti/http/LtiOutboundRequests.ts` replaces ltijs's `FetchRequestHandler` (a `Provider` option): a URL is asked
+  only on the origins of the configured platforms (issuer, the two endpoints, the key-set URL) and
+  `CANVAS_ORIGINS`, over https in production, without credentials in it; no redirect is followed; a request ends
+  after 10 seconds and an answer after 4 MB. So a roster's «next page» link that names another host is refused
+  before any request is made (D-104 set this for the first roster URL and for scores), and a slow key-set answer
+  cannot hold a launch open.
+- **Recorded, not changed — which course may open an activity (LTI-006, LTI-007).** A published activity is opened
+  by any resource link of a registered platform and deployment that carries its ID in `custom.contentId`. Links
+  are made in the Deep Linking picker, which offers an author only their own and co-authored activities and signs
+  its answer; Canvas keeps the ID when a course is copied, which is what LTI-007 asks for. A course whose teacher
+  never owned the activity can therefore play it, see its own course's insight and duplicate it, and cannot edit
+  it (D-060). The ID is a UUID that cannot be guessed, but it is no secret: whoever holds a link can place it
+  again. An owner withdraws an activity from every course by unpublishing or deleting it. A rule that tied an
+  activity to the courses its owner chose would have to refuse copied courses.
+- **Verified:** unit tests of the last-step rule and of ltijs's routes on our router; an integration test through
+  the whole app with the mock Canvas, with a genuine ID token, state and recovery token and only the post's
+  headers changed; a browser test in full Chromium whose launch posts reach the server without fetch metadata
+  (taken with the browser's own `Origin`, refused with `null`); integration tests of the ceiling, the audit bound
+  and the key-set cache on Redis; a test that five launches naming an unpublished key cause no key-set fetch; unit
+  tests of the request handler against local servers (another origin, a redirect, a slow and an over-large answer,
+  a «next page» link that points elsewhere).
+- **Consequences:** A browser that sends neither `Sec-Fetch-Site` nor `Origin` on a form post can no longer finish
+  a launch; Canvas supports none. After Canvas replaces its signing keys a launch can fail for up to a minute.
+  More than 2 000 launches a minute from one address get the «try again» page. The load scripts and the test
+  launch driver send `Sec-Fetch-Site: same-origin` on the last step, as a browser does. LTI-001, LTI-003, LTI-007
+  and LTI-008 have an "Amended" line; T-13, T-18, T-60, T-63 and T-111 in the threat model follow.
+
+### D-142 · Security repairs, step 26: a logout and a cookie order follow the session; one Feide ID rule; typed text holds no hidden characters; the editor endpoint takes known actions only
+- **Context:** Five places where a request was read more loosely than its rule said. (1) `POST /auth/logout` asked
+  for the CSRF token only when the request carried a live session, and cleared the session cookie either way. A
+  form post from another site carries no `SameSite=Lax` cookie, so it met no check, and its answer still told the
+  browser to delete the cookie: any page could log a person out of the portal. (2) A request whose session cookie
+  named no live session had the cookie cleared on whatever answer it got, also on H5P's core and library files and
+  the web app's files under `/_next/static/`, which are `public` and kept by caches for a year; a shared cache that
+  kept such an answer would hand its `Set-Cookie` to other people. (3) A Feide ID was trimmed and lower-cased by
+  JavaScript's Unicode rules before it was checked: `trim` removes a no-break space or a byte-order mark, and
+  `toLowerCase` turns U+212A (the Kelvin sign) into `k`. A login ID in Canvas written with such a character named,
+  through `custom.feide_login` (AUTH-005), the Feide account of the plain ID. (4) The free-text fields of the API
+  took any character: U+0000, which PostgreSQL refuses (the request ended as a 500), the line and paragraph
+  separators U+2028 and U+2029 (a line break that the learner purpose's «one line» rule did not see), and the
+  bidirectional controls, which reorder what a reader sees. (5) Lumi's AJAX endpoint answers an unknown POST action
+  with status 500, so an author could raise that answer and its error-level log line at will.
+- **Decision — a logout ends what its cookie names (AUTH-003).** `endPortalSession` clears the session cookie only
+  when the request had a live session, which the route has by then held to the CSRF token. A request without one
+  gets the same redirect to `/`, `no-store`; it changes no cookie and writes no audit row.
+- **Decision — the order to delete a dead cookie never travels on an answer a cache may keep (AUTH-003).**
+  `auth/session/staleCookieClearing.ts`: the session middleware no longer sets the clearing cookie when it finds a
+  dead session ID. The order is added when the answer's headers are written (`writeHead`), and only when
+  `Cache-Control` says `no-store` or `private`. An answer that names no caching gets `no-store` and the order: it
+  answers one browser's cookie. An answer that names any other caching (`public`, `max-age`, `no-cache`) never
+  carries it; the next answer about the person does. An answer that sets the session cookie itself (a login) is
+  left as it is. Next.js writes its own headers, so the rule is tested on the built web app's real answers.
+- **Decision — one Feide ID rule, in ASCII only (AUTH-002, AUTH-005, DATA-008).** `auth/identity/feideId.ts`
+  (`normaliseFeideId`) with `auth/identity/asciiText.ts`: SP and HTAB are trimmed, `A`–`Z` are lower-cased, every
+  other character stays as written, and then `FEIDE_ID_PATTERN` is checked. Every reader uses it: the login's
+  claims, `custom.feide_login`, `ADMIN_FEIDE_IDS` and the other configured lists, the people search, the
+  data-subject tool, and the two guards that refuse a Feide subject that is not normalised; Feide group IDs are
+  compared in ASCII case too. Two IDs as written now give one Feide ID only when they differ in ASCII case or in
+  blanks at their ends. Not decided: whether a Feide ID may hold a letter outside ASCII at all. Feide's rule for
+  `eduPersonPrincipalName` could not be read from the build environment, so the rule does not depend on it: such a
+  letter is kept as written and never folded *(verify with HVL IT, Q32; a stricter pattern is a one-line change)*.
+- **Decision — typed text holds no control character, hidden line break or bidirectional control (PED-030,
+  PED-032, UD-022, PROD-007).** `packages/api-contract/src/textRules.ts`: a one-line text refuses Unicode `Cc`,
+  `Zl`, `Zp` and `Bidi_Control`; a free text is the same but keeps tab, CR and LF. It holds the learner purpose (one
+  line), the outcomes, the rationale, a reason for publishing with its rule ID and path, and the people search. A
+  request that breaks it is a 400, like any other body the contract refuses. Other format characters (a soft
+  hyphen, the joiner inside an emoji) are text and stay. The web forms clean pasted text before they check and
+  send it (`apps/web/src/config/typedText.ts`): a bidirectional control is dropped, a hidden line break becomes a
+  line break (a space on one line) and any other control character a space; a test keeps the web app's copy of the
+  classes equal to the contract's. A stored learner purpose that breaks the rule is not handed to learners
+  (`learnerInfoFields` reads it through the schema).
+- **Decision — the editor's AJAX endpoint takes known actions only (H5P-002).** `http/routes/ajaxRoutes.ts`: a
+  request names exactly one action that Lumi's `H5PAjaxEndpoint` knows for its method (three for GET, seven for
+  POST). A missing, repeated or unknown action is 400 `error.badRequest`, after the role check and before any body
+  is read.
+- **Verified:** unit tests of the cookie order with every way a route writes its headers, an integration test of
+  the session middleware on Redis, of the logout route and of the whole app's shared H5P files, and one against the
+  built web app; unit tests of the ASCII folding and of the Feide ID rule at every reader, and the people search on
+  the database; contract tests of the two text patterns and of every field that keeps them, route tests that each
+  field answers 400 and logs no fault, and web tests that the forms send cleaned text that the contract's schema
+  takes; route tests of every refused and every known AJAX action. The new tests fail on the code before this step.
+- **Consequences:** A browser with a dead session cookie keeps it until the next answer about the person. A Feide
+  ID with a capital letter outside ASCII is no longer folded (none is known at HVL). Text stored before this step is
+  not changed; a stored purpose that breaks the rule stays hidden from learners until it is saved again. No page
+  looks different and no message is new. AUTH-002, AUTH-003, AUTH-005, PED-030, PED-032, UD-022, PROD-007 and
+  H5P-002 have an "Amended" line; D-054, D-057 and D-087 an amendment; T-02, T-05, T-21 and the new T-25 in the
+  threat model follow.
+
+### D-143 · Security repairs, step 27: a `.json` file is checked in portions; an upload's text fields are few and small; library sources are held to their forms; scan turns go person by person
+- **Context:** Four places where the handling of something sent or fetched cost more, or trusted more, than its
+  rule needs. (1) SEC-002 accepts a `.json` content file only when it is valid UTF-8 and valid JSON. The check read
+  the whole file (up to 50 MB) and gave it to `JSON.parse`: the file, its text and the parsed value were in memory
+  together, many times the file's size, and no other request was served during the parse; an editor upload ran the
+  check twice (ours, for the reason, and Lumi's own). (2) An upload request could carry 20 text fields of 4 MB each,
+  all kept in memory, although H5P's editor sends two small ones (`field`, at most 434 bytes among the installed
+  content types, and `contentId`); a field past the size limit was cut short and passed on. (3)
+  `tools/h5p-libraries` with `--resolve` reads repository addresses from H5P's public registry, and library names
+  and versions from the `library.json` and `semantics.json` of repositories it has just fetched, and gave them to
+  `git` and to folder names as they were. An address that begins with `-` is an option to git, an address in
+  another form reaches another transport or a local path, and a name with `../` joins to a folder outside the work
+  folder, which a checkout removes first. A test checked the committed pin list afterwards; the code checked
+  nothing. (4) The malware scanner lets four scans talk to clamd at a time and counts the wait for a turn against a
+  scan's time limit (D-110). With one queue for everybody, one author's many files at the same moment could hold the
+  turns long enough for other authors' uploads to pass the limit and be refused.
+- **Decision — a `.json` file is checked in portions (SEC-002).** `security/sniff/jsonFileCheck.ts` reads the file
+  64 KB at a time, decodes it as UTF-8 (fatal, one leading byte-order mark removed) and follows its syntax with
+  `security/sniff/jsonSyntax.ts`, a state machine for RFC 8259 that builds nothing. The answer is exactly that of
+  `JSON.parse`; no size or depth rule is added. Memory is one portion and one bit for each open bracket, and the
+  reads are asynchronous, so other requests are served between the portions. The check still runs twice for an
+  editor upload; each run is now cheap.
+- **Decision — an upload request's text fields are few and small (SEC-005).** `http/multipartUpload.ts`: at most 4
+  text fields of at most 64 KB each (about 150 times the largest real one), a field name of at most 100 characters,
+  at most 8 parts in all. A request past one of these is 400 `error.badRequest` after its body was read, and its
+  folder is removed; a value is never cut short and passed on. A second file within the 8 parts is still discarded
+  unread.
+- **Decision — a library source is held to its form before git or a folder sees it (H5P-003).**
+  `tools/h5p-libraries/sourceRules.mjs`: a repository is `https://github.com/<owner>/<name>`; a machine name is
+  parts of letters, digits, `_` and `-` joined by single dots; a version part is a whole number, given as a number;
+  a ref is `HEAD`, a version tag's ref or a full commit; a commit is 40 hex characters. `resolveManifest.mjs` applies
+  them to the registry's address and to every name and version before a folder name is made or the source is asked;
+  `gitSource.mjs` applies them again before git runs or a folder is touched, and puts `--` before the address;
+  `fetchLibraries.mjs` holds every line of the committed pin list to them before it fetches the first. A required
+  library that fails stops the run; an offered one is listed as skipped with the reason, like any other that cannot
+  be resolved. All 120 lines of today's pin list pass. The image build copies the new file beside the resolver
+  (`deploy/Dockerfile`).
+- **Decision — waiting scans get the free turns person by person (SEC-006).** `security/malware/ScanTurns.ts`: a
+  free turn goes to the owner who has waited longest since their last turn, and to that owner's oldest waiting scan.
+  The upload route records the author for the length of the request (`security/malware/scanOwner.ts`, an
+  `AsyncLocalStorage`, as `h5p/storage/contentCreations.ts` uses one), and the scanner names that author when it
+  asks for a turn; the settings probe has a place of its own in the rotation. Four scans at a time and the time
+  limit that includes the wait stay as D-110 set them: an author whose own files fill the queue may still see the
+  later ones refused, the other authors no longer do. PRIVACY: the owner is an internal account ID held in memory
+  while a request runs; it is not logged or stored.
+- **Not changed — what an imported package shows in the editor (SEC-005, SEC-008).** D-124 already hands the editor
+  an uploaded package's content fitted and cleaned, with its title data and that of its pieces as plain text. A
+  test now states it for a title, a licence note, an author, a piece's author role and a file field's settings.
+- **Verified:** a property test compares the syntax check with `JSON.parse` on generated JSON, on generated JSON
+  with one character changed and on texts of JSON's own characters, however they are cut into pieces; file tests
+  with characters, escapes, numbers and words across two portions; a 30 MB file checked by a process whose heap
+  (64 MB) cannot hold it parsed. Unit tests of the upload reader at and past each limit, and of the editor's upload
+  route. Unit tests of each source rule, of the resolver with a registry address, a name and a version out of form
+  (no source asked, no folder made), of the git access (refused before git runs, the folder untouched) and of the
+  pin list. Unit tests of the rotation and of the owner's async context, and an integration test with a fake clamd
+  whose scans take a while: with forty files of one author waiting, another author's file is scanned among the
+  first and stored. The new tests fail on the code before this step (the test of the imported package passes on
+  both, as it should). The tool was run for real: tags read from GitHub with the `--` form, and a fetch from the
+  cached checkouts packed the same ten packages (the same SHA-256 list).
+- **Consequences:** No page looks different and no message is new in normal use. An upload with more than four text
+  fields or a field over 64 KB, which no H5P client sends, is refused. A registry entry that names a repository
+  outside GitHub cannot be resolved until the rule is widened on purpose. One person's scans delay another's only by
+  the scans that already run. No new stored data. SEC-002, SEC-005, SEC-006 and H5P-003 have an "Amended" line;
+  D-043, D-078 and D-110 an amendment; T-33, T-80 and T-112 in the threat model, ROS-07, the architecture
+  description, the ClamAV runbook and the server README follow.
+
+### D-144 · Security repairs, step 28: a server that stands still is unhealthy within half a minute and says so; Redis commands fail at once while Redis is unreachable; the image runs no code from a writable folder; the seccomp profile is Docker's default plus one rule; a real purge run records its start
+- **Context:** Five places where the running service said too little, waited too long or kept an old default. (1)
+  The app stack's health check gave each try Docker's default 30 seconds and allowed 40 failed tries, so a server
+  whose process no longer answered kept its "healthy" mark for about twenty minutes, and whatever routes requests
+  by that mark went on sending them; nothing in the log said that the server had stood still. (2) The Redis
+  client's default keeps every command sent while the connection is down in a list without a limit and sends it
+  when the connection is back. Requests that need Redis (sessions, limits, locks) then waited instead of failing,
+  although `xapi/XapiRateLimit.ts` and the threat model say such a request fails, and a count meant for one minute
+  was added whenever Redis came back. (3) The image runs the server's TypeScript through tsx, which writes each
+  translated file to `/tmp/tsx-<uid>` and reads it back at the next load without checking it. The root file system
+  is read-only, but `/tmp` is not: whatever can write a file there as the app's user decides what code the next
+  worker thread, CLI run or start of the process loads. (4) The seccomp profile of the app's containers was
+  Playwright's, byte for byte: a copy of an older Docker default with `clone`, `setns` and `unshare` opened for
+  Chromium's sandbox. Docker's default has since stopped allowing the `io_uring` calls and `socket` for every
+  address family; Playwright has not updated its file (v1.65.1's is the same bytes as v1.56.1's). (5) A real purge
+  run wrote its audit event when it ended, `completed` or `failed`. A run cut short by a deployment, a crash or
+  Ctrl-C reached neither, so its deletions were in no record, and the next run's event counted only what was left.
+- **Decision — the health check is short, and a standstill is written (NFR-002).** `deploy/compose.app.yml`: a try
+  has 3 seconds (the request itself gives up after 2.5), tries come every 5 seconds, the third failed one in a row
+  makes the app unhealthy (about 25 seconds), and a start period of 120 seconds keeps a starting server from being
+  counted as failing. `tools/deploy-check/resourceRules.mjs` refuses a stack whose check has a time limit over 5 s,
+  an interval over 10 s, more than 5 retries or no start period. `server/eventLoopWatch.ts` measures the event
+  loop's delay (Node's `monitorEventLoopDelay`) and, every 10 seconds, writes one warning with the longest
+  standstill when it reached a second: two numbers, nothing of a request or a person. The line is written after the
+  standstill; a server that never runs again is the health check's to report. The server does not end or restart
+  itself when it stands still: Docker alone does not restart an unhealthy container, and what acts on the mark (an
+  orchestrator, a load balancer that stops routing) is the platform's choice (`docs/ops/docker.md`).
+- **Decision — a Redis command fails at once while Redis is unreachable (H5P-004, LTI-011).**
+  `infra/redisClient.ts` creates the client with `disableOfflineQueue`: a command sent while the connection is down
+  rejects with the client's `ClientOfflineError`, and nothing is kept to be sent later; the client reconnects by
+  itself, at most half a second between tries. UPSTREAM: node-redis 4.7.1 applies the option to single commands and
+  scripts but not to `multi().exec()`; the rate limits count in transactions, so the same rule is put on the
+  client's `multiExecutor` here. A request that needs Redis then fails like any server fault instead of waiting,
+  `/healthz` answers 503 at once, and the background jobs, which already log a failed lease and try again at their
+  next tick, do the same.
+- **Decision — the image switches the loader's cache off (NFR-007).** `deploy/Dockerfile` sets
+  `TSX_DISABLE_CACHE=1` in the runtime stage: tsx keeps translated code in memory and neither writes nor reads
+  `/tmp/tsx-<uid>`. `tools/deploy-check/deployRules.mjs` requires the setting in the runtime stage and refuses a
+  service of the stack that changes it. Cost, measured on the development machine: loading the server's code takes
+  about 4 s without the cache and about 2 s with a filled one, but a container starts with an empty `/tmp`, and the
+  first load that has to fill the cache took about 14 s; the SVG worker starts in about 1.1 s instead of 0.9 s (its
+  limit is 30 s).
+- **Decision — the seccomp profile is Docker's default plus one rule (MAPPE-004, NFR-007).**
+  `deploy/seccomp/chromium-sandbox.seccomp` is the default profile of Docker Engine 29.9.2
+  (`https://github.com/moby/moby`, tag `docker-v29.9.2`, file `vendor/github.com/moby/profiles/seccomp/default.json`,
+  SHA-256 `785b2429…9334`), fetched with git, with one rule inserted first: `clone`, `setns` and `unshare` allowed
+  without a condition, which Chromium needs to create the user namespaces of its sandbox (D-096). Against the
+  profile before: the `io_uring` calls are no longer allowed, `socket` only for the address families Docker's
+  default allows, and `clone3` answers "not implemented", so the C library falls back to `clone`.
+  `tools/deploy-check/seccompRules.mjs` holds the file to its hash and proves that, with the one rule taken out, it
+  is Docker's file byte for byte. Playwright's file is removed, and the stack, the rules and the operations notes
+  name the new one.
+- **Decision — a real purge run records its start (DATA-007, DATA-003).** `privacy/purge/retentionPurge.ts` writes
+  a `purge.run` event with `outcome: "started"` and the plan's counts before the run's first change, then
+  `completed` or `failed` as before. A run that is cut short leaves its `started` event; the next run's `started`
+  event shows what was left, so the difference is what the cut run did. Only a `completed` real run marks a year as
+  purged (`purgeAudit.ts`). If the start cannot be audited, the run changes nothing.
+- **Verified:** unit tests of the health-check rule on the real stack file and on copies with a long time limit, a
+  long interval, many retries, no start period or no check, and of the standstill watch (one line for a standstill
+  of a second, none below it, none after `stop`). An integration test with a relay in front of the real Redis that
+  cuts and restores the connection: a command, a transaction (the xAPI limit), a script and a PING are refused
+  within a second, no refused command is sent later, and the client works again when the connection is back.
+  Tests that start a TypeScript program and its worker thread with the pinned tsx: with the setting the temporary
+  area stays empty, without it the loader's folder appears. Unit tests of the profile rules on the real file and on
+  copies with a changed byte, a second or moved rule, an open default, a missing namespace call, `io_uring` or an
+  unconditional `socket`. Integration tests of a purge run whose process ends at its first statement delete: the
+  `started` event with the full plan is in the log before the first change and is all the cut run leaves, the year
+  does not count as purged, and the next run completes with the rest. The new tests fail on the code before this
+  step. The Docker smoke test ran on the final tree: the image builds, the mappe PDF prints with Chromium's sandbox
+  on under the new profile (seen in `/proc` too), no tsx folder is in the app's `/tmp`, and a server process
+  stopped in place (SIGSTOP) made the app unhealthy after 18 s; it was healthy again 5 s after it ran on, and its log named a standstill of 18 707 ms (the smoke passed in 686 s, most of it the image build).
+- **Consequences:** No page looks different. During a Redis outage a user gets an error at once instead of a
+  request that hangs, and the node reports itself unavailable. The profile's file has a new name: a deployment that
+  copied the old path must use the new one, and a runtime with its own policy needs the three namespace calls
+  allowed, as before. One more audit row for each real purge run, and one possible warning line in the log. NFR-002,
+  NFR-007, H5P-004, MAPPE-004, DATA-003 and DATA-007 have an "Amended" line; D-107, D-110 and D-134 an amendment;
+  T-54, T-70, T-103, T-110 and T-114 in the threat model, ROS-20, the architecture description, the Docker and
+  yearly-purge operations notes, the runbook and the READMEs of `deploy/`, `deploy/seccomp/` and
+  `tools/deploy-check/` follow.
+
+### D-145 · Security repairs, step 29: the lock file is held to one source and one checksum, an install script outside the reviewed list stops the install, the workflows name commits and digests, an audit exception is dated and bound to its package, and the advisories are checked every day
+- **Context:** Six gaps in how the dependencies and the build steps are held. (1) `npm run check:audit` failed:
+  `effect` 3.20.0, an exact dependency of `@prisma/config` 7.10.1 (Prisma's command-line tool), is named by
+  GHSA-7589-6fvf-x4pw (a slow pattern in `Schema.TemplateLiteral`; fixed in 3.22.1). (2) The audit check compared
+  an exception's `expires` with today as text, so an entry without a date, with a misspelt one or with a date
+  years ahead never expired, and it matched an exception to an advisory by the advisory's ID alone, whatever
+  package the entry named. (3) That every package of `package-lock.json` comes from the npm registry with a
+  SHA-512 value had been checked once by hand (threat model T-90); nothing held it. (4) The root `package.json`
+  lists the reviewed install scripts in `allowScripts`, but npm 11 runs a script outside the list with a notice
+  unless `strict-allow-scripts` is set, and there was no `.npmrc`. (5) The workflows named their actions by major
+  tag and three of the gate's service images by tag; a tag can be moved by its publisher. (6) The audit check ran
+  only on a push or a pull request, and Dependabot proposes updates once a month (the owner's choice of
+  2026-10-28, where `SEC-007` says weekly), so an advisory published in between waited for the next push.
+- **Decision — `effect` 3.22.4 by an exact override (SEC-007).** The root `overrides` pins `effect` at 3.22.4, as
+  D-030 did for `underscore`: Prisma 7.10.1 is the newest 7.x and names 3.20.0 exactly. 3.22.4 was five weeks old;
+  the newest, 3.22.5, one week. The package is used by Prisma's CLI (`generate`, `migrate deploy`) to read our own
+  `prisma.config.ts`; `@prisma/client`, which the server runs, does not load it. Remove the override when a Prisma
+  release names a fixed `effect` itself. The two `image-size` exceptions stay (D-030): no 1.x release is fixed.
+- **Decision — an exception is complete, dated and bound to its package.**
+  `tools/dependency-check/auditExceptionRules.mjs`: an entry needs `advisory`, `package`, `decision`, `expires`
+  and `mitigation`; `expires` is a real calendar date (`2027-02-30` is not one) at most 120 days after today, so
+  every exception is read again within four months; two entries for the same advisory and package are refused.
+  `checkAudit.mjs` matches an advisory to an exception by ID and package, and reports an advisory once for each
+  package npm names. D-030's entries (until 2027-01-31) pass.
+- **Decision — `npm run check:lockfile` (SEC-007).** `tools/dependency-check/checkLockfile.mjs` holds every
+  package of the lock file that is not one of our workspaces to
+  `https://registry.npmjs.org/<name>/-/<name>-<version>.tgz` and to a `sha512-` value of the full length; an alias
+  or a bundled package fails until a person has reviewed it; a link points at a local package. It uses Node alone,
+  and both workflows run it before `npm ci`. Not required: a rule for another registry. A mirror at HVL would be a
+  change of this check on purpose.
+- **Decision — an install script outside the reviewed list stops the install.** `.npmrc` sets
+  `strict-allow-scripts=true`. `allowScripts` names the four packages of the lock file with a script, each as
+  `name@version`: `esbuild`, `prisma` and `@prisma/engines` run theirs, and `fsevents` (macOS only) is `false`,
+  because it ships its built file and its script would only build it again. `installScriptRules.mjs` compares the
+  lock file with the list both ways and requires the setting; `deploy/Dockerfile` copies `.npmrc` before its
+  `npm ci`, and `tools/deploy-check` requires that copy.
+- **Decision — the workflows name commits and digests (`npm run check:workflows`).** Each action is written as
+  `owner/repo@<commit> # v1.2.3` (checkout v7.0.1, setup-node v7.1.0, cache v6.1.0, upload-artifact v7.0.2; each
+  commit read from the action's tag list and fetched). The gate's `postgres`, `redis` and `moto` services carry
+  the digests of `deploy/compose.app.yml`, and the check refuses another digest for an image the stack names.
+  It also requires top-level `permissions` without `write`, and `persist-credentials: false` on every checkout,
+  which the two workflows already had. Dependabot proposes new action commits; an image digest is changed by hand.
+- **Decision — a daily advisory run; Dependabot stays monthly (the owner, 2026-11-26).**
+  `.github/workflows/audit.yml` runs `check:lockfile` and `check:audit` once a day on the default branch. Nothing
+  is installed for it: both read the lock file and use Node and npm alone. `SEC-007` is amended. Not known from
+  here: whom GitHub notifies about a failed scheduled run, and when it pauses a schedule in a quiet repository
+  *(verify; GitHub's documentation could not be reached from the development sandbox)*.
+- **Recorded, not built.** A secret scan of the repository: the repository is public, so GitHub's secret scanning
+  and push protection are settings the owner can switch on; no scanner was added to CI, because none could be run
+  in the development sandbox to see what it reports (Q34). Signing the image and stating where it was built: no
+  workflow publishes an image, so there is nothing to sign yet; where the production image is built and whether it
+  is signed there is HVL IT's choice (Q33).
+- **Verified:** unit tests of each rule on the real files and on changed copies: an exception without a date,
+  with text for a date, with a date that does not exist, more than 120 days ahead, for another package or twice;
+  a lock-file entry from another server or another package's address, with a weak, cut or missing checksum, as an
+  alias or bundled, and a link out of the repository; a script the list does not name, a stale or loosely written
+  entry, and npm settings without the strict line; an action by tag, branch or short commit or without its
+  version, an image without a digest or with another than the stack's, a token that may write, a checkout that
+  keeps the token; an image build that does not copy `.npmrc`. The old code accepted each of the exception cases,
+  and the old workflows fail the new check. A real `npm ci` in a copy of the manifests passed with the strict
+  setting and the full list, and ended with `ESTRICTALLOWSCRIPTS`, changing nothing, with one entry removed.
+  `npm run check:audit` passes; `prisma validate`, `generate`, `migrate deploy` and `migrate status` ran with
+  `effect` 3.22.4, and the server suite, which applies the migrations, passes as before. The two commands of the
+  daily run were run in a copy with nothing installed. The Docker smoke test ran on the committed tree (278 s): a
+  fresh builder built the image, its `npm ci` with the strict setting among the steps; the `migrate` step applied
+  8 of 8 migrations with `effect` 3.22.4; the PDF printed with Chromium's sandbox on, and the checks of D-144
+  passed (no code cache, a stopped server unhealthy after 19 s). The workflow files themselves have not run on
+  GitHub: GitHub runs them for `main` and for pull requests only, so they first run with the pull request that
+  brings this branch to `main`.
+- **Consequences:** `package.json`, `package-lock.json`, `.npmrc`, `docs/assurance/sbom.cdx.json` (the SBOM lists
+  `effect` 3.22.4); `tools/dependency-check/` (`auditExceptionRules.mjs`, `checkLockfile.mjs`,
+  `installScriptRules.mjs`, `checkWorkflows.mjs`, `checkAudit.mjs`, their tests and the README);
+  `tools/deploy-check/deployRules.mjs`; `deploy/Dockerfile`; `.github/workflows/ci.yml`, `docker.yml`, `audit.yml`
+  and `.github/dependabot.yml`; `tools/doc-lint/test/ciDependencyGates.test.mjs`; `CLAUDE.md` §3. An upgrade of a
+  package with an install script now changes `allowScripts` in the same commit, and an exception renewed on its
+  last day can run 120 days. Amends D-029, D-030 and D-110, and `SEC-007`. Open questions Q33 and Q34.
+
+### D-146 · Security repairs, step 30: the insight routes answer only a request with the own-page header, the Hjelp header shows on every page of Canvas's frame, the shortlist's texts say what it holds, and the documents' line references are re-pointed
+- **Context:** Four things left at the end of the repairs. (1) D-106's amendment of 2026-11-05 left a residual: the
+  insight routes are GETs that write the audit trail (`DATA-007`), they take no CSRF token (D-057), and they told
+  our pages' fetch from another site's request by fetch metadata alone, so a browser that sends none was served.
+  (2) The pages Express renders itself left out their header (the skip link, the site name and **Hjelp**, `UD-013`)
+  for every frame request from our own origin, taking it for our own chrome around the page (D-067's amendment of
+  2026-10-24). Since D-130 a launch's last step is a post from our own page into Canvas's frame, so the Deep Linking
+  picker and a launch's error page arrived as "a frame from our own origin" and showed no Hjelp link in Canvas; a
+  test in full Chromium showed it. (3) Four comments of the «Ta opp i samlinga» list said that it holds "aggregates
+  and the teacher's texts only". A gap line also names a wrong answer that learners typed (`INS-003` lists one when
+  *k* or more learners gave it), and the list can be printed or projected; DPIA input R30 did not say that. (4) The
+  line references of the assurance documents, into source files, `PROGRESS.md` and this file, had moved with the
+  repairs: 89 of 392 pointed at other lines than their text.
+- **Decision — the own-page header (`DATA-007`, `INS-007`).** The web client adds `x-hvli-request: fetch` to every
+  request it sends, from a portal page and from a Canvas page alike (`apps/web/src/api/apiRequest.ts`); the name and
+  the value are the contract's (`OWN_PAGE_HEADER_NAME`, `OWN_PAGE_HEADER_VALUE`). Every insight route refuses a
+  request without it with 403 `error.forbidden`, for a session and for an ltik, after the sign-in check and before
+  View, the rate limit and any audit write (`insightRoutes.ts`, `isOwnPageFetch`); the fetch-metadata rule of D-106
+  stays as a second check. Why it holds in a browser without fetch metadata: a navigation, a form, an image, a
+  frame or a prefetch cannot add a request header, and another origin's script can add one only after a CORS
+  preflight, which `/api` never grants (only the files origin answers one, for reading files; `SEC-004`, D-045). D-057 is
+  unchanged: no CSRF token on a GET. *Not chosen:* the CSRF token on these GETs, which a Canvas page does not have.
+  *Residual:* a script running on our own origin can fetch these routes, as it can every route; a page that was
+  open while the server was upgraded keeps its old script and gets 403 from the Innsikt tab until it is reloaded.
+  No other GET of `/api` writes the audit trail (searched 2026-11-26).
+- **Decision — the Hjelp header on every page of Canvas's frame (`UD-013`).** `http/pages/helpLink.ts` leaves the
+  header out only for a page that our chrome frames (`isChromeFramedPath`: `/h5p/play/:id`, `/h5p/edit/:id`,
+  `/h5p/new`, `/lti/play`, `/lti/edit`) and that is asked for as a frame from our own origin. Every other page shows
+  it, however the request reached it: the picker and a launch's error page in Canvas's frame, a top-level page, and a
+  client without fetch metadata. The list of framed pages is the one `web/chromeRedirect.ts` sends on to their chrome
+  page; a test holds the two together.
+- **Decision — the shortlist's texts (`INS-003`, `INS-006`).** No behaviour changes. The comments of
+  `shortlistEntries.ts`, `printShortlist.ts`, `shortlistContext.tsx` and `InsightShortlist.tsx` say what the list
+  holds: aggregates, the teacher's own texts and, for a gap, the commonest wrong answer the view lists, which is
+  learners' own words and is listed only when *k* or more gave it. DPIA input R30 says that such an answer can be
+  put on the list, which the teacher can print or project.
+- **Decision — line references.** Each reference was followed through the repository's history, one document
+  line at a time: the commit that last set the reference on its line was found (`git log -L`), and the lines it
+  names were mapped from that commit to today's files. 89 moved. Fourteen whose lines had changed themselves were
+  read by hand, and one more was found wrong by reading (it was wrong when it was last set). A random sample of 30
+  of all 392 was then read against its text, and all 30 held. A reference that was wrong when it was set is not
+  made right by following it, so the sample is evidence, not proof. A first try that took the newest commit in
+  which a reference's text appeared anywhere in the document moved two right references to wrong lines, where
+  several rows carry the same reference; it was undone. Each document's "Written" row names the date. References
+  into `PROGRESS.md` and this file move whenever a row or an amendment is added above them, so the decision ID or
+  the step named beside a reference is what finds the text.
+- **Verified:** `insightForeignRequest.test.ts`: a request without the header, with a wrong value, or with our
+  pages' fetch metadata but no header is 403 on all four routes, audits nothing and takes no limit; a navigation,
+  another origin's request and an image are refused with the header too; our pages' fetch is served and audited. The
+  old code served the requests without the header. `apiRequest.test.ts`: every request of the web client carries the
+  contract's header. `pickerHelpLink.e2e.test.ts` (full Chromium, the built web app, the mock Canvas with third-party
+  cookies blocked): the picker in Canvas's frame shows one Hjelp link that opens a new tab, and the player frame
+  inside `/app/play` has no second header; the first failed on the old rule. `ltiErrorPages.test.ts`,
+  `portalPages.test.ts` and `chromeRedirect.test.ts` hold the rule and the list of framed pages.
+  `insightSummaries.test.ts`: a shortlist entry names a typed gap answer only when its count is shown (the rule held
+  before; with the filter taken out for a trial the test failed). Screenshots of the picker in nn at 1280 and 390 px
+  went to the owner.
+- **Consequences:** `packages/api-contract/src/openApi.ts` and `routes/insightRoutes.ts` (the 403 names the header);
+  `apps/web/src/api/apiRequest.ts`; `apps/server/src/insight/http/insightRoutes.ts`;
+  `apps/server/src/http/pages/helpLink.ts`; `apps/server/test/support/ownPageFetch.ts` (the header for tests that ask
+  as our pages do); the four shortlist files; `docs/privacy/DPIA-INPUT.md` (R30); threat model T-02; the assurance
+  documents' line references. A client that reads insight must send the header. Amends D-106 (its residual is
+  closed) and D-067 (which frames get no header); `INS-007` has an "Amended" line. With this step the security
+  repairs of steps 1 to 30 (D-117 to D-146) are done; what stays open is in the open questions of `PROGRESS.md`.

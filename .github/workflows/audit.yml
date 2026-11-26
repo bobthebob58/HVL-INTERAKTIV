@@ -1,0 +1,40 @@
+# Advisories: once a day, on the default branch, the lock-file check and the audit check (SEC-007, D-145).
+# WHY: ci.yml runs the audit check only when someone pushes or opens a pull request, and Dependabot proposes updates
+# once a month (the owner's choice). An advisory published in between would wait for the next push; this run fails
+# on the day it is published, and a failed run is the signal: GitHub shows it on the Actions tab and sends its
+# notice for a failed scheduled run to the account its notification settings name.
+# Nothing is installed: both checks read package-lock.json and use Node and npm alone, so no dependency's code and
+# no install script runs here.
+name: Advisories
+
+on:
+  schedule:
+    # WHY: 04:23 UTC, away from the full hour, when many scheduled runs start at once.
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: advisories
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Advisories in the production dependencies
+    runs-on: ubuntu-24.04
+    # WHY: two checks of a few seconds each; 10 minutes stops a hung registry request.
+    timeout-minutes: 10
+    steps:
+      # SECURITY: no step pushes or fetches with the job's token, so checkout leaves none on disk.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: The lock file names one source, one kind of checksum and the reviewed install scripts (SEC-007)
+        run: node tools/dependency-check/checkLockfile.mjs
+      - name: Audit with reviewed exceptions (SEC-007)
+        run: npm run check:audit

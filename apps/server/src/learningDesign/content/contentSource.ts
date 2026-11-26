@@ -80,7 +80,7 @@ const jsonProblem = (text: string, file: string): ContentProblem | undefined => 
     return {
       file,
       ...(line ? { line: Number(line) } : {}),
-      message: `is not valid JSON: ${message.replace(/ in JSON at position \d+.*$/, '')}`,
+      message: `is not valid JSON: ${message.replace(/ in JSON at position \d.*$/, '')}`,
     };
   }
 };

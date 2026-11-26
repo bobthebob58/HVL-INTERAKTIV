@@ -22,6 +22,8 @@ export interface PageAction {
   readonly href: string;
   /** Locale key of the link text. */
   readonly labelKey: MessageKey;
+  /** Opens the link in the whole window (`target="_top"`), for a page that may be shown inside a frame. */
+  readonly top?: boolean;
 }
 
 /** What a message page says. */
@@ -36,6 +38,8 @@ export interface MessagePageInput {
   readonly action?: PageAction;
   /** The header's Hjelp link, when the web app runs (./helpLink.ts). */
   readonly help?: HelpLink | undefined;
+  /** Same-origin static scripts the page loads, e.g. the one that takes an ltik out of the address. */
+  readonly scripts?: readonly string[];
 }
 
 /**
@@ -49,11 +53,13 @@ export function messagePage(input: MessagePageInput): string {
   // SECURITY: `//host` and `/\host` are protocol-relative in browsers; only plain paths are links here.
   if (action && !/^\/(?![/\\])/.test(action.href)) throw new Error('message page links must be local paths');
   const title = t(titleKey, {}, locale);
-  const link = action
-    ? markup`<p><a href="${action.href}">${t(action.labelKey, {}, locale)}</a></p>`
-    : undefined;
+  const label = action ? t(action.labelKey, {}, locale) : '';
+  // WHY: a page shown inside one of our frames opens its link in the whole window, where a login belongs.
+  const top = action?.top ? markup`<p><a href="${action.href}" target="_top">${label}</a></p>` : undefined;
+  const link = action ? (top ?? markup`<p><a href="${action.href}">${label}</a></p>`) : undefined;
   const main = markup`<h1>${title}</h1>
 <p>${t(bodyKey, {}, locale)}</p>
 ${link}`;
-  return htmlPage({ locale, title, main, help: input.help }, t('page.siteName', {}, locale));
+  const scripts = input.scripts ? { scripts: input.scripts } : {};
+  return htmlPage({ locale, title, main, help: input.help, ...scripts }, t('page.siteName', {}, locale));
 }

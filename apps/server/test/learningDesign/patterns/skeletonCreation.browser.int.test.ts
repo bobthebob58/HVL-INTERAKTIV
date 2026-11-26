@@ -1,9 +1,8 @@
 /**
- * Probe P1 (S5): activities created on the server from pattern skeletons, on the real content types (D-078). Each
- * skeleton is completed with Nynorsk semantics defaults and fresh `subContentId`s, saved through HvlH5PEditor as an
- * author, validated, played in Chromium and saved once, unchanged, in H5P's editor (D-084, D-085). The tests pin
- * what was found: the versions offered, what a save needs, what the editor still adds, which defaults stay English,
- * and what a learner sees where a video or an image is missing.
+ * Probe P1: activities created from pattern skeletons on the real content types (D-078). Each skeleton gets Nynorsk
+ * semantics defaults and fresh `subContentId`s, is saved through HvlH5PEditor as an author, validated, played in
+ * Chromium and saved once, unchanged, in H5P's editor (D-084, D-085). The tests pin the versions offered, what a save
+ * needs, what the editor adds, which defaults stay English, and what a learner sees without a video or image.
  *
  * Spec: PED-010, PROD-001, H5P-008
  */
@@ -16,6 +15,7 @@ import { closeLoopbackServers, listenOnLoopback } from '../../support/loopbackSe
 import { openHttpTestbed, type HttpTestbed, type TestActor } from '../../support/httpTestbed.js';
 import { describeWithRealPackages, REAL_PACKAGES_DIR } from '../../support/realPackages.js';
 import { describeWithServices } from '../../support/services.js';
+import { storedContent } from '../../support/storedContent.js';
 import { diffParams, sameText, subContentIdsOf } from './skeletonCreationDiff.js';
 import * as expected from './skeletonCreationExpected.js';
 import {
@@ -44,7 +44,7 @@ describeWithServices('creating activities from pattern skeletons (probe P1)', ()
     const created: Created[] = [];
     const byPattern = <T>(value: (c: Created) => T): Record<string, T> =>
       Object.fromEntries(created.map((c) => [c.skeleton.pattern, value(c)]));
-    const stored = (id: string) => tb.runtime.editor.getContent(id, user);
+    const stored = (id: string) => storedContent(tb.runtime.editor, id, user); // WHY: the row itself (D-124)
     beforeAll(async () => {
       tb = await openHttpTestbed([], { seedFrom: REAL_PACKAGES_DIR });
       author = await tb.actor('author');

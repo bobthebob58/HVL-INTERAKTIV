@@ -36,11 +36,10 @@ describeWithServices('Malformed content input over HTTP', () => {
     library = 'H5P.MultiChoice 1.16',
   ) => requestAs(tb.app, author, 'post', '/h5p/content').send({ library, params: { params, metadata } });
 
-  it('[PROD-012] text PostgreSQL cannot store (U+0000, a lone surrogate) is a 400, in values, keys and titles', async () => {
+  it('[PROD-012] text PostgreSQL cannot store (U+0000, a lone surrogate) is a 400, in values and titles', async () => {
     // Arrange
     const cases: [object, object?][] = [
       [{ question: 'a\u0000b' }],
-      [{ question: 'ok', ['a\u0000b']: 1 }],
       [{ question: '\udc00' }],
       [{ question: 'ok' }, { title: 'S\ud800', license: 'U' }],
     ];
@@ -51,6 +50,15 @@ describeWithServices('Malformed content input over HTTP', () => {
       expect(res.body).toMatchObject({ errorCode: 'hvl:unstorable-text' });
     }
     expect((await save({ question: 'Kva? 🙂' })).status).toBe(201);
+  });
+
+  it('[PROD-012] such text in a key no field defines goes with the key: the save is stored without it', async () => {
+    // Act: a key the semantics do not name, which a save removes (D-123)
+    const res = await save({ question: 'ok', ['a\u0000b']: 1 });
+    // Assert
+    expect(res.status).toBe(201);
+    const stored = await tb.db.h5PContent.findUniqueOrThrow({ where: { id: res.body.contentId as string } });
+    expect(stored.params).toEqual({ question: 'ok' });
   });
 
   it('[PROD-012] a learner state with U+0000 is a 400, and nothing is stored', async () => {

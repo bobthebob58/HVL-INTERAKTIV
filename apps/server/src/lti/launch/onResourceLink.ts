@@ -62,6 +62,7 @@ export function onResourceLink(deps: ResourceLinkDeps): OnLaunchHandler {
     const roles = mapLtiRoles(facts.roles);
     const account = await deps.accounts.atLaunch({
       issuer: facts.issuer,
+      clientId: facts.clientId,
       subject: facts.subject,
       platformId: facts.platformId,
       roles,

@@ -7,7 +7,8 @@
  * Spec: INS-003
  * Invariants:
  *   - The mark (`data-insight-print` on `<html>`) is removed on `afterprint`, and at once if printing throws.
- *   - PRIVACY: the printed list holds only what the shortlist shows: aggregates and the teacher's texts.
+ *   - PRIVACY: the printed list holds only what the shortlist shows: aggregates, the teacher's texts and, for a
+ *     gap, a wrong answer that k or more learners typed (./shortlistEntries.ts). Paper leaves the app's control.
  * Collaborators: ./insightPrint.css (the rules the mark switches on), ./InsightShortlist.tsx.
  * Tests: apps/web/test/features/insight/InsightShortlist.test.tsx
  */

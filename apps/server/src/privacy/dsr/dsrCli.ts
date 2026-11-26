@@ -42,7 +42,7 @@ export const DSR_USAGE = [
   'usage: dsrCli.ts export --operator <your-feide-id>             print the data subject’s data as JSON',
   '       dsrCli.ts erase --operator <your-feide-id> [--confirm]  count it (dry run), or delete it',
   'The data subject is read from standard input as one JSON object, for example',
-  '  {"feideId":"<feide-id>","lti":[{"issuer":"<iss>","sub":"<sub>"}]}',
+  '  {"feideId":"<feide-id>","lti":[{"issuer":"<iss>","clientId":"<client-id>","sub":"<sub>"}]}',
 ].join('\n');
 
 /** The CLI's exit codes. */

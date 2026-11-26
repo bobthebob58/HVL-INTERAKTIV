@@ -19,6 +19,7 @@
   "intentionallyNotExported": [
     "nn",
     "PrismaClient",
+    "H5PContentUpdateManyMutationInput",
     "H5PUserData",
     "LtiAccessToken",
     "LtiPlatformCreateInput",

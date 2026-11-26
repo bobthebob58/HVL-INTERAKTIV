@@ -141,7 +141,7 @@ export interface InsightReport {
   readonly participation: ParticipationInsight;
   /** Hardest first; questions whose share is hidden or unknown last. */
   readonly items: readonly ItemDifficultyInsight[];
-  /** Empty for a content version older than the current one: its options may have changed (D-093, D-106). */
+  /** Empty for a version older than the current one: its options or answer key may have changed (D-106, D-137). */
   readonly misconceptions: readonly MisconceptionInsight[];
   /** Only for an InteractiveVideo; null otherwise. */
   readonly videoEngagement: readonly VideoInteractionInsight[] | null;

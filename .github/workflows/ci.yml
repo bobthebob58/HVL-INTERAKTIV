@@ -1,5 +1,5 @@
 # CI: the Session gate from docs/EVALUATOR-GUIDE.md §5, on every push to main and every pull request.
-# Requirements: NFR-004 (typecheck, lint, tests, traceability), SEC-007 (pins, audit), NFR-005 (licences),
+# Requirements: NFR-004 (typecheck, lint, tests, traceability), SEC-007 (pins, lock file, workflow pins, audit), NFR-005 (licences),
 # DATA-001 (data inventory), H5P-001 (verified H5P client files and the boot check), D-023 (services), SEC-006
 # (the fail-closed scanner and its settings probe against a strict and a lax clamd), UD-040 (the conformance report
 # matches its sources).
@@ -32,7 +32,7 @@ jobs:
     timeout-minutes: 75
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
         env:
           POSTGRES_USER: hvli
           POSTGRES_PASSWORD: hvli-dev
@@ -41,12 +41,12 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U hvli" --health-interval 5s --health-timeout 5s --health-retries 20
       redis:
-        image: redis:7-alpine
+        image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
         ports: ['6379:6379']
         options: >-
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 20
       s3:
-        image: motoserver/moto:5.1.16
+        image: motoserver/moto:5.1.16@sha256:f78c8e0370cabe2516395f351fb27e1df1aa6dc2d728d6de16d5dfbc9ccf595d
         ports: ['5000:5000']
       # WHY: the real-clamd SEC-006 tests run only where CLAMAV_TEST_HOST names a clamd (D-110 integration amendment).
       # freshclam is off: the image's own signatures hold EICAR, and the run needs no signature server.
@@ -89,15 +89,23 @@ jobs:
       CLAMAV_TEST_LAX_PORT: '3311'
     steps:
       # WHY: GitHub retires Node 20 for actions; these majors run on Node 24.
+      # SECURITY: every action is named by commit, with its version as a comment, and every service image by
+      # digest: a tag can be moved by its publisher, a commit or a digest cannot (`npm run check:workflows`, D-145).
+      # Dependabot proposes new commits for the actions (.github/dependabot.yml); a service image's digest is changed
+      # by hand, in the same commit as deploy/compose.app.yml, which the check compares it with.
       # SECURITY: no later step pushes or fetches with the job's token, and the library builds run third-party
       # build scripts, so checkout leaves no token on disk for them (D-110's amendment of 2026-11-05, step 7).
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
+      # SECURITY: before anything is installed, the lock file is held to the npm registry, to sha512 checksums and
+      # to the reviewed list of install scripts; the check uses Node alone (SEC-007, D-145).
+      - name: The lock file names one source, one kind of checksum and the reviewed install scripts (SEC-007)
+        run: node tools/dependency-check/checkLockfile.mjs
       - name: Install dependencies (exact lockfile)
         run: npm ci
       - name: Fetch and verify H5P core 1.28.0 and the pinned editor (H5P-001, D-022, D-027)
@@ -110,7 +118,7 @@ jobs:
       # request) whose run saved it; a run reads only its own scope's caches and those of its base or default branch,
       # so a pull request cannot fill main's.
       - name: Cache the H5P library checkouts and builds
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/hvl-interaktiv/h5p-libraries
           key: h5p-libraries-${{ runner.os }}-${{ hashFiles('tools/h5p-libraries/libraries.manifest.json', 'tools/h5p-libraries/*.mjs') }}
@@ -153,6 +161,8 @@ jobs:
         run: npm run check:filesize
       - name: Exact pins (SEC-007)
         run: npm run check:pins
+      - name: Workflows name actions by commit and service images by digest (SEC-007)
+        run: npm run check:workflows
       - name: Licences (NFR-005)
         run: npm run check:licences
       - name: Audit with reviewed exceptions (SEC-007)
@@ -173,7 +183,7 @@ jobs:
           A11Y_REPORT_DIR: a11y-report
       - name: Keep the accessibility report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: a11y-report
           path: a11y-report

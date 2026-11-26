@@ -20,7 +20,7 @@ import {
 import type { LearnerStateStore } from '../../src/learningDesign/safeEditing/LearnerStateGate.js';
 import { ContentFileGrants } from '../../src/h5p/contentFileGrants.js';
 import { createH5pConfig } from '../../src/h5p/H5pConfigFactory.js';
-import { createHvlEditor } from '../../src/h5p/H5pEditorFactory.js';
+import { createHvlEditor, type EditorFactoryInputs } from '../../src/h5p/H5pEditorFactory.js';
 import type { HvlH5PEditor } from '../../src/h5p/HvlH5PEditor.js';
 import { asAccountUser, type H5pRole, type HvlH5pUser } from '../../src/h5p/HvlH5pUser.js';
 import { HvlUrlGenerator } from '../../src/h5p/HvlUrlGenerator.js';
@@ -51,9 +51,13 @@ const roots: string[] = [];
 /**
  * Builds an editor whose library folder holds the given libraries.
  * @param libraries - Synthetic libraries to install.
+ * @param options - Small file limits for one activity, or a listener for a failed clean-up (D-139).
  * @returns The editor and its helpers; remove folders with `removeEditorTestbeds`.
  */
-export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<EditorTestbed> {
+export async function editorTestbed(
+  libraries: SyntheticLibrary[],
+  options: Pick<EditorFactoryInputs, 'fileLimits' | 'onCleanupFailed'> = {},
+): Promise<EditorTestbed> {
   const root = mkdtempSync(join(tmpdir(), 'h5p-editor-'));
   roots.push(root);
   const libraryDir = syntheticLibraryDir(libraries);
@@ -71,6 +75,7 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
     resets,
     hasOtherLearnersState: async () => learnerStates.othersHaveState,
     resetLearnerState: async (contentId: string) => void resets.push(contentId),
+    raiseVersion: async () => undefined,
   };
   const editor = createHvlEditor({
     config,
@@ -95,6 +100,7 @@ export async function editorTestbed(libraries: SyntheticLibrary[]): Promise<Edit
       },
     },
     translate: createHvlTranslationCallback(),
+    ...options,
     fileSanitizers: [],
     // WHY: no HTTP here; relative file URLs, as a test server that serves the player's files itself would use.
     urlGenerator: new HvlUrlGenerator(config, new ContentFileGrants(parseKeyring(`t1=${randomKey(9)}`)), ''),

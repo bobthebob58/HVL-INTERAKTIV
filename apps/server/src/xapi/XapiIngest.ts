@@ -19,23 +19,29 @@
  *     student (`testUser`, stored flagged so passback works but insight never reads it, D-102's amendment of
  *     2026-11-04). Logs hold counts only (DATA-009).
  *   - PRIVACY: an LTI request's `sub` passes through to the listener only (D-104), never into a row or a log.
+ *   - PRIVACY: a play is stored only for a learner ./learningDataScope.ts names (an HVL member in the portal, the
+ *     Learner role in Canvas), and a batch naming an older version only for a learner who already has rows under
+ *     that version in that context: a version that is no longer current takes no new learner (INS-006, D-138).
  *   - The listener gets only the rows this request inserted, in timestamp order, after the insert committed; its
  *     failure is logged by kind only and does not fail the batch, whose statements are stored (a resend would be
  *     skipped).
  * Collaborators: ./xapiTarget.ts, ./XapiRateLimit.ts, ./XapiStatementStore.ts, ./xapiBatchPlan.ts,
- *   ./platformContextKey.ts, ../auth/Principal.ts, ./xapiRoutes.ts, ../server/createApp.ts (wires the listener).
+ *   ./platformContextKey.ts, ./learningDataScope.ts, ../auth/Principal.ts, ./xapiRoutes.ts,
+ *   ../server/createApp.ts (wires the listener).
  * Tests: apps/server/test/xapi/xapiIngest.int.test.ts, apps/server/test/xapi/xapiLimits.int.test.ts,
  *   apps/server/test/xapi/xapiRouteAuth.int.test.ts, apps/server/test/xapi/xapiLaunchScope.int.test.ts,
- *   apps/server/test/xapi/xapiReplay.int.test.ts, apps/server/test/xapi/xapiTestUser.int.test.ts
+ *   apps/server/test/xapi/xapiReplay.int.test.ts, apps/server/test/xapi/xapiTestUser.int.test.ts,
+ *   apps/server/test/xapi/xapiRecordedLearners.int.test.ts
  */
 import type { XapiBatchEnvelope } from '@hvl-interaktiv/api-contract';
 import type { Logger } from 'pino';
-import { highestRole, learnerKeyYearOf, type Principal } from '../auth/Principal.js';
+import { learnerKeyYearOf, type Principal } from '../auth/Principal.js';
 import type { XapiStatement } from '../generated/prisma/client.js';
 import type { ContentAccessRepository } from '../h5p/permissions/ContentAccessRepository.js';
 import { HttpError } from '../http/HttpError.js';
 import type { Database } from '../infra/prismaClient.js';
 import { isPrismaError, prismaErrorLine } from '../logging/prismaErrorSummary.js';
+import { recordsLearningData } from './learningDataScope.js';
 import { principalContextKey } from './platformContextKey.js';
 import { batchKeys, parseXapiItems, planXapiBatch, type XapiBatchPlan } from './xapiBatchPlan.js';
 import type { StatementLimit } from './XapiRateLimit.js';
@@ -68,7 +74,7 @@ export type XapiStoredListener = (
 export interface XapiIngestDeps {
   readonly access: ContentAccessRepository;
   readonly db: Database;
-  readonly statements: Pick<XapiStatementStore, 'storedIds' | 'replayHistory' | 'insert'>;
+  readonly statements: Pick<XapiStatementStore, 'storedIds' | 'replayHistory' | 'insert' | 'hasRowsIn'>;
   readonly rateLimit: StatementLimit;
   /** The server's clock; the receive time of every batch (D-115). */
   readonly clock: () => Date;
@@ -106,16 +112,16 @@ export class XapiIngest {
   ): Promise<XapiIngestOutcome> {
     const receivedAt = this.deps.clock();
     const target = await xapiTarget(this.deps, principal, batch.contentId);
-    // WHY: a page opened before a structural save keeps its version; a later one does not exist yet (D-093, D-115).
+    // WHY: a page opened before a save that raised the version keeps its own; a later one does not exist yet (D-115).
     if (batch.contentVersion > target.currentVersion) throw new HttpError(400, 'error.badRequest');
     const count = batch.statements.length;
     const decision = await this.deps.rateLimit.take(principal.userId, target.contentId, count);
     if (!decision.allowed) return { kind: 'limited', retryAfterSeconds: decision.retryAfterSeconds };
-    // PRIVACY: previews and teachers' plays are not learning data; their batches store nothing (D-102).
-    if (highestRole(principal.roles) !== 'learner') return { kind: 'accepted', stored: 0 };
+    // PRIVACY: previews, teachers' plays and plays outside the rule are not learning data (D-102, D-138).
+    if (!recordsLearningData(principal)) return { kind: 'accepted', stored: 0 };
     const contextId = principalContextKey(principal);
     // WHY: a launch outside a course has no course to store under, and null would make it a portal play (D-103).
-    if (contextId === undefined) return this.skipCourseless(count);
+    if (contextId === undefined) return this.skip(count, 'noCourse');
     const facts: XapiBatchFacts = {
       contentId: target.contentId,
       contentVersion: batch.contentVersion,
@@ -125,6 +131,9 @@ export class XapiIngest {
       testUser: principal.lti?.testUser === true,
       mainCategory: target.mainCategory,
     };
+    // PRIVACY: a version that is no longer current takes no new learner; one already in it may finish (D-138).
+    const closed = batch.contentVersion < target.currentVersion;
+    if (closed && !(await this.deps.statements.hasRowsIn(facts))) return this.skip(count, 'closedVersion');
     const items = parseXapiItems(batch.statements);
     const keys = batchKeys(items);
     // WHY: one after the other: a racing request's answer that this batch skips as stored must be in the history too,
@@ -146,12 +155,10 @@ export class XapiIngest {
     return { kind: 'accepted', stored: rows.length };
   }
 
-  private skipCourseless(received: number): XapiIngestOutcome {
-    // PRIVACY: a count only (DATA-009); the launch is not named.
-    this.deps.logger.info(
-      { event: 'xapi.batch', received, stored: 0, noCourse: received },
-      'xapi batch had no course',
-    );
+  private skip(received: number, why: 'noCourse' | 'closedVersion'): XapiIngestOutcome {
+    // PRIVACY: a count only (DATA-009); neither the launch nor the learner is named.
+    const message = why === 'noCourse' ? 'xapi batch had no course' : 'xapi batch named a closed version';
+    this.deps.logger.info({ event: 'xapi.batch', received, stored: 0, [why]: received }, message);
     return { kind: 'accepted', stored: 0 };
   }
 

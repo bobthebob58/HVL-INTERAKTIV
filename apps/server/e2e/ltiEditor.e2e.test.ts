@@ -15,6 +15,7 @@ import { launchFromCanvas } from '../test/support/ltiLaunchDriver.js';
 import { describeWithServices } from '../test/support/services.js';
 import { recordFlow, redactTokens } from '../test/support/flowRecorder.js';
 import { launchCookieTestChromium } from '../test/support/thirdPartyCookies.js';
+import { openLanding } from '../test/support/openLanding.js';
 import { pressEditorSave } from './support/editorSave.js';
 
 /** The ltik H5P's AJAX URL carries on the tool's player page (the address bar no longer has it). */
@@ -80,7 +81,7 @@ describeWithServices('[LTI-006] the H5P editor in the Canvas iframe with third-p
           problems.push(redactTokens(m.text()));
       });
       page.on('pageerror', (e) => problems.push(e.message));
-      await frame.goto(`${tb.toolUrl}/lti/edit?ltik=${encodeURIComponent(ltik)}`);
+      await openLanding(frame, `${tb.toolUrl}/lti/edit?ltik=${encodeURIComponent(ltik)}`);
       // WHY: «Lagre» is enabled only once H5P's editor can save: the page's own signal, not H5P's markup.
       await frame
         .locator('#hvl-editor-save:enabled')

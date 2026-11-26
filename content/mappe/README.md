@@ -79,14 +79,14 @@ Inside `{{#aktivitetar}}` … `{{/aktivitetar}}`, once per chosen activity:
 | `emne` | The course code |
 | `laeringsutbytte` | The learning outcomes with their category, separated by `;` |
 | `grunngjeving` | The didactic rationale from the **Læringsdesign** tab |
-| `uu_status` | One sentence with the universal design check's errors, how many of them were explained, and warnings |
+| `uu_status` | One sentence with the universal design check's errors, how many of them were explained, and warnings; a second sentence when the activity has more findings than the 50 that are listed |
 | `lenke` | The activity's address in HVL Interaktiv. It opens only for people who may view the activity, so the template's 3.3 tells the teacher to publish it and choose «Alle med Feide-innlogging» before sending the portfolio |
 | `resultat` | One sentence with the anonymised results, or why there are none |
 | `deltakarar`, `fullforing`, `median_forsok`, `endring` | The same figures one by one: participants, completion rate, median attempts, change from the first to the last attempt |
 | `oppretta`, `endra`, `publisert` | When the activity was made, last changed and published |
 
 Inside `{{#uu_merknader}}` … `{{/uu_merknader}}`, which stands inside `{{#aktivitetar}}`, once per finding of the
-universal design check: `alvor` (Feil, Åtvaring or Tips), `melding` (what the check says) and `uu_grunngjeving` (the
+universal design check, for at most the first 50 findings of an activity: `alvor` (Feil, Åtvaring or Tips), `melding` (what the check says) and `uu_grunngjeving` (the
 reason the authors gave for publishing despite an error, with its date).
 
 Inside `{{#emneoversikt}}` … `{{/emneoversikt}}`, once per course: `emnekode`, `tal` (activities) and `fasar` (how many

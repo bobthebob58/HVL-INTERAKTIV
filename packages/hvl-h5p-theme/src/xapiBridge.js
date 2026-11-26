@@ -10,7 +10,8 @@
  * Invariants:
  *   - Starts once, while it is evaluated, and only in a document that is not one of Core's iframes (whose
  *     `frameElement` has the class `h5p-iframe`) and that has its configuration (the inert JSON block
- *     `#hvl-xapi-bridge`, rendered only for a learner, D-102); otherwise it does nothing. At event time it ignores an
+ *     `#hvl-xapi-bridge`, rendered only for a learner, D-102, and read only when it is the JSON script in the page's
+ *     head, D-140); otherwise it does nothing. At event time it ignores an
  *     event that `H5P.isFramed && H5P.externalEmbed === false` marks as raised in a Core iframe.
  *   - It sends the first root `attempted` of the page load, every `answered` and a root `completed`, each queued once
  *     with a `statementId` (`crypto.randomUUID()`) and an `attemptId` `<viewId>:<n>`; `n` goes up right after a root
@@ -69,12 +70,18 @@
   var failures = 0;
   var envelopeBytes = batching.sized(envelope([])).bytes;
 
-  /** The configuration block, or null when it is missing, unreadable or names anything but a same-origin path. */
+  /** The configuration block, or null when it is missing, not the page's own, unreadable or names anything but a same-origin path. */
   function readConfig() {
     var block = document.getElementById('hvl-xapi-bridge');
+    // SECURITY: an ID can be given to any element; only the inert JSON element the page wrote in its head is ours.
+    var own =
+      block &&
+      block.tagName === 'SCRIPT' &&
+      block.type === 'application/json' &&
+      block.parentNode === document.head;
     var parsed;
     try {
-      parsed = block ? JSON.parse(block.textContent || '') : null;
+      parsed = own ? JSON.parse(block.textContent || '') : null;
     } catch {
       return null;
     }

@@ -174,8 +174,9 @@ describe('[INS-003] misconceptions', () => {
   it('[INS-003][PROD-013] says that answer distributions are for the current version only when an older one is viewed', () => {
     // Act
     render(<MisconceptionSection misconceptions={[]} items={[]} k={5} olderVersion />);
-    // Assert
-    expect(screen.getByText(/^Svarfordelinga blir berre vist for den gjeldande versjonen/)).toBeTruthy();
+    // Assert: a version also ends when the answer key changes (D-137), so the reason names both
+    const note = screen.getByText(/^Svarfordelinga blir berre vist for den gjeldande versjonen/);
+    expect(note.textContent).toContain('fordi svaralternativa eller fasiten kan ha endra seg sidan');
     expect(screen.queryByText(/Ingen fleirvals- eller utfyllingsspørsmål/)).toBeNull();
   });
 });

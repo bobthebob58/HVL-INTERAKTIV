@@ -11,12 +11,16 @@
  *     learner's H5P state rows store so the yearly purge deletes them with their key (D-107).
  *   - `ltiLaunchContentIds` holds only the activity the launch itself opened.
  *   - `urlToken` is the ltik (LTI) or the session's CSRF token (portal); nothing else goes into H5P URLs.
+ *   - `recordsLearning` is the ingestion's own rule (../xapi/learningDataScope.ts), so a player page carries the
+ *     xAPI bridge exactly when the server would store what it sends (D-102, D-138).
  *   - `studentAuthor` travels as the login computed it, so copying through the content bank is refused to a student
  *     author in the editor's paste guard as in the duplicate route (D-091, D-092).
- * Collaborators: ./Principal.ts, ../h5p/HvlH5pUser.ts, ./requestPrincipal.ts, ../lti/play/ltiPlayRoutes.ts.
+ * Collaborators: ./Principal.ts, ../h5p/HvlH5pUser.ts, ./requestPrincipal.ts, ../lti/play/ltiPlayRoutes.ts,
+ *   ../xapi/learningDataScope.ts.
  * Tests: apps/server/test/auth/principalToH5pActor.test.ts
  */
 import type { HvlH5pActor, UrlToken } from '../h5p/HvlH5pUser.js';
+import { recordsLearningData } from '../xapi/learningDataScope.js';
 import { highestRole, learnerKeyYearOf, type Principal } from './Principal.js';
 
 /**
@@ -44,6 +48,7 @@ export function principalToH5pActor(
     feideAuthenticated: principal.feideAuthenticated,
     studentAuthor: principal.studentAuthor,
     ltiLaunchContentIds: contentId ? [contentId] : [],
+    recordsLearning: recordsLearningData(principal),
     ...(urlToken && urlToken.value !== '' ? { urlToken } : {}),
   };
 }

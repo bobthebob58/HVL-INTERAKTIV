@@ -55,8 +55,8 @@ describe('[DOC-008] Session 3 defaults', () => {
 
 describe('[LTI-003] public URL and frame origins', () => {
   it('[LTI-003] reduces PUBLIC_BASE_URL to its origin and refuses a path', () => {
-    expect(loadEnv({ ...VALID_ENV, PUBLIC_BASE_URL: 'https://interaktiv.hvl.no/' }).PUBLIC_BASE_URL).toBe(
-      'https://interaktiv.hvl.no',
+    expect(loadEnv({ ...VALID_ENV, PUBLIC_BASE_URL: 'http://Tool.localhost:3000/' }).PUBLIC_BASE_URL).toBe(
+      'http://tool.localhost:3000',
     );
     expect(envProblems({ ...VALID_ENV, PUBLIC_BASE_URL: 'https://hvl.no/interaktiv' })[0]).toMatch(
       /^PUBLIC_BASE_URL: must be an origin/,
@@ -152,6 +152,25 @@ describe('[LTI-001] LTI_PLATFORMS', () => {
       expect(problems.length, raw).toBeGreaterThan(0);
       expect(problems[0], raw).toMatch(expected);
     }
+  });
+
+  it('[LTI-001] refuses a bar or a control character in an issuer or a client ID, where a Canvas identity starts', () => {
+    // Arrange
+    const withBar = [
+      { ...PLATFORM, clientId: '10000000000001|x' },
+      { ...PLATFORM, issuer: 'https://canvas.instructure.com/a|b' },
+      { ...PLATFORM, clientId: '10000000000001\t' },
+    ];
+    // Act
+    const problems = withBar.map(
+      (platform) => envProblems({ ...VALID_ENV, LTI_PLATFORMS: JSON.stringify([platform]) })[0],
+    );
+    // Assert
+    expect(problems).toEqual([
+      'LTI_PLATFORMS.0.clientId: must not contain "|" or a control character',
+      'LTI_PLATFORMS.0.issuer: must not contain "|" or a control character',
+      'LTI_PLATFORMS.0.clientId: must not contain "|" or a control character',
+    ]);
   });
 
   it('[LTI-001] allows one issuer with several client IDs (every hosted Canvas shares one issuer)', () => {

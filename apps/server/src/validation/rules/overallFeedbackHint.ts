@@ -32,7 +32,7 @@ export const overallFeedbackHint: ValidationRule = {
         const relevant =
           OVERALL_FEEDBACK.test(field.path) ||
           (node.machineName === 'H5P.TrueFalse' && TRUE_FALSE_FEEDBACK.test(field.path));
-        if (relevant && isBareVerdict(field.value))
+        if (relevant && isBareVerdict(field.value, scope.read))
           hits.push({ path: field.path, message: 'PED-H11.verdictOnly' });
       }
     }

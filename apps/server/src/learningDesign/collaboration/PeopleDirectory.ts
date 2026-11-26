@@ -25,7 +25,7 @@
 import { PEOPLE_SEARCH_MAX_RESULTS, type Person } from '@hvl-interaktiv/api-contract';
 import { findIdentity } from '../../auth/identity/identityLookup.js';
 import { identitySource } from '../../auth/identity/subjectSources.js';
-import { FEIDE_ID_PATTERN } from '../../config/envParsers.js';
+import { normaliseFeideId } from '../../auth/identity/feideId.js';
 import type { Database } from '../../infra/prismaClient.js';
 import type { Redis } from '../../infra/redisClient.js';
 import type { IdentityHasher } from '../../security/keys/IdentityHasher.js';
@@ -83,10 +83,12 @@ export class PeopleDirectory {
     const decision = await this.rateLimit.take(askerUserId);
     if (!decision.allowed) return { kind: 'limited', retryAfterSeconds: decision.retryAfterSeconds };
     try {
-      const feideId = query.toLowerCase();
-      const people = FEIDE_ID_PATTERN.test(feideId)
-        ? await this.byFeideId(askerUserId, feideId, now)
-        : await this.byName(askerUserId, query, now);
+      // SECURITY: the login's own rule (D-142), so a look-alike of an ID is a name that matches nobody.
+      const feideId = normaliseFeideId(query);
+      const people =
+        feideId === undefined
+          ? await this.byName(askerUserId, query, now)
+          : await this.byFeideId(askerUserId, feideId, now);
       return { kind: 'found', people };
     } catch {
       // PRIVACY: a database error may quote the query; the error that is logged names nothing (DATA-009).

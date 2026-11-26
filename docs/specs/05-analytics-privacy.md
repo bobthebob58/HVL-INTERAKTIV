@@ -70,6 +70,9 @@ shortlist that can be printed or projected.
   the current version, whose options and gaps the stored parameters describe; for an older version the tab says so.
   A single-answer question's right options and wrong options (with «no answer») are suppressed as two groups, since
   `INS-002`'s share gives the right options' total.
+- **Amended (D-137, 2026-11-22):** the answers of one content version were judged against one answer key: a save
+  that changes a key starts a new version (`PROD-013`), so a distribution never shows answers under another key's
+  marks, and `INS-002`'s share and the distribution agree.
 
 #### INS-004 · SHOULD · S6 · Branching paths
 For BranchingScenario, the view shows the distribution of choices at each decision node and how
@@ -106,6 +109,10 @@ too. The insight API has **no endpoint** that returns per-learner rows.
   started are hidden, every question cell is. An exhaustive test checks every group of two to five cells for *k* = 3–6.
 - **Acceptance:** Property-based test: for random datasets, no API response contains a group smaller than *k*.
 - **Verify:** `fast-check` property test `[INS-006] …`.
+- **Amended (D-138, 2026-11-22):** who can be one of the *k* is narrowed where statements arrive (`LTI-011`): only
+  HVL learners in the portal and launches with the `Learner` role in Canvas are recorded, and a version that is no
+  longer current takes no new learner. Learners who cooperate with the reader of insight remain learners; the DPIA
+  input records that (R41).
 
 #### INS-007 · MUST · S6 · Who can see insight
 Owners and co-authors of an activity can see its insight. In LTI mode, authors of the launch context
@@ -117,6 +124,9 @@ view writes an audit event (`DATA-007`).
   context is the launch's and cannot be changed. The audited support action for admins is not built in S6, so admins
   see no insight. A view writes `insight.view` and a CSV download `insight.export`, with details limited to the view,
   the period, the context and the content version: no learner key, count or answer.
+- **Amended (D-146, 2026-11-26):** the insight routes answer only a request that carries the header our own pages
+  add to every request (`x-hvli-request: fetch`). Another site's link, a navigation or an image cannot add it, so
+  none of them writes `insight.view` or `insight.export` in a teacher's name (`DATA-007`).
 
 #### INS-008 · MUST · S6 · Accessible charts
 Each chart has a visible data table alternative and a text summary (e.g. "Question 2: 38 % correct
@@ -127,6 +137,9 @@ on first attempt; most common wrong answer: B"). Charts use patterns or labels a
 #### INS-009 · SHOULD · S6 · Export aggregated CSV
 Insight can be exported as CSV, with the same suppression (`INS-006`) applied.
 - **Verify:** Unit test.
+- **Amended (D-136, 2026-11-22):** the file follows the person's language (`;` and a decimal comma in nn and nb,
+  `,` and a point in en); every field is quoted and guarded against spreadsheet formulas wherever a cell could
+  start in it; a question that is not in the activity's current content is written without an ID.
 
 #### INS-010 · SHOULD · S6 · Validator status in insight
 Insight shows the activity's current validator findings and acknowledgements (`UD-022`), so
@@ -155,6 +168,12 @@ addresses, Feide IDs, national ID numbers or raw LTI `sub` values. The one excep
 - **Verify:** Unit tests for key derivation; schema test asserting no PII columns on learner tables.
 - **Amended (D-104, 2026-10-30):** the encrypted `ltiSub` is deleted 30 days after the job stops, whether it
   succeeded, failed or was orphaned, so a job that never succeeds keeps it no longer.
+- **Amended (D-129, 2026-11-21):** the LTI `source` is `lti|<iss>|<client-id>|<sub>`: it names the platform
+  registration (issuer and client ID), because several platforms can send one issuer and a `sub` is unique
+  within one platform only. The text above shows the earlier form.
+- **Amended (D-133, 2026-11-22):** a secret must not be readable text, must have at least 16 distinct bytes and is
+  never used in two places; the server checks this in production and, in any other mode, whenever
+  `PUBLIC_BASE_URL` is not a local address.
 
 #### DATA-003 · MUST · S6 · Annual retention purge
 A scheduled job runs on a configured date (default 15 August), for the academic year that has
@@ -185,6 +204,9 @@ aggregate snapshots that already satisfy *k*-suppression are kept, for the *peda
   reached and no completed run for the ended year is audited. A run deletes every stored year before the current
   academic year, so a year a missed run left behind goes too. A snapshot holds the mappe's figures for the year
   (`MAPPE-002`) under the mappe's group rules. The runbook is `docs/ops/yearly-purge.md`.
+- **Amended (D-144, 2026-11-26):** a real run writes an audit event when it starts, with the counts it is about to
+  delete, before its first change, and another when it ends; a run that is cut short therefore leaves a record,
+  and only a completed run marks the year as purged.
 
 #### DATA-004 · MUST · S6 · EEA residency and encryption
 PostgreSQL, Redis and S3-compatible storage are hosted in Norway or the EEA. All traffic uses TLS
@@ -220,6 +242,8 @@ audit log itself has no free-text personal data. It is kept for 2 years.
   never an identifier, key or hash; both hold counts, years and fixed words only. The app's database role may add and
   read audit rows but never change or delete them (D-109), so the deletion after 2 years, which is not built yet,
   needs its own amendment and grant (DPIA input R27).
+- **Amended (D-144, 2026-11-26):** `purge.run`'s `outcome` is `started` (a real run, before its first change, with
+  the planned counts), `completed` or `failed`.
 
 #### DATA-008 · MUST · S6 · Data-subject requests
 An admin-only tool takes a Feide ID or an `(iss, sub)` pair. It derives the learner keys for the
@@ -233,11 +257,15 @@ retained academic years, then exports (JSON) or deletes that learner's data. Eve
   `deleteAllContentUserDataByUser` deletes the acting user's state. The audit target is a random request ID. The export
   also lists the person's portal login events (`AuthAuditEvent`), which the erasure keeps for their 2 years; a staff
   member's own data and Canvas's own data are outside the tool (Q6). Runbook: `docs/ops/data-subject-requests.md`.
+- **Amended (D-129, 2026-11-21):** a Canvas identity is given as issuer, client ID and `sub`, since the
+  pseudonyms are derived per platform registration (`DATA-002`); one without the client ID is refused.
 
 #### DATA-009 · MUST · S1 · Logs contain no personal data
 The logger (pino) redacts `authorization`, `cookie`, `ltik`, `id_token`, `email`, `name`, `sub`,
 `feide*`, and any key named `response` (answer content). Application logs are kept for 30 days.
 - **Verify:** Unit test of redaction paths (`NFR-006`).
+- **Amended (D-133, 2026-11-22):** production does not start with `DEBUG` or `NODE_DEBUG` set, because their output
+  goes around the logger; faults outside a request go through the logger too (`NFR-006`).
 
 #### DATA-010 · MUST · S6 · Least-privilege access to infrastructure
 Separate database roles are used for the app, for migrations and for read-only analytics. Production
@@ -289,6 +317,9 @@ else is dropped, including actor names, mailboxes and extensions.
   launch, never from the statement; database default false. Like `academicYear` it holds no statement data. Insight,
   the mappe and the yearly purge's snapshots never read a flagged row, so *k* − 1 test students cannot make a group of
   *k* around one real learner; the grade worker does read them, so a teacher can test the score passback.
+- **Amended (D-138, 2026-11-22):** "only learner principals' statements" means the learners `LTI-011` records as
+  amended: an HVL member in the portal, the `Learner` role in Canvas. `contentVersion` is the version the page was
+  rendered with, and an older one only for a learner who was already in it.
 
 ---
 
@@ -333,9 +364,9 @@ personal data; **P** marks pseudonymous fields.
 
 ```
 Feide login / LTI launch
-   │  raw id (feide id or iss+sub) — exists only in memory during the request
+   │  raw id (feide id, or iss + client id + sub) — exists only in memory during the request
    ▼
-learnerKey = HMAC_SHA256(secret[yyyy], "lti|" + iss + "|" + sub)
+learnerKey = HMAC_SHA256(secret[yyyy], "lti|" + iss + "|" + clientId + "|" + sub)   (D-129)
    │
    ├─► H5PUserData.learnerKey     (resume state)
    ├─► XapiStatement.learnerKey   (insight aggregates, k ≥ 5)

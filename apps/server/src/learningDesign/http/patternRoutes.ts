@@ -11,7 +11,8 @@
  * Errors: 401 `hvl:unauthenticated` (signed out, or a Canvas ltik), `hvl:session-expired`, `hvl:ltik-invalid`,
  *   `hvl:csrf-invalid`; 403 `error.forbidden` (a portal learner); 400 `error.badRequest` (the body) and
  *   `hvl:pattern-choice-invalid` (a phase or content type the pattern does not offer); 404 `error.notFound` (no such
- *   pattern); 409 `hvl:pattern-unavailable` (a library the skeleton needs is not installed); an editor refusal
+ *   pattern); 409 `hvl:pattern-unavailable` (a library the skeleton needs is not installed); 429
+ *   `hvl:rate-limited` with `Retry-After` (past the limit on new activities per person, D-128); an editor refusal
  *   (4xx) passes through.
  * Invariants:
  *   - The principal is checked before the body, so someone who may not create learns nothing from a 400.
@@ -30,6 +31,7 @@ import { patternActivityRequestSchema } from '@hvl-interaktiv/api-contract';
 import { Router } from 'express';
 import { principalToH5pActor } from '../../auth/principalToH5pActor.js';
 import { apiJson, parseBody } from '../../http/api/apiBodies.js';
+import { refuseWhenLimited } from '../../http/h5pRouteLimits.js';
 import { pathParam } from '../../http/routeParams.js';
 import { requirePortalAuthor } from './studioPrincipal.js';
 import type { StudioRouteDeps } from './studioRouteDeps.js';
@@ -45,6 +47,8 @@ export function patternRoutes(deps: StudioRouteDeps): Router {
   // WHY: the body holds four short fields (a language, a phase, a course code and a content type).
   router.post('/patterns/:patternId/activities', apiJson('1kb'), async (req, res) => {
     const principal = requirePortalAuthor(res);
+    // SECURITY: one limit for new activities, from a pattern or from the editor (./studioRouteLimits.ts, D-128).
+    refuseWhenLimited(await deps.studio.limits.creations.take(principal.userId), res);
     const request = parseBody(patternActivityRequestSchema, req.body);
     const created = await deps.studio.patternCreator.create(
       pathParam(req, 'patternId'),

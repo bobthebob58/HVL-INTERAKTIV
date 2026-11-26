@@ -130,6 +130,11 @@ describe('[INS-003] options and gaps from the parameters', () => {
     const gaps = dragTextGaps({ textField: 'Ei *samling:tips* og *forarbeid\\+Bra\\-Nei* og *ord *' });
     expect(gaps.map(({ answers }) => answers)).toEqual([['samling'], ['forarbeid'], ['ord']]);
     expect(dragTextGaps({ textField: 12 })).toEqual([]);
+    // WHY: the tip is everything from the first `:`, also when it holds a `:` itself.
+    expect(dragTextGaps({ textField: '*ord:eit:to* og *:berre tips*' })).toEqual([
+      { answers: ['ord'] },
+      { answers: [] },
+    ]);
   });
 
   it('[INS-003] normalises an answer: trimmed, whitespace collapsed, case-folded unless case-sensitive', () => {

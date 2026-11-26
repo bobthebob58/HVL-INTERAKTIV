@@ -5,7 +5,7 @@
  * Spec: LTI-004
  */
 import { describe, expect, it } from 'vitest';
-import { isLtiTestUser, LTI_TEST_USER_ROLE, mapLtiRoles } from '../../src/lti/LtiRoleMapper.js';
+import { isLtiLearner, isLtiTestUser, LTI_TEST_USER_ROLE, mapLtiRoles } from '../../src/lti/LtiRoleMapper.js';
 
 const LIS = 'http://purl.imsglobal.org/vocab/lis/v2/';
 const INSTRUCTOR = `${LIS}membership#Instructor`;
@@ -67,6 +67,19 @@ describe('[LTI-004] LTI role table', () => {
     ['no claim', false, undefined],
   ])('[LTI-004] %s: Canvas’s test student is %s (D-102 amendment)', (_case, expected, roles) => {
     expect(isLtiTestUser(roles)).toBe(expected);
+  });
+
+  it.each([
+    ['the context role Learner', true, [LEARNER, INSTITUTION_STUDENT]],
+    ['the short context role Learner', true, ['Learner']],
+    ['Learner beside Instructor (the mapping makes them an author)', true, [LEARNER, INSTRUCTOR]],
+    ['Mentor (Canvas observer)', false, [MENTOR]],
+    ['an institution Student who is not enrolled in the course', false, [INSTITUTION_STUDENT]],
+    ['a look-alike of the Learner role', false, [`${LIS}membership#Learners`, 'learner']],
+    ['no roles', false, []],
+    ['a claim that is not a list', false, LEARNER],
+  ])('[LTI-004] %s: holds the Learner role is %s (D-138)', (_case, expected, roles) => {
+    expect(isLtiLearner(roles)).toBe(expected);
   });
 
   it.each([

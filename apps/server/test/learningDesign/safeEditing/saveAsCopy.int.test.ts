@@ -63,8 +63,8 @@ describeWithServices('[PROD-013] saving an edit as a copy', () => {
       // Act
       const res = await bench.copy(mc, appended(mc.params), ltik);
       // Assert
-      expect(res.status).toBe(401);
-      expect(res.body).toMatchObject({ errorCode: 'hvl:unauthenticated' });
+      expect(res.status).toBe(403);
+      expect(res.body).toMatchObject({ errorCode: 'hvl:not-from-canvas' });
       expect(await copies()).toBe(0);
     });
 

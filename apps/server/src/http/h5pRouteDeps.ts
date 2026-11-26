@@ -10,7 +10,7 @@
  *   - `fileGrants` is the instance whose grants the player's HvlUrlGenerator puts into file URLs (D-058); the files
  *     origin accepts only those. `editorFileGrants` signs and checks the editor's file URLs on the app origin, with
  *     another purpose key, so neither opens a file on the other origin (D-110 amendment of 2026-11-05).
- * Collaborators: ./createH5pRouter.ts, ./routes/*, ../h5p/createH5pRuntime.ts.
+ * Collaborators: ./createH5pRouter.ts, ./routes/*, ../h5p/createH5pRuntime.ts, ./h5pRouteLimits.ts.
  * Tests: apps/server/test/http/router.int.test.ts
  */
 import type {
@@ -24,6 +24,7 @@ import type { ContentFileGrants } from '../h5p/contentFileGrants.js';
 import type { HvlH5PEditor } from '../h5p/HvlH5PEditor.js';
 import type { HvlH5pUser } from '../h5p/HvlH5pUser.js';
 import type { H5pPageCspSettings } from './h5pPageCsp.js';
+import type { H5pRouteLimits } from './h5pRouteLimits.js';
 
 /** Everything the H5P routes use. */
 export interface H5pRouteDeps {
@@ -51,4 +52,6 @@ export interface H5pRouteDeps {
   readonly pageCsp: H5pPageCspSettings;
   /** Server logger. */
   readonly logger: Logger;
+  /** The per-person limits (D-120); absent in tests of single routes, where nothing is limited. */
+  readonly limits?: H5pRouteLimits;
 }

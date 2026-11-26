@@ -60,6 +60,8 @@ production; register the same paths for any test server.
   The seed script refuses packages that do not match it.
 - When an original arrives, put it here, record it in the provenance table, and re-run the check
   named in the derived file (for colours: `python3 -I docs/reference/tools/contrast.py`).
+- `norsk-ordbank-nynorsk/` holds third-party language data under CC BY 4.0, not under the repository's GPL
+  licence. Its `README.md` (source, licence, changes, checksum) must stay with the file.
 
 ## Provenance
 
@@ -71,3 +73,4 @@ production; register the same paths for any test server.
 | `feide-oidc-config.example.json`, `feide-values.md` | docs.feide.no (search extracts), Feide's archived AuthEngine source, public integrations on GitHub and npm (cited by commit and version) | 2026-10-16 | Each high-confidence value already rests on two or more independent sources; separate independent review pending |
 | `canvas-lti13-developer-key.json`, `canvas-platform-values.md` | Instructure's canvas-lms repository at commit `1c9f0bb` (docs and source), ltijs 7.0.7, vendor guides | 2026-10-21 | Key claims (privacy levels, token `aud` rule, endpoints) re-checked against the Canvas docs; separate independent review pending |
 | `h5p-core-1.28-seed-packages/README.md`, `h5p-php-library-1.28.0.files.sha256`, `tools/seed/fetch-seed-packages.sh` | H5P's git repositories (tags and commits), Lumi h5p-server 10.0.4 and `master`, the H5P WordPress plugin, h5p.org and Moodle forum posts | 2026-10-21 | Script checked with `bash -n` and `--dry-run`; not run against the Hub |
+| `norsk-ordbank-nynorsk/20260915_norsk_ordbank_nno.tsv.gz`, `norsk-ordbank-nynorsk/README.md`, `norsk-ordbank-nynorsk/SHA256SUMS` | *Norsk ordbank – nynorsk 2012*, version of 2026-09-15, distributed by Språkbanken under CC BY 4.0; supplied by the project owner as downloaded | 2026-11-15 | Checked against the distributor's documentation: seven columns on every line, 627 666 full forms, 122 941 lemma IDs; SHA-256 of the original and of the compressed file recorded; decompression gives the original bytes |

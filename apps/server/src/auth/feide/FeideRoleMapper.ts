@@ -22,7 +22,8 @@
  *   ../Principal.ts, ../../config/env.ts (ALLOWED_FEIDE_ORGS, ADMIN_FEIDE_IDS, AUTHOR_COURSE_GROUPS).
  * Tests: apps/server/test/auth/feide/FeideRoleMapper.test.ts
  */
-import { FEIDE_ID_PATTERN } from '../../config/envParsers.js';
+import { asciiLowerCase } from '../identity/asciiText.js';
+import { isNormalisedFeideId } from '../identity/feideId.js';
 import type { Role } from '../Principal.js';
 
 /** Affiliations that make an HVL member an author (spec 02 `AUTH-002`, first row). */
@@ -65,7 +66,7 @@ const isObject = (value: unknown): value is JsonObject =>
 
 /** A group's ID, lower-cased; undefined when the group or its ID is not what Feide sends. */
 const groupIdOf = (group: unknown): string | undefined =>
-  isObject(group) && typeof group.id === 'string' ? group.id.toLowerCase() : undefined;
+  isObject(group) && typeof group.id === 'string' ? asciiLowerCase(group.id) : undefined;
 
 /** The affiliation strings of a group membership; an unexpected shape yields none. */
 function affiliationsOf(group: JsonObject): ReadonlySet<string> {
@@ -83,8 +84,9 @@ function affiliationsOf(group: JsonObject): ReadonlySet<string> {
  * @returns True for an exact match or `entry` followed by `:`, ignoring case.
  */
 export function matchesCourseGroup(groupId: string, entry: string): boolean {
-  const id = groupId.toLowerCase();
-  const wanted = entry.toLowerCase();
+  // SECURITY: ASCII case only, as for a Feide ID: no other character of a group ID becomes a plain letter (D-142).
+  const id = asciiLowerCase(groupId);
+  const wanted = asciiLowerCase(entry);
   // WHY: the `:` boundary keeps `…:ppu101` from matching the unrelated course `…:ppu1012:1`.
   return id === wanted || id.startsWith(`${wanted}:`);
 }
@@ -133,7 +135,7 @@ export function mapFeideRoles(
   now: Date = new Date(),
 ): FeideRoles {
   const { feideId } = input;
-  if (feideId !== feideId.toLowerCase() || !FEIDE_ID_PATTERN.test(feideId)) {
+  if (!isNormalisedFeideId(feideId)) {
     throw new Error('mapFeideRoles needs a normalised Feide ID');
   }
   const realm = feideId.slice(feideId.indexOf('@') + 1);

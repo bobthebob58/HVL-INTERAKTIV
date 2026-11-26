@@ -14,7 +14,6 @@
  * Tests: apps/server/test/validation/rules/imageAltRule.test.ts
  */
 import { altSourcesOf } from '../imageAltSources.js';
-import { plainTextOf } from '../richText.js';
 import type { RuleHit, ValidationRule } from '../rule.js';
 
 // WHY: the spec's examples of alt texts that are file names: an image extension, camera and default names
@@ -43,7 +42,7 @@ export const imageAltRule: ValidationRule = {
     const hits: RuleHit[] = [];
     for (const source of scope.nodes.flatMap(altSourcesOf)) {
       if (source.decorative) continue;
-      const alt = plainTextOf(source.alt ?? '');
+      const alt = scope.read(source.alt ?? '').text;
       if (alt === '') hits.push({ path: source.path, message: 'V-IMG-ALT.missing' });
       else if (looksLikeFileName(alt))
         hits.push({ path: source.path, message: 'V-IMG-ALT.fileName', values: { alt } });

@@ -10,12 +10,14 @@
  *   - Lists are comma-separated; blanks around entries and empty entries are ignored.
  *   - An origin is `scheme://host[:port]` exactly as `URL.origin` prints it (no path, no trailing slash).
  *   - `LTI_PLATFORMS` is a JSON array; a platform is identified by `(issuer, clientId)` (every hosted Canvas
- *     shares one issuer), and each lists at least one deployment ID (D-051).
+ *     shares one issuer), and each lists at least one deployment ID (D-051). Neither part may contain `|` or a
+ *     control character: they start the text a Canvas user's account and pseudonym are derived from (D-129).
  *   - Messages never contain a key, and contain other values only where they are not secret.
  * Collaborators: ./env.ts, ../security/keys/keyring.ts, ../lti/platforms/syncLtiPlatforms.ts.
  * Tests: apps/server/test/config/envParsers.test.ts
  */
 import { z } from 'zod';
+import { asciiLowerCase } from '../auth/identity/asciiText.js';
 import { parseKeyring } from '../security/keys/keyring.js';
 
 /**
@@ -99,7 +101,8 @@ export const toMatchingList =
   (pattern: RegExp, what: string) =>
   (raw: string, ctx: Ctx): string[] =>
     splitList(raw).map((entry, index) => {
-      const value = entry.toLowerCase();
+      // SECURITY: ASCII case only, as the login folds a Feide ID (../auth/identity/feideId.ts, D-142).
+      const value = asciiLowerCase(entry);
       if (!pattern.test(value)) fail(ctx, `entry ${index + 1} is not ${what}`);
       return value;
     });
@@ -111,14 +114,26 @@ export const FEIDE_REALM_PATTERN = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 /** A Feide group ID or prefix, e.g. `fc:fs:fs:emne:hvl.no:ppu` (D-059); a trailing `:` could never match. */
 export const FEIDE_GROUP_PATTERN = /^fc:[a-z0-9:._-]*[a-z0-9._-]$/;
 
+// SECURITY: issuer and client ID are the first parts of a Canvas user's identity text,
+// `lti|<iss>|<client-id>|<sub>`, which `|` divides; neither may hold one, or two users could share a text (D-129).
+// A control character is refused in every login field, so a platform configured with one could never log in.
+const identityPart = [
+  (value: string): boolean => !/[|\p{Cc}]/u.test(value),
+  'must not contain "|" or a control character',
+] as const;
+
 /** One LTI platform (a Canvas developer key) as configured in `LTI_PLATFORMS`. */
 export const ltiPlatformSchema = z.strictObject({
   /** A readable name for logs and the admin view. */
   name: z.string().min(1).max(100),
   /** The `iss` claim, e.g. `https://canvas.instructure.com`. */
-  issuer: httpUrl(),
+  issuer: httpUrl().refine(...identityPart),
   /** The developer key's client ID. */
-  clientId: z.string().min(1).max(255),
+  clientId: z
+    .string()
+    .min(1)
+    .max(255)
+    .refine(...identityPart),
   /** The OIDC authorisation endpoint, e.g. `https://sso.canvaslms.com/api/lti/authorize_redirect`. */
   authEndpoint: httpUrl(),
   /** The OAuth 2 token endpoint for LTI Advantage services. */

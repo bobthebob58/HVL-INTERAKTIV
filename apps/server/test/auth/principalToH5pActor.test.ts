@@ -49,8 +49,21 @@ describe('[H5P-006] principal to H5P actor', () => {
       feideAuthenticated: true,
       studentAuthor: false,
       ltiLaunchContentIds: [],
+      recordsLearning: false,
       urlToken: { name: 'csrf', value: 't' },
     });
+  });
+
+  it('[LTI-011] says whose play is recorded: an HVL learner and a Canvas Learner, not a guest or an observer (D-138)', () => {
+    // Arrange
+    const learner: Principal = { ...PORTAL, roles: ['learner'] };
+    const withRole: Principal = { ...LTI, lti: { ...LTI.lti!, learnerRole: true } };
+    // Act
+    const recorded = [learner, { ...learner, hvlMember: false }, withRole, LTI].map(
+      (principal) => principalToH5pActor(principal).recordsLearning,
+    );
+    // Assert
+    expect(recorded).toEqual([true, false, true, false]);
   });
 
   it('[PROD-007] a student author stays one in the actor, so the paste guard refuses bank copies too', () => {

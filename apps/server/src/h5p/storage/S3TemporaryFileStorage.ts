@@ -10,6 +10,7 @@
  *     cleanup job. It skips files deleted while it lists and keys it did not write (no owner segment or a
  *     malformed escape); the bucket lifecycle rule removes those.
  *   - Uploads stop at `maxFileSize` bytes.
+ *   - `saveFile` closes the data it was given when the upload fails or the name is refused.
  * Collaborators: ./s3Objects.ts, ../../infra/s3Client.ts, ../jobs/TemporaryFileCleanupJob.ts (via H5PEditor).
  * Tests: apps/server/test/h5p/contentStorage.int.test.ts, apps/server/test/h5p/S3TemporaryFileStorage.test.ts
  */
@@ -28,7 +29,7 @@ import {
   type ITemporaryFileStorage,
   type IUser,
 } from '@lumieducation/h5p-server';
-import { assertSafeObjectName, isNotFound, limitedUpload, rangeHeader } from './s3Objects.js';
+import { assertSafeObjectName, isNotFound, keyForUpload, limitedUpload, rangeHeader } from './s3Objects.js';
 
 /** S3-backed `ITemporaryFileStorage`. */
 export class S3TemporaryFileStorage implements ITemporaryFileStorage {
@@ -57,12 +58,8 @@ export class S3TemporaryFileStorage implements ITemporaryFileStorage {
     expirationTime: Date,
   ): Promise<ITemporaryFile> {
     const Metadata = { owner: user.id, expiresat: expirationTime.toISOString() };
-    await limitedUpload(
-      this.s3,
-      { Bucket: this.bucket, Key: this.key(user.id, filename), Metadata },
-      dataStream,
-      this.maxFileSize,
-    );
+    const Key = keyForUpload(dataStream, () => this.key(user.id, filename));
+    await limitedUpload(this.s3, { Bucket: this.bucket, Key, Metadata }, dataStream, this.maxFileSize);
     return { filename, ownedByUserId: user.id, expiresAt: expirationTime };
   }
 

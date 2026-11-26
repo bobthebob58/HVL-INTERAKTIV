@@ -147,6 +147,8 @@ describe('[LTI-001] LTI error pages', () => {
     // Act
     const inOurChrome = await Promise.all(['/lti/play', '/lti/edit'].map((p) => asFrame(p, 'same-origin')));
     const inCanvas = await asFrame('/lti/play', 'cross-site');
+    // Act: the picker is the page of Canvas's frame; a launch's last step reaches it from our own origin (D-130)
+    const picker = await asFrame('/lti/deeplink', 'same-origin');
     // Assert
     for (const res of inOurChrome) {
       expect(res.status).toBe(401);
@@ -156,6 +158,7 @@ describe('[LTI-001] LTI error pages', () => {
     expect(inCanvas.text).toContain(
       '<a href="/hjelp?lang=nn" target="_blank" rel="noopener noreferrer">Hjelp',
     );
+    expect(picker.text).toContain('<a href="/hjelp?lang=en" target="_blank" rel="noopener noreferrer">Help');
   });
 
   it('[PROD-012] once a route has resolved the ltik (setLtiPageLocale), the page and the JSON are in the launch’s language', async () => {

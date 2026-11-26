@@ -36,7 +36,7 @@ import { findPattern } from '../../src/learningDesign/content/patternAccessors.j
 import { studioContentRoutes } from '../../src/learningDesign/http/studioContentRoutes.js';
 import type { StudioRouteDeps } from '../../src/learningDesign/http/studioRouteDeps.js';
 import { createLogger } from '../../src/logging/logger.js';
-import { baseSecurityHeaders } from '../../src/http/securityHeaders.js';
+import { baseSecurityHeaders, setPortalFrameHeaders } from '../../src/http/securityHeaders.js';
 import { setAppLaunch, type AppLaunch } from '../../src/web/appLaunch.js';
 import { loadWebApp, WEB_APP_DIR, type WebApp } from '../../src/web/nextWebApp.js';
 import { webRoutes } from '../../src/web/webRoutes.js';
@@ -93,10 +93,10 @@ export function webTestServer(web: WebApp): Express {
   app.use(baseSecurityHeaders({ https: false }));
   app.use('/api', publicStudioRoutes(), h5pErrorHandler(createLogger({ level: 'silent' })));
   app.get(['/auth/session', '/api/{*rest}'], (_req, res) => void res.status(401).json(SIGNED_OUT));
-  app.get(
-    ['/lti/play', '/lti/edit'],
-    (_req, res) => void res.type('html').send('<!doctype html><title>H5P</title>'),
-  );
+  app.get(['/lti/play', '/lti/edit'], (_req, res) => {
+    setPortalFrameHeaders(res); // WHY: the default policy lets nobody frame an answer; pages say who may
+    res.type('html').send('<!doctype html><title>H5P</title>');
+  });
   app.get('/app/play', (req, res, next) => {
     const launch = typeof req.query.ltik === 'string' ? LAUNCHES[req.query.ltik] : undefined;
     if (launch) setAppLaunch(res, launch);

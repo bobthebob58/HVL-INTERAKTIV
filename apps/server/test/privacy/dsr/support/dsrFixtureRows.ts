@@ -37,7 +37,7 @@ export function pseudonymsAsWritten(
       : []),
     ...subject.lti.map((one) => ({
       variant: 'lti' as const,
-      source: { kind: 'lti' as const, issuer: one.issuer, subject: one.subject },
+      source: { kind: 'lti' as const, issuer: one.issuer, clientId: one.clientId, subject: one.subject },
     })),
   ];
   return years.flatMap((academicYear) =>

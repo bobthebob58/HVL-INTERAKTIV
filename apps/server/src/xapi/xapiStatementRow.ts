@@ -16,6 +16,8 @@
  *     a `subContentId`; a root result `completed` (replays are dropped by ./xapiReplayRule.ts). Discarded:
  *     `interacted`, `progressed`, a part's `attempted` or `completed`, a part without a `subContentId`, a root
  *     `answered` or `completed` that is not the main library's, and anything about another activity.
+ *   - A part's `subContentId` is stored only when it is a UUID, the shape of H5P's sub-content IDs; an answer
+ *     under any other text is discarded as `invalid` (D-121).
  *   - `id` is the bridge's `statementId` in lower case (the database's UUID form), so a statement sent twice is one
  *     row; `timestamp` is given by the caller (receive time plus the item's place in its batch).
  *   - `response` keeps D-115's caps (choice and fill-in only, 100 characters a gap, nothing over 1 000);
@@ -26,6 +28,7 @@
  */
 import { storedXapiResponse, type XapiStatementItem } from '@hvl-interaktiv/api-contract';
 import type { XapiStatement } from '../generated/prisma/client.js';
+import { isContentUuid } from '../h5p/contentIds.js';
 import { durationMsOf } from './xapiDuration.js';
 import { isAboutContent, isRootResult, isRootStatement, subContentIdOf, verbOf } from './xapiRootTests.js';
 
@@ -77,8 +80,12 @@ export function classifyXapiItem(item: XapiStatementItem, facts: XapiBatchFacts)
   }
   // WHY: a part's `attempted` and `completed` (InteractiveBook's chapters, sent twice) serve no INS requirement.
   if (verb !== 'answered') return discard('notStored');
+  const part = subContentIdOf(item);
   // WHY: content saved without subContentIds names no part; its answers cannot be grouped per question (D-115).
-  return subContentIdOf(item) === undefined ? discard('noSubContentId') : store(false);
+  if (part === undefined) return discard('noSubContentId');
+  // SECURITY: H5P's sub-content IDs are UUIDs. The ID comes from the learner's browser and insight lists what is
+  // stored under it to teachers (INS-002), so text of any other shape is never stored (D-121).
+  return isContentUuid(part) ? store(false) : discard('invalid');
 }
 
 /**

@@ -1,6 +1,7 @@
 /**
  * Integration tests for LTI accounts: created at the launch, found by later requests, with the yearly pseudonym and
- * the academic year it was derived in.
+ * the academic year it was derived in; and one account per platform registration, also when two registrations
+ * send the same issuer (D-129).
  *
  * Spec: LTI-001, DATA-002, DATA-003
  */
@@ -24,11 +25,11 @@ describeWithServices('[LTI-001] LTI accounts', () => {
     await db.$disconnect();
   });
   /** A platform row of this file's own, so every test also runs on its own (`-t`). */
-  const fixturePlatform = () =>
+  const fixturePlatform = (url = `https://${uniqueName('c')}.example`, clientId = '1') =>
     db.ltiPlatform.create({
       data: {
-        url: `https://${uniqueName('c')}.example`,
-        clientId: '1',
+        url,
+        clientId,
         name: 'C',
         authenticationEndpoint: 'https://a',
         accessTokenEndpoint: 'https://t',
@@ -41,6 +42,7 @@ describeWithServices('[LTI-001] LTI accounts', () => {
   /** A Canvas identity of this test only, with one role. */
   const newIdentity = (role: 'learner' | 'author') => ({
     issuer: 'https://canvas.example',
+    clientId: '1',
     subject: uniqueName('sub'),
     platformId: crypto.randomUUID(),
     roles: [role] as const,
@@ -57,7 +59,7 @@ describeWithServices('[LTI-001] LTI accounts', () => {
     // Assert
     expect(resumed).toEqual(atLaunch);
     const expectedKey = deriveLearnerKey(
-      { kind: 'lti', issuer: identity.issuer, subject: identity.subject },
+      { kind: 'lti', issuer: identity.issuer, clientId: identity.clientId, subject: identity.subject },
       env.PSEUDONYM_SECRETS,
       autumn(),
     );
@@ -69,6 +71,28 @@ describeWithServices('[LTI-001] LTI accounts', () => {
     expect(user).toMatchObject({ kind: 'learner', displayName: null, email: null });
     expect(user.identities[0]).toMatchObject({ provider: 'lti', platformId: platform.id });
     expect(JSON.stringify(user)).not.toContain(identity.subject);
+  });
+
+  it('[LTI-001] the same sub from two registrations with one issuer is two accounts and two pseudonyms', async () => {
+    // Arrange: two developer keys of platforms that send the same issuer, as every hosted Canvas does
+    const issuer = `https://${uniqueName('c')}.example`;
+    const [first, second] = [await fixturePlatform(issuer, 'key-1'), await fixturePlatform(issuer, 'key-2')];
+    const person = { ...newIdentity('author'), issuer };
+    const atFirst = { ...person, clientId: 'key-1', platformId: first.id };
+    const atSecond = { ...person, clientId: 'key-2', platformId: second.id };
+    // Act
+    const one = await lti.atLaunch(atFirst);
+    const unknownYet = await lti.forRequest(atSecond);
+    const other = await lti.atLaunch(atSecond);
+    const again = await lti.atLaunch(atFirst);
+    // Assert
+    expect(unknownYet).toBeUndefined();
+    expect(other.userId).not.toBe(one.userId);
+    expect(other.learnerKey).not.toBe(one.learnerKey);
+    expect(again).toEqual(one);
+    expect(await lti.forRequest(atSecond)).toEqual(other);
+    const identities = await db.identity.findMany({ where: { userId: { in: [one.userId, other.userId] } } });
+    expect(identities.map((row) => row.platformId).sort()).toEqual([first.id, second.id].sort());
   });
 
   it('[DATA-003] the key and its academic year come from the same moment, also at the turn of the year', async () => {

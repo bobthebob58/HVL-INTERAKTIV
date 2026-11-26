@@ -106,6 +106,14 @@ describe('[SEC-001] SVG final check and rules', () => {
     expect(findCssViolation('a{fill:url( #g )}')).toBeUndefined();
   });
 
+  it('[SEC-001] the CSS rules answer in time that grows in step with the length of the text', () => {
+    const css = `a{fill:url(${' '.repeat(1_000_000)}(`;
+    const started = performance.now();
+    expect(findCssViolation(css)).toBe('external url');
+    expect(neutraliseCss(css)).toBeUndefined();
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
+
   it('[SEC-001] the pre-check strips plain DOCTYPEs and xml-stylesheet instructions', () => {
     // Arrange
     const svg = `<svg ${NS}/>`;

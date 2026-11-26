@@ -42,10 +42,14 @@ export interface InsightScopeRequest {
   readonly version?: number;
 }
 
-/** Why a scope cannot be resolved; the API answers 404 for the first and 400 for the others. */
-export type InsightScopeProblem = 'activityUnavailable' | 'versionUnavailable' | 'contextInvalid';
+/**
+ * Why a scope cannot be resolved, or cannot be read; the API answers 404 for the first, 400 for the next two and
+ * 422 for the last (a scope with more stored statements than one view covers, D-122).
+ */
+export type InsightScopeProblem =
+  'activityUnavailable' | 'versionUnavailable' | 'contextInvalid' | 'viewTooLarge';
 
-/** A request that names no activity, version or context the view can cover. */
+/** A request that names no activity, version or context the view can cover, or more rows than a view covers. */
 export class InsightScopeError extends Error {
   /**
    * @param reason - What is wrong.

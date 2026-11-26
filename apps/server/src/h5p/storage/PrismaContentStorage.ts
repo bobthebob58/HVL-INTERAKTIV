@@ -10,10 +10,13 @@
  *   - IDs that are not UUIDs, and file names no stored file can have (./storableFileName.ts), are "not found"
  *     without reaching the database.
  *   - Every row `addContent` creates is reported to ./contentCreations.ts, so a failed duplicate can remove it.
+ *   - `addContent` creates a row, and sets its owner, only when it is called without an ID. With an ID it updates
+ *     the existing row through ./contentUpdate.ts and answers "not found" when there is none (H5P-006, D-117).
  *   - The first update of an activity whose editor save resets learner state (./learnerStateResetWrite.ts) writes
  *     the parameters, raises `version` and deletes every state row of the activity in one transaction (D-093).
+ *   - A file is stored only while its activity has room for it (./activityFileRoom.ts, D-139), under the stored ID.
  * Collaborators: ./S3ContentFileStore.ts, ./storableFileName.ts, ./contentUsage.ts, ./contentCreations.ts,
- *   ./learnerStateResetWrite.ts, ../../infra/prismaClient.ts, H5PEditor (S2).
+ *   ./contentUpdate.ts, ./activityFileRoom.ts, ../../infra/prismaClient.ts, H5PEditor (S2).
  * Tests: apps/server/test/h5p/contentStorage.int.test.ts,
  *   apps/server/test/learningDesign/safeEditing/safeEditingFailures.int.test.ts
  */
@@ -29,9 +32,11 @@ import {
 } from '@lumieducation/h5p-server';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { Database } from '../../infra/prismaClient.js';
+import type { ActivityFileLimits } from '../activityFileBudget.js';
+import { storeFileWithinLimits } from './activityFileRoom.js';
 import { noteContentCreated } from './contentCreations.js';
+import { updateStoredContent } from './contentUpdate.js';
 import { countLibraryUsage } from './contentUsage.js';
-import { claimLearnerStateReset } from './learnerStateResetWrite.js';
 import type { S3ContentFileStore } from './S3ContentFileStore.js';
 import { isStorableFileName } from './storableFileName.js';
 import { assertStorableText } from './storableText.js';
@@ -44,10 +49,12 @@ export class PrismaContentStorage implements IContentStorage {
   /**
    * @param db - Database client.
    * @param files - S3 store for content files.
+   * @param fileLimits - The limit for one activity's files; D-139's when left out.
    */
   constructor(
     private readonly db: Database,
     private readonly files: S3ContentFileStore,
+    private readonly fileLimits?: ActivityFileLimits,
   ) {}
 
   /** Creates an activity, or replaces metadata and parameters of an existing one (resetting state when marked). */
@@ -72,29 +79,23 @@ export class PrismaContentStorage implements IContentStorage {
       noteContentCreated(created.id);
       return created.id;
     }
-    if (!isContentUuid(contentId))
+    // SECURITY: with an ID this only updates. An ID with no row is "not found", never a new row (D-117).
+    if (!isContentUuid(contentId) || !(await updateStoredContent(this.db, contentId, data)))
       throw new H5pError('storage-file-implementations:content-not-found', { contentId }, 404);
-    const reset = claimLearnerStateReset(contentId);
-    const write = this.db.h5PContent.upsert({
-      where: { id: contentId },
-      // WHY: the version raise is part of the row update, so its lock comes first, as a state write expects (D-093).
-      update: reset ? { ...data, version: { increment: 1 } } : data,
-      create: { id: contentId, ...data, ownerUserId: user.id },
-    });
-    // WHY: a structural save's reset commits with its parameters or not at all (D-093 amendment, S5 review).
-    if (reset) await this.db.$transaction([write, this.db.h5PUserData.deleteMany({ where: { contentId } })]);
-    else await write;
     return contentId;
   }
 
   /** Stores a file of an activity (replacing a file with the same name). */
   async addFile(contentId: ContentId, filename: string, readStream: Readable, _user?: IUser): Promise<void> {
-    await this.requireContent(contentId);
-    const { key, size, sha256 } = await this.files.put(contentId, filename, readStream);
+    // SECURITY: under the stored ID, and only while the activity has room for the file (D-131, D-139).
+    const id = (await this.requireContent(contentId)).id;
+    const file = { contentId: id, filename, stream: readStream };
+    const stored = await storeFileWithinLimits({ db: this.db, files: this.files }, file, this.fileLimits);
+    const row = { s3Key: stored.key, size: stored.size, sha256: stored.sha256 };
     await this.db.h5PContentFile.upsert({
-      where: { contentId_filename: { contentId, filename } },
-      update: { s3Key: key, size, sha256 },
-      create: { contentId, filename, s3Key: key, size, sha256 },
+      where: { contentId_filename: { contentId: id, filename } },
+      update: row,
+      create: { contentId: id, filename, ...row },
     });
   }
 

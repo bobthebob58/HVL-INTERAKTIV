@@ -154,7 +154,8 @@ describeWithServices(
       expect(events.map((event) => event.action)).toEqual([
         'dataSubject.export',
         'purge.run',
-        ...(due ? ['purge.run'] : []),
+        // WHY: a real run writes its start and its end (D-144).
+        ...(due ? ['purge.run', 'purge.run'] : []),
         'dataSubject.erase',
         'dataSubject.erase',
       ]);

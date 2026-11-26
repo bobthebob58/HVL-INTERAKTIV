@@ -27,6 +27,7 @@ const EXCEPTION = {
   package: 'image-size',
   decision: 'D-001',
   expires: '2027-01-31',
+  mitigation: 'The parser is reached only after the upload check.',
 };
 
 describe('[SEC-007] npm audit with reviewed exceptions', () => {

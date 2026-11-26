@@ -15,6 +15,7 @@ const FEIDE: IdentitySubject = { kind: 'feide', feideId: 'ola@hvl.no' };
 const LTI = {
   kind: 'lti',
   issuer: 'https://canvas.instructure.com',
+  clientId: '10000000000001',
   subject: 'a6d5c443-1f51-4783-ba1a-7686ffe3b54a',
 } as const satisfies IdentitySubject;
 
@@ -22,14 +23,14 @@ describe('[DATA-002] identity and learnerKey sources', () => {
   it.each([
     ['a Feide ID', FEIDE, 'feide|ola@hvl.no'],
     [
-      'an LTI issuer and subject',
+      'an LTI issuer, client ID and subject',
       LTI,
-      'lti|https://canvas.instructure.com|a6d5c443-1f51-4783-ba1a-7686ffe3b54a',
+      'lti|https://canvas.instructure.com|10000000000001|a6d5c443-1f51-4783-ba1a-7686ffe3b54a',
     ],
     [
-      'an LTI subject containing "|" (kept unambiguous by the issuer rule)',
+      'an LTI subject containing "|" (kept unambiguous by the issuer and client ID rules)',
       { ...LTI, subject: 'a|b' },
-      'lti|https://canvas.instructure.com|a|b',
+      'lti|https://canvas.instructure.com|10000000000001|a|b',
     ],
   ])('[DATA-002] hashes %s in the documented format', (_case, subject, expected) => {
     expect(identitySource(subject)).toBe(expected);
@@ -47,6 +48,15 @@ describe('[DATA-002] identity and learnerKey sources', () => {
     },
   );
 
+  it('[LTI-001] the same sub under another client ID of the same issuer is another identity', () => {
+    // Arrange
+    const other = { ...LTI, clientId: '10000000000002' };
+    // Act
+    const sources = [identitySource(LTI), identitySource(other)];
+    // Assert
+    expect(sources[0]).not.toBe(sources[1]);
+  });
+
   it('[DATA-002] keeps the LTI subject exactly, because LTI subjects are case-sensitive', () => {
     expect(identitySource({ ...LTI, subject: 'AbC' })).not.toBe(identitySource({ ...LTI, subject: 'abc' }));
   });
@@ -63,12 +73,18 @@ describe('[DATA-002] identity and learnerKey sources', () => {
   });
 
   it.each([
-    ['an empty issuer', { ...LTI, issuer: '' }, 'LTI issuer and subject are required'],
-    ['an empty subject', { ...LTI, subject: '' }, 'LTI issuer and subject are required'],
+    ['an empty issuer', { ...LTI, issuer: '' }, 'LTI issuer, client ID and subject are required'],
+    ['an empty client ID', { ...LTI, clientId: '' }, 'LTI issuer, client ID and subject are required'],
+    ['an empty subject', { ...LTI, subject: '' }, 'LTI issuer, client ID and subject are required'],
     [
       'an issuer containing "|"',
       { ...LTI, issuer: 'https://evil.example|x' },
-      'LTI issuer must not contain "|"',
+      'LTI issuer and client ID must not contain "|"',
+    ],
+    [
+      'a client ID containing "|"',
+      { ...LTI, clientId: '1|2' },
+      'LTI issuer and client ID must not contain "|"',
     ],
   ])('[DATA-002] refuses %s', (_case, subject, message) => {
     expect(() => identitySource(subject)).toThrow(message);

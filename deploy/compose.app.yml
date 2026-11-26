@@ -4,22 +4,30 @@
 # Why:   NFR-007 asks for compose files for local and staging use, with a smoke test. The app's stack is a file of its
 #        own, not a profile in ../docker-compose.yml, whose test services publish 5432, 6379 and 5000 and start with
 #        any profile (D-110, probe P3; SPEC-DEVIATION: D-110, the file name only).
-# Spec:  NFR-007, MAPPE-004, H5P-003, SEC-006, SEC-004
-# Tests: tools/deploy-check/test/deployFiles.test.mjs (digests, ports, hardening, no secrets in the file);
-#        deploy/smoke/dockerSmoke.sh starts it and checks it.
+# Spec:  NFR-007, MAPPE-004, H5P-003, SEC-006, SEC-004, NFR-002
+# Tests: tools/deploy-check/test/deployFiles.test.mjs (digests, ports, hardening, no secrets in the file),
+#        tools/deploy-check/test/resourceRules.test.mjs (restart rule, memory limit, health check) and
+#        tools/deploy-check/test/seccompRules.test.mjs (the profile); deploy/smoke/dockerSmoke.sh starts it and
+#        checks it.
 # Invariants:
 #   - Every image is pinned by digest; only the app is published, and only on 127.0.0.1.
 #   - SECURITY: keys, passwords and secrets come from the environment (`${NAME:?}`), never from this file; the smoke
 #     script makes random throwaway ones.
-#   - The app and its one-off steps run as uid 10001 with a read-only root file system, no new privileges and
-#     Playwright's seccomp profile, and with every capability dropped but SYS_CHROOT for the app, so Chromium keeps
-#     its sandbox (D-096); never PDF_ALLOW_NO_SANDBOX.
+#   - The app and its one-off steps run as uid 10001 with a read-only root file system, no new privileges and the
+#     seccomp profile in ./seccomp (Docker's default plus the one rule Chromium's sandbox needs, D-144), and with
+#     every capability dropped but SYS_CHROOT for the app, so Chromium keeps its sandbox (D-096); never
+#     PDF_ALLOW_NO_SANDBOX.
 #   - Local only: NODE_ENV=development, because the production checks rightly refuse plain-HTTP database, Redis,
 #     S3 and public URLs. Staging runs the same image with NODE_ENV=production, TLS endpoints and D-109's two
 #     database URLs (docs/ops/docker.md).
 #   - Uploads are scanned as in production: CLAMAV_HOST names the stack's clamd and the app starts only when clamd is
 #     healthy (SEC-006, D-110 integration amendment). Its signatures are the image's own (freshclam off); HVL runs
 #     its own clamd with updates (docs/ops/clamav.md). The files origin is files.localhost (SEC-004).
+#   - The app comes back after it stops (`restart: unless-stopped`) and has a memory limit with no swap beyond it;
+#     the steps that run once (buckets, migrate, seed) have no restart rule (NFR-002, D-134; the budget is in
+#     docs/ops/docker.md).
+#   - A server that stands still is unhealthy within half a minute: a health check try has 3 seconds, tries come
+#     every 5 seconds, and the third failed one in a row counts (NFR-002, D-144).
 # Usage: HVLI_IMAGE=<tag> docker compose -f deploy/compose.app.yml --env-file <file> up -d --wait app
 
 name: hvli-app
@@ -54,7 +62,7 @@ x-hardened: &hardened
   cap_drop: [ALL]
   security_opt:
     - no-new-privileges:true
-    - seccomp=./seccomp/playwright-v1.56.1.seccomp
+    - seccomp=./seccomp/chromium-sandbox.seccomp
   tmpfs:
     - /tmp:size=512m,mode=1777
     - /home/hvli:size=64m,uid=10001,gid=10001,mode=0700
@@ -141,21 +149,34 @@ services:
     # CAP_SYS_CHROOT in the container's bounding set; without it the launch fails (smoke test, 2026-11-05). Only this
     # one capability comes back, and only for the app, which prints the PDF.
     cap_add: [SYS_CHROOT]
+    # WHY: after a fault nothing handled the server ends its process (D-133); this starts it again. A stop by hand
+    # (`docker compose stop`) stays a stop.
+    restart: unless-stopped
+    # WHY: a ceiling for when something goes wrong, with no swap beyond it. At 5 GiB the heap limit Node chooses
+    # (2 240 MiB), the SVG worker (512), Chromium for two PDF exports (512), the server outside its heap (256) and a
+    # full /tmp (512) fit with about 1 GiB to spare (docs/ops/docker.md, D-134).
+    mem_limit: 5g
+    memswap_limit: 5g
     ports: ['127.0.0.1:${HVLI_APP_PORT:-18080}:3000']
     volumes: ['h5p-libraries:/app/apps/server/var/h5p/libraries']
     tmpfs:
       - /tmp:size=512m,mode=1777
       - /home/hvli:size=64m,uid=10001,gid=10001,mode=0700
       - /app/apps/web/.next/cache:size=64m,uid=10001,gid=10001
+    # WHY: a server that no longer answers must lose its "healthy" mark soon, because whatever routes requests to
+    # it goes by that mark. The request gives up after 2.5 seconds and Docker ends a try after 3; three failed
+    # tries in a row, 5 seconds apart, make the app unhealthy after about 25 seconds. Failed tries during the start
+    # period do not count (D-144). Docker alone does not restart an unhealthy container (docs/ops/docker.md).
     healthcheck:
       test:
         - CMD
         - node
         - -e
-        - "fetch('http://127.0.0.1:3000/healthz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
-      interval: 3s
-      retries: 40
-      start_period: 10s
+        - "fetch('http://127.0.0.1:3000/healthz', { signal: AbortSignal.timeout(2500) }).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 120s
     depends_on:
       seed: { condition: service_completed_successfully }
       clamav: { condition: service_healthy }

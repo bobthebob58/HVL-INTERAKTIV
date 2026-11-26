@@ -11,8 +11,10 @@
  *     would delete and write.
  *   - A real run writes the snapshots first (./yearSnapshots.ts), then deletes (./purgeTables.ts); the current
  *     academic year's rows are never selected.
- *   - Every run writes one `purge.run` event: `completed` with its counts, or `failed` with the counts of what it did
- *     before the error, which it then rethrows (./purgeAudit.ts).
+ *   - Every run ends with one `purge.run` event: `completed` with its counts, or `failed` with the counts of what it
+ *     did before the error, which it then rethrows (./purgeAudit.ts).
+ *   - A real run writes one event more, `started` with the plan's counts, before its first change: a run that is cut
+ *     short (a deployment, a crash, Ctrl-C) reaches neither end, and its deletions would be in no record (D-144).
  *   - Idempotent: a second real run deletes nothing and writes no snapshot; it is audited like any run.
  *   - It does not decide whether the date allows a run: the job and the CLI check the run date (./purgeCalendar.ts).
  *   - PRIVACY: returns and audits counts and years only; nothing is logged here.
@@ -97,7 +99,8 @@ export async function planRetentionPurge(
  * @param deps - The database and *k*.
  * @param request - The moment, whether to count only, and who started it.
  * @returns What the run did (or, dry, would do).
- * @throws Whatever the database throws during a real run, after the failed run is audited.
+ * @throws Whatever the database throws during a real run, after the failed run is audited; and, before anything is
+ *   changed, when the start of a real run cannot be audited.
  * @example
  * const plan = await runRetentionPurge({ db, groupSize }, { now: new Date(), dryRun: true, trigger: 'cli' });
  * @spec DATA-003
@@ -114,7 +117,11 @@ export async function runRetentionPurge(
     await auditPurgeRun(db, scope.endedYear, { trigger, dryRun, outcome: 'completed', ...plan });
     return { endedYear: scope.endedYear, dryRun, ...plan };
   }
-  const years = await yearsWithRows(db, scope.currentYear);
+  const plan = await planRetentionPurge(db, scope);
+  // WHY: written before the first change, so a run that never reaches its end is still on record with what it was
+  //      about to delete; the next run's `started` event then shows what it left (D-144, docs/ops/yearly-purge.md).
+  await auditPurgeRun(db, scope.endedYear, { trigger, dryRun, outcome: 'started', ...plan });
+  const { years } = plan;
   const counts: PurgeCounts = { snapshots: 0, ...emptyTableCounts() };
   try {
     // PRIVACY: the k-suppressed snapshots are written before anything is deleted, and are all that remains (DATA-003).

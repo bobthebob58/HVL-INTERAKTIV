@@ -98,6 +98,34 @@ describe('[AUTH-003] Cookie header parser', () => {
     expect(readCookie({ headers: { cookie: `__host-hvli_sid=${ID}` } }, SESSION_COOKIE)).toBeUndefined();
   });
 
+  it('[AUTH-003] trims only SP and HTAB, so a name with a leading non-breaking space is a different cookie', () => {
+    // Arrange: a cookie whose name begins with U+00A0 (a non-breaking space), alone and beside the genuine
+    // session cookie. Names are matched byte for byte, so it is a different cookie: it is ignored, and it does
+    // not count as a second session cookie.
+    const planted = `\u00A0${SESSION_COOKIE}=${ID}`;
+    const otherSpaces = ['\u00A0', '\u2028', '\u2029', '\u3000', '\uFEFF'];
+    // Act
+    const plantedCookies = parseCookieHeader(planted);
+    const beside = parseCookieHeader(`${planted}; ${SESSION_COOKIE}=${ID}`);
+    const ordinary = parseCookieHeader(`\t ${SESSION_COOKIE}=${ID} \t`);
+    // Assert
+    expect(plantedCookies.has(SESSION_COOKIE)).toBe(false);
+    expect(readCookie({ headers: { cookie: planted } }, SESSION_COOKIE)).toBeUndefined();
+    expect(beside.get(SESSION_COOKIE)).toBe(ID); // the real cookie is read, not dropped as a duplicate
+    for (const space of otherSpaces)
+      expect(parseCookieHeader(`${space}a=1`).has('a'), JSON.stringify(space)).toBe(false);
+    expect(ordinary.get(SESSION_COOKIE)).toBe(ID); // a real SP or HTAB around a pair is still trimmed (RFC 6265)
+  });
+
+  it('[AUTH-003] reads a pair in linear time, however long its run of spaces', () => {
+    const header = `a=${' '.repeat(200_000)}b; ${SESSION_COOKIE}=${ID}`;
+    const started = performance.now();
+    const cookies = parseCookieHeader(header);
+    expect(performance.now() - started).toBeLessThan(250);
+    expect(cookies.get(SESSION_COOKIE)).toBe(ID);
+    expect(cookies.has('a')).toBe(false); // a space is no cookie-octet, so the value is malformed
+  });
+
   it('[AUTH-003] handles a missing, empty or split header', () => {
     expect(parseCookieHeader(undefined).size).toBe(0);
     expect(parseCookieHeader('').size).toBe(0);
