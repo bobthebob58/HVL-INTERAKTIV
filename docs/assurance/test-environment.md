@@ -97,7 +97,7 @@ marked *; each key is new and random (`openssl rand -base64 32`), used on this i
 | Never set | `PDF_ALLOW_NO_SANDBOX`, `AWS_ENDPOINT_URL_S3`, `AWS_ENDPOINT_URL`, `CLAMSCAN_*`, `CLAMDSCAN_*`. Runbook §3 also says never `CLAMAV_ALLOW_UNSCANNED_UPLOADS` in production; *(proposal)* for stage 1 only if IT has no clamd and accepts unscanned uploads | runbook §3; `apps/server/.env.example:291-295` |
 
 The rest (`LOG_LEVEL`, `MIN_GROUP_SIZE`, `PURGE_RUN_DATE`, the `H5P_*` settings, the media origins, and
-`PDF_BROWSER_EXECUTABLE`, whose empty default uses the image's own Chromium; `deploy/Dockerfile:113`) keep their
+`PDF_BROWSER_EXECUTABLE`, whose empty default uses the image's own Chromium; `deploy/Dockerfile:115`) keep their
 defaults.
 
 ## 4. The rules

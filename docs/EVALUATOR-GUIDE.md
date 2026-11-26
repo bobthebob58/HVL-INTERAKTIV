@@ -139,8 +139,10 @@ whose results HVL records (D-079); `UD-031`'s own check, a dated result file for
 | `npx vitest run -t "PED-0"` *(from S5)* | The studio: phases and labels from content, the guide's node tree and its refusals, the catalogue filters in the address, the patterns on the real types, the **Læringsdesign** tab's routes and limits, the planner's gaps and the time and purpose learners see (`PED-001`…`PED-032`). Also `-t "PROD-001\|PROD-009"` (creating from a pattern; formative defaults), `-t "PROD-007\|PROD-013"` (co-authors, the bank and copies; the save choice and its reset) and `-t "MAPPE-"` (the portfolio; its PDF tests need Chromium). The integration tests among them need the services and the real packages |
 | `npm run spec:trace -- --check --done-through=S<n>` | Every MUST requirement up to session *n* has a test |
 | `npm run check:filesize` | No source file over 200 lines (`DOC-007`) |
-| `npm run check:audit` | No unreviewed high or critical advisory in production dependencies (`SEC-007`, D-029) |
+| `npm run check:audit` | No unreviewed high or critical advisory in production dependencies; an exception is complete, dated at most 120 days ahead and written for its package (`SEC-007`, D-029, D-145) |
 | `npm run check:pins && npm run check:licences` | Exact pins; GPL-3.0-compatible licences (`SEC-007`, `NFR-005`) |
+| `npm run check:lockfile` | Every package of the lock file comes from the npm registry with a SHA-512 checksum; each install script is in the reviewed list, and npm refuses any other (`SEC-007`, D-145) |
+| `npm run check:workflows` | The workflows name actions by commit and service images by digest, with a token that only reads (`SEC-007`, D-145) |
 | `npm run docs:api` *(from S2)* | Browsable API documentation builds with no warnings (TypeDoc; `DOC-002`) |
 | `npx vitest run -t "H5P-002\|PROD-002"` *(from S2)* | Only the ten types are creatable; DragQuestion is never offered |
 | `npx vitest run -t "SEC-003\|H5P-011\|H5P-006"` *(from S2)* | Non-admins cannot install libraries; every library change is audited; the permission matrix |

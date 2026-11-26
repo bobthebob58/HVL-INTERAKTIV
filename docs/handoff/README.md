@@ -31,7 +31,7 @@ document answer "why is it like this?":
 | Why was it built this way? | [docs/DECISIONS.md](../DECISIONS.md), D-001…D-116, each with context, decision, alternatives, consequences and dated amendments |
 | Which code and which tests belong to a requirement? | [docs/TRACEABILITY.md](../TRACEABILITY.md) (generated), and the spec site `docs/site/index.html` (open it in a browser) |
 | How is a package laid out? | The module map in each README: [apps/server](../../apps/server/README.md), [apps/web](../../apps/web/README.md), `packages/*/README.md`, `tools/*/README.md`, [content/README.md](../../content/README.md) |
-| What is the state, and what did each gate prove? | [PROGRESS.md](../../PROGRESS.md): the checklist, the open questions Q1–Q31, the risk register and every gate's output |
+| What is the state, and what did each gate prove? | [PROGRESS.md](../../PROGRESS.md): the checklist, the open questions Q1–Q34, the risk register and every gate's output |
 
 Every source file starts with a module header (What, Why, Spec, Invariants, Collaborators, Tests), every export has
 TSDoc, and non-obvious lines carry a tag: `SECURITY:`, `PRIVACY:`, `A11Y:`, `PEDAGOGY:`, `UPSTREAM:`, `WHY:` or
@@ -80,7 +80,8 @@ has had no human review and where a review should start, and the SBOM, all draft
 
 One date matters to everyone: the `image-size` audit exceptions (D-030, R-08) expire on **2027-01-31**, early in your
 term. After that `npm run check:audit`, and so CI, fails until one of D-112's three choices is made
-([lumi-path.md](lumi-path.md)).
+([lumi-path.md](lumi-path.md)). A renewed exception can run 120 days at most (D-145), and the check now also runs
+once a day on the default branch, so the failure shows on that day without a push.
 
 ## 3. What passes to you
 

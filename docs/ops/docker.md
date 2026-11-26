@@ -14,7 +14,7 @@ One multi-stage `deploy/Dockerfile`, built from the repository root. Only its la
 | Part | From | Checked by |
 |---|---|---|
 | Ubuntu 24.04 and Node 24 | `ubuntu:24.04` and `node:24-bookworm-slim`, both by digest | The digests in the Dockerfile (`tools/deploy-check`) |
-| Production dependencies, `tsx` among them | `npm ci` from the lockfile, then `npm prune --omit=dev`; `tsx` is a dependency of `apps/server` (D-110 integration amendment), `prisma` stays as `@prisma/client`'s optional peer | The build fails if `tsx`, `prisma` or `playwright-core` is missing |
+| Production dependencies, `tsx` among them | `npm ci` from the lockfile, with `.npmrc` (an install script outside `allowScripts` stops the build, D-145), then `npm prune --omit=dev`; `tsx` is a dependency of `apps/server` (D-110 integration amendment), `prisma` stays as `@prisma/client`'s optional peer | The build fails if `tsx`, `prisma` or `playwright-core` is missing |
 | The server's TypeScript, the Prisma client, the built web app, the tokens and the theme | The repository | The build (`prisma generate`, `npm run build`) |
 | H5P core 1.28.0 and the pinned editor | Build context `h5pcore` (`apps/server/h5p`, from `npm run h5p:fetch-core`) | Every file against the committed hash lists, in stage `inputs` |
 | The ten content types | Build context `h5pbundle` (from `tools/h5p-bundle`) | Their `SHA256SUMS`, the ten names and the build-secret scan, in stage `inputs` (its rules file, `apps/server/src/h5p/libraries/libraryBuildSecrets.ts`, is copied there too); the seeder checks the hashes and scans each package again, then scans the library volume |

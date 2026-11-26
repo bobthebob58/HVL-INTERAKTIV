@@ -390,6 +390,11 @@ loading of one spec per session are kept.
 - **Consequences:** No extra dependencies. Packages with legacy licence metadata are listed by name and
   version after a person has read their licence file.
 
+- **Amendment (2026-11-26, D-145):** two more checks stand beside these: `checkLockfile.mjs` (where each package
+  of the lock file comes from, its checksum, and the install scripts against the reviewed list) and
+  `checkWorkflows.mjs` (the workflows' actions, images and token). The audit check also runs once a day on the
+  default branch, and it reads an exception's date as a date.
+
 ### D-030 · Accepted advisory: `image-size` parser loops (until 2027-01-31)
 - **Context:** `@lumieducation/h5p-server` 10.0.4 depends on `image-size@^1.0.2`. Advisories
   GHSA-5p2g-fcmc-qvqq (JXL and HEIF) and GHSA-w3rx-r6r6-pgpr (ICNS) affect every version up to 2.0.2; no
@@ -401,6 +406,10 @@ loading of one spec per session are kept.
   bytes are not on the allowlist (JXL, HEIF and ICNS are not) before H5P calls `image-size`.
 - **Consequences:** `audit-exceptions.json` lists both advisories with this decision and the expiry date.
   Review again at expiry, or earlier if h5p-server releases a version with `image-size` ≥ 2.0.3.
+
+- **Amendment (2026-11-26, D-145):** an exception needs every field, a real calendar date at most 120 days ahead,
+  and covers its advisory only for the package it names. The two entries here pass as they are; a renewal on
+  2027-01-31 can run to 2027-05-31 at most.
 
 ### D-031 · Session 1 items that finish in Session 2
 - **Context:** Some Session 1 work depends on things that only exist in Session 2, or on a network this
@@ -4347,6 +4356,11 @@ loading of one spec per session are kept.
   Chromium's user namespaces, in place of Playwright's file, which is an older Docker default. The app's health
   check has a time limit of 3 seconds, an interval of 5 seconds, 3 retries and a start period of 120 seconds.
 
+- **Amendment (2026-11-26, D-145):** the `deps` stage copies `.npmrc` with the lock file, so the image's `npm ci`
+  stops at an install script that `allowScripts` does not name (`strict-allow-scripts=true`);
+  `tools/deploy-check` requires the copy. The workflows name their actions by commit and the gate's service
+  images by the digests of `deploy/compose.app.yml`.
+
 ### D-111 · An HVL language overlay in a library-storage wrapper; `H5P-010`'s guidance through it
 - **Context:** S5's probe P1 found that many `nn` and `nb` defaults of the real libraries are English (MultiChoice,
   QuestionSet, InteractiveBook and BranchingScenario buttons and messages). Patterns set their own texts (D-084), but
@@ -6252,3 +6266,80 @@ loading of one spec per session are kept.
   T-54, T-70, T-103, T-110 and T-114 in the threat model, ROS-20, the architecture description, the Docker and
   yearly-purge operations notes, the runbook and the READMEs of `deploy/`, `deploy/seccomp/` and
   `tools/deploy-check/` follow.
+
+### D-145 · Security repairs, step 29: the lock file is held to one source and one checksum, an install script outside the reviewed list stops the install, the workflows name commits and digests, an audit exception is dated and bound to its package, and the advisories are checked every day
+- **Context:** Six gaps in how the dependencies and the build steps are held. (1) `npm run check:audit` failed:
+  `effect` 3.20.0, an exact dependency of `@prisma/config` 7.10.1 (Prisma's command-line tool), is named by
+  GHSA-7589-6fvf-x4pw (a slow pattern in `Schema.TemplateLiteral`; fixed in 3.22.1). (2) The audit check compared
+  an exception's `expires` with today as text, so an entry without a date, with a misspelt one or with a date
+  years ahead never expired, and it matched an exception to an advisory by the advisory's ID alone, whatever
+  package the entry named. (3) That every package of `package-lock.json` comes from the npm registry with a
+  SHA-512 value had been checked once by hand (threat model T-90); nothing held it. (4) The root `package.json`
+  lists the reviewed install scripts in `allowScripts`, but npm 11 runs a script outside the list with a notice
+  unless `strict-allow-scripts` is set, and there was no `.npmrc`. (5) The workflows named their actions by major
+  tag and three of the gate's service images by tag; a tag can be moved by its publisher. (6) The audit check ran
+  only on a push or a pull request, and Dependabot proposes updates once a month (the owner's choice of
+  2026-10-28, where `SEC-007` says weekly), so an advisory published in between waited for the next push.
+- **Decision — `effect` 3.22.4 by an exact override (SEC-007).** The root `overrides` pins `effect` at 3.22.4, as
+  D-030 did for `underscore`: Prisma 7.10.1 is the newest 7.x and names 3.20.0 exactly. 3.22.4 was five weeks old;
+  the newest, 3.22.5, one week. The package is used by Prisma's CLI (`generate`, `migrate deploy`) to read our own
+  `prisma.config.ts`; `@prisma/client`, which the server runs, does not load it. Remove the override when a Prisma
+  release names a fixed `effect` itself. The two `image-size` exceptions stay (D-030): no 1.x release is fixed.
+- **Decision — an exception is complete, dated and bound to its package.**
+  `tools/dependency-check/auditExceptionRules.mjs`: an entry needs `advisory`, `package`, `decision`, `expires`
+  and `mitigation`; `expires` is a real calendar date (`2027-02-30` is not one) at most 120 days after today, so
+  every exception is read again within four months; two entries for the same advisory and package are refused.
+  `checkAudit.mjs` matches an advisory to an exception by ID and package, and reports an advisory once for each
+  package npm names. D-030's entries (until 2027-01-31) pass.
+- **Decision — `npm run check:lockfile` (SEC-007).** `tools/dependency-check/checkLockfile.mjs` holds every
+  package of the lock file that is not one of our workspaces to
+  `https://registry.npmjs.org/<name>/-/<name>-<version>.tgz` and to a `sha512-` value of the full length; an alias
+  or a bundled package fails until a person has reviewed it; a link points at a local package. It uses Node alone,
+  and both workflows run it before `npm ci`. Not required: a rule for another registry. A mirror at HVL would be a
+  change of this check on purpose.
+- **Decision — an install script outside the reviewed list stops the install.** `.npmrc` sets
+  `strict-allow-scripts=true`. `allowScripts` names the four packages of the lock file with a script, each as
+  `name@version`: `esbuild`, `prisma` and `@prisma/engines` run theirs, and `fsevents` (macOS only) is `false`,
+  because it ships its built file and its script would only build it again. `installScriptRules.mjs` compares the
+  lock file with the list both ways and requires the setting; `deploy/Dockerfile` copies `.npmrc` before its
+  `npm ci`, and `tools/deploy-check` requires that copy.
+- **Decision — the workflows name commits and digests (`npm run check:workflows`).** Each action is written as
+  `owner/repo@<commit> # v1.2.3` (checkout v7.0.1, setup-node v7.1.0, cache v6.1.0, upload-artifact v7.0.2; each
+  commit read from the action's tag list and fetched). The gate's `postgres`, `redis` and `moto` services carry
+  the digests of `deploy/compose.app.yml`, and the check refuses another digest for an image the stack names.
+  It also requires top-level `permissions` without `write`, and `persist-credentials: false` on every checkout,
+  which the two workflows already had. Dependabot proposes new action commits; an image digest is changed by hand.
+- **Decision — a daily advisory run; Dependabot stays monthly (the owner, 2026-11-26).**
+  `.github/workflows/audit.yml` runs `check:lockfile` and `check:audit` once a day on the default branch. Nothing
+  is installed for it: both read the lock file and use Node and npm alone. `SEC-007` is amended. Not known from
+  here: whom GitHub notifies about a failed scheduled run, and when it pauses a schedule in a quiet repository
+  *(verify; GitHub's documentation could not be reached from the development sandbox)*.
+- **Recorded, not built.** A secret scan of the repository: the repository is public, so GitHub's secret scanning
+  and push protection are settings the owner can switch on; no scanner was added to CI, because none could be run
+  in the development sandbox to see what it reports (Q34). Signing the image and stating where it was built: no
+  workflow publishes an image, so there is nothing to sign yet; where the production image is built and whether it
+  is signed there is HVL IT's choice (Q33).
+- **Verified:** unit tests of each rule on the real files and on changed copies: an exception without a date,
+  with text for a date, with a date that does not exist, more than 120 days ahead, for another package or twice;
+  a lock-file entry from another server or another package's address, with a weak, cut or missing checksum, as an
+  alias or bundled, and a link out of the repository; a script the list does not name, a stale or loosely written
+  entry, and npm settings without the strict line; an action by tag, branch or short commit or without its
+  version, an image without a digest or with another than the stack's, a token that may write, a checkout that
+  keeps the token; an image build that does not copy `.npmrc`. The old code accepted each of the exception cases,
+  and the old workflows fail the new check. A real `npm ci` in a copy of the manifests passed with the strict
+  setting and the full list, and ended with `ESTRICTALLOWSCRIPTS`, changing nothing, with one entry removed.
+  `npm run check:audit` passes; `prisma validate`, `generate`, `migrate deploy` and `migrate status` ran with
+  `effect` 3.22.4, and the server suite, which applies the migrations, passes as before. The two commands of the
+  daily run were run in a copy with nothing installed. The Docker smoke test ran on the committed tree (278 s): a
+  fresh builder built the image, its `npm ci` with the strict setting among the steps; the `migrate` step applied
+  8 of 8 migrations with `effect` 3.22.4; the PDF printed with Chromium's sandbox on, and the checks of D-144
+  passed (no code cache, a stopped server unhealthy after 19 s). The workflow files themselves have not run on
+  GitHub: GitHub runs them for `main` and for pull requests only, so they first run with the pull request that
+  brings this branch to `main`.
+- **Consequences:** `package.json`, `package-lock.json`, `.npmrc`, `docs/assurance/sbom.cdx.json` (the SBOM lists
+  `effect` 3.22.4); `tools/dependency-check/` (`auditExceptionRules.mjs`, `checkLockfile.mjs`,
+  `installScriptRules.mjs`, `checkWorkflows.mjs`, `checkAudit.mjs`, their tests and the README);
+  `tools/deploy-check/deployRules.mjs`; `deploy/Dockerfile`; `.github/workflows/ci.yml`, `docker.yml`, `audit.yml`
+  and `.github/dependabot.yml`; `tools/doc-lint/test/ciDependencyGates.test.mjs`; `CLAUDE.md` §3. An upgrade of a
+  package with an install script now changes `allowScripts` in the same commit, and an exception renewed on its
+  last day can run 120 days. Amends D-029, D-030 and D-110, and `SEC-007`. Open questions Q33 and Q34.

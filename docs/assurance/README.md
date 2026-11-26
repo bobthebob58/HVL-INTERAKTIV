@@ -159,4 +159,4 @@ and the hand-off index says the tasks that need a person or system at HVL "are n
 | Operations: what IT provides, secrets, backups, monitoring, the deployment checklist | [docs/ops/runbook.md](../ops/runbook.md) and [docs/ops/](../ops/README.md) |
 | Accessibility conformance (automated results; manual pending) | [docs/accessibility/WCAG-CONFORMANCE-REPORT.md](../accessibility/WCAG-CONFORMANCE-REPORT.md) |
 | What is done, what needs HVL, what passes to the students | [docs/handoff/README.md](../handoff/README.md) |
-| Build progress, open questions Q1–Q31 (there is no Q11), every gate's output | [PROGRESS.md](../../PROGRESS.md) |
+| Build progress, open questions Q1–Q34 (there is no Q11), every gate's output | [PROGRESS.md](../../PROGRESS.md) |

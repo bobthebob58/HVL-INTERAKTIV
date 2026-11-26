@@ -1365,13 +1365,25 @@ free turns author by author, so one author&#39;s many files do not push another 
 <details class="req" id="x-SEC-007" data-area="SEC" data-priority="MUST" data-session="S1" data-status="tested" data-text="sec-007 dependency hygiene all runtime dependencies are pinned exactly (no `^`) and listed in `package-lock.json`. ci runs
 `npm audit --omit=dev --audit-level=high` and fails on unreviewed findings. a reviewed exception must
 be recorded in `decisions.md` with an expiry date. renovate (or dependabot) opens update prs weekly.
-- **verify:** ci job.">
+- **verify:** ci job.
+- **amended (d-145, 2026-11-26):** dependabot opens its grouped update pull requests monthly, not weekly (the
+  owner's choice, 2026-10-28, kept 2026-11-26); in between, a daily workflow runs the audit check on the default
+  branch. an exception's expiry is a real date at most 120 days ahead, and an exception covers its advisory only
+  for the package it names. the lock file is held to the npm registry and sha-512 checksums
+  (`npm run check:lockfile`), an install script outside the reviewed list (`allowscripts`) stops the install, and
+  the workflows name actions by commit and service images by digest (`npm run check:workflows`).">
 <summary><span class="req-id">SEC-007</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 1">S1</span> <span class="req-title">Dependency hygiene</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>All runtime dependencies are pinned exactly (no <code>^</code>) and listed in <code>package-lock.json</code>. CI runs
 <code>npm audit --omit=dev --audit-level=high</code> and fails on unreviewed findings. A reviewed exception must
 be recorded in <code>DECISIONS.md</code> with an expiry date. Renovate (or Dependabot) opens update PRs weekly.</p>
 <ul>
 <li><strong>Verify:</strong> CI job.</li>
+<li><strong>Amended (D-145, 2026-11-26):</strong> Dependabot opens its grouped update pull requests monthly, not weekly (the
+owner&#39;s choice, 2026-10-28, kept 2026-11-26); in between, a daily workflow runs the audit check on the default
+branch. An exception&#39;s expiry is a real date at most 120 days ahead, and an exception covers its advisory only
+for the package it names. The lock file is held to the npm registry and SHA-512 checksums
+(<code>npm run check:lockfile</code>), an install script outside the reviewed list (<code>allowScripts</code>) stops the install, and
+the workflows name actions by commit and service images by digest (<code>npm run check:workflows</code>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-SEC-007">01 H5P engine and security, SEC-007</a> · Upload security</p></div>
 </details>
@@ -4504,6 +4516,12 @@ free turns author by author, so one author&#39;s many files do not push another 
 be recorded in <code>DECISIONS.md</code> with an expiry date. Renovate (or Dependabot) opens update PRs weekly.</p>
 <ul>
 <li><strong>Verify:</strong> CI job.</li>
+<li><strong>Amended (D-145, 2026-11-26):</strong> Dependabot opens its grouped update pull requests monthly, not weekly (the
+owner&#39;s choice, 2026-10-28, kept 2026-11-26); in between, a daily workflow runs the audit check on the default
+branch. An exception&#39;s expiry is a real date at most 120 days ahead, and an exception covers its advisory only
+for the package it names. The lock file is held to the npm registry and SHA-512 checksums
+(<code>npm run check:lockfile</code>), an install script outside the reviewed list (<code>allowScripts</code>) stops the install, and
+the workflows name actions by commit and service images by digest (<code>npm run check:workflows</code>).</li>
 </ul>
 <h4 id="r-SEC-008" class="req-heading" tabindex="-1"><a class="req-id" href="#r-SEC-008">SEC-008</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 2">S2</span> <span class="req-title">Regression test for CVE-2025-47828</span></h4>
 <p>A test saves content with <code>&lt;img src=x onerror=alert(1)&gt;</code> in a plain-text field. It asserts that the
@@ -6453,9 +6471,13 @@ whose results HVL records (D-079); <a class="req-ref" href="#r-UD-031"><code>UD-
 <tr>
 <td><code>npm run check:filesize</code></td><td>No source file over 200 lines (<a class="req-ref" href="#r-DOC-007"><code>DOC-007</code></a>)</td></tr>
 <tr>
-<td><code>npm run check:audit</code></td><td>No unreviewed high or critical advisory in production dependencies (<a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>, D-029)</td></tr>
+<td><code>npm run check:audit</code></td><td>No unreviewed high or critical advisory in production dependencies; an exception is complete, dated at most 120 days ahead and written for its package (<a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>, D-029, D-145)</td></tr>
 <tr>
 <td><code>npm run check:pins &amp;&amp; npm run check:licences</code></td><td>Exact pins; GPL-3.0-compatible licences (<a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>, <a class="req-ref" href="#r-NFR-005"><code>NFR-005</code></a>)</td></tr>
+<tr>
+<td><code>npm run check:lockfile</code></td><td>Every package of the lock file comes from the npm registry with a SHA-512 checksum; each install script is in the reviewed list, and npm refuses any other (<a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>, D-145)</td></tr>
+<tr>
+<td><code>npm run check:workflows</code></td><td>The workflows name actions by commit and service images by digest, with a token that only reads (<a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>, D-145)</td></tr>
 <tr>
 <td><code>npm run docs:api</code> <em>(from S2)</em></td><td>Browsable API documentation builds with no warnings (TypeDoc; <a class="req-ref" href="#r-DOC-002"><code>DOC-002</code></a>)</td></tr>
 <tr>
@@ -7336,27 +7358,42 @@ database table, so the schema is complete.</li>
 </ul>
 <h3 id="decisions--d-029--own-licence-and-audit-checks-instead-of-license-checker-and-plain-npm-audit" tabindex="-1">D-029 · Own licence and audit checks instead of <code>license-checker</code> and plain <code>npm audit</code></h3>
 <ul>
-<li><strong>Context:</strong> <a class="req-ref" href="#r-NFR-005"><code>NFR-005</code></a> suggests <code>license-checker</code>; it is unmaintained and pulls in its own dependency
-tree. <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a> allows reviewed, expiring exceptions to <code>npm audit</code>, which plain <code>npm audit</code> cannot express.</li>
-<li><strong>Decision:</strong> <code>tools/dependency-check/checkLicences.mjs</code> reads production packages with
+<li><p><strong>Context:</strong> <a class="req-ref" href="#r-NFR-005"><code>NFR-005</code></a> suggests <code>license-checker</code>; it is unmaintained and pulls in its own dependency
+tree. <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a> allows reviewed, expiring exceptions to <code>npm audit</code>, which plain <code>npm audit</code> cannot express.</p>
+</li>
+<li><p><strong>Decision:</strong> <code>tools/dependency-check/checkLicences.mjs</code> reads production packages with
 <code>npm query &#39;:not(.dev)&#39;</code> (since S4 <code>npm query &#39;*&#39;</code> filtered on the <code>dev</code> flag, D-071) and checks their SPDX expressions against a GPL-3.0-compatible allow-list.
 <code>checkAudit.mjs</code> runs <code>npm audit --omit=dev --json</code> and fails on any high or critical advisory that has
-no unexpired entry in <code>audit-exceptions.json</code> pointing to a decision here.</li>
-<li><strong>Consequences:</strong> No extra dependencies. Packages with legacy licence metadata are listed by name and
-version after a person has read their licence file.</li>
+no unexpired entry in <code>audit-exceptions.json</code> pointing to a decision here.</p>
+</li>
+<li><p><strong>Consequences:</strong> No extra dependencies. Packages with legacy licence metadata are listed by name and
+version after a person has read their licence file.</p>
+</li>
+<li><p><strong>Amendment (2026-11-26, D-145):</strong> two more checks stand beside these: <code>checkLockfile.mjs</code> (where each package
+of the lock file comes from, its checksum, and the install scripts against the reviewed list) and
+<code>checkWorkflows.mjs</code> (the workflows&#39; actions, images and token). The audit check also runs once a day on the
+default branch, and it reads an exception&#39;s date as a date.</p>
+</li>
 </ul>
 <h3 id="decisions--d-030--accepted-advisory-image-size-parser-loops-until-2027-01-31" tabindex="-1">D-030 · Accepted advisory: <code>image-size</code> parser loops (until 2027-01-31)</h3>
 <ul>
-<li><strong>Context:</strong> <code>@lumieducation/h5p-server</code> 10.0.4 depends on <code>image-size@^1.0.2</code>. Advisories
+<li><p><strong>Context:</strong> <code>@lumieducation/h5p-server</code> 10.0.4 depends on <code>image-size@^1.0.2</code>. Advisories
 GHSA-5p2g-fcmc-qvqq (JXL and HEIF) and GHSA-w3rx-r6r6-pgpr (ICNS) affect every version up to 2.0.2; no
 1.x release is fixed. Version 2 changes the API that <code>H5PEditor.saveContentFile</code> calls (it passes a file
 path), so an override would break image uploads. A third advisory (<code>underscore</code> ≤ 1.13.7, via <code>jsonpath</code>)
-is fixed by an npm <code>overrides</code> entry pinning <code>underscore</code> 1.13.8, a patch release.</li>
-<li><strong>Decision:</strong> Accept both <code>image-size</code> advisories until <strong>2027-01-31</strong>. The loop is reachable only through
+is fixed by an npm <code>overrides</code> entry pinning <code>underscore</code> 1.13.8, a patch release.</p>
+</li>
+<li><p><strong>Decision:</strong> Accept both <code>image-size</code> advisories until <strong>2027-01-31</strong>. The loop is reachable only through
 an authenticated author&#39;s file upload. In S2, <a class="req-ref" href="#r-SEC-002"><code>SEC-002</code></a> content sniffing rejects any file whose magic
-bytes are not on the allowlist (JXL, HEIF and ICNS are not) before H5P calls <code>image-size</code>.</li>
-<li><strong>Consequences:</strong> <code>audit-exceptions.json</code> lists both advisories with this decision and the expiry date.
-Review again at expiry, or earlier if h5p-server releases a version with <code>image-size</code> ≥ 2.0.3.</li>
+bytes are not on the allowlist (JXL, HEIF and ICNS are not) before H5P calls <code>image-size</code>.</p>
+</li>
+<li><p><strong>Consequences:</strong> <code>audit-exceptions.json</code> lists both advisories with this decision and the expiry date.
+Review again at expiry, or earlier if h5p-server releases a version with <code>image-size</code> ≥ 2.0.3.</p>
+</li>
+<li><p><strong>Amendment (2026-11-26, D-145):</strong> an exception needs every field, a real calendar date at most 120 days ahead,
+and covers its advisory only for the package it names. The two entries here pass as they are; a renewal on
+2027-01-31 can run to 2027-05-31 at most.</p>
+</li>
 </ul>
 <h3 id="decisions--d-031--session-1-items-that-finish-in-session-2" tabindex="-1">D-031 · Session 1 items that finish in Session 2</h3>
 <ul>
@@ -11585,6 +11622,11 @@ at once and the time limit that includes the wait stay as they are.</p>
 Chromium&#39;s user namespaces, in place of Playwright&#39;s file, which is an older Docker default. The app&#39;s health
 check has a time limit of 3 seconds, an interval of 5 seconds, 3 retries and a start period of 120 seconds.</p>
 </li>
+<li><p><strong>Amendment (2026-11-26, D-145):</strong> the <code>deps</code> stage copies <code>.npmrc</code> with the lock file, so the image&#39;s <code>npm ci</code>
+stops at an install script that <code>allowScripts</code> does not name (<code>strict-allow-scripts=true</code>);
+<code>tools/deploy-check</code> requires the copy. The workflows name their actions by commit and the gate&#39;s service
+images by the digests of <code>deploy/compose.app.yml</code>.</p>
+</li>
 </ul>
 <h3 id="decisions--d-111--an-hvl-language-overlay-in-a-library-storage-wrapper-h5p-010s-guidance-through-it" tabindex="-1">D-111 · An HVL language overlay in a library-storage wrapper; <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>&#39;s guidance through it</h3>
 <ul>
@@ -13601,6 +13643,84 @@ T-54, T-70, T-103, T-110 and T-114 in the threat model, ROS-20, the architecture
 yearly-purge operations notes, the runbook and the READMEs of <code>deploy/</code>, <code>deploy/seccomp/</code> and
 <code>tools/deploy-check/</code> follow.</li>
 </ul>
+<h3 id="decisions--d-145--security-repairs-step-29-the-lock-file-is-held-to-one-source-and-one-checksum-an-install-script-outside-the-reviewed-list-stops-the-install-the-workflows-name-commits-and-digests-an-audit-exception-is-dated-and-bound-to-its-package-and-the-advisories-are-checked-every-day" tabindex="-1">D-145 · Security repairs, step 29: the lock file is held to one source and one checksum, an install script outside the reviewed list stops the install, the workflows name commits and digests, an audit exception is dated and bound to its package, and the advisories are checked every day</h3>
+<ul>
+<li><strong>Context:</strong> Six gaps in how the dependencies and the build steps are held. (1) <code>npm run check:audit</code> failed:
+<code>effect</code> 3.20.0, an exact dependency of <code>@prisma/config</code> 7.10.1 (Prisma&#39;s command-line tool), is named by
+GHSA-7589-6fvf-x4pw (a slow pattern in <code>Schema.TemplateLiteral</code>; fixed in 3.22.1). (2) The audit check compared
+an exception&#39;s <code>expires</code> with today as text, so an entry without a date, with a misspelt one or with a date
+years ahead never expired, and it matched an exception to an advisory by the advisory&#39;s ID alone, whatever
+package the entry named. (3) That every package of <code>package-lock.json</code> comes from the npm registry with a
+SHA-512 value had been checked once by hand (threat model T-90); nothing held it. (4) The root <code>package.json</code>
+lists the reviewed install scripts in <code>allowScripts</code>, but npm 11 runs a script outside the list with a notice
+unless <code>strict-allow-scripts</code> is set, and there was no <code>.npmrc</code>. (5) The workflows named their actions by major
+tag and three of the gate&#39;s service images by tag; a tag can be moved by its publisher. (6) The audit check ran
+only on a push or a pull request, and Dependabot proposes updates once a month (the owner&#39;s choice of
+2026-10-28, where <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a> says weekly), so an advisory published in between waited for the next push.</li>
+<li><strong>Decision — <code>effect</code> 3.22.4 by an exact override (SEC-007).</strong> The root <code>overrides</code> pins <code>effect</code> at 3.22.4, as
+D-030 did for <code>underscore</code>: Prisma 7.10.1 is the newest 7.x and names 3.20.0 exactly. 3.22.4 was five weeks old;
+the newest, 3.22.5, one week. The package is used by Prisma&#39;s CLI (<code>generate</code>, <code>migrate deploy</code>) to read our own
+<code>prisma.config.ts</code>; <code>@prisma/client</code>, which the server runs, does not load it. Remove the override when a Prisma
+release names a fixed <code>effect</code> itself. The two <code>image-size</code> exceptions stay (D-030): no 1.x release is fixed.</li>
+<li><strong>Decision — an exception is complete, dated and bound to its package.</strong>
+<code>tools/dependency-check/auditExceptionRules.mjs</code>: an entry needs <code>advisory</code>, <code>package</code>, <code>decision</code>, <code>expires</code>
+and <code>mitigation</code>; <code>expires</code> is a real calendar date (<code>2027-02-30</code> is not one) at most 120 days after today, so
+every exception is read again within four months; two entries for the same advisory and package are refused.
+<code>checkAudit.mjs</code> matches an advisory to an exception by ID and package, and reports an advisory once for each
+package npm names. D-030&#39;s entries (until 2027-01-31) pass.</li>
+<li><strong>Decision — <code>npm run check:lockfile</code> (SEC-007).</strong> <code>tools/dependency-check/checkLockfile.mjs</code> holds every
+package of the lock file that is not one of our workspaces to
+<code>https://registry.npmjs.org/&lt;name&gt;/-/&lt;name&gt;-&lt;version&gt;.tgz</code> and to a <code>sha512-</code> value of the full length; an alias
+or a bundled package fails until a person has reviewed it; a link points at a local package. It uses Node alone,
+and both workflows run it before <code>npm ci</code>. Not required: a rule for another registry. A mirror at HVL would be a
+change of this check on purpose.</li>
+<li><strong>Decision — an install script outside the reviewed list stops the install.</strong> <code>.npmrc</code> sets
+<code>strict-allow-scripts=true</code>. <code>allowScripts</code> names the four packages of the lock file with a script, each as
+<code>name@version</code>: <code>esbuild</code>, <code>prisma</code> and <code>@prisma/engines</code> run theirs, and <code>fsevents</code> (macOS only) is <code>false</code>,
+because it ships its built file and its script would only build it again. <code>installScriptRules.mjs</code> compares the
+lock file with the list both ways and requires the setting; <code>deploy/Dockerfile</code> copies <code>.npmrc</code> before its
+<code>npm ci</code>, and <code>tools/deploy-check</code> requires that copy.</li>
+<li><strong>Decision — the workflows name commits and digests (<code>npm run check:workflows</code>).</strong> Each action is written as
+<code>owner/repo@&lt;commit&gt; # v1.2.3</code> (checkout v7.0.1, setup-node v7.1.0, cache v6.1.0, upload-artifact v7.0.2; each
+commit read from the action&#39;s tag list and fetched). The gate&#39;s <code>postgres</code>, <code>redis</code> and <code>moto</code> services carry
+the digests of <code>deploy/compose.app.yml</code>, and the check refuses another digest for an image the stack names.
+It also requires top-level <code>permissions</code> without <code>write</code>, and <code>persist-credentials: false</code> on every checkout,
+which the two workflows already had. Dependabot proposes new action commits; an image digest is changed by hand.</li>
+<li><strong>Decision — a daily advisory run; Dependabot stays monthly (the owner, 2026-11-26).</strong>
+<code>.github/workflows/audit.yml</code> runs <code>check:lockfile</code> and <code>check:audit</code> once a day on the default branch. Nothing
+is installed for it: both read the lock file and use Node and npm alone. <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a> is amended. Not known from
+here: whom GitHub notifies about a failed scheduled run, and when it pauses a schedule in a quiet repository
+<em>(verify; GitHub&#39;s documentation could not be reached from the development sandbox)</em>.</li>
+<li><strong>Recorded, not built.</strong> A secret scan of the repository: the repository is public, so GitHub&#39;s secret scanning
+and push protection are settings the owner can switch on; no scanner was added to CI, because none could be run
+in the development sandbox to see what it reports (Q34). Signing the image and stating where it was built: no
+workflow publishes an image, so there is nothing to sign yet; where the production image is built and whether it
+is signed there is HVL IT&#39;s choice (Q33).</li>
+<li><strong>Verified:</strong> unit tests of each rule on the real files and on changed copies: an exception without a date,
+with text for a date, with a date that does not exist, more than 120 days ahead, for another package or twice;
+a lock-file entry from another server or another package&#39;s address, with a weak, cut or missing checksum, as an
+alias or bundled, and a link out of the repository; a script the list does not name, a stale or loosely written
+entry, and npm settings without the strict line; an action by tag, branch or short commit or without its
+version, an image without a digest or with another than the stack&#39;s, a token that may write, a checkout that
+keeps the token; an image build that does not copy <code>.npmrc</code>. The old code accepted each of the exception cases,
+and the old workflows fail the new check. A real <code>npm ci</code> in a copy of the manifests passed with the strict
+setting and the full list, and ended with <code>ESTRICTALLOWSCRIPTS</code>, changing nothing, with one entry removed.
+<code>npm run check:audit</code> passes; <code>prisma validate</code>, <code>generate</code>, <code>migrate deploy</code> and <code>migrate status</code> ran with
+<code>effect</code> 3.22.4, and the server suite, which applies the migrations, passes as before. The two commands of the
+daily run were run in a copy with nothing installed. The Docker smoke test ran on the committed tree (278 s): a
+fresh builder built the image, its <code>npm ci</code> with the strict setting among the steps; the <code>migrate</code> step applied
+8 of 8 migrations with <code>effect</code> 3.22.4; the PDF printed with Chromium&#39;s sandbox on, and the checks of D-144
+passed (no code cache, a stopped server unhealthy after 19 s). The workflow files themselves have not run on
+GitHub: GitHub runs them for <code>main</code> and for pull requests only, so they first run with the pull request that
+brings this branch to <code>main</code>.</li>
+<li><strong>Consequences:</strong> <code>package.json</code>, <code>package-lock.json</code>, <code>.npmrc</code>, <code>docs/assurance/sbom.cdx.json</code> (the SBOM lists
+<code>effect</code> 3.22.4); <code>tools/dependency-check/</code> (<code>auditExceptionRules.mjs</code>, <code>checkLockfile.mjs</code>,
+<code>installScriptRules.mjs</code>, <code>checkWorkflows.mjs</code>, <code>checkAudit.mjs</code>, their tests and the README);
+<code>tools/deploy-check/deployRules.mjs</code>; <code>deploy/Dockerfile</code>; <code>.github/workflows/ci.yml</code>, <code>docker.yml</code>, <code>audit.yml</code>
+and <code>.github/dependabot.yml</code>; <code>tools/doc-lint/test/ciDependencyGates.test.mjs</code>; <code>CLAUDE.md</code> §3. An upgrade of a
+package with an install script now changes <code>allowScripts</code> in the same commit, and an exception renewed on its
+last day can run 120 days. Amends D-029, D-030 and D-110, and <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>. Open questions Q33 and Q34.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -14728,6 +14848,10 @@ log, «2026-11-06 · S6 gate»)</li>
 <td>Q31</td><td>Name a system owner (<em>systemeigar</em>) and a maintainer (<em>forvaltar</em>) at HVL for HVL Interaktiv. Neither is named anywhere, and the IT assurance pack asks for them (D-116; <code>docs/assurance/README.md</code>, «Who is accountable»; ROS-19 in <code>docs/assurance/ros-analyse.md</code>): the system owner, and who owns the test install and its tester list, before stage 1; the maintainer, who rebuilds and redeploys the image with fixes and runs the key rotations, the yearly purge and the backups (<code>docs/ops/runbook.md</code> §2, §4–§7), before stage 2 at the latest. Until then the repository owner makes the product decisions; the bachelor students&#39; project (D-101) does not replace either role</td><td>Owner, HVL IT / ALU</td><td>Stage 1 of the IT assurance pack (<code>docs/assurance/test-environment.md</code>)</td></tr>
 <tr>
 <td>Q32</td><td>May a Feide ID (<code>eduPersonPrincipalName</code>) hold letters outside a–z, digits and <code>.</code>, <code>-</code>, <code>_</code> before the <code>@</code>, for example æ, ø or å? The server keeps such a letter as written and folds only <code>A</code>–<code>Z</code> (D-142); if Feide never issues one, the Feide ID pattern can refuse it</td><td>HVL IT, Sikt</td><td>Nothing; a stricter Feide ID pattern</td></tr>
+<tr>
+<td>Q33</td><td>Where is the production image built, and is it signed there? No workflow publishes, signs or attests an image: <code>docker.yml</code> builds it only to test it. Decide the place (HVL&#39;s own pipeline or registry), whether the image is signed and carries a statement of the commit it was built from, and who checks both at deployment (threat model T-92, ROS-21; D-145)</td><td>HVL IT</td><td>Nothing in the code; the production deployment</td></tr>
+<tr>
+<td>Q34</td><td>A secret scan of the repository. The repository is public, so GitHub&#39;s secret scanning and push protection are settings the owner can switch on (Settings → Code security); CI runs no scanner of its own (D-145). Switch them on, or name the scan HVL IT uses once the code lives with HVL</td><td>Owner, HVL IT</td><td>Nothing</td></tr>
 </tbody></table></div>
 <h3 id="progress--risk-register" tabindex="-1">Risk register</h3>
 <div class="table-wrap" role="region" aria-label="Table 4, Risk register" tabindex="0"><table><thead><tr>
@@ -16823,6 +16947,70 @@ $ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 686 s (PDF 
 $ npx vitest run --project web                       642 passed (100 files)
 $ npx vitest run --project api-contract              122 passed (15 files)
 $ npx vitest run --project tools                     555 passed (73 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             206 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files)
+$ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    27134 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004)</code></pre>
+</li>
+<li><p><strong>2026-11-26 · Security repairs, step 29 (D-145)</strong> — The advisory check passes again, an audit exception is dated
+and bound to its package, the lock file is held to one source and one checksum, an install script outside the
+reviewed list stops the install, the workflows name commits and digests, and the advisories are checked every
+day. One code commit:</p>
+<ul>
+<li>The advisory (SEC-007): the root <code>overrides</code> pins <code>effect</code> at 3.22.4 (Prisma&#39;s CLI named 3.20.0); the lock file
+and <code>docs/assurance/sbom.cdx.json</code> follow. <code>prisma validate</code>, <code>generate</code> and <code>migrate deploy</code> ran with it.</li>
+<li>Exceptions (SEC-007): <code>tools/dependency-check/auditExceptionRules.mjs</code> (new) asks every field, a real calendar
+date at most 120 days ahead and one entry per advisory and package; <code>checkAudit.mjs</code> matches by ID and package.
+Tests: <code>test/auditExceptionRules.test.mjs</code>, <code>test/checkAudit.test.mjs</code>.</li>
+<li>Lock file (SEC-007): <code>checkLockfile.mjs</code> (new, <code>npm run check:lockfile</code>) holds each package to the npm
+registry&#39;s address for its name and version and to SHA-512; <code>installScriptRules.mjs</code> (new) holds the install
+scripts to <code>allowScripts</code>, both ways, and <code>.npmrc</code> (new) to <code>strict-allow-scripts=true</code>; <code>fsevents</code> is listed
+as skipped. <code>deploy/Dockerfile</code> copies <code>.npmrc</code>, and <code>tools/deploy-check/deployRules.mjs</code> requires it. Tests:
+<code>test/checkLockfile.test.mjs</code>, <code>test/installScriptRules.test.mjs</code>, <code>tools/deploy-check/test/deployFiles.test.mjs</code>.
+A real <code>npm ci</code> in a copy passed with the list and ended with <code>ESTRICTALLOWSCRIPTS</code> with one entry removed.</li>
+<li>Workflows (SEC-007): <code>ci.yml</code> and <code>docker.yml</code> name their actions by commit with the version as a comment, run
+the lock-file check before <code>npm ci</code>, and the gate&#39;s <code>postgres</code>, <code>redis</code> and <code>moto</code> services carry the app
+stack&#39;s digests; <code>audit.yml</code> (new) runs the lock-file check and the audit check once a day.
+<code>checkWorkflows.mjs</code> (new, <code>npm run check:workflows</code>) holds the three files. Tests:
+<code>test/checkWorkflows.test.mjs</code>, <code>tools/doc-lint/test/ciDependencyGates.test.mjs</code> (new; the dependency tests of
+<code>ciWorkflow.test.mjs</code> moved there). The workflow files have not run on GitHub yet: they run for <code>main</code> and
+for pull requests.</li>
+<li>D-145 added, with amendment lines under D-029, D-030 and D-110; <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a> in spec 01 has an &quot;Amended&quot; line
+(Dependabot monthly by the owner&#39;s choice, the daily run, the new rules); the threat model (T-90, T-92,
+residual 7), ROS-21 and ROS-24, the architecture description (also its line references into the Dockerfile),
+the evaluator guide, the hand-off README, the Docker operations notes, the tool&#39;s README and <code>CLAUDE.md</code> §3
+follow; open questions Q33 (where the image is built and whether it is signed) and Q34 (a secret scan of the
+repository) added; <code>TRACEABILITY.md</code> and the spec site regenerated. No page of the web app looks different,
+so no screenshots. Gate output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 49, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run check:lockfile                             954 packages from the registry with sha512; 4 install scripts reviewed
+$ npm run check:workflows                            3 workflows: actions by commit, images by digest
+$ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+$ npm run sbom -- --check                            current: 477 npm packages, 12 H5P components, 3 images
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ HVLI_DOCKER_SANDBOX=1 bash deploy/smoke/dockerSmoke.sh   passed in 278 s (a fresh builder: the image's
+    npm ci with the strict setting; 8 of 8 migrations by the migrate step; PDF with the sandbox on; a stopped
+    server process unhealthy after 19 s; restart count 1)
+$ npx vitest run --project web                       642 passed (100 files)
+$ npx vitest run --project api-contract              122 passed (15 files)
+$ npx vitest run --project tools                     586 passed (78 files)
 $ npx vitest run --project design-tokens             156 passed
 $ npx vitest run --project hvl-h5p-theme             206 passed
 $ LIVE_TARGET=mock npm run test:live                 36 passed
