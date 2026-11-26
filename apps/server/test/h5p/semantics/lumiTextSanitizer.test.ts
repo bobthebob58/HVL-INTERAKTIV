@@ -1,7 +1,8 @@
 /**
  * Unit tests of the one definition of safe text (D-140): a text field with a `tags` list is sanitised as Lumi
  * sanitises it, a field without one is plain text, what the editor sends for a plain field is kept, a text past
- * its field's length is cut whole, and Lumi's `regexp` check still has the last word.
+ * its field's length is cut whole, Lumi's `regexp` check still has the last word, and text after a CDATA marker is
+ * read as a browser reads it (D-147).
  *
  * Spec: SEC-008
  */
@@ -54,6 +55,18 @@ describe('[SEC-008] the rule for one text value', () => {
     expect(text.sanitizeText(rich, value)).toBe(lumiAlone(rich, value));
     // WHY: an empty list still means markup: H5P always allows div, span, p and br in such a field.
     expect(text.sanitizeText(field({ tags: [] }), '<p>Hei</p><a href="/x">x</a>')).toBe('<p>Hei</p>x');
+  });
+
+  it('[SEC-008] text after a CDATA marker is cleaned as a browser reads it, not hidden from the cleaner', () => {
+    // Arrange: UPSTREAM — in HTML a browser ends `<![CDATA[` at the first `>`; sanitize-html before 2.18.2 read on to
+    // `]]>` and never saw what lay between (https://www.npmjs.com/package/sanitize-html/v/2.18.2, D-147)
+    const value = 'a<![CDATA[>b<strong>c</strong><em>d</em>]]>e';
+    // Act
+    const rich = text.sanitizeText(field({ tags: ['strong'] }), value);
+    const plain = text.sanitizeText(field(), value);
+    // Assert: every word is still there; the allowed tag is a tag, the other is gone; a plain field has no tag
+    expect(rich).toBe('ab<strong>c</strong>d]]&gt;e');
+    expect(plain).toBe('abcd]]&gt;e');
   });
 
   it('[H5P-006] what the editor sends for a plain field is kept: a typed "<", "&" and quotes', () => {
