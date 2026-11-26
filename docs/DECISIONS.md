@@ -6000,6 +6000,11 @@ loading of one spec per session are kept.
   quote or a space is stored percent-encoded. SEC-008 and H5P-009 have an "Amended" line; T-03 in the threat model
   follows.
 
+- **Amendment (2026-11-26, D-147):** a correction of the context above. `H5P.Link` joins its address into
+  `<a href="…">` as text, and Interactive Video's hotspot shows a web address through `H5P.Link`. Interactive
+  Video's "go to" sets its address as an attribute and does not join it. The rule for a link field's address is
+  unchanged and holds for all three.
+
 ### D-141 · Security repairs, step 25: a launch is finished by the browser that began it; requests before sign-in have a bound; ltijs asks a platform only through our request handler
 - **Context:** ltijs 7 processes a launch on its own second POST: Canvas posts the ID token to `/lti/launch`,
   ltijs's page there reads a recovery token from the browser that began the login and posts everything again. That
@@ -6417,3 +6422,40 @@ loading of one spec per session are kept.
   documents' line references. A client that reads insight must send the header. Amends D-106 (its residual is
   closed) and D-067 (which frames get no header); `INS-007` has an "Amended" line. With this step the security
   repairs of steps 1 to 30 (D-117 to D-146) are done; what stays open is in the open questions of `PROGRESS.md`.
+
+### D-147 · Security repairs, step 31: sanitize-html 2.18.2, after a check of the newest versions of the software the content handling stands on
+- **Context:** On 2026-11-26 the versions in use were compared with the newest ones: npm's registry for the
+  packages, and the projects' repositories at their tags and main branches for the code. Found: (1)
+  `@lumieducation/h5p-server` 10.0.4 is the newest release (2025-03-08). (2) htmlparser2 12.0.0 is the newest
+  release (2026-03-20); its main branch already keeps the open tags with `push` and `pop` and a count per name,
+  which removes the cost that D-126 bounds, but that is not released. (3) sanitize-html 2.18.2 (2026-11-11) is
+  newer than the 2.18.1 in use, and it changes how text after a CDATA marker is read. In HTML a browser ends
+  `<![CDATA[` at the first `>`; 2.18.1 read on to `]]>` and handed nothing of what lay between to its rules, so
+  the cleaner and a browser could disagree about what is markup. 2.18.2 reads it as a browser does. It also
+  tightens two cases about `style` content and animated attributes inside SVG or MathML, which no tag list of the
+  71 installed libraries allows (their lists hold `a`, `br`, `code`, `del`, `em`, `h1` to `h6`, `hr`, `ol`, `p`,
+  `pre`, `strong`, `sub`, `sup`, `table`, `u` and `ul`). `npm audit` listed no advisory for 2.18.1 on that day, so
+  `check:audit` and the daily run (D-145) did not show it. (4) H5P core 1.28.0 is the newest tag; the main branch
+  prepares 1.29. (5) Of the 100 pinned H5P libraries, 13 have a newer tag in their repository, three of them main
+  libraries of the ten types: Interactive Video 1.28.38 (when an interaction counts as a task), Question Set
+  1.21.14 (the version number only) and Branching Scenario 1.11.2 (a new minor version, not read).
+- **Decision — sanitize-html 2.18.2 (SEC-008, SEC-007).** `apps/server/package.json` pins it exactly; Lumi's range
+  (`^2.10.0`) resolves to the same copy, so Lumi's cleaning and ours change together; one entry of the lock file
+  changes, and the SBOM follows. The other bounds stay as they are: the size of a text and its open tags (D-126),
+  plain text for a field without a tag list (D-140), and the page policy (D-070).
+- **Decision — nothing else changes.** htmlparser2 stays at 12.0.0 until a release carries the change; D-126's
+  limit of 100 open tags covers the time until then. The H5P libraries stay as pinned (D-078): a newer tag is not
+  a release on the Hub, neither of the two that were read is a security change, and an update of content types
+  needs its own accessibility and upstream-pin runs. `ts-deepmerge` 7.0.3 (moderate, GHSA-87mf-gv2c-c62c), a
+  dependency of Lumi's ClamAV scanner, merges our own scanner settings and nothing a user sends; its fix is a major
+  version outside Lumi's range, and it is left.
+- **Residual:** a release that closes a weakness without a published advisory is seen only when someone looks, or
+  when Dependabot next runs (monthly, the owner's choice; D-145). Lumi's repository could not be read from the
+  development sandbox, so changes there that are not yet released are unknown.
+- **Verified:** `lumiTextSanitizer.test.ts` has a test of a text with a CDATA marker, for a field with a tag list
+  and for a plain field: every word is kept, the allowed tag stays a tag, any other goes. With 2.18.1 it failed
+  (the text between the markers was gone); with 2.18.2 it passes. The 842 tests of the text rules, the patterns and
+  the validator pass, and so does the gate (step 31 in `PROGRESS.md`).
+- **Consequences:** `apps/server/package.json`, `package-lock.json`, `docs/assurance/sbom.cdx.json`,
+  `apps/server/test/h5p/semantics/lumiTextSanitizer.test.ts`. Amends D-140 (one sentence of its context, below
+  it). The status overview counts 31 steps.
