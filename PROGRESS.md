@@ -3320,6 +3320,9 @@ Append one entry per session: date, session, what was done, gate output, and any
     row of the hand-off index.
   - One line reference in the threat model (T-113, to the hand-off index) pointed two rows too high and is
     corrected.
+  - The brief says how to read the server suite's count: `vitest list` gives about 3,000 written test cases
+    (3,061) in 625 files, and three tables that try every combination (`userDataMatrix.test.ts`,
+    `contentMatrix.test.ts`, `duplicateRules.test.ts`) hold 21,990 of the tests a run counts.
   - No code changes, so no decision entry and no screenshots. The spec site is regenerated. Checks (the documents'
     own; the whole gate runs in GitHub CI on the pull request):
 
