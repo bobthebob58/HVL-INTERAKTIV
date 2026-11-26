@@ -3310,3 +3310,23 @@ Append one entry per session: date, session, what was done, gate output, and any
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
   ```
+
+- **2026-11-26 · A meeting brief for an HVL developer and TeCopp (documents only)** — At the owner's request, a
+  short way into the hand-over documents before a first meeting about a test Canvas and a test server:
+  `docs/handoff/meeting-brief.md`. It says what the tool is, where it stands today, what the developer and TeCopp
+  are each asked for, what a test server needs, what the meeting should decide and what is not asked now. It asks
+  for nothing new: every statement links to the document it comes from.
+  - Pointers to it: the root README's documentation map and its status paragraph (now 2026-11-26), and the «For»
+    row of the hand-off index.
+  - One line reference in the threat model (T-113, to the hand-off index) pointed two rows too high and is
+    corrected.
+  - No code changes, so no decision entry and no screenshots. The spec site is regenerated. Checks (the documents'
+    own; the whole gate runs in GitHub CI on the pull request):
+
+  ```
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npx vitest run --project tools                     586 passed (78 files)
+  ```

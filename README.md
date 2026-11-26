@@ -10,8 +10,9 @@ it in Canvas and, before the next seminar, sees which misconceptions to address.
 activities that explain *why* an answer is wrong, work with screen readers and on phones, and can
 be resumed where they left off.
 
-> **Status (2026-11-06): Sessions 1–6 passed their gates (Session 6, the last planned one, on 2026-11-06); Session
-> 6's commits still have to run in GitHub CI.** The server (`apps/server`) runs the H5P engine with the
+> **Status (2026-11-26): Sessions 1–6 passed their gates (Session 6, the last planned one, on 2026-11-06), and
+> security repairs in 31 steps followed (2026-11-20 to 2026-11-26); steps 1–30 are on `main`, where GitHub CI passed
+> on 2026-11-26.** The server (`apps/server`) runs the H5P engine with the
 > ten content types, Feide login, Canvas LTI 1.3 launches and Deep Linking, and the pre-publish validator; the web
 > app (`apps/web`) has the activity pages, the publish flow and the Canvas page, with the HVL design tokens and H5P
 > theme, and (S5) the læringsdesign studio: the guide, the patterns, the planner, sharing with co-authors and the
@@ -24,9 +25,10 @@ be resumed where they left off.
 > still verify what needs its own Canvas, Feide, servers or people: the 200-learner load test, the restore drill,
 > the manual assistive-technology run and the data protection officer's review. The **[hand-off
 > index](docs/handoff/README.md)** lists that, and what Session 6 does not reach, for HVL's bachelor students in
-> programming (spring 2027), who take the project on (D-101). Build progress, what is open and every gate's output
-> are in [PROGRESS.md](PROGRESS.md); the [Evaluator Guide](docs/EVALUATOR-GUIDE.md) says how to check it, and its
-> limitations say what is not verified yet.
+> programming (spring 2027), who take the project on (D-101). For a first meeting about a test Canvas and a test
+> server, the **[meeting brief](docs/handoff/meeting-brief.md)** is the short way in. Build progress, what is open
+> and every gate's output are in [PROGRESS.md](PROGRESS.md); the [Evaluator Guide](docs/EVALUATOR-GUIDE.md) says how
+> to check it, and its limitations say what is not verified yet.
 
 ---
 
@@ -60,6 +62,7 @@ be resumed where they left off.
 | Look up a Norwegian term | [docs/GLOSSARY.md](docs/GLOSSARY.md) |
 | Supply HVL reference material | [docs/reference/README.md](docs/reference/README.md) |
 | **Take over the project** (HVL's bachelor students, spring 2027): what is done, what needs HVL, what passes to you | [docs/handoff/README.md](docs/handoff/README.md) |
+| **Prepare a first meeting** about a test Canvas and a test server (an HVL developer, the Canvas team): where it stands, what each is asked for, what to decide | [docs/handoff/meeting-brief.md](docs/handoff/meeting-brief.md) |
 | **Decide whether to host it** (HVL IT): the staged request, architecture, threat model, a draft ROS-analyse, what has had no human review, and the SBOM; drafts for IT to correct | [docs/assurance/README.md](docs/assurance/README.md) |
 | Run it in production: image, deployment checklist, backups, ClamAV, the yearly purge | [docs/ops/README.md](docs/ops/README.md) |
 | Report a problem found in the pilot (testers, in Nynorsk) | [docs/testing/rapportere-problem.md](docs/testing/rapportere-problem.md); maintainers: [docs/testing/labels-and-triage.md](docs/testing/labels-and-triage.md) |

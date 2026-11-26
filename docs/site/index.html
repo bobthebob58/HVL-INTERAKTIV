@@ -17275,6 +17275,25 @@ $ npx vitest run --project server                    27137 passed, 31 skipped; 1
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004)</code></pre>
 </li>
+<li><p><strong>2026-11-26 · A meeting brief for an HVL developer and TeCopp (documents only)</strong> — At the owner&#39;s request, a
+short way into the hand-over documents before a first meeting about a test Canvas and a test server:
+<code>docs/handoff/meeting-brief.md</code>. It says what the tool is, where it stands today, what the developer and TeCopp
+are each asked for, what a test server needs, what the meeting should decide and what is not asked now. It asks
+for nothing new: every statement links to the document it comes from.</p>
+<ul>
+<li>Pointers to it: the root README&#39;s documentation map and its status paragraph (now 2026-11-26), and the «For»
+row of the hand-off index.</li>
+<li>One line reference in the threat model (T-113, to the hand-off index) pointed two rows too high and is
+corrected.</li>
+<li>No code changes, so no decision entry and no screenshots. The spec site is regenerated. Checks (the documents&#39;
+own; the whole gate runs in GitHub CI on the pull request):</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 52, Session log"><code>$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npx vitest run --project tools                     586 passed (78 files)</code></pre>
+</li>
 </ul>
 
 </section>
