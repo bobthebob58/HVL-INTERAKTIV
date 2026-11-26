@@ -227,7 +227,7 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 </div>
 <dl class="glance">
 <div><dt>Requirements</dt><dd><a href="#requirements">126</a> <span class="sub">106 must · 17 should · 3 could</span></dd></div>
-<div><dt>Build sessions</dt><dd>7 <span class="sub">7 of 7 done; specification complete</span></dd></div>
+<div><dt>Build sessions</dt><dd>8 <span class="sub">8 of 8 done; specification complete</span></dd></div>
 <div><dt>H5P content types</dt><dd>10 <span class="sub">chosen for pedagogy and accessibility</span></dd></div>
 <div><dt>Learning-design patterns</dt><dd>9 <span class="sub">for <span lang="nn">forarbeid</span>, <span lang="nn">mellomarbeid</span> and <span lang="nn">etterarbeid</span></span></dd></div>
 </dl>
@@ -280,6 +280,8 @@ asynchronous and synchronous teaching, it is out of scope.</p>
 <td>S5</td><td>Læringsdesign studio, patterns, planner, pedagogisk mappe export</td><td>04; 00 S5 rows</td><td>✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6</td></tr>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
+<tr>
+<td>SR</td><td>Security repairs after the S6 gate: 30 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-26; D-117…D-146; session log, steps 1–30); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 
 <p class="more"><a href="#progress">Open the build tracker</a> · <a href="#evaluator-guide--5-session-gates">See each session's pass/fail gate</a></p>
@@ -3037,7 +3039,10 @@ view writes an audit event (`data-007`).
   comes from that context, whether or not they own the activity (after a course copy, `lti-007`). in `/app/play` the
   context is the launch's and cannot be changed. the audited support action for admins is not built in s6, so admins
   see no insight. a view writes `insight.view` and a csv download `insight.export`, with details limited to the view,
-  the period, the context and the content version: no learner key, count or answer.">
+  the period, the context and the content version: no learner key, count or answer.
+- **amended (d-146, 2026-11-26):** the insight routes answer only a request that carries the header our own pages
+  add to every request (`x-hvli-request: fetch`). another site's link, a navigation or an image cannot add it, so
+  none of them writes `insight.view` or `insight.export` in a teacher's name (`data-007`).">
 <summary><span class="req-id">INS-007</span> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Who can see insight</span> <span class="status" data-status="tested">● Tested</span></summary>
 <div class="req-body"><p>Owners and co-authors of an activity can see its insight. In LTI mode, authors of the launch context
 see results for <em>that context only</em>. Admins can see it only through an audited support action. Each
@@ -3049,6 +3054,9 @@ comes from that context, whether or not they own the activity (after a course co
 context is the launch&#39;s and cannot be changed. The audited support action for admins is not built in S6, so admins
 see no insight. A view writes <code>insight.view</code> and a CSV download <code>insight.export</code>, with details limited to the view,
 the period, the context and the content version: no learner key, count or answer.</li>
+<li><strong>Amended (D-146, 2026-11-26):</strong> the insight routes answer only a request that carries the header our own pages
+add to every request (<code>x-hvli-request: fetch</code>). Another site&#39;s link, a navigation or an image cannot add it, so
+none of them writes <code>insight.view</code> or <code>insight.export</code> in a teacher&#39;s name (<a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>).</li>
 </ul>
 <p class="req-source">Defined in <a href="#r-INS-007">05 Insight and privacy, INS-007</a> · Teacher insight</p></div>
 </details>
@@ -5856,6 +5864,9 @@ comes from that context, whether or not they own the activity (after a course co
 context is the launch&#39;s and cannot be changed. The audited support action for admins is not built in S6, so admins
 see no insight. A view writes <code>insight.view</code> and a CSV download <code>insight.export</code>, with details limited to the view,
 the period, the context and the content version: no learner key, count or answer.</li>
+<li><strong>Amended (D-146, 2026-11-26):</strong> the insight routes answer only a request that carries the header our own pages
+add to every request (<code>x-hvli-request: fetch</code>). Another site&#39;s link, a navigation or an image cannot add it, so
+none of them writes <code>insight.view</code> or <code>insight.export</code> in a teacher&#39;s name (<a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>).</li>
 </ul>
 <h4 id="r-INS-008" class="req-heading" tabindex="-1"><a class="req-id" href="#r-INS-008">INS-008</a> <span class="badge pri pri-must" title="RFC 2119 MUST">Must</span> <span class="badge sess" title="Delivered in build session 6">S6</span> <span class="req-title">Accessible charts</span></h4>
 <p>Each chart has a visible data table alternative and a text summary (e.g. &quot;Question 2: 38 % correct
@@ -6451,7 +6462,7 @@ whose results HVL records (D-079); <a class="req-ref" href="#r-UD-031"><code>UD-
 <tr>
 <td><code>npm start</code> <em>(from S3)</em></td><td>The server starts: tsx runs <code>apps/server/src/server/main.ts</code> (no build step), which syncs <code>LTI_PLATFORMS</code>, re-encrypts platform keys, starts the cleanup jobs and listens on <code>PORT</code>. With <code>npm run mock:platform</code> running, <code>curl http://localhost:3000/healthz</code> answers <code>{&quot;status&quot;:&quot;ok&quot;}</code> and <code>/lti/keys</code> the tool&#39;s public keys. Needs the setup of <code>npm test</code> plus <code>npm run h5p:fetch-core</code>; a bad configuration exits with code 1 and names the variables, never their values (<a class="req-ref" href="#r-NFR-002"><code>NFR-002</code></a>)</td></tr>
 <tr>
-<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Chromium flows against the whole server and the mock platform (D-065), in CI too: from S3, launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome&#39;s partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available (<code>ltiIframe.e2e.test.ts</code>); the same launch as a browser that sends no fetch metadata makes it, taken with the <code>Origin</code> the browser sets on the last step and refused with a <code>null</code> one (<code>ltiLaunchOwnPage.e2e.test.ts</code>, D-141); the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item (<code>deepLinking.e2e.test.ts</code>); portal Feide login, sharing with the CSRF token, and logout through Feide (<code>portalSharing.e2e.test.ts</code>). These play a synthetic content type (limitation 3). From S4: the owner edits and saves in the H5P editor inside the cookie-less Canvas iframe with the Bearer ltik (<code>ltiEditor.e2e.test.ts</code>); on the built web app with the real content types, a Feide author is refused without a reason and then publishes despite a validator error with one, which stores one ValidationAcknowledgement and leaves no reason in the audit or the log (<code>publishWithReason.e2e.test.ts</code>, PROD-003, UD-022); and the teacher&#39;s Canvas page <code>/app/play</code> with Spel and Rediger, where frame storage is blocked (LTI Platform Storage), saves from the editor inside its chrome with the teacher&#39;s ltik as Bearer, with no Set-Cookie from the tool and no ltik in any frame address (<code>appPlayEditor.e2e.test.ts</code>, LTI-006, LTI-003). A failed step names itself, what failed before it (ltik redacted) and whether another process removed its rows (<code>flowRecord.e2e.test.ts</code> tests this); a closed test bed removes what it created and keeps an account an earlier run left (<code>testbedCleanup.e2e.test.ts</code>). From S5, on the built web app: J1&#39;s portal part from the filtered catalogue through a pattern, a filled placeholder and the learning design to publishing with reasons (<code>patternToPublish.e2e.test.ts</code>); a colleague&#39;s copy from the content bank (<code>bankDuplicate.e2e.test.ts</code>); both mappe downloads with nothing stored (<code>mappeDownloads.e2e.test.ts</code>); and a confirmed reset of a Canvas student&#39;s saved progress (<code>safeEditReset.e2e.test.ts</code>). From S6: a Canvas student&#39;s right answer through the xAPI bridge, the grade queue and the worker to the mock Canvas&#39;s gradebook, and a portal preview that stores nothing (<code>xapiToCanvas.e2e.test.ts</code>, <code>xapiPortal.e2e.test.ts</code>); and the teacher&#39;s <strong>Innsikt</strong> tab in <code>/app/play</code> showing six learners of one course, two of another course as «&lt; 5», a learner refused and another course&#39;s teacher kept to their own course (<code>insightInCanvas.e2e.test.ts</code>); the player&#39;s files from the files origin with no cookie, ltik or Referer, and a crafted SVG that never runs (<code>filesOrigin.e2e.test.ts</code>); a learner&#39;s export and erasure and the yearly purge through the operations CLIs, on what a real launch stored (<code>learnerDataRights.e2e.test.ts</code>); and the journeys of spec 00 §3, in part (D-101&#39;s amendment of 2026-11-05, S6 step 8): J1&#39;s Canvas half, a portal activity placed as an assignment and its score in the gradebook, without «new from a pattern», which passes to the students (limitation 20; the portal half is <code>patternToPublish</code> and <code>publishWithReason</code>) (<code>journeyPlaceInCanvas.e2e.test.ts</code>); J2&#39;s steps 1–3 on a phone 320 px wide, resumed the next evening (<code>journeyPhoneResume.e2e.test.ts</code>; step 4 is the manual protocol&#39;s); J3, where the tab writes an option&#39;s count, not step 2&#39;s share (<code>journeySeminarInsight.e2e.test.ts</code>); J4&#39;s Markdown export (<code>journeyPortfolio.e2e.test.ts</code>); and J5&#39;s step 1 only, ALU&#39;s edit of the content files (<code>journeyGovernance.e2e.test.ts</code>), its step 2 being HTTP tests (<code>packageImport.int.test.ts</code>, <code>ajax.int.test.ts</code>) and a runbook procedure (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §2). Needs the setup of <code>npm test</code>; the web app flows also need <code>npm run build</code> and <code>npm run h5p:fetch-libraries</code> (skipped without them locally, failing in CI). Run it without other test processes on the same database</td></tr>
+<td><code>npm run test:e2e</code> <em>(from S3)</em></td><td>Chromium flows against the whole server and the mock platform (D-065), in CI too: from S3, launch → play → answer → reopen in the cross-site Canvas iframe with third-party cookies blocked (checked by a canary), once with stock Chrome&#39;s partitioned frame storage and once with frame storage blocked (LTI Platform Storage), plus our error page when neither is available (<code>ltiIframe.e2e.test.ts</code>); the same launch as a browser that sends no fetch metadata makes it, taken with the <code>Origin</code> the browser sets on the last step and refused with a <code>null</code> one (<code>ltiLaunchOwnPage.e2e.test.ts</code>, D-141); the Deep Linking round trip, whose signed answer the mock Canvas accepts with a line item (<code>deepLinking.e2e.test.ts</code>); portal Feide login, sharing with the CSRF token, and logout through Feide (<code>portalSharing.e2e.test.ts</code>). These play a synthetic content type (limitation 3). From S4: the owner edits and saves in the H5P editor inside the cookie-less Canvas iframe with the Bearer ltik (<code>ltiEditor.e2e.test.ts</code>); on the built web app with the real content types, a Feide author is refused without a reason and then publishes despite a validator error with one, which stores one ValidationAcknowledgement and leaves no reason in the audit or the log (<code>publishWithReason.e2e.test.ts</code>, PROD-003, UD-022); and the teacher&#39;s Canvas page <code>/app/play</code> with Spel and Rediger, where frame storage is blocked (LTI Platform Storage), saves from the editor inside its chrome with the teacher&#39;s ltik as Bearer, with no Set-Cookie from the tool and no ltik in any frame address (<code>appPlayEditor.e2e.test.ts</code>, LTI-006, LTI-003). A failed step names itself, what failed before it (ltik redacted) and whether another process removed its rows (<code>flowRecord.e2e.test.ts</code> tests this); a closed test bed removes what it created and keeps an account an earlier run left (<code>testbedCleanup.e2e.test.ts</code>). From S5, on the built web app: J1&#39;s portal part from the filtered catalogue through a pattern, a filled placeholder and the learning design to publishing with reasons (<code>patternToPublish.e2e.test.ts</code>); a colleague&#39;s copy from the content bank (<code>bankDuplicate.e2e.test.ts</code>); both mappe downloads with nothing stored (<code>mappeDownloads.e2e.test.ts</code>); and a confirmed reset of a Canvas student&#39;s saved progress (<code>safeEditReset.e2e.test.ts</code>). From S6: a Canvas student&#39;s right answer through the xAPI bridge, the grade queue and the worker to the mock Canvas&#39;s gradebook, and a portal preview that stores nothing (<code>xapiToCanvas.e2e.test.ts</code>, <code>xapiPortal.e2e.test.ts</code>); and the teacher&#39;s <strong>Innsikt</strong> tab in <code>/app/play</code> showing six learners of one course, two of another course as «&lt; 5», a learner refused and another course&#39;s teacher kept to their own course (<code>insightInCanvas.e2e.test.ts</code>); the player&#39;s files from the files origin with no cookie, ltik or Referer, and a crafted SVG that never runs (<code>filesOrigin.e2e.test.ts</code>); a learner&#39;s export and erasure and the yearly purge through the operations CLIs, on what a real launch stored (<code>learnerDataRights.e2e.test.ts</code>); and the journeys of spec 00 §3, in part (D-101&#39;s amendment of 2026-11-05, S6 step 8): J1&#39;s Canvas half, a portal activity placed as an assignment and its score in the gradebook, without «new from a pattern», which passes to the students (limitation 20; the portal half is <code>patternToPublish</code> and <code>publishWithReason</code>) (<code>journeyPlaceInCanvas.e2e.test.ts</code>); J2&#39;s steps 1–3 on a phone 320 px wide, resumed the next evening (<code>journeyPhoneResume.e2e.test.ts</code>; step 4 is the manual protocol&#39;s); J3, where the tab writes an option&#39;s count, not step 2&#39;s share (<code>journeySeminarInsight.e2e.test.ts</code>); J4&#39;s Markdown export (<code>journeyPortfolio.e2e.test.ts</code>); and J5&#39;s step 1 only, ALU&#39;s edit of the content files (<code>journeyGovernance.e2e.test.ts</code>), its step 2 being HTTP tests (<code>packageImport.int.test.ts</code>, <code>ajax.int.test.ts</code>) and a runbook procedure (<a href="https://github.com/bobthebob58/HVL-INTERAKTIV/blob/HEAD/docs/ops/runbook.md" rel="noopener" class="ext">ops/runbook.md<span aria-hidden="true"> ↗</span><span class="vh"> (opens external site)</span></a> §2). From the security repairs: the Deep Linking picker as the page of Canvas&#39;s frame shows the header with Hjelp, and the player frame inside <code>/app/play</code> no second one (<code>pickerHelpLink.e2e.test.ts</code>, UD-013, D-146). Needs the setup of <code>npm test</code>; the web app flows also need <code>npm run build</code> and <code>npm run h5p:fetch-libraries</code> (skipped without them locally, failing in CI). Run it without other test processes on the same database</td></tr>
 <tr>
 <td><code>npm run test:a11y</code> <em>(from S4)</em></td><td>axe-core (WCAG 2.2 AA tags) on every web route, the server pages and the player and editor of all ten real types, in the light theme and with forced colours, plus reflow at 320 px, reduced motion, text spacing and 200 % zoom, keyboard walks (focus visible and not covered), target size, <code>lang</code> and first-party requests (<a class="req-ref" href="#r-UD-030"><code>UD-030</code></a>, D-079). H5P&#39;s own findings are repaired at run time or listed in <code>apps/server/a11y/support/upstreamRegister.ts</code> (D-080). From S5 every check also walks the studio&#39;s pages, signed in with seeded data (a pattern page, the planner with gaps, the bank, <code>/mappe</code> with a word count, the <strong>Læringsdesign</strong> and <strong>Deling</strong> tabs, a copy&#39;s page), plus keyboard scripts of the studio&#39;s journeys and the editor&#39;s save choice dialog with the page around it inert (<code>axeStudioViews</code>, <code>keyboardStudioJourneys</code>, <code>axeSaveChoice</code>). From S6 also the <strong>Innsikt</strong> tab (with «&lt; 5» cells, the projection dialog and print) and the <strong>Poeng til Canvas</strong> tab (scores in every state, a keyboard retry), in the portal and in <code>/app/play</code> (<code>axeInsight</code>, <code>axeGradeSync</code>, and every view walk through <code>support/dataTabViews.ts</code>); the Deep Linking picker&#39;s no-score note on a graded placement (<code>axeServerPages</code>, <code>support/noScoreActivity.ts</code>); and a MultiChoice and a QuestionSet made in Nynorsk with HVL&#39;s language overlay, in the player and the editor (<code>support/nynorskActivities.ts</code>). Needs <code>npm run build</code>, the real packages and Chromium; about 15 minutes; run it on its own</td></tr>
 <tr>
@@ -7950,31 +7961,36 @@ correct labels; InteractiveBook 1.15 offers only Column 1.22, which has no relea
 </ul>
 <h3 id="decisions--d-067--h5p-runtime-pages-stay-in-express-the-nextjs-app-frames-them" tabindex="-1">D-067 · H5P runtime pages stay in Express; the Next.js app frames them</h3>
 <ul>
-<li><strong>Context:</strong> S4 brings <code>apps/web</code> (Next.js), the H5P editor page (D-040) and the move of the S3 LTI views (D-048).
+<li><p><strong>Context:</strong> S4 brings <code>apps/web</code> (Next.js), the H5P editor page (D-040) and the move of the S3 LTI views (D-048).
 H5P needs its own global jQuery, CSS and iframes, and <a class="req-ref" href="#r-UD-011"><code>UD-011</code></a>/<a class="req-ref" href="#r-DATA-011"><code>DATA-011</code></a> need a strict script policy. Next.js App
 Router pages always contain inline scripts, and H5P Core writes <code>&lt;script src&gt;</code> tags into its iframes, which a
-nonce policy with <code>&#39;strict-dynamic&#39;</code> would block.</li>
-<li><strong>Decision:</strong> The H5P player (<code>/h5p/play/:id</code>, <code>/lti/play</code>) and editor (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>)
+nonce policy with <code>&#39;strict-dynamic&#39;</code> would block.</p>
+</li>
+<li><p><strong>Decision:</strong> The H5P player (<code>/h5p/play/:id</code>, <code>/lti/play</code>) and editor (<code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/edit</code>)
 stay server-rendered by Express with a hash-based policy (D-070). Next.js pages are the application chrome and
 frame them on the same origin: <code>/</code>, <code>/aktivitet/[id]</code>, <code>/aktivitet/ny</code>, <code>/app/play</code>, <code>/app/deeplink</code>,
 <code>/personvern</code>, <code>/hjelp</code>. Amends D-048: the picker and the LTI chrome move to <code>/app/*</code>; the friendly error pages stay
 server-rendered (they need Express&#39;s 401/403/404/503 statuses) but use the token CSS. Amends D-062: the
 <strong>Rediger</strong> tab arrives on <code>/app/play</code> for authors. H5P pages refuse a top-level navigation and send the browser
-to their chrome page, so the privacy link (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>) is always on screen.</li>
-<li><strong>Consequences:</strong> The S2/S3 player tests keep their page; e2e tests reach H5P one frame deeper. Same-origin
-framing does not isolate the ltik from H5P content; the script policy is the defence (D-058).</li>
-<li><strong>Amendment (2026-10-23, workstream planning):</strong> the Deep Linking picker stays the server-rendered page at
+to their chrome page, so the privacy link (<a class="req-ref" href="#r-DATA-006"><code>DATA-006</code></a>) is always on screen.</p>
+</li>
+<li><p><strong>Consequences:</strong> The S2/S3 player tests keep their page; e2e tests reach H5P one frame deeper. Same-origin
+framing does not isolate the ltik from H5P content; the script policy is the defence (D-058).</p>
+</li>
+<li><p><strong>Amendment (2026-10-23, workstream planning):</strong> the Deep Linking picker stays the server-rendered page at
 <code>/lti/deeplink</code> from S3, restyled with the token CSS and given the formative notice (<a class="req-ref" href="#r-PROD-011"><code>PROD-011</code></a>); there is no
 <code>/app/deeplink</code>. Its form post to Canvas works today, and a Next.js picker would need a new API for the signed
 Deep Linking answer without adding anything for the teacher. ltijs sends resource-link launches to <code>/app/play</code>
 only when the web app runs (<code>WEB_APP</code> is not <code>off</code>); otherwise to <code>/lti/play</code> as in S3, so the integration tests
-without the web app keep their flow.</li>
-<li><strong>Amendment (2026-10-23, integration):</strong> the refusal of top-level navigations is <code>src/web/chromeRedirect.ts</code>,
+without the web app keep their flow.</p>
+</li>
+<li><p><strong>Amendment (2026-10-23, integration):</strong> the refusal of top-level navigations is <code>src/web/chromeRedirect.ts</code>,
 mounted only when the web app runs. A browser&#39;s own navigation (<code>Sec-Fetch-Dest: document</code>, <code>Sec-Fetch-Mode: navigate</code>) to <code>/h5p/play/:id</code> or <code>/h5p/edit/:id</code> gets 303 to <code>/aktivitet/:id</code>, <code>/h5p/new</code> to <code>/aktivitet/ny</code>, and
 <code>/lti/play</code> or <code>/lti/edit</code> to <code>/app/play</code> with only the ltik carried over (<code>no-store</code>, <code>no-referrer</code>). Frames,
 fetches and clients without fetch metadata get the page as before, so the integration tests and older browsers
-are unaffected.</li>
-<li><strong>Amendment (2026-10-24, review):</strong> the pages Express still renders (the friendly error pages and the Deep Linking
+are unaffected.</p>
+</li>
+<li><p><strong>Amendment (2026-10-24, review):</strong> the pages Express still renders (the friendly error pages and the Deep Linking
 picker) show the web app&#39;s header themselves when the web app runs and they are opened on their own, in the
 browser or as the page of Canvas&#39;s iframe (<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>): a skip link, the site name and <strong>Hjelp</strong> to <code>/hjelp</code>, which
 opens a new tab inside Canvas (<a class="req-ref" href="#r-UD-007"><code>UD-007</code></a>). Inside our own chrome (the error pages of <code>/lti/play</code> and <code>/lti/edit</code> in
@@ -7984,7 +8000,13 @@ gets no second header; Canvas&#39;s iframe is cross-site, also after the launch&
 metadata shows both headers, which repeats Hjelp but hides nothing. With <code>WEB_APP=off</code> there is no <code>/hjelp</code>, so
 there is no header. The picker lists its problems in an error summary below the heading that takes focus and
 links to the choices (<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>). The editor&#39;s outer page uses the server pages&#39; stylesheet for its save button and
-status (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>).</li>
+status (<a class="req-ref" href="#r-UD-002"><code>UD-002</code></a>).</p>
+</li>
+<li><p><strong>Amendment (2026-11-26, D-146):</strong> &quot;a frame our own origin asked for gets no second header&quot; now holds only for
+the pages our chrome frames (<code>/h5p/play/:id</code>, <code>/h5p/edit/:id</code>, <code>/h5p/new</code>, <code>/lti/play</code>, <code>/lti/edit</code>). Since D-130
+a launch&#39;s last step reaches Canvas&#39;s frame from our own origin, so the picker and a launch&#39;s error page are not
+told from our chrome by fetch metadata; they are the whole page of that frame and show the header.</p>
+</li>
 </ul>
 <h3 id="decisions--d-068--express-is-the-front-door-and-runs-nextjs-in-the-same-process" tabindex="-1">D-068 · Express is the front door and runs Next.js in the same process</h3>
 <ul>
@@ -10242,7 +10264,8 @@ students&#39; Canvas acceptance checklist <em>(verify)</em>.</li>
 </ul>
 <h3 id="decisions--d-106--spec-deviation-spec-05-1-insight-per-context-fixed-periods-suppression-as-ins-006-writes-it" tabindex="-1">D-106 · <code>SPEC-DEVIATION</code> spec 05 §1: insight per context, fixed periods, suppression as <a class="req-ref" href="#r-INS-006"><code>INS-006</code></a> writes it</h3>
 <ul>
-<li><strong>Context:</strong><ul>
+<li><p><strong>Context:</strong></p>
+<ul>
 <li><a class="req-ref" href="#r-INS-007"><code>INS-007</code></a>: owners and co-authors see an activity&#39;s insight; in LTI mode, authors of the launch context see that
 context only; admins only through an audited support action; every view is audited (<a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>).</li>
 <li>Spec 05 §1: the view covers one activity in one Canvas context (or all portal users), with results &quot;since a
@@ -10259,8 +10282,9 @@ and derived shades wait for HVL (D-017, D-072, Q2). Spec 00 §8 measures from th
 teachers opened <em>Før samlinga</em>.</li>
 </ul>
 </li>
-<li><strong>Decision:</strong> The owner decided on 2026-10-30 that insight is shown in tabs, one context at a time (D-101). In
-detail:<ul>
+<li><p><strong>Decision:</strong> The owner decided on 2026-10-30 that insight is shown in tabs, one context at a time (D-101). In
+detail:</p>
+<ul>
 <li><strong>One view:</strong> one activity, one content version (the current one by default; <a class="req-ref" href="#r-PROD-013"><code>PROD-013</code></a>, D-093) and one context:
 a Canvas context the activity is placed in (D-103), or the portal&#39;s plays. There is no view across contexts.</li>
 <li><strong>Who:</strong> for a context, the activity&#39;s owner and co-authors, and an LTI author whose launch comes from that
@@ -10288,24 +10312,27 @@ content version: no learner key, count or answer. That is enough for spec 00 §8
 <li><strong>The formative label:</strong> D-105.</li>
 </ul>
 </li>
-<li><strong>Alternatives considered:</strong> (a) An all-contexts view for owners: not in spec 05, and &quot;all contexts minus one&quot;
+<li><p><strong>Alternatives considered:</strong> (a) An all-contexts view for owners: not in spec 05, and &quot;all contexts minus one&quot;
 differences out a single course. (b) A free &quot;since&quot; date, as spec 05 §1 reads: open to differencing. (c) The
 mappe&#39;s two-sided rule for insight rates too: it would hide the items a teacher most needs to see. (d) New chart
-colours: they need HVL&#39;s approval (Q2).</li>
-<li><strong>Consequences:</strong> <code>SPEC-DEVIATION</code> spec 05 §1: the period is chosen from fixed values, not any date; the code that
+colours: they need HVL&#39;s approval (Q2).</p>
+</li>
+<li><p><strong>Consequences:</strong> <code>SPEC-DEVIATION</code> spec 05 §1: the period is chosen from fixed values, not any date; the code that
 builds periods carries <code>SPEC-DEVIATION: D-106</code>, and spec 05 gets an amendment note. Residuals for the DPIA input
 (<a class="req-ref" href="#r-DATA-005"><code>DATA-005</code></a>) and the DPO (Q6): views of the same period on two days differ by one day&#39;s learners; an owner or
 co-author sees aggregates for every course their activity is placed in, including a colleague&#39;s course that placed
 it from the bank or copied it, which spec 05 §3&#39;s &quot;data from other courses&#39; contexts&quot; can be read to forbid, so the
 DPO and the owner may narrow it by amendment; and a 0 % or 100 % rate tells what every learner in a group of at
-least <em>k</em> did.</li>
-<li><strong>Amendment (2026-11-04, S6 step 4: suppression and the tab as built):</strong> <em>Found</em> in the insight core&#39;s review: an
+least <em>k</em> did.</p>
+</li>
+<li><p><strong>Amendment (2026-11-04, S6 step 4: suppression and the tab as built):</strong> <em>Found</em> in the insight core&#39;s review: an
 exhaustive check of every group of two to five cells for <em>k</em> = 3 to 6 showed that hiding only &quot;the next-smallest
 cell&quot; lets a reader who knows the rule (it is public, here and in <a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>) work hidden counts out in about one
 answer in ten (with <em>k</em> = 5, the cells <code>(hidden, 0, hidden, 5)</code> of a total of 6 can only be <code>[0, 0, 1, 5]</code>); and
 <a class="req-ref" href="#r-INS-002"><code>INS-002</code></a>&#39;s share right times its learners tells how many chose the right options, which <a class="req-ref" href="#r-INS-003"><code>INS-003</code></a> may hide.
 <em>Decided, in place of &quot;the next-smallest cell is hidden too&quot; and &quot;<code>minimumGroupSize.ts</code> gets the insight rules
-beside the mappe&#39;s&quot; above:</em><ul>
+beside the mappe&#39;s&quot; above:</em></p>
+<ul>
 <li><strong>A 0 is shown.</strong> A count of 0 is about no learner, so it singles no one out, and it is the &quot;nobody chose this&quot; a
 seminar needs, as a rate of 0 % is. A 0 is hidden only as a complement or inside a hidden group (below).
 <code>SPEC-DEVIATION</code> <a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>, whose &quot;fewer than <em>k</em>&quot; read literally takes in 0 (<code>insight/suppression/insightCells.ts</code>).</li>
@@ -10344,7 +10371,7 @@ active only in their difference; and a &quot;first answer&quot; is the first wit
 accepts as small spelling errors are listed as wrong in <a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>.</li>
 </ul>
 </li>
-<li><strong>Amendment (2026-11-04, the step-4 privacy review: when a period ends, 1 August, the gap rule as built, the
+<li><p><strong>Amendment (2026-11-04, the step-4 privacy review: when a period ends, 1 August, the gap rule as built, the
 summaries, the roster URL):</strong> <em>Found</em> in the privacy review of step 4: (a) every period ended at the request
 (<code>end: now</code>), so two views of the same period a few minutes apart differed only by what was stored in between,
 and a teacher who saw one learner play could read which cells that learner moved, below <em>k</em> (the residual above,
@@ -10353,7 +10380,8 @@ August spanned 1 August, when the pseudonym secret changes (<a class="req-ref" h
 counted twice, under two keys, and a portal session keeps the old year&#39;s key up to 12 hours past 1 August
 (D-057); (c) the chart summaries named &quot;the hardest&quot; question and &quot;the most common&quot; wrong answer among the shown
 cells only, which a hidden cell can make false; (d) the gap rule the review built is not written here; (e) the
-NRPS roster URL behind the course count was not checked as D-104 checks a line item&#39;s URL. <em>Decided:</em><ul>
+NRPS roster URL behind the course count was not checked as D-104 checks a line item&#39;s URL. <em>Decided:</em></p>
+<ul>
 <li><strong>Every period ends at the latest midnight in Oslo</strong>, the start of today: a view holds the data up to and
 including yesterday, and the tab says so («Tal til og med i går»). Two views of the same period on the same day
 are the same whatever is stored in between. The start is N days before that midnight (7 whole days for <code>7d</code>), or
@@ -10417,7 +10445,7 @@ operations erase a learner&#39;s data (D-108) or an activity is deleted, so a vi
 differs by that learner&#39;s rows (rare, run by operations, and nothing in the tab says that or whom it erased).</li>
 </ul>
 </li>
-<li><strong>Amendment (2026-11-05, the step-5 privacy and security review: the mappe ends at midnight too):</strong> <em>Found:</em> the
+<li><p><strong>Amendment (2026-11-05, the step-5 privacy and security review: the mappe ends at midnight too):</strong> <em>Found:</em> the
 mappe&#39;s results source (<code>learningDesign/mappe/storedActivityResults.ts</code>) read every stored row up to the moment of
 the export, while insight&#39;s views end at the latest midnight in Oslo (the amendment above). For an activity in one
 course and one version, the mappe&#39;s current-semester group is insight&#39;s <code>semester</code> view plus today&#39;s plays, so the
@@ -10429,8 +10457,9 @@ stored before the latest midnight in Oslo at the moment of the export (presences
 exports on one day are the same and an export never holds today&#39;s plays. <em>The trade-off:</em> as for insight, a teacher
 sees today&#39;s plays in the mappe tomorrow (PROGRESS Q24 applies to both). The yearly purge&#39;s snapshots cover ended
 years only and are unchanged. <em>Verified by</em> <code>storedResultsBeforeToday.int.test.ts</code> (a learner who played today is in
-no group until the next day).</li>
-<li><strong>Amendment (2026-11-05, the S6 security review: another site cannot write the audit trail):</strong> <em>Found</em>
+no group until the next day).</p>
+</li>
+<li><p><strong>Amendment (2026-11-05, the S6 security review: another site cannot write the audit trail):</strong> <em>Found</em>
 (SEC-S6-01): the view and the CSV download are GETs that write <code>insight.view</code> and <code>insight.export</code> (<strong>Audit</strong>
 above, <a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>), D-057 asks for the CSRF token on unsafe methods only, and the <code>SameSite=Lax</code> session cookie goes
 with another site&#39;s top-level navigation. A page on any site could send a signed-in teacher to <code>…/insight/export</code>:
@@ -10455,7 +10484,12 @@ before 16.4) is not covered; only a token on these GETs would close that, a chan
 running on our own origin can still fetch these routes, as it can every route. <em>Verified by</em>
 <code>insightForeignRequest.test.ts</code> (no audit event and no rate-limit take for a navigation, another origin&#39;s request or
 our own page&#39;s image, video, frame or prefetch, with the headers full Chromium sends; our pages&#39; fetch still
-audited).</li>
+audited).</p>
+</li>
+<li><p><strong>Amendment (2026-11-26, D-146):</strong> the residual of the amendment of 2026-11-05 is closed. Every insight route
+also requires the header that our pages add to every request (<code>x-hvli-request: fetch</code>), which a navigation, an
+image or another origin&#39;s request cannot carry, so a browser that sends no fetch metadata is covered too.</p>
+</li>
 </ul>
 <h3 id="decisions--d-107--spec-deviation-data-003-the-yearly-purge-runs-on-31-august-and-deletes-by-a-stored-academic-year" tabindex="-1">D-107 · <code>SPEC-DEVIATION</code> DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year</h3>
 <ul>
@@ -13721,6 +13755,72 @@ and <code>.github/dependabot.yml</code>; <code>tools/doc-lint/test/ciDependencyG
 package with an install script now changes <code>allowScripts</code> in the same commit, and an exception renewed on its
 last day can run 120 days. Amends D-029, D-030 and D-110, and <a class="req-ref" href="#r-SEC-007"><code>SEC-007</code></a>. Open questions Q33 and Q34.</li>
 </ul>
+<h3 id="decisions--d-146--security-repairs-step-30-the-insight-routes-answer-only-a-request-with-the-own-page-header-the-hjelp-header-shows-on-every-page-of-canvass-frame-the-shortlists-texts-say-what-it-holds-and-the-documents-line-references-are-re-pointed" tabindex="-1">D-146 · Security repairs, step 30: the insight routes answer only a request with the own-page header, the Hjelp header shows on every page of Canvas&#39;s frame, the shortlist&#39;s texts say what it holds, and the documents&#39; line references are re-pointed</h3>
+<ul>
+<li><strong>Context:</strong> Four things left at the end of the repairs. (1) D-106&#39;s amendment of 2026-11-05 left a residual: the
+insight routes are GETs that write the audit trail (<a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>), they take no CSRF token (D-057), and they told
+our pages&#39; fetch from another site&#39;s request by fetch metadata alone, so a browser that sends none was served.
+(2) The pages Express renders itself left out their header (the skip link, the site name and <strong>Hjelp</strong>, <a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>)
+for every frame request from our own origin, taking it for our own chrome around the page (D-067&#39;s amendment of
+2026-10-24). Since D-130 a launch&#39;s last step is a post from our own page into Canvas&#39;s frame, so the Deep Linking
+picker and a launch&#39;s error page arrived as &quot;a frame from our own origin&quot; and showed no Hjelp link in Canvas; a
+test in full Chromium showed it. (3) Four comments of the «Ta opp i samlinga» list said that it holds &quot;aggregates
+and the teacher&#39;s texts only&quot;. A gap line also names a wrong answer that learners typed (<a class="req-ref" href="#r-INS-003"><code>INS-003</code></a> lists one when
+<em>k</em> or more learners gave it), and the list can be printed or projected; DPIA input R30 did not say that. (4) The
+line references of the assurance documents, into source files, <code>PROGRESS.md</code> and this file, had moved with the
+repairs: 89 of 392 pointed at other lines than their text.</li>
+<li><strong>Decision — the own-page header (<a class="req-ref" href="#r-DATA-007"><code>DATA-007</code></a>, <a class="req-ref" href="#r-INS-007"><code>INS-007</code></a>).</strong> The web client adds <code>x-hvli-request: fetch</code> to every
+request it sends, from a portal page and from a Canvas page alike (<code>apps/web/src/api/apiRequest.ts</code>); the name and
+the value are the contract&#39;s (<code>OWN_PAGE_HEADER_NAME</code>, <code>OWN_PAGE_HEADER_VALUE</code>). Every insight route refuses a
+request without it with 403 <code>error.forbidden</code>, for a session and for an ltik, after the sign-in check and before
+View, the rate limit and any audit write (<code>insightRoutes.ts</code>, <code>isOwnPageFetch</code>); the fetch-metadata rule of D-106
+stays as a second check. Why it holds in a browser without fetch metadata: a navigation, a form, an image, a
+frame or a prefetch cannot add a request header, and another origin&#39;s script can add one only after a CORS
+preflight, which <code>/api</code> never grants (only the files origin answers one, for reading files; <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, D-045). D-057 is
+unchanged: no CSRF token on a GET. <em>Not chosen:</em> the CSRF token on these GETs, which a Canvas page does not have.
+<em>Residual:</em> a script running on our own origin can fetch these routes, as it can every route; a page that was
+open while the server was upgraded keeps its old script and gets 403 from the Innsikt tab until it is reloaded.
+No other GET of <code>/api</code> writes the audit trail (searched 2026-11-26).</li>
+<li><strong>Decision — the Hjelp header on every page of Canvas&#39;s frame (<a class="req-ref" href="#r-UD-013"><code>UD-013</code></a>).</strong> <code>http/pages/helpLink.ts</code> leaves the
+header out only for a page that our chrome frames (<code>isChromeFramedPath</code>: <code>/h5p/play/:id</code>, <code>/h5p/edit/:id</code>,
+<code>/h5p/new</code>, <code>/lti/play</code>, <code>/lti/edit</code>) and that is asked for as a frame from our own origin. Every other page shows
+it, however the request reached it: the picker and a launch&#39;s error page in Canvas&#39;s frame, a top-level page, and a
+client without fetch metadata. The list of framed pages is the one <code>web/chromeRedirect.ts</code> sends on to their chrome
+page; a test holds the two together.</li>
+<li><strong>Decision — the shortlist&#39;s texts (<a class="req-ref" href="#r-INS-003"><code>INS-003</code></a>, <a class="req-ref" href="#r-INS-006"><code>INS-006</code></a>).</strong> No behaviour changes. The comments of
+<code>shortlistEntries.ts</code>, <code>printShortlist.ts</code>, <code>shortlistContext.tsx</code> and <code>InsightShortlist.tsx</code> say what the list
+holds: aggregates, the teacher&#39;s own texts and, for a gap, the commonest wrong answer the view lists, which is
+learners&#39; own words and is listed only when <em>k</em> or more gave it. DPIA input R30 says that such an answer can be
+put on the list, which the teacher can print or project.</li>
+<li><strong>Decision — line references.</strong> Each reference was followed through the repository&#39;s history, one document
+line at a time: the commit that last set the reference on its line was found (<code>git log -L</code>), and the lines it
+names were mapped from that commit to today&#39;s files. 89 moved. Fourteen whose lines had changed themselves were
+read by hand, and one more was found wrong by reading (it was wrong when it was last set). A random sample of 30
+of all 392 was then read against its text, and all 30 held. A reference that was wrong when it was set is not
+made right by following it, so the sample is evidence, not proof. A first try that took the newest commit in
+which a reference&#39;s text appeared anywhere in the document moved two right references to wrong lines, where
+several rows carry the same reference; it was undone. Each document&#39;s &quot;Written&quot; row names the date. References
+into <code>PROGRESS.md</code> and this file move whenever a row or an amendment is added above them, so the decision ID or
+the step named beside a reference is what finds the text.</li>
+<li><strong>Verified:</strong> <code>insightForeignRequest.test.ts</code>: a request without the header, with a wrong value, or with our
+pages&#39; fetch metadata but no header is 403 on all four routes, audits nothing and takes no limit; a navigation,
+another origin&#39;s request and an image are refused with the header too; our pages&#39; fetch is served and audited. The
+old code served the requests without the header. <code>apiRequest.test.ts</code>: every request of the web client carries the
+contract&#39;s header. <code>pickerHelpLink.e2e.test.ts</code> (full Chromium, the built web app, the mock Canvas with third-party
+cookies blocked): the picker in Canvas&#39;s frame shows one Hjelp link that opens a new tab, and the player frame
+inside <code>/app/play</code> has no second header; the first failed on the old rule. <code>ltiErrorPages.test.ts</code>,
+<code>portalPages.test.ts</code> and <code>chromeRedirect.test.ts</code> hold the rule and the list of framed pages.
+<code>insightSummaries.test.ts</code>: a shortlist entry names a typed gap answer only when its count is shown (the rule held
+before; with the filter taken out for a trial the test failed). Screenshots of the picker in nn at 1280 and 390 px
+went to the owner.</li>
+<li><strong>Consequences:</strong> <code>packages/api-contract/src/openApi.ts</code> and <code>routes/insightRoutes.ts</code> (the 403 names the header);
+<code>apps/web/src/api/apiRequest.ts</code>; <code>apps/server/src/insight/http/insightRoutes.ts</code>;
+<code>apps/server/src/http/pages/helpLink.ts</code>; <code>apps/server/test/support/ownPageFetch.ts</code> (the header for tests that ask
+as our pages do); the four shortlist files; <code>docs/privacy/DPIA-INPUT.md</code> (R30); threat model T-02; the assurance
+documents&#39; line references. A client that reads insight must send the header. Amends D-106 (its residual is
+closed) and D-067 (which frames get no header); <a class="req-ref" href="#r-INS-007"><code>INS-007</code></a> has an &quot;Amended&quot; line. With this step the security
+repairs of steps 1 to 30 (D-117 to D-146) are done; what stays open is in the open questions of <code>PROGRESS.md</code>.</li>
+</ul>
 
 </section>
 <section class="view doc" id="progress" aria-labelledby="progress-h">
@@ -13747,6 +13847,8 @@ what is done, what is verified, and what is blocked.</p>
 <td>S5</td><td>Læringsdesign studio, patterns, planner, pedagogisk mappe export</td><td>04; 00 S5 rows</td><td>✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6</td></tr>
 <tr>
 <td>S6</td><td>xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report</td><td>02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 <a class="req-ref" href="#r-H5P-009"><code>H5P-009</code></a>, <a class="req-ref" href="#r-H5P-010"><code>H5P-010</code></a>, <a class="req-ref" href="#r-SEC-004"><code>SEC-004</code></a>, <a class="req-ref" href="#r-SEC-006"><code>SEC-006</code></a>; 03 <a class="req-ref" href="#r-UD-003"><code>UD-003</code></a>, §6 (<a class="req-ref" href="#r-UD-040"><code>UD-040</code></a>); 04 <a class="req-ref" href="#r-MAPPE-003"><code>MAPPE-003</code></a>, <a class="req-ref" href="#r-MAPPE-004"><code>MAPPE-004</code></a> (D-101)</td><td>✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116)</td></tr>
+<tr>
+<td>SR</td><td>Security repairs after the S6 gate: 30 steps, each with tests, a gate run and a decision entry</td><td>The spec a step names</td><td>✅ Done (2026-11-20 to 2026-11-26; D-117…D-146; session log, steps 1–30); open: HVL IT&#39;s and the owner&#39;s questions Q32, Q33 and Q34, with the earlier ones</td></tr>
 </tbody></table></div>
 <p>Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked</p>
 <hr>
@@ -14744,7 +14846,8 @@ fixed): correctness 1/1/0/1, security 1/1/0/1, privacy 2/1/1/1, accessibility an
   e2e and accessibility rows; the conformance report links e2e files under <code>npm run test:e2e</code>; J3&#39;s «62 %»
   claim; PROGRESS&#39;s commit ticks; limitation 19. <code>DOC-S6-07</code> refuted</li>
 <li>Still open, not blocking the step: a browser that sends no fetch metadata (Safari before 16.4) is still served
-by the insight GETs (only a CSRF token on them would close it, which changes D-057); authors can put an absolute
+by the insight GETs (only a CSRF token on them would close it, which changes D-057) <em>(closed 2026-11-26 by the
+own-page header, D-146)</em>; authors can put an absolute
 URL to our own origin in an H5P media path, so refusing such paths at save time deserves its own look (other
 GETs with side effects); R40&#39;s option «only ungraded activities in staff courses» is partial, and <code>/personvern</code>
 waits for the DPO (R32, R40); sentences the Innsikt tab builds around an authored text (chart summaries,
@@ -17018,6 +17121,62 @@ $ npm run test:a11y                                  563 passed (18 files)
 $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
     (needs the privileged database, like DATA-010's tests)
 $ npx vitest run --project server                    27134 passed, 31 skipped; 1 failed in 4 files: a
+    privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+    MAPPE-004)</code></pre>
+</li>
+<li><p><strong>2026-11-26 · Security repairs, step 30 (D-146)</strong> — The last step: the insight routes answer only a request
+with the own-page header, the Hjelp header shows on every page of Canvas&#39;s frame, the shortlist&#39;s texts say what
+it holds, and the documents&#39; line references are re-pointed. One code commit:</p>
+<ul>
+<li>Insight (DATA-007, INS-007): the web client adds <code>x-hvli-request: fetch</code> to every request
+(<code>apps/web/src/api/apiRequest.ts</code>; the name and value in <code>packages/api-contract/src/openApi.ts</code>), and every
+insight route refuses a request without it, for a session and for an ltik, before View, the limit and the
+audit (<code>insightRoutes.ts</code>). It holds in a browser that sends no fetch metadata, which closes the residual of
+D-106&#39;s amendment of 2026-11-05. Tests: <code>insightForeignRequest.test.ts</code> (one new test, which the old code
+fails), <code>apiRequest.test.ts</code>, the contract&#39;s <code>insightRoutes.test.ts</code>; the tests that read a view send the
+header (<code>test/support/ownPageFetch.ts</code>).</li>
+<li>Hjelp (UD-013): <code>http/pages/helpLink.ts</code> leaves the header out only for the pages our chrome frames, asked for
+as a frame from our own origin; the Deep Linking picker and a launch&#39;s error page in Canvas&#39;s frame show it.
+Tests: <code>e2e/pickerHelpLink.e2e.test.ts</code> (full Chromium; its first test fails on the old rule),
+<code>ltiErrorPages.test.ts</code>, <code>portalPages.test.ts</code>, <code>chromeRedirect.test.ts</code>. Screenshots of the picker in nn at
+1280 and 390 px were sent to the owner.</li>
+<li>Shortlist (INS-003, INS-006): the comments of the four shortlist files and DPIA input R30 say that a gap line
+names a wrong answer learners typed, listed when <em>k</em> or more gave it, and that the list can be printed or
+projected. <code>insightSummaries.test.ts</code> pins that a hidden answer never reaches the list (the rule held before).</li>
+<li>D-146 added, with amendment lines under D-067 and D-106; <a class="req-ref" href="#r-INS-007"><code>INS-007</code></a> has an &quot;Amended&quot; line; threat model T-02
+and the list of known open items in <code>human-review.md</code> follow; the line references of the assurance documents
+are re-pointed (89 by following each document line through the repository&#39;s history, 15 read by hand), and each document&#39;s
+&quot;Written&quot; row says so; the status overview has a row for the security repairs; the conformance report,
+<code>TRACEABILITY.md</code> and the spec site regenerated. With this step the repairs of steps 1 to 30 are done. Gate
+output:</li>
+</ul>
+<pre class="code" tabindex="0" role="region" aria-label="Code 50, Session log"><code>$ npm run build                                      exit 0
+$ npm run typecheck                                  exit 0
+$ npm run lint &amp;&amp; npm run format:check               exit 0
+$ npm run lint:css                                   exit 0
+$ npm run doc:lint &amp;&amp; npm run check:filesize         11 checks passed; file-size passed
+$ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+$ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+$ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+$ npm run check:pins &amp;&amp; npm run check:licences       every version pinned; 488 production packages compatible
+$ npm run check:lockfile                             954 packages from the registry with sha512; 4 install scripts reviewed
+$ npm run check:workflows                            3 workflows: actions by commit, images by digest
+$ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+$ npm run sbom -- --check                            current: 477 npm packages, 12 H5P components, 3 images
+$ npm run content:check &amp;&amp; npm run tokens:check      exit 0
+$ node tools/spec-site/buildSpecSite.mjs --check     up to date
+$ npm run docs:api                                   exit 0
+$ npm run a11y:report -- --check                     exit 0
+$ npx vitest run --project web                       644 passed (100 files)
+$ npx vitest run --project api-contract              123 passed (15 files)
+$ npx vitest run --project tools                     586 passed (78 files)
+$ npx vitest run --project design-tokens             156 passed
+$ npx vitest run --project hvl-h5p-theme             206 passed
+$ LIVE_TARGET=mock npm run test:live                 36 passed
+$ npm run test:a11y                                  563 passed (18 files)
+$ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+    (needs the privileged database, like DATA-010's tests)
+$ npx vitest run --project server                    27136 passed, 31 skipped; 1 failed in 4 files: a
     privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
     MAPPE-004)</code></pre>
 </li>

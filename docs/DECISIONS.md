@@ -956,6 +956,11 @@ loading of one spec per session are kept.
   links to the choices (`UD-013`). The editor's outer page uses the server pages' stylesheet for its save button and
   status (`UD-002`).
 
+- **Amendment (2026-11-26, D-146):** "a frame our own origin asked for gets no second header" now holds only for
+  the pages our chrome frames (`/h5p/play/:id`, `/h5p/edit/:id`, `/h5p/new`, `/lti/play`, `/lti/edit`). Since D-130
+  a launch's last step reaches Canvas's frame from our own origin, so the picker and a launch's error page are not
+  told from our chrome by fetch metadata; they are the whole page of that frame and show the header.
+
 ### D-068 · Express is the front door and runs Next.js in the same process
 - **Context:** D-012 puts a reverse proxy in front of Express and Next.js in production. Development and tests need
   one origin too, and the session cookie (`__Host-`, D-057), ltijs's same-origin checks and `PUBLIC_BASE_URL` must not
@@ -3251,6 +3256,10 @@ loading of one spec per session are kept.
   `insightForeignRequest.test.ts` (no audit event and no rate-limit take for a navigation, another origin's request or
   our own page's image, video, frame or prefetch, with the headers full Chromium sends; our pages' fetch still
   audited).
+
+- **Amendment (2026-11-26, D-146):** the residual of the amendment of 2026-11-05 is closed. Every insight route
+  also requires the header that our pages add to every request (`x-hvli-request: fetch`), which a navigation, an
+  image or another origin's request cannot carry, so a browser that sends no fetch metadata is covered too.
 
 ### D-107 · `SPEC-DEVIATION` DATA-003: the yearly purge runs on 31 August and deletes by a stored academic year
 - **Context:** `DATA-003` runs the purge "on a configured date (default 15 August)" for the academic year that has
@@ -6343,3 +6352,68 @@ loading of one spec per session are kept.
   and `.github/dependabot.yml`; `tools/doc-lint/test/ciDependencyGates.test.mjs`; `CLAUDE.md` §3. An upgrade of a
   package with an install script now changes `allowScripts` in the same commit, and an exception renewed on its
   last day can run 120 days. Amends D-029, D-030 and D-110, and `SEC-007`. Open questions Q33 and Q34.
+
+### D-146 · Security repairs, step 30: the insight routes answer only a request with the own-page header, the Hjelp header shows on every page of Canvas's frame, the shortlist's texts say what it holds, and the documents' line references are re-pointed
+- **Context:** Four things left at the end of the repairs. (1) D-106's amendment of 2026-11-05 left a residual: the
+  insight routes are GETs that write the audit trail (`DATA-007`), they take no CSRF token (D-057), and they told
+  our pages' fetch from another site's request by fetch metadata alone, so a browser that sends none was served.
+  (2) The pages Express renders itself left out their header (the skip link, the site name and **Hjelp**, `UD-013`)
+  for every frame request from our own origin, taking it for our own chrome around the page (D-067's amendment of
+  2026-10-24). Since D-130 a launch's last step is a post from our own page into Canvas's frame, so the Deep Linking
+  picker and a launch's error page arrived as "a frame from our own origin" and showed no Hjelp link in Canvas; a
+  test in full Chromium showed it. (3) Four comments of the «Ta opp i samlinga» list said that it holds "aggregates
+  and the teacher's texts only". A gap line also names a wrong answer that learners typed (`INS-003` lists one when
+  *k* or more learners gave it), and the list can be printed or projected; DPIA input R30 did not say that. (4) The
+  line references of the assurance documents, into source files, `PROGRESS.md` and this file, had moved with the
+  repairs: 89 of 392 pointed at other lines than their text.
+- **Decision — the own-page header (`DATA-007`, `INS-007`).** The web client adds `x-hvli-request: fetch` to every
+  request it sends, from a portal page and from a Canvas page alike (`apps/web/src/api/apiRequest.ts`); the name and
+  the value are the contract's (`OWN_PAGE_HEADER_NAME`, `OWN_PAGE_HEADER_VALUE`). Every insight route refuses a
+  request without it with 403 `error.forbidden`, for a session and for an ltik, after the sign-in check and before
+  View, the rate limit and any audit write (`insightRoutes.ts`, `isOwnPageFetch`); the fetch-metadata rule of D-106
+  stays as a second check. Why it holds in a browser without fetch metadata: a navigation, a form, an image, a
+  frame or a prefetch cannot add a request header, and another origin's script can add one only after a CORS
+  preflight, which `/api` never grants (only the files origin answers one, for reading files; `SEC-004`, D-045). D-057 is
+  unchanged: no CSRF token on a GET. *Not chosen:* the CSRF token on these GETs, which a Canvas page does not have.
+  *Residual:* a script running on our own origin can fetch these routes, as it can every route; a page that was
+  open while the server was upgraded keeps its old script and gets 403 from the Innsikt tab until it is reloaded.
+  No other GET of `/api` writes the audit trail (searched 2026-11-26).
+- **Decision — the Hjelp header on every page of Canvas's frame (`UD-013`).** `http/pages/helpLink.ts` leaves the
+  header out only for a page that our chrome frames (`isChromeFramedPath`: `/h5p/play/:id`, `/h5p/edit/:id`,
+  `/h5p/new`, `/lti/play`, `/lti/edit`) and that is asked for as a frame from our own origin. Every other page shows
+  it, however the request reached it: the picker and a launch's error page in Canvas's frame, a top-level page, and a
+  client without fetch metadata. The list of framed pages is the one `web/chromeRedirect.ts` sends on to their chrome
+  page; a test holds the two together.
+- **Decision — the shortlist's texts (`INS-003`, `INS-006`).** No behaviour changes. The comments of
+  `shortlistEntries.ts`, `printShortlist.ts`, `shortlistContext.tsx` and `InsightShortlist.tsx` say what the list
+  holds: aggregates, the teacher's own texts and, for a gap, the commonest wrong answer the view lists, which is
+  learners' own words and is listed only when *k* or more gave it. DPIA input R30 says that such an answer can be
+  put on the list, which the teacher can print or project.
+- **Decision — line references.** Each reference was followed through the repository's history, one document
+  line at a time: the commit that last set the reference on its line was found (`git log -L`), and the lines it
+  names were mapped from that commit to today's files. 89 moved. Fourteen whose lines had changed themselves were
+  read by hand, and one more was found wrong by reading (it was wrong when it was last set). A random sample of 30
+  of all 392 was then read against its text, and all 30 held. A reference that was wrong when it was set is not
+  made right by following it, so the sample is evidence, not proof. A first try that took the newest commit in
+  which a reference's text appeared anywhere in the document moved two right references to wrong lines, where
+  several rows carry the same reference; it was undone. Each document's "Written" row names the date. References
+  into `PROGRESS.md` and this file move whenever a row or an amendment is added above them, so the decision ID or
+  the step named beside a reference is what finds the text.
+- **Verified:** `insightForeignRequest.test.ts`: a request without the header, with a wrong value, or with our
+  pages' fetch metadata but no header is 403 on all four routes, audits nothing and takes no limit; a navigation,
+  another origin's request and an image are refused with the header too; our pages' fetch is served and audited. The
+  old code served the requests without the header. `apiRequest.test.ts`: every request of the web client carries the
+  contract's header. `pickerHelpLink.e2e.test.ts` (full Chromium, the built web app, the mock Canvas with third-party
+  cookies blocked): the picker in Canvas's frame shows one Hjelp link that opens a new tab, and the player frame
+  inside `/app/play` has no second header; the first failed on the old rule. `ltiErrorPages.test.ts`,
+  `portalPages.test.ts` and `chromeRedirect.test.ts` hold the rule and the list of framed pages.
+  `insightSummaries.test.ts`: a shortlist entry names a typed gap answer only when its count is shown (the rule held
+  before; with the filter taken out for a trial the test failed). Screenshots of the picker in nn at 1280 and 390 px
+  went to the owner.
+- **Consequences:** `packages/api-contract/src/openApi.ts` and `routes/insightRoutes.ts` (the 403 names the header);
+  `apps/web/src/api/apiRequest.ts`; `apps/server/src/insight/http/insightRoutes.ts`;
+  `apps/server/src/http/pages/helpLink.ts`; `apps/server/test/support/ownPageFetch.ts` (the header for tests that ask
+  as our pages do); the four shortlist files; `docs/privacy/DPIA-INPUT.md` (R30); threat model T-02; the assurance
+  documents' line references. A client that reads insight must send the header. Amends D-106 (its residual is
+  closed) and D-067 (which frames get no header); `INS-007` has an "Amended" line. With this step the security
+  repairs of steps 1 to 30 (D-117 to D-146) are done; what stays open is in the open questions of `PROGRESS.md`.

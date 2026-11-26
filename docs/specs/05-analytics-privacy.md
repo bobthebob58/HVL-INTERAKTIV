@@ -124,6 +124,9 @@ view writes an audit event (`DATA-007`).
   context is the launch's and cannot be changed. The audited support action for admins is not built in S6, so admins
   see no insight. A view writes `insight.view` and a CSV download `insight.export`, with details limited to the view,
   the period, the context and the content version: no learner key, count or answer.
+- **Amended (D-146, 2026-11-26):** the insight routes answer only a request that carries the header our own pages
+  add to every request (`x-hvli-request: fetch`). Another site's link, a navigation or an image cannot add it, so
+  none of them writes `insight.view` or `insight.export` in a teacher's name (`DATA-007`).
 
 #### INS-008 · MUST · S6 · Accessible charts
 Each chart has a visible data table alternative and a text summary (e.g. "Question 2: 38 % correct

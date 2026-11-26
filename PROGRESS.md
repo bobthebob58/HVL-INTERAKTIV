@@ -16,6 +16,7 @@ what is done, what is verified, and what is blocked.
 | S4+ | Whole-code-base simplification pass (owner decision, 2026-10-24) | — | ✅ Done (2026-10-25): 59 changes, 569 lines shorter, every test kept, S4 gate green again; a second round is the owner's call |
 | S5 | Læringsdesign studio, patterns, planner, pedagogisk mappe export | 04; 00 S5 rows | ✅ Gate passed (2026-10-30); the ALU and pilot review (Q17), the bank consent text and the manual PDF check open; the Canvas side in S6 |
 | S6 | xAPI → AGS grade bridge, insight, privacy jobs, Docker, conformance report | 02 §4–§8; 05; 00 §3 (journeys J1–J5), §6; 01 `H5P-009`, `H5P-010`, `SEC-004`, `SEC-006`; 03 `UD-003`, §6 (`UD-040`); 04 `MAPPE-003`, `MAPPE-004` (D-101) | ✅ Done (gate passed 2026-11-06; started 2026-10-30; D-101…D-116) |
+| SR | Security repairs after the S6 gate: 30 steps, each with tests, a gate run and a decision entry | The spec a step names | ✅ Done (2026-11-20 to 2026-11-26; D-117…D-146; session log, steps 1–30); open: HVL IT's and the owner's questions Q32, Q33 and Q34, with the earlier ones |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (gate passed, output pasted below) · ⛔ blocked
 
@@ -921,7 +922,8 @@ under the step that does it):
           e2e and accessibility rows; the conformance report links e2e files under `npm run test:e2e`; J3's «62 %»
           claim; PROGRESS's commit ticks; limitation 19. `DOC-S6-07` refuted
   - Still open, not blocking the step: a browser that sends no fetch metadata (Safari before 16.4) is still served
-    by the insight GETs (only a CSRF token on them would close it, which changes D-057); authors can put an absolute
+    by the insight GETs (only a CSRF token on them would close it, which changes D-057) *(closed 2026-11-26 by the
+    own-page header, D-146)*; authors can put an absolute
     URL to our own origin in an H5P media path, so refusing such paths at save time deserves its own look (other
     GETs with side effects); R40's option «only ungraded activities in staff courses» is partial, and `/personvern`
     waits for the DPO (R32, R40); sentences the Innsikt tab builds around an authored text (chart summaries,
@@ -3202,6 +3204,63 @@ Append one entry per session: date, session, what was done, gate output, and any
   $ npm run test:e2e                                   34 passed, 1 skipped; 1 file failed: learnerDataRights
       (needs the privileged database, like DATA-010's tests)
   $ npx vitest run --project server                    27134 passed, 31 skipped; 1 failed in 4 files: a
+      privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
+      MAPPE-004)
+  ```
+
+- **2026-11-26 · Security repairs, step 30 (D-146)** — The last step: the insight routes answer only a request
+  with the own-page header, the Hjelp header shows on every page of Canvas's frame, the shortlist's texts say what
+  it holds, and the documents' line references are re-pointed. One code commit:
+  - Insight (DATA-007, INS-007): the web client adds `x-hvli-request: fetch` to every request
+    (`apps/web/src/api/apiRequest.ts`; the name and value in `packages/api-contract/src/openApi.ts`), and every
+    insight route refuses a request without it, for a session and for an ltik, before View, the limit and the
+    audit (`insightRoutes.ts`). It holds in a browser that sends no fetch metadata, which closes the residual of
+    D-106's amendment of 2026-11-05. Tests: `insightForeignRequest.test.ts` (one new test, which the old code
+    fails), `apiRequest.test.ts`, the contract's `insightRoutes.test.ts`; the tests that read a view send the
+    header (`test/support/ownPageFetch.ts`).
+  - Hjelp (UD-013): `http/pages/helpLink.ts` leaves the header out only for the pages our chrome frames, asked for
+    as a frame from our own origin; the Deep Linking picker and a launch's error page in Canvas's frame show it.
+    Tests: `e2e/pickerHelpLink.e2e.test.ts` (full Chromium; its first test fails on the old rule),
+    `ltiErrorPages.test.ts`, `portalPages.test.ts`, `chromeRedirect.test.ts`. Screenshots of the picker in nn at
+    1280 and 390 px were sent to the owner.
+  - Shortlist (INS-003, INS-006): the comments of the four shortlist files and DPIA input R30 say that a gap line
+    names a wrong answer learners typed, listed when *k* or more gave it, and that the list can be printed or
+    projected. `insightSummaries.test.ts` pins that a hidden answer never reaches the list (the rule held before).
+  - D-146 added, with amendment lines under D-067 and D-106; `INS-007` has an "Amended" line; threat model T-02
+    and the list of known open items in `human-review.md` follow; the line references of the assurance documents
+    are re-pointed (89 by following each document line through the repository's history, 15 read by hand), and each document's
+    "Written" row says so; the status overview has a row for the security repairs; the conformance report,
+    `TRACEABILITY.md` and the spec site regenerated. With this step the repairs of steps 1 to 30 are done. Gate
+    output:
+
+  ```
+  $ npm run build                                      exit 0
+  $ npm run typecheck                                  exit 0
+  $ npm run lint && npm run format:check               exit 0
+  $ npm run lint:css                                   exit 0
+  $ npm run doc:lint && npm run check:filesize         11 checks passed; file-size passed
+  $ npm run privacy:inventory-check                    22 models, 182 fields, all documented
+  $ npm run privacy:dpia-check                         13 sections, the developer key and the residuals agree
+  $ npm run spec:trace -- --check --done-through=S6    exit 0 (126 requirements, traceability up to date)
+  $ npm run check:pins && npm run check:licences       every version pinned; 488 production packages compatible
+  $ npm run check:lockfile                             954 packages from the registry with sha512; 4 install scripts reviewed
+  $ npm run check:workflows                            3 workflows: actions by commit, images by digest
+  $ npm run check:audit                                2 high/critical advisories, both covered by reviewed exceptions
+  $ npm run sbom -- --check                            current: 477 npm packages, 12 H5P components, 3 images
+  $ npm run content:check && npm run tokens:check      exit 0
+  $ node tools/spec-site/buildSpecSite.mjs --check     up to date
+  $ npm run docs:api                                   exit 0
+  $ npm run a11y:report -- --check                     exit 0
+  $ npx vitest run --project web                       644 passed (100 files)
+  $ npx vitest run --project api-contract              123 passed (15 files)
+  $ npx vitest run --project tools                     586 passed (78 files)
+  $ npx vitest run --project design-tokens             156 passed
+  $ npx vitest run --project hvl-h5p-theme             206 passed
+  $ LIVE_TARGET=mock npm run test:live                 36 passed
+  $ npm run test:a11y                                  563 passed (18 files)
+  $ npm run test:e2e                                   36 passed, 1 skipped; 1 file failed: learnerDataRights
+      (needs the privileged database, like DATA-010's tests)
+  $ npx vitest run --project server                    27136 passed, 31 skipped; 1 failed in 4 files: a
       privileged database (three files) and the seccomp PDF sandbox: limits of this container (DATA-010,
       MAPPE-004)
   ```

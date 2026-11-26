@@ -4,7 +4,7 @@
 |---|---|
 | **For** | HVL IT (security and operations), the DPO, and anyone HVL asks to review the code, including HVL's bachelor students |
 | **Status** | **Draft for HVL IT to correct.** The plan, the checklists, the time estimates and the definitions of "reviewed" in §4–§6 are proposals |
-| **Written** | 2026-11-05 by the same AI assistant (Claude) that wrote the code, from the repository at commit `92ca2c5`. Updated 2026-11-06 at commit `8d4eaf0` with the commit counts, pull request #18 and its GitHub CI runs (§2.1, §2.3, §2.4, §3). No file under `apps/server/src`, `apps/web`, `packages/`, `deploy/` or `content/` changed between those commits (`git diff --stat 92ca2c5 8d4eaf0`). Updated again on 2026-11-06 at commit `43c6673`, after pull requests #18 and #21 were merged: §2.1, §2.3, §3, the line counts in §4 (only area A2's changed materially) and the new controls in A2 and C4 |
+| **Written** | 2026-11-05 by the same AI assistant (Claude) that wrote the code, from the repository at commit `92ca2c5`. Updated 2026-11-06 at commit `8d4eaf0` with the commit counts, pull request #18 and its GitHub CI runs (§2.1, §2.3, §2.4, §3). No file under `apps/server/src`, `apps/web`, `packages/`, `deploy/` or `content/` changed between those commits (`git diff --stat 92ca2c5 8d4eaf0`). Updated again on 2026-11-06 at commit `43c6673`, after pull requests #18 and #21 were merged: §2.1, §2.3, §3, the line counts in §4 (only area A2's changed materially) and the new controls in A2 and C4. Line references were re-pointed on 2026-11-26 by following each through the repository's history (D-146) |
 | **Reviewed by** | Nobody yet. A second AI pass checked the facts and evidence against the repository on 2026-11-05; that is not a human review |
 | **Overview** | [README.md](README.md); the risks this review lowers are ROS-01 and ROS-02 in the [ROS-analyse](ros-analyse.md) |
 
@@ -168,7 +168,7 @@ deployment ID nor the platform's active flag, so our code does (D-050, D-051), a
       metadata (`lti/http/launchPostOrigin.ts`, D-141).
 - [ ] ltijs asks only the configured platforms' origins and `CANVAS_ORIGINS`, follows no redirect and gives
       up after 10 seconds (`lti/http/LtiOutboundRequests.ts`, D-141).
-- [ ] The ltik is taken from the query only on the paths in `LTIK_QUERY_PATHS` (`auth/requestPrincipal.ts:32-38`) and
+- [ ] The ltik is taken from the query only on the paths in `LTIK_QUERY_PATHS` (`auth/requestPrincipal.ts:35-38`) and
       on `/app/play`; anywhere else a query ltik gets 401.
 - [ ] The ltik never reaches a log line, a `Referer` header, the browser's history or its storage (`LTI-003`).
 - [ ] `Provider.listen()` is never called and ltijs's own HTTP handler and CORS are not mounted (D-050).
@@ -401,9 +401,8 @@ HVL's bachelor students in programming are asked to review this code in spring 2
 tools, but it is a one-term student project and does not replace IT's security review or the DPO's review.
 
 **Known open items** that reviewers should judge rather than report as new (each is recorded): CVE-2025-7062 in Lumi
-10.0.4 (D-003); the editor's files on the app origin and the cookie routes (D-110); insight GETs served to browsers
-that send no fetch metadata (`PROGRESS.md`, S6 step 10, «Still open»); scores computed in the browser (limitation 1 in
-`docs/EVALUATOR-GUIDE.md` §6); tokens in some URLs, so the proxy must not log query strings (limitation 9); no rate
+10.0.4 (D-003); the editor's files on the app origin and the cookie routes (D-110); scores computed in the browser
+(limitation 1 in `docs/EVALUATOR-GUIDE.md` §6); tokens in some URLs, so the proxy must not log query strings (limitation 9); no rate
 limit on login and launch in the app (ROS-07); the residuals R1–R41 in `docs/privacy/DPIA-INPUT.md` §12.
 
 ## 5. How to report findings
