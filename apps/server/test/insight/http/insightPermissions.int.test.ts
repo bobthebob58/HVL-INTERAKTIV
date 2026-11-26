@@ -10,6 +10,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Principal } from '../../../src/auth/Principal.js';
 import { describeWithServices, uniqueName } from '../../support/services.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import {
   canvasPrincipal,
   openInsightHttpBench,
@@ -32,8 +33,10 @@ const OTHER_PLATFORM = {
 
 describeWithServices('[INS-007] who may see insight', () => {
   let bench: InsightHttpBench;
+  const get = (principal: Principal | undefined, path: string) =>
+    request(bench.appAs(principal)).get(`/api/content/${path}`).set(OWN_PAGE_FETCH);
   const call = (principal: Principal | undefined, route: (typeof ROUTES)[number] = '', query = '') =>
-    request(bench.appAs(principal)).get(`/api/content/${bench.contentId}/insight${route}${query}`);
+    get(principal, `${bench.contentId}/insight${route}${query}`);
   const course = (contextId: string, roles: Principal['roles'] = ['author'], userId = bench.colleagueId) =>
     canvasPrincipal(userId, { platformId: bench.platformId, contextId, contentId: bench.contentId }, [
       ...roles,
@@ -164,11 +167,10 @@ describeWithServices('[INS-007] who may see insight', () => {
         ownerUserId: bench.ownerId,
       },
     });
-    const path = (id: string) => `/api/content/${id}/insight`;
     // Act
-    const unknown = await request(bench.appAs(portalPrincipal(bench.ownerId))).get(path(crypto.randomUUID()));
-    const malformed = await request(bench.appAs(portalPrincipal(bench.ownerId))).get(path('not-a-uuid'));
-    const invisible = await request(bench.appAs(portalPrincipal(bench.colleagueId))).get(path(draft.id));
+    const unknown = await get(portalPrincipal(bench.ownerId), `${crypto.randomUUID()}/insight`);
+    const malformed = await get(portalPrincipal(bench.ownerId), 'not-a-uuid/insight');
+    const invisible = await get(portalPrincipal(bench.colleagueId), `${draft.id}/insight`);
     const nobody = await call(undefined);
     await bench.db.h5PContent.delete({ where: { id: draft.id } });
     // Assert
@@ -183,9 +185,7 @@ describeWithServices('[INS-007] who may see insight', () => {
     // Arrange
     await bench.db.auditEvent.deleteMany({ where: { actorUserId: bench.ownerId } });
     // Act
-    const res = await request(bench.appAs(portalPrincipal(bench.ownerId))).get(
-      `/api/content/${bench.contentId.toUpperCase()}/insight`,
-    );
+    const res = await get(portalPrincipal(bench.ownerId), `${bench.contentId.toUpperCase()}/insight`);
     const events = await bench.db.auditEvent.findMany({
       where: { actorUserId: bench.ownerId, action: 'insight.view' },
       select: { targetId: true },

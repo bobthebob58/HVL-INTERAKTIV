@@ -13,6 +13,7 @@ import {
 } from '../../../src/insight/http/InsightRateLimit.js';
 import { connectRedis, type Redis } from '../../../src/infra/redisClient.js';
 import { describeWithServices, serviceEnv } from '../../support/services.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import { openInsightHttpBench, portalPrincipal, type InsightHttpBench } from './support/insightHttpBench.js';
 
 describeWithServices('[INS-007] the insight request limit', () => {
@@ -34,9 +35,9 @@ describeWithServices('[INS-007] the insight request limit', () => {
     const app = bench.appAs(portalPrincipal(bench.ownerId), { limit: new InsightRateLimit(redis, 2, 60) });
     const base = `/api/content/${bench.contentId}/insight`;
     // Act
-    const contexts = await request(app).get(`${base}/contexts`);
-    const view = await request(app).get(base);
-    const third = await request(app).get(`${base}/export`);
+    const contexts = await request(app).get(`${base}/contexts`).set(OWN_PAGE_FETCH);
+    const view = await request(app).get(base).set(OWN_PAGE_FETCH);
+    const third = await request(app).get(`${base}/export`).set(OWN_PAGE_FETCH);
     // Assert
     expect([contexts.status, view.status, third.status]).toEqual([200, 200, 429]);
     expect(Number(third.headers['retry-after'])).toBeGreaterThanOrEqual(1);

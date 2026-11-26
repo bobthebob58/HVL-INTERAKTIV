@@ -14,6 +14,7 @@ import type { InsightReport } from '../../../src/insight/insightReport.js';
 import { minimumGroupSize } from '../../../src/privacy/minimumGroupSize.js';
 import { INTERACTIVE_VIDEO, IV1, IV2, IV3, Q1, Q2, QUESTION_SET } from '../fixtures/insightActivities.js';
 import type { FixtureRow } from '../fixtures/thirtyLearners.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import { reportOf } from '../support/insightFixtureReport.js';
 import { cellsIn, insightInvariantViolations } from '../support/reportInvariants.js';
 import { parseCsv } from './support/csvRecords.js';
@@ -102,8 +103,8 @@ describe('[INS-006] suppression at the API boundary', () => {
         const report = reportOf(activity, rows, { size: minimumGroupSize(k), courseLearners });
         const { app } = insightStubApp(report);
         // Act
-        const json = await request(app).get(`/api/content/${CONTENT}/insight`);
-        const csv = await request(app).get(`/api/content/${CONTENT}/insight/export`);
+        const json = await request(app).get(`/api/content/${CONTENT}/insight`).set(OWN_PAGE_FETCH);
+        const csv = await request(app).get(`/api/content/${CONTENT}/insight/export`).set(OWN_PAGE_FETCH);
         // Assert
         const received = insightReportSchema.parse(json.body) as InsightReport;
         expect(insightInvariantViolations(received)).toEqual([]);

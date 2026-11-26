@@ -12,6 +12,7 @@ import type { Principal } from '../../../src/auth/Principal.js';
 import { altError, colourHint, DAY, findingsOnly } from '../../support/publishFixtures.js';
 import { describeWithServices } from '../../support/services.js';
 import { FIXTURE_NOW } from '../fixtures/thirtyLearners.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import {
   canvasPrincipal,
   openInsightHttpBench,
@@ -24,9 +25,9 @@ const REASON = 'Biletet er pynt; teksten kjem i neste versjon.';
 describeWithServices('[INS-010] validator findings in insight', () => {
   let bench: InsightHttpBench;
   const findings = (principal: Principal) =>
-    request(bench.appAs(principal, { validator: findingsOnly(altError, colourHint) })).get(
-      `/api/content/${bench.contentId}/insight/findings`,
-    );
+    request(bench.appAs(principal, { validator: findingsOnly(altError, colourHint) }))
+      .get(`/api/content/${bench.contentId}/insight/findings`)
+      .set(OWN_PAGE_FETCH);
 
   beforeAll(async () => {
     bench = await openInsightHttpBench();

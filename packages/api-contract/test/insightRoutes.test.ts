@@ -1,7 +1,7 @@
 /**
  * Tests the insight route registry: the view, contexts, CSV export and findings routes build an OpenAPI document whose
  * references resolve, work from the portal and from Canvas, document their refusals (422 for a view over the limit of
- * D-122 among them), take no learner, and are part of `API_ROUTES` once each.
+ * D-122 and the own-page header of D-146 among them), take no learner, and are part of `API_ROUTES` once each.
  *
  * Spec: DOC-012, INS-001, INS-006, INS-007, INS-009, INS-010
  */
@@ -12,6 +12,8 @@ import {
   API_ROUTES,
   buildOpenApiDocument,
   CSV_MEDIA_TYPE,
+  OWN_PAGE_HEADER_NAME,
+  OWN_PAGE_HEADER_VALUE,
   RESPONSE_SCHEMAS,
   type ApiRoute,
 } from '../src/index.js';
@@ -54,6 +56,18 @@ describe('[DOC-012] insight routes', () => {
       '429',
       '503',
     ]);
+  });
+
+  it('[INS-007] the 403 of every route, and the document, name the own-page header a request must carry', () => {
+    // Act
+    const refusals = ['', '/contexts', '/export', '/findings'].map((suffix) =>
+      JSON.stringify(operation(BASE + suffix).responses['403']),
+    );
+    // Assert
+    const header = `${OWN_PAGE_HEADER_NAME}: ${OWN_PAGE_HEADER_VALUE}`;
+    expect(header).toBe('x-hvli-request: fetch');
+    for (const refusal of refusals) expect(refusal).toContain(header);
+    expect(document.info.description).toContain(header);
   });
 
   it('[INS-001] the view and the export document 503 for too many views at once, to be asked again later', () => {

@@ -9,8 +9,9 @@
  *      type, which the teacher can show full screen.
  * Spec: INS-003, UD-006, UD-002, UD-010
  * Invariants:
- *   - PRIVACY: the list holds aggregates and the teacher's texts only (./shortlistEntries.ts); so do its printout and
- *     its projection.
+ *   - PRIVACY: the list holds aggregates, the teacher's texts and, for a gap, a wrong answer that k or more
+ *     learners typed (./shortlistEntries.ts); so do its printout and its projection, which take them to paper and to
+ *     a classroom screen.
  *   - A11Y: a section named by its `h3`; the list is an ordered list; «Ta ut av lista» names its question; after a
  *     removal focus moves to the section's heading, never to `body` (WCAG 2.4.3). The dialog returns focus on close.
  *   - Print and project are offered only when the list has questions.

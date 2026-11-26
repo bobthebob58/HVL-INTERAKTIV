@@ -11,6 +11,8 @@
  * Invariants:
  *   - The ltik goes only into the Authorization header of same-origin requests, never into a URL here.
  *   - Requests are never cached (`no-store`), like every `/api` answer; a file answer is kept only in the result.
+ *   - SECURITY: every request carries the own-page header, which only a script of our own origin can add; the
+ *     insight routes, GETs that write the audit trail, refuse a request without it (DATA-007, D-146).
  *   - Never throws: a network failure, or a body that cannot be read, is `{ ok: false, status: 0 }`.
  *   - A refused file request answers JSON like any other route, so its error body is read the same way.
  *   - A portal request refused with `hvl:csrf-invalid` is sent once more with the session's current token
@@ -26,6 +28,8 @@ import { currentCsrfToken, fresherCsrfToken, isCsrfRefusal } from './csrfRetry';
 
 /** The header that carries the CSRF token; the same name as api-contract's `CSRF_HEADER_NAME` (a test checks it). */
 export const CSRF_HEADER = 'x-csrf-token';
+/** The own-page header and its value: api-contract's `OWN_PAGE_HEADER_NAME` and `…_VALUE` (a test checks both). */
+export const OWN_PAGE_HEADER = { name: 'x-hvli-request', value: 'fetch' } as const;
 
 /** How a request proves who sends it. */
 export type ApiAuth =
@@ -70,7 +74,7 @@ export function apiHeaders(
   json: boolean,
   accept = 'application/json',
 ): Record<string, string> {
-  const headers: Record<string, string> = { Accept: accept };
+  const headers: Record<string, string> = { Accept: accept, [OWN_PAGE_HEADER.name]: OWN_PAGE_HEADER.value };
   if (json) headers['Content-Type'] = 'application/json';
   // SECURITY: the ltik is a bearer credential for the launch (LTI-003); it travels only in this header.
   if (auth.kind === 'lti') headers.Authorization = `Bearer ${auth.ltik}`;

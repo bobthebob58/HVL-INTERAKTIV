@@ -9,6 +9,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { QUESTION_SET } from '../fixtures/insightActivities.js';
 import { questionSetRows } from '../fixtures/thirtyLearners.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import { reportOf } from '../support/insightFixtureReport.js';
 import { insightStubApp } from './support/insightStubApp.js';
 
@@ -21,8 +22,8 @@ describe('[DATA-007] insight is audited before it is sent', () => {
     const report = reportOf(QUESTION_SET, questionSetRows());
     const { app } = insightStubApp(report, { auditFails: true });
     // Act
-    const view = await request(app).get(BASE);
-    const csv = await request(app).get(`${BASE}/export`);
+    const view = await request(app).get(BASE).set(OWN_PAGE_FETCH);
+    const csv = await request(app).get(`${BASE}/export`).set(OWN_PAGE_FETCH);
     // Assert
     for (const res of [view, csv]) {
       expect(res.status).toBe(500);
@@ -38,9 +39,9 @@ describe('[DATA-007] insight is audited before it is sent', () => {
     const { app, audited } = insightStubApp(reportOf(QUESTION_SET, questionSetRows()));
     // Act
     const answers = [
-      await request(app).get(`${BASE}?period=14d`),
-      await request(app).get(`${BASE}/export`),
-      await request(app).get(`${BASE}/contexts`),
+      await request(app).get(`${BASE}?period=14d`).set(OWN_PAGE_FETCH),
+      await request(app).get(`${BASE}/export`).set(OWN_PAGE_FETCH),
+      await request(app).get(`${BASE}/contexts`).set(OWN_PAGE_FETCH),
     ];
     // Assert
     expect(answers.map((res) => res.status)).toEqual([200, 200, 200]);

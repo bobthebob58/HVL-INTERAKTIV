@@ -17,6 +17,7 @@ import { minimumGroupSize } from '../../../src/privacy/minimumGroupSize.js';
 import { NO_LIMIT } from '../../grades/status/support/gradeSyncApp.js';
 import { describeWithServices } from '../../support/services.js';
 import { FIXTURE_NOW } from '../fixtures/thirtyLearners.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import { openInsightHttpBench, portalPrincipal, type InsightHttpBench } from './support/insightHttpBench.js';
 
 describeWithServices('[INS-001] insight views past the gate', () => {
@@ -61,7 +62,8 @@ describeWithServices('[INS-001] insight views past the gate', () => {
     // Arrange: one place, nobody may wait; the first view holds the place
     reading = 0;
     const app = bench.appAs(owner, { services: servicesWith({ atOnce: 1, waiting: 0 }) });
-    const get = (path: string) => request(app).get(`/api/content/${bench.contentId}/insight${path}`);
+    const get = (path: string) =>
+      request(app).get(`/api/content/${bench.contentId}/insight${path}`).set(OWN_PAGE_FETCH);
     await bench.db.auditEvent.deleteMany({ where: { targetId: bench.contentId } });
     const first = get('?context=portal').then((res) => res);
     await until(() => reading === 1);
@@ -86,7 +88,8 @@ describeWithServices('[INS-001] insight views past the gate', () => {
     // Arrange: one place, one may wait
     reading = 0;
     const app = bench.appAs(owner, { services: servicesWith({ atOnce: 1, waiting: 1 }) });
-    const get = () => request(app).get(`/api/content/${bench.contentId}/insight?context=portal`);
+    const get = () =>
+      request(app).get(`/api/content/${bench.contentId}/insight?context=portal`).set(OWN_PAGE_FETCH);
     const first = get().then((res) => res);
     await until(() => reading === 1);
     const second = get().then((res) => res);

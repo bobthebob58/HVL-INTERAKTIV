@@ -101,11 +101,15 @@ describe('[UD-013] portal pages and Hjelp', () => {
     const inOurChrome = await asFrame('same-origin');
     const elsewhere = await asFrame('cross-site');
     const topLevel = await request(app).get('/h5p/play/x').set('Sec-Fetch-Dest', 'document');
+    // Act: a page our chrome never frames, asked for as a frame from our own origin
+    const otherPage = await request(app)
+      .get('/no-such-page')
+      .set({ 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Site': 'same-origin' });
     // Assert
     expect(inOurChrome.text).not.toContain('/hjelp');
     expect(inOurChrome.text).not.toContain('hvl-site-header');
     expect(inOurChrome.text).toContain('<main id="main"');
-    for (const res of [elsewhere, topLevel])
+    for (const res of [elsewhere, topLevel, otherPage])
       expect(res.text).toContain('<a href="/hjelp?lang=nn" target="_top">');
   });
 

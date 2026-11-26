@@ -18,6 +18,7 @@ import { minimumGroupSize } from '../../../src/privacy/minimumGroupSize.js';
 import { NO_LIMIT } from '../../grades/status/support/gradeSyncApp.js';
 import { describeWithServices } from '../../support/services.js';
 import { FIXTURE_NOW, PERIOD_START } from '../fixtures/thirtyLearners.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import { openInsightHttpBench, portalPrincipal, type InsightHttpBench } from './support/insightHttpBench.js';
 
 const PAGE = 7;
@@ -98,7 +99,9 @@ describeWithServices('[INS-001] how much one insight view reads', () => {
     asked = [];
     const services = { insight: insightWith({ maxStatements: inView - 1, pageSize: PAGE }), limit: NO_LIMIT };
     const get = (path: string) =>
-      request(bench.appAs(owner, { services })).get(`/api/content/${bench.contentId}/insight${path}`);
+      request(bench.appAs(owner, { services }))
+        .get(`/api/content/${bench.contentId}/insight${path}`)
+        .set(OWN_PAGE_FETCH);
     await bench.db.auditEvent.deleteMany({ where: { targetId: bench.contentId } });
     // Act
     const view = await get(`?context=${bench.fx.courseA}`);

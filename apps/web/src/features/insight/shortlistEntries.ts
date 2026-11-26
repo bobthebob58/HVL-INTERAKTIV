@@ -5,17 +5,21 @@
  *
  * Why: INS-003's «Ta opp i samlinga» adds an item to a shortlist that can be printed or projected in the seminar. The
  *      entry is a snapshot in words, so it stays the same when the teacher changes the period or version, and it can
- *      only say what the tab showed: aggregates and the teacher's own texts, no personal data (INS-006). As the list
- *      keeps entries from several views, each names its own (context, period, version), so a printout never presents
- *      numbers from two courses or periods as one.
+ *      only say what the tab showed: aggregates, the teacher's own texts and, for a gap, the commonest wrong answer
+ *      the view lists. That answer is text learners typed; the view lists it only when k or more learners gave it
+ *      (INS-003, INS-006). As the list keeps entries from several views, each names its own (context, period,
+ *      version), so a printout never presents numbers from two courses or periods as one.
  * Spec: INS-003, INS-002, INS-006, UD-010
  * Invariants:
- *   - PRIVACY: built only from the already suppressed report; a hidden value stays «< k» or is left out.
+ *   - PRIVACY: built only from the already suppressed report; a hidden value stays «< k» or is left out. A typed
+ *     gap answer is written only when its count is shown. It is learners' own words, so a line can hold whatever k
+ *     or more of them typed alike, and the printout and the projection take it out of the app (DPIA input, R30).
  *   - An item is keyed by its `subContentId`, or by `ACTIVITY_ITEM` for the activity itself (a single question).
  *   - PEDAGOGY: Just-in-Time Teaching (spec 05): each entry names the difficulty and the misconception to discuss.
  * Collaborators: ./insightReportShape.ts, ./insightFormat.ts, ./insightSummaries.ts, ./insightScopeText.ts,
  *   ./shortlistContext.tsx.
- * Tests: apps/web/test/features/insight/InsightShortlist.test.tsx
+ * Tests: apps/web/test/features/insight/InsightShortlist.test.tsx,
+ *   apps/web/test/features/insight/insightSummaries.test.ts
  */
 import { t, type Locale } from '../../i18n/translate';
 import { cellText } from './insightFormat';
@@ -36,7 +40,7 @@ export interface ShortlistEntry {
   readonly authored: boolean;
   /** The view the numbers come from, e.g. «Tal frå SYK110 i Canvas, siste 7 dagar (frå 28. okt. 2026), versjon 3.» */
   readonly view: string;
-  /** Shown aggregates and the teacher's feedback, one sentence each. */
+  /** Shown aggregates, the teacher's feedback and, per gap, the commonest listed typed answer; a sentence each. */
   readonly lines: readonly string[];
 }
 

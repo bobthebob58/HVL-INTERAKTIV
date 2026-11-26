@@ -10,12 +10,12 @@
  *      2026-11-05).
  * Spec: INS-001, INS-006, INS-007, INS-009, INS-010, PROD-010, DATA-007, DOC-012
  * Auth: either — a portal session or an ltik as `Authorization: Bearer` (LTI-003); `requestPrincipal` checks both
- *   before this router. Every route is a GET and takes no CSRF token (D-057); instead, a browser request that is not
- *   a script's fetch from our own origin is refused (`isOwnPageFetch`).
+ *   before this router. Every route is a GET and takes no CSRF token (D-057); instead, a request that is not a
+ *   script's fetch from our own origin is refused (`isOwnPageFetch`).
  * Errors: 401 `hvl:unauthenticated`, `hvl:session-expired`, `hvl:ltik-invalid`; 404 `hvl:activity-unavailable`
  *   (unknown or not viewable, D-066); 403 `error.forbidden` (a learner, an admin or colleague who neither owns nor
  *   co-authors the activity, a Canvas author of a course it is not placed in, another context in Canvas, or a
- *   browser request that is not our pages' fetch: a navigation, another origin's request, an image or a frame); 400
+ *   request that is not our pages' fetch: a navigation, another origin's request, an image or a frame); 400
  *   `error.badRequest` (the query, a version above the current one, a context the activity lacks); 429
  *   `hvl:rate-limited` with `Retry-After`; 500 (a logged fault) while the app has not wired the insight services.
  * Invariants:
@@ -26,9 +26,10 @@
  *     report, the contexts carry labels only, the findings no learner at all. Nothing about a learner is logged.
  *   - A view and a download are audited before they are sent; the contexts and findings are not about learners and
  *     are not audited.
- *   - SECURITY: only a request whose `Sec-Fetch-Site` is absent or `same-origin`, `Sec-Fetch-Mode` absent, `cors` or
+ *   - SECURITY: only a request with the own-page header (`x-hvli-request: fetch`, which only a script of our own
+ *     origin can add; D-146) whose `Sec-Fetch-Site` is absent or `same-origin`, `Sec-Fetch-Mode` absent, `cors` or
  *     `same-origin`, and `Sec-Fetch-Dest` absent or `empty` gets past the sign-in check; any other is 403 before
- *     anything is audited or counted. One without fetch metadata is served.
+ *     anything is audited or counted. The header is asked of a portal session and of an ltik alike.
  *   - Every answer is `Cache-Control: no-store` (../../http/api/apiRouter.ts sets it; the CSV sets it again).
  * Collaborators: ./insightAccess.ts, ./insightView.ts, ./insightAudit.ts, ./insightCsvText.ts,
  *   ./insightFindingsAnswer.ts, ./InsightRateLimit.ts, ./insightApi.ts, ../../http/api/apiRouter.ts (mounts it),
@@ -40,6 +41,8 @@
  */
 import {
   CSV_MEDIA_TYPE,
+  OWN_PAGE_HEADER_NAME,
+  OWN_PAGE_HEADER_VALUE,
   type FindingsResponse,
   type InsightContextsResponse,
   type InsightFindingsResponse,
@@ -65,12 +68,16 @@ export const INSIGHT_PATH = '/content/:contentId/insight';
 // SECURITY: the view and the CSV write the audit trail (DATA-007) and every route takes from the limit, while GETs
 // take no CSRF token (D-057) and the Lax session cookie goes with another site's navigation and with an image an
 // author points at this URL in an activity our player shows. Our pages only `fetch` these routes from their own
-// origin, so only that, or a client without fetch metadata, is served (D-106, amended 2026-11-05).
+// origin, and each such fetch carries a header that a navigation, a form, an image or a frame cannot add, nor
+// another origin's script without a CORS grant `/api` never gives. So the header is required, which holds in a
+// browser that sends no fetch metadata too (D-146), and fetch metadata, where sent, must agree (D-106, amended
+// 2026-11-05).
 const isOwnPageFetch = (req: Request): boolean => {
   const site = req.get('sec-fetch-site');
   const mode = req.get('sec-fetch-mode');
   const dest = req.get('sec-fetch-dest');
   return (
+    req.get(OWN_PAGE_HEADER_NAME) === OWN_PAGE_HEADER_VALUE &&
     (site === undefined || site === 'same-origin') &&
     (mode === undefined || mode === 'cors' || mode === 'same-origin') &&
     (dest === undefined || dest === 'empty')

@@ -11,6 +11,7 @@ import { afterAll, beforeAll, expect, it } from 'vitest';
 import { CANVAS_USERS } from '../../../../tools/mock-platform/mockPlatform.mjs';
 import { openAppTestbed, type AppTestbed } from '../support/appTestbed.js';
 import { launchFromCanvas } from '../support/ltiLaunchDriver.js';
+import { OWN_PAGE_FETCH } from '../support/ownPageFetch.js';
 import { describeWithServices } from '../support/services.js';
 
 const REFUSED = { errorCode: 'hvl:not-from-canvas', httpStatusCode: 403 };
@@ -25,7 +26,7 @@ describeWithServices('[LTI-003] what an ltik reaches', () => {
   const launch = async (spec: Parameters<typeof launchFromCanvas>[2]) =>
     (await launchFromCanvas(tb.app, tb.mock.canvas, { user: CANVAS_USERS.teacher, ...spec })).ltik ?? '';
   const as = (token: string, method: 'get' | 'post' | 'put' | 'patch' | 'delete', path: string) =>
-    request(tb.app)[method](path).set('Authorization', `Bearer ${token}`);
+    request(tb.app)[method](path).set(OWN_PAGE_FETCH).set('Authorization', `Bearer ${token}`);
   beforeAll(async () => {
     tb = await openAppTestbed();
     const first = await tb.activity(await tb.staffAccount(), { published: true });

@@ -17,6 +17,7 @@ import { DataEncryption } from '../../src/security/keys/DataEncryption.js';
 import { openAppTestbed, type AppTestbed } from '../support/appTestbed.js';
 import { capturedLogger } from '../support/capturedLogger.js';
 import { launchFromCanvas } from '../support/ltiLaunchDriver.js';
+import { OWN_PAGE_FETCH } from '../support/ownPageFetch.js';
 import { describeWithServices } from '../support/services.js';
 import { moveStatementsToYesterday } from '../support/statementsToYesterday.js';
 import { fixturePlay } from './support/xapiBridgeItems.js';
@@ -154,6 +155,7 @@ describeWithServices(
       const view = async () => {
         const res = await request(tb.app)
           .get(`/api/content/${contentId}/insight`)
+          .set(OWN_PAGE_FETCH)
           .set('Authorization', `Bearer ${teacher.ltik}`);
         return [res.status, res.body.participation?.started];
       };

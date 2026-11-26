@@ -10,19 +10,22 @@ import { getStudioOverview, STUDIO_OVERVIEW_PATH } from '../../src/api/studioApi
 import { fakeFetch } from '../support/fakeFetch';
 import { OVERVIEW } from '../support/studioFixtures';
 
+/** What every request of the web client carries (../../src/api/apiRequest.ts). */
+const BASE = { Accept: 'application/json', 'x-hvli-request': 'fetch' };
+
 describe('[PED-001] the studio overview request', () => {
   it.each([
-    ['a public page (no credential given)', undefined, { Accept: 'application/json' }, 'same-origin'],
+    ['a public page (no credential given)', undefined, BASE, 'same-origin'],
     [
       'a portal page with its CSRF token',
       { kind: 'portal', csrfToken: 'csrf-1' } as const,
-      { Accept: 'application/json' },
+      BASE,
       'same-origin',
     ],
     [
       'an LTI page',
       { kind: 'lti', ltik: 'ltik-1' } as const,
-      { Accept: 'application/json', Authorization: 'Bearer ltik-1' },
+      { ...BASE, Authorization: 'Bearer ltik-1' },
       'omit',
     ],
   ])(

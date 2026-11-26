@@ -19,6 +19,7 @@ import type { Browser, FrameLocator, Page } from 'playwright-core';
 import { expect } from 'vitest';
 import type { LaunchSpec } from '../../../../tools/mock-platform/mockPlatform.mjs';
 import { launchFromCanvas } from '../../test/support/ltiLaunchDriver.js';
+import { OWN_PAGE_FETCH } from '../../test/support/ownPageFetch.js';
 import type { RealWebApp } from '../../test/support/realWebApp.js';
 import { answerMultiChoiceRight, recordBridgePosts, startedPlayer } from './gradeBridgeFlow.js';
 
@@ -121,6 +122,7 @@ export async function insightAsLaunch(
   const { ltik } = await launchFromCanvas(app.tb.app, app.tb.mock.canvas, launch);
   if (!ltik) throw new Error('the launch did not reach the tool');
   const path = `/api/content/${encodeURIComponent(launch.custom.contentId)}/insight${query}`;
-  const res = await fetch(`${app.base}${path}`, { headers: { authorization: `Bearer ${ltik}` } });
+  const headers = { ...OWN_PAGE_FETCH, authorization: `Bearer ${ltik}` };
+  const res = await fetch(`${app.base}${path}`, { headers });
   return { status: res.status, body: await res.json() };
 }

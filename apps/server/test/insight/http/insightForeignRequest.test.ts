@@ -1,17 +1,20 @@
 /**
  * Tests that another site, or a path an author sets in an activity, cannot write the insight audit trail (DATA-007,
- * INS-009, D-106's amendment of 2026-11-05): a browser's top-level navigation, a request it marks as sent from
- * another origin, and an image, video, frame or prefetch that a page of our own origin loads are refused with 403
- * before any audit event is written or the rate limit is taken, while our pages' same-origin fetches and clients
- * without fetch metadata are served and audited as before. The headers are those full Chromium sends.
+ * INS-009, D-106's amendment of 2026-11-05, D-146): a browser's top-level navigation, a request it marks as sent
+ * from another origin, and an image, video, frame or prefetch that a page of our own origin loads are refused with
+ * 403 before any audit event is written or the rate limit is taken, with or without the own-page header; so is any
+ * request without that header, which is what a browser that sends no fetch metadata gives for a navigation or an
+ * image. Our pages' fetches, with the header, are served and audited. The fetch metadata is what full Chromium sends.
  *
  * Spec: DATA-007, INS-009, INS-007
  */
+import { OWN_PAGE_HEADER_NAME } from '@hvl-interaktiv/api-contract';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import type { PersonLimit } from '../../../src/learningDesign/collaboration/PersonRateLimit.js';
 import { QUESTION_SET } from '../fixtures/insightActivities.js';
 import { questionSetRows } from '../fixtures/thirtyLearners.js';
+import { OWN_PAGE_FETCH } from '../../support/ownPageFetch.js';
 import { reportOf } from '../support/insightFixtureReport.js';
 import { insightStubApp } from './support/insightStubApp.js';
 
@@ -25,12 +28,14 @@ const CROSS_SITE_NAVIGATION = {
   'Sec-Fetch-Dest': 'document',
 };
 
-/** What a browser sends for our own pages' `fetch` (the web client's `apiRequest`). */
+/** What a browser sends for our own pages' `fetch` (the web client's `apiRequest`), the own-page header included. */
 const SAME_ORIGIN_FETCH = {
+  ...OWN_PAGE_FETCH,
   'Sec-Fetch-Site': 'same-origin',
   'Sec-Fetch-Mode': 'cors',
   'Sec-Fetch-Dest': 'empty',
 };
+const ROUTES = ['', '/export?period=semester', '/contexts', '/findings'];
 
 /** The insight app with a limit that counts its takes. */
 function countingApp() {
@@ -50,8 +55,13 @@ describe('[DATA-007] another site cannot write the insight audit trail', () => {
     const { app, audited, takes } = countingApp();
     // Act
     const answers = [];
-    for (const route of ['', '/export?period=semester', '/contexts', '/findings']) {
+    for (const route of ROUTES) {
       answers.push(await request(app).get(`${BASE}${route}`).set(CROSS_SITE_NAVIGATION));
+      answers.push(
+        await request(app)
+          .get(`${BASE}${route}`)
+          .set({ ...OWN_PAGE_FETCH, ...CROSS_SITE_NAVIGATION }),
+      );
     }
     // Assert
     for (const res of answers) {
@@ -74,8 +84,16 @@ describe('[DATA-007] another site cannot write the insight audit trail', () => {
     // Act
     const answers = [];
     for (const headers of requests) {
-      answers.push(await request(app).get(BASE).set(headers));
-      answers.push(await request(app).get(`${BASE}/export`).set(headers));
+      answers.push(
+        await request(app)
+          .get(BASE)
+          .set({ ...OWN_PAGE_FETCH, ...headers }),
+      );
+      answers.push(
+        await request(app)
+          .get(`${BASE}/export`)
+          .set({ ...OWN_PAGE_FETCH, ...headers }),
+      );
     }
     // Assert
     expect(answers.map((res) => res.status)).toEqual([403, 403, 403, 403, 403, 403]);
@@ -96,8 +114,16 @@ describe('[DATA-007] another site cannot write the insight audit trail', () => {
     // Act
     const answers = [];
     for (const headers of requests) {
-      answers.push(await request(app).get(BASE).set(headers));
-      answers.push(await request(app).get(`${BASE}/export?period=semester`).set(headers));
+      answers.push(
+        await request(app)
+          .get(BASE)
+          .set({ ...OWN_PAGE_FETCH, ...headers }),
+      );
+      answers.push(
+        await request(app)
+          .get(`${BASE}/export?period=semester`)
+          .set({ ...OWN_PAGE_FETCH, ...headers }),
+      );
     }
     // Assert
     expect(answers.map((res) => res.status)).toEqual(Array.from({ length: 8 }, () => 403));
@@ -105,14 +131,36 @@ describe('[DATA-007] another site cannot write the insight audit trail', () => {
     expect(takes).toEqual([]);
   });
 
-  it('[INS-009] our pages’ fetch and a client without fetch metadata get the view and the CSV, audited', async () => {
+  it('[DATA-007] a request without the own-page header is refused, whatever else it sends', async () => {
+    // Arrange: a browser without fetch metadata sends a navigation or an image like this; then a wrong value, and
+    // the fetch metadata of our own page's fetch without the header
+    const { app, audited, takes } = countingApp();
+    const requests = [
+      {},
+      { [OWN_PAGE_HEADER_NAME]: 'yes' },
+      { [OWN_PAGE_HEADER_NAME]: '' },
+      { 'Sec-Fetch-Site': 'same-origin', 'Sec-Fetch-Mode': 'cors', 'Sec-Fetch-Dest': 'empty' },
+    ];
+    // Act
+    const answers = [];
+    for (const headers of requests)
+      for (const route of ROUTES) answers.push(await request(app).get(`${BASE}${route}`).set(headers));
+    // Assert
+    expect(answers.map((res) => res.status)).toEqual(Array.from({ length: 16 }, () => 403));
+    expect(answers.every((res) => res.body.errorCode === 'error.forbidden')).toBe(true);
+    expect(answers.every((res) => res.headers['content-disposition'] === undefined)).toBe(true);
+    expect(audited).toEqual([]);
+    expect(takes).toEqual([]);
+  });
+
+  it('[INS-009] our pages’ fetch, and a client that sends the header alone, get the view and the CSV, audited', async () => {
     // Arrange
     const { app, audited, takes } = countingApp();
     // Act
     const answers = [
       await request(app).get(BASE).set(SAME_ORIGIN_FETCH),
       await request(app).get(`${BASE}/export`).set(SAME_ORIGIN_FETCH),
-      await request(app).get(`${BASE}/export`),
+      await request(app).get(`${BASE}/export`).set(OWN_PAGE_FETCH),
     ];
     // Assert
     expect(answers.map((res) => res.status)).toEqual([200, 200, 200]);

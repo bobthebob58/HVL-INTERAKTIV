@@ -44,6 +44,7 @@ describe('[MAPPE-001] file answers', () => {
     expect(requests[0]?.headers).toEqual({
       Accept: 'text/markdown',
       'Content-Type': 'application/json',
+      'x-hvli-request': 'fetch',
       [CSRF_HEADER]: 'tok',
     });
   });

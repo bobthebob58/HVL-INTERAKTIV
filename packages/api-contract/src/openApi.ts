@@ -11,7 +11,8 @@
  *     in ./apiSchemaNames.ts, else building throws (a test builds the document).
  *   - A file answer is documented with its media type, a string schema (binary unless it is text) and a required
  *     `Content-Disposition: attachment` header.
- *   - The security schemes name the server's real cookie and CSRF header; a server test compares them.
+ *   - The security schemes name the server's real cookie and CSRF header; a server test compares them. The
+ *     own-page header's name and value are defined here once, for the server; the web client's copy is tested.
  * Collaborators: ./apiRoutes.ts, ./apiSchemaNames.ts, ./apiRouteTypes.ts, apps/server/src/http/api/apiDocsRoutes.ts.
  * Tests: packages/api-contract/test/openApi.test.ts, packages/api-contract/test/openApiFiles.test.ts,
  *   apps/server/test/http/api/apiDocs.int.test.ts
@@ -33,6 +34,14 @@ export { REQUEST_SCHEMAS, RESPONSE_SCHEMAS } from './apiSchemaNames.js';
 export const PORTAL_SESSION_COOKIE = '__Host-hvli_sid';
 /** The header that carries the session's CSRF token (apps/server/src/auth/session/csrfToken.ts, D-057). */
 export const CSRF_HEADER_NAME = 'x-csrf-token';
+/**
+ * The header the app's pages add to every request they send, with `OWN_PAGE_HEADER_VALUE`. SECURITY: a navigation, a
+ * form, an image or a frame cannot add a header, and another origin's script cannot without a CORS grant, which
+ * `/api` never gives; the insight routes, GETs that write the audit trail, require it (DATA-007, D-146).
+ */
+export const OWN_PAGE_HEADER_NAME = 'x-hvli-request';
+/** The value of `OWN_PAGE_HEADER_NAME`. */
+export const OWN_PAGE_HEADER_VALUE = 'fetch';
 
 /** An OpenAPI 3.1 document as plain JSON. */
 export type OpenApiDocument = z.infer<typeof openApiDocumentSchema>;
@@ -155,7 +164,8 @@ export function buildOpenApiDocument(routes: readonly ApiRoute[] = API_ROUTES): 
       description:
         'The JSON API of HVL Interaktiv. Errors share one shape (ErrorBody) with a translated message. Portal ' +
         `requests send the session cookie and, on unsafe methods, the \`${CSRF_HEADER_NAME}\` header with the ` +
-        'token from `GET /auth/session`; LTI requests send the ltik as `Authorization: Bearer`.',
+        'token from `GET /auth/session`; LTI requests send the ltik as `Authorization: Bearer`. The app’s pages ' +
+        `add \`${OWN_PAGE_HEADER_NAME}: ${OWN_PAGE_HEADER_VALUE}\` to every request; the insight routes require it.`,
     },
     paths,
     components: {
