@@ -2,7 +2,7 @@
  * Tests for the deployment files: the real Dockerfile, ignore file and app stack pass the D-110 rules, and broken
  * copies of each are caught. The seccomp profile's own rules are tested in ./seccompRules.test.mjs.
  *
- * Spec: NFR-007, MAPPE-004
+ * Spec: NFR-007, MAPPE-004, SEC-007
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -51,6 +51,14 @@ describe('[NFR-007] the deployment files keep D-110 rules', () => {
       '    export NODE_EXTRA_CA_CERTS=/run/secrets/proxy_ca\nFROM a AS runtime\n' +
       'ENV TSX_DISABLE_CACHE=1\nUSER 10001:10001\n';
     expect(dockerfileProblems(text)).toEqual([]);
+  });
+
+  it('[SEC-007] an image whose install does not copy .npmrc is refused', () => {
+    const without = DOCKERFILE.replace('package-lock.json .npmrc ./', 'package-lock.json ./');
+    expect(without).not.toBe(DOCKERFILE);
+    expect(dockerfileProblems(without)).toEqual([
+      'Dockerfile: the stage that installs must copy .npmrc with package-lock.json',
+    ]);
   });
 
   it('[NFR-007] an image or a service that lets the loader keep its code in a writable folder is refused', () => {

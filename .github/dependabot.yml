@@ -2,6 +2,9 @@
 # WHY: major versions change behaviour and are upgraded on purpose, with a decision and the full gate, not by a bot;
 # an advisory that only a major version fixes still fails `npm run check:audit` in CI, so it cannot go unnoticed.
 # Every update still goes through review, the exact-pin check and the audit check in CI.
+# Between two runs, .github/workflows/audit.yml runs the audit check once a day on the default branch (D-145), so a
+# new advisory does not wait for the next month or the next push.
+# The actions are named by commit with the version as a comment (`npm run check:workflows`); Dependabot updates both.
 version: 2
 updates:
   - package-ecosystem: npm

@@ -32,10 +32,12 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
 ENV NEXT_TELEMETRY_DISABLED=1 CHECKPOINT_DISABLE=1
 
 # Every dependency from the lockfile, with install scripts: @prisma/engines fetches the OpenSSL 3 schema engine here.
+# SECURITY: .npmrc comes with the lockfile, so this npm ci also stops at an install script that the root
+# package.json does not name in `allowScripts` (strict-allow-scripts, D-145).
 FROM base AS deps
 WORKDIR /app
 ENV HUSKY=0
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json .npmrc ./
 COPY apps/server/package.json apps/server/
 COPY apps/web/package.json apps/web/
 COPY packages/api-contract/package.json packages/api-contract/

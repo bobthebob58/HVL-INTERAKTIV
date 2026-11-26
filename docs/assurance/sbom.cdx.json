@@ -2,7 +2,7 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:afe3d795-3b45-5d5e-bc12-eeeb65f2fd9c",
+  "serialNumber": "urn:uuid:c09f8e44-b244-5cf9-95c4-97680b5ff0dc",
   "version": 1,
   "metadata": {
     "lifecycles": [
@@ -7266,18 +7266,18 @@
       ]
     },
     {
-      "bom-ref": "effect@3.20.0",
+      "bom-ref": "effect@3.22.4",
       "type": "library",
       "name": "effect",
-      "version": "3.20.0",
+      "version": "3.22.4",
       "scope": "optional",
       "description": "The missing standard library for TypeScript, for writing production-grade software.",
-      "purl": "pkg:npm/effect@3.20.0",
+      "purl": "pkg:npm/effect@3.22.4",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/effect/-/effect-3.20.0.tgz"
+          "url": "https://registry.npmjs.org/effect/-/effect-3.22.4.tgz"
         },
         {
           "type": "vcs",
@@ -7291,7 +7291,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "a8c2df0c9b1cacd1bca7f6b0f88913f56edf823e74678c06e5b2c1cb44f1b31cfc8941e30c890e80edd25745997e741b346d952586f46feac32ccae1338f8aaf"
+          "content": "44db21bbb017571c4387a692e25a2d86127e428678c52ca46d635a69576f0cdef644cc95c210867402e4ca5d536c4c9d80099121d0f5793c89a81506c120460c"
         }
       ],
       "licenses": [
@@ -18267,7 +18267,7 @@
       "dependsOn": [
         "c12@3.3.4",
         "deepmerge-ts@8.0.2",
-        "effect@3.20.0",
+        "effect@3.22.4",
         "empathic@2.0.0"
       ]
     },
@@ -19174,7 +19174,7 @@
       "dependsOn": []
     },
     {
-      "ref": "effect@3.20.0",
+      "ref": "effect@3.22.4",
       "dependsOn": [
         "@standard-schema/spec@1.1.0",
         "fast-check@3.23.2"

@@ -6,7 +6,7 @@
  *      only as a secret, a non-root user, Chromium's sandbox through the seccomp profile, nothing published but the
  *      app on 127.0.0.1, no secret in a file). These are cheap to check on every test run and before every smoke
  *      build, long before a slow build would show them (NFR-007, MAPPE-004).
- * Spec: NFR-007, MAPPE-004
+ * Spec: NFR-007, MAPPE-004, SEC-007
  * Invariants:
  *   - Pure checks of file contents: each function returns problems as text and an empty list when all is well.
  *   - SECURITY: a problem names a key or a line number, never a value that could be a secret.
@@ -15,6 +15,8 @@
  *   - SECURITY: the image switches the TypeScript loader's cache off (`TSX_DISABLE_CACHE=1`), and no service of the
  *     stack switches it back on: with it, translated code would be kept in the writable /tmp and run from there,
  *     past the read-only root file system (D-144).
+ *   - SECURITY: the stage that runs `npm ci` copies `.npmrc` with the lock file, so the image's install refuses an
+ *     install script outside `allowScripts` as every other install does (SEC-007, D-145).
  * Collaborators: ./checkDeployFiles.mjs, ./seccompRules.mjs (the profile itself), deploy/Dockerfile,
  *   deploy/Dockerfile.dockerignore, deploy/compose.app.yml, yaml.
  * Tests: tools/deploy-check/test/deployFiles.test.mjs
@@ -93,6 +95,10 @@ export function dockerfileProblems(text) {
     if (declared.some((pair) => SECRET_KEY.test(pair.split('=')[0])))
       problems.push(`Dockerfile:${line}: no secret may be an ARG or ENV`);
   }
+  // SECURITY: without .npmrc the image's npm ci would run an install script outside `allowScripts` (D-145).
+  const lockCopy = instructions.find((i) => /^COPY\s.*\bpackage-lock\.json\s/i.test(i.text));
+  if (instructions.some((i) => /\bnpm ci\b/.test(i.text)) && !/\s\.npmrc\s/.test(lockCopy?.text ?? ''))
+    problems.push('Dockerfile: the stage that installs must copy .npmrc with package-lock.json');
   const runtime = instructions.slice(instructions.findLastIndex((i) => /^FROM\s/i.test(i.text)));
   const finalUser = runtime.filter((i) => /^USER\s/i.test(i.text)).at(-1);
   if (finalUser?.text !== `USER ${APP_UID}:${APP_UID}`)

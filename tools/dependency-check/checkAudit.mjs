@@ -5,36 +5,41 @@
  *      decision down and set an expiry date. Plain `npm audit` cannot express such an exception.
  * Spec: SEC-007
  * Invariants:
- *   - Every high or critical advisory must match an entry in audit-exceptions.json by its GHSA ID.
- *   - An entry must name an existing decision (`### D-xxx` in docs/DECISIONS.md) and must not be expired.
+ *   - Every high or critical advisory must match an entry in audit-exceptions.json by its GHSA ID and by the
+ *     package it is reported for: an exception written for one package never covers another (D-145).
+ *   - An entry must be complete and dated as ./auditExceptionRules.mjs says (a real date, at most 120 days
+ *     ahead), must name an existing decision (`### D-xxx` in docs/DECISIONS.md) and must not be expired.
  *   - An entry that no longer matches any advisory fails too, so the list never goes stale.
  *   - Output that is not a real report (registry unreachable, npm error) fails with exit code 2; it never
  *     counts as "no advisories".
  *   - An exception is valid up to and including its `expires` date.
- * Collaborators: npm (audit), ./audit-exceptions.json, docs/DECISIONS.md, CI (`npm run check:audit`).
+ * Collaborators: npm (audit), ./auditExceptionRules.mjs, ./audit-exceptions.json, docs/DECISIONS.md, CI
+ *                (`npm run check:audit`, on every push and once a day).
  * Tests: tools/dependency-check/test/checkAudit.test.mjs
  */
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { exceptionProblems, isCalendarDate } from './auditExceptionRules.mjs';
 
 const BLOCKING = new Set(['high', 'critical']);
 
 /**
  * Extracts the blocking advisories from an `npm audit --json` report.
  * @param {{vulnerabilities?: Record<string, {via: (string|object)[]}>}} report - Parsed audit report.
- * @returns {{id: string, pkg: string, title: string}[]} Unique advisories, sorted by ID.
+ * @returns {{id: string, pkg: string, title: string}[]} One per advisory and package, sorted by ID, then package.
  */
 export function blockingAdvisories(report) {
   const found = new Map();
   for (const entry of Object.values(report.vulnerabilities ?? {})) {
     for (const via of entry.via.filter((v) => typeof v === 'object' && BLOCKING.has(v.severity))) {
       const id = /GHSA-[\w-]+/.exec(via.url ?? '')?.[0] ?? `npm-${via.source}`;
-      found.set(id, { id, pkg: via.name, title: via.title });
+      // WHY: one advisory can name several packages; each of them needs its own reviewed exception.
+      found.set(`${id} ${via.name}`, { id, pkg: via.name, title: via.title });
     }
   }
-  return [...found.values()].sort((a, b) => a.id.localeCompare(b.id));
+  return [...found.values()].sort((a, b) => a.id.localeCompare(b.id) || a.pkg.localeCompare(b.pkg));
 }
 
 /**
@@ -65,19 +70,26 @@ export function assertAuditReport(report) {
  * @param {{advisory: string, package: string, decision: string, expires: string}[]} exceptions - Reviewed list.
  * @param {Set<string>} decisions - Decision IDs that exist in DECISIONS.md.
  * @param {string} today - ISO date (YYYY-MM-DD).
- * @returns {string[]} Problems; empty when every advisory is covered by a valid exception.
+ * @returns {string[]} Problems; empty when the list is sound and every advisory is covered by a valid exception.
  */
 export function evaluateAudit(advisories, exceptions, decisions, today) {
-  const problems = [];
+  const problems = exceptionProblems(exceptions, today);
+  const entries = (Array.isArray(exceptions) ? exceptions : []).filter((e) => e && typeof e === 'object');
   for (const a of advisories) {
-    const ex = exceptions.find((e) => e.advisory === a.id);
-    if (!ex) problems.push(`${a.id} (${a.pkg}): unreviewed — ${a.title}`);
-    else if (ex.expires < today)
+    const sameAdvisory = entries.filter((e) => e.advisory === a.id);
+    const ex = sameAdvisory.find((e) => e.package === a.pkg);
+    if (!ex && sameAdvisory.length > 0) {
+      const names = sameAdvisory.map((e) => e.package).join(', ');
+      problems.push(`${a.id} (${a.pkg}): the exception is written for ${names}, not for this package`);
+    } else if (!ex) problems.push(`${a.id} (${a.pkg}): unreviewed — ${a.title}`);
+    // WHY: an expiry that is not a date is already a problem of the list; as text it would never be "before today".
+    else if (isCalendarDate(ex.expires) && ex.expires < today)
       problems.push(`${a.id} (${a.pkg}): exception expired on ${ex.expires}; review it again`);
     else if (!decisions.has(ex.decision))
       problems.push(`${a.id} (${a.pkg}): exception names unknown decision ${ex.decision}`);
   }
-  for (const e of exceptions.filter((x) => !advisories.some((a) => a.id === x.advisory))) {
+  const reported = (e) => advisories.some((a) => a.id === e.advisory && a.pkg === e.package);
+  for (const e of entries.filter((x) => !reported(x))) {
     problems.push(`${e.advisory} (${e.package}): no longer reported; remove the exception`);
   }
   return problems;
