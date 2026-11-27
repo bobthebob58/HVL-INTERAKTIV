@@ -149,7 +149,7 @@ describeA11y('[UD-004] visible focus and [UD-006] keyboard access', (env) => {
       .locator('.h5p-slide.h5p-current')
       .evaluate((slide) => [getComputedStyle(slide).outline, getComputedStyle(slide).boxShadow]);
     // Assert
-    expect(ring).toEqual(['rgb(0, 67, 87) solid 3px', 'rgb(255, 255, 255) 0px 0px 0px 5px inset']);
+    expect(ring).toEqual(['3px solid rgb(0, 67, 87)', 'rgb(255, 255, 255) 0px 0px 0px 5px inset']);
     await context.close();
   });
 });

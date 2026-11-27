@@ -1,7 +1,7 @@
 /**
  * End-to-end test of journey J2 (spec 00 §3, «Study asynchronously on a phone and resume»), steps 1–3, in full
  * Chromium with third-party cookies and frame storage blocked (D-065): a student opens the author's QuestionSet from
- * the mock Canvas on a phone 320 px wide (touch, two device pixels per CSS pixel); the player reflows to the frame's
+ * the mock Canvas on a phone 320 px wide (touch, one device pixel per CSS pixel); the player reflows to the frame's
  * width with no sideways scrolling (UD-008). The student starts the set, answers the first question wrong and sees
  * «Feil:» and the teacher's explanation (UD-003), goes on and fills two of the Blanks question's gaps, and the player
  * saves the state (H5P-005). The student closes the browser; the next evening a new browser on the same phone opens
@@ -24,8 +24,12 @@ import { launchCookieTestChromium } from '../test/support/thirdPartyCookies.js';
 import { startedPlayer } from './support/gradeBridgeFlow.js';
 import { questionSetTexts } from './support/seminarCohort.js';
 
-/** A small phone: 320 CSS pixels wide (WCAG 1.4.10's reflow width), touch, two device pixels per CSS pixel. */
-const PHONE = { viewport: { width: 320, height: 640 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
+/**
+ * A small phone: 320 CSS pixels wide (WCAG 1.4.10's reflow width), touch.
+ * WHY: no device pixel ratio above 1. Under an emulated ratio, the pinned full Chromium lays the tool's frame out at
+ * half its width (../test/browser/emulatedPixelRatio.browser.test.ts, D-149); reflow is a matter of CSS pixels.
+ */
+const PHONE = { viewport: { width: 320, height: 640 }, isMobile: true, hasTouch: true };
 /** The two gaps the student fills, as the example accepts them. */
 const WORDS = ['undervegsvurdering', 'framover'] as const;
 
