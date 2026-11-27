@@ -17,7 +17,8 @@ import { fileLink, plain } from './renderCriterion.mjs';
 import { criterionBlockId, VERDICTS, verdictOf } from './manualBlocks.mjs';
 import { issueText } from './upstreamEntries.mjs';
 
-const cell = (text) => plain(text).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+// WHY: `\` is escaped with `|`, so a backslash in the text cannot join the `\|` after it and end the cell.
+const cell = (text) => plain(text).replace(/[\\|]/g, '\\$&').replace(/\n/g, ' ');
 
 /**
  * GitHub's anchor for a heading, e.g. `1.4.10 Reflow` → `1410-reflow`.

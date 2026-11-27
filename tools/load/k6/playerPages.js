@@ -79,8 +79,9 @@ export function embeddedJson(html, id) {
  */
 export function pageAssets(html) {
   const found = [];
-  for (const [tag] of (html ?? '').matchAll(/<(?:script|link)\b[^>]*>/g)) {
-    const path = tag.startsWith('<script') ? attribute(tag, 'src') : stylesheetHref(tag);
+  // WHY: HTML tag names are not case-sensitive, so `<SCRIPT src=…>` is a script too.
+  for (const [tag] of (html ?? '').matchAll(/<(?:script|link)\b[^>]*>/gi)) {
+    const path = /^<script/i.test(tag) ? attribute(tag, 'src') : stylesheetHref(tag);
     if (path?.startsWith('/') && !path.startsWith('//') && !found.includes(path)) found.push(path);
   }
   return found;
