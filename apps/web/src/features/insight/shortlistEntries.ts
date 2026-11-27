@@ -16,16 +16,20 @@
  *     or more of them typed alike, and the printout and the projection take it out of the app (DPIA input, R30).
  *   - An item is keyed by its `subContentId`, or by `ACTIVITY_ITEM` for the activity itself (a single question).
  *   - PEDAGOGY: Just-in-Time Teaching (spec 05): each entry names the difficulty and the misconception to discuss.
+ *   - A line that quotes the activity's text (an option, feedback, a typed answer) gives its range, so only that part
+ *     carries the activity's language (./quotedText.tsx, UD-010).
  * Collaborators: ./insightReportShape.ts, ./insightFormat.ts, ./insightSummaries.ts, ./insightScopeText.ts,
- *   ./shortlistContext.tsx.
+ *   ./quotedText.tsx, ./shortlistContext.tsx.
  * Tests: apps/web/test/features/insight/InsightShortlist.test.tsx,
- *   apps/web/test/features/insight/insightSummaries.test.ts
+ *   apps/web/test/features/insight/insightSummaries.test.ts,
+ *   apps/web/test/features/insight/InsightQuotedLanguage.test.tsx
  */
 import { t, type Locale } from '../../i18n/translate';
 import { cellText } from './insightFormat';
 import type { InsightReport } from './insightReportShape';
 import { scopeWords } from './insightScopeText';
 import { choiceSummary, commonestWrongOption, gapSummary, questionLabel } from './insightSummaries';
+import { plainText, quotedSentence, type QuotedText } from './quotedText';
 
 /** The key of the activity itself when it is a single question (`item: null`). */
 export const ACTIVITY_ITEM = ':activity';
@@ -41,7 +45,7 @@ export interface ShortlistEntry {
   /** The view the numbers come from, e.g. «Tal frå SYK110 i Canvas, siste 7 dagar (frå 28. okt. 2026), versjon 3.» */
   readonly view: string;
   /** Shown aggregates, the teacher's feedback and, per gap, the commonest listed typed answer; a sentence each. */
-  readonly lines: readonly string[];
+  readonly lines: readonly QuotedText[];
 }
 
 /**
@@ -69,20 +73,23 @@ export function shortlistEntry(
   const item = report.items[index];
   const misconception = report.misconceptions.find((candidate) => itemKey(candidate.item) === key);
   if (!item && !misconception) return undefined;
-  const lines: string[] = [];
+  const lines: QuotedText[] = [];
   if (item?.firstCorrect) {
     lines.push(
-      t('insight.shortlist.lineItem', locale, {
-        first: cellText(item.firstCorrect, 'percent', k, locale),
-        latest: cellText(item.latestCorrect, 'percent', k, locale),
-        learners: cellText(item.learners, 'count', k, locale),
-      }),
+      plainText(
+        t('insight.shortlist.lineItem', locale, {
+          first: cellText(item.firstCorrect, 'percent', k, locale),
+          latest: cellText(item.latestCorrect, 'percent', k, locale),
+          learners: cellText(item.learners, 'count', k, locale),
+        }),
+      ),
     );
   }
   if (misconception?.kind === 'choice') {
     lines.push(choiceSummary(misconception, locale));
     const feedback = commonestWrongOption(misconception)?.feedback;
-    if (feedback) lines.push(t('insight.shortlist.lineFeedback', locale, { feedback }));
+    if (feedback)
+      lines.push(quotedSentence('insight.shortlist.lineFeedback', locale, { feedback }, 'feedback'));
   }
   if (misconception?.kind === 'gaps') {
     for (const gap of misconception.gaps) lines.push(gapSummary(gap, locale));

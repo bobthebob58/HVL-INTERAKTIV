@@ -12,10 +12,12 @@
  *   - Bars are a share of the learners who answered, or of the largest shown count when that total is hidden.
  *   - «Ingen av alternativa» (first answers that name no current option) has a row only when it is not 0.
  *   - The icons are `aria-hidden`; the words carry the meaning.
- *   - The option and feedback texts carry the activity's language (UD-010); «Inga tilbakemelding» does not.
- * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts,
+ *   - The option and feedback texts carry the activity's language (UD-010), in the table, the chart's labels, the
+ *     summary and the caption (only the quoted part, ./quotedText.tsx); «Inga tilbakemelding» does not.
+ * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./quotedText.tsx,
  *   ./MisconceptionSection.tsx.
- * Tests: apps/web/test/features/insight/InsightMisconceptions.test.tsx
+ * Tests: apps/web/test/features/insight/InsightMisconceptions.test.tsx,
+ *   apps/web/test/features/insight/InsightQuotedLanguage.test.tsx
  */
 'use client';
 
@@ -27,6 +29,7 @@ import { CellValue } from './CellValue';
 import { cellText, shownValue, type AnyCell, KIND } from './insightFormat';
 import type { ChoiceMisconception } from './insightReportShape';
 import { choiceSummary } from './insightSummaries';
+import { Quoted, quotedSentence } from './quotedText';
 import { DATA_CELL, HEAD_CELL, ROW_HEAD_CELL, ScrollTable } from './ScrollTable';
 
 /** The icon before a right and a wrong option (UD-003); always followed by its word. */
@@ -45,29 +48,47 @@ export function barBase(total: AnyCell, cells: readonly AnyCell[]): number {
 
 /**
  * One choice question's distribution.
- * @param props - The question, its name for the table's caption (its text, or its place when it has none), and k.
+ * @param props - The question, its name for the table's caption (its text, or its place when it has none), whether
+ *   that name is the question's own text, and k.
  * @returns The figure.
  */
 export function ChoiceQuestion({
   question,
   name,
+  authored,
   k,
 }: {
   readonly question: ChoiceMisconception;
   readonly name: string;
+  /** False when `name` is a fallback (a question without text), which the caption never marks. */
+  readonly authored: boolean;
   readonly k: number;
 }) {
   const locale = useLocale();
   const lang = useAuthoredLang();
+  const caption = quotedSentence(
+    'insight.choice.caption',
+    locale,
+    { question: name },
+    authored ? 'question' : undefined,
+  );
   const showNoAnswer = shownValue(question.noAnswer) !== 0;
   const rowsOf = [
     ...question.options.map((option) => ({
       key: `o${option.index}`,
       label: option.text,
       cell: option.learners,
+      authored: true,
     })),
     ...(showNoAnswer
-      ? [{ key: 'none', label: t('insight.choice.noAnswer', locale), cell: question.noAnswer }]
+      ? [
+          {
+            key: 'none',
+            label: t('insight.choice.noAnswer', locale),
+            cell: question.noAnswer,
+            authored: false,
+          },
+        ]
       : []),
   ];
   const base = barBase(
@@ -79,6 +100,7 @@ export function ChoiceQuestion({
     return {
       key: row.key,
       label: row.label,
+      authored: row.authored,
       bars: [
         {
           pattern: SOLID,
@@ -90,9 +112,11 @@ export function ChoiceQuestion({
   });
   return (
     <figure className="m-0 mb-4">
-      <figcaption className="mb-2 font-bold">{choiceSummary(question, locale)}</figcaption>
+      <figcaption className="mb-2 font-bold">
+        <Quoted value={choiceSummary(question, locale)} />
+      </figcaption>
       <BarChart rows={rows} />
-      <ScrollTable caption={t('insight.choice.caption', locale, { question: name })}>
+      <ScrollTable caption={<Quoted value={caption} />}>
         <thead>
           <tr>
             <th scope="col" className={HEAD_CELL}>

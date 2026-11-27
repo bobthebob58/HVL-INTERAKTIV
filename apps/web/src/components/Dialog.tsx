@@ -10,7 +10,8 @@
  *   - On open, focus goes to the dialog itself, so its name is read first; on close, back to the element that had
  *     focus when it opened, if that element is still on the page.
  *   - Escape and the close button both call `onClose`; the caller decides what closing means.
- * Collaborators: ./PublishDialog.tsx, ../i18n/LocaleContext.tsx.
+ * Collaborators: ./PublishDialog.tsx, ./ConfirmDialog.tsx, ../features/insight/InsightShortlist.tsx,
+ *   ../i18n/LocaleContext.tsx.
  * Tests: apps/web/test/components/Dialog.test.tsx
  */
 'use client';
@@ -23,7 +24,8 @@ import { t } from '../i18n/translate';
 /** What the dialog needs. */
 export interface DialogProps {
   readonly open: boolean;
-  readonly title: string;
+  /** The dialog's heading and name: text, or a node such as a sentence with a part in another language (UD-010). */
+  readonly title: ReactNode;
   readonly onClose: () => void;
   readonly children: ReactNode;
 }

@@ -7,11 +7,12 @@
  */
 // @vitest-environment jsdom
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { AuthoredLanguageContext } from '../../../src/features/insight/authoredLanguage';
 import { InsightPanel } from '../../../src/features/insight/InsightPanel';
 import { VideoEngagementSection } from '../../../src/features/insight/VideoEngagementSection';
 import { fakeFetch } from '../../support/fakeFetch';
+import { treatSpansAsInline } from '../../support/inlineSpans';
 import { CONTEXTS, CONTEXTS_PATH, FINDINGS_PATH, ID, PORTAL_PATH, REPORT } from './insightAnswers';
 import { FINDINGS, VIDEO_REPORT } from './insightOtherAnswers';
 
@@ -30,6 +31,8 @@ const openTab = async (language: string) => {
 };
 
 describe('[UD-010] the language of the activity’s texts on the Innsikt tab', () => {
+  beforeEach(treatSpansAsInline);
+
   it('[UD-010] marks the question, option, feedback and answer texts of an English activity, not the tab’s words', async () => {
     // Act
     await openTab('en');

@@ -10,9 +10,12 @@
  *   - Shown only when the view has video engagement (an InteractiveVideo); the server's order is kept.
  *   - A suppressed share has no bar and shows «< k»; the summary task at the end is at «Slutten».
  *   - A11Y: a figure whose caption is the summary; the chart is `aria-hidden`, the table carries every value. A
- *     task's own label or question carries the activity's language (UD-010); «Oppgåve utan tittel» does not.
- * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./InsightReportView.tsx.
- * Tests: apps/web/test/features/insight/InsightCharts.test.tsx
+ *     task's own label or question carries the activity's language (UD-010), in the table and where the summary
+ *     quotes it (./quotedText.tsx); «Oppgåve utan tittel» does not.
+ * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./quotedText.tsx,
+ *   ./InsightReportView.tsx.
+ * Tests: apps/web/test/features/insight/InsightCharts.test.tsx,
+ *   apps/web/test/features/insight/InsightQuotedLanguage.test.tsx
  */
 'use client';
 
@@ -25,6 +28,7 @@ import { CellValue } from './CellValue';
 import { cellText, shownValue, videoTime, KIND } from './insightFormat';
 import type { VideoInteractionInsight } from './insightReportShape';
 import { interactionName, videoSummary } from './insightSummaries';
+import { Quoted } from './quotedText';
 import { DATA_CELL, HEAD_CELL, ROW_HEAD_CELL, ScrollTable } from './ScrollTable';
 
 /**
@@ -58,7 +62,10 @@ export function VideoEngagementSection({
       <h3 id={headingId}>{t('insight.video.heading', locale)}</h3>
       <figure className="m-0">
         <figcaption className="mb-3">
-          {t('insight.video.intro', locale)} <strong>{videoSummary(interactions, locale)}</strong>
+          {t('insight.video.intro', locale)}{' '}
+          <strong>
+            <Quoted value={videoSummary(interactions, locale)} />
+          </strong>
         </figcaption>
         <BarChart rows={rows} />
         <ScrollTable caption={t('insight.video.caption', locale)}>

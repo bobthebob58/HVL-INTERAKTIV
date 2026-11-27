@@ -13,10 +13,12 @@
  *   - Rows: the right answers, each listed wrong answer most frequent first, the other wrong answers, empty gaps.
  *   - A suppressed count has no bar and shows «< k».
  *   - A11Y: each gap is named by its own `h5` heading, under the question's `h4`. The accepted answers and the
- *     listed wrong answers, given in the activity, carry its language (UD-010); the row names around them do not.
- * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./ChoiceQuestion.tsx
- *   (`barBase`), ./MisconceptionSection.tsx.
- * Tests: apps/web/test/features/insight/InsightMisconceptions.test.tsx
+ *     listed wrong answers, given in the activity, carry its language (UD-010), in the table, the chart's labels
+ *     and the summary (only the quoted part, ./quotedText.tsx); the row names around them do not.
+ * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./quotedText.tsx,
+ *   ./ChoiceQuestion.tsx (`barBase`), ./MisconceptionSection.tsx.
+ * Tests: apps/web/test/features/insight/InsightMisconceptions.test.tsx,
+ *   apps/web/test/features/insight/InsightQuotedLanguage.test.tsx
  */
 'use client';
 
@@ -30,6 +32,7 @@ import { barBase } from './ChoiceQuestion';
 import { acceptedAnswerParts, cellText, shownValue, type AnyCell, KIND } from './insightFormat';
 import type { GapInsight, GapMisconception } from './insightReportShape';
 import { gapSummary } from './insightSummaries';
+import { Quoted } from './quotedText';
 import { DATA_CELL, HEAD_CELL, ROW_HEAD_CELL, ScrollTable } from './ScrollTable';
 
 /** One gap's rows; `answer` marks a row named by an answer given in the activity rather than by the tab. */
@@ -76,6 +79,7 @@ function Gap({
     return {
       key: row.key,
       label: row.label,
+      authored: row.answer,
       bars: [
         {
           pattern: SOLID,
@@ -104,7 +108,9 @@ function Gap({
         {after}
       </p>
       <figure className="m-0">
-        <figcaption className="mb-2 font-bold">{gapSummary(gap, locale)}</figcaption>
+        <figcaption className="mb-2 font-bold">
+          <Quoted value={gapSummary(gap, locale)} />
+        </figcaption>
         <BarChart rows={rows} />
         <ScrollTable caption={t('insight.gaps.caption', locale, { number })}>
           <thead>

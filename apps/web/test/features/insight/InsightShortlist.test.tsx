@@ -192,7 +192,7 @@ describe('[INS-003] Ta opp i samlinga', () => {
     // Act
     const entry = shortlistEntry(report, ACTIVITY_ITEM, 'nn');
     // Assert
-    expect(entry?.lines.map(plain)).toEqual([
+    expect(entry?.lines.map((line) => plain(line.text))).toEqual([
       '40 % riktig på første forsøk og < 5 på siste (9 studentar svarte).',
     ]);
     expect(shortlistEntry(report, 'no-such-item', 'nn')).toBeUndefined();

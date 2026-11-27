@@ -64,7 +64,7 @@ function Question({
         <CellValue cell={question.learners} kind={KIND.count} k={k} />
       </p>
       {question.kind === 'choice' ? (
-        <ChoiceQuestion question={question} name={name} k={k} />
+        <ChoiceQuestion question={question} name={name} authored={Boolean(question.questionText)} k={k} />
       ) : (
         <GapQuestion question={question} k={k} />
       )}

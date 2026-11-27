@@ -19,18 +19,18 @@
  *   - A period with more answers than one view covers (D-122) says so and keeps the choices, also on the first
  *     view, so the teacher can choose a shorter period.
  *   - Works with the page's credential (`useApiAuth`): the session in the portal, the Bearer ltik in Canvas.
- *   - A11Y: the texts quoted from the activity carry its language when it differs from the page's (WCAG 3.1.2).
+ *   - A11Y: the texts quoted from the activity carry its language when it differs from the page's (WCAG 3.1.2),
+ *     also the quoted part of an announcement in the status region (./useQuotedAnnouncement.tsx).
  * Collaborators: ./useInsightView.ts, ./authoredLanguage.tsx, ./InsightQueryForm.tsx, ./InsightReportView.tsx,
  *   ./insightScopeText.ts, ./InsightShortlist.tsx, ./shortlistContext.tsx, ./InsightFindings.tsx, ./InsightNotes.tsx,
- *   ../activity/tabs/InsightTab.tsx, ../lti/LtiPlayView.tsx, ../../components/useAnnouncement.ts.
+ *   ../activity/tabs/InsightTab.tsx, ../lti/LtiPlayView.tsx, ./useQuotedAnnouncement.tsx, ./quotedText.tsx.
  * Tests: apps/web/test/features/insight/InsightPanel.test.tsx, apps/web/test/features/insight/InsightQuery.test.tsx,
  *   apps/web/test/features/insight/InsightViewState.test.tsx, apps/web/test/features/insight/InsightLanguage.test.tsx,
- *   apps/web/test/features/insight/InsightTooLarge.test.tsx
+ *   apps/web/test/features/insight/InsightTooLarge.test.tsx, apps/web/test/features/insight/InsightQuotedLanguage.test.tsx
  */
 'use client';
 
 import { useCallback } from 'react';
-import { useAnnouncement } from '../../components/useAnnouncement';
 import { useLocale } from '../../i18n/LocaleContext';
 import { partLanguage } from '../../i18n/partLanguage';
 import { t, type MessageKey } from '../../i18n/translate';
@@ -43,8 +43,10 @@ import type { InsightReport } from './insightReportShape';
 import { InsightReportView } from './InsightReportView';
 import { scopeSentence } from './insightScopeText';
 import { InsightShortlist } from './InsightShortlist';
+import { plainText } from './quotedText';
 import { ShortlistContext, useShortlistState } from './shortlistContext';
 import { useInsightView } from './useInsightView';
+import { useQuotedAnnouncement } from './useQuotedAnnouncement';
 
 /** What the tab needs. */
 export interface InsightPanelProps {
@@ -72,10 +74,10 @@ export function InsightPanel({
   onOpenCheck,
 }: InsightPanelProps) {
   const locale = useLocale();
-  const [announcement, announce] = useAnnouncement();
+  const [announcement, announce] = useQuotedAnnouncement();
   const onUpdated = useCallback(
     (report: InsightReport) =>
-      announce(t('insight.updated', locale, { scope: scopeSentence(report, locale) })),
+      announce(plainText(t('insight.updated', locale, { scope: scopeSentence(report, locale) }))),
     [announce, locale],
   );
   const view = useInsightView(contentId, fixedContext, onUpdated);

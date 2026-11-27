@@ -33,12 +33,12 @@ describe('[INS-008] chart summaries', () => {
     // Arrange
     const items = [{ ...REPORT.items[2]! }, ...REPORT.items.slice(0, 2)];
     // Act
-    const summary = plain(itemsSummary(items, 5, 'nn'));
+    const summary = plain(itemsSummary(items, 5, 'nn').text);
     // Assert
     expect(summary).toBe(
       'Av spørsmåla der delen riktige kan visast, er spørsmål 2 vanskelegast, «Kva gjer mitokondriane?»: 40 % riktig på første forsøk og 65 % på siste.',
     );
-    expect(itemsSummary([REPORT.items[2]!], 5, 'nn')).toBe(
+    expect(itemsSummary([REPORT.items[2]!], 5, 'nn').text).toBe(
       'Ingen spørsmål har svar frå nok studentar til at delen riktige kan visast.',
     );
   });
@@ -76,7 +76,7 @@ describe('[INS-008] chart summaries', () => {
     const wrong = commonestWrongOption({ ...choice, options });
     // Assert
     expect(wrong).toEqual({ text: 'Feil', count: 6, feedback: 'f2' });
-    expect(choiceSummary({ ...choice, options }, 'en')).toBe(
+    expect(choiceSummary({ ...choice, options }, 'en').text).toBe(
       'Most common wrong answer of those that can be shown: “Feil”, chosen by 6 students.',
     );
   });
@@ -92,10 +92,10 @@ describe('[INS-008] chart summaries', () => {
       empty: shown(0),
     };
     // Act and assert
-    expect(gapSummary(gap, 'nb')).toBe(
+    expect(gapSummary(gap, 'nb').text).toBe(
       'Luke 2: ingen feil svar er gitt av nok studenter til at de kan vises.',
     );
-    expect(gapSummary({ ...gap, wrongAnswers: [{ answer: 'y', learners: shown(5) }] }, 'nb')).toBe(
+    expect(gapSummary({ ...gap, wrongAnswers: [{ answer: 'y', learners: shown(5) }] }, 'nb').text).toBe(
       'Luke 2: vanligste feilsvar av dem som kan vises, er «y» (5 studenter).',
     );
   });
@@ -112,7 +112,7 @@ describe('[INS-008] chart summaries', () => {
     // Act
     const entry = shortlistEntry({ ...REPORT, items: [], misconceptions }, 'q-gaps', 'nn');
     // Assert: what the list, its printout and its projection hold
-    const words = (entry?.lines ?? []).map(plain).join(' ');
+    const words = (entry?.lines ?? []).map((line) => plain(line.text)).join(' ');
     expect(entry?.lines).toHaveLength(2);
     expect(words).toContain('«fotosyntese» (6 studentar)');
     expect(words).not.toMatch(/Nordmann/);
@@ -121,10 +121,12 @@ describe('[INS-008] chart summaries', () => {
 
   it('[INS-005] names the video task with the smallest shown share, or says none can be shown', () => {
     // Act and assert
-    expect(plain(videoSummary(VIDEO_REPORT.videoEngagement ?? [], 'nn'))).toBe(
+    expect(plain(videoSummary(VIDEO_REPORT.videoEngagement ?? [], 'nn').text)).toBe(
       'Av oppgåvene der delen kan visast, svarte minst del på «Skriv namnet.» (5:10): 40 %.',
     );
-    expect(videoSummary([], 'nn')).toBe('Ingen oppgåve har svar frå nok studentar til at delen kan visast.');
+    expect(videoSummary([], 'nn').text).toBe(
+      'Ingen oppgåve har svar frå nok studentar til at delen kan visast.',
+    );
   });
 
   it('[INS-005][INS-006] never names a task whose share is hidden, even when it comes first', () => {
@@ -132,10 +134,10 @@ describe('[INS-008] chart summaries', () => {
     const [first, second] = VIDEO_REPORT.videoEngagement ?? [];
     const hiddenFirst = { ...first!, label: 'Skjult', answered: HIDDEN, share: HIDDEN };
     // Act and assert
-    expect(plain(videoSummary([hiddenFirst, second!], 'nn'))).toBe(
+    expect(plain(videoSummary([hiddenFirst, second!], 'nn').text)).toBe(
       'Av oppgåvene der delen kan visast, svarte minst del på «Skriv namnet.» (5:10): 40 %.',
     );
-    expect(videoSummary([hiddenFirst], 'nn')).toBe(
+    expect(videoSummary([hiddenFirst], 'nn').text).toBe(
       'Ingen oppgåve har svar frå nok studentar til at delen kan visast.',
     );
   });
@@ -156,7 +158,7 @@ describe('[INS-008] chart summaries', () => {
         choiceSummary(choice, locale),
         gapSummary(listed, locale),
         videoSummary(VIDEO_REPORT.videoEngagement ?? [], locale),
-      ].map(plain);
+      ].map((summary) => plain(summary.text));
       // Assert
       for (const summary of summaries) expect(summary).toContain(qualifier);
     },

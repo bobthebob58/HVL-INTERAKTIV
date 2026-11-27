@@ -12,9 +12,10 @@
  *     table is the place in that order.
  *   - A suppressed share has no bar and shows «< k»; a share that cannot be judged shows «Ikkje tilgjengeleg».
  *   - A11Y: a figure whose caption is the summary; the chart is `aria-hidden`, the table carries every value. A
- *     question's own text carries the activity's language (UD-010); the name of one without text does not.
- * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./ShortlistButton.tsx,
- *   ./InsightReportView.tsx.
+ *     question's own text carries the activity's language (UD-010), also where the summary quotes it
+ *     (./quotedText.tsx); the name of one without text does not.
+ * Collaborators: ./BarChart.tsx, ./ScrollTable.tsx, ./CellValue.tsx, ./insightSummaries.ts, ./quotedText.tsx,
+ *   ./ShortlistButton.tsx, *   ./InsightReportView.tsx.
  * Tests: apps/web/test/features/insight/InsightCharts.test.tsx
  */
 'use client';
@@ -28,6 +29,7 @@ import { CellValue } from './CellValue';
 import { cellText, shownValue, KIND } from './insightFormat';
 import type { ItemDifficultyInsight } from './insightReportShape';
 import { itemsSummary, questionLabel } from './insightSummaries';
+import { Quoted } from './quotedText';
 import { DATA_CELL, HEAD_CELL, ROW_HEAD_CELL, ScrollTable } from './ScrollTable';
 import { ShortlistButton } from './ShortlistButton';
 import { itemKey } from './shortlistEntries';
@@ -71,7 +73,10 @@ export function ItemDifficultySection({
       ) : (
         <figure className="m-0">
           <figcaption className="mb-3">
-            {t('insight.items.intro', locale)} <strong>{itemsSummary(items, k, locale)}</strong>
+            {t('insight.items.intro', locale)}{' '}
+            <strong>
+              <Quoted value={itemsSummary(items, k, locale)} />
+            </strong>
           </figcaption>
           <BarChart
             rows={rows}
