@@ -60,30 +60,16 @@ describe('[INS-002] the questions of an activity', () => {
     ]);
   });
 
-  it('[INS-002] reads the text a SingleChoiceSet and an ImageHotspotQuestion keep below the top level', () => {
-    // Arrange: the set's text is all its questions' (one empty); the hotspot question's is in its hotspot settings
+  it('[INS-002] reads the text an ImageHotspotQuestion keeps below the top level', () => {
+    // Arrange: the hotspot question's text is in its hotspot settings (a set's questions: singleChoiceSetQuestions)
     const hotspots = {
       imageHotspotQuestion: { hotspotSettings: { taskDescription: '<p>Klikk på kjernen.</p>' } },
     };
-    const params = {
-      a: node('H5P.SingleChoiceSet 1.11', 'scs', {
-        choices: [
-          { question: '<p>Kva er 2+2?</p>' },
-          { question: '<p> </p>' },
-          { question: '<p>3 &lt; 4?</p>' },
-        ],
-      }),
-      b: node('H5P.ImageHotspotQuestion 1.8', 'ihq', hotspots),
-      c: node('H5P.SingleChoiceSet 1.11', 'empty', { choices: 'x' }),
-    };
+    const params = { b: node('H5P.ImageHotspotQuestion 1.8', 'ihq', hotspots) };
     // Act
     const questions = questionCatalogue('H5P.Column', params);
     // Assert
-    expect(questions.map(({ item, text }) => [item, text])).toEqual([
-      ['scs', 'Kva er 2+2? / 3 < 4?'],
-      ['ihq', 'Klikk på kjernen.'],
-      ['empty', ''],
-    ]);
+    expect(questions.map(({ item, text }) => [item, text])).toEqual([['ihq', 'Klikk på kjernen.']]);
   });
 
   it('[INS-002] never throws on malformed parameters and stops at 100 levels', () => {

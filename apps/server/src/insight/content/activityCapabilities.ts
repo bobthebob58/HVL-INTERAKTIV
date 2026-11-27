@@ -15,6 +15,9 @@
  *   - An interaction is listed when its `action` is a question with a `subContentId` (./questionCatalogue.ts
  *     `isQuestion`); its time is `duration.from` in seconds. The summary task (`summary.task`, shown at the end) is
  *     listed last, with no time, when it has at least one statement set.
+ *   - An H5P.SingleChoiceSet is one interaction, answered through its questions (`answeredBy`): the set sends an
+ *     `answered` for each question and none for itself (D-151). A set whose questions have no ID is not listed:
+ *     the server stores no answer without one, so its row could only ever say that nobody answered.
  *   - The parameters are author data: nothing here throws on a field of the wrong type.
  * Collaborators: ./questionCatalogue.ts, ../../learningDesign/safeEditing/subContentNodes.ts, ../InsightService.ts,
  *   ../aggregate/participation.ts, ../aggregate/videoEngagement.ts.
@@ -29,7 +32,7 @@ import {
   objectOf,
 } from '../../learningDesign/safeEditing/subContentNodes.js';
 import { isQuestion } from './questionCatalogue.js';
-import { insightText } from './questionShapes.js';
+import { insightText, questionText, singleChoiceQuestions } from './questionShapes.js';
 
 /** What an activity can send. */
 export interface ActivityCapabilities {
@@ -49,6 +52,10 @@ export interface VideoInteraction {
   readonly label: string | null;
   /** When it appears, in seconds from the start; null for the summary task at the end. */
   readonly atSeconds: number | null;
+  /** Its question as plain text, or '' when the parameters hold none; a set's is every question's. */
+  readonly questionText: string;
+  /** The items whose `answered` statements answer it: itself, or each question of an H5P.SingleChoiceSet. */
+  readonly answeredBy: readonly string[];
 }
 
 const videoOf = (params: unknown): Record<string, unknown> => objectOf(objectOf(params).interactiveVideo);
@@ -78,9 +85,14 @@ function interactionOf(
   if (!isSubContentNode(node)) return undefined;
   const library = machineNameOf(libraryKey(node.library));
   const item = node.subContentId;
-  if (!isQuestion(library, objectOf(node.params)) || typeof item !== 'string' || item === '')
-    return undefined;
-  return { item, library, label, atSeconds };
+  const params = objectOf(node.params);
+  if (!isQuestion(library, params) || typeof item !== 'string' || item === '') return undefined;
+  const answeredBy =
+    library === 'H5P.SingleChoiceSet'
+      ? singleChoiceQuestions(params).map((question) => question.item)
+      : [item];
+  if (answeredBy.length === 0) return undefined;
+  return { item, library, label, atSeconds, questionText: questionText(library, params), answeredBy };
 }
 
 /**

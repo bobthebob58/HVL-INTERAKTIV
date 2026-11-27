@@ -15,10 +15,14 @@
  *     `tipsAndFeedback.chosenFeedback` (null when empty).
  *   - A gap task is H5P.Blanks (case-sensitive unless `behaviour.caseSensitive` is false, the library's default)
  *     or H5P.DragText (dropped words are the author's own, so compared as written).
- *   - H5P.SingleChoiceSet and H5P.ImageHotspotQuestion keep their text below the top level; it is read from there,
- *     so such an item is not left without a name (WCAG 1.3.1, 2.4.6). A set is one item for all its questions, so
- *     its text is every question's, joined with « / », not the first one's alone (that would name the whole set's
- *     numbers after one question).
+ *   - An H5P.SingleChoiceSet sends one `answered` per question, under that question's own `subContentId`, and
+ *     none for itself; the response is the stored index of the chosen alternative, and the first stored alternative
+ *     is the right one (single-choice-set.js `createXApiAnsweredEvent`). So each of its questions with an ID is a
+ *     choice question of its own (`singleChoiceQuestions`), without feedback texts: the library has no such field.
+ *     The set's own text, for the one place a set is shown as one thing (an InteractiveVideo's interaction), is
+ *     every question's, joined with « / », not the first one's alone.
+ *   - H5P.ImageHotspotQuestion keeps its text below the top level; it is read from there, so the item is not left
+ *     without a name (WCAG 1.3.1, 2.4.6).
  * Collaborators: ./gapSolutions.ts, ./questionCatalogue.ts, ../../learningDesign/safeEditing/subContentNodes.ts.
  * Tests: apps/server/test/insight/questionCatalogue.test.ts
  */
@@ -113,6 +117,35 @@ function choiceOptions(params: Record<string, unknown>): ChoiceOptionText[] {
     const correct = option.correct === true;
     const feedback = correct ? '' : insightText(objectOf(option.tipsAndFeedback).chosenFeedback);
     return { text: insightText(option.text), correct, feedback: feedback === '' ? null : feedback };
+  });
+}
+
+/** One question of an H5P.SingleChoiceSet. */
+export interface SetQuestion {
+  /** The question's own `subContentId`, which its `answered` statements carry. */
+  readonly item: string;
+  /** The question as plain text, or '' when the parameters hold none. */
+  readonly text: string;
+  readonly shape: QuestionShape;
+}
+
+/**
+ * The questions of an H5P.SingleChoiceSet that a statement can name.
+ * @param params - The set's parameters.
+ * @returns One choice question per question with an ID, in stored order; its first alternative is the right one.
+ * @spec INS-003
+ */
+export function singleChoiceQuestions(params: Record<string, unknown>): SetQuestion[] {
+  return listOf(params.choices).flatMap((entry) => {
+    const choice = objectOf(entry);
+    const item = choice.subContentId;
+    if (typeof item !== 'string' || item === '') return [];
+    const options = listOf(choice.answers).map((answer, index) => ({
+      text: insightText(answer),
+      correct: index === 0,
+      feedback: null,
+    }));
+    return [{ item, text: insightText(choice.question), shape: { kind: 'choice' as const, options } }];
   });
 }
 
