@@ -63,7 +63,10 @@ function motionRecorder(): void {
  * Starts recording motion in every page and frame a context opens; call it before the first page opens.
  * @param context - The browser context.
  */
-export const recordMotion = (context: BrowserContext): Promise<void> => context.addInitScript(motionRecorder);
+export async function recordMotion(context: BrowserContext): Promise<void> {
+  // WHY: `addInitScript` answers with a handle that removes the script again; the recorder stays for the context's life.
+  await context.addInitScript(motionRecorder);
+}
 
 /**
  * Everything that moved in a page and its frames since they loaded (`recordMotion`).

@@ -16,7 +16,7 @@
  *     closed without waiting, since a stalled browser may never finish closing (D-096 S5 review amendment).
  *   - Playwright installs no signal handlers: the server's own shutdown closes the browser (`close`).
  *   - After `close`, no browser is started again.
- * Collaborators: ./PdfRenderer.ts, playwright-core 1.56.1, ../../../config/env.ts (`PDF_*`).
+ * Collaborators: ./PdfRenderer.ts, playwright-core 1.65.1, ../../../config/env.ts (`PDF_*`).
  * Tests: apps/server/test/learningDesign/mappe/mappePdf.browser.int.test.ts,
  *   apps/server/test/learningDesign/mappe/pdfRenderer.test.ts,
  *   apps/server/test/learningDesign/mappe/pdfRendererTimeLimit.test.ts

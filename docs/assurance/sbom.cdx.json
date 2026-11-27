@@ -2,7 +2,7 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:b3ef44b6-1af9-555f-9de4-2c1ca620fc97",
+  "serialNumber": "urn:uuid:cc1f7d0a-6eec-5d44-8c51-61b6058acf88",
   "version": 1,
   "metadata": {
     "lifecycles": [
@@ -13497,19 +13497,19 @@
       ]
     },
     {
-      "bom-ref": "playwright-core@1.56.1",
+      "bom-ref": "playwright-core@1.65.1",
       "type": "library",
       "name": "playwright-core",
-      "version": "1.56.1",
+      "version": "1.65.1",
       "scope": "required",
       "author": "Microsoft Corporation",
       "description": "A high-level API to automate web browsers",
-      "purl": "pkg:npm/playwright-core@1.56.1",
+      "purl": "pkg:npm/playwright-core@1.65.1",
       "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.56.1.tgz"
+          "url": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.65.1.tgz"
         },
         {
           "type": "vcs",
@@ -13523,7 +13523,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "86eb6b6b29f29f7d45f8189f99ef8fb3d56ae7d84ab940b3ec7d640ce701b3eda81a0b8a9164d4e746c15abb73df83945a6230a414d60f16913d7ac85e482f99"
+          "content": "86a3e9cfb6e548c3f1595768784d728814b35ec2a254e77693e9230af994cb00f618f3b60ddf477dc5a7abd34dd061db3590c5819f497c116bf97e7f04ba34ab"
         }
       ],
       "licenses": [
@@ -18170,7 +18170,7 @@
         "next@16.4.6",
         "openid-client@6.9.1",
         "pino@10.4.0",
-        "playwright-core@1.56.1",
+        "playwright-core@1.65.1",
         "prisma@7.10.1",
         "redis@4.7.1",
         "sanitize-html@2.18.2",
@@ -20243,7 +20243,7 @@
       "dependsOn": []
     },
     {
-      "ref": "playwright-core@1.56.1",
+      "ref": "playwright-core@1.65.1",
       "dependsOn": []
     },
     {

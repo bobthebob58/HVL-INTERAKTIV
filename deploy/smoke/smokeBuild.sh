@@ -30,8 +30,8 @@ preflight() {
   docker buildx version >/dev/null && docker compose version >/dev/null
   if sandbox; then
     [[ -r "$PROXY_CA" ]] || { echo "✗ HVLI_DOCKER_SANDBOX=1 but the proxy CA $PROXY_CA is not readable" >&2; return 1; }
-    [[ -x "$PW_BROWSERS/chromium-1194/chrome-linux/chrome" ]] ||
-      { echo "✗ HVLI_DOCKER_SANDBOX=1 but $PW_BROWSERS has no chromium-1194" >&2; return 1; }
+    [[ -x "$PW_BROWSERS/chromium-1255/chrome-linux64/chrome" ]] ||
+      { echo "✗ HVLI_DOCKER_SANDBOX=1 but $PW_BROWSERS has no chromium-1255" >&2; return 1; }
     docker info --format '{{.RegistryConfig.Mirrors}}' | grep -q mirror.gcr.io ||
       echo "! dockerd runs without --registry-mirror=https://mirror.gcr.io; Docker Hub may answer 429 here" >&2
   fi

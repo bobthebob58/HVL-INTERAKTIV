@@ -14,7 +14,7 @@
  *   - Prints one JSON line (counts and kernel fields only, no paths or command lines); exit code 0 only when there is
  *     at least one renderer and every renderer is in its own PID namespace with an extra seccomp filter.
  * Collaborators: apps/server/src/learningDesign/mappe/pdf/SharedChromium.ts, ./smokeChecks.sh
- *   (`check_sandbox_processes`), playwright-core 1.56.1.
+ *   (`check_sandbox_processes`), playwright-core 1.65.1.
  * Tests: it is a check of the smoke test (./dockerSmoke.sh); its two outcomes were measured by hand with the sandbox on
  *   and off (D-110 amendment of 2026-11-05).
  */
@@ -36,7 +36,7 @@ function chromiumProcesses() {
     } catch {
       continue; // WHY: a process may end while the list is read.
     }
-    if (!commandLine.includes('chrome-linux/chrome')) continue;
+    if (!commandLine.includes('chrome-linux64/chrome')) continue;
     const type = /--type=([a-z-]+)/.exec(commandLine)?.[1] ?? 'browser';
     const namespaces = field(status, 'NSpid').split(/\s+/).length;
     found.push({ type, namespaces, filters: Number(field(status, 'Seccomp_filters')) });
