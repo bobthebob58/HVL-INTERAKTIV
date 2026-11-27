@@ -6487,18 +6487,18 @@ loading of one spec per session are kept.
   - **`openid-client` 6.9.1** no longer asks for an ID token by itself when a nonce is expected.
   - **`tailwindcss` 4.3.5** changes two rules of the built stylesheet: a `@supports` probe, and a space inside
     empty `var()` fallbacks.
-  - **`axe-core` 4.14.1** (through `@axe-core/playwright` 4.14.0) adds outcomes to several checks; it adds no
-    rule and removes none.
+  - **`axe-core` 4.14.1** (through `@axe-core/playwright` 4.14.0) turns on a rule that 4.13 left out by default,
+    `label-content-name-mismatch` (WCAG 2.5.3). The accessibility suite then reports it on two of H5P's controls.
   - **`file-type` 22.3.0**, with `strtok3`, `token-types` and `@tokenizer/inflate`, reads ZIP and EBML containers
     more strictly. Nothing in the other packages changes what the server does.
-- **Decision — the 23 updates (SEC-007).** Exact pins in the root, `apps/server` and `apps/web` manifests. In the
+- **Decision — 22 of the 23 updates (SEC-007).** Exact pins in the root, `apps/server` and `apps/web` manifests. In the
   running server: `@aws-sdk/client-s3` and `@aws-sdk/lib-storage` 3.1175.0, `@fastify/busboy` 3.2.6, `dompurify`
   3.5.0, `file-type` 22.3.0, `i18next` 26.7.2, `openid-client` 6.9.1. For building and testing: `vitest` 5.1.1,
   `eslint` 10.15.0, `typescript-eslint` 8.73.0, `eslint-plugin-jsdoc` 65.5.3, `globals` 17.14.0, `prettier`
-  3.10.1, `lint-staged` 17.6.2, `tailwindcss` and `@tailwindcss/postcss` 4.3.5, `@axe-core/playwright` 4.14.0,
+  3.10.1, `lint-staged` 17.6.2, `tailwindcss` and `@tailwindcss/postcss` 4.3.5,
   `fast-check` 4.11.0, `pdfjs-dist` 6.5.438, `supertest` 7.3.2, `jose` 6.2.18, `oauth2-mock-server` 9.3.0 and
   `@types/yazl` 3.3.1. The lock file is Dependabot's own resolution with playwright-core kept at 1.56.1: 954
-  packages, 110 with a new version, 37 of them in the running server and none added there. A plain `npm install`
+  packages, 108 with a new version, 37 of them in the running server and none added there. A plain `npm install`
   gave a wider change (it moved packages nothing asked to move), so it was not used. The SBOM follows.
 - **Decision — a body that ends inside a discarded part is an ordinary 400 (SEC-005).** `readMultipart` listens
   for the error of a file stream it discards, as it already did for the file it keeps. With busboy 3.2.6 the same
@@ -6521,7 +6521,13 @@ loading of one spec per session are kept.
   For an image extension the sniffer accepts only PNG, JPEG, GIF and WebP by their own first bytes (SEC-002), so
   no accepted file reaches one of the three parsers. The date is the latest D-145's 120-day rule allows from the
   day of the review. D-112's three choices stand; the release request to Lumi is the lasting one.
-- **Residual:** playwright-core 1.56.1 and its Chromium stay until the next step. The two advisories' own pages
+- **Decision — `@axe-core/playwright` stays at 4.13.0 for now.** With 4.14.0 the suite fails 14 of 563 tests,
+  all for the one rule: Course Presentation's slide-menu button, whose visible text is the slide's title, and the
+  check button of the question types, whose accessible name in the test content is an English sentence while
+  the button says «Sjekk». Each needs a repair or a register entry under D-080, and the conformance report's
+  text for 2.5.3 changes with it, so the scanner is updated as a step of its own.
+- **Residual:** playwright-core 1.56.1 and its Chromium stay until the next step, and axe-core 4.13.0 until the
+  step above. The two advisories' own pages
   could not be opened from the development sandbox, so the second reading rests on npm's list and on the code.
 - **Verified:** `multipartUploadCutOff.test.ts` sends four bodies that end inside a discarded part, each in two
   pieces. Before this step two of them reached the process's fault handler (a file under another field name, and

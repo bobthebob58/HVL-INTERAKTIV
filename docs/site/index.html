@@ -13911,20 +13911,20 @@ lets one more kind of link address (<code>matrix:</code>) through by default.</l
 <li><strong><code>openid-client</code> 6.9.1</strong> no longer asks for an ID token by itself when a nonce is expected.</li>
 <li><strong><code>tailwindcss</code> 4.3.5</strong> changes two rules of the built stylesheet: a <code>@supports</code> probe, and a space inside
 empty <code>var()</code> fallbacks.</li>
-<li><strong><code>axe-core</code> 4.14.1</strong> (through <code>@axe-core/playwright</code> 4.14.0) adds outcomes to several checks; it adds no
-rule and removes none.</li>
+<li><strong><code>axe-core</code> 4.14.1</strong> (through <code>@axe-core/playwright</code> 4.14.0) turns on a rule that 4.13 left out by default,
+<code>label-content-name-mismatch</code> (WCAG 2.5.3). The accessibility suite then reports it on two of H5P&#39;s controls.</li>
 <li><strong><code>file-type</code> 22.3.0</strong>, with <code>strtok3</code>, <code>token-types</code> and <code>@tokenizer/inflate</code>, reads ZIP and EBML containers
 more strictly. Nothing in the other packages changes what the server does.</li>
 </ul>
 </li>
-<li><strong>Decision — the 23 updates (SEC-007).</strong> Exact pins in the root, <code>apps/server</code> and <code>apps/web</code> manifests. In the
+<li><strong>Decision — 22 of the 23 updates (SEC-007).</strong> Exact pins in the root, <code>apps/server</code> and <code>apps/web</code> manifests. In the
 running server: <code>@aws-sdk/client-s3</code> and <code>@aws-sdk/lib-storage</code> 3.1175.0, <code>@fastify/busboy</code> 3.2.6, <code>dompurify</code>
 3.5.0, <code>file-type</code> 22.3.0, <code>i18next</code> 26.7.2, <code>openid-client</code> 6.9.1. For building and testing: <code>vitest</code> 5.1.1,
 <code>eslint</code> 10.15.0, <code>typescript-eslint</code> 8.73.0, <code>eslint-plugin-jsdoc</code> 65.5.3, <code>globals</code> 17.14.0, <code>prettier</code>
-3.10.1, <code>lint-staged</code> 17.6.2, <code>tailwindcss</code> and <code>@tailwindcss/postcss</code> 4.3.5, <code>@axe-core/playwright</code> 4.14.0,
+3.10.1, <code>lint-staged</code> 17.6.2, <code>tailwindcss</code> and <code>@tailwindcss/postcss</code> 4.3.5,
 <code>fast-check</code> 4.11.0, <code>pdfjs-dist</code> 6.5.438, <code>supertest</code> 7.3.2, <code>jose</code> 6.2.18, <code>oauth2-mock-server</code> 9.3.0 and
 <code>@types/yazl</code> 3.3.1. The lock file is Dependabot&#39;s own resolution with playwright-core kept at 1.56.1: 954
-packages, 110 with a new version, 37 of them in the running server and none added there. A plain <code>npm install</code>
+packages, 108 with a new version, 37 of them in the running server and none added there. A plain <code>npm install</code>
 gave a wider change (it moved packages nothing asked to move), so it was not used. The SBOM follows.</li>
 <li><strong>Decision — a body that ends inside a discarded part is an ordinary 400 (SEC-005).</strong> <code>readMultipart</code> listens
 for the error of a file stream it discards, as it already did for the file it keeps. With busboy 3.2.6 the same
@@ -13947,7 +13947,13 @@ chooses a parser by a file&#39;s first bytes: <code>icns</code> at the start, <c
 For an image extension the sniffer accepts only PNG, JPEG, GIF and WebP by their own first bytes (SEC-002), so
 no accepted file reaches one of the three parsers. The date is the latest D-145&#39;s 120-day rule allows from the
 day of the review. D-112&#39;s three choices stand; the release request to Lumi is the lasting one.</li>
-<li><strong>Residual:</strong> playwright-core 1.56.1 and its Chromium stay until the next step. The two advisories&#39; own pages
+<li><strong>Decision — <code>@axe-core/playwright</code> stays at 4.13.0 for now.</strong> With 4.14.0 the suite fails 14 of 563 tests,
+all for the one rule: Course Presentation&#39;s slide-menu button, whose visible text is the slide&#39;s title, and the
+check button of the question types, whose accessible name in the test content is an English sentence while
+the button says «Sjekk». Each needs a repair or a register entry under D-080, and the conformance report&#39;s
+text for 2.5.3 changes with it, so the scanner is updated as a step of its own.</li>
+<li><strong>Residual:</strong> playwright-core 1.56.1 and its Chromium stay until the next step, and axe-core 4.13.0 until the
+step above. The two advisories&#39; own pages
 could not be opened from the development sandbox, so the second reading rests on npm&#39;s list and on the code.</li>
 <li><strong>Verified:</strong> <code>multipartUploadCutOff.test.ts</code> sends four bodies that end inside a discarded part, each in two
 pieces. Before this step two of them reached the process&#39;s fault handler (a file under another field name, and
