@@ -85,6 +85,8 @@ const CHOICES = {
 };
 
 const current = (page: Page) => page.locator('.question-container:visible');
+// WHY: the theme puts a button's shown word first in its name («Sjekk. Check the answers. …», WCAG 2.5.3), so a
+// button is found by the sentence in its name, wherever it stands.
 const press = (page: Page, name: RegExp) => current(page).getByRole('button', { name }).click();
 const visibleText = (page: Page, selector: string) =>
   page
@@ -115,28 +117,28 @@ describeWithServices('answer prefixes inside containers', () => {
         // Act and assert: TrueFalse, "Rett" is wrong; its label is shown beside the library's own ✗ (the radio's
         // name starts with the glyph of TrueFalse's radio icon, its ::before)
         await current(page).locator('.h5p-true-false-answer', { hasText: 'Rett' }).click();
-        await press(page, /^Check the answers/);
+        await press(page, /Check the answers/);
         await expect.poll(() => contentTree(page)).toMatch(/radio "[^"]{0,2}Feil: Rett/);
         expect(await visibleText(page, '.h5p-true-false-answer.wrong > .hvl-feedback-text')).toBe('Feil: ');
-        await press(page, /^Show the solution/);
+        await press(page, /Show the solution/);
         await expect.poll(() => contentTree(page)).toMatch(/radio "[^"]{0,2}Riktig: Feil/);
         // MarkTheWords: one right and one wrong word; the solution shows the missed one with the full prefix
         await page.getByRole('button', { name: 'Next', exact: true }).click();
         await current(page).getByRole('option', { name: 'medan' }).click();
         await current(page).getByRole('option', { name: 'studenten' }).click();
-        await press(page, /^Check the answers/);
+        await press(page, /Check the answers/);
         await expect
           .poll(() => contentTree(page))
           .toMatch(/option "Riktig: medan[\s\S]*option "Feil: studenten/);
         expect(await before(page, '[aria-describedby=h5p-description-incorrect]')).toBe('"Feil:" / ""');
-        await press(page, /^Show the solution/);
+        await press(page, /Show the solution/);
         await expect
           .poll(() => before(page, '[aria-describedby=h5p-description-missed]'))
           .toBe('"✓ Riktig:" / ""');
         // MultiMediaChoice: the option is named by its alt text, which gets the label in front
         await page.getByRole('button', { name: 'Next', exact: true }).click();
         await current(page).getByRole('radio', { name: 'Eit tomt rom' }).click();
-        await press(page, /^Check the answers/);
+        await press(page, /Check the answers/);
         await expect.poll(() => contentTree(page)).toContain('radio "Feil: Eit tomt rom"');
         expect(await visibleText(page, '.h5p-multi-media-choice-wrong > .hvl-feedback-text')).toBe('Feil: ');
         await page.close();
