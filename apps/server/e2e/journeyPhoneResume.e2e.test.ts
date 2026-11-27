@@ -6,11 +6,13 @@
  * «Feil:» and the teacher's explanation (UD-003), goes on and fills two of the Blanks question's gaps, and the player
  * saves the state (H5P-005). The student closes the browser; the next evening a new browser on the same phone opens
  * the activity from Canvas again and is back at the Blanks question with both words in their gaps (PROD-008), and the
- * tool set no cookie. Step 1's "under 3 s" is NFR-001's load test (tools/load), not timed here; step 4 (NVDA and the
- * keyboard only) is the manual protocol's (UD-031). The whole server with the built web app and the real content
- * types (../test/support/realWebApp.ts).
+ * tool set no cookie. Step 1's "under 3 s" is timed on the test machine, with no network profile: from the click in
+ * Canvas until H5P has started the activity, the quicker of the journey's two opens. NFR-001's 200 learners and
+ * its Fast 4G profile stay the load test's (tools/load) and Lighthouse's (D-114). Step 4 (NVDA and the keyboard
+ * only) is the manual protocol's (UD-031). The whole server with the built web app and the real content types
+ * (../test/support/realWebApp.ts).
  *
- * Spec: UD-008, UD-003, PROD-008, H5P-005, LTI-003
+ * Spec: UD-008, UD-003, PROD-008, H5P-005, LTI-003, NFR-001
  */
 import { randomUUID } from 'node:crypto';
 import type { Browser, BrowserContext, Frame } from 'playwright-core';
@@ -68,7 +70,7 @@ describeWithRealWebApp('[PROD-008] a student studies on a phone and resumes the 
     await browser?.close();
   });
 
-  it('[UD-008][UD-003][PROD-008][H5P-005] reflows at 320 px, says «Feil:» with the explanation, and resumes at the same point', async () => {
+  it('[UD-008][UD-003][PROD-008][H5P-005][NFR-001] opens in under 3 s, reflows at 320 px, says «Feil:» with the explanation, and resumes at the same point', async () => {
     // Arrange: the student's phone; the mock Canvas page is not under test
     const texts = await questionSetTexts(app, contentId);
     const canvasOrigin = new URL(app.tb.mock.canvas.coursePageUrl()).origin;
@@ -80,8 +82,10 @@ describeWithRealWebApp('[PROD-008] a student studies on a phone and resumes the 
         ignoreConsole: (m) =>
           m.location().url.startsWith(canvasOrigin) || m.text().includes('fullscreen is not allowed'),
       });
+      const clicked = Date.now();
       await page.goto(app.tb.mock.canvas.coursePageUrl(launch));
-      return { flow, player: await startedPlayer(page, '/lti/play') };
+      const player = await startedPlayer(page, '/lti/play');
+      return { flow, player, openedInMs: Date.now() - clicked };
     };
     const evening = await browser.newContext(PHONE);
     const first = await openOnPhone(evening);
@@ -128,6 +132,9 @@ describeWithRealWebApp('[PROD-008] a student studies on a phone and resumes the 
       return { gaps: await gapValues(second.player), reflow: await reflowOf(second.player) };
     }, facts);
     await second.flow.settled();
+    // Assert: from the click in Canvas to a started activity in under 3 s (J2 step 1, NFR-001)
+    // WHY: the quicker of the two opens: a busy test machine only ever adds time to one of them.
+    expect(Math.min(first.openedInMs, second.openedInMs)).toBeLessThan(3_000);
     // Assert: the player fills the phone's width and never scrolls sideways (UD-008)
     for (const reflow of [studied.reflow, resumed.reflow]) {
       expect(reflow.width).toBeLessThanOrEqual(320);

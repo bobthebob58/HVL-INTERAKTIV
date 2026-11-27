@@ -94,9 +94,10 @@ describeWithRealWebApp('[PED-011] ALU changes a pattern’s guidance in the cont
     tb = await openAppTestbed([], { web, studioContent: loadStudioContent(edited) });
     const page = await (await browser.newContext()).newPage();
     const flow = await recordFlow(page, tb.toolUrl, {
-      // WHY: Chromium logs each failed resource; the tool's are in `flow.failed`, asserted below, and the web app has
-      // no icon yet, so a visitor's first page logs a 404 for /favicon.ico.
-      ignoreConsole: (m) => m.text().startsWith('Failed to load resource'),
+      // WHY: a visitor is not signed in, and the page asks who they are; Chromium logs each 401 answer. Nothing
+      // else may fail: the site icon answers now, and the tool's failed requests are in `flow.failed`, asserted below.
+      ignoreConsole: (m) =>
+        m.text().includes('status of 401') && /\/(?:api\/me|auth\/session)$/.test(m.location().url),
     });
     const shown = await flow.run(async () => {
       flow.step = 'pattern page';

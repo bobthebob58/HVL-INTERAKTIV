@@ -8,7 +8,8 @@
  * option B chosen by 8 with the author's own feedback beside it; the word 2 learners wrote never shown and its
  * group as «< 5» (INS-006). The tab writes an option's count, not its share: J3 step 2's «62 % chose option B» (8
  * of 13) is only the bar's length (apps/web/src/features/insight/ChoiceQuestion.tsx), which this test does not
- * read. The author adds the question to «Ta opp i samlinga» and opens the list on the big screen for the seminar.
+ * read. The author adds the question to «Ta opp i samlinga», opens the list on the big screen for the seminar and
+ * prints it: the paper, as Chromium prints the page after «Skriv ut lista», holds the list alone.
  * The Canvas path of insight (the course fixed by the launch, other courses and learners refused) is
  * ./insightInCanvas.e2e.test.ts. The whole server with the built web app and the real content types
  * (../test/support/realWebApp.ts).
@@ -23,6 +24,7 @@ import { recordFlow } from '../test/support/flowRecorder.js';
 import { lostRowsFact } from '../test/support/lostTestRows.js';
 import { openRealWebApp, type RealWebApp } from '../test/support/realWebApp.js';
 import { describeWithRealWebApp } from '../test/support/realWebAppPrerequisites.js';
+import { readTaggedPdf } from '../test/learningDesign/mappe/taggedPdfReader.js';
 import { moveStatementsToYesterday } from '../test/support/statementsToYesterday.js';
 import { launchCookieTestChromium } from '../test/support/thirdPartyCookies.js';
 import { webText } from '../test/support/webAppTexts.js';
@@ -124,7 +126,17 @@ describeWithRealWebApp('[INS-003] a teacher prepares the seminar from the class�
       const screen = page.getByRole('dialog');
       await screen.waitFor();
       const projected = flat(await screen.textContent());
-      return { view, projected };
+      // Act: print the list for the seminar room
+      flow.step = 'printout';
+      await screen.getByRole('button', { name: webText('common.close') }).click();
+      // WHY: a headless browser has no print dialog to answer. The page's own print call is held back, so the
+      // document stays as it is while printing, and Chromium prints that to a PDF.
+      await page.evaluate(() => {
+        window.print = () => undefined;
+      });
+      await shortlist.getByRole('button', { name: webText('insight.shortlist.print') }).click();
+      const paper = flat((await readTaggedPdf(await page.pdf({ format: 'A4' }))).textItems.join(' '));
+      return { view, projected, paper };
     }, facts);
     await flow.settled();
     const audits = await app.tb.db.auditEvent.findMany({
@@ -152,6 +164,14 @@ describeWithRealWebApp('[INS-003] a teacher prepares the seminar from the class�
     expect(seen.projected).toContain(texts.first);
     expect(seen.projected).toContain('38 %');
     expect(seen.projected).not.toMatch(/learnerKey|kollegavurdering/);
+    // Assert: the paper holds the list alone: its title, the question, its share and the feedback (INS-003)
+    expect(seen.paper).toContain(webText('insight.shortlist.title', { title: '' }).trim());
+    expect(seen.paper).toContain(texts.first);
+    expect(seen.paper).toContain('38 %');
+    expect(seen.paper).toContain(texts.feedback[1]);
+    for (const hidden of ['insight.shortlist.print', 'insight.heading', 'activity.tabCheck'] as const) {
+      expect(seen.paper).not.toContain(webText(hidden));
+    }
     // Assert: the view is audited with its context and no learner (DATA-007)
     expect(audits.map((event) => (event.details as { context: string }).context)).toContain(
       `${app.tb.platformId}:${course.id}`,
