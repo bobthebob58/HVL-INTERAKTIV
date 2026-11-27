@@ -88,6 +88,7 @@ const THEME_SOURCES: readonly (readonly [string, string])[] = [
 
 /** Served name → package export of the xAPI bridge's scripts, in load order: its rules, then the bridge (D-115). */
 const XAPI_BRIDGE_SOURCES: readonly (readonly [string, string])[] = [
+  ['xapiSingleChoiceSet.js', '@hvl-interaktiv/hvl-h5p-theme/xapiSingleChoiceSet.js'],
   ['xapiStatements.js', '@hvl-interaktiv/hvl-h5p-theme/xapiStatements.js'],
   ['xapiBatching.js', '@hvl-interaktiv/hvl-h5p-theme/xapiBatching.js'],
   ['xapiBridge.js', '@hvl-interaktiv/hvl-h5p-theme/xapiBridge.js'],

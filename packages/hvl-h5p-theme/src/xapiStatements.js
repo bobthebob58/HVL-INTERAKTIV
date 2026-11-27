@@ -16,12 +16,14 @@
  *     at all when the result is still over 1 000, as packages/api-contract/src/xapiResponseCaps.ts does on the server.
  *   - Root: `object.id` is the content ID, with no `h5p-subContentId` extension and no parent. A root result is a root
  *     `answered` or `completed` whose first category names the main library; it is gradable when `score.max` > 0.
+ *   - The answer of an H5P.SingleChoiceSet's question is the set's own record of it, not the statement's, which
+ *     follows the shuffled order on screen (./xapiSingleChoiceSet.js, D-151); no other result is changed.
  *   - Pure: reads only its arguments, never throws on any value, never changes what it is given. Defined once per
  *     window, as a read-only global, before ./xapiBridge.js reads it.
  * SPEC-DEVIATION: D-115 — LTI-010 posts each statement; the bridge sends only what the server stores, cut down.
- * Collaborators: ./xapiBridge.js (the only reader; loaded right after this file), apps/server/src/h5p/h5pAssets.ts
- *   (lists both as player-only scripts).
- * Tests: packages/hvl-h5p-theme/test/xapiStatements.test.ts
+ * Collaborators: ./xapiBridge.js (the only reader; loaded after this file), ./xapiSingleChoiceSet.js (loaded before
+ *   it), apps/server/src/h5p/h5pAssets.ts (lists them as player-only scripts).
+ * Tests: packages/hvl-h5p-theme/test/xapiStatements.test.ts, packages/hvl-h5p-theme/test/xapiSingleChoiceSet.test.ts
  */
 (function hvlXapiStatements() {
   'use strict';
@@ -158,8 +160,11 @@
     return Object.keys(out).length > 0 ? out : undefined;
   }
 
-  /** The statement cut down to what the server reads (D-115); the caller has checked the verb and `object.id`. */
-  function cut(statement) {
+  /**
+   * The statement cut down to what the server reads (D-115); the caller has checked the verb and `object.id`.
+   * `source` is the instance that raised it: an H5P.SingleChoiceSet's answer comes from there (D-151).
+   */
+  function cut(statement, source) {
     var definition = definitionOf(statement);
     var interactionType = isText(definition.interactionType) ? definition.interactionType : undefined;
     var extensions = pick(extensionsOf(statement), [LOCAL_CONTENT_ID, SUBCONTENT_ID], isText);
@@ -176,7 +181,9 @@
     );
     if (activities) out.context = { contextActivities: activities };
     var result = cutResult(statement.result, interactionType);
-    if (result) out.result = result;
+    var sets = window.hvliXapiSingleChoiceSet;
+    if (sets) result = sets.result(result, source, extensions && extensions[SUBCONTENT_ID]);
+    if (result && Object.keys(result).length > 0) out.result = result;
     return out;
   }
 

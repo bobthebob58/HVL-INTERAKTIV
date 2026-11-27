@@ -40,7 +40,7 @@ const STYLE_ORDER = [
  * motion (UD-009). */
 const SCRIPT_ORDER = ['feedbackPrefixes.js', 'a11yRepairs.js', 'a11yEditorRepairs.js', 'reducedMotion.js'];
 /** The xAPI bridge: its rules, its batch rules and the bridge, after every theme script, in the player only. */
-const BRIDGE_ORDER = ['xapiStatements.js', 'xapiBatching.js', 'xapiBridge.js'];
+const BRIDGE_ORDER = ['xapiSingleChoiceSet.js', 'xapiStatements.js', 'xapiBatching.js', 'xapiBridge.js'];
 
 describe('the HVL theme files', () => {
   it('[UD-011] resolves every theme file from its package and versions it by content', () => {

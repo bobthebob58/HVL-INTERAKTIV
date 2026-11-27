@@ -50,8 +50,13 @@ describeWithServices('[LTI-010] the xAPI bridge on the Canvas player page', () =
       contentVersion: version,
       token: { name: 'ltik', value: ltik },
     });
-    expect(bridge.scripts).toEqual(['xapiStatements.js', 'xapiBatching.js', 'xapiBridge.js']);
-    expect(bridge.coreScripts).toHaveLength(3);
+    expect(bridge.scripts).toEqual([
+      'xapiSingleChoiceSet.js',
+      'xapiStatements.js',
+      'xapiBatching.js',
+      'xapiBridge.js',
+    ]);
+    expect(bridge.coreScripts).toHaveLength(4);
     expect(bridge.bridgeAfterTheme).toBe(true);
     expect(bridge.reporting).toBe(true);
   });
