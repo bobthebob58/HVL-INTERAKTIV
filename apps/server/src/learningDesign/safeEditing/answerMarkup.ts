@@ -20,6 +20,7 @@
 import { plainTextOfValue } from './subContentNodes.js';
 
 // WHY: as H5P.Blanks 1.14 does, which strips these tags inside a blank before reading it (blanks.js:270).
+// SECURITY: not a cleaner of markup: one pass, as the library makes it. The result is only compared, never shown.
 const BLANK_TAGS = /<\/?[a-z]*\d?>/gi;
 const BLANK = /\*([^*]*)\*/g;
 // WHY: H5P.DragText 1.10's tokenizer (parse-text.js:12), on the text with line breaks turned into `<br/>`.

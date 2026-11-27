@@ -43,6 +43,7 @@ function blanksClozes(line: string): string[] {
     const end = line.indexOf('*', start + 1);
     if (end === -1) break;
     // WHY: the same tag removal as H5P.Blanks 1.14 `handleBlanks`, so the gaps are numbered as the library numbers them.
+    // SECURITY: not a cleaner of markup: one pass, as the library makes it. The text is shown as text, never as HTML.
     const content = line.slice(start + 1, end).replaceAll(/<\/?[a-z]*\d?>/gi, '');
     if (content.length > 0) clozes.push(content);
     start = line.indexOf('*', end + 1);
