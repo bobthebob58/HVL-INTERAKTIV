@@ -8,9 +8,9 @@
  *      and, with the activity, whenever the server says it changed. A reason holds 14 days and an error found by a
  *      later rule never had one; both show as `acknowledgement: null` (the note names neither), every save of the
  *      published activity is refused while one stays, and publishing again gives new reasons (D-074 amendment
- *      2026-10-23). The tab may add a notice to the first-publish dialog (the learning-design prompt, D-087); it
- *      never blocks.
- * Spec: PROD-003, UD-022, UD-013, UD-006, PED-030
+ *      2026-10-23). The tab may add a notice to the first-publish dialog (the learning-design prompt, D-087), which
+ *      never blocks, and may choose the words said after a first publish (the repetition suggestion, PROD-014).
+ * Spec: PROD-003, UD-022, UD-013, UD-006, PED-030, PROD-014
  * Invariants:
  *   - Publishing always sends the `updatedAt` of the findings on screen; unpublishing the same.
  *   - A published activity offers the dialog (**Grunngje på nytt**) only while an error has no reason that holds and
@@ -39,7 +39,7 @@ import { FindingsList } from '../../components/FindingsList';
 import { PublishDialog, unexplainedErrors } from '../../components/PublishDialog';
 import { useAnnouncement } from '../../components/useAnnouncement';
 import { useLocale } from '../../i18n/LocaleContext';
-import { t } from '../../i18n/translate';
+import { t, type MessageKey } from '../../i18n/translate';
 import { useMainActionFocus, type FocusAfter } from './useMainActionFocus';
 import { useUnpublish } from './useUnpublish';
 
@@ -53,6 +53,8 @@ export interface CheckPanelProps {
   readonly onStatusChange: () => void | Promise<void>;
   /** A notice for the first-publish dialog, given the way to close it; it never takes part in publishing. */
   readonly publishNotice?: (closeDialog: () => void) => ReactNode;
+  /** What is said after a first publish; «Aktiviteten er publisert.» unless the tab has more to say. */
+  readonly publishedKey?: MessageKey;
 }
 
 type Findings = FindingsResponse | 'loading' | 'failed';
@@ -72,6 +74,7 @@ export function CheckPanel({
   onGoToField,
   onStatusChange,
   publishNotice,
+  publishedKey = 'publish.published',
 }: CheckPanelProps) {
   const locale = useLocale();
   const auth = useApiAuth();
@@ -123,7 +126,7 @@ export function CheckPanel({
     setDialog(null);
   };
   const afterPublish = () => {
-    announce(t(dialog === 'renew' ? 'publish.renewed' : 'publish.published', locale));
+    announce(t(dialog === 'renew' ? 'publish.renewed' : publishedKey, locale));
     closeDialog('always');
     setProblem('');
     void Promise.all([onStatusChange(), load()]);

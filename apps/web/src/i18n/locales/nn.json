@@ -347,6 +347,23 @@
     "promptNote": "Du kan publisere likevel. Planleggaren og den pedagogiske mappa brukar desse opplysningane.",
     "promptLink": "Fyll ut læringsdesignet"
   },
+  "weekday": {
+    "sunday": "sundag",
+    "monday": "måndag",
+    "tuesday": "tysdag",
+    "wednesday": "onsdag",
+    "thursday": "torsdag",
+    "friday": "fredag",
+    "saturday": "laurdag"
+  },
+  "repetition": {
+    "heading": "Forslag til repetisjon",
+    "intro": "Øving verkar best når ho blir spreidd over tid. Lag ein kopi for kvar repetisjon, og legg kopien inn i ein seinare Canvas-modul rundt desse datoane:",
+    "after": "({{days}} dagar etter publisering)",
+    "countFrom": "Rekn frå dagen studentane først gjer aktiviteten dersom det er seinare.",
+    "copyNote": "Kopien opnar seg som utkast. Gje han eit namn som viser at det er repetisjon, og publiser han før du legg han inn i Canvas.",
+    "published": "Aktiviteten er publisert. Forslag til repetisjon står under knappen."
+  },
   "planner": {
     "pageTitle": "Planleggar",
     "heading": "Planleggar for læringsutbytte og fasar",

@@ -347,6 +347,23 @@
     "promptNote": "You can publish anyway. The planner and the teaching portfolio use this information.",
     "promptLink": "Fill in the learning design"
   },
+  "weekday": {
+    "sunday": "Sunday",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday"
+  },
+  "repetition": {
+    "heading": "Suggested repetition",
+    "intro": "Practice works best when it is spread over time. Make one copy for each repetition, and place it in a later Canvas module around these dates:",
+    "after": "({{days}} days after publishing)",
+    "countFrom": "Count from the day the students first do the activity if that is later.",
+    "copyNote": "The copy opens as a draft. Give it a name that shows it is a repetition, and publish it before you place it in Canvas.",
+    "published": "The activity is published. Suggested repetition dates are below the button."
+  },
   "planner": {
     "pageTitle": "Planner",
     "heading": "Planner for learning outcomes and phases",
