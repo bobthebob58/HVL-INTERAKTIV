@@ -95,7 +95,7 @@ file does not list»).
 
 | Component | Version or pin | What it does here | Evidence |
 |---|---|---|---|
-| Base image | `ubuntu:24.04` by digest `sha256:fe81560990fa…` | Every image stage | `deploy/Dockerfile:24`; D-110 (P3 amendment) |
+| Base image | `ubuntu:24.04` by digest `sha256:562111b88caa…` | Every image stage | `deploy/Dockerfile:24`; D-110 (P3 amendment) |
 | Node.js | 24; the image copies it from `node:24-bookworm-slim` by digest `sha256:c86ecead9e55…` (v24.22.2) | Runtime; engines `>=24.0.0 <25` | `deploy/Dockerfile:22,25-29`; `package.json` `engines`; `docs/DECISIONS.md:3685-3689` |
 | tsx | 4.23.15 | Runs the server's TypeScript directly; there is no compile step | `deploy/Dockerfile:141`; `apps/server/package.json` |
 | Express | 5.3.0 | HTTP routing; `X-Powered-By` off | `apps/server/package.json`; `src/server/createApp.ts:159` |

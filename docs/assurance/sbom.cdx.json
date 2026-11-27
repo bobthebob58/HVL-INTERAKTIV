@@ -2,7 +2,7 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:cc1f7d0a-6eec-5d44-8c51-61b6058acf88",
+  "serialNumber": "urn:uuid:e42ab2e3-a991-514a-b290-ab7e95e395fc",
   "version": 1,
   "metadata": {
     "lifecycles": [
@@ -13472,13 +13472,13 @@
       ]
     },
     {
-      "bom-ref": "pkg:oci/ubuntu@sha256%3Afe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852?repository_url=docker.io/library/ubuntu&tag=24.04",
+      "bom-ref": "pkg:oci/ubuntu@sha256%3A562111b88caa79c71391c0c4d3c2114a7d5c35915c20561fd893cb1e07929e6b?repository_url=docker.io/library/ubuntu&tag=24.04",
       "type": "container",
       "name": "ubuntu",
       "version": "24.04",
       "scope": "required",
       "description": "Base image of the server image: the build stages and the runtime stage start from it",
-      "purl": "pkg:oci/ubuntu@sha256%3Afe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852?repository_url=docker.io/library/ubuntu&tag=24.04",
+      "purl": "pkg:oci/ubuntu@sha256%3A562111b88caa79c71391c0c4d3c2114a7d5c35915c20561fd893cb1e07929e6b?repository_url=docker.io/library/ubuntu&tag=24.04",
       "properties": [
         {
           "name": "hvl:dockerfile:stage",
@@ -13492,7 +13492,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852"
+          "content": "562111b88caa79c71391c0c4d3c2114a7d5c35915c20561fd893cb1e07929e6b"
         }
       ]
     },
@@ -19621,7 +19621,7 @@
         "pkg:github/h5p/h5p-php-library@2aeb0b83fa603e331381b3a6b8bf42c3773ba140",
         "pkg:github/h5p/h5p-question-set@4598d1d60ea8730e62c66a4ac6ad5ef653f0c5f6",
         "pkg:oci/node@sha256%3Ac86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c?repository_url=docker.io/library/node&tag=24-bookworm-slim",
-        "pkg:oci/ubuntu@sha256%3Afe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852?repository_url=docker.io/library/ubuntu&tag=24.04",
+        "pkg:oci/ubuntu@sha256%3A562111b88caa79c71391c0c4d3c2114a7d5c35915c20561fd893cb1e07929e6b?repository_url=docker.io/library/ubuntu&tag=24.04",
         "typescript@6.0.3",
         "yazl@3.3.1"
       ]
@@ -20239,7 +20239,7 @@
       "dependsOn": []
     },
     {
-      "ref": "pkg:oci/ubuntu@sha256%3Afe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852?repository_url=docker.io/library/ubuntu&tag=24.04",
+      "ref": "pkg:oci/ubuntu@sha256%3A562111b88caa79c71391c0c4d3c2114a7d5c35915c20561fd893cb1e07929e6b?repository_url=docker.io/library/ubuntu&tag=24.04",
       "dependsOn": []
     },
     {
