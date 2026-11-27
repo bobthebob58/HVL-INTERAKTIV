@@ -121,7 +121,7 @@
     var label = button.getAttribute('aria-label');
     var named = button.getAttribute('data-hvl-named');
     // WHY: a label other than the one written here is H5P's new one; else the remembered one is still H5P's.
-    var own = named !== null && label === named ? button.getAttribute('data-hvl-label') : label;
+    var own = (named !== null && label === named && button.getAttribute('data-hvl-label')) || label;
     var holds = !shown || own.replace(/\s+/g, ' ').toLowerCase().indexOf(shown.toLowerCase()) !== -1;
     var name = holds ? own : shown + '. ' + own;
     if (name === own && named === null) return;

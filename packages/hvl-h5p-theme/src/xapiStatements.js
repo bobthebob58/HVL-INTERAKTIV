@@ -12,14 +12,16 @@
  *     `h5p-local-content-id` and `h5p-subContentId`, the IDs of `context.contextActivities.parent` and `category`,
  *     and `result.score` (numbers), `success`, `completion`, `duration` and `response`; never `actor`, texts,
  *     choices or other extensions (DATA-012, D-115).
- *   - `response` is kept only for `choice` and `fill-in`: each gap (between `[,]`) cut to 100 code points, and none
+ *   - `response` is kept only for `choice` and `fill-in` (a SingleChoiceSet question's, a `choice`, is the stored
+ *     index from ./xapiSingleChoiceSet.js): each gap (between `[,]`) cut to 100 code points, and none
  *     at all when the result is still over 1 000, as packages/api-contract/src/xapiResponseCaps.ts does on the server.
  *   - Root: `object.id` is the content ID, with no `h5p-subContentId` extension and no parent. A root result is a root
  *     `answered` or `completed` whose first category names the main library; it is gradable when `score.max` > 0.
  *   - The answer of an H5P.SingleChoiceSet's question is the set's own record of it, not the statement's, which
  *     follows the shuffled order on screen (./xapiSingleChoiceSet.js, D-151); no other result is changed.
- *   - Pure: reads only its arguments, never throws on any value, never changes what it is given. Defined once per
- *     window, as a read-only global, before ./xapiBridge.js reads it.
+ *   - Pure: reads only its arguments and the read-only global of ./xapiSingleChoiceSet.js, never throws on any
+ *     value, never changes what it is given. Defined once per window, as a read-only global, before
+ *     ./xapiBridge.js reads it.
  * SPEC-DEVIATION: D-115 — LTI-010 posts each statement; the bridge sends only what the server stores, cut down.
  * Collaborators: ./xapiBridge.js (the only reader; loaded after this file), ./xapiSingleChoiceSet.js (loaded before
  *   it), apps/server/src/h5p/h5pAssets.ts (lists them as player-only scripts).

@@ -109,4 +109,16 @@ describe('the repairs that put a control’s shown words in its name', () => {
     ]);
     expect(writes).toEqual([]);
   });
+
+  it('[UD-030] a button whose remembered label is gone is named from the label it has, and the next one still is', () => {
+    // Arrange: another script took the remembered label away; the button after it has an English label
+    const { attr } = openDocument(
+      `<div class="h5p-question-buttons"><button aria-label="Sjekk. ${ENGLISH}" data-hvl-named="Sjekk. ${ENGLISH}" id="lost">Sjekk</button>
+       <button aria-label="Retry the task." id="next">Prøv igjen</button></div>`,
+    );
+    // Act
+    const names = [attr('#lost', 'aria-label'), attr('#next', 'aria-label')];
+    // Assert
+    expect(names).toEqual([`Sjekk. ${ENGLISH}`, 'Prøv igjen. Retry the task.']);
+  });
 });
